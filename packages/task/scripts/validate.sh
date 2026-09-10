@@ -7,6 +7,17 @@
 # по нему (отсутствие plans/ — не ошибка, пакет task её не создаёт).
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+plan_targets=()
+fleet=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --plan) [[ $# -ge 2 ]] || { echo "--plan требует путь" >&2; exit 2; }
+      plan_targets+=("$(realpath "$2")"); shift 2 ;;
+    --fleet) fleet=true; shift ;;
+    -h|--help) echo "validate.sh [--plan PATH ...] [--fleet] — пакет; выбранные планы или CI/release fleet"; exit 0 ;;
+    *) echo "Неизвестный параметр: $1" >&2; exit 2 ;;
+  esac
+done
 cd "$REPO_ROOT"
 fail=0
 err() { echo "  FAIL: $*" >&2; fail=1; }
@@ -63,7 +74,7 @@ for b in bad:
 sys.exit(1 if bad else 0)
 PY
 
-echo "[5/5] тесты + plan-lint (если в монорепо есть plans/)"
+echo "[5/5] тесты + явно выбранный plan-lint"
 # lib/ — пакет task; MONOREPO_ROOT (на два уровня выше пакета) — чтобы опционально
 # импортировался core (fallback core.term.warn внутри plan_lint.py, см. его try/except).
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
@@ -71,10 +82,14 @@ MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
   python3 -m unittest discover -s tests -p "test_*.py" || err "unittest"
 
-if [[ -n "$MONOREPO_ROOT" && -d "$MONOREPO_ROOT/plans" ]]; then
-  python3 scripts/plan-lint.py "$MONOREPO_ROOT/plans" || err "plan-lint.py plans/ — см. вывод выше"
-else
-  echo "  (plans/ нет в монорепо — пропуск plan-lint, это не ошибка)"
+if $fleet && [[ -n "$MONOREPO_ROOT" && -d "$MONOREPO_ROOT/plans" ]]; then
+  plan_targets+=("$MONOREPO_ROOT/plans")
+fi
+for plan_target in "${plan_targets[@]}"; do
+  python3 scripts/plan-lint.py "$plan_target" || err "plan-lint.py $plan_target"
+done
+if [[ ${#plan_targets[@]} -eq 0 ]]; then
+  echo "  plan regression не запрошен; --plan PATH для задачи, --fleet для CI/release"
 fi
 
 # --conflicts (2026.07.31-SKM-LEAN P5.9, roadmap plan-audit-loop.md §A.1) — дешёвая

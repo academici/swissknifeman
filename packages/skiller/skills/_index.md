@@ -225,9 +225,9 @@
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `anti-drift` | Discipline against agent rabbit-holing: think first, simplicity, surgical edits, circuit-… | `workflow`, `discipline`, `orchestration`, `context` |
-| `compact-responses` | Activate ultra-compact response mode: minimal prose, code-only, no explanations unless as… | `conventions`, `style`, `tokens`, `context`, `workflow` |
+| `compact-responses` | Use when the user explicitly requests terse output; preserve necessary explanations, prog… | `conventions`, `style`, `tokens`, `context`, `workflow` |
 | `complex-task-orchestrator` | Complex-task orchestration: decomposition, context routing, risk, Definition of Done. | `workflow`, `orchestration`, `checklist`, `agents` |
-| `context-economy` | Claude Code context economy: CLAUDE.md ≤200 lines, path-scoped rules, /compact vs /clear,… | `tokens`, `context`, `claude-code`, `workflow`, `conventions` |
+| `context-economy` | Reduce measured context overhead with targeted reads, on-demand instructions, continuity … | `tokens`, `context`, `claude-code`, `workflow`, `conventions` |
 | `cross-layer-change-checklist` | Use when a change spans multiple layers: code, authorization, UI, docs, tests. | `checklist`, `workflow`, `validation` |
 | `git-commit-rules` | Use when preparing a Git commit: husky/commitlint, message format, safe action order. | `git`, `conventions`, `conventional-commits`, `gitops` |
 | `git-safety` | Guard against destructive git commands via a Claude Code PreToolUse hook: blocks push/res… | `git`, `safety`, `hooks`, `guardrails`, `init` |
@@ -243,7 +243,7 @@
 | `skills-ssot` | Single source of truth for skills across AI agents: .ai/skills, symlinks, gitignore. | `ai-context`, `skills`, `ssot`, `workflow`, `conventions`, `ai` |
 | `spec-interview` | Pre-code interview: one question at a time, reads the codebase itself, proposes a recomme… | `workflow`, `requirements`, `discovery` |
 | `task-brief-template` | Brief template for complex tasks: goal, scope, invariants, assumptions, out of scope, acc… | `workflow`, `template`, `requirements`, `context` |
-| `verify-claims` | Before a verdict on an EXTERNAL fact (library version/API, 'still current', best practice… | `verification`, `rag`, `research`, `planning`, `context`, `claude-code` |
+| `verify-claims` | Use when a decision relies on changing external premises; verify in primary sources. Repo… | `verification`, `rag`, `research`, `planning`, `context`, `claude-code` |
 | `workflow-craft` | Activate on \"write a workflow\"/multi-agent orchestration: match 4 canonical templates f… | `workflow`, `orchestration`, `multi-agent`, `templates`, `authoring` |
 | `writing-style` | Tone & language of code artifacts: Russian by default for comments, commit bodies, test d… | `writing`, `language`, `russian`, `comments`, `commits`, `tests`, `docs`, `style` |
 
@@ -425,7 +425,7 @@
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `cross-project-optimizer` | Cross-project optimization across ~N similar ecosystem projects (shared core packages): f… | `ecosystem`, `fleet`, `dedup`, `shared-package`, `root-bootstrap` |
-| `decision-verification` | Epistemic discipline for work ON this repo: before a verdict on an EXTERNAL fact (library… | `rag`, `verification`, `epistemics`, `root-bootstrap` |
+| `decision-verification` | Use when a repository decision rests on a changing external premise; route to the shared … | `rag`, `verification`, `epistemics`, `root-bootstrap` |
 | `docs-maintenance` | After every completed task in a repository with a docs/ directory at its root: assess whe… | `docs`, `maintenance`, `root-bootstrap` |
 | `ecosystem-integration` | How to connect (onboard) a new project to the academici ecosystem via the mAInd hub - sha… | `ecosystem`, `maind`, `onboarding`, `root-bootstrap` |
 | `ecosystem-mcp` | What MCP tools are available here (agent-memory = shared memory/context, serena = code gr… | `ecosystem`, `mcp`, `maind`, `root-bootstrap` |
@@ -443,7 +443,7 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `query-craft` | How to FORMULATE a search/doc-engine query (Perplexity Web · WebSearch · context7): versi… | `research`, `perplexity`, `search`, `query`, `rag`, `context7`, `claude-code` |
+| `query-craft` | Use when a search query needs precision: concrete question, version, environment and sour… | `research`, `perplexity`, `search`, `query`, `rag`, `context7`, `claude-code` |
 | `research-knowledge-super-skill` | Research and knowledge management: deep research, knowledge graphs, data exploration, sta… |  |
 
 ### roles — Personas: tech lead, startup CTO, solo founder, open-source maintainer (4)

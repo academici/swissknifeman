@@ -22,10 +22,6 @@ _PREIMAGE_DIGESTS = {
     "plan-exec": "646172c92e6e13b8cddb6af36594f4a24060224d0ceb2c8f981eff9f8c894664",
     "plan-run": "29fbffbeef7eb1cfdb712895978f1dc4a4b48221a1ac4029d9144124299d5828",
 }
-_CANDIDATE_DIGESTS = {
-    "plan-exec": "f807738a24c05472e64874a47fb2fe74c1c43458ef8b5c01fde0a2a377e9a7fd",
-    "plan-run": "5330520902162b5d851c1c9e56ca297059683a697083628c0214918d77eaa5b6",
-}
 # Markdown permits up to three leading spaces on a fenced-code delimiter.  Command
 # sources use that form inside ordered lists, so matching only column-zero fences
 # silently discarded executable fragments from the inventory.
@@ -39,15 +35,13 @@ _ID_RE = re.compile(r"\b(?:task:[\w:-]+|P\d+\.\d+|D\d+|[A-Z][A-Z0-9_]{2,}|v\d+(?
 _KEY_RE = re.compile(r"\b[a-z][a-z0-9_]*(?==)")
 _PLACEHOLDER_RE = re.compile(r"<[^>\n]+>")
 _EXPECTED_INVENTORIES = {
-    # Generated from git:980ee79d plus the D80 replacement source.  Each digest
-    # binds the full typed sequence, including order and multiplicity.
+    # Historical preimage identity stays pinned; current source is read from its
+    # canonical owner rather than duplicated as a hash in runtime.
     "plan-exec": {
         "preimage": "sha256:4ab5a60b17f011d0ae6f6a4da4548d7362010a0e5e998a571cac08dd4870dd73",
-        "candidate": "sha256:414f01106f099c65904ddf69cff020ea16081f1ff88fbc9d96c9e899d772752d",
     },
     "plan-run": {
         "preimage": "sha256:476951e51315cfbcca269206edcccf19fc32e90de8c0dd3a4656194a23392082",
-        "candidate": "sha256:0132d933226b09e252ab2effd0b99810653b2e169b2806b15659210c7ac55f60",
     },
 }
 
@@ -171,11 +165,9 @@ def literal_inventory(text: str, *, command_id: str) -> dict[str, object]:
 def verify_literal_inventory(text: str, *, command_id: str) -> dict[str, object]:
     """Reject any omitted, reordered, multiplied, or unclassified literal sequence."""
     inventory = literal_inventory(text, command_id=command_id)
+    canonical = (Path(__file__).resolve().parents[2] / "commands" / f"{command_id}.md").read_text(encoding="utf-8")
     expected = _EXPECTED_INVENTORIES[command_id]
-    if (inventory["candidate_sha256"] != "sha256:" + _CANDIDATE_DIGESTS[command_id]
-            or inventory["preimage_inventory_sha256"] != expected["preimage"]
-            or inventory["candidate_inventory_sha256"] != expected["candidate"]
-            ):
+    if (text != canonical or inventory["preimage_inventory_sha256"] != expected["preimage"]):
         raise ValueError("CMD_LOCALE_LITERAL_INVENTORY_MISMATCH")
     return inventory
 
@@ -219,6 +211,10 @@ def resolve_command(command_id: str, *, locale: str = "en", command_root: Path |
     catalog = english_catalog(command_root)
     key = command_locale_key(command_id)
     overlay = load_russian_overlay(overlay_path) if locale == "ru" else None
+    # An empty overlay contributes no translated bytes and needs no rebind on
+    # every English edit. Nonempty overlays still pass core's digest gate.
+    if overlay is not None and not overlay.units:
+        overlay = None
     return render_message(catalog, overlay, key, immutable_tokens=immutable_tokens(catalog.units[key]))
 
 

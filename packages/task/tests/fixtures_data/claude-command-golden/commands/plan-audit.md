@@ -13,10 +13,15 @@ Before GREEN, regenerate audit-owned carriers once, rebuild the candidate and pe
 `task.plan_evidence.audit_finalization()` with the exact `phase_close_gate` admission; product
 paths must remain byte-identical between the product and closure anchors.
 
-Use `task.plan_lifecycle.select(audit=True)`: at most one deterministic audit-owned bookkeeping
+Use `task.plan_lifecycle.select(task.plan_lifecycle.LifecycleInput(audit=True))` as advice: at most one deterministic audit-owned bookkeeping
 repair is allowed. A product defect returns one exact owning continuation; it does not trigger a
 second audit, full replay, product write, or fresh root merely because this command is an audit.
 Material risk selects one independent review path. Persist the semantic Next through `plan_delivery`.
 
 Audit does not bypass terminal admission: an applicable lease can only emit `waiting-owner` or its
 typed continuation until a fresh terminal receipt and exact final fragment exist.
+
+Persist a product finding as audit-attention (or audit-red) with decision action
+`return-owning-continuation`, evidence IDs, reason_code, scope_class=<owning item>,
+recovered=false, terminal=false,
+and exact exec-items/run-items owning continuation. Reviewer completion leaves the phase open.

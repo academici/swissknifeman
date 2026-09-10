@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:f807738a24c05472e64874a47fb2fe74c1c43458ef8b5c01fde0a2a377e9a7fd
+Canonical SHA-256: sha256:e731ac1939f61af6bc912b279da3719eb944b696423ccccc4543bfaa4820bad9
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -75,16 +75,17 @@ live/snapshot digest mismatch is `PLAN_CONTEXT_TRUNCATED`/`PLAN_CONTEXT_DIGEST_M
 the product journal starts. Continue only from the same snapshot; never reread a live carrier to
 replace a lost chunk.
 
-Execute only the Routing-owned Batch for `$ARGUMENTS`. The pinned route is a minimum;
+Execute the admitted Routing group or ready subset of a recommended group for `$ARGUMENTS`. The pinned route is a minimum;
 provider-attested overshoot is recorded and undershoot stops before mutation.
 
 ## Shared lifecycle
 
-`task.plan_lifecycle.select()` is the normal-path composer. It owns no carrier or enum: admission
+`task.plan_lifecycle.select(task.plan_lifecycle.LifecycleInput())` is advisory impact selection. It owns no carrier or enum: admission
 stays in `task.plan_admission`/`task_contract`, route proof in `route_evidence`, recovery in
 `plan_repair`/`plan_blocking`, review in `review_policy`/`plan_gates`, projection in
 `plan_projection`, context in `plan_continuity`, and semantic Next/delivery in `plan_delivery`.
-Commands must not copy those algorithms.
+Commands must not copy those algorithms. Choose any safe order consistent with their data
+dependencies, Scope and Acceptance; recommended Next is not exclusive execution authority.
 
 1. Capture exactly the v2 five-carrier context once with `task.plan_context.capture()` and consume
    contiguous terminal-marked chunks. Missing or changed input is `PLAN_CONTEXT_TRUNCATED` or
@@ -106,7 +107,7 @@ Commands must not copy those algorithms.
    Audit is read-only: it returns one owning continuation for a product finding and never starts a
    second audit/full replay without a new material hypothesis.
 5. Generate only changed terminal projections once, persist one semantic Next through `plan_delivery`,
-   and use one scoped commit. A second bookkeeping commit requires a real session/ownership boundary.
+   and use one scoped commit. A second bookkeeping commit requires a real session/ownership boundary or digest-input collision.
 
 Run every declared Validation carrier. Close only with green evidence, `task_contract` allow at both
 write sites, generated views/lint, and `plan-delivery --kind terminal`. For a terminal phase use

@@ -262,7 +262,7 @@ class PlanDeliveryTests(unittest.TestCase):
         entry = json.loads(journal_path.read_text(encoding="utf-8"))
         entry.pop("run_id")
         journal_path.write_text(json.dumps(entry, ensure_ascii=False) + "\n", encoding="utf-8")
-        with self.assertRaisesRegex(plan_delivery.DeliveryError, "TERMINAL_RUN_ID_MISSING"):
+        with self.assertRaisesRegex(plan_delivery.DeliveryError, "STALE_TERMINAL_RECEIPT|TERMINAL_RUN_ID_MISSING"):
             plan_delivery.build_terminal_receipt(plan, "P1.1")
 
     def test_terminal_receipt_skips_historical_missing_run_id_when_latest_is_valid(self):

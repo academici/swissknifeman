@@ -74,8 +74,7 @@ def unresolved_incidents(plan_dir, item_id: str) -> tuple[tuple[str, str, str], 
             record = entry.get("repair_decision")
             if entry.get("item_id") != item_id or not isinstance(record, dict):
                 continue
-            outcome = evaluate(record)
-            if outcome["action"] != "repair-in-current-attempt":
+            if entry.get("repair_action") != "repair-in-current-attempt":
                 continue
             key = incident_key(record)
             if post_validation_complete(record):
@@ -110,7 +109,7 @@ def latest_action(plan_dir, *, item_id: str | None = None,
             record = entry.get("repair_decision")
             if not isinstance(record, dict):
                 continue
-            action = evaluate(record)["action"]
+            action = entry["repair_action"]
             latest = (None if action == "repair-in-current-attempt"
                       and post_validation_complete(record) else action)
         except (json.JSONDecodeError, journal.JournalValidationError,
@@ -214,7 +213,7 @@ def _decision(action: str, *, record: dict, reason_code: str) -> dict:
             "post_validation_required": action == "repair-in-current-attempt"}
 
 
-def evaluate(record: dict) -> dict:
+def evaluate(record: dict, *, plan_dir=None) -> dict:
     """Classify one repair record; this is the sole repair/design policy owner."""
     try:
         validate(record)
@@ -224,22 +223,38 @@ def evaluate(record: dict) -> dict:
                 "reason_code": "REPAIR_EVIDENCE_INVALID", "repair_digest": None,
                 "post_validation_required": False}
     baseline = record["baseline"]["carrier"]
-    if baseline is not None and baseline["result"] == "red" and not record["candidate"]["delta_proved"]:
-        return _decision("repair-in-current-attempt", record=record,
-                         reason_code="CLEAN_BASELINE_WITHOUT_CANDIDATE_DELTA")
     surface = record["material_surface"]
-    material = any(surface.values())
-    bounded = (record["bounded_diff"]["reversible"]
-               and record["bounded_diff"]["files_changed"] <= record["bounded_diff"]["max_files"])
-    owners = all(row["owner_item"] for row in record["affected_paths"])
-    if not material and bounded and owners:
-        return _decision("repair-in-current-attempt", record=record,
-                         reason_code="BOUNDED_NONMATERIAL_REPAIR")
-    if not material:
-        return _decision("gather-evidence", record=record,
-                         reason_code="REPAIR_BOUNDS_OR_ATTRIBUTION_MISSING")
+    # A recorded new decision requires design; product/test/dependency edits
+    # themselves do not create a new Acceptance or authority boundary.
     if record["design"] is not None:
         return _decision("design-required", record=record,
                          reason_code="NEW_MATERIAL_DECISION_SURFACE")
+    material = any(surface[key] for key in ("public", "frozen", "security", "schema",
+                                            "authority", "irreversible"))
+    bounded = record["bounded_diff"]["reversible"]
+    owners = all(row["owner_item"] for row in record["affected_paths"])
+    impact_proved = (record["candidate"]["delta_proved"]
+                     and bool(record["candidate"]["evidence_ids"]))
+    authorized_material = False
+    if material and plan_dir is not None and Path(plan_dir).name == record["plan_id"]:
+        from task import plan_bundle, plan_gates
+        try:
+            declared = set(plan_gates._declared_file_paths(
+                plan_bundle._fields(Path(plan_dir), record["item_id"]).get("Files", "")))
+            authorized_material = all(row["owner_item"] == record["item_id"]
+                                      and row["path"] in declared
+                                      for row in record["affected_paths"])
+        except ValueError:
+            pass
+    unresolved_boundary = any(surface[key] for key in ("frozen", "authority", "irreversible"))
+    if bounded and owners and not unresolved_boundary and (not material or (impact_proved and authorized_material)):
+        return _decision("repair-in-current-attempt", record=record,
+                         reason_code=("CLEAN_BASELINE_WITHOUT_CANDIDATE_DELTA"
+                                      if baseline is not None and baseline["result"] == "red"
+                                      and not record["candidate"]["delta_proved"]
+                                      else "BOUNDED_NONMATERIAL_REPAIR"))
+    if not material:
+        return _decision("gather-evidence", record=record,
+                         reason_code="REPAIR_BOUNDS_OR_ATTRIBUTION_MISSING")
     return _decision("gather-evidence", record=record,
                      reason_code="DESIGN_EVIDENCE_REQUIRED")

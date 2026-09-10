@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Task lifecycle:** обычная межмодульная разработка по брифу без обязательного плана; read-only audit возвращает продуктовый дефект исполнителю через journal/lint/delivery, сохраняя фазу открытой. Audit budget больше не запрещает ремонт; product delta и число файлов сами по себе не требуют design. Новые рекомендованные batches допускают ready subset, исторические обязательные группы сохраняют контракт.
+- **Проверки и инструкции:** один scoped commit по умолчанию, scoped plan validation отдельно от fleet; targeted context и research без обязательных перезапусков. Добавлены read-only подготовка snapshot и диагностика выбранной установленной Task/core-проекции; terminal delivery проверяет свежесть state, повторная генерация не переписывает неизменённые файлы. Analyst help показывает workflow-scan.
+
 ## [0.15.0] - 2026-09-10
 
 - **`skiller`: lifecycle-aware Laravel parallel isolation.** `test-isolation-guard` now keeps

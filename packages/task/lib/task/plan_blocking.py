@@ -172,7 +172,7 @@ def _decision(action: str) -> dict:
     }
 
 
-def evaluate(candidate: dict) -> dict:
+def evaluate(candidate: dict, *, plan_dir=None) -> dict:
     """Choose the next action; missing proof always remains nonterminal."""
     try:
         validate(candidate)
@@ -182,7 +182,7 @@ def evaluate(candidate: dict) -> dict:
         return _decision("repair-candidate")
     if "repair_decision" in candidate:
         from task import plan_repair
-        repair = plan_repair.evaluate(candidate["repair_decision"])
+        repair = plan_repair.evaluate(candidate["repair_decision"], plan_dir=plan_dir)
         if repair["action"] != "block-candidate":
             # Block confirmation consumes the upstream result; it never gets to
             # relabel a qualified repair as a terminal premise.

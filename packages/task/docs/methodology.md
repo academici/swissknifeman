@@ -2,7 +2,7 @@
 
 ## Compact normal path
 
-`task.plan_lifecycle` only composes existing runtime owners and persists no new carrier.  Low-risk
+`task.plan_lifecycle` provides advisory impact selection alongside existing runtime owners and persists no new carrier.  Low-risk
 items use focused validation, changed projections once, one semantic Next and one scoped commit.
 Declared hard risk widens validation and review; audits are read-only and return product findings to
 their owning item.
@@ -23,8 +23,8 @@ flowchart TD
     C --> AP{phase-assurance/v1<br>candidate evidence · impact}
     AP -- audit required --> RV[первый pre-close audit<br>/task:plan-audit]
     AP -- direct close --> PC
-    RV -- safe finding --> RE[inline audit-fixer repair<br>в том же root]
-    RE --> RV
+    RV -- product finding --> RE[owning executor repair<br>фаза остаётся открытой]
+    RE -- delta verification --> RV
     RV -- final GREEN --> PC[phase close<br>/task:plan-close]
     RV -- proven boundary --> INC[DecisionRequest / block evidence]
     PC --> AR[archive<br>/task:plan-close archive]
@@ -76,14 +76,16 @@ pending` / `Resolved → D#`, скилл §3) — но закрыть план �
 `task:plan-exec` (implementation/medium) исполняет item строго по ТЗ. В layout v2 он читает
 пять объявленных носителей и не использует handoff как execution input. **Commit-гейт**:
 статус `🟢`/`🟠` не ставится без закоммиченного диффа item'а — Conventional Commits,
-зелёный `validate.sh` до коммита, фиксы ревью отдельным коммитом. **Два дома** (скилл §12):
+проверки по риску и declared Validation до коммита; связанные фиксы и bookkeeping вместе. **Два дома** (скилл §12):
 до старта exec базовый план живёт в Brain; на старте переезжает в репо проекта (Meta
 `Home: repo:<путь>`), SSOT = репо, Brain — зеркало; расхождение базового с working-копией —
 не молчаливый merge, а `temporary divergence` + эскалация §10. Exec также сверяет свою
 модель/effort с Routing плана — расхождение фиксируется в Known Deviations. Execution handoff
 всегда показывает `Batch`; batch выполняется последовательно в одной сессии, после каждого
 item проходят его собственные acceptance/commit/close gates, а следующий carrier сохраняет
-весь оставшийся смежный suffix группы. Audit/close фазы запускается уже отдельным carrier.
+рекомендованный остаток группы. Новые строки `Почему: recommended:` допускают ready subset
+и порядок независимых items; `required:` и исторические немаркированные группы сохраняют
+обязательную полноту/порядок. Изменение frozen-группы фиксируется существующим решением. Audit/close фазы запускается уже отдельным carrier.
 Для `plan-run` canonical `plan-exec` резолвится через установленный `task.command_catalog`, а
 маршрут снимается provider-neutral функцией `task.route_evidence.capture_launch()`: Codex argv и
 Claude Code session JSONL остаются additive adapters одного record. Missing/ambiguous evidence —

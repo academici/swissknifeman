@@ -624,7 +624,7 @@ def _lint_audit_terminal_policy(lines, path, plan_dir, plan_id, phase_id, diag):
         return
     try:
         _review_policy.validate_phase_audit_continuation(
-            latest, plan_id=plan_id, next_exact=next_exact)
+            latest, plan_id=plan_id, next_exact=next_exact, plan_dir=plan_dir)
     except _review_policy.ReviewPolicyError as exc:
         report(path, idx + 1, str(exc))
 

@@ -109,7 +109,7 @@ before execution resumes.
 class supported item/gate/metric claims: `real`, `synthetic`, or `baseline_pending`.
 
 `phases/<Pn>/<Pn>.closed.md` is the generated v2 phase closure contract. It states the terminal
-item set, phase result, scope commit, bookkeeping commit, gates, limitations, next action, and
+item set, phase result, scope commit, optional separate bookkeeping commit, gates, limitations, next action, and
 source digests. It is produced at the terminal transition and checked against current specs/state.
 
 These carriers are orthogonal: the JSON explains evidentiary judgement; the Markdown view supplies
@@ -160,8 +160,8 @@ Correct routing before the start event. Do not classify a missing future consume
 record its dependency state. Reconcile PID/output/state before declaring an external process
 terminal. A prior review remains valid without a new material scope/SHA/risk trigger. Deterministic
 non-material state/view/navigation drift is repaired by its owner, regenerated once, and rerun in
-the same root; sealed-spec, acceptance, security, safety, authority, and material changes are not
-inline repair.
+the same root. The reviewer returns product findings to the executor. A new Acceptance or
+ungranted authority choice requires its decision; already authorized product repair stays execution.
 
 ## Semantic Next extensions
 
@@ -192,7 +192,7 @@ Both forms carry the same provider-neutral meaning. Provider-native invocations 
 
 ## Projection order
 
-For a v2 item transition:
+For a v2 item transition, respect these data dependencies. Independent work may be reordered:
 
 1. append the journal event with neutral session identity and actor/model;
 2. regenerate the selected item state;
@@ -201,6 +201,7 @@ For a v2 item transition:
 5. at phase terminality, generate `<Pn>.closed.md` and optional closure evidence;
 6. run owner `--check` commands and `plan-downstream.py --record`;
 7. rewrite handoff with semantic Next and provider-native launch block;
-8. lint the plan and commit bookkeeping.
+8. lint the selected plan and commit implementation with changed bookkeeping once. A real
+   digest-input collision or ownership/session boundary may require separate anchors.
 
 Never hand-edit generated carriers. A failure or skipped check is recorded as non-green evidence.

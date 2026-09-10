@@ -15,7 +15,10 @@ adapters: [claude, cursor, fable]
 
 # Skill: Tech Debt Audit
 
-Apply when: team says "everything is slow", feature delivery velocity drops, new bugs recur in old places, junior onboarding > 2 weeks. Also: quarterly, even if "all good". On tech-lead change — mandatory.
+This is an opt-in team inventory template. Use its cadence, source quotas,
+register and capacity examples only when the user asks to establish that process.
+For a bounded technical audit, choose evidence relevant to the observed problem;
+no quarterly ritual, four-source minimum or fixed repair percentage is required.
 
 ## When NOT to apply
 - Pre-MVP stage (too early to classify debt; "all code is debt")
@@ -48,7 +51,7 @@ Compounding subtype of `architectural` debt, specific to AI-built codebases. Nor
 > Concept detail: `02-Knowledge/Agentic-Technical-Debt` (Brain-vault).
 
 ## Step 2 — Signal sources (where to find debt)
-Use **min 4 of 8** sources, else picture is skewed.
+For an opted-in broad inventory, sample multiple applicable sources.
 
 | Source | Extract |
 |:---|:---|

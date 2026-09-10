@@ -1250,7 +1250,7 @@ def _provenance_diagnostics(provenance: object) -> tuple[InstructionDiagnostic, 
         return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
                       expected="D81 provenance object", observed=_shape(provenance)),)
     scope = provenance.get("source_hash_scope")
-    if scope != "section":
+    if scope not in {"section", "file"}:
         return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
                       expected="section", observed=_display(scope)),)
     try:
@@ -1258,7 +1258,7 @@ def _provenance_diagnostics(provenance: object) -> tuple[InstructionDiagnostic, 
     except (OSError, ValueError) as error:
         return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
                       expected=provenance.get("source_sha256"), observed=type(error).__name__),)
-    section = literal_coverage_section(text, provenance.get("source_section"))
+    section = text if scope == "file" else literal_coverage_section(text, provenance.get("source_section"))
     if section is None:
         return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
                       expected=provenance.get("source_sha256"), observed="section not found"),)

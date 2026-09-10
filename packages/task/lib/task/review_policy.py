@@ -1,25 +1,7 @@
-"""review_policy — typed finding/review enforcement and loop breaker
-(2026.07.24-AGENT-RELIABILITY P2.3).
+"""Finding identity, read-only review outcomes and bounded review recurrence.
 
-Implements exactly `root/contracts/risk-review-loop-budget-v1.md` (2026.07.24-AGENT-RELIABILITY P2.1, frozen) as
-executable policy: finding identity derived from the defect's SEAM (never report
-wording — split-ban), the `reopens_product` predicate, the `same_finding_max = 2`
-loop budget where the THIRD occurrence of one stable identity becomes an incident
-with no inline repair, and the authority-profile-parameterized cap subject (D68 —
-the subject is a parameter, never hardcoded). Validation cadence follows the same
-contract: full once per phase-terminal item, targeted after each bounded fix.
-
-This module is the ONE new call-site `packages/task/lib/task/task_contract.py`
-gains for it (`evaluate_finding`, 2026.07.24-AGENT-RELIABILITY P2.2's approved policy hook) — the compiler's own
-pre-mutation/pre-final predicates are untouched and never import this module, so
-P2.2's independently-green test suite does not depend on it.
-
-Reason codes are reused verbatim from `artifacts/P2.1/state-transition-cases.json`
-`new_reason_codes` (P2.1, frozen; never re-minted here):
-`FINDING_IDENTITY_UNSTABLE`, `REOPEN_WITHOUT_PRODUCT_FINDING`,
-`AUTHORITY_PROFILE_UNDECLARED`.
-
-stdlib-only.
+Historical finding/authority records remain readable. Audit budgets do not revoke
+executor repair authority; validation breadth follows impact and declared checks.
 """
 from __future__ import annotations
 
@@ -114,12 +96,10 @@ def audit_fixer_action(*, in_scope: bool, bounded_incidental: bool = False,
                        reviewer_returns: int = 0, boundary: str | None = None,
                        authority_verdict: str | None = None,
                        block_action: str | None = None) -> dict:
-    """Choose the next action for one finding inside an owning phase-audit root.
+    """Compatibility entry point for a read-only reviewer finding.
 
-    The audit may repair only a safe, in-scope seam.  A repeated fingerprint first
-    changes tactic; a second recurrence (or a new material risk) may use exactly
-    one isolated reviewer, whose evidence returns to this same root.  This helper
-    deliberately never manufactures a repair successor or a second audit round.
+    Product repair belongs to the executor. Repeated review evidence never
+    grants this reviewer write authority or forces another independent audit.
     """
     if not isinstance(in_scope, bool) or not isinstance(bounded_incidental, bool):
         raise ReviewPolicyError("FINDING_IDENTITY_UNSTABLE", "scope flags must be bool")
@@ -129,9 +109,6 @@ def audit_fixer_action(*, in_scope: bool, bounded_incidental: bool = False,
     if not isinstance(material_risk, bool) or (isinstance(reviewer_returns, bool)
             or not isinstance(reviewer_returns, int) or reviewer_returns < 0):
         raise ReviewPolicyError("FINDING_IDENTITY_UNSTABLE", "review inputs are invalid")
-    if reviewer_returns > 1:
-        raise ReviewPolicyError(
-            "FINDING_IDENTITY_UNSTABLE", "audit-fixer permits at most one reviewer return")
     if boundary is not None and boundary not in AUDIT_FIXER_BOUNDARIES:
         raise ReviewPolicyError("FINDING_IDENTITY_UNSTABLE", f"unknown audit boundary {boundary!r}")
     if authority_verdict is not None and authority_verdict not in AUTHORITY_VERDICTS:
@@ -141,14 +118,14 @@ def audit_fixer_action(*, in_scope: bool, bounded_incidental: bool = False,
         raise ReviewPolicyError(
             "FINDING_IDENTITY_UNSTABLE", f"unknown block action {block_action!r}")
     if boundary == "acceptance":
-        return {"action": "repair-inline", "terminal": False,
+        return {"action": "return-owning-continuation", "terminal": False,
                 "reason": "acceptance-failure-is-work"}
     if boundary in {"authority", "public-frozen"}:
         if authority_verdict is None:
             return {"action": "request-authority", "terminal": False,
                     "reason": f"{boundary}-boundary-unresolved"}
         if authority_verdict == "delegated":
-            return {"action": "repair-inline", "terminal": False,
+            return {"action": "return-owning-continuation", "terminal": False,
                     "reason": "authority-delegated"}
         if authority_verdict == "approval_required":
             return {"action": "approval-required", "terminal": True,
@@ -162,24 +139,13 @@ def audit_fixer_action(*, in_scope: bool, bounded_incidental: bool = False,
         if block_action == "terminal-block":
             return {"action": "terminal-block", "terminal": True,
                     "reason": "safety-block-confirmed"}
-        return {"action": "repair-inline", "terminal": False,
+        return {"action": "return-owning-continuation", "terminal": False,
                 "reason": f"block-reducer-{block_action}"}
     if not in_scope:
         return {"action": "record-non-gating", "terminal": False,
                 "reason": "out-of-scope-non-product"}
-    if reviewer_returns > 0:
-        return {"action": "repair-inline", "terminal": False,
-                "reason": "review-evidence-returned"}
-    if material_risk or repeated_fingerprint >= 2:
-        return {"action": "isolated-child-return", "terminal": False,
-                "reason": "material-risk" if material_risk else "repeated-fingerprint"}
-    if repeated_fingerprint == 1:
-        return {"action": "change-tactic", "terminal": False,
-                "reason": "first-repeated-fingerprint"}
-    if bounded_incidental:
-        return {"action": "repair-inline", "terminal": False,
-                "reason": "bounded-incidental"}
-    return {"action": "repair-inline", "terminal": False, "reason": "safe-in-scope"}
+    return {"action": "return-owning-continuation", "terminal": False,
+            "reason": "safe-in-scope"}
 
 
 def phase_audit_subject(item_id: object) -> str | None:
@@ -193,16 +159,8 @@ def phase_audit_subject(item_id: object) -> str | None:
     return match.group(1) if match else None
 
 
-def phase_audit_terminal_policy(entry: dict) -> dict:
-    """Validate the only legal terminal outcomes of one owning phase-audit root.
-
-    GREEN hands the exact candidate to close.  ATTENTION is deliberately
-    nonterminal: nits/out-of-scope observations do not colour phase acceptance,
-    while an in-scope defect is work for the owning root.  RED is legal only when
-    a deterministic authority/block reducer supplied exact evidence and a waiting
-    or terminal continuation.  Mere labels such as ``acceptance boundary`` never
-    manufacture a stop.
-    """
+def phase_audit_terminal_policy(entry: dict, *, plan_dir=None) -> dict:
+    """Separate reviewer completion from phase closure; preserve old RED outcomes."""
     if not isinstance(entry, dict) or entry.get("command") != "plan-audit":
         raise ReviewPolicyError("AUDIT_TERMINAL_EVENT_INVALID", "entry is not plan-audit")
     phase_id = phase_audit_subject(entry.get("item_id"))
@@ -212,11 +170,40 @@ def phase_audit_terminal_policy(entry: dict) -> dict:
     if result == "audit-green":
         return {"allow": True, "phase_id": phase_id, "action": "close",
                 "continuation": None, "terminal": True}
+    evidence = entry.get("decision")
+    if result in {"audit-attention", "audit-red"} and isinstance(evidence, dict) and evidence.get("action") == "return-owning-continuation":
+        continuation = evidence.get("continuation")
+        ids = evidence.get("evidence_ids")
+        plan_id = entry.get("plan_id", "")
+        pattern = rf"(?:exec-items: task:plan-exec|run-items: task:plan-run) {re.escape(plan_id)} ({phase_id}\.[0-9]+)"
+        if (not isinstance(continuation, str) or re.fullmatch(pattern, continuation) is None
+                or evidence.get("recovered") is not False
+                or evidence.get("terminal") is not False
+                or not isinstance(ids, list) or not ids
+                or not all(isinstance(value, str) and value for value in ids)
+                or len(ids) != len(set(ids))
+                or not isinstance(evidence.get("reason_code"), str) or not evidence["reason_code"]):
+            raise ReviewPolicyError("AUDIT_TERMINAL_EVIDENCE_REQUIRED",
+                                    "замечание требует evidence и точный owning item той же фазы")
+        owner_item = continuation.rsplit(" ", 1)[1]
+        if evidence.get("scope_class") != owner_item:
+            raise ReviewPolicyError("AUDIT_TERMINAL_EVIDENCE_REQUIRED",
+                                    "scope_class должен называть exact owning item")
+        if plan_dir is not None:
+            from task import plan_layout, plan_bundle
+            try:
+                spec = plan_layout.carrier_path(plan_dir, "item-spec", item_id=owner_item)
+                if not spec.is_file():
+                    raise ValueError(f"owning item отсутствует: {owner_item}")
+                plan_bundle.producer_readiness(plan_dir, owner_item)
+            except ValueError as exc:
+                raise ReviewPolicyError("AUDIT_TERMINAL_CONTINUATION_INVALID", str(exc)) from exc
+        return {"allow": True, "phase_id": phase_id,
+                "action": "return-owning-continuation", "continuation": continuation,
+                "terminal": True, "phase_closed": False}
     if result == "audit-attention":
-        raise ReviewPolicyError(
-            "AUDIT_ATTENTION_NONTERMINAL",
-            "phase ATTENTION must continue repair or become GREEN; it cannot end the root",
-        )
+        raise ReviewPolicyError("AUDIT_ATTENTION_NONTERMINAL",
+                                "ATTENTION требует доказанное замечание и owning continuation")
     if result != "audit-red":
         raise ReviewPolicyError(
             "AUDIT_TERMINAL_EVENT_INVALID", f"unsupported phase audit result {result!r}")
@@ -258,9 +245,9 @@ def phase_audit_terminal_policy(entry: dict) -> dict:
 
 
 def validate_phase_audit_continuation(entry: dict, *, plan_id: str,
-                                      next_exact: str) -> dict:
+                                      next_exact: str, plan_dir=None) -> dict:
     """Bind a persisted audit outcome to the only successor its reducer permits."""
-    policy = phase_audit_terminal_policy(entry)
+    policy = phase_audit_terminal_policy(entry, plan_dir=plan_dir)
     if entry.get("result") == "audit-green":
         expected = f"close: task:plan-close {plan_id} {policy['phase_id']}"
     else:
@@ -271,6 +258,28 @@ def validate_phase_audit_continuation(entry: dict, *, plan_id: str,
             f"audit outcome requires exact continuation {expected!r}, got {next_exact!r}",
         )
     return policy
+
+
+def pending_phase_repair(plan_dir, item_id: str) -> bool:
+    """A reviewer return permits one owning recovery, until its next terminal event."""
+    from task import journal
+    path = Path(plan_dir) / journal.FILENAME
+    if not path.is_file():
+        return False
+    for raw in reversed(path.read_text(encoding="utf-8").splitlines()):
+        if not raw.strip():
+            continue
+        entry = json.loads(raw)
+        journal.validate_entry(entry)
+        if entry.get("item_id") == item_id and entry.get("result") in journal.TERMINAL_CLOSE_RESULTS:
+            return False
+        if (entry.get("command") == "plan-audit"
+                and phase_audit_subject(entry.get("item_id")) == item_id.split(".")[0]
+                and entry.get("result") in {"audit-green", "audit-attention", "audit-red"}):
+            policy = phase_audit_terminal_policy(entry, plan_dir=plan_dir)
+            return (policy["action"] == "return-owning-continuation"
+                    and entry["decision"]["scope_class"] == item_id)
+    return False
 
 
 def _audit_blocks(phase_lines, phase_id: str):
@@ -503,6 +512,8 @@ def same_finding_third(state: str, finding: dict, *, budget: LoopBudget, profile
 
 
 def validation_cadence(*, is_phase_terminal_item: bool) -> str:
-    """§Validation cadence — full validation runs once on the terminal item of a
-    phase; targeted checks run after each bounded fix."""
-    return "full" if is_phase_terminal_item else "targeted"
+    """Compatibility hint; terminal item numbering does not establish risk.
+
+    Declared Validation and impact selection own any wider qualification.
+    """
+    return "targeted"

@@ -63,14 +63,13 @@ comment intent, severity = weight):
 Combinations are legal and informative: `issue(Blocker)`, `suggestion(Minor)`,
 `question(Major)` — a question whose answer gates acceptance.
 
-Rules: when in doubt, set severity HIGHER, don't drop findings yourself (detect ≠ gate);
+Rules: severity follows reproduced impact; report uncertainty separately from severity;
 every finding carries `file:line` + failure_scenario + constitution-rule reference.
 
 ## Review fixes
 
-Fixes for findings go as **separate commits** from the review report and from each other
-(P7.4 commit gate): one semantic fix = one commit `type(scope): subject` — atomically
-revertible and traceable to the finding.
+Keep the reviewer read-only. The executor may group semantically related fixes in one
+scoped commit with their evidence; split only at a real independent rollback/ownership boundary.
 
 ## Dispatch
 
@@ -92,7 +91,7 @@ each finding names its profile.
 - [ ] Every finding: severity (Blocker/Major/Minor/Nit) + label + `file:line` + failure_scenario.
 - [ ] Nit never blocks; Blocker never downgraded "to keep things moving".
 - [ ] Mixed artifact split by profile, findings not blended.
-- [ ] Fixes as separate atomic commits traceable to findings.
+- [ ] Related fixes grouped in scoped commits traceable to findings.
 
 ## Conformance
 
@@ -100,9 +99,9 @@ each finding names its profile.
 - Every finding gets a severity from `Blocker/Major/Minor/Nit` AND a label `issue/suggestion/question/nitpick`; don't mix the axes.
 - Anchor every "non-conforming" finding to the exact constitution rule (skill→rule, schema section, canon).
 - Every finding carries `file:line` + failure_scenario.
-- When in doubt, set severity higher; don't drop findings yourself.
+- Set severity by reproduced impact; record confidence separately.
 - `nitpick`/Nit never blocks acceptance.
-- Review fixes go as separate commits, one per semantic fix.
+- Review remains read-only; the executor groups related fixes in scoped commits.
 
 ## Related skills
 

@@ -35,7 +35,7 @@ if [[ ! -d "$REPO_ROOT/lib/analyst" ]]; then
   exit 1
 fi
 
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,18p'; }
+usage() { sed -n '2,/^[^#]/{ /^#/s/^# \{0,1\}//p; }' "$SELF"; }
 
 CMD="${1:-help}"
 [[ $# -gt 0 ]] && shift

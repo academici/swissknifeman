@@ -584,7 +584,8 @@ def compile_batch_routing(plan_dir, *, routing_config_path=None) -> dict:
             batch_key = f"solo:{item}" if item_batch.lower() == "solo" else item_batch
             entry = {"item_id": item, "batch": item_batch, "batch_key": batch_key, "route": {
                 "model_class": model_class, "effort": effort},
-                "exec": exec_mode, "review": review, "line": line}
+                "exec": exec_mode, "review": review, "line": line,
+                "recommended": row.get("Почему", "").strip().startswith("recommended:")}
             item_rows[item] = entry
             groups.setdefault(batch_key, []).append(entry)
 
@@ -611,7 +612,8 @@ def compile_batch_routing(plan_dir, *, routing_config_path=None) -> dict:
         routing_digest, spec_digest = _routing_digest(plan_dir, items)
         compiled[batch_key] = {"batch_id": batch, "items": items, "route": route,
                            "exec": next(iter(execs)), "review": review,
-                           "routing_digest": routing_digest, "spec_digest": spec_digest}
+                           "routing_digest": routing_digest, "spec_digest": spec_digest,
+                           "recommended": all(entry["recommended"] for entry in members)}
     return {"items": item_rows, "batches": compiled, "routing_digest": table["digest"]}
 
 
@@ -679,6 +681,36 @@ def admit_batch(plan_dir, request, *, receipt=None, routing_config_path=None) ->
         return {"verdict": "BATCH_AMBIGUOUS", "batch": None, "requested": list(requested), "canonical": None}
     batch = compiled["batches"][owners[0]]
     exact = tuple(batch["items"])
+    if batch["recommended"] and receipt is None:
+        # New advisory groups admit independent ready work. Historical unmarked
+        # groups and receipt-bound continuations retain their frozen semantics.
+        from task import plan_bundle, plan_admission, plan_item_state, terminal_policy, review_policy
+        try:
+            for item in requested:
+                plan_item_state.build_states(plan_dir, item_id=item, check=True)
+                state = plan_item_state.state_model(plan_dir, item)[0]["state"]["position"]
+                if (state["status"] not in {"⬜ Not started", "🟡 In progress"}
+                        and not review_policy.pending_phase_repair(plan_dir, item)):
+                    raise plan_bundle.BundleError(f"item-not-ready: {item}: {state['status']}")
+                plan_bundle.build(plan_dir, item, check=True)
+                plan_bundle.producer_readiness(plan_dir, item)
+                fields = plan_bundle._fields(Path(plan_dir), item)
+                for field in ("Inputs", "Required Reads"):
+                    for raw in plan_bundle._raw_entries(fields.get(field, ""), field):
+                        producer = plan_admission.producer_annotation(raw)
+                        if producer:
+                            evidence = plan_item_state.material_terminal_evidence(plan_dir, producer)
+                            if evidence["result"] not in {"closed-green", "closed-deviations"}:
+                                raise plan_bundle.BundleError(f"dependency-not-ready: {producer}")
+                            terminal_policy.validate(evidence["decision"], result=evidence["result"],
+                                                     plan_dir=Path(plan_dir), item_id=producer)
+        except (plan_bundle.BundleError, plan_item_state.ItemStateError,
+                terminal_policy.TerminalPolicyError, review_policy.ReviewPolicyError) as exc:
+            return {"verdict": "BATCH_STALE", "batch": batch,
+                    "requested": list(requested), "canonical": list(exact),
+                    "reason": str(exc)}
+        return {"verdict": "ALLOW", "batch": batch,
+                "requested": list(requested), "canonical": list(requested)}
     if requested == exact:
         return {"verdict": "ALLOW", "batch": batch, "requested": list(requested), "canonical": list(exact)}
     if batch["batch_id"].lower() == "solo":
@@ -1255,14 +1287,8 @@ def pre_mutation(contract: dict, *, work: dict | None = None,
             return "CAPABILITY_UNSUPPORTED"
 
     authority = contract["authority"]
-    # `audit_rounds_max` is the total audit budget, not the number of repairs that
-    # may follow it.  Once the final allowed audit has been observed there is no
-    # remaining repair round: GREEN proceeds to phase close, while non-GREEN is an
-    # incident/owner decision.  Using `>` here admitted one extra repair and a
-    # third audit despite the declared two-audit cap.
-    if (authority["observed_rounds"] >= authority["loop_budget"]["audit_rounds_max"]
-            and not authority.get("audit_cap_remediation", False)):
-        return "LOOP_BUDGET_EXCEEDED"
+    # Audit budget limits repeated review, not already authorized repair.
+    # Keep historical audit_cap_remediation readable without requiring it.
     if authority["class"] == "owner-gate" and not authority["granted"]:
         return "AUTHORITY_BOUNDARY"
 

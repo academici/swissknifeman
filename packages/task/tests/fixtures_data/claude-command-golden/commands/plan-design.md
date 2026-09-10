@@ -7,7 +7,7 @@ effort: high
 Design creates a v2 plan contract, not a second execution protocol. Read repository evidence,
 declare `Phase Assurance | v1` in every new phase (impact, named seams, live/irreversible,
 audit intent, rationale), Routing Batch/Review, Required Reads, Files, Validation and Deliverables, then generate
-owned views. Use `task.plan_lifecycle.select()` as the normal-path vocabulary: focused validation,
+owned views. Use `task.plan_lifecycle.select(task.plan_lifecycle.LifecycleInput())` as the normal-path vocabulary: focused validation,
 selective projections, one semantic Next, and a measured context boundary.
 
 внешняя ссылка на item использует `<PLAN-ID> Pn.m`; голый `Pn.m` допустим только внутри самого плана.
@@ -19,3 +19,7 @@ handoff boundary: it must not execute or spawn a successor in the same design in
 
 An applicable terminal-admission lease is a provider adapter concern: design supplies only typed
 continuity and delivery carriers, never free-prose terminal authorization.
+
+For new ordinary Routing groups, start Почему with `recommended:`; ready subsets may execute.
+Use `required:` for an explicit atomic/owner-mandated group. Historical unmarked groups stay
+exact until changed through their existing decision carrier.

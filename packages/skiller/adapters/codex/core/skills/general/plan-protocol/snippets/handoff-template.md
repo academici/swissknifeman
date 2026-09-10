@@ -23,7 +23,8 @@ Next обязан нести launch-block (полная форма и прави
 `snippets/launch-block-template.md`, SKILL раздел 8): таблица параметров запуска
 + provider-rendered invocation одним code-block. `plan-lint` проверяет их наличие.
 Для execution Next таблица всегда несёт `Batch` из Routing, а команда — весь оставшийся
-adjacent-суффикс группы; одиночный запуск помечается `Batch: solo`. Для иных Next — `Batch: n/a`.
+остаток группы. Для `recommended:` это рекомендация, допускающая ready subset; исторические
+и `required:` группы сохраняют adjacent suffix. Одиночный запуск помечается `Batch: solo`. Для иных Next — `Batch: n/a`.
 
 **Формы `Next`** — закрытый enum (иная форма = ERROR линтера; канон — SKILL §8):
 

@@ -40,16 +40,16 @@ Maintain one generated `swissknifeman` marketplace with package provenance; plug
 Do not add pip/npm runtime dependencies, duplicate shared primitives, rename the umbrella or `~/.swissknifeman/` state, break embedded `maind` paths, or roll out always-on context without the budget gate. In addition, take external code as a pattern and rewrite it, never as a runtime dependency, and never roll out always-on context without a measured budget verdict.
 <!-- instruction:root.plan-lifecycle -->
 ## root.plan-lifecycle
-Keep executable master plans in `plans/<ID>/`, use the `plan-protocol` schema and commands, and reference items as `<PLAN-ID> Pn.m`. Vault topology and authoring-provenance carriers are defined by that on-demand protocol.
+Keep executable master plans in `plans/<ID>/`, use the `plan-protocol` schema and commands, and reference items as `<PLAN-ID> Pn.m`. Vault topology and authoring-provenance carriers are defined by that on-demand protocol. Ordinary bounded work may use a message or task file; cross-module scope alone does not require a plan.
 <!-- instruction:root.development-validation -->
 ## root.development-validation
-Run the affected package validation command before handoff and use Russian Conventional Commit messages. Also, record release-visible changes in the single root `CHANGELOG.md` under `[Unreleased]`, with no per-package release ledger.
+Run affected package qualification before handoff; scope plan regression to the selected plan and dependency closure, and keep fleet health at CI/release boundaries and use Russian Conventional Commit messages. Also, record release-visible changes in the single root `CHANGELOG.md` under `[Unreleased]`, with no per-package release ledger.
 <!-- instruction:root.reference-provenance -->
 ## root.reference-provenance
 Record external design sources in `docs/reference.md`, vendor provenance in adjacent `upstream.json`, and deliberately rejected recurring ideas in `docs/rejected-optimizations.md`. Also, vendor external content faithfully with an adjacent `upstream.json`, and never vendor proprietary sources.
 <!-- instruction:root.decision-verification -->
 ## root.decision-verification
-Verify external claims through `context7` → `perplexity-web` → `WebSearch`; verify repository claims by reading code and recorded evidence. Also, cover every external fact class a verdict stands on, treating a tool-poor delegate's summary as a draft to verify, not an exhaustive list. Delegate retrieval and synthesis of external facts to flat-rate tooling: prefer `perplexity-web` aggressively over `WebSearch`.
+Verify repository claims by reading code and recorded evidence. A changing external premise requires a current primary source: use versioned docs/context7 for APIs and prefer Perplexity for retrieval/synthesis. Use available direct-source/search fallback without a separate research ritual; delegate summaries are leads, not proof. The single detailed policy lives in `general/verify-claims`.
 <!-- instruction:root.provider-parity -->
 ## root.provider-parity
 Both provider projections carry one shared meaning: provider-specific files are additive adapters over the shared contract, never replacements.
@@ -82,11 +82,11 @@ By convention, package documentation builds standalone and in the umbrella aggre
 Treat `.agents/skills/*` as thin generated Codex bootstrap projections that are never the source of truth: canonical skill and command content stays under `packages/skiller/skills/` and `packages/task/commands/`.
 <!-- instruction:root.codex.launch-and-hook-integrity -->
 ## root.codex.launch-and-hook-integrity
-For this trusted repository, a Codex launch names the repository cwd, routed model and effort, `-a never`, and `-s danger-full-access`; preflight checks `pwd`, `git status --short`, `codex doctor --json`, hook integrity, `maind health --cwd`, and applicable plan lint. Treat hook exit `127` as a path defect and repair its effective registration. Every finished task and terminal handoff ends with a launch block, and for plan work the provider-neutral `plan-protocol` form is mandatory alongside the native table — never native-only.
+For a Codex launch, name the intended cwd, routed model/effort, `-a never` and `-s danger-full-access`. Check cwd and working-tree state before edits. Run doctor, hook/settings integrity and maind health on installation, environment changes or symptoms, not every code task. Treat hook exit `127` as a path defect and repair its effective registration. A runnable plan handoff includes provider-neutral Next and the native launch block; an ordinary completed task needs no new launch.
 <!-- instruction:root.codex.fresh-agent-execution -->
 ## root.codex.fresh-agent-execution
-For an active executable plan, delegate each next executable item from its committed handoff; fix audit regressions forward through the owning item and escalate only an authority or frozen-contract change.
+For an active executable plan, use the committed handoff and typed continuity. Continue in the current root when context and capabilities suffice; delegate for useful independent work or required independent review. Fix regressions through the owning item; escalate only a real authority or frozen-contract change. Respect a separately requested design/review boundary.
 <!-- instruction:root.codex.package-scope-routing -->
 ## root.codex.package-scope-routing
-Project docs are read root→cwd and never past the repository root; restart with `codex -C packages/<name>` to pick up package rules before working inside `packages/<name>/**`.
+Project docs are read root→cwd and never past the repository root. Start package-scoped work with the intended cwd for native discovery. During an authorized cross-package task, explicitly read each applicable package guide in the current session; directory changes alone do not require restart.
 <!-- swissknifeman:instructions:root:codex:extension:end -->

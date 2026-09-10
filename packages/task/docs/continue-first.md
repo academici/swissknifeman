@@ -22,11 +22,13 @@ Task рассматривает ошибку инструмента, route rejec
 классификатор и возвращает `repair-in-current-attempt`, `gather-evidence`, `block-candidate` или
 `design-required`.
 
-Clean-baseline red без доказанного candidate delta и любой bounded reversible repair со всеми
-ложными material-surface осями продолжаются в том же attempt, в том числе если затронутый путь не
-в `Files`. Exact original carrier обязательно запускается после ремонта. Только material decision
-surface с непустыми `decision_question`, `evidence_gap`, `alternatives` и `expected_artifact`
-разрешает `design-required`; `FIX_REQUIRED` и мнение reviewer сами по себе не разрешают redesign.
+Обратимый ремонт внутри согласованной задачи продолжается при product/dependency/test delta
+и за подсказанным порогом числа файлов. Пути сохраняют owner attribution. Public/security/schema
+impact требует доказанного candidate delta и соответствующей проверки. Неразрешённые
+frozen/authority/irreversible границы требуют evidence; красный baseline их не отменяет.
+Новый выбор результата/Acceptance с `decision_question`, `evidence_gap`, `alternatives`
+и `expected_artifact` требует design. Лимит независимых аудитов не расходует право на ремонт;
+повтор одной ошибки без новой информации требует смены подхода или checkpoint.
 `block-candidate/v1` хранит digest repair record и потребляет его без собственной переклассификации.
 
 Terminal close дополнительно проверяет append-only журнал: каждый qualified repair остаётся
@@ -70,7 +72,13 @@ Safety и authority gates остаются fail-closed: reviewer только п
 После последнего terminal item фаза остаётся `🟡 In progress` как audit candidate. Fingerprint
 требует явный Layout v2, привязывает item specs/state и digest объявленных `Files`,
 но не общий Git HEAD: audit bookkeeping не инвалидирует собственное доказательство, а изменение
-product carrier инвалидирует. Только fresh GREEN разрешает последующий `plan-close Pn`.
+product carrier инвалидирует. Assurance выбирает direct close либо независимый аудит. Если аудит требуется, только fresh
+GREEN разрешает `plan-close Pn`. Reviewer может закончить с audit-attention/audit-red и
+`decision.action=return-owning-continuation`, `signal_class=acceptance`, `scope_class=<owning item>`,
+`terminal=false`, `recovered=false`, reason_code, evidence_ids и точным exec-items/run-items
+continuation для owning item той же фазы. Journal/lint/delivery принимают этот результат,
+но фаза остаётся открытой. Исполнитель ремонтирует, reviewer проверяет delta с сохранением
+неизменённого evidence. Старые authority/block RED outcomes остаются читаемыми.
 
 ## Защита от преждевременного final
 
@@ -105,3 +113,8 @@ last refreshed into the lease, rebuilds the receipt and compares only
 contain identities, sequence, verdict/reason and SHA-256 values, never raw transcript text. A stale,
 released or corrupted lease has the named `re-arm` recovery. This is local deterministic admission
 proof; provider payload translation and transport capability claims belong to P4.2.
+
+При прерывании после terminal journal и до state projection delivery возвращает
+`STALE_TERMINAL_RECEIPT`. Повторный `append_idempotent_terminal` не дублирует запись;
+регенерация через `plan-views state` восстанавливает проекцию. Writer не переписывает
+байт-идентичный файл. Проверки нельзя объявлять выполненными по переданному списку имён.

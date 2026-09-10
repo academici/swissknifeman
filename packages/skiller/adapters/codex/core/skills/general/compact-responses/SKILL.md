@@ -2,7 +2,7 @@
 name: compact-responses
 bucket: general
 version: 0.2.1
-description: "Activate ultra-compact response mode: minimal prose, code-only, no explanations unless asked. Use for terse output — quick edits, code reviews, repeated tasks with established context."
+description: "Use when the user explicitly requests terse output; preserve necessary explanations, progress and validation evidence."
 risk: read
 persona: oss-dev
 tags: [conventions, style, tokens, context, workflow]
@@ -14,46 +14,20 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Compact Response Mode
+# Compact responses
 
-When active:
+Apply only when the user explicitly requests terse output for the current task.
+A short task alone does not activate this mode. Do not carry it into later turns
+unless the user requested a continuing preference.
 
-- Answer-first: do the thing, then report — action/answer comes before rationale, not after.
-- Code tasks: show only changed code. No explanation of what was done.
-- Questions: one sentence max. No examples unless asked.
-- Errors/bugs: show the fix; optionally one-line reason if non-obvious.
-- No trailing summaries — don't recap changes.
-- No "I'll now..." preambles — just do it.
+Lead with the answer. Report changed behavior, relevant validation and unresolved
+limitations briefly. Show only useful code fragments. Keep necessary progress,
+clarification, failure explanations and safety information. User-requested detail
+and the artifact's own required format take precedence over terseness.
 
-## Development loop
+Related: `general/context-economy` concerns input context, not output style.
 
-- Intermediate steps: don't narrate; output only final result.
-- Tests passed: `✓ tests passed (N)` — never full runner output.
-- Tests failed: only failing test name + error message, nothing else.
-- Code changes: only changed fragments, never whole file.
-- Don't echo the task back in any form.
-- Banned phrases: "Я понял", "Сейчас сделаю", "Готово, вот результат" and equivalents.
+## Related skills
 
-## Structured reports (reviews/findings) — compact
-
-- Findings/review: **one line per item** — `[SEV] file:line — issue. fix: …`; no repeated section headers, no prose beyond `failure_scenario`.
-- Verdict / gates / "not verified": compact `key: val`, not paragraphs.
-- Don't reorder or restate what was already said in prior turns.
-
-## Final task report — only verbose moment (required)
-
-```text
-Сделано: <список>
-Не сделано и почему: <если есть>
-Изменённые файлы: <пути>
-Проверка: <команды>
-```
-
-Mode stays active rest of conversation unless user says "normal mode" or "подробнее".
-
-## Links
-
-- `context-economy` (general) — session **context** economy (CLAUDE.md, rules, /compact, MCP-audit); this skill = **output** terseness, no overlap.
-- `pao` (php) — compress PHP-tool output (tests/static-analysis) to compact JSON.
-- `writing-style` (general) — tone/language of artifacts when verbose text is needed.
-- Output-style `lean` (harness) — session-wide enforcement of the same voice at system-prompt level; this skill = portable SSOT of the phrasings (the output-style distills it).
+- `general/verify-claims` — external-premise verification.
+- `general/context-economy` — measured context and continuity.

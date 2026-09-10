@@ -188,31 +188,21 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             "dependency-not-ready", reproduced=True, scope_class="consumer", fingerprint="f2")
         self.assertFalse(future["terminal"])
         delta = plan_gates.baseline_delta(
-            current_failures={"old"}, baseline_failures={"old"}, owned_failures={"old"})
+            current_failures={"old"}, baseline_failures={"old"}, owned_failures=set())
         self.assertFalse(delta["blocks"])
         self.assertEqual(delta["pre_existing"], ("old",))
 
     def test_audit_fixer_repairs_safe_work_without_a_successor(self):
         self.assertEqual(
             audit_fixer_action(in_scope=True),
-            {"action": "repair-inline", "terminal": False, "reason": "safe-in-scope"},
+            {"action": "return-owning-continuation", "terminal": False, "reason": "safe-in-scope"},
         )
 
-    def test_audit_fixer_changes_tactic_then_allows_one_return(self):
-        self.assertEqual(
-            audit_fixer_action(in_scope=True, repeated_fingerprint=1)["action"],
-            "change-tactic",
-        )
-        self.assertEqual(
-            audit_fixer_action(in_scope=True, repeated_fingerprint=2)["action"],
-            "isolated-child-return",
-        )
-        self.assertEqual(
-            audit_fixer_action(in_scope=True, repeated_fingerprint=3, reviewer_returns=1)["action"],
-            "repair-inline",
-        )
-        with self.assertRaisesRegex(ReviewPolicyError, "at most one reviewer return"):
-            audit_fixer_action(in_scope=True, repeated_fingerprint=3, reviewer_returns=2)
+    def test_audit_repeats_do_not_grant_reviewer_product_writes(self):
+        for repeats in range(4):
+            self.assertEqual(audit_fixer_action(in_scope=True, repeated_fingerprint=repeats,
+                                               reviewer_returns=repeats)["action"],
+                             "return-owning-continuation")
 
     def test_audit_fixer_preserves_non_gating_and_authority_boundaries(self):
         self.assertEqual(
@@ -224,7 +214,7 @@ class EvidenceFirstSignalTests(unittest.TestCase):
         )
         self.assertEqual(
             audit_fixer_action(in_scope=True, boundary="acceptance"),
-            {"action": "repair-inline", "terminal": False,
+            {"action": "return-owning-continuation", "terminal": False,
              "reason": "acceptance-failure-is-work"},
         )
 
@@ -232,7 +222,7 @@ class EvidenceFirstSignalTests(unittest.TestCase):
         self.assertEqual(
             audit_fixer_action(
                 in_scope=True, boundary="authority", authority_verdict="delegated"),
-            {"action": "repair-inline", "terminal": False,
+            {"action": "return-owning-continuation", "terminal": False,
              "reason": "authority-delegated"},
         )
         self.assertEqual(
@@ -761,7 +751,7 @@ class SameFindingThirdEventTests(unittest.TestCase):
 
 class ValidationCadenceTests(unittest.TestCase):
     def test_terminal_item_gets_full_validation(self):
-        self.assertEqual(validation_cadence(is_phase_terminal_item=True), "full")
+        self.assertEqual(validation_cadence(is_phase_terminal_item=True), "targeted")
 
     def test_non_terminal_item_gets_targeted_validation(self):
         self.assertEqual(validation_cadence(is_phase_terminal_item=False), "targeted")

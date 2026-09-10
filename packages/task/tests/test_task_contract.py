@@ -314,11 +314,11 @@ class AuthorityTests(unittest.TestCase):
         contract = _rehashed(base)
         self.assertIsNone(task_contract.pre_mutation(contract))
 
-    def test_final_allowed_audit_exhausts_repair_budget(self):
+    def test_final_allowed_audit_preserves_repair_authority(self):
         base = _load_base_contract()
         base["authority"]["observed_rounds"] = 2
         contract = _rehashed(base)
-        self.assertEqual(task_contract.pre_mutation(contract), "LOOP_BUDGET_EXCEEDED")
+        self.assertIsNone(task_contract.pre_mutation(contract))
 
     def test_ungranted_owner_gate_blocks(self):
         base = _load_base_contract()
@@ -603,10 +603,11 @@ class EvaluateTests(unittest.TestCase):
 
     def test_blocked_pre_mutation_reports_pre_final_as_not_applicable(self):
         base = _load_base_contract()
-        base["authority"]["observed_rounds"] = 99
+        base["authority"]["class"] = "owner-gate"
+        base["authority"]["granted"] = False
         contract = _rehashed(base)
         result = task_contract.evaluate(contract)
-        self.assertEqual(result["pre_mutation"], "block:LOOP_BUDGET_EXCEEDED")
+        self.assertEqual(result["pre_mutation"], "block:AUTHORITY_BOUNDARY")
         self.assertEqual(result["pre_final"], "n/a")
 
 
@@ -696,7 +697,7 @@ class BuildSelfConformanceTests(unittest.TestCase):
                 caps = re_.capability_support(["command.subagents"], {"command.subagents": "native"})
                 contract["route"] = re_.build_task_contract_route(required, actual, caps)
                 contract["version"]["content_hash"] = task_contract.content_hash(contract)
-                self.assertEqual(task_contract.pre_mutation(contract), "LOOP_BUDGET_EXCEEDED")
+                self.assertIsNone(task_contract.pre_mutation(contract))
 
     def test_unknown_item_id_fails_closed(self):
         with self.assertRaises(task_contract.TaskContractBuildError):

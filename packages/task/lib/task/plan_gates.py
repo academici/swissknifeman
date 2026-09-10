@@ -39,17 +39,17 @@ _BRACE_EXPANSION_LIMIT = 64
 _GLOB_CHARS = frozenset("*?[")
 
 
-def baseline_delta(*, current_failures, baseline_failures, owned_failures=()):
+def baseline_delta(*, current_failures, baseline_failures, owned_failures=None):
     """Classify inherited red without letting unrelated baseline failures gate work."""
     current = set(current_failures)
     baseline = set(baseline_failures)
-    owned = set(owned_failures)
+    owned = set(owned_failures or ())
     introduced = current - baseline
     return {
         "introduced": tuple(sorted(introduced)),
         "owned_regressions": tuple(sorted(introduced & owned if owned else introduced)),
         "pre_existing": tuple(sorted(current & baseline)),
-        "blocks": bool(introduced & owned if owned else introduced),
+        "blocks": bool(current & owned if owned_failures is not None else current),
     }
 
 

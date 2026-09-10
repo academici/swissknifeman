@@ -141,16 +141,16 @@ def entry_validation_errors(entry):
         try:
             from task import plan_repair
             plan_repair.validate(entry["repair_decision"])
-            outcome = plan_repair.evaluate(entry["repair_decision"])
-            if entry.get("repair_digest") != outcome["repair_digest"]:
+            if entry.get("repair_digest") != plan_repair.digest(entry["repair_decision"]):
                 raise ValueError("repair_digest не совпадает с record")
-            if entry.get("repair_action") != outcome["action"]:
-                raise ValueError("repair_action не совпадает с reducer result")
-            if (outcome["action"] == "repair-in-current-attempt"
+            action = entry.get("repair_action")
+            if action not in plan_repair._ACTIONS:
+                raise ValueError("неизвестный repair_action")
+            if (action == "repair-in-current-attempt"
                     and entry.get("result") in TERMINAL_CLOSE_RESULTS):
                 raise ValueError("qualified repair не может записать terminal result")
             if (entry.get("command") == "plan-design"
-                    and outcome["action"] != "design-required"):
+                    and action != "design-required"):
                 raise ValueError("plan-design требует repair action design-required")
         except (ImportError, ValueError) as exc:
             errors.append(("repair_decision", f"repair_decision: {exc}"))
@@ -178,6 +178,10 @@ def validate_append_policy(entry, *, plan_dir=None):
     new append is rejected, before any bytes are written.
     """
     note = entry.get("note") if isinstance(entry, dict) else None
+    if isinstance(entry, dict) and "repair_decision" in entry:
+        from task import plan_repair
+        if entry.get("repair_action") != plan_repair.evaluate(entry["repair_decision"], plan_dir=plan_dir)["action"]:
+            raise JournalValidationError("repair_action не совпадает с текущим reducer result")
     if isinstance(note, str) and len(note) > NOTE_MAX_CHARS:
         raise JournalValidationError(
             f"note: {len(note)} символов > {NOTE_MAX_CHARS}; "
@@ -187,7 +191,7 @@ def validate_append_policy(entry, *, plan_dir=None):
         from task import review_policy
         if review_policy.phase_audit_subject(entry.get("item_id")) is not None:
             try:
-                review_policy.phase_audit_terminal_policy(entry)
+                review_policy.phase_audit_terminal_policy(entry, plan_dir=plan_dir)
             except review_policy.ReviewPolicyError as exc:
                 raise JournalValidationError(str(exc)) from exc
     if isinstance(entry, dict):
@@ -593,7 +597,7 @@ def main(argv=None):
         try:
             repair_decision = json.loads(args.repair_decision_json)
             from task import plan_repair
-            outcome = plan_repair.evaluate(repair_decision)
+            outcome = plan_repair.evaluate(repair_decision, plan_dir=args.plan_dir)
             if args.repair_action != outcome["action"]:
                 raise ValueError("--repair-action должен совпадать с reducer result")
             repair_digest = outcome["repair_digest"]

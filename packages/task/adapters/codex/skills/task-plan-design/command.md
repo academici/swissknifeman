@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:d987ea9648f9a2f7748577891a2a4b7458825cef2a7140fea09c8d471b9c72a8
+Canonical SHA-256: sha256:6704c9b8dfacc6932c6d177510bc1966c6df6a0cd203bc524ba01dd8597399c9
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -66,7 +66,7 @@ evidence.
 Design creates a v2 plan contract, not a second execution protocol. Read repository evidence,
 declare `Phase Assurance | v1` in every new phase (impact, named seams, live/irreversible,
 audit intent, rationale), Routing Batch/Review, Required Reads, Files, Validation and Deliverables, then generate
-owned views. Use `task.plan_lifecycle.select()` as the normal-path vocabulary: focused validation,
+owned views. Use `task.plan_lifecycle.select(task.plan_lifecycle.LifecycleInput())` as the normal-path vocabulary: focused validation,
 selective projections, one semantic Next, and a measured context boundary.
 
 внешняя ссылка на item использует `<PLAN-ID> Pn.m`; голый `Pn.m` допустим только внутри самого плана.
@@ -78,3 +78,7 @@ handoff boundary: it must not execute or spawn a successor in the same design in
 
 An applicable terminal-admission lease is a provider adapter concern: design supplies only typed
 continuity and delivery carriers, never free-prose terminal authorization.
+
+For new ordinary Routing groups, start Почему with `recommended:`; ready subsets may execute.
+Use `required:` for an explicit atomic/owner-mandated group. Historical unmarked groups stay
+exact until changed through their existing decision carrier.

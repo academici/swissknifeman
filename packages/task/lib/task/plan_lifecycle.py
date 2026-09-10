@@ -1,13 +1,10 @@
-"""Transient, change-impact selection for the normal plan execution loop.
+"""Advisory impact selection, not an execution engine or admission gate.
 
-This module deliberately owns no plan carrier, status or new enum.  It only
-composes decisions already owned by Task runtime modules into a small result a
-command can execute and test without copying the control algorithm into prose.
+Mechanical operations and their evidence remain owned by the existing modules.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
-from time import monotonic
 
 
 HARD_RISKS = frozenset((
@@ -46,6 +43,20 @@ class LifecycleSelection:
 
 def select(data: LifecycleInput) -> LifecycleSelection:
     """Select the cheapest safe normal path from declared, typed impact facts."""
+    if not isinstance(data, LifecycleInput):
+        raise ValueError("нужен LifecycleInput с явно оценённым воздействием")
+    if not isinstance(data.risks, frozenset) or not all(isinstance(risk, str) for risk in data.risks):
+        raise ValueError("risks: нужен frozenset имён рисков")
+    unknown = data.risks - HARD_RISKS
+    if unknown:
+        raise ValueError(f"неизвестный риск: {sorted(unknown)}; уточните воздействие")
+    for name in ("bounded_integration", "foreign_baseline_intersects", "route_changed",
+                 "audit", "audit_product_finding", "ownership_boundary", "session_boundary",
+                 "release_or_authority"):
+        if not isinstance(getattr(data, name), bool):
+            raise ValueError(f"{name}: нужна явная boolean оценка")
+    if data.audit_product_finding and not data.audit:
+        raise ValueError("audit_product_finding требует audit=True")
     hard = bool(data.risks & HARD_RISKS) or data.release_or_authority
     if hard:
         validation = ("focused", "affected-package", "integration")
@@ -72,14 +83,3 @@ def select(data: LifecycleInput) -> LifecycleSelection:
         semantic_next="waiting" if data.release_or_authority else "exec-items",
         foreign_baseline=("gating" if data.foreign_baseline_intersects else "visible-non-gating"),
     )
-
-
-def execute(data: LifecycleInput, *, executed: tuple[str, ...] = (), started_at: float | None = None) -> dict:
-    """Return bounded end-to-end evidence; callers execute commands themselves."""
-    selection = select(data)
-    return {
-        "selection": selection,
-        "executed": tuple(executed),
-        "reused": ("route-evidence",) if selection.route_evidence == "reuse" else (),
-        "wall_time_ms": round((monotonic() - started_at) * 1000, 3) if started_at is not None else None,
-    }

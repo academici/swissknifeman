@@ -2,9 +2,31 @@
 
 ## Lean lifecycle selection
 
-`task.plan_lifecycle.select()` is transient orchestration, not a new plan schema. It selects the
-normal focused path or declared hard-risk widening; route evidence is reused until an actual route
-change, and only changed terminal projections are generated.
+`task.plan_lifecycle.select(LifecycleInput(...))` — рекомендация по оценённому воздействию,
+не workflow engine и не gate. Неизвестное имя риска отклоняется с диагностикой.
+Разрешённый порядок работы выбирает исполнитель; правила Scope/Acceptance/authority действуют.
+
+Read-only подготовка snapshot через существующий launcher:
+
+```bash
+python3 packages/task/scripts/plan-session.py prepare --plan-dir plans/<ID> --item P1.1 --risk none
+```
+
+`none` означает проведённую оценку без hard risk, а не отсутствие входов. Можно повторить
+`--risk security-auth --risk public-api-schema`. Snapshot объединяет контекст, evidence graph,
+producer readiness и Validation prerequisites; он не заменяет route/admission перед записью.
+
+```bash
+bash packages/task/scripts/validate.sh --plan plans/<ID>
+bash packages/task/scripts/validate.sh --fleet
+python3 packages/task/scripts/plan-session.py installed --source packages/task --installed <selected-task-cache>
+```
+
+Без `--plan`/`--fleet` validator квалифицирует пакет. Повторяй `--plan` для затронутой dependency
+closure; `--fleet` оставлен CI/release. Чужой red видим; пересечение со scope остаётся gating.
+`installed` сравнивает version/path/digest выбранной копии с исходниками, возвращая ненулевой
+exit при drift. Проверяй отдельно Task и core; затем обновляй через provider plugin manager
+и проверяй новым запуском. Checkout `--check` не доказывает свежесть установленного пакета.
 
 ## Codex launch-block для handoff
 

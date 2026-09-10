@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:review`.
 - Invocation: `$ task:review <arguments>`
 - Routing: `frontier/xhigh -> gpt-5.6-sol/xhigh`
 - Canonical source: `packages/task/commands/review.md`
-- Canonical SHA-256: `sha256:79f984c396e74cc0d1b866d6258d768217d92e6b64945240273d70855c1968c0`
+- Canonical SHA-256: `sha256:f56bd580c79ee971e3a51e4a2f038db815a10b5eeae7bed3c4a8defc9efd4903`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as `$ARGUMENTS`.

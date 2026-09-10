@@ -1,6 +1,6 @@
 import unittest
 
-from task.plan_lifecycle import LifecycleInput, execute, select
+from task.plan_lifecycle import LifecycleInput, select
 
 
 class PlanLifecycleTests(unittest.TestCase):
@@ -29,9 +29,12 @@ class PlanLifecycleTests(unittest.TestCase):
         self.assertEqual(result.foreign_baseline, "visible-non-gating")
         self.assertEqual(select(LifecycleInput(foreign_baseline_intersects=True)).foreign_baseline, "gating")
 
-    def test_route_is_reused_until_a_real_change_and_cost_is_reported(self):
-        result = execute(LifecycleInput(), executed=("focused",), started_at=0.0)
-        self.assertEqual(result["reused"], ("route-evidence",))
-        self.assertEqual(result["executed"], ("focused",))
-        self.assertIsNotNone(result["wall_time_ms"])
+    def test_invalid_impact_never_silently_selects_low_risk(self):
+        for data in (None, {"audit": True}, LifecycleInput(risks=frozenset(("security_auth",))),
+                     LifecycleInput(bounded_integration=None), LifecycleInput(audit_product_finding=True)):
+            with self.subTest(data=data), self.assertRaises(ValueError):
+                select(data)
+
+    def test_route_is_reused_until_a_real_change(self):
+        self.assertEqual(select(LifecycleInput()).route_evidence, "reuse")
         self.assertEqual(select(LifecycleInput(route_changed=True)).route_evidence, "recapture")

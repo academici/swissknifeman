@@ -23,3 +23,6 @@ jobs:
 
       - name: Validate maind
         run: bash packages/maind/scripts/validate.sh
+
+      - name: Validate task and plan fleet
+        run: bash packages/task/scripts/validate.sh --fleet

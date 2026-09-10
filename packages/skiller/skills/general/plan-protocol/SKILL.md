@@ -25,9 +25,9 @@ the snippets are copies, not independent rules.
 ## 1. When to activate and invariants
 
 Activate for `task:plan-design`, `task:plan-exec`, `task:plan-run`, `task:plan-close`,
-`task:plan-audit`, or whenever a `plans/<PLAN-ID>` contract is authoritative. Small single-slice
-work may use `task:fix`/`task:dev`; cross-module, compliance, multi-repository, or multi-session
-work requires an executable plan.
+`task:plan-audit`, or whenever a `plans/<PLAN-ID>` contract is authoritative. Ordinary work, including bounded cross-module work, may use `task:fix`/`task:dev` from a
+message or task file. Create a plan when requested or when durable execution transfer actually
+requires it; preserve an already authoritative plan and separately requested design/review.
 
 Rules common to layouts v1 and v2:
 
@@ -129,7 +129,9 @@ and pre/post validation. `task.plan_repair.evaluate()` alone returns
 red baseline without a proved candidate delta, or a bounded reversible all-nonmaterial repair,
 continues in the owning attempt even for an attributed path outside `Files`; rerun the exact
 original carrier. `design-required` needs a decision question, evidence gap, alternatives, and
-expected decision artifact. A material block candidate uses `block-candidate/v1` bound to the repair
+expected decision artifact for a new unapproved outcome/contract choice. Product, dependency and
+test edits or a file-count threshold alone do not require design. Public/security impact needs
+evidence and appropriate verification; ungranted authority remains a gate. A material block candidate uses `block-candidate/v1` bound to the repair
 digest; every external candidate has verified RAG evidence, and one fresh non-executor reviewer in
 `isolated-child-return` returns evidence under `block-confirmation-rubric-v1`. The block reducer
 consumes that upstream repair result without reclassification. Only `JUSTIFIED` may become a
@@ -151,12 +153,14 @@ in status/returns. Lint and delivery reject terminal-phase `plan-design` without
 evidence. Terminal close also rejects every qualified repair whose exact original carrier was not
 rerun green in a later immutable record.
 
-Phase audit uses the same reducer as its machine terminal policy. Acceptance failure is work for
-the owning audit root, not a terminal label. Phase `ATTENTION` is nonterminal. Phase `RED` requires
-persisted reducer evidence: `approval_required`/`denied` from authority or `terminal-block` from
-block confirmation, plus its exact `waiting:`/`terminal:` continuation. The journal writer,
-plan-lint, and delivery receipt reject a non-GREEN phase audit without that evidence. A phase RED
-never points directly to design/exec/run; resolution resumes the owning root, which finishes repair.
+Phase audit is read-only over product. `audit-attention` or `audit-red` can finish the reviewer
+with `decision.action=return-owning-continuation`, reproduced evidence IDs, `scope_class=<owning item>`, `recovered=false`,
+`terminal=false`, and an exact `exec-items:`/`run-items:` owning item of the same phase.
+The phase remains open; journal, lint and delivery consume the same policy. GREEN alone admits
+close. After executor repair, verify the changed risk delta and retain unaffected evidence.
+Historical RED authority/block outcomes with `waiting:`/`terminal:` remain readable.
+The audit budget limits redundant independent audits, not authorized reversible repair.
+Repeated failure without new information requires a changed tactic or checkpoint.
 
 Routing correction happens before journal start and never turns the current producer red. A future
 carrier is `dependency-not-ready`, not a failure of its producer. Compare inherited red against its
@@ -166,7 +170,8 @@ risk are unchanged; status, bookkeeping drift, and nits are not review triggers.
 non-material plan-bookkeeping defect is repaired inline by its owner, followed by one regeneration
 and gate rerun in the same attempt.
 
-Close with two commits: scope implementation, then plan bookkeeping. Append, never rewrite journal
+Close with one scoped commit containing implementation and affected bookkeeping by default.
+A second commit requires a real ownership/session boundary or digest-input collision. Append, never rewrite journal
 events; `[v2]` regenerates views and runs downstream before handoff. An executable item terminal
 event carries reducer-owned `terminal-evidence/v1`, bound to the current item-spec digest and every
 declared Validation carrier. Any red carrier keeps the item in progress. `closed-deviations` is not
@@ -235,10 +240,12 @@ more rereading/setup than it adds coupling. Do not split merely because items ha
 deliverables, or per-item close gates: those gates still run inside the batch. A batch never crosses
 a phase audit/close boundary, mixes `Exec` modes, hides an owner/irreversible gate, or exceeds the
 remaining context budget. Its launch route and review are the maxima of its rows and capabilities are
-the union. After each item, persist the same batch plus only its remaining adjacent suffix.
-Before the first journal/status mutation, the executor admits only the exact declared batch,
-`solo`, or a Routing/spec-digest-bound suffix receipt; partial, ambiguous, and stale requests stay
-non-mutating (`BATCH_REQUIRED`, `BATCH_AMBIGUOUS`, `BATCH_STALE`).
+the union. New ordinary groups start their `Почему` with `recommended:`: grouping is a recommendation,
+and a ready subset or dependency-safe order is admitted with current input/readiness checks.
+Keep checkpoints in the existing journal. Explicit atomic/mandatory groups use `required:`;
+historical unmarked groups and their receipts keep exact membership/order or bound suffix
+semantics. Changing a frozen mandatory group requires its existing decision carrier.
+Ambiguous and stale requests stay non-mutating (`BATCH_REQUIRED`, `BATCH_AMBIGUOUS`, `BATCH_STALE`).
 
 Workflow requirement is a line-scoped positive declaration in Phase Context, not a keyword grep:
 `scriptPath` or a positive orchestration/multi-agent statement requires a canonical workflow asset.
@@ -277,8 +284,8 @@ the last ends with `\`. Markdown visual wrapping is never command syntax. A runn
 this fenced command block is incomplete; a final response must not stop at a completion statement
 while an executable successor exists. Manual carries a fenced bare prompt instead. Legacy table rows
 named `Команда` remain readable for old plans but are never emitted. Non-execution Next uses
-`Batch: n/a`. `Batch` is copied from Routing and an execution handoff names the whole remaining batch,
-never silently one item from it. The launch snippet is the copyable form.
+`Batch: n/a`. `Batch` is copied from Routing and an execution handoff recommends the remaining batch; a safe ready subset of a recommended
+group is also permitted. The launch snippet is the copyable form.
 
 For layout v2 the Context field carries EXACTLY one of three values:
 
@@ -333,8 +340,8 @@ not a claim that runtime behavior was exhaustively proved.
 Use `task:plan-design` for new/from-draft/phase/item/finish/roadmap; `task:plan-exec` for pinned
 implementation items; `task:plan-run` for manual-route items in the current session;
 `task:plan-audit` for adversarial design/phase audit; `task:plan-close` for reconciliation,
-phase closure, and archive. The command contract defines exact write order and is authoritative
-for the operation; this canon defines shared meaning.
+phase closure, and archive. Mechanical data dependencies determine write order; commands recommend a working approach.
+Independent safe actions may be reordered within Scope, dependencies and Acceptance.
 
 Portable execution inputs must be committed or predecessor-produced. Host/chat/tmp/foreign paths
 are not committed bundle inputs. An external side effect requires explicit authority. Another
@@ -345,7 +352,8 @@ narrow an oversized read; reconcile a deterministic generated carrier through it
 PID/output/state before calling a process failed. A missing required carrier, bundle digest mismatch,
 unsupported capability, authority boundary, safety concern, or reproduced acceptance failure fails
 closed. If the required meaning crosses a package boundary, record the exact gap for its owner and
-continue separable in-scope work; do not edit the other package.
+continue separable in-scope work. Explicitly authorized cross-package work reads each package
+guide and may proceed in the current session.
 
 ## 8. Canon weight and maintenance
 

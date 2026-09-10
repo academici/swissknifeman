@@ -21,16 +21,16 @@ Maintain one generated `swissknifeman` marketplace with package provenance; plug
 Do not add pip/npm runtime dependencies, duplicate shared primitives, rename the umbrella or `~/.swissknifeman/` state, break embedded `maind` paths, or roll out always-on context without the budget gate. In addition, take external code as a pattern and rewrite it, never as a runtime dependency, and never roll out always-on context without a measured budget verdict.
 <!-- instruction:root.plan-lifecycle -->
 ## root.plan-lifecycle
-Keep executable master plans in `plans/<ID>/`, use the `plan-protocol` schema and commands, and reference items as `<PLAN-ID> Pn.m`. Vault topology and authoring-provenance carriers are defined by that on-demand protocol.
+Keep executable master plans in `plans/<ID>/`, use the `plan-protocol` schema and commands, and reference items as `<PLAN-ID> Pn.m`. Vault topology and authoring-provenance carriers are defined by that on-demand protocol. Ordinary bounded work may use a message or task file; cross-module scope alone does not require a plan.
 <!-- instruction:root.development-validation -->
 ## root.development-validation
-Run the affected package validation command before handoff and use Russian Conventional Commit messages. Also, record release-visible changes in the single root `CHANGELOG.md` under `[Unreleased]`, with no per-package release ledger.
+Run affected package qualification before handoff; scope plan regression to the selected plan and dependency closure, and keep fleet health at CI/release boundaries and use Russian Conventional Commit messages. Also, record release-visible changes in the single root `CHANGELOG.md` under `[Unreleased]`, with no per-package release ledger.
 <!-- instruction:root.reference-provenance -->
 ## root.reference-provenance
 Record external design sources in `docs/reference.md`, vendor provenance in adjacent `upstream.json`, and deliberately rejected recurring ideas in `docs/rejected-optimizations.md`. Also, vendor external content faithfully with an adjacent `upstream.json`, and never vendor proprietary sources.
 <!-- instruction:root.decision-verification -->
 ## root.decision-verification
-Verify external claims through `context7` → `perplexity-web` → `WebSearch`; verify repository claims by reading code and recorded evidence. Also, cover every external fact class a verdict stands on, treating a tool-poor delegate's summary as a draft to verify, not an exhaustive list. Delegate retrieval and synthesis of external facts to flat-rate tooling: prefer `perplexity-web` aggressively over `WebSearch`.
+Verify repository claims by reading code and recorded evidence. A changing external premise requires a current primary source: use versioned docs/context7 for APIs and prefer Perplexity for retrieval/synthesis. Use available direct-source/search fallback without a separate research ritual; delegate summaries are leads, not proof. The single detailed policy lives in `general/verify-claims`.
 <!-- instruction:root.provider-parity -->
 ## root.provider-parity
 Both provider projections carry one shared meaning: provider-specific files are additive adapters over the shared contract, never replacements.

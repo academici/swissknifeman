@@ -105,16 +105,11 @@ page as permission to mutate a project or publish a release.
 
 - **Гейт дрейфа `[9/10]`** — предпоследний шаг `packages/harness/scripts/validate.sh`:
   `python3 -m harness.instructions --check`, зелёный только если все двенадцать целей
-  `clean`. Единственный CI-носитель на сегодня (`skiller`/`analyst`/`task` в CI не
-  покрыты — открытый вопрос вне этого item'а).
-- **Гейт равенства провенанса покрытия литералов** — `validate_literal_coverage`
-  сверяет два независимых факта: (1) записанный `source_sha256` фикстуры
-  `tests/fixtures_data/instruction-literal-coverage-v1.json` равен хешу РОВНО
-  извлекаемой §2-секции матрицы `research/05-instruction-canon-routing.md` (иначе
-  `INSTRUCTION_PROVENANCE_INVALID`); (2) сам список обязательных литералов
-  по-прежнему присутствует в живых проекциях. Провенанс, пиновавший хеш ВСЕГО файла
-  матрицы, протухал от любой посторонней правки файла — сужение до §2 и гейт
-  равенства (D81) не дают этому повториться молча.
+  `clean`. Единственный CI-носитель на сегодня (`analyst` в этом CI не покрыт).
+- **Гейт равенства provenance покрытия литералов** — `validate_literal_coverage` проверяет
+  digest текущего compatibility source и присутствие его assertions в живом каталоге.
+  Fixture регенерируется `generate-provider-instructions.py`. Исторический section-hash
+  остаётся читаемым, архивная матрица не задаёт текущую семантику.
 - **Гейт размера канона** — `validate_canon_size`, тот же вход `--check`: каждая
   существующая проекция обязана уместиться в потолок своего класса и по строкам, и
   по оценке токенов. Правило «канон инструкций ≤ 200 строк» после
@@ -160,3 +155,16 @@ files under 200 lines and move reference material to skills»), а не теку
 effective): фрагменты + `catalog.json` — canonical, двенадцать проекций — generated
 (дрейф чинится перегенерацией, не правкой файла), то, что реально видит агент в
 сессии, — effective.
+
+## Текущая семантика и исторический provenance
+
+Текущая literal coverage генерируется `scripts/generate-provider-instructions.py` из
+`tests/fixtures_data/instruction-compatibility-v1.json`. `--check` проверяет обе проекции.
+Архивная матрица остаётся историческим evidence, но не навязывает отменённые требования
+текущим правилам. Старый section-hash provenance читается; новый file-hash связывает
+coverage с текущим compatibility source. Изменение runtime-политики обновляет этот source
+и semantic tests, после чего штатно регенерируются root/provider carriers.
+
+Root требует package guides, scope/authority и правдивое evidence. Общий doctor/health
+выполняется при настройке среды или симптомах; переход каталога и номер item не требуют
+новой сессии. Обычная задача может выполняться по брифу без плана.

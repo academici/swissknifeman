@@ -70,7 +70,7 @@ flowchart LR
     ci_cd["ci-cd<br/>⊕55 ↻1123"]:::mild
     db_test_preflight["db-test-preflight<br/>⊕104 ↻1676"]:::warm
     docker["docker<br/>⊕66 ↻400"]:::mild
-    docker_dev_prod["docker-dev-prod<br/>⊕42 ↻924"]:::cool
+    docker_dev_prod["docker-dev-prod<br/>⊕42 ↻924"]:::mild
     docker_php["docker-php<br/>⊕40 ↻767"]:::cool
     docker_postgres["docker-postgres<br/>⊕43 ↻807"]:::mild
     docker_services["docker-services<br/>⊕48 ↻858"]:::mild
@@ -86,13 +86,13 @@ flowchart LR
     adversarial_check["adversarial-check<br/>⊕55 ↻1134"]:::mild
     competitive_analysis["competitive-analysis<br/>⊕37 ↻1315"]:::cool
     customer_discovery["customer-discovery<br/>⊕55 ↻1288"]:::mild
-    defensibility["defensibility<br/>⊕42 ↻1124"]:::cool
+    defensibility["defensibility<br/>⊕42 ↻1124"]:::mild
     idea_audit["idea-audit<br/>⊕61 ↻2474"]:::mild
     idea_discovery["idea-discovery<br/>⊕35 ↻1640"]:::cool
     new_project["new-project<br/>⊕31 ↻1449"]:::cool
     pitch_deck["pitch-deck<br/>⊕32 ↻1555"]:::cool
     risk_assessment["risk-assessment<br/>⊕40 ↻1275"]:::cool
-    startup_lifecycle["startup-lifecycle<br/>⊕42 ↻1748"]:::cool
+    startup_lifecycle["startup-lifecycle<br/>⊕42 ↻1748"]:::mild
   end
   subgraph frontend["frontend"]
     document_writer["document-writer<br/>⊕88 ↻1283"]:::warm
@@ -120,7 +120,7 @@ flowchart LR
     naive_ui_theming["naive-ui-theming<br/>⊕103 ↻2014"]:::warm
   end
   subgraph frontend_nuxt["frontend-nuxt"]
-    nuxt["nuxt<br/>⊕80 ↻1095"]:::mild
+    nuxt["nuxt<br/>⊕80 ↻1095"]:::warm
     nuxt_modules["nuxt-modules<br/>⊕125 ↻644"]:::hot
     nuxt_seo["nuxt-seo<br/>⊕50 ↻825"]:::mild
   end
@@ -144,7 +144,7 @@ flowchart LR
     vitest_vue["vitest-vue<br/>⊕55 ↻1049"]:::mild
     vue["vue<br/>⊕63 ↻876"]:::mild
     vue_best_practices["vue-best-practices<br/>⊕99 ↻2560"]:::warm
-    vue_composition_api["vue-composition-api<br/>⊕80 ↻503"]:::mild
+    vue_composition_api["vue-composition-api<br/>⊕80 ↻503"]:::warm
     vue_dynamic_icons["vue-dynamic-icons<br/>⊕76 ↻1275"]:::mild
     vue_router_best_practices["vue-router-best-practices<br/>⊕126 ↻2792"]:::hot
     vue_testing_best_practices["vue-testing-best-practices<br/>⊕77 ↻2367"]:::mild
@@ -155,9 +155,9 @@ flowchart LR
   end
   subgraph general["general"]
     anti_drift["anti-drift<br/>⊕32 ↻1971"]:::cool
-    compact_responses["compact-responses<br/>⊕60 ↻570"]:::mild
+    compact_responses["compact-responses<br/>⊕40 ↻227"]:::cool
     complex_task_orchestrator["complex-task-orchestrator<br/>⊕33 ↻632"]:::cool
-    context_economy["context-economy<br/>⊕48 ↻2673"]:::mild
+    context_economy["context-economy<br/>⊕39 ↻490"]:::cool
     cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕32 ↻433"]:::cool
     git_commit_rules["git-commit-rules<br/>⊕30 ↻1097"]:::cool
     git_safety["git-safety<br/>⊕84 ↻600"]:::warm
@@ -166,14 +166,14 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻503"]:::warm
-    plan_protocol["plan-protocol<br/>⊕31 ↻7686"]:::cool
+    plan_protocol["plan-protocol<br/>⊕31 ↻7983"]:::cool
     project_map["project-map<br/>⊕83 ↻618"]:::warm
     session_handoff["session-handoff<br/>⊕29 ↻590"]:::cool
     shell["shell<br/>⊕73 ↻1997"]:::mild
     skills_ssot["skills-ssot<br/>⊕29 ↻1744"]:::cool
     spec_interview["spec-interview<br/>⊕35 ↻725"]:::cool
     task_brief_template["task-brief-template<br/>⊕47 ↻1226"]:::mild
-    verify_claims["verify-claims<br/>⊕110 ↻3004"]:::hot
+    verify_claims["verify-claims<br/>⊕41 ↻341"]:::mild
     workflow_craft["workflow-craft<br/>⊕48 ↻3349"]:::mild
     writing_style["writing-style<br/>⊕98 ↻1878"]:::warm
   end
@@ -221,8 +221,8 @@ flowchart LR
     figma_to_flutter["figma-to-flutter<br/>⊕107 ↻840"]:::hot
   end
   subgraph operator["operator"]
-    capacity_planning["capacity-planning<br/>⊕41 ↻2056"]:::cool
-    incident_response["incident-response<br/>⊕41 ↻1817"]:::cool
+    capacity_planning["capacity-planning<br/>⊕41 ↻2056"]:::mild
+    incident_response["incident-response<br/>⊕41 ↻1817"]:::mild
     oncall_rotation["oncall-rotation<br/>⊕37 ↻1681"]:::cool
     operations_cx_super_skill["operations-cx-super-skill<br/>⊕98 ↻597"]:::warm
     postmortem["postmortem<br/>⊕43 ↻1902"]:::mild
@@ -251,7 +251,7 @@ flowchart LR
     named_arguments["named-arguments<br/>⊕50 ↻667"]:::mild
     namespace_refactor_safety["namespace-refactor-safety<br/>⊕110 ↻338"]:::hot
     pao["pao<br/>⊕59 ↻625"]:::mild
-    php_naming_conventions["php-naming-conventions<br/>⊕80 ↻1398"]:::mild
+    php_naming_conventions["php-naming-conventions<br/>⊕80 ↻1398"]:::warm
     php_patterns["php-patterns<br/>⊕31 ↻2510"]:::cool
     php_upgrade_checklist["php-upgrade-checklist<br/>⊕71 ↻644"]:::mild
     production_readiness_checklist["production-readiness-checklist<br/>⊕128 ↻548"]:::hot
@@ -287,7 +287,7 @@ flowchart LR
     venv_dependencies["venv-dependencies<br/>⊕33 ↻522"]:::cool
   end
   subgraph quality["quality"]
-    artifact_review["artifact-review<br/>⊕93 ↻1472"]:::warm
+    artifact_review["artifact-review<br/>⊕93 ↻1470"]:::warm
     code_review["code-review<br/>⊕36 ↻1595"]:::cool
     code_simplifier["code-simplifier<br/>⊕68 ↻1233"]:::mild
     diagnosing_bugs["diagnosing-bugs<br/>⊕106 ↻2577"]:::warm
@@ -295,20 +295,20 @@ flowchart LR
     playwright_e2e["playwright-e2e<br/>⊕107 ↻2517"]:::hot
     refactoring_plan["refactoring-plan<br/>⊕37 ↻1850"]:::cool
     tdd_discipline["tdd-discipline<br/>⊕100 ↻1374"]:::warm
-    tech_debt_audit["tech-debt-audit<br/>⊕44 ↻2173"]:::mild
+    tech_debt_audit["tech-debt-audit<br/>⊕44 ↻2211"]:::mild
     test_strategy["test-strategy<br/>⊕61 ↻2247"]:::mild
     testing_safety_report["testing-safety-report<br/>⊕77 ↻729"]:::mild
   end
   subgraph repository_bootstrap["repository-bootstrap"]
     cross_project_optimizer["cross-project-optimizer<br/>⊕95 ↻1026"]:::warm
-    decision_verification["decision-verification<br/>⊕91 ↻1249"]:::warm
+    decision_verification["decision-verification<br/>⊕39 ↻304"]:::cool
     docs_maintenance["docs-maintenance<br/>⊕88 ↻1017"]:::warm
     ecosystem_integration["ecosystem-integration<br/>⊕77 ↻1965"]:::mild
     ecosystem_mcp["ecosystem-mcp<br/>⊕92 ↻1619"]:::warm
     ecosystem_setup["ecosystem-setup<br/>⊕89 ↻1114"]:::warm
     field_feedback_loop["field-feedback-loop<br/>⊕91 ↻1347"]:::warm
     harness_operations["harness-operations<br/>⊕87 ↻2105"]:::warm
-    maind_overview["maind-overview<br/>⊕80 ↻1626"]:::mild
+    maind_overview["maind-overview<br/>⊕80 ↻1626"]:::warm
     package_architecture["package-architecture<br/>⊕85 ↻3740"]:::warm
     project_tooling_runbook["project-tooling-runbook<br/>⊕93 ↻6971"]:::warm
     release_discipline["release-discipline<br/>⊕64 ↻805"]:::mild
@@ -316,7 +316,7 @@ flowchart LR
     task_development_philosophy["task-development-philosophy<br/>⊕74 ↻2778"]:::mild
   end
   subgraph research["research"]
-    query_craft["query-craft<br/>⊕103 ↻4194"]:::warm
+    query_craft["query-craft<br/>⊕35 ↻257"]:::cool
     research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕97 ↻569"]:::warm
   end
   subgraph roles["roles"]
@@ -447,17 +447,17 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 232 скиллов · ⊕ always **16134** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 338514 ток · ⌥ on-demand 838821 ток (сниппеты + references).
+**Итого:** 232 скиллов · ⊕ always **15916** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 328776 ток · ⌥ on-demand 838953 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1366 | 37629 | 26226 |
-| `repository-bootstrap` | 14 | 1150 | 29154 | 0 |
+| `general` | 22 | 1268 | 32737 | 26358 |
+| `repository-bootstrap` | 14 | 1098 | 28209 | 0 |
 | `php` | 17 | 1065 | 18886 | 54837 |
 | `architect` | 15 | 1005 | 23164 | 33458 |
-| `quality` | 11 | 835 | 20319 | 7447 |
+| `quality` | 11 | 835 | 20355 | 7447 |
 | `frontend-vue` | 11 | 815 | 25633 | 248486 |
 | `php-packages` | 9 | 690 | 5390 | 520 |
 | `oss-dev` | 10 | 642 | 14300 | 10187 |
@@ -478,10 +478,10 @@ flowchart LR
 | `frontend-tailwind` | 2 | 216 | 4403 | 5218 |
 | `laravel-auth` | 3 | 202 | 3275 | 5640 |
 | `laravel-extras` | 3 | 202 | 4202 | 7664 |
-| `research` | 2 | 200 | 4763 | 20472 |
 | `frontend-vite` | 4 | 188 | 3096 | 24662 |
 | `laravel-data-layer` | 2 | 160 | 3287 | 3977 |
 | `blender` | 2 | 146 | 2231 | 1907 |
+| `research` | 2 | 132 | 826 | 20472 |
 | `laravel-livewire` | 1 | 128 | 1256 | 1117 |
 | `voice-ai` | 1 | 125 | 3165 | 0 |
 | `creative` | 1 | 111 | 687 | 26240 |
@@ -527,12 +527,12 @@ flowchart LR
 | Скилл | Бакет | ток |
 |---|---|--:|
 | `vueuse-functions` | frontend-vue | 10838 |
-| `plan-protocol` | general | 7686 |
+| `plan-protocol` | general | 7983 |
 | `project-tooling-runbook` | repository-bootstrap | 6971 |
-| `query-craft` | research | 4194 |
 | `package-architecture` | repository-bootstrap | 3740 |
 | `workflow-craft` | general | 3349 |
 | `mcp-advisor` | general | 3188 |
 | `voice-ai` | voice-ai | 3165 |
 | `modular-architecture` | laravel-architecture | 3112 |
 | `laravel-testing` | laravel-testing | 3034 |
+| `build-loop` | blender-modeling | 2847 |

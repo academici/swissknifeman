@@ -76,6 +76,8 @@ def write_or_check(target, expected: str, *, check: bool) -> bool:
         if actual != encoded:
             raise ProjectionError(f"вид устарел: {target}")
         return False
+    if target.is_file() and target.read_bytes() == encoded:
+        return False
     target.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=target.parent, prefix=f".{target.name}.", delete=False) as tmp:
         tmp.write(encoded)

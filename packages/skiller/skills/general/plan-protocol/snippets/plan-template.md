@@ -60,8 +60,8 @@ plan-protocol; не копировать его целиком. Минимум:>
 
 | Batch | Items | Model class/effort | Exec | Review | Почему |
 |:--|:--|:--|:--|:--|:--|
-| B1 | <Pn.m> | <frontier/high> | manual | full | <общие reads/setup с Pn.(m+1)> |
-| B1 | <Pn.(m+1)> | <implementation/high> | manual | light | <producer→consumer, выгодно продолжить> |
+| B1 | <Pn.m> | <frontier/high> | manual | full | recommended: <общие reads/setup с Pn.(m+1)> |
+| B1 | <Pn.(m+1)> | <implementation/high> | manual | light | recommended: <producer→consumer, выгодно продолжить> |
 | solo | <Pn.k> | <implementation/medium> | plan-exec | full | <конкретный hard/owner/side-effect boundary> |
 
 ## 5. Decision Log

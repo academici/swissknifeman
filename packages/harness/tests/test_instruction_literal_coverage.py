@@ -35,18 +35,16 @@ def write_fixture(directory, payload):
 
 
 class LiteralCoverageFixtureTests(unittest.TestCase):
-    def test_fixture_envelope_and_105_literals_from_the_frozen_matrix(self):
+    def test_fixture_envelope_tracks_current_compatibility_source(self):
         fixture = json.loads(DATA.read_text(encoding="utf-8"))
         self.assertEqual(set(fixture), {"contract_version", "fixture_version", "provenance",
                                         "literals"})
         self.assertEqual(fixture["contract_version"], CONTRACT_VERSION)
         provenance = fixture["provenance"]
         self.assertEqual(provenance["source"],
-                         "plans/archive/2026.07.29-HARNESS-AGNOSTIC/research/05-instruction-canon-routing.md")
-        self.assertEqual(provenance["owner_decision"], "2026.07.29-HARNESS-AGNOSTIC D76")
-        self.assertEqual(provenance["row_count"], 121)
-        self.assertEqual(provenance["literal_count"], 105)
-        self.assertEqual(len(fixture["literals"]), 105)
+                         "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json")
+        self.assertEqual(provenance["source_hash_scope"], "file")
+        self.assertEqual(provenance["literal_count"], len(fixture["literals"]))
         self.assertTrue(all(set(item) == {"semantic_id", "literal"} for item in fixture["literals"]))
 
 
@@ -127,7 +125,7 @@ class LiteralCoverageProvenanceTests(unittest.TestCase):
         self.assertEqual(diagnostics[0].code, "INSTRUCTION_PROVENANCE_INVALID")
 
     def test_unknown_source_hash_scope_yields_exactly_one_diagnostic(self):
-        fixture = self._tampered(source_hash_scope="file")
+        fixture = self._tampered(source_hash_scope="unknown")
         with tempfile.TemporaryDirectory() as temp:
             path = write_fixture(temp, fixture)
             with patch("harness.instructions.literal_coverage_path", return_value=path):
@@ -135,13 +133,14 @@ class LiteralCoverageProvenanceTests(unittest.TestCase):
         self.assertEqual(len(diagnostics), 1)
         self.assertEqual(diagnostics[0].code, "INSTRUCTION_PROVENANCE_INVALID")
 
-    def test_edit_outside_section_leaves_gate_green(self):
+    def test_current_fixture_source_edit_changes_provenance(self):
         source_path = REPO_ROOT / json.loads(
             DATA.read_text(encoding="utf-8"))["provenance"]["source"]
         text = source_path.read_text(encoding="utf-8") + "\n<!-- P2.6 edit outside §2 -->\n"
         with patch("harness.instructions._literal_coverage_source_text", return_value=text):
             diagnostics = validate_literal_coverage(load_catalog())
-        self.assertEqual(diagnostics, ())
+        self.assertEqual(len(diagnostics), 1)
+        self.assertEqual(diagnostics[0].code, "INSTRUCTION_PROVENANCE_INVALID")
 
 
 class LiteralCoverageWiringTests(unittest.TestCase):

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:a711aeaefbe64cda785ee0680d3e4da91efccc57752f810f36d97fdedf068813
+Canonical SHA-256: sha256:5b6d672e6e1ac98ebdcf28e2753c1d8893620bae764c23934a7d452338ad284f
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -75,7 +75,7 @@ with its exact continuation; it never implicitly authorizes full replay.
 For a post-audit phase close, consume the persisted `audit-finalization/v1` bound to the rebuilt
 candidate; absence or a non-allow close admission refuses closure.
 
-Normal close is one scoped commit. A second commit requires a real ownership/session boundary. A red
+Normal close is one scoped commit. A second commit requires a real ownership/session boundary or digest-input collision. A red
 carrier remains owning repair work; an audit product finding returns its exact continuation.
 
 If a terminal-admission lease applies, `plan-close` provides the freshly rebuilt delivery receipt

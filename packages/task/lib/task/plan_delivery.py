@@ -242,7 +242,7 @@ def _audit_handoff(plan_dir: Path, subject: str) -> dict | None:
         raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "latest audit launch block не несёт команду")
     try:
         review_policy.validate_phase_audit_continuation(
-            event, plan_id=plan_dir.name, next_exact=next_exact)
+            event, plan_id=plan_dir.name, next_exact=next_exact, plan_dir=plan_dir)
     except review_policy.ReviewPolicyError as exc:
         raise DeliveryError(exc.code, str(exc)) from exc
     recommendation = f"**Next:** {next_exact}\n\n" + "\n".join(body).strip()
@@ -316,6 +316,11 @@ def _item_status(plan_dir: Path, item_id: str) -> tuple[str, Path]:
     state_path = plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
     if not state_path.is_file():
         raise DeliveryError("DELIVERY_CARRIER_MISSING", f"state carrier не читается: {state_path}")
+    from task import plan_item_state
+    try:
+        plan_item_state.build_states(plan_dir, item_id=item_id, check=True)
+    except plan_item_state.ItemStateError as exc:
+        raise DeliveryError("STALE_TERMINAL_RECEIPT", str(exc)) from exc
     phase_path = plan_layout.phase_path(plan_dir, phase_id)
     diagnostics = plan_lint.Diagnostics()
     phase = plan_lint.parse_phase_md(phase_path, phase_id, diagnostics, layout="v2")

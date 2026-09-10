@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: 867413818c69f11d43a2285c1c2ae70e5151dcd28dfba7af530b8b537936ed3f
+inputs_sha256: e2b29090067a894c04925c19058a55afbb5e1b7919fd3c947fdd748c21a073a3
 generated_by: task plan-views status
 -->
 
@@ -24,7 +24,7 @@ generated_by: task plan-views status
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Task read, dispatch and session economy | 0/3 | 🟠 Done with deviations |
-| P2 | Bounded repair, readiness, re-entry and archive | 2/3 | 🟡 In progress |
+| P2 | Bounded repair, readiness, re-entry and archive | 3/3 | 🟢 Done |
 | P3 | Proportional phase assurance and evidence reuse | 0/4 | ⬜ Not started |
 | P4 | Terminal delivery and provider boundary | 0/2 | ⬜ Not started |
 | P5 | Narrow cross-package field gaps | 0/3 | ⬜ Not started |
@@ -45,7 +45,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P2.1 | Unified repair evidence and reducer | 🟢 Done | 2026-09-09 |
 | P2.2 | Producer readiness and priority-fix re-entry | 🟢 Done | 2026-09-10 |
-| P2.3 | Brain-independent archive | ⬜ Not started | — |
+| P2.3 | Brain-independent archive | 🟢 Done | 2026-09-10 |
 
 ## Phase P3
 
@@ -145,6 +145,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · — |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · P2.2 closure evidence rebind after generated Completion Notes repair. |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P2.2 closed: producer readiness, re-entry and priority-fix reducers validated.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P2.3 closed: archive is repository-local and does not invoke Brain.
 write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: 9591921564c37d72a8edb8763331a94265b9aa211821953f3dd79f798c7ad1d6
+inputs_sha256: bd0dea1a0137cb578c0488a1e32ffb3e52406cfa3a5c45385c66e7ec4b0a38be
 generated_by: task plan-views status
 -->
 
@@ -25,7 +25,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P1 | Task read, dispatch and session economy | 0/3 | 🟠 Done with deviations |
 | P2 | Bounded repair, readiness, re-entry and archive | 0/3 | 🟠 Done with deviations |
-| P3 | Proportional phase assurance and evidence reuse | 2/3 | 🟡 In progress |
+| P3 | Proportional phase assurance and evidence reuse | 3/3 | 🟢 Done |
 | P4 | Terminal delivery and provider boundary | 0/2 | ⬜ Not started |
 | P5 | Narrow cross-package field gaps | 0/3 | ⬜ Not started |
 | P7 | Lean Task control loop consolidation | 1/1 | 🟢 Done |
@@ -52,7 +52,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P3.1 | Phase assurance and impact broker | 🟢 Done | 2026-09-10 |
 | P3.2 | Routing-table parser regression | 🟢 Done | 2026-09-10 |
-| P3.4 | Evidence graph and closure continuity | ⬜ Not started | — |
+| P3.4 | Evidence graph and closure continuity | 🟢 Done | 2026-09-10 |
 
 ## Phase P4
 
@@ -160,6 +160,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P3.2 closed: one executable Routing compiler now governs contract, lint and phase policy; focused/package/provider gates green.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · note сокращена; полный текст: journal.jsonl:68 |
 
 ## Correction Routing
 

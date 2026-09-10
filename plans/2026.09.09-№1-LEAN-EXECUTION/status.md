@@ -2,8 +2,8 @@
 projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
-through: 2026-09-09
-inputs_sha256: 7a63cc89685f9558995a0c7bad6d0888374759e1336121f80ee48ae5f6795871
+through: 2026-09-10
+inputs_sha256: 867413818c69f11d43a2285c1c2ae70e5151dcd28dfba7af530b8b537936ed3f
 generated_by: task plan-views status
 -->
 
@@ -17,14 +17,14 @@ generated_by: task plan-views status
 |:--|:--|
 | Version | 1.0.2 |
 | Status | 🟡 In progress |
-| Last Updated | 2026-09-09 |
+| Last Updated | 2026-09-10 |
 
 ## 4. Phase Index & Status Board
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Task read, dispatch and session economy | 0/3 | 🟠 Done with deviations |
-| P2 | Bounded repair, readiness, re-entry and archive | 1/3 | 🟡 In progress |
+| P2 | Bounded repair, readiness, re-entry and archive | 2/3 | 🟡 In progress |
 | P3 | Proportional phase assurance and evidence reuse | 0/4 | ⬜ Not started |
 | P4 | Terminal delivery and provider boundary | 0/2 | ⬜ Not started |
 | P5 | Narrow cross-package field gaps | 0/3 | ⬜ Not started |
@@ -44,7 +44,7 @@ generated_by: task plan-views status
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P2.1 | Unified repair evidence and reducer | 🟢 Done | 2026-09-09 |
-| P2.2 | Producer readiness and priority-fix re-entry | ⬜ Not started | 2026-09-09 |
+| P2.2 | Producer readiness and priority-fix re-entry | 🟢 Done | 2026-09-10 |
 | P2.3 | Brain-independent archive | ⬜ Not started | — |
 
 ## Phase P3
@@ -141,6 +141,11 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-09 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR: P2.1 schema/reducer закреплены exact digest-qualified paths |
 | 2026-09-09 | gpt-5.6-terra/high | plan-run · in-progress · P2.1 resumed after P2.2 producer-input correction; current route receipt bound. |
 | 2026-09-09 | gpt-5.6-terra/high | plan-run · closed-green · P2.1 closed after producer-input correction. write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · — |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · P2.2 closure evidence rebind after generated Completion Notes repair. |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P2.2 closed: producer readiness, re-entry and priority-fix reducers validated.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Owner Gates
 

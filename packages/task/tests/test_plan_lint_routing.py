@@ -231,6 +231,36 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
                          diag.errors)
 
 
+class TestExecutableRoutingTableBoundary(TmpPlanTestCase):
+    def _plan(self, suffix):
+        plan_dir = write_valid_plan(self.root, "2026.09.10-№1-ROUTING", layout="v2")
+        routing = (
+            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "|:--|:--|:--|:--|:--|:--|\n"
+            "| solo | P1.1 | implementation/medium | plan-exec | full | test |\n")
+        plan = plan_dir / "plan.md"
+        plan.write_text(plan.read_text(encoding="utf-8").replace(
+            "## 3. Routing\n\n", "## 3. Routing\n\n" + routing + suffix),
+            encoding="utf-8")
+        return plan_dir
+
+    def test_adjacent_provider_mapping_is_not_a_second_routing_table(self):
+        _model, diag = _lint(self._plan(
+            "\n| Provider | Model | Selector |\n"
+            "|:--|:--|:--|\n"
+            "| Codex | gpt-5.6-terra | implementation |\n"))
+        self.assertEqual(_errors_containing(diag, "Routing schema"), [], diag.errors)
+
+    def test_second_executable_header_is_a_named_routing_error(self):
+        duplicate = (
+            "\n| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "|:--|:--|:--|:--|:--|:--|\n"
+            "| solo | P1.1 | implementation/medium | plan-exec | full | duplicate |\n")
+        _model, diag = _lint(self._plan(duplicate))
+        self.assertTrue(_errors_containing(diag, "duplicate executable Routing tables"),
+                        diag.errors)
+
+
 class TestContinuityHandoffGate(TmpPlanTestCase):
     PLAN_ID = "2026.09.09-№1-CONTINUITY"
 

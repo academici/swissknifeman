@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:dd4c68f73e6782777b5dbccfdcc099c9252e673f8a88938fde5304e4d61095a2
+Canonical SHA-256: sha256:ac1d95313889c7150cbe836a825eed9075260f574889712d9caea572abf17ee6
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -63,7 +63,8 @@ its private-rollout prohibition forbids manual probing but not this validated ad
 read; neither rule prohibits a verified cleared chat or overrides current `turn_context`
 evidence.
 
-Reconcile only declared terminal evidence. `task_contract` owns both write-site predicates;
+Reconcile only declared terminal evidence. `task_contract` owns both write-site predicates and the sole
+exact executable Routing compiler;
 `plan_assurance.evaluate()` is the sole assurance/impact reducer behind `phase_audit_policy`: it selects first audit/direct close
 and post-GREEN `gate-rebind|delta|full|gather-evidence|owner-review` from a runtime-built candidate;
 `plan_projection` regenerates

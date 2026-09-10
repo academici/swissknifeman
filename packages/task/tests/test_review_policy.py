@@ -100,6 +100,38 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             self.assertTrue(gate["allow"])
             self.assertEqual(gate["audit_policy"]["code"], "PHASE_DIRECT_CLOSE_ASSURED")
 
+    def test_phase_policy_projects_review_from_executable_table_not_mapping_table(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = self._plan_with_review(tmp, "light")
+            route = plan / "plan.md"
+            route.write_text(route.read_text(encoding="utf-8") + (
+                "\n| Provider | Model | Selector |\n"
+                "|:--|:--|:--|\n"
+                "| Codex | gpt-5.6-terra | implementation |\n"), encoding="utf-8")
+            policy = plan_gates.phase_audit_policy(
+                plan, "P1", candidate_snapshot=self._candidate())
+            self.assertEqual(policy["effective_review"], "light")
+            self.assertEqual(policy["routing_reviews"], {"P1.1": "light"})
+
+    def test_duplicate_executable_table_blocks_audit_and_close(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = self._plan_with_review(tmp, "full")
+            route = plan / "plan.md"
+            route.write_text(route.read_text(encoding="utf-8") + (
+                "\n| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+                "|:--|:--|:--|:--|:--|:--|\n"
+                "| solo | P1.1 | implementation/high | manual | full | duplicate |\n"),
+                encoding="utf-8")
+            snapshot = self._candidate()
+            policy = plan_gates.phase_audit_policy(
+                plan, "P1", candidate_snapshot=snapshot)
+            self.assertEqual(policy["code"], "PHASE_ROUTING_UNRESOLVED")
+            gate = plan_gates.phase_close_gate(
+                plan, "P1",
+                candidate_fingerprint=plan_gates._candidate_snapshot_fingerprint(snapshot),
+                candidate_snapshot=snapshot)
+            self.assertEqual(gate["code"], "PHASE_ROUTING_UNRESOLVED")
+
     def test_phase_audit_policy_ignores_review_and_item_count_but_refuses_risk(self):
         cases = (
             ("full", ("🟢 Done",), (), False, "PHASE_DIRECT_CLOSE_ASSURED"),

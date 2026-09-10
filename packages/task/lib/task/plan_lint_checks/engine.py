@@ -58,23 +58,25 @@ def _routing_items(cell):
 
 def _lint_routing(plan_lines, plan_path, plan_id, layout, diag):
     """Validate canonical batch routing and return expanded rows for handoff checks."""
-    _idx, body, start = _find_section(
-        plan_lines, re.compile(r"^##\s+3\.\s+Routing\s*$"))
-    if body is None:
-        return []
-    headers, rows, _header = _parse_table(body, start)
     strict = layout == "v2" and bool(PLAN_ID_NUMBERED_RE.match(plan_id))
-    if strict and headers != list(_ROUTING_COLUMNS):
-        diag.error(
-            plan_path, _header,
-            "Routing schema: новый layout-v2 план обязан нести таблицу "
-            "`Batch | Items | Model class/effort | Exec | Review | Почему`; "
-            "Batch/Review не опциональны")
-        return []
-    if strict and not rows:
-        diag.error(plan_path, _header,
-                   "Routing schema: таблица нового layout-v2 плана не может быть пустой")
-        return []
+    if strict:
+        # task_contract owns the executable table boundary.  In particular, do
+        # not let the first adjacent pipe table become a competing parser here.
+        from task import task_contract
+        try:
+            table = task_contract.executable_routing_table(Path(plan_path).parent)
+        except task_contract.TaskContractBuildError as exc:
+            diag.error(plan_path, None, f"Routing schema: {exc}")
+            return []
+        headers = list(table["headers"])
+        rows = list(table["rows"])
+        _header = table["header_line"]
+    else:
+        _idx, body, start = _find_section(
+            plan_lines, re.compile(r"^##\s+3\.\s+Routing\s*$"))
+        if body is None:
+            return []
+        headers, rows, _header = _parse_table(body, start)
     if not headers or "Items" not in headers:
         return []
     expanded_rows = []

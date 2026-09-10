@@ -4,7 +4,8 @@ argument-hint: "<PLAN-ID> <Pn.m|Pn|archive ID>"
 model: sonnet
 effort: low
 ---
-Reconcile only declared terminal evidence. `task_contract` owns both write-site predicates;
+Reconcile only declared terminal evidence. `task_contract` owns both write-site predicates and the sole
+exact executable Routing compiler;
 `plan_assurance.evaluate()` is the sole assurance/impact reducer behind `phase_audit_policy`: it selects first audit/direct close
 and post-GREEN `gate-rebind|delta|full|gather-evidence|owner-review` from a runtime-built candidate;
 `plan_projection` regenerates

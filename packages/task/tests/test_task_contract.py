@@ -744,6 +744,23 @@ class BuildFixtureTests(unittest.TestCase):
             self.assertEqual(contract["goal"]["outcome"], "Добавить проверку.")
             self.assertEqual(contract["next"]["context"], "continue-root")
 
+    def test_contract_ignores_a_mapping_table_before_the_executable_table(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = fixtures.write_valid_plan(Path(tmp), "DEMO-ROUTING", layout="v2")
+            routing = (
+                "| Provider | Model | Selector |\n"
+                "|:--|:--|:--|\n"
+                "| Codex | gpt-5.6-terra | implementation |\n\n"
+                "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+                "|:--|:--|:--|:--|:--|:--|\n"
+                "| solo | P1.1 | implementation/high | plan-exec | full | test |\n")
+            plan_md = (plan / "plan.md").read_text(encoding="utf-8").replace(
+                "## 3. Routing\n\n", "## 3. Routing\n\n" + routing)
+            (plan / "plan.md").write_text(plan_md, encoding="utf-8")
+            contract = task_contract.build(plan, "P1.1")
+            self.assertEqual(contract["route"]["required"],
+                             {"model_class": "implementation", "effort": "high"})
+
     def test_empty_validation_field_refuses_to_fabricate_an_acceptance_entry(self):
         phase_path = fixtures.item_spec_path(self.plan_dir)
         phase_path.write_text(
@@ -1058,6 +1075,52 @@ class BatchRoutingAdmissionTests(unittest.TestCase):
         (self.plan_dir / "plan.md").write_text(plan, encoding="utf-8")
         self.assertEqual(task_contract.admit_batch(self.plan_dir, ("P1.1", "P1.2"))["verdict"],
                          "BATCH_AMBIGUOUS")
+
+
+class ExecutableRoutingTableTests(unittest.TestCase):
+    """P3.2/D6: only the exact executable header is a Routing carrier."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.plan_dir = fixtures.write_valid_plan(
+            Path(self.tmp.name), "ROUTING-TABLE", layout="v2")
+        self.routing = (
+            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "|:--|:--|:--|:--|:--|:--|\n"
+            "| solo | P1.1 | implementation/high | manual | light | test |\n")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _write_routing(self, suffix=""):
+        path = self.plan_dir / "plan.md"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "## 3. Routing\n\n", "## 3. Routing\n\n" + self.routing + suffix),
+            encoding="utf-8")
+
+    def test_adjacent_mapping_table_does_not_change_compiled_route_or_digest(self):
+        self._write_routing(
+            "\n| Provider | Model | Selector |\n"
+            "|:--|:--|:--|\n"
+            "| Codex | gpt-5.6-terra | implementation |\n")
+        table = task_contract.executable_routing_table(self.plan_dir)
+        compiled = task_contract.compile_batch_routing(self.plan_dir)
+        self.assertEqual(table["rows"][0][0]["Review"], "light")
+        self.assertEqual(compiled["items"]["P1.1"]["review"], "light")
+        self.assertEqual(compiled["routing_digest"], table["digest"])
+
+    def test_duplicate_executable_header_refuses_before_admission(self):
+        self._write_routing("\n" + self.routing)
+        with self.assertRaisesRegex(task_contract.TaskContractBuildError,
+                                    "duplicate executable Routing tables"):
+            task_contract.admit_batch(self.plan_dir, "P1.1")
+
+    def test_duplicate_item_refuses_from_the_same_compiler(self):
+        self._write_routing(
+            "| solo | P1.1 | implementation/high | manual | full | duplicate |\n")
+        with self.assertRaisesRegex(task_contract.TaskContractBuildError,
+                                    "item is assigned more than once"):
+            task_contract.compile_batch_routing(self.plan_dir)
 
 
 if __name__ == "__main__":

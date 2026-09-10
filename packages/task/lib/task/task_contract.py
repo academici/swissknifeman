@@ -383,6 +383,11 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
 # never a guess (Implementation Rules (2)).
 _ROUTING_HEADER_CANON = "Model class/effort"
 _ROUTING_HEADER_CANDIDATES = (_ROUTING_HEADER_CANON, "Model/effort", "Model/Effort")
+_EXECUTABLE_ROUTING_COLUMNS = (
+    "Batch", "Items", "Model class/effort", "Exec", "Review", "Почему",
+)
+_EXECUTABLE_ROUTING_EXEC_VALUES = frozenset(("plan-exec", "manual", "plan-design"))
+_EXECUTABLE_ROUTING_REVIEW_VALUES = frozenset(("full", "light", "none"))
 
 # Default location of the committed provider routing carrier this module reads
 # `mappings.*.class_selectors` from (D78 Implementation Rules (1) — one name-to-class
@@ -447,28 +452,105 @@ def _routing_digest(plan_dir: Path, items: tuple[str, ...]) -> tuple[str, str]:
     return hashlib.sha256(plan_bytes).hexdigest(), hashlib.sha256(spec_bytes).hexdigest()
 
 
-def compile_batch_routing(plan_dir, *, routing_config_path=None) -> dict:
-    """Compile Routing once into item and batch projections.
+def executable_routing_table(plan_dir: Path | str) -> dict:
+    """Return the sole executable ``§3 Routing`` table for a v2 plan.
 
-    New layout-v2 plans must name a Batch.  Older plans retain their historical
-    item route semantics, but never acquire an inferred multi-item group: each
-    expanded legacy item is a declared ``solo`` unit.  The table parser and
-    closed range grammar are deliberately borrowed from plan-lint.
+    A Routing section may contain explanatory or provider-mapping tables.  They
+    are not executable Routing merely because they have pipe-delimited rows.
+    The exact six-column header bounds the one executable table.  A second
+    matching header is ambiguity, never a later table to silently prefer.
     """
-    from task import command_catalog, plan_lint
+    from task import plan_lint
 
     plan_dir = Path(plan_dir)
     lines = plan_lint._read_lines(plan_dir / "plan.md") or []
     _index, body, start = plan_lint._find_section(lines, _ROUTING_HEADER_RE)
     if body is None:
-        raise TaskContractBuildError("routing", "Routing", "no `## 3. Routing` section found in plan.md")
-    headers, rows, _header = plan_lint._parse_table(body, start)
-    if not headers or "Items" not in headers:
-        raise TaskContractBuildError("routing", "Routing", "`## 3. Routing` carries no Items table")
-    route_header = next((candidate for candidate in _ROUTING_HEADER_CANDIDATES
-                         if candidate in headers), None)
-    if route_header is None:
-        raise TaskContractBuildError("routing", "Routing", "no recognized route-column header")
+        raise TaskContractBuildError(
+            "routing", "Routing", "no `## 3. Routing` section found in plan.md")
+
+    def cells(raw: str) -> tuple[str, ...]:
+        value = raw.strip()
+        if value.startswith("|"):
+            value = value[1:]
+        if value.endswith("|"):
+            value = value[:-1]
+        return tuple(cell.strip() for cell in value.split("|"))
+
+    matches: list[tuple[int, list[tuple[dict[str, object], int]]]] = []
+    for index, raw in enumerate(body):
+        if not raw.strip().startswith("|") or cells(raw) != _EXECUTABLE_ROUTING_COLUMNS:
+            continue
+        separator_index = index + 1
+        if separator_index >= len(body):
+            raise TaskContractBuildError(
+                "routing", "Routing", f"line {start + index}: executable table has no separator")
+        separator = cells(body[separator_index])
+        if (len(separator) != len(_EXECUTABLE_ROUTING_COLUMNS)
+                or not all(re.fullmatch(r":?-{2,}:?", cell) for cell in separator)):
+            raise TaskContractBuildError(
+                "routing", "Routing", f"line {start + index}: executable table has an invalid separator")
+        rows: list[tuple[dict[str, object], int]] = []
+        row_index = separator_index + 1
+        while row_index < len(body) and body[row_index].strip().startswith("|"):
+            values = cells(body[row_index])
+            if len(values) != len(_EXECUTABLE_ROUTING_COLUMNS):
+                raise TaskContractBuildError(
+                    "routing", "Routing", f"line {start + row_index}: executable table must have exactly six columns")
+            row = dict(zip(_EXECUTABLE_ROUTING_COLUMNS, values))
+            items = plan_lint._routing_items(row["Items"].strip().strip("`"))
+            if not items:
+                raise TaskContractBuildError(
+                    "routing", "Routing", f"line {start + row_index}: invalid Items form")
+            row["_items"] = tuple(items)
+            rows.append((row, start + row_index))
+            row_index += 1
+        matches.append((start + index, rows))
+
+    if not matches:
+        raise TaskContractBuildError(
+            "routing", "Routing",
+            "no executable table with exact header `Batch | Items | Model class/effort | Exec | Review | Почему`")
+    if len(matches) != 1:
+        lines = ", ".join(str(line) for line, _rows in matches)
+        raise TaskContractBuildError(
+            "routing", "Routing", f"duplicate executable Routing tables at lines {lines}")
+    header_line, rows = matches[0]
+    if not rows:
+        raise TaskContractBuildError(
+            "routing", "Routing", "executable Routing table may not be empty")
+    owners: set[str] = set()
+    for row, line in rows:
+        for item_id in row["_items"]:
+            if item_id in owners:
+                raise TaskContractBuildError(
+                    item_id, "Routing", f"line {line}: item is assigned more than once")
+            owners.add(item_id)
+    digest_payload = "\n".join(
+        ["|".join(_EXECUTABLE_ROUTING_COLUMNS)]
+        + ["|".join(row[column] for column in _EXECUTABLE_ROUTING_COLUMNS) for row, _line in rows]
+    )
+    return {
+        "headers": _EXECUTABLE_ROUTING_COLUMNS,
+        "header_line": header_line,
+        "rows": tuple(rows),
+        "digest": hashlib.sha256(digest_payload.encode("utf-8")).hexdigest(),
+    }
+
+
+def compile_batch_routing(plan_dir, *, routing_config_path=None) -> dict:
+    """Compile Routing once into item and batch projections.
+
+    This compiler accepts only the exact executable v2 table.  Historical
+    item-route spellings remain isolated in ``build()``'s legacy resolver and
+    never acquire an inferred execution group.
+    """
+    from task import command_catalog, plan_lint
+
+    plan_dir = Path(plan_dir)
+    table = executable_routing_table(plan_dir)
+    rows = table["rows"]
+    route_header = _ROUTING_HEADER_CANON
 
     metadata = command_catalog.load_routing_metadata(
         routing_config_path or _DEFAULT_ROUTING_CONFIG_PATH)
@@ -481,21 +563,20 @@ def compile_batch_routing(plan_dir, *, routing_config_path=None) -> dict:
             raise TaskContractBuildError(item, "Routing", f"route cell {raw!r} does not parse as '<model>/<effort>'")
         return _resolve_model_class(model, names, item, raw), effort
 
-    strict = "Batch" in headers
     item_rows: dict[str, dict] = {}
     groups: dict[str, list[dict]] = {}
     for row, line in rows:
-        items = plan_lint._routing_items((row.get("Items") or "").strip().strip("`"))
-        if not items:
-            raise TaskContractBuildError("routing", "Routing", f"line {line}: invalid Items form")
+        items = row["_items"]
         batch = (row.get("Batch") or "solo").strip()
-        if strict and (not batch or not plan_lint._ROUTING_BATCH_RE.fullmatch(batch)):
+        if not batch or not plan_lint._ROUTING_BATCH_RE.fullmatch(batch):
             raise TaskContractBuildError("routing", "Routing", f"line {line}: invalid Batch {batch!r}")
-        if not strict:
-            # A legacy range describes routes, never an unstated execution group.
-            batches = ["solo"] * len(items)
-        else:
-            batches = [batch] * len(items)
+        exec_mode = (row.get("Exec") or "").strip()
+        if exec_mode not in _EXECUTABLE_ROUTING_EXEC_VALUES:
+            raise TaskContractBuildError("routing", "Routing", f"line {line}: invalid Exec {exec_mode!r}")
+        review = (row.get("Review") or "").strip()
+        if review not in _EXECUTABLE_ROUTING_REVIEW_VALUES:
+            raise TaskContractBuildError("routing", "Routing", f"line {line}: invalid Review {review!r}")
+        batches = [batch] * len(items)
         for item, item_batch in zip(items, batches):
             if item in item_rows:
                 raise TaskContractBuildError(item, "Routing", "item is assigned more than once")
@@ -503,8 +584,7 @@ def compile_batch_routing(plan_dir, *, routing_config_path=None) -> dict:
             batch_key = f"solo:{item}" if item_batch.lower() == "solo" else item_batch
             entry = {"item_id": item, "batch": item_batch, "batch_key": batch_key, "route": {
                 "model_class": model_class, "effort": effort},
-                "exec": (row.get("Exec") or "").strip(),
-                "review": (row.get("Review") or "full").strip(), "line": line}
+                "exec": exec_mode, "review": review, "line": line}
             item_rows[item] = entry
             groups.setdefault(batch_key, []).append(entry)
 
@@ -532,7 +612,7 @@ def compile_batch_routing(plan_dir, *, routing_config_path=None) -> dict:
         compiled[batch_key] = {"batch_id": batch, "items": items, "route": route,
                            "exec": next(iter(execs)), "review": review,
                            "routing_digest": routing_digest, "spec_digest": spec_digest}
-    return {"items": item_rows, "batches": compiled}
+    return {"items": item_rows, "batches": compiled, "routing_digest": table["digest"]}
 
 
 def normalize_batch_request(request) -> tuple[str, ...]:
@@ -843,23 +923,21 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     plan_lines = plan_lint._read_lines(plan_dir / "plan.md") or []
     routing_metadata = command_catalog.load_routing_metadata(
         routing_config_path or _DEFAULT_ROUTING_CONFIG_PATH)
-    # Batch-bearing plans have one compiler for item route and execution unit.
-    # Keep the legacy resolver below for its deliberately precise historical
-    # diagnostics (notably comma-list migration guidance).
-    _routing_index, routing_body, routing_start = plan_lint._find_section(
-        plan_lines, _ROUTING_HEADER_RE)
-    routing_headers, _routing_rows, _routing_header = (
-        plan_lint._parse_table(routing_body, routing_start)
-        if routing_body is not None else (None, None, None))
-    if routing_headers and "Batch" in routing_headers:
+    # The canonical executable header may follow a non-executable mapping
+    # table.  Ask the compiler first; legacy spellings retain their isolated
+    # resolver only when the canonical table is absent altogether.
+    try:
         compiled = compile_batch_routing(plan_dir, routing_config_path=routing_config_path)
+    except TaskContractBuildError as exc:
+        if "no executable table with exact header" not in str(exc):
+            raise
+        routing = _find_routing_row(plan_lint, plan_lines, item_id, routing_metadata)
+    else:
         try:
             routing = compiled["items"][item_id]["route"]
         except KeyError as exc:
             raise TaskContractBuildError(item_id, "Routing", "no §3 Routing row found for this item") from exc
         routing = (routing["model_class"], routing["effort"])
-    else:
-        routing = _find_routing_row(plan_lint, plan_lines, item_id, routing_metadata)
     required_route = {"model_class": routing[0], "effort": routing[1]}
     if actual_route is None:
         actual_route = route_evidence.capture_actual(

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:fc40b262af5793dd7146eb2be2064bea42036f49296e4d97313262fe41af2c54
+Canonical SHA-256: sha256:7ea345b9b076a6d186b02e2ab68549e2b02e0043519f591d81cf6532716c4e80
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -63,8 +63,9 @@ its private-rollout prohibition forbids manual probing but not this validated ad
 read; neither rule prohibits a verified cleared chat or overrides current `turn_context`
 evidence.
 
-Audit is adversarial and read-only over product work. Read the declared assurance, route and prior
-terminal evidence; compare only the changed-risk delta. Persist the runtime candidate snapshot with
+Audit is adversarial and read-only over product work. Read the declared assurance, the Task Contract's
+sole exact executable Routing compiler result, and prior terminal evidence; compare only the changed-risk delta.
+Persist the runtime candidate snapshot with
 a GREEN verdict. A post-GREEN mismatch is `audit-impact/v1`: gate-rebind, delta, justified full,
 evidence gathering, or owner review—never bare stale/full. Fresh deterministic evidence is reused.
 

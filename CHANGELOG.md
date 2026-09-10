@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: единый исполнимый Routing compiler.** `Task Contract`, batch admission,
+  phase audit/close и lint теперь потребляют одну exact six-column Routing table; соседние
+  provider mapping-таблицы не меняют Review coverage, а duplicate executable table или item
+  отказываются до mutation.
+
 - **`task`: пропорциональная phase assurance.** Новый `Phase Assurance | v1` и единый
   `plan_assurance` reducer отделяют semantic phase risk от Routing Review и числа items;
   phase audit subject канонизируется, а post-GREEN diff получает field-level

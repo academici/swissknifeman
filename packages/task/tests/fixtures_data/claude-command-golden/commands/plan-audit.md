@@ -4,8 +4,9 @@ argument-hint: "<PLAN-ID> <Pn|design>"
 model: opus
 effort: xhigh
 ---
-Audit is adversarial and read-only over product work. Read the declared assurance, route and prior
-terminal evidence; compare only the changed-risk delta. Persist the runtime candidate snapshot with
+Audit is adversarial and read-only over product work. Read the declared assurance, the Task Contract's
+sole exact executable Routing compiler result, and prior terminal evidence; compare only the changed-risk delta.
+Persist the runtime candidate snapshot with
 a GREEN verdict. A post-GREEN mismatch is `audit-impact/v1`: gate-rebind, delta, justified full,
 evidence gathering, or owner review—never bare stale/full. Fresh deterministic evidence is reused.
 

@@ -16,7 +16,7 @@ from pathlib import Path, PurePosixPath
 
 from task import (plan_bundle, plan_decisions, plan_downstream, plan_gate_activation, plan_item_state, plan_layout,
                   plan_assurance, plan_projection, plan_requests, plan_returns, plan_status, plan_weight,
-                  review_policy)
+                  review_policy, task_contract)
 
 
 GATE_ID = "read-budget-v1"
@@ -286,43 +286,13 @@ def _routing_items(value: str) -> tuple[str, ...] | None:
 
 
 def _phase_reviews(plan_dir: Path, phase_id: str) -> dict[str, str]:
-    """Read the declared Review cells for one phase; unresolved input fails closed."""
-    try:
-        lines = (plan_dir / "plan.md").read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return {}
-    in_routing = False
-    headers = None
+    """Project one phase's Review cells from the Task Contract Routing model."""
+    table = task_contract.executable_routing_table(plan_dir)
     reviews = {}
-    for line in lines:
-        if re.fullmatch(r"##\s+3\.\s+Routing\s*", line.strip()):
-            in_routing = True
-            continue
-        if in_routing and line.startswith("## "):
-            break
-        if not in_routing or not line.strip().startswith("|"):
-            continue
-        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-        if headers is None:
-            if "Items" in cells and "Review" in cells:
-                headers = cells
-            continue
-        if all(re.fullmatch(r":?-{2,}:?", cell) for cell in cells):
-            continue
-        if len(cells) != len(headers):
-            return {}
-        row = dict(zip(headers, cells))
-        items = _routing_items(row.get("Items", ""))
-        review = row.get("Review", "").strip()
-        if items is None or review not in _REVIEW_ORDER:
-            return ()
-        if any(item.startswith(f"{phase_id}.") for item in items):
-            for item in items:
-                if not item.startswith(f"{phase_id}."):
-                    continue
-                if item in reviews:
-                    return {}
-                reviews[item] = review
+    for row, _line in table["rows"]:
+        for item_id in row["_items"]:
+            if item_id.startswith(f"{phase_id}."):
+                reviews[item_id] = row["Review"]
     return reviews
 
 
@@ -350,12 +320,27 @@ def phase_audit_policy(plan_dir, phase_id, *, candidate_snapshot=None):
     if not re.fullmatch(r"P\d+", phase_id):
         raise ValueError("phase_id должен иметь форму Pn")
     snapshot = candidate_snapshot if isinstance(candidate_snapshot, dict) else None
+    try:
+        reviews = _phase_reviews(plan_dir, phase_id)
+    except task_contract.TaskContractBuildError as exc:
+        # Routing ambiguity is an admission defect, not an assurance inference.
+        # Keep P3.1 as the sole assurance reducer while refusing audit/close
+        # before any historical audit receipt can be reused.
+        if "duplicate executable Routing tables" in str(exc) or "assigned more than once" in str(exc):
+            return _audit_policy_decision(
+                Path(plan_dir), phase_id, required=True,
+                code="PHASE_ROUTING_UNRESOLVED", review="unassessed",
+                reason=f"Routing compiler: {exc}")
+        reviews = {}
     policy = plan_assurance.evaluate(plan_dir, phase_id, candidate=snapshot)
     # Existing consumers expose these legacy keys; they carry no independent
     # decision semantics and may be removed only in a separately versioned API.
     return {
         **policy,
-        "effective_review": "assurance",
+        # This is reporting-only.  Assurance remains the P3.1 decision owner.
+        "effective_review": (max(reviews.values(), key=_REVIEW_ORDER.__getitem__)
+                             if reviews else "assurance"),
+        "routing_reviews": reviews,
     }
 
 
@@ -481,6 +466,9 @@ def phase_close_gate(plan_dir, phase_id, *, candidate_fingerprint, candidate_sna
         return override
     audit_policy = phase_audit_policy(
         plan_dir, phase_id, candidate_snapshot=candidate_snapshot)
+    if audit_policy["code"] == "PHASE_ROUTING_UNRESOLVED":
+        return {"allow": False, "code": "PHASE_ROUTING_UNRESOLVED", "journal_line": None,
+                "audit_policy": audit_policy}
     if not audit_policy["audit_required"]:
         return {"allow": True, "code": "allow", "journal_line": None,
                 "audit_policy": audit_policy}

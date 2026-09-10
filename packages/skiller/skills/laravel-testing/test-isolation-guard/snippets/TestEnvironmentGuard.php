@@ -19,6 +19,25 @@ use RuntimeException;
  */
 final class TestEnvironmentGuard
 {
+    /** Exact serial boundary. Worker DB names belong only to the parallel callback. */
+    public static function assertCanonicalTestDatabase(Application $app, string $expected): void
+    {
+        $config = $app->make('config');
+        $default = (string) $config->get('database.default');
+        $database = $config->get("database.connections.{$default}.database");
+
+        if (! is_string($database) || $expected === '' || $database !== $expected) {
+            throw new RuntimeException(sprintf(
+                "FRAMEWORK_LIFECYCLE_CONFLICT: serial DB differs from the project canonical resolver.\n".
+                    "  connection: [%s], observed: [%s]\n".
+                    "Do not derive a parallel worker DB in createApplication(); keep the canonical resolver " .
+                    "and assert the framework-selected DB in setUpTestDatabaseBeforeMigrating().",
+                $default,
+                is_string($database) ? $database : (string) json_encode($database)
+            ));
+        }
+    }
+
     /**
      * БД активного подключения обязана заканчиваться на `_test`.
      *

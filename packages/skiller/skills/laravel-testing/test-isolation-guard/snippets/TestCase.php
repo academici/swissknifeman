@@ -28,10 +28,14 @@ abstract class TestCase extends BaseTestCase
         $app = parent::createApplication();
 
         TestEnvironmentGuard::assertIsolatedTestDatabase($app);
+        TestEnvironmentGuard::assertCanonicalTestDatabase($app, $this->canonicalTestDatabase());
         TestEnvironmentGuard::assertIsolatedTestMediaDisk($app);
 
         return $app;
     }
+
+    /** Project-owned canonical serial DB resolver; never derive worker names here. */
+    abstract protected function canonicalTestDatabase(): string;
 }
 
 /*
@@ -52,6 +56,7 @@ abstract class TestCase extends BaseTestCase
  *
  * Порядок гарантий:
  *   1. tests/bootstrap.php       — выставляет DB_DATABASE=*_test, MEDIA_DISK=media-test до autoload.
- *   2. TestCase::createApplication — TestEnvironmentGuard аварийно прерывает, если 1 не сработал.
- *   3. RefreshDatabase           — migrate:fresh, теперь заведомо по тестовой БД.
+ *   2. TestCase::createApplication — serial guard сверяет resolved config с canonical DB.
+ *   3. ParallelTestingIsolation::setUpTestDatabaseBeforeMigrating — exact worker DB after switch.
+ *   4. RefreshDatabase           — migrate:fresh, только после обеих границ.
  */

@@ -2869,9 +2869,9 @@
       "bucket": "laravel-testing",
       "path": "skills/laravel-testing/test-isolation-guard/SKILL.md",
       "version": "0.1.0",
-      "description": "Guard Laravel tests against running on prod/dev DB and prod media disk: bootstrap.php sets DB_DATABASE=*_test and media-test before autoload, TestEnvironmentGuard aborts createApplication() on isolation breach, safe RefreshDatabase. Activate when setting up the test environment, protecting CI, or suspecting tests hit dev/prod DB.",
-      "sha256": "de9442d6ecc2dc1c965f37c3c10cd48b63bdc106fccf71bd89c705d7faaa3e41",
-      "content_sha256": "def6dc207d0af82b9971bfd7323ccd0388dd75c8f78b0fc68f9108bfd9168325",
+      "description": "Activate when Laravel tests need prod/dev DB or writable-disk protection: bootstrap, canonical serial guard, exact parallel DB proof and contained worker roots.",
+      "sha256": "1779a42af30cef477b6b0d936aa22d8e7b503788a488a0e55db07b00960b8e24",
+      "content_sha256": "2c875149b2864ae8c11ca102e07abbb18547d127e7d347837770cc046978371d",
       "tags": [
         "php",
         "laravel",

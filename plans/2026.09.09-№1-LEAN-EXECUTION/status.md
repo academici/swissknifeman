@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: 894c2316c200caaee9493c7f2fbf8800c19424287bd9005bb8ef60bdb254ea30
+inputs_sha256: 51dd7763c3dcb73957c7ba5d79584e3598664634ae8d64337c14f80821c82f02
 generated_by: task plan-views status
 -->
 
@@ -16,7 +16,7 @@ generated_by: task plan-views status
 | Поле | Значение |
 |:--|:--|
 | Version | 1.0.4 |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Last Updated | 2026-09-10 |
 
 ## 4. Phase Index & Status Board
@@ -27,7 +27,7 @@ generated_by: task plan-views status
 | P2 | Bounded repair, readiness, re-entry and archive | 0/3 | 🟠 Done with deviations |
 | P3 | Proportional phase assurance and evidence reuse | 3/3 | 🟢 Done |
 | P4 | Terminal delivery and provider boundary | 2/2 | 🟢 Done |
-| P5 | Narrow cross-package field gaps | 2/3 | 🟡 In progress |
+| P5 | Narrow cross-package field gaps | 3/3 | 🟢 Done |
 | P7 | Lean Task control loop consolidation | 1/1 | 🟢 Done |
 
 ## Phase P1
@@ -67,7 +67,7 @@ generated_by: task plan-views status
 |:--|:--|:--|:--|
 | P5.1 | Skill description quality contract | 🟢 Done | 2026-09-10 |
 | P5.2 | Analyst test-strategy fleet synthesis | 🟢 Done | 2026-09-10 |
-| P5.3 | Lifecycle-aware Laravel parallel isolation | ⬜ Not started | — |
+| P5.3 | Lifecycle-aware Laravel parallel isolation | 🟢 Done | 2026-09-10 |
 
 ## Phase P7
 
@@ -183,6 +183,9 @@ write-site: pre_mutation: allow · pre_final: allow |
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · P5.2: bounded static workflow fleet implementation started. |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P5.2 closed: workflow-scan emits a bounded, digest-deduplicated static fleet report; current evidence is covered, so Task templates stay unchanged.
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · P5.3: lifecycle-aware Laravel isolation implementation started. |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P5.3 closed: serial DB guard remains at app boot; the parallel callback proves the exact selected worker DB before migration and process disks are local, contained and owned-only.
 write-site: pre_mutation: allow · pre_final: allow |
 
 ## Correction Routing

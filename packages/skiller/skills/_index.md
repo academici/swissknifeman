@@ -300,7 +300,7 @@
 | `health-checks` | spatie/laravel-health in Laravel: custom Check classes (disk, queue, scheduler heartbeat,… | `laravel`, `health`, `monitoring`, `spatie`, `liveness`, `readiness`, `observability` |
 | `laravel-dusk` | Laravel Dusk: browser E2E tests, isolated test DB, run from Docker via host ChromeDriver,… | `php`, `laravel`, `dusk`, `e2e`, `browser-testing`, `chromedriver`, `docker` |
 | `laravel-testing` | Feature/unit/pest testing patterns: test DB isolation, Docker/local env detection, covera… | `php`, `laravel`, `testing` |
-| `test-isolation-guard` | Guard Laravel tests against running on prod/dev DB and prod media disk: bootstrap.php set… | `php`, `laravel`, `testing`, `isolation`, `safety`, `database`, `ci`, `refreshdatabase` |
+| `test-isolation-guard` | Activate when Laravel tests need prod/dev DB or writable-disk protection: bootstrap, cano… | `php`, `laravel`, `testing`, `isolation`, `safety`, `database`, `ci`, `refreshdatabase` |
 
 ### legal — Legal operations: contracts, compliance, risk (1)
 

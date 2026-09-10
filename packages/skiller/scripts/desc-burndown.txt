@@ -65,7 +65,6 @@ research/query-craft
 finance/finance-super-skill
 devops/db-test-preflight
 laravel-architecture/enum-state-machine
-laravel-testing/test-isolation-guard
 frontend-naive-ui/naive-ui-theming
 frontend-tailwind/tailwind-conventions
 architect/package-contribution-protocol

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`skiller`: lifecycle-aware Laravel parallel isolation.** `test-isolation-guard` now keeps
+  canonical serial DB protection at app boot and requires the framework callback’s exact worker
+  DB/token before migration; writable parallel disks are local, contained per-process roots and
+  fail closed with `FRAMEWORK_LIFECYCLE_CONFLICT` on unavailable lifecycle evidence.
+
 - **`analyst`: workflow fleet evidence.** Новый read-only `workflow-scan` ограничен declared
   plan roots enabled-проектов, digest-дедуплицирует mirrors, статически извлекает признаки без
   исполнения JavaScript и публикует воспроизводимый `workflow-fleet-report/v1`; изменения Task

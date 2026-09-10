@@ -209,7 +209,7 @@ flowchart LR
     health_checks["health-checks<br/>⊕100 ↻2298"]:::warm
     laravel_dusk["laravel-dusk<br/>⊕34 ↻980"]:::cool
     laravel_testing["laravel-testing<br/>⊕56 ↻3034"]:::mild
-    test_isolation_guard["test-isolation-guard<br/>⊕104 ↻1572"]:::warm
+    test_isolation_guard["test-isolation-guard<br/>⊕54 ↻1965"]:::mild
   end
   subgraph legal["legal"]
     legal_super_skill["legal-super-skill<br/>⊕93 ↻615"]:::warm
@@ -447,7 +447,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 232 скиллов · ⊕ always **16184** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 338121 ток · ⌥ on-demand 837213 ток (сниппеты + references).
+**Итого:** 232 скиллов · ⊕ always **16134** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 338514 ток · ⌥ on-demand 838821 ток (сниппеты + references).
 
 ## По бакетам
 
@@ -470,11 +470,11 @@ flowchart LR
 | `axioma` | 4 | 352 | 4496 | 0 |
 | `frontend-linting` | 4 | 323 | 5892 | 18380 |
 | `operator` | 6 | 296 | 9773 | 22461 |
-| `laravel-testing` | 4 | 294 | 7884 | 15335 |
 | `ai` | 3 | 284 | 4578 | 51473 |
 | `frontend-backend` | 3 | 269 | 5405 | 7851 |
 | `frontend` | 3 | 263 | 3794 | 7958 |
 | `frontend-nuxt` | 3 | 255 | 2564 | 24048 |
+| `laravel-testing` | 4 | 244 | 8277 | 16943 |
 | `frontend-tailwind` | 2 | 216 | 4403 | 5218 |
 | `laravel-auth` | 3 | 202 | 3275 | 5640 |
 | `laravel-extras` | 3 | 202 | 4202 | 7664 |

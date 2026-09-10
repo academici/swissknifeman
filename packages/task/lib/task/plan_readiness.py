@@ -44,6 +44,8 @@ def directive(deliverables: str) -> dict | None:
 def validate_readiness(record: dict) -> None:
     fields = {"schema_version", "producer_item", "consumer_item", "mode", "roots", "command",
               "candidate_count", "candidate_paths_sha256", "source_commit", "predicate", "exclusions"}
+    if not isinstance(record, dict):
+        raise ReadinessError("producer readiness: expected object")
     if record.get("mode") == "empty-by-decision":
         fields.add("owner_decision")
     _closed(record, fields, "producer readiness")

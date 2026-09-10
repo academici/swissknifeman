@@ -39,6 +39,21 @@ class PlanReadinessTest(unittest.TestCase):
         with self.assertRaises(plan_readiness.ReadinessError):
             plan_readiness.validate_fix_branch(record, declared_items=("P2.4",))
 
+    def test_terminal_builder_accepts_declared_readiness(self):
+        from task import terminal_policy
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp)
+            phase = plan / "phases" / "P2"
+            phase.mkdir(parents=True)
+            (plan / "plan.md").write_text("## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n", encoding="utf-8")
+            (phase / "P2.md").write_text("# P2\n\n### P2.2 — producer\n\n**Deliverables:** `producer-readiness/v1`: consumer=P2.3; modes=nonempty-candidates|empty-by-decision.\n", encoding="utf-8")
+            (phase / "P2.2.md").write_text("# P2.2\n", encoding="utf-8")
+            # Minimal fixture has no parseable full item; validate the builder's additive API.
+            decision = terminal_policy.build_decision(plan, "P2.2", result="closed-green", validation=[{"carrier": "test", "status": "green", "evidence_ids": ["test:ok"]}], producer_readiness=self.readiness())
+            self.assertEqual(decision["producer_readiness"]["consumer_item"], "P2.3")
+
     def test_reentry_and_priority_fix_are_closed(self):
         plan_readiness.validate_reentry({
             "schema_version": "phase-reentry-justification/v1", "phase_id": "P2",

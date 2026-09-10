@@ -38,7 +38,10 @@ def _spec_digest(plan_dir: Path, item_id: str) -> str:
 
 
 def build_decision(plan_dir, item_id: str, *, result: str, validation: list[dict],
-                   repair_exhausted: dict | None = None) -> dict:
+                   repair_exhausted: dict | None = None,
+                   producer_readiness: dict | None = None,
+                   phase_reentry: dict | None = None,
+                   fix_branch: dict | None = None) -> dict:
     """Build the decision carrier required by a new item close."""
     if result not in _CLOSE_RESULTS:
         raise TerminalPolicyError("TERMINAL_RESULT_INVALID", f"не close result: {result}")
@@ -55,6 +58,12 @@ def build_decision(plan_dir, item_id: str, *, result: str, validation: list[dict
             "repair_exhausted": repair_exhausted,
         },
     }
+    if producer_readiness is not None:
+        decision["producer_readiness"] = producer_readiness
+    if phase_reentry is not None:
+        decision["phase_reentry"] = phase_reentry
+    if fix_branch is not None:
+        decision["fix_branch"] = fix_branch
     validate(decision, result=result, plan_dir=Path(plan_dir), item_id=item_id)
     return decision
 
@@ -108,6 +117,16 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
                     or record["consumer_item"] != declared["consumer_item"]
                     or record["mode"] not in declared["modes"]):
                 raise TerminalPolicyError("PRODUCER_READINESS_REQUIRED", "readiness не совпадает с Deliverables")
+        if "phase_reentry" in decision:
+            try:
+                plan_readiness.validate_reentry(decision["phase_reentry"])
+            except plan_readiness.ReadinessError as exc:
+                raise TerminalPolicyError("PHASE_REENTRY_INVALID", str(exc)) from exc
+        if "fix_branch" in decision:
+            try:
+                plan_readiness.validate_fix_branch(decision["fix_branch"])
+            except plan_readiness.ReadinessError as exc:
+                raise TerminalPolicyError("FIX_BRANCH_INVALID", str(exc)) from exc
     rows = evidence["validation"]
     if not isinstance(rows, list) or not rows:
         raise TerminalPolicyError(

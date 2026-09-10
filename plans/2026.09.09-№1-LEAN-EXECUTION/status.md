@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: d6453d987c3c3a5ffd2decc644c9a2537f7c405e6658f62e923a274bf4375575
+inputs_sha256: 701baa36e8753cedba35ddecda6e9ec3fd82b8b4d100dc780dbd5815d72e0c95
 generated_by: task plan-views status
 -->
 
@@ -175,6 +175,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · P4.2 closure rebind: emit the required standalone write-site record without changing product bytes. |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P4.2 closure rebind: provider Stop adapters, capability evidence and the forty-boundary proof remain green; product bytes are unchanged.
 write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · audit-green · P4 minimal audit: stable candidate; focused seam green; unrelated P5.1 bundle lint error remains non-gating. |
 
 ## Correction Routing
 

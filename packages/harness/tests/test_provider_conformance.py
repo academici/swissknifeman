@@ -93,12 +93,12 @@ class ProviderConformanceTests(unittest.TestCase):
         self.assertTrue(all(f"agent:codex:{role}" in hashes for role in fixture["agent_roles"]
                             if role != "_common.orchestrator"))
         self.assertNotIn("agent:codex:_common.orchestrator", hashes)
-        self.assertEqual(len(hashes), 6 + 2 + 44 + 43 + 30)
+        self.assertEqual(len(hashes), 6 + 2 + 44 + 43 + 32)
         expected = {(provider, surface) for provider in ("claude-code", "codex")
                     for surface in fixture["surfaces"]}
         observed = {(row["provider"], row["surface_id"]) for row in report["surface_map"]}
         self.assertEqual(observed, expected)
-        self.assertEqual(len(report["surface_map"]), 46)
+        self.assertEqual(len(report["surface_map"]), 48)
         self.assertIn({"category": "activation", "provider": "claude-code",
                        "identity": "agents.catalog", "polarity": "positive",
                        "state": "supported", "diagnostic": "HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:44"},
@@ -162,7 +162,7 @@ class ProviderConformanceTests(unittest.TestCase):
             ".codex/hooks.json", ".codex/hooks/lifecycle.py"))
         before = {path: path.read_bytes() for path in protected}
         command = [str(PACKAGE / "bin/harness"), "hooks", "--provider", "codex",
-                   "--observer", "--trusted", "--dry-run", "--target"]
+                   "--terminal-admission", "on", "--trusted", "--dry-run", "--target"]
 
         relative = subprocess.run(command + ["."], cwd=repository, text=True,
                                   capture_output=True, check=False)

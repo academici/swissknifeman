@@ -14,6 +14,7 @@ _SURFACE_EVENTS = {
     "security.safe-dirs": "PreToolUse",
     "lifecycle.daemon-safety": "PreToolUse",
     "lifecycle.git-guardrails": "PreToolUse",
+    "lifecycle.terminal-admission": "Stop",
 }
 _EVENT_FIELDS = {
     "SessionStart": ("source",),
@@ -21,6 +22,7 @@ _EVENT_FIELDS = {
     "SessionEnd": ("reason",),
     "UserPromptSubmit": ("prompt",),
     "SubagentStop": ("agent_type",),
+    "Stop": ("stop_hook_active", "last_assistant_message"),
 }
 _GATE_MODES = ("off", "warn", "strict")
 
@@ -44,7 +46,8 @@ def _read_mode(cwd, filename):
         key, value = (part.strip() for part in line.split("=", 1))
         if key == "MODE":
             value = value.lower()
-            mode = value if value in _GATE_MODES else "off"
+            allowed = ("on", "off") if filename == "terminal-admission.env.ini" else _GATE_MODES
+            mode = value if value in allowed else "off"
     return mode
 _ROUTER_CATALOG = [{"name": "task:design", "weight": 1, "keywords": ["спроектир", "проектир", "дизайн", "архитектур", "design", "architecture", "adr", "распланируй", "продумай", "схему", "модель данных", "concept"]}, {"name": "task:dev", "weight": 1, "keywords": ["сделай", "добавь", "реализуй", "построй", "напиши", "внедри", "build", "implement", "feature", "фича", "эндпоинт", "endpoint", "команду", "миграци", "интеграци"]}, {"name": "task:research", "weight": 1, "keywords": ["исследуй", "research", "сравни", "compare", "разузнай", "investigate", "актуально", "best practice", "варианты", "какой лучше", "изучи"]}, {"name": "task:review", "weight": 1, "keywords": ["ревью", "отревьюй", "review", "audit", "аудит", "diff", "pr", "проверь код", "code review", "посмотри дифф"]}, {"name": "task:fix", "weight": 1, "keywords": ["почини", "fix", "баг", "bug", "опечатк", "typo", "поправь", "мелкая правка", "small fix", "сломал"]}]
 _ROUTER_HINT_TEMPLATE = '[intent-router] bias (non-authoritative): top={name} score={score}{runners}'
@@ -406,6 +409,38 @@ def _git_guardrails(payload):
             return
 
 
+def _terminal_admission(payload):
+    """Thin Stop adapter: P4.1 remains the only terminal-policy owner."""
+    cwd = payload.get("cwd")
+    if _read_mode(cwd, "terminal-admission.env.ini") != "on" or not cwd:
+        return
+    request = payload.get("terminal_admission")
+    if not isinstance(request, dict) or not request.get("applicable"):
+        return
+    required = ("plan", "subject", "command", "run_id", "task_session", "continuity_json")
+    if any(not isinstance(request.get(key), str) or not request[key] for key in required):
+        print(json.dumps({"decision": "block", "reason": "TERMINAL_ADMISSION_CONTEXT_INVALID"})); return
+    cli = Path(cwd) / "packages/task/scripts/plan-terminal-admission.py"
+    if not cli.is_file():
+        print(json.dumps({"decision": "block", "reason": "TASK_TERMINAL_ADMISSION_UNAVAILABLE"})); return
+    message = payload.get("last_assistant_message")
+    if not isinstance(message, str):
+        print(json.dumps({"decision": "block", "reason": "TERMINAL_MESSAGE_UNAVAILABLE"})); return
+    command = [sys.executable, str(cli), "check", "--state-dir", str(Path(cwd) / ".swissknifeman/terminal-admission"),
+               "--plan", request["plan"], "--subject", request["subject"], "--command", request["command"],
+               "--run-id", request["run_id"], "--task-session", request["task_session"], "--provider", "codex",
+               "--provider-session", payload.get("session_id", ""), "--turn-id", payload.get("turn_id", ""),
+               "--continuity-json", request["continuity_json"], "--message", message,
+               "--plan-dir", str(Path(cwd) / "plans" / request["plan"])]
+    result = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=10)
+    try:
+        verdict = json.loads(result.stdout)
+    except (TypeError, ValueError):
+        verdict = {"final_allowed": False, "reason": "TERMINAL_ADMISSION_VERIFIER_FAILED"}
+    if not verdict.get("final_allowed"):
+        print(json.dumps({"decision": "block", "reason": str(verdict.get("reason") or "TERMINAL_ADMISSION_REFUSED")}))
+
+
 _HANDLERS = {
     "context.observer": _observer,
     "lifecycle.command-log": _command_log,
@@ -418,6 +453,7 @@ _HANDLERS = {
     "security.safe-dirs": _safe_dirs,
     "lifecycle.daemon-safety": _daemon_safety,
     "lifecycle.git-guardrails": _git_guardrails,
+    "lifecycle.terminal-admission": _terminal_admission,
 }
 
 parser = argparse.ArgumentParser()

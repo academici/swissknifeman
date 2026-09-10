@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **`harness` / `task`: opt-in terminal-admission Stop adapters.** Codex and Claude Code
+  lifecycle bindings now delegate applicable, trusted Stop attempts to the P4.1 Task reducer;
+  inactive hooks and absent leases remain no-ops, while provider limits stay explicit.
+
 - **`task`: lease-bound terminal admission.** Новый provider-neutral reducer и worktree-local CLI
   привязывают terminal response к run/session identity, P1.3 typed continuity, свежему delivery
   receipt и точному machine-authored fragment. Leases monotonic and expiring; append-only events

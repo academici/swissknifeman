@@ -6,9 +6,9 @@
 
 - Contract: `1.0.0`
 - Catalog: `1.0.0`
-- Canonical JSON SHA-256 (without carrier LF): `9d8b95709c5977dcec4699e515feebadcbb4c77b00d3c4a25ca869b61e8920b4`
-- Carrier SHA-256 (canonical bytes plus one LF): `2b3bd60cade123c1f390c2c3fe3e1db0029bf2d2f7946ed3394620366c8f387d`
-- Common capabilities: `35`; Native Extensions: `0`
+- Canonical JSON SHA-256 (without carrier LF): `ef84f7e1a1fd47cc04ddec2ccc62dcc99887730bc84870041354cee97a13e8cc`
+- Carrier SHA-256 (canonical bytes plus one LF): `7298d50fa9953353151d6c51502e98d8d15adfeeb3ff8b1f2c50cc0e741f37b2`
+- Common capabilities: `36`; Native Extensions: `0`
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
 
@@ -49,6 +49,7 @@ Support levels, provider bindings, limitations, evidence and diagnostics below c
 | `lifecycle.review-gate` | adapted | adapted |
 | `lifecycle.router` | adapted | adapted |
 | `lifecycle.run-report` | adapted | adapted |
+| `lifecycle.terminal-admission` | adapted | adapted |
 | `mcp.catalog` | adapted | adapted |
 | `security.safe-dirs` | adapted | adapted |
 | `settings.audit` | adapted | adapted |
@@ -504,6 +505,20 @@ Capture a provider-qualified run report at a native lifecycle boundary.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.run-report
   Limitations: captures the session boundary only: the Codex transcript format is unverified, so no outcome is extracted from `transcript_path`; `reason` is currently always `other` in Codex payloads, so the report cannot distinguish end causes; outcome depth comparable to the Claude report requires the neutral analytics path (`analytics.run-report`), not this hook.
   Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.run-report` writes one provider-qualified run record per session end from the documented `SessionEnd` payload; the transcript is not parsed — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.run-report boundary capture at SessionEnd, without transcript-derived outcome extraction).
+
+### `lifecycle.terminal-admission`
+
+Adapt an opted-in provider Stop boundary to Task terminal admission.
+
+- **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.terminal-admission`.
+  Diagnostic: opt-in Claude Stop adapter delegates final admission to Task
+  Limitations: inactive by default; only an applicable Task lease is evaluated; Claude Code can override after eight consecutive blocks; does not control unconfigured or non-CLI surfaces.
+  Evidence: [2026-09-10] Claude Code Stop hooks receive the final assistant message and can continue the agent — `https://code.claude.com/docs/en/hooks` (configured trusted Claude Code Stop hook).
+
+- **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.terminal-admission`.
+  Diagnostic: opt-in Codex Stop adapter delegates final admission to Task
+  Limitations: inactive by default; only an applicable Task lease is evaluated; multiple matching hooks run concurrently; does not control unconfigured or non-CLI surfaces.
+  Evidence: [2026-09-10] Codex Stop hooks receive last_assistant_message and can request continuation — `https://developers.openai.com/codex/hooks` (configured trusted Codex Stop hook).
 
 ### `mcp.catalog`
 

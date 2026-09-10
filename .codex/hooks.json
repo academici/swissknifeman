@@ -1,15 +1,14 @@
 {
   "description": "Managed provider-native lifecycle hooks.",
   "hooks": {
-    "SessionStart": [
+    "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/lifecycle.py\" --surface context.observer"
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/lifecycle.py\" --surface lifecycle.terminal-admission"
           }
-        ],
-        "matcher": "startup|resume|clear|compact"
+        ]
       }
     ]
   }

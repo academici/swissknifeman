@@ -91,6 +91,7 @@ def _claude_lifecycle_bindings():
         "lifecycle.review-gate": LifecycleBinding("lifecycle.review-gate", "native", "global-hook", "SubagentStop", "", "~/.claude/hooks/review-gate/review-gate.sh"),
         "lifecycle.daemon-safety": LifecycleBinding("lifecycle.daemon-safety", "native", "global-hook", "PreToolUse", "Bash", "~/.claude/hooks/daemon-safety/block-daemon-ops.sh"),
         "lifecycle.git-guardrails": LifecycleBinding("lifecycle.git-guardrails", "unsupported", "none", diagnostic_code="HARNESS_ACTIVATION_UNSUPPORTED"),
+        "lifecycle.terminal-admission": LifecycleBinding("lifecycle.terminal-admission", "native", "trusted-project-stop", "Stop", "", "terminal-admission.py", "TERMINAL_ADMISSION=off"),
         "security.safe-dirs": LifecycleBinding("security.safe-dirs", "native", "embedded-in-auto-approval", "PreToolUse", "Bash", "~/.claude/hooks/auto-approve/lib/safedirs.py"),
         "context.observer": LifecycleBinding("context.observer", "unsupported", "none", diagnostic_code="HARNESS_ACTIVATION_UNSUPPORTED"),
         "context.output-style": LifecycleBinding("context.output-style", "native", "new-session", handler="outputStyle", kill_switch="outputStyle=off"),
@@ -165,6 +166,7 @@ _CODEX_EVENT_REQUIRED_FIELDS = {
     "PostToolUse": ("tool_name", "tool_input"),
     "PermissionRequest": ("tool_name", "tool_input"),
     "SubagentStop": ("agent_type",),
+    "Stop": ("stop_hook_active", "last_assistant_message"),
 }
 
 
@@ -249,6 +251,7 @@ _SURFACE_EVENTS = {{
     "security.safe-dirs": "PreToolUse",
     "lifecycle.daemon-safety": "PreToolUse",
     "lifecycle.git-guardrails": "PreToolUse",
+    "lifecycle.terminal-admission": "Stop",
 }}
 _EVENT_FIELDS = {{
     "SessionStart": ("source",),
@@ -256,6 +259,7 @@ _EVENT_FIELDS = {{
     "SessionEnd": ("reason",),
     "UserPromptSubmit": ("prompt",),
     "SubagentStop": ("agent_type",),
+    "Stop": ("stop_hook_active", "last_assistant_message"),
 }}
 _GATE_MODES = ("off", "warn", "strict")
 
@@ -279,7 +283,8 @@ def _read_mode(cwd, filename):
         key, value = (part.strip() for part in line.split("=", 1))
         if key == "MODE":
             value = value.lower()
-            mode = value if value in _GATE_MODES else "off"
+            allowed = ("on", "off") if filename == "terminal-admission.env.ini" else _GATE_MODES
+            mode = value if value in allowed else "off"
     return mode
 _ROUTER_CATALOG = {router_catalog_literal}
 _ROUTER_HINT_TEMPLATE = {hint_template!r}
@@ -641,6 +646,38 @@ def _git_guardrails(payload):
             return
 
 
+def _terminal_admission(payload):
+    """Thin Stop adapter: P4.1 remains the only terminal-policy owner."""
+    cwd = payload.get("cwd")
+    if _read_mode(cwd, "terminal-admission.env.ini") != "on" or not cwd:
+        return
+    request = payload.get("terminal_admission")
+    if not isinstance(request, dict) or not request.get("applicable"):
+        return
+    required = ("plan", "subject", "command", "run_id", "task_session", "continuity_json")
+    if any(not isinstance(request.get(key), str) or not request[key] for key in required):
+        print(json.dumps({{"decision": "block", "reason": "TERMINAL_ADMISSION_CONTEXT_INVALID"}})); return
+    cli = Path(cwd) / "packages/task/scripts/plan-terminal-admission.py"
+    if not cli.is_file():
+        print(json.dumps({{"decision": "block", "reason": "TASK_TERMINAL_ADMISSION_UNAVAILABLE"}})); return
+    message = payload.get("last_assistant_message")
+    if not isinstance(message, str):
+        print(json.dumps({{"decision": "block", "reason": "TERMINAL_MESSAGE_UNAVAILABLE"}})); return
+    command = [sys.executable, str(cli), "check", "--state-dir", str(Path(cwd) / ".swissknifeman/terminal-admission"),
+               "--plan", request["plan"], "--subject", request["subject"], "--command", request["command"],
+               "--run-id", request["run_id"], "--task-session", request["task_session"], "--provider", "codex",
+               "--provider-session", payload.get("session_id", ""), "--turn-id", payload.get("turn_id", ""),
+               "--continuity-json", request["continuity_json"], "--message", message,
+               "--plan-dir", str(Path(cwd) / "plans" / request["plan"])]
+    result = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=10)
+    try:
+        verdict = json.loads(result.stdout)
+    except (TypeError, ValueError):
+        verdict = {{"final_allowed": False, "reason": "TERMINAL_ADMISSION_VERIFIER_FAILED"}}
+    if not verdict.get("final_allowed"):
+        print(json.dumps({{"decision": "block", "reason": str(verdict.get("reason") or "TERMINAL_ADMISSION_REFUSED")}}))
+
+
 _HANDLERS = {{
     "context.observer": _observer,
     "lifecycle.command-log": _command_log,
@@ -653,6 +690,7 @@ _HANDLERS = {{
     "security.safe-dirs": _safe_dirs,
     "lifecycle.daemon-safety": _daemon_safety,
     "lifecycle.git-guardrails": _git_guardrails,
+    "lifecycle.terminal-admission": _terminal_admission,
 }}
 
 parser = argparse.ArgumentParser()
@@ -1083,6 +1121,13 @@ def _block_codex_gates(env, target, opts):
                   opts["dry_run"])
         if mode != "off":
             surfaces.append(surface_id)
+    if opts["terminal_admission"]:
+        if opts["terminal_admission"] not in ("on", "off"):
+            die("неизвестный режим terminal-admission: on|off")
+        write_text(target / ".codex" / "terminal-admission.env.ini",
+                   f"MODE={opts['terminal_admission']}\n", opts["dry_run"])
+        if opts["terminal_admission"] == "on":
+            surfaces.append("lifecycle.terminal-admission")
     if not surfaces:
         die("provider codex нужен хотя бы один из: --observer / --pack-guard off|warn|strict / "
             "--changelog-gate off|warn|strict / --review-gate off|warn|strict / "
@@ -1091,12 +1136,25 @@ def _block_codex_gates(env, target, opts):
                           repair=bool(opts["repair"]), dry=bool(opts["dry_run"]))
 
 
+def block_terminal_admission(target, mode, settings_file, dry):
+    """Register the opt-in Claude Stop adapter without making it a global policy."""
+    if mode not in ("on", "off"):
+        die("неизвестный режим terminal-admission: on|off")
+    write_text(target / ".claude" / "terminal-admission.env.ini", f"MODE={mode}\n", dry)
+    if mode == "off":
+        return
+    settings, path = load_settings(target, settings_file)
+    command = 'python3 ${CLAUDE_PROJECT_DIR}/packages/harness/configs/claude-code/hooks/terminal-admission/terminal-admission.py'
+    if add_hook(settings, "Stop", "", command):
+        write_json(path, settings, dry)
+
+
 def cmd_hooks(env, argv):
     opts = parse_flags(argv, {
         "--target": "str", "--auto-approve": "str", "--memory": "str",
         "--router": "str", "--run-report": "str", "--pack-guard": "str",
         "--changelog-gate": "str", "--review-gate": "str", "--git-guardrails": "str",
-        "--safe-dirs": "bool", "--daemon-safety": "bool",
+        "--safe-dirs": "bool", "--daemon-safety": "bool", "--terminal-admission": "str",
         "--output-style": "str", "--plans-dir": "str", "--statusline": "str",
         "--file": "str",
         "--provider": "str", "--observer": "bool", "--trusted": "bool",
@@ -1115,6 +1173,7 @@ def cmd_hooks(env, argv):
               "[--provider codex [--observer] [--pack-guard off|warn|strict] "
               "[--changelog-gate off|warn|strict] [--review-gate off|warn|strict] "
               "[--git-guardrails off|warn|strict] [--safe-dirs] [--daemon-safety] "
+              "[--terminal-admission on|off] "
               "[--trusted] [--repair]] "
               "[--file settings.json|settings.local.json] [--dry-run]")
         return
@@ -1133,7 +1192,7 @@ def cmd_hooks(env, argv):
         return
     if not (opts["auto_approve"] or opts["memory"] or opts["router"]
             or opts["run_report"] or opts["pack_guard"] or opts["changelog_gate"]
-            or opts["output_style"] or opts["plans_dir"] or opts["statusline"]):
+            or opts["output_style"] or opts["plans_dir"] or opts["statusline"] or opts["terminal_admission"]):
         die("нужен хотя бы один из: --auto-approve MODE / --memory BRAIN:MODE / "
             "--router MODE / --run-report on|off / --pack-guard off|warn|strict / "
             "--changelog-gate off|warn|strict / "
@@ -1159,3 +1218,5 @@ def cmd_hooks(env, argv):
         block_plans_dir(target, opts["plans_dir"], settings_file, opts["dry_run"])
     if opts["statusline"]:
         block_statusline(target, opts["statusline"], opts["dry_run"])
+    if opts["terminal_admission"]:
+        block_terminal_admission(target, opts["terminal_admission"], settings_file, opts["dry_run"])

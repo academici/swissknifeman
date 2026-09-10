@@ -402,6 +402,15 @@ docs-impact гейт, матрица возможностей, CI-гигиена
 
 ## Instruction-carrier weight policy (2026-08-07)
 
+## Provider Stop adapters (2026-09-10)
+
+- [OpenAI Codex Hooks](https://developers.openai.com/codex/hooks): documented `Stop` payload
+  includes `turn_id`, `stop_hook_active` and `last_assistant_message`; a `decision: "block"`
+  requests continuation. The adapter remains opt-in and only translates the Task verdict.
+- [Claude Code hooks](https://code.claude.com/docs/en/hooks): documented `Stop` receives the
+  final assistant message and supports blocking continuation, with an eight-consecutive-block
+  override. No provider-specific behavior becomes Task policy.
+
 - <https://docs.anthropic.com/en/docs/claude-code/memory> and
   <https://docs.github.com/en/copilot/tutorials/optimize-ai-usage> informed the focused-carrier
   guidance recorded in `plans/archive/2026.08.07-PLAN-ECONOMY/findings/14-*`.

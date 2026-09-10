@@ -18,7 +18,7 @@
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
 ### Поддержка провайдеров (generated)
 
-Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `9d8b95709c5977dcec4699e515feebadcbb4c77b00d3c4a25ca869b61e8920b4`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Подробности и операции: [provider support](docs/provider-support.md).
+Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `ef84f7e1a1fd47cc04ddec2ccc62dcc99887730bc84870041354cee97a13e8cc`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Подробности и операции: [provider support](docs/provider-support.md).
 
 | Capability | Claude Code | Codex |
 |:--|:--:|:--:|
@@ -51,6 +51,7 @@
 | `lifecycle.review-gate` | adapted | adapted |
 | `lifecycle.router` | adapted | adapted |
 | `lifecycle.run-report` | adapted | adapted |
+| `lifecycle.terminal-admission` | adapted | adapted |
 | `mcp.catalog` | adapted | adapted |
 | `security.safe-dirs` | adapted | adapted |
 | `settings.audit` | adapted | adapted |

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: 59f8fbece9ed9d6d54083852f938f2e431a5397baab58e0426bd8e69d9ee8641
+inputs_sha256: 49780f42d8ed836a31cace3114b56874cebc2f92906a03929f1ded2bec2b07e7
 generated_by: task plan-views status
 -->
 
@@ -197,6 +197,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 34 tests and 5 PHP syntax checks (на d7d0d94e).
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · audit-green · P5 minimal audit: one carrier-only repair; focused delta green; unchanged affected-package evidence reused. |
+| 2026-09-10 | implementation/low | plan-close · closed-green · фаза P5 закрыта |
 
 ## Correction Routing
 

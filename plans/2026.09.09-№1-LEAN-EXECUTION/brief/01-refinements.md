@@ -141,3 +141,19 @@ The owner also required a permanent executable plan item that prevents the same 
 P7.1 therefore owns the Task command/policy/lint/delivery regression for bounded design-audit
 remediation → direct grouped execution. It is deliberately one vertical item with `Review=none`;
 adding a separate audit of that anti-repeat-audit item would recreate the measured process defect.
+
+## 2026-09-10 — owner priority correction: simplify before P3
+
+The owner explicitly stops normal progression before P3 and requires the instruction, validation,
+audit and bookkeeping overhead observed during the P2 audit to be fixed first in a fresh session.
+The existing P7.1 identity is reused as the priority target instead of adding P2.4 or another phase.
+Its design must be broadened from repeat-design-audit continuation to one lean Task control loop,
+then executed before P3. The measured diagnosis, external evidence, required deletions and
+acceptance budget are persisted in `findings/15-lean-lifecycle-overhead-2026-09-10.md`.
+
+This is an owner sequencing and simplification decision, not permission to weaken high-risk gates.
+Security/authentication, destructive migrations, irreversible external actions, payments,
+concurrency/shared state and public API/schema changes retain deterministic widened validation and
+review. Overlapping future machinery in P3.3, P6.1–P6.4 and the old P7.1 contract must be removed or
+superseded during design rather than executed in addition to the lean replacement. No new parallel
+`lean` protocol is authorized.

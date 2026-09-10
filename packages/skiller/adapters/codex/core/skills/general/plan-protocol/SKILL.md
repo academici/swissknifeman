@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.31.3
+version: 2.31.4
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
@@ -182,9 +182,13 @@ generated `[v2]` phase-closure view. A terminal phase is a candidate. Both hando
 `task.plan_gates.phase_audit_policy`) over the same runtime-built candidate snapshot. Every new
 phase declares one handwritten `Phase Assurance | v1` block: Impact, Integration Seams, Live or
 Irreversible, Audit Intent, and Rationale. `Routing.Review` and item count are item-execution
-depth, never phase-risk triggers. Missing legacy assurance takes a named conservative audit baseline;
-isolated, green, seam-free `direct-close-eligible` candidates may close directly; public, security,
-live/irreversible, non-green, or material-risk candidates require audit. After a GREEN audit, every
+depth, never phase-risk triggers. Missing legacy assurance takes a named conservative audit baseline.
+<!-- i18n-keep: Audit Intent: light -->
+Historical `Audit Intent: light` normalizes only to named `legacy-light`: a single green candidate
+without material risk may preserve its historical direct close, while every other legacy-light
+candidate requires audit. New declarations use `direct-close-eligible` only for isolated, green,
+seam-free candidates; public, security, live/irreversible, non-green, or material-risk candidates
+require audit. After a GREEN audit, every
 mismatch is `audit-impact/v1`: bookkeeping rebind, bounded delta, justified full, evidence gathering,
 or owner review—never bare stale/full. RED or unresolved ATTENTION is repaired in its owning item.
 A terminal blocked item remains fail-closed, except for an explicit accepted, non-superseded

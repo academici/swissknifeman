@@ -10,7 +10,7 @@
     "impact": {"enum": ["isolated", "internal-integration", "public-contract", "security-external"]},
     "integration_seams": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"}},
     "live_or_irreversible": {"type": "boolean"},
-    "audit_intent": {"enum": ["auto", "required", "direct-close-eligible"]},
+    "audit_intent": {"enum": ["auto", "required", "direct-close-eligible", "legacy-light"]},
     "rationale": {"type": "string", "minLength": 1}
   }
 }

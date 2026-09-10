@@ -59,6 +59,25 @@ class PhaseAssuranceTests(unittest.TestCase):
         self.assertEqual(plan_assurance.evaluate(plan, "P1", candidate=candidate(risks=("security",)))["code"],
                          "PHASE_AUDIT_REQUIRED_MATERIAL_RISK")
 
+    def test_legacy_light_preserves_only_single_green_direct_close(self):
+        plan = self.plan(
+            impact="internal-integration",
+            seams="legacy-seam",
+            live="none; repository edits are reversible",
+            intent="light",
+        )
+        assurance = plan_assurance.read(plan, "P1")
+        self.assertEqual(assurance["audit_intent"], "legacy-light")
+        self.assertFalse(assurance["live_or_irreversible"])
+        self.assertEqual(
+            plan_assurance.evaluate(plan, "P1", candidate=candidate())["code"],
+            "PHASE_DIRECT_CLOSE_LEGACY_LIGHT",
+        )
+        self.assertEqual(
+            plan_assurance.evaluate(plan, "P1", candidate=candidate(statuses=("🟢 Done", "🟢 Done")))["code"],
+            "PHASE_AUDIT_REQUIRED_LEGACY_LIGHT_MULTI_ITEM",
+        )
+
     def test_field_level_impact_never_returns_bare_stale_or_implicit_full(self):
         plan = self.plan(impact="internal-integration", seams="policy", intent="auto")
         baseline = candidate(product="a")

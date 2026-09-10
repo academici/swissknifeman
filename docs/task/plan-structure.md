@@ -49,6 +49,10 @@ green candidate; public/security/live/non-green/material risk остаются a
 расхождение по полям как `audit-impact/v1`, возвращая только `gate-rebind`, `delta`, justified
 `full`, `gather-evidence` или `owner-review`; bare stale/full запрещён.
 
+Исторический `Audit Intent: light` нормализуется в named `legacy-light`: прямое закрытие
+сохраняется только для одного green item без material risk; любой другой legacy-light candidate
+остаётся audit-required. Новые фазы не используют этот compatibility intent.
+
 Рядом с каталогами планов живёт `plans/ACTIVE.md` — 4-строчный указатель активного плана
 (парсится `plan-lint`); плоские `.md` прямо в `plans/` — черновики plan mode,
 разворачиваются `/task:plan-design from-draft <файл>`.

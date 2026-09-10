@@ -14,7 +14,7 @@ from task import plan_status
 
 
 IMPACTS = frozenset(("isolated", "internal-integration", "public-contract", "security-external"))
-AUDIT_INTENTS = frozenset(("auto", "required", "direct-close-eligible"))
+AUDIT_INTENTS = frozenset(("auto", "required", "direct-close-eligible", "legacy-light"))
 IMPACT_CLASSES = frozenset((
     "unrelated-worktree", "audit-bookkeeping", "local-material", "wide-material",
     "unclassifiable",
@@ -23,6 +23,8 @@ _HEADER = "> **Phase Assurance | v1.**"
 _FIELD_RE = re.compile(r"^>\s*(Impact|Integration Seams|Live or Irreversible|Audit Intent|Rationale):\s*(.*?)\s*$")
 _SEAM_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 _NO_BASELINE = object()
+_LEGACY_AUDIT_INTENT_NORMALIZATIONS = {"light": "legacy-light"}
+_LEGACY_LIVE_NORMALIZATIONS = {"none; repository edits are reversible": "no"}
 
 
 class AssuranceError(ValueError):
@@ -59,12 +61,13 @@ def parse(text: str) -> dict:
     if missing:
         raise AssuranceError("PHASE_ASSURANCE_FIELD_MISSING", f"отсутствуют поля: {', '.join(missing)}")
     impact = values["Impact"]
-    intent = values["Audit Intent"]
+    intent = _LEGACY_AUDIT_INTENT_NORMALIZATIONS.get(values["Audit Intent"], values["Audit Intent"])
     if impact not in IMPACTS:
         raise AssuranceError("PHASE_ASSURANCE_IMPACT_INVALID", f"Impact {impact!r} вне закрытого enum")
     if intent not in AUDIT_INTENTS:
         raise AssuranceError("PHASE_ASSURANCE_INTENT_INVALID", f"Audit Intent {intent!r} вне закрытого enum")
-    live = values["Live or Irreversible"]
+    live = _LEGACY_LIVE_NORMALIZATIONS.get(
+        values["Live or Irreversible"], values["Live or Irreversible"])
     if live not in {"yes", "no"}:
         raise AssuranceError("PHASE_ASSURANCE_LIVE_INVALID", "Live or Irreversible ожидает yes/no")
     raw_seams = values["Integration Seams"]
@@ -214,6 +217,15 @@ def evaluate(plan_dir: Path | str, phase_id: str, *, candidate: dict | None,
         return _decision(plan_dir=plan_dir, phase_id=phase_id, action="direct-close",
                          code="PHASE_DIRECT_CLOSE_ASSURED", reasons=["isolated-green-direct-close"],
                          assurance=assurance, audit_required=False)
+    if assurance["audit_intent"] == "legacy-light":
+        if len(heads) == 1:
+            return _decision(plan_dir=plan_dir, phase_id=phase_id, action="direct-close",
+                             code="PHASE_DIRECT_CLOSE_LEGACY_LIGHT",
+                             reasons=["legacy-light-single-green-item"], assurance=assurance,
+                             audit_required=False)
+        return _decision(plan_dir=plan_dir, phase_id=phase_id, action="audit-required",
+                         code="PHASE_AUDIT_REQUIRED_LEGACY_LIGHT_MULTI_ITEM",
+                         reasons=["legacy-light-multi-item"], assurance=assurance)
     return _decision(plan_dir=plan_dir, phase_id=phase_id, action="audit-required",
                      code="PHASE_AUDIT_REQUIRED_INTEGRATION", reasons=["integration-assurance"],
                      assurance=assurance)

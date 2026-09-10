@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: 094e01f67834c004d20070840577e5c22e4cea72e40f7db4bac6f80602c18632
+inputs_sha256: bc1754093bdbddfe35cfdec740258234996c293d379fff374f8b90d4a82a15f3
 generated_by: task plan-views status
 -->
 
@@ -26,7 +26,7 @@ generated_by: task plan-views status
 | P1 | Task read, dispatch and session economy | 0/3 | 🟠 Done with deviations |
 | P2 | Bounded repair, readiness, re-entry and archive | 0/3 | 🟠 Done with deviations |
 | P3 | Proportional phase assurance and evidence reuse | 3/3 | 🟢 Done |
-| P4 | Terminal delivery and provider boundary | 0/2 | ⬜ Not started |
+| P4 | Terminal delivery and provider boundary | 1/2 | 🟡 In progress |
 | P5 | Narrow cross-package field gaps | 0/3 | ⬜ Not started |
 | P7 | Lean Task control loop consolidation | 1/1 | 🟢 Done |
 
@@ -58,7 +58,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P4.1 | Terminal admission, lease and transcript contract | ⬜ Not started | — |
+| P4.1 | Terminal admission, lease and transcript contract | 🟢 Done | 2026-09-10 |
 | P4.2 | Provider adapters and 40-boundary proof | ⬜ Not started | — |
 
 ## Phase P5
@@ -165,6 +165,11 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · note сокращена; полный текст: journal.jsonl:68 |
 | 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · local-repair · P3 product finding: audit continuation still has an unconditional command-name hard boundary; owning forward repair is P3.4. |
 | 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · local-repair · Forward correction: normalize the owning continuation to run-items; supersedes the semantic kind in journal:69. |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · note сокращена; полный текст: journal.jsonl:72 |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · in-progress · — |
+| 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P4.1 closed: terminal admission binds typed P1.3 continuity, stable run identity, a fresh receipt and the exact final fragment; leases remain hash-only and recoverable.
+write-site: pre_mutation: allow · pre_final: allow |
 
 ## Correction Routing
 

@@ -4,6 +4,13 @@ try:
 except ImportError:
     from test_plan_lint_support import *
 
+from task import terminal_admission
+
+
+class TestTerminalAdmissionSchemaContract(TmpPlanTestCase):
+    def test_runtime_contracts_match_committed_schemas(self):
+        self.assertTrue(terminal_admission.validate_contracts())
+
 
 class TestBriefLayer(TmpPlanTestCase):
     """Слой 0 «бриф» (SKILL §16): датовый план от 2026.07.16 без brief/ — ERROR,

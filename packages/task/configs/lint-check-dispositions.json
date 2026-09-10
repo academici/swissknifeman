@@ -10,6 +10,7 @@
     "task.plan_lint_checks.engine._lint_design_continuation": {"disposition": "migrated"},
     "task.plan_lint_checks.engine._lint_priority_continuation": {"disposition": "migrated"},
     "task.plan_lint_checks.engine._lint_routing": {"disposition": "migrated"},
+    "task.plan_lint_checks.engine._lint_terminal_admission_contract": {"disposition": "migrated", "activated_from": "2026-09-10"},
     "task.plan_lint_checks.engine._lint_routing_coverage": {"disposition": "migrated"},
     "task.plan_lint_checks.engine._lint_next_runnable_bundle": {"disposition": "migrated"},
     "task.plan_lint_checks.parsing._lint_contracts_cross_plan": {"disposition": "unchanged"},

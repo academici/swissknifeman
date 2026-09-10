@@ -50,6 +50,17 @@ bundle digest inputs, declared product paths и closure. До мутации `Fi
 Closure доказывает byte identity product paths; registry-owned volatile projections, journal и
 handoff считаются bookkeeping, пока item явно не выводит их в Deliverables.
 
+## Terminal admission lease
+
+`terminal-admission-lease/v1` is ignored project-local runtime state, not a sixth plan carrier.
+It is keyed by provider/session + Task session/run + plan/subject/command, with monotonic
+progress and bounded expiry; each event retains its turn identity separately, so a later turn of
+the same run cannot silently bypass the active lease. `final-admission-event/v1` is append-only hash-only evidence: the
+same refreshed typed P1.3 terminal decision, exact terminal receipt and exact machine-authored
+recommendation fragment are required for `final_allowed=true`. No lease leaves ordinary chat
+untouched; invalid, stale or released applicable state returns a stable `re-arm` recovery verdict.
+Provider adapters may translate this reducer, but cannot replace its terminal policy.
+
 Перед `audit-green` audit-finalization regenerates owned projections once, rebuilds candidate and
 records `audit-finalization/v1` with `close_admission=allow`. Phase close consumes that evidence.
 

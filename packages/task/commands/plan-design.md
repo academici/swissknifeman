@@ -16,3 +16,6 @@ Design completion records exactly one semantic Next. A bounded remediation does 
 fresh audit/root; only a concrete context-budget, capability, owner-pause, independent review,
 public/authority, or material-risk boundary does. `DESIGN-ROOT-TERMINAL` remains a design-result
 handoff boundary: it must not execute or spawn a successor in the same design invocation.
+
+An applicable terminal-admission lease is a provider adapter concern: design supplies only typed
+continuity and delivery carriers, never free-prose terminal authorization.

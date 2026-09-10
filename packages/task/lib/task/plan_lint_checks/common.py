@@ -40,7 +40,7 @@ except ImportError:  # pragma: no cover - standalone-фолбэк, см. docstri
 # журнала реюзает её вместо дубля правил (Code Guidance 2026.07.18-FOREMAN P1.4 «анти-подгонка»), тот же
 # пакет `task`, тот же lib/ на sys.path (см. scripts/plan-lint.py лаунчер).
 from task import journal as _journal
-from task import plan_continuity, plan_layout
+from task import plan_continuity, plan_layout, terminal_admission
 from task import review_policy as _review_policy
 from task import plan_status
 # task.task_contract — единственный владелец строкового теста «внешности» execution

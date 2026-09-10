@@ -13,6 +13,14 @@ from task import plan_readiness
 
 
 class PlanDeliveryTests(unittest.TestCase):
+    def test_required_final_message_is_machine_authored_and_exact(self):
+        message = plan_delivery.required_final_message({
+            "schema_version": "terminal-delivery-receipt/v1", "recommendation": "Run P4.2.",
+        })
+        self.assertEqual(message, "Рекомендация следующего шага:\nRun P4.2.")
+        with self.assertRaisesRegex(plan_delivery.DeliveryError, "STALE_TERMINAL_RECEIPT"):
+            plan_delivery.required_final_message({"schema_version": "unknown"})
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)

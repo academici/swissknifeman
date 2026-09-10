@@ -87,3 +87,21 @@ handoff. Нетерминальный state возвращает `FINAL_BEFORE_T
 Package runtime не видит transport lifecycle провайдера, поэтому heartbeat и проверка уже
 отправленного transcript остаются отдельными adapter/harness seam. Receipt честно защищает
 package-owned границу до `final`, но не заявляет недоступный transport hook.
+
+## Terminal admission lease
+
+`terminal_admission` adds the repository-owned seam between a Task run and a documented provider
+Stop adapter. Its ignored `.swissknifeman/task-terminal/` state binds provider/session, Task
+session, plan, subject, command and run ID to one monotonic, expiring lease; turn identity remains
+in each event, so a later turn of the same run stays applicable. Concurrent Task runs never replace
+each other. `arm` follows run admission;
+`refresh` needs a changed progress fingerprint or typed `waiting-owner`; `release` is explicit.
+`check` is a total reducer: no matching lease is `NOT_APPLICABLE`, while invalid, stale or ambiguous
+applicable state fails closed with a recovery action.
+
+For a terminal decision it requires the exact validated P1.3 `terminal` continuity result that was
+last refreshed into the lease, rebuilds the receipt and compares only
+`plan_delivery.required_final_message(receipt)` with the in-memory proposed fragment. JSONL events
+contain identities, sequence, verdict/reason and SHA-256 values, never raw transcript text. A stale,
+released or corrupted lease has the named `re-arm` recovery. This is local deterministic admission
+proof; provider payload translation and transport capability claims belong to P4.2.

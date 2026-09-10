@@ -18,3 +18,7 @@ candidate; absence or a non-allow close admission refuses closure.
 
 Normal close is one scoped commit. A second commit requires a real ownership/session boundary. A red
 carrier remains owning repair work; an audit product finding returns its exact continuation.
+
+If a terminal-admission lease applies, `plan-close` provides the freshly rebuilt delivery receipt
+and exact machine-authored final fragment to its provider-neutral reducer. A missing, stale or
+mismatched lease never fabricates a terminal allow; recovery is a named re-arm/resume action.

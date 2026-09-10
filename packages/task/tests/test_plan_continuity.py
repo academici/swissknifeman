@@ -86,6 +86,12 @@ class ContinuityTests(unittest.TestCase):
         self.assertEqual(isolated.outcome, "isolated-child-return")
         self.assertNotEqual(isolated.outcome, "cold-start-root")
 
+    def test_terminal_is_a_typed_nonrunnable_p1_3_outcome(self):
+        decision = reduce(estimate(lifecycle="terminal"))
+        self.assertEqual(decision.outcome, "terminal")
+        self.assertFalse(decision.runnable)
+        self.assertEqual(decision_from_dict(decision.as_dict()), decision)
+
     def test_persisted_context_and_decision_are_fail_closed(self):
         for reason in COLD_START_REASONS:
             self.assertEqual(

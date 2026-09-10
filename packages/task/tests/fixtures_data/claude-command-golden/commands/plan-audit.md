@@ -17,3 +17,6 @@ Use `task.plan_lifecycle.select(audit=True)`: at most one deterministic audit-ow
 repair is allowed. A product defect returns one exact owning continuation; it does not trigger a
 second audit, full replay, product write, or fresh root merely because this command is an audit.
 Material risk selects one independent review path. Persist the semantic Next through `plan_delivery`.
+
+Audit does not bypass terminal admission: an applicable lease can only emit `waiting-owner` or its
+typed continuation until a fresh terminal receipt and exact final fragment exist.

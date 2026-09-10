@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:207fc5b95d404e21cbd955fd306342ab1bfec6d5491d8b806026a998bcb9c685
+Canonical SHA-256: sha256:5330520902162b5d851c1c9e56ca297059683a697083628c0214918d77eaa5b6
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -84,3 +84,8 @@ Use `task.plan_lifecycle.select()` for transient change-impact selection: focuse
 commit are normal; declared hard risk widens validation/review; foreign baseline is non-gating unless
 its closure intersects; audit is read-only; only changed projections are generated once; one semantic
 Next is rendered by `plan_delivery`. Follow the complete close and delivery gates from `plan-exec`.
+
+For an installed terminal-admission adapter, arm the lease only after this command's run receipt,
+refresh it only after material progress or typed owner-wait, and use its check verdict before a
+terminal response. It is repository-owned admission evidence, not a claim that an unconfigured
+provider transport is intercepted.

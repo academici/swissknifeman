@@ -9,7 +9,7 @@ import re
 
 WORK_ESTIMATE_SCHEMA_VERSION = "session-work-estimate/v1"
 DECISION_SCHEMA_VERSION = "session-continuity-decision/v1"
-OUTCOMES = ("continue-root", "isolated-child-return", "cold-start-root", "waiting-owner")
+OUTCOMES = ("continue-root", "isolated-child-return", "cold-start-root", "waiting-owner", "terminal")
 COLD_START_REASONS = (
     "context-budget",
     "capability-missing",
@@ -23,6 +23,7 @@ LIFECYCLES = (
     "owner-pause-no-resume",
     "whole-plan-independent-audit",
     "design-root-terminal",
+    "terminal",
 )
 CONTEXT_HEALTH = ("sufficient", "insufficient", "unavailable")
 _WORK_KEYS = frozenset((
@@ -159,6 +160,8 @@ def reduce(estimate: WorkEstimate) -> ContinuityDecision:
     )
     if estimate.lifecycle == "waiting-owner":
         return ContinuityDecision("waiting-owner", "owner-wait", evidence, False)
+    if estimate.lifecycle == "terminal":
+        return ContinuityDecision("terminal", "terminal-evidence", evidence, False)
     if not estimate.route_attested or not estimate.batch_receipt_valid:
         raise ContinuityError("CONTINUITY_EVIDENCE_MISSING: route or batch receipt")
     if not estimate.capabilities_attested:
@@ -219,9 +222,9 @@ def validate_decision(decision: ContinuityDecision) -> ContinuityDecision:
             raise ContinuityError("CONTINUITY_DECISION_INVALID: cold-start evidence")
     elif decision.reason in COLD_START_REASONS:
         raise ContinuityError("CONTINUITY_DECISION_INVALID: reason/outcome mismatch")
-    if decision.outcome == "waiting-owner" and decision.runnable:
-        raise ContinuityError("CONTINUITY_DECISION_INVALID: owner wait is runnable")
-    if decision.outcome != "waiting-owner" and not decision.runnable:
+    if decision.outcome in {"waiting-owner", "terminal"} and decision.runnable:
+        raise ContinuityError("CONTINUITY_DECISION_INVALID: non-runnable outcome is runnable")
+    if decision.outcome not in {"waiting-owner", "terminal"} and not decision.runnable:
         raise ContinuityError("CONTINUITY_DECISION_INVALID: runnable outcome suppressed")
     return decision
 

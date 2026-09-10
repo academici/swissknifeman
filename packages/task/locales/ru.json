@@ -2,6 +2,6 @@
   "$schema": "urn:swissknifeman:localized-overlay:v1",
   "contract_version": "1.0.0",
   "locale": "ru",
-  "source_catalog_sha256": "sha256:81859f0f53b31cce31879ca50d955f38d6cf2dcdd87fb98fc63bdf2b54e5d814",
+  "source_catalog_sha256": "sha256:ef20698d0ee8d3893fa9b4575a81f229b33cebe3918a888a991015fe67eddf7e",
   "units": {}
 }

@@ -530,6 +530,20 @@ def verify_receipt(plan_dir, receipt: dict) -> bool:
     return True
 
 
+def required_final_message(receipt: dict) -> str:
+    """Render the one machine-authored terminal fragment bound by P4 admission.
+
+    Providers may wrap this in their own transport envelope, but only this exact
+    repository-owned fragment is eligible for byte comparison by terminal admission.
+    """
+    if not isinstance(receipt, dict) or receipt.get("schema_version") != "terminal-delivery-receipt/v1":
+        raise DeliveryError("STALE_TERMINAL_RECEIPT", "terminal delivery receipt is required")
+    recommendation = receipt.get("recommendation")
+    if not isinstance(recommendation, str) or not recommendation:
+        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "receipt recommendation is absent")
+    return f"Рекомендация следующего шага:\n{recommendation}"
+
+
 def write_receipt(path, receipt: dict) -> Path:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

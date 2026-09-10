@@ -42,3 +42,13 @@ write sites, generated views/lint, and `plan-delivery --kind terminal`. For a te
 `plan_assurance.evaluate()` through `phase_audit_policy` to choose `audit-phase` or `close`; Routing
 Review and item count do not manufacture phase risk. Batch handoff retains
 its Batch, Context, and one provider-native launch block.
+
+## Terminal admission
+
+After route/run admission, an applicable provider adapter may arm `terminal-admission-lease/v1`
+through the worktree-local `plan-terminal-admission.py`; it refreshes only on material progress or
+a typed `waiting-owner` decision. At a Stop boundary the adapter passes the typed P1.3 continuity
+decision, rebuilt terminal receipt and in-memory proposed final fragment to
+`terminal_admission.evaluate()`. `final_allowed=true` requires exact identity and byte-exact
+`plan_delivery.required_final_message(receipt)`; no lease is `NOT_APPLICABLE`. The reducer stores
+only hashes and reason codes. Providers render its verdict but never decide terminality.

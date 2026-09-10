@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:3d2f15eea0217a13eebdb973045d983d4887cb07aa6f943f90f9bf0e4a0ec11a
+Canonical SHA-256: sha256:509afe728a4beb5afb035ba9947683c83697acca7b256ce973805a103a460f3a
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -76,3 +76,6 @@ Use `task.plan_lifecycle.select(audit=True)`: at most one deterministic audit-ow
 repair is allowed. A product defect returns one exact owning continuation; it does not trigger a
 second audit, full replay, product write, or fresh root merely because this command is an audit.
 Material risk selects one independent review path. Persist the semantic Next through `plan_delivery`.
+
+Audit does not bypass terminal admission: an applicable lease can only emit `waiting-owner` or its
+typed continuation until a fresh terminal receipt and exact final fragment exist.

@@ -7,7 +7,7 @@
   "required": ["schema_version", "outcome", "reason", "evidence", "runnable"],
   "properties": {
     "schema_version": {"const": "session-continuity-decision/v1"},
-    "outcome": {"enum": ["continue-root", "isolated-child-return", "cold-start-root", "waiting-owner"]},
+    "outcome": {"enum": ["continue-root", "isolated-child-return", "cold-start-root", "waiting-owner", "terminal"]},
     "reason": {"type": "string", "minLength": 1},
     "evidence": {"type": "array", "items": {"type": "string"}},
     "runnable": {"type": "boolean"}

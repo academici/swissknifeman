@@ -11,3 +11,8 @@ Use `task.plan_lifecycle.select()` for transient change-impact selection: focuse
 commit are normal; declared hard risk widens validation/review; foreign baseline is non-gating unless
 its closure intersects; audit is read-only; only changed projections are generated once; one semantic
 Next is rendered by `plan_delivery`. Follow the complete close and delivery gates from `plan-exec`.
+
+For an installed terminal-admission adapter, arm the lease only after this command's run receipt,
+refresh it only after material progress or typed owner-wait, and use its check verdict before a
+terminal response. It is repository-owned admission evidence, not a claim that an unconfigured
+provider transport is intercepted.

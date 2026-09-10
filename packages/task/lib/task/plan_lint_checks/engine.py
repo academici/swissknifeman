@@ -14,6 +14,14 @@ _ROUTING_REVIEW_VALUES = frozenset(("full", "light", "none"))
 _CONTINUE_FIRST_GATE_DATE = "2026.09.09"
 
 
+def _lint_terminal_admission_contract(plan_path, diag):
+    """Keep the command-visible terminal seam bound to its committed schemas."""
+    try:
+        terminal_admission.validate_contracts()
+    except terminal_admission.AdmissionError as exc:
+        diag.error(plan_path, None, f"terminal admission contract: {exc}")
+
+
 def _lint_design_continuation(plan_dir, plan_path, plan_id, phase_id, item_id,
                               line_number, diag):
     """Reject redesign when typed repair/re-entry evidence says continue."""
@@ -214,6 +222,7 @@ def lint_plan(plan_dir, diag):
     plan_dir = Path(plan_dir)
     plan_id = plan_dir.name
     plan_md = plan_dir / "plan.md"
+    _lint_terminal_admission_contract(plan_md, diag)
     meta, status_board = parse_plan_md(plan_md, diag)
 
     # 2026.07.10-SKM-ROADMAP-005 P4.3: warning-проверки идентичности (ID / workflow-скрипты / supersedes) — D24/D27/D28.

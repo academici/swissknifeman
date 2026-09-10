@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`task`: lease-bound terminal admission.** Новый provider-neutral reducer и worktree-local CLI
+  привязывают terminal response к run/session identity, P1.3 typed continuity, свежему delivery
+  receipt и точному machine-authored fragment. Leases monotonic and expiring; append-only events
+  retain only hashes and stable recovery diagnostics. Provider Stop payload translation remains P4.2.
+
 - Исправлено: `task:plan-audit` больше не принудительно передаёт совместимое продолжение в новую сессию; контекст выбирает единый evidence-based reducer.
 
 - **`task`: evidence anchors prevent self-invalidating plan closure.** Новый derived

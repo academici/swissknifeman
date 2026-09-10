@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:84a60b9857934e61750b5df3d0e25cf97cee9ab713e3e866fa47c7fc04c6bde4
+Canonical SHA-256: sha256:f807738a24c05472e64874a47fb2fe74c1c43458ef8b5c01fde0a2a377e9a7fd
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -113,3 +113,13 @@ write sites, generated views/lint, and `plan-delivery --kind terminal`. For a te
 `plan_assurance.evaluate()` through `phase_audit_policy` to choose `audit-phase` or `close`; Routing
 Review and item count do not manufacture phase risk. Batch handoff retains
 its Batch, Context, and one provider-native launch block.
+
+## Terminal admission
+
+After route/run admission, an applicable provider adapter may arm `terminal-admission-lease/v1`
+through the worktree-local `plan-terminal-admission.py`; it refreshes only on material progress or
+a typed `waiting-owner` decision. At a Stop boundary the adapter passes the typed P1.3 continuity
+decision, rebuilt terminal receipt and in-memory proposed final fragment to
+`terminal_admission.evaluate()`. `final_allowed=true` requires exact identity and byte-exact
+`plan_delivery.required_final_message(receipt)`; no lease is `NOT_APPLICABLE`. The reducer stores
+only hashes and reason codes. Providers render its verdict but never decide terminality.

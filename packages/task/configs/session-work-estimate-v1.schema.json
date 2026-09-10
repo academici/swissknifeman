@@ -31,7 +31,7 @@
     "remaining_batch_digest": {"type": "string", "pattern": "^(sha256:)?[0-9a-f]{64}$"},
     "loaded_inputs_reusable": {"type": "boolean"},
     "cold_start_cost": {"type": "integer", "minimum": 0},
-    "lifecycle": {"enum": ["active", "waiting-owner", "owner-pause-no-resume", "whole-plan-independent-audit", "design-root-terminal"]},
+    "lifecycle": {"enum": ["active", "waiting-owner", "owner-pause-no-resume", "whole-plan-independent-audit", "design-root-terminal", "terminal"]},
     "isolated_review": {"type": "boolean"},
     "reviewer_task": {"type": ["string", "null"]},
     "checkpoint": {"type": ["string", "null"]}

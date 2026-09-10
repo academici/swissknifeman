@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:e2b18b3ae821e007bab27b1c3460696cd3f28d30093126924c558248c1d4c95d
+Canonical SHA-256: sha256:d987ea9648f9a2f7748577891a2a4b7458825cef2a7140fea09c8d471b9c72a8
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -75,3 +75,6 @@ Design completion records exactly one semantic Next. A bounded remediation does 
 fresh audit/root; only a concrete context-budget, capability, owner-pause, independent review,
 public/authority, or material-risk boundary does. `DESIGN-ROOT-TERMINAL` remains a design-result
 handoff boundary: it must not execute or spawn a successor in the same design invocation.
+
+An applicable terminal-admission lease is a provider adapter concern: design supplies only typed
+continuity and delivery carriers, never free-prose terminal authorization.

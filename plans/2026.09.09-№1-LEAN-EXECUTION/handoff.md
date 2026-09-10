@@ -1,6 +1,6 @@
-# HANDOFF — 2026-09-10 — after P5.1
+# HANDOFF — 2026-09-10 — after P5.2
 
-**Next:** run-items: task:plan-run 2026.09.09-№1-LEAN-EXECUTION P5.2-P5.3
+**Next:** run-items: task:plan-run 2026.09.09-№1-LEAN-EXECUTION P5.3
 
 | Параметр | Значение |
 |:--|:--|
@@ -25,9 +25,9 @@ $ task:plan-run 2026.09.09-№1-LEAN-EXECUTION P5.1-P5.3
 codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.09.09-№1-LEAN-EXECUTION P5.1-P5.3'
 ```
 
-**Done:** P5.1 added a deterministic `bucket-audit --description-debt` projection: ratchet membership, exact tier-0 share, direct/resident/unobserved evidence, and a stable queue; absent direct calls remain evidence insufficiency, not a rewrite verdict.
-**Remaining:** Execute P5.2–P5.3, then run the P5 assurance gate and close/archive the plan through the normal protocol.
-**Sources of truth:** `plans/2026.09.09-№1-LEAN-EXECUTION/phases/P5/P5.2.md` · `plans/2026.09.09-№1-LEAN-EXECUTION/bundles/P5.2.json` · `plans/2026.09.09-№1-LEAN-EXECUTION/phases/P5/P5.1.state.md` · `plans/2026.09.09-№1-LEAN-EXECUTION/roadmap.md`.
+**Done:** P5.1 added the deterministic description-debt queue. P5.2 added `analyst workflow-scan`: bounded registered-root inventory, digest mirror deduplication, static extraction and a deterministic `workflow-fleet-report/v1`; the current report is `covered`, so no Task template changed.
+**Remaining:** Execute P5.3, then run the P5 assurance gate and close/archive the plan through the normal protocol.
+**Sources of truth:** `plans/2026.09.09-№1-LEAN-EXECUTION/phases/P5/P5.3.md` · `plans/2026.09.09-№1-LEAN-EXECUTION/bundles/P5.3.json` · `plans/2026.09.09-№1-LEAN-EXECUTION/phases/P5/P5.2.state.md` · `plans/2026.09.09-№1-LEAN-EXECUTION/roadmap.md`.
 **Open risks:** Direct-call evidence remains incomplete (zero calls in the 61-row debt subset across five scanned projects), so execution must preserve D10's no-rewrite verdict; repeated `session-observer`/`shared-memory` warnings remain a disclosed signal-coverage limitation, not a P5.1 scope expansion.
 **Workarounds/Deferred/Open questions:**
 - workarounds: —

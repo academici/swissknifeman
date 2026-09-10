@@ -42,6 +42,7 @@ analyst review    [--state ephemeral|candidate|curated] [--json]
 analyst promote   <id> [--to candidate|curated] [--yes]   # human-gate; curated → память mAInd
 analyst deprecate <id>                          # soft-демоут (не удаляется — аудит)
 analyst doctor                                  # диагностика окружения
+analyst workflow-scan --output DIR --now ISO    # read-only workflow fleet evidence
 ```
 
 ## Разработка

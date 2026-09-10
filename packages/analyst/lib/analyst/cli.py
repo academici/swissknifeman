@@ -19,6 +19,7 @@ from .sessions import cmd_sessions
 from .status import cmd_compact, cmd_status
 from .suggest import cmd_suggest
 from .token_report import cmd_token_report
+from .workflow_scan import cmd_workflow_scan
 
 COMMANDS = {
     "digest": cmd_digest,
@@ -37,6 +38,7 @@ COMMANDS = {
     "token-report": cmd_token_report,
     "sessions": cmd_sessions,
     "doctor": cmd_doctor,
+    "workflow-scan": cmd_workflow_scan,
 }
 
 

@@ -26,6 +26,19 @@ greedy-Jaccard-кластеризует и детектит паттерны, п
 **Namespace-изолированно**. Реконсиляция: осиротевшие артефакты снимаются **строго в scope прогона**
 (`--no-prune` выключает, `--dry-run` показывает). Подробнее — [Жизненный цикл](./lifecycle).
 
+## `analyst workflow-scan`
+
+```
+analyst workflow-scan [--project ID] --output DIR|FILE.json --now ISO [--json]
+```
+
+Read-only инвентаризация workflow-скриптов только из явных `local_path`/`vault_path` plan-root
+enabled-проектов. Команда хеширует байты до разбора, сохраняет aliases зеркал, считает Rule of
+Three по разным планам и сопоставляет статические признаки с четырьмя Task templates. JavaScript
+не выполняется, абсолютные пути, prompts и тела скриптов в отчёт не попадают. Результат
+`workflow-fleet-report/v1` может предложить лишь доказанное уточнение существующего слота;
+пятая template-family и смена матрицы стадий остаются `report-only`.
+
 ## `analyst suggest` (P4)
 
 ```

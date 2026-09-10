@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **`analyst`: workflow fleet evidence.** Новый read-only `workflow-scan` ограничен declared
+  plan roots enabled-проектов, digest-дедуплицирует mirrors, статически извлекает признаки без
+  исполнения JavaScript и публикует воспроизводимый `workflow-fleet-report/v1`; изменения Task
+  остаются только report-backed и требуют Rule of Three по разным plan identities.
+
 - **`skiller`: description-trigger debt queue.** `bucket-audit --description-debt` now emits the
   additive `description-trigger-priority/v1` contract with exact ratchet membership, tier-0 listing
   share, direct-call/resident/unobserved evidence, deterministic ordering, and fail-closed ledger

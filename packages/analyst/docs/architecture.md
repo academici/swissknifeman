@@ -12,6 +12,7 @@ analyst — детерминированный (stdlib-only, on-demand) слой
 | `lessons.py` | файловый стор: схема урока, state-каталоги, atomic write, append-only `audit`/`events`, Jaccard/similar, mem0-таксономия |
 | `digest.py` | run-report → кандидаты по высокоточным сигналам; **чистые извлекатели** + IO в `cmd_` |
 | `scan.py` | cross-project агрегатор (P2): кластеры → паттерны в ≥N проектах (namespace-изолированно) + reconcile |
+| `workflow_scan.py` | bounded read-only inventory plan workflow files: digest mirrors, static signatures and Rule-of-Three template coverage |
 | `suggest.py` | паттерн → **черновик** `SKILL.ru.md` (P4): чистые генераторы + edit-safe writer |
 | `confidence.py` | **чистая** арифметика (Beta × volume × decay) + тиры |
 | `recompute.py` | пересчёт confidence из `events.ndjson` → числовая state-machine (P3) |

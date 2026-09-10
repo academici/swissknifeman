@@ -33,6 +33,9 @@ class TestCli(unittest.TestCase):
                 pass
         self.assertIn("analyst doctor", out.getvalue())
 
+    def test_workflow_scan_registered(self):
+        self.assertIn("workflow-scan", COMMANDS)
+
 
 if __name__ == "__main__":
     unittest.main()

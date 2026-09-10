@@ -18,6 +18,7 @@
 #   sessions  недельные медианы first_turn_overhead из живых jsonl-транскриптов сессии
 #             (--project ID | --weeks N | --json)
 #   doctor    диагностика окружения
+#   workflow-scan  read-only inventory registered plan workflow artifacts
 #   version   версия (git SHA) и путь к пакету
 set -euo pipefail
 
@@ -45,7 +46,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "analyst $sha ($REPO_ROOT)"
     exit 0 ;;
-  digest|scan|suggest|review|recompute|promote|deprecate|status|compact|token-report|sessions|doctor) ;;
+  digest|scan|suggest|review|recompute|promote|deprecate|status|compact|token-report|sessions|doctor|workflow-scan) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

@@ -273,6 +273,20 @@ class TestReadBudgetGate(unittest.TestCase):
         diag = lint(self.copied_fixture("plan-v2"))
         self.assertFalse(any(plan_gates.BUNDLE_GATE_ID in row for row in diag.errors), diag.errors)
 
+    def test_unresolvable_next_bundle_requires_local_repair_not_design(self):
+        plan_dir = self.copied_fixture("plan-v2")
+        spec = plan_dir / "phases" / "P1" / "P1.1.md"
+        spec.write_text(
+            spec.read_text(encoding="utf-8").replace("brief/00-brief.md", "missing.md"),
+            encoding="utf-8",
+        )
+
+        diag = lint(plan_dir)
+
+        message = next(row for row in diag.errors if "unresolvable_entry" in row)
+        self.assertIn("локальный обратимый носитель", message)
+        self.assertNotIn("исправь ТЗ через task:plan-design", message)
+
     def test_terminal_bundle_keeps_schema_checks_without_live_source_resolution(self):
         plan_dir = self.copied_fixture("plan-v2")
         target = plan_dir / "bundles" / "P0.1.json"

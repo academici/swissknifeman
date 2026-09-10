@@ -197,7 +197,10 @@ def _lint_next_runnable_bundle(plan_dir, layout, phases, all_items, diag):
         diag.error(
             item_path, None,
             f"item {item_id}: bundle следующего запускаемого item не собирается: {exc}; "
-            f"исправь ТЗ через task:plan-design и запусти plan-views.py bundle --item {item_id}",
+            "сначала классифицируй и исправь локальный обратимый носитель в текущем "
+            "execution attempt, затем запусти plan-views.py bundle --item "
+            f"{item_id}; task:plan-design допустим только при доказанном новом material "
+            "decision surface",
         )
         return
     try:

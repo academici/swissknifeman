@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:ad3ec876015c2cdf590df1fd6285530fa16a9bcf35c45d69063ca28cbd6a4dcc
+Canonical SHA-256: sha256:64ddbf414b12a291359b4cfc803d2b8e7e36136f353e16ccdac3758cd3ec6c7e
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -73,6 +73,15 @@ evidence.
 For every forward repair record, preserve `repair-decision/v1`, its digest, affected paths and
 pre/post carriers in the append-only journal. A qualified `repair-in-current-attempt` record cannot
 close, block, escalate, or emit a redesign handoff until its exact original carrier is rerun.
+
+If an item declares ``producer-readiness/v1``, reconcile its terminal
+`producer_readiness` through `task.plan_readiness.validate_readiness(..., plan_dir=...)`: a
+decided-empty result is valid only with one accepted owner `D#`. Before persisting a design/reopen
+handoff for a terminal phase, require the exact nonterminal outcome from
+`task.plan_readiness.correction_decision()` and call `validate_design_target()`; valid output and
+approved no-op continue, while missing/stale evidence repairs in the current attempt. A priority
+fix must target a declared item through `fix-branch/v1`. Never convert these corrections directly
+into a terminal result.
 
 ## DecisionRequest и isolated-child-return (P6.3)
 

@@ -328,6 +328,8 @@ def evaluate(plan_dir, producer_item: str, *, producer_commit: str = "HEAD", run
                 if readiness["mode"] not in consumer["readiness_modes"]:
                     consumer_red = True
                     any_red = True
+                else:
+                    any_applicable = True
         outcome = "red" if consumer_red else ("green" if readiness is not None or applicable_count else "unknown")
         spec_sha = consumer_spec_sha256(plan_dir, consumer["item"])
         consumer_results.append({**consumer, "consumer_spec_sha256": spec_sha,

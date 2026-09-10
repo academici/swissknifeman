@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:851009a6fead28a088fea42d793302fb5e5f475eee2d0a8c937cd127c79fd6ca
+Canonical SHA-256: sha256:48e0c6b68771669f9b5ea6ae83a69ac552860a16bb213ea575898029817b3e26
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -123,6 +123,15 @@ Raw provider flags допустимы только в additive adapter/projectio
    evidence, `OUT_OF_SCOPE`/`MALFORMED` — repair capsule. Прямой append terminal event без
    reducer outcome запрещён.
 <!-- block-confirmation:v1:end -->
+
+Audit-fixer проверяет continue-first carrier сквозным образом: каждый qualified
+`repair-in-current-attempt` обязан иметь последующую immutable запись с тем же exact original
+carrier и green post-validation до terminal verdict. Для producer edge сверяются directive,
+terminal `producer_readiness`, accepted owner `D#` у decided-empty и digest-bound bundle/downstream
+projection. Handoff на `plan-design` терминальной фазы допустим только после nonterminal
+`task.plan_readiness.correction_decision()` с валидным re-entry; missing/stale carrier ремонтируется
+в текущем audit attempt. Несовпадения runtime/lint/delivery/status/returns — in-scope audit repair,
+а не повод для `ATTENTION` или redesign.
 
 Недоступное или не верифицируемое route evidence до product journal start обозначай
 `ROUTE-UNVERIFIABLE`: это `routing-rejected`, не attempt и не transition статуса. Верни exact

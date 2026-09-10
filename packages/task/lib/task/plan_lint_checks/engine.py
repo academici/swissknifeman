@@ -2,7 +2,7 @@
 from .common import *
 from .policy import *
 from .parsing import *
-from task import plan_gates
+from task import plan_gates, plan_readiness, plan_repair
 
 
 _ROUTING_ITEM_RE = re.compile(r"^P\d+\.\d+$")
@@ -11,6 +11,36 @@ _ROUTING_COLUMNS = ("Batch", "Items", "Model class/effort", "Exec", "Review", "Ð
 _ROUTING_BATCH_RE = re.compile(r"^[A-Z][A-Z0-9._-]*$", re.IGNORECASE)
 _ROUTING_EXEC_VALUES = frozenset(("plan-exec", "manual", "plan-design"))
 _ROUTING_REVIEW_VALUES = frozenset(("full", "light", "none"))
+_CONTINUE_FIRST_GATE_DATE = "2026.09.09"
+
+
+def _lint_design_continuation(plan_dir, plan_path, plan_id, phase_id, item_id,
+                              line_number, diag):
+    """Reject redesign when typed repair/re-entry evidence says continue."""
+    if not PLAN_ID_DATED_RE.match(plan_id) or plan_id[:10] < _CONTINUE_FIRST_GATE_DATE:
+        return
+    latest = plan_repair.latest_action(
+        plan_dir, item_id=item_id, phase_id=None if item_id is not None else phase_id)
+    if latest == "repair-in-current-attempt":
+        diag.error(
+            plan_path, line_number,
+            "REPAIR_CONTINUATION_REQUIRED: latest repair-decision/v1 requires "
+            "repair-in-current-attempt, not plan-design",
+        )
+    try:
+        plan_readiness.validate_design_target(plan_dir, phase_id)
+    except plan_readiness.ReadinessError as exc:
+        diag.error(plan_path, line_number, str(exc))
+
+
+def _lint_priority_continuation(plan_dir, plan_path, plan_id, item_ids,
+                                line_number, diag):
+    if not PLAN_ID_DATED_RE.match(plan_id) or plan_id[:10] < _CONTINUE_FIRST_GATE_DATE:
+        return
+    try:
+        plan_readiness.validate_execution_target(plan_dir, item_ids)
+    except plan_readiness.ReadinessError as exc:
+        diag.error(plan_path, line_number, str(exc))
 
 
 def _routing_items(cell):
@@ -662,12 +692,19 @@ def lint_plan(plan_dir, diag):
             ref_plan_id, ref_item = m.group(1), m.group(2)
             _check_plan_id(ref_plan_id)
             _check_item(ref_item)
+            _lint_priority_continuation(
+                plan_dir, handoff_path, plan_id, [ref_item], next_lineno, diag)
         elif kind == "run":
             ref_plan_id, ref_from, ref_to = m.group(1), m.group(2), m.group(3)
             _check_plan_id(ref_plan_id)
             _check_item(ref_from)
             if ref_to:
                 _check_item(ref_to)
+            requested = _routing_items(
+                ref_from + (f"-{ref_to}" if ref_to else "")) or (
+                    [ref_from, ref_to] if ref_to else [ref_from])
+            _lint_priority_continuation(
+                plan_dir, handoff_path, plan_id, requested, next_lineno, diag)
         elif kind == "audit-design":
             _check_plan_id(m.group(1))
         elif kind == "closed":
@@ -678,10 +715,15 @@ def lint_plan(plan_dir, diag):
             ref_plan_id, ref_item = m.group(1), m.group(2)
             _check_plan_id(ref_plan_id)
             _check_item(ref_item)
+            _lint_design_continuation(
+                plan_dir, handoff_path, plan_id, ref_item.split(".", 1)[0], ref_item,
+                next_lineno, diag)
         elif kind == "design-phase":
             ref_plan_id, ref_phase = m.group(1), m.group(2)
             _check_plan_id(ref_plan_id)
             _check_phase(ref_phase)
+            _lint_design_continuation(
+                plan_dir, handoff_path, plan_id, ref_phase, None, next_lineno, diag)
         elif kind in ("design-finish", "design-roadmap"):
             _check_plan_id(m.group(1))
         elif kind == "audit":

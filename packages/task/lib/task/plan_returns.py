@@ -587,6 +587,7 @@ def returns(plan_dir) -> dict:
     seams = _seams(plan_dir)
     fingerprints, executions, history = [], [], {}
     repair_records, readiness_records, reentry_records, fix_branches = [], [], [], []
+    correction_outcomes = Counter()
     non_item_subjects = 0
     schema_invalid_rows = sum(bool(row["errors"]) for row in entries)
     for row in entries:
@@ -606,6 +607,8 @@ def returns(plan_dir) -> dict:
             })
         decision = entry.get("decision") if isinstance(entry, dict) else None
         if isinstance(decision, dict):
+            if decision.get("signal_class") == "producer-readiness":
+                correction_outcomes[str(decision.get("action") or "unknown")] += 1
             if isinstance(decision.get("producer_readiness"), dict):
                 readiness_records.append(decision["producer_readiness"])
             if isinstance(decision.get("phase_reentry"), dict):
@@ -655,7 +658,8 @@ def returns(plan_dir) -> dict:
             "repair_metrics": {"observed": len(repair_records), "first_ten": repair_records[:10]},
             "readiness_metrics": {"producer_readiness": len(readiness_records),
                                   "phase_reentry": len(reentry_records),
-                                  "priority_fix": len(fix_branches)}}
+                                  "priority_fix": len(fix_branches),
+                                  "outcomes": dict(sorted(correction_outcomes.items()))}}
 
 
 def durable_count(plan_dir, digest: str):

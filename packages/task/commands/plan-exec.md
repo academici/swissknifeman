@@ -64,6 +64,23 @@ Missing capability is `cold-start-root: capability-missing`. Use immutable
    outcomes continue repair or evidence collection. Never append a terminal event directly.
 <!-- block-confirmation:v1:end -->
 
+## Producer readiness and terminal-phase correction (v1)
+
+If Deliverables declares ``producer-readiness/v1``, terminal evidence carries exactly one typed
+`producer_readiness` record. `nonempty-candidates` requires a positive deterministic candidate set;
+`empty-by-decision` requires zero candidates and one accepted owner `D#`. Bundle/downstream consume
+only the digest-bound terminal projection. A missing, stale, or malformed readiness carrier is a
+same-attempt repair signal, never an automatic producer failure.
+
+Before recommending `plan-design`, phase re-entry, or a priority fix, call
+`task.plan_readiness.correction_decision()` and append its nonterminal decision. `approved-no-op`
+and `valid-output` continue the current path; `stale-derived` and `missing-or-corrupt` repair in the
+current attempt; only `contract-conflict` plus valid `phase-reentry-justification/v1` may reopen a
+terminal phase. A priority fix requires closed `fix-branch/v1` and a declared target item. Lint and
+delivery call `validate_design_target()` and reject terminal-phase design without that exact
+evidence. Status and returns project the reducer outcome; the correction decision cannot terminalize
+an item.
+
 Before product-journal start, unavailable route evidence is `ROUTE-UNVERIFIABLE` and results in
 `routing-rejected`, never an attempt/status transition. Return the exact fresh launch and repeat the
 route gate; do not substitute config, actor, or prose.

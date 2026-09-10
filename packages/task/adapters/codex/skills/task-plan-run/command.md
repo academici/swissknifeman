@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:3b62f8f6ba6c29ae25a969781ed0267882bb7a0c284b9f5bb0f319d079b841ae
+Canonical SHA-256: sha256:557d3b37361addc0d10b604eb28aa899a3055b094d4c34be431da7e95c4339a6
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -90,6 +90,10 @@ The inherited **Continue-first block gate (v1)** keeps `local-repair`, `block-ca
 `routing-rejected`, and `ROUTE-UNVERIFIABLE`; the latter is never an attempt/status transition.
 Repair routing is governed solely by `task:plan-exec`'s single
 `<!-- carrier-repair:continue-first -->` rule. `plan-run` adds no second classifier.
+It also inherits the single producer-readiness/re-entry reducer: decided-empty needs an accepted
+owner `D#`; verified output continues, missing/stale output repairs in the current attempt, and a
+terminal phase reopens only through typed `phase-reentry-justification/v1`. Never synthesize a
+second readiness or correction policy in this adapter.
 
 Read the v2 five-slot item path only: `plans/<PLAN-ID>/plan.md`,
 `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md`, `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md`,

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:59d26fbecb05795afe81919bfd155b4f320174df093feb643f722dec856ce568
+Canonical SHA-256: sha256:a1c9970b9ffceb88b695aa92fbb5645bf7a0963fe304620b496d90d3297650ed
 Adapter: task.codex-command/1.0.11
 -->
 ## Native Codex launch-block — mandatory for every executable handoff
@@ -85,6 +85,14 @@ successor из design handoff несёт `Context: cold-start-root: design-root-
 и native launch с моделью и effort именно successor'а.
 Получи этот Context через `task.plan_continuity.reduce()` над attested work estimate с
 `lifecycle=design-root-terminal` и durable checkpoint; передай тот же typed decision renderer'у.
+
+До любой мутации существующей терминальной фазы вызови
+`task.plan_readiness.validate_design_target(plan_dir, phase_id)`. `approved-no-op` и
+`valid-output` запрещают reopen; `stale-derived`/`missing-or-corrupt` возвращаются в bounded repair
+исходного attempt. Reopen разрешён только последним nonterminal reducer outcome `reopen-phase` с
+валидным `phase-reentry-justification/v1`; priority fix идёт в объявленный target item по
+`fix-branch/v1`, а не расширяет design scope. `PHASE_REENTRY_UNJUSTIFIED` останавливает
+`plan-design` до записи статусов, D-записи или handoff.
 
 ## DecisionRequest и isolated-child-return (P6.3)
 

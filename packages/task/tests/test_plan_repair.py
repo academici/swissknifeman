@@ -1,7 +1,10 @@
 """Regression coverage for the closed continue-first repair reducer."""
+import json
+import tempfile
 import unittest
+from pathlib import Path
 
-from task import plan_blocking, plan_repair
+from task import journal, plan_blocking, plan_repair, terminal_policy
 
 
 def carrier(command="phpstan analyse", result="red", marker="a"):
@@ -58,6 +61,65 @@ class RepairDecisionTests(unittest.TestCase):
         value["pre_validation"] = [carrier(command="focused test")]
         with self.assertRaises(plan_repair.RepairDecisionError):
             plan_repair.validate(value)
+
+    def test_post_validation_must_repeat_exact_original_carrier_green(self):
+        value = record()
+        self.assertFalse(plan_repair.post_validation_complete(value))
+        value["post_validation"] = [carrier(command="focused test", result="green")]
+        self.assertFalse(plan_repair.post_validation_complete(value))
+        value["post_validation"] = [carrier(result="green")]
+        self.assertTrue(plan_repair.post_validation_complete(value))
+
+    def test_completed_repair_no_longer_blocks_a_future_continuation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp)
+            completed = record(post_validation=[carrier(result="green")])
+            event = journal.new_entry(
+                plan_id="2026.09.09-№1-DEMO", item_id="P2.1", command="plan-audit",
+                actor="frontier/xhigh", result="local-repair")
+            event.update({"repair_decision": completed,
+                          "repair_digest": plan_repair.digest(completed),
+                          "repair_action": "repair-in-current-attempt"})
+            (plan / "journal.jsonl").write_text(
+                json.dumps(event, ensure_ascii=False) + "\n", encoding="utf-8")
+            self.assertIsNone(plan_repair.latest_action(plan, item_id="P2.1"))
+
+    def test_terminal_close_waits_for_exact_post_repair_carrier(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "2026.09.09-№1-DEMO"
+            phase = plan / "phases" / "P2"
+            phase.mkdir(parents=True)
+            (plan / "plan.md").write_text(
+                "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+                encoding="utf-8")
+            (phase / "P2.md").write_text("# P2\n", encoding="utf-8")
+            (phase / "P2.1.md").write_text("### P2.1 — repair\n", encoding="utf-8")
+            observed = record()
+            observed_event = journal.new_entry(
+                plan_id=plan.name, item_id="P2.1", command="plan-audit",
+                actor="frontier/xhigh", result="local-repair")
+            observed_event.update({"repair_decision": observed,
+                                   "repair_digest": plan_repair.digest(observed),
+                                   "repair_action": "repair-in-current-attempt"})
+            (plan / "journal.jsonl").write_text(
+                json.dumps(observed_event, ensure_ascii=False) + "\n", encoding="utf-8")
+            validation = [{"carrier": "focused", "status": "green",
+                           "evidence_ids": ["test:green"]}]
+            with self.assertRaisesRegex(terminal_policy.TerminalPolicyError,
+                                        "REPAIR_POST_VALIDATION_REQUIRED"):
+                terminal_policy.build_decision(
+                    plan, "P2.1", result="closed-green", validation=validation)
+            completed = record(post_validation=[carrier(result="green")])
+            completed_event = journal.new_entry(
+                plan_id=plan.name, item_id="P2.1", command="plan-audit",
+                actor="frontier/xhigh", result="local-repair")
+            completed_event.update({"repair_decision": completed,
+                                    "repair_digest": plan_repair.digest(completed),
+                                    "repair_action": "repair-in-current-attempt"})
+            with (plan / "journal.jsonl").open("a", encoding="utf-8") as stream:
+                stream.write(json.dumps(completed_event, ensure_ascii=False) + "\n")
+            terminal_policy.build_decision(
+                plan, "P2.1", result="closed-green", validation=validation)
 
     def test_public_security_and_authority_surfaces_fail_closed(self):
         for axis in ("public", "security", "authority"):

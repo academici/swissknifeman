@@ -17,6 +17,10 @@ The inherited **Continue-first block gate (v1)** keeps `local-repair`, `block-ca
 `routing-rejected`, and `ROUTE-UNVERIFIABLE`; the latter is never an attempt/status transition.
 Repair routing is governed solely by `task:plan-exec`'s single
 `<!-- carrier-repair:continue-first -->` rule. `plan-run` adds no second classifier.
+It also inherits the single producer-readiness/re-entry reducer: decided-empty needs an accepted
+owner `D#`; verified output continues, missing/stale output repairs in the current attempt, and a
+terminal phase reopens only through typed `phase-reentry-justification/v1`. Never synthesize a
+second readiness or correction policy in this adapter.
 
 Read the v2 five-slot item path only: `plans/<PLAN-ID>/plan.md`,
 `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md`, `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md`,

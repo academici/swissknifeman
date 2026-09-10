@@ -80,6 +80,16 @@ RE_PATTERN_FUNCS = ("compile", "escape", "match", "search", "fullmatch", "sub", 
 STR_GREP_METHODS = ("startswith", "endswith", "count", "find", "index", "partition", "split")
 
 
+class TestArchiveIndependence(unittest.TestCase):
+    def test_archive_contract_forbids_brain_as_a_precondition_or_command(self):
+        source = (Path(__file__).resolve().parents[1] / "commands" / "plan-close.md").read_text(
+            encoding="utf-8")
+        archive = source.split("## Режим `archive <ID>`", 1)[1].split(
+            "## Delivery receipt", 1)[0]
+        self.assertIn("не разрешает, не ищет и не вызывает Brain", archive)
+        self.assertNotRegex(archive, r"(?m)^\s*(?:\$\s*)?brain\s+")
+
+
 def _is_string_expr(node):
     """Значение-выражение ИЗ СТРОКОВЫХ ЛИТЕРАЛОВ: `"…"` · конкатенация · кортеж/список строк ·
     `re.compile("…")`. Вызов рантайма (`ap.parse_args(argv)`, `row.get("Status", "")`) — НЕ он."""

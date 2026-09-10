@@ -2309,8 +2309,8 @@
       "path": "skills/general/plan-protocol/SKILL.md",
       "version": "2.31.3",
       "description": "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff.",
-      "sha256": "a329b7693829d078fdd6654c75d29654ebaab624e07ea14a0a5c47a6d951b5a8",
-      "content_sha256": "cd122e9b2611b7ad44c747384e7728a12ae438accbc8e08787f9ceb0c0d93cc6",
+      "sha256": "075d6a32febddc3ec3daf2927bcae069c68c8b47ab52dcde2cdb43dbcba068bd",
+      "content_sha256": "2fce2c63e347ec259011fe17f8e876a040b146091c626f91b5cb6a030ebc134a",
       "tags": [
         "workflow",
         "planning",

@@ -16,7 +16,14 @@
     "candidate_paths_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "source_commit": {"type": "string", "pattern": "^[0-9a-f]{7,64}$"},
     "predicate": {"type": "string", "minLength": 1},
-    "exclusions": {"type": "array", "items": {"type": "string", "minLength": 1}},
-    "owner_decision": {"type": "string", "pattern": "^D[0-9]+$"}
-  }
+    "exclusions": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "owner_decision": {"type": "string", "pattern": "^D[1-9][0-9]*$"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"mode": {"const": "empty-by-decision"}}, "required": ["mode"]},
+      "then": {"required": ["owner_decision"], "properties": {"candidate_count": {"const": 0}}},
+      "else": {"not": {"required": ["owner_decision"]}, "properties": {"candidate_count": {"minimum": 1}}}
+    }
+  ]
 }

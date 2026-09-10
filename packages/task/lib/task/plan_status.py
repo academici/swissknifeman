@@ -31,6 +31,7 @@ _STATUS_META = ("Version", "Status", "Last Updated")
 _BOARD_COLUMNS = ("Phase", "Title", "Items 🟢/всего", "Status")
 _ITEM_COLUMNS = ("ID", "Title", "Status", "Updated")
 _UPDATE_COLUMNS = ("Дата", "Кто (role/model)", "Что")
+_CORRECTION_COLUMNS = ("Тип", "Origin", "Outcome", "Target / resume")
 
 
 def _read(path: Path) -> str:
@@ -104,10 +105,12 @@ def _phase_status(statuses: list[str], *, plan_dir: Path | None = None,
     return STATUS_NOT_STARTED
 
 
-def _journal_rows(path: Path) -> tuple[list[tuple[str, str, str]], str, dict[str, str]]:
+def _journal_rows(path: Path) -> tuple[
+        list[tuple[str, str, str]], str, dict[str, str], list[tuple[str, str, str, str]]]:
     if not path.is_file():
-        return [], "—", {}
+        return [], "—", {}, []
     rows = []
+    corrections = []
     last_updated = "—"
     item_updated: dict[str, str] = {}
     for number, raw in enumerate(_read(path).splitlines(), start=1):
@@ -127,7 +130,38 @@ def _journal_rows(path: Path) -> tuple[list[tuple[str, str, str]], str, dict[str
             item_updated[item_id] = max(item_updated.get(item_id, day), day)
         what = plan_journal.project_update_log_what(entry, number)
         rows.append((ts[:10], str(entry.get("actor") or "—"), what))
-    return rows, last_updated, item_updated
+        decision = entry.get("decision")
+        if not isinstance(decision, dict):
+            continue
+        if decision.get("signal_class") == "producer-readiness":
+            target = decision.get("phase_reentry") or decision.get("fix_branch") or {}
+            corrections.append((
+                "routing", str(item_id or "—"),
+                f"{decision.get('observed_mode') or '—'} → {decision.get('action') or '—'}",
+                str(target.get("resume_item") or target.get("target_item") or "—"),
+            ))
+        readiness = decision.get("producer_readiness")
+        if isinstance(readiness, dict):
+            corrections.append((
+                "producer", str(readiness.get("producer_item") or item_id or "—"),
+                str(readiness.get("mode") or "—"),
+                str(readiness.get("consumer_item") or "—"),
+            ))
+        reentry = decision.get("phase_reentry")
+        if isinstance(reentry, dict):
+            corrections.append((
+                "re-entry", str(reentry.get("origin_item") or item_id or "—"),
+                str(reentry.get("trigger") or "—"),
+                f"{reentry.get('phase_id') or '—'} / {reentry.get('resume_item') or '—'}",
+            ))
+        fix = decision.get("fix_branch")
+        if isinstance(fix, dict):
+            corrections.append((
+                "priority-fix", str(fix.get("origin_item") or item_id or "—"),
+                str(fix.get("priority") or "—"),
+                f"{fix.get('target_item') or '—'} / {fix.get('resume_item') or '—'}",
+            ))
+    return rows, last_updated, item_updated, corrections
 
 
 def status_model(plan_dir) -> dict:
@@ -152,7 +186,7 @@ def status_model(plan_dir) -> dict:
                        "status": _phase_status([item["status"] for item in items],
                                                plan_dir=plan_dir, phase_id=phase_id)})
     journal = plan_dir / "journal.jsonl"
-    journal_rows, last_updated, item_updated = _journal_rows(journal)
+    journal_rows, last_updated, item_updated, corrections = _journal_rows(journal)
     if journal.is_file():
         input_paths.append(journal)
     for phase in phases:
@@ -160,6 +194,7 @@ def status_model(plan_dir) -> dict:
             item["updated"] = item_updated.get(item["id"], "—")
     plan_status = _phase_status([phase["status"] for phase in phases])
     return {"core": core, "phases": phases, "journal_rows": journal_rows,
+            "corrections": corrections,
             "meta": {"Version": _migrated_version(plan_dir), "Status": plan_status, "Last Updated": last_updated},
             "input_paths": input_paths}
 
@@ -187,14 +222,18 @@ def render_status(plan_dir) -> str:
                 gates.append(f"- {item['id']}: escalation")
             if item["state"].get("Known Deviations", "—") not in ("", "—"):
                 gates.append(f"- {item['id']}: known deviation")
-    body = "\n\n".join((
+    sections = [
         "## 0. Meta\n\n" + _table(("Поле", "Значение"),
                                       [(field, model["meta"][field]) for field in _STATUS_META]),
         "## 4. Phase Index & Status Board\n\n" + _table(_BOARD_COLUMNS, board),
         "\n".join(phase_sections).rstrip(),
         "## 6. Update Log\n\n" + _table(_UPDATE_COLUMNS, model["journal_rows"] or [("—", "—", "Нет записей")]),
-        "## Owner Gates\n\n" + "\n".join(gates or ["- —"]),
-    ))
+    ]
+    if model["corrections"]:
+        sections.append("## Correction Routing\n\n" + _table(
+            _CORRECTION_COLUMNS, model["corrections"]))
+    sections.append("## Owner Gates\n\n" + "\n".join(gates or ["- —"]))
+    body = "\n\n".join(sections)
     return plan_projection.rendered_file(metadata=metadata, title="Статус плана", body=body)
 
 

@@ -65,6 +65,15 @@ Raw provider flags допустимы только в additive adapter/projectio
    reducer outcome запрещён.
 <!-- block-confirmation:v1:end -->
 
+Audit-fixer проверяет continue-first carrier сквозным образом: каждый qualified
+`repair-in-current-attempt` обязан иметь последующую immutable запись с тем же exact original
+carrier и green post-validation до terminal verdict. Для producer edge сверяются directive,
+terminal `producer_readiness`, accepted owner `D#` у decided-empty и digest-bound bundle/downstream
+projection. Handoff на `plan-design` терминальной фазы допустим только после nonterminal
+`task.plan_readiness.correction_decision()` с валидным re-entry; missing/stale carrier ремонтируется
+в текущем audit attempt. Несовпадения runtime/lint/delivery/status/returns — in-scope audit repair,
+а не повод для `ATTENTION` или redesign.
+
 Недоступное или не верифицируемое route evidence до product journal start обозначай
 `ROUTE-UNVERIFIABLE`: это `routing-rejected`, не attempt и не transition статуса. Верни exact
 fresh-launch continuation, а после корректного запуска повтори исходный route gate; не подменяй

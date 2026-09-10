@@ -138,6 +138,12 @@ Context is chosen from the boundary predicate, not from command name:
 Ordinary item sequencing, local repair, or plan close does not itself justify a cold start.
 Completed `task:plan-design` and `task:plan-audit` invocations are explicit terminal-root
 exceptions: neither root executes its successor, even when the successor is otherwise compatible.
+Terminal producer phases use additive `producer-readiness/v1` evidence. Its consumer sees only a
+digest-bound projection; an empty set requires an accepted owner `D#`. Re-entering an already
+terminal phase is not inferred from prose or a design command: it requires the latest nonterminal
+`phase-reentry-justification/v1` reducer outcome. Missing/stale producer evidence stays a bounded
+repair in the current attempt, and priority fixes target only declared items through
+`fix-branch/v1`.
 First eligible local failure is repaired in root; a repeated fingerprint or risk trigger
 permits one isolated reviewer. The child may report evidence but cannot close the root-owned item.
 

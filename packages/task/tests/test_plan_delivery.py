@@ -9,6 +9,7 @@ try:
 except ImportError:
     from fixtures import write_valid_plan
 from task import journal, plan_delivery, plan_item_state, terminal_policy
+from task import plan_readiness
 
 
 class PlanDeliveryTests(unittest.TestCase):
@@ -88,6 +89,29 @@ class PlanDeliveryTests(unittest.TestCase):
         self.assertEqual(receipt["next_exact"], "/task:plan-exec DEMO-HANDOFF P1.1")
         self.assertEqual(receipt["continuity"]["outcome"], "cold-start-root")
         self.assertEqual(receipt["continuity"]["reason"], "owner-pause-no-resume")
+
+    def test_terminal_phase_design_handoff_requires_typed_reentry(self):
+        plan = write_valid_plan(self.root, "2026.09.09-№1-REENTRY", layout="v2")
+        handoff = plan / "handoff.md"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "/task:plan-exec 2026.09.09-№1-REENTRY P1.1",
+            "/task:plan-design 2026.09.09-№1-REENTRY P1"), encoding="utf-8")
+        with self.assertRaisesRegex(plan_delivery.DeliveryError,
+                                    "PHASE_REENTRY_UNJUSTIFIED"):
+            plan_delivery.build_handoff_receipt(plan, "design")
+        reentry = {
+            "schema_version": "phase-reentry-justification/v1", "phase_id": "P1",
+            "trigger": "terminal-evidence-invalid", "evidence_ids": ["audit:P1"],
+            "origin_item": "P1.1", "resume_item": "P1.1",
+        }
+        decision = plan_readiness.correction_decision(
+            observed_mode="contract-conflict", reentry=reentry)
+        journal.append(plan, journal.new_entry(
+            plan_id=plan.name, item_id="P1", command="plan-audit",
+            actor="frontier/xhigh", result="local-repair", decision=decision,
+        ))
+        receipt = plan_delivery.build_handoff_receipt(plan, "design")
+        self.assertIn("plan-design", receipt["next_exact"])
 
     def test_handoff_receipt_rejects_unknown_persisted_context(self):
         plan = write_valid_plan(self.root, "DEMO-BAD-CONTEXT", layout="v2")

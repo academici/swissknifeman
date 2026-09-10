@@ -137,6 +137,17 @@ file count, elapsed time, or a large diagnostic set never proves a boundary. An 
 failure always decomposes and continues local repair in the same attempt; `JUSTIFIED` without a
 concrete authority, capability, safety, or declared-scope boundary is reduced to evidence gathering.
 
+For a declared ``producer-readiness/v1`` edge, terminal evidence carries exactly one typed
+readiness record. Nonempty output binds a positive deterministic candidate set; empty output is
+valid only by one accepted owner `D#`. Bundle/downstream expose its digest-bound projection, and a
+valid projection is a green downstream carrier. Use `task.plan_readiness.correction_decision()` as
+the only continuation reducer: verified/no-op continues, missing/stale repairs in the same attempt,
+a proved contract conflict plus `phase-reentry-justification/v1` may reopen a terminal phase, and
+`fix-branch/v1` may target only a declared priority item. The decision is nonterminal and is visible
+in status/returns. Lint and delivery reject terminal-phase `plan-design` without exact re-entry
+evidence. Terminal close also rejects every qualified repair whose exact original carrier was not
+rerun green in a later immutable record.
+
 Phase audit uses the same reducer as its machine terminal policy. Acceptance failure is work for
 the owning audit root, not a terminal label. Phase `ATTENTION` is nonterminal. Phase `RED` requires
 persisted reducer evidence: `approval_required`/`denied` from authority or `terminal-block` from

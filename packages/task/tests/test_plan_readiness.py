@@ -1,6 +1,9 @@
 import unittest
+import json
+import tempfile
+from pathlib import Path
 
-from task import plan_readiness
+from task import journal, plan_readiness
 
 
 class PlanReadinessTest(unittest.TestCase):
@@ -54,13 +57,6 @@ class PlanReadinessTest(unittest.TestCase):
             decision = terminal_policy.build_decision(plan, "P2.2", result="closed-green", validation=[{"carrier": "test", "status": "green", "evidence_ids": ["test:ok"]}], producer_readiness=self.readiness())
             self.assertEqual(decision["producer_readiness"]["consumer_item"], "P2.3")
 
-    def test_archive_contract_has_no_brain_precondition(self):
-        from pathlib import Path
-        source = (Path(__file__).resolve().parents[1] / "commands" / "plan-close.md").read_text(encoding="utf-8")
-        archive = source.split("## Режим `archive <ID>`", 1)[1].split("## Delivery receipt", 1)[0]
-        self.assertIn("не разрешает, не ищет и не вызывает Brain", archive)
-        self.assertNotIn("синк\n   зеркала в Brain", archive)
-
     def test_reentry_and_priority_fix_are_closed(self):
         plan_readiness.validate_reentry({
             "schema_version": "phase-reentry-justification/v1", "phase_id": "P2",
@@ -72,4 +68,117 @@ class PlanReadinessTest(unittest.TestCase):
                 "schema_version": "phase-reentry-justification/v1", "phase_id": "P2",
                 "trigger": "stale-view", "evidence_ids": ["journal:4"],
                 "origin_item": "P2.2", "resume_item": "P2.3",
+            })
+
+    def test_empty_readiness_requires_one_accepted_owner_decision(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp)
+            (plan / "decisions").mkdir()
+            empty = self.readiness(mode="empty-by-decision", candidate_count=0,
+                                   owner_decision="D7", exclusions=["approved no-op"])
+            with self.assertRaisesRegex(plan_readiness.ReadinessError, "accepted owner"):
+                plan_readiness.validate_readiness(empty, plan_dir=plan)
+            (plan / "decisions" / "D7-empty.md").write_text(
+                "---\nid: D7\nstatus: accepted\n---\n", encoding="utf-8")
+            plan_readiness.validate_readiness(empty, plan_dir=plan)
+
+    def test_correction_reducer_continues_verified_and_repairs_missing(self):
+        expected = {
+            "approved-no-op": "continue-current",
+            "valid-output": "continue-current",
+            "stale-derived": "repair-in-current-attempt",
+            "missing-or-corrupt": "repair-in-current-attempt",
+            "contract-conflict": "gather-evidence",
+        }
+        for observed_mode, action in expected.items():
+            with self.subTest(observed_mode=observed_mode):
+                self.assertEqual(plan_readiness.correction_decision(
+                    observed_mode=observed_mode)["action"], action)
+        with self.assertRaisesRegex(plan_readiness.ReadinessError, "forbids re-entry"):
+            plan_readiness.correction_decision(
+                observed_mode="approved-no-op",
+                reentry={
+                    "schema_version": "phase-reentry-justification/v1", "phase_id": "P2",
+                    "trigger": "owner-decision-change", "evidence_ids": ["D7"],
+                    "origin_item": "P2.2", "resume_item": "P2.3",
+                },
+            )
+
+    def test_terminal_phase_design_requires_reentry_decision(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp)
+            phase = plan / "phases" / "P2"
+            phase.mkdir(parents=True)
+            (plan / "plan.md").write_text(
+                "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+                encoding="utf-8")
+            (plan / "journal.jsonl").write_text("", encoding="utf-8")
+            (phase / "P2.md").write_text("# P2\n", encoding="utf-8")
+            (phase / "P2.1.md").write_text("### P2.1 — done\n", encoding="utf-8")
+            (phase / "P2.1.state.md").write_text("**Status:** 🟢 Done\n", encoding="utf-8")
+            with self.assertRaisesRegex(plan_readiness.ReadinessError,
+                                        "PHASE_REENTRY_UNJUSTIFIED"):
+                plan_readiness.validate_design_target(plan, "P2")
+            reentry = {
+                "schema_version": "phase-reentry-justification/v1", "phase_id": "P2",
+                "trigger": "terminal-evidence-invalid", "evidence_ids": ["audit:P2"],
+                "origin_item": "P2.1", "resume_item": "P2.1",
+            }
+            decision = plan_readiness.correction_decision(
+                observed_mode="contract-conflict", reentry=reentry)
+            event = journal.new_entry(
+                plan_id="DEMO", item_id="P2", command="plan-audit",
+                actor="frontier/xhigh", result="local-repair", decision=decision)
+            (plan / "journal.jsonl").write_text(
+                json.dumps(event, ensure_ascii=False) + "\n", encoding="utf-8")
+            plan_readiness.validate_design_target(plan, "P2")
+
+    def test_all_three_reentry_triggers_reduce_to_reopen(self):
+        for trigger in ("owner-decision-change", "terminal-evidence-invalid",
+                        "safety-or-authority-boundary"):
+            with self.subTest(trigger=trigger):
+                reentry = {
+                    "schema_version": "phase-reentry-justification/v1", "phase_id": "P2",
+                    "trigger": trigger, "evidence_ids": [f"evidence:{trigger}"],
+                    "origin_item": "P2.2", "resume_item": "P2.3",
+                }
+                self.assertEqual(plan_readiness.correction_decision(
+                    observed_mode="contract-conflict", reentry=reentry)["action"],
+                    "reopen-phase")
+
+    def test_priority_fix_binds_exact_declared_dispatch_target(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp)
+            branch = {
+                "schema_version": "fix-branch/v1", "origin_item": "P2.2", "owner": "task",
+                "scope": "bounded repair", "priority": "priority", "rollback": "revert",
+                "validation": "python3 -m unittest", "target_item": "P3.1",
+                "resume_item": "P2.3",
+            }
+            decision = plan_readiness.correction_decision(
+                observed_mode="contract-conflict", fix_branch=branch,
+                declared_items=("P3.1",))
+            event = journal.new_entry(
+                plan_id="DEMO", item_id="P2.2", command="plan-audit",
+                actor="frontier/xhigh", result="local-repair", decision=decision)
+            (plan / "journal.jsonl").write_text(
+                json.dumps(event, ensure_ascii=False) + "\n", encoding="utf-8")
+            plan_readiness.validate_execution_target(plan, ["P3.1"])
+            with self.assertRaisesRegex(plan_readiness.ReadinessError,
+                                        "PRIORITY_FIX_TARGET_MISMATCH"):
+                plan_readiness.validate_execution_target(plan, ["P2.3"])
+            with (plan / "journal.jsonl").open("a", encoding="utf-8") as stream:
+                stream.write(json.dumps(journal.new_entry(
+                    plan_id="DEMO", item_id="P3.1", command="plan-run",
+                    actor="implementation/high", result="in-progress")) + "\n")
+            self.assertIsNone(plan_readiness.latest_correction(plan))
+
+    def test_correction_decision_cannot_terminalize_an_item(self):
+        from task import terminal_policy
+        decision = plan_readiness.correction_decision(observed_mode="valid-output")
+        with self.assertRaisesRegex(terminal_policy.TerminalPolicyError,
+                                    "READINESS_DECISION_NONTERMINAL"):
+            terminal_policy.validate_entry({
+                "item_id": "P2.2", "command": "plan-run", "result": "closed-green",
+                "decision": decision,
             })

@@ -51,6 +51,24 @@ class PlanStatusTests(unittest.TestCase):
         self.assertEqual(plan_status.status_model(self.plan_dir)["phases"][0]["status"],
                          "🟠 Done with deviations")
 
+    def test_projects_continue_first_correction_outcome(self):
+        event = {
+            "ts": "2026-09-10T12:00:00Z", "item_id": "P1.1", "actor": "frontier/xhigh",
+            "decision": {
+                "signal_class": "producer-readiness", "scope_class": "item",
+                "action": "repair-in-current-attempt", "recovered": True,
+                "terminal": False, "reason_code": "PRODUCER_REPAIR_REQUIRED",
+                "observed_mode": "stale-derived",
+            },
+        }
+        with (self.plan_dir / "journal.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+        model = plan_status.status_model(self.plan_dir)
+        self.assertIn(
+            ("routing", "P1.1", "stale-derived → repair-in-current-attempt", "—"),
+            model["corrections"],
+        )
+
     def test_owner_gated_terminal_block_close_projects_phase_deviations_without_rewriting_item(self):
         state = self.plan_dir / "phases" / "P1" / "P1.1.state.md"
         state.write_text(state.read_text(encoding="utf-8").replace(

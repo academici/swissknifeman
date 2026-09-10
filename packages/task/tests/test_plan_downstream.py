@@ -11,7 +11,7 @@ import unittest.mock
 from pathlib import Path
 from types import SimpleNamespace
 
-from task import plan_downstream, plan_lint
+from task import journal, plan_downstream, plan_lint, terminal_policy
 
 
 DATA = Path(__file__).resolve().parent / "data" / "plan-v2"
@@ -122,6 +122,39 @@ class TestPlanDownstream(unittest.TestCase):
         fields, _body = plan_downstream.parse_result_record(paths[0])
         self.assertEqual(fields["outcome"], "unknown")
         plan_downstream.validate_result_record(fields)
+
+    def test_typed_readiness_is_a_green_downstream_carrier_without_shell_validation(self):
+        producer = self.plan / "phases" / "P0" / "P0.1.md"
+        producer.write_text(producer.read_text(encoding="utf-8").replace(
+            "**Deliverables:** terminal fixture artifact.",
+            "**Deliverables:** terminal fixture artifact. `producer-readiness/v1`: "
+            "consumer=P1.1; modes=nonempty-candidates|empty-by-decision."),
+            encoding="utf-8")
+        self._commit_consumer("readiness projection is the validation carrier")
+        readiness = {
+            "schema_version": "producer-readiness/v1", "producer_item": "P0.1",
+            "consumer_item": "P1.1", "mode": "nonempty-candidates",
+            "roots": ["artifact.txt"], "command": "find artifact.txt -type f",
+            "candidate_count": 1, "candidate_paths_sha256": "a" * 64,
+            "source_commit": self._git("rev-parse", "HEAD"),
+            "predicate": "one declared candidate", "exclusions": [],
+        }
+        decision = terminal_policy.build_decision(
+            self.plan, "P0.1", result="closed-green",
+            validation=[{"carrier": "readiness verifier", "status": "green",
+                         "evidence_ids": ["fixture:green"]}],
+            producer_readiness=readiness)
+        event = journal.new_entry(
+            plan_id=self.plan.name, item_id="P0.1", command="plan-run",
+            actor="implementation/high", result="closed-green", decision=decision)
+        with (self.plan / "journal.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+
+        result = plan_downstream.evaluate(self.plan, "P0.1")
+
+        self.assertEqual(result["outcome"], "green")
+        self.assertEqual(result["consumers"][0]["readiness"]["mode"],
+                         "nonempty-candidates")
 
     def test_missing_validation_under_numbered_plan_path_is_unknown(self):
         path = "plans/2026.08.12-№1-DEMO/artifacts/P1/future-validator.py"

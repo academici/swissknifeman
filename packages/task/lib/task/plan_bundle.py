@@ -183,7 +183,7 @@ def producer_readiness(plan_dir, consumer_item: str) -> tuple[dict, ...]:
     manifest schema would invalidate historic bundles.  Consumers call this
     owner API while their bundle supplies the immutable declared inputs.
     """
-    from task import plan_readiness
+    from task import journal, plan_readiness, terminal_policy
 
     plan_dir = Path(plan_dir)
     producers = []
@@ -211,8 +211,11 @@ def producer_readiness(plan_dir, consumer_item: str) -> tuple[dict, ...]:
                 terminal = event
         record = (terminal or {}).get("decision", {}).get("producer_readiness")
         try:
-            result.append(plan_readiness.terminal_projection(record))
-        except plan_readiness.ReadinessError as exc:
+            journal.validate_entry(terminal)
+            terminal_policy.validate_entry(terminal, plan_dir=plan_dir)
+            result.append(plan_readiness.terminal_projection(record, plan_dir=plan_dir))
+        except (journal.JournalValidationError, terminal_policy.TerminalPolicyError,
+                plan_readiness.ReadinessError, TypeError) as exc:
             raise BundleError(f"dependency-not-ready: {producer}: {exc}") from exc
     return tuple(sorted(result, key=lambda row: row["producer_item"]))
 

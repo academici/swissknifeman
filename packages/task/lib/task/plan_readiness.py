@@ -15,6 +15,11 @@ _ITEM = re.compile(r"^P[0-9]+\.[0-9]+$")
 _PHASE = re.compile(r"^P[0-9]+$")
 _SHA = re.compile(r"^[0-9a-f]{64}$")
 _COMMIT = re.compile(r"^[0-9a-f]{7,64}$")
+_DECISION = re.compile(r"^D[1-9][0-9]*$")
+_OBSERVED_MODES = frozenset((
+    "approved-no-op", "valid-output", "stale-derived", "missing-or-corrupt",
+    "contract-conflict",
+))
 _DIRECTIVE = re.compile(
     r"`producer-readiness/v1`\s*:\s*consumer=(P\d+\.\d+)\s*;\s*"
     r"modes=(nonempty-candidates\|empty-by-decision|empty-by-decision\|nonempty-candidates)")
@@ -41,7 +46,23 @@ def directive(deliverables: str) -> dict | None:
     return {"consumer_item": consumer, "modes": tuple(modes.split("|"))}
 
 
-def validate_readiness(record: dict) -> None:
+def _accepted_decision(plan_dir: Path, identifier: str) -> bool:
+    matches = sorted((plan_dir / "decisions").glob(f"{identifier}-*.md"))
+    if len(matches) != 1:
+        return False
+    try:
+        frontmatter = matches[0].read_text(encoding="utf-8").split("---", 2)[1]
+    except (OSError, UnicodeDecodeError, IndexError):
+        return False
+    fields = {}
+    for line in frontmatter.splitlines():
+        if ":" in line:
+            key, value = line.split(":", 1)
+            fields[key.strip()] = value.strip()
+    return fields.get("id") == identifier and fields.get("status") == "accepted"
+
+
+def validate_readiness(record: dict, *, plan_dir: Path | None = None) -> None:
     fields = {"schema_version", "producer_item", "consumer_item", "mode", "roots", "command",
               "candidate_count", "candidate_paths_sha256", "source_commit", "predicate", "exclusions"}
     if not isinstance(record, dict):
@@ -65,8 +86,10 @@ def validate_readiness(record: dict) -> None:
     if record["mode"] == "nonempty-candidates" and record["candidate_count"] == 0:
         raise ReadinessError("nonempty-candidates requires candidate_count > 0")
     if record["mode"] == "empty-by-decision":
-        if record["candidate_count"] != 0 or not re.fullmatch(r"D[0-9]+", record["owner_decision"]):
+        if record["candidate_count"] != 0 or not _DECISION.fullmatch(record["owner_decision"]):
             raise ReadinessError("empty-by-decision requires zero candidates and D#")
+        if plan_dir is not None and not _accepted_decision(Path(plan_dir), record["owner_decision"]):
+            raise ReadinessError("empty-by-decision requires one accepted owner D#")
 
 
 def readiness_digest(record: dict) -> str:
@@ -99,9 +122,142 @@ def validate_fix_branch(record: dict, *, declared_items=()) -> None:
         raise ReadinessError("fix branch: target item is not declared")
 
 
-def terminal_projection(record: dict) -> dict:
+def correction_decision(*, observed_mode: str, reentry: dict | None = None,
+                        fix_branch: dict | None = None, declared_items=()) -> dict:
+    """Reduce producer/re-entry facts to one closed continuation action."""
+    if observed_mode not in _OBSERVED_MODES:
+        raise ReadinessError("correction: observed mode is not allowed")
+    if reentry is not None and fix_branch is not None:
+        raise ReadinessError("correction: reentry and fix branch are mutually exclusive")
+    if reentry is not None:
+        validate_reentry(reentry)
+    if fix_branch is not None:
+        validate_fix_branch(fix_branch, declared_items=declared_items)
+
+    if observed_mode in {"approved-no-op", "valid-output"}:
+        if reentry is not None or fix_branch is not None:
+            raise ReadinessError("correction: verified producer mode forbids re-entry or priority fix")
+        action, reason = "continue-current", "PRODUCER_ALREADY_READY"
+    elif reentry is not None:
+        if observed_mode != "contract-conflict":
+            raise ReadinessError("correction: reopen requires a proved contract conflict")
+        action, reason = "reopen-phase", "PHASE_REENTRY_JUSTIFIED"
+    elif fix_branch is not None:
+        action, reason = "priority-fix", "DECLARED_PRIORITY_FIX"
+    elif observed_mode in {"stale-derived", "missing-or-corrupt"}:
+        action, reason = "repair-in-current-attempt", "PRODUCER_REPAIR_REQUIRED"
+    else:
+        action, reason = "gather-evidence", "REENTRY_EVIDENCE_REQUIRED"
+
+    decision = {
+        "signal_class": "producer-readiness",
+        "scope_class": "item",
+        "action": action,
+        "recovered": action in {"continue-current", "repair-in-current-attempt", "priority-fix"},
+        "terminal": False,
+        "reason_code": reason,
+        "observed_mode": observed_mode,
+    }
+    if reentry is not None:
+        decision["phase_reentry"] = reentry
+    if fix_branch is not None:
+        decision["fix_branch"] = fix_branch
+    return decision
+
+
+def latest_correction(plan_dir) -> dict | None:
+    """Return the latest unconsumed producer/re-entry decision from the journal."""
+    path = Path(plan_dir) / "journal.jsonl"
+    try:
+        rows = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    latest = None
+    latest_index = None
+    events = []
+    from task import journal
+    for index, raw in enumerate(rows):
+        try:
+            event = json.loads(raw)
+            journal.validate_entry(event)
+        except (json.JSONDecodeError, journal.JournalValidationError):
+            continue
+        events.append((index, event))
+        decision = event.get("decision")
+        if not isinstance(decision, dict) or decision.get("signal_class") != "producer-readiness":
+            continue
+        try:
+            expected = correction_decision(
+                observed_mode=decision.get("observed_mode"),
+                reentry=decision.get("phase_reentry"),
+                fix_branch=decision.get("fix_branch"),
+            )
+        except ReadinessError:
+            continue
+        if set(decision) == set(expected) and all(
+                decision.get(key) == value for key, value in expected.items()):
+            latest = decision
+            latest_index = index
+    if latest is None:
+        return None
+    for index, event in events:
+        if index <= latest_index:
+            continue
+        subject = str(event.get("item_id") or "")
+        command = event.get("command")
+        if latest["action"] == "reopen-phase":
+            phase = latest["phase_reentry"]["phase_id"]
+            if command == "plan-design" and (subject == phase or subject.startswith(phase + ".")):
+                return None
+        if latest["action"] == "priority-fix":
+            target = latest["fix_branch"]["target_item"]
+            if command in {"plan-exec", "plan-run", "plan-close"} and subject == target:
+                return None
+    return latest
+
+
+def validate_execution_target(plan_dir, item_ids) -> None:
+    """Bind an active priority-fix route to its one declared target item."""
+    decision = latest_correction(plan_dir)
+    if not isinstance(decision, dict) or decision.get("action") != "priority-fix":
+        return
+    requested = tuple(item_ids)
+    expected = (decision["fix_branch"]["target_item"],)
+    if requested != expected:
+        raise ReadinessError(
+            f"PRIORITY_FIX_TARGET_MISMATCH: expected {expected[0]}, got {list(requested)}")
+
+
+def validate_design_target(plan_dir, phase_id: str) -> None:
+    """Require an exact re-entry decision before design targets a terminal phase."""
+    from task import plan_layout
+
+    plan_dir = Path(plan_dir)
+    statuses = []
+    for spec in plan_layout.item_spec_paths(plan_dir, phase_id):
+        state_path = spec.with_name(spec.stem + ".state.md")
+        try:
+            text = state_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            return
+        match = re.search(r"^\*\*Status:\*\*\s*(.+?)\s*$", text, re.MULTILINE)
+        if match is None:
+            return
+        statuses.append(match.group(1))
+    terminal = {"🟢 Done", "🟠 Done with deviations", "⛔ Skipped by decision"}
+    if not statuses or not all(status in terminal for status in statuses):
+        return
+    decision = latest_correction(plan_dir)
+    record = (decision or {}).get("phase_reentry")
+    if (not isinstance(decision, dict) or decision.get("action") != "reopen-phase"
+            or not isinstance(record, dict) or record.get("phase_id") != phase_id):
+        raise ReadinessError(
+            f"PHASE_REENTRY_UNJUSTIFIED: terminal phase {phase_id} requires re-entry evidence")
+
+
+def terminal_projection(record: dict, *, plan_dir: Path | None = None) -> dict:
     """Return the only consumer-visible, digest-bound subset."""
-    validate_readiness(record)
+    validate_readiness(record, plan_dir=plan_dir)
     return {"schema_version": "producer-readiness-projection/v1", "digest": readiness_digest(record),
             "producer_item": record["producer_item"], "consumer_item": record["consumer_item"],
             "mode": record["mode"], "candidate_count": record["candidate_count"],

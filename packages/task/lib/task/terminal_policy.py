@@ -110,7 +110,7 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
         if declared is not None:
             record = decision.get("producer_readiness")
             try:
-                plan_readiness.validate_readiness(record)
+                plan_readiness.validate_readiness(record, plan_dir=plan_dir)
             except plan_readiness.ReadinessError as exc:
                 raise TerminalPolicyError("PRODUCER_READINESS_REQUIRED", str(exc)) from exc
             if (record["producer_item"] != item_id
@@ -123,10 +123,19 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
             except plan_readiness.ReadinessError as exc:
                 raise TerminalPolicyError("PHASE_REENTRY_INVALID", str(exc)) from exc
         if "fix_branch" in decision:
+            declared_items = tuple(
+                spec.stem
+                for phase_id in plan_layout.phase_paths(plan_dir)
+                for spec in plan_layout.item_spec_paths(plan_dir, phase_id)
+            )
             try:
-                plan_readiness.validate_fix_branch(decision["fix_branch"])
+                plan_readiness.validate_fix_branch(
+                    decision["fix_branch"], declared_items=declared_items)
             except plan_readiness.ReadinessError as exc:
                 raise TerminalPolicyError("FIX_BRANCH_INVALID", str(exc)) from exc
+            if decision["fix_branch"]["target_item"] != item_id:
+                raise TerminalPolicyError(
+                    "FIX_BRANCH_INVALID", "terminal fix evidence belongs to another target item")
     rows = evidence["validation"]
     if not isinstance(rows, list) or not rows:
         raise TerminalPolicyError(
@@ -145,6 +154,16 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
             "TERMINAL_VALIDATION_RED",
             f"обязательная Validation ещё красная: {', '.join(red)}",
         )
+
+    if plan_dir is not None and item_id is not None:
+        from task import plan_repair
+        unresolved = plan_repair.unresolved_incidents(plan_dir, item_id)
+        if unresolved:
+            carriers = ", ".join(command for _subject, command, _digest in unresolved)
+            raise TerminalPolicyError(
+                "REPAIR_POST_VALIDATION_REQUIRED",
+                f"qualified repair не завершил exact original carrier: {carriers}",
+            )
 
     exhausted = evidence["repair_exhausted"]
     if result == "closed-green":
@@ -171,6 +190,34 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
 
 def validate_entry(entry: dict, *, plan_dir: Path | None = None) -> None:
     item_id = entry.get("item_id")
+    decision = entry.get("decision")
+    if isinstance(decision, dict) and decision.get("signal_class") == "producer-readiness":
+        from task import plan_readiness
+        declared_items = ()
+        if plan_dir is not None:
+            declared_items = tuple(
+                spec.stem
+                for phase_id in plan_layout.phase_paths(plan_dir)
+                for spec in plan_layout.item_spec_paths(plan_dir, phase_id)
+            )
+        try:
+            expected = plan_readiness.correction_decision(
+                observed_mode=decision.get("observed_mode"),
+                reentry=decision.get("phase_reentry"),
+                fix_branch=decision.get("fix_branch"),
+                declared_items=declared_items,
+            )
+        except plan_readiness.ReadinessError as exc:
+            raise TerminalPolicyError("READINESS_DECISION_INVALID", str(exc)) from exc
+        if set(decision) != set(expected) or any(
+                decision.get(key) != value for key, value in expected.items()):
+            raise TerminalPolicyError(
+                "READINESS_DECISION_INVALID", "decision не совпадает с reducer outcome")
+        if entry.get("result") in (_CLOSE_RESULTS | _BLOCK_RESULTS):
+            raise TerminalPolicyError(
+                "READINESS_DECISION_NONTERMINAL",
+                "producer/re-entry routing не может напрямую terminalize item",
+            )
     if (entry.get("command") not in _EXECUTION_COMMANDS
             or not isinstance(item_id, str) or not _ITEM_RE.fullmatch(item_id)
             or entry.get("result") not in (_CLOSE_RESULTS | _BLOCK_RESULTS)):

@@ -15,6 +15,15 @@ For every forward repair record, preserve `repair-decision/v1`, its digest, affe
 pre/post carriers in the append-only journal. A qualified `repair-in-current-attempt` record cannot
 close, block, escalate, or emit a redesign handoff until its exact original carrier is rerun.
 
+If an item declares ``producer-readiness/v1``, reconcile its terminal
+`producer_readiness` through `task.plan_readiness.validate_readiness(..., plan_dir=...)`: a
+decided-empty result is valid only with one accepted owner `D#`. Before persisting a design/reopen
+handoff for a terminal phase, require the exact nonterminal outcome from
+`task.plan_readiness.correction_decision()` and call `validate_design_target()`; valid output and
+approved no-op continue, while missing/stale evidence repairs in the current attempt. A priority
+fix must target a declared item through `fix-branch/v1`. Never convert these corrections directly
+into a terminal result.
+
 ## DecisionRequest и isolated-child-return (P6.3)
 
 Свободная проза не является каналом уточнения или авторизации. Когда дальнейший шаг требует

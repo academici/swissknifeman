@@ -611,6 +611,18 @@ class TestAuditTerminalPolicy(TmpPlanTestCase):
 
         self.assertEqual(_errors_containing(diag, "TERMINAL_SPEC_STALE"), [], diag.errors)
 
+    def test_terminal_phase_design_handoff_requires_reentry_evidence(self):
+        plan = write_valid_plan(self.root, plan_id="2026.09.09-№1-REENTRY-LINT")
+        handoff = plan / "handoff.md"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "/task:plan-exec 2026.09.09-№1-REENTRY-LINT P1.1",
+            "/task:plan-design 2026.09.09-№1-REENTRY-LINT P1"), encoding="utf-8")
+
+        _, diag = _lint(plan)
+
+        self.assertTrue(
+            _errors_containing(diag, "PHASE_REENTRY_UNJUSTIFIED"), diag.errors)
+
 
 class TestTieredPortability(TmpPlanTestCase):
     """P2.2/D26/D47: план с `handoff.md` (tier=committed-bundle по конструкции) обязан

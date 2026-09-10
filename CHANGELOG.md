@@ -2,8 +2,11 @@
 
 ## [Unreleased]
 
-- **`task`: явная готовность producer.** Добавлены закрытые `producer-readiness/v1`,
-  `phase-reentry-justification/v1` и `fix-branch/v1` reducers для readiness/re-entry evidence.
+- **`task`: явная готовность producer.** Закрытые `producer-readiness/v1`,
+  `phase-reentry-justification/v1` и `fix-branch/v1` теперь проходят один correction reducer:
+  accepted-empty и digest-bound downstream проверяются сквозным образом, priority fix привязан
+  к declared target, а lint/delivery запрещают необоснованный re-entry терминальной фазы.
+  Terminal close также требует green rerun exact исходного carrier после qualified repair.
 
 - **`task`: repo-local archive не зависит от Brain.** Archive больше не ищет и не вызывает
   Brain; синхронизация Brain остаётся отдельной opt-in docs-операцией.

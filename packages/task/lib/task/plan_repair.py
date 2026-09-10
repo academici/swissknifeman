@@ -34,6 +34,91 @@ def digest(record: dict) -> str:
     return hashlib.sha256(canonical_json(record).encode("utf-8")).hexdigest()
 
 
+def incident_key(record: dict) -> tuple[str, str, str]:
+    """Return the stable identity shared by pre- and post-repair evidence."""
+    validate(record)
+    carrier = record["original_carrier"]
+    return record["item_id"], carrier["command"], carrier["digest"]
+
+
+def post_validation_complete(record: dict) -> bool:
+    """Whether the exact original carrier was rerun successfully after repair."""
+    validate(record)
+    original = record["original_carrier"]
+    return any(
+        carrier["command"] == original["command"]
+        and carrier["digest"] == original["digest"]
+        and carrier["result"] == "green"
+        for carrier in record["post_validation"]
+    )
+
+
+def unresolved_incidents(plan_dir, item_id: str) -> tuple[tuple[str, str, str], ...]:
+    """Project unresolved qualified repairs from the append-only journal.
+
+    A second immutable record with the same incident key and an exact green
+    post-carrier resolves the earlier observation. Malformed historical rows
+    are ignored here and remain owned by the journal linter.
+    """
+    path = Path(plan_dir) / "journal.jsonl"
+    try:
+        rows = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return ()
+    unresolved = set()
+    from task import journal
+    for raw in rows:
+        try:
+            entry = json.loads(raw)
+            journal.validate_entry(entry)
+            record = entry.get("repair_decision")
+            if entry.get("item_id") != item_id or not isinstance(record, dict):
+                continue
+            outcome = evaluate(record)
+            if outcome["action"] != "repair-in-current-attempt":
+                continue
+            key = incident_key(record)
+            if post_validation_complete(record):
+                unresolved.discard(key)
+            else:
+                unresolved.add(key)
+        except (json.JSONDecodeError, journal.JournalValidationError,
+                RepairDecisionError, KeyError, TypeError):
+            continue
+    return tuple(sorted(unresolved))
+
+
+def latest_action(plan_dir, *, item_id: str | None = None,
+                  phase_id: str | None = None) -> str | None:
+    """Return the latest validated repair action for an item or phase."""
+    path = Path(plan_dir) / "journal.jsonl"
+    try:
+        rows = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    latest = None
+    from task import journal
+    for raw in rows:
+        try:
+            entry = json.loads(raw)
+            journal.validate_entry(entry)
+            subject = entry.get("item_id")
+            if item_id is not None and subject != item_id:
+                continue
+            if phase_id is not None and not str(subject).startswith(phase_id + "."):
+                continue
+            record = entry.get("repair_decision")
+            if not isinstance(record, dict):
+                continue
+            action = evaluate(record)["action"]
+            latest = (None if action == "repair-in-current-attempt"
+                      and post_validation_complete(record) else action)
+        except (json.JSONDecodeError, journal.JournalValidationError,
+                RepairDecisionError, KeyError, TypeError):
+            continue
+    return latest
+
+
 def _closed(value, expected, field):
     if not isinstance(value, dict):
         raise RepairDecisionError(f"{field}: ожидается object")

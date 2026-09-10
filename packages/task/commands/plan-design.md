@@ -27,6 +27,14 @@ successor из design handoff несёт `Context: cold-start-root: design-root-
 Получи этот Context через `task.plan_continuity.reduce()` над attested work estimate с
 `lifecycle=design-root-terminal` и durable checkpoint; передай тот же typed decision renderer'у.
 
+До любой мутации существующей терминальной фазы вызови
+`task.plan_readiness.validate_design_target(plan_dir, phase_id)`. `approved-no-op` и
+`valid-output` запрещают reopen; `stale-derived`/`missing-or-corrupt` возвращаются в bounded repair
+исходного attempt. Reopen разрешён только последним nonterminal reducer outcome `reopen-phase` с
+валидным `phase-reentry-justification/v1`; priority fix идёт в объявленный target item по
+`fix-branch/v1`, а не расширяет design scope. `PHASE_REENTRY_UNJUSTIFIED` останавливает
+`plan-design` до записи статусов, D-записи или handoff.
+
 ## DecisionRequest и isolated-child-return (P6.3)
 
 Свободная проза не является каналом уточнения или авторизации. Когда дальнейший шаг требует

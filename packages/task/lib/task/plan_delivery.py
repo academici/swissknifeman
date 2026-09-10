@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 
 from task import (command_catalog, journal, plan_continuity, plan_layout, plan_lint,
-                  review_policy, terminal_policy)
+                  plan_readiness, plan_repair, review_policy, terminal_policy)
 
 
 class DeliveryError(ValueError):
@@ -37,6 +37,51 @@ _STATUS_BY_RESULT = {
 }
 _AUDIT_VERDICT_RE = re.compile(r"\*\*Вердикт:\s*(GREEN|ATTENTION|RED)\*\*")
 _SEMANTIC_NEXT_LINE_RE = re.compile(r"^(?:Semantic Next:\s*)?`?([^`]+?)`?\.?$")
+_DESIGN_TARGET_RE = re.compile(
+    r"(?:^|\s|/)(?:task:)?plan-design\s+(\S+)\s+(P[0-9]+(?:\.[0-9]+)?)\b")
+_EXEC_TARGET_RE = re.compile(
+    r"(?:^|\s|/)(?:task:)?plan-(?:exec|run)\s+(\S+)\s+"
+    r"(P[0-9]+\.[0-9]+)(?:\s*[-–]\s*(P[0-9]+\.[0-9]+))?")
+
+
+def _validate_design_continuation(plan_dir: Path, next_exact: str) -> None:
+    match = _DESIGN_TARGET_RE.search(next_exact)
+    if match is None or match.group(1) != plan_dir.name:
+        return
+    target = match.group(2)
+    phase_id = target.split(".", 1)[0]
+    latest = plan_repair.latest_action(
+        plan_dir, item_id=target if "." in target else None,
+        phase_id=None if "." in target else phase_id,
+    )
+    if latest == "repair-in-current-attempt":
+        raise DeliveryError(
+            "REPAIR_CONTINUATION_REQUIRED",
+            "latest repair-decision/v1 forbids a plan-design handoff",
+        )
+    try:
+        plan_readiness.validate_design_target(plan_dir, phase_id)
+    except plan_readiness.ReadinessError as exc:
+        raise DeliveryError("PHASE_REENTRY_UNJUSTIFIED", str(exc)) from exc
+
+
+def _validate_priority_continuation(plan_dir: Path, next_exact: str) -> None:
+    match = _EXEC_TARGET_RE.search(next_exact)
+    if match is None or match.group(1) != plan_dir.name:
+        return
+    requested = [match.group(2)]
+    if match.group(3):
+        first_phase, first_number = match.group(2)[1:].split(".", 1)
+        last_phase, last_number = match.group(3)[1:].split(".", 1)
+        if first_phase == last_phase and int(first_number) <= int(last_number):
+            requested = [f"P{first_phase}.{number}" for number in
+                         range(int(first_number), int(last_number) + 1)]
+        else:
+            requested = [match.group(2), match.group(3)]
+    try:
+        plan_readiness.validate_execution_target(plan_dir, requested)
+    except plan_readiness.ReadinessError as exc:
+        raise DeliveryError("PRIORITY_FIX_TARGET_MISMATCH", str(exc)) from exc
 
 
 def _continuity(route: dict, *, allow_legacy: bool) -> dict:
@@ -230,6 +275,8 @@ def _handoff(plan_dir: Path, *, closed_subject: str | None = None) -> dict:
     next_exact = lines[start].split("**Next:**", 1)[1].strip()
     if not next_exact:
         raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "Next пуст")
+    _validate_design_continuation(plan_dir, next_exact)
+    _validate_priority_continuation(plan_dir, next_exact)
     if (closed_subject is not None and _ITEM_RE.fullmatch(closed_subject)
             and re.search(
                 rf"(?:task:plan-exec|task:plan-run)\s+\S+\s+{re.escape(closed_subject)}(?:\s|$)",

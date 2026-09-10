@@ -29,6 +29,25 @@ surface с непустыми `decision_question`, `evidence_gap`, `alternatives
 разрешает `design-required`; `FIX_REQUIRED` и мнение reviewer сами по себе не разрешают redesign.
 `block-candidate/v1` хранит digest repair record и потребляет его без собственной переклассификации.
 
+Terminal close дополнительно проверяет append-only журнал: каждый qualified repair остаётся
+незавершённым, пока более поздняя immutable запись с тем же item, command и digest исходного
+carrier не зафиксирует его green в `post_validation`. Поэтому отдельный focused green не может
+скрыть неповторённую исходную проверку.
+
+## Producer readiness и correction routing
+
+Producer объявляет связь ровно одной directive ``producer-readiness/v1``. Terminal decision несёт
+`producer-readiness/v1`: `nonempty-candidates` привязывает положительный детерминированный набор,
+а `empty-by-decision` — нулевой набор и одну принятую owner decision `D#`. Bundle и downstream
+передают потребителю только digest-bound projection; валидная readiness сама является green
+downstream carrier без обязательного shell-запуска.
+
+`task.plan_readiness.correction_decision()` — единственный reducer для продолжения: verified output
+или approved no-op → `continue-current`; stale/missing → `repair-in-current-attempt`; доказанный
+contract conflict с `phase-reentry-justification/v1` → `reopen-phase`; закрытый `fix-branch/v1` с
+объявленным target → `priority-fix`. Решение всегда nonterminal и проецируется в status/returns.
+Lint и delivery отклоняют `plan-design` для терминальной фазы без exact re-entry evidence.
+
 ## Когда допустим Blocked
 
 Material-кандидат сериализуется как закрытый `block-candidate/v1`. Для внешней проблемы RAG

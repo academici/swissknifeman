@@ -155,6 +155,22 @@ class PlanReturnsTests(unittest.TestCase):
         self.assertEqual(result["fingerprints"], [])
         self.assertEqual(result["counts"], {})
 
+    def test_preterminal_readiness_route_is_visible_without_return_fingerprint(self):
+        decision = {
+            "signal_class": "producer-readiness", "scope_class": "item",
+            "action": "continue-current", "recovered": True, "terminal": False,
+            "reason_code": "PRODUCER_ALREADY_READY", "observed_mode": "approved-no-op",
+        }
+        row = entry("2026-09-10T00:00:00Z", "plan-audit", "local-repair", item="P1.1")
+        row["decision"] = decision
+        (self.plan / "journal.jsonl").write_text(
+            json.dumps(row, sort_keys=True) + "\n", encoding="utf-8")
+
+        result = plan_returns.returns(self.plan)
+
+        self.assertEqual(result["readiness_metrics"]["outcomes"], {"continue-current": 1})
+        self.assertEqual(result["fingerprints"], [])
+
     def test_observed_risk_trigger_requires_isolated_review_on_first_occurrence(self):
         (self.plan / "findings/P1.1-fixture.md").write_text(
             "---\nitem: P1.1\ndate: 2026-07-02\nfile: a.py\n"

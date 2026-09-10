@@ -5,10 +5,10 @@
 | Параметр | Значение |
 |:--|:--|
 | Batch | solo |
-| Model class | implementation |
-| Model | gpt-5.6-terra |
-| Effort | high |
-| Thinking | high — required P5 internal-integration assurance |
+| Model class | frontier |
+| Model | gpt-5.6-sol |
+| Effort | xhigh |
+| Thinking | xhigh — required P5 internal-integration assurance |
 | Capabilities | skills.repository · command.filesystem-read · command.git-read |
 | Context | continue-root |
 | Суть | Read-only assurance of the three closed P5 evidence contracts. |
@@ -22,7 +22,7 @@ $ task:plan-audit 2026.09.09-№1-LEAN-EXECUTION P5
 **Native Codex command:**
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-audit 2026.09.09-№1-LEAN-EXECUTION P5'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.09.09-№1-LEAN-EXECUTION P5'
 ```
 
 **Done:** P5.1 added the deterministic description-debt queue. P5.2 added `analyst workflow-scan` and a `covered` report, so no Task template changed. P5.3 added exact callback DB proof and contained owned worker roots to the Laravel isolation skill.

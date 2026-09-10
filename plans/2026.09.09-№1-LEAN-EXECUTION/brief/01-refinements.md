@@ -171,3 +171,17 @@ receipt programme and the four-item P6 context evaluator are retired instead of 
 addition. P7 moves before P3; P3.1/P3.2/P3.4 remain because impact classification, routing
 consumption and evidence topology are distinct seams. No release, rollout, push or external write is
 authorized by this design session.
+
+## 2026-09-10 — P5.1 executable input repair
+
+No new owner authority or product decision was introduced. The post-P4 handoff named one exact
+design defect: P5.1 used the prose input `current ratchet, budget and bucket-audit output`, so its v2
+bundle could not be materialized. The item now names only digest-qualified repository inputs and
+keeps live usage as runtime evidence rather than pretending it is a portable design carrier.
+
+The current read-only probe still found all 61 trigger-debt keys with zero direct calls, now across
+five scanned projects; 56 rows were resident and 5 had no visibility channel. This updates the dated
+baseline without changing D10 or authorizing description rewrites. Trigger-formula and stale-by-
+trigger policy remain owned by `validate.sh`; P5.1 only joins admitted ratchet membership to existing
+audit/budget fields and fail-closes malformed membership data. Product implementation remains
+unopened in this design root.

@@ -3,8 +3,8 @@
 <!-- Живая execution map, не второй план. Routing §3, item specs, owner gates и material-review
      triggers остаются авторитетными; фактический handoff пересчитывает readiness и Context. -->
 
-**Обновлён:** 2026-09-10 · **Соответствует plan.md:** v1.0.3 · **Design:** pass 3/3 +
-D14 P7 redesign · **Статус:** P1/P2/P3/P4/P7 terminal; redesign P5.1 before B-P5-GAPS.
+**Обновлён:** 2026-09-10 · **Соответствует plan.md:** v1.0.4 · **Design:** pass 3/3 +
+D14 P7 redesign + P5.1 input-contract repair · **Статус:** P1/P2/P3/P4/P7 terminal; B-P5-GAPS ready.
 
 ## Правило группировки
 
@@ -141,5 +141,5 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 
 ## Current handoff
 
-The current action is `task:plan-design` for P5.1: repair its unresolvable bundle input before
-launching B-P5-GAPS (`P5.1–P5.3`). D14 retires P3.3 and P6.
+The current action is `task:plan-run` for the ready B-P5-GAPS suffix (`P5.1–P5.3`). P5.1 now has
+digest-qualified inputs and a generated bundle; D14 retires P3.3 and P6.

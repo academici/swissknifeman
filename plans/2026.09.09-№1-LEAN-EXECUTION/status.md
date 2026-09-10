@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: 160dc48d49e7b916474baf3f3f4348e34f29b0d414a8196cf37d31ad7241ba75
+inputs_sha256: 702ab3a2cfac48380078650eb832b2e68f5a3d2da6349d53a37b7ffb96eac8ad
 generated_by: task plan-views status
 -->
 
@@ -15,7 +15,7 @@ generated_by: task plan-views status
 
 | Поле | Значение |
 |:--|:--|
-| Version | 1.0.3 |
+| Version | 1.0.4 |
 | Status | 🟡 In progress |
 | Last Updated | 2026-09-10 |
 
@@ -65,7 +65,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P5.1 | Skill description quality contract | ⬜ Not started | — |
+| P5.1 | Skill description quality contract | ⬜ Not started | 2026-09-10 |
 | P5.2 | Analyst test-strategy fleet synthesis | ⬜ Not started | — |
 | P5.3 | Lifecycle-aware Laravel parallel isolation | ⬜ Not started | — |
 
@@ -177,6 +177,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · audit-green · P4 minimal audit: stable candidate; focused seam green; unrelated P5.1 bundle lint error remains non-gating. |
 | 2026-09-10 | implementation/low | plan-close · closed-green · фаза P4 закрыта |
+| 2026-09-10 | frontier/high | plan-design · in-progress · ТЗ item'а доведено до DoR |
 
 ## Correction Routing
 

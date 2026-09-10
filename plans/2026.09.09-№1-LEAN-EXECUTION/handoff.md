@@ -1,35 +1,35 @@
 # HANDOFF — 2026-09-10 — after P4
 
-**Next:** close: task:plan-close 2026.09.09-№1-LEAN-EXECUTION P4
+**Next:** design-item: task:plan-design 2026.09.09-№1-LEAN-EXECUTION P5.1
 
 | Параметр | Значение |
 |:--|:--|
-| Batch | n/a |
-| Model class | implementation |
-| Model | gpt-5.6-terra |
-| Effort | low |
-| Thinking | low |
+| Batch | B-P5-GAPS |
+| Model class | frontier |
+| Model | gpt-5.6-sol |
+| Effort | high |
+| Thinking | high — repair immutable P5.1 input contract |
 | Capabilities | skills.repository · command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
-| Context | continue-root |
-| Суть | Reconcile the unchanged audited P4 candidate and close the phase; do not enter P5.1. |
+| Context | cold-start-root: capability-missing |
+| Суть | Repair P5.1’s unresolved bundle input before running the P5 batch. |
 
 **Provider-neutral command:**
 
 ```text
-$ task:plan-close 2026.09.09-№1-LEAN-EXECUTION P4
+$ task:plan-design 2026.09.09-№1-LEAN-EXECUTION P5.1
 ```
 
 **Native Codex command:**
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access '$ task:plan-close 2026.09.09-№1-LEAN-EXECUTION P4'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.09.09-№1-LEAN-EXECUTION P5.1'
 ```
 
-**Done:** Minimal P4 audit is GREEN on candidate `dbb4b0a02d9…`: both item states and bundles are fresh, declared product bytes are unchanged after `0a64ff37`, exact-final and forty-boundary focused tests are green, and official provider Stop contracts were re-verified on 2026-09-10.
-**Remaining:** Close P4. Do not enter P5.1 until its unresolved bundle input is repaired by `task:plan-design`.
-**Sources of truth:** `plans/2026.09.09-№1-LEAN-EXECUTION/phases/P4/P4.md` · `plans/2026.09.09-№1-LEAN-EXECUTION/phases/P4/P4.1.state.md` · `plans/2026.09.09-№1-LEAN-EXECUTION/phases/P4/P4.2.state.md` · `packages/task/lib/task/terminal_admission.py` · `packages/harness/lib/harness/hooks.py` · `configs/provider-capabilities.json`.
-**Open risks:** Plan lint retains one non-gating future-phase error: P5.1 cannot resolve `current ratchet, budget and bucket-audit output`. Provider enforcement remains limited to configured trusted CLI hooks; Claude Code's documented eight-block ceiling and Codex matching-hook concurrency remain explicit. Installed Task plugin cache predates the current worktree canonical, so fresh roots must honor repository canonical sources.
+**Done:** P4 closed after the fresh GREEN audit on candidate `dbb4b0a02d9…`; terminal admission, provider adapters and the bounded forty-boundary proof remain committed and unchanged.
+**Remaining:** Redesign P5.1’s unresolved input, then execute B-P5-GAPS.
+**Sources of truth:** `plans/2026.09.09-№1-LEAN-EXECUTION/phases/P4/P4.closed.md` · `plans/2026.09.09-№1-LEAN-EXECUTION/phases/P5/P5.1.md` · `plans/2026.09.09-№1-LEAN-EXECUTION/bundles/P5.1.json`.
+**Open risks:** P5.1 cannot resolve `current ratchet, budget and bucket-audit output`; do not run it before the design repair. Provider enforcement remains limited to configured trusted CLI hooks; unsupported/unconfigured transports remain explicit capability gaps.
 **Workarounds/Deferred/Open questions:**
 - workarounds: no applicable lease is a successful hook no-op; an applicable malformed/missing Task verifier state fails closed with a named diagnostic.
-- deferred: unsupported, unconfigured and non-CLI transports remain explicit capability gaps; P5.1 bundle repair belongs to its design owner.
+- deferred: unsupported, unconfigured and non-CLI transports remain explicit capability gaps.
 - open_questions: —

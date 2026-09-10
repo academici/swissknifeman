@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-10
-inputs_sha256: 701baa36e8753cedba35ddecda6e9ec3fd82b8b4d100dc780dbd5815d72e0c95
+inputs_sha256: 160dc48d49e7b916474baf3f3f4348e34f29b0d414a8196cf37d31ad7241ba75
 generated_by: task plan-views status
 -->
 
@@ -176,6 +176,7 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-terra/high | plan-run · closed-green · P4.2 closure rebind: provider Stop adapters, capability evidence and the forty-boundary proof remain green; product bytes are unchanged.
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-10 | gpt-5.6-sol/xhigh | plan-audit · audit-green · P4 minimal audit: stable candidate; focused seam green; unrelated P5.1 bundle lint error remains non-gating. |
+| 2026-09-10 | implementation/low | plan-close · closed-green · фаза P4 закрыта |
 
 ## Correction Routing
 

@@ -16,9 +16,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 from fixtures import write_valid_plan, write_v2_carriers
-from task import (journal, plan_bundle, plan_context, plan_delivery, plan_evidence,
+from task import (journal, plan_bundle, plan_closure, plan_context, plan_delivery, plan_evidence,
                   plan_gates, plan_item_state, plan_lifecycle, plan_projection,
-                  plan_repair, task_contract, terminal_policy)
+                  plan_repair, plan_status, task_contract, terminal_policy)
 from task.plan_lint_checks.common import _lint_audit_terminal_policy
 from task.plan_lint import Diagnostics
 from test_plan_repair import record
@@ -44,16 +44,42 @@ class LifecycleScenarios(unittest.TestCase):
             run('git', 'config', 'user.name', 'Scenario')
             plan = write_valid_plan(root, 'SCENARIO', layout='v2')
             spec = plan / 'phases/P1/P1.1.md'
+            phase = plan / 'phases/P1/P1.md'
+            phase.write_text(phase.read_text() +
+                             '\n> **Phase Assurance | v1.**\n'
+                             '> Impact: internal-integration\n'
+                             '> Integration Seams: successor-closure-carrier\n'
+                             '> Live or Irreversible: no\n'
+                             '> Audit Intent: required\n'
+                             '> Rationale: legacy required must remain advisory\n\n'
+                             '> **Контракт фазы | v1.**\n'
+                             '> Produce one validated result for the successor.\n')
             # Product is distinct from digest inputs: no synthetic collision waiver.
             product = root / 'result.txt'
             product.write_text('before\n')
             spec.write_text(spec.read_text().replace('**Files:** lib/pkg/config.py',
                                                      '**Files:** `result.txt`').replace('**Validation:** bash scripts/test.sh — зелёный.',
                                                      '**Validation:** `python3 validate.py`'))
+            successor_spec = spec.read_text().replace('P1.1', 'P2.1').replace(
+                '**Inputs:** `lib/pkg/config.py`.',
+                '**Inputs:** `phases/P1/P1.closed.md`.').replace(
+                '**Required Reads:** 1) lib/pkg/config.py',
+                '**Required Reads:** 1) `phases/P1/P1.closed.md`')
+            write_v2_carriers(
+                plan, phase_id='P2', item_id='P2.1', item_spec=successor_spec,
+                item_state=(
+                    '**Status:** ⬜ Not started\n'
+                    '**Completion Notes:** —\n'
+                    '**Pending Work:** —\n'
+                    '**Known Deviations:** —\n'
+                    '**Escalation Needed:** —\n'),
+                refresh_views=False,
+            )
+            plan_status.build_status(plan)
             plan_bundle.build(plan, 'P1.1')
             handoff = plan / 'handoff.md'
             handoff.write_text(handoff.read_text().replace(
-                '/task:plan-exec SCENARIO P1.1', '/task:plan-close SCENARIO P1'))
+                '/task:plan-exec SCENARIO P1.1', '/task:plan-exec SCENARIO P2.1'))
             (plan / 'journal.jsonl').write_text('')
             plan_item_state.build_states(plan, item_id='P1.1')
             (root / 'validate.py').write_text("from pathlib import Path; assert Path('result.txt').read_text() == 'after\\n'\n")
@@ -82,19 +108,40 @@ class LifecycleScenarios(unittest.TestCase):
             with patch.object(plan_projection.os, 'replace', wraps=plan_projection.os.replace) as writes:
                 plan_item_state.build_states(plan, item_id='P1.1')
                 self.assertEqual(writes.call_count, 1)
+                candidate = plan_gates.phase_candidate_fingerprint(plan, 'P1')
+                policy = plan_gates.phase_audit_policy(
+                    plan, 'P1', candidate_snapshot=candidate['snapshot'])
+                self.assertEqual(policy['next_kind'], 'close')
+                self.assertTrue(policy['close_allowed'])
+                self.assertFalse(policy['audit_required'])
+                self.assertTrue(plan_gates.phase_close_gate(
+                    plan, 'P1', candidate_fingerprint=candidate['fingerprint'],
+                    candidate_snapshot=candidate['snapshot'])['allow'])
+                plan_status.build_status(plan)
+                plan_closure.build_closure(plan, 'P1')
+                journal.append(plan, journal.new_entry(
+                    plan_id=plan.name, item_id='P1', command='plan-close',
+                    actor='implementation/high', result='closed-green',
+                    session_id='scenario', run_id='scenario-run',
+                    fingerprint=candidate['fingerprint']))
+                plan_bundle.build(plan, 'P2.1')
                 receipt = plan_delivery.build_terminal_receipt(plan, 'P1.1')
                 _, _, appended = journal.append_idempotent_terminal(plan, event)
                 self.assertFalse(appended)
+                writes_before_rebuild = writes.call_count
                 plan_item_state.build_states(plan, item_id='P1.1')
-                self.assertEqual(writes.call_count, 1)
+                self.assertEqual(writes.call_count, writes_before_rebuild)
+                self.assertEqual(receipt['next_exact'], '/task:plan-exec SCENARIO P2.1')
+                self.assertIsNotNone(receipt['digests']['closure'])
             run('git', 'add', '.')
             run('git', 'commit', '-qm', 'fix: результат и evidence')
             self.assertTrue(plan_delivery.verify_receipt(plan, receipt))
             self.assertEqual(int(run('git', 'rev-list', '--count', 'HEAD')) - before, 1)
             self.assertEqual(sum(argv == validation for argv, _, _ in commands), 1)
             events = [json.loads(line) for line in (plan / 'journal.jsonl').read_text().splitlines()]
-            self.assertEqual(len(events), 1)
+            self.assertEqual(len(events), 2)
             self.assertFalse(any(event['command'] == 'plan-audit' for event in events))
+            self.assertEqual(events[-1]['item_id'], 'P1')
             self.assertEqual(run('git', 'status', '--porcelain'), '')
             spec.write_text(spec.read_text() + '\nchanged acceptance input\n')
             with self.assertRaises((plan_delivery.DeliveryError, journal.JournalValidationError)):

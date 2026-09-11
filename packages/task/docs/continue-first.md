@@ -69,16 +69,24 @@ Material-кандидат сериализуется как закрытый `bl
 Safety и authority gates остаются fail-closed: reviewer только подтверждает факты, но не выдаёт
 право на действие.
 
-После последнего terminal item фаза остаётся `🟡 In progress` как audit candidate. Fingerprint
+После последнего terminal item фаза становится кандидатом для закрытия. Fingerprint
 требует явный Layout v2, привязывает item specs/state и digest объявленных `Files`,
 но не общий Git HEAD: audit bookkeeping не инвалидирует собственное доказательство, а изменение
-product carrier инвалидирует. Assurance выбирает direct close либо независимый аудит. Если аудит требуется, только fresh
-GREEN разрешает `plan-close Pn`. Reviewer может закончить с audit-attention/audit-red и
+product carrier инвалидирует. GREEN acceptance по умолчанию допускает direct-close; legacy
+`Audit Intent: required`, integration и число items сами не назначают audit. Дополнительный audit
+требует адресного owner consent и конкретного evidence gap, связанных с candidate и одним run
+через `audit-admission/v2` в decision record. Новые phase-audit start events проверяют это согласие;
+исторические terminal rows без run ID остаются читаемыми, но не авторизуют новый run.
+Reviewer может закончить с audit-attention/audit-red и
 `decision.action=return-owning-continuation`, `signal_class=acceptance`, `scope_class=<owning item>`,
 `terminal=false`, `recovered=false`, reason_code, evidence_ids и точным exec-items/run-items
 continuation для owning item той же фазы. Journal/lint/delivery принимают этот результат,
-но фаза остаётся открытой. Исполнитель ремонтирует, reviewer проверяет delta с сохранением
-неизменённого evidence. Старые authority/block RED outcomes остаются читаемыми.
+но фаза остаётся открытой. Исполнитель ремонтирует, подтверждает affected acceptance и закрывает
+результат без автоматического второго phase audit. Старые authority/block RED outcomes остаются читаемыми.
+
+Уже зелёные проверки переиспользуются при неизменных релевантных product/test/tool/config inputs
+и окружении. Lifecycle-переход и bookkeeping-only diff не требуют продуктового replay;
+изменившиеся входы требуют affected rerun, live check выполняется на своей live boundary.
 
 ## Защита от преждевременного final
 
@@ -87,6 +95,11 @@ continuation для owning item той же фазы. Journal/lint/delivery пр
 journal pointer, commit, digests plan/handoff/state/closure и точную рекомендацию из сохранённого
 handoff. Нетерминальный state возвращает `FINAL_BEFORE_TERMINAL_FORBIDDEN`; stale handoff —
 `HANDOFF_RECOMMENDATION_MISSING` или `STALE_TERMINAL_RECEIPT`.
+
+`plan-run` доводит GREEN item до journal/state/closure в той же owner session. После последнего
+GREEN item delivery требует также допустимое закрытие фазы (`PHASE_CLOSURE_REQUIRED` — продолжить
+локальный close), прежде чем отдать внешний Next. `plan-close` текущего item, его повторный запуск
+и audit без admission не могут быть таким Next. Отдельный явно запрошенный `plan-close` сохраняется.
 
 `plan-design` и `plan-audit` используют `--kind handoff`: это не заявляет product terminality, но
 обязывает финальный ответ скопировать точный persisted Next. Финал содержит метку

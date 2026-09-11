@@ -1,7 +1,7 @@
 ---
 name: task-development-philosophy
 bucket: repository-bootstrap
-version: 0.1.0
+version: 0.2.0
 description: "Guardrails for keeping Task plans flexible, proportional, and loop-free. Activate before creating or revising a plan in this repository or changing packages/task planning, validation, audit, close, retry, or budget policy."
 when_to_use: "Use for swissknifeman plan authoring and Task workflow-policy changes."
 risk: read
@@ -88,28 +88,38 @@ static/structural check
   → affected unit or artifact test
   → changed-item validation
   → dependency-closure integration check
-  → full phase audit only when broad material impact is demonstrated
+  → bounded independent review only for a concrete item risk or explicit owner requirement
+  → phase audit only for a residual-risk question with candidate/run-bound owner consent
 ```
 
-Item close owns item-level Validation. Persist a digest-bound receipt so later consumers can prove
-whether inputs, product, tool, route, and result are unchanged. Audit must verify those receipts and
-rerun invalid or risk-sensitive checks; it must not mechanically replay every green command.
+Item close owns item-level Validation and completes in the execution invocation once acceptance is
+GREEN. If that item completes a GREEN phase eligible for direct close, close the phase before
+computing Next; do not hand off the current result to a separate close invocation. Persist a
+digest-bound receipt so later consumers can prove whether relevant product/test/tool/config inputs,
+environment, route, and result are unchanged. Reuse current evidence across review, close, and
+delivery. Rerun the affected delta after a relevant change and rerun a live check at its live
+boundary; lifecycle or bookkeeping movement alone is not invalidation.
 
-Run one full audit for a material phase baseline. After that:
+GREEN phase evidence direct-closes by default. Integration boundaries, item count, risk prose, and
+legacy `required`/`auto`/`light` intent may support a recommendation but do not admit an audit. A
+phase audit requires an explicit residual-risk question and fresh owner consent bound to the target,
+material candidate, and audit run. Missing or RED evidence is repaired by its owning item instead of
+being sent to audit. For an admitted audit:
 
-- protocol/bookkeeping-only change → gate rebind;
-- bounded product change → changed items plus dependency closure;
-- broad or unbounded material change → justified second full audit;
-- third full audit in one lineage → explicit owner decision.
+- unchanged relevant inputs → reuse evidence;
+- protocol/bookkeeping-only change → regenerate once and run the structural gate;
+- bounded product/test/tool/config change → changed items plus dependency closure;
+- broad material change → one justified bounded review within the consented question;
+- any repeat audit → a new material hypothesis and fresh candidate/run-bound owner consent.
 
 Historical `Done with deviations`, regenerated views, a journal append, a line-number drift, or an
 expired live receipt are not by themselves reasons to replay the whole phase. Rerun the exact live
 gate at its boundary; keep deterministic product evidence reusable.
 
 For the measured repeat-audit contract and thresholds, read
-[`roadmap/2026.08.14-repeat-audit-evidence-reuse-budget.md`](../../../../../roadmap/2026.08.14-repeat-audit-evidence-reuse-budget.md)
+[`2026.08.14-repeat-audit-evidence-reuse-budget.md`](../../../../../plans/archive/2026.09.09-№1-LEAN-EXECUTION/artifacts/source-roadmap/2026.08.14-repeat-audit-evidence-reuse-budget.md)
 when changing audit policy. For evidence-anchor topology, also read
-[`roadmap/2026.08.10-plan-evidence-anchor-audit-loop.md`](../../../../../roadmap/2026.08.10-plan-evidence-anchor-audit-loop.md).
+[`2026.08.10-plan-evidence-anchor-audit-loop.md`](../../../../../plans/archive/2026.09.09-№1-LEAN-EXECUTION/artifacts/source-roadmap/2026.08.10-plan-evidence-anchor-audit-loop.md).
 
 ## Repair and escalation
 
@@ -140,7 +150,8 @@ Audit should answer:
 Audit should not optimize for finding any possible nit, restate every item report, or rerun work
 whose inputs and receipts are unchanged. Non-gating observations remain visible without forcing
 RED. A safe finding is repaired once at its owner; repeated symptoms from one seam are grouped and
-the seam is fixed.
+the seam is fixed. A reviewer does not manufacture its own consent: without the matching owner-bound
+audit admission, it records the bounded recommendation and lets GREEN direct-close.
 
 ## Anti-patterns
 
@@ -182,7 +193,7 @@ For every new or materially revised plan in this repository, silently verify bef
 - each item is a meaningful vertical unit;
 - repeated reads and validations are not copied without an ownership reason;
 - the plan names the minimum sufficient audit depth and evidence-reuse boundary;
-- a second full audit requires a material-change justification;
+- every phase audit names its residual-risk question and owner-consent boundary;
 - local repairs remain same-root and do not manufacture redesign loops;
 - no generated carrier is accidentally both audit bookkeeping and self-invalidating product;
 - owner-visible value dominates orchestration overhead.
@@ -193,7 +204,7 @@ Record a decision or `## Обсуждение` only when a real trade-off exists
 ## Provenance (root-bootstrap, P1.2)
 
 Repository-authored internal philosophy, grounded in field regressions captured in
-`roadmap/2026.08.10-plan-evidence-anchor-audit-loop.md` and
-`roadmap/2026.08.14-repeat-audit-evidence-reuse-budget.md`. It is source-only and projects to thin
+the archived `2026.08.10-plan-evidence-anchor-audit-loop.md` and
+`2026.08.14-repeat-audit-evidence-reuse-budget.md` source records linked above. It is source-only and projects to thin
 Claude/Codex root-bootstrap pointers through `skiller registry`; it is not published to consumer
 projects as an ordinary skill.

@@ -166,7 +166,7 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻503"]:::warm
-    plan_protocol["plan-protocol<br/>⊕31 ↻7983"]:::cool
+    plan_protocol["plan-protocol<br/>⊕31 ↻8710"]:::cool
     project_map["project-map<br/>⊕83 ↻618"]:::warm
     session_handoff["session-handoff<br/>⊕29 ↻590"]:::cool
     shell["shell<br/>⊕73 ↻1997"]:::mild
@@ -313,7 +313,7 @@ flowchart LR
     project_tooling_runbook["project-tooling-runbook<br/>⊕93 ↻6971"]:::warm
     release_discipline["release-discipline<br/>⊕64 ↻805"]:::mild
     skill_authoring["skill-authoring<br/>⊕44 ↻1792"]:::mild
-    task_development_philosophy["task-development-philosophy<br/>⊕74 ↻2778"]:::mild
+    task_development_philosophy["task-development-philosophy<br/>⊕74 ↻3160"]:::mild
   end
   subgraph research["research"]
     query_craft["query-craft<br/>⊕35 ↻257"]:::cool
@@ -446,14 +446,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 232 скиллов · ⊕ always **15911** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 328892 ток · ⌥ on-demand 838953 ток (сниппеты + references).
+**Итого:** 232 скиллов · ⊕ always **15911** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 330001 ток · ⌥ on-demand 839827 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1263 | 32853 | 26358 |
-| `repository-bootstrap` | 14 | 1098 | 28209 | 0 |
+| `general` | 22 | 1263 | 33580 | 27232 |
+| `repository-bootstrap` | 14 | 1098 | 28591 | 0 |
 | `php` | 17 | 1065 | 18886 | 54837 |
 | `architect` | 15 | 1005 | 23164 | 33458 |
 | `quality` | 11 | 835 | 20355 | 7447 |
@@ -526,12 +526,12 @@ flowchart LR
 | Скилл | Бакет | ток |
 |---|---|--:|
 | `vueuse-functions` | frontend-vue | 10838 |
-| `plan-protocol` | general | 7983 |
+| `plan-protocol` | general | 8710 |
 | `project-tooling-runbook` | repository-bootstrap | 6971 |
 | `package-architecture` | repository-bootstrap | 3740 |
 | `workflow-craft` | general | 3349 |
 | `mcp-advisor` | general | 3188 |
 | `voice-ai` | voice-ai | 3165 |
+| `task-development-philosophy` | repository-bootstrap | 3160 |
 | `modular-architecture` | laravel-architecture | 3112 |
 | `laravel-testing` | laravel-testing | 3034 |
-| `build-loop` | blender-modeling | 2847 |

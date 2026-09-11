@@ -9,8 +9,9 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from task import (command_catalog, journal, plan_continuity, plan_layout, plan_lint,
-                  plan_readiness, plan_repair, review_policy, terminal_policy)
+from task import (command_catalog, journal, plan_bundle, plan_closure, plan_continuity,
+                  plan_gates, plan_layout, plan_lint, plan_readiness, plan_repair,
+                  review_policy, terminal_policy)
 
 
 class DeliveryError(ValueError):
@@ -42,6 +43,8 @@ _DESIGN_TARGET_RE = re.compile(
 _EXEC_TARGET_RE = re.compile(
     r"(?:^|\s|/)(?:task:)?plan-(?:exec|run)\s+(\S+)\s+"
     r"(P[0-9]+\.[0-9]+)(?:\s*[-–]\s*(P[0-9]+\.[0-9]+))?")
+_AUDIT_TARGET_RE = re.compile(
+    r"(?:^|\s|/)(?:task:)?plan-audit\s+(\S+)\s+(P[0-9]+)(?:\s|$)")
 
 
 def _validate_design_continuation(plan_dir: Path, next_exact: str) -> None:
@@ -82,6 +85,43 @@ def _validate_priority_continuation(plan_dir: Path, next_exact: str) -> None:
         plan_readiness.validate_execution_target(plan_dir, requested)
     except plan_readiness.ReadinessError as exc:
         raise DeliveryError("PRIORITY_FIX_TARGET_MISMATCH", str(exc)) from exc
+    if plan_layout.layout_version(plan_dir) != "v2":
+        return
+    try:
+        for item_id in requested:
+            plan_bundle.build(plan_dir, item_id, check=True)
+            plan_bundle.producer_readiness(plan_dir, item_id)
+    except (plan_bundle.BundleError, plan_layout.PlanLayoutError) as exc:
+        raise DeliveryError(
+            "NEXT_ITEM_NOT_READY", f"execution Next не готов: {exc}") from exc
+
+
+def _phase_candidate(plan_dir: Path, phase_id: str) -> dict:
+    """Rebuild the material phase candidate at the delivery boundary."""
+    try:
+        return plan_gates.phase_candidate_fingerprint(plan_dir, phase_id)
+    except (OSError, ValueError) as exc:
+        raise DeliveryError(
+            "PHASE_ASSURANCE_CANDIDATE_UNRESOLVED",
+            f"{phase_id}: material candidate не собирается: {exc}",
+        ) from exc
+
+
+def _validate_phase_audit_continuation(plan_dir: Path, next_exact: str) -> None:
+    """Admit a phase-audit handoff only when the current policy selects it."""
+    match = _AUDIT_TARGET_RE.search(next_exact)
+    if match is None or match.group(1) != plan_dir.name:
+        return
+    phase_id = match.group(2)
+    candidate = _phase_candidate(plan_dir, phase_id)
+    policy = plan_gates.phase_audit_policy(
+        plan_dir, phase_id, candidate_snapshot=candidate["snapshot"])
+    if (policy.get("next_kind") != "audit-phase"
+            or policy.get("next_exact") != next_exact):
+        raise DeliveryError(
+            "PHASE_AUDIT_NOT_ADMITTED",
+            f"{phase_id}: policy {policy.get('code')} не допускает Next {next_exact!r}",
+        )
 
 
 def _continuity(route: dict, *, allow_legacy: bool) -> dict:
@@ -279,9 +319,11 @@ def _handoff(plan_dir: Path, *, closed_subject: str | None = None) -> dict:
         raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "Next пуст")
     _validate_design_continuation(plan_dir, next_exact)
     _validate_priority_continuation(plan_dir, next_exact)
+    _validate_phase_audit_continuation(plan_dir, next_exact)
     if (closed_subject is not None and _ITEM_RE.fullmatch(closed_subject)
             and re.search(
-                rf"(?:task:plan-exec|task:plan-run)\s+\S+\s+{re.escape(closed_subject)}(?:\s|$)",
+                rf"(?:task:plan-exec|task:plan-run|task:plan-close)\s+\S+\s+"
+                rf"{re.escape(closed_subject)}(?:\s|$)",
                 next_exact)):
         raise DeliveryError(
             "FINAL_BEFORE_TERMINAL_FORBIDDEN",
@@ -431,14 +473,96 @@ def _closure_digest(plan_dir: Path, phase_id: str) -> str | None:
     return next((file_digest(path) for path in candidates if path.is_file()), None)
 
 
+def _require_completed_phase_before_item_handoff(plan_dir: Path, item_id: str) -> str | None:
+    """Keep the last GREEN item invocation active through eligible phase close.
+
+    Partial and non-GREEN terminal phases continue through their ordinary
+    terminal-policy handoff.  Only when every item is GREEN does the rebuilt
+    candidate decide between a consented audit and an inline phase close before
+    the external handoff.
+    """
+    phase_id = item_id.split(".", 1)[0]
+    from task import plan_item_state, plan_status
+
+    statuses = []
+    try:
+        for spec_path in plan_layout.item_spec_paths(plan_dir, phase_id):
+            model, _note, _friction = plan_item_state.state_model(plan_dir, spec_path.stem)
+            statuses.append(model["state"]["position"]["status"])
+    except (OSError, ValueError) as exc:
+        raise DeliveryError("STALE_TERMINAL_RECEIPT", str(exc)) from exc
+    if not statuses or any(status != plan_status.STATUS_DONE for status in statuses):
+        return None
+
+    candidate = _phase_candidate(plan_dir, phase_id)
+    policy = plan_gates.phase_audit_policy(
+        plan_dir, phase_id, candidate_snapshot=candidate["snapshot"])
+    if policy.get("audit_required") or policy.get("next_kind") == "audit-phase":
+        # `_handoff()` also independently rebuilds and validates an audit
+        # target.  Returning the reducer output additionally forbids replacing
+        # a required audit with an arbitrary external handoff.
+        return policy.get("next_exact")
+
+    close_allowed = policy.get("close_allowed")
+    if close_allowed is None:  # compatibility with pre-v2 policy projections
+        close_allowed = policy.get("next_kind") == "close"
+    gate = plan_gates.phase_close_gate(
+        plan_dir,
+        phase_id,
+        candidate_fingerprint=candidate["fingerprint"],
+        candidate_snapshot=candidate["snapshot"],
+    )
+    if not close_allowed or not gate.get("allow"):
+        raise DeliveryError(
+            gate.get("code") or policy.get("code") or "PHASE_CLOSE_NOT_ALLOWED",
+            f"{phase_id}: GREEN item completion не допускает phase close",
+        )
+
+    try:
+        phase_status = plan_layout.phase_statuses(plan_dir).get(phase_id)
+    except plan_layout.PlanLayoutError as exc:
+        raise DeliveryError("PHASE_CLOSURE_REQUIRED", str(exc)) from exc
+    if phase_status != plan_status.STATUS_DONE:
+        raise DeliveryError(
+            "PHASE_CLOSURE_REQUIRED",
+            f"{phase_id}: terminal phase state не спроецирован ({phase_status})",
+        )
+    if _closure_digest(plan_dir, phase_id) is None:
+        raise DeliveryError(
+            "PHASE_CLOSURE_REQUIRED",
+            f"{phase_id}: закрой фазу в текущем item invocation до external handoff",
+        )
+    try:
+        plan_closure.build_closure(plan_dir, phase_id, check=True)
+    except plan_closure.ClosureError as exc:
+        raise DeliveryError(
+            "PHASE_CLOSURE_REQUIRED",
+            f"{phase_id}: phase closure carrier устарел: {exc}",
+        ) from exc
+    try:
+        _terminal_journal(plan_dir, phase_id)
+    except DeliveryError as exc:
+        raise DeliveryError(
+            "PHASE_CLOSURE_REQUIRED",
+            f"{phase_id}: terminal phase journal не записан в текущем item invocation",
+        ) from exc
+    return None
+
+
 def _base_receipt(plan_dir: Path, subject: str, *, schema_version: str, status: str,
                   state_digest: str | None, closure_digest: str | None,
-                  terminal: dict | None, prefer_audit: bool = False) -> dict:
+                  terminal: dict | None, prefer_audit: bool = False,
+                  required_next_exact: str | None = None) -> dict:
     handoff = ((_audit_handoff(plan_dir, subject) if prefer_audit else None)
                or _handoff(
                    plan_dir,
                    closed_subject=(subject if terminal is not None and _ITEM_RE.fullmatch(subject)
                                    else None)))
+    if required_next_exact is not None and handoff["next_exact"] != required_next_exact:
+        raise DeliveryError(
+            "PHASE_AUDIT_CONTINUATION_REQUIRED",
+            f"Next должен точно совпадать с policy: {required_next_exact}",
+        )
     return {
         "schema_version": schema_version,
         "plan_id": plan_dir.name,
@@ -480,11 +604,15 @@ def build_terminal_receipt(plan_dir, subject: str) -> dict:
         terminal = _terminal_journal(plan_dir, subject)
         if _STATUS_BY_RESULT.get(terminal["result"]) != status:
             raise DeliveryError("STALE_TERMINAL_RECEIPT", "journal result не совпадает с item state")
+        required_next_exact = (
+            _require_completed_phase_before_item_handoff(plan_dir, subject)
+            if status == _STATUS_BY_RESULT["closed-green"] else None
+        )
         phase_id = subject.split(".", 1)[0]
         return _base_receipt(
             plan_dir, subject, schema_version="terminal-delivery-receipt/v1", status=status,
             state_digest=file_digest(state_path), closure_digest=_closure_digest(plan_dir, phase_id),
-            terminal=terminal,
+            terminal=terminal, required_next_exact=required_next_exact,
         )
     if _PHASE_RE.fullmatch(subject):
         status = plan_layout.phase_statuses(plan_dir).get(subject)

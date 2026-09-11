@@ -34,9 +34,17 @@ Code Guidance = «—»; без неё пустой Code Guidance — дефек
 <Опционально (contract-first, скилл plan-protocol §5) — контракт-блок фазы:>
 > **Контракт фазы (contract-first).** Потребляет: … · Производит: … · Границы: …
 
+> **Phase Assurance | v1.**
+> Impact: <isolated | internal-integration | public-contract | security | live>
+> Integration Seams: <конкретные seams или —>
+> Live or Irreversible: <yes | no>
+> Audit Intent: direct-close-eligible
+> Rationale: <почему item Validation и phase gates достаточны для штатного direct-close;
+> residual risk без отдельного owner-bound audit-admission остаётся recommendation>
+
 ## DoR (Definition of Ready)
 
-<Прогоняет plan-design перед выдачей «фаза готова»; plan-audit сверяет
+<Прогоняет plan-design перед выдачей «фаза готова»; явно допущенный plan-audit сверяет
 пост-фактум. Фиксированный чеклист — SKILL раздел 7.>
 
 - [ ] Все `[NEEDS CLARIFICATION]` сняты (0 маркеров в фазе).

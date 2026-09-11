@@ -284,12 +284,15 @@ def lint_plan(plan_dir, diag):
         # Блоки `## Audit Pn` исключены из грепов фазы (_lines_before_audit) — свой гейт.
         phase_lines = _read_lines(path)
         if phase_lines:
-            # Assurance is forward-only: historical plans without the carrier
-            # retain their conservative runtime baseline, while any new block
-            # must be exact before it can influence close admission.
+            # Legacy intent is advisory; malformed handwritten structure still
+            # gets its ordinary schema diagnostic, never an audit requirement.
             if "> **Phase Assurance | v1.**" in phase_lines:
                 try:
-                    plan_assurance.parse("\n".join(phase_lines))
+                    assurance = plan_assurance.parse("\n".join(phase_lines))
+                    if assurance["audit_intent"] == "required":
+                        diag.warning(path, None,
+                                     "PHASE_AUDIT_INTENT_ADVISORY: Audit Intent: required не назначает audit; "
+                                     "при следующей правке используйте direct-close-eligible")
                 except plan_assurance.AssuranceError as exc:
                     diag.error(path, None, str(exc))
             _lint_audit_scope_payload(phase_lines, path, plan_id, diag)

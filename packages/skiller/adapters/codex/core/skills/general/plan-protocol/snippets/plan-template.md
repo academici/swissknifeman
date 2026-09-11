@@ -56,13 +56,15 @@ plan-protocol; не копировать его целиком. Минимум:>
 
 <ПОСТРОЧНОЕ покрытие всех items. Batch/Review обязательны: `solo` только с конкретной
 причиной; связные adjacent items одной фазы группировать, если общий контекст экономит
-повторное чтение/setup/validation. Группа не пересекает audit/close и не смешивает Exec.>
+повторное чтение/setup/validation. Группа не пересекает audit/close и не смешивает Exec.
+Review выбирается по конкретному item risk или прямому требованию владельца: неизвестность
+сначала собирает evidence и не превращается автоматически в full.>
 
 | Batch | Items | Model class/effort | Exec | Review | Почему |
 |:--|:--|:--|:--|:--|:--|
-| B1 | <Pn.m> | <frontier/high> | manual | full | recommended: <общие reads/setup с Pn.(m+1)> |
-| B1 | <Pn.(m+1)> | <implementation/high> | manual | light | recommended: <producer→consumer, выгодно продолжить> |
-| solo | <Pn.k> | <implementation/medium> | plan-exec | full | <конкретный hard/owner/side-effect boundary> |
+| B1 | <Pn.m> | <implementation/high> | manual | none | recommended: <low-risk; self-check + affected tests; общие reads/setup> |
+| B1 | <Pn.(m+1)> | <implementation/high> | manual | light | recommended: <bounded integration seam требует targeted review> |
+| solo | <Pn.k> | <frontier/high> | plan-exec | full | <названный security/public/irreversible risk или owner requirement> |
 
 ## 5. Decision Log
 

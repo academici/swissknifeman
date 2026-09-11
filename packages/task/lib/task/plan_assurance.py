@@ -79,11 +79,6 @@ def parse(text: str) -> dict:
     rationale = values["Rationale"]
     if not rationale or rationale == "—":
         raise AssuranceError("PHASE_ASSURANCE_RATIONALE_REQUIRED", "Rationale обязателен")
-    if intent == "direct-close-eligible" and (impact != "isolated" or seams or live != "no"):
-        raise AssuranceError(
-            "PHASE_ASSURANCE_DIRECT_CLOSE_INCOMPATIBLE",
-            "direct-close-eligible допустим только для isolated без seams и live/irreversible",
-        )
     return {
         "schema_version": "phase-assurance/v1",
         "impact": impact,
@@ -104,24 +99,30 @@ def read(plan_dir: Path | str, phase_id: str) -> dict:
 
 def _decision(*, plan_dir: Path, phase_id: str, action: str, code: str,
               reasons: list[str], assurance: dict | None = None,
-              impact: dict | None = None, audit_required: bool | None = None) -> dict:
+              impact: dict | None = None, audit_required: bool = False,
+              close_allowed: bool = False, admission: dict | None = None,
+              diagnostics: list[str] | None = None) -> dict:
     command = {
         "direct-close": "task:plan-close",
         "audit-required": "task:plan-audit",
         "gate-rebind": "task:plan-close",
         "delta": "task:plan-audit",
         "full": "task:plan-audit",
-        "gather-evidence": "task:plan-audit",
-        "owner-review": "task:plan-audit",
+        "gather-evidence": "task:plan-close",
+        "owning-repair": "task:plan-close",
+        "owner-review": "task:plan-close",
     }[action]
-    kind = "close" if action in {"direct-close", "gate-rebind"} else "audit-phase"
+    kind = "audit-phase" if audit_required else "close"
     return {
         "action": action,
-        "audit_required": action == "audit-required" if audit_required is None else audit_required,
+        "audit_required": audit_required,
+        "close_allowed": close_allowed,
         "code": code,
         "reasons": reasons,
         "assurance": assurance,
         "impact": impact,
+        "audit_admission": admission,
+        "diagnostics": diagnostics or [],
         "next_kind": kind,
         "next_exact": f"{kind}: {command} {plan_dir.name} {phase_id}",
     }
@@ -179,53 +180,57 @@ def _impact(classification: str, affected_items: tuple[str, ...], affected_edges
 def evaluate(plan_dir: Path | str, phase_id: str, *, candidate: dict | None,
              baseline: dict | None | object = _NO_BASELINE,
              second_full_justification: dict | None = None) -> dict:
-    """Select the only permitted first-audit or post-GREEN continuation."""
+    """Separate sufficient acceptance from an explicitly consented extra audit."""
     plan_dir = Path(plan_dir)
+    diagnostics = []
     try:
         assurance = read(plan_dir, phase_id)
     except AssuranceError as exc:
-        return _decision(plan_dir=plan_dir, phase_id=phase_id, action="audit-required", code=exc.code,
-                         reasons=["legacy-or-invalid-assurance-baseline"], audit_required=True)
+        assurance = None
+        diagnostics.append(f"{exc.code}: Phase Assurance advisory; восстановите описание при следующей правке фазы")
+    if assurance and assurance["audit_intent"] in {"required", "legacy-light", "auto"}:
+        diagnostics.append("PHASE_AUDIT_INTENT_ADVISORY: legacy Audit Intent не назначает audit; default direct-close")
     heads = candidate.get("terminal_item_heads") if isinstance(candidate, dict) else None
     risks = candidate.get("material_risks") if isinstance(candidate, dict) else None
-    if candidate is None or candidate.get("phase_id") != phase_id or not isinstance(heads, list) or not heads or not isinstance(risks, list):
+    if (not isinstance(candidate, dict) or candidate.get("phase_id") != phase_id
+            or not isinstance(heads, list) or not heads or not isinstance(risks, list)
+            or not all(isinstance(risk, str) for risk in risks)
+            or not isinstance(candidate.get("declared_files"), list)
+            or not isinstance(candidate.get("scope"), list)
+            or not re.fullmatch(r"[0-9a-f]{64}", str(candidate.get("product_tree_sha256", "")))
+            or any(not isinstance(row, dict) or not re.fullmatch(
+                rf"{re.escape(phase_id)}\.\d+", str(row.get("item_id", ""))) for row in heads)
+            or len({row["item_id"] for row in heads if isinstance(row, dict)}) != len(heads)):
         return _decision(plan_dir=plan_dir, phase_id=phase_id, action="gather-evidence",
                          code="PHASE_ASSURANCE_CANDIDATE_UNRESOLVED",
-                         reasons=["runtime-candidate-unresolved"], assurance=assurance, audit_required=True)
+                         reasons=["runtime-candidate-unresolved"], assurance=assurance,
+                         diagnostics=diagnostics)
     statuses = [row.get("status") for row in heads if isinstance(row, dict)]
     if len(statuses) != len(heads) or any(status != plan_status.STATUS_DONE for status in statuses):
-        return _decision(plan_dir=plan_dir, phase_id=phase_id, action="audit-required",
-                         code="PHASE_AUDIT_REQUIRED_NON_GREEN", reasons=["non-green-terminal-item"],
-                         assurance=assurance)
-    if risks:
-        return _decision(plan_dir=plan_dir, phase_id=phase_id, action="audit-required",
-                         code="PHASE_AUDIT_REQUIRED_MATERIAL_RISK", reasons=["material-risk"],
-                         assurance=assurance)
+        result = _decision(plan_dir=plan_dir, phase_id=phase_id, action="owning-repair",
+                           code="PHASE_ACCEPTANCE_NON_GREEN", reasons=["non-green-terminal-item"],
+                           assurance=assurance, diagnostics=diagnostics)
+        item = next((row.get("item_id") for row in heads if isinstance(row, dict)
+                     and row.get("status") != plan_status.STATUS_DONE), None)
+        if isinstance(item, str) and re.fullmatch(rf"{re.escape(phase_id)}\.\d+", item):
+            result.update(next_kind="exec-items", next_exact=f"exec-items: task:plan-run {plan_dir.name} {item}")
+        return result
+    impact = None
     if baseline is not _NO_BASELINE:
         impact = classify_impact(baseline=baseline, candidate=candidate,
                                  second_full_justification=second_full_justification)
-        return _decision(plan_dir=plan_dir, phase_id=phase_id, action=impact["continuation"],
-                         code="PHASE_AUDIT_IMPACT_" + impact["classification"].upper().replace("-", "_"),
-                         reasons=impact["reasons"], assurance=assurance, impact=impact,
-                         audit_required=impact["continuation"] not in {"gate-rebind"})
-    if (assurance["audit_intent"] == "required" or assurance["impact"] in {"public-contract", "security-external"}
-            or assurance["live_or_irreversible"]):
+    from task import audit_admission
+    admission = audit_admission.evaluate(plan_dir, phase_id, candidate)
+    if admission["allowed"]:
         return _decision(plan_dir=plan_dir, phase_id=phase_id, action="audit-required",
-                         code="PHASE_AUDIT_REQUIRED_ASSURANCE", reasons=["mandatory-assurance-risk"],
-                         assurance=assurance)
-    if assurance["audit_intent"] == "direct-close-eligible":
-        return _decision(plan_dir=plan_dir, phase_id=phase_id, action="direct-close",
-                         code="PHASE_DIRECT_CLOSE_ASSURED", reasons=["isolated-green-direct-close"],
-                         assurance=assurance, audit_required=False)
-    if assurance["audit_intent"] == "legacy-light":
-        if len(heads) == 1:
-            return _decision(plan_dir=plan_dir, phase_id=phase_id, action="direct-close",
-                             code="PHASE_DIRECT_CLOSE_LEGACY_LIGHT",
-                             reasons=["legacy-light-single-green-item"], assurance=assurance,
-                             audit_required=False)
-        return _decision(plan_dir=plan_dir, phase_id=phase_id, action="audit-required",
-                         code="PHASE_AUDIT_REQUIRED_LEGACY_LIGHT_MULTI_ITEM",
-                         reasons=["legacy-light-multi-item"], assurance=assurance)
-    return _decision(plan_dir=plan_dir, phase_id=phase_id, action="audit-required",
-                     code="PHASE_AUDIT_REQUIRED_INTEGRATION", reasons=["integration-assurance"],
-                     assurance=assurance)
+                         code="PHASE_AUDIT_OWNER_APPROVED",
+                         reasons=[risk["bounded_question"] for risk in admission["record"]["residual_risks"]],
+                         assurance=assurance, impact=impact, admission=admission,
+                         audit_required=True, diagnostics=diagnostics)
+    if risks:
+        diagnostics.append("AUDIT_RECOMMENDATION: уточните непокрытый вопрос и адресное согласие; material-risk сам не назначает audit")
+    action = "gate-rebind" if impact and impact["classification"] == "audit-bookkeeping" else "direct-close"
+    return _decision(plan_dir=plan_dir, phase_id=phase_id, action=action,
+                     code="PHASE_DIRECT_CLOSE_ASSURED", reasons=["green-acceptance-no-approved-audit"],
+                     assurance=assurance, impact=impact, admission=admission,
+                     close_allowed=True, diagnostics=diagnostics)

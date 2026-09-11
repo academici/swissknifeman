@@ -28,21 +28,40 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
    spec and bundle, then pass it to `task_contract.pre_mutation()`. A real digest-input/write
    collision is `SELF_INVALIDATING_EVIDENCE_ANCHOR`: split product and closure anchors; otherwise
    collapse them into one anchor.
-3. Implement only Scope Included. Select focused validation by default; bounded integration adds
-   affected-package validation; security/auth, destructive migration, irreversible external action,
+3. Implement only Scope Included. Ordinary low-risk work uses a self-check and affected tests;
+   bounded integration adds the necessary package/integration check. Independent review requires a
+   concrete item risk—security/auth, destructive migration, irreversible external action,
    payment/accounting, concurrency/shared state, public API/schema, low-confidence impact, or release
-   authority widen to focused + affected-package + integration and independent review.
+   authority—or an explicit owner requirement. Uncertainty gathers evidence; it does not default to
+   full review.
 4. A foreign baseline stays visible but non-gating unless ownership/dependency closure intersects.
    Audit is read-only: it returns one owning continuation for a product finding and never starts a
    second audit/full replay without a new material hypothesis.
-5. Generate only changed terminal projections once, persist one semantic Next through `plan_delivery`,
-   and use one scoped commit. A second bookkeeping commit requires a real session/ownership boundary or digest-input collision.
+5. After GREEN acceptance, persist evidence and the terminal journal event, generate changed terminal
+   projections once, and close the item in this invocation. If this is the last item, phase gates are
+   GREEN, and no audit was explicitly admitted, create its phase closure before deriving Next. Derive and validate
+   one semantic Next through `plan_delivery` from the resulting state and dependencies; never emit
+   `plan-close` for the current result or repeat `plan-exec`/`plan-run` for the current item. Use one
+   scoped commit. A second bookkeeping commit requires a real session/ownership boundary or
+   digest-input collision.
 
-Run every declared Validation carrier. Close only with green evidence, `task_contract` allow at both
-write sites, generated views/lint, and `plan-delivery --kind terminal`. For a terminal phase use
-`plan_assurance.evaluate()` through `phase_audit_policy` to choose `audit-phase` or `close`; Routing
-Review and item count do not manufacture phase risk. Batch handoff retains
-its Batch, Context, and one provider-native launch block.
+Have current GREEN evidence for every declared Validation carrier. Evidence remains current only
+while its relevant product/test/tool/config inputs and environment are unchanged; rerun the affected
+delta after change and rerun a live gate at its live boundary. A closure/bookkeeping-only delta needs
+one regeneration and structural check and does not invalidate independent product evidence. An
+explicit Validation/security/release carrier remains binding until transparently amended through the
+existing contract rules; do not silently skip it.
+
+Close only with green evidence, `task_contract` allow at both write sites, generated views/lint, and
+`plan-delivery --kind terminal`. For a terminal phase use `plan_assurance.evaluate()` through
+`phase_audit_policy`: GREEN evidence direct-closes by default. An `audit-phase` Next requires an
+explicit residual-risk question and fresh owner consent bound to the phase, candidate fingerprint,
+and audit run; legacy `required`/`auto`/`light`, Routing Review, item count, integration seams, or risk
+prose alone are advisory. Missing or RED evidence remains repair work for the current executor in
+this invocation, never audit admission or a routine handoff to the repository owner. Ask the owner
+only at a concrete authority or product-decision boundary.
+Batch handoff retains its Batch, Context, and one provider-native launch block for the actual
+post-closure successor.
 
 ## Terminal admission
 

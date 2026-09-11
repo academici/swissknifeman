@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.31.4
+version: 2.32.0
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
@@ -156,11 +156,20 @@ rerun green in a later immutable record.
 Phase audit is read-only over product. `audit-attention` or `audit-red` can finish the reviewer
 with `decision.action=return-owning-continuation`, reproduced evidence IDs, `scope_class=<owning item>`, `recovered=false`,
 `terminal=false`, and an exact `exec-items:`/`run-items:` owning item of the same phase.
-The phase remains open; journal, lint and delivery consume the same policy. GREEN alone admits
-close. After executor repair, verify the changed risk delta and retain unaffected evidence.
+The phase remains open; journal, lint and delivery consume the same policy. Without an admitted
+audit, GREEN alone admits close. Missing or RED acceptance evidence is owning repair, not audit admission. After executor
+repair, verify the changed risk delta and retain unaffected evidence.
 Historical RED authority/block outcomes with `waiting:`/`terminal:` remain readable.
 The audit budget limits redundant independent audits, not authorized reversible repair.
 Repeated failure without new information requires a changed tactic or checkpoint.
+
+A phase audit is admitted only by one accepted, unsuperseded `audit-admission/v2` decision. Its
+bounded residual-risk question, target phase and material candidate fingerprint, audit run,
+owner-message provenance, and canonical scope digest must match the requested run. The in-progress
+journal event reserves that consent; a terminal event consumes it. Foreign, stale, ambiguous,
+agent-authored, or consumed consent is invalid, and every repeat needs a new material hypothesis and
+fresh consent. Without admission, material risk produces at most a bounded recommendation and never
+an `audit-phase` Next.
 
 Routing correction happens before journal start and never turns the current producer red. A future
 carrier is `dependency-not-ready`, not a failure of its producer. Compare inherited red against its
@@ -174,9 +183,15 @@ Close with one scoped commit containing implementation and affected bookkeeping 
 A second commit requires a real ownership/session boundary or digest-input collision. Append, never rewrite journal
 events; `[v2]` regenerates views and runs downstream before handoff. An executable item terminal
 event carries reducer-owned `terminal-evidence/v1`, bound to the current item-spec digest and every
-declared Validation carrier. Any red carrier keeps the item in progress. `closed-deviations` is not
-an escape hatch: it still requires green Validation plus a closed `recoverable-validation-gap/v1`
-record proving why a material/outside-scope/unsafe residual cannot be repaired in this attempt.
+declared Validation carrier. A GREEN receipt is current while relevant product/test/tool/config
+inputs and environment are unchanged; review, close, and delivery reuse it. A relevant change reruns
+the affected delta, and a live gate reruns at its live boundary. Closure/bookkeeping-only change
+regenerates its carrier once and runs its structural check without invalidating independent product
+evidence. Any red carrier keeps the item in progress. Explicit acceptance, security, and release
+gates remain binding; change an excessive frozen carrier transparently through the existing contract
+rules, never by silent omission. `closed-deviations` is not an escape hatch: it still requires green
+Validation plus a closed `recoverable-validation-gap/v1` record proving why a
+material/outside-scope/unsafe residual cannot be repaired in this attempt.
 `blocked`/`escalated` requires an authority or block reducer terminal action. Completion Notes carry
 exact evidence; a cancelling/superseding decision adds `**Consequences:**`.
 Before journal/product mutation, derive `evidence-graph/v1` from the committed item spec, bundle,
@@ -194,20 +209,24 @@ attempt; dynamic Make definitions remain unknown rather than manufacturing a mis
 
 `Closure Protocol | v1` opts into `closure/<Pn>.json`; evidence class is exactly `real`,
 `synthetic`, or `baseline_pending`. It records judgement provenance and does not replace the
-generated `[v2]` phase-closure view. A terminal phase is a candidate. Both handoff and close call
+generated `[v2]` phase-closure view. A ready-to-close phase is a candidate. Execution/handoff and
+standalone close call
 `task.plan_assurance.evaluate()` (through the compatibility facade
 `task.plan_gates.phase_audit_policy`) over the same runtime-built candidate snapshot. Every new
 phase declares one handwritten `Phase Assurance | v1` block: Impact, Integration Seams, Live or
 Irreversible, Audit Intent, and Rationale. `Routing.Review` and item count are item-execution
-depth, never phase-risk triggers. Missing legacy assurance takes a named conservative audit baseline.
+depth, never phase-audit admission. Missing legacy assurance is an advisory migration finding.
 <!-- i18n-keep: Audit Intent: light -->
-Historical `Audit Intent: light` normalizes only to named `legacy-light`: a single green candidate
-without material risk may preserve its historical direct close, while every other legacy-light
-candidate requires audit. New declarations use `direct-close-eligible` only for isolated, green,
-seam-free candidates; public, security, live/irreversible, non-green, or material-risk candidates
-require audit. After a GREEN audit, every
-mismatch is `audit-impact/v1`: bookkeeping rebind, bounded delta, justified full, evidence gathering,
-or owner review—never bare stale/full. RED or unresolved ATTENTION is repaired in its owning item.
+Historical `Audit Intent: light` normalizes to `legacy-light`; `required` and `auto` retain their
+enum values. All three remain readable but advisory: none admits audit or rewrites historical
+events. A phase with current
+GREEN item evidence and satisfied acceptance/safety gates direct-closes by default, including
+multi-item and integration phases. RED or missing evidence returns its owning repair. Material risk
+without matching `audit-admission/v2` produces a bounded recommendation while GREEN still
+direct-closes. After an admitted GREEN audit, `audit-impact/v1` classifies the mismatch for
+bookkeeping rebind, affected validation repair, evidence gathering, or owner review. `delta`/`full`
+describe impact only and never authorize another audit; every new audit requires a fresh residual-risk
+question and candidate/run-bound owner consent. RED or unresolved ATTENTION is repaired in its owning item.
 A terminal blocked item remains fail-closed, except for an explicit accepted, non-superseded
 phase-scoped owner D#: its `item` is `Pn`, `items` is exactly `Pn` plus every `Pn.*`, and it
 carries `` `phase-close: terminal-blocked-deviations` ``. That D# permits only a
@@ -221,7 +240,10 @@ Compare both independently: undershoot, ambiguity, or unsupported capability blo
 overshoot is recorded. Frozen-spec implementation normally uses implementation/high; frontier is for
 open design or irreversible choices. Routing rows are
 `| Batch | Items | Model class/effort | Exec | Review | Почему |`; `Exec` is `plan-exec`, `manual`,
-or `plan-design`, and default/doubt Review is `full`. A batch inherits its highest review depth.
+or `plan-design`. Choose Review from concrete item risk: ordinary low-risk work uses self-check and
+affected tests, bounded integration adds the necessary package/integration check, and independent
+review requires a named hard risk or explicit owner requirement. Uncertainty gathers evidence rather
+than defaulting to full. A batch inherits its highest justified review depth.
 `plan-exec` requires implementation/medium; `plan-run` executes manual items and prints its actual
 class/effort as evidence.
 
@@ -269,12 +291,15 @@ store the provider-neutral semantic form and separately render Claude `/task:…
 `$ task:…`. A waiting launch includes `# НЕ раньше:`. Audit findings include, in order,
 `РЕЖИМ:`, `ВХОД:`, `СКОУП:`, `НЕ ТРОГАТЬ:`; an audit block declares `Вердикт:`.
 
-A terminal-item handoff never probes `plan-close` to discover that audit is missing. It evaluates
-`phase_audit_policy` once: `next_kind=audit-phase` renders `task:plan-audit`, while
-`next_kind=close` renders `task:plan-close`. Handoff copies the returned `next_exact`; the close
-gate consumes the same snapshot and policy.
+A GREEN item closes inside its `plan-exec`/`plan-run` invocation: persist terminal evidence and
+journal, regenerate changed views, and, when it is the final item of a directly closable phase,
+create the phase closure before deriving Next. Evaluate `phase_audit_policy` once over the rebuilt
+candidate. Matching consent may produce `next_kind=audit-phase`; the default GREEN result closes the
+phase in place. Handoff is computed from post-closure state and dependencies and never launches
+`plan-close` for the current result or repeats `plan-exec`/`plan-run` for the current item. The
+`close` form remains compatible for an explicitly requested standalone reconciliation.
 
-Every runnable execution Next has a metadata table with Batch, Model class, Effort, Capabilities,
+Every runnable execution Next for an actual successor has a metadata table with Batch, Model class, Effort, Capabilities,
 Context, and Суть; the table never carries the invocation. Immediately after it, render exactly one
 copyable provider-native command block for the active provider adapter. Claude Code emits its native
 slash form; Codex emits a `bash` block that launches `codex` with pinned cwd, model, effort, approval,
@@ -313,7 +338,8 @@ and exact persisted handoff recommendation. A nonterminal or stale carrier retur
 `FINAL_BEFORE_TERMINAL_FORBIDDEN` and keeps the dispatch active. Design/audit delivery builds the
 non-product `handoff-recommendation-receipt/v1`. Every final response labels
 `Рекомендация следующего шага:` and copies the receipt's exact recommendation; a bare item ID
-is not a delivery receipt.
+is not a delivery receipt. Build it only after same-invocation item/eligible-phase closure, so its
+recommendation cannot point back to that closure or current item.
 
 **AUDIT CONTINUATION.** A completed `task:plan-audit` invocation does not itself select a new
 root. Build and persist the same `plan_continuity.WorkEstimate` used for every runnable successor;
@@ -339,8 +365,10 @@ not a claim that runtime behavior was exhaustively proved.
 
 Use `task:plan-design` for new/from-draft/phase/item/finish/roadmap; `task:plan-exec` for pinned
 implementation items; `task:plan-run` for manual-route items in the current session;
-`task:plan-audit` for adversarial design/phase audit; `task:plan-close` for reconciliation,
-phase closure, and archive. Mechanical data dependencies determine write order; commands recommend a working approach.
+`task:plan-audit` for a design audit or an explicitly admitted adversarial phase audit;
+`task:plan-close` for explicitly
+requested standalone reconciliation or archive. Item execution owns its GREEN item close and an
+eligible final-item phase close. Mechanical data dependencies determine write order; commands recommend a working approach.
 Independent safe actions may be reordered within Scope, dependencies and Acceptance.
 
 Portable execution inputs must be committed or predecessor-produced. Host/chat/tmp/foreign paths

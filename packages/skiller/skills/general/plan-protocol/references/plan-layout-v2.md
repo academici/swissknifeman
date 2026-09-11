@@ -103,6 +103,17 @@ Owner requests use `decisions/queue.jsonl`: request → claim → response or au
 does not replace a decision record. A resolved response is reconciled into the owning item/decision
 before execution resumes.
 
+Optional phase-audit consent is one accepted, unsuperseded phase-scoped decision with one fenced
+`audit-admission/v2` JSON object. It contains `schema_version`, `target` with `phase_id` and
+`candidate_fingerprint`, `run_id`, nonempty `residual_risks` rows with
+`id`/`impact`/`evidence_gap`/`bounded_question`, `owner_message` in the form
+`brief/file.md#id`, and `scope_sha256`. Existing `REPOSITORY-OWNER-MESSAGE` provenance must validate
+that reference. The scope digest hashes canonical JSON of `target`, `run_id`, and `residual_risks`;
+`consent_request(record)` maps it to gate `AUDIT-<Pn>`, branch `phase-audit`, and scope
+`audit-admission/v2:<scope_sha256>`. The matching phase/run/fingerprint in-progress journal event
+reserves the consent and its terminal event consumes it. It cannot be reused for another audit.
+Normal direct close records no consent payload or additional audit gate.
+
 ## Closure carriers
 
 `closure/<Pn>.json` is opt-in judgement evidence under `Closure Protocol | v1`. It says which data
@@ -137,6 +148,10 @@ Context is chosen from the boundary predicate, not from command name:
 Ordinary item sequencing, local repair, or plan close does not itself justify a cold start.
 Only a completed `task:plan-design` invocation is an explicit terminal-root exception. Audit
 continuation uses the persisted `plan_continuity` decision and may remain in its authoritative root.
+GREEN execution closes its item in the current invocation. When that is the last item of a phase
+whose acceptance/safety gates are GREEN and no phase audit was explicitly admitted, it also creates
+the phase closure before computing the post-closure Next. Handoff never launches close for that
+result or repeats the current item.
 Terminal producer phases use additive `producer-readiness/v1` evidence. Its consumer sees only a
 digest-bound projection; an empty set requires an accepted owner `D#`. Re-entering an already
 terminal phase is not inferred from prose or a design command: it requires the latest nonterminal
@@ -162,6 +177,9 @@ terminal. A prior review remains valid without a new material scope/SHA/risk tri
 non-material state/view/navigation drift is repaired by its owner, regenerated once, and rerun in
 the same root. The reviewer returns product findings to the executor. A new Acceptance or
 ungranted authority choice requires its decision; already authorized product repair stays execution.
+Declared Validation likewise remains current while relevant product/test/tool/config inputs and the
+environment are unchanged. Rerun only the changed delta or a live check at its live boundary;
+closure bookkeeping alone does not invalidate product evidence.
 
 ## Semantic Next extensions
 
@@ -198,9 +216,11 @@ For a v2 item transition, respect these data dependencies. Independent work may 
 2. regenerate the selected item state;
 3. regenerate `status.md` and decisions views if affected;
 4. regenerate bundle/index views affected by stable-input changes;
-5. at phase terminality, generate `<Pn>.closed.md` and optional closure evidence;
+5. when a GREEN item makes its phase terminal and direct close is admitted, generate
+   `<Pn>.closed.md` and optional closure evidence in that execution invocation;
 6. run owner `--check` commands and `plan-downstream.py --record`;
-7. rewrite handoff with semantic Next and provider-native launch block;
+7. rewrite handoff from post-closure state with semantic Next and, for an actual runnable successor,
+   its provider-native launch block;
 8. lint the selected plan and commit implementation with changed bookkeeping once. A real
    digest-input collision or ownership/session boundary may require separate anchors.
 

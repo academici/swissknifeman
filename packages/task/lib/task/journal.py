@@ -187,6 +187,27 @@ def validate_append_policy(entry, *, plan_dir=None):
             f"note: {len(note)} символов > {NOTE_MAX_CHARS}; "
             "детали вынесите в Completion Notes/findings")
     if (isinstance(entry, dict) and entry.get("command") == "plan-audit"
+            and re.fullmatch(r"P\d+", str(entry.get("item_id", "")))
+            and (entry.get("result") == "in-progress" or entry.get("run_id") is not None)):
+        # Admission applies to live runs. Historical terminal rows with no run
+        # identity remain readable/importable; they never authorize a new run.
+        from task import audit_admission, plan_gates
+        if plan_dir is None or not entry.get("run_id"):
+            raise JournalValidationError("AUDIT_CONSENT_INVALID: phase audit требует plan_dir и run_id")
+        try:
+            candidate = plan_gates.phase_candidate_fingerprint(plan_dir, entry["item_id"])
+        except (OSError, ValueError, KeyError) as exc:
+            raise JournalValidationError(f"AUDIT_CANDIDATE_UNRESOLVED: {exc}") from exc
+        if entry.get("fingerprint") != candidate["fingerprint"]:
+            raise JournalValidationError("AUDIT_CANDIDATE_MISMATCH: fingerprint не совпадает с текущим candidate")
+        admission = audit_admission.evaluate(
+            Path(plan_dir), entry["item_id"], candidate["snapshot"], run_id=entry["run_id"])
+        if not admission["allowed"]:
+            raise JournalValidationError(f"{admission['code']}: нет адресного согласия на phase audit")
+        if (entry.get("result") == "in-progress"
+                and audit_admission._journal_state(Path(plan_dir), admission["record"]) != "available"):
+            raise JournalValidationError("AUDIT_RUN_ALREADY_STARTED: продолжите текущий audit run")
+    if (isinstance(entry, dict) and entry.get("command") == "plan-audit"
             and entry.get("result") in {"audit-green", "audit-attention", "audit-red"}):
         from task import review_policy
         if review_policy.phase_audit_subject(entry.get("item_id")) is not None:

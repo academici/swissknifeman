@@ -137,8 +137,8 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             ("full", ("🟢 Done",), (), False, "PHASE_DIRECT_CLOSE_ASSURED"),
             ("light", ("🟢 Done",), (), False, "PHASE_DIRECT_CLOSE_ASSURED"),
             ("light", ("🟢 Done", "🟢 Done"), (), False, "PHASE_DIRECT_CLOSE_ASSURED"),
-            ("none", ("🟢 Done",), ("public contract",), True, "PHASE_AUDIT_REQUIRED_MATERIAL_RISK"),
-            ("none", ("🟠 Done with deviations",), (), True, "PHASE_AUDIT_REQUIRED_NON_GREEN"),
+            ("none", ("🟢 Done",), ("public contract",), False, "PHASE_DIRECT_CLOSE_ASSURED"),
+            ("none", ("🟠 Done with deviations",), (), False, "PHASE_ACCEPTANCE_NON_GREEN"),
         )
         for review, statuses, risks, required, code in cases:
             with self.subTest(review=review, statuses=statuses, risks=risks):
@@ -158,8 +158,9 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             policy = plan_gates.phase_audit_policy(
                 plan, "P1", candidate_snapshot=self._candidate(
                     statuses=("🟢 Done", "🟢 Done")))
-            self.assertTrue(policy["audit_required"])
-            self.assertEqual(policy["code"], "PHASE_ASSURANCE_CARRIER_MISSING")
+            self.assertFalse(policy["audit_required"])
+            self.assertTrue(policy["close_allowed"])
+            self.assertIn("PHASE_ASSURANCE_CARRIER_MISSING", policy["diagnostics"][0])
 
     def test_phase_close_binds_policy_snapshot_to_candidate_fingerprint(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -277,7 +278,7 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             fingerprint = "a" * 64
             missing = plan_gates.phase_close_gate(
                 plan, "P1", candidate_fingerprint=fingerprint)
-            self.assertEqual(missing["code"], "PHASE_AUDIT_MISSING")
+            self.assertEqual(missing["code"], "PHASE_ASSURANCE_CANDIDATE_UNRESOLVED")
             journal.append(plan, journal.new_entry(
                 plan_id="P", item_id="P1", command="plan-audit", actor="model/high",
                 result="audit-green", fingerprint=fingerprint))
@@ -434,7 +435,7 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             self.assertEqual(refused["code"], "PHASE_OWNER_DECISION_SCOPE_MISMATCH")
             default = plan_gates.phase_close_gate(
                 plan, "P3", candidate_fingerprint="a" * 64)
-            self.assertEqual(default["code"], "PHASE_AUDIT_MISSING")
+            self.assertEqual(default["code"], "PHASE_ASSURANCE_CANDIDATE_UNRESOLVED")
 
     def test_terminal_blocked_phase_requires_exact_owner_override_and_preserves_default_gate(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -467,7 +468,7 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             fingerprint = plan_gates._candidate_snapshot_fingerprint(snapshot)
             refused = plan_gates.phase_close_gate(
                 plan, "P1", candidate_fingerprint=fingerprint, candidate_snapshot=snapshot)
-            self.assertEqual(refused["code"], "PHASE_AUDIT_MISSING")
+            self.assertEqual(refused["code"], "PHASE_ACCEPTANCE_NON_GREEN")
             allowed = plan_gates.phase_close_gate(
                 plan, "P1", candidate_fingerprint=fingerprint, candidate_snapshot=snapshot,
                 owner_decision="D92")

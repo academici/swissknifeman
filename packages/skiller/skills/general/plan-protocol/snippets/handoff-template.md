@@ -19,7 +19,7 @@
 `task:plan-design`; design root его не исполняет. После terminal `task:plan-audit` Context
 определяет сохранённое решение `plan_continuity`, а не имя команды.
 
-Next обязан нести launch-block (полная форма и правила cold-start —
+Runnable Next для фактического successor обязан нести launch-block (полная форма и правила cold-start —
 `snippets/launch-block-template.md`, SKILL раздел 8): таблица параметров запуска
 + provider-rendered invocation одним code-block. `plan-lint` проверяет их наличие.
 Для execution Next таблица всегда несёт `Batch` из Routing, а команда — весь оставшийся
@@ -37,8 +37,8 @@ Next обязан нести launch-block (полная форма и прави
 | `design-item: task:plan-design <ID> Pn.m` | item эскалирован (🔴) либо требует ре-дизайна |
 | `design-finish: task:plan-design <ID> finish` | reconciliation полностью детализированного дизайна |
 | `design-roadmap: task:plan-design <ID> roadmap` | обновить execution map без правки ТЗ |
-| `audit-phase: task:plan-audit <ID> Pn` | фаза Pn закрыта (терминальна) — аудит перед следующей |
-| `close: task:plan-close <ID> Pn[.m]` | items терминальны: закрыть фазу / сверить item |
+| `audit-phase: task:plan-audit <ID> Pn` | есть свежий owner-bound `audit-admission/v2` на residual-risk question/candidate/run |
+| `close: task:plan-close <ID> Pn[.m]` | только явно запрошенная standalone reconciliation; не handoff текущего результата |
 | `archive: task:plan-close archive <ID>` | план терминален целиком |
 | `terminal: план закрыт` | все items терминальны, следующий шаг вне протокола |
 | `manual: <model-class/effort>` | Exec = manual (§9): команды нет — launch-block несёт route и ГОЛЫЙ ПРОМПТ item'а |
@@ -46,6 +46,8 @@ Next обязан нести launch-block (полная форма и прави
 
 Historical `/task:…` declarations remain compatibility inputs. New plans write the semantic
 form above; provider renderers emit Claude `/task:…` or Codex `$ task:…` without changing payload.
+`plan-exec`/`plan-run` сами закрывают GREEN item и eligible final-item phase; handoff строится после
+closure и не может повторять текущий item или запускать `plan-close` для него.
 
 Форма «ЗАПУСК ВРУЧНУЮ» (item с Exec = manual — модель выше пина `plan-exec`):
 

@@ -4,5 +4,5 @@
   "skills": [
     "./adapters/codex/skills"
   ],
-  "version": "0.13.3"
+  "version": "0.13.4"
 }

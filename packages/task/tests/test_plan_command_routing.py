@@ -99,7 +99,9 @@ class ProviderPlanRoutingTests(unittest.TestCase):
                 self.assertIn("phase_audit_policy", carrier)
         self.assertNotIn(
             "Фаза терминальна → `/task:plan-close <PLAN-ID> Pn`", execution)
-        self.assertIn("`audit-phase` or `close`", execution)
+        self.assertIn("GREEN evidence direct-closes by default", execution)
+        self.assertIn("fresh owner consent", execution)
+        self.assertIn("create its phase closure before deriving Next", execution)
 
     def test_each_plan_command_renders_from_one_semantic_carrier_for_both_providers(self):
         for command_id, expected in self.expected["plan_commands"].items():

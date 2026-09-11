@@ -320,6 +320,12 @@ def phase_audit_policy(plan_dir, phase_id, *, candidate_snapshot=None):
     if not re.fullmatch(r"P\d+", phase_id):
         raise ValueError("phase_id должен иметь форму Pn")
     snapshot = candidate_snapshot if isinstance(candidate_snapshot, dict) else None
+    if snapshot is None:
+        try:
+            snapshot = phase_candidate_fingerprint(plan_dir, phase_id)["snapshot"]
+        except (OSError, ValueError, KeyError):
+            # Missing acceptance is owning evidence work, never an audit request.
+            pass
     try:
         reviews = _phase_reviews(plan_dir, phase_id)
     except task_contract.TaskContractBuildError as exc:
@@ -327,10 +333,13 @@ def phase_audit_policy(plan_dir, phase_id, *, candidate_snapshot=None):
         # Keep P3.1 as the sole assurance reducer while refusing audit/close
         # before any historical audit receipt can be reused.
         if "duplicate executable Routing tables" in str(exc) or "assigned more than once" in str(exc):
-            return _audit_policy_decision(
-                Path(plan_dir), phase_id, required=True,
-                code="PHASE_ROUTING_UNRESOLVED", review="unassessed",
-                reason=f"Routing compiler: {exc}")
+            return {
+                **_audit_policy_decision(
+                    plan_dir, phase_id, required=False,
+                    code="PHASE_ROUTING_UNRESOLVED", review="unassessed",
+                    reason=f"Routing compiler: {exc}"),
+                "action": "gather-evidence", "close_allowed": False,
+            }
         reviews = {}
     policy = plan_assurance.evaluate(plan_dir, phase_id, candidate=snapshot)
     # Existing consumers expose these legacy keys; they carry no independent
@@ -437,6 +446,11 @@ def phase_close_gate(plan_dir, phase_id, *, candidate_fingerprint, candidate_sna
                      owner_decision=None):
     """Allow adaptive direct close, matching GREEN audit, or an owner override."""
     plan_dir = Path(plan_dir)
+    if candidate_snapshot is None:
+        try:
+            candidate_snapshot = phase_candidate_fingerprint(plan_dir, phase_id)["snapshot"]
+        except (OSError, ValueError, KeyError):
+            pass
     if candidate_snapshot is not None:
         try:
             bound_fingerprint = _candidate_snapshot_fingerprint(candidate_snapshot)
@@ -469,9 +483,6 @@ def phase_close_gate(plan_dir, phase_id, *, candidate_fingerprint, candidate_sna
     if audit_policy["code"] == "PHASE_ROUTING_UNRESOLVED":
         return {"allow": False, "code": "PHASE_ROUTING_UNRESOLVED", "journal_line": None,
                 "audit_policy": audit_policy}
-    if not audit_policy["audit_required"]:
-        return {"allow": True, "code": "allow", "journal_line": None,
-                "audit_policy": audit_policy}
     journal_path = Path(plan_dir) / "journal.jsonl"
     latest = None
     if journal_path.is_file():
@@ -484,9 +495,43 @@ def phase_close_gate(plan_dir, phase_id, *, candidate_fingerprint, candidate_sna
             if (event.get("command") == "plan-audit"
                     and review_policy.phase_audit_subject(event.get("item_id")) == phase_id):
                 latest = (line_number, event)
-    if latest is None:
+    if audit_policy["audit_required"] and (latest is None or latest[1].get("run_id") !=
+            audit_policy["audit_admission"]["record"]["run_id"]):
         return {"allow": False, "code": "PHASE_AUDIT_MISSING", "journal_line": None,
+                "audit_policy": audit_policy, "next_exact": audit_policy["next_exact"]}
+    if latest is not None and latest[1].get("result") in {"audit-red", "audit-attention"}:
+        event = latest[1]
+        owner = (event.get("decision") or {}).get("scope_class")
+        repaired = False
+        if (isinstance(owner, str) and re.fullmatch(rf"{re.escape(phase_id)}\.\d+", owner)
+                and (event.get("decision") or {}).get("action") == "return-owning-continuation"):
+            # Only a subsequent GREEN owning result resolves a recorded product finding.
+            for raw in journal_path.read_text(encoding="utf-8").splitlines()[latest[0]:]:
+                try:
+                    repair = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                if repair.get("item_id") == owner and repair.get("result") in {
+                        "closed-green", "closed-deviations", "blocked", "escalated", "in-progress"}:
+                    repaired = repair.get("result") == "closed-green"
+        if not repaired:
+            return {"allow": False,
+                    "code": "PHASE_AUDIT_RED" if event["result"] == "audit-red" else "PHASE_AUDIT_ATTENTION",
+                    "journal_line": latest[0], "audit_policy": audit_policy,
+                    "continuation": "owning-repair",
+                    "next_exact": (event.get("decision") or {}).get("continuation")}
+    if audit_policy.get("close_allowed"):
+        return {"allow": True, "code": "allow", "journal_line": latest[0] if latest else None,
                 "audit_policy": audit_policy}
+    if candidate_snapshot is not None and not audit_policy["audit_required"]:
+        return {"allow": False, "code": audit_policy["code"], "journal_line": None,
+                "audit_policy": audit_policy, "continuation": audit_policy["action"],
+                "next_exact": audit_policy["next_exact"]}
+    if latest is None:
+        return {"allow": False,
+                "code": "PHASE_AUDIT_MISSING" if audit_policy["audit_required"] else audit_policy["code"],
+                "journal_line": None, "audit_policy": audit_policy,
+                "continuation": audit_policy["action"], "next_exact": audit_policy["next_exact"]}
     line_number, event = latest
     if event.get("fingerprint") != candidate_fingerprint:
         # Historical minimal callers have no snapshot to classify.  Preserve

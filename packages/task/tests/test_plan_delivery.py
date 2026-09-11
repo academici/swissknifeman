@@ -1,14 +1,17 @@
 """Terminal continuity and handoff recommendation receipts."""
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 try:
     from .fixtures import write_valid_plan
 except ImportError:
     from fixtures import write_valid_plan
-from task import journal, plan_delivery, plan_item_state, terminal_policy
+from task import (journal, plan_closure, plan_delivery, plan_gates, plan_item_state,
+                  terminal_policy)
 from task import plan_readiness
 
 
@@ -28,24 +31,59 @@ class PlanDeliveryTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    @staticmethod
+    def _events(path):
+        return [json.loads(row) for row in Path(path).read_text(
+            encoding="utf-8").splitlines() if row.strip()]
+
+    @staticmethod
+    def _write_events(path, events):
+        Path(path).write_text("".join(
+            json.dumps(event, ensure_ascii=False) + "\n" for event in events),
+            encoding="utf-8")
+
     def _terminal_plan(self, *, layout="v2", result="closed-green", root=None):
-        plan = write_valid_plan(root or self.root, "DEMO-DELIVERY", layout=layout)
+        fixture_root = Path(root or self.root)
+        fixture_root.mkdir(parents=True, exist_ok=True)
+        subprocess.run(("git", "init", "-q"), cwd=fixture_root, check=True)
+        subprocess.run(("git", "config", "user.email", "delivery@example.invalid"),
+                       cwd=fixture_root, check=True)
+        subprocess.run(("git", "config", "user.name", "Delivery Fixture"),
+                       cwd=fixture_root, check=True)
+        plan = write_valid_plan(fixture_root, "DEMO-DELIVERY", layout=layout)
+        phase = plan / "phases" / "P1" / "P1.md"
+        phase.write_text(
+            phase.read_text(encoding="utf-8")
+            + "\n> **Контракт фазы | v1.**\n> Delivery fixture contract.\n",
+            encoding="utf-8")
         (plan / "journal.jsonl").write_text("", encoding="utf-8")
         handoff = plan / "handoff.md"
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
             "/task:plan-exec DEMO-DELIVERY P1.1",
-            "/task:plan-audit DEMO-DELIVERY P1"), encoding="utf-8")
-        decision = terminal_policy.build_decision(
-            plan, "P1.1", result=result,
-            validation=[{"carrier": "bash test.sh", "status": "green",
-                         "evidence_ids": ["test:exit-0"]}],
-            repair_exhausted=(
-                {"classifier": "recoverable-validation-gap/v1",
-                 "failed_carrier": "bash test.sh", "verdict": "outside-scope",
-                 "reason": "fixture deviation", "continuation": "follow-up: fixture",
-                 "evidence_ids": ["test:deviation"]}
-                if result == "closed-deviations" else None),
-        )
+            "archive: task:plan-close DEMO-DELIVERY archive"), encoding="utf-8")
+        subprocess.run(("git", "add", "."), cwd=fixture_root, check=True)
+        subprocess.run(("git", "commit", "-qm", "fixture"), cwd=fixture_root, check=True)
+        if result in {"blocked", "escalated"}:
+            decision = {
+                "signal_class": "authority",
+                "scope_class": "item",
+                "action": "terminal-block",
+                "recovered": False,
+                "terminal": True,
+                "reason_code": "OWNER_AUTHORITY_REQUIRED",
+            }
+        else:
+            decision = terminal_policy.build_decision(
+                plan, "P1.1", result=result,
+                validation=[{"carrier": "bash test.sh", "status": "green",
+                             "evidence_ids": ["test:exit-0"]}],
+                repair_exhausted=(
+                    {"classifier": "recoverable-validation-gap/v1",
+                     "failed_carrier": "bash test.sh", "verdict": "outside-scope",
+                     "reason": "fixture deviation", "continuation": "follow-up: fixture",
+                     "evidence_ids": ["test:deviation"]}
+                    if result == "closed-deviations" else None),
+            )
         journal.append(plan, journal.new_entry(
             plan_id=plan.name,
             item_id="P1.1",
@@ -58,6 +96,18 @@ class PlanDeliveryTests(unittest.TestCase):
             decision=decision,
         ))
         plan_item_state.build_states(plan, item_id="P1.1")
+        if result == "closed-green":
+            plan_closure.build_closure(plan, "P1")
+            journal.append(plan, journal.new_entry(
+                plan_id=plan.name,
+                item_id="P1",
+                command="plan-close",
+                actor="implementation/high",
+                result="closed-green",
+                session_id="session-1",
+                run_id="run-phase-1",
+                fingerprint="b" * 64,
+            ))
         return plan
 
     def test_terminal_item_receipt_binds_state_journal_and_exact_recommendation(self):
@@ -65,17 +115,127 @@ class PlanDeliveryTests(unittest.TestCase):
         receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")
         self.assertEqual(receipt["schema_version"], "terminal-delivery-receipt/v1")
         self.assertEqual(receipt["status"], "🟢 Done")
-        self.assertEqual(receipt["next_exact"], "/task:plan-audit DEMO-DELIVERY P1")
+        self.assertEqual(
+            receipt["next_exact"], "archive: task:plan-close DEMO-DELIVERY archive")
         self.assertIn("| Model | sonnet |", receipt["recommendation"])
         self.assertEqual(receipt["journal"]["run_id"], "run-1")
         self.assertEqual(receipt["journal"]["line"], 1)
-        self.assertEqual(receipt["adapter_attestation"]["version"], "0.13.3")
+        self.assertEqual(receipt["adapter_attestation"]["version"], "0.13.4")
         self.assertEqual(receipt["adapter_attestation"]["command_id"], "task:plan-run")
         self.assertRegex(
             receipt["adapter_attestation"]["canonical_command_sha256"],
             r"^sha256:[0-9a-f]{64}$")
         self.assertRegex(receipt["digests"]["state"], r"^sha256:[0-9a-f]{64}$")
         self.assertTrue(plan_delivery.verify_receipt(plan, receipt))
+
+    def test_terminal_item_handoff_rejects_relaunch_via_plan_close(self):
+        plan = self._terminal_plan(root=self.root / "close-loop")
+        phase_dir = plan / "phases" / "P1"
+        (phase_dir / "P1.2.md").write_text(
+            (phase_dir / "P1.1.md").read_text(encoding="utf-8").replace(
+                "P1.1", "P1.2"), encoding="utf-8")
+        (phase_dir / "P1.2.state.md").write_text(
+            "**Status:** ⬜ Not started\n"
+            "**Completion Notes:** —\n"
+            "**Pending Work:** —\n"
+            "**Known Deviations:** —\n"
+            "**Escalation Needed:** —\n",
+            encoding="utf-8")
+        (phase_dir / "P1.closed.md").unlink()
+        self._write_events(plan / "journal.jsonl", self._events(plan / "journal.jsonl")[:1])
+        handoff = plan / "handoff.md"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "archive: task:plan-close DEMO-DELIVERY archive",
+            "close: task:plan-close DEMO-DELIVERY P1.1"), encoding="utf-8")
+
+        with self.assertRaisesRegex(
+                plan_delivery.DeliveryError, "FINAL_BEFORE_TERMINAL_FORBIDDEN"):
+            plan_delivery.build_terminal_receipt(plan, "P1.1")
+
+    def test_last_green_item_requires_inline_phase_closure(self):
+        plan = self._terminal_plan(root=self.root / "phase-closure-required")
+        (plan / "phases" / "P1" / "P1.closed.md").unlink()
+
+        with self.assertRaisesRegex(plan_delivery.DeliveryError, "PHASE_CLOSURE_REQUIRED"):
+            plan_delivery.build_terminal_receipt(plan, "P1.1")
+
+    def test_terminal_non_green_item_keeps_ordinary_handoff(self):
+        for result, expected_status in (
+                ("closed-deviations", "🟠 Done with deviations"),
+                ("blocked", "🔴 Blocked")):
+            with self.subTest(result=result):
+                plan = self._terminal_plan(
+                    root=self.root / result, result=result)
+
+                receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")
+
+                self.assertEqual(receipt["status"], expected_status)
+                self.assertIsNone(receipt["digests"]["closure"])
+
+    def test_green_item_with_other_blocked_phase_item_does_not_force_phase_close(self):
+        plan = self._terminal_plan(root=self.root / "other-blocked")
+        phase_dir = plan / "phases" / "P1"
+        (phase_dir / "P1.2.md").write_text(
+            (phase_dir / "P1.1.md").read_text(encoding="utf-8").replace(
+                "P1.1", "P1.2"), encoding="utf-8")
+        (phase_dir / "P1.closed.md").unlink()
+        self._write_events(plan / "journal.jsonl", self._events(plan / "journal.jsonl")[:1])
+        journal.append(plan, journal.new_entry(
+            plan_id=plan.name,
+            item_id="P1.2",
+            command="plan-run",
+            actor="implementation/high",
+            result="blocked",
+            session_id="session-2",
+            run_id="run-2",
+            decision={
+                "signal_class": "authority",
+                "scope_class": "item",
+                "action": "terminal-block",
+                "recovered": False,
+                "terminal": True,
+                "reason_code": "OWNER_AUTHORITY_REQUIRED",
+            },
+        ))
+        plan_item_state.build_states(plan, item_id="P1.2")
+
+        receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")
+
+        self.assertEqual(receipt["status"], "🟢 Done")
+        self.assertIsNone(receipt["digests"]["closure"])
+
+    def test_unconsented_audit_next_is_rejected_from_rebuilt_candidate(self):
+        plan = self._terminal_plan(root=self.root / "audit-not-admitted")
+        handoff = plan / "handoff.md"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "archive: task:plan-close DEMO-DELIVERY archive",
+            "audit-phase: task:plan-audit DEMO-DELIVERY P1"), encoding="utf-8")
+
+        with self.assertRaisesRegex(plan_delivery.DeliveryError, "PHASE_AUDIT_NOT_ADMITTED"):
+            plan_delivery.build_terminal_receipt(plan, "P1.1")
+
+    def test_consented_audit_next_must_match_policy_exactly(self):
+        plan = self._terminal_plan(root=self.root / "audit-exact")
+        (plan / "phases" / "P1" / "P1.closed.md").unlink()
+        self._write_events(plan / "journal.jsonl", self._events(plan / "journal.jsonl")[:1])
+        handoff = plan / "handoff.md"
+        expected = "audit-phase: task:plan-audit DEMO-DELIVERY P1"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "archive: task:plan-close DEMO-DELIVERY archive", expected), encoding="utf-8")
+        policy = {
+            "action": "audit-required",
+            "audit_required": True,
+            "close_allowed": False,
+            "code": "PHASE_AUDIT_APPROVED",
+            "next_kind": "audit-phase",
+            "next_exact": expected,
+        }
+
+        with patch.object(plan_gates, "phase_audit_policy", return_value=policy) as reducer:
+            receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")
+
+        self.assertEqual(receipt["next_exact"], expected)
+        self.assertGreaterEqual(reducer.call_count, 2)
 
     def test_nonterminal_item_forbids_terminal_receipt(self):
         plan = write_valid_plan(self.root, "DEMO-LIVE", layout="v2")
@@ -259,23 +419,20 @@ class PlanDeliveryTests(unittest.TestCase):
 
         plan = self._terminal_plan(root=self.root / "missing-run-id-terminal")
         journal_path = plan / "journal.jsonl"
-        entry = json.loads(journal_path.read_text(encoding="utf-8"))
-        entry.pop("run_id")
-        journal_path.write_text(json.dumps(entry, ensure_ascii=False) + "\n", encoding="utf-8")
+        events = self._events(journal_path)
+        events[0].pop("run_id")
+        self._write_events(journal_path, events)
         with self.assertRaisesRegex(plan_delivery.DeliveryError, "STALE_TERMINAL_RECEIPT|TERMINAL_RUN_ID_MISSING"):
             plan_delivery.build_terminal_receipt(plan, "P1.1")
 
     def test_terminal_receipt_skips_historical_missing_run_id_when_latest_is_valid(self):
         plan = self._terminal_plan(root=self.root / "historical-missing-run-id")
         journal_path = plan / "journal.jsonl"
-        latest = json.loads(journal_path.read_text(encoding="utf-8"))
+        latest, phase_close = self._events(journal_path)
         historical = {**latest, "run_id": None, "ts": "2026-08-12T00:00:00Z"}
-        journal_path.write_text(
-            json.dumps(historical, ensure_ascii=False) + "\n"
-            + json.dumps(latest, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
+        self._write_events(journal_path, (historical, latest, phase_close))
         plan_item_state.build_states(plan, item_id="P1.1")
+        plan_closure.build_closure(plan, "P1")
 
         receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")
 
@@ -285,19 +442,16 @@ class PlanDeliveryTests(unittest.TestCase):
     def test_terminal_receipt_skips_historical_invalid_terminal_when_recovered_close_is_valid(self):
         plan = self._terminal_plan(root=self.root / "historical-invalid-terminal")
         journal_path = plan / "journal.jsonl"
-        latest = json.loads(journal_path.read_text(encoding="utf-8"))
+        latest, phase_close = self._events(journal_path)
         historical = {
             **latest,
             "result": "blocked",
             "decision": None,
             "ts": "2026-08-12T00:00:00Z",
         }
-        journal_path.write_text(
-            json.dumps(historical, ensure_ascii=False) + "\n"
-            + json.dumps(latest, ensure_ascii=False) + "\n",
-            encoding="utf-8",
-        )
+        self._write_events(journal_path, (historical, latest, phase_close))
         plan_item_state.build_states(plan, item_id="P1.1")
+        plan_closure.build_closure(plan, "P1")
 
         receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")
 
@@ -307,10 +461,10 @@ class PlanDeliveryTests(unittest.TestCase):
     def test_terminal_receipt_still_refuses_only_invalid_terminal(self):
         plan = self._terminal_plan(root=self.root / "only-invalid-terminal")
         path = plan / "journal.jsonl"
-        event = json.loads(path.read_text(encoding="utf-8"))
+        event, phase_close = self._events(path)
         event["result"] = "blocked"
         event["decision"] = None
-        path.write_text(json.dumps(event, ensure_ascii=False) + "\n", encoding="utf-8")
+        self._write_events(path, (event, phase_close))
         plan_item_state.build_states(plan, item_id="P1.1")
 
         with self.assertRaisesRegex(plan_delivery.DeliveryError, "TERMINAL_EVIDENCE_REQUIRED"):
@@ -329,9 +483,9 @@ class PlanDeliveryTests(unittest.TestCase):
     def test_terminal_receipt_rejects_tampered_red_validation(self):
         plan = self._terminal_plan()
         path = plan / "journal.jsonl"
-        event = json.loads(path.read_text(encoding="utf-8"))
+        event, phase_close = self._events(path)
         event["decision"]["terminal_evidence"]["validation"][0]["status"] = "red"
-        path.write_text(json.dumps(event, ensure_ascii=False) + "\n", encoding="utf-8")
+        self._write_events(path, (event, phase_close))
         plan_item_state.build_states(plan, item_id="P1.1")
         with self.assertRaisesRegex(plan_delivery.DeliveryError, "TERMINAL_VALIDATION_RED"):
             plan_delivery.build_terminal_receipt(plan, "P1.1")

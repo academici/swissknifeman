@@ -20,11 +20,11 @@ flowchart TD
     RF -- 0 маркеров, DoR пройден --> A[approve<br>владелец плана]
     A --> E[exec<br>/task:plan-exec<br>commit-гейт · два дома]
     E --> C[phase candidate<br>terminal items]
-    C --> AP{phase-assurance/v1<br>candidate evidence · impact}
-    AP -- audit required --> RV[первый pre-close audit<br>/task:plan-audit]
-    AP -- direct close --> PC
+    C --> AP{GREEN acceptance<br>остаточный риск и согласие?}
+    AP -- адресное согласие --> RV[bounded audit<br>/task:plan-audit]
+    AP -- default direct-close --> PC
     RV -- product finding --> RE[owning executor repair<br>фаза остаётся открытой]
-    RE -- delta verification --> RV
+    RE -- affected validation --> AP
     RV -- final GREEN --> PC[phase close<br>/task:plan-close]
     RV -- proven boundary --> INC[DecisionRequest / block evidence]
     PC --> AR[archive<br>/task:plan-close archive]
@@ -85,12 +85,14 @@ pending` / `Resolved → D#`, скилл §3) — но закрыть план �
 item проходят его собственные acceptance/commit/close gates, а следующий carrier сохраняет
 рекомендованный остаток группы. Новые строки `Почему: recommended:` допускают ready subset
 и порядок независимых items; `required:` и исторические немаркированные группы сохраняют
-обязательную полноту/порядок. Изменение frozen-группы фиксируется существующим решением. Audit/close фазы запускается уже отдельным carrier.
+обязательную полноту/порядок. Изменение frozen-группы фиксируется существующим решением.
+Закрытие item и допустимый direct-close фазы выполняются в текущем invocation до handoff;
+наличие отдельной команды `plan-close` не требует новой сессии.
 Для `plan-run` canonical `plan-exec` резолвится через установленный `task.command_catalog`, а
 маршрут снимается provider-neutral функцией `task.route_evidence.capture_launch()`: Codex argv и
 Claude Code session JSONL остаются additive adapters одного record. Missing/ambiguous evidence —
-`ROUTE-UNVERIFIABLE`, не undershoot. Start event хранит `route-run-receipt/v1`; pre-final обязан
-перечитать его, повторно снять route и отказать при смене session/model/effort/cwd/invocation.
+`ROUTE-UNVERIFIABLE`, не undershoot. Start event хранит `route-run-receipt/v1`; route/context
+evidence переиспользуются до доказанной смены session/model/effort/cwd/invocation.
 
 Перед journal/product mutation executor компилирует `evidence-graph/v1` из immutable item-spec,
 digest-qualified bundle, declared `Files` и registry владельцев carriers. Реальное
@@ -119,16 +121,20 @@ delivery receipt, связанный с terminal state и exact persisted handof
 runtime-built кандидата фазы. Единый `plan_assurance.evaluate()` выбирает следующий carrier без
 пробного `plan-close`: handwritten `Phase Assurance | v1` несёт impact, seams, live/irreversible
 и intent, а `Routing.Review` и число items остаются глубиной item review, не фазовым риском.
-Legacy assurance идёт в named conservative baseline; isolated, green, seam-free
-`direct-close-eligible` идёт прямо в `/task:plan-close`, а public/security/live, non-green и
-material-risk требуют `/task:plan-audit`. После GREEN расхождение получает typed
-`audit-impact/v1` continuation: gate-rebind, delta, justified full, gather evidence или owner review;
-неизвестное влияние не превращается в implicit full.
+Default для GREEN acceptance — direct-close. Legacy `required/auto/light` не назначает audit;
+`required` даёт advisory migration hint. Отсутствующий candidate собирается существующим runtime,
+неполная/красная приёмка возвращается исполнителю. Дополнительный phase audit допускается только
+с конкретным непокрытым вопросом и адресным owner consent в существующем decision record:
+`audit-admission/v2` привязан к фазе, material candidate и одному run. По завершении run согласие
+потреблено; повторный audit требует нового согласия. Поля и owner-message формат описаны в
+каноническом `plan-protocol/references/plan-layout-v2.md`, раздел Phase Assurance.
+Impact classification остаётся информацией для выбора affected проверки, а не правом на новый audit.
 GREEN audit регенерирует свои owned views ровно один раз, пересобирает candidate и сохраняет
 `audit-finalization/v1` с exact close admission. Поэтому следующий `plan-close` потребляет
 доказанно тот же candidate, а не обнаруживает self-invalidation повторным аудитом.
-Audit-fixer остаётся независимым при старте, но после обнаружения владеет safe in-scope ремонтом:
-повторяет точную Validation, регенерирует owner views и пересобирает candidate в том же root.
+Audit остаётся read-only и возвращает дефект owning executor. Исполнитель чинит его в своей
+сессии, повторяет affected Validation и обновляет views; новое независимое full review не добавляется
+по самому факту ремонта.
 Routine `audit → repair-run → second audit → AUDIT-CAP` запрещён. Первый same fingerprint меняет
 tactic; лишь повтор или новый material risk допускает один isolated reviewer return в этот же root.
 Acceptance failure остаётся работой owning root. Authority/public-frozen сигнал проходит
@@ -138,13 +144,13 @@ distinct `JUSTIFIED` терминален. В phase-режиме `ATTENTION` н�
 репортится под GREEN, исправимый — чинится. `plan-design` не является successor phase RED;
 одобренное изменение stable Intent/Scope/Files/Validation выполняет возобновлённый owning root.
 
-Исключение возможно лишь как явное owner decision: `phase_close_gate(..., owner_decision="D#")`.
+Исторические исключения совместимо читаются через `phase_close_gate(..., owner_decision="D#")`.
 Direct-green-validation требует один accepted, phase-scoped и superseding decision carrier с
 literal `phase-close: direct-green-validation`. После исчерпанного AUDIT-CAP отдельный remediation
 carrier должен покрывать точный полный набор items фазы и явно фиксировать, что третьего audit нет,
 а фаза закрывается штатным `task:plan-close`; разрешение действует только после самого ремонта и
-повторного deterministic gate. Отсутствие или любое несовпадение остаётся fail-closed и использует
-обычный audit GREEN путь.
+повторного deterministic gate. Невалидное явное исключение остаётся fail-closed. Для обычной
+GREEN-фазы такой carrier не нужен.
 
 Отдельное исключение для terminal blocked phase требует accepted, non-superseded D# с `item: Pn`,
 точным набором `Pn` и всех `Pn.*`, а также literal

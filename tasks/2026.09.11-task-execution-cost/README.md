@@ -113,6 +113,11 @@ Codex plan-run на живом consumer ещё не проверено; provider
 `388429ed1bf6c47ddde7ced751ba5609eb4acd42eb7b8938cf8756a14264caec`; для существующих Codex
 bundles проверены manifest versions Task 0.13.4/Core 0.13.2. Connect-проекты, где bundle не
 создаётся, указывают на опубликованный worktree `.../swissknifeman` и включают `task`.
+Native Claude marketplace также обновлён. Фактически установленные local-cache Task были
+переведены с 0.11.1 на 0.13.4 (Brain, Agelto, Dterema, Edufy, FlexCRM, swissknifeman,
+sibintek-insiders и Sova), Core — на commit `5a5ec97335dd`; Claude Code применит их после
+перезапуска сессии. Для connect-записей без local-cache сохранён только штатный source pointer:
+не утверждается, что неустановленный plugin уже исполнялся.
 
 | Статус | Проекты |
 |:--|:--|

@@ -91,6 +91,38 @@ Codex plan-run на живом consumer ещё не проверено; provider
 и тестами контрактов, а не двумя полевыми запусками. При новом воспроизводимом сбое исправлять
 конкретную ветку, без автоматического расширения процесса.
 
+## Delivery 2026-09-11
+
+Поставлено без запуска consumer-планов и без production deploy:
+
+- Релиз: Task **0.13.4**, публикационные units **core 0.13.2** и **general 0.13.2**;
+  umbrella **v0.15.2** — commit `b9045b66`, merge commit `2f13589b`, PR
+  [#150](https://github.com/academici/swissknifeman/pull/150), annotated tag и
+  [GitHub Release v0.15.2](https://github.com/academici/swissknifeman/releases/tag/v0.15.2).
+- Release checks: `bash packages/task/scripts/validate.sh` — 1046 tests OK (1 skipped),
+  `bash packages/skiller/scripts/validate.sh` — 654 tests OK; provider renderer and registry
+  `--check` — OK. Existing docs build evidence from this task was reused.
+- PR CI не является зелёным по независимой baseline-причине: тот же `origin/main` не проходит
+  `docs/status.md` status-check (две неизвестные capability labels), Ruff находит старые unused
+  imports в `core`/`harness`, а harness fixture ожидает Claude CLI в runner. Эти пути не входят
+  в релизный diff; Task CI не стартовал, поскольку validate останавливается на harness. Причина
+  и граница зафиксированы в [PR #150](https://github.com/academici/swissknifeman/pull/150).
+
+`packages/skiller/bin/skiller update --all` выполнил сохранённые connect/vendor/sync каналы и
+локальные provider selections. Для physical vendor-копий проверен SHA-256 `plan-protocol`:
+`388429ed1bf6c47ddde7ced751ba5609eb4acd42eb7b8938cf8756a14264caec`; для существующих Codex
+bundles проверены manifest versions Task 0.13.4/Core 0.13.2. Connect-проекты, где bundle не
+создаётся, указывают на опубликованный worktree `.../swissknifeman` и включают `task`.
+
+| Статус | Проекты |
+|:--|:--|
+| Обновлён и подтверждён | Brain, Agelto, Axioma Studio, Diabox, Dterema, Edufy, FlexCRM, Memster, Azguard, Chatom, CoreX, erp-sdk, Loqum, perplexity-web-mcp, swissknifeman, Vaulter, vintera/cms, sibintek-insiders, Sova |
+| Уже актуален | Нет: все доступные записи были штатно переприменены и проверены на текущий source/version. |
+| Заблокирован без перезаписи | dterema/app, botkit, vintera/vintera, agentools — `SPUB_OWNERSHIP_CONFLICT`: Codex marketplace bundle содержит неуправляемые либо изменённые файлы. До явной reconciliation/repair эти четыре сохраняют Task 0.13.3/Core 0.13.1 (для dterema/app, botkit и vintera/vintera подтверждено manifest); agentools также оставлен нетронутым из-за modified managed artifacts. |
+
+Существующие пользовательские правки `docs/reference.md` и `roadmap/README.md` в umbrella
+worktree не включались ни в релизный commit, ни в эту поставку.
+
 ## Подтверждённые причины до исправления
 
 Разделы ниже сохраняют исходную диагностику и спецификацию как историю и критерии регрессии,

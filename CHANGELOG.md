@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.15.4] - 2026-09-12
+
 ### Fixed
 
 - **Codex plugins `task` и `core`:** версии выровнены с umbrella-релизом

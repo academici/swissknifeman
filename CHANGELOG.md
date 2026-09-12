@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-09-12
+
 ### Changed
 
 - **Codex plugins `task` и `core`:** выпущена линия 0.14.0 из

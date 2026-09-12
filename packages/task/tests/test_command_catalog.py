@@ -50,7 +50,7 @@ class CommandCatalogTests(unittest.TestCase):
     def test_parent_command_resolves_in_source_and_installed_package_layouts(self):
         self.assertEqual(package_command_path("task:plan-exec"), COMMAND_ROOT / "plan-exec.md")
         with tempfile.TemporaryDirectory() as temporary:
-            installed = Path(temporary) / "task" / "0.14.0"
+            installed = Path(temporary) / "task" / "0.15.4"
             (installed / "lib" / "task").mkdir(parents=True)
             shutil.copy2(
                 REPO_ROOT / "packages/task/lib/task/command_catalog.py",

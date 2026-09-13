@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import hashlib
 import os
 import re
 from pathlib import Path
@@ -87,7 +88,7 @@ def _effort_for(effort: str, metadata: dict) -> str:
 
 def capture_current(*, expected_invocation: str, expected_cwd: str | Path,
                     session_id: str | None = None, state_root: str | Path | None = None,
-                    routing_path: str | Path = _ROUTING_PATH) -> dict:
+                    routing_path: str | Path = _ROUTING_PATH, require_current_owner_invocation=False) -> dict:
     observed = session_id if session_id is not None else os.environ.get("CLAUDE_CODE_SESSION_ID")
     if not isinstance(observed, str) or not observed.strip() or any(char.isspace() for char in observed):
         raise RouteEvidenceError(
@@ -108,6 +109,13 @@ def capture_current(*, expected_invocation: str, expected_cwd: str | Path,
             raise RouteEvidenceError(
                 "ROUTE_LAUNCH_UNAVAILABLE", f"Claude state {path}:{index + 1} is invalid") from exc
         invocation = _invocation_from_event(event)
+        if require_current_owner_invocation and event.get("type") == "user":
+            message = event.get("message", {})
+            content = message.get("content", []) if isinstance(message, dict) else []
+            is_tool_result = isinstance(content, list) and content and all(isinstance(p, dict) and p.get("type") == "tool_result" for p in content)
+            if not is_tool_result:
+                invocation_index = None
+                route_event = None
         if invocation == expected_invocation:
             invocation_index = index
             route_event = None
@@ -146,6 +154,8 @@ def capture_current(*, expected_invocation: str, expected_cwd: str | Path,
         "cwd": str(Path(cwd).resolve()),
         "invocation": expected_invocation,
     })
+    if require_current_owner_invocation:
+        evidence["owner_message_digest"] = hashlib.sha256(rows[invocation_index].encode()).hexdigest()
     return evidence
 
 

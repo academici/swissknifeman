@@ -205,3 +205,21 @@ provider-а не могут владеть одним physical skills path: оп
 wrapper'ы на один релиз, переадресуют в CLI. Brain-sync (`BRAIN_PATH`)
 удалён: brain подключается как обычный проект (`cd <brain> && swissknifeman
 vendor`, дальше `skiller update`).
+# Проверяемая поставка релиза
+
+`skiller version --json` показывает umbrella tag/commit и независимые unit versions/digests.
+`skiller attest --release vX.Y.Z --previous vA.B.C` генерирует `releases/vX.Y.Z.json`;
+`--check` проверяет свежесть и immutable version tuple. После проверки generator locks
+и commit запустите `python3 scripts/verify-tag.py vX.Y.Z` до создания annotated tag.
+
+`skiller deliver --release vX.Y.Z --all --dry-run` классифицирует lost ownership без записи.
+Без `--dry-run` команда обновляет registered projects и установленные native plugins,
+восстанавливая только exact-current/exact-known-old или закрытую generated marketplace форму.
+Modified/unknown файлы сохраняются и оставляют PARTIAL. До изменения сохраняются preimages.
+`--target PATH` ограничивает project delivery; `--no-native` явно исключает cache stage.
+
+Receipt хранится в `~/.swissknifeman/receipts/delivery/<release>/`; GREEN требует readback
+всех выбранных targets. Existing sessions отмечаются `restart-required`: начните новую сессию.
+Source-managed bytes, native cache, project projection и loaded session — разные поверхности.
+Commit SHA добавляется к runtime receipt через annotated tag: committed attestation хранит tag,
+date и tree digests, чтобы не создавать самоссылочный SHA release commit.

@@ -131,6 +131,9 @@ def _paths(plan_dir: Path, item_id: str) -> tuple[tuple[str, Path], ...]:
 def capture(plan_dir, item_id: str) -> PlanContextSnapshot:
     """Capture every executor carrier before exposing a byte of any one carrier."""
     root = Path(plan_dir)
+    if _ITEM.fullmatch(item_id) and plan_layout.layout_version(root) == "v2":
+        from task import plan_recovery
+        plan_recovery.validate_request(root, item_id)
     members = []
     for role, path in _paths(root, item_id):
         try:

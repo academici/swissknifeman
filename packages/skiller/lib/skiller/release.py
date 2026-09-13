@@ -193,6 +193,13 @@ def cmd_release(env, argv):
               "(заполните CHANGELOG перед релизом, см. `oss-dev/release-engineering`).")
         return
 
+    if (root / ".agents/plugins/marketplace.json").is_file():
+        from .release_attestation import build, check_transition
+        errors = check_transition(build(root, ref=tag), build(root)) if tag else []
+        if errors:
+            print("skiller release: " + "; ".join(errors), file=sys.stderr)
+            sys.exit(1)
+
     print(f"skiller release: предложение — {tag or '(нет тега)'} -> {new_version} "
           f"({bump}, {len(commits)} коммит(ов) в диапазоне)")
     tag_cmd = f'git tag -a {new_version} -m "release: {new_version}"'
@@ -203,5 +210,11 @@ def cmd_release(env, argv):
 
     backup_file(changelog)
     atomic_write_text(changelog, _release_changelog(text, new_version))
+    if (root / ".agents/plugins/marketplace.json").is_file():
+        from .release_attestation import cmd_attest
+        args = ["--release", new_version]
+        if tag:
+            args += ["--previous", tag]
+        cmd_attest(env, args)
     print(f"CHANGELOG.md обновлён: [Unreleased] -> [{new_version.removeprefix('v')}]. "
           f"Тег и push — вручную:\n  {tag_cmd}\n  git push origin {new_version}")

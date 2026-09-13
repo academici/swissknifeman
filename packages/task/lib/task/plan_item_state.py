@@ -247,4 +247,8 @@ def build_states(plan_dir, *, item_id=None, check=False):
             if not legacy_matches:
                 raise ItemStateError(str(exc)) from exc
         targets.append(target)
+    if not check:
+        from task import plan_recovery
+        for identifier in identifiers:
+            plan_recovery.materialize_next_ready(plan_dir, identifier)
     return tuple(targets)

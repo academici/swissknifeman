@@ -21,7 +21,7 @@ from typing import Callable
 
 LEASE_SCHEMA = "terminal-admission-lease/v1"
 EVENT_SCHEMA = "final-admission-event/v1"
-_LIFECYCLES = frozenset(("active", "waiting-owner", "released"))
+_LIFECYCLES = frozenset(("active", "waiting-owner", "waiting-external", "released"))
 _SHA256_LENGTH = 64
 _CONFIG_ROOT = Path(__file__).resolve().parents[2] / "configs"
 
@@ -302,7 +302,7 @@ def arm(store: FileStore, identity: Identity, continuity: dict, *, progress_fing
         current = store.load(identity)
     except AdmissionError:
         current = None
-    if current is not None and current.lifecycle in {"active", "waiting-owner"} and now < current.expires_at:
+    if current is not None and current.lifecycle in {"active", "waiting-owner", "waiting-external"} and now < current.expires_at:
         raise AdmissionError("LEASE_ALREADY_ACTIVE", "active lease must be refreshed or released")
     store.replace(lease, expected_sequence=current.sequence if current is not None else None,
                   recover_invalid=True)
@@ -320,10 +320,10 @@ def refresh(store: FileStore, identity: Identity, *, expected_sequence: int, pro
     if current.lifecycle == "released":
         raise AdmissionError("LEASE_RELEASED", "released lease requires re-arm")
     outcome = _continuity_outcome(continuity)
-    if current.progress_fingerprint == progress_fingerprint and outcome != "waiting-owner":
+    if current.progress_fingerprint == progress_fingerprint and outcome not in {"waiting-owner", "waiting-external"}:
         raise AdmissionError("PROGRESS_UNCHANGED", "refresh requires material progress")
     now = store.clock()
-    lifecycle = "waiting-owner" if outcome == "waiting-owner" else "active"
+    lifecycle = outcome if outcome in {"waiting-owner", "waiting-external"} else "active"
     lease = Lease(identity=identity, sequence=current.sequence + 1,
                   progress_fingerprint=progress_fingerprint, continuity_sha256=_sha(_canonical(continuity)),
                   lifecycle=lifecycle, issued_at=current.issued_at, refreshed_at=now,
@@ -376,6 +376,9 @@ def evaluate(store: FileStore, identity: Identity, continuity: dict, *, receipt_
         return _verdict(store, identity, Verdict(False, "CONTINUITY_STALE", None, "refresh", lease.sequence))
     if outcome == "waiting-owner":
         return _verdict(store, identity, Verdict(False, "WAITING_OWNER", "waiting-owner", None, lease.sequence),
+                        observed_message=_normalized_message(proposed_message))
+    if outcome == "waiting-external":
+        return _verdict(store, identity, Verdict(False, "WAITING_EXTERNAL", "waiting-external", None, lease.sequence),
                         observed_message=_normalized_message(proposed_message))
     if outcome != "terminal":
         return _verdict(store, identity, Verdict(False, outcome.upper().replace("-", "_"), outcome, None, lease.sequence),

@@ -13,5 +13,9 @@ Generated Codex adapter for semantic command `task:review`.
 - Canonical SHA-256: `sha256:f56bd580c79ee971e3a51e4a2f038db815a10b5eeae7bed3c4a8defc9efd4903`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
+Read `references/intent-routing.md` from the configured Task marketplace runtime before selecting
+the workflow. Skill relevance alone is not workflow authority; the latest explicit owner
+request determines the work product. Direct development and fixes require no plan lifecycle.
+
 Read `command.md` completely and execute it with the invocation payload as `$ARGUMENTS`.
 Preserve the semantic command ID, gates, status literals, scope, and validation behavior.

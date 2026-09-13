@@ -781,7 +781,7 @@ def _build_codex_connect_artifacts(*, repo_root: Path, target: Path,
     lock_path = target / LOCK_RELATIVE_PATH
     lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
     artifact_plan = plan_artifact_lock(
-        target, result, lock_bytes=lock_bytes, retain_unexpected_records=True)
+        target, result, lock_bytes=lock_bytes, owner_namespace="skiller.codex.connect")
     refused = tuple(action for action in artifact_plan.actions
                     if action.action is ArtifactActionKind.REFUSE)
     if refused:

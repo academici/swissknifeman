@@ -11,7 +11,7 @@
     "sequence": {"type": "integer", "minimum": 1},
     "progress_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "continuity_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "lifecycle": {"enum": ["active", "waiting-owner", "released"]},
+    "lifecycle": {"enum": ["active", "waiting-owner", "waiting-external", "released"]},
     "issued_at": {"type": "number"},
     "refreshed_at": {"type": "number"},
     "expires_at": {"type": "number"}

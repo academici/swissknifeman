@@ -88,6 +88,35 @@ The generated state contains exactly:
 
 `Status, Completion Notes, Pending Work, Known Deviations, Escalation Needed`
 
+The optional stable `Authority` field is `routine` or exactly
+`[OWNER-GATE:GATE-ID] branch=\`declared-branch\`; scope=\`finite-scope\``.
+`task_contract.build()` discovers this gate without caller kwargs; missing authorization stays
+`owner-gate/granted=false`. Known legacy phrases requiring durable owner authorization without an
+explicit machine gate fail with `AUTHORITY_CONTRACT_GAP`; this migration detector never grants.
+The bundle exposes the exact gate and digest-bound grant/revocation/owner-message evidence paths.
+
+For an exact owner `plan-run <PLAN-ID> <item>`, call
+`task_contract.materialize_owner_invocation(plan_dir, item_id)` before protected product writes.
+It captures the live provider user invocation itself, accepts only the already declared finite
+gate, appends the existing brief owner-message and accepted Decision Log grant carriers, then
+regenerates affected decision views and bundle. Caller dictionaries, copied actor/Approval Owner,
+and route flags cannot mint consent. Revoked, ambiguous, altered or foreign grants remain denied.
+The invocation does not extend Files, environment, irreversible actions, release or fleet scope.
+Read-only environment preflight proceeds autonomously; actual missing production setup yields
+`NO-GO`, concrete repair evidence and a continuation, without a repeated owner questionnaire.
+
+Use `WorkEstimate.lifecycle=waiting-external` with `checkpoint` and `external_pause` for external
+or calendar waits. The pause has exactly `reason`, `started_at`, `resume_at`, `observed_at`,
+`fingerprint`, `runnable_after`, `predicate_satisfied`, and `continuation`; times include timezones
+and the fingerprint binds actual observation/environment evidence. Preserve the original start and
+run ID across resumes. The reducer suppresses execution until the observed time reaches `resume_at`
+and the recorded predicate is satisfied; this is continuation admission, never proof of completed
+Acceptance or a substitute for actual production start/end evidence. The terminal lease returns
+`WAITING_EXTERNAL` while paused. Persist the complete decision with
+`command_render.render_continuity_decision()` alongside matching Context, using its fenced
+`session-continuity-decision/v1` carrier; delivery validates the same checkpoint rather than
+reconstructing it from a bare label. Unchanged finite scope does not require renewed authorization.
+
 The journal is authoritative history; the state file is a projection. Attempts append journal
 events, then regeneration derives current state. A state byte mismatch is a stale-carrier error,
 not permission to hand-edit it.
@@ -209,6 +238,16 @@ Both forms carry the same provider-neutral meaning. Provider-native invocations 
 | repeated local failure fingerprint | change tactic once; then one isolated reviewer or authority/capability gate |
 
 ## Projection order
+
+Before context capture, `plan_recovery.inspect(plan_dir, item_id)` reconciles an interrupted
+predecessor from the journal, item state and actual dependency declarations. Resume the owning
+in-progress run rather than blaming its successor for a missing predecessor artifact. An independent
+ready subset remains executable. After normal route/contract admission and before any product write,
+`plan_recovery.start(..., contract=contract)` persists one durable in-progress event and returns the
+run ID/attempt; a resume returns that same identity without a second start. If interruption left the
+journal ahead of generated state, regenerate the owning state before recapture. After terminal
+evidence and any inline phase closure, materialize the next ready bundle through
+`plan_recovery.materialize_next_ready(plan_dir, item_id)` before delivery.
 
 For a v2 item transition, respect these data dependencies. Independent work may be reordered:
 

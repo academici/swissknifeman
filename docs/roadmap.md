@@ -12,10 +12,19 @@
 Инциденты Task от 10–11 сентября 2026 сведены в одно аудит-задание
 `tasks/2026.09.11-task-execution-cost/README.md` в репозитории. Локальные исправления завершены:
 direct-close на обычном GREEN пути, проверки по риску с reuse актуального evidence и закрытие
-текущего пункта в той же сессии. Приёмка и ограничения записаны в отчёте; installed plugins
-consumer-проектов не обновлялись. Исходные roadmap-записи сохранены рядом с заданием.
+текущего пункта в той же сессии. Позднейший Delivery обновил и подтвердил 19 consumer roots,
+но четыре остались заблокированы без перезаписи. Причины version/cache/ownership drift и
+проект исправления собраны в
+[`release-to-runtime attestation and recovery`](../roadmap/archive/2026.09.11-release-to-runtime-attestation-and-recovery.md).
+Исходные Task roadmap-записи сохранены рядом с заданием.
 
 ## Ближайшая фаза
+
+**Полевые исправления 2026-09-13 реализованы.** Task сохраняет явный opt-in маршрут,
+восстанавливает незавершённый predecessor и отделяет finite owner authority от external/calendar wait.
+Релиз проверяет immutable `(unit, version) → bytes`; delivery сохраняет общий owner-union lock,
+восстанавливает только известные preimages и проверяет cache/project bytes по digest.
+Оригиналы сохранены в `roadmap/archive/`; фактический результат fleet находится в machine-local receipt.
 
 **Миграция собственных скиллов из локальных проектов.** Анализ наработок
 в проектах из `.skills-scanner.json`, перенос универсальной части в реестр

@@ -9,7 +9,7 @@ from core import (ArtifactActionKind, ArtifactAdapterIdentity,
                   ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
                   ConfigSource, ProviderConfigCatalog,
                   ProviderConfigLayer, ProviderId, apply_plan, canonical_json_bytes,
-                  parse_lock, plan_artifact_render, sha256_digest)
+                  parse_lock, plan_artifact_lock, plan_artifact_render, sha256_digest)
 from harness.mcp import load_mcp_catalog, plan_mcp_projection
 from maind.provider_deploy import (ProviderDeployError, plan_provider_deploy,
                                    plan_provider_artifacts, apply_provider_artifacts,
@@ -85,6 +85,50 @@ _D108_MCP_PREIMAGE = b'''{
 
 
 class TestProviderDeploy(unittest.TestCase):
+    @staticmethod
+    def skiller_artifact(body=b"managed skill\n"):
+        return plan_artifact_render(ArtifactRenderRequest(
+            "skiller.codex.connect.a123", (ArtifactSource(
+                "skiller.test", "packages/skiller/test", sha256_digest(body)),),
+            ArtifactTarget(".agents/skills/test/SKILL.md", ("whole-file", ())),
+            ArtifactAdapterIdentity("skiller.test", "1.0.0", ProviderId.CODEX,
+                                    "1.0.0", ()), (), {}, lambda _request: body))
+
+    def test_ordinary_deploy_and_skiller_alternating_writers_preserve_ownership(self):
+        harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
+        bases = tuple(plan_mcp_projection(
+            catalog, provider_id=provider,
+            bindings_path=harness / provider.value / "mcp/bindings.json",
+            selected=(), trusted=True) for provider in ProviderId)
+        deploy = plan_provider_deploy(bases, semantic_servers(maind={"command": "maind"}))
+        for order in (("skiller", "maind"), ("maind", "skiller")):
+            with self.subTest(order=order), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+
+                def skiller_write(body):
+                    artifact = self.skiller_artifact(body)
+                    apply_plan(root, plan_artifact_lock(
+                        root, (artifact,), lock_bytes=lock_path.read_bytes()
+                        if lock_path.exists() else None,
+                        owner_namespace="skiller.codex.connect"))
+
+                for writer in order:
+                    if writer == "skiller":
+                        skiller_write(b"old skill\n")
+                    else:
+                        apply_provider_artifacts(root, deploy)
+                updated = plan_provider_deploy(
+                    bases, semantic_servers(maind={"command": "updated-maind"}))
+                apply_provider_artifacts(root, updated)
+                skiller_write(b"updated skill\n")
+                self.assertEqual(plan_provider_artifacts(root, updated)["severity"], "green")
+                records = parse_lock(lock_path.read_bytes()).records
+                self.assertEqual({record.artifact_id for record in records},
+                                 {"skiller.codex.connect.a123"} |
+                                 {row.artifact.provenance.artifact_id for row in deploy.results})
+
     def test_exact_provider_artifact_adoption_updates_and_locks_targets(self):
         harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
         catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
@@ -328,12 +372,18 @@ class TestProviderDeploy(unittest.TestCase):
             first = plan_d108_operation(root, config, "swissknifeman", servers,
                                         harness_configs=harness, expected_root=root)
             apply_d108_operation(root, first)
+            lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+            foreign = self.skiller_artifact()
+            apply_plan(root, plan_artifact_lock(
+                root, (foreign,), lock_bytes=lock_path.read_bytes(),
+                owner_namespace="skiller.codex.connect"))
             before = {path.relative_to(root): path.read_bytes()
                       for path in root.rglob("*") if path.is_file()}
 
             second = plan_d108_operation(root, config, "swissknifeman", servers,
                                          harness_configs=harness, expected_root=root)
             self.assertFalse(second.carrier.changed)
+            self.assertIn(foreign.provenance, second.chained_plan.next_lock.records)
             self.assertTrue(all(action.action.value == "noop"
                                 for action in second.chained_plan.actions))
             with patch("maind.provider_deploy.apply_plan") as writer:

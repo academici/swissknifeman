@@ -53,6 +53,17 @@ class ClaudeRouteEvidenceTests(unittest.TestCase):
         required = {"model_class": "frontier", "effort": "high"}
         self.assertEqual(route_evidence.dispatch_guard(required, actual, ()), "ROUTE_UNDERSHOOT")
 
+    def test_owner_grant_requires_latest_user_command(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._session(Path(directory))
+            options = dict(expected_invocation="/task:plan-run PLAN P0.15", expected_cwd="/workspace/repo",
+                           session_id="claude-1", state_root=directory, require_current_owner_invocation=True)
+            self.assertIn("owner_message_digest", route_evidence_claude.capture_current(**options))
+            with path.open("a") as stream:
+                stream.write(json.dumps({"type": "user", "message": {"role": "user", "content": "Review only"}}) + "\n")
+            with self.assertRaisesRegex(route_evidence.RouteEvidenceError, "ROUTE_LAUNCH_MISMATCH"):
+                route_evidence_claude.capture_current(**options)
+
     def test_missing_session_record_is_unavailable_not_undershoot(self):
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaisesRegex(route_evidence.RouteEvidenceError,

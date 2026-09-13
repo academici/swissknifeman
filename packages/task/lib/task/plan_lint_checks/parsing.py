@@ -601,11 +601,11 @@ def _parse_v2_item_file(path, item_id, diag):
             diag.error(path, fields[field][1],
                        f"item {item_id}: поле исхода «{field}» запрещено в файле ТЗ")
     for field, (_value, lineno) in fields.items():
-        if field not in ITEM_SPEC_FIELDS and field not in ITEM_STATE_FIELDS:
+        if field not in ITEM_SPEC_FIELDS and field not in ITEM_STATE_FIELDS and field != "Authority":
             diag.error(path, lineno,
                        f"item {item_id}: поле «{field}» не входит в закрытый список файла ТЗ")
     for name, first_ln, first_val, dup_ln, dup_val in duplicates:
-        if name in ITEM_SPEC_FIELDS:
+        if name in ITEM_SPEC_FIELDS or name == "Authority":
             diag.error(path, dup_ln,
                        f"item {item_id}: поле ТЗ «{name}» встречается повторно "
                        f"(первое {path.name}:{first_ln} → «{_preview(first_val)}», "
@@ -643,6 +643,8 @@ def _parse_v2_item_file(path, item_id, diag):
                        f"повтор {state_path.name}:{dup_ln} → «{_preview(dup_val)}»)")
 
     merged = {}
+    if "Authority" in fields:
+        merged["Authority"] = fields["Authority"]
     for field in REQUIRED_ITEM_FIELDS:
         if field in fields:
             merged[field] = fields[field]

@@ -1,4 +1,3 @@
-import filecmp
 import json
 import shutil
 import tempfile
@@ -22,11 +21,14 @@ class PlanBundleTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_lifted_schema_is_byte_identical(self):
+    def test_lifted_schema_preserves_historical_fields_with_optional_authority_extension(self):
         root = Path(__file__).resolve().parents[3]
-        self.assertTrue(filecmp.cmp(root / "packages/task/configs/bundle-v1.schema.json",
-                                     root / "plans/archive/2026.08.07-PLAN-ECONOMY/root/contracts/bundle-v1.schema.json",
-                                     shallow=False))
+        current = json.loads((root / "packages/task/configs/bundle-v1.schema.json").read_text())
+        historical = json.loads((root / "plans/archive/2026.08.07-PLAN-ECONOMY/root/contracts/bundle-v1.schema.json").read_text())
+        self.assertNotIn("authority", current["required"])
+        authority = current["properties"].pop("authority")
+        self.assertEqual(authority["required"], ["gate", "evidence_paths"])
+        self.assertEqual(current, historical)
 
     def test_build_is_deterministic_and_check_is_byte_fresh(self):
         one = plan_bundle.render(self.plan, "P1.1")

@@ -13,6 +13,7 @@ import json
 import re
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 try:
@@ -411,6 +412,44 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
         self.assertTrue(contract["authority"]["granted"])
         self.assertIn("[OWNER-GRANT:G-TEST]", contract["authority"]["granted_by"])
         self.assertEqual(task_contract.evaluate(contract)["pre_mutation"], "allow")
+
+    def _declare_gate(self):
+        path = fixtures.item_spec_path(self.plan_dir)
+        path.write_text(path.read_text() + "\n**Authority:** [OWNER-GATE:G-TEST] "
+                        "branch=`go-branch`; scope=`finite-scope`\n", encoding="utf-8")
+
+    def test_declared_gate_is_discovered_without_caller_kwargs(self):
+        self._declare_gate()
+        contract = task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())
+        self.assertEqual(contract["authority"]["class"], "owner-gate")
+        self.assertTrue(contract["authority"]["granted"])
+
+    def test_migration_prose_gap_is_closed_even_when_routine_is_declared(self):
+        path = fixtures.item_spec_path(self.plan_dir)
+        path.write_text(path.read_text() + "\n**Authority:** routine\n"
+                        "Requires durable owner authorization.\n", encoding="utf-8")
+        with self.assertRaisesRegex(task_contract.TaskContractBuildError, "AUTHORITY_CONTRACT_GAP"):
+            task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())
+
+    def test_live_owner_invocation_materializes_only_the_declared_gate(self):
+        self._declare_gate()
+        self._replace_decision_rows(self._decision_rows(prefix_count=64))
+        evidence = {**self._actual_route(), "source": "provider-thread-state", "thread_id": "owner-thread",
+                    "source_version": "codex-thread-state-v1", "cwd": str(self.plan_dir.parent.parent),
+                    "invocation": f"$ task:plan-run {self.plan_dir.name} P1.1", "ts": "2026-09-13T12:00:00Z"}
+        with patch("task.route_evidence.capture_launch", return_value=evidence) as capture:
+            result = task_contract.materialize_owner_invocation(self.plan_dir, "P1.1")
+            self.assertTrue(result["granted"])
+            capture.assert_called_once_with(expected_invocation=f"task:plan-run {self.plan_dir.name} P1.1",
+                                            expected_cwd=self.plan_dir.parent.parent,
+                                            require_current_owner_invocation=True)
+        self.assertTrue(task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())["authority"]["granted"])
+        self.assertFalse(self._protected(scope="other-scope")["authority"]["granted"])
+        with patch("task.route_evidence.capture_launch", return_value={**evidence, "invocation": "$ task:plan-run OTHER P1.1"}):
+            with self.assertRaisesRegex(task_contract.TaskContractBuildError, "UNATTESTED"):
+                task_contract.materialize_owner_invocation(self.plan_dir, "P1.1")
+        with self.assertRaises(TypeError):
+            task_contract.materialize_owner_invocation(self.plan_dir, "P1.1", evidence=evidence)
 
     def test_missing_forged_wrong_scope_and_revoked_grants_fail_closed(self):
         cases = {

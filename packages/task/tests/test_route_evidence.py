@@ -601,6 +601,25 @@ class CodexLaunchEvidenceTests(unittest.TestCase):
                     state_root=state_root,
                 )
 
+    def test_owner_grant_cannot_reuse_old_invocation_after_new_user_turn(self):
+        from task import route_evidence_codex
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            prompt = "$ task:plan-run PLAN P0.3"
+            path = self._write_thread_state(root, thread_id="owner-current", model="gpt-5.6-terra",
+                                            effort="high", prompt=prompt)
+            evidence = route_evidence_codex.capture_current(expected_invocation=prompt,
+                expected_cwd="/workspace/repo", thread_id="owner-current", state_root=root,
+                require_current_owner_invocation=True)
+            self.assertIn("owner_message_digest", evidence)
+            with path.open("a") as stream:
+                stream.write(json.dumps({"type": "response_item", "payload": {
+                    "type": "message", "role": "user", "content": [{"type": "input_text", "text": "Review only"}]}}) + "\n")
+            with self.assertRaisesRegex(re.RouteEvidenceError, "ROUTE_LAUNCH_MISMATCH"):
+                route_evidence_codex.capture_current(expected_invocation=prompt,
+                    expected_cwd="/workspace/repo", thread_id="owner-current", state_root=root,
+                    require_current_owner_invocation=True)
+
     def test_exact_native_launch_is_captured_from_the_current_ancestor_chain(self):
         from task import route_evidence_codex
 

@@ -3254,14 +3254,14 @@
             "lib/skiller/common.py": "sha256:72f2715cd1f51868f390f81a8d8f5aaa2dd7d6333f13155d9b6568eff58bb8e0",
             "lib/skiller/config.py": "sha256:4862b0d9b05e75bfb88692b4cf2cbd4ed916b8a09e479ade1bdcd70dbe25e577",
             "lib/skiller/connect.py": "sha256:0fbd7c22964fdb40d4bf39ae9c2f7d79507209bec18f52c5d034b06e0dc3cb01",
-            "lib/skiller/delivery.py": "sha256:2a68937e3d10b0bc1bccee6e8270f9adf255c723b159837a5c27de3f20263f9e",
+            "lib/skiller/delivery.py": "sha256:ecbdb9a6e47b6f9a4ab4ac252f7c57c2fe57bd0e822f2142ef4d96f417fcd651",
             "lib/skiller/doctor.py": "sha256:387766598b6ea3e6ab0c883bce811ebaae77f068c1e7f6bccc24b2e93a07a9bd",
             "lib/skiller/hub.py": "sha256:26dd6cc854f4573b5379ccb1cb8cb2d1b59328c4a74f4dccfdc98b863ae0e205",
             "lib/skiller/integrate.py": "sha256:f2c7e8522c7b6588dd62cdda162457e2fe7789b1697fc041cfe9d317286de338",
             "lib/skiller/listing.py": "sha256:f6acbbbd0f507dacca868bdf3da761a55bdf795cca0459a2122f097b8478087a",
             "lib/skiller/lock.py": "sha256:a8c8744e5799712bae174e572d044a6222078e27abd098292b4a5c7799ccae03",
             "lib/skiller/plugins.py": "sha256:540b55bead5dd018b33151c4a457ed31ef73ef3da84fe2d02bd88a3e28065c99",
-            "lib/skiller/publication.py": "sha256:34cf47ff1f519189850a5345175273cc46f53d451e79afed50baf2eb39b051c6",
+            "lib/skiller/publication.py": "sha256:b39519f7e27c977dfcc4a094533f2de804201571bfbd8debb262210056263729",
             "lib/skiller/quality/__init__.py": "sha256:c7f83f3c7e8d307351325f7e495ebb9a3fb42cfa8ea02bc2b64bcb129bf7f477",
             "lib/skiller/quality/analyze.py": "sha256:c5e4c5f120c250e8e5da686b187835d8e8eff0fe666baf62dd066d9f4d048143",
             "lib/skiller/quality/audit.py": "sha256:465e0e4606673803227899fb0114573e70551a927a5fa830fb1df2d09f57c52b",
@@ -3290,10 +3290,10 @@
             "scripts/update-upstreams.sh": "sha256:48d60502a450cb4c47d5d1a9180036fbe76e973a24f4d8bf779dbeec3315f4c1",
             "scripts/validate.sh": "sha256:edfd54aa81aee7a1a61f8240be42f61e2f2890d0be9c369a8ea8c1a0ff0451b3"
           },
-          "tree_digest": "sha256:60c64ba1a6ab8feda0ef7eb15dae79de316c52a005dec152cdc455fbd1901f86"
+          "tree_digest": "sha256:8948b5e586131edc30b423e1a48024ddc8b88b52166fdb4ad019ca3fc61cc379"
         }
       },
-      "tree_digest": "sha256:60c64ba1a6ab8feda0ef7eb15dae79de316c52a005dec152cdc455fbd1901f86"
+      "tree_digest": "sha256:8948b5e586131edc30b423e1a48024ddc8b88b52166fdb4ad019ca3fc61cc379"
     },
     {
       "id": "php",

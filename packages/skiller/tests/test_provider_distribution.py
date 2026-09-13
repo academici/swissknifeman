@@ -4,6 +4,7 @@ import hashlib
 import io
 import json
 import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -369,6 +370,25 @@ class ProviderDistributionCase(unittest.TestCase):
         self.assertEqual(commands[0][0][:4], ["codex", "plugin", "marketplace", "add"])
         self.assertEqual(commands[1][0], ["codex", "plugin", "add", "core@swissknifeman"])
         self.assertTrue(all(item[1].get("shell") is None for item in commands))
+
+    def test_native_install_upgrades_matching_git_source_without_replacement(self):
+        commands = []
+
+        def runner(command, **kwargs):
+            commands.append(command)
+            if command[2:4] == ["marketplace", "add"]:
+                return subprocess.CompletedProcess(command, 1, "", "already added from a different source")
+            if command[-2:] == ["list", "--json"]:
+                return subprocess.CompletedProcess(command, 0, json.dumps({"marketplaces": [{"name": "swissknifeman", "marketplaceSource": {"sourceType": "git", "source": "https://example.test/repo.git"}}]}), "")
+            if command[0] == "git":
+                return subprocess.CompletedProcess(command, 0, "https://example.test/repo.git\n", "")
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        with mock.patch("skiller.publication.shutil.which", return_value="/bin/codex"):
+            ok, _ = run_codex_native_install(repo_root=self.root, plugin="core", dry_run=False, runner=runner)
+        self.assertTrue(ok)
+        self.assertIn(["codex", "plugin", "marketplace", "upgrade", "swissknifeman"], commands)
+        self.assertFalse(any("remove" in command for command in commands))
 
     def test_provider_b_failure_is_honest_and_repairable(self):
         self.write_provider_config(providers())

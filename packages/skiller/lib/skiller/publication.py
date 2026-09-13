@@ -940,6 +940,23 @@ def run_codex_native_install(*, repo_root: Path, plugin: str, dry_run: bool,
             return False, f"SPUB_INSTALL_UNAVAILABLE: {exc}"
         if getattr(result, "returncode", 1) != 0:
             detail = (getattr(result, "stderr", "") or getattr(result, "stdout", "")).strip()
+            if command[2:4] == ["marketplace", "add"] and "already added from a different source" in detail:
+                try:
+                    listed = runner([executable, "plugin", "marketplace", "list", "--json"],
+                                    check=False, capture_output=True, text=True)
+                    origin = runner(["git", "-C", str(repo_root), "remote", "get-url", "origin"],
+                                    check=False, capture_output=True, text=True)
+                    sources = [m.get("marketplaceSource", {}) for m in json.loads(listed.stdout).get("marketplaces", [])
+                               if m.get("name") == MARKETPLACE]
+                    if listed.returncode or origin.returncode or len(sources) != 1 or sources[0].get("sourceType") != "git" or sources[0].get("source") != origin.stdout.strip():
+                        return False, "SPUB_INSTALL_UNAVAILABLE: existing marketplace source does not match repository origin"
+                    upgraded = runner([executable, "plugin", "marketplace", "upgrade", MARKETPLACE],
+                                      check=False, capture_output=True, text=True)
+                    if upgraded.returncode == 0:
+                        continue
+                    detail = (upgraded.stderr or upgraded.stdout).strip()
+                except (OSError, ValueError, AttributeError) as exc:
+                    detail = str(exc)
             return False, f"SPUB_INSTALL_UNAVAILABLE: {' '.join(command[:3])} failed: {detail}"
     return True, f"codex/native-install: marketplace={repo_root}, plugin={plugin}@{MARKETPLACE}"
 

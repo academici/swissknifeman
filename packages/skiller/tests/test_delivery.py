@@ -168,3 +168,23 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(statuses[str(good)], "updated")
         self.assertEqual(statuses[str(bad)], "blocked")
         self.assertEqual(json.loads(Path(receipt["receipt"]).read_text()), receipt)
+
+    def test_native_claude_updates_project_scope_in_its_own_directory(self):
+        checkout, project = self.root / "checkout", self.root / "project"
+        project.mkdir()
+        value = attestation({})
+        value["units"][0]["providers"]["claude-code"] = surface({})
+        self.write(checkout / "releases/v1.0.0.json", json.dumps(value).encode())
+        env = SimpleNamespace(root=checkout, home=self.root / "home")
+        cache = self.root / "cache"
+        installation = {"scope": "local", "projectPath": str(project), "installPath": str(cache)}
+        self.write(env.home / ".claude/plugins/installed_plugins.json", json.dumps({"plugins": {"task@swissknifeman": [installation]}}).encode())
+        with patch("skiller.delivery.find_monorepo_root", return_value=checkout), \
+                patch("skiller.delivery.check", return_value=[]), \
+                patch("skiller.delivery.build", side_effect=ValueError("no-history")), \
+                patch("skiller.delivery.subprocess.run", return_value=SimpleNamespace(stdout="abc\n", returncode=0)), \
+                patch("skiller.delivery.shutil.which", side_effect=lambda name: name if name == "claude" else None), \
+                patch("skiller.delivery._run", return_value=(True, "updated")) as runner:
+            receipt = deliver(env, "v1.0.0")
+        runner.assert_any_call(["claude", "plugin", "update", "task@swissknifeman", "--scope", "local", "--yes"], cwd=str(project))
+        self.assertEqual(receipt["status"], "GREEN")

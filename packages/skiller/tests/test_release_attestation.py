@@ -1,9 +1,10 @@
 """Version identity is tied to delivered bytes, including the historical incident."""
 from copy import deepcopy
+import json
 from pathlib import Path
 import unittest
 
-from skiller.release_attestation import build, check_transition, tree_digest
+from skiller.release_attestation import check_transition, tree_digest
 
 
 class ReleaseAttestationTests(unittest.TestCase):
@@ -23,7 +24,7 @@ class ReleaseAttestationTests(unittest.TestCase):
         self.assertEqual(check_transition(previous, current), [])
 
     def test_recorded_v014_to_v015_incident_rejects_core_and_task(self):
-        root = Path(__file__).resolve().parents[3]
-        errors = check_transition(build(root, ref="v0.14.0"), build(root, ref="v0.15.0"))
+        fixture = json.loads((Path(__file__).parent / "fixtures_data/release-immutable-incident.json").read_text())
+        errors = check_transition(fixture["v0.14.0"], fixture["v0.15.0"])
         self.assertIn("RELEASE_IMMUTABLE_TUPLE: core@0.13.1", errors)
         self.assertIn("RELEASE_IMMUTABLE_TUPLE: task@0.13.3", errors)

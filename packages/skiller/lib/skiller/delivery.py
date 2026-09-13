@@ -213,8 +213,8 @@ def project_readback(target, value):
     return surfaces
 
 
-def _run(command):
-    result = subprocess.run(command, capture_output=True, text=True, check=False)
+def _run(command, *, cwd=None):
+    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False)
     return result.returncode == 0, (result.stderr or result.stdout).strip()[-3000:]
 
 
@@ -264,6 +264,13 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
                     shutil.copytree(managed, preimage / "agents-plugins", symlinks=True, dirs_exist_ok=True)
                 for manifest_path in project.glob(".*/skills/" + ".swissknifeman-manifest.json"):
                     shutil.copytree(manifest_path.parent, preimage / manifest_path.parent.relative_to(project), symlinks=True, dirs_exist_ok=True)
+                config_path = project / ".swissknife.json"
+                if config_path.is_file():
+                    custom = json.loads(config_path.read_text()).get("skills_path")
+                    if custom:
+                        folder = _contained_target(project, custom)
+                        if (folder / ".swissknifeman-manifest.json").is_file():
+                            shutil.copytree(folder, preimage / "custom-skills", symlinks=True, dirs_exist_ok=True)
             output = io.StringIO()
             with redirect_stdout(output), redirect_stderr(output):
                 ok = update_one(env, project, dry_run=dry_run)
@@ -320,16 +327,25 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
                 name = identifier.split("@")[0]
                 if name not in units or "claude-code" not in units[name]["providers"]:
                     continue
-                row = {"surface": "claude-cache/" + name, "status": "blocked"}
-                receipt["targets"].append(row)
-                save()
-                updated, message = _run(["claude", "plugin", "update", identifier]) if ok else (False, detail)
                 installs = json.loads(installed_path.read_text())["plugins"].get(identifier, [])
-                row["readback"] = [{"root": i["installPath"], "errors": verify_surface(i["installPath"], units[name]["providers"]["claude-code"])} for i in installs]
-                row["reason"] = message
-                if updated and row["readback"] and not any(i["errors"] for i in row["readback"]):
-                    row["status"] = "updated"
-                save()
+                for installation in installs:
+                    scope = installation.get("scope", "user")
+                    project_path = installation.get("projectPath")
+                    row = {"surface": "claude-cache/" + name, "scope": scope, "project": project_path, "status": "blocked"}
+                    receipt["targets"].append(row)
+                    save()
+                    if project_path and not Path(project_path).is_dir():
+                        row["reason"] = "DELIVERY_TARGET_MISSING"
+                        save()
+                        continue
+                    updated, message = _run(["claude", "plugin", "update", identifier, "--scope", scope, "--yes"], cwd=project_path) if ok else (False, detail)
+                    current = json.loads(installed_path.read_text())["plugins"].get(identifier, [])
+                    current = [i for i in current if i.get("scope", "user") == scope and i.get("projectPath") == project_path]
+                    row["readback"] = [{"root": i["installPath"], "errors": verify_surface(i["installPath"], units[name]["providers"]["claude-code"])} for i in current]
+                    row["reason"] = message
+                    if updated and row["readback"] and not any(i["errors"] for i in row["readback"]):
+                        row["status"] = "updated"
+                    save()
     receipt["status"] = "GREEN" if receipt["targets"] and all(t["status"] in {"updated", "current"} for t in receipt["targets"]) else "PARTIAL"
     if dry_run:
         receipt["status"] = "DRY-RUN"

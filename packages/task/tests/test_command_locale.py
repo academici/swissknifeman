@@ -2,6 +2,7 @@
 from collections import Counter
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from task.command_locale import (command_locale_key, english_catalog, literal_inventory,
                                  verify_literal_inventory, resolve_command,
@@ -14,6 +15,13 @@ OVERLAY_PATH = REPO_ROOT / "packages/task/locales/ru.json"
 
 
 class CommandLocaleTests(unittest.TestCase):
+    def test_frozen_preimage_inventory_needs_no_git_process(self):
+        with patch("subprocess.run", side_effect=AssertionError("installed runtime must not call Git")):
+            for command_id in ("plan-exec", "plan-run"):
+                text = (COMMAND_ROOT / f"{command_id}.md").read_text()
+                inventory = literal_inventory(text, command_id=command_id)
+                self.assertEqual(inventory["preimage_commit"], "980ee79d")
+
     def test_english_is_the_canonical_default(self):
         result = resolve_command("plan-exec", command_root=COMMAND_ROOT)
         self.assertEqual(result["resolved_locale"], "en")

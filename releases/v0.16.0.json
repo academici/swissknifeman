@@ -3992,6 +3992,9 @@
             "configs/bundle-v1.schema.json": "sha256:df57d1fd511fd06ef098c5b10d3a6b02d7f4311bab0e34f12676b19a9ecc9876",
             "configs/calibration-probe-log-v2.json": "sha256:72a7ce18dcc9ea05dd777d475a4bb7d9b2db9b223f561640e9e11c88711e65bb",
             "configs/canon-weight-budget.json": "sha256:dfbceaebb1322591fc61979effa68f19c3d25bb2deecab55d00b54bfe7d880c6",
+            "configs/command-locale-preimages/plan-exec.md": "sha256:646172c92e6e13b8cddb6af36594f4a24060224d0ceb2c8f981eff9f8c894664",
+            "configs/command-locale-preimages/plan-run.md": "sha256:29fbffbeef7eb1cfdb712895978f1dc4a4b48221a1ac4029d9144124299d5828",
+            "configs/command-locale-preimages/source.json": "sha256:48c97b4d3822c3fe9b4230f3d0868a0ec59733b49b02b98899ef5f2cacd5a12d",
             "configs/command-routing.json": "sha256:cdced65a9796774286ffe9109e220c652a58a535d9719e0633706fab17a1f17e",
             "configs/cross-plan-known-intersections.json": "sha256:d0a505b80517dee2f9a222ddd3ee858f5a83444d81f17de12b7589fecb5c7774",
             "configs/decision-request-v1.schema.json": "sha256:6b7c42f19e44abf00cbb20b771cf5a4bbac87bd99310cfa95f38c765ee754459",
@@ -4026,7 +4029,7 @@
             "lib/task/__init__.py": "sha256:7e9df3d59f07f2a018b18459856baeebc85982ac125bb9fb8b148a348e7f9ddc",
             "lib/task/audit_admission.py": "sha256:89a477c0891ad52e5d7893ffde4382e56d602d3932d94d207f568aae44b2b84d",
             "lib/task/command_catalog.py": "sha256:f62d90e084a336f6247e9db98ca399f49534cac6799900fd65723221747e9495",
-            "lib/task/command_locale.py": "sha256:3c595c9f28e2f5a219790c0d3337a382fc8347c3d46e7d4776172013bbe8d153",
+            "lib/task/command_locale.py": "sha256:f5f9799223b7e1206fc384a89405252dd67bcdf2fce50a4096975ce3dd2a4e74",
             "lib/task/command_render.py": "sha256:53d36be08ccc01947795efdd8bd59edf08f2714778024190fee07c490c7406da",
             "lib/task/journal.py": "sha256:77fdd46931c167a24663a564b9561c16bc898dad056c82324e1f9a10697afeac",
             "lib/task/plan_admission.py": "sha256:cb756c3612311cc85d9da1adb296906a06d575fb416b8303297b0c1ea570d9f9",
@@ -4094,10 +4097,10 @@
             "scripts/validate.sh": "sha256:c56ccaa544bebe9c43c5badbc5c8d4aad0af8d70b21b3b0669e141f3b2e10729",
             "scripts/verify-plan-citations.py": "sha256:ceb36002c1479daa02572e92eaf1b4df9b43d672e7060e91e88b18fed8c7c437"
           },
-          "tree_digest": "sha256:41b5f9ac8b26700133b7afcb6b3982a88a19d82f66b818b40bcfe7a8efa1992b"
+          "tree_digest": "sha256:a2d09abe9d53bd9a088556e7e2825fcf29b8d706610c199a5a7a7e9791875f6b"
         }
       },
-      "tree_digest": "sha256:2dc3157d15279fa69fdd53ebcd3199a140ccdaecd2903c35a83b0cdf77108095"
+      "tree_digest": "sha256:5313545bddb58d4839ddeabe74923922eabbec5dd75ffb1febbd9171bb1b37ef"
     },
     {
       "id": "voice-ai",

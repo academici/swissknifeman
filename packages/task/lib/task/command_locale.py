@@ -9,7 +9,6 @@ from hashlib import sha256
 import json
 from pathlib import Path
 import re
-import subprocess
 
 from core.locale import Catalog, Overlay, render_message
 
@@ -129,11 +128,8 @@ def _preserves_protected_literals(
 
 
 def _preimage(command_id: str) -> str:
-    result = subprocess.run(
-        ("git", "show", f"{_PREIMAGE_COMMIT}:packages/task/commands/{command_id}.md"),
-        check=True, capture_output=True, text=True,
-    )
-    text = result.stdout
+    path = Path(__file__).resolve().parents[2] / "configs/command-locale-preimages" / f"{command_id}.md"
+    text = path.read_text(encoding="utf-8")
     if sha256(text.encode()).hexdigest() != _PREIMAGE_DIGESTS[command_id]:
         raise ValueError("CMD_LOCALE_PREIMAGE_DIGEST_MISMATCH")
     return text

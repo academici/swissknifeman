@@ -33,7 +33,7 @@ def verify_surface(root, surface, *, reject_extras=False):
             relative = path.relative_to(root).as_posix()
             if path.is_file() and relative not in surface["files"] and not any(
                     fnmatch.fnmatch(part, pattern) for part in path.relative_to(root).parts
-                    for pattern in SKILL_IGNORE):
+                    for pattern in SKILL_IGNORE + ("tests",)):
                 allowed = False
                 source = Path(__file__).resolve().parents[4] / surface.get("source", "")
                 if relative.startswith(".codex-plugin/migrated-command-skills/"):
@@ -185,6 +185,7 @@ def project_readback(target, value):
             records = list(records.values())
         for record in records:
             if not isinstance(record, dict):
+                errors.append("unverifiable:manifest-record")
                 continue
             source = record.get("source_path") or record.get("source")
             name = record.get("flat_name") or record.get("path") or record.get("name")
@@ -259,6 +260,10 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
             if not dry_run:
                 # Preserve the actual old managed bytes before update, including deletions.
                 preimage = backup / str(index)
+                preimage.mkdir(parents=True, exist_ok=True)
+                lock_preimage = _contained_target(project, LOCK_RELATIVE_PATH)
+                if lock_preimage.is_file():
+                    shutil.copy2(lock_preimage, preimage / "provider-lock-before-update.json")
                 managed = project / ".agents/plugins"
                 if managed.is_dir():
                     shutil.copytree(managed, preimage / "agents-plugins", symlinks=True, dirs_exist_ok=True)
@@ -300,10 +305,11 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
                 ok, detail = run_codex_native_install(repo_root=root, plugin=name, dry_run=False)
                 row["reason"] = detail
                 cache = env.home / ".codex/plugins/cache/swissknifeman" / name / units[name]["version"]
-                row["readback"] = verify_surface(cache, units[name]["providers"]["codex"], reject_extras=True)
+                projection = units[name]["providers"].get("codex-native", units[name]["providers"]["codex"])
+                row["readback"] = verify_surface(cache, projection, reject_extras=True)
                 if ok and not row["readback"]:
                     row["status"] = "updated"
-                    row["digest"] = units[name]["providers"]["codex"]["tree_digest"]
+                    row["digest"] = projection["tree_digest"]
                 save()
             marketplaces = subprocess.run(["codex", "plugin", "marketplace", "list", "--json"], capture_output=True, text=True, check=True)
             roots = [Path(m["root"]) for m in json.loads(marketplaces.stdout).get("marketplaces", []) if m.get("name") == "swissknifeman"]

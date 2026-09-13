@@ -223,3 +223,8 @@ Receipt хранится в `~/.swissknifeman/receipts/delivery/<release>/`; GRE
 Source-managed bytes, native cache, project projection и loaded session — разные поверхности.
 Commit SHA добавляется к runtime receipt через annotated tag: committed attestation хранит tag,
 date и tree digests, чтобы не создавать самоссылочный SHA release commit.
+# Native cache and legacy Codex copies
+
+`connect --cleanup-codex-vendored` explicitly retires only directories declared by a known v1 `.agents/skills` vendor manifest. It keeps unlisted local skills, refuses foreign lock ownership, and moves the old copies into `.swissknifeman/backups/` so they can be restored. It does not change the project's configured plugin selection.
+
+Release attestation distinguishes contained `codex` skill bundles from full `codex-native` source caches. Ignored local telemetry is not a release surface. Added evidence coverage is checked against the previous Git source tag; changing already recorded bytes still requires a new unit version.

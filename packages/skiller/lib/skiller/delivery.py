@@ -238,7 +238,7 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
             atomic_write_json(receipt_path, receipt)
     save()
     history = []
-    for ref in ("v0.15.4", "v0.15.2", "v0.15.1", "v0.14.0"):
+    for ref in ("v0.15.4", "v0.15.2", "v0.15.1", "v0.15.0", "v0.14.0"):
         try:
             history.append(build(root, ref=ref))
         except (subprocess.CalledProcessError, OSError, ValueError, KeyError):

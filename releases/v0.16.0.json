@@ -3254,7 +3254,7 @@
             "lib/skiller/common.py": "sha256:72f2715cd1f51868f390f81a8d8f5aaa2dd7d6333f13155d9b6568eff58bb8e0",
             "lib/skiller/config.py": "sha256:4862b0d9b05e75bfb88692b4cf2cbd4ed916b8a09e479ade1bdcd70dbe25e577",
             "lib/skiller/connect.py": "sha256:0fbd7c22964fdb40d4bf39ae9c2f7d79507209bec18f52c5d034b06e0dc3cb01",
-            "lib/skiller/delivery.py": "sha256:ecbdb9a6e47b6f9a4ab4ac252f7c57c2fe57bd0e822f2142ef4d96f417fcd651",
+            "lib/skiller/delivery.py": "sha256:6d3c0a328503b22e259059f5e11a01603d0a029f595c4c5e3a5442fbf70e0056",
             "lib/skiller/doctor.py": "sha256:387766598b6ea3e6ab0c883bce811ebaae77f068c1e7f6bccc24b2e93a07a9bd",
             "lib/skiller/hub.py": "sha256:26dd6cc854f4573b5379ccb1cb8cb2d1b59328c4a74f4dccfdc98b863ae0e205",
             "lib/skiller/integrate.py": "sha256:f2c7e8522c7b6588dd62cdda162457e2fe7789b1697fc041cfe9d317286de338",
@@ -3290,10 +3290,10 @@
             "scripts/update-upstreams.sh": "sha256:48d60502a450cb4c47d5d1a9180036fbe76e973a24f4d8bf779dbeec3315f4c1",
             "scripts/validate.sh": "sha256:edfd54aa81aee7a1a61f8240be42f61e2f2890d0be9c369a8ea8c1a0ff0451b3"
           },
-          "tree_digest": "sha256:8948b5e586131edc30b423e1a48024ddc8b88b52166fdb4ad019ca3fc61cc379"
+          "tree_digest": "sha256:0954bd3b5a51ea8768120b21550984ef7ade850c3878d638cfcea7c5cca2e247"
         }
       },
-      "tree_digest": "sha256:8948b5e586131edc30b423e1a48024ddc8b88b52166fdb4ad019ca3fc61cc379"
+      "tree_digest": "sha256:0954bd3b5a51ea8768120b21550984ef7ade850c3878d638cfcea7c5cca2e247"
     },
     {
       "id": "php",

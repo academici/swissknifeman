@@ -107,7 +107,7 @@ class TestProviderDeploy(unittest.TestCase):
                 root = Path(directory)
                 lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
 
-                def skiller_write(body):
+                def skiller_write(body, root=root, lock_path=lock_path):
                     artifact = self.skiller_artifact(body)
                     apply_plan(root, plan_artifact_lock(
                         root, (artifact,), lock_bytes=lock_path.read_bytes()

@@ -21,7 +21,6 @@ from skiller.budget import (CODEX_LISTING_FALLBACK_CHARS, cmd_budget,
                             format_profiles_listing_report,
                             measure_listing_budget, profiles_listing_report,
                             resolve_active_set)
-from skiller.common import Env
 import tests.fixtures as fx
 
 

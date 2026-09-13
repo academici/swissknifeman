@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from core.provider.reconcile import (Observation, ReconcileDiagnostic, ReconcileState,
+from core.provider.reconcile import (Observation, ReconcileState,
                                      apply_reconciliation, plan_reconciliation)
 from core.provider.values import ProviderId
 

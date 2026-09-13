@@ -1,5 +1,4 @@
 """Internal documentation."""
-import copy
 import json
 import tempfile
 import unittest

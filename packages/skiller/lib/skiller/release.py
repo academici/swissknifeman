@@ -33,7 +33,7 @@ NEXT_HEADING_RE = re.compile(r"^##\s*\[")
 def _last_tag(root):
     """Последний umbrella-тег `vX.Y.Z` (`git describe --tags --abbrev=0`).
     None — тегов нет (первый релиз) либо `root` не git-репозиторий."""
-    result = run_cmd(["git", "describe", "--tags", "--abbrev=0"],
+    result = run_cmd(["git", "describe", "--tags", "--match", "v[0-9]*", "--abbrev=0"],
                       cwd=root, capture=True, check=False)
     if result.returncode != 0:
         return None

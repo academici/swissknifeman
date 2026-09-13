@@ -1058,7 +1058,7 @@ def _class_b_donor_bucket(canonical: str) -> str:
     try:
         return parts[parts.index("skills") + 1]
     except (ValueError, IndexError):
-        raise ValueError(f"class_b canonical path {canonical!r} is not under a skills/<bucket>/ tree")
+        raise ValueError(f"class_b canonical path {canonical!r} is not under a skills/<bucket>/ tree") from None
 
 
 def _root_bootstrap_class_b_body(identity: str, description: str, canonical_path: str,

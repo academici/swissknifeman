@@ -480,7 +480,7 @@
             "io.py": "sha256:097d44161563d371ee6f570e20183821c608cb57f9686dc06a650446b9ddca12",
             "locale/__init__.py": "sha256:d8968225269356f2fd8bf4a18241267dfc99a71161ae268837c8b618a3c5fef9",
             "locale/catalog.py": "sha256:32762fdc41046f2530258366905df3092c5b5120205573d202f8406e5678b72f",
-            "locale/corpus.py": "sha256:938c320433de3a6a049726fd7ba7d2536e372eb77d7d6dd3e4070da9b5b46499",
+            "locale/corpus.py": "sha256:acd0703c48d7a2631cc30f1c17f913be23831e0f45e8f7b79cdeccf97818b8c3",
             "locale/data/language-subtag-registry.txt": "sha256:be1fad86a99e3a932d07b80c9b3c271ec2381a5909ce22420144e5077ab0a43a",
             "locale/render.py": "sha256:ee97db11e4a955a1b114a9a4e31e4ef3178ad9aea28be17372c89ab8f09de69e",
             "locale/resolution.py": "sha256:8737ee790ca5f843b2e2f63ed0098f13ce5b9389fd4e3421795696f2e182d54b",
@@ -509,10 +509,10 @@
             "text.py": "sha256:8eccd73254124ddc8ac56c99b6b06dc82afb7659dc1549e9bd27433bc6dfa70a",
             "usage.py": "sha256:a06a938ee3bb103b4b7487b7496e5e694c55e4ed05a12faf9fdbda595f8b6b9d"
           },
-          "tree_digest": "sha256:925a9195c83134edf5699ceb2b3220d06aff1e1936729375b9e21640ac980ea9"
+          "tree_digest": "sha256:e417b38c4551178c86034d7abaf5f83dde0322930ee4ebaf6ea427c9ba399afb"
         }
       },
-      "tree_digest": "sha256:96a9b7b6d40272f15a6fc7d7ffbe34ccf579994946ec5d4b6ebc95e85cb2d7eb"
+      "tree_digest": "sha256:a6be73203b0fce86e856f3d42963db79cb0a5dc62f6677722bd41ec2435e9b09"
     },
     {
       "id": "creative",
@@ -3141,7 +3141,7 @@
             "lib/harness/cli.py": "sha256:63e247e392e966172c41d70797b314b005f8d18f84bb0cd39075faf12db53c51",
             "lib/harness/common.py": "sha256:0032954126d21207903c4fec8cc0c137741590db9c05c4d7c6dcc1d38864a1f6",
             "lib/harness/doctor.py": "sha256:03a976172dc202eb4bacf80b18a12b01fa6331a16c6cfed84390a34f4d4c6c29",
-            "lib/harness/execpolicy.py": "sha256:2096972a4fde03fc711cd90104f9b5d6a7d35ee83ecbc8a5fb40ec4f59fa07e4",
+            "lib/harness/execpolicy.py": "sha256:8eae952f8b373cef4f2fea836338708393633f95e6226a11712aecd93afcce00",
             "lib/harness/hooks.py": "sha256:fc6b08e77c957873521bfd28b2810abfaa9fce0c52e38bd96847f54c0a02fa13",
             "lib/harness/instructions.py": "sha256:4ed68a47ff669b0955b55feaa98af578d212db75d834b598c8b474168326c2e2",
             "lib/harness/mcp.py": "sha256:36b1f83b8d654508b69cfaabe38ab33e19fc2b372bfddbdb632c0fe336aaffe0",
@@ -3168,10 +3168,10 @@
             "scripts/test.sh": "sha256:54dae7b130d0e1e8bede49e2f9083baa5b296f5eebd6e7503fcd0f7ade84bd0c",
             "scripts/validate.sh": "sha256:144d61a59ed4ad62cdc0ebce3d80cc7de5bb100796da672b81dd29fefc37dbc4"
           },
-          "tree_digest": "sha256:605d04d0297763510339528b409b0ff86ef70067c1e39d0cc2e67481506399db"
+          "tree_digest": "sha256:5b8e7ed0def48312dde3e127a5486c52c936aac33d85dbbc8256597b963a118f"
         }
       },
-      "tree_digest": "sha256:605d04d0297763510339528b409b0ff86ef70067c1e39d0cc2e67481506399db"
+      "tree_digest": "sha256:5b8e7ed0def48312dde3e127a5486c52c936aac33d85dbbc8256597b963a118f"
     },
     {
       "id": "package.maind",
@@ -3261,13 +3261,13 @@
             "lib/skiller/listing.py": "sha256:f6acbbbd0f507dacca868bdf3da761a55bdf795cca0459a2122f097b8478087a",
             "lib/skiller/lock.py": "sha256:a8c8744e5799712bae174e572d044a6222078e27abd098292b4a5c7799ccae03",
             "lib/skiller/plugins.py": "sha256:540b55bead5dd018b33151c4a457ed31ef73ef3da84fe2d02bd88a3e28065c99",
-            "lib/skiller/publication.py": "sha256:d697a4a0b086ef059813d80fe7936b2ef11954c15ea15c667d955f503dc0cf59",
+            "lib/skiller/publication.py": "sha256:34cf47ff1f519189850a5345175273cc46f53d451e79afed50baf2eb39b051c6",
             "lib/skiller/quality/__init__.py": "sha256:c7f83f3c7e8d307351325f7e495ebb9a3fb42cfa8ea02bc2b64bcb129bf7f477",
             "lib/skiller/quality/analyze.py": "sha256:c5e4c5f120c250e8e5da686b187835d8e8eff0fe666baf62dd066d9f4d048143",
             "lib/skiller/quality/audit.py": "sha256:465e0e4606673803227899fb0114573e70551a927a5fa830fb1df2d09f57c52b",
             "lib/skiller/quality/eval.py": "sha256:c195142dfbe2f148a7c4932626ff1e637fbc5ed4b2965792f9b48fcb90d50d77",
             "lib/skiller/registry.py": "sha256:c537316dbc1ceb5e680586ce42fd87e85b3bcf909798401f11f03c97b68daa66",
-            "lib/skiller/release.py": "sha256:cee5df250e256752fbf275bffdf42b08cae2b3b129c24da1049d2d6ba143fdcf",
+            "lib/skiller/release.py": "sha256:d60d938d204aadce6c099c39859de582c6f651a2f53e2465b764b49f793f3c1d",
             "lib/skiller/release_attestation.py": "sha256:521529b70e76a620804782a61836958f58c6759a1a7560050f8f337497aab73c",
             "lib/skiller/skillset.py": "sha256:18e0068e6905a5127c031f06fc753d5514470ccb2a9aea0179e959c25846e9be",
             "lib/skiller/state.py": "sha256:1bc643183e179b893ac615ed6a41546eb0f90850f1dbe201e885d9abac9abcda",
@@ -3290,10 +3290,10 @@
             "scripts/update-upstreams.sh": "sha256:48d60502a450cb4c47d5d1a9180036fbe76e973a24f4d8bf779dbeec3315f4c1",
             "scripts/validate.sh": "sha256:edfd54aa81aee7a1a61f8240be42f61e2f2890d0be9c369a8ea8c1a0ff0451b3"
           },
-          "tree_digest": "sha256:593fd71ceb584bc17633f8787250d0a8d15265edcc69168f0eeaf4f951ff81bc"
+          "tree_digest": "sha256:60c64ba1a6ab8feda0ef7eb15dae79de316c52a005dec152cdc455fbd1901f86"
         }
       },
-      "tree_digest": "sha256:593fd71ceb584bc17633f8787250d0a8d15265edcc69168f0eeaf4f951ff81bc"
+      "tree_digest": "sha256:60c64ba1a6ab8feda0ef7eb15dae79de316c52a005dec152cdc455fbd1901f86"
     },
     {
       "id": "php",

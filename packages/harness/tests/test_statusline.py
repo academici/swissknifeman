@@ -200,11 +200,11 @@ class StatuslineScriptCase(unittest.TestCase):
             self.render(pct)
         lines = self.notifications(3)
         self.assertEqual(len(lines), 3, f"ожидались ровно 3 уведомления, получено: {lines}")
-        self.assertIn("81%", lines[0])
-        self.assertIn("порог 80%", lines[0])
-        self.assertIn("91%", lines[1])
-        self.assertIn("порог 90%", lines[1])
-        self.assertIn("95%", lines[2])
+        # Notification commands run in the background: dispatch order is not
+        # completion order. Each crossing must still have exactly one alert.
+        for percent, threshold in (("81%", "порог 80%"), ("91%", "порог 90%"), ("95%", "порог 90%")):
+            matching = [line for line in lines if percent in line and threshold in line]
+            self.assertEqual(len(matching), 1, lines)
 
     def test_cooldown_suppresses_and_does_not_lose_alert(self):
         """Internal documentation."""

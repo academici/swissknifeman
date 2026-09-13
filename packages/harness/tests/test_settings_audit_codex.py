@@ -16,6 +16,7 @@ from harness.settings_audit import (
 )
 
 
+@unittest.skipIf(sys.version_info < (3, 11), "Codex TOML parsing requires stdlib tomllib (Python 3.11+)")
 class CodexSettingsAuditCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()

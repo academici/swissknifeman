@@ -3252,7 +3252,7 @@
             "lib/skiller/budget.py": "sha256:1320ac522c1d73868b2f13e6ee3f98f62b34254f44d95d19321bff25a901da4b",
             "lib/skiller/cli.py": "sha256:c93aad8c7dfba315d696607c0ee588eb8ce7348b78724cce2156d61ac01214b6",
             "lib/skiller/common.py": "sha256:72f2715cd1f51868f390f81a8d8f5aaa2dd7d6333f13155d9b6568eff58bb8e0",
-            "lib/skiller/config.py": "sha256:4862b0d9b05e75bfb88692b4cf2cbd4ed916b8a09e479ade1bdcd70dbe25e577",
+            "lib/skiller/config.py": "sha256:717499395ff3536824a747b1e04b982f06d15d58caf1a816d135f80f6c09b788",
             "lib/skiller/connect.py": "sha256:0fbd7c22964fdb40d4bf39ae9c2f7d79507209bec18f52c5d034b06e0dc3cb01",
             "lib/skiller/delivery.py": "sha256:6d3c0a328503b22e259059f5e11a01603d0a029f595c4c5e3a5442fbf70e0056",
             "lib/skiller/doctor.py": "sha256:387766598b6ea3e6ab0c883bce811ebaae77f068c1e7f6bccc24b2e93a07a9bd",
@@ -3290,10 +3290,10 @@
             "scripts/update-upstreams.sh": "sha256:48d60502a450cb4c47d5d1a9180036fbe76e973a24f4d8bf779dbeec3315f4c1",
             "scripts/validate.sh": "sha256:edfd54aa81aee7a1a61f8240be42f61e2f2890d0be9c369a8ea8c1a0ff0451b3"
           },
-          "tree_digest": "sha256:0954bd3b5a51ea8768120b21550984ef7ade850c3878d638cfcea7c5cca2e247"
+          "tree_digest": "sha256:68f834cec97370c0e11c29c61057dd45211568e10c9de6962a51c4889380fc9c"
         }
       },
-      "tree_digest": "sha256:0954bd3b5a51ea8768120b21550984ef7ade850c3878d638cfcea7c5cca2e247"
+      "tree_digest": "sha256:68f834cec97370c0e11c29c61057dd45211568e10c9de6962a51c4889380fc9c"
     },
     {
       "id": "php",

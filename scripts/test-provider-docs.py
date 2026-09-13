@@ -26,6 +26,7 @@ def snapshot(root):
     excluded = (root / ".git", root / "packages/maind/data")
     return {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
             for path in sorted(root.rglob("*")) if path.is_file()
+            and "__pycache__" not in path.relative_to(root).parts
             and not any(path.is_relative_to(directory) for directory in excluded)}
 
 

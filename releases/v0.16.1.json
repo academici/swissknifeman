@@ -5575,7 +5575,7 @@
             "configs/verify-citations-known-exceptions.json": "sha256:f4e41c90ba103c6afc7d9a4e4b3716eb903bc489c832860283798ddf5f7d5c78",
             "docs/.vitepress/config.mts": "sha256:704c4b15bf489bf94b71dd864aced7862dda4f688cf2d5e0fe9c282766790693",
             "docs/continue-first.md": "sha256:1def1fa07bd96ccfc5dd3859dff46b7765f4b54dd6d7b4cda1ca18b93b28009c",
-            "docs/index.md": "sha256:727bffca24e0e5cd014c2b47f5a51c8b67d67f9777cdb0fdafc110101b9f3946",
+            "docs/index.md": "sha256:d08a0b31b1fa1035d381dfa5567f2f3aef1194d63b0c0c6ef17e709eb2f15482",
             "docs/methodology.md": "sha256:a29d83ba53ed9fff17e8c7dc6766c899717da913aadfe749c8b9125677f2dece",
             "docs/plan-structure.md": "sha256:f4ab92e6417d197d8d8eb9bbfb0624c560fcb8addfd19e01e755326b83039680",
             "docs/reference/plan-authority.md": "sha256:e37b774a208382cf28f288635f7704689cf30694ac1d8a075fc86538f7f57794",
@@ -5670,7 +5670,7 @@
             "workflows/wf-dev-slice.js": "sha256:358b70814067796c8d2aecc6f773a1d5d15d16e61ffbfbcee31b6b1bf6e9197f",
             "workflows/wf-research-fanout.js": "sha256:16a5d1680edc7a3b463c3c71548688b39f98a63faba8032db63da92199c22923"
           },
-          "tree_digest": "sha256:8f96e56a6984370bec427873fa02cc5f1539e3aa92944f724529fec1eb29a525"
+          "tree_digest": "sha256:5f32b1c6716ebf3dc2f008623c93431032e517aa09b525ea33fb446bd88ae273"
         },
         "claude-code": {
           "source": "packages/task",
@@ -5798,7 +5798,7 @@
           "tree_digest": "sha256:92089174088b2d394979cb59ef6a23d82f309b1eee89a34675faad619512066f"
         }
       },
-      "tree_digest": "sha256:a7510d4d42db8856b303d3aea4bcd9b5438642deb3472806a144c06b128ea0b1"
+      "tree_digest": "sha256:41d3ede23c0bc4554614b10e36ef6fe8ff3b6cabcb9d6ae8d4ce7e4e3925ff74"
     },
     {
       "id": "voice-ai",

@@ -4,10 +4,32 @@ import json
 from pathlib import Path
 import unittest
 
-from skiller.release_attestation import check_transition, tree_digest
+from skiller.release_attestation import Source, check_transition, tree_digest
+import subprocess
+import tempfile
 
 
 class ReleaseAttestationTests(unittest.TestCase):
+    def test_live_source_ignores_ambient_ignored_telemetry(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            subprocess.run(["git", "init", "-q", folder], check=True)
+            (root / ".gitignore").write_text("telemetry/\n")
+            (root / "lib").mkdir()
+            (root / "lib/source.py").write_text("source\n")
+            (root / "lib/telemetry").mkdir()
+            (root / "lib/telemetry/session.json").write_text("ambient\n")
+            self.assertEqual(Source(root).files("lib"), ["lib/source.py"])
+
+    def test_added_native_proof_does_not_change_old_bytes(self):
+        old = {"units": [{"id": "task", "version": "1.0.0", "providers": {"codex": {"tree_digest": "same"}}, "tree_digest": "old-proof"}]}
+        new = deepcopy(old)
+        new["units"][0]["providers"]["codex-native"] = {"tree_digest": "additional-proof"}
+        new["units"][0]["tree_digest"] = "expanded-proof"
+        self.assertEqual(check_transition(old, new), [])
+        new["units"][0]["providers"]["codex"]["tree_digest"] = "changed-bytes"
+        self.assertEqual(check_transition(old, new), ["RELEASE_IMMUTABLE_TUPLE: task@1.0.0"])
+
     def test_tree_digest_is_order_independent_and_path_sensitive(self):
         self.assertEqual(tree_digest({"a": "one", "b": "two"}),
                          tree_digest({"b": "two", "a": "one"}))

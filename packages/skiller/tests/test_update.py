@@ -19,7 +19,7 @@ from skiller.connect import do_connect
 from skiller.registry import build_registry
 from skiller.skillset import do_sync, skillset_config_path
 from skiller.vendor import do_vendor
-from skiller.update import cmd_update, replay_opts, update_one
+from skiller.update import cmd_update, replay_opts, update_one, retire_orphaned_codex_vendor_manifest, retire_legacy_codex_vendor
 try:
     from . import fixtures as fx
 except ImportError:  # unittest discover loads this module without a package.
@@ -44,6 +44,38 @@ def _write_sync_config(target, cfg):
 
 
 class UpdateCase(unittest.TestCase):
+    def legacy_marker(self, project, *, existing=False):
+        path = project / ".agents/skills" / MANIFEST
+        path.parent.mkdir(parents=True)
+        path.write_text(json.dumps({"version": 1, "agent": "claude", "layout": "flat", "skills": [{"flat_name": "old", "source_path": "skills/php/old"}]}))
+        if existing:
+            (path.parent / "old").mkdir()
+            (path.parent / "old/SKILL.md").write_text("old bytes")
+        return path
+
+    def test_orphan_marker_archives_only_when_all_declared_dirs_are_absent(self):
+        project = self.tmp / "legacy"
+        path = self.legacy_marker(project, existing=True)
+        with mock.patch("skiller.update.detect_codex_marketplace", return_value=True):
+            self.assertFalse(retire_orphaned_codex_vendor_manifest(project))
+            (path.parent / "old/SKILL.md").unlink()
+            (path.parent / "old").rmdir()
+            self.assertTrue(retire_orphaned_codex_vendor_manifest(project))
+        self.assertFalse(path.exists())
+        self.assertEqual(len(list((project / ".swissknifeman/backups").glob("*.json"))), 1)
+
+    def test_explicit_vendor_cleanup_preserves_unlisted_local_and_all_preimages(self):
+        project = self.tmp / "legacy"
+        path = self.legacy_marker(project, existing=True)
+        local = path.parent / "local"
+        local.mkdir()
+        (local / "SKILL.md").write_text("local bytes")
+        with mock.patch("skiller.update.detect_codex_marketplace", return_value=True):
+            self.assertTrue(retire_legacy_codex_vendor(self.env, project))
+        self.assertTrue((local / "SKILL.md").exists())
+        self.assertFalse((path.parent / "old").exists())
+        self.assertEqual(next((project / ".swissknifeman/backups").glob("*/old/SKILL.md")).read_text(), "old bytes")
+
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.tmp = Path(self._tmp.name)

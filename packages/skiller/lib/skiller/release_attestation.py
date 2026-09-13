@@ -26,6 +26,10 @@ class Source:
             result = subprocess.run(["git", "ls-tree", "-r", "--name-only", ref],
                                     cwd=root, check=True, capture_output=True, text=True)
             self.paths = result.stdout.splitlines()
+        else:
+            result = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+                                    cwd=root, check=True, capture_output=True, text=True)
+            self.paths = result.stdout.splitlines()
 
     def read(self, path):
         if self.ref:
@@ -90,6 +94,8 @@ def build(root, tag=None, *, ref=None):
             skill_roots = [skill_roots]
         providers = {"codex": surface(source, codex_root, skill_roots,
                                        manifest=".codex-plugin/plugin.json")}
+        providers["codex-native"] = surface(source, codex_root, ["."],
+                                              manifest=".codex-plugin/plugin.json")
         other = claude.get(name)
         if other:
             claude_root = str(Path(other["source"]))
@@ -129,7 +135,13 @@ def check_transition(previous, current):
     errors = []
     for unit in current["units"]:
         prior = old.get(unit["id"])
-        if prior and prior["version"] == unit["version"] and prior["tree_digest"] != unit["tree_digest"]:
+        changed = prior and prior["tree_digest"] != unit["tree_digest"]
+        if changed and prior.get("providers") and unit.get("providers"):
+            # Added proof coverage is not a byte change. The previous source tag
+            # is also rebuilt by this algorithm, so new surfaces are compared there.
+            changed = any(p not in unit["providers"] or s != unit["providers"][p]
+                          for p, s in prior["providers"].items())
+        if prior and prior["version"] == unit["version"] and changed:
             errors.append(f"RELEASE_IMMUTABLE_TUPLE: {unit['id']}@{unit['version']}")
     return errors
 

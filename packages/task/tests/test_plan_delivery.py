@@ -120,7 +120,10 @@ class PlanDeliveryTests(unittest.TestCase):
         self.assertIn("| Model | sonnet |", receipt["recommendation"])
         self.assertEqual(receipt["journal"]["run_id"], "run-1")
         self.assertEqual(receipt["journal"]["line"], 1)
-        self.assertEqual(receipt["adapter_attestation"]["version"], "0.16.0")
+        routing = json.loads((Path(__file__).resolve().parents[1]
+                              / "configs" / "command-routing.json").read_text())
+        self.assertEqual(receipt["adapter_attestation"]["version"],
+                         routing["plugin_version"])
         self.assertEqual(receipt["adapter_attestation"]["command_id"], "task:plan-run")
         self.assertRegex(
             receipt["adapter_attestation"]["canonical_command_sha256"],

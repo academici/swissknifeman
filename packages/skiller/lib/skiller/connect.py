@@ -389,7 +389,7 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
 def cmd_connect(env, argv):
     opts = parse_flags(argv, {
         "--target": "str", "--profile": "str", "--plugins": "str",
-        "--file": "str", "--cleanup-vendored": "bool", "--list": "bool",
+        "--file": "str", "--cleanup-vendored": "bool", "--cleanup-codex-vendored": "bool", "--list": "bool",
         "--dry-run": "bool", "--hub": "bool", "--no-core": "bool",
         "--no-permissions": "bool", "--fix-path": "bool",
     })
@@ -401,3 +401,6 @@ def cmd_connect(env, argv):
         return
     target, _ = resolve_target(env, opts, allow_home_confirm=True)
     do_connect(env, target, opts, fix_path_drift=opts.get("fix_path", False))
+    if opts.get("cleanup_codex_vendored"):
+        from .update import retire_legacy_codex_vendor
+        retire_legacy_codex_vendor(env, target, dry_run=opts.get("dry_run", False))

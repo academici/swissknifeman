@@ -1,9 +1,12 @@
 """update — обновить подключение/вендоринг проекта (диск — источник истины)."""
 import json
 import shutil
+import uuid
+import re
 from pathlib import Path
 
 from core import atomic_write_text
+from core.provider.lock import _contained_target, _writer_guard
 
 from .common import AGENT_DEFAULTS, MANIFEST, MARKETPLACE, die, parse_flags, warn
 from .config import ProjectConfig, load_config, resolve_target
@@ -124,6 +127,73 @@ def prune_legacy_task_runtime_link(env, target, dry_run=False):
         legacy.unlink()
         print(f"remove legacy task runtime link {legacy}")
     return True
+
+
+def retire_orphaned_codex_vendor_manifest(target, *, dry_run=False):
+    """Archive a v1 Claude mirror marker only when every declared directory is gone."""
+    target = Path(target)
+    with _writer_guard(target):
+        path = _contained_target(target, ".agents/skills/" + MANIFEST)
+        if not path.is_file() or not detect_codex_marketplace(target):
+            return False
+        value = json.loads(path.read_text())
+        records = value.get("skills")
+        if value.get("version") != 1 or value.get("layout") != "flat" or value.get("agent") != "claude" or not isinstance(records, list) or not records:
+            return False
+        for record in records:
+            if not isinstance(record, dict) or not isinstance(record.get("flat_name"), str) or not record.get("source_path"):
+                return False
+            directory = _contained_target(target, ".agents/skills/" + record["flat_name"])
+            if directory.exists():
+                return False
+        backup = _contained_target(target, ".swissknifeman/backups/orphaned-codex-vendor-" + uuid.uuid4().hex + ".json")
+        if dry_run:
+            print(f"[dry-run] archive orphaned vendor marker {path}")
+        else:
+            backup.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(path, backup)
+            print(f"archive orphaned vendor marker {path}; backup={backup}")
+        return True
+
+
+def retire_legacy_codex_vendor(env, target, *, dry_run=False):
+    """Explicit connector cleanup of manifest-declared copies, with reversible backup."""
+    from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock
+    target = Path(target)
+    with _writer_guard(target):
+        path = _contained_target(target, ".agents/skills/" + MANIFEST)
+        if not path.is_file() or not detect_codex_marketplace(target):
+            return False
+        value = json.loads(path.read_text())
+        records = value.get("skills")
+        if value.get("version") != 1 or value.get("layout") != "flat" or value.get("agent") not in ("claude", "codex") or not isinstance(records, list):
+            raise ValueError("LEGACY_VENDOR_UNRECOGNIZED: cleanup requires the known v1 vendor manifest")
+        lock_path = _contained_target(target, LOCK_RELATIVE_PATH)
+        owned = parse_lock(lock_path.read_bytes()).records if lock_path.is_file() else ()
+        targets = []
+        for record in records:
+            if not isinstance(record, dict) or not isinstance(record.get("flat_name"), str) or not isinstance(record.get("source_path"), str):
+                raise ValueError("LEGACY_VENDOR_UNRECOGNIZED: malformed record")
+            if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", record["flat_name"]):
+                raise ValueError("LEGACY_VENDOR_UNRECOGNIZED: unsafe target name")
+            source = Path(record["source_path"])
+            source = source if source.is_absolute() else env.root / source
+            if not source.resolve().is_relative_to((env.root / "skills").resolve()):
+                raise ValueError("LEGACY_VENDOR_UNRECOGNIZED: foreign source")
+            relative = ".agents/skills/" + record["flat_name"]
+            directory = _contained_target(target, relative)
+            if any(r.target_path == relative or r.target_path.startswith(relative + "/") for r in owned):
+                raise ValueError("LEGACY_VENDOR_FOREIGN_OWNER: preserve " + relative)
+            if directory.exists():
+                targets.append(directory)
+        backup = _contained_target(target, ".swissknifeman/backups/legacy-codex-vendor-" + uuid.uuid4().hex)
+        if not dry_run:
+            backup.mkdir(parents=True, exist_ok=True)
+            for directory in sorted(set(targets)):
+                shutil.move(directory, backup / directory.name)
+            shutil.move(path, backup / MANIFEST)
+        print(f"{'[dry-run] ' if dry_run else ''}retire {len(set(targets))} legacy Codex vendor directories; backup={backup}")
+        return True
 
 
 def detect_vendor_path(target, config):
@@ -276,6 +346,7 @@ def update_one(env, target, dry_run=False, adopt_codex=False):
         opts["hub"] = bool(rec.get("hub")) or hub_artifacts_exist(target)
         print(f"--- update (vendor): {target} ---")
         do_vendor(env, target, opts)
+    retire_orphaned_codex_vendor_manifest(target, dry_run=dry_run)
     return ok
 
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from datetime import datetime
 import json
 from pathlib import Path
 import re
@@ -9,7 +10,7 @@ import re
 
 WORK_ESTIMATE_SCHEMA_VERSION = "session-work-estimate/v1"
 DECISION_SCHEMA_VERSION = "session-continuity-decision/v1"
-OUTCOMES = ("continue-root", "isolated-child-return", "cold-start-root", "waiting-owner", "terminal")
+OUTCOMES = ("continue-root", "isolated-child-return", "cold-start-root", "waiting-owner", "waiting-external", "terminal")
 COLD_START_REASONS = (
     "context-budget",
     "capability-missing",
@@ -20,6 +21,7 @@ COLD_START_REASONS = (
 LIFECYCLES = (
     "active",
     "waiting-owner",
+    "waiting-external",
     "owner-pause-no-resume",
     "whole-plan-independent-audit",
     "design-root-terminal",
@@ -31,6 +33,7 @@ _WORK_KEYS = frozenset((
     "capabilities_sufficient", "context_attested", "context_health",
     "batch_receipt_valid", "remaining_batch_digest", "loaded_inputs_reusable",
     "cold_start_cost", "lifecycle", "isolated_review", "reviewer_task", "checkpoint",
+    "external_pause",
 ))
 _DECISION_KEYS = frozenset(("schema_version", "outcome", "reason", "evidence", "runnable"))
 _CONFIG_ROOT = Path(__file__).resolve().parents[2] / "configs"
@@ -65,6 +68,7 @@ class WorkEstimate:
     isolated_review: bool = False
     reviewer_task: str | None = None
     checkpoint: str | None = None
+    external_pause: dict | None = None
     schema_version: str = WORK_ESTIMATE_SCHEMA_VERSION
 
     def as_dict(self) -> dict[str, object]:
@@ -147,7 +151,30 @@ def validate_estimate(estimate: WorkEstimate) -> WorkEstimate:
         raise ContinuityError("CONTINUITY_EVIDENCE_MISSING: context health attestation")
     if estimate.isolated_review and not estimate.reviewer_task:
         raise ContinuityError("CONTINUITY_EVIDENCE_MISSING: bounded reviewer task")
+    if estimate.lifecycle == "waiting-external" or estimate.external_pause is not None:
+        _validate_external_pause(estimate.external_pause)
+        if not estimate.checkpoint:
+            raise ContinuityError("CONTINUITY_EVIDENCE_MISSING: external durable checkpoint")
     return estimate
+
+
+def _validate_external_pause(value: dict) -> dict:
+    keys = {"reason", "started_at", "resume_at", "observed_at", "fingerprint",
+            "runnable_after", "predicate_satisfied", "continuation"}
+    if (not isinstance(value, dict) or set(value) != keys
+            or any(not isinstance(value[key], str) or not value[key].strip()
+                   for key in keys - {"predicate_satisfied"})
+            or not isinstance(value["predicate_satisfied"], bool)
+            or not _SHA256_RE.fullmatch(value["fingerprint"])):
+        raise ContinuityError("CONTINUITY_EVIDENCE_INVALID: external checkpoint")
+    try:
+        times = [datetime.fromisoformat(value[key].replace("Z", "+00:00"))
+                 for key in ("started_at", "resume_at", "observed_at")]
+        if any(time.tzinfo is None for time in times) or times[1] <= times[0] or times[2] < times[0]:
+            raise ValueError("observation window")
+    except (ValueError, TypeError) as exc:
+        raise ContinuityError("CONTINUITY_EVIDENCE_INVALID: external observation times") from exc
+    return value
 
 
 def reduce(estimate: WorkEstimate) -> ContinuityDecision:
@@ -160,6 +187,15 @@ def reduce(estimate: WorkEstimate) -> ContinuityDecision:
     )
     if estimate.lifecycle == "waiting-owner":
         return ContinuityDecision("waiting-owner", "owner-wait", evidence, False)
+    if estimate.external_pause is not None:
+        pause = estimate.external_pause
+        evidence += tuple(f"{key}:{pause[key]}" for key in
+                          ("reason", "started_at", "resume_at", "observed_at", "fingerprint",
+                           "runnable_after", "continuation")) + (f"checkpoint:{estimate.checkpoint}",)
+        observed = datetime.fromisoformat(pause["observed_at"].replace("Z", "+00:00"))
+        resume = datetime.fromisoformat(pause["resume_at"].replace("Z", "+00:00"))
+        if observed < resume or not pause["predicate_satisfied"]:
+            return ContinuityDecision("waiting-external", "external-wait", evidence, False)
     if estimate.lifecycle == "terminal":
         return ContinuityDecision("terminal", "terminal-evidence", evidence, False)
     if not estimate.route_attested or not estimate.batch_receipt_valid:
@@ -194,7 +230,7 @@ def reduce(estimate: WorkEstimate) -> ContinuityDecision:
 
 def estimate_from_dict(value: dict) -> WorkEstimate:
     """Load one exact JSON-compatible work-estimate carrier."""
-    if not isinstance(value, dict) or set(value) != _WORK_KEYS:
+    if not isinstance(value, dict) or set(value) not in (_WORK_KEYS, _WORK_KEYS - {"external_pause"}):
         raise ContinuityError("CONTINUITY_EVIDENCE_INVALID: work estimate shape")
     try:
         estimate = WorkEstimate(**value)
@@ -222,9 +258,14 @@ def validate_decision(decision: ContinuityDecision) -> ContinuityDecision:
             raise ContinuityError("CONTINUITY_DECISION_INVALID: cold-start evidence")
     elif decision.reason in COLD_START_REASONS:
         raise ContinuityError("CONTINUITY_DECISION_INVALID: reason/outcome mismatch")
-    if decision.outcome in {"waiting-owner", "terminal"} and decision.runnable:
+    if decision.outcome == "waiting-external":
+        if not all(any(value.startswith(prefix + ":") for value in decision.evidence)
+                   for prefix in ("reason", "started_at", "resume_at", "observed_at", "fingerprint",
+                                  "runnable_after", "continuation", "checkpoint")):
+            raise ContinuityError("CONTINUITY_DECISION_INVALID: external checkpoint missing")
+    if decision.outcome in {"waiting-owner", "waiting-external", "terminal"} and decision.runnable:
         raise ContinuityError("CONTINUITY_DECISION_INVALID: non-runnable outcome is runnable")
-    if decision.outcome not in {"waiting-owner", "terminal"} and not decision.runnable:
+    if decision.outcome not in {"waiting-owner", "waiting-external", "terminal"} and not decision.runnable:
         raise ContinuityError("CONTINUITY_DECISION_INVALID: runnable outcome suppressed")
     return decision
 

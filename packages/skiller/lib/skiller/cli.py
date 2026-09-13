@@ -13,6 +13,8 @@ from .listing import cmd_list
 from .lock import cmd_lock
 from .registry import cmd_registry
 from .release import cmd_release
+from .release_attestation import cmd_attest, cmd_version
+from .delivery import cmd_deliver
 from .skillset import cmd_init, cmd_sync
 from .status import cmd_status
 from .topology import cmd_topology
@@ -37,6 +39,9 @@ COMMANDS = {
     "doctor": cmd_doctor,
     "topology": cmd_topology,
     "release": cmd_release,
+    "attest": cmd_attest,
+    "version": cmd_version,
+    "deliver": cmd_deliver,
 }
 
 

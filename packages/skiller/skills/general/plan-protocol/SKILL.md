@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.32.0
+version: 2.33.0
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
@@ -25,9 +25,10 @@ the snippets are copies, not independent rules.
 ## 1. When to activate and invariants
 
 Activate for `task:plan-design`, `task:plan-exec`, `task:plan-run`, `task:plan-close`,
-`task:plan-audit`, or whenever a `plans/<PLAN-ID>` contract is authoritative. Ordinary work, including bounded cross-module work, may use `task:fix`/`task:dev` from a
-message or task file. Create a plan when requested or when durable execution transfer actually
-requires it; preserve an already authoritative plan and separately requested design/review.
+`task:plan-audit` when the owner explicitly selects plan work or an exact cited local workflow
+policy requires it. Follow the Task package's shared intent-routing canon; ordinary work may proceed
+directly from a message or task file. Create a plan only when requested; preserve an explicitly
+selected plan and a separately requested design/review boundary.
 
 Rules common to layouts v1 and v2:
 
@@ -85,6 +86,8 @@ Contracts are optional. Every item has the 16 ordered fields named by `plan-layo
 empty. Inputs are predecessor evidence, Required Reads precede work, Files bound writes, and
 Validation/Deliverables are observable. Closure prints exactly
 `write-site: pre_mutation: <code> · pre_final: <code>`; both codes must be `allow`.
+Optional `Authority` declares `routine` or one finite `[OWNER-GATE:GATE-ID]` with exact branch/scope.
+Read the authority/calendar contract in the layout reference for protected execution or timed waits.
 
 ## 4. Status, readiness, and adaptive execution
 
@@ -330,7 +333,8 @@ reuse, cold-start cost, lifecycle, and durable checkpoint, then call `task.plan_
 Persist that decision's `context`; pass the same typed decision to `PlanNextCarrier`. Renderers,
 delivery receipts, and plan-lint validate this result and never choose continuity independently.
 Unavailable context telemetry defaults to `continue-root`; `waiting-owner` suppresses a runnable
-successor; DecisionRequest recovery preserves `resume-root` whenever that root still exists.
+successor; `waiting-external` persists its observation checkpoint and exact time/predicate continuation;
+DecisionRequest recovery preserves `resume-root` whenever that root still exists.
 
 Before a terminal response, `plan-exec`, `plan-run`, and `plan-close` build a
 `terminal-delivery-receipt/v1` from the terminal journal pointer/run ID, current state/closure,

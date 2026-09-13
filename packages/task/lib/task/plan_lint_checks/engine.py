@@ -302,6 +302,11 @@ def lint_plan(plan_dir, diag):
         table_by_id = {row.get("ID"): (row, lineno) for row, lineno in parsed["status_table"]}
         for item_id, occurrences in parsed["items"].items():
             item = occurrences[0]  # диагностика дублей уже выдана выше; для сверки берём первый
+            from task import task_contract
+            try:
+                task_contract.declared_authority(item_id, item["fields"])
+            except task_contract.TaskContractBuildError as exc:
+                diag.error(path, item["header_lineno"], str(exc))
             status_val, _ = item["fields"].get("Status", ("", item["header_lineno"]))
             all_items[item_id] = {
                 "phase": pid, "title": item["title"], "status": status_val,

@@ -1,4 +1,6 @@
 """Typed render boundary preserving literal interpolation values."""
+from __future__ import annotations
+
 from .catalog import Catalog, Overlay, resolve_catalog
 
 

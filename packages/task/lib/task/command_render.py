@@ -23,7 +23,7 @@ from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_
                                   metadata_value)
 
 
-ADAPTER_VERSION = "1.0.11"
+ADAPTER_VERSION = "1.0.12"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
@@ -143,7 +143,7 @@ class PlanNextCarrier:
                 "cold-start": "cold-start-root",
             }.get(self.context_kind, self.context_kind)
             waiting_matches = (
-                self.kind == "waiting" and decision.outcome == "waiting-owner"
+                self.kind == "waiting" and decision.outcome in {"waiting-owner", "waiting-external"}
                 and not decision.runnable
             )
             runnable_matches = (
@@ -368,6 +368,12 @@ def parse_next_carrier(declaration: str, *, context_kind: str = "same-session",
     return PlanNextCarrier(
         kind, command_id, plan_id, arguments, context_kind,
         tuple(item_ids), scope, tuple(orchestration_capabilities), continuity)
+
+
+def render_continuity_decision(decision: plan_continuity.ContinuityDecision) -> str:
+    """Persist the full typed pause, since compact Context cannot carry a checkpoint."""
+    value = plan_continuity.validate_decision(decision).as_dict()
+    return "```session-continuity-decision/v1\n" + json.dumps(value, ensure_ascii=False, sort_keys=True) + "\n```"
 
 
 def plan_provider_invocation(
@@ -1007,6 +1013,10 @@ Generated Codex adapter for semantic command `{record.command_id}`.
 - Canonical source: `{record.source.path}`
 - Canonical SHA-256: `{source_hash}`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
+
+Read `references/intent-routing.md` from the configured Task marketplace runtime before selecting
+the workflow. Skill relevance alone is not workflow authority; the latest explicit owner
+request determines the work product. Direct development and fixes require no plan lifecycle.
 
 Read `command.md` completely and execute it with the invocation payload as `$ARGUMENTS`.
 Preserve the semantic command ID, gates, status literals, scope, and validation behavior.

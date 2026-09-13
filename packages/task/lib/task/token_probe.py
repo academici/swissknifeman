@@ -1,4 +1,6 @@
 """Provider-neutral records and interface for token-calibration probes (P0.1)."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any, Mapping, Protocol
 

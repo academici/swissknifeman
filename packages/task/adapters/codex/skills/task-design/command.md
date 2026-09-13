@@ -1,9 +1,12 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/design.md
-Canonical SHA-256: sha256:2375c5d8d953aa704f9b96aac97bcc3800e6c97f198a0ec86c67fda61b3318ac
-Adapter: task.codex-command/1.0.11
+Canonical SHA-256: sha256:0002f2976b4416042f432f46c44bbcd7f912849f263ddafe6708b0deecd41efa
+Adapter: task.codex-command/1.0.12
 -->
 Это задача ПРОЕКТИРОВАНИЯ — выход артефакты, НЕ код. Ввод пользователя: «$ARGUMENTS».
+Применяй общий opt-in контракт `references/intent-routing.md` из установленного пакета Task.
+Активируй этот workflow только по явному запросу проектирования; обычная реализация
+и исправление не становятся дизайном из-за масштаба, риска или найденного старого плана.
 Модель/effort запинены (frontier/high) — не переключай вручную.
 
 Профиль `design`:

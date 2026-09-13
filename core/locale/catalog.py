@@ -1,4 +1,6 @@
 """Key-addressed English catalogs and sparse overlays."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from hashlib import sha256
 import json

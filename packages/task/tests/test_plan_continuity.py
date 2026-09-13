@@ -26,6 +26,33 @@ def estimate(**overrides):
 
 
 class ContinuityTests(unittest.TestCase):
+    def test_calendar_pause_preserves_window_and_requires_external_predicate(self):
+        pause = {"reason": "production observation", "started_at": "2026-09-10T12:00:00Z",
+                 "resume_at": "2026-09-13T12:00:00Z", "observed_at": "2026-09-11T12:00:00Z",
+                 "fingerprint": "b" * 64, "runnable_after": "72h production evidence complete",
+                 "predicate_satisfied": False, "continuation": "task:plan-run PLAN P1.1"}
+        waiting = reduce(estimate(lifecycle="waiting-external", checkpoint="artifacts/P1.1/window.json", external_pause=pause))
+        self.assertEqual(waiting.outcome, "waiting-external")
+        self.assertFalse(waiting.runnable)
+        self.assertEqual(decision_from_dict(waiting.as_dict()), waiting)
+        from task import command_render, plan_delivery
+        persisted = ["| Context | waiting-external |"] + command_render.render_continuity_decision(waiting).splitlines()
+        route = plan_delivery._route_from_lines(persisted)
+        self.assertEqual(plan_delivery._continuity(route, allow_legacy=False), waiting.as_dict())
+        with self.assertRaises(plan_delivery.DeliveryError):
+            plan_delivery._continuity({**route, "context": "continue-root"}, allow_legacy=False)
+        self.assertIn("started_at:2026-09-10T12:00:00Z", waiting.evidence)
+        later = {**pause, "observed_at": "2026-09-13T12:00:00Z"}
+        self.assertEqual(reduce(estimate(lifecycle="waiting-external", checkpoint="window", external_pause=later)).outcome,
+                         "waiting-external")
+        resumed = reduce(estimate(lifecycle="waiting-external", checkpoint="window",
+                                  external_pause={**later, "predicate_satisfied": True}))
+        self.assertEqual(resumed.outcome, "continue-root")
+        self.assertIn("fingerprint:" + "b" * 64, resumed.evidence)
+        for invalid in (None, {**pause, "resume_at": "2026-09-09T12:00:00Z"}):
+            with self.assertRaises(ContinuityError):
+                reduce(estimate(lifecycle="waiting-external", checkpoint="window", external_pause=invalid))
+
     def test_compatible_and_missing_telemetry_continue_in_root(self):
         for telemetry in (True, None):
             self.assertEqual(evaluate(route_attested=True, context_attested=telemetry,

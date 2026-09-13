@@ -1,6 +1,6 @@
 {
   "name": "core",
-  "version": "0.15.4",
+  "version": "0.16.0",
   "description": "Curated always-on core skills",
   "skills": [
     "./skills"

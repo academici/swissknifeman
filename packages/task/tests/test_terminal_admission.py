@@ -90,6 +90,24 @@ class TerminalAdmissionTests(unittest.TestCase):
         self.assertTrue(allowed.final_allowed)
         self.assertEqual(allowed.reason, "FINAL_ALLOWED")
 
+    def test_external_pause_refresh_cannot_admit_terminal(self):
+        from task.plan_continuity import WorkEstimate, reduce
+        pause = {"reason": "observation", "started_at": "2026-09-10T12:00:00Z",
+                 "resume_at": "2026-09-13T12:00:00Z", "observed_at": "2026-09-11T12:00:00Z",
+                 "fingerprint": "b" * 64, "runnable_after": "production window complete",
+                 "predicate_satisfied": False, "continuation": "task:plan-run PLAN P4.1"}
+        decision = reduce(WorkEstimate(True, True, True, True, "sufficient", True,
+                                       "a" * 64, True, 0, lifecycle="waiting-external",
+                                       checkpoint="artifacts/window.json", external_pause=pause)).as_dict()
+        lease = self.arm()
+        paused = terminal_admission.refresh(self.store, self.identity, expected_sequence=lease.sequence,
+                                            progress_fingerprint="a" * 64, continuity=decision, ttl_seconds=60)
+        self.assertEqual(paused.lifecycle, "waiting-external")
+        verdict = terminal_admission.evaluate(self.store, self.identity, decision, receipt_reader=receipt,
+                                             proposed_message=terminal_admission.required_final_message(receipt()))
+        self.assertEqual(verdict.reason, "WAITING_EXTERNAL")
+        self.assertFalse(verdict.final_allowed)
+
     def test_expired_lease_fails_closed(self):
         self.arm()
         self.clock[0] += 61

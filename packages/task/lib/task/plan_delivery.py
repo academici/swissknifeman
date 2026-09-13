@@ -87,6 +87,13 @@ def _validate_priority_continuation(plan_dir: Path, next_exact: str) -> None:
         raise DeliveryError("PRIORITY_FIX_TARGET_MISMATCH", str(exc)) from exc
     if plan_layout.layout_version(plan_dir) != "v2":
         return
+    from task import plan_recovery
+    try:
+        plan_recovery.validate_request(plan_dir, requested[0])
+    except plan_recovery.RecoveryError as exc:
+        error = DeliveryError(exc.code, str(exc))
+        error.verdict = exc.verdict
+        raise error from exc
     try:
         for item_id in requested:
             plan_bundle.build(plan_dir, item_id, check=True)
@@ -126,8 +133,13 @@ def _validate_phase_audit_continuation(plan_dir: Path, next_exact: str) -> None:
 
 def _continuity(route: dict, *, allow_legacy: bool) -> dict:
     try:
-        decision = plan_continuity.parse_context(
-            route.get("context"), allow_legacy=allow_legacy)
+        if "continuity" in route:
+            decision = plan_continuity.decision_from_dict(route["continuity"])
+            if route.get("context") != decision.context:
+                raise plan_continuity.ContinuityError("typed continuity/Context mismatch")
+        else:
+            decision = plan_continuity.parse_context(
+                route.get("context"), allow_legacy=allow_legacy)
     except plan_continuity.ContinuityError as exc:
         raise DeliveryError(
             "CONTINUITY_CONTEXT_INVALID", "handoff Context не прошёл continuity gate") from exc
@@ -144,6 +156,16 @@ def file_digest(path) -> str:
 
 def _route_from_lines(lines: list[str]) -> dict:
     route = {"batch": None, "model": None, "thinking": None, "context": None, "command": None}
+    text = "\n".join(lines)
+    blocks = re.findall(r"^```session-continuity-decision/v1\s*\n(.*?)\n```", text,
+                        flags=re.MULTILINE | re.DOTALL)
+    if len(blocks) != text.count("```session-continuity-decision/v1") or len(blocks) > 1:
+        raise DeliveryError("CONTINUITY_CONTEXT_INVALID", "typed continuity block неоднозначен")
+    if blocks:
+        try:
+            route["continuity"] = plan_continuity.decision_from_dict(json.loads(blocks[0])).as_dict()
+        except (json.JSONDecodeError, plan_continuity.ContinuityError) as exc:
+            raise DeliveryError("CONTINUITY_CONTEXT_INVALID", "typed continuity block повреждён") from exc
     rows = []
     for line in lines:
         if not line.strip().startswith("|"):

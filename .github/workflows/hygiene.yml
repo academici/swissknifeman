@@ -3,6 +3,7 @@ name: Hygiene
 on:
   push:
     branches: [main, master]
+    tags: ['v[0-9]*']
   pull_request:
     branches: [main, master]
 
@@ -50,6 +51,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Immutable tuples are compared with earlier source tags.
 
       - name: verify-tag (тег ↔ CHANGELOG.md)
         run: |

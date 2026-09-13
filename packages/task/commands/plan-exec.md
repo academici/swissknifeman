@@ -6,6 +6,8 @@ effort: medium
 ---
 Execute the admitted Routing group or ready subset of a recommended group for `$ARGUMENTS`. The pinned route is a minimum;
 provider-attested overshoot is recorded and undershoot stops before mutation.
+Activation follows explicit owner plan intent or an exact cited local workflow policy in the
+shared [intent routing canon](../references/intent-routing.md).
 
 ## Shared lifecycle
 
@@ -28,6 +30,15 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
    spec and bundle, then pass it to `task_contract.pre_mutation()`. A real digest-input/write
    collision is `SELF_INVALIDATING_EVIDENCE_ANCHOR`: split product and closure anchors; otherwise
    collapse them into one anchor.
+   After normal admission and before the first product write, call
+   `plan_recovery.start(plan_dir, item_id, command=command, actor=actor, session_id=session_id,
+   contract=contract, batch_receipt=batch_receipt)` and retain its durable run ID/attempt.
+   An interrupted resume reuses that run without appending a second start; an independent ready
+   successor may proceed only after recovery preflight proves its dependencies satisfied.
+   If journal start survived interruption before state projection, regenerate that owning state
+   before recapture; reuse the journal identity. After terminal evidence and any inline phase closure,
+   call `plan_recovery.materialize_next_ready(plan_dir, item_id)` before delivery so a newly ready
+   successor receives its generated bundle.
 3. Implement only Scope Included. Ordinary low-risk work uses a self-check and affected tests;
    bounded integration adds the necessary package/integration check. Independent review requires a
    concrete item risk—security/auth, destructive migration, irreversible external action,
@@ -67,7 +78,9 @@ post-closure successor.
 
 After route/run admission, an applicable provider adapter may arm `terminal-admission-lease/v1`
 through the worktree-local `plan-terminal-admission.py`; it refreshes only on material progress or
-a typed `waiting-owner` decision. At a Stop boundary the adapter passes the typed P1.3 continuity
+a typed `waiting-owner` or `waiting-external` decision. External waits preserve the observation
+checkpoint and suppress terminal admission until actual time/predicate evidence allows continuation.
+At a Stop boundary the adapter passes the typed P1.3 continuity
 decision, rebuilt terminal receipt and in-memory proposed final fragment to
 `terminal_admission.evaluate()`. `final_allowed=true` requires exact identity and byte-exact
 `plan_delivery.required_final_message(receipt)`; no lease is `NOT_APPLICABLE`. The reducer stores

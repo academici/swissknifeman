@@ -14,6 +14,15 @@
     "manifest_sha256"
   ],
   "properties": {
+    "authority": {
+      "type": "object", "additionalProperties": false, "required": ["gate", "evidence_paths"],
+      "properties": {
+        "gate": {"type": "object", "additionalProperties": false, "required": ["gate_id", "branch", "scope"],
+          "properties": {"gate_id": {"type": "string", "minLength": 1}, "branch": {"type": "string", "minLength": 1}, "scope": {"type": "string", "minLength": 1}}},
+        "evidence_paths": {"type": "array", "items": {"type": "object", "additionalProperties": false,
+          "required": ["path", "sha256"], "properties": {"path": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"}, "sha256": {"$ref": "#/$defs/sha256"}}}}
+      }
+    },
     "$schema": {
       "type": "string",
       "format": "uri-reference"

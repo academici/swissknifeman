@@ -18,7 +18,8 @@
     "lifecycle",
     "isolated_review",
     "reviewer_task",
-    "checkpoint"
+    "checkpoint",
+    "external_pause"
   ],
   "properties": {
     "schema_version": {"const": "session-work-estimate/v1"},
@@ -31,9 +32,21 @@
     "remaining_batch_digest": {"type": "string", "pattern": "^(sha256:)?[0-9a-f]{64}$"},
     "loaded_inputs_reusable": {"type": "boolean"},
     "cold_start_cost": {"type": "integer", "minimum": 0},
-    "lifecycle": {"enum": ["active", "waiting-owner", "owner-pause-no-resume", "whole-plan-independent-audit", "design-root-terminal", "terminal"]},
+    "lifecycle": {"enum": ["active", "waiting-owner", "waiting-external", "owner-pause-no-resume", "whole-plan-independent-audit", "design-root-terminal", "terminal"]},
     "isolated_review": {"type": "boolean"},
     "reviewer_task": {"type": ["string", "null"]},
-    "checkpoint": {"type": ["string", "null"]}
+    "checkpoint": {"type": ["string", "null"]},
+    "external_pause": {"type": ["object", "null"], "additionalProperties": false,
+      "required": ["reason", "started_at", "resume_at", "observed_at", "fingerprint", "runnable_after", "predicate_satisfied", "continuation"],
+      "properties": {
+        "reason": {"type": "string", "minLength": 1},
+        "started_at": {"type": "string", "format": "date-time"},
+        "resume_at": {"type": "string", "format": "date-time"},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "fingerprint": {"type": "string", "pattern": "^(sha256:)?[0-9a-f]{64}$"},
+        "runnable_after": {"type": "string", "minLength": 1},
+        "predicate_satisfied": {"type": "boolean"},
+        "continuation": {"type": "string", "minLength": 1}
+      }}
   }
 }

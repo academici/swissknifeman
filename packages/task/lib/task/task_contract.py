@@ -28,6 +28,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import os
 import re
 from pathlib import Path
 
@@ -94,6 +95,13 @@ _ROUTING_RANGE_RE = re.compile(r"^(P\d+)\.(\d+)\s*[–-]\s*(P\d+)\.(\d+)$")
 _AUDIT_BLOCK_HEADER_RE = re.compile(r"^##\s+Audit\s+(P\d+)\b")
 _OWNER_GRANT_RE = re.compile(r"\[OWNER-GRANT:([A-Z0-9][A-Z0-9.-]+)\]")
 _OWNER_REVOKE_RE = re.compile(r"\[OWNER-REVOKE:([A-Z0-9][A-Z0-9.-]+)\]")
+_AUTHORITY_DECLARATION_RE = re.compile(
+    r"^\[OWNER-GATE:(?P<gate_id>[A-Z0-9][A-Z0-9.-]+)\]\s+"
+    r"branch=`(?P<branch>[^`\n]+)`;\s*scope=`(?P<scope>[^`\n]+)`$")
+# Migration diagnostic only: machine authority is always the explicit declaration.
+_LEGACY_AUTHORITY_RE = re.compile(
+    r"durable\s+owner\s+authori[sz]ation|only\s+after\s+owner\s+authori[sz]ation|"
+    r"только\s+после\s+(?:durable\s+)?owner\s+authorization", re.IGNORECASE)
 # Protected authority is deliberately a small, exact Decision Log record rather than
 # prose searched by substring.  Backticks make the three values unambiguous even when
 # a branch or scope contains ordinary punctuation.  The Decision Log must reference a
@@ -267,9 +275,105 @@ def _authority_request(item_id: str, protected_transition):
     return {key: value.strip() for key, value in request.items()}
 
 
+def declared_authority(item_id: str, fields: dict):
+    """Read a finite item gate; prose can flag migration but cannot grant authority."""
+    def text(name):
+        value = fields.get(name, "")
+        return value[0] if isinstance(value, tuple) else value
+    declaration = (text("Authority") or "").strip()
+    if declaration and declaration != "routine":
+        match = _AUTHORITY_DECLARATION_RE.fullmatch(declaration)
+        if match is None:
+            raise TaskContractBuildError(item_id, "authority", "AUTHORITY_CONTRACT_GAP: неверное объявление Authority")
+        return _authority_request(item_id, match.groupdict())
+    if _LEGACY_AUTHORITY_RE.search("\n".join(str(text(name)) for name in fields)):
+        raise TaskContractBuildError(item_id, "authority", "AUTHORITY_CONTRACT_GAP: owner authorization требует finite Authority gate")
+    return None
+
+
 def _decision_number(value: str):
     match = re.fullmatch(r"D(\d+)", (value or "").strip())
     return int(match.group(1)) if match else None
+
+
+def materialize_owner_invocation(plan_dir, item_id: str, *, command="plan-run") -> dict:
+    """Bind the live owner's exact invocation to an already declared finite gate.
+
+    No caller-supplied evidence, actor, branch or scope is accepted. The provider
+    adapter must observe the user message in this session before any carrier write.
+    """
+    from task import plan_lint, plan_layout, plan_decisions, route_evidence
+    plan_dir = Path(plan_dir).resolve()
+    if command != "plan-run" or not re.fullmatch(r"P\d+\.\d+", item_id):
+        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: требуется exact plan-run item")
+    phase_id = item_id.split(".")[0]
+    phase_path = plan_layout.phase_path(plan_dir, phase_id)
+    phase = plan_lint.parse_phase_md(phase_path, phase_id, plan_lint.Diagnostics(),
+                                     layout=plan_layout.layout_version(plan_dir))
+    occurrences = phase["items"].get(item_id, []) if phase else []
+    if len(occurrences) != 1:
+        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: item неоднозначен")
+    request = declared_authority(item_id, occurrences[0]["fields"])
+    if request is None:
+        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: finite gate не объявлен")
+    checkout = plan_dir.parent.parent
+    semantic = f"task:plan-run {plan_dir.name} {item_id}"
+    evidence = route_evidence.capture_launch(expected_invocation=semantic, expected_cwd=checkout,
+                                           require_current_owner_invocation=True)
+    # The CLI process fallback proves route flags, not a current owner user message.
+    if (evidence.get("source") != "provider-thread-state"
+            or evidence.get("invocation") not in ("$ " + semantic, "/" + semantic)
+            or evidence.get("cwd") != str(checkout)
+            or not evidence.get("thread_id") or not evidence.get("source_version")):
+        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_UNATTESTED: нужен current user-message adapter")
+    decisions = plan_decisions.load_decisions(plan_dir)
+    rows = [({"D#": decision.identifier}, 1) for decision in decisions]
+    if not _has_contiguous_decision_identities(rows):
+        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: Decision Log discontinuity")
+    gate_id = request["gate_id"]
+    marker = f"[OWNER-GRANT:{gate_id}]"
+    if any(marker in decision.decision_text or gate_id in _OWNER_REVOKE_RE.findall(decision.decision_text)
+           for decision in decisions):
+        authority = _resolve_authority(plan_lint, [], plan_dir, item_id, phase_path, "", None, request)
+        if not authority[1]:
+            raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: существующий grant отозван или неоднозначен")
+        return {"granted": True, "granted_by": authority[2], "reused": True}
+    digest = hashlib.sha256(json.dumps({"plan": plan_dir.name, "item": item_id,
+                                       "gate": request, "evidence": evidence},
+                                      sort_keys=True).encode()).hexdigest()
+    message_id = f"invocation-{digest[:16]}"
+    filename = f"owner-invocation-{digest[:16]}.md"
+    reference = f"brief/{filename}#{message_id}"
+    message_path = plan_dir / "brief" / filename
+    if message_path.parent.is_symlink() or not message_path.parent.is_dir():
+        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: brief carrier")
+    message = (f"# Exact owner invocation: {plan_dir.name} {item_id}\n\n"
+               f"[REPOSITORY-OWNER-MESSAGE:{message_id}] {marker} "
+               f"branch=`{request['branch']}`; scope=`{request['scope']}`; provenance=`repository-owner`\n\n"
+               "```owner-invocation-evidence/v1\n" + json.dumps(evidence, ensure_ascii=False, sort_keys=True)
+               + "\n```\n")
+    identifier = f"D{len(decisions) + 1}"
+    decision_path = plan_dir / "decisions" / f"{identifier}-owner-invocation.md"
+    date = str(evidence.get("ts", ""))[:10]
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date) or decision_path.parent.is_symlink():
+        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: provenance date/path")
+    decision = (f"---\nid: {identifier}\ndate: {date}\nstatus: accepted\nitem: {item_id}\n"
+                f"items: [{item_id}]\nsupersedes: []\nsuperseded_by: null\n---\n\n## Решение\n\n"
+                f"{marker} branch=`{request['branch']}`; scope=`{request['scope']}`; owner-message=`{reference}`\n\n"
+                "## Почему\n\nExact provider-attested owner invocation; declared finite scope only.\n")
+    # Exclusive writes preserve an existing carrier; partial failure remains denied.
+    with message_path.open("x", encoding="utf-8") as output:
+        output.write(message)
+        output.flush()
+        os.fsync(output.fileno())
+    with decision_path.open("x", encoding="utf-8") as output:
+        output.write(decision)
+        output.flush()
+        os.fsync(output.fileno())
+    from task import plan_bundle
+    plan_decisions.build_views(plan_dir)
+    plan_bundle.build(plan_dir, item_id)
+    return {"granted": True, "granted_by": f"decisions/{identifier}:1 {marker}", "reused": False}
 
 
 def _has_contiguous_decision_identities(rows) -> bool:
@@ -316,7 +420,7 @@ def _owner_message_matches(plan_dir: Path, reference: str, request: dict) -> boo
 
 def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
                        phase_path: Path, implementation_rules: str,
-                       protected_transition):
+                       protected_transition, declared=None):
     """Derive authority only from committed plan-native carriers.
 
     The routine path is backed by the item block that `build()` already parsed.  A
@@ -328,14 +432,17 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
     """
     item_carrier_path = phase_path.parent / f"{item_id}.md"
     item_carrier = f"{item_carrier_path.relative_to(plan_dir).as_posix()}:{item_id}"
-    request = _authority_request(item_id, protected_transition)
+    requested = _authority_request(item_id, protected_transition)
+    if declared is not None and requested is not None and requested != declared:
+        return "owner-gate", False, item_carrier
+    request = declared if declared is not None else requested
     if request is None:
         return "routine", True, item_carrier
 
     marker = f"[OWNER-GRANT:{request['gate_id']}]"
     # The item must itself declare this exact protected transition.  A caller cannot
     # redirect a valid grant to another item/branch merely by supplying kwargs.
-    if marker not in implementation_rules:
+    if declared is None and marker not in implementation_rules:
         return "owner-gate", False, item_carrier
 
     from task import plan_decisions
@@ -365,6 +472,10 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
     if len(grant_rows) != 1:
         return "owner-gate", False, item_carrier
     decision_id, lineno, decision = grant_rows[0]
+    matched_decision = decisions[decision_id - 1]
+    if (matched_decision.status != "accepted" or matched_decision.superseded_by is not None
+            or (declared is not None and item_id not in matched_decision.items)):
+        return "owner-gate", False, item_carrier
     record = _OWNER_GRANT_RECORD_RE.fullmatch(decision)
     if (record is None
             or record.group("gate_id") != request["gate_id"]
@@ -880,6 +991,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     if not occurrences:
         raise TaskContractBuildError(item_id, "item", f"no item block found in {phase_path}")
     fields = occurrences[0]["fields"]
+    declared = declared_authority(item_id, fields)
 
     def field_text(name):
         value, _ = fields.get(name, ("", None))
@@ -992,7 +1104,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     audit_cap_remediation = _has_audit_cap_remediation_grant(plan_dir, item_id)
     authority_class, authority_granted, authority_granted_by = _resolve_authority(
         plan_lint, plan_lines, plan_dir, item_id, phase_path, impl_rules_text,
-        protected_transition)
+        protected_transition, declared)
 
     contract = {
         "schema_version": SCHEMA_VERSION,

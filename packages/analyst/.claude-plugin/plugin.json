@@ -1,6 +1,6 @@
 {
   "name": "analyst",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "analyst — continuous learning экосистемы: детерминированный захват кандидат-уроков из прогонов (digest), человеко-гейт (review/promote), провенанс; агент-аналитик (/analyst:deep, digest-first). Команды + агент.",
   "author": { "name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com" },
   "homepage": "https://github.com/academici/swissknifeman",

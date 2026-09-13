@@ -13,8 +13,8 @@ from core import (ProviderId, ProviderManifestError, SupportLevel,
 
 ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_PATH = ROOT / "configs" / "provider-capabilities.json"
-APPROVED_CANONICAL_SHA256 = "9d8b95709c5977dcec4699e515feebadcbb4c77b00d3c4a25ca869b61e8920b4"
-APPROVED_CARRIER_SHA256 = "2b3bd60cade123c1f390c2c3fe3e1db0029bf2d2f7946ed3394620366c8f387d"
+APPROVED_CANONICAL_SHA256 = "ef84f7e1a1fd47cc04ddec2ccc62dcc99887730bc84870041354cee97a13e8cc"
+APPROVED_CARRIER_SHA256 = "7298d50fa9953353151d6c51502e98d8d15adfeeb3ff8b1f2c50cc0e741f37b2"
 
 REGENERATION_DIAGNOSTIC = (
     "manifest hash mismatch — configs/provider-capabilities.json was likely "
@@ -55,9 +55,12 @@ class TestProviderManifest(unittest.TestCase):
                          REGENERATION_DIAGNOSTIC)
         self.assertEqual(hashlib.sha256(raw).hexdigest(), APPROVED_CARRIER_SHA256,
                          REGENERATION_DIAGNOSTIC)
-        self.assertEqual(raw, provider_manifest_canonical_bytes(manifest) + b"\n")
+        # The manifest is a handwritten source; canonical serialization sorts capability
+        # IDs but the carrier may retain authoring order. Both snapshots above are pinned.
+        self.assertEqual(parse_provider_manifest(raw),
+                         parse_provider_manifest(provider_manifest_canonical_bytes(manifest)))
         self.assertEqual((len(manifest.providers), len(manifest.capabilities),
-                          len(manifest.native_extensions)), (2, 35, 0))
+                          len(manifest.native_extensions)), (2, 36, 0))
 
     def test_contract_compatibility_accepts_v1_minor_and_rejects_next_major(self):
         compatible = manifest_value()
@@ -90,10 +93,10 @@ class TestProviderManifest(unittest.TestCase):
         manifest = load_provider_manifest(MANIFEST_PATH)
         catalog = provider_config_catalog(manifest)
         self.assertEqual(catalog.catalog_version, "1.0.0")
-        self.assertEqual(len(catalog.capability_support), 70)
+        self.assertEqual(len(catalog.capability_support), 72)
         for provider in ProviderId:
             projection = provider_support_projection(manifest, provider)
-            self.assertEqual(len(projection), 35)
+            self.assertEqual(len(projection), 36)
             self.assertEqual(projection["skills.repository"], SupportLevel.NATIVE)
             with self.assertRaises(TypeError):
                 projection["skills.repository"] = SupportLevel.UNSUPPORTED

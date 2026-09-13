@@ -14,7 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from skiller.common import MANIFEST, MARKETPLACE
-from skiller.status import (channel_overlap, cmd_status, dead_local_entries,
+from skiller.status import (channel_overlap, cmd_status,
                             detect_raw_vendor_path, local_channel_entries,
                             name_duplicates, registry_skill_names)
 import tests.fixtures as fx

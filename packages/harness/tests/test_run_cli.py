@@ -228,6 +228,7 @@ class DryRunTest(unittest.TestCase):
         argv = [PLAN_ID, PHASE_ID, "--dry-run", "--plans-root", str(self.root / "plans"),
                *extra_flags]
         with mock.patch.object(worker, "run", side_effect=self._refuse_if_called), \
+             mock.patch.object(worker, "resolve_claude_bin", return_value=sys.executable), \
              mock.patch.object(gate, "snapshot_before", side_effect=self._refuse_if_called), \
              mock.patch.object(gate, "verdict", side_effect=self._refuse_if_called), \
              mock.patch.object(journal, "maybe_write", side_effect=self._refuse_if_called):

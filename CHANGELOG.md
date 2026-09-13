@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-09-13
+
+### Added
+
+- **Release-to-runtime:** `skiller attest` формирует детерминированные version/tree/file digests для обоих providers и package runtimes; tag gate отклоняет изменённые bytes под прежней unit version. `version --json` показывает umbrella и независимые units. `skiller deliver --release ... --all` явно обновляет проекты/native caches, восстанавливает ownership только известных preimages и сохраняет durable per-target receipt с digest readback и `restart-required`.
+
+### Fixed
+
+- **Task opt-in:** текущий owner intent определяет маршрут; dev/fix работают напрямую без обязательного плана, audit/close/handoff lifecycle. Старые embedded инструкции не переопределяют новый выбор владельца.
+- **Task recovery:** successor до terminal predecessor получает `OUT_OF_ORDER_REQUEST` с active item и start/resume; старт фиксируется durable до product write, resume сохраняет run identity, terminal producer материализует только следующий ready bundle.
+- **Task authority/calendar:** явный finite Authority gate проходит lint/compiler/bundle; grant материализуется из текущего provider-attested owner invocation. Отзыв проверяется заново перед start/resume; `waiting-external` сохраняет observation checkpoint, дату/predicate и continuation без нового owner questionnaire.
+- **Ownership и cache:** общий lock атомарно заменяет только records своего owner; alternating/concurrent writers сохраняют чужие записи и отказывают при collision. Installed verification принимает лишь точные known Codex migration bytes и отвергает mutation, unknown extras и symlinks. Исправлены baseline snapshots уже опубликованного terminal-admission capability.
+
+### Documentation
+
+- **Release-to-runtime roadmap.** Зафиксированы подтверждённые причины version/cache/fleet drift: повторное использование unit versions для новых bytes, потеря ownership в multi-writer lock, разрыв native cache/project/session и отсутствие durable partial-delivery receipt; описаны безопасная reconciliation и проверяемые этапы исправления.
+
 ## [0.15.4] - 2026-09-12
 
 ### Fixed

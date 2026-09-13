@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 import json
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any, Mapping
 
 
 LEDGER_SCHEMA = "urn:swissknifeman:locale-corpus:v1"

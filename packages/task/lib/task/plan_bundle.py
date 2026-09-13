@@ -227,6 +227,11 @@ def model(plan_dir, item_id: str) -> dict:
     if plan_layout.layout_version(plan_dir) != "v2":
         raise BundleError("Bundle v1 существует только для Layout v2")
     fields = _fields(plan_dir, item_id)
+    from task import task_contract
+    try:
+        authority = task_contract.declared_authority(item_id, fields)
+    except task_contract.TaskContractBuildError as exc:
+        raise BundleError(str(exc)) from exc
     repo_root = plan_weight.repo_root_for(plan_dir)
     declarations, entries = {"inputs": [], "required_reads": []}, []
     for field, key in (("Inputs", "inputs"), ("Required Reads", "required_reads")):
@@ -268,6 +273,19 @@ def model(plan_dir, item_id: str) -> dict:
                              "calibration_id": _sha(calibration_raw),
                              "model_id": artifact["calibration_target"]["requested_model_id"]},
               "declaration": declaration, "entries": entries}
+    if authority is not None:
+        from task import plan_decisions
+        sources = []
+        for decision in plan_decisions.load_decisions(plan_dir):
+            if (f"[OWNER-GRANT:{authority['gate_id']}]" in decision.decision_text
+                    or f"[OWNER-REVOKE:{authority['gate_id']}]" in decision.decision_text):
+                sources.append(decision.path)
+                record = task_contract._OWNER_GRANT_RECORD_RE.fullmatch(decision.decision_text)
+                if record is not None:
+                    sources.append(plan_dir / record.group("owner_message").split("#")[0])
+        result["authority"] = {"gate": authority, "evidence_paths": [
+            {"path": source.relative_to(plan_dir).as_posix(), "sha256": _sha(source.read_bytes())}
+            for source in dict.fromkeys(sources)]}
     result["manifest_sha256"] = _sha(canonical_json(result).encode("utf-8"))
     validate(result)
     return result

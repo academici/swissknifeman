@@ -39,10 +39,7 @@ CMD="${1:-help}"
 case "$CMD" in
   -h|--help|help) usage; exit 0 ;;
   -V|--version|version)
-    # Единая версия монорепо из git (тегов мало, --always даёт SHA; --dirty — флаг
-    # незакоммиченного). Без .git → "dev". НЕ делегируем в skiller (там version нет).
-    echo "swissknifeman $(git -C "$ROOT" describe --tags --always --dirty 2>/dev/null || echo dev)"
-    exit 0 ;;
+    shift; need "$SKILLER"; exec "$SKILLER" version "$@" ;;
   skills)  shift; need "$SKILLER"; exec "$SKILLER" "$@" ;;
   env)     shift; need "$HARNESS"; exec "$HARNESS" "$@" ;;
   wf)      shift; need "$HARNESS"; exec "$HARNESS" wf "$@" ;;

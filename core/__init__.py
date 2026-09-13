@@ -44,7 +44,7 @@ from .provider.lock import (ArtifactAction, ArtifactActionKind, ArtifactLock, Ar
                             BootstrapTransferAdmission, ChainedBootstrapTransferAdmission,
                             DriftObservation, LOCK_RELATIVE_PATH,
                             LOCK_SCHEMA_VERSION, apply_plan, artifact_dry_run, parse_lock,
-                            plan_artifact_lock, plan_bootstrap_transfer,
+                            plan_artifact_lock, plan_bootstrap_transfer, replace_owner_records,
                             plan_chained_bootstrap_transfer,
                             render_artifact_projection, rollback_chained_bootstrap_transfer,
                             serialize_lock)
@@ -91,7 +91,7 @@ __all__ = [
     "ArtifactLock", "ArtifactAction", "ArtifactPlan", "BootstrapTransferAdmission",
     "ChainedBootstrapTransferAdmission", "DriftObservation",
     "ArtifactActionKind", "LOCK_SCHEMA_VERSION", "LOCK_RELATIVE_PATH", "serialize_lock",
-    "parse_lock", "plan_artifact_lock", "plan_bootstrap_transfer",
+    "parse_lock", "plan_artifact_lock", "plan_bootstrap_transfer", "replace_owner_records",
     "plan_chained_bootstrap_transfer", "apply_plan", "artifact_dry_run",
     "render_artifact_projection", "rollback_chained_bootstrap_transfer",
     "RegistrySeverity", "RegistryDiagnostic", "AdapterDescriptor", "AdapterSelection",

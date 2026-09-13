@@ -7,6 +7,7 @@ immutable plan it produced.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from contextlib import contextmanager
 from enum import Enum
 import json
 import os
@@ -178,6 +179,8 @@ class ArtifactPlan:
     lock_path: str = LOCK_RELATIVE_PATH
     bootstrap_transfer: BootstrapTransferAdmission | None = None
     chained_bootstrap_transfer: ChainedBootstrapTransferAdmission | None = None
+    owner_namespace: str | tuple[str, ...] | None = None
+    observed_lock: ArtifactLock | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.actions, tuple) or not all(isinstance(action, ArtifactAction)
@@ -197,6 +200,10 @@ class ArtifactPlan:
         if self.bootstrap_transfer is not None and self.chained_bootstrap_transfer is not None:
             raise ValueError("bootstrap transfer forms must not be combined")
         validate_target_path(self.lock_path)
+        if self.owner_namespace is not None:
+            _owner_namespaces(self.owner_namespace)
+        if self.observed_lock is not None and not isinstance(self.observed_lock, ArtifactLock):
+            raise TypeError("observed_lock must be ArtifactLock or None")
         object.__setattr__(self, "actions", ordered)
 
 
@@ -303,10 +310,44 @@ def parse_lock(raw: bytes) -> ArtifactLock:
     return lock
 
 
+def _owner_namespaces(owner_namespace: str | tuple[str, ...]) -> tuple[str, ...]:
+    namespaces = (owner_namespace,) if isinstance(owner_namespace, str) else owner_namespace
+    if (not isinstance(namespaces, tuple) or not namespaces or
+            any(not isinstance(value, str) or not _IDENTIFIER_RE.fullmatch(value)
+                for value in namespaces)):
+        raise ValueError("owner namespace must be an identifier or nonempty tuple of identifiers")
+    return namespaces
+
+
+def _owned(record: ArtifactProvenance, namespaces: tuple[str, ...]) -> bool:
+    return any(record.artifact_id == namespace or
+               record.artifact_id.startswith(namespace + ".") for namespace in namespaces)
+
+
+def replace_owner_records(lock: ArtifactLock | None,
+                          owner_namespace: str | tuple[str, ...],
+                          records: Iterable[ArtifactProvenance]) -> ArtifactLock:
+    """Replace only an explicit owner's records, preserving every foreign record.
+
+    An empty replacement removes the owner's stale records. A target belonging
+    to a different owner can never be transferred through this helper.
+    """
+    namespaces = _owner_namespaces(owner_namespace)
+    replacement = ArtifactLock(LOCK_SCHEMA_VERSION, tuple(records))
+    if any(not _owned(record, namespaces) for record in replacement.records):
+        raise ValueError("replacement record is outside the owner namespace")
+    foreign = tuple(record for record in lock.records if not _owned(record, namespaces)) if lock else ()
+    if {record.target_path for record in foreign} & {
+            record.target_path for record in replacement.records}:
+        raise ValueError("target belongs to a foreign owner")
+    return ArtifactLock(LOCK_SCHEMA_VERSION, foreign + replacement.records)
+
+
 def plan_artifact_lock(root: Path, expected: Iterable[ArtifactRenderResult], *,
                        lock_bytes: bytes | None, repair_artifact_ids: tuple[str, ...] = (),
                        unsupported_artifact_ids: tuple[str, ...] = (),
                        retain_unexpected_records: bool = False,
+                       owner_namespace: str | tuple[str, ...] | None = None,
                        managed_block_codecs: Mapping[str, tuple[
                            Callable[[bytes, tuple[str, ...]], bytes],
                            Callable[[bytes, bytes, tuple[str, ...]], bytes]]] | None = None) -> ArtifactPlan:
@@ -341,9 +382,17 @@ def plan_artifact_lock(root: Path, expected: Iterable[ArtifactRenderResult], *,
         retained_records = tuple(record for record in lock.records
                                  if record.artifact_id not in expected_ids
                                  and record.target_path not in expected_targets)
-    next_lock = None if any(action.action is ArtifactActionKind.REFUSE for action in actions) else ArtifactLock(
-        LOCK_SCHEMA_VERSION, expected_records + retained_records)
-    return ArtifactPlan(tuple(actions), next_lock)
+    if owner_namespace is not None:
+        namespaces = _owner_namespaces(owner_namespace)
+        if any(not _owned(record, namespaces) for record in expected_records):
+            raise ValueError("expected artifact is outside the owner namespace")
+    next_lock = None
+    if not any(action.action is ArtifactActionKind.REFUSE for action in actions):
+        next_lock = (replace_owner_records(lock, owner_namespace, expected_records)
+                     if owner_namespace is not None else
+                     ArtifactLock(LOCK_SCHEMA_VERSION, expected_records + retained_records))
+    return ArtifactPlan(tuple(actions), next_lock, owner_namespace=owner_namespace,
+                        observed_lock=lock)
 
 
 def plan_bootstrap_transfer(root: Path, expected: Iterable[ArtifactRenderResult], *,
@@ -422,6 +471,25 @@ def apply_plan(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
     root = _root(root)
     if not isinstance(plan, ArtifactPlan):
         raise TypeError("plan must be ArtifactPlan")
+    with _writer_guard(root):
+        return _apply_plan_locked(root, plan)
+
+
+@contextmanager
+def _writer_guard(root: Path):
+    """Serialize provider writers on the root inode without creating sidecars."""
+    import fcntl
+
+    descriptor = os.open(root, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        yield
+    finally:
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+        os.close(descriptor)
+
+
+def _apply_plan_locked(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
     if plan.chained_bootstrap_transfer is not None:
         return _apply_chained_bootstrap_transfer(root, plan)
     if plan.bootstrap_transfer is not None:
@@ -432,14 +500,35 @@ def apply_plan(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
         raise ValueError("bootstrap transfer plan is missing admission")
     if plan.next_lock is None or any(action.action is ArtifactActionKind.REFUSE for action in plan.actions):
         raise ValueError("refusing plan cannot be applied")
+    lock_path = _contained_target(root, plan.lock_path)
+    current_lock = parse_lock(lock_path.read_bytes()) if lock_path.exists() else None
+    if plan.owner_namespace is not None:
+        namespaces = _owner_namespaces(plan.owner_namespace)
+        observed_own = tuple(record for record in plan.observed_lock.records
+                             if _owned(record, namespaces)) if plan.observed_lock else ()
+        current_own = tuple(record for record in current_lock.records
+                            if _owned(record, namespaces)) if current_lock else ()
+        if current_own != observed_own:
+            raise ValueError("owner lock records changed after planning")
+        next_lock = replace_owner_records(current_lock, plan.owner_namespace,
+                                          (record for record in plan.next_lock.records
+                                           if _owned(record, namespaces)))
+    else:
+        # Legacy plans cannot delete ownership they did not explicitly replace.
+        expected_ids = {action.artifact_id for action in plan.actions}
+        replacement = tuple(record for record in plan.next_lock.records
+                            if record.artifact_id in expected_ids)
+        foreign = tuple(record for record in current_lock.records
+                        if record.artifact_id not in expected_ids) if current_lock else ()
+        next_lock = ArtifactLock(LOCK_SCHEMA_VERSION, replacement + foreign)
     writable = tuple(action for action in plan.actions if action.action is not ArtifactActionKind.NOOP)
-    if not writable:
-        return plan
-    for action in writable:
+    for action in plan.actions:
         target = _contained_target(root, action.target_path)
         current = _managed_hash(target, action.expected, action.managed_block_codec)
         if current != action.observed_hash:
             raise ValueError("target changed after planning")
+    if not writable and (plan.owner_namespace is None or next_lock == current_lock):
+        return plan
     for action in writable:
         target = _contained_target(root, action.target_path)
         if action.action is ArtifactActionKind.REPAIR and target.exists():
@@ -447,10 +536,11 @@ def apply_plan(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
                                 target.read_bytes())
         _atomic_write_bytes(target, _replacement_bytes(target, action.expected,
                                                         action.managed_block_codec))
-    _atomic_write_bytes(_contained_target(root, plan.lock_path), serialize_lock(plan.next_lock))
+    _atomic_write_bytes(lock_path, serialize_lock(next_lock))
     return plan_artifact_lock(root, (action.expected for action in plan.actions),
-                              lock_bytes=serialize_lock(plan.next_lock),
+                              lock_bytes=serialize_lock(next_lock),
                               retain_unexpected_records=True,
+                              owner_namespace=plan.owner_namespace,
                               managed_block_codecs={
                                   action.artifact_id: action.managed_block_codec
                                   for action in plan.actions if action.managed_block_codec is not None})

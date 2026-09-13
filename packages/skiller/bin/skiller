@@ -55,11 +55,7 @@ CMD="${1:-help}"
 case "$CMD" in
   -h|--help|help) usage; exit 0 ;;
   validate) exec "$REPO_ROOT/scripts/validate.sh" "$@" ;;
-  version)
-    sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
-    echo "skiller $sha ($REPO_ROOT)"
-    exit 0 ;;
-  connect|vendor|integrate|update|init|sync|lock|status|budget|eval|analyze-run|bucket-audit|list|registry|doctor|topology|release) ;;
+  connect|vendor|integrate|update|init|sync|lock|status|budget|eval|analyze-run|bucket-audit|list|registry|doctor|topology|release|attest|version|deliver) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

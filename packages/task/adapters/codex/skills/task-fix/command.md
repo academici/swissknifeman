@@ -1,9 +1,12 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/fix.md
-Canonical SHA-256: sha256:a7ff7beab7f0f485f8caefeda1d4cf774d9bd310bd20f2407fea1f3dbcff4973
-Adapter: task.codex-command/1.0.11
+Canonical SHA-256: sha256:25678f123188ada21e102329b854b7208b73c4b2cb3c126c2fd72d365426b1ab
+Adapter: task.codex-command/1.0.12
 -->
 Это МЕЛКАЯ инкрементальная правка. Ввод пользователя: «$ARGUMENTS».
+Применяй общий opt-in контракт `references/intent-routing.md` из установленного пакета Task.
+Заверши исправление напрямую: design, план, phase audit и plan close не являются
+условием готовности; старые инструкции в файле задания не отменяют текущий запрос владельца.
 Модель/effort запинены (implementation/medium) — не переключай вручную (frontier тут избыточен).
 
 Профиль `fix` (token-frugal):

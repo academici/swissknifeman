@@ -10,7 +10,7 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from harness.settings_audit import _load_layer, check_1_layer_json_valid, Context
+from harness.settings_audit import _load_layer, _load_codex_toml_layer, check_1_layer_json_valid, Context
 
 
 PACKAGE = Path(__file__).resolve().parents[1]
@@ -45,8 +45,15 @@ class ProviderSettingsDoctorCase(unittest.TestCase):
         codex.write_text('trust_level = "trusted"\n', encoding="utf-8")
 
         codex_result = self._run("--provider", "codex", "--json")
-        self.assertEqual(codex_result.returncode, 0, codex_result.stderr)
-        self.assertEqual(json.loads(codex_result.stdout)["status"], "clean")
+        if sys.version_info < (3, 11):
+            self.assertEqual(codex_result.returncode, 1, codex_result.stderr)
+            self.assertEqual(json.loads(codex_result.stdout)["status"], "warning")
+            layer = _load_codex_toml_layer("project", codex)
+            self.assertEqual(layer.error_kind, "unreadable")
+            self.assertIn("tomllib", layer.error)
+        else:
+            self.assertEqual(codex_result.returncode, 0, codex_result.stderr)
+            self.assertEqual(json.loads(codex_result.stdout)["status"], "clean")
 
         claude_result = self._run("--provider", "claude-code", "--json")
         self.assertEqual(claude_result.returncode, 2, claude_result.stderr)

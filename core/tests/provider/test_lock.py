@@ -2,9 +2,11 @@
 import json
 import os
 from contextlib import contextmanager
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from pathlib import Path
 import tempfile
+from threading import Barrier
 import unittest
 from unittest.mock import patch
 
@@ -16,6 +18,7 @@ from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource
                   plan_artifact_render, plan_bootstrap_transfer,
                   plan_chained_bootstrap_transfer,
                   rollback_chained_bootstrap_transfer, serialize_lock)
+from core import ArtifactLock, replace_owner_records
 
 
 HASH = "sha256:" + "a" * 64
@@ -52,6 +55,15 @@ class ProviderLockTests(unittest.TestCase):
 
     def tearDown(self):
         self.tmp.cleanup()
+
+    def test_noop_target_must_still_match_preimage_at_apply(self):
+        apply_plan(self.root, self.plan())
+        lock = (self.root / provider_lock.LOCK_RELATIVE_PATH).read_bytes()
+        current = self.plan(lock_bytes=lock)
+        (self.root / self.expected.target.path).write_bytes(b"user mutation\n")
+        with self.assertRaisesRegex(ValueError, "target changed after planning"):
+            apply_plan(self.root, current)
+        self.assertEqual((self.root / provider_lock.LOCK_RELATIVE_PATH).read_bytes(), lock)
 
     def plan(self, expected=None, lock_bytes=None, **kwargs):
         return plan_artifact_lock(self.root, (expected or self.expected,), lock_bytes=lock_bytes, **kwargs)
@@ -683,6 +695,106 @@ class ProviderLockTests(unittest.TestCase):
         lock = parse_lock((self.root / ".swissknifeman/provider-artifacts.lock.json").read_bytes())
         self.assertEqual({record.artifact_id for record in lock.records},
                          {self.expected.provenance.artifact_id, other.provenance.artifact_id})
+
+    def test_owner_replacement_preserves_other_writers_in_both_orders(self):
+        for order in (("skiller", "maind"), ("maind", "skiller")):
+            with self.subTest(order=order), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                artifacts = {
+                    owner: result(artifact_id=owner + ".artifact", target=owner + ".txt")
+                    for owner in order}
+                # Both writers planned against the same old lock. The second
+                # application must merge the first writer's newly created record.
+                plans = {owner: plan_artifact_lock(
+                    root, (artifacts[owner],), lock_bytes=None, owner_namespace=owner)
+                         for owner in order}
+                for owner in order:
+                    apply_plan(root, plans[owner])
+                lock_path = root / provider_lock.LOCK_RELATIVE_PATH
+                lock = parse_lock(lock_path.read_bytes())
+                self.assertEqual({record.artifact_id for record in lock.records},
+                                 {"skiller.artifact", "maind.artifact"})
+                for owner in order + order[::-1]:
+                    changed = replace(artifacts[owner], provenance=replace(
+                        artifacts[owner].provenance, adapter_version="1.0.1"))
+                    planned = plan_artifact_lock(
+                        root, (changed,), lock_bytes=lock_path.read_bytes(),
+                        owner_namespace=owner)
+                    apply_plan(root, planned)
+                    self.assertEqual(len(parse_lock(lock_path.read_bytes()).records), 2)
+
+    def test_concurrent_owner_applications_merge_under_writer_guard(self):
+        barrier = Barrier(2)
+
+        def write(owner):
+            artifact = result(artifact_id=owner + ".artifact", target=owner + ".txt")
+            planned = plan_artifact_lock(
+                self.root, (artifact,), lock_bytes=None, owner_namespace=owner)
+            barrier.wait(timeout=5)
+            return apply_plan(self.root, planned)
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            futures = [pool.submit(write, owner) for owner in ("skiller", "maind")]
+            for future in futures:
+                future.result(timeout=5)
+        lock = parse_lock((self.root / provider_lock.LOCK_RELATIVE_PATH).read_bytes())
+        self.assertEqual({record.artifact_id for record in lock.records},
+                         {"skiller.artifact", "maind.artifact"})
+
+    def test_owner_cleanup_replaces_only_own_records_even_for_noop_targets(self):
+        own = result(artifact_id="skiller.first", target="first.txt")
+        obsolete = result(artifact_id="skiller.obsolete", target="obsolete.txt")
+        foreign = result(artifact_id="maind.artifact", target="foreign.txt")
+        apply_plan(self.root, plan_artifact_lock(
+            self.root, (own, obsolete), lock_bytes=None, owner_namespace="skiller"))
+        lock_path = self.root / provider_lock.LOCK_RELATIVE_PATH
+        apply_plan(self.root, plan_artifact_lock(
+            self.root, (foreign,), lock_bytes=lock_path.read_bytes(), owner_namespace="maind"))
+        cleanup = plan_artifact_lock(
+            self.root, (own,), lock_bytes=lock_path.read_bytes(), owner_namespace="skiller")
+        self.assertEqual(cleanup.actions[0].action, ArtifactActionKind.NOOP)
+        apply_plan(self.root, cleanup)
+        lock = parse_lock(lock_path.read_bytes())
+        self.assertEqual({record.artifact_id for record in lock.records},
+                         {"skiller.first", "maind.artifact"})
+        self.assertEqual(replace_owner_records(lock, "skiller", ()).records,
+                         (foreign.provenance,))
+
+    def test_owner_replacement_refuses_foreign_collision_and_stale_own_records(self):
+        foreign = result(artifact_id="maind.artifact", target="shared.txt")
+        own = result(artifact_id="skiller.artifact", target="shared.txt")
+        with self.assertRaisesRegex(ValueError, "foreign owner"):
+            replace_owner_records(ArtifactLock(1, (foreign.provenance,)),
+                                  "skiller", (own.provenance,))
+        planned = plan_artifact_lock(
+            self.root, (own,), lock_bytes=None, owner_namespace="skiller")
+        lock_path = self.root / provider_lock.LOCK_RELATIVE_PATH
+        lock_path.parent.mkdir()
+        lock_path.write_bytes(serialize_lock(ArtifactLock(1, (foreign.provenance,))))
+        with self.assertRaisesRegex(ValueError, "foreign owner"):
+            apply_plan(self.root, planned)
+        self.assertFalse((self.root / own.target.path).exists())
+        lock_path.unlink()
+        apply_plan(self.root, planned)
+        with self.assertRaisesRegex(ValueError, "owner lock records changed"):
+            apply_plan(self.root, planned)
+
+    def test_replacement_records_must_belong_to_declared_namespace(self):
+        with self.assertRaisesRegex(ValueError, "outside the owner namespace"):
+            replace_owner_records(None, "skiller", (self.expected.provenance,))
+
+    def test_legacy_retention_reloads_foreign_record_instead_of_stale_snapshot(self):
+        apply_plan(self.root, self.plan())
+        lock_path = self.root / provider_lock.LOCK_RELATIVE_PATH
+        other = result(artifact_id="harness.other", target=".codex/other.py")
+        stale = plan_artifact_lock(
+            self.root, (other,), lock_bytes=lock_path.read_bytes(),
+            retain_unexpected_records=True)
+        changed = result(body=b"updated task\n", adapter_version="1.0.1")
+        apply_plan(self.root, plan_artifact_lock(
+            self.root, (changed,), lock_bytes=lock_path.read_bytes(), owner_namespace="task"))
+        apply_plan(self.root, stale)
+        self.assertIn(changed.provenance, parse_lock(lock_path.read_bytes()).records)
 
 
 if __name__ == "__main__":  # pragma: no cover

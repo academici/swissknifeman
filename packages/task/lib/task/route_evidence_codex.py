@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import hashlib
 import os
 from pathlib import Path
 
@@ -172,7 +173,7 @@ def _completed_user_prompt(payload: dict, turn_id: str | None) -> str | None:
     return "\n".join(texts) if texts else None
 
 
-def _read_thread_state(path: Path, thread_id: str) -> tuple[dict, tuple[str, ...]]:
+def _read_thread_state(path: Path, thread_id: str, *, require_current_owner_invocation=False) -> tuple[dict, tuple[str, ...]]:
     session_ids = []
     context = None
     task_prompts = []
@@ -194,14 +195,20 @@ def _read_thread_state(path: Path, thread_id: str) -> tuple[dict, tuple[str, ...
                 if event.get("type") == "session_meta" and isinstance(payload.get("id"), str):
                     session_ids.append(payload["id"])
                 elif event.get("type") == "turn_context":
+                    if require_current_owner_invocation and (context is None or context.get("turn_id") != payload.get("turn_id")):
+                        task_prompts = []
                     context = payload
                 elif context is not None and event.get("type") == "response_item":
                     if (prompt := _user_prompt(payload)) is not None:
+                        if require_current_owner_invocation:
+                            task_prompts = [prompt]
                         if any(line.startswith("$ task:") for line in prompt.splitlines()):
                             task_prompts = [prompt]
                 elif context is not None and event.get("type") == "event_msg":
                     if (prompt := _completed_user_prompt(
                             payload, context.get("turn_id"))) is not None:
+                        if require_current_owner_invocation:
+                            task_prompts = [prompt]
                         if any(line.startswith("$ task:") for line in prompt.splitlines()):
                             task_prompts = [prompt]
     except OSError as error:
@@ -221,11 +228,11 @@ def _read_thread_state(path: Path, thread_id: str) -> tuple[dict, tuple[str, ...
 
 def _capture_thread_state(*, thread_id: str, expected_invocation: str,
                           expected_cwd: str | Path, state_root: Path,
-                          routing_path: Path) -> dict | None:
+                          routing_path: Path, require_current_owner_invocation=False) -> dict | None:
     path = _thread_rollout(thread_id, state_root)
     if path is None:
         return None
-    context, prompts = _read_thread_state(path, thread_id)
+    context, prompts = _read_thread_state(path, thread_id, require_current_owner_invocation=require_current_owner_invocation)
     model = context.get("model")
     effort = context.get("effort")
     cwd = context.get("cwd")
@@ -260,13 +267,15 @@ def _capture_thread_state(*, thread_id: str, expected_invocation: str,
         "cwd": str(Path(cwd).resolve()),
         "invocation": expected_invocation,
     })
+    if require_current_owner_invocation:
+        evidence["owner_message_digest"] = hashlib.sha256((str(context.get("turn_id")) + "\n" + prompts[-1]).encode()).hexdigest()
     return evidence
 
 
 def capture_current(*, expected_invocation: str, expected_cwd: str | Path,
                     thread_id: str | None = None, start_pid: int | None = None,
                     process_table=None, routing_path: str | Path = _ROUTING_PATH,
-                    state_root: str | Path | None = None) -> dict:
+                    state_root: str | Path | None = None, require_current_owner_invocation=False) -> dict:
     """Capture and validate the current ``plan-run`` route for this thread."""
     observed_thread = thread_id if thread_id is not None else os.environ.get("CODEX_THREAD_ID")
     if not isinstance(observed_thread, str) or not observed_thread.strip() \
@@ -281,9 +290,12 @@ def capture_current(*, expected_invocation: str, expected_cwd: str | Path,
         expected_cwd=expected_cwd,
         state_root=Path(state_root) if state_root is not None else _thread_state_root(),
         routing_path=routing_path,
+        require_current_owner_invocation=require_current_owner_invocation,
     )
     if thread_evidence is not None:
         return thread_evidence
+    if require_current_owner_invocation:
+        raise RouteEvidenceError("ROUTE_LAUNCH_UNAVAILABLE", "current owner message unavailable; argv cannot grant authority")
 
     argv = _codex_ancestor(start_pid or os.getpid(), process_table)
     model = _one(_option_values(argv, "-m", "--model"), "Codex model selector")

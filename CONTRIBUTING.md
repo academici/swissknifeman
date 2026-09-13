@@ -60,7 +60,15 @@ PYTHONPATH=. python3 -m unittest discover -s core/tests -v   # фундамен�
 - Правки скиллов/бакетов/плагинов → `skiller registry` (регенерит `skills.json`, marketplace,
   plugin-манифесты, граф) — генерёжку руками не правят.
 - Аннотированные semver-теги: `git tag -a vX.Y.Z`; при теге `[Unreleased]` → `[X.Y.Z]`.
-  Версии плагинов Claude Code резолвятся в git SHA (поля `version` в манифестах нет).
+  Umbrella, package API и installable plugin units имеют собственные версии.
+- До тега: `skiller registry --check`, provider command generator `--check`,
+  `skiller attest --release vX.Y.Z --previous vA.B.C`, затем
+  `python3 scripts/verify-tag.py vX.Y.Z`. Изменившийся unit tree требует version bump.
+  Attestation содержит tag/date/digests; SHA определяется через тег, без самоссылки release commit.
+- После тега: `skiller deliver --release vX.Y.Z --all --dry-run`, затем та же команда
+  без `--dry-run`. Только receipt GREEN доказывает полную поставку; PARTIAL перечисляет
+  сохранённые конфликтующие targets. Provider sessions требуют перезапуска.
+- API теги используют `packages/<name>/vX.Y.Z`; plugin теги — `<name>--vX.Y.Z`.
 
 ## PR
 

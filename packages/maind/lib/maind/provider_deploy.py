@@ -18,6 +18,7 @@ from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource
                   ArtifactPlan, CapabilityId, CapabilityRequirement, DriftObservation,
                   ProviderId, SupportLevel, canonical_json_bytes, apply_plan,
                   load_provider_manifest, plan_artifact_lock, plan_artifact_render,
+                  replace_owner_records,
                   parse_lock, provider_config_catalog,
                   plan_bootstrap_transfer, BootstrapTransferAdmission, artifact_dry_run, sha256_digest,
                   ChainedBootstrapTransferAdmission, plan_chained_bootstrap_transfer,
@@ -286,7 +287,9 @@ def plan_d108_operation(root, config, project_id, servers, *, harness_configs,
     lock_bytes = lock.read_bytes() if lock.exists() else None
     artifacts = transfer.artifacts + (mcp,)
     if transfer.managed_post_apply:
-        chained = plan_artifact_lock(Path(root), artifacts, lock_bytes=lock_bytes)
+        chained = plan_artifact_lock(
+            Path(root), artifacts, lock_bytes=lock_bytes,
+            owner_namespace=("maind.provider-deploy", "harness.codex.lifecycle"))
     else:
         admission = ChainedBootstrapTransferAdmission(
             BootstrapTransferAdmission("D104", ".codex/hooks.json",
@@ -630,9 +633,12 @@ def plan_provider_artifacts(root, deploy_plan, *, repair=False, extra_artifacts=
     lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
     lock_bytes = lock_path.read_bytes() if lock_path.exists() else None
     artifacts = tuple(row.artifact for row in deploy_plan.results if row.artifact is not None)
-    artifacts += tuple(extra_artifacts)
+    extra_artifacts = tuple(extra_artifacts)
+    artifacts += extra_artifacts
     codecs = _provider_managed_block_codecs(artifacts)
     plan = plan_artifact_lock(root, artifacts, lock_bytes=lock_bytes,
+                              owner_namespace=("maind.provider-deploy",) + tuple(
+                                  artifact.provenance.artifact_id for artifact in extra_artifacts),
                               repair_artifact_ids=tuple(
                                   artifact.provenance.artifact_id for artifact in artifacts)
                               if repair else (),
@@ -720,9 +726,12 @@ def plan_exact_artifact_adoption(root, artifacts, *, preimage_hashes,
         actions.append(ArtifactAction(
             artifact.provenance.artifact_id, target_path, observation, action,
             artifact, current_hash, diagnostic, codec))
-    return ArtifactPlan(tuple(actions), ArtifactLock(
-        1, existing_lock.records +
-        tuple(artifact.provenance for artifact in artifacts)))
+    namespaces = tuple(artifact.provenance.artifact_id for artifact in artifacts)
+    return ArtifactPlan(
+        tuple(actions), replace_owner_records(
+            existing_lock, namespaces,
+            (artifact.provenance for artifact in artifacts)),
+        owner_namespace=namespaces, observed_lock=existing_lock)
 
 
 def plan_provider_artifact_adoption(root, deploy_plan, *, preimage_hashes):

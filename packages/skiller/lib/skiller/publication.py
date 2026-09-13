@@ -781,7 +781,7 @@ def _build_codex_connect_artifacts(*, repo_root: Path, target: Path,
     lock_path = target / LOCK_RELATIVE_PATH
     lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
     artifact_plan = plan_artifact_lock(
-        target, result, lock_bytes=lock_bytes, retain_unexpected_records=True)
+        target, result, lock_bytes=lock_bytes, owner_namespace="skiller.codex.connect")
     refused = tuple(action for action in artifact_plan.actions
                     if action.action is ArtifactActionKind.REFUSE)
     if refused:
@@ -940,6 +940,23 @@ def run_codex_native_install(*, repo_root: Path, plugin: str, dry_run: bool,
             return False, f"SPUB_INSTALL_UNAVAILABLE: {exc}"
         if getattr(result, "returncode", 1) != 0:
             detail = (getattr(result, "stderr", "") or getattr(result, "stdout", "")).strip()
+            if command[2:4] == ["marketplace", "add"] and "already added from a different source" in detail:
+                try:
+                    listed = runner([executable, "plugin", "marketplace", "list", "--json"],
+                                    check=False, capture_output=True, text=True)
+                    origin = runner(["git", "-C", str(repo_root), "remote", "get-url", "origin"],
+                                    check=False, capture_output=True, text=True)
+                    sources = [m.get("marketplaceSource", {}) for m in json.loads(listed.stdout).get("marketplaces", [])
+                               if m.get("name") == MARKETPLACE]
+                    if listed.returncode or origin.returncode or len(sources) != 1 or sources[0].get("sourceType") != "git" or sources[0].get("source") != origin.stdout.strip():
+                        return False, "SPUB_INSTALL_UNAVAILABLE: existing marketplace source does not match repository origin"
+                    upgraded = runner([executable, "plugin", "marketplace", "upgrade", MARKETPLACE],
+                                      check=False, capture_output=True, text=True)
+                    if upgraded.returncode == 0:
+                        continue
+                    detail = (upgraded.stderr or upgraded.stdout).strip()
+                except (OSError, ValueError, AttributeError) as exc:
+                    detail = str(exc)
             return False, f"SPUB_INSTALL_UNAVAILABLE: {' '.join(command[:3])} failed: {detail}"
     return True, f"codex/native-install: marketplace={repo_root}, plugin={plugin}@{MARKETPLACE}"
 
@@ -1058,7 +1075,7 @@ def _class_b_donor_bucket(canonical: str) -> str:
     try:
         return parts[parts.index("skills") + 1]
     except (ValueError, IndexError):
-        raise ValueError(f"class_b canonical path {canonical!r} is not under a skills/<bucket>/ tree")
+        raise ValueError(f"class_b canonical path {canonical!r} is not under a skills/<bucket>/ tree") from None
 
 
 def _root_bootstrap_class_b_body(identity: str, description: str, canonical_path: str,

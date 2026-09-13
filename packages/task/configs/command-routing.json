@@ -1,7 +1,7 @@
 {
   "contract_version": "1.0.0",
   "catalog_version": "1.0.0",
-  "plugin_version": "0.15.4",
+  "plugin_version": "0.16.0",
   "commands": [
     {
       "command_id": "task:design",
@@ -18,8 +18,8 @@
       "command_id": "task:dev",
       "kind": "intent",
       "source": "packages/task/commands/dev.md",
-      "argument_contract": "brief, slices or durable plan reference",
-      "output_contract": "implementation, tests and risk-adaptive review",
+      "argument_contract": "owner implementation request, brief or requirements reference; explicit plan execution is opt-in",
+      "output_contract": "direct implementation and risk-proportional verification, no implicit plan lifecycle",
       "routing": {"mode": "fixed", "model_class": "implementation", "effort": "high"},
       "capability_requirements": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.git-write", "command.external-research", "command.subagents"],
       "plan_semantics": [],

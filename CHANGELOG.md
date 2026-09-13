@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-09-13
+
 ### Fixed
 
 - **Полевой delivery readback:** отдельная source-bound `codex-native` поверхность проверяет полный native cache, а project bundles — только declared skills. Attestation исключает ignored/untracked telemetry; расширение proof coverage сверяется с предыдущим Git source tag, не требует ложного bump неизменённых units. Orphaned v1 vendor markers архивируются только при отсутствии всех объявленных директорий; реальные оставшиеся vendor-копии остаются blocked. Перед update сохраняется также lock preimage.

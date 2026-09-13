@@ -479,12 +479,12 @@
             "http.py": "sha256:a77eec263bc41adbf87682c2dea0f251ad137bfcb1f2361ec53096a10efbab46",
             "io.py": "sha256:097d44161563d371ee6f570e20183821c608cb57f9686dc06a650446b9ddca12",
             "locale/__init__.py": "sha256:d8968225269356f2fd8bf4a18241267dfc99a71161ae268837c8b618a3c5fef9",
-            "locale/catalog.py": "sha256:32762fdc41046f2530258366905df3092c5b5120205573d202f8406e5678b72f",
+            "locale/catalog.py": "sha256:852f03b37ba29df51140020db99b20cbe8a211bdd42b902e127235bfd35fb18d",
             "locale/corpus.py": "sha256:acd0703c48d7a2631cc30f1c17f913be23831e0f45e8f7b79cdeccf97818b8c3",
             "locale/data/language-subtag-registry.txt": "sha256:be1fad86a99e3a932d07b80c9b3c271ec2381a5909ce22420144e5077ab0a43a",
-            "locale/render.py": "sha256:ee97db11e4a955a1b114a9a4e31e4ef3178ad9aea28be17372c89ab8f09de69e",
+            "locale/render.py": "sha256:5995ea09f253f94e409c2cea8aa7b49bed8b24d6036b40989e8ccabc17aed4ee",
             "locale/resolution.py": "sha256:8737ee790ca5f843b2e2f63ed0098f13ce5b9389fd4e3421795696f2e182d54b",
-            "locale/values.py": "sha256:5270eb6890f1f58c6e42ed6e92a29905af95d40dc53616bced12d147b217157b",
+            "locale/values.py": "sha256:9ad5d7f7f74b235ab6c2f19f6cd5710eac22f52212ea316f35a3c49f9a0c1056",
             "pathology.py": "sha256:023dc66e46c12b17ca0e79fba3de49489b89a6752455beb5f45490e55315978f",
             "paths.py": "sha256:801bbc17865484f0be9ad6920463d1364499350a1467da2d715820ccf13cd640",
             "proc.py": "sha256:21ace1a109a7860f9f39e00597eea93a154d645e3d2135edcb29600b6f90ed78",
@@ -509,10 +509,10 @@
             "text.py": "sha256:8eccd73254124ddc8ac56c99b6b06dc82afb7659dc1549e9bd27433bc6dfa70a",
             "usage.py": "sha256:a06a938ee3bb103b4b7487b7496e5e694c55e4ed05a12faf9fdbda595f8b6b9d"
           },
-          "tree_digest": "sha256:e417b38c4551178c86034d7abaf5f83dde0322930ee4ebaf6ea427c9ba399afb"
+          "tree_digest": "sha256:133a5476e400018a93c9f87593709bb40731ffd7da8ecad120a293daaff5e608"
         }
       },
-      "tree_digest": "sha256:a6be73203b0fce86e856f3d42963db79cb0a5dc62f6677722bd41ec2435e9b09"
+      "tree_digest": "sha256:4eb5d1db896c00571286cd033a6f978b997397c2224405283d24b95b31c07410"
     },
     {
       "id": "creative",
@@ -4074,7 +4074,7 @@
             "lib/task/terminal_admission.py": "sha256:c2b077c9eabefbad015f4671b329d3d268b0d8f881bb6fcfaad47b598c6ad3ff",
             "lib/task/terminal_policy.py": "sha256:efc96efc8f47bcff40fc0e7018ac079675c18b7512b82534894775e0c94028fc",
             "lib/task/token_estimate.py": "sha256:0cac9d374b0ba84be36b558a70e6a7eea35266a375c40af36f593d4515fcb8b7",
-            "lib/task/token_probe.py": "sha256:2b9856c54ebb4171a89e2b48d6ab5d1d48f99d3bc910d218eb261ac751fbfdcc",
+            "lib/task/token_probe.py": "sha256:844a30736af6adbf9360f9cd6dfc71502771e914bd07a05bb376e21f8ac32deb",
             "lib/task/token_probe_codex.py": "sha256:244f484914444cb6be4f8dd67837bff604d0efebd4a2714f6c9731c13c53e27f",
             "lib/task/validation_admission.py": "sha256:93583caf0ec106bac4bfbc051212fab9932876032a43477ad87cf903bf10a049",
             "references/intent-routing.md": "sha256:feba8a0cd25c5b6007159024a6836fed35cf79842cce989ca5bd88f75a9f5ec4",
@@ -4094,10 +4094,10 @@
             "scripts/validate.sh": "sha256:c56ccaa544bebe9c43c5badbc5c8d4aad0af8d70b21b3b0669e141f3b2e10729",
             "scripts/verify-plan-citations.py": "sha256:ceb36002c1479daa02572e92eaf1b4df9b43d672e7060e91e88b18fed8c7c437"
           },
-          "tree_digest": "sha256:fb8dc63dd8782036be0c202ed112d581d12b3ac9898dabc52e93b7111c819a7f"
+          "tree_digest": "sha256:41b5f9ac8b26700133b7afcb6b3982a88a19d82f66b818b40bcfe7a8efa1992b"
         }
       },
-      "tree_digest": "sha256:30de94b186ce3cde3b0576a49dcf11255106e7cc02defbe6d7c98f918008bdc8"
+      "tree_digest": "sha256:2dc3157d15279fa69fdd53ebcd3199a140ccdaecd2903c35a83b0cdf77108095"
     },
     {
       "id": "voice-ai",

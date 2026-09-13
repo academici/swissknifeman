@@ -1,4 +1,6 @@
 """Immutable values shared by the locale resolver and render boundaries."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 SURFACES = ("response", "plan", "diagnostics")

@@ -9,7 +9,7 @@ Keep the two distribution channels distinct: `connect` enables a marketplace sou
 Keep `.swissknife.json` for connect and legacy vendor selection separate from `.swissknifeman/config.json` for skill-granular vendor sync. JSON files under `schema/` document these configs for editor DX only; runtime validation stays manual and does not read them as a live contract.
 <!-- instruction:skiller.core-policy -->
 ## skiller.core-policy
-Deliver the nine `CORE_SKILLS` by default through the selected channel; `--no-core` is the explicit opt-out and budget reporting remains authoritative. Also, take the resident CORE cost from `skiller budget --check-core`, never from a copied snapshot.
+Deliver the curated `CORE_SKILLS` by default through the selected channel; `--no-core` is the explicit opt-out and budget reporting remains authoritative. Also, take the resident CORE cost from `skiller budget --check-core`, never from a copied snapshot.
 <!-- instruction:skiller.layout-and-generation -->
 ## skiller.layout-and-generation
 Keep skills under `skills/<bucket>/<name>/SKILL.md`; treat `skills.json`, `skills/_index.md`, marketplace manifests, graph, and budget documentation as registry-generated outputs. Also, presets expand before the selection formula `(presets ∪ buckets ∪ include) − exclude`.

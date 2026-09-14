@@ -28,7 +28,7 @@ def _write_core_skills(root):
     дописать их бакеты в buckets.json (требование 1:1 с каталогами)."""
     skills = root / "skills"
     for name in ("context-economy", "anti-drift", "compact-responses",
-                 "session-handoff"):
+                 "session-handoff", "verify-claims"):
         write_skill(skills / "general" / name, name)
     write_skill(skills / "oss-dev" / "gh-review", "gh-review")
     write_skill(skills / "system" / "shared-memory", "shared-memory")
@@ -493,7 +493,13 @@ class TestCoreAndManifest(unittest.TestCase):
             names = {e["name"] for e in entries}
             self.assertIn("code-style", names)
             self.assertIn("context-economy", names)
-            self.assertIn("gh-review", names)
+            self.assertEqual(names, {"code-style", "context-economy", "anti-drift",
+                                     "session-handoff", "verify-claims"})
+            self.assertNotIn("gh-review", names)
+            self.assertNotIn("compact-responses", names)
+            optional, _ = resolve_skillset(env, {"include": ["oss-dev/gh-review"]},
+                                            include_core=True)
+            self.assertIn("gh-review", {e["name"] for e in optional})
             # без include_core CORE не добавляется
             base, _ = resolve_skillset(env, {"include": ["php/code-style"]})
             self.assertEqual({e["name"] for e in base}, {"code-style"})

@@ -2,9 +2,24 @@
   "_doc": "D27: per-publication-unit version map, separated from the skiller package API SemVer (packages/skiller/package.json). `default_unit_version` freezes the exact pre-migration value every generated unit's manifest carried before this map existed (skiller API was 0.4.0 at freeze time and every unit's rendered `version` field inherited it uniformly); a unit NOT listed under `units` stays pinned to that frozen baseline, so an unrelated owner's package-API bump never touches its manifest bytes (byte-identical guard, generated-artifact-version-v1.md). Only an owner item's Implementation Rules may add/bump an entry here, and each bump is read from the repo, not assumed (P1.1 ledger).",
   "default_unit_version": "0.4.0",
   "units": {
-    "core": "0.16.2",
-    "general": "0.13.4",
+    "core": "0.17.0",
+    "general": "0.13.5",
     "skm": "0.4.2",
-    "repository-bootstrap": "0.3.0"
+    "repository-bootstrap": "0.3.1",
+    "architect": "0.4.1",
+    "frontend-vue": "0.4.1",
+    "php": "0.4.1",
+    "quality": "0.4.1",
+    "frontend-backend": "0.4.1",
+    "frontend-naive-ui": "0.4.1",
+    "frontend-nuxt": "0.4.1",
+    "frontend-tailwind": "0.4.1",
+    "frontend-wayfinder": "0.4.1",
+    "laravel-auth": "0.4.1",
+    "laravel-data-layer": "0.4.1",
+    "laravel-filament": "0.4.1",
+    "laravel-testing": "0.4.1",
+    "oss-dev": "0.4.1",
+    "php-packages": "0.4.1"
   }
 }

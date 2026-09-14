@@ -23,7 +23,7 @@ from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_
                                   metadata_value)
 
 
-ADAPTER_VERSION = "1.0.12"
+ADAPTER_VERSION = "1.0.14"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
@@ -1066,12 +1066,13 @@ def _codex_native_launch_rule(mapping: ProviderCommandMapping) -> str:
 This generated runtime is the Codex provider projection. Render only the Codex-native launch;
 never copy Claude Code slash syntax as the executable invocation and never print both providers.
 `$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
-When the typed Context is `continue-root`, keep executing the compatible ready successor in this
-root: do not finalise, ask the owner, or manufacture a fresh `codex` process between ordinary
-items. A command, phase, directory, local repair, or ordinary test failure is not a session
+When the typed Context is `continue-root`, keep executing the compatible ready successor within
+the owner-authorized scope in this root. If that scope is complete, report the exact successor as a
+recommendation for this chat; a final answer does not require a new `codex` process. A command, phase, directory, local repair, or ordinary test failure is not a session
 boundary.
 
-Keep Batch/Model/Thinking/Context/Суть in the metadata table, but never put the command in a table
+At a fresh-session boundary, keep Batch/Model/Thinking/Context/Суть in the metadata table,
+but never put the command in a table
 cell or column. Immediately after the table print `**Native Codex command:**` and a fenced `bash`
 block which explicitly pins the repository cwd, mapped model, reasoning effort, approval policy,
 and sandbox:
@@ -1083,16 +1084,19 @@ codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-sele
 Prefer one physical command line. If intentional formatting uses multiple shell lines, terminate
 every continued line except the last with `\\`; never rely on Markdown visual wrapping.
 
-**Final-response guard:** a `continue-root` successor means continue work now, not a final response.
-At a real user-facing boundary with an executable Next (`cold-start-root`, `waiting-owner`, or
-`waiting-external`), do not stop after a completion summary, `Delivery receipt`, or `PHASE-CLOSED`.
-Before final, verify that the copyable native Codex `bash` block is present after the metadata table.
-Only a genuinely terminal Next with no executable successor may omit it.
+**Final-response guard:** continue compatible work inside the admitted owner scope. At an actual
+chat stop, include the exact shared receipt recommendation even when no terminal-admission lease
+is installed. `scope-complete` retains `continue-root`; it does not authorize the successor or
+require a fresh launch. An explicit new-session request updates the persisted decision to
+`cold-start-root: owner-requested-new-session` with a fresh post-close checkpoint. Then include the
+copyable native Codex block after the metadata table. Waiting continuations retain the exact gate;
+never present them as an unconditional command to run now. A completed objective needs no invented
+successor. Render only the active provider.
 
 Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
 do not reuse the preceding session's route. Current Codex mapping: {class_routes};
-{effort_routes}. Keep the provider-neutral launch-block too, but never hand off only
-`$ task:…` or an unpinned `codex` command.
+{effort_routes}. At a fresh-session boundary, keep the provider-neutral Next too; its
+`$ task:…` form alone or an unpinned `codex` command is not a native fresh launch.
 
 '''
 

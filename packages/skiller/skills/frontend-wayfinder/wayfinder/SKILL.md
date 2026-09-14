@@ -1,8 +1,8 @@
 ---
 name: wayfinder
 bucket: frontend-wayfinder
-version: 0.1.0
-description: "Laravel Wayfinder: typesafe routes and controller actions for the frontend. Generation, named imports, form(), import architecture boundaries via ESLint."
+version: 0.1.1
+description: "Use for Laravel Wayfinder route/action generation, typed imports, forms, and import boundaries."
 risk: write
 persona: oss-dev
 tags: [wayfinder, laravel, typescript, routes, inertia, eslint, frontend]

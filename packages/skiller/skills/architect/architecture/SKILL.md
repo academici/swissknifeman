@@ -1,148 +1,58 @@
 ---
 name: architecture
 bucket: architect
-version: 0.1.0
-description: Use when choosing system architecture: stack choice, ADR, C4 diagrams, deployment, scalability.
+version: 0.2.0
+description: "Choose a consequential architecture or record a disputed design decision; scale artifacts to risk."
+when_to_use: "Use when a consequential architecture decision needs design."
 risk: draft
 persona: architect
 tags: [architecture, adr, c4, scalability, deployment]
-requires: [brd, tech-stack-selection]
+requires: []
 produces_for: [data-schema, api-design, security-design, agent-design, observability-design, legal-compliance]
 outputs: ["docs/03_Dev/Architecture_[Name].md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
 
-# Skill: Architecture Design
+# Architecture Design
 
-Apply when: task on architecture, stack choice, ADR, technical design.
+Use for a consequential system/component design decision. Start from the authorized outcome,
+existing architecture, load and deployment constraints, and relevant recorded decisions. A BRD
+is useful input when present; its absence does not block a bounded design or an authorized
+local repair. Do not manufacture a design phase because several files are involved.
 
-## Precondition
+## Decide with enough evidence
 
-Write architecture ONLY after approved BRD. No BRD → first read `.ai/skills/pm/brd.md`.
+1. Identify the boundary and the concrete problem: behavior, ownership, compatibility, load,
+   reliability, or operating cost. State unknown constraints that affect the decision.
+2. Inspect existing capabilities before adding a dependency or new layer. Compare viable
+   alternatives when they meaningfully differ; each rationale explains how it serves the
+   actual goal and constraints, rather than popularity or familiarity.
+3. Choose the smallest sufficient design, name tradeoffs and accepted risks, and define
+   observable acceptance. Verify changing external premises with current primary evidence.
+4. Record the decision where the project owns architecture docs. A short explanation suffices
+   for a local reversible choice; an ADR suits a consequential, disputed, or durable boundary.
+5. When implementation is authorized, carry it through checks and delivery. A separately
+   requested design ends with the reviewable design and concrete next action.
 
-## Architecture doc format
+## Useful artifacts
 
-```
-1. Context & constraints (from BRD)
-2. Options considered (min 2–3)
-   - Option A: [name]
-     - Pros: ...
-     - Cons: ...
-     - Cost / complexity: ...
-     - business_rationale: how the option serves the BRD goal/constraint
-   - Option B: ...
-3. Chosen solution + rationale
-   - Why this one, not the others
-   - Which risks we accept consciously
-4. Component diagram (Mermaid)
-5. Integrations & external dependencies
-6. ADR records for non-trivial decisions → `docs/03_Dev/ADR/`
-```
+For a full architecture document include context, alternatives/rationale, chosen components,
+integrations, deployment, reliability/security constraints, and acceptance. Use a diagram when
+it makes relationships clearer. Do not require a Mermaid diagram or a load/SLO estimate that
+is irrelevant or unsupported; record unknowns honestly and resolve them when they become
+load-bearing.
 
-## Rationale rule
+Use [ADR template](snippets/adr-template.md) for a significant decision,
+[C4 context](snippets/c4-context.md) for system boundaries, and
+[C4 containers](snippets/c4-container.md) for runtime components. Adapt paths to the existing
+project layout; a particular vault or BRD file is not a universal prerequisite.
 
-Each architectural decision contains:
-- **What chosen**
-- **Why** (via business logic, not just "it's popular")
-- **What rejected and why**
+## Risk-specific navigation
 
-**Mandatory:** every Options block carries a `business_rationale` field — how the option serves the BRD goal/constraint. An option without `business_rationale` is not admitted to the comparison (don't pick a stack "because popular/familiar").
-
-## ADR (Architecture Decision Record)
-
-Create ADR in `docs/03_Dev/ADR/ADR-NNN_name.md` when:
-- Decision is non-trivial and can be contested
-- Real alternatives with similar trade-offs exist
-- Decision affects multiple components
-
-ADR format:
-```
-## Context
-## Decision
-## Alternatives
-## Consequences
-```
-
-## Cross-project check
-
-Before designing, check `02 - Knowledge/` and vault map:
-- Similar architecture in another project → reuse pattern
-- Reference in `95 - References/` → link via `[[file]]`
-
-## Full architecture doc template
-
-Create in `docs/03_Dev/Architecture_[Name].md`:
-
-```markdown
-# Architecture: [ProjectName] — [component/context]
-
-## 1. Context & constraints
-[From BRD: goal, actors, key non-functional requirements]
-- Load: [RPS / DAU]
-- Latency SLO: [ms for p95]
-- Availability: [% uptime]
-- Budget: [infra cost target]
-
-## 2. Options considered
-
-### Option A: [name]
-- Pros: ...
-- Cons: ...
-- Complexity: [Low / Medium / High]
-- business_rationale: [how the option serves the BRD goal/constraint]
-
-### Option B: [name]
-- ...
-
-## 3. Chosen solution
-[What chosen and why — via business logic, not "it's popular"]
-Risks accepted consciously: ...
-
-## 4. Component diagram (Mermaid)
-[C4 Level 2 — containers]
-
-## 5. Deployment Architecture
-[Where it runs: cloud/VPS, containers, serverless, region]
-[Infra diagram: LB → App → DB → Cache → Queue]
-
-## 6. Integrations & external dependencies
-| System | Purpose | Integration type | Dependency SLA |
-|:---|:---|:---|:---|
-| [Name] | [why] | REST/webhook/SDK | [uptime] |
-
-## 7. Scalability
-- [ ] Stateless app servers? (horizontal scale)
-- [ ] Bottleneck identified? (DB / external API / computation)
-- [ ] Caching strategy? (what we cache, TTL, invalidation)
-- [ ] Async for long operations? (queue / background jobs)
-
-## 8. ADR
-[Links to records in docs/03_Dev/ADR/]
-```
-
-## Security Gate
-
-**If product handles user data, finances or third-party integrations** → read `.ai/skills/architect/security-design.md` in parallel with this skill. Output — `docs/03_Dev/Security_Design.md`.
-
-## Hard prohibitions
-
-FORBIDDEN:
-- Design architecture without approved BRD
-- Choose technology without comparing min 2 options
-- Leave an Options block without `business_rationale` (choosing by "popularity/habit")
-- Leave SLO/load undefined ("figure out later")
-- Create architecture doc without Mermaid diagram
-- Skip Security Gate for products with PII
-- Commit external facts (library versions, API behavior, SLA, pricing) from memory — verify via `verify-claims` first
-
-## Related skills
-
-- `pm/brd` — approved BRD as mandatory precondition.
-- `architect/tech-stack-selection` — stack choice with trade-off matrix goes BEFORE this skill.
-- `architect/data-schema`, `architect/api-design` — data & contract detailing after architecture.
-- `architect/security-design` — Security Gate, run in parallel for products with PII/money.
-- `architect/observability-design` — prod observability (SLO/SLI/runbooks) on top of approved architecture.
-- `architect/agent-design` — Agent Design section for products with agents.
-- `architect/legal-compliance` — regulatory checklist based on architecture (where data is stored).
-- `php/laravel-structure`, `laravel-architecture/modular-architecture` — implementing architecture in concrete Laravel code.
+Assess affected trust/data boundaries while choosing architecture. For changes to auth,
+secrets, personal/financial data, or external exposure, use `architect/security-design` for
+those boundaries; no automatic second full security document follows every local edit.
+`architect/tech-stack-selection` applies to an actual stack decision, `architect/api-design`
+to a public contract, and `architect/data-schema` to persistence modeling. Agent loop,
+observability, and legal-compliance skills apply only when those decisions are in scope.

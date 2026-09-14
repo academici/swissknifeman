@@ -1,3 +1,6 @@
+> Scope: this example belongs to the project-adopted pattern in `../SKILL.md`.
+> It does not impose this architecture on another project; preserve real access and transaction invariants.
+
 # Организация маршрутов (routes/web.php, routes/api.php)
 
 <!-- Source: anonymized production Laravel project -->

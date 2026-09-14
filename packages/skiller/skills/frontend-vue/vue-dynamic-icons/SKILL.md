@@ -1,8 +1,8 @@
 ---
 name: vue-dynamic-icons
 bucket: frontend-vue
-version: 0.1.0
-description: "Vue: one icon component rendering SVG by string name from a set (lucide-vue-next etc.) via <component :is>; activate on dynamic icon, icon by name, component is icon, passing size/strokeWidth/color, type-safe icon name, swapping icon set."
+version: 0.1.1
+description: "Use for Vue SVG icons selected by string name: component :is, typed names, and icon props."
 risk: write
 persona: oss-dev
 tags: [vue, icons, dynamic-component, lucide, typescript, frontend]

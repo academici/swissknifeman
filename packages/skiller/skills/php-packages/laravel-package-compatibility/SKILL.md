@@ -1,8 +1,8 @@
 ---
 name: laravel-package-compatibility
 bucket: php-packages
-version: 0.3.0
-description: "Use this skill when reviewing Laravel package compatibility across composer constraints, PHP versions, Laravel versions, Testbench versions, dependency stability lanes, Windows CI, or matrix-sensitive code and workflow changes."
+version: 0.3.1
+description: "Use for Laravel package PHP/Laravel/Testbench constraints and CI compatibility matrices."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "package-dev"]

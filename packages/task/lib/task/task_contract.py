@@ -95,6 +95,7 @@ _ROUTING_RANGE_RE = re.compile(r"^(P\d+)\.(\d+)\s*[–-]\s*(P\d+)\.(\d+)$")
 _AUDIT_BLOCK_HEADER_RE = re.compile(r"^##\s+Audit\s+(P\d+)\b")
 _OWNER_GRANT_RE = re.compile(r"\[OWNER-GRANT:([A-Z0-9][A-Z0-9.-]+)\]")
 _OWNER_REVOKE_RE = re.compile(r"\[OWNER-REVOKE:([A-Z0-9][A-Z0-9.-]+)\]")
+_NEEDS_CLARIFICATION_RE = re.compile(r"\[NEEDS\s+CLARIFICATION\s*:", re.IGNORECASE)
 _AUTHORITY_DECLARATION_RE = re.compile(
     r"^\[OWNER-GATE:(?P<gate_id>[A-Z0-9][A-Z0-9.-]+)\]\s+"
     r"branch=`(?P<branch>[^`\n]+)`;\s*scope=`(?P<scope>[^`\n]+)`$")
@@ -275,11 +276,23 @@ def _authority_request(item_id: str, protected_transition):
     return {key: value.strip() for key, value in request.items()}
 
 
-def declared_authority(item_id: str, fields: dict):
-    """Read a finite item gate; prose can flag migration but cannot grant authority."""
+def declared_authority(item_id: str, fields: dict, *, for_execution: bool = False):
+    """Read a finite item gate; prose can flag migration but cannot grant authority.
+
+    An unresolved clarification marker is an explicit statement that the item lacks
+    an execution-critical binding.  It must not silently fall through to the routine
+    path merely because the author did not also write an ``Authority`` field.
+    """
     def text(name):
         value = fields.get(name, "")
         return value[0] if isinstance(value, tuple) else value
+    # Design lint and bundle rendering still need to inspect an unfinished item;
+    # this becomes a hard boundary only when an executor/recovery path asks to act.
+    if (for_execution
+            and any(_NEEDS_CLARIFICATION_RE.search(str(text(name)) or "") for name in fields)):
+        raise TaskContractBuildError(
+            item_id, "Authority",
+            "AUTHORITY_CONTRACT_GAP: unresolved NEEDS CLARIFICATION requires a finite Authority gate")
     declaration = (text("Authority") or "").strip()
     if declaration and declaration != "routine":
         match = _AUTHORITY_DECLARATION_RE.fullmatch(declaration)
@@ -313,7 +326,7 @@ def materialize_owner_invocation(plan_dir, item_id: str, *, command="plan-run") 
     occurrences = phase["items"].get(item_id, []) if phase else []
     if len(occurrences) != 1:
         raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: item неоднозначен")
-    request = declared_authority(item_id, occurrences[0]["fields"])
+    request = declared_authority(item_id, occurrences[0]["fields"], for_execution=True)
     if request is None:
         raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: finite gate не объявлен")
     checkout = plan_dir.parent.parent
@@ -497,7 +510,19 @@ _ROUTING_HEADER_CANDIDATES = (_ROUTING_HEADER_CANON, "Model/effort", "Model/Effo
 _EXECUTABLE_ROUTING_COLUMNS = (
     "Batch", "Items", "Model class/effort", "Exec", "Review", "Почему",
 )
-_EXECUTABLE_ROUTING_EXEC_VALUES = frozenset(("plan-exec", "manual", "plan-design"))
+def resolve_exec(value: str) -> str:
+    """Resolve command spelling to execution mode without changing route authority.
+
+    plan-run shares plan-exec lifecycle but retains manual/owner route semantics.
+    The raw Routing cell stays in the table digest and item projection.
+    """
+    modes = {"plan-exec": "plan-exec", "manual": "manual",
+             "plan-run": "manual", "plan-design": "plan-design"}
+    try:
+        return modes[value.strip()]
+    except (KeyError, AttributeError) as exc:
+        raise TaskContractBuildError("routing", "Routing", f"invalid Exec {value!r}") from exc
+
 _EXECUTABLE_ROUTING_REVIEW_VALUES = frozenset(("full", "light", "none"))
 
 # Default location of the committed provider routing carrier this module reads
@@ -681,9 +706,8 @@ def compile_batch_routing(plan_dir, *, routing_config_path=None) -> dict:
         batch = (row.get("Batch") or "solo").strip()
         if not batch or not plan_lint._ROUTING_BATCH_RE.fullmatch(batch):
             raise TaskContractBuildError("routing", "Routing", f"line {line}: invalid Batch {batch!r}")
-        exec_mode = (row.get("Exec") or "").strip()
-        if exec_mode not in _EXECUTABLE_ROUTING_EXEC_VALUES:
-            raise TaskContractBuildError("routing", "Routing", f"line {line}: invalid Exec {exec_mode!r}")
+        declared_exec = (row.get("Exec") or "").strip()
+        exec_mode = resolve_exec(declared_exec)
         review = (row.get("Review") or "").strip()
         if review not in _EXECUTABLE_ROUTING_REVIEW_VALUES:
             raise TaskContractBuildError("routing", "Routing", f"line {line}: invalid Review {review!r}")
@@ -695,7 +719,7 @@ def compile_batch_routing(plan_dir, *, routing_config_path=None) -> dict:
             batch_key = f"solo:{item}" if item_batch.lower() == "solo" else item_batch
             entry = {"item_id": item, "batch": item_batch, "batch_key": batch_key, "route": {
                 "model_class": model_class, "effort": effort},
-                "exec": exec_mode, "review": review, "line": line,
+                "exec": exec_mode, "declared_exec": declared_exec, "review": review, "line": line,
                 "recommended": row.get("Почему", "").strip().startswith("recommended:")}
             item_rows[item] = entry
             groups.setdefault(batch_key, []).append(entry)
@@ -991,7 +1015,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     if not occurrences:
         raise TaskContractBuildError(item_id, "item", f"no item block found in {phase_path}")
     fields = occurrences[0]["fields"]
-    declared = declared_authority(item_id, fields)
+    declared = declared_authority(item_id, fields, for_execution=True)
 
     def field_text(name):
         value, _ = fields.get(name, ("", None))

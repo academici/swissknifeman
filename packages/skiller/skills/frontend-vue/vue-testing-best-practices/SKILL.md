@@ -1,8 +1,8 @@
 ---
 name: vue-testing-best-practices
 bucket: frontend-vue
-version: 1.1.0
-description: "Testing practices for Vue 3 components with Vitest + Vue Test Utils 2: mount vs shallowMount, isolating composables, createTestingPinia, async/flushPromises, resilient data-testid, mocking children/slots/emits, and what NOT to test."
+version: 1.1.1
+description: "Use for Vue Test Utils 2 component/composable tests, Pinia fakes, async DOM, and emits."
 risk: write
 persona: oss-dev
 tags: [vue, testing, vitest, vue-test-utils, pinia, composables, frontend]

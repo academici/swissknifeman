@@ -1,8 +1,8 @@
 ---
 name: laravel-security-audit
 bucket: laravel-auth
-version: 0.1.0
-description: "Audit Laravel code for sharp edges: raw Eloquent queries, mass assignment, Blade XSS, CSRF bypass, open redirect, unsafe serialization, authz holes."
+version: 0.1.1
+description: "Use to audit Laravel auth, raw queries, mass assignment, XSS, CSRF, and unsafe input."
 risk: draft
 persona: oss-dev
 tags: [php, laravel, security]

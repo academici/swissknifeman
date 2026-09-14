@@ -4,7 +4,7 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "9d840b7dfa1123ed40b2013b43c29a040f91b28704b21011230e9bf7e373bacb",
+    "source_sha256": "f7cb08722ba302235d03b9bbcf89568e28a8b762a03d7907866011041351f27a",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
     "literal_count": 291
   },
@@ -379,7 +379,7 @@
     },
     {
       "semantic_id": "skiller.core-policy",
-      "literal": "Deliver the nine `CORE_SKILLS` by default through the selected channel"
+      "literal": "Deliver the curated `CORE_SKILLS` by default through the selected channel"
     },
     {
       "semantic_id": "skiller.core-policy",

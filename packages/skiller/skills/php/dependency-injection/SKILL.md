@@ -1,8 +1,9 @@
 ---
 name: dependency-injection
 bucket: php
-version: 0.1.0
-description: "Layer interaction via constructor injection: final readonly + promotion, injection matrix, Action composition"
+version: 0.2.0
+description: "Wire dependencies in an adopted Laravel layer model; inspect the relevant DI example."
+when_to_use: "Use when wiring collaborators in an adopted Laravel architecture."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "di", "architecture"]
@@ -13,6 +14,14 @@ snippets: ["action-di.php", "service-orchestrator.php", "composite-action.php", 
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
+
+## Scope of this pattern
+
+Apply this Action/Read-Store/DTO/constructor-injection pattern only where the project has
+adopted it or the requested design explicitly chooses it. Preserve existing Laravel/module
+conventions elsewhere; do not introduce layers, facades, DTOs, `VisibilityService`, or directory
+mirrors merely to satisfy this example. Review severity follows actual impact and adopted
+contracts. Whatever the pattern, preserve authorization, transaction atomicity, and test isolation.
 
 ## Context
 
@@ -55,7 +64,7 @@ Business-rule violation in Action → `ValidationException::withMessages([...])`
 
 ### 6. Bad-boundary signals
 - Circular dependency → extract a third class with shared logic.
-- 6+ constructor deps → class does too much, split.
+- Many constructor dependencies → inspect cohesion; split only when responsibilities warrant it.
 - Dependency needed by one method of ten → rethink class boundaries.
 
 ## Snippet map
@@ -78,7 +87,7 @@ Business-rule violation in Action → `ValidationException::withMessages([...])`
 - [ ] No `app()` / `resolve()` / facade dependency resolution in Action/Service/Repository
 - [ ] Multi-step scenario — composite Action with one outer transaction, not use-case Service
 - [ ] Business validation in Action — `ValidationException`, not `abort()`
-- [ ] Constructor ≤ 5 deps; no cycles; no "one-method" deps
+- [ ] Constructor dependencies are cohesive; no cycles; narrow dependencies where useful
 - [ ] PHP snippets pass `php -l`
 
 ## Links

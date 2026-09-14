@@ -1,8 +1,8 @@
 ---
 name: refactoring-plan
 bucket: quality
-version: 0.1.0
-description: Use when planning a safe refactor: scope, Mikado / strangler pattern, atomic steps, done criteria, rollback.
+version: 0.1.1
+description: "Use when planning a safe refactor: scope, incremental steps, validation, and rollback."
 context: fork
 background: false
 risk: draft

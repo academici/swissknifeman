@@ -1,6 +1,6 @@
 ---
 name: task-plan-close
-description: "Close a green item or phase with changed-scope evidence and semantic delivery."
+description: "Reconcile GREEN Task items or phases; ordinary execution already closes inline."
 ---
 
 # Task plan-close
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-close`.
 - Invocation: `$ task:plan-close <arguments>`
 - Routing: `implementation/low -> gpt-5.6-terra/low`
 - Canonical source: `packages/task/commands/plan-close.md`
-- Canonical SHA-256: `sha256:ab015c331ed651a589a65071dc82b05d07e172567bfd799d13369f4d0c4070c3`
+- Canonical SHA-256: `sha256:fc87cc465062aecc166c7f9e7cff56fd85fdf3e45f69754f8a67abc4851e042b`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `references/intent-routing.md` from the configured Task marketplace runtime before selecting

@@ -1,8 +1,8 @@
 ---
 name: code-simplifier
 bucket: quality
-version: 0.3.0
-description: "Simplify freshly written code without changing behavior: dead code, needless abstractions, dups, align to project patterns; YAGNI ladder before coding + diff delete-list (ponytail discipline). Tests pin behavior."
+version: 0.3.1
+description: "Use to simplify a fresh diff: remove duplication and needless layers while preserving behavior."
 risk: write
 persona: quality
 tags: [quality, refactoring, refactor, ci, validation]

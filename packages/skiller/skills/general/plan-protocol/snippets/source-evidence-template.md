@@ -1,5 +1,9 @@
 # Шаблон evidence bundle — `committed-bundle`-тир (P2.7)
 
+Resolve `<task-package-root>` from the configured Task runtime before copying a command; it is
+the package directory containing `lib/task/`. Use the same provider runtime locator as the Task
+command, never a consumer-local package copy or another provider's environment variable.
+
 Исполнимая форма bundle-требований (SSOT формулировок — `plan-portability-v1.md`
 §Bundle requirements плана `2026.07.24-AGENT-RELIABILITY`; здесь — ЦИТАТА и структура,
 не переписывание). Нужен КАЖДОМУ item'у, чей `portability.tier == "committed-bundle"`
@@ -45,7 +49,7 @@ plans/<PLAN-ID>/artifacts/<Pn.m>/evidence/
 ## Команда верификации
 
 ```bash
-PYTHONPATH="${CLAUDE_PLUGIN_ROOT}/packages/task/lib" python3 -c '
+PYTHONPATH="<task-package-root>/lib" python3 -c '
 from task.task_contract import bundle_lint
 code = bundle_lint(
     "plans/<PLAN-ID>/artifacts/<Pn.m>/evidence",

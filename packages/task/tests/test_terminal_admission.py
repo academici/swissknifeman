@@ -56,6 +56,23 @@ class TerminalAdmissionTests(unittest.TestCase):
         self.assertEqual(verdict.reason, "NOT_APPLICABLE")
         self.assertFalse(verdict.final_allowed)
 
+    def test_chat_scope_stop_and_fresh_handoff_require_terminal_receipt(self):
+        from task.plan_continuity import WorkEstimate, reduce
+        for lifecycle in ("scope-complete", "owner-requested-new-session"):
+            with self.subTest(lifecycle=lifecycle):
+                decision = reduce(WorkEstimate(True, True, True, True, "sufficient", True,
+                    "a" * 64, True, 0, lifecycle=lifecycle, checkpoint="journal:closed-P4.1")).as_dict()
+                terminal_admission.arm(self.store, self.identity, decision,
+                    progress_fingerprint="b" * 64, ttl_seconds=60)
+                rejected = terminal_admission.evaluate(self.store, self.identity, decision,
+                    receipt_reader=lambda: receipt(subject="P4.2"),
+                    proposed_message=terminal_admission.required_final_message(receipt()))
+                self.assertFalse(rejected.final_allowed)
+                allowed = terminal_admission.evaluate(self.store, self.identity, decision,
+                    receipt_reader=receipt,
+                    proposed_message=terminal_admission.required_final_message(receipt()))
+                self.assertTrue(allowed.final_allowed)
+
     def test_active_progress_must_continue(self):
         self.arm()
         verdict = terminal_admission.evaluate(

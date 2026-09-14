@@ -1,8 +1,8 @@
 ---
 name: laravel-package-testing
 bucket: php-packages
-version: 0.3.0
-description: "Use this skill when writing, editing, fixing, or reviewing package tests with Pest 4 and Orchestra Testbench, including TDD, feature tests, unit tests, type coverage, arch tests, workbench behavior, commands, routes, config, migrations, and publishable resources."
+version: 0.3.1
+description: "Use for Laravel package Pest 4/Testbench tests: HTTP, commands, config, migrations, and fixtures."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "package-dev"]

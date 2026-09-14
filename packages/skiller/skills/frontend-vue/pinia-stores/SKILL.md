@@ -1,8 +1,8 @@
 ---
 name: pinia-stores
 bucket: frontend-vue
-version: 0.1.0
-description: "Pinia (Vue 3) global state: setup stores (defineStore with function), ref=state/computed=getters/function=actions, use*Store naming, store composition, access outside components, hydration, persist. Activate creating/editing resources/js/stores/**, defineStore, useXxxStore, or 'how to store global state / share data between components'."
+version: 0.1.1
+description: "Use for project Pinia setup-store conventions, shared state, hydration, and persistence."
 risk: write
 persona: oss-dev
 tags: [pinia, vue, frontend, state-management, store, architecture]

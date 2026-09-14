@@ -1,8 +1,8 @@
 ---
 name: laravel-package-release
 bucket: php-packages
-version: 0.3.0
-description: "Use this skill when preparing Laravel package releases: generated release notes, GitHub release workflows, version checks, tags, release validation, or release automation changes. Never publish autonomously."
+version: 0.3.1
+description: "Use to prepare Laravel package releases, notes, tags, and checks; publishing needs authority."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "package-dev"]

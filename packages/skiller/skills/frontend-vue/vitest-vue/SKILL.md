@@ -1,6 +1,7 @@
 ---
+version: 0.1.1
 name: vitest-vue
-description: Vitest fast unit testing framework powered by Vite with Jest-compatible API. Use when writing tests, mocking, configuring coverage, or working with test filtering and fixtures.
+description: "Use for Vitest APIs: tests, mocks, coverage, filtering, and fixtures in Vite projects."
 metadata:
   author: Anthony Fu
   version: "2026.1.28"

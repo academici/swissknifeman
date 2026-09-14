@@ -22,7 +22,6 @@ flowchart LR
     figma_mcp_core["figma-mcp-core"]
     legal_compliance["legal-compliance"]
     observability_design["observability-design"]
-    package_contribution_protocol["package-contribution-protocol"]
     security_design["security-design"]
     tech_stack_selection["tech-stack-selection"]
   end
@@ -201,10 +200,6 @@ flowchart LR
     shared_memory["shared-memory"]
     swissknifeman_locator["swissknifeman-locator"]
   end
-  agent_design -->|requires| architecture
-  api_design -->|requires| data_schema
-  architecture -->|requires| brd
-  architecture -->|requires| tech_stack_selection
   attribute_authorization -->|requires| laravel_permissions
   axioma_glossary -->|requires| domain_modeling
   axioma_stack -->|requires| ecosystem_reuse_gate
@@ -264,10 +259,6 @@ flowchart LR
   new_project -->|requires| risk_assessment
   observability_design -->|requires| architecture
   oss_governance -->|requires| oss_development
-  package_contribution_protocol -->|requires| anti_drift
-  package_contribution_protocol -->|requires| api_design
-  package_contribution_protocol -->|requires| architecture
-  package_contribution_protocol -->|requires| task_brief_template
   parametric_config -->|requires| model_rules
   parametric_config -->|requires| threading
   parametric_config -->|requires| version_gotchas
@@ -284,7 +275,6 @@ flowchart LR
   release_engineering -->|requires| oss_development
   requirement_critic -->|requires| brd
   resolving_merge_conflicts -->|requires| git_commit_rules
-  security_design -->|requires| architecture
   session_observer -->|requires| shared_memory
   shared_memory -->|requires| local_topology
   swissknifeman_locator -->|requires| local_topology
@@ -306,8 +296,11 @@ flowchart LR
   adversarial_check -.->|feeds| startup_lifecycle
   agent_design -.->|feeds| observability_design
   anti_drift -.->|feeds| session_handoff
+  architecture -.->|feeds| agent_design
   architecture -.->|feeds| api_design
   architecture -.->|feeds| data_schema
+  architecture -.->|feeds| security_design
+  brd -.->|feeds| architecture
   ci_cd -.->|feeds| release_engineering
   code_simplifier -.->|feeds| code_review
   codebase_design -.->|feeds| architecture
@@ -318,6 +311,7 @@ flowchart LR
   customer_discovery -.->|feeds| competitive_analysis
   customer_discovery -.->|feeds| monetization_design
   customer_discovery -.->|feeds| new_project
+  data_schema -.->|feeds| api_design
   db_test_preflight -.->|feeds| laravel_testing
   db_test_preflight -.->|feeds| test_isolation_guard
   defensibility -.->|feeds| go_to_market
@@ -379,6 +373,7 @@ flowchart LR
   startup_lifecycle -.->|feeds| pmf_diagnostics
   task_brief_template -.->|feeds| complex_task_orchestrator
   tdd_discipline -.->|feeds| code_review
+  tech_stack_selection -.->|feeds| architecture
   tech_stack_selection -.->|feeds| oss_development
   tech_stack_selection -.->|feeds| release_engineering
   test_strategy -.->|feeds| code_review
@@ -389,16 +384,16 @@ flowchart LR
   verify_claims -.->|feeds| tech_stack_selection
 ```
 
-**В графе:** 131 скиллов, 97 рёбер requires, 89 рёбер produces_for.
+**В графе:** 130 скиллов, 88 рёбер requires, 94 рёбер produces_for.
 
-## Изолированные скиллы (101)
+## Изолированные скиллы (102)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
 | Бакет | Скиллы |
 |---|---|
 | ai | `ai-agents`, `mcp-builder`, `token-efficient` |
-| architect | `dev-engineering-super-skill` |
+| architect | `dev-engineering-super-skill`, `package-contribution-protocol` |
 | axioma | `axioma-doctrine`, `ecosystem-map` |
 | azguard | `azguard` |
 | creative | `content-creative-super-skill` |

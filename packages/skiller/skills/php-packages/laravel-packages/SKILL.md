@@ -1,8 +1,8 @@
 ---
 name: laravel-packages
 bucket: php-packages
-version: 0.3.0
-description: "Use when building a Laravel package: scaffold, tests, publish package skills to consumers via vendor:publish."
+version: 0.3.1
+description: "Use when building a Laravel package: scaffold, tests, and publishing skills to consumers."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "package-dev", "skills"]

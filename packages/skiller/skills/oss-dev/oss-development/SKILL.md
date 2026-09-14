@@ -1,8 +1,8 @@
 ---
 name: oss-development
 bucket: oss-dev
-version: 0.1.0
-description: "OSS project: repo structure, README, Architecture, ADR, SemVer, CI/CD. PHP specifics in ../references/oss-php.md"
+version: 0.1.1
+description: "Use for OSS repository structure, package docs, architecture decisions, versioning, and CI."
 risk: write
 persona: oss-dev
 tags: [oss, architecture, documentation, ci]

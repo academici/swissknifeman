@@ -1,8 +1,8 @@
 ---
 name: vue-composition-api
 bucket: frontend-vue
-version: 0.2.0
-description: "Project Composition API conventions: ref-first and composables pattern. NOT an API reference (`<script setup>`, defineProps/Emits, reactivity) — that's in `vue`; NOT general workflow — that's in `vue-best-practices`. Only delta-decisions and pointers."
+version: 0.2.1
+description: "Use for project ref-first/composable conventions; Vue API syntax belongs to the vue skill."
 risk: write
 persona: oss-dev
 tags: [vue, frontend, composable, patterns]

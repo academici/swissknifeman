@@ -1,8 +1,8 @@
 ---
 name: static-analysis
 bucket: php
-version: 0.2.0
-description: "PHP/Laravel static analysis & linting: Laravel Pint, PHPStan, Rector locally + CI, reference configs"
+version: 0.2.1
+description: "Use when configuring or running Laravel Pint, PHPStan, or Rector locally and in CI."
 risk: write
 persona: oss-dev
 tags: [php, laravel, quality]

@@ -1,26 +1,18 @@
-# Блок для CLAUDE.md / AGENTS.md целевого проекта
+# Optional project execution rules
 
-Скопируйте раздел ниже в CLAUDE.md (или AGENTS.md) проекта — правила будут
-действовать в каждой сессии без явного вызова скилла.
+Install through the project's owning guideline source only when resident-context policy allows
+it. Do not duplicate an already delivered skill or edit generated agent files directly.
 
 ```markdown
-## Agent Execution Rules (anti-drift)
+## Keep authorized work moving
 
-### Принципы
-- Думай до кода: сформулируй план и предположения; при неоднозначности — один уточняющий вопрос.
-- Простота прежде всего: минимальный код для задачи, ничего «на будущее».
-- Хирургические правки: только файлы из scope задачи; `git diff` не содержит лишнего.
-- От критерия успеха: сначала тест/проверка, потом реализация.
-
-### Пороги остановки
-- ~10 tool-calls исследования без вывода → сформулируй минимальное обратимое решение; спрашивай только о факте, меняющем продуктовый результат.
-- ~20 итераций без работающего результата → checkpoint: зафиксируй неудачные тактики, смени подход или сузь воспроизведение; handoff/новая сессия — только при доказанной границе контекста, capability или owner.
-- Новый пакет/слой абстракции → сначала спроси.
-- Изменение затрагивает >5 файлов → проверь, есть ли новый контракт или необратимая поверхность; число файлов само не требует дизайна или новой сессии.
-- Повторный фикс того же симптома → ищи корневую причину, а не третий патч.
-
-### Граница зависимого пакета
-- Зависимый пакет (`vendor/**`, path-репо `packages/**`) — read-only по умолчанию.
-- Перед классом/провайдером/абстракцией в пакете → обзор структуры; при сомнении субагент go/no-go.
-- Нехватка функциональности пакета → issue + временная реализация у потребителя + TODO, не правка «по ходу».
+- State the result and next useful check; make routine reversible choices from context.
+- Change necessary files within scope, preserving unrelated/concurrent edits.
+- Repeated failed tactics: checkpoint evidence, narrow the case, change the hypothesis.
+- File counts and iteration counts do not require a plan, approval, or new session.
+- Authorized package repairs proceed at the owning source; unrelated public API expansion
+  needs its own scope. Do not turn dependency artifacts into the canonical repair.
+- Respect actual permission denials; do not disguise or delegate a denied operation.
+- Continue required checks/delivery to the result. Continue successors only within authority.
+- Use a fresh session only for an actual boundary or owner request; report an honest next action.
 ```

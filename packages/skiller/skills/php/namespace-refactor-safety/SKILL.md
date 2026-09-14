@@ -1,8 +1,8 @@
 ---
 name: namespace-refactor-safety
 bucket: php
-version: 0.1.0
-description: "Discipline for large PHP/Laravel namespace or class-move refactors: three-phase alias → update use-statements → hard rename; anchor find-replace on FQN to dodge prefix collisions; keep a contract at the seam for phpstan; arch-tests for layer parity. Activate on: namespace refactor, move class, rename namespace, domain restructure, mass rename."
+version: 0.1.1
+description: "Use for PHP namespace/class moves: FQN-safe edits, aliases, and caller compatibility."
 risk: write
 persona: oss-dev
 tags: ["php", "refactor", "namespace", "safety"]

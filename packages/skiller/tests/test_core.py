@@ -27,7 +27,7 @@ class CoreCase(unittest.TestCase):
         self.root, self.env = fx.make_registry(self.tmp)
         skills = self.root / "skills"
         for name in ("context-economy", "anti-drift", "compact-responses",
-                     "session-handoff"):
+                     "session-handoff", "verify-claims"):
             fx.write_skill(skills / "general" / name, name)
         fx.write_skill(skills / "oss-dev" / "gh-review", "gh-review")
         fx.write_skill(skills / "system" / "shared-memory", "shared-memory")
@@ -48,11 +48,10 @@ class CoreCase(unittest.TestCase):
     def test_core_skill_tuples_resolves_and_respects_exclude(self):
         names = {t[3] for t in core_skill_tuples(self.env, set())}
         self.assertEqual(names, {"context-economy", "anti-drift",
-                                 "compact-responses", "session-handoff",
-                                 "gh-review"})
+                                 "session-handoff", "verify-claims"})
         # exclude (в форме bucket/rel) побеждает CORE
-        excluded = {t[3] for t in core_skill_tuples(self.env, {"oss-dev/gh-review"})}
-        self.assertNotIn("gh-review", excluded)
+        excluded = {t[3] for t in core_skill_tuples(self.env, {"general/verify-claims"})}
+        self.assertNotIn("verify-claims", excluded)
 
     def test_vendor_injects_core_even_outside_profile(self):
         # profile laravel-project -> [php, quality]; CORE-скиллы из general/oss-dev
@@ -61,7 +60,9 @@ class CoreCase(unittest.TestCase):
         do_vendor(self.env, proj, {"agent": "generic"})
         dest = proj / ".ai" / "skills"
         self.assertTrue((dest / "general" / "context-economy" / "SKILL.md").exists())
-        self.assertTrue((dest / "oss-dev" / "gh-review" / "SKILL.md").exists())
+        self.assertTrue((dest / "general" / "verify-claims" / "SKILL.md").exists())
+        self.assertFalse((dest / "oss-dev" / "gh-review" / "SKILL.md").exists())
+        self.assertFalse((dest / "general" / "compact-responses" / "SKILL.md").exists())
 
     def test_vendor_default_excludes_maind_dupes(self):
         # system выбран явно: shared-memory и cross-project-coordinator убираются

@@ -1,3 +1,6 @@
+> Scope: this example belongs to the project-adopted pattern in `../SKILL.md`.
+> It does not impose this architecture on another project; preserve real access and transaction invariants.
+
 # Вынос общего кода: лестница ступеней
 
 Код выносится «вверх» только когда дублирование реально случилось (второй потребитель существует, а не предполагается). Каждая следующая ступень — больше абстракции и больше стоимость сопровождения; берём минимально достаточную.

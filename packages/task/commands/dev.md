@@ -1,5 +1,5 @@
 ---
-description: "Прямая разработка по запросу владельца: код и проверки по риску, без неявного плана или фаз. Sonnet/high."
+description: "Implement an authorized feature directly, with checks proportionate to risk."
 argument-hint: "[что строим: бриф / срезы / ссылка на план]"
 model: sonnet
 effort: high

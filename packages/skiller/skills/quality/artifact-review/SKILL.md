@@ -1,8 +1,9 @@
 ---
 name: artifact-review
 bucket: quality
-version: 0.1.0
-description: "Review taxonomy by artifact type: three profiles (plan/spec, documentation, code), each with a conformance constitution and dimensions; shared severity axis Blocker/Major/Minor/Nit + independent Conventional-Comments label. Activate when reviewing any artifact — pick the profile first, then measure."
+version: 0.2.0
+description: "Review plans, specifications, docs, or mixed artifacts against their adopted contracts."
+when_to_use: "Use when reviewing plans, specs, documentation, or mixed artifacts."
 risk: read
 persona: quality
 tags: [quality, review, taxonomy, plan, docs, code, severity, conventional-comments]
@@ -14,98 +15,47 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Review taxonomy by artifact type
+# Artifact Review
 
-## Activate when
+Pick review dimensions from the artifact and requested scope. Remain read-only unless fixes
+were separately authorized. Review does not automatically start a Task phase or implementation.
 
-- A review request arrives and the artifact is NOT just code: plan, spec, docs.
-- Dispatching a review command (`task:review`, `task:plan-audit`) and a profile must be chosen.
-- Writing findings and you need the shared severity+label scale instead of an ad-hoc one.
+| Artifact | Contract and useful checks |
+|---|---|
+| Executable Task plan | Its adopted `general/plan-protocol` version, readiness, dependencies, decisions, acceptance, continuity |
+| Other plan/spec | Requested outcome, internal consistency, feasible sequence, missing decisions and failure cases |
+| Documentation | Actual code/API behavior, intended audience, working links, applicable documentation conventions |
+| Code | Runtime contract, correctness, security, compatibility, relevant performance and validation |
 
-Do not use as a replacement for stack-specific code checklists — those come from
-skill-conformance (`task:review` orchestrator, Stage B); this skill is the top level:
-WHICH profile to measure with.
+A `plans/` path alone does not authorize `task:plan-audit`. Use that lifecycle command when an
+executable Task plan audit is requested or already authorized. A bounded design/spec review
+stays within that request. For mixed input, apply relevant dimensions in one review and identify
+the affected artifact in each finding; no mandatory parallel reviewers or second audit pass.
 
-## Principle
+## Findings
 
-One-size-fits-all review misses defect classes: a plan breaks in different places than code.
-Separating design/doc/code review is industry reality (RAG:✅ P5.1 §7 2026-07-09); there is
-no named severity standard for plan review — the scale below is our adaptation, mark it as
-such. Each artifact type gets its own **conformance constitution** (what we check against)
-and its own **dimensions** (what actually breaks).
-
-## Three profiles
-
-| Profile | Conformance constitution | Key dimensions |
-|:--|:--|:--|
-| **Plan/spec** | plan-protocol 2.0 schema + DoR | RAG-groundedness of load-bearing points (`RAG:✅`/`[UNVERIFIED]` markers); structural completeness (sections/statuses/folders); D-log/phase consistency; Open Questions extracted; gates defined |
-| **Documentation** | docs structure canon (Diátaxis / vault canon) | canon conformance; staleness vs code (examples/routes/flags verified); plan→docs migration without loss; wiki-link integrity / broken links |
-| **Code** | stack skills (skill-conformance, `task:review` Stage A/B) | correctness / security / perf + skill-conformance per applicable skill |
-
-The constitution is not reviewer taste: a "non-conforming" finding must reference the exact
-constitution rule (schema section, canon rule, `## Conformance` line of a skill).
-
-## Shared axes: severity × label
-
-Two **independent** axes per finding (RAG:✅ P5.1 §7, CONFIRMED: Conventional Comments label =
-comment intent, severity = weight):
-
-**Severity:**
+Each finding identifies a precise location, failure scenario, consequence, and supporting
+observation or static reasoning. For nonconformance, cite the exact **adopted** requirement.
+Generic skill advice, an unchosen architecture, or reviewer preference cannot become a gate.
+Record uncertainty separately; do not claim a hypothetical scenario was reproduced.
 
 | Severity | Meaning |
-|:--|:--|
-| **Blocker** | artifact cannot be accepted/merged until fixed |
-| **Major** | important defect: fix now or defer by explicit decision (ticket/D#) |
-| **Minor** | real but non-critical — author's call, with a trace |
-| **Nit** | style/trivia; never blocks |
+|---|---|
+| Blocker | Demonstrated acceptance/safety violation that prevents accepting the artifact |
+| Major | Material defect requiring repair or an explicit accepted deferral |
+| Minor | Real bounded defect that does not block acceptance |
+| Nit | Optional style/preference; never blocks |
 
-**Label** (Conventional Comments): `issue` / `suggestion` / `question` / `nitpick`.
-Combinations are legal and informative: `issue(Blocker)`, `suggestion(Minor)`,
-`question(Major)` — a question whose answer gates acceptance.
+Labels `issue`, `suggestion`, `question`, and `nitpick` describe intent independently of severity.
+A question needs a concrete acceptance consequence to carry Major/Blocker severity. Explicit
+uncertainty does not excuse a known blocker, and a stylistic suggestion never blocks.
 
-Rules: severity follows reproduced impact; report uncertainty separately from severity;
-every finding carries `file:line` + failure_scenario + constitution-rule reference.
+## Close the review
 
-## Review fixes
+Report findings first, followed by coverage and material limits. A clean bounded review means
+no findings in that scope, not proof of all-system correctness. The executor may group related
+repairs with shared evidence, preserving independent rollback/ownership boundaries where needed.
+Recheck changed findings; a second full audit needs new scope or a concrete new concern.
 
-Keep the reviewer read-only. The executor may group semantically related fixes in one
-scoped commit with their evidence; split only at a real independent rollback/ownership boundary.
-
-## Dispatch
-
-By artifact type on input (analogous to stack detection in `task:review` Stage A):
-
-| Artifact | Profile-implementing command |
-|:--|:--|
-| Plan/spec (`plans/<ID>/…`) | `task:plan-audit` — declared implementation of the plan-review profile |
-| Documentation (`docs/`, README, guides) | `task:review`, doc profile |
-| Code (diff/branch/PR) | `task:review`, code profile (Stage A/B/C + skill-conformance) |
-
-Mixed input (diff touches both code and docs) — run both profiles, keep findings separated:
-each finding names its profile.
-
-## Quality checklist
-
-- [ ] Profile picked by artifact type before reviewing, not by "read it as code" habit.
-- [ ] Constitution named explicitly; every finding references its exact rule.
-- [ ] Every finding: severity (Blocker/Major/Minor/Nit) + label + `file:line` + failure_scenario.
-- [ ] Nit never blocks; Blocker never downgraded "to keep things moving".
-- [ ] Mixed artifact split by profile, findings not blended.
-- [ ] Related fixes grouped in scoped commits traceable to findings.
-
-## Conformance
-
-- Pick the review profile by artifact type: plan/spec → plan-protocol+DoR, docs → docs canon, code → stack skills.
-- Every finding gets a severity from `Blocker/Major/Minor/Nit` AND a label `issue/suggestion/question/nitpick`; don't mix the axes.
-- Anchor every "non-conforming" finding to the exact constitution rule (skill→rule, schema section, canon).
-- Every finding carries `file:line` + failure_scenario.
-- Set severity by reproduced impact; record confidence separately.
-- `nitpick`/Nit never blocks acceptance.
-- Review remains read-only; the executor groups related fixes in scoped commits.
-
-## Related skills
-
-- `quality/code-review` — team code-review process/checklist (P0–P3, SLA, `[blocker]`… prefixes); this skill is the taxonomy one level up: which profile, which scale.
-- `general/plan-protocol` — plan-protocol 2.0 schema + DoR = constitution of the plan/spec profile.
-- `quality/tech-debt-audit` — scheduled debt audit; deferred Major findings land there.
-- `general/git-commit-rules` — commit format for atomic review-fix commits.
+See `quality/code-review` for diff mechanics and team process. Use `general/plan-protocol` only
+for an adopted executable plan contract, not as a universal template for all plans or specs.

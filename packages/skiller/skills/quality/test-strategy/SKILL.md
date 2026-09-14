@@ -1,8 +1,9 @@
 ---
 name: test-strategy
 bucket: quality
-version: 0.2.0
-description: "Test strategy: pyramid (unit/integration/e2e), coverage policy, mock vs real, which features need which test level, test-suite composition (Arch/Feature/Unit) and Pest Arch architecture tests"
+version: 0.3.0
+description: "Design or revise a test suite strategy; choose checks by behavior and risk, not fixed percentages."
+when_to_use: "Use when defining or revising test-suite policy."
 risk: draft
 persona: quality
 tags: [quality, testing, coverage, validation, ci, architecture, pest]
@@ -14,157 +15,58 @@ sha256: ""
 adapters: [claude, cursor, fable]
 ---
 
-# Skill: Test Strategy
+# Test Strategy
 
-Apply when: feature/regression count makes ad-hoc testing impractical (post first MVP; or onboarding a new product / taking over a legacy codebase).
+Use when defining or revising a suite's coverage, test boundaries, isolation, runtime, or CI
+policy. An ordinary fix uses existing checks plus the smallest meaningful regression coverage;
+it does not require this strategy document, a finished MVP, or an approved architecture file.
 
-## When NOT to apply
-- Prototype / PoC discarded after demo
-- One-off data migration
-- One-person 50-line automation script
-- Before first working MVP / one-off scripts / PoC
-- Before architecture is fixed (`architecture.md`) — else tests get rewritten
+## Choose evidence by failure
 
-## Step 1. Test Pyramid — proportions
+| Changed behavior | Useful evidence |
+|---|---|
+| Calculation or branching logic | Unit cases for boundaries and invariants |
+| Persistence, query, transaction | Integration with isolated storage and the relevant DB semantics |
+| Authorization or tenant visibility | Allowed and denied access at the actual entry boundary |
+| Queue, payment, external effect | Contract/fake checks plus retry, idempotency, and failure cases |
+| User journey spanning components | Focused API/browser integration or E2E |
+| Migration | Isolated representative data; forward/rollback or recovery evidence by risk |
+| Text or mechanical reversible edit | Structural/link/lint checks where useful; no mirrored test |
 
-| Level | Share | Tests | Speed | Maintenance cost |
-|:---|:---:|:---|:---|:---|
-| **Unit** | ~70% | Pure functions, business logic, edge-cases | ms | low |
-| **Integration** | ~20% | Layer ↔ layer (repo ↔ DB, service ↔ cache) | hundreds ms | medium |
-| **E2E** | ~10% | End-to-end user scenario via UI/API | seconds-minutes | high |
+A single well-placed test may cover several layers. Do not require unit + integration + E2E
+for every feature. Reuse valid checks; broaden after new changes, failures, or a concrete gap.
 
-Antipattern "ice-cream cone": many E2E + few unit = slow CI, fragile tests, false alerts. If it happens — record in `tech-debt-audit`.
+## Suite design
 
-## Step 2. Coverage Policy
+Prefer fast feedback and reliable assertions. The familiar 70/20/10 pyramid is an illustration,
+not an enforced distribution. Choose coverage targets from uncovered failure risk and cost;
+90% domain or 80% application coverage are possible team choices, not default merge gates.
+Line coverage cannot prove correctness. Mutation testing can help a critical module when
+ordinary coverage leaves an actual uncertainty.
 
-| Code layer | Min coverage |
-|:---|:---:|
-| Business logic / domain | ≥ 90% |
-| Application / use-cases | ≥ 80% |
-| Adapters (DB, HTTP, external API) | ≥ 60% |
-| UI / presentation | ≥ 40% |
-| Generated / boilerplate | 0% (exclude from coverage report) |
+Test real behavior at the boundary under examination. Mocking internal collaborators is
+appropriate for a focused unit contract but does not verify their integration. For DB or queue
+integration, use the production-relevant semantics in an isolated test environment. SQLite
+cannot prove PostgreSQL locking behavior. Use sandbox/fakes for payments and external sends.
+Never direct cleanup, migration, or destructive fixtures at development or production storage.
+Keep per-test data isolated; do not make success depend on test order or shared mutable state.
 
-Rule: coverage is a lower bound, not a goal. 100% coverage ≠ 100% correctness. Prefer **mutation testing** for critical modules (Stryker, mutmut, infection).
+Use factories, small fixtures, or approved anonymized representative data according to the
+failure. Production-derived data still requires the project's privacy/access controls.
 
-## Step 3. Mock vs Real
+## Adopt policy explicitly
 
-| Testing | Dependency | Mock or Real? |
-|:---|:---|:---|
-| Unit of pure function | — | n/a |
-| Unit with injected dependency | internal service | **mock** (or fake/in-memory) |
-| Integration: repository | DB | **real** (testcontainers / SQLite in-memory) |
-| Integration: external HTTP API | third-party service | **mock** (wiremock / MSW / VCR) |
-| Integration: queue | Kafka/RabbitMQ | **real** (testcontainers) |
-| E2E: critical happy path | full stack | **real** (or close staging) |
-| E2E: payment gateway | Stripe/PayPal | **sandbox** (never real) |
+Record the suite owners, relevant commands, environments, expected runtime, required CI checks,
+and any accepted exceptions. CI gates come from adopted project/release policy. Mark failed,
+flaky, and skipped checks honestly; quarantine needs an owner and loss-of-coverage explanation.
+Decide whether E2E belongs pre-merge or later from release risk, not a blanket nightly rule.
 
-Forbidden: mocking your own code in integration tests — turns them into sub-unit tests.
+For a PHP layered project, read [suite example](snippets/phpunit-testsuites.xml) and
+[architecture example](snippets/pest-arch-test.php) only when configuring those mechanisms.
+Architecture assertions encode the project's chosen boundaries; they must not impose Actions,
+DTOs, `readonly`, or repository layers on another architecture. The
+[pyramid illustration](snippets/test-pyramid.md) is optional background.
 
-## Step 4. Which features need which level
-
-| Feature type | Unit | Integration | E2E |
-|:---|:---:|:---:|:---:|
-| Algorithm / calc (billing, scoring) | ✅ required | — | — |
-| CRUD entity through layers | ✅ | ✅ | — |
-| Authorization / RBAC | ✅ | ✅ | ✅ (smoke) |
-| Payment flow | ✅ | ✅ | ✅ |
-| User registration | ✅ | ✅ | ✅ |
-| UI form with validation | ✅ (logic) | — | ✅ (smoke) |
-| Background job / cron | ✅ | ✅ | — |
-| Migration script | — | ✅ (on copy of prod data) | — |
-
-## Step 5. Test Data Strategy
-
-Pick one primary approach:
-
-| Approach | When | Pros | Cons |
-|:---|:---|:---|:---|
-| **Fixtures (static)** | Simple scenarios | Reproducible, readable | Hard to maintain as it grows |
-| **Factories / Builders** | Medium project | Flexible, DRY | Hidden magic, learning curve |
-| **Production replicas (anonymized)** | Complex regressions | Realistic | Expensive, GDPR risks |
-
-Antipattern: shared mutable state between tests (shared DB without cleanup) — breaks isolation, makes run order significant.
-
-## Step 6. Test-suite composition (PHPUnit/Pest)
-
-Not one flat `tests/` — split into named `<testsuite>` so fast tests fail first, slow ones isolated to a separate job:
-
-| Suite | What | Speed | Run |
-|:---|:---|:---|:---|
-| **Arch** | architecture invariants (Pest Arch) | ms, no DB | first, separate |
-| **Unit** | pure logic, isolation via mock | ms | before Feature |
-| **Feature** | layer↔layer, DB, HTTP | hundreds ms | main |
-| **Context** | end-to-end domain scenarios (opt.) | seconds | after Feature |
-| **UnitFilament** / UI-suite | panel/widgets, separate bootstrap | hundreds ms | separate |
-
-`--testsuite=Arch` runs first CI step (fast fail on boundary breach before DB); each suite parallelized in its own job; `<exclude>` removes overlaps (e.g. `Unit` excludes `Unit/Filament`). See `snippets/phpunit-testsuites.xml`.
-
-Enable run strictness at `<phpunit>` level: `failOnWarning`, `failOnRisky`, `failOnEmptyTestSuite`, `beStrictAboutOutputDuringTests`, `executionOrder="random"`.
-
-## Step 7. Architecture tests (Pest Arch)
-
-Encode boundaries/invariants as executable rules. Don't replace unit; protect architecture from erosion. Typical invariant set for layered backend:
-- `strict_types=1` everywhere in package/app (`->toUseStrictTypes()`).
-- No debug helpers in prod: `dd, dump, ray, var_dump, die` (`->not->toBeUsed()`).
-- **Actions** final (`->toBeFinal()`); **DTO / ValueObjects / Events** — `readonly`.
-- **Contracts** are interfaces (`->toBeInterfaces()`).
-- **Actions and Repositories don't depend on HTTP** (`->not->toUse(Request::class)`).
-
-See `snippets/pest-arch-test.php`. Laravel implementation — `laravel-testing/laravel-testing` and `php-packages/laravel-package-testing`; layer boundaries — `php/laravel-structure`.
-
-## Step 8. CI Integration
-
-```yaml
-# .github/workflows/test.yml
-stages:
-  - lint           # ~10 сек, быстрый fail
-  - unit           # ~30 сек, параллелится по модулям
-  - integration    # ~2 мин, требует docker services
-  - e2e            # ~5-10 мин, отдельная job, не блокирует merge
-  - coverage       # gate: < min → fail PR
-```
-
-Rule: unit + integration **must pass** before merge. E2E can be nightly or post-merge smoke.
-
-## What the agent adds itself
-- "Test time budget": % of feature dev time for tests (standard 30-40%, critical modules 50%+)
-- Test framework recommendation per language (see relevant `oss-dev/references/oss-*.md`)
-- Flaky tests warning: "3 strikes — quarantine" rule, flakiness rate metric
-- Test plan template for a large feature (preconditions / scenarios / expected outcomes)
-
-## Output file `Test_Strategy.md` structure
-
-```markdown
-# Test Strategy: [ProjectName]
-
-## 1. Пирамида (целевые пропорции + текущее состояние)
-## 2. Coverage policy (по слоям + текущий coverage)
-## 3. Mock vs Real (таблица решений на конкретные зависимости проекта)
-## 4. Test Data Strategy (выбранный подход + обоснование)
-## 5. CI Pipeline (stages + gates)
-## 6. Flaky tests policy (как ловим и убираем)
-## 7. Test budget (% времени на тесты)
-## 8. Open questions / TODO
-```
-
-## Hard prohibitions
-
-FORBIDDEN:
-- Writing E2E without unit coverage of the same logic
-- Coverage gate < 60% for domain layer (marker "tests aren't written at all")
-- Shared mutable DB between tests without cleanup
-- Mocking the standard library (datetime, fs) instead of injecting an abstraction — makes tests fragile to refactoring
-- Treating coverage as a goal instead of a risk metric
-- Running tests against production environment
-
-## Links
-- Strategy implementations: `laravel-testing/laravel-testing` (app), `php-packages/laravel-package-testing` (packages), `laravel-testing/laravel-dusk` (E2E), `frontend-vue/vitest` (frontend), `quality/playwright-e2e` (native TS E2E)
-- `quality/mutation-testing` — measure test quality (MSI) on top of coverage policy
-- `quality/code-review` — "are there tests on new logic" criterion relies on this strategy
-- `quality/tech-debt-audit` — where ice-cream cone and coverage debt are logged
-- `laravel-testing/test-isolation-guard`, `devops/db-test-preflight` — test DB isolation and preflight
-- `devops/ci-cd` — coverage gate as separate CI job (threshold from this coverage policy), running suites per job
-- `php/laravel-structure` — layer boundaries checked by Arch invariants
-- snippets/pest-arch-test.php — Pest Arch rules set (strict types, no-debug, final actions, readonly DTO/VO/Events, contracts=interfaces, no Request in Actions/Repositories)
-- snippets/phpunit-testsuites.xml — `<testsuites>` Arch/Feature/Context/Unit + strict run flags
+Write or update the existing strategy document when that is the task. Include concrete
+commands and scenario coverage, not mandatory percentages of development time. For execution,
+route to the relevant stack testing skill and its environment/isolation preflight.

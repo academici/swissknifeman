@@ -1,6 +1,6 @@
 ---
 name: task-plan-audit
-description: "Review a phase or design result as bounded evidence, not a second execution."
+description: "Read-only Task design or phase audit; phase audit needs owner-bound consent."
 ---
 
 # Task plan-audit
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-audit`.
 - Invocation: `$ task:plan-audit <arguments>`
 - Routing: `frontier/xhigh -> gpt-5.6-sol/xhigh`
 - Canonical source: `packages/task/commands/plan-audit.md`
-- Canonical SHA-256: `sha256:9b5ee9b6bc9cd5d18b9a22e1808d3ea19db595c0749b8417c053ca4e2dda07fd`
+- Canonical SHA-256: `sha256:ea4be4ecaf32eb680bf62b20991d76b95d539f8a8c0647c7a38b51ad0a968fb4`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `references/intent-routing.md` from the configured Task marketplace runtime before selecting

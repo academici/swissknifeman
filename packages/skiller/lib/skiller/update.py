@@ -208,6 +208,93 @@ def detect_vendor_path(target, config):
     return None
 
 
+def retire_legacy_codex_links(env, target, *, dry_run=False):
+    """Retire declared links replaced by native skills or explicitly disabled locally.
+
+    The marker owns link destinations, never the source directories. Modified
+    links and files fail before mutation; unique local capabilities remain.
+    """
+    from .native_codex import native_inventory
+    from .common import find_monorepo_root, parse_frontmatter
+    from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock
+    target = Path(target)
+    marker = target / ".agents/.swissknifeman-codex-links.json"
+    if not marker.is_file():
+        return False
+    inventory = native_inventory(env, target)
+    if not inventory["ok"]:
+        raise ValueError("CODEX_DISCOVERY_UNKNOWN: cannot retire skill links without native replacement evidence")
+    with _writer_guard(target):
+        marker = _contained_target(target, ".agents/.swissknifeman-codex-links.json")
+        original = marker.read_text()
+        value = json.loads(original)
+        links = value.get("links")
+        if value.get("version") != 1 or not isinstance(links, dict):
+            raise ValueError("LEGACY_LINKS_UNRECOGNIZED: expected v1 links map")
+        disabled = set()
+        selection_path = _contained_target(target, ".codex/config.toml")
+        if selection_path.is_file():
+            import tomllib
+            selection = tomllib.loads(selection_path.read_text())
+            effective = {Path(row["path"]).resolve(): row.get("enabled")
+                         for row in selection.get("skills", {}).get("config", [])
+                         if isinstance(row.get("path"), str) and Path(row["path"]).is_absolute()}
+            disabled = {path for path, enabled in effective.items() if enabled is False}
+        lock_path = _contained_target(target, LOCK_RELATIVE_PATH)
+        owned = parse_lock(lock_path.read_bytes()).records if lock_path.is_file() else ()
+        repo = find_monorepo_root(env.root)
+        allowed = [env.root / "skills", env.root / "adapters/codex"]
+        if repo is not None:
+            allowed.append(Path(repo) / "packages/task/adapters/codex/skills")
+        pending = []
+        for name, destination in links.items():
+            if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name) or not isinstance(destination, str):
+                raise ValueError("LEGACY_LINKS_UNRECOGNIZED: unsafe link declaration")
+            source = Path(destination)
+            if not source.is_absolute() or not any(source.resolve().is_relative_to(p.resolve()) for p in allowed):
+                raise ValueError("LEGACY_LINKS_UNRECOGNIZED: source outside owned skill roots")
+            # Check the parent, not the symlink target: the target is intentionally external.
+            directory = _contained_target(target, ".agents/skills")
+            link = directory / name
+            if not link.is_symlink() or link.resolve() != source.resolve():
+                raise ValueError("LEGACY_LINK_MODIFIED: preserve " + str(link))
+            md = link / "SKILL.md"
+            if not md.is_file():
+                continue
+            identity = parse_frontmatter(md).get("name", name)
+            explicitly_disabled = md.resolve() in disabled
+            if explicitly_disabled or identity in inventory["native_names"]:
+                # A same-name cache entry can be stale. Preserve every source file,
+                # including referenced instructions, before retiring its local carrier.
+                replacements = [Path(p).parent for p in inventory.get("paths", {}).get(identity, [])
+                                if "/plugins/cache/swissknifeman/" in str(p)]
+                files = [p for p in source.rglob("*") if p.is_file()]
+                equivalent = any(all((candidate / p.relative_to(source)).is_file()
+                                     and (candidate / p.relative_to(source)).read_bytes() == p.read_bytes()
+                                     for p in files) for candidate in replacements)
+                if not explicitly_disabled and not equivalent:
+                    print("preserve non-equivalent native replacement: " + name)
+                    continue
+                relative = ".agents/skills/" + name
+                if any(r.target_path == relative or r.target_path.startswith(relative + "/") for r in owned):
+                    raise ValueError("LEGACY_LINK_FOREIGN_OWNER: preserve " + relative)
+                pending.append((name, link))
+        if not pending:
+            return False
+        backup = _contained_target(target, ".swissknifeman/backups/legacy-codex-links-" + uuid.uuid4().hex)
+        if not dry_run:
+            backup.mkdir(parents=True)
+            (backup / marker.name).write_text(original)
+            for name, link in pending:
+                link.rename(backup / name)
+            retained = dict(value)
+            retired = {name for name, _link in pending}
+            retained["links"] = {k:v for k,v in links.items() if k not in retired}
+            atomic_write_text(marker, json.dumps(retained, ensure_ascii=False, indent=2) + "\n")
+        print(f"{'[dry-run] ' if dry_run else ''}retire {len(pending)} replaced/disabled Codex skill links; backup={backup}")
+        return True
+
+
 def enabled_marketplace_plugins(target, mk_file):
     """Активные (True) плагины marketplace-канала из settings-файла — имена без
     '@<marketplace>'. Fail-safe: битый/пропавший файл → [] (гонка/порча между

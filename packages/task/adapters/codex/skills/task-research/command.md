@@ -1,10 +1,14 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/research.md
-Canonical SHA-256: sha256:14cbac2b918121ebaeefd88c00cf6bd5137ac9d2e4ac39415eeca2d7377c38c5
-Adapter: task.codex-command/1.0.12
+Canonical SHA-256: sha256:417b37dbca208f58ec3ca9373736dde751db43be02d2910180377649df631d9b
+Adapter: task.codex-command/1.0.14
 -->
 Это задача ИССЛЕДОВАНИЯ. Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (frontier/high) — не переключай вручную.
+
+Результат — ответ на исследовательский вопрос с проверенными источниками и конкретным следующим
+шагом. Workflow нужен только при действительной необходимости оркестрации; само исследование не
+включает design/dev lifecycle и не разрешает реализацию.
 
 Профиль `research`:
 1. **Формулируй запросы по дисциплине `query-craft`** (никогда не голый «как сделать X» без версии+контекста);

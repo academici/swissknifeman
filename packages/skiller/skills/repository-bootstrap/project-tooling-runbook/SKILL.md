@@ -1,8 +1,8 @@
 ---
 name: project-tooling-runbook
 bucket: repository-bootstrap
-version: 0.1.0
-description: "Runbook for ecosystem project tooling: multi-source skills (swissknifeman connect/vendor channels + local skills; Laravel Boost as MCP only) and docs sync with Brain vault. Use to add/choose skills (ALWAYS ask connect vs vendor), configure agent-packs, sync docs, or handle config hygiene."
+version: 0.1.1
+description: "Use when configuring ecosystem skill delivery, agent-packs, or Brain docs sync; preserve existing channel ownership."
 risk: draft
 persona: oss-dev
 tags: [runbook, skills, docs-sync, root-bootstrap]
@@ -36,10 +36,10 @@ only".
 | **Laravel Boost** | `boost.json` (`mcp`/`guidelines`/`skills[]`) | **MCP + guidelines only** — not used as a skills channel (below) |
 | **local** (own) | — (just a folder `.claude/skills/<name>/`) | your own skills / rolled out from another hub (e.g. `ecosystem-mcp` from maind) |
 
-### ⚠️ swissknifeman installs skills via TWO channels — ASK the user which
+### swissknifeman installs skills via two ownership channels
 
-Before installing/adding swissknifeman skills, **always confirm the channel with the user** (not
-a default choice — it changes what enters the repo and at what granularity you control it):
+Reuse the project’s configured channel and the owner’s existing authorization. Ask only when
+a new channel choice is unresolved and materially changes repository ownership or delivery:
 
 | Channel | Command | What it does | Granularity | In repo |
 |:--|:--|:--|:--|:--|
@@ -60,7 +60,7 @@ a default choice — it changes what enters the repo and at what granularity you
 > vs `.swissknifeman/config.json` (vendor `sync`, skill-granular). Canon — swissknifeman docs
 > `guide/skills-architecture.md` §6.
 
-> Ask via AskUserQuestion: "connect (bucket plugins, not in repo; needs registry access)" vs
+> For an unresolved choice, explain: "connect (bucket plugins, not in repo; needs registry access)" vs
 > "vendor (physical skill copies in repo + lock; works for external developers)". Default
 > recommendation — **vendor**, if the project is handed to external developers or needs set
 > control and repo commitment.
@@ -182,7 +182,7 @@ digests. Use `codex plugin list --json` from the consumer and offline `codex deb
 to confirm the selected plugins contribute skills. Global cache versions and project bundle
 versions are separate observations; never infer release delivery from a Connect success.
 
-**Adding a role to a project** (ask the channel first, see above):
+**Adding a role to a project** (resolve the channel from existing configuration first):
 - **connect**: `connect --plugins <current>,<new>` (current — in `skiller status` /
   `enabledPlugins`). Preserves `permissions`/`defaultMode` (bypass, see
   [[auto-approve-bypass]]). Afterward — restart the session or `/plugin marketplace update
@@ -330,7 +330,7 @@ four:
 
 1. Hub onboarding — [ecosystem-integration] (`maind onboard …`, namespace, health=connected).
    Rolls out the **MCP + memory/graph** layers (daemon, `.mcp.json` servers, graph/code graph).
-2. Role skills — **ask the channel** (connect/vendor), then:
+2. Role skills — reuse the authorized channel (connect/vendor), then:
    - connect: `connect --plugins …` (architect+php[+frontend]); or
    - vendor: `.swissknifeman/config.json` (include/buckets) → `skiller sync`.
 3. **Agents/roles** — `harness agent-packs render --pack <stack> [--pack <role>] --target .

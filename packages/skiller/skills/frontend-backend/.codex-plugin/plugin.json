@@ -1,6 +1,6 @@
 {
   "name": "frontend-backend",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Backend integration layer: Inertia+Vue, Laravel Echo realtime client, backend→frontend type sync",
   "skills": [
     "./backend-type-sync",

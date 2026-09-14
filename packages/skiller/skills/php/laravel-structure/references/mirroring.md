@@ -1,3 +1,6 @@
+> Scope: this example belongs to the project-adopted pattern in `../SKILL.md`.
+> It does not impose this architecture on another project; preserve real access and transaction invariants.
+
 # Правило зеркала
 
 **Одна таксономия доменов во всех слоях.** Если домен называется `Order` в `Models/`, он называется `Order` в `Enums/`, `Policies/`, `Repositories/`, `database/factories/`, `tests/Feature/` — везде. Подпроцессы (`Common/`, `Review/`, `Application/`) — одинаковые подпапки в `Actions/`, `Dto/Actions/`, `Enums/<Domain>/Permissions/`, `Policies/<Domain>/`.

@@ -1,25 +1,14 @@
-# Блок «первый приоритет» для CLAUDE.md проекта-потребителя
+# Optional consumer package boundary
 
-Вставьте раздел ниже в корневой `CLAUDE.md` (или `AGENTS.md`) проекта, который
-дорабатывает свои зависимые пакеты. Это ручной акцент поверх автоматически
-подключённого скилла `package-contribution-protocol` — правило действует в каждой
-сессии. Имена пакетов подставьте под свой проект.
+Add only through the project's owning source and resident-context budget policy. This snippet
+does not outrank user authority and does not impose a mandatory separate session or subagent.
 
 ```markdown
-## ПРИОРИТЕТ 1 — граница «проект ↔ зависимый пакет»
+## Shared package changes
 
-Этот проект потребляет свои пакеты как **read-only зависимость**. При любой
-доработке пакета руководствуйся скиллом `package-contribution-protocol`.
-
-**НЕЛЬЗЯ:**
-- Редактировать код зависимого пакета (`vendor/<vendor>/<package>/`, path-репо
-  `packages/<package>/`) в рамках продуктовой задачи.
-- Добавлять в пакет класс/провайдер/интерфейс/абстракцию «на будущее» (YAGNI).
-- Переносить код в пакет «потому что похоже на общее» без Rule of Three.
-- Менять публичный контракт пакета без ADR и SemVer-версии.
-
-**Перед расширением пакета — спроси / отдай субагенту go/no-go**, затем при `go`:
-1. Proposal issue в репозитории пакета (с альтернативами).
-2. Временно реализуй нужное в `app/`/`Modules/` через extends/события.
-3. Поставь `TODO` со ссылкой на issue.
+Inspect the owning package source, guide, and extension points. Authorized repairs proceed
+there with compatibility checks and delivery; do not patch installed vendor artifacts as the
+permanent fix. Preserve concurrent edits. New unrelated public API expansion requires scope;
+reuse/generalization needs a measured reason, not anticipated consumers. Proposal/ADR/review
+requirements follow the package's adopted policy. Respect actual tool permission boundaries.
 ```

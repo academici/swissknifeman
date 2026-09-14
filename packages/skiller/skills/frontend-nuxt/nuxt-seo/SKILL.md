@@ -1,6 +1,7 @@
 ---
+version: 0.1.1
 name: nuxt-seo
-description: Nuxt SEO meta-module with robots, sitemap, og-image, schema-org. Use when configuring SEO, generating sitemaps, creating OG images, or adding structured data.
+description: "Use for Nuxt SEO modules: robots, sitemap, OG images, metadata, and structured data."
 license: MIT
 ---
 

@@ -29,7 +29,21 @@ class Source:
         else:
             result = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard"],
                                     cwd=root, check=True, capture_output=True, text=True)
-            self.paths = result.stdout.splitlines()
+            self.paths = [path for path in result.stdout.splitlines()
+                          if self._present_in_worktree(path)]
+
+    def _present_in_worktree(self, path):
+        # The index retains unstaged deletions. Exclude only genuinely absent
+        # entries; lstat keeps dangling/external links for read() to reject.
+        candidate = self.root / path
+        try:
+            candidate.lstat()
+        except FileNotFoundError:
+            # A missing target below a replaced symlink is not evidence of a
+            # deleted tracked file. Preserve it for the containment/read gate.
+            return any((self.root / parent).is_symlink()
+                       for parent in Path(path).parents if parent != Path("."))
+        return True
 
     def read(self, path):
         if self.ref:

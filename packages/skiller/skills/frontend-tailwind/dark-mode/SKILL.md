@@ -1,8 +1,8 @@
 ---
 name: dark-mode
 bucket: frontend-tailwind
-version: 0.1.0
-description: "Dark theme light|dark|system on Vue 3: useDarkMode composable (matchMedia prefers-color-scheme, localStorage + cookie for SSR, toggle .dark class on documentElement, change listener for system), pre-mount init without theme flash, mini toggle. Activate when adding theme switching, fighting light-theme flash (FOUC), syncing theme with system, or restoring theme under SSR."
+version: 0.1.1
+description: "Use for Vue light/dark/system switching, SSR theme restore, and preventing theme flash."
 risk: write
 persona: oss-dev
 tags: [dark-mode, theme, vue, composable, ssr, tailwind, matchmedia, localstorage]

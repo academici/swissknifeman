@@ -1,8 +1,8 @@
 ---
 name: mutation-testing
 bucket: quality
-version: 0.1.0
-description: "PHP mutation testing via Infection: infection.json5 (source/excludes, mutators, logs, minMsi/minCoveredMsi gates), run with --threads and --git-diff-lines for CI increment, reading MSI and escaped mutants. Activate when setting up Infection, adding a mutation test-quality gate to CI, reading an MSI report, or investigating surviving mutants."
+version: 0.1.1
+description: "Use for PHP Infection setup, mutation CI checks, MSI reports, or surviving mutants."
 risk: write
 persona: quality
 tags: [quality, testing, mutation, infection, php, ci, coverage]

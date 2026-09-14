@@ -9,7 +9,6 @@ _ROUTING_ITEM_RE = re.compile(r"^P\d+\.\d+$")
 _ROUTING_RANGE_RE = re.compile(r"^(P\d+)\.(\d+)\s*[–-]\s*(P\d+)\.(\d+)$")
 _ROUTING_COLUMNS = ("Batch", "Items", "Model class/effort", "Exec", "Review", "Почему")
 _ROUTING_BATCH_RE = re.compile(r"^[A-Z][A-Z0-9._-]*$", re.IGNORECASE)
-_ROUTING_EXEC_VALUES = frozenset(("plan-exec", "manual", "plan-design"))
 _ROUTING_REVIEW_VALUES = frozenset(("full", "light", "none"))
 _CONTINUE_FIRST_GATE_DATE = "2026.09.09"
 
@@ -105,9 +104,10 @@ def _lint_routing(plan_lines, plan_path, plan_id, layout, diag):
             elif batch.lower() == "solo" and len(items) != 1:
                 diag.error(plan_path, line_number,
                            "Routing Batch `solo` может адресовать ровно один item")
-            if row.get("Exec", "").strip() not in _ROUTING_EXEC_VALUES:
-                diag.error(plan_path, line_number,
-                           "Routing Exec должен быть plan-exec, manual или plan-design")
+            try:
+                task_contract.resolve_exec(row.get("Exec", ""))
+            except task_contract.TaskContractBuildError as exc:
+                diag.error(plan_path, line_number, str(exc))
             if row.get("Review", "").strip() not in _ROUTING_REVIEW_VALUES:
                 diag.error(plan_path, line_number,
                            "Routing Review должен быть full, light или none")
@@ -139,7 +139,12 @@ def _lint_routing_coverage(plan_path, plan_id, layout, routing_rows, all_items, 
     for batch, members in batches.items():
         item_ids = [item_id for item_id, _row in members]
         phases = {item_id.split(".", 1)[0] for item_id in item_ids}
-        exec_modes = {row.get("Exec", "").strip() for _item_id, row in members}
+        from task import task_contract
+        try:
+            exec_modes = {task_contract.resolve_exec(row.get("Exec", ""))
+                          for _item_id, row in members}
+        except task_contract.TaskContractBuildError:
+            continue  # The row validator already reports the unknown spelling.
         numbers = sorted(int(item_id.split(".", 1)[1]) for item_id in item_ids)
         if len(item_ids) < 2:
             diag.error(plan_path, members[0][1]["_line"],

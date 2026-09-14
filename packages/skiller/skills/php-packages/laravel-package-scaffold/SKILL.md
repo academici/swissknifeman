@@ -1,8 +1,8 @@
 ---
 name: laravel-package-scaffold
 bucket: php-packages
-version: 0.3.0
-description: "Use this skill when adding Laravel package capabilities or package shape changes after creating a package from this starter: commands, migrations, routes, config, views, assets, middleware, workbench files, or new publishable resources."
+version: 0.3.1
+description: "Use to add commands, routes, migrations, config, or publishable assets to a configured package."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "package-dev"]

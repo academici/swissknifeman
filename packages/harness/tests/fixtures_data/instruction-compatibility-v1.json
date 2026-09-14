@@ -352,7 +352,7 @@
         "codex"
       ],
       "assertions": [
-        "Deliver the nine `CORE_SKILLS` by default through the selected channel",
+        "Deliver the curated `CORE_SKILLS` by default through the selected channel",
         "`--no-core` is the explicit opt-out and budget reporting remains authoritative.",
         "`CORE_SKILLS`",
         "`--no-core`",

@@ -1,9 +1,15 @@
 ---
-description: "Close a green item or phase with changed-scope evidence and semantic delivery."
+description: "Reconcile GREEN Task items or phases; ordinary execution already closes inline."
 argument-hint: "<PLAN-ID> <Pn.m|Pn|archive ID>"
 model: sonnet
 effort: low
 ---
+Invocation payload: `$ARGUMENTS`.
+
+Read `runtime/plan-protocol/SKILL.md` from the configured Task package root (the same
+root that contains `lib/task/`) before using the plan schema. Its adjacent `references/` and
+`snippets/` are delivered on demand with Task; a separate CORE skill is not required.
+
 Reconcile only declared terminal evidence. `task_contract` owns both write-site predicates and the sole
 exact executable Routing compiler;
 `plan_assurance.evaluate()` is the sole assurance/impact reducer behind `phase_audit_policy`: GREEN

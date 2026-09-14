@@ -1,6 +1,6 @@
 ---
 name: task-review
-description: "Задача РЕВЬЮ: read-only adversarial-ревью свежим контекстом — диспетчер профилей doc/code (таксономия artifact-review), Stage A детект стека → скиллы, Stage B классика + conformance-finder'ы, Stage C adversarial verify. Пинит frontier/xhigh."
+description: "Read-only review of code, docs or specs; rank findings by demonstrated impact."
 ---
 
 # Task review
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:review`.
 - Invocation: `$ task:review <arguments>`
 - Routing: `frontier/xhigh -> gpt-5.6-sol/xhigh`
 - Canonical source: `packages/task/commands/review.md`
-- Canonical SHA-256: `sha256:f56bd580c79ee971e3a51e4a2f038db815a10b5eeae7bed3c4a8defc9efd4903`
+- Canonical SHA-256: `sha256:2a027c9f5d627305927c3ec38525b15858ca2902df082b883ab95b5c367b5c66`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `references/intent-routing.md` from the configured Task marketplace runtime before selecting

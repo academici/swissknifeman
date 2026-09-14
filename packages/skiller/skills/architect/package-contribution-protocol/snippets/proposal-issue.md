@@ -1,27 +1,23 @@
-# Шаблон Proposal issue (в репозиторий пакета)
+# Optional proposal for a new public package contract
 
-Создаётся в репозитории зависимого пакета **до** любой правки его кода.
+Use when the package's adopted process or an unresolved scope decision needs a proposal.
+An already authorized bugfix does not require this artifact. Posting externally needs authority.
 
 ```markdown
-Заголовок: [PROPOSAL] <короткое описание контракта>
+# Proposal: <contract>
 
-## Какой потребитель инициирует
-<проект-потребитель + ссылка на задачу-источник>
+## Problem and initiating consumer
+<source task, concrete failure or need>
 
-## Почему нельзя решить на стороне потребителя
-<что мешает реализовать локально через extends/события/конфиг>
+## Existing extension points and alternatives
+<what was inspected; viable local/package options and tradeoffs>
 
-## Подтверждение Rule of Three
-<где ещё (2+ независимых потребителя) это нужно прямо сейчас>
+## Reuse evidence
+<actual repeated cases when proposing generalization; no consumer-count gate on bugfixes>
 
-## Предлагаемый контракт (минимальный)
-<набросок интерфейса/метода/события — только необходимое>
+## Minimal contract and acceptance
+<observable behavior, owners, checks>
 
-## Рассмотренные альтернативы (минимум 2)
-- Событие/Observer вместо нового метода контракта: <почему нет>
-- Trait/helper вместо базового класса: <почему нет>
-- Конфиг вместо нового параметра: <почему нет>
-
-## Версия и совместимость
-<minor (новое API) / major (breaking) — обоснование по чеклисту SemVer>
+## Compatibility and delivery
+<patch/minor/major rationale, affected consumers, migration if needed>
 ```

@@ -110,6 +110,25 @@ class PlanDeliveryTests(unittest.TestCase):
             ))
         return plan
 
+    def test_cli_renders_shared_final_without_optional_admission_lease(self):
+        plan = self._terminal_plan()
+        script = Path(__file__).resolve().parents[1] / "scripts" / "plan-delivery.py"
+        output = self.root / "receipt.json"
+        args = ["python3", str(script), "--plan-dir", str(plan), "--subject", "P1.1",
+                "--kind", "terminal", "--render-final"]
+        written = subprocess.run(args + ["--output", str(output)], capture_output=True, text=True)
+        self.assertEqual(written.returncode, 0, written.stderr)
+        receipt = json.loads(output.read_text())
+        self.assertEqual(written.stdout.strip(), plan_delivery.required_final_message(receipt))
+        verified = subprocess.run(args + ["--verify", str(output)], capture_output=True, text=True)
+        self.assertEqual(verified.returncode, 0, verified.stderr)
+        self.assertEqual(verified.stdout, written.stdout)
+        receipt["recommendation"] = "stale successor"
+        output.write_text(json.dumps(receipt))
+        rejected = subprocess.run(args + ["--verify", str(output)], capture_output=True, text=True)
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertEqual(rejected.stdout, "")
+
     def test_terminal_item_receipt_binds_state_journal_and_exact_recommendation(self):
         plan = self._terminal_plan()
         receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")

@@ -1,8 +1,8 @@
 ---
 name: test-isolation-guard
 bucket: laravel-testing
-version: 0.1.0
-description: "Activate when Laravel tests need prod/dev DB or writable-disk protection: bootstrap, canonical serial guard, exact parallel DB proof and contained worker roots."
+version: 0.1.1
+description: "Use before Laravel tests that can mutate DB/files: prove isolated serial or parallel targets."
 risk: write
 persona: oss-dev
 tags: [php, laravel, testing, isolation, safety, database, ci, refreshdatabase]
@@ -12,6 +12,7 @@ outputs: []
 snippets: [bootstrap.php, TestEnvironmentGuard.php, TestCase.php, ParallelTestingIsolation.php]
 adapters: [claude, cursor, fable]
 sha256: ""
+when_to_use: "Use when preparing Laravel tests that can write to databases or files."
 ---
 
 # Skill: Test isolation guard

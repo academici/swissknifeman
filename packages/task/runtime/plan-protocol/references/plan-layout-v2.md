@@ -170,12 +170,16 @@ Context is chosen from the boundary predicate, not from command name:
 - `context-budget` — root cannot complete within its measured context budget;
 - `capability-missing` — required capability cannot be added to the current root;
 - `owner-pause-no-resume` — owner paused and no resumable root exists;
+- `owner-requested-new-session` — owner explicitly requested a fresh session; persist a new checkpoint;
 - `whole-plan-independent-audit` — adversarial audit of the whole plan requires independence.
 - `design-root-terminal` — a completed `task:plan-design` hands its recommendation to a separately
   routed root and never executes or spawns the successor itself;
 
 Ordinary item sequencing, local repair, or plan close does not itself justify a cold start.
-Only a completed `task:plan-design` invocation is an explicit terminal-root exception. Audit
+A completed `task:plan-design` and an explicit owner new-session request are named boundaries.
+Lifecycle `scope-complete` records a narrower chat stop after the requested work is closed; its
+`continue-root` decision carries `authorized-scope-complete` and a checkpoint. The successor is a
+recommendation in the current chat, with no automatic authority or fresh launch. Audit
 continuation uses the persisted `plan_continuity` decision and may remain in its authoritative root.
 GREEN execution closes its item in the current invocation. When that is the last item of a phase
 whose acceptance/safety gates are GREEN and no phase audit was explicitly admitted, it also creates

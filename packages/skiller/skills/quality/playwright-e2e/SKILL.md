@@ -1,8 +1,8 @@
 ---
 name: playwright-e2e
 bucket: quality
-version: 0.1.0
-description: "Browser E2E with Playwright for a web app (frontend-agnostic: Vue/Inertia/Livewire): playwright.config with webServer + projects, single-login auth via storageState, data-testid convention, data/media isolation between runs, CI run. Activate when adding/fixing an end-to-end browser scenario, configuring playwright.config, or storageState login."
+version: 0.1.1
+description: "Use for Playwright browser scenarios, auth state, config, or isolated test data."
 risk: write
 persona: oss-dev
 tags: [playwright, e2e, browser, testing, storage-state, ci, quality, frontend, typescript]

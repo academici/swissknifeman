@@ -1,8 +1,8 @@
 ---
 name: laravel-dusk
 bucket: laravel-testing
-version: 0.1.0
-description: "Laravel Dusk: browser E2E tests, isolated test DB, run from Docker via host ChromeDriver, Page Objects"
+version: 0.1.1
+description: "Use for Laravel Dusk browser tests: isolated DB, Docker/ChromeDriver, and Page Objects."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "dusk", "e2e", "browser-testing", "chromedriver", "docker"]

@@ -1,6 +1,6 @@
 ---
 name: task-plan-exec
-description: "Execute declared plan item(s) through the shared Task lifecycle."
+description: "Execute authorized Task plan items using declared routing and inline closure."
 ---
 
 # Task plan-exec
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-exec`.
 - Invocation: `$ task:plan-exec <arguments>`
 - Routing: `implementation/medium -> gpt-5.6-terra/medium`
 - Canonical source: `packages/task/commands/plan-exec.md`
-- Canonical SHA-256: `sha256:83555fa9ce79b267cbea0dd85d8d345de7d23262a67ac299029b5078cd0adac7`
+- Canonical SHA-256: `sha256:1e126e8fe48451bde39877bda219bbc59b379ea1e0184c17a2612dadb2c64974`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `references/intent-routing.md` from the configured Task marketplace runtime before selecting

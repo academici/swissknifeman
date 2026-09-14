@@ -12,7 +12,7 @@
       "fetched_at": "2026-06-12"
     }
   ],
-  "notes": "Imported from WendellAdriel/laravel-expressive .agents/skills/package-release; bucket frontmatter added (name package-release -> laravel-package-release). Do not auto-replace.",
+  "notes": "Imported from WendellAdriel/laravel-expressive .agents/skills/package-release; bucket frontmatter added (name package-release -> laravel-package-release). Do not auto-replace. 2026-09-14: Local discovery metadata shortened for startup budget; canonical body/reference content unchanged by this metadata pass. Public skill identity and operational boundaries preserved.",
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",

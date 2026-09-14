@@ -1,19 +1,20 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:9b5ee9b6bc9cd5d18b9a22e1808d3ea19db595c0749b8417c053ca4e2dda07fd
-Adapter: task.codex-command/1.0.12
+Canonical SHA-256: sha256:ea4be4ecaf32eb680bf62b20991d76b95d539f8a8c0647c7a38b51ad0a968fb4
+Adapter: task.codex-command/1.0.14
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
 
 This generated runtime is the Codex provider projection. Render only the Codex-native launch;
 never copy Claude Code slash syntax as the executable invocation and never print both providers.
 `$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
-When the typed Context is `continue-root`, keep executing the compatible ready successor in this
-root: do not finalise, ask the owner, or manufacture a fresh `codex` process between ordinary
-items. A command, phase, directory, local repair, or ordinary test failure is not a session
+When the typed Context is `continue-root`, keep executing the compatible ready successor within
+the owner-authorized scope in this root. If that scope is complete, report the exact successor as a
+recommendation for this chat; a final answer does not require a new `codex` process. A command, phase, directory, local repair, or ordinary test failure is not a session
 boundary.
 
-Keep Batch/Model/Thinking/Context/Суть in the metadata table, but never put the command in a table
+At a fresh-session boundary, keep Batch/Model/Thinking/Context/Суть in the metadata table,
+but never put the command in a table
 cell or column. Immediately after the table print `**Native Codex command:**` and a fenced `bash`
 block which explicitly pins the repository cwd, mapped model, reasoning effort, approval policy,
 and sandbox:
@@ -25,16 +26,19 @@ codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-sele
 Prefer one physical command line. If intentional formatting uses multiple shell lines, terminate
 every continued line except the last with `\`; never rely on Markdown visual wrapping.
 
-**Final-response guard:** a `continue-root` successor means continue work now, not a final response.
-At a real user-facing boundary with an executable Next (`cold-start-root`, `waiting-owner`, or
-`waiting-external`), do not stop after a completion summary, `Delivery receipt`, or `PHASE-CLOSED`.
-Before final, verify that the copyable native Codex `bash` block is present after the metadata table.
-Only a genuinely terminal Next with no executable successor may omit it.
+**Final-response guard:** continue compatible work inside the admitted owner scope. At an actual
+chat stop, include the exact shared receipt recommendation even when no terminal-admission lease
+is installed. `scope-complete` retains `continue-root`; it does not authorize the successor or
+require a fresh launch. An explicit new-session request updates the persisted decision to
+`cold-start-root: owner-requested-new-session` with a fresh post-close checkpoint. Then include the
+copyable native Codex block after the metadata table. Waiting continuations retain the exact gate;
+never present them as an unconditional command to run now. A completed objective needs no invented
+successor. Render only the active provider.
 
 Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
 do not reuse the preceding session's route. Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-5.6-terra, frontier=gpt-5.6-sol;
-low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch-block too, but never hand off only
-`$ task:…` or an unpinned `codex` command.
+low=low, medium=medium, high=high, xhigh=xhigh. At a fresh-session boundary, keep the provider-neutral Next too; its
+`$ task:…` form alone or an unpinned `codex` command is not a native fresh launch.
 
 ## Codex current-route binding — provider-specific
 
@@ -67,6 +71,12 @@ placeholders, `codex doctor`, configuration, or agent prose. Its fresh-native-on
 its private-rollout prohibition forbids manual probing but not this validated adapter-owned
 read; neither rule prohibits a verified cleared chat or overrides current `turn_context`
 evidence.
+
+Invocation payload: `$ARGUMENTS`.
+
+Read `runtime/plan-protocol/SKILL.md` from the configured Task package root (the same
+root that contains `lib/task/`) before using the plan schema. Its adjacent `references/` and
+`snippets/` are delivered on demand with Task; a separate CORE skill is not required.
 
 Audit is adversarial and read-only over product work. Read the declared assurance, the Task Contract's
 sole exact executable Routing compiler result, and prior terminal evidence; compare only the changed-risk delta.

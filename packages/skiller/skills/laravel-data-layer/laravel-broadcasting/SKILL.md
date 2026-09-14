@@ -1,8 +1,8 @@
 ---
 name: laravel-broadcasting
 bucket: laravel-data-layer
-version: 0.1.0
-description: "Laravel Echo + Reverb/Pusher/Ably: broadcast events, channel authorization, presence/whisper, model broadcasting."
+version: 0.1.1
+description: "Use for Laravel broadcast events, channel auth, Echo/Reverb/Pusher/Ably integration."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "broadcasting", "echo", "reverb", "websockets", "realtime"]

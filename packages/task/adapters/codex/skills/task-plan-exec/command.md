@@ -1,19 +1,20 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:83555fa9ce79b267cbea0dd85d8d345de7d23262a67ac299029b5078cd0adac7
-Adapter: task.codex-command/1.0.12
+Canonical SHA-256: sha256:1e126e8fe48451bde39877bda219bbc59b379ea1e0184c17a2612dadb2c64974
+Adapter: task.codex-command/1.0.14
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
 
 This generated runtime is the Codex provider projection. Render only the Codex-native launch;
 never copy Claude Code slash syntax as the executable invocation and never print both providers.
 `$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
-When the typed Context is `continue-root`, keep executing the compatible ready successor in this
-root: do not finalise, ask the owner, or manufacture a fresh `codex` process between ordinary
-items. A command, phase, directory, local repair, or ordinary test failure is not a session
+When the typed Context is `continue-root`, keep executing the compatible ready successor within
+the owner-authorized scope in this root. If that scope is complete, report the exact successor as a
+recommendation for this chat; a final answer does not require a new `codex` process. A command, phase, directory, local repair, or ordinary test failure is not a session
 boundary.
 
-Keep Batch/Model/Thinking/Context/Суть in the metadata table, but never put the command in a table
+At a fresh-session boundary, keep Batch/Model/Thinking/Context/Суть in the metadata table,
+but never put the command in a table
 cell or column. Immediately after the table print `**Native Codex command:**` and a fenced `bash`
 block which explicitly pins the repository cwd, mapped model, reasoning effort, approval policy,
 and sandbox:
@@ -25,16 +26,19 @@ codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-sele
 Prefer one physical command line. If intentional formatting uses multiple shell lines, terminate
 every continued line except the last with `\`; never rely on Markdown visual wrapping.
 
-**Final-response guard:** a `continue-root` successor means continue work now, not a final response.
-At a real user-facing boundary with an executable Next (`cold-start-root`, `waiting-owner`, or
-`waiting-external`), do not stop after a completion summary, `Delivery receipt`, or `PHASE-CLOSED`.
-Before final, verify that the copyable native Codex `bash` block is present after the metadata table.
-Only a genuinely terminal Next with no executable successor may omit it.
+**Final-response guard:** continue compatible work inside the admitted owner scope. At an actual
+chat stop, include the exact shared receipt recommendation even when no terminal-admission lease
+is installed. `scope-complete` retains `continue-root`; it does not authorize the successor or
+require a fresh launch. An explicit new-session request updates the persisted decision to
+`cold-start-root: owner-requested-new-session` with a fresh post-close checkpoint. Then include the
+copyable native Codex block after the metadata table. Waiting continuations retain the exact gate;
+never present them as an unconditional command to run now. A completed objective needs no invented
+successor. Render only the active provider.
 
 Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
 do not reuse the preceding session's route. Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-5.6-terra, frontier=gpt-5.6-sol;
-low=low, medium=medium, high=high, xhigh=xhigh. Keep the provider-neutral launch-block too, but never hand off only
-`$ task:…` or an unpinned `codex` command.
+low=low, medium=medium, high=high, xhigh=xhigh. At a fresh-session boundary, keep the provider-neutral Next too; its
+`$ task:…` form alone or an unpinned `codex` command is not a native fresh launch.
 
 ## Codex current-route binding — provider-specific
 
@@ -80,6 +84,10 @@ live/snapshot digest mismatch is `PLAN_CONTEXT_TRUNCATED`/`PLAN_CONTEXT_DIGEST_M
 the product journal starts. Continue only from the same snapshot; never reread a live carrier to
 replace a lost chunk.
 
+Read `runtime/plan-protocol/SKILL.md` from the configured Task package root (the same
+root that contains `lib/task/`) before using the plan schema. Its adjacent `references/` and
+`snippets/` are delivered on demand with Task; a separate CORE skill is not required.
+
 Execute the admitted Routing group or ready subset of a recommended group for `$ARGUMENTS`. The pinned route is a minimum;
 provider-attested overshoot is recorded and undershoot stops before mutation.
 Activation follows explicit owner plan intent or an exact cited local workflow policy in the
@@ -87,12 +95,17 @@ shared [intent routing canon](../references/intent-routing.md).
 
 ## Continuous execution
 
-After each GREEN item, materialize its successor and apply the persisted continuity decision. For
-`continue-root`, immediately execute the compatible ready successor in the admitted Routing batch
-(or safe ready subset) in this same root; do not emit a final, ask the owner, or launch a fresh
-session between ordinary items. A user-facing native launch block is for a real `cold-start-root`
-or waiting boundary only. Local reversible repair stays in this invocation. A design pass is allowed
-only when `plan_repair` returns `design-required` for a concrete unapproved contract decision.
+After each GREEN item, close the item and any directly closable GREEN phase in this invocation,
+then compute Next from the resulting state. Continue a compatible ready successor inside the
+owner-authorized admitted scope in this root. Local reversible repair stays in this invocation.
+If the owner requested only the completed scope, stop product writes and persist lifecycle
+`scope-complete` with its checkpoint: the reducer retains `continue-root` with reason
+`authorized-scope-complete`. A chat final reports the successor as a recommendation; it grants no
+execution authority and does not require a new process. Never invent work when the objective is done.
+An explicit request for a new session updates lifecycle to `owner-requested-new-session`; persist a
+fresh post-close checkpoint and render exactly one native launch for that successor. A routine
+item/phase transition or test failure does not imply a session boundary. A real external wait keeps
+its time/predicate gate visible. Design-only/review-only requests remain separate deliverables.
 
 ## Shared lifecycle
 
@@ -156,8 +169,8 @@ and audit run; legacy `required`/`auto`/`light`, Routing Review, item count, int
 prose alone are advisory. Missing or RED evidence remains repair work for the current executor in
 this invocation, never audit admission or a routine handoff to the repository owner. Ask the owner
 only at a concrete authority or product-decision boundary.
-Batch handoff retains its Batch, Context, and one provider-native launch block for the actual
-post-closure successor.
+Batch handoff retains its Batch and Context; a fresh-session boundary carries one provider-native
+launch block for the actual post-closure successor.
 
 ## Terminal admission
 
@@ -170,3 +183,8 @@ decision, rebuilt terminal receipt and in-memory proposed final fragment to
 `terminal_admission.evaluate()`. `final_allowed=true` requires exact identity and byte-exact
 `plan_delivery.required_final_message(receipt)`; no lease is `NOT_APPLICABLE`. The reducer stores
 only hashes and reason codes. Providers render its verdict but never decide terminality.
+
+At every actual final after closure, render the shared receipt fragment through worktree-local
+`plan-delivery.py --plan-dir <plan-dir> --subject <subject> --kind terminal --render-final`
+(or the same command with `--verify <receipt>`). This delivery rule applies even without an optional
+terminal-admission lease. A lease controls transport admission, not whether Next is reported.

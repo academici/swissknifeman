@@ -62,7 +62,7 @@ def _build_plans(root: Path):
     return claude_plan, codex_plan, render_provider_commands_reference(report)
 
 
-def _plan_protocol_projection(root: Path) -> tuple[bytes, bytes]:
+def _plan_protocol_projection(root: Path) -> dict[Path, bytes]:
     source = root / _PLAN_PROTOCOL_SOURCE
     if not source.is_file():
         raise FileNotFoundError(f"plan-protocol canon missing: {source}")
@@ -71,7 +71,25 @@ def _plan_protocol_projection(root: Path) -> tuple[bytes, bytes]:
         "canonical_source": _PLAN_PROTOCOL_SOURCE.as_posix(),
         "canonical_sha256": "sha256:" + sha256(runtime).hexdigest(),
     }, ensure_ascii=False, indent=2, sort_keys=True).encode("utf-8") + b"\n"
-    return runtime, provenance
+    projection = {_PLAN_PROTOCOL_RUNTIME: runtime, _PLAN_PROTOCOL_PROVENANCE: provenance}
+    # These are on-demand support files, outside native skill discovery. Copy
+    # their relative layout so the standalone Task runtime never relies on CORE.
+    for directory in ("references", "snippets"):
+        support = source.parent / directory
+        if not support.is_dir() or support.is_symlink():
+            raise FileNotFoundError(f"plan-protocol support missing: {support}")
+        for path in sorted(support.rglob("*")):
+            if path.is_symlink():
+                raise ValueError(f"plan-protocol support must be a regular file: {path}")
+            if path.is_file():
+                relative = path.relative_to(source.parent)
+                projection[_PLAN_PROTOCOL_RUNTIME.parent / relative] = path.read_bytes()
+    return projection
+
+
+def _plan_protocol_runtime_drift(root: Path, projection: dict[Path, bytes]) -> tuple[Path, ...]:
+    return tuple(root / path for path, expected in projection.items()
+                 if not (root / path).is_file() or (root / path).read_bytes() != expected)
 
 
 def _claude_golden_projection(claude_plan) -> dict[Path, bytes]:
@@ -109,12 +127,7 @@ def cmd_check(root: Path, claude_plan, codex_plan, reference_bytes: bytes) -> in
         path for path, expected in _claude_golden_projection(claude_plan).items()
         if not (root / path).is_file() or (root / path).read_bytes() != expected
     )
-    runtime_bytes, provenance_bytes = _plan_protocol_projection(root)
-    runtime_drift = tuple(
-        path for path, expected in ((root / _PLAN_PROTOCOL_RUNTIME, runtime_bytes),
-                                    (root / _PLAN_PROTOCOL_PROVENANCE, provenance_bytes))
-        if not path.is_file() or path.read_bytes() != expected
-    )
+    runtime_drift = _plan_protocol_runtime_drift(root, _plan_protocol_projection(root))
     if not claude_drift and not codex_drift and not reference_drift and not golden_drift and not runtime_drift:
         print("render-provider-commands: check OK (no-op)")
         return 0
@@ -156,12 +169,10 @@ def cmd_write(root: Path, claude_plan, codex_plan, reference_bytes: bytes, *, re
         target = root / path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(contents)
-    runtime_bytes, provenance_bytes = _plan_protocol_projection(root)
-    runtime_path = root / _PLAN_PROTOCOL_RUNTIME
-    provenance_path = root / _PLAN_PROTOCOL_PROVENANCE
-    runtime_path.parent.mkdir(parents=True, exist_ok=True)
-    runtime_path.write_bytes(runtime_bytes)
-    provenance_path.write_bytes(provenance_bytes)
+    for path, contents in _plan_protocol_projection(root).items():
+        target = root / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(contents)
     written = len([action for action in codex_artifact_plan.actions
                   if action.action.value != "noop"])
     print(f"render-provider-commands: wrote {len(claude_plan.artifacts)} Claude artifact(s), "

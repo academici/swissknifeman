@@ -1,6 +1,6 @@
 ---
 name: task-make-workflow
-description: "Авторинг workflow-скрипта через гейт: активация workflow-craft → интервью по типу задачи (spec-interview) → генерация копией шаблона → выходной статический ревьюер (RED блокирует выдачу). Пинит implementation/high."
+description: "Explicit workflow authoring: fill a canonical template and validate its stages."
 ---
 
 # Task make-workflow
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:make-workflow`.
 - Invocation: `$ task:make-workflow <arguments>`
 - Routing: `implementation/high -> gpt-5.6-terra/high`
 - Canonical source: `packages/task/commands/make-workflow.md`
-- Canonical SHA-256: `sha256:de0cb9534e602a48e13fc01c64a62d031f60d1e9a7245b4fbe1566d485090170`
+- Canonical SHA-256: `sha256:f0c032bd66f9f19cf4e1b52c9ffca5cce6d6cd3b4029b29e7b587d13d76ec472`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `references/intent-routing.md` from the configured Task marketplace runtime before selecting

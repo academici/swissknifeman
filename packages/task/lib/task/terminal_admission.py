@@ -380,7 +380,12 @@ def evaluate(store: FileStore, identity: Identity, continuity: dict, *, receipt_
     if outcome == "waiting-external":
         return _verdict(store, identity, Verdict(False, "WAITING_EXTERNAL", "waiting-external", None, lease.sequence),
                         observed_message=_normalized_message(proposed_message))
-    if outcome != "terminal":
+    # Chat completion of the admitted scope does not terminate the plan or
+    # manufacture a fresh session. A cold-start boundary may deliver a handoff
+    # only after the current subject has a valid terminal receipt as below.
+    chat_boundary = (outcome == "cold-start-root" or (
+        outcome == "continue-root" and continuity.get("reason") == "authorized-scope-complete"))
+    if outcome != "terminal" and not chat_boundary:
         return _verdict(store, identity, Verdict(False, outcome.upper().replace("-", "_"), outcome, None, lease.sequence),
                         observed_message=_normalized_message(proposed_message))
     try:

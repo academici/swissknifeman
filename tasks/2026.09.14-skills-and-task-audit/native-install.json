@@ -1,0 +1,138 @@
+[
+  {
+    "pluginId": "core@swissknifeman",
+    "name": "core",
+    "marketplaceName": "swissknifeman",
+    "version": "0.17.0",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/core/0.17.0",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "task@swissknifeman",
+    "name": "task",
+    "marketplaceName": "swissknifeman",
+    "version": "0.17.0",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/task/0.17.0",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "architect@swissknifeman",
+    "name": "architect",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/architect/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "php@swissknifeman",
+    "name": "php",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/php/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "quality@swissknifeman",
+    "name": "quality",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/quality/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "frontend-vue@swissknifeman",
+    "name": "frontend-vue",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/frontend-vue/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "frontend-backend@swissknifeman",
+    "name": "frontend-backend",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/frontend-backend/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "frontend-naive-ui@swissknifeman",
+    "name": "frontend-naive-ui",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/frontend-naive-ui/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "frontend-nuxt@swissknifeman",
+    "name": "frontend-nuxt",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/frontend-nuxt/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "frontend-tailwind@swissknifeman",
+    "name": "frontend-tailwind",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/frontend-tailwind/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "frontend-wayfinder@swissknifeman",
+    "name": "frontend-wayfinder",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/frontend-wayfinder/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "laravel-auth@swissknifeman",
+    "name": "laravel-auth",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/laravel-auth/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "laravel-data-layer@swissknifeman",
+    "name": "laravel-data-layer",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/laravel-data-layer/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "laravel-filament@swissknifeman",
+    "name": "laravel-filament",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/laravel-filament/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "laravel-testing@swissknifeman",
+    "name": "laravel-testing",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/laravel-testing/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "oss-dev@swissknifeman",
+    "name": "oss-dev",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/oss-dev/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  },
+  {
+    "pluginId": "php-packages@swissknifeman",
+    "name": "php-packages",
+    "marketplaceName": "swissknifeman",
+    "version": "0.4.1",
+    "installedPath": "/home/vostrikov/.codex/plugins/cache/swissknifeman/php-packages/0.4.1",
+    "authPolicy": "ON_INSTALL"
+  }
+]

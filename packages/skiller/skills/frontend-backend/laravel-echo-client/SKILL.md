@@ -1,8 +1,8 @@
 ---
 name: laravel-echo-client
 bucket: frontend-backend
-version: 0.1.0
-description: "Frontend realtime client Laravel Echo (Reverb/Pusher) in Vue 3: configure Echo from runtime-config/env, subscribe to private/presence channels, listen on broadcastAs events, unsubscribe in onUnmounted, inject X-Socket-ID into axios. Activate wiring websockets on frontend, useEcho/useChannel composable, .broadcastAs event, window.echo/laravel-echo in Vue."
+version: 0.1.1
+description: "Use for Vue Laravel Echo subscriptions, private/presence channels, cleanup, and socket IDs."
 risk: write
 persona: oss-dev
 tags: [laravel-echo, reverb, pusher, websockets, realtime, vue, broadcasting, frontend]

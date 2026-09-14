@@ -3,14 +3,22 @@
   "core_members": [
     "general/context-economy",
     "general/anti-drift",
-    "general/compact-responses",
     "general/session-handoff",
-    "general/mcp-advisor",
-    "general/verify-claims",
-    "research/query-craft",
-    "oss-dev/gh-review",
-    "general/plan-protocol"
+    "general/verify-claims"
   ],
-  "required_plugin_fields": ["name", "version", "description", "skills"],
-  "required_marketplace_fields": ["name", "source", "description", "category", "tags", "install_policy", "auth"]
+  "required_plugin_fields": [
+    "name",
+    "version",
+    "description",
+    "skills"
+  ],
+  "required_marketplace_fields": [
+    "name",
+    "source",
+    "description",
+    "category",
+    "tags",
+    "install_policy",
+    "auth"
+  ]
 }

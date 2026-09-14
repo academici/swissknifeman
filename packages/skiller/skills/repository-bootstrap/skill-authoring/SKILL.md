@@ -1,7 +1,7 @@
 ---
 name: skill-authoring
 bucket: repository-bootstrap
-version: 3.0.0
+version: 3.0.1
 description: "Rules for creating or editing EN-only registry skills, references, snippets, metadata, provenance, tests, and generated projections."
 when_to_use: "Activate for any change under packages/skiller/skills/ or the skill generator."
 risk: write
@@ -99,11 +99,11 @@ heuristic registry, not to `i18n-keep`.
 
 ## Provenance (root-bootstrap, P1.2)
 
-Every registry skill has adjacent `upstream.json`:
-
-- `strategy: original` for repository-authored skills;
-- `strategy: vendor` for faithful vendoring;
-- `strategy: merge` for a deliberate synthesis of named origins.
+External provenance uses adjacent `upstream.json` with the actual registry strategies:
+`replace`, `notify`, `fork`, or `merge`. Repository-authored skills do not need fabricated
+external provenance. Preserve the declared upstream revision and license; describe local
+adaptations honestly. Check the owning schema before selecting a strategy; `original` and
+`vendor` are not supported strategy values.
 
 Record source URL/revision/license and local transformation notes. External code is a design
 source to rewrite unless explicit vendoring is authorized. Never vendor proprietary content.

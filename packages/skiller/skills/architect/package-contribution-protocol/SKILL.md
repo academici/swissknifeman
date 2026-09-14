@@ -1,12 +1,13 @@
 ---
 name: package-contribution-protocol
 bucket: architect
-version: 0.1.0
-description: "Gate against bloating a depended-on package from a consumer project: Rule of Three, proposal→ADR, minimal contract, dependency direction, SemVer, read-only boundary. Activate when a project task needs editing a shared package, on 'extract common', and when adding a class/provider/interface/abstraction to a depended-on package."
+version: 0.2.0
+description: "Change a dependency at its owning source; distinguish authorized bugfixes from new public API scope."
+when_to_use: "Use when a consumer task reaches a shared package."
 risk: read
 persona: architect
 tags: [governance, package, monorepo, contribution, semver, anti-bloat, boundary]
-requires: [architecture, api-design, task-brief-template, anti-drift]
+requires: []
 produces_for: []
 outputs: [chat]
 snippets: [proposal-issue.md, adr-template.md, claude-md-priority.md, permissions-deny.md]
@@ -16,106 +17,62 @@ sha256: ""
 
 # Package Contribution Protocol
 
-Consumer project consumes its packages as a **read-only dependency**. Editing a package = separate, deliberate, agreed action — never a side effect of a product task. Universal: "package" = any shared package (composer/npm/…); "consumer" = any dependent project. No concrete package/project names in body — principles only.
+Use when consumer work reaches a shared package, or when proposing a shared abstraction.
+Inspect the actual owning repository, package guide, current diff, and existing extension
+points. Installed `vendor/` copies are delivery artifacts, not the durable repair source.
+A monorepo `packages/` path alone does not make authorized package development read-only.
 
-## When to activate
+## Scope and authority
 
-- Consumer task blocked by missing package functionality.
-- Phrasing "extract common", "make reusable", "into core/into package".
-- Adding to a depended-on package: a new class, service provider, interface, base class, parameter, or public method.
-- `git diff` touched a depended-on package dir (`vendor/**`, path-repo `packages/**`, monorepo package) within a product task.
+- An authorized bugfix or package change proceeds at its owning source with focused tests,
+  compatibility checks, and required delivery. Do not ask again for existing authority or
+  force a consumer workaround, proposal issue, ADR, or fresh session first.
+- Consumer-only convenience or speculative generalization does not authorize an unrelated
+  public API expansion. Use an existing contract, event, config, or local implementation when
+  that adequately solves the request. Escalate the concrete missing scope when necessary.
+- Rule of Three is a heuristic for discovering reusable abstractions: look for three actual
+  similar cases before generalizing. It is not a two-consumer admission check for every public
+  method and does not prevent fixing a bug reported by one consumer.
+- Choose independent investigation/delegation only when useful and authorized; no mandatory
+  go/no-go subagent. Preserve concurrent edits and qualify through the owning worktree.
 
-## Main question (ask before ANY package edit)
+## Minimal contract
 
-> Is this used in **two or more independent consumers right now**, AND **can no consumer** solve it on its own?
+Keep consumer-specific configuration in the consumer. Avoid generic base classes without an
+invariant, proxy APIs with no value, and reverse imports from package to consumer. A shared
+package must not become a hidden communication channel between unrelated consumers.
+Compare real alternatives when a contract decision warrants it; do not manufacture two options
+or a document for a routine repair.
 
-If "no" to either part → code stays in the consumer with a `TODO` + issue link. Rule of Three (Fowler) + YAGNI: generalize on the third repetition, not on imagined future.
+For a substantial new public contract, use the package's adopted proposal/ADR/review process.
+Drafts can make a required decision concrete, but posting an issue or contacting maintainers
+still needs the task's authority. Templates below are optional carriers, not extra permission
+gates. If blocked, name the missing decision and a useful next action; continue independent work.
 
-## Stop and ask / delegate to subagent
+## Compatibility and delivery
 
-Default: **ask, don't extend**. Before introducing a new class/provider/interface/abstraction:
+Apply the package's version policy. Under SemVer:
 
-1. **Structure survey.** Find an existing extension point in the package (contract, event, config, trait). Often nothing new is needed.
-2. **If in doubt — small task/subagent go/no-go.** Run one narrow step (or subagent) with a single goal: (a) survey — what in the package already solves it; (b) judge by YAGNI / Rule of Three / Law of Demeter; (c) verdict **go/no-go** with one-line rationale. Do not mix recon with implementation.
-3. **Verdict `no-go`** → solve consumer-side (see "Local workaround").
-4. **Verdict `go`** → two-stage gate below.
+- Patch: compatible bugfix.
+- Minor: backward-compatible added functionality.
+- Major: incompatible public behavior requiring consumer adaptation.
 
-## Two-stage gate
+Judge the actual compatibility, not whether a file is named `Contracts/`. Adding a required
+method to an implemented interface can break implementers; an additive API elsewhere may be
+compatible. Check signatures, input/output promises, stored/event formats, config keys, and
+extension behavior. Follow documented deprecation/migration policy for breaking changes.
 
-**Stage 1 — Proposal issue** in the package repo (template `snippets/proposal-issue.md`): which consumer initiates, source task, why it can't be solved in the consumer, contract sketch, alternatives considered (minimum 2 — e.g. "event" instead of "new method", "trait" instead of "base class", "config" instead of "new parameter").
+Run affected package checks and relevant consumer compatibility checks. Regenerate managed
+outputs with their owner, record release-visible changes in the owning release ledger, and
+keep source validation distinct from published/installed/loaded-session evidence. An unshipped
+source fix is not proof that the consumer runtime changed.
 
-**Stage 2 — Review + ADR** (only after proposal approval): branch in the package → ADR (`snippets/adr-template.md`) → implement the **minimal** contract → PR with mandatory manual review by the package maintainer.
+## Templates and references
 
-## What does NOT go into the package
-
-| Antipattern | Symptom | Correct place |
-|---|---|---|
-| "Shared BaseService" | class without invariant, convenience only | trait/helper in consumer |
-| Consumer configuration | params specific to one project | consumer config |
-| Proxy method | wraps one package method without logic | call directly |
-| Temporary storage | code "until we figure out where" | issue + refactor backlog |
-| God-interface | >5–7 methods without clear cohesion | split into contracts |
-
-## Dependency direction
-
-- Package **does not import** consumers (Dependency Inversion: consumers depend on package abstractions, not vice versa).
-- No reverse-dependency "consumer → consumer via package": package must not become a hidden channel between products.
-- Changing `Contracts/` (public interfaces) without a major version — forbidden.
-
-## Local workaround without editing the package
-
-Until need is confirmed in 2+ consumers:
-
-1. Implement consumer-side (`app/`, `Modules/`) via `extends`, events/Observer, or a package extension point.
-2. File an issue in the package using the proposal template.
-3. Put a `TODO` with the issue link at the local implementation site.
-
-## Package contract SemVer
-
-If a package edit is agreed:
-
-- **patch** — bugfix, no public API change.
-- **minor** — new public APIs; backward compatibility preserved.
-- **major** — breaking change: consumers must adapt code.
-- "Is it breaking?" checklist: public method/class removed/renamed? signature/return type changed? input tightened or output weakened? data format/event name changed? config key removed/renamed? Any "yes" → major.
-- Deprecation: mark old (`@deprecated` + deadline), do not remove in minor; remove in next major with a migration guide.
-- Every major: ADR + CHANGELOG entry ("Breaking:") + short migration guide.
-
-## Five markers of a healthy package
-
-1. Every public method used in 2+ consumers.
-2. Every breaking change has an ADR and a major bump.
-3. Package imports nothing from consumers.
-4. All extensions via contracts/events, not monkey-patching.
-5. Package `git log` — only explicitly agreed PRs (no "silent" edits from product tasks).
-
-## Quality checklist
-
-- [ ] Main question asked (2+ consumers + not solvable locally).
-- [ ] Before a new abstraction — package structure survey; if in doubt, go/no-go via small step/subagent.
-- [ ] `no-go` → local implementation + issue + TODO; `go` → proposal → ADR → PR.
-- [ ] ≥2 alternatives considered (event/trait/config vs new contract).
-- [ ] Contract minimal; dependency direction not violated.
-- [ ] Package version per SemVer; breaking → ADR + CHANGELOG + migration guide.
-
-## Distribution (hybrid)
-
-- Base reflex "ask before extending" already ships to all projects via CORE skill `anti-drift` — no separate install.
-- This skill (deep protocol) connects **selectively** to projects that work on their packages, reinforced by a manual "top priority" in the consumer's root CLAUDE.md — generic block ready in `snippets/claude-md-priority.md`.
-- Hard write boundary to package — permissions preset `product-boundary` (`harness permissions --preset product-boundary`); fragment and path-repo variant in `snippets/permissions-deny.md`.
-
-## Related skills
-
-- `general/anti-drift` — base reflex "ask before extending", YAGNI, surgical edits (CORE, all projects).
-- `quality/code-simplifier` — speculative-generality checklist on the fresh diff.
-- `architect/architecture` — ADR and ≥2-variant comparison for non-trivial decisions.
-- `architect/api-design` — designing and evolving the public contract.
-- `general/task-brief-template` — scope/out-of-scope/DoD before starting a package edit.
-- `system/cross-project-coordinator` — finding duplicate candidates for the shared package.
-
-## Links
-
-- snippets/proposal-issue.md
-- snippets/adr-template.md
-- snippets/claude-md-priority.md
-- snippets/permissions-deny.md
+- [Proposal](snippets/proposal-issue.md): when a new public contract needs a recorded decision.
+- [ADR](snippets/adr-template.md): when a significant decision needs durable rationale.
+- [Consumer boundary](snippets/claude-md-priority.md): optional source-owned project guidance.
+- [Permissions](snippets/permissions-deny.md): explicit consumer write restrictions; never
+  override a real deny merely because this skill permits an owning-source repair.
+- `general/anti-drift`: preserve scope and useful progress.
+- `architect/api-design`: public contract design when needed.

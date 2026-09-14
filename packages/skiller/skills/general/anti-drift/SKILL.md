@@ -1,8 +1,8 @@
 ---
 name: anti-drift
 bucket: general
-version: 0.5.0
-description: "Discipline against agent rabbit-holing: think first, simplicity, surgical edits, circuit-breaker."
+version: 0.6.0
+description: "Recover from repeated failed approaches or growing scope; preserve authorized progress."
 when_to_use: "Use when a session drags, retries approaches, or piles on flags."
 risk: read
 persona: oss-dev
@@ -19,89 +19,56 @@ sha256: ""
 
 ## When to activate
 
-Any code-writing/editing session, especially when:
-- task already took >2–3 "try another way" iterations;
-- solution accretes new layers/flags/dependencies;
-- session is long, early decisions risk being forgotten.
+Activate when repeated attempts stop producing evidence, the solution accumulates speculative
+layers, or earlier decisions are getting lost. Ordinary edits need no extra process.
 
-## Four principles (Karpathy)
+## Keep the result in view
 
-1. **Think Before Coding** — before editing state: what changes, why, which assumptions. On ambiguity ask ONE clarifying question, don't guess. Check: can you explain the plan in one paragraph? If not, plan isn't ready.
-2. **Simplicity First** — minimal code for the current task; not one line "for the future" (YAGNI). Check: "could I write this simpler?" If yes, rewrite before committing.
-3. **Surgical Changes** — touch only files named in the task; don't improve neighboring code unrequested. Check: `git diff` — any out-of-scope change? Revert it.
-4. **Goal-Driven Execution** — success criterion (test/check) first, then code. Check: is there a check that fails BEFORE and passes AFTER?
+- State the authorized outcome and the next useful check. Use existing acceptance criteria;
+  a reversible documentation edit need not acquire a new test suite.
+- Resolve routine implementation choices from context. Ask only for a missing decision that
+  changes scope, public behavior, authority, or an irreversible action.
+- Edit the files necessary to achieve that outcome, including an owning source or test absent
+  from the initial file list. Avoid unrelated cleanup; preserve others' changes.
+- Complete necessary implementation, verification, and delivery within existing authority.
+  A green intermediate check is not completion of an unfinished requested result.
 
-## File-op hygiene (read/edit/write)
+## Recover instead of repeating
 
-Three concrete rules against file-op churn — a measured (not hypothetical) source of wasted
-iterations: reread dwarfs Edit/Write failures by an order of magnitude, and failures are the
-tool's existing gate firing (Edit/Write rejects editing a file not Read THIS session), not a
-silent overwrite.
+After roughly ten investigative calls with no conclusion, summarize the evidence and choose
+one small reversible experiment. After repeated failed tactics (roughly twenty iterations is
+an alarm, not a quota), checkpoint what failed and change the hypothesis or narrow the case.
+Continue in the current session while context and tools suffice. A new session needs a real
+context/capability boundary or owner request; counts and file breadth do not require one.
 
-1. **Read-before-edit.** Before Edit/Write a file, confirm it was Read THIS session (not from
-   memory of an earlier iteration). The tool rejects the attempt anyway without a read — a
-   blind attempt is pure churn (reject → forced-read → retry) with no upside. Check: can you
-   cite the line number of the last Read of this file in the current session?
-2. **Anchor hygiene.** Take `old_string` verbatim from the FRESH Read output, not from
-   memory/guess — large, unique context (several lines, not one word), else
-   `string-not-found`/`not-unique`. Repeated edit pattern → `replace_all=true` instead of a
-   series of single Edits. Check: is `old_string` copied from the latest Read output, not
-   typed from memory?
-3. **Anti-reread.** A file already visible in session context, unchanged since its last Read
-   (by you or an external tool) — don't reread it, use the content already in context. Reread
-   is the largest measured driver of file-op churn, yet produces NO tool error (not caught by
-   failure categorization) — only discipline stops it. Check: any Edit/Write of THIS file
-   (yours or someone else's) between now and its last Read? No → don't reread.
+Before adding a dependency or abstraction, check whether existing code solves the problem.
+An authorized necessary change may proceed; a new product capability or package contract
+outside scope needs a decision. For dependent packages, inspect the owning source and existing
+extension points. An authorized package bugfix proceeds there with qualification; an unrelated
+API expansion does not follow automatically. See `architect/package-contribution-protocol`.
 
-## Circuit Breaker — stop thresholds
+## File and tool hygiene
 
-Catches three degradation patterns: layered edits (new layer atop old instead of removing it), symptomatic fixes (treat the log not the cause), context saturation (conflict with early session decisions).
+Read the affected content and current diff before editing. Reuse unchanged content already in
+context; refresh when another writer or tool could have changed it. Use unique edit anchors.
+Never revert a whole file to remove your own out-of-scope fragment if it contains others' work.
 
-- **Soft (warning):** codebase investigation >~10 tool-calls without a conclusion → stop and formulate the smallest reversible decision from current data. Ask only when a missing fact materially changes the product outcome.
-- **Hard stop:** after ~20 iterations with no working result → checkpoint: describe the failed tactics, choose a genuinely different tactic or narrow the reproducer, and continue in the current root when context and capability still suffice. `session-handoff` + a new session is allowed only for a proved context/capability/owner boundary; it is not the default circuit-breaker action.
-- **Complexity-escalation ban:**
-  - Needs a new package or abstraction layer → ASK first.
-  - Touches >5 files → check whether a new contract or irreversible surface is actually involved. If not, keep the direct task and validate the affected delta; file count alone does not require design or a new session.
-  - Second fix of the same symptom → stop, find root cause (reproduction → root cause → fix → verification), not a third patch.
-- **Dependent-package boundary — ask before extending.** A dependent package (`vendor/**`, path-repo `packages/**`, shared package) is **read-only** by default. Before adding a class/provider/interface/abstraction:
-  - Survey package structure first for an existing extension point (contract, event, config, trait) — often nothing new is needed.
-  - When in doubt, hand the go/no-go to a **separate small task/subagent** (survey reuse → judge by YAGNI/Rule of Three → verdict); don't mix recon with implementation.
-  - Missing package functionality → **issue against the package**, temporary impl on consumer side (`app/`/`Modules/`) + `TODO`; don't edit the package "along the way".
-  - Deep protocol (proposal → ADR → SemVer) → `package-contribution-protocol`.
+A permission denial is evidence about authority. Do not retry the denied action in disguised
+syntax. Use an alternative only when the stated policy permits that action (for example, the
+owning publisher instead of manual removal); otherwise report the reason and continue
+independent authorized work. Do not bypass a denial through another tool or agent.
 
-## DENY circuit-breaker (permission denied)
-
-A measured (not hypothetical) source of wasted moves: the agent gets `DENY(policy)`
-on a command and re-issues the SAME form almost unchanged — pure repeated churn, no
-progress. Rule: **a permission-gate denial is terminal for the exact command FORM
-within the session** — never re-issue it verbatim. The next attempt must be one of:
-
-1. **Atomic/allow-matchable alternative** — e.g. split a denied compound chain
-   (`cd X; ls; grep …`) into separate atomic commands, each in the allow-set.
-2. **Standard tool instead of manual action** — e.g. `skiller`/`maind` instead of a
-   manual `rm` on a managed asset (skill, hub config).
-3. **Explicit question to the user** if the form is ambiguously denied (unclear what
-   in the allow/deny rules rejected it) — don't guess or keep varying the same form.
-
-Check: if the next command is the same form that already got DENY'd this session,
-differing only in arguments/paths — stop, that's a repeat, not an alternative.
-
-## Shared resources & flaky tools
-
-Long-lived daemons/servers (browser pools like perplexity-web-mcp, dev servers, LSP) serve OTHER agents concurrently.
-
-- **No unneeded/destructive ops.** Never `pkill`/`kill -9`/`rm` a daemon's profile, socket, or Singleton lock. Prefer the gentlest path: reuse the live process, wait for it to free up. Rebuild/restart a shared service ONLY after confirming it's idle (no live agents) — else you crash others' sessions.
-- **Respect concurrency.** Several tasks may hit one tool in parallel; that's expected — let them queue (or one tab/context per task), don't force-clear the resource.
-- **Flaky tool → retry, don't panic.** An external tool (web search, network) can blip. Retry with backoff before giving up or changing the plan; a solid plan shouldn't collapse on one transient error. Configure retries/log/notify on the tool side, don't route around it.
+Shared servers, browser profiles, sockets, and locks may belong to live sessions. Do not kill
+or delete them to clear contention. Queue, isolate your context, or use the owning recovery
+mechanism; restart only with established authority and no conflicting users. Retry transient
+reads with bounded backoff. Before retrying a write, establish whether it already took effect
+or use an idempotent operation.
 
 ## Related skills
 
-- `task-brief-template` — scope and acceptance criteria fixed before start.
-- `session-handoff` — exit session after the hard threshold.
-- `complex-task-orchestrator` — decomposition and DoD for complex tasks; this skill = iteration discipline within them.
-- `context-economy` — context economy on a dragging session (`/compact`, `/clear`, Plan→Clear→Execute).
-- `package-contribution-protocol` — deep gate against dependent-package bloat (proposal → ADR → SemVer), when editing the package is agreed.
-
-## Snippet
-
-`snippets/claude-md-anti-drift.md` — ready-made rules block for the target project's CLAUDE.md (agent applies thresholds without an explicit skill call).
+When the result is complete, report it with checks and limitations. Continue a ready successor
+only within the authorized scope; otherwise name the useful next action without inventing more
+mandatory work. `general/session-handoff` handles an actual handoff;
+`general/context-economy` handles context pressure. The optional
+[project snippet](snippets/claude-md-anti-drift.md) is installed only through the project's
+owned source and measured resident-context policy.

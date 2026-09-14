@@ -1,3 +1,6 @@
+> Scope: this example belongs to the project-adopted pattern in `../SKILL.md`.
+> It does not impose this architecture on another project; preserve real access and transaction invariants.
+
 # Канон структуры `app/`
 
 Две оси организации:

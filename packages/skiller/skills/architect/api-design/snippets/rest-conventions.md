@@ -1,6 +1,7 @@
-# REST Conventions
+# Optional REST conventions
 
-- Use plural nouns: `/users`, `/orders`
-- HTTP verbs: GET (read), POST (create), PUT/PATCH (update), DELETE
-- Version via header or `/v1/` prefix
-- Pagination: `?page=1&per_page=20`
+Follow the API's existing contract. For a new contract, consider plural resources, consistent
+HTTP methods/statuses/errors, shallow nesting, and bounded collection pagination. Select URL,
+header or schema compatibility/versioning based on actual consumers; `/v1/` is not mandatory.
+Action endpoints are valid where needed. GET does not request mutation; credentials stay out
+of URLs. Cursor and page pagination are alternatives, not interchangeable defaults.

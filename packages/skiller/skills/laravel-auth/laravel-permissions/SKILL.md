@@ -1,8 +1,8 @@
 ---
 name: laravel-permissions
 bucket: laravel-auth
-version: 0.3.1
-description: "Manual/native Laravel RBAC: policies, gates, entity-scoped permissions without a dedicated package. Need azguard package → skill azguard; declarative permission attributes on actions → attribute-authorization."
+version: 0.3.2
+description: "Use for native Laravel policies/gates and entity RBAC; azguard has its own skill."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "permissions", "azguard", "rbac", "authorization"]

@@ -1,8 +1,9 @@
 ---
 name: laravel-structure
 bucket: php
-version: 0.2.0
-description: "Laravel project structure canon for greenfield and adding domains: domain taxonomy, layer-mirror rule, class placement and naming"
+version: 0.3.0
+description: "Place new Laravel domain classes within the project's chosen structure."
+when_to_use: "Use when placing new classes or domains in Laravel."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "architecture", "structure"]
@@ -13,6 +14,14 @@ snippets: []
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
+
+## Scope of this pattern
+
+Apply this Action/Read-Store/DTO/constructor-injection pattern only where the project has
+adopted it or the requested design explicitly chooses it. Preserve existing Laravel/module
+conventions elsewhere; do not introduce layers, facades, DTOs, `VisibilityService`, or directory
+mirrors merely to satisfy this example. Review severity follows actual impact and adopted
+contracts. Whatever the pattern, preserve authorization, transaction atomicity, and test isolation.
 
 # Laravel Structure
 

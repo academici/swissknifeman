@@ -168,7 +168,11 @@ EMPTY_PLACEHOLDER = plan_lint.EMPTY_PLACEHOLDER
 BARE_TOKEN_STRIP = "«»\"'(),;:.…“”[]"
 BRACE_GROUP_RE = re.compile(r"\{([^{}]*)\}")
 MAX_BRACE_EXPANSION = 64
-PATH_TOKEN_RE = re.compile(r"^[A-Za-z0-9._@~/+-]+$")
+# Plan IDs are explicitly Unicode-capable (for example, `№1`).  A path is
+# never executed here: it is resolved with pathlib and read only.  Restrict
+# the lexical form to one non-whitespace, non-backtick token so a declared
+# Unicode path keeps the same fail-closed missing-file semantics as ASCII.
+PATH_TOKEN_RE = re.compile(r"^[^\s`]+$")
 # Расширение обязано начинаться с БУКВЫ: `.md`/`.py`/`.json` — путь, `P0.1` — проза.
 PATH_SUFFIX_RE = re.compile(r"\.[A-Za-z][A-Za-z0-9]{0,7}$")
 

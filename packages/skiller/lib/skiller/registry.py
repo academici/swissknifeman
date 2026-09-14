@@ -2,6 +2,7 @@
 import hashlib
 import json
 import sys
+from pathlib import Path
 
 from core import atomic_write_text, find_repo_root, safe_load_json
 
@@ -462,12 +463,37 @@ def _has_repository_bootstrap_config(root):
     return (root / "configs" / "repository-bootstrap-skills.json").is_file()
 
 
+def _prune_publication_artifacts(artifacts):
+    """Remove only unchanged artifacts retired from a prior publication lock."""
+    expected = {item.target for item in artifacts}
+    pending = []
+    for artifact in artifacts:
+        if artifact.target.name != "publication-lock.json" or not artifact.target.is_file():
+            continue
+        root = artifact.target.parent
+        previous = json.loads(artifact.target.read_text())
+        for record in previous.get("artifacts", []):
+            relative = Path(record["path"])
+            path = root / relative
+            if relative.is_absolute() or ".." in relative.parts or not path.resolve().is_relative_to(root.resolve()):
+                raise ValueError("PUBLICATION_RETIRE_UNSAFE_PATH: " + str(path))
+            if path in expected or not path.exists():
+                continue
+            if path.is_symlink() or not path.is_file() or "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest() != record["rendered_hash"]:
+                raise ValueError("PUBLICATION_RETIRE_MODIFIED: " + str(path))
+            pending.append(path)
+    for path in pending:
+        path.unlink()
+
+
 def write_plugin_manifests(env, bucket_meta, bucket_dirs):
     """Записать все plugin-манифесты + marketplace.json (атомарно). Возвращает число плагинов."""
     manifests = build_plugin_manifests(env, bucket_meta, bucket_dirs)
     for path, data in manifests:
         atomic_write_text(path, _manifest_text(data))
-    for artifact in build_codex_publication(env, bucket_meta, bucket_dirs):
+    codex_artifacts = build_codex_publication(env, bucket_meta, bucket_dirs)
+    _prune_publication_artifacts(codex_artifacts)
+    for artifact in codex_artifacts:
         atomic_write_text(artifact.target, artifact.managed_bytes.decode("utf-8"))
     if _has_repository_bootstrap_config(env.root):
         bootstrap_artifacts = build_repository_bootstrap_publication(env)

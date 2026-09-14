@@ -1,8 +1,8 @@
 ---
 name: issue-triage
 bucket: oss-dev
-version: 0.1.0
-description: "State machine for handling issues and external PRs: category (bug/enhancement) + status (needs-triage/needs-info/ready-for-agent/ready-for-human/wontfix, +needs-device-access for hardware); duplicate and prior-rejection checks, claim verification, grilling when needed, agent-brief. Invoke EXPLICITLY (writes to the tracker via gh) — usually through the issue-triager agent."
+version: 0.1.1
+description: "Explicit issue/PR triage only: classify, verify, and prepare tracker updates via gh."
 risk: write
 persona: oss-dev
 tags: [triage, issues, github, state-machine, governance]
@@ -13,6 +13,7 @@ snippets: [AGENT-BRIEF.md, OUT-OF-SCOPE.md]
 adapters: [claude, cursor, fable]
 disable-model-invocation: true
 sha256: ""
+when_to_use: "Use when the owner explicitly requests issue or external PR triage."
 ---
 
 # Triage

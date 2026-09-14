@@ -8,6 +8,7 @@
 import io
 import json
 import unittest
+from unittest import mock
 from contextlib import redirect_stdout
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -76,7 +77,9 @@ def make_project(tmp, *, plugins=("php", "quality"), claude_md=None, boost=False
 
 def run_hub(env, proj, **kw):
     buf = io.StringIO()
-    with redirect_stdout(buf):
+    inventory = kw.pop("codex_inventory", {"ok": False, "names": set(), "notes": []})
+    with redirect_stdout(buf), mock.patch("skiller.native_codex.native_inventory", return_value=inventory), \
+            mock.patch("skiller.native_codex.codex_home", return_value=env.home / ".codex"):
         result = hub.run(env, proj, **kw)
     result["stdout"] = buf.getvalue()
     return result
@@ -100,16 +103,79 @@ class HubFormTests(unittest.TestCase):
         self.assertIn("НАТИВНЫМ листингом", text)
         self.assertIn("--full-index", text)  # указатель на полную форму
 
-    def test_root_files_get_full_form_in_same_run(self):
-        """Один прогон, две цели: CLAUDE.md краткая, AGENTS.md полная."""
+    def test_generator_wrapper_forwards_requested_root_files(self):
+        proj = make_project(self.tmp.name)
+        with mock.patch("skiller.hub.run_cmd") as run:
+            hub.generate_hub(self.env, proj, root_files=("AGENTS.md",), full_index=True)
+        run.assert_called_once_with([str(self.env.root / "scripts/generate-hub.sh"),
+                                     "--target", str(proj), "--full-index", "--root-files", "AGENTS.md"])
+
+    def test_codex_uses_native_discovery_while_gemini_keeps_full_index(self):
         proj = make_project(self.tmp.name, config={"buckets": ["php", "quality"]})
-        result = run_hub(self.env, proj, root_files=["AGENTS.md"])
-        self.assertEqual(result["forms"]["AGENTS.md"], hub.FORM_FULL)
+        result = run_hub(self.env, proj, root_files=["AGENTS.md", "GEMINI.md"],
+                         codex_inventory={"ok": True, "names": {"code-style"},
+                                          "enabled": ["php", "quality"], "notes": []})
+        self.assertEqual(result["forms"]["AGENTS.md"], hub.FORM_SHORT)
+        self.assertEqual(result["forms"]["GEMINI.md"], hub.FORM_FULL)
         agents_md = (proj / "AGENTS.md").read_text(encoding="utf-8")
         claude_md = (proj / "CLAUDE.md").read_text(encoding="utf-8")
-        self.assertIn(INDEX_TITLE, agents_md)
-        self.assertIn("- **code-style** — PHP code style", agents_md)
+        self.assertNotIn(INDEX_TITLE, agents_md)
+        self.assertNotIn("- **code-style**", agents_md)
+        self.assertIn("- **test-writer**", agents_md)
+        self.assertIn(INDEX_TITLE, (proj / "GEMINI.md").read_text())
         self.assertNotIn(INDEX_TITLE, claude_md)
+
+    def test_codex_failure_keeps_every_unconfirmed_skill(self):
+        proj = make_project(self.tmp.name, config={"buckets": ["php", "quality"]})
+        run_hub(self.env, proj, root_files=["AGENTS.md"])
+        text = (proj / "AGENTS.md").read_text()
+        for name in ("code-style", "laravel-conventions", "test-writer"):
+            self.assertIn("- **" + name + "**", text)
+
+    def test_codex_does_not_repeat_disabled_claude_only_plugin_skills(self):
+        proj = make_project(self.tmp.name, config={"buckets": ["php", "quality"]})
+        run_hub(self.env, proj, root_files=["AGENTS.md", "GEMINI.md"],
+                codex_inventory={"ok": True, "names": {"code-style", "laravel-conventions"},
+                                 "enabled": ["php"], "notes": []})
+        agents = (proj / "AGENTS.md").read_text()
+        self.assertNotIn("- **test-writer**", agents)
+        self.assertNotIn(RESIDUAL_TITLE, agents)
+        self.assertIn("- **test-writer**", (proj / "GEMINI.md").read_text())
+
+    def test_codex_retains_explicit_selected_plugin_without_native_cache(self):
+        proj = make_project(self.tmp.name, plugins=["php"], config={"buckets": ["php"]})
+        (proj / ".codex").mkdir()
+        (proj / ".codex/config.toml").write_text('[plugins."quality@swissknifeman"]\nenabled = true\n')
+        run_hub(self.env, proj, root_files=["AGENTS.md"],
+                codex_inventory={"ok": True, "names": {"code-style", "laravel-conventions"},
+                                 "enabled": ["php"], "notes": []})
+        self.assertIn("- **test-writer**", (proj / "AGENTS.md").read_text())
+
+    def test_codex_curated_selection_does_not_expand_entire_donor_bucket(self):
+        proj = make_project(self.tmp.name, config={"buckets": ["php", "quality"]})
+        run_hub(self.env, proj, root_files=["AGENTS.md"],
+                codex_inventory={"ok": True, "names": set(), "enabled": ["curated"], "notes": []})
+        text = (proj / "AGENTS.md").read_text()
+        self.assertIn("- **code-style**", text)
+        self.assertNotIn("- **laravel-conventions**", text)
+        self.assertNotIn("- **test-writer**", text)
+
+    def test_codex_retains_manifest_declared_local_skill_when_plugin_is_disabled(self):
+        proj = make_project(self.tmp.name, plugins=["php"], config={"buckets": ["php"]})
+        folder = proj / ".ai/skills"
+        folder.mkdir(parents=True)
+        (folder / hub.MANIFEST).write_text(json.dumps({"skills": [
+            {"source_path": "skills/quality/test-writer"}]}))
+        run_hub(self.env, proj, root_files=["AGENTS.md"],
+                codex_inventory={"ok": True, "names": {"code-style", "laravel-conventions"},
+                                 "enabled": ["php"], "notes": []})
+        self.assertIn("- **test-writer**", (proj / "AGENTS.md").read_text())
+
+    def test_full_index_bypasses_native_codex_discovery(self):
+        proj = make_project(self.tmp.name, config={"buckets": ["php", "quality"]})
+        with mock.patch("skiller.native_codex.native_inventory", side_effect=AssertionError("native probe")):
+            result = hub.run(self.env, proj, root_files=["AGENTS.md"], full_index=True)
+        self.assertEqual(result["forms"]["AGENTS.md"], hub.FORM_FULL)
 
     def test_full_index_flag_returns_index_to_claude_md(self):
         proj = make_project(self.tmp.name, config={"buckets": ["php", "quality"]})

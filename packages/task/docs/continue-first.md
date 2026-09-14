@@ -52,18 +52,42 @@ Lint и delivery отклоняют `plan-design` для терминально�
 также отклоняет автоматически сгенерированный `plan-design`, если фаза уже детализирована и имеет
 незавершённый item: следующий шаг тогда `plan-exec`, а не повторный дорогой design pass.
 
+## Плановый протокол без отдельного CORE-скилла
+
+Команды `plan-*` читают `runtime/plan-protocol/SKILL.md` из настроенного Task runtime.
+Генератор доставляет рядом `references/` и `snippets/`, включая индекс шаблонов; `--check`
+проверяет их содержимое. Эти файлы читаются по необходимости и не добавляют записей в native
+skills listing. Установка отдельного `core:plan-protocol` для исполнения Task не требуется.
+
 ## Continue-root без лишней сессии
 
-После GREEN item executor сначала материализует successor и читает его typed Context.
-`continue-root` означает продолжить совместимый ready item из admitted Routing batch в том же root:
-не отдавать final, не спрашивать владельца и не запускать новый процесс Codex. Обычный repair,
-смена item/фазы, generated drift и failed check сами по себе не образуют context boundary.
+После GREEN item executor закрывает item и готовую GREEN фазу в текущем invocation, затем
+материализует successor и читает typed Context. `continue-root` продолжает совместимый ready item
+в пределах разрешённого владельцем scope. Dirty baseline сохраняется и компонуется; обычный
+repair, смена item/фазы, generated drift и failed check не образуют context boundary.
 
-Новый provider-native launch-block нужен только в реальном user-facing boundary:
-`cold-start-root`, `waiting-owner`, `waiting-external` или `isolated-child-return`. В таком final
-он содержит metadata-таблицу и ровно одну copyable provider command; для waiting строка
-`# НЕ раньше:` сохраняет точное условие. Поэтому владелец получает полный запуск с моделью,
-effort, cwd, approval и sandbox только тогда, когда новая сессия действительно необходима.
+Если заказан ровно выполненный scope, lifecycle `scope-complete` с post-close checkpoint даёт
+`continue-root` и reason `authorized-scope-complete`. Агент завершает ответ, сообщает exact Next
+как рекомендацию для этого же чата и не получает новых полномочий на исполнение. Завершение
+ответа не означает завершение плана или обязательный запуск новой сессии.
+
+Явная просьба владельца о новом запуске меняет lifecycle на `owner-requested-new-session` и
+пересчитывает typed decision после closure. Полученный `cold-start-root` требует одну native
+команду активного provider с актуальным successor. Реальная context/capability boundary также
+сохраняет checkpoint. Для waiting показывается точное условие `# НЕ раньше:`; команда не
+представляется как безусловный запуск сейчас.
+
+Каждый фактический final после closure получает общий фрагмент из
+`plan-delivery.py --plan-dir <plan-dir> --subject <subject> --kind terminal --render-final`.
+Можно передать `--output <receipt>` или проверить сохранённый receipt через `--verify <receipt>`.
+Это работает и без optional terminal-admission lease. При установленном lease допуск final
+проверяет terminal receipt текущего subject; scope-complete и cold-start не разрешают закрыть
+незавершённый item. Обычный active continue-root остаётся nonterminal.
+
+В Routing `Exec=plan-run` — совместимое написание существующего `manual`: используется lifecycle
+`plan-exec`, сохраняется provider-attested owner route. Compiler и lint вызывают один
+`task_contract.resolve_exec`; исходная команда хранится отдельно в `declared_exec` и digest.
+Неизвестные spelling и смешение pinned/manual режимов отклоняются.
 
 ## Когда допустим Blocked
 

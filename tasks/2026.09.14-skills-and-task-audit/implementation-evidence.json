@@ -1,0 +1,77 @@
+{
+  "logs": {
+    "task": {
+      "path": "/tmp/task-skills-audit-final-validation.log",
+      "sha256": "8c74c848d41347215fd39119b696d556b6a4ff08eba6210e07755e485e1adbe6"
+    },
+    "skiller": {
+      "path": "/tmp/skm-audit-skiller-final4.log",
+      "sha256": "4471404cf4375cae39f10df7fb10138513225d3c9d938fcdf740a9d2df422a81"
+    },
+    "harness": {
+      "path": "/tmp/skm-audit-harness-final3.log",
+      "sha256": "ef5df283236712920a06e8202981c251ec04c581a6461dc1525a7d15dd20e3c9"
+    },
+    "maind": {
+      "path": "/tmp/skm-audit-maind-final.log",
+      "sha256": "ca5370dbb4a21875fa8b96ab146573507e53af4a0077e8bc98bf630c85d8afe8"
+    },
+    "cleanup": {
+      "path": "/tmp/skm-cleanup-final-tests.log",
+      "sha256": "1a760109855a7d4cae8e2c0b878b766d9812fcc6fb89e764a6602665d10ab46b"
+    },
+    "docs": {
+      "path": "/tmp/skm-docs-umbrella-final.log",
+      "sha256": "fec5ccf865561c6fafee87131a4f298fbbd2fe741c9476c10cae83c1ae855086"
+    },
+    "release_dry_run": {
+      "path": "/tmp/skm-audit-release-check.log",
+      "sha256": "82279e669280e138804b729c303c8abea86ea1fda1884cf6cdd7bda117844571"
+    },
+    "docs_final": {
+      "path": "/tmp/skm-docs-umbrella-closeout.log",
+      "sha256": "f4e40d722fe3857532c9a5a09b683e1dceb339f2ba3aaf9bbe550b4a5e37cff9"
+    },
+    "harness_docs": {
+      "path": "/tmp/skm-docs-harness-closeout.log",
+      "sha256": "1d080c1e86615c0c816e65312fc6018621529428232a9b87d5940481e76897fd"
+    }
+  },
+  "backup_roots": [
+    "/home/vostrikov/.swissknifeman/backups/skills-audit-personal-20260914184502",
+    "/home/vostrikov/.swissknifeman/backups/skills-audit-generated-20260914184726",
+    "/home/vostrikov/projects/packages/corex/.swissknifeman/backups/legacy-codex-links-706bf3eeca34474a8178ca779d075225",
+    "/home/vostrikov/projects/packages/corex/.swissknifeman/backups/legacy-codex-links-f1f729abccab4cb58a64a361ab1924a6",
+    "/home/vostrikov/projects/flexcrm/.swissknifeman/backups/skills-audit-boost-20260914185240",
+    "/home/vostrikov/.swissknifeman/backups/skills-audit-flex-audit-backups-p8b4mnc_",
+    "/home/vostrikov/.swissknifeman/backups/skills-audit-flex-composer-hook-backup-8v_2nhf4",
+    "/home/vostrikov/.swissknifeman/backups/skills-audit-skill-metadata-backups-0m_yqrnj",
+    "/home/vostrikov/.swissknifeman/backups/skills-audit-flex-local-skill-metadata-2nyg1_x7"
+  ],
+  "global_codex_config_sha256": "7182dd3ef9673223d91b52d2b149ddb6ad3fbb598bad850a8a4d64af05605489",
+  "global_config_observation": {
+    "plugins_unchanged": true,
+    "other_changed_keys": [
+      "model_reasoning_effort",
+      "model"
+    ],
+    "before_route": {
+      "model": "gpt-5.6-terra",
+      "model_reasoning_effort": "medium"
+    },
+    "after_route": {
+      "model": "gpt-5.6-sol",
+      "model_reasoning_effort": "high"
+    },
+    "cause": "not established; current settings preserved; runtime captures explicitly pin their models"
+  },
+  "last_scoped_checks": {
+    "cleanup_tests": 14,
+    "registry_check": "GREEN",
+    "task_renderer_check": "GREEN",
+    "provider_instructions_check": "GREEN",
+    "root_provider_docs_check": "GREEN",
+    "diff_check": "GREEN",
+    "audit_local_links": "GREEN"
+  }
+}

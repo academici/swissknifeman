@@ -1,6 +1,6 @@
 ---
 name: task-plan-run
-description: "Execute manual plan item(s) using the owner session route and shared lifecycle."
+description: "Execute authorized Task plan items with the attested current-session route."
 ---
 
 # Task plan-run
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-run`.
 - Invocation: `$ task:plan-run <arguments>`
 - Routing: `inherited-plan -> validate the current session against the selected plan item`
 - Canonical source: `packages/task/commands/plan-run.md`
-- Canonical SHA-256: `sha256:02e70af13deabbf348898e954a1b15b7de0efb4a923482a91bd483aa498e01f0`
+- Canonical SHA-256: `sha256:4fda4312ee96b6ee71a19efb3095cd79f64c7bde8d614bbb5f5ab2b15915ef07`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `references/intent-routing.md` from the configured Task marketplace runtime before selecting

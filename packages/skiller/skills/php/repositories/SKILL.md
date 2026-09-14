@@ -1,8 +1,9 @@
 ---
 name: repositories
 bucket: php
-version: 0.1.0
-description: "Use when building Laravel repositories: read/store split, model scopes, delta-DTO, facade, VisibilityService."
+version: 0.2.0
+description: "Implement repositories when justified; Read/Store and visibility patterns apply if adopted."
+when_to_use: "Use when a justified repository needs queries, writes, or visibility."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "repository", "architecture"]
@@ -13,6 +14,14 @@ snippets: ["read-repository.php", "store-repository.php", "member-store-reposito
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
+
+## Scope of this pattern
+
+Apply this Action/Read-Store/DTO/constructor-injection pattern only where the project has
+adopted it or the requested design explicitly chooses it. Preserve existing Laravel/module
+conventions elsewhere; do not introduce layers, facades, DTOs, `VisibilityService`, or directory
+mirrors merely to satisfy this example. Review severity follows actual impact and adopted
+contracts. Whatever the pattern, preserve authorization, transaction atomicity, and test isolation.
 
 # Laravel repositories: read/store split
 
@@ -33,7 +42,7 @@ Canon — lightweight-CQRS split in `app/Repositories/<Domain>/`:
 ## Algorithm
 
 1. **Pick side.** Query → `XxxReadRepository`; mutation → `XxxStoreRepository`. Never mix in one class.
-2. **Read-side: start from visibility.** Every public read method builds atop `queryForUser(?User $user, bool $ignorePermissions = false)`, delegating to `XxxVisibilityService::apply()`. Signature signals filtering by rights.
+2. **Read-side: start from visibility.** In this visibility model, every public read method builds atop `queryForUser(?User $user, bool $ignorePermissions = false)`, delegating to `XxxVisibilityService::apply()`. Signature signals filtering by rights.
 3. **Move repeated predicates into model scopes** with domain names (`withStatus`, `withListRelations`, `forUser`). Repository COMPOSES them — a second identical where-chain = create a scope.
 4. **Choose return type:**
    - `Builder` — consumer composes further (counters, sections, extra filters);
@@ -58,7 +67,7 @@ Canon — lightweight-CQRS split in `app/Repositories/<Domain>/`:
 ## Quality checklist
 
 - [ ] Read and store separated: no mutations in `ReadRepository`, no display-queries in `StoreRepository`.
-- [ ] Every public read method goes through `queryForUser()`; bypass rights only via explicit `ignorePermissions: true`.
+- [ ] For protected resources in this model, public reads go through `queryForUser()`; an explicit bypass flag is not authorization: require a trusted authorized caller before any bypass.
 - [ ] Repository opens **NO transactions** — runs inside Action's transaction.
 - [ ] Repository does **NOT write history and does NOT dispatch events**. Typical bug: `recordHistory()` inside `persistFromForm()` — business-logic leak; history and events belong to Action/StateMachine.
 - [ ] Repository does **NOT accept `Request`** — only DTO commands (write) and scalars/enums/models (read).

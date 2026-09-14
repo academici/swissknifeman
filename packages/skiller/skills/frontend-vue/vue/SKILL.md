@@ -1,6 +1,7 @@
 ---
+version: 0.1.1
 name: vue
-description: Vue 3 Composition API, script setup macros, reactivity system, and built-in components. Use when writing Vue SFCs, defineProps/defineEmits/defineModel, watchers, or using Transition/Teleport/Suspense/KeepAlive.
+description: "Use for Vue 3 APIs: SFC macros, reactivity, watchers, and built-in components."
 metadata:
   author: Anthony Fu
   version: "2026.1.31"

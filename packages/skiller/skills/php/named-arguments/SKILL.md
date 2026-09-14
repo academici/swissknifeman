@@ -1,8 +1,8 @@
 ---
 name: named-arguments
 bucket: php
-version: 0.1.0
-description: "PHP rule: method/function calls use named arguments; exceptions; activate when writing/reviewing calls or when readability/parameter order is mentioned"
+version: 0.1.1
+description: "Use when writing PHP calls under the project's named-argument rule and exceptions."
 risk: read
 persona: oss-dev
 tags: ["php", "code-style", "readability", "conventions"]

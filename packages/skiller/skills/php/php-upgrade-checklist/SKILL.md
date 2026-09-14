@@ -1,8 +1,8 @@
 ---
 name: php-upgrade-checklist
 bucket: php
-version: 0.1.0
-description: "PHP version upgrade checklist (minor/major): sync image/CI, composer update + clear deprecations, phpstan baseline, full suite, update rector sets, review RFCs for incompatibilities. Activate before bumping PHP version."
+version: 0.1.1
+description: "Use before upgrading PHP: runtime/CI alignment, dependencies, deprecations, compatibility."
 risk: draft
 persona: oss-dev
 tags: [php, upgrade, version, rector, phpstan, composer]
@@ -12,6 +12,7 @@ outputs: []
 snippets: []
 adapters: [claude, cursor, fable]
 sha256: ""
+when_to_use: "Use when preparing a PHP version upgrade."
 ---
 
 # PHP Upgrade Checklist

@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import unittest
 
-from skiller.release_attestation import Source, check_transition, tree_digest
+from skiller.release_attestation import Source, check_transition, surface, tree_digest
 import subprocess
 import tempfile
 
@@ -20,6 +20,63 @@ class ReleaseAttestationTests(unittest.TestCase):
             (root / "lib/telemetry").mkdir()
             (root / "lib/telemetry/session.json").write_text("ambient\n")
             self.assertEqual(Source(root).files("lib"), ["lib/source.py"])
+
+    def test_deleted_tracked_files_change_live_surface_without_breaking_historical_ref(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            subprocess.run(["git", "init", "-q", folder], check=True)
+            (root / "skills").mkdir()
+            (root / "skills/keep.md").write_text("retained capability\n")
+            removed = root / "skills/removed.md"
+            removed.write_text("removed CORE member\n")
+            subprocess.run(["git", "add", "skills"], cwd=root, check=True)
+            subprocess.run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                            "commit", "-qm", "fixture"], cwd=root, check=True)
+            previous = surface(Source(root, "HEAD"), "skills", ["."])
+            removed.unlink()  # Deliberately leave the deleted path in the git index.
+            current = surface(Source(root), "skills", ["."])
+            self.assertEqual(set(current["files"]), {"keep.md"})
+            self.assertEqual(set(previous["files"]), {"keep.md", "removed.md"})
+            self.assertEqual(surface(Source(root, "HEAD"), "skills", ["."]), previous)
+            def release(value, version="1.0.0"):
+                return {"units": [{"id": "core", "version": version,
+                                   "providers": {"codex": value},
+                                   "tree_digest": value["tree_digest"]}]}
+            self.assertEqual(check_transition(release(previous), release(current)),
+                             ["RELEASE_IMMUTABLE_TUPLE: core@1.0.0"])
+            self.assertEqual(check_transition(release(previous), release(current, "1.0.1")), [])
+
+    def test_missing_and_external_symlink_targets_are_not_treated_as_deletions(self):
+        for outside in (False, True):
+            with self.subTest(outside=outside), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder) / "repo"
+                root.mkdir()
+                subprocess.run(["git", "init", "-q", str(root)], check=True)
+                (root / "skills").mkdir()
+                link = root / "skills/broken.md"
+                target = Path(folder) / "outside.md" if outside else root / "missing.md"
+                link.symlink_to(target)
+                source = Source(root)
+                self.assertIn("skills/broken.md", source.files("skills"))
+                with self.assertRaises(ValueError if outside else FileNotFoundError):
+                    surface(source, "skills", ["."])
+
+    def test_deleted_path_below_replaced_symlink_parent_still_fails_closed(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / "repo"
+            root.mkdir()
+            subprocess.run(["git", "init", "-q", str(root)], check=True)
+            parent = root / "skills"
+            parent.mkdir()
+            (parent / "tracked.md").write_text("tracked\n")
+            subprocess.run(["git", "add", "skills/tracked.md"], cwd=root, check=True)
+            (parent / "tracked.md").unlink()
+            parent.rmdir()
+            parent.symlink_to(Path(folder) / "missing-outside")
+            source = Source(root)
+            self.assertIn("skills/tracked.md", source.files("skills"))
+            with self.assertRaisesRegex(ValueError, "RELEASE_PATH_UNCONTAINED"):
+                source.read("skills/tracked.md")
 
     def test_added_native_proof_does_not_change_old_bytes(self):
         old = {"units": [{"id": "task", "version": "1.0.0", "providers": {"codex": {"tree_digest": "same"}}, "tree_digest": "old-proof"}]}

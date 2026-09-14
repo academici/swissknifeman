@@ -196,6 +196,22 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "≠ Routing «solo»"), diag.errors)
 
+    def test_plan_run_alias_and_manual_share_one_lint_execution_mode(self):
+        from task import task_contract
+        routing = (
+            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "|:--|:--|:--|:--|:--|:--|\n"
+            "| B1 | P1.1 | implementation/high | manual | full | shared reads |\n"
+            "| B1 | P1.2 | implementation/high | plan-run | light | same lifecycle |"
+        )
+        plan_dir = self._plan(routing)
+        from fixtures import write_v2_carriers
+        write_v2_carriers(plan_dir, item_id="P1.2", refresh_views=False)
+        _, diag = _lint(plan_dir)
+        self.assertFalse(_errors_containing(diag, "invalid Exec"), diag.errors)
+        self.assertFalse(_errors_containing(diag, "несовместимые Exec"), diag.errors)
+        self.assertEqual(task_contract.compile_batch_routing(plan_dir)["batches"]["B1"]["exec"], "manual")
+
     def test_handoff_cannot_collapse_batch_to_one_item(self):
         from task import plan_bundle, plan_item_state, plan_status
 

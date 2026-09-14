@@ -1,5 +1,5 @@
 ---
-description: "Задача РЕВЬЮ: read-only adversarial-ревью свежим контекстом — диспетчер профилей doc/code (таксономия artifact-review), Stage A детект стека → скиллы, Stage B классика + conformance-finder'ы, Stage C adversarial verify. Пинит Opus/xhigh."
+description: "Read-only review of code, docs or specs; rank findings by demonstrated impact."
 argument-hint: "[что ревьюим: дифф / ветка / PR# / docs-путь]"
 model: opus
 effort: xhigh
@@ -21,8 +21,9 @@ effort: xhigh
   (примеры/маршруты/флаги сверить с реальным кодом), миграция план→docs без потерь,
   wiki-связность/битые ссылки. Stage A/B применяй к doc-скиллам реестра (writing-style и т.п.),
   Stage C — тот же.
-- **План/спека** (`plans/<ID>/…`) → НЕ эта команда: профиль плана реализует `task:plan-audit`,
-  перенаправь туда.
+- **План/спека** → read-only профиль plan/spec из `quality/artifact-review`. Путь `plans/`
+  сам по себе не включает phase lifecycle. `task:plan-audit` нужен при явно запрошенном Task audit;
+  его фазовая admission/authority остаётся обязательной.
 - Смешанный дифф (код + docs) → оба профиля, findings не смешивать — у каждой находки профиль.
 
 ## Stage A — детект стека → резолв скиллов
@@ -44,6 +45,9 @@ effort: xhigh
    adversarial: перечисли failure-modes, для каждого построй конкретный сценарий поломки.
 2. **Проверка применимых правил** из Stage A: finder получает секцию
    `## Conformance` скилла как чек-лист императивов и проверяет дифф против каждой строки.
+   Применимость определяется запросом, принятым контрактом проекта и наблюдаемым влиянием.
+   Рекомендация скилла не становится обязательным gate из-за наличия в каталоге; непринятые
+   style/coverage defaults отмечай как suggestion без выдуманного Major или обязательного repair.
    Нет секции `## Conformance` — finder берёт свод правил из тела SKILL (чеклист качества /
    жёсткие запреты). Смежные правила проверяй одним проходом; количество скиллов не задаёт число reviewers.
    **Кап делегирования:** finder заводится только под скилл, который реально даёт отдельное
@@ -72,5 +76,5 @@ effort: xhigh
    `issue/suggestion/question/nitpick` + `file:line` + `failure_scenario` +
    **ссылка скилл→правило** (`<bucket>/<skill> ## Conformance: "<строка правила>"`;
    для классики — измерение correctness/security/perf). Severity определяется воспроизводимым влиянием; uncertainty укажи отдельно.
-3. Прогони статику/целевые тесты проекта, если уместно. Кода НЕ меняй, дерево чистое.
+3. Прогони статику/целевые тесты проекта, если уместно. Кода НЕ меняй; существующий dirty baseline сохрани.
    Фиксы передай исполнителю; связанные исправления можно объединить в scoped commit.

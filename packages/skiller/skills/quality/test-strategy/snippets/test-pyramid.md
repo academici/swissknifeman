@@ -1,11 +1,11 @@
-# Test Pyramid
+# Test pyramid illustration
 
-```
-    /E2E\
-   /Integ.\
-  /  Unit   \
+```text
+    / E2E \
+   /Integration\
+  /    Unit     \
 ```
 
-- Unit: 70%
-- Integration: 20%
-- E2E: 10%
+70% unit / 20% integration / 10% E2E is one illustrative mix. It is not an acceptance gate.
+Choose boundaries and counts from failure risk, existing coverage, runtime, and maintenance.
+A representative integration check may provide stronger evidence than many mocked unit cases.

@@ -1,8 +1,8 @@
 ---
 name: naive-ui-theming
 bucket: frontend-naive-ui
-version: 0.1.0
-description: "Naive UI global theme: GlobalThemeOverrides (common + Button/Card/Form/Input/Tag/Tabs…), NConfigProvider at entry point, naive dark theme (darkTheme), tokens wired to Tailwind/CSS-variables. Activate when editing config/naive-ui.ts, Naive theme, themeOverrides, NConfigProvider, primaryColor/borderRadius, dark mode under Naive UI."
+version: 0.1.1
+description: "Use for Naive UI theme tokens, GlobalThemeOverrides, NConfigProvider, and dark mode."
 risk: write
 persona: oss-dev
 tags: [naive-ui, vue, theming, design-tokens, dark-mode, tailwind, frontend, components, ui]

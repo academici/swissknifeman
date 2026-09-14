@@ -1,8 +1,8 @@
 ---
 name: attribute-authorization
 bucket: laravel-auth
-version: 0.1.0
-description: "Declarative method-level authorization via #[CheckPermission] attribute (enum permission + route args) and reflection-middleware CheckAccess over Gate. Activate for declarative action-level checks, enum permissions instead of strings, reflection middleware."
+version: 0.1.1
+description: "Use for #[CheckPermission] action attributes and reflection middleware over Laravel Gate."
 risk: write
 persona: oss-dev
 tags: [php, laravel, authorization, attribute, reflection, middleware, gate, enum, permissions, rbac]

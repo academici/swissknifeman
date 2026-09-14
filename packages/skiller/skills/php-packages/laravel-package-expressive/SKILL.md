@@ -1,8 +1,8 @@
 ---
 name: laravel-package-expressive
 bucket: php-packages
-version: 0.3.0
-description: "Upstream skill for working ON the WendellAdriel/laravel-expressive package itself (starter kit), not a general package-development skill: placeholders, configure flow, starter defaults, root guidance, local skills, temporary phase tests, dist hygiene, scaffold-wide conventions. Do not use for ordinary package feature work after a package has been configured."
+version: 0.3.1
+description: "Use only on WendellAdriel/laravel-expressive starter itself, not configured package features."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "package-dev"]
@@ -13,6 +13,7 @@ adapters: [claude, cursor, fable]
 upstream: WendellAdriel/laravel-expressive
 license: MIT
 sha256: ""
+when_to_use: "Use when maintaining the laravel-expressive starter itself, not a configured package."
 ---
 
 # Expressive Development

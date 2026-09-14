@@ -431,6 +431,15 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
         with self.assertRaisesRegex(task_contract.TaskContractBuildError, "AUTHORITY_CONTRACT_GAP"):
             task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())
 
+    def test_unresolved_clarification_cannot_fall_through_to_routine_authority(self):
+        path = fixtures.item_spec_path(self.plan_dir)
+        path.write_text(path.read_text().replace(
+            "**Code Guidance:** ручная проверка dict-ключей.",
+            "**Code Guidance:** [NEEDS CLARIFICATION: consumer owner and paths]."),
+            encoding="utf-8")
+        with self.assertRaisesRegex(task_contract.TaskContractBuildError, "AUTHORITY_CONTRACT_GAP"):
+            task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())
+
     def test_live_owner_invocation_materializes_only_the_declared_gate(self):
         self._declare_gate()
         self._replace_decision_rows(self._decision_rows(prefix_count=64))
@@ -1088,6 +1097,21 @@ class BatchRoutingAdmissionTests(unittest.TestCase):
 
     def tearDown(self):
         self.tmp.cleanup()
+
+    def test_plan_run_alias_preserves_owner_mode_route_and_admission(self):
+        path = self.plan_dir / "plan.md"
+        baseline = task_contract.compile_batch_routing(self.plan_dir)
+        path.write_text(path.read_text().replace("| manual |", "| plan-run |"))
+        compiled = task_contract.compile_batch_routing(self.plan_dir)
+        self.assertEqual(compiled["batches"]["B1"]["exec"], "manual")
+        self.assertEqual(compiled["items"]["P1.1"]["declared_exec"], "plan-run")
+        self.assertEqual(compiled["batches"]["B1"]["route"], baseline["batches"]["B1"]["route"])
+        self.assertNotEqual(compiled["routing_digest"], baseline["routing_digest"])
+        self.assertEqual(task_contract.admit_batch(self.plan_dir, "P1.1–P1.3")["verdict"], "ALLOW")
+        self.assertEqual(task_contract.admit_batch(self.plan_dir, "P1.1")["verdict"], "BATCH_REQUIRED")
+        path.write_text(path.read_text().replace("| plan-run |", "| plan-rnu |"))
+        with self.assertRaisesRegex(task_contract.TaskContractBuildError, "invalid Exec"):
+            task_contract.compile_batch_routing(self.plan_dir)
 
     def test_direct_first_item_is_refused_and_exact_range_is_allowed(self):
         partial = task_contract.admit_batch(self.plan_dir, "P1.1")

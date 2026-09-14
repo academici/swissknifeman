@@ -1,172 +1,77 @@
 ---
 name: agent-design
 bucket: architect
-version: 0.1.0
-description: Use when designing an agent: agentic loop, tool contracts, harness, permission gates.
+version: 0.2.0
+description: "Design or audit an agent loop, tool boundary, autonomy policy, or recovery behavior."
+when_to_use: "Use when designing agent loops, tool policies, or recovery."
 risk: draft
 persona: architect
 tags: [agentic, architecture, security, validation]
-requires: [architecture]
+requires: []
 produces_for: [eval-design, observability-design]
 outputs: ["docs/03_Dev/Agent_Design.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
 
-# Skill: Agent Design
+# Agent Design
 
-Apply when: agent design, agentic workflow, tool contracts, harness design, agentic loop audit, MVP agent blueprint.
+Use when building or auditing an agent system. The project's authorized use case and risk
+model define autonomy; this skill does not reduce an already authorized coding session to
+approval-before-every-step or demand a BRD before a bounded repair.
 
-## Precondition
+## Loop and tool contract
 
-- Agent architecture written **only after approved BRD**. No BRD → first read `.ai/skills/pm/brd.md`.
-- PII/financial products → run `.ai/skills/architect/security-design.md` in parallel.
+The model proposes actions; the harness validates parameters, enforces actual permissions,
+executes tools, and records outcomes. Define:
 
-## Key principle
+- Tool names/schemas, timeouts, bounded outputs, and a result correlated with each call,
+  including failures and refusals. Streaming/progress events follow the provider protocol.
+- Trust boundaries: imported pages, memory, files, and tool output are data, not authority.
+  Keep credentials outside model context; grant only capabilities needed for the task.
+- A measurable done condition and next-action decision. Continue useful authorized work;
+  checkpoint on a real resource/context boundary; stop when the objective is achieved.
+- Structured failures and recovery: distinguish denied, invalid, transient, uncertain-effect,
+  and terminal outcomes. Do not disguise retries to bypass a permission denial.
 
-> Model **proposes** actions. Harness validates, authorizes, executes, records.
+## Autonomy and concurrency
 
-Model never executes directly. Every tool call returns a result — even a refusal or error.
+Select permissions by action, resource, reversibility, user intent, and adopted policy. Read
+and reversible local changes commonly proceed within existing authority; external sends,
+financial effects, and destructive operations require the authority appropriate to their
+actual impact. A prior explicit authorization remains valid. Use preview/commit or separate
+confirmation when the product's risk or transaction scope requires it, not as a blanket
+second approval for all multistep work.
 
-## 7 Loop Invariants (mandatory checklist)
+Parallelize independent operations only when their resources and side effects are isolated.
+Writes to separate owned outputs can be independent; conflicting writers, dependent commits,
+shared-state mutations, or order-sensitive sends must serialize. For uncertain outcomes of
+non-idempotent effects, inspect receipts/state before retrying. Cancellation does not prove
+an effect was rolled back.
 
-Loop is correct iff all 7 hold:
+## Bound resource use
 
-- [ ] **One-to-one** — each tool call returns exactly one result block
-- [ ] **Pre-execution validation** — schema and params validated before execution
-- [ ] **Permission gate** — risky actions pass policy-check outside the model
-- [ ] **Bounded results** — tool results size-limited
-- [ ] **Hard budgets** — limits exist: steps, tokens, time, cost
-- [ ] **Evidence-based conclusions** — final answer backed by loop observations, not assumptions
-- [ ] **Structured failure** — errors and refusals structured and logged
+Choose enforced limits sufficient to bound the actual loop: steps, tokens, time, cost, output
+size, or resource-specific quotas. Four separate counters are not obligatory when an existing
+bound covers the risk. Record which controls are enforced and which telemetry is unavailable;
+do not imply an unmeasured cost or context budget is safe.
 
-## Autonomy levels (choose before design)
+Keep stable cacheable prefixes where the provider supports them. Compact/history handling
+must preserve decisions, authorization, outstanding work, and tool/result coherence; cache
+optimization never forbids necessary context repair.
 
-| Level | Mode | When |
-|:---|:---|:---|
-| 0 | Answer-only | Answers only, no actions |
-| 1 | Draft-only | Prepares, does not send |
-| **2** | **Approval-gated** | **Default — acts after confirmation** |
-| 3 | Supervised autonomous | Autonomous, with human review gate |
-| 4 | Long-running autonomous | Full autonomy with checkpoints |
+## Verification and delivery
 
-Default Level 2. Move to 3–4 only after proven reliability at 2.
+Test harness policy enforcement independently from model behavior. Include relevant negative
+cases: prompt injection, authority bypass, oversized output, expired context, invalid tool
+input, concurrent writes, cancellation, and duplicate external effects. Use representative
+model evals for task completion and unnecessary approvals/restarts; deterministic harness
+tests alone cannot prove model behavior. Record traces without secrets or private reasoning.
 
-## MVP Blueprint — 15 components
+Choose rollout/checkpoints by failure impact and observed reliability. A limited release or
+shadow run may be appropriate; a fixed ladder of autonomy levels is not a required ceremony.
+Keep design-only work bounded and distinguish source checks from live provider evidence.
 
-```
-1.  Domain objective      — what agent does and does not do
-2.  Autonomy level        — one of 0–4 (choose explicitly)
-3.  Provider-neutral loop — model wired via contract, not directly
-4.  Typed tool registry   — each tool: schema + timeout + output limit
-5.  Permission matrix     — allow / deny / ask_user / approval_required
-6.  Structured results    — tool call always returns typed result
-7.  Context architecture  — what enters context, in what order
-8.  External memory       — state stored outside conversation
-9.  Auto-compaction       — compress context before limit exceeded
-10. Planning mode         — approval-gated before multi-step tasks
-11. Goal-like loops       — checkpoints + measurable done condition
-12. Skills/connectors     — external APIs wired as typed skills
-13. Cost-aware layout     — stable prefix + cache-optimized order
-14. Observability         — traces: operational events, not reasoning
-15. Evals                 — test harness, not just model
-```
-
-## Tool & Permission Design
-
-Risk taxonomy:
-
-| Class | Examples | Policy |
-|:---|:---|:---|
-| read-only | search, file read, metadata | allow |
-| write-local | create files, drafts | allow |
-| write-external | email, webhook, push | approval_required |
-| financial | payment, transaction | approval_required + audit |
-| destructive | delete, drop, wipe | ask_user |
-
-Draft-commit pattern — mandatory for financial / destructive / regulated:
-
-```
-draft_action() → preview → user_confirm() → commit_action()
-```
-
-Parallelism: independent read-only ops only. Writes, sends, deletes — always sequential.
-
-## Cost & Caching
-
-- **Stable prefix** — system prompt + static instructions first (cached)
-- **Dynamic suffix** — conversation history last (not cached)
-- **Append-only history** — never rebuild history, preserve cache reuse
-- **Deterministic tool order** — tool order in schema never changes
-- **Budget limits** — all 4 mandatory: step_limit, token_limit, time_limit, cost_limit
-
-## Pre-launch Checklist
-
-```
-Security:
-- [ ] Test prompt injection (external content as data, not instruction)
-- [ ] Test approval bypass (attempt to skip permission gate)
-- [ ] Test context overflow (behavior on overflow)
-- [ ] Secrets do not reach model context
-
-Reliability:
-- [ ] Traces and evals defined before deploy
-- [ ] Shadow mode / limited rollout on first release
-- [ ] Cost telemetry works
-- [ ] Structured errors for all tool failures
-
-Quality:
-- [ ] Eval covers: injection, misuse, bypass, overflow
-- [ ] Harness tested independently of model
-```
-
-## Agent section format in Architecture doc
-
-Add section `## Agent Design` to `docs/03_Dev/Architecture_[Name].md`:
-
-```markdown
-## Agent Design
-
-### Уровень автономии
-[Level X: описание]
-
-### Tool Registry
-| Tool | Класс риска | Схема | Timeout | Output limit |
-|:---|:---|:---|:---|:---|
-
-### Permission Matrix
-| Действие | Политика | Условие |
-|:---|:---|:---|
-
-### Loop Budget
-- step_limit: N
-- token_limit: N
-- time_limit: Xs
-- cost_limit: $N
-
-### Context Architecture
-[Что в system prompt, что в history, что из внешней памяти]
-```
-
-## Hard prohibitions
-
-DO NOT:
-- Give model direct execute access without harness
-- Parallelize write/send/delete ops
-- Run at Level 3–4 without proven Level 2
-- Store secrets in model context
-- Deploy without traces and evals
-- Leave budgets undefined
-
-## Reference
-
-`https://github.com/DenisSergeevitch/agents-best-practices` — full reference files: agentic-loop, tools-and-permissions, mvp-blueprint, security-evals, prompt-caching, workflow-orchestration.
-
-## Related skills
-
-- `architect/architecture` — overall architecture doc embedding the Agent Design section (precondition).
-- `architect/eval-design` — measuring agentic output quality; eval harness tests harness, not just model (this skill's output).
-- `architect/security-design` — STRIDE, prompt-injection, secrets outside model context — in parallel for PII/money agents.
-- `architect/observability-design` — traces, token-cost, latency per model, jailbreak metrics for prod agent.
-- `ai/ai-agents` — external compendium on building agents/MCP/RAG (analysis, not mirror).
-- `security/security` — external defensive playbook on prompt injection and tool-use safety.
+See [loop sketch](snippets/agentic-loop.md) and [tool contract](snippets/tool-contract.md).
+Use `architect/eval-design` or `architect/observability-design` for substantive decisions in
+those areas, not as mandatory documents on every change.

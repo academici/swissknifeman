@@ -1,5 +1,9 @@
 # Журнал исполнения — `plans/<PLAN-ID>/journal.jsonl`
 
+Resolve `<task-package-root>` from the configured Task runtime before copying a command; it is
+the package directory containing `lib/task/`. Use the same provider runtime locator as the Task
+command, never a consumer-local package copy or another provider's environment variable.
+
 <!-- Справочник, НЕ файл для копирования как есть: journal.jsonl — append-only NDJSON
      (root/contracts/plan-journal-schema.md, P1.1 sealed v1), пишется хелпером
      lib/task/journal.py из close-протокола команд /task:plan-*, руками правится
@@ -9,11 +13,11 @@
 ## Канонический способ (close-протокол команд, автоматически)
 
 ```bash
-PYTHONPATH="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/lib" python3 -m task.journal append \
+PYTHONPATH="<task-package-root>/lib" python3 -m task.journal append \
   --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item <Pn.m> \
   --command plan-exec --actor sonnet/medium --result in-progress
 # … исполнение …
-PYTHONPATH="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/lib" python3 -m task.journal append \
+PYTHONPATH="<task-package-root>/lib" python3 -m task.journal append \
   --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item <Pn.m> \
   --command plan-exec --actor sonnet/medium --result closed-green \
   --note "1 строка сути закрытия"
@@ -46,7 +50,7 @@ cost/turns/duration — `root/contracts/plan-journal-schema.md` §2–§2.2.
 owner-gated sidecar (исходная строка остаётся byte-for-byte):
 
 ```bash
-PYTHONPATH="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/lib" python3 -m task.journal exception \
+PYTHONPATH="<task-package-root>/lib" python3 -m task.journal exception \
   --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --target-line <N> \
   --invalid-fields friction --owner-decision <D#> --actor owner \
   --reason "почему historical exception необходим и безопасен"
@@ -65,7 +69,7 @@ carrier и не может ссылаться на себя, поэтому corr
 ## Sealed historical exception (D51)
 
 Не переписывай и не компенсируй event'ом schema-invalid historical line. Только existing Owner
-D# может дописать sidecar через `PYTHONPATH="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/lib" python3 -m task.journal exception
+D# может дописать sidecar через `PYTHONPATH="<task-package-root>/lib" python3 -m task.journal exception
 --plan-dir plans/<PLAN-ID> --target-line N --invalid-fields friction --owner-decision D# --actor
 <actor> --reason "..."`. Sidecar принимает только exact `friction` error и fail closed на
 duplicate, hash/plan mismatch, valid/malformed target или inexact field set; он не несёт status/Next.

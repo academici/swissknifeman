@@ -1,8 +1,8 @@
 ---
 name: skills-ssot
 bucket: general
-version: 0.2.0
-description: "Single source of truth for skills across AI agents: .ai/skills, symlinks, gitignore."
+version: 0.3.0
+description: "Resolve duplicate or drifting skill delivery by inspecting each source, generator, and provider owner."
 when_to_use: "Use when skills drift between agent tools."
 risk: write
 persona: oss-dev
@@ -15,102 +15,52 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Skills SSOT — single source of truth for skills
+# Skills: One Source per Identity
 
-One source: `.ai/skills/` (+ `.ai/guidelines/` for permanent rules). Everything else = generated symlinks/copies, listed in `.gitignore`.
+Use when skill copies drift, discovery has duplicates, or generation ownership is unclear.
+SSOT means one semantic owner per capability; it does not mandate `.ai/`, symlinks, Boost,
+ignored agent files, or a particular distribution channel in every repository.
 
-## Layout
+## Discover ownership first
 
-```text
-.ai/
-  guidelines/                  # permanent rules (committed)
-  skills/<name>/SKILL.md       # project skills source (committed)
-.agents/skills/<name>/         # external vendor skills (committed)
-skills-lock.json               # source + hash of vendor skills (committed)
-boost.json                     # Laravel Boost generation config (committed)
-.claude/skills/<name> -> ../../.ai/skills/<name>   # generated, in .gitignore
-.cursor/skills/<name> -> ../../.ai/skills/<name>   # generated, in .gitignore
-CLAUDE.md / AGENTS.md / GEMINI.md                  # generated, in .gitignore
-```
+Read project instructions, generation markers, config/locks, selected plugin manifests, and
+actual provider paths. For each identity record its source, publisher, output, selection, and
+local modifications. Distinguish project-local authoring, managed vendored skills, native
+plugins, user skills, and provider-generated adapters. Matching names alone do not justify
+removing a local skill; compare meaning and preserve unowned edits.
 
-Generators:
-- **Laravel Boost present**: `boost.json` = config (agents, guidelines, mcp, packages, skills); `php artisan boost:update` = generator; it also regenerates `CLAUDE.md`/`AGENTS.md` → they are generated and ignored.
-- **No Boost**: snippet `symlink-sync.sh` — idempotent generation of symlinks from `.ai/skills/` into `.claude/skills/` and `.cursor/skills/`.
+In Swissknifeman, registry skills are authored under `packages/skiller/skills/`; registry and
+provider projections are generated. Consumer projects may select native plugins or managed
+copies. Use their existing `.swissknife.json` / `.swissknifeman/config.json` and the owning
+worktree-local Skiller CLI; inspect its help for the operation. Do not mix both delivery
+channels for the same identity or change the chosen channel by accidental cleanup.
 
-## Committed
+## Edit and regenerate
 
-| Path | Why |
-|---|---|
-| `.ai/guidelines/*.md` | permanent project rules |
-| `.ai/skills/*/SKILL.md` | skills source |
-| `.agents/skills/*` | external vendor skills (after review) |
-| `skills-lock.json` | pin source/hash of vendor skills |
-| `boost.json` | generation config (if Boost used) |
-| `scripts/symlink-sync.sh` | symlink generator (if no Boost) |
+1. Change the owning semantic source, not a generated projection. A handwritten `AGENTS.md`
+   is a valid source when the project owns it directly; generation markers define managed
+   blocks. Preserve handwritten sections when a file has mixed ownership.
+2. Run the established generator for the affected output. Laravel Boost's presence alone
+   does not give it ownership of every `AGENTS.md`, skill, setting, or hub. Verify installed
+   commands, configuration, and package documentation before prescribing `boost:update`.
+3. Keep generators from overwriting each other's output. Put integrations into source-owned
+   extension points or compose through the existing pipeline.
+4. Check generated drift, links, selected identities, and actual provider discovery. Filesystem
+   presence is not proof a running session loaded the new rules.
+5. Commit/ignore according to project policy. Many repositories intentionally commit generated
+   manifests or bootstrap files. Never mass-untrack `AGENTS.md` or provider settings merely
+   because a sample `.gitignore` lists them.
 
-## In .gitignore
+Prefer one version-appropriate delivery for overlapping framework guidance. In a Boost
+project, compare its selected framework guidance with Skiller's fallback before disabling a
+copy; retain unique domain and safety requirements. A general skill catalog should not be
+repeated in a resident hub when native discovery already provides it.
 
-| Path | Why |
-|---|---|
-| `/CLAUDE.md`, `/AGENTS.md`, `/GEMINI.md` | generated from `.ai/` |
-| `/.claude/settings.json` | local agent settings |
-| `/.claude/skills/` | symlinks/copies, restored by generator |
-| `/.cursor/skills/` | symlinks/copies, restored by generator |
+## Narrow references
 
-## Update cycle
-
-1. Edit **only** `.ai/skills/` and `.ai/guidelines/` (and `boost.json` if composition changes).
-2. Regen: `php artisan boost:update` (Boost) or `scripts/symlink-sync.sh` (no Boost).
-3. Commit sources: `.ai/*`, `boost.json`, `skills-lock.json`.
-
-**Forbidden** to hand-edit `CLAUDE.md`, `AGENTS.md`, contents of `.claude/skills/` — next generation wipes edits.
-
-## swissknifeman integration
-
-- **Claude Code** — native plugin marketplace: `scripts/connect-claude.sh`; registry skills are **not copied** into project, not placed in `.ai/skills/`.
-- **Other agents** — `./install.sh --agent generic --target <project>` installs selected buckets into `.ai/skills/`, then normal regen (`symlink-sync.sh` or `boost:update`).
-- **Root hub** generated by `scripts/generate-hub.sh`; in Boost projects the hub is attached via `.ai/guidelines/swissknifeman-hub.md` to survive `CLAUDE.md` regeneration.
-
-## Algorithm (from scratch)
-
-1. Create `.ai/skills/` and `.ai/guidelines/`; move existing skills from agent dirs into `.ai/skills/` (one `<name>/SKILL.md` dir per skill, merge duplicates).
-2. Add `.gitignore` block from snippet `gitignore-ai.txt`; un-stage already-committed generated files: `git rm -r --cached CLAUDE.md AGENTS.md .claude/skills .cursor/skills` (whatever actually exists).
-3. Put external vendor skills in `.agents/skills/` and pin in `skills-lock.json` (`npx skills add <owner/repo@skill>`, `npx skills check`) — see `skills-lock.example.json`.
-4. Laravel Boost project → fill `boost.json` (see `boost-json.example`: every skill from `.ai/skills/` must be in the `skills` array) and run `php artisan boost:update`. Else → put `symlink-sync.sh` in `scripts/` and run it.
-5. Verify: `ls -la .claude/skills/` — symlinks point to `../../.ai/skills/*`, none broken, real dirs remain only for vendor copies.
-6. Connect swissknifeman: Claude Code → `connect-claude.sh`; others → `install.sh --agent generic`, then re-run regen from step 4.
-7. Commit sources (`.ai/`, `.agents/skills/`, `skills-lock.json`, `boost.json`, `.gitignore`, `scripts/symlink-sync.sh`); do not commit generated.
-
-## Which snippet
-
-| Situation | Snippet |
-|---|---|
-| Configuring `.gitignore` for SSOT | `gitignore-ai.txt` |
-| No Laravel Boost — need agent symlinks | `symlink-sync.sh` |
-| Laravel Boost — generation setup | `boost-json.example` |
-| Connecting external vendor skill with hash pin | `skills-lock.example.json` |
-
-## AI-context edit cycle (workflow)
-
-Rule: change only **sources**, never hand-edit generated.
-
-1. Edit **only** `.ai/guidelines/*` / `.ai/skills/*` / `boost.json` (or stack equivalent).
-2. **Do not edit** generated `CLAUDE.md`/`AGENTS.md`/`GEMINI.md` in root and ignored copies — regen overwrites them.
-3. After edit — **regen**: Laravel Boost `php artisan boost:update` (or `composer ai:sync`); other stacks — matching sync/symlink script.
-4. Architectural convention changed in code → sync project docs (`docs/`) and `.ai/` rules together, then regen — else agents diverge from repo.
-
-## Quality checklist
-
-- [ ] Each skill exists exactly once — in `.ai/skills/`; in `.claude/skills/` and `.cursor/skills/` only symlinks (plus vendor copies from `.agents/skills/`).
-- [ ] `.gitignore` contains generated-files block; `git status` clean after regen.
-- [ ] Every `SKILL.md` has `description` with real triggers (classes, scenarios), not abstraction.
-- [ ] All skills from `.ai/skills/` listed in `boost.json` → `skills` (if Boost used).
-- [ ] External skills pinned in `skills-lock.json`; `npx skills check` passes.
-- [ ] PR with context edits — sources only, zero generated files.
-
-## Links
-
-- registry `docs/routing.md` — skill routing by bucket and agent.
-- registry `docs/boost-compatibility.md` — registry-skill compatibility with Laravel Boost (package: https://github.com/laravel/boost, docs: https://laravel.com/docs/boost).
-- `references/ssot-source-layout.md` — detailed `.ai/` design: data flows, three priority layers, guidelines vs skills, commands, common errors.
-- `references/ssot-scenarios.md` — "scenario → skill" table for typical agent tasks.
+[Source layouts](references/ssot-source-layout.md) shows optional compositions.
+[Scenarios](references/ssot-scenarios.md) routes related tasks.
+[Gitignore example](snippets/gitignore-ai.txt), [symlink publisher](snippets/symlink-sync.sh),
+[Boost example](snippets/boost-json.example), and [vendor lock](snippets/skills-lock.example.json)
+are examples to inspect, not commands/configuration to apply blindly. The symlink example is
+only for projects that explicitly choose `.ai/skills` as its source and those target roots.

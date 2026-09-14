@@ -1,3 +1,6 @@
+> Scope: this example belongs to the project-adopted pattern in `../SKILL.md`.
+> It does not impose this architecture on another project; preserve real access and transaction invariants.
+
 # Матрица инъекций: кто кого инжектит
 
 Source: anonymized production Laravel project.
@@ -71,17 +74,11 @@ $action->execute(command: new StoreCommand(form: $form, user: $request->user()))
 означает неверную границу: общая логика принадлежит третьему классу. Выдели
 `ServiceC`, который инжектят оба.
 
-### 4. God-конструктор: 6+ зависимостей
+### 4. Cohesion signals
 
-Конструктор на 6 и больше коллабораторов — сигнал, что класс делает слишком много.
-Делить по сценариям: composite action на атомарные Actions, сервис — на оркестратор
-и узкие сервисы.
-
-### 5. Зависимость «для одного метода из десяти»
-
-Если зависимость нужна одному методу из десяти — границы класса нарезаны неверно.
-Либо метод переезжает в класс, где зависимость уместна, либо выделяется новый класс.
-(В контроллере легальная альтернатива — method injection в конкретный экшен-метод.)
+Many constructor dependencies, or a collaborator used by only one method, warrant checking
+cohesion. They do not automatically require splitting a class; follow actual responsibilities.
+A controller can use method injection for an operation-specific collaborator.
 
 ### 6. Интерфейс без второй реализации
 

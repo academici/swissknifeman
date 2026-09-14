@@ -22,22 +22,28 @@ def main(argv=None) -> int:
     parser.add_argument("--subject", required=True)
     parser.add_argument("--kind", choices=("terminal", "handoff"), default="terminal")
     parser.add_argument("--output")
+    parser.add_argument("--render-final", action="store_true",
+                        help="render the shared final fragment after receipt validation")
     parser.add_argument("--verify")
     args = parser.parse_args(argv)
+    if args.render_final and args.kind != "terminal":
+        parser.error("--render-final требует --kind terminal")
     if args.output and args.verify:
         parser.error("--output и --verify взаимоисключаются")
     try:
         if args.verify:
             receipt = json.loads(Path(args.verify).read_text(encoding="utf-8"))
             plan_delivery.verify_receipt(args.plan_dir, receipt)
-            print("plan-delivery: receipt OK")
+            print(plan_delivery.required_final_message(receipt) if args.render_final
+                  else "plan-delivery: receipt OK")
             return 0
         receipt = (plan_delivery.build_terminal_receipt(args.plan_dir, args.subject)
                    if args.kind == "terminal"
                    else plan_delivery.build_handoff_receipt(args.plan_dir, args.subject))
         if args.output:
             plan_delivery.write_receipt(args.output, receipt)
-        print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+        print(plan_delivery.required_final_message(receipt) if args.render_final
+              else json.dumps(receipt, ensure_ascii=False, sort_keys=True))
         return 0
     except (OSError, UnicodeDecodeError, json.JSONDecodeError, plan_delivery.DeliveryError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

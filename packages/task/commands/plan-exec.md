@@ -1,9 +1,13 @@
 ---
-description: "Execute declared plan item(s) through the shared Task lifecycle."
+description: "Execute authorized Task plan items using declared routing and inline closure."
 argument-hint: "<PLAN-ID> Pn.m [Pn.k]"
 model: sonnet
 effort: medium
 ---
+Read `runtime/plan-protocol/SKILL.md` from the configured Task package root (the same
+root that contains `lib/task/`) before using the plan schema. Its adjacent `references/` and
+`snippets/` are delivered on demand with Task; a separate CORE skill is not required.
+
 Execute the admitted Routing group or ready subset of a recommended group for `$ARGUMENTS`. The pinned route is a minimum;
 provider-attested overshoot is recorded and undershoot stops before mutation.
 Activation follows explicit owner plan intent or an exact cited local workflow policy in the
@@ -11,12 +15,17 @@ shared [intent routing canon](../references/intent-routing.md).
 
 ## Continuous execution
 
-After each GREEN item, materialize its successor and apply the persisted continuity decision. For
-`continue-root`, immediately execute the compatible ready successor in the admitted Routing batch
-(or safe ready subset) in this same root; do not emit a final, ask the owner, or launch a fresh
-session between ordinary items. A user-facing native launch block is for a real `cold-start-root`
-or waiting boundary only. Local reversible repair stays in this invocation. A design pass is allowed
-only when `plan_repair` returns `design-required` for a concrete unapproved contract decision.
+After each GREEN item, close the item and any directly closable GREEN phase in this invocation,
+then compute Next from the resulting state. Continue a compatible ready successor inside the
+owner-authorized admitted scope in this root. Local reversible repair stays in this invocation.
+If the owner requested only the completed scope, stop product writes and persist lifecycle
+`scope-complete` with its checkpoint: the reducer retains `continue-root` with reason
+`authorized-scope-complete`. A chat final reports the successor as a recommendation; it grants no
+execution authority and does not require a new process. Never invent work when the objective is done.
+An explicit request for a new session updates lifecycle to `owner-requested-new-session`; persist a
+fresh post-close checkpoint and render exactly one native launch for that successor. A routine
+item/phase transition or test failure does not imply a session boundary. A real external wait keeps
+its time/predicate gate visible. Design-only/review-only requests remain separate deliverables.
 
 ## Shared lifecycle
 
@@ -80,8 +89,8 @@ and audit run; legacy `required`/`auto`/`light`, Routing Review, item count, int
 prose alone are advisory. Missing or RED evidence remains repair work for the current executor in
 this invocation, never audit admission or a routine handoff to the repository owner. Ask the owner
 only at a concrete authority or product-decision boundary.
-Batch handoff retains its Batch, Context, and one provider-native launch block for the actual
-post-closure successor.
+Batch handoff retains its Batch and Context; a fresh-session boundary carries one provider-native
+launch block for the actual post-closure successor.
 
 ## Terminal admission
 
@@ -94,3 +103,8 @@ decision, rebuilt terminal receipt and in-memory proposed final fragment to
 `terminal_admission.evaluate()`. `final_allowed=true` requires exact identity and byte-exact
 `plan_delivery.required_final_message(receipt)`; no lease is `NOT_APPLICABLE`. The reducer stores
 only hashes and reason codes. Providers render its verdict but never decide terminality.
+
+At every actual final after closure, render the shared receipt fragment through worktree-local
+`plan-delivery.py --plan-dir <plan-dir> --subject <subject> --kind terminal --render-final`
+(or the same command with `--verify <receipt>`). This delivery rule applies even without an optional
+terminal-admission lease. A lease controls transport admission, not whether Next is reported.

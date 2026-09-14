@@ -1,8 +1,8 @@
 ---
 name: transactional-outbox-relay
 bucket: php
-version: 0.1.0
-description: "At-least-once async event delivery via transactional outbox: write+outbox in one transaction, relay-sweep sole retry owner, idempotent consumers, backoff+DLQ, after-commit effects. Activate wiring webhook/event delivery, an outbox, or async jobs that must not be lost/double-fired. Triggers: outbox, at-least-once, duplicate events, relay sweep."
+version: 0.1.1
+description: "Use for durable async delivery: transactional outbox, relay retries, idempotent consumers."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "queue", "outbox", "reliability", "async"]

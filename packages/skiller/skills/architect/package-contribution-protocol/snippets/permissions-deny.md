@@ -1,43 +1,19 @@
-# permissions.deny: аппаратная граница записи в зависимый пакет
+# Optional enforced consumer boundary
 
-Блокирует запись агента в код пакета при работе в проекте-потребителе. Применяй
-через готовый пресет (рекомендуется) или вставь правила вручную.
-
-## Через пресет (рекомендуется)
-
-```bash
-harness permissions --target <project> --preset product-boundary
-```
-
-Пресет `settings.product-boundary.json` (пакет harness, `configs/claude-code/`) добавляет в deny:
+Use a permission preset only when the owner chooses this boundary for consumer work. Inspect
+the installed Harness CLI help and effective settings. It must not accidentally forbid the
+owning package repository during authorized development.
 
 ```json
 {
   "permissions": {
-    "deny": [
-      "Write(vendor/**)",
-      "Edit(vendor/**)"
-    ]
+    "deny": ["Write(vendor/**)", "Edit(vendor/**)"]
   }
 }
 ```
 
-## Вариант для path-репозитория (composer `path` / монорепо)
-
-Если пакет подключён как локальный path-репозиторий и лежит в `packages/`, добавь
-вручную в `.claude/settings.local.json` потребителя (НЕ включай это в общий
-пресет — в самом репозитории пакета такой deny сломал бы разработку):
-
-```json
-{
-  "permissions": {
-    "deny": [
-      "Write(packages/**)",
-      "Edit(packages/**)"
-    ]
-  }
-}
-```
-
-Сними этот deny, когда осознанно открываешь сессию разработки самого пакета
-(отдельный контекст по `package-contribution-protocol`).
+A local `packages/` directory can contain owned development sources, not merely dependencies;
+do not deny all package paths by name. Scope any path-repository restriction to the actual
+consumer authority. An actual deny remains enforced: use an authorized owning-source route or
+report the permission boundary. Do not remove or work around it just because a skill permits
+a repair. A separate session is needed only for a real context/capability boundary or request.

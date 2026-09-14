@@ -1,6 +1,6 @@
 ---
 name: task-dev
-description: "Прямая разработка по запросу владельца: код и проверки по риску, без неявного плана или фаз. implementation/high."
+description: "Implement an authorized feature directly, with checks proportionate to risk."
 ---
 
 # Task dev
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:dev`.
 - Invocation: `$ task:dev <arguments>`
 - Routing: `implementation/high -> gpt-5.6-terra/high`
 - Canonical source: `packages/task/commands/dev.md`
-- Canonical SHA-256: `sha256:1f9dd07afc439392354f2bc9d37dd7373d2ea729c2ae23cd1af5ddcf02094cdc`
+- Canonical SHA-256: `sha256:80eca26ed89d46495b3a7487b28849d5f2728c41d7b19f305c6fc117a7433cef`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `references/intent-routing.md` from the configured Task marketplace runtime before selecting

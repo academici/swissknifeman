@@ -6,7 +6,8 @@ import unittest
 from pathlib import Path
 
 from skiller.common import Env
-from skiller.publication import (assert_root_bootstrap_set_completeness,
+from skiller.publication import (_codex_skill_runtime_files, _project_codex_skill_runtime,
+                                 assert_root_bootstrap_set_completeness,
                                  load_repository_bootstrap_config,
                                  render_repository_bootstrap_projections)
 from skiller.registry import (build_codex_publication, build_registry,
@@ -101,69 +102,80 @@ class TestCodexPublication(unittest.TestCase):
             self.assertFalse((cached / "SKILL.ru.md").exists())
             self._assert_core_cache_matches_catalog(cached, core_root, core)
 
-            stale = cached / "skills" / "general" / "plan-protocol" / "SKILL.md"
+            stale = cached / "skills" / "general" / "anti-drift" / "SKILL.md"
             stale.write_bytes(stale.read_bytes() + b"\n<!-- deliberately stale -->\n")
             with self.assertRaises(AssertionError):
                 self._assert_core_cache_matches_catalog(cached, core_root, core)
 
-    def test_core_bundle_keeps_runtime_tree_and_consumer_exclusions(self):
-        core_root, core = self._core_artifacts()
-        runtime_path = Path(
-            "skills/general/plan-protocol/snippets/plan-template.md")
-        excluded_path = Path(
-            "skills/general/plan-protocol/SKILL.ru.md")
-        expected_bytes = (
-            self.package_root / "skills/general/plan-protocol/snippets/plan-template.md"
-        ).read_bytes()
-        artifacts = {
-            item.target.relative_to(core_root): item.managed_bytes
-            for item in core
-        }
+    def _optional_plan_protocol_root(self):
+        """Resolve the opt-in general skill through its rendered native manifest."""
+        source_root = self.package_root / "skills/general"
+        artifacts = build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
+        manifest = next(item for item in artifacts
+                        if item.target == source_root / ".codex-plugin/plugin.json")
+        declared = json.loads(manifest.managed_bytes)["skills"]
+        self.assertIn("./plan-protocol", declared)
+        _, core = self._core_artifacts()
+        self.assertFalse(any("plan-protocol" in item.target.parts for item in core))
+        return source_root / "plan-protocol"
 
+    def test_optional_plan_protocol_keeps_runtime_tree_and_consumer_exclusions(self):
+        skill_root = self._optional_plan_protocol_root()
+        files = _codex_skill_runtime_files(skill_root, source_root=skill_root.parent,
+                                          plugin="general")
+        artifacts = {path.relative_to(skill_root): path.read_bytes() for path in files}
+        runtime_path = Path("snippets/plan-template.md")
+        expected_bytes = (skill_root / runtime_path).read_bytes()
         self.assertEqual(artifacts[runtime_path], expected_bytes)
-        self.assertNotIn(excluded_path, artifacts)
+        self.assertNotIn(Path("SKILL.ru.md"), artifacts)
+        self.assertNotIn(Path("upstream.json"), artifacts)
         with tempfile.TemporaryDirectory() as tmp:
-            cached = Path(tmp) / "cached-core"
+            cached = Path(tmp) / "cached-general-plan-protocol"
             for relative, managed_bytes in artifacts.items():
                 target = cached / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(managed_bytes)
             self.assertEqual((cached / runtime_path).read_bytes(), expected_bytes)
-            self.assertFalse((cached / excluded_path).exists())
+            self.assertFalse((cached / "SKILL.ru.md").exists())
 
-    def test_core_plan_protocol_keeps_the_adaptive_execution_contract(self):
-        core_root, core = self._core_artifacts()
-        relative = Path("skills/general/plan-protocol/SKILL.md")
-        artifacts = {
-            item.target.relative_to(core_root): item.managed_bytes
-            for item in core
-        }
-        canonical = (self.package_root / relative).read_bytes()
-        self.assertEqual(artifacts[relative], canonical)
+    def test_optional_plan_protocol_keeps_the_adaptive_execution_contract(self):
+        skill_root = self._optional_plan_protocol_root()
+        canonical = (skill_root / "SKILL.md").read_bytes()
         canon_text = canonical.decode("utf-8")
         for literal in ("observe → minimal reproduce → classify → act → verify",
                         "procedural / transient / dependency-not-ready / unrelated-pre-existing",
                         "Reuse a prior scoped verdict"):
             self.assertIn(literal, canon_text)
 
-    def test_core_bundle_projects_task_runtime_without_consumer_copy(self):
-        core_root, core = self._core_artifacts()
-        runtime_path = Path(
-            "skills/general/plan-protocol/snippets/journal-template.md")
-        canonical = (
-            self.package_root / "skills/general/plan-protocol/snippets/journal-template.md"
-        ).read_bytes()
-        artifacts = {
-            item.target.relative_to(core_root): item.managed_bytes
-            for item in core
-        }
-        projected = artifacts[runtime_path]
-        self.assertIn(b"${CLAUDE_PLUGIN_ROOT}/packages/task/lib", canonical)
-        self.assertNotIn(b"${CLAUDE_PLUGIN_ROOT}", projected)
+    def test_runtime_projection_resolves_task_without_consumer_copy(self):
+        skill_root = self._optional_plan_protocol_root()
+        canonical = (skill_root / "snippets/journal-template.md").read_bytes()
+        projected = _project_codex_skill_runtime(canonical)
+        self.assertIn(b"<task-package-root>/lib", canonical)
+        self.assertNotIn(b"${CLAUDE_PLUGIN_ROOT}", canonical)
+        self.assertEqual(projected, canonical)
         self.assertNotIn(b"PYTHONPATH=packages/task/lib", projected)
-        self.assertIn(b"codex plugin marketplace list --json", projected)
-        self.assertIn(b'item.get("name")=="swissknifeman"', projected)
-        self.assertNotIn(b'task@swissknifeman', projected)
+
+    def test_retirement_preserves_modified_files_and_removes_only_prior_owned_bytes(self):
+        import tempfile
+        from types import SimpleNamespace
+        from skiller.registry import _prune_publication_artifacts
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old = root / "retired.md"
+            old.write_bytes(b"owned")
+            lock = root / "publication-lock.json"
+            lock.write_text(json.dumps({"artifacts": [{"path": "retired.md",
+                "rendered_hash": "sha256:" + hashlib.sha256(b"owned").hexdigest()}]}))
+            artifacts = [SimpleNamespace(target=lock)]
+            old.write_bytes(b"local change")
+            with self.assertRaisesRegex(ValueError, "PUBLICATION_RETIRE_MODIFIED"):
+                _prune_publication_artifacts(artifacts)
+            self.assertEqual(old.read_bytes(), b"local change")
+            old.write_bytes(b"owned")
+            _prune_publication_artifacts(artifacts)
+            self.assertFalse(old.exists())
+            self.assertTrue(lock.exists())
 
     def test_repository_core_cache_matches_current_catalog(self):
         core_root, core = self._core_artifacts()

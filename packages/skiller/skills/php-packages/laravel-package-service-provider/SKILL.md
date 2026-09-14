@@ -1,8 +1,8 @@
 ---
 name: laravel-package-service-provider
 bucket: php-packages
-version: 0.3.0
-description: "Use this skill when changing a Laravel package service provider: config merges, routes, views, translations, publishing, migrations, assets, Blade components, commands, console-only behavior, or package metadata."
+version: 0.3.1
+description: "Use for Laravel package providers: boot/register, config, routes, views, assets, and commands."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "package-dev"]

@@ -1,8 +1,8 @@
 ---
 name: health-checks
 bucket: laravel-testing
-version: 0.1.0
-description: "spatie/laravel-health in Laravel: custom Check classes (disk, queue, scheduler heartbeat, TCP port, cache, DB) via Health::checks(); /health endpoint (live/ready, JSON/Filament); scheduled runs, failure notifications. Activate on: health check, liveness/readiness, /health, spatie health, disk/queue/cache/heartbeat checks."
+version: 0.1.1
+description: "Use for spatie/laravel-health checks, readiness endpoints, heartbeat, and failure alerts."
 risk: write
 persona: oss-dev
 tags: [laravel, health, monitoring, spatie, liveness, readiness, observability]

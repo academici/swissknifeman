@@ -1,3 +1,6 @@
+> Scope: this example belongs to the project-adopted pattern in `../SKILL.md`.
+> It does not impose this architecture on another project; preserve real access and transaction invariants.
+
 # Laravel Eloquent Model
 
 > Нейминг таблиц и шаблон миграции — в `db-conventions.md`.

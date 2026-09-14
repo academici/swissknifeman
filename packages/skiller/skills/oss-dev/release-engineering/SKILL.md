@@ -1,8 +1,8 @@
 ---
 name: release-engineering
 bucket: oss-dev
-version: 0.1.0
-description: SemVer strategy, CHANGELOG, release pipeline (CI/CD), pre-releases, deprecation policy for an OSS package
+version: 0.1.1
+description: "Use for package release policy: SemVer, changelog, CI releases, prereleases, and deprecation."
 risk: draft
 persona: oss-dev
 tags: [oss, semver, release, changelog, ci]

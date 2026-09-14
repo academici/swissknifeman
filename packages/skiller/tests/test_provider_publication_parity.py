@@ -121,21 +121,24 @@ class TestProviderPublicationParity(unittest.TestCase):
         self.assertEqual(_digest(first_codex, self.repo_root),
                          _digest(build_codex_publication(self.env, metadata, buckets, registry), self.repo_root))
 
-    def test_core_plan_protocol_has_one_canonical_provider_meaning(self):
+    def test_optional_plan_protocol_has_one_canonical_provider_meaning(self):
         registry, metadata, buckets = build_registry(self.env)
-        canonical = (self.package_root / "skills/general/plan-protocol/SKILL.md").read_bytes()
-        expected_suffix = "skills/general/plan-protocol/SKILL.md"
+        canonical_root = self.package_root / "skills/general/plan-protocol"
+        canonical = (canonical_root / "SKILL.md").read_bytes()
+        for build in (build_claude_publication, build_codex_publication):
+            artifacts = build(self.env, metadata, buckets, registry)
+            marketplace = json.loads(next(item.managed_bytes for item in artifacts
+                                          if item.target.name == "marketplace.json"))
+            general = next(plugin for plugin in marketplace["plugins"]
+                           if plugin["name"] == "general")
+            plugin_root = (self.repo_root / general["source"]).resolve()
+            self.assertEqual(plugin_root / "plan-protocol", canonical_root)
+            self.assertEqual((plugin_root / "plan-protocol/SKILL.md").read_bytes(), canonical)
+            core = next(plugin for plugin in marketplace["plugins"] if plugin["name"] == "core")
+            self.assertFalse(any("plan-protocol" in path for path in core.get("skills", [])))
         codex = build_codex_publication(self.env, metadata, buckets, registry)
-        projected = next(item.managed_bytes for item in codex
-                         if item.publication_unit_id == "core"
-                         and item.target.as_posix().endswith(expected_suffix))
-        self.assertEqual(projected, canonical)
-
-        claude = build_claude_publication(self.env, metadata, buckets, registry)
-        marketplace = json.loads(next(item.managed_bytes for item in claude
-                                      if item.target.name == "marketplace.json"))
-        core = next(plugin for plugin in marketplace["plugins"] if plugin["name"] == "core")
-        self.assertEqual(core["source"], "./")
+        self.assertFalse(any(item.publication_unit_id == "core"
+                             and "plan-protocol" in item.target.parts for item in codex))
 
     def test_manifest_gate_refuses_missing_unsupported_and_catalog_mismatch_before_write(self):
         source = json.loads((self.repo_root / "configs/provider-capabilities.json").read_text())

@@ -1,5 +1,8 @@
 <?php
 
+// Optional examples: enable only the architecture invariants adopted by this project.
+// Do not impose Action/DTO/readonly layers or a CI order from this template alone.
+
 // Source: a Laravel package test suite — tests/Arch/ArchTest.php (anonymized)
 // Pest Arch: исполняемые архитектурные инварианты. Заменить 'App' на корневой
 // namespace проекта/пакета. Запускается отдельным suite, без БД, первым шагом CI.

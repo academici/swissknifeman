@@ -780,7 +780,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
+              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
             }
           ],
           "compatibility_assertions": [
@@ -809,7 +809,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
+              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
             }
           ],
           "compatibility_assertions": [
@@ -840,7 +840,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
+              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
             }
           ],
           "compatibility_assertions": [
@@ -856,7 +856,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 4,
-          "intent": "Apply this source-derived instruction: Deliver the nine `CORE_SKILLS` by default through the selected channel; `--no-core` is the explicit opt-out and budget reporting remains authoritative. Also, take the resident CORE cost from `skiller budget --check-core`, never from a copied snapshot.",
+          "intent": "Apply this source-derived instruction: Deliver the curated `CORE_SKILLS` by default through the selected channel; `--no-core` is the explicit opt-out and budget reporting remains authoritative. Also, take the resident CORE cost from `skiller budget --check-core`, never from a copied snapshot.",
           "obligations": [
             {
               "modality": "must",
@@ -870,11 +870,11 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
+              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
             }
           ],
           "compatibility_assertions": [
-            "Deliver the nine `CORE_SKILLS` by default through the selected channel",
+            "Deliver the curated `CORE_SKILLS` by default through the selected channel",
             "`--no-core` is the explicit opt-out and budget reporting remains authoritative.",
             "`CORE_SKILLS`",
             "`--no-core`",
@@ -901,7 +901,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
+              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
             }
           ],
           "compatibility_assertions": [
@@ -933,7 +933,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
+              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
             }
           ],
           "compatibility_assertions": [
@@ -964,7 +964,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
+              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
             }
           ],
           "compatibility_assertions": [
@@ -995,7 +995,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "347b6689dacfb6e7f6c75e173940fd6d04e8dda37a59e2a795183f223878812f"
+              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
             }
           ],
           "compatibility_assertions": [

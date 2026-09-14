@@ -50,6 +50,31 @@ class PlanBundleTest(unittest.TestCase):
             plan_bundle.build(self.plan, "P1.1")
         self.assertEqual(target.read_bytes(), expected)
 
+    def test_unicode_cross_plan_decision_path_builds_as_one_declared_input(self):
+        plans = Path(self.tmp.name) / "plans"
+        source = plans / "2026.09.12-№1-SOURCE"
+        consumer = plans / "2026.09.12-№2-CONSUMER"
+        shutil.copytree(self.plan, source)
+        shutil.copytree(self.plan, consumer)
+
+        decision = source / "decisions" / "D16-owner-domain-control-plane.md"
+        decision.write_text("# D16\n", encoding="utf-8")
+        path = "plans/2026.09.12-№1-SOURCE/decisions/D16-owner-domain-control-plane.md"
+        spec = consumer / "phases" / "P1" / "P1.1.md"
+        spec.write_text(
+            spec.read_text(encoding="utf-8")
+            .replace("**Inputs:** `brief/00-brief.md` · `phases/P0/P0.closed.md`", f"**Inputs:** `{path}`")
+            .replace("**Required Reads:** 1) `brief/00-brief.md`", f"**Required Reads:** 1) `{path}`"),
+            encoding="utf-8",
+        )
+
+        bundle = plan_bundle.model(consumer, "P1.1")
+
+        self.assertEqual(
+            [entry["path"] for entry in bundle["declaration"]["inputs"]],
+            [path],
+        )
+
     def test_deduplicates_one_path_and_decision_resolution_in_the_same_ordinal(self):
         spec = self.plan / "phases/P1/P1.1.md"
         spec.write_text(

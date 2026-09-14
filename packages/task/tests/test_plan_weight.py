@@ -315,6 +315,11 @@ class TestRequiredReadsResolution(MeasurerTestCase):
         self.assertEqual(path_candidates("1) `lib/pkg/config.py` и проза"),
                          [("lib/pkg/config.py", True)])
 
+    def test_backticked_unicode_plan_identifier_is_a_declared_path(self):
+        path = "plans/2026.09.12-№1-COREX-SUCCESSOR/decisions/D16-owner.md"
+
+        self.assertEqual(path_candidates(f"1) `{path}`"), [(path, True)])
+
     def test_bare_strong_path_is_a_declaration(self):
         """Планы флота до 2026.07 пишут пути без бэктиков: `каталог/файл.ext` — такое же
         объявление, и его промах обязан называться `missing_file`."""

@@ -15,14 +15,17 @@ COLD_START_REASONS = (
     "context-budget",
     "capability-missing",
     "owner-pause-no-resume",
+    "owner-requested-new-session",
     "whole-plan-independent-audit",
     "design-root-terminal",
 )
 LIFECYCLES = (
     "active",
+    "scope-complete",
     "waiting-owner",
     "waiting-external",
     "owner-pause-no-resume",
+    "owner-requested-new-session",
     "whole-plan-independent-audit",
     "design-root-terminal",
     "terminal",
@@ -215,6 +218,11 @@ def reduce(estimate: WorkEstimate) -> ContinuityDecision:
             raise ContinuityError("CONTINUITY_EVIDENCE_MISSING: durable checkpoint")
         return ContinuityDecision(
             "cold-start-root", reason, evidence + (f"checkpoint:{estimate.checkpoint}",), True)
+    if estimate.lifecycle == "scope-complete":
+        if not estimate.checkpoint:
+            raise ContinuityError("CONTINUITY_EVIDENCE_MISSING: durable checkpoint")
+        return ContinuityDecision("continue-root", "authorized-scope-complete",
+                                  evidence + ("lifecycle:scope-complete", f"checkpoint:{estimate.checkpoint}"), True)
     if estimate.isolated_review:
         return ContinuityDecision(
             "isolated-child-return", "independent-review",
@@ -258,6 +266,11 @@ def validate_decision(decision: ContinuityDecision) -> ContinuityDecision:
             raise ContinuityError("CONTINUITY_DECISION_INVALID: cold-start evidence")
     elif decision.reason in COLD_START_REASONS:
         raise ContinuityError("CONTINUITY_DECISION_INVALID: reason/outcome mismatch")
+    if decision.reason == "authorized-scope-complete":
+        if (decision.outcome != "continue-root"
+                or "lifecycle:scope-complete" not in decision.evidence
+                or not any(value.startswith("checkpoint:") for value in decision.evidence)):
+            raise ContinuityError("CONTINUITY_DECISION_INVALID: scope completion evidence")
     if decision.outcome == "waiting-external":
         if not all(any(value.startswith(prefix + ":") for value in decision.evidence)
                    for prefix in ("reason", "started_at", "resume_at", "observed_at", "fingerprint",

@@ -1,6 +1,7 @@
 ---
+version: 0.1.1
 name: nuxt
-description: Use when working on Nuxt 4+ projects - provides server routes, file-based routing, middleware patterns, Nuxt-specific composables, and configuration with latest docs. Covers h3 v1 helpers (validation, WebSocket, SSE) and nitropack v2 patterns. Updated for Nuxt 4.3+.
+description: "Use for Nuxt 4+ routes, middleware, composables, server handlers, and project configuration."
 license: MIT
 ---
 

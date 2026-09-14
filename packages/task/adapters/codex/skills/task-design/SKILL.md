@@ -1,6 +1,6 @@
 ---
 name: task-design
-description: "По явному запросу проектирования: проектные артефакты (план / решения / ADR), кода НЕ пишем. frontier/high."
+description: "Explicit design request: produce a plan or ADR; implementation is separate."
 ---
 
 # Task design
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:design`.
 - Invocation: `$ task:design <arguments>`
 - Routing: `frontier/high -> gpt-5.6-sol/high`
 - Canonical source: `packages/task/commands/design.md`
-- Canonical SHA-256: `sha256:0002f2976b4416042f432f46c44bbcd7f912849f263ddafe6708b0deecd41efa`
+- Canonical SHA-256: `sha256:3e2215a33373d1403e46b7c083a0d8f9b1ce8f52b203f33db6b75c349e52c0a9`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `references/intent-routing.md` from the configured Task marketplace runtime before selecting

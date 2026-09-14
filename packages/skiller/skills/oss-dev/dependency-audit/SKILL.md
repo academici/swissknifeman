@@ -1,8 +1,8 @@
 ---
 name: dependency-audit
 bucket: oss-dev
-version: 0.2.0
-description: Use when auditing dependencies: lockfile sanity, vuln scan, license compatibility, supply-chain risk, SBOM.
+version: 0.2.1
+description: "Use when auditing lockfiles, vulnerabilities, licenses, supply-chain risk, or SBOMs."
 risk: draft
 persona: oss-dev
 tags: [oss, compliance, security, dependencies, php]

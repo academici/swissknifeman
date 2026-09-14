@@ -1,8 +1,8 @@
 ---
 name: backend-type-sync
 bucket: frontend-backend
-version: 0.1.0
-description: "Backend→frontend type sync via spatie/laravel-typescript-transformer: #[TypeScript] on enum/DTO/Spatie-Data, php artisan typescript:transform → generated.d.ts, use App.Enums.* / App.Data.* in Vue/TS. Activate: new enum/DTO needed on frontend, type drift FE↔BE, type-sync setup. Boundary with wayfinder (routes ≠ types)."
+version: 0.1.1
+description: "Use for Laravel enum/DTO to TypeScript generation; route typing belongs to Wayfinder."
 risk: write
 persona: oss-dev
 tags: [typescript, laravel, spatie, types, enum, dto, frontend, type-sync, ci]

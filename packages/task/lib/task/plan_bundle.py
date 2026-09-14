@@ -142,8 +142,13 @@ def _decision_sources(raw: str, plan_dir: Path) -> list[Path]:
         directory = plan_layout.carrier_glob(plan_dir, "decision-record").parent
     except plan_layout.PlanLayoutError as exc:
         raise BundleError(str(exc)) from exc
+    # A declared file path can itself contain `D16` (including a cross-plan
+    # path).  It is already resolved by `path_candidates()` above; treating
+    # that filename as a second reference to this plan's D16 incorrectly
+    # rejects a valid external decision source.
+    prose = re.sub(r"`[^`]+`", "", raw)
     sources = []
-    for match in _DECISION.finditer(raw):
+    for match in _DECISION.finditer(prose):
         start = int(match.group(1))
         end = int(match.group(2) or start)
         if end < start:

@@ -1,5 +1,5 @@
 ---
-description: "Мелкая ПРАВКА: узкий single-agent, без fan-out, token-frugal. Пинит Sonnet/medium."
+description: "Fix a scoped defect directly; preserve existing work and verify the change."
 argument-hint: "[что починить]"
 model: sonnet
 effort: medium
@@ -12,10 +12,12 @@ effort: medium
 
 Профиль `fix` (token-frugal):
 1. **Один проход, без fan-out и без субагентов** — задача мелкая, координация не окупится.
-2. **Selective-input** (экономия 5–50×): читай slice — функцию/класс/роут ±контекст, не файлы целиком; логи —
+2. **Selective-input**: читай slice — функцию/класс/роут ±контекст, не файлы целиком; логи —
    `tail -n`/`grep` по идентификатору, не весь файл; ошибки — последний stack-frame; PR/дифф — `git diff`/
    `gh pr diff`, не файлы. «Point, don't paste»: указывай путь и дочитывай нужное.
 3. **Минимальное изменение** под задачу; на изменённое поведение — тест/проверка; не разводи абстракции
    «на вырост».
 4. Внешний факт под сомнением → `verify-claims`-лестница (context7 → `perplexity-web`), не утверждай по памяти.
-5. Дерево чистое; НЕ git push / PR без явной просьбы.
+5. Зафиксируй исходный `git status` и прочитай пересекающийся diff. Dirty baseline сам по себе
+   не блокирует правку: компонуй изменения, сохраняй чужую работу; останови только несовместимый
+   участок при конкретном конфликте ownership. НЕ git push / PR без явной просьбы.

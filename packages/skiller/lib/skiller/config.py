@@ -22,19 +22,16 @@ from .common import (AGENT_DEFAULTS, confirm, die,
 # DEFAULT_EXCLUDE убирает из авто-раздачи скиллы, дублирующие хаб maind
 # (shared-memory ← agent-memory MCP) и ручные инструменты (cross-project-coordinator).
 # Отключается флагом --no-core у connect/vendor.
-# RAG-дисциплина — трио: mcp-advisor (что подключить) · verify-claims (когда/что
-# верифицировать) · query-craft (как сформулировать запрос). Все три — CORE: внешний поиск
-# нужен в любом проекте, а размытый запрос (без версии/контекста) — частая полевая проблема
-# (см. SKILL research/query-craft). Скилл физически в бакете research, в CORE — по ссылке.
+# CORE хранит только общую дисциплину исполнения. Onboarding, поиск, GitHub review
+# и стиль ответа подключаются предметно; plan-protocol поставляется runtime Task.
 def _load_core_policy():
     """CORE-политика из configs/core-policy.json (декларативно) с фолбэком на встроенные дефолты.
     Самолокация через __file__ → работает на import-time (потребители budget/connect/vendor/registry
     берут константы модульного уровня). Standalone-safe, stdlib-only: нет файла/битый → дефолты."""
     defaults = {
-        "skills": ["general/context-economy", "general/anti-drift", "general/compact-responses",
-                   "general/session-handoff", "general/mcp-advisor", "general/verify-claims",
-                   "research/query-craft", "oss-dev/gh-review", "general/plan-protocol"],
-        "resident_budget_target": 600,
+        "skills": ["general/context-economy", "general/anti-drift",
+                   "general/session-handoff", "general/verify-claims"],
+        "resident_budget_target": 750,
         "core_plugin": "core",
         "core_buckets": ["general", "oss-dev"],
         "default_command_plugins": ["task"],
@@ -76,8 +73,8 @@ CORE_BUCKETS = list(_CORE_POLICY["core_buckets"])
 # `task` — интент-команды /task:design|dev|review|research|fix (пакет task, commands-only): раздаём
 # везде, т.к. intent-router политика предлагает именно их — без плагина предложение не резолвится.
 # Как и CORE_PLUGIN: объявлены в marketplace и тихо пропускаются на старом marketplace / в тест-реестре
-# (там marketplace.json = {}). Резидентного tier-0 налога у команд нет (описания команд не инжектятся
-# в каждый запрос, в отличие от description скиллов). Отключить точечно — enabledPlugins[...]=false
+# (там marketplace.json = {}). Codex публикует команды как скиллы, поэтому их описания
+# входят в его listing budget. Отключить точечно — enabledPlugins[...]=false
 # (connect уважает явный false, как и для бакетов).
 DEFAULT_COMMAND_PLUGINS = list(_CORE_POLICY["default_command_plugins"])
 DEFAULT_EXCLUDE = list(_CORE_POLICY["default_exclude"])

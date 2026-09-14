@@ -1,8 +1,8 @@
 ---
 name: laravel-testing
 bucket: laravel-testing
-version: 0.4.1
-description: "Feature/unit/pest testing patterns: test DB isolation, Docker/local env detection, coverage gate, Pest composition (setUp traits, fixtures, beforeEach fake/freeze, datasets)"
+version: 0.4.2
+description: "Use for Laravel/Pest tests: isolated DB, environment preflight, fixtures, and test composition."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "testing"]

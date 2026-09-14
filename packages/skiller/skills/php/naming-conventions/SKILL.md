@@ -1,8 +1,8 @@
 ---
 name: php-naming-conventions
 bucket: php
-version: 0.1.0
-description: "Naming Laravel/PHP entities: repository methods by intent (not findByCodeOrFail-explosion), Action/DTO/VO/Enum/Event/Job, tables/columns/routes. Kills junk names AI loves to generate. Activate when creating or reviewing class/method/migration names."
+version: 0.1.1
+description: "Use when naming PHP classes, repository methods, DTOs, events, tables, or routes."
 risk: read
 persona: oss-dev
 tags: ["php", "laravel", "naming", "conventions", "code-style", "readability"]

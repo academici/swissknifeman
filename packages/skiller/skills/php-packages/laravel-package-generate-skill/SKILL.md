@@ -1,8 +1,8 @@
 ---
 name: laravel-package-generate-skill
 bucket: php-packages
-version: 0.3.0
-description: "Use this skill when creating or updating the bundled Laravel Boost skill under resources/boost/skills from the package implementation and documentation. Trigger after public APIs, commands, config, routes, views, publish tags, examples, or docs change."
+version: 0.3.1
+description: "Use to update a package's resources/boost/skills after its public API or docs change."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "package-dev"]

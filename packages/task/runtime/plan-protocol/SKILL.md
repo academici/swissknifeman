@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.33.0
+version: 2.34.0
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
@@ -242,11 +242,16 @@ Model order is `economy < implementation < frontier`; effort order is `low < med
 Compare both independently: undershoot, ambiguity, or unsupported capability blocks before mutation;
 overshoot is recorded. Frozen-spec implementation normally uses implementation/high; frontier is for
 open design or irreversible choices. Routing rows are
-`| Batch | Items | Model class/effort | Exec | Review | Почему |`; `Exec` is `plan-exec`, `manual`,
+`| Batch | Items | Model class/effort | Exec | Review | Почему |`; `Exec` is `plan-exec`, `manual` (also accepted as `plan-run`),
 or `plan-design`. Choose Review from concrete item risk: ordinary low-risk work uses self-check and
 affected tests, bounded integration adds the necessary package/integration check, and independent
 review requires a named hard risk or explicit owner requirement. Uncertainty gathers evidence rather
 than defaulting to full. A batch inherits its highest justified review depth.
+`task_contract.resolve_exec` owns execution-mode normalization for both compiler and lint.
+`plan-run` resolves to the existing `manual` mode: it shares the canonical `plan-exec` lifecycle,
+keeps the raw command in `declared_exec` and routing digests, and preserves the attested owner route.
+Unknown spellings fail closed; alias resolution never substitutes pinned model/effort or authority.
+
 `plan-exec` requires implementation/medium; `plan-run` executes manual items and prints its actual
 class/effort as evidence.
 
@@ -302,15 +307,25 @@ phase in place. Handoff is computed from post-closure state and dependencies and
 `plan-close` for the current result or repeats `plan-exec`/`plan-run` for the current item. The
 `close` form remains compatible for an explicitly requested standalone reconciliation.
 
-After a GREEN item, materialize the actual successor and obey its typed Context before responding.
-`continue-root` means begin the compatible ready successor in the same root invocation, not a
-handoff and not a reason to start a new Codex process. Continue the admitted Routing batch (or its
-safe ready subset) without asking the owner between ordinary items. Render a user-facing handoff
-only at a real stop boundary: `cold-start-root`, `waiting-owner`, `waiting-external`,
-`isolated-child-return`, or a terminal plan. A completion summary for an item with a compatible,
-ready `continue-root` successor is premature.
+Completion of one item or an admitted batch is not terminality of the whole plan. An unfinished
+phase forbids `Context: terminal` and a terminal Next; `none` is not a declared Next form.
+Preserve the actual successor even when it is outside the completed batch. Do not execute outside
+the admitted scope; at a real owner-requested new-session boundary, persist the successor's Routing
+and render its native command. Never replace that handoff with only a completion summary.
 
-At a real user-facing executable handoff, provide a metadata table with Batch, Model class, Effort,
+After a GREEN item, materialize the actual successor and obey its typed Context before responding.
+`continue-root` means begin a compatible ready successor inside the owner-authorized admitted scope
+in the same root. Continue that scope without asking between ordinary items. When the owner asked
+only for the completed scope, persist lifecycle `scope-complete` and a post-close checkpoint. Its
+`continue-root` decision uses reason `authorized-scope-complete`: stop product writes and report the
+exact successor as a recommendation for this chat. Chat completion does not terminate the plan,
+expand authority, or imply a new process. If no ready successor exists, name the missing scope or
+decision; if the entire goal is complete, say so without inventing more mandatory work.
+An explicit request for a new session updates lifecycle to `owner-requested-new-session`, captures a
+fresh checkpoint and renders the post-close successor. A previous `continue-root` does not override
+that request. Separate design/review requests remain within their requested artifact boundary.
+
+At a fresh-session executable handoff, provide a metadata table with Batch, Model class, Effort,
 Capabilities, Context, and Суть; the table never carries the invocation. Immediately after it,
 render exactly one copyable provider-native command block for the active provider adapter. Claude
 Code emits its native slash form; Codex emits a `bash` block that launches `codex` with pinned cwd,
@@ -327,9 +342,10 @@ For layout v2 the Context field carries EXACTLY one of three values:
 
 `[v1]` historical context strings remain readable but are not emitted for layout v2. A v2
 `cold-start-root` must give exactly one reason: `context-budget`, `capability-missing`,
-`owner-pause-no-resume`, `whole-plan-independent-audit`, or `design-root-terminal`. Command names
+`owner-pause-no-resume`, `owner-requested-new-session`, `whole-plan-independent-audit`, or
+`design-root-terminal`. Command names
 do not select context; the hard-boundary predicate does. `handoff.Next` always carries the
-provider-neutral form and the native launch block together.
+provider-neutral form; a fresh-session handoff also carries the native launch block.
 
 Before any runnable Context is written, build one `task.plan_continuity.WorkEstimate` from the
 provider-attested route/capabilities, context health, digest-bound remaining batch, loaded-input
@@ -349,7 +365,10 @@ and exact persisted handoff recommendation. A nonterminal or stale carrier retur
 non-product `handoff-recommendation-receipt/v1`. Every final response labels
 `Рекомендация следующего шага:` and copies the receipt's exact recommendation; a bare item ID
 is not a delivery receipt. Build it only after same-invocation item/eligible-phase closure, so its
-recommendation cannot point back to that closure or current item.
+recommendation cannot point back to that closure or current item. Use the shared renderer via
+`plan-delivery.py --kind terminal --render-final` (with plan directory and subject, or a verified
+receipt) whether or not an optional terminal-admission lease is installed. That lease governs
+transport admission; it does not create the obligation to report Next.
 
 **AUDIT CONTINUATION.** A completed `task:plan-audit` invocation does not itself select a new
 root. Build and persist the same `plan_continuity.WorkEstimate` used for every runnable successor;

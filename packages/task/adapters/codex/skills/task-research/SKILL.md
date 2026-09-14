@@ -1,6 +1,6 @@
 ---
 name: task-research
-description: "Задача ИССЛЕДОВАНИЯ: многоисточниковый research с верификацией (RAG), синтез с цитатами. Пинит frontier/high."
+description: "Research an explicit question using verified sources; return findings and Next."
 ---
 
 # Task research
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:research`.
 - Invocation: `$ task:research <arguments>`
 - Routing: `frontier/high -> gpt-5.6-sol/high`
 - Canonical source: `packages/task/commands/research.md`
-- Canonical SHA-256: `sha256:14cbac2b918121ebaeefd88c00cf6bd5137ac9d2e4ac39415eeca2d7377c38c5`
+- Canonical SHA-256: `sha256:417b37dbca208f58ec3ca9373736dde751db43be02d2910180377649df631d9b`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `references/intent-routing.md` from the configured Task marketplace runtime before selecting

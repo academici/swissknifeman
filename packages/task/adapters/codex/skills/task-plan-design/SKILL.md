@@ -1,6 +1,6 @@
 ---
 name: task-plan-design
-description: "Design or refine an executable plan with bounded, proportional evidence."
+description: "Explicit Task plan design: author or refine executable plan contracts."
 ---
 
 # Task plan-design
@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-design`.
 - Invocation: `$ task:plan-design <arguments>`
 - Routing: `frontier/high -> gpt-5.6-sol/high`
 - Canonical source: `packages/task/commands/plan-design.md`
-- Canonical SHA-256: `sha256:0ebf171c5dda5d7f5854cadff88941e299502f2cb0b21943818ee95a2fe428e1`
+- Canonical SHA-256: `sha256:e5066316471d4c626560130038b0c96e92accbcb889d92c78af68d4a0a95c73c`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `references/intent-routing.md` from the configured Task marketplace runtime before selecting

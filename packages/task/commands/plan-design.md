@@ -1,9 +1,15 @@
 ---
-description: "Design or refine an executable plan with bounded, proportional evidence."
+description: "Explicit Task plan design: author or refine executable plan contracts."
 argument-hint: "<PLAN-ID>|new <title>|finish <PLAN-ID>"
 model: opus
 effort: high
 ---
+Invocation payload: `$ARGUMENTS`.
+
+Read `runtime/plan-protocol/SKILL.md` from the configured Task package root (the same
+root that contains `lib/task/`) before using the plan schema. Its adjacent `references/` and
+`snippets/` are delivered on demand with Task; a separate CORE skill is not required.
+
 Design creates a v2 plan contract, not a second execution protocol. Read repository evidence,
 declare `Phase Assurance | v1` in every new phase (impact, named seams, live/irreversible,
 audit intent, rationale), Routing Batch/Review, Required Reads, Files, Validation and Deliverables, then generate

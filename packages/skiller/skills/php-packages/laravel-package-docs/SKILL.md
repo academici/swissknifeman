@@ -1,8 +1,8 @@
 ---
 name: laravel-package-docs
 bucket: php-packages
-version: 0.3.0
-description: "Use this skill when writing or revising package documentation after creating a package from this starter: README content, VitePress pages, contributing docs, upgrade notes, installation, usage, testing, workbench docs, or examples."
+version: 0.3.1
+description: "Use for configured Laravel package README, VitePress, install/usage, and upgrade docs."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "package-dev"]

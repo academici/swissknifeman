@@ -3,6 +3,11 @@ import contextlib
 import hashlib
 import io
 import json
+import os
+try:
+    import tomllib
+except ImportError:
+    tomllib = None
 import shutil
 import subprocess
 import tempfile
@@ -83,6 +88,61 @@ class ProviderDistributionCase(unittest.TestCase):
         lock = json.loads((self.project / "skills-lock.json").read_text())
         self.assertIn("code-style", lock["skills"])
         self.assertNotIn("providers", lock)
+
+    @unittest.skipUnless(tomllib, "native activation requires stdlib tomllib (Python 3.11+)")
+    def test_native_selection_is_opt_in_dry_run_and_explicit_project_only(self):
+        self.write_provider_config(providers())
+        materialize_codex_marketplace(self.root)
+        config = self.project / ".codex/config.toml"
+        with mock.patch.dict(os.environ, {"CODEX_HOME": str(self.tmp / "codex-home")}), \
+                mock.patch("skiller.publication.run_codex_native_install", side_effect=AssertionError("native install")), \
+                contextlib.redirect_stdout(io.StringIO()):
+            do_connect(self.env, self.project, {"plugins": "php", "no_core": True, "dry_run": True,
+                                               "native_codex": True}, register=False)
+            self.assertFalse(config.exists())
+            do_connect(self.env, self.project, {"plugins": "php", "no_core": True}, register=False)
+            self.assertFalse(config.exists())
+            with mock.patch("skiller.connect.apply_permissions", side_effect=AssertionError("permissions write")):
+                do_connect(self.env, self.project, {"plugins": "php", "no_core": True,
+                                                   "native_codex": True}, register=False)
+        plugins = tomllib.loads(config.read_text())["plugins"]
+        self.assertTrue(plugins["php@swissknifeman"]["enabled"])
+        self.assertFalse(plugins["quality@swissknifeman"]["enabled"])
+
+    def test_native_selection_parse_failure_precedes_connect_mutations(self):
+        self.write_provider_config(providers())
+        materialize_codex_marketplace(self.root)
+        config = self.project / ".codex/config.toml"
+        config.parent.mkdir()
+        config.write_text("[broken")
+        before = {p.relative_to(self.project): p.read_bytes() for p in self.project.rglob("*") if p.is_file()}
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()), \
+                self.assertRaises(SystemExit):
+            do_connect(self.env, self.project, {"plugins": "php", "no_core": True,
+                                               "native_codex": True}, register=False)
+        self.assertEqual(before, {p.relative_to(self.project): p.read_bytes()
+                                  for p in self.project.rglob("*") if p.is_file()})
+
+    @unittest.skipUnless(tomllib, "native activation requires stdlib tomllib (Python 3.11+)")
+    def test_native_hub_runs_once_after_project_selection_and_includes_agents(self):
+        self.write_provider_config(providers())
+        materialize_codex_marketplace(self.root)
+        opts = {"plugins": "php", "no_core": True, "native_codex": True, "hub": True}
+
+        def hub_after_selection(env, target, *, root_files):
+            self.assertEqual(root_files, ("AGENTS.md",))
+            plugins = tomllib.loads((target / ".codex/config.toml").read_text())["plugins"]
+            self.assertTrue(plugins["php@swissknifeman"]["enabled"])
+            self.assertFalse(plugins["quality@swissknifeman"]["enabled"])
+            self.assertTrue((target / ".agents/plugins/marketplace.json").is_file())
+
+        with mock.patch.dict(os.environ, {"CODEX_HOME": str(self.tmp / "codex-home")}), \
+                mock.patch("skiller.connect.generate_hub", side_effect=hub_after_selection) as generate, \
+                contextlib.redirect_stdout(io.StringIO()):
+            do_connect(self.env, self.project, {**opts, "dry_run": True}, register=False)
+            generate.assert_not_called()
+            do_connect(self.env, self.project, opts, register=False)
+            generate.assert_called_once_with(self.env, self.project, root_files=("AGENTS.md",))
 
     def test_dual_vendor_preflights_then_keeps_provider_qualified_locks(self):
         self.write_provider_config(providers())
@@ -631,20 +691,17 @@ class CoreDonorMutualExclusionCase(unittest.TestCase):
         registry, metadata, buckets = build_registry(self.env)
         return build_catalog(self.env, metadata, buckets, registry)
 
-    def test_worst_case_declared_set_names_exactly_the_nine_known_pairs(self):
+    def test_worst_case_declared_set_names_exactly_the_four_core_pairs(self):
         from skiller.doctor import detect_core_donor_collisions
         catalog = self._catalog()
         enabled = {unit.plugin_id: True for unit in catalog.units}
         findings = detect_core_donor_collisions(catalog, enabled=enabled)
         pairs = {(item["identity"], tuple(item["carriers"])) for item in findings}
-        general_identities = {"anti-drift", "compact-responses", "context-economy",
-                              "mcp-advisor", "plan-protocol", "session-handoff",
-                              "verify-claims"}
+        general_identities = {"anti-drift", "context-economy",
+                              "session-handoff", "verify-claims"}
         for identity in general_identities:
             self.assertIn((identity, ("unit:core", "unit:general")), pairs)
-        self.assertIn(("gh-review", ("unit:core", "unit:oss-dev")), pairs)
-        self.assertIn(("query-craft", ("unit:core", "unit:research")), pairs)
-        self.assertEqual(len(findings), 9)  # exactly the nine named pairs, not just a count
+        self.assertEqual(len(findings), 4)  # the curated CORE, not the whole general bucket
         for item in findings:
             self.assertEqual(item["owner"], "P1.5")
             self.assertTrue(item["safe_owner_action"])
@@ -661,7 +718,7 @@ class CoreDonorMutualExclusionCase(unittest.TestCase):
         catalog = self._catalog()
         findings = detect_core_donor_collisions(
             catalog, enabled={"core": True, "research": True})
-        self.assertEqual({item["identity"] for item in findings}, {"query-craft"})
+        self.assertEqual(findings, ())
 
     def test_doctor_provider_distribution_prints_d42_diagnostics(self):
         import contextlib
@@ -674,13 +731,13 @@ class CoreDonorMutualExclusionCase(unittest.TestCase):
                                       str(self.package_root)])
         out = buf.getvalue()
         self.assertIn("D42 core↔donor mutual exclusion", out)
-        self.assertIn("query-craft", out)
+        self.assertIn("verify-claims", out)
 
 
 class EffectiveRuntimeGateCase(unittest.TestCase):
     """P1.4 (D51/D62/D63): cold per-provider install/discover of the declared fixture
     (repo marketplace minus the three donor buckets) proves catalog-wide identity
-    uniqueness — never a named-ID list — plus the negative fixture (D42 nine pairs +
+    uniqueness — never a named-ID list — plus the negative fixture (D42 curated CORE pairs +
     class-B `workflow-craft` precondition) and the D62 reconciliation against a frozen
     collision snapshot. Runs against the REAL repo catalog (like
     CoreDonorMutualExclusionCase above) — a synthetic fixture has neither the
@@ -728,7 +785,6 @@ class EffectiveRuntimeGateCase(unittest.TestCase):
         # installed bundle only — the deleted root carrier never reappears
         for identity, expected_unit in (
                 ("anti-drift", "unit:core"), ("context-economy", "unit:core"),
-                ("plan-protocol", "unit:core"), ("query-craft", "unit:core"),
                 ("session-handoff", "unit:core"), ("verify-claims", "unit:core"),
                 ("architecture", "unit:architect"), ("codebase-design", "unit:architect"),
                 ("domain-modeling", "unit:architect"),
@@ -747,11 +803,11 @@ class EffectiveRuntimeGateCase(unittest.TestCase):
         self.assertEqual(result["positive_maps"]["codex"].get("workflow-craft"), ["root:codex"])
         self.assertNotIn("workflow-craft", result["positive_maps"]["claude-code"])
 
-    def test_negative_fixture_proves_the_nine_pairs_and_class_b_precondition(self):
+    def test_negative_fixture_proves_the_four_pairs_and_class_b_precondition(self):
         from skiller.doctor import run_effective_runtime_gate
         result = run_effective_runtime_gate(self.env)
-        self.assertEqual(len(result["negative_pairs"]), 9)
-        self.assertIn("query-craft", {item["identity"] for item in result["negative_pairs"]})
+        self.assertEqual(len(result["negative_pairs"]), 4)
+        self.assertIn("verify-claims", {item["identity"] for item in result["negative_pairs"]})
         self.assertIsNotNone(result["workflow_craft_precondition_error"])
         self.assertIn("precondition violated", result["workflow_craft_precondition_error"])
 

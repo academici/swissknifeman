@@ -1,61 +1,19 @@
-# Code review
+# PHP diff review prompts
 
-## Когда активировать
+Apply only the project's adopted architecture and conventions. This checklist does not select
+an Action/Service/Repository pattern for a project or authorize a new process.
 
-- Пользователь просит ревью или разбор PR.
-- Перед merge нетипично большого изменения.
-- Проверка чужого кода в доменном слое (модели, переходы состояний, права доступа).
-- Нужна сверка с архитектурой слоёв и контрактами доменных процессов.
+1. Trace the changed behavior across the affected HTTP/domain/persistence boundaries.
+2. Check transactional atomicity, retries and duplicate effects where mutations occur.
+3. Check allowed and denied resource/tenant access at server entry points. Keep enum, policy,
+   route and UI behavior coherent if those mechanisms exist.
+4. Check validation, mass assignment, secret handling, uploads and untrusted query input.
+5. Verify meaningful regression coverage and isolated test DB/filesystem. Stack testing skills
+   supply actual commands and preflight; this checklist does not add blanket coverage gates.
+6. Inspect generated output through its owning source. Discover ownership from markers/config;
+   neither `.ai/` nor Boost owns every project automatically.
 
-## Порядок (кратко)
-
-1. Понять границы изменения: один слой или несколько (см. **`cross-layer-change-checklist`** при multi-layer).
-2. Проверить границы **Action ↔ Service**, контроллер, политики — по архитектурным договорённостям проекта.
-3. Если затронуты доменные переходы/abilities — проверить согласованность enum/policy/route/UI
-   (доменный FSM — **`laravel-architecture/enum-state-machine`**).
-4. Тесты: покрытие, человекочитаемые имена сценариев, изоляция БД — **`laravel-testing/laravel-testing`**,
-   **`laravel-testing/test-isolation-guard`**.
-5. Безопасность — раздел ниже (**`laravel-auth/laravel-security-audit`**).
-
-## Архитектура слоёв
-
-- Один публичный `execute()` у Action; без `Request` в Action/Service-сценариях домена.
-- Мутации и транзакционная граница use-case — в Action; `*Service` без записи в домен и без `Request`.
-- Контроллер: HTTP → validate → Action → ответ; без оркестрации мутаций через «use-case Service».
-- Именованные аргументы PHP везде, где применимо правило проекта (**`php/named-arguments`**).
-
-Подробности границ слоёв — **`php/repositories`**, **`laravel-architecture/modular-architecture`**.
-
-## Доменные переходы (FSM)
-
-- Переходы статусов и политики не расходятся с определением переходов доменного enum и гейтами.
-- При смене перехода/permission синхронно: enums, policies, routes, фронт.
-- Реализация и сверка — **`laravel-architecture/enum-state-machine`**.
-
-## Многослойные изменения
-
-Если затронуты backend + policy + HTTP + frontend + тесты — пройди чеклист **`cross-layer-change-checklist`**. При необходимости оркестрации задачи — **`complex-task-orchestrator`**.
-
-## Тесты
-
-- Feature-тесты для HTTP и сценариев доступа; для чистой логики — unit.
-- Имена тестов и описания — по языковому правилу проекта.
-- Изоляция БД (`RefreshDatabase` / отдельная тест-схема) — **`laravel-testing/test-isolation-guard`**.
-- Минимальный набор команд и Docker vs хост — **`laravel-testing/laravel-testing`**.
-
-## Security pass
-
-Опирайся на **`laravel-auth/laravel-security-audit`** (практики безопасности Laravel и аудит кода).
-
-- **Авторизация:** согласованность Permission enum, методов Policy и вызовов `Gate`; негативные
-  кейсы в тестах там, где меняется доступ (**`laravel-auth/laravel-permissions`**).
-- **Загрузки и медиа:** коллекции, видимость файлов, конверсии — **`laravel-extras/medialibrary`**.
-- **Конфигурация:** секреты и окружение только через `config/*`, не `env()` снаружи конфигов.
-- **Ввод пользователя:** валидация в Form Request; массовое присвоение — только разрешённые поля.
-
-## Generated-артефакты и контекст агента
-
-- Не предлагать правки в сгенерированные `CLAUDE.md`/`AGENTS.md`/`GEMINI.md` и игнорируемые копии —
-  источник правды AI-контекста (`.ai/` + `boost.json` у Boost-проектов), затем регенерация.
-- Ревью зафиксировало новую архитектурную договорённость — в той же задаче синхронизировать
-  доковую базу проекта (`docs/`) и правила контекста агентов, затем регенерация (**`skills-ssot`**).
+Findings follow `quality/code-review` severity: demonstrated impact and adopted contracts.
+Missing a preferred layer, named argument or style pattern does not block unless an applicable
+project requirement or concrete failure explains why. Review stays read-only; a large diff or
+many affected layers does not automatically spawn an orchestration workflow.

@@ -1,8 +1,8 @@
 ---
 name: laravel-data
 bucket: laravel-data-layer
-version: 0.1.0
-description: "DTOs with spatie/laravel-data: typed Data classes, nested DataCollection, casts/transformers, computed properties, mapName/mapInputName, from(request) with validation, API/Inertia output, #[TypeScript] annotation. Activate: need a type-safe DTO instead of array/array-access, parse incoming request into an object, single data shape between back and front, replace ad-hoc JsonResource with Data."
+version: 0.1.1
+description: "Use for spatie/laravel-data DTOs: validation, casts, nested data, and typed API output."
 risk: write
 persona: oss-dev
 tags: [php, laravel, spatie, laravel-data, dto, data-transfer-object, casts, validation, inertia, api]

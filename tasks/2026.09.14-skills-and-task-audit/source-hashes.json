@@ -1,0 +1,12 @@
+{
+  "packages/skiller/lib/skiller/hub.py": "26dd6cc854f4573b5379ccb1cb8cb2d1b59328c4a74f4dccfdc98b863ae0e205",
+  "packages/skiller/lib/skiller/budget.py": "1320ac522c1d73868b2f13e6ee3f98f62b34254f44d95d19321bff25a901da4b",
+  "packages/task/lib/task/task_contract.py": "53445457faf01786e87bdccd65e9c6bad5071133b9a7c9a2ab5d922b758da079",
+  "packages/task/lib/task/plan_lint_checks/engine.py": "d7b0146dac751eac7f9a8affcc06e27a2d11dad96f0263e002166cf5d514aea6",
+  "packages/task/lib/task/plan_continuity.py": "98c3bf1366584b2490e3a063df3206bdad24c259aa73501871f53c5c957ff654",
+  "packages/task/lib/task/plan_delivery.py": "7ffea4a559eb98e3f94816b3911447b92265a5a58ab59af815edd38273094500",
+  "packages/task/lib/task/terminal_admission.py": "c2b077c9eabefbad015f4671b329d3d268b0d8f881bb6fcfaad47b598c6ad3ff",
+  "packages/task/lib/task/command_render.py": "50f51eb4ec9ee1c07d924acae72ce232903790312aee281b1acdc509f0b4dbd7",
+  "packages/task/lib/task/plan_weight.py": "9223a286292b1779bcb52c742eb801eadb4869ebda13071d3dc648f06e795c0b",
+  "packages/task/lib/task/plan_bundle.py": "c95bac244b1dd202a058a69d7eae1de62bb1b2f0ce1caacf8ad8c5fc41d7d57c"
+}

@@ -1,8 +1,8 @@
 ---
 name: tech-debt-audit
 bucket: quality
-version: 0.1.0
-description: Tech-debt inventory, classification (architectural/code/dependency/test/process), prioritization by impact × effort, payback ROI calc
+version: 0.1.1
+description: "Use when auditing technical debt: classify findings and prioritize by impact and effort."
 risk: draft
 persona: quality
 tags: [quality, validation, refactor, dependencies, workflow]

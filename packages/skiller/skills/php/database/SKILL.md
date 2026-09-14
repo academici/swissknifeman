@@ -1,8 +1,8 @@
 ---
 name: database
 bucket: php
-version: 0.1.0
-description: "Database migrations, models, and table naming. Activate when writing migrations, creating models, defining schema, foreign keys, or working in database/migrations/."
+version: 0.1.1
+description: "Use when changing migrations, models, table names, foreign keys, or database schema."
 risk: write
 persona: oss-dev
 tags: [php, laravel, database, migrations]

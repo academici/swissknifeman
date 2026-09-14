@@ -1,8 +1,8 @@
 ---
 name: github-flow
 bucket: oss-dev
-version: 0.2.0
-description: "Chain Issue → Branch → PR → Merge → Tag → Release on GitHub: naming, labels, SemVer oracle by commit types, Issue/PR templates. Commit format — git-commit-rules; changelog & pipeline — release-engineering; PR review — gh-review."
+version: 0.2.1
+description: "Use for GitHub Issue→Branch→PR→Merge→Tag→Release workflow, templates, and version routing."
 risk: write
 persona: oss-dev
 tags: [oss, github, git, semver, release]

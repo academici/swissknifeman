@@ -1,8 +1,8 @@
 ---
 name: tailwind-conventions
 bucket: frontend-tailwind
-version: 0.1.0
-description: "Tailwind CSS v4 conventions for Laravel/Vue: CSS-first config (@import tailwindcss, @theme tokens instead of tailwind.config.js), dark mode (.dark + dark:* + useAppearance), cn() (clsx+tailwind-merge), prettier-plugin-tailwindcss. Activate editing *.vue/*.css with Tailwind, configuring tailwind/postcss/prettier, dark mode work."
+version: 0.1.1
+description: "Use for Tailwind v4 in Laravel/Vue: CSS-first config, theme tokens, classes, and formatting."
 risk: write
 persona: oss-dev
 tags: [tailwind, tailwindcss-v4, css, vue, laravel, dark-mode, design-tokens, prettier]

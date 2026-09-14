@@ -1,28 +1,20 @@
-# ADR: изменение контракта пакета
+# Optional ADR for a consequential package decision
 
-Пишется после одобрения proposal, до реализации. Хранить в репозитории пакета
-(`docs/**/ADR/` или `docs/03_Dev/ADR/`).
+Use the owning project's existing location and process. This is not a prerequisite for every
+package edit or a second approval of authorized work.
 
 ```markdown
-# ADR-NNN: <решение>
+# ADR: <decision>
 
-## Статус
-Предложено | Принято | Заменено ADR-MMM
+## Status
+Proposed | Accepted | Superseded
 
-## Контекст
-Что инициировало изменение (ссылка на proposal issue и задачу-источник).
-Сколько независимых потребителей этого требуют (Rule of Three).
+## Context
+<problem, initiating task, constraints, actual reuse evidence when relevant>
 
-## Решение
-Что добавляется в пакет и в какой модуль. Минимальный контракт.
+## Decision and alternatives
+<minimal contract, meaningful options, rationale>
 
-## Альтернативы (≥2)
-- <вариант A — событие/trait/конфиг> — отклонён, потому что…
-- <вариант B> — отклонён, потому что…
-
-## Последствия
-- Затронутые потребители.
-- Версия: minor | major (по чеклисту «это breaking?»).
-- Для major: требуется migration guide и запись «Breaking:» в CHANGELOG.
-- Точки расширения: контракт/событие (не monkey-patching).
+## Consequences
+<affected consumers, compatibility/version rationale, migration and validation>
 ```

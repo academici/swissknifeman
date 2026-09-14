@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/review.md
-Canonical SHA-256: sha256:f56bd580c79ee971e3a51e4a2f038db815a10b5eeae7bed3c4a8defc9efd4903
-Adapter: task.codex-command/1.0.12
+Canonical SHA-256: sha256:2a027c9f5d627305927c3ec38525b15858ca2902df082b883ab95b5c367b5c66
+Adapter: task.codex-command/1.0.14
 -->
 Это задача РЕВЬЮ (read-only). Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (frontier/xhigh) — не переключай вручную. Файлы НЕ меняй.
@@ -20,8 +20,9 @@ Adapter: task.codex-command/1.0.12
   (примеры/маршруты/флаги сверить с реальным кодом), миграция план→docs без потерь,
   wiki-связность/битые ссылки. Stage A/B применяй к doc-скиллам реестра (writing-style и т.п.),
   Stage C — тот же.
-- **План/спека** (`plans/<ID>/…`) → НЕ эта команда: профиль плана реализует `task:plan-audit`,
-  перенаправь туда.
+- **План/спека** → read-only профиль plan/spec из `quality/artifact-review`. Путь `plans/`
+  сам по себе не включает phase lifecycle. `task:plan-audit` нужен при явно запрошенном Task audit;
+  его фазовая admission/authority остаётся обязательной.
 - Смешанный дифф (код + docs) → оба профиля, findings не смешивать — у каждой находки профиль.
 
 ## Stage A — детект стека → резолв скиллов
@@ -43,6 +44,9 @@ Adapter: task.codex-command/1.0.12
    adversarial: перечисли failure-modes, для каждого построй конкретный сценарий поломки.
 2. **Проверка применимых правил** из Stage A: finder получает секцию
    `## Conformance` скилла как чек-лист императивов и проверяет дифф против каждой строки.
+   Применимость определяется запросом, принятым контрактом проекта и наблюдаемым влиянием.
+   Рекомендация скилла не становится обязательным gate из-за наличия в каталоге; непринятые
+   style/coverage defaults отмечай как suggestion без выдуманного Major или обязательного repair.
    Нет секции `## Conformance` — finder берёт свод правил из тела SKILL (чеклист качества /
    жёсткие запреты). Смежные правила проверяй одним проходом; количество скиллов не задаёт число reviewers.
    **Кап делегирования:** finder заводится только под скилл, который реально даёт отдельное
@@ -71,5 +75,5 @@ Adapter: task.codex-command/1.0.12
    `issue/suggestion/question/nitpick` + `file:line` + `failure_scenario` +
    **ссылка скилл→правило** (`<bucket>/<skill> ## Conformance: "<строка правила>"`;
    для классики — измерение correctness/security/perf). Severity определяется воспроизводимым влиянием; uncertainty укажи отдельно.
-3. Прогони статику/целевые тесты проекта, если уместно. Кода НЕ меняй, дерево чистое.
+3. Прогони статику/целевые тесты проекта, если уместно. Кода НЕ меняй; существующий dirty baseline сохрани.
    Фиксы передай исполнителю; связанные исправления можно объединить в scoped commit.

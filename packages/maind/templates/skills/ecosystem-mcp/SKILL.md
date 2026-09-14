@@ -1,6 +1,6 @@
 ---
 name: ecosystem-mcp
-description: Что за MCP-инструменты доступны в этом проекте (agent-memory = общая память/контекст экосистемы, serena = граф кода проекта), когда их вызывать, с какими проектами экосистемы academici он связан и как чинить связь при сбое. Используй при работе в любом проекте экосистемы — особенно когда нужно поднять контекст прошлых решений, навигировать по коду или диагностировать пропавшую память/граф.
+description: "Use to recall ecosystem decisions, choose memory/code-graph MCP tools, or diagnose missing project connections."
 ---
 
 # Экосистема academici — MCP-инструменты этого проекта

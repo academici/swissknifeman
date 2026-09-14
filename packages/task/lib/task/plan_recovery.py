@@ -160,7 +160,7 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
         if len(occurrences) != 1:
             raise RecoveryError({"code": "RECOVERY_CONTRACT_IDENTITY_MISMATCH", "reason": "live item неоднозначен"})
         fields = occurrences[0]["fields"]
-        request = task_contract.declared_authority(item_id, fields)
+        request = task_contract.declared_authority(item_id, fields, for_execution=True)
         rules = fields.get("Implementation Rules", "")
         rules = rules[0] if isinstance(rules, tuple) else rules
         authority = task_contract._resolve_authority(plan_lint, [], root, item_id,

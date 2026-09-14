@@ -1,8 +1,8 @@
 ---
 name: inertia-vue
 bucket: frontend-backend
-version: 0.3.0
-description: "Inertia + Vue in Laravel: pages, forms, navigation and layered resources/js organization (pages, layouts, components, composables, stores, features, events, types, actions/wayfinder)."
+version: 0.3.1
+description: "Use for Laravel/Inertia Vue pages, forms, navigation, and resources/js organization."
 risk: write
 persona: oss-dev
 tags: [inertia, vue, laravel, frontend, architecture, structure]

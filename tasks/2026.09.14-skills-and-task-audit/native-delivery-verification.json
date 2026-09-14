@@ -1,0 +1,3599 @@
+[
+  {
+    "unit": "core",
+    "version": "0.17.0",
+    "files_checked": 13,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "skills/general/anti-drift/SKILL.md",
+        "source_sha256": "372f28ee10dab7fb7d5db713c355a2b39f020007604269e58bfc206295abe7b8",
+        "matches": true
+      },
+      {
+        "path": "skills/general/verify-claims/SKILL.md",
+        "source_sha256": "821ff84d254dd5a4fc9e56360a2e2a5d14023126e48cf9de1966530b585224a6",
+        "matches": true
+      },
+      {
+        "path": "skills/general/session-handoff/SKILL.md",
+        "source_sha256": "0ea2cbf5eb20fe32dfb39323b0185793df618264934388db11c4cf1d4307a270",
+        "matches": true
+      },
+      {
+        "path": "skills/general/context-economy/SKILL.md",
+        "source_sha256": "fbc48ed3bfd41b5abb2724b4590e28edad2ae2a173df4bfbbf485b35bf41f0e6",
+        "matches": true
+      },
+      {
+        "path": "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+        "source_sha256": "0582f58a6a1952b7e1f92511c7fe3d7aa4c664916c86fe76d897afe4179a5099",
+        "matches": true
+      },
+      {
+        "path": "skills/general/session-handoff/snippets/handoff-template.md",
+        "source_sha256": "c7730e534ab4b8cec7016af6e60444c581e94cecca39267cfe95e6b479fc9bdf",
+        "matches": true
+      },
+      {
+        "path": "skills/general/context-economy/snippets/command-plan.md",
+        "source_sha256": "0c749951df352dea67c8b623c7ba2e6ba3e03db6684e7c4d44dd93d3642fc0b6",
+        "matches": true
+      },
+      {
+        "path": "skills/general/context-economy/snippets/claude-md-fact-vs-procedure-examples.md",
+        "source_sha256": "20c088ea3e7f7950d6c322d9cc0c9469a01b48b185a17ee356b8fcc93982a4c0",
+        "matches": true
+      },
+      {
+        "path": "skills/general/context-economy/snippets/command-prime.md",
+        "source_sha256": "400d39e499301d4e2748ada3d7ae8cd49c1c8945b6e0b4f41e93bcb6e16ccf7c",
+        "matches": true
+      },
+      {
+        "path": "skills/general/context-economy/snippets/claude-md-template.md",
+        "source_sha256": "ce43523f42621a831006680499824bff9c552cf39055d47f5804a09abc8117e9",
+        "matches": true
+      },
+      {
+        "path": "skills/general/context-economy/snippets/rules-example.md",
+        "source_sha256": "097e50b6087ec0429efac0e10d70931537ab8de18ff79a75f4ae43dffb88fdf7",
+        "matches": true
+      },
+      {
+        "path": "skills/general/context-economy/snippets/command-execute.md",
+        "source_sha256": "f8aa5c85570ad377c746ce658c7d589af6f5b7e4a7019eab2da03e9efdb19f2c",
+        "matches": true
+      },
+      {
+        "path": "skills/general/context-economy/snippets/claude-md-checklist.md",
+        "source_sha256": "74a991b31bba853b972e9cb4744311a0a83d924c77e55a3b31cb5130204ffe4f",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "task",
+    "version": "0.17.0",
+    "files_checked": 122,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "AGENTS.md",
+        "source_sha256": "3772961ede14a2e6343dae4a56bbebdd1ac265bcbb2994c4a2ca3dd239eacc34",
+        "matches": true
+      },
+      {
+        "path": "CLAUDE.md",
+        "source_sha256": "9ddb8ae35689ae37598824c55623c11f421e28f9b7d59a4242079a662d7ded75",
+        "matches": true
+      },
+      {
+        "path": "commands/plan-run.md",
+        "source_sha256": "4fda4312ee96b6ee71a19efb3095cd79f64c7bde8d614bbb5f5ab2b15915ef07",
+        "matches": true
+      },
+      {
+        "path": "commands/dev.md",
+        "source_sha256": "80eca26ed89d46495b3a7487b28849d5f2728c41d7b19f305c6fc117a7433cef",
+        "matches": true
+      },
+      {
+        "path": "commands/plan-audit.md",
+        "source_sha256": "ea4be4ecaf32eb680bf62b20991d76b95d539f8a8c0647c7a38b51ad0a968fb4",
+        "matches": true
+      },
+      {
+        "path": "commands/plan-close.md",
+        "source_sha256": "fc87cc465062aecc166c7f9e7cff56fd85fdf3e45f69754f8a67abc4851e042b",
+        "matches": true
+      },
+      {
+        "path": "commands/make-workflow.md",
+        "source_sha256": "f0c032bd66f9f19cf4e1b52c9ffca5cce6d6cd3b4029b29e7b587d13d76ec472",
+        "matches": true
+      },
+      {
+        "path": "commands/fix.md",
+        "source_sha256": "4d63fbb7b4b281671c9be62d149dd3c203400287b76e0fccff8b76e600866019",
+        "matches": true
+      },
+      {
+        "path": "commands/plan-design.md",
+        "source_sha256": "e5066316471d4c626560130038b0c96e92accbcb889d92c78af68d4a0a95c73c",
+        "matches": true
+      },
+      {
+        "path": "commands/research.md",
+        "source_sha256": "417b37dbca208f58ec3ca9373736dde751db43be02d2910180377649df631d9b",
+        "matches": true
+      },
+      {
+        "path": "commands/design.md",
+        "source_sha256": "3e2215a33373d1403e46b7c083a0d8f9b1ce8f52b203f33db6b75c349e52c0a9",
+        "matches": true
+      },
+      {
+        "path": "commands/review.md",
+        "source_sha256": "2a027c9f5d627305927c3ec38525b15858ca2902df082b883ab95b5c367b5c66",
+        "matches": true
+      },
+      {
+        "path": "commands/plan-exec.md",
+        "source_sha256": "1e126e8fe48451bde39877bda219bbc59b379ea1e0184c17a2612dadb2c64974",
+        "matches": true
+      },
+      {
+        "path": "references/intent-routing.md",
+        "source_sha256": "feba8a0cd25c5b6007159024a6836fed35cf79842cce989ca5bd88f75a9f5ec4",
+        "matches": true
+      },
+      {
+        "path": "scripts/cross-plan-files.py",
+        "source_sha256": "d53c7ba9cb8d4407955a24f3a70f70e04c0604ee45f6972570f87f4d5bc92337",
+        "matches": true
+      },
+      {
+        "path": "scripts/plan-downstream.py",
+        "source_sha256": "ce2f63f873edadc4ef63b79a05ab0f6065a9260ccae1663eab7e6d5d5b312fec",
+        "matches": true
+      },
+      {
+        "path": "scripts/render-provider-commands.py",
+        "source_sha256": "48ddb49e68f05744deac0c2633442ae2356f23ad566ae492af058469b5170e67",
+        "matches": true
+      },
+      {
+        "path": "scripts/plan-views.py",
+        "source_sha256": "7ab1669d40511d20895c7daa8df50b0cf4c4ebf7c5773df747a839117b15e92c",
+        "matches": true
+      },
+      {
+        "path": "scripts/calibrate-token-estimate.py",
+        "source_sha256": "01010bd88556611cc9f90633aa5ac4a6e8a45d2776523f641b485915156de3d3",
+        "matches": true
+      },
+      {
+        "path": "scripts/verify-plan-citations.py",
+        "source_sha256": "ceb36002c1479daa02572e92eaf1b4df9b43d672e7060e91e88b18fed8c7c437",
+        "matches": true
+      },
+      {
+        "path": "scripts/plan-delivery.py",
+        "source_sha256": "60827417261300b23716b96aec309d97689d9e645faa011e5f3e5c04a94f7ccb",
+        "matches": true
+      },
+      {
+        "path": "scripts/plan-weight.py",
+        "source_sha256": "3615c79604fe278a36ec1d9b6de879d60fb4b8edbeaab752c53ab96478920a92",
+        "matches": true
+      },
+      {
+        "path": "scripts/plan-terminal-admission.py",
+        "source_sha256": "ce91210ee754df9d01a712ff3c312f95ab9582bba6ee42047d64aaf42800ec23",
+        "matches": true
+      },
+      {
+        "path": "scripts/plan-session.py",
+        "source_sha256": "c947e011aaa1bb90fa8851e1949b6465f74bfc328646fdd7190d8cd1eb4acaff",
+        "matches": true
+      },
+      {
+        "path": "scripts/plan-decisions.py",
+        "source_sha256": "e022155b132b0f23efa577d8feec83a2d2d163c112a35ea7a1ae0842b98e56b8",
+        "matches": true
+      },
+      {
+        "path": "scripts/plan-lint.py",
+        "source_sha256": "890c7a9f5194194a323adf0b70f10f0c3f9a17fa8baecfe919da9627ab753f7c",
+        "matches": true
+      },
+      {
+        "path": "workflows/README.md",
+        "source_sha256": "18b10df1dc88f04e3ccf0d2c668373459cd205b3dc8a0f443140ff8f577ed9bc",
+        "matches": true
+      },
+      {
+        "path": "prompts/return-judgement-rubric-v1.md",
+        "source_sha256": "63323e5565fa2c321354e36ebe47624f37f86c3c3372ba01efaedcc61b6c2e1e",
+        "matches": true
+      },
+      {
+        "path": "prompts/block-confirmation-rubric-v1.md",
+        "source_sha256": "fd21e4667cebed0d09c38e693ce3e3cc78f30e3e354b3282338c87b5f5e538e4",
+        "matches": true
+      },
+      {
+        "path": "lib/task/session_context_codex.py",
+        "source_sha256": "5dbea554154a12a206972d5a0067a6a32bbf6a44a166bc820a2e9186444f8c46",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_recovery.py",
+        "source_sha256": "afefa849f1b2a6b7cca9fdce752f5eb2c79352470dace6067f767eaad8cf2c5b",
+        "matches": true
+      },
+      {
+        "path": "lib/task/route_evidence_claude.py",
+        "source_sha256": "63b15c10359577f12c95791aae090de89e014387810f7d65fb975a187f3a7f83",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_closure.py",
+        "source_sha256": "3d325e83e43e47fd5a6b95cfb363dff750eb7fe888bd76f4bf00bca77a3a551b",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_context.py",
+        "source_sha256": "fe9a57768f3f6d3585b48ba29a245ad3c67f50bdb1953fd735a9930c11660291",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_bundle.py",
+        "source_sha256": "c95bac244b1dd202a058a69d7eae1de62bb1b2f0ce1caacf8ad8c5fc41d7d57c",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_evidence.py",
+        "source_sha256": "cafbeb2cdd312ae30eda25f80fbcd5933399854eb77a927abbcc0b9b9d0a9df5",
+        "matches": true
+      },
+      {
+        "path": "lib/task/route_evidence_codex.py",
+        "source_sha256": "7c052b1b1dd9f79ec8f268101fe8b55fcfefd2e2a3e8d33b9ce264882888db54",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_returns.py",
+        "source_sha256": "e3bcaccd1b2e7572082fc2ad714ca9ec86ed25881d0211d97d4f479f7ef170c1",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_admission.py",
+        "source_sha256": "cb756c3612311cc85d9da1adb296906a06d575fb416b8303297b0c1ea570d9f9",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_item_state.py",
+        "source_sha256": "a94a4ca26a9fd994c5ce5e686df2f27a63cdd4fccd80f2185bf66f8b977b9ef1",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_repair.py",
+        "source_sha256": "7b5cb78754c061c2f9ceb535275a16dee2b60f514a5e5e8b1d3890cb26bd1c10",
+        "matches": true
+      },
+      {
+        "path": "lib/task/audit_admission.py",
+        "source_sha256": "89a477c0891ad52e5d7893ffde4382e56d602d3932d94d207f568aae44b2b84d",
+        "matches": true
+      },
+      {
+        "path": "lib/task/validation_admission.py",
+        "source_sha256": "93583caf0ec106bac4bfbc051212fab9932876032a43477ad87cf903bf10a049",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_downstream.py",
+        "source_sha256": "d13084bc3223dc86e6dd6b162e3610528f5dd83e4f1dc1c1f3a61495cb707628",
+        "matches": true
+      },
+      {
+        "path": "lib/task/command_locale.py",
+        "source_sha256": "f5f9799223b7e1206fc384a89405252dd67bcdf2fce50a4096975ce3dd2a4e74",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_lint.py",
+        "source_sha256": "300b87b618e4da79b7614a0f1ba2ffd48314a4974445453e1485c89937595b77",
+        "matches": true
+      },
+      {
+        "path": "lib/task/journal.py",
+        "source_sha256": "77fdd46931c167a24663a564b9561c16bc898dad056c82324e1f9a10697afeac",
+        "matches": true
+      },
+      {
+        "path": "lib/task/task_contract.py",
+        "source_sha256": "492bd93c50343e5237f2a7f2421313fdc2b438dcabc28edde05ed2963b3ed5d2",
+        "matches": true
+      },
+      {
+        "path": "lib/task/__init__.py",
+        "source_sha256": "7e9df3d59f07f2a018b18459856baeebc85982ac125bb9fb8b148a348e7f9ddc",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_weight.py",
+        "source_sha256": "9223a286292b1779bcb52c742eb801eadb4869ebda13071d3dc648f06e795c0b",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_gates.py",
+        "source_sha256": "9b707ec50b34c5d745fc4098da2e5fd6f13dce57ea9c6e1f4049a31acb1447b7",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_lifecycle.py",
+        "source_sha256": "9aca5fff6a2bc2e91e5f1a7ed8ec9da046b7cd3dea704d283ba4ca3ccd31e8af",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_authority.py",
+        "source_sha256": "ebc368fc60a4ac4fcaefba7fd2d563f9a465a22b0df7a3202705c190bf75263e",
+        "matches": true
+      },
+      {
+        "path": "lib/task/command_render.py",
+        "source_sha256": "fda07d4803de6e32cb3f1be839dba0c5337f68553ee52d134f782927a30c1d9c",
+        "matches": true
+      },
+      {
+        "path": "lib/task/review_policy.py",
+        "source_sha256": "39696cda62505e87a531ab3eccbadd03f0971e166139cb2eb8803f3300f54995",
+        "matches": true
+      },
+      {
+        "path": "lib/task/token_probe_codex.py",
+        "source_sha256": "244f484914444cb6be4f8dd67837bff604d0efebd4a2714f6c9731c13c53e27f",
+        "matches": true
+      },
+      {
+        "path": "lib/task/session_context.py",
+        "source_sha256": "835661acae26e400db74d1e0ff094cd925edbea027ff620964295f685afe23c0",
+        "matches": true
+      },
+      {
+        "path": "lib/task/route_evidence.py",
+        "source_sha256": "65770af2b1f724c85211cffb796f8c78449e2f27851576fd6658acd666f93b32",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_projection.py",
+        "source_sha256": "06ceba2e3881276ca5636ac7ca5176626ab762d40aae5a7cadc4efac22c634e3",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_gate_activation.py",
+        "source_sha256": "2d0a6fcae1356b09f0d95857fb4861f8f6bb96ce39bc4bbb8e2bd38d99d4da24",
+        "matches": true
+      },
+      {
+        "path": "lib/task/terminal_policy.py",
+        "source_sha256": "efc96efc8f47bcff40fc0e7018ac079675c18b7512b82534894775e0c94028fc",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_layout.py",
+        "source_sha256": "8222e691510bbe62c10cc34702071c92e8c9dc6222d238e178370ae2ac5f1149",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_delivery.py",
+        "source_sha256": "7ffea4a559eb98e3f94816b3911447b92265a5a58ab59af815edd38273094500",
+        "matches": true
+      },
+      {
+        "path": "lib/task/command_catalog.py",
+        "source_sha256": "f62d90e084a336f6247e9db98ca399f49534cac6799900fd65723221747e9495",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_history.py",
+        "source_sha256": "e2ddcf215ae4b7bc2ecd3f480f8ad2b90bc958e697af4678f020e77185144dbc",
+        "matches": true
+      },
+      {
+        "path": "lib/task/token_probe.py",
+        "source_sha256": "844a30736af6adbf9360f9cd6dfc71502771e914bd07a05bb376e21f8ac32deb",
+        "matches": true
+      },
+      {
+        "path": "lib/task/token_estimate.py",
+        "source_sha256": "0cac9d374b0ba84be36b558a70e6a7eea35266a375c40af36f593d4515fcb8b7",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_status.py",
+        "source_sha256": "9a799e404fa0c8649d029988d202e7661a0c29370a8a55e8fae8f73d647e3b37",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_continuity.py",
+        "source_sha256": "cd413b37690b3924143c597464a8d05501b3e7d85a93d3140efe36ba41212a34",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_readiness.py",
+        "source_sha256": "84f926068247a8c2815c28519c18eb81aa7384ed93f103ad574dbc628486537f",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_assurance.py",
+        "source_sha256": "a028ced91260246b8038e985b61f5da48f127d0025d255e48c0acb328eb28891",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_blocking.py",
+        "source_sha256": "3baf6e14beb8f99922fe3ca9672b19e9dec2ca838ab29f2c9e6fa3f0b174976b",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_decisions.py",
+        "source_sha256": "9f4de2f35a754db76232b1e0b7d9e326117d5e3848460b4d1a02152de72ffbbb",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_requests.py",
+        "source_sha256": "33cf7ffdbb32388c16c28e060d6a46cc2b82dc91d37c937e234ab871530bf619",
+        "matches": true
+      },
+      {
+        "path": "lib/task/terminal_admission.py",
+        "source_sha256": "bc976dc9a289977b65486525bda91f8b4a28162ccbf1163ff875dc4963a68729",
+        "matches": true
+      },
+      {
+        "path": "lib/task/session_context_claude.py",
+        "source_sha256": "9b380a83b08abb0f144382170ac36d7196d2cdb955b72af041e90f4159e4ea18",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_lint_checks/conflicts.py",
+        "source_sha256": "64b7fe8e091104665c61d0806759f053d3f889604f19eec55e0d8fb14f472e5d",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_lint_checks/__init__.py",
+        "source_sha256": "a4283c527ed5556b289aebb3b393da4696251d8de1cc079511c23e549ff1833e",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_lint_checks/engine.py",
+        "source_sha256": "3dafefc3ab3be2f745948828b11fbf7c2538ee42fa25290968ff7a07f1312d39",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_lint_checks/cli.py",
+        "source_sha256": "45af930dadced9a8d9c35ae332106c3eef0888ec8d38fa1df77c57de31d187b3",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_lint_checks/parsing.py",
+        "source_sha256": "738d65832cb8987fe79d0f85393b95c6fde0c4f8b707ca87cd10a7a6d95d6f61",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_lint_checks/common.py",
+        "source_sha256": "18cff4183d5f6b701ce7fd39386fcf693fd6f0df8a2f171a84ba3ca862b9d4fc",
+        "matches": true
+      },
+      {
+        "path": "lib/task/plan_lint_checks/policy.py",
+        "source_sha256": "92999f2158d07d138850d2ca284405321a92ae72fa12b96683a73955ada45f2b",
+        "matches": true
+      },
+      {
+        "path": "configs/command-locale-preimages/plan-run.md",
+        "source_sha256": "29fbffbeef7eb1cfdb712895978f1dc4a4b48221a1ac4029d9144124299d5828",
+        "matches": true
+      },
+      {
+        "path": "configs/command-locale-preimages/plan-exec.md",
+        "source_sha256": "646172c92e6e13b8cddb6af36594f4a24060224d0ceb2c8f981eff9f8c894664",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/SKILL.md",
+        "source_sha256": "d9e5759d44dcfd122fc99bd8b8de9399a1741b3965d214949bce741926451107",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/snippets/phase-template.md",
+        "source_sha256": "69b65d587ea83737a59c801d3116d15a08a94f724d09276d3ebfd8f86abcce1b",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/snippets/handoff-template.md",
+        "source_sha256": "9b44b83792467966d07937eb9077e2f482a5ac1ca6f97f3248506ebaf1ef06b1",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/snippets/active-template.md",
+        "source_sha256": "5f055389e6db9583dfecf3b6fb2dad9c6e015a32ebc74d104b7e80f0d251017a",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/snippets/roadmap-template.md",
+        "source_sha256": "fc30c7ccd11705b8e5dd79723ea6ad72ce1666c9a1cd7d627abd65382a2b6344",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/snippets/code-guidance-patterns.md",
+        "source_sha256": "95a0c1615f56d38e516a7f38128a2cd6969082edb9f22281985b2a0f51a9904a",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/snippets/launch-block-template.md",
+        "source_sha256": "f0b6c4941f0afbfc8b78da59a44851b277361fbf68b2843e546a2e04f18ddd26",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/snippets/index-template.md",
+        "source_sha256": "669d1f97ea3cb0c2975cfdc7cf990db015a2e698f39b48c2bfaa7fe25b6e6763",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/snippets/closure-template.md",
+        "source_sha256": "55937853e555295f479cc9a2287bdabc58ca174f5601eb6d1450a7790bee3f42",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/snippets/plan-template.md",
+        "source_sha256": "cc2237047458b4206635230dbea31f69a92115ef87fd8bb6a364d3116275c283",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/snippets/item-state-template.md",
+        "source_sha256": "1ee331ca6b612bdea0731ea32b18ee433f7bd5ee5b05b8efa8aaf38ecd3e997e",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/snippets/journal-template.md",
+        "source_sha256": "e03d0d211f22b4fc908685b740a475df76e908df30b1f154f609c7e0e5c1632a",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/snippets/decision-record-template.md",
+        "source_sha256": "f5bd43b5aa916ec5185e1e74eb30eaf8e2c48e547b658763ae8b06267b0c80e4",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/snippets/source-evidence-template.md",
+        "source_sha256": "63fdd05d2471af3b152f46f4af394a6a53873fb3573e0a8605739516338fd8d5",
+        "matches": true
+      },
+      {
+        "path": "runtime/plan-protocol/references/plan-layout-v2.md",
+        "source_sha256": "4c5a6154249c1f283cbb49bc6d634619f1f4433b89b2d143f68f33ffcb5b8b0c",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-plan-audit/command.md",
+        "source_sha256": "01365d911c9ac599a28528f94cbec0d321debc01aef2f7aed13d893b506e2b1f",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-plan-audit/SKILL.md",
+        "source_sha256": "be8ed9884ad9b9f68092250a369bc9b2d2ec6c208fad736e0c186317253ce915",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-fix/command.md",
+        "source_sha256": "2fd126292350f35075fb6ef6665817f2df03fd9042a857056a898352815ee210",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-fix/SKILL.md",
+        "source_sha256": "1a47bcfee548d57760a2efe35be7e4606dc59167c1f4e69f79115a352a644b65",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-plan-close/command.md",
+        "source_sha256": "499256a4ffec499a5480ab7b7c678203eca13bc3c0ba8b7e62f660e6a83a70ac",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-plan-close/SKILL.md",
+        "source_sha256": "6dfc7b46da9abe6f273dca1f2fe23610c2051a1d96ceb0076733e078bd34d7f7",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-review/command.md",
+        "source_sha256": "d04c1e27963b3fcd816877001614020000f557a4eb7b228d0592a7ec1d4ffeca",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-review/SKILL.md",
+        "source_sha256": "8107e944c3c96c87278b3e74a0802a0b15817eea719eeb25c39e6be9f7f6f80d",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-make-workflow/command.md",
+        "source_sha256": "9f6010e76242a3135c730fcc320a515909ebb5faf72ccf39509d03e270f0481a",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-make-workflow/SKILL.md",
+        "source_sha256": "59226565d0a9fa647f517e9b7f0c3ea092d414316c3165590f4e39eb7077c65a",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-plan-run/command.md",
+        "source_sha256": "8f2201469be272e34bcd144f1458a198347dec53e8741fb53cbd9c60d8620c19",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-plan-run/SKILL.md",
+        "source_sha256": "9568267ae44ea5c659a37ae7554ed7e38c47bfd942a50dbae13f5bb9794d5ec1",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-design/command.md",
+        "source_sha256": "efc50b6e1f9f1798817d9d6a31d1011cf85a5ddc6ecfcfc2419a39cfe8a26081",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-design/SKILL.md",
+        "source_sha256": "6b68f6973b84d8e452ada62f7dfa554d8bd81a307a0a0d2c5aba477cd456b69d",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-research/command.md",
+        "source_sha256": "0afd837937748c5a765e953d5e4a3b64366729863ecc9223f4873c06cf52c098",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-research/SKILL.md",
+        "source_sha256": "ee106217fb017fe92b5b6bbd0a26f08eff4d4c889d1670bb94ab2e7a77ab1b93",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-dev/command.md",
+        "source_sha256": "c3252f06f723cf70846eb08bfa58cf85167bb4dd5c4922578e91e03b1b358056",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-dev/SKILL.md",
+        "source_sha256": "6fcd3c11deee082b977cf4ac482aa6f944de63ad52edd47eca89a81fbf33838b",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-plan-exec/command.md",
+        "source_sha256": "ea67726f93a3569a8c2563519de70bfd284709ab7b2ac6a7eb6efd727213ce65",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-plan-exec/SKILL.md",
+        "source_sha256": "4b59c6504fb6ac1f878d420e8fce58b9953c1466d86ddbbe34beb6d15b39d3e4",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-plan-design/command.md",
+        "source_sha256": "b4a0e74bfa2976bcdfb7da1747057e0f403aa01623f40e473a4f264afa4866f9",
+        "matches": true
+      },
+      {
+        "path": "adapters/codex/skills/task-plan-design/SKILL.md",
+        "source_sha256": "74fde3ca43b9bbfe1f1ec5d664a1e333f93f3d7327318df0b5a79d822b448e3a",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "architect",
+    "version": "0.4.1",
+    "files_checked": 40,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "tech-stack-selection/SKILL.md",
+        "source_sha256": "5aec95e44a373e697bde7b0f629f261fdd286755fe251e6c63abc2d64c1d047a",
+        "matches": true
+      },
+      {
+        "path": "figma-mcp-core/SKILL.md",
+        "source_sha256": "71437f5f831f47b87e115f64579ac511a34c93ab39989ecdc11fb0c1c88a77e3",
+        "matches": true
+      },
+      {
+        "path": "eval-design/SKILL.md",
+        "source_sha256": "c5e5bf37e88f55973489d0301cc353b1944d2c35441aa84d522190817df87411",
+        "matches": true
+      },
+      {
+        "path": "agent-design/SKILL.md",
+        "source_sha256": "9009c76ea66e5e26817e9d6fece28cde8b6601f0cfb685cf70fd8afa32a3b8fd",
+        "matches": true
+      },
+      {
+        "path": "legal-compliance/SKILL.md",
+        "source_sha256": "97d1fc0b92d46a21d9600ae13f1abcb99a3599ec9cd0805c38aea7a669755e42",
+        "matches": true
+      },
+      {
+        "path": "ecosystem-reuse-gate/SKILL.md",
+        "source_sha256": "a98691585e1f07698de9c20dd988e3ed560bc0502b513d28ed35713723424eb9",
+        "matches": true
+      },
+      {
+        "path": "domain-modeling/SKILL.md",
+        "source_sha256": "a2fcf326c7c81331a3c0e5a3a9ec4c46cdb87ce2282f368bdd9beb8fe0eb2d67",
+        "matches": true
+      },
+      {
+        "path": "data-schema/SKILL.md",
+        "source_sha256": "e0f362c0dbd2dafaf047f2d6472aae363a0b796e66019610650bc50de00bcb79",
+        "matches": true
+      },
+      {
+        "path": "package-contribution-protocol/SKILL.md",
+        "source_sha256": "56855ae90b939b70f4ff9226ddb4ccf4d35dc459a6942da0604a853048ba502b",
+        "matches": true
+      },
+      {
+        "path": "codebase-design/SKILL.md",
+        "source_sha256": "81766faecb0222400b7c09ea0384486643ba47b5f868344ffd18ceebb12fe701",
+        "matches": true
+      },
+      {
+        "path": "security-design/SKILL.md",
+        "source_sha256": "5af716e5deaa1b5e288aa37bff0327331766786302dc0bc901d9817ba8819010",
+        "matches": true
+      },
+      {
+        "path": "observability-design/SKILL.md",
+        "source_sha256": "31d8cdbb39db368c659a4fc2733cfa7586e878825d5686436934b431bbf5b0c6",
+        "matches": true
+      },
+      {
+        "path": "engineering/SKILL.md",
+        "source_sha256": "5fcdd133dff5e09bf192c278520709fabae24f14547b7c0375f8fcaaa91afdaf",
+        "matches": true
+      },
+      {
+        "path": "api-design/SKILL.md",
+        "source_sha256": "ad4e8cfb0535ec3f77378906c932b4112108bf557fc3621c04e3b8cb1879cde4",
+        "matches": true
+      },
+      {
+        "path": "architecture/SKILL.md",
+        "source_sha256": "ff3e2b3819a71fa9ea3bae6c983a263bd934bdfa9c27065c21f7bd62bac55578",
+        "matches": true
+      },
+      {
+        "path": "tech-stack-selection/snippets/tradeoff-matrix.md",
+        "source_sha256": "9bbb4a305d6450f520ce5ebc44bbf62a1f45fac5aab8b6a05ab19bc74c938958",
+        "matches": true
+      },
+      {
+        "path": "figma-mcp-core/snippets/design-system-checklist.md",
+        "source_sha256": "b136f46352f2859d6d4ae93d5ed85276acd26553af91d57e2beb07dfd715ad79",
+        "matches": true
+      },
+      {
+        "path": "eval-design/references/metrics.md",
+        "source_sha256": "590a62f9f2814213db1b392c847eeffeb51e45ff1dbec1f888fedfa9f2636033",
+        "matches": true
+      },
+      {
+        "path": "agent-design/snippets/tool-contract.md",
+        "source_sha256": "0a9e300786f054518a62b8eb09e3e9d63fd63ecd3ad9b7acccb64492e69abc0f",
+        "matches": true
+      },
+      {
+        "path": "agent-design/snippets/agentic-loop.md",
+        "source_sha256": "f5aaf7400f5904071e7b0db5370dbe71736d954e9f2b5a1b88cf325d53f3f514",
+        "matches": true
+      },
+      {
+        "path": "legal-compliance/references/gdpr-checklist.md",
+        "source_sha256": "500b06fa383313a3e3a1db0b085edc03b2fa3a0ef7cebbc4c5244290821a36d3",
+        "matches": true
+      },
+      {
+        "path": "domain-modeling/snippets/CONTEXT-FORMAT.md",
+        "source_sha256": "b8cc318f2a4285b530e908b6bc43901c3c5cd11100362636bbc4216639bef597",
+        "matches": true
+      },
+      {
+        "path": "domain-modeling/snippets/ADR-FORMAT.md",
+        "source_sha256": "f1f36cd3f8d3b6474ddd5855da4e233bfc4ae1a1c5024909ccf11871819a41b2",
+        "matches": true
+      },
+      {
+        "path": "data-schema/snippets/entity-table.md",
+        "source_sha256": "c83ca4c042783b4986b0627333ad25cf1926ed6ea00fff59d82bc71996ef55f0",
+        "matches": true
+      },
+      {
+        "path": "package-contribution-protocol/snippets/adr-template.md",
+        "source_sha256": "bd649f6789a28e45d5b57f24d095a8d33068e939f113bc5261d610d93de81365",
+        "matches": true
+      },
+      {
+        "path": "package-contribution-protocol/snippets/claude-md-priority.md",
+        "source_sha256": "6ead342bac8c0aa09dd932d03c9d7560c9ba754e879a0105fa10ce12d7b4c728",
+        "matches": true
+      },
+      {
+        "path": "package-contribution-protocol/snippets/permissions-deny.md",
+        "source_sha256": "a1ec3660445e86990bd71963fe9c487e0e9f0f303bdba12591c20d364e75c549",
+        "matches": true
+      },
+      {
+        "path": "package-contribution-protocol/snippets/proposal-issue.md",
+        "source_sha256": "98c23952caf33e539de1f8c99c368b757f56c90431f605f13da77e474bc9b4f4",
+        "matches": true
+      },
+      {
+        "path": "codebase-design/snippets/DESIGN-IT-TWICE.md",
+        "source_sha256": "21c3264953bd30ee87b181a3ccaf0e70649f461e5ffd7dc654acee4ba1788b31",
+        "matches": true
+      },
+      {
+        "path": "codebase-design/snippets/HTML-REPORT.md",
+        "source_sha256": "0b0936104158abeef7246ff6cbabefa4dc055f17589f2833f2d93001421910a1",
+        "matches": true
+      },
+      {
+        "path": "codebase-design/snippets/DEEPENING.md",
+        "source_sha256": "125e6b77413ad2bc7cf7a772bc74336d580a50f9e797db2178ed133d62333d06",
+        "matches": true
+      },
+      {
+        "path": "security-design/snippets/stride-threat-model.md",
+        "source_sha256": "78153cb0ff42b864f8dc565c69570b95d4e079fb14646d5ac36b8f937d1c0963",
+        "matches": true
+      },
+      {
+        "path": "security-design/snippets/ops-security-checklist.md",
+        "source_sha256": "481c63abf107b5fbc2332759f3505a17a7c7bd55393309794c60dab868041036",
+        "matches": true
+      },
+      {
+        "path": "observability-design/snippets/slo-sli-template.md",
+        "source_sha256": "042310c649335d7b0571aca1aa49f75de6bbca0783978c684a31502cf3160c0d",
+        "matches": true
+      },
+      {
+        "path": "observability-design/references/four-pillars.md",
+        "source_sha256": "8dcfcab2e392d7a748edd146ba31efd32421629d1904ad42bf9e916b62370b88",
+        "matches": true
+      },
+      {
+        "path": "engineering/references/full.md",
+        "source_sha256": "84e6de32023a90d7cbe36840eadc9714216af9b3086944cdc9d06429885e8105",
+        "matches": true
+      },
+      {
+        "path": "api-design/snippets/rest-conventions.md",
+        "source_sha256": "8ff6b46b1a284312c6e08db804a77342569dd7282e04e161f2a3095a05da3846",
+        "matches": true
+      },
+      {
+        "path": "architecture/snippets/adr-template.md",
+        "source_sha256": "307103cb8556d3e10da4ffada6285f525a649f7e507e197a807916624dc45057",
+        "matches": true
+      },
+      {
+        "path": "architecture/snippets/c4-context.md",
+        "source_sha256": "55a73ea4d43b74003cf08c6ba1669fc9ac1e803882ec1990c3e745e8bbc839c8",
+        "matches": true
+      },
+      {
+        "path": "architecture/snippets/c4-container.md",
+        "source_sha256": "18c2c52a804bdeca9954ab8ccf5835ff0f996fa117913a8be89aa60714b25ff7",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "php",
+    "version": "0.4.1",
+    "files_checked": 50,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "database/SKILL.md",
+        "source_sha256": "007cbb411a1c916a15c8e04456adc725fceea4dec0dcbed174e0c6229c43dc32",
+        "matches": true
+      },
+      {
+        "path": "laravel-structure/SKILL.md",
+        "source_sha256": "25ed049ffd7db8fa6e85a0ec9c5e91e2b78341f956dff75feb1a347026544cd3",
+        "matches": true
+      },
+      {
+        "path": "named-arguments/SKILL.md",
+        "source_sha256": "e3f5487381a37bda8088c08f4afbc6ab61443fd74ec2a5ea68fa43bfa3acb610",
+        "matches": true
+      },
+      {
+        "path": "production-readiness-checklist/SKILL.md",
+        "source_sha256": "06727d75770114cfd0d58fd81543a78d8d77bea7f0b8b7d95985e4b755d92c28",
+        "matches": true
+      },
+      {
+        "path": "pao/SKILL.md",
+        "source_sha256": "b073c28e0ff713a9485e9641eb8b5fdf419346489e196e8ae05665ee6eef13af",
+        "matches": true
+      },
+      {
+        "path": "static-analysis/SKILL.md",
+        "source_sha256": "a8a310f1228d33775238a0e741767e7a7a6d24d784a56c334fdc73cdb5a54584",
+        "matches": true
+      },
+      {
+        "path": "transactional-outbox-relay/SKILL.md",
+        "source_sha256": "73a93d71417fc429367a74b08f4536de786245d4236a80dcbeb57e0c1a8903da",
+        "matches": true
+      },
+      {
+        "path": "naming-conventions/SKILL.md",
+        "source_sha256": "f9d627ac0b79075a4a231b48365cbc1d92ecec603646745ccd0f572463724569",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/SKILL.md",
+        "source_sha256": "904f744db732bb3335ebba9b07dc13faf9d39a662c9eeb0fa79cb05f2fe65c95",
+        "matches": true
+      },
+      {
+        "path": "php-upgrade-checklist/SKILL.md",
+        "source_sha256": "18457f97f0abfd8a36b1e21f4bd9eb20cd9c542ab40fd0c3b82ba2f768c36f59",
+        "matches": true
+      },
+      {
+        "path": "code-style-spatie/SKILL.md",
+        "source_sha256": "a9af7a3513fa6461d30216b98dda4f7e01a64606179b6108d5a9fc03d6c6e91a",
+        "matches": true
+      },
+      {
+        "path": "php-patterns/SKILL.md",
+        "source_sha256": "7849f1b73f09a5c1e1448022a324ccfa5ae42b483ae535a905bb184a9455544c",
+        "matches": true
+      },
+      {
+        "path": "laravel/SKILL.md",
+        "source_sha256": "447bfbc176a9596c76b262fc185864c9c41f656406cd94da8bdfa40009afbcc1",
+        "matches": true
+      },
+      {
+        "path": "cursor-pagination-design/SKILL.md",
+        "source_sha256": "d8784cab6cdc3894a1fdfedb907fd757d08f64124dcd89829d5de1a3c3ba1c1a",
+        "matches": true
+      },
+      {
+        "path": "namespace-refactor-safety/SKILL.md",
+        "source_sha256": "95404c183caa8b05356d23b39251256701fdc4defecba9324686544b9dc918fe",
+        "matches": true
+      },
+      {
+        "path": "repositories/SKILL.md",
+        "source_sha256": "ce22c57858a9d2c3816d71298f7895e5a6574ecc3e2cc19ad3b4d78414431b17",
+        "matches": true
+      },
+      {
+        "path": "dependency-injection/SKILL.md",
+        "source_sha256": "8fd0d8a1a910496d1ffa984bda0801449238e2752a0d293933483f806e505926",
+        "matches": true
+      },
+      {
+        "path": "laravel-structure/references/app-structure.md",
+        "source_sha256": "b56349d45a58cb97ec1e923e2b989605780150a41895707a5599cd6628fc3001",
+        "matches": true
+      },
+      {
+        "path": "laravel-structure/references/domain-structure.md",
+        "source_sha256": "8347e3425a897830fe09c7ca103fe37e7b87967c5513e22986ba7b50cd6ba546",
+        "matches": true
+      },
+      {
+        "path": "laravel-structure/references/shared-code.md",
+        "source_sha256": "ce642bd6a7bfc4e0e8479e145372d886fe6f2525a04581eebf184af3a9bb1913",
+        "matches": true
+      },
+      {
+        "path": "laravel-structure/references/mirroring.md",
+        "source_sha256": "0feb7ee363fc403c4fa7cb40695109c987879995ac4fa0e2e35a48e217f564a0",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/db-performance.md",
+        "source_sha256": "35fd91914f09f24a4b8f85e892d29fba710df7c1c2d8d88cdc772048ee2d2fbc",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/routing.md",
+        "source_sha256": "b1dbd51a54d9cc0771b85d7eec13badf9fb19fa78f1ef1749c2bb9db00c0f311",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/testing.md",
+        "source_sha256": "3140c09b50e29cd6093eebd7b754f4bebdd5145c12cf6e1c6535587f137337ec",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/caching.md",
+        "source_sha256": "2e21f4269c3fe249a2d182f20cff1d923f3217f085a2006b66d29c168c786957",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/scheduling.md",
+        "source_sha256": "30cd6ddac1ceb3f3629422e7b1cef71e7ae7d5cb238c76f5c531636f00cb11dc",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/style.md",
+        "source_sha256": "4100b4ea2b95e438f79a5f682ecf050fdcb28520bf8e59fcdf7729358b5e11d7",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/security.md",
+        "source_sha256": "2d05fd92c7b30cff883ae36579bfe8b0af4e130214aa14721868ec28458fb00b",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/mail.md",
+        "source_sha256": "bed14d99c4908ca70c58e60405edd122e79e84b9d04166918a1668b457417f1b",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/blade-views.md",
+        "source_sha256": "c20d381bb00258c262342b4e2808d42012088bd6f753f5876ba63f0de862b15d",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/advanced-queries.md",
+        "source_sha256": "b96532f919138afcd29b662a0da26b29a21f2b07d35a0b0bc2ec655104f1a6a4",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/config.md",
+        "source_sha256": "8d3c7f1155693b4d6fc00954a05013ef7fb02c3fc8c51079c9971e50db112935",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/architecture.md",
+        "source_sha256": "8ebfeed441a31b76c8a0b83fe1f46b979d9f97579845c45c0c68c03bd2a0e250",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/collections.md",
+        "source_sha256": "4b928c1ae3a9647be8d76a04a99910cd01f6f998901b952a6d83d64f6fb20e94",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/validation.md",
+        "source_sha256": "dc91dee52f8463b77fc43260a45be627349868032a4adb9239b3647bc0206dfc",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/events-notifications.md",
+        "source_sha256": "ed731f11286673ee0fe73f691137642f428fe1244e015ab64fcd08a61c792915",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/http-client.md",
+        "source_sha256": "899e83d06610df0ce30d2bed793239ee1c715c07ebaae0784ce5a5865e971b30",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/migrations.md",
+        "source_sha256": "50ab20d16ad8c81cdef74ed3b9bd60c456a2a6521bd4fba2508ca1ae35fdca7d",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/queue-jobs.md",
+        "source_sha256": "b9c637332b9c95c32f9c661b1a69ee4edf77fa8ab7b515b7bae4038ab23662b7",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/eloquent.md",
+        "source_sha256": "cec20653c32b72eb0e9f6fa5d5bad324889d4945544f5f8631c6d118ed8cc182",
+        "matches": true
+      },
+      {
+        "path": "laravel-best-practices/references/error-handling.md",
+        "source_sha256": "125860eb05e0ef0cadec6cbc8838b3dc31b52a0128dbb13f0d3fee973897a82c",
+        "matches": true
+      },
+      {
+        "path": "code-style-spatie/references/spatie-laravel-php-guidelines.md",
+        "source_sha256": "6197a4f8b8196fe58bb133a3c1399c815fe1ac985183a86ae3f24be29e82ed45",
+        "matches": true
+      },
+      {
+        "path": "laravel/snippets/dto.md",
+        "source_sha256": "7033fe59ab2f3d5b3b1d5321ae6901610d579aab87af1c5ecf1ad6af73d768e7",
+        "matches": true
+      },
+      {
+        "path": "laravel/snippets/authorization.md",
+        "source_sha256": "88994cd5b1008eb689dd455402a791e58ec890bae90b425093ce2daa9680c613",
+        "matches": true
+      },
+      {
+        "path": "laravel/snippets/routes-organization.md",
+        "source_sha256": "a921206a6dd6a265005cec2aa3024969b5496f142e6afd00149fea74613d4607",
+        "matches": true
+      },
+      {
+        "path": "laravel/snippets/db-conventions.md",
+        "source_sha256": "984dd010c3044176c41bc8bcc44bb4a326943f547a2eb03d7a53b02858e7097f",
+        "matches": true
+      },
+      {
+        "path": "laravel/snippets/layer-boundaries.md",
+        "source_sha256": "36d8a8c2e4cdbc7647d5a04787af01c0dc299e9db7b25dc426a774031bf52425",
+        "matches": true
+      },
+      {
+        "path": "laravel/snippets/actions.md",
+        "source_sha256": "844a720e6774c18b9abc004dc4ebfb4bcc80c9033a5e0fbd0d6dda517b4eb28b",
+        "matches": true
+      },
+      {
+        "path": "laravel/snippets/eloquent-model.md",
+        "source_sha256": "897281c12cf5a5cdc7b0a0bafc2b98634df57e624b7b3377a1b2d977cf5722cc",
+        "matches": true
+      },
+      {
+        "path": "dependency-injection/snippets/di-matrix.md",
+        "source_sha256": "9fa2b6703743d574fa70b4e367e1957d8be98795e673a716ca76a137fae3ad55",
+        "matches": true
+      }
+    ],
+    "provider_excluded_files": [
+      "agents/laravel-reviewer.md",
+      "agents/laravel-implementer.md",
+      "agents/laravel-test-writer.md"
+    ],
+    "note": "The native skills manifest does not declare these Claude agent files; absent from native cache. Agent parity is not asserted."
+  },
+  {
+    "unit": "quality",
+    "version": "0.4.1",
+    "files_checked": 20,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "refactoring-plan/SKILL.md",
+        "source_sha256": "63997ba655a7fdaf10b00f1581b1fe5fc75727cddc3ab44d6f180a9670ca54ea",
+        "matches": true
+      },
+      {
+        "path": "diagnosing-bugs/SKILL.md",
+        "source_sha256": "4f8e0765f7ac4c8a826740c3435fdd28a2a9a46a87884c845486a8dcf3376884",
+        "matches": true
+      },
+      {
+        "path": "testing-safety-report/SKILL.md",
+        "source_sha256": "364e0c0daa5ee7fed967566f0af3e2029078975667dbeb88bb678b78a814b9f2",
+        "matches": true
+      },
+      {
+        "path": "code-simplifier/SKILL.md",
+        "source_sha256": "d09f96cb1a09639f78cc46332a64de30d031aaae3941bac78c70e128f9363395",
+        "matches": true
+      },
+      {
+        "path": "playwright-e2e/SKILL.md",
+        "source_sha256": "ba6289e560681433b638b6e76fb1824dd49adb58910090badd0f4a1a2030ad26",
+        "matches": true
+      },
+      {
+        "path": "tech-debt-audit/SKILL.md",
+        "source_sha256": "9a523d3456fb0df12cc6aef8527c85e3e79e3eb4b4cf6b128e6b226d432d160f",
+        "matches": true
+      },
+      {
+        "path": "tdd-discipline/SKILL.md",
+        "source_sha256": "65e0e62619ae7ed4561ba74a2f7a31270fd567d96eff19af4b21c37a3f09a8ce",
+        "matches": true
+      },
+      {
+        "path": "test-strategy/SKILL.md",
+        "source_sha256": "68d666f821532e78a75b3ae16dead2a689e616e9e5f4092a6d48a330da78e9c9",
+        "matches": true
+      },
+      {
+        "path": "code-review/SKILL.md",
+        "source_sha256": "39bb0e86c9e5ac9544e3a6b7e93482f5efab03564586b2185830d057cd4cbad0",
+        "matches": true
+      },
+      {
+        "path": "mutation-testing/SKILL.md",
+        "source_sha256": "681d980f38c3ecdb55eff4428ede46ffb58d872215d97fa68120aabb4bbfdcb7",
+        "matches": true
+      },
+      {
+        "path": "artifact-review/SKILL.md",
+        "source_sha256": "ce2da8504ca7f272ff97621766bd54d8e659adca9d04f59a9240fd7593fda18f",
+        "matches": true
+      },
+      {
+        "path": "refactoring-plan/snippets/mikado-template.md",
+        "source_sha256": "756693d01e885dfbf71b171d8c6b3938e01451db3abfb8ef0e5cb41a83e47f8f",
+        "matches": true
+      },
+      {
+        "path": "tech-debt-audit/snippets/debt-register.md",
+        "source_sha256": "e9c62ad934f46a536dbf627be55cd8f6d4678edeaef7f43352673a09f1549725",
+        "matches": true
+      },
+      {
+        "path": "tdd-discipline/snippets/mocking.md",
+        "source_sha256": "9c5a4f7418b14d33ad14eca553389b70dd433374407a67b1f3338e1eef53b42c",
+        "matches": true
+      },
+      {
+        "path": "tdd-discipline/snippets/tests.md",
+        "source_sha256": "860729e9bafc05bef2da196f741662ab12a348bcbcbb74fce02b79daa0c7d882",
+        "matches": true
+      },
+      {
+        "path": "tdd-discipline/snippets/refactoring.md",
+        "source_sha256": "54fced22dd1911b7094c3fe7979b7c1a40d40be307482c4adf7dc0588f27d6cc",
+        "matches": true
+      },
+      {
+        "path": "test-strategy/snippets/test-pyramid.md",
+        "source_sha256": "c6ddaf87afd6bb825cd426abc2522db2c9f96a166fe46e2c43226774d7caddde",
+        "matches": true
+      },
+      {
+        "path": "code-review/snippets/severity-guide.md",
+        "source_sha256": "fceb72fc3ea77a4dceebf789da505e34fa7fc9c66ac0ecafa470bdaf0808dc64",
+        "matches": true
+      },
+      {
+        "path": "code-review/snippets/pr-comment-template.md",
+        "source_sha256": "84c237093ec87611e0b61a70cddca1b4dbcfd66061012786a3ae260931993a19",
+        "matches": true
+      },
+      {
+        "path": "code-review/snippets/code-review.md",
+        "source_sha256": "45393e9171c2864d03657eafb323e77d91e38e1ae275df3cbdef393c4d6c4880",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "frontend-vue",
+    "version": "0.4.1",
+    "files_checked": 357,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "vitest/SKILL.md",
+        "source_sha256": "196af873c1173b329d687d55a0101789ac15a5a6f87f2e333448e5f3b75f5d23",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/GENERATION.md",
+        "source_sha256": "3cf85efaca1c200657437fce6f9215ad805d44c1a8e4a125353294e8b6238b97",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/SKILL.md",
+        "source_sha256": "1aef3e1f6d495659233f40a60f7f93ad2f43c43bf46af2d2f764295062c4d2f9",
+        "matches": true
+      },
+      {
+        "path": "pinia/GENERATION.md",
+        "source_sha256": "90053e5f51c2f060aeef398125da3633ec3dc9a90169379096c7ebe3c514225d",
+        "matches": true
+      },
+      {
+        "path": "pinia/SKILL.md",
+        "source_sha256": "8f2bbebf25ee2c4a928fb21610bf1ce778b881e3870e5bf98fd9a6b98dfe647e",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/SKILL.md",
+        "source_sha256": "75f6cfc8a9f354c6814565328016a3b2af9f52907fe821928e6fe73c3be12a5e",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/SYNC.md",
+        "source_sha256": "a1d585b6478d9413fbf4594545b4bb12c9083843add1278dfa4662da39aad0a6",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/LICENSE.md",
+        "source_sha256": "44d916aa917ef8232a46995f444a3997956468ced8bef4354a60671bc5d4c2f4",
+        "matches": true
+      },
+      {
+        "path": "vue-testing-best-practices/SKILL.md",
+        "source_sha256": "9bb9345e57d501f1369a620901fbb94a47d214ec4e5f857e2e06db1f7d03105d",
+        "matches": true
+      },
+      {
+        "path": "vue-testing-best-practices/SYNC.md",
+        "source_sha256": "05b20c8f6cc487107ee7693e21f2747def24974fbd96de0e771385e46d193e20",
+        "matches": true
+      },
+      {
+        "path": "vue-testing-best-practices/LICENSE.md",
+        "source_sha256": "2ea4e714425cf682879c4dea3d0d0a1a379a1418f463063f9eea1aa709ad946d",
+        "matches": true
+      },
+      {
+        "path": "vue-composition-api/SKILL.md",
+        "source_sha256": "275c7d6a6fddbf3cafa6ac37a9f33a63c1380d272f34cd51dc8f0bc8225c796b",
+        "matches": true
+      },
+      {
+        "path": "pinia-stores/SKILL.md",
+        "source_sha256": "54198150f2bc95df5d8d3829a9d78aa16dde9e4f0e9cb9503ded2f687a376bf0",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/SKILL.md",
+        "source_sha256": "c45333ba3bafcd66a92a8440e490f5d8fa0663b016ad1d9ede9062c5616f4ecb",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/SYNC.md",
+        "source_sha256": "58921f403470acbb47a8145e8e8f06844f888a213edc0d117ec01f0e89c80285",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/LICENSE.md",
+        "source_sha256": "2ea4e714425cf682879c4dea3d0d0a1a379a1418f463063f9eea1aa709ad946d",
+        "matches": true
+      },
+      {
+        "path": "vue-router-best-practices/SKILL.md",
+        "source_sha256": "d5764f848dbe806a73e68ff0b713cc8aa69ab8cd170e9d3e697a8034b77b6d46",
+        "matches": true
+      },
+      {
+        "path": "vue-router-best-practices/SYNC.md",
+        "source_sha256": "748579fc6a54766d45ee730dc1cc16e693ead686a1047ed852db420b45a455d1",
+        "matches": true
+      },
+      {
+        "path": "vue-router-best-practices/LICENSE.md",
+        "source_sha256": "2ea4e714425cf682879c4dea3d0d0a1a379a1418f463063f9eea1aa709ad946d",
+        "matches": true
+      },
+      {
+        "path": "vue-dynamic-icons/SKILL.md",
+        "source_sha256": "7b028ad031e1163d596bd0837e513f220de40e4b6821f4b0f117b582c53713d9",
+        "matches": true
+      },
+      {
+        "path": "vue/GENERATION.md",
+        "source_sha256": "e600ea01783f3066f990707ff96a88aaa53327902bfff3f876cfcda800f8bb7d",
+        "matches": true
+      },
+      {
+        "path": "vue/SKILL.md",
+        "source_sha256": "8811b2afc9e3b7e5822f74577f43bf269d307487f505c2b9f6d09fb69f7969e6",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/advanced-type-testing.md",
+        "source_sha256": "370c55c10174ae6d8332605ecb1a7575944c8a072a85f43637c03dce00dd1c35",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/core-hooks.md",
+        "source_sha256": "d6489a5d762e2bf47b7a139e0265ff2e03ba13653cf14004e05a9be8512690b9",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/features-snapshots.md",
+        "source_sha256": "e7f650ca061cc14c90d68c2ab8325ee430b046277fbc959552e64665bdac9592",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/features-concurrency.md",
+        "source_sha256": "f658bade9a9f5c61518f38f08b80fe0b3e7bcd3b6c5e7b4d5cb8ef721acd84aa",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/core-test-api.md",
+        "source_sha256": "ce3ecd0aa73560e2072c79ced9d0eee39d527c1c71ccabe4e9b665326b219247",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/core-expect.md",
+        "source_sha256": "d39b2bf31f67d66a5f036eae6a88844e7d427854b075c395b086a6c5086a2973",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/features-mocking.md",
+        "source_sha256": "9d23a9d60dbbfa1183f5753c0cf5ea7fefcf7853e57abd491f9cb00f903d6a80",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/features-context.md",
+        "source_sha256": "ea7a77c4ebb677ff004659f0f0f50a135744934c1a8f39629ec462fb918c7dbe",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/core-describe.md",
+        "source_sha256": "c5642ff6433fca69bbfbe9526acb2becd17d8cb2c99cebd1976d87e1def91b9c",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/advanced-vi.md",
+        "source_sha256": "1d80b9c373f6d374093c937f46d731c663c684eb8e1533f82144275aee6dfe19",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/features-filtering.md",
+        "source_sha256": "29fd70bd48726bab2ee58ebf740cf1dc23efc51276d049444a31910748cf6e55",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/advanced-projects.md",
+        "source_sha256": "10efde418c9a4406d467a565d4ac9df60c39b16908895f38efba908d573621e1",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/advanced-environments.md",
+        "source_sha256": "b3b10adfef569023d922ce370c12f15d2dacf4c59d043ce015fb1c96f168b254",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/core-config.md",
+        "source_sha256": "5fd3cf0983f203f14c4f4732dde0632c1d537241daa5cffea24f7e55712a6fb3",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/features-coverage.md",
+        "source_sha256": "d65c2b5c33d0220c1f06bb7f95bf039a1cba25f3c5e4b13fd48d6b3d30a77818",
+        "matches": true
+      },
+      {
+        "path": "vitest-vue/references/core-cli.md",
+        "source_sha256": "2ff72dc4754b8738d31a041e3f3e26ea83fd18e9795521adb5510e61e50951b6",
+        "matches": true
+      },
+      {
+        "path": "pinia/references/features-plugins.md",
+        "source_sha256": "f5cc105231d80f1fdf5e54369f283fda3acbad7da27f3a0b61c9b0c62fd6c3d7",
+        "matches": true
+      },
+      {
+        "path": "pinia/references/best-practices-testing.md",
+        "source_sha256": "634ccd1d076c509af0fa9bae4ac428a536c2ba42a2ef11eda7fe7af683fa5252",
+        "matches": true
+      },
+      {
+        "path": "pinia/references/core-stores.md",
+        "source_sha256": "41627453eb019d1755dac787924bde52be162a3bdfc555119f88a8e59dda8f21",
+        "matches": true
+      },
+      {
+        "path": "pinia/references/best-practices-outside-component.md",
+        "source_sha256": "1354224a5a9e41b2b7dea712b79ec948690a0d65e90dde905298e8b17e7ed49e",
+        "matches": true
+      },
+      {
+        "path": "pinia/references/advanced-ssr.md",
+        "source_sha256": "9fbc7b11da5cb7b1d4ef8b320935712ba3d356f7847344c56b01e80a3e1e3132",
+        "matches": true
+      },
+      {
+        "path": "pinia/references/advanced-hmr.md",
+        "source_sha256": "661ff58636eaca335805df317c93848aba710e5957aab5f921eba9b57b69192d",
+        "matches": true
+      },
+      {
+        "path": "pinia/references/features-composables.md",
+        "source_sha256": "e218809b50506ca8177eee9e3926a8e3601f636ea13b661c9a432b3af2251653",
+        "matches": true
+      },
+      {
+        "path": "pinia/references/advanced-nuxt.md",
+        "source_sha256": "e12dd48df259c97c38722e87b368808188fcbc28208398505624007529b0e3a2",
+        "matches": true
+      },
+      {
+        "path": "pinia/references/features-composing-stores.md",
+        "source_sha256": "2c4245338e3e3f368c6665775909eef5e062645e0252a6f760817a73f677df7e",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useDraggable.md",
+        "source_sha256": "1888d36900fe1157a51b331d87fc3d759e6badb74380000367e9183cd40bc78b",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/computedEager.md",
+        "source_sha256": "ec8db12bc47db477a6eca2786f3052201d70d96f22a165b2a590e9599210169d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/toRef.md",
+        "source_sha256": "4a08cd66f6af71c03156906d7b95a3a520ea46d0c15dc86836ef81a8e52a0616",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useScrollLock.md",
+        "source_sha256": "0901f163f5f907512f4d3e5c5a24c581fb546f9b4786d45c8f54f6568e182cc9",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useCeil.md",
+        "source_sha256": "f97c34b8cbe729d20ef694d274b5d41a56d0f2c6779946b4f273b6b56f89107c",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useInterval.md",
+        "source_sha256": "b5984479275388ea06eab6aa0628e92ea8324636481029611561b92aaab20e34",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useFocusWithin.md",
+        "source_sha256": "1db34fc97936c7fac4c8f005fe546495b0c7edc3cb7d8c6584fe00c4d0925784",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useTextareaAutosize.md",
+        "source_sha256": "2ac87bf5d9e76a984877849dd3aa1f8751bb24f21ff36f00e3bd755ee0276e97",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/createGlobalState.md",
+        "source_sha256": "43a260724cb8610553d487a4cd59591efbc61a9876c07dbea04b07381ca7479f",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useDebouncedRefHistory.md",
+        "source_sha256": "56b7241ae053baa0dfb85c18df0aa4b87fc2e1e16a70dee35a86f72e25f86237",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useObjectUrl.md",
+        "source_sha256": "3fb64238f491843c4767025d8d21177c025b2d394e3151490b161c383e628d8a",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useArrayIncludes.md",
+        "source_sha256": "0cec4f26d465b5e9c7741b6a0159894100d27d8671684cc5bb24d80e8dae4d72",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useToNumber.md",
+        "source_sha256": "66c1134df7da70325913944560a05f08273ac594fd6ea271dda0da7492bf841a",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useMouseInElement.md",
+        "source_sha256": "a3e0de0f45e9fd610ea8b1221274bc4d9724f3f137517f9e0c3b7315c57abc26",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useDevicesList.md",
+        "source_sha256": "32aef1368ef57a7d30c8a76ef8555ce5fe59e93a031d6eca55cef163847d5835",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/syncRef.md",
+        "source_sha256": "00561019c13e0d593c9101069ced5693335c7f99d33b316b477677110d85a162",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/watchImmediate.md",
+        "source_sha256": "6a8892771151d1443f6105a392a4919d9ef1d4d9cbcc3e2f9d65e1de138845bb",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useManualRefHistory.md",
+        "source_sha256": "1a79a416ec4f05fa8466e3ca56397f88e130025cf5853b595aa295c2233542b1",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useSortable.md",
+        "source_sha256": "90c8c880464872f13061ebd3dbb7f998f8326394b01ba61eb2d5ac5210b64ff1",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useMax.md",
+        "source_sha256": "6ec5a359cea679e099268890a4da0d82dbf402435cd13cf1441666936aa1a474",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/injectLocal.md",
+        "source_sha256": "aded9d267c4d1d086e35935de28341351d4ca52e72dc867ad6a7f364be08171f",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/watchArray.md",
+        "source_sha256": "eb3730e84f59450706b6955ea1ad3f626c78d1e95b192ddbe81d0e344ccd4694",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useClipboardItems.md",
+        "source_sha256": "34a754a49c8392e6eb82f99bb000647ec257dc67631268ef6e9bc5afddfdeeba",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useSpeechSynthesis.md",
+        "source_sha256": "da176aeca78e964a52f4c506c0e4c6ed726e967431a9ac9ffb46637ee3a16f11",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useIpcRenderer.md",
+        "source_sha256": "a5338954728edadd48e8b0412d868a79e2bf66a72a0fc557f2d232d5aa3df471",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useFileSystemAccess.md",
+        "source_sha256": "61fc484d99f215b7bf40139176b6fa91f27ce0a68414192ce5e26e15cf1ef96d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useJwt.md",
+        "source_sha256": "a1a5de113dd2e57338bf4b62e5ae28aad29bb9860898ccdb35d38ce33a9fdb28",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/createInjectionState.md",
+        "source_sha256": "50e9f029951b331175bffb1665554a7f50c2b2c614e9bb2ee72a95cad7642f79",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/usePointer.md",
+        "source_sha256": "3096e3198ebef52c5a8a108c1fcab4f54301f54e4dbc4ffd7199627d13ad7422",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useNProgress.md",
+        "source_sha256": "16734ccfa5d9711d4f10395e7f2e15a1096eec231f0dbcaf640455920c56a971",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/watchExtractedObservable.md",
+        "source_sha256": "2a9ab189b51fdc9f8c454f28113824ebdaa2f4399e491a0ee05b1b67bbc97108",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/onClickOutside.md",
+        "source_sha256": "ebd896bdcce2dd6cb1e3d727ba1492629d4631dd1aa89a960576a5f85cad4ab4",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/usePointerLock.md",
+        "source_sha256": "8d08a87a4135e1a001f43c4ee08eeff19fc1a3c2f09514fdaefe5cd3c6742601",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useUserMedia.md",
+        "source_sha256": "7ccb5ac41d39a7d07fc4c69b2ab34e6d9e19cfa861e46ee443c128083d7d4f4d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useThrottledRefHistory.md",
+        "source_sha256": "e5d38de5baf9fdca5a44a5c56033312ed1605dc8e723e6a83402598d7594c110",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useSubscription.md",
+        "source_sha256": "6007e11d57a68c3811dbfdac576b4b5aff9ad6a62ac0957f6ee71af3080a942f",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/until.md",
+        "source_sha256": "27c86fb53d6851064354281524222865468934dfd884d5e6930ba69c16191163",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useStyleTag.md",
+        "source_sha256": "d4813df222d9534aa7e6a820708a6201f6910b257d11b583a1ecfcf1e9e253bf",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useMemoize.md",
+        "source_sha256": "6660e721e7143720a4066a50a5173f4ee61062e6fb2025758af2917ad5fcf8a7",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useFetch.md",
+        "source_sha256": "abdf558236c498adb4aba893bdb219b84e4aa7e21c3080ca542e7f957f210f96",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useIdle.md",
+        "source_sha256": "3fb458dec5eb08ed81c6347e750b203356737c19fbed58bad1345ea88f6fe256",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useArrayFilter.md",
+        "source_sha256": "c231c34b1e621fde7c5299acf54b34dcc6d8b6a8f48cd6e8187e6e1d8bbc0a98",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useTemplateRefsList.md",
+        "source_sha256": "e32c4076dca47d17f6f493a707eb57773a22e05b1dd36aae4725e304514453c5",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useIntersectionObserver.md",
+        "source_sha256": "292ab67c9941d48989e912833bd5d07962354f135af2ede7f35336131e29b45f",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useSum.md",
+        "source_sha256": "91c01211bd2e25c353bdaaacb17d0a4903500a77f3e7f6bd33425982f38c90fe",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useActiveElement.md",
+        "source_sha256": "48870732e4f46f15ad01955876782f481c32600ba7b599ccc762e28ab44f3e65",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/createUnrefFn.md",
+        "source_sha256": "1119a0b7b0fc2047353b7c8bb83b5a6aba8917fd914bc012bf3eada3db6e8233",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/reactify.md",
+        "source_sha256": "e09b52ccefd75ef8951e744e892799f0cdbd64e10462f0c307f8c79ebc414cb8",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useArrayReduce.md",
+        "source_sha256": "5a522fbc13256a46c7b840991921aed06b3270a42e812d05bb0efaf2b7e9dd4c",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useWindowScroll.md",
+        "source_sha256": "564bb964dae2c51a9b75e9550247f97c80bd6d99d15b3769fd0e84e18283f6b6",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useRefHistory.md",
+        "source_sha256": "e30deb6f667867da00cc1bd446d490e35eb61e303edd66dee180d1291b100338",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/watchTriggerable.md",
+        "source_sha256": "414e29cc0a6c57fbfd5c3fdcc6b00f7a1587d79e7c42a88d255752d6f4576f72",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useElementVisibility.md",
+        "source_sha256": "71e9a5601b0f4f59c36b764ea2d5446a6b339112c07d5482467fee3067fd725b",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/get.md",
+        "source_sha256": "ffb0de9a74e9522829296ab2a3b3185a4329aa28e84004952507dfa8d61dc2b7",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useDisplayMedia.md",
+        "source_sha256": "e599542193e881a8523a3e610d29a0b7020314dd9e140ab99dae6d73db3978ae",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useFloor.md",
+        "source_sha256": "00451d13f68071ba9a3aec06b7ba996bf306d248727fea21658ac0ffc883ea58",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/reactiveOmit.md",
+        "source_sha256": "06021647f000be3a6dd33eece42db32b31f13a59d8e967539b9b3d1ee9ac63c6",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useCloned.md",
+        "source_sha256": "73e0b3967cecb6780ddcc513cfdd2a1e0c7bfa50bf74debe312863d1cb0f307c",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useCycleList.md",
+        "source_sha256": "a5b62630d0666798ba70459e708d77cafa473d9ebf93ac8c937da9b2edfb5854",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useMath.md",
+        "source_sha256": "f7b2f8091aa709de3a302b70a1b121375832264fd452d581e1f9ec9c91372579",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useCountdown.md",
+        "source_sha256": "2ba885424478d4956dfada2d724ec51b8e802f258397d890d9976f120c61c19e",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useEventListener.md",
+        "source_sha256": "7b8857ef57999ee7c31362c3087a0b67a0eaa2929b9ee9b1025595d6a79155af",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/refWithControl.md",
+        "source_sha256": "82bc28cbfbfc9be9d7523b475449946a2e0a3810e2478f45d03d6233421dd0cb",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useStorageAsync.md",
+        "source_sha256": "f1ff09c6026c6dcbac315e0d87ec258866240a1a2faebd100a8dc644684e123c",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useDateFormat.md",
+        "source_sha256": "055e785b7a5cf6ca5cb1bbe24be50ec174f8b25d45991e588f419aaf38761407",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/logicNot.md",
+        "source_sha256": "e71f449ae2a30a7bad8eae1cd6daa265ada83bf1937546d7215de6a6e14db87a",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/tryOnUnmounted.md",
+        "source_sha256": "276289803fd49ab0fbf91f9d50e7af5ac6c1201ae3fa7df3e227e722ceab0a92",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useEventBus.md",
+        "source_sha256": "0a1ad55654b2bf3d11109554fa2cff7b4aa43e27f3aa1801064dcbd73fc42fdb",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useArrayDifference.md",
+        "source_sha256": "b86f7875b1b5e893f6e30bdd02fd2b1e9f704142b15811cd21873016a2d142bb",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useClipboard.md",
+        "source_sha256": "cd30d45161ae4062beb5d158e94a5333f8e98fa3fb3732ab6954ba8846f8b9cc",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useScreenOrientation.md",
+        "source_sha256": "0507feab52a7bfbb929d42f626889d0f94ad582b86a1c8341b35001651751b7d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useConfirmDialog.md",
+        "source_sha256": "023d0ee359871d39ec10844448765c4fc51ee3b7ac7a90626a6d69df98ce81e8",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useRouteQuery.md",
+        "source_sha256": "a03e5029fb2f3cf9c295d7cbfae62cda0a2bf1ec4b2ab99481e7a9b77542a885",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/computedWithControl.md",
+        "source_sha256": "fddac8001081957dcad13bda0bfb7bae6476d57c37536911c79ca4b95453263a",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/usePreferredLanguages.md",
+        "source_sha256": "39abf8b4e9848b8d1fd617c61d3e28c5de824a58c059ff339aecee8acae8bb3a",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useShare.md",
+        "source_sha256": "c87894dcef3bf4b1b48fbf96374a1e7e2823af0a382e9803d307cac8bdc20d2e",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useAxios.md",
+        "source_sha256": "c08f5256683cf09108b74e8903e95411ec5219377a8ad75a14c300ca64d5a2f8",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useDocumentVisibility.md",
+        "source_sha256": "e35a63d04a7a69b5e0bd5eb3f3e7427d6ca725ee7c4cdb16f8e41deccd3e1cd3",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useToString.md",
+        "source_sha256": "8fb5da6e9fc107b54e07064335e91887db0541c5629a111d1676d39474e184d4",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useDropZone.md",
+        "source_sha256": "0a38ccea1b66bafe9b0bf472d4fa33db32c46436f01680209bc7b4def51e0624",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/usePreferredReducedTransparency.md",
+        "source_sha256": "0e078f3338c838487a2a8bac9715bbbbaadefa0371aa337be98c3a2afa2e3426",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/whenever.md",
+        "source_sha256": "4436994524decdc0ff7fcb9da5a66b6f62853c091af5f1bab0aad6c813e3e663",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useWebWorker.md",
+        "source_sha256": "f3ae619db6f1e00668492ab9674fc43bbe6f5d14114be7b3b47fee5ae95005ec",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useNetwork.md",
+        "source_sha256": "6ab76d70990faa3575f584e67d4d3d451bcb5e16b7f0d369cc56e4883ecde43d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useDeviceOrientation.md",
+        "source_sha256": "5ef59fe7752a4c4e2ce685f3715d9777689beaf3a5d96d9c45dcb2dc2a20412b",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useBroadcastChannel.md",
+        "source_sha256": "a3a194f943a5912411458d478feb93b893215365600dfbc2f46ec5675b4c01cc",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/createGenericProjection.md",
+        "source_sha256": "57a8dbad37f715b83a98bb3ca326f15b59e6b323e485e63c53fd85bb08356ed3",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/isDefined.md",
+        "source_sha256": "c1448d81a120879d8dd3349bdb1f2583e02fa81cfd23b90adbb0b9943b5aab77",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/reactiveComputed.md",
+        "source_sha256": "e77c31e7da5c85b2976c330aef5f02292ce78ee9cf974f51595ef3751f3deef0",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useMounted.md",
+        "source_sha256": "46e8e03b2e57f7fd1a1712767335faad58252376f70b01725d6c7761e2240ee1",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/createProjection.md",
+        "source_sha256": "5180e0a5875242a0067e8b3ee57a9cee53c772846d83f04c45d1c2475316966e",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/tryOnMounted.md",
+        "source_sha256": "fae5a4d145772ac6e491361727d27f8edad81ed7149c2f8cc232e22a4e625dcd",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useTimeoutFn.md",
+        "source_sha256": "1c382d48eaa773367f273e9db4fdec43ece2e8292a3718dc1f64426f5590ea81",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useAnimate.md",
+        "source_sha256": "b435cb3bd501300e257900dfde15ea45647f1cd7084450bf3365391d0bd13e7b",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useTimeoutPoll.md",
+        "source_sha256": "ee3658bf35fef96ea8f8d3636123731664213692f3ab927d559d88d04da35f10",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useRound.md",
+        "source_sha256": "0c679f89de4cc342ea534635ab2a6f34c3f2640999ceecb3f70133011dec159e",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/computedAsync.md",
+        "source_sha256": "028f0643b3f5a6f5df4be8486ab6373fe7eb1c261db51f794b7f9f44c0fa349b",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useFileDialog.md",
+        "source_sha256": "1890096f821c5479c67fc1629dbff780ed9f5bc8c8beddff0caf218f497cae68",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/onElementRemoval.md",
+        "source_sha256": "769112d5e08512d4c51be8d7328f640dab9314f259b6c80a64d5638f111f448d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useColorMode.md",
+        "source_sha256": "5a1cb244cd4cf1641be5feee115e98911a64f23dedf26f13a5711cc53b9697b1",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useElementByPoint.md",
+        "source_sha256": "2a1a7c8d14629bf180e56fe799f4aad098820b3f5e8d0c9ad1917695fc4dbbe8",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/usePreferredContrast.md",
+        "source_sha256": "19d4c40156dde55c9b625ef62efe1d9da0732360af53a2f5741622dc870026e8",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/usePreferredReducedMotion.md",
+        "source_sha256": "fee9885231f487e385b8b81913773c26d1b88b4b0d8ea2e7c2c1ce4aa0ba8198",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/refAutoReset.md",
+        "source_sha256": "ec83c77303e99cddac04a25b74e21e7860412f88084da7a239215ccbeb982288",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/watchThrottled.md",
+        "source_sha256": "3824edcbb17f15009d64d03a80bed80be62aa703c7bfa146f8c53fab389ea74e",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/syncRefs.md",
+        "source_sha256": "02d90ad30334b791e67ff721c39d81a2997f3c2965fbcf75c8094cbedf6ec74d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/refThrottled.md",
+        "source_sha256": "90f5505e677e8e3f283e96587ebd5050b0d76c64e03a15550999b6b02e8fb76d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/unrefElement.md",
+        "source_sha256": "8b157e9f23658a3ef0c51511a34cc54bb739cd6e3466105b55ee7b8e571f6d94",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useScriptTag.md",
+        "source_sha256": "d6c3cfee44f806d4dec8ccba3491ac39fac5a28d1217bb370de3ab4574421827",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useWebSocket.md",
+        "source_sha256": "1b8ad036010833eac95fe1af6843a25429c0b1f550982d28036dd280bdf7f718",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/computedInject.md",
+        "source_sha256": "6d617c53655acfb24eafa9e02a6f47955f6860b799ce122bb96fdc02bcd8faff",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/makeDestructurable.md",
+        "source_sha256": "c5d6304bb7065a8da1e29c5881872221d8cb04ae14d978542a997fdc23d869fb",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useTimeAgo.md",
+        "source_sha256": "b301e6a897c03ae7162f40a9c1e55e2c016e116f4018120b359622db5030adf7",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/tryOnBeforeUnmount.md",
+        "source_sha256": "5313df961b2d7f1662b772ef4200b02f3f28e6aee1f88610e394a40e7601aca5",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/usePointerSwipe.md",
+        "source_sha256": "a2023e7c6720e00133b6a92db6127d75d64489c89c22712fd779b11a5f98a11d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useParallax.md",
+        "source_sha256": "c2ea1d90e584ec86fb750393b2c0ee8bac2dae1d292465de12bd03aba57737cb",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useMouse.md",
+        "source_sha256": "567b7a2361801d0e004f638ffdd2aecefbc0f2270d68b43123f3dd48d3bcbe0b",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useElementSize.md",
+        "source_sha256": "7ce07a9a4a143a754e04c20a6ceff46efe9c925bee8642bbfc2c21cae606746d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useAverage.md",
+        "source_sha256": "587ff28415451a710002b56f2de7ee7c03d29a166e10b643dac10da8068e937e",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useTimestamp.md",
+        "source_sha256": "1977d892331e3c9d37a89cd6c341aa068cc9f9e907adf60fe85e2258081ab3ba",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useStepper.md",
+        "source_sha256": "1da12631d964f3f479ffe1f6b17d68cc0c3b375163655ab24e7cff726fea5dbd",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useQRCode.md",
+        "source_sha256": "492ac04d588c39600af85281d12cf97f4a4c5f061769905463602995b3ddb5c2",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useBase64.md",
+        "source_sha256": "6c1c6ac203d658368695b44001ae173934de29d7dd30a2428427e9f26f53df60",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/usePerformanceObserver.md",
+        "source_sha256": "9041874fc22c55896ea847305be5b334fc997e38931b830f9639d4e32252ff28",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useAsyncState.md",
+        "source_sha256": "11defe19dde97dacb764695c43beb61214248de143ec084708891ecfb3193605",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useFullscreen.md",
+        "source_sha256": "0a08cc0662b4d79e8c4364937949685733ed9a17bf3f6ca4a07bf15e59ba96c6",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useEyeDropper.md",
+        "source_sha256": "b55a75e0e074f5ca16cfad9016a2cac87ebc7b4217e13d053f5157147edc1989",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/set.md",
+        "source_sha256": "6dfa9a73dd8f5420520521c56029ec4c83cbf3b4b5244d646fb6106231899118",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useCssSupports.md",
+        "source_sha256": "f1d5de50de2057dbfd10eff772feab47242b706ee7f23bfa29befa882286c1c6",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/usePageLeave.md",
+        "source_sha256": "954fe54cecf7443c174e3f004735231ee4cd02a61a5501b9119f2326ebf749ed",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useAbs.md",
+        "source_sha256": "cbbace8ba591904d27db87e5ce24e05be72dc50b368413bdff29ec2ebced0fa9",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/onLongPress.md",
+        "source_sha256": "faa007d3cbb9585d1eee028843b46658b1ac154f127c3703345fab2fd325f31b",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useDark.md",
+        "source_sha256": "b53e0f33e08bd5eecbc7f106691b7abb86a7b329967c6c800aa27e3100f6dc50",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useDeviceMotion.md",
+        "source_sha256": "58e6ed59863da04e7e58dd471d4528987be925b6b3da65520f07920c0a22be56",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/createEventHook.md",
+        "source_sha256": "ab6bb48f7cc25b30654e48b40410e14c4ba25ea151d0aae17327d1eedae1864e",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useWindowFocus.md",
+        "source_sha256": "8317bf35fa08f9a3babf2549c7f36b98cf268b4f2c86f1c07b614dfa1f089d57",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useFocusTrap.md",
+        "source_sha256": "2afccc1b1666aec639c83b7e38d5bf23cee3c61de30f65e25597b6f214b57615",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useStorage.md",
+        "source_sha256": "055dd34a5a2dea27b398138a2818ff3dca67eb6000686651b11dd9e5e7a78172",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/logicOr.md",
+        "source_sha256": "f09d0de683078fd1fe8a233e9fb399589fb1b5e0cd2a2e304455a0902301e0c7",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useLastChanged.md",
+        "source_sha256": "3ed69dd236b7199c1b9e7434f39cc1f4930771db51d8c024f60b24538a591a1a",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useTimeAgoIntl.md",
+        "source_sha256": "4907eb78da9458e2c5666d3c9a4c736e8e8c82e45e6f209b9a339f4f7399672d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useFuse.md",
+        "source_sha256": "c83933cc9592c3ae587535e9924eee1735ef00f2ca6f8616db1c14371ee3af3b",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useScreenSafeArea.md",
+        "source_sha256": "82c6c358f42dfb558adb2e2c860f76a6b2b5967538cd0b261e13d576e6345fda",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useDrauu.md",
+        "source_sha256": "9ba4de9433b34e5ec9de1fe3d358daa9062fe15e76e1550b798837a5cac062a6",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useCookies.md",
+        "source_sha256": "22c1f1ef60150e2067de151197b07ddf9ecef88e2369101ddfb65c6c5c69dd4c",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useNow.md",
+        "source_sha256": "c05fab0ae70767c4e57a3a27696f0a3e640d2235a162d5a82773d08577b4c119",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useArrayFind.md",
+        "source_sha256": "b70c7c09613b42cf43816bd9d18a7b91aabf3bac09499bda8b1ad8a9e95e1a8b",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useAsyncQueue.md",
+        "source_sha256": "2ee7a6ef33dbb3fe79bf76ee1579e631e64d99813071ec80c87969b44b092d27",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/reactifyObject.md",
+        "source_sha256": "38d6bd16dffd13abf893a6a33ef2d7a7a3514e4810865ae404b8a7054df02a5f",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/watchPausable.md",
+        "source_sha256": "2a071457bd4582ad353a9f476fb771e759c58841bc820ba0b105dcf367c2832a",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/onKeyStroke.md",
+        "source_sha256": "676d2565771f20c31e03f553af5d8f5c26b90af7e87bb2188978d385e9a070e0",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useSessionStorage.md",
+        "source_sha256": "b273ce17f32622cdd387f2595d1573b34b625f71ee0d68cd7e7680a7f92856a8",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/catalog.md",
+        "source_sha256": "66c369e46c1f81a0a6bfd547bab6485f6ff48df0b5ad594749e28ff89b640b4e",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useFirestore.md",
+        "source_sha256": "cf59a9fb9d8620a98a755ae77666a9ec0041da618b61e903873f10d8d2ace8a0",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useAsyncValidator.md",
+        "source_sha256": "625e339bc1a519fcb28d47f65d20cfa9cc43eb732e2abaaefce1d2be3f5996bb",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useLocalStorage.md",
+        "source_sha256": "f17a8fb769164ee096222d233db51c78e3a1b613c8496949bf5fb5a79be58e22",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/toReactive.md",
+        "source_sha256": "7e8fda81ee8b655ac649ae386ec86ccd2d7c7be673f21db7c30dab96f23daa05",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useSorted.md",
+        "source_sha256": "9446f7d6de3054faa9a901f8ae94e64b85a4b4d61dc59f8c8a3ec1f33a550b0f",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useArraySome.md",
+        "source_sha256": "3a3e9ef69e26db9073d6c209abbc8604dafb0fc1846a2b0fc2e025c064459528",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useMagicKeys.md",
+        "source_sha256": "70bd22fab3ed9c10f493151d6f1101b58ac8e2bcdd3f2f15a6625a9c30b6bdb5",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/watchOnce.md",
+        "source_sha256": "ea6dac085e8b6afe2ac854cbe6a3361ed827ec9ed81d72853fa6c734c98da627",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useKeyModifier.md",
+        "source_sha256": "8b6887b5898e7a8d2ecfea8d3170ee6c6bae8b959ccfa73659dfcc4d18d2b553",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useDebounceFn.md",
+        "source_sha256": "d2f064d9766695bec87d312a6fc7295643b315f7a7f4e9003179050a4ccb8b81",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useClamp.md",
+        "source_sha256": "0fe500bfb884005bfbe6fe4a40704f7580b83b152fca5f07e3b80a7a04a05ed7",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useResizeObserver.md",
+        "source_sha256": "45c78c61f1d43e242320ce4baaa1401d1b752bcaffa0b78dbd555a7008c8f7d3",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useDevicePixelRatio.md",
+        "source_sha256": "065c97094f313c85f47a342d26ea6c2e904539e048a1a64618ebfed119f22a87",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/usePrevious.md",
+        "source_sha256": "275f8e5f761534a87eed6063dfb10627378843fc756ae52bcc2e5cec328b8c14",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useElementBounding.md",
+        "source_sha256": "fc5825b79aa7a5a7ace599d5763c06ea060565bdc65cbfe603fe734a9adf38b8",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useSupported.md",
+        "source_sha256": "851afe051e3ee8a25486c9fcbac9436ae4f8b9ad28b0bc0e1c0fd0856be71937",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useRafFn.md",
+        "source_sha256": "0ae0a77ff67407c0d85a96a4eddb041f5c2be76fdf005a8ce3fa3c5ce6753fcf",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useExtractedObservable.md",
+        "source_sha256": "81d33c1c781ee6a6cd6c20290690d01bc1f1ca7b97fc7090e7869a839d223014",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/onStartTyping.md",
+        "source_sha256": "118d6f5a9a55b6799affef7ca0d6dbe6523b319a676b311c351b605681b33cc0",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useGeolocation.md",
+        "source_sha256": "385ff708a5af6dca20e55455780bc4dcf573b6e1374ecacd4d51c7a22524a360",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/toObserver.md",
+        "source_sha256": "d8207f7dae7d1d0decc0a717e6b05c53177a0ca1fe11d79620371a4f6a36f0a6",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/provideLocal.md",
+        "source_sha256": "731a48d2be7dbfae11b3ffd9e7954acc49b6303d6b3e37e35fa611c5b8e0dbb1",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useInfiniteScroll.md",
+        "source_sha256": "b22abff18c13320abb389fbbfef56c2e5c7ba1b92a587179d4e7e70ec4a13503",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useArrayFindIndex.md",
+        "source_sha256": "2de584ceff0f0bd48aec70635d9294c76172ea2bcfe6c10ee29d9736e36a273b",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useMutationObserver.md",
+        "source_sha256": "9c748cb0009ef3dd31daf8a4e89d986f9800e2f55daaf9985c34c29ebc9a4d50",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useFavicon.md",
+        "source_sha256": "c39deec43e890532f7cf2406a4dedb5af5ed45ecd72640b6eef0dcfaffb7f276",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/usePrecision.md",
+        "source_sha256": "0a94094ef8bb7659cd63844ac113def81b8a3ac2d6723e847e59c568257fe958",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useCached.md",
+        "source_sha256": "a32de3ed6c7232bcd00df6988c30a88f2b1f53ae9adc2afb818fcc6d558fa127",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useImage.md",
+        "source_sha256": "4a33cfddf99675a1f4f99301e497ac45a2e198c1c6c45873b3a73d27530980c0",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useWebNotification.md",
+        "source_sha256": "781ec5b04a06e99935e97f2f81546f9ddb250f7906b2809ce51d0c727bd403fd",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useBattery.md",
+        "source_sha256": "c3acfe097e7afbc8b1bee4d90aaf4f2e9e860caf0dcfd44f029a1056f8304165",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useWakeLock.md",
+        "source_sha256": "3eb9000244e7e478c029b5f1075c08dd8b0a2f1b178635f539cc6dd8da37b619",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useWindowSize.md",
+        "source_sha256": "eb41f40edc625036a15f69917b7e4a234dcb9b383b5514ffdf58a1bd9819feaa",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useMousePressed.md",
+        "source_sha256": "dcd8eb5bbe22bc13443a3d845fea246e2a9439a5dff2cb75d16a07a8166c9ee6",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useVirtualList.md",
+        "source_sha256": "6c3a70b04067e1edb34e2e814f1bcc20d9ffd2efc88f9da68cbd35f3291a2a86",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useArrayFindLast.md",
+        "source_sha256": "7cb4c219fce5d961ae1a046da39074f8c7e7080a1691b830529d7fd5de3bbc6e",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/createReusableTemplate.md",
+        "source_sha256": "e50157c9e4416810a7e885dbaeefc4274349d019a19bbf337dd5cc18dfea3aa3",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/refDebounced.md",
+        "source_sha256": "2602eadb5103a66fe8fa1e9b1972866b6301617f422e3dfe4f385cd8926daed8",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/reactivePick.md",
+        "source_sha256": "ec20b59e63ba42c17b1973fe83d4a8f550a6e114b6f6477705b480678addf06d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useVModel.md",
+        "source_sha256": "516581825e284ab4cb1d2a7ebdae7d6add0a70092e62cc4d95a73fe624dedb6e",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useProjection.md",
+        "source_sha256": "e50deb798391a9827880710edd2dfafa9d2578de3c2a46dcc74fc23f3c32ad22",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/refDefault.md",
+        "source_sha256": "541357fef0a38f4ece4caabefd3d44bd2fd0278774a0ae08730322ed5a38379f",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useArrayMap.md",
+        "source_sha256": "a2846e305821761d6bc23a9800c949f9fb27c8aa98ff31a5489b3609ed2a8165",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useMediaQuery.md",
+        "source_sha256": "f6e212ff7f2b5a5878db12bc3039c2a097dc7a3cb941a5275143c06dab3fcf50",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/extendRef.md",
+        "source_sha256": "54969789cfc8d0c2839d00d52f70b7dfaaba9f53fedac686608c1acd71df20f1",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useBreakpoints.md",
+        "source_sha256": "5ecd37d8125e65fba07263b427e7f492d349fa36d59401ac0b4ca55788bb2033",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useSubject.md",
+        "source_sha256": "2fa09944450eeba37d63fd80c323a1e3de5da95cf30b46399a5f98516ffb8f56",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useIpcRendererOn.md",
+        "source_sha256": "c66ac50a03f13ae10814ea5636f762445d753a73d5e6801ba5c1657dc86b5b15",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useBrowserLocation.md",
+        "source_sha256": "bd4f8796041a0d729390233e2a0e654b42bac60eb573d26ea8e52e636b859917",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useSwipe.md",
+        "source_sha256": "80d36644cbbf4c1e8bb7eeda9fca70cf38231d83d62d7c02e48cb2932c58f798",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/tryOnBeforeMount.md",
+        "source_sha256": "0054b94d4f3fcf6e6ec86e21acdaa6b86f759db5e92b7a1fac5d8aaefb530131",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useObservable.md",
+        "source_sha256": "71685806b3b593664e20fcf067900bb5c4ff586bed662a90b98e71ad50ef8e1b",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useCurrentElement.md",
+        "source_sha256": "b6d3122b1596f9d4eb08c4b177496a5c5e0d48f7b3b52d49205e3229aa5a6878",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useCssVar.md",
+        "source_sha256": "fdcfcd678a5220e2548108d285a8963f3cc1d436c6cb4bb9ca63c1899a63c0ee",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useVModels.md",
+        "source_sha256": "7239ad95ed54dc551e006e46516a6455f45c6fca45da64a69746e9a8e6bdd701",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useArrayEvery.md",
+        "source_sha256": "495419d7fde224e08729ecb7ad45996af4b719cdf6cab516aef71600e466dc09",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/watchDeep.md",
+        "source_sha256": "f6d1cd4fe4f81743f6d22fc60021fd6423d0fc54f6b657a4ab115c2f4de91678",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useNavigatorLanguage.md",
+        "source_sha256": "5e2834f6f7a90117cb2af61d40307f64f725b86f1635bf924e36be1d9a7c4b58",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useTimeout.md",
+        "source_sha256": "1c6cd74f79b3dfec87b9f21d106755810ab2f7a74893353023b061dd1b4ba0aa",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useOffsetPagination.md",
+        "source_sha256": "59156418280f0418953ee2128d0ce5854eb70160e3b1ecdd3ce800df6e462c97",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useZoomLevel.md",
+        "source_sha256": "273c55a58d1b0306f6ee54c93a5b55c0151bb8b9d9cf0d26a58306735a048e84",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useMediaControls.md",
+        "source_sha256": "4e40797e10b2cb48c7653952c375386743d1d55fb54bc3abe7c2907ee29880a9",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/watchDebounced.md",
+        "source_sha256": "ccc3cc5c44ffa6dd92d20de73d8aa28b55ee0c85a3454beca55bb5336ad48037",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useParentElement.md",
+        "source_sha256": "de5ddaecd9fb1cf126c20145cc4553fca672bfe34cf85dce1db7b82897505097",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/createSharedComposable.md",
+        "source_sha256": "6dd2dc0146bcd5b3d2daf8f960e1c9f1de44c8861d559135c0ca4ac67a0dcf28",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/createTemplatePromise.md",
+        "source_sha256": "d68bb260bef8340cf78dc90d13eb1c9517f83e7be33c7157710344ed91bc56f4",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useZoomFactor.md",
+        "source_sha256": "204895b74c22d9247f127255b3da75b164c07f9cd872c9e7dc7c12b28d8e8252",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useTransition.md",
+        "source_sha256": "bc6554d49f07cbea33d95af82bd7b0d64f22b6e93332728981b6db63750720fd",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/refManualReset.md",
+        "source_sha256": "215d441a2cac4043533110de69fc15c87f39764f92d23055416a5f879f6e162a",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useIpcRendererInvoke.md",
+        "source_sha256": "ee68b8684f9580889cec4ac9790a840e2479f3e9c849210132af7145baf29a04",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useTrunc.md",
+        "source_sha256": "0b5a820bc016852c69a3b0ff23e135692ff16dfce82f9ba72a0e85f6d126903b",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useBluetooth.md",
+        "source_sha256": "48a5d47c82360f7bfcba2b624be7a735b3a16d99de3aa9678f32333304718c11",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useThrottleFn.md",
+        "source_sha256": "0220a8e25a7311e40b5ddc3aa856e603305fff380fe4f43a45ad9b3acbd1b630",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useEventSource.md",
+        "source_sha256": "000ceacecea023014374731bf60be675b40f839dd6e423622dabfb0cc4c066a7",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useGamepad.md",
+        "source_sha256": "aa966979569fe61a5fc52fff677ad8bc12d9ceaced20d19511da128249c77c69",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/createRef.md",
+        "source_sha256": "3794cc3878c1729122e76f88849b9eb168399c2aa9f9f62629d4c53d44944805",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useOnline.md",
+        "source_sha256": "33306a59772f83ce5ffd62aa008a4ba5885600bc45c0faf658b2efdd872de27c",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useChangeCase.md",
+        "source_sha256": "160b3201fd8ebc81fe0ded2df1e6038566a16c3c94406d77e3b5e7dbc6f80cc3",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useFocus.md",
+        "source_sha256": "0193b270a53e61834d1f9678cda40e0472c2e3c699c51570c3e83a5da12b4c7b",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useSSRWidth.md",
+        "source_sha256": "c55b29428278b5eaf0f66787485e764749572a48bc6f25b3c54892c2bc30b2e9",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useTextSelection.md",
+        "source_sha256": "fe4a606f2e8da35d4250b608e8bd7cd25deb85b63a60dde12741a2c0ee583b58",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useWebWorkerFn.md",
+        "source_sha256": "6cb4d10a7124319de12234fb60bf2fd68e0828368749fdf4ffe088230cbb7b1e",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useUrlSearchParams.md",
+        "source_sha256": "a5fdc15161cf9460bb186a2c53b88c894784f472a27a322afc6da57085787771",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/logicAnd.md",
+        "source_sha256": "6798d1e07ca411ec090b34de1720940f263a732d92dd2b98a5f8d86dbd360430",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useMemory.md",
+        "source_sha256": "282f913448ced25fa02cdbc9362b1ee1796cdf1abf999d2abf9cae4362bcea88",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useRouteParams.md",
+        "source_sha256": "211ab2d00909cc6511e4ad4c75c5a9614a3299f6eaf7d6bad3143ad6fb60d746",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/usePreferredDark.md",
+        "source_sha256": "ba9a9f11b5252367c5c70e150418ba37ca5d59a88a0b75b1e877399e3cc7cd89",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useTitle.md",
+        "source_sha256": "9b7d25852942c56549cc74532c09afbe1dbec8f871196c5acd7315d0968cc53a",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/watchIgnorable.md",
+        "source_sha256": "9ca1f33895ad29f7d0cfc955af3ae0fd2ec3e624690cd99ddd3c1d5f9251e3f8",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useMin.md",
+        "source_sha256": "40557b6dc75ed299c5d2b0303d3fdb8207cead90440db6dd2989c4d4a0c9a1ca",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useElementHover.md",
+        "source_sha256": "f0d5db48bbf1d4948a7d5d44b8b4f08bcf98cfbe97bd8a276c27d9c3dd0e8802",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useAuth.md",
+        "source_sha256": "ec93251e3c77f2cd2eeec026366c107083fa31784af09d458d6c94f080c14d37",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useScroll.md",
+        "source_sha256": "99538e7a9023ec65c604c9c05cb76582791f85f7bf2b7959bd592b8fff125a4b",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useTextDirection.md",
+        "source_sha256": "82e44c0cac58572a9fe3f0587752301fa302bdadbc2266e78f3ec7bd520de7cf",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useRTDB.md",
+        "source_sha256": "64fcefdd491c9d4649ed4dfcb411e391da9f620e09af8a724c5f9bae6752f22d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useArrayUnique.md",
+        "source_sha256": "67182eba431c63436bc65eaa70266c771018304766b6da13321344c62ac63380",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/templateRef.md",
+        "source_sha256": "a01df713abcda0515b7d6c8d8491a77d7d1aa919cf96468f128f512b79249920",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useSpeechRecognition.md",
+        "source_sha256": "2ae968c4c98ad33c7ba90ad54bb98af53453d6df2e6091128c62b25332652f7d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/watchAtMost.md",
+        "source_sha256": "25c869b611fb5469e522c9f6440cdbed2ef4e0eb34b59539e571b11dd3172477",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useIDBKeyval.md",
+        "source_sha256": "400aeb269a193c5d5b44db5bb4f92881e8950ce36c6b895cbbfe16353b92dc8a",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useIntervalFn.md",
+        "source_sha256": "0a892c5b1b2aa48ef94fc8d571b61957cfe80abc287fa4f56ae7883cfbb1398d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useRouteHash.md",
+        "source_sha256": "12416e7f4a5ee64b51dc7827d42a1f279b48e893180f0bd7184b64ff04f32834",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useCounter.md",
+        "source_sha256": "5a60fbcfcdd2f98b0cecf62b73483af26ebd299abcb126fe8286729f64d4eb22",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/toRefs.md",
+        "source_sha256": "3c05f87cf7b1cc792a8057ca43ff288cf7ea6ab4ef2e602eaf024baa369f8421",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useFps.md",
+        "source_sha256": "7e241da721cdca170671d8f868057980a776e7e62d1e4087064e51ba88b5ebbf",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useToggle.md",
+        "source_sha256": "6e4e50c65bbb0f56c14946c42bcc7b1dee4c3d7aa2dc10c1ea1dc358c8d87fd1",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/from.md",
+        "source_sha256": "ca67668da4a08bc3aeba57cf6eb5202b9e5b7ceab9971965fb57e28671e5c8ee",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/usePreferredColorScheme.md",
+        "source_sha256": "25c97e786607edbe34f60fec16e71b8f0a8a6d0db2ffde4582c0ec783a71d39a",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/tryOnScopeDispose.md",
+        "source_sha256": "31ffa27dcfba3cfcbab6d5ce4276d70d7de021f7833b637cd9469cec2bdd2a5d",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/usePermission.md",
+        "source_sha256": "e9dbaa2049d7420e277867859148802a8f82fa254b1bf6275c2e19a7c58268a2",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/watchWithFilter.md",
+        "source_sha256": "3139e533277d82a749c208995a90fd69cc3ff9f6fcb9ede9d7948131616499ed",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useArrayJoin.md",
+        "source_sha256": "cffccf556f745f9962ea3fe60c619f125d905a558311c7649f79ab5e2a73cc88",
+        "matches": true
+      },
+      {
+        "path": "vueuse-functions/references/useVibrate.md",
+        "source_sha256": "fdd227321f2aeab6f7ebbb5d6982c162069d31a335347ecf8a95442329b7a95b",
+        "matches": true
+      },
+      {
+        "path": "vue-testing-best-practices/reference/testing-component-blackbox-approach.md",
+        "source_sha256": "16ac94d67addf1cb60177a81a5c5c01318daa310216261ffb2d60b396112f86d",
+        "matches": true
+      },
+      {
+        "path": "vue-testing-best-practices/reference/testing-vitest-recommended-for-vue.md",
+        "source_sha256": "acfa0b3986e092f43d4cd8090864860cff07ffa3aaa62a10c5a622770ccaeb6b",
+        "matches": true
+      },
+      {
+        "path": "vue-testing-best-practices/reference/async-component-testing.md",
+        "source_sha256": "75b1c7b3949a5f0211824c525fd7b3f8a6b2cdd4933592ada65f37ecaa4146d3",
+        "matches": true
+      },
+      {
+        "path": "vue-testing-best-practices/reference/testing-no-snapshot-only.md",
+        "source_sha256": "d541b490b8c9c0f822a2ca0d8184d7325b07918e76124d717fb480bc7a488995",
+        "matches": true
+      },
+      {
+        "path": "vue-testing-best-practices/reference/teleport-testing-complexity.md",
+        "source_sha256": "5a42ce8eb5497b5165b09cd758b647ddf4bb537be9cf808a84bee7ae8c3aca39",
+        "matches": true
+      },
+      {
+        "path": "vue-testing-best-practices/reference/testing-suspense-async-components.md",
+        "source_sha256": "12307929380fcf0e8bcbd6be23a6bc1710904c9462cec945f80ce4b5aa0b7f12",
+        "matches": true
+      },
+      {
+        "path": "vue-testing-best-practices/reference/testing-pinia-store-setup.md",
+        "source_sha256": "005a375c587bd33d1eb3a1b7fe1c89e42daf4c115014e49cf327ab5af5d0ed4e",
+        "matches": true
+      },
+      {
+        "path": "vue-testing-best-practices/reference/testing-browser-vs-node-runners.md",
+        "source_sha256": "ffc13da105aadfca0bded6d955f79f9c02c5548ee699f274ff5976cb7484ac98",
+        "matches": true
+      },
+      {
+        "path": "vue-testing-best-practices/reference/testing-composables-helper-wrapper.md",
+        "source_sha256": "57af3ae779cf0770ed53034575d783463d2b9e790c29fbc9bb80f166be3255bd",
+        "matches": true
+      },
+      {
+        "path": "vue-testing-best-practices/reference/testing-async-await-flushpromises.md",
+        "source_sha256": "2dd5099b32cf2626d19aab2ef4b365cc26102cfb5a0aedc5667efc06d2070cab",
+        "matches": true
+      },
+      {
+        "path": "vue-testing-best-practices/reference/testing-e2e-playwright-recommended.md",
+        "source_sha256": "d415a403c6851cb57666b9143cb3acec6eba53af269cf765918c108dd0c96355",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/reactivity.md",
+        "source_sha256": "48c97831e72f0b82bfae0344cf02a181c7723e1ee4a29a58a85009aab7d60a4b",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/animation-class-based-technique.md",
+        "source_sha256": "d37e4ae4f124454fc5dfa54d23816edb16d337228641a77ec04c8ee9fe5a32fe",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/component-data-flow.md",
+        "source_sha256": "81277341d7dfe240721c2324548b9d404354d3ce270515acb130e8ac0c7396aa",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/updated-hook-performance.md",
+        "source_sha256": "ded08ce93f9b23082538846f84e8d159d84af757c27b2c6b43a9283df803a32b",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/perf-virtualize-large-lists.md",
+        "source_sha256": "69712f1f296cf03401c47f936e1a9c32481bfd82623f536b1fe08d05c846bada",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/render-functions.md",
+        "source_sha256": "01b35e671f7890939fa5acda52c5cf0a50b398e153d80cc9fc9f74c19e460357",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/component-keep-alive.md",
+        "source_sha256": "8738608665ad42baa6d2d7548d46b3ecd318a85f4ec3a0afac5f728948ade3ca",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/component-fallthrough-attrs.md",
+        "source_sha256": "62d291508df9997d3b6c5adfde251d6c722926ecf5f7168dea0272564f119919",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/directives.md",
+        "source_sha256": "70d4c68ea15a961eec6471c42b4c44d37adfeb094f694b6811fb718eab7b2cf7",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/perf-avoid-component-abstraction-in-lists.md",
+        "source_sha256": "a5fb787065cbaa4731a12d3ab2f40284d058a4d6a45972b48b3052931e4f80da",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/animation-state-driven-technique.md",
+        "source_sha256": "9a17a15356b32c8cd8669c3ede28dd890e9a48c03101047738a5c6dec7c716d6",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/component-teleport.md",
+        "source_sha256": "4e48748842262df50c293ab23857c22c107e3e8360c87da482d23f0eb88b2c3f",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/component-slots.md",
+        "source_sha256": "726fdac036fcdb6071e669f1ed90af5b3bdc5fc150ad82ff41afa0af5e39f481",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/plugins.md",
+        "source_sha256": "b1583522aca059c4295708517ba987530dd6a13134f6046aed9fd7327fb9c936",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/component-async.md",
+        "source_sha256": "e20036c6622a1647d9e1c23f1fe871b2465cf4bab434422e17eb05710c8878f3",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/sfc.md",
+        "source_sha256": "dfe09f28869a2bc44e618068c3b6269f55d925d096714df25e253d2bbb58c28f",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/state-management.md",
+        "source_sha256": "9e98a1c6d9009c0c8ef7228b6b3bcf10d30be6b713ffcef448ab7db3b419a851",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/composables.md",
+        "source_sha256": "8fcb3ede4ecb13f8dc7e4c7db07561652f6d306c85a91bc6736fda4fae2b624d",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/component-suspense.md",
+        "source_sha256": "6a5a98dcc6a2093f038f877eb6fefeedb199aba058a5dea71b139017c557bdd1",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/component-transition-group.md",
+        "source_sha256": "cfdd76e2466a8c0ef8a965674a74924e5cf25e538e75ce97d02213472442ccb2",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/component-transition.md",
+        "source_sha256": "bc59a19f2e8eed7a228bdb6383d423a57c6dd75704ae11c9596018c9fb1cac42",
+        "matches": true
+      },
+      {
+        "path": "vue-best-practices/references/perf-v-once-v-memo-directives.md",
+        "source_sha256": "066a45e60f6faa702cb75b76724c391d7e560aa6805c9bc379c06f2c64d97677",
+        "matches": true
+      },
+      {
+        "path": "vue-router-best-practices/reference/router-beforerouteenter-no-this.md",
+        "source_sha256": "c525231bb699cacb2764e804312df2c601ba9f23d7b81936bbaf418b015d1ced",
+        "matches": true
+      },
+      {
+        "path": "vue-router-best-practices/reference/router-simple-routing-cleanup.md",
+        "source_sha256": "3ff3b3d102f0312fe53da77d3c54c0a1e938e511ec2588bcc53bc02f35b99374",
+        "matches": true
+      },
+      {
+        "path": "vue-router-best-practices/reference/router-use-vue-router-for-production.md",
+        "source_sha256": "4212de1b50d1f53d5f831ca6945d53994e8e2cfbfb11b0a0c232bc53c032c8a1",
+        "matches": true
+      },
+      {
+        "path": "vue-router-best-practices/reference/router-beforeenter-no-param-trigger.md",
+        "source_sha256": "8cf2bd4e3f40cf24b14962ea0b33b31d736d56db891aafdd721e4ca68d82c6ad",
+        "matches": true
+      },
+      {
+        "path": "vue-router-best-practices/reference/router-navigation-guard-infinite-loop.md",
+        "source_sha256": "38749bac69bc717cb99539f61fa4994c9294acbb795b5b93c80e1775b0c5b2cf",
+        "matches": true
+      },
+      {
+        "path": "vue-router-best-practices/reference/router-param-change-no-lifecycle.md",
+        "source_sha256": "8813b065391b5467e878935d196eb014d5dd27ee599a128b5194a0dc0da1b557",
+        "matches": true
+      },
+      {
+        "path": "vue-router-best-practices/reference/router-navigation-guard-next-deprecated.md",
+        "source_sha256": "81dee3b480c31f72456fc4a81a67a717c1f96b798fcafb938ac18b92bb7bf8c0",
+        "matches": true
+      },
+      {
+        "path": "vue-router-best-practices/reference/router-guard-async-await-pattern.md",
+        "source_sha256": "97521c582a7495e5540c93975737562c41d0eb3aa99c2fb3a6acaa2411ecd69e",
+        "matches": true
+      },
+      {
+        "path": "vue/references/script-setup-macros.md",
+        "source_sha256": "ad47db85f8fbda6c055cedcc1d4175cd79d414e9be3ebf1e631d0e493eb4480a",
+        "matches": true
+      },
+      {
+        "path": "vue/references/advanced-patterns.md",
+        "source_sha256": "f6b9e26e3ae582dca1dfe01261c9800cd8f8dec511384d6bc816848209d2bc51",
+        "matches": true
+      },
+      {
+        "path": "vue/references/core-new-apis.md",
+        "source_sha256": "4afa9fdcdf62d2300d86686f890e4a52cbbed48e4c13a3e15f3e4572185c90ed",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "frontend-backend",
+    "version": "0.4.1",
+    "files_checked": 5,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "backend-type-sync/SKILL.md",
+        "source_sha256": "af6446adb04574e565316eeba68953985e8c278bb93bb94b971410d17b3f8b18",
+        "matches": true
+      },
+      {
+        "path": "laravel-echo-client/SKILL.md",
+        "source_sha256": "e4b844d61c111e67429a4d79015ed5f08b8211797560ac7e918c327dad38e4b6",
+        "matches": true
+      },
+      {
+        "path": "inertia-vue/SKILL.md",
+        "source_sha256": "d80d13d534ce98dee5c5adced736eee5e627f55f7af82883c7ebcf2886d84ab3",
+        "matches": true
+      },
+      {
+        "path": "inertia-vue/snippets/feature-structure.md",
+        "source_sha256": "d59f31f96e9c5b2324418a77222838617b4ad1ca56113330ee34673aa91c1151",
+        "matches": true
+      },
+      {
+        "path": "inertia-vue/snippets/structure.md",
+        "source_sha256": "c9a85d1629d541dec23089956c45a53596f6b6425235cdd96aa5cb7da53fc559",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "frontend-naive-ui",
+    "version": "0.4.1",
+    "files_checked": 1,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "naive-ui-theming/SKILL.md",
+        "source_sha256": "fd9953c530175e4bc62ed533c10fa29e9832305155f4352932f6a91da9a6f55a",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "frontend-nuxt",
+    "version": "0.4.1",
+    "files_checked": 18,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "nuxt/SKILL.md",
+        "source_sha256": "1517d52997895f4a5170571ae7ac67f806d92363a5b7e67edd8fa4dfcbb374ca",
+        "matches": true
+      },
+      {
+        "path": "nuxt-modules/SKILL.md",
+        "source_sha256": "a070b2bcfcb342c5f659bc3c40bf09842155776d54f615e601e87343ee92b2a3",
+        "matches": true
+      },
+      {
+        "path": "nuxt-seo/SKILL.md",
+        "source_sha256": "41a81222375ffbedaae95abba5e82a8c428d320076eccad6ade21e364a5e1862",
+        "matches": true
+      },
+      {
+        "path": "nuxt/references/nuxt-components.md",
+        "source_sha256": "b6a666c2094ac2121d684e3e856e4e21ad8050549c1bd2b81b92622f93ab628a",
+        "matches": true
+      },
+      {
+        "path": "nuxt/references/routing.md",
+        "source_sha256": "f687d2d42a505d0acaaa40d86c37a571fa3343145b96fdee401d52e41fcc20f4",
+        "matches": true
+      },
+      {
+        "path": "nuxt/references/nuxt-config.md",
+        "source_sha256": "abd8591dd8a08e978a6564e35deeea6bb3d4ca33c06f08d2426b2f323d0de6b5",
+        "matches": true
+      },
+      {
+        "path": "nuxt/references/project-setup.md",
+        "source_sha256": "8da40a9fad48459146e6b213eb2e7630ef5e051e05dbcf149ef83ebdae913151",
+        "matches": true
+      },
+      {
+        "path": "nuxt/references/server.md",
+        "source_sha256": "c4fc207cba9ca2bb0aace0bdc171f1193fe04b24a75dba40e0006764cd631e06",
+        "matches": true
+      },
+      {
+        "path": "nuxt/references/nuxt-composables.md",
+        "source_sha256": "c6dc8b5da6d097276ab4754c803dda053f84a3552e8a630cd6e09f7e9580efdd",
+        "matches": true
+      },
+      {
+        "path": "nuxt/references/middleware-plugins.md",
+        "source_sha256": "1f71ceb2ee1480cb02b061d6d7f45331868177bb342b728dfc188553fa934b9f",
+        "matches": true
+      },
+      {
+        "path": "nuxt-modules/references/ci-workflows.md",
+        "source_sha256": "69df88074f7e5ed4bc887b55c32fd6e4e4c9a426b8d360b48009db8b7b411ec9",
+        "matches": true
+      },
+      {
+        "path": "nuxt-modules/references/testing-and-publishing.md",
+        "source_sha256": "f12b41853a00213a14ce2744fe1e97cd89dbfcdb973e8c6b950d1fe51aa86b32",
+        "matches": true
+      },
+      {
+        "path": "nuxt-modules/references/development.md",
+        "source_sha256": "22572b0823c7d75231a6ab867e3e83bc98a3fa8758dd51645b0bede5a8d6081b",
+        "matches": true
+      },
+      {
+        "path": "nuxt-seo/references/site-config.md",
+        "source_sha256": "5fe0f6314f21f851027e203b33e483fa94d318ec6ac82fa047124674b82a89b0",
+        "matches": true
+      },
+      {
+        "path": "nuxt-seo/references/crawlability.md",
+        "source_sha256": "1a9febcb15141063f7a66e9173cb9f477f44b3e2dd15cd01e891fe09f1b53a9c",
+        "matches": true
+      },
+      {
+        "path": "nuxt-seo/references/og-image.md",
+        "source_sha256": "06a3da5d6335e20d7671de85e946d22686feb067bcbbbf0bf5aa7146fe5a5789",
+        "matches": true
+      },
+      {
+        "path": "nuxt-seo/references/utilities.md",
+        "source_sha256": "86911e26124945ac6ea99bbd7d9bbf0bbbd7bf7c4a0d104fbcf9105698386ac5",
+        "matches": true
+      },
+      {
+        "path": "nuxt-seo/references/schema-org.md",
+        "source_sha256": "e822241e1637c790f15cdea00dea96e5f2375e22f27d173e6c2c904fea239e52",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "frontend-tailwind",
+    "version": "0.4.1",
+    "files_checked": 2,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "dark-mode/SKILL.md",
+        "source_sha256": "efb805798691829d3ceb0ca82def9483e6a5de8d25faaba29930f4ddd89e9995",
+        "matches": true
+      },
+      {
+        "path": "tailwind-conventions/SKILL.md",
+        "source_sha256": "06644f070420f0bb934eda7be8e8701955ae0625f86569d87687639c7b8a9851",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "frontend-wayfinder",
+    "version": "0.4.1",
+    "files_checked": 1,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "wayfinder/SKILL.md",
+        "source_sha256": "1d429fbf647690a780a50033fc68875680b40900a9861df59194e62c0d0607c3",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "laravel-auth",
+    "version": "0.4.1",
+    "files_checked": 8,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "laravel-security-audit/SKILL.md",
+        "source_sha256": "579382fc82d54641485b93e12b63dd02911899bc9edaf94b277af63242e8348e",
+        "matches": true
+      },
+      {
+        "path": "laravel-permissions/SKILL.md",
+        "source_sha256": "7bdaef0a49d3576a649fc431be80dd9ce884cd48d43ef1536f2438742c292185",
+        "matches": true
+      },
+      {
+        "path": "attribute-authorization/SKILL.md",
+        "source_sha256": "5dcf297dd8b096891fa6e93610b6e58010448705bd97ed56b975f488834f8509",
+        "matches": true
+      },
+      {
+        "path": "laravel-security-audit/references/blade-xss.md",
+        "source_sha256": "5d1ac020375831c0b6fa87aad5842c7c9a415484a95c62058fe2f0c94b7cbf7d",
+        "matches": true
+      },
+      {
+        "path": "laravel-security-audit/references/csrf-and-redirects.md",
+        "source_sha256": "b12c021308e0fcf19547741f5a7d5aab227e29b42c5696aef34fbf509757a09a",
+        "matches": true
+      },
+      {
+        "path": "laravel-security-audit/references/serialization-authz.md",
+        "source_sha256": "1b9d92921247c4e9c8ea88a6f388f0a0cc324797102d834c4393b76771fe9e22",
+        "matches": true
+      },
+      {
+        "path": "laravel-security-audit/references/mass-assignment.md",
+        "source_sha256": "45320229d66ec41e18d7c0009d7e4cde7041ef9ff8706b62392a5c02d35138b5",
+        "matches": true
+      },
+      {
+        "path": "laravel-security-audit/references/eloquent-raw-queries.md",
+        "source_sha256": "1e301ba3030528a4f3e67a766203e043adbc4272102e47ec3a517c8954c41158",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "laravel-data-layer",
+    "version": "0.4.1",
+    "files_checked": 2,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "laravel-data/SKILL.md",
+        "source_sha256": "b55b631485b524b6bf09085fa3c7db0c65dcaa5516cddae78eb4fba772818bd4",
+        "matches": true
+      },
+      {
+        "path": "laravel-broadcasting/SKILL.md",
+        "source_sha256": "958f1d61919203f34f3e4e6024c3a572fd3158575f34e117e0de15206915ec4b",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "laravel-filament",
+    "version": "0.4.1",
+    "files_checked": 3,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "filament/SKILL.md",
+        "source_sha256": "fc05b27899e8de5fa3918bdbc34562150f61016ce8e6f716d545b6ad72b4f6bf",
+        "matches": true
+      },
+      {
+        "path": "filament/snippets/forms-tables-reference.md",
+        "source_sha256": "d7c33054da31e51c6da490943ccd74f79fe00ee3d68c2420bbb88b5bcb9c0599",
+        "matches": true
+      },
+      {
+        "path": "filament/snippets/filament-development.md",
+        "source_sha256": "d4ff37c70cd4b9fd1aa9e5f21d31b7f3173d1a9d41eec619a437e5a1d4a95b0e",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "laravel-testing",
+    "version": "0.4.1",
+    "files_checked": 7,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "health-checks/SKILL.md",
+        "source_sha256": "7085634525570d311861564093c2a30ebe1059df6bcfd4f6aa200969107c9f87",
+        "matches": true
+      },
+      {
+        "path": "laravel-testing/SKILL.md",
+        "source_sha256": "72022dc469c1f82d7672a1f7f81bdd9f1ba230c2096290dee319535825fb1e77",
+        "matches": true
+      },
+      {
+        "path": "laravel-dusk/SKILL.md",
+        "source_sha256": "4bebb851dbd6adabc7018ea549a98f27009b478bcb3c68169b1619a31cf20089",
+        "matches": true
+      },
+      {
+        "path": "test-isolation-guard/SKILL.md",
+        "source_sha256": "9eb27fb142b2040acdf5ca46cd0815169e708a20f488db334cdf5a7be662ebb6",
+        "matches": true
+      },
+      {
+        "path": "laravel-testing/snippets/pest-testing.md",
+        "source_sha256": "d075877e0b6227611d99627bfff140c43c2b710268d39510872438441e87343b",
+        "matches": true
+      },
+      {
+        "path": "laravel-testing/snippets/testing-safety-report.md",
+        "source_sha256": "180179e9ed69f7651e3e4ca93c926aac629b42ed1924bd096278969df509137c",
+        "matches": true
+      },
+      {
+        "path": "laravel-testing/snippets/testing-rules.md",
+        "source_sha256": "8f563d4781a1d35b3dbf6386dce39db1e49d42826fa47ef11fdc376f79effa72",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "oss-dev",
+    "version": "0.4.1",
+    "files_checked": 33,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "oss-governance/SKILL.md",
+        "source_sha256": "fce9c5cc4907de149e1ae631f5a2d6ddbd23c0f26b54859c1c6704210314665f",
+        "matches": true
+      },
+      {
+        "path": "oss-development/SKILL.md",
+        "source_sha256": "188f584611e1ca869a9c68e21d5dba4818b74412deb552aa6cacbd36b4a29925",
+        "matches": true
+      },
+      {
+        "path": "references/oss-py.md",
+        "source_sha256": "f9735cb0305c76e4c920340fafedb90736de8492a1a104e2a5410928b0f0f429",
+        "matches": true
+      },
+      {
+        "path": "references/oss-js.md",
+        "source_sha256": "8397a65039c0a67663c7ecdc2e7cfb5bf58496118678ebe6dc26ef8a22c6acde",
+        "matches": true
+      },
+      {
+        "path": "references/oss-dart.md",
+        "source_sha256": "a647e633f0149d7ac32897e96f3694c7be6d378fa216077d4924947303bcbde5",
+        "matches": true
+      },
+      {
+        "path": "references/oss-php.md",
+        "source_sha256": "28fa67fcc89adaec632d03094d5111772eaaa273c1ece886ce30ca4cccc6e1b0",
+        "matches": true
+      },
+      {
+        "path": "dx-design/SKILL.md",
+        "source_sha256": "45069719e3a2782757fda359128ba9474821475671c152974ce4c97dfec3d185",
+        "matches": true
+      },
+      {
+        "path": "github-flow/SKILL.md",
+        "source_sha256": "49b903fd97158c5a6889ecba88ef0b5d981411738dc561a09f3d7eae0a8bf608",
+        "matches": true
+      },
+      {
+        "path": "resolving-merge-conflicts/SKILL.md",
+        "source_sha256": "21971cefc0d79a7e628cd45fdb38b13a05a0d911dec7d5ffae9b8200d92c2e9b",
+        "matches": true
+      },
+      {
+        "path": "dependency-audit/SKILL.md",
+        "source_sha256": "5c8868f553ec7712bf77783ce8bd39b238f216707d4c79adc89155db6e2b3fff",
+        "matches": true
+      },
+      {
+        "path": "issue-triage/SKILL.md",
+        "source_sha256": "abae26f20a49aab5c92218d3aa35cd91176a126f95e0f73eecb2fd1fcc531b83",
+        "matches": true
+      },
+      {
+        "path": "gh-review/SKILL.md",
+        "source_sha256": "bc3b0df164bbc08e3dc1599e047267250a84cf58c997530e815ac8d9f1f200cb",
+        "matches": true
+      },
+      {
+        "path": "to-issues/SKILL.md",
+        "source_sha256": "0c1c7478e17ffb30de58cd756e8935c5c97f34611e2ee69ceebb45de63fa0ab4",
+        "matches": true
+      },
+      {
+        "path": "release-engineering/SKILL.md",
+        "source_sha256": "1ac90a3e03ab322d9784d0103fadc98d66d24efb1713757085e1c4f36a3efa6b",
+        "matches": true
+      },
+      {
+        "path": "oss-governance/snippets/contributing-template.md",
+        "source_sha256": "cf61df3faa62f298c61ce91c6df88c9a0a470995cd878fd606ea0c646fcfa752",
+        "matches": true
+      },
+      {
+        "path": "oss-governance/snippets/security-policy.md",
+        "source_sha256": "cd0ccfb06d93fdd3053260d843637683ea1ee04ed7a9378520f145419db2b8f1",
+        "matches": true
+      },
+      {
+        "path": "oss-governance/references/governance-artifacts.md",
+        "source_sha256": "ef65ca46e1f7f3acbad2d1e751b40f1ecc2d05e36f973ea5c1135691b32f1fcd",
+        "matches": true
+      },
+      {
+        "path": "oss-development/snippets/architecture-template.md",
+        "source_sha256": "e0990f3615f9a89de7d968d04561aa2c33bc9f4038ac2715291bd9926ed3d40d",
+        "matches": true
+      },
+      {
+        "path": "oss-development/snippets/readme-template.md",
+        "source_sha256": "3c0cadde93497137ab109407a1a547a0fe58df99b1f822152e11c05e53ef7f8c",
+        "matches": true
+      },
+      {
+        "path": "oss-development/references/repo-structure.md",
+        "source_sha256": "b41583364a12cc7acd44cb78bcb7320ad13b5018bef9f05bf84ba0ec92fe19da",
+        "matches": true
+      },
+      {
+        "path": "dx-design/snippets/quickstart-60sec.md",
+        "source_sha256": "0a6a6c537a7a684dd75f5eb844e4a225bd22871c40e99a50b62bda8199922cd0",
+        "matches": true
+      },
+      {
+        "path": "dx-design/references/license-guidance.md",
+        "source_sha256": "5e71da9dd65b82dadeda0f958a1f8a93a26a3feaf425987ee1c3a97849ea03ae",
+        "matches": true
+      },
+      {
+        "path": "github-flow/snippets/issue-templates.md",
+        "source_sha256": "e21c1f5ad1ae1286690fc411426ee8dcd5e2757873f5d1c37fbf8d308f11110d",
+        "matches": true
+      },
+      {
+        "path": "github-flow/snippets/pull-request-template.md",
+        "source_sha256": "d356f84c06098c523ec9d70e381ca6c84a8e8e5af62d16998989a6943441ec59",
+        "matches": true
+      },
+      {
+        "path": "github-flow/references/php-package-gate.md",
+        "source_sha256": "177f432c324d389f6a8549cbac015bc199ffa473d5ae42eca275bc7094190a8a",
+        "matches": true
+      },
+      {
+        "path": "dependency-audit/references/audit-dimensions.md",
+        "source_sha256": "f5d6c71d5359f1c1f924b56bf3c33e86b896d5f39e5908eeb909791fba676f29",
+        "matches": true
+      },
+      {
+        "path": "dependency-audit/references/composer.md",
+        "source_sha256": "de717f465e9c12d211f555301ee67d230a188a3fde716a1ab6981c4ca19bbe68",
+        "matches": true
+      },
+      {
+        "path": "issue-triage/snippets/AGENT-BRIEF.md",
+        "source_sha256": "5b78d347cc53f6bcf7b875106005ccf5315055fa4cf75eb28d41e96ee426d27b",
+        "matches": true
+      },
+      {
+        "path": "issue-triage/snippets/OUT-OF-SCOPE.md",
+        "source_sha256": "2526f998fd7ca5e956d3f6f234bcc2431a5971ee769f1148ddc60b92f04d5914",
+        "matches": true
+      },
+      {
+        "path": "gh-review/snippets/gh-review-commands.md",
+        "source_sha256": "dae502e73e0b45d21d1617eb520881caa09ed0ad09286eb8f2f82ca22672de32",
+        "matches": true
+      },
+      {
+        "path": "release-engineering/snippets/semver-decision-tree.md",
+        "source_sha256": "a5b340b6ae7d23e9e7846bf8a93a5c0f1c75344fbb7fd1c9b9fb8a9893a1a115",
+        "matches": true
+      },
+      {
+        "path": "release-engineering/snippets/changelog-template.md",
+        "source_sha256": "54ada1ad531b306fca3bee30d464d20c65117121247b898c9e50a1dc474c985a",
+        "matches": true
+      },
+      {
+        "path": "release-engineering/references/changelog-example.md",
+        "source_sha256": "a69ca8f7c64f2e63cc1a91fbc6dd74d50cea88846837a49e9ed696cc7a3a9bc3",
+        "matches": true
+      }
+    ]
+  },
+  {
+    "unit": "php-packages",
+    "version": "0.4.1",
+    "files_checked": 9,
+    "mismatches": [],
+    "files": [
+      {
+        "path": "laravel-package-docs/SKILL.md",
+        "source_sha256": "0bf322cc37f8dd8f4da8cb466d2c7e7fd44bca39b3e39f98b65d6507af832d8e",
+        "matches": true
+      },
+      {
+        "path": "laravel-packages/SKILL.md",
+        "source_sha256": "98faae22f12429d84e0cb8280369203d732dea4e20a8cbb8cfe827c8278ba0d6",
+        "matches": true
+      },
+      {
+        "path": "laravel-package-service-provider/SKILL.md",
+        "source_sha256": "12410a572d847e6df61e50d868411e191dde616263792dfb8c85674d280cd2d6",
+        "matches": true
+      },
+      {
+        "path": "laravel-package-generate-skill/SKILL.md",
+        "source_sha256": "fee26e5290ebcaedd2b8988b39dd49d24127c9f0b65a704064d97fa7dbb584d4",
+        "matches": true
+      },
+      {
+        "path": "laravel-package-compatibility/SKILL.md",
+        "source_sha256": "0e2eb48bb1c0b87228f3a4536fbe805ac1e3b170eb1d2f810f308553a6192492",
+        "matches": true
+      },
+      {
+        "path": "laravel-package-release/SKILL.md",
+        "source_sha256": "452b3922f0be22ebbd5393a63af3193ee574d433a6de687622c710ed5d9b7fdb",
+        "matches": true
+      },
+      {
+        "path": "laravel-package-expressive/SKILL.md",
+        "source_sha256": "2cee0dcf47a7437ab28365f7bd013e737a1a47eb118b3cea1d34083bc2b62a3e",
+        "matches": true
+      },
+      {
+        "path": "laravel-package-scaffold/SKILL.md",
+        "source_sha256": "19b229f3bfad3805db1a5a5ad92c9eeecff18b360efd168c68f57d618163ea2a",
+        "matches": true
+      },
+      {
+        "path": "laravel-package-testing/SKILL.md",
+        "source_sha256": "a501452b111759eb8986d2b9061e2d1f5cb3f70a8c290351f6975b25e4cd702a",
+        "matches": true
+      }
+    ]
+  }
+]

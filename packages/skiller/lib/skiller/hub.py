@@ -12,7 +12,9 @@
       <https://code.claude.com/docs/en/features-overview> §Skills), поэтому индекс
       в блоке — второй платный экземпляр: он не печатается, остаются приоритеты
       источников, правила поиска и указатель на полный индекс.
-  полная (`full`)    — цель БЕЗ нативного листинга: `--root-files AGENTS.md,GEMINI.md`
+  Codex (`AGENTS.md`) — краткая форма; подтверждение через реальный offline
+      `codex debug prompt-input` из cwd проекта. Неподтверждённые имена остаются.
+  полная (`full`)    — цель БЕЗ нативного листинга: `--root-files GEMINI.md`
       и любые сторонние корневые файлы. Там индекс — единственный носитель
       обнаружения, он остаётся.
 
@@ -59,10 +61,12 @@ def hub_artifacts_exist(target):
     return claude_md.is_file() and HUB_MARKER in claude_md.read_text(encoding="utf-8")
 
 
-def generate_hub(env, target, *, full_index=False):
+def generate_hub(env, target, *, full_index=False, root_files=()):
     argv = [str(env.root / "scripts" / "generate-hub.sh"), "--target", str(target)]
     if full_index:
         argv.append("--full-index")
+    if root_files:
+        argv.extend(["--root-files", ",".join(root_files)])
     run_cmd(argv)
 
 
@@ -243,6 +247,54 @@ def _project_skill_names(target):
             if p.is_dir() and (p / "SKILL.md").is_file()}
 
 
+def _codex_installed(env, target, registry, installed, channels, inventory):
+    """Scope fallback pointers to Codex selection, never Claude-only extras.
+
+    Explicit native config also covers selected plugins whose cache is missing;
+    those need fallback pointers even though native ``plugin list`` omits them.
+    Discovery/config failure retains the original conservative inventory.
+    """
+    if not inventory.get("ok"):
+        return installed
+    from .native_codex import SUFFIX, _read, codex_home
+    selected = set(inventory.get("enabled", ()))
+    overrides = {}
+    try:
+        for path in (codex_home(env) / "config.toml", Path(target) / ".codex/config.toml"):
+            _, config = _read(path)
+            for identifier, options in config.get("plugins", {}).items():
+                if identifier.endswith(SUFFIX) and "enabled" in options:
+                    if not isinstance(options["enabled"], bool):
+                        raise ValueError("native plugin enabled is not boolean")
+                    overrides[identifier[:-len(SUFFIX)]] = options["enabled"]
+    except (OSError, ValueError, TypeError, AttributeError) as error:
+        inventory["notes"].append(f"Codex selection unavailable; keeping fallback inventory: {error}")
+        return installed
+    for plugin, enabled in overrides.items():
+        if enabled:
+            selected.add(plugin)
+        else:
+            selected.discard(plugin)
+    plugin_skills = _marketplace_plugin_skills(env, registry)
+    if not plugin_skills and selected:
+        inventory["notes"].append("Codex plugin catalog unavailable; keeping fallback inventory")
+        return installed
+    candidates = set().union(*(plugin_skills.get(plugin, set()) for plugin in selected))
+    by_source = {str(Path(skill["path"]).parent): skill["name"] for skill in registry["skills"]}
+    for folder in set(channels["manifests"]) | {".agents/skills"}:
+        manifest = _load_json(Path(target) / folder / MANIFEST)
+        if not isinstance(manifest, dict):
+            continue
+        for entry in manifest.get("skills", []):
+            if isinstance(entry, dict) and entry.get("source_path") in by_source:
+                candidates.add(by_source[entry["source_path"]])
+    result = {}
+    for skill in registry["skills"]:
+        if skill["name"] in candidates:
+            result.setdefault(skill["bucket"], {})[skill["name"]] = skill
+    return result
+
+
 def _measurer_active_names(env, target):
     """Активный набор ИЗМЕРИТЕЛЯ (`budget.resolve_active_set`) — источник, названный
     ТЗ P2.5. Импорт ленивый: budget → vendor → hub, прямой импорт замкнул бы цикл.
@@ -308,7 +360,7 @@ def _priority_lines(boost_mode, form):
              else "нативный листинг скиллов клиента")
     out = ["## Приоритет источников правил", "",
            "1. Проектные правила и скиллы (`.ai/guidelines/`, `.ai/skills/`, "
-           "корневые инструкции проекта) — высший приоритет."]
+           "корневые инструкции проекта) задают локальные соглашения."]
     if boost_mode:
         out.append("2. Laravel Boost: для версионно-специфичных тем (Laravel, Pest, "
                    "Inertia, Livewire, Tailwind, Filament) используй встроенные "
@@ -319,7 +371,7 @@ def _priority_lines(boost_mode, form):
         out.append(f"2. Скиллы swissknifeman ({where}) — архитектура, структура, "
                    "практики, процессы. Если в проект добавят Laravel Boost, его "
                    "версионно-специфичные скиллы приоритетнее пересекающихся.")
-    out += ["", "Конфликт правил: побеждает более специфичный источник "
+    out += ["", "Скиллы дополняют инструкции среды и запрос владельца; внутри совместимых правил выбирай более специфичный источник "
                 "(проект > Boost > реестр swissknifeman).", ""]
     return out
 
@@ -334,9 +386,8 @@ def _search_lines(form):
                    "с начала сессии) — ищи по нему; здесь индекс не дублируется.")
     out += ["2. Выбери скилл по описанию; внутри скилла открывай сниппеты только "
             "по его таблице «когда какой сниппет открывать» — не загружай всё подряд.",
-            "3. Структурные вопросы нового кода решай в порядке: структура "
-            "(`laravel-structure`) -> взаимодействие (`dependency-injection`) -> "
-            "реализация (профильный скилл).",
+            "3. Открывай архитектурные скиллы при изменении соответствующих контрактов; "
+            "обычная правка следует существующей структуре проекта.",
             "4. Устройство системы скиллов в проекте (источник истины, симлинки, "
             "gitignore) — скилл `skills-ssot`."]
     if form == FORM_SHORT:
@@ -433,7 +484,7 @@ def target_form(name, *, boost_mode=False, full_index=False):
         return FORM_FULL
     if boost_mode:
         return FORM_SHORT  # Boost вставляет фрагмент в CLAUDE.md — канал тот же
-    return FORM_SHORT if name == CLAUDE_TARGET else FORM_FULL
+    return FORM_SHORT if name in (CLAUDE_TARGET, "AGENTS.md") else FORM_FULL
 
 
 def run(env, target, *, dry_run=False, root_files=(), full_index=False, out=print):
@@ -473,7 +524,7 @@ def run(env, target, *, dry_run=False, root_files=(), full_index=False, out=prin
             file=sys.stderr)
 
     check = None
-    if FORM_SHORT in forms.values() and names:
+    if any(form == FORM_SHORT and name != "AGENTS.md" for name, form in forms.items()) and names:
         check = native_check(env, target, names)
         for note in check["notes"]:
             out(f"WARNING: сверка нативного набора: {note}", file=sys.stderr)
@@ -484,13 +535,25 @@ def run(env, target, *, dry_run=False, root_files=(), full_index=False, out=prin
                 "остаются перечисленными: " + ", ".join(check["unconfirmed"]))
     unconfirmed = check["unconfirmed"] if check else sorted(names)
 
+    codex_check = None
+    codex_installed = installed
+    if forms.get("AGENTS.md") == FORM_SHORT:
+        from .native_codex import native_inventory
+        codex_check = native_inventory(env, target)
+        codex_installed = _codex_installed(env, target, registry, installed, channels, codex_check)
+        for note in codex_check["notes"]:
+            out(f"WARNING: {note}; AGENTS.md сохраняет неподтверждённые скиллы", file=sys.stderr)
+
     rendered = {}
     for name, form in forms.items():
+        remaining = (sorted(installed_names(codex_installed) - codex_check["names"])
+                     if name == "AGENTS.md" and codex_check is not None else unconfirmed)
         rendered[name] = build_hub_markdown(
-            installed=installed, buckets_meta=buckets_meta, agents=agents,
+            installed=codex_installed if name == "AGENTS.md" else installed,
+            buckets_meta=buckets_meta, agents=agents,
             unknown_skills=unknown_skills, reg_sha=reg_sha,
             reg_count=len(registry["skills"]), boost_mode=boost_mode, form=form,
-            unconfirmed=unconfirmed)
+            unconfirmed=remaining)
         if form == FORM_FULL and not names:
             out(f"WARNING: {name}: полная форма при пустом индексе — канал без "
                 "нативного листинга остаётся без обнаружения", file=sys.stderr)
@@ -531,7 +594,7 @@ def run(env, target, *, dry_run=False, root_files=(), full_index=False, out=prin
         out("WARNING: skills: у агентов не найдены в реестре (preload no-op): "
             + ", ".join(sorted(unknown_skills)), file=sys.stderr)
     return {"forms": forms, "written": written, "rendered": rendered,
-            "installed": installed, "check": check, "channels": channels}
+            "installed": installed, "check": check, "codex_check": codex_check, "channels": channels}
 
 
 USAGE = """generate-hub.sh — корневой «хаб» скиллов в проекте.

@@ -2,17 +2,30 @@
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-09-14
+
+### Added
+
+- **Skiller: явный native Codex selection.** `skiller connect --native-codex` записывает
+  точный project-level выбор Swissknifeman plugins, не меняя permissions, сторонние TOML-поля
+  или глобальные defaults; с `--hub` AGENTS строится по этому набору.
+
 ### Fixed
 
-- **Task: завершение batch не стирает следующий пункт плана.** Delivery отказывает
-  `Context: terminal` и `Next: none/terminal`, пока есть незавершённая фаза; правило
-  распространяется и на recommendation-only receipt. Протокол сохраняет фактический
-  successor вне завершённого batch и native command при запрошенной новой сессии.
-
-## [0.16.2] - 2026-09-14
-
-### Fixed
-
+- **Skiller: стартовый контекст Codex.** Краткий AGENTS hub учитывает реальную Codex
+  discovery и не возвращает Claude-only extras. CORE сокращён до четырёх общих скиллов,
+  66 профильных descriptions укорочены;
+  VueUse-каталог вынесен в reference. Управляемые дубли и явно отключённые ссылки
+  архивируются с проверкой ownership и эквивалентности; чужие backups сохраняются.
+- **Task: результат и продолжение.** Общий resolver принимает `plan-run` с сохранением
+  owner route; renderer различает завершение заказанного scope в чате и явно запрошенную
+  новую сессию. Убраны clean-tree и повторные interview gates; Task runtime содержит
+  все шаблоны и references. Native Codex больше не создаёт три migrated command duplicates.
+- **Skills: соразмерные правила.** TDD, review, package contribution и PHP architecture
+  учитывают авторизацию и принятые контракты проекта; универсальные советы не становятся
+  дополнительными blockers. mAInd setup/MCP descriptions сокращены без изменения инструкций.
+- **Публикация: удалённые артефакты.** Registry снимает неизменённые retired files по
+  предыдущему publication lock; release attestation корректно учитывает working-tree deletions.
 - **Task: непрерывное исполнение и точный Next.** `continue-root` продолжает совместимый ready
   batch в текущем root без final, owner question или fresh session; native launch-block остаётся
   только для действительной cold-start/wait границы. Автоматический handoff отказывает
@@ -21,12 +34,21 @@
   использует checkpoint и смену тактики при затянувшемся исправлении; число файлов само
   по себе не требует плана. `plan-protocol` согласован с непрерывным исполнением Task;
   native handoff сохраняется для подтверждённой границы контекста, capability или ожидания.
-- **Локальный релизный draft 0.16.2:** распространяемые плагины `task` и `core`
-  получают patch-версии `0.16.2`, `general` — `0.13.4`; пакет Skiller — `0.14.2`
-  из-за обновления runtime-конфига версий публикаций, без изменения API.
-- **Skiller connect:** dry-run замены Codex-набора проверяет post-prune snapshot
-  вместо старого lock; до удаления проверяются digests всех прежних owned artifacts.
-  Изменённые preimages отклоняются до записи, чужие owner records сохраняются.
+- **Skiller connect:** dry-run замены Codex-набора проверяет post-prune snapshot вместо
+  старого lock; до удаления проверяются digests всех прежних owned artifacts. Изменённые
+  preimages отклоняются до записи, чужие owner records сохраняются.
+
+- **Task: unresolved execution binding.** An item containing an explicit
+  `[NEEDS CLARIFICATION: …]` marker can no longer compile as routine authority;
+  it must first receive a finite owner gate and binding.
+- **Task: Unicode cross-plan inputs.** Bundle/read-path parsing now recognises
+  declared paths whose plan IDs contain `№` and does not mistake `D16` in a
+  filename for a local decision reference; a valid cross-plan decision can no
+  longer disappear as an unresolvable entry before bundle generation.
+- **Task: завершение batch не стирает следующий пункт плана.** Delivery отказывает
+  `Context: terminal` и `Next: none/terminal`, пока есть незавершённая фаза; правило
+  распространяется и на recommendation-only receipt. Протокол сохраняет фактический
+  successor вне завершённого batch и native command при запрошенной новой сессии.
 
 ## [0.16.1] - 2026-09-13
 

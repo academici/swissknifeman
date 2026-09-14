@@ -87,7 +87,9 @@ class RegistryBuildCase(unittest.TestCase):
         self.assertIsNotNone(core, "marketplace должен содержать курируемый core-плагин")
         self.assertEqual(core["source"], "./")
         self.assertIn("./skills/general/context-economy", core["skills"])
-        self.assertIn("./skills/oss-dev/gh-review", core["skills"])
+        self.assertEqual(core["skills"], ["./skills/general/context-economy"])
+        self.assertNotIn("./skills/oss-dev/gh-review", core["skills"])
+        self.assertTrue(any(plugin["name"] == "oss-dev" for plugin in mp["plugins"]))
         # курируемый core не имеет каталога-плагина на диске (ссылки, не копии)
         self.assertFalse((skills / CORE_PLUGIN).exists())
 

@@ -12,5 +12,5 @@
     "evidence": {"type": "array", "items": {"type": "string"}},
     "runnable": {"type": "boolean"}
   },
-  "cold_start_reasons": ["context-budget", "capability-missing", "owner-pause-no-resume", "whole-plan-independent-audit", "design-root-terminal"]
+  "cold_start_reasons": ["context-budget", "capability-missing", "owner-pause-no-resume", "owner-requested-new-session", "whole-plan-independent-audit", "design-root-terminal"]
 }

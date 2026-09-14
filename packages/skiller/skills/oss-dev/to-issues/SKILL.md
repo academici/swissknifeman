@@ -1,8 +1,8 @@
 ---
 name: to-issues
 bucket: oss-dev
-version: 0.1.0
-description: "Split a plan/spec/PRD into independently-grabbable GitHub issues by VERTICAL slices (tracer bullets): each slice is a thin end-to-end path through all layers (schema/API/UI/tests), demonstrable on its own; publish via gh in dependency order (blockers first). Invoke EXPLICITLY (posts to the tracker)."
+version: 0.1.1
+description: "Explicit publishing request only: turn a plan/spec into vertical GitHub issues with dependencies."
 risk: write
 persona: oss-dev
 tags: [issues, github, vertical-slices, decomposition, planning]
@@ -13,6 +13,7 @@ snippets: []
 adapters: [claude, cursor, fable]
 disable-model-invocation: true
 sha256: ""
+when_to_use: "Use when the owner explicitly requests publishing a plan as GitHub issues."
 ---
 
 # To Issues

@@ -1,8 +1,8 @@
 ---
 name: gh-review
 bucket: oss-dev
-version: 0.1.0
-description: "Review and handoff changes via GitHub CLI (gh) with context economy: gh pr diff/view/comment/review, gh api for targeted file reads instead of loading whole files. Activate when reviewing PRs, handing off to a dev, reading others' changes on GitHub."
+version: 0.1.1
+description: "Use for GitHub PR review or handoff via gh: targeted diffs, file reads, and review commands."
 risk: write
 persona: oss-dev
 tags: [github, gh, review, handoff, tokens, context]

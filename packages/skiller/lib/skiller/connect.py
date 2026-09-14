@@ -303,9 +303,9 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
                   f"{dest_root}) — удалить: --cleanup-vendored")
 
     hub = opts.get("hub", False)
-    if hub and not dry_run:
+    if hub and not dry_run and not opts.get("native_codex"):
         generate_hub(env, target)
-    elif not dry_run:
+    elif not hub and not dry_run:
         print("Подсказка: корневой хаб скиллов — skiller update или "
               "перезапуск с --hub")
 
@@ -375,9 +375,21 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
     is intentionally a verified generated marketplace, not a second settings
     format or an implicit global install.
     """
+    if opts.get("native_codex"):
+        # Activation selection never changes the project's permission policy.
+        opts = {**opts, "no_permissions": True}
     config = load_config(env, target)
     repo_root = find_repo_root(env.root) or env.root
     prepared = _prepare_connect_selection(env, target, opts, config)
+    native_plan = None
+    if opts.get("native_codex"):
+        from .native_codex import plan_selection
+        marketplace = json.loads((repo_root / ".agents/plugins/marketplace.json").read_text())
+        try:
+            native_plan = plan_selection(env, target, prepared["plugins"],
+                                         [p["name"] for p in marketplace["plugins"]])
+        except (OSError, ValueError) as exc:
+            die(f"CODEX_SELECTION_PREFLIGHT: {exc}")
     if "codex" in selected_distribution_providers(config, project_id=target.name):
         _prune_codex_connect_artifacts(target, dry_run=opts.get("dry_run", False))
     if (opts.get("dry_run", False) and target.resolve() != repo_root.resolve()
@@ -414,6 +426,11 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
             records.append(_apply_codex_connect_plan(
                 env, target, plan, dry_run=opts.get("dry_run", False),
                 register=register))
+    if native_plan is not None:
+        from .native_codex import apply_selection
+        apply_selection(target, native_plan, dry_run=opts.get("dry_run", False))
+        if opts.get("hub") and not opts.get("dry_run", False):
+            generate_hub(env, target, root_files=("AGENTS.md",))
     return records[0] if len(records) == 1 else {"providers": records}
 
 
@@ -423,15 +440,19 @@ def cmd_connect(env, argv):
         "--file": "str", "--cleanup-vendored": "bool", "--cleanup-codex-vendored": "bool", "--list": "bool",
         "--dry-run": "bool", "--hub": "bool", "--no-core": "bool",
         "--no-permissions": "bool", "--fix-path": "bool",
+        "--native-codex": "bool", "--cleanup-codex-links": "bool",
     })
     if opts["help"]:
         print("skiller connect [--profile P|--plugins a,b] "
               "[--file settings.json|settings.local.json] [--cleanup-vendored] "
               "[--list] [--dry-run] [--hub] [--no-core] [--no-permissions] "
-              "[--fix-path]")
+              "[--fix-path] [--native-codex] [--cleanup-codex-links]")
         return
     target, _ = resolve_target(env, opts, allow_home_confirm=True)
     do_connect(env, target, opts, fix_path_drift=opts.get("fix_path", False))
     if opts.get("cleanup_codex_vendored"):
         from .update import retire_legacy_codex_vendor
         retire_legacy_codex_vendor(env, target, dry_run=opts.get("dry_run", False))
+    if opts.get("cleanup_codex_links"):
+        from .update import retire_legacy_codex_links
+        retire_legacy_codex_links(env, target, dry_run=opts.get("dry_run", False))

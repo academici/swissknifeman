@@ -1,8 +1,8 @@
 ---
 name: pao
 bucket: php
-version: 1.0.0
-description: "Laravel PAO — agent-optimized PHP tool output: PHPUnit/Pest/Paratest/PHPStan/Rector/Artisan collapse to compact JSON (~20 tokens vs thousands) when run inside an AI agent. Install, verify, limits."
+version: 1.0.1
+description: "Use when installing or verifying PAO compact output for PHP tests, analysis, or Artisan."
 risk: write
 persona: oss-dev
 tags: [php, laravel, testing, tokens, agent-output]

@@ -3,13 +3,8 @@
   "skills": [
     "general/context-economy",
     "general/anti-drift",
-    "general/compact-responses",
     "general/session-handoff",
-    "general/mcp-advisor",
-    "general/verify-claims",
-    "research/query-craft",
-    "oss-dev/gh-review",
-    "general/plan-protocol"
+    "general/verify-claims"
   ],
   "_budget_note": "750 (было 600) — поднято 2026-07 после калибровки budget.CHARS_PER_TOKEN_* по RAG-данным (аудит B-1: старые константы занижали токены, реальный резидент 8 CORE_SKILLS оказался ~696, не ~592). Не занижай обратно ради 'зелёного' check-core — калибровка отражает реальный tokenizer точнее прежней.",
   "resident_budget_target": 750,

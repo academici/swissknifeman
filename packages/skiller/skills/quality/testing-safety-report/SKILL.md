@@ -1,8 +1,8 @@
 ---
 name: testing-safety-report
 bucket: quality
-version: 0.1.0
-description: "Safety report after a risky change (migrations, schema/layer refactor, dependency upgrade): what changed structurally, which tests ran and with what result, what risks and control checks remain. Do it after the change to make it auditable."
+version: 0.1.1
+description: "Use after a risky schema, layer, or dependency change to report checks and remaining risks."
 risk: read
 persona: architect
 tags: [testing, safety, migrations, reporting, verification, quality, refactor]
@@ -12,6 +12,7 @@ outputs: []
 snippets: []
 adapters: [claude, cursor, fable]
 sha256: ""
+when_to_use: "Use when reporting validation and remaining risks after a risky change."
 ---
 
 # Testing Safety Report

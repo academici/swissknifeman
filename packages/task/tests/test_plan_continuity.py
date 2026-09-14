@@ -26,6 +26,20 @@ def estimate(**overrides):
 
 
 class ContinuityTests(unittest.TestCase):
+    def test_chat_scope_stop_and_explicit_fresh_session_are_distinct(self):
+        decision = reduce(estimate(lifecycle="scope-complete", checkpoint="journal:closed-P1.1"))
+        self.assertEqual(decision.outcome, "continue-root")
+        self.assertEqual(decision.reason, "authorized-scope-complete")
+        self.assertEqual(decision_from_dict(decision.as_dict()), decision)
+        fresh = reduce(estimate(lifecycle="owner-requested-new-session", checkpoint="handoff:post-close"))
+        self.assertEqual(fresh.context, "cold-start-root: owner-requested-new-session")
+        self.assertEqual(decision_from_dict(fresh.as_dict()), fresh)
+        for lifecycle in ("scope-complete", "owner-requested-new-session"):
+            with self.assertRaisesRegex(ContinuityError, "checkpoint"):
+                reduce(estimate(lifecycle=lifecycle))
+        with self.assertRaisesRegex(ContinuityError, "scope completion"):
+            decision_from_dict({**decision.as_dict(), "evidence": []})
+
     def test_calendar_pause_preserves_window_and_requires_external_predicate(self):
         pause = {"reason": "production observation", "started_at": "2026-09-10T12:00:00Z",
                  "resume_at": "2026-09-13T12:00:00Z", "observed_at": "2026-09-11T12:00:00Z",

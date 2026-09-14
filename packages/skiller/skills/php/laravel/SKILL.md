@@ -1,8 +1,9 @@
 ---
 name: laravel
 bucket: php
-version: 0.4.0
-description: "Use when applying Laravel architecture patterns: actions, repositories, resources."
+version: 0.5.0
+description: "Navigate an adopted Laravel layered architecture; choose only the relevant class pattern."
+when_to_use: "Use when choosing a class pattern in an adopted layered design."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "architecture", "patterns"]
@@ -13,6 +14,14 @@ snippets: ["service-provider.php", "repository-pattern.php", "action-class.php",
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
+
+## Scope of this pattern
+
+Apply this Action/Read-Store/DTO/constructor-injection pattern only where the project has
+adopted it or the requested design explicitly chooses it. Preserve existing Laravel/module
+conventions elsewhere; do not introduce layers, facades, DTOs, `VisibilityService`, or directory
+mirrors merely to satisfy this example. Review severity follows actual impact and adopted
+contracts. Whatever the pattern, preserve authorization, transaction atomicity, and test isolation.
 
 Hub-navigator over Laravel architecture patterns. Thin skill; specifics live in 14 snippets (`.php` class skeletons, `.md` rule breakdowns). Placement/naming → sibling skills (Links), not duplicated.
 

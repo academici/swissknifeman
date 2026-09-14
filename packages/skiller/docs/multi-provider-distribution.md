@@ -30,8 +30,10 @@ skiller сегодня раздаёт **только свой реестр** (`e
   писать управляемый блок в `CLAUDE.md`/`AGENTS.md` (маркеры
   `<!-- swissknifeman:hub:start/end -->`) — но это **индекс** установленных скиллов, а не
   **агрегация текста** `.ai/guidelines/*.md`. Форма блока провайдер-зависима: цели с нативным
-  листингом скиллов (`CLAUDE.md`, Boost-фрагмент) получают краткую форму без индекса, цели без
-  него (`AGENTS.md`/`GEMINI.md`, раскладки Cursor) — полную; `--full-index` возвращает индекс
+  листингом скиллов (`CLAUDE.md`, Boost-фрагмент, `AGENTS.md`) получают краткую форму без
+  подтверждённых нативным набором имён. Для `AGENTS.md` генератор читает реальный offline
+  `codex debug prompt-input` из cwd проекта; неподтверждённые имена сохраняет.
+  Цели без листинга (`GEMINI.md`, раскладки Cursor) получают полную форму; `--full-index` возвращает индекс
   всем целям. Сокращение допускается только после машинной сверки обнаружения — см.
   [installation.md](./guide/installation) («Форма блока: по каналу-цели, а не по проекту»).
 - Фан-аут провайдеров узкий: `AGENT_DEFAULTS` (`common.py:23`) знает только пути скиллов для
@@ -119,6 +121,35 @@ per-provider: реестровый источник → копия (как се�
 - проверки: идемпотентность (повторный прогон не меняет байты), merge-only (ручной контент цел),
   симлинки указывают на `.ai/skills`, управляемый блок ограничен маркерами, `--dry-run` без записи;
 - `scripts/validate.sh` зелёный; после правок реестра — `skiller registry`.
+
+## Явный проектный выбор Codex plugins
+
+```bash
+packages/skiller/bin/skiller connect --target /path/to/project --native-codex --dry-run
+packages/skiller/bin/skiller connect --target /path/to/project --native-codex
+```
+
+`--native-codex` требует Python 3.11+ (stdlib `tomllib`) и согласует `[plugins."<name>@swissknifeman"].enabled` в проектном
+`.codex/config.toml` с выбранным набором Connect. Выбранные плагины получают `true`,
+остальные известные и унаследованные Swissknifeman-плагины — `false`. Глобальные defaults,
+сторонние плагины, permissions, остальные TOML-поля и комментарии сохраняются. Перед изменением делается
+полный parse/render preflight; изменённый файл имеет `.bak`, повторный запуск идемпотентен.
+Нестандартная inline/dotted раскладка plugin tables отклоняется до изменения проекта;
+используйте отдельные `[plugins."name@swissknifeman"]` таблицы. Codex читает проектную
+конфигурацию в trusted проектах. Флаг не устанавливает cache: наличия `.agents/plugins/bundles`
+недостаточно для native activation. Установите недостающие плагины явным `codex plugin add`,
+затем проверьте `codex plugin list --json` и `codex debug prompt-input` из cwd потребителя.
+
+В сочетании с `--hub` native selection применяется до генерации хаба; для обычного
+проекта обновляются `CLAUDE.md` и `AGENTS.md` с сохранением текста вне managed-блоков.
+В Boost-проекте сохраняется существующий путь через guideline-фрагмент.
+
+`--cleanup-codex-vendored` архивирует manifest-declared legacy copies отдельно от установки.
+`--cleanup-codex-links` архивирует только распознанные managed links: либо native replacement
+совпадает по всем исходным файлам скилла, либо этот точный путь явно выключен в проектном
+`[[skills.config]]`. При несовпадении, чужом ownership или изменённой ссылке данные сохраняются.
+Уникальные локальные скиллы без явного отключения остаются. Это также позволяет снять старые
+ссылки в клиентах, где project-level per-skill selection ещё не влияет на discovery.
 
 ## Codex publication — consumer-acceptance гейт (P5.5)
 

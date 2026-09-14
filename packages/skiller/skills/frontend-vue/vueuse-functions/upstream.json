@@ -6,7 +6,7 @@
   "license": "MIT",
   "files": [
     {
-      "path": "SKILL.md",
+      "path": "references/catalog.md",
       "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/SKILL.md",
       "sha256": "8c4a245c65d73b6d6e95335c499d214faa85cc10cf5187b0d6132d822f1c7d88",
       "fetched_at": "2026-06-17"
@@ -1602,11 +1602,18 @@
       "fetched_at": "2026-06-17"
     }
   ],
-  "notes": "Imported from antfu/skills (skills/vueuse-functions/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually.",
+  "notes": "Imported from antfu/skills (skills/vueuse-functions/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually. 2026-09-14: Local navigator replaces the broad entry. The upstream-derived Functions catalog moved to references/catalog.md with links rebased and a local scope note; every table row and invocation class preserved. Per-function reference files unchanged. Historical source SHA is retained; the catalog is an adapted extraction, not byte-faithful upstream SKILL.md. strategy=notify reports drift without overwriting local adaptations.",
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",
     "by": "2026.07.31-SKM-LEAN P5.1",
     "upstream_sha": "e833f58780207770088609af97b35d72d14bfa9a3cf7389fa345d142007630c3"
+  },
+  "body_path": "references/catalog.md",
+  "local_adaptation": {
+    "at": "2026-09-14",
+    "reason": "tasks/2026.09.14-skills-and-task-audit W6",
+    "catalog": "references/catalog.md",
+    "reference_policy": "unchanged per-function reference bytes"
   }
 }

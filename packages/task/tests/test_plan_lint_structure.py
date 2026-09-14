@@ -124,6 +124,45 @@ class TestValidPlan(TmpPlanTestCase):
         json.dumps(model, ensure_ascii=False)
 
 
+class TestShortPlanIdentity(TmpPlanTestCase):
+    def _short_plan(self, plan_id="DEMO-1", short_id="PLAN1"):
+        plan_dir = write_valid_plan(self.root, plan_id)
+        plan_md = plan_dir / "plan.md"
+        text = plan_md.read_text(encoding="utf-8")
+        text = text.replace(f"| Plan ID | {plan_id} |",
+                            f"| Plan ID | {plan_id} |\n| Short ID | {short_id} |")
+        plan_md.write_text(text, encoding="utf-8")
+        return plan_dir
+
+    def test_valid_short_id_and_legacy_absence(self):
+        for plan_dir in (self._short_plan(), write_valid_plan(self.root, "OLD-1")):
+            _, diag = _lint(plan_dir)
+            self.assertFalse(_errors_containing(diag, "Short ID"), diag.errors)
+
+    def test_invalid_short_ids(self):
+        for index, short_id in enumerate(("PLAN0", "PLAN01", "TASK1", "#PLAN1", "P1", "")):
+            with self.subTest(short_id=short_id):
+                _, diag = _lint(self._short_plan(plan_id=f"INVALID-{index}", short_id=short_id))
+                self.assertTrue(_errors_containing(diag, "Short ID"), diag.errors)
+
+    def test_duplicate_short_id_in_live_or_archive(self):
+        current = self._short_plan()
+        other = self._short_plan("OTHER-1")
+        _, diag = _lint(current)
+        self.assertTrue(_errors_containing(diag, "Short ID PLAN1 дублирует"), diag.errors)
+        archive = self.root / "plans" / "archive"
+        archive.mkdir()
+        shutil.move(str(other), str(archive / other.name))
+        _, diag = _lint(current)
+        self.assertTrue(_errors_containing(diag, "Short ID PLAN1 дублирует"), diag.errors)
+
+    def test_same_plan_live_archive_copy_is_not_a_collision(self):
+        current = self._short_plan()
+        shutil.copytree(current, self.root / "plans" / "archive" / current.name)
+        _, diag = _lint(current)
+        self.assertFalse(_errors_containing(diag, "Short ID"), diag.errors)
+
+
 class TestNumberedPlanIdentity(TmpPlanTestCase):
     def _numbered(self, plan_id="2026.08.12-№1-DEMO", title="План №1 — Демо"):
         plan_dir = write_valid_plan(self.root, plan_id)

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:e5066316471d4c626560130038b0c96e92accbcb889d92c78af68d4a0a95c73c
+Canonical SHA-256: sha256:921a608b8763ac890a2d2b275be80ba270f75a0917cba7293eb3741db1d4c0d7
 Adapter: task.codex-command/1.0.14
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -90,7 +90,8 @@ than redrafting the phase. “Next/new phase”, item count, local repair, or an
 does not justify design; only new/from-draft scope or a concrete `design-required` contract decision
 does.
 
-внешняя ссылка на item использует `<PLAN-ID> Pn.m`; голый `Pn.m` допустим только внутри самого плана.
+Назначай Short ID и оформляй ссылки по `runtime/plan-protocol/references/work-references.md`
+из установленного пакета Task (`PLAN1.D35`, `PLAN1.P2.3`; legacy: `<PLAN-ID> <local-ID>`).
 
 Design completion records exactly one semantic Next. A bounded remediation does not manufacture a
 fresh audit/root; only a concrete context-budget, capability, owner-pause, independent review,

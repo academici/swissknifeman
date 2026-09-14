@@ -1,6 +1,6 @@
 {
   "name": "task",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "task — интент-команды постановки задач для Claude Code: /task:design|dev|review|research|fix + plan-протокол /task:plan-design|plan-exec|plan-close|plan-audit|plan-run (исполняемые мастер-планы в plans/ по скиллу plan-protocol: opus проектирует, sonnet исполняет, opus аудитит; plan-run — БЕЗ пина модели, исполняет под моделью сессии). Каждая команда пинит свою модель + reasoning effort + профиль workflow (перебивая настройки сессии), чтобы не помнить про ручное переключение модели/effort/режима. Тонкое лицо над agent-packs/workflow экосистемы academici.",
   "author": { "name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com" },
   "homepage": "https://github.com/academici/swissknifeman",

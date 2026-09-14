@@ -22,7 +22,8 @@ than redrafting the phase. “Next/new phase”, item count, local repair, or an
 does not justify design; only new/from-draft scope or a concrete `design-required` contract decision
 does.
 
-внешняя ссылка на item использует `<PLAN-ID> Pn.m`; голый `Pn.m` допустим только внутри самого плана.
+Назначай Short ID и оформляй ссылки по `runtime/plan-protocol/references/work-references.md`
+из установленного пакета Task (`PLAN1.D35`, `PLAN1.P2.3`; legacy: `<PLAN-ID> <local-ID>`).
 
 Design completion records exactly one semantic Next. A bounded remediation does not manufacture a
 fresh audit/root; only a concrete context-budget, capability, owner-pause, independent review,

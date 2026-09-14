@@ -166,7 +166,7 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻503"]:::warm
-    plan_protocol["plan-protocol<br/>⊕31 ↻9496"]:::cool
+    plan_protocol["plan-protocol<br/>⊕31 ↻9522"]:::cool
     project_map["project-map<br/>⊕83 ↻618"]:::warm
     session_handoff["session-handoff<br/>⊕29 ↻590"]:::cool
     shell["shell<br/>⊕73 ↻1997"]:::warm
@@ -437,13 +437,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 232 скиллов · ⊕ always **12653** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 310318 ток · ⌥ on-demand 848433 ток (сниппеты + references).
+**Итого:** 232 скиллов · ⊕ always **12653** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 310344 ток · ⌥ on-demand 848981 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1265 | 32602 | 26500 |
+| `general` | 22 | 1265 | 32628 | 27048 |
 | `repository-bootstrap` | 14 | 1047 | 29033 | 0 |
 | `architect` | 15 | 937 | 19897 | 33252 |
 | `system` | 7 | 607 | 10821 | 834 |
@@ -516,7 +516,7 @@ flowchart LR
 
 | Скилл | Бакет | ток |
 |---|---|--:|
-| `plan-protocol` | general | 9496 |
+| `plan-protocol` | general | 9522 |
 | `project-tooling-runbook` | repository-bootstrap | 7297 |
 | `package-architecture` | repository-bootstrap | 3740 |
 | `workflow-craft` | general | 3349 |

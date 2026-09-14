@@ -402,6 +402,27 @@ def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
     plan_dir = Path(plan_dir)
     meta = meta or {}
 
+    # Short IDs are opt-in for legacy plans; allocation spans live + archive.
+    short_id, short_line = meta.get("Short ID", (None, None))
+    if short_id is not None:
+        if not re.fullmatch(r"PLAN[1-9][0-9]*", short_id):
+            diag.error(plan_md, short_line, "Short ID должен иметь вид PLAN<N>, N > 0")
+        else:
+            plans_root = plan_dir.parent.parent if plan_dir.parent.name == "archive" else plan_dir.parent
+            candidates = list(plans_root.glob("*/plan.md"))
+            candidates.extend(plans_root.glob("archive/*/plan.md"))
+            for peer_md in sorted(candidates):
+                if peer_md.parent.name == plan_id:
+                    continue  # live/archive copies are one existing identity
+                peer_lines = _read_lines(peer_md) or ()
+                _, peer_meta, _ = _find_section(peer_lines, META_HEADER_RE)
+                for line in peer_meta or ():
+                    match = re.fullmatch(r"\s*\|\s*Short ID\s*\|\s*(PLAN[1-9][0-9]*)\s*\|\s*", line)
+                    if match and match.group(1) == short_id:
+                        diag.error(plan_md, short_line,
+                                   f"Short ID {short_id} дублирует {peer_md.relative_to(plans_root)}")
+                        break
+
     # (1) PLAN-ID: исторические формы readable, но новые датовые планы
     # обязаны нести `№N`; ordinal связан с Title и уникален внутри даты.
     if not (PLAN_ID_LEGACY_RE.match(plan_id) or PLAN_ID_DATED_RE.match(plan_id)):

@@ -248,10 +248,10 @@ class ProviderCommandParityTests(unittest.TestCase):
         self.assertIn("plan_lifecycle", plan_text)
 
     def test_qualified_item_reference_rule_survives_provider_rendering(self):
-        literal = "внешняя ссылка на item использует"
+        literal = "runtime/plan-protocol/references/work-references.md"
         source = self.catalog.content_for("task:plan-design").decode("utf-8")
         self.assertIn(literal, source)
-        self.assertIn("`<PLAN-ID> Pn.m`; голый `Pn.m` допустим", source)
+        self.assertIn("`PLAN1.D35`, `PLAN1.P2.3`; legacy: `<PLAN-ID> <local-ID>`", source)
         for provider_id, plan in (("claude-code", self.claude_plan), ("codex", self.codex_plan)):
             with self.subTest(provider=provider_id):
                 rendered = "\n".join(
@@ -261,7 +261,7 @@ class ProviderCommandParityTests(unittest.TestCase):
                     or "task-plan-design" in artifact.path
                 )
                 self.assertIn(literal, rendered)
-                self.assertIn("`<PLAN-ID> Pn.m`; голый `Pn.m` допустим", rendered)
+                self.assertIn("`PLAN1.D35`, `PLAN1.P2.3`; legacy: `<PLAN-ID> <local-ID>`", rendered)
 
     def test_all_contract_diagnostics_have_fail_closed_negative_cases(self):
         observed = set()

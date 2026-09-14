@@ -13,17 +13,54 @@ from core.provider.lock import _contained_target, _writer_guard
 SUFFIX = "@swissknifeman"
 
 
+def _fallback_toml_loads(text):
+    """Read the two Codex selection tables on Python 3.10.
+
+    Skiller is stdlib-only and supports the CI's Python 3.10 runtime, where
+    ``tomllib`` is unavailable.  We only need the scalar forms Codex writes for
+    plugin activation and legacy skill opt-outs; unknown TOML remains untouched.
+    """
+    data, current = {}, None
+    plugin_header = re.compile(r'^\[plugins\.(?:"([^"]+)"|\'([^\']+)\')\]$')
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        match = plugin_header.fullmatch(line)
+        if match:
+            current = data.setdefault("plugins", {}).setdefault(match.group(1) or match.group(2), {})
+            continue
+        if line == "[[skills.config]]":
+            current = {}
+            data.setdefault("skills", {}).setdefault("config", []).append(current)
+            continue
+        if current is None or "=" not in line:
+            continue
+        key, value = (part.strip() for part in line.split("=", 1))
+        if value in ("true", "false"):
+            current[key] = value == "true"
+        elif len(value) >= 2 and value[0] == value[-1] == '"':
+            current[key] = json.loads(value)
+        elif len(value) >= 2 and value[0] == value[-1] == "'":
+            current[key] = value[1:-1]
+    return data
+
+
+def _toml_loads(text):
+    try:
+        import tomllib
+    except ImportError:
+        return _fallback_toml_loads(text)
+    return tomllib.loads(text)
+
+
 def codex_home(env):
     return Path(os.environ.get("CODEX_HOME", str(env.home / ".codex")))
 
 
 def _read(path):
-    try:
-        import tomllib
-    except ImportError as exc:
-        raise ValueError("CODEX_SELECTION_UNAVAILABLE: Python 3.11+ is required for TOML activation") from exc
     text = path.read_bytes().decode("utf-8") if path.exists() else ""
-    return text, tomllib.loads(text)
+    return text, _toml_loads(text)
 
 
 def plan_selection(env, target, selected, known):
@@ -35,7 +72,6 @@ def plan_selection(env, target, selected, known):
     """
     path = _contained_target(Path(target), ".codex/config.toml")
     before, data = _read(path)
-    import tomllib
     _, user = _read(codex_home(env) / "config.toml")
     names = set(known) | set(selected)
     for layer in (user, data):
@@ -49,10 +85,7 @@ def plan_selection(env, target, selected, known):
     for index, line in enumerate(lines):
         if not line.lstrip().startswith("["):
             continue
-        try:
-            parsed = tomllib.loads(line)
-        except tomllib.TOMLDecodeError:
-            continue
+        parsed = _toml_loads(line)
         headers.append(index)
         plugins = parsed.get("plugins", {})
         if isinstance(plugins, dict) and len(plugins) == 1:
@@ -90,7 +123,7 @@ def plan_selection(env, target, selected, known):
     after = "".join(lines)
     if additions:
         after += (("\n" if after.endswith("\n") else "\n\n") if after else "") + "\n".join(additions)
-    parsed = tomllib.loads(after)
+    parsed = _toml_loads(after)
     expected = copy.deepcopy(data)
     for name in names:
         expected.setdefault("plugins", {}).setdefault(name + SUFFIX, {})["enabled"] = name in selected

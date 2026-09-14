@@ -12,7 +12,8 @@ from types import SimpleNamespace
 import unittest
 from unittest import mock
 
-from skiller.native_codex import apply_selection, native_inventory, plan_selection
+from skiller.native_codex import (_fallback_toml_loads, apply_selection, native_inventory,
+                                  plan_selection)
 
 
 class NativeCodexTests(unittest.TestCase):
@@ -28,6 +29,16 @@ class NativeCodexTests(unittest.TestCase):
         patcher = mock.patch.dict(os.environ, {"CODEX_HOME": str(self.codex)})
         patcher.start()
         self.addCleanup(patcher.stop)
+
+    def test_python_310_fallback_reads_plugin_and_legacy_skill_selection(self):
+        data = _fallback_toml_loads(
+            '[plugins."quality@swissknifeman"]\n'
+            'enabled = true\n\n'
+            '[[skills.config]]\n'
+            'path = "/tmp/skill/SKILL.md"\n'
+            'enabled = false\n')
+        self.assertTrue(data["plugins"]["quality@swissknifeman"]["enabled"])
+        self.assertEqual(data["skills"]["config"], [{"path": "/tmp/skill/SKILL.md", "enabled": False}])
 
     @unittest.skipUnless(tomllib, "native activation requires stdlib tomllib (Python 3.11+)")
     def test_selection_preserves_foreign_bytes_and_user_defaults(self):

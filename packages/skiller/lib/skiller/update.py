@@ -234,8 +234,8 @@ def retire_legacy_codex_links(env, target, *, dry_run=False):
         disabled = set()
         selection_path = _contained_target(target, ".codex/config.toml")
         if selection_path.is_file():
-            import tomllib
-            selection = tomllib.loads(selection_path.read_text())
+            from .native_codex import _read
+            _, selection = _read(selection_path)
             effective = {Path(row["path"]).resolve(): row.get("enabled")
                          for row in selection.get("skills", {}).get("config", [])
                          if isinstance(row.get("path"), str) and Path(row["path"]).is_absolute()}

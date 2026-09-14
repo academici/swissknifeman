@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.17.4] - 2026-09-14
+
+### Fixed
+
+- **Skiller: Python 3.10 Codex selection.** Native Codex selection and legacy
+  link cleanup use a bounded stdlib TOML reader when `tomllib` is unavailable,
+  preserving explicit plugin selection and disabled local skills.
+
 ## [0.17.3] - 2026-09-14
 
 ### Fixed

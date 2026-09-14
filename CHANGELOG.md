@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.17.2] - 2026-09-14
+
+### Fixed
+
+- **Skiller delivery: Codex native cache.** Readback по-прежнему сверяет все
+  attested bytes и symlink safety, но больше не считает штатные package files и
+  provider-generated cache state неизвестным drift.
+
 ## [0.17.1] - 2026-09-14
 
 ### Fixed

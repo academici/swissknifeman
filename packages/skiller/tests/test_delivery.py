@@ -83,6 +83,14 @@ class DeliveryTests(unittest.TestCase):
         self.write(cache / relative, generated + b"\nModified instructions.")
         self.assertTrue(verify_surface(cache, expected, reject_extras=True))
 
+    def test_native_cache_readback_allows_unattested_package_files(self):
+        cache = self.root / "cache"
+        self.write(cache / "SKILL.md", b"managed")
+        self.write(cache / "docs/generated-search-index.json", b"cache state")
+        expected = surface({"SKILL.md": b"managed"})
+        self.assertEqual(verify_surface(cache, expected), [])
+        self.assertTrue(verify_surface(cache, expected, reject_extras=True))
+
     def test_recovery_refuses_symlink_even_when_known_bytes_match(self):
         target = self.root / "project"
         path = target / ".agents/plugins/bundles/task/SKILL.md"

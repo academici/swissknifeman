@@ -306,7 +306,10 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
                 row["reason"] = detail
                 cache = env.home / ".codex/plugins/cache/swissknifeman" / name / units[name]["version"]
                 projection = units[name]["providers"].get("codex-native", units[name]["providers"]["codex"])
-                row["readback"] = verify_surface(cache, projection, reject_extras=True)
+                # A native cache is a package checkout.  Its attested projection must
+                # match exactly, while unrelated package files and provider-generated
+                # state are valid cache contents.
+                row["readback"] = verify_surface(cache, projection)
                 if ok and not row["readback"]:
                     row["status"] = "updated"
                     row["digest"] = projection["tree_digest"]

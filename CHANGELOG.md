@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.17.5] - 2026-09-14
+
+### Fixed
+
+- **Skiller: fail-closed Python 3.10 TOML fallback.** Unsupported tables and
+  inline plugin maps now reject native selection before any consumer mutation.
+
 ## [0.17.4] - 2026-09-14
 
 ### Fixed

@@ -34,6 +34,10 @@ def _fallback_toml_loads(text):
             current = {}
             data.setdefault("skills", {}).setdefault("config", []).append(current)
             continue
+        if line.startswith("["):
+            raise ValueError("CODEX_SELECTION_LAYOUT: unsupported TOML table")
+        if current is None and line.startswith("plugins"):
+            raise ValueError("CODEX_SELECTION_LAYOUT: plugins must use dedicated tables")
         if current is None or "=" not in line:
             continue
         key, value = (part.strip() for part in line.split("=", 1))

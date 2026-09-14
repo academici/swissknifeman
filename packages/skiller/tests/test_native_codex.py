@@ -40,6 +40,12 @@ class NativeCodexTests(unittest.TestCase):
         self.assertTrue(data["plugins"]["quality@swissknifeman"]["enabled"])
         self.assertEqual(data["skills"]["config"], [{"path": "/tmp/skill/SKILL.md", "enabled": False}])
 
+    def test_python_310_fallback_rejects_invalid_or_inline_plugin_layout(self):
+        for text in ("[broken", 'plugins = { "php@swissknifeman" = {enabled = true} }\n'):
+            with self.subTest(text=text):
+                with self.assertRaises(ValueError):
+                    _fallback_toml_loads(text)
+
     @unittest.skipUnless(tomllib, "native activation requires stdlib tomllib (Python 3.11+)")
     def test_selection_preserves_foreign_bytes_and_user_defaults(self):
         user = '[plugins."system@swissknifeman"]\nenabled = true\n'

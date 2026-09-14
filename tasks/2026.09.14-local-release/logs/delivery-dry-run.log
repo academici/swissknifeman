@@ -1,1 +1,0 @@
-ERROR: DELIVERY_FAILED: Command '['git', 'rev-parse', 'v0.16.2^{commit}']' returned non-zero exit status 128.

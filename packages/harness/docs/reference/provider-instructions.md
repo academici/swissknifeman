@@ -14,15 +14,6 @@ Generated from the validated D86 catalog.
 
 The frozen inventory contains 56 common and 20 provider-extension IDs (76 total) across exactly 12 targets.
 
-## Catalog changes and consumer context
-
-The catalog is the source for instruction descriptions as well as their semantic IDs.
-When a provider-specific discovery limit changes, update the catalog, regenerate every
-projection, and check the rendered target files. Keep a complete description for each
-selected skill in the consumer's chosen provider; reducing discovery load must not turn a
-selected skill into an opaque identifier. Provider extensions remain additive to the
-common contract.
-
 ## Public API
 
 `InstructionRequest` carries contract/catalog versions, operation ID, explicit ordered scope/provider IDs, an absolute target root, and config/authorization provenance. `InstructionTargetResult` carries artifact/scope/provider/path, ordered semantic IDs, observation/action, source/render hashes, marker/block IDs, ordered structured diagnostics, and `changed`. `InstructionOperationResult` adds aggregate diagnostics and `green`.

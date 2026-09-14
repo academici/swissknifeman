@@ -1,3 +1,0 @@
-Connect --no-permissions --dry-run: exit 0
-Target: /home/vostrikov/projects/flexcrm
-Full machine-specific log: /home/vostrikov/.swissknifeman/receipts/setup/20260914T075645Z-agelto-flexcrm/connect-dry-run-flexcrm.log

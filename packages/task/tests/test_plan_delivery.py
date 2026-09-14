@@ -11,7 +11,7 @@ try:
 except ImportError:
     from fixtures import write_valid_plan
 from task import (journal, plan_closure, plan_delivery, plan_gates, plan_item_state,
-                  terminal_policy)
+                  terminal_policy, plan_bundle, plan_continuity)
 from task import plan_readiness
 
 
@@ -154,6 +154,59 @@ class PlanDeliveryTests(unittest.TestCase):
         with self.assertRaisesRegex(
                 plan_delivery.DeliveryError, "FINAL_BEFORE_TERMINAL_FORBIDDEN"):
             plan_delivery.build_terminal_receipt(plan, "P1.1")
+
+    def _plan_with_ready_successor(self, *, root=None):
+        plan = self._terminal_plan(root=root)
+        phase_dir = plan / "phases" / "P1"
+        (phase_dir / "P1.2.md").write_text(
+            (phase_dir / "P1.1.md").read_text(encoding="utf-8").replace(
+                "P1.1", "P1.2"), encoding="utf-8")
+        (phase_dir / "P1.closed.md").unlink()
+        plan_item_state.build_states(plan, item_id="P1.2")
+        plan_bundle.build(plan, "P1.2")
+        return plan
+
+    @staticmethod
+    def _write_terminal_handoff(plan, next_exact):
+        handoff = plan / "handoff.md"
+        text = handoff.read_text(encoding="utf-8").replace(
+            "archive: task:plan-close DEMO-DELIVERY archive", next_exact
+        ).replace("| Context | fresh session |", "| Context | terminal |")
+        decision = plan_continuity.ContinuityDecision(
+            "terminal", "terminal-evidence", ("batch:solo-complete",), False)
+        block = "\n```session-continuity-decision/v1\n" + json.dumps(
+            decision.as_dict()) + "\n```\n"
+        text = text.replace("\n**Done:**", block + "\n**Done:**", 1)
+        handoff.write_text(text, encoding="utf-8")
+
+    def test_completed_solo_batch_cannot_hide_ready_successor_as_terminal(self):
+        for index, next_exact in enumerate(("none: solo complete", "terminal: solo complete")):
+            with self.subTest(next_exact=next_exact):
+                plan = self._plan_with_ready_successor(root=self.root / str(index))
+                self._write_terminal_handoff(plan, next_exact)
+                with self.assertRaisesRegex(
+                        plan_delivery.DeliveryError, "TERMINAL_NEXT_FORBIDDEN"):
+                    plan_delivery.build_terminal_receipt(plan, "P1.1")
+                with self.assertRaisesRegex(
+                        plan_delivery.DeliveryError, "TERMINAL_NEXT_FORBIDDEN"):
+                    plan_delivery.build_handoff_receipt(plan, "P1.1")
+
+    def test_ready_successor_outside_completed_batch_keeps_executable_handoff(self):
+        plan = self._plan_with_ready_successor()
+        handoff = plan / "handoff.md"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "archive: task:plan-close DEMO-DELIVERY archive",
+            "run-items: task:plan-run DEMO-DELIVERY P1.2"), encoding="utf-8")
+        receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")
+        self.assertEqual(receipt["next_exact"],
+                         "run-items: task:plan-run DEMO-DELIVERY P1.2")
+        self.assertEqual(receipt["continuity"]["outcome"], "cold-start-root")
+
+    def test_terminal_next_is_allowed_after_all_plan_items_complete(self):
+        plan = self._terminal_plan()
+        self._write_terminal_handoff(plan, "terminal: plan complete")
+        receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")
+        self.assertEqual(receipt["continuity"]["outcome"], "terminal")
 
     def test_last_green_item_requires_inline_phase_closure(self):
         plan = self._terminal_plan(root=self.root / "phase-closure-required")

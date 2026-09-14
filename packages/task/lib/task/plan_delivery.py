@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 
 from task import (command_catalog, journal, plan_bundle, plan_closure, plan_continuity,
-                  plan_gates, plan_layout, plan_lint, plan_readiness, plan_repair,
+                  plan_gates, plan_layout, plan_lint, plan_readiness, plan_repair, plan_status,
                   review_policy, terminal_policy)
 
 
@@ -319,6 +319,27 @@ def _audit_handoff(plan_dir: Path, subject: str) -> dict | None:
     }
 
 
+def _validate_terminal_next(plan_dir: Path, next_exact: str, continuity: dict) -> None:
+    """A completed execution batch cannot erase the unfinished plan successor."""
+    terminal_form = re.match(r"^(?:none|terminal)(?::|$)", next_exact)
+    if continuity["outcome"] != "terminal" and terminal_form is None:
+        return
+    # Rebuild from item carriers; a stale status board must not hide a successor.
+    unfinished = [(phase["id"], phase["status"]) for phase in
+                  plan_status.status_model(plan_dir)["phases"]
+                  if phase["status"] not in TERMINAL_PHASE_STATUSES]
+    if unfinished:
+        phase, status = min(unfinished, key=lambda row: int(row[0][1:]))
+        raise DeliveryError(
+            "TERMINAL_NEXT_FORBIDDEN",
+            f"batch завершён, но план не terminal: {phase} — {status}; "
+            "Next должен сохранять фактическое продолжение плана",
+        )
+    if next_exact.startswith("none:"):
+        raise DeliveryError(
+            "HANDOFF_NEXT_INVALID", "форма none не объявлена; используйте terminal для завершённого плана")
+
+
 def _handoff(plan_dir: Path, *, closed_subject: str | None = None) -> dict:
     path = plan_dir / "handoff.md"
     try:
@@ -359,6 +380,8 @@ def _handoff(plan_dir: Path, *, closed_subject: str | None = None) -> dict:
         raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "recommendation пуста")
 
     route = _route_from_lines(lines[start:end])
+    continuity = _continuity(route, allow_legacy=True)
+    _validate_terminal_next(plan_dir, next_exact, continuity)
 
     def field(name):
         prefix = f"**{name}:**"
@@ -369,7 +392,7 @@ def _handoff(plan_dir: Path, *, closed_subject: str | None = None) -> dict:
         "next_exact": next_exact,
         "recommendation": recommendation,
         "route": route,
-        "continuity": _continuity(route, allow_legacy=True),
+        "continuity": continuity,
         "rationale": {"remaining": field("Remaining"), "open_risks": field("Open risks")},
         "digest": file_digest(path),
     }

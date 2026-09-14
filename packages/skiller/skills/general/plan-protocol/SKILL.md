@@ -302,6 +302,12 @@ phase in place. Handoff is computed from post-closure state and dependencies and
 `plan-close` for the current result or repeats `plan-exec`/`plan-run` for the current item. The
 `close` form remains compatible for an explicitly requested standalone reconciliation.
 
+Completion of one item or an admitted batch is not terminality of the whole plan. An unfinished
+phase forbids `Context: terminal` and a terminal Next; `none` is not a declared Next form.
+Preserve the actual successor even when it is outside the completed batch. Do not execute outside
+the admitted scope; at a real owner-requested new-session boundary, persist the successor's Routing
+and render its native command. Never replace that handoff with only a completion summary.
+
 After a GREEN item, materialize the actual successor and obey its typed Context before responding.
 `continue-root` means begin the compatible ready successor in the same root invocation, not a
 handoff and not a reason to start a new Codex process. Continue the admitted Routing batch (or its

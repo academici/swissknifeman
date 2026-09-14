@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Task: завершение batch не стирает следующий пункт плана.** Delivery отказывает
+  `Context: terminal` и `Next: none/terminal`, пока есть незавершённая фаза; правило
+  распространяется и на recommendation-only receipt. Протокол сохраняет фактический
+  successor вне завершённого batch и native command при запрошенной новой сессии.
+
 ## [0.16.2] - 2026-09-14
 
 ### Fixed

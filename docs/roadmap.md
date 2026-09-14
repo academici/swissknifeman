@@ -18,10 +18,13 @@ direct-close на обычном GREEN пути, проверки по риск�
 [`release-to-runtime attestation and recovery`](../roadmap/archive/2026.09.11-release-to-runtime-attestation-and-recovery.md).
 Исходные Task roadmap-записи сохранены рядом с заданием.
 
-Полевая регрессия 13 сентября также закрыта: `continue-root` теперь требует непрерывного
-исполнения compatible ready batch в текущем root, а native launch выдаётся лишь на реальной
-cold-start/wait границе. Автоматический handoff больше не рекомендует `plan-design` для уже
-детализированной незавершённой фазы; источник инцидента сохранён в `roadmap/archive/`.
+Полевая регрессия 13 сентября закрыла непрерывное исполнение compatible ready batch и выбор
+`plan-design` для уже детализированной незавершённой фазы. Но 14 сентября в Edufy повторился
+terminal output gap: `handoff.md` и delivery receipt содержали native launch, а user-facing final
+его не вывел. Живой roadmap-carrier
+[`task terminal command emission regression`](../roadmap/2026.09.14-task-terminal-command-emission-regression.md)
+задаёт обязательный finalization seam и регрессионные проверки; архивный результат не считается
+достаточным, пока это не станет write-site enforcement.
 
 ## Ближайшая фаза
 

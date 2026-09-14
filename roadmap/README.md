@@ -15,14 +15,15 @@
 | [`2026.08.15-locale-corpus-after-field-validation.md`](2026.08.15-locale-corpus-after-field-validation.md) | ⬜ ждёт field evidence | Конкретный проект, surface и воспроизводимый пользовательский эффект после compact field cut `2026.08.02-PROVIDER-CONTRACT-LOCALE P4`. |
 | [`plan-design-vs-exec-status-check.md`](plan-design-vs-exec-status-check.md) | ⬜ один замер | Повтор ошибочного выбора `plan-design` для уже готовой фазы на втором плане; первый замер — `2026.07.16-INS-EVO P1`. |
 | [`plan-lesson-capture.md`](plan-lesson-capture.md) | ⬜ один замер | Повтор потери post-closure owner finding на втором плане; первый замер — `2026.07.14-DTEREMA-SITE P6.2–P6.3`. |
+| [`2026.09.14-task-terminal-command-emission-regression.md`](2026.09.14-task-terminal-command-emission-regression.md) | 🔥 owner-prioritized | Edufy P5.2 снова завершился user-facing summary без native команды P5.3, хотя delivery receipt её содержал. |
 | [`upstream-notify-diet-fork.md`](upstream-notify-diet-fork.md) | ⬜ trigger не сработал | Реальный болезненный drift либо содержательная диета `notify`-скилла; последняя квалификация — `2026.07.31-SKM-LEAN P7.3`. |
 
 ## Диспозиция 2026-09-13
 
-Task launch-block parity закрыт: `continue-root` продолжает ready batch в том же root, а
-user-facing launch печатается только на реальной cold-start/wait boundary; delivery не предлагает
-`plan-design` для уже детализированной незавершённой фазы. Оригинал перенесён в
-[`archive/`](archive/README.md).
+Task launch-block parity был закрыт: `continue-root` продолжает ready batch в том же root, а
+delivery не предлагает `plan-design` для уже детализированной незавершённой фазы. Однако полевая
+регрессия Edufy 2026-09-14 показала, что saved delivery receipt всё ещё можно не вывести в
+user-facing final; живой carrier снова фиксирует обязательный finalization seam.
 
 Четыре новых incident carrier реализованы напрямую в одной сессии без master plan:
 Task opt-in routing, interrupted predecessor recovery, finite owner authority/calendar

@@ -7,6 +7,11 @@ provider-attested route; it never pins model or effort and it never substitutes 
 route evidence. Capture five v2 carriers once, admit the Routing group or ready subset of a recommended group, persist one
 `route-run-receipt/v1`, then reuse route/context evidence until `route_change_boundary()` proves change.
 
+For `continue-root`, carry on with the compatible ready successor in the admitted Routing batch in
+this same root. Do not turn ordinary item closure, local reversible repair, or a phase transition
+into a new session, a final response, or an owner question. Render a native fresh launch only when
+the persisted continuity decision is genuinely `cold-start-root` (or at a typed wait boundary).
+
 Activate only for explicit owner plan intent or an exact cited local workflow policy; use the
 shared [intent routing canon](../references/intent-routing.md). An exact current owner `plan-run`
 is intent to execute the declared item. Before protected writes, an item-declared finite `Authority`

@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [0.16.2] - 2026-09-14
+
+### Fixed
+
+- **Task: непрерывное исполнение и точный Next.** `continue-root` продолжает совместимый ready
+  batch в текущем root без final, owner question или fresh session; native launch-block остаётся
+  только для действительной cold-start/wait границы. Автоматический handoff отказывает
+  повторный `plan-design`, когда существующая фаза уже детализирована и готова к `plan-exec`.
+- **Skiller / core: локальный repair без лишнего design или перезапуска.** `anti-drift`
+  использует checkpoint и смену тактики при затянувшемся исправлении; число файлов само
+  по себе не требует плана. `plan-protocol` согласован с непрерывным исполнением Task;
+  native handoff сохраняется для подтверждённой границы контекста, capability или ожидания.
+- **Локальный релизный draft 0.16.2:** распространяемые плагины `task` и `core`
+  получают patch-версии `0.16.2`, `general` — `0.13.4`; пакет Skiller — `0.14.2`
+  из-за обновления runtime-конфига версий публикаций, без изменения API.
+- **Skiller connect:** dry-run замены Codex-набора проверяет post-prune snapshot
+  вместо старого lock; до удаления проверяются digests всех прежних owned artifacts.
+  Изменённые preimages отклоняются до записи, чужие owner records сохраняются.
+
 ## [0.16.1] - 2026-09-13
 
 ### Fixed

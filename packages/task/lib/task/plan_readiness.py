@@ -23,6 +23,10 @@ _OBSERVED_MODES = frozenset((
 _DIRECTIVE = re.compile(
     r"`producer-readiness/v1`\s*:\s*consumer=(P\d+\.\d+)\s*;\s*"
     r"modes=(nonempty-candidates\|empty-by-decision|empty-by-decision\|nonempty-candidates)")
+_EXECUTABLE_ITEM_FIELDS = (
+    "Intent", "Why", "Scope Included", "Scope Excluded", "Inputs", "Files",
+    "Required Reads", "Implementation Rules", "Code Guidance", "Validation", "Deliverables",
+)
 
 
 def _closed(value, fields, name):
@@ -253,6 +257,39 @@ def validate_design_target(plan_dir, phase_id: str) -> None:
             or not isinstance(record, dict) or record.get("phase_id") != phase_id):
         raise ReadinessError(
             f"PHASE_REENTRY_UNJUSTIFIED: terminal phase {phase_id} requires re-entry evidence")
+
+
+def validate_design_handoff_target(plan_dir, phase_id: str) -> None:
+    """Prevent an automatic design handoff from redrafting an execution-ready phase.
+
+    This applies to generated Next recommendations, not an explicit owner request to revise a
+    plan. A ready phase has every existing item specification fully detailed and at least one
+    unfinished item. The executor remains responsible for its normal readiness gate.
+    """
+    from task import plan_layout
+
+    plan_dir = Path(plan_dir)
+    specs = plan_layout.item_spec_paths(plan_dir, phase_id)
+    if not specs:
+        return
+    states = []
+    for spec in specs:
+        try:
+            text = spec.read_text(encoding="utf-8")
+            state = spec.with_name(spec.stem + ".state.md").read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            return
+        if not all(re.search(rf"^\*\*{re.escape(field)}:\*\*\s*\S", text, re.MULTILINE)
+                   for field in _EXECUTABLE_ITEM_FIELDS):
+            return
+        match = re.search(r"^\*\*Status:\*\*\s*(.+?)\s*$", state, re.MULTILINE)
+        if match is None:
+            return
+        states.append(match.group(1))
+    terminal = {"🟢 Done", "🟠 Done with deviations", "⛔ Skipped by decision"}
+    if any(status not in terminal for status in states):
+        raise ReadinessError(
+            f"PLAN_DESIGN_NOT_NEEDED: phase {phase_id} already has detailed unfinished items; use plan-exec")
 
 
 def terminal_projection(record: dict, *, plan_dir: Path | None = None) -> dict:

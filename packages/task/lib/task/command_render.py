@@ -1061,11 +1061,15 @@ def _codex_native_launch_rule(mapping: ProviderCommandMapping) -> str:
         f"{name}={classes[name][0]}" for name in MODEL_CLASSES)
     effort_routes = ", ".join(
         f"{name}={efforts[name][0]}" for name in EFFORTS)
-    return f'''## Native Codex launch-block — mandatory for every executable handoff
+    return f'''## Native Codex launch-block — required only at a real user-facing boundary
 
 This generated runtime is the Codex provider projection. Render only the Codex-native launch;
 never copy Claude Code slash syntax as the executable invocation and never print both providers.
 `$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
+When the typed Context is `continue-root`, keep executing the compatible ready successor in this
+root: do not finalise, ask the owner, or manufacture a fresh `codex` process between ordinary
+items. A command, phase, directory, local repair, or ordinary test failure is not a session
+boundary.
 
 Keep Batch/Model/Thinking/Context/Суть in the metadata table, but never put the command in a table
 cell or column. Immediately after the table print `**Native Codex command:**` and a fenced `bash`
@@ -1079,10 +1083,11 @@ codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-sele
 Prefer one physical command line. If intentional formatting uses multiple shell lines, terminate
 every continued line except the last with `\\`; never rely on Markdown visual wrapping.
 
-**Final-response guard:** when an executable Next exists, do not stop after a completion summary,
-`Delivery receipt`, or `PHASE-CLOSED`. Before final, verify that the copyable native Codex `bash`
-block is present after the metadata table. Only a genuinely terminal Next with no executable
-successor may omit it.
+**Final-response guard:** a `continue-root` successor means continue work now, not a final response.
+At a real user-facing boundary with an executable Next (`cold-start-root`, `waiting-owner`, or
+`waiting-external`), do not stop after a completion summary, `Delivery receipt`, or `PHASE-CLOSED`.
+Before final, verify that the copyable native Codex `bash` block is present after the metadata table.
+Only a genuinely terminal Next with no executable successor may omit it.
 
 Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
 do not reuse the preceding session's route. Current Codex mapping: {class_routes};

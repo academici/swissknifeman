@@ -669,6 +669,9 @@ def lint_plan(plan_dir, diag):
         # файлу: шаблон кладёт launch-block продолжением Next, но точное место не гейтим
         # (warning-уровень).
         # Для целиком закрытого плана («план закрыт») запускать нечего — не требуем.
+        # `continue-root` тоже не является user-facing launch: executor продолжает тот же
+        # admitted batch. Waiting остаётся boundary даже если его исторический Context
+        # ошибочно/совместимо записан как continue-root.
         # Условие СОЗНАТЕЛЬНО мягче резолвера (`kind`): любое утверждение о закрытии в
         # ЛЮБОМ месте поля снимает требование launch-block'а. Ужесточение до `kind` дало бы
         # новый WARNING живому плану флота (PILOT-AZG: первая строка несёт и «план закрыт
@@ -677,7 +680,12 @@ def lint_plan(plan_dir, diag):
         # Новая canonical форма всегда использует fenced command block вне таблицы. Старую
         # строку `| Команда |` продолжаем принимать reader-side, чтобы правка формата не
         # инвалидировала уже закрытые handoff'ы флота.
-        if LITERAL_PLAN_CLOSED not in next_val.lower():
+        handoff_contexts = [match.group(1).strip().strip("`")
+                            for match in (LAUNCH_CONTEXT_ROW_RE.match(line)
+                                          for line in next_val.splitlines()) if match]
+        needs_launch = (LITERAL_PLAN_CLOSED not in next_val.lower()
+                        and (kind == "waiting" or handoff_contexts != ["continue-root"]))
+        if needs_launch:
             has_table = any(LAUNCH_TABLE_ROW_RE.match(ln) for ln in handoff["lines"])
             has_command_row = any(LAUNCH_COMMAND_ROW_RE.match(ln) for ln in handoff["lines"])
             has_fence = any(CODE_FENCE_RE.match(ln) for ln in handoff["lines"])

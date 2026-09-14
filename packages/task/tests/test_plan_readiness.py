@@ -5,6 +5,11 @@ from pathlib import Path
 
 from task import journal, plan_readiness
 
+try:
+    from .fixtures import write_valid_plan
+except ImportError:
+    from fixtures import write_valid_plan
+
 
 class PlanReadinessTest(unittest.TestCase):
     def readiness(self, **changes):
@@ -132,6 +137,15 @@ class PlanReadinessTest(unittest.TestCase):
             (plan / "journal.jsonl").write_text(
                 json.dumps(event, ensure_ascii=False) + "\n", encoding="utf-8")
             plan_readiness.validate_design_target(plan, "P2")
+
+    def test_generated_design_handoff_rejects_a_detailed_unfinished_phase(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = write_valid_plan(Path(tmp), "READY-PHASE", layout="v2")
+            state = plan / "phases" / "P1" / "P1.1.state.md"
+            state.write_text(state.read_text(encoding="utf-8").replace(
+                "🟢 Done", "⬜ Not started"), encoding="utf-8")
+            with self.assertRaisesRegex(plan_readiness.ReadinessError, "PLAN_DESIGN_NOT_NEEDED"):
+                plan_readiness.validate_design_handoff_target(plan, "P1")
 
     def test_all_three_reentry_triggers_reduce_to_reopen(self):
         for trigger in ("owner-decision-change", "terminal-evidence-invalid",

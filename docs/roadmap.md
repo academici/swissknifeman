@@ -18,6 +18,11 @@ direct-close на обычном GREEN пути, проверки по риск�
 [`release-to-runtime attestation and recovery`](../roadmap/archive/2026.09.11-release-to-runtime-attestation-and-recovery.md).
 Исходные Task roadmap-записи сохранены рядом с заданием.
 
+Полевая регрессия 13 сентября также закрыта: `continue-root` теперь требует непрерывного
+исполнения compatible ready batch в текущем root, а native launch выдаётся лишь на реальной
+cold-start/wait границе. Автоматический handoff больше не рекомендует `plan-design` для уже
+детализированной незавершённой фазы; источник инцидента сохранён в `roadmap/archive/`.
+
 ## Ближайшая фаза
 
 **Полевые исправления 2026-09-13 реализованы.** Task сохраняет явный opt-in маршрут,

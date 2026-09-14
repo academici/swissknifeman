@@ -9,6 +9,15 @@ provider-attested overshoot is recorded and undershoot stops before mutation.
 Activation follows explicit owner plan intent or an exact cited local workflow policy in the
 shared [intent routing canon](../references/intent-routing.md).
 
+## Continuous execution
+
+After each GREEN item, materialize its successor and apply the persisted continuity decision. For
+`continue-root`, immediately execute the compatible ready successor in the admitted Routing batch
+(or safe ready subset) in this same root; do not emit a final, ask the owner, or launch a fresh
+session between ordinary items. A user-facing native launch block is for a real `cold-start-root`
+or waiting boundary only. Local reversible repair stays in this invocation. A design pass is allowed
+only when `plan_repair` returns `design-required` for a concrete unapproved contract decision.
+
 ## Shared lifecycle
 
 `task.plan_lifecycle.select(task.plan_lifecycle.LifecycleInput())` is advisory impact selection. It owns no carrier or enum: admission

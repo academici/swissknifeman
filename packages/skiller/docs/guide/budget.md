@@ -154,7 +154,7 @@ flowchart LR
     wayfinder["wayfinder<br/>⊕48 ↻966"]:::mild
   end
   subgraph general["general"]
-    anti_drift["anti-drift<br/>⊕32 ↻1971"]:::cool
+    anti_drift["anti-drift<br/>⊕32 ↻2099"]:::cool
     compact_responses["compact-responses<br/>⊕40 ↻227"]:::cool
     complex_task_orchestrator["complex-task-orchestrator<br/>⊕33 ↻632"]:::cool
     context_economy["context-economy<br/>⊕39 ↻490"]:::cool
@@ -166,7 +166,7 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻503"]:::warm
-    plan_protocol["plan-protocol<br/>⊕31 ↻8798"]:::cool
+    plan_protocol["plan-protocol<br/>⊕31 ↻8996"]:::cool
     project_map["project-map<br/>⊕83 ↻618"]:::warm
     session_handoff["session-handoff<br/>⊕29 ↻590"]:::cool
     shell["shell<br/>⊕73 ↻1997"]:::mild
@@ -310,10 +310,10 @@ flowchart LR
     harness_operations["harness-operations<br/>⊕87 ↻2105"]:::warm
     maind_overview["maind-overview<br/>⊕80 ↻1626"]:::warm
     package_architecture["package-architecture<br/>⊕85 ↻3740"]:::warm
-    project_tooling_runbook["project-tooling-runbook<br/>⊕93 ↻6971"]:::warm
+    project_tooling_runbook["project-tooling-runbook<br/>⊕93 ↻7290"]:::warm
     release_discipline["release-discipline<br/>⊕64 ↻805"]:::mild
     skill_authoring["skill-authoring<br/>⊕44 ↻1792"]:::mild
-    task_development_philosophy["task-development-philosophy<br/>⊕74 ↻3160"]:::mild
+    task_development_philosophy["task-development-philosophy<br/>⊕74 ↻3222"]:::mild
   end
   subgraph research["research"]
     query_craft["query-craft<br/>⊕35 ↻257"]:::cool
@@ -446,14 +446,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 232 скиллов · ⊕ always **15911** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 330089 ток · ⌥ on-demand 840776 ток (сниппеты + references).
+**Итого:** 232 скиллов · ⊕ always **15911** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 330796 ток · ⌥ on-demand 840865 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1263 | 33668 | 28181 |
-| `repository-bootstrap` | 14 | 1098 | 28591 | 0 |
+| `general` | 22 | 1263 | 33994 | 28270 |
+| `repository-bootstrap` | 14 | 1098 | 28972 | 0 |
 | `php` | 17 | 1065 | 18886 | 54837 |
 | `architect` | 15 | 1005 | 23164 | 33458 |
 | `quality` | 11 | 835 | 20355 | 7447 |
@@ -526,12 +526,12 @@ flowchart LR
 | Скилл | Бакет | ток |
 |---|---|--:|
 | `vueuse-functions` | frontend-vue | 10838 |
-| `plan-protocol` | general | 8798 |
-| `project-tooling-runbook` | repository-bootstrap | 6971 |
+| `plan-protocol` | general | 8996 |
+| `project-tooling-runbook` | repository-bootstrap | 7290 |
 | `package-architecture` | repository-bootstrap | 3740 |
 | `workflow-craft` | general | 3349 |
+| `task-development-philosophy` | repository-bootstrap | 3222 |
 | `mcp-advisor` | general | 3188 |
 | `voice-ai` | voice-ai | 3165 |
-| `task-development-philosophy` | repository-bootstrap | 3160 |
 | `modular-architecture` | laravel-architecture | 3112 |
 | `laravel-testing` | laravel-testing | 3034 |

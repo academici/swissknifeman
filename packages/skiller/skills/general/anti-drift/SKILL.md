@@ -57,11 +57,11 @@ silent overwrite.
 
 Catches three degradation patterns: layered edits (new layer atop old instead of removing it), symptomatic fixes (treat the log not the cause), context saturation (conflict with early session decisions).
 
-- **Soft (warning):** codebase investigation >~10 tool-calls without a conclusion → stop, formulate a decision from current data; ask for what's missing.
-- **Hard stop:** after ~20 iterations with no working result → stop, describe what you tried and why it failed. Then `session-handoff` + new session with clean context, or ask the user.
+- **Soft (warning):** codebase investigation >~10 tool-calls without a conclusion → stop and formulate the smallest reversible decision from current data. Ask only when a missing fact materially changes the product outcome.
+- **Hard stop:** after ~20 iterations with no working result → checkpoint: describe the failed tactics, choose a genuinely different tactic or narrow the reproducer, and continue in the current root when context and capability still suffice. `session-handoff` + a new session is allowed only for a proved context/capability/owner boundary; it is not the default circuit-breaker action.
 - **Complexity-escalation ban:**
   - Needs a new package or abstraction layer → ASK first.
-  - Touches >5 files → describe plan first, then edit.
+  - Touches >5 files → check whether a new contract or irreversible surface is actually involved. If not, keep the direct task and validate the affected delta; file count alone does not require design or a new session.
   - Second fix of the same symptom → stop, find root cause (reproduction → root cause → fix → verification), not a third patch.
 - **Dependent-package boundary — ask before extending.** A dependent package (`vendor/**`, path-repo `packages/**`, shared package) is **read-only** by default. Before adding a class/provider/interface/abstraction:
   - Survey package structure first for an existing extension point (contract, event, config, trait) — often nothing new is needed.

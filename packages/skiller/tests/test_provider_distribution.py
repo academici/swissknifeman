@@ -332,6 +332,43 @@ class ProviderDistributionCase(unittest.TestCase):
             do_connect(self.env, self.root, opts, register=False)
         self.assertFalse((self.root / ".agents/plugins/bundles").exists())
 
+    def test_connect_replacement_dry_run_matches_apply_without_consumer_writes(self):
+        self.write_provider_config(providers())
+        materialize_codex_marketplace(self.root)
+        opts = {"plugins": "php,quality", "no_core": True, "no_permissions": True}
+        with contextlib.redirect_stdout(io.StringIO()):
+            do_connect(self.env, self.project, opts)
+        before = {path.relative_to(self.project).as_posix(): path.read_bytes()
+                  for path in self.project.rglob("*") if path.is_file()}
+        replacement = dict(opts, plugins="php")
+        with contextlib.redirect_stdout(io.StringIO()):
+            do_connect(self.env, self.project, dict(replacement, dry_run=True))
+        after = {path.relative_to(self.project).as_posix(): path.read_bytes()
+                 for path in self.project.rglob("*") if path.is_file()}
+        self.assertEqual(before, after)
+        with contextlib.redirect_stdout(io.StringIO()):
+            do_connect(self.env, self.project, replacement)
+        marketplace = json.loads((self.project / ".agents/plugins/marketplace.json").read_text())
+        self.assertEqual([entry["name"] for entry in marketplace["plugins"]], ["php"])
+        self.assertFalse((self.project / ".agents/plugins/bundles/quality").exists())
+
+    def test_connect_replacement_refuses_modified_preimage_without_writes(self):
+        self.write_provider_config(providers())
+        materialize_codex_marketplace(self.root)
+        opts = {"plugins": "php,quality", "no_core": True, "no_permissions": True}
+        with contextlib.redirect_stdout(io.StringIO()):
+            do_connect(self.env, self.project, opts)
+        path = self.project / ".agents/plugins/bundles/php/.codex-plugin/plugin.json"
+        path.write_text('{"name":"modified"}\n', encoding="utf-8")
+        before = {p.relative_to(self.project).as_posix(): p.read_bytes()
+                  for p in self.project.rglob("*") if p.is_file()}
+        for dry_run in (True, False):
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()), \
+                    self.assertRaises(SystemExit):
+                do_connect(self.env, self.project, dict(opts, plugins="php", dry_run=dry_run))
+            self.assertEqual(before, {p.relative_to(self.project).as_posix(): p.read_bytes()
+                                     for p in self.project.rglob("*") if p.is_file()})
+
     def test_native_install_is_explicit_and_dry_run_never_calls_runner(self):
         calls = []
         ok, message = run_codex_native_install(

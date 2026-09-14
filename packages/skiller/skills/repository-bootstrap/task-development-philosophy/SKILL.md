@@ -94,7 +94,9 @@ static/structural check
 
 Item close owns item-level Validation and completes in the execution invocation once acceptance is
 GREEN. If that item completes a GREEN phase eligible for direct close, close the phase before
-computing Next; do not hand off the current result to a separate close invocation. Persist a
+computing Next; do not hand off the current result to a separate close invocation. A compatible
+ready successor with `continue-root` is work to begin now in the same root, not a prompt for a new
+session or an owner question. Persist a
 digest-bound receipt so later consumers can prove whether relevant product/test/tool/config inputs,
 environment, route, and result are unchanged. Reuse current evidence across review, close, and
 delivery. Rerun the affected delta after a relevant change and rerun a live check at its live
@@ -125,7 +127,8 @@ when changing audit policy. For evidence-anchor topology, also read
 
 Continue first for local, reversible, in-scope failures. Repair the owning seam, rerun only its
 affected validation, and continue the same objective. Do not convert ordinary test failures,
-generated drift, missing bookkeeping, route noise, or a large file count into redesign.
+generated drift, missing bookkeeping, route noise, a large file count, or a phase that merely has
+not started execution into redesign or a fresh session.
 
 Escalate only when the next action needs authority the agent does not have, changes a frozen/public
 contract beyond scope, performs an irreversible or external action, or remains genuinely unbounded

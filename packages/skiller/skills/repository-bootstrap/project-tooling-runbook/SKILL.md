@@ -145,7 +145,7 @@ skiller status                       # what's connected: profile, buckets, chann
                                      #   (bucket both plugin and vendored) — also `swissknifeman skills status`
 # --- CONNECT channel (bucket plugins, not in repo) ---
 skiller connect --profile laravel-project          # connect by profile
-skiller connect --plugins a,b,c                    # exact bucket set (overwrites enabledPlugins)
+skiller connect --plugins a,b,c                    # desired set; extra Claude entries are retained
 skiller connect --plugins ... --dry-run            # preview (preserves permissions/bypass)
 # --- VENDOR channel (physical transfer of specific skills into the repo) ---
 skiller init                         # create .swissknifeman/config.json (mode:vendor) from autodetect
@@ -167,6 +167,20 @@ guidelines, but **NOT as a skills channel**. In `boost.json`: `"mcp": true`, `"g
 `frontend-wayfinder/wayfinder`, etc.). A needed
 Boost skill missing from the library — import it as external. The `laravel-boost` MCP server
 stays in `.mcp.json` (maind appends it on onboarding if the project has `boost.json`).
+
+For an explicitly requested smaller set, update `.swissknife.json::plugins`, disable surplus
+`<plugin>@swissknifeman` Claude entries, and run `connect --dry-run` before apply. Connect retains
+extra Claude entries and honors an explicit `false`; an exact plugin argument does not trim them.
+Codex Connect replaces only its lock-owned bundles and refuses modified preimages. Keep local
+skills; archive dangling legacy links separately with their preimages.
+
+Codex project bundles are an available marketplace surface, not native activation. In a trusted
+project, `.codex/config.toml` can select installed plugins with
+`[plugins."<plugin>@swissknifeman"]` and `enabled = true`. Keep this selection aligned with
+`.swissknife.json`; install missing native caches explicitly through Codex CLI and verify their
+digests. Use `codex plugin list --json` from the consumer and offline `codex debug prompt-input`
+to confirm the selected plugins contribute skills. Global cache versions and project bundle
+versions are separate observations; never infer release delivery from a Connect success.
 
 **Adding a role to a project** (ask the channel first, see above):
 - **connect**: `connect --plugins <current>,<new>` (current — in `skiller status` /

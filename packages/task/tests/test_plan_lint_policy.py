@@ -58,6 +58,21 @@ class TestBriefLayer(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "Next без launch-block"), diag.errors)
 
+    def test_dated_continue_root_next_does_not_require_a_fresh_launch_block(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
+        handoff = plan_dir / "handoff.md"
+        text = handoff.read_text(encoding="utf-8").replace(
+            "| Context | fresh session |",
+            "| Context | continue-root |",
+        )
+        lines = [line for line in text.splitlines()
+                 if (not line.startswith("|") or line.startswith("| Context |"))
+                 and not line.startswith("```")
+                 and not line.startswith("/task:plan-exec")]
+        handoff.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "Next без launch-block"), [], diag.errors)
+
     def test_dated_plan_next_table_without_command_row_or_fence_is_error(self):
         # P5.8: таблица есть (`| Model |`), но нет НИ строки `| Команда |`, НИ code-block'а —
         # ни один из двух носителей команды не назван, гейт остаётся ERROR.

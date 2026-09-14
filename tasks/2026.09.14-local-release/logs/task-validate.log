@@ -1,0 +1,46 @@
+[1/5] python compile
+[2/5] bash syntax
+[3/5] обязательные файлы
+[4/5] slash-команды (frontmatter: description/model/effort)
+[5/5] тесты + явно выбранный plan-lint
+....................................................................usage: task.journal append [-h] --plan-dir PLAN_DIR --plan PLAN_ID --item
+                           ITEM_ID --command
+                           {plan-exec,plan-run,plan-close,plan-audit,plan-design}
+                           --result
+                           {in-progress,closed-green,closed-deviations,blocked,escalated,no-op,audit-green,audit-attention,audit-red,routing-rejected,decision-pending,local-repair,rag-pending,block-candidate}
+                           [--actor ACTOR] [--route-evidence ROUTE_EVIDENCE]
+                           [--session-id SESSION_ID] [--run-id RUN_ID]
+                           [--attempt ATTEMPT] [--friction FRICTION]
+                           [--cost-usd COST_USD] [--num-turns NUM_TURNS]
+                           [--duration-ms DURATION_MS] [--note NOTE]
+                           [--trace-ref TRACE_REF] [--fingerprint FINGERPRINT]
+                           [--decision-json DECISION_JSON]
+                           [--batch-receipt-json BATCH_RECEIPT_JSON]
+                           [--repair-decision-json REPAIR_DECISION_JSON]
+                           [--repair-action {repair-in-current-attempt,gather-evidence,block-candidate,design-required}]
+task.journal append: error: argument --command: invalid choice: 'plan-nope' (choose from 'plan-exec', 'plan-run', 'plan-close', 'plan-audit', 'plan-design')
+.ERROR: запись журнала не прошла валидацию: friction: обязан быть массивом значений из ('escalation', 'routing-blocked', 'route-deviation', 'red-audit', 'deviation', 'retry', 'no-op', 'local-repair', 'block-review', 'external-evidence')
+.............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................s.......................................................................................................................................................ERROR: ровно один из --actor / --route-evidence обязателен
+ERROR: ровно один из --actor / --route-evidence обязателен
+....ERROR: --route-evidence не читается: [Errno 2] No such file or directory: '/tmp/tmp_b3nbdyj/missing.json'
+............................................................................................................................................WARNING: token_estimate: артефакт калиброван под «codex/gpt-5.6-terra», сессия — «codex/other»; оценка может быть неточной
+.......................
+----------------------------------------------------------------------
+Ran 1073 tests in 16.560s
+
+OK (skipped=1)
+journal: append → /tmp/tmpsuj2kzsn/2026.07.18-FOREMAN/journal.jsonl
+journal: append → /tmp/tmpt24xo0qb/2026.07.18-FOREMAN/journal.jsonl
+journal: exception append → /tmp/tmpzpb_ziez/P/journal-exceptions.jsonl
+DIAGNOSTIC-PARITY-OK v2-fixture
+journal: append → /tmp/tmpuw52i1tx/P/journal.jsonl
+journal: append → /tmp/tmp7yjcvwmg/P/journal.jsonl
+journal: append → /tmp/tmp4fb7pc5l/P/journal.jsonl
+{"continuation": null, "final_allowed": false, "reason": "NOT_APPLICABLE", "recovery": null, "schema_version": "final-admission-event/v1", "sequence": null}
+WARN: /home/vostrikov/projects/packages/swissknifeman/plans/archive/2026.09.09-№1-LEAN-EXECUTION/phases/P3/P3.md: PHASE_AUDIT_INTENT_ADVISORY: Audit Intent: required не назначает audit; при следующей правке используйте direct-close-eligible
+WARN: /home/vostrikov/projects/packages/swissknifeman/plans/archive/2026.09.09-№1-LEAN-EXECUTION/phases/P4/P4.md: PHASE_AUDIT_INTENT_ADVISORY: Audit Intent: required не назначает audit; при следующей правке используйте direct-close-eligible
+WARN: /home/vostrikov/projects/packages/swissknifeman/plans/archive/2026.09.09-№1-LEAN-EXECUTION/phases/P5/P5.md: PHASE_AUDIT_INTENT_ADVISORY: Audit Intent: required не назначает audit; при следующей правке используйте direct-close-eligible
+plan-lint: OK (2 план(ов), 0 ошибок, 3 предупреждений)
+plan-lint --conflicts: OK (0 расхождений, 0 предупреждений)
+
+validate: OK

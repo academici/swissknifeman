@@ -284,6 +284,18 @@ class PlanDeliveryTests(unittest.TestCase):
         receipt = plan_delivery.build_handoff_receipt(plan, "design")
         self.assertIn("plan-design", receipt["next_exact"])
 
+    def test_generated_design_handoff_rejects_a_ready_unfinished_phase(self):
+        plan = write_valid_plan(self.root, "2026.09.14-№1-READY", layout="v2")
+        state = plan / "phases" / "P1" / "P1.1.state.md"
+        state.write_text(state.read_text(encoding="utf-8").replace(
+            "🟢 Done", "⬜ Not started"), encoding="utf-8")
+        handoff = plan / "handoff.md"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "/task:plan-exec 2026.09.14-№1-READY P1.1",
+            "/task:plan-design 2026.09.14-№1-READY P1"), encoding="utf-8")
+        with self.assertRaisesRegex(plan_delivery.DeliveryError, "PLAN_DESIGN_NOT_NEEDED"):
+            plan_delivery.build_handoff_receipt(plan, "design")
+
     def test_handoff_receipt_rejects_unknown_persisted_context(self):
         plan = write_valid_plan(self.root, "DEMO-BAD-CONTEXT", layout="v2")
         handoff = plan / "handoff.md"

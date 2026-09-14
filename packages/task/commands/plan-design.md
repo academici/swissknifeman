@@ -10,6 +10,12 @@ audit intent, rationale), Routing Batch/Review, Required Reads, Files, Validatio
 owned views. Use `task.plan_lifecycle.select(task.plan_lifecycle.LifecycleInput())` as the normal-path vocabulary: focused validation,
 selective projections, one semantic Next, and a measured context boundary.
 
+For an existing phase, inspect its item carriers and state before designing. If its items are already
+detailed and an unfinished item is execution-ready, return `task:plan-exec` for that item rather
+than redrafting the phase. “Next/new phase”, item count, local repair, or an ordinary failed check
+does not justify design; only new/from-draft scope or a concrete `design-required` contract decision
+does.
+
 внешняя ссылка на item использует `<PLAN-ID> Pn.m`; голый `Pn.m` допустим только внутри самого плана.
 
 Design completion records exactly one semantic Next. A bounded remediation does not manufacture a

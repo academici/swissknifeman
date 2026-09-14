@@ -302,18 +302,22 @@ phase in place. Handoff is computed from post-closure state and dependencies and
 `plan-close` for the current result or repeats `plan-exec`/`plan-run` for the current item. The
 `close` form remains compatible for an explicitly requested standalone reconciliation.
 
-Every runnable execution Next for an actual successor has a metadata table with Batch, Model class, Effort, Capabilities,
-Context, and Суть; the table never carries the invocation. Immediately after it, render exactly one
-copyable provider-native command block for the active provider adapter. Claude Code emits its native
-slash form; Codex emits a `bash` block that launches `codex` with pinned cwd, model, effort, approval,
-and sandbox. Never infer the provider from an example and never print both native providers. Prefer
-one physical command line. If a shell command is intentionally wrapped, every continued line except
-the last ends with `\`. Markdown visual wrapping is never command syntax. A runnable Next without
-this fenced command block is incomplete; a final response must not stop at a completion statement
-while an executable successor exists. Manual carries a fenced bare prompt instead. Legacy table rows
-named `Команда` remain readable for old plans but are never emitted. Non-execution Next uses
-`Batch: n/a`. `Batch` is copied from Routing and an execution handoff recommends the remaining batch; a safe ready subset of a recommended
-group is also permitted. The launch snippet is the copyable form.
+After a GREEN item, materialize the actual successor and obey its typed Context before responding.
+`continue-root` means begin the compatible ready successor in the same root invocation, not a
+handoff and not a reason to start a new Codex process. Continue the admitted Routing batch (or its
+safe ready subset) without asking the owner between ordinary items. Render a user-facing handoff
+only at a real stop boundary: `cold-start-root`, `waiting-owner`, `waiting-external`,
+`isolated-child-return`, or a terminal plan. A completion summary for an item with a compatible,
+ready `continue-root` successor is premature.
+
+At a real user-facing executable handoff, provide a metadata table with Batch, Model class, Effort,
+Capabilities, Context, and Суть; the table never carries the invocation. Immediately after it,
+render exactly one copyable provider-native command block for the active provider adapter. Claude
+Code emits its native slash form; Codex emits a `bash` block that launches `codex` with pinned cwd,
+model, effort, approval, and sandbox. Never infer the provider from an example and never print both
+native providers. For `waiting`, preserve the exact gate before the block with `# НЕ раньше:`.
+Manual carries a fenced bare prompt instead. Legacy table rows named `Команда` remain readable for
+old plans but are never emitted. Non-execution Next uses `Batch: n/a`.
 
 For layout v2 the Context field carries EXACTLY one of three values:
 
@@ -334,7 +338,9 @@ Persist that decision's `context`; pass the same typed decision to `PlanNextCarr
 delivery receipts, and plan-lint validate this result and never choose continuity independently.
 Unavailable context telemetry defaults to `continue-root`; `waiting-owner` suppresses a runnable
 successor; `waiting-external` persists its observation checkpoint and exact time/predicate continuation;
-DecisionRequest recovery preserves `resume-root` whenever that root still exists.
+DecisionRequest recovery preserves `resume-root` whenever that root still exists. A command, phase,
+directory, ordinary test failure, generated drift, or a design-looking file name is never a context
+boundary by itself.
 
 Before a terminal response, `plan-exec`, `plan-run`, and `plan-close` build a
 `terminal-delivery-receipt/v1` from the terminal journal pointer/run ID, current state/closure,
@@ -367,7 +373,11 @@ Before mutation and before final close, `task:plan-exec` and `task:plan-close` c
 `task_contract.build` and `task_contract.evaluate`. Green closure is the spec's FORM boundary,
 not a claim that runtime behavior was exhaustively proved.
 
-Use `task:plan-design` for new/from-draft/phase/item/finish/roadmap; `task:plan-exec` for pinned
+Before recommending `task:plan-design` for an existing phase, inspect its actual item carriers and
+generated state. A phase whose items are already detailed and whose first unfinished item is ready
+for execution receives `task:plan-exec`, not another design pass. `task:plan-design` is for
+new/from-draft scope or a concrete new contract decision; a file count, a failed ordinary check, or
+the phrase “next/new phase” is not a design trigger. Use `task:plan-exec` for pinned
 implementation items; `task:plan-run` for manual-route items in the current session;
 `task:plan-audit` for a design audit or an explicitly admitted adversarial phase audit;
 `task:plan-close` for explicitly

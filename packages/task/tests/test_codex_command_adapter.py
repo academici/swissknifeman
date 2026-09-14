@@ -82,7 +82,7 @@ class CodexCommandAdapterTests(unittest.TestCase):
         self.assertNotIn("${CLAUDE_PLUGIN_ROOT}", codex_runtime)
         self.assertNotIn("PYTHONPATH=packages/task/lib", codex_runtime)
 
-    def test_plan_runtime_requires_a_full_native_codex_launch_block(self):
+    def test_plan_runtime_requires_a_native_launch_only_at_a_real_boundary(self):
         plan_commands = {
             "plan-design", "plan-exec", "plan-run", "plan-audit", "plan-close",
         }
@@ -96,7 +96,7 @@ class CodexCommandAdapterTests(unittest.TestCase):
         for command, codex_runtime in runtimes.items():
             with self.subTest(command=command):
                 self.assertIn(
-                    "Native Codex launch-block — mandatory for every executable handoff",
+                    "Native Codex launch-block — required only at a real user-facing boundary",
                     codex_runtime)
                 self.assertIn("codex -C <repo-cwd> -m <model-selector>", codex_runtime)
                 self.assertIn("model_reasoning_effort=\"<effort-selector>\"", codex_runtime)
@@ -105,7 +105,8 @@ class CodexCommandAdapterTests(unittest.TestCase):
                 self.assertIn("never put the command in a table", codex_runtime)
                 self.assertIn("**Native Codex command:**", codex_runtime)
                 self.assertIn("Final-response guard", codex_runtime)
-                self.assertIn("do not stop after a completion summary", codex_runtime)
+                self.assertIn("continue work now, not a final response", codex_runtime)
+                self.assertIn("cold-start-root", codex_runtime)
         self.assertIn("do not reuse the preceding session's route", runtimes["plan-run"])
         self.assertIn("Codex snapshot transport guard", runtimes["plan-run"])
         self.assertIn("PLAN_CONTEXT_TRUNCATED", runtimes["plan-run"])

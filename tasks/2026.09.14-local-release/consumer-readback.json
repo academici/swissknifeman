@@ -1,0 +1,3929 @@
+{
+  "schema_version": "local-release-preflight/v1",
+  "created_at": "2026-09-14T07:49:17.702691+00:00",
+  "release": "v0.16.2",
+  "source_status": "BLOCKED_MISSING_RELEASE_TAG",
+  "delivery_dry_run_exit_code": 1,
+  "delivery_applied": false,
+  "updated_projects": [],
+  "targets": [
+    {
+      "root": "/home/vostrikov/Vaults/Brain",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json",
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/axioma",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/creative",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/finance",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/founder",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/legal",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/marketing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/operator",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/pm",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/research",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/roles",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/sales",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/axioma",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/creative",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/finance",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/founder",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/legal",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/marketing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/operator",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/pm",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/research",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/roles",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/sales",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/agelto/agelto",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/axioma-studio",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 18,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "general/.codex-plugin/plugin.json",
+            "general/anti-drift/SKILL.md",
+            "general/anti-drift/snippets/claude-md-anti-drift.md",
+            "general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/general",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/oss-dev",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/general",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "anti-drift/SKILL.md",
+            "anti-drift/snippets/claude-md-anti-drift.md",
+            "plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/oss-dev",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/diabox",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 18,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json",
+            "general/.codex-plugin/plugin.json",
+            "general/anti-drift/SKILL.md",
+            "general/anti-drift/snippets/claude-md-anti-drift.md",
+            "general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/blender",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/blender-modeling",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/python",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/blender",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/blender-modeling",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/python",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/dterema/app",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-linting",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-tailwind",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-vite",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-vue",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": ".claude/skills",
+          "status": "blocked",
+          "error_count": 3,
+          "errors": [
+            "anti-drift/SKILL.md",
+            "anti-drift/snippets/claude-md-anti-drift.md",
+            "plan-protocol/SKILL.md"
+          ]
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-linting",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-tailwind",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-vite",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-vue",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": ".claude/skills",
+          "status": "blocked",
+          "error_count": 3,
+          "errors": [
+            "anti-drift/SKILL.md",
+            "anti-drift/snippets/claude-md-anti-drift.md",
+            "plan-protocol/SKILL.md"
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/dterema/dterema",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-auth",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-data-layer",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/operator",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": ".claude/skills",
+          "status": "blocked",
+          "error_count": 3,
+          "errors": [
+            "anti-drift/SKILL.md",
+            "anti-drift/snippets/claude-md-anti-drift.md",
+            "plan-protocol/SKILL.md"
+          ]
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-auth",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-data-layer",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/operator",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": ".claude/skills",
+          "status": "blocked",
+          "error_count": 3,
+          "errors": [
+            "anti-drift/SKILL.md",
+            "anti-drift/snippets/claude-md-anti-drift.md",
+            "plan-protocol/SKILL.md"
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/edufy",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-auth",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-data-layer",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-auth",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-data-layer",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/flexcrm",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/azguard",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-backend",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-linting",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-naive-ui",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-tailwind",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-vite",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-vue",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-wayfinder",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-architecture",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-auth",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-data-layer",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-extras",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-filament",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/operator",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/azguard",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-backend",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-linting",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-naive-ui",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-tailwind",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-vite",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-vue",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-wayfinder",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-architecture",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-auth",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-data-layer",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-extras",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-filament",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/operator",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/memster",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-tailwind",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-auth",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-data-layer",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-filament",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/operator",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-tailwind",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-auth",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-data-layer",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-filament",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/operator",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/packages/agentools",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/dart",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/mobile",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php-packages",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/dart",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/mobile",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php-packages",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/packages/azguard",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json",
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/oss-dev",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php-packages",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": ".claude/skills",
+          "status": "blocked",
+          "error_count": 3,
+          "errors": [
+            "anti-drift/SKILL.md",
+            "anti-drift/snippets/claude-md-anti-drift.md",
+            "plan-protocol/SKILL.md"
+          ]
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/oss-dev",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php-packages",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": ".claude/skills",
+          "status": "blocked",
+          "error_count": 3,
+          "errors": [
+            "anti-drift/SKILL.md",
+            "anti-drift/snippets/claude-md-anti-drift.md",
+            "plan-protocol/SKILL.md"
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/packages/botkit",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/oss-dev",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php-packages",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": ".claude/skills",
+          "status": "blocked",
+          "error_count": 3,
+          "errors": [
+            "anti-drift/SKILL.md",
+            "anti-drift/snippets/claude-md-anti-drift.md",
+            "plan-protocol/SKILL.md"
+          ]
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/oss-dev",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php-packages",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": ".claude/skills",
+          "status": "blocked",
+          "error_count": 3,
+          "errors": [
+            "anti-drift/SKILL.md",
+            "anti-drift/snippets/claude-md-anti-drift.md",
+            "plan-protocol/SKILL.md"
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/packages/chatom",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-auth",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-data-layer",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php-packages",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-auth",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-data-layer",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php-packages",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/packages/corex",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/oss-dev",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php-packages",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/oss-dev",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php-packages",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/packages/erp-sdk",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 18,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "general/.codex-plugin/plugin.json",
+            "general/anti-drift/SKILL.md",
+            "general/anti-drift/snippets/claude-md-anti-drift.md",
+            "general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/mobile",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/mobile",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/packages/loqum",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/ai",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/ai",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/packages/perplexity-web-mcp",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/packages/vaulter",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php-packages",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php-packages",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/vintera/cms",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/oss-dev",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php-packages",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": ".claude/skills",
+          "status": "blocked",
+          "error_count": 3,
+          "errors": [
+            "anti-drift/SKILL.md",
+            "anti-drift/snippets/claude-md-anti-drift.md",
+            "plan-protocol/SKILL.md"
+          ]
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/oss-dev",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php-packages",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": ".claude/skills",
+          "status": "blocked",
+          "error_count": 3,
+          "errors": [
+            "anti-drift/SKILL.md",
+            "anti-drift/snippets/claude-md-anti-drift.md",
+            "plan-protocol/SKILL.md"
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/projects/vintera/vintera",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-linting",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-tailwind",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-vite",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-vue",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": ".claude/skills",
+          "status": "blocked",
+          "error_count": 3,
+          "errors": [
+            "anti-drift/SKILL.md",
+            "anti-drift/snippets/claude-md-anti-drift.md",
+            "plan-protocol/SKILL.md"
+          ]
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-linting",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-tailwind",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-vite",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/frontend-vue",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": ".claude/skills",
+          "status": "blocked",
+          "error_count": 3,
+          "errors": [
+            "anti-drift/SKILL.md",
+            "anti-drift/snippets/claude-md-anti-drift.md",
+            "plan-protocol/SKILL.md"
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/sibintek/projects/insiders",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-auth",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-data-layer",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-auth",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-data-layer",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "root": "/home/vostrikov/sibintek/projects/sova",
+      "registered": true,
+      "exists": true,
+      "writes_performed": false,
+      "previous_release_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "blocked",
+          "error_count": 14,
+          "errors": [
+            "core/packages/skiller/skills/general/anti-drift/SKILL.md",
+            "core/packages/skiller/skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "core/packages/skiller/skills/general/plan-protocol/SKILL.md",
+            "task/.claude-plugin/plugin.json",
+            "task/commands/plan-design.md",
+            "task/commands/plan-exec.md",
+            "task/commands/plan-run.md",
+            "task/configs/command-routing.json",
+            "task/lib/task/command_render.py",
+            "task/lib/task/plan_delivery.py",
+            "task/lib/task/plan_lint_checks/engine.py",
+            "task/lib/task/plan_readiness.py",
+            "task/runtime/plan-protocol/SKILL.md",
+            "task/runtime/plan-protocol/provenance.json"
+          ]
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-auth",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-data-layer",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/operator",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ],
+      "draft_readback": [
+        {
+          "surface": "claude-activation/settings.local.json",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/architect",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/core",
+          "status": "blocked",
+          "error_count": 4,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "skills/general/anti-drift/SKILL.md",
+            "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
+            "skills/general/plan-protocol/SKILL.md"
+          ]
+        },
+        {
+          "surface": "codex/devops",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-auth",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-data-layer",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/laravel-testing",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/operator",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/php",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/quality",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/system",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        },
+        {
+          "surface": "codex/task",
+          "status": "blocked",
+          "error_count": 9,
+          "errors": [
+            ".codex-plugin/plugin.json",
+            "adapters/codex/skills/task-plan-audit/command.md",
+            "adapters/codex/skills/task-plan-close/command.md",
+            "adapters/codex/skills/task-plan-design/SKILL.md",
+            "adapters/codex/skills/task-plan-design/command.md",
+            "adapters/codex/skills/task-plan-exec/SKILL.md",
+            "adapters/codex/skills/task-plan-exec/command.md",
+            "adapters/codex/skills/task-plan-run/SKILL.md",
+            "adapters/codex/skills/task-plan-run/command.md"
+          ]
+        },
+        {
+          "surface": "provider-lock",
+          "status": "current",
+          "error_count": 0,
+          "errors": []
+        }
+      ]
+    }
+  ]
+}

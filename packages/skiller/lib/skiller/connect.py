@@ -1,10 +1,14 @@
 """connect — канал plugin marketplace Claude Code."""
 import json
 import shutil
+import tempfile
+from dataclasses import replace
+from pathlib import Path
 
 from core import (apply_plan, atomic_write_text, find_repo_root, parse_lock,
                   safe_load_json, serialize_lock)
 from core.provider.lock import ArtifactLock, LOCK_RELATIVE_PATH
+from core.provider.artifact import sha256_digest
 
 from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, apply_permissions,
                      die, is_within, parse_flags, warn)
@@ -32,9 +36,17 @@ def _prune_codex_connect_artifacts(target, *, dry_run):
         die(f"SPUB_OWNERSHIP_CONFLICT: provider codex, invalid artifact lock {lock_path}: {exc}")
     prefix = ".agents/plugins/"
     stale = tuple(record for record in lock.records
-                  if record.provider_id.value == "codex" and record.target_path.startswith(prefix))
+                  if record.artifact_id.startswith("skiller.codex.connect.")
+                  and record.provider_id.value == "codex"
+                  and record.target_path.startswith(prefix))
     if not stale:
         return
+    # Validate every preimage before deleting any owned artifact.
+    for record in stale:
+        path = target / record.target_path
+        if (path.is_symlink() or (path.exists() and
+                (not path.is_file() or sha256_digest(path.read_bytes()) != record.rendered_hash))):
+            die(f"SPUB_OWNERSHIP_CONFLICT: provider codex, modified prior artifact: {path}")
     if dry_run:
         print(f"--- dry-run: prune {len(stale)} prior Codex Connect artifact(s) ---")
         return
@@ -368,9 +380,28 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
     prepared = _prepare_connect_selection(env, target, opts, config)
     if "codex" in selected_distribution_providers(config, project_id=target.name):
         _prune_codex_connect_artifacts(target, dry_run=opts.get("dry_run", False))
-    plans = build_connect_distribution_plan(config, target, project_id=target.name,
-                                            repo_root=repo_root,
-                                            plugins=prepared["plugins"])
+    if (opts.get("dry_run", False) and target.resolve() != repo_root.resolve()
+            and (target / LOCK_RELATIVE_PATH).is_file()
+            and "codex" in selected_distribution_providers(config, project_id=target.name)):
+        # The write path plans after pruning. Mirror only that surface so dry-run
+        # sees the same post-prune files and lock without changing the consumer.
+        with tempfile.TemporaryDirectory(prefix="skiller-connect-preflight-") as folder:
+            snapshot = Path(folder)
+            bundles = target / ".agents/plugins"
+            if bundles.is_dir():
+                shutil.copytree(bundles, snapshot / ".agents/plugins", symlinks=True)
+            snapshot_lock = snapshot / LOCK_RELATIVE_PATH
+            snapshot_lock.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(target / LOCK_RELATIVE_PATH, snapshot_lock)
+            _prune_codex_connect_artifacts(snapshot, dry_run=False)
+            plans = build_connect_distribution_plan(
+                config, snapshot, project_id=target.name, repo_root=repo_root,
+                plugins=prepared["plugins"])
+            plans = tuple(replace(plan, target=target / plan.target_identity) for plan in plans)
+    else:
+        plans = build_connect_distribution_plan(config, target, project_id=target.name,
+                                                repo_root=repo_root,
+                                                plugins=prepared["plugins"])
     if any(plan.provider_id == "claude-code" for plan in plans):
         _preflight_claude_connect_target(target, opts)
     records = []

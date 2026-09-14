@@ -19,6 +19,11 @@
 
 ## Диспозиция 2026-09-13
 
+Task launch-block parity закрыт: `continue-root` продолжает ready batch в том же root, а
+user-facing launch печатается только на реальной cold-start/wait boundary; delivery не предлагает
+`plan-design` для уже детализированной незавершённой фазы. Оригинал перенесён в
+[`archive/`](archive/README.md).
+
 Четыре новых incident carrier реализованы напрямую в одной сессии без master plan:
 Task opt-in routing, interrupted predecessor recovery, finite owner authority/calendar
 и release-to-runtime delivery. Оригиналы перенесены в [`archive/`](archive/README.md).

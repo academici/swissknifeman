@@ -64,6 +64,7 @@ def _validate_design_continuation(plan_dir: Path, next_exact: str) -> None:
         )
     try:
         plan_readiness.validate_design_target(plan_dir, phase_id)
+        plan_readiness.validate_design_handoff_target(plan_dir, phase_id)
     except plan_readiness.ReadinessError as exc:
         raise DeliveryError("PHASE_REENTRY_UNJUSTIFIED", str(exc)) from exc
 

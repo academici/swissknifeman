@@ -1,13 +1,17 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:1592207cf0b13c466ad62ab1bc7e2686debffe069a5cd5e846cd2a11c0c4ad70
+Canonical SHA-256: sha256:83555fa9ce79b267cbea0dd85d8d345de7d23262a67ac299029b5078cd0adac7
 Adapter: task.codex-command/1.0.12
 -->
-## Native Codex launch-block — mandatory for every executable handoff
+## Native Codex launch-block — required only at a real user-facing boundary
 
 This generated runtime is the Codex provider projection. Render only the Codex-native launch;
 never copy Claude Code slash syntax as the executable invocation and never print both providers.
 `$ task:…` is an invocation inside the **current** Codex session, not a fresh launch.
+When the typed Context is `continue-root`, keep executing the compatible ready successor in this
+root: do not finalise, ask the owner, or manufacture a fresh `codex` process between ordinary
+items. A command, phase, directory, local repair, or ordinary test failure is not a session
+boundary.
 
 Keep Batch/Model/Thinking/Context/Суть in the metadata table, but never put the command in a table
 cell or column. Immediately after the table print `**Native Codex command:**` and a fenced `bash`
@@ -21,10 +25,11 @@ codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-sele
 Prefer one physical command line. If intentional formatting uses multiple shell lines, terminate
 every continued line except the last with `\`; never rely on Markdown visual wrapping.
 
-**Final-response guard:** when an executable Next exists, do not stop after a completion summary,
-`Delivery receipt`, or `PHASE-CLOSED`. Before final, verify that the copyable native Codex `bash`
-block is present after the metadata table. Only a genuinely terminal Next with no executable
-successor may omit it.
+**Final-response guard:** a `continue-root` successor means continue work now, not a final response.
+At a real user-facing boundary with an executable Next (`cold-start-root`, `waiting-owner`, or
+`waiting-external`), do not stop after a completion summary, `Delivery receipt`, or `PHASE-CLOSED`.
+Before final, verify that the copyable native Codex `bash` block is present after the metadata table.
+Only a genuinely terminal Next with no executable successor may omit it.
 
 Derive the class and effort from the next item's Routing before rendering it; for `plan-run`,
 do not reuse the preceding session's route. Current Codex mapping: economy=gpt-5.6-luna, implementation=gpt-5.6-terra, frontier=gpt-5.6-sol;
@@ -79,6 +84,15 @@ Execute the admitted Routing group or ready subset of a recommended group for `$
 provider-attested overshoot is recorded and undershoot stops before mutation.
 Activation follows explicit owner plan intent or an exact cited local workflow policy in the
 shared [intent routing canon](../references/intent-routing.md).
+
+## Continuous execution
+
+After each GREEN item, materialize its successor and apply the persisted continuity decision. For
+`continue-root`, immediately execute the compatible ready successor in the admitted Routing batch
+(or safe ready subset) in this same root; do not emit a final, ask the owner, or launch a fresh
+session between ordinary items. A user-facing native launch block is for a real `cold-start-root`
+or waiting boundary only. Local reversible repair stays in this invocation. A design pass is allowed
+only when `plan_repair` returns `design-required` for a concrete unapproved contract decision.
 
 ## Shared lifecycle
 

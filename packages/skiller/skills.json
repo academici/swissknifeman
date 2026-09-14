@@ -2074,8 +2074,8 @@
       "path": "skills/general/anti-drift/SKILL.md",
       "version": "0.5.0",
       "description": "Discipline against agent rabbit-holing: think first, simplicity, surgical edits, circuit-breaker.",
-      "sha256": "cf35afa6747a1c0d1b82629866843d4e6c7a7552838b02f2fee95c0c3228677c",
-      "content_sha256": "63e504fd7e2044eb6e6e2966479c0609129cc18ff07a4d894c95be5bd7884b96",
+      "sha256": "b0b75a5bd105ea15ff82b3c62448d40d9d71160ac45eea66149e4fb5d43a17f6",
+      "content_sha256": "2a0f28aaca4833229ceec531bfb316e15edeb53118a63ff34a0c427bac2a91d7",
       "tags": [
         "workflow",
         "discipline",
@@ -2308,8 +2308,8 @@
       "path": "skills/general/plan-protocol/SKILL.md",
       "version": "2.33.0",
       "description": "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff.",
-      "sha256": "4448c0650fb9cd7833bbecc3326ac947d28a628ed94a60078e0cc96c1e80720c",
-      "content_sha256": "481ac84b8b17143737932590777d96e5bb969481c0eef9ea7eff28f623823f23",
+      "sha256": "e46aae9ad332885be87ee86b35b99a11f45389849ee712175c9742f9e9b85e79",
+      "content_sha256": "9aa0db93cd71750ffb6c16914009fe43e23373b0ec768d3a73cde0e8cb1db51f",
       "tags": [
         "workflow",
         "planning",
@@ -4351,8 +4351,8 @@
       "path": "skills/repository-bootstrap/project-tooling-runbook/SKILL.md",
       "version": "0.1.0",
       "description": "Runbook for ecosystem project tooling: multi-source skills (swissknifeman connect/vendor channels + local skills; Laravel Boost as MCP only) and docs sync with Brain vault. Use to add/choose skills (ALWAYS ask connect vs vendor), configure agent-packs, sync docs, or handle config hygiene.",
-      "sha256": "bf465b6a2ff7ddeca408b84ddfcfbc970ca7a681d01f0d42155fe2892a018f43",
-      "content_sha256": "b80ac00fc05ba48ff9d924e5fcb498dec9c65d667ee574fbfa3ba0c945f5b30e",
+      "sha256": "7229e556508324d7d83a8fb11dc6698e58774586aa83ac77cec1efbf16760170",
+      "content_sha256": "8d2f67dd7596b62e9996a35a744c8310caeedcee30f8d7009390fea76ba4ad09",
       "tags": [
         "runbook",
         "skills",
@@ -4399,8 +4399,8 @@
       "path": "skills/repository-bootstrap/task-development-philosophy/SKILL.md",
       "version": "0.2.0",
       "description": "Guardrails for keeping Task plans flexible, proportional, and loop-free. Activate before creating or revising a plan in this repository or changing packages/task planning, validation, audit, close, retry, or budget policy.",
-      "sha256": "ec518123894bd8c2b39d76eb435c2dc8a4260bacba5149f1c4c91637054c6a4c",
-      "content_sha256": "f9c83e3e7122e76410c9068b55b227c0612a10a20d1521d4388b8550821b33b9",
+      "sha256": "79d45a886fb67bea401501f4615257816f6bbaafab0949a1b0d8e71cb73dc85c",
+      "content_sha256": "535c9e892a2f2e9937605f962c59101c6ef4057bbf420714666aafe9093ea172",
       "tags": [
         "task",
         "philosophy",

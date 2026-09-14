@@ -48,7 +48,22 @@ downstream carrier без обязательного shell-запуска.
 или approved no-op → `continue-current`; stale/missing → `repair-in-current-attempt`; доказанный
 contract conflict с `phase-reentry-justification/v1` → `reopen-phase`; закрытый `fix-branch/v1` с
 объявленным target → `priority-fix`. Решение всегда nonterminal и проецируется в status/returns.
-Lint и delivery отклоняют `plan-design` для терминальной фазы без exact re-entry evidence.
+Lint и delivery отклоняют `plan-design` для терминальной фазы без exact re-entry evidence. Delivery
+также отклоняет автоматически сгенерированный `plan-design`, если фаза уже детализирована и имеет
+незавершённый item: следующий шаг тогда `plan-exec`, а не повторный дорогой design pass.
+
+## Continue-root без лишней сессии
+
+После GREEN item executor сначала материализует successor и читает его typed Context.
+`continue-root` означает продолжить совместимый ready item из admitted Routing batch в том же root:
+не отдавать final, не спрашивать владельца и не запускать новый процесс Codex. Обычный repair,
+смена item/фазы, generated drift и failed check сами по себе не образуют context boundary.
+
+Новый provider-native launch-block нужен только в реальном user-facing boundary:
+`cold-start-root`, `waiting-owner`, `waiting-external` или `isolated-child-return`. В таком final
+он содержит metadata-таблицу и ровно одну copyable provider command; для waiting строка
+`# НЕ раньше:` сохраняет точное условие. Поэтому владелец получает полный запуск с моделью,
+effort, cwd, approval и sandbox только тогда, когда новая сессия действительно необходима.
 
 ## Когда допустим Blocked
 

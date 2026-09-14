@@ -1,5 +1,6 @@
 """connect — канал plugin marketplace Claude Code."""
 import json
+import re
 import shutil
 import tempfile
 from dataclasses import replace
@@ -18,6 +19,28 @@ from .config import (CORE_BUCKETS, CORE_PLUGIN, CORE_SKILLS,
 from .hub import generate_hub, hub_artifacts_exist
 from .state import upsert_project
 from .publication import build_connect_distribution_plan, selected_distribution_providers
+
+
+_PREVIEW_SECRET_KEY = re.compile(r"(?:api[_-]?key|authorization|credential|password|secret|token|private[_-]?key)", re.I)
+
+
+def _redacted_settings_preview(value, *, key="", redact=False):
+    """Return a dry-run-safe copy of consumer settings for terminal output.
+
+    A delivery dry-run may replay an existing ``settings.local.json``. Its
+    ``env`` table often contains provider credentials, so printing the merged
+    settings document would leak them into terminal logs and release receipts.
+    The writer still receives the original object; only this preview is redacted.
+    """
+    if isinstance(value, dict):
+        redact = redact or key == "env"
+        return {name: _redacted_settings_preview(item, key=name, redact=redact)
+                for name, item in value.items()}
+    if isinstance(value, list):
+        return [_redacted_settings_preview(item, key=key, redact=redact) for item in value]
+    if redact or _PREVIEW_SECRET_KEY.search(key):
+        return "[REDACTED]"
+    return value
 
 
 def _prune_codex_connect_artifacts(target, *, dry_run):
@@ -250,7 +273,7 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
 
     if dry_run:
         print(f"--- dry-run: {dest} ---")
-        print(json.dumps(settings, ensure_ascii=False, indent=2))
+        print(json.dumps(_redacted_settings_preview(settings), ensure_ascii=False, indent=2))
     else:
         if dest.exists():
             shutil.copy2(dest, f"{dest}.bak")

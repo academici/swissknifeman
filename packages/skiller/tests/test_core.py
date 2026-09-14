@@ -95,6 +95,23 @@ class CoreCase(unittest.TestCase):
         self.assertNotIn("general", enabled)   # целые бакеты больше не пушим
         self.assertNotIn("oss-dev", enabled)
 
+    def test_connect_dry_run_redacts_existing_environment_secrets(self):
+        proj = fx.make_laravel_project(self.tmp)
+        settings_path = proj / ".claude" / "settings.local.json"
+        settings_path.parent.mkdir()
+        settings_path.write_text(json.dumps({
+            "env": {"PERPLEXITY_API_KEY": "private-value"},
+            "extraKnownMarketplaces": {},
+        }), encoding="utf-8")
+
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            do_connect(self.env, proj, {"dry_run": True, "no_core": True})
+
+        self.assertNotIn("private-value", output.getvalue())
+        self.assertIn("[REDACTED]", output.getvalue())
+        self.assertIn("private-value", settings_path.read_text(encoding="utf-8"))
+
     def test_connect_no_core_omits_core_plugin(self):
         proj = fx.make_laravel_project(self.tmp)
         do_connect(self.env, proj, {"no_core": True})

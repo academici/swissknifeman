@@ -15,6 +15,11 @@
 - [Task launch-block parity](2026.09.13-task-final-launch-block-parity.md): `continue-root`
   продолжает ready batch в том же root; cold-start/wait final получает один native launch-block,
   а delivery не рекомендует design для уже детализированной фазы.
+- [CoreX B-P3 local resource efficiency](2026.09.15-corex-p3-local-resource-efficiency.md):
+  ограниченные repairs Task/Harness выполнены и выпущены в `v0.18.0`; измерение полного
+  resource-effect остаётся отдельным условным исследованием.
+- [Open-run final admission](2026.09.15-task-open-run-final-admission-regression.md):
+  session-bound guard реализован и выпущен в `v0.18.0`; full transport acceptance не заявлен.
 
 Machine-local receipt находится в `~/.swissknifeman/receipts/delivery/v0.16.0/`.
 Он отдельно фиксирует успешные и заблокированные targets; публикация тега не означает GREEN delivery.

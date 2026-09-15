@@ -55,6 +55,15 @@ class PlanHistoryTests(unittest.TestCase):
         self.assertIn("projection: history", first)
         self.assertIn("inputs_sha256:", first)
 
+    def test_history_includes_secondary_affected_item(self):
+        path = self.plan / "decisions" / "D1-fixture.md"
+        path.write_text(_decision().replace("items: [P1.1]", "items: [P1.1, P1.2]"))
+        records, inputs = plan_history._decision_records(self.plan, "P1.2")
+        self.assertEqual([record.identity for record in records], ["D1"])
+        self.assertEqual(inputs, [path])
+        self.assertEqual(records[0].payload["items"], ["P1.1", "P1.2"])
+        self.assertEqual(plan_history._decision_records(self.plan, "P1.3"), ([], []))
+
     def test_materialization_is_explicit_and_check_detects_drift(self):
         target = self.plan / ".plan-cache" / "history" / "P1.1.md"
         self.assertEqual(plan_history.materialize_history(self.plan, "P1.1", target), target)

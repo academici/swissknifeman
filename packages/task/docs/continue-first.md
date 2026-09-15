@@ -150,6 +150,14 @@ package-owned границу до `final`, но не заявляет недос
 
 ## Terminal admission lease
 
+Включённый Stop-адаптер сначала вызывает `plan-terminal-admission.py check-open
+--project-root <cwd> --provider-session <session>`. Этот шаг не требует lease или специального
+payload: он проверяет latest execution state текущей сессии в живых `plans/*/journal.jsonl`.
+`in-progress` отклоняет final с `TASK_OPEN_RUN_FINAL_FORBIDDEN`; промежуточные успехи выводятся
+как progress. Проверка не закрывает item и не заменяет существующий receipt gate. Реальная
+защита требует доставленного Task CLI и включённого native Stop hook; перенос run в новую
+сессию и полный structured waiting handoff требуют отдельной привязки.
+
 `terminal_admission` adds the repository-owned seam between a Task run and a documented provider
 Stop adapter. Its ignored `.swissknifeman/task-terminal/` state binds provider/session, Task
 session, plan, subject, command and run ID to one monotonic, expiring lease; turn identity remains

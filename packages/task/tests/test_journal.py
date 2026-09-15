@@ -183,6 +183,21 @@ class TestTraceRef(TmpDirTestCase):
 
 
 class TestAppend(TmpDirTestCase):
+    def test_malformed_decision_rejects_terminal_before_journal_mutation(self):
+        decision = _validation_decision(self.plan_dir)
+        records = self.plan_dir / "decisions"
+        records.mkdir()
+        (records / "D1-broken.md").write_text("# Missing YAML\n")
+        start = new_entry(plan_id="P", item_id="P1.3", command="plan-run",
+                          actor="sonnet/high", result="in-progress")
+        path = append(self.plan_dir, start)
+        before = path.read_bytes()
+        terminal = new_entry(plan_id="P", item_id="P1.3", command="plan-run",
+                             actor="sonnet/high", result="closed-green", decision=decision)
+        with self.assertRaisesRegex(JournalValidationError, "TERMINAL_DECISIONS_INVALID"):
+            append(self.plan_dir, terminal)
+        self.assertEqual(path.read_bytes(), before)
+
     def test_start_and_terminal_share_deterministic_run_id(self):
         kwargs = dict(plan_id="P", item_id="P1.3", attempt=2, session_id="session-1")
         self.assertEqual(derive_run_id(**kwargs), derive_run_id(**kwargs))

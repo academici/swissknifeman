@@ -15,7 +15,7 @@ from core import ProviderId, load_provider_manifest, support_for
 from harness.hooks import (LifecycleRequest, adapt_codex_hook_payload, plan_lifecycle,
                            render_codex_hook_handler, render_codex_hooks)
 from harness.profiles import load_catalog
-from task import terminal_admission
+from task import journal, terminal_admission
 
 PACKAGE = Path(__file__).resolve().parents[1]
 ROOT = PACKAGE.parents[1]
@@ -122,6 +122,41 @@ class CodexLifecycleSurfaceTests(unittest.TestCase):
             result = _run_handler(handler, "lifecycle.terminal-admission", {**payload, "cwd": project})
             self.assertEqual(result.returncode, 0)
             self.assertEqual(result.stdout, b"")
+
+    def test_stop_dispatchers_reject_open_session_without_task_payload_or_lease(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "packages").mkdir()
+            (root / "packages/task").symlink_to(ROOT / "packages/task", target_is_directory=True)
+            for provider in ("codex", "claude"):
+                config = root / f".{provider}/terminal-admission.env.ini"
+                config.parent.mkdir()
+                config.write_text("MODE=on\n")
+            path = root / "plans/DEMO/journal.jsonl"
+            path.parent.mkdir(parents=True)
+            entry = journal.new_entry(plan_id="DEMO", item_id="P7.4", command="plan-run",
+                                      actor="sonnet/medium", result="in-progress",
+                                      session_id="s1", run_id="run-1", attempt=1)
+            path.write_text(json.dumps(entry) + "\n")
+            before = path.read_bytes()
+            handler = self._write_handler(root)
+            payload = {**_COMMON_FIELDS, "cwd": str(root), "hook_event_name": "Stop",
+                       "turn_id": "t1", "stop_hook_active": False,
+                       "last_assistant_message": "Subset tests passed. Done."}
+            adapters = ([sys.executable, str(handler), "--surface", "lifecycle.terminal-admission"],
+                        [sys.executable, str(PACKAGE / "configs/claude-code/hooks/terminal-admission/terminal-admission.py")])
+            for command in adapters:
+                with self.subTest(adapter=command):
+                    result = subprocess.run(command, input=json.dumps(payload), text=True,
+                                            capture_output=True, timeout=20)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(json.loads(result.stdout), {
+                        "decision": "block", "reason": "TASK_OPEN_RUN_FINAL_FORBIDDEN"})
+                    ordinary = subprocess.run(command, input=json.dumps({**payload, "session_id": "ordinary"}),
+                                              text=True, capture_output=True, timeout=20)
+                    self.assertEqual(ordinary.returncode, 0, ordinary.stderr)
+                    self.assertEqual(ordinary.stdout, "")
+            self.assertEqual(path.read_bytes(), before)
 
     def test_terminal_admission_proves_forty_advancing_boundaries_then_one_exact_final(self):
         """Exercise the shared P4.1 reducer; providers only render its verdict."""

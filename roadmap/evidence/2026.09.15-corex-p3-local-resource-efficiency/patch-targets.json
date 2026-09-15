@@ -1,0 +1,200 @@
+[
+  {
+    "line": 137,
+    "timestamp": "2026-09-15T18:07:28.131Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/decisions/D23-P3-local-read-budget-advisory.md",
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/scripts/task-check.py"
+    ]
+  },
+  {
+    "line": 184,
+    "timestamp": "2026-09-15T18:09:07.133Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/check-read-budget-policy.py"
+    ]
+  },
+  {
+    "line": 295,
+    "timestamp": "2026-09-15T18:12:18.741Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/decisions/D24-P3-local-read-carrier-repair.md"
+    ]
+  },
+  {
+    "line": 475,
+    "timestamp": "2026-09-15T18:32:05.950Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/decisions/D25-P3-local-owner-adoption.md"
+    ]
+  },
+  {
+    "line": 955,
+    "timestamp": "2026-09-15T18:47:29.106Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/checkpoint.md"
+    ]
+  },
+  {
+    "line": 1143,
+    "timestamp": "2026-09-15T18:52:07.323Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/core/tests/Storage/LocalTenantStorageTest.php"
+    ]
+  },
+  {
+    "line": 1152,
+    "timestamp": "2026-09-15T18:52:26.165Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/core/src/Storage/ScopedFilesystem.php"
+    ]
+  },
+  {
+    "line": 1179,
+    "timestamp": "2026-09-15T18:53:45.290Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/tests/Feature/StorageContextConformanceTest.php"
+    ]
+  },
+  {
+    "line": 1197,
+    "timestamp": "2026-09-15T18:54:23.281Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/src/Storage/ObjectTenantStorage.php",
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/composer.json"
+    ]
+  },
+  {
+    "line": 1231,
+    "timestamp": "2026-09-15T18:55:47.250Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/tests/Pg/PhysicalContextConformanceTest.php"
+    ]
+  },
+  {
+    "line": 1247,
+    "timestamp": "2026-09-15T18:56:03.120Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/src/Bootstrappers/WorkspaceContextBootstrapper.php"
+    ]
+  },
+  {
+    "line": 1265,
+    "timestamp": "2026-09-15T18:57:16.924Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/tests/Feature/StorageContextConformanceTest.php"
+    ]
+  },
+  {
+    "line": 1350,
+    "timestamp": "2026-09-15T18:59:58.546Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/tests/Feature/StorageContextConformanceTest.php"
+    ]
+  },
+  {
+    "line": 1359,
+    "timestamp": "2026-09-15T19:00:18.186Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/core/src/Storage/ScopedFilesystem.php"
+    ]
+  },
+  {
+    "line": 1394,
+    "timestamp": "2026-09-15T19:01:21.524Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/core/tests/Storage/LocalTenantStorageTest.php",
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/tests/Feature/StorageContextConformanceTest.php"
+    ]
+  },
+  {
+    "line": 1404,
+    "timestamp": "2026-09-15T19:01:35.855Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/decisions/D26-P3-local-usage-adjacency-repair.md",
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/phases/P3/P3.1.md"
+    ]
+  },
+  {
+    "line": 1410,
+    "timestamp": "2026-09-15T19:01:54.324Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/decisions/D26-P3-local-usage-adjacency-repair.md"
+    ]
+  },
+  {
+    "line": 1426,
+    "timestamp": "2026-09-15T19:02:22.977Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/core/src/Storage/LocalTenantStorage.php",
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/src/Storage/ContextTenantStorage.php"
+    ]
+  },
+  {
+    "line": 1472,
+    "timestamp": "2026-09-15T19:03:54.890Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/phpunit.xml",
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/decisions/D26-P3-local-usage-adjacency-repair.md"
+    ]
+  },
+  {
+    "line": 1500,
+    "timestamp": "2026-09-15T19:05:01.839Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/tools/run-checks.py"
+    ]
+  },
+  {
+    "line": 1933,
+    "timestamp": "2026-09-15T19:20:09.699Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/tests/Feature/ClaimLifecycleConformanceTest.php"
+    ]
+  },
+  {
+    "line": 1949,
+    "timestamp": "2026-09-15T19:21:44.443Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/tests/Pg/ClaimLifecycleConcurrencyTest.php"
+    ]
+  },
+  {
+    "line": 1978,
+    "timestamp": "2026-09-15T19:22:38.066Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/tests/Feature/ClaimLifecycleConformanceTest.php"
+    ]
+  },
+  {
+    "line": 1987,
+    "timestamp": "2026-09-15T19:23:02.155Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/src/Provisioning/StanclTenantDatabaseLifecycle.php",
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/src/Lifecycle/AccountLifecycle.php",
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/tests/Feature/AccountLifecycleTest.php"
+    ]
+  },
+  {
+    "line": 2009,
+    "timestamp": "2026-09-15T19:23:48.780Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/tests/Feature/ClaimLifecycleConformanceTest.php",
+      "/home/vostrikov/projects/packages/corex/packages/tenancy/tests/Pg/ClaimLifecycleConcurrencyTest.php"
+    ]
+  },
+  {
+    "line": 2289,
+    "timestamp": "2026-09-15T19:36:19.675Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/tools/finish-handoff.py"
+    ]
+  },
+  {
+    "line": 2364,
+    "timestamp": "2026-09-15T19:38:27.800Z",
+    "paths": [
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/tools/finish-handoff.py"
+    ]
+  }
+]

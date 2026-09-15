@@ -125,6 +125,31 @@ class MeasurerTestCase(unittest.TestCase):
         return plan_dir
 
 
+class TestScopedMeasurement(MeasurerTestCase):
+    def test_semicolon_reads_preserve_annotations_and_quoted_paths(self):
+        self.assertEqual(split_entries("a.py; b.py (producer: P1.1; required); `c;d.py`"),
+                         ["a.py", "b.py (producer: P1.1; required)", "`c;d.py`"])
+        record = self.item("lib/pkg/config.py; lib/pkg/config.py")
+        self.assertFalse(self.gaps_of(record, GAP_UNRESOLVED_ENTRY))
+
+    def test_only_item_measures_one_record_with_whole_plan_admission_parity(self):
+        plan_dir = write_valid_plan(self.root, layout="v2")
+        first = plan_dir / "phases/P1/P1.1.md"
+        for number in range(2, 5):
+            item = f"P1.{number}"
+            first.with_name(f"{item}.md").write_text(first.read_text().replace("P1.1", item))
+            plan_item_state.build_states(plan_dir, item_id=item)
+            plan_bundle.build(plan_dir, item)
+        full = measure_plan(plan_dir, self.measurer())
+        self.assertGreater(len(full["items"]), 1)
+        for expected in full["items"]:
+            with self.subTest(item=expected["item_id"]), unittest.mock.patch.object(
+                    plan_weight, "measure_item", wraps=measure_item) as measured:
+                scoped = measure_plan(plan_dir, self.measurer(), only_item=expected["item_id"])
+                self.assertEqual(scoped["items"], [expected])
+                self.assertEqual(measured.call_count, 1)
+
+
 class TestMandatoryPath(unittest.TestCase):
     """Обязательный путь воспроизводится ИЗ текста команды, а не по памяти: правка
     `plan-exec.md` §1 обязана ломать этот тест, а не расходиться с инструментом молча."""

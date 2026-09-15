@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-09-15
+
+### Fixed
+
+- **Task: полевые ошибки и стоимость исполнения.** Decision template проходит native parser,
+  terminal append заранее отклоняет невалидные решения; semicolon reads/Files распознаются,
+  пустой product anchor не подтверждает closure. `only_item` измеряет только выбранный пункт
+  с сохранением producer admission; история учитывает все affected `items` решения.
+- **Task/Harness: ранний final открытого run.** Включённые Stop-адаптеры проверяют durable
+  состояние текущей сессии даже без Task payload/lease. Проверен repository dispatcher обоих
+  провайдеров; полевой transport acceptance остаётся отдельным шагом. Conformance-тест
+  dry-run изолирован от версии hook в рабочем окружении разработчика. Версия Harness API `0.4.3`.
+
 ### Changed
 
 - **Task: короткие ссылки без коллизий.** Постоянные Short ID `PLAN<N>`/`TASK<N>` для

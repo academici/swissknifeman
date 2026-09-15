@@ -9,6 +9,14 @@
 переезд или структурный критерий возврата. Эта страница оставляет только тематические
 направления, а не дублирует рабочий каталог.
 
+По записям 15 сентября выполнено ограниченное исправление Task:
+parser-compatible decision template, terminal preflight решений, semicolon reads/Files,
+отклонение пустого product proof, измерение только выбранного item и multi-item history.
+Включённые Stop-адаптеры проверяют открытый run текущей сессии без optional payload/lease.
+Результаты, замер и незакрытые ограничения находятся в
+[`roadmap field fixes`](../tasks/2026.09.15-roadmap-field-fixes/README.md).
+Проверка реального transport и экономии на consumer-проектах ещё предстоит.
+
 Аудит 14 сентября и его локальная реализация собраны в
 `tasks/2026.09.14-skills-and-task-audit/implementation.md`: краткий native skill discovery,
 минимальный CORE, исправление plan-run alias и уточнённый Next. В Edufy/Flexcrm/CoreX

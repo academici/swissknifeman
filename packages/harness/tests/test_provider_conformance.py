@@ -157,24 +157,28 @@ class ProviderConformanceTests(unittest.TestCase):
         self.assertTrue(json.loads(machine.stdout)["green"])
 
     def test_public_hook_dry_run_normalizes_relative_and_absolute_targets_without_writes(self):
-        repository = PACKAGE.parents[1]
-        protected = tuple(repository / relative for relative in (
-            ".codex/hooks.json", ".codex/hooks/lifecycle.py"))
-        before = {path: path.read_bytes() for path in protected}
-        command = [str(PACKAGE / "bin/harness"), "hooks", "--provider", "codex",
-                   "--terminal-admission", "on", "--trusted", "--dry-run", "--target"]
-
-        relative = subprocess.run(command + ["."], cwd=repository, text=True,
-                                  capture_output=True, check=False)
-        absolute = subprocess.run(command + [str(repository)], cwd=repository, text=True,
-                                  capture_output=True, check=False)
-
-        self.assertEqual(relative.returncode, 0, relative.stderr)
-        self.assertEqual(absolute.returncode, 0, absolute.stderr)
-        self.assertEqual(relative.stdout, absolute.stdout)
-        self.assertIn("План: sha256:", relative.stdout)
-        self.assertIn("Статус: green", relative.stdout)
-        self.assertEqual(before, {path: path.read_bytes() for path in protected})
+        # Qualification must not depend on the developer's installed hook revision.
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory)
+            install = [str(PACKAGE / "bin/harness"), "hooks", "--provider", "codex",
+                       "--terminal-admission", "on", "--trusted", "--target", str(repository)]
+            seeded = subprocess.run(install, cwd=repository, text=True, capture_output=True)
+            self.assertEqual(seeded.returncode, 0, seeded.stderr)
+            protected = tuple(path for path in repository.rglob("*") if path.is_file())
+            before = {path: path.read_bytes() for path in protected}
+            command = [str(PACKAGE / "bin/harness"), "hooks", "--provider", "codex",
+                       "--terminal-admission", "on", "--trusted", "--dry-run", "--target"]
+            relative = subprocess.run(command + ["."], cwd=repository, text=True,
+                                      capture_output=True, check=False)
+            absolute = subprocess.run(command + [str(repository)], cwd=repository, text=True,
+                                      capture_output=True, check=False)
+            self.assertEqual(relative.returncode, 0, relative.stderr)
+            self.assertEqual(absolute.returncode, 0, absolute.stderr)
+            self.assertEqual(relative.stdout, absolute.stdout)
+            self.assertIn("План: sha256:", relative.stdout)
+            self.assertIn("Статус: green", relative.stdout)
+            self.assertEqual(before, {path: path.read_bytes() for path in repository.rglob("*")
+                                      if path.is_file()})
 
     def test_provider_doctor_returns_error_exit_for_a_non_green_consumer(self):
         from harness.doctor import cmd_doctor

@@ -111,12 +111,12 @@ def _findings(plan_dir: Path, item_id: str) -> tuple[list[HistoryRecord], list[P
 
 def _decision_records(plan_dir: Path, item_id: str) -> tuple[list[HistoryRecord], list[Path]]:
     decisions = plan_decisions.load_decisions(plan_dir)
-    selected = [decision for decision in decisions if decision.item == item_id]
+    selected = [decision for decision in decisions if item_id in decision.items]
     records = [HistoryRecord(
         "decisions", decision.identifier,
         _event_time(decision.date, path=decision.path, field="date", date_only=True),
         {"id": decision.identifier, "date": decision.date, "status": decision.status,
-         "item": decision.item, "supersedes": list(decision.supersedes),
+         "item": decision.item, "items": list(decision.items), "supersedes": list(decision.supersedes),
          "superseded_by": decision.superseded_by}, decision.path)
         for decision in selected]
     return records, [decision.path for decision in selected]

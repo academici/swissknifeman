@@ -1,0 +1,4427 @@
+[
+  {
+    "line": 18,
+    "timestamp": "2026-09-15T18:05:09.471Z",
+    "call_id": "call_gfGPwua6uHbU2snjwv07U2qh",
+    "returned_chars": 5344,
+    "contains_truncation": false,
+    "original_token_counts": [
+      10,
+      255,
+      984
+    ],
+    "exit_codes": [
+      0,
+      0,
+      2
+    ]
+  },
+  {
+    "line": 25,
+    "timestamp": "2026-09-15T18:05:15.529Z",
+    "call_id": "call_5PbOA406wjQvnbaw6VRRiVrp",
+    "returned_chars": 18777,
+    "contains_truncation": true,
+    "original_token_counts": [
+      3561,
+      687,
+      283
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "line": 31,
+    "timestamp": "2026-09-15T18:05:20.222Z",
+    "call_id": "call_7aP0V1Y5prcusTZXIqJ8EqIk",
+    "returned_chars": 7224,
+    "contains_truncation": false,
+    "original_token_counts": [
+      247,
+      1675
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 38,
+    "timestamp": "2026-09-15T18:05:26.722Z",
+    "call_id": "call_FvnmtQSULymPR08WA72vP23O",
+    "returned_chars": 39770,
+    "contains_truncation": true,
+    "original_token_counts": [
+      9072,
+      1589
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 46,
+    "timestamp": "2026-09-15T18:05:33.696Z",
+    "call_id": "call_bJD4nZhG9V6Dp2vyynmufYmg",
+    "returned_chars": 21851,
+    "contains_truncation": true,
+    "original_token_counts": [
+      5238,
+      90
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 56,
+    "timestamp": "2026-09-15T18:05:45.805Z",
+    "call_id": "call_t902xVJIxiJAgShJ7m7do1oG",
+    "returned_chars": 33024,
+    "contains_truncation": true,
+    "original_token_counts": [
+      4300,
+      9544
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 63,
+    "timestamp": "2026-09-15T18:05:51.403Z",
+    "call_id": "call_k8aSKG1Mtfct4OWXwmbEUmGj",
+    "returned_chars": 15068,
+    "contains_truncation": false,
+    "original_token_counts": [
+      4253
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 68,
+    "timestamp": "2026-09-15T18:05:55.410Z",
+    "call_id": "call_6yqalkOMrZI9cMNvnRHUkcZC",
+    "returned_chars": 16913,
+    "contains_truncation": false,
+    "original_token_counts": [
+      4319
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 75,
+    "timestamp": "2026-09-15T18:05:59.901Z",
+    "call_id": "call_UIMZWasYSGMD7esfH2RJjcuS",
+    "returned_chars": 20066,
+    "contains_truncation": false,
+    "original_token_counts": [
+      4580
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 80,
+    "timestamp": "2026-09-15T18:06:03.993Z",
+    "call_id": "call_ekhXJY4H5C7iF1purMtBHbtX",
+    "returned_chars": 20161,
+    "contains_truncation": false,
+    "original_token_counts": [
+      4581
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 85,
+    "timestamp": "2026-09-15T18:06:10.881Z",
+    "call_id": "call_l30xgRHwb65qEJWu7uzFbQ7W",
+    "returned_chars": 17911,
+    "contains_truncation": false,
+    "original_token_counts": [
+      4059
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 92,
+    "timestamp": "2026-09-15T18:06:16.621Z",
+    "call_id": "call_twVHnNRo1FTTS7q99eWx5I62",
+    "returned_chars": 39000,
+    "contains_truncation": true,
+    "original_token_counts": [
+      9843
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 100,
+    "timestamp": "2026-09-15T18:06:22.629Z",
+    "call_id": "call_Z5jOpCbnNJrGV7plknWalqfh",
+    "returned_chars": 32472,
+    "contains_truncation": true,
+    "original_token_counts": [
+      5001,
+      27941
+    ],
+    "exit_codes": [
+      0,
+      2
+    ]
+  },
+  {
+    "line": 107,
+    "timestamp": "2026-09-15T18:06:28.630Z",
+    "call_id": "call_eJjSM8WSsn5FZTA49ifkGJJd",
+    "returned_chars": 26635,
+    "contains_truncation": true,
+    "original_token_counts": [
+      7090
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 117,
+    "timestamp": "2026-09-15T18:06:37.588Z",
+    "call_id": "call_V57mmhWkTEEcEkJ5VoH6U018",
+    "returned_chars": 33026,
+    "contains_truncation": false,
+    "original_token_counts": [
+      3924,
+      4530
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 125,
+    "timestamp": "2026-09-15T18:06:46.849Z",
+    "call_id": "call_roh6mLTli3IahIVNTXVp4ugT",
+    "returned_chars": 24403,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2495
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 133,
+    "timestamp": "2026-09-15T18:06:57.402Z",
+    "call_id": "call_gooKnfiH4p4f5NzUgGNtuQVN",
+    "returned_chars": 13645,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1408
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 141,
+    "timestamp": "2026-09-15T18:07:28.212Z",
+    "call_id": "call_SEv1DDT1eu1psCF0EV91BGCW",
+    "returned_chars": 155,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 148,
+    "timestamp": "2026-09-15T18:07:37.686Z",
+    "call_id": "call_RC3Lyv1V9w4rDinDr0g17ukG",
+    "returned_chars": 6919,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1604
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 155,
+    "timestamp": "2026-09-15T18:07:50.652Z",
+    "call_id": "call_zS1xfBdrg3HbJ0gk27F4hLHg",
+    "returned_chars": 307,
+    "contains_truncation": false,
+    "original_token_counts": [
+      11,
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 164,
+    "timestamp": "2026-09-15T18:08:03.231Z",
+    "call_id": "call_WjTQbn98f0xi3jgB2EafWNds",
+    "returned_chars": 30348,
+    "contains_truncation": true,
+    "original_token_counts": [
+      11005,
+      3432
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 170,
+    "timestamp": "2026-09-15T18:08:21.410Z",
+    "call_id": "call_LFO636EUNWXWxkxusxKa1nFh",
+    "returned_chars": 1562,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      317
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 179,
+    "timestamp": "2026-09-15T18:08:36.264Z",
+    "call_id": "call_or9gOePzm7KbOotDXPpwRim4",
+    "returned_chars": 670,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      96
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 188,
+    "timestamp": "2026-09-15T18:09:11.327Z",
+    "call_id": "call_BHLZoBZ2yILDKbQmvNnN6bH5",
+    "returned_chars": 1859,
+    "contains_truncation": false,
+    "original_token_counts": [
+      419
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 195,
+    "timestamp": "2026-09-15T18:09:16.725Z",
+    "call_id": "call_FCgFq1jHotIbQ7S9XulgxPn4",
+    "returned_chars": 9556,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2125,
+      113
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 203,
+    "timestamp": "2026-09-15T18:09:27.134Z",
+    "call_id": "call_UznSbeVRJohRlk5qSOVehXNI",
+    "returned_chars": 14151,
+    "contains_truncation": false,
+    "original_token_counts": [
+      426
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 210,
+    "timestamp": "2026-09-15T18:09:45.074Z",
+    "call_id": "call_PahA2saRrbVFFpQXGoMPrM28",
+    "returned_chars": 8818,
+    "contains_truncation": true,
+    "original_token_counts": [
+      0,
+      3013
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 218,
+    "timestamp": "2026-09-15T18:09:52.276Z",
+    "call_id": "call_2aNrKxzq282mt0p9AH5huIj1",
+    "returned_chars": 10834,
+    "contains_truncation": true,
+    "original_token_counts": [
+      123,
+      2953
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 226,
+    "timestamp": "2026-09-15T18:10:02.084Z",
+    "call_id": "call_HU4UgEsKEYJs1tXy59vylhdo",
+    "returned_chars": 8407,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1864
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 234,
+    "timestamp": "2026-09-15T18:10:18.392Z",
+    "call_id": "call_hLjK7GcvJa2zNMUJoVzOVqdY",
+    "returned_chars": 1660,
+    "contains_truncation": false,
+    "original_token_counts": [
+      101,
+      238
+    ],
+    "exit_codes": [
+      0,
+      1
+    ]
+  },
+  {
+    "line": 242,
+    "timestamp": "2026-09-15T18:10:34.619Z",
+    "call_id": "call_oYOVJH3XFjPjQ0r6KQOJoJpr",
+    "returned_chars": 2399,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      481
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 249,
+    "timestamp": "2026-09-15T18:10:46.779Z",
+    "call_id": "call_44jwiBZc9ULrTz0vNZLdaFJQ",
+    "returned_chars": 10274,
+    "contains_truncation": false,
+    "original_token_counts": [
+      292,
+      0,
+      2280
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "line": 255,
+    "timestamp": "2026-09-15T18:10:59.131Z",
+    "call_id": "call_1p8sxRjc2AZGRTPasl2Oy0zj",
+    "returned_chars": 157,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 265,
+    "timestamp": "2026-09-15T18:11:15.453Z",
+    "call_id": "call_tDImmiA3CY8tigqtm2MnRwKS",
+    "returned_chars": 5375,
+    "contains_truncation": false,
+    "original_token_counts": [
+      54,
+      1211
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 274,
+    "timestamp": "2026-09-15T18:11:36.816Z",
+    "call_id": "call_OxzJviiZTzcYPd15ALAlElIK",
+    "returned_chars": 646,
+    "contains_truncation": false,
+    "original_token_counts": [
+      123
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 284,
+    "timestamp": "2026-09-15T18:11:58.906Z",
+    "call_id": "call_ezTwaIYuOFEIZZMnGtxJeSbg",
+    "returned_chars": 422,
+    "contains_truncation": false,
+    "original_token_counts": [
+      21,
+      22
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 291,
+    "timestamp": "2026-09-15T18:12:05.619Z",
+    "call_id": "call_Mjb8FlzJFMbFNJQwP6o46GUF",
+    "returned_chars": 1589,
+    "contains_truncation": false,
+    "original_token_counts": [
+      395
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 299,
+    "timestamp": "2026-09-15T18:12:18.904Z",
+    "call_id": "call_uUweKY63fz28MSIqimo97bjw",
+    "returned_chars": 196,
+    "contains_truncation": false,
+    "original_token_counts": [
+      13
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 306,
+    "timestamp": "2026-09-15T18:12:57.016Z",
+    "call_id": "call_SQasMEq4oLZqmvyMZuqT8jRA",
+    "returned_chars": 238,
+    "contains_truncation": false,
+    "original_token_counts": [
+      21
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 320,
+    "timestamp": "2026-09-15T18:13:34.188Z",
+    "call_id": "call_OsLZEubPJQQ9CeRHXgOv00bN",
+    "returned_chars": 325,
+    "contains_truncation": false,
+    "original_token_counts": [
+      43
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 330,
+    "timestamp": "2026-09-15T18:13:49.275Z",
+    "call_id": "call_VCQRnqFDuE0Mas97JOpMhVmw",
+    "returned_chars": 979,
+    "contains_truncation": false,
+    "original_token_counts": [
+      34,
+      45,
+      8,
+      8
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "line": 338,
+    "timestamp": "2026-09-15T18:13:56.553Z",
+    "call_id": "call_RfoKZe944daKUhEAqT7RUTlN",
+    "returned_chars": 7942,
+    "contains_truncation": false,
+    "original_token_counts": [
+      404,
+      1485
+    ],
+    "exit_codes": [
+      0,
+      1
+    ]
+  },
+  {
+    "line": 345,
+    "timestamp": "2026-09-15T18:14:07.991Z",
+    "call_id": "call_m1Wp9zJ2OSNaNxo1ouEa1iLw",
+    "returned_chars": 1757,
+    "contains_truncation": false,
+    "original_token_counts": [
+      380
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 352,
+    "timestamp": "2026-09-15T18:14:54.255Z",
+    "call_id": "call_C9f3zlL76r5BmYcKkEW6OA3B",
+    "returned_chars": 334,
+    "contains_truncation": false,
+    "original_token_counts": [
+      48
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 358,
+    "timestamp": "2026-09-15T18:15:05.963Z",
+    "call_id": "call_GmRuDTkFW7H719hBcSo4AOQo",
+    "returned_chars": 581,
+    "contains_truncation": false,
+    "original_token_counts": [
+      104
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 368,
+    "timestamp": "2026-09-15T18:15:22.163Z",
+    "call_id": "call_80jzZyU2btMtLCzdBKeSqcjy",
+    "returned_chars": 2471,
+    "contains_truncation": false,
+    "original_token_counts": [
+      203,
+      336
+    ],
+    "exit_codes": [
+      1,
+      0
+    ]
+  },
+  {
+    "line": 375,
+    "timestamp": "2026-09-15T18:15:30.132Z",
+    "call_id": "call_dahVG0mhjZfGWCaJn214dfFV",
+    "returned_chars": 2851,
+    "contains_truncation": false,
+    "original_token_counts": [
+      656
+    ],
+    "exit_codes": [
+      2
+    ]
+  },
+  {
+    "line": 382,
+    "timestamp": "2026-09-15T18:15:39.284Z",
+    "call_id": "call_gwNOxepK3HlnwCzMOEqFb4wK",
+    "returned_chars": 1758,
+    "contains_truncation": false,
+    "original_token_counts": [
+      386
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 389,
+    "timestamp": "2026-09-15T18:15:48.732Z",
+    "call_id": "call_VbWXHWmCNH1ErDmd9fBoECFH",
+    "returned_chars": 3628,
+    "contains_truncation": false,
+    "original_token_counts": [
+      858
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 396,
+    "timestamp": "2026-09-15T18:16:01.473Z",
+    "call_id": "call_7E8eXatoAesRh7XhQ4J2YU7G",
+    "returned_chars": 7935,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1987
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 402,
+    "timestamp": "2026-09-15T18:16:30.624Z",
+    "call_id": "call_DohKecC85YhlxfVmYeGDXqwf",
+    "returned_chars": 223,
+    "contains_truncation": false,
+    "original_token_counts": [
+      16
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 410,
+    "timestamp": "2026-09-15T18:16:42.336Z",
+    "call_id": "call_SWiJZUtQa3fxD2GmS2wns1QU",
+    "returned_chars": 3099,
+    "contains_truncation": false,
+    "original_token_counts": [
+      611,
+      72
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 417,
+    "timestamp": "2026-09-15T18:16:54.128Z",
+    "call_id": "call_CsbAWSfOsnsHsOqdTBxyTCan",
+    "returned_chars": 845,
+    "contains_truncation": false,
+    "original_token_counts": [
+      184
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 424,
+    "timestamp": "2026-09-15T18:17:11.986Z",
+    "call_id": "call_JV24CYiLiV9KbHFiaXrh1KW6",
+    "returned_chars": 7370,
+    "contains_truncation": true,
+    "original_token_counts": [
+      2115
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 431,
+    "timestamp": "2026-09-15T18:17:23.790Z",
+    "call_id": "call_Uiosjcj3q4goWAyUcvmwW7Lr",
+    "returned_chars": 845,
+    "contains_truncation": false,
+    "original_token_counts": [
+      184
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 451,
+    "timestamp": "2026-09-15T18:30:56.529Z",
+    "call_id": "call_CrjLJ0UpJS3J51VHY708TQd0",
+    "returned_chars": 18549,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2866,
+      1762
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 458,
+    "timestamp": "2026-09-15T18:31:11.021Z",
+    "call_id": "call_EjJmuHcAvihvEpalQvyAAPss",
+    "returned_chars": 10653,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2541
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 465,
+    "timestamp": "2026-09-15T18:31:28.445Z",
+    "call_id": "call_k4mN4KBfZ53fbC5NJ2VOLRmu",
+    "returned_chars": 16755,
+    "contains_truncation": false,
+    "original_token_counts": [
+      4096
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 479,
+    "timestamp": "2026-09-15T18:32:06.140Z",
+    "call_id": "call_GHCpqKiUohHPKVygl1rxXNyu",
+    "returned_chars": 257,
+    "contains_truncation": false,
+    "original_token_counts": [
+      28
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 492,
+    "timestamp": "2026-09-15T18:34:23.285Z",
+    "call_id": "call_dSD4kDeTCLtZJMkUH9M03Mw1",
+    "returned_chars": 7430,
+    "contains_truncation": false,
+    "original_token_counts": [
+      53,
+      1753
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 499,
+    "timestamp": "2026-09-15T18:34:34.754Z",
+    "call_id": "call_owlJbQUXTxpZy4bZ5VB5qSR8",
+    "returned_chars": 26198,
+    "contains_truncation": true,
+    "original_token_counts": [
+      14198
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 507,
+    "timestamp": "2026-09-15T18:34:48.309Z",
+    "call_id": "call_oNaMBuLCPccCmAhfrmE030fO",
+    "returned_chars": 12633,
+    "contains_truncation": false,
+    "original_token_counts": [
+      42,
+      3098
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 516,
+    "timestamp": "2026-09-15T18:35:04.436Z",
+    "call_id": "call_k56gRjMdQfalgwoRT9XhwKmD",
+    "returned_chars": 3285,
+    "contains_truncation": false,
+    "original_token_counts": [
+      745
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 524,
+    "timestamp": "2026-09-15T18:35:18.268Z",
+    "call_id": "call_iLEgmMzUflTwldlDPNSy3mnA",
+    "returned_chars": 7365,
+    "contains_truncation": true,
+    "original_token_counts": [
+      1599,
+      123
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 531,
+    "timestamp": "2026-09-15T18:35:28.400Z",
+    "call_id": "call_lZp81XRgYCt4lq92eVcRmGlA",
+    "returned_chars": 33000,
+    "contains_truncation": false,
+    "original_token_counts": [
+      7501
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 538,
+    "timestamp": "2026-09-15T18:35:37.243Z",
+    "call_id": "call_4080u3VE02tubdUHb2FiCFq5",
+    "returned_chars": 36928,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8415
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 546,
+    "timestamp": "2026-09-15T18:36:02.308Z",
+    "call_id": "call_97JxFC3uIhqEeGTCrTkxk4mo",
+    "returned_chars": 17810,
+    "contains_truncation": true,
+    "original_token_counts": [
+      101,
+      5705
+    ],
+    "exit_codes": [
+      1,
+      0
+    ]
+  },
+  {
+    "line": 553,
+    "timestamp": "2026-09-15T18:36:22.240Z",
+    "call_id": "call_b4kxHYNSbzR3ACkk41sS0NLJ",
+    "returned_chars": 4943,
+    "contains_truncation": true,
+    "original_token_counts": [
+      1184
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 560,
+    "timestamp": "2026-09-15T18:36:29.976Z",
+    "call_id": "call_zpHoWMjZ3XlTNU40rIc6BBVp",
+    "returned_chars": 33309,
+    "contains_truncation": true,
+    "original_token_counts": [
+      11267
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 568,
+    "timestamp": "2026-09-15T18:36:39.724Z",
+    "call_id": "call_CuK7jrjvLrSQBhB19SOyAcAA",
+    "returned_chars": 10668,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2830,
+      255
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 577,
+    "timestamp": "2026-09-15T18:37:00.651Z",
+    "call_id": "call_WHVMK9BFr4QFsfGEYuxQIBYS",
+    "returned_chars": 20109,
+    "contains_truncation": false,
+    "original_token_counts": [
+      6646
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 584,
+    "timestamp": "2026-09-15T18:37:09.912Z",
+    "call_id": "call_7fodN3Wq508Z3RLnrscmoxFS",
+    "returned_chars": 19768,
+    "contains_truncation": false,
+    "original_token_counts": [
+      6533
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 591,
+    "timestamp": "2026-09-15T18:37:21.781Z",
+    "call_id": "call_nbmvmRErcKU3NZfEjASWnqGU",
+    "returned_chars": 19807,
+    "contains_truncation": false,
+    "original_token_counts": [
+      6533
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 598,
+    "timestamp": "2026-09-15T18:37:32.169Z",
+    "call_id": "call_YBjUR6DHmTFfmRrm0qNjyHSK",
+    "returned_chars": 19581,
+    "contains_truncation": false,
+    "original_token_counts": [
+      6534
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 605,
+    "timestamp": "2026-09-15T18:37:43.917Z",
+    "call_id": "call_Vh3GNP6eW5QX4NbOV1hOMWu2",
+    "returned_chars": 20636,
+    "contains_truncation": false,
+    "original_token_counts": [
+      5837
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 613,
+    "timestamp": "2026-09-15T18:37:58.637Z",
+    "call_id": "call_3S4hTFtmt4UljFrOHX6U40lw",
+    "returned_chars": 16830,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1794,
+      3160
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 620,
+    "timestamp": "2026-09-15T18:38:08.110Z",
+    "call_id": "call_7UFjEDgtL9f3JMQ34rzSd3NA",
+    "returned_chars": 9903,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2511
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 627,
+    "timestamp": "2026-09-15T18:38:16.169Z",
+    "call_id": "call_ETLw16CennaSiQD5M36Cjuoa",
+    "returned_chars": 15000,
+    "contains_truncation": false,
+    "original_token_counts": [
+      3736
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 634,
+    "timestamp": "2026-09-15T18:38:23.306Z",
+    "call_id": "call_tHsf0GEkt5XFowmwK4tn7NlD",
+    "returned_chars": 8021,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2026
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 641,
+    "timestamp": "2026-09-15T18:38:37.663Z",
+    "call_id": "call_7iiF0NtYJPnBUItOR2iDYSkC",
+    "returned_chars": 17330,
+    "contains_truncation": false,
+    "original_token_counts": [
+      4284
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 649,
+    "timestamp": "2026-09-15T18:38:52.164Z",
+    "call_id": "call_7bthuaU3J5ygMnkln5N1i8WO",
+    "returned_chars": 11045,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2606,
+      0
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 658,
+    "timestamp": "2026-09-15T18:39:07.461Z",
+    "call_id": "call_9lAGCEhSwkdGVpemKZJ3Ywno",
+    "returned_chars": 18819,
+    "contains_truncation": false,
+    "original_token_counts": [
+      4657
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 665,
+    "timestamp": "2026-09-15T18:39:22.285Z",
+    "call_id": "call_2MFfXFO3hZo32au1tq55N4FG",
+    "returned_chars": 18465,
+    "contains_truncation": false,
+    "original_token_counts": [
+      4564
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 672,
+    "timestamp": "2026-09-15T18:39:49.226Z",
+    "call_id": "call_brFU9aLJNkikqYa8p3gn34Uz",
+    "returned_chars": 2648,
+    "contains_truncation": false,
+    "original_token_counts": [
+      610
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 679,
+    "timestamp": "2026-09-15T18:39:56.296Z",
+    "call_id": "call_rvKVqqd5MWmql0AaEwFiW878",
+    "returned_chars": 24730,
+    "contains_truncation": false,
+    "original_token_counts": [
+      6122
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 686,
+    "timestamp": "2026-09-15T18:40:03.580Z",
+    "call_id": "call_BiTeodicCyoAnIFufXE05vxQ",
+    "returned_chars": 1886,
+    "contains_truncation": false,
+    "original_token_counts": [
+      421
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 693,
+    "timestamp": "2026-09-15T18:40:15.820Z",
+    "call_id": "call_GEBIueJy91VyHFRN7S061KG2",
+    "returned_chars": 24728,
+    "contains_truncation": false,
+    "original_token_counts": [
+      6122
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 700,
+    "timestamp": "2026-09-15T18:40:22.955Z",
+    "call_id": "call_s4Zxjc5o7Q0wSsVKK4lYtQuJ",
+    "returned_chars": 2369,
+    "contains_truncation": false,
+    "original_token_counts": [
+      542
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 707,
+    "timestamp": "2026-09-15T18:40:30.331Z",
+    "call_id": "call_fneE2jugreaL8poQUNB3plu0",
+    "returned_chars": 25925,
+    "contains_truncation": false,
+    "original_token_counts": [
+      6420
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 714,
+    "timestamp": "2026-09-15T18:40:42.842Z",
+    "call_id": "call_ND2cHl7SFHIJSL9mwVspUUKe",
+    "returned_chars": 4090,
+    "contains_truncation": false,
+    "original_token_counts": [
+      987
+    ],
+    "exit_codes": [
+      2
+    ]
+  },
+  {
+    "line": 721,
+    "timestamp": "2026-09-15T18:40:51.223Z",
+    "call_id": "call_m580y8wXleL8V5TqMdxFDJlF",
+    "returned_chars": 568,
+    "contains_truncation": false,
+    "original_token_counts": [
+      103
+    ],
+    "exit_codes": [
+      1
+    ]
+  },
+  {
+    "line": 728,
+    "timestamp": "2026-09-15T18:41:00.235Z",
+    "call_id": "call_2kTBEr4pJLrJ1n3J9VV3P4zc",
+    "returned_chars": 5829,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1341
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 735,
+    "timestamp": "2026-09-15T18:41:11.236Z",
+    "call_id": "call_uV2NwZThq11TQAG4G7TrL5VM",
+    "returned_chars": 1311,
+    "contains_truncation": false,
+    "original_token_counts": [
+      272
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 742,
+    "timestamp": "2026-09-15T18:41:24.266Z",
+    "call_id": "call_dSyQ7rKrygVh9zCY7np8IZvB",
+    "returned_chars": 434,
+    "contains_truncation": false,
+    "original_token_counts": [
+      71
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 749,
+    "timestamp": "2026-09-15T18:41:35.446Z",
+    "call_id": "call_jAbZT2HI3VLTvkAoOO85a0vK",
+    "returned_chars": 25826,
+    "contains_truncation": false,
+    "original_token_counts": [
+      6395
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 756,
+    "timestamp": "2026-09-15T18:42:04.444Z",
+    "call_id": "call_GDPT4MCtj7EoMi5dq14Lk7fg",
+    "returned_chars": 152,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 763,
+    "timestamp": "2026-09-15T18:42:11.027Z",
+    "call_id": "call_Y3EzOlrB7l0EQZM9wermzzfm",
+    "returned_chars": 25393,
+    "contains_truncation": false,
+    "original_token_counts": [
+      6287
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 770,
+    "timestamp": "2026-09-15T18:42:18.225Z",
+    "call_id": "call_KfIGhLK1pBKZ7akowVzrfF0s",
+    "returned_chars": 26357,
+    "contains_truncation": false,
+    "original_token_counts": [
+      6529
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 777,
+    "timestamp": "2026-09-15T18:42:26.542Z",
+    "call_id": "call_4IRGwIE1eF3Tms0IRnNAxMYp",
+    "returned_chars": 28099,
+    "contains_truncation": false,
+    "original_token_counts": [
+      6964
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 784,
+    "timestamp": "2026-09-15T18:42:33.580Z",
+    "call_id": "call_OhAxAFE7B9maTtsYyEf3MX3y",
+    "returned_chars": 26901,
+    "contains_truncation": false,
+    "original_token_counts": [
+      6675
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 791,
+    "timestamp": "2026-09-15T18:42:41.460Z",
+    "call_id": "call_mH1jIiO7ZeP4Yk6uEBjYt61i",
+    "returned_chars": 3516,
+    "contains_truncation": false,
+    "original_token_counts": [
+      829
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 798,
+    "timestamp": "2026-09-15T18:43:05.837Z",
+    "call_id": "call_SJk2R74ihf1BKKaG8Z0aQH3p",
+    "returned_chars": 32090,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8486
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 805,
+    "timestamp": "2026-09-15T18:43:14.568Z",
+    "call_id": "call_Rrq1wwLqIUOhkLe8BWmpVdp8",
+    "returned_chars": 32908,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8608
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 812,
+    "timestamp": "2026-09-15T18:43:21.724Z",
+    "call_id": "call_cy7uAvCoI4sUBUe1pKaDpUIk",
+    "returned_chars": 32079,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8487
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 824,
+    "timestamp": "2026-09-15T18:45:41.333Z",
+    "call_id": "call_B73Y4zOJCq3f4NM3ZPCdgohv",
+    "returned_chars": 32485,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8609
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 833,
+    "timestamp": "2026-09-15T18:45:47.988Z",
+    "call_id": "call_nA5FGSD9fczromky11bOFS2H",
+    "returned_chars": 32060,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8488
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 838,
+    "timestamp": "2026-09-15T18:45:53.365Z",
+    "call_id": "call_LjyyLGifeIaotkoJMP4AwnVF",
+    "returned_chars": 32213,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8489
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 845,
+    "timestamp": "2026-09-15T18:46:00.101Z",
+    "call_id": "call_yx4Kp4hxFui2e6IWNue6ZXXZ",
+    "returned_chars": 32041,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8610
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 850,
+    "timestamp": "2026-09-15T18:46:04.855Z",
+    "call_id": "call_MRrw9UU20hXgYMY9AAxUuB8u",
+    "returned_chars": 31337,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8487
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 857,
+    "timestamp": "2026-09-15T18:46:12.279Z",
+    "call_id": "call_9lIRzS7edd8BfASHJ2dwXcqq",
+    "returned_chars": 30226,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8279
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 862,
+    "timestamp": "2026-09-15T18:46:18.402Z",
+    "call_id": "call_dK07AZUtkbB9CQggK9KPQylX",
+    "returned_chars": 31246,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8487
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 869,
+    "timestamp": "2026-09-15T18:46:26.530Z",
+    "call_id": "call_SmsSGbAMrtVhPNui96lEe1Le",
+    "returned_chars": 30703,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8489
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 878,
+    "timestamp": "2026-09-15T18:46:36.553Z",
+    "call_id": "call_i4BZyK0hvaObnEpLYpc5VmuG",
+    "returned_chars": 34081,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8649
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 883,
+    "timestamp": "2026-09-15T18:46:39.199Z",
+    "call_id": "call_YsZJJVINKIQXQf5fDrCnTEkQ",
+    "returned_chars": 34875,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8612
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 890,
+    "timestamp": "2026-09-15T18:46:44.919Z",
+    "call_id": "call_F83farVDM0Y6rG590I1Z87XX",
+    "returned_chars": 33805,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8369
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 897,
+    "timestamp": "2026-09-15T18:46:47.976Z",
+    "call_id": "call_kSXAD3LAfnaJrvY85bCO8fH4",
+    "returned_chars": 33278,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8247
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 904,
+    "timestamp": "2026-09-15T18:46:52.074Z",
+    "call_id": "call_xmu0ueiuhST5UtAwYAyJlEZj",
+    "returned_chars": 33816,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8370
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 909,
+    "timestamp": "2026-09-15T18:46:55.752Z",
+    "call_id": "call_VEggNbZAHt5eU2zn69lKNZO2",
+    "returned_chars": 34413,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8490
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 916,
+    "timestamp": "2026-09-15T18:47:00.781Z",
+    "call_id": "call_1A5NVr5X237FANzqCF1nVnBO",
+    "returned_chars": 33356,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8124
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 923,
+    "timestamp": "2026-09-15T18:47:04.114Z",
+    "call_id": "call_9OoogEMfETqEXLLgED8hABfk",
+    "returned_chars": 33835,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8247
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 930,
+    "timestamp": "2026-09-15T18:47:07.659Z",
+    "call_id": "call_lXnIsjT2jPJGmLIIv1GgKan0",
+    "returned_chars": 33652,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8124
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 937,
+    "timestamp": "2026-09-15T18:47:10.801Z",
+    "call_id": "call_Q5cV2YO1666HPIxqJE3KIEtp",
+    "returned_chars": 34033,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8247
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 944,
+    "timestamp": "2026-09-15T18:47:14.907Z",
+    "call_id": "call_1S8Bl5IHTqTOgXBqGnXUMVtZ",
+    "returned_chars": 33887,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8247
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 951,
+    "timestamp": "2026-09-15T18:47:18.297Z",
+    "call_id": "call_XWAktwZNAvu9omzydtH25nQh",
+    "returned_chars": 5158,
+    "contains_truncation": true,
+    "original_token_counts": [
+      1254
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 958,
+    "timestamp": "2026-09-15T18:47:29.155Z",
+    "call_id": "call_lEx79YXUoxyyJIPL8ShwMfEI",
+    "returned_chars": 50,
+    "contains_truncation": false,
+    "original_token_counts": [],
+    "exit_codes": []
+  },
+  {
+    "line": 963,
+    "timestamp": "2026-09-15T18:47:31.868Z",
+    "call_id": "call_ZwZqO8eXKLL25Oqyd7GWcTnq",
+    "returned_chars": 33507,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8124
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 970,
+    "timestamp": "2026-09-15T18:47:35.216Z",
+    "call_id": "call_aB1ukvn8H4HHFFGuMP0D9KPX",
+    "returned_chars": 33907,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8247
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 977,
+    "timestamp": "2026-09-15T18:47:38.129Z",
+    "call_id": "call_zdT2zazwCCEiBQg3d3TXEaf5",
+    "returned_chars": 33442,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8124
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 986,
+    "timestamp": "2026-09-15T18:47:42.482Z",
+    "call_id": "call_VtR9QLpG0ov6JTi8LU8ocaxL",
+    "returned_chars": 34156,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8247
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 998,
+    "timestamp": "2026-09-15T18:49:48.046Z",
+    "call_id": "call_L4N2tDLN6n6JVFnjSfggp9Zk",
+    "returned_chars": 33825,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8247
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1009,
+    "timestamp": "2026-09-15T18:50:00.037Z",
+    "call_id": "call_9eFUOhNLpIvXWtB65KS6YuDA",
+    "returned_chars": 33449,
+    "contains_truncation": true,
+    "original_token_counts": [
+      8124
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1016,
+    "timestamp": "2026-09-15T18:50:07.064Z",
+    "call_id": "call_eY4Ln6deEG5ZwBYRWvXtRx0Q",
+    "returned_chars": 33957,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8247
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1023,
+    "timestamp": "2026-09-15T18:50:13.631Z",
+    "call_id": "call_QNPzRG6E3NHLWcDVrE32JhMC",
+    "returned_chars": 33511,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8124
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1030,
+    "timestamp": "2026-09-15T18:50:21.408Z",
+    "call_id": "call_1fhGKoM0eeN0Ttf07ABNpl4i",
+    "returned_chars": 33951,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8247
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1037,
+    "timestamp": "2026-09-15T18:50:28.105Z",
+    "call_id": "call_wu6QO40frmyyceYmSQkN6BGR",
+    "returned_chars": 33516,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8124
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1044,
+    "timestamp": "2026-09-15T18:50:34.449Z",
+    "call_id": "call_HNFj7tyR1YUOrvlROuoZ8Vyw",
+    "returned_chars": 34036,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8247
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1051,
+    "timestamp": "2026-09-15T18:50:36.877Z",
+    "call_id": "call_IOrHex4mvYacJKBORUwzcysR",
+    "returned_chars": 34079,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8243
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1058,
+    "timestamp": "2026-09-15T18:50:39.727Z",
+    "call_id": "call_stoJEsc0hZ0hl74QkdeWcjC9",
+    "returned_chars": 33987,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8120
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1065,
+    "timestamp": "2026-09-15T18:50:42.554Z",
+    "call_id": "call_XaY0kMkfiWWHLAbvrcEtZiV5",
+    "returned_chars": 33245,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8238
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1072,
+    "timestamp": "2026-09-15T18:50:44.912Z",
+    "call_id": "call_eObMDoqiURaCs9DX6KSrwyjs",
+    "returned_chars": 23185,
+    "contains_truncation": false,
+    "original_token_counts": [
+      5742
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1079,
+    "timestamp": "2026-09-15T18:50:47.746Z",
+    "call_id": "call_hvdivCFcBgD0XUxaSBAYxfm6",
+    "returned_chars": 181,
+    "contains_truncation": false,
+    "original_token_counts": [
+      7
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1088,
+    "timestamp": "2026-09-15T18:50:54.456Z",
+    "call_id": "call_uEmO0gvAhSYs17OTS8XGQ5DK",
+    "returned_chars": 16347,
+    "contains_truncation": false,
+    "original_token_counts": [
+      301,
+      3241,
+      319
+    ],
+    "exit_codes": [
+      0,
+      1,
+      0
+    ]
+  },
+  {
+    "line": 1099,
+    "timestamp": "2026-09-15T18:51:04.006Z",
+    "call_id": "call_iB5Y8KYSqpqjufQ7p7aXkspT",
+    "returned_chars": 10697,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      2313,
+      273
+    ],
+    "exit_codes": [
+      0,
+      0,
+      1
+    ]
+  },
+  {
+    "line": 1107,
+    "timestamp": "2026-09-15T18:51:09.947Z",
+    "call_id": "call_n3s1t7BFYdEk3OXCMXEKDczi",
+    "returned_chars": 789,
+    "contains_truncation": false,
+    "original_token_counts": [
+      34,
+      90
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1112,
+    "timestamp": "2026-09-15T18:51:27.716Z",
+    "call_id": "call_lu6hDE5DlCa4UiR5GrqASyz0",
+    "returned_chars": 587,
+    "contains_truncation": false,
+    "original_token_counts": [
+      114
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1120,
+    "timestamp": "2026-09-15T18:51:32.722Z",
+    "call_id": "call_j5uVZNvIEMgVTQkksa3L9zpe",
+    "returned_chars": 21100,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2597,
+      1980,
+      297,
+      65
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1131,
+    "timestamp": "2026-09-15T18:51:42.774Z",
+    "call_id": "call_Nvzdq3IqLvnqpCR23XE8bwmM",
+    "returned_chars": 19174,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2809,
+      1547,
+      13,
+      28,
+      28
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0,
+      1
+    ]
+  },
+  {
+    "line": 1139,
+    "timestamp": "2026-09-15T18:51:53.830Z",
+    "call_id": "call_JPOX4GgTc7BG7zew4lJ5M3YO",
+    "returned_chars": 20353,
+    "contains_truncation": false,
+    "original_token_counts": [
+      313,
+      4245
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1148,
+    "timestamp": "2026-09-15T18:52:07.630Z",
+    "call_id": "call_xFEyHPiV8Awf4QR26o6pXXmX",
+    "returned_chars": 1630,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      311
+    ],
+    "exit_codes": [
+      1,
+      0
+    ]
+  },
+  {
+    "line": 1157,
+    "timestamp": "2026-09-15T18:52:26.407Z",
+    "call_id": "call_YBLvLJniLjQUiZLkVtSASvNs",
+    "returned_chars": 366,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      22
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1166,
+    "timestamp": "2026-09-15T18:52:35.134Z",
+    "call_id": "call_z2CYdVtG3rzSLzS5ar0cW3Xj",
+    "returned_chars": 13493,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1238,
+      1033,
+      891
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1175,
+    "timestamp": "2026-09-15T18:52:58.669Z",
+    "call_id": "call_7Fk3oFCZZb6kA2tKlATpj5qt",
+    "returned_chars": 290,
+    "contains_truncation": false,
+    "original_token_counts": [
+      7,
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1184,
+    "timestamp": "2026-09-15T18:53:45.763Z",
+    "call_id": "call_gWl2GxgVD7mul48ptN0nHNXZ",
+    "returned_chars": 1928,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      371
+    ],
+    "exit_codes": [
+      1,
+      0
+    ]
+  },
+  {
+    "line": 1193,
+    "timestamp": "2026-09-15T18:53:53.972Z",
+    "call_id": "call_k5DnAsGmDsOcrpFf56OrdylB",
+    "returned_chars": 10440,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1337,
+      1197
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1202,
+    "timestamp": "2026-09-15T18:54:23.629Z",
+    "call_id": "call_19IgSPTA4C4EzQcpG46nqVMr",
+    "returned_chars": 846,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      95
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1211,
+    "timestamp": "2026-09-15T18:54:32.238Z",
+    "call_id": "call_qAGiKVjqS9BOVHNf6jDQr4Vh",
+    "returned_chars": 34098,
+    "contains_truncation": false,
+    "original_token_counts": [
+      3829,
+      4242,
+      87
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1219,
+    "timestamp": "2026-09-15T18:54:44.562Z",
+    "call_id": "call_I06svJt1y7UGhlPsXyxIzpuG",
+    "returned_chars": 4256,
+    "contains_truncation": false,
+    "original_token_counts": [
+      807,
+      164
+    ],
+    "exit_codes": [
+      1,
+      0
+    ]
+  },
+  {
+    "line": 1226,
+    "timestamp": "2026-09-15T18:54:55.639Z",
+    "call_id": "call_jk5lCQHF1WwKYogDiuizIA9g",
+    "returned_chars": 13421,
+    "contains_truncation": false,
+    "original_token_counts": [
+      3562,
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1235,
+    "timestamp": "2026-09-15T18:55:48.488Z",
+    "call_id": "call_h6y1bAwqn3UEHxSkT5Azwqr3",
+    "returned_chars": 265,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1243,
+    "timestamp": "2026-09-15T18:55:51.715Z",
+    "call_id": "call_jlzE4gAEAPLfJKFzgSct3cGt",
+    "returned_chars": 6066,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      1418
+    ],
+    "exit_codes": [
+      1,
+      0
+    ]
+  },
+  {
+    "line": 1252,
+    "timestamp": "2026-09-15T18:56:04.175Z",
+    "call_id": "call_jiXBD0za7VrtVyv3Zz69wo42",
+    "returned_chars": 905,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      159
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1261,
+    "timestamp": "2026-09-15T18:56:30.052Z",
+    "call_id": "call_Yv8x6bkmyK07o4dHB8Ix7cHR",
+    "returned_chars": 223,
+    "contains_truncation": false,
+    "original_token_counts": [
+      18
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1269,
+    "timestamp": "2026-09-15T18:57:17.035Z",
+    "call_id": "call_I3I34wnaZYXxbhLBJJvbre4i",
+    "returned_chars": 183,
+    "contains_truncation": false,
+    "original_token_counts": [
+      7
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1278,
+    "timestamp": "2026-09-15T18:57:35.314Z",
+    "call_id": "call_9LJKct9COvQegxYvwZ7DNpSR",
+    "returned_chars": 2263,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      0,
+      438
+    ],
+    "exit_codes": [
+      0,
+      255,
+      0
+    ]
+  },
+  {
+    "line": 1285,
+    "timestamp": "2026-09-15T18:57:45.277Z",
+    "call_id": "call_avva0IM2TgaktLdTyLPeE4q0",
+    "returned_chars": 4844,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1124
+    ],
+    "exit_codes": [
+      1
+    ]
+  },
+  {
+    "line": 1293,
+    "timestamp": "2026-09-15T18:58:06.483Z",
+    "call_id": "call_bfeaygiViH7JmtrLVCSdo7FT",
+    "returned_chars": 307,
+    "contains_truncation": false,
+    "original_token_counts": [
+      12,
+      0
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1300,
+    "timestamp": "2026-09-15T18:58:14.219Z",
+    "call_id": "call_b34a1luEDtBpBlc9cawCgrh3",
+    "returned_chars": 20601,
+    "contains_truncation": true,
+    "original_token_counts": [
+      8281
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1306,
+    "timestamp": "2026-09-15T18:58:28.898Z",
+    "call_id": "call_SVoL3uNlPhlZjMoYJse0kVRo",
+    "returned_chars": 267,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      0
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 1315,
+    "timestamp": "2026-09-15T18:58:35.498Z",
+    "call_id": "call_3Fbh9sLlx3meL3korLYbd9lD",
+    "returned_chars": 3734,
+    "contains_truncation": false,
+    "original_token_counts": [
+      805,
+      66
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1323,
+    "timestamp": "2026-09-15T18:58:51.476Z",
+    "call_id": "call_5buoyEw5bVFit6No9fE5wASD",
+    "returned_chars": 9040,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1998,
+      125
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1331,
+    "timestamp": "2026-09-15T18:59:01.210Z",
+    "call_id": "call_Mz4vdpUQjCSjLUZi1EubRulb",
+    "returned_chars": 10583,
+    "contains_truncation": true,
+    "original_token_counts": [
+      1772,
+      784
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1338,
+    "timestamp": "2026-09-15T18:59:06.897Z",
+    "call_id": "call_0FoEBPg9w4tzn2F3rzoTZVDQ",
+    "returned_chars": 4188,
+    "contains_truncation": false,
+    "original_token_counts": [
+      997
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1346,
+    "timestamp": "2026-09-15T18:59:39.207Z",
+    "call_id": "call_Qk41HMuYbJIxPwhpmRJEV7Xd",
+    "returned_chars": 3719,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      807
+    ],
+    "exit_codes": [
+      2,
+      0
+    ]
+  },
+  {
+    "line": 1355,
+    "timestamp": "2026-09-15T18:59:59.284Z",
+    "call_id": "call_9wPmuvmlc4mJedf8YrViXLCR",
+    "returned_chars": 2266,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      480
+    ],
+    "exit_codes": [
+      1,
+      0
+    ]
+  },
+  {
+    "line": 1364,
+    "timestamp": "2026-09-15T19:00:20.128Z",
+    "call_id": "call_XugwSi6ECSCLUxRIpN97gzur",
+    "returned_chars": 306,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      11
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1373,
+    "timestamp": "2026-09-15T19:00:33.604Z",
+    "call_id": "call_e3fEWlRkYEMbqxorKoyvTR41",
+    "returned_chars": 18112,
+    "contains_truncation": true,
+    "original_token_counts": [
+      2777,
+      4213,
+      77
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1383,
+    "timestamp": "2026-09-15T19:00:52.208Z",
+    "call_id": "call_JnAC5xZ0MNfnFs4FhR9lnhut",
+    "returned_chars": 5325,
+    "contains_truncation": false,
+    "original_token_counts": [
+      371,
+      877
+    ],
+    "exit_codes": [
+      1,
+      0
+    ]
+  },
+  {
+    "line": 1390,
+    "timestamp": "2026-09-15T19:01:06.377Z",
+    "call_id": "call_uXNXxYx49cRCFxasrqJLKEuf",
+    "returned_chars": 6336,
+    "contains_truncation": true,
+    "original_token_counts": [
+      1693
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1400,
+    "timestamp": "2026-09-15T19:01:21.850Z",
+    "call_id": "call_C4WRF0VsiW0FYRa3SWr07A8k",
+    "returned_chars": 2470,
+    "contains_truncation": false,
+    "original_token_counts": [
+      393,
+      0,
+      117
+    ],
+    "exit_codes": [
+      0,
+      1,
+      0
+    ]
+  },
+  {
+    "line": 1406,
+    "timestamp": "2026-09-15T19:01:35.931Z",
+    "call_id": "call_24ppomG8AhodtCwvRYUaXcyb",
+    "returned_chars": 286,
+    "contains_truncation": false,
+    "original_token_counts": [],
+    "exit_codes": []
+  },
+  {
+    "line": 1414,
+    "timestamp": "2026-09-15T19:01:54.593Z",
+    "call_id": "call_JoPiz8VIPiDax7QZvtCjwUKO",
+    "returned_chars": 1190,
+    "contains_truncation": false,
+    "original_token_counts": [
+      256
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1422,
+    "timestamp": "2026-09-15T19:02:11.094Z",
+    "call_id": "call_3SULea6DkimesMuRI8VlNelG",
+    "returned_chars": 554,
+    "contains_truncation": false,
+    "original_token_counts": [
+      40,
+      33
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1431,
+    "timestamp": "2026-09-15T19:02:23.463Z",
+    "call_id": "call_ljYAb5KEaXfjreTz4JwTpIZ2",
+    "returned_chars": 978,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      121
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1442,
+    "timestamp": "2026-09-15T19:02:47.691Z",
+    "call_id": "call_0y1ll8cN6JzyAKvu7HAgLWDQ",
+    "returned_chars": 2441,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      0,
+      476
+    ],
+    "exit_codes": [
+      1,
+      1,
+      0
+    ]
+  },
+  {
+    "line": 1450,
+    "timestamp": "2026-09-15T19:02:57.610Z",
+    "call_id": "call_kCXcl1SOXyfO5qWVQdbKXoMN",
+    "returned_chars": 733,
+    "contains_truncation": false,
+    "original_token_counts": [
+      118,
+      0
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1458,
+    "timestamp": "2026-09-15T19:03:09.528Z",
+    "call_id": "call_udYhwGk6PdQEcTlpmZjJYp59",
+    "returned_chars": 1872,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      389
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1466,
+    "timestamp": "2026-09-15T19:03:22.384Z",
+    "call_id": "call_LeEDd15XUGgjeUrSH1vmvRld",
+    "returned_chars": 370,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      24
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1476,
+    "timestamp": "2026-09-15T19:03:55.529Z",
+    "call_id": "call_nIBlFFQAcgXxCUEupj3uDJWl",
+    "returned_chars": 311,
+    "contains_truncation": false,
+    "original_token_counts": [
+      40
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1484,
+    "timestamp": "2026-09-15T19:04:06.382Z",
+    "call_id": "call_Ec3mXHYvrpzOpayjGUkR8tEj",
+    "returned_chars": 11732,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2598,
+      219
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1495,
+    "timestamp": "2026-09-15T19:04:37.318Z",
+    "call_id": "call_fAhEJOLFqOeTq93pBX4VJXUm",
+    "returned_chars": 332,
+    "contains_truncation": false,
+    "original_token_counts": [
+      9,
+      9
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1503,
+    "timestamp": "2026-09-15T19:05:03.028Z",
+    "call_id": "call_rGdrDCSe8tlOMo2RRagvrI3K",
+    "returned_chars": 186,
+    "contains_truncation": false,
+    "original_token_counts": [
+      6
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 1517,
+    "timestamp": "2026-09-15T19:07:44.791Z",
+    "call_id": "call_4mknsUrvgjj1njKj81FeJjhJ",
+    "returned_chars": 4144,
+    "contains_truncation": false,
+    "original_token_counts": [
+      29,
+      0,
+      842
+    ],
+    "exit_codes": [
+      1,
+      2,
+      0
+    ]
+  },
+  {
+    "line": 1526,
+    "timestamp": "2026-09-15T19:07:54.651Z",
+    "call_id": "call_F3laeIdUUjwEsmaM0xzsSXWS",
+    "returned_chars": 2902,
+    "contains_truncation": false,
+    "original_token_counts": [
+      654
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1531,
+    "timestamp": "2026-09-15T19:08:01.476Z",
+    "call_id": "call_gX8yR289TtgRMfs3b0LLNc94",
+    "returned_chars": 7475,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1736
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1538,
+    "timestamp": "2026-09-15T19:08:08.189Z",
+    "call_id": "call_zXjvZgFHftukBNO3vRg5Jhec",
+    "returned_chars": 12607,
+    "contains_truncation": false,
+    "original_token_counts": [
+      3017
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1545,
+    "timestamp": "2026-09-15T19:08:18.049Z",
+    "call_id": "call_PuPqyKzGq4uLJYoN2dbBMzcB",
+    "returned_chars": 22895,
+    "contains_truncation": true,
+    "original_token_counts": [
+      11832
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1552,
+    "timestamp": "2026-09-15T19:08:25.001Z",
+    "call_id": "call_iMagjFej7XFcsHg4TQtFv4EM",
+    "returned_chars": 28876,
+    "contains_truncation": true,
+    "original_token_counts": [
+      22154
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1559,
+    "timestamp": "2026-09-15T19:08:41.152Z",
+    "call_id": "call_Vp2R9SnLKr3anxVpAaEclVS3",
+    "returned_chars": 1254,
+    "contains_truncation": false,
+    "original_token_counts": [
+      321
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1566,
+    "timestamp": "2026-09-15T19:08:51.872Z",
+    "call_id": "call_BY0mlc35OYSilHuDTbkup5H6",
+    "returned_chars": 321,
+    "contains_truncation": false,
+    "original_token_counts": [
+      43
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1570,
+    "timestamp": "2026-09-15T19:09:04.781Z",
+    "call_id": "call_9CcxNhBj2K6RF3zO7epdCzNb",
+    "returned_chars": 280,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      3
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 1578,
+    "timestamp": "2026-09-15T19:09:08.803Z",
+    "call_id": "call_NKrHLhibzesBgxwJqdnpqfbx",
+    "returned_chars": 16632,
+    "contains_truncation": true,
+    "original_token_counts": [
+      4065
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1586,
+    "timestamp": "2026-09-15T19:09:30.070Z",
+    "call_id": "call_PDOZpiYic6zo9mGuSJfMqFZx",
+    "returned_chars": 152,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1593,
+    "timestamp": "2026-09-15T19:09:38.388Z",
+    "call_id": "call_pzeZdwiiE1TBMIIkQjls4cxy",
+    "returned_chars": 13448,
+    "contains_truncation": false,
+    "original_token_counts": [
+      3218,
+      0,
+      8
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1599,
+    "timestamp": "2026-09-15T19:09:58.372Z",
+    "call_id": "call_Zs3J2pUhCk4rrV5qhgZwd5R6",
+    "returned_chars": 213,
+    "contains_truncation": false,
+    "original_token_counts": [
+      14
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 1609,
+    "timestamp": "2026-09-15T19:10:07.319Z",
+    "call_id": "call_Nmf8L5peAJMamrwAciEAsY6n",
+    "returned_chars": 19991,
+    "contains_truncation": true,
+    "original_token_counts": [
+      19148,
+      15
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1616,
+    "timestamp": "2026-09-15T19:10:13.381Z",
+    "call_id": "call_aB5F3U1y5wDDrzxJSdi8wm1q",
+    "returned_chars": 2836,
+    "contains_truncation": false,
+    "original_token_counts": [
+      648
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1623,
+    "timestamp": "2026-09-15T19:10:29.414Z",
+    "call_id": "call_xQyEOF1Ps9hZTDlIpc1dXeUW",
+    "returned_chars": 1148,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      217
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1631,
+    "timestamp": "2026-09-15T19:10:42.851Z",
+    "call_id": "call_hKjOnaCE8vBWQlgURd3Uep3U",
+    "returned_chars": 298,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      10
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1638,
+    "timestamp": "2026-09-15T19:10:49.969Z",
+    "call_id": "call_0zuDjxTn6J4GKthXfuXjADrP",
+    "returned_chars": 7789,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1815
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1644,
+    "timestamp": "2026-09-15T19:11:07.141Z",
+    "call_id": "call_fsbI1kHovcEHSVXgl5kVhpVI",
+    "returned_chars": 171,
+    "contains_truncation": false,
+    "original_token_counts": [
+      4
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 1652,
+    "timestamp": "2026-09-15T19:11:47.052Z",
+    "call_id": "call_G50SrzD1m8B8WmaJRYFDlIwL",
+    "returned_chars": 273,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      5
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1658,
+    "timestamp": "2026-09-15T19:12:08.549Z",
+    "call_id": "call_5s3pucj9MTomDPNbKlwIpHjx",
+    "returned_chars": 637,
+    "contains_truncation": false,
+    "original_token_counts": [
+      111
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 1666,
+    "timestamp": "2026-09-15T19:12:11.805Z",
+    "call_id": "call_MFBoZ3oLekNBiMvmZ1i9O06r",
+    "returned_chars": 17250,
+    "contains_truncation": false,
+    "original_token_counts": [
+      4132
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1673,
+    "timestamp": "2026-09-15T19:12:16.848Z",
+    "call_id": "call_8VRwZRDPqN1VGQ5AGVNrYM5z",
+    "returned_chars": 10216,
+    "contains_truncation": false,
+    "original_token_counts": [
+      354,
+      2032
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 1679,
+    "timestamp": "2026-09-15T19:12:39.639Z",
+    "call_id": "call_YX5xbTBhfR9P3ujsfW8Lis2Y",
+    "returned_chars": 157,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 1686,
+    "timestamp": "2026-09-15T19:12:44.629Z",
+    "call_id": "call_s5LruD0fGeGeJrCqU3PVlHJ1",
+    "returned_chars": 2408,
+    "contains_truncation": false,
+    "original_token_counts": [
+      558
+    ],
+    "exit_codes": [
+      2
+    ]
+  },
+  {
+    "line": 1693,
+    "timestamp": "2026-09-15T19:12:55.616Z",
+    "call_id": "call_GVJeFrT8s41DoINk0Tclk9h8",
+    "returned_chars": 2390,
+    "contains_truncation": false,
+    "original_token_counts": [
+      528,
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1700,
+    "timestamp": "2026-09-15T19:13:00.498Z",
+    "call_id": "call_RDvdaJJlrGNBQbs1TpJvgqMe",
+    "returned_chars": 13724,
+    "contains_truncation": true,
+    "original_token_counts": [
+      3322
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1707,
+    "timestamp": "2026-09-15T19:13:10.863Z",
+    "call_id": "call_n5siolaSLpm0RoAP4ckfORhX",
+    "returned_chars": 739,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      106
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1715,
+    "timestamp": "2026-09-15T19:13:16.288Z",
+    "call_id": "call_8KTjKhPFhQeFECoZ6F1UjU0i",
+    "returned_chars": 359,
+    "contains_truncation": false,
+    "original_token_counts": [
+      51
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1721,
+    "timestamp": "2026-09-15T19:13:20.006Z",
+    "call_id": "call_PevRsnDE7A1XSyzfKHDwT5hu",
+    "returned_chars": 1535,
+    "contains_truncation": false,
+    "original_token_counts": [
+      339
+    ],
+    "exit_codes": [
+      1
+    ]
+  },
+  {
+    "line": 1730,
+    "timestamp": "2026-09-15T19:13:30.316Z",
+    "call_id": "call_VmzV9HXo88uNOI5pphIUtMDp",
+    "returned_chars": 7171,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1725
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1736,
+    "timestamp": "2026-09-15T19:13:37.652Z",
+    "call_id": "call_ctxpWP3za0nOaHw2Kv7wJVl5",
+    "returned_chars": 6734,
+    "contains_truncation": true,
+    "original_token_counts": [
+      1567
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 1743,
+    "timestamp": "2026-09-15T19:13:45.322Z",
+    "call_id": "call_QwUt0zs3wxwVaDvcwk047RmE",
+    "returned_chars": 161,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1750,
+    "timestamp": "2026-09-15T19:13:55.601Z",
+    "call_id": "call_agfiDYGghokUpguXgRdt7H0b",
+    "returned_chars": 2135,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      464
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1757,
+    "timestamp": "2026-09-15T19:13:59.176Z",
+    "call_id": "call_nyXcni6UNvAZJ45DWkwkNyzy",
+    "returned_chars": 937,
+    "contains_truncation": false,
+    "original_token_counts": [
+      197
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1765,
+    "timestamp": "2026-09-15T19:14:08.441Z",
+    "call_id": "call_ldYc03B0tlMe8Hml8r6R0etT",
+    "returned_chars": 16468,
+    "contains_truncation": true,
+    "original_token_counts": [
+      0,
+      23250
+    ],
+    "exit_codes": [
+      1,
+      0
+    ]
+  },
+  {
+    "line": 1771,
+    "timestamp": "2026-09-15T19:14:28.294Z",
+    "call_id": "call_5g7pYEdqtISxOO8mJ5n62CcR",
+    "returned_chars": 170,
+    "contains_truncation": false,
+    "original_token_counts": [
+      3
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 1778,
+    "timestamp": "2026-09-15T19:14:34.773Z",
+    "call_id": "call_YEWI1UdD5ifh0GflDyTWjzhE",
+    "returned_chars": 6033,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1423
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1784,
+    "timestamp": "2026-09-15T19:14:43.746Z",
+    "call_id": "call_4R6r1rR8IooHvYcMOOTM9KqG",
+    "returned_chars": 157,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 1793,
+    "timestamp": "2026-09-15T19:14:54.644Z",
+    "call_id": "call_pwljQSRNweDZcwp40hmnzrAN",
+    "returned_chars": 648,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      97
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1800,
+    "timestamp": "2026-09-15T19:14:58.413Z",
+    "call_id": "call_pFmFKmmiGpbHDvzkfVciNGig",
+    "returned_chars": 4748,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1120
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1807,
+    "timestamp": "2026-09-15T19:15:03.199Z",
+    "call_id": "call_H27P6Ak4wXeTC6Mdec6faDwV",
+    "returned_chars": 188,
+    "contains_truncation": false,
+    "original_token_counts": [
+      9
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1816,
+    "timestamp": "2026-09-15T19:15:10.458Z",
+    "call_id": "call_INP1hwBapaCLPortlz262yJH",
+    "returned_chars": 6587,
+    "contains_truncation": true,
+    "original_token_counts": [
+      1639
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1823,
+    "timestamp": "2026-09-15T19:15:21.717Z",
+    "call_id": "call_2decOVMsbujfCINMiECrIBeE",
+    "returned_chars": 1179,
+    "contains_truncation": false,
+    "original_token_counts": [
+      257
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1830,
+    "timestamp": "2026-09-15T19:15:44.591Z",
+    "call_id": "call_DbpLZbioNCIpLXhDBzYwJN98",
+    "returned_chars": 328,
+    "contains_truncation": false,
+    "original_token_counts": [
+      45
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1837,
+    "timestamp": "2026-09-15T19:16:07.580Z",
+    "call_id": "call_AKQuYrjWA3NrSjL6Iob9drsa",
+    "returned_chars": 9780,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2456
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1844,
+    "timestamp": "2026-09-15T19:16:16.428Z",
+    "call_id": "call_FixxzADEAyYk1PE0WGcVq4Ep",
+    "returned_chars": 4858,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1172
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1851,
+    "timestamp": "2026-09-15T19:16:31.780Z",
+    "call_id": "call_vYKEReLJQdZVyDx6kMOhoByn",
+    "returned_chars": 22303,
+    "contains_truncation": false,
+    "original_token_counts": [
+      5004
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1858,
+    "timestamp": "2026-09-15T19:16:37.613Z",
+    "call_id": "call_4R1bBJAPO9dAHZ4tuiBi53hT",
+    "returned_chars": 22098,
+    "contains_truncation": false,
+    "original_token_counts": [
+      5005
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1863,
+    "timestamp": "2026-09-15T19:16:43.711Z",
+    "call_id": "call_NpGzExHdMzdILuYK3j05L8fD",
+    "returned_chars": 11593,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2632
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1870,
+    "timestamp": "2026-09-15T19:16:54.789Z",
+    "call_id": "call_qvAemm1Z6oHAJz9vGEzL3VIa",
+    "returned_chars": 35814,
+    "contains_truncation": false,
+    "original_token_counts": [
+      8627
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1877,
+    "timestamp": "2026-09-15T19:16:57.829Z",
+    "call_id": "call_w3bcwuyGOdEhVPFa1xg1lpuo",
+    "returned_chars": 17657,
+    "contains_truncation": false,
+    "original_token_counts": [
+      4271
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1884,
+    "timestamp": "2026-09-15T19:17:04.504Z",
+    "call_id": "call_HXBN5cIp0q8wS5DQEygqHZ32",
+    "returned_chars": 6560,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1559
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1891,
+    "timestamp": "2026-09-15T19:17:23.514Z",
+    "call_id": "call_SlIy9LvUucnhDmaxzQFnHo6x",
+    "returned_chars": 1027,
+    "contains_truncation": false,
+    "original_token_counts": [
+      219
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1898,
+    "timestamp": "2026-09-15T19:17:40.263Z",
+    "call_id": "call_8NNuudeezOvfpZ0o3qVx9xtk",
+    "returned_chars": 2558,
+    "contains_truncation": false,
+    "original_token_counts": [
+      592
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1905,
+    "timestamp": "2026-09-15T19:17:50.483Z",
+    "call_id": "call_I8fdR6Lglbce4U1lwVzBkPX7",
+    "returned_chars": 9009,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2151
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1924,
+    "timestamp": "2026-09-15T19:18:48.719Z",
+    "call_id": "call_SOulJ8IQy37tCFdOBXGm5kG7",
+    "returned_chars": 357,
+    "contains_truncation": false,
+    "original_token_counts": [
+      50
+    ],
+    "exit_codes": [
+      1
+    ]
+  },
+  {
+    "line": 1931,
+    "timestamp": "2026-09-15T19:18:55.477Z",
+    "call_id": "call_Rv9tHNlFbsaIFOPvWGgpryCW",
+    "returned_chars": 216,
+    "contains_truncation": false,
+    "original_token_counts": [
+      16
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 1936,
+    "timestamp": "2026-09-15T19:20:09.863Z",
+    "call_id": "call_r8bnEAmhUq2yif7TmAJKQKQd",
+    "returned_chars": 50,
+    "contains_truncation": false,
+    "original_token_counts": [],
+    "exit_codes": []
+  },
+  {
+    "line": 1942,
+    "timestamp": "2026-09-15T19:20:16.316Z",
+    "call_id": "call_IaMqMfhjgJcyNiBjgFtUeswj",
+    "returned_chars": 157,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 1952,
+    "timestamp": "2026-09-15T19:21:44.507Z",
+    "call_id": "call_YB1cESj884ylTuw0lbK0TemM",
+    "returned_chars": 50,
+    "contains_truncation": false,
+    "original_token_counts": [],
+    "exit_codes": []
+  },
+  {
+    "line": 1959,
+    "timestamp": "2026-09-15T19:21:50.616Z",
+    "call_id": "call_3bYsIUFCSZACilMRgVkQIVPy",
+    "returned_chars": 5842,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      1376
+    ],
+    "exit_codes": [
+      2,
+      2
+    ]
+  },
+  {
+    "line": 1965,
+    "timestamp": "2026-09-15T19:21:59.820Z",
+    "call_id": "call_mCQaaOsrN3mtdrM6DsTEq6vO",
+    "returned_chars": 4667,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1100
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 1974,
+    "timestamp": "2026-09-15T19:22:11.198Z",
+    "call_id": "call_ZjrGCU4n2pSXGO9HFKqDpVAY",
+    "returned_chars": 2064,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      0,
+      396
+    ],
+    "exit_codes": [
+      2,
+      1,
+      0
+    ]
+  },
+  {
+    "line": 1983,
+    "timestamp": "2026-09-15T19:22:38.919Z",
+    "call_id": "call_zXg0An2f6QqpQ8XhumUCS843",
+    "returned_chars": 4139,
+    "contains_truncation": false,
+    "original_token_counts": [
+      967,
+      0
+    ],
+    "exit_codes": [
+      0,
+      1
+    ]
+  },
+  {
+    "line": 1991,
+    "timestamp": "2026-09-15T19:23:03.403Z",
+    "call_id": "call_y9L7B6I8mIAIP8SEuaKIyHrr",
+    "returned_chars": 1832,
+    "contains_truncation": false,
+    "original_token_counts": [
+      383,
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2001,
+    "timestamp": "2026-09-15T19:23:20.544Z",
+    "call_id": "call_4FQVyTVUC9N3H3ilSAtFRjC5",
+    "returned_chars": 2299,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      452
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 2012,
+    "timestamp": "2026-09-15T19:23:50.024Z",
+    "call_id": "call_0atwLhbLtJznfkVMjz57LAEG",
+    "returned_chars": 160,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 2019,
+    "timestamp": "2026-09-15T19:23:59.046Z",
+    "call_id": "call_rMSpS3nanvwESD9z5jLllY0T",
+    "returned_chars": 18093,
+    "contains_truncation": false,
+    "original_token_counts": [
+      4501
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2026,
+    "timestamp": "2026-09-15T19:24:33.645Z",
+    "call_id": "call_4JPK5m1D7c6Khbhvhm9yp8si",
+    "returned_chars": 384,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      29
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2035,
+    "timestamp": "2026-09-15T19:25:19.477Z",
+    "call_id": "call_uQKSm3euBBYsnoNtvQPQ0Bxd",
+    "returned_chars": 1197,
+    "contains_truncation": false,
+    "original_token_counts": [
+      230,
+      0
+    ],
+    "exit_codes": [
+      1
+    ]
+  },
+  {
+    "line": 2043,
+    "timestamp": "2026-09-15T19:25:38.222Z",
+    "call_id": "call_i6UmItHdrNZuTJ9A7VOgLRWv",
+    "returned_chars": 673,
+    "contains_truncation": false,
+    "original_token_counts": [
+      129
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2052,
+    "timestamp": "2026-09-15T19:25:58.444Z",
+    "call_id": "call_14x2DSS5d2f16Kmul6XB3YJh",
+    "returned_chars": 1599,
+    "contains_truncation": false,
+    "original_token_counts": [
+      7,
+      258
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 2061,
+    "timestamp": "2026-09-15T19:26:50.590Z",
+    "call_id": "call_fH1jKEVAkYKDmIjnjS9hp5YW",
+    "returned_chars": 374,
+    "contains_truncation": false,
+    "original_token_counts": [
+      52
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2069,
+    "timestamp": "2026-09-15T19:27:16.284Z",
+    "call_id": "call_QvMV1awZxO6bP1VjdjIgX4vl",
+    "returned_chars": 157,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 2077,
+    "timestamp": "2026-09-15T19:27:31.074Z",
+    "call_id": "call_vnBGdoN75qhvhOXHjBoXiGqO",
+    "returned_chars": 8858,
+    "contains_truncation": false,
+    "original_token_counts": [
+      77,
+      2048
+    ],
+    "exit_codes": [
+      2,
+      1
+    ]
+  },
+  {
+    "line": 2084,
+    "timestamp": "2026-09-15T19:27:41.281Z",
+    "call_id": "call_OUPFG77Zvijz6eOaUeFF30qL",
+    "returned_chars": 9933,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2620
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2092,
+    "timestamp": "2026-09-15T19:28:20.868Z",
+    "call_id": "call_zGcHMShTQia8xdk9FU35Wb5k",
+    "returned_chars": 157,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 2100,
+    "timestamp": "2026-09-15T19:28:36.958Z",
+    "call_id": "call_6VIa8xFeOFe7D1XK9QGokt1n",
+    "returned_chars": 6081,
+    "contains_truncation": false,
+    "original_token_counts": [
+      318,
+      1154
+    ],
+    "exit_codes": [
+      0,
+      1
+    ]
+  },
+  {
+    "line": 2106,
+    "timestamp": "2026-09-15T19:28:48.616Z",
+    "call_id": "call_dI9xkgU9CRVQWM6GQilqrMMO",
+    "returned_chars": 5714,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1335
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 2115,
+    "timestamp": "2026-09-15T19:29:21.711Z",
+    "call_id": "call_AyLZMxsPn1dURengb5CQghA4",
+    "returned_chars": 177,
+    "contains_truncation": false,
+    "original_token_counts": [
+      7
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 2122,
+    "timestamp": "2026-09-15T19:29:41.234Z",
+    "call_id": "call_79GvswAqHA6P05sKB63L9Mza",
+    "returned_chars": 15692,
+    "contains_truncation": true,
+    "original_token_counts": [
+      3806,
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2129,
+    "timestamp": "2026-09-15T19:29:52.912Z",
+    "call_id": "call_Ts20Rsvqo46TK72duqV41ISG",
+    "returned_chars": 6536,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      1520
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2137,
+    "timestamp": "2026-09-15T19:30:00.734Z",
+    "call_id": "call_wr8HdfFJOJecz3L39wrriQLw",
+    "returned_chars": 7064,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1341,
+      443
+    ],
+    "exit_codes": [
+      0,
+      1
+    ]
+  },
+  {
+    "line": 2144,
+    "timestamp": "2026-09-15T19:30:10.857Z",
+    "call_id": "call_qqlrRSLtsbxcQUCjI90X9uBB",
+    "returned_chars": 6802,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1670
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2151,
+    "timestamp": "2026-09-15T19:30:21.944Z",
+    "call_id": "call_MazSbgKLhY41ypPAKU6svV45",
+    "returned_chars": 4248,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1041
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2164,
+    "timestamp": "2026-09-15T19:31:16.424Z",
+    "call_id": "call_2jAWoNhRbIYuwjdPHcOYg5Q1",
+    "returned_chars": 1561,
+    "contains_truncation": false,
+    "original_token_counts": [
+      360
+    ],
+    "exit_codes": [
+      1
+    ]
+  },
+  {
+    "line": 2172,
+    "timestamp": "2026-09-15T19:31:43.472Z",
+    "call_id": "call_uSPU4FKl60gShEiGwK8UPZMQ",
+    "returned_chars": 157,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 2182,
+    "timestamp": "2026-09-15T19:32:08.293Z",
+    "call_id": "call_fjMKdJCeGcRNLIz82wqYhwHM",
+    "returned_chars": 3009,
+    "contains_truncation": false,
+    "original_token_counts": [
+      22,
+      650
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 2189,
+    "timestamp": "2026-09-15T19:32:19.620Z",
+    "call_id": "call_kAJ7F04z3iiP278cOFQXH01R",
+    "returned_chars": 734,
+    "contains_truncation": false,
+    "original_token_counts": [
+      145
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2198,
+    "timestamp": "2026-09-15T19:32:40.404Z",
+    "call_id": "call_nMUPZcsUhVFh6CWrhTB2xoJ7",
+    "returned_chars": 5256,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1233
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2211,
+    "timestamp": "2026-09-15T19:34:30.633Z",
+    "call_id": "call_zGAP1yiPxIol7N67UkDEii6V",
+    "returned_chars": 10366,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2149,
+      255
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 2219,
+    "timestamp": "2026-09-15T19:34:35.267Z",
+    "call_id": "call_VK0u7a6ruMOGyIr2hJJ4tnFe",
+    "returned_chars": 3246,
+    "contains_truncation": false,
+    "original_token_counts": [
+      261,
+      479
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 2226,
+    "timestamp": "2026-09-15T19:34:40.871Z",
+    "call_id": "call_6yriDp52Wk5iFtLDJuGJaGNg",
+    "returned_chars": 29366,
+    "contains_truncation": false,
+    "original_token_counts": [
+      844,
+      2591,
+      3716
+    ],
+    "exit_codes": [
+      0,
+      0,
+      2
+    ]
+  },
+  {
+    "line": 2234,
+    "timestamp": "2026-09-15T19:34:49.327Z",
+    "call_id": "call_tMjPCubG9KVGXQinUn4jCQQj",
+    "returned_chars": 18613,
+    "contains_truncation": false,
+    "original_token_counts": [
+      3304,
+      1086
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 2243,
+    "timestamp": "2026-09-15T19:34:55.467Z",
+    "call_id": "call_EUVu0oTPaP4sEOdstjvu06HG",
+    "returned_chars": 11918,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2915
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2250,
+    "timestamp": "2026-09-15T19:35:00.411Z",
+    "call_id": "call_iOcgOtb6rqEQOnefOfc8hSSJ",
+    "returned_chars": 7219,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1657
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2257,
+    "timestamp": "2026-09-15T19:35:07.316Z",
+    "call_id": "call_TS9kCuoxz22qAHj4MKDnQJCo",
+    "returned_chars": 7666,
+    "contains_truncation": true,
+    "original_token_counts": [
+      1860
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2264,
+    "timestamp": "2026-09-15T19:35:11.914Z",
+    "call_id": "call_b2BOXEVWm0gPSkN1grGl8c0g",
+    "returned_chars": 12088,
+    "contains_truncation": false,
+    "original_token_counts": [
+      2912
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2271,
+    "timestamp": "2026-09-15T19:35:17.067Z",
+    "call_id": "call_CqGeC6cDY8H9gTcGGH2yDDmO",
+    "returned_chars": 4444,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1000
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2278,
+    "timestamp": "2026-09-15T19:35:21.784Z",
+    "call_id": "call_hwQ7lAGT848gMHPVMYPH0FOC",
+    "returned_chars": 293,
+    "contains_truncation": false,
+    "original_token_counts": [
+      35
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2285,
+    "timestamp": "2026-09-15T19:35:27.312Z",
+    "call_id": "call_y9udkeRvfv8bukDFZq65JbxA",
+    "returned_chars": 6708,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1580
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2293,
+    "timestamp": "2026-09-15T19:36:19.906Z",
+    "call_id": "call_ZGs9hGEIKfGgWV4VT21vS5IR",
+    "returned_chars": 243,
+    "contains_truncation": false,
+    "original_token_counts": [
+      22
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2300,
+    "timestamp": "2026-09-15T19:36:40.829Z",
+    "call_id": "call_paQdRhAoqGewMeQ19U7ZjRwQ",
+    "returned_chars": 605,
+    "contains_truncation": false,
+    "original_token_counts": [
+      16,
+      66
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2308,
+    "timestamp": "2026-09-15T19:36:45.456Z",
+    "call_id": "call_wDOkT0L8eUqOSiE3m1VU2C75",
+    "returned_chars": 5414,
+    "contains_truncation": false,
+    "original_token_counts": [
+      559,
+      711
+    ],
+    "exit_codes": [
+      0,
+      1
+    ]
+  },
+  {
+    "line": 2317,
+    "timestamp": "2026-09-15T19:36:53.094Z",
+    "call_id": "call_zN9klwqe2Y28UHeA6fLqVxAz",
+    "returned_chars": 16828,
+    "contains_truncation": false,
+    "original_token_counts": [
+      4284
+    ],
+    "exit_codes": [
+      2
+    ]
+  },
+  {
+    "line": 2324,
+    "timestamp": "2026-09-15T19:36:59.702Z",
+    "call_id": "call_WkcietnLVJDuNn4DupC0Gg6l",
+    "returned_chars": 4685,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1122
+    ],
+    "exit_codes": [
+      2
+    ]
+  },
+  {
+    "line": 2331,
+    "timestamp": "2026-09-15T19:37:05.128Z",
+    "call_id": "call_pBQqQXgKPCPFJ2lYjuN5jtLZ",
+    "returned_chars": 2072,
+    "contains_truncation": false,
+    "original_token_counts": [
+      499
+    ],
+    "exit_codes": [
+      1
+    ]
+  },
+  {
+    "line": 2338,
+    "timestamp": "2026-09-15T19:37:11.392Z",
+    "call_id": "call_tJuGK5YDCjVJvnPc2t2ul051",
+    "returned_chars": 6052,
+    "contains_truncation": true,
+    "original_token_counts": [
+      1714
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2345,
+    "timestamp": "2026-09-15T19:37:45.224Z",
+    "call_id": "call_vANmYkoc7gfGgNWnLf8T8Tuu",
+    "returned_chars": 332,
+    "contains_truncation": false,
+    "original_token_counts": [
+      17,
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2352,
+    "timestamp": "2026-09-15T19:37:54.123Z",
+    "call_id": "call_mCdm5bfmCLwdtUwK0Ia0tTE9",
+    "returned_chars": 3730,
+    "contains_truncation": true,
+    "original_token_counts": [
+      1247,
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2360,
+    "timestamp": "2026-09-15T19:38:00.741Z",
+    "call_id": "call_9P1zHIvQGCHs85X7jGjXMUYL",
+    "returned_chars": 1614,
+    "contains_truncation": false,
+    "original_token_counts": [
+      26,
+      294
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 2368,
+    "timestamp": "2026-09-15T19:38:31.940Z",
+    "call_id": "call_Ni47ItYIZjXmRlJSCVjJ1vaD",
+    "returned_chars": 243,
+    "contains_truncation": false,
+    "original_token_counts": [
+      22
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2374,
+    "timestamp": "2026-09-15T19:38:41.996Z",
+    "call_id": "call_VHxIP4iQzgV22ylSkrbfzOJ3",
+    "returned_chars": 157,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 2381,
+    "timestamp": "2026-09-15T19:38:56.571Z",
+    "call_id": "call_087mml1GzL2HJiIqwpvBDFsW",
+    "returned_chars": 7996,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1860,
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2389,
+    "timestamp": "2026-09-15T19:39:04.946Z",
+    "call_id": "call_vQAt5oRwqSL8grwU1niPCUQP",
+    "returned_chars": 1398,
+    "contains_truncation": false,
+    "original_token_counts": [
+      77,
+      205
+    ],
+    "exit_codes": [
+      0,
+      1
+    ]
+  },
+  {
+    "line": 2396,
+    "timestamp": "2026-09-15T19:39:09.837Z",
+    "call_id": "call_ZqwNyfWlvbMhJg3nK3GLGhmQ",
+    "returned_chars": 4883,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1214
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2403,
+    "timestamp": "2026-09-15T19:39:14.857Z",
+    "call_id": "call_XFcbQcmByMq7JAGP4sRtjAyq",
+    "returned_chars": 3527,
+    "contains_truncation": false,
+    "original_token_counts": [
+      807
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2410,
+    "timestamp": "2026-09-15T19:39:19.580Z",
+    "call_id": "call_ebyWaFxvLmUG46hZeZVpxqiF",
+    "returned_chars": 418,
+    "contains_truncation": false,
+    "original_token_counts": [
+      66
+    ],
+    "exit_codes": [
+      2
+    ]
+  },
+  {
+    "line": 2417,
+    "timestamp": "2026-09-15T19:39:23.462Z",
+    "call_id": "call_kAVnmcCOpEEmeambpY9oGm8g",
+    "returned_chars": 152,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2424,
+    "timestamp": "2026-09-15T19:39:26.238Z",
+    "call_id": "call_8zmx4EoOTdO2xBGyhFnGryWS",
+    "returned_chars": 2173,
+    "contains_truncation": false,
+    "original_token_counts": [
+      584
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2431,
+    "timestamp": "2026-09-15T19:39:30.955Z",
+    "call_id": "call_yDBe7E1cJrl9bI9aVJeErj7j",
+    "returned_chars": 4607,
+    "contains_truncation": false,
+    "original_token_counts": [
+      1165
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2438,
+    "timestamp": "2026-09-15T19:39:34.809Z",
+    "call_id": "call_AucwFwliB61DmeAAlp6WixSm",
+    "returned_chars": 1960,
+    "contains_truncation": false,
+    "original_token_counts": [
+      491
+    ],
+    "exit_codes": [
+      2
+    ]
+  },
+  {
+    "line": 2443,
+    "timestamp": "2026-09-15T19:39:38.591Z",
+    "call_id": "call_POf0zlMVv44FkrwgaAtBTXVg",
+    "returned_chars": 3758,
+    "contains_truncation": false,
+    "original_token_counts": [
+      916
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2453,
+    "timestamp": "2026-09-15T19:40:13.495Z",
+    "call_id": "call_VGS37FC4V8Kj4Q4o4VeD777z",
+    "returned_chars": 157,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 2465,
+    "timestamp": "2026-09-15T19:40:38.391Z",
+    "call_id": "call_DcpeDifzF7q0FhZgy1JGlzLU",
+    "returned_chars": 2012,
+    "contains_truncation": false,
+    "original_token_counts": [
+      386,
+      21,
+      0
+    ],
+    "exit_codes": [
+      1,
+      0
+    ]
+  },
+  {
+    "line": 2473,
+    "timestamp": "2026-09-15T19:40:52.696Z",
+    "call_id": "call_QXgMwRD3H0EHuUaZKmz3Rd4d",
+    "returned_chars": 262,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      0
+    ],
+    "exit_codes": [
+      0
+    ]
+  },
+  {
+    "line": 2479,
+    "timestamp": "2026-09-15T19:41:02.540Z",
+    "call_id": "call_V8lqPq76itfmCXMrEmvUafJS",
+    "returned_chars": 727,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0,
+      115
+    ],
+    "exit_codes": [
+      1
+    ]
+  },
+  {
+    "line": 2487,
+    "timestamp": "2026-09-15T19:41:12.386Z",
+    "call_id": "call_DxQ0hBKZq6NwNZn5VBjUG6fo",
+    "returned_chars": 1388,
+    "contains_truncation": false,
+    "original_token_counts": [
+      22,
+      310
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 2493,
+    "timestamp": "2026-09-15T19:41:25.519Z",
+    "call_id": "call_C7n8o1ooABWvKkHCUOm3iGON",
+    "returned_chars": 157,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 2500,
+    "timestamp": "2026-09-15T19:41:47.580Z",
+    "call_id": "call_CeYYkGcTGxTJOcmrqe2ghuhM",
+    "returned_chars": 157,
+    "contains_truncation": false,
+    "original_token_counts": [
+      0
+    ],
+    "exit_codes": []
+  },
+  {
+    "line": 2507,
+    "timestamp": "2026-09-15T19:41:54.181Z",
+    "call_id": "call_cBmRhewC3Y5cXo67KI1hRHq9",
+    "returned_chars": 682,
+    "contains_truncation": false,
+    "original_token_counts": [
+      85,
+      27
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 2519,
+    "timestamp": "2026-09-15T19:42:11.116Z",
+    "call_id": "call_lNVqR1DO7z9CTvzpYGuInmpJ",
+    "returned_chars": 12110,
+    "contains_truncation": true,
+    "original_token_counts": [
+      0,
+      0,
+      55760,
+      5437
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "line": 2527,
+    "timestamp": "2026-09-15T19:42:20.505Z",
+    "call_id": "call_Bdm1SLgccZIb4JNacNr2sus1",
+    "returned_chars": 1176,
+    "contains_truncation": false,
+    "original_token_counts": [
+      248,
+      0
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  {
+    "line": 2535,
+    "timestamp": "2026-09-15T19:42:31.006Z",
+    "call_id": "call_rAg6qTk65bjoS7nnWWckdoj6",
+    "returned_chars": 284,
+    "contains_truncation": false,
+    "original_token_counts": [
+      7,
+      0
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  }
+]

@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:1e126e8fe48451bde39877bda219bbc59b379ea1e0184c17a2612dadb2c64974
+Canonical SHA-256: sha256:80ada213734c93a6137406933d1c3cf319935978158c4ff7b9b3faef284bf784
 Adapter: task.codex-command/1.0.14
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -173,6 +173,12 @@ Batch handoff retains its Batch and Context; a fresh-session boundary carries on
 launch block for the actual post-closure successor.
 
 ## Terminal admission
+
+While the durable run is open, report partial progress through commentary and continue authorized
+work. The enabled Stop adapter invokes `plan-terminal-admission.py check-open --project-root <cwd>
+--provider-session <session>` before the optional lease check, including when the Stop payload has
+no Task context. `TASK_OPEN_RUN_FINAL_FORBIDDEN` is repaired by continuing work or persisting a
+legitimate terminal block/checkpoint; it never authorizes fabricated closure. Respect owner stop.
 
 After route/run admission, an applicable provider adapter may arm `terminal-admission-lease/v1`
 through the worktree-local `plan-terminal-admission.py`; it refreshes only on material progress or

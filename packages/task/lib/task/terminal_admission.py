@@ -14,6 +14,8 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
+import sys
 import tempfile
 from time import time
 from typing import Callable
@@ -428,7 +430,79 @@ def _continuity(value: str) -> dict:
         raise AdmissionError("CONTINUITY_INVALID", "continuity-json must be JSON") from exc
 
 
+def pre_final_open_runs(project_root: Path, provider_session: str) -> dict:
+    """Inspect session-bound durable positions without requiring a proposed receipt.
+
+    Only live project plan journals are inspected; archives and other projects are
+    excluded. Observation events do not terminate a run. No product state is written.
+    """
+    from task import journal, plan_item_state
+
+    if not provider_session:
+        raise AdmissionError("TERMINAL_ADMISSION_CONTEXT_INVALID", "нет provider session")
+    observed = []
+    for path in sorted((Path(project_root) / "plans").glob("*/journal.jsonl")):
+        rows = path.read_text(encoding="utf-8").splitlines()
+        events = []
+        for raw in rows:
+            if not raw.strip():
+                continue
+            try:
+                event = json.loads(raw)
+            except ValueError:
+                if provider_session in raw:
+                    raise AdmissionError("TASK_FINAL_STATE_UNAVAILABLE", str(path))
+                continue
+            if isinstance(event, dict):
+                events.append(event)
+        subjects = {event.get("item_id") for event in events
+                    if event.get("session_id") == provider_session
+                    and re.fullmatch(r"P\d+\.\d+", str(event.get("item_id", "")))}
+        for subject in sorted(subjects):
+            history = [event for event in events if event.get("item_id") == subject]
+            latest = plan_item_state.latest_execution_event(history)
+            if latest is None or latest.get("session_id") != provider_session:
+                continue
+            try:
+                journal.validate_entry(latest)
+            except journal.JournalValidationError as exc:
+                raise AdmissionError("TASK_FINAL_STATE_UNAVAILABLE", str(path)) from exc
+            if latest.get("plan_id") != path.parent.name or not latest.get("run_id"):
+                raise AdmissionError("TASK_FINAL_STATE_UNAVAILABLE", str(path))
+            observed.append({"plan_id": path.parent.name, "item_id": subject,
+                             "run_id": latest["run_id"], "state": latest["result"]})
+    blocked = any(row["state"] == "in-progress" for row in observed)
+    verdict = {"final_allowed": not blocked,
+               "reason": "TASK_OPEN_RUN_FINAL_FORBIDDEN" if blocked else "NO_OPEN_SESSION_RUN",
+               "observed": observed}
+    if observed:
+        store = FileStore(Path(project_root) / ".swissknifeman/terminal-admission")
+        # Reuse the local admission journal; no response or user text is retained.
+        with store._locked():
+            with store.events_path.open("a", encoding="utf-8") as stream:
+                stream.write(_canonical({"schema_version": "task-pre-final-open-run/v1",
+                                         "session_id": provider_session, **verdict}) + "\n")
+    return verdict
+
+
+def _check_open_main(argv) -> int:
+    parser = argparse.ArgumentParser(description="Session-bound Task pre-final check")
+    parser.add_argument("--project-root", type=Path, required=True)
+    parser.add_argument("--provider-session", required=True)
+    args = parser.parse_args(argv)
+    try:
+        value = pre_final_open_runs(args.project_root, args.provider_session)
+    except (AdmissionError, OSError, UnicodeError) as exc:
+        value = {"final_allowed": False,
+                 "reason": exc.code if isinstance(exc, AdmissionError) else "TASK_FINAL_STATE_UNAVAILABLE"}
+    print(json.dumps(value, ensure_ascii=False, sort_keys=True))
+    return 0 if value["final_allowed"] else 1
+
+
 def main(argv=None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "check-open":
+        return _check_open_main(argv[1:])
     parser = argparse.ArgumentParser(description="Lease-bound Task terminal admission")
     parser.add_argument("command", choices=("arm", "refresh", "check", "release"))
     parser.add_argument("--state-dir", required=True)

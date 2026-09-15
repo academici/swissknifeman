@@ -154,7 +154,8 @@ def _entry_for_path(entries: list[str], path: str) -> str:
     return matches[0] if len(matches) == 1 else ""
 
 
-def classify(plan_dir, items: list[dict], specs: dict[str, dict], *, contract=None) -> dict:
+def classify(plan_dir, items: list[dict], specs: dict[str, dict], *, contract=None,
+             item_index: list[dict] | None = None) -> dict:
     """Attach admission facts to measured layout-v2 item records.
 
     ``items`` are records from ``plan_weight``. ``specs`` maps item id to the
@@ -172,8 +173,10 @@ def classify(plan_dir, items: list[dict], specs: dict[str, dict], *, contract=No
             contract_error = str(exc)
     activation, terminal_lines, post_activation = _journal_facts(plan_dir)
     migration_pending = _migration_pending_items(plan_dir)
-    order = {record["item_id"]: index for index, record in enumerate(items)}
-    by_id = {record["item_id"]: record for record in items}
+    # Producer order/status needs the complete symbolic index, not token measurements.
+    indexed = items if item_index is None else item_index
+    order = {record["item_id"]: index for index, record in enumerate(indexed)}
+    by_id = {record["item_id"]: record for record in indexed}
     admission_counts = {state: 0 for state in STATES}
     code_counts = {}
 

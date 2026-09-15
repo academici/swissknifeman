@@ -1,0 +1,95 @@
+[
+  {
+    "name": "task-returns",
+    "command": [
+      "python3",
+      "/home/vostrikov/projects/packages/swissknifeman/packages/task/scripts/plan-views.py",
+      "returns",
+      "--plan-dir",
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-\u21161-COREX-FLEXCRM-REMAINING",
+      "--json",
+      "--fingerprint"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/corex",
+    "started_at": "2026-09-15T19:44:56.669775+00:00",
+    "ended_at": "2026-09-15T19:44:56.727336+00:00",
+    "exit_code": 0,
+    "json": true,
+    "stdout_bytes": 733,
+    "stderr_bytes": 0
+  },
+  {
+    "name": "task-history-p31",
+    "command": [
+      "python3",
+      "/home/vostrikov/projects/packages/swissknifeman/packages/task/scripts/plan-views.py",
+      "history",
+      "--plan-dir",
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-\u21161-COREX-FLEXCRM-REMAINING",
+      "--item",
+      "P3.1"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/corex",
+    "started_at": "2026-09-15T19:44:56.669944+00:00",
+    "ended_at": "2026-09-15T19:44:56.729522+00:00",
+    "exit_code": 0,
+    "json": false,
+    "stdout_bytes": 825,
+    "stderr_bytes": 0
+  },
+  {
+    "name": "task-history-p32",
+    "command": [
+      "python3",
+      "/home/vostrikov/projects/packages/swissknifeman/packages/task/scripts/plan-views.py",
+      "history",
+      "--plan-dir",
+      "/home/vostrikov/projects/packages/corex/plans/2026.09.15-\u21161-COREX-FLEXCRM-REMAINING",
+      "--item",
+      "P3.2"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/corex",
+    "started_at": "2026-09-15T19:44:56.670118+00:00",
+    "ended_at": "2026-09-15T19:44:56.734117+00:00",
+    "exit_code": 0,
+    "json": false,
+    "stdout_bytes": 699,
+    "stderr_bytes": 0
+  },
+  {
+    "name": "maind-analyze",
+    "command": [
+      "/home/vostrikov/projects/packages/swissknifeman/packages/maind/bin/maind",
+      "analyze",
+      "--cwd",
+      "--session",
+      "01a0a63e-5b7e-7af2-8348-ab127f7d7fef",
+      "--no-health",
+      "--json"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/corex",
+    "started_at": "2026-09-15T19:44:56.670256+00:00",
+    "ended_at": "2026-09-15T19:44:56.993848+00:00",
+    "exit_code": 0,
+    "json": true,
+    "stdout_bytes": 7551,
+    "stderr_bytes": 0
+  },
+  {
+    "name": "analyst-token-report",
+    "command": [
+      "/home/vostrikov/projects/packages/swissknifeman/packages/analyst/bin/analyst",
+      "token-report",
+      "--sessions",
+      "20",
+      "--json"
+    ],
+    "cwd": "/home/vostrikov/projects/packages/corex",
+    "started_at": "2026-09-15T19:44:56.670544+00:00",
+    "ended_at": "2026-09-15T19:44:56.755116+00:00",
+    "exit_code": 0,
+    "json": true,
+    "stdout_bytes": 5217,
+    "stderr_bytes": 0
+  }
+]

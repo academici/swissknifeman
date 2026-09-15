@@ -13,7 +13,7 @@
 | `launch-block-template.md` | фиксированная форма «что запускать дальше»: таблица Batch/Model/Thinking/Context/Суть + отдельный command block | provider-native copy-safe команда; Batch из Routing; правила cold-start и hard boundary |
 | `active-template.md` | 4-строчный указатель `plans/ACTIVE.md` | парсится `plan-lint` байт-в-байт |
 | `code-guidance-patterns.md` | 3 паттерна Code Guidance для типовых классов item'ов | анти-подгонка (conformance/contract) · анти-самообман (gate) · if-then эскалация к D# |
-| `decision-record-template.md` | append-only `decisions/<D-id>.md` | evidence, supersession, actor/model, consequences |
+| `decision-record-template.md` | append-only `decisions/<D-id>.md` | YAML id/date/status/item/items/supersedes/superseded_by; literal `Решение`/`Почему`, `## Consequences` при замещении |
 | `item-state-template.md` | generated `<Pn.m>.state.md` | пять volatile result-полей; руками не редактируется |
 | `closure-template.md` | opt-in judgement evidence `closure/<Pn>.json` | дополняет, не заменяет generated `<Pn>.closed.md` |
 

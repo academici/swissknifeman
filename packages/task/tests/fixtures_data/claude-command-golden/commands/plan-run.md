@@ -56,6 +56,12 @@ refresh it only after material progress or typed owner-wait, and use its check v
 terminal response. It is repository-owned admission evidence, not a claim that an unconfigured
 provider transport is intercepted.
 
+An open durable run is not a response boundary: use commentary for partial progress and continue
+the authorized work. Before final, the enabled Stop adapter runs `check-open` against the current
+provider session even without a lease/request payload. `TASK_OPEN_RUN_FINAL_FORBIDDEN` requires
+continuing or persisting a legitimate terminal block/checkpoint; a green subset of tests is not
+an exception. An explicit owner stop remains binding. The check does not itself close any run.
+
 At every actual final after closure, render the shared receipt fragment through worktree-local
 `plan-delivery.py --plan-dir <plan-dir> --subject <subject> --kind terminal --render-final`
 (or the same command with `--verify <receipt>`). This delivery rule applies even without an optional

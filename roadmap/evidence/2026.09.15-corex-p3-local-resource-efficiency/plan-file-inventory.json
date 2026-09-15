@@ -1,0 +1,5366 @@
+[
+  {
+    "path": "index.md",
+    "bytes": 4654
+  },
+  {
+    "path": "handoff.md",
+    "bytes": 5230
+  },
+  {
+    "path": "plan.md",
+    "bytes": 32648
+  },
+  {
+    "path": "open-questions.md",
+    "bytes": 488
+  },
+  {
+    "path": "journal.jsonl",
+    "bytes": 83442
+  },
+  {
+    "path": "roadmap.md",
+    "bytes": 8670
+  },
+  {
+    "path": "status.md",
+    "bytes": 23258
+  },
+  {
+    "path": "artifacts/handoff-receipt.json",
+    "bytes": 1735
+  },
+  {
+    "path": "artifacts/design-finish.md",
+    "bytes": 88351
+  },
+  {
+    "path": "artifacts/source-inventory.json",
+    "bytes": 40226
+  },
+  {
+    "path": "artifacts/authoring-notes.md",
+    "bytes": 952
+  },
+  {
+    "path": "artifacts/lifecycle-selection.json",
+    "bytes": 316
+  },
+  {
+    "path": "artifacts/design-validation.md",
+    "bytes": 1873
+  },
+  {
+    "path": "artifacts/route-run-receipt.json",
+    "bytes": 691
+  },
+  {
+    "path": "brief/01-owner-design-policy.md",
+    "bytes": 3445
+  },
+  {
+    "path": "brief/00-owner-request.md",
+    "bytes": 2625
+  },
+  {
+    "path": "brief/02-astra-whole-plan-review.md",
+    "bytes": 14357
+  },
+  {
+    "path": "research/07-open-source-patterns.md",
+    "bytes": 17857
+  },
+  {
+    "path": "research/P3-adapter-design.md",
+    "bytes": 22156
+  },
+  {
+    "path": "research/P2-design-rag.md",
+    "bytes": 7240
+  },
+  {
+    "path": "research/05-integrated-design.md",
+    "bytes": 45643
+  },
+  {
+    "path": "research/P6-data-design.md",
+    "bytes": 41450
+  },
+  {
+    "path": "research/P5-design-rag.md",
+    "bytes": 9539
+  },
+  {
+    "path": "research/06-azguard-patterns.md",
+    "bytes": 15554
+  },
+  {
+    "path": "research/P10-design-rag.md",
+    "bytes": 8422
+  },
+  {
+    "path": "research/P10-effective-design.md",
+    "bytes": 60867
+  },
+  {
+    "path": "research/P9-design-rag.md",
+    "bytes": 8123
+  },
+  {
+    "path": "research/P4-extension-design.md",
+    "bytes": 44133
+  },
+  {
+    "path": "research/P5-wakeup-design.md",
+    "bytes": 28867
+  },
+  {
+    "path": "research/P9-cohort-design.md",
+    "bytes": 39621
+  },
+  {
+    "path": "research/P8-tool-design.md",
+    "bytes": 50080
+  },
+  {
+    "path": "research/P8-design-rag.md",
+    "bytes": 9051
+  },
+  {
+    "path": "research/00-sources.md",
+    "bytes": 24663
+  },
+  {
+    "path": "research/02-baseline.md",
+    "bytes": 6674
+  },
+  {
+    "path": "research/P7-utility-design.md",
+    "bytes": 45700
+  },
+  {
+    "path": "research/09-read-budget-policy.json",
+    "bytes": 945
+  },
+  {
+    "path": "research/01b-acceptance-source-supplement.md",
+    "bytes": 6352
+  },
+  {
+    "path": "research/P11-design-rag.md",
+    "bytes": 4607
+  },
+  {
+    "path": "research/P6-design-rag.md",
+    "bytes": 8192
+  },
+  {
+    "path": "research/P1-design-rag.md",
+    "bytes": 4421
+  },
+  {
+    "path": "research/01a-acceptance-index.md",
+    "bytes": 109699
+  },
+  {
+    "path": "research/P7-design-rag.md",
+    "bytes": 11282
+  },
+  {
+    "path": "research/08-execution-batches.md",
+    "bytes": 18211
+  },
+  {
+    "path": "research/04-architecture.md",
+    "bytes": 7074
+  },
+  {
+    "path": "research/01-traceability.md",
+    "bytes": 20393
+  },
+  {
+    "path": "research/P3-design-rag.md",
+    "bytes": 6291
+  },
+  {
+    "path": "research/P4-design-rag.md",
+    "bytes": 8336
+  },
+  {
+    "path": "research/P11-reconciliation-design.md",
+    "bytes": 29138
+  },
+  {
+    "path": "research/P2-contract-design.md",
+    "bytes": 13748
+  },
+  {
+    "path": "research/03-gates.md",
+    "bytes": 17495
+  },
+  {
+    "path": ".plan-cache/P3.2-terminal-delivery.json",
+    "bytes": 4842
+  },
+  {
+    "path": ".plan-cache/execution-start.lock",
+    "bytes": 0
+  },
+  {
+    "path": "decisions/D19-read-budget-advisory.md",
+    "bytes": 4113
+  },
+  {
+    "path": "decisions/D22-P2-successor-admission.md",
+    "bytes": 1979
+  },
+  {
+    "path": "decisions/_archive.md",
+    "bytes": 473
+  },
+  {
+    "path": "decisions/_index.md",
+    "bytes": 25514
+  },
+  {
+    "path": "decisions/D11-data-import-search.md",
+    "bytes": 4517
+  },
+  {
+    "path": "decisions/D3.md",
+    "bytes": 4129
+  },
+  {
+    "path": "decisions/D28-local-handoff-producer-readiness.md",
+    "bytes": 2254
+  },
+  {
+    "path": "decisions/D17-whole-plan-review.md",
+    "bytes": 7623
+  },
+  {
+    "path": "decisions/D16-consumer-reconciliation.md",
+    "bytes": 3602
+  },
+  {
+    "path": "decisions/D13-tool-introspection.md",
+    "bytes": 6156
+  },
+  {
+    "path": "decisions/D7.md",
+    "bytes": 3847
+  },
+  {
+    "path": "decisions/D4.md",
+    "bytes": 5050
+  },
+  {
+    "path": "decisions/_current.md",
+    "bytes": 25518
+  },
+  {
+    "path": "decisions/D10-workflow-wakeup.md",
+    "bytes": 3438
+  },
+  {
+    "path": "decisions/D29-identity-handoff-read-carrier.md",
+    "bytes": 1668
+  },
+  {
+    "path": "decisions/D5.md",
+    "bytes": 2389
+  },
+  {
+    "path": "decisions/D27-P3-claim-read-carriers.md",
+    "bytes": 1863
+  },
+  {
+    "path": "decisions/D14-release-cohort.md",
+    "bytes": 4183
+  },
+  {
+    "path": "decisions/D9-headless-extensions.md",
+    "bytes": 3400
+  },
+  {
+    "path": "decisions/D1.md",
+    "bytes": 1090
+  },
+  {
+    "path": "decisions/D20-P2-read-budget-advisory.md",
+    "bytes": 3830
+  },
+  {
+    "path": "decisions/D24-P3-local-read-carrier-repair.md",
+    "bytes": 1570
+  },
+  {
+    "path": "decisions/D26-P3-local-usage-adjacency-repair.md",
+    "bytes": 2687
+  },
+  {
+    "path": "decisions/D23-P3-local-read-budget-advisory.md",
+    "bytes": 4627
+  },
+  {
+    "path": "decisions/D6.md",
+    "bytes": 2904
+  },
+  {
+    "path": "decisions/D2.md",
+    "bytes": 1252
+  },
+  {
+    "path": "decisions/D8.md",
+    "bytes": 2560
+  },
+  {
+    "path": "decisions/D15-effective-acceptance.md",
+    "bytes": 4252
+  },
+  {
+    "path": "decisions/D21-P2-read-declarations.md",
+    "bytes": 1518
+  },
+  {
+    "path": "decisions/D25-P3-local-owner-adoption.md",
+    "bytes": 3039
+  },
+  {
+    "path": "decisions/D12-portable-utilities.md",
+    "bytes": 4141
+  },
+  {
+    "path": "decisions/D18-execution-batches.md",
+    "bytes": 4020
+  },
+  {
+    "path": "scripts/validate-p2.py",
+    "bytes": 12002
+  },
+  {
+    "path": "scripts/validate-p9.py",
+    "bytes": 13024
+  },
+  {
+    "path": "scripts/validate-p6.py",
+    "bytes": 8043
+  },
+  {
+    "path": "scripts/validate-p5.py",
+    "bytes": 8573
+  },
+  {
+    "path": "scripts/test-design-guards.py",
+    "bytes": 6210
+  },
+  {
+    "path": "scripts/validate-p1.py",
+    "bytes": 12568
+  },
+  {
+    "path": "scripts/validate-p10.py",
+    "bytes": 17598
+  },
+  {
+    "path": "scripts/validate-p8.py",
+    "bytes": 11424
+  },
+  {
+    "path": "scripts/validate-p11.py",
+    "bytes": 9492
+  },
+  {
+    "path": "scripts/validate-p4.py",
+    "bytes": 11260
+  },
+  {
+    "path": "scripts/validate-p3.py",
+    "bytes": 10389
+  },
+  {
+    "path": "scripts/validate-p7.py",
+    "bytes": 8906
+  },
+  {
+    "path": "scripts/task-check.py",
+    "bytes": 12156
+  },
+  {
+    "path": "findings/P2-contract-proposals.md",
+    "bytes": 552673
+  },
+  {
+    "path": "findings/P1.4-downstream-P6.4-b7ae58b4d591-41a2c9317c0f.md",
+    "bytes": 501
+  },
+  {
+    "path": "findings/P2-intake.md",
+    "bytes": 93747
+  },
+  {
+    "path": "findings/P1.4-downstream-P8.7-670863303d0c-41a2c9317c0f.md",
+    "bytes": 457
+  },
+  {
+    "path": "findings/P1.4-downstream-P10.9-43f75295d3a2-41a2c9317c0f.md",
+    "bytes": 460
+  },
+  {
+    "path": "findings/P1.4-downstream-P2.2-535fd9687f53-41a2c9317c0f.md",
+    "bytes": 461
+  },
+  {
+    "path": "findings/P1.4-downstream-P6.8-4808c683072a-41a2c9317c0f.md",
+    "bytes": 457
+  },
+  {
+    "path": "findings/P1.4-downstream-P10.1-430eab1d70a4-41a2c9317c0f.md",
+    "bytes": 494
+  },
+  {
+    "path": "findings/P1.4-downstream-P8.4-91967e0432eb-41a2c9317c0f.md",
+    "bytes": 496
+  },
+  {
+    "path": "findings/P1.4-downstream-P3.6-5fe60fc22c5b-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1.4-downstream-P8.5-5cbc88adbaf7-41a2c9317c0f.md",
+    "bytes": 499
+  },
+  {
+    "path": "findings/P1.4-downstream-P10.2-0e0f51fd66b3-41a2c9317c0f.md",
+    "bytes": 509
+  },
+  {
+    "path": "findings/P1.4-downstream-P7.6-b5feae3eba5e-41a2c9317c0f.md",
+    "bytes": 497
+  },
+  {
+    "path": "findings/P1.4-downstream-P7.9-a7c9960156f7-41a2c9317c0f.md",
+    "bytes": 457
+  },
+  {
+    "path": "findings/P1.4-downstream-P8.6-57f66238ac62-41a2c9317c0f.md",
+    "bytes": 499
+  },
+  {
+    "path": "findings/P1.4-downstream-P10.5-9020ae0afcc5-41a2c9317c0f.md",
+    "bytes": 511
+  },
+  {
+    "path": "findings/P3-claim-maintenance.md",
+    "bytes": 44882
+  },
+  {
+    "path": "findings/P1.4-downstream-P5.2-a0b4b45c7773-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1.4-downstream-P5.4-608ee2c875a6-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1.4-downstream-P4.5-7739d0df3557-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1.4-downstream-P3.4-110094dd528c-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1-evidence-ledger.md",
+    "bytes": 123565
+  },
+  {
+    "path": "findings/P1.4-downstream-P11.3-1282238b3557-41a2c9317c0f.md",
+    "bytes": 461
+  },
+  {
+    "path": "findings/P1.4-downstream-P3.2-f7fdbe9b9e19-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1.4-downstream-P10.6-be459bbda20b-41a2c9317c0f.md",
+    "bytes": 503
+  },
+  {
+    "path": "findings/P1.4-downstream-P4.3-008bb82892db-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1.4-downstream-P7.3-6a04bc15451b-41a2c9317c0f.md",
+    "bytes": 501
+  },
+  {
+    "path": "findings/P1.4-downstream-P7.5-dd2a573adfdd-41a2c9317c0f.md",
+    "bytes": 492
+  },
+  {
+    "path": "findings/P1-source-reconciliation.md",
+    "bytes": 49806
+  },
+  {
+    "path": "findings/P1.4-downstream-P7.8-ba52375138e5-41a2c9317c0f.md",
+    "bytes": 502
+  },
+  {
+    "path": "findings/P1.4-downstream-P11.1-794dfee9e85a-41a2c9317c0f.md",
+    "bytes": 462
+  },
+  {
+    "path": "findings/P1.4-downstream-P10.7-2a119835b2b5-41a2c9317c0f.md",
+    "bytes": 506
+  },
+  {
+    "path": "findings/P1.4-downstream-P11.4-f85eb5a8f10d-41a2c9317c0f.md",
+    "bytes": 462
+  },
+  {
+    "path": "findings/P1.4-downstream-P4.4-ecc5eae1f4c8-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1.4-downstream-P4.7-29e6a498acff-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1.4-downstream-P4.6-1950310f4ccd-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P2-delta-map.md",
+    "bytes": 35958
+  },
+  {
+    "path": "findings/P1.4-downstream-P8.2-18909044e5d3-41a2c9317c0f.md",
+    "bytes": 497
+  },
+  {
+    "path": "findings/P1.4-downstream-P6.7-65ccaabeee6d-41a2c9317c0f.md",
+    "bytes": 501
+  },
+  {
+    "path": "findings/P3-storage-context.md",
+    "bytes": 43574
+  },
+  {
+    "path": "findings/P1.4-downstream-P8.1-ba5fac92cfc5-41a2c9317c0f.md",
+    "bytes": 506
+  },
+  {
+    "path": "findings/P1.4-downstream-P2.1-4c560a9098c1-41a2c9317c0f.md",
+    "bytes": 457
+  },
+  {
+    "path": "findings/P1.4-downstream-P4.1-bc3bfebcab4f-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1-downstream-gaps.md",
+    "bytes": 63009
+  },
+  {
+    "path": "findings/P1.4-downstream-P10.8-44bedb808407-41a2c9317c0f.md",
+    "bytes": 502
+  },
+  {
+    "path": "findings/P1.4-downstream-P3.1-83fe7fd78824-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1.4-downstream-P6.6-18bfda23310a-41a2c9317c0f.md",
+    "bytes": 498
+  },
+  {
+    "path": "findings/P1.4-downstream-P4.8-f84e3e9e4939-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1-requirements-lock.md",
+    "bytes": 36605
+  },
+  {
+    "path": "findings/P1-acceptance-map.md",
+    "bytes": 592701
+  },
+  {
+    "path": "findings/P1.4-downstream-P3.3-8735318de9f7-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1.4-downstream-P11.6-4d3db2712d19-41a2c9317c0f.md",
+    "bytes": 461
+  },
+  {
+    "path": "findings/P2-gate-requests.md",
+    "bytes": 52609
+  },
+  {
+    "path": "findings/P1.4-downstream-P6.2-d78560542eac-41a2c9317c0f.md",
+    "bytes": 499
+  },
+  {
+    "path": "findings/P1.4-downstream-P11.5-b7a09e32c98f-41a2c9317c0f.md",
+    "bytes": 462
+  },
+  {
+    "path": "findings/P1.4-downstream-P4.2-938923b14e6d-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P2-identity-profile.md",
+    "bytes": 30336
+  },
+  {
+    "path": "findings/P1.4-downstream-P6.1-b8e74d592f30-41a2c9317c0f.md",
+    "bytes": 506
+  },
+  {
+    "path": "findings/P1.4-downstream-P7.7-e488f4abf199-41a2c9317c0f.md",
+    "bytes": 495
+  },
+  {
+    "path": "findings/P1.4-downstream-P10.3-1ec070306c30-41a2c9317c0f.md",
+    "bytes": 507
+  },
+  {
+    "path": "findings/P1.4-downstream-P6.3-ae4378e7c5dd-41a2c9317c0f.md",
+    "bytes": 499
+  },
+  {
+    "path": "findings/P1.4-downstream-P2.4-97ba3d3dd686-41a2c9317c0f.md",
+    "bytes": 457
+  },
+  {
+    "path": "findings/P2-consumer-cases.md",
+    "bytes": 42267
+  },
+  {
+    "path": "findings/P1.4-downstream-P5.6-b110acacef6c-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1.4-downstream-P7.4-e11e137bb11c-41a2c9317c0f.md",
+    "bytes": 501
+  },
+  {
+    "path": "findings/P1.4-downstream-P11.7-fe590af9f12a-41a2c9317c0f.md",
+    "bytes": 460
+  },
+  {
+    "path": "findings/P1.4-downstream-P7.1-80b982ccc073-41a2c9317c0f.md",
+    "bytes": 506
+  },
+  {
+    "path": "findings/P1.4-downstream-P5.5-453824bff9f6-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1.4-downstream-P5.3-6867806ef177-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1-rag-review.md",
+    "bytes": 3520
+  },
+  {
+    "path": "findings/P1-conflicts.md",
+    "bytes": 13576
+  },
+  {
+    "path": "findings/P1.4-downstream-P10.4-3666710febac-41a2c9317c0f.md",
+    "bytes": 507
+  },
+  {
+    "path": "findings/P1.4-downstream-P6.5-97385b8dd790-41a2c9317c0f.md",
+    "bytes": 492
+  },
+  {
+    "path": "findings/whole-plan-astra-review.md",
+    "bytes": 18067
+  },
+  {
+    "path": "findings/P2-auth-ownership.md",
+    "bytes": 7231
+  },
+  {
+    "path": "findings/P2-contract-catalogue.md",
+    "bytes": 143367
+  },
+  {
+    "path": "findings/P1.4-downstream-P7.2-1a909072934a-41a2c9317c0f.md",
+    "bytes": 496
+  },
+  {
+    "path": "findings/P1.4-downstream-P3.5-572d36797a97-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1.4-downstream-P8.3-010e6166076f-41a2c9317c0f.md",
+    "bytes": 502
+  },
+  {
+    "path": "findings/P1.4-downstream-P5.1-ae548e36e3a2-41a2c9317c0f.md",
+    "bytes": 382
+  },
+  {
+    "path": "findings/P1.4-downstream-P2.3-97c4e3ed6ef8-41a2c9317c0f.md",
+    "bytes": 459
+  },
+  {
+    "path": "findings/P1.4-downstream-P11.2-6e58e39559f6-41a2c9317c0f.md",
+    "bytes": 460
+  },
+  {
+    "path": "bundles/P3.3.json",
+    "bytes": 51607
+  },
+  {
+    "path": "bundles/P2.1.json",
+    "bytes": 50128
+  },
+  {
+    "path": "bundles/P2.2.json",
+    "bytes": 60722
+  },
+  {
+    "path": "bundles/P1.3.json",
+    "bytes": 28370
+  },
+  {
+    "path": "bundles/P1.2.json",
+    "bytes": 22333
+  },
+  {
+    "path": "bundles/P3.1.json",
+    "bytes": 50318
+  },
+  {
+    "path": "bundles/P1.4.json",
+    "bytes": 47258
+  },
+  {
+    "path": "bundles/P2.4.json",
+    "bytes": 48348
+  },
+  {
+    "path": "bundles/P1.1.json",
+    "bytes": 7801
+  },
+  {
+    "path": "bundles/P3.2.json",
+    "bytes": 49905
+  },
+  {
+    "path": "bundles/P2.3.json",
+    "bytes": 59257
+  },
+  {
+    "path": "artifacts/P4-design/native-launch.txt",
+    "bytes": 194
+  },
+  {
+    "path": "artifacts/P4-design/handoff-receipt.json",
+    "bytes": 1903
+  },
+  {
+    "path": "artifacts/P4-design/focused-checks.json",
+    "bytes": 2452
+  },
+  {
+    "path": "artifacts/P4-design/perplexity-query.txt",
+    "bytes": 1056
+  },
+  {
+    "path": "artifacts/P4-design/perplexity-query.focused.txt",
+    "bytes": 594
+  },
+  {
+    "path": "artifacts/P4-design/work-estimate.json",
+    "bytes": 670
+  },
+  {
+    "path": "artifacts/P4-design/contract-smoke.json",
+    "bytes": 882
+  },
+  {
+    "path": "artifacts/P4-design/perplexity-response.focused.json",
+    "bytes": 4279
+  },
+  {
+    "path": "artifacts/P4-design/continuity-decision.json",
+    "bytes": 455
+  },
+  {
+    "path": "artifacts/P4-design/final-integrity.json",
+    "bytes": 201
+  },
+  {
+    "path": "artifacts/P4-design/perplexity-response.json",
+    "bytes": 3445
+  },
+  {
+    "path": "artifacts/P4-design/authoring-notes.md",
+    "bytes": 1184
+  },
+  {
+    "path": "artifacts/P4-design/next-carrier.json",
+    "bytes": 774
+  },
+  {
+    "path": "artifacts/P4-design/lifecycle-selection.json",
+    "bytes": 328
+  },
+  {
+    "path": "artifacts/P4-design/next-input-anchors.json",
+    "bytes": 1044
+  },
+  {
+    "path": "artifacts/P4-design/perplexity-response.initial.json",
+    "bytes": 17302
+  },
+  {
+    "path": "artifacts/P4-design/primary-verification.additional.json",
+    "bytes": 16696
+  },
+  {
+    "path": "artifacts/P4-design/route-evidence.json",
+    "bytes": 661
+  },
+  {
+    "path": "artifacts/P4-design/validation.md",
+    "bytes": 4002
+  },
+  {
+    "path": "artifacts/P4-design/route-evidence.final.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P4-design/perplexity-query.initial.txt",
+    "bytes": 1001
+  },
+  {
+    "path": "artifacts/P4-design/primary-verification.json",
+    "bytes": 33945
+  },
+  {
+    "path": "artifacts/P4-design/source-observations.json",
+    "bytes": 3798
+  },
+  {
+    "path": "artifacts/P2-design/native-launch.txt",
+    "bytes": 194
+  },
+  {
+    "path": "artifacts/P2-design/handoff-receipt.json",
+    "bytes": 1925
+  },
+  {
+    "path": "artifacts/P2-design/perplexity-query.txt",
+    "bytes": 1301
+  },
+  {
+    "path": "artifacts/P2-design/work-estimate.json",
+    "bytes": 665
+  },
+  {
+    "path": "artifacts/P2-design/contract-smoke.json",
+    "bytes": 1876
+  },
+  {
+    "path": "artifacts/P2-design/continuity-decision.json",
+    "bytes": 450
+  },
+  {
+    "path": "artifacts/P2-design/perplexity-response.json",
+    "bytes": 24736
+  },
+  {
+    "path": "artifacts/P2-design/next-carrier.json",
+    "bytes": 769
+  },
+  {
+    "path": "artifacts/P2-design/lifecycle-selection.json",
+    "bytes": 337
+  },
+  {
+    "path": "artifacts/P2-design/next-input-anchors.json",
+    "bytes": 896
+  },
+  {
+    "path": "artifacts/P2-design/perplexity-response.initial.json",
+    "bytes": 12456
+  },
+  {
+    "path": "artifacts/P2-design/route-evidence.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P2-design/validation.md",
+    "bytes": 3881
+  },
+  {
+    "path": "artifacts/P2-design/route-evidence.final.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P2-design/perplexity-query.initial.txt",
+    "bytes": 1452
+  },
+  {
+    "path": "artifacts/P2-design/perplexity-query.superseded.txt",
+    "bytes": 1842
+  },
+  {
+    "path": "artifacts/P2-design/source-observations.json",
+    "bytes": 1880
+  },
+  {
+    "path": "artifacts/P2-design/perplexity-response.superseded.json",
+    "bytes": 13393
+  },
+  {
+    "path": "artifacts/P2-design/route-run-receipt.json",
+    "bytes": 693
+  },
+  {
+    "path": "artifacts/P9-design/case-contracts.json",
+    "bytes": 11263
+  },
+  {
+    "path": "artifacts/P9-design/handoff-receipt.json",
+    "bytes": 3802
+  },
+  {
+    "path": "artifacts/P9-design/run.json",
+    "bytes": 1577
+  },
+  {
+    "path": "artifacts/P9-design/final-fragment.md",
+    "bytes": 1110
+  },
+  {
+    "path": "artifacts/P9-design/primary-web-open.json",
+    "bytes": 32827
+  },
+  {
+    "path": "artifacts/P9-design/work-estimate.json",
+    "bytes": 567
+  },
+  {
+    "path": "artifacts/P9-design/perplexity-matrix-incomplete.json",
+    "bytes": 1859
+  },
+  {
+    "path": "artifacts/P9-design/contract-smoke.json",
+    "bytes": 1964
+  },
+  {
+    "path": "artifacts/P9-design/context-measurement.json",
+    "bytes": 255
+  },
+  {
+    "path": "artifacts/P9-design/continuity-decision.json",
+    "bytes": 354
+  },
+  {
+    "path": "artifacts/P9-design/perplexity-response.json",
+    "bytes": 4063
+  },
+  {
+    "path": "artifacts/P9-design/next-carrier.json",
+    "bytes": 674
+  },
+  {
+    "path": "artifacts/P9-design/primary-web-supplement.json",
+    "bytes": 16348
+  },
+  {
+    "path": "artifacts/P9-design/lifecycle-selection.json",
+    "bytes": 268
+  },
+  {
+    "path": "artifacts/P9-design/perplexity-initial-response.json",
+    "bytes": 15302
+  },
+  {
+    "path": "artifacts/P9-design/route-evidence-final.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P9-design/primary-source-retrieval.json",
+    "bytes": 6153
+  },
+  {
+    "path": "artifacts/P9-design/route-evidence.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P9-design/routing.json",
+    "bytes": 1974
+  },
+  {
+    "path": "artifacts/P9-design/validation.md",
+    "bytes": 3679
+  },
+  {
+    "path": "artifacts/P9-design/product-baseline.json",
+    "bytes": 147053
+  },
+  {
+    "path": "artifacts/P9-design/primary-web-find.json",
+    "bytes": 16525
+  },
+  {
+    "path": "artifacts/P9-design/check-results.json",
+    "bytes": 7362
+  },
+  {
+    "path": "artifacts/P9-design/design-check-results.json",
+    "bytes": 4736
+  },
+  {
+    "path": "artifacts/P9-design/source-preservation.json",
+    "bytes": 197
+  },
+  {
+    "path": "artifacts/P9-design/source-observations.json",
+    "bytes": 4318
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/perplexity-response-06.json",
+    "bytes": 1455
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/perplexity-07-query.txt",
+    "bytes": 446
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/perplexity-response-01.json",
+    "bytes": 17538
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/azguard-inputs.initial.json",
+    "bytes": 73887
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/perplexity-query-06.txt",
+    "bytes": 243
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/perplexity-response-02.json",
+    "bytes": 874
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/batch-routing.selection.json",
+    "bytes": 9415
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/input-inventory.initial.json",
+    "bytes": 163529
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/batch-routing-check.py",
+    "bytes": 3988
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/perplexity-query-04.txt",
+    "bytes": 384
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/perplexity-query-05.txt",
+    "bytes": 310
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/perplexity-query-02.txt",
+    "bytes": 441
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/reviewed-inputs.json",
+    "bytes": 73137
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/perplexity-query-01.txt",
+    "bytes": 597
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/perplexity-07-response.json",
+    "bytes": 2025
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/perplexity-response-03.json",
+    "bytes": 2038
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/perplexity-response-04.json",
+    "bytes": 890
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/perplexity-query-03.txt",
+    "bytes": 246
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/baseline-checks.json",
+    "bytes": 4741
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/batch-routing.before.json",
+    "bytes": 572229
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/source-preservation.json",
+    "bytes": 526
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/azguard-status.initial.txt",
+    "bytes": 21209
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/perplexity-response-05.json",
+    "bytes": 1859
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/read-pages.jsonl",
+    "bytes": 44584
+  },
+  {
+    "path": "artifacts/P6-design/downstream-structural.json",
+    "bytes": 66946
+  },
+  {
+    "path": "artifacts/P6-design/work-estimate.json",
+    "bytes": 664
+  },
+  {
+    "path": "artifacts/P6-design/contract-smoke.json",
+    "bytes": 1298
+  },
+  {
+    "path": "artifacts/P6-design/context-measurement.json",
+    "bytes": 464
+  },
+  {
+    "path": "artifacts/P6-design/continuity-decision.json",
+    "bytes": 449
+  },
+  {
+    "path": "artifacts/P6-design/perplexity-query.transfer.txt",
+    "bytes": 10
+  },
+  {
+    "path": "artifacts/P6-design/perplexity-response.json",
+    "bytes": 7527
+  },
+  {
+    "path": "artifacts/P6-design/next-carrier.json",
+    "bytes": 810
+  },
+  {
+    "path": "artifacts/P6-design/lifecycle-selection.json",
+    "bytes": 268
+  },
+  {
+    "path": "artifacts/P6-design/next-input-anchors.json",
+    "bytes": 369
+  },
+  {
+    "path": "artifacts/P6-design/perplexity-response.initial.json",
+    "bytes": 12009
+  },
+  {
+    "path": "artifacts/P6-design/perplexity-response.search.json",
+    "bytes": 7527
+  },
+  {
+    "path": "artifacts/P6-design/route-evidence.json",
+    "bytes": 383
+  },
+  {
+    "path": "artifacts/P6-design/validation.md",
+    "bytes": 3549
+  },
+  {
+    "path": "artifacts/P6-design/route-evidence.final.json",
+    "bytes": 383
+  },
+  {
+    "path": "artifacts/P6-design/perplexity-response.transfer.json",
+    "bytes": 8287
+  },
+  {
+    "path": "artifacts/P6-design/initial-check-results.json",
+    "bytes": 2983
+  },
+  {
+    "path": "artifacts/P6-design/delivery-receipt.json",
+    "bytes": 3239
+  },
+  {
+    "path": "artifacts/P6-design/check-results.json",
+    "bytes": 3462
+  },
+  {
+    "path": "artifacts/P6-design/perplexity-query.initial.txt",
+    "bytes": 1505
+  },
+  {
+    "path": "artifacts/P6-design/primary-verification.json",
+    "bytes": 4428
+  },
+  {
+    "path": "artifacts/P6-design/source-preservation.json",
+    "bytes": 269
+  },
+  {
+    "path": "artifacts/P6-design/perplexity-query.search.txt",
+    "bytes": 905
+  },
+  {
+    "path": "artifacts/P6-design/route-run-receipt.json",
+    "bytes": 667
+  },
+  {
+    "path": "artifacts/P1-design/perplexity-query.txt",
+    "bytes": 1057
+  },
+  {
+    "path": "artifacts/P1-design/work-estimate.json",
+    "bytes": 627
+  },
+  {
+    "path": "artifacts/P1-design/contract-smoke.json",
+    "bytes": 647
+  },
+  {
+    "path": "artifacts/P1-design/context-measurement.json",
+    "bytes": 2473
+  },
+  {
+    "path": "artifacts/P1-design/continuity-decision.json",
+    "bytes": 412
+  },
+  {
+    "path": "artifacts/P1-design/perplexity-response.json",
+    "bytes": 7996
+  },
+  {
+    "path": "artifacts/P1-design/validator-smoke.json",
+    "bytes": 941
+  },
+  {
+    "path": "artifacts/P1-design/next-carrier.json",
+    "bytes": 820
+  },
+  {
+    "path": "artifacts/P1-design/lifecycle-selection.json",
+    "bytes": 355
+  },
+  {
+    "path": "artifacts/P1-design/route-evidence.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P1-design/validation.md",
+    "bytes": 2883
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/admission-check-results.json",
+    "bytes": 2712
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/checkpoint.md",
+    "bytes": 3552
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/admission-check-3.log",
+    "bytes": 30
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/initial-item-spec.txt",
+    "bytes": 8110
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1-graph-before.json",
+    "bytes": 5146
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/installed-sdk-source-proof.json",
+    "bytes": 1286
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/local-complete-continuity-estimate.json",
+    "bytes": 560
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/pending-read-chunk.json",
+    "bytes": 560
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1-before-read-repair.md",
+    "bytes": 8110
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-admission.json",
+    "bytes": 520
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-five-carrier-read-proof.json",
+    "bytes": 3200
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-final-bundle-delta-proof.json",
+    "bytes": 3192
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/final-bookkeeping-checks.json",
+    "bytes": 1601
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-active-continuity-estimate.json",
+    "bytes": 552
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-active-five-carrier-context.json",
+    "bytes": 1071
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-qualification.json",
+    "bytes": 16977
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/admission-check-results-before-context-repair.json",
+    "bytes": 2616
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1-pre-mutation.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/D25-P3-local-owner-adoption-before-metadata.md",
+    "bytes": 2540
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-resolution.log",
+    "bytes": 401
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/admission-check-4.log",
+    "bytes": 30
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/B-P3-IDENTITY-handoff-carrier.json",
+    "bytes": 813
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/adopted-continuity-estimate.json",
+    "bytes": 553
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/adopted-continuity-decision.json",
+    "bytes": 309
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1-route-run.json",
+    "bytes": 691
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/initial-five-carrier-context.json",
+    "bytes": 1071
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/proposed-composer.json",
+    "bytes": 822
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/native-weight-current.json",
+    "bytes": 1095731
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/final-lint.log",
+    "bytes": 1963
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/pre-final-carrier-fix-design.log",
+    "bytes": 110
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.7-before-pending-producer-annotation.md",
+    "bytes": 3373
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/B-P3-IDENTITY-next-admission.json",
+    "bytes": 1509
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/minio-LICENSE.txt",
+    "bytes": 34523
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/initial-item-state.txt",
+    "bytes": 601
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/B-P3-IDENTITY-handoff-admission.json",
+    "bytes": 921
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/admission-check-6.log",
+    "bytes": 0
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/check-read-budget-policy.py",
+    "bytes": 4025
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/continuity-decision.json",
+    "bytes": 291
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1-admission.json",
+    "bytes": 520
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/initial-bundle.txt",
+    "bytes": 51803
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/pre-reconciliation-final-bookkeeping-checks.json",
+    "bytes": 841
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/manual-request-continuity-decision.json",
+    "bytes": 309
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-context-read-progress.json",
+    "bytes": 485
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/initial-plan-core.txt",
+    "bytes": 32648
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/admission-check-2.log",
+    "bytes": 180
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/D26-pre-mutation.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-handoff-product-anchor-before.json",
+    "bytes": 3871
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-run.json",
+    "bytes": 425
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-before-read-repair.md",
+    "bytes": 5762
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/storage-service-cleanup.json",
+    "bytes": 303
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-five-carrier-context.json",
+    "bytes": 1071
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/proposed-composer.lock",
+    "bytes": 50485
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-check-results.json",
+    "bytes": 11227
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1-contract.json",
+    "bytes": 28260
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/final-design.log",
+    "bytes": 134
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-contract.json",
+    "bytes": 27841
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/pre-reconciliation-final-lint.log",
+    "bytes": 3428
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/D23-policy-checks.json",
+    "bytes": 2170
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/storage-service-candidate.json",
+    "bytes": 2006
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-pending-read-chunk.json",
+    "bytes": 586
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/local-complete-continuity-decision.json",
+    "bytes": 386
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/owner-gate-requests.md",
+    "bytes": 7959
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/minio-tag.json",
+    "bytes": 2664
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/pre-reconciliation-final-design.log",
+    "bytes": 85
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.3-before-handoff-read-repair.md",
+    "bytes": 5942
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/admission-check-5-final.log",
+    "bytes": 1677
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/route-evidence.json",
+    "bytes": 360
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-graph-before.json",
+    "bytes": 4730
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/upstream-runner-source-proof.json",
+    "bytes": 1633
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1-check-results.json",
+    "bytes": 10888
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-active-continuity-decision.json",
+    "bytes": 305
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-pre-final.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/owner-adoption-receipts.json",
+    "bytes": 541
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1-before-read-repair.bundle.json",
+    "bytes": 51803
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/adopted-five-carrier-context.json",
+    "bytes": 1071
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/manual-request-continuity-estimate.json",
+    "bytes": 553
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/B-P3-IDENTITY-handoff-admission-before-Inputs-repair.json",
+    "bytes": 751
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-active-five-carrier-read-proof.json",
+    "bytes": 330
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/pre-final-carrier-fix-lint.log",
+    "bytes": 2827
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-pre-mutation.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/admission-check-5.log",
+    "bytes": 1854
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/adopted-five-carrier-read-proof.json",
+    "bytes": 4366
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-projection-recovery.json",
+    "bytes": 328
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1-routing-admission.json",
+    "bytes": 520
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/handoff-receipt-before-context-repair.json",
+    "bytes": 3276
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/final-delivery-location.md",
+    "bytes": 365
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/B-P3-IDENTITY-provider-recommendation.json",
+    "bytes": 267
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/D28-local-handoff-producer-readiness-before-metadata.md",
+    "bytes": 1755
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/D27-P3-claim-read-carriers-before-metadata.md",
+    "bytes": 1364
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/D26-P3-local-usage-adjacency-repair-before-metadata.md",
+    "bytes": 2188
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/D26-arch-pre-mutation.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/native-weight.json",
+    "bytes": 1096244
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/prior-terminal-current-wait-receipt.json",
+    "bytes": 3891
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/guard-check-results.json",
+    "bytes": 522
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1-run.json",
+    "bytes": 337
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-required-read-progress.json",
+    "bytes": 85184
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/decision-metadata-reconciliation.json",
+    "bytes": 2599
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/continuity-estimate.json",
+    "bytes": 561
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/storage-service-run.json",
+    "bytes": 466
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/handoff-before-admission.md",
+    "bytes": 2747
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1-pre-final.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/native-weight-after-read-repair.json",
+    "bytes": 1096216
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/required-read-progress.json",
+    "bytes": 150636
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/read-repair-check.json",
+    "bytes": 234
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/admission-check-1.log",
+    "bytes": 134
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-closure-freshness.json",
+    "bytes": 2008
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2-handoff-product-anchor-after.json",
+    "bytes": 3877
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/checkpoint-before-owner-adoption.md",
+    "bytes": 3503
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/lint-before-context-repair.log",
+    "bytes": 1854
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/initial-phase-context.txt",
+    "bytes": 7458
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1-closure-freshness.json",
+    "bytes": 262
+  },
+  {
+    "path": "artifacts/P3-design/native-launch.txt",
+    "bytes": 194
+  },
+  {
+    "path": "artifacts/P3-design/handoff-receipt.json",
+    "bytes": 1906
+  },
+  {
+    "path": "artifacts/P3-design/perplexity-query.txt",
+    "bytes": 476
+  },
+  {
+    "path": "artifacts/P3-design/work-estimate.json",
+    "bytes": 647
+  },
+  {
+    "path": "artifacts/P3-design/contract-smoke.json",
+    "bytes": 1934
+  },
+  {
+    "path": "artifacts/P3-design/continuity-decision.json",
+    "bytes": 432
+  },
+  {
+    "path": "artifacts/P3-design/perplexity-response.json",
+    "bytes": 16733
+  },
+  {
+    "path": "artifacts/P3-design/perplexity-response.transport.json",
+    "bytes": 12887
+  },
+  {
+    "path": "artifacts/P3-design/authoring-notes.md",
+    "bytes": 365
+  },
+  {
+    "path": "artifacts/P3-design/next-carrier.json",
+    "bytes": 751
+  },
+  {
+    "path": "artifacts/P3-design/lifecycle-selection.json",
+    "bytes": 268
+  },
+  {
+    "path": "artifacts/P3-design/next-input-anchors.json",
+    "bytes": 1150
+  },
+  {
+    "path": "artifacts/P3-design/perplexity-response.initial.json",
+    "bytes": 133
+  },
+  {
+    "path": "artifacts/P3-design/route-evidence.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P3-design/validation.md",
+    "bytes": 3660
+  },
+  {
+    "path": "artifacts/P3-design/route-evidence.final.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P3-design/perplexity-query.transport.txt",
+    "bytes": 415
+  },
+  {
+    "path": "artifacts/P3-design/perplexity-query.initial.txt",
+    "bytes": 948
+  },
+  {
+    "path": "artifacts/P3-design/primary-verification.json",
+    "bytes": 16673
+  },
+  {
+    "path": "artifacts/P3-design/source-observations.json",
+    "bytes": 9902
+  },
+  {
+    "path": "artifacts/P3-design/journal-encoding-observation.json",
+    "bytes": 2026
+  },
+  {
+    "path": "artifacts/P3-design/route-run-receipt.json",
+    "bytes": 661
+  },
+  {
+    "path": "artifacts/P7-design/perplexity-query.geo.txt",
+    "bytes": 668
+  },
+  {
+    "path": "artifacts/P7-design/perplexity-response.geo.json",
+    "bytes": 14385
+  },
+  {
+    "path": "artifacts/P7-design/perplexity-query.incomplete.txt",
+    "bytes": 1358
+  },
+  {
+    "path": "artifacts/P7-design/perplexity-query.recurrence.failed.txt",
+    "bytes": 618
+  },
+  {
+    "path": "artifacts/P7-design/downstream-structural.json",
+    "bytes": 11087
+  },
+  {
+    "path": "artifacts/P7-design/work-estimate.json",
+    "bytes": 570
+  },
+  {
+    "path": "artifacts/P7-design/contract-smoke.json",
+    "bytes": 1227
+  },
+  {
+    "path": "artifacts/P7-design/perplexity-response.optional.json",
+    "bytes": 3426
+  },
+  {
+    "path": "artifacts/P7-design/context-measurement.json",
+    "bytes": 489
+  },
+  {
+    "path": "artifacts/P7-design/continuity-decision.json",
+    "bytes": 355
+  },
+  {
+    "path": "artifacts/P7-design/perplexity-response.intl.failed.json",
+    "bytes": 133
+  },
+  {
+    "path": "artifacts/P7-design/perplexity-response.json",
+    "bytes": 7181
+  },
+  {
+    "path": "artifacts/P7-design/next-carrier.json",
+    "bytes": 674
+  },
+  {
+    "path": "artifacts/P7-design/case-inventory.json",
+    "bytes": 13900
+  },
+  {
+    "path": "artifacts/P7-design/lifecycle-selection.json",
+    "bytes": 369
+  },
+  {
+    "path": "artifacts/P7-design/next-input-anchors.json",
+    "bytes": 859
+  },
+  {
+    "path": "artifacts/P7-design/perplexity-query.optional.txt",
+    "bytes": 397
+  },
+  {
+    "path": "artifacts/P7-design/route-evidence.json",
+    "bytes": 383
+  },
+  {
+    "path": "artifacts/P7-design/validation.md",
+    "bytes": 3442
+  },
+  {
+    "path": "artifacts/P7-design/route-evidence.final.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P7-design/perplexity-query.intl.txt",
+    "bytes": 292
+  },
+  {
+    "path": "artifacts/P7-design/initial-check-results.json",
+    "bytes": 4521
+  },
+  {
+    "path": "artifacts/P7-design/perplexity-response.recurrence.json",
+    "bytes": 9510
+  },
+  {
+    "path": "artifacts/P7-design/perplexity-response.recurrence.failed.json",
+    "bytes": 133
+  },
+  {
+    "path": "artifacts/P7-design/delivery-receipt.json",
+    "bytes": 4226
+  },
+  {
+    "path": "artifacts/P7-design/perplexity-query.recurrence.txt",
+    "bytes": 285
+  },
+  {
+    "path": "artifacts/P7-design/check-results.json",
+    "bytes": 17821
+  },
+  {
+    "path": "artifacts/P7-design/perplexity-query.intl.failed.txt",
+    "bytes": 599
+  },
+  {
+    "path": "artifacts/P7-design/primary-verification.json",
+    "bytes": 6132
+  },
+  {
+    "path": "artifacts/P7-design/source-preservation.json",
+    "bytes": 276
+  },
+  {
+    "path": "artifacts/P7-design/perplexity-response.incomplete.json",
+    "bytes": 322
+  },
+  {
+    "path": "artifacts/P7-design/route-run-receipt.json",
+    "bytes": 699
+  },
+  {
+    "path": "artifacts/P8-design/parent-counts.json",
+    "bytes": 64
+  },
+  {
+    "path": "artifacts/P8-design/perplexity-query.txt",
+    "bytes": 969
+  },
+  {
+    "path": "artifacts/P8-design/downstream-structural.json",
+    "bytes": 111724
+  },
+  {
+    "path": "artifacts/P8-design/work-estimate.json",
+    "bytes": 570
+  },
+  {
+    "path": "artifacts/P8-design/contract-smoke.json",
+    "bytes": 1581
+  },
+  {
+    "path": "artifacts/P8-design/context-measurement.json",
+    "bytes": 414
+  },
+  {
+    "path": "artifacts/P8-design/continuity-decision.json",
+    "bytes": 355
+  },
+  {
+    "path": "artifacts/P8-design/perplexity-response.json",
+    "bytes": 8302
+  },
+  {
+    "path": "artifacts/P8-design/next-carrier.json",
+    "bytes": 674
+  },
+  {
+    "path": "artifacts/P8-design/case-inventory.json",
+    "bytes": 423
+  },
+  {
+    "path": "artifacts/P8-design/lifecycle-selection.json",
+    "bytes": 363
+  },
+  {
+    "path": "artifacts/P8-design/next-input-anchors.json",
+    "bytes": 1461
+  },
+  {
+    "path": "artifacts/P8-design/perplexity-response.initial.json",
+    "bytes": 14524
+  },
+  {
+    "path": "artifacts/P8-design/route-evidence.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P8-design/git-status.before.txt",
+    "bytes": 80
+  },
+  {
+    "path": "artifacts/P8-design/validation.md",
+    "bytes": 3613
+  },
+  {
+    "path": "artifacts/P8-design/route-evidence.final.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P8-design/git-status.after.txt",
+    "bytes": 80
+  },
+  {
+    "path": "artifacts/P8-design/perplexity-response.schema.json",
+    "bytes": 5079
+  },
+  {
+    "path": "artifacts/P8-design/product-baseline.json",
+    "bytes": 147053
+  },
+  {
+    "path": "artifacts/P8-design/final-recommendation.md",
+    "bytes": 1095
+  },
+  {
+    "path": "artifacts/P8-design/delivery-receipt.json",
+    "bytes": 4094
+  },
+  {
+    "path": "artifacts/P8-design/check-results.json",
+    "bytes": 2992
+  },
+  {
+    "path": "artifacts/P8-design/design-check-results.json",
+    "bytes": 4378
+  },
+  {
+    "path": "artifacts/P8-design/perplexity-query.initial.txt",
+    "bytes": 1202
+  },
+  {
+    "path": "artifacts/P8-design/primary-verification.json",
+    "bytes": 764
+  },
+  {
+    "path": "artifacts/P8-design/source-preservation.json",
+    "bytes": 243
+  },
+  {
+    "path": "artifacts/P8-design/perplexity-query.schema.txt",
+    "bytes": 821
+  },
+  {
+    "path": "artifacts/P8-design/source-observations.json",
+    "bytes": 4438
+  },
+  {
+    "path": "artifacts/P8-design/route-run-receipt.json",
+    "bytes": 661
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-login.retry-owner.json",
+    "bytes": 135
+  },
+  {
+    "path": "artifacts/P5-design/next-carrier.resumed.json",
+    "bytes": 775
+  },
+  {
+    "path": "artifacts/P5-design/lifecycle-selection.resumed.json",
+    "bytes": 328
+  },
+  {
+    "path": "artifacts/P5-design/work-estimate.resumed.json",
+    "bytes": 671
+  },
+  {
+    "path": "artifacts/P5-design/delivery-receipt.resumed.json",
+    "bytes": 3132
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-query.txt",
+    "bytes": 1051
+  },
+  {
+    "path": "artifacts/P5-design/validation.resumed.md",
+    "bytes": 5584
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-response.resumed-routing-web.json",
+    "bytes": 3802
+  },
+  {
+    "path": "artifacts/P5-design/source-preservation.resumed.json",
+    "bytes": 81
+  },
+  {
+    "path": "artifacts/P5-design/route-evidence.final.resumed.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P5-design/final-shared-lint.json",
+    "bytes": 364
+  },
+  {
+    "path": "artifacts/P5-design/work-estimate.json",
+    "bytes": 1411
+  },
+  {
+    "path": "artifacts/P5-design/retry-owner-observation.md",
+    "bytes": 533
+  },
+  {
+    "path": "artifacts/P5-design/route-evidence.resumed.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P5-design/final-checks.resumed.json",
+    "bytes": 1212
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-query.supplementary-failed.txt",
+    "bytes": 657
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-query.resumed-routing-web.txt",
+    "bytes": 354
+  },
+  {
+    "path": "artifacts/P5-design/route-evidence.retry-owner.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P5-design/continuity-decision.json",
+    "bytes": 1138
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-query.minimal-failed.txt",
+    "bytes": 363
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-query.resumed-root-digest.txt",
+    "bytes": 645
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-response.json",
+    "bytes": 13772
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-response.minimal-failed.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-response.retry-focused.json",
+    "bytes": 198
+  },
+  {
+    "path": "artifacts/P5-design/next-carrier.json",
+    "bytes": 1391
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-query.resumed-digest-web.txt",
+    "bytes": 473
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-response.retry-owner.json",
+    "bytes": 13772
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-response.supplementary-failed.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/P5-design/lifecycle-selection.json",
+    "bytes": 268
+  },
+  {
+    "path": "artifacts/P5-design/rag-coverage.resumed.json",
+    "bytes": 751
+  },
+  {
+    "path": "artifacts/P5-design/next-input-anchors.json",
+    "bytes": 1257
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-response.initial.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/P5-design/continuity-decision.resumed.json",
+    "bytes": 456
+  },
+  {
+    "path": "artifacts/P5-design/route-evidence.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-response.resumed-digest-web.json",
+    "bytes": 4135
+  },
+  {
+    "path": "artifacts/P5-design/validation.md",
+    "bytes": 4739
+  },
+  {
+    "path": "artifacts/P5-design/route-evidence.final.json",
+    "bytes": 380
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-query.retry-owner.txt",
+    "bytes": 1051
+  },
+  {
+    "path": "artifacts/P5-design/rag-failure.md",
+    "bytes": 690
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-login.retry-focused.json",
+    "bytes": 113
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-query.retry-focused-web.txt",
+    "bytes": 544
+  },
+  {
+    "path": "artifacts/P5-design/check-results.resumed.json",
+    "bytes": 2560
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-response.resumed-root-digest.json",
+    "bytes": 133
+  },
+  {
+    "path": "artifacts/P5-design/next-input-anchors.resumed.json",
+    "bytes": 635
+  },
+  {
+    "path": "artifacts/P5-design/delivery-receipt.json",
+    "bytes": 6046
+  },
+  {
+    "path": "artifacts/P5-design/context-measurement.resumed.json",
+    "bytes": 432
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-query.retry-focused.txt",
+    "bytes": 691
+  },
+  {
+    "path": "artifacts/P5-design/check-results.json",
+    "bytes": 1629
+  },
+  {
+    "path": "artifacts/P5-design/perplexity-query.initial.txt",
+    "bytes": 1199
+  },
+  {
+    "path": "artifacts/P5-design/primary-verification.json",
+    "bytes": 15572
+  },
+  {
+    "path": "artifacts/P5-design/source-preservation.json",
+    "bytes": 679
+  },
+  {
+    "path": "artifacts/P5-design/source-observations.json",
+    "bytes": 1995
+  },
+  {
+    "path": "artifacts/P5-design/primary-verification.resumed.json",
+    "bytes": 16310
+  },
+  {
+    "path": "artifacts/P5-design/route-run-receipt.json",
+    "bytes": 661
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-contract.json",
+    "bytes": 39161
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-pre-final.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/checkpoint.md",
+    "bytes": 2544
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-indexed-P4-reads.json",
+    "bytes": 3386
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-route-run.json",
+    "bytes": 691
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-pre-mutation.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2-required-final-fragment.md",
+    "bytes": 831
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-admission.json",
+    "bytes": 547
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-context.json",
+    "bytes": 4679
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-semantic.json",
+    "bytes": 10331
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-request-inventory.json",
+    "bytes": 3308
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-admission.json",
+    "bytes": 547
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-run.json",
+    "bytes": 424
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-declaration-bytes.json",
+    "bytes": 117273
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-check-results.json",
+    "bytes": 19638
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-semantic.json",
+    "bytes": 3642
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-admission.json",
+    "bytes": 547
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-pre-mutation.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2-final-lint.txt",
+    "bytes": 1476
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-admission.json",
+    "bytes": 547
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-indexed-P5-reads.json",
+    "bytes": 2540
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/B-P2-completed-batch-receipt.json",
+    "bytes": 545
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-route-run.json",
+    "bytes": 697
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-route-run.json",
+    "bytes": 691
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-pre-final.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-graph-before.json",
+    "bytes": 4309
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-pre-final.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2-phase-assurance.json",
+    "bytes": 1090
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-semantic.json",
+    "bytes": 1640
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-closure-freshness.json",
+    "bytes": 262
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2-phase-candidate.json",
+    "bytes": 2602
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-post-close-lint.txt",
+    "bytes": 2117
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/D20-policy-checks.json",
+    "bytes": 1158
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-closure-freshness.json",
+    "bytes": 262
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-route-run.json",
+    "bytes": 691
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-pre-final.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-indexed-P3-reads.json",
+    "bytes": 2963
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-sql-proposals.json",
+    "bytes": 129506
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2-phase-close-admission.json",
+    "bytes": 1388
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-graph-before.json",
+    "bytes": 4120
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-graph-before.json",
+    "bytes": 3896
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-pre-mutation.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/design-finish-before.md",
+    "bytes": 85312
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-indexed-P7-reads.json",
+    "bytes": 3809
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-run.json",
+    "bytes": 337
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-indexed-P6-reads.json",
+    "bytes": 3386
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-presentation-experiment-status.json",
+    "bytes": 657
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P3.1-routing-admission.json",
+    "bytes": 520
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-post-close-lint.txt",
+    "bytes": 1785
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-run.json",
+    "bytes": 425
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-check-results.json",
+    "bytes": 6006
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-context.json",
+    "bytes": 4681
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-contract.json",
+    "bytes": 31220
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P3.1-admission-declaration-repair.json",
+    "bytes": 1533
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-attempt1-run.json",
+    "bytes": 337
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2-terminal-delivery.json",
+    "bytes": 4135
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-refinement.md",
+    "bytes": 356
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-post-close-lint.txt",
+    "bytes": 1808
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-closure-freshness.json",
+    "bytes": 262
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-post-close-lint.txt",
+    "bytes": 1476
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-check-results.json",
+    "bytes": 8446
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-indexed-P8-reads.json",
+    "bytes": 2963
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-contract.json",
+    "bytes": 39738
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-contract.json",
+    "bytes": 35562
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-check-results.json",
+    "bytes": 15594
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-native-measurement.json",
+    "bytes": 35503
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-semantic.json",
+    "bytes": 14233
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P3.1-admission-declaration-before.md",
+    "bytes": 6014
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-closure-freshness.json",
+    "bytes": 262
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2-final-verification.json",
+    "bytes": 957
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-graph-before.json",
+    "bytes": 3566
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-proposal-read-groups.json",
+    "bytes": 2797
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-context.json",
+    "bytes": 4681
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/B-P2-continuity.json",
+    "bytes": 1041
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.3-run.json",
+    "bytes": 337
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-pre-mutation.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P3.1-read-budget-native.json",
+    "bytes": 38433
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-run.json",
+    "bytes": 337
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.1-sources.json",
+    "bytes": 147
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-check-results.json",
+    "bytes": 2954
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/checkpoint.md",
+    "bytes": 8098
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-source-catalog.json",
+    "bytes": 36276
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/read-budget-waiting-lint.red.txt",
+    "bytes": 2054
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-product-anchor.json",
+    "bytes": 313
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.1-run.json",
+    "bytes": 316
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-next-carrier.json",
+    "bytes": 656
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P2.1-read-budget-assessment.json",
+    "bytes": 35504
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-source-and-coverage-check.json",
+    "bytes": 465
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-route-run-receipt.json",
+    "bytes": 691
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-context.json",
+    "bytes": 1364
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-continuity.json",
+    "bytes": 305
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.1-admission.json",
+    "bytes": 13237
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-map-renderer.py",
+    "bytes": 7532
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-write-site.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-product-read-progress.json",
+    "bytes": 10806
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-evidence-structural.json",
+    "bytes": 162
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-admission.json",
+    "bytes": 545
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-adaptive-bindings-progress.json",
+    "bytes": 11409
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-author.py",
+    "bytes": 22243
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-semantic-review.json",
+    "bytes": 3749
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-resume-context.json",
+    "bytes": 1374
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-closure-byte-proof.json",
+    "bytes": 262
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-semantic-review.json",
+    "bytes": 2804
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-write-site.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-ledger-author.py",
+    "bytes": 54284
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-lock-model.json",
+    "bytes": 40885
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-route-final.json",
+    "bytes": 691
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-route-final.json",
+    "bytes": 691
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.1-context.json",
+    "bytes": 1071
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-seal-structural.json",
+    "bytes": 158
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-route-run-receipt.json",
+    "bytes": 691
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P2.1-batch-receipt.json",
+    "bytes": 495
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-run.json",
+    "bytes": 337
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-draft-builder.py",
+    "bytes": 8538
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P2.1-admission.json",
+    "bytes": 733
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-draft-model.json",
+    "bytes": 813147
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P2.1-read-declaration-repair.json",
+    "bytes": 3178
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-verify-lossless.py",
+    "bytes": 4771
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/read-budget-next-carrier.json",
+    "bytes": 710
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-resume-context.json",
+    "bytes": 1468
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-delimiter-fragments-open.json",
+    "bytes": 2273
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-bundle-packaging-proof.json",
+    "bytes": 741
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.1-work-estimate.json",
+    "bytes": 554
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-read-progress.json",
+    "bytes": 24208
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/read-budget-measurement.json",
+    "bytes": 1157428
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/read-budget-repair-result.json",
+    "bytes": 237
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-work-estimate.json",
+    "bytes": 554
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.1-inputs.json",
+    "bytes": 146
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P2.1-packaging-repair.py",
+    "bytes": 5196
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-effective-acceptance-projection.json",
+    "bytes": 249138
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-close.py",
+    "bytes": 4450
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-context.json",
+    "bytes": 1416
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/read-budget-lint.red.txt",
+    "bytes": 1877
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-final-byte-proof.json",
+    "bytes": 262
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-write-site.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-target-read-progress.json",
+    "bytes": 43455
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P2.1-read-declaration-before.md",
+    "bytes": 5895
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-conflict-model.json",
+    "bytes": 13834
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-adaptive-read-progress.json",
+    "bytes": 24688
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.1-delivery.json",
+    "bytes": 2945
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-semantic-review.json",
+    "bytes": 3990
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/D19-lint.txt",
+    "bytes": 1880
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-next.json",
+    "bytes": 632
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-admission.json",
+    "bytes": 545
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-product-anchor.json",
+    "bytes": 250
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/D19-policy-checks.json",
+    "bytes": 582
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-delimiter-fragments-resolution.json",
+    "bytes": 375
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-final-context.json",
+    "bytes": 1547
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-batch-receipt.json",
+    "bytes": 531
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-semantic-model.json",
+    "bytes": 1093809
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-write-site-pre.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-lossless-coverage.json",
+    "bytes": 114402
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/read-budget-continuity.json",
+    "bytes": 287
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-delivery.json",
+    "bytes": 2964
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1-phase-close-admission.json",
+    "bytes": 1435
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-resume-context.json",
+    "bytes": 1211
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-downstream-model.json",
+    "bytes": 71514
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/D19-design.txt",
+    "bytes": 134
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.1-product-anchor.json",
+    "bytes": 2503
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-product-write-site.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-continuity.json",
+    "bytes": 305
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-delivery.json",
+    "bytes": 2940
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-start-write-site.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-criteria-structural.json",
+    "bytes": 219
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-admission.json",
+    "bytes": 23565
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-pre-product-design-check.json",
+    "bytes": 378
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-work-estimate.json",
+    "bytes": 554
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/read-budget-decision.md",
+    "bytes": 2917
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-batch-receipt.json",
+    "bytes": 519
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-semantic-model.json",
+    "bytes": 149011
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-closure-byte-proof.json",
+    "bytes": 262
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/B-P1-completed-receipt.json",
+    "bytes": 543
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.1-actual-product-reconciliation.json",
+    "bytes": 530
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/source-observation.json",
+    "bytes": 17843
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-context.json",
+    "bytes": 1412
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-verify-seal.py",
+    "bytes": 6310
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-verify-source-and-coverage.py",
+    "bytes": 4153
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/read-budget-repair-decision.json",
+    "bytes": 2888
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-final-downstream-summary.json",
+    "bytes": 1684
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-closure-byte-proof.json",
+    "bytes": 262
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-check-results.json",
+    "bytes": 1585
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-work-estimate.json",
+    "bytes": 562
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-delivery-precommit.json",
+    "bytes": 4406
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-read-progress.json",
+    "bytes": 7979
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.1-continuity.json",
+    "bytes": 305
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-product-anchor.json",
+    "bytes": 4590
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.1-next-carrier.json",
+    "bytes": 680
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-independent-seal-check.json",
+    "bytes": 706
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.3-cohort-applicability.json",
+    "bytes": 8400
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-non-ac-bindings.json",
+    "bytes": 10458
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-required-read-progress.json",
+    "bytes": 5594
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P2.1-admission-after-repair.json",
+    "bytes": 547
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-continuity.json",
+    "bytes": 388
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-final-check-results.json",
+    "bytes": 143273
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.4-bundle-packaging-red.json",
+    "bytes": 2401
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-run.json",
+    "bytes": 425
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/P1.2-semantic-refinement.py",
+    "bytes": 25707
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/read-budget-work-estimate.json",
+    "bytes": 561
+  },
+  {
+    "path": "artifacts/B-P1-QUALIFY/route-run-receipt.json",
+    "bytes": 691
+  },
+  {
+    "path": "artifacts/P11-design/primary-d77223ddb3c3a83c.gz",
+    "bytes": 9741
+  },
+  {
+    "path": "artifacts/P11-design/retrieval-history.json",
+    "bytes": 4155
+  },
+  {
+    "path": "artifacts/P11-design/remaining-design-inputs.json",
+    "bytes": 13600
+  },
+  {
+    "path": "artifacts/P11-design/check-results-intermediate.json",
+    "bytes": 3100
+  },
+  {
+    "path": "artifacts/P11-design/handoff-receipt.json",
+    "bytes": 3587
+  },
+  {
+    "path": "artifacts/P11-design/primary-0801e1ee8a70e53f.gz",
+    "bytes": 55705
+  },
+  {
+    "path": "artifacts/P11-design/source-baseline.json",
+    "bytes": 458949
+  },
+  {
+    "path": "artifacts/P11-design/run-id.txt",
+    "bytes": 33
+  },
+  {
+    "path": "artifacts/P11-design/work-estimate.json",
+    "bytes": 572
+  },
+  {
+    "path": "artifacts/P11-design/contract-smoke.json",
+    "bytes": 2160
+  },
+  {
+    "path": "artifacts/P11-design/check-results-initial.json",
+    "bytes": 295
+  },
+  {
+    "path": "artifacts/P11-design/continuity-decision.json",
+    "bytes": 357
+  },
+  {
+    "path": "artifacts/P11-design/perplexity-response.json",
+    "bytes": 882
+  },
+  {
+    "path": "artifacts/P11-design/next-carrier.json",
+    "bytes": 681
+  },
+  {
+    "path": "artifacts/P11-design/lifecycle-selection.json",
+    "bytes": 355
+  },
+  {
+    "path": "artifacts/P11-design/prior-design-checks.json",
+    "bytes": 3888
+  },
+  {
+    "path": "artifacts/P11-design/route-evidence-final.json",
+    "bytes": 384
+  },
+  {
+    "path": "artifacts/P11-design/primary-source-retrieval.json",
+    "bytes": 1567
+  },
+  {
+    "path": "artifacts/P11-design/route-evidence.json",
+    "bytes": 384
+  },
+  {
+    "path": "artifacts/P11-design/routing.json",
+    "bytes": 1360
+  },
+  {
+    "path": "artifacts/P11-design/validation.md",
+    "bytes": 3619
+  },
+  {
+    "path": "artifacts/P11-design/render-final-limitation.json",
+    "bytes": 355
+  },
+  {
+    "path": "artifacts/P11-design/primary-72baf4e59af53fd9.gz",
+    "bytes": 6194
+  },
+  {
+    "path": "artifacts/P11-design/check-results.json",
+    "bytes": 7626
+  },
+  {
+    "path": "artifacts/P11-design/source-preservation.json",
+    "bytes": 171
+  },
+  {
+    "path": "artifacts/P11-design/source-observations.json",
+    "bytes": 4716
+  },
+  {
+    "path": "artifacts/P11-design/primary-37e861981f44da80.gz",
+    "bytes": 1219
+  },
+  {
+    "path": "artifacts/P10-design/primary-a04effa473fb145c.html.gz",
+    "bytes": 44161
+  },
+  {
+    "path": "artifacts/P10-design/primary-f561a6295e1b6a09.html.gz",
+    "bytes": 9714
+  },
+  {
+    "path": "artifacts/P10-design/primary-7b9a3e66dbb9cd31.html.gz",
+    "bytes": 14475
+  },
+  {
+    "path": "artifacts/P10-design/check-results-intermediate.json",
+    "bytes": 9999
+  },
+  {
+    "path": "artifacts/P10-design/handoff-receipt.json",
+    "bytes": 4004
+  },
+  {
+    "path": "artifacts/P10-design/primary-15a0fd0f91bcc2c4.html.gz",
+    "bytes": 11391
+  },
+  {
+    "path": "artifacts/P10-design/source-baseline.json",
+    "bytes": 147053
+  },
+  {
+    "path": "artifacts/P10-design/contract-counts.json",
+    "bytes": 494
+  },
+  {
+    "path": "artifacts/P10-design/primary-9df8106752836173.html.gz",
+    "bytes": 6143
+  },
+  {
+    "path": "artifacts/P10-design/run-id.txt",
+    "bytes": 33
+  },
+  {
+    "path": "artifacts/P10-design/primary-10c2347db109ea1e.html.gz",
+    "bytes": 20136
+  },
+  {
+    "path": "artifacts/P10-design/work-estimate.json",
+    "bytes": 570
+  },
+  {
+    "path": "artifacts/P10-design/primary-nist80034.pdf.gz",
+    "bytes": 878868
+  },
+  {
+    "path": "artifacts/P10-design/contract-smoke.json",
+    "bytes": 1783
+  },
+  {
+    "path": "artifacts/P10-design/check-results-initial.json",
+    "bytes": 10165
+  },
+  {
+    "path": "artifacts/P10-design/continuity-decision.json",
+    "bytes": 355
+  },
+  {
+    "path": "artifacts/P10-design/perplexity-response.json",
+    "bytes": 3482
+  },
+  {
+    "path": "artifacts/P10-design/primary-retrieval-failures.json",
+    "bytes": 254
+  },
+  {
+    "path": "artifacts/P10-design/perplexity-ops-response.json",
+    "bytes": 3839
+  },
+  {
+    "path": "artifacts/P10-design/next-carrier.json",
+    "bytes": 675
+  },
+  {
+    "path": "artifacts/P10-design/primary-10346fff24e322b2.html.gz",
+    "bytes": 7260
+  },
+  {
+    "path": "artifacts/P10-design/primary-99db330be8cb828c.html.gz",
+    "bytes": 18580
+  },
+  {
+    "path": "artifacts/P10-design/lifecycle-selection.json",
+    "bytes": 330
+  },
+  {
+    "path": "artifacts/P10-design/perplexity-initial-response.json",
+    "bytes": 11797
+  },
+  {
+    "path": "artifacts/P10-design/route-evidence-final.json",
+    "bytes": 381
+  },
+  {
+    "path": "artifacts/P10-design/primary-source-retrieval.json",
+    "bytes": 6477
+  },
+  {
+    "path": "artifacts/P10-design/route-evidence.json",
+    "bytes": 381
+  },
+  {
+    "path": "artifacts/P10-design/validation.md",
+    "bytes": 3889
+  },
+  {
+    "path": "artifacts/P10-design/primary-1a562210fe98eb6d.html.gz",
+    "bytes": 30356
+  },
+  {
+    "path": "artifacts/P10-design/primary-4e6d674bf887d330.html.gz",
+    "bytes": 56002
+  },
+  {
+    "path": "artifacts/P10-design/check-results.json",
+    "bytes": 9763
+  },
+  {
+    "path": "artifacts/P10-design/design-check-results.json",
+    "bytes": 4406
+  },
+  {
+    "path": "artifacts/P10-design/source-preservation.json",
+    "bytes": 100
+  },
+  {
+    "path": "artifacts/P10-design/source-observations.json",
+    "bytes": 1864
+  },
+  {
+    "path": "artifacts/P10-design/primary-3d1f0dbea6f47149.html.gz",
+    "bytes": 8213
+  },
+  {
+    "path": "artifacts/P10-design/primary-d2339cc3e4d51f42.html.gz",
+    "bytes": 1079
+  },
+  {
+    "path": "artifacts/P10-design/perplexity-ops-failed.json",
+    "bytes": 472
+  },
+  {
+    "path": "artifacts/design-policy/gate-smoke.json",
+    "bytes": 1319
+  },
+  {
+    "path": "artifacts/design-policy/work-estimate.json",
+    "bytes": 665
+  },
+  {
+    "path": "artifacts/design-policy/continuity-decision.json",
+    "bytes": 491
+  },
+  {
+    "path": "artifacts/design-policy/next-carrier.json",
+    "bytes": 810
+  },
+  {
+    "path": "artifacts/design-policy/validation.md",
+    "bytes": 2053
+  },
+  {
+    "path": "artifacts/P9-design/primary/composer-cli.html.gz",
+    "bytes": 23201
+  },
+  {
+    "path": "artifacts/P9-design/primary/composer-basic.html.gz",
+    "bytes": 6194
+  },
+  {
+    "path": "artifacts/P9-design/primary/owasp-authorization.html.gz",
+    "bytes": 20136
+  },
+  {
+    "path": "artifacts/P9-design/primary/github-immutable.html.gz",
+    "bytes": 42298
+  },
+  {
+    "path": "artifacts/P9-design/primary/semver.html.gz",
+    "bytes": 9077
+  },
+  {
+    "path": "artifacts/P9-design/primary/github-security.html.gz",
+    "bytes": 63667
+  },
+  {
+    "path": "artifacts/P9-design/primary/postgres-dump.html.gz",
+    "bytes": 7260
+  },
+  {
+    "path": "artifacts/P9-design/primary/composer-repositories.html.gz",
+    "bytes": 12293
+  },
+  {
+    "path": "artifacts/P9-design/primary/github-contexts.html.gz",
+    "bytes": 86957
+  },
+  {
+    "path": "artifacts/P9-design/primary/git-archive.html.gz",
+    "bytes": 8853
+  },
+  {
+    "path": "artifacts/P9-design/primary/laravel-migrations.html.gz",
+    "bytes": 63421
+  },
+  {
+    "path": "artifacts/P9-design/primary/reproducible-timestamps.html.gz",
+    "bytes": 4808
+  },
+  {
+    "path": "artifacts/P9-design/primary/slsa-provenance.html.gz",
+    "bytes": 4537
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/1c9e37e6fa33b921.gz",
+    "bytes": 2472
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/source-trees.json",
+    "bytes": 160954
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/735ee3bbf7d71ae5.gz",
+    "bytes": 867
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/2ae0c576e1873e71.gz",
+    "bytes": 804
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/076fab1730e0c46f.gz",
+    "bytes": 1321
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/35e1b859e60f798f.gz",
+    "bytes": 2839
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/projects.json",
+    "bytes": 8820
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/44ab59859559df58.gz",
+    "bytes": 3649
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/941604c22333c4ab.gz",
+    "bytes": 427236
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/32c06bd434fd151c.gz",
+    "bytes": 940
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/359020c0b2b855b1.gz",
+    "bytes": 1371
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/e63420dfce109775.gz",
+    "bytes": 1350
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/74ab60c7a04f76a2.gz",
+    "bytes": 1274
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/2de98de619248174.gz",
+    "bytes": 1387
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/b57e3fad819daffb.gz",
+    "bytes": 18414
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/1ec5c09a730738de.gz",
+    "bytes": 1362
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/20235b3d4cb6ad7f.gz",
+    "bytes": 9772
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/087ffc89b681d6bc.gz",
+    "bytes": 742
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/thephpleague--flysystem.tar.gz",
+    "bytes": 16330
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/603a1d61dc04ded5.gz",
+    "bytes": 11440
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/spatie--laravel-medialibrary.tar.gz",
+    "bytes": 53865
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/ec49707d932cd2e0.gz",
+    "bytes": 2206
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/flysystem-tags.json",
+    "bytes": 42700
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/2820077f5eb3f113.gz",
+    "bytes": 1385
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/00fb4e69b5fa31d0.gz",
+    "bytes": 13027
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/51d7106837b410e7.gz",
+    "bytes": 31415
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/584c9f6f91e251cb.gz",
+    "bytes": 1838
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/1ea3b3fa2383aef4.gz",
+    "bytes": 1452
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/nWidart--laravel-modules.tar.gz",
+    "bytes": 73792
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/49bbfc83d38292e5.gz",
+    "bytes": 3456
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/spatie--laravel-permission.tar.gz",
+    "bytes": 30596
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/archtechx--tenancy.tar.gz",
+    "bytes": 35427
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/81b82682426c3b00.gz",
+    "bytes": 1250
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/spatie--laravel-data.tar.gz",
+    "bytes": 169835
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/test-retrievals.json",
+    "bytes": 5498
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/source-projects.json",
+    "bytes": 11577
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/5086e8ac6daa2ab0.gz",
+    "bytes": 1782
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/eca30ae952fdb6df.gz",
+    "bytes": 746
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/ec76545ab8fef9eb.gz",
+    "bytes": 22166
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/filamentphp--filament.tar.gz",
+    "bytes": 75989387
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/09de22b23c1bbcdd.gz",
+    "bytes": 2333
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/checks/final-check-results.json",
+    "bytes": 11366
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/checks/retrieval-digest-check.json",
+    "bytes": 7883
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/checks/iteration-1-check-results.json",
+    "bytes": 13149
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/checks/batch-source-preservation.json",
+    "bytes": 319
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/checks/design-finish.before-D18.md",
+    "bytes": 81891
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/checks/design-finish-check.json",
+    "bytes": 514
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/checks/iteration-1-downstream.json",
+    "bytes": 169281
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/checks/phase-checks.before-final.json",
+    "bytes": 4741
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/checks/routing-and-status.json",
+    "bytes": 177
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/checks/batch-routing-check.json",
+    "bytes": 48429
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/source-tests/nWidart--laravel-modules/tests/LaravelModuleTest.php.txt",
+    "bytes": 6999
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/source-tests/nWidart--laravel-modules/tests/LaravelFileRepositoryTest.php.txt",
+    "bytes": 6724
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/source-tests/thephpleague--flysystem/src/WhitespacePathNormalizerTest.php.txt",
+    "bytes": 4353
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/source-tests/spatie--laravel-data/tests/ValidationTest.php.txt",
+    "bytes": 111738
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/source-tests/spatie--laravel-permission/tests/Traits/TeamScopeTest.php.txt",
+    "bytes": 6941
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/source-tests/spatie--laravel-permission/tests/Integration/CacheTest.php.txt",
+    "bytes": 7801
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/source-tests/spatie--laravel-permission/tests/Integration/OctaneListenerTest.php.txt",
+    "bytes": 4979
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/source-tests/archtechx--tenancy/tests/BootstrapperTest.php.txt",
+    "bytes": 7395
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/source-tests/archtechx--tenancy/tests/QueueTest.php.txt",
+    "bytes": 8395
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/source-tests/spatie--laravel-medialibrary/tests/Feature/FileAdder/MediaConversions/DeleteMediaFolderTest.php.txt",
+    "bytes": 3503
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/source-tests/spatie--laravel-medialibrary/tests/Feature/FileAdder/MediaConversions/DeleteMediaTest.php.txt",
+    "bytes": 4760
+  },
+  {
+    "path": "artifacts/astra-whole-plan-review/upstream/source-tests/filamentphp--filament/tests/src/Panels/Configuration/DarkModeTest.php.txt",
+    "bytes": 1594
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/upstream-full.log",
+    "bytes": 1808
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/laravel12-compatibility.lock.json",
+    "bytes": 317026
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/native-visibility-red.log",
+    "bytes": 1920
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/conformance-red.log",
+    "bytes": 1482
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/storage-red.log",
+    "bytes": 1243
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/usage-red.log",
+    "bytes": 465
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/usage-green.log",
+    "bytes": 88
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/storage-green.log",
+    "bytes": 88
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/physical-red.log",
+    "bytes": 1823
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/conformance-green.log",
+    "bytes": 378
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/upstream-runner-sources.zip",
+    "bytes": 23912
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/global-p1-downstream-observation.json",
+    "bytes": 217461
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/LayerTest.php.source",
+    "bytes": 6934
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/upstream-private-green.log",
+    "bytes": 95
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/physical-green.log",
+    "bytes": 200
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/league-flysystem-aws-s3-v3-LICENSE.txt",
+    "bytes": 1063
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/aws-aws-crt-php-LICENSE.txt",
+    "bytes": 10142
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/aws-aws-sdk-php.zip",
+    "bytes": 7837199
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/aws-aws-crt-php.zip",
+    "bytes": 25969
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/aws-aws-sdk-php-composer.json.txt",
+    "bytes": 2488
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/mtdowling-jmespath.php-LICENSE.txt",
+    "bytes": 1089
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/symfony-filesystem.zip",
+    "bytes": 19935
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/symfony-filesystem-composer.json.txt",
+    "bytes": 845
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/league-flysystem-aws-s3-v3.zip",
+    "bytes": 6450
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/symfony-filesystem-LICENSE.txt",
+    "bytes": 1068
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/league-flysystem-aws-s3-v3-composer.json.txt",
+    "bytes": 741
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/aws-aws-crt-php-composer.json.txt",
+    "bytes": 953
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/mtdowling-jmespath.php.zip",
+    "bytes": 31130
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/mtdowling-jmespath.php-composer.json.txt",
+    "bytes": 998
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/dependency-sources/aws-aws-sdk-php-LICENSE.txt",
+    "bytes": 9202
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/lifecycle-red.log",
+    "bytes": 12276
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/pint.log",
+    "bytes": 540
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/conformance-first.log",
+    "bytes": 378
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/timestamp-red.log",
+    "bytes": 1531
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/lifecycle-red-qualified.log",
+    "bytes": 1582
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/claim-first.log",
+    "bytes": 4399
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/claim-second.log",
+    "bytes": 3865
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/tools/read-p32-required.py",
+    "bytes": 2111
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/tools/close-local.py",
+    "bytes": 3373
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/tools/finish-handoff.py",
+    "bytes": 13518
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/tools/run-checks.py",
+    "bytes": 2657
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/tools/read-required.py",
+    "bytes": 2096
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/root-pg.log",
+    "bytes": 125
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/tenancy-test.json",
+    "bytes": 619
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/laravel12-php8.5.json",
+    "bytes": 929
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/root-pg.json",
+    "bytes": 579
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/root-test.log",
+    "bytes": 132
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/root-test.json",
+    "bytes": 578
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/root-arch.json",
+    "bytes": 583
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/laravel13-php8.5.log",
+    "bytes": 520
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/tenancy-analyse.log",
+    "bytes": 424
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/root-lint.json",
+    "bytes": 584
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/anti-weakening.log",
+    "bytes": 317
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/sdk-absent.log",
+    "bytes": 394
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/laravel13-php8.5.json",
+    "bytes": 977
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/laravel12-php8.4-harness-setup-failure.log",
+    "bytes": 773
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/contract-guard.log",
+    "bytes": 131
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/tenancy-analyse.json",
+    "bytes": 625
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/laravel12-php8.5-harness-setup-failure.json",
+    "bytes": 929
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/root-arch-before-allowlist.json",
+    "bytes": 583
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/laravel12-php8.4.log",
+    "bytes": 975
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/laravel12-php8.5.log",
+    "bytes": 975
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/mutations.log",
+    "bytes": 36103
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/root-analyse.json",
+    "bytes": 584
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/compatibility-results.json",
+    "bytes": 2991
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/root-arch.log",
+    "bytes": 122
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/results.json",
+    "bytes": 6397
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/mutations.json",
+    "bytes": 608
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/root-arch-before-allowlist.log",
+    "bytes": 802
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/tenancy-test.log",
+    "bytes": 68256
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/sdk-absent.json",
+    "bytes": 490
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/laravel12-php8.4.json",
+    "bytes": 929
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/contract-guard.json",
+    "bytes": 593
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/root-test-before-allowlist.log",
+    "bytes": 809
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/root-lint.log",
+    "bytes": 58
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/laravel12-php8.4-harness-setup-failure.json",
+    "bytes": 929
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/upstream-private.json",
+    "bytes": 879
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/anti-weakening.json",
+    "bytes": 605
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/upstream-private.log",
+    "bytes": 95
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/laravel12-php8.5-harness-setup-failure.log",
+    "bytes": 773
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/root-analyse.log",
+    "bytes": 95
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.1/checks/root-test-before-allowlist.json",
+    "bytes": 578
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/root-pg.log",
+    "bytes": 125
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/tenancy-test.json",
+    "bytes": 619
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/root-pg.json",
+    "bytes": 579
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/root-test.log",
+    "bytes": 132
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/root-test.json",
+    "bytes": 578
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/root-arch.json",
+    "bytes": 583
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/tenancy-analyse.log",
+    "bytes": 424
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/root-lint.json",
+    "bytes": 584
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/anti-weakening.log",
+    "bytes": 317
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/contract-guard.log",
+    "bytes": 131
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/tenancy-analyse.json",
+    "bytes": 625
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/mutations.log",
+    "bytes": 36104
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/root-analyse.json",
+    "bytes": 584
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/root-arch.log",
+    "bytes": 122
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/results.json",
+    "bytes": 6397
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/mutations.json",
+    "bytes": 608
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/tenancy-test.log",
+    "bytes": 70258
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/contract-guard.json",
+    "bytes": 593
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/root-lint.log",
+    "bytes": 58
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/anti-weakening.json",
+    "bytes": 605
+  },
+  {
+    "path": "artifacts/B-P3-LOCAL/P3.2/checks/root-analyse.log",
+    "bytes": 95
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2.4-pre-mutation.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2.4-context.json",
+    "bytes": 4679
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2.4-semantic.json",
+    "bytes": 10331
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2.4-request-inventory.json",
+    "bytes": 3308
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2.4-admission.json",
+    "bytes": 547
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2.4-route-run.json",
+    "bytes": 691
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2.4-closure-freshness.json",
+    "bytes": 262
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2.4-pre-final.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2.4-lossless-proposal-presentation.json",
+    "bytes": 521
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2-gate-requests.md",
+    "bytes": 52609
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2.4-graph-before.json",
+    "bytes": 3896
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2.4-run.json",
+    "bytes": 337
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2.4-contract.json",
+    "bytes": 31220
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2.4-post-close-lint.txt",
+    "bytes": 2819
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2.4-check-results.json",
+    "bytes": 15594
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.4-attempt1/P2-contract-catalogue.md",
+    "bytes": 143062
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-attempt1/P2.2-contract.json",
+    "bytes": 39161
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-attempt1/P2.2-pre-final.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-attempt1/P2.2-route-run.json",
+    "bytes": 691
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-attempt1/P2.2-admission.json",
+    "bytes": 547
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-attempt1/P2.2-graph-before.json",
+    "bytes": 4130
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-attempt1/P2.2-semantic.json",
+    "bytes": 1559
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-attempt1/P2.2-closure-freshness.json",
+    "bytes": 262
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-attempt1/P2-identity-profile.md",
+    "bytes": 27526
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-attempt1/P2.2-run.json",
+    "bytes": 337
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-attempt1/P2.2-check-results.json",
+    "bytes": 5923
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-attempt1/P2-auth-ownership.md",
+    "bytes": 7231
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-attempt1/P2.2-context.json",
+    "bytes": 4681
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.2-attempt1/P2.2-pre-mutation.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-start.py",
+    "bytes": 1201
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-semantic-identity.py",
+    "bytes": 4955
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-context.py",
+    "bytes": 304
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-chunk.py",
+    "bytes": 373
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-group-reads.py",
+    "bytes": 794
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-phase-delivery.py",
+    "bytes": 5952
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-semantic-deltas.py",
+    "bytes": 10621
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-types.py",
+    "bytes": 15525
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-close.py",
+    "bytes": 3133
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-reseal-current.py",
+    "bytes": 715
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-semantic-seal.py",
+    "bytes": 4953
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-reopen-seal.py",
+    "bytes": 1888
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-delta-data.py",
+    "bytes": 7304
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-surfaces.py",
+    "bytes": 9046
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-common.py",
+    "bytes": 1409
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-profile-refinements.py",
+    "bytes": 22191
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-finalize-proposals.py",
+    "bytes": 3910
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-semantic-intake.py",
+    "bytes": 2553
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-read-receipt.py",
+    "bytes": 1314
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-policy-check.py",
+    "bytes": 2662
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-schema-data.py",
+    "bytes": 11468
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-proposals.py",
+    "bytes": 57378
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-successor-declarations.py",
+    "bytes": 6281
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/README.md",
+    "bytes": 1446
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/tools/corex-p2-bound-proposals.py",
+    "bytes": 5024
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-attempt1/P2-intake.md",
+    "bytes": 127711
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-attempt1/P2.1-semantic.json",
+    "bytes": 3642
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-attempt1/P2.1-admission.json",
+    "bytes": 547
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-attempt1/P2.1-pre-mutation.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-attempt1/P2.1-pre-final.json",
+    "bytes": 140
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-attempt1/P2.1-post-close-lint.txt",
+    "bytes": 8225
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-attempt1/P2.1-route-run.json",
+    "bytes": 691
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-attempt1/P2.1-attempt1-run.json",
+    "bytes": 337
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-attempt1/P2.1-closure-freshness.json",
+    "bytes": 262
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-attempt1/P2.1-check-results.json",
+    "bytes": 7491
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-attempt1/P2.1-contract.json",
+    "bytes": 35562
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-attempt1/P2.1-native-measurement.json",
+    "bytes": 35503
+  },
+  {
+    "path": "artifacts/B-P2-PROPOSALS/P2.1-attempt1/P2.1-graph-before.json",
+    "bytes": 3566
+  },
+  {
+    "path": "brief/sources/flex-d41.md",
+    "bytes": 2938
+  },
+  {
+    "path": "brief/sources/archive-flexcrm-w2-handoff.md",
+    "bytes": 1807
+  },
+  {
+    "path": "brief/sources/flex-d37.md",
+    "bytes": 3757
+  },
+  {
+    "path": "brief/sources/b24.md",
+    "bytes": 36118
+  },
+  {
+    "path": "brief/sources/b10.md",
+    "bytes": 86590
+  },
+  {
+    "path": "brief/sources/b30.md",
+    "bytes": 86151
+  },
+  {
+    "path": "brief/sources/flex-d24.md",
+    "bytes": 1502
+  },
+  {
+    "path": "brief/sources/vault-flex-handoff.md",
+    "bytes": 2743
+  },
+  {
+    "path": "brief/sources/flex-p6-8.md",
+    "bytes": 3154
+  },
+  {
+    "path": "brief/sources/flex-p6.committed.md",
+    "bytes": 5353
+  },
+  {
+    "path": "brief/sources/b33.md",
+    "bytes": 72225
+  },
+  {
+    "path": "brief/sources/archive-flex-impl-plan.md",
+    "bytes": 9556
+  },
+  {
+    "path": "brief/sources/b26.md",
+    "bytes": 31827
+  },
+  {
+    "path": "brief/sources/b15.md",
+    "bytes": 87324
+  },
+  {
+    "path": "brief/sources/b32.md",
+    "bytes": 102153
+  },
+  {
+    "path": "brief/sources/vault-b38.committed.md",
+    "bytes": 50683
+  },
+  {
+    "path": "brief/sources/flex-d22.md",
+    "bytes": 1969
+  },
+  {
+    "path": "brief/sources/flex-d33.md",
+    "bytes": 1709
+  },
+  {
+    "path": "brief/sources/flex-d18.md",
+    "bytes": 1028
+  },
+  {
+    "path": "brief/sources/flex-d49.md",
+    "bytes": 5356
+  },
+  {
+    "path": "brief/sources/b18.md",
+    "bytes": 73057
+  },
+  {
+    "path": "brief/sources/vault-flex-plan.committed.md",
+    "bytes": 76513
+  },
+  {
+    "path": "brief/sources/b31.md",
+    "bytes": 88447
+  },
+  {
+    "path": "brief/sources/vault-flex-plan.md",
+    "bytes": 27323
+  },
+  {
+    "path": "brief/sources/flex-d46.md",
+    "bytes": 4029
+  },
+  {
+    "path": "brief/sources/archive-corex-core-plan.md",
+    "bytes": 382915
+  },
+  {
+    "path": "brief/sources/b13.md",
+    "bytes": 102240
+  },
+  {
+    "path": "brief/sources/flex-p6-17.md",
+    "bytes": 3232
+  },
+  {
+    "path": "brief/sources/archive-flexcrm-w2-plan.md",
+    "bytes": 14742
+  },
+  {
+    "path": "brief/sources/flex-handoff.md",
+    "bytes": 2743
+  },
+  {
+    "path": "brief/sources/flex-p6-21.md",
+    "bytes": 6310
+  },
+  {
+    "path": "brief/sources/flex-p6-11.md",
+    "bytes": 4843
+  },
+  {
+    "path": "brief/sources/flex-p6-10.md",
+    "bytes": 5292
+  },
+  {
+    "path": "brief/sources/flex-p6-20.md",
+    "bytes": 5661
+  },
+  {
+    "path": "brief/sources/flex-v1-plan.md",
+    "bytes": 76513
+  },
+  {
+    "path": "brief/sources/flex-p6-25.md",
+    "bytes": 5163
+  },
+  {
+    "path": "brief/sources/flex-p6-22.md",
+    "bytes": 5556
+  },
+  {
+    "path": "brief/sources/b01.md",
+    "bytes": 22442
+  },
+  {
+    "path": "brief/sources/b28.md",
+    "bytes": 71235
+  },
+  {
+    "path": "brief/sources/flex-p6-19.md",
+    "bytes": 3837
+  },
+  {
+    "path": "brief/sources/b11.md",
+    "bytes": 83989
+  },
+  {
+    "path": "brief/sources/flex-v1-handoff.md",
+    "bytes": 10540
+  },
+  {
+    "path": "brief/sources/b27.md",
+    "bytes": 71687
+  },
+  {
+    "path": "brief/sources/flex-installed-inputs.md",
+    "bytes": 2345
+  },
+  {
+    "path": "brief/sources/flex-p6-18.md",
+    "bytes": 4388
+  },
+  {
+    "path": "brief/sources/b35.md",
+    "bytes": 73363
+  },
+  {
+    "path": "brief/sources/flex-p6-23.md",
+    "bytes": 3728
+  },
+  {
+    "path": "brief/sources/flex-d47.md",
+    "bytes": 3667
+  },
+  {
+    "path": "brief/sources/flex-d50-committed.md",
+    "bytes": 3509
+  },
+  {
+    "path": "brief/sources/b34.md",
+    "bytes": 73915
+  },
+  {
+    "path": "brief/sources/flex-installed.md",
+    "bytes": 3106
+  },
+  {
+    "path": "brief/sources/archive-flex-code-plan.md",
+    "bytes": 13878
+  },
+  {
+    "path": "brief/sources/b29.md",
+    "bytes": 89838
+  },
+  {
+    "path": "brief/sources/flex-p6.md",
+    "bytes": 8682
+  },
+  {
+    "path": "brief/sources/vault-flex-handoff.committed.md",
+    "bytes": 10540
+  },
+  {
+    "path": "brief/sources/flex-d39.md",
+    "bytes": 3577
+  },
+  {
+    "path": "brief/sources/flex-d42.md",
+    "bytes": 2228
+  },
+  {
+    "path": "brief/sources/flex-p65-progress.md",
+    "bytes": 6021
+  },
+  {
+    "path": "brief/sources/flex-d28.md",
+    "bytes": 1501
+  },
+  {
+    "path": "brief/sources/flex-d43.md",
+    "bytes": 3827
+  },
+  {
+    "path": "brief/sources/flex-p91.md",
+    "bytes": 2360
+  },
+  {
+    "path": "brief/sources/flex-d50.md",
+    "bytes": 3509
+  },
+  {
+    "path": "brief/sources/b12.md",
+    "bytes": 90013
+  },
+  {
+    "path": "brief/sources/flex-p6-24.md",
+    "bytes": 3153
+  },
+  {
+    "path": "brief/sources/archive-flex-impl-handoff.md",
+    "bytes": 2530
+  },
+  {
+    "path": "brief/sources/archive-corex-core-handoff.md",
+    "bytes": 4139
+  },
+  {
+    "path": "brief/sources/flex-p6-6.md",
+    "bytes": 4572
+  },
+  {
+    "path": "brief/sources/flex-plan.md",
+    "bytes": 27323
+  },
+  {
+    "path": "brief/sources/flex-d14.md",
+    "bytes": 1763
+  },
+  {
+    "path": "brief/sources/vault-b38.md",
+    "bytes": 51462
+  },
+  {
+    "path": "brief/sources/archive-flex-code-handoff.md",
+    "bytes": 6370
+  },
+  {
+    "path": "brief/sources/b16.md",
+    "bytes": 84063
+  },
+  {
+    "path": "brief/sources/flex-d48.md",
+    "bytes": 2251
+  },
+  {
+    "path": "brief/sources/flex-p6-12.md",
+    "bytes": 3729
+  },
+  {
+    "path": "brief/sources/flex-d40.md",
+    "bytes": 3001
+  },
+  {
+    "path": "brief/sources/b36.md",
+    "bytes": 64400
+  },
+  {
+    "path": "brief/sources/flex-p65-contract.md",
+    "bytes": 8881
+  },
+  {
+    "path": "brief/sources/flex-p117.md",
+    "bytes": 2421
+  },
+  {
+    "path": "brief/sources/flex-p6-15.md",
+    "bytes": 5115
+  },
+  {
+    "path": "brief/sources/flex-p6-9.md",
+    "bytes": 4214
+  },
+  {
+    "path": "brief/sources/flex-p6-13.md",
+    "bytes": 4702
+  },
+  {
+    "path": "brief/sources/flex-d38.md",
+    "bytes": 4234
+  },
+  {
+    "path": "brief/sources/flex-p6-16.md",
+    "bytes": 5052
+  },
+  {
+    "path": "brief/sources/b38.md",
+    "bytes": 51462
+  },
+  {
+    "path": "brief/sources/flex-p6-26.md",
+    "bytes": 4930
+  },
+  {
+    "path": "brief/sources/flex-p6-14.md",
+    "bytes": 4792
+  },
+  {
+    "path": "brief/sources/flex-p6-7.md",
+    "bytes": 3423
+  },
+  {
+    "path": "brief/sources/flex-d23.md",
+    "bytes": 1354
+  },
+  {
+    "path": "brief/sources/flex-p6-5.md",
+    "bytes": 4724
+  },
+  {
+    "path": "brief/sources/flex-d29.md",
+    "bytes": 2123
+  },
+  {
+    "path": "brief/sources/flex-p6-map.md",
+    "bytes": 14696
+  },
+  {
+    "path": "phases/P4/P4.2.md",
+    "bytes": 6340
+  },
+  {
+    "path": "phases/P4/P4.2.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P4/P4.6.md",
+    "bytes": 7099
+  },
+  {
+    "path": "phases/P4/P4.5.md",
+    "bytes": 6569
+  },
+  {
+    "path": "phases/P4/P4.6.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P4/P4.4.md",
+    "bytes": 6670
+  },
+  {
+    "path": "phases/P4/P4.1.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P4/P4.5.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P4/P4.8.md",
+    "bytes": 6636
+  },
+  {
+    "path": "phases/P4/P4.3.md",
+    "bytes": 5906
+  },
+  {
+    "path": "phases/P4/P4.7.md",
+    "bytes": 6476
+  },
+  {
+    "path": "phases/P4/P4.7.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P4/P4.1.md",
+    "bytes": 5827
+  },
+  {
+    "path": "phases/P4/P4.md",
+    "bytes": 8699
+  },
+  {
+    "path": "phases/P4/P4.8.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P4/P4.3.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P4/P4.4.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P1/P1.3.state.md",
+    "bytes": 812
+  },
+  {
+    "path": "phases/P1/P1.2.md",
+    "bytes": 6049
+  },
+  {
+    "path": "phases/P1/P1.1.md",
+    "bytes": 4390
+  },
+  {
+    "path": "phases/P1/P1.3.md",
+    "bytes": 7131
+  },
+  {
+    "path": "phases/P1/P1.4.md",
+    "bytes": 10197
+  },
+  {
+    "path": "phases/P1/P1.4.state.md",
+    "bytes": 850
+  },
+  {
+    "path": "phases/P1/P1.closed.md",
+    "bytes": 2459
+  },
+  {
+    "path": "phases/P1/P1.2.state.md",
+    "bytes": 858
+  },
+  {
+    "path": "phases/P1/P1.md",
+    "bytes": 10733
+  },
+  {
+    "path": "phases/P1/P1.1.state.md",
+    "bytes": 823
+  },
+  {
+    "path": "phases/P10/P10.2.md",
+    "bytes": 6096
+  },
+  {
+    "path": "phases/P10/P10.9.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P10/P10.5.md",
+    "bytes": 6055
+  },
+  {
+    "path": "phases/P10/P10.md",
+    "bytes": 9686
+  },
+  {
+    "path": "phases/P10/P10.4.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P10/P10.2.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P10/P10.1.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P10/P10.9.md",
+    "bytes": 6319
+  },
+  {
+    "path": "phases/P10/P10.7.md",
+    "bytes": 6103
+  },
+  {
+    "path": "phases/P10/P10.8.md",
+    "bytes": 6081
+  },
+  {
+    "path": "phases/P10/P10.7.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P10/P10.1.md",
+    "bytes": 5976
+  },
+  {
+    "path": "phases/P10/P10.6.md",
+    "bytes": 5991
+  },
+  {
+    "path": "phases/P10/P10.4.md",
+    "bytes": 6081
+  },
+  {
+    "path": "phases/P10/P10.8.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P10/P10.3.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P10/P10.6.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P10/P10.3.md",
+    "bytes": 6042
+  },
+  {
+    "path": "phases/P10/P10.5.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P9/P9.3.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P9/P9.6.md",
+    "bytes": 6061
+  },
+  {
+    "path": "phases/P9/P9.3.md",
+    "bytes": 6638
+  },
+  {
+    "path": "phases/P9/P9.2.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P9/P9.7.md",
+    "bytes": 6259
+  },
+  {
+    "path": "phases/P9/P9.1.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P9/P9.9.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P9/P9.9.md",
+    "bytes": 6433
+  },
+  {
+    "path": "phases/P9/P9.5.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P9/P9.4.md",
+    "bytes": 6822
+  },
+  {
+    "path": "phases/P9/P9.8.md",
+    "bytes": 6084
+  },
+  {
+    "path": "phases/P9/P9.8.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P9/P9.md",
+    "bytes": 9522
+  },
+  {
+    "path": "phases/P9/P9.2.md",
+    "bytes": 8290
+  },
+  {
+    "path": "phases/P9/P9.1.md",
+    "bytes": 6042
+  },
+  {
+    "path": "phases/P9/P9.6.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P9/P9.4.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P9/P9.5.md",
+    "bytes": 5938
+  },
+  {
+    "path": "phases/P9/P9.7.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P8/P8.2.md",
+    "bytes": 7280
+  },
+  {
+    "path": "phases/P8/P8.md",
+    "bytes": 10655
+  },
+  {
+    "path": "phases/P8/P8.3.md",
+    "bytes": 6736
+  },
+  {
+    "path": "phases/P8/P8.5.md",
+    "bytes": 6795
+  },
+  {
+    "path": "phases/P8/P8.7.md",
+    "bytes": 6921
+  },
+  {
+    "path": "phases/P8/P8.1.md",
+    "bytes": 6592
+  },
+  {
+    "path": "phases/P8/P8.2.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P8/P8.6.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P8/P8.6.md",
+    "bytes": 7068
+  },
+  {
+    "path": "phases/P8/P8.4.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P8/P8.5.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P8/P8.1.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P8/P8.3.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P8/P8.4.md",
+    "bytes": 7157
+  },
+  {
+    "path": "phases/P8/P8.7.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P6/P6.5.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P6/P6.8.md",
+    "bytes": 6100
+  },
+  {
+    "path": "phases/P6/P6.8.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P6/P6.5.md",
+    "bytes": 5914
+  },
+  {
+    "path": "phases/P6/P6.1.md",
+    "bytes": 5374
+  },
+  {
+    "path": "phases/P6/P6.4.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P6/P6.6.md",
+    "bytes": 7120
+  },
+  {
+    "path": "phases/P6/P6.7.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P6/P6.2.md",
+    "bytes": 6766
+  },
+  {
+    "path": "phases/P6/P6.md",
+    "bytes": 8065
+  },
+  {
+    "path": "phases/P6/P6.4.md",
+    "bytes": 7046
+  },
+  {
+    "path": "phases/P6/P6.3.md",
+    "bytes": 5484
+  },
+  {
+    "path": "phases/P6/P6.6.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P6/P6.3.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P6/P6.2.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P6/P6.1.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P6/P6.7.md",
+    "bytes": 6150
+  },
+  {
+    "path": "phases/P3/P3.6.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P3/P3.4.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P3/P3.7.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P3/P3.3.md",
+    "bytes": 9399
+  },
+  {
+    "path": "phases/P3/P3.1.md",
+    "bytes": 9356
+  },
+  {
+    "path": "phases/P3/P3.4.md",
+    "bytes": 6527
+  },
+  {
+    "path": "phases/P3/P3.5.md",
+    "bytes": 6374
+  },
+  {
+    "path": "phases/P3/P3.2.md",
+    "bytes": 9033
+  },
+  {
+    "path": "phases/P3/P3.7.md",
+    "bytes": 4598
+  },
+  {
+    "path": "phases/P3/P3.6.md",
+    "bytes": 5594
+  },
+  {
+    "path": "phases/P3/P3.3.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P3/P3.5.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P3/P3.1.state.md",
+    "bytes": 834
+  },
+  {
+    "path": "phases/P3/P3.2.state.md",
+    "bytes": 834
+  },
+  {
+    "path": "phases/P3/P3.md",
+    "bytes": 7458
+  },
+  {
+    "path": "phases/P5/P5.3.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P5/P5.1.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P5/P5.5.md",
+    "bytes": 5422
+  },
+  {
+    "path": "phases/P5/P5.3.md",
+    "bytes": 5169
+  },
+  {
+    "path": "phases/P5/P5.2.md",
+    "bytes": 5169
+  },
+  {
+    "path": "phases/P5/P5.6.md",
+    "bytes": 5532
+  },
+  {
+    "path": "phases/P5/P5.2.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P5/P5.4.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P5/P5.4.md",
+    "bytes": 5628
+  },
+  {
+    "path": "phases/P5/P5.5.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P5/P5.6.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P5/P5.md",
+    "bytes": 7768
+  },
+  {
+    "path": "phases/P5/P5.1.md",
+    "bytes": 5099
+  },
+  {
+    "path": "phases/P2/P2.closed.md",
+    "bytes": 2980
+  },
+  {
+    "path": "phases/P2/P2.1.md",
+    "bytes": 8922
+  },
+  {
+    "path": "phases/P2/P2.3.state.md",
+    "bytes": 808
+  },
+  {
+    "path": "phases/P2/P2.2.md",
+    "bytes": 10307
+  },
+  {
+    "path": "phases/P2/P2.3.md",
+    "bytes": 10638
+  },
+  {
+    "path": "phases/P2/P2.1.state.md",
+    "bytes": 808
+  },
+  {
+    "path": "phases/P2/P2.4.state.md",
+    "bytes": 806
+  },
+  {
+    "path": "phases/P2/P2.md",
+    "bytes": 9082
+  },
+  {
+    "path": "phases/P2/P2.2.state.md",
+    "bytes": 810
+  },
+  {
+    "path": "phases/P2/P2.4.md",
+    "bytes": 9070
+  },
+  {
+    "path": "phases/P7/P7.5.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P7/P7.6.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P7/P7.1.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P7/P7.9.md",
+    "bytes": 6257
+  },
+  {
+    "path": "phases/P7/P7.5.md",
+    "bytes": 5647
+  },
+  {
+    "path": "phases/P7/P7.2.md",
+    "bytes": 5420
+  },
+  {
+    "path": "phases/P7/P7.7.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P7/P7.4.md",
+    "bytes": 6670
+  },
+  {
+    "path": "phases/P7/P7.4.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P7/P7.1.md",
+    "bytes": 5334
+  },
+  {
+    "path": "phases/P7/P7.3.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P7/P7.8.md",
+    "bytes": 6043
+  },
+  {
+    "path": "phases/P7/P7.md",
+    "bytes": 7971
+  },
+  {
+    "path": "phases/P7/P7.2.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P7/P7.8.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P7/P7.7.md",
+    "bytes": 6682
+  },
+  {
+    "path": "phases/P7/P7.6.md",
+    "bytes": 6818
+  },
+  {
+    "path": "phases/P7/P7.9.state.md",
+    "bytes": 601
+  },
+  {
+    "path": "phases/P7/P7.3.md",
+    "bytes": 5646
+  },
+  {
+    "path": "phases/P11/P11.md",
+    "bytes": 8005
+  },
+  {
+    "path": "phases/P11/P11.3.md",
+    "bytes": 5543
+  },
+  {
+    "path": "phases/P11/P11.7.md",
+    "bytes": 5743
+  },
+  {
+    "path": "phases/P11/P11.6.md",
+    "bytes": 6611
+  },
+  {
+    "path": "phases/P11/P11.2.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P11/P11.2.md",
+    "bytes": 5516
+  },
+  {
+    "path": "phases/P11/P11.3.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P11/P11.1.md",
+    "bytes": 5760
+  },
+  {
+    "path": "phases/P11/P11.4.md",
+    "bytes": 5849
+  },
+  {
+    "path": "phases/P11/P11.7.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P11/P11.5.md",
+    "bytes": 5687
+  },
+  {
+    "path": "phases/P11/P11.4.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P11/P11.1.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P11/P11.6.state.md",
+    "bytes": 604
+  },
+  {
+    "path": "phases/P11/P11.5.state.md",
+    "bytes": 604
+  },
+  {
+    "path": ".plan-cache/delivery/P1.4.json",
+    "bytes": 4406
+  }
+]

@@ -94,6 +94,12 @@ launch block for the actual post-closure successor.
 
 ## Terminal admission
 
+While the durable run is open, report partial progress through commentary and continue authorized
+work. The enabled Stop adapter invokes `plan-terminal-admission.py check-open --project-root <cwd>
+--provider-session <session>` before the optional lease check, including when the Stop payload has
+no Task context. `TASK_OPEN_RUN_FINAL_FORBIDDEN` is repaired by continuing work or persisting a
+legitimate terminal block/checkpoint; it never authorizes fabricated closure. Respect owner stop.
+
 After route/run admission, an applicable provider adapter may arm `terminal-admission-lease/v1`
 through the worktree-local `plan-terminal-admission.py`; it refreshes only on material progress or
 a typed `waiting-owner` or `waiting-external` decision. External waits preserve the observation

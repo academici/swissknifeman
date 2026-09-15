@@ -1,0 +1,242 @@
+[
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/plan.md",
+    "bytes": 32648,
+    "sha256": "8f3d6e8713f5827b105391836593885dd77d0e5576a17e604fcdc7d78985ba36"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/handoff.md",
+    "bytes": 5230,
+    "sha256": "aeff94301415e36404bfc039748feef75bd57394a85064eaa2261b615ae6ffbb"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/research/09-read-budget-policy.json",
+    "bytes": 945,
+    "sha256": "c9de9238d7781865990ae733d57b5953962500dfa2d7aa164c71b812d8573152"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/phases/P3/P3.1.md",
+    "bytes": 9356,
+    "sha256": "053ba425a7facfb4dc52877ca45b54bf92daf952d36df641ee73cbe0cc7bd64b"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/phases/P3/P3.2.md",
+    "bytes": 9033,
+    "sha256": "9f84b0e02b9449778a3277a8d17531bdf50d7194a64053c11ac89a5100b39f05"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/phases/P3/P3.3.md",
+    "bytes": 9399,
+    "sha256": "3a001002cd0ed2be86abf691595e914c00a3b01257acbc90897c85cbf4dc496d"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/design-finish.md",
+    "bytes": 88351,
+    "sha256": "44c27300a041a616ab04063a41a8ac732b293181c5c9eed7361155c1709a6dc4"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/scripts/task-check.py",
+    "bytes": 12156,
+    "sha256": "f298e70cd5bce0d1c2093b7f6e21ca20dce3643c04e1369378f70a9b9c2be593"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/scripts/validate-p3.py",
+    "bytes": 10389,
+    "sha256": "4ca8724ac8c16acf097740d3eaa2bb276ca50aff94433a9abd4eedd6a8641787"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/journal.jsonl",
+    "bytes": 83442,
+    "sha256": "b1ab97acb6944163764dab4aaba97bd3e3ab734bdf7440bee3a2650f5bce8ff8"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/required-read-progress.json",
+    "bytes": 150636,
+    "sha256": "1bc66ed2cf98a218ed32d0d46313730eef5a376d4b1f3421c5bdd9fff1ea9952"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/P3.2-required-read-progress.json",
+    "bytes": 85184,
+    "sha256": "fe3479b23deeccbfa768cba95d7a72c15260f9c09167bdd13fb550e738af7b82"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/P3.1-graph-before.json",
+    "bytes": 5146,
+    "sha256": "6d56aad045310a4be627b42fc35e17d12a196c1da48fc41d0a03e8a50c65b9f3"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/P3.2-graph-before.json",
+    "bytes": 4730,
+    "sha256": "4ba1f3a7a185f07c91996d4a811c94dc8a6f7b821f2e6958758f73f49f68e35a"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/P3.2-final-bundle-delta-proof.json",
+    "bytes": 3192,
+    "sha256": "80187a5d43896c542d5eaf155bad49adcd42076c285d970696fddf6792c7ef49"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/owner-gate-requests.md",
+    "bytes": 7959,
+    "sha256": "4751d9796cd98b6bf73b3b5e21cd451917b8f68d264fb305cc9558de54f0d1e9"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/decision-metadata-reconciliation.json",
+    "bytes": 2599,
+    "sha256": "039caa2604d6789a5df67ecdf18af966ae3afcbffe04acf8f8d9f01c7bd96a2a"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/final-bookkeeping-checks.json",
+    "bytes": 1601,
+    "sha256": "c5b2b93e7d0e72fd7a406deed4e2842102c991892e294389fa4e0ccf5a38aa41"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/P3.1-check-results.json",
+    "bytes": 10888,
+    "sha256": "2febdc70e69c114b4bfd7ba7aac5d61e770fc5e81fe212875e9380dd24f843fc"
+  },
+  {
+    "repository": "corex",
+    "path": "/home/vostrikov/projects/packages/corex/plans/2026.09.15-№1-COREX-FLEXCRM-REMAINING/artifacts/B-P3-LOCAL/P3.2-check-results.json",
+    "bytes": 11227,
+    "sha256": "eb6b29238f23d8c4fee554118b931739eca1cc5cb696599a7f5125de440a07fb"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/runtime/plan-protocol/snippets/decision-record-template.md",
+    "bytes": 616,
+    "sha256": "f5bd43b5aa916ec5185e1e74eb30eaf8e2c48e547b658763ae8b06267b0c80e4"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/lib/task/plan_decisions.py",
+    "bytes": 9793,
+    "sha256": "9f4de2f35a754db76232b1e0b7d9e326117d5e3848460b4d1a02152de72ffbbb"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/lib/task/plan_evidence.py",
+    "bytes": 13071,
+    "sha256": "cafbeb2cdd312ae30eda25f80fbcd5933399854eb77a927abbcc0b9b9d0a9df5"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/lib/task/plan_bundle.py",
+    "bytes": 14617,
+    "sha256": "c95bac244b1dd202a058a69d7eae1de62bb1b2f0ce1caacf8ad8c5fc41d7d57c"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/lib/task/plan_item_state.py",
+    "bytes": 12944,
+    "sha256": "a94a4ca26a9fd994c5ce5e686df2f27a63cdd4fccd80f2185bf66f8b977b9ef1"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/lib/task/plan_gates.py",
+    "bytes": 49854,
+    "sha256": "9b707ec50b34c5d745fc4098da2e5fd6f13dce57ea9c6e1f4049a31acb1447b7"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/lib/task/plan_weight.py",
+    "bytes": 64736,
+    "sha256": "9223a286292b1779bcb52c742eb801eadb4869ebda13071d3dc648f06e795c0b"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/lib/task/task_contract.py",
+    "bytes": 83368,
+    "sha256": "492bd93c50343e5237f2a7f2421313fdc2b438dcabc28edde05ed2963b3ed5d2"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/lib/task/plan_delivery.py",
+    "bytes": 33344,
+    "sha256": "7ffea4a559eb98e3f94816b3911447b92265a5a58ab59af815edd38273094500"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/analyst/lib/analyst/sessions.py",
+    "bytes": 14334,
+    "sha256": "30d9bd628f0d67681183b3a96d3e320fc109ff6dcde4773e59b67c3463a77a82"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/analyst/lib/analyst/token_report.py",
+    "bytes": 27520,
+    "sha256": "2eeed1d9336f6b99c1d255d1a1a41f2363eff26e22b4dda770b223dfd575d968"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/maind/lib/maind/analysis/analyze.py",
+    "bytes": 21222,
+    "sha256": "fe4815aa4452fa7faaccd92be21aa762152222d9350e01721e3067b18a50e87c"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/core/usage.py",
+    "bytes": 10496,
+    "sha256": "a06a938ee3bb103b4b7487b7496e5e694c55e4ed05a12faf9fdbda595f8b6b9d"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/core/pathology.py",
+    "bytes": 16729,
+    "sha256": "023dc66e46c12b17ca0e79fba3de49489b89a6752455beb5f45490e55315978f"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/commands/plan-exec.md",
+    "bytes": 8363,
+    "sha256": "1e126e8fe48451bde39877bda219bbc59b379ea1e0184c17a2612dadb2c64974"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/docs/continue-first.md",
+    "bytes": 15650,
+    "sha256": "4205e1fa6ca1e69c573e493e8272ecdf20fb2580da1011025c7b8b11507330eb"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/docs/rejected-optimizations.md",
+    "bytes": 21256,
+    "sha256": "38ff480471c177bd3b9600f254339aeb06def64066c4acbb18dc00919bb9d3c0"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/lib/task/plan_history.py",
+    "bytes": 8011,
+    "sha256": "e2ddcf215ae4b7bc2ecd3f480f8ad2b90bc958e697af4678f020e77185144dbc"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/packages/analyst/commands/deep.md",
+    "bytes": 3689,
+    "sha256": "d20f9203a1e312140f44d0f0383879a1fd7d8667b75f3dbd8099f107da9c6fcc"
+  },
+  {
+    "repository": "swissknifeman",
+    "path": "/home/vostrikov/projects/packages/swissknifeman/tasks/2026.09.11-task-execution-cost/README.md",
+    "bytes": 38247,
+    "sha256": "4c5fcfffb72085e0a696142d6ebdae8c69cc3bcea1c12f089fe462eeee7a4fb7"
+  }
+]

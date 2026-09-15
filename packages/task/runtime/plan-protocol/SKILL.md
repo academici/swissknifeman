@@ -197,13 +197,18 @@ rules, never by silent omission. `closed-deviations` is not an escape hatch: it 
 Validation plus a closed `recoverable-validation-gap/v1` record proving why a
 material/outside-scope/unsafe residual cannot be repaired in this attempt.
 `blocked`/`escalated` requires an authority or block reducer terminal action. Completion Notes carry
-exact evidence; a cancelling/superseding decision adds `**Consequences:**`.
+exact evidence; a cancelling/superseding decision adds `## Consequences`.
+Use the decision-record template's YAML metadata and literal `Решение` / `Почему` headings;
+terminal preparation rejects invalid decision records before appending the journal event.
 Before journal/product mutation, derive `evidence-graph/v1` from the committed item spec, bundle,
 decisions, producer-readiness and declared Files. A real `Files ∩ digest_inputs` collision with a
 fresh closure requirement is `SELF_INVALIDATING_EVIDENCE_ANCHOR`: split spec→product→closure;
 otherwise collapse the anchors. Registry-owned volatile journal/view/handoff carriers are
 bookkeeping unless the item explicitly declares their product semantics in Deliverables. Closure
-proves declared product bytes identical to the product anchor. Before `audit-green`, regenerate
+proves declared product bytes identical to the product anchor; empty or missing-only anchors fail
+with `PRODUCT_COVERAGE_MISSING`. Use backticks around each Files path and keep explanatory prose
+outside them. Unnumbered Required Reads may use semicolons outside quoted paths/annotations.
+Before `audit-green`, regenerate
 audit-owned projections once, rebuild the candidate and persist `audit-finalization/v1` with the
 exact `phase_close_gate` admission; `plan-close` consumes that admission rather than discovering a
 new audit cycle.

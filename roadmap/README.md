@@ -11,6 +11,7 @@
 
 | Файл | Статус | Критерий запуска / исторический якорь |
 |:--|:--|:--|
+| [`2026.09.15-corex-p3-local-resource-efficiency.md`](2026.09.15-corex-p3-local-resource-efficiency.md) | 🧪 bounded repairs реализованы; остальной scope открыт | Запрошенный владельцем отчёт: CoreX B-P3-LOCAL, стоимость source intake/закрытия, defects Task и алгоритм улучшений; не отдельный исполняемый backlog. |
 | [`2026.07.25-memory-hub-service.md`](2026.07.25-memory-hub-service.md) | 🧭 deferred by decision | Второй человек, больше двух машин/машина вне LAN, project ACL или тысячи записей; подготовительный предшественник — `2026.07.25-ECO-OPT P4`. |
 | [`2026.08.15-locale-corpus-after-field-validation.md`](2026.08.15-locale-corpus-after-field-validation.md) | ⬜ ждёт field evidence | Конкретный проект, surface и воспроизводимый пользовательский эффект после compact field cut `2026.08.02-PROVIDER-CONTRACT-LOCALE P4`. |
 | [`2026.09.14-owner-session-continuity-regression.md`](2026.09.14-owner-session-continuity-regression.md) | 🧪 код доставлен; field acceptance | FlexCRM incident: агент выдумал новую сессию и повтор текущего item вместо `continue-root`. |
@@ -18,8 +19,16 @@
 | [`plan-design-vs-exec-status-check.md`](plan-design-vs-exec-status-check.md) | ⬜ один замер | Повтор ошибочного выбора `plan-design` для уже готовой фазы на втором плане; первый замер — `2026.07.16-INS-EVO P1`. |
 | [`plan-lesson-capture.md`](plan-lesson-capture.md) | ⬜ один замер | Повтор потери post-closure owner finding на втором плане; первый замер — `2026.07.14-DTEREMA-SITE P6.2–P6.3`. |
 | [`2026.09.14-task-terminal-command-emission-regression.md`](2026.09.14-task-terminal-command-emission-regression.md) | 🧪 код доставлен; field acceptance | Edufy P5.2 снова завершился user-facing summary без native команды P5.3, хотя delivery receipt её содержал. |
+| [`2026.09.15-task-open-run-final-admission-regression.md`](2026.09.15-task-open-run-final-admission-regression.md) | 🧪 session-bound guard реализован; transport acceptance открыт | Edufy P7.4: agent повторно выпустил user-facing final, когда run был `in progress`, без terminal event и delivery receipt. |
 | [`2026.09.14-task-unicode-cross-plan-bundle-regression.md`](2026.09.14-task-unicode-cross-plan-bundle-regression.md) | 🧪 код доставлен; field acceptance | CoreX P3.1: `№` в cross-plan ID делал declared input нераспознаваемым и блокировал bundle до execution. |
 | [`upstream-notify-diet-fork.md`](upstream-notify-diet-fork.md) | ⬜ trigger не сработал | Реальный болезненный drift либо содержательная диета `notify`-скилла; последняя квалификация — `2026.07.31-SKM-LEAN P7.3`. |
+
+## Диспозиция 2026-09-15
+
+Новые причины и ограниченные исправления сведены в
+[отчёт задания](../tasks/2026.09.15-roadmap-field-fixes/README.md). Четыре записи 14 сентября
+не требуют повторной реализации. Остатки 15 сентября перечислены по RSC-ID и transport boundary;
+полная экономия ресурсов и native final acceptance пока не заявлены.
 
 ## Диспозиция 2026-09-13
 

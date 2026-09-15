@@ -38,16 +38,22 @@ def _canonical(value) -> bytes:
                       separators=(",", ":")).encode("utf-8")
 
 
-def _declared_paths(value: str) -> tuple[str, ...]:
+def _declared_paths(value: str, *, allow_prose: bool = False) -> tuple[str, ...]:
     paths = _BACKTICK_PATH.findall(value or "")
+    quoted = bool(paths)
     if not paths and value and value.strip() != "—":
-        paths = [part.strip() for part in re.split(r"\s*[·,]\s*", value) if part.strip()]
+        paths = [part.strip() for entry in plan_weight.split_semicolon_entries(value)
+                 for part in re.split(r"\s*[·,]\s*", entry) if part.strip()]
     normalized = []
     for path in paths:
+        if allow_prose and not quoted and any(char.isspace() for char in path):
+            continue
         candidate = PurePosixPath(path)
         if (not path or candidate.is_absolute() or ".." in candidate.parts
-                or "\\" in path or path.startswith("./")):
-            raise EvidenceError("EVIDENCE_PATH_INVALID", f"некорректный declared path {path!r}")
+                or "\\" in path or path.startswith("./")
+                or (not quoted and any(char.isspace() for char in path))):
+            raise EvidenceError("EVIDENCE_PATH_INVALID", f"некорректный declared path {path!r}; "
+                                "обрамите каждый путь backticks, пояснения вынесите за них")
         normalized.append(candidate.as_posix())
     return tuple(sorted(set(normalized)))
 
@@ -149,7 +155,7 @@ def material_product_paths(plan_dir, item_id: str) -> tuple[str, ...]:
     """
     plan_dir = Path(plan_dir).resolve()
     fields = plan_bundle._fields(plan_dir, item_id)
-    deliverables = set(_declared_paths(fields.get("Deliverables", "")))
+    deliverables = set(_declared_paths(fields.get("Deliverables", ""), allow_prose=True))
     volatile = [
         _carrier_pattern(row["path"])
         for row in plan_layout.registry().values()
@@ -237,6 +243,16 @@ def verify_closure(product_anchor: dict, closure_anchor: dict) -> dict:
     for anchor in (product_anchor, closure_anchor):
         if not isinstance(anchor, dict) or not isinstance(anchor.get("paths"), list):
             raise EvidenceError("EVIDENCE_ANCHOR_INVALID", "anchor.paths обязателен")
+        rows = anchor["paths"]
+        if not rows or not any(isinstance(row, dict) and row.get("state") == "file"
+                               and re.fullmatch(r"[0-9a-f]{64}", str(row.get("sha256", "")))
+                               for row in rows):
+            raise EvidenceError("PRODUCT_COVERAGE_MISSING",
+                                "anchor не связывает байты ни одного реального product file")
+        if (any(not isinstance(row, dict) or not isinstance(row.get("path"), str)
+                or not row["path"] for row in rows)
+                or len({row["path"] for row in rows}) != len(rows)):
+            raise EvidenceError("EVIDENCE_ANCHOR_INVALID", "anchor.paths содержит неверные/повторные пути")
     product = {row.get("path"): row for row in product_anchor["paths"]}
     closure = {row.get("path"): row for row in closure_anchor["paths"]}
     if product != closure:

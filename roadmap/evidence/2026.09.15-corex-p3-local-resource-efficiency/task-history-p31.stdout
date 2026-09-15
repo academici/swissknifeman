@@ -1,0 +1,18 @@
+<!-- plan-projection
+projection: history
+projection_version: 1.0.0
+source_scope: {"item": "P3.1", "sources": ["journal", "decisions", "findings"]}
+through: 2026-09-15T19:14:41Z
+inputs_sha256: 060e4623162ed8eebb13f91b5c66fedad0143e0f75ff6822a141f4812e23c5be
+generated_by: task plan-views history
+-->
+
+# История P3.1
+
+> Не править руками: это генерируемый вид.
+
+| Time | Source | Identity | Status |
+|:--|:--|:--|:--|
+| 2026-09-15T18:14:54Z | journal | `61:8e023a6cab5e464e52a9c0bbc8f46fd9fe44846407b5ba5347e87790d12df6f1` | decision-pending |
+| 2026-09-15T18:51:27Z | journal | `62:f575229233eae66ff8bd900028522e1f30f3f07f86edbf5841a40225c305a31c` | in-progress |
+| 2026-09-15T19:14:41Z | journal | `63:cd0cdc118b7e7109de9180db43041ede88ee420c1f5bdc1504009a3656b9d6e8` | closed-green |

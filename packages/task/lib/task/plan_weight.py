@@ -414,16 +414,36 @@ def violated_gate(file_record):
 
 # --- резолвинг Required Reads ------------------------------------------------------
 
+def split_semicolon_entries(value):
+    """Split list separators, preserving quoted paths and parenthesized annotations."""
+    entries, start, depth, quoted = [], 0, 0, False
+    for index, char in enumerate(value):
+        if char == "`":
+            quoted = not quoted
+        elif not quoted:
+            if char in "([{":
+                depth += 1
+            elif char in ")]}":
+                depth = max(0, depth - 1)
+            elif char == ";" and depth == 0:
+                if value[start:index].strip():
+                    entries.append(value[start:index].strip())
+                start = index + 1
+    if value[start:].strip():
+        entries.append(value[start:].strip())
+    return entries
+
+
 def split_entries(value):
     """Значение поля `Required Reads` → список позиций по нумерации `N)`. Нумерации нет
-    — всё значение считается ОДНОЙ позицией (а не выбрасывается). Канонический пустой
+    — позиции разделяются точкой с запятой вне путей и аннотаций. Канонический пустой
     плейсхолдер `—` означает отсутствие Required Reads, а не нерезолвленную позицию."""
     text = " ".join((value or "").split())
     if not text or text == EMPTY_PLACEHOLDER:
         return []
     marks = [m for m in ENTRY_NUMBER_RE.finditer(text)]
     if not marks:
-        return [text]
+        return split_semicolon_entries(text)
     entries = []
     for i, m in enumerate(marks):
         start = m.end()
@@ -772,6 +792,7 @@ def measure_plan(plan_dir, measurer, *, only_item=None):
 
     items = []
     specs = {}
+    item_index = []
     try:
         phase_files = plan_layout.phase_paths(plan_dir)
     except plan_layout.PlanLayoutError as exc:
@@ -784,15 +805,18 @@ def measure_plan(plan_dir, measurer, *, only_item=None):
         for item_id, occurrences in parsed["items"].items():
             occurrence = occurrences[0]
             fields = {k: v for k, v in occurrence["fields"].items()}
+            item_index.append({"item_id": item_id, "status": _field(fields, "Status")})
+            specs[item_id] = {
+                "required_read_entries": split_entries(_field(fields, "Required Reads")),
+                "deliverables": _field(fields, "Deliverables"),
+            }
+            if only_item is not None and item_id != only_item:
+                continue
             record = measure_item(plan_dir, item_id, fields, measurer,
                                   phase_file=phase_path, repo_root=repo_root, rel_to=repo_root)
             record["phase_id"] = phase_id
             record["title"] = occurrence["title"]
             items.append(record)
-            specs[item_id] = {
-                "required_read_entries": split_entries(_field(fields, "Required Reads")),
-                "deliverables": _field(fields, "Deliverables"),
-            }
 
     if only_item is not None and not any(item["item_id"] == only_item for item in items):
         raise PlanWeightError(f"пункт {only_item} не найден в {plan_dir}")
@@ -800,7 +824,7 @@ def measure_plan(plan_dir, measurer, *, only_item=None):
     admission = None
     if layout == "v2":
         try:
-            admission = plan_admission.classify(plan_dir, items, specs)
+            admission = plan_admission.classify(plan_dir, items, specs, item_index=item_index)
         except plan_admission.AdmissionError as exc:
             raise PlanWeightError(str(exc)) from exc
     selected_items = ([item for item in items if item["item_id"] == only_item]

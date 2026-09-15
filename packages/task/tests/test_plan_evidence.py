@@ -15,6 +15,28 @@ from task import plan_bundle, plan_evidence, plan_gates, task_contract
 
 
 class EvidenceGraphTests(unittest.TestCase):
+    def test_missing_only_and_empty_anchors_are_not_product_coverage(self):
+        for paths in ([], [{"path": "a.py; b.py", "state": "missing"}]):
+            anchor = {"paths": paths, "sha256": "0" * 64}
+            with self.subTest(paths=paths), self.assertRaisesRegex(
+                    plan_evidence.EvidenceError, "PRODUCT_COVERAGE_MISSING"):
+                plan_evidence.verify_closure(anchor, anchor)
+
+    def test_semicolon_files_bind_real_product_bytes_and_detect_mutation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "a.py").write_text("before")
+            (root / "b.py").write_text("stable")
+            paths = plan_evidence._declared_paths("a.py; b.py")
+            before = plan_evidence._anchor(paths, repo_root=root)
+            self.assertEqual([row["state"] for row in before["paths"]], ["file", "file"])
+            plan_evidence.verify_closure(before, before)
+            (root / "a.py").write_text("after")
+            with self.assertRaisesRegex(plan_evidence.EvidenceError, "PRODUCT_ANCHOR_DRIFT"):
+                plan_evidence.verify_closure(before, plan_evidence._anchor(paths, repo_root=root))
+        with self.assertRaisesRegex(plan_evidence.EvidenceError, "EVIDENCE_PATH_INVALID"):
+            plan_evidence._declared_paths("a.py; b.py with explanatory prose")
+
     @staticmethod
     def _git(root, *arguments):
         return subprocess.run(("git", *arguments), cwd=root, check=True,

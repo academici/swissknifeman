@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:4fda4312ee96b6ee71a19efb3095cd79f64c7bde8d614bbb5f5ab2b15915ef07
+Canonical SHA-256: sha256:4a598a6047c214d7151538bab9d8f6f0120a5430d0af9e28009b69a303c254be
 Adapter: task.codex-command/1.0.14
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -137,6 +137,12 @@ For an installed terminal-admission adapter, arm the lease only after this comma
 refresh it only after material progress or typed owner-wait, and use its check verdict before a
 terminal response. It is repository-owned admission evidence, not a claim that an unconfigured
 provider transport is intercepted.
+
+An open durable run is not a response boundary: use commentary for partial progress and continue
+the authorized work. Before final, the enabled Stop adapter runs `check-open` against the current
+provider session even without a lease/request payload. `TASK_OPEN_RUN_FINAL_FORBIDDEN` requires
+continuing or persisting a legitimate terminal block/checkpoint; a green subset of tests is not
+an exception. An explicit owner stop remains binding. The check does not itself close any run.
 
 At every actual final after closure, render the shared receipt fragment through worktree-local
 `plan-delivery.py --plan-dir <plan-dir> --subject <subject> --kind terminal --render-final`

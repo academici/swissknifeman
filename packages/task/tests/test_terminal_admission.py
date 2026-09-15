@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from task import terminal_admission
+from task import journal, terminal_admission
 
 
 def receipt(*, run_id="run-1", subject="P4.1", command="plan-run"):
@@ -55,6 +55,34 @@ class TerminalAdmissionTests(unittest.TestCase):
         )
         self.assertEqual(verdict.reason, "NOT_APPLICABLE")
         self.assertFalse(verdict.final_allowed)
+
+    def test_open_run_needs_no_lease_and_observation_does_not_close_it(self):
+        root = Path(self.directory.name)
+        path = root / "plans/PLAN/journal.jsonl"
+        path.parent.mkdir(parents=True)
+        def write(result, *, session="thread-1", append=False):
+            event = journal.new_entry(plan_id="PLAN", item_id="P4.1", command="plan-run",
+                                      actor="sonnet/medium", result=result,
+                                      session_id=session, run_id="run-1", attempt=1)
+            with path.open("a" if append else "w") as stream:
+                stream.write(json.dumps(event) + "\n")
+        write("in-progress")
+        write("local-repair", append=True)
+        denied = terminal_admission.pre_final_open_runs(root, "thread-1")
+        self.assertEqual(denied["reason"], "TASK_OPEN_RUN_FINAL_FORBIDDEN")
+        self.assertTrue(terminal_admission.pre_final_open_runs(root, "other-thread")["final_allowed"])
+        for terminal in ("closed-green", "blocked", "escalated"):
+            write("in-progress")
+            write(terminal, append=True)
+            self.assertTrue(terminal_admission.pre_final_open_runs(root, "thread-1")["final_allowed"])
+        events = (root / ".swissknifeman/terminal-admission/events.jsonl").read_text()
+        self.assertIn('"state":"in-progress"', events)
+        self.assertNotIn("last_assistant_message", events)
+
+    def test_open_run_check_does_not_create_state_for_ordinary_chat(self):
+        root = Path(self.directory.name)
+        self.assertTrue(terminal_admission.pre_final_open_runs(root, "thread-1")["final_allowed"])
+        self.assertFalse((root / ".swissknifeman").exists())
 
     def test_chat_scope_stop_and_fresh_handoff_require_terminal_receipt(self):
         from task.plan_continuity import WorkEstimate, reduce

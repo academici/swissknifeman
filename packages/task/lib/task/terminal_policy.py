@@ -222,5 +222,11 @@ def validate_entry(entry: dict, *, plan_dir: Path | None = None) -> None:
             or not isinstance(item_id, str) or not _ITEM_RE.fullmatch(item_id)
             or entry.get("result") not in (_CLOSE_RESULTS | _BLOCK_RESULTS)):
         return
+    if plan_dir is not None and (Path(plan_dir) / "decisions").is_dir():
+        from task import plan_decisions
+        try:
+            plan_decisions.load_decisions(plan_dir)
+        except plan_decisions.DecisionError as exc:
+            raise TerminalPolicyError("TERMINAL_DECISIONS_INVALID", str(exc)) from exc
     validate(
         entry.get("decision"), result=entry["result"], plan_dir=plan_dir, item_id=item_id)

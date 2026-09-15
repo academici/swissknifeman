@@ -1,0 +1,62 @@
+{
+  "maind_analyze": {
+    "verdict": "GREEN",
+    "confidence": "low",
+    "run_report": null,
+    "requested_session": "01a0a63e-5b7e-7af2-8348-ab127f7d7fef",
+    "bash_forensics_present": true,
+    "bash_command_count": 435,
+    "health_disabled": true
+  },
+  "analyst_token_report": {
+    "sessions_total_in_trend": 22,
+    "window": 20,
+    "newest_ts": "2026-08-07T18:31:45.800995+00:00",
+    "requested_session_present": false,
+    "matched_baseline": false
+  },
+  "task_returns": {
+    "return_events": 0,
+    "entries": 65,
+    "counts": {},
+    "metrics": {
+      "non_item_subjects": 31,
+      "provisional_share": 0,
+      "schema_invalid_rows": 0,
+      "ungroupable_share": 0
+    },
+    "repair_metrics": {
+      "first_ten": [
+        {
+          "action": "design-required",
+          "material_surface": {
+            "authority": true,
+            "dependency": false,
+            "frozen": true,
+            "irreversible": false,
+            "product": false,
+            "public": false,
+            "schema": false,
+            "security": false,
+            "test_topology": false
+          },
+          "origin": "validation",
+          "paths": [
+            "root/contracts/read-budget-v1.md",
+            "phases/P1/P1.4.md"
+          ],
+          "post": [],
+          "pre": [
+            "23b9d802afbce847077569f51ae2a298cf990605f7c9802e7c0e6229a3813b0b"
+          ]
+        }
+      ],
+      "observed": 1
+    }
+  },
+  "limitations": [
+    "No phase audit or runtime implementation performed; diagnostic commands executed once, acquisition results are not product acceptance.",
+    "No USD estimate, token savings percentage or CPU estimate is asserted.",
+    "Deep command discovered, not invoked as a subagent workflow; original owner no-child constraint and explicit session study retained."
+  ]
+}

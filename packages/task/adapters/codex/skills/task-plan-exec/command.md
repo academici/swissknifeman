@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:80ada213734c93a6137406933d1c3cf319935978158c4ff7b9b3faef284bf784
-Adapter: task.codex-command/1.0.14
+Canonical SHA-256: sha256:676a103d306e2bc7770da860d6f276b428981d17303850cc75b16d336321bc09
+Adapter: task.codex-command/1.0.15
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
 
@@ -75,7 +75,8 @@ evidence.
 
 ## Codex snapshot transport guard — provider-specific
 
-Capture the v2 five-carrier context before analysis with `task.plan_context.capture()`. Set both
+Run `task.plan_recovery.prepare()` before analysis, then consume its immutable v2 five-carrier
+snapshot. Set both
 the nested `exec_command.max_output_tokens` and the outer `// @exec: {"max_output_tokens": ...}`
 budget high enough for the current immutable byte chunk; never treat a successful shell exit as a
 complete read. Every chunk must retain `snapshot_sha256`, byte `offset`/`next_offset`, and the
@@ -84,9 +85,9 @@ live/snapshot digest mismatch is `PLAN_CONTEXT_TRUNCATED`/`PLAN_CONTEXT_DIGEST_M
 the product journal starts. Continue only from the same snapshot; never reread a live carrier to
 replace a lost chunk.
 
-Read `runtime/plan-protocol/SKILL.md` from the configured Task package root (the same
-root that contains `lib/task/`) before using the plan schema. Its adjacent `references/` and
-`snippets/` are delivered on demand with Task; a separate CORE skill is not required.
+Read `runtime/plan-protocol/references/common-principles.md` and
+`runtime/plan-protocol/references/execution-mode.md` from the configured Task package root.
+The full schema canon and snippets are on-demand references, not mandatory execution context.
 
 Execute the admitted Routing group or ready subset of a recommended group for `$ARGUMENTS`. The pinned route is a minimum;
 provider-attested overshoot is recorded and undershoot stops before mutation.
@@ -116,7 +117,7 @@ stays in `task.plan_admission`/`task_contract`, route proof in `route_evidence`,
 Commands must not copy those algorithms. Choose any safe order consistent with their data
 dependencies, Scope and Acceptance; recommended Next is not exclusive execution authority.
 
-1. Capture exactly the v2 five-carrier context once with `task.plan_context.capture()` and consume
+1. Run `task.plan_recovery.prepare()` and then capture exactly the v2 five-carrier context once; consume
    contiguous terminal-marked chunks. Missing or changed input is `PLAN_CONTEXT_TRUNCATED` or
    `PLAN_CONTEXT_DIGEST_MISMATCH` before journal mutation.
    The ordered carriers are `plans/<PLAN-ID>/plan.md` → `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md` →
@@ -146,8 +147,9 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
 4. A foreign baseline stays visible but non-gating unless ownership/dependency closure intersects.
    Audit is read-only: it returns one owning continuation for a product finding and never starts a
    second audit/full replay without a new material hypothesis.
-5. After GREEN acceptance, persist evidence and the terminal journal event, generate changed terminal
-   projections once, and close the item in this invocation. If this is the last item, phase gates are
+5. After GREEN acceptance, persist evidence and the terminal journal event, then call
+   `task.plan_reconcile.reconcile_terminal()` to converge changed terminal projections, the
+   selected successor bundle, freshness and delivery receipt. Close the item in this invocation. If this is the last item, phase gates are
    GREEN, and no audit was explicitly admitted, create its phase closure before deriving Next. Derive and validate
    one semantic Next through `plan_delivery` from the resulting state and dependencies; never emit
    `plan-close` for the current result or repeat `plan-exec`/`plan-run` for the current item. Use one

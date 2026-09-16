@@ -6,9 +6,9 @@ effort: xhigh
 ---
 Invocation payload: `$ARGUMENTS`.
 
-Read `runtime/plan-protocol/SKILL.md` from the configured Task package root (the same
-root that contains `lib/task/`) before using the plan schema. Its adjacent `references/` and
-`snippets/` are delivered on demand with Task; a separate CORE skill is not required.
+Read `runtime/plan-protocol/references/common-principles.md` and
+`runtime/plan-protocol/references/review-mode.md` from the configured Task package root.
+The full schema canon and snippets are on-demand references, not mandatory review context.
 
 Audit is adversarial and read-only over product work. Read the declared assurance, the Task Contract's
 sole exact executable Routing compiler result, and prior terminal evidence; compare only the changed-risk delta.

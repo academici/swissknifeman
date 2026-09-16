@@ -107,21 +107,19 @@ def main(argv=None) -> int:
                 contract=contract, batch_receipt=receipt)
             print(json.dumps(verdict, ensure_ascii=False))
         elif args.command == "prepare":
-            from task import plan_context, plan_bundle, plan_evidence, plan_lifecycle, validation_admission, plan_item_state
+            from task import plan_evidence, plan_lifecycle, validation_admission
             risks = set(args.risk)
             if "none" in risks and len(risks) != 1:
                 raise ValueError("none несовместим с другими рисками")
             selection = plan_lifecycle.select(plan_lifecycle.LifecycleInput(
                 risks=frozenset() if risks == {"none"} else frozenset(risks)))
             from task import plan_recovery
-            recovery = plan_recovery.validate_request(args.plan_dir, args.item)
-            plan_item_state.build_states(args.plan_dir, item_id=args.item, check=True)
-            snapshot = plan_context.capture(args.plan_dir, args.item)
-            plan_bundle.build(args.plan_dir, args.item, check=True)
-            readiness = plan_bundle.producer_readiness(args.plan_dir, args.item)
+            prepared = plan_recovery.prepare(args.plan_dir, args.item)
+            recovery = prepared["recovery"]
+            snapshot = prepared["snapshot"]
+            readiness = prepared["producer_readiness"]
             graph = plan_evidence.compile_graph(args.plan_dir, args.item)
             admission = validation_admission.inspect(args.plan_dir, args.item)
-            plan_item_state.build_states(args.plan_dir, item_id=args.item, check=True)
             snapshot.assert_live_integrity()
             print(json.dumps({"snapshot_sha256": snapshot.snapshot_sha256,
                               "evidence_graph": graph, "producer_readiness": readiness,

@@ -51,7 +51,7 @@ from .provider.lock import (ArtifactAction, ArtifactActionKind, ArtifactLock, Ar
 from .provider.registry import (AdapterCatalog, AdapterDescriptor, AdapterSelection,
                                 AdapterSelectionResult, RegistryDiagnostic, RegistrySeverity)
 from .repo import find_monorepo_root, find_repo_root, sibling_bin
-from .runs import find_run_report
+from .runs import find_run_report, find_run_report_result
 from .term import confirm, die, now_iso, parse_iso, warn
 from .text import parse_frontmatter, parse_inline_list, sanitize
 
@@ -61,6 +61,7 @@ __all__ = [
     "atomic_write_text", "atomic_write_json", "safe_load_json", "load_json_db",
     "backup_file",
     "read_ndjson", "read_ndjson_iter", "pid_alive", "find_run_report",
+    "find_run_report_result",
     "is_within", "is_within_lexical", "state_dir",
     "find_repo_root", "find_monorepo_root", "sibling_bin",
     "detect_project_type", "PROJECT_TYPES", "LANGUAGE_BY_TYPE",

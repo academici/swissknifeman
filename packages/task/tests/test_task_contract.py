@@ -1131,6 +1131,32 @@ class BatchRoutingAdmissionTests(unittest.TestCase):
         self.assertEqual(task_contract.admit_batch(self.plan_dir, ("P1.2", "P1.3"),
                                                    receipt=receipt)["verdict"], "BATCH_STALE")
 
+    def test_recommended_batch_admits_only_ready_frontier_and_returns_empty_prefix_receipt(self):
+        path = self.plan_dir / "plan.md"
+        path.write_text(path.read_text().replace("| test |", "| recommended: sequential |"),
+                        encoding="utf-8")
+        successor = fixtures.item_spec_path(self.plan_dir, "P1.2")
+        successor.write_text(successor.read_text().replace(
+            "**Inputs:** `lib/pkg/config.py`.",
+            "**Inputs:** `phases/P1/P1.1.state.md` (producer: P1.1)."), encoding="utf-8")
+        (self.plan_dir / "journal.jsonl").write_text("", encoding="utf-8")
+        for item in ("P1.1", "P1.2", "P1.3"):
+            from task import plan_item_state
+            plan_item_state.build_states(self.plan_dir, item_id=item,
+                                         materialize_successor=False)
+        verdict = task_contract.admit_batch(self.plan_dir, ("P1.1", "P1.2"))
+        self.assertEqual(verdict["verdict"], "ALLOW")
+        self.assertEqual(verdict["batch_receipt"]["membership"], ["P1.1", "P1.2"])
+        self.assertEqual(verdict["batch_receipt"]["completed_prefix"], [])
+
+    def test_recommended_batch_rejects_reversed_membership_order(self):
+        path = self.plan_dir / "plan.md"
+        path.write_text(path.read_text().replace("| test |", "| recommended: ordered |"),
+                        encoding="utf-8")
+        verdict = task_contract.admit_batch(self.plan_dir, ("P1.2", "P1.1"))
+        self.assertEqual(verdict["verdict"], "BATCH_REQUIRED")
+        self.assertEqual(verdict["canonical"], ["P1.1", "P1.2"])
+
     def test_request_across_groups_is_ambiguous(self):
         plan = (self.plan_dir / "plan.md").read_text(encoding="utf-8").replace(
             "| B1 | P1.1–P1.3 | implementation/high | manual | full | test |",

@@ -2,9 +2,9 @@
 description: "Execute authorized Task plan items with the attested current-session route."
 argument-hint: "<PLAN-ID> Pn.m [Pn.k]"
 ---
-Read `runtime/plan-protocol/SKILL.md` from the configured Task package root (the same
-root that contains `lib/task/`) before using the plan schema. Its adjacent `references/` and
-`snippets/` are delivered on demand with Task; a separate CORE skill is not required.
+Read `runtime/plan-protocol/references/common-principles.md` and
+`runtime/plan-protocol/references/execution-mode.md` from the configured Task package root.
+The full schema canon and snippets are on-demand references, not mandatory execution context.
 
 Execute `$ARGUMENTS` by the canonical `task:plan-exec` lifecycle. `plan-run` inherits the current
 provider-attested route; it never pins model or effort and it never substitutes config or prose for
@@ -45,7 +45,8 @@ another run at each lifecycle transition: reuse it while relevant product/test/t
 environment are unchanged, rerun the affected delta after change, and rerun a live check at its live
 boundary. Follow the complete close and delivery gates from `plan-exec`.
 
-After GREEN acceptance, persist evidence and the terminal journal event, regenerate changed views,
+After GREEN acceptance, persist evidence and the terminal journal event, run
+`task.plan_reconcile.reconcile_terminal()` to regenerate and verify changed views,
 and close the item in this invocation. If it is the last item of a GREEN phase and no audit is
 explicitly admitted by `phase_audit_policy`, create the phase closure in this invocation too. Compute
 Next only from that post-closure state and dependencies. Never render a launch for `plan-close` of

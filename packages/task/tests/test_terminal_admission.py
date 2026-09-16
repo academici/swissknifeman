@@ -6,7 +6,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from task import journal, terminal_admission
+from task import journal, terminal_admission, terminal_policy, task_contract
+
+try:
+    from .fixtures import write_valid_plan
+except ImportError:
+    from fixtures import write_valid_plan
 
 
 def receipt(*, run_id="run-1", subject="P4.1", command="plan-run"):
@@ -83,6 +88,30 @@ class TerminalAdmissionTests(unittest.TestCase):
         root = Path(self.directory.name)
         self.assertTrue(terminal_admission.pre_final_open_runs(root, "thread-1")["final_allowed"])
         self.assertFalse((root / ".swissknifeman").exists())
+
+    def test_closed_first_member_does_not_hide_unstarted_workset_remainder(self):
+        root = Path(self.directory.name)
+        plan = write_valid_plan(root, "WORKSET", layout="v2")
+        batch = {"batch_id": "B1", "items": ("P1.1", "P1.2"),
+                 "routing_digest": "a" * 64, "spec_digest": "b" * 64}
+        checkpoint = task_contract.build_batch_receipt(batch, membership=("P1.1", "P1.2"))
+        run_id = "run-workset"
+        journal.append(plan, journal.new_entry(
+            plan_id=plan.name, item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="in-progress", session_id="thread-1",
+            run_id=run_id, attempt=1, batch_receipt=checkpoint))
+        decision = terminal_policy.build_decision(
+            plan, "P1.1", result="closed-green",
+            validation=[{"carrier": "fixture", "status": "green",
+                         "evidence_ids": ["test:workset"]}])
+        journal.append(plan, journal.new_entry(
+            plan_id=plan.name, item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="closed-green", session_id="thread-1",
+            run_id=run_id, attempt=1, decision=decision, batch_receipt=checkpoint))
+        verdict = terminal_admission.pre_final_open_runs(root, "thread-1")
+        self.assertFalse(verdict["final_allowed"])
+        self.assertEqual(verdict["reason"], "TASK_WORKSET_INCOMPLETE")
+        self.assertEqual(verdict["worksets"][0]["remaining"], ["P1.2"])
 
     def test_chat_scope_stop_and_fresh_handoff_require_terminal_receipt(self):
         from task.plan_continuity import WorkEstimate, reduce

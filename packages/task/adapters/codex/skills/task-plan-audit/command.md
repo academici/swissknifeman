@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:ea4be4ecaf32eb680bf62b20991d76b95d539f8a8c0647c7a38b51ad0a968fb4
-Adapter: task.codex-command/1.0.14
+Canonical SHA-256: sha256:08477e5dd99ae24350e8489c70d85028ee97d3d4c0560a8425318a40d853e77d
+Adapter: task.codex-command/1.0.15
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
 
@@ -74,9 +74,9 @@ evidence.
 
 Invocation payload: `$ARGUMENTS`.
 
-Read `runtime/plan-protocol/SKILL.md` from the configured Task package root (the same
-root that contains `lib/task/`) before using the plan schema. Its adjacent `references/` and
-`snippets/` are delivered on demand with Task; a separate CORE skill is not required.
+Read `runtime/plan-protocol/references/common-principles.md` and
+`runtime/plan-protocol/references/review-mode.md` from the configured Task package root.
+The full schema canon and snippets are on-demand references, not mandatory review context.
 
 Audit is adversarial and read-only over product work. Read the declared assurance, the Task Contract's
 sole exact executable Routing compiler result, and prior terminal evidence; compare only the changed-risk delta.

@@ -410,6 +410,21 @@ docs-impact гейт, матрица возможностей, CI-гигиена
 
 ## Provider Stop adapters (2026-09-10)
 
+### Проверка instruction layers (2026-09-16)
+
+Для [аудита SKM-IA](../tasks/2026.09.16-instruction-layers-audit/README.md) проверены:
+[OpenAI model guidance](https://developers.openai.com/api/docs/guides/latest-model#instruction-following),
+[AGENTS.md discovery](https://learn.chatgpt.com/docs/agent-configuration/agents-md),
+[skills](https://learn.chatgpt.com/docs/build-skills),
+[Codex Stop hooks](https://learn.chatgpt.com/docs/hooks#stop),
+[Claude Code memory](https://code.claude.com/docs/en/memory),
+[skills](https://code.claude.com/docs/en/skills) и [Stop hooks](https://code.claude.com/docs/en/hooks#stop).
+Они обосновывают progressive disclosure и различие между инструкциями, состоянием задачи
+и фактическим hook continuation. Perplexity использован для двух поисковых синтезов;
+выводы сверены с открытыми первичными страницами. Новая политика этим исследованием не введена.
+
+### Исходная аттестация
+
 - [OpenAI Codex Hooks](https://developers.openai.com/codex/hooks): documented `Stop` payload
   includes `turn_id`, `stop_hook_active` and `last_assistant_message`; a `decision: "block"`
   requests continuation. The adapter remains opt-in and only translates the Task verdict.

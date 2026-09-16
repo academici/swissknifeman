@@ -107,16 +107,93 @@ def find_analytics_events(project_path, session=None):
     return tuple(events)
 
 
-def find_run_report(project_path, session=None):
-    """Return the newest or selected decoded run report, or ``None``."""
-    runs = Path(os.path.expanduser(str(project_path))) / ".claude" / "runs"
-    if not runs.is_dir():
+@dataclass(frozen=True)
+class RunReportLookup:
+    """A trusted legacy report or a typed reason why it was rejected."""
+
+    report: dict | None
+    diagnostic: MappingProxyType | None
+
+
+def _within(path: Path, root: Path) -> bool:
+    try:
+        path.resolve(strict=False).relative_to(root.resolve(strict=False))
+        return True
+    except (OSError, ValueError):
+        return False
+
+
+def _run_report_project_mismatch(report, project_path: Path, source: Path,
+                                 expected_session=None, expected_project_id=None):
+    """Reject only positive cross-project evidence; absence remains unknown.
+
+    ``cwd`` alone is insufficient because old copied reports have been observed with a
+    rewritten cwd.  Absolute changed-file evidence is therefore checked independently.
+    Relative paths carry no project identity and are left to the report consumer.
+    """
+    if not isinstance(report, dict):
         return None
+    expected = project_path.resolve(strict=False)
+    conflicts = []
+    provider = report.get("provider_id", report.get("provider"))
+    if provider is not None and provider != "claude-code":
+        conflicts.append({"field": "provider", "value": provider})
+    reported_session = report.get("session_id")
+    if (expected_session is not None and reported_session is not None
+            and reported_session != expected_session):
+        conflicts.append({"field": "session_id", "value": reported_session})
+    project_id = report.get("project_id")
+    if (expected_project_id is not None and project_id is not None
+            and project_id != expected_project_id):
+        conflicts.append({"field": "project_id", "value": project_id})
+    cwd = report.get("cwd")
+    if isinstance(cwd, str) and cwd.strip():
+        observed = Path(os.path.expanduser(cwd))
+        if observed.is_absolute() and not _within(observed, expected):
+            conflicts.append({"field": "cwd", "value": str(observed)})
+    changed = report.get("files_changed")
+    if isinstance(changed, list):
+        for value in changed:
+            if not isinstance(value, str) or not value.strip():
+                continue
+            observed = Path(os.path.expanduser(value))
+            if observed.is_absolute() and not _within(observed, expected):
+                conflicts.append({"field": "files_changed", "value": str(observed)})
+    if not conflicts:
+        return None
+    return MappingProxyType({
+        "code": "RUN_REPORT_PROJECT_MISMATCH",
+        "confidence": "untrusted-run-report",
+        "provider": "claude-code",
+        "expected_project": str(expected),
+        "source": str(source),
+        "conflicts": tuple(MappingProxyType(row) for row in conflicts),
+    })
+
+
+def find_run_report_result(project_path, session=None, *, project_id=None):
+    """Return a provenance-checked report lookup without trusting its directory."""
+    project = Path(os.path.expanduser(str(project_path)))
+    runs = project / ".claude" / "runs"
+    if not runs.is_dir():
+        return RunReportLookup(None, None)
     if session:
         f = runs / f"{session}.json"
-        return safe_load_json(f, None) if f.is_file() else None
-    files = [p for p in runs.glob("*.json") if p.is_file()]
+        files = [f] if f.is_file() else []
+    else:
+        files = [p for p in runs.glob("*.json") if p.is_file()]
     if not files:
-        return None
-    latest = max(files, key=lambda p: p.stat().st_mtime)
-    return safe_load_json(latest, None)
+        return RunReportLookup(None, None)
+    selected = files[0] if session else max(files, key=lambda p: p.stat().st_mtime)
+    report = safe_load_json(selected, None)
+    if not isinstance(report, dict):
+        return RunReportLookup(None, None)
+    mismatch = _run_report_project_mismatch(
+        report, project, selected, expected_session=session or selected.stem,
+        expected_project_id=project_id)
+    return RunReportLookup(None if mismatch else report, mismatch)
+
+
+def find_run_report(project_path, session=None):
+    """Return only a provenance-checked legacy report, or ``None``."""
+    return find_run_report_result(project_path, session=session).report

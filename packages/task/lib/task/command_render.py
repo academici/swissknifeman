@@ -23,7 +23,7 @@ from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_
                                   metadata_value)
 
 
-ADAPTER_VERSION = "1.0.14"
+ADAPTER_VERSION = "1.0.15"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
@@ -1110,7 +1110,8 @@ def _codex_current_route_rule(record: CommandRecord) -> str:
         context_rule = '''
 ## Codex snapshot transport guard — provider-specific
 
-Capture the v2 five-carrier context before analysis with `task.plan_context.capture()`. Set both
+Run `task.plan_recovery.prepare()` before analysis, then consume its immutable v2 five-carrier
+snapshot. Set both
 the nested `exec_command.max_output_tokens` and the outer `// @exec: {"max_output_tokens": ...}`
 budget high enough for the current immutable byte chunk; never treat a successful shell exit as a
 complete read. Every chunk must retain `snapshot_sha256`, byte `offset`/`next_offset`, and the

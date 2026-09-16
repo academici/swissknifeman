@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.35.0
+version: 2.36.0
 description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
 when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
 risk: write
@@ -71,8 +71,9 @@ Stable specifications, volatile state, append-only history, and generated views 
 4. `bundles/<Pn.m>.json` — ordered digest-qualified inputs.
 5. `phases/<Pn>/<Pn.m>.state.md` — byte-fresh generated state.
 
-The executor first captures these five carriers through `task.plan_context.capture()` before exposing
-content. It may paginate only immutable snapshot bytes by cursor; each member needs a matching
+The executor first calls `task.plan_recovery.prepare()` to validate the selected item and converge
+its deterministic state/bundle, then exposes only the returned `task.plan_context` snapshot. It may
+paginate only immutable snapshot bytes by cursor; each member needs a matching
 digest and terminal marker, while a gap, transport truncation, or changed live source fails before
 journal mutation with `PLAN_CONTEXT_TRUNCATED`/`PLAN_CONTEXT_DIGEST_MISMATCH`. The designer additionally reads current decisions/status; the auditor materializes history from
 `journal.jsonl`; the owner reads status, gates, and handoff. `[v2]` `handoff.md` is not on the
@@ -432,6 +433,9 @@ provider files are additive adapters.
 
 ## References
 
+- Mandatory layers selected by Task commands: [common principles](references/common-principles.md),
+  [design](references/design-mode.md), [execution](references/execution-mode.md), and
+  [review](references/review-mode.md). The full canon remains on demand for exact schema details.
 - Layout/carrier/read-path/state/closure details:
   [references/plan-layout-v2.md](references/plan-layout-v2.md).
 - Source-evidence verification and portability rules are summarized in sections 1 and 7; a plan

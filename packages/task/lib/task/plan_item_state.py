@@ -227,7 +227,7 @@ def _render_state(plan_dir, item_id, *, legacy_freshness=False):
 def render_state(plan_dir, item_id):
     return _render_state(plan_dir, item_id)
 
-def build_states(plan_dir, *, item_id=None, check=False):
+def build_states(plan_dir, *, item_id=None, check=False, materialize_successor=True):
     plan_dir = Path(plan_dir)
     identifiers = [item_id] if item_id else [path.stem for phase in plan_layout.phase_paths(plan_dir) for path in plan_layout.item_spec_paths(plan_dir, phase)]
     targets = []
@@ -247,7 +247,7 @@ def build_states(plan_dir, *, item_id=None, check=False):
             if not legacy_matches:
                 raise ItemStateError(str(exc)) from exc
         targets.append(target)
-    if not check:
+    if not check and materialize_successor:
         from task import plan_recovery
         for identifier in identifiers:
             plan_recovery.materialize_next_ready(plan_dir, identifier)

@@ -14,7 +14,7 @@ import json
 import os
 from pathlib import Path
 
-from ..common import find_run_report, parse_args, read_ndjson_iter, run_cmd
+from ..common import find_run_report, find_run_report_result, parse_args, read_ndjson_iter, run_cmd
 from core.runs import find_analytics_events
 from ..config import load_config
 from ..health import _target
@@ -157,7 +157,7 @@ def health_slice(env, config, project):
 
 
 # ── вердикт ──────────────────────────────────────────────────────────────────
-def compute_verdict(run_report, git, observer):
+def compute_verdict(run_report, git, observer, *, evidence_diagnostics=()):
     """(verdict, confidence, red, reasons, repass) из собранных срезов.
     RED — упавший тест/воркфлоу. ATTENTION — линт/tool-провалы/deferred/workarounds/грязное
     дерево/LOOP. repass — dev-loop tool_failures (движок был недоступен → факт не проверен)."""
@@ -204,6 +204,10 @@ def compute_verdict(run_report, git, observer):
             reasons.append(f"память опрашивалась (recall ×{recall['calls']}), но пуста/не по адресу "
                            f"— проверь scope/наполнение (maind memory count)")
 
+    for diagnostic in evidence_diagnostics:
+        if diagnostic.get("code") == "RUN_REPORT_PROJECT_MISMATCH":
+            reasons.append("RUN_REPORT_PROJECT_MISMATCH: чужой run-report исключён из verdict")
+
     if git and git.get("dirty"):
         reasons.append(f"рабочее дерево не чисто: {git.get('working_files', '?')} файл(ов)")
     if observer and observer.get("alerts"):
@@ -225,7 +229,8 @@ def analyze_report(env, config, project, *, session=None, base=None, with_health
     local = project.get("local_path")
     ppath = os.path.expanduser(local) if local else os.getcwd()
 
-    run_report = find_run_report(ppath, session)
+    lookup = find_run_report_result(ppath, session, project_id=pid)
+    run_report = lookup.report
     # bash-лог коррелируем по РЕАЛЬНОЙ сессии run-report'а (в проде session_id run-report ==
     # id сессии Claude == session в bash-логе); явный --session имеет приоритет.
     effective_session = session or (run_report or {}).get("session_id")
@@ -234,12 +239,18 @@ def analyze_report(env, config, project, *, session=None, base=None, with_health
     git = git_status(ppath, base)
     health = health_slice(env, config, project) if with_health else None
 
-    verdict, confidence, red, reasons, repass = compute_verdict(run_report, git, observer)
+    diagnostics = []
+    if lookup.diagnostic is not None:
+        diagnostic = dict(lookup.diagnostic)
+        diagnostic["conflicts"] = [dict(row) for row in diagnostic.get("conflicts", ())]
+        diagnostics.append(diagnostic)
+    verdict, confidence, red, reasons, repass = compute_verdict(
+        run_report, git, observer, evidence_diagnostics=diagnostics)
     return {
         "project": pid, "path": ppath,
         "verdict": verdict, "confidence": confidence,
         "red": red, "reasons": reasons, "repass": repass,
-        "run_report": run_report, "bash_log": bash_log,
+        "run_report": run_report, "run_report_diagnostics": diagnostics, "bash_log": bash_log,
         "observer": observer, "git": git, "health": health,
         "pending_lessons": pending_lessons(ppath),
         "analytics": analytics_slice(ppath, effective_session),

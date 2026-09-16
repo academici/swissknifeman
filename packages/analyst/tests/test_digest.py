@@ -14,7 +14,7 @@ def _run_report(**over):
         "session_id": "sid-123",
         "generated_at": "2026-07-01T10:00:00Z",
         "tools": {"total": 5, "by_name": {"Bash": 5}},
-        "files_changed": ["/proj/src/Service.php", "/proj/tests/ServiceTest.php"],
+        "files_changed": ["src/Service.php", "tests/ServiceTest.php"],
         "tool_failures": [],
         "bash": {"tests": [], "lints": [], "failed": []},
         "workflows": [],

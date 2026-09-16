@@ -46,7 +46,8 @@ Read exactly, in order:
 5. `phases/<Pn>/<Pn.m>.state.md` (fresh volatile state).
 
 `handoff.md`, full `status.md`, full decisions, and raw journal are excluded from this path.
-Capture all five members before exposing one through `task.plan_context.capture()`. Chunk continuation
+Call `task.plan_recovery.prepare()` before exposing any member, then consume the returned immutable
+five-carrier snapshot. Chunk continuation
 uses only the immutable snapshot bytes and contiguous byte cursors; each member ends with its
 terminal marker and binds the snapshot digest. Missing terminal proof, output truncation, a cursor
 gap, or a changed live member fails before journal mutation with

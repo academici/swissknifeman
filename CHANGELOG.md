@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-09-16
+
+### Added
+
+- **Task: preparation и terminal reconciliation.** Выбранный bundle/state восстанавливается до
+  five-carrier snapshot; одна идемпотентная операция сводит terminal journal, generated views,
+  следующий frontier bundle и delivery receipt.
+
+### Fixed
+
+- **Task/Harness: непрерывный workset.** Recommended batch допускает текущий ready frontier с
+  пустым prefix, а Stop guard видит ещё не начатый остаток receipt. Обновлённый Codex dispatcher
+  доставляется через versioned owning adapter и вызывает `check-open` без специального payload.
+- **Task: design-time bundle validation.** Все nonterminal admission-ready declarations проходят
+  dry render без массовой materialization; неразрешимый выбранный bundle даёт точный typed repair.
+- **mAInd: provenance run-report.** Чужой project/session/provider report исключается из verdict и
+  становится `ATTENTION`, не ложным RED.
+- **CoreX plan checker:** execution bookkeeping и generated decision views больше не инвалидируют
+  design seal, а новые design decisions и изменения item contracts по-прежнему требуют reseal.
+
+### Changed
+
+- **Task instructions:** обязательный контекст разделён на common/design/execution/review layers;
+  полный plan protocol остаётся on-demand canonical reference.
+- **Версии поставки:** Task `0.19.0`, Core `0.18.0`, general `0.14.1`, Skiller API `0.16.1`,
+  Harness API `0.4.4` и mAInd API `0.3.3`.
+
 ## [0.18.0] - 2026-09-15
 
 ### Fixed

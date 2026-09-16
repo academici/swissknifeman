@@ -414,6 +414,19 @@ def _terminal_admission(payload):
     cwd = payload.get("cwd")
     if _read_mode(cwd, "terminal-admission.env.ini") != "on" or not cwd:
         return
+    cli = Path(cwd) / "packages/task/scripts/plan-terminal-admission.py"
+    if cli.is_file():
+        try:
+            result = subprocess.run([sys.executable, str(cli), "check-open", "--project-root", cwd,
+                                     "--provider-session", str(payload.get("session_id") or "")],
+                                    cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=10)
+            verdict = json.loads(result.stdout)
+            if not isinstance(verdict, dict) or result.returncode not in (0, 1):
+                raise ValueError("invalid pre-final result")
+        except (OSError, subprocess.TimeoutExpired, TypeError, ValueError):
+            verdict = {"final_allowed": False, "reason": "TASK_FINAL_STATE_UNAVAILABLE"}
+        if not verdict.get("final_allowed"):
+            print(json.dumps({"decision": "block", "reason": verdict.get("reason")})); return
     request = payload.get("terminal_admission")
     if not isinstance(request, dict) or not request.get("applicable"):
         return

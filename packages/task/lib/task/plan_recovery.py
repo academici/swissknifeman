@@ -132,6 +132,33 @@ def validate_request(plan_dir, item_id: str) -> dict:
     return verdict
 
 
+def prepare(plan_dir, item_id: str) -> dict:
+    """Converge deterministic selected-item carriers before taking the snapshot."""
+    from task import plan_context
+
+    root = Path(plan_dir)
+    verdict = validate_request(root, item_id)
+    try:
+        plan_item_state.build_states(root, item_id=item_id)
+        bundle = plan_bundle.build(root, item_id)
+        readiness = plan_bundle.producer_readiness(root, item_id)
+        snapshot = plan_context.capture(root, item_id)
+        plan_item_state.build_states(root, item_id=item_id, check=True)
+        plan_bundle.build(root, item_id, check=True)
+        snapshot.assert_live_integrity()
+    except plan_bundle.BundleError as exc:
+        command = (f"python3 packages/task/scripts/plan-views.py bundle --plan-dir "
+                   f"{root} --item {item_id} --stdout")
+        raise RecoveryError({
+            "code": "PLAN_BUNDLE_UNRESOLVABLE", "reason": str(exc),
+            "requested_item": item_id, "active_item": item_id,
+            "mode": verdict["mode"], "entry": str(exc).removeprefix("unresolvable_entry: "),
+            "recovery_command": command,
+        }) from exc
+    return {"recovery": verdict, "bundle": bundle, "producer_readiness": readiness,
+            "snapshot": snapshot}
+
+
 def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
           contract: dict, batch_receipt=None) -> dict:
     """Admit one durable start; a restarted session reuses the open run identity."""
@@ -173,13 +200,10 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
             if not verdict["run_id"]:
                 raise RecoveryError({"code": "RECOVERY_RUN_ID_UNAVAILABLE",
                                      "reason": f"{item_id}: durable start не содержит run_id"})
-            plan_item_state.build_states(root, item_id=item_id)
-            plan_context.capture(root, item_id)
+            prepare(root, item_id)
             return verdict
-        snapshot = plan_context.capture(root, item_id)
-        plan_bundle.build(root, item_id, check=True)
-        plan_bundle.producer_readiness(root, item_id)
-        snapshot.assert_live_integrity()
+        prepared = prepare(root, item_id)
+        snapshot = prepared["snapshot"]
         positions = _positions(root)
         attempt = int(positions.get(item_id, {}).get("attempt", 0)) + 1
         run_id = journal.derive_run_id(plan_id=root.name, item_id=item_id,

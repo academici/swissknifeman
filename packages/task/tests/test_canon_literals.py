@@ -27,7 +27,7 @@ class CompactCanonTests(unittest.TestCase):
 
     def test_commands_preserve_v2_and_delivery_owners(self):
         text = (COMMANDS / "plan-exec.md").read_text(encoding="utf-8")
-        self.assertIn("task.plan_context.capture()", text)
+        self.assertIn("task.plan_recovery.prepare()", text)
         self.assertIn("PLAN_CONTEXT_TRUNCATED", text)
         self.assertIn("phase_audit_policy", text)
         self.assertIn("plan_delivery", text)

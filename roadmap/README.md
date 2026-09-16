@@ -9,8 +9,13 @@
 
 ## Живой каталог
 
+Сводный [аудит слоёв инструкций и незавершённых остатков от 16 сентября](../tasks/2026.09.16-instruction-layers-audit/README.md)
+различает исправления исходников, локальную доставку и полевой acceptance. Source remediation
+выполнена; живой остаток — consumer/provider field acceptance без fleet rollout.
+
 | Файл | Статус | Критерий запуска / исторический якорь |
 |:--|:--|:--|
+| [`2026.09.16-SKM-PLAN-BUNDLE-ADMISSION-GAP.md`](2026.09.16-SKM-PLAN-BUNDLE-ADMISSION-GAP.md) | 🧪 source + local runtime готовы; field acceptance | Bundle preparation/admission, whole-workset Stop coverage, terminal reconciliation и run-report provenance реализованы; нужен реальный consumer batch/provider final, без fleet rollout. |
 | [`2026.07.25-memory-hub-service.md`](2026.07.25-memory-hub-service.md) | 🧭 deferred by decision | Второй человек, больше двух машин/машина вне LAN, project ACL или тысячи записей; подготовительный предшественник — `2026.07.25-ECO-OPT P4`. |
 | [`2026.08.15-locale-corpus-after-field-validation.md`](2026.08.15-locale-corpus-after-field-validation.md) | ⬜ ждёт field evidence | Конкретный проект, surface и воспроизводимый пользовательский эффект после compact field cut `2026.08.02-PROVIDER-CONTRACT-LOCALE P4`. |
 | [`2026.09.14-owner-session-continuity-regression.md`](2026.09.14-owner-session-continuity-regression.md) | 🧪 код доставлен; field acceptance | FlexCRM incident: агент выдумал новую сессию и повтор текущего item вместо `continue-root`. |

@@ -13,7 +13,7 @@ from maind.config import load_config
 from tests.fixtures import make_repo, write_maind_config
 
 GREEN_RR = {"schema": 1, "tools": {"total": 3, "by_name": {"Bash": 2, "Edit": 1}},
-            "files_changed": ["/p/a.py"],
+            "files_changed": ["a.py"],
             "bash": {"tests": [{"command": "pytest", "ok": True}],
                      "lints": [{"command": "ruff", "ok": True}], "failed": []},
             "tool_failures": [], "workflows": [], "devloop": None,
@@ -147,6 +147,25 @@ class ReportAssemblyCase(unittest.TestCase):
             self.assertIsNone(rep["health"])                    # отключён
             # JSON-сериализуемо целиком
             self.assertIsInstance(json.dumps(rep, ensure_ascii=False), str)
+
+    def test_foreign_report_is_attention_and_its_red_reasons_are_excluded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            projdir = Path(tmp) / "corex"
+            projdir.mkdir()
+            foreign = {**RED_RR, "cwd": str(projdir),
+                       "files_changed": ["/home/example/projects/edufy/app.py"]}
+            _write_run(projdir, foreign)
+            projects = [{"id": "corex", "name": "CoreX", "type": "php-package",
+                         "status": "active", "local_path": str(projdir)}]
+            write_maind_config(root, projects=projects)
+            config, _ = load_config(env)
+            rep = analyze_report(env, config, config["projects"][0], with_health=False)
+            self.assertEqual(rep["verdict"], "ATTENTION")
+            self.assertEqual(rep["red"], [])
+            self.assertIsNone(rep["run_report"])
+            self.assertEqual(rep["run_report_diagnostics"][0]["code"],
+                             "RUN_REPORT_PROJECT_MISMATCH")
 
 
 class PendingLessonsCase(unittest.TestCase):

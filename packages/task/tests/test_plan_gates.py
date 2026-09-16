@@ -1,6 +1,7 @@
 """D2/P3 gate tests for the sole executable layout."""
 import copy
 import json
+import re
 import shutil
 import subprocess
 import tempfile
@@ -375,6 +376,23 @@ class TestReadBudgetGate(unittest.TestCase):
             "| P1 | Фаза раз | 0/1 | ⬜ Not started |"), encoding="utf-8")
         diag = lint(plan_dir)
         self.assertFalse(any("P1.1: missing_entry" in row for row in diag.errors), diag.errors)
+
+    def test_ready_future_phase_dry_render_catches_mixed_path_and_prose(self):
+        plan_dir = self.copied_fixture("plan-v2")
+        status = plan_dir / "status.md"
+        status.write_text(status.read_text(encoding="utf-8").replace(
+            "| P1 | Фаза раз | 0/1 | 🟡 In progress |",
+            "| P1 | Фаза раз | 0/1 | ⬜ Not started |"), encoding="utf-8")
+        spec = plan_dir / "phases" / "P1" / "P1.1.md"
+        spec.write_text(re.sub(
+            r"^\*\*Inputs:\*\*.*$",
+            "**Inputs:** `brief/00-brief.md`; future outputs are contracts",
+            spec.read_text(encoding="utf-8"), flags=re.M), encoding="utf-8")
+        diag = lint(plan_dir)
+        self.assertTrue(any("P1.1" in row and "unresolvable_entry" in row
+                            and "future outputs are contracts" in row
+                            for row in diag.errors), diag.errors)
+        self.assertFalse((plan_dir / "bundles" / "P1.2.json").exists())
 
     def test_stale_fixture_checks_only_the_next_runnable_bundle(self):
         diag = lint(self.copied_fixture("plan-v2-stale"))

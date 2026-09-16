@@ -64,8 +64,16 @@ maind doctor --context [--json]        # флот-агрегация always-on �
 maind doctor --skill-drift             # дрейф ecosystem-mcp/ecosystem-setup от шаблона, по проектам
 maind doctor --channel-drift           # дубль-канал skiller (connect+vendor на один бакет)
 maind verify [--json]                  # пруф работы 3 плоскостей: пишут реально или вхолостую
+maind analyze [--cwd | --project ID] [--session ID] [--no-health] [--json]
+                                        # post-run verdict с проверкой provenance run-report
 maind version                          # git SHA + путь к узлу
 ```
+
+`analyze` доверяет legacy run-report только после сверки project/session/provider identity.
+Абсолютные `files_changed` вне выбранного проекта также считаются конфликтом provenance. Такой
+отчёт исключается из RED-причин и возвращается как `ATTENTION` с
+`RUN_REPORT_PROJECT_MISMATCH`; отсутствие доверенного report понижает confidence, но не доказывает
+ошибку продукта.
 
 ## Как это устроено
 

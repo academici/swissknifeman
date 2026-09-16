@@ -4,9 +4,9 @@ argument-hint: "<PLAN-ID> Pn.m [Pn.k]"
 model: sonnet
 effort: medium
 ---
-Read `runtime/plan-protocol/SKILL.md` from the configured Task package root (the same
-root that contains `lib/task/`) before using the plan schema. Its adjacent `references/` and
-`snippets/` are delivered on demand with Task; a separate CORE skill is not required.
+Read `runtime/plan-protocol/references/common-principles.md` and
+`runtime/plan-protocol/references/execution-mode.md` from the configured Task package root.
+The full schema canon and snippets are on-demand references, not mandatory execution context.
 
 Execute the admitted Routing group or ready subset of a recommended group for `$ARGUMENTS`. The pinned route is a minimum;
 provider-attested overshoot is recorded and undershoot stops before mutation.
@@ -36,7 +36,7 @@ stays in `task.plan_admission`/`task_contract`, route proof in `route_evidence`,
 Commands must not copy those algorithms. Choose any safe order consistent with their data
 dependencies, Scope and Acceptance; recommended Next is not exclusive execution authority.
 
-1. Capture exactly the v2 five-carrier context once with `task.plan_context.capture()` and consume
+1. Run `task.plan_recovery.prepare()` and then capture exactly the v2 five-carrier context once; consume
    contiguous terminal-marked chunks. Missing or changed input is `PLAN_CONTEXT_TRUNCATED` or
    `PLAN_CONTEXT_DIGEST_MISMATCH` before journal mutation.
    The ordered carriers are `plans/<PLAN-ID>/plan.md` → `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md` →
@@ -66,8 +66,9 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
 4. A foreign baseline stays visible but non-gating unless ownership/dependency closure intersects.
    Audit is read-only: it returns one owning continuation for a product finding and never starts a
    second audit/full replay without a new material hypothesis.
-5. After GREEN acceptance, persist evidence and the terminal journal event, generate changed terminal
-   projections once, and close the item in this invocation. If this is the last item, phase gates are
+5. After GREEN acceptance, persist evidence and the terminal journal event, then call
+   `task.plan_reconcile.reconcile_terminal()` to converge changed terminal projections, the
+   selected successor bundle, freshness and delivery receipt. Close the item in this invocation. If this is the last item, phase gates are
    GREEN, and no audit was explicitly admitted, create its phase closure before deriving Next. Derive and validate
    one semantic Next through `plan_delivery` from the resulting state and dependencies; never emit
    `plan-close` for the current result or repeat `plan-exec`/`plan-run` for the current item. Use one

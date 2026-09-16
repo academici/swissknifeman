@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:921a608b8763ac890a2d2b275be80ba270f75a0917cba7293eb3741db1d4c0d7
-Adapter: task.codex-command/1.0.14
+Canonical SHA-256: sha256:d5d75c7d162f7221c1057b2970b1e4e4026cd06e8f835a9f580479ecd788fc9c
+Adapter: task.codex-command/1.0.15
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
 
@@ -74,9 +74,9 @@ evidence.
 
 Invocation payload: `$ARGUMENTS`.
 
-Read `runtime/plan-protocol/SKILL.md` from the configured Task package root (the same
-root that contains `lib/task/`) before using the plan schema. Its adjacent `references/` and
-`snippets/` are delivered on demand with Task; a separate CORE skill is not required.
+Read `runtime/plan-protocol/references/common-principles.md` and
+`runtime/plan-protocol/references/design-mode.md` from the configured Task package root.
+The full schema canon and snippets are on-demand references, not mandatory execution context.
 
 Design creates a v2 plan contract, not a second execution protocol. Read repository evidence,
 declare `Phase Assurance | v1` in every new phase (impact, named seams, live/irreversible,

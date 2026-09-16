@@ -54,10 +54,33 @@ Lint и delivery отклоняют `plan-design` для терминально�
 
 ## Плановый протокол без отдельного CORE-скилла
 
-Команды `plan-*` читают `runtime/plan-protocol/SKILL.md` из настроенного Task runtime.
+Команды `plan-*` читают короткие общие принципы и ровно один режим из
+`runtime/plan-protocol/references/`: `design-mode.md`, `execution-mode.md` или
+`review-mode.md`. Полный `runtime/plan-protocol/SKILL.md` остаётся каноном схем и читается
+по требованию конкретной детали, а не как обязательный контекст каждого запуска.
 Генератор доставляет рядом `references/` и `snippets/`, включая индекс шаблонов; `--check`
 проверяет их содержимое. Эти файлы читаются по необходимости и не добавляют записей в native
 skills listing. Установка отдельного `core:plan-protocol` для исполнения Task не требуется.
+
+## Workset, preparation и terminal reconciliation
+
+Явно запрошенная последовательность items — один упорядоченный workset. Для recommended batch
+первый ready frontier допускается с пустым completed prefix; будущий consumer проверяется после
+durable terminal producer, а не до его старта. Batch receipt сохраняет membership/order и следует
+через start/terminal events. Поэтому закрытие одного item не разрешает final, пока в receipt есть
+не начатый остаток без terminal boundary.
+
+`task.plan_recovery.prepare()` сначала валидирует запрос, затем восстанавливает выбранные state и
+bundle, проверяет producer readiness и только после этого снимает five-carrier snapshot. Если
+declaration неразрешим, ответ содержит `PLAN_BUNDLE_UNRESOLVABLE`, точный entry и команду
+повторного рендера. Design lint dry-renderит объявления всех nonterminal admission-ready items,
+но не сохраняет массово будущие bundles.
+
+После terminal journal вызывается `task.plan_reconcile.reconcile_terminal()`. Под файловой
+блокировкой он пересобирает state/decision/status views, материализует ровно один следующий ready
+bundle, проверяет freshness и строит delivery receipt. Повторный вызов идемпотентен и не добавляет
+journal rows; ошибка этапа остаётся resumable local repair с
+`PLAN_RECONCILIATION_INCOMPLETE`.
 
 ## Continue-root без лишней сессии
 
@@ -154,9 +177,10 @@ package-owned границу до `final`, но не заявляет недос
 --project-root <cwd> --provider-session <session>`. Этот шаг не требует lease или специального
 payload: он проверяет latest execution state текущей сессии в живых `plans/*/journal.jsonl`.
 `in-progress` отклоняет final с `TASK_OPEN_RUN_FINAL_FORBIDDEN`; промежуточные успехи выводятся
-как progress. Проверка не закрывает item и не заменяет существующий receipt gate. Реальная
-защита требует доставленного Task CLI и включённого native Stop hook; перенос run в новую
-сессию и полный structured waiting handoff требуют отдельной привязки.
+как progress. Session-bound batch receipt с незапущенным остатком отдельно отклоняет final с
+`TASK_WORKSET_INCOMPLETE`. Проверка не закрывает item и не заменяет существующий receipt gate.
+Реальная защита требует доставленного Task CLI и включённого native Stop hook; перенос run в
+новую сессию и полный structured waiting handoff требуют отдельной привязки.
 
 `terminal_admission` adds the repository-owned seam between a Task run and a documented provider
 Stop adapter. Its ignored `.swissknifeman/task-terminal/` state binds provider/session, Task

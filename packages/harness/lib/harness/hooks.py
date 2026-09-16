@@ -62,7 +62,7 @@ class LifecycleRenderPlan:
         return not any(item.severity is DiagnosticSeverity.ERROR for item in self.diagnostics)
 
 
-_CODEX_HOOK_ADAPTER_VERSION = "1.0.0"
+_CODEX_HOOK_ADAPTER_VERSION = "1.1.0"
 _CODEX_CAPTURE_ADAPTER_VERSION = "1.0.0"
 _LIFECYCLE_KINDS = frozenset(("lifecycle", "context", "security"))
 _D104_CODEX_HOOKS_TARGET = ".codex/hooks.json"

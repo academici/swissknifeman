@@ -770,10 +770,19 @@ def normalize_batch_request(request) -> tuple[str, ...]:
     return tuple(expanded)
 
 
-def build_batch_receipt(batch: dict, *, completed_prefix=(), handoff_digest=None) -> dict:
-    """Create the optional durable continuation checkpoint for one batch."""
+def build_batch_receipt(batch: dict, *, membership=None, completed_prefix=(), handoff_digest=None) -> dict:
+    """Create a durable checkpoint for the owner-authorized batch workset.
+
+    Recommended Routing groups may admit an ordered subset.  ``membership`` binds that
+    exact invocation scope; it never silently widens to every advisory group member.
+    """
     prefix = tuple(completed_prefix)
-    items = tuple(batch["items"])
+    declared = tuple(batch["items"])
+    items = tuple(declared if membership is None else membership)
+    positions = [declared.index(item) for item in items if item in declared]
+    if (not items or len(positions) != len(items) or positions != sorted(positions)
+            or len(set(items)) != len(items)):
+        raise ValueError("BATCH_STALE: membership is not an ordered batch subset")
     if items[:len(prefix)] != prefix:
         raise ValueError("BATCH_STALE: completed prefix is not a batch prefix")
     if handoff_digest is not None and not _SHA256_RE.fullmatch(handoff_digest):
@@ -816,36 +825,75 @@ def admit_batch(plan_dir, request, *, receipt=None, routing_config_path=None) ->
         return {"verdict": "BATCH_AMBIGUOUS", "batch": None, "requested": list(requested), "canonical": None}
     batch = compiled["batches"][owners[0]]
     exact = tuple(batch["items"])
-    if batch["recommended"] and receipt is None:
-        # New advisory groups admit independent ready work. Historical unmarked
-        # groups and receipt-bound continuations retain their frozen semantics.
+    if batch["recommended"]:
+        # Membership/order and the currently runnable frontier are separate
+        # predicates.  Future consumers are checked only after their producers
+        # have durable terminal evidence; no future GREEN is fabricated here.
         from task import plan_bundle, plan_admission, plan_item_state, terminal_policy, review_policy
+        declared_positions = [exact.index(item) for item in requested]
+        if declared_positions != sorted(declared_positions):
+            return {"verdict": "BATCH_REQUIRED", "batch": batch,
+                    "requested": list(requested), "canonical": sorted(requested, key=exact.index)}
+        if receipt is None:
+            workset = requested
+            prefix = ()
+            checkpoint = build_batch_receipt(batch, membership=workset)
+        else:
+            try:
+                validate_batch_receipt(receipt)
+            except ValueError:
+                return {"verdict": "BATCH_STALE", "batch": batch,
+                        "requested": list(requested), "canonical": list(requested)}
+            workset = tuple(receipt["membership"])
+            if (receipt["batch_id"] != batch["batch_id"]
+                    or receipt["routing_digest"] != batch["routing_digest"]
+                    or receipt["spec_digest"] != batch["spec_digest"]
+                    or any(item not in exact for item in workset)
+                    or [exact.index(item) for item in workset] != sorted(exact.index(item) for item in workset)):
+                return {"verdict": "BATCH_STALE", "batch": batch,
+                        "requested": list(requested), "canonical": list(workset)}
+            prefix = tuple(receipt["completed_prefix"])
+            suffix = workset[len(prefix):]
+            if requested != suffix:
+                return {"verdict": "BATCH_REQUIRED", "batch": batch,
+                        "requested": list(requested), "canonical": list(suffix)}
+            checkpoint = receipt
         try:
-            for item in requested:
-                plan_item_state.build_states(plan_dir, item_id=item, check=True)
-                state = plan_item_state.state_model(plan_dir, item)[0]["state"]["position"]
-                if (state["status"] not in {"⬜ Not started", "🟡 In progress"}
-                        and not review_policy.pending_phase_repair(plan_dir, item)):
-                    raise plan_bundle.BundleError(f"item-not-ready: {item}: {state['status']}")
-                plan_bundle.build(plan_dir, item, check=True)
-                plan_bundle.producer_readiness(plan_dir, item)
-                fields = plan_bundle._fields(Path(plan_dir), item)
-                for field in ("Inputs", "Required Reads"):
-                    for raw in plan_bundle._raw_entries(fields.get(field, ""), field):
-                        producer = plan_admission.producer_annotation(raw)
-                        if producer:
-                            evidence = plan_item_state.material_terminal_evidence(plan_dir, producer)
-                            if evidence["result"] not in {"closed-green", "closed-deviations"}:
-                                raise plan_bundle.BundleError(f"dependency-not-ready: {producer}")
-                            terminal_policy.validate(evidence["decision"], result=evidence["result"],
-                                                     plan_dir=Path(plan_dir), item_id=producer)
+            for item in prefix:
+                evidence = plan_item_state.material_terminal_evidence(plan_dir, item)
+                if evidence["result"] not in {"closed-green", "closed-deviations"}:
+                    raise plan_bundle.BundleError(f"completed-prefix-not-terminal: {item}")
+                terminal_policy.validate(evidence["decision"], result=evidence["result"],
+                                         plan_dir=Path(plan_dir), item_id=item)
+            frontier = requested[0] if requested else None
+            if frontier is None:
+                raise plan_bundle.BundleError("workset-complete")
+            state = plan_item_state.state_model(plan_dir, frontier)[0]["state"]["position"]
+            if (state["status"] not in {"⬜ Not started", "🟡 In progress"}
+                    and not review_policy.pending_phase_repair(plan_dir, frontier)):
+                raise plan_bundle.BundleError(f"item-not-ready: {frontier}: {state['status']}")
+            # Dry rendering validates declarations without requiring a persistent
+            # bundle before the preparation owner has had a chance to build it.
+            plan_bundle.model(plan_dir, frontier)
+            plan_bundle.producer_readiness(plan_dir, frontier)
+            fields = plan_bundle._fields(Path(plan_dir), frontier)
+            for field in ("Inputs", "Required Reads"):
+                for raw in plan_bundle._raw_entries(fields.get(field, ""), field):
+                    producer = plan_admission.producer_annotation(raw)
+                    if producer:
+                        evidence = plan_item_state.material_terminal_evidence(plan_dir, producer)
+                        if evidence["result"] not in {"closed-green", "closed-deviations"}:
+                            raise plan_bundle.BundleError(f"dependency-not-ready: {producer}")
+                        terminal_policy.validate(evidence["decision"], result=evidence["result"],
+                                                 plan_dir=Path(plan_dir), item_id=producer)
         except (plan_bundle.BundleError, plan_item_state.ItemStateError,
                 terminal_policy.TerminalPolicyError, review_policy.ReviewPolicyError) as exc:
             return {"verdict": "BATCH_STALE", "batch": batch,
-                    "requested": list(requested), "canonical": list(exact),
+                    "requested": list(requested), "canonical": list(workset),
                     "reason": str(exc)}
         return {"verdict": "ALLOW", "batch": batch,
-                "requested": list(requested), "canonical": list(requested)}
+                "requested": list(requested), "canonical": list(workset),
+                "batch_receipt": checkpoint}
     if requested == exact:
         return {"verdict": "ALLOW", "batch": batch, "requested": list(requested), "canonical": list(exact)}
     if batch["batch_id"].lower() == "solo":

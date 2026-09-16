@@ -269,17 +269,19 @@ class LifecycleScenarios(unittest.TestCase):
                     journal.append(plan, entry)
                 self.assertEqual((plan / 'journal.jsonl').read_bytes(), before)
 
-    def test_prepare_refuses_stale_state_and_unknown_risk(self):
+    def test_prepare_repairs_stale_selected_state_before_snapshot(self):
         with tempfile.TemporaryDirectory() as temporary:
             plan = write_valid_plan(Path(temporary), 'STALE-PREPARE', layout='v2')
             journal.append(plan, journal.new_entry(plan_id=plan.name, item_id='P1.1', command='plan-run',
                                                   actor='implementation/high', result='in-progress'))
             argv = [sys.executable, str(ROOT / 'packages/task/scripts/plan-session.py'), 'prepare',
                     '--plan-dir', str(plan), '--item', 'P1.1', '--risk']
-            for risk in ('none', 'security_auth'):
-                result = subprocess.run([*argv, risk], capture_output=True, text=True)
-                self.assertEqual(result.returncode, 1)
-                self.assertIn('ERROR:', result.stderr)
+            repaired = subprocess.run([*argv, 'none'], capture_output=True, text=True)
+            self.assertEqual(repaired.returncode, 0, repaired.stderr)
+            self.assertIn('"snapshot_sha256"', repaired.stdout)
+            unknown = subprocess.run([*argv, 'security_auth'], capture_output=True, text=True)
+            self.assertEqual(unknown.returncode, 1)
+            self.assertIn('ERROR:', unknown.stderr)
 
     def test_prepare_rechecks_state_after_concurrent_journal_append(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -312,8 +314,10 @@ class LifecycleScenarios(unittest.TestCase):
             for item in ('P1.1', 'P1.2'):
                 plan_item_state.build_states(plan, item_id=item)
                 plan_bundle.build(plan, item)
-            for order in (('P1.1',), ('P1.1', 'P1.2'), ('P1.2', 'P1.1')):
+            for order in (('P1.1',), ('P1.1', 'P1.2')):
                 self.assertEqual(task_contract.admit_batch(plan, order)['verdict'], 'ALLOW')
+            self.assertEqual(task_contract.admit_batch(plan, ('P1.2', 'P1.1'))['verdict'],
+                             'BATCH_REQUIRED')
             closed = terminal_policy.build_decision(plan, 'P1.1', result='closed-green',
                 validation=[{'carrier': 'fixture', 'status': 'green', 'evidence_ids': ['test:done']}])
             journal.append(plan, journal.new_entry(plan_id=plan.name, item_id='P1.1', command='plan-run',

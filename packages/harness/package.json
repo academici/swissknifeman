@@ -1,6 +1,6 @@
 {
   "name": "@academici/harness",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "private": true,
   "license": "MIT",
   "description": "Настройка окружения Claude Code: пресеты permissions, режимы auto-approve/bypass, MCP-серверы, хуки",

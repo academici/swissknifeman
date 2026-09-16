@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
-Canonical SHA-256: sha256:fc87cc465062aecc166c7f9e7cff56fd85fdf3e45f69754f8a67abc4851e042b
-Adapter: task.codex-command/1.0.14
+Canonical SHA-256: sha256:bbf90c5f3b616c1a8837de01d591a2252cf80d9a89318d0e4ff65ea63acb81a5
+Adapter: task.codex-command/1.0.15
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
 
@@ -74,9 +74,9 @@ evidence.
 
 Invocation payload: `$ARGUMENTS`.
 
-Read `runtime/plan-protocol/SKILL.md` from the configured Task package root (the same
-root that contains `lib/task/`) before using the plan schema. Its adjacent `references/` and
-`snippets/` are delivered on demand with Task; a separate CORE skill is not required.
+Read `runtime/plan-protocol/references/common-principles.md` and
+`runtime/plan-protocol/references/execution-mode.md` from the configured Task package root.
+The full schema canon and snippets are on-demand references, not mandatory reconciliation context.
 
 Reconcile only declared terminal evidence. `task_contract` owns both write-site predicates and the sole
 exact executable Routing compiler;

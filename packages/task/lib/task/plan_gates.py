@@ -801,7 +801,23 @@ def lint_bundle_freshness(plan_dir, layout: str, diag) -> None:
     except plan_layout.PlanLayoutError as exc:
         _bundle_error(diag, plan_dir / "status.md", f"не удалось определить активную фазу: {exc}")
         return
-    active_items = [item for item in measured["items"]
+    ready_items = [item for item in measured["items"]
+                   if item.get("admission_state") == "ready"
+                   and item.get("admission_pass") is True
+                   and item.get("status") not in TERMINAL_ITEM_STATUSES]
+    # Design/static admission validates declarations for every directly
+    # executable item, including a ready item in a not-yet-active phase.  This
+    # is a dry render only: persistent bundles remain limited to the selected
+    # execution frontier below.
+    for item in ready_items:
+        try:
+            plan_bundle.model(plan_dir, item["item_id"])
+        except plan_bundle.BundleError as exc:
+            target = plan_layout.carrier_path(plan_dir, "bundle", item_id=item["item_id"])
+            _bundle_error(diag, target,
+                          f"пункт {item['item_id']}: declaration-not-renderable: {exc}")
+
+    active_items = [item for item in ready_items
                     if item.get("admission_state") == "ready"
                     and item["item_id"].split(".", 1)[0] in active_phases
                     and item.get("status") not in TERMINAL_ITEM_STATUSES]
@@ -824,8 +840,6 @@ def lint_bundle_freshness(plan_dir, layout: str, diag) -> None:
                for item in active_items):
         return
     for item in active_items:
-        if item.get("admission_state") != "ready":
-            continue
         item_id = item["item_id"]
         target = plan_layout.carrier_path(plan_dir, "bundle", item_id=item_id)
         try:

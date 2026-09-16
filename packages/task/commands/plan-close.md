@@ -6,9 +6,9 @@ effort: low
 ---
 Invocation payload: `$ARGUMENTS`.
 
-Read `runtime/plan-protocol/SKILL.md` from the configured Task package root (the same
-root that contains `lib/task/`) before using the plan schema. Its adjacent `references/` and
-`snippets/` are delivered on demand with Task; a separate CORE skill is not required.
+Read `runtime/plan-protocol/references/common-principles.md` and
+`runtime/plan-protocol/references/execution-mode.md` from the configured Task package root.
+The full schema canon and snippets are on-demand references, not mandatory reconciliation context.
 
 Reconcile only declared terminal evidence. `task_contract` owns both write-site predicates and the sole
 exact executable Routing compiler;

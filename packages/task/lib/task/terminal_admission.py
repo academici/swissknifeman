@@ -436,11 +436,12 @@ def pre_final_open_runs(project_root: Path, provider_session: str) -> dict:
     Only live project plan journals are inspected; archives and other projects are
     excluded. Observation events do not terminate a run. No product state is written.
     """
-    from task import journal, plan_item_state
+    from task import journal, plan_item_state, task_contract
 
     if not provider_session:
         raise AdmissionError("TERMINAL_ADMISSION_CONTEXT_INVALID", "нет provider session")
     observed = []
+    worksets = []
     for path in sorted((Path(project_root) / "plans").glob("*/journal.jsonl")):
         rows = path.read_text(encoding="utf-8").splitlines()
         events = []
@@ -471,11 +472,51 @@ def pre_final_open_runs(project_root: Path, provider_session: str) -> dict:
                 raise AdmissionError("TASK_FINAL_STATE_UNAVAILABLE", str(path))
             observed.append({"plan_id": path.parent.name, "item_id": subject,
                              "run_id": latest["run_id"], "state": latest["result"]})
-    blocked = any(row["state"] == "in-progress" for row in observed)
+        receipts = []
+        for event in events:
+            receipt = event.get("batch_receipt")
+            if event.get("session_id") != provider_session or receipt is None:
+                continue
+            try:
+                task_contract.validate_batch_receipt(receipt)
+            except ValueError as exc:
+                raise AdmissionError("TASK_FINAL_STATE_UNAVAILABLE", str(path)) from exc
+            identity = (receipt["batch_id"], receipt["invocation_digest"])
+            if identity not in {(row[0], row[1]) for row in receipts}:
+                receipts.append((identity[0], identity[1], receipt))
+        positions = {}
+        subjects = {event.get("item_id") for event in events
+                    if re.fullmatch(r"P\d+\.\d+", str(event.get("item_id", "")))}
+        for subject in subjects:
+            latest = plan_item_state.latest_execution_event(
+                [event for event in events if event.get("item_id") == subject])
+            if latest is not None:
+                positions[subject] = latest
+        for _batch_id, _digest, receipt in receipts:
+            remaining = []
+            boundary = None
+            for member in receipt["membership"]:
+                state = positions.get(member, {}).get("result")
+                if state in {"closed-green", "closed-deviations"}:
+                    continue
+                if state in {"blocked", "escalated"}:
+                    boundary = {"item_id": member, "state": state}
+                    break
+                remaining = receipt["membership"][receipt["membership"].index(member):]
+                break
+            worksets.append({"plan_id": path.parent.name, "batch_id": receipt["batch_id"],
+                             "membership": receipt["membership"], "remaining": remaining,
+                             "terminal_boundary": boundary})
+    open_run = any(row["state"] == "in-progress" for row in observed)
+    incomplete_workset = any(row["remaining"] and row["terminal_boundary"] is None
+                             for row in worksets)
+    blocked = open_run or incomplete_workset
     verdict = {"final_allowed": not blocked,
-               "reason": "TASK_OPEN_RUN_FINAL_FORBIDDEN" if blocked else "NO_OPEN_SESSION_RUN",
-               "observed": observed}
-    if observed:
+               "reason": ("TASK_OPEN_RUN_FINAL_FORBIDDEN" if open_run else
+                          "TASK_WORKSET_INCOMPLETE" if incomplete_workset else
+                          "NO_OPEN_SESSION_RUN"),
+               "observed": observed, "worksets": worksets}
+    if observed or worksets:
         store = FileStore(Path(project_root) / ".swissknifeman/terminal-admission")
         # Reuse the local admission journal; no response or user text is retained.
         with store._locked():

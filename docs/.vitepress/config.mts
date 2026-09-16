@@ -13,9 +13,9 @@ export default withMermaid(defineConfig({
     'Зонтик экосистемы academici: скиллы (skiller), окружение Claude Code (harness), память и граф (maind)',
   base: '/swissknifeman/',
   lastUpdated: true,
-  // roadmap/ живёт в корне репо (вне srcDir доков) — ссылки на него из docs/reference.md
-  // указывают на реальные файлы репозитория, но не на страницы сайта: не считаем мёртвыми.
-  ignoreDeadLinks: [/roadmap\//],
+  // roadmap/ и tasks/ живут в корне репо (вне srcDir доков) — ссылки на них указывают
+  // на реальные source/evidence files репозитория, но не на страницы сайта.
+  ignoreDeadLinks: [/roadmap\//, /tasks\//],
 
   themeConfig: {
     nav: [

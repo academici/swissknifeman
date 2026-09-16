@@ -83,7 +83,14 @@ class PlanRecoveryTests(unittest.TestCase):
         self.assertIn("🟡 In progress", (self.plan / "phases/P1/P1.1.state.md").read_text())
 
     def test_interruption_between_journal_and_state_projection_recovers_without_second_start(self):
-        with patch("task.plan_item_state.build_states", side_effect=OSError("interrupted")):
+        original_builder = plan_item_state.build_states
+        calls = [0]
+        def interrupt_after_start(*args, **kwargs):
+            calls[0] += 1
+            if calls[0] == 3:
+                raise OSError("interrupted")
+            return original_builder(*args, **kwargs)
+        with patch("task.plan_item_state.build_states", side_effect=interrupt_after_start):
             with self.assertRaisesRegex(OSError, "interrupted"):
                 self.start()
         original = (self.plan / "journal.jsonl").read_bytes()
@@ -144,11 +151,24 @@ class PlanRecoveryTests(unittest.TestCase):
         self.assertEqual(first["run_id"], second["run_id"])
         self.assertEqual(len((self.plan / "journal.jsonl").read_text().splitlines()), 1)
 
-    def test_resume_still_refuses_an_incomplete_five_carrier_snapshot(self):
+    def test_resume_repairs_a_missing_deterministic_bundle_before_snapshot(self):
         self.start()
         (self.plan / "bundles/P1.1.json").unlink()
-        with self.assertRaisesRegex(plan_context.PlanContextError, "PLAN_CONTEXT_TRUNCATED"):
-            self.start(session_id="two")
+        resumed = self.start(session_id="two")
+        self.assertEqual(resumed["mode"], "resume")
+        self.assertTrue((self.plan / "bundles/P1.1.json").is_file())
+        plan_context.capture(self.plan, "P1.1")
+
+    def test_prepare_names_the_unresolvable_entry_and_recovery_command(self):
+        spec = self.plan / "phases/P1/P1.1.md"
+        spec.write_text(spec.read_text().replace(
+            "**Inputs:** `lib/pkg/config.py`.",
+            "**Inputs:** `lib/pkg/config.py`; explanatory policy prose."), encoding="utf-8")
+        with self.assertRaises(plan_recovery.RecoveryError) as raised:
+            plan_recovery.prepare(self.plan, "P1.1")
+        self.assertEqual(raised.exception.code, "PLAN_BUNDLE_UNRESOLVABLE")
+        self.assertIn("explanatory policy prose", raised.exception.verdict["entry"])
+        self.assertIn("plan-views.py bundle", raised.exception.verdict["recovery_command"])
 
     def test_start_contract_cannot_be_reused_for_another_item(self):
         with patch("task.task_contract.pre_mutation", return_value=None):

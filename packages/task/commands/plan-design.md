@@ -6,9 +6,9 @@ effort: high
 ---
 Invocation payload: `$ARGUMENTS`.
 
-Read `runtime/plan-protocol/SKILL.md` from the configured Task package root (the same
-root that contains `lib/task/`) before using the plan schema. Its adjacent `references/` and
-`snippets/` are delivered on demand with Task; a separate CORE skill is not required.
+Read `runtime/plan-protocol/references/common-principles.md` and
+`runtime/plan-protocol/references/design-mode.md` from the configured Task package root.
+The full schema canon and snippets are on-demand references, not mandatory execution context.
 
 Design creates a v2 plan contract, not a second execution protocol. Read repository evidence,
 declare `Phase Assurance | v1` in every new phase (impact, named seams, live/irreversible,

@@ -71,7 +71,10 @@ def production_requirements(root: Path = ROOT) -> tuple[tuple[str, str, str, fro
         rows.append(("skiller.publication", provider.value, "skills.repository",
                      frozenset({"native", "adapted"})))
     routing = json.loads((root / "packages/task/configs/command-routing.json").read_text())
+    task_providers = set(routing["mappings"])
     for provider in ProviderId:
+        if provider.value not in task_providers:
+            continue
         for command in routing["commands"]:
             for capability in command["capability_requirements"]:
                 rows.append((f"task.{command['command_id']}", provider.value, capability,
@@ -149,11 +152,12 @@ def conformance(root: Path = ROOT) -> dict[str, object]:
 
 
 def _matrix(manifest) -> str:
-    lines = ["| Capability | Claude Code | Codex |", "|:--|:--:|:--:|"]
+    lines = ["| Capability | Claude Code | Codex | Cursor |", "|:--|:--:|:--:|:--:|"]
     for capability in manifest.capabilities:
         levels = {row.provider_id: row.level.value for row in capability.support}
-        lines.append(f"| `{capability.capability_id.value}` | {levels[ProviderId.CLAUDE_CODE]} | "
-                     f"{levels[ProviderId.CODEX]} |")
+        lines.append(
+            f"| `{capability.capability_id.value}` | {levels[ProviderId.CLAUDE_CODE]} | "
+            f"{levels[ProviderId.CODEX]} | {levels[ProviderId.CURSOR]} |")
     return "\n".join(lines)
 
 

@@ -165,18 +165,25 @@ def _validate_secret_references(server, record):
 
 
 def plan_mcp_artifact(plan: McpProjection, *, catalog_path: Path, bindings_path: Path):
-    """Codex MCP is a P2 whole-file artifact; Claude keeps its merge-only writer."""
-    if plan.provider_id is not ProviderId.CODEX:
+    """Codex/Cursor MCP is a P2 whole-file artifact; Claude keeps its merge-only writer."""
+    if plan.provider_id not in (ProviderId.CODEX, ProviderId.CURSOR):
         raise ValueError("HARNESS_MAPPING_MISSING")
+    binding_label = ("harness.codex.mcp-bindings" if plan.provider_id is ProviderId.CODEX
+                     else "harness.cursor.mcp-bindings")
+    binding_relpath = ("packages/harness/configs/codex/mcp/bindings.json"
+                       if plan.provider_id is ProviderId.CODEX
+                       else "packages/harness/configs/cursor/mcp/bindings.json")
     sources = (
         ArtifactSource("harness.mcp.catalog", "packages/harness/configs/common/mcp/catalog.json",
                        sha256_digest(Path(catalog_path).read_bytes())),
-        ArtifactSource("harness.codex.mcp-bindings", "packages/harness/configs/codex/mcp/bindings.json",
+        ArtifactSource(binding_label, binding_relpath,
                        sha256_digest(Path(bindings_path).read_bytes())),
     )
-    identity = ArtifactAdapterIdentity("harness.codex.mcp", "1.0.0", ProviderId.CODEX, "1.0.0", ())
+    identity = ArtifactAdapterIdentity(f"harness.{plan.provider_id.value}.mcp", "1.0.0",
+                                       plan.provider_id, "1.0.0", ())
     return plan_artifact_render(ArtifactRenderRequest(
-        "harness.codex.mcp." + ".".join(server_id for server_id, _ in plan.servers), sources,
+        f"harness.{plan.provider_id.value}.mcp." + ".".join(server_id for server_id, _ in plan.servers),
+        sources,
         ArtifactTarget(plan.target_path, ("whole-file", ())), identity, (),
         {"target_scope": plan.target_scope, "server_ids": [server_id for server_id, _ in plan.servers],
          "secret_refs": list(plan.secret_refs)},
@@ -185,7 +192,7 @@ def plan_mcp_artifact(plan: McpProjection, *, catalog_path: Path, bindings_path:
 
 def render_mcp_projection(plan: McpProjection) -> bytes:
     """Serialize only the named projection.  Claude retains its merge-only writer."""
-    if plan.provider_id is ProviderId.CLAUDE_CODE:
+    if plan.provider_id in (ProviderId.CLAUDE_CODE, ProviderId.CURSOR):
         return (json.dumps({"mcpServers": dict(plan.servers)}, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
     lines = []
     for server_id, binding in plan.servers:

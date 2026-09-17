@@ -329,7 +329,7 @@ SKILL_LISTING_CONTEXT_WINDOW = 1_000_000
 CODEX_LISTING_FALLBACK_CHARS = 8_000
 CODEX_LISTING_BUDGET_FRACTION = 0.02
 
-LISTING_PROVIDERS = ("claude-code", "codex")
+LISTING_PROVIDERS = ("claude-code", "codex", "cursor")
 DEFAULT_LISTING_PROVIDER = "claude-code"
 
 MEASUREMENT_SURFACES = frozenset({"listing", "loaded-body", "runtime"})
@@ -457,8 +457,8 @@ def measure_listing_budget(skills, provider=DEFAULT_LISTING_PROVIDER):
             f"{', '.join(LISTING_PROVIDERS)})")
     all_dirs = [d for _bucket, _rel, d, _fm in skills]
     dirs, excluded = _split_listing_entries(all_dirs, provider)
-    entry = _listing_entry_chars if provider == "codex" else _listing_entry_tokens
-    if provider == "codex":
+    entry = _listing_entry_chars if provider in ("codex", "cursor") else _listing_entry_tokens
+    if provider in ("codex", "cursor"):
         budget = CODEX_LISTING_FALLBACK_CHARS
         unit = "симв"
         degradation = "скилл может быть выброшен из листинга целиком"
@@ -628,11 +628,11 @@ def listing_measurements(skills, *, observed_at=None, evaluated_at=None):
             model_family="unknown",
             surface="listing",
             value=legacy["raw"],
-            unit="characters" if provider == "codex" else "estimated_tokens",
-            method=("skiller:listing-characters-v1" if provider == "codex"
+            unit="characters" if provider in ("codex", "cursor") else "estimated_tokens",
+            method=("skiller:listing-characters-v1" if provider in ("codex", "cursor")
                     else "skiller:listing-token-estimate-v1"),
             uncertainty=("exact source characters; provider loading is estimated"
-                         if provider == "codex" else "heuristic token estimate"),
+                         if provider in ("codex", "cursor") else "heuristic token estimate"),
             measurement_class="estimate",
             observed_at=observed,
             expires_at=expires,
@@ -1086,7 +1086,7 @@ def cmd_budget(env, argv):
     if opts["help"]:
         print("skiller budget [--config F.json | --compare a,b | --target DIR]\n"
               "               [--profile P | --buckets a,b] [--exclude x,y]\n"
-              "               [--provider claude-code|codex] [--profiles]\n"
+              "               [--provider claude-code|codex|cursor] [--profiles]\n"
               "               [--no-core] [--json] [--write-map] [--check-core [--strict]]\n"
               "               [--first-turn [--json] [--strict]]\n"
               "  Трёхъярусный токеновый бюджет набора скиллов (⊕ always / ↻ on-trigger\n"
@@ -1102,7 +1102,7 @@ def cmd_budget(env, argv):
               "  установленных marketplace-плагинов проекта (`claude plugin list/details`)\n"
               "  аддитивными ключами `plugins`/`session_total`/`session_verdict` — без\n"
               "  флага вывод не меняется.\n"
-              "  --provider claude-code|codex (с --profile/--config/--target): добавляет к\n"
+              "  --provider claude-code|codex|cursor (с --profile/--config/--target): добавляет к\n"
               "  отчёту provider-aware бюджет обнаружения (листинга) и режим деградации;\n"
               "  без флага поведение не меняется (дефолт — claude-code).\n"
               "  --profiles: бюджет обнаружения КАЖДОГО поставляемого профиля против ОБОИХ\n"

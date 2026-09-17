@@ -99,9 +99,10 @@ def _claude_lifecycle_bindings():
     }
 
 
-def _load_codex_lifecycle_bindings(path):
+def _load_provider_lifecycle_bindings(path, *, provider_id: str):
     value = json.loads(Path(path).read_text(encoding="utf-8"))
-    if not isinstance(value, dict) or set(value) != {"provider_id", "bindings"} or value["provider_id"] != "codex":
+    if (not isinstance(value, dict) or set(value) != {"provider_id", "bindings"}
+            or value["provider_id"] != provider_id):
         raise ValueError("HARNESS_MAPPING_MISSING")
     rows = value["bindings"]
     if not isinstance(rows, list):
@@ -121,17 +122,33 @@ def _load_codex_lifecycle_bindings(path):
     return result
 
 
+def _load_codex_lifecycle_bindings(path):
+    return _load_provider_lifecycle_bindings(path, provider_id="codex")
+
+
+def _load_cursor_lifecycle_bindings(path):
+    return _load_provider_lifecycle_bindings(path, provider_id="cursor")
+
+
 def plan_lifecycle(catalog: ProfileCatalog, *, provider_id: ProviderId,
                    requests: tuple[LifecycleRequest, ...], trusted: bool,
-                   codex_bindings_path: Path | None = None) -> LifecycleRenderPlan:
+                   codex_bindings_path: Path | None = None,
+                   cursor_bindings_path: Path | None = None) -> LifecycleRenderPlan:
     """Resolve native bindings and diagnostics before any registration artifact is produced."""
     if not isinstance(catalog, ProfileCatalog) or not isinstance(provider_id, ProviderId):
         raise TypeError("catalog and provider_id are required")
     if len({request.surface_id for request in requests}) != len(requests):
         raise ValueError("HARNESS_CATALOG_MISMATCH")
-    adapters = {ProviderId.CLAUDE_CODE: _claude_lifecycle_bindings(),
-                ProviderId.CODEX: _load_codex_lifecycle_bindings(codex_bindings_path) if codex_bindings_path else None}
-    bindings = adapters.get(provider_id)
+    if provider_id is ProviderId.CLAUDE_CODE:
+        bindings = _claude_lifecycle_bindings()
+    elif provider_id is ProviderId.CODEX:
+        bindings = (_load_codex_lifecycle_bindings(codex_bindings_path)
+                    if codex_bindings_path else None)
+    elif provider_id is ProviderId.CURSOR:
+        path = cursor_bindings_path or codex_bindings_path
+        bindings = _load_cursor_lifecycle_bindings(path) if path else None
+    else:
+        bindings = None
     if bindings is None:
         raise ValueError("HARNESS_MAPPING_MISSING")
     valid = {surface.id for surface in catalog.surfaces if surface.kind in _LIFECYCLE_KINDS}
@@ -206,6 +223,116 @@ def render_codex_hooks(plan: LifecycleRenderPlan) -> bytes:
         hooks.setdefault(binding.event, []).append(group)
     return (json.dumps({"description": "Managed provider-native lifecycle hooks.", "hooks": hooks},
                        ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+
+
+def render_cursor_hooks(plan: LifecycleRenderPlan) -> bytes:
+    """Render Cursor-native hooks.json; only hook-native bindings are registered."""
+    if plan.provider_id is not ProviderId.CURSOR or not plan.green:
+        raise ValueError("cannot render refused lifecycle plan")
+    hooks = {}
+    for binding in plan.bindings:
+        if binding.support_level != "hook-native":
+            continue
+        entry = {"type": "command",
+                 "command": ('python3 "$(git rev-parse --show-toplevel)/.cursor/hooks/lifecycle.py" '
+                             f"--surface {binding.surface_id}"),
+                 "failClosed": True}
+        hooks.setdefault(binding.event, []).append({"hooks": [entry]})
+    return (json.dumps({"description": "Managed Cursor lifecycle hooks.", "hooks": hooks},
+                       ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+
+
+def render_cursor_hook_handler() -> bytes:
+    """Generate the Cursor safe-dirs dispatcher (beforeShellExecution only at P1)."""
+    return b'''#!/usr/bin/env python3
+import argparse, importlib.util, json, os, re, sys
+from pathlib import Path
+
+_RM_HEAD_RE = re.compile(r"\\b(rm|rmdir)\\b")
+_EVENT_FIELDS = {"beforeShellExecution": ("command",)}
+
+
+def _find_repo_root():
+    for name in ("swissknifeman", "skiller", "harness", "maind"):
+        import shutil
+        exe = shutil.which(name)
+        if not exe:
+            continue
+        d = os.path.dirname(os.path.realpath(exe))
+        for _ in range(6):
+            if os.path.isfile(os.path.join(d, ".claude-plugin", "marketplace.json")):
+                return d
+            parent = os.path.dirname(d)
+            if parent == d:
+                break
+            d = parent
+    return None
+
+
+def _safe_dirs(payload):
+    command = payload.get("command")
+    if not isinstance(command, str) or not _RM_HEAD_RE.search(command):
+        return
+    root = _find_repo_root()
+    if root is None:
+        sys.stderr.write("security.safe-dirs: refusing rm/rmdir - harness checkout unreachable\\n")
+        sys.exit(2)
+    module_path = os.path.join(root, "packages", "harness", "configs", "claude-code",
+                               "hooks", "auto-approve", "lib", "safedirs.py")
+    try:
+        spec = importlib.util.spec_from_file_location("cursor_safedirs", module_path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        home = os.path.expanduser("~")
+        cwd = payload.get("cwd") or os.getcwd()
+        allow = mod.load_allowlist(home)
+        safe = allow is not None and mod.command_is_safe(command, cwd, allow, home)
+    except Exception:
+        safe = False
+    if not safe:
+        sys.stderr.write(f"security.safe-dirs: refusing rm/rmdir - '{command}' is not covered by the safe-dirs allowlist\\n")
+        sys.exit(2)
+
+
+_HANDLERS = {"security.safe-dirs": _safe_dirs}
+_SURFACE_EVENTS = {"security.safe-dirs": "beforeShellExecution"}
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--surface", required=True)
+args = parser.parse_args()
+if args.surface not in _SURFACE_EVENTS:
+    sys.exit(2)
+try:
+    payload = json.load(sys.stdin)
+except (json.JSONDecodeError, TypeError):
+    sys.exit(2)
+if not isinstance(payload, dict):
+    sys.exit(2)
+event = _SURFACE_EVENTS[args.surface]
+required = {"session_id", "cwd", "hook_event_name"}
+required.update(_EVENT_FIELDS.get(event, ()))
+if not required.issubset(payload) or payload["hook_event_name"] != event:
+    sys.exit(2)
+_HANDLERS[args.surface](payload)
+'''
+
+
+def plan_cursor_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path: Path):
+    """P2 artifact seam for Cursor hooks registration and handler."""
+    if plan.provider_id is not ProviderId.CURSOR or not plan.green:
+        raise ValueError("cannot plan refused lifecycle artifact")
+    source = ArtifactSource("harness.cursor.lifecycle-bindings",
+                            "packages/harness/configs/cursor/hooks/lifecycle-context-bindings.json",
+                            sha256_digest(Path(bindings_path).read_bytes()))
+    identity = ArtifactAdapterIdentity("harness.cursor.lifecycle", _CODEX_HOOK_ADAPTER_VERSION,
+                                       ProviderId.CURSOR, "1.0.0", ())
+    hooks = plan_artifact_render(ArtifactRenderRequest("harness.cursor.lifecycle.hooks", (source,),
+        ArtifactTarget(".cursor/hooks.json", ("whole-file", ())), identity, (), {},
+        lambda _request: render_cursor_hooks(plan)))
+    handler = plan_artifact_render(ArtifactRenderRequest("harness.cursor.lifecycle.handler", (source,),
+        ArtifactTarget(".cursor/hooks/lifecycle.py", ("whole-file", ())), identity, (), {},
+        lambda _request: render_cursor_hook_handler()))
+    return hooks, handler
 
 
 _CODEX_ROUTER_CATALOG_PATH = ("packages/harness/configs/claude-code/hooks/"

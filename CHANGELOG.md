@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Cursor third provider (P0–P2, cold-start S2).** `ProviderId.CURSOR` и полная
+  36-строчная capability matrix (`8 native` / `7 adapted` / `21 unsupported`);
+  harness-адаптер `packages/harness/configs/cursor/` (profile bindings, MCP,
+  permissions/cli render, lifecycle hooks, `.cursor/rules/*.mdc`); conformance
+  tests по design-freeze §3.6; skiller `render_cursor_publication` и listing budget
+  для `cursor` без dual-write `.agents` + `.cursor`.
+
 ## [0.19.0] - 2026-09-16
 
 ### Added

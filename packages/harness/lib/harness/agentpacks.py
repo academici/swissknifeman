@@ -757,12 +757,12 @@ def cmd_agent_packs(env, argv):
         print("harness agent-packs <list|render|upgrade|remove|doctor> "
               "[--pack P] [--target DIR] [--auto] [--answer K=V] "
               "[--install-only] [--allow-shell off|safe|full] [--dry-run] [--json] "
-              "[--drift [--strict]] [--provider claude-code|codex]")
+              "[--drift [--strict]] [--provider claude-code|codex|cursor]")
         return
     shell_policy = opts.get("allow_shell") or "safe"
     provider = opts.get("provider") or "claude-code"
     if provider not in ("claude-code", "codex"):
-        die(f"--provider неизвестен: {provider} (claude-code|codex)")
+        die(f"--provider неизвестен: {provider} (claude-code|codex|cursor)")
 
     if provider == "codex":
         if sub not in ("render", "remove", "doctor"):

@@ -13,8 +13,8 @@ from core import (ProviderId, ProviderManifestError, SupportLevel,
 
 ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_PATH = ROOT / "configs" / "provider-capabilities.json"
-APPROVED_CANONICAL_SHA256 = "ef84f7e1a1fd47cc04ddec2ccc62dcc99887730bc84870041354cee97a13e8cc"
-APPROVED_CARRIER_SHA256 = "7298d50fa9953353151d6c51502e98d8d15adfeeb3ff8b1f2c50cc0e741f37b2"
+APPROVED_CANONICAL_SHA256 = "43b252d393b302633624d3a3589ecd9d576fafedf2c068e2d0806a096f045ae8"
+APPROVED_CARRIER_SHA256 = "2e5144b97745c655ef1d7ecd10354e6095f45246569a13f80c74b8eb5fbe93d8"
 
 REGENERATION_DIAGNOSTIC = (
     "manifest hash mismatch — configs/provider-capabilities.json was likely "
@@ -60,7 +60,7 @@ class TestProviderManifest(unittest.TestCase):
         self.assertEqual(parse_provider_manifest(raw),
                          parse_provider_manifest(provider_manifest_canonical_bytes(manifest)))
         self.assertEqual((len(manifest.providers), len(manifest.capabilities),
-                          len(manifest.native_extensions)), (2, 36, 0))
+                          len(manifest.native_extensions)), (3, 36, 0))
 
     def test_contract_compatibility_accepts_v1_minor_and_rejects_next_major(self):
         compatible = manifest_value()
@@ -93,7 +93,7 @@ class TestProviderManifest(unittest.TestCase):
         manifest = load_provider_manifest(MANIFEST_PATH)
         catalog = provider_config_catalog(manifest)
         self.assertEqual(catalog.catalog_version, "1.0.0")
-        self.assertEqual(len(catalog.capability_support), 72)
+        self.assertEqual(len(catalog.capability_support), 108)
         for provider in ProviderId:
             projection = provider_support_projection(manifest, provider)
             self.assertEqual(len(projection), 36)

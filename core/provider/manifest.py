@@ -25,7 +25,8 @@ _CONTRACT_MAJOR = 1
 _SEMVER_RE = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
 _IDENTIFIER_RE = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$")
 _DATE_RE = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
-_DISPLAY_NAMES = {ProviderId.CLAUDE_CODE: "Claude Code", ProviderId.CODEX: "Codex"}
+_DISPLAY_NAMES = {ProviderId.CLAUDE_CODE: "Claude Code", ProviderId.CODEX: "Codex",
+                  ProviderId.CURSOR: "Cursor"}
 _ENVELOPE_KEYS = frozenset({"contract_version", "catalog_version", "providers",
                             "capabilities", "native_extensions"})
 _PROVIDER_KEYS = frozenset({"id", "display_name"})
@@ -266,7 +267,7 @@ def _providers(value, diagnostics):
     required = set(ProviderId)
     if set(providers) != required:
         diagnostics.append(_diag("MANIFEST_PROVIDER_INVALID", "/providers",
-                                 "v1 requires exactly claude-code and codex"))
+                                 "v1 requires exactly one row per ProviderId"))
     return providers, records
 
 

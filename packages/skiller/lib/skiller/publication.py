@@ -38,13 +38,25 @@ _CODEX_ADAPTER = ArtifactAdapterIdentity(
                            (SupportLevel.NATIVE, SupportLevel.ADAPTED)),),
 )
 
+_CURSOR_ADAPTER = ArtifactAdapterIdentity(
+    "skiller.cursor-publication", "1.0.0", ProviderId.CURSOR, "1.0.0",
+    (CapabilityRequirement(CapabilityId("skills.repository"),
+                           (SupportLevel.NATIVE, SupportLevel.ADAPTED)),),
+)
+
+_PUBLICATION_ADAPTERS = {
+    ProviderId.CLAUDE_CODE: _CLAUDE_ADAPTER,
+    ProviderId.CODEX: _CODEX_ADAPTER,
+    ProviderId.CURSOR: _CURSOR_ADAPTER,
+}
+
 
 def validate_publication_capabilities(provider_id: ProviderId, *, manifest_path=None):
     """Fail closed against the root manifest before publication bytes are rendered."""
     manifest_path = Path(manifest_path) if manifest_path is not None else (
         Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json")
     manifest = load_provider_manifest(manifest_path)
-    identity = _CLAUDE_ADAPTER if provider_id is ProviderId.CLAUDE_CODE else _CODEX_ADAPTER
+    identity = _PUBLICATION_ADAPTERS[provider_id]
     gate = AdapterCatalog((AdapterDescriptor(
         "skills.publication", identity, lambda _request: b""),)).select(
             provider_id=provider_id, artifact_kind="skills.publication",
@@ -401,6 +413,24 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
         marketplace, tuple(catalog.skills) + codex_siblings,
         repo_root, catalog.package_version))
     return tuple(artifacts)
+
+
+def render_cursor_publication(catalog: PublicationCatalog, *, repo_root: Path,
+                              manifest_path=None) -> tuple[()]:
+    """Ownership assertion only: Cursor reads ``.agents/skills`` natively (D8).
+
+    No ``.cursor/skills`` writer ships in P0–P2; skiller must not dual-write the skill tree.
+    """
+    validate_publication_capabilities(ProviderId.CURSOR, manifest_path=manifest_path)
+    if not isinstance(catalog, PublicationCatalog):
+        raise TypeError("catalog must be PublicationCatalog")
+    agents_skills = repo_root.resolve() / ".agents" / "skills"
+    if not agents_skills.is_dir():
+        raise ValueError("SPUB_OWNERSHIP_ASSERTION_FAILED: .agents/skills is missing")
+    cursor_skills = repo_root.resolve() / ".cursor" / "skills"
+    if cursor_skills.is_dir() and any(cursor_skills.iterdir()):
+        raise ValueError("SPUB_OWNERSHIP_CONFLICT: .cursor/skills must not be a second writer")
+    return ()
 
 
 def _codex_plugin_manifest(name: str, version: str, description: str,

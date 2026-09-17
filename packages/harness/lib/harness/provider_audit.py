@@ -21,6 +21,7 @@ from .hooks import LifecycleRequest, plan_codex_lifecycle_artifacts, plan_lifecy
 from .mcp import (load_mcp_catalog, plan_mcp_artifact, plan_mcp_projection,
                   render_mcp_projection)
 from .profiles import load_catalog, resolve_profile
+from .cursor_render import assert_rule_frontmatter, cursor_profile_target, render_cursor_rules
 from .provider_render import plan_profile_artifact, render_profile
 
 
@@ -103,9 +104,32 @@ def audited_paths(package_root: Path) -> tuple[Path, ...]:
         root / "configs/codex/hooks/lifecycle-context-bindings.json",
         root / "configs/claude-code/mcp/bindings.json",
         root / "configs/codex/mcp/bindings.json",
+        root / "configs/cursor/config/profile-bindings.json",
+        root / "configs/cursor/hooks/lifecycle-context-bindings.json",
+        root / "configs/cursor/mcp/bindings.json",
         root / "configs/claude-code/agent-packs/role-bindings.json",
     )
     return tuple(sorted(paths))
+
+
+def _profile_bindings_path(root: Path, provider: ProviderId) -> Path:
+    if provider is ProviderId.CURSOR:
+        return root / "configs/cursor/config/profile-bindings.json"
+    return root / "configs/codex/config/profile-bindings.json"
+
+
+def _lifecycle_bindings_path(root: Path, provider: ProviderId) -> Path:
+    if provider is ProviderId.CURSOR:
+        return root / "configs/cursor/hooks/lifecycle-context-bindings.json"
+    return root / "configs/codex/hooks/lifecycle-context-bindings.json"
+
+
+def _mcp_bindings_path(root: Path, provider: ProviderId) -> Path:
+    if provider is ProviderId.CLAUDE_CODE:
+        return root / "configs/claude-code/mcp/bindings.json"
+    if provider is ProviderId.CURSOR:
+        return root / "configs/cursor/mcp/bindings.json"
+    return root / "configs/codex/mcp/bindings.json"
 
 
 def _fixture(path):
@@ -146,24 +170,42 @@ def audit_package(package_root: Path, fixture_path: Path | None = None, *,
             diagnostics.append(f"HARNESS_CATALOG_MISMATCH:actual:{name}")
     # Independent provider projections: profile, lifecycle, MCP and every role.
     for provider in ProviderId:
-        bindings = root / "configs/codex/config/profile-bindings.json"
+        profile_bindings = _profile_bindings_path(root, provider)
+        cursor_bindings = profile_bindings if provider is ProviderId.CURSOR else None
         for profile in catalog.profiles:
             resolution = resolve_profile(catalog, provider_id=provider, profile_id=profile.id,
                 target_scope="project", trusted=True,
                 operation_id="self-host-apply" if profile.id == "trusted-full-access" else None,
                 target_identity="repo:fixture" if profile.id == "trusted-full-access" else None,
                 origin="operation", effective_provider=EffectiveProvider(provider, True))
-            if not resolution.green or not render_profile(resolution, codex_bindings_path=bindings):
+            try:
+                rendered = (render_profile(resolution, codex_bindings_path=profile_bindings,
+                                           cursor_bindings_path=cursor_bindings)
+                            if resolution.green else b"")
+            except ValueError as error:
+                if provider is ProviderId.CURSOR and "HARNESS_CURSOR" in str(error):
+                    evidence.append(("security", provider.value, f"profile:{profile.id}", "negative",
+                                     "refused", str(error)))
+                    continue
+                diagnostics.append(f"HARNESS_MAPPING_MISSING:{provider.value}:profile:{profile.id}")
+                continue
+            if not resolution.green or not rendered:
                 diagnostics.append(f"HARNESS_MAPPING_MISSING:{provider.value}:profile:{profile.id}")
             else:
-                rendered = render_profile(resolution, codex_bindings_path=bindings)
                 render_hashes.append((f"profile:{provider.value}:{profile.id}", _bytes_hash(rendered)))
                 evidence.append(("security", provider.value, f"profile:{profile.id}", "positive",
                                  "supported", "HARNESS_PROFILE_RESOLVED"))
+                if provider is ProviderId.CURSOR and resolution.green:
+                    for path, content in render_cursor_rules(resolution).items():
+                        assert_rule_frontmatter(path, content)
+                        render_hashes.append((f"rule:{provider.value}:{Path(path).name}", _bytes_hash(content)))
         requests = tuple(LifecycleRequest(surface.id, False) for surface in catalog.surfaces
                          if surface.kind in {"lifecycle", "context", "security"})
-        lifecycle = plan_lifecycle(catalog, provider_id=provider, trusted=True, requests=requests,
-                                  codex_bindings_path=root / "configs/codex/hooks/lifecycle-context-bindings.json")
+        lifecycle_path = _lifecycle_bindings_path(root, provider)
+        lifecycle = plan_lifecycle(
+            catalog, provider_id=provider, trusted=True, requests=requests,
+            codex_bindings_path=lifecycle_path if provider is ProviderId.CODEX else None,
+            cursor_bindings_path=lifecycle_path if provider is ProviderId.CURSOR else None)
         unsupported = {item.surface_id: item.code for item in lifecycle.diagnostics}
         for binding in lifecycle.bindings:
             code = unsupported.get(binding.surface_id, "")
@@ -174,7 +216,7 @@ def audit_package(package_root: Path, fixture_path: Path | None = None, *,
                              "unsupported" if code else "supported", code or "HARNESS_ACTIVATION_NATIVE"))
             if code and code != "HARNESS_ACTIVATION_UNSUPPORTED":
                 diagnostics.append(f"{code}:{provider.value}:{binding.surface_id}")
-        bindings_path = root / ("configs/claude-code/mcp/bindings.json" if provider is ProviderId.CLAUDE_CODE else "configs/codex/mcp/bindings.json")
+        bindings_path = _mcp_bindings_path(root, provider)
         mcp_plan = plan_mcp_projection(mcp, provider_id=provider, bindings_path=bindings_path,
                                        selected=actual["mcp"], trusted=True)
         mcp_render = render_mcp_projection(mcp_plan)
@@ -201,30 +243,35 @@ def audit_package(package_root: Path, fixture_path: Path | None = None, *,
             root / "configs/claude-code/agent-packs/role-bindings.json", roles)
             if provider is ProviderId.CLAUDE_CODE else None)
         agent_artifacts = []
-        for role in roles:
-            try:
-                artifact = plan_agent_artifact(
-                    role, provider_id=provider.value, catalog_path=roles_path,
-                    claude_bindings_path=(root / "configs/claude-code/agent-packs/role-bindings.json"
-                                          if provider is ProviderId.CLAUDE_CODE else None),
-                    claude_bindings=claude_role_bindings)
-            except ValueError as error:
-                if "HARNESS_ACTIVATION_UNSUPPORTED" in str(error):
-                    evidence.append(("activation", provider.value,
-                                     f"role:{role.pack_id}.{role.role_id}", "negative", "unsupported",
-                                     str(error)))
+        if provider is not ProviderId.CURSOR:
+            for role in roles:
+                try:
+                    artifact = plan_agent_artifact(
+                        role, provider_id=provider.value, catalog_path=roles_path,
+                        claude_bindings_path=(root / "configs/claude-code/agent-packs/role-bindings.json"
+                                              if provider is ProviderId.CLAUDE_CODE else None),
+                        claude_bindings=claude_role_bindings)
+                except ValueError as error:
+                    if "HARNESS_ACTIVATION_UNSUPPORTED" in str(error):
+                        evidence.append(("activation", provider.value,
+                                         f"role:{role.pack_id}.{role.role_id}", "negative", "unsupported",
+                                         str(error)))
+                    else:
+                        diagnostics.append(f"{error}:{provider.value}:agents")
                 else:
-                    diagnostics.append(f"{error}:{provider.value}:agents")
-            else:
-                agent_artifacts.append(artifact)
-                render_hashes.append((f"agent:{provider.value}:{role.pack_id}.{role.role_id}",
-                                      _bytes_hash(artifact.managed_bytes)))
-                evidence.append(("activation", provider.value,
-                                 f"role:{role.pack_id}.{role.role_id}", "positive", "supported",
-                                 "HARNESS_AGENT_ACTIVATION_NATIVE"))
+                    agent_artifacts.append(artifact)
+                    render_hashes.append((f"agent:{provider.value}:{role.pack_id}.{role.role_id}",
+                                          _bytes_hash(artifact.managed_bytes)))
+                    evidence.append(("activation", provider.value,
+                                     f"role:{role.pack_id}.{role.role_id}", "positive", "supported",
+                                     "HARNESS_AGENT_ACTIVATION_NATIVE"))
         verified_count = _verify_agent_artifact_plans(provider, tuple(agent_artifacts))
-        evidence.append(("activation", provider.value, "agents.catalog", "positive", "supported",
-                         f"HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:{verified_count}"))
+        if provider is ProviderId.CURSOR:
+            evidence.append(("activation", provider.value, "agents.catalog", "negative", "unsupported",
+                             "HARNESS_ACTIVATION_UNSUPPORTED:cursor:agents.catalog:P0"))
+        else:
+            evidence.append(("activation", provider.value, "agents.catalog", "positive", "supported",
+                             f"HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:{verified_count}"))
         _append_security_evidence(catalog, provider, evidence)
         _append_secret_negative_evidence(mcp, provider, bindings_path, actual["mcp"], evidence)
         surface_map.extend(_provider_surface_rows(provider, catalog, lifecycle, mcp_plan,
@@ -321,8 +368,12 @@ def _provider_surface_rows(provider, catalog, lifecycle, mcp_plan, verified_agen
     """
     binding_by_surface = {binding.surface_id: binding for binding in lifecycle.bindings}
     lifecycle_codes = {item.surface_id: item.code for item in lifecycle.diagnostics}
-    profile_target = (".claude/settings.local.json" if provider is ProviderId.CLAUDE_CODE
-                      else ".codex/config.toml")
+    if provider is ProviderId.CLAUDE_CODE:
+        profile_target = ".claude/settings.local.json"
+    elif provider is ProviderId.CURSOR:
+        profile_target = cursor_profile_target()
+    else:
+        profile_target = ".codex/config.toml"
     rows = []
     for surface in catalog.surfaces:
         semantic_hash = _canonical_hash(asdict(surface))
@@ -345,6 +396,8 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
     if surface_id == "settings.audit":
         if provider is ProviderId.CLAUDE_CODE:
             return "non-artifact:named-settings-audit", "supported", "HARNESS_SETTINGS_AUDIT_NAMED"
+        if provider is ProviderId.CURSOR:
+            return "non-artifact:named-cursor-settings-audit", "supported", "HARNESS_SETTINGS_AUDIT_NAMED"
         # bounded closure (codex-parity-verdicts-v1.md §3.11, P2.4): Codex gets its own
         # smaller named check set (settings_audit.run_codex_checks) over the documented
         # Codex layers — not a generalization of the 13 Claude checks.
@@ -356,15 +409,23 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
             return "non-artifact:unsupported-native-binding", "unsupported", code
         if provider is ProviderId.CODEX and binding.support_level == "hook-native":
             return "artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py", "supported", "HARNESS_ACTIVATION_NATIVE"
+        if provider is ProviderId.CURSOR and binding.support_level == "hook-native":
+            return "artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py", "supported", "HARNESS_ACTIVATION_NATIVE"
         return f"native-binding:{binding.activation}", "supported", "HARNESS_ACTIVATION_NATIVE"
     if surface_id == "mcp.catalog":
         return f"artifact:{mcp_plan.target_scope}:{mcp_plan.target_path}", "supported", "HARNESS_MCP_PROJECTION_RENDERED"
     if surface_id == "agents.catalog":
+        if provider is ProviderId.CURSOR:
+            return ("non-artifact:back-compat-claude-agents-read", "unsupported",
+                    "HARNESS_ACTIVATION_UNSUPPORTED:cursor:agents.catalog:P0")
         return (f"artifact:project:{verified_agent_count}-named-agent-targets", "supported",
                 "HARNESS_AGENT_ACTIVATION_NATIVE")
     if surface_id == "agent-packs.lifecycle":
         if provider is ProviderId.CLAUDE_CODE:
             return "non-artifact:named-agent-pack-engine", "supported", "HARNESS_AGENTPACK_LIFECYCLE_NAMED"
+        if provider is ProviderId.CURSOR:
+            return ("non-artifact:back-compat-claude-agents-read", "unsupported",
+                    "HARNESS_ACTIVATION_UNSUPPORTED:cursor:agent-packs.lifecycle:P0")
         # bounded closure (codex-parity-verdicts-v1.md §3.12, P2.4): role-projection
         # lifecycle only (render/check/remove/diagnose over .codex/agents/*.toml,
         # provider-qualified lock) — Claude-runtime pack members stay excluded by name.

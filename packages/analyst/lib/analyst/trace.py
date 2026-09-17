@@ -14,7 +14,7 @@ import hashlib
 import json
 
 SCHEMA_VERSION = "unified-agent-trace/v1"
-PROVIDER_IDS = frozenset(("claude-code", "codex"))
+PROVIDER_IDS = frozenset(("claude-code", "codex", "cursor"))
 PRIVACY_EXCLUDED = ("raw_transcript", "chain_of_thought", "tool_payload", "secret")
 DISPATCH_STATES = frozenset((
     "READY", "EXECUTING", "VERIFYING", "FIXING", "DONE", "INCIDENT",

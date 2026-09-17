@@ -225,21 +225,94 @@ def render_codex_hooks(plan: LifecycleRenderPlan) -> bytes:
                        ensure_ascii=False, indent=2) + "\n").encode("utf-8")
 
 
-def render_cursor_hooks(plan: LifecycleRenderPlan) -> bytes:
-    """Render Cursor-native hooks.json; only hook-native bindings are registered."""
+_CURSOR_HANDLER_COMMAND_PREFIX = ('python3 "${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py" '
+                                  '--surface ')
+_CURSOR_ENFORCEMENT_SURFACES = frozenset((
+    "security.safe-dirs", "lifecycle.daemon-safety", "lifecycle.git-guardrails",
+    "lifecycle.changelog-gate", "lifecycle.pack-guard", "lifecycle.review-gate",
+    "lifecycle.terminal-admission",
+))
+
+
+def _cursor_loop_limit(event):
+    if event in {"stop", "subagentStop"}:
+        return 3
+    return None
+
+
+def _cursor_entry_from_binding(binding):
+    entry = {"command": _CURSOR_HANDLER_COMMAND_PREFIX + binding.surface_id}
+    if binding.matcher:
+        entry["matcher"] = binding.matcher
+    if binding.surface_id in _CURSOR_ENFORCEMENT_SURFACES:
+        entry["failClosed"] = True
+    loop_limit = _cursor_loop_limit(binding.event)
+    if loop_limit is not None:
+        entry["loop_limit"] = loop_limit
+    return entry
+
+
+def _cursor_normalize_entry(raw):
+    if not isinstance(raw, dict):
+        return None
+    if "hooks" in raw:
+        hooks = raw.get("hooks")
+        if (set(raw) - {"hooks", "matcher"} or not isinstance(hooks, list) or len(hooks) != 1
+                or not isinstance(hooks[0], dict)):
+            return None
+        value = dict(hooks[0])
+        if "matcher" in raw and "matcher" not in value and isinstance(raw["matcher"], str):
+            value["matcher"] = raw["matcher"]
+        return value
+    return dict(raw)
+
+
+def _cursor_is_managed_entry(entry):
+    command = entry.get("command")
+    return isinstance(command, str) and command.startswith(_CURSOR_HANDLER_COMMAND_PREFIX)
+
+
+def _cursor_collect_preserved(existing_document):
+    if existing_document is None:
+        return [], {}
+    if not isinstance(existing_document, dict):
+        raise ValueError("HARNESS_CURSOR_HOOKS_INVALID")
+    raw_hooks = existing_document.get("hooks", {})
+    if not isinstance(raw_hooks, dict):
+        raise ValueError("HARNESS_CURSOR_HOOKS_INVALID")
+    event_order, preserved = [], {}
+    for event, entries in raw_hooks.items():
+        if not isinstance(event, str) or not isinstance(entries, list):
+            raise ValueError("HARNESS_CURSOR_HOOKS_INVALID")
+        event_order.append(event)
+        for raw in entries:
+            normalized = _cursor_normalize_entry(raw)
+            if normalized is None or _cursor_is_managed_entry(normalized):
+                continue
+            preserved.setdefault(event, []).append(normalized)
+    return event_order, preserved
+
+
+def render_cursor_hooks(plan: LifecycleRenderPlan, *, existing_document=None) -> bytes:
+    """Render Cursor-native hooks.json with a merge-preserving managed projection."""
     if plan.provider_id is not ProviderId.CURSOR or not plan.green:
         raise ValueError("cannot render refused lifecycle plan")
+    event_order, preserved = _cursor_collect_preserved(existing_document)
+    managed = {}
+    for binding in sorted((item for item in plan.bindings if item.support_level == "hook-native"),
+                          key=lambda item: (item.event, item.surface_id)):
+        managed.setdefault(binding.event, []).append(_cursor_entry_from_binding(binding))
+    events = list(event_order)
+    for event in sorted(set(managed) - set(events)):
+        events.append(event)
     hooks = {}
-    for binding in plan.bindings:
-        if binding.support_level != "hook-native":
-            continue
-        entry = {"type": "command",
-                 "command": ('python3 "$(git rev-parse --show-toplevel)/.cursor/hooks/lifecycle.py" '
-                             f"--surface {binding.surface_id}"),
-                 "failClosed": True}
-        hooks.setdefault(binding.event, []).append({"hooks": [entry]})
-    return (json.dumps({"description": "Managed Cursor lifecycle hooks.", "hooks": hooks},
-                       ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    for event in events:
+        merged_entries = []
+        merged_entries.extend(preserved.get(event, ()))
+        merged_entries.extend(managed.get(event, ()))
+        if merged_entries:
+            hooks[event] = merged_entries
+    return (json.dumps({"version": 1, "hooks": hooks}, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
 
 
 def render_cursor_hook_handler() -> bytes:
@@ -250,9 +323,44 @@ from pathlib import Path
 
 _RM_HEAD_RE = re.compile(r"\\b(rm|rmdir)\\b")
 _EVENT_FIELDS = {"beforeShellExecution": ("command",)}
+_COMMON_FIELDS = ("hook_event_name", "conversation_id")
 
 
-def _find_repo_root():
+def _payload_cwd(payload):
+    cwd = payload.get("cwd")
+    if isinstance(cwd, str) and cwd:
+        return cwd
+    env_root = os.environ.get("CURSOR_PROJECT_DIR")
+    if env_root:
+        return env_root
+    roots = payload.get("workspace_roots")
+    if isinstance(roots, list):
+        for item in roots:
+            if isinstance(item, str) and item:
+                return item
+    return os.getcwd()
+
+
+def _find_repo_root(payload):
+    candidates = []
+    env_root = os.environ.get("CURSOR_PROJECT_DIR")
+    if env_root:
+        candidates.append(env_root)
+    roots = payload.get("workspace_roots")
+    if isinstance(roots, list):
+        candidates.extend(item for item in roots if isinstance(item, str) and item)
+    cwd = payload.get("cwd")
+    if isinstance(cwd, str) and cwd:
+        candidates.append(cwd)
+    for candidate in candidates:
+        d = Path(candidate).resolve()
+        for _ in range(6):
+            marker = d / "packages" / "harness" / "configs" / "claude-code" / "hooks" / "auto-approve" / "lib" / "safedirs.py"
+            if marker.is_file():
+                return str(d)
+            if d.parent == d:
+                break
+            d = d.parent
     for name in ("swissknifeman", "skiller", "harness", "maind"):
         import shutil
         exe = shutil.which(name)
@@ -273,7 +381,7 @@ def _safe_dirs(payload):
     command = payload.get("command")
     if not isinstance(command, str) or not _RM_HEAD_RE.search(command):
         return
-    root = _find_repo_root()
+    root = _find_repo_root(payload)
     if root is None:
         sys.stderr.write("security.safe-dirs: refusing rm/rmdir - harness checkout unreachable\\n")
         sys.exit(2)
@@ -284,7 +392,7 @@ def _safe_dirs(payload):
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         home = os.path.expanduser("~")
-        cwd = payload.get("cwd") or os.getcwd()
+        cwd = _payload_cwd(payload)
         allow = mod.load_allowlist(home)
         safe = allow is not None and mod.command_is_safe(command, cwd, allow, home)
     except Exception:
@@ -309,7 +417,7 @@ except (json.JSONDecodeError, TypeError):
 if not isinstance(payload, dict):
     sys.exit(2)
 event = _SURFACE_EVENTS[args.surface]
-required = {"session_id", "cwd", "hook_event_name"}
+required = set(_COMMON_FIELDS)
 required.update(_EVENT_FIELDS.get(event, ()))
 if not required.issubset(payload) or payload["hook_event_name"] != event:
     sys.exit(2)
@@ -317,7 +425,8 @@ _HANDLERS[args.surface](payload)
 '''
 
 
-def plan_cursor_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path: Path):
+def plan_cursor_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path: Path,
+                                    existing_document=None):
     """P2 artifact seam for Cursor hooks registration and handler."""
     if plan.provider_id is not ProviderId.CURSOR or not plan.green:
         raise ValueError("cannot plan refused lifecycle artifact")
@@ -328,7 +437,7 @@ def plan_cursor_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path:
                                        ProviderId.CURSOR, "1.0.0", ())
     hooks = plan_artifact_render(ArtifactRenderRequest("harness.cursor.lifecycle.hooks", (source,),
         ArtifactTarget(".cursor/hooks.json", ("whole-file", ())), identity, (), {},
-        lambda _request: render_cursor_hooks(plan)))
+        lambda _request: render_cursor_hooks(plan, existing_document=existing_document)))
     handler = plan_artifact_render(ArtifactRenderRequest("harness.cursor.lifecycle.handler", (source,),
         ArtifactTarget(".cursor/hooks/lifecycle.py", ("whole-file", ())), identity, (), {},
         lambda _request: render_cursor_hook_handler()))
@@ -965,6 +1074,54 @@ def block_codex_lifecycle(env, target, *, surfaces, trusted, repair, dry):
         apply_plan(Path(target), plan)
 
 
+def _read_existing_cursor_hooks(target: Path):
+    hooks_path = target / ".cursor" / "hooks.json"
+    if not hooks_path.exists():
+        return None
+    if hooks_path.is_symlink():
+        raise ValueError("HARNESS_CURSOR_HOOKS_INVALID")
+    try:
+        value = json.loads(hooks_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise ValueError("HARNESS_CURSOR_HOOKS_INVALID") from exc
+    if not isinstance(value, dict):
+        raise ValueError("HARNESS_CURSOR_HOOKS_INVALID")
+    return value
+
+
+def block_cursor_lifecycle(env, target, *, surfaces, trusted, repair, dry):
+    """Deploy Cursor lifecycle hooks preserving user-owned hook entries."""
+    bindings_path = Path(env.root) / "configs/cursor/hooks/lifecycle-context-bindings.json"
+    requests = tuple(LifecycleRequest(surface_id, True) for surface_id in surfaces)
+    lifecycle = plan_lifecycle(
+        load_catalog(default_catalog_path(env)), provider_id=ProviderId.CURSOR,
+        requests=requests, trusted=trusted, cursor_bindings_path=bindings_path)
+    if not lifecycle.green:
+        diagnostic = lifecycle.diagnostics[0]
+        die(f"{diagnostic.code}: {diagnostic.next_action}")
+    try:
+        existing_document = _read_existing_cursor_hooks(Path(target))
+    except ValueError:
+        die("HARNESS_CURSOR_HOOKS_INVALID: исправь .cursor/hooks.json или убери его перед deploy")
+    artifacts = plan_cursor_lifecycle_artifacts(
+        lifecycle, bindings_path=bindings_path, existing_document=existing_document)
+    lock_path = Path(target) / ".swissknifeman/provider-artifacts.lock.json"
+    lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
+    repair_ids = {item.provenance.artifact_id for item in artifacts} if repair else set()
+    if existing_document is not None:
+        repair_ids.add("harness.cursor.lifecycle.hooks")
+    plan = plan_artifact_lock(
+        Path(target), artifacts, lock_bytes=lock_bytes,
+        repair_artifact_ids=tuple(sorted(repair_ids)), retain_unexpected_records=True)
+    projection = artifact_dry_run(plan)
+    print(f"cursor hooks: {len(surfaces)} surface(s) — {', '.join(sorted(surfaces))}")
+    print(render_artifact_projection(projection), end="")
+    if projection["exit_severity"] == "error":
+        die("Cursor lifecycle deploy refused; resolve ownership/drift or use --repair")
+    if not dry:
+        apply_plan(Path(target), plan)
+
+
 def block_codex_observer(env, target, *, trusted, repair, dry):
     """Deploy the supported Codex lifecycle observer without replacing other package records."""
     block_codex_lifecycle(env, target, surfaces=("context.observer",),
@@ -1276,6 +1433,31 @@ def _block_codex_gates(env, target, opts):
                           repair=bool(opts["repair"]), dry=bool(opts["dry_run"]))
 
 
+def _block_cursor_gates(env, target, opts):
+    """P0 Cursor seam: only security.safe-dirs is deployable."""
+    unsupported = []
+    if opts["observer"]:
+        unsupported.append("--observer")
+    if opts["daemon_safety"]:
+        unsupported.append("--daemon-safety")
+    if opts["terminal_admission"]:
+        unsupported.append("--terminal-admission")
+    for flag, value in (("--pack-guard", opts["pack_guard"]),
+                        ("--changelog-gate", opts["changelog_gate"]),
+                        ("--review-gate", opts["review_gate"]),
+                        ("--git-guardrails", opts["git_guardrails"])):
+        if value and value != "off":
+            unsupported.append(f"{flag} {value}")
+    if unsupported:
+        die("для --provider cursor в P0 поддерживается только --safe-dirs; неподдержано: "
+            + ", ".join(unsupported))
+    if not opts["safe_dirs"]:
+        die("provider cursor требует --safe-dirs (P0)")
+    block_cursor_lifecycle(env, target, surfaces=("security.safe-dirs",),
+                           trusted=bool(opts["trusted"]), repair=bool(opts["repair"]),
+                           dry=bool(opts["dry_run"]))
+
+
 def block_terminal_admission(target, mode, settings_file, dry):
     """Register the opt-in Claude Stop adapter without making it a global policy."""
     if mode not in ("on", "off"):
@@ -1313,7 +1495,7 @@ def cmd_hooks(env, argv):
               "[--provider codex [--observer] [--pack-guard off|warn|strict] "
               "[--changelog-gate off|warn|strict] [--review-gate off|warn|strict] "
               "[--git-guardrails off|warn|strict] [--safe-dirs] [--daemon-safety] "
-              "[--terminal-admission on|off] "
+              "[--terminal-admission on|off] | --provider cursor [--safe-dirs] "
               "[--trusted] [--repair]] "
               "[--file settings.json|settings.local.json] [--dry-run]")
         return
@@ -1326,9 +1508,12 @@ def cmd_hooks(env, argv):
     # artifact lock deliberately accepts only an explicit absolute root.
     target = Path(opts["target"]).expanduser().resolve()
     if opts["provider"]:
-        if opts["provider"] != "codex":
-            die("поддерживается только --provider codex")
-        _block_codex_gates(env, target, opts)
+        if opts["provider"] == "codex":
+            _block_codex_gates(env, target, opts)
+        elif opts["provider"] == "cursor":
+            _block_cursor_gates(env, target, opts)
+        else:
+            die("поддерживается только --provider codex|cursor")
         return
     if not (opts["auto_approve"] or opts["memory"] or opts["router"]
             or opts["run_report"] or opts["pack_guard"] or opts["changelog_gate"]

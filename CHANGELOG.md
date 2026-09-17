@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Cursor lifecycle hooks (P0).** `harness hooks --provider cursor --safe-dirs` теперь
+  рендерит корректный `.cursor/hooks.json` (`version: 1`, плоские entries) и
+  публикует `.cursor/hooks/lifecycle.py` через provider-artifact lock с сохранением
+  user entries и детерминированным повторным render.
+- **Cursor safe-dirs handler contract.** Генерируемый обработчик больше не требует
+  `session_id` для `beforeShellExecution`, использует `conversation_id` + event fields
+  и берёт `cwd` через fallback (`payload.cwd` → `CURSOR_PROJECT_DIR` → `workspace_roots[0]`).
+- **P0 conformance evidence.** Добавлены fixture реального Cursor wire payload и тесты
+  `packages/harness/tests/test_cursor_hook_render.py`; обновлена evidence-запись
+  `security.safe-dirs` для `cursor` в `configs/provider-capabilities.json`.
+
 ## [0.21.5] - 2026-09-17
 
 ### Fixed

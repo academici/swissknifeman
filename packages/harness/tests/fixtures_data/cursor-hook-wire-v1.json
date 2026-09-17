@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "source": "native-afterShellExecution-probe",
+  "observed_at": "2026-09-17T17:25:00Z",
+  "payload": {
+    "conversation_id": "1a4b7111-d48e-4f4d-8278-cf9595034b41",
+    "generation_id": "1a4b7111-d48e-4f4d-8278-cf9595034b41",
+    "model": "gpt-5.3-codex-fast",
+    "command": "echo native-probe-child",
+    "output": "",
+    "duration": 18853.512,
+    "sandbox": false,
+    "session_id": "1a4b7111-d48e-4f4d-8278-cf9595034b41",
+    "hook_event_name": "afterShellExecution",
+    "cursor_version": "2026.09.15-d2fe57e",
+    "workspace_roots": [
+      "/home/vostrikov/projects/packages/swissknifeman"
+    ],
+    "user_email": "probe@example.invalid",
+    "transcript_path": "/redacted/transcript.jsonl"
+  }
+}

@@ -20,8 +20,9 @@ from core import (AdapterCatalog, AdapterDescriptor, ArtifactAdapterIdentity,
                   ArtifactActionKind, ArtifactPlan, ArtifactRenderRequest,
                   ArtifactRenderResult, ArtifactSource, ArtifactTarget, CapabilityId,
                   CapabilityRequirement, EffectiveProvider, ProviderId, SupportLevel,
+                  connect_channel, find_monorepo_root, load_distribution_catalog,
                   load_provider_manifest, plan_artifact_lock, plan_artifact_render,
-                  provider_config_catalog)
+                  provider_config_catalog, vendor_channel)
 from core.provider.lock import LOCK_RELATIVE_PATH
 from core.provider.runtime import codex_task_plugin_root_expression
 
@@ -49,6 +50,16 @@ _PUBLICATION_ADAPTERS = {
     ProviderId.CODEX: _CODEX_ADAPTER,
     ProviderId.CURSOR: _CURSOR_ADAPTER,
 }
+
+_DISTRIBUTION_CATALOG = None
+
+
+def _distribution_catalog():
+    global _DISTRIBUTION_CATALOG
+    if _DISTRIBUTION_CATALOG is None:
+        root = find_monorepo_root(Path(__file__).resolve()) or Path(__file__).resolve().parents[4]
+        _DISTRIBUTION_CATALOG = load_distribution_catalog(root / "configs/provider-distribution.json")
+    return _DISTRIBUTION_CATALOG
 
 
 def validate_publication_capabilities(provider_id: ProviderId, *, manifest_path=None):
@@ -655,28 +666,37 @@ def selected_distribution_providers(config, *, project_id: str) -> tuple[str, ..
 def build_vendor_distribution_plan(config, target: Path, *, project_id: str,
                                    claude_path: str, codex_path: str) -> tuple[ProviderDistributionPlan, ...]:
     from .common import die
-    paths = {"claude-code": claude_path, "codex": codex_path}
-    plans = tuple(ProviderDistributionPlan(provider, "vendor", target / paths[provider],
-                                           (target / paths[provider]).as_posix(), "", "")
-                  for provider in selected_distribution_providers(config, project_id=project_id)
-                  if provider != "cursor")
+    catalog = _distribution_catalog()
+    path_params = {"claude_path": claude_path, "codex_path": codex_path}
+    plans = []
+    for provider in selected_distribution_providers(config, project_id=project_id):
+        vendor = vendor_channel(catalog, ProviderId(provider))
+        if vendor is None:
+            continue
+        rel = path_params.get(vendor.path_param)
+        if rel is None:
+            die(f"SPUB_CAPABILITY_UNSUPPORTED: provider {provider}, channel vendor: "
+                f"unknown path_param {vendor.path_param!r}")
+        plans.append(ProviderDistributionPlan(provider, "vendor", target / rel,
+                                              (target / rel).as_posix(), "", ""))
     seen = set()
     for plan in plans:
         resolved = plan.target.resolve(strict=False)
         if resolved in seen:
             die("SPUB_OWNERSHIP_CONFLICT: selected providers share one managed vendor path")
         seen.add(resolved)
-    return plans
+    return tuple(plans)
 
 
 def build_connect_distribution_plan(config, target: Path, *, project_id: str,
                                     repo_root: Path,
                                     plugins: Sequence[str] = ()) -> tuple[ProviderDistributionPlan, ...]:
     from .common import die
+    catalog = _distribution_catalog()
     plans = []
     for provider in selected_distribution_providers(config, project_id=project_id):
-        if provider == "cursor":
-            # D8: Cursor reads ``.agents/skills`` natively; no marketplace channel exists.
+        connect = connect_channel(catalog, ProviderId(provider))
+        if connect is None:
             continue
         provider_id = ProviderId(provider)
         try:
@@ -684,13 +704,13 @@ def build_connect_distribution_plan(config, target: Path, *, project_id: str,
         except (OSError, TypeError, ValueError) as exc:
             die(f"SPUB_CAPABILITY_UNSUPPORTED: provider {provider}, "
                 f"channel marketplace: {exc}")
-        if provider == "claude-code":
-            plans.append(ProviderDistributionPlan(provider, "marketplace", target / ".claude",
-                                                   ".claude", "", ""))
-        elif provider == "codex":
+        if connect.mode == "claude-marketplace":
+            plans.append(ProviderDistributionPlan(provider, "marketplace", target / connect.target,
+                                                   connect.target, "", ""))
+        elif connect.mode == "codex-marketplace":
             repo_root = repo_root.resolve()
             target = target.resolve()
-            marketplace = repo_root / ".agents" / "plugins" / "marketplace.json"
+            marketplace = repo_root / connect.marketplace
             if not marketplace.is_file():
                 die("SPUB_BUNDLE_INCOMPLETE: provider codex, unit marketplace, "
                     f"target {marketplace}: generated marketplace is missing; run skiller registry")
@@ -715,7 +735,7 @@ def build_connect_distribution_plan(config, target: Path, *, project_id: str,
                     marketplace_artifact.provenance.rendered_hash,
                     artifacts, artifact_plan))
         else:
-            die(f"SPUB_CAPABILITY_UNSUPPORTED: provider {provider}")
+            die(f"SPUB_CAPABILITY_UNSUPPORTED: provider {provider}, connect mode {connect.mode}")
     return tuple(plans)
 
 

@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Provider distribution SSOT.** `configs/provider-distribution.json` +
+  `core.provider.distribution` — connect/vendor/discovery каналы без `if cursor` в
+  `publication.py`. Док: `docs/reference/provider-distribution.md`.
+
+### Changed
+
+- **maind fleet:** проект `sova` в `config.json`; MCP/instructions adopt на cursor-consumer
+  (flexcrm, cms, insiders, sova); D104 lifecycle handler для dterema/brain.
+
 ## [0.21.1] - 2026-09-17
 
 ### Fixed

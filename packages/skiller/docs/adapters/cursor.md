@@ -9,6 +9,7 @@
 | Surface | Канал | Примечание |
 |:--|:--|:--|
 | Скиллы | `.agents/skills/` | Cursor читает нативно (D8); skiller **не** пишет `.cursor/skills` |
+| Connect/vendor | — | Каналы объявлены в `configs/provider-distribution.json` (`discovery` only); без `if cursor` в Python |
 | Инструкции (extension) | `.cursor/rules/swissknifeman-*.mdc` | только self-host umbrella; trigger-scoped (D11) |
 | MCP | `.cursor/mcp.json` | merge-only; пишет `maind sync` при включённом провайдере |
 | CLI permissions | `.cursor/cli.json` | только `permissions`; `deny` переживает `--force` |

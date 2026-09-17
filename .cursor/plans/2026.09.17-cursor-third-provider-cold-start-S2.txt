@@ -1,0 +1,70 @@
+Cold-start: Cursor third provider — EXEC S2 (P0 + P1 + P2). Model composer-2.5, autonomous.
+
+Repository: /home/vostrikov/projects/packages/swissknifeman (umbrella monorepo, self-host).
+Read first, in this order:
+  1. .cursor/plans/2026.09.17-cursor-third-provider.md              (canon plan)
+  2. .cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md (S1 freeze — authoritative for shapes)
+The freeze document wins over the canon plan wherever they disagree; it lists the disagreements explicitly.
+
+Implement P0, P1 and P2 only. Do NOT release, do NOT tag, do NOT run maind sync or skiller deliver,
+do NOT enable Cursor on any fleet project. P3/P4/P5 are out of scope for this session.
+
+P0 — authority and vocabulary:
+  - core/provider/values.py: add ProviderId.CURSOR = "cursor".
+  - configs/provider-capabilities.json: add the cursor column for all 36 capabilities using the
+    "P0" column of the freeze matrix (8 native, 7 adapted, 21 unsupported). Commit the honest
+    unsupported levels; never write "adapted" for an adapter that does not exist yet. Add
+    {"display_name": "Cursor", "id": "cursor"} to providers.
+  - Update every hardcoded provider allowlist: harness PROVIDERS, maind REQUIRED_PROVIDERS and
+    provider_deploy, task loops, skiller budget listing, core/runs.py.
+  - Remove the Cursor out-of-scope note in docs/reference.md and record the Cursor provenance rows
+    (permissions.json, CLI permissions, CLI configuration, hooks, rules) with verified_at 2026-09-17.
+  - Regenerate: python3 scripts/provider-docs.py --write.
+
+P1 — harness Cursor adapter:
+  - New tree packages/harness/configs/cursor/ with config/profile-bindings.json and mcp/bindings.json,
+    exactly as specified in freeze section 3.1 and 3.4.
+  - Renderers for .cursor/permissions.json, .cursor/cli.json, .cursor/mcp.json and
+    .cursor/rules/swissknifeman-{core,launch,packages}.mdc, byte shapes per freeze sections
+    3.2, 3.3, 3.4, 3.5.
+  - Hard constraint: .cursor/cli.json accepts ONLY a "permissions" object at project level. A renderer
+    that emits approvalMode or sandbox into a project file is a defect — refuse instead.
+  - Rules carry the root.cursor.* extension ONLY; do not duplicate the common instruction block, and
+    never write AGENTS.md. Per D11 exactly ONE rule file is alwaysApply: true (the precedence rule);
+    launch is description-triggered and packages is glob-triggered. Assert the frontmatter of each file
+    in conformance, because a mis-set alwaysApply silently promotes a rule to always-on.
+  - security.safe-dirs: beforeShellExecution hook with failClosed: true, calling the existing shared
+    verdict core. Do not copy the pattern set.
+  - Wire provider_render.py _ADAPTERS, doctor and conformance. Conformance must include all seven cases
+    in freeze section 3.6, including the two new Cursor-specific refusals.
+  - Everyday permissive path publishes workspace-contained shapes only; trusted-full-access stays behind
+    origin=operation / operation_id=self-host-apply / target_identity=repo:.
+
+P2 — skiller publication:
+  - No new skill tree and no .cursor/skills writer. Cursor reads .agents/skills natively, so
+    render_cursor_publication is an ownership assertion that enforces one writer per tree.
+  - Add provider cursor to connect/status/budget listings; keep legacy `vendor --agent cursor` working.
+
+Two P0 facts about ~/.swissknifeman/projects.json, both verified — do not re-derive them:
+  - Its key is composite (path, provider, channel): 57 rows, 23 projects, zero collisions. These are
+    NOT duplicates. Adding Cursor means ADDING rows with provider "cursor"; never overwrite a sibling
+    provider's row for the same path, and never deduplicate by path.
+  - Two legacy vendor rows carry provider: null. Any new read of `provider` must tolerate null.
+
+Environment defect to respect: the `claude` CLI on this machine fails with "OAuth session expired and
+could not be refreshed". Do not plan a step that needs a live Claude Code run or a delegation to it.
+Separately, .claude/settings.local.json holds an over-broad rule — Bash(cp .../packages/task/commands/*
+.../agelto/agelto/.claude/commands/) has a wildcard before the rest of the command. Do not widen it;
+narrowing it is welcome but out of this scope.
+
+Invariants: stdlib-only Python, no pip/npm dependency, merge-only project writes with *.bak, Russian
+diagnostics in harness, no duplicated shared primitives, do not rename the umbrella or ~/.swissknifeman state.
+
+Validate before handing off: core provider tests, bash packages/harness/scripts/validate.sh and
+bash packages/skiller/scripts/validate.sh. Also run skiller budget --first-turn and report the number
+as an observation only — it is not a gate for Cursor, and the 16K/23K thresholds are a Claude Code rule
+that this freeze does not extend. Record release-visible changes under [Unreleased] in the root
+CHANGELOG.md. Commit messages in Russian Conventional Commit form.
+
+Report at the end: which of the 36 capability rows landed at which level, the budget number, the
+validate results, and anything you found that contradicts the freeze document.

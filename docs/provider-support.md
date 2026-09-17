@@ -6,8 +6,8 @@
 
 - Contract: `1.0.0`
 - Catalog: `1.0.0`
-- Canonical JSON SHA-256 (without carrier LF): `43b252d393b302633624d3a3589ecd9d576fafedf2c068e2d0806a096f045ae8`
-- Carrier SHA-256 (canonical bytes plus one LF): `2e5144b97745c655ef1d7ecd10354e6095f45246569a13f80c74b8eb5fbe93d8`
+- Canonical JSON SHA-256 (without carrier LF): `16f93a6ce9c4161585d696b3e6c6717ea32abcdffb7f74a250ea65dc6684254f`
+- Carrier SHA-256 (canonical bytes plus one LF): `f6bf47794db1f827a2ffd17e6e6cee1d76943f52feee939f8897369e30070026`
 - Common capabilities: `36`; Native Extensions: `0`
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
@@ -420,7 +420,7 @@ Compose named provider validators and catalog diagnostics.
 
 - **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.doctor.provider`.
   Diagnostic: deterministic cursor adapter satisfies doctor.provider
-  Limitations: reports the unmanaged approval-mode axis per D2.
+  Limitations: reports the unmanaged approval-mode axis per D2; Claude-compat delivery depends on the user toggle "Include Third-Party Plugins, Skills, and Other Configs", so compat is not treated as a managed provider binding.
   Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `instructions.project`
@@ -706,7 +706,7 @@ Maintain a fail-closed destructive-operation allowlist.
 - **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.security.safe-dirs`.
   Diagnostic: deterministic cursor adapter satisfies security.safe-dirs
   Limitations: beforeShellExecution hook with failClosed:true calling shared verdict core.
-  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix); [2026-09-17] P0 conformance covers native hooks.json v1 rendering, merge-preserving registration, pinned beforeShellExecution/afterShellExecution payload fixtures, and handler behavior without hard dependency on session_id — `packages/harness/tests/test_cursor_hook_render.py` (cursor security.safe-dirs hook registration, native before/after wire shape and fail-closed verdict path).
 
 ### `settings.audit`
 

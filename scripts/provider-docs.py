@@ -75,8 +75,16 @@ def production_requirements(root: Path = ROOT) -> tuple[tuple[str, str, str, fro
     for provider in ProviderId:
         if provider.value not in task_providers:
             continue
+        provider_bindings = (routing["mappings"].get(provider.value, {})
+                             .get("capability_bindings", {}))
         for command in routing["commands"]:
-            for capability in command["capability_requirements"]:
+            requirements = tuple(command["capability_requirements"])
+            # Provider command projections are generated only when every required
+            # capability is satisfiable for that provider (native|adapted).
+            if not all(provider_bindings.get(capability) in {"native", "adapted"}
+                       for capability in requirements):
+                continue
+            for capability in requirements:
                 rows.append((f"task.{command['command_id']}", provider.value, capability,
                              frozenset({"native", "adapted"})))
     profile = json.loads((root / "packages/harness/configs/common/profile-catalog.json").read_text())

@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from harness.common import Env
 from harness.settings_audit import (
-    build_context, effective_config, load_layers, run_checks,
+    build_context, effective_config, load_layers, run_checks, run_cursor_checks,
     _load_vscode_layer,
 )
 
@@ -254,6 +254,83 @@ class SettingsAuditChecksCase(unittest.TestCase):
         secret_findings = [f for f in _findings_by_id(findings, 9)
                             if "FOO_API_KEY" in f.title]
         self.assertEqual(secret_findings, [])
+
+
+class CursorSettingsAuditChecksCase(unittest.TestCase):
+    """Internal documentation."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.home = self.tmp / "home"
+        self.target = self.tmp / "proj"
+        self.home.mkdir()
+        self.target.mkdir()
+        self.env = Env(self.tmp, "test", home=self.home)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _run(self):
+        return run_cursor_checks(build_context(self.env, self.target))
+
+    def _write_compat_log_hook(self):
+        _write(self.home / ".claude" / "settings.json", {"hooks": {"PreToolUse": [
+            {"matcher": "Bash", "hooks": [
+                {"type": "command", "command": "~/.claude/hooks/log-bash-command.sh"}
+            ]}
+        ]}})
+
+    def test_check14_reports_overlap_between_cursor_native_and_claude_compat(self):
+        self._write_compat_log_hook()
+        _write(self.target / ".cursor" / "hooks.json", {
+            "version": 1,
+            "hooks": {
+                "preToolUse": [
+                    {"matcher": "Shell",
+                     "command": ('python3 "${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py" '
+                                 "--surface lifecycle.command-log")}
+                ]
+            },
+        })
+        warns = [f for f in _findings_by_id(self._run(), 14) if f.level == "warn"]
+        self.assertEqual(len(warns), 1)
+        self.assertIn("lifecycle.command-log", warns[0].title)
+
+    def test_check14_invalid_cursor_hooks_is_error(self):
+        hooks = self.target / ".cursor" / "hooks.json"
+        hooks.parent.mkdir(parents=True, exist_ok=True)
+        hooks.write_text("{broken", encoding="utf-8")
+        errs = [f for f in _findings_by_id(self._run(), 14) if f.level == "error"]
+        self.assertEqual(len(errs), 1)
+        self.assertIn(".cursor/hooks.json", errs[0].title)
+
+    def test_check15_detects_duplicate_identical_registration(self):
+        _write(self.home / ".claude" / "settings.json", {"hooks": {"PreToolUse": [
+            {"matcher": "Bash", "hooks": [
+                {"type": "command", "command": "~/.claude/hooks/log-bash-command.sh"}
+            ]},
+            {"matcher": "Bash", "hooks": [
+                {"type": "command", "command": "~/.claude/hooks/log-bash-command.sh"}
+            ]},
+            {"matcher": "Bash", "hooks": [
+                {"type": "command", "command": "~/.claude/hooks/daemon-safety/block-daemon-ops.sh"},
+                {"type": "command", "command": "~/.claude/hooks/log-bash-command.sh"},
+            ]},
+        ]}})
+        warns = [f for f in _findings_by_id(self._run(), 15) if f.level == "warn"]
+        self.assertTrue(any("x3" in warning.title for warning in warns))
+        self.assertTrue(any("log-bash-command.sh" in warning.detail for warning in warns))
+
+    def test_check16_reports_unmanaged_cursor_compat_binding(self):
+        _write(self.target / ".claude" / "settings.json", {"hooks": {"PreToolUse": [
+            {"matcher": "Bash", "hooks": [
+                {"type": "command", "command": "~/.claude/hooks/daemon-safety/block-daemon-ops.sh"}
+            ]}
+        ]}})
+        infos = [f for f in _findings_by_id(self._run(), 16) if f.level == "info"]
+        self.assertEqual(len(infos), 1)
+        self.assertIn("Include Third-Party Plugins, Skills, and Other Configs", infos[0].hint)
 
 
 class SettingsAuditPolicyProfileCase(unittest.TestCase):

@@ -15,6 +15,19 @@
   `packages/harness/tests/test_cursor_hook_render.py` (для `afterShellExecution` и
   `beforeShellExecution`); обновлена evidence-запись `security.safe-dirs` для `cursor`
   в `configs/provider-capabilities.json`.
+- **Release attestation blockers.** Закрыт `RELEASE_IMMUTABLE_TUPLE` для `harness`
+  (`packages/harness/package.json` 0.5.3) и `CMD_SOURCE_DRIFT` для `task`
+  (canon-forward `0.20.3` + регенерация provider-команд через
+  `render-provider-commands.py --write --repair-owned`).
+- **Cursor rules и command projections под `--check`.** `cursor_render` читает тела
+  `root.cursor.*` напрямую из каталога инструкций, добавлен генератор
+  `packages/harness/scripts/render-cursor-rules.py` и шаг проверки в
+  `packages/harness/scripts/validate.sh`; `packages/task/scripts/validate.sh`
+  теперь включает `render-provider-commands.py --check`.
+- **Cursor doctor P1 (single-writer + dedup).** `harness doctor --settings --provider cursor`
+  проверяет пересечения semantic surfaces между `.cursor/hooks.json` и Claude-compat
+  hooks, ловит повторные идентичные регистрации (включая D6) и помечает compat-путь
+  как неуправляемый binding, зависящий от user-toggle third-party configs.
 
 ## [0.21.5] - 2026-09-17
 

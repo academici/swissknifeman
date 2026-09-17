@@ -913,7 +913,8 @@
             }
           ],
           "limitations": [
-            "reports the unmanaged approval-mode axis per D2"
+            "reports the unmanaged approval-mode axis per D2",
+            "Claude-compat delivery depends on the user toggle \"Include Third-Party Plugins, Skills, and Other Configs\", so compat is not treated as a managed provider binding"
           ],
           "diagnostic": "deterministic cursor adapter satisfies doctor.provider",
           "adapter_id": "harness.cursor.doctor.provider"

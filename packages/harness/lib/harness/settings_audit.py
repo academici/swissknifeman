@@ -628,6 +628,21 @@ def check_4_policy_profile_conformance(ctx):
 
 
 _INTERPRETERS = {"bash", "sh", "zsh", "dash", "python", "python3", "node", "perl", "ruby"}
+_CURSOR_HANDLER_MARKER = ".cursor/hooks/lifecycle.py"
+_CURSOR_SURFACE_RE = re.compile(r"--surface\s+([A-Za-z0-9._-]+)")
+_CLAUDE_COMPAT_SURFACE_HINTS = (
+    ("lifecycle.command-log", "pretooluse", "bash", "log-bash-command.sh"),
+    ("lifecycle.daemon-safety", "pretooluse", "bash", "daemon-safety/block-daemon-ops.sh"),
+    ("lifecycle.review-gate", "subagentstop", "", "review-gate/review-gate.sh"),
+    ("lifecycle.run-report", "sessionend", "", "run-report/run-report.py"),
+    ("lifecycle.router", "userpromptsubmit", "", "agent-router/router.py"),
+    ("lifecycle.memory", "sessionstart", "", "hooks/memory/memory.sh"),
+    ("lifecycle.pack-guard", "pretooluse", "", "hooks/pack-guard/pack-guard.py"),
+    ("lifecycle.changelog-gate", "pretooluse", "bash", "hooks/changelog-gate/changelog-gate.py"),
+    ("lifecycle.terminal-admission", "stop", "", "terminal-admission/terminal-admission.py"),
+    # safe-dirs is embedded into auto-approve on the Claude compatibility path.
+    ("security.safe-dirs", "pretooluse", "bash", "auto-approve/auto-approve.sh"),
+)
 
 
 def _resolve_hook_command_path(command, target, home):
@@ -709,6 +724,192 @@ def check_5_hooks(ctx):
     return findings
 
 
+def _iter_layer_hook_commands(layer):
+    hooks = layer.data.get("hooks") if isinstance(layer.data, dict) else None
+    if not isinstance(hooks, dict):
+        return
+    for event, entries in hooks.items():
+        if not isinstance(event, str) or not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            matcher = entry.get("matcher")
+            matcher = matcher if isinstance(matcher, str) else ""
+            for hook in entry.get("hooks") or []:
+                command = hook.get("command") if isinstance(hook, dict) else None
+                if isinstance(command, str) and command.strip():
+                    yield event, matcher, command.strip()
+
+
+def _load_cursor_hooks(target):
+    path = Path(target) / ".cursor" / "hooks.json"
+    if not path.exists():
+        return None, None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None, Finding(
+            id=14, level="error",
+            title="Не удалось прочитать .cursor/hooks.json",
+            detail=str(path),
+            hint="Почини JSON и повтори doctor — без этого single-writer сверка недостоверна.",
+        )
+    if not isinstance(value, dict):
+        return None, Finding(
+            id=14, level="error",
+            title=".cursor/hooks.json: верхний уровень не объект",
+            detail=str(path),
+            hint="Ожидается JSON object c ключом hooks.",
+        )
+    hooks = value.get("hooks")
+    if not isinstance(hooks, dict):
+        return None, Finding(
+            id=14, level="error",
+            title=".cursor/hooks.json: отсутствует объект hooks",
+            detail=str(path),
+            hint="Ожидается структура {\"version\":1,\"hooks\":{...}}.",
+        )
+    return hooks, None
+
+
+def _iter_cursor_hook_commands(target):
+    hooks, finding = _load_cursor_hooks(target)
+    if finding is not None or hooks is None:
+        return (), finding
+    rows = []
+    for event, entries in hooks.items():
+        if not isinstance(event, str) or not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            matcher = entry.get("matcher")
+            matcher = matcher if isinstance(matcher, str) else ""
+            command = entry.get("command")
+            if isinstance(command, str) and command.strip():
+                rows.append((event, matcher, command.strip()))
+                continue
+            # Tolerate legacy nested shape only for analysis/readability.
+            nested = entry.get("hooks")
+            if not isinstance(nested, list):
+                continue
+            for hook in nested:
+                command = hook.get("command") if isinstance(hook, dict) else None
+                if isinstance(command, str) and command.strip():
+                    rows.append((event, matcher, command.strip()))
+    return tuple(rows), None
+
+
+def _surface_from_cursor_command(command):
+    if not isinstance(command, str) or _CURSOR_HANDLER_MARKER not in command:
+        return None
+    match = _CURSOR_SURFACE_RE.search(command)
+    return match.group(1) if match else None
+
+
+def _surface_from_claude_compat(event, matcher, command):
+    if not isinstance(command, str):
+        return None
+    event_key = event.lower()
+    matcher_key = matcher.lower()
+    command_key = command.lower()
+    for surface_id, req_event, req_matcher, token in _CLAUDE_COMPAT_SURFACE_HINTS:
+        if req_event and event_key != req_event:
+            continue
+        if req_matcher and matcher_key != req_matcher:
+            continue
+        if token in command_key:
+            return surface_id
+    return None
+
+
+def _collect_claude_compat_refs(ctx):
+    refs = {}
+    for layer in ctx.layers:
+        if layer.name not in {"project", "user"}:
+            continue
+        for event, matcher, command in _iter_layer_hook_commands(layer):
+            surface_id = _surface_from_claude_compat(event, matcher, command)
+            if surface_id is None:
+                continue
+            refs.setdefault(surface_id, []).append((layer.name, layer.path, event, matcher, command))
+    return refs
+
+
+def check_14_cursor_single_writer_overlap(ctx):
+    """Internal documentation."""
+    findings = []
+    cursor_rows, parse_finding = _iter_cursor_hook_commands(ctx.target)
+    if parse_finding is not None:
+        findings.append(parse_finding)
+        return findings
+    cursor_refs = {}
+    for event, matcher, command in cursor_rows:
+        surface_id = _surface_from_cursor_command(command)
+        if surface_id is None:
+            continue
+        cursor_refs.setdefault(surface_id, []).append((event, matcher, command))
+    compat_refs = _collect_claude_compat_refs(ctx)
+    for surface_id in sorted(set(cursor_refs) & set(compat_refs)):
+        compat_summary = ", ".join(
+            f"{layer}:{event}:{matcher or '*'}"
+            for layer, _path, event, matcher, _command in compat_refs[surface_id]
+        )
+        findings.append(Finding(
+            id=14, level="warn",
+            title=f"Single-writer нарушен: surface {surface_id} зарегистрирован дважды",
+            detail=("Cursor-native .cursor/hooks.json пересекается с Claude-compat hooks: "
+                    + compat_summary),
+            hint=("Оставь один источник регистрации surface: сними Claude-compat запись "
+                  "или сделай обработчик идемпотентным по (conversation_id, tool_use_id)."),
+        ))
+    return findings
+
+
+def check_15_duplicate_hook_registrations(ctx):
+    """Internal documentation."""
+    findings = []
+    counter = {}
+    for layer in ctx.layers:
+        if layer.name not in {"project", "user"}:
+            continue
+        for event, matcher, command in _iter_layer_hook_commands(layer):
+            key = (str(layer.path), event, matcher, command)
+            counter[key] = counter.get(key, 0) + 1
+    cursor_rows, parse_finding = _iter_cursor_hook_commands(ctx.target)
+    if parse_finding is None:
+        cursor_path = ctx.target / ".cursor" / "hooks.json"
+        for event, matcher, command in cursor_rows:
+            key = (str(cursor_path), event, matcher, command)
+            counter[key] = counter.get(key, 0) + 1
+    for (path, event, matcher, command), times in sorted(counter.items()):
+        if times < 2:
+            continue
+        findings.append(Finding(
+            id=15, level="warn",
+            title=(f"Повторная идентичная регистрация хука x{times}: "
+                   f"{Path(path).name} {event}:{matcher or '*'}"),
+            detail=command,
+            hint=("Убери дубликаты: Cursor выполняет все совпавшие hooks из всех источников, "
+                  "поэтому идентичная команда сработает многократно."),
+        ))
+    return findings
+
+
+def check_16_cursor_compat_binding_notice(ctx):
+    """Internal documentation."""
+    compat_refs = _collect_claude_compat_refs(ctx)
+    if not compat_refs:
+        return []
+    surfaces = ", ".join(sorted(compat_refs))
+    return [Finding(
+        id=16, level="info",
+        title="Claude-compat hooks в Cursor не являются управляемым binding",
+        detail="Найдены compat-surfaces: " + surfaces,
+        hint=("Доставка compat-пути зависит от пользовательского флага "
+              "\"Include Third-Party Plugins, Skills, and Other Configs\"."),
+    )]
 
 
 def check_9_secrets(ctx):
@@ -971,6 +1172,21 @@ CHECKS = (
 
 
 def run_checks(ctx, checks=CHECKS):
+    """Internal documentation."""
+    findings = []
+    for _id, fn in checks:
+        findings.extend(fn(ctx))
+    return findings
+
+
+CURSOR_CHECKS = CHECKS + (
+    (14, check_14_cursor_single_writer_overlap),
+    (15, check_15_duplicate_hook_registrations),
+    (16, check_16_cursor_compat_binding_notice),
+)
+
+
+def run_cursor_checks(ctx, checks=CURSOR_CHECKS):
     """Internal documentation."""
     findings = []
     for _id, fn in checks:

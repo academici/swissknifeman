@@ -77,6 +77,17 @@ class ProviderSettingsDoctorCase(unittest.TestCase):
         self.assertEqual(report["exit"], 1)
         self.assertEqual(report["findings"][0]["id"], 1)
 
+    def test_cursor_provider_has_provider_qualified_json_shape(self):
+        result = self._run("--provider", "cursor", "--json")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual(
+            list(report),
+            ["provider", "target", "profile", "status", "counts", "findings", "exit"],
+        )
+        self.assertEqual(report["provider"], "cursor")
+        self.assertEqual(report["status"], "clean")
+
     def test_legacy_no_provider_json_shape_is_unchanged(self):
         result = self._run("--json")
         self.assertEqual(result.returncode, 0, result.stderr)

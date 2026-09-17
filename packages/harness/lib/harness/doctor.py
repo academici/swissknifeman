@@ -62,7 +62,7 @@ def _cmd_doctor_settings(env, opts):
     from .settings_audit import (
         Context, build_context, exit_code, load_codex_layers, render_json_obj,
         render_provider_json_obj, render_provider_text, render_text, run_checks,
-        run_codex_checks,
+        run_codex_checks, run_cursor_checks,
     )
     target = opts["target"] or os.getcwd()
     provider = opts["provider"] or None
@@ -83,6 +83,13 @@ def _cmd_doctor_settings(env, opts):
 
     profile_name = opts["profile"] or None
     ctx = build_context(env, target, profile_name=profile_name)
+    if provider == "cursor":
+        findings = run_cursor_checks(ctx)
+        if opts["json"]:
+            print(json.dumps(render_provider_json_obj(provider, ctx, findings), ensure_ascii=False))
+        else:
+            print(render_provider_text(provider, ctx, findings))
+        sys.exit(exit_code(findings))
     findings = run_checks(ctx)
     if provider == "claude-code":
         if opts["json"]:

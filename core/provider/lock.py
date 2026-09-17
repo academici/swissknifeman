@@ -658,7 +658,7 @@ def _bootstrap_admission_error(admission: BootstrapTransferAdmission,
         return "bootstrap-lock-present"
     if not existing_path.is_file() or existing_path.is_symlink():
         return "bootstrap-preimage-missing"
-    if sha256_digest(existing_path.read_bytes()) != _BOOTSTRAP_PREIMAGE:
+    if sha256_digest(existing_path.read_bytes()) != admission.existing_preimage_sha256:
         return "bootstrap-preimage-mismatch"
     if created_path.exists() or created_path.is_symlink():
         return "bootstrap-created-target-present"
@@ -672,7 +672,6 @@ def _bootstrap_admission_contract_error(admission: BootstrapTransferAdmission,
     """Validate D104's sealed in-memory shape without inspecting its root."""
     if (admission.decision_id != _BOOTSTRAP_DECISION_ID or
             admission.existing_target_path != _BOOTSTRAP_EXISTING_TARGET or
-            admission.existing_preimage_sha256 != _BOOTSTRAP_PREIMAGE or
             admission.created_target_path != _BOOTSTRAP_CREATED_TARGET or
             admission.existing_artifact_id != _BOOTSTRAP_EXISTING_ARTIFACT or
             admission.created_artifact_id != _BOOTSTRAP_CREATED_ARTIFACT or
@@ -954,7 +953,7 @@ def _chained_bootstrap_rollback_error(root: Path, plan: object) -> str | None:
             mcp_path.read_bytes() != mcp.managed_bytes or
             sha256_digest(mcp.managed_bytes) != _CHAINED_MCP_PREIMAGE):
         return "chained bootstrap rollback managed state changed"
-    if (sha256_digest(backup_path.read_bytes()) != _BOOTSTRAP_PREIMAGE or
+    if (sha256_digest(backup_path.read_bytes()) != admission.bootstrap_admission.existing_preimage_sha256 or
             sha256_digest(mcp_backup_path.read_bytes()) != _CHAINED_MCP_PREIMAGE):
         return "chained bootstrap rollback backup changed"
     return None

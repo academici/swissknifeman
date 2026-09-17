@@ -75,7 +75,8 @@ def _parse_provider(raw: object) -> ProviderDistributionSpec:
 def load_distribution_catalog(path: Path | None = None) -> DistributionCatalog:
     """Read ``configs/provider-distribution.json`` from *path* or the repo default."""
     if path is None:
-        path = Path(__file__).resolve().parents[2] / "configs" / "provider-distribution.json"
+        from ..config_paths import shared_config_path
+        path = shared_config_path("provider-distribution")
     path = Path(path)
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))

@@ -17,6 +17,7 @@ from typing import Mapping
 from core.cli import parse_args
 from core.io import atomic_write_text
 from core.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+from core.provider.projection import load_projection_catalog, project_common_instructions
 from core.repo import resolve_plan_dir
 from core.provider.artifact import (
     ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
@@ -973,7 +974,9 @@ def _projection(value: dict[str, object], scope: dict, provider: str, *,
     hint = (adoption_hints or {}).get(artifact_id)
     if hint is not None:
         semantic["adoption"] = dict(hint)
-    projected_common_ids = () if provider == "cursor" else common_ids
+    catalog = load_projection_catalog()
+    projected_common_ids = (common_ids if project_common_instructions(catalog, ProviderId(provider))
+                            else ())
     result = plan_artifact_render(ArtifactRenderRequest(
         artifact_id, sources,
         ArtifactTarget(target, ("managed-blocks", blocks)), identity, (), semantic,

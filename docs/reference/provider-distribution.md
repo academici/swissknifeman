@@ -27,6 +27,9 @@ Adding a fourth provider or a new channel means extending the JSON catalog and t
 |:--|:--|
 | `configs/provider-capabilities.json` | 36-capability matrix (native/adapted/unsupported) |
 | `configs/provider-distribution.json` | Skill connect/vendor/discovery channels |
+| `configs/provider-projection.json` | Instruction/route/command projection policies |
+| `configs/command-routing.json` | Task command routing SSOT |
+| `configs/profile-catalog.json` | Harness profile catalog SSOT |
 | `config.json` (maind hub) | Fleet project registry, MCP inventory, `extra_servers` |
 
 Package-local trees under `packages/*/configs/` remain **provider render bindings** (harness MCP/hooks/profile catalogs, task routing). Shared contracts that multiple packages must agree on live under repository-root `configs/`.

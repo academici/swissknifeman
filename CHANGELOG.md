@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [0.21.3] - 2026-09-17
+
+### Added
+
+- **Provider projection SSOT.** `configs/provider-projection.json` +
+  `core.provider.projection` — instruction/route/command dispatch без provider `if/elif`
+  в harness/task. Док: `docs/reference/provider-projection.md`.
+- **Shared root configs.** `configs/command-routing.json`, `configs/profile-catalog.json`
+  + `core.config_paths.shared_config_path`; legacy package paths — symlinks.
+
+### Fixed
+
+- **D104 bootstrap.** Сохраняет non-`SessionStart` hooks при compose (dterema/brain и др.).
+
+### Changed
+
+- **Provider dispatch refactor.** `instructions.py`, `route_evidence.py`, `command_render.py`
+  читают projection catalog вместо hardcoded cursor/codex/claude веток.
+
 ## [0.21.2] - 2026-09-17
 
 ### Added

@@ -897,7 +897,7 @@ def validate_d104_codex_lifecycle_composition(document: bytes, *, memory_command
     if not isinstance(value, dict) or set(value) != {"hooks"}:
         raise ValueError("HARNESS_D104_LIFECYCLE_INVALID")
     hooks = value["hooks"]
-    if not isinstance(hooks, dict) or set(hooks) != {"SessionStart"}:
+    if not isinstance(hooks, dict) or "SessionStart" not in hooks:
         raise ValueError("HARNESS_D104_LIFECYCLE_INVALID")
     groups = hooks["SessionStart"]
     if not isinstance(groups, list) or len(groups) != 2:

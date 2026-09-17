@@ -13,6 +13,7 @@ from typing import Mapping
 from core.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
 from core.provider.manifest import (ProviderCapabilityManifest, load_provider_manifest,
                                     provider_support_projection)
+from core.provider.projection import ProjectionCatalog, load_projection_catalog, projection_spec
 from core.provider.artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
                                     ArtifactRenderResult, ArtifactSource, ArtifactTarget,
                                     plan_artifact_render)
@@ -367,6 +368,33 @@ def render_claude_invocation(record: CommandRecord, arguments: str,
     return invocation
 
 
+_PROJECTION_CATALOG: ProjectionCatalog | None = None
+_INVOCATION_BY_STYLE = {
+    "slash": render_claude_invocation,
+    "dollar": render_invocation,
+    "semantic": render_cursor_invocation,
+}
+
+
+def _projection_catalog():
+    global _PROJECTION_CATALOG
+    if _PROJECTION_CATALOG is None:
+        _PROJECTION_CATALOG = load_projection_catalog()
+    return _PROJECTION_CATALOG
+
+
+def render_provider_invocation(record: CommandRecord, arguments: str,
+                               mapping: ProviderCommandMapping) -> str:
+    """Render native invocation via the provider projection catalog."""
+    spec = projection_spec(_projection_catalog(), ProviderId(mapping.provider_id))
+    if spec is None:
+        raise ValueError("CMD_PROVIDER_DISABLED")
+    renderer = _INVOCATION_BY_STYLE.get(spec.command_invocation.style)
+    if renderer is None:
+        raise ValueError("CMD_INVOCATION_INVALID")
+    return renderer(record, arguments, mapping)
+
+
 def parse_next_carrier(declaration: str, *, context_kind: str = "same-session",
                        item_ids: list[str] | tuple[str, ...] = (),
                        cold_start_scope: list[list[str]] | tuple[tuple[str, str], ...] = (),
@@ -501,13 +529,9 @@ def plan_provider_invocation(
         return PlanProviderInvocation(carrier, None, None, None, tuple(diagnostics))
 
     arguments = " ".join(shlex.quote(value) for value in carrier.arguments)
-    if mapping.provider_id == "claude-code":
-        invocation = render_claude_invocation(record, arguments, mapping)
-    elif mapping.provider_id == "codex":
-        invocation = render_invocation(record, arguments, mapping)
-    elif mapping.provider_id == "cursor":
-        invocation = render_cursor_invocation(record, arguments, mapping)
-    else:
+    try:
+        invocation = render_provider_invocation(record, arguments, mapping)
+    except ValueError:
         diagnostic = _diag(
             "CMD_PROVIDER_DISABLED", record, "/provider_id",
             {"provider_id": tuple(sorted(_PROVIDER_IDS))},
@@ -904,12 +928,7 @@ def build_provider_command_parity_report(
                 effort = dict(mapping.effort_selectors)[route.effort][0]
             else:
                 selector = effort = "routing-required"
-            if provider_id == "claude-code":
-                invocation = render_claude_invocation(record, "<arguments>", mapping)
-            elif provider_id == "codex":
-                invocation = render_invocation(record, "<arguments>", mapping)
-            else:
-                invocation = render_cursor_invocation(record, "<arguments>", mapping)
+            invocation = render_provider_invocation(record, "<arguments>", mapping)
             if provider_id == "claude-code":
                 artifact = claude_artifacts[record.source.path]
                 artifact_paths = [artifact.path]

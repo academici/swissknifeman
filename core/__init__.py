@@ -35,10 +35,15 @@ from .provider.manifest import (ManifestCapability, ManifestEvidence,
                                 provider_manifest_canonical_bytes,
                                 provider_manifest_sha256, provider_support_projection,
                                 support_for)
+from .config_paths import shared_config_path
 from .provider.distribution import (ConnectChannelSpec, DistributionCatalog,
                                     VendorChannelSpec, connect_channel,
                                     load_distribution_catalog, provider_distribution,
                                     vendor_channel)
+from .provider.projection import (CommandInvocationPolicy, InstructionProjectionPolicy,
+                                  ProjectionCatalog, ProviderProjectionSpec,
+                                  RouteEvidencePolicy, load_projection_catalog,
+                                  projection_spec, project_common_instructions)
 from .provider.artifact import (ArtifactAdapterIdentity, ArtifactProvenance,
                                 ArtifactRenderRequest, ArtifactRenderResult,
                                 ArtifactSource, ArtifactTarget,
@@ -92,6 +97,10 @@ __all__ = [
     "DistributionCatalog", "ConnectChannelSpec", "VendorChannelSpec",
     "load_distribution_catalog", "provider_distribution", "connect_channel",
     "vendor_channel",
+    "ProjectionCatalog", "ProviderProjectionSpec", "InstructionProjectionPolicy",
+    "RouteEvidencePolicy", "CommandInvocationPolicy", "load_projection_catalog",
+    "projection_spec", "project_common_instructions",
+    "shared_config_path",
     "ArtifactSource", "ArtifactTarget", "ArtifactAdapterIdentity",
     "ArtifactRenderRequest", "ArtifactProvenance", "ArtifactRenderResult",
     "canonical_json_bytes", "sha256_digest", "validate_target_path",

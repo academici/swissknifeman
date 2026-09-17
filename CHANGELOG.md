@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.21.2] - 2026-09-17
+
 ### Added
 
 - **Provider distribution SSOT.** `configs/provider-distribution.json` +

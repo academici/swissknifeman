@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.21.4] - 2026-09-17
+
 ### Fixed
 
 - **Deliver readback.** `command-routing.json` и `profile-catalog.json` — обычные файлы

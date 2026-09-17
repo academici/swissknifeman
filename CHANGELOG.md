@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.21.1] - 2026-09-17
+
 ### Fixed
 
 - **skiller distribution (Cursor).** `build_connect_distribution_plan()` и

@@ -5,10 +5,10 @@ cd "$REPO_ROOT"
 fail=0
 err() { echo "  FAIL: $*" >&2; fail=1; }
 
-echo "[1/10] python compile"
+echo "[1/12] python compile"
 python3 -m compileall -q lib tests || err "py_compile"
 
-echo "[2/10] вендоринг _usage.py (SCHEMA=2 run-report)"
+echo "[2/12] вендоринг _usage.py (SCHEMA=2 run-report)"
 MONOREPO_ROOT_USAGE="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 USAGE_DST="configs/claude-code/hooks/run-report/_usage.py"
 if [[ -n "$MONOREPO_ROOT_USAGE" && -f "$MONOREPO_ROOT_USAGE/core/usage.py" ]]; then
@@ -18,7 +18,7 @@ else
   [[ -f "$USAGE_DST" ]] || err "нет $USAGE_DST (standalone-раскладка без core/ — ожидается вендоренная копия)"
 fi
 
-echo "[3/10] bash syntax"
+echo "[3/12] bash syntax"
 for f in bin/harness install.sh scripts/*.sh; do
   bash -n "$f" || err "bash -n $f"
 done
@@ -29,7 +29,7 @@ while IFS= read -r -d '' py; do
   python3 -m py_compile "$py" || err "py_compile $py"
 done < <(find configs/claude-code -name '*.py' -print0)
 
-echo "[4/10] JSON (плагин + пресеты)"
+echo "[4/12] JSON (плагин + пресеты)"
 python3 - <<'PY' || err "битый JSON"
 import glob, json, sys
 bad = []
@@ -43,7 +43,7 @@ for b in bad:
 sys.exit(1 if bad else 0)
 PY
 
-echo "[5/10] обязательные файлы"
+echo "[5/12] обязательные файлы"
 for f in bin/harness lib/harness/__init__.py lib/harness/cli.py \
          scripts/apply-permissions.sh configs/claude-code/settings.base.json \
          .claude-plugin/plugin.json commands/harness.md \
@@ -51,7 +51,7 @@ for f in bin/harness lib/harness/__init__.py lib/harness/cli.py \
   [[ -e "$f" ]] || err "нет файла: $f"
 done
 
-echo "[6/10] slash-команды (frontmatter)"
+echo "[6/12] slash-команды (frontmatter)"
 python3 - <<'PY' || err "битый frontmatter в commands/*.md"
 import glob, sys
 bad = []
@@ -74,7 +74,7 @@ for b in bad:
 sys.exit(1 if bad else 0)
 PY
 
-echo "[7/10] импорт пакета + тесты"
+echo "[7/12] импорт пакета + тесты"
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "import harness.cli" \
@@ -86,20 +86,28 @@ from harness.common import Env
 sys.exit(do_doctor(Env('$REPO_ROOT', 'validate')))" || err "agent-packs integrity"
 scripts/test.sh || err "тесты"
 
-echo "[8/11] generated provider instructions reference"
+echo "[8/12] generated provider instructions reference"
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" \
   python3 scripts/generate-provider-instructions.py --check \
   || err "generated provider instructions reference"
 
-echo "[9/11] реестр ролей ревью"
+echo "[9/12] реестр ролей ревью"
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -m harness.reviewroles --check \
   || err "реестр ролей ревью (role-bindings.json)"
 
-echo "[10/11] дрейф инструкций (18 проекций)"
+echo "[10/12] дрейф инструкций (18 проекций)"
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -m harness.instructions --check \
   || err "дрейф инструкций (harness instructions check)"
 
-echo "[11/11] политика исполнения (execution-policy)"
+echo "[11/12] правила Cursor (.cursor/rules/*.mdc как проекция каталога)"
+if [[ -n "$MONOREPO_ROOT" ]]; then
+  PYTHONPATH="$REPO_ROOT/lib:$MONOREPO_ROOT" python3 scripts/render-cursor-rules.py --check \
+    || err "правила Cursor разошлись с каталогом инструкций"
+else
+  echo "  правила Cursor: core/ не найден (standalone-раскладка) — гейт пропущен"
+fi
+
+echo "[12/12] политика исполнения (execution-policy)"
 if [[ -n "$MONOREPO_ROOT" ]]; then
   PYTHONPATH="$REPO_ROOT/lib:$MONOREPO_ROOT" python3 -m harness.execpolicy --check \
     || err "политика исполнения (execution-policy)"

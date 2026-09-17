@@ -33,7 +33,7 @@ The audit and named Claude settings doctor are separate consumers. It writes no 
 | source:configs/cursor/config/profile-bindings.json | `sha256:8772a33bbdf9d5082bc12457d135e2a29c3faf945a5f8f3c11a9954695bf1594` |
 | source:configs/cursor/hooks/lifecycle-context-bindings.json | `sha256:f1a2bd7537990e183606b57ea794a89dfd81963abbe16542500e369ccaad1add` |
 | source:configs/cursor/mcp/bindings.json | `sha256:70f8e83eaa179e26308cfbe4848429c824864e4c0e0016c520e59914aeb4b44f` |
-| render-manifest:all-provider-qualified-outputs | `sha256:9b804b4da0fd34cc4903518fb842c3b4c9105ee4303682474f81f68ab8981e78` |
+| render-manifest:all-provider-qualified-outputs | `sha256:4de9a02aeefb68047aea190bdae1852025adb1f7e1a55905c8529fe99726b07e` |
 
 The read-only JSON report retains every individual provider-qualified render hash; this manifest hash covers all of them deterministically.
 

@@ -74,7 +74,7 @@ for b in bad:
 sys.exit(1 if bad else 0)
 PY
 
-echo "[5/5] тесты + явно выбранный plan-lint"
+echo "[5/6] тесты + явно выбранный plan-lint"
 # lib/ — пакет task; MONOREPO_ROOT (на два уровня выше пакета) — чтобы опционально
 # импортировался core (fallback core.term.warn внутри plan_lint.py, см. его try/except).
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
@@ -96,6 +96,16 @@ fi
 # сверка «EN-only канон ↔ реализация» без плана на входе; отсутствие канона fail-closed.
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
   python3 scripts/plan-lint.py --conflicts || err "plan-lint.py --conflicts — см. вывод выше"
+
+# P0.7 — паритет провайдерских проекций команд держался только на unit-тестах; гейт
+# генератора покрывает ещё и claude-golden, runtime-копию plan-protocol и publication-lock.
+echo "[6/6] проекции команд провайдеров (render-provider-commands --check)"
+if [[ -n "$MONOREPO_ROOT" ]]; then
+  python3 scripts/render-provider-commands.py --check --root "$MONOREPO_ROOT" \
+    || err "проекции команд разошлись с каноном — python3 packages/task/scripts/render-provider-commands.py --write --root ."
+else
+  echo "  проекции команд: монорепо-корень не найден (standalone-раскладка) — гейт пропущен"
+fi
 
 echo ""
 if [[ "$fail" -eq 0 ]]; then echo "validate: OK"; else echo "validate: ПРОВАЛ" >&2; exit 1; fi

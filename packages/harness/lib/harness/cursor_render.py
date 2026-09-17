@@ -6,10 +6,12 @@ Approval mode and sandbox are launch-only axes and must never be written here.
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
 
 from core import ProviderId
 
+from .instructions import fragment_section, semantic_block
 from .profiles import ProfileResolution
 
 _DENY_FLOOR = [
@@ -90,42 +92,37 @@ _IDE_PERMISSIONS = {
     },
 }
 
-_RULE_CORE = """---
-alwaysApply: true
----
-<!-- swissknifeman:instructions:root:cursor:extension:begin -->
-<!-- semantic:root.cursor.instruction-precedence -->
+_LAUNCH_DESCRIPTION = (
+    "Cursor launch and autonomy in this repository — Run Mode, model routing, the permissions "
+    "deny floor, and why approval mode is not file-configurable. Read before starting or "
+    "re-configuring an autonomous session."
+)
 
-## root.cursor.instruction-precedence
-The common repository contract reaches this session through the `AGENTS.md` Cursor already reads; it is not
-repeated here. Sections marked `root.codex.*` in that file are Codex-owned and are **not** authoritative in a
-Cursor session — never follow Codex launch flags (`-a never`, `-s danger-full-access`) from them.
-<!-- swissknifeman:instructions:root:cursor:extension:end -->
-"""
 
-_RULE_LAUNCH = """---
-description: Cursor launch and autonomy in this repository — Run Mode, model routing, the permissions deny floor, and why approval mode is not file-configurable. Read before starting or re-configuring an autonomous session.
-alwaysApply: false
----
-<!-- semantic:root.cursor.launch-and-autonomy -->
+@dataclass(frozen=True)
+class _CursorRule:
+    """One `.mdc` rule: canonical body plus the Cursor-only trigger metadata."""
 
-## root.cursor.launch-and-autonomy
-Name the intended workspace, the routed model and the Run Mode before acting. Autonomy in a trusted session
-comes from launch flags (`--force --sandbox disabled --trust --approve-mcps`), never from a committed file:
-the approval mode is not project-configurable. The `deny` floor in `.cursor/cli.json` still applies under
-`--force`, so a denied secret path is a real refusal, not a transient error to retry.
-"""
+    path: str
+    semantic_id: str
+    frontmatter: tuple[str, ...]
+    managed_block: bool
 
-_RULE_PACKAGES = """---
-globs: packages/**,core/**
-alwaysApply: false
----
-<!-- semantic:root.cursor.package-scope-routing -->
 
-## root.cursor.package-scope-routing
-Start package-scoped work with the intended workspace root so native discovery reads root→cwd. During an
-authorized cross-package task, explicitly read each applicable package guide in the current session.
-"""
+# The body of every rule is read from the instruction catalog fragment
+# `configs/common/instructions/root/cursor.md`. Only the frontmatter — which has no
+# counterpart in the catalog, because triggering is a Cursor-specific concern — lives here.
+_RULES = (
+    _CursorRule(".cursor/rules/swissknifeman-core.mdc",
+                "root.cursor.instruction-precedence",
+                ("alwaysApply: true",), True),
+    _CursorRule(".cursor/rules/swissknifeman-launch.mdc",
+                "root.cursor.launch-and-autonomy",
+                (f"description: {_LAUNCH_DESCRIPTION}", "alwaysApply: false"), False),
+    _CursorRule(".cursor/rules/swissknifeman-packages.mdc",
+                "root.cursor.package-scope-routing",
+                ("globs: packages/**,core/**", "alwaysApply: false"), False),
+)
 
 
 def _load_bindings(path: Path) -> dict:
@@ -171,16 +168,61 @@ def render_cursor_permissions_json(resolution: ProfileResolution, bindings_path:
     return json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8") + b"\n"
 
 
-def render_cursor_rules(resolution: ProfileResolution) -> dict[str, bytes]:
+def _render_rule(rule: _CursorRule, root: Path | None) -> bytes:
+    body = fragment_section("root", ProviderId.CURSOR.value, rule.semantic_id, root=root)
+    ids = (rule.semantic_id,)
+    if rule.managed_block:
+        section = semantic_block("root", ProviderId.CURSOR.value, "extension", body, ids)
+    else:
+        section = (f"<!-- semantic:{rule.semantic_id} -->\n"
+                   + body.rstrip() + "\n").encode("utf-8")
+    frontmatter = "---\n" + "".join(f"{line}\n" for line in rule.frontmatter) + "---\n"
+    return frontmatter.encode("utf-8") + section
+
+
+def plan_cursor_rules(root: Path | None = None) -> dict[str, bytes]:
+    """Expected bytes of the committed `.cursor/rules/*.mdc`, keyed by repository path."""
+    return {rule.path: _render_rule(rule, root) for rule in _RULES}
+
+
+def check_cursor_rules(root: Path) -> tuple[str, ...]:
+    """Committed rule paths that drifted from the instruction catalog."""
+    drift = []
+    for path, expected in plan_cursor_rules(root).items():
+        assert_rule_frontmatter(path, expected)
+        target = Path(root) / path
+        if not target.is_file() or target.read_bytes() != expected:
+            drift.append(path)
+    return tuple(drift)
+
+
+def write_cursor_rules(root: Path) -> tuple[str, ...]:
+    """Write the committed rules from canon; returns the paths that changed."""
+    written = []
+    for path in check_cursor_rules(root):
+        target = Path(root) / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(plan_cursor_rules(root)[path])
+        written.append(path)
+    return tuple(written)
+
+
+def render_cursor_rules(resolution: ProfileResolution, *,
+                        root: Path | None = None) -> dict[str, bytes]:
     """Instruction rules ship only for the self-host umbrella repository."""
     _require_self_host(resolution)
     if (resolution.target_identity or "").rstrip(":") not in ("repo:swissknifeman", "repo:fixture"):
         return {}
-    return {
-        ".cursor/rules/swissknifeman-core.mdc": _RULE_CORE.encode("utf-8"),
-        ".cursor/rules/swissknifeman-launch.mdc": _RULE_LAUNCH.encode("utf-8"),
-        ".cursor/rules/swissknifeman-packages.mdc": _RULE_PACKAGES.encode("utf-8"),
-    }
+    return plan_cursor_rules(root)
+
+
+# Deliberately restated rather than derived from `_RULES`: a guard that reads its
+# expectations from the table it guards cannot catch a wrong edit to that table.
+_RULE_SEMANTICS = {
+    "swissknifeman-core.mdc": "root.cursor.instruction-precedence",
+    "swissknifeman-launch.mdc": "root.cursor.launch-and-autonomy",
+    "swissknifeman-packages.mdc": "root.cursor.package-scope-routing",
+}
 
 
 def assert_rule_frontmatter(path: str, content: bytes) -> None:
@@ -201,6 +243,9 @@ def assert_rule_frontmatter(path: str, content: bytes) -> None:
             raise ValueError("HARNESS_CURSOR_RULE_FRONTMATTER:packages-glob")
     else:
         raise ValueError(f"HARNESS_CURSOR_RULE_FRONTMATTER:unknown:{path}")
+    expected = _RULE_SEMANTICS[Path(path).name]
+    if f"<!-- semantic:{expected} -->" not in text:
+        raise ValueError(f"HARNESS_CURSOR_RULE_SEMANTIC:{path}")
 
 
 def profile_bindings_path(package_root: Path) -> Path:

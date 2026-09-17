@@ -1577,6 +1577,22 @@ def _fragment_body(text: str, semantic_id: str) -> str:
     return text[start:] if next_start < 0 else text[start:next_start]
 
 
+def fragment_section(scope_id: str, provider_id: str | None, semantic_id: str, *,
+                     root: Path | None = None) -> str:
+    """Body of one catalog section, so a projection never restates the text itself."""
+    base = repository_root() if root is None else Path(root)
+    path = base / _fragment_relative(scope_id, provider_id)
+    body = _fragment_body(path.read_text(encoding="utf-8"), semantic_id)
+    if not body:
+        raise ValueError(f"HARNESS_INSTRUCTION_FRAGMENT_MISSING:{semantic_id}")
+    return body
+
+
+def semantic_block(scope: str, provider: str, kind: str, text: str,
+                   ids: tuple[str, ...]) -> bytes:
+    return _block(scope, provider, kind, text, ids)
+
+
 def _managed(scope: str, provider: str, common: str, extension: str,
              common_ids: tuple[str, ...], extension_ids: tuple[str, ...]) -> bytes:
     return (_block(scope, provider, "common", common, common_ids)

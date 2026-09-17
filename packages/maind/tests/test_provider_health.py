@@ -50,6 +50,14 @@ def _write_set(root, requirements, evidence=(), project_id="alpha"):
     return load_evidence_set(path)
 
 
+def _readback_requirements():
+    return [
+        _requirement("claude-code", "provider.readback", "sealed"),
+        _requirement("codex", "provider.readback", "sealed"),
+        _requirement("cursor", "provider.readback", "sealed"),
+    ]
+
+
 def _measurement(provider):
     return {
         "provider": provider, "model_family": "unknown", "surface": "listing",
@@ -76,17 +84,19 @@ class ProviderHealthTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root, env, target, project = self._case(tmp)
             requirements = [
-                _requirement("claude-code", "provider.readback", "sealed"),
-                _requirement("codex", "provider.readback", "sealed"),
+                *_readback_requirements(),
                 _requirement("claude-code", "harness.settings", "harness"),
                 _requirement("codex", "harness.settings", "harness"),
+                _requirement("cursor", "harness.settings", "harness"),
                 _requirement("claude-code", "skill.measurement.listing", "skiller"),
                 _requirement("codex", "skill.measurement.listing", "skiller"),
+                _requirement("cursor", "skill.measurement.listing", "skiller"),
                 _requirement("shared", "skill.dependency", "skiller"),
             ]
             declared = _write_set(root, requirements, [
                 _evidence("claude-code", "provider.readback"),
                 _evidence("codex", "provider.readback"),
+                _evidence("cursor", "provider.readback"),
             ])
 
             def runner(argv, **_kwargs):
@@ -95,6 +105,7 @@ class ProviderHealthTests(unittest.TestCase):
                         "dependency_closure": {"status": "green", "diagnostics": []},
                         "measurements": {"status": "green", "rows": [
                             _measurement("claude-code"), _measurement("codex"),
+                            _measurement("cursor"),
                         ]},
                     }
                 else:
@@ -108,15 +119,21 @@ class ProviderHealthTests(unittest.TestCase):
             result = evaluate(env, {"projects": [project]}, [project], declared,
                               evaluated_at=NOW, runner=runner)
             self.assertEqual("green", result["aggregate"])
-            self.assertEqual(7, len(result["projects"][0]["rows"]))
+            self.assertEqual(10, len(result["projects"][0]["rows"]))
             self.assertNotIn(str(target), json.dumps(result))
 
     def test_timeout_becomes_non_green_rows_not_a_skipped_provider(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, env, _target, project = self._case(tmp)
             declared = _write_set(root, [
+                *_readback_requirements(),
                 _requirement("claude-code", "skill.measurement.listing", "skiller"),
                 _requirement("codex", "skill.measurement.listing", "skiller"),
+                _requirement("cursor", "skill.measurement.listing", "skiller"),
+            ], [
+                _evidence("claude-code", "provider.readback"),
+                _evidence("codex", "provider.readback"),
+                _evidence("cursor", "provider.readback"),
             ])
 
             def timeout(argv, **_kwargs):
@@ -126,51 +143,68 @@ class ProviderHealthTests(unittest.TestCase):
                               evaluated_at=NOW, runner=timeout)
             rows = result["projects"][0]["rows"]
             self.assertEqual("non-green", result["aggregate"])
-            self.assertEqual({"unavailable"}, {row["status"] for row in rows})
-            self.assertEqual({"claude-code", "codex"},
-                             {row["provider_id"] for row in rows})
+            listing_rows = [row for row in rows
+                            if row["axis_id"] == "skill.measurement.listing"]
+            self.assertEqual({"unavailable"}, {row["status"] for row in listing_rows})
+            self.assertEqual({"claude-code", "codex", "cursor"},
+                             {row["provider_id"] for row in listing_rows})
 
     def test_malformed_skiller_schema_becomes_error_rows(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, env, _target, project = self._case(tmp)
             declared = _write_set(root, [
+                *_readback_requirements(),
                 _requirement("claude-code", "skill.measurement.listing", "skiller"),
                 _requirement("codex", "skill.measurement.listing", "skiller"),
+                _requirement("cursor", "skill.measurement.listing", "skiller"),
+            ], [
+                _evidence("claude-code", "provider.readback"),
+                _evidence("codex", "provider.readback"),
+                _evidence("cursor", "provider.readback"),
             ])
             runner = lambda argv, **kwargs: subprocess.CompletedProcess(
                 argv, 0, '{"measurements": []}', "")
             result = evaluate(env, {"projects": [project]}, [project], declared,
                               evaluated_at=NOW, runner=runner)
-            self.assertEqual({"error"},
-                             {row["status"] for row in result["projects"][0]["rows"]})
+            listing_rows = [row for row in result["projects"][0]["rows"]
+                            if row["axis_id"] == "skill.measurement.listing"]
+            self.assertEqual({"error"}, {row["status"] for row in listing_rows})
 
     def test_nonzero_skiller_exit_cannot_be_green_even_with_valid_json(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, env, _target, project = self._case(tmp)
             declared = _write_set(root, [
+                *_readback_requirements(),
                 _requirement("claude-code", "skill.measurement.listing", "skiller"),
                 _requirement("codex", "skill.measurement.listing", "skiller"),
+                _requirement("cursor", "skill.measurement.listing", "skiller"),
+            ], [
+                _evidence("claude-code", "provider.readback"),
+                _evidence("codex", "provider.readback"),
+                _evidence("cursor", "provider.readback"),
             ])
             payload = {
                 "dependency_closure": {"status": "green", "diagnostics": []},
                 "measurements": {"status": "green", "rows": [
                     _measurement("claude-code"), _measurement("codex"),
+                    _measurement("cursor"),
                 ]},
             }
             runner = lambda argv, **kwargs: subprocess.CompletedProcess(
                 argv, 2, json.dumps(payload), "failed")
             result = evaluate(env, {"projects": [project]}, [project], declared,
                               evaluated_at=NOW, runner=runner)
-            self.assertEqual({"error"},
-                             {row["status"] for row in result["projects"][0]["rows"]})
+            listing_rows = [row for row in result["projects"][0]["rows"]
+                            if row["axis_id"] == "skill.measurement.listing"]
+            self.assertEqual({"error"}, {row["status"] for row in listing_rows})
 
     def test_missing_codex_evidence_cannot_be_masked_by_claude(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, env, _target, project = self._case(tmp)
-            declared = _write_set(root, [
-                _requirement("claude-code", "provider.readback", "sealed"),
-                _requirement("codex", "provider.readback", "sealed"),
-            ], [_evidence("claude-code", "provider.readback")])
+            declared = _write_set(root, _readback_requirements(), [
+                _evidence("claude-code", "provider.readback"),
+                _evidence("cursor", "provider.readback"),
+            ])
             result = evaluate(env, {"projects": [project]}, [project], declared,
                               evaluated_at=NOW)
             self.assertEqual("non-green", result["aggregate"])
@@ -180,9 +214,10 @@ class ProviderHealthTests(unittest.TestCase):
     def test_evidence_set_seal_and_project_set_are_exact(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, env, _target, project = self._case(tmp)
-            declared = _write_set(root, [
-                _requirement("claude-code", "provider.readback", "sealed"),
-                _requirement("codex", "provider.readback", "sealed"),
+            declared = _write_set(root, _readback_requirements(), [
+                _evidence("claude-code", "provider.readback"),
+                _evidence("codex", "provider.readback"),
+                _evidence("cursor", "provider.readback"),
             ])
             with self.assertRaisesRegex(ValueError, "PH_PROJECT_SET_MISMATCH"):
                 evaluate(env, {}, [project, {"id": "extra"}], declared, evaluated_at=NOW)
@@ -197,11 +232,12 @@ class ProviderHealthTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root, _env = make_repo(tmp)
             with self.assertRaisesRegex(ValueError, "PH_REDACTION_REQUIRED"):
-                _write_set(root, [
-                    _requirement("claude-code", "provider.readback", "sealed"),
-                    _requirement("codex", "provider.readback", "sealed"),
-                ], [_evidence("claude-code", "provider.readback",
-                              source="secret.token")])
+                _write_set(root, _readback_requirements(), [
+                    _evidence("claude-code", "provider.readback",
+                              source="secret.token"),
+                    _evidence("codex", "provider.readback"),
+                    _evidence("cursor", "provider.readback"),
+                ])
 
 
 if __name__ == "__main__":

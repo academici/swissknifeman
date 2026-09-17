@@ -13,6 +13,7 @@ from typing import Mapping
 from core.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
 from core.provider.manifest import (ProviderCapabilityManifest, load_provider_manifest,
                                     provider_support_projection)
+from core.provider.projection import ProjectionCatalog, load_projection_catalog, projection_spec
 from core.provider.artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
                                     ArtifactRenderResult, ArtifactSource, ArtifactTarget,
                                     plan_artifact_render)
@@ -27,8 +28,10 @@ ADAPTER_VERSION = "1.0.15"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
-    "capability_bindings", "invocation_binding", "evidence",
+    "capability_bindings", "invocation_binding", "model_inventory", "evidence",
 })
+_PROVIDER_IDS = frozenset({"claude-code", "codex", "cursor"})
+_PROVIDER_ORDER = ("claude-code", "codex", "cursor")
 _PLAN_NEXT_COMMANDS = {
     "exec-items": "task:plan-exec",
     "run-items": "task:plan-run",
@@ -193,6 +196,12 @@ class PlanProviderInvocation:
         return render_codex_launch(
             self.invocation, self.model_selector, self.effort_selector, cwd)
 
+    def cursor_launch(self, cwd: str | Path) -> str:
+        """Render a complete fresh-process Cursor launch for this validated carrier."""
+        if not self.ok or not self.invocation or not self.model_selector:
+            raise ValueError("CMD_INVOCATION_INVALID")
+        return render_cursor_launch(self.invocation, self.model_selector, cwd)
+
 
 @dataclass(frozen=True)
 class RenderedCommandArtifact:
@@ -224,6 +233,23 @@ class CodexCommandRenderPlan:
 class ClaudeCommandRenderPlan:
     artifacts: tuple[RenderedCommandArtifact, ...]
     diagnostics: tuple[CommandDiagnostic, ...]
+
+    @property
+    def ok(self) -> bool:
+        return not any(item.severity == "error" for item in self.diagnostics)
+
+
+@dataclass(frozen=True)
+class CursorCommandRenderPlan:
+    results: tuple[ArtifactRenderResult, ...]
+    diagnostics: tuple[CommandDiagnostic, ...]
+
+    @property
+    def artifacts(self) -> tuple[RenderedCommandArtifact, ...]:
+        return tuple(RenderedCommandArtifact(
+            result.target.path, result.managed_bytes, result.provenance.source_hash,
+            result.provenance.rendered_hash, result.provenance.artifact_id,
+        ) for result in self.results)
 
     @property
     def ok(self) -> bool:
@@ -278,6 +304,34 @@ def render_invocation(record: CommandRecord, arguments: str,
     return invocation
 
 
+def render_cursor_invocation(record: CommandRecord, arguments: str,
+                             mapping: ProviderCommandMapping) -> str:
+    """Render the frozen Cursor semantic invocation from explicit validated values."""
+    if mapping.provider_id != "cursor" or not isinstance(arguments, str):
+        raise ValueError("CMD_INVOCATION_INVALID")
+    if "{command_id}" not in mapping.invocation_template or "{arguments}" not in mapping.invocation_template:
+        raise ValueError("CMD_INVOCATION_INVALID")
+    invocation = mapping.invocation_template.format(
+        command_id=record.command_id, arguments=arguments).rstrip()
+    if not invocation.startswith("task:"):
+        raise ValueError("CMD_INVOCATION_INVALID")
+    return invocation
+
+
+def render_cursor_launch(invocation: str, model_selector: str, cwd: str | Path) -> str:
+    """Render a shell-safe, fully routed native Cursor launch command."""
+    if (not isinstance(invocation, str) or not invocation.startswith("task:")
+            or not isinstance(model_selector, str) or not model_selector
+            or not isinstance(cwd, (str, Path)) or not str(cwd)):
+        raise ValueError("CMD_INVOCATION_INVALID")
+    return (
+        f"agent --workspace {shlex.quote(str(cwd))} "
+        f"--model {shlex.quote(model_selector)} "
+        f"--force --sandbox disabled --trust --approve-mcps "
+        f"{shlex.quote(invocation)}"
+    )
+
+
 def render_codex_launch(invocation: str, model_selector: str, effort_selector: str,
                         cwd: str | Path) -> str:
     """Render a shell-safe, fully routed native Codex launch command.
@@ -312,6 +366,33 @@ def render_claude_invocation(record: CommandRecord, arguments: str,
     if not invocation.startswith("/task:") or invocation.startswith("//"):
         raise ValueError("CMD_INVOCATION_INVALID")
     return invocation
+
+
+_PROJECTION_CATALOG: ProjectionCatalog | None = None
+_INVOCATION_BY_STYLE = {
+    "slash": render_claude_invocation,
+    "dollar": render_invocation,
+    "semantic": render_cursor_invocation,
+}
+
+
+def _projection_catalog():
+    global _PROJECTION_CATALOG
+    if _PROJECTION_CATALOG is None:
+        _PROJECTION_CATALOG = load_projection_catalog()
+    return _PROJECTION_CATALOG
+
+
+def render_provider_invocation(record: CommandRecord, arguments: str,
+                               mapping: ProviderCommandMapping) -> str:
+    """Render native invocation via the provider projection catalog."""
+    spec = projection_spec(_projection_catalog(), ProviderId(mapping.provider_id))
+    if spec is None:
+        raise ValueError("CMD_PROVIDER_DISABLED")
+    renderer = _INVOCATION_BY_STYLE.get(spec.command_invocation.style)
+    if renderer is None:
+        raise ValueError("CMD_INVOCATION_INVALID")
+    return renderer(record, arguments, mapping)
 
 
 def parse_next_carrier(declaration: str, *, context_kind: str = "same-session",
@@ -448,14 +529,12 @@ def plan_provider_invocation(
         return PlanProviderInvocation(carrier, None, None, None, tuple(diagnostics))
 
     arguments = " ".join(shlex.quote(value) for value in carrier.arguments)
-    if mapping.provider_id == "claude-code":
-        invocation = render_claude_invocation(record, arguments, mapping)
-    elif mapping.provider_id == "codex":
-        invocation = render_invocation(record, arguments, mapping)
-    else:
+    try:
+        invocation = render_provider_invocation(record, arguments, mapping)
+    except ValueError:
         diagnostic = _diag(
             "CMD_PROVIDER_DISABLED", record, "/provider_id",
-            {"provider_id": ("claude-code", "codex")},
+            {"provider_id": tuple(sorted(_PROVIDER_IDS))},
             {"provider_id": mapping.provider_id}, mapping,
             "provider projection is not enabled")
         return PlanProviderInvocation(carrier, None, None, None,
@@ -703,9 +782,77 @@ def apply_codex_command_plan(root: Path, artifact_plan: ArtifactPlan) -> Artifac
     return apply_plan(Path(root), artifact_plan)
 
 
+def plan_cursor_command_render(
+        catalog: CommandCatalog, mapping: ProviderCommandMapping,
+        capability_support: Mapping[str, str] | None = None) -> CursorCommandRenderPlan:
+    """Return a complete no-write Cursor render plan or only pre-write diagnostics."""
+    diagnostics: list[CommandDiagnostic] = []
+    if mapping.provider_id != "cursor":
+        return CursorCommandRenderPlan((), (_diag_raw(
+            "CMD_PROVIDER_DISABLED", "task:catalog", "/provider_id", {"provider_id": "cursor"},
+            {"provider_id": mapping.provider_id}, mapping, "Cursor projection is not selected"),))
+    capability_support = (dict(mapping.capability_bindings) if capability_support is None
+                          else capability_support)
+    blocked: set[str] = set()
+    for record in catalog.records:
+        diagnostics.extend(_mapping_diagnostics(record, mapping))
+        for requirement in record.capability_requirements:
+            level = capability_support.get(requirement.capability_id)
+            if level not in requirement.accepted_levels:
+                diagnostics.append(_diag(
+                    "CMD_CAPABILITY_UNSUPPORTED", record,
+                    f"/capabilities/{requirement.capability_id}",
+                    {"accepted_levels": requirement.accepted_levels}, {"support_level": level},
+                    mapping, "required command capability is missing or unsupported",
+                    severity="info"))
+                blocked.add(record.command_id)
+    diagnostics = _dedupe_diagnostics(diagnostics)
+    if any(item.severity == "error" for item in diagnostics):
+        return CursorCommandRenderPlan((), tuple(diagnostics))
+
+    results: list[ArtifactRenderResult] = []
+    all_sources = tuple(_source(record) for record in catalog.records
+                        if record.command_id not in blocked)
+    for record in catalog.records:
+        if record.command_id in blocked:
+            continue
+        name = record.command_id.removeprefix("task:")
+        base = f"packages/task/adapters/cursor/skills/task-{name}"
+        description = _frontmatter_description(catalog.content_for(record.command_id))
+        wrapper = _cursor_wrapper_bytes(record, description, mapping)
+        capabilities = tuple(item.capability_id for item in record.capability_requirements)
+        runtime = _cursor_runtime_bytes(record, catalog.content_for(record.command_id), mapping)
+        results.append(_artifact_cursor(f"task.cursor.{name.replace('-', '.')}.skill",
+                                        f"{base}/SKILL.md", wrapper, (_source(record),),
+                                        capabilities, catalog, mapping.capability_catalog_version,
+                                        {"command_id": record.command_id, "kind": "skill-wrapper"}))
+        results.append(_artifact_cursor(f"task.cursor.{name.replace('-', '.')}.runtime",
+                                        f"{base}/command.md", runtime, (_source(record),),
+                                        capabilities, catalog, mapping.capability_catalog_version,
+                                        {"command_id": record.command_id, "kind": "runtime-projection"}))
+    records = [{
+        "path": result.target.path,
+        "source_hash": result.provenance.source_hash,
+        "rendered_hash": result.provenance.rendered_hash,
+        "artifact_id": result.provenance.artifact_id,
+    } for result in sorted(results, key=lambda item: item.target.path)]
+    publication_lock = {
+        "contract_version": "1.0.0", "publication_unit": "task",
+        "version": catalog.plugin_version, "artifacts": records,
+    }
+    results.append(_artifact_cursor("task.cursor.publication-lock",
+                                      "packages/task/adapters/cursor/publication-lock.json",
+                                      _json_bytes(publication_lock), all_sources, ("skills.repository",),
+                                      catalog, mapping.capability_catalog_version,
+                                      {"publication_unit": "task", "kind": "publication-lock"}))
+    return CursorCommandRenderPlan(tuple(sorted(results, key=lambda item: item.target.path)),
+                                   tuple(diagnostics))
+
+
 def build_provider_command_parity_report(
         catalog: CommandCatalog, claude_plan: ClaudeCommandRenderPlan,
         codex_plan: CodexCommandRenderPlan,
+        cursor_plan: CursorCommandRenderPlan,
         mappings: Mapping[str, ProviderCommandMapping], *,
         expected_command_ids: tuple[str, ...],
         next_carriers: tuple[PlanNextCarrier, ...] = ()) -> dict[str, object]:
@@ -714,9 +861,9 @@ def build_provider_command_parity_report(
     This is a conformance reporter, not another renderer: it consumes the two named
     provider plans and refuses any inventory/projection delta before producing rows.
     """
-    if set(mappings) != {"claude-code", "codex"}:
-        raise ValueError("CMD_PROVIDER_DISABLED: both provider mappings are required")
-    if not claude_plan.ok or not codex_plan.ok:
+    if set(mappings) != _PROVIDER_IDS:
+        raise ValueError("CMD_PROVIDER_DISABLED: all provider mappings are required")
+    if not claude_plan.ok or not codex_plan.ok or not cursor_plan.ok:
         raise ValueError("CMD_SOURCE_DRIFT: provider render plans must be clean")
 
     catalog_ids = tuple(record.command_id for record in catalog.records)
@@ -733,6 +880,11 @@ def build_provider_command_parity_report(
         "packages/task/.codex-plugin/plugin.json",
         "packages/task/adapters/codex/publication-lock.json",
     }
+    expected_cursor = {
+        "packages/task/adapters/cursor/publication-lock.json",
+    }
+    cursor_mapping = mappings["cursor"]
+    cursor_support = dict(cursor_mapping.capability_bindings)
     for command_id in expected_command_ids:
         name = command_id.removeprefix("task:")
         expected_claude.add(f"packages/task/commands/{name}.md")
@@ -740,12 +892,23 @@ def build_provider_command_parity_report(
             f"packages/task/adapters/codex/skills/task-{name}/SKILL.md")
         expected_codex.add(
             f"packages/task/adapters/codex/skills/task-{name}/command.md")
+        record = catalog.by_id()[command_id]
+        cursor_supported = all(
+            cursor_support.get(requirement.capability_id) in requirement.accepted_levels
+            for requirement in record.capability_requirements)
+        if cursor_supported:
+            expected_cursor.add(
+                f"packages/task/adapters/cursor/skills/task-{name}/SKILL.md")
+            expected_cursor.add(
+                f"packages/task/adapters/cursor/skills/task-{name}/command.md")
 
     claude_paths = tuple(artifact.path for artifact in claude_plan.artifacts)
     codex_paths = tuple(artifact.path for artifact in codex_plan.artifacts)
+    cursor_paths = tuple(artifact.path for artifact in cursor_plan.artifacts)
     projections = {
         "claude-code": _projection_delta(expected_claude, claude_paths),
         "codex": _projection_delta(expected_codex, codex_paths),
+        "cursor": _projection_delta(expected_cursor, cursor_paths),
     }
     if (any(semantic_delta.values())
             or any(any(delta.values()) for delta in projections.values())):
@@ -758,21 +921,19 @@ def build_provider_command_parity_report(
         route = record.routing
         name = record.command_id.removeprefix("task:")
         providers = {}
-        for provider_id in ("claude-code", "codex"):
+        for provider_id in _PROVIDER_ORDER:
             mapping = mappings[provider_id]
             if route.mode == "fixed":
                 selector = dict(mapping.class_selectors)[route.model_class][0]
                 effort = dict(mapping.effort_selectors)[route.effort][0]
             else:
                 selector = effort = "routing-required"
-            invocation = (render_claude_invocation(record, "<arguments>", mapping)
-                          if provider_id == "claude-code"
-                          else render_invocation(record, "<arguments>", mapping))
+            invocation = render_provider_invocation(record, "<arguments>", mapping)
             if provider_id == "claude-code":
                 artifact = claude_artifacts[record.source.path]
                 artifact_paths = [artifact.path]
                 rendered_hashes = [artifact.rendered_hash]
-            else:
+            elif provider_id == "codex":
                 paths = [
                     f"packages/task/adapters/codex/skills/task-{name}/SKILL.md",
                     f"packages/task/adapters/codex/skills/task-{name}/command.md",
@@ -780,6 +941,23 @@ def build_provider_command_parity_report(
                 artifacts = [codex_artifacts[path] for path in paths]
                 artifact_paths = paths
                 rendered_hashes = [artifact.rendered_hash for artifact in artifacts]
+            else:
+                cursor_supported = all(
+                    dict(mapping.capability_bindings).get(requirement.capability_id)
+                    in requirement.accepted_levels
+                    for requirement in record.capability_requirements)
+                if cursor_supported:
+                    paths = [
+                        f"packages/task/adapters/cursor/skills/task-{name}/SKILL.md",
+                        f"packages/task/adapters/cursor/skills/task-{name}/command.md",
+                    ]
+                    cursor_artifacts = {item.path: item for item in cursor_plan.artifacts}
+                    artifacts = [cursor_artifacts[path] for path in paths]
+                    artifact_paths = paths
+                    rendered_hashes = [artifact.rendered_hash for artifact in artifacts]
+                else:
+                    artifact_paths = []
+                    rendered_hashes = []
             providers[provider_id] = {
                 "artifacts": artifact_paths,
                 "rendered_hashes": rendered_hashes,
@@ -805,7 +983,7 @@ def build_provider_command_parity_report(
     next_rows = []
     for carrier in next_carriers:
         providers = {}
-        for provider_id in ("claude-code", "codex"):
+        for provider_id in _PROVIDER_ORDER:
             if carrier.command_id is None:
                 providers[provider_id] = {
                     "invocation": None, "model_selector": None,
@@ -851,8 +1029,8 @@ def render_provider_commands_reference(report: Mapping[str, object]) -> bytes:
         "",
         "## Command matrix",
         "",
-        "| Semantic ID | Canonical source / SHA-256 | Neutral route | Capabilities | Claude Code | Codex |",
-        "|:--|:--|:--|:--|:--|:--|",
+        "| Semantic ID | Canonical source / SHA-256 | Neutral route | Capabilities | Claude Code | Codex | Cursor |",
+        "|:--|:--|:--|:--|:--|:--|:--|",
     ]
     for command in report["commands"]:
         route = command["routing"]
@@ -860,30 +1038,33 @@ def render_provider_commands_reference(report: Mapping[str, object]) -> bytes:
         capabilities = "<br>".join(f"`{item}`" for item in command["capabilities"])
         source = f"`{command['source']}`<br>`{command['source_hash']}`"
         provider_cells = []
-        for provider_id in ("claude-code", "codex"):
+        for provider_id in _PROVIDER_ORDER:
             projection = command["providers"][provider_id]
             provider_cells.append(
                 f"`{projection['invocation']}`<br>"
                 f"`{projection['model_selector']}/{projection['effort_selector']}`")
         lines.append(
             f"| `{command['command_id']}` | {source} | `{neutral}` | {capabilities} | "
-            f"{provider_cells[0]} | {provider_cells[1]} |")
+            + " | ".join(provider_cells) + " |")
 
     lines.extend([
         "",
         "## Semantic Next forms",
         "",
-        "| Kind | Semantic carrier | Claude Code | Codex | Diagnostics |",
-        "|:--|:--|:--|:--|:--|",
+        "| Kind | Semantic carrier | Claude Code | Codex | Cursor | Diagnostics |",
+        "|:--|:--|:--|:--|:--|:--|",
     ])
     for row in report["next_forms"]:
         carrier = row["carrier"]
         claude = row["providers"]["claude-code"]
         codex = row["providers"]["codex"]
-        diagnostics = sorted(set(claude["diagnostics"] + codex["diagnostics"]))
+        cursor = row["providers"]["cursor"]
+        diagnostics = sorted(set(claude["diagnostics"] + codex["diagnostics"]
+                                 + cursor["diagnostics"]))
         lines.append(
             f"| `{carrier['kind']}` | `{json.dumps(carrier, ensure_ascii=False, sort_keys=True)}` "
             f"| `{claude['invocation'] or '—'}` | `{codex['invocation'] or '—'}` "
+            f"| `{cursor['invocation'] or '—'}` "
             f"| `{', '.join(diagnostics) or '—'}` |")
 
     lines.extend([
@@ -893,7 +1074,119 @@ def render_provider_commands_reference(report: Mapping[str, object]) -> bytes:
         "- Semantic inventory: `missing=[]`, `extra=[]`, `duplicates=[]`.",
         "- Claude Code projection: `missing=[]`, `extra=[]`, `duplicates=[]`.",
         "- Codex projection: `missing=[]`, `extra=[]`, `duplicates=[]`.",
+        "- Cursor projection: `missing=[]`, `extra=[]`, `duplicates=[]`.",
         "- Unknown, ambiguous, unsupported, undershoot, invalid invocation and source drift are fail-closed before write.",
+        "",
+    ])
+    return "\n".join(lines).encode("utf-8")
+
+
+def render_provider_model_roles_reference(catalog: CommandCatalog) -> bytes:
+    """Render the per-provider model role guide from validated routing mappings."""
+    metadata = metadata_value(catalog)
+    mappings = metadata.get("mappings", {})
+    if set(mappings) != _PROVIDER_IDS:
+        raise ValueError("CMD_PROVIDER_DISABLED: all provider mappings are required")
+    lines = [
+        "# Provider model roles",
+        "",
+        "Hand-verified model inventories and fixed class pins for the three managed providers.",
+        "Neutral routing in `packages/task/configs/command-routing.json` uses "
+        "`model_class` (`economy` < `implementation` < `frontier`) plus `effort`; "
+        "each provider block below maps those classes to native selectors.",
+        "",
+        "Generated from the validated command-routing mappings. Do not edit the tables manually.",
+        "",
+        "## Semantic roles",
+        "",
+        "| Work kind | Neutral class | Typical commands |",
+        "|:--|:--|:--|",
+        "| Economy / ad-hoc explore | `economy` | low-risk fixes, scans |",
+        "| Implementation / execution | `implementation` | `task:dev`, `task:plan-exec`, `task:plan-close` |",
+        "| Design / audit / review | `frontier` | `task:design`, `task:plan-design`, `task:plan-audit`, `task:review` |",
+        "",
+        "Fixed commands and launch-blocks pin **one** selector per class. Inventory-only models never "
+        "substitute a missing pin (fail-closed, same as an unknown spelling in plan-protocol).",
+        "",
+        "## Class pins",
+        "",
+        "| Provider | economy | implementation | frontier |",
+        "|:--|:--|:--|:--|",
+    ]
+    pin_cells = []
+    for provider_id in _PROVIDER_ORDER:
+        mapping = mappings[provider_id]
+        selectors = mapping["class_selectors"]
+        pin_cells.append(
+            f"| `{provider_id}` | `{selectors['economy'][0]}` | `{selectors['implementation'][0]}` "
+            f"| `{selectors['frontier'][0]}` |")
+    lines.extend(pin_cells)
+    lines.extend(["", "## Model inventory", ""])
+    for provider_id in _PROVIDER_ORDER:
+        mapping = mappings[provider_id]
+        inventory = mapping["model_inventory"]
+        lines.append(f"### `{provider_id}`")
+        lines.append("")
+        lines.append(f"- `verified_at`: `{inventory['verified_at']}`")
+        lines.append(f"- `source`: {inventory['source']}")
+        if inventory.get("verification"):
+            lines.append(f"- `verification`: {inventory['verification']}")
+        lines.extend(["", "| Model id | Roles | Notes |", "|:--|:--|:--|"])
+        for entry in inventory["entries"]:
+            roles = ", ".join(entry["roles"])
+            notes = []
+            if entry.get("status"):
+                notes.append(f"status={entry['status']}")
+            if entry.get("policy"):
+                notes.append(f"policy={entry['policy']}")
+            if entry.get("notes"):
+                notes.append(entry["notes"])
+            note_cell = "; ".join(notes) if notes else "—"
+            lines.append(f"| `{entry['id']}` | {roles} | {note_cell} |")
+        auto_mode = inventory.get("auto_mode")
+        if auto_mode:
+            lines.extend([
+                "",
+                "**Auto policy** (`auto` routing-assist only):",
+                "",
+                f"- `allowed_for`: {', '.join(f'`{item}`' for item in auto_mode['allowed_for'])}",
+                f"- `forbidden_for`: {', '.join(f'`{item}`' for item in auto_mode['forbidden_for'])}",
+                "",
+                "`auto` never substitutes a fixed `frontier` or `implementation` pin in a launch-block "
+                "or fixed command.",
+            ])
+        lines.append("")
+    lines.extend([
+        "## Cursor launch contract (trusted self-host)",
+        "",
+        "Approval mode and IDE Run Mode are **not** project-configurable (see freeze E14.1). "
+        "Autonomy comes from launch flags plus a documented IDE checklist; the `deny` floor in "
+        "`.cursor/cli.json` survives `--force`.",
+        "",
+        "| Parameter | Value |",
+        "|:--|:--|",
+        "| Workspace (`cwd`) | repository root — `agent --workspace <repo-cwd>` (not `-C`) |",
+        "| Model | class pin from table above |",
+        "| Effort | from plan Routing / command frontmatter |",
+        "| CLI autonomy | `--force --sandbox disabled --trust --approve-mcps` |",
+        "| IDE Run Mode | **Run Everything** (trusted self-host only; UI-owned, not a repo file) |",
+        "",
+        "**Native Cursor command** (copy after the metadata table in a launch-block):",
+        "",
+        "```bash",
+        "agent --workspace <repo-cwd> --model <model-selector> --force --sandbox disabled --trust --approve-mcps 'task:<command> <arguments>'",
+        "```",
+        "",
+        "IDE checklist before an autonomous session:",
+        "",
+        "1. Open the intended repository root as the workspace.",
+        "2. Set Run Mode to **Run Everything** (Settings → Run Mode).",
+        "3. Confirm `.cursor/mcp.json` contains hub servers (`maind health --cwd`).",
+        "4. Pin the routed model; do not substitute `auto` for fixed frontier/implementation pins.",
+        "5. For CLI launches, pass the full flag set above; partial flags are not a trusted launch.",
+        "",
+        "Full install and profile shapes: [Cursor adapter](/skiller/adapters/cursor) and "
+        "[Harness setup: Cursor](/harness/setup/cursor).",
         "",
     ])
     return "\n".join(lines).encode("utf-8")
@@ -986,6 +1279,91 @@ def _artifact(artifact_id: str, target: str, rendered: bytes,
 
 def _source(record: CommandRecord) -> ArtifactSource:
     return ArtifactSource(record.source.source_id, record.source.path, record.source.content_hash)
+
+
+def _cursor_wrapper_bytes(record: CommandRecord, description: str,
+                          mapping: ProviderCommandMapping) -> bytes:
+    name = record.command_id.removeprefix("task:")
+    source_hash = record.source.content_hash
+    invocation = render_cursor_invocation(record, "<arguments>", mapping)
+    if record.routing.mode == "fixed":
+        selector = dict(mapping.class_selectors)[record.routing.model_class][0]
+        effort = dict(mapping.effort_selectors)[record.routing.effort][0]
+        route = f"{record.routing.model_class}/{record.routing.effort} -> {selector}/{effort}"
+    else:
+        route = "inherited-plan -> validate the current session against the selected plan item"
+    text = f'''---
+name: task-{name}
+description: {json.dumps(description, ensure_ascii=False)}
+---
+
+# Task {name}
+
+Generated Cursor adapter for semantic command `{record.command_id}`.
+
+- Invocation: `{invocation}`
+- Routing: `{route}`
+- Canonical source: `{record.source.path}`
+- Canonical SHA-256: `{source_hash}`
+- Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
+
+Read `command.md` completely and execute it with the invocation payload as the user prompt.
+Preserve the semantic command ID, gates, status literals, scope, and validation behavior.
+'''
+    return text.encode("utf-8")
+
+
+def _cursor_runtime_bytes(record: CommandRecord, content: bytes,
+                          mapping: ProviderCommandMapping) -> bytes:
+    text = content.decode("utf-8")
+    if record.kind == "plan-protocol":
+        text = _cursor_native_launch_rule(mapping) + text
+    provenance = (
+        "<!-- Generated Cursor runtime projection; do not edit as source.\n"
+        f"Canonical source: {record.source.path}\n"
+        f"Canonical SHA-256: {record.source.content_hash}\n"
+        f"Adapter: task.cursor-command/{ADAPTER_VERSION}\n"
+        "-->\n"
+    )
+    return (provenance + text).encode("utf-8")
+
+
+def _cursor_native_launch_rule(mapping: ProviderCommandMapping) -> str:
+    classes = dict(mapping.class_selectors)
+    class_routes = ", ".join(f"{name}={classes[name][0]}" for name in MODEL_CLASSES)
+    return f'''## Native Cursor launch-block — required only at a real user-facing boundary
+
+This generated runtime is the Cursor provider projection. Render only the Cursor-native launch;
+never copy Claude slash syntax or Codex `$ task:` as the executable invocation.
+
+At a fresh-session boundary print `**Native Cursor command:**` and a fenced `bash` block which
+explicitly pins the repository workspace, mapped model, and autonomy flags:
+
+```bash
+agent --workspace <repo-cwd> --model <model-selector> --force --sandbox disabled --trust --approve-mcps 'task:<command> <arguments>'
+```
+
+`auto` never substitutes a fixed frontier or implementation pin. Current Cursor mapping: {class_routes}.
+
+'''
+
+
+def _artifact_cursor(artifact_id: str, target: str, rendered: bytes,
+                     sources: tuple[ArtifactSource, ...], capabilities: tuple[str, ...],
+                     catalog: CommandCatalog, capability_catalog_version: str,
+                     semantic_parameters: Mapping[str, object]) -> ArtifactRenderResult:
+    requirements = tuple(CapabilityRequirement(CapabilityId(item),
+                                                (SupportLevel.ADAPTED, SupportLevel.NATIVE))
+                         for item in sorted(set(capabilities)))
+    parameters = dict(semantic_parameters)
+    parameters["plugin_version"] = catalog.plugin_version
+    request = ArtifactRenderRequest(
+        artifact_id, sources, ArtifactTarget(target, ("whole-file", ())),
+        ArtifactAdapterIdentity("task.cursor-command", ADAPTER_VERSION, ProviderId.CURSOR,
+                                capability_catalog_version, requirements),
+        (), parameters, lambda _request: rendered,
+    )
+    return plan_artifact_render(request)
 
 
 def _wrapper_bytes(record: CommandRecord, description: str,

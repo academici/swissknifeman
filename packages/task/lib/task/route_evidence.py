@@ -27,9 +27,12 @@ stdlib-only.
 from __future__ import annotations
 
 import json
+import importlib
 from datetime import datetime, timezone
 from pathlib import Path
 
+from core.provider.projection import load_projection_catalog, projection_spec
+from core.provider.values import ProviderId
 from task.command_catalog import CommandRecord
 from task.task_contract import EFFORT_ORDER, MODEL_CLASS_ORDER
 
@@ -49,7 +52,7 @@ except ImportError:  # pragma: no cover - standalone fallback, byte-identical to
 # and never turns a selector into proof of the route that actually ran.
 SOURCES = (
     "self-attested", "provider-doctor", "provider-config", "cli-flag",
-    "provider-thread-state",
+    "provider-thread-state", "provider-attestation",
 )
 
 # Usage/context budget axes — token/duration/tool counts only, no pricing (Code
@@ -208,16 +211,14 @@ def capture_launch(*, expected_invocation: str, expected_cwd: str | Path,
     if not semantic.startswith("task:"):
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_MISMATCH", "expected invocation must use semantic task:<command> form")
-    if provider == "codex":
-        from task.route_evidence_codex import capture_current
-        native_invocation = "$ " + semantic
-    elif provider == "claude-code":
-        from task.route_evidence_claude import capture_current
-        native_invocation = "/" + semantic
-    else:
+    catalog = load_projection_catalog()
+    spec = projection_spec(catalog, ProviderId(provider))
+    if spec is None:
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_UNAVAILABLE", f"provider {provider!r} has no route adapter")
-    return capture_current(
+    module = importlib.import_module(f"task.{spec.route_evidence.adapter}")
+    native_invocation = spec.route_evidence.semantic_prefix + semantic
+    return module.capture_current(
         expected_invocation=native_invocation,
         expected_cwd=expected_cwd,
         **adapter_options,

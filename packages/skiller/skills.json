@@ -2296,7 +2296,7 @@
       "version": "2.36.0",
       "description": "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff.",
       "sha256": "8d90360f04009ab98d2709c28676ecc73caf6dd59fe3aa5cc0f30b7d2f5422b7",
-      "content_sha256": "ca76ba9c16d86bcf1461c241e3edddf2b162d30121dbebf511fe1821e69a5fff",
+      "content_sha256": "b363852f9ca7d3cd588efb473e8c0f0f8ef5b445a229c10efbe1f6ce76a1512c",
       "tags": [
         "workflow",
         "planning",

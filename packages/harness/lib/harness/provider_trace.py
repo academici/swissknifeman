@@ -8,7 +8,7 @@ boundary: "no normalization logic lives here"). stdlib-only, no import of `analy
 (harness stays independently testable, mirroring the rest of the package)."""
 import hashlib
 
-PROVIDER_IDS = ("claude-code", "codex")
+PROVIDER_IDS = ("claude-code", "codex", "cursor")
 READER_VERSION = "1.0.0"
 
 # Same six nullable fields `analyst.trace` scores completeness over — kept here as a

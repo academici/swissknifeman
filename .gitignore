@@ -47,6 +47,8 @@ safe-dirs.json
 # `maind` (sync/deploy → mcpconfig.write_mcp). .bak — бэкап от write_mcp.
 .mcp.json
 .mcp.json.bak
+.cursor/mcp.json
+.cursor/mcp.json.bak
 
 # Генерируемые maind хук-скрипты проекта (SessionStart/SessionEnd) + их рантайм-state:
 # пишет `maind sync` из templates/health/*; лаунчер maind резолвится в самих скриптах

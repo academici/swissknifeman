@@ -42,7 +42,7 @@ skiller connect
   (playwright, filesystem, fetch, memory, sequential-thinking, github) — opt-in через
   `--mcp`; каталог инструментов — раздел [Интеграции](../integrations/). Дальше — новые
   проверенные конфигурации `.mcp.json`;
-- **Конфиги других IDE** — правила Cursor, настройки Perplexity.
+- **Cursor** — [Настройка Cursor](../setup/cursor): `.cursor/cli.json`, `.cursor/permissions.json`, `.cursor/mcp.json`; профили observe / workspace-contained / trusted-full-access.
 
 Принцип тот же, что у скиллов: всё проверено в бою, всё в одном месте,
 ставится одной командой.

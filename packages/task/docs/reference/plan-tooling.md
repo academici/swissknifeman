@@ -28,11 +28,11 @@ closure; `--fleet` оставлен CI/release. Чужой red видим; пе�
 exit при drift. Проверяй отдельно Task и core; затем обновляй через provider plugin manager
 и проверяй новым запуском. Checkout `--check` не доказывает свежесть установленного пакета.
 
-## Codex launch-block для handoff
+## Native launch-block для handoff
 
-Launch-block выбирает native-синтаксис по активному provider adapter: Claude Code получает
-slash-команду, Codex — полный `codex ...` запуск. Эти native-формы не смешиваются. Таблица хранит
-только Batch/Model/Thinking/Context/Суть; команда всегда идёт после неё отдельным fenced-блоком,
+Launch-block выбирает native-синтаксис по активному provider adapter: Claude Code — slash,
+Codex — `codex …`, Cursor — `agent …`. Эти native-формы не смешиваются. Таблица хранит
+только Batch/Model class/Effort/Context/Суть; команда всегда идёт после неё отдельным fenced-блоком,
 чтобы Markdown-переносы ячейки не ломали копирование. Предпочтительна одна физическая строка;
 если shell-команда разбита намеренно, каждая продолжаемая строка заканчивается `\`.
 
@@ -53,6 +53,28 @@ codex -C <repo-cwd> -m <model-selector> -c 'model_reasoning_effort="<effort-sele
 ```
 
 Provider-neutral форма удобна для `/clear`, native-блок делает отдельный запуск воспроизводимым.
+
+### Cursor
+
+Пины моделей — [Provider model roles](./provider-model-roles). `auto` не заменяет fixed
+frontier/implementation pin (fail-closed).
+
+| Model class | Cursor pin | Effort | Run Mode / CLI |
+|:--|:--|:--|:--|
+| `economy` | `composer-2.5-fast` | из Routing | allowlist / без `--force` |
+| `implementation` | `composer-2.5` | из Routing | trusted: Run Everything + flags ниже |
+| `frontier` | `claude-opus-5-thinking-high` | из Routing | trusted: Run Everything + flags ниже |
+
+Trusted cold-start (self-host only):
+
+```bash
+agent --workspace <repo-cwd> --model <model-selector> --force --sandbox disabled --trust --approve-mcps 'task:plan-run <PLAN-ID> <Pn.m>'
+```
+
+IDE checklist: workspace root → **Run Everything** → `maind health --cwd` → pinned model.
+Approval mode не project-configurable; `deny` floor в `.cursor/cli.json` переживает `--force`.
+
+### Codex
 
 Перед любой plan-командой (`plan-design`, `plan-exec`, `plan-run`, `plan-audit`,
 `plan-close`) Codex-проекция получает current-route provenance автоматически до первой

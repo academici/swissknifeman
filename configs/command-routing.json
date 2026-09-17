@@ -1,0 +1,208 @@
+{
+  "contract_version": "1.0.0",
+  "catalog_version": "1.0.0",
+  "plugin_version": "0.20.0",
+  "commands": [
+    {
+      "command_id": "task:design",
+      "kind": "intent",
+      "source": "packages/task/commands/design.md",
+      "argument_contract": "design brief",
+      "output_contract": "durable design/decision artifacts, no implementation code",
+      "routing": {"mode": "fixed", "model_class": "frontier", "effort": "high"},
+      "capability_requirements": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.external-research", "command.subagents"],
+      "plan_semantics": [],
+      "aliases": []
+    },
+    {
+      "command_id": "task:dev",
+      "kind": "intent",
+      "source": "packages/task/commands/dev.md",
+      "argument_contract": "owner implementation request, brief or requirements reference; explicit plan execution is opt-in",
+      "output_contract": "direct implementation and risk-proportional verification, no implicit plan lifecycle",
+      "routing": {"mode": "fixed", "model_class": "implementation", "effort": "high"},
+      "capability_requirements": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.git-write", "command.external-research", "command.subagents"],
+      "plan_semantics": [],
+      "aliases": []
+    },
+    {
+      "command_id": "task:fix",
+      "kind": "intent",
+      "source": "packages/task/commands/fix.md",
+      "argument_contract": "narrow defect/edit",
+      "output_contract": "minimal patch and focused verification",
+      "routing": {"mode": "fixed", "model_class": "implementation", "effort": "medium"},
+      "capability_requirements": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.git-write"],
+      "plan_semantics": [],
+      "aliases": []
+    },
+    {
+      "command_id": "task:make-workflow",
+      "kind": "workflow-authoring",
+      "source": "packages/task/commands/make-workflow.md",
+      "argument_contract": "workflow type and purpose",
+      "output_contract": "plan-owned workflow projection plus static review verdict",
+      "routing": {"mode": "fixed", "model_class": "implementation", "effort": "high"},
+      "capability_requirements": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.subagents", "command.workflow-carrier"],
+      "plan_semantics": [],
+      "aliases": []
+    },
+    {
+      "command_id": "task:research",
+      "kind": "intent",
+      "source": "packages/task/commands/research.md",
+      "argument_contract": "research question",
+      "output_contract": "verified synthesis with provenance",
+      "routing": {"mode": "fixed", "model_class": "frontier", "effort": "high"},
+      "capability_requirements": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.external-research", "command.subagents"],
+      "plan_semantics": [],
+      "aliases": []
+    },
+    {
+      "command_id": "task:review",
+      "kind": "intent",
+      "source": "packages/task/commands/review.md",
+      "argument_contract": "code/doc artifact reference",
+      "output_contract": "read-only adversarial findings",
+      "routing": {"mode": "fixed", "model_class": "frontier", "effort": "xhigh"},
+      "capability_requirements": ["skills.repository", "command.filesystem-read", "command.git-read", "command.external-research", "command.subagents"],
+      "plan_semantics": [],
+      "aliases": []
+    },
+    {
+      "command_id": "task:plan-design",
+      "kind": "plan-protocol",
+      "source": "packages/task/commands/plan-design.md",
+      "argument_contract": "plan ID and design mode",
+      "output_contract": "plan/design carriers and next-step handoff",
+      "routing": {"mode": "fixed", "model_class": "frontier", "effort": "high"},
+      "capability_requirements": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.external-research"],
+      "plan_semantics": ["statuses", "item-fields", "next", "journal", "commit-topology"],
+      "aliases": []
+    },
+    {
+      "command_id": "task:plan-exec",
+      "kind": "plan-protocol",
+      "source": "packages/task/commands/plan-exec.md",
+      "argument_contract": "plan ID and item list",
+      "output_contract": "implementation, validation, closed item and handoff",
+      "routing": {"mode": "fixed", "model_class": "implementation", "effort": "medium"},
+      "capability_requirements": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.git-write"],
+      "plan_semantics": ["statuses", "item-fields", "next", "journal", "commit-topology"],
+      "aliases": []
+    },
+    {
+      "command_id": "task:plan-run",
+      "kind": "plan-protocol",
+      "source": "packages/task/commands/plan-run.md",
+      "argument_contract": "plan ID and manual item list",
+      "output_contract": "the plan-exec lifecycle under the session route",
+      "routing": {"mode": "inherited-plan", "model_class": "routing-required", "effort": "routing-required"},
+      "capability_requirements": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.git-write"],
+      "plan_semantics": ["statuses", "item-fields", "next", "journal", "commit-topology"],
+      "aliases": []
+    },
+    {
+      "command_id": "task:plan-close",
+      "kind": "plan-protocol",
+      "source": "packages/task/commands/plan-close.md",
+      "argument_contract": "plan ID plus item, phase or archive mode",
+      "output_contract": "reconciled/closed/archived plan state",
+      "routing": {"mode": "fixed", "model_class": "implementation", "effort": "low"},
+      "capability_requirements": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.git-write"],
+      "plan_semantics": ["statuses", "item-fields", "next", "journal", "commit-topology"],
+      "aliases": []
+    },
+    {
+      "command_id": "task:plan-audit",
+      "kind": "plan-protocol",
+      "source": "packages/task/commands/plan-audit.md",
+      "argument_contract": "plan ID plus phase or design mode",
+      "output_contract": "append-only independent audit verdict",
+      "routing": {"mode": "fixed", "model_class": "frontier", "effort": "xhigh"},
+      "capability_requirements": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read"],
+      "plan_semantics": ["statuses", "item-fields", "next", "journal", "commit-topology"],
+      "aliases": []
+    }
+  ],
+  "mappings": {
+    "claude-code": {
+      "provider_id": "claude-code",
+      "mapping_version": "1.0.0",
+      "class_selectors": {"economy": ["haiku"], "implementation": ["sonnet"], "frontier": ["opus"]},
+      "effort_selectors": {"low": ["low"], "medium": ["medium"], "high": ["high"], "xhigh": ["xhigh"]},
+      "capability_bindings": {
+        "skills.repository": "native", "command.filesystem-read": "native", "command.filesystem-write": "native",
+        "command.git-read": "native", "command.git-write": "native", "command.external-research": "adapted",
+        "command.subagents": "native", "command.workflow-carrier": "native"
+      },
+      "invocation_binding": {"template": "/{command_id} {arguments}"},
+      "model_inventory": {
+        "verified_at": "2026-09-17",
+        "source": "claude --help @ 2.1.266 + command-routing.json D84",
+        "verification": "cli-help-and-frozen-mapping; no machine-readable catalogue exists",
+        "entries": [
+          {"id": "opus", "roles": ["frontier", "design", "audit"]},
+          {"id": "sonnet", "roles": ["implementation"]},
+          {"id": "haiku", "roles": ["economy"], "status": "confirmed"}
+        ]
+      },
+      "evidence": [{"source": "packages/task/commands", "verified_at": "2026-07-21", "scope": "current Claude task plugin", "claim": "committed slash command and frontmatter surface"}]
+    },
+    "codex": {
+      "provider_id": "codex",
+      "mapping_version": "1.0.0",
+      "class_selectors": {"economy": ["gpt-5.6-luna"], "implementation": ["gpt-5.6-terra"], "frontier": ["gpt-5.6-sol"]},
+      "effort_selectors": {"low": ["low"], "medium": ["medium"], "high": ["high"], "xhigh": ["xhigh"]},
+      "capability_bindings": {
+        "skills.repository": "native", "command.filesystem-read": "native", "command.filesystem-write": "native",
+        "command.git-read": "native", "command.git-write": "native", "command.external-research": "adapted",
+        "command.subagents": "native", "command.workflow-carrier": "adapted"
+      },
+      "invocation_binding": {"template": "$ {command_id} {arguments}"},
+      "model_inventory": {
+        "verified_at": "2026-09-17",
+        "source": "plans/2026.07.19-DUAL-PROVIDER/plan.md#D84",
+        "verification": "frozen D84 mapping; no machine-readable catalogue exists",
+        "entries": [
+          {"id": "gpt-5.6-luna", "roles": ["economy"]},
+          {"id": "gpt-5.6-terra", "roles": ["implementation"]},
+          {"id": "gpt-5.6-sol", "roles": ["frontier", "design", "audit"]}
+        ]
+      },
+      "evidence": [{"source": "plans/2026.07.19-DUAL-PROVIDER/plan.md#D84", "verified_at": "2026-07-21", "scope": "Codex command routing and invocation", "claim": "D84 freezes selectors and the mandatory `$ ` invocation prefix"}]
+    },
+    "cursor": {
+      "provider_id": "cursor",
+      "mapping_version": "1.0.0",
+      "class_selectors": {
+        "economy": ["composer-2.5-fast"],
+        "implementation": ["composer-2.5"],
+        "frontier": ["claude-opus-5-thinking-high"]
+      },
+      "effort_selectors": {"low": ["low"], "medium": ["medium"], "high": ["high"], "xhigh": ["xhigh"]},
+      "capability_bindings": {
+        "skills.repository": "native", "command.filesystem-read": "native", "command.filesystem-write": "native",
+        "command.git-read": "native", "command.git-write": "native", "command.external-research": "adapted",
+        "command.subagents": "native", "command.workflow-carrier": "unsupported"
+      },
+      "invocation_binding": {"template": "{command_id} {arguments}"},
+      "model_inventory": {
+        "verified_at": "2026-09-17",
+        "source": "agent --list-models @ 2026.09.15-d2fe57e",
+        "entries": [
+          {"id": "composer-2.5-fast", "roles": ["economy", "explore"]},
+          {"id": "composer-2.5", "roles": ["implementation"]},
+          {"id": "claude-opus-5-thinking-high", "roles": ["frontier", "design", "audit"]},
+          {"id": "gpt-5.6-sol-medium", "roles": ["alternate"]},
+          {"id": "auto", "roles": ["routing-assist"], "policy": "never-substitute-fixed-frontier"}
+        ],
+        "auto_mode": {
+          "allowed_for": ["economy", "adhoc-explore"],
+          "forbidden_for": ["fixed-frontier-commands", "plan-design", "plan-audit", "task:review"]
+        }
+      },
+      "evidence": [{"source": "docs/reference.md#cursor-models", "verified_at": "2026-09-17", "scope": "Cursor task skill carrier", "claim": "semantic task:<id> invocation and class pins verified against agent --list-models"}]
+    }
+  }
+}

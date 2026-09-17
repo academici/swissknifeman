@@ -95,7 +95,7 @@ echo "[9/11] реестр ролей ревью"
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -m harness.reviewroles --check \
   || err "реестр ролей ревью (role-bindings.json)"
 
-echo "[10/11] дрейф инструкций (12 проекций)"
+echo "[10/11] дрейф инструкций (18 проекций)"
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -m harness.instructions --check \
   || err "дрейф инструкций (harness instructions check)"
 

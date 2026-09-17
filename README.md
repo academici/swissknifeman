@@ -18,46 +18,46 @@
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
 ### Поддержка провайдеров (generated)
 
-Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `ef84f7e1a1fd47cc04ddec2ccc62dcc99887730bc84870041354cee97a13e8cc`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Подробности и операции: [provider support](docs/provider-support.md).
+Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `43b252d393b302633624d3a3589ecd9d576fafedf2c068e2d0806a096f045ae8`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Подробности и операции: [provider support](docs/provider-support.md).
 
-| Capability | Claude Code | Codex |
-|:--|:--:|:--:|
-| `agent-packs.lifecycle` | adapted | adapted |
-| `agents.catalog` | adapted | adapted |
-| `analytics.legacy-migration` | adapted | unsupported |
-| `analytics.normalized-events` | adapted | adapted |
-| `analytics.run-report` | adapted | adapted |
-| `command.external-research` | adapted | adapted |
-| `command.filesystem-read` | native | native |
-| `command.filesystem-write` | native | native |
-| `command.git-read` | native | native |
-| `command.git-write` | native | native |
-| `command.subagents` | native | native |
-| `command.workflow-carrier` | native | adapted |
-| `context.observer` | unsupported | native |
-| `context.output-style` | native | unsupported |
-| `context.plans-directory` | native | unsupported |
-| `doctor.environment` | adapted | adapted |
-| `doctor.provider` | adapted | adapted |
-| `instructions.project` | native | native |
-| `lifecycle.auto-approval` | adapted | native |
-| `lifecycle.changelog-gate` | adapted | adapted |
-| `lifecycle.command-log` | adapted | adapted |
-| `lifecycle.daemon-safety` | adapted | adapted |
-| `lifecycle.git-guardrails` | unsupported | adapted |
-| `lifecycle.memory` | adapted | adapted |
-| `lifecycle.notification` | adapted | unsupported |
-| `lifecycle.pack-guard` | adapted | adapted |
-| `lifecycle.review-gate` | adapted | adapted |
-| `lifecycle.router` | adapted | adapted |
-| `lifecycle.run-report` | adapted | adapted |
-| `lifecycle.terminal-admission` | adapted | adapted |
-| `mcp.catalog` | adapted | adapted |
-| `security.safe-dirs` | adapted | adapted |
-| `settings.audit` | adapted | adapted |
-| `settings.permissions` | adapted | adapted |
-| `skills.repository` | native | native |
-| `workflows.status` | adapted | unsupported |
+| Capability | Claude Code | Codex | Cursor |
+|:--|:--:|:--:|:--:|
+| `agent-packs.lifecycle` | adapted | adapted | unsupported |
+| `agents.catalog` | adapted | adapted | unsupported |
+| `analytics.legacy-migration` | adapted | unsupported | unsupported |
+| `analytics.normalized-events` | adapted | adapted | unsupported |
+| `analytics.run-report` | adapted | adapted | unsupported |
+| `command.external-research` | adapted | adapted | adapted |
+| `command.filesystem-read` | native | native | native |
+| `command.filesystem-write` | native | native | native |
+| `command.git-read` | native | native | native |
+| `command.git-write` | native | native | native |
+| `command.subagents` | native | native | native |
+| `command.workflow-carrier` | native | adapted | unsupported |
+| `context.observer` | unsupported | native | unsupported |
+| `context.output-style` | native | unsupported | unsupported |
+| `context.plans-directory` | native | unsupported | unsupported |
+| `doctor.environment` | adapted | adapted | adapted |
+| `doctor.provider` | adapted | adapted | adapted |
+| `instructions.project` | native | native | native |
+| `lifecycle.auto-approval` | adapted | native | adapted |
+| `lifecycle.changelog-gate` | adapted | adapted | unsupported |
+| `lifecycle.command-log` | adapted | adapted | unsupported |
+| `lifecycle.daemon-safety` | adapted | adapted | unsupported |
+| `lifecycle.git-guardrails` | unsupported | adapted | unsupported |
+| `lifecycle.memory` | adapted | adapted | unsupported |
+| `lifecycle.notification` | adapted | unsupported | unsupported |
+| `lifecycle.pack-guard` | adapted | adapted | unsupported |
+| `lifecycle.review-gate` | adapted | adapted | unsupported |
+| `lifecycle.router` | adapted | adapted | unsupported |
+| `lifecycle.run-report` | adapted | adapted | unsupported |
+| `lifecycle.terminal-admission` | adapted | adapted | unsupported |
+| `mcp.catalog` | adapted | adapted | native |
+| `security.safe-dirs` | adapted | adapted | adapted |
+| `settings.audit` | adapted | adapted | adapted |
+| `settings.permissions` | adapted | adapted | adapted |
+| `skills.repository` | native | native | native |
+| `workflows.status` | adapted | unsupported | unsupported |
 <!-- END GENERATED PROVIDER CAPABILITIES -->
 
 | Что | Коротко |

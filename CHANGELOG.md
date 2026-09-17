@@ -2,6 +2,97 @@
 
 ## [Unreleased]
 
+## [0.21.5] - 2026-09-17
+
+### Fixed
+
+- **task codex plugin.** `packages/task/.codex-plugin/plugin.json` → `div0.20.2` (пропущен при v0.21.4).
+- **Cursor MCP runtime.** `.cursor/mcp.json` в `.gitignore` (как корневой `.mcp.json`); шаблон — `.cursor/mcp.json.example`.
+
+## [0.21.4] - 2026-09-17
+
+### Fixed
+
+- **Deliver readback.** `command-routing.json` и `profile-catalog.json` — обычные файлы
+  (не symlink) в package paths; root `configs/` остаётся SSOT через `shared_config_path`.
+
+## [0.21.3] - 2026-09-17
+
+### Added
+
+- **Provider projection SSOT.** `configs/provider-projection.json` +
+  `core.provider.projection` — instruction/route/command dispatch без provider `if/elif`
+  в harness/task. Док: `docs/reference/provider-projection.md`.
+- **Shared root configs.** `configs/command-routing.json`, `configs/profile-catalog.json`
+  + `core.config_paths.shared_config_path`; legacy package paths — symlinks.
+
+### Fixed
+
+- **D104 bootstrap.** Сохраняет non-`SessionStart` hooks при compose (dterema/brain и др.).
+
+### Changed
+
+- **Provider dispatch refactor.** `instructions.py`, `route_evidence.py`, `command_render.py`
+  читают projection catalog вместо hardcoded cursor/codex/claude веток.
+
+## [0.21.2] - 2026-09-17
+
+### Added
+
+- **Provider distribution SSOT.** `configs/provider-distribution.json` +
+  `core.provider.distribution` — connect/vendor/discovery каналы без `if cursor` в
+  `publication.py`. Док: `docs/reference/provider-distribution.md`.
+
+### Changed
+
+- **maind fleet:** проект `sova` в `config.json`; MCP/instructions adopt на cursor-consumer
+  (flexcrm, cms, insiders, sova); D104 lifecycle handler для dterema/brain.
+
+## [0.21.1] - 2026-09-17
+
+### Fixed
+
+- **skiller distribution (Cursor).** `build_connect_distribution_plan()` и
+  `build_vendor_distribution_plan()` пропускают `cursor` — нет marketplace/vendor
+  канала (D8); без этого `skiller update`/`deliver` падали на cursor-enabled проектах.
+  Package `skiller` 0.17.1 → 0.17.2.
+
+## [0.21.0] - 2026-09-17
+
+### Fixed
+
+- **skiller connect (Cursor).** `build_connect_distribution_plan()` пропускает `cursor` — нет
+  marketplace-канала (D8); без этого `skiller update`/`deliver` падали на cursor-enabled проектах.
+  Package `skiller` 0.17.0 → 0.17.1.
+
+## [0.20.0] - 2026-09-17
+
+### Added
+
+- **Cursor third provider (P5).** Релиз v0.20.0: validate, attest, fleet `maind sync` +
+  `skiller deliver`; явный enable Cursor на self-host и проектах с `.cursor/mcp.json`.
+
+- **Cursor third provider (P4).** Документация: адаптер Cursor (install, trusted profile, MCP,
+  permissions); generated [Provider model roles](packages/task/docs/reference/provider-model-roles.md)
+  (pins design/exec/audit/economy + inventory и запрет Auto на fixed frontier); harness
+  [setup/cursor](packages/harness/docs/setup/cursor.md); launch-block с таблицей class→selector,
+  `agent --workspace` и IDE Run Mode checklist; instruction `root.cursor.launch-and-autonomy` в catalog.
+
+- **Cursor third provider (P3).** Task: `mappings.cursor` + `model_inventory` для всех трёх
+  провайдеров; `command_render` (launch через `agent --workspace`, не `-C`); `route_evidence_cursor`
+  и generated `packages/task/adapters/cursor/`; parity/reference на три колонки. mAInd:
+  `provider_deploy` для `.cursor/mcp.json`, `REQUIRED_PROVIDERS` включает `cursor`, health
+  `provider:cursor trust` через harness profile resolution. Harness instructions engine:
+  `PROVIDERS` + `root.cursor.*`, 21 проекция (`.cursor-instructions.mdc` / `.mdc` rules),
+  catalog `1.3.0` и compatibility fixture на 87 записей.
+
+- **Cursor third provider (P0–P2, cold-start S2).** `ProviderId.CURSOR` и полная
+  36-строчная capability matrix (`8 native` / `7 adapted` / `21 unsupported`);
+  harness-адаптер `packages/harness/configs/cursor/` (profile bindings, MCP,
+  permissions/cli render, lifecycle hooks, `.cursor/rules/*.mdc`); conformance
+  tests по design-freeze §3.6; skiller `render_cursor_publication` и listing budget
+  для `cursor` без dual-write `.agents` + `.cursor`.
+
 ## [0.19.0] - 2026-09-16
 
 ### Added

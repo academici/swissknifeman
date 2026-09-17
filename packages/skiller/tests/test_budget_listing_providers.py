@@ -59,10 +59,17 @@ class MeasureListingBudgetCase(unittest.TestCase):
         codex = measure_listing_budget(skills, "codex")
         self.assertLess(report["raw"], codex["raw"])
 
+    def test_cursor_unit_is_raw_characters_like_codex(self):
+        skills = self._skills("laravel-project")
+        report = measure_listing_budget(skills, "cursor")
+        self.assertEqual(report["unit"], "симв")
+        codex = measure_listing_budget(skills, "codex")
+        self.assertEqual(report["raw"], codex["raw"])
+
     def test_unknown_provider_dies(self):
         skills = self._skills("laravel-project")
         with self.assertRaises(SystemExit):
-            measure_listing_budget(skills, "cursor")
+            measure_listing_budget(skills, "windsurf")
 
     def test_codex_entry_uncapped_unlike_claude(self):
         # запись длиннее 1 536 симв (клиентский cap Claude) обязана дать РАЗНЫЙ

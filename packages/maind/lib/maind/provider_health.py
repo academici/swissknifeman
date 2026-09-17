@@ -29,7 +29,7 @@ from .probe import provider_health_probe
 
 
 EVIDENCE_SET_VERSION = "provider-health-evidence-set/v1"
-REQUIRED_PROVIDERS = frozenset({"claude-code", "codex"})
+REQUIRED_PROVIDERS = frozenset({"claude-code", "codex", "cursor"})
 DEFAULT_TIMEOUT = 20
 _PRODUCERS = frozenset({"sealed", "skiller", "harness", "maind"})
 _SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]*$")
@@ -128,7 +128,7 @@ def evaluate(env, config: dict[str, object], selected_projects: list[dict[str, o
     for declaration in evidence_set.projects:
         project = by_id[declaration.project_id]
         requirements = tuple(item.requirement for item in declaration.requirements)
-        _require_dual_provider(requirements)
+        _require_provider_set(requirements)
         evidence = list(declaration.evidence)
         by_producer = {
             producer: tuple(item.requirement for item in declaration.requirements
@@ -217,7 +217,7 @@ def _health_evidence(value: object) -> HealthEvidence:
     )
 
 
-def _require_dual_provider(requirements: tuple[HealthRequirement, ...]) -> None:
+def _require_provider_set(requirements: tuple[HealthRequirement, ...]) -> None:
     declared = {item.provider_id for item in requirements}
     if not REQUIRED_PROVIDERS <= declared:
         raise ValueError("PH_REQUIRED_PROVIDER_SET_MISMATCH")

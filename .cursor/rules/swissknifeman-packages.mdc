@@ -1,0 +1,9 @@
+---
+globs: packages/**,core/**
+alwaysApply: false
+---
+<!-- semantic:root.cursor.package-scope-routing -->
+
+## root.cursor.package-scope-routing
+Start package-scoped work with the intended workspace root so native discovery reads root→cwd. During an
+authorized cross-package task, explicitly read each applicable package guide in the current session.

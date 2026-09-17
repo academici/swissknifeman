@@ -17,6 +17,7 @@ from typing import Mapping
 from core.cli import parse_args
 from core.io import atomic_write_text
 from core.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+from core.provider.projection import load_projection_catalog, project_common_instructions
 from core.repo import resolve_plan_dir
 from core.provider.artifact import (
     ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
@@ -29,17 +30,38 @@ from core.provider.lock import (
 
 
 CONTRACT_VERSION = "1.0.0"
-CATALOG_VERSION = "1.2.0"
-PROVIDERS = ("claude-code", "codex")
+CATALOG_VERSION = "1.3.0"
+PROVIDERS = ("claude-code", "codex", "cursor")
 SCOPES = ("root", "skiller", "harness", "maind", "analyst", "task", "artifex")
 TARGETS = {
-    "root": {"claude-code": "CLAUDE.md", "codex": "AGENTS.md"},
-    "skiller": {"claude-code": "packages/skiller/CLAUDE.md", "codex": "packages/skiller/AGENTS.md"},
-    "harness": {"claude-code": "packages/harness/CLAUDE.md", "codex": "packages/harness/AGENTS.md"},
-    "maind": {"claude-code": "packages/maind/CLAUDE.md", "codex": "packages/maind/AGENTS.md"},
-    "analyst": {"claude-code": "packages/analyst/CLAUDE.md", "codex": "packages/analyst/AGENTS.md"},
-    "task": {"claude-code": "packages/task/CLAUDE.md", "codex": "packages/task/AGENTS.md"},
-    "artifex": {"claude-code": "packages/artifex/CLAUDE.md", "codex": "packages/artifex/AGENTS.md"},
+    "root": {
+        "claude-code": "CLAUDE.md", "codex": "AGENTS.md",
+        "cursor": ".cursor/rules/swissknifeman-instructions.mdc",
+    },
+    "skiller": {
+        "claude-code": "packages/skiller/CLAUDE.md", "codex": "packages/skiller/AGENTS.md",
+        "cursor": "packages/skiller/.cursor-instructions.mdc",
+    },
+    "harness": {
+        "claude-code": "packages/harness/CLAUDE.md", "codex": "packages/harness/AGENTS.md",
+        "cursor": "packages/harness/.cursor-instructions.mdc",
+    },
+    "maind": {
+        "claude-code": "packages/maind/CLAUDE.md", "codex": "packages/maind/AGENTS.md",
+        "cursor": "packages/maind/.cursor-instructions.mdc",
+    },
+    "analyst": {
+        "claude-code": "packages/analyst/CLAUDE.md", "codex": "packages/analyst/AGENTS.md",
+        "cursor": "packages/analyst/.cursor-instructions.mdc",
+    },
+    "task": {
+        "claude-code": "packages/task/CLAUDE.md", "codex": "packages/task/AGENTS.md",
+        "cursor": "packages/task/.cursor-instructions.mdc",
+    },
+    "artifex": {
+        "claude-code": "packages/artifex/CLAUDE.md", "codex": "packages/artifex/AGENTS.md",
+        "cursor": "packages/artifex/.cursor-instructions.mdc",
+    },
 }
 COMMON_IDS = {
     "root": ("root.ecosystem-identity", "root.repository-layout", "root.package-boundaries",
@@ -77,6 +99,9 @@ EXTENSION_IDS = {
     ("root", "codex"): ("root.codex.bootstrap", "root.codex.launch-and-hook-integrity",
                         "root.codex.fresh-agent-execution",
                         "root.codex.package-scope-routing"),
+    ("root", "cursor"): ("root.cursor.instruction-precedence",
+                         "root.cursor.launch-and-autonomy",
+                         "root.cursor.package-scope-routing"),
     ("skiller", "claude-code"): ("skiller.claude-code.marketplace-connect",
                                  "skiller.claude-code.vendor-targets",
                                  "skiller.claude-code.agent-hub"),
@@ -380,12 +405,13 @@ def validate_catalog(value: object) -> tuple[InstructionDiagnostic, ...]:
         scope = scopes[scope_index]
         if scope.get("id") != scope_id:
             continue
-        if set(scope) != {"id", "claude_target", "codex_target", "sections"}:
+        if set(scope) != {"id", "claude_target", "codex_target", "cursor_target", "sections"}:
             diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID", scope_id=scope_id,
                                      expected="scope record fields", observed=_shape(scope)))
             continue
-        observed_targets = (scope["claude_target"], scope["codex_target"])
-        expected_targets = (TARGETS[scope_id]["claude-code"], TARGETS[scope_id]["codex"])
+        observed_targets = (scope["claude_target"], scope["codex_target"], scope["cursor_target"])
+        expected_targets = (TARGETS[scope_id]["claude-code"], TARGETS[scope_id]["codex"],
+                            TARGETS[scope_id]["cursor"])
         if observed_targets != expected_targets:
             diagnostics.append(_diag("INSTRUCTION_TARGET_SET_MISMATCH", scope_id=scope_id,
                                      expected=_display(expected_targets),
@@ -783,16 +809,18 @@ def operator_reference(catalog: dict[str, object] | None = None) -> str:
     if diagnostics:
         raise InstructionValidationError(diagnostics)
     lines = ["# Provider instructions", "", "Generated from the validated D86 catalog.", "",
-             "| Scope | Claude target | Codex target | Common IDs | Claude extensions | Codex extensions |",
-             "|:--|:--|:--|--:|--:|--:|"]
+             "| Scope | Claude target | Codex target | Cursor target | Common IDs | Claude extensions | Codex extensions | Cursor extensions |",
+             "|:--|:--|:--|:--|--:|--:|--:|--:|"]
     for scope_id in SCOPES:
         lines.append(
             f"| `{scope_id}` | `{TARGETS[scope_id]['claude-code']}` | "
-            f"`{TARGETS[scope_id]['codex']}` | {len(COMMON_IDS[scope_id])} | "
+            f"`{TARGETS[scope_id]['codex']}` | `{TARGETS[scope_id]['cursor']}` | "
+            f"{len(COMMON_IDS[scope_id])} | "
             f"{len(EXTENSION_IDS[(scope_id, 'claude-code')])} | "
-            f"{len(EXTENSION_IDS[(scope_id, 'codex')])} |")
-    lines += ["", "The frozen inventory contains 56 common and 20 provider-extension IDs "
-              "(76 total) across exactly 12 targets.", "",
+            f"{len(EXTENSION_IDS[(scope_id, 'codex')])} | "
+            f"{len(EXTENSION_IDS[(scope_id, 'cursor')])} |")
+    lines += ["", "The frozen inventory contains 56 common and 23 provider-extension IDs "
+              "(79 total) across exactly 18 targets.", "",
               "## Public API", "",
               "`InstructionRequest` carries contract/catalog versions, operation ID, explicit "
               "ordered scope/provider IDs, an absolute target root, and config/authorization "
@@ -851,16 +879,17 @@ def _validate_projection_semantics(value: dict[str, object],
             continue
         for projection in scoped:
             rendered = projection.result.managed_bytes.decode("utf-8")
-            common_found = tuple(re.findall(r"<!-- semantic:([^ ]+) -->", rendered))[
-                :len(projection.common_ids)]
-            if common_found != COMMON_IDS[scope_id]:
-                diagnostics.append(_diag(
-                    "INSTRUCTION_PARITY_MISMATCH", scope_id=scope_id,
-                    provider_id=projection.provider_id,
-                    target_path=projection.target_path,
-                    artifact_id=projection.result.provenance.artifact_id,
-                    observation="semantic-invalid", expected=_display(COMMON_IDS[scope_id]),
-                    observed=_display(common_found)))
+            if projection.common_ids:
+                common_found = tuple(re.findall(r"<!-- semantic:([^ ]+) -->", rendered))[
+                    :len(projection.common_ids)]
+                if common_found != projection.common_ids:
+                    diagnostics.append(_diag(
+                        "INSTRUCTION_PARITY_MISMATCH", scope_id=scope_id,
+                        provider_id=projection.provider_id,
+                        target_path=projection.target_path,
+                        artifact_id=projection.result.provenance.artifact_id,
+                        observation="semantic-invalid", expected=_display(projection.common_ids),
+                        observed=_display(common_found)))
             if projection.extension_ids != EXTENSION_IDS[(scope_id, projection.provider_id)]:
                 diagnostics.append(_diag(
                     "INSTRUCTION_EXTENSION_ID_INVALID", scope_id=scope_id,
@@ -878,8 +907,8 @@ def _validate_projection_semantics(value: dict[str, object],
                         artifact_id=projection.result.provenance.artifact_id,
                         observation="semantic-invalid", semantic_id=semantic_id,
                         expected=_display(missing), observed="rendered assertion missing"))
-        if len(scoped) == 2:
-            left, right = scoped
+        if len(scoped) == len(PROVIDERS):
+            left, right = scoped[0], scoped[1]
             if left.common_ids != right.common_ids:
                 diagnostics.append(_diag(
                     "INSTRUCTION_PARITY_MISMATCH", scope_id=scope_id,
@@ -945,14 +974,18 @@ def _projection(value: dict[str, object], scope: dict, provider: str, *,
     hint = (adoption_hints or {}).get(artifact_id)
     if hint is not None:
         semantic["adoption"] = dict(hint)
+    catalog = load_projection_catalog()
+    projected_common_ids = (common_ids if project_common_instructions(catalog, ProviderId(provider))
+                            else ())
     result = plan_artifact_render(ArtifactRenderRequest(
         artifact_id, sources,
         ArtifactTarget(target, ("managed-blocks", blocks)), identity, (), semantic,
         lambda _request: _managed(
             scope_id, provider, common.read_text(encoding="utf-8"),
-            extension.read_text(encoding="utf-8"), common_ids, extension_ids),
+            extension.read_text(encoding="utf-8"), projected_common_ids, extension_ids),
         contract_version="1.1.0"))
-    return InstructionProjection(scope_id, provider, target, common_ids, extension_ids, result)
+    return InstructionProjection(scope_id, provider, target, projected_common_ids,
+                                 extension_ids, result)
 
 
 def _validate_record(record: dict, scope_id: str, diagnostics: list[InstructionDiagnostic],
@@ -1196,7 +1229,7 @@ def _validate_compatibility_fixture(records: dict[str, dict],
     fixture_ids = tuple(item.get("id") for item in fixture_records if isinstance(item, dict))
     expected_ids = tuple(item for scope_id in SCOPES for item in (
         COMMON_IDS[scope_id] + EXTENSION_IDS[(scope_id, "claude-code")]
-        + EXTENSION_IDS[(scope_id, "codex")]))
+        + EXTENSION_IDS[(scope_id, "codex")] + EXTENSION_IDS[(scope_id, "cursor")]))
     if fixture_ids != expected_ids:
         diagnostics.append(_diag("INSTRUCTION_COMPATIBILITY_MISMATCH",
                                  observation="semantic-invalid",
@@ -1211,7 +1244,8 @@ def _validate_compatibility_fixture(records: dict[str, dict],
         record = records.get(item["id"])
         if record is None:
             continue
-        provider_ids = PROVIDERS if record["kind"] == "common" else (record["provider_id"],)
+        provider_ids = (("claude-code", "codex") if record["kind"] == "common"
+                        else (record["provider_id"],))
         if (tuple(item["provider_ids"]) != provider_ids
                 or tuple(item["assertions"]) != tuple(record["compatibility_assertions"])):
             diagnostics.append(_diag("INSTRUCTION_COMPATIBILITY_MISMATCH",

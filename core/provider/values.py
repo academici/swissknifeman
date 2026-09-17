@@ -19,6 +19,7 @@ _SOURCE_CARRIERS = frozenset({"operation", ".swissknife.json", "config.json", "l
 class ProviderId(str, Enum):
     CLAUDE_CODE = "claude-code"
     CODEX = "codex"
+    CURSOR = "cursor"
 
 
 class SupportLevel(str, Enum):

@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "catalog_version": "1.2.0",
+  "catalog_version": "1.3.0",
   "capability_requirements": [
     {
       "id": "instructions.project",
@@ -752,8 +752,95 @@
           "compatibility_assertions": [
             "Project docs are read root→cwd and never past the repository root. Start package-scoped work with the intended cwd for native discovery. During an authorized cross-package task, explicitly read each applicable package guide in the current session; directory changes alone do not require restart."
           ]
+        },
+        {
+          "id": "root.cursor.instruction-precedence",
+          "scope_id": "root",
+          "kind": "provider-extension",
+          "provider_id": "cursor",
+          "order": 1,
+          "intent": "Apply this source-derived instruction: The common repository contract reaches this session through the AGENTS.md Cursor already reads; Codex-owned sections are not authoritative in a Cursor session.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.cursor.maintainer",
+              "action": "enforce",
+              "object": "root.cursor.instruction-precedence.requirements",
+              "boundary": "root.provider.cursor"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.cursor",
+              "path": "packages/harness/configs/common/instructions/root/cursor.md",
+              "sha256": "c87937b9930d9410e039764c6c09f385aaf838ab9032416d648c27e8d30c64d7"
+            }
+          ],
+          "compatibility_assertions": [
+            "The common repository contract reaches this session through the `AGENTS.md` Cursor already reads",
+            "root.codex.*",
+            "Codex-owned and are **not** authoritative in a Cursor session"
+          ]
+        },
+        {
+          "id": "root.cursor.launch-and-autonomy",
+          "scope_id": "root",
+          "kind": "provider-extension",
+          "provider_id": "cursor",
+          "order": 2,
+          "intent": "Apply this source-derived instruction: Name the intended workspace, the routed model and the Run Mode before acting. Autonomy in a trusted session comes from launch flags (`--force --sandbox disabled --trust --approve-mcps`), never from a committed file.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.cursor.maintainer",
+              "action": "enforce",
+              "object": "root.cursor.launch-and-autonomy.requirements",
+              "boundary": "root.provider.cursor"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.cursor",
+              "path": "packages/harness/configs/common/instructions/root/cursor.md",
+              "sha256": "c87937b9930d9410e039764c6c09f385aaf838ab9032416d648c27e8d30c64d7"
+            }
+          ],
+          "compatibility_assertions": [
+            "`--force --sandbox disabled --trust --approve-mcps`",
+            "approval mode is not project-configurable",
+            "`.cursor/cli.json` still applies under `--force`"
+          ]
+        },
+        {
+          "id": "root.cursor.package-scope-routing",
+          "scope_id": "root",
+          "kind": "provider-extension",
+          "provider_id": "cursor",
+          "order": 3,
+          "intent": "Apply this source-derived instruction: Start package-scoped work with the intended workspace root so native discovery reads root→cwd.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.cursor.maintainer",
+              "action": "enforce",
+              "object": "root.cursor.package-scope-routing.requirements",
+              "boundary": "root.provider.cursor"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.cursor",
+              "path": "packages/harness/configs/common/instructions/root/cursor.md",
+              "sha256": "c87937b9930d9410e039764c6c09f385aaf838ab9032416d648c27e8d30c64d7"
+            }
+          ],
+          "compatibility_assertions": [
+            "reads root→cwd",
+            "explicitly read each applicable package guide"
+          ]
         }
-      ]
+      ],
+      "cursor_target": ".cursor/rules/swissknifeman-instructions.mdc"
     },
     {
       "id": "skiller",
@@ -1095,7 +1182,8 @@
             "`hub.py`"
           ]
         }
-      ]
+      ],
+      "cursor_target": "packages/skiller/.cursor-instructions.mdc"
     },
     {
       "id": "harness",
@@ -1466,7 +1554,8 @@
             "the safe-dirs allowlist is machine-owned and its verdict is fail-closed"
           ]
         }
-      ]
+      ],
+      "cursor_target": "packages/harness/.cursor-instructions.mdc"
     },
     {
       "id": "maind",
@@ -1741,7 +1830,8 @@
             "`.claude/settings.local.json`"
           ]
         }
-      ]
+      ],
+      "cursor_target": "packages/maind/.cursor-instructions.mdc"
     },
     {
       "id": "analyst",
@@ -2036,7 +2126,8 @@
             "`/analyst:*`"
           ]
         }
-      ]
+      ],
+      "cursor_target": "packages/analyst/.cursor-instructions.mdc"
     },
     {
       "id": "task",
@@ -2305,7 +2396,8 @@
             "`plan-run`"
           ]
         }
-      ]
+      ],
+      "cursor_target": "packages/task/.cursor-instructions.mdc"
     },
     {
       "id": "artifex",
@@ -2540,7 +2632,8 @@
             "`codex -C packages/artifex`"
           ]
         }
-      ]
+      ],
+      "cursor_target": "packages/artifex/.cursor-instructions.mdc"
     }
   ]
 }

@@ -12,6 +12,8 @@ export default defineConfig({
   base: '/harness/',
   lastUpdated: true,
 
+  ignoreDeadLinks: [/^\/skiller\//, /^\/task\//, /^\/maind\//],
+
   themeConfig: {
     nav: [
       { text: 'Обзор', link: '/' },
@@ -31,6 +33,7 @@ export default defineConfig({
             { text: 'Statusline: контекст и уведомления', link: '/configs/statusline' },
             { text: 'Конфиги (обзор)', link: '/configs/' },
             { text: 'Настройка Claude Code (машина)', link: '/setup/claude' },
+            { text: 'Настройка Cursor', link: '/setup/cursor' },
             { text: 'Канон корневых инструкций', link: '/reference/instruction-canon' },
             { text: '*.env.ini: хуковый интент', link: '/reference/hook-intent-files' },
             { text: 'Политика исполнения', link: '/reference/execution-policy' },

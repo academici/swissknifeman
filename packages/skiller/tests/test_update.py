@@ -301,5 +301,45 @@ class UpdateCase(unittest.TestCase):
         self.assertIn("skiller update", buf.getvalue())
 
 
+class TestCursorConnectDistribution(unittest.TestCase):
+    def test_build_connect_distribution_plan_skips_cursor_marketplace(self):
+        from skiller.publication import build_connect_distribution_plan
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".agents" / "plugins").mkdir(parents=True)
+            (root / ".agents" / "plugins" / "marketplace.json").write_text(
+                json.dumps({"plugins": []}), encoding="utf-8")
+            config = {"providers": {
+                "contract_version": "1.0.0",
+                "selection": {
+                    "claude-code": {"enabled": True},
+                    "codex": {"enabled": True},
+                    "cursor": {"enabled": True},
+                },
+            }}
+            plans = build_connect_distribution_plan(
+                config, root, project_id="demo", repo_root=root)
+            self.assertEqual(tuple(plan.provider_id for plan in plans),
+                             ("claude-code", "codex"))
+
+    def test_build_vendor_distribution_plan_skips_cursor_vendor_path(self):
+        from skiller.publication import build_vendor_distribution_plan
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = {"providers": {
+                "contract_version": "1.0.0",
+                "selection": {
+                    "claude-code": {"enabled": True},
+                    "codex": {"enabled": True},
+                    "cursor": {"enabled": True},
+                },
+            }}
+            plans = build_vendor_distribution_plan(
+                config, root, project_id="demo",
+                claude_path=".claude/skills", codex_path=".agents/skills")
+            self.assertEqual(tuple(plan.provider_id for plan in plans),
+                             ("claude-code", "codex"))
+
+
 if __name__ == "__main__":
     unittest.main()

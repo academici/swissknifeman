@@ -82,23 +82,23 @@ class ProviderConformanceTests(unittest.TestCase):
         self.assertEqual(len(hashes), len(set(hashes)))
         self.assertTrue(all(value.startswith("sha256:") and len(value) == 71 for value in hashes.values()))
         fixture = json.loads((PACKAGE / "tests/fixtures_data/provider-harness-cases.json").read_text())
-        for provider in ("claude-code", "codex"):
+        for provider in ("claude-code", "codex", "cursor"):
             self.assertTrue(all(f"profile:{provider}:{profile}" in hashes
                                 for profile in ("observe", "workspace-contained", "trusted-full-access")))
             self.assertIn(f"mcp:{provider}:catalog", hashes)
             self.assertTrue(all(f"lifecycle:{provider}:{surface}" in hashes
                                 for surface in fixture["surfaces"]
-                                if surface.startswith(("lifecycle.", "context."))))
+                                if surface.startswith(("lifecycle.", "context.", "security."))))
         self.assertTrue(all(f"agent:claude-code:{role}" in hashes for role in fixture["agent_roles"]))
         self.assertTrue(all(f"agent:codex:{role}" in hashes for role in fixture["agent_roles"]
                             if role != "_common.orchestrator"))
         self.assertNotIn("agent:codex:_common.orchestrator", hashes)
-        self.assertEqual(len(hashes), 6 + 2 + 44 + 43 + 32)
-        expected = {(provider, surface) for provider in ("claude-code", "codex")
+        self.assertEqual(len(hashes), 150)
+        expected = {(provider, surface) for provider in ("claude-code", "codex", "cursor")
                     for surface in fixture["surfaces"]}
         observed = {(row["provider"], row["surface_id"]) for row in report["surface_map"]}
         self.assertEqual(observed, expected)
-        self.assertEqual(len(report["surface_map"]), 48)
+        self.assertEqual(len(report["surface_map"]), 72)
         self.assertIn({"category": "activation", "provider": "claude-code",
                        "identity": "agents.catalog", "polarity": "positive",
                        "state": "supported", "diagnostic": "HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:44"},

@@ -154,7 +154,7 @@ class TestProviderDeploy(unittest.TestCase):
                 root, deploy, preimage_hashes=preimages)
             self.assertEqual(
                 [action.diagnostic for action in adoption.actions],
-                ["explicit-adoption", "explicit-adoption"])
+                ["explicit-adoption"] * len(deploy.results))
             apply_plan(root, adoption)
 
             for row in deploy.results:
@@ -528,6 +528,27 @@ class TestProviderDeploy(unittest.TestCase):
             self.assertEqual(plan_provider_artifacts(
                 root, deploy, extra_artifacts=transfer.artifacts)["severity"], "green")
 
+    def test_d104_transfer_preserves_non_sessionstart_hooks(self):
+        harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        preimage_value = json.loads(_D104_PREIMAGE.decode("utf-8"))
+        preimage_value["hooks"]["UserPromptSubmit"] = [
+            {"hooks": [{"type": "command", "command": "echo keep"}]},
+        ]
+        preimage = (json.dumps(preimage_value, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".codex/hooks").mkdir(parents=True)
+            (root / ".codex/hooks.json").write_bytes(preimage)
+            transfer = plan_d104_bootstrap_transfer(root, harness_configs=harness)
+            self.assertEqual([action.action.value for action in transfer.plan.actions],
+                             ["update", "create"])
+            apply_plan(root, transfer.plan)
+            hooks = json.loads((root / ".codex/hooks.json").read_text(encoding="utf-8"))
+            self.assertIn("UserPromptSubmit", hooks["hooks"])
+            self.assertEqual(hooks["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"],
+                             "echo keep")
+            self.assertEqual(len(hooks["hooks"]["SessionStart"]), 2)
+
     def test_d104_transfer_refuses_changed_preimage_or_existing_handler_without_writes(self):
         harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
         for changed, handler in ((True, False), (False, True)):
@@ -541,8 +562,13 @@ class TestProviderDeploy(unittest.TestCase):
                     (root / ".codex/hooks/lifecycle.py").write_text("foreign", encoding="utf-8")
                 before = {path.relative_to(root): path.read_bytes()
                           for path in root.rglob("*") if path.is_file()}
-                transfer = plan_d104_bootstrap_transfer(root, harness_configs=harness)
-                self.assertTrue(all(action.action.value == "refuse" for action in transfer.plan.actions))
+                if changed:
+                    with self.assertRaises(ProviderDeployError):
+                        plan_d104_bootstrap_transfer(root, harness_configs=harness)
+                else:
+                    transfer = plan_d104_bootstrap_transfer(root, harness_configs=harness)
+                    self.assertTrue(all(action.action.value == "refuse"
+                                        for action in transfer.plan.actions))
                 after = {path.relative_to(root): path.read_bytes()
                          for path in root.rglob("*") if path.is_file()}
                 self.assertEqual(after, before)
@@ -729,13 +755,14 @@ class TestProviderDeploy(unittest.TestCase):
         catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
         bases = tuple(plan_mcp_projection(catalog, provider_id=provider,
             bindings_path=root / provider.value / "mcp/bindings.json", selected=(), trusted=True)
-            for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX))
+            for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX, ProviderId.CURSOR))
         servers = semantic_servers(maind={"command": "maind"},
             codegraph={"command": "uvx", "args": ["serena"]},
             perplexity={"command": "pplx"})
         plan = plan_provider_deploy(bases, servers)
         self.assertTrue(plan.green)
-        self.assertEqual([row.target_path for row in plan.results], [".mcp.json", ".codex/config.toml"])
+        self.assertEqual([row.target_path for row in plan.results],
+                         [".mcp.json", ".codex/config.toml", ".cursor/mcp.json"])
         self.assertTrue(all(b"maind" in row.rendered and b"codegraph" in row.rendered
                             for row in plan.results))
         self.assertTrue(all(row.artifact.provenance.target_path == row.target_path

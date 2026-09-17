@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 from harness.instructions import (
-    PROVIDERS, SCOPES, apply_instructions, default_request, load_catalog,
+    EXTENSION_IDS, PROVIDERS, SCOPES, apply_instructions, default_request, load_catalog,
     operator_reference, plan_instructions,
 )
 
@@ -27,7 +27,7 @@ class InstructionCompatibilityTests(unittest.TestCase):
             "captured_before_renderer": True,
             "owner_decision": "D86",
         })
-        self.assertEqual(len(expected["records"]), 84)
+        self.assertEqual(len(expected["records"]), 87)
         self.assertTrue(all(item["assertions"] for item in expected["records"]))
 
     def test_every_record_anchor_exists_in_actual_installed_consumers(self):
@@ -60,14 +60,18 @@ class InstructionCompatibilityTests(unittest.TestCase):
             request = replace(default_request("apply", root), authorized_target_paths=targets)
             applied = apply_instructions(request)
             for scope in SCOPES:
-                pair = [item for item in applied.targets if item.scope_id == scope]
-                self.assertEqual(len(pair), 2)
+                by_provider = {item.provider_id: item
+                               for item in applied.targets if item.scope_id == scope}
+                self.assertEqual(set(by_provider), set(PROVIDERS))
                 common_count = sum(
                     record["kind"] == "common"
                     for record in next(item for item in load_catalog()["scopes"]
                                        if item["id"] == scope)["sections"])
-                self.assertEqual(pair[0].ordered_semantic_ids[:common_count],
-                                 pair[1].ordered_semantic_ids[:common_count])
+                self.assertEqual(
+                    by_provider["claude-code"].ordered_semantic_ids[:common_count],
+                    by_provider["codex"].ordered_semantic_ids[:common_count])
+                self.assertEqual(by_provider["cursor"].ordered_semantic_ids,
+                                 EXTENSION_IDS[(scope, "cursor")])
 
     def test_p4_forbidden_claude_runtime_tokens_absent_from_codex_consumers(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -93,7 +97,8 @@ class InstructionCompatibilityTests(unittest.TestCase):
                            for record in scope["sections"]}
         for item in fixture["records"]:
             record = catalog_records[item["id"]]
-            expected = PROVIDERS if record["kind"] == "common" else (record["provider_id"],)
+            expected = (("claude-code", "codex") if record["kind"] == "common"
+                        else (record["provider_id"],))
             self.assertEqual(tuple(item["provider_ids"]), expected)
 
 

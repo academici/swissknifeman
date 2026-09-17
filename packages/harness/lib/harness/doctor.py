@@ -66,8 +66,8 @@ def _cmd_doctor_settings(env, opts):
     )
     target = opts["target"] or os.getcwd()
     provider = opts["provider"] or None
-    if provider not in (None, "claude-code", "codex"):
-        die(f"--provider неизвестен: {provider} (claude-code|codex)")
+    if provider not in (None, "claude-code", "codex", "cursor"):
+        die(f"--provider неизвестен: {provider} (claude-code|codex|cursor)")
     if provider == "codex" and opts["profile"]:
         die("--profile применим только к --provider claude-code")
 
@@ -103,7 +103,7 @@ def cmd_doctor(env, argv):
         "--profile": "str", "--provider": "str", "--provider-audit": "bool",
     })
     if opts["help"]:
-        print("harness doctor [--settings [--provider claude-code|codex] [--target P] "
+        print("harness doctor [--settings [--provider claude-code|codex|cursor] [--target P] "
               "[--json] [--profile NAME] | --provider-audit]\n"
               "  без флага:  диагностика окружения harness (пресеты/скрипт/хуки).\n"
               "  --settings: аудит слоёв настроек выбранного провайдера\n"

@@ -41,15 +41,18 @@ CLI всегда свежий, а путь к реестру он определ
 cd ~/projects/my-app
 skiller connect
 
-# Cursor и другие агенты — вендоринг копий скиллов
+# Cursor — managed sync (рекомендуется) или legacy vendor
 cd ~/projects/my-app
-skiller vendor --agent cursor
+# providers.selection.cursor.enabled=true в .swissknife.json, затем:
+skiller sync
+maind onboard --cwd && maind sync --project <id>
 ```
 
 | Канал | Команда | Что попадает в проект |
 |---|---|---|
 | **Claude Code** | `skiller connect` | только записи в `.claude/settings.local.json` |
-| **Cursor / generic** | `skiller vendor` | сами скиллы в `.cursor/skills` / `.ai/skills` |
+| **Cursor** | `skiller sync` + `maind onboard/sync` | скиллы в `.agents/skills` (native discovery); MCP в `.cursor/mcp.json`; permissions — [адаптер Cursor](../adapters/cursor) |
+| **Cursor (legacy)** | `skiller vendor --agent cursor` | копии в `.cursor/skills` — избегайте dual-write с `.agents` |
 | **Codex (vendor)** | `skiller sync` с `providers.codex.enabled=true` | managed copies в `.agents/skills` + provider-qualified lock |
 
 Базовые Codex-плагины устанавливаются один раз на машину шагом 1 и доступны во

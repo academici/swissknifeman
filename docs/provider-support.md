@@ -6,8 +6,8 @@
 
 - Contract: `1.0.0`
 - Catalog: `1.0.0`
-- Canonical JSON SHA-256 (without carrier LF): `ef84f7e1a1fd47cc04ddec2ccc62dcc99887730bc84870041354cee97a13e8cc`
-- Carrier SHA-256 (canonical bytes plus one LF): `7298d50fa9953353151d6c51502e98d8d15adfeeb3ff8b1f2c50cc0e741f37b2`
+- Canonical JSON SHA-256 (without carrier LF): `43b252d393b302633624d3a3589ecd9d576fafedf2c068e2d0806a096f045ae8`
+- Carrier SHA-256 (canonical bytes plus one LF): `2e5144b97745c655ef1d7ecd10354e6095f45246569a13f80c74b8eb5fbe93d8`
 - Common capabilities: `36`; Native Extensions: `0`
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
@@ -18,44 +18,44 @@ Support levels, provider bindings, limitations, evidence and diagnostics below c
 
 ## Capability matrix
 
-| Capability | Claude Code | Codex |
-|:--|:--:|:--:|
-| `agent-packs.lifecycle` | adapted | adapted |
-| `agents.catalog` | adapted | adapted |
-| `analytics.legacy-migration` | adapted | unsupported |
-| `analytics.normalized-events` | adapted | adapted |
-| `analytics.run-report` | adapted | adapted |
-| `command.external-research` | adapted | adapted |
-| `command.filesystem-read` | native | native |
-| `command.filesystem-write` | native | native |
-| `command.git-read` | native | native |
-| `command.git-write` | native | native |
-| `command.subagents` | native | native |
-| `command.workflow-carrier` | native | adapted |
-| `context.observer` | unsupported | native |
-| `context.output-style` | native | unsupported |
-| `context.plans-directory` | native | unsupported |
-| `doctor.environment` | adapted | adapted |
-| `doctor.provider` | adapted | adapted |
-| `instructions.project` | native | native |
-| `lifecycle.auto-approval` | adapted | native |
-| `lifecycle.changelog-gate` | adapted | adapted |
-| `lifecycle.command-log` | adapted | adapted |
-| `lifecycle.daemon-safety` | adapted | adapted |
-| `lifecycle.git-guardrails` | unsupported | adapted |
-| `lifecycle.memory` | adapted | adapted |
-| `lifecycle.notification` | adapted | unsupported |
-| `lifecycle.pack-guard` | adapted | adapted |
-| `lifecycle.review-gate` | adapted | adapted |
-| `lifecycle.router` | adapted | adapted |
-| `lifecycle.run-report` | adapted | adapted |
-| `lifecycle.terminal-admission` | adapted | adapted |
-| `mcp.catalog` | adapted | adapted |
-| `security.safe-dirs` | adapted | adapted |
-| `settings.audit` | adapted | adapted |
-| `settings.permissions` | adapted | adapted |
-| `skills.repository` | native | native |
-| `workflows.status` | adapted | unsupported |
+| Capability | Claude Code | Codex | Cursor |
+|:--|:--:|:--:|:--:|
+| `agent-packs.lifecycle` | adapted | adapted | unsupported |
+| `agents.catalog` | adapted | adapted | unsupported |
+| `analytics.legacy-migration` | adapted | unsupported | unsupported |
+| `analytics.normalized-events` | adapted | adapted | unsupported |
+| `analytics.run-report` | adapted | adapted | unsupported |
+| `command.external-research` | adapted | adapted | adapted |
+| `command.filesystem-read` | native | native | native |
+| `command.filesystem-write` | native | native | native |
+| `command.git-read` | native | native | native |
+| `command.git-write` | native | native | native |
+| `command.subagents` | native | native | native |
+| `command.workflow-carrier` | native | adapted | unsupported |
+| `context.observer` | unsupported | native | unsupported |
+| `context.output-style` | native | unsupported | unsupported |
+| `context.plans-directory` | native | unsupported | unsupported |
+| `doctor.environment` | adapted | adapted | adapted |
+| `doctor.provider` | adapted | adapted | adapted |
+| `instructions.project` | native | native | native |
+| `lifecycle.auto-approval` | adapted | native | adapted |
+| `lifecycle.changelog-gate` | adapted | adapted | unsupported |
+| `lifecycle.command-log` | adapted | adapted | unsupported |
+| `lifecycle.daemon-safety` | adapted | adapted | unsupported |
+| `lifecycle.git-guardrails` | unsupported | adapted | unsupported |
+| `lifecycle.memory` | adapted | adapted | unsupported |
+| `lifecycle.notification` | adapted | unsupported | unsupported |
+| `lifecycle.pack-guard` | adapted | adapted | unsupported |
+| `lifecycle.review-gate` | adapted | adapted | unsupported |
+| `lifecycle.router` | adapted | adapted | unsupported |
+| `lifecycle.run-report` | adapted | adapted | unsupported |
+| `lifecycle.terminal-admission` | adapted | adapted | unsupported |
+| `mcp.catalog` | adapted | adapted | native |
+| `security.safe-dirs` | adapted | adapted | adapted |
+| `settings.audit` | adapted | adapted | adapted |
+| `settings.permissions` | adapted | adapted | adapted |
+| `skills.repository` | native | native | native |
+| `workflows.status` | adapted | unsupported | unsupported |
 
 ## Provider selection and precedence
 
@@ -114,6 +114,11 @@ Render, check, upgrade, remove and diagnose locked packs.
   Limitations: covers role projections only: pack members that are Claude-runtime artifacts (.claude/workflows/*.js, .claude/rules/*, the review-gate shell hook and its ini) have no Codex projection and are excluded; a role that requires command.workflow-carrier is refused for Codex by the frozen renderer, so such roles are absent from the Codex projection; interview answers and pack versions stay shared with the Claude projection: the Codex lifecycle does not fork the pack catalog.
   Evidence: [2026-07-30] the deterministic adapter harness.codex.agent-packs.lifecycle renders, checks, diagnoses and removes locked Codex role projections through the same semantic role catalog and the same byte-level classification the Claude projection uses — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex agent-packs.lifecycle over role projections .codex/agents/*.toml with a provider-qualified lock, excluding Claude-runtime pack members).
 
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor agent-packs.lifecycle at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `agents.catalog`
 
 Render semantic agent requirements into native targets.
@@ -127,6 +132,11 @@ Render semantic agent requirements into native targets.
   Diagnostic: deterministic harness adapter satisfies codex agents.catalog
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor agents.catalog at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `analytics.legacy-migration`
 
@@ -142,6 +152,11 @@ Plan, dry-run, check and copy-verify supported legacy analytics into the neutral
   Limitations: the intent does not apply to Codex: there is no legacy Codex analytics carrier to migrate; new Codex writes already target the neutral store; a future Codex legacy source would be an additive change, not a reopened verdict.
   Evidence: [2026-07-30] no committed Codex legacy analytics carrier exists to migrate, and new Codex evidence is normalized into the neutral store directly, so the migration intent does not apply to this provider — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex analytics.legacy-migration applicability).
 
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor analytics.legacy-migration at P0 level unsupported
+  Limitations: no legacy Cursor analytics carrier; intent does not apply.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `analytics.normalized-events`
 
 Normalize allowlisted provider evidence into the project-local append-only neutral analytics event store with opaque provenance.
@@ -155,6 +170,11 @@ Normalize allowlisted provider evidence into the project-local append-only neutr
   Diagnostic: Codex capture input is normalized only through the named fail-closed reader
   Limitations: accepts only the committed Codex capture schema and evidenced semantic fields.
   Evidence: [2026-07-22] accepted P6 review and terminal implementation evidence prove named provider readers, neutral run projection and bounded legacy migration — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P6-analytics-contract-review.md` (frozen neutral analytics readers, store and migration).
+
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor analytics.normalized-events at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `analytics.run-report`
 
@@ -170,6 +190,11 @@ Build a deterministic one-project/session run report from normalized semantic ev
   Limitations: missing semantic evidence remains absent and is never inferred as zero.
   Evidence: [2026-07-22] accepted P6 review and terminal implementation evidence prove named provider readers, neutral run projection and bounded legacy migration — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P6-analytics-contract-review.md` (frozen neutral analytics readers, store and migration).
 
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor analytics.run-report at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `command.external-research`
 
 Use an explicitly available research or retrieval surface.
@@ -183,6 +208,11 @@ Use an explicitly available research or retrieval surface.
   Diagnostic: deterministic codex adapter satisfies command.external-research
   Limitations: availability still depends on an explicitly configured research surface.
   Evidence: [2026-07-21] D84 mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+
+- **cursor** — `adapted`; binding: `—`; adapter: `task.cursor.external-research`.
+  Diagnostic: deterministic cursor adapter satisfies command.external-research
+  Limitations: availability depends on an explicitly configured research surface and WebFetch permission token.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `command.filesystem-read`
 
@@ -198,6 +228,11 @@ Read declared repository and plan inputs.
   Limitations: none.
   Evidence: [2026-07-21] D84 mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
 
+- **cursor** — `native`; binding: `{"surface": "provider-native filesystem read"}`; adapter: `—`.
+  Diagnostic: native cursor binding satisfies command.filesystem-read
+  Limitations: none.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `command.filesystem-write`
 
 Write only declared task or plan-item targets.
@@ -211,6 +246,11 @@ Write only declared task or plan-item targets.
   Diagnostic: native codex binding satisfies command.filesystem-write
   Limitations: none.
   Evidence: [2026-07-21] D84 mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+
+- **cursor** — `native`; binding: `{"surface": "provider-native filesystem write"}`; adapter: `—`.
+  Diagnostic: native cursor binding satisfies command.filesystem-write
+  Limitations: none.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `command.git-read`
 
@@ -226,6 +266,11 @@ Inspect declared repository history and diffs.
   Limitations: none.
   Evidence: [2026-07-21] D84 mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
 
+- **cursor** — `native`; binding: `{"surface": "provider-native Git read"}`; adapter: `—`.
+  Diagnostic: native cursor binding satisfies command.git-read
+  Limitations: none.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `command.git-write`
 
 Create only task-authorized commits.
@@ -239,6 +284,11 @@ Create only task-authorized commits.
   Diagnostic: native codex binding satisfies command.git-write
   Limitations: none.
   Evidence: [2026-07-21] D84 mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+
+- **cursor** — `native`; binding: `{"surface": "provider-native Git write"}`; adapter: `—`.
+  Diagnostic: native cursor binding satisfies command.git-write
+  Limitations: none.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `command.subagents`
 
@@ -254,6 +304,11 @@ Run declared subagent and reviewer stages.
   Limitations: none.
   Evidence: [2026-07-21] D84 mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
 
+- **cursor** — `native`; binding: `{"surface": "provider-native subagents"}`; adapter: `—`.
+  Diagnostic: native cursor binding satisfies command.subagents
+  Limitations: none.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `command.workflow-carrier`
 
 Resolve a semantic orchestration carrier through the provider projection.
@@ -267,6 +322,11 @@ Resolve a semantic orchestration carrier through the provider projection.
   Diagnostic: deterministic codex adapter satisfies command.workflow-carrier
   Limitations: requires the generated carrier and native subagent binding.
   Evidence: [2026-07-21] D84 mapping declares exact support levels for every v1 command capability — `packages/task/configs/command-routing.json` (frozen task command capability mappings).
+
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor command.workflow-carrier at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `context.observer`
 
@@ -282,6 +342,11 @@ Activate the read-oriented observer context policy.
   Limitations: activation remains subject to the frozen trust, approval and sandbox axes.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor context.observer at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `context.output-style`
 
 Select a provider-native output/context style.
@@ -295,6 +360,11 @@ Select a provider-native output/context style.
   Diagnostic: unsupported codex context.output-style: no configuration key exists at the provider; fails closed with HARNESS_ACTIVATION_UNSUPPORTED
   Limitations: Codex documents no output-style configuration key; session style at Codex is a provider-owned behaviour with no project-scoped key to bind; if such a key appears, raising the level is an additive change.
   Evidence: [2026-07-30] the Codex configuration reference documents no output-style key, so no configuration binding or deterministic adapter can satisfy this surface — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex context.output-style configuration key).
+
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor context.output-style at P0 level unsupported
+  Limitations: permanently api-capped: no project-scoped configuration key.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `context.plans-directory`
 
@@ -310,6 +380,11 @@ Declare the project plan directory through a native configuration binding.
   Limitations: Codex documents no plan-directory configuration key; plan location for a Codex session is a repository convention, not a provider-bound setting; if such a key appears, raising the level is an additive change.
   Evidence: [2026-07-30] the Codex configuration reference documents no plan-directory key, so no configuration binding or deterministic adapter can satisfy this surface — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex context.plans-directory configuration key).
 
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor context.plans-directory at P0 level unsupported
+  Limitations: permanently api-capped: no project-scoped configuration key.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `doctor.environment`
 
 Diagnose harness prerequisites without mutation.
@@ -323,6 +398,11 @@ Diagnose harness prerequisites without mutation.
   Diagnostic: deterministic harness adapter satisfies codex doctor.environment
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.doctor.environment`.
+  Diagnostic: deterministic cursor adapter satisfies doctor.environment
+  Limitations: requires the committed harness cursor adapter and managed-boundary checks.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `doctor.provider`
 
@@ -338,6 +418,11 @@ Compose named provider validators and catalog diagnostics.
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.doctor.provider`.
+  Diagnostic: deterministic cursor adapter satisfies doctor.provider
+  Limitations: reports the unmanaged approval-mode axis per D2.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `instructions.project`
 
 Activate repository-scoped operator instructions after provider trust checks.
@@ -351,6 +436,11 @@ Activate repository-scoped operator instructions after provider trust checks.
   Diagnostic: native Codex repository instruction chain; activation remains trust-gated
   Limitations: none.
   Evidence: [2026-07-21] terminal P5 conformance proves exact common semantic parity and provider-owned extensions across both native instruction targets — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-instruction-conformance.md` (root and package instruction projections).
+
+- **cursor** — `native`; binding: `{"surface": ".cursor/rules/*.mdc"}`; adapter: `—`.
+  Diagnostic: native cursor binding satisfies instructions.project
+  Limitations: none.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `lifecycle.auto-approval`
 
@@ -366,6 +456,11 @@ Apply selected approval policy through a native lifecycle binding.
   Limitations: activation remains subject to the frozen trust, approval and sandbox axes.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.lifecycle.auto-approval`.
+  Diagnostic: deterministic cursor adapter satisfies lifecycle.auto-approval
+  Limitations: bounded to the allowlist half only; approval mode axis is unmanaged per D2.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `lifecycle.changelog-gate`
 
 Gate declared release-sensitive operations.
@@ -379,6 +474,11 @@ Gate declared release-sensitive operations.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.changelog-gate
   Limitations: inactive by default; reads the commit type only from a -m message: an editor-composed message is not inspected; the non-blocking warning is delivered as a systemMessage hint, not byte-identical to Claude's hookSpecificOutput.additionalContext.
   Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.changelog-gate refuses a git commit of a release-sensitive type without a staged changelog edit in mode strict, warns in warn, and is inactive by default — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.changelog-gate refusal on release-sensitive commits).
+
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor lifecycle.changelog-gate at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `lifecycle.command-log`
 
@@ -394,6 +494,11 @@ Record provider-native command execution evidence.
   Limitations: records only tool calls Codex exposes as `Bash`; a shell invocation routed through another tool name is out of the log; writes to a Codex-qualified log path; the Claude-side log at `~/.claude/logs/bash-commands.jsonl` is untouched.
   Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.command-log` writes one provider-qualified command-log line per matched Bash tool call and is observed as a green `surface_map` row for codex — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.command-log surface, hook-native binding on PreToolUse).
 
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor lifecycle.command-log at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `lifecycle.daemon-safety`
 
 Reject unsafe shared-daemon operations.
@@ -407,6 +512,11 @@ Reject unsafe shared-daemon operations.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.daemon-safety
   Limitations: pattern-based refusal over declared destructive daemon operations: an operation phrased outside the pattern set passes; the escape hatch stays the documented environment kill switch (PERPLEXITY_DAEMON_GUARD=off), not a project override; the pattern set is embedded into the generated dispatcher, so a change of the Claude-side patterns requires regenerating the Codex artifact; Codex-side activation is project-scoped opt-in via harness hooks --provider codex, unlike the Claude side which is a machine-wide always-on install.
   Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.daemon-safety refuses a matched destructive daemon command with exit 2 and a reason, from the same pattern set as the shipped Claude hook — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.daemon-safety refusal on destructive shared-daemon commands).
+
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor lifecycle.daemon-safety at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `lifecycle.git-guardrails`
 
@@ -422,6 +532,11 @@ Reject declared dangerous version-control operations.
   Limitations: inactive by default; pattern-based refusal: a command phrased outside the declared pattern set passes; the Claude half of this surface stays unsupported (see its own record): only the Codex half is closed here.
   Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.git-guardrails refuses a matched dangerous git command in mode strict, warns in warn, and is inactive by default — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.git-guardrails refusal on declared dangerous version-control commands).
 
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor lifecycle.git-guardrails at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `lifecycle.memory`
 
 Activate selected memory lifecycle integration.
@@ -435,6 +550,11 @@ Activate selected memory lifecycle integration.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.memory
   Limitations: per-project overrides are read from the Codex-side project files; Claude's `.claude/memory.*` overrides do not apply to a Codex session; the backend, its groups and its state remain owned by skiller/maind: this surface only activates them.
   Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.memory` activates the selected memory backend for a Codex session without writing memory state itself and without changing state paths owned by skiller — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.memory activation at SessionStart against unchanged `~/.swissknifeman` state ownership).
+
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor lifecycle.memory at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `lifecycle.notification`
 
@@ -450,6 +570,11 @@ Notify on provider-native waiting or approval events.
   Limitations: Codex has no Notification hook event; notifications are user-scope notify only, which a project-scoped configuration may not override, so the surface stays fail-closed under the managed-artifact model; replacement inside project scope: none; the operator may configure notify at machine level by hand.
   Evidence: [2026-07-30] Codex exposes no Notification hook event and delivers notifications only through the user-scope notify key, which a project-scoped configuration may not override, so no managed project artifact can satisfy this surface — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.notification within the managed-project-artifact model).
 
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor lifecycle.notification at P0 level unsupported
+  Limitations: permanently api-capped: no project-scoped configuration key.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `lifecycle.pack-guard`
 
 Guard managed agent-pack assets before mutation.
@@ -463,6 +588,11 @@ Guard managed agent-pack assets before mutation.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.pack-guard
   Limitations: inactive by default; the operator enables a mode explicitly, as on the Claude side; matches only the Codex apply_patch tool: a mutation performed through a shell command is out of this gate; detects a touched managed path by a best-effort substring match over the serialized apply_patch tool_input, because the exact Codex apply_patch payload shape beyond tool_name is unverified.
   Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.pack-guard refuses an apply_patch over a managed generated asset in mode strict, warns in warn, and is inactive by default — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.pack-guard refusal over managed pack assets recorded in the project's pack lock).
+
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor lifecycle.pack-guard at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `lifecycle.review-gate`
 
@@ -478,6 +608,11 @@ Gate declared review-sensitive lifecycle completion.
   Limitations: enforcement means forced continuation with feedback, not cancellation of the subagent: neither provider can cancel it from this event; the loop-guard counter lives in the dispatcher (a per-session/agent attempt count capped at 3), because stop_hook_active is documented at neither provider as reliable; inactive by default, and the check command comes only from the machine-owned hook configuration shared with the Claude review-gate install.
   Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.review-gate runs the project-declared check at SubagentStop and, in mode strict, exits 2 so the subagent continues with the violation text instead of finishing — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.review-gate enforcement at SubagentStop by preventing the subagent from stopping).
 
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor lifecycle.review-gate at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `lifecycle.router`
 
 Project semantic routing into native lifecycle activation.
@@ -491,6 +626,11 @@ Project semantic routing into native lifecycle activation.
   Diagnostic: deterministic harness adapter satisfies codex lifecycle.router
   Limitations: delivers the bias as `systemMessage`, the form the generated Codex handler already uses, not as Claude's `hookSpecificOutput.additionalContext`; the `SessionStart` half of the Claude pair (static policy) is not part of this surface at Codex, where `SessionStart` is owned by `context.observer`.
   Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.router` emits at most one non-authoritative routing bias line per prompt from the shared router catalog and never refuses a turn — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.router bias injection on UserPromptSubmit).
+
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor lifecycle.router at P0 level unsupported
+  Limitations: per-prompt bias impossible; session-scoped only in P3+.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `lifecycle.run-report`
 
@@ -506,6 +646,11 @@ Capture a provider-qualified run report at a native lifecycle boundary.
   Limitations: captures the session boundary only: the Codex transcript format is unverified, so no outcome is extracted from `transcript_path`; `reason` is currently always `other` in Codex payloads, so the report cannot distinguish end causes; outcome depth comparable to the Claude report requires the neutral analytics path (`analytics.run-report`), not this hook.
   Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.run-report` writes one provider-qualified run record per session end from the documented `SessionEnd` payload; the transcript is not parsed — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.run-report boundary capture at SessionEnd, without transcript-derived outcome extraction).
 
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor lifecycle.run-report at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `lifecycle.terminal-admission`
 
 Adapt an opted-in provider Stop boundary to Task terminal admission.
@@ -519,6 +664,11 @@ Adapt an opted-in provider Stop boundary to Task terminal admission.
   Diagnostic: opt-in Codex Stop adapter delegates final admission to Task
   Limitations: inactive by default; only an applicable Task lease is evaluated; multiple matching hooks run concurrently; does not control unconfigured or non-CLI surfaces.
   Evidence: [2026-09-10] Codex Stop hooks receive last_assistant_message and can request continuation — `https://developers.openai.com/codex/hooks` (configured trusted Codex Stop hook).
+
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor lifecycle.terminal-admission at P0 level unsupported
+  Limitations: deferred at P0 per D1; adapter does not ship yet.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `mcp.catalog`
 
@@ -534,6 +684,11 @@ Render semantic MCP descriptors with secret references only.
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
 
+- **cursor** — `native`; binding: `{"surface": ".cursor/mcp.json"}`; adapter: `—`.
+  Diagnostic: native cursor binding satisfies mcp.catalog
+  Limitations: none.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `security.safe-dirs`
 
 Maintain a fail-closed destructive-operation allowlist.
@@ -547,6 +702,11 @@ Maintain a fail-closed destructive-operation allowlist.
   Diagnostic: deterministic harness adapter satisfies codex security.safe-dirs
   Limitations: covers the hook half only: sandbox_workspace_write.writable_roots is not projected, because the sandbox axis belongs to lifecycle.auto-approval; requires the harness checkout reachable from the project, since the verdict core is called rather than copied; an unreachable core is a refusal, not a pass; the allowlist itself stays machine-owned and is never written by this surface.
   Evidence: [2026-07-30] the deterministic adapter harness.codex.security.safe-dirs reaches its verdict by calling the single allowlist verdict core used by the Claude hook, refuses fail-closed on any doubt, and does not project the sandbox configuration half — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex security.safe-dirs fail-closed refusal over the machine-owned allowlist, hook half only).
+
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.security.safe-dirs`.
+  Diagnostic: deterministic cursor adapter satisfies security.safe-dirs
+  Limitations: beforeShellExecution hook with failClosed:true calling shared verdict core.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `settings.audit`
 
@@ -562,6 +722,11 @@ Read layered settings and report named policy conformance.
   Limitations: the check set is Codex-specific and smaller than the Claude one: the 13 Claude checks are permission- and settings-shape rules with no Codex counterpart; layer content is parsed only where the interpreter provides tomllib (Python 3.11+); on 3.9 and 3.10 the layer is reported as unreadable, never as conforming; read-only, like the Claude auditor: nothing in ~/.codex or .codex is written.
   Evidence: [2026-07-30] the deterministic adapter harness.codex.settings.audit reads the documented Codex layers, reports named conformance findings with layer provenance, and reports an unreadable layer as a finding instead of asserting conformance — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex settings.audit over the documented Codex configuration layers, Codex-specific check set).
 
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.settings.audit`.
+  Diagnostic: deterministic cursor adapter satisfies settings.audit
+  Limitations: read-only audit of documented layers; unreadable layer is a finding.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `settings.permissions`
 
 Render named permission/settings presets without replacing user-owned values.
@@ -575,6 +740,11 @@ Render named permission/settings presets without replacing user-owned values.
   Diagnostic: deterministic harness adapter satisfies codex settings.permissions
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
   Evidence: [2026-07-21] terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md` (frozen provider-qualified harness surface matrix).
+
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.settings.permissions`.
+  Diagnostic: deterministic cursor adapter satisfies settings.permissions
+  Limitations: merge-only .cursor/permissions.json and .cursor/cli.json; deny floor survives --force.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ### `skills.repository`
 
@@ -590,6 +760,11 @@ Load repository-owned skills and task adapters through the provider-native repos
   Limitations: none.
   Evidence: [2026-07-21] terminal P3 conformance proves both native repository/plugin projections preserve one canonical skill inventory — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P3-skill-publication-conformance.md` (dual-provider skill publication).
 
+- **cursor** — `native`; binding: `{"surface": ".agents/skills"}`; adapter: `—`.
+  Diagnostic: native cursor binding satisfies skills.repository
+  Limitations: none.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+
 ### `workflows.status`
 
 Read and report provider-qualified workflow run status.
@@ -603,6 +778,11 @@ Read and report provider-qualified workflow run status.
   Diagnostic: unsupported codex workflows.status: the reported object does not exist at Codex; fails closed with HARNESS_ACTIVATION_UNSUPPORTED
   Limitations: the Claude surface reads an internal, undocumented Claude Code run directory; Codex documents no equivalent run store; the Codex orchestration carrier is a rendered instruction, not a runtime that leaves a run directory; session-level reporting for Codex is covered by analytics.run-report, which is adapted for both providers.
   Evidence: [2026-07-30] the Claude surface parses the internal Claude Code workflow run directory, and the documented Codex surfaces expose no workflow-run store to read, so the surface has no Codex object to report — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex workflows.status as a reader of workflow run state).
+
+- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: cursor workflows.status at P0 level unsupported
+  Limitations: permanently api-capped: no project-scoped configuration key.
+  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
 
 ## Native Extensions
 

@@ -22,9 +22,12 @@ from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource
                   parse_lock, provider_config_catalog,
                   plan_bootstrap_transfer, BootstrapTransferAdmission, artifact_dry_run, sha256_digest,
                   ChainedBootstrapTransferAdmission, plan_chained_bootstrap_transfer,
-                  support_for)
+                  support_for, shared_config_path)
 from core.provider.lock import artifact_doctor, rollback_chained_bootstrap_transfer
 from .common import atomic_write_text
+
+
+_BOOTSTRAP_CANONICAL_PREIMAGE = "sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db"
 
 
 class ProviderDeployError(ValueError):
@@ -292,10 +295,7 @@ def plan_d108_operation(root, config, project_id, servers, *, harness_configs,
             owner_namespace=("maind.provider-deploy", "harness.codex.lifecycle"))
     else:
         admission = ChainedBootstrapTransferAdmission(
-            BootstrapTransferAdmission("D104", ".codex/hooks.json",
-                "sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db",
-                ".codex/hooks/lifecycle.py", "harness.codex.lifecycle.hooks",
-                "harness.codex.lifecycle.handler"), transfer.plan, "D108", ".mcp.json",
+            transfer.plan.bootstrap_transfer, transfer.plan, "D108", ".mcp.json",
             "sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283",
             "maind.provider-deploy.claude-code", ("whole-file", ()),
             ("maind", "perplexity-web", "serena"))
@@ -402,16 +402,19 @@ def _d104_memory_registration(preimage, *, observer_group=None):
             json.JSONDecodeError):
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED") from None
     if (not isinstance(value, dict) or set(value) != {"hooks"}
-            or not isinstance(hooks, dict) or set(hooks) != {"SessionStart"}
+            or not isinstance(hooks, dict) or "SessionStart" not in hooks
             or not isinstance(groups, list) or len(groups) not in {1, 2}
             or not isinstance(group, dict) or set(group) - {"hooks", "matcher"}
             or not isinstance(group.get("hooks"), list) or len(group["hooks"]) != 1
             or not isinstance(hook, dict) or set(hook) != {"type", "command"}
             or hook["type"] != "command" or not isinstance(hook["command"], str)
-            or not hook["command"] or "matcher" in group and not isinstance(group["matcher"], str)):
+            or not hook["command"] or "maind-memory" not in hook["command"]
+            or "matcher" in group and not isinstance(group["matcher"], str)):
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
     if len(groups) == 2:
-        document = (json.dumps({"hooks": {"SessionStart": [group, observer_group]}},
+        merged_hooks = dict(hooks)
+        merged_hooks["SessionStart"] = [group, observer_group]
+        document = (json.dumps({"hooks": merged_hooks},
                                ensure_ascii=False, indent=2) + "\n").encode("utf-8")
         if not isinstance(observer_group, dict) or groups[1] != observer_group or preimage != document:
             raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
@@ -429,7 +432,8 @@ def _d104_observer_fragment(harness_configs):
     from harness.profiles import load_catalog
 
     lifecycle = plan_lifecycle(
-        load_catalog(harness_configs / "common/profile-catalog.json"),
+        load_catalog(shared_config_path("profile-catalog",
+                                        repo_root=harness_configs.parents[2])),
         provider_id=ProviderId.CODEX,
         requests=(LifecycleRequest("context.observer", True),), trusted=True,
         codex_bindings_path=harness_configs / "codex/hooks/lifecycle-context-bindings.json")
@@ -453,7 +457,10 @@ def plan_d104_bootstrap_transfer(root, *, harness_configs):
     memory_group, memory_command, managed_post_apply = _d104_memory_registration(
         preimage, observer_group=fragment.group)
     from harness.hooks import validate_d104_codex_lifecycle_composition
-    document = (json.dumps({"hooks": {"SessionStart": [memory_group, fragment.group]}},
+    preimage_value = json.loads(preimage.decode("utf-8"))
+    merged_hooks = dict(preimage_value["hooks"])
+    merged_hooks["SessionStart"] = [memory_group, fragment.group]
+    document = (json.dumps({"hooks": merged_hooks},
                            ensure_ascii=False, indent=2) + "\n").encode("utf-8")
     try:
         validate_d104_codex_lifecycle_composition(
@@ -461,10 +468,10 @@ def plan_d104_bootstrap_transfer(root, *, harness_configs):
     except ValueError as error:
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED") from error
 
+    preimage_hash = sha256_digest(preimage)
     sources = (
         ArtifactSource("maind.d104.memory-preimage", ".codex/hooks.json",
-                       "sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db"
-                       if managed_post_apply else sha256_digest(preimage)),
+                       _BOOTSTRAP_CANONICAL_PREIMAGE if managed_post_apply else preimage_hash),
         ArtifactSource("harness.d104.observer-fragment",
                        "packages/harness/lib/harness/hooks.py",
                        sha256_digest(canonical_json_bytes({
@@ -485,7 +492,7 @@ def plan_d104_bootstrap_transfer(root, *, harness_configs):
         lambda _request: fragment.handler_bytes))
     admission = BootstrapTransferAdmission(
         "D104", ".codex/hooks.json",
-        "sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db",
+        preimage_hash,
         ".codex/hooks/lifecycle.py", "harness.codex.lifecycle.hooks",
         "harness.codex.lifecycle.handler")
     lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
@@ -615,7 +622,7 @@ def generate_conformance_report(harness_configs, output_path):
     bases = tuple(plan_mcp_projection(
         catalog, provider_id=provider,
         bindings_path=root / provider.value / "mcp/bindings.json", selected=(), trusted=True)
-        for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX))
+        for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX, ProviderId.CURSOR))
     plan = plan_provider_deploy(bases, semantic_servers(
         maind={"command": "maind"},
         codegraph={"command": "uvx", "args": ["serena"]},

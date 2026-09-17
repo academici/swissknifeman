@@ -1,0 +1,25 @@
+{
+  "cursor": {
+    "observe": {
+      "cli_permissions_profile": "read-biased",
+      "ide_allowlists": "empty-declared",
+      "launch_only": {"mode": "plan", "approvalMode": "allowlist", "sandbox": "enabled"}
+    },
+    "workspace-contained": {
+      "cli_permissions_profile": "workspace-scoped",
+      "ide_allowlists": "scoped",
+      "launch_only": {"approvalMode": "auto-review", "sandbox": "enabled"}
+    },
+    "trusted-full-access": {
+      "cli_permissions_profile": "broad-with-deny-floor",
+      "ide_allowlists": "wildcard",
+      "launch_only": {"approvalMode": "unrestricted", "sandbox": "disabled", "run_mode": "Run Everything"},
+      "gate": {
+        "origin": "operation",
+        "operation_id": "self-host-apply",
+        "target_identity_prefix": "repo:",
+        "inheritable": false
+      }
+    }
+  }
+}

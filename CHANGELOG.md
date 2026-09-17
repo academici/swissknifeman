@@ -2,7 +2,12 @@
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-09-17
+
 ### Added
+
+- **Cursor third provider (P5).** Релиз v0.20.0: validate, attest, fleet `maind sync` +
+  `skiller deliver`; явный enable Cursor на self-host и проектах с `.cursor/mcp.json`.
 
 - **Cursor third provider (P4).** Документация: адаптер Cursor (install, trusted profile, MCP,
   permissions); generated [Provider model roles](packages/task/docs/reference/provider-model-roles.md)

@@ -1,91 +1,91 @@
 {
   "contract_version": "1.0.0",
   "publication_unit": "core",
-  "version": "0.18.0",
+  "version": "0.19.0",
   "artifacts": [
     {
       "path": ".codex-plugin/plugin.json",
-      "source_hash": "sha256:782142fa49fcff8bf2c616bfe02373fa01cf82458edc9b8f2418c716c9d07d4f",
-      "rendered_hash": "sha256:3a4ef9ce1f3529727e0405be19e9cc4c7e2bb02824c49a3dfd5d92b97929f145"
+      "source_hash": "sha256:b6a254fe20a28311f65a11b83c101a17d0e83809bd3422a23da5c10cacf84834",
+      "rendered_hash": "sha256:5a8da87235dc3ea438f299840d2bb5279b7ed505fe9370abc9770b5bf76c62d3"
     },
     {
       "path": "skills/general/context-economy/SKILL.md",
-      "source_hash": "sha256:a9bd5c03a7b122c3ee4731b3337dd92e759ca47fdcbc407952e875bd2a685cf0",
+      "source_hash": "sha256:d6a364c42826fa67fcf46b3a971b788c09e828a970b05e7a317abc5780ed19bd",
       "rendered_hash": "sha256:fbc48ed3bfd41b5abb2724b4590e28edad2ae2a173df4bfbbf485b35bf41f0e6"
     },
     {
       "path": "skills/general/context-economy/snippets/claude-md-checklist.md",
-      "source_hash": "sha256:a9bd5c03a7b122c3ee4731b3337dd92e759ca47fdcbc407952e875bd2a685cf0",
+      "source_hash": "sha256:d6a364c42826fa67fcf46b3a971b788c09e828a970b05e7a317abc5780ed19bd",
       "rendered_hash": "sha256:74a991b31bba853b972e9cb4744311a0a83d924c77e55a3b31cb5130204ffe4f"
     },
     {
       "path": "skills/general/context-economy/snippets/claude-md-fact-vs-procedure-examples.md",
-      "source_hash": "sha256:a9bd5c03a7b122c3ee4731b3337dd92e759ca47fdcbc407952e875bd2a685cf0",
+      "source_hash": "sha256:d6a364c42826fa67fcf46b3a971b788c09e828a970b05e7a317abc5780ed19bd",
       "rendered_hash": "sha256:20c088ea3e7f7950d6c322d9cc0c9469a01b48b185a17ee356b8fcc93982a4c0"
     },
     {
       "path": "skills/general/context-economy/snippets/claude-md-template.md",
-      "source_hash": "sha256:a9bd5c03a7b122c3ee4731b3337dd92e759ca47fdcbc407952e875bd2a685cf0",
+      "source_hash": "sha256:d6a364c42826fa67fcf46b3a971b788c09e828a970b05e7a317abc5780ed19bd",
       "rendered_hash": "sha256:ce43523f42621a831006680499824bff9c552cf39055d47f5804a09abc8117e9"
     },
     {
       "path": "skills/general/context-economy/snippets/command-execute.md",
-      "source_hash": "sha256:a9bd5c03a7b122c3ee4731b3337dd92e759ca47fdcbc407952e875bd2a685cf0",
+      "source_hash": "sha256:d6a364c42826fa67fcf46b3a971b788c09e828a970b05e7a317abc5780ed19bd",
       "rendered_hash": "sha256:f8aa5c85570ad377c746ce658c7d589af6f5b7e4a7019eab2da03e9efdb19f2c"
     },
     {
       "path": "skills/general/context-economy/snippets/command-plan.md",
-      "source_hash": "sha256:a9bd5c03a7b122c3ee4731b3337dd92e759ca47fdcbc407952e875bd2a685cf0",
+      "source_hash": "sha256:d6a364c42826fa67fcf46b3a971b788c09e828a970b05e7a317abc5780ed19bd",
       "rendered_hash": "sha256:0c749951df352dea67c8b623c7ba2e6ba3e03db6684e7c4d44dd93d3642fc0b6"
     },
     {
       "path": "skills/general/context-economy/snippets/command-prime.md",
-      "source_hash": "sha256:a9bd5c03a7b122c3ee4731b3337dd92e759ca47fdcbc407952e875bd2a685cf0",
+      "source_hash": "sha256:d6a364c42826fa67fcf46b3a971b788c09e828a970b05e7a317abc5780ed19bd",
       "rendered_hash": "sha256:400d39e499301d4e2748ada3d7ae8cd49c1c8945b6e0b4f41e93bcb6e16ccf7c"
     },
     {
       "path": "skills/general/context-economy/snippets/index.json",
-      "source_hash": "sha256:a9bd5c03a7b122c3ee4731b3337dd92e759ca47fdcbc407952e875bd2a685cf0",
+      "source_hash": "sha256:d6a364c42826fa67fcf46b3a971b788c09e828a970b05e7a317abc5780ed19bd",
       "rendered_hash": "sha256:6200e2909d0aff348932f5b026737615a66fdcbe7602284567152642f7b5611e"
     },
     {
       "path": "skills/general/context-economy/snippets/rules-example.md",
-      "source_hash": "sha256:a9bd5c03a7b122c3ee4731b3337dd92e759ca47fdcbc407952e875bd2a685cf0",
+      "source_hash": "sha256:d6a364c42826fa67fcf46b3a971b788c09e828a970b05e7a317abc5780ed19bd",
       "rendered_hash": "sha256:097e50b6087ec0429efac0e10d70931537ab8de18ff79a75f4ae43dffb88fdf7"
     },
     {
       "path": "skills/general/anti-drift/SKILL.md",
-      "source_hash": "sha256:5d22bc9748bb719d5b9754d3a0c2601d7fd02a0152e40c708e846e710ccfe722",
+      "source_hash": "sha256:12c03ba4f272c1af1474b7e2a9db4044c82b4bfb78f4ca41effc2f9ba8c9882b",
       "rendered_hash": "sha256:372f28ee10dab7fb7d5db713c355a2b39f020007604269e58bfc206295abe7b8"
     },
     {
       "path": "skills/general/anti-drift/snippets/claude-md-anti-drift.md",
-      "source_hash": "sha256:5d22bc9748bb719d5b9754d3a0c2601d7fd02a0152e40c708e846e710ccfe722",
+      "source_hash": "sha256:12c03ba4f272c1af1474b7e2a9db4044c82b4bfb78f4ca41effc2f9ba8c9882b",
       "rendered_hash": "sha256:0582f58a6a1952b7e1f92511c7fe3d7aa4c664916c86fe76d897afe4179a5099"
     },
     {
       "path": "skills/general/anti-drift/snippets/index.json",
-      "source_hash": "sha256:5d22bc9748bb719d5b9754d3a0c2601d7fd02a0152e40c708e846e710ccfe722",
+      "source_hash": "sha256:12c03ba4f272c1af1474b7e2a9db4044c82b4bfb78f4ca41effc2f9ba8c9882b",
       "rendered_hash": "sha256:9f30bcf49a06f2daa7133c339649fc836ca1d635c0639ce22f6cff0048896995"
     },
     {
       "path": "skills/general/session-handoff/SKILL.md",
-      "source_hash": "sha256:e0aef4936dd73b3791451167a6316a44bcfc19f7ce5804ccc65fad35ce5f0d45",
+      "source_hash": "sha256:d62e66dce73a1a3416ffa59a6e4ddeb3b8500967ae2bc8798471c52471c2455e",
       "rendered_hash": "sha256:0ea2cbf5eb20fe32dfb39323b0185793df618264934388db11c4cf1d4307a270"
     },
     {
       "path": "skills/general/session-handoff/snippets/handoff-template.md",
-      "source_hash": "sha256:e0aef4936dd73b3791451167a6316a44bcfc19f7ce5804ccc65fad35ce5f0d45",
+      "source_hash": "sha256:d62e66dce73a1a3416ffa59a6e4ddeb3b8500967ae2bc8798471c52471c2455e",
       "rendered_hash": "sha256:c7730e534ab4b8cec7016af6e60444c581e94cecca39267cfe95e6b479fc9bdf"
     },
     {
       "path": "skills/general/session-handoff/snippets/index.json",
-      "source_hash": "sha256:e0aef4936dd73b3791451167a6316a44bcfc19f7ce5804ccc65fad35ce5f0d45",
+      "source_hash": "sha256:d62e66dce73a1a3416ffa59a6e4ddeb3b8500967ae2bc8798471c52471c2455e",
       "rendered_hash": "sha256:8aab6105648da9a72a241cfe4b6c6c574f0d4147e5a3fa3467720334727bc41d"
     },
     {
       "path": "skills/general/verify-claims/SKILL.md",
-      "source_hash": "sha256:586c6fa09b3b1d9fa66ff44ab512d431708b64bb5878bb37734aca315a100497",
+      "source_hash": "sha256:581e8d7167f4cada041e4c4d75f5eebe0309c6d2f9d18446d1f1cdb646bc0706",
       "rendered_hash": "sha256:821ff84d254dd5a4fc9e56360a2e2a5d14023126e48cf9de1966530b585224a6"
     }
   ]

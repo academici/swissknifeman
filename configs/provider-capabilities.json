@@ -1684,8 +1684,8 @@
             {
               "source": "packages/harness/tests/test_cursor_hook_render.py",
               "verified_at": "2026-09-17",
-              "scope": "cursor security.safe-dirs hook registration, native wire shape and fail-closed verdict path",
-              "claim": "P0 conformance covers native hooks.json v1 rendering, merge-preserving registration, and handler behavior without session_id in beforeShellExecution payload"
+              "scope": "cursor security.safe-dirs hook registration, native before/after wire shape and fail-closed verdict path",
+              "claim": "P0 conformance covers native hooks.json v1 rendering, merge-preserving registration, pinned beforeShellExecution/afterShellExecution payload fixtures, and handler behavior without hard dependency on session_id"
             }
           ],
           "limitations": [

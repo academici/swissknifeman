@@ -23,7 +23,8 @@ PACKAGE = Path(__file__).resolve().parents[1]
 ROOT = PACKAGE.parents[1]
 CATALOG = PACKAGE / "configs/common/profile-catalog.json"
 CURSOR_BINDINGS = PACKAGE / "configs/cursor/hooks/lifecycle-context-bindings.json"
-WIRE_FIXTURE = PACKAGE / "tests/fixtures_data/cursor-hook-wire-v1.json"
+WIRE_AFTER_FIXTURE = PACKAGE / "tests/fixtures_data/cursor-hook-wire-v1.json"
+WIRE_BEFORE_FIXTURE = PACKAGE / "tests/fixtures_data/cursor-hook-wire-before-v1.json"
 
 
 def _run_handler(handler_path, surface, payload, *, env=None):
@@ -50,8 +51,8 @@ class CursorHookRenderTests(unittest.TestCase):
             cursor_bindings_path=CURSOR_BINDINGS,
         )
 
-    def test_real_wire_fixture_shape_is_pinned(self):
-        value = json.loads(WIRE_FIXTURE.read_text(encoding="utf-8"))
+    def test_real_after_wire_fixture_shape_is_pinned(self):
+        value = json.loads(WIRE_AFTER_FIXTURE.read_text(encoding="utf-8"))
         payload = value["payload"]
         self.assertEqual(value["schema"], 1)
         self.assertEqual(value["source"], "native-afterShellExecution-probe")
@@ -59,6 +60,16 @@ class CursorHookRenderTests(unittest.TestCase):
         self.assertIn("conversation_id", payload)
         self.assertIn("workspace_roots", payload)
         self.assertIn("sandbox", payload)
+
+    def test_real_before_wire_fixture_shape_is_pinned(self):
+        value = json.loads(WIRE_BEFORE_FIXTURE.read_text(encoding="utf-8"))
+        payload = value["payload"]
+        self.assertEqual(value["schema"], 1)
+        self.assertEqual(value["source"], "native-beforeShellExecution-probe")
+        self.assertEqual(payload["hook_event_name"], "beforeShellExecution")
+        self.assertIn("conversation_id", payload)
+        self.assertIn("cwd", payload)
+        self.assertIn("command", payload)
 
     def test_render_cursor_hooks_emits_native_flat_shape_with_version(self):
         plan = self._safe_dirs_plan()

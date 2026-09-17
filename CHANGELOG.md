@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-09-17
+
+### Fixed
+
+- **skiller connect (Cursor).** `build_connect_distribution_plan()` пропускает `cursor` — нет
+  marketplace-канала (D8); без этого `skiller update`/`deliver` падали на cursor-enabled проектах.
+  Package `skiller` 0.17.0 → 0.17.1.
+
 ## [0.20.0] - 2026-09-17
 
 ### Added

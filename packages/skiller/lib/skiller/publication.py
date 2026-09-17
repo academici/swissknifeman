@@ -674,6 +674,9 @@ def build_connect_distribution_plan(config, target: Path, *, project_id: str,
     from .common import die
     plans = []
     for provider in selected_distribution_providers(config, project_id=project_id):
+        if provider == "cursor":
+            # D8: Cursor reads ``.agents/skills`` natively; no marketplace channel exists.
+            continue
         provider_id = ProviderId(provider)
         try:
             validate_publication_capabilities(provider_id)

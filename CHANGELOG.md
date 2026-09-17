@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **task codex plugin.** `packages/task/.codex-plugin/plugin.json` → `div0.20.2` (пропущен при v0.21.4).
+- **Cursor MCP runtime.** `.cursor/mcp.json` в `.gitignore` (как корневой `.mcp.json`); шаблон — `.cursor/mcp.json.example`.
+
 ## [0.21.4] - 2026-09-17
 
 ### Fixed

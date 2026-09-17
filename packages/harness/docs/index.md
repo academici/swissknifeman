@@ -1,10 +1,11 @@
-# CLI harness — окружение Claude Code
+# CLI harness — окружение агентов
 
-`harness` — пакет настройки **окружения Claude Code**: пресеты permissions,
+`harness` — пакет настройки **окружения Claude Code, Codex и Cursor**: пресеты permissions,
 режимы auto-approve/bypass, MCP-серверы и хуки (memory/notify/log). Раньше этот
 функционал жил внутри `skiller`; вынесен в отдельный пакет, потому что к
-управлению скиллами он не относится. Источник истины пресетов —
-`packages/harness/configs/claude-code/`.
+управлению скиллами он не относится. Источник истины пресетов Claude —
+`packages/harness/configs/claude-code/`; Cursor shapes —
+`packages/harness/configs/cursor/`.
 
 Устанавливается симлинком в `~/.local/bin` (зонтичный `./install.sh` ставит
 `skiller` · `harness` · `maind`). Пакет stateless — пишет в `.claude/` целевых
@@ -28,7 +29,8 @@ harness permissions --global                      # baseline + файлы хук
 
 ### `harness mcp`
 
-Добавляет MCP-серверы в `.mcp.json` из пресетов (merge-only, чужие серверы целы).
+Добавляет MCP-серверы в `.mcp.json` (Claude Code) из пресетов (merge-only, чужие серверы целы).
+Для **Cursor** MCP в `.cursor/mcp.json` пишет `maind sync` при включённом провайдере.
 Каталог пресетов и описания — [Интеграции](./integrations/).
 
 ```
@@ -36,6 +38,8 @@ harness mcp --list
 harness mcp --target . --mcp context7,playwright
 harness mcp --target . --mcp context7 --dry-run
 ```
+
+Cursor MCP и permissions — [Настройка Cursor](./setup/cursor).
 
 ### `harness hooks`
 
@@ -137,7 +141,12 @@ harness instructions adopt --authorize <цель> --owner-decision D# \
 ### `harness doctor`
 
 Диагностика: наличие пресетов и `apply-permissions.sh`, установлены ли файлы
-хуков в `~/.claude/hooks/`.
+хуков в `~/.claude/hooks/`. Provider audit:
+
+```
+harness doctor --settings --provider cursor --target .
+harness doctor --provider-audit
+```
 
 ## Связь со skiller и maind
 

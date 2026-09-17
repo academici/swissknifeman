@@ -1062,6 +1062,117 @@ def render_provider_commands_reference(report: Mapping[str, object]) -> bytes:
     return "\n".join(lines).encode("utf-8")
 
 
+def render_provider_model_roles_reference(catalog: CommandCatalog) -> bytes:
+    """Render the per-provider model role guide from validated routing mappings."""
+    metadata = metadata_value(catalog)
+    mappings = metadata.get("mappings", {})
+    if set(mappings) != _PROVIDER_IDS:
+        raise ValueError("CMD_PROVIDER_DISABLED: all provider mappings are required")
+    lines = [
+        "# Provider model roles",
+        "",
+        "Hand-verified model inventories and fixed class pins for the three managed providers.",
+        "Neutral routing in `packages/task/configs/command-routing.json` uses "
+        "`model_class` (`economy` < `implementation` < `frontier`) plus `effort`; "
+        "each provider block below maps those classes to native selectors.",
+        "",
+        "Generated from the validated command-routing mappings. Do not edit the tables manually.",
+        "",
+        "## Semantic roles",
+        "",
+        "| Work kind | Neutral class | Typical commands |",
+        "|:--|:--|:--|",
+        "| Economy / ad-hoc explore | `economy` | low-risk fixes, scans |",
+        "| Implementation / execution | `implementation` | `task:dev`, `task:plan-exec`, `task:plan-close` |",
+        "| Design / audit / review | `frontier` | `task:design`, `task:plan-design`, `task:plan-audit`, `task:review` |",
+        "",
+        "Fixed commands and launch-blocks pin **one** selector per class. Inventory-only models never "
+        "substitute a missing pin (fail-closed, same as an unknown spelling in plan-protocol).",
+        "",
+        "## Class pins",
+        "",
+        "| Provider | economy | implementation | frontier |",
+        "|:--|:--|:--|:--|",
+    ]
+    pin_cells = []
+    for provider_id in _PROVIDER_ORDER:
+        mapping = mappings[provider_id]
+        selectors = mapping["class_selectors"]
+        pin_cells.append(
+            f"| `{provider_id}` | `{selectors['economy'][0]}` | `{selectors['implementation'][0]}` "
+            f"| `{selectors['frontier'][0]}` |")
+    lines.extend(pin_cells)
+    lines.extend(["", "## Model inventory", ""])
+    for provider_id in _PROVIDER_ORDER:
+        mapping = mappings[provider_id]
+        inventory = mapping["model_inventory"]
+        lines.append(f"### `{provider_id}`")
+        lines.append("")
+        lines.append(f"- `verified_at`: `{inventory['verified_at']}`")
+        lines.append(f"- `source`: {inventory['source']}")
+        if inventory.get("verification"):
+            lines.append(f"- `verification`: {inventory['verification']}")
+        lines.extend(["", "| Model id | Roles | Notes |", "|:--|:--|:--|"])
+        for entry in inventory["entries"]:
+            roles = ", ".join(entry["roles"])
+            notes = []
+            if entry.get("status"):
+                notes.append(f"status={entry['status']}")
+            if entry.get("policy"):
+                notes.append(f"policy={entry['policy']}")
+            if entry.get("notes"):
+                notes.append(entry["notes"])
+            note_cell = "; ".join(notes) if notes else "—"
+            lines.append(f"| `{entry['id']}` | {roles} | {note_cell} |")
+        auto_mode = inventory.get("auto_mode")
+        if auto_mode:
+            lines.extend([
+                "",
+                "**Auto policy** (`auto` routing-assist only):",
+                "",
+                f"- `allowed_for`: {', '.join(f'`{item}`' for item in auto_mode['allowed_for'])}",
+                f"- `forbidden_for`: {', '.join(f'`{item}`' for item in auto_mode['forbidden_for'])}",
+                "",
+                "`auto` never substitutes a fixed `frontier` or `implementation` pin in a launch-block "
+                "or fixed command.",
+            ])
+        lines.append("")
+    lines.extend([
+        "## Cursor launch contract (trusted self-host)",
+        "",
+        "Approval mode and IDE Run Mode are **not** project-configurable (see freeze E14.1). "
+        "Autonomy comes from launch flags plus a documented IDE checklist; the `deny` floor in "
+        "`.cursor/cli.json` survives `--force`.",
+        "",
+        "| Parameter | Value |",
+        "|:--|:--|",
+        "| Workspace (`cwd`) | repository root — `agent --workspace <repo-cwd>` (not `-C`) |",
+        "| Model | class pin from table above |",
+        "| Effort | from plan Routing / command frontmatter |",
+        "| CLI autonomy | `--force --sandbox disabled --trust --approve-mcps` |",
+        "| IDE Run Mode | **Run Everything** (trusted self-host only; UI-owned, not a repo file) |",
+        "",
+        "**Native Cursor command** (copy after the metadata table in a launch-block):",
+        "",
+        "```bash",
+        "agent --workspace <repo-cwd> --model <model-selector> --force --sandbox disabled --trust --approve-mcps 'task:<command> <arguments>'",
+        "```",
+        "",
+        "IDE checklist before an autonomous session:",
+        "",
+        "1. Open the intended repository root as the workspace.",
+        "2. Set Run Mode to **Run Everything** (Settings → Run Mode).",
+        "3. Confirm `.cursor/mcp.json` contains hub servers (`maind health --cwd`).",
+        "4. Pin the routed model; do not substitute `auto` for fixed frontier/implementation pins.",
+        "5. For CLI launches, pass the full flag set above; partial flags are not a trusted launch.",
+        "",
+        "Full install and profile shapes: [Cursor adapter](/skiller/adapters/cursor) and "
+        "[Harness setup: Cursor](/harness/setup/cursor).",
+        "",
+    ])
+    return "\n".join(lines).encode("utf-8")
+
+
 def _projection_delta(expected: set[str], actual: tuple[str, ...]) -> dict[str, list[str]]:
     actual_set = set(actual)
     return {

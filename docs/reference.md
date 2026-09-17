@@ -428,6 +428,15 @@ docs-impact гейт, матрица возможностей, CI-гигиена
 и фактическим hook continuation. Perplexity использован для двух поисковых синтезов;
 выводы сверены с открытыми первичными страницами. Новая политика этим исследованием не введена.
 
+### Cursor models {#cursor-models}
+
+Hand-verified class pins для Task routing (freeze 2026-09-17, `agent --list-models` @
+`2026.09.15-d2fe57e`): `economy=composer-2.5-fast`, `implementation=composer-2.5`,
+`frontier=claude-opus-5-thinking-high`. Inventory-only: `gpt-5.6-sol-medium`, `auto`
+(`never-substitute-fixed-frontier`). Bare `composer` и `gpt-5.6-sol` **отсутствуют** в каталоге.
+SSOT: `packages/task/configs/command-routing.json` → generated
+[Provider model roles](/task/reference/provider-model-roles).
+
 ### Исходная аттестация
 
 - [OpenAI Codex Hooks](https://developers.openai.com/codex/hooks): documented `Stop` payload

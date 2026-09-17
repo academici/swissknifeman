@@ -4,6 +4,12 @@
 
 ### Added
 
+- **Cursor third provider (P4).** Документация: адаптер Cursor (install, trusted profile, MCP,
+  permissions); generated [Provider model roles](packages/task/docs/reference/provider-model-roles.md)
+  (pins design/exec/audit/economy + inventory и запрет Auto на fixed frontier); harness
+  [setup/cursor](packages/harness/docs/setup/cursor.md); launch-block с таблицей class→selector,
+  `agent --workspace` и IDE Run Mode checklist; instruction `root.cursor.launch-and-autonomy` в catalog.
+
 - **Cursor third provider (P3).** Task: `mappings.cursor` + `model_inventory` для всех трёх
   провайдеров; `command_render` (launch через `agent --workspace`, не `-C`); `route_evidence_cursor`
   и generated `packages/task/adapters/cursor/`; parity/reference на три колонки. mAInd:

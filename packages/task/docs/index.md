@@ -1,6 +1,7 @@
 # task — команды постановки и выполнения задач
 
-**Что это.** Опциональные помощники Claude Code (`/task:*`) и Codex (`$ task:*`) для явного выбора работы.
+**Что это.** Опциональные помощники Claude Code (`/task:*`), Codex (`$ task:*`) и Cursor (`task:*`)
+для явного выбора работы.
 Каждая команда **пинит модель + reasoning effort + профиль workflow**, перебивая настройки сессии,
 чтобы не переключать их вручную. Default-on в каждом онбордженном проекте (connect-канал);
 резидентного налога нет — описания команд не инжектятся в каждый запрос.
@@ -91,6 +92,8 @@ python3 packages/task/scripts/plan-views.py closure --plan-dir plans/<ID> --phas
 | [Continue-first, block confirmation и delivery receipt](./continue-first) | Автофикс малых отклонений, isolated-подтверждение реального Blocked, 100% RAG для external-кандидатов и защита от раннего final |
 | [Структура плана](./plan-structure) | канон папок `plans/<ID>/` 2.0, различие `root/`/`artifacts/`, таблица миграции root/ → docs |
 | [Шаблоны](./templates) | референс snippets: plan/phase/handoff/launch-block/code-guidance — что где лежит |
+| [Provider model roles](./reference/provider-model-roles) | pins economy/implementation/frontier + inventory и Auto policy для трёх провайдеров |
+| [Plan tooling](./reference/plan-tooling) | launch-block: Codex/Cursor native-формы, route evidence |
 | [Конструктор workflow](./workflows) | 4 канонических шаблон-скрипта оркестрации: когда какой, правила слотов |
 
 Обычная межмодульная разработка принимает сообщение или файл задания без `plans/` и фаз.

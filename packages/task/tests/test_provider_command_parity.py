@@ -19,6 +19,7 @@ from task.command_render import (build_provider_command_parity_report,
                                  plan_codex_command_render,
                                  plan_cursor_command_render,
                                  render_provider_commands_reference,
+                                 render_provider_model_roles_reference,
                                  validate_route)
 from core import ProviderManifestError
 
@@ -32,6 +33,7 @@ CONTRACT_PATH = (REPO_ROOT / "plans/archive/2026.07.19-DUAL-PROVIDER/root/contra
 FIXTURE_PATH = (REPO_ROOT / "packages/task/tests/fixtures_data/"
                 "provider-command-parity.json")
 REFERENCE_PATH = REPO_ROOT / "packages/task/docs/reference/provider-commands.md"
+MODEL_ROLES_REFERENCE_PATH = REPO_ROOT / "packages/task/docs/reference/provider-model-roles.md"
 _CODEX_RUNTIME_FORBIDDEN = (
     re.compile(r"(?i)\b(?:opus|sonnet|haiku|fable)\b"),
     re.compile(r"(?<![\w/])/task:"),
@@ -201,6 +203,12 @@ class ProviderCommandParityTests(unittest.TestCase):
         second = render_provider_commands_reference(self.report())
         self.assertEqual(first, second)
         self.assertEqual(REFERENCE_PATH.read_bytes(), first)
+
+    def test_generated_model_roles_reference_is_deterministic(self):
+        first = render_provider_model_roles_reference(self.catalog)
+        second = render_provider_model_roles_reference(self.catalog)
+        self.assertEqual(first, second)
+        self.assertEqual(MODEL_ROLES_REFERENCE_PATH.read_bytes(), first)
 
     def test_codex_runtime_projection_is_provider_safe_and_semantically_complete(self):
         artifacts = {item.path: item.managed_bytes for item in self.codex_plan.artifacts}

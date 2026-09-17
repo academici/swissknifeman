@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.21.5] - 2026-09-17
+
 ### Fixed
 
 - **task codex plugin.** `packages/task/.codex-plugin/plugin.json` → `div0.20.2` (пропущен при v0.21.4).

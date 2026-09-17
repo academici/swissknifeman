@@ -658,7 +658,8 @@ def build_vendor_distribution_plan(config, target: Path, *, project_id: str,
     paths = {"claude-code": claude_path, "codex": codex_path}
     plans = tuple(ProviderDistributionPlan(provider, "vendor", target / paths[provider],
                                            (target / paths[provider]).as_posix(), "", "")
-                  for provider in selected_distribution_providers(config, project_id=project_id))
+                  for provider in selected_distribution_providers(config, project_id=project_id)
+                  if provider != "cursor")
     seen = set()
     for plan in plans:
         resolved = plan.target.resolve(strict=False)

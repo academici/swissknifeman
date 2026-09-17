@@ -322,6 +322,24 @@ class TestCursorConnectDistribution(unittest.TestCase):
             self.assertEqual(tuple(plan.provider_id for plan in plans),
                              ("claude-code", "codex"))
 
+    def test_build_vendor_distribution_plan_skips_cursor_vendor_path(self):
+        from skiller.publication import build_vendor_distribution_plan
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = {"providers": {
+                "contract_version": "1.0.0",
+                "selection": {
+                    "claude-code": {"enabled": True},
+                    "codex": {"enabled": True},
+                    "cursor": {"enabled": True},
+                },
+            }}
+            plans = build_vendor_distribution_plan(
+                config, root, project_id="demo",
+                claude_path=".claude/skills", codex_path=".agents/skills")
+            self.assertEqual(tuple(plan.provider_id for plan in plans),
+                             ("claude-code", "codex"))
+
 
 if __name__ == "__main__":
     unittest.main()

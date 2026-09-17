@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Deliver readback.** `command-routing.json` и `profile-catalog.json` — обычные файлы
+  (не symlink) в package paths; root `configs/` остаётся SSOT через `shared_config_path`.
+
 ## [0.21.3] - 2026-09-17
 
 ### Added

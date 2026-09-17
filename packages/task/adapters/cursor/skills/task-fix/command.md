@@ -1,0 +1,28 @@
+<!-- Generated Cursor runtime projection; do not edit as source.
+Canonical source: packages/task/commands/fix.md
+Canonical SHA-256: sha256:4d63fbb7b4b281671c9be62d149dd3c203400287b76e0fccff8b76e600866019
+Adapter: task.cursor-command/1.0.15
+-->
+---
+description: "Fix a scoped defect directly; preserve existing work and verify the change."
+argument-hint: "[что починить]"
+model: sonnet
+effort: medium
+---
+Это МЕЛКАЯ инкрементальная правка. Ввод пользователя: «$ARGUMENTS».
+Применяй общий opt-in контракт `references/intent-routing.md` из установленного пакета Task.
+Заверши исправление напрямую: design, план, phase audit и plan close не являются
+условием готовности; старые инструкции в файле задания не отменяют текущий запрос владельца.
+Модель/effort запинены (Sonnet/medium) — не переключай вручную (Opus тут избыточен).
+
+Профиль `fix` (token-frugal):
+1. **Один проход, без fan-out и без субагентов** — задача мелкая, координация не окупится.
+2. **Selective-input**: читай slice — функцию/класс/роут ±контекст, не файлы целиком; логи —
+   `tail -n`/`grep` по идентификатору, не весь файл; ошибки — последний stack-frame; PR/дифф — `git diff`/
+   `gh pr diff`, не файлы. «Point, don't paste»: указывай путь и дочитывай нужное.
+3. **Минимальное изменение** под задачу; на изменённое поведение — тест/проверка; не разводи абстракции
+   «на вырост».
+4. Внешний факт под сомнением → `verify-claims`-лестница (context7 → `perplexity-web`), не утверждай по памяти.
+5. Зафиксируй исходный `git status` и прочитай пересекающийся diff. Dirty baseline сам по себе
+   не блокирует правку: компонуй изменения, сохраняй чужую работу; останови только несовместимый
+   участок при конкретном конфликте ownership. НЕ git push / PR без явной просьбы.

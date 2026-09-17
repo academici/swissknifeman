@@ -4,6 +4,14 @@
 
 ### Added
 
+- **Cursor third provider (P3).** Task: `mappings.cursor` + `model_inventory` для всех трёх
+  провайдеров; `command_render` (launch через `agent --workspace`, не `-C`); `route_evidence_cursor`
+  и generated `packages/task/adapters/cursor/`; parity/reference на три колонки. mAInd:
+  `provider_deploy` для `.cursor/mcp.json`, `REQUIRED_PROVIDERS` включает `cursor`, health
+  `provider:cursor trust` через harness profile resolution. Harness instructions engine:
+  `PROVIDERS` + `root.cursor.*`, 21 проекция (`.cursor-instructions.mdc` / `.mdc` rules),
+  catalog `1.3.0` и compatibility fixture на 87 записей.
+
 - **Cursor third provider (P0–P2, cold-start S2).** `ProviderId.CURSOR` и полная
   36-строчная capability matrix (`8 native` / `7 adapted` / `21 unsupported`);
   harness-адаптер `packages/harness/configs/cursor/` (profile bindings, MCP,

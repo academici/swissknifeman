@@ -154,7 +154,7 @@ class TestProviderDeploy(unittest.TestCase):
                 root, deploy, preimage_hashes=preimages)
             self.assertEqual(
                 [action.diagnostic for action in adoption.actions],
-                ["explicit-adoption", "explicit-adoption"])
+                ["explicit-adoption"] * len(deploy.results))
             apply_plan(root, adoption)
 
             for row in deploy.results:
@@ -729,13 +729,14 @@ class TestProviderDeploy(unittest.TestCase):
         catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
         bases = tuple(plan_mcp_projection(catalog, provider_id=provider,
             bindings_path=root / provider.value / "mcp/bindings.json", selected=(), trusted=True)
-            for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX))
+            for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX, ProviderId.CURSOR))
         servers = semantic_servers(maind={"command": "maind"},
             codegraph={"command": "uvx", "args": ["serena"]},
             perplexity={"command": "pplx"})
         plan = plan_provider_deploy(bases, servers)
         self.assertTrue(plan.green)
-        self.assertEqual([row.target_path for row in plan.results], [".mcp.json", ".codex/config.toml"])
+        self.assertEqual([row.target_path for row in plan.results],
+                         [".mcp.json", ".codex/config.toml", ".cursor/mcp.json"])
         self.assertTrue(all(b"maind" in row.rendered and b"codegraph" in row.rendered
                             for row in plan.results))
         self.assertTrue(all(row.artifact.provenance.target_path == row.target_path

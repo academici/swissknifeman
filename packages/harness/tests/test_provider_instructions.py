@@ -71,26 +71,28 @@ class SemanticCatalogTests(unittest.TestCase):
         registry = Path(__file__).resolve().parents[3] / "core/locale/data/language-subtag-registry.txt"
         result = resolve_locale(({"contract_version": "1.0.0", "rank": 5, "kind": "built-in", "locale": {"response": "en", "plan": "en", "diagnostics": "en"}},), registry_path=registry)
         self.assertEqual(render_locale_context(result)["provider_boundary"], "harness")
-    def test_exact_62_common_22_extension_84_total_and_fourteen_targets(self):
+    def test_exact_62_common_25_extension_87_total_and_twenty_one_targets(self):
         catalog = load_catalog()
         common = sum(record["kind"] == "common" for scope in catalog["scopes"]
                      for record in scope["sections"])
         extensions = sum(record["kind"] == "provider-extension" for scope in catalog["scopes"]
                          for record in scope["sections"])
-        self.assertEqual((common, extensions, common + extensions), (62, 22, 84))
+        self.assertEqual((common, extensions, common + extensions), (62, 25, 87))
         with tempfile.TemporaryDirectory() as temp:
             result = plan_instructions(request("plan", Path(temp).resolve()))
         self.assertEqual(
             tuple((item.scope_id, item.provider_id, item.target_path) for item in result.targets),
             tuple((scope, provider, TARGETS[scope][provider])
                   for scope in SCOPES for provider in PROVIDERS))
-        self.assertEqual(len(result.targets), 14)
+        self.assertEqual(len(result.targets), 21)
 
     def test_positive_parity_and_allowed_provider_extension(self):
         with tempfile.TemporaryDirectory() as temp:
             result = plan_instructions(request("plan", Path(temp).resolve()))
         for scope in SCOPES:
-            claude, codex = [item for item in result.targets if item.scope_id == scope]
+            by_provider = {item.provider_id: item
+                           for item in result.targets if item.scope_id == scope}
+            claude, codex, cursor = (by_provider[provider] for provider in PROVIDERS)
             common = COMMON_IDS[scope]
             self.assertEqual(claude.ordered_semantic_ids[:len(common)], common)
             self.assertEqual(codex.ordered_semantic_ids[:len(common)], common)
@@ -100,6 +102,8 @@ class SemanticCatalogTests(unittest.TestCase):
             self.assertEqual(
                 codex.ordered_semantic_ids[len(common):],
                 EXTENSION_IDS[(scope, "codex")])
+            self.assertEqual(cursor.ordered_semantic_ids,
+                             EXTENSION_IDS[(scope, "cursor")])
 
     def test_missing_id_refuses_before_p2(self):
         result = altered_result(lambda value: root_records(value).pop(0))
@@ -434,7 +438,7 @@ class PublicOperationTests(unittest.TestCase):
             root = Path(temp).resolve()
             planned = plan_instructions(request("plan", root))
             lock = json.loads(serialize_lock(planned.artifact_plan.next_lock))
-        self.assertEqual(len(lock["records"]), 14)
+        self.assertEqual(len(lock["records"]), 21)
         expected_records = tuple(
             (provider, TARGETS[scope][provider])
             for _artifact_id, provider, scope in sorted(

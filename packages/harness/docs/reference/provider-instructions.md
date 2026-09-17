@@ -2,17 +2,17 @@
 
 Generated from the validated D86 catalog.
 
-| Scope | Claude target | Codex target | Common IDs | Claude extensions | Codex extensions |
-|:--|:--|:--|--:|--:|--:|
-| `root` | `CLAUDE.md` | `AGENTS.md` | 18 | 3 | 4 |
-| `skiller` | `packages/skiller/CLAUDE.md` | `packages/skiller/AGENTS.md` | 8 | 3 | 0 |
-| `harness` | `packages/harness/CLAUDE.md` | `packages/harness/AGENTS.md` | 8 | 4 | 0 |
-| `maind` | `packages/maind/CLAUDE.md` | `packages/maind/AGENTS.md` | 7 | 2 | 0 |
-| `analyst` | `packages/analyst/CLAUDE.md` | `packages/analyst/AGENTS.md` | 8 | 2 | 0 |
-| `task` | `packages/task/CLAUDE.md` | `packages/task/AGENTS.md` | 7 | 2 | 0 |
-| `artifex` | `packages/artifex/CLAUDE.md` | `packages/artifex/AGENTS.md` | 6 | 1 | 1 |
+| Scope | Claude target | Codex target | Cursor target | Common IDs | Claude extensions | Codex extensions | Cursor extensions |
+|:--|:--|:--|:--|--:|--:|--:|--:|
+| `root` | `CLAUDE.md` | `AGENTS.md` | `.cursor/rules/swissknifeman-instructions.mdc` | 18 | 3 | 4 | 3 |
+| `skiller` | `packages/skiller/CLAUDE.md` | `packages/skiller/AGENTS.md` | `packages/skiller/.cursor-instructions.mdc` | 8 | 3 | 0 | 0 |
+| `harness` | `packages/harness/CLAUDE.md` | `packages/harness/AGENTS.md` | `packages/harness/.cursor-instructions.mdc` | 8 | 4 | 0 | 0 |
+| `maind` | `packages/maind/CLAUDE.md` | `packages/maind/AGENTS.md` | `packages/maind/.cursor-instructions.mdc` | 7 | 2 | 0 | 0 |
+| `analyst` | `packages/analyst/CLAUDE.md` | `packages/analyst/AGENTS.md` | `packages/analyst/.cursor-instructions.mdc` | 8 | 2 | 0 | 0 |
+| `task` | `packages/task/CLAUDE.md` | `packages/task/AGENTS.md` | `packages/task/.cursor-instructions.mdc` | 7 | 2 | 0 | 0 |
+| `artifex` | `packages/artifex/CLAUDE.md` | `packages/artifex/AGENTS.md` | `packages/artifex/.cursor-instructions.mdc` | 6 | 1 | 1 | 0 |
 
-The frozen inventory contains 56 common and 20 provider-extension IDs (76 total) across exactly 12 targets.
+The frozen inventory contains 56 common and 23 provider-extension IDs (79 total) across exactly 18 targets.
 
 ## Public API
 

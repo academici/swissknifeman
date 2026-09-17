@@ -49,7 +49,7 @@ except ImportError:  # pragma: no cover - standalone fallback, byte-identical to
 # and never turns a selector into proof of the route that actually ran.
 SOURCES = (
     "self-attested", "provider-doctor", "provider-config", "cli-flag",
-    "provider-thread-state",
+    "provider-thread-state", "provider-attestation",
 )
 
 # Usage/context budget axes — token/duration/tool counts only, no pricing (Code
@@ -214,6 +214,9 @@ def capture_launch(*, expected_invocation: str, expected_cwd: str | Path,
     elif provider == "claude-code":
         from task.route_evidence_claude import capture_current
         native_invocation = "/" + semantic
+    elif provider == "cursor":
+        from task.route_evidence_cursor import capture_current
+        native_invocation = semantic
     else:
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_UNAVAILABLE", f"provider {provider!r} has no route adapter")

@@ -1,0 +1,9 @@
+<!-- instruction:root.cursor.instruction-precedence -->
+## root.cursor.instruction-precedence
+The common repository contract reaches this session through the `AGENTS.md` Cursor already reads; it is not repeated here. Sections marked `root.codex.*` in that file are Codex-owned and are **not** authoritative in a Cursor session — never follow Codex launch flags (`-a never`, `-s danger-full-access`) from them.
+<!-- instruction:root.cursor.launch-and-autonomy -->
+## root.cursor.launch-and-autonomy
+Name the intended workspace, the routed model and the Run Mode before acting. Autonomy in a trusted session comes from launch flags (`--force --sandbox disabled --trust --approve-mcps`), never from a committed file: the approval mode is not project-configurable. The `deny` floor in `.cursor/cli.json` still applies under `--force`, so a denied secret path is a real refusal, not a transient error to retry.
+<!-- instruction:root.cursor.package-scope-routing -->
+## root.cursor.package-scope-routing
+Start package-scoped work with the intended workspace root so native discovery reads root→cwd. During an authorized cross-package task, explicitly read each applicable package guide in the current session.

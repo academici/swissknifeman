@@ -615,7 +615,7 @@ def generate_conformance_report(harness_configs, output_path):
     bases = tuple(plan_mcp_projection(
         catalog, provider_id=provider,
         bindings_path=root / provider.value / "mcp/bindings.json", selected=(), trusted=True)
-        for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX))
+        for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX, ProviderId.CURSOR))
     plan = plan_provider_deploy(bases, semantic_servers(
         maind={"command": "maind"},
         codegraph={"command": "uvx", "args": ["serena"]},

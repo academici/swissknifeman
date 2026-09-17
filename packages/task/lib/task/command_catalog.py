@@ -18,6 +18,11 @@ MODEL_CLASSES = ("economy", "implementation", "frontier")
 EFFORTS = ("low", "medium", "high", "xhigh")
 COMMAND_KINDS = ("intent", "workflow-authoring", "plan-protocol")
 ROUTING_MODES = ("fixed", "inherited-plan")
+_MAPPING_KEYS = frozenset({
+    "provider_id", "mapping_version", "class_selectors", "effort_selectors",
+    "capability_bindings", "invocation_binding", "model_inventory", "evidence",
+})
+_INVENTORY_ENTRY_KEYS = frozenset({"id", "roles"})
 _COMMAND_ID_RE = re.compile(r"^task:[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
 _CAPABILITY_RE = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)+$")
 _DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -199,10 +204,15 @@ def build_command_catalog(command_root: Path, routing_path: Path) -> CommandCata
         if not isinstance(raw, dict) or raw.get("provider_id") != provider_id:
             raise _catalog_error("CMD_MAPPING_MISSING", f"/mappings/{provider_id}", {},
                                  {"mapping": raw}, "provider mapping identity is missing or inconsistent")
+        if set(raw) != _MAPPING_KEYS:
+            raise _catalog_error("CMD_MAPPING_MISSING", f"/mappings/{provider_id}",
+                                 {"keys": sorted(_MAPPING_KEYS)},
+                                 {"keys": sorted(raw)}, "provider mapping has an unsupported shape")
         version = raw.get("mapping_version")
         if not isinstance(version, str):
             raise _catalog_error("CMD_MAPPING_MISSING", f"/mappings/{provider_id}/mapping_version",
                                  {}, {"mapping_version": version}, "mapping version is missing")
+        _validate_model_inventory(raw.get("model_inventory"), provider_id)
         mapping_versions.append((provider_id, version))
 
     records, contents = [], []
@@ -241,6 +251,52 @@ def metadata_value(catalog: CommandCatalog) -> dict[str, object]:
     """Return a detached JSON-compatible copy of the captured routing carrier."""
     return _thaw(dict(catalog.routing_metadata))
 
+
+def _validate_model_inventory(raw: object, provider_id: str) -> None:
+    if not isinstance(raw, dict):
+        raise _catalog_error("CMD_MAPPING_MISSING", f"/mappings/{provider_id}/model_inventory",
+                             {}, {"model_inventory": raw}, "model inventory is missing")
+    required = {"verified_at", "source", "entries"}
+    if not required <= set(raw):
+        raise _catalog_error("CMD_MAPPING_MISSING", f"/mappings/{provider_id}/model_inventory",
+                             {"keys": sorted(required)}, {"keys": sorted(raw)},
+                             "model inventory has an unsupported shape")
+    if not isinstance(raw["verified_at"], str) or not isinstance(raw["source"], str):
+        raise _catalog_error("CMD_MAPPING_MISSING", f"/mappings/{provider_id}/model_inventory",
+                             {}, {}, "model inventory provenance is invalid")
+    entries = raw["entries"]
+    if not isinstance(entries, list) or not entries:
+        raise _catalog_error("CMD_MAPPING_MISSING", f"/mappings/{provider_id}/model_inventory/entries",
+                             {}, {"entries": entries}, "model inventory entries are missing")
+    seen = set()
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict) or not _INVENTORY_ENTRY_KEYS <= set(entry):
+            raise _catalog_error("CMD_MAPPING_MISSING",
+                                 f"/mappings/{provider_id}/model_inventory/entries/{index}",
+                                 {}, {"entry": entry}, "model inventory entry is invalid")
+        model_id = entry["id"]
+        roles = entry["roles"]
+        if not isinstance(model_id, str) or not model_id or model_id in seen:
+            raise _catalog_error("CMD_MAPPING_MISSING",
+                                 f"/mappings/{provider_id}/model_inventory/entries/{index}/id",
+                                 {}, {"id": model_id}, "model inventory id is invalid or duplicated")
+        seen.add(model_id)
+        if not isinstance(roles, list) or not roles or not all(isinstance(item, str) and item for item in roles):
+            raise _catalog_error("CMD_MAPPING_MISSING",
+                                 f"/mappings/{provider_id}/model_inventory/entries/{index}/roles",
+                                 {}, {"roles": roles}, "model inventory roles are invalid")
+    auto_mode = raw.get("auto_mode")
+    if auto_mode is not None:
+        if not isinstance(auto_mode, dict) or set(auto_mode) != {"allowed_for", "forbidden_for"}:
+            raise _catalog_error("CMD_MAPPING_MISSING",
+                                 f"/mappings/{provider_id}/model_inventory/auto_mode",
+                                 {}, {"auto_mode": auto_mode}, "auto_mode shape is invalid")
+        for key in ("allowed_for", "forbidden_for"):
+            values = auto_mode[key]
+            if not isinstance(values, list) or not all(isinstance(item, str) and item for item in values):
+                raise _catalog_error("CMD_MAPPING_MISSING",
+                                     f"/mappings/{provider_id}/model_inventory/auto_mode/{key}",
+                                     {}, {key: values}, "auto_mode list is invalid")
 
 def _routing(raw: object, command_id: str, index: int) -> CommandRouting:
     if not isinstance(raw, dict) or set(raw) != {"mode", "model_class", "effort"}:

@@ -137,6 +137,16 @@
         "command.subagents": "native", "command.workflow-carrier": "native"
       },
       "invocation_binding": {"template": "/{command_id} {arguments}"},
+      "model_inventory": {
+        "verified_at": "2026-09-17",
+        "source": "claude --help @ 2.1.266 + command-routing.json D84",
+        "verification": "cli-help-and-frozen-mapping; no machine-readable catalogue exists",
+        "entries": [
+          {"id": "opus", "roles": ["frontier", "design", "audit"]},
+          {"id": "sonnet", "roles": ["implementation"]},
+          {"id": "haiku", "roles": ["economy"], "status": "confirmed"}
+        ]
+      },
       "evidence": [{"source": "packages/task/commands", "verified_at": "2026-07-21", "scope": "current Claude task plugin", "claim": "committed slash command and frontmatter surface"}]
     },
     "codex": {
@@ -150,7 +160,49 @@
         "command.subagents": "native", "command.workflow-carrier": "adapted"
       },
       "invocation_binding": {"template": "$ {command_id} {arguments}"},
+      "model_inventory": {
+        "verified_at": "2026-09-17",
+        "source": "plans/2026.07.19-DUAL-PROVIDER/plan.md#D84",
+        "verification": "frozen D84 mapping; no machine-readable catalogue exists",
+        "entries": [
+          {"id": "gpt-5.6-luna", "roles": ["economy"]},
+          {"id": "gpt-5.6-terra", "roles": ["implementation"]},
+          {"id": "gpt-5.6-sol", "roles": ["frontier", "design", "audit"]}
+        ]
+      },
       "evidence": [{"source": "plans/2026.07.19-DUAL-PROVIDER/plan.md#D84", "verified_at": "2026-07-21", "scope": "Codex command routing and invocation", "claim": "D84 freezes selectors and the mandatory `$ ` invocation prefix"}]
+    },
+    "cursor": {
+      "provider_id": "cursor",
+      "mapping_version": "1.0.0",
+      "class_selectors": {
+        "economy": ["composer-2.5-fast"],
+        "implementation": ["composer-2.5"],
+        "frontier": ["claude-opus-5-thinking-high"]
+      },
+      "effort_selectors": {"low": ["low"], "medium": ["medium"], "high": ["high"], "xhigh": ["xhigh"]},
+      "capability_bindings": {
+        "skills.repository": "native", "command.filesystem-read": "native", "command.filesystem-write": "native",
+        "command.git-read": "native", "command.git-write": "native", "command.external-research": "adapted",
+        "command.subagents": "native", "command.workflow-carrier": "unsupported"
+      },
+      "invocation_binding": {"template": "{command_id} {arguments}"},
+      "model_inventory": {
+        "verified_at": "2026-09-17",
+        "source": "agent --list-models @ 2026.09.15-d2fe57e",
+        "entries": [
+          {"id": "composer-2.5-fast", "roles": ["economy", "explore"]},
+          {"id": "composer-2.5", "roles": ["implementation"]},
+          {"id": "claude-opus-5-thinking-high", "roles": ["frontier", "design", "audit"]},
+          {"id": "gpt-5.6-sol-medium", "roles": ["alternate"]},
+          {"id": "auto", "roles": ["routing-assist"], "policy": "never-substitute-fixed-frontier"}
+        ],
+        "auto_mode": {
+          "allowed_for": ["economy", "adhoc-explore"],
+          "forbidden_for": ["fixed-frontier-commands", "plan-design", "plan-audit", "task:review"]
+        }
+      },
+      "evidence": [{"source": "docs/reference.md#cursor-models", "verified_at": "2026-09-17", "scope": "Cursor task skill carrier", "claim": "semantic task:<id> invocation and class pins verified against agent --list-models"}]
     }
   }
 }

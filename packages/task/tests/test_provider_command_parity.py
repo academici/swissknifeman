@@ -17,6 +17,7 @@ from task.command_render import (build_provider_command_parity_report,
                                  mapping_from_catalog, parse_next_carrier,
                                  plan_claude_command_render,
                                  plan_codex_command_render,
+                                 plan_cursor_command_render,
                                  render_provider_commands_reference,
                                  validate_route)
 from core import ProviderManifestError
@@ -125,7 +126,7 @@ class ProviderCommandParityTests(unittest.TestCase):
         cls.catalog = build_command_catalog(COMMAND_ROOT, ROUTING_PATH)
         cls.mappings = {
             provider_id: mapping_from_catalog(cls.catalog, provider_id)
-            for provider_id in ("claude-code", "codex")
+            for provider_id in ("claude-code", "codex", "cursor")
         }
         cls.support = {
             provider_id: dict(mapping.capability_bindings)
@@ -136,6 +137,8 @@ class ProviderCommandParityTests(unittest.TestCase):
             plugin_bytes=PLUGIN_PATH.read_bytes())
         cls.codex_plan = plan_codex_command_render(
             cls.catalog, cls.mappings["codex"], cls.support["codex"])
+        cls.cursor_plan = plan_cursor_command_render(
+            cls.catalog, cls.mappings["cursor"], cls.support["cursor"])
         cls.next_carriers = tuple(
             parse_next_carrier(case["valid"])
             for case in cls.expected["next_forms"])
@@ -143,7 +146,7 @@ class ProviderCommandParityTests(unittest.TestCase):
     @classmethod
     def report(cls):
         return build_provider_command_parity_report(
-            cls.catalog, cls.claude_plan, cls.codex_plan, cls.mappings,
+            cls.catalog, cls.claude_plan, cls.codex_plan, cls.cursor_plan, cls.mappings,
             expected_command_ids=tuple(
                 command["command_id"] for command in cls.expected["commands"]),
             next_carriers=cls.next_carriers)
@@ -183,7 +186,7 @@ class ProviderCommandParityTests(unittest.TestCase):
             json.dumps(second, ensure_ascii=False, sort_keys=True))
         self.assertEqual(first["inventory"],
                          {"missing": [], "extra": [], "duplicates": []})
-        for provider_id in ("claude-code", "codex"):
+        for provider_id in ("claude-code", "codex", "cursor"):
             self.assertEqual(first["projections"][provider_id],
                              {"missing": [], "extra": [], "duplicates": []})
         self.assertEqual(
@@ -252,7 +255,8 @@ class ProviderCommandParityTests(unittest.TestCase):
         source = self.catalog.content_for("task:plan-design").decode("utf-8")
         self.assertIn(literal, source)
         self.assertIn("`PLAN1.D35`, `PLAN1.P2.3`; legacy: `<PLAN-ID> <local-ID>`", source)
-        for provider_id, plan in (("claude-code", self.claude_plan), ("codex", self.codex_plan)):
+        for provider_id, plan in (("claude-code", self.claude_plan), ("codex", self.codex_plan),
+                                  ("cursor", self.cursor_plan)):
             with self.subTest(provider=provider_id):
                 rendered = "\n".join(
                     artifact.managed_bytes.decode("utf-8")

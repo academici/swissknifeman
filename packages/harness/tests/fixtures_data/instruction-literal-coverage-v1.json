@@ -4,9 +4,9 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "f7cb08722ba302235d03b9bbcf89568e28a8b762a03d7907866011041351f27a",
+    "source_sha256": "a95030cfcfdeee170a04923286836e131b1f29b406ee1a3d8884d98ee0ff6d1a",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
-    "literal_count": 291
+    "literal_count": 299
   },
   "literals": [
     {
@@ -328,6 +328,38 @@
     {
       "semantic_id": "root.codex.package-scope-routing",
       "literal": "Project docs are read root→cwd and never past the repository root. Start package-scoped work with the intended cwd for native discovery. During an authorized cross-package task, explicitly read each applicable package guide in the current session; directory changes alone do not require restart."
+    },
+    {
+      "semantic_id": "root.cursor.instruction-precedence",
+      "literal": "The common repository contract reaches this session through the `AGENTS.md` Cursor already reads"
+    },
+    {
+      "semantic_id": "root.cursor.instruction-precedence",
+      "literal": "root.codex.*"
+    },
+    {
+      "semantic_id": "root.cursor.instruction-precedence",
+      "literal": "Codex-owned and are **not** authoritative in a Cursor session"
+    },
+    {
+      "semantic_id": "root.cursor.launch-and-autonomy",
+      "literal": "`--force --sandbox disabled --trust --approve-mcps`"
+    },
+    {
+      "semantic_id": "root.cursor.launch-and-autonomy",
+      "literal": "approval mode is not project-configurable"
+    },
+    {
+      "semantic_id": "root.cursor.launch-and-autonomy",
+      "literal": "`.cursor/cli.json` still applies under `--force`"
+    },
+    {
+      "semantic_id": "root.cursor.package-scope-routing",
+      "literal": "reads root→cwd"
+    },
+    {
+      "semantic_id": "root.cursor.package-scope-routing",
+      "literal": "explicitly read each applicable package guide"
     },
     {
       "semantic_id": "skiller.identity",

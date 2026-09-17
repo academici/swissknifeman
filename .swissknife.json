@@ -8,6 +8,9 @@
       },
       "codex": {
         "enabled": true
+      },
+      "cursor": {
+        "enabled": true
       }
     }
   },

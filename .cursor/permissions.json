@@ -1,0 +1,14 @@
+{
+  "mcpAllowlist": [
+    "*:*"
+  ],
+  "terminalAllowlist": [
+    "git",
+    "python3",
+    "bash",
+    "packages",
+    "maind",
+    "skiller",
+    "harness"
+  ]
+}

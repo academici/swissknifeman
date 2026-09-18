@@ -13,6 +13,7 @@ dev-loop-воркфлоу. Поэтому `dev-loop.js`/паки трогать 
 | Срез | Источник в транскрипте |
 |:--|:--|
 | `tools.by_name` / `.total` | все `tool_use`-блоки (Bash/Edit/Write/Workflow/Task/…) |
+| `codegraph` | вызовы symbol-tools Serena/codegraph/laravel-boost (`find_symbol`, `get_symbols_overview`, …) |
 | `bash.tests` / `.lints` | Bash-команды по паттерну (pytest/phpunit/pest/ruff/pint/validate.sh…) + `ok` из `is_error` |
 | `bash.failed` | Bash-команды, чей `tool_result.is_error=true` |
 | `tool_failures` | любой `tool_result.is_error=true` (инструмент + срез вывода) |

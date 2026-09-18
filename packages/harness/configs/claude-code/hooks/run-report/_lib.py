@@ -217,6 +217,47 @@ def _maind_tool(name):
     return None
 
 
+_SYMBOL_TOOLS = frozenset({
+    "find_symbol", "find_referencing_symbols", "get_symbols_overview",
+    "find_implementations", "find_declaration", "replace_symbol_body",
+    "insert_after_symbol", "insert_before_symbol", "rename_symbol",
+    "safe_delete_symbol", "replace_content", "replace_in_files",
+    "get_diagnostics_for_file",
+})
+_CODEGRAPH_SERVERS = (
+    "codegraph", "serena", "plugin_core_codegraph", "plugin-core-codegraph",
+    "laravel-boost", "laravel_boost",
+)
+
+
+def _codegraph_server_match(server):
+    norm = server.lower().replace("-", "_")
+    return any(marker.replace("-", "_") in norm for marker in _CODEGRAPH_SERVERS)
+
+
+def _codegraph_tool(name):
+    """Symbol-tool op id for codegraph/Serena/laravel-boost MCP names."""
+    if not isinstance(name, str) or not name:
+        return None
+    if name in _SYMBOL_TOOLS:
+        return name
+    low = name.lower()
+    if low in _SYMBOL_TOOLS:
+        return low
+    if low.startswith("mcp:"):
+        parts = name.split(":", 2)
+        if len(parts) >= 3 and _codegraph_server_match(parts[1]):
+            return parts[2]
+        return None
+    if not name.startswith("mcp__"):
+        return None
+    tail = name.rsplit("__", 1)[-1]
+    server = name[len("mcp__"):-(len(tail) + 2)]
+    if _codegraph_server_match(server):
+        return tail
+    return None
+
+
 def _maind_result_count(result_text):
     """Internal documentation."""
     text = (result_text or "").strip()
@@ -305,6 +346,7 @@ def parse_events(lines, transcript_path=None, cwd=None):
     devloop = {}
     total_tools = 0
     maind = {}
+    codegraph = {}
     reads = {}
     error_loops = []
     err_streak = {"tool": None, "input": None, "len": 0, "snippet": None, "entry": None}
@@ -325,6 +367,12 @@ def parse_events(lines, transcript_path=None, cwd=None):
         r = maind.get(op)
         if r is None:
             r = maind[op] = {"calls": 0, "results": 0, "found_total": 0, "found_max": 0}
+        return r
+
+    def codegraph_rec(op):
+        r = codegraph.get(op)
+        if r is None:
+            r = codegraph[op] = {"calls": 0}
         return r
 
     for line in lines:
@@ -352,6 +400,9 @@ def parse_events(lines, transcript_path=None, cwd=None):
                 op = _maind_tool(name)
                 if op:
                     maind_rec(op)["calls"] += 1
+                cg = _codegraph_tool(name)
+                if cg:
+                    codegraph_rec(cg)["calls"] += 1
                 tid = b.get("id")
                 inp = b.get("input") if isinstance(b.get("input"), dict) else {}
                 if tid:
@@ -490,6 +541,7 @@ def parse_events(lines, transcript_path=None, cwd=None):
         "workflow_relaunch": workflow_relaunch,
         "devloop": devloop or None,
         "maind": maind or None,
+        "codegraph": codegraph or None,
         "usage": _collect_usage(main_acc, transcript_path),
         "reads": {"total": sum(reads.values()), "unique": len(reads), "top_rereads": top_rereads},
         "error_loops": error_loops,

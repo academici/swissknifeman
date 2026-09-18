@@ -2,7 +2,7 @@
 
 > Generated from the validated deterministic provider-audit report; no second inventory is maintained.
 
-Catalog `sha256:3417643f87ca3b22c519e360201020bc50b6a81c774bd2dd938c612fdbefb66a` is the P5.5 preflight input. Run `harness doctor --provider-audit --json` twice and require byte-identical green output with empty missing/extra/duplicates.
+Catalog `sha256:2de95c6dcc8ed888bf9f72f295bcee759e987157be81fec411f3991da46523a5` is the P5.5 preflight input. Run `harness doctor --provider-audit --json` twice and require byte-identical green output with empty missing/extra/duplicates.
 
 The audit and named Claude settings doctor are separate consumers. It writes no audited package source or target.
 
@@ -25,16 +25,16 @@ The audit and named Claude settings doctor are separate consumers. It writes no 
 | source:configs/claude-code/agent-packs/role-bindings.json | `sha256:d619828f8a5ea9a6e5fff0c7f6b87940e6aaaf40c92269e2bf955c85c403614b` |
 | source:configs/claude-code/mcp/bindings.json | `sha256:80fcf080664a04c51bf950568b468a7acb4b3bc829866023c3708a08241089aa` |
 | source:configs/codex/config/profile-bindings.json | `sha256:9de3078c203f0cebd1a66e0f243efd96cb78a829341ed8f1faa6bc6ed0b1542e` |
-| source:configs/codex/hooks/lifecycle-context-bindings.json | `sha256:2a9dc6cf0a2b029ab9cbbc8bd1893ab6704ea9c31eb5e539c3e772aafc74adf7` |
+| source:configs/codex/hooks/lifecycle-context-bindings.json | `sha256:e213b959bda8facff398f06413487be2afb8495d13e5a05e38623d85c5a2984c` |
 | source:configs/codex/mcp/bindings.json | `sha256:7cfaa92d8314f01a20d52f227a0bbda2495f11b4b508bd5376c22670a0de8772` |
 | source:configs/common/agent-packs/roles.json | `sha256:2ba25a3a8f4ef52655403b0d0655f10b1cae3a850594b16c443dc6053462ee75` |
 | source:configs/common/mcp/catalog.json | `sha256:95be667cbd19a671f88d946739b7161a6ca33407429ca7d7cb0cd93f6f714419` |
-| source:configs/common/profile-catalog.json | `sha256:3417643f87ca3b22c519e360201020bc50b6a81c774bd2dd938c612fdbefb66a` |
+| source:configs/common/profile-catalog.json | `sha256:2de95c6dcc8ed888bf9f72f295bcee759e987157be81fec411f3991da46523a5` |
 | source:configs/cursor/agent-packs/consumer-mapping.json | `sha256:314f0935b254c8a7e814cfa1ae476b99e373d0fffeb4de91fabf8c756708d67e` |
 | source:configs/cursor/config/profile-bindings.json | `sha256:8772a33bbdf9d5082bc12457d135e2a29c3faf945a5f8f3c11a9954695bf1594` |
-| source:configs/cursor/hooks/lifecycle-context-bindings.json | `sha256:4de2140330ad9f2dd18fa902e29b89d2e2414bb4033eaba8aef562bfe7feed81` |
+| source:configs/cursor/hooks/lifecycle-context-bindings.json | `sha256:d7d7b241afd84add521435197c86b98904d63bd2ea8825d3b513a8bf9af19273` |
 | source:configs/cursor/mcp/bindings.json | `sha256:c4a5b15e4417cdf05da6cd6130b05890b3feca860c09cb19342754f776a218a6` |
-| render-manifest:all-provider-qualified-outputs | `sha256:923157d61f21ad2c364e635d92c1b0292329525dc45164d98373858ac7024bae` |
+| render-manifest:all-provider-qualified-outputs | `sha256:f06719c0e6ffdd7099d0a2f7e24699c0ce29a91c52f95018b787de40200244d3` |
 
 The read-only JSON report retains every individual provider-qualified render hash; this manifest hash covers all of them deterministically.
 
@@ -63,6 +63,7 @@ Every provider-qualified surface row is required: missing, extra or duplicate ro
 | claude-code | lifecycle.router | `sha256:3579aac732a227a565edc6175dbfa4ddc27767a10af3aa7fb70091ca4915f283` | — | harness.lifecycle.router | native-binding:project-settings | supported | `HARNESS_ACTIVATION_NATIVE` |
 | claude-code | lifecycle.run-report | `sha256:9b92c0ff639e64772a2961e198f3f9d7b93bf120a6aed8e1350a5f0fa6bea13b` | — | harness.lifecycle.run-report | native-binding:project-settings | supported | `HARNESS_ACTIVATION_NATIVE` |
 | claude-code | lifecycle.terminal-admission | `sha256:b952c2d83aeee61113c4a474d673dbf7d98334a8d85f6d3ab352a5cad689568f` | — | harness.lifecycle.terminal-admission | native-binding:trusted-project-stop | supported | `HARNESS_ACTIVATION_NATIVE` |
+| claude-code | lifecycle.tool-telemetry | `sha256:6907facd80a1eeef47b08c686355698cb724f30f27f27ad790ad25019679f176` | — | harness.lifecycle.tool-telemetry | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | claude-code | mcp.catalog | `sha256:54dd40ebbd21f976206d42e35be4f3c92f57b4679ff97a013edb3a406c190394` | — | harness.mcp.catalog | artifact:project:.mcp.json | supported | `HARNESS_MCP_PROJECTION_RENDERED` |
 | claude-code | security.safe-dirs | `sha256:8ce38a9571be6fd4220f256972925f3f84dd844c144ac1d479a5d561b435f312` | — | harness.security.safe-dirs | native-binding:embedded-in-auto-approval | supported | `HARNESS_ACTIVATION_NATIVE` |
 | claude-code | settings.audit | `sha256:da70a0c0e55d4324a8704a211532d8398083192570b00a7f1d4f94ab4d9daba7` | — | harness.settings.audit | non-artifact:named-settings-audit | supported | `HARNESS_SETTINGS_AUDIT_NAMED` |
@@ -87,6 +88,7 @@ Every provider-qualified surface row is required: missing, extra or duplicate ro
 | codex | lifecycle.router | `sha256:3579aac732a227a565edc6175dbfa4ddc27767a10af3aa7fb70091ca4915f283` | — | harness.lifecycle.router | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | codex | lifecycle.run-report | `sha256:9b92c0ff639e64772a2961e198f3f9d7b93bf120a6aed8e1350a5f0fa6bea13b` | — | harness.lifecycle.run-report | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | codex | lifecycle.terminal-admission | `sha256:b952c2d83aeee61113c4a474d673dbf7d98334a8d85f6d3ab352a5cad689568f` | — | harness.lifecycle.terminal-admission | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
+| codex | lifecycle.tool-telemetry | `sha256:6907facd80a1eeef47b08c686355698cb724f30f27f27ad790ad25019679f176` | — | harness.lifecycle.tool-telemetry | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | codex | mcp.catalog | `sha256:54dd40ebbd21f976206d42e35be4f3c92f57b4679ff97a013edb3a406c190394` | — | harness.mcp.catalog | artifact:project:.codex/config.toml | supported | `HARNESS_MCP_PROJECTION_RENDERED` |
 | codex | security.safe-dirs | `sha256:8ce38a9571be6fd4220f256972925f3f84dd844c144ac1d479a5d561b435f312` | — | harness.security.safe-dirs | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | codex | settings.audit | `sha256:da70a0c0e55d4324a8704a211532d8398083192570b00a7f1d4f94ab4d9daba7` | — | harness.settings.audit | non-artifact:named-codex-settings-audit | supported | `HARNESS_SETTINGS_AUDIT_NAMED` |
@@ -111,6 +113,7 @@ Every provider-qualified surface row is required: missing, extra or duplicate ro
 | cursor | lifecycle.router | `sha256:3579aac732a227a565edc6175dbfa4ddc27767a10af3aa7fb70091ca4915f283` | — | harness.lifecycle.router | artifact:project:.cursor/rules/swissknifeman-router.mdc | supported | `HARNESS_CURSOR_STATIC_RULE` |
 | cursor | lifecycle.run-report | `sha256:9b92c0ff639e64772a2961e198f3f9d7b93bf120a6aed8e1350a5f0fa6bea13b` | — | harness.lifecycle.run-report | artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | cursor | lifecycle.terminal-admission | `sha256:b952c2d83aeee61113c4a474d673dbf7d98334a8d85f6d3ab352a5cad689568f` | — | harness.lifecycle.terminal-admission | artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
+| cursor | lifecycle.tool-telemetry | `sha256:6907facd80a1eeef47b08c686355698cb724f30f27f27ad790ad25019679f176` | — | harness.lifecycle.tool-telemetry | artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | cursor | mcp.catalog | `sha256:54dd40ebbd21f976206d42e35be4f3c92f57b4679ff97a013edb3a406c190394` | — | harness.mcp.catalog | artifact:project:.cursor/mcp.json | supported | `HARNESS_MCP_PROJECTION_RENDERED` |
 | cursor | security.safe-dirs | `sha256:8ce38a9571be6fd4220f256972925f3f84dd844c144ac1d479a5d561b435f312` | — | harness.security.safe-dirs | artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | cursor | settings.audit | `sha256:da70a0c0e55d4324a8704a211532d8398083192570b00a7f1d4f94ab4d9daba7` | — | harness.settings.audit | non-artifact:named-cursor-settings-audit | supported | `HARNESS_SETTINGS_AUDIT_NAMED` |

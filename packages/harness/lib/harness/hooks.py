@@ -84,6 +84,7 @@ def _claude_lifecycle_bindings():
         "lifecycle.memory": LifecycleBinding("lifecycle.memory", "native", "global-hook-plus-project-config", handler="~/.claude/hooks/memory/memory.sh", kill_switch="MODE=off"),
         "lifecycle.notification": LifecycleBinding("lifecycle.notification", "native", "global-hook", handler="~/.claude/hooks/notify/notify.sh"),
         "lifecycle.command-log": LifecycleBinding("lifecycle.command-log", "native", "global-hook", "PreToolUse", "Bash", "~/.claude/hooks/log-bash-command.sh"),
+        "lifecycle.tool-telemetry": LifecycleBinding("lifecycle.tool-telemetry", "unsupported", "none", diagnostic_code="HARNESS_ACTIVATION_UNSUPPORTED"),
         "lifecycle.router": LifecycleBinding("lifecycle.router", "native", "project-settings", "UserPromptSubmit|SessionStart", "", "python3 ~/.claude/hooks/agent-router/router.py", "POLICY=off"),
         "lifecycle.run-report": LifecycleBinding("lifecycle.run-report", "native", "project-settings", "SessionEnd", "", "python3 ~/.claude/hooks/run-report/run-report.py", "ENABLED=off"),
         "lifecycle.pack-guard": LifecycleBinding("lifecycle.pack-guard", "native", "project-settings", "PreToolUse", "Edit|Write|MultiEdit|NotebookEdit", "python3 ~/.claude/hooks/pack-guard/pack-guard.py", "MODE=off"),
@@ -922,6 +923,96 @@ def _append_jsonl(path, payload):
         os.close(fd)
 
 
+_SYMBOL_TOOLS = frozenset({
+    "find_symbol", "find_referencing_symbols", "get_symbols_overview",
+    "find_implementations", "find_declaration", "replace_symbol_body",
+    "insert_after_symbol", "insert_before_symbol", "rename_symbol",
+    "safe_delete_symbol", "replace_content", "replace_in_files",
+    "get_diagnostics_for_file",
+})
+_CODEGRAPH_SERVERS = (
+    "codegraph", "serena", "plugin_core_codegraph", "plugin-core-codegraph",
+    "laravel-boost", "laravel_boost",
+)
+
+
+def _codegraph_server_match(server):
+    norm = server.lower().replace("-", "_")
+    return any(marker.replace("-", "_") in norm for marker in _CODEGRAPH_SERVERS)
+
+
+def _codegraph_tool(name):
+    if not isinstance(name, str) or not name:
+        return None
+    if name in _SYMBOL_TOOLS:
+        return name
+    low = name.lower()
+    if low in _SYMBOL_TOOLS:
+        return low
+    if low.startswith("mcp:"):
+        parts = name.split(":", 2)
+        if len(parts) >= 3 and _codegraph_server_match(parts[1]):
+            return parts[2]
+        return None
+    if not name.startswith("mcp__"):
+        return None
+    tail = name.rsplit("__", 1)[-1]
+    server = name[len("mcp__"):-(len(tail) + 2)]
+    if _codegraph_server_match(server):
+        return tail
+    return None
+
+
+def _tool_sidecar_path(cwd, conversation_id):
+    return Path(cwd) / ".cursor" / "state" / (conversation_id + ".tools.jsonl")
+
+
+def _tool_telemetry(payload):
+    conversation_id = _conversation_id(payload)
+    tool_name = payload.get("tool_name")
+    if conversation_id is None or not isinstance(tool_name, str) or not tool_name:
+        return
+    cwd = _payload_cwd(payload)
+    entry = {"tool": tool_name, "ts": _utc_now()}
+    cg = _codegraph_tool(tool_name)
+    if cg:
+        entry["codegraph_op"] = cg
+    try:
+        path = _tool_sidecar_path(cwd, conversation_id)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        _append_jsonl(path, entry)
+    except OSError:
+        pass
+
+
+def _aggregate_tool_sidecar(path):
+    counts = {}
+    codegraph = {}
+    if not path.is_file():
+        return counts, codegraph
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return counts, codegraph
+    for line in lines:
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(row, dict):
+            continue
+        tool = row.get("tool")
+        if isinstance(tool, str) and tool:
+            counts[tool] = counts.get(tool, 0) + 1
+        op = row.get("codegraph_op")
+        if isinstance(op, str) and op:
+            rec = codegraph.setdefault(op, {"calls": 0})
+            rec["calls"] += 1
+    return counts, codegraph
+
+
 def _command_log(payload):
     command = payload.get("command")
     if not isinstance(command, str) or not command:
@@ -958,6 +1049,7 @@ def _run_report(payload):
     conversation_id = _conversation_id(payload)
     if reason not in _REASON_TO_OUTCOME or conversation_id is None:
         return
+    cwd = _payload_cwd(payload)
     cursor = {"end_reason": reason}
     final_status = payload.get("final_status")
     if isinstance(final_status, str) and final_status:
@@ -968,19 +1060,26 @@ def _run_report(payload):
     duration_ms = payload.get("duration_ms")
     if isinstance(duration_ms, (int, float)) and not isinstance(duration_ms, bool):
         cursor["duration_ms"] = duration_ms
+    sidecar = _tool_sidecar_path(cwd, conversation_id)
+    by_name, codegraph = _aggregate_tool_sidecar(sidecar)
     record = {
-        "schema": 1,
+        "schema": 2,
         "provider_id": "cursor",
         "session_id": conversation_id,
         "conversation_id": conversation_id,
+        "cwd": cwd,
         "occurred_at": _utc_now(),
         "event_kind": "run_summary",
         "outcome": _REASON_TO_OUTCOME[reason],
         "metrics": {},
         "cursor": cursor,
     }
+    if by_name:
+        record["tools"] = {"total": sum(by_name.values()), "by_name": by_name}
+    if codegraph:
+        record["codegraph"] = codegraph
     try:
-        runs = Path(_payload_cwd(payload)) / ".cursor" / "runs"
+        runs = Path(cwd) / ".cursor" / "runs"
         runs.mkdir(parents=True, exist_ok=True)
         gitignore = runs / ".gitignore"
         if not gitignore.exists():
@@ -990,6 +1089,8 @@ def _run_report(payload):
         tmp.write_text(json.dumps(record, ensure_ascii=False, sort_keys=True, indent=2) + "\\n",
                        encoding="utf-8")
         os.replace(tmp, target)
+        if sidecar.is_file():
+            sidecar.unlink()
     except OSError:
         pass
 
@@ -1004,6 +1105,7 @@ _HANDLERS = {
     "lifecycle.review-gate": _review_gate,
     "lifecycle.terminal-admission": _terminal_admission,
     "lifecycle.command-log": _command_log,
+    "lifecycle.tool-telemetry": _tool_telemetry,
     "lifecycle.run-report": _run_report,
 }
 _SURFACE_EVENTS = {
@@ -1013,6 +1115,7 @@ _SURFACE_EVENTS = {
     "lifecycle.git-guardrails": "beforeShellExecution",
     "lifecycle.changelog-gate": "beforeShellExecution",
     "lifecycle.pack-guard": "preToolUse",
+    "lifecycle.tool-telemetry": "preToolUse",
     "lifecycle.review-gate": "subagentStop",
     "lifecycle.terminal-admission": "stop",
     "lifecycle.command-log": "afterShellExecution",
@@ -1092,6 +1195,7 @@ from pathlib import Path
 _SURFACE_EVENTS = {{
     "context.observer": "SessionStart",
     "lifecycle.command-log": "PreToolUse",
+    "lifecycle.tool-telemetry": "PreToolUse",
     "lifecycle.run-report": "SessionEnd",
     "lifecycle.router": "UserPromptSubmit",
     "lifecycle.memory": "SessionStart",
@@ -1145,6 +1249,138 @@ def _observer(payload):
     print(json.dumps({{"systemMessage": "[harness observer] read-only policy active"}}))
 
 
+_SYMBOL_TOOLS = frozenset({{
+    "find_symbol", "find_referencing_symbols", "get_symbols_overview",
+    "find_implementations", "find_declaration", "replace_symbol_body",
+    "insert_after_symbol", "insert_before_symbol", "rename_symbol",
+    "safe_delete_symbol", "replace_content", "replace_in_files",
+    "get_diagnostics_for_file",
+}})
+_CODEGRAPH_SERVERS = (
+    "codegraph", "serena", "plugin_core_codegraph", "plugin-core-codegraph",
+    "laravel-boost", "laravel_boost",
+)
+
+
+def _codegraph_server_match(server):
+    norm = server.lower().replace("-", "_")
+    return any(marker.replace("-", "_") in norm for marker in _CODEGRAPH_SERVERS)
+
+
+def _codegraph_tool(name):
+    if not isinstance(name, str) or not name:
+        return None
+    if name in _SYMBOL_TOOLS:
+        return name
+    low = name.lower()
+    if low in _SYMBOL_TOOLS:
+        return low
+    if low.startswith("mcp:"):
+        parts = name.split(":", 2)
+        if len(parts) >= 3 and _codegraph_server_match(parts[1]):
+            return parts[2]
+        return None
+    if not name.startswith("mcp__"):
+        return None
+    tail = name.rsplit("__", 1)[-1]
+    server = name[len("mcp__"):-(len(tail) + 2)]
+    if _codegraph_server_match(server):
+        return tail
+    return None
+
+
+def _append_jsonl(path, payload):
+    line = json.dumps(payload, sort_keys=True, ensure_ascii=False, separators=(",", ":")) + "\\n"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(str(path), os.O_APPEND | os.O_CREAT | os.O_WRONLY, 0o600)
+    try:
+        os.write(fd, line.encode("utf-8"))
+    finally:
+        os.close(fd)
+
+
+def _tool_sidecar_path(cwd, session_id):
+    return Path(cwd) / ".codex" / "state" / (str(session_id) + ".tools.jsonl")
+
+
+def _aggregate_tool_sidecar(path):
+    counts = {{}}
+    codegraph = {{}}
+    if not path.is_file():
+        return counts, codegraph
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return counts, codegraph
+    for line in lines:
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(row, dict):
+            continue
+        tool = row.get("tool")
+        if isinstance(tool, str) and tool:
+            counts[tool] = counts.get(tool, 0) + 1
+        op = row.get("codegraph_op")
+        if isinstance(op, str) and op:
+            rec = codegraph.setdefault(op, {{"calls": 0}})
+            rec["calls"] += 1
+    return counts, codegraph
+
+
+def _run_report_lib_path(cwd):
+    candidates = []
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(cwd), "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, timeout=2, check=False)
+        root = proc.stdout.strip() if proc.returncode == 0 else ""
+        if root:
+            candidates.append(Path(root) / "packages/harness/configs/claude-code/hooks/run-report/_lib.py")
+    except (OSError, subprocess.SubprocessError):
+        pass
+    candidates.append(Path.home() / ".claude/hooks/run-report/_lib.py")
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _parse_transcript_report(cwd, tpath):
+    lib = _run_report_lib_path(cwd)
+    if lib is None:
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("run_report_lib", lib)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        with open(tpath, encoding="utf-8", errors="replace") as handle:
+            return mod.parse_events(handle, transcript_path=tpath, cwd=cwd)
+    except Exception:
+        return None
+
+
+def _tool_telemetry(payload):
+    session_id = payload.get("session_id")
+    tool_name = payload.get("tool_name")
+    cwd = payload.get("cwd")
+    if not isinstance(cwd, str) or not cwd or not isinstance(session_id, str) or not session_id:
+        return
+    if not isinstance(tool_name, str) or not tool_name:
+        return
+    entry = {{"tool": tool_name, "ts": datetime.datetime.now(datetime.timezone.utc).isoformat()}}
+    cg = _codegraph_tool(tool_name)
+    if cg:
+        entry["codegraph_op"] = cg
+    try:
+        _append_jsonl(_tool_sidecar_path(cwd, session_id), entry)
+    except OSError:
+        pass
+
+
 def _command_log(payload):
     log_dir = Path.home() / ".codex" / "logs"
     try:
@@ -1163,19 +1399,53 @@ def _run_report(payload):
     cwd = payload.get("cwd")
     if not cwd:
         return
+    sid = payload.get("session_id") or "session"
+    sid = "".join(c for c in str(sid) if c.isalnum() or c in "-_") or "session"
+    tpath = payload.get("transcript_path")
+    record = None
+    if isinstance(tpath, str) and tpath:
+        tpath = os.path.expanduser(tpath)
+        if os.path.isfile(tpath):
+            record = _parse_transcript_report(cwd, tpath)
+    sidecar = _tool_sidecar_path(cwd, sid)
+    by_name, codegraph = _aggregate_tool_sidecar(sidecar)
+    if record is None:
+        record = {{"schema": 1, "session_id": sid, "cwd": cwd,
+                   "reason": payload.get("reason", ""),
+                   "transcript_path": tpath if isinstance(tpath, str) else None}}
+    else:
+        record["schema"] = 2
+        record["provider_id"] = "codex"
+        record["session_id"] = sid
+        record["cwd"] = cwd
+        record["reason"] = payload.get("reason") or ""
+        if isinstance(tpath, str):
+            record["transcript_path"] = tpath
+        try:
+            record["generated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        except Exception:
+            pass
+    if by_name:
+        record["tools"] = {{"total": sum(by_name.values()), "by_name": by_name}}
+    if codegraph:
+        existing = record.get("codegraph") if isinstance(record.get("codegraph"), dict) else {{}}
+        for op, rec in codegraph.items():
+            cur = existing.setdefault(op, {{"calls": 0}})
+            cur["calls"] += rec.get("calls", 0)
+        record["codegraph"] = existing
     runs_dir = Path(cwd) / ".codex" / "runs"
     try:
         runs_dir.mkdir(parents=True, exist_ok=True)
         gitignore = runs_dir / ".gitignore"
         if not gitignore.exists():
             gitignore.write_text("*\\n", encoding="utf-8")
-        record = {{"schema": 1, "session_id": payload.get("session_id", ""), "cwd": cwd,
-                  "reason": payload.get("reason", ""),
-                  "transcript_path": payload.get("transcript_path")}}
-        target = runs_dir / (str(payload.get("session_id") or "session") + ".json")
+        target = runs_dir / (sid + ".json")
         tmp = target.with_name(target.name + ".tmp")
-        tmp.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+        tmp.write_text(json.dumps(record, ensure_ascii=False, sort_keys=True, indent=2) + "\\n",
+                       encoding="utf-8")
         os.replace(tmp, target)
+        if sidecar.is_file():
+            sidecar.unlink()
     except OSError:
         pass
 
@@ -1586,6 +1856,7 @@ def _terminal_admission(payload):
 _HANDLERS = {{
     "context.observer": _observer,
     "lifecycle.command-log": _command_log,
+    "lifecycle.tool-telemetry": _tool_telemetry,
     "lifecycle.run-report": _run_report,
     "lifecycle.router": _router,
     "lifecycle.memory": _memory,
@@ -1790,7 +2061,7 @@ def render_codex_capture_handler() -> bytes:
 import json, sys
 payload = json.load(sys.stdin)
 required = {"session_id", "occurred_at", "metrics"}
-allowed = {"tools", "files", "workflows", "retrieval", "devloop", "maind", "usage", "reads", "errors"}
+allowed = {"tools", "files", "workflows", "retrieval", "devloop", "maind", "codegraph", "usage", "reads", "errors"}
 if (not isinstance(payload, dict) or set(payload) - (required | {"outcome"})
         or not required.issubset(payload) or not isinstance(payload["metrics"], dict)
         or not set(payload["metrics"]).issubset(allowed)
@@ -2038,6 +2309,11 @@ def _parse_memory_flag(raw):
     return "core", raw.strip()
 
 
+_CODEX_OBSERVABILITY_SURFACES = (
+    "lifecycle.command-log",
+    "lifecycle.tool-telemetry",
+    "lifecycle.run-report",
+)
 _CODEX_GATE_FLAGS = ("pack_guard", "changelog_gate", "review_gate", "git_guardrails")
 _CODEX_GATE_SURFACE = {
     "pack_guard": "lifecycle.pack-guard", "changelog_gate": "lifecycle.changelog-gate",
@@ -2085,6 +2361,9 @@ def _block_codex_gates(env, target, opts):
         die("provider codex нужен хотя бы один из: --observer / --pack-guard off|warn|strict / "
             "--changelog-gate off|warn|strict / --review-gate off|warn|strict / "
             "--git-guardrails off|warn|strict / --safe-dirs / --daemon-safety")
+    for surface in _CODEX_OBSERVABILITY_SURFACES:
+        if surface not in surfaces:
+            surfaces.append(surface)
     block_codex_lifecycle(env, target, surfaces=tuple(surfaces), trusted=bool(opts["trusted"]),
                           repair=bool(opts["repair"]), dry=bool(opts["dry_run"]))
 
@@ -2102,6 +2381,7 @@ def _block_cursor_gates(env, target, opts):
     surfaces = [
         "security.safe-dirs",
         "lifecycle.command-log",
+        "lifecycle.tool-telemetry",
         "lifecycle.run-report",
     ]
     memory = opts["memory"]

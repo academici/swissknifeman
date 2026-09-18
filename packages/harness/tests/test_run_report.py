@@ -88,6 +88,8 @@ FIXTURE_MCP = "\n".join([
     _mcp_line("g1", "mcp__maind__maind_graph_query",
               {"root": "project:x", "count": 3, "neighbors": [1, 2, 3]}),       # count=3
     _mcp_line("s1", "mcp__maind__maind_memory_store", {"memory": {"id": "m_1"}}),
+    _mcp_line("c1", "mcp__codegraph__find_symbol", {"name": "Foo"}),
+    _mcp_line("c2", "mcp__plugin_core_codegraph__get_symbols_overview", {"path": "a.py"}),
     json.dumps({"type": "assistant", "message": {"content": [
         {"type": "tool_use", "id": "m3", "name": "mcp__maind__maind_memory_recall",
          "input": {"q": "z"}}]}}),
@@ -221,6 +223,12 @@ class ParseCase(unittest.TestCase):
         self.assertEqual(m["graph_query"]["found_total"], 3)
 
         self.assertEqual(r["tools"]["by_name"]["mcp__maind__maind_memory_recall"], 2)
+
+    def test_codegraph_mcp_metrics(self):
+        r = parse_transcript(FIXTURE_MCP)
+        cg = r["codegraph"]
+        self.assertEqual(cg["find_symbol"]["calls"], 1)
+        self.assertEqual(cg["get_symbols_overview"]["calls"], 1)
 
     def test_empty_and_garbage(self):
         for bad in ("", "not json", "{{{", "null\n[]\n42"):

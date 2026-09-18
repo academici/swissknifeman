@@ -1171,6 +1171,61 @@
       }
     },
     {
+      "id": "lifecycle.tool-telemetry",
+      "intent": "Capture provider-native tool-call sidecar evidence for run-report enrichment.",
+      "support": {
+        "claude-code": {
+          "diagnostic": "unsupported claude-code lifecycle.tool-telemetry; run-report derives tool counts from the SessionEnd transcript instead",
+          "evidence": [
+            {
+              "claim": "Claude SessionEnd run-report extracts codegraph and tool counts from the transcript; a separate PreToolUse sidecar is redundant",
+              "scope": "claude-code lifecycle.tool-telemetry surface",
+              "source": "packages/harness/configs/claude-code/hooks/run-report/_lib.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "unsupported",
+          "limitations": [
+            "codegraph telemetry is derived from the SessionEnd transcript parser, not a PreToolUse hook"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.lifecycle.tool-telemetry",
+          "diagnostic": "deterministic harness adapter appends tool-call sidecar lines on PreToolUse for run-report merge",
+          "evidence": [
+            {
+              "claim": "Codex lifecycle handler records tool_name and codegraph counters to .codex/state/<session>.tools.jsonl and SessionEnd run-report merges the sidecar",
+              "scope": "codex lifecycle.tool-telemetry PreToolUse sidecar and run-report enrichment",
+              "source": "packages/harness/tests/test_codex_lifecycle_surfaces.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "records only tool calls exposed on the Codex PreToolUse boundary",
+            "merges into run-report at SessionEnd; empty sidecar yields transcript-only counts when available"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.lifecycle.tool-telemetry",
+          "diagnostic": "deterministic cursor adapter appends tool-call sidecar lines on preToolUse for run-report merge",
+          "evidence": [
+            {
+              "claim": "Cursor lifecycle handler records tool_name and codegraph counters to .cursor/state/<conversation>.tools.jsonl and sessionEnd run-report merges the sidecar",
+              "scope": "cursor lifecycle.tool-telemetry preToolUse sidecar and run-report enrichment",
+              "source": "packages/harness/tests/test_cursor_hook_render.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "records only tool calls exposed on the Cursor preToolUse boundary",
+            "merges into run-report at sessionEnd; uses conversation_id as the correlation key"
+          ]
+        }
+      }
+    },
+    {
       "id": "lifecycle.daemon-safety",
       "intent": "Reject unsafe shared-daemon operations.",
       "support": {

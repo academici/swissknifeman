@@ -24,6 +24,7 @@ from .. import codegraph
 from .. import pao
 from ..mcpconfig import MCP_FILES
 from ..mcp_parity import analyze as mcp_parity_analyze
+from ..codegraph_usage import fleet_summary, format_project_line, usage_note
 from ..mcp_runtime import runtime_summary, scan_runtime
 from ..projects import listing
 
@@ -241,10 +242,13 @@ def run_audit(env, config, dim, as_json=False):
     projs = listing(env, config)
     rows = [audit_project(env, p, dims, code_st, config) for p in projs]
     runtime = scan_runtime() if "mcp" in dims else None
+    code_usage = fleet_summary(projs) if "mcp" in dims else None
     if as_json:
         payload = {"dims": list(dims), "projects": rows}
         if runtime is not None:
             payload["mcp_runtime"] = runtime
+        if code_usage is not None:
+            payload["codegraph_usage"] = code_usage
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return
     print(f"maind audit ({', '.join(dims)}) — проектов: {len(rows)}")
@@ -300,3 +304,14 @@ def run_audit(env, config, dim, as_json=False):
             print(f"  [host] mcp-runtime⚠ {note}")
         elif runtime.get("duplicates") or runtime.get("heavy"):
             print("  [host] mcp-runtime: ok")
+    if code_usage is not None:
+        print(f"  [fleet] codegraph-usage {usage_note(code_usage)}")
+        code_on = {p["id"]: bool(p.get("code") or p.get("graphify")) for p in projs}
+        idle = []
+        for row in code_usage.get("projects") or []:
+            line = format_project_line(row, code_on.get(row["id"], False))
+            if line and " idle" in line:
+                idle.append(row["id"])
+        if idle:
+            print(f"  [fleet] codegraph-idle {', '.join(idle[:8])}"
+                  + ("…" if len(idle) > 8 else ""))

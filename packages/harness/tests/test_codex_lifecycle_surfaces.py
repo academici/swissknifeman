@@ -237,18 +237,41 @@ class CodexLifecycleSurfaceTests(unittest.TestCase):
             self.assertEqual(entry["session"], "s1")
             self.assertFalse((Path(home) / ".claude/logs/bash-commands.jsonl").exists())
 
-    def test_run_report_captures_session_boundary_only(self):
+    def test_run_report_parses_transcript_when_available(self):
+        project = str(PACKAGE.parents[1])
+        with tempfile.TemporaryDirectory() as scratch:
+            handler = self._write_handler(scratch)
+            transcript = Path(scratch) / "transcript.jsonl"
+            transcript.write_text("\n".join([
+                json.dumps({"type": "assistant", "message": {"content": [
+                    {"type": "tool_use", "id": "c1", "name": "mcp__codegraph__find_symbol",
+                     "input": {"name": "Foo"}}]}}),
+                json.dumps({"type": "user", "message": {"content": [
+                    {"type": "tool_result", "tool_use_id": "c1", "content": "ok",
+                     "is_error": False}]}}),
+            ]) + "\n", encoding="utf-8")
+            payload = {"session_id": "s1", "cwd": project, "model": "gpt-5.6-terra",
+                      "hook_event_name": "SessionEnd", "reason": "other",
+                      "transcript_path": str(transcript)}
+            result = _run_handler(handler, "lifecycle.run-report", payload)
+            self.assertEqual(result.returncode, 0)
+            record = json.loads((Path(project) / ".codex/runs/s1.json").read_text(encoding="utf-8"))
+            self.assertEqual(record["schema"], 2)
+            self.assertEqual(record["provider_id"], "codex")
+            self.assertEqual(record["codegraph"]["find_symbol"]["calls"], 1)
+            self.assertTrue((Path(project) / ".codex/runs/.gitignore").is_file())
+            (Path(project) / ".codex/runs/s1.json").unlink(missing_ok=True)
+
+    def test_run_report_stub_without_transcript(self):
         with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:
             handler = self._write_handler(scratch)
             payload = {**_COMMON_FIELDS, "cwd": project, "hook_event_name": "SessionEnd",
-                      "reason": "other", "transcript_path": "/tmp/transcript.jsonl"}
+                      "reason": "other"}
             result = _run_handler(handler, "lifecycle.run-report", payload)
             self.assertEqual(result.returncode, 0)
-            record_path = Path(project) / ".codex/runs/s1.json"
-            record = json.loads(record_path.read_text(encoding="utf-8"))
-            self.assertEqual(record, {"schema": 1, "session_id": "s1", "cwd": project,
-                                      "reason": "other", "transcript_path": "/tmp/transcript.jsonl"})
-            self.assertTrue((Path(project) / ".codex/runs/.gitignore").is_file())
+            record = json.loads((Path(project) / ".codex/runs/s1.json").read_text(encoding="utf-8"))
+            self.assertEqual(record["schema"], 1)
+            self.assertEqual(record["session_id"], "s1")
 
     def test_router_emits_bare_task_command_bias_above_threshold_and_stays_silent_below(self):
         with tempfile.TemporaryDirectory() as scratch:

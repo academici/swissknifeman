@@ -4,6 +4,10 @@
 
 ### Added
 
+- **Телеметрия codegraph:** run-report (Claude + Cursor + Codex) пишет блок `codegraph`;
+  `preToolUse` sidecar на Cursor/Codex; Codex парсит `transcript_path` через run-report
+  `_lib.py`; `harness hooks --provider codex|cursor` раскатывает observability-поверхности;
+  `maind doctor --audit mcp` — `[fleet] codegraph-usage`.
 - **maind:** `mcp_runtime` — host-аудит дублей Serena и тяжёлых LSP (>500 MB) в
   `maind doctor --audit mcp`.
 - **maind:** `mcp_parity` — аудит расхождений MCP между `.mcp.json`, `.cursor/mcp.json`,

@@ -99,7 +99,7 @@ class ProviderConformanceTests(unittest.TestCase):
                     for surface in fixture["surfaces"]}
         observed = {(row["provider"], row["surface_id"]) for row in report["surface_map"]}
         self.assertEqual(observed, expected)
-        self.assertEqual(len(report["surface_map"]), 72)
+        self.assertEqual(len(report["surface_map"]), 75)
         self.assertIn({"category": "activation", "provider": "claude-code",
                        "identity": "agents.catalog", "polarity": "positive",
                        "state": "supported", "diagnostic": "HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:44"},

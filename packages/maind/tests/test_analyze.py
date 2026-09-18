@@ -224,7 +224,7 @@ class MaindObservabilityCase(unittest.TestCase):
         v, _c, red, reasons, _rp = compute_verdict(MAIND_RR, {"dirty": False}, None)
         self.assertEqual(v, "ATTENTION")
         self.assertFalse(red)
-        self.assertTrue(any("код-граф не использовался" in r for r in reasons))
+        self.assertTrue(any("codegraph не использовался" in r for r in reasons))
         self.assertTrue(any("recall" in r for r in reasons))       # пустой recall тоже подсвечен
 
     def test_old_report_without_maind_key_ok(self):

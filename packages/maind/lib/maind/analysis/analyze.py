@@ -14,8 +14,9 @@ import json
 import os
 from pathlib import Path
 
-from ..common import find_run_report, find_run_report_result, parse_args, read_ndjson_iter, run_cmd
+from core.codegraph_telemetry import scan_run_report
 from core.runs import find_analytics_events
+from ..common import find_run_report, find_run_report_result, parse_args, read_ndjson_iter, run_cmd
 from ..config import load_config
 from ..health import _target
 
@@ -190,15 +191,14 @@ def compute_verdict(run_report, git, observer, *, evidence_diagnostics=()):
 
         # наблюдаемость памяти/графа (ключ run-report.maind — аддитивный; старый отчёт → пусто).
         maind = run_report.get("maind") or {}
-        graph_calls = sum(v.get("calls", 0) for k, v in maind.items() if k.startswith("graph_"))
+        cg = scan_run_report(run_report)
+        codegraph_calls = cg.get("calls", 0)
         by_name = (run_report.get("tools") or {}).get("by_name") or {}
         scan = sum(by_name.get(t, 0) for t in ("Read", "Grep", "Glob"))
-        # КОСВЕННАЯ эвристика: тяжёлое файловое сканирование при нуле обращений к графу.
-        # Формулировка «не использовался», НЕ «бесполезен» — прямой корреляции «граф спас grep» нет.
-        if scan >= 30 and graph_calls == 0:
-            reasons.append(f"код-граф не использовался при тяжёлом сканировании "
-                           f"({scan} Read/Grep/Glob, граф ×0) — граф/Serena дешевле; "
-                           f"устарел → maind sync --only graph")
+        # КОСВЕННАЯ эвристика: тяжёлое файловое сканирование при нуле symbol-tools codegraph.
+        if scan >= 30 and codegraph_calls == 0:
+            reasons.append(f"codegraph не использовался при тяжёлом сканировании "
+                           f"({scan} Read/Grep/Glob, codegraph ×0) — symbol-tools дешевле grep+read")
         recall = maind.get("memory_recall") or {}
         if recall.get("calls", 0) >= 2 and recall.get("found_total", 0) == 0:
             reasons.append(f"память опрашивалась (recall ×{recall['calls']}), но пуста/не по адресу "
@@ -280,14 +280,19 @@ def _print_human(rep):
         print(f"  инструментов: {tools.get('total', 0)}  · файлов изменено: "
               f"{len(rr.get('files_changed') or [])}")
         md = rr.get("maind") or {}
-        if md:
+        cg = scan_run_report(rr)
+        if md or cg.get("calls"):
             mem_calls = sum(v.get("calls", 0) for k, v in md.items() if k.startswith("memory_"))
             graph_calls = sum(v.get("calls", 0) for k, v in md.items() if k.startswith("graph_"))
             graph_found = sum(v.get("found_total", 0) for k, v in md.items() if k.startswith("graph_"))
             recall = md.get("memory_recall") or {}
-            print(f"  mAInd:      память ×{mem_calls} "
-                  f"(recall ×{recall.get('calls', 0)}→{recall.get('found_total', 0)} фактов) · "
-                  f"граф ×{graph_calls}→{graph_found} соседей")
+            line = (f"  mAInd:      память ×{mem_calls} "
+                    f"(recall ×{recall.get('calls', 0)}→{recall.get('found_total', 0)} фактов) · "
+                    f"топология ×{graph_calls}→{graph_found} соседей")
+            if cg.get("calls"):
+                ops = ", ".join(f"{k}×{v}" for k, v in sorted(cg.get("by_op", {}).items()))
+                line += f" · codegraph ×{cg['calls']} ({ops})"
+            print(line)
         print(f"  тесты:      {tpass} ok / {tfail} FAIL     линт: {lpass} ok / {lfail} FAIL")
         if rr.get("workflows"):
             for wf in rr["workflows"]:

@@ -256,11 +256,38 @@ class CursorHookRenderTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0)
             record = json.loads((Path(project) / ".cursor/runs/conv-run.json").read_text(
                 encoding="utf-8"))
+            self.assertEqual(record["schema"], 2)
             self.assertEqual(record["session_id"], "conv-run")
             self.assertEqual(record["outcome"], "unknown")
             self.assertEqual(record["cursor"]["end_reason"], "window_close")
             self.assertEqual(record["cursor"]["native_session_id"], "cursor-session-17")
             self.assertEqual(record["cursor"]["duration_ms"], 777.0)
+
+    def test_handler_tool_telemetry_merges_into_run_report(self):
+        with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:
+            handler = Path(scratch) / "lifecycle.py"
+            handler.write_bytes(render_cursor_hook_handler())
+            common = {
+                "conversation_id": "conv-cg",
+                "workspace_roots": [project],
+            }
+            tool_payload = {
+                **common,
+                "hook_event_name": "preToolUse",
+                "tool_name": "MCP:plugin-core-codegraph:find_symbol",
+                "tool_input": {"name": "Foo"},
+            }
+            self.assertEqual(_run_handler(handler, "lifecycle.tool-telemetry", tool_payload).returncode, 0)
+            end_payload = {
+                **common,
+                "hook_event_name": "sessionEnd",
+                "reason": "completed",
+            }
+            self.assertEqual(_run_handler(handler, "lifecycle.run-report", end_payload).returncode, 0)
+            record = json.loads((Path(project) / ".cursor/runs/conv-cg.json").read_text(
+                encoding="utf-8"))
+            self.assertEqual(record["codegraph"]["find_symbol"]["calls"], 1)
+            self.assertFalse((Path(project) / ".cursor/state/conv-cg.tools.jsonl").exists())
 
 
 if __name__ == "__main__":

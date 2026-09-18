@@ -51,7 +51,8 @@ class ProviderHookTests(unittest.TestCase):
                          {"lifecycle.auto-approval"})
         self.assertEqual({binding.surface_id for binding in plan.bindings
                           if binding.support_level == "hook-native"},
-                         {"context.observer", "lifecycle.command-log", "lifecycle.run-report",
+                         {"context.observer", "lifecycle.command-log", "lifecycle.tool-telemetry",
+                          "lifecycle.run-report",
                           "lifecycle.router", "lifecycle.memory", "lifecycle.pack-guard",
                           "lifecycle.changelog-gate", "lifecycle.review-gate",
                           "lifecycle.daemon-safety", "lifecycle.git-guardrails",

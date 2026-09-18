@@ -1094,19 +1094,22 @@
           ]
         },
         "cursor": {
-          "level": "unsupported",
+          "adapter_id": "harness.cursor.lifecycle.changelog-gate",
+          "diagnostic": "deterministic cursor adapter satisfies lifecycle.changelog-gate through the shared policy core",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
-              "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "claim": "Cursor and Codex changelog-gate adapters consume one shared release-sensitive commit-type core and apply off/warn/strict via provider mode files",
+              "scope": "cursor lifecycle.changelog-gate shared-core routing and mode behavior",
+              "source": "packages/harness/tests/test_cursor_lifecycle_gates.py",
+              "verified_at": "2026-09-18"
             }
           ],
+          "level": "adapted",
           "limitations": [
-            "deferred at P0 per D1; adapter does not ship yet"
-          ],
-          "diagnostic": "cursor lifecycle.changelog-gate at P0 level unsupported"
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "reads release-sensitive commit type only from git commit -m messages",
+            "fail closed when the shared policy core is unreachable"
+          ]
         }
       }
     },
@@ -1209,19 +1212,22 @@
           ]
         },
         "cursor": {
-          "level": "unsupported",
+          "adapter_id": "harness.cursor.lifecycle.daemon-safety",
+          "diagnostic": "deterministic cursor adapter satisfies lifecycle.daemon-safety through the shared policy core",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
-              "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "claim": "Cursor and Codex daemon-safety adapters consume one shared declarative policy core and fail closed with exit 2 in strict mode",
+              "scope": "cursor lifecycle.daemon-safety policy-core routing and enforcement behavior",
+              "source": "packages/harness/tests/test_cursor_lifecycle_gates.py",
+              "verified_at": "2026-09-18"
             }
           ],
+          "level": "adapted",
           "limitations": [
-            "deferred at P0 per D1; adapter does not ship yet"
-          ],
-          "diagnostic": "cursor lifecycle.daemon-safety at P0 level unsupported"
+            "inactive unless explicitly registered via harness hooks --provider cursor --daemon-safety",
+            "fail closed when the shared policy core is unreachable",
+            "uses the documented environment kill switch PERPLEXITY_DAEMON_GUARD=off"
+          ]
         }
       }
     },
@@ -1264,19 +1270,22 @@
           ]
         },
         "cursor": {
-          "level": "unsupported",
+          "adapter_id": "harness.cursor.lifecycle.git-guardrails",
+          "diagnostic": "deterministic cursor adapter satisfies lifecycle.git-guardrails through the shared policy core",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
-              "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "claim": "Cursor and Codex git-guardrails adapters consume one shared declarative policy core with off/warn/strict mode handling",
+              "scope": "cursor lifecycle.git-guardrails shared-core enforcement and warning behavior",
+              "source": "packages/harness/tests/test_cursor_lifecycle_gates.py",
+              "verified_at": "2026-09-18"
             }
           ],
+          "level": "adapted",
           "limitations": [
-            "deferred at P0 per D1; adapter does not ship yet"
-          ],
-          "diagnostic": "cursor lifecycle.git-guardrails at P0 level unsupported"
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "pattern-based refusal remains intentionally unchanged on this pass",
+            "fail closed when the shared policy core is unreachable"
+          ]
         }
       }
     },
@@ -1428,19 +1437,22 @@
           ]
         },
         "cursor": {
-          "level": "unsupported",
+          "adapter_id": "harness.cursor.lifecycle.pack-guard",
+          "diagnostic": "deterministic cursor adapter satisfies lifecycle.pack-guard through the shared policy core",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
-              "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "claim": "Cursor and Codex pack-guard adapters consume one shared declarative policy core that evaluates managed-target rules under off/warn/strict",
+              "scope": "cursor lifecycle.pack-guard managed-target guard behavior",
+              "source": "packages/harness/tests/test_cursor_lifecycle_gates.py",
+              "verified_at": "2026-09-18"
             }
           ],
+          "level": "adapted",
           "limitations": [
-            "deferred at P0 per D1; adapter does not ship yet"
-          ],
-          "diagnostic": "cursor lifecycle.pack-guard at P0 level unsupported"
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "matches managed targets through serialized preToolUse payload inspection",
+            "fail closed when the shared policy core is unreachable"
+          ]
         }
       }
     },

@@ -24,9 +24,9 @@ No live target write, activation, apply authority, MCP start, hook start or work
 | source:configs/common/profile-catalog.json | `sha256:3417643f87ca3b22c519e360201020bc50b6a81c774bd2dd938c612fdbefb66a` |
 | source:configs/cursor/agent-packs/consumer-mapping.json | `sha256:314f0935b254c8a7e814cfa1ae476b99e373d0fffeb4de91fabf8c756708d67e` |
 | source:configs/cursor/config/profile-bindings.json | `sha256:8772a33bbdf9d5082bc12457d135e2a29c3faf945a5f8f3c11a9954695bf1594` |
-| source:configs/cursor/hooks/lifecycle-context-bindings.json | `sha256:c1bc4548abf8031efc4f9b96577390531e567a638e7008dc1ff190f6a08ae85a` |
+| source:configs/cursor/hooks/lifecycle-context-bindings.json | `sha256:efbe2d83692692c7fbe10fdf68403fe686421525cb7d04a2be2a43f8b9b729c1` |
 | source:configs/cursor/mcp/bindings.json | `sha256:70f8e83eaa179e26308cfbe4848429c824864e4c0e0016c520e59914aeb4b44f` |
-| render-manifest:all-provider-qualified-outputs | `sha256:634f9e08cb43568da426573892ef63efbc857da5f862f68f47944e67e8f82110` |
+| render-manifest:all-provider-qualified-outputs | `sha256:a14f7625dd9c1aab73c3f72216f0cd1bd33aa32ab13b35ac0c32581ea7932359` |
 
 The read-only JSON report retains every individual provider-qualified render hash; this manifest hash covers all of them deterministically.
 
@@ -92,13 +92,13 @@ Every provider-qualified surface row is required: missing, extra or duplicate ro
 | cursor | doctor.environment | `sha256:a559d78d9d698deeebe696353405507b85f3eaefe96a7f0a621d3be04033c5ec` | — | harness.doctor.environment | non-artifact:named-harness-doctor | supported | `HARNESS_DOCTOR_ENVIRONMENT_NAMED` |
 | cursor | doctor.provider | `sha256:b697fe554c9c0d0271f950bd875c6a81373c03bf97aaf4e6ba11352ca184273a` | — | harness.doctor.provider | non-artifact:provider-audit | supported | `HARNESS_PROVIDER_AUDIT_NAMED` |
 | cursor | lifecycle.auto-approval | `sha256:8681c3e09d1ef2a59015ccda5efebf4c4d2417b73f6b47c45bdda4d5bff7e6d9` | — | harness.lifecycle.auto-approval | native-binding:P5.2-config-security-projection | supported | `HARNESS_ACTIVATION_NATIVE` |
-| cursor | lifecycle.changelog-gate | `sha256:6a1579586594df0a691221c4aca2efe7d7f4835be82c0f807d3ba785b2ea8a9d` | — | harness.lifecycle.changelog-gate | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
+| cursor | lifecycle.changelog-gate | `sha256:6a1579586594df0a691221c4aca2efe7d7f4835be82c0f807d3ba785b2ea8a9d` | — | harness.lifecycle.changelog-gate | artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | cursor | lifecycle.command-log | `sha256:6c2900af6956f64747429488e3177132cbed547a935cf98bda46a26fe57fe8ad` | — | harness.lifecycle.command-log | artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
-| cursor | lifecycle.daemon-safety | `sha256:d7eefb087ebafb37c2dfd19240e1611c6150925d12977d337c78a6e126ebbf2b` | — | harness.lifecycle.daemon-safety | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
-| cursor | lifecycle.git-guardrails | `sha256:4d5c38147dc736cb1d6b93c38e04d98324f48c057cc9ebb4ab294c4181559610` | — | harness.lifecycle.git-guardrails | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
+| cursor | lifecycle.daemon-safety | `sha256:d7eefb087ebafb37c2dfd19240e1611c6150925d12977d337c78a6e126ebbf2b` | — | harness.lifecycle.daemon-safety | artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
+| cursor | lifecycle.git-guardrails | `sha256:4d5c38147dc736cb1d6b93c38e04d98324f48c057cc9ebb4ab294c4181559610` | — | harness.lifecycle.git-guardrails | artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | cursor | lifecycle.memory | `sha256:1c68623b21d4eafa0887b798cedea70ec3cf7d0674d35320f61328686e02e3fb` | — | harness.lifecycle.memory | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | cursor | lifecycle.notification | `sha256:c9e55167aaf018fdc0109cea4553c2c2911d53f709e49d400ed367a8b0683a00` | — | harness.lifecycle.notification | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
-| cursor | lifecycle.pack-guard | `sha256:05b5c33e3cb01e7ce424631d35b8485adcf77ba6b66a78bd8bf73dfbaa6b9c8e` | — | harness.lifecycle.pack-guard | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
+| cursor | lifecycle.pack-guard | `sha256:05b5c33e3cb01e7ce424631d35b8485adcf77ba6b66a78bd8bf73dfbaa6b9c8e` | — | harness.lifecycle.pack-guard | artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | cursor | lifecycle.review-gate | `sha256:a8bdf4c8d37277ab0a8976ee7cfcf215f5ee8e63f4bb69163dca1796ebe44368` | — | harness.lifecycle.review-gate | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | cursor | lifecycle.router | `sha256:3579aac732a227a565edc6175dbfa4ddc27767a10af3aa7fb70091ca4915f283` | — | harness.lifecycle.router | artifact:project:.cursor/rules/swissknifeman-router.mdc | supported | `HARNESS_CURSOR_STATIC_RULE` |
 | cursor | lifecycle.run-report | `sha256:9b92c0ff639e64772a2961e198f3f9d7b93bf120a6aed8e1350a5f0fa6bea13b` | — | harness.lifecycle.run-report | artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |

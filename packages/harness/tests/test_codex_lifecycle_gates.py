@@ -47,6 +47,9 @@ class CodexLifecycleGateTests(unittest.TestCase):
     def _project_env(self, home):
         return {**os.environ, "HOME": home}
 
+    def _core_env(self):
+        return {**os.environ, "PATH": f"{ROOT / 'bin'}:{os.environ.get('PATH', '')}"}
+
     def test_manifest_levels_raised_with_adapter_id_and_evidence(self):
         manifest = load_provider_manifest(MANIFEST)
         for surface_id in CLASS_B_SURFACES:
@@ -100,13 +103,13 @@ class CodexLifecycleGateTests(unittest.TestCase):
             managed = {**_COMMON_FIELDS, "cwd": project, "hook_event_name": "PreToolUse",
                       "tool_name": "apply_patch",
                       "tool_input": {"input": "*** Update File: .claude/agents/foo.md\n"}}
-            refused = _run_handler(handler, "lifecycle.pack-guard", managed)
+            refused = _run_handler(handler, "lifecycle.pack-guard", managed, env=self._core_env())
             self.assertEqual(refused.returncode, 2)
             self.assertIn(b"demo", refused.stderr)
             unmanaged = {**_COMMON_FIELDS, "cwd": project, "hook_event_name": "PreToolUse",
                         "tool_name": "apply_patch",
                         "tool_input": {"input": "*** Update File: .claude/notes.md\n"}}
-            passed = _run_handler(handler, "lifecycle.pack-guard", unmanaged)
+            passed = _run_handler(handler, "lifecycle.pack-guard", unmanaged, env=self._core_env())
             self.assertEqual(passed.returncode, 0)
             self.assertEqual(passed.stdout, b"")
 
@@ -120,7 +123,7 @@ class CodexLifecycleGateTests(unittest.TestCase):
             payload = {**_COMMON_FIELDS, "cwd": project, "hook_event_name": "PreToolUse",
                       "tool_name": "apply_patch",
                       "tool_input": {"input": "*** Update File: .claude/agents/foo.md\n"}}
-            result = _run_handler(handler, "lifecycle.pack-guard", payload)
+            result = _run_handler(handler, "lifecycle.pack-guard", payload, env=self._core_env())
             self.assertEqual(result.returncode, 0)
 
     # -- lifecycle.changelog-gate --------------------------------------------
@@ -146,13 +149,13 @@ class CodexLifecycleGateTests(unittest.TestCase):
                 "MODE=warn\n", encoding="utf-8")
             feat = {**_COMMON_FIELDS, "cwd": project, "hook_event_name": "PreToolUse",
                    "tool_name": "Bash", "tool_input": {"command": 'git commit -m "feat: add x"'}}
-            warned = _run_handler(handler, "lifecycle.changelog-gate", feat)
+            warned = _run_handler(handler, "lifecycle.changelog-gate", feat, env=self._core_env())
             self.assertEqual(warned.returncode, 0)
             hint = json.loads(warned.stdout)["systemMessage"]
             self.assertIn("changelog-gate", hint)
             docs = {**_COMMON_FIELDS, "cwd": project, "hook_event_name": "PreToolUse",
                    "tool_name": "Bash", "tool_input": {"command": 'git commit -m "docs: x"'}}
-            passed = _run_handler(handler, "lifecycle.changelog-gate", docs)
+            passed = _run_handler(handler, "lifecycle.changelog-gate", docs, env=self._core_env())
             self.assertEqual(passed.returncode, 0)
             self.assertEqual(passed.stdout, b"")
 
@@ -165,12 +168,12 @@ class CodexLifecycleGateTests(unittest.TestCase):
                 "MODE=strict\n", encoding="utf-8")
             feat = {**_COMMON_FIELDS, "cwd": project, "hook_event_name": "PreToolUse",
                    "tool_name": "Bash", "tool_input": {"command": 'git commit -m "fix: y"'}}
-            blocked = _run_handler(handler, "lifecycle.changelog-gate", feat)
+            blocked = _run_handler(handler, "lifecycle.changelog-gate", feat, env=self._core_env())
             self.assertEqual(blocked.returncode, 2)
             skipped = {**_COMMON_FIELDS, "cwd": project, "hook_event_name": "PreToolUse",
                       "tool_name": "Bash",
                       "tool_input": {"command": 'git commit -m "fix: y [changelog-skip]"'}}
-            passed = _run_handler(handler, "lifecycle.changelog-gate", skipped)
+            passed = _run_handler(handler, "lifecycle.changelog-gate", skipped, env=self._core_env())
             self.assertEqual(passed.returncode, 0)
 
     # -- lifecycle.review-gate ------------------------------------------------
@@ -267,10 +270,10 @@ class CodexLifecycleGateTests(unittest.TestCase):
             danger = "pk" + "ill -f perplexity"
             payload = {**_COMMON_FIELDS, "hook_event_name": "PreToolUse", "tool_name": "Bash",
                       "tool_input": {"command": danger}}
-            blocked = _run_handler(handler, "lifecycle.daemon-safety", payload)
+            blocked = _run_handler(handler, "lifecycle.daemon-safety", payload, env=self._core_env())
             self.assertEqual(blocked.returncode, 2)
             self.assertIn(b"daemon-safety", blocked.stderr)
-            bypassed_env = {**os.environ, "PERPLEXITY_DAEMON_GUARD": "off"}
+            bypassed_env = {**self._core_env(), "PERPLEXITY_DAEMON_GUARD": "off"}
             bypassed = _run_handler(handler, "lifecycle.daemon-safety", payload, env=bypassed_env)
             self.assertEqual(bypassed.returncode, 0)
 
@@ -279,7 +282,7 @@ class CodexLifecycleGateTests(unittest.TestCase):
             handler = self._write_handler(scratch)
             payload = {**_COMMON_FIELDS, "hook_event_name": "PreToolUse", "tool_name": "Bash",
                       "tool_input": {"command": "ls -la"}}
-            result = _run_handler(handler, "lifecycle.daemon-safety", payload)
+            result = _run_handler(handler, "lifecycle.daemon-safety", payload, env=self._core_env())
             self.assertEqual(result.returncode, 0)
             self.assertEqual(result.stdout, b"")
 
@@ -293,11 +296,11 @@ class CodexLifecycleGateTests(unittest.TestCase):
                 "MODE=strict\n", encoding="utf-8")
             payload = {**_COMMON_FIELDS, "cwd": project, "hook_event_name": "PreToolUse",
                       "tool_name": "Bash", "tool_input": {"command": "git reset --hard HEAD~1"}}
-            blocked = _run_handler(handler, "lifecycle.git-guardrails", payload)
+            blocked = _run_handler(handler, "lifecycle.git-guardrails", payload, env=self._core_env())
             self.assertEqual(blocked.returncode, 2)
             (Path(project) / ".codex" / "git-guardrails.env.ini").write_text(
                 "MODE=warn\n", encoding="utf-8")
-            warned = _run_handler(handler, "lifecycle.git-guardrails", payload)
+            warned = _run_handler(handler, "lifecycle.git-guardrails", payload, env=self._core_env())
             self.assertEqual(warned.returncode, 0)
             self.assertIn(b"git-guardrails", warned.stdout)
 
@@ -309,12 +312,13 @@ class CodexLifecycleGateTests(unittest.TestCase):
                 "MODE=strict\n", encoding="utf-8")
             benign = {**_COMMON_FIELDS, "cwd": project, "hook_event_name": "PreToolUse",
                      "tool_name": "Bash", "tool_input": {"command": "git status"}}
-            passed = _run_handler(handler, "lifecycle.git-guardrails", benign)
+            passed = _run_handler(handler, "lifecycle.git-guardrails", benign, env=self._core_env())
             self.assertEqual(passed.returncode, 0)
             no_mode_project = tempfile.mkdtemp()
             dangerous_but_off = {**benign, "cwd": no_mode_project,
                                 "tool_input": {"command": "git push --force"}}
-            inactive = _run_handler(handler, "lifecycle.git-guardrails", dangerous_but_off)
+            inactive = _run_handler(handler, "lifecycle.git-guardrails", dangerous_but_off,
+                                    env=self._core_env())
             self.assertEqual(inactive.returncode, 0)
 
 

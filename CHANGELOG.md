@@ -44,6 +44,16 @@
   (без `payload.output`), `sessionEnd` сохраняет исходный `reason` с нейтральным
   `outcome` и корреляцией по `conversation_id`; в `packages/analyst` добавлен
   `CursorCaptureReader` (`("cursor", 1)`) и e2e-путь `envelope -> neutral_run_report`.
+- **fix(harness): Cursor lifecycle P4 policy cores + adapters.** Вынесен общий
+  core-контракт (`id/pattern/reason/tier` + чистый `verdict` с лестницей
+  `off|warn|strict`) в `lifecycle_policy_core.py`, добавлены policy cores для
+  `daemon-safety`, `git-guardrails`, `changelog-gate`, `pack-guard`; Codex/Cursor
+  адаптеры в `hooks.py` переведены на core verdict, а Cursor bindings/capabilities
+  обновлены до `hook-native` / `adapted`.
+- **test(harness): детектор расхождений core ↔ Claude lifecycle hooks.** Добавлен
+  `test_lifecycle_policy_core_alignment.py` (без переписывания bash-хуков Claude),
+  плюс Cursor/Codex regression tests для mode ladder, fail-closed behavior, kill-switch
+  и false-positive pinning по всем четырём политикам P4.
 
 ## [0.21.5] - 2026-09-17
 

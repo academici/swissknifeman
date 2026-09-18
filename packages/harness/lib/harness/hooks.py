@@ -316,15 +316,16 @@ def render_cursor_hooks(plan: LifecycleRenderPlan, *, existing_document=None) ->
 
 
 def render_cursor_hook_handler() -> bytes:
-    """Generate the Cursor lifecycle dispatcher (safe-dirs + P3 observability)."""
+    """Generate the Cursor lifecycle dispatcher (P0-P4 Cursor surfaces)."""
     return b'''#!/usr/bin/env python3
-import argparse, datetime, hashlib, importlib.util, json, os, re, shlex, sys
+import argparse, datetime, hashlib, importlib.util, json, os, re, shlex, subprocess, sys
 from pathlib import Path
 
 _RM_HEAD_RE = re.compile(r"\\b(rm|rmdir)\\b")
 _EVENT_FIELDS = {
     "beforeShellExecution": ("command",),
     "afterShellExecution": ("command", "duration", "sandbox"),
+    "preToolUse": ("tool_name", "tool_input"),
     "sessionEnd": ("reason",),
 }
 _COMMON_FIELDS = ("hook_event_name", "conversation_id")
@@ -335,6 +336,10 @@ _REASON_TO_OUTCOME = {
     "window_close": "unknown",
     "user_close": "unknown",
 }
+_GATE_MODES = ("off", "warn", "strict")
+_CHANGELOG_SKIP_MARKER = "[changelog-skip]"
+_CHANGELOG_NAME_RE = re.compile(r"changelog", re.IGNORECASE)
+_CHANGELOG_SEGMENT_RE = re.compile(r"&&|\\|\\||;|\\|")
 
 
 def _utc_now():
@@ -361,6 +366,26 @@ def _payload_cwd(payload):
             if isinstance(item, str) and item:
                 return item
     return os.getcwd()
+
+
+def _read_mode(cwd, filename):
+    if not cwd:
+        return "off"
+    env_file = Path(cwd) / ".cursor" / filename
+    try:
+        text = env_file.read_text(encoding="utf-8")
+    except OSError:
+        return "off"
+    mode = "off"
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = (part.strip() for part in line.split("=", 1))
+        if key == "MODE":
+            value = value.lower()
+            mode = value if value in _GATE_MODES else "off"
+    return mode
 
 
 def _find_repo_root(payload):
@@ -422,6 +447,214 @@ def _safe_dirs(payload):
     if not safe:
         sys.stderr.write(f"security.safe-dirs: refusing rm/rmdir - '{command}' is not covered by the safe-dirs allowlist\\n")
         sys.exit(2)
+
+
+def _daemon_safety(payload):
+    command = payload.get("command")
+    if not isinstance(command, str) or os.environ.get("PERPLEXITY_DAEMON_GUARD") == "off":
+        return
+    root = _find_repo_root(payload)
+    if root is None:
+        sys.stderr.write("lifecycle.daemon-safety: refusing command - harness core unreachable\\n")
+        sys.exit(2)
+    lib_root = os.path.join(root, "packages", "harness", "lib")
+    try:
+        if lib_root not in sys.path:
+            sys.path.insert(0, lib_root)
+        from harness.lifecycle_daemon_safety_core import daemon_safety_verdict
+        gate = daemon_safety_verdict(command, mode="strict")
+    except Exception:
+        sys.stderr.write("lifecycle.daemon-safety: refusing command - policy core failed\\n")
+        sys.exit(2)
+    match = gate.match
+    if gate.decision != "deny" or match is None:
+        return
+    sys.stderr.write(
+        "BLOCKED (daemon-safety): %r matched rule %s (%s). One-time bypass: "
+        "PERPLEXITY_DAEMON_GUARD=off.\\n"
+        % (command, match.id, match.pattern)
+    )
+    sys.exit(2)
+
+
+def _git_guardrails(payload):
+    command = payload.get("command")
+    if not isinstance(command, str):
+        return
+    cwd = _payload_cwd(payload)
+    mode = _read_mode(cwd, "git-guardrails.env.ini")
+    if mode == "off":
+        return
+    root = _find_repo_root(payload)
+    if root is None:
+        sys.stderr.write("lifecycle.git-guardrails: refusing command - harness core unreachable\\n")
+        sys.exit(2)
+    lib_root = os.path.join(root, "packages", "harness", "lib")
+    try:
+        if lib_root not in sys.path:
+            sys.path.insert(0, lib_root)
+        from harness.lifecycle_git_guardrails_core import git_guardrails_verdict
+        gate = git_guardrails_verdict(command, mode=mode)
+    except Exception:
+        sys.stderr.write("lifecycle.git-guardrails: refusing command - policy core failed\\n")
+        sys.exit(2)
+    match = gate.match
+    if match is None or gate.decision == "allow":
+        return
+    reason = ("git-guardrails: %r matched rule %s (%s)."
+              % (command, match.id, match.pattern))
+    if gate.decision == "deny":
+        sys.stderr.write(reason + "\\n")
+        sys.exit(2)
+    print(json.dumps({
+        "permission": "allow",
+        "agent_message": "[warn] " + reason,
+    }))
+
+
+def _commit_messages(command):
+    if not isinstance(command, str) or not command.strip():
+        return []
+    for segment in _CHANGELOG_SEGMENT_RE.split(command):
+        try:
+            tokens = shlex.split(segment)
+        except ValueError:
+            continue
+        for index in range(len(tokens) - 1):
+            if tokens[index] == "git" and tokens[index + 1] == "commit":
+                rest = tokens[index + 2:]
+                return [rest[item + 1] for item in range(len(rest) - 1) if rest[item] == "-m"]
+    return []
+
+
+def _git_lines(cwd, *args):
+    try:
+        out = subprocess.run(
+            ["git", "-C", cwd, *args],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            timeout=10,
+            check=False,
+        )
+    except OSError:
+        return None
+    if out.returncode != 0:
+        return None
+    text = out.stdout.decode("utf-8", errors="replace")
+    return [line for line in text.splitlines() if line]
+
+
+def _changelog_gate(payload):
+    command = payload.get("command")
+    if not isinstance(command, str):
+        return
+    cwd = _payload_cwd(payload)
+    mode = _read_mode(cwd, "changelog-gate.env.ini")
+    if mode == "off":
+        return
+    messages = _commit_messages(command)
+    if not messages:
+        return
+    if _CHANGELOG_SKIP_MARKER in "\\n".join(messages):
+        return
+    root = _find_repo_root(payload)
+    if root is None:
+        sys.stderr.write("lifecycle.changelog-gate: refusing command - harness core unreachable\\n")
+        sys.exit(2)
+    lib_root = os.path.join(root, "packages", "harness", "lib")
+    try:
+        if lib_root not in sys.path:
+            sys.path.insert(0, lib_root)
+        from harness.lifecycle_changelog_gate_core import changelog_gate_verdict
+        gate = changelog_gate_verdict(messages[0], mode=mode)
+    except Exception:
+        sys.stderr.write("lifecycle.changelog-gate: refusing command - policy core failed\\n")
+        sys.exit(2)
+    if gate.match is None or gate.decision == "allow":
+        return
+    files = _git_lines(cwd, "ls-files")
+    if not files or not any(_CHANGELOG_NAME_RE.search(path) for path in files):
+        return
+    staged = _git_lines(cwd, "diff", "--cached", "--name-only")
+    if staged and any(_CHANGELOG_NAME_RE.search(path) for path in staged):
+        return
+    head = messages[0].split(":", 1)[0]
+    reason = ("changelog-gate: commit %r matched rule %s but [Unreleased] is untouched. "
+              "Stage a CHANGELOG entry or add [changelog-skip]."
+              % (head, gate.match.id))
+    if gate.decision == "deny":
+        sys.stderr.write(reason + "\\n")
+        sys.exit(2)
+    print(json.dumps({
+        "permission": "allow",
+        "agent_message": "[warn] " + reason,
+    }))
+
+
+def _managed_pack_files(cwd):
+    result = {}
+    try:
+        lock = json.loads((Path(cwd) / ".claude" / "agent-pack.lock.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return result
+    packs = lock.get("packs") if isinstance(lock, dict) else None
+    if not isinstance(packs, dict):
+        return result
+    for pack_name, pack in packs.items():
+        if not isinstance(pack, dict):
+            continue
+        for item in pack.get("files") or []:
+            if isinstance(item, dict) and item.get("target") and not item.get("user_owned"):
+                target = str(item["target"])
+                result[target] = pack_name
+                result[str(Path(cwd) / target)] = pack_name
+    return result
+
+
+def _pack_guard(payload):
+    tool_name = payload.get("tool_name")
+    if not isinstance(tool_name, str):
+        return
+    mode = _read_mode(_payload_cwd(payload), "pack-guard.env.ini")
+    if mode == "off":
+        return
+    cwd = _payload_cwd(payload)
+    managed = _managed_pack_files(cwd)
+    if not managed:
+        return
+    tool_input = payload.get("tool_input")
+    try:
+        haystack = json.dumps({"tool_name": tool_name, "tool_input": tool_input},
+                              ensure_ascii=False)
+    except (TypeError, ValueError):
+        return
+    root = _find_repo_root(payload)
+    if root is None:
+        sys.stderr.write("lifecycle.pack-guard: refusing command - harness core unreachable\\n")
+        sys.exit(2)
+    lib_root = os.path.join(root, "packages", "harness", "lib")
+    try:
+        if lib_root not in sys.path:
+            sys.path.insert(0, lib_root)
+        from harness.lifecycle_pack_guard_core import matched_target, pack_guard_verdict
+        gate = pack_guard_verdict(haystack, mode=mode, managed_targets=tuple(managed))
+    except Exception:
+        sys.stderr.write("lifecycle.pack-guard: refusing command - policy core failed\\n")
+        sys.exit(2)
+    match = gate.match
+    if match is None or gate.decision == "allow":
+        return
+    hit = matched_target(match.id) or "<unknown>"
+    pack = managed.get(hit, "unknown")
+    reason = ("pack-guard: payload matched managed target %r from pack %r."
+              % (hit, pack))
+    if gate.decision == "deny":
+        sys.stderr.write(reason + "\\n")
+        sys.exit(2)
+    print(json.dumps({
+        "permission": "allow",
+        "agent_message": "[warn] " + reason,
+    }))
 
 
 def _first_command_token(command):
@@ -533,11 +766,19 @@ def _run_report(payload):
 
 _HANDLERS = {
     "security.safe-dirs": _safe_dirs,
+    "lifecycle.daemon-safety": _daemon_safety,
+    "lifecycle.git-guardrails": _git_guardrails,
+    "lifecycle.changelog-gate": _changelog_gate,
+    "lifecycle.pack-guard": _pack_guard,
     "lifecycle.command-log": _command_log,
     "lifecycle.run-report": _run_report,
 }
 _SURFACE_EVENTS = {
     "security.safe-dirs": "beforeShellExecution",
+    "lifecycle.daemon-safety": "beforeShellExecution",
+    "lifecycle.git-guardrails": "beforeShellExecution",
+    "lifecycle.changelog-gate": "beforeShellExecution",
+    "lifecycle.pack-guard": "preToolUse",
     "lifecycle.command-log": "afterShellExecution",
     "lifecycle.run-report": "sessionEnd",
 }
@@ -790,20 +1031,33 @@ def _pack_guard(payload):
         haystack = json.dumps(tool_input, ensure_ascii=False)
     except (TypeError, ValueError):
         return
-    hit = next((path for path in managed if path in haystack), None)
-    if hit is None:
+    root = _find_repo_root()
+    if root is None:
+        sys.stderr.write("lifecycle.pack-guard: refusing command — harness core unreachable\\n")
+        sys.exit(2)
+    lib_root = os.path.join(root, "packages", "harness", "lib")
+    try:
+        if lib_root not in sys.path:
+            sys.path.insert(0, lib_root)
+        from harness.lifecycle_pack_guard_core import matched_target, pack_guard_verdict
+        gate = pack_guard_verdict(haystack, mode=mode, managed_targets=tuple(managed))
+    except Exception:
+        sys.stderr.write("lifecycle.pack-guard: refusing command — policy core failed\\n")
+        sys.exit(2)
+    match = gate.match
+    if match is None or gate.decision == "allow":
         return
-    pack = managed[hit]
-    msg = (f"pack-guard: apply_patch touches a file managed by pack '{{pack}}' "
+    hit = matched_target(match.id) or "<unknown>"
+    pack = managed.get(hit, "unknown")
+    msg = (f"pack-guard: command payload matched managed target '{{hit}}' from pack '{{pack}}' "
           f"(swissknifeman:generated) — edit the pack overlay or accept the change "
           f"through 'harness agent-packs upgrade': {{hit}}")
-    if mode == "strict":
+    if gate.decision == "deny":
         sys.stderr.write(msg + "\\n")
         sys.exit(2)
     print(json.dumps({{"systemMessage": "[warn] " + msg}}))
 
 
-_CHANGELOG_TYPE_RE = re.compile(r"^(feat|fix|perf|refactor)(\\([^)]*\\))?!?:\\s")
 _CHANGELOG_NAME_RE = re.compile(r"changelog", re.IGNORECASE)
 _CHANGELOG_SEGMENT_RE = re.compile(r"&&|\\|\\||;|\\|")
 
@@ -847,8 +1101,20 @@ def _changelog_gate(payload):
         return
     if "[changelog-skip]" in "\\n".join(messages):
         return
-    m = _CHANGELOG_TYPE_RE.match(messages[0])
-    if not m:
+    root = _find_repo_root()
+    if root is None:
+        sys.stderr.write("lifecycle.changelog-gate: refusing command — harness core unreachable\\n")
+        sys.exit(2)
+    lib_root = os.path.join(root, "packages", "harness", "lib")
+    try:
+        if lib_root not in sys.path:
+            sys.path.insert(0, lib_root)
+        from harness.lifecycle_changelog_gate_core import changelog_gate_verdict
+        gate = changelog_gate_verdict(messages[0], mode=mode)
+    except Exception:
+        sys.stderr.write("lifecycle.changelog-gate: refusing command — policy core failed\\n")
+        sys.exit(2)
+    if gate.match is None or gate.decision == "allow":
         return
     files = _git_lines(cwd, "ls-files")
     if not files or not any(_CHANGELOG_NAME_RE.search(f) for f in files):
@@ -856,9 +1122,11 @@ def _changelog_gate(payload):
     staged = _git_lines(cwd, "diff", "--cached", "--name-only")
     if staged and any(_CHANGELOG_NAME_RE.search(f) for f in staged):
         return
-    reason = (f"changelog-gate: commit '{{m.group(1)}}:' is content-bearing but "
-             f"[Unreleased] is untouched. Stage a CHANGELOG entry or add [changelog-skip].")
-    if mode == "strict":
+    head = messages[0].split(":", 1)[0]
+    reason = ("changelog-gate: commit %r matched rule %s but [Unreleased] is untouched. "
+              "Stage a CHANGELOG entry or add [changelog-skip]."
+              % (head, gate.match.id))
+    if gate.decision == "deny":
         sys.stderr.write(reason + "\\n")
         sys.exit(2)
     print(json.dumps({{"systemMessage": "[warn] " + reason}}))
@@ -969,14 +1237,6 @@ def _safe_dirs(payload):
         sys.exit(2)
 
 
-_DAEMON_SAFETY_PATTERNS = tuple(re.compile(p) for p in (
-    r"pkill.*(perplexity|playwright|chromium|chrome)",
-    r"killall.*(perplexity|playwright|chromium|chrome)",
-    r"kill +-9.*(perplexity|playwright|chromium)",
-    r"rm .*Singleton", r"rm .*\\.playwright/(profile|profiles)",
-    r"rm .*perplexity-web-mcp", r"rm .*profile\\.lock", r"rm .*perplexity.*\\.sock"))
-
-
 def _daemon_safety(payload):
     if payload.get("tool_name") != "Bash" or os.environ.get("PERPLEXITY_DAEMON_GUARD") == "off":
         return
@@ -984,18 +1244,28 @@ def _daemon_safety(payload):
     command = tool_input.get("command")
     if not isinstance(command, str):
         return
-    for pattern in _DAEMON_SAFETY_PATTERNS:
-        if pattern.search(command):
-            sys.stderr.write(f"BLOCKED (daemon-safety): '{{command}}' matches a shared-daemon "
-                             f"destructive pattern. Reuse the live daemon or wait for it to be "
-                             f"idle. One-time bypass: PERPLEXITY_DAEMON_GUARD=off.\\n")
-            sys.exit(2)
-
-
-_GIT_GUARDRAILS_PATTERNS = tuple(re.compile(p) for p in (
-    r"git push", r"git reset --hard", r"git clean -fd", r"git clean -f", r"git branch -D",
-    r"git checkout \\.", r"git restore \\.", r"push --force", r"push --force-with-lease",
-    r"reset --hard", r"rebase --onto"))
+    root = _find_repo_root()
+    if root is None:
+        sys.stderr.write("lifecycle.daemon-safety: refusing command — harness core unreachable\\n")
+        sys.exit(2)
+    lib_root = os.path.join(root, "packages", "harness", "lib")
+    try:
+        if lib_root not in sys.path:
+            sys.path.insert(0, lib_root)
+        from harness.lifecycle_daemon_safety_core import daemon_safety_verdict
+        gate = daemon_safety_verdict(command, mode="strict")
+    except Exception:
+        sys.stderr.write("lifecycle.daemon-safety: refusing command — policy core failed\\n")
+        sys.exit(2)
+    match = gate.match
+    if gate.decision != "deny" or match is None:
+        return
+    sys.stderr.write(
+        "BLOCKED (daemon-safety): %r matched rule %s (%s). One-time bypass: "
+        "PERPLEXITY_DAEMON_GUARD=off.\\n"
+        % (command, match.id, match.pattern)
+    )
+    sys.exit(2)
 
 
 def _git_guardrails(payload):
@@ -1009,14 +1279,27 @@ def _git_guardrails(payload):
     command = tool_input.get("command")
     if not isinstance(command, str):
         return
-    for pattern in _GIT_GUARDRAILS_PATTERNS:
-        if pattern.search(command):
-            reason = f"git-guardrails: '{{command}}' matches dangerous pattern '{{pattern.pattern}}'."
-            if mode == "strict":
-                sys.stderr.write(reason + "\\n")
-                sys.exit(2)
-            print(json.dumps({{"systemMessage": "[warn] " + reason}}))
-            return
+    root = _find_repo_root()
+    if root is None:
+        sys.stderr.write("lifecycle.git-guardrails: refusing command — harness core unreachable\\n")
+        sys.exit(2)
+    lib_root = os.path.join(root, "packages", "harness", "lib")
+    try:
+        if lib_root not in sys.path:
+            sys.path.insert(0, lib_root)
+        from harness.lifecycle_git_guardrails_core import git_guardrails_verdict
+        gate = git_guardrails_verdict(command, mode=mode)
+    except Exception:
+        sys.stderr.write("lifecycle.git-guardrails: refusing command — policy core failed\\n")
+        sys.exit(2)
+    match = gate.match
+    if match is None or gate.decision == "allow":
+        return
+    reason = "git-guardrails: %r matched rule %s (%s)." % (command, match.id, match.pattern)
+    if gate.decision == "deny":
+        sys.stderr.write(reason + "\\n")
+        sys.exit(2)
+    print(json.dumps({{"systemMessage": "[warn] " + reason}}))
 
 
 def _terminal_admission(payload):
@@ -1571,30 +1854,55 @@ def _block_codex_gates(env, target, opts):
 
 
 def _block_cursor_gates(env, target, opts):
-    """P3 Cursor seam: safe-dirs plus command-log/run-report observability."""
+    """Cursor seam: P3 observability plus gradually enabled P4 gates."""
     unsupported = []
     if opts["observer"]:
         unsupported.append("--observer")
-    if opts["daemon_safety"]:
-        unsupported.append("--daemon-safety")
     if opts["terminal_admission"]:
         unsupported.append("--terminal-admission")
-    for flag, value in (("--pack-guard", opts["pack_guard"]),
-                        ("--changelog-gate", opts["changelog_gate"]),
-                        ("--review-gate", opts["review_gate"]),
-                        ("--git-guardrails", opts["git_guardrails"])):
+    for flag, value in (("--review-gate", opts["review_gate"]),):
         if value and value != "off":
             unsupported.append(f"{flag} {value}")
     if unsupported:
-        die("для --provider cursor в P3 поддерживается только --safe-dirs; неподдержано: "
+        die("для --provider cursor здесь не поддержаны запрошенные флаги: "
             + ", ".join(unsupported))
     if not opts["safe_dirs"]:
-        die("provider cursor требует --safe-dirs (P3)")
-    block_cursor_lifecycle(env, target, surfaces=(
+        die("provider cursor требует --safe-dirs (P3/P4)")
+    surfaces = [
         "security.safe-dirs",
         "lifecycle.command-log",
         "lifecycle.run-report",
-    ),
+    ]
+    if opts["daemon_safety"]:
+        surfaces.append("lifecycle.daemon-safety")
+    git_mode = opts["git_guardrails"]
+    if git_mode:
+        if git_mode not in PACKGUARD_MODES:
+            die("неизвестный режим --git-guardrails: "
+                + f"{git_mode} ({'|'.join(PACKGUARD_MODES)})")
+        write_text(target / ".cursor" / "git-guardrails.env.ini", f"MODE={git_mode}\n",
+                   opts["dry_run"])
+        if git_mode != "off":
+            surfaces.append("lifecycle.git-guardrails")
+    changelog_mode = opts["changelog_gate"]
+    if changelog_mode:
+        if changelog_mode not in PACKGUARD_MODES:
+            die("неизвестный режим --changelog-gate: "
+                + f"{changelog_mode} ({'|'.join(PACKGUARD_MODES)})")
+        write_text(target / ".cursor" / "changelog-gate.env.ini", f"MODE={changelog_mode}\n",
+                   opts["dry_run"])
+        if changelog_mode != "off":
+            surfaces.append("lifecycle.changelog-gate")
+    pack_mode = opts["pack_guard"]
+    if pack_mode:
+        if pack_mode not in PACKGUARD_MODES:
+            die("неизвестный режим --pack-guard: "
+                + f"{pack_mode} ({'|'.join(PACKGUARD_MODES)})")
+        write_text(target / ".cursor" / "pack-guard.env.ini", f"MODE={pack_mode}\n",
+                   opts["dry_run"])
+        if pack_mode != "off":
+            surfaces.append("lifecycle.pack-guard")
+    block_cursor_lifecycle(env, target, surfaces=tuple(surfaces),
                            trusted=bool(opts["trusted"]), repair=bool(opts["repair"]),
                            dry=bool(opts["dry_run"]))
 
@@ -1637,6 +1945,8 @@ def cmd_hooks(env, argv):
               "[--changelog-gate off|warn|strict] [--review-gate off|warn|strict] "
               "[--git-guardrails off|warn|strict] [--safe-dirs] [--daemon-safety] "
               "[--terminal-admission on|off] | --provider cursor [--safe-dirs] "
+              "[--daemon-safety] [--git-guardrails off|warn|strict] "
+              "[--changelog-gate off|warn|strict] [--pack-guard off|warn|strict] "
               "[--trusted] [--repair]] "
               "[--file settings.json|settings.local.json] [--dry-run]")
         return

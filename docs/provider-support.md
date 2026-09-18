@@ -6,8 +6,8 @@
 
 - Contract: `1.0.0`
 - Catalog: `1.0.0`
-- Canonical JSON SHA-256 (without carrier LF): `15c1cc4f3b8828a146db2c16bfcef8a86f31819abf95b5edc1402be5781b22e8`
-- Carrier SHA-256 (canonical bytes plus one LF): `443ed952cda744fb5b39f76d118a56d7fbe89a3c7b15cf60258c0270c3665f18`
+- Canonical JSON SHA-256 (without carrier LF): `747b112432fdec1b0649f7afbb553bd2b26a0597ed9b406fedeb4caba19bd3bc`
+- Carrier SHA-256 (canonical bytes plus one LF): `ac0b3e40700bfb9273122822b83df6d1e88c308e7f0e90fd315a7adb389edc07`
 - Common capabilities: `36`; Native Extensions: `0`
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
@@ -39,13 +39,13 @@ Support levels, provider bindings, limitations, evidence and diagnostics below c
 | `doctor.provider` | adapted | adapted | adapted |
 | `instructions.project` | native | native | native |
 | `lifecycle.auto-approval` | adapted | native | adapted |
-| `lifecycle.changelog-gate` | adapted | adapted | unsupported |
+| `lifecycle.changelog-gate` | adapted | adapted | adapted |
 | `lifecycle.command-log` | adapted | adapted | adapted |
-| `lifecycle.daemon-safety` | adapted | adapted | unsupported |
-| `lifecycle.git-guardrails` | unsupported | adapted | unsupported |
+| `lifecycle.daemon-safety` | adapted | adapted | adapted |
+| `lifecycle.git-guardrails` | unsupported | adapted | adapted |
 | `lifecycle.memory` | adapted | adapted | unsupported |
 | `lifecycle.notification` | adapted | unsupported | unsupported |
-| `lifecycle.pack-guard` | adapted | adapted | unsupported |
+| `lifecycle.pack-guard` | adapted | adapted | adapted |
 | `lifecycle.review-gate` | adapted | adapted | unsupported |
 | `lifecycle.router` | adapted | adapted | adapted |
 | `lifecycle.run-report` | adapted | adapted | adapted |
@@ -481,10 +481,10 @@ Gate declared release-sensitive operations.
   Limitations: inactive by default; reads the commit type only from a -m message: an editor-composed message is not inspected; the non-blocking warning is delivered as a systemMessage hint, not byte-identical to Claude's hookSpecificOutput.additionalContext.
   Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.changelog-gate refuses a git commit of a release-sensitive type without a staged changelog edit in mode strict, warns in warn, and is inactive by default — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.changelog-gate refusal on release-sensitive commits).
 
-- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: cursor lifecycle.changelog-gate at P0 level unsupported
-  Limitations: deferred at P0 per D1; adapter does not ship yet.
-  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.lifecycle.changelog-gate`.
+  Diagnostic: deterministic cursor adapter satisfies lifecycle.changelog-gate through the shared policy core
+  Limitations: inactive by default; MODE=warn|strict must be set explicitly via harness hooks; reads release-sensitive commit type only from git commit -m messages; fail closed when the shared policy core is unreachable.
+  Evidence: [2026-09-18] Cursor and Codex changelog-gate adapters consume one shared release-sensitive commit-type core and apply off/warn/strict via provider mode files — `packages/harness/tests/test_cursor_lifecycle_gates.py` (cursor lifecycle.changelog-gate shared-core routing and mode behavior).
 
 ### `lifecycle.command-log`
 
@@ -519,10 +519,10 @@ Reject unsafe shared-daemon operations.
   Limitations: pattern-based refusal over declared destructive daemon operations: an operation phrased outside the pattern set passes; the escape hatch stays the documented environment kill switch (PERPLEXITY_DAEMON_GUARD=off), not a project override; the pattern set is embedded into the generated dispatcher, so a change of the Claude-side patterns requires regenerating the Codex artifact; Codex-side activation is project-scoped opt-in via harness hooks --provider codex, unlike the Claude side which is a machine-wide always-on install.
   Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.daemon-safety refuses a matched destructive daemon command with exit 2 and a reason, from the same pattern set as the shipped Claude hook — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.daemon-safety refusal on destructive shared-daemon commands).
 
-- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: cursor lifecycle.daemon-safety at P0 level unsupported
-  Limitations: deferred at P0 per D1; adapter does not ship yet.
-  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.lifecycle.daemon-safety`.
+  Diagnostic: deterministic cursor adapter satisfies lifecycle.daemon-safety through the shared policy core
+  Limitations: inactive unless explicitly registered via harness hooks --provider cursor --daemon-safety; fail closed when the shared policy core is unreachable; uses the documented environment kill switch PERPLEXITY_DAEMON_GUARD=off.
+  Evidence: [2026-09-18] Cursor and Codex daemon-safety adapters consume one shared declarative policy core and fail closed with exit 2 in strict mode — `packages/harness/tests/test_cursor_lifecycle_gates.py` (cursor lifecycle.daemon-safety policy-core routing and enforcement behavior).
 
 ### `lifecycle.git-guardrails`
 
@@ -538,10 +538,10 @@ Reject declared dangerous version-control operations.
   Limitations: inactive by default; pattern-based refusal: a command phrased outside the declared pattern set passes; the Claude half of this surface stays unsupported (see its own record): only the Codex half is closed here.
   Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.git-guardrails refuses a matched dangerous git command in mode strict, warns in warn, and is inactive by default — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.git-guardrails refusal on declared dangerous version-control commands).
 
-- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: cursor lifecycle.git-guardrails at P0 level unsupported
-  Limitations: deferred at P0 per D1; adapter does not ship yet.
-  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.lifecycle.git-guardrails`.
+  Diagnostic: deterministic cursor adapter satisfies lifecycle.git-guardrails through the shared policy core
+  Limitations: inactive by default; MODE=warn|strict must be set explicitly via harness hooks; pattern-based refusal remains intentionally unchanged on this pass; fail closed when the shared policy core is unreachable.
+  Evidence: [2026-09-18] Cursor and Codex git-guardrails adapters consume one shared declarative policy core with off/warn/strict mode handling — `packages/harness/tests/test_cursor_lifecycle_gates.py` (cursor lifecycle.git-guardrails shared-core enforcement and warning behavior).
 
 ### `lifecycle.memory`
 
@@ -595,10 +595,10 @@ Guard managed agent-pack assets before mutation.
   Limitations: inactive by default; the operator enables a mode explicitly, as on the Claude side; matches only the Codex apply_patch tool: a mutation performed through a shell command is out of this gate; detects a touched managed path by a best-effort substring match over the serialized apply_patch tool_input, because the exact Codex apply_patch payload shape beyond tool_name is unverified.
   Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.pack-guard refuses an apply_patch over a managed generated asset in mode strict, warns in warn, and is inactive by default — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.pack-guard refusal over managed pack assets recorded in the project's pack lock).
 
-- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: cursor lifecycle.pack-guard at P0 level unsupported
-  Limitations: deferred at P0 per D1; adapter does not ship yet.
-  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.lifecycle.pack-guard`.
+  Diagnostic: deterministic cursor adapter satisfies lifecycle.pack-guard through the shared policy core
+  Limitations: inactive by default; MODE=warn|strict must be set explicitly via harness hooks; matches managed targets through serialized preToolUse payload inspection; fail closed when the shared policy core is unreachable.
+  Evidence: [2026-09-18] Cursor and Codex pack-guard adapters consume one shared declarative policy core that evaluates managed-target rules under off/warn/strict — `packages/harness/tests/test_cursor_lifecycle_gates.py` (cursor lifecycle.pack-guard managed-target guard behavior).
 
 ### `lifecycle.review-gate`
 

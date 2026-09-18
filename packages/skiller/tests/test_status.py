@@ -14,9 +14,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from skiller.common import MANIFEST, MARKETPLACE
-from skiller.status import (channel_overlap, cmd_status,
-                            detect_raw_vendor_path, local_channel_entries,
-                            name_duplicates, registry_skill_names)
+from skiller.status import (channel_overlap, cmd_status, detect_raw_vendor_path,
+                            local_channel_entries, name_duplicates,
+                            raw_vendor_overlap_dirs, registry_skill_names,
+                            remove_raw_vendor_entries)
 import tests.fixtures as fx
 
 
@@ -195,6 +196,33 @@ class TestNameDuplicatesAgainstRegistry(unittest.TestCase):
         local = [{"dir": "code-style", "dead": True, "name": None}]
         self.assertEqual(name_duplicates(local, names), [])
 
+    def test_maind_managed_skills_excluded_from_duplicates(self):
+        names = registry_skill_names(self.env)
+        names["ecosystem-mcp"] = ["repository-bootstrap"]
+        local = [{"dir": "ecosystem-mcp", "dead": False, "name": "ecosystem-mcp"}]
+        self.assertEqual(name_duplicates(local, names), [])
+
+    def test_raw_vendor_overlap_dirs_respects_enabled_buckets(self):
+        names = {"code-style": ["php"], "my-own-thing": ["quality"]}
+        local = [
+            {"dir": "code-style", "dead": False, "name": "code-style"},
+            {"dir": "my-own-thing", "dead": False, "name": "my-own-thing"},
+        ]
+        self.assertEqual(raw_vendor_overlap_dirs(local, names, {"php"}), ["code-style"])
+        self.assertEqual(raw_vendor_overlap_dirs(local, names, {"quality"}), ["my-own-thing"])
+        self.assertEqual(raw_vendor_overlap_dirs(local, names, set()), [])
+
+    def test_remove_raw_vendor_entries_unlinks_symlink(self):
+        skills_dir = self.tmp / "skills"
+        skills_dir.mkdir()
+        link = skills_dir / "code-style"
+        target = self.tmp / "source"
+        target.mkdir()
+        link.symlink_to(target, target_is_directory=True)
+        removed = remove_raw_vendor_entries(skills_dir, ["code-style"])
+        self.assertEqual(removed, ["code-style"])
+        self.assertFalse(link.exists())
+
 
 class TestStatusRawVendorReport(unittest.TestCase):
     """Интеграционный прогон cmd_status на канале без манифеста — тот же класс,
@@ -228,6 +256,13 @@ class TestStatusRawVendorReport(unittest.TestCase):
                             ["--target", str(self.proj), "--json"]))
         self.assertEqual(js["dead_entries"], ["broken"])
         self.assertEqual([d["dir"] for d in js["name_duplicates"]], ["code-style"])
+
+    def test_maind_managed_not_reported_as_duplicate(self):
+        skills_dir = self.proj / ".claude" / "skills"
+        fx.write_skill(skills_dir / "ecosystem-mcp", "ecosystem-mcp")
+        js = json.loads(run(cmd_status, self.env,
+                            ["--target", str(self.proj), "--json"]))
+        self.assertEqual(js["name_duplicates"], [])
 
     def test_silent_when_no_local_skills_dir(self):
         out = run(cmd_status, self.env, ["--target", str(self.proj)])

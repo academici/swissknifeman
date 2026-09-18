@@ -288,6 +288,10 @@ CLI лишь предупреждает (`WARN: ... excluded by --exclude, skipp
 `.claude/skills/<name>/SKILL.md`, коллизии разрешаются префиксом bucket-а),
 но предпочтительный путь — `skiller connect` ([marketplace](../adapters/claude-code)).
 Мигрировать с вендоринга: `skiller connect --cleanup-vendored`.
+Флаг также снимает **raw vendor** (симлинки/копии в `.claude/skills` без
+`.swissknifeman-manifest.json`), если имя скилла уже раздаётся включённым
+marketplace-бакетом; project-specific записи и maind-managed
+`ecosystem-mcp`/`ecosystem-setup` не трогаются.
 
 ## Что дальше
 

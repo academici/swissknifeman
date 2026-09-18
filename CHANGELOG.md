@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.22.1] - 2026-09-18
+
+### Fixed
+
+- **skiller (0.17.7): channel hygiene для legacy raw vendor.** `status` больше не
+  помечает maind-managed `ecosystem-mcp`/`ecosystem-setup` как `name_duplicates`
+  (они обновляются через `maind sync`, не `skiller update`). `connect
+  --cleanup-vendored` теперь снимает raw symlinks/копии в `.claude/skills`, чьи
+  имена перекрывают активные marketplace-бакеты (миграция connect+vendor, репо-факт
+  insiders/flexcrm). `doctor --downstream` предупреждает о битых симлинках в
+  `.cursor/skills`.
+
 ## [0.22.0] - 2026-09-18
 
 ### Fixed

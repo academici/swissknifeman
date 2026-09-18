@@ -1,6 +1,7 @@
 """status — read-only отчёт по проекту."""
 import json
 import os
+import shutil
 from pathlib import Path
 
 from core import find_repo_root
@@ -11,6 +12,10 @@ from .config import ProjectConfig, find_project_root, load_config, resolve_selec
 from .registry import alias_migration_hints, load_bucket_aliases
 from .state import db_records, print_registry_state
 from .update import detect_marketplace_file, detect_vendor_path
+
+# maind sync writes these at fixed paths; they share registry names with
+# repository-bootstrap but are NOT skiller-vendored copies (see skilldoc.py).
+MAIND_MANAGED_SKILL_NAMES = frozenset({"ecosystem-mcp", "ecosystem-setup"})
 
 
 def _bucket_of(source_path):
@@ -95,10 +100,48 @@ def registry_skill_names(env):
 def name_duplicates(local_entries, registry_names):
     """Живые локальные записи, чьё frontmatter `name` уже есть где-то в реестре —
     дубль ИМЕНИ (не каталога: у части скиллов каталог переименован при сохранённом
-    `name`, см. `findings/P3-listing-hygiene-and-vendoring-facts.md` §6)."""
+    `name`, см. `findings/P3-listing-hygiene-and-vendoring-facts.md` §6).
+
+    maind-managed ecosystem skills share registry names but are updated by
+    ``maind sync``, not ``skiller update`` — exclude them from duplicate warnings."""
     return sorted(
         (e["dir"], e["name"], tuple(registry_names[e["name"]]))
-        for e in local_entries if not e["dead"] and e["name"] in registry_names)
+        for e in local_entries
+        if (not e["dead"] and e["name"] in registry_names
+            and e["name"] not in MAIND_MANAGED_SKILL_NAMES)
+    )
+
+
+def raw_vendor_overlap_dirs(local_entries, registry_names, enabled_buckets):
+    """Локальные записи raw vendor, чьи имена перекрывают активные marketplace-бакеты.
+
+    Используется ``connect --cleanup-vendored`` для миграции legacy symlinks из
+    ``.ai/skills`` (репо-факт insiders/flexcrm — канал без манифеста)."""
+    enabled = set(enabled_buckets)
+    return sorted(
+        e["dir"] for e in local_entries
+        if (not e["dead"] and e["name"] in registry_names
+            and e["name"] not in MAIND_MANAGED_SKILL_NAMES
+            and enabled.intersection(registry_names[e["name"]]))
+    )
+
+
+def remove_raw_vendor_entries(skills_dir, dirs, *, dry_run=False):
+    """Удалить перечисленные записи из каталога raw vendor (symlink или каталог)."""
+    removed = []
+    for name in dirs:
+        path = skills_dir / name
+        if not path.exists() and not path.is_symlink():
+            continue
+        if dry_run:
+            removed.append(name)
+            continue
+        if path.is_symlink() or path.is_file():
+            path.unlink()
+        elif path.is_dir():
+            shutil.rmtree(path)
+        removed.append(name)
+    return removed
 
 
 def dead_local_entries(local_entries):

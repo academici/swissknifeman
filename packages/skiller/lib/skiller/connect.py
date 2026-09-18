@@ -325,6 +325,32 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
             print(f"NOTE: найдены вендоренные копии ({len(stale)} dir(s) в "
                   f"{dest_root}) — удалить: --cleanup-vendored")
 
+    if opts.get("cleanup_vendored"):
+        from .status import (detect_raw_vendor_path, local_channel_entries,
+                             raw_vendor_overlap_dirs, registry_skill_names,
+                             remove_raw_vendor_entries)
+        raw_path = detect_raw_vendor_path(target, config)
+        if raw_path:
+            skills_dir = target / raw_path
+            local_entries = local_channel_entries(skills_dir)
+            enabled_buckets = {k.split("@")[0] for k, v in enabled.items()
+                                 if k.endswith(f"@{MARKETPLACE}") and v}
+            overlap_dirs = raw_vendor_overlap_dirs(
+                local_entries, registry_skill_names(env), enabled_buckets)
+            if overlap_dirs:
+                if dry_run:
+                    print(f"NOTE: raw vendor ({raw_path}) перекрывает marketplace: "
+                          f"{' '.join(overlap_dirs)} — удалить: --cleanup-vendored")
+                else:
+                    removed = remove_raw_vendor_entries(
+                        skills_dir, overlap_dirs, dry_run=False)
+                    print(f"Удалены raw vendor-записи ({raw_path}): "
+                          f"{len(removed)} ({', '.join(removed[:8])}"
+                          f"{', …' if len(removed) > 8 else ''})")
+            elif not manifest_file.exists():
+                print(f"NOTE: raw vendor ({raw_path}) без пересечений с marketplace "
+                      f"— project-specific записи сохранены")
+
     hub = opts.get("hub", False)
     if hub and not dry_run and not opts.get("native_codex"):
         generate_hub(env, target)

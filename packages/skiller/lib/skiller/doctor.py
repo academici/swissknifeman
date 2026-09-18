@@ -86,6 +86,13 @@ def _audit_downstream(env):
             flags.append(f"{unscoped} unscoped-rules (always-loaded)")
         if not deny:
             flags.append("нет deny-пресета шума")
+        cursor_skills = pdir / ".cursor" / "skills"
+        if cursor_skills.is_dir():
+            broken = sorted(p.name for p in cursor_skills.iterdir()
+                            if p.is_symlink() and not p.exists())
+            if broken:
+                sample = ", ".join(broken[:5]) + (" …" if len(broken) > 5 else "")
+                flags.append(f"битые .cursor/skills ({len(broken)}): {sample}")
         mark = "ok " if not flags else "warn"
         tail = (" — " + "; ".join(flags)) if flags else ""
         print(f"  [{mark}] {name}: CLAUDE.md={lines} строк, "

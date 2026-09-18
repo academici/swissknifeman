@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.22.2] - 2026-09-18
+
 ### Fixed
 
 - **harness:** убран официальный Perplexity API MCP (`@perplexity-ai/mcp-server`,

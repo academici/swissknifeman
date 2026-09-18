@@ -6,8 +6,8 @@
 
 - Contract: `1.0.0`
 - Catalog: `1.0.0`
-- Canonical JSON SHA-256 (without carrier LF): `747b112432fdec1b0649f7afbb553bd2b26a0597ed9b406fedeb4caba19bd3bc`
-- Carrier SHA-256 (canonical bytes plus one LF): `ac0b3e40700bfb9273122822b83df6d1e88c308e7f0e90fd315a7adb389edc07`
+- Canonical JSON SHA-256 (without carrier LF): `8ac06cb7ef59969934231291ffa001a23aeef21ec848e0c51e916d1adbc7778c`
+- Carrier SHA-256 (canonical bytes plus one LF): `e83542be06544661ff35d93071c2b115a50e1c804164030cd09dc9ab80d5987a`
 - Common capabilities: `36`; Native Extensions: `0`
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
@@ -43,13 +43,13 @@ Support levels, provider bindings, limitations, evidence and diagnostics below c
 | `lifecycle.command-log` | adapted | adapted | adapted |
 | `lifecycle.daemon-safety` | adapted | adapted | adapted |
 | `lifecycle.git-guardrails` | unsupported | adapted | adapted |
-| `lifecycle.memory` | adapted | adapted | unsupported |
+| `lifecycle.memory` | adapted | adapted | adapted |
 | `lifecycle.notification` | adapted | unsupported | unsupported |
 | `lifecycle.pack-guard` | adapted | adapted | adapted |
-| `lifecycle.review-gate` | adapted | adapted | unsupported |
+| `lifecycle.review-gate` | adapted | adapted | adapted |
 | `lifecycle.router` | adapted | adapted | adapted |
 | `lifecycle.run-report` | adapted | adapted | adapted |
-| `lifecycle.terminal-admission` | adapted | adapted | unsupported |
+| `lifecycle.terminal-admission` | adapted | adapted | adapted |
 | `mcp.catalog` | adapted | adapted | native |
 | `security.safe-dirs` | adapted | adapted | adapted |
 | `settings.audit` | adapted | adapted | adapted |
@@ -557,10 +557,10 @@ Activate selected memory lifecycle integration.
   Limitations: per-project overrides are read from the Codex-side project files; Claude's `.claude/memory.*` overrides do not apply to a Codex session; the backend, its groups and its state remain owned by skiller/maind: this surface only activates them.
   Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.memory` activates the selected memory backend for a Codex session without writing memory state itself and without changing state paths owned by skiller — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.memory activation at SessionStart against unchanged `~/.swissknifeman` state ownership).
 
-- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: cursor lifecycle.memory at P0 level unsupported
-  Limitations: deferred at P0 per D1; adapter does not ship yet.
-  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.lifecycle.memory`.
+  Diagnostic: deterministic cursor adapter activates lifecycle.memory through sessionStart env
+  Limitations: activation is explicit and mode-driven via .cursor/memory.env.ini; sessionStart additional_context is intentionally not used for this surface; memory backend state remains owned by skiller/maind; this adapter only exports non-secret env hints.
+  Evidence: [2026-09-18] Cursor memory adapter emits sessionStart env activation from project-scoped memory mode without injecting additional_context or token values — `packages/harness/tests/test_cursor_lifecycle_gates.py` (cursor lifecycle.memory sessionStart environment activation).
 
 ### `lifecycle.notification`
 
@@ -614,10 +614,10 @@ Gate declared review-sensitive lifecycle completion.
   Limitations: enforcement means forced continuation with feedback, not cancellation of the subagent: neither provider can cancel it from this event; the loop-guard counter lives in the dispatcher (a per-session/agent attempt count capped at 3), because stop_hook_active is documented at neither provider as reliable; inactive by default, and the check command comes only from the machine-owned hook configuration shared with the Claude review-gate install.
   Evidence: [2026-07-30] the deterministic adapter harness.codex.lifecycle.review-gate runs the project-declared check at SubagentStop and, in mode strict, exits 2 so the subagent continues with the violation text instead of finishing — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.review-gate enforcement at SubagentStop by preventing the subagent from stopping).
 
-- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: cursor lifecycle.review-gate at P0 level unsupported
-  Limitations: deferred at P0 per D1; adapter does not ship yet.
-  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.lifecycle.review-gate`.
+  Diagnostic: deterministic cursor adapter satisfies lifecycle.review-gate via subagentStop continuation
+  Limitations: inactive by default; MODE=warn|strict must be set explicitly via harness hooks; continuation followups are emitted only when subagentStop status is completed; if a Claude-compat review-gate registration is already present, Cursor-native continuation is skipped to avoid double triggering.
+  Evidence: [2026-09-18] Cursor review-gate uses SubagentStop loop_count with loop_limit=3, emits actionable followup_message only for status=completed, and refuses unchanged repeated followups — `packages/harness/tests/test_cursor_lifecycle_gates.py` (cursor lifecycle.review-gate continuation behavior and dedup safeguards).
 
 ### `lifecycle.router`
 
@@ -671,10 +671,10 @@ Adapt an opted-in provider Stop boundary to Task terminal admission.
   Limitations: inactive by default; only an applicable Task lease is evaluated; multiple matching hooks run concurrently; does not control unconfigured or non-CLI surfaces.
   Evidence: [2026-09-10] Codex Stop hooks receive last_assistant_message and can request continuation — `https://developers.openai.com/codex/hooks` (configured trusted Codex Stop hook).
 
-- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: cursor lifecycle.terminal-admission at P0 level unsupported
-  Limitations: deferred at P0 per D1; adapter does not ship yet.
-  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.lifecycle.terminal-admission`.
+  Diagnostic: deterministic cursor adapter satisfies lifecycle.terminal-admission via stop continuation
+  Limitations: inactive by default; MODE=on must be set explicitly via harness hooks; continuation depends on documented stop payload fields (status and loop_count); without lease/session evidence, the adapter refuses final completion with a deterministic diagnostic.
+  Evidence: [2026-09-18] Cursor stop adapter reuses Task terminal-admission contracts and open-run decision core, emits continuation followups with loop_count-aware loop_limit=3 handling, and refuses repeated unchanged followups — `packages/harness/tests/test_cursor_lifecycle_gates.py` (cursor lifecycle.terminal-admission stop-boundary decision and continuation behavior).
 
 ### `mcp.catalog`
 

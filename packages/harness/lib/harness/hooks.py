@@ -326,7 +326,10 @@ _EVENT_FIELDS = {
     "beforeShellExecution": ("command",),
     "afterShellExecution": ("command", "duration", "sandbox"),
     "preToolUse": ("tool_name", "tool_input"),
+    "subagentStop": ("status", "loop_count"),
+    "sessionStart": ("session_id",),
     "sessionEnd": ("reason",),
+    "stop": ("status", "loop_count"),
 }
 _COMMON_FIELDS = ("hook_event_name", "conversation_id")
 _REASON_TO_OUTCOME = {
@@ -337,9 +340,11 @@ _REASON_TO_OUTCOME = {
     "user_close": "unknown",
 }
 _GATE_MODES = ("off", "warn", "strict")
+_MEMORY_MODES = ("maind", "file", "federation", "agentmemory", "off")
 _CHANGELOG_SKIP_MARKER = "[changelog-skip]"
 _CHANGELOG_NAME_RE = re.compile(r"changelog", re.IGNORECASE)
 _CHANGELOG_SEGMENT_RE = re.compile(r"&&|\\|\\||;|\\|")
+_CURSOR_FOLLOWUP_LOOP_LIMIT = 3
 
 
 def _utc_now():
@@ -384,8 +389,140 @@ def _read_mode(cwd, filename):
         key, value = (part.strip() for part in line.split("=", 1))
         if key == "MODE":
             value = value.lower()
-            mode = value if value in _GATE_MODES else "off"
+            allowed = ("on", "off") if filename == "terminal-admission.env.ini" else _GATE_MODES
+            mode = value if value in allowed else "off"
     return mode
+
+
+def _followup_state_path(cwd, filename):
+    return Path(cwd) / ".cursor" / filename
+
+
+def _load_followup_state(path):
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def _save_followup_state(path, state):
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(state, sort_keys=True), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _clear_followup_state(path, key):
+    state = _load_followup_state(path)
+    if key not in state:
+        return
+    state.pop(key, None)
+    _save_followup_state(path, state)
+
+
+def _loop_count(payload):
+    value = payload.get("loop_count")
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+
+def _read_memory_config(cwd):
+    mode, brain = "off", "core"
+    if not cwd:
+        return mode, brain
+    env_file = Path(cwd) / ".cursor" / "memory.env.ini"
+    try:
+        text = env_file.read_text(encoding="utf-8")
+    except OSError:
+        return mode, brain
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = (part.strip() for part in line.split("=", 1))
+        if key == "MODE":
+            lowered = value.lower()
+            mode = lowered if lowered in _MEMORY_MODES else "off"
+        elif key == "BRAIN" and value:
+            brain = value
+    return mode, brain
+
+
+def _memory(payload):
+    cwd = _payload_cwd(payload)
+    mode, brain = _read_memory_config(cwd)
+    if mode == "off":
+        return
+    project_name = Path(cwd).resolve().name if cwd else "unknown"
+    out = {
+        "SWISSKNIFEMAN_MEMORY_PROVIDER": mode,
+        "SWISSKNIFEMAN_MEMORY_BRAIN": brain,
+        "SWISSKNIFEMAN_MEMORY_SCOPE": f"project:{project_name}",
+    }
+    print(json.dumps({"env": out}, ensure_ascii=False))
+
+
+def _emit_followup_message(payload, *, cwd, state_filename, state_key, message):
+    if not isinstance(message, str):
+        return False
+    text = message.strip()
+    loop_count = _loop_count(payload)
+    if not text or loop_count is None or loop_count >= _CURSOR_FOLLOWUP_LOOP_LIMIT:
+        return False
+    path = _followup_state_path(cwd, state_filename)
+    state = _load_followup_state(path)
+    digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    previous = state.get(state_key) if isinstance(state.get(state_key), dict) else {}
+    if previous.get("message_sha256") == digest:
+        state[state_key] = {"message_sha256": digest, "refused": True}
+        _save_followup_state(path, state)
+        sys.stderr.write("continuation refused: repeated followup without progress\\n")
+        return False
+    state[state_key] = {"message_sha256": digest, "refused": False}
+    _save_followup_state(path, state)
+    print(json.dumps({"followup_message": text}))
+    return True
+
+
+def _iter_hook_commands(settings, event_name):
+    hooks = settings.get("hooks")
+    if not isinstance(hooks, dict):
+        return
+    entries = hooks.get(event_name)
+    if not isinstance(entries, list):
+        return
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        command = entry.get("command")
+        if isinstance(command, str) and command.strip():
+            yield command.strip()
+        nested = entry.get("hooks")
+        if not isinstance(nested, list):
+            continue
+        for hook in nested:
+            command = hook.get("command") if isinstance(hook, dict) else None
+            if isinstance(command, str) and command.strip():
+                yield command.strip()
+
+
+def _claude_compat_review_gate_present(cwd):
+    paths = [Path.home() / ".claude" / "settings.json"]
+    if cwd:
+        paths.append(Path(cwd) / ".claude" / "settings.json")
+        paths.append(Path(cwd) / ".claude" / "settings.local.json")
+    for path in paths:
+        try:
+            settings = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if not isinstance(settings, dict):
+            continue
+        for command in _iter_hook_commands(settings, "SubagentStop") or ():
+            if "review-gate/review-gate.sh" in command.lower():
+                return True
+    return False
 
 
 def _find_repo_root(payload):
@@ -657,6 +794,99 @@ def _pack_guard(payload):
     }))
 
 
+def _review_gate(payload):
+    cwd = _payload_cwd(payload)
+    mode = _read_mode(cwd, "review-gate.env.ini")
+    if mode == "off":
+        return
+    if payload.get("status") != "completed":
+        return
+    if _claude_compat_review_gate_present(cwd):
+        sys.stderr.write("review-gate: skipped because Claude-compat SubagentStop hook is already registered\\n")
+        return
+    config_path = Path.home() / ".claude" / "hooks" / "review-gate" / "config.json"
+    try:
+        check = json.loads(config_path.read_text(encoding="utf-8")).get("check_command") or ""
+    except (OSError, ValueError):
+        check = ""
+    if not check:
+        return
+    try:
+        result = subprocess.run(["bash", "-c", check], cwd=cwd, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, timeout=120, check=False)
+    except OSError:
+        return
+    conversation = _conversation_id(payload)
+    subagent_type = payload.get("subagent_type")
+    if not isinstance(subagent_type, str):
+        subagent_type = "subagent"
+    state_key = f"{conversation or 'noconversation'}:{subagent_type}"
+    state_path = _followup_state_path(cwd, "review-gate.state.json")
+    if result.returncode == 0:
+        _clear_followup_state(state_path, state_key)
+        return
+    if mode != "strict":
+        return
+    body = result.stdout.decode("utf-8", errors="replace").strip()
+    evidence = body if body else "declared review check failed"
+    followup = ("Review gate denied completion: fix the failing review check and rerun `%s`."
+                "\\nCheck output:\\n%s" % (check, evidence))
+    _emit_followup_message(payload, cwd=cwd, state_filename="review-gate.state.json",
+                           state_key=state_key, message=followup)
+
+
+def _terminal_admission_followup(reason):
+    templates = {
+        "TASK_OPEN_RUN_FINAL_FORBIDDEN": ("Terminal admission denied: an open Task run for this session is still in progress. "
+                                          "Continue the active plan item and retry stop after it reaches a terminal state."),
+        "TASK_WORKSET_INCOMPLETE": ("Terminal admission denied: the active Task workset is incomplete for this session. "
+                                    "Finish the next required workset members, then retry stop."),
+        "TASK_FINAL_STATE_UNAVAILABLE": ("Terminal admission denied: Task final-state evidence is unavailable. "
+                                         "Restore plan journals/receipts and retry stop."),
+        "TERMINAL_ADMISSION_CONTEXT_INVALID": ("Terminal admission denied: stop payload misses session context. "
+                                               "Retry from the same Task session context."),
+    }
+    prefix = templates.get(reason, "Terminal admission denied: Task lease state is not ready for final completion.")
+    return f"{prefix} (reason={reason})"
+
+
+def _terminal_admission_decision(payload, cwd):
+    conversation_id = _conversation_id(payload)
+    if conversation_id is None:
+        return {"final_allowed": False, "reason": "TERMINAL_ADMISSION_CONTEXT_INVALID"}
+    root = _find_repo_root(payload)
+    if root is None:
+        return {"final_allowed": False, "reason": "TASK_FINAL_STATE_UNAVAILABLE"}
+    task_lib = os.path.join(root, "packages", "task", "lib")
+    try:
+        if task_lib not in sys.path:
+            sys.path.insert(0, task_lib)
+        from task import terminal_admission
+        terminal_admission.validate_contracts()
+        return terminal_admission.pre_final_open_runs(Path(cwd), conversation_id)
+    except Exception:
+        return {"final_allowed": False, "reason": "TASK_FINAL_STATE_UNAVAILABLE"}
+
+
+def _terminal_admission(payload):
+    cwd = _payload_cwd(payload)
+    if _read_mode(cwd, "terminal-admission.env.ini") != "on":
+        return
+    if payload.get("status") != "completed":
+        return
+    decision = _terminal_admission_decision(payload, cwd)
+    state_key = _conversation_id(payload) or "noconversation"
+    state_path = _followup_state_path(cwd, "terminal-admission.state.json")
+    if decision.get("final_allowed"):
+        _clear_followup_state(state_path, state_key)
+        return
+    reason = str(decision.get("reason") or "TERMINAL_ADMISSION_REFUSED")
+    followup = _terminal_admission_followup(reason)
+    _emit_followup_message(payload, cwd=cwd,
+                           state_filename="terminal-admission.state.json",
+                           state_key=state_key, message=followup)
+
+
 def _first_command_token(command):
     if not isinstance(command, str) or not command.strip():
         return None
@@ -766,19 +996,25 @@ def _run_report(payload):
 
 _HANDLERS = {
     "security.safe-dirs": _safe_dirs,
+    "lifecycle.memory": _memory,
     "lifecycle.daemon-safety": _daemon_safety,
     "lifecycle.git-guardrails": _git_guardrails,
     "lifecycle.changelog-gate": _changelog_gate,
     "lifecycle.pack-guard": _pack_guard,
+    "lifecycle.review-gate": _review_gate,
+    "lifecycle.terminal-admission": _terminal_admission,
     "lifecycle.command-log": _command_log,
     "lifecycle.run-report": _run_report,
 }
 _SURFACE_EVENTS = {
     "security.safe-dirs": "beforeShellExecution",
+    "lifecycle.memory": "sessionStart",
     "lifecycle.daemon-safety": "beforeShellExecution",
     "lifecycle.git-guardrails": "beforeShellExecution",
     "lifecycle.changelog-gate": "beforeShellExecution",
     "lifecycle.pack-guard": "preToolUse",
+    "lifecycle.review-gate": "subagentStop",
+    "lifecycle.terminal-admission": "stop",
     "lifecycle.command-log": "afterShellExecution",
     "lifecycle.run-report": "sessionEnd",
 }
@@ -1858,11 +2094,6 @@ def _block_cursor_gates(env, target, opts):
     unsupported = []
     if opts["observer"]:
         unsupported.append("--observer")
-    if opts["terminal_admission"]:
-        unsupported.append("--terminal-admission")
-    for flag, value in (("--review-gate", opts["review_gate"]),):
-        if value and value != "off":
-            unsupported.append(f"{flag} {value}")
     if unsupported:
         die("для --provider cursor здесь не поддержаны запрошенные флаги: "
             + ", ".join(unsupported))
@@ -1873,6 +2104,15 @@ def _block_cursor_gates(env, target, opts):
         "lifecycle.command-log",
         "lifecycle.run-report",
     ]
+    memory = opts["memory"]
+    if memory:
+        brain, mode = _parse_memory_flag(memory)
+        if mode not in MEM_MODES:
+            die(f"неизвестный режим --memory: {mode} ({'|'.join(MEM_MODES)})")
+        write_text(target / ".cursor" / "memory.env.ini",
+                   f"MODE={mode}\nBRAIN={brain}\n", opts["dry_run"])
+        if mode != "off":
+            surfaces.append("lifecycle.memory")
     if opts["daemon_safety"]:
         surfaces.append("lifecycle.daemon-safety")
     git_mode = opts["git_guardrails"]
@@ -1902,6 +2142,23 @@ def _block_cursor_gates(env, target, opts):
                    opts["dry_run"])
         if pack_mode != "off":
             surfaces.append("lifecycle.pack-guard")
+    review_mode = opts["review_gate"]
+    if review_mode:
+        if review_mode not in PACKGUARD_MODES:
+            die("неизвестный режим --review-gate: "
+                + f"{review_mode} ({'|'.join(PACKGUARD_MODES)})")
+        write_text(target / ".cursor" / "review-gate.env.ini", f"MODE={review_mode}\n",
+                   opts["dry_run"])
+        if review_mode != "off":
+            surfaces.append("lifecycle.review-gate")
+    terminal_mode = opts["terminal_admission"]
+    if terminal_mode:
+        if terminal_mode not in ("on", "off"):
+            die("неизвестный режим --terminal-admission: on|off")
+        write_text(target / ".cursor" / "terminal-admission.env.ini",
+                   f"MODE={terminal_mode}\n", opts["dry_run"])
+        if terminal_mode == "on":
+            surfaces.append("lifecycle.terminal-admission")
     block_cursor_lifecycle(env, target, surfaces=tuple(surfaces),
                            trusted=bool(opts["trusted"]), repair=bool(opts["repair"]),
                            dry=bool(opts["dry_run"]))
@@ -1945,8 +2202,11 @@ def cmd_hooks(env, argv):
               "[--changelog-gate off|warn|strict] [--review-gate off|warn|strict] "
               "[--git-guardrails off|warn|strict] [--safe-dirs] [--daemon-safety] "
               "[--terminal-admission on|off] | --provider cursor [--safe-dirs] "
+              "[--memory BRAIN:maind|file|federation|agentmemory|off] "
               "[--daemon-safety] [--git-guardrails off|warn|strict] "
               "[--changelog-gate off|warn|strict] [--pack-guard off|warn|strict] "
+              "[--review-gate off|warn|strict] "
+              "[--terminal-admission on|off] "
               "[--trusted] [--repair]] "
               "[--file settings.json|settings.local.json] [--dry-run]")
         return

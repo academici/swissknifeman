@@ -10,11 +10,13 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "packages/task/lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from core import ProviderId, load_provider_manifest, support_for
 from harness.hooks import LifecycleRequest, plan_lifecycle, render_cursor_hook_handler, render_cursor_hooks
 from harness.profiles import load_catalog
+from task import journal
 
 PACKAGE = Path(__file__).resolve().parents[1]
 ROOT = PACKAGE.parents[1]
@@ -64,6 +66,27 @@ class CursorLifecycleGateTests(unittest.TestCase):
         (Path(project) / "CHANGELOG.md").write_text("# Changelog\n", encoding="utf-8")
         self._git(project, "add", "CHANGELOG.md")
         self._git(project, "commit", "-qm", "init")
+
+    def _review_gate_home(self, home, check_command):
+        cfg = Path(home) / ".claude" / "hooks" / "review-gate"
+        cfg.mkdir(parents=True)
+        (cfg / "config.json").write_text(
+            json.dumps({"check_command": check_command}), encoding="utf-8")
+
+    def _seed_open_run(self, project, *, session_id):
+        path = Path(project) / "plans" / "DEMO" / "journal.jsonl"
+        path.parent.mkdir(parents=True)
+        entry = journal.new_entry(
+            plan_id="DEMO",
+            item_id="P7.4",
+            command="plan-run",
+            actor="test/medium",
+            result="in-progress",
+            session_id=session_id,
+            run_id="run-1",
+            attempt=1,
+        )
+        path.write_text(json.dumps(entry) + "\n", encoding="utf-8")
 
     def test_manifest_daemon_safety_row_is_adapted_with_named_adapter(self):
         manifest = load_provider_manifest(MANIFEST)
@@ -323,6 +346,264 @@ class CursorLifecycleGateTests(unittest.TestCase):
             result = _run_handler(handler, "lifecycle.pack-guard", payload)
             self.assertEqual(result.returncode, 2)
             self.assertIn(b"matched managed target", result.stderr)
+
+    def test_manifest_review_gate_row_is_adapted_with_named_adapter(self):
+        manifest = load_provider_manifest(MANIFEST)
+        support = support_for(manifest, "lifecycle.review-gate", ProviderId.CURSOR)
+        self.assertEqual(support.level.value, "adapted")
+        self.assertEqual(support.adapter_id, "harness.cursor.lifecycle.review-gate")
+        self.assertTrue(support.evidence)
+        self.assertTrue(support.limitations)
+
+    def test_review_gate_binding_and_render_use_subagentstop(self):
+        plan = self._cursor_plan("lifecycle.review-gate")
+        self.assertTrue(plan.green)
+        self.assertEqual(plan.bindings[0].support_level, "hook-native")
+        self.assertEqual(plan.bindings[0].event, "subagentStop")
+        rendered = json.loads(render_cursor_hooks(plan))
+        entry = rendered["hooks"]["subagentStop"][0]
+        self.assertIn("--surface lifecycle.review-gate", entry["command"])
+        self.assertEqual(entry.get("failClosed"), True)
+        self.assertEqual(entry.get("loop_limit"), 3)
+
+    def test_review_gate_strict_uses_payload_loop_count_and_refuses_repeated_followup(self):
+        with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch, \
+                tempfile.TemporaryDirectory() as home:
+            handler = Path(scratch) / "lifecycle.py"
+            handler.write_bytes(render_cursor_hook_handler())
+            cursor_dir = Path(project) / ".cursor"
+            cursor_dir.mkdir()
+            (cursor_dir / "review-gate.env.ini").write_text("MODE=strict\n", encoding="utf-8")
+            self._review_gate_home(home, "printf 'missing review evidence'; exit 1")
+            payload = {
+                "hook_event_name": "subagentStop",
+                "conversation_id": "conv-review",
+                "cwd": project,
+                "workspace_roots": [str(ROOT)],
+                "status": "completed",
+                "loop_count": 0,
+                "subagent_type": "reviewer",
+            }
+            env = {**os.environ, "HOME": home}
+            first = _run_handler(handler, "lifecycle.review-gate", payload, env=env)
+            self.assertEqual(first.returncode, 0)
+            followup = json.loads(first.stdout.decode("utf-8"))
+            self.assertIn("followup_message", followup)
+            self.assertIn("Review gate denied completion", followup["followup_message"])
+            repeated = _run_handler(handler, "lifecycle.review-gate", payload, env=env)
+            self.assertEqual(repeated.returncode, 0)
+            self.assertEqual(repeated.stdout, b"")
+            at_limit = _run_handler(
+                handler,
+                "lifecycle.review-gate",
+                {**payload, "conversation_id": "conv-review-limit", "loop_count": 3},
+                env=env,
+            )
+            self.assertEqual(at_limit.returncode, 0)
+            self.assertEqual(at_limit.stdout, b"")
+
+    def test_review_gate_ignores_non_completed_status_and_warn_mode(self):
+        with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch, \
+                tempfile.TemporaryDirectory() as home:
+            handler = Path(scratch) / "lifecycle.py"
+            handler.write_bytes(render_cursor_hook_handler())
+            cursor_dir = Path(project) / ".cursor"
+            cursor_dir.mkdir()
+            self._review_gate_home(home, "exit 1")
+            env = {**os.environ, "HOME": home}
+            (cursor_dir / "review-gate.env.ini").write_text("MODE=strict\n", encoding="utf-8")
+            non_completed = _run_handler(handler, "lifecycle.review-gate", {
+                "hook_event_name": "subagentStop",
+                "conversation_id": "conv-review-other",
+                "cwd": project,
+                "workspace_roots": [str(ROOT)],
+                "status": "failed",
+                "loop_count": 0,
+                "subagent_type": "reviewer",
+            }, env=env)
+            self.assertEqual(non_completed.returncode, 0)
+            self.assertEqual(non_completed.stdout, b"")
+            (cursor_dir / "review-gate.env.ini").write_text("MODE=warn\n", encoding="utf-8")
+            warned = _run_handler(handler, "lifecycle.review-gate", {
+                "hook_event_name": "subagentStop",
+                "conversation_id": "conv-review-warn",
+                "cwd": project,
+                "workspace_roots": [str(ROOT)],
+                "status": "completed",
+                "loop_count": 0,
+                "subagent_type": "reviewer",
+            }, env=env)
+            self.assertEqual(warned.returncode, 0)
+            self.assertEqual(warned.stdout, b"")
+
+    def test_review_gate_skips_when_claude_compat_registration_exists(self):
+        with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch, \
+                tempfile.TemporaryDirectory() as home:
+            handler = Path(scratch) / "lifecycle.py"
+            handler.write_bytes(render_cursor_hook_handler())
+            cursor_dir = Path(project) / ".cursor"
+            cursor_dir.mkdir()
+            (cursor_dir / "review-gate.env.ini").write_text("MODE=strict\n", encoding="utf-8")
+            self._review_gate_home(home, "exit 1")
+            claude = Path(home) / ".claude"
+            claude.mkdir(parents=True, exist_ok=True)
+            (claude / "settings.json").write_text(json.dumps({
+                "hooks": {
+                    "SubagentStop": [{
+                        "hooks": [{"type": "command", "command": "~/.claude/hooks/review-gate/review-gate.sh"}]
+                    }]
+                }
+            }), encoding="utf-8")
+            payload = {
+                "hook_event_name": "subagentStop",
+                "conversation_id": "conv-review-overlap",
+                "cwd": project,
+                "workspace_roots": [str(ROOT)],
+                "status": "completed",
+                "loop_count": 0,
+                "subagent_type": "reviewer",
+            }
+            result = _run_handler(handler, "lifecycle.review-gate", payload,
+                                  env={**os.environ, "HOME": home})
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, b"")
+            self.assertIn(b"skipped", result.stderr)
+
+    def test_manifest_terminal_admission_row_is_adapted_with_named_adapter(self):
+        manifest = load_provider_manifest(MANIFEST)
+        support = support_for(manifest, "lifecycle.terminal-admission", ProviderId.CURSOR)
+        self.assertEqual(support.level.value, "adapted")
+        self.assertEqual(support.adapter_id, "harness.cursor.lifecycle.terminal-admission")
+        self.assertTrue(support.evidence)
+        self.assertTrue(support.limitations)
+
+    def test_terminal_admission_binding_and_render_use_stop_with_loop_limit(self):
+        plan = self._cursor_plan("lifecycle.terminal-admission")
+        self.assertTrue(plan.green)
+        self.assertEqual(plan.bindings[0].support_level, "hook-native")
+        self.assertEqual(plan.bindings[0].event, "stop")
+        rendered = json.loads(render_cursor_hooks(plan))
+        entry = rendered["hooks"]["stop"][0]
+        self.assertIn("--surface lifecycle.terminal-admission", entry["command"])
+        self.assertEqual(entry.get("failClosed"), True)
+        self.assertEqual(entry.get("loop_limit"), 3)
+
+    def test_terminal_admission_emits_followup_for_open_run_and_refuses_repeat(self):
+        with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:
+            handler = Path(scratch) / "lifecycle.py"
+            handler.write_bytes(render_cursor_hook_handler())
+            cursor_dir = Path(project) / ".cursor"
+            cursor_dir.mkdir()
+            (cursor_dir / "terminal-admission.env.ini").write_text("MODE=on\n", encoding="utf-8")
+            self._seed_open_run(project, session_id="conv-stop")
+            payload = {
+                "hook_event_name": "stop",
+                "conversation_id": "conv-stop",
+                "cwd": project,
+                "workspace_roots": [str(ROOT)],
+                "status": "completed",
+                "loop_count": 0,
+            }
+            first = _run_handler(handler, "lifecycle.terminal-admission", payload)
+            self.assertEqual(first.returncode, 0)
+            followup = json.loads(first.stdout.decode("utf-8"))
+            self.assertIn("followup_message", followup)
+            self.assertIn("Terminal admission denied", followup["followup_message"])
+            repeated = _run_handler(handler, "lifecycle.terminal-admission", payload)
+            self.assertEqual(repeated.returncode, 0)
+            self.assertEqual(repeated.stdout, b"")
+            at_limit = _run_handler(
+                handler,
+                "lifecycle.terminal-admission",
+                {**payload, "conversation_id": "conv-stop-limit", "loop_count": 3},
+            )
+            self.assertEqual(at_limit.returncode, 0)
+            self.assertEqual(at_limit.stdout, b"")
+
+    def test_terminal_admission_is_inactive_when_not_completed_or_mode_off(self):
+        with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:
+            handler = Path(scratch) / "lifecycle.py"
+            handler.write_bytes(render_cursor_hook_handler())
+            cursor_dir = Path(project) / ".cursor"
+            cursor_dir.mkdir()
+            self._seed_open_run(project, session_id="conv-stop-inactive")
+            payload = {
+                "hook_event_name": "stop",
+                "conversation_id": "conv-stop-inactive",
+                "cwd": project,
+                "workspace_roots": [str(ROOT)],
+                "status": "completed",
+                "loop_count": 0,
+            }
+            off = _run_handler(handler, "lifecycle.terminal-admission", payload)
+            self.assertEqual(off.returncode, 0)
+            self.assertEqual(off.stdout, b"")
+            (cursor_dir / "terminal-admission.env.ini").write_text("MODE=on\n", encoding="utf-8")
+            non_completed = _run_handler(
+                handler, "lifecycle.terminal-admission", {**payload, "status": "aborted"}
+            )
+            self.assertEqual(non_completed.returncode, 0)
+            self.assertEqual(non_completed.stdout, b"")
+
+    def test_manifest_memory_row_is_adapted_with_named_adapter(self):
+        manifest = load_provider_manifest(MANIFEST)
+        support = support_for(manifest, "lifecycle.memory", ProviderId.CURSOR)
+        self.assertEqual(support.level.value, "adapted")
+        self.assertEqual(support.adapter_id, "harness.cursor.lifecycle.memory")
+        self.assertTrue(support.evidence)
+        self.assertTrue(support.limitations)
+
+    def test_memory_binding_and_render_use_session_start(self):
+        plan = self._cursor_plan("lifecycle.memory")
+        self.assertTrue(plan.green)
+        self.assertEqual(plan.bindings[0].support_level, "hook-native")
+        self.assertEqual(plan.bindings[0].event, "sessionStart")
+        rendered = json.loads(render_cursor_hooks(plan))
+        entry = rendered["hooks"]["sessionStart"][0]
+        self.assertIn("--surface lifecycle.memory", entry["command"])
+        self.assertNotIn("failClosed", entry)
+
+    def test_memory_session_start_exports_env_without_tokens_or_additional_context(self):
+        with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:
+            handler = Path(scratch) / "lifecycle.py"
+            handler.write_bytes(render_cursor_hook_handler())
+            cursor_dir = Path(project) / ".cursor"
+            cursor_dir.mkdir()
+            (cursor_dir / "memory.env.ini").write_text(
+                "MODE=maind\nBRAIN=core\nTOKEN=secret\n", encoding="utf-8")
+            payload = {
+                "hook_event_name": "sessionStart",
+                "conversation_id": "conv-memory",
+                "session_id": "session-memory",
+                "cwd": project,
+                "workspace_roots": [str(ROOT)],
+            }
+            result = _run_handler(handler, "lifecycle.memory", payload)
+            self.assertEqual(result.returncode, 0)
+            record = json.loads(result.stdout.decode("utf-8"))
+            self.assertEqual(record["env"]["SWISSKNIFEMAN_MEMORY_PROVIDER"], "maind")
+            self.assertEqual(record["env"]["SWISSKNIFEMAN_MEMORY_BRAIN"], "core")
+            self.assertTrue(record["env"]["SWISSKNIFEMAN_MEMORY_SCOPE"].startswith("project:"))
+            self.assertNotIn("TOKEN", json.dumps(record))
+            self.assertNotIn("additional_context", record)
+
+    def test_memory_off_mode_remains_silent(self):
+        with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:
+            handler = Path(scratch) / "lifecycle.py"
+            handler.write_bytes(render_cursor_hook_handler())
+            cursor_dir = Path(project) / ".cursor"
+            cursor_dir.mkdir()
+            (cursor_dir / "memory.env.ini").write_text("MODE=off\nBRAIN=core\n", encoding="utf-8")
+            payload = {
+                "hook_event_name": "sessionStart",
+                "conversation_id": "conv-memory-off",
+                "session_id": "session-memory-off",
+                "cwd": project,
+                "workspace_roots": [str(ROOT)],
+            }
+            result = _run_handler(handler, "lifecycle.memory", payload)
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, b"")
 
 
 if __name__ == "__main__":

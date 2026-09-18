@@ -54,6 +54,20 @@
   `test_lifecycle_policy_core_alignment.py` (без переписывания bash-хуков Claude),
   плюс Cursor/Codex regression tests для mode ladder, fail-closed behavior, kill-switch
   и false-positive pinning по всем четырём политикам P4.
+- **Cursor lifecycle P5 review-gate.** `lifecycle.review-gate` для Cursor переведён в
+  `hook-native` на `subagentStop`: включается только через `.cursor/review-gate.env.ini`,
+  учитывает `loop_count` из payload (без собственного счётчика), возвращает
+  `followup_message` только при `status=completed`, не повторяет один и тот же followup
+  дважды подряд и пропускает продолжение при найденной Claude-compat регистрации
+  (single-writer dedup P1).
+- **Cursor lifecycle P5 terminal-admission.** `lifecycle.terminal-admission` для Cursor
+  переведён в `hook-native` на `stop`: переиспользует `task.terminal_admission`
+  (`validate_contracts` + `pre_final_open_runs`) и контракт
+  `terminal-admission-lease-v1.schema.json`, остаётся `off` по умолчанию, использует
+  `loop_count` из payload и останавливает continuation при неизменном повторном followup.
+- **Cursor lifecycle P5 memory.** `lifecycle.memory` для Cursor поднят через `sessionStart`
+  с env-активацией из `.cursor/memory.env.ini` (`MODE`/`BRAIN`) без передачи токенов;
+  в матрице Cursor достигнуты `8 native / 23 adapted / 5 unsupported`.
 
 ## [0.21.5] - 2026-09-17
 

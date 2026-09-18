@@ -18,7 +18,7 @@
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
 ### Поддержка провайдеров (generated)
 
-Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `747b112432fdec1b0649f7afbb553bd2b26a0597ed9b406fedeb4caba19bd3bc`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Подробности и операции: [provider support](docs/provider-support.md).
+Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `8ac06cb7ef59969934231291ffa001a23aeef21ec848e0c51e916d1adbc7778c`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Подробности и операции: [provider support](docs/provider-support.md).
 
 | Capability | Claude Code | Codex | Cursor |
 |:--|:--:|:--:|:--:|
@@ -45,13 +45,13 @@
 | `lifecycle.command-log` | adapted | adapted | adapted |
 | `lifecycle.daemon-safety` | adapted | adapted | adapted |
 | `lifecycle.git-guardrails` | unsupported | adapted | adapted |
-| `lifecycle.memory` | adapted | adapted | unsupported |
+| `lifecycle.memory` | adapted | adapted | adapted |
 | `lifecycle.notification` | adapted | unsupported | unsupported |
 | `lifecycle.pack-guard` | adapted | adapted | adapted |
-| `lifecycle.review-gate` | adapted | adapted | unsupported |
+| `lifecycle.review-gate` | adapted | adapted | adapted |
 | `lifecycle.router` | adapted | adapted | adapted |
 | `lifecycle.run-report` | adapted | adapted | adapted |
-| `lifecycle.terminal-admission` | adapted | adapted | unsupported |
+| `lifecycle.terminal-admission` | adapted | adapted | adapted |
 | `mcp.catalog` | adapted | adapted | native |
 | `security.safe-dirs` | adapted | adapted | adapted |
 | `settings.audit` | adapted | adapted | adapted |

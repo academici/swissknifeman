@@ -1,20 +1,14 @@
 {
   "mcpServers": {
     "maind": {
-      "command": "${MAIND_BIN:-maind}",
+      "command": "maind",
       "args": [
         "mcp",
         "--scope",
         "project:swissknifeman"
       ]
     },
-    "perplexity-web": {
-      "command": "${PERPLEXITY_WEB_MCP_BIN:-<HOME>/projects/packages/perplexity-web-mcp/start.sh}",
-      "args": [
-        "--pool=default"
-      ]
-    },
-    "serena": {
+    "codegraph": {
       "command": "uvx",
       "args": [
         "--from",
@@ -27,6 +21,12 @@
         "<ABS_PATH_TO_PROJECT>",
         "--enable-web-dashboard",
         "false"
+      ]
+    },
+    "perplexity": {
+      "command": "${PERPLEXITY_WEB_MCP_BIN:-<HOME>/projects/packages/perplexity-web-mcp/start.sh}",
+      "args": [
+        "--pool=default"
       ]
     }
   }

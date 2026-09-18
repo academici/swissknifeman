@@ -63,10 +63,11 @@ class TestConstants(unittest.TestCase):
 
         with open(root / ".mcp.json.example", encoding="utf-8") as f:
             mcp_example = json.load(f)
-        serena_args = mcp_example["mcpServers"]["serena"]["args"]
+        codegraph = mcp_example["mcpServers"]["codegraph"]
+        serena_args = codegraph["args"]
         from_idx = serena_args.index("--from")
         self.assertEqual(serena_args[from_idx + 1], c.SERENA_SRC,
-                          f".mcp.json.example serena.args не пиннован на "
+                          f".mcp.json.example codegraph.args не пиннован на "
                           f"constants.SERENA_SRC ({c.SERENA_SRC!r}): "
                           f"{serena_args[from_idx + 1]!r}")
 

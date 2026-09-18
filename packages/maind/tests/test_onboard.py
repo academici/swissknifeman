@@ -48,7 +48,8 @@ class TestOnboard(unittest.TestCase):
             root, env = make_repo(tmp)
             _seed_config(root)
             project = Path(tmp) / "instruction-project"
-            project.mkdir()
+            for pkg in ("skiller", "maind", "harness"):
+                (project / "packages" / pkg).mkdir(parents=True)
             config, _ = load_config(env)
             onb.onboard(env, config, str(project), {
                 "skip_skills": True, "yes": True, "dry": False,

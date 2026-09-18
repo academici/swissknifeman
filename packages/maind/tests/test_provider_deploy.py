@@ -20,7 +20,9 @@ from maind.provider_deploy import (ProviderDeployError, plan_provider_deploy,
 from maind.provider_deploy import (conformance_report, plan_d104_bootstrap_transfer,
                                    write_conformance_report, plan_project_carrier,
                                    apply_project_carrier, apply_d108_operation,
-                                   rollback_d108_operation, _d108_planned_projections)
+                                   rollback_d108_operation, _d108_planned_projections,
+                                   _CODEX_MCP_BLOCK_IDS, _extract_codex_mcp_blocks,
+                                   _replace_codex_mcp_blocks)
 from maind.provision.deploy import deploy_project, mark_deployed, provider_semantic_inventory
 try:
     from .fixtures import make_repo
@@ -923,6 +925,20 @@ class TestProviderDeploy(unittest.TestCase):
             bindings_path=root / "claude-code/mcp/bindings.json", selected=(), trusted=True)
         with self.assertRaisesRegex(ProviderDeployError, "MAIND_PROVIDER_DUPLICATE"):
             plan_provider_deploy((claude, claude), semantic_servers(maind={"command": "maind"}))
+
+    def test_codex_mcp_append_to_bootstrap_config_preserves_unmanaged_bytes(self):
+        managed = b'[mcp_servers.maind]\ncommand = "maind"\n'
+        for bootstrap in (
+            b'approval_policy = "never"\n'
+            b'sandbox_mode = "danger-full-access"\n',
+            b'approval_policy = "never"\n\n',
+        ):
+            existing = _extract_codex_mcp_blocks(bootstrap, _CODEX_MCP_BLOCK_IDS)
+            rendered = _replace_codex_mcp_blocks(bootstrap, managed, _CODEX_MCP_BLOCK_IDS)
+            restored = _replace_codex_mcp_blocks(rendered, existing, _CODEX_MCP_BLOCK_IDS)
+            expected = (bootstrap if bootstrap.endswith(b"\n\n")
+                        else bootstrap + (b"\n" if bootstrap.endswith(b"\n") else b"\n\n"))
+            self.assertEqual(restored, expected)
 
     def test_consumer_inventory_projects_claude_and_codex_outputs(self):
         root = Path(__file__).resolve().parents[3] / "packages/harness/configs"

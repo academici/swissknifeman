@@ -265,6 +265,29 @@ def _health_doc_run(env, config, projects, mode, dry):
     return [apply_health_doc(env, config, p, mode, dry) for p in projects]
 
 
+def _seed_umbrella_layout(root):
+    """Minimal ``packages/`` tree so instruction scopes match the swissknifeman monorepo."""
+    root = Path(root)
+    for pkg in ("skiller", "maind", "harness"):
+        (root / "packages" / pkg).mkdir(parents=True, exist_ok=True)
+
+
+def _instructions_applicable(context):
+    """Instruction-carrier blocks belong only on the swissknifeman umbrella monorepo.
+
+    Consumer projects (Laravel apps, packages, vaults) keep their own CLAUDE.md/AGENTS.md
+    contracts; projecting package-scope instruction blocks into them hits boundary-invalid
+    and adds noise to fleet sync."""
+    if context.id == "swissknifeman":
+        return True
+    packages = context.path / "packages"
+    if not packages.is_dir():
+        return False
+    required = ("skiller", "maind", "harness")
+    return all((packages / name).is_dir() and not (packages / name).is_symlink()
+               for name in required)
+
+
 def _instruction_scope_ids(context):
     """Return root plus real, non-symlink swissknifeman package directories in catalog order."""
     from harness.instructions import SCOPES
@@ -312,6 +335,10 @@ def _instruction_run(env, config, projects, mode, dry):
             project = context.project if isinstance(context, ProjectContext) else context
             results.append(_result("instructions", project["id"], "skip", state="absent",
                                    detail="нет пути проекта"))
+            continue
+        if not _instructions_applicable(context):
+            results.append(_result("instructions", context.id, "skip", state="n-a",
+                                   detail="только umbrella-монорепо swissknifeman"))
             continue
         planned = plan_instructions(_instruction_request(context, "plan"))
         paths = tuple(action.target_path for action in (planned.artifact_plan.actions
@@ -698,6 +725,7 @@ def generate_instruction_conformance(env, output_path):
                 ("Dual-provider", {"claude-code": {"enabled": True}, "codex": {"enabled": True}})):
             root = base / label.replace(" ", "-")
             root.mkdir()
+            _seed_umbrella_layout(root)
             project = {"id": "target", "name": "Target", "type": "node-package",
                        "enabled": True, "status": "active", "local_path": str(root)}
             if selection is not None:
@@ -739,6 +767,7 @@ def generate_instruction_conformance(env, output_path):
         # managed drift/repair is proved from public harness observations; outside bytes survive.
         root = base / "repair"
         root.mkdir()
+        _seed_umbrella_layout(root)
         project = {"id": "repair", "name": "Repair", "type": "node-package", "enabled": True,
                    "status": "active", "local_path": str(root)}
         config = _conformance_config(project)
@@ -776,6 +805,7 @@ def generate_instruction_conformance(env, output_path):
         # than recreating instruction parsing or managed-boundary semantics in maind.
         contract_root = base / "instruction-contract"
         contract_root.mkdir()
+        _seed_umbrella_layout(contract_root)
         contract_project = {"id": "contract", "name": "Contract", "type": "node-package",
                             "enabled": True, "status": "active", "local_path": str(contract_root),
                             "providers": {"contract_version": "1.0.0", "selection": {
@@ -829,6 +859,7 @@ def generate_instruction_conformance(env, output_path):
         # claim that maind wrote a provider artifact.
         dual_root = base / "provisioner-matrix"
         dual_root.mkdir()
+        _seed_umbrella_layout(dual_root)
         dual = {"id": "matrix", "name": "Matrix", "type": "node-package", "enabled": True,
                 "status": "active", "local_path": str(dual_root), "providers": {
                     "contract_version": "1.0.0", "selection": {
@@ -862,6 +893,7 @@ def generate_instruction_conformance(env, output_path):
         # Onboard's public API receives a context once and passes it through to instruction sync.
         onboard_root = base / "onboard"
         onboard_root.mkdir()
+        _seed_umbrella_layout(onboard_root)
         isolated = base / "maind"
         (isolated / "config/memory").mkdir(parents=True)
         (isolated / "config/memory/iii-config.yaml").write_text("workers: []\n", encoding="utf-8")

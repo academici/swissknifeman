@@ -66,10 +66,12 @@ def _replace_codex_mcp_blocks(raw, managed, block_ids):
         raise ProviderDeployError("MAIND_CODEX_MCP_RENDER_INVALID")
     span = _codex_mcp_span(raw, block_ids)
     if span is not None:
-        return raw[:span[0]] + desired + raw[span[1]:]
-    separator = b"" if not raw or raw.endswith(b"\n\n") else (
-        b"\n" if raw.endswith(b"\n") else b"\n\n")
-    return raw + separator + desired
+        start, end = span
+        return raw[:start] + desired + raw[end:]
+    body = raw
+    if body and not body.endswith(b"\n\n"):
+        body = body + (b"\n" if body.endswith(b"\n") else b"\n\n")
+    return body + desired
 
 
 def _provider_managed_block_codecs(artifacts):

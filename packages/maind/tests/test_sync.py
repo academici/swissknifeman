@@ -17,6 +17,12 @@ from maind.mcpconfig import has_server
 from tests.fixtures import make_repo, write_maind_config
 
 
+def _ensure_umbrella_packages(project):
+    """Minimal monorepo layout so instructions provisioner applies (production: swissknifeman)."""
+    for pkg in ("skiller", "maind", "harness"):
+        (project / "packages" / pkg).mkdir(parents=True, exist_ok=True)
+
+
 def _setup(tmp):
     root, env = make_repo(tmp)
     proj = Path(tmp) / "flexcrm"
@@ -57,6 +63,30 @@ class TestManagedBlock(unittest.TestCase):
 
     def test_block_has_hash(self):
         self.assertIn("hash=", managed_block("x", self.MARK))
+
+
+class TestInstructionsApplicability(unittest.TestCase):
+    def test_consumer_project_skips_instructions_provisioner(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = _setup(tmp)
+            context = sync.contexts(env, config, config["projects"])[0]
+            self.assertFalse(sync._instructions_applicable(context))
+            rows = sync._instruction_run(env, config, [context], "auto", True)
+            self.assertEqual(rows[0]["status"], "skip")
+            self.assertEqual(rows[0]["state"], "n-a")
+
+    def test_umbrella_layout_applies_instructions(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            proj = Path(tmp) / "swissknifeman"
+            for pkg in ("skiller", "maind", "harness"):
+                (proj / "packages" / pkg).mkdir(parents=True)
+            projects = [{"id": "swissknifeman", "name": "SKM", "type": "standalone",
+                         "status": "active", "enabled": True, "local_path": str(proj)}]
+            write_maind_config(root, projects=projects)
+            config, _ = load_config(env)
+            context = sync.contexts(env, config, projects)[0]
+            self.assertTrue(sync._instructions_applicable(context))
 
 
 class TestProviderContexts(unittest.TestCase):
@@ -156,6 +186,7 @@ class TestProviderContexts(unittest.TestCase):
     def test_instruction_provisioner_uses_context_provider_ids_and_is_idempotent(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, project = _setup(tmp)
+            _ensure_umbrella_packages(project)
             config["projects"][0]["providers"] = {
                 "contract_version": "1.0.0",
                 "selection": {"claude-code": {"enabled": True}, "codex": {"enabled": True}},
@@ -166,7 +197,10 @@ class TestProviderContexts(unittest.TestCase):
                              {"claude-code", "codex"})
             self.assertTrue((project / "CLAUDE.md").is_file())
             self.assertTrue((project / "AGENTS.md").is_file())
-            for package in ("skiller", "harness", "maind", "analyst", "task"):
+            for package in ("skiller", "harness", "maind"):
+                self.assertTrue((project / "packages" / package / "CLAUDE.md").is_file())
+                self.assertTrue((project / "packages" / package / "AGENTS.md").is_file())
+            for package in ("analyst", "task"):
                 self.assertFalse((project / "packages" / package / "CLAUDE.md").exists())
                 self.assertFalse((project / "packages" / package / "AGENTS.md").exists())
             second = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
@@ -195,6 +229,7 @@ class TestProviderContexts(unittest.TestCase):
     def test_instruction_provisioner_dry_run_does_not_write(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, project = _setup(tmp)
+            _ensure_umbrella_packages(project)
             row = sync.run_sync(env, config, config["projects"], only="instructions", dry=True)[0]
             self.assertEqual(row["status"], "dry")
             self.assertFalse((project / "CLAUDE.md").exists())
@@ -202,6 +237,7 @@ class TestProviderContexts(unittest.TestCase):
     def test_instruction_repair_changes_only_managed_blocks(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, project = _setup(tmp)
+            _ensure_umbrella_packages(project)
             sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
             target = project / "CLAUDE.md"
             original = target.read_text(encoding="utf-8")

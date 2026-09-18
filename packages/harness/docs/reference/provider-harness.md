@@ -4,7 +4,7 @@
 
 `harness doctor --provider-audit [--json]` is read-only. `settings_audit.py` remains the named Claude Code checker behind `harness doctor --settings`; provider audit never universalizes Claude merge rules.
 
-Validated catalog `sha256:3417643f87ca3b22c519e360201020bc50b6a81c774bd2dd938c612fdbefb66a`: 3 profiles, 24 semantic surfaces, 8 MCP descriptors and 44 agent roles.
+Validated catalog `sha256:3417643f87ca3b22c519e360201020bc50b6a81c774bd2dd938c612fdbefb66a`: 3 profiles, 24 semantic surfaces, 7 MCP descriptors and 44 agent roles.
 
 Reports retain missing/extra and expected/actual duplicate identities. Full access is only explicit `self-host-apply` for a trusted repository; project, fleet-project and fleet-defaults selection are rejected. Secret references are value-free.
 
@@ -15,18 +15,18 @@ No live target write, activation, apply authority, MCP start, hook start or work
 | Identity | SHA-256 |
 |:--|:--|
 | source:configs/claude-code/agent-packs/role-bindings.json | `sha256:d619828f8a5ea9a6e5fff0c7f6b87940e6aaaf40c92269e2bf955c85c403614b` |
-| source:configs/claude-code/mcp/bindings.json | `sha256:669011d1fa6042f7abdb143a3761e9d84673795426cdbd3b934f54b802c8ce26` |
+| source:configs/claude-code/mcp/bindings.json | `sha256:80fcf080664a04c51bf950568b468a7acb4b3bc829866023c3708a08241089aa` |
 | source:configs/codex/config/profile-bindings.json | `sha256:9de3078c203f0cebd1a66e0f243efd96cb78a829341ed8f1faa6bc6ed0b1542e` |
 | source:configs/codex/hooks/lifecycle-context-bindings.json | `sha256:2a9dc6cf0a2b029ab9cbbc8bd1893ab6704ea9c31eb5e539c3e772aafc74adf7` |
-| source:configs/codex/mcp/bindings.json | `sha256:bd876ab14dcb1d253bb2d0b5771dc335bebc03ea1abcc8fb84718b44541aa087` |
+| source:configs/codex/mcp/bindings.json | `sha256:7cfaa92d8314f01a20d52f227a0bbda2495f11b4b508bd5376c22670a0de8772` |
 | source:configs/common/agent-packs/roles.json | `sha256:2ba25a3a8f4ef52655403b0d0655f10b1cae3a850594b16c443dc6053462ee75` |
-| source:configs/common/mcp/catalog.json | `sha256:26bddfc7f495650855ea183936aaf2d4c7ffa6e8cd91391e1a8fb25156a0842f` |
+| source:configs/common/mcp/catalog.json | `sha256:95be667cbd19a671f88d946739b7161a6ca33407429ca7d7cb0cd93f6f714419` |
 | source:configs/common/profile-catalog.json | `sha256:3417643f87ca3b22c519e360201020bc50b6a81c774bd2dd938c612fdbefb66a` |
 | source:configs/cursor/agent-packs/consumer-mapping.json | `sha256:314f0935b254c8a7e814cfa1ae476b99e373d0fffeb4de91fabf8c756708d67e` |
 | source:configs/cursor/config/profile-bindings.json | `sha256:8772a33bbdf9d5082bc12457d135e2a29c3faf945a5f8f3c11a9954695bf1594` |
 | source:configs/cursor/hooks/lifecycle-context-bindings.json | `sha256:4de2140330ad9f2dd18fa902e29b89d2e2414bb4033eaba8aef562bfe7feed81` |
-| source:configs/cursor/mcp/bindings.json | `sha256:70f8e83eaa179e26308cfbe4848429c824864e4c0e0016c520e59914aeb4b44f` |
-| render-manifest:all-provider-qualified-outputs | `sha256:a55fb989fdd209ad23b144839a7d0b28e455faba2d829e951154ef893847d72c` |
+| source:configs/cursor/mcp/bindings.json | `sha256:c4a5b15e4417cdf05da6cd6130b05890b3feca860c09cb19342754f776a218a6` |
+| render-manifest:all-provider-qualified-outputs | `sha256:923157d61f21ad2c364e635d92c1b0292329525dc45164d98373858ac7024bae` |
 
 The read-only JSON report retains every individual provider-qualified render hash; this manifest hash covers all of them deterministically.
 

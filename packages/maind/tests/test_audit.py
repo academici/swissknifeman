@@ -144,12 +144,29 @@ class AuditCase(unittest.TestCase):
                                   audit.DIMS, self.code_st)
         self.assertEqual(row["core"]["missing"], [])
 
+    def test_core_present_via_connect_core_plugin(self):
+        # connect-канал (текущий дефолт): курируемый core@ вместо general+oss-dev
+        p = _make_project(self.tmp, plugins=["core"])
+        row = audit.audit_project(self.env, {"id": "c", "local_path": str(p)},
+                                  audit.DIMS, self.code_st)
+        self.assertEqual(row["core"]["missing"], [])
+
     def test_core_partial_via_connect_buckets(self):
         # включён только general → gh-review (oss-dev) остаётся missing
         p = _make_project(self.tmp, plugins=["general"])
         row = audit.audit_project(self.env, {"id": "c", "local_path": str(p)},
                                   audit.DIMS, self.code_st)
         self.assertEqual(row["core"]["missing"], ["gh-review"])
+
+    def test_present_skills_list_lock_format(self):
+        """Brain-валт и др.: skills-lock.json::skills как list, не dict."""
+        p = _make_project(self.tmp)
+        (p / "skills-lock.json").write_text(json.dumps({
+            "skills": [{"name": "context-economy", "source": "swissknifeman"}],
+        }), encoding="utf-8")
+        row = audit.audit_project(self.env, {"id": "brain", "local_path": str(p)},
+                                  audit.DIMS, self.code_st)
+        self.assertNotIn("context-economy", row["core"]["missing"])
 
     def test_missing_path(self):
         row = audit.audit_project(self.env,

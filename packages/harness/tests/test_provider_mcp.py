@@ -51,7 +51,7 @@ class ProviderMcpCase(unittest.TestCase):
     def test_exact_common_inventory_and_independent_native_targets(self):
         catalog = load_mcp_catalog(CATALOG)
         selected = tuple(item.id for item in catalog)
-        self.assertEqual(len(catalog), 8)
+        self.assertEqual(len(catalog), 7)
         self.assertEqual({item.id for item in catalog},
                          {path.stem for path in (ROOT / "configs" / "claude-code" / "mcp").glob("*.json")
                           if path.name != "bindings.json"})
@@ -89,28 +89,19 @@ class ProviderMcpCase(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "HARNESS_MAPPING_MISSING"):
             plan_mcp_projection(catalog, provider_id=ProviderId.CLAUDE_CODE, bindings_path=CODEX_BINDINGS,
                                 selected=("context7",), trusted=True)
-        with tempfile.TemporaryDirectory() as tmp:
-            altered = Path(tmp) / "bindings.json"
-            altered.write_text(CODEX_BINDINGS.read_text(encoding="utf-8").replace("${PERPLEXITY_API_KEY}", "real-token"), encoding="utf-8")
-            with self.assertRaisesRegex(ValueError, "HARNESS_SECRET_VALUE_EXPOSED"):
-                plan_mcp_projection(catalog, provider_id=ProviderId.CODEX, bindings_path=altered,
-                                    selected=("perplexity",), trusted=True)
-
     def test_codex_projection_is_a_p2_locked_actual_consumer(self):
         catalog = load_mcp_catalog(CATALOG)
         projection = plan_mcp_projection(catalog, provider_id=ProviderId.CODEX,
                                          bindings_path=CODEX_BINDINGS,
-                                         selected=("context7", "perplexity"), trusted=True)
+                                         selected=("context7", "github"), trusted=True)
         expected = plan_mcp_artifact(projection, catalog_path=CATALOG, bindings_path=CODEX_BINDINGS)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             plan = plan_artifact_lock(root, (expected,), lock_bytes=None)
             apply_plan(root, plan)
             actual = (root / ".codex/config.toml").read_text(encoding="utf-8")
-            assert_mcp_server_ids(self, actual, {"context7", "perplexity"})
+            assert_mcp_server_ids(self, actual, {"context7", "github"})
             self.assertNotIn(".claude", actual)
-            self.assertNotIn("real-token", actual)
-            self.assertIn("${PERPLEXITY_API_KEY}", actual)
             self.assertNotIn(b"real-token", serialize_lock(plan.next_lock))
             clean = plan_artifact_lock(root, (expected,), lock_bytes=serialize_lock(plan.next_lock))
             self.assertEqual(clean.actions[0].action, ArtifactActionKind.NOOP)

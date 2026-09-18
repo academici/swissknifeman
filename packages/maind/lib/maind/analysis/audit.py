@@ -29,8 +29,10 @@ DIMS = ("mcp", "claude", "deny", "core", "pao", "settings")
 CLAUDE_MD_WARN = 200  # ориентир Anthropic (context-economy ось 1)
 CORE_SKILLS = ("context-economy", "anti-drift", "compact-responses",
                "session-handoff", "gh-review")
-# CORE может доехать ДВУМЯ каналами: vendor → физ. файлы скиллов; connect →
-# бакет-плагин включён в settings.enabledPlugins. Бакет каждого CORE-скилла:
+# Курируемый connect-плагин, несущий ровно CORE_SKILLS (зеркало skiller CORE_PLUGIN).
+CORE_PLUGIN = "core"
+# CORE может доехать ТРЕМЯ каналами: vendor → физ. файлы; connect → core@ (текущий
+# дефолт) или legacy-бакеты general/oss-dev. Бакет каждого CORE-скилла (legacy):
 CORE_SKILL_BUCKET = {
     "context-economy": "general", "anti-drift": "general",
     "compact-responses": "general", "session-handoff": "general",
@@ -85,6 +87,17 @@ def _deny_present(path):
     return False
 
 
+def _lock_skill_names(lock_skills):
+    """Имена из skills-lock.json::skills — dict {name: entry} или list [{name, ...}]."""
+    if not lock_skills:
+        return set()
+    if isinstance(lock_skills, list):
+        return {s.get("name") for s in lock_skills if s.get("name")}
+    if isinstance(lock_skills, dict):
+        return set(lock_skills.keys())
+    return set()
+
+
 def _present_skills(path):
     """Имена установленных скиллов: skills-lock.json + каталоги .claude/.ai skills."""
     names = set()
@@ -92,7 +105,7 @@ def _present_skills(path):
     if lock.is_file():
         try:
             data = json.loads(lock.read_text(encoding="utf-8"))
-            names |= set((data.get("skills") or {}).keys())
+            names |= _lock_skill_names(data.get("skills"))
         except (json.JSONDecodeError, OSError):
             pass
     for base in (path / ".claude" / "skills", path / ".ai" / "skills"):
@@ -167,9 +180,11 @@ def audit_project(env, project, dims, code_st, config=None):
     if "core" in dims:
         present = _present_skills(path)          # vendor: физ. файлы
         enabled = _enabled_buckets(path)         # connect: бакет/командные плагины
+        core_via_connect = CORE_PLUGIN in enabled
         row["core"] = {
             "missing": [s for s in CORE_SKILLS
-                        if s not in present and CORE_SKILL_BUCKET.get(s) not in enabled],
+                        if s not in present and not core_via_connect
+                        and CORE_SKILL_BUCKET.get(s) not in enabled],
             # Командные плагины (task) доезжают только connect-каналом → проверяем enabledPlugins.
             "missing_cmds": [c for c in DEFAULT_COMMAND_PLUGINS if c not in enabled],
         }

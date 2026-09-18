@@ -11,7 +11,7 @@ from maind.doctor import provider_trust_report
 from maind.health import health_report
 from maind.provision import sync
 from maind.provision.onboard import _unmet_steps
-from tests.test_sync import _setup
+from tests.test_sync import _ensure_umbrella_packages, _setup
 
 
 def _providers(config, selection):
@@ -51,6 +51,7 @@ class TestProviderProvisionConformance(unittest.TestCase):
         for _name, selection, names in cases:
             with self.subTest(case=_name), tempfile.TemporaryDirectory() as tmp:
                 env, config, root = _setup(tmp)
+                _ensure_umbrella_packages(root)
                 if selection is not None:
                     _providers(config, selection)
                 first = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")[0]
@@ -86,7 +87,8 @@ class TestProviderProvisionConformance(unittest.TestCase):
     def test_independent_provisioner_provider_matrix_is_complete_and_honest(self):
         """The oracle is test-owned, never copied from PROVISIONERS or rendered rows."""
         with tempfile.TemporaryDirectory() as tmp:
-            env, config, _root = _setup(tmp)
+            env, config, root = _setup(tmp)
+            _ensure_umbrella_packages(root)
             _providers(config, {"claude-code": {"enabled": True}, "codex": {"enabled": True}})
             context = sync.contexts(env, config, config["projects"])[0]
             repo_root = Path(__file__).resolve().parents[3]
@@ -146,6 +148,7 @@ class TestProviderProvisionConformance(unittest.TestCase):
     def test_instruction_contract_negative_matrix_and_critical_partial_gate(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, root = _setup(tmp)
+            _ensure_umbrella_packages(root)
             _providers(config, {"claude-code": {"enabled": True}, "codex": {"enabled": True}})
             context = sync.contexts(env, config, config["projects"])[0]
             from harness.instructions import (apply_instructions, load_catalog, plan_instructions,

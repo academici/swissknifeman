@@ -156,6 +156,54 @@ def retire_orphaned_codex_vendor_manifest(target, *, dry_run=False):
         return True
 
 
+_CODEX_PHYSICAL_KEEP = frozenset({"ecosystem-mcp", "ecosystem-setup"})
+
+
+def retire_orphan_codex_physical_skills(env, target, *, dry_run=False):
+    """Archive manifest-less physical copies in ``.agents/skills`` when Codex marketplace is on.
+
+    Leftovers from pre-contained-bundle connect: skills are served via
+    ``.agents/plugins/marketplace.json``; physical SKILL.md trees duplicate listing budget.
+    """
+    target = Path(target)
+    if not detect_codex_marketplace(target):
+        return False
+    skills_dir = target / ".agents" / "skills"
+    if not skills_dir.is_dir():
+        return False
+    from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock
+    lock_path = _contained_target(target, LOCK_RELATIVE_PATH)
+    owned = parse_lock(lock_path.read_bytes()).records if lock_path.is_file() else ()
+    owned_prefixes = tuple(r.target_path for r in owned)
+    targets = []
+    for entry in sorted(skills_dir.iterdir()):
+        if entry.name.startswith(".") or entry.name == MANIFEST:
+            continue
+        if entry.name in _CODEX_PHYSICAL_KEEP:
+            continue
+        if entry.is_symlink():
+            continue
+        if not entry.is_dir() or not (entry / "SKILL.md").is_file():
+            continue
+        rel = ".agents/skills/" + entry.name
+        if any(op == rel or op.startswith(rel + "/") for op in owned_prefixes):
+            continue
+        targets.append(entry)
+    if not targets:
+        return False
+    backup = _contained_target(target,
+                               ".swissknifeman/backups/legacy-codex-physical-" + uuid.uuid4().hex)
+    if dry_run:
+        print(f"[dry-run] retire {len(targets)} orphan Codex physical skill dirs; "
+              f"backup={backup}")
+        return True
+    backup.mkdir(parents=True, exist_ok=True)
+    for directory in targets:
+        shutil.move(directory, backup / directory.name)
+    print(f"retire {len(targets)} orphan Codex physical skill dirs; backup={backup}")
+    return True
+
+
 def retire_legacy_codex_vendor(env, target, *, dry_run=False):
     """Explicit connector cleanup of manifest-declared copies, with reversible backup."""
     from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock

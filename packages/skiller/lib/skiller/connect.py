@@ -327,8 +327,8 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
 
     if opts.get("cleanup_vendored"):
         from .status import (detect_raw_vendor_path, local_channel_entries,
-                             raw_vendor_overlap_dirs, registry_skill_names,
-                             remove_raw_vendor_entries)
+                             prune_orphan_managed_lock, raw_vendor_overlap_dirs,
+                             registry_skill_names, remove_raw_vendor_entries)
         raw_path = detect_raw_vendor_path(target, config)
         if raw_path:
             skills_dir = target / raw_path
@@ -350,6 +350,7 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
             elif not manifest_file.exists():
                 print(f"NOTE: raw vendor ({raw_path}) без пересечений с marketplace "
                       f"— project-specific записи сохранены")
+        prune_orphan_managed_lock(target, dry_run=dry_run)
 
     hub = opts.get("hub", False)
     if hub and not dry_run and not opts.get("native_codex"):
@@ -486,7 +487,8 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
 def cmd_connect(env, argv):
     opts = parse_flags(argv, {
         "--target": "str", "--profile": "str", "--plugins": "str",
-        "--file": "str", "--cleanup-vendored": "bool", "--cleanup-codex-vendored": "bool", "--list": "bool",
+        "--file": "str", "--cleanup-vendored": "bool", "--cleanup-codex-vendored": "bool",
+        "--cleanup-codex-physical": "bool", "--list": "bool",
         "--dry-run": "bool", "--hub": "bool", "--no-core": "bool",
         "--no-permissions": "bool", "--fix-path": "bool",
         "--native-codex": "bool", "--cleanup-codex-links": "bool",
@@ -495,7 +497,8 @@ def cmd_connect(env, argv):
         print("skiller connect [--profile P|--plugins a,b] "
               "[--file settings.json|settings.local.json] [--cleanup-vendored] "
               "[--list] [--dry-run] [--hub] [--no-core] [--no-permissions] "
-              "[--fix-path] [--native-codex] [--cleanup-codex-links]")
+              "[--cleanup-codex-vendored] [--cleanup-codex-links] [--cleanup-codex-physical] "
+              "[--fix-path] [--native-codex]")
         return
     target, _ = resolve_target(env, opts, allow_home_confirm=True)
     do_connect(env, target, opts, fix_path_drift=opts.get("fix_path", False))
@@ -505,3 +508,6 @@ def cmd_connect(env, argv):
     if opts.get("cleanup_codex_links"):
         from .update import retire_legacy_codex_links
         retire_legacy_codex_links(env, target, dry_run=opts.get("dry_run", False))
+    if opts.get("cleanup_codex_physical"):
+        from .update import retire_orphan_codex_physical_skills
+        retire_orphan_codex_physical_skills(env, target, dry_run=opts.get("dry_run", False))

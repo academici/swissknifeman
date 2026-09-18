@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **harness:** убран официальный Perplexity API MCP (`@perplexity-ai/mcp-server`,
+  `PERPLEXITY_API_KEY`) из каталога и bindings — исследование только через hub-managed
+  `perplexity-web-mcp` (maind deploy).
+- **maind:** `provider_deploy` корректно вставляет `mcp_servers` в bootstrap
+  `.codex/config.toml` (одиночный trailing `\n` больше не ломает P2 round-trip);
+  `sync` ограничивает umbrella-instructions consumer-проектам; audit учитывает
+  `core@` marketplace и list-формат `skills-lock.json`.
+- **skiller:** `prune_orphan_managed_lock` / `retire_orphan_codex_physical_skills`;
+  `connect --cleanup-codex-physical` для legacy `.agents/skills`; channel hygiene в
+  status/update.
+
+### Changed
+
+- **Экосистема:** fleet `providers.defaults` включает `cursor` (вместе с claude-code и
+  codex); `maind sync` раскатывает `.cursor/mcp.json` на все проекты.
+
 ## [0.22.1] - 2026-09-18
 
 ### Fixed

@@ -3,3 +3,15 @@
 # is owned by the DUAL-PROVIDER harness migration.
 approval_policy = "never"
 sandbox_mode = "danger-full-access"
+
+[mcp_servers.maind]
+command = "maind"
+args = ["mcp", "--scope", "project:swissknifeman"]
+
+[mcp_servers.codegraph]
+command = "uvx"
+args = ["--from", "git+https://github.com/oraios/serena@026b007bb889366283c925527e9a3bab317f66c1", "serena", "start-mcp-server", "--context", "ide-assistant", "--project", "/home/vostrikov/projects/packages/swissknifeman", "--enable-web-dashboard", "false"]
+
+[mcp_servers.perplexity]
+command = "${PERPLEXITY_WEB_MCP_BIN:-/home/vostrikov/projects/packages/perplexity-web-mcp/start.sh}"
+args = ["--pool=default"]

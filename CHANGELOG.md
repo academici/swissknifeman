@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-09-18
+
 ### Fixed
 
 - **Cursor lifecycle hooks (P0).** `harness hooks --provider cursor --safe-dirs` теперь

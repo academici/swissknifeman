@@ -205,19 +205,22 @@
           ]
         },
         "cursor": {
-          "level": "unsupported",
+          "adapter_id": "analyst.cursor-capture-reader",
+          "diagnostic": "Cursor schema=1 hook envelopes are normalized only through the named fail-closed reader",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
-              "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "claim": "Cursor schema=1 run-summary envelopes are normalized through the named reader and rejected when raw output/reason markers violate the allowlist",
+              "scope": "cursor reader normalization, redaction and schema checks",
+              "source": "packages/analyst/tests/test_provider_readers.py",
+              "verified_at": "2026-09-18"
             }
           ],
+          "level": "adapted",
           "limitations": [
-            "deferred at P0 per D1; adapter does not ship yet"
-          ],
-          "diagnostic": "cursor analytics.normalized-events at P0 level unsupported"
+            "normalizes only allowlisted Cursor schema=1 hook envelope fields",
+            "correlation key is conversation_id, persisted as normalized session_id",
+            "raw command output, prompts and transcript keys are refused fail-closed"
+          ]
         }
       }
     },
@@ -258,19 +261,21 @@
           ]
         },
         "cursor": {
-          "level": "unsupported",
+          "adapter_id": "analyst.neutral-run-report",
+          "diagnostic": "provider-neutral run-report projection is available for Cursor-origin normalized events",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
-              "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "claim": "the cursor schema=1 envelope path reaches neutral run-report through normalize -> append_event -> neutral_run_report without provider-specific fallback",
+              "scope": "cursor envelope to neutral run-report end-to-end chain",
+              "source": "packages/analyst/tests/test_provider_readers.py",
+              "verified_at": "2026-09-18"
             }
           ],
+          "level": "adapted",
           "limitations": [
-            "deferred at P0 per D1; adapter does not ship yet"
-          ],
-          "diagnostic": "cursor analytics.run-report at P0 level unsupported"
+            "requires Cursor events normalized through analyst.cursor-capture-reader",
+            "missing semantic metrics remain omitted and are never inferred as zero"
+          ]
         }
       }
     },
@@ -1143,19 +1148,22 @@
           ]
         },
         "cursor": {
-          "level": "unsupported",
+          "adapter_id": "harness.cursor.lifecycle.command-log",
+          "diagnostic": "deterministic cursor adapter captures afterShellExecution command envelopes",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
-              "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "claim": "Cursor lifecycle handler captures command_sha256, command_class, duration, sandbox and neutral outcome on afterShellExecution while omitting payload output",
+              "scope": "cursor lifecycle.command-log wire-shape and persistence checks",
+              "source": "packages/harness/tests/test_cursor_hook_render.py",
+              "verified_at": "2026-09-18"
             }
           ],
+          "level": "adapted",
           "limitations": [
-            "deferred at P0 per D1; adapter does not ship yet"
-          ],
-          "diagnostic": "cursor lifecycle.command-log at P0 level unsupported"
+            "captures only afterShellExecution payloads rendered through .cursor/hooks/lifecycle.py",
+            "correlates records by conversation_id (stored as session_id)",
+            "does not persist payload.output"
+          ]
         }
       }
     },
@@ -1592,19 +1600,22 @@
           ]
         },
         "cursor": {
-          "level": "unsupported",
+          "adapter_id": "harness.cursor.lifecycle.run-report",
+          "diagnostic": "deterministic cursor adapter captures sessionEnd reason with neutral outcome mapping",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
-              "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "claim": "Cursor lifecycle handler preserves the source reason enum and writes a neutral outcome envelope for the sessionEnd event",
+              "scope": "cursor lifecycle.run-report schema=1 envelope checks",
+              "source": "packages/harness/tests/test_cursor_hook_render.py",
+              "verified_at": "2026-09-18"
             }
           ],
+          "level": "adapted",
           "limitations": [
-            "deferred at P0 per D1; adapter does not ship yet"
-          ],
-          "diagnostic": "cursor lifecycle.run-report at P0 level unsupported"
+            "captures only documented sessionEnd fields and stores source reason under cursor.end_reason",
+            "maps reason to a neutral outcome (ok|failed|unknown) while preserving the original reason",
+            "uses conversation_id as the cross-event correlation key"
+          ]
         }
       }
     },

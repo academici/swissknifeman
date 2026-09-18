@@ -1,6 +1,6 @@
 {
   "name": "@academici/analyst",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "license": "MIT",
   "description": "analyst — continuous learning экосистемы academici: детерминированный захват уроков из прогонов Claude Code с человеком в гейте. Ядро — Python stdlib; npm нужен только для документации (VitePress).",

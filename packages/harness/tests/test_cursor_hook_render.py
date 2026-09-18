@@ -42,12 +42,13 @@ class CursorHookRenderTests(unittest.TestCase):
     def setUp(self):
         self.catalog = load_catalog(CATALOG)
 
-    def _safe_dirs_plan(self):
+    def _cursor_plan(self, *surfaces):
+        requests = tuple(LifecycleRequest(surface, True) for surface in surfaces)
         return plan_lifecycle(
             self.catalog,
             provider_id=ProviderId.CURSOR,
             trusted=True,
-            requests=(LifecycleRequest("security.safe-dirs", True),),
+            requests=requests,
             cursor_bindings_path=CURSOR_BINDINGS,
         )
 
@@ -72,7 +73,7 @@ class CursorHookRenderTests(unittest.TestCase):
         self.assertIn("command", payload)
 
     def test_render_cursor_hooks_emits_native_flat_shape_with_version(self):
-        plan = self._safe_dirs_plan()
+        plan = self._cursor_plan("security.safe-dirs")
         rendered = json.loads(render_cursor_hooks(plan))
         self.assertEqual(rendered["version"], 1)
         entry = rendered["hooks"]["beforeShellExecution"][0]
@@ -80,8 +81,27 @@ class CursorHookRenderTests(unittest.TestCase):
         self.assertNotIn("hooks", entry)
         self.assertIn("${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py", entry["command"])
 
+    def test_render_cursor_hooks_includes_p3_observability_events(self):
+        plan = self._cursor_plan(
+            "security.safe-dirs",
+            "lifecycle.command-log",
+            "lifecycle.run-report",
+        )
+        rendered = json.loads(render_cursor_hooks(plan))
+        self.assertEqual(set(rendered["hooks"]), {
+            "beforeShellExecution", "afterShellExecution", "sessionEnd",
+        })
+        by_event = {
+            event: [entry["command"].rsplit(" ", 1)[-1] for entry in entries]
+            for event, entries in rendered["hooks"].items()
+        }
+        self.assertEqual(by_event["afterShellExecution"], ["lifecycle.command-log"])
+        self.assertEqual(by_event["sessionEnd"], ["lifecycle.run-report"])
+        self.assertNotIn("failClosed", rendered["hooks"]["afterShellExecution"][0])
+        self.assertNotIn("failClosed", rendered["hooks"]["sessionEnd"][0])
+
     def test_render_is_deterministic_and_preserves_user_entries(self):
-        plan = self._safe_dirs_plan()
+        plan = self._cursor_plan("security.safe-dirs")
         existing = {
             "version": 1,
             "hooks": {
@@ -191,6 +211,56 @@ class CursorHookRenderTests(unittest.TestCase):
             outside = {**payload, "workspace_roots": [scratch], "command": "rm -rf ."}
             refused = _run_handler(handler, "security.safe-dirs", outside, env=env)
             self.assertEqual(refused.returncode, 2)
+
+    def test_handler_command_log_writes_without_output_payload_field(self):
+        with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:
+            handler = Path(scratch) / "lifecycle.py"
+            handler.write_bytes(render_cursor_hook_handler())
+            payload = {
+                "hook_event_name": "afterShellExecution",
+                "conversation_id": "conv-log",
+                "command": "git status",
+                "duration": 12.5,
+                "sandbox": False,
+                "output": "must-never-be-persisted",
+                "workspace_roots": [project],
+            }
+            result = _run_handler(handler, "lifecycle.command-log", payload)
+            self.assertEqual(result.returncode, 0)
+            records = (Path(project) / ".cursor/logs/commands.jsonl").read_text(
+                encoding="utf-8").splitlines()
+            self.assertEqual(len(records), 1)
+            entry = json.loads(records[0])
+            self.assertEqual(entry["session_id"], "conv-log")
+            self.assertEqual(entry["command_class"], "git")
+            self.assertEqual(entry["duration"], 12.5)
+            self.assertEqual(entry["sandbox"], False)
+            self.assertEqual(entry["outcome"], "observed")
+            self.assertIn("command_sha256", entry)
+            self.assertNotIn("output", entry)
+
+    def test_handler_run_report_keeps_reason_and_neutral_outcome(self):
+        with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:
+            handler = Path(scratch) / "lifecycle.py"
+            handler.write_bytes(render_cursor_hook_handler())
+            payload = {
+                "hook_event_name": "sessionEnd",
+                "conversation_id": "conv-run",
+                "session_id": "cursor-session-17",
+                "reason": "window_close",
+                "duration_ms": 777.0,
+                "final_status": "cancelled",
+                "workspace_roots": [project],
+            }
+            result = _run_handler(handler, "lifecycle.run-report", payload)
+            self.assertEqual(result.returncode, 0)
+            record = json.loads((Path(project) / ".cursor/runs/conv-run.json").read_text(
+                encoding="utf-8"))
+            self.assertEqual(record["session_id"], "conv-run")
+            self.assertEqual(record["outcome"], "unknown")
+            self.assertEqual(record["cursor"]["end_reason"], "window_close")
+            self.assertEqual(record["cursor"]["native_session_id"], "cursor-session-17")
+            self.assertEqual(record["cursor"]["duration_ms"], 777.0)
 
 
 if __name__ == "__main__":

@@ -6,8 +6,8 @@
 
 - Contract: `1.0.0`
 - Catalog: `1.0.0`
-- Canonical JSON SHA-256 (without carrier LF): `3ca982e7bf33404ce35e85fc443f4994df0b3aacf005f0d1d13178ce832b8154`
-- Carrier SHA-256 (canonical bytes plus one LF): `970f150fae57ee1caae12d2e06a13268be9679dc15e28a2f84f719054c571a3a`
+- Canonical JSON SHA-256 (without carrier LF): `15c1cc4f3b8828a146db2c16bfcef8a86f31819abf95b5edc1402be5781b22e8`
+- Carrier SHA-256 (canonical bytes plus one LF): `443ed952cda744fb5b39f76d118a56d7fbe89a3c7b15cf60258c0270c3665f18`
 - Common capabilities: `36`; Native Extensions: `0`
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
@@ -23,8 +23,8 @@ Support levels, provider bindings, limitations, evidence and diagnostics below c
 | `agent-packs.lifecycle` | adapted | adapted | adapted |
 | `agents.catalog` | adapted | adapted | adapted |
 | `analytics.legacy-migration` | adapted | unsupported | unsupported |
-| `analytics.normalized-events` | adapted | adapted | unsupported |
-| `analytics.run-report` | adapted | adapted | unsupported |
+| `analytics.normalized-events` | adapted | adapted | adapted |
+| `analytics.run-report` | adapted | adapted | adapted |
 | `command.external-research` | adapted | adapted | adapted |
 | `command.filesystem-read` | native | native | native |
 | `command.filesystem-write` | native | native | native |
@@ -40,7 +40,7 @@ Support levels, provider bindings, limitations, evidence and diagnostics below c
 | `instructions.project` | native | native | native |
 | `lifecycle.auto-approval` | adapted | native | adapted |
 | `lifecycle.changelog-gate` | adapted | adapted | unsupported |
-| `lifecycle.command-log` | adapted | adapted | unsupported |
+| `lifecycle.command-log` | adapted | adapted | adapted |
 | `lifecycle.daemon-safety` | adapted | adapted | unsupported |
 | `lifecycle.git-guardrails` | unsupported | adapted | unsupported |
 | `lifecycle.memory` | adapted | adapted | unsupported |
@@ -48,7 +48,7 @@ Support levels, provider bindings, limitations, evidence and diagnostics below c
 | `lifecycle.pack-guard` | adapted | adapted | unsupported |
 | `lifecycle.review-gate` | adapted | adapted | unsupported |
 | `lifecycle.router` | adapted | adapted | adapted |
-| `lifecycle.run-report` | adapted | adapted | unsupported |
+| `lifecycle.run-report` | adapted | adapted | adapted |
 | `lifecycle.terminal-admission` | adapted | adapted | unsupported |
 | `mcp.catalog` | adapted | adapted | native |
 | `security.safe-dirs` | adapted | adapted | adapted |
@@ -177,10 +177,10 @@ Normalize allowlisted provider evidence into the project-local append-only neutr
   Limitations: accepts only the committed Codex capture schema and evidenced semantic fields.
   Evidence: [2026-07-22] accepted P6 review and terminal implementation evidence prove named provider readers, neutral run projection and bounded legacy migration — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P6-analytics-contract-review.md` (frozen neutral analytics readers, store and migration).
 
-- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: cursor analytics.normalized-events at P0 level unsupported
-  Limitations: deferred at P0 per D1; adapter does not ship yet.
-  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+- **cursor** — `adapted`; binding: `—`; adapter: `analyst.cursor-capture-reader`.
+  Diagnostic: Cursor schema=1 hook envelopes are normalized only through the named fail-closed reader
+  Limitations: normalizes only allowlisted Cursor schema=1 hook envelope fields; correlation key is conversation_id, persisted as normalized session_id; raw command output, prompts and transcript keys are refused fail-closed.
+  Evidence: [2026-09-18] Cursor schema=1 run-summary envelopes are normalized through the named reader and rejected when raw output/reason markers violate the allowlist — `packages/analyst/tests/test_provider_readers.py` (cursor reader normalization, redaction and schema checks).
 
 ### `analytics.run-report`
 
@@ -196,10 +196,10 @@ Build a deterministic one-project/session run report from normalized semantic ev
   Limitations: missing semantic evidence remains absent and is never inferred as zero.
   Evidence: [2026-07-22] accepted P6 review and terminal implementation evidence prove named provider readers, neutral run projection and bounded legacy migration — `plans/2026.07.19-DUAL-PROVIDER/artifacts/P6-analytics-contract-review.md` (frozen neutral analytics readers, store and migration).
 
-- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: cursor analytics.run-report at P0 level unsupported
-  Limitations: deferred at P0 per D1; adapter does not ship yet.
-  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+- **cursor** — `adapted`; binding: `—`; adapter: `analyst.neutral-run-report`.
+  Diagnostic: provider-neutral run-report projection is available for Cursor-origin normalized events
+  Limitations: requires Cursor events normalized through analyst.cursor-capture-reader; missing semantic metrics remain omitted and are never inferred as zero.
+  Evidence: [2026-09-18] the cursor schema=1 envelope path reaches neutral run-report through normalize -> append_event -> neutral_run_report without provider-specific fallback — `packages/analyst/tests/test_provider_readers.py` (cursor envelope to neutral run-report end-to-end chain).
 
 ### `command.external-research`
 
@@ -500,10 +500,10 @@ Record provider-native command execution evidence.
   Limitations: records only tool calls Codex exposes as `Bash`; a shell invocation routed through another tool name is out of the log; writes to a Codex-qualified log path; the Claude-side log at `~/.claude/logs/bash-commands.jsonl` is untouched.
   Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.command-log` writes one provider-qualified command-log line per matched Bash tool call and is observed as a green `surface_map` row for codex — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.command-log surface, hook-native binding on PreToolUse).
 
-- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: cursor lifecycle.command-log at P0 level unsupported
-  Limitations: deferred at P0 per D1; adapter does not ship yet.
-  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.lifecycle.command-log`.
+  Diagnostic: deterministic cursor adapter captures afterShellExecution command envelopes
+  Limitations: captures only afterShellExecution payloads rendered through .cursor/hooks/lifecycle.py; correlates records by conversation_id (stored as session_id); does not persist payload.output.
+  Evidence: [2026-09-18] Cursor lifecycle handler captures command_sha256, command_class, duration, sandbox and neutral outcome on afterShellExecution while omitting payload output — `packages/harness/tests/test_cursor_hook_render.py` (cursor lifecycle.command-log wire-shape and persistence checks).
 
 ### `lifecycle.daemon-safety`
 
@@ -652,10 +652,10 @@ Capture a provider-qualified run report at a native lifecycle boundary.
   Limitations: captures the session boundary only: the Codex transcript format is unverified, so no outcome is extracted from `transcript_path`; `reason` is currently always `other` in Codex payloads, so the report cannot distinguish end causes; outcome depth comparable to the Claude report requires the neutral analytics path (`analytics.run-report`), not this hook.
   Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.run-report` writes one provider-qualified run record per session end from the documented `SessionEnd` payload; the transcript is not parsed — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.run-report boundary capture at SessionEnd, without transcript-derived outcome extraction).
 
-- **cursor** — `unsupported`; binding: `—`; adapter: `—`.
-  Diagnostic: cursor lifecycle.run-report at P0 level unsupported
-  Limitations: deferred at P0 per D1; adapter does not ship yet.
-  Evidence: [2026-09-17] P0 committed support level per freeze §2 design freeze S1 — `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md` (cursor third provider P0 capability matrix).
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.lifecycle.run-report`.
+  Diagnostic: deterministic cursor adapter captures sessionEnd reason with neutral outcome mapping
+  Limitations: captures only documented sessionEnd fields and stores source reason under cursor.end_reason; maps reason to a neutral outcome (ok|failed|unknown) while preserving the original reason; uses conversation_id as the cross-event correlation key.
+  Evidence: [2026-09-18] Cursor lifecycle handler preserves the source reason enum and writes a neutral outcome envelope for the sessionEnd event — `packages/harness/tests/test_cursor_hook_render.py` (cursor lifecycle.run-report schema=1 envelope checks).
 
 ### `lifecycle.terminal-admission`
 

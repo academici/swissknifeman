@@ -10,7 +10,7 @@ from .io import safe_load_json
 
 
 ANALYTICS_CONTRACT_VERSION = "1.0.0"
-ANALYTICS_PROVIDER_IDS = frozenset(("claude-code", "codex"))
+ANALYTICS_PROVIDER_IDS = frozenset(("claude-code", "codex", "cursor"))
 ANALYTICS_METRICS = frozenset((
     "tools", "files", "workflows", "retrieval", "devloop", "maind", "usage", "reads", "errors",
 ))

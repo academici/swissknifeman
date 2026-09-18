@@ -42,10 +42,12 @@ def reject_sensitive(value):
 
 from .claude_code import ClaudeRunReportReader
 from .codex import CodexCaptureReader
+from .cursor import CursorCaptureReader
 
 READERS = MappingProxyType({
     ("claude-code", 2): ClaudeRunReportReader(),
     ("codex", 1): CodexCaptureReader(),
+    ("cursor", 1): CursorCaptureReader(),
 })
 
 

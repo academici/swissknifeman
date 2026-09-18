@@ -28,8 +28,10 @@ class EventEnvelopeTests(unittest.TestCase):
     def test_contract_golden_is_immutable_and_provider_qualified(self):
         claude = EventEnvelope.from_mapping(_event())
         codex = EventEnvelope.from_mapping(_event("codex"))
+        cursor = EventEnvelope.from_mapping(_event("cursor"))
         self.assertEqual(claude.metrics["tools"], 3)
         self.assertNotEqual(event_key(claude), event_key(codex))
+        self.assertNotEqual(event_key(claude), event_key(cursor))
         with self.assertRaises(TypeError):
             claude.metrics["tools"] = 4
 

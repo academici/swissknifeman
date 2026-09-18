@@ -316,14 +316,36 @@ def render_cursor_hooks(plan: LifecycleRenderPlan, *, existing_document=None) ->
 
 
 def render_cursor_hook_handler() -> bytes:
-    """Generate the Cursor safe-dirs dispatcher (beforeShellExecution only at P1)."""
+    """Generate the Cursor lifecycle dispatcher (safe-dirs + P3 observability)."""
     return b'''#!/usr/bin/env python3
-import argparse, importlib.util, json, os, re, sys
+import argparse, datetime, hashlib, importlib.util, json, os, re, shlex, sys
 from pathlib import Path
 
 _RM_HEAD_RE = re.compile(r"\\b(rm|rmdir)\\b")
-_EVENT_FIELDS = {"beforeShellExecution": ("command",)}
+_EVENT_FIELDS = {
+    "beforeShellExecution": ("command",),
+    "afterShellExecution": ("command", "duration", "sandbox"),
+    "sessionEnd": ("reason",),
+}
 _COMMON_FIELDS = ("hook_event_name", "conversation_id")
+_REASON_TO_OUTCOME = {
+    "completed": "ok",
+    "aborted": "unknown",
+    "error": "failed",
+    "window_close": "unknown",
+    "user_close": "unknown",
+}
+
+
+def _utc_now():
+    return datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+
+def _conversation_id(payload):
+    value = payload.get("conversation_id")
+    if isinstance(value, str) and value:
+        return value
+    return None
 
 
 def _payload_cwd(payload):
@@ -402,8 +424,123 @@ def _safe_dirs(payload):
         sys.exit(2)
 
 
-_HANDLERS = {"security.safe-dirs": _safe_dirs}
-_SURFACE_EVENTS = {"security.safe-dirs": "beforeShellExecution"}
+def _first_command_token(command):
+    if not isinstance(command, str) or not command.strip():
+        return None
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        return None
+    if not tokens:
+        return None
+    index = 0
+    if tokens[index] == "env":
+        index += 1
+        while index < len(tokens):
+            token = tokens[index]
+            if "=" in token and not token.startswith("-"):
+                index += 1
+                continue
+            break
+    while index < len(tokens) and tokens[index] in {"command", "builtin", "nohup", "time"}:
+        index += 1
+    if index >= len(tokens):
+        return None
+    return os.path.basename(tokens[index]) or None
+
+
+def _append_jsonl(path, payload):
+    line = json.dumps(payload, sort_keys=True, ensure_ascii=False, separators=(",", ":")) + "\\n"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(str(path), os.O_APPEND | os.O_CREAT | os.O_WRONLY, 0o600)
+    try:
+        os.write(fd, line.encode("utf-8"))
+    finally:
+        os.close(fd)
+
+
+def _command_log(payload):
+    command = payload.get("command")
+    if not isinstance(command, str) or not command:
+        return
+    duration = payload.get("duration")
+    sandbox = payload.get("sandbox")
+    conversation_id = _conversation_id(payload)
+    if (conversation_id is None
+            or not isinstance(duration, (int, float)) or isinstance(duration, bool)
+            or not isinstance(sandbox, bool)):
+        return
+    command_class = _first_command_token(command) or "unknown"
+    entry = {
+        "schema": 1,
+        "provider_id": "cursor",
+        "event_kind": "shell_execution",
+        "session_id": conversation_id,
+        "conversation_id": conversation_id,
+        "occurred_at": _utc_now(),
+        "command_sha256": "sha256:" + hashlib.sha256(command.encode("utf-8")).hexdigest(),
+        "command_class": command_class,
+        "duration": duration,
+        "sandbox": sandbox,
+        "outcome": "observed",
+    }
+    try:
+        _append_jsonl(Path(_payload_cwd(payload)) / ".cursor" / "logs" / "commands.jsonl", entry)
+    except OSError:
+        pass
+
+
+def _run_report(payload):
+    reason = payload.get("reason")
+    conversation_id = _conversation_id(payload)
+    if reason not in _REASON_TO_OUTCOME or conversation_id is None:
+        return
+    cursor = {"end_reason": reason}
+    final_status = payload.get("final_status")
+    if isinstance(final_status, str) and final_status:
+        cursor["final_status"] = final_status
+    native_session = payload.get("session_id")
+    if isinstance(native_session, str) and native_session:
+        cursor["native_session_id"] = native_session
+    duration_ms = payload.get("duration_ms")
+    if isinstance(duration_ms, (int, float)) and not isinstance(duration_ms, bool):
+        cursor["duration_ms"] = duration_ms
+    record = {
+        "schema": 1,
+        "provider_id": "cursor",
+        "session_id": conversation_id,
+        "conversation_id": conversation_id,
+        "occurred_at": _utc_now(),
+        "event_kind": "run_summary",
+        "outcome": _REASON_TO_OUTCOME[reason],
+        "metrics": {},
+        "cursor": cursor,
+    }
+    try:
+        runs = Path(_payload_cwd(payload)) / ".cursor" / "runs"
+        runs.mkdir(parents=True, exist_ok=True)
+        gitignore = runs / ".gitignore"
+        if not gitignore.exists():
+            gitignore.write_text("*\\n", encoding="utf-8")
+        target = runs / (conversation_id + ".json")
+        tmp = target.with_name(target.name + ".tmp")
+        tmp.write_text(json.dumps(record, ensure_ascii=False, sort_keys=True, indent=2) + "\\n",
+                       encoding="utf-8")
+        os.replace(tmp, target)
+    except OSError:
+        pass
+
+
+_HANDLERS = {
+    "security.safe-dirs": _safe_dirs,
+    "lifecycle.command-log": _command_log,
+    "lifecycle.run-report": _run_report,
+}
+_SURFACE_EVENTS = {
+    "security.safe-dirs": "beforeShellExecution",
+    "lifecycle.command-log": "afterShellExecution",
+    "lifecycle.run-report": "sessionEnd",
+}
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--surface", required=True)
@@ -1434,7 +1571,7 @@ def _block_codex_gates(env, target, opts):
 
 
 def _block_cursor_gates(env, target, opts):
-    """P0 Cursor seam: only security.safe-dirs is deployable."""
+    """P3 Cursor seam: safe-dirs plus command-log/run-report observability."""
     unsupported = []
     if opts["observer"]:
         unsupported.append("--observer")
@@ -1449,11 +1586,15 @@ def _block_cursor_gates(env, target, opts):
         if value and value != "off":
             unsupported.append(f"{flag} {value}")
     if unsupported:
-        die("для --provider cursor в P0 поддерживается только --safe-dirs; неподдержано: "
+        die("для --provider cursor в P3 поддерживается только --safe-dirs; неподдержано: "
             + ", ".join(unsupported))
     if not opts["safe_dirs"]:
-        die("provider cursor требует --safe-dirs (P0)")
-    block_cursor_lifecycle(env, target, surfaces=("security.safe-dirs",),
+        die("provider cursor требует --safe-dirs (P3)")
+    block_cursor_lifecycle(env, target, surfaces=(
+        "security.safe-dirs",
+        "lifecycle.command-log",
+        "lifecycle.run-report",
+    ),
                            trusted=bool(opts["trusted"]), repair=bool(opts["repair"]),
                            dry=bool(opts["dry_run"]))
 

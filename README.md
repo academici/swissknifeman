@@ -18,15 +18,15 @@
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
 ### Поддержка провайдеров (generated)
 
-Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `3ca982e7bf33404ce35e85fc443f4994df0b3aacf005f0d1d13178ce832b8154`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Подробности и операции: [provider support](docs/provider-support.md).
+Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `15c1cc4f3b8828a146db2c16bfcef8a86f31819abf95b5edc1402be5781b22e8`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Подробности и операции: [provider support](docs/provider-support.md).
 
 | Capability | Claude Code | Codex | Cursor |
 |:--|:--:|:--:|:--:|
 | `agent-packs.lifecycle` | adapted | adapted | adapted |
 | `agents.catalog` | adapted | adapted | adapted |
 | `analytics.legacy-migration` | adapted | unsupported | unsupported |
-| `analytics.normalized-events` | adapted | adapted | unsupported |
-| `analytics.run-report` | adapted | adapted | unsupported |
+| `analytics.normalized-events` | adapted | adapted | adapted |
+| `analytics.run-report` | adapted | adapted | adapted |
 | `command.external-research` | adapted | adapted | adapted |
 | `command.filesystem-read` | native | native | native |
 | `command.filesystem-write` | native | native | native |
@@ -42,7 +42,7 @@
 | `instructions.project` | native | native | native |
 | `lifecycle.auto-approval` | adapted | native | adapted |
 | `lifecycle.changelog-gate` | adapted | adapted | unsupported |
-| `lifecycle.command-log` | adapted | adapted | unsupported |
+| `lifecycle.command-log` | adapted | adapted | adapted |
 | `lifecycle.daemon-safety` | adapted | adapted | unsupported |
 | `lifecycle.git-guardrails` | unsupported | adapted | unsupported |
 | `lifecycle.memory` | adapted | adapted | unsupported |
@@ -50,7 +50,7 @@
 | `lifecycle.pack-guard` | adapted | adapted | unsupported |
 | `lifecycle.review-gate` | adapted | adapted | unsupported |
 | `lifecycle.router` | adapted | adapted | adapted |
-| `lifecycle.run-report` | adapted | adapted | unsupported |
+| `lifecycle.run-report` | adapted | adapted | adapted |
 | `lifecycle.terminal-admission` | adapted | adapted | unsupported |
 | `mcp.catalog` | adapted | adapted | native |
 | `security.safe-dirs` | adapted | adapted | adapted |

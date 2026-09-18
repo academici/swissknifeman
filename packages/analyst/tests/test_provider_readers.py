@@ -61,7 +61,19 @@ class ProviderReaderTests(unittest.TestCase):
     def test_explicit_reader_normalizes_distinct_provider_provenance(self):
         claude = normalize("claude-code", 2, {"schema": 2, "session_id": "s", "generated_at": "2026-07-22T00:00:00Z", "tools": {"total": 1}, "bash": {}}, project_id="p", raw_ref="local:c")
         codex = normalize("codex", 1, {"schema": 1, "session_id": "s", "occurred_at": "2026-07-22T00:00:00Z", "metrics": {"usage": 1}}, project_id="p", raw_ref="local:x")
-        self.assertEqual((claude["provider_id"], codex["provider_id"]), ("claude-code", "codex"))
+        cursor = normalize("cursor", 1, {
+            "schema": 1,
+            "provider_id": "cursor",
+            "session_id": "conv-1",
+            "conversation_id": "conv-1",
+            "occurred_at": "2026-09-18T00:00:00Z",
+            "event_kind": "run_summary",
+            "outcome": "unknown",
+            "metrics": {},
+            "cursor": {"end_reason": "window_close"},
+        }, project_id="p", raw_ref="local:u")
+        self.assertEqual((claude["provider_id"], codex["provider_id"], cursor["provider_id"]),
+                         ("claude-code", "codex", "cursor"))
         with self.assertRaisesRegex(ValueError, "ANALYTICS_UNKNOWN_PROVIDER"):
             normalize("other", 1, {}, project_id="p", raw_ref="local:z")
 
@@ -136,6 +148,53 @@ class ProviderReaderTests(unittest.TestCase):
             self.assertNotIn("files_changed", report)
             self.assertNotIn("bash", report)
             self.assertNotIn("workflows", report)
+
+    def test_cursor_envelope_to_neutral_run_report(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = {
+                "schema": 1,
+                "provider_id": "cursor",
+                "session_id": "conv-42",
+                "conversation_id": "conv-42",
+                "occurred_at": "2026-09-18T03:00:00Z",
+                "event_kind": "run_summary",
+                "outcome": "unknown",
+                "metrics": {},
+                "cursor": {
+                    "end_reason": "window_close",
+                    "final_status": "cancelled",
+                    "native_session_id": "cursor-session-1",
+                    "duration_ms": 3210,
+                },
+            }
+            event = normalize("cursor", 1, source, project_id="p", raw_ref="local:cursor")
+            append_event(root, event)
+            report = neutral_run_report(root, "conv-42")
+            self.assertEqual(report["session_id"], "conv-42")
+            self.assertEqual(report["metrics"], {})
+            self.assertEqual(len(report["provenance"]), 1)
+            stored = read_events(root)[0]
+            self.assertEqual(stored.provider_id, "cursor")
+            self.assertEqual(stored.outcome, "unknown")
+
+    def test_cursor_reader_rejects_output_and_bad_reason(self):
+        valid = {
+            "schema": 1,
+            "provider_id": "cursor",
+            "session_id": "conv-1",
+            "conversation_id": "conv-1",
+            "occurred_at": "2026-09-18T03:00:00Z",
+            "event_kind": "run_summary",
+            "outcome": "ok",
+            "metrics": {},
+            "cursor": {"end_reason": "completed"},
+        }
+        with self.assertRaisesRegex(ValueError, "ANALYTICS_REDACTION_FAILED"):
+            normalize("cursor", 1, dict(valid, output="secret"), project_id="p", raw_ref="local:r")
+        with self.assertRaisesRegex(ValueError, "ANALYTICS_REDACTION_FAILED"):
+            normalize("cursor", 1, {**valid, "cursor": {"end_reason": "not-documented"}},
+                      project_id="p", raw_ref="local:r")
 
 
 class DoctorRouteEvidenceTests(unittest.TestCase):

@@ -16,7 +16,9 @@
   `beforeShellExecution`); обновлена evidence-запись `security.safe-dirs` для `cursor`
   в `configs/provider-capabilities.json`.
 - **Release attestation blockers.** Закрыт `RELEASE_IMMUTABLE_TUPLE` для `harness`
-  (`packages/harness/package.json` 0.5.3) и `CMD_SOURCE_DRIFT` для `task`
+  (`packages/harness/package.json` 0.5.3), `core` (`publication-versions` 0.19.3),
+  `package.analyst` (`packages/analyst/package.json` 0.2.3) и `package.skiller`
+  (`packages/skiller/package.json` 0.17.6), а также `CMD_SOURCE_DRIFT` для `task`
   (canon-forward `0.20.3` + регенерация provider-команд через
   `render-provider-commands.py --write --repair-owned`).
 - **Cursor rules и command projections под `--check`.** `cursor_render` читает тела
@@ -36,6 +38,12 @@
   `sessionStart.additional_context`, `task:make-workflow` входит в Cursor command projection, а
   `unsupported`-строки получили явную таксономию причин (`not implemented` / `API-capped` /
   `not applicable`) в generated provider docs.
+- **Cursor lifecycle P3 (observability + analytics).** `lifecycle.command-log` и
+  `lifecycle.run-report` переведены в hook-native для Cursor:
+  `afterShellExecution` пишет только digest/class/duration/sandbox/outcome
+  (без `payload.output`), `sessionEnd` сохраняет исходный `reason` с нейтральным
+  `outcome` и корреляцией по `conversation_id`; в `packages/analyst` добавлен
+  `CursorCaptureReader` (`("cursor", 1)`) и e2e-путь `envelope -> neutral_run_report`.
 
 ## [0.21.5] - 2026-09-17
 

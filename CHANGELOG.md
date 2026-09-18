@@ -4,10 +4,19 @@
 
 ### Added
 
+- **maind:** `mcp_runtime` — host-аудит дублей Serena и тяжёлых LSP (>500 MB) в
+  `maind doctor --audit mcp`.
 - **maind:** `mcp_parity` — аудит расхождений MCP между `.mcp.json`, `.cursor/mcp.json`,
   `.codex/config.toml` и дублей в `.claude/settings*.json`; `maind sync --only mcp`
   чистит settings-дубли и при `auto` эскалирует в repair; `extra_servers` сохраняются
   в `mark_deployed`.
+
+### Changed
+
+- **Флот codegraph:** Laravel-проекты переведены на `laravel-boost` (php artisan boost:mcp)
+  вместо Serena/Intelephense; `code: false` на umbrella/agentools/perplexity-web-mcp;
+  `pre_index: false` по умолчанию; `.serena/project.yml` сужены ignores/workspace на
+  тяжёлых PHP/monorepo.
 
 ### Fixed
 

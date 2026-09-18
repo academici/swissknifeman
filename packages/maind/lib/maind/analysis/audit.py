@@ -24,6 +24,7 @@ from .. import codegraph
 from .. import pao
 from ..mcpconfig import MCP_FILES
 from ..mcp_parity import analyze as mcp_parity_analyze
+from ..mcp_runtime import runtime_summary, scan_runtime
 from ..projects import listing
 
 DIMS = ("mcp", "claude", "deny", "core", "pao", "settings")
@@ -239,9 +240,12 @@ def run_audit(env, config, dim, as_json=False):
     code_st = codegraph.settings(config)
     projs = listing(env, config)
     rows = [audit_project(env, p, dims, code_st, config) for p in projs]
+    runtime = scan_runtime() if "mcp" in dims else None
     if as_json:
-        print(json.dumps({"dims": list(dims), "projects": rows},
-                         ensure_ascii=False, indent=2))
+        payload = {"dims": list(dims), "projects": rows}
+        if runtime is not None:
+            payload["mcp_runtime"] = runtime
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
         return
     print(f"maind audit ({', '.join(dims)}) — проектов: {len(rows)}")
     if not rows:
@@ -290,3 +294,9 @@ def run_audit(env, config, dim, as_json=False):
             else:
                 parts.append(f"settings⚠(err:{st['error']} warn:{st['warn']})")
         print(f"  {r['id']:<18} " + "  ".join(parts))
+    if runtime is not None:
+        note = runtime_summary(runtime)
+        if note:
+            print(f"  [host] mcp-runtime⚠ {note}")
+        elif runtime.get("duplicates") or runtime.get("heavy"):
+            print("  [host] mcp-runtime: ok")

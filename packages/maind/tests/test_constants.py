@@ -63,7 +63,10 @@ class TestConstants(unittest.TestCase):
 
         with open(root / ".mcp.json.example", encoding="utf-8") as f:
             mcp_example = json.load(f)
-        codegraph = mcp_example["mcpServers"]["codegraph"]
+        servers = (mcp_example.get("mcpServers") or {})
+        codegraph = servers.get("codegraph") or servers.get("serena")
+        if codegraph is None:
+            return  # umbrella без codegraph — пин Serena проверяется через code_graph выше
         serena_args = codegraph["args"]
         from_idx = serena_args.index("--from")
         self.assertEqual(serena_args[from_idx + 1], c.SERENA_SRC,

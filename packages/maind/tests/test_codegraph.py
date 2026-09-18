@@ -160,7 +160,8 @@ class TestConfigDriven(unittest.TestCase):
 
     def test_pre_index_launched_when_enabled(self):
         with tempfile.TemporaryDirectory() as tmp:
-            env, config, proj, pdir = _setup(tmp, code=True)   # pre_index дефолт true
+            env, config, proj, pdir = _setup(tmp, code=True,
+                                          code_graph={"pre_index": True})
             with mock.patch.object(codegraph.shutil, "which", return_value="/u/uvx"), \
                  mock.patch.object(codegraph.subprocess, "Popen") as popen:
                 codegraph.apply_serena_config(env, config, proj, "auto", dry=False)

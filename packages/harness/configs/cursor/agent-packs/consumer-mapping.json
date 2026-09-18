@@ -1,0 +1,13 @@
+{
+  "provider_id": "cursor",
+  "mapping_version": "1.0.0",
+  "projection_owner": "claude-code",
+  "projection_consumers": [
+    "cursor"
+  ],
+  "projection_root": ".claude/agents",
+  "projection_glob": "*.md",
+  "target_template": "{pack_prefix}-{role_id}.md",
+  "create_cursor_agents": false,
+  "disconnect_policy": "preserve-shared-projection"
+}

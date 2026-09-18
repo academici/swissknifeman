@@ -101,17 +101,20 @@ _LAUNCH_DESCRIPTION = (
 
 @dataclass(frozen=True)
 class _CursorRule:
-    """One `.mdc` rule: canonical body plus the Cursor-only trigger metadata."""
+    """One `.mdc` rule: canonical body plus Cursor-specific trigger metadata."""
 
     path: str
     semantic_id: str
     frontmatter: tuple[str, ...]
     managed_block: bool
+    source_kind: str = "catalog"
 
 
-# The body of every rule is read from the instruction catalog fragment
-# `configs/common/instructions/root/cursor.md`. Only the frontmatter — which has no
-# counterpart in the catalog, because triggering is a Cursor-specific concern — lives here.
+# Rule bodies are projected from existing canons:
+# - catalog-backed instruction sections (`root.cursor.*`);
+# - observe profile policy (`_IDE_PERMISSIONS["observe"]`);
+# - command routing mapping (`packages/task/configs/command-routing.json`).
+# Only frontmatter lives directly in this table.
 _RULES = (
     _CursorRule(".cursor/rules/swissknifeman-core.mdc",
                 "root.cursor.instruction-precedence",
@@ -122,6 +125,22 @@ _RULES = (
     _CursorRule(".cursor/rules/swissknifeman-packages.mdc",
                 "root.cursor.package-scope-routing",
                 ("globs: packages/**,core/**", "alwaysApply: false"), False),
+    _CursorRule(
+        ".cursor/rules/swissknifeman-observer.mdc",
+        "cursor.context.observer.static-policy",
+        ("description: Static Cursor observer policy carrier (no sessionStart.additional_context).",
+         "alwaysApply: true"),
+        False,
+        "observer",
+    ),
+    _CursorRule(
+        ".cursor/rules/swissknifeman-router.mdc",
+        "cursor.lifecycle.router.session-scoped-static",
+        ("description: Static session-scoped Cursor routing carrier derived from command-routing.",
+         "alwaysApply: true"),
+        False,
+        "router",
+    ),
 )
 
 
@@ -169,15 +188,81 @@ def render_cursor_permissions_json(resolution: ProfileResolution, bindings_path:
 
 
 def _render_rule(rule: _CursorRule, root: Path | None) -> bytes:
-    body = fragment_section("root", ProviderId.CURSOR.value, rule.semantic_id, root=root)
-    ids = (rule.semantic_id,)
-    if rule.managed_block:
-        section = semantic_block("root", ProviderId.CURSOR.value, "extension", body, ids)
+    if rule.source_kind == "catalog":
+        body = fragment_section("root", ProviderId.CURSOR.value, rule.semantic_id, root=root)
+        ids = (rule.semantic_id,)
+        if rule.managed_block:
+            section = semantic_block("root", ProviderId.CURSOR.value, "extension", body, ids)
+        else:
+            section = (f"<!-- semantic:{rule.semantic_id} -->\n"
+                       + body.rstrip() + "\n").encode("utf-8")
+    elif rule.source_kind == "observer":
+        section = _observer_rule_section(rule.semantic_id)
+    elif rule.source_kind == "router":
+        section = _router_rule_section(rule.semantic_id, root)
     else:
-        section = (f"<!-- semantic:{rule.semantic_id} -->\n"
-                   + body.rstrip() + "\n").encode("utf-8")
+        raise ValueError("HARNESS_MAPPING_MISSING")
     frontmatter = "---\n" + "".join(f"{line}\n" for line in rule.frontmatter) + "---\n"
     return frontmatter.encode("utf-8") + section
+
+
+def _observer_rule_section(semantic_id: str) -> bytes:
+    block = _IDE_PERMISSIONS["observe"]["autoRun"]["block_instructions"][0]
+    text = (
+        f"<!-- semantic:{semantic_id} -->\n"
+        "## Cursor observer policy (static)\n\n"
+        "This managed rule is the observer carrier for Cursor sessions.\n"
+        "It is static and always-on; do not depend on `sessionStart.additional_context`.\n\n"
+        f"- {block}\n"
+        "- Treat write/install/migration/release requests as out of scope for observe mode.\n"
+        "- If mutation is required, request an explicit profile switch before continuing.\n"
+    )
+    return text.encode("utf-8")
+
+
+def _router_rule_section(semantic_id: str, root: Path | None) -> bytes:
+    routing = _cursor_routing_catalog(root)
+    commands = routing["commands"]
+    cursor_mapping = routing["mappings"]["cursor"]
+    class_selectors = cursor_mapping["class_selectors"]
+    fixed = {name: [] for name in ("economy", "implementation", "frontier")}
+    for command in commands:
+        route = command.get("routing", {})
+        if route.get("mode") != "fixed":
+            continue
+        model_class = route.get("model_class")
+        if model_class in fixed:
+            fixed[model_class].append(command["command_id"])
+    classes = ", ".join(
+        f"{name}={class_selectors[name][0]}" for name in ("economy", "implementation", "frontier")
+    )
+    fixed_rows = "\n".join(
+        f"- Fixed {name} commands: {', '.join(f'`{command}`' for command in sorted(ids)) or 'none'}."
+        for name, ids in fixed.items()
+    )
+    text = (
+        f"<!-- semantic:{semantic_id} -->\n"
+        "## Cursor routing policy (session-scoped static carrier)\n\n"
+        "This managed rule is generated from `packages/task/configs/command-routing.json`.\n"
+        "The carrier is static and session-scoped; it intentionally avoids\n"
+        "`sessionStart.additional_context` and per-prompt injection claims.\n\n"
+        f"{fixed_rows}\n"
+        f"- Model selectors: {classes}.\n"
+        "- Never replace fixed frontier or fixed implementation routes with `auto`.\n"
+    )
+    return text.encode("utf-8")
+
+
+def _cursor_routing_catalog(root: Path | None) -> dict:
+    repo_root = Path(root) if root is not None else Path(__file__).resolve().parents[4]
+    candidate = repo_root / "packages/task/configs/command-routing.json"
+    if not candidate.is_file():
+        candidate = Path(__file__).resolve().parents[4] / "packages/task/configs/command-routing.json"
+    value = json.loads(candidate.read_text(encoding="utf-8"))
+    if ("commands" not in value or "mappings" not in value
+            or "cursor" not in value["mappings"]):
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    return value
 
 
 def plan_cursor_rules(root: Path | None = None) -> dict[str, bytes]:
@@ -222,6 +307,8 @@ _RULE_SEMANTICS = {
     "swissknifeman-core.mdc": "root.cursor.instruction-precedence",
     "swissknifeman-launch.mdc": "root.cursor.launch-and-autonomy",
     "swissknifeman-packages.mdc": "root.cursor.package-scope-routing",
+    "swissknifeman-observer.mdc": "cursor.context.observer.static-policy",
+    "swissknifeman-router.mdc": "cursor.lifecycle.router.session-scoped-static",
 }
 
 
@@ -241,6 +328,16 @@ def assert_rule_frontmatter(path: str, content: bytes) -> None:
     elif path.endswith("swissknifeman-packages.mdc"):
         if "globs: packages/**,core/**" not in text or "alwaysApply: false" not in text:
             raise ValueError("HARNESS_CURSOR_RULE_FRONTMATTER:packages-glob")
+    elif path.endswith("swissknifeman-observer.mdc"):
+        if "alwaysApply: true" not in text or "description:" not in text:
+            raise ValueError("HARNESS_CURSOR_RULE_FRONTMATTER:observer-trigger")
+        if "globs:" in text.split("---", 2)[1]:
+            raise ValueError("HARNESS_CURSOR_RULE_FRONTMATTER:observer-has-globs")
+    elif path.endswith("swissknifeman-router.mdc"):
+        if "alwaysApply: true" not in text or "description:" not in text:
+            raise ValueError("HARNESS_CURSOR_RULE_FRONTMATTER:router-trigger")
+        if "globs:" in text.split("---", 2)[1]:
+            raise ValueError("HARNESS_CURSOR_RULE_FRONTMATTER:router-has-globs")
     else:
         raise ValueError(f"HARNESS_CURSOR_RULE_FRONTMATTER:unknown:{path}")
     expected = _RULE_SEMANTICS[Path(path).name]

@@ -15,15 +15,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from core import ArtifactActionKind, apply_plan, plan_artifact_lock, serialize_lock
-from harness.agentpacks import (agent_model_trace, compare_agent_inventory, expected_agent_inventory,
-                                load_claude_role_bindings, plan_agent_artifact, project_agent_role,
-                                semantic_agent_roles, _validate_agent_artifact_ids)
+from harness.agentpacks import (agent_model_trace, compare_agent_inventory, cursor_consumer_target,
+                                expected_agent_inventory,
+                                cursor_consumer_targets, load_claude_role_bindings,
+                                load_cursor_agent_consumer_mapping, plan_agent_artifact,
+                                project_agent_role, semantic_agent_roles, _validate_agent_artifact_ids)
 import tests.fixtures as fx
 
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "configs/common/agent-packs/roles.json"
 BINDINGS = ROOT / "configs/claude-code/agent-packs/role-bindings.json"
+CURSOR_MAPPING = ROOT / "configs/cursor/agent-packs/consumer-mapping.json"
 FORBIDDEN = re.compile(r"\.claude(?:/|\b)|(?<![\w-])/(?:task:[a-z-]+|effort|clear)\b|"
                        r"\bWorkflow\b|\bSubagentStop\b|"
                        r"(?<![\w-])(?:Read|Grep|Glob|Bash|Edit|Write)(?![\w-])")
@@ -212,6 +215,28 @@ class ProviderAgentpackCase(unittest.TestCase):
                                  common.model_class, common.activation_requirements)
         with self.assertRaisesRegex(ValueError, "agent-artifact-id-collision"):
             _validate_agent_artifact_ids((common, collision), "claude-code")
+
+    def test_cursor_consumer_mapping_resolves_every_role_without_cursor_agents_tree(self):
+        mapping = load_cursor_agent_consumer_mapping(CURSOR_MAPPING)
+        self.assertEqual(mapping.projection_owner, "claude-code")
+        self.assertFalse(mapping.create_cursor_agents)
+        targets = cursor_consumer_targets(self.roles, mapping)
+        self.assertEqual(len(targets), 44)
+        resolved = {cursor_consumer_target(role, mapping, pack_prefix=role.pack_id)
+                    for role in self.roles}
+        self.assertEqual(len(resolved), 44)
+        for _pack, _role, target in targets:
+            self.assertTrue(target.startswith(".claude/agents/"))
+            self.assertTrue(target.endswith(".md"))
+            self.assertNotIn(".cursor/agents", target)
+
+    def test_cursor_consumer_mapping_contract_requires_shared_projection_policy(self):
+        mapping = load_cursor_agent_consumer_mapping(CURSOR_MAPPING)
+        self.assertEqual(mapping.provider_id, "cursor")
+        self.assertEqual(mapping.mapping_version, "1.0.0")
+        self.assertEqual(mapping.projection_glob, "*.md")
+        self.assertEqual(mapping.disconnect_policy, "preserve-shared-projection")
+        self.assertIn("cursor", mapping.projection_consumers)
 
 
 if __name__ == "__main__":

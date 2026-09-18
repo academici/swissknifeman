@@ -18,12 +18,12 @@
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
 ### Поддержка провайдеров (generated)
 
-Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `16f93a6ce9c4161585d696b3e6c6717ea32abcdffb7f74a250ea65dc6684254f`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Подробности и операции: [provider support](docs/provider-support.md).
+Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `3ca982e7bf33404ce35e85fc443f4994df0b3aacf005f0d1d13178ce832b8154`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Подробности и операции: [provider support](docs/provider-support.md).
 
 | Capability | Claude Code | Codex | Cursor |
 |:--|:--:|:--:|:--:|
-| `agent-packs.lifecycle` | adapted | adapted | unsupported |
-| `agents.catalog` | adapted | adapted | unsupported |
+| `agent-packs.lifecycle` | adapted | adapted | adapted |
+| `agents.catalog` | adapted | adapted | adapted |
 | `analytics.legacy-migration` | adapted | unsupported | unsupported |
 | `analytics.normalized-events` | adapted | adapted | unsupported |
 | `analytics.run-report` | adapted | adapted | unsupported |
@@ -33,8 +33,8 @@
 | `command.git-read` | native | native | native |
 | `command.git-write` | native | native | native |
 | `command.subagents` | native | native | native |
-| `command.workflow-carrier` | native | adapted | unsupported |
-| `context.observer` | unsupported | native | unsupported |
+| `command.workflow-carrier` | native | adapted | adapted |
+| `context.observer` | unsupported | native | adapted |
 | `context.output-style` | native | unsupported | unsupported |
 | `context.plans-directory` | native | unsupported | unsupported |
 | `doctor.environment` | adapted | adapted | adapted |
@@ -49,7 +49,7 @@
 | `lifecycle.notification` | adapted | unsupported | unsupported |
 | `lifecycle.pack-guard` | adapted | adapted | unsupported |
 | `lifecycle.review-gate` | adapted | adapted | unsupported |
-| `lifecycle.router` | adapted | adapted | unsupported |
+| `lifecycle.router` | adapted | adapted | adapted |
 | `lifecycle.run-report` | adapted | adapted | unsupported |
 | `lifecycle.terminal-admission` | adapted | adapted | unsupported |
 | `mcp.catalog` | adapted | adapted | native |
@@ -58,6 +58,8 @@
 | `settings.permissions` | adapted | adapted | adapted |
 | `skills.repository` | native | native | native |
 | `workflows.status` | adapted | unsupported | unsupported |
+
+Unsupported reasons legend: `not implemented` (adapter/binding not shipped), `API-capped` (provider has no suitable project-scoped API), `not applicable` (intent has no provider object to migrate/read).
 <!-- END GENERATED PROVIDER CAPABILITIES -->
 
 | Что | Коротко |

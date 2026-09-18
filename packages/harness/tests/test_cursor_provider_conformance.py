@@ -39,7 +39,7 @@ class CursorProviderConformanceTests(unittest.TestCase):
         self.assertIn(b'"Shell(**)"', cli)
         self.assertNotIn(b"approvalMode", cli)
         rules = render_cursor_rules(resolution)
-        self.assertEqual(len(rules), 3)
+        self.assertEqual(len(rules), 5)
         for path, content in rules.items():
             assert_rule_frontmatter(path, content)
 
@@ -97,21 +97,44 @@ class CursorProviderConformanceTests(unittest.TestCase):
 
 
 class CursorRuleProjectionTests(unittest.TestCase):
-    """P0.6: the committed rules are a projection of the instruction catalog, not a copy."""
+    """Committed Cursor rules are generated projections, not hand-maintained copies."""
 
     def test_committed_rules_match_the_catalog(self):
         self.assertEqual(check_cursor_rules(REPO), ())
 
     def test_every_rule_body_is_quoted_from_the_fragment(self):
         fragment = (REPO / FRAGMENT).read_text(encoding="utf-8")
+        catalog_rules = {
+            ".cursor/rules/swissknifeman-core.mdc",
+            ".cursor/rules/swissknifeman-launch.mdc",
+            ".cursor/rules/swissknifeman-packages.mdc",
+        }
         for path, content in plan_cursor_rules(REPO).items():
             assert_rule_frontmatter(path, content)
+            if path not in catalog_rules:
+                continue
             body = content.decode("utf-8").split("---\n", 2)[2]
             prose = [line for line in body.splitlines()
                      if line and not line.startswith("<!--") and not line.startswith("## ")]
             self.assertTrue(prose, path)
             for line in prose:
                 self.assertIn(line, fragment, f"{path}: body is not quoted from the catalog")
+
+    def test_observer_and_router_are_static_always_apply_bindings(self):
+        import json
+
+        bindings = json.loads((PACKAGE / "configs/cursor/hooks/lifecycle-context-bindings.json")
+                              .read_text(encoding="utf-8"))
+        by_surface = {row["surface_id"]: row for row in bindings["bindings"]}
+        for surface, rule in (("context.observer", ".cursor/rules/swissknifeman-observer.mdc"),
+                              ("lifecycle.router", ".cursor/rules/swissknifeman-router.mdc")):
+            row = by_surface[surface]
+            self.assertEqual(row["support_level"], "config-native")
+            self.assertEqual(row["activation"], f"managed-rule:{rule}")
+            self.assertEqual(row["event"], "")
+            self.assertEqual(row["matcher"], "")
+            self.assertEqual(row["handler"], "")
+            self.assertEqual(row["diagnostic_code"], "")
 
     def test_editing_the_catalog_moves_the_rules(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Render the committed `.cursor/rules/*.mdc` from the instruction catalog.
+"""Render the committed `.cursor/rules/*.mdc` from canonical sources.
 
-The rule bodies are a projection of `configs/common/instructions/root/cursor.md`;
-only the Cursor-specific frontmatter lives in the renderer. These files enter the
-context of every Cursor session, so drift here is more expensive than usual.
+Catalog-backed root.cursor sections, observe policy bindings, and command-routing
+selectors are projected into static Cursor rules. These files enter the context of
+every Cursor session, so drift here is more expensive than usual.
 """
 from __future__ import annotations
 

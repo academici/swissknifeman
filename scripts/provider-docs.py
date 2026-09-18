@@ -182,6 +182,10 @@ def render_readme_block(manifest, report) -> str:
          "операции: [provider support](docs/provider-support.md)."),
         "",
         _matrix(manifest),
+        "",
+        ("Unsupported reasons legend: `not implemented` (adapter/binding not shipped), "
+         "`API-capped` (provider has no suitable project-scoped API), "
+         "`not applicable` (intent has no provider object to migrate/read)."),
         END,
     ])
 
@@ -217,6 +221,12 @@ def render_guide(manifest, report) -> bytes:
         "## Capability matrix",
         "",
         _matrix(manifest),
+        "",
+        "## Unsupported reason legend",
+        "",
+        "- `not implemented` — this release does not ship a deterministic adapter or provider binding.",
+        "- `API-capped` — provider documentation exposes no suitable project-scoped API surface.",
+        "- `not applicable` — the capability intent has no provider object to migrate/read.",
         "",
         "## Provider selection and precedence",
         "",

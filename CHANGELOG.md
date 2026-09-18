@@ -28,6 +28,14 @@
   проверяет пересечения semantic surfaces между `.cursor/hooks.json` и Claude-compat
   hooks, ловит повторные идентичные регистрации (включая D6) и помечает compat-путь
   как неуправляемый binding, зависящий от user-toggle third-party configs.
+- **Cursor lifecycle P2 (cheap adapted surfaces).** Для Cursor подняты
+  `agent-packs.lifecycle`, `agents.catalog`, `command.workflow-carrier`,
+  `context.observer`, `lifecycle.router`: роли идут как consumer-mapping на
+  `.claude/agents/*.md` (`projection_owner=claude-code`, без `.cursor/agents`), observer/router
+  публикуются статическими `.mdc` (`alwaysApply: true`) без зависимости от
+  `sessionStart.additional_context`, `task:make-workflow` входит в Cursor command projection, а
+  `unsupported`-строки получили явную таксономию причин (`not implemented` / `API-capped` /
+  `not applicable`) в generated provider docs.
 
 ## [0.21.5] - 2026-09-17
 

@@ -37,6 +37,18 @@
       "source_hash": "sha256:e141fec25699c096f86e057dca6dc5a9f1bbb5ed0cf3a2409697aeed5a82743b"
     },
     {
+      "artifact_id": "task.cursor.make.workflow.skill",
+      "path": "packages/task/adapters/cursor/skills/task-make-workflow/SKILL.md",
+      "rendered_hash": "sha256:85452beff5e949c610e0f2d8ab11db12bb3dbdaabf85607243bfd245072d4bc7",
+      "source_hash": "sha256:4e28e652c05e60c496e74f03cf399e4813a0dd208d5445bea38bb45e3d23a815"
+    },
+    {
+      "artifact_id": "task.cursor.make.workflow.runtime",
+      "path": "packages/task/adapters/cursor/skills/task-make-workflow/command.md",
+      "rendered_hash": "sha256:3e47f8e70e7228ae4f5140e79546065ff861e7c48259795605ea12c576d5b02d",
+      "source_hash": "sha256:7c91addbb4bd088db084638f087817bea088cbec6ecd1a0eafe8e8591c217d4d"
+    },
+    {
       "artifact_id": "task.cursor.plan.audit.skill",
       "path": "packages/task/adapters/cursor/skills/task-plan-audit/SKILL.md",
       "rendered_hash": "sha256:98e98d0c55ab2cc6865c91070b06431b80cff148852dc80741a44f257a720036",

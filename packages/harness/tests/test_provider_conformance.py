@@ -93,7 +93,8 @@ class ProviderConformanceTests(unittest.TestCase):
         self.assertTrue(all(f"agent:codex:{role}" in hashes for role in fixture["agent_roles"]
                             if role != "_common.orchestrator"))
         self.assertNotIn("agent:codex:_common.orchestrator", hashes)
-        self.assertEqual(len(hashes), 150)
+        self.assertIn("agent:cursor:consumer-mapping", hashes)
+        self.assertGreaterEqual(len(hashes), 153)
         expected = {(provider, surface) for provider in ("claude-code", "codex", "cursor")
                     for surface in fixture["surfaces"]}
         observed = {(row["provider"], row["surface_id"]) for row in report["surface_map"]}
@@ -106,6 +107,11 @@ class ProviderConformanceTests(unittest.TestCase):
         self.assertIn({"category": "activation", "provider": "codex",
                        "identity": "agents.catalog", "polarity": "positive",
                        "state": "supported", "diagnostic": "HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:43"},
+                      report["evidence"])
+        self.assertIn({"category": "activation", "provider": "cursor",
+                       "identity": "agents.catalog", "polarity": "positive",
+                       "state": "supported",
+                       "diagnostic": "HARNESS_CURSOR_AGENT_CONSUMER_MAPPING:44"},
                       report["evidence"])
         self.assertFalse(_map_diagnostics(
             [(row["provider"], row["surface_id"], "", "", "", "", "", "")
@@ -272,19 +278,31 @@ class ProviderConformanceTests(unittest.TestCase):
     def test_named_lifecycle_and_workflow_consumers_are_provider_qualified(self):
         surface_map = {(row["provider"], row["surface_id"]): row
                        for row in audit_package(PACKAGE).as_dict()["surface_map"]}
-        for surface_id, claude_diagnostic, codex_diagnostic, codex_state in (
-            # agent-packs.lifecycle: P2.4 closed the Codex half (bounded, role
-            # projections only) — codex-parity-verdicts-v1.md §3.12.
-            ("agent-packs.lifecycle", "HARNESS_AGENTPACK_LIFECYCLE_NAMED",
-             "HARNESS_AGENTPACK_LIFECYCLE_NAMED", "supported"),
-            ("workflows.status", "HARNESS_WORKFLOW_STATUS_NAMED",
-             "HARNESS_ACTIVATION_UNSUPPORTED:codex:workflows.status:"
-             "missing-native-codex-workflow-status-consumer", "unsupported"),
-        ):
-            self.assertEqual(surface_map[("claude-code", surface_id)]["activation_state"], "supported")
-            self.assertEqual(surface_map[("claude-code", surface_id)]["diagnostic"], claude_diagnostic)
-            self.assertEqual(surface_map[("codex", surface_id)]["activation_state"], codex_state)
-            self.assertEqual(surface_map[("codex", surface_id)]["diagnostic"], codex_diagnostic)
+        expectations = (
+            ("agent-packs.lifecycle",
+             ("supported", "HARNESS_AGENTPACK_LIFECYCLE_NAMED"),
+             ("supported", "HARNESS_AGENTPACK_LIFECYCLE_NAMED"),
+             ("supported", "HARNESS_CURSOR_AGENTPACK_CONSUMER_LIFECYCLE")),
+            ("workflows.status",
+             ("supported", "HARNESS_WORKFLOW_STATUS_NAMED"),
+             ("unsupported", "HARNESS_ACTIVATION_UNSUPPORTED:codex:workflows.status:"
+              "missing-native-codex-workflow-status-consumer"),
+             ("unsupported", "HARNESS_ACTIVATION_UNSUPPORTED:cursor:workflows.status:"
+              "missing-native-cursor-workflow-status-consumer")),
+        )
+        for surface_id, claude_expected, codex_expected, cursor_expected in expectations:
+            self.assertEqual(
+                (surface_map[("claude-code", surface_id)]["activation_state"],
+                 surface_map[("claude-code", surface_id)]["diagnostic"]),
+                claude_expected)
+            self.assertEqual(
+                (surface_map[("codex", surface_id)]["activation_state"],
+                 surface_map[("codex", surface_id)]["diagnostic"]),
+                codex_expected)
+            self.assertEqual(
+                (surface_map[("cursor", surface_id)]["activation_state"],
+                 surface_map[("cursor", surface_id)]["diagnostic"]),
+                cursor_expected)
 
 
 if __name__ == "__main__":

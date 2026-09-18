@@ -15,7 +15,8 @@ import tempfile
 from core import (ArtifactActionKind, EffectiveProvider, ProviderId, SupportLevel,
                   apply_plan, load_provider_manifest, plan_artifact_lock,
                   serialize_lock, support_for)
-from .agentpacks import (load_claude_role_bindings, plan_agent_artifact,
+from .agentpacks import (cursor_consumer_targets, load_claude_role_bindings,
+                         load_cursor_agent_consumer_mapping, plan_agent_artifact,
                          semantic_agent_roles)
 from .hooks import LifecycleRequest, plan_codex_lifecycle_artifacts, plan_lifecycle
 from .mcp import (load_mcp_catalog, plan_mcp_artifact, plan_mcp_projection,
@@ -105,6 +106,7 @@ def audited_paths(package_root: Path) -> tuple[Path, ...]:
         root / "configs/claude-code/mcp/bindings.json",
         root / "configs/codex/mcp/bindings.json",
         root / "configs/cursor/config/profile-bindings.json",
+        root / "configs/cursor/agent-packs/consumer-mapping.json",
         root / "configs/cursor/hooks/lifecycle-context-bindings.json",
         root / "configs/cursor/mcp/bindings.json",
         root / "configs/claude-code/agent-packs/role-bindings.json",
@@ -242,8 +244,18 @@ def audit_package(package_root: Path, fixture_path: Path | None = None, *,
         claude_role_bindings = (load_claude_role_bindings(
             root / "configs/claude-code/agent-packs/role-bindings.json", roles)
             if provider is ProviderId.CLAUDE_CODE else None)
-        agent_artifacts = []
-        if provider is not ProviderId.CURSOR:
+        verified_count = 0
+        if provider is ProviderId.CURSOR:
+            mapping = load_cursor_agent_consumer_mapping(
+                root / "configs/cursor/agent-packs/consumer-mapping.json")
+            consumer_targets = _verify_cursor_agent_consumer_mapping(roles, mapping)
+            verified_count = len(consumer_targets)
+            render_hashes.append(("agent:cursor:consumer-mapping",
+                                  _canonical_hash(consumer_targets)))
+            evidence.append(("activation", provider.value, "agents.catalog", "positive", "supported",
+                             f"HARNESS_CURSOR_AGENT_CONSUMER_MAPPING:{verified_count}"))
+        else:
+            agent_artifacts = []
             for role in roles:
                 try:
                     artifact = plan_agent_artifact(
@@ -265,11 +277,7 @@ def audit_package(package_root: Path, fixture_path: Path | None = None, *,
                     evidence.append(("activation", provider.value,
                                      f"role:{role.pack_id}.{role.role_id}", "positive", "supported",
                                      "HARNESS_AGENT_ACTIVATION_NATIVE"))
-        verified_count = _verify_agent_artifact_plans(provider, tuple(agent_artifacts))
-        if provider is ProviderId.CURSOR:
-            evidence.append(("activation", provider.value, "agents.catalog", "negative", "unsupported",
-                             "HARNESS_ACTIVATION_UNSUPPORTED:cursor:agents.catalog:P0"))
-        else:
+            verified_count = _verify_agent_artifact_plans(provider, tuple(agent_artifacts))
             evidence.append(("activation", provider.value, "agents.catalog", "positive", "supported",
                              f"HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:{verified_count}"))
         _append_security_evidence(catalog, provider, evidence)
@@ -360,6 +368,19 @@ def _verify_agent_artifact_plans(provider, expected):
     return len(expected)
 
 
+def _verify_cursor_agent_consumer_mapping(roles, mapping):
+    """Cursor consumer mapping must resolve every semantic role to .claude/agents/*.md."""
+    targets = cursor_consumer_targets(roles, mapping)
+    if len(targets) != len(roles):
+        raise ValueError("HARNESS_CATALOG_MISMATCH:cursor:agents:missing")
+    for _pack_id, _role_id, target in targets:
+        if not target.startswith(".claude/agents/") or not target.endswith(".md"):
+            raise ValueError("HARNESS_CATALOG_MISMATCH:cursor:agents:target")
+        if ".cursor/agents" in target:
+            raise ValueError("HARNESS_CATALOG_MISMATCH:cursor:agents:forbidden-target")
+    return targets
+
+
 def _provider_surface_rows(provider, catalog, lifecycle, mcp_plan, verified_agent_count):
     """One complete provider-qualified row per frozen semantic surface.
 
@@ -411,21 +432,29 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
             return "artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py", "supported", "HARNESS_ACTIVATION_NATIVE"
         if provider is ProviderId.CURSOR and binding.support_level == "hook-native":
             return "artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py", "supported", "HARNESS_ACTIVATION_NATIVE"
+        if provider is ProviderId.CURSOR and binding.support_level == "config-native":
+            static_rules = {
+                "context.observer": ".cursor/rules/swissknifeman-observer.mdc",
+                "lifecycle.router": ".cursor/rules/swissknifeman-router.mdc",
+            }
+            if surface_id in static_rules:
+                return (f"artifact:project:{static_rules[surface_id]}",
+                        "supported", "HARNESS_CURSOR_STATIC_RULE")
         return f"native-binding:{binding.activation}", "supported", "HARNESS_ACTIVATION_NATIVE"
     if surface_id == "mcp.catalog":
         return f"artifact:{mcp_plan.target_scope}:{mcp_plan.target_path}", "supported", "HARNESS_MCP_PROJECTION_RENDERED"
     if surface_id == "agents.catalog":
         if provider is ProviderId.CURSOR:
-            return ("non-artifact:back-compat-claude-agents-read", "unsupported",
-                    "HARNESS_ACTIVATION_UNSUPPORTED:cursor:agents.catalog:P0")
+            return (f"non-artifact:cursor-consumer-mapping:{verified_agent_count}-targets:.claude/agents/*.md",
+                    "supported", "HARNESS_CURSOR_AGENT_CONSUMER_MAPPING")
         return (f"artifact:project:{verified_agent_count}-named-agent-targets", "supported",
                 "HARNESS_AGENT_ACTIVATION_NATIVE")
     if surface_id == "agent-packs.lifecycle":
         if provider is ProviderId.CLAUDE_CODE:
             return "non-artifact:named-agent-pack-engine", "supported", "HARNESS_AGENTPACK_LIFECYCLE_NAMED"
         if provider is ProviderId.CURSOR:
-            return ("non-artifact:back-compat-claude-agents-read", "unsupported",
-                    "HARNESS_ACTIVATION_UNSUPPORTED:cursor:agent-packs.lifecycle:P0")
+            return ("non-artifact:cursor-consumer-lifecycle-shared-projection",
+                    "supported", "HARNESS_CURSOR_AGENTPACK_CONSUMER_LIFECYCLE")
         # bounded closure (codex-parity-verdicts-v1.md §3.12, P2.4): role-projection
         # lifecycle only (render/check/remove/diagnose over .codex/agents/*.toml,
         # provider-qualified lock) — Claude-runtime pack members stay excluded by name.
@@ -434,6 +463,10 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
     if surface_id == "workflows.status":
         if provider is ProviderId.CLAUDE_CODE:
             return "non-artifact:named-workflow-status", "supported", "HARNESS_WORKFLOW_STATUS_NAMED"
+        if provider is ProviderId.CURSOR:
+            return ("non-artifact:missing-native-cursor-workflow-status-consumer", "unsupported",
+                    "HARNESS_ACTIVATION_UNSUPPORTED:cursor:workflows.status:"
+                    "missing-native-cursor-workflow-status-consumer")
         return ("non-artifact:missing-native-codex-workflow-status-consumer", "unsupported",
                 "HARNESS_ACTIVATION_UNSUPPORTED:codex:workflows.status:"
                 "missing-native-codex-workflow-status-consumer")

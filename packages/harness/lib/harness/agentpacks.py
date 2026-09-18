@@ -757,12 +757,12 @@ def cmd_agent_packs(env, argv):
         print("harness agent-packs <list|render|upgrade|remove|doctor> "
               "[--pack P] [--target DIR] [--auto] [--answer K=V] "
               "[--install-only] [--allow-shell off|safe|full] [--dry-run] [--json] "
-              "[--drift [--strict]] [--provider claude-code|codex]")
+              "[--drift [--strict]] [--provider claude-code|codex|cursor]")
         return
     shell_policy = opts.get("allow_shell") or "safe"
     provider = opts.get("provider") or "claude-code"
-    if provider not in ("claude-code", "codex"):
-        die(f"--provider неизвестен: {provider} (claude-code|codex)")
+    if provider not in ("claude-code", "codex", "cursor"):
+        die(f"--provider неизвестен: {provider} (claude-code|codex|cursor)")
 
     if provider == "codex":
         if sub not in ("render", "remove", "doctor"):
@@ -782,6 +782,26 @@ def cmd_agent_packs(env, argv):
             raise SystemExit(do_codex_role_remove(env, target, opts["pack"], dry=dry))
         raise SystemExit(do_codex_role_doctor(env, target, json_out=bool(opts.get("json")),
                                               strict=bool(opts.get("strict"))))
+
+    if provider == "cursor":
+        if sub not in ("render", "remove", "doctor"):
+            die("--provider cursor не поддерживает подкоманду "
+                f"'{sub}' (consumer mapping only: render/remove/doctor)")
+        if not opts.get("target"):
+            die(f"нужен --target DIR для {sub} --provider cursor")
+        target = Path(os.path.expanduser(opts["target"])).resolve()
+        if not target.is_dir():
+            die(f"target не каталог: {target}")
+        dry = bool(opts.get("dry_run"))
+        if sub == "render":
+            raise SystemExit(do_cursor_role_render(env, target, pack=opts.get("pack"), dry=dry))
+        if sub == "remove":
+            if not opts.get("pack"):
+                die("нужен --pack P для remove --provider cursor")
+            raise SystemExit(do_cursor_role_remove(env, target, opts["pack"], dry=dry))
+        raise SystemExit(do_cursor_role_doctor(
+            env, target, json_out=bool(opts.get("json")), strict=bool(opts.get("strict")),
+            pack=opts.get("pack")))
 
     if sub == "list":
         for pk in list_packs(env):
@@ -842,8 +862,26 @@ class AgentProjection:
     diagnostic: str | None = None
 
 
+@dataclass(frozen=True)
+class CursorAgentConsumerMapping:
+    provider_id: str
+    mapping_version: str
+    projection_owner: str
+    projection_consumers: tuple[str, ...]
+    projection_root: str
+    projection_glob: str
+    target_template: str
+    create_cursor_agents: bool
+    disconnect_policy: str
+
+
 _ROLE_FIELDS = {"pack_id", "role_id", "description_lines", "content", "skills",
                 "tool_requirements", "command_ids", "model_class", "activation_requirements"}
+_CURSOR_CONSUMER_FIELDS = {
+    "provider_id", "mapping_version", "projection_owner", "projection_consumers",
+    "projection_root", "projection_glob", "target_template", "create_cursor_agents",
+    "disconnect_policy",
+}
 _COMMON_FORBIDDEN = re.compile(
     r"\.claude(?:/|\b)|(?<![\w-])/(?:task:[a-z-]+|effort|clear)\b|"
     r"\bWorkflow\b|\bSubagentStop\b|(?<![\w-])(?:Read|Grep|Glob|Bash|Edit|Write|"
@@ -1060,6 +1098,64 @@ def project_agent_role(role, provider_id, *, claude_bindings=None, pack_prefix=N
         target = target.replace("{{PACK_PREFIX}}", pack_prefix)
         rendered = rendered.replace(b"{{PACK_PREFIX}}", pack_prefix.encode("utf-8"))
     return AgentProjection(provider_id, target, rendered)
+
+
+def load_cursor_agent_consumer_mapping(path):
+    """Load and validate Cursor consumer-only mapping for shared Claude projections."""
+    value = safe_load_json(Path(path), default=None)
+    if not isinstance(value, dict) or set(value) != _CURSOR_CONSUMER_FIELDS:
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    consumers = value.get("projection_consumers")
+    if not isinstance(consumers, list) or not consumers:
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    mapping = CursorAgentConsumerMapping(
+        provider_id=value["provider_id"],
+        mapping_version=value["mapping_version"],
+        projection_owner=value["projection_owner"],
+        projection_consumers=tuple(consumers),
+        projection_root=value["projection_root"],
+        projection_glob=value["projection_glob"],
+        target_template=value["target_template"],
+        create_cursor_agents=value["create_cursor_agents"],
+        disconnect_policy=value["disconnect_policy"],
+    )
+    if (mapping.provider_id != "cursor"
+            or mapping.mapping_version != "1.0.0"
+            or mapping.projection_owner != "claude-code"
+            or "cursor" not in mapping.projection_consumers
+            or mapping.projection_root != ".claude/agents"
+            or mapping.projection_glob != "*.md"
+            or not isinstance(mapping.target_template, str)
+            or "{pack_prefix}" not in mapping.target_template
+            or "{role_id}" not in mapping.target_template
+            or mapping.create_cursor_agents
+            or mapping.disconnect_policy != "preserve-shared-projection"):
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    return mapping
+
+
+def cursor_consumer_target(role: AgentRole, mapping: CursorAgentConsumerMapping, *,
+                           pack_prefix: str) -> str:
+    name = mapping.target_template.format(pack_prefix=pack_prefix, role_id=role.role_id)
+    target = f"{mapping.projection_root}/{name}"
+    if (not target.startswith(".claude/agents/")
+            or ".cursor/agents" in target
+            or ".." in Path(target).parts):
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    return target
+
+
+def cursor_consumer_targets(roles, mapping: CursorAgentConsumerMapping, *,
+                            pack_prefix: str = "{{PACK_PREFIX}}"):
+    seen, result = set(), []
+    for role in roles:
+        target = cursor_consumer_target(role, mapping, pack_prefix=pack_prefix)
+        key = (role.pack_id, role.role_id)
+        if key in seen:
+            raise ValueError("HARNESS_CATALOG_MISMATCH")
+        seen.add(key)
+        result.append((role.pack_id, role.role_id, target))
+    return tuple(result)
 
 
 _ARTIFACT_ID_SEGMENT = re.compile(r"^[a-z][a-z0-9-]*$")
@@ -1287,3 +1383,87 @@ def do_codex_role_doctor(env, target, *, json_out=False, strict=False):
         print(f"  · {pack_id}.{role_id}: excluded — {reason}")
     print("[OK] дрейф не найден" if not drift else f"[WARN] дрейф: {len(drift)} запис(ей)")
     return 1 if drift and strict else 0
+
+
+def expected_cursor_role_consumers(env, target, mapping_path=None, catalog_path=None, *, pack=None):
+    """Resolve Cursor consumer targets over shared Claude role projections."""
+    mapping_path = mapping_path or (Path(env.root) / "configs" / "cursor" /
+                                    "agent-packs" / "consumer-mapping.json")
+    catalog_path = catalog_path or (Path(env.root) / "configs" / "common" /
+                                    "agent-packs" / "roles.json")
+    mapping = load_cursor_agent_consumer_mapping(mapping_path)
+    roles = semantic_agent_roles(catalog_path)
+    installed_packs = load_lock(target).get("packs") or {}
+    rows = []
+    for role in roles:
+        if role.pack_id not in installed_packs:
+            continue
+        if pack is not None and role.pack_id != pack:
+            continue
+        prefix = installed_packs[role.pack_id].get("answers", {}).get("PACK_PREFIX")
+        if not prefix:
+            continue
+        rows.append((role, cursor_consumer_target(role, mapping, pack_prefix=prefix)))
+    targets = [target_path for _role, target_path in rows]
+    if len(targets) != len(set(targets)):
+        raise ValueError("HARNESS_CATALOG_MISMATCH")
+    return mapping, tuple(rows)
+
+
+def do_cursor_role_render(env, target, *, pack=None, dry=False):
+    """Cursor consumer mapping is visibility-only and never writes role files."""
+    mapping, rows = expected_cursor_role_consumers(env, target, pack=pack)
+    tag = " [dry-run]" if dry else ""
+    print(f"=== agent-packs render --provider cursor → {target} ==={tag}")
+    print("  consumer-only: no .cursor/agents writer; shared .claude/agents projection is preserved")
+    missing = 0
+    for role, target_path in rows:
+        state = "visible" if (Path(target) / target_path).is_file() else "missing"
+        if state == "missing":
+            missing += 1
+        print(f"  [{state}] {role.pack_id}.{role.role_id} → {target_path}")
+    if not rows:
+        print("  нет установленных паков с role-проекцией для Cursor")
+    print(f"  projection owner: {mapping.projection_owner}; disconnect policy: {mapping.disconnect_policy}")
+    return 0 if missing == 0 else 1
+
+
+def do_cursor_role_remove(env, target, pack, *, dry=False):
+    """Removing Cursor consumer mapping never deletes shared Claude projections."""
+    _mapping, rows = expected_cursor_role_consumers(env, target, pack=pack)
+    tag = " [dry-run]" if dry else ""
+    print(f"=== agent-packs remove --provider cursor: {pack} ← {target} ==={tag}")
+    if not rows:
+        print("  нечего удалять: consumer mapping не владеет role-файлами")
+        return 0
+    print("  shared .claude/agents projection остаётся без изменений (projection_owner=claude-code)")
+    for role, target_path in rows:
+        print(f"  [preserve] {role.pack_id}.{role.role_id} → {target_path}")
+    return 0
+
+
+def do_cursor_role_doctor(env, target, *, json_out=False, strict=False, pack=None):
+    mapping, rows = expected_cursor_role_consumers(env, target, pack=pack)
+    report = []
+    for role, target_path in rows:
+        state = "visible" if (Path(target) / target_path).is_file() else "missing"
+        report.append({"pack_id": role.pack_id, "role_id": role.role_id,
+                       "target": target_path, "state": state})
+    missing = [row for row in report if row["state"] == "missing"]
+    if json_out:
+        print(json.dumps({
+            "projection_owner": mapping.projection_owner,
+            "projection_consumers": list(mapping.projection_consumers),
+            "projection_root": mapping.projection_root,
+            "disconnect_policy": mapping.disconnect_policy,
+            "rows": report,
+            "missing": len(missing),
+        }, ensure_ascii=False, indent=2))
+        return 1 if missing and strict else 0
+    print(f"=== agent-packs doctor --provider cursor → {target} ===")
+    for row in report:
+        print(f"[{row['state']}] {row['pack_id']}.{row['role_id']} → {row['target']}")
+    if not report:
+        print("нет установленных role-проекций для Cursor consumer mapping")
+    print(f"[OK] projection owner: {mapping.projection_owner}; disconnect: {mapping.disconnect_policy}")
+    return 1 if missing and strict else 0

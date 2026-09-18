@@ -184,7 +184,7 @@
       "capability_bindings": {
         "skills.repository": "native", "command.filesystem-read": "native", "command.filesystem-write": "native",
         "command.git-read": "native", "command.git-write": "native", "command.external-research": "adapted",
-        "command.subagents": "native", "command.workflow-carrier": "unsupported"
+        "command.subagents": "native", "command.workflow-carrier": "adapted"
       },
       "invocation_binding": {"template": "{command_id} {arguments}"},
       "model_inventory": {

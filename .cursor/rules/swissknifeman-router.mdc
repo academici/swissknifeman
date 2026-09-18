@@ -1,0 +1,16 @@
+---
+description: Static session-scoped Cursor routing carrier derived from command-routing.
+alwaysApply: true
+---
+<!-- semantic:cursor.lifecycle.router.session-scoped-static -->
+## Cursor routing policy (session-scoped static carrier)
+
+This managed rule is generated from `packages/task/configs/command-routing.json`.
+The carrier is static and session-scoped; it intentionally avoids
+`sessionStart.additional_context` and per-prompt injection claims.
+
+- Fixed economy commands: none.
+- Fixed implementation commands: `task:dev`, `task:fix`, `task:make-workflow`, `task:plan-close`, `task:plan-exec`.
+- Fixed frontier commands: `task:design`, `task:plan-audit`, `task:plan-design`, `task:research`, `task:review`.
+- Model selectors: economy=composer-2.5-fast, implementation=composer-2.5, frontier=claude-opus-5-thinking-high.
+- Never replace fixed frontier or fixed implementation routes with `auto`.

@@ -377,6 +377,8 @@ def mark_deployed(config, project_id, result):
         return config
     proj["deployed"] = True
     proj["deployed_at"] = now_iso()
+    prev_mcp = proj.get("mcp") or {}
+    extra_servers = prev_mcp.get("extra_servers")
     proj["mcp"] = {
         "agentmemory": "agentmemory" in result["servers"],
         "maind": "maind" in result["servers"],
@@ -386,6 +388,8 @@ def mark_deployed(config, project_id, result):
         "targets": result["targets"],
         "scope": result["scope"],
     }
+    if extra_servers:
+        proj["mcp"]["extra_servers"] = extra_servers
     provider_plan = result.get("provider_plan")
     if provider_plan is not None:
         proj["provider_deploy"] = {

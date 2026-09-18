@@ -170,15 +170,24 @@ def _result(provisioner, project_id, status, *, changed=False, state="", detail=
 def _mcp_run(env, config, projects, mode, dry):
     """MCP-серверы хаба (agent-memory + maind [+ код-граф/Serena]) в конфиги проектов."""
     from .deploy import deploy_project, mark_deployed, provider_operation_green
+    from ..mcp_parity import repair_settings_duplicates
     from ..projects import write_config
     results, applied = [], False
     for context in projects:
         p = context.project if isinstance(context, ProjectContext) else context
         provider_context = context.provider_context if isinstance(context, ProjectContext) else None
+        local = p.get("local_path")
+        if local:
+            repair_settings_duplicates(local, dry=dry)
         res = deploy_project(env, config, p, dry=dry,
                              provider_projections=(provider_context.projections
                                                    if provider_context is not None else None),
                              provider_repair=(mode == "repair"))
+        if res is not None and mode == "auto" and not dry and not provider_operation_green(res):
+            res = deploy_project(env, config, p, dry=False,
+                                 provider_projections=(provider_context.projections
+                                                       if provider_context is not None else None),
+                                 provider_repair=True)
         if res is None:
             results.append(_result("mcp", p["id"], "skip", detail="нет/нет пути проекта"))
             continue

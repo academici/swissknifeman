@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added
+
+- **maind:** `mcp_parity` — аудит расхождений MCP между `.mcp.json`, `.cursor/mcp.json`,
+  `.codex/config.toml` и дублей в `.claude/settings*.json`; `maind sync --only mcp`
+  чистит settings-дубли и при `auto` эскалирует в repair; `extra_servers` сохраняются
+  в `mark_deployed`.
+
+### Fixed
+
+- **sibintek-insiders:** `figma`, `laravel-boost` и `perplexity` объявлены в hub
+  `extra_servers` / `perplexity_web` — выровнены все provider-таргеты.
+
 ## [0.22.2] - 2026-09-18
 
 ### Fixed

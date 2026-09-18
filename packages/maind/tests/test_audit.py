@@ -137,6 +137,22 @@ class AuditCase(unittest.TestCase):
         self.assertEqual(set(row["core"]["missing"]), set(audit.CORE_SKILLS))
         self.assertEqual(row["mcp"]["servers"], [])
 
+    def test_audit_project_reports_mcp_parity(self):
+        p = _make_project(self.tmp, mcp=["maind", "figma"])
+        (p / ".cursor").mkdir(parents=True, exist_ok=True)
+        (p / ".cursor" / "mcp.json").write_text(json.dumps({
+            "mcpServers": {"maind": {}, "figma": {}}}), encoding="utf-8")
+        (p / ".codex").mkdir(exist_ok=True)
+        (p / ".codex" / "config.toml").write_text(
+            "[mcp_servers.maind]\ncommand = \"maind\"\n", encoding="utf-8")
+        (p / ".claude" / "settings.json").write_text(json.dumps({
+            "mcpServers": {"figma": {"url": "https://example.test"}}}), encoding="utf-8")
+        row = audit.audit_project(self.env, {"id": "proj", "local_path": str(p)},
+                                  ("mcp",), self.code_st, config={})
+        parity = row["mcp"]["parity"]
+        self.assertEqual(parity["settings_dup"], ["figma"])
+        self.assertTrue(any(d["only_left"] == ["figma"] for d in parity["drifts"]))
+
     def test_core_present_via_connect_buckets(self):
         # connect-канал: CORE доезжает бакет-плагинами general+oss-dev (без физ. файлов)
         p = _make_project(self.tmp, plugins=["general", "oss-dev"])

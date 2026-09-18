@@ -23,6 +23,7 @@ from pathlib import Path
 from .. import codegraph
 from .. import pao
 from ..mcpconfig import MCP_FILES
+from ..mcp_parity import analyze as mcp_parity_analyze
 from ..projects import listing
 
 DIMS = ("mcp", "claude", "deny", "core", "pao", "settings")
@@ -44,6 +45,36 @@ CORE_SKILL_BUCKET = {
 DEFAULT_COMMAND_PLUGINS = ("task",)
 # Серверы, которые maind раскатывает штатно — не кандидаты на ревизию.
 HUB_MCP = {"agentmemory", "maind"}
+
+
+def _expected_mcp_servers(env, config, project, code_st):
+    """Semantic inventory IDs the hub would deploy for this project (fail-soft)."""
+    if config is None:
+        return ()
+    try:
+        from ..provision.deploy import provider_semantic_inventory
+        rows = provider_semantic_inventory(
+            env, config, project, with_code=None, maind_server=True,
+            with_agentmemory=False)
+        return tuple(row.id for row in rows)
+    except (ValueError, KeyError, TypeError):
+        return ()
+
+
+def _mcp_parity_summary(parity):
+    parts = []
+    for drift in parity.get("drifts") or []:
+        left = drift["left"]
+        right = drift["right"]
+        if drift["only_left"]:
+            parts.append(f"{left}−{right}:{','.join(drift['only_left'])}")
+        if drift["only_right"]:
+            parts.append(f"{right}−{left}:{','.join(drift['only_right'])}")
+    if parity.get("settings_dup"):
+        parts.append("settings_dup:" + ",".join(parity["settings_dup"]))
+    if parity.get("undeclared"):
+        parts.append("undeclared:" + ",".join(parity["undeclared"]))
+    return "; ".join(parts)
 
 
 def _mcp_servers(path):
@@ -170,9 +201,12 @@ def audit_project(env, project, dims, code_st, config=None):
     row["status"] = "ok"
     if "mcp" in dims:
         servers = _mcp_servers(path)
-        known = HUB_MCP | {codegraph.server_name(project, code_st)}
+        expected = _expected_mcp_servers(env, config, project, code_st)
+        known = HUB_MCP | {codegraph.server_name(project, code_st)} | set(expected)
+        parity = mcp_parity_analyze(path, expected)
         row["mcp"] = {"servers": servers,
-                      "review": [s for s in servers if s not in known]}
+                      "review": [s for s in servers if s not in known],
+                      "parity": parity}
     if "claude" in dims:
         row["claude_md_lines"] = _claude_md_lines(path)
     if "deny" in dims:
@@ -220,8 +254,11 @@ def run_audit(env, config, dim, as_json=False):
         parts = []
         if "mcp" in dims:
             review = r["mcp"]["review"]
+            parity_note = _mcp_parity_summary(r["mcp"].get("parity") or {})
             seg = f"mcp={len(r['mcp']['servers'])}"
-            if review:
+            if parity_note:
+                seg += f"⚠(parity: {parity_note})"
+            elif review:
                 seg += f"⚠(ревизия: {', '.join(review)})"
             parts.append(seg)
         if "claude" in dims:

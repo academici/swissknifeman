@@ -351,6 +351,18 @@ class TestDeploy(unittest.TestCase):
             self.assertTrue(p["mcp"]["maind"])
             self.assertFalse(p["mcp"]["agentmemory"])   # raw-сервер выведен из деплоя
 
+    def test_mark_deployed_preserves_extra_servers(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            cfg = _config(ppath)
+            extra = {"blender": {"command": "/usr/bin/blender-mcp"}}
+            cfg["projects"][0]["mcp"] = {"extra_servers": extra}
+            res = deploy.deploy_project(env, cfg, cfg["projects"][0])
+            cfg = deploy.mark_deployed(cfg, "flexcrm", res)
+            p = get(cfg, "flexcrm")
+            self.assertEqual(p["mcp"]["extra_servers"], extra)
+
     def test_url_from_resolve_ports(self):
         # legacy raw-сервер (--with-agentmemory) несёт разрешённый URL из resolve_ports
         with tempfile.TemporaryDirectory() as tmp:

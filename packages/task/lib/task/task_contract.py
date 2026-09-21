@@ -506,7 +506,7 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
 # no fuzzy/normalized/regex match — a header outside this tuple is an unrecognized table,
 # never a guess (Implementation Rules (2)).
 _ROUTING_HEADER_CANON = "Model class/effort"
-_ROUTING_HEADER_CANDIDATES = (_ROUTING_HEADER_CANON, "Model/effort", "Model/Effort")
+_ROUTING_HEADER_CANDIDATES = (_ROUTING_HEADER_CANON,)
 _EXECUTABLE_ROUTING_COLUMNS = (
     "Batch", "Items", "Model class/effort", "Exec", "Review", "Почему",
 )

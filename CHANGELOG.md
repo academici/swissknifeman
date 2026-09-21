@@ -17,6 +17,7 @@
 
 ### Changed
 
+- **task:** выпилен переходный legacy layout v1→v2 (migration admission hold, phase-citation alias, §3 `Model/effort` back-compat, dual freshness в item-state); мёртвые ссылки на runbook миграции в docs.
 - **Корневой хаб скиллов:** `generate-hub` / `skiller connect --hub` по умолчанию пишет в `CLAUDE.md` и `AGENTS.md` только comment-stub (без приоритетов и индекса); полный блок — `--full-index`, прежняя краткая форма — `--hub-legacy-short`.
 - **Codex root instructions:** `project_common: false` — `root.*` common не проецируется в корневой `AGENTS.md` (on-demand через пакеты, скиллы и task-команды).
 - **Root instructions (rationalization P5):** `CLAUDE.md` не держит полный `root.*` dump; first-turn `claude_md` budget на umbrella checkout снижается (~2653→~757 tokens по `skiller budget --first-turn`).

@@ -262,24 +262,6 @@ def check_citation(path_token: str, suffix: str, bases: list[tuple[str, str]]) -
     return f"файл не найден ни {tried}"
 
 
-def _migrated_phase_alias(plan_dir: str, path_token: str) -> bool:
-    """Legacy phase line anchors survive v2 migration in its generated inventory.
-
-    A historical `phases/Pn.md:<line>` cannot retain a meaningful physical line
-    after P2.8 splits the monolith.  The converter preserves every original item
-    field in its immutable migration inventory; accepting this alias prevents a
-    known historical reference from being misreported as a missing file while
-    keeping ordinary unresolved citations fail-closed.
-    """
-    if not re.fullmatch(r"phases/P\d+\.md", path_token):
-        return False
-    try:
-        core = open(os.path.join(plan_dir, "plan.md"), encoding="utf-8").read()
-    except OSError:
-        return False
-    return "| Layout | v2 |" in core and os.path.isfile(
-        os.path.join(plan_dir, "artifacts", "p2-migration-inventory.json"))
-
 
 def scan_plan(plan_dir: str, known: dict[str, str], repo_root: str) -> tuple[list[Finding], int]:
     bases = resolve_bases(repo_root, plan_dir)
@@ -296,8 +278,6 @@ def scan_plan(plan_dir: str, known: dict[str, str], repo_root: str) -> tuple[lis
                     if citation in known:
                         continue
                     reason = check_citation(path_token, suffix, bases)
-                    if reason and _migrated_phase_alias(plan_dir, path_token):
-                        reason = None
                     if reason:
                         findings.append(Finding(rel_src, lineno, citation, reason))
     return findings, checked

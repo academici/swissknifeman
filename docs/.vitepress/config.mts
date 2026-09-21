@@ -222,7 +222,6 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Полный цикл', link: '/task/methodology' },
             { text: 'Структура плана', link: '/task/plan-structure' },
-            { text: 'Dry-run миграции v1 → v2', link: '/task/plan-migration-runbook' },
             { text: 'Шаблоны', link: '/task/templates' },
             { text: 'Конструктор workflow', link: '/task/workflows' },
           ],

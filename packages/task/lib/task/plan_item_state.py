@@ -159,7 +159,7 @@ def _validate(model):
     if "routing" in json.dumps(model, ensure_ascii=False).lower() or "маршрут" in json.dumps(model, ensure_ascii=False).lower():
         raise ItemStateError("слепок содержит запрещённый маршрут")
 
-def state_model(plan_dir, item_id, *, _legacy_freshness=False):
+def state_model(plan_dir, item_id):
     plan_dir = Path(plan_dir)
     if not _ITEM.fullmatch(item_id):
         raise ItemStateError("item должен иметь форму Pn.m")
@@ -180,14 +180,9 @@ def state_model(plan_dir, item_id, *, _legacy_freshness=False):
     model = {"projection_meta": {
         "projection": "item-state", "projection_version": "1.0.0",
         "source_scope": {"item": item_id, "event_types": ["attempt"], "subjects": [item_id], "ordering": "journal line ascending"},
-        "through": ({"journal_line": len(_read(journal_path).splitlines()),
-                     "ts": last.get("ts", "1970-01-01T00:00:00Z")}
-                    if _legacy_freshness else
-                    {"journal_line": last_event[0],
-                     "ts": last_event[2].get("ts", "1970-01-01T00:00:00Z")}),
-        "inputs_sha256": (plan_projection.inputs_sha256((spec_path, journal_path), root=plan_dir)
-                          if _legacy_freshness else
-                          _inputs_sha256(plan_dir, spec_path, item_id, event_rows)),
+        "through": {"journal_line": last_event[0],
+                    "ts": last_event[2].get("ts", "1970-01-01T00:00:00Z")},
+        "inputs_sha256": _inputs_sha256(plan_dir, spec_path, item_id, event_rows),
         "generated_by": {"name": "task.plan-views", "version": "1.0.0"},
     }, "state": {
         "world": {"paths": [], "commits": []},
@@ -202,9 +197,8 @@ def state_model(plan_dir, item_id, *, _legacy_freshness=False):
     _validate(model)
     return model, note, friction
 
-def _render_state(plan_dir, item_id, *, legacy_freshness=False):
-    model, note, friction = state_model(
-        plan_dir, item_id, _legacy_freshness=legacy_freshness)
+def _render_state(plan_dir, item_id):
+    model, note, friction = state_model(plan_dir, item_id)
     meta, state = model["projection_meta"], model["state"]
     block = plan_projection.metadata_block(projection=meta["projection"], projection_version=meta["projection_version"], source_scope=json.dumps(meta["source_scope"], sort_keys=True), through=json.dumps(meta["through"], sort_keys=True), inputs_sha256_value=meta["inputs_sha256"], generated_by="task plan-views state")
     result = state["position"]["last_result"]
@@ -237,15 +231,7 @@ def build_states(plan_dir, *, item_id=None, check=False, materialize_successor=T
         try:
             plan_projection.write_or_check(target, expected, check=check)
         except plan_projection.ProjectionError as exc:
-            if not check:
-                raise ItemStateError(str(exc)) from exc
-            try:
-                legacy = _render_state(plan_dir, identifier, legacy_freshness=True)
-                legacy_matches = target.read_bytes() == legacy.encode("utf-8")
-            except OSError:
-                legacy_matches = False
-            if not legacy_matches:
-                raise ItemStateError(str(exc)) from exc
+            raise ItemStateError(str(exc)) from exc
         targets.append(target)
     if not check and materialize_successor:
         from task import plan_recovery

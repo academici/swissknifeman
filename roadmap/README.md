@@ -15,6 +15,7 @@
 
 | Файл | Статус | Критерий запуска / исторический якорь |
 |:--|:--|:--|
+| [`2026.09.21-consumer-context-rollout-regression.md`](2026.09.21-consumer-context-rollout-regression.md) | 🔴 воспроизведённый field regression | Insiders после update сохранил resident hub, лишний plugin bucket, дубли local/marketplace skills и шесть optional-агентов; compact source fix `b2543bf8` не обеспечил consumer convergence. |
 | [`2026.09.17-task-final-plan-audit-and-route-coalescing.md`](2026.09.17-task-final-plan-audit-and-route-coalescing.md) | ⬜ ждёт field evidence | После полной детализации: один плановый срез с несогласованностью, неэкономичным дроблением либо потерянным незакрытым пунктом; нужны Routing, cost/context и terminal evidence. |
 | [`2026.09.17-task-batch-launch-scope-regression.md`](2026.09.17-task-batch-launch-scope-regression.md) | 🔴 воспроизведённый field regression | CoreX P6: native fresh launch был вручную сужен с B-P6-SEARCH `P6.6–P6.8` до P6.6, хотя handoff сохранял полный `plan-run` range. |
 | [`2026.09.16-SKM-PLAN-BUNDLE-ADMISSION-GAP.md`](2026.09.16-SKM-PLAN-BUNDLE-ADMISSION-GAP.md) | 🧪 source + local runtime готовы; field acceptance | Bundle preparation/admission, whole-workset Stop coverage, terminal reconciliation и run-report provenance реализованы; нужен реальный consumer batch/provider final, без fleet rollout. |

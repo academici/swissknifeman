@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-09-21
+
 ### Added
 
 - **Телеметрия codegraph:** run-report (Claude + Cursor + Codex) пишет блок `codegraph`;

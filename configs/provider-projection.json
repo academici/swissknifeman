@@ -8,7 +8,7 @@
       "command_invocation": {"style": "slash"}
     },
     "codex": {
-      "instructions": {"project_common": true},
+      "instructions": {"project_common": false},
       "route_evidence": {"adapter": "route_evidence_codex", "semantic_prefix": "$ "},
       "command_invocation": {"style": "dollar"}
     },

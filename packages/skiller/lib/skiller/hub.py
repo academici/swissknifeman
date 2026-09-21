@@ -17,8 +17,12 @@
   полная (`full`)    — цель БЕЗ нативного листинга: `--root-files GEMINI.md`
       и любые сторонние корневые файлы. Там индекс — единственный носитель
       обнаружения, он остаётся.
+  заглушка (`stub`)  — по умолчанию для `CLAUDE.md` и `AGENTS.md`: между маркерами
+      только HTML-комментарии (registry stamp + указатель на `--full-index`).
+      Скиллы и task-команды подключаются нативно; prose-хаб не дублируется.
 
 `--full-index` возвращает полную форму ВСЕМ целям одной командой (путь отката).
+`--hub-legacy-short` — прежняя краткая форма с приоритетами/поиском (без полного индекса).
 
 СВЕРКА ПЕРЕД СОКРАЩЕНИЕМ (обязательна): скилл убирается из блока, только если он
 подтверждён в нативном активном наборе проекта ДВУМЯ независимыми условиями —
@@ -44,6 +48,7 @@ HUB_END = "<!-- swissknifeman:hub:end -->"
 
 FORM_SHORT = "short"
 FORM_FULL = "full"
+FORM_STUB = "stub"
 
 CLAUDE_TARGET = "CLAUDE.md"
 BOOST_TARGET = Path(".ai") / "guidelines" / "swissknifeman-hub.md"
@@ -437,10 +442,23 @@ def _index_lines(installed, buckets_meta, title, note=""):
     return out
 
 
+def build_stub_markdown(*, reg_sha, reg_count):
+    """Comment-only hub: no resident prose; discovery stays native (plugins/skills/commands)."""
+    return "\n".join([
+        "<!-- swissknifeman hub: stub — скиллы и task-команды подключаются нативно; "
+        "индекс и правила приоритета здесь не дублируются. -->",
+        f"<!-- swissknifeman:registry sha={reg_sha} skills={reg_count} -->",
+        "<!-- Полный индекс: `skiller status` или generate-hub.sh --target <dir> --full-index. -->",
+        "",
+    ])
+
+
 def build_hub_markdown(*, installed, buckets_meta, agents, unknown_skills, reg_sha,
                        reg_count, boost_mode, form, unconfirmed=()):
     """Markdown блока в заданной ФОРМЕ. Краткая форма не печатает индекс, кроме
     скиллов, не подтверждённых нативным набором (они остаются перечисленными)."""
+    if form == FORM_STUB:
+        return build_stub_markdown(reg_sha=reg_sha, reg_count=reg_count)
     lines = ["# Swissknifeman: хаб скиллов", "",
              "<!-- Сгенерировано scripts/generate-hub.sh из реестра swissknifeman. -->",
              "<!-- НЕ редактируйте вручную: перегенерация затрёт правки. -->",
@@ -478,16 +496,21 @@ def upsert_block(out, block):
     return block
 
 
-def target_form(name, *, boost_mode=False, full_index=False):
+def target_form(name, *, boost_mode=False, full_index=False, legacy_short=False):
     """Форма блока по КАНАЛУ-ЦЕЛИ (D20). `--full-index` возвращает полную всем."""
     if full_index:
         return FORM_FULL
+    if legacy_short:
+        if boost_mode:
+            return FORM_SHORT
+        return FORM_SHORT if name in (CLAUDE_TARGET, "AGENTS.md") else FORM_FULL
     if boost_mode:
-        return FORM_SHORT  # Boost вставляет фрагмент в CLAUDE.md — канал тот же
-    return FORM_SHORT if name in (CLAUDE_TARGET, "AGENTS.md") else FORM_FULL
+        return FORM_STUB
+    return FORM_STUB if name in (CLAUDE_TARGET, "AGENTS.md") else FORM_FULL
 
 
-def run(env, target, *, dry_run=False, root_files=(), full_index=False, out=print):
+def run(env, target, *, dry_run=False, root_files=(), full_index=False, legacy_short=False,
+        out=print):
     """Сгенерировать и записать хаб. → dict со сводкой (для тестов и отчётов)."""
     target = Path(os.path.expanduser(str(target))).resolve()
     registry = registry_of(env)
@@ -514,7 +537,8 @@ def run(env, target, *, dry_run=False, root_files=(), full_index=False, out=prin
     names = installed_names(installed)
     targets = ([str(BOOST_TARGET)] if boost_mode
                else [CLAUDE_TARGET] + [f for f in root_files if f != CLAUDE_TARGET])
-    forms = {name: target_form(name, boost_mode=boost_mode, full_index=full_index)
+    forms = {name: target_form(name, boost_mode=boost_mode, full_index=full_index,
+                               legacy_short=legacy_short)
              for name in targets}
 
     if not names and channels["plugins"]:
@@ -603,6 +627,7 @@ USAGE = """generate-hub.sh — корневой «хаб» скиллов в п�
   --dry-run             ничего не писать, показать блок
   --root-files A,B      дополнительные корневые файлы (AGENTS.md,GEMINI.md)
   --full-index          полная форма (с индексом) ВСЕМ целям — путь отката
+  --hub-legacy-short    краткая форма с приоритетами (до stub по умолчанию)
 """
 
 
@@ -614,7 +639,7 @@ def main(argv=None):
         print(USAGE, file=sys.stderr)
         return 2
     root, args = argv[0], argv[1:]
-    target, dry_run, root_files, full_index = "", False, [], False
+    target, dry_run, root_files, full_index, legacy_short = "", False, [], False, False
     while args:
         arg = args.pop(0)
         if arg == "--target" and args:
@@ -623,6 +648,8 @@ def main(argv=None):
             dry_run = True
         elif arg == "--full-index":
             full_index = True
+        elif arg == "--hub-legacy-short":
+            legacy_short = True
         elif arg == "--root-files" and args:
             root_files = [f.strip() for f in args.pop(0).split(",") if f.strip()]
         elif arg in ("-h", "--help"):
@@ -639,7 +666,7 @@ def main(argv=None):
         print(f"Ошибка: каталог не найден: {target}", file=sys.stderr)
         return 1
     run(Env(root, "generate-hub"), target, dry_run=dry_run,
-        root_files=root_files, full_index=full_index)
+        root_files=root_files, full_index=full_index, legacy_short=legacy_short)
     return 0
 
 

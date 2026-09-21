@@ -93,15 +93,23 @@ class HubFormTests(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.env = make_monorepo(self.tmp.name)
 
-    def test_claude_md_gets_short_form(self):
+    def test_claude_md_gets_stub_form_by_default(self):
         proj = make_project(self.tmp.name, config={"buckets": ["php", "quality"]})
         result = run_hub(self.env, proj)
         text = (proj / "CLAUDE.md").read_text(encoding="utf-8")
-        self.assertEqual(result["forms"]["CLAUDE.md"], hub.FORM_SHORT)
+        self.assertEqual(result["forms"]["CLAUDE.md"], hub.FORM_STUB)
         self.assertNotIn(INDEX_TITLE, text)
         self.assertNotIn("- **code-style**", text)
+        self.assertNotIn("НАТИВНЫМ листингом", text)
+        self.assertIn("hub: stub", text)
+        self.assertIn("--full-index", text)
+
+    def test_claude_md_legacy_short_restores_priority_prose(self):
+        proj = make_project(self.tmp.name, config={"buckets": ["php", "quality"]})
+        result = run_hub(self.env, proj, legacy_short=True)
+        text = (proj / "CLAUDE.md").read_text(encoding="utf-8")
+        self.assertEqual(result["forms"]["CLAUDE.md"], hub.FORM_SHORT)
         self.assertIn("НАТИВНЫМ листингом", text)
-        self.assertIn("--full-index", text)  # указатель на полную форму
 
     def test_generator_wrapper_forwards_requested_root_files(self):
         proj = make_project(self.tmp.name)
@@ -115,26 +123,26 @@ class HubFormTests(unittest.TestCase):
         result = run_hub(self.env, proj, root_files=["AGENTS.md", "GEMINI.md"],
                          codex_inventory={"ok": True, "names": {"code-style"},
                                           "enabled": ["php", "quality"], "notes": []})
-        self.assertEqual(result["forms"]["AGENTS.md"], hub.FORM_SHORT)
+        self.assertEqual(result["forms"]["AGENTS.md"], hub.FORM_STUB)
         self.assertEqual(result["forms"]["GEMINI.md"], hub.FORM_FULL)
         agents_md = (proj / "AGENTS.md").read_text(encoding="utf-8")
         claude_md = (proj / "CLAUDE.md").read_text(encoding="utf-8")
         self.assertNotIn(INDEX_TITLE, agents_md)
         self.assertNotIn("- **code-style**", agents_md)
-        self.assertIn("- **test-writer**", agents_md)
+        self.assertNotIn("- **test-writer**", agents_md)
         self.assertIn(INDEX_TITLE, (proj / "GEMINI.md").read_text())
         self.assertNotIn(INDEX_TITLE, claude_md)
 
-    def test_codex_failure_keeps_every_unconfirmed_skill(self):
+    def test_codex_failure_keeps_every_unconfirmed_skill_with_legacy_short(self):
         proj = make_project(self.tmp.name, config={"buckets": ["php", "quality"]})
-        run_hub(self.env, proj, root_files=["AGENTS.md"])
+        run_hub(self.env, proj, root_files=["AGENTS.md"], legacy_short=True)
         text = (proj / "AGENTS.md").read_text()
         for name in ("code-style", "laravel-conventions", "test-writer"):
             self.assertIn("- **" + name + "**", text)
 
     def test_codex_does_not_repeat_disabled_claude_only_plugin_skills(self):
         proj = make_project(self.tmp.name, config={"buckets": ["php", "quality"]})
-        run_hub(self.env, proj, root_files=["AGENTS.md", "GEMINI.md"],
+        run_hub(self.env, proj, root_files=["AGENTS.md", "GEMINI.md"], legacy_short=True,
                 codex_inventory={"ok": True, "names": {"code-style", "laravel-conventions"},
                                  "enabled": ["php"], "notes": []})
         agents = (proj / "AGENTS.md").read_text()
@@ -146,14 +154,14 @@ class HubFormTests(unittest.TestCase):
         proj = make_project(self.tmp.name, plugins=["php"], config={"buckets": ["php"]})
         (proj / ".codex").mkdir()
         (proj / ".codex/config.toml").write_text('[plugins."quality@swissknifeman"]\nenabled = true\n')
-        run_hub(self.env, proj, root_files=["AGENTS.md"],
+        run_hub(self.env, proj, root_files=["AGENTS.md"], legacy_short=True,
                 codex_inventory={"ok": True, "names": {"code-style", "laravel-conventions"},
                                  "enabled": ["php"], "notes": []})
         self.assertIn("- **test-writer**", (proj / "AGENTS.md").read_text())
 
     def test_codex_curated_selection_does_not_expand_entire_donor_bucket(self):
         proj = make_project(self.tmp.name, config={"buckets": ["php", "quality"]})
-        run_hub(self.env, proj, root_files=["AGENTS.md"],
+        run_hub(self.env, proj, root_files=["AGENTS.md"], legacy_short=True,
                 codex_inventory={"ok": True, "names": set(), "enabled": ["curated"], "notes": []})
         text = (proj / "AGENTS.md").read_text()
         self.assertIn("- **code-style**", text)
@@ -166,7 +174,7 @@ class HubFormTests(unittest.TestCase):
         folder.mkdir(parents=True)
         (folder / hub.MANIFEST).write_text(json.dumps({"skills": [
             {"source_path": "skills/quality/test-writer"}]}))
-        run_hub(self.env, proj, root_files=["AGENTS.md"],
+        run_hub(self.env, proj, root_files=["AGENTS.md"], legacy_short=True,
                 codex_inventory={"ok": True, "names": {"code-style", "laravel-conventions"},
                                  "enabled": ["php"], "notes": []})
         self.assertIn("- **test-writer**", (proj / "AGENTS.md").read_text())
@@ -192,7 +200,7 @@ class HubFormTests(unittest.TestCase):
         result = run_hub(self.env, proj)
         out = proj / ".ai" / "guidelines" / "swissknifeman-hub.md"
         self.assertTrue(out.is_file())
-        self.assertEqual(list(result["forms"].values()), [hub.FORM_SHORT])
+        self.assertEqual(list(result["forms"].values()), [hub.FORM_STUB])
         self.assertNotIn(INDEX_TITLE, out.read_text(encoding="utf-8"))
 
     def test_stamp_present_in_both_forms(self):
@@ -223,7 +231,7 @@ class HubNativeCheckTests(unittest.TestCase):
         (manifest_dir / ".swissknifeman-manifest.json").write_text(json.dumps(
             {"skills": [{"source_path": "skills/quality/test-writer"}]}),
             encoding="utf-8")
-        result = run_hub(self.env, proj)
+        result = run_hub(self.env, proj, legacy_short=True)
         self.assertEqual(result["check"]["unconfirmed"], ["test-writer"])
         text = (proj / "CLAUDE.md").read_text(encoding="utf-8")
         self.assertIn(RESIDUAL_TITLE, text)
@@ -235,7 +243,7 @@ class HubNativeCheckTests(unittest.TestCase):
         доставлен плагином (конъюнкция двух источников)."""
         proj = make_project(self.tmp.name, plugins=["php", "quality"],
                             config={"buckets": ["php"]})
-        result = run_hub(self.env, proj)
+        result = run_hub(self.env, proj, legacy_short=True)
         self.assertNotIn("test-writer", result["check"]["confirmed"])
         self.assertIn("test-writer", result["check"]["unconfirmed"])
         self.assertIn("code-style", result["check"]["confirmed"])

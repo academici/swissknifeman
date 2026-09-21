@@ -13,7 +13,7 @@ class ProjectionCatalogTests(unittest.TestCase):
     def test_cursor_skips_common_instructions(self):
         catalog = load_projection_catalog()
         self.assertFalse(project_common_instructions(catalog, ProviderId.CURSOR))
-        self.assertTrue(project_common_instructions(catalog, ProviderId.CODEX))
+        self.assertFalse(project_common_instructions(catalog, ProviderId.CODEX))
 
     def test_route_and_command_policies(self):
         catalog = load_projection_catalog()

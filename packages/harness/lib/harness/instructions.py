@@ -977,11 +977,12 @@ def _projection(value: dict[str, object], scope: dict, provider: str, *,
     catalog = load_projection_catalog()
     projected_common_ids = (common_ids if project_common_instructions(catalog, ProviderId(provider))
                             else ())
+    common_text = (common.read_text(encoding="utf-8") if projected_common_ids else "")
     result = plan_artifact_render(ArtifactRenderRequest(
         artifact_id, sources,
         ArtifactTarget(target, ("managed-blocks", blocks)), identity, (), semantic,
         lambda _request: _managed(
-            scope_id, provider, common.read_text(encoding="utf-8"),
+            scope_id, provider, common_text,
             extension.read_text(encoding="utf-8"), projected_common_ids, extension_ids),
         contract_version="1.1.0"))
     return InstructionProjection(scope_id, provider, target, projected_common_ids,

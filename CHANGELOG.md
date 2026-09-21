@@ -17,7 +17,9 @@
 
 ### Changed
 
-- **Root instructions (rationalization P5):** `CLAUDE.md` больше не дублирует общий `root.*` contract — канон остаётся в `AGENTS.md`; first-turn `claude_md` budget на umbrella checkout снижается (~2653→~757 tokens по `skiller budget --first-turn`).
+- **Корневой хаб скиллов:** `generate-hub` / `skiller connect --hub` по умолчанию пишет в `CLAUDE.md` и `AGENTS.md` только comment-stub (без приоритетов и индекса); полный блок — `--full-index`, прежняя краткая форма — `--hub-legacy-short`.
+- **Codex root instructions:** `project_common: false` — `root.*` common не проецируется в корневой `AGENTS.md` (on-demand через пакеты, скиллы и task-команды).
+- **Root instructions (rationalization P5):** `CLAUDE.md` не держит полный `root.*` dump; first-turn `claude_md` budget на umbrella checkout снижается (~2653→~757 tokens по `skiller budget --first-turn`).
 - **Флот codegraph:** Laravel-проекты переведены на `laravel-boost` (php artisan boost:mcp)
   вместо Serena/Intelephense; `code: false` на umbrella/agentools/perplexity-web-mcp;
   `pre_index: false` по умолчанию; `.serena/project.yml` сужены ignores/workspace на

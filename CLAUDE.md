@@ -2,7 +2,7 @@
 <!-- semantic:root.common-delegated-to-agents -->
 <!-- instruction:root.common-delegated-to-agents -->
 ## root.common-delegated-to-agents
-The shared repository contract (`root.*` semantics) is authoritative in `AGENTS.md` only. Read and follow that file for ecosystem identity, layout, invariants, and validation rules. Do not treat duplicated prose in other provider roots as a second source of truth.
+The shared `root.*` contract is not resident in provider root files. Load it on demand from package `AGENTS.md` / `CLAUDE.md`, skills, and `/task:*` commands when the task needs it — do not expect a second always-on dump here.
 <!-- swissknifeman:instructions:root:claude-code:common:end -->
 <!-- swissknifeman:instructions:root:claude-code:extension:begin -->
 <!-- semantic:root.claude-code.native-surfaces -->

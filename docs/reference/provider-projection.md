@@ -18,7 +18,7 @@ route evidence, command invocation). Packages read this catalog through
 | Provider | Project common instructions | Route prefix | Invocation style |
 |:--|:--|:--|:--|
 | `claude-code` | yes | `/` | `slash` |
-| `codex` | yes | `$ ` | `dollar` |
+| `codex` | no (on-demand via packages/skills/commands) | `$ ` | `dollar` |
 | `cursor` | no (Codex-sibling) | *(empty)* | `semantic` |
 
 Adding a fourth provider means extending the JSON catalog and registering the

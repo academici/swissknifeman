@@ -49,6 +49,14 @@ safe-dirs.json
 .mcp.json.bak
 .cursor/mcp.json
 .cursor/mcp.json.bak
+# Cursor lifecycle: режимы поверхностей (как .claude/*.env.ini) — пишет `harness hooks --provider cursor`.
+.cursor/*.env.ini
+# Cursor/Codex hook runtime: tool-telemetry sidecars (harness.hooks), не коммитим.
+.cursor/state/
+.cursor/logs/
+.codex/state/
+# Запуски агентов с cwd внутри пакета (тот же sidecar, иной корень).
+packages/*/.cursor/
 
 # Генерируемые maind хук-скрипты проекта (SessionStart/SessionEnd) + их рантайм-state:
 # пишет `maind sync` из templates/health/*; лаунчер maind резолвится в самих скриптах

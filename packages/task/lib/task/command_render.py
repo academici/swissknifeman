@@ -24,7 +24,7 @@ from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_
                                   metadata_value)
 
 
-ADAPTER_VERSION = "1.0.15"
+ADAPTER_VERSION = "1.0.16"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
@@ -1504,7 +1504,8 @@ replace a lost chunk.
 Before the first product-journal mutation, capture the effective route for this exact command:
 
 ```bash
-export TASK_CODEX_ROUTE_EVIDENCE="$(PYTHONPATH="{task_root}/lib" \
+export TASK_CODEX_PLUGIN_ROOT="{task_root}"
+export TASK_CODEX_ROUTE_EVIDENCE="$(PYTHONPATH="${{TASK_CODEX_PLUGIN_ROOT}}/lib:${{TASK_CODEX_PLUGIN_ROOT}}/../.." \
   python3 -m task.route_evidence_codex capture \
   --expected-invocation '{invocation}' --expected-cwd <repo-cwd>)"
 ```

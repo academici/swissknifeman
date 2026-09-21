@@ -51,6 +51,29 @@ def _load_base_contract():
     raise AssertionError("fixture example 'routine-continuation' not found")
 
 
+class CodexInventoryRouteTests(unittest.TestCase):
+    def test_explicit_astra_is_frontier_without_ambiguous_launch_default(self):
+        from task import route_evidence_codex
+        metadata = json.loads(ROUTING_PATH.read_text())
+        self.assertEqual(metadata["mappings"]["codex"]["class_selectors"]["frontier"],
+                         ["gpt-5.6-sol"])
+        self.assertEqual(route_evidence_codex._selector_class("gpt-6-astra", ROUTING_PATH),
+                         "frontier")
+        with self.assertRaises(re.RouteEvidenceError):
+            route_evidence_codex._selector_class("unlisted-model", ROUTING_PATH)
+
+    def test_ambiguous_inventory_roles_fail_closed(self):
+        from task import route_evidence_codex
+        metadata = json.loads(ROUTING_PATH.read_text())
+        metadata["mappings"]["codex"]["model_inventory"]["entries"].append(
+            {"id": "ambiguous-model", "roles": ["implementation", "frontier"]})
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "routing.json"
+            path.write_text(json.dumps(metadata))
+            with self.assertRaises(re.RouteEvidenceError):
+                route_evidence_codex._selector_class("ambiguous-model", path)
+
+
 class RequiredRouteTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

@@ -128,14 +128,12 @@ CODE_GRAPH_DEFAULTS = {
 #              "per-project"       → пул = id проекта (свой логин на проект);
 #              "per-namespace"     → пул = "ns-<namespace>" (логин на группу);
 #              per-project override — `perplexity_web_pool: "<имя>"`;
-#   bin      — fallback-путь к start.sh пакета (machine-specific → живёт в хаб-конфиге,
-#              НЕ в коде); оборачивается индирекцией `${PERPLEXITY_WEB_MCP_BIN:-<bin>}`,
-#              как `${MAIND_BIN:-maind}` — переносимо между машинами/CI.
+#   bin      — machine-local путь к start.sh пакета (живёт в хаб-конфиге, НЕ в коде).
+#              MCP-клиенты запускают команду напрямую и не раскрывают shell-подстановки.
 PERPLEXITY_WEB_DEFAULTS = {
     "enabled": False,
     "pool": "default",
     "bin": "",
-    "env_var": "PERPLEXITY_WEB_MCP_BIN",
     "server_name": "perplexity-web",
 }
 

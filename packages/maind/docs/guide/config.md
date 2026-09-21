@@ -140,7 +140,7 @@ Keyless-мост **perplexity-web** (отдельный Node-пакет, пои�
   "perplexity_web": {
     "enabled": true,                     // глобальный фан-аут на все проекты
     "pool": "default",                   // модель пулов браузера (см. ниже)
-    "bin": "/abs/path/to/perplexity-web-mcp/start.sh"  // fallback-путь к start.sh
+    "bin": "/abs/path/to/perplexity-web-mcp/start.sh"  // путь к исполняемому start.sh
   }
 }
 ```
@@ -156,9 +156,10 @@ Keyless-мост **perplexity-web** (отдельный Node-пакет, пои�
 | `"per-project"` | `<id проекта>` | по логину на проект |
 
 Per-project override: `projects[].perplexity_web` (`true`/`false` — форс вкл/выкл) и
-`projects[].perplexity_web_pool` (литеральное имя пула). Команда пишется через индирекцию
-`${PERPLEXITY_WEB_MCP_BIN:-<bin>}` (как `${MAIND_BIN:-maind}`) — переносимо между машинами/CI,
-без захардкоженного `/home/...` в `.mcp.json`.
+`projects[].perplexity_web_pool` (литеральное имя пула). `bin` задаётся в локальном
+hub-конфиге и рендерится как непосредственная команда: MCP-клиенты запускают её без shell и
+не раскрывают `${…}`. Поэтому machine-specific путь не попадает в отслеживаемый исходный код —
+он остаётся в локальных сгенерированных MCP-конфигурациях.
 
 ## Namespaces
 

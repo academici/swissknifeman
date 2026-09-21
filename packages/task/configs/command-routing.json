@@ -167,7 +167,8 @@
         "entries": [
           {"id": "gpt-5.6-luna", "roles": ["economy"]},
           {"id": "gpt-5.6-terra", "roles": ["implementation"]},
-          {"id": "gpt-5.6-sol", "roles": ["frontier", "design", "audit"]}
+          {"id": "gpt-5.6-sol", "roles": ["frontier", "design", "audit"]},
+          {"id": "gpt-6-astra", "roles": ["frontier", "design", "audit"]}
         ]
       },
       "evidence": [{"source": "plans/2026.07.19-DUAL-PROVIDER/plan.md#D84", "verified_at": "2026-07-21", "scope": "Codex command routing and invocation", "claim": "D84 freezes selectors and the mandatory `$ ` invocation prefix"}]

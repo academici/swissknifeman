@@ -48,6 +48,7 @@ Fixed commands and launch-blocks pin **one** selector per class. Inventory-only 
 | `gpt-5.6-luna` | economy | — |
 | `gpt-5.6-terra` | implementation | — |
 | `gpt-5.6-sol` | frontier, design, audit | — |
+| `gpt-6-astra` | frontier, design, audit | — |
 
 ### `cursor`
 

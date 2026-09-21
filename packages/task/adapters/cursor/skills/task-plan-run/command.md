@@ -1,7 +1,7 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
 Canonical SHA-256: sha256:fcec0c67bb951c1d274dc40fed4b2c390f498fa22b22c3f9ae3f02275381b82d
-Adapter: task.cursor-command/1.0.15
+Adapter: task.cursor-command/1.0.16
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
 

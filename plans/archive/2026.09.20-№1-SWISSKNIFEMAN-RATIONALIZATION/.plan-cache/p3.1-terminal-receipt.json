@@ -1,0 +1,63 @@
+{
+  "adapter_attestation": {
+    "canonical_command_sha256": "sha256:fcec0c67bb951c1d274dc40fed4b2c390f498fa22b22c3f9ae3f02275381b82d",
+    "command_id": "task:plan-run",
+    "package": "task",
+    "version": "0.20.3"
+  },
+  "commit_sha": "aa1792e6e05b1b23288975bafefd60cd9579d21c",
+  "continuity": {
+    "evidence": [
+      "persisted-context:continue-root"
+    ],
+    "outcome": "continue-root",
+    "reason": "compatible-active-work",
+    "runnable": true,
+    "schema_version": "session-continuity-decision/v1"
+  },
+  "digests": {
+    "closure": "sha256:7322487c0019a3247b94d924c8b633edc224961f715b8c3a72c3ef1ee031dc93",
+    "handoff": "sha256:f9be3380c2e87a74978dba364fa0b6ba025ea9786694ed62ecfaf8bd3d4f8b86",
+    "plan": "sha256:af15d97abc3657f51c941520607bfed15bc75141c7e8b594e49d4ea6221fd60e",
+    "state": "sha256:51a144ee315fbe2de7dcaea75b686380168429d8a7d2020f7bcf90e925edf151"
+  },
+  "journal": {
+    "batch_receipt": {
+      "batch_id": "solo",
+      "completed_prefix": [
+        "P3.1"
+      ],
+      "handoff_digest": null,
+      "invocation_digest": "e29993720cefe1c2459040d848cb33d312e4b57e3631cadc9672630127c095e4",
+      "membership": [
+        "P3.1"
+      ],
+      "routing_digest": "af15d97abc3657f51c941520607bfed15bc75141c7e8b594e49d4ea6221fd60e",
+      "schema_version": "batch-receipt/v1",
+      "spec_digest": "2649c60b9a53810e54838c00eb82bd74942ab77174fa00f7b3e52b69930b9e61",
+      "stop_disposition": "continue"
+    },
+    "command": "plan-run",
+    "line": 28,
+    "result": "closed-green",
+    "run_id": "690aa4985d3ba14e4531e6eb2ff2af17bf1297cbac25dfbc1a00043704691638",
+    "sha256": "sha256:73a297cec79c6e2adb75c3ffe7462b668ef899ba8ae76503d4981038996ffb60"
+  },
+  "next_exact": "run-items: task:plan-run 2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION P4.1",
+  "plan_id": "2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION",
+  "rationale": {
+    "open_risks": "Catalog Cursor frontier pin is still opus while live P3 route was Grok 4.6; Cursor hook `conversation_id` did not match `CURSOR_CONVERSATION_ID`; live MCP names are 2-part `MCP:<tool>`; analyst has no Cursor schema 2 reader; P1 corpus T1–T6 unmatched.",
+    "remaining": "P4.1 portfolio; exact P5 route/review remain post-P4 admission by D8. Owner-authorized P3.1 batch is complete — do not continue P4.1 in the same admission."
+  },
+  "recommendation": "**Next:** run-items: task:plan-run 2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION P4.1\n\n| Параметр | Значение |\n|:--|:--|\n| Batch | solo |\n| Model class | implementation |\n| Effort | high |\n| Capabilities | filesystem/git read · plan-owned writes · no consumer/product writes until a P4 GO row |\n| Context | continue-root |\n| Суть | P4.1 portfolio from P1–P3 evidence after two independent P3 defer verdicts. |\n\n**Provider-native command:**\n\n```bash\nagent --workspace /home/vostrikov/projects/packages/swissknifeman --model composer-2.5 --force --sandbox disabled --trust --approve-mcps 'task:plan-run 2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION P4.1'\n```",
+  "route": {
+    "batch": "solo",
+    "command": null,
+    "context": "continue-root",
+    "model": null,
+    "thinking": null
+  },
+  "schema_version": "terminal-delivery-receipt/v1",
+  "status": "🟢 Done",
+  "subject": "P3.1"
+}

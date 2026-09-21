@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/review.md
 Canonical SHA-256: sha256:2a027c9f5d627305927c3ec38525b15858ca2902df082b883ab95b5c367b5c66
-Adapter: task.codex-command/1.0.15
+Adapter: task.codex-command/1.0.16
 -->
 Это задача РЕВЬЮ (read-only). Ввод пользователя: «$ARGUMENTS».
 Модель/effort запинены (frontier/xhigh) — не переключай вручную. Файлы НЕ меняй.

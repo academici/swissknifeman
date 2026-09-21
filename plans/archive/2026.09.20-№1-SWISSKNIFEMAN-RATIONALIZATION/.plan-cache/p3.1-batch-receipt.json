@@ -1,0 +1,13 @@
+{
+  "schema_version": "batch-receipt/v1",
+  "batch_id": "solo",
+  "membership": [
+    "P3.1"
+  ],
+  "invocation_digest": "e29993720cefe1c2459040d848cb33d312e4b57e3631cadc9672630127c095e4",
+  "completed_prefix": [],
+  "routing_digest": "af15d97abc3657f51c941520607bfed15bc75141c7e8b594e49d4ea6221fd60e",
+  "spec_digest": "2649c60b9a53810e54838c00eb82bd74942ab77174fa00f7b3e52b69930b9e61",
+  "handoff_digest": null,
+  "stop_disposition": "continue"
+}

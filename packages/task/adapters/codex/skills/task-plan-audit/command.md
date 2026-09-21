@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
 Canonical SHA-256: sha256:08477e5dd99ae24350e8489c70d85028ee97d3d4c0560a8425318a40d853e77d
-Adapter: task.codex-command/1.0.15
+Adapter: task.codex-command/1.0.16
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
 
@@ -45,7 +45,8 @@ low=low, medium=medium, high=high, xhigh=xhigh. At a fresh-session boundary, kee
 Before the first product-journal mutation, capture the effective route for this exact command:
 
 ```bash
-export TASK_CODEX_ROUTE_EVIDENCE="$(PYTHONPATH="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')/lib"   python3 -m task.route_evidence_codex capture   --expected-invocation '$ task:plan-audit <arguments>' --expected-cwd <repo-cwd>)"
+export TASK_CODEX_PLUGIN_ROOT="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')"
+export TASK_CODEX_ROUTE_EVIDENCE="$(PYTHONPATH="${TASK_CODEX_PLUGIN_ROOT}/lib:${TASK_CODEX_PLUGIN_ROOT}/../.."   python3 -m task.route_evidence_codex capture   --expected-invocation '$ task:plan-audit <arguments>' --expected-cwd <repo-cwd>)"
 ```
 
 Replace `<arguments>` and `<repo-cwd>` with the exact current invocation payload and repository

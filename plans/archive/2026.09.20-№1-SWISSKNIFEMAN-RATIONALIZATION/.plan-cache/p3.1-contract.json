@@ -1,0 +1,416 @@
+{
+  "schema_version": "task-contract/v1",
+  "contract_id": "2026.09.20-№1-swissknifeman-rationalization-p3-1",
+  "version": {
+    "revision": 1,
+    "content_hash": "d50d68761aef7f26aa68eda4777a936daa1ac2c35e6a2ac33f6c7b7c1bbb4a06",
+    "supersedes": null
+  },
+  "goal": {
+    "outcome": "Сначала доказать, что наблюдение memory/codegraph на выбранном execution provider достаточно для честного сравнения, затем на малом matched corpus отдельно измерить ценность maind memory и repository codegraph против обычного repository search.",
+    "non_goals": [
+      "Full factorial/statistical benchmark",
+      "более двух valid pairs на mechanism",
+      "новая telemetry/schema/parser",
+      "permanent MCP/config/hook/skill changes",
+      "always-on rollout",
+      "изменение product, docs или consumer trees",
+      "смешивание maind federation graph с repository codegraph",
+      "combined capability verdict",
+      "P4 portfolio и P5 implementation."
+    ]
+  },
+  "must": [
+    {
+      "id": "M1",
+      "requirement": "Structural coverage/parity matrix для Claude Code, Codex и Cursor",
+      "source_ref": "phases/P3.md:5"
+    },
+    {
+      "id": "M2",
+      "requirement": "один controlled telemetry probe каждого механизма на exact execution provider",
+      "source_ref": "phases/P3.md:5"
+    },
+    {
+      "id": "M3",
+      "requirement": "две memory A/B пары на cross-session decision/failure-recall tasks",
+      "source_ref": "phases/P3.md:5"
+    },
+    {
+      "id": "M4",
+      "requirement": "две codegraph A/B пары на cross-file navigation tasks",
+      "source_ref": "phases/P3.md:5"
+    },
+    {
+      "id": "M5",
+      "requirement": "retrieval/navigation и downstream metrics",
+      "source_ref": "phases/P3.md:5"
+    },
+    {
+      "id": "M6",
+      "requirement": "отдельные verdicts и applicability limits.",
+      "source_ref": "phases/P3.md:5"
+    }
+  ],
+  "never": [
+    {
+      "id": "N1",
+      "prohibition": "Full factorial/statistical benchmark",
+      "source_ref": "phases/P3.md:6"
+    },
+    {
+      "id": "N2",
+      "prohibition": "более двух valid pairs на mechanism",
+      "source_ref": "phases/P3.md:6"
+    },
+    {
+      "id": "N3",
+      "prohibition": "новая telemetry/schema/parser",
+      "source_ref": "phases/P3.md:6"
+    },
+    {
+      "id": "N4",
+      "prohibition": "permanent MCP/config/hook/skill changes",
+      "source_ref": "phases/P3.md:6"
+    },
+    {
+      "id": "N5",
+      "prohibition": "always-on rollout",
+      "source_ref": "phases/P3.md:6"
+    },
+    {
+      "id": "N6",
+      "prohibition": "изменение product, docs или consumer trees",
+      "source_ref": "phases/P3.md:6"
+    },
+    {
+      "id": "N7",
+      "prohibition": "смешивание maind federation graph с repository codegraph",
+      "source_ref": "phases/P3.md:6"
+    },
+    {
+      "id": "N8",
+      "prohibition": "combined capability verdict",
+      "source_ref": "phases/P3.md:6"
+    },
+    {
+      "id": "N9",
+      "prohibition": "P4 portfolio и P5 implementation.",
+      "source_ref": "phases/P3.md:6"
+    }
+  ],
+  "done": {
+    "public_acceptance": [
+      {
+        "id": "A1",
+        "predicate": "1) `findings/p3-telemetry-coverage.md` — provider coverage/parity matrix и controlled-probe evidence; 2) `research/p3-memory-codegraph-pilot.md` — bounded pair ledger, два раздельных verdict и P4-ready applicability/coverage limits; 3) GREEN plan/citation/bundle/diff и cleanup evidence; 4) ноль permanent config, product, docs, CHANGELOG, consumer и rollout changes.",
+        "scope": "public",
+        "check": "1) `findings/p3-telemetry-coverage.md` содержит source/test-bound provider matrix, exact selected provider/model/effort, controlled memory/codegraph probe IDs, automatic-vs-worksheet field ownership и явные `n/a|coverage-gap`; 2) `research/p3-memory-codegraph-pilot.md` содержит не более двух valid A/B pairs на mechanism плюс максимум одну documented invalid replacement, exact commit/prompt/route/condition/run IDs, frozen memory sources или code anchors, P1 metrics/thresholds, pair deltas и invalid/exclusion reasons; 3) в том же файле есть два независимых `go|keep|defer|reject` verdict, нет combined score/verdict, а `go` невозможен при coverage/guardrail gap; 4) pre/post HEAD/status hashes базового и temporary worktrees, memory cleanup proof и scoped diff доказывают ноль permanent config/product/consumer writes; 5) `python3 packages/task/scripts/verify-plan-citations.py --strict plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION`; 6) `python3 packages/task/scripts/plan-views.py bundle --plan-dir plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION --item P3.1 --check`; 7) `python3 packages/task/scripts/plan-lint.py plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION`; 8) `git diff --check -- plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION`.",
+        "evidence_ref": "E18"
+      }
+    ]
+  },
+  "authority": {
+    "class": "routine",
+    "granted": true,
+    "granted_by": "phases/P3/P3.1.md:P3.1",
+    "auto_allowed": [
+      "write the item's declared Files",
+      "run the item's Validation",
+      "close the item with the two-commit topology"
+    ],
+    "stop_boundaries": [
+      "tag/push/release",
+      "fleet rollout",
+      "consumer repositories",
+      "FOREMAN outward parts"
+    ],
+    "loop_budget": {
+      "audit_rounds_max": 2,
+      "same_finding_max": 2
+    },
+    "observed_rounds": 0,
+    "audit_cap_remediation": false
+  },
+  "next": {
+    "form": "exec-items",
+    "carrier": "task:plan-run 2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION P3.1",
+    "context": "continue-root",
+    "origin": "approved-goal",
+    "changed_by": null
+  },
+  "route": {
+    "required": {
+      "model_class": "frontier",
+      "effort": "high"
+    },
+    "actual": {
+      "model_class": "frontier",
+      "effort": "high"
+    },
+    "capabilities": [
+      {
+        "id": "skills.repository",
+        "support": "native"
+      },
+      {
+        "id": "command.filesystem-read",
+        "support": "native"
+      },
+      {
+        "id": "command.filesystem-write",
+        "support": "native"
+      },
+      {
+        "id": "command.git-read",
+        "support": "native"
+      },
+      {
+        "id": "command.git-write",
+        "support": "native"
+      }
+    ]
+  },
+  "evidence": [
+    {
+      "id": "E1",
+      "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/findings/01-p1-verified-baseline.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E2",
+      "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/research/02-p1-measurement-contract.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E3",
+      "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/findings/p2-corex-field.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E4",
+      "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/findings/p2-agentools-field.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E5",
+      "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/findings/p2-edufy-field.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E6",
+      "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/research/p2-cross-project-synthesis.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E7",
+      "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/findings/p3-design-method.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E8",
+      "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/decisions/D2-measure-before-implementation.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E9",
+      "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/decisions/D8-p1-p4-audit-and-p5-post-manifest-routing.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E10",
+      "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/decisions/D5-p3-coverage-first-pilot-budget.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E11",
+      "path": "packages/maind/docs/guide/memory.md",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E12",
+      "path": "packages/maind/lib/maind/mcp.py",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E13",
+      "path": "packages/maind/lib/maind/codegraph_usage.py",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E14",
+      "path": "core/codegraph_telemetry.py",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E15",
+      "path": "packages/harness/configs/claude-code/hooks/run-report/_lib.py",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E16",
+      "path": "packages/harness/lib/harness/hooks.py",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E17",
+      "path": "packages/analyst/lib/analyst/runs.py",
+      "proof_class": "unknown",
+      "algorithm": "doc-citation"
+    },
+    {
+      "id": "E18",
+      "path": "1) `findings/p3-telemetry-coverage.md` содержит source/test-bound provider matrix, exact selected provider/model/effort, controlled memory/codegraph probe IDs, automatic-vs-worksheet field ownership и явные `n/a|coverage-gap`; 2) `research/p3-memory-codegraph-pilot.md` содержит не более двух valid A/B pairs на mechanism плюс максимум одну documented invalid replacement, exact commit/prompt/route/condition/run IDs, frozen memory sources или code anchors, P1 metrics/thresholds, pair deltas и invalid/exclusion reasons; 3) в том же файле есть два независимых `go|keep|defer|reject` verdict, нет combined score/verdict, а `go` невозможен при coverage/guardrail gap; 4) pre/post HEAD/status hashes базового и temporary worktrees, memory cleanup proof и scoped diff доказывают ноль permanent config/product/consumer writes; 5) `python3 packages/task/scripts/verify-plan-citations.py --strict plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION`; 6) `python3 packages/task/scripts/plan-views.py bundle --plan-dir plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION --item P3.1 --check`; 7) `python3 packages/task/scripts/plan-lint.py plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION`; 8) `git diff --check -- plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION`.",
+      "proof_class": "cross-checked",
+      "algorithm": "shell-command"
+    }
+  ],
+  "portability": {
+    "tier": "committed-bundle",
+    "execution_inputs": [
+      {
+        "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/findings/01-p1-verified-baseline.md",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/research/02-p1-measurement-contract.md",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/findings/p2-corex-field.md",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/findings/p2-agentools-field.md",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/findings/p2-edufy-field.md",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/research/p2-cross-project-synthesis.md",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/findings/p3-design-method.md",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/decisions/D2-measure-before-implementation.md",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/decisions/D8-p1-p4-audit-and-p5-post-manifest-routing.md",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "plans/2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION/decisions/D5-p3-coverage-first-pilot-budget.md",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "packages/maind/docs/guide/memory.md",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "packages/maind/lib/maind/mcp.py",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "packages/maind/lib/maind/codegraph_usage.py",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "core/codegraph_telemetry.py",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "packages/harness/configs/claude-code/hooks/run-report/_lib.py",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "packages/harness/lib/harness/hooks.py",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "packages/analyst/lib/analyst/runs.py",
+        "kind": "committed",
+        "producer": null
+      }
+    ],
+    "provenance_only": [],
+    "privacy": {
+      "minimized": true,
+      "excluded_classes": []
+    },
+    "semantic_carrier": "task:plan-exec",
+    "provider_renderers": {
+      "claude": "/task:plan-exec 2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION P3.1",
+      "codex": "$ task:plan-exec 2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION P3.1"
+    }
+  },
+  "conflicts": [],
+  "slice": {
+    "subagent_keys": [
+      "goal",
+      "must",
+      "never",
+      "done",
+      "authority",
+      "next",
+      "route",
+      "version"
+    ],
+    "root_only_keys": [
+      "evidence",
+      "portability",
+      "conflicts"
+    ]
+  },
+  "cold_start": {
+    "plan_id": "2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION",
+    "item_id": "P3.1",
+    "reads": [
+      "E11",
+      "E12",
+      "E13",
+      "E14",
+      "E15",
+      "E16",
+      "E17"
+    ],
+    "carrier": "task:plan-run 2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION P3.1"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "when": "post-files",
+  "head": "aa1792e6e05b1b23288975bafefd60cd9579d21c",
+  "status_sha256": "d0a94911f000811fde2a269ec05c17789407de6bf9b12e2f65944bb1a5babdb5",
+  "porcelain_lines": 64,
+  "plan_files": [
+    "p3-memory-codegraph-pilot.md",
+    "p3-telemetry-coverage.md"
+  ]
+}

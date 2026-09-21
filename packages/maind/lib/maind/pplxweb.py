@@ -1,7 +1,7 @@
 """Resolve policy for the hub-managed perplexity-web MCP server.
 
 `mcp.perplexity_web` is the single source of truth for deployment, overrides,
-pool selection, and portable `${PERPLEXITY_WEB_MCP_BIN:-<bin>}` commands.
+pool selection, and the executable launcher path.
 The external Node package is launched by the MCP client, so this module remains
 stdlib-only."""
 from .constants import PERPLEXITY_WEB_DEFAULTS
@@ -42,9 +42,12 @@ def resolve_pool(project, st):
 
 
 def entry(project, st):
-    """Build an MCP entry with portable command indirection and --pool."""
+    """Build an MCP entry with an executable command and --pool.
+
+    MCP clients spawn the command directly; they do not run a shell to expand
+    ``${VAR:-default}``.  ``bin`` is therefore the resolved, machine-local
+    launcher path supplied by the hub configuration.
+    """
     pool = resolve_pool(project, st)
     bin_path = st.get("bin") or ""
-    env_var = st.get("env_var") or "PERPLEXITY_WEB_MCP_BIN"
-    command = f"${{{env_var}:-{bin_path}}}" if bin_path else f"${{{env_var}}}"
-    return {"command": command, "args": [f"--pool={pool}"]}
+    return {"command": bin_path, "args": [f"--pool={pool}"]}

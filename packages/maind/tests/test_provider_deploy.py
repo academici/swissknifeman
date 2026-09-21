@@ -875,7 +875,7 @@ class TestProviderDeploy(unittest.TestCase):
             plan = plan_provider_deploy(bases, d108)
             claude = next(row for row in plan.results if row.provider_id is ProviderId.CLAUDE_CODE)
             self.assertEqual(sha256_digest(claude.rendered),
-                             "sha256:1d6d757436dc238647a841e6bb7c9efdfa137d5f82c680b7a88d28f1c325fd9d")
+                             "sha256:cea677a113e25c5131a9f350dacb56d6746fdc931174f299bb24901b5cee6002")
 
     def test_facade_executes_provider_plan_and_dry_is_no_write(self):
         root = Path(__file__).resolve().parents[3] / "packages/harness/configs"

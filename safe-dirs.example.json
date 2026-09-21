@@ -4,7 +4,10 @@
   "version": 1,
   "include_registered_projects": true,
   "dirs": [
-    "~/projects"
+    "~/projects",
+    "~/projects/packages",
+    "~/Vaults",
+    "~/Vaults/Brain"
   ],
   "exclude": [],
   "protect_git": true,

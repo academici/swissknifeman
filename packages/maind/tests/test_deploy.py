@@ -400,9 +400,9 @@ class TestDeploy(unittest.TestCase):
             self.assertIn("perplexity-web", servers)
             self.assertIn("perplexity-web", res["servers"])
             self.assertEqual(servers["perplexity-web"]["args"], ["--pool=default"])
-            # индирекция через env (как у maind), bin — лишь fallback
+            # MCP-клиент запускает launcher напрямую, поэтому shell-indirection недопустима.
             self.assertEqual(servers["perplexity-web"]["command"],
-                             "${PERPLEXITY_WEB_MCP_BIN:-/opt/pplx/start.sh}")
+                             "/opt/pplx/start.sh")
 
     def test_perplexity_web_per_project_pool(self):
         with tempfile.TemporaryDirectory() as tmp:

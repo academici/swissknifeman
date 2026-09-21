@@ -1,7 +1,7 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/research.md
 Canonical SHA-256: sha256:417b37dbca208f58ec3ca9373736dde751db43be02d2910180377649df631d9b
-Adapter: task.cursor-command/1.0.15
+Adapter: task.cursor-command/1.0.16
 -->
 ---
 description: "Research an explicit question using verified sources; return findings and Next."

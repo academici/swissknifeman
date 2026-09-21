@@ -17,6 +17,7 @@
 
 ### Changed
 
+- **Root instructions (rationalization P5):** `CLAUDE.md` больше не дублирует общий `root.*` contract — канон остаётся в `AGENTS.md`; first-turn `claude_md` budget на umbrella checkout снижается (~2653→~757 tokens по `skiller budget --first-turn`).
 - **Флот codegraph:** Laravel-проекты переведены на `laravel-boost` (php artisan boost:mcp)
   вместо Serena/Intelephense; `code: false` на umbrella/agentools/perplexity-web-mcp;
   `pre_index: false` по умолчанию; `.serena/project.yml` сужены ignores/workspace на
@@ -24,6 +25,14 @@
 
 ### Fixed
 
+- **task:** Codex route evidence распознаёт `gpt-6-astra` как frontier при явном выборе;
+  маршрут по умолчанию остаётся `gpt-5.6-sol`.
+
+- **task:** Codex route-evidence bootstrap теперь добавляет общий `core/` в `PYTHONPATH`,
+  поэтому plan-команды не падают с `ModuleNotFoundError` вне монорепозитория swissknifeman.
+- **maind:** `perplexity-web` теперь рендерит настроенный `start.sh` как непосредственную
+  MCP-команду: Codex больше не пытается выполнить буквальную shell-подстановку
+  `${PERPLEXITY_WEB_MCP_BIN:-…}`.
 - **sibintek-insiders:** `figma`, `laravel-boost` и `perplexity` объявлены в hub
   `extra_servers` / `perplexity_web` — выровнены все provider-таргеты.
 

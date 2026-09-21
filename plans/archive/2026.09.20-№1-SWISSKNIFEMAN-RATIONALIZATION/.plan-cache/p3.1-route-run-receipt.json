@@ -1,0 +1,19 @@
+{
+  "schema_version": "route-run-receipt/v1",
+  "plan_id": "2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION",
+  "item_id": "P3.1",
+  "attempt": 1,
+  "session_id": "9c5317fe-29c7-4d9c-aa34-0e80a0d1c877",
+  "run_id": "690aa4985d3ba14e4531e6eb2ff2af17bf1297cbac25dfbc1a00043704691638",
+  "evidence": {
+    "cwd": "/home/vostrikov/projects/packages/swissknifeman",
+    "effort": "high",
+    "invocation": "task:plan-run 2026.09.20-№1-SWISSKNIFEMAN-RATIONALIZATION P3.1",
+    "model": "cursor-grok-4.6-high",
+    "model_class": "frontier",
+    "source": "provider-attestation",
+    "source_version": "cursor-explicit-attestation-v1",
+    "thread_id": "9c5317fe-29c7-4d9c-aa34-0e80a0d1c877",
+    "ts": "2026-09-21T08:50:05Z"
+  }
+}

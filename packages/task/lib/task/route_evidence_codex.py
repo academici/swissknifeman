@@ -105,6 +105,17 @@ def _selector_class(model: str, routing_path: Path) -> str:
         for model_class, selectors in mapping.get("class_selectors", {}).items()
         if model in selectors
     ]
+    # Launch defaults remain single-valued. An explicitly selected model may
+    # instead be classified by the same committed provider model inventory.
+    if not matches:
+        classes = mapping.get("class_selectors", {})
+        matches = [
+            role
+            for entry in mapping.get("model_inventory", {}).get("entries", ())
+            if entry.get("id") == model
+            for role in entry.get("roles", ())
+            if role in classes
+        ]
     return _one(tuple(matches), f"Codex model-class mapping for {model!r}")
 
 

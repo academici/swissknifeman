@@ -79,6 +79,11 @@ class CodexCommandAdapterTests(unittest.TestCase):
             if artifact.path.endswith("/task-plan-exec/command.md"))
         self.assertIn("codex plugin marketplace list --json", codex_runtime)
         self.assertIn("packages/task/lib/task", codex_runtime)
+        self.assertIn('export TASK_CODEX_PLUGIN_ROOT="$(codex plugin marketplace', codex_runtime)
+        self.assertIn(
+            'PYTHONPATH="${TASK_CODEX_PLUGIN_ROOT}/lib:${TASK_CODEX_PLUGIN_ROOT}/../.."',
+            codex_runtime,
+        )
         self.assertNotIn("${CLAUDE_PLUGIN_ROOT}", codex_runtime)
         self.assertNotIn("PYTHONPATH=packages/task/lib", codex_runtime)
 

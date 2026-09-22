@@ -614,5 +614,17 @@ class TestRouterConfigProvisioner(unittest.TestCase):
             self.assertEqual(r[0]["status"], "ok")
 
 
+class TestSyncCliExitStatus(unittest.TestCase):
+    def test_json_mode_exits_nonzero_when_a_provisioner_failed(self):
+        rows = [{"provisioner": "mcp", "id": "demo", "status": "failed",
+                 "detail": "repair-required"}]
+        with (mock.patch.object(sync, "load_config", return_value=({"projects": []}, None)),
+              mock.patch.object(sync, "select_projects", return_value=[]),
+              mock.patch.object(sync, "run_sync", return_value=rows),
+              self.assertRaises(SystemExit) as raised):
+            sync.cmd_sync(object(), ["--all", "--json", "--dry-run"])
+        self.assertEqual(raised.exception.code, 1)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -734,6 +734,34 @@ class CoreDonorMutualExclusionCase(unittest.TestCase):
         self.assertIn("verify-claims", out)
 
 
+class ProviderDistributionDoctorSelectionCase(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self.temp.name)
+        self.root, self.env = fx.make_registry(self.tmp)
+        materialize_registry(self.env)
+        materialize_codex_marketplace(self.root)
+        self.project = fx.make_laravel_project(self.tmp)
+        (self.project / ".swissknife.json").write_text(json.dumps({
+            "plugins": ["php"],
+            "providers": providers(claude=False, codex=True),
+        }), encoding="utf-8")
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def test_doctor_passes_resolved_plugin_selection_to_codex_plan(self):
+        from skiller.doctor import cmd_doctor
+        output = io.StringIO()
+
+        with contextlib.redirect_stdout(output):
+            cmd_doctor(self.env, ["--provider-distribution", "--target",
+                                  str(self.project)])
+
+        self.assertIn("[ok ] marketplace plan: codex", output.getvalue())
+        self.assertNotIn("SPUB_BUNDLE_INCOMPLETE", output.getvalue())
+
+
 class EffectiveRuntimeGateCase(unittest.TestCase):
     """P1.4 (D51/D62/D63): cold per-provider install/discover of the declared fixture
     (repo marketplace minus the three donor buckets) proves catalog-wide identity

@@ -207,6 +207,7 @@ class UpdateCase(unittest.TestCase):
         config = json.loads((proj / ".swissknife.json").read_text())
         self.assertTrue(config["providers"]["selection"]["claude-code"]["enabled"])
         self.assertTrue(config["providers"]["selection"]["codex"]["enabled"])
+        self.assertTrue(config["providers"]["selection"]["cursor"]["enabled"])
         self.assertIn("plugins", config)
 
     def test_first_dual_connect_excludes_codex_from_following_vendor_sync(self):

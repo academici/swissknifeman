@@ -184,16 +184,16 @@
       "provider": "claude",
       "target": ".claude/skills/release-discipline/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/release-discipline/SKILL.md",
-      "canonical_sha256": "97e8c6a55b49b89e6fcd23ad02c2fb3c6d4e0c6eb5de747304cdcb61b4493a92",
-      "rendered_sha256": "d1ce810db491c25a15568d2885392b25421368b9a2a736e28f92e474218d2a39"
+      "canonical_sha256": "573de504274d0fc70708ebf553c7bd0130e4f1c221ee1e54c974284957acd1f4",
+      "rendered_sha256": "b4575dce447aabb413c869b6dcb2c97f7b9b07e61cf09075b8b5ac88534ad327"
     },
     {
       "identity": "release-discipline",
       "provider": "codex",
       "target": ".agents/skills/release-discipline/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/release-discipline/SKILL.md",
-      "canonical_sha256": "97e8c6a55b49b89e6fcd23ad02c2fb3c6d4e0c6eb5de747304cdcb61b4493a92",
-      "rendered_sha256": "d1ce810db491c25a15568d2885392b25421368b9a2a736e28f92e474218d2a39"
+      "canonical_sha256": "573de504274d0fc70708ebf553c7bd0130e4f1c221ee1e54c974284957acd1f4",
+      "rendered_sha256": "b4575dce447aabb413c869b6dcb2c97f7b9b07e61cf09075b8b5ac88534ad327"
     },
     {
       "identity": "skill-authoring",

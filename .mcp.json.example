@@ -9,7 +9,7 @@
       ]
     },
     "perplexity": {
-      "command": "${PERPLEXITY_WEB_MCP_BIN:-<HOME>/projects/packages/perplexity-web-mcp/start.sh}",
+      "command": "<HOME>/projects/packages/perplexity-web-mcp/start.sh",
       "args": [
         "--pool=default"
       ]

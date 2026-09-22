@@ -108,7 +108,9 @@ def _vendor_drift(env):
     remove — выпал из конфига). Сухой plan_sync, ничего не пишет. Connect-only проекты
     (без .swissknifeman/config.json) пропускаются — им обновление приходит из marketplace
     само. Возвращает [(project_name, plan), ...] только для тех, у кого есть дрейф."""
-    from .skillset import load_skillset_config, plan_sync
+    from .config import load_config
+    from .publication import build_vendor_distribution_plan
+    from .skillset import DEFAULT_SKILLS_PATH, load_skillset_config, plan_sync
     db_file = env.db_file
     if not db_file.exists():
         return []
@@ -123,20 +125,45 @@ def _vendor_drift(env):
             continue
         try:
             cfg = load_skillset_config(pdir)
-        except SystemExit:
-            continue  # битый .swissknifeman/config.json — отдельная забота, не роняем скан
+        except SystemExit as exc:
+            drifted.append((p.get("id") or pdir.name,
+                            {"errors": [str(exc) or type(exc).__name__]}))
+            continue
         if cfg is None:
             continue
+        name = p.get("id") or pdir.name
         try:
-            # include_core=True — тот же дефолт, что и у `skiller sync` (cmd_sync:
-            # include_core=not opts["no_core"], по умолчанию no_core=False). Без
-            # этого сравнение с реестром ложно считает CORE_SKILLS «add»/«remove».
-            plan = plan_sync(env, pdir, cfg, include_core=True)
-        except Exception:
+            config = load_config(env, pdir)
+            providers = build_vendor_distribution_plan(
+                config, pdir, project_id=pdir.name,
+                claude_path=cfg.get("skills_path") or DEFAULT_SKILLS_PATH,
+                codex_path=".agents/skills")
+        except (Exception, SystemExit) as exc:
+            drifted.append((name, {"errors": [str(exc) or type(exc).__name__]}))
             continue
-        if plan["add"] or plan["update"] or plan["remove"] or plan["conflicts"]:
-            drifted.append((p.get("id") or pdir.name, plan))
+        for descriptor in providers:
+            provider = descriptor.provider_id
+            try:
+                skills_path = descriptor.target.relative_to(pdir).as_posix()
+                provider_cfg = {**cfg, "skills_path": skills_path, "agent": provider}
+                # include_core=True — тот же дефолт, что и у `skiller sync` (cmd_sync:
+                # include_core=not opts["no_core"], по умолчанию no_core=False). Без
+                # этого сравнение с реестром ложно считает CORE_SKILLS «add»/«remove».
+                plan = plan_sync(env, pdir, provider_cfg, include_core=True,
+                                 provider=provider)
+            except (Exception, SystemExit) as exc:
+                plan = {"errors": [str(exc) or type(exc).__name__]}
+            if _vendor_plan_has_drift(plan):
+                label = f"{name} [{provider}]" if len(providers) > 1 else name
+                drifted.append((label, plan))
     return drifted
+
+
+def _vendor_plan_has_drift(plan):
+    """Every state that prevents an ordinary vendor sync from being current."""
+    return any(plan.get(field) for field in (
+        "add", "update", "managed_drift", "remove", "conflicts", "relocated",
+        "provenance_invalid", "errors"))
 
 
 def _audit_vendor_drift(env):
@@ -148,14 +175,24 @@ def _audit_vendor_drift(env):
         return
     for name, plan in drifted:
         parts = []
-        if plan["add"]:
+        if plan.get("add"):
             parts.append(f"+{len(plan['add'])} новых")
-        if plan["update"]:
+        if plan.get("update"):
             parts.append(f"~{len(plan['update'])} с новой версией")
-        if plan["remove"]:
+        if plan.get("remove"):
             parts.append(f"-{len(plan['remove'])} лишних")
-        if plan["conflicts"]:
+        if plan.get("conflicts"):
             parts.append(f"!{len(plan['conflicts'])} конфликтов (прерванный sync?)")
+        if plan.get("managed_drift"):
+            parts.append(f"!{len(plan['managed_drift'])} managed drift")
+        if plan.get("relocated"):
+            parts.append(f"!{len(plan['relocated'])} relocated")
+        if plan.get("provenance_invalid"):
+            parts.append("!invalid provenance")
+        if plan.get("errors"):
+            errors = plan["errors"]
+            count = len(errors) if isinstance(errors, (list, tuple, dict, set)) else 1
+            parts.append(f"!{count} errors")
         print(f"  [warn] {name}: " + ", ".join(parts)
               + "  (применить: skiller sync — из каталога проекта)")
 
@@ -165,7 +202,8 @@ def _vendor_drift_summary(env):
     от реестра (новые/изменившиеся managed-скиллы). Детали — --vendor-drift."""
     drifted = _vendor_drift(env)
     if drifted:
-        print(f"  [warn] vendor-скиллы: {len(drifted)} проект(ов) отстали от реестра "
+        projects = {name.partition(" [")[0] for name, _plan in drifted}
+        print(f"  [warn] vendor-скиллы: {len(projects)} проект(ов) отстали от реестра "
               "(детали: skiller doctor --vendor-drift)")
     else:
         print("  [ok ] vendor-скиллы: дрейфа от реестра нет")
@@ -269,6 +307,7 @@ def _core_donor_diagnostics(env):
 def _provider_distribution_doctor(env, target):
     """Read-only provider-aware delivery preflight; never invokes native Codex."""
     from .config import load_config
+    from .connect import prepare_connect_selection
     from .publication import build_connect_distribution_plan, build_vendor_distribution_plan
     from .skillset import DEFAULT_SKILLS_PATH, load_skillset_config
     from core import find_repo_root
@@ -277,8 +316,9 @@ def _provider_distribution_doctor(env, target):
     _core_donor_diagnostics(env)
     print(f"\nProvider distribution (target: {target}):")
     try:
+        plugins = prepare_connect_selection(env, target, {}, config)["plugins"]
         connect = build_connect_distribution_plan(config, target, project_id=target.name,
-                                                  repo_root=repo_root)
+                                                  repo_root=repo_root, plugins=plugins)
         print("  [ok ] marketplace plan: " + ", ".join(item.provider_id for item in connect))
     except SystemExit as exc:
         print(f"  [warn] marketplace plan blocked: {exc}")

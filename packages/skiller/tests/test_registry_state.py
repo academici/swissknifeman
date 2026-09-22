@@ -396,6 +396,16 @@ class VendorDriftCase(unittest.TestCase):
         out = _run_doctor(self.env, [])
         self.assertIn("vendor-скиллы: дрейфа от реестра нет", out)
 
+    def test_non_green_plan_states_are_never_ignored(self):
+        from skiller.doctor import _vendor_plan_has_drift
+        for field, value in (
+                ("managed_drift", ["test-writer"]),
+                ("provenance_invalid", "bad-lock"),
+                ("relocated", {"test-writer": ".claude/skills/test-writer"}),
+                ("errors", ["planning failed"])):
+            with self.subTest(field=field):
+                self.assertTrue(_vendor_plan_has_drift({field: value}))
+
     def test_summary_warns_when_project_behind(self):
         self._register_vendor_project(["quality"])
         out = _run_doctor(self.env, [])
@@ -413,6 +423,40 @@ class VendorDriftCase(unittest.TestCase):
         sync_skillset(self.env, proj, cfg)
         out = _run_doctor(self.env, ["--vendor-drift"])
         self.assertIn("(все vendor-проекты синхронизированы с реестром)", out)
+
+    def test_detail_flag_reports_managed_drift(self):
+        from skiller.skillset import load_skillset_config, sync_skillset
+        proj = self._register_vendor_project(["quality"])
+        cfg = load_skillset_config(proj)
+        sync_skillset(self.env, proj, cfg)
+        installed = proj / ".claude/skills/test-writer/SKILL.md"
+        installed.write_text(installed.read_text(encoding="utf-8") + "\nlocal edit\n",
+                             encoding="utf-8")
+
+        out = _run_doctor(self.env, ["--vendor-drift"])
+
+        self.assertIn("proj: !1 managed drift", out)
+
+    def test_detail_flag_checks_each_enabled_vendor_provider(self):
+        from skiller.skillset import load_skillset_config, sync_skillset
+        proj = self._register_vendor_project(["quality"])
+        (proj / ".swissknife.json").write_text(json.dumps({
+            "providers": {"contract_version": "1.0.0", "selection": {
+                "claude-code": {"enabled": True},
+                "codex": {"enabled": True},
+            }},
+        }), encoding="utf-8")
+        cfg = load_skillset_config(proj)
+        sync_skillset(self.env, proj, cfg, provider="claude-code")
+        codex_cfg = {**cfg, "skills_path": ".agents/skills", "agent": "codex"}
+        sync_skillset(self.env, proj, codex_cfg, provider="codex")
+        installed = proj / ".agents/skills/test-writer/SKILL.md"
+        installed.write_text(installed.read_text(encoding="utf-8") + "\nlocal edit\n",
+                             encoding="utf-8")
+
+        out = _run_doctor(self.env, ["--vendor-drift"])
+
+        self.assertIn("proj [codex]: !1 managed drift", out)
 
     def test_connect_only_project_ignored(self):
         # проект без .swissknifeman/config.json (только connect) — не участвует в дрейфе

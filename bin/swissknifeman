@@ -15,6 +15,7 @@
 #                     skills+packs+mcp+память + drift→fix); bare/--target → skiller status
 #   wf <args>       → harness   (детальный статус фонового workflow-прогона: wf status)
 #   release <args>  → skiller   (предложение релиза монорепо: [Unreleased]+conventional commits)
+#   release-fleet   → validated local post-tag delivery + fleet sync (never pushes/publishes)
 #   -V, --version   → версия зонтика (git describe)
 #
 # Back-compat: исторические команды swissknifeman = skiller (алиас сохранён):
@@ -44,6 +45,7 @@ case "$CMD" in
   env)     shift; need "$HARNESS"; exec "$HARNESS" "$@" ;;
   wf)      shift; need "$HARNESS"; exec "$HARNESS" wf "$@" ;;
   release) shift; need "$SKILLER"; exec "$SKILLER" release "$@" ;;
+  release-fleet) shift; exec "$ROOT/scripts/release-fleet.sh" "$@" ;;
   maind|hub) shift; need "$MAIND"; exec "$MAIND" "$@" ;;
   analyst) shift; need "$ANALYST"; exec "$ANALYST" "$@" ;;
   setup)

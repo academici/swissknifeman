@@ -112,6 +112,27 @@ class CoreCase(unittest.TestCase):
         self.assertIn("[REDACTED]", output.getvalue())
         self.assertIn("private-value", settings_path.read_text(encoding="utf-8"))
 
+    def test_cleanup_finds_legacy_claude_manifest_after_provider_path_changes(self):
+        proj = fx.make_laravel_project(self.tmp)
+        legacy = proj / ".claude" / "skills"
+        skill = legacy / "legacy-managed"
+        skill.mkdir(parents=True)
+        (skill / "SKILL.md").write_text("managed\n", encoding="utf-8")
+        (legacy / ".swissknifeman-manifest.json").write_text(json.dumps({
+            "version": 1,
+            "skills": [{"flat_name": "legacy-managed"}],
+        }) + "\n", encoding="utf-8")
+        # Simulate the new provider contract selecting a different projection.
+        (proj / ".swissknifeman" / "config.json").parent.mkdir(parents=True)
+        (proj / ".swissknifeman" / "config.json").write_text(json.dumps({
+            "version": 1, "mode": "vendor", "skills_path": ".agents/skills",
+        }) + "\n", encoding="utf-8")
+
+        do_connect(self.env, proj, {"cleanup_vendored": True, "no_core": True})
+
+        self.assertFalse(skill.exists())
+        self.assertFalse((legacy / ".swissknifeman-manifest.json").exists())
+
     def test_connect_no_core_omits_core_plugin(self):
         proj = fx.make_laravel_project(self.tmp)
         do_connect(self.env, proj, {"no_core": True})

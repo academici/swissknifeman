@@ -44,6 +44,12 @@ generated and by what — [package-architecture]; the canonical Releases & Taggi
    Trivial changes (typos, formatting) — no CHANGELOG entry.
 5. PR.
 6. Run the [docs-maintenance] decision (does docs/ need updating).
+7. After the annotated tag exists locally and points at `HEAD`, run
+   `./bin/swissknifeman release-fleet vX.Y.Z`. This validates the tag and attestation, delivers
+   every registered project, updates provider-native caches, prunes only unreferenced
+   exact-attested superseded SKM caches, runs `maind sync --all`, and proves the resulting sync is
+   idempotent. Use `--dry-run` for a preflight. The workflow never creates, moves, or pushes a tag
+   and never publishes a GitHub release.
 
 ## Tags and versions
 
@@ -53,6 +59,9 @@ generated and by what — [package-architecture]; the canonical Releases & Taggi
 - On tagging: `[Unreleased]` → `[X.Y.Z]` in CHANGELOG; pushing the tag — manual.
 - Tags are human markers: Claude Code plugin versions resolve to a git SHA and don't depend on
   tags.
+- A release is incomplete until `release-fleet` succeeds. Cache deletion is fail-closed: a cache
+  is preserved and reported as blocked when its version is absent from committed tagged release
+  snapshots, its attested bytes changed, or a provider still references it.
 
 ## Checklist
 
@@ -61,6 +70,7 @@ generated and by what — [package-architecture]; the canonical Releases & Taggi
 - [ ] Generated files were not hand-edited.
 - [ ] CHANGELOG updated (or the change is trivial).
 - [ ] docs/ decision recorded ([docs-maintenance]).
+- [ ] `release-fleet vX.Y.Z` is green, including the post-apply dry-run.
 
 ## Related skills
 

@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added
+
+- **release-fleet workflow:** единая локальная команда валидирует tag и attestation,
+  доставляет release во все активные проекты, удаляет только подтверждённые
+  unreferenced provider caches и проверяет повторный dry-run на идемпотентность.
+
+### Fixed
+
+- **release version integrity:** attestation теперь независимо сверяет expected unit
+  version с package/plugin/publication/provider surfaces и включает Claude-only
+  units; circular snapshot consistency больше не скрывает устаревшую версию.
+- **Task/maind/analyst publication versions:** Task выровнен на `0.24.0`, maind на
+  `0.4.3`, analyst на `0.2.3`; lock-файлы и generated provider projections
+  регенерированы из owning sources.
+- **fleet migration:** трёхпровайдерный контракт применяется ко всем активным
+  проектам; cleanup обнаруживает legacy Claude manifest даже после смены provider
+  path, а doctor больше не пропускает managed drift и выбранные plugins.
+- **maind sync exit status:** JSON-режим возвращает ошибку при non-green строках,
+  поэтому automation не может принять частично применённый fleet sync за успех.
+
 ## [0.24.0] - 2026-09-22
 
 ### Fixed

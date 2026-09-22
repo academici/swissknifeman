@@ -311,7 +311,7 @@ flowchart LR
     maind_overview["maind-overview<br/>⊕80 ↻1626"]:::warm
     package_architecture["package-architecture<br/>⊕85 ↻3740"]:::warm
     project_tooling_runbook["project-tooling-runbook<br/>⊕42 ↻7297"]:::mild
-    release_discipline["release-discipline<br/>⊕64 ↻805"]:::warm
+    release_discipline["release-discipline<br/>⊕64 ↻1049"]:::warm
     skill_authoring["skill-authoring<br/>⊕44 ↻1846"]:::warm
     task_development_philosophy["task-development-philosophy<br/>⊕74 ↻3222"]:::warm
   end
@@ -437,14 +437,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 232 скиллов · ⊕ always **12647** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 310868 ток · ⌥ on-demand 850880 ток (сниппеты + references).
+**Итого:** 232 скиллов · ⊕ always **12647** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 311112 ток · ⌥ on-demand 850880 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
 | `general` | 22 | 1259 | 33152 | 28947 |
-| `repository-bootstrap` | 14 | 1047 | 29033 | 0 |
+| `repository-bootstrap` | 14 | 1047 | 29277 | 0 |
 | `architect` | 15 | 937 | 19897 | 33252 |
 | `system` | 7 | 607 | 10821 | 834 |
 | `laravel-architecture` | 6 | 596 | 9567 | 7994 |

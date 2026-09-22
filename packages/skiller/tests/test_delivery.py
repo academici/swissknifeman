@@ -9,7 +9,8 @@ from unittest.mock import patch
 from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock
 from core.provider.runtime import codex_migrated_command_skill
 from skiller.common import MANIFEST, SKILL_MANAGED_MARKER
-from skiller.delivery import deliver, project_readback, recover_lock, verify_surface
+from skiller.delivery import (deliver, project_readback, prune_provider_caches,
+                              recover_lock, release_history, verify_surface)
 from skiller.release_attestation import digest, tree_digest
 
 
@@ -90,6 +91,90 @@ class DeliveryTests(unittest.TestCase):
         expected = surface({"SKILL.md": b"managed"})
         self.assertEqual(verify_surface(cache, expected), [])
         self.assertTrue(verify_surface(cache, expected, reject_extras=True))
+
+    def test_release_history_discovers_tagged_committed_snapshots(self):
+        good = attestation({})
+        good["umbrella"]["tag"] = "v0.9.0"
+        calls = []
+
+        def run(command, **_kwargs):
+            calls.append(command)
+            if command[1:3] == ["tag", "--list"]:
+                return SimpleNamespace(stdout="v1.0.0\nv0.9.0\nv0.8.0\n", returncode=0)
+            if command[-1] == "v0.9.0:releases/v0.9.0.json":
+                return SimpleNamespace(stdout=json.dumps(good), returncode=0)
+            if command[-1] == "v0.9.0^{commit}":
+                return SimpleNamespace(stdout="0123456789abcdef\n", returncode=0)
+            return SimpleNamespace(stdout="", returncode=1)
+
+        with patch("skiller.delivery.subprocess.run", side_effect=run):
+            discovered = release_history(self.root, "v1.0.0")
+        self.assertEqual(discovered[0]["umbrella"], good["umbrella"])
+        self.assertEqual(discovered[0]["_tag_commit"], "0123456789abcdef")
+        self.assertNotIn(["git", "show", "v1.0.0:releases/v1.0.0.json"], calls)
+
+    def test_cache_gc_prunes_only_unreferenced_exact_known_and_supports_dry_run(self):
+        env = SimpleNamespace(home=self.root / "home")
+        current = attestation({"SKILL.md": b"current"})
+        current["units"][0]["version"] = "2.0.0"
+        current["units"][0]["providers"]["claude-code"] = surface({"SKILL.md": b"current"})
+        old = attestation({"SKILL.md": b"old"})
+        old["units"][0]["version"] = "1.0.0"
+        old["units"][0]["providers"]["claude-code"] = surface({"SKILL.md": b"old"})
+        old["_tag_commit"] = "0123456789abcdef"
+        cache = env.home / ".claude/plugins/cache/swissknifeman/task"
+        self.write(env.home / ".claude/plugins/installed_plugins.json",
+                   json.dumps({"plugins": {}}).encode())
+        self.write(cache / "1.0.0/SKILL.md", b"old")
+        self.write(cache / "0123456789ab/SKILL.md", b"old")
+        self.write(cache / "2.0.0/SKILL.md", b"current")
+        self.write(cache / "mystery/SKILL.md", b"unknown")
+        with patch("skiller.delivery.shutil.which", return_value=None):
+            planned = prune_provider_caches(env, current, [old], dry_run=True)
+        self.assertTrue((cache / "1.0.0").is_dir())
+        self.assertEqual(next(row for row in planned if row["version"] == "1.0.0")["status"], "planned")
+        self.assertEqual(next(row for row in planned if row["version"] == "0123456789ab")["status"], "planned")
+        self.assertEqual(next(row for row in planned if row["version"] == "2.0.0")["classification"], "current")
+        self.assertEqual(next(row for row in planned if row["version"] == "mystery")["status"], "blocked")
+        with patch("skiller.delivery.shutil.which", return_value=None):
+            applied = prune_provider_caches(env, current, [old])
+        pruned = next(row for row in applied if row["version"] == "1.0.0")
+        self.assertEqual(pruned["status"], "pruned")
+        self.assertEqual(pruned["readback"], {"exists": False})
+        self.assertFalse((cache / "1.0.0").exists())
+        self.assertFalse((cache / "0123456789ab").exists())
+        self.assertTrue((cache / "mystery").exists())
+
+    def test_cache_gc_preserves_declared_reference_even_when_superseded(self):
+        env = SimpleNamespace(home=self.root / "home")
+        current, old = attestation({}), attestation({"SKILL.md": b"old"})
+        current["units"][0]["version"] = "2.0.0"
+        old["units"][0]["version"] = "1.0.0"
+        old["units"][0]["providers"]["claude-code"] = surface({"SKILL.md": b"old"})
+        path = env.home / ".claude/plugins/cache/swissknifeman/task/1.0.0"
+        self.write(path / "SKILL.md", b"old")
+        installed = {"plugins": {"task@swissknifeman": [{"installPath": str(path)}]}}
+        self.write(env.home / ".claude/plugins/installed_plugins.json", json.dumps(installed).encode())
+        with patch("skiller.delivery.shutil.which", return_value=None):
+            rows = prune_provider_caches(env, current, [old])
+        self.assertEqual(rows[0]["classification"], "referenced")
+        self.assertTrue(path.is_dir())
+
+    def test_cache_gc_blocks_modified_known_cache(self):
+        env = SimpleNamespace(home=self.root / "home")
+        current, old = attestation({}), attestation({"SKILL.md": b"expected"})
+        current["units"][0]["version"] = "2.0.0"
+        old["units"][0]["version"] = "1.0.0"
+        old["units"][0]["providers"]["claude-code"] = surface({"SKILL.md": b"expected"})
+        path = env.home / ".claude/plugins/cache/swissknifeman/task/1.0.0"
+        self.write(path / "SKILL.md", b"modified")
+        self.write(env.home / ".claude/plugins/installed_plugins.json",
+                   json.dumps({"plugins": {}}).encode())
+        with patch("skiller.delivery.shutil.which", return_value=None):
+            rows = prune_provider_caches(env, current, [old])
+        self.assertEqual(rows[0]["status"], "blocked")
+        self.assertEqual(rows[0]["classification"], "modified-or-unknown")
+        self.assertTrue(path.is_dir())
 
     def test_recovery_refuses_symlink_even_when_known_bytes_match(self):
         target = self.root / "project"

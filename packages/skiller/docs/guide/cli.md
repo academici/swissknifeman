@@ -218,6 +218,18 @@ vendor`, дальше `skiller update`).
 Modified/unknown файлы сохраняются и оставляют PARTIAL. До изменения сохраняются preimages.
 `--target PATH` ограничивает project delivery; `--no-native` явно исключает cache stage.
 
+Штатный post-tag путь — `./bin/swissknifeman release-fleet vX.Y.Z [--dry-run]`. Он требует,
+чтобы локальный annotated tag указывал на `HEAD`, проверяет tag и release attestation, выполняет
+`skiller deliver --all` и `maind sync --all`, затем повторяет оба dry-run и fleet diagnostics.
+Команда не создаёт и не перемещает теги, не делает push и не публикует GitHub Release.
+
+Delivery строит историю из release snapshot, закоммиченных под реально существующими тегами.
+После provider update он удаляет из Claude/Codex cache только непривязанные каталоги прежних
+версий, чьи managed bytes точно совпали с такой attestation. Текущие и ещё referenced каталоги
+сохраняются; unknown/modified cache и недоступный provider state дают blocked/PARTIAL. Решение,
+digest и readback удаления записываются в delivery receipt; dry-run показывает тот же план без
+удаления.
+
 Receipt хранится в `~/.swissknifeman/receipts/delivery/<release>/`; GREEN требует readback
 всех выбранных targets. Existing sessions отмечаются `restart-required`: начните новую сессию.
 Source-managed bytes, native cache, project projection и loaded session — разные поверхности.

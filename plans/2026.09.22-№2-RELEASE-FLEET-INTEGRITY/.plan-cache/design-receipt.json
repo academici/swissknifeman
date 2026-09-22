@@ -1,0 +1,37 @@
+{
+  "adapter_attestation": null,
+  "commit_sha": "6344c0f11cd05f57db57ae9616f0ea786ab4440f",
+  "continuity": {
+    "evidence": [
+      "persisted-context:continue-root"
+    ],
+    "outcome": "continue-root",
+    "reason": "compatible-active-work",
+    "runnable": true,
+    "schema_version": "session-continuity-decision/v1"
+  },
+  "digests": {
+    "closure": null,
+    "handoff": "sha256:1eacfa4bfbe49810392c1c29eeae5c493a060314cf6e4f97536f1eee1a1a55a1",
+    "plan": "sha256:29908971fe5a2564f637a2775ff0367f52f431ea682a79a995b33f29e5f4b4d8",
+    "state": null
+  },
+  "journal": null,
+  "next_exact": "manual: frontier/high — P1.1 (§3 Routing: Exec = manual; `task:plan-exec` обязан отказать)",
+  "plan_id": "2026.09.22-№2-RELEASE-FLEET-INTEGRITY",
+  "rationale": {
+    "open_risks": "Concurrent unrelated dirty change in `packages/task/lib/task/journal.py` appeared after initial clean baseline and must not be overwritten.",
+    "remaining": "Один item P1.1: baseline, owning fix, local release candidate, fleet migration и final attestation."
+  },
+  "recommendation": "**Next:** manual: frontier/high — P1.1 (§3 Routing: Exec = manual; `task:plan-exec` обязан отказать)\n\n| Параметр | Значение |\n|:--|:--|\n| Batch | solo |\n| Model class | frontier |\n| Effort | high — полный cross-project baseline и причинная проверка четырёх независимых seams |\n| Capabilities | local topology · multi-agent read-only discovery |\n| Context | continue-root |\n| Суть | Снять immutable before baseline, version ownership и exact root-cause ledger. |\n\n```\nВыполни P1.1 плана 2026.09.22-№2-RELEASE-FLEET-INTEGRITY в текущем root-сеансе. Параллелизуй независимый read-only анализ release/version generators, fleet delivery и provider budgets; не выполняй product или consumer writes. Сохрани четыре declared findings, проверь полное покрытие enabled registry, plan lint/bundles и только после terminal evidence закрой item/phase.\n```",
+  "route": {
+    "batch": "solo",
+    "command": null,
+    "context": "continue-root",
+    "model": null,
+    "thinking": null
+  },
+  "schema_version": "handoff-recommendation-receipt/v1",
+  "status": "handoff-persisted",
+  "subject": "P1"
+}

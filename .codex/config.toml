@@ -9,5 +9,5 @@ command = "maind"
 args = ["mcp", "--scope", "project:swissknifeman"]
 
 [mcp_servers.perplexity]
-command = "${PERPLEXITY_WEB_MCP_BIN:-/home/vostrikov/projects/packages/perplexity-web-mcp/start.sh}"
+command = "/home/vostrikov/projects/packages/perplexity-web-mcp/start.sh"
 args = ["--pool=default"]

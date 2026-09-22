@@ -981,8 +981,12 @@ def cmd_sync(env, argv):
     projects = select_projects(env, config, opts)
     results = run_sync(env, config, projects, only=opts["only"], mode=mode,
                        dry=opts["dry_run"])
+    failed = [r for r in results if r["status"] == "failed"]
     if opts["json"]:
         print(json.dumps(results, ensure_ascii=False, indent=2))
+        if failed:
+            import sys
+            sys.exit(1)
         return
     tag = "[dry-run] " if opts["dry_run"] else ""
     print(f"{tag}sync (mode={mode}, проектов {len(projects)}, "
@@ -996,7 +1000,6 @@ def cmd_sync(env, argv):
         else:
             note = ""
         print(f"  {mark} {r['provisioner']:<11} {r['id']:<18} {r.get('detail', '')}{note}")
-    failed = [r for r in results if r["status"] == "failed"]
     if failed:
         import sys
         warn(f"провиженеров упало: {len(failed)} (см. ✗ выше)")

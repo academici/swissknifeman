@@ -44,7 +44,7 @@ def detect_codex_skill_links(target):
 
 
 def adopt_codex_provider_config(target, dry_run=False, plugins=None):
-    """Opt an existing SKM project into the explicit dual-provider contract.
+    """Opt an existing SKM project into the explicit three-provider contract.
 
     Legacy projects resolve to Claude Code only by compatibility default.  Codex
     therefore never receives its generated, project-contained marketplace bundle
@@ -74,7 +74,7 @@ def adopt_codex_provider_config(target, dry_run=False, plugins=None):
     if providers.get("contract_version") != "1.0.0":
         providers["contract_version"] = "1.0.0"
         changed = True
-    for provider in ("claude-code", "codex"):
+    for provider in ("claude-code", "codex", "cursor"):
         value = selection.get(provider)
         if value is None:
             selection[provider] = {"enabled": True}
@@ -88,12 +88,12 @@ def adopt_codex_provider_config(target, dry_run=False, plugins=None):
     if not changed:
         return False
     if dry_run:
-        print(f"[dry-run] adopt dual-provider contract {config_path}")
+        print(f"[dry-run] adopt three-provider contract {config_path}")
         return True
     if config_path.exists():
         shutil.copy2(config_path, f"{config_path}.bak")
     atomic_write_text(config_path, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
-    print(f"adopt dual-provider contract {config_path}")
+    print(f"adopt three-provider contract {config_path}")
     return True
 
 

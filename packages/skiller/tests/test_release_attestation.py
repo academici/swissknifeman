@@ -4,12 +4,40 @@ import json
 from pathlib import Path
 import unittest
 
-from skiller.release_attestation import Source, check_transition, surface, tree_digest
+from skiller.release_attestation import (Source, check_transition, surface, tree_digest,
+                                         version_errors)
 import subprocess
 import tempfile
 
 
 class ReleaseAttestationTests(unittest.TestCase):
+    def test_byte_consistent_snapshot_still_rejects_stale_expected_task_version(self):
+        value = {"units": [{
+            "id": "task", "version": "0.21.0", "expected_version": "0.24.0",
+            "version_source": "umbrella", "required_providers": ["claude-code", "codex"],
+            "provider_versions": {"claude-code": "0.21.0", "codex": "0.21.0"},
+            "providers": {"claude-code": {}, "codex": {}},
+        }]}
+        errors = version_errors(value)
+        self.assertIn(
+            "RELEASE_EXPECTED_VERSION_MISMATCH: task expected 0.24.0 from umbrella, got 0.21.0",
+            errors)
+        self.assertIn(
+            "RELEASE_VERSION_SURFACE_MISMATCH: task codex=0.21.0, expected 0.24.0",
+            errors)
+
+    def test_version_surfaces_and_required_providers_are_independent_gates(self):
+        value = {"units": [{
+            "id": "task", "version": "0.24.0", "expected_version": "0.24.0",
+            "version_source": "umbrella", "required_providers": ["claude-code", "codex"],
+            "provider_versions": {"claude-code": "0.23.0"},
+            "providers": {"claude-code": {}},
+        }]}
+        self.assertEqual(version_errors(value), [
+            "RELEASE_VERSION_SURFACE_MISMATCH: task claude-code=0.23.0, expected 0.24.0",
+            "RELEASE_PROVIDER_MISSING: task codex",
+        ])
+
     def test_live_source_ignores_ambient_ignored_telemetry(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

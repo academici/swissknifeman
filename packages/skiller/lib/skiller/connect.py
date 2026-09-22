@@ -94,7 +94,7 @@ def _prune_codex_connect_artifacts(target, *, dry_run):
             pass
 
 
-def _prepare_connect_selection(env, target, opts, config):
+def prepare_connect_selection(env, target, opts, config):
     """Resolve the one semantic plugin set used by every selected provider."""
     flag_plugins = [p for p in opts.get("plugins", "").split(",") if p]
     plugins, profile_name, profile_source, source, include_meta = \
@@ -137,6 +137,11 @@ def _prepare_connect_selection(env, target, opts, config):
     }
 
 
+# Compatibility for callers/tests that used the former private seam.  Doctor uses the
+# public helper so its read-only preflight resolves exactly the selection connect applies.
+_prepare_connect_selection = prepare_connect_selection
+
+
 def _resident_tokens(env, plugins):
     """Грубая оценка резидентного ⊕ tier-0 (name+description) выбранного набора плагинов —
     для «умного подключения»: видно цену ДО записи. core → CORE_SKILLS; бакет → все его скиллы;
@@ -173,7 +178,7 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
                        prepared=None):
     root = env.root
     config = load_config(env, target)
-    prepared = prepared or _prepare_connect_selection(env, target, opts, config)
+    prepared = prepared or prepare_connect_selection(env, target, opts, config)
     plugins = list(prepared["plugins"])
     profile_name = prepared["profile_name"]
     profile_source = prepared["profile_source"]
@@ -306,8 +311,18 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
 
     # vendored-copy migration
     skills_path = config.skills_path or AGENT_DEFAULTS["claude"]
-    manifest_file = target / skills_path / MANIFEST
-    if manifest_file.exists():
+    # The three-provider config may point at the Codex projection while an old
+    # Claude vendor tree still lives at its historical default.  Inspect both
+    # locations so switching config cannot hide a managed legacy manifest.
+    manifest_files = {
+        target / skills_path / MANIFEST,
+        target / AGENT_DEFAULTS["claude"] / MANIFEST,
+    }
+    legacy_manifest_found = False
+    for manifest_file in sorted(manifest_files):
+        if not manifest_file.exists():
+            continue
+        legacy_manifest_found = True
         manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
         dest_root = manifest_file.parent
         stale = []
@@ -347,7 +362,7 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
                     print(f"Удалены raw vendor-записи ({raw_path}): "
                           f"{len(removed)} ({', '.join(removed[:8])}"
                           f"{', …' if len(removed) > 8 else ''})")
-            elif not manifest_file.exists():
+            elif not legacy_manifest_found:
                 print(f"NOTE: raw vendor ({raw_path}) без пересечений с marketplace "
                       f"— project-specific записи сохранены")
         prune_orphan_managed_lock(target, dry_run=dry_run)
@@ -430,7 +445,7 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
         opts = {**opts, "no_permissions": True}
     config = load_config(env, target)
     repo_root = find_repo_root(env.root) or env.root
-    prepared = _prepare_connect_selection(env, target, opts, config)
+    prepared = prepare_connect_selection(env, target, opts, config)
     native_plan = None
     if opts.get("native_codex"):
         from .native_codex import plan_selection

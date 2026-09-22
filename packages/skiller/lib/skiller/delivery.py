@@ -17,6 +17,147 @@ from .state import load_db
 from .update import update_one
 
 
+def release_history(root, current_release):
+    """Load attested history from snapshots committed at matching release tags."""
+    result = subprocess.run(
+        ["git", "tag", "--list", "v*", "--sort=-version:refname"],
+        cwd=root, capture_output=True, text=True, check=True,
+    )
+    history = []
+    for ref in result.stdout.splitlines():
+        if ref == current_release:
+            continue
+        snapshot = subprocess.run(
+            ["git", "show", f"{ref}:releases/{ref}.json"],
+            cwd=root, capture_output=True, text=True, check=False,
+        )
+        if snapshot.returncode != 0:
+            continue
+        try:
+            value = json.loads(snapshot.stdout)
+        except json.JSONDecodeError:
+            continue
+        if value.get("umbrella", {}).get("tag") == ref and isinstance(value.get("units"), list):
+            commit = subprocess.run(
+                ["git", "rev-parse", f"{ref}^{{commit}}"], cwd=root,
+                capture_output=True, text=True, check=False,
+            )
+            if commit.returncode == 0:
+                value["_tag_commit"] = commit.stdout.strip()
+            history.append(value)
+    return history
+
+
+def _provider_references(env):
+    """Return provider-declared cache roots; failure to inspect never authorizes deletion."""
+    references = {"claude": set(), "codex": set()}
+    inspected = {"claude": False, "codex": False}
+    installed = env.home / ".claude/plugins/installed_plugins.json"
+    try:
+        plugins = json.loads(installed.read_text()).get("plugins", {})
+        for identifier, entries in plugins.items():
+            if identifier.endswith("@swissknifeman"):
+                references["claude"].update(Path(entry["installPath"]).resolve()
+                                             for entry in entries if entry.get("installPath"))
+        inspected["claude"] = True
+    except (OSError, TypeError, ValueError):
+        pass
+    if shutil.which("codex"):
+        try:
+            result = subprocess.run(["codex", "plugin", "list", "--json"],
+                                    capture_output=True, text=True, check=True)
+            for entry in json.loads(result.stdout).get("installed", []):
+                if entry.get("marketplaceName") != "swissknifeman":
+                    continue
+                path = entry.get("source", {}).get("path")
+                if path:
+                    references["codex"].add(Path(path).resolve())
+            inspected["codex"] = True
+        except (OSError, TypeError, ValueError, subprocess.CalledProcessError):
+            pass
+    return references, inspected
+
+
+def prune_provider_caches(env, attestation, history, *, dry_run=False):
+    """Prune only unreferenced caches whose attested provider bytes are exact-known."""
+    references, inspected = _provider_references(env)
+    current = {unit["id"]: unit for unit in attestation["units"]}
+    known = {}
+    for snapshot in history:
+        for unit in snapshot["units"]:
+            known.setdefault((unit["id"], unit["version"]), []).append(unit)
+            commit = snapshot.get("_tag_commit", "")
+            if commit:
+                known.setdefault((unit["id"], commit[:12]), []).append(unit)
+    rows = []
+    providers = (
+        ("claude", env.home / ".claude/plugins/cache/swissknifeman", "claude-code"),
+        ("codex", env.home / ".codex/plugins/cache/swissknifeman", "codex-native"),
+    )
+    for provider, cache_root, projection_name in providers:
+        if cache_root.is_symlink():
+            rows.append({"provider": provider, "path": str(cache_root), "unit": "*",
+                         "version": "*", "action": "preserve",
+                         "classification": "modified-or-unknown", "status": "blocked",
+                         "errors": ["symlink-cache-root"], "readback": {"exists": True}})
+            continue
+        if not cache_root.is_dir():
+            continue
+        for unit_root in sorted(cache_root.iterdir()):
+            if unit_root.is_symlink():
+                rows.append({"provider": provider, "path": str(unit_root),
+                             "unit": unit_root.name, "version": "*", "action": "preserve",
+                             "classification": "modified-or-unknown", "status": "blocked",
+                             "errors": ["symlink-unit-root"], "readback": {"exists": True}})
+                continue
+            if not unit_root.is_dir():
+                continue
+            for candidate in sorted(unit_root.iterdir()):
+                if candidate.is_symlink():
+                    rows.append({"provider": provider, "path": str(candidate),
+                                 "unit": unit_root.name, "version": candidate.name,
+                                 "action": "preserve", "classification": "modified-or-unknown",
+                                 "status": "blocked", "errors": ["symlink-cache-entry"],
+                                 "readback": {"exists": True}})
+                    continue
+                if not candidate.is_dir():
+                    continue
+                resolved = candidate.resolve()
+                row = {"provider": provider, "path": str(candidate), "unit": unit_root.name,
+                       "version": candidate.name, "action": "preserve", "readback": {"exists": True}}
+                now = current.get(unit_root.name)
+                if now and candidate.name == now["version"]:
+                    row["classification"] = "current"
+                elif any(resolved == ref or ref.is_relative_to(resolved)
+                         for ref in references[provider]):
+                    row["classification"] = "referenced"
+                elif not inspected[provider]:
+                    row.update({"classification": "reference-state-unavailable",
+                                "status": "blocked", "errors": ["provider-state-unavailable"]})
+                else:
+                    matches = known.get((unit_root.name, candidate.name), [])
+                    projections = [unit["providers"].get(projection_name)
+                                   or (unit["providers"].get("codex")
+                                       if provider == "codex" else None)
+                                   for unit in matches if unit.get("providers")]
+                    projection = next((item for item in projections
+                                       if item and not verify_surface(candidate, item)), None)
+                    if not projection:
+                        row.update({"classification": "modified-or-unknown", "status": "blocked",
+                                    "errors": (["unknown-version"] if not projections
+                                               else sorted(set(error for item in projections if item
+                                                               for error in verify_surface(candidate, item))))})
+                    else:
+                        row.update({"classification": "exact-known-superseded",
+                                    "status": "planned" if dry_run else "pruned",
+                                    "action": "prune", "digest": projection["tree_digest"]})
+                        if not dry_run:
+                            shutil.rmtree(candidate)
+                            row["readback"] = {"exists": candidate.exists()}
+                rows.append(row)
+    return rows
+
+
 def verify_surface(root, surface, *, reject_extras=False):
     root = Path(root)
     errors = []
@@ -238,12 +379,7 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
         if not dry_run:
             atomic_write_json(receipt_path, receipt)
     save()
-    history = []
-    for ref in ("v0.15.4", "v0.15.2", "v0.15.1", "v0.15.0", "v0.14.0"):
-        try:
-            history.append(build(root, ref=ref))
-        except (subprocess.CalledProcessError, OSError, ValueError, KeyError):
-            continue
+    history = release_history(root, release)
     roots = ([Path(r["path"]) for r in load_db(env)["projects"]] if all_projects else [Path(target)] if target else [])
     for index, project in enumerate(sorted(set(roots))):
         if project.resolve() == root.resolve():
@@ -355,7 +491,11 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
                     if updated and row["readback"] and not any(i["errors"] for i in row["readback"]):
                         row["status"] = "updated"
                     save()
-    receipt["status"] = "GREEN" if receipt["targets"] and all(t["status"] in {"updated", "current"} for t in receipt["targets"]) else "PARTIAL"
+    receipt["cache_gc"] = prune_provider_caches(env, value, history, dry_run=dry_run) if native else []
+    cache_blocked = any(row.get("status") == "blocked" for row in receipt["cache_gc"])
+    receipt["status"] = ("GREEN" if receipt["targets"] and not cache_blocked
+                         and all(t["status"] in {"updated", "current"} for t in receipt["targets"])
+                         else "PARTIAL")
     if dry_run:
         receipt["status"] = "DRY-RUN"
     save()
@@ -375,6 +515,9 @@ def cmd_deliver(env, argv):
         die(f"DELIVERY_FAILED: {exc}")
     for target in receipt["targets"]:
         print(f"{target['status']:8} {target.get('root', target['surface'])} {target.get('reason', '')[:200]}")
+    for cache in receipt.get("cache_gc", []):
+        status = cache.get("status", "preserve")
+        print(f"{status:8} {cache['path']} {cache['classification']}")
     print(f"{receipt['status']}; session=restart-required; receipt={receipt['receipt']}")
     if receipt["status"] == "PARTIAL":
         raise SystemExit(1)

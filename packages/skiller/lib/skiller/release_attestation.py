@@ -57,6 +57,10 @@ class Source:
     def json(self, path):
         return json.loads(self.read(path))
 
+    def exists(self, path):
+        path = str(Path(path)).removeprefix("./")
+        return path in self.paths if self.paths is not None else (self.root / path).is_file()
+
     def files(self, prefix, *, ignore=SKILL_IGNORE):
         prefix = str(Path(prefix)).removeprefix("./")
         if self.paths is not None:
@@ -85,6 +89,73 @@ def surface(source, root, roots, *, manifest=None):
     return {"source": root, "files": files, "tree_digest": tree_digest(files)}
 
 
+def _release_unit_policy(source):
+    """Return the independent version owner for every release plugin unit.
+
+    Historical refs predate the explicit policy file.  The fallback is the same
+    stable ownership rule so old releases remain comparable without becoming an
+    authority for the current expected version.
+    """
+    path = "configs/release-units.json"
+    if source.exists(path):
+        value = source.json(path)
+        if value.get("schema_version") != "release-unit-policy/v1":
+            raise ValueError("RELEASE_UNIT_POLICY_INVALID")
+        return value
+    return {
+        "schema_version": "release-unit-policy/v1",
+        "plugins": {
+            "task": {"version_owner": "umbrella", "required_providers": ["claude-code", "codex"]},
+            "maind": {"version_owner": "package", "package": "maind", "required_providers": ["claude-code"]},
+            "analyst": {"version_owner": "package", "package": "analyst", "required_providers": ["claude-code"]},
+            "harness": {"version_owner": "package", "package": "harness", "required_providers": ["claude-code"]},
+        },
+        "default_plugin_version_owner": "skiller-publication-map",
+    }
+
+
+def _expected_plugin_version(source, policy, name, umbrella_version):
+    rule = policy.get("plugins", {}).get(name, {})
+    owner = rule.get("version_owner", policy.get("default_plugin_version_owner"))
+    if owner == "umbrella":
+        return umbrella_version, "umbrella"
+    if owner == "package":
+        package = rule.get("package", name)
+        package_path = f"packages/{package}/package.json"
+        return source.json(package_path)["version"], package_path
+    if owner == "skiller-publication-map":
+        path = "packages/skiller/configs/publication-versions.json"
+        versions = source.json(path)
+        expected = versions.get("units", {}).get(name, versions["default_unit_version"])
+        return expected, path
+    raise ValueError(f"RELEASE_UNIT_POLICY_INVALID: {name}: {owner}")
+
+
+def version_errors(value):
+    """Validate version freshness independently from release snapshot bytes."""
+    errors = []
+    for unit in value.get("units", []):
+        expected = unit.get("expected_version")
+        if expected is None:
+            continue
+        actual = unit.get("version")
+        source = unit.get("version_source", "unknown")
+        if actual != expected:
+            errors.append(
+                f"RELEASE_EXPECTED_VERSION_MISMATCH: {unit['id']} expected {expected} "
+                f"from {source}, got {actual}")
+        provider_versions = unit.get("provider_versions", {})
+        for provider, provider_version in sorted(provider_versions.items()):
+            if provider_version != expected:
+                errors.append(
+                    f"RELEASE_VERSION_SURFACE_MISMATCH: {unit['id']} {provider}="
+                    f"{provider_version}, expected {expected}")
+        for provider in unit.get("required_providers", []):
+            if provider not in unit.get("providers", {}):
+                errors.append(f"RELEASE_PROVIDER_MISSING: {unit['id']} {provider}")
+    return errors
+
+
 def build(root, tag=None, *, ref=None):
     source = Source(root, ref)
     changelog = source.read("CHANGELOG.md").decode()
@@ -95,21 +166,26 @@ def build(root, tag=None, *, ref=None):
     version, date = headings[0]
     if tag and tag != "v" + version:
         raise ValueError("RELEASE_VERSION_MISMATCH")
-    codex = source.json(".agents/plugins/marketplace.json")
+    codex = {p["name"]: p for p in source.json(".agents/plugins/marketplace.json")["plugins"]}
     claude = {p["name"]: p for p in source.json(".claude-plugin/marketplace.json")["plugins"]}
+    policy = _release_unit_policy(source)
     units = []
-    for entry in sorted(codex["plugins"], key=lambda e: e["name"]):
-        name = entry["name"]
-        raw = entry["source"]
-        codex_root = (raw if isinstance(raw, str) else raw["path"]).removeprefix("./")
-        manifest = source.json(codex_root + "/.codex-plugin/plugin.json")
-        skill_roots = manifest["skills"]
-        if isinstance(skill_roots, str):
-            skill_roots = [skill_roots]
-        providers = {"codex": surface(source, codex_root, skill_roots,
-                                       manifest=".codex-plugin/plugin.json")}
-        providers["codex-native"] = surface(source, codex_root, ["."],
-                                              manifest=".codex-plugin/plugin.json")
+    for name in sorted(set(codex) | set(claude)):
+        entry = codex.get(name)
+        providers = {}
+        provider_versions = {}
+        if entry:
+            raw = entry["source"]
+            codex_root = (raw if isinstance(raw, str) else raw["path"]).removeprefix("./")
+            manifest = source.json(codex_root + "/.codex-plugin/plugin.json")
+            skill_roots = manifest["skills"]
+            if isinstance(skill_roots, str):
+                skill_roots = [skill_roots]
+            providers["codex"] = surface(source, codex_root, skill_roots,
+                                           manifest=".codex-plugin/plugin.json")
+            providers["codex-native"] = surface(source, codex_root, ["."],
+                                                  manifest=".codex-plugin/plugin.json")
+            provider_versions["codex"] = manifest["version"]
         other = claude.get(name)
         if other:
             claude_root = str(Path(other["source"]))
@@ -119,6 +195,8 @@ def build(root, tag=None, *, ref=None):
             else:
                 claude_manifest = ".claude-plugin/plugin.json"
                 declaration = source.json(claude_root + "/" + claude_manifest)
+                if declaration.get("version"):
+                    provider_versions["claude-code"] = declaration["version"]
                 if claude_root.startswith("packages/skiller/skills/"):
                     roots = ["."]
                 else:
@@ -131,15 +209,28 @@ def build(root, tag=None, *, ref=None):
         if name == "core":
             providers["runtime"] = surface(source, "core", ["."],
                                             manifest=None)
-        units.append({"id": name, "version": manifest["version"], "providers": providers,
+        expected, version_source = _expected_plugin_version(source, policy, name, version)
+        actual = (provider_versions.get("codex") or provider_versions.get("claude-code")
+                  or expected)
+        units.append({"id": name, "version": actual, "expected_version": expected,
+                      "version_source": version_source,
+                      "required_providers": policy.get("plugins", {}).get(name, {}).get(
+                          "required_providers", []),
+                      "provider_versions": provider_versions, "providers": providers,
                       "tree_digest": tree_digest({p: s["tree_digest"] for p, s in providers.items()})})
     for package in ("skiller", "harness", "maind", "analyst"):
         package_root = "packages/" + package
         metadata = source.json(package_root + "/package.json")
         runtime = surface(source, package_root, ["lib", "bin", "scripts", "configs", "install.sh", "package.json"])
         units.append({"id": "package." + package, "version": metadata["version"],
+                      "expected_version": metadata["version"],
+                      "version_source": package_root + "/package.json",
+                      "required_providers": [], "provider_versions": {},
                       "providers": {"runtime": runtime}, "tree_digest": runtime["tree_digest"]})
     return {"schema_version": "release-attestation/v1",
+            "version_policy": {"source": "configs/release-units.json",
+                               "digest": digest(json.dumps(policy, sort_keys=True,
+                                                           separators=(",", ":")).encode())},
             "umbrella": {"version": version, "tag": "v" + version, "date": date},
             "units": sorted(units, key=lambda u: u["id"])}
 
@@ -163,7 +254,8 @@ def check_transition(previous, current):
 def check(root, value, *, previous_ref=None):
     errors = []
     if build(root, value["umbrella"]["tag"]) != value:
-        errors.append("RELEASE_ATTESTATION_STALE")
+        errors.append("RELEASE_SNAPSHOT_STALE")
+    errors.extend(version_errors(value))
     if previous_ref:
         errors.extend(check_transition(build(root, ref=previous_ref), value))
     for path in sorted((Path(root) / "releases").glob("v*.json")):

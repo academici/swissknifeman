@@ -1,0 +1,26 @@
+{
+  "schema_version": "release-unit-policy/v1",
+  "_doc": "Independent version ownership for release attestation. Snapshot bytes never define the expected version.",
+  "plugins": {
+    "task": {
+      "version_owner": "umbrella",
+      "required_providers": ["claude-code", "codex"]
+    },
+    "maind": {
+      "version_owner": "package",
+      "package": "maind",
+      "required_providers": ["claude-code"]
+    },
+    "analyst": {
+      "version_owner": "package",
+      "package": "analyst",
+      "required_providers": ["claude-code"]
+    },
+    "harness": {
+      "version_owner": "package",
+      "package": "harness",
+      "required_providers": ["claude-code"]
+    }
+  },
+  "default_plugin_version_owner": "skiller-publication-map"
+}

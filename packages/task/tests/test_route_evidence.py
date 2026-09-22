@@ -158,6 +158,82 @@ class CaptureActualTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, "ROUTE_ACTUAL_SOURCE_UNDECLARED")
 
 
+class OwnerAttestationTests(unittest.TestCase):
+    def _workflow_attestation(self):
+        evidence = re.capture_actual(
+            "implementation", "medium", source="provider-thread-state",
+            model="gpt-5.6-terra", ts="2026-09-22T10:00:00Z")
+        evidence.update({
+            "thread_id": "thread-1", "source_version": "codex-turn-context-v1",
+            "cwd": "/workspace/repo",
+            "invocation": "$ task:plan-run PLAN P1.1",
+            "owner_message_digest": "a" * 64,
+        })
+        return re.build_owner_attestation(
+            evidence, provider="codex", plan_id="PLAN", item_id="P1.1",
+            action_digest="b" * 64, audience="task.owner-authority",
+            expires_at="2026-09-22T10:05:00Z", nonce="nonce-1")
+
+    def _expected(self):
+        return {"provider": "codex", "cwd": "/workspace/repo", "plan_id": "PLAN",
+                "item_id": "P1.1", "action_digest": "b" * 64,
+                "command": "task:plan-run", "arguments": "PLAN P1.1",
+                "audience": "task.owner-authority", "session_id": "thread-1",
+                "owner_message_digest": "a" * 64}
+
+    def test_local_provider_state_is_workflow_guard_only(self):
+        attestation = self._workflow_attestation()
+        result = re.verify_owner_attestation(
+            attestation, expected=self._expected(), protected=False,
+            now=datetime(2026, 9, 22, 10, 1, tzinfo=timezone.utc))
+        self.assertEqual(result["boundary"], "workflow-guard")
+        with self.assertRaisesRegex(re.RouteEvidenceError, "OWNER_ATTESTATION_UNSUPPORTED"):
+            re.verify_owner_attestation(
+                attestation, expected=self._expected(), protected=True,
+                now=datetime(2026, 9, 22, 10, 1, tzinfo=timezone.utc))
+
+    def test_exact_fields_binding_and_expiry_fail_closed(self):
+        attestation = self._workflow_attestation()
+        with self.assertRaisesRegex(re.RouteEvidenceError, "OWNER_ATTESTATION_INVALID"):
+            re.verify_owner_attestation(
+                {**attestation, "extra": True}, expected=self._expected(), protected=False,
+                now=datetime(2026, 9, 22, 10, 1, tzinfo=timezone.utc))
+        with self.assertRaisesRegex(re.RouteEvidenceError, "OWNER_ATTESTATION_INVALID"):
+            re.verify_owner_attestation(
+                {**attestation, "subject": {"audience": "task.owner-authority"}},
+                expected=self._expected(), protected=False,
+                now=datetime(2026, 9, 22, 10, 1, tzinfo=timezone.utc))
+        with self.assertRaisesRegex(re.RouteEvidenceError, "OWNER_ATTESTATION_MISMATCH"):
+            re.verify_owner_attestation(
+                attestation, expected={**self._expected(), "item_id": "P1.2"},
+                protected=False, now=datetime(2026, 9, 22, 10, 1, tzinfo=timezone.utc))
+        with self.assertRaisesRegex(re.RouteEvidenceError, "OWNER_ATTESTATION_EXPIRED"):
+            re.verify_owner_attestation(
+                attestation, expected=self._expected(), protected=False,
+                now=datetime(2026, 9, 22, 10, 6, tzinfo=timezone.utc))
+
+    def test_security_boundary_requires_verifier_and_single_use_nonce(self):
+        attestation = {**self._workflow_attestation(), "boundary": "security-boundary",
+                       "issuer": "provider:codex", "proof": "opaque-provider-proof"}
+        used = set()
+
+        def consume(issuer, nonce, digest):
+            key = (issuer, nonce, digest)
+            if key in used:
+                return False
+            used.add(key)
+            return True
+
+        now = datetime(2026, 9, 22, 10, 1, tzinfo=timezone.utc)
+        self.assertTrue(re.verify_owner_attestation(
+            attestation, expected=self._expected(), verifier=lambda value: bool(value["proof"]),
+            nonce_consumer=consume, protected=True, now=now)["verified"])
+        with self.assertRaisesRegex(re.RouteEvidenceError, "OWNER_ATTESTATION_REPLAYED"):
+            re.verify_owner_attestation(
+                attestation, expected=self._expected(), verifier=lambda value: True,
+                nonce_consumer=consume, protected=True, now=now)
+
+
 class ClassifyTests(unittest.TestCase):
     REQUIRED = {"model_class": "implementation", "effort": "high"}
 
@@ -606,6 +682,28 @@ class CodexLaunchEvidenceTests(unittest.TestCase):
 
         self.assertEqual(evidence["model_class"], "implementation")
         self.assertEqual(evidence["effort"], "medium")
+
+    def test_thread_state_accepts_semantic_task_invocation_without_shell_prompt_marker(self):
+        from task import route_evidence_codex
+
+        expected = "$ task:plan-exec PLAN P5.6"
+        with tempfile.TemporaryDirectory() as directory:
+            state_root = Path(directory)
+            self._write_thread_state(
+                state_root, thread_id="thread-natural-invocation", model="gpt-5.6-sol",
+                effort="high", prompt="task:plan-exec PLAN P5.6",
+            )
+
+            evidence = route_evidence_codex.capture_current(
+                expected_invocation=expected,
+                expected_cwd="/workspace/repo",
+                thread_id="thread-natural-invocation",
+                state_root=state_root,
+            )
+
+        self.assertEqual(evidence["invocation"], expected)
+        self.assertEqual(evidence["model_class"], "frontier")
+        self.assertEqual(evidence["effort"], "high")
 
     def test_thread_state_rejects_a_prompt_from_an_older_turn(self):
         from task import route_evidence_codex

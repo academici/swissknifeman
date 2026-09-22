@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import fcntl
 import hashlib
 import json
 import os
@@ -61,11 +62,7 @@ class Verdict:
 
 
 class CommitmentStore:
-    """Item-lifetime aggregation for previously delegated requests.
-
-    Persistence belongs to P5.4.  P5.3 keeps this small in-memory representation
-    so every adapter can supply the same prior commitments deterministically.
-    """
+    """Explicit in-memory diagnostic store; never enforced replay protection."""
 
     def __init__(self) -> None:
         self._commitments: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
@@ -81,7 +78,7 @@ class CommitmentStore:
 
 
 class ResponseStore:
-    """Single-use response registry. Durable storage is intentionally P5.4."""
+    """Explicit in-memory diagnostic registry; never enforced replay protection."""
 
     def __init__(self) -> None:
         self._used: set[tuple[str, int, str]] = set()
@@ -92,6 +89,132 @@ class ResponseStore:
             return False
         self._used.add(key)
         return True
+
+
+class DurableAuthorityStore:
+    """Small locked JSON store for workflow-guard commitments and responses.
+
+    The store is durable across processes and restarts, but remains writable by the
+    local agent principal.  It therefore prevents accidental/local replay without
+    claiming to be a provider security root.
+    """
+
+    SCHEMA_VERSION = "authority-store/v1"
+
+    def __init__(self, path: str | Path) -> None:
+        self.path = Path(path)
+        self.lock_path = self.path.with_suffix(self.path.suffix + ".lock")
+
+    @classmethod
+    def for_plan(cls, plan_dir: str | Path) -> "DurableAuthorityStore":
+        return cls(Path(plan_dir) / ".plan-cache" / "authority-store.json")
+
+    @staticmethod
+    def _empty() -> dict[str, Any]:
+        return {"schema_version": DurableAuthorityStore.SCHEMA_VERSION,
+                "commitments": {}, "responses": [], "activations": {}}
+
+    def _read(self) -> dict[str, Any]:
+        if not self.path.exists():
+            return self._empty()
+        if self.path.is_symlink() or not self.path.is_file():
+            raise AuthorityFrameError("authority store path is not a regular file")
+        try:
+            state = json.loads(self.path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise AuthorityFrameError("authority store is unreadable or corrupt") from exc
+        if (not isinstance(state, dict) or set(state) != {
+                "schema_version", "commitments", "responses", "activations"}
+                or state.get("schema_version") != self.SCHEMA_VERSION
+                or not isinstance(state.get("commitments"), dict)
+                or not isinstance(state.get("responses"), list)
+                or not isinstance(state.get("activations"), dict)):
+            raise AuthorityFrameError("authority store has an unsupported schema")
+        return state
+
+    def _write(self, state: dict[str, Any]) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        if self.path.parent.is_symlink():
+            raise AuthorityFrameError("authority store parent is a symlink")
+        payload = _canonical_bytes(state) + b"\n"
+        temporary = self.path.with_name(f".{self.path.name}.{os.getpid()}.tmp")
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        if hasattr(os, "O_NOFOLLOW"):
+            flags |= os.O_NOFOLLOW
+        descriptor = os.open(temporary, flags, 0o600)
+        try:
+            with os.fdopen(descriptor, "wb", closefd=True) as stream:
+                stream.write(payload)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary, self.path)
+            directory = os.open(self.path.parent, os.O_RDONLY)
+            try:
+                os.fsync(directory)
+            finally:
+                os.close(directory)
+        finally:
+            try:
+                temporary.unlink()
+            except FileNotFoundError:
+                pass
+
+    def _transaction(self, operation):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with self.lock_path.open("a+") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            state = self._read()
+            result, changed = operation(state)
+            if changed:
+                self._write(state)
+            return result
+
+    @staticmethod
+    def _key(request: dict[str, Any]) -> str:
+        return "\0".join(_aggregation_key(request))
+
+    def authorize(self, request: dict[str, Any], *, frame: dict[str, Any] | None,
+                  observed: "ObservedAction | None") -> Verdict:
+        active = frame if frame is not None else load_frame()
+        return Verdict("approval_required", "P5_DECISION_OBSERVATION_UNVERIFIED",
+                       policy_digest(active))
+
+    def use_response(self, decision_id: str, action_version: int,
+                     action_digest: str) -> bool:
+        key = [decision_id, action_version, action_digest]
+
+        def operation(state):
+            if key in state["responses"]:
+                return False, False
+            state["responses"].append(key)
+            return True, True
+        return self._transaction(operation)
+
+    def activate(self, key: str, record: dict[str, Any]) -> bool:
+        def operation(state):
+            existing = state["activations"].get(key)
+            if existing is not None:
+                return existing == record, False
+            state["activations"][key] = record
+            return True, True
+        return self._transaction(operation)
+
+    def activation(self, key: str) -> dict[str, Any] | None:
+        return self._transaction(lambda state: (state["activations"].get(key), False))
+
+
+@dataclass(frozen=True)
+class ObservedAction:
+    """Facts produced by a trusted adapter, separate from caller claims."""
+
+    affected_surfaces: tuple[str, ...]
+    declared_scope: tuple[str, ...]
+    frozen_contract_change: bool
+    closed_set_extension: bool
+    reversible: bool
+    decision_recorded: bool
+    provenance: str
+    verified: bool = True
 
 
 def _package_root() -> Path:
@@ -217,19 +340,25 @@ def _surfaces(action: dict[str, Any]) -> set[str]:
     return set(surfaces)
 
 
-def _commitment(request: dict[str, Any]) -> dict[str, Any]:
+def _commitment(request: dict[str, Any], *, observed: ObservedAction | None = None) -> dict[str, Any]:
     action = _action(request)
+    if observed is not None:
+        return {"affected_surfaces": sorted(observed.affected_surfaces),
+                "declared_scope": sorted(observed.declared_scope)}
     return {
         "affected_surfaces": sorted(_surfaces(action)),
         "declared_scope": sorted(set(action.get("declared_scope", ()))),
     }
 
 
-def _constructive_predicates(request: dict[str, Any], commitments: list[dict[str, Any]]) -> tuple[bool, set[str]]:
-    action = _action(request)
-    surfaces = _surfaces(action)
-    declared_scope = action.get("declared_scope")
-    if not isinstance(declared_scope, list) or not all(isinstance(value, str) and value for value in declared_scope):
+def _constructive_predicates(request: dict[str, Any], commitments: list[dict[str, Any]],
+                             observed: ObservedAction | None) -> tuple[bool, set[str]]:
+    _action(request)  # validate the diagnostic caller claim, but never authorize from it
+    if observed is None or observed.verified is not True or not observed.provenance:
+        return False, set()
+    surfaces = set(observed.affected_surfaces)
+    declared_scope = list(observed.declared_scope)
+    if not declared_scope or not all(isinstance(value, str) and value for value in declared_scope):
         raise AuthorityRequestError("P5_DECISION_REJECTED")
     prior_surfaces: set[str] = set()
     scope = set(declared_scope)
@@ -240,16 +369,17 @@ def _constructive_predicates(request: dict[str, Any], commitments: list[dict[str
         scope &= set(previous["declared_scope"])
     predicates = {
         "within_declared_scope": (surfaces | prior_surfaces).issubset(scope),
-        "no_frozen_contract_change": action.get("frozen_contract_change") is False,
-        "no_closed_set_extension": action.get("closed_set_extension") is False,
-        "reversible": action.get("reversible") is True,
-        "decision_recorded": action.get("decision_recorded") is True,
+        "no_frozen_contract_change": observed.frozen_contract_change is False,
+        "no_closed_set_extension": observed.closed_set_extension is False,
+        "reversible": observed.reversible is True,
+        "decision_recorded": observed.decision_recorded is True,
     }
     return all(predicates[name] for name in REQUIRED_PREDICATES), surfaces | prior_surfaces
 
 
 def evaluate(request: dict[str, Any], *, frame: dict[str, Any] | None = None,
-             commitments: list[dict[str, Any]] | None = None) -> Verdict:
+             commitments: list[dict[str, Any]] | None = None,
+             observed: ObservedAction | None = None) -> Verdict:
     """Evaluate a request without committing it. Every error returns non-delegated."""
     try:
         active = frame if frame is not None else load_frame()
@@ -270,7 +400,7 @@ def evaluate(request: dict[str, Any], *, frame: dict[str, Any] | None = None,
             return Verdict("approval_required", "P5_DECISION_ESCALATED", expected_digest)
         if decision_class != "constructive":
             return Verdict("denied", "P5_DECISION_POLICY_ERROR", expected_digest)
-        allowed, surfaces = _constructive_predicates(request, commitments or [])
+        allowed, surfaces = _constructive_predicates(request, commitments or [], observed)
         if not allowed:
             return Verdict("approval_required", "P5_DECISION_ESCALATED", expected_digest,
                            affected_surfaces=tuple(sorted(surfaces)))
@@ -281,15 +411,27 @@ def evaluate(request: dict[str, Any], *, frame: dict[str, Any] | None = None,
         return Verdict("denied", "P5_DECISION_POLICY_ERROR", None)
 
 
-def authorize(request: dict[str, Any], *, store: CommitmentStore | None = None,
-              frame: dict[str, Any] | None = None, shadow: bool = False) -> Verdict | dict[str, Any]:
-    """The mandatory adapter boundary.  Only this function records delegation."""
+def authorize(request: dict[str, Any], *,
+              store: CommitmentStore | DurableAuthorityStore | None = None,
+              frame: dict[str, Any] | None = None, observed: ObservedAction | None = None,
+              shadow: bool = False, mode: str = "enforced") -> Verdict | dict[str, Any]:
+    """The mandatory adapter boundary.
+
+    Enforced mode requires the durable transactional store.  The legacy in-memory
+    store is available only in explicitly named diagnostic mode.
+    """
+    if mode not in ("enforced", "diagnostic"):
+        return Verdict("denied", "P5_DECISION_POLICY_ERROR", None)
+    if isinstance(store, DurableAuthorityStore) and not shadow:
+        return store.authorize(request, frame=frame, observed=observed)
     commitments = store.for_request(request) if store is not None else []
-    verdict = evaluate(request, frame=frame, commitments=commitments)
+    verdict = evaluate(request, frame=frame, commitments=commitments, observed=observed)
     if shadow:
         return {"enforced": False, "would_verdict": verdict.verdict,
                 "reason_code": verdict.reason_code, "policy_digest": verdict.policy_digest}
-    if store is not None:
+    if mode == "enforced":
+        return Verdict("denied", "P5_DECISION_STORE_REQUIRED", verdict.policy_digest)
+    if isinstance(store, CommitmentStore):
         store.record(request, verdict)
     return verdict
 
@@ -337,7 +479,9 @@ def auto_answer_clarification(request: dict[str, Any], *, question_class: str,
 
 
 def apply_response(request: dict[str, Any], response: dict[str, Any], *,
-                   store: ResponseStore | None = None, frame: dict[str, Any] | None = None) -> Verdict | dict[str, Any]:
+                   store: ResponseStore | DurableAuthorityStore | None = None,
+                   frame: dict[str, Any] | None = None,
+                   mode: str = "enforced") -> Verdict | dict[str, Any]:
     """Apply exactly one response only when its current bytes and policy still match."""
     active = frame if frame is not None else load_frame()
     try:
@@ -365,8 +509,13 @@ def apply_response(request: dict[str, Any], response: dict[str, Any], *,
     version = request.get("action_version")
     if not isinstance(decision_id, str) or not isinstance(version, int):
         return Verdict("denied", "P5_DECISION_REJECTED", policy_digest(active))
-    registry = store if store is not None else ResponseStore()
-    if not registry.use(decision_id, version, current_digest):
+    if isinstance(store, DurableAuthorityStore):
+        consumed = store.use_response(decision_id, version, current_digest)
+    elif mode == "diagnostic" and isinstance(store, ResponseStore):
+        consumed = store.use(decision_id, version, current_digest)
+    else:
+        return Verdict("denied", "P5_DECISION_STORE_REQUIRED", policy_digest(active))
+    if not consumed:
         return Verdict("denied", "P5_DECISION_RESPONSE_REUSED", policy_digest(active))
     return {"verdict": "applied", "action_digest": current_digest,
             "reclassified_to": response.get("reclassified_to")}

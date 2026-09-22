@@ -312,6 +312,11 @@ def parse_context(value: str, *, allow_legacy: bool = False) -> ContinuityDecisi
             raise ContinuityError("CONTINUITY_CONTEXT_INVALID: cold start requires one reason")
         return validate_decision(ContinuityDecision(
             outcome, reason, (f"persisted-context:{reason}",), True))
+    if outcome == "terminal":
+        if separator:
+            raise ContinuityError("CONTINUITY_CONTEXT_INVALID: terminal has no suffix")
+        return validate_decision(ContinuityDecision(
+            outcome, "terminal-evidence", ("persisted-context:terminal",), False))
     if separator or outcome not in {"continue-root", "isolated-child-return"}:
         raise ContinuityError("CONTINUITY_CONTEXT_INVALID")
     return validate_decision(ContinuityDecision(

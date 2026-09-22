@@ -124,9 +124,15 @@ def _raw_entries(value: str, field: str) -> list[str]:
 def _relative(path: Path, plan_dir: Path, repo_root: Path) -> str:
     for root in (plan_dir, repo_root):
         try:
-            return path.resolve().relative_to(root.resolve()).as_posix()
+            relative = path.absolute().relative_to(root.absolute()).as_posix()
         except ValueError:
             continue
+        from task import task_contract
+        try:
+            task_contract.contained_regular_path(root, relative)
+        except ValueError as exc:
+            raise BundleError(f"unsafe_input: {path}: {exc}") from exc
+        return relative
     raise BundleError(f"вход вне plan/repo root: {path}")
 
 
@@ -245,6 +251,10 @@ def model(plan_dir, item_id: str) -> dict:
             sources = []
             for token, _declared in (candidate for candidate in plan_weight.path_candidates(raw)
                                      if candidate[1]):
+                classified = task_contract.classify_execution_input(token)
+                if classified["path_kind"] != "internal":
+                    raise BundleError(
+                        f"{classified['rejection']}: {classified['original']}")
                 source = plan_weight.resolve_candidate(token, (plan_dir, repo_root))
                 if source is None:
                     raise BundleError(f"unresolvable_entry: {raw}")

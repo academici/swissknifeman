@@ -60,6 +60,7 @@ Fixed commands and launch-blocks pin **one** selector per class. Inventory-only 
 | `composer-2.5-fast` | economy, explore | — |
 | `composer-2.5` | implementation | — |
 | `claude-opus-5-thinking-high` | frontier, design, audit | — |
+| `grok-4.7` | frontier | live cli-config selectedModel; reasoning_effort=high maps through effort_selectors |
 | `gpt-5.6-sol-medium` | alternate | — |
 | `auto` | routing-assist | policy=never-substitute-fixed-frontier |
 

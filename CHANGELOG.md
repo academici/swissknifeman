@@ -2,6 +2,40 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **task public recovery reasons.** Task Contract JSON сохраняет точные внутренние
+  diagnostics и добавляет стабильные `reason_codes` с восемью recovery-категориями;
+  существующие `pre_mutation`/`pre_final` и exit-status остаются совместимыми.
+- **task bundle privacy/portability boundary.** `BundleInputPolicy/v1` теперь
+  запрещает caller-owned ослабление minimization/sensitive classes; bundle members
+  проходят platform-neutral lexical classification, no-follow containment и
+  regular-file checks, а внешние/невалидные execution inputs сохраняются до
+  типизированного portability verdict вместо молчаливого отбрасывания.
+- **task journal/projection durability.** Terminal journal writes теперь
+  сериализованы, отказываются от corrupt history и terminal-before-start,
+  а typed historical exceptions привязаны к accepted/current D#; timestamps,
+  metrics и decision dates валидируются строго, projection writes добавили
+  no-follow, process lock и `fsync(file) → replace → fsync(directory)`.
+- **task owner-authority boundary.** Локальные Codex/Claude transcript carriers теперь
+  честно остаются `workflow-guard` и не активируют protected owner-gate; exact
+  `provider-attestation/v1` требует provider-owned verifier/nonce channel. Enforced
+  authority использует durable process-safe replay/commitment store и fail-closed
+  требует approval, пока нет реального analyzer для observed-action facts.
+- **task:** добавлена owner-gated миграция legacy `journal.jsonl` в актуальную схему без
+  переписывания истории; Codex route evidence принимает семантически одинаковые строки
+  `task:…` и `$ task:…`; перед одноразовым применением owner-response теперь сначала
+  валидируется continuation, поэтому ошибочный fallback не расходует ответ.
+- **Cursor consumer workspace-contained.** SSOT
+  `packages/harness/configs/cursor/config/consumer-workspace-extensions.json` — append
+  `Shell(docker|make|curl)`, Laravel Write globs, terminal/MCP allowlists; merge в
+  `cursor_render.py`. Rollout: `configs/cursor/config/OPERATOR-ROLLOUT-cursor-consumer.md`.
+- **Cursor security.safe-dirs fail-closed envelope.** Генерируемый `lifecycle.py` больше
+  не блокирует Shell при пустом/битом stdin или неполном `beforeShellExecution` payload
+  для surface `security.safe-dirs` (non-rm default allow); остальные surfaces пишут
+  stderr при invalid envelope. `conversation_id` optional. Roadmap:
+  `roadmap/2026.09.21-cursor-safe-dirs-fail-closed-non-rm-shell.md`.
+
 ## [0.23.0] - 2026-09-21
 
 ### Added

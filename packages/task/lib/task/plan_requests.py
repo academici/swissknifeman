@@ -610,21 +610,22 @@ def resolve(plan_dir, decision_id: str, response: dict, *, resolver_id: str,
     selected = next(row for row in request_value["options"] if row["id"] == response["selected_option"])
     outcome = selected["outcome"]
     if outcome == "apply":
-        application = plan_authority.apply_response(
-            {**request_value, "action": request_value["canonical_action"]["action"]}, response)
-        if not isinstance(application, dict) or application.get("verdict") != "applied":
-            raise RequestError("response application rejected")
-        _continuation(request_value, current=current_continuation,
-                      resume_available=resume_available, fallback_reason=fallback_reason)
+        continuation = _continuation(
+            request_value, current=current_continuation,
+            resume_available=resume_available, fallback_reason=fallback_reason,
+        )
+    application = plan_authority.apply_response(
+        {**request_value, "action": request_value["canonical_action"]["action"]}, response,
+        store=plan_authority.DurableAuthorityStore.for_plan(plan_dir))
+    if not isinstance(application, dict) or application.get("verdict") != "applied":
+        raise RequestError("response application rejected")
     event = {"type": "response", "at": _now(), "actor": actor, "decision_id": decision_id,
              "resolver_id": resolver_id, "response": response, "outcome": outcome}
     _append(plan_dir, event)
     outcome = semantic_outcome(states(plan_dir)[decision_id])
     _repair_transition(plan_dir, request_value, actor=actor, outcome=outcome)
     if outcome == "apply":
-        return {**event, "continuation": _continuation(
-            request_value, current=current_continuation, resume_available=resume_available,
-            fallback_reason=fallback_reason)}
+        return {**event, "continuation": continuation}
     return event
 
 

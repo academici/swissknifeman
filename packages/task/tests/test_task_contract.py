@@ -9,6 +9,7 @@ every mutation starts from a schema-valid, allow/allow baseline — one mutated 
 test, never a hand-authored contract that could silently satisfy the wrong branch.
 """
 import copy
+import hashlib
 import json
 import os
 import re
@@ -16,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 from pathlib import Path
 
@@ -23,7 +25,8 @@ try:
     from . import fixtures  # noqa: F401,E402 — package invocation from repository root
 except ImportError:  # pragma: no cover - discovery from packages/task
     import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
-from task import journal, plan_item_state, plan_layout, task_contract, terminal_policy  # noqa: E402
+from task import (journal, plan_authority, plan_item_state, plan_layout, task_contract,
+                  terminal_policy)  # noqa: E402
 from core.repo import resolve_plan_dir  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -364,6 +367,20 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
             "**Implementation Rules:** stdlib-only.",
             "**Implementation Rules:** [OWNER-GRANT:G-TEST] protects this transition.")
         fixtures.write_v2_carriers(self.plan_dir, item_spec=spec)
+        request = {"gate_id": "G-TEST", "branch": "go-branch", "scope": "finite-scope"}
+        action = {"plan_id": self.plan_dir.name, "item_id": "P1.1", "gate": request,
+                  "command": f"task:plan-run {self.plan_dir.name} P1.1",
+                  "cwd": str(self.plan_dir.parent.parent)}
+        action_digest = hashlib.sha256(json.dumps(
+            action, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":")).encode()).hexdigest()
+        plan_authority.DurableAuthorityStore.for_plan(self.plan_dir).activate(
+            f"{self.plan_dir.name}\0P1.1\0G-TEST",
+            {"schema_version": "owner-activation/v1", "plan_id": self.plan_dir.name,
+             "item_id": "P1.1", "gate_id": "G-TEST", "decision_id": "D65",
+             "owner_message": "brief/00-brief.md#grant-g-test",
+             "action_digest": action_digest, "attestation_sha256": "a" * 64,
+             "boundary": "security-boundary"})
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -378,6 +395,32 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
         request.update(overrides)
         return task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route(),
                                    protected_transition=request)
+
+    def _security_evidence(self):
+        from task import route_evidence
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        request = {"gate_id": "G-TEST", "branch": "go-branch", "scope": "finite-scope"}
+        action = {"plan_id": self.plan_dir.name, "item_id": "P1.1", "gate": request,
+                  "command": f"task:plan-run {self.plan_dir.name} P1.1",
+                  "cwd": str(self.plan_dir.parent.parent)}
+        digest = hashlib.sha256(json.dumps(
+            action, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":")).encode()).hexdigest()
+        evidence = {**self._actual_route(), "source": "provider-thread-state",
+                    "thread_id": "owner-thread", "source_version": "codex-provider-v1",
+                    "cwd": str(self.plan_dir.parent.parent),
+                    "invocation": f"$ task:plan-run {self.plan_dir.name} P1.1",
+                    "ts": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "owner_message_digest": "b" * 64}
+        workflow = route_evidence.build_owner_attestation(
+            evidence, provider="codex", plan_id=self.plan_dir.name, item_id="P1.1",
+            action_digest=digest, audience="task.owner-authority",
+            expires_at=(now + timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            nonce="nonce-provider-1")
+        evidence["owner_attestation"] = {
+            **workflow, "boundary": "security-boundary", "issuer": "provider:codex",
+            "proof": "opaque-provider-proof"}
+        return evidence
 
     @staticmethod
     def _decision_rows(*tail, prefix_count=64):
@@ -409,12 +452,12 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
         self.assertEqual(contract["authority"]["granted_by"], "phases/P1/P1.1.md:P1.1")
         self.assertEqual(task_contract.evaluate(contract)["pre_mutation"], "allow")
 
-    def test_exact_matching_owner_grant_allows_the_protected_transition(self):
+    def test_local_owner_grant_cannot_activate_protected_transition(self):
         contract = self._protected()
         self.assertEqual(contract["authority"]["class"], "owner-gate")
-        self.assertTrue(contract["authority"]["granted"])
-        self.assertIn("[OWNER-GRANT:G-TEST]", contract["authority"]["granted_by"])
-        self.assertEqual(task_contract.evaluate(contract)["pre_mutation"], "allow")
+        self.assertFalse(contract["authority"]["granted"])
+        self.assertEqual(task_contract.evaluate(contract)["pre_mutation"],
+                         "block:AUTHORITY_BOUNDARY")
 
     def _declare_gate(self):
         path = fixtures.item_spec_path(self.plan_dir)
@@ -425,7 +468,7 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
         self._declare_gate()
         contract = task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())
         self.assertEqual(contract["authority"]["class"], "owner-gate")
-        self.assertTrue(contract["authority"]["granted"])
+        self.assertFalse(contract["authority"]["granted"])
 
     def test_migration_prose_gap_is_closed_even_when_routine_is_declared(self):
         path = fixtures.item_spec_path(self.plan_dir)
@@ -446,22 +489,40 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
     def test_live_owner_invocation_materializes_only_the_declared_gate(self):
         self._declare_gate()
         self._replace_decision_rows(self._decision_rows(prefix_count=64))
-        evidence = {**self._actual_route(), "source": "provider-thread-state", "thread_id": "owner-thread",
-                    "source_version": "codex-thread-state-v1", "cwd": str(self.plan_dir.parent.parent),
-                    "invocation": f"$ task:plan-run {self.plan_dir.name} P1.1", "ts": "2026-09-13T12:00:00Z"}
-        with patch("task.route_evidence.capture_launch", return_value=evidence) as capture:
+        store = plan_authority.DurableAuthorityStore.for_plan(self.plan_dir)
+        store.path.unlink()
+        evidence = self._security_evidence()
+        with patch("task.route_evidence.capture_launch", return_value=evidence) as capture, \
+                patch("task.route_evidence.provider_owner_verification",
+                      return_value=(lambda value: True, lambda issuer, nonce, digest: True)):
             result = task_contract.materialize_owner_invocation(self.plan_dir, "P1.1")
-            self.assertTrue(result["granted"])
+            self.assertFalse(result["granted"])
+            self.assertTrue(result["prepared"])
             capture.assert_called_once_with(expected_invocation=f"task:plan-run {self.plan_dir.name} P1.1",
                                             expected_cwd=self.plan_dir.parent.parent,
                                             require_current_owner_invocation=True)
-        self.assertTrue(task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())["authority"]["granted"])
+        self.assertFalse(task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())["authority"]["granted"])
         self.assertFalse(self._protected(scope="other-scope")["authority"]["granted"])
         with patch("task.route_evidence.capture_launch", return_value={**evidence, "invocation": "$ task:plan-run OTHER P1.1"}):
             with self.assertRaisesRegex(task_contract.TaskContractBuildError, "UNATTESTED"):
                 task_contract.materialize_owner_invocation(self.plan_dir, "P1.1")
         with self.assertRaises(TypeError):
             task_contract.materialize_owner_invocation(self.plan_dir, "P1.1", evidence=evidence)
+
+    def test_materialization_failure_never_activates_partial_grant(self):
+        self._declare_gate()
+        self._replace_decision_rows(self._decision_rows(prefix_count=64))
+        store = plan_authority.DurableAuthorityStore.for_plan(self.plan_dir)
+        store.path.unlink()
+        evidence = self._security_evidence()
+        with patch("task.route_evidence.capture_launch", return_value=evidence), \
+                patch("task.route_evidence.provider_owner_verification",
+                      return_value=(lambda value: True, lambda issuer, nonce, digest: True)), \
+                patch("task.plan_decisions.build_views", side_effect=RuntimeError("injected")):
+            with self.assertRaisesRegex(RuntimeError, "injected"):
+                task_contract.materialize_owner_invocation(self.plan_dir, "P1.1")
+        self.assertFalse(task_contract.build(
+            self.plan_dir, "P1.1", actual_route=self._actual_route())["authority"]["granted"])
 
     def test_missing_forged_wrong_scope_and_revoked_grants_fail_closed(self):
         cases = {
@@ -515,11 +576,12 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
                 self.assertEqual(task_contract.evaluate(self._protected())["pre_mutation"],
                                  "block:AUTHORITY_BOUNDARY")
 
-    def test_explicit_owner_message_not_approval_owner_identity_allows(self):
+    def test_explicit_owner_message_cannot_replace_provider_authority(self):
         plan = (self.plan_dir / "plan.md").read_text(encoding="utf-8").replace(
             "| Approval Owner | dv |", "| Approval Owner | copied-display-name |")
         (self.plan_dir / "plan.md").write_text(plan, encoding="utf-8")
-        self.assertEqual(task_contract.evaluate(self._protected())["pre_mutation"], "allow")
+        self.assertEqual(task_contract.evaluate(self._protected())["pre_mutation"],
+                         "block:AUTHORITY_BOUNDARY")
 
     def test_legacy_manual_authority_kwargs_are_refused_by_the_api(self):
         with self.assertRaises(TypeError):
@@ -552,6 +614,14 @@ class ArtifexOrdinaryAuthorityRegressionTests(unittest.TestCase):
                 self.assertEqual(task_contract.evaluate(contract), {
                     "pre_mutation": "allow",
                     "pre_final": "block:VALIDATION_RECEIPT_MISSING",
+                    "reason_codes": {
+                        "pre_mutation": None,
+                        "pre_final": {
+                            "code": "evidence-missing",
+                            "internal_code": "VALIDATION_RECEIPT_MISSING",
+                            "message": "Produce the required evidence before retrying.",
+                        },
+                    },
                     "content_hash": task_contract.content_hash(contract)})
                 self.assertNotIn("D50", contract["authority"]["granted_by"])
 
@@ -706,6 +776,8 @@ class EvaluateTests(unittest.TestCase):
         result = task_contract.evaluate(base)
         self.assertEqual(result["pre_mutation"], "allow")
         self.assertEqual(result["pre_final"], "allow")
+        self.assertEqual(result["reason_codes"], {
+            "pre_mutation": None, "pre_final": None})
         self.assertEqual(result["content_hash"], base["version"]["content_hash"])
 
     def test_blocked_pre_mutation_reports_pre_final_as_not_applicable(self):
@@ -716,6 +788,32 @@ class EvaluateTests(unittest.TestCase):
         result = task_contract.evaluate(contract)
         self.assertEqual(result["pre_mutation"], "block:AUTHORITY_BOUNDARY")
         self.assertEqual(result["pre_final"], "n/a")
+        self.assertEqual(result["reason_codes"]["pre_mutation"]["code"],
+                         "policy-denied")
+        self.assertIsNone(result["reason_codes"]["pre_final"])
+
+    def test_public_reason_taxonomy_keeps_internal_diagnostics(self):
+        expected = {
+            "PLAN_CONTEXT_TRUNCATED": "evidence-missing",
+            "PLAN_CONTEXT_DIGEST_MISMATCH": "evidence-forged",
+            "VALIDATION_RECEIPT_STALE": "evidence-stale",
+            "OWNER_ATTESTATION_FORGED": "evidence-forged",
+            "AUTHORITY_BOUNDARY": "policy-denied",
+            "JOURNAL_CONFLICT": "conflict",
+            "JOURNAL_CORRUPT": "corrupt-state",
+            "JOURNAL_DURABILITY_FAILED": "durability-failed",
+            "PORTABILITY_INPUT_INVALID": "schema-invalid",
+        }
+        for internal, public in expected.items():
+            with self.subTest(internal=internal):
+                reason = task_contract.public_reason(internal)
+                self.assertEqual(reason["code"], public)
+                self.assertEqual(reason["internal_code"], internal)
+                self.assertTrue(reason["message"])
+        for unknown in ("UNKNOWN_MISSING", "UNKNOWN_ATTESTATION", "UNKNOWN_CONFLICT"):
+            with self.subTest(unknown=unknown):
+                self.assertEqual(task_contract.public_reason(unknown)["code"],
+                                 "policy-denied")
 
 
 class CliGateTests(unittest.TestCase):
@@ -740,6 +838,8 @@ class CliGateTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertEqual(payload["pre_mutation"], "allow")
         self.assertEqual(payload["pre_final"], "block:ACCEPTANCE_NOT_PUBLIC")
+        self.assertEqual(payload["reason_codes"]["pre_final"]["code"],
+                         "schema-invalid")
 
     def test_full_check_keeps_allow_allow_exit_zero_and_json_shape(self):
         result = self._check(_load_base_contract())
@@ -747,6 +847,8 @@ class CliGateTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertEqual(payload["pre_mutation"], "allow")
         self.assertEqual(payload["pre_final"], "allow")
+        self.assertEqual(payload["reason_codes"], {
+            "pre_mutation": None, "pre_final": None})
 
 
 class EvaluateFindingHookTests(unittest.TestCase):
@@ -883,6 +985,35 @@ class BuildFixtureTests(unittest.TestCase):
                              {"model_class": "implementation", "effort": "medium"})
             self.assertEqual(contract["goal"]["outcome"], "Добавить проверку.")
             self.assertEqual(contract["next"]["context"], "continue-root")
+
+    def test_build_preserves_external_input_until_portability_gate(self):
+        phase_path = fixtures.item_spec_path(self.plan_dir)
+        phase_path.write_text(
+            phase_path.read_text(encoding="utf-8").replace(
+                "**Required Reads:** 1) lib/pkg/config.py",
+                "**Required Reads:** 1) lib/pkg/config.py 2) `/tmp/secret.json`"),
+            encoding="utf-8",
+        )
+        contract = task_contract.build(self.plan_dir, "P1.1")
+        external = next(entry for entry in contract["portability"]["execution_inputs"]
+                        if entry["original"] == "/tmp/secret.json")
+        self.assertEqual(external["path_kind"], "external")
+        self.assertEqual(task_contract.pre_mutation(contract), "PORTABILITY_EXTERNAL_INPUT")
+
+    def test_path_classifier_is_platform_neutral_and_does_not_expand_ambient_state(self):
+        cases = {
+            "nested/file.md": "internal",
+            "C:\\temp\\file.md": "external",
+            "\\\\server\\share\\file.md": "external",
+            "file:///tmp/file.md": "external",
+            "~/file.md": "external",
+            "$HOME/file.md": "external",
+            "nested/../file.md": "invalid",
+        }
+        for value, expected in cases.items():
+            with self.subTest(value=value):
+                self.assertEqual(
+                    task_contract.classify_execution_input(value)["path_kind"], expected)
 
     def test_contract_ignores_a_mapping_table_before_the_executable_table(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1095,7 +1226,7 @@ class BundleLintTests(unittest.TestCase):
         self.assertEqual(
             task_contract.bundle_lint(self.bundle_dir, manifest_path=self.manifest_path,
                                       verifier_path=self.verifier_path,
-                                      declared_privacy={"minimized": True, "excluded_classes": []}),
+                                      declared_privacy=task_contract.BUNDLE_INPUT_POLICY.privacy()),
             task_contract.BUNDLE_ARTIFACT_MISSING)
 
     def test_missing_verifier_fails_closed(self):
@@ -1105,7 +1236,7 @@ class BundleLintTests(unittest.TestCase):
         self.assertEqual(
             task_contract.bundle_lint(self.bundle_dir, manifest_path=self.manifest_path,
                                       verifier_path=self.verifier_path,
-                                      declared_privacy={"minimized": True, "excluded_classes": []}),
+                                      declared_privacy=task_contract.BUNDLE_INPUT_POLICY.privacy()),
             task_contract.BUNDLE_ARTIFACT_MISSING)
 
     def test_clean_bundle_matching_declaration_allows(self):
@@ -1113,7 +1244,15 @@ class BundleLintTests(unittest.TestCase):
         (self.bundle_dir / "a.txt").write_text("clean committed content", encoding="utf-8")
         self.assertIsNone(task_contract.bundle_lint(
             self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
-            declared_privacy={"minimized": True, "excluded_classes": ["secrets"]}))
+            declared_privacy=task_contract.BUNDLE_INPUT_POLICY.privacy()))
+
+    def test_clean_nested_minimized_bundle_allows(self):
+        self._write_manifest(["nested/a.txt"])
+        (self.bundle_dir / "nested").mkdir()
+        (self.bundle_dir / "nested/a.txt").write_text("clean committed content", encoding="utf-8")
+        self.assertIsNone(task_contract.bundle_lint(
+            self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
+            declared_privacy=task_contract.BUNDLE_INPUT_POLICY.privacy()))
 
     def test_extra_undeclared_file_breaks_minimization(self):
         self._write_manifest(["a.txt"])
@@ -1122,7 +1261,7 @@ class BundleLintTests(unittest.TestCase):
         self.assertEqual(
             task_contract.bundle_lint(self.bundle_dir, manifest_path=self.manifest_path,
                                       verifier_path=self.verifier_path,
-                                      declared_privacy={"minimized": True, "excluded_classes": []}),
+                                      declared_privacy=task_contract.BUNDLE_INPUT_POLICY.privacy()),
             task_contract.BUNDLE_PRIVACY_MISMATCH)
 
     def test_secret_signature_found_despite_declared_exclusion(self):
@@ -1132,8 +1271,8 @@ class BundleLintTests(unittest.TestCase):
         self.assertEqual(
             task_contract.bundle_lint(
                 self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
-                declared_privacy={"minimized": True, "excluded_classes": ["secrets"]}),
-            task_contract.BUNDLE_PRIVACY_MISMATCH)
+                declared_privacy=task_contract.BUNDLE_INPUT_POLICY.privacy()),
+            task_contract.BUNDLE_POLICY_DENIED)
 
     def test_raw_transcript_body_needs_repeated_turn_markers_not_one_stray_line(self):
         self._write_manifest(["note.md"])
@@ -1142,7 +1281,7 @@ class BundleLintTests(unittest.TestCase):
         # One stray "Human:"-shaped line is not a transcript (false-positive guard).
         self.assertIsNone(task_contract.bundle_lint(
             self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
-            declared_privacy={"minimized": True, "excluded_classes": ["raw-transcript-bodies"]}))
+            declared_privacy=task_contract.BUNDLE_INPUT_POLICY.privacy()))
 
     def test_repeated_turn_markers_are_flagged_as_raw_transcript_bodies(self):
         self._write_manifest(["rollout.txt"])
@@ -1151,19 +1290,66 @@ class BundleLintTests(unittest.TestCase):
         self.assertEqual(
             task_contract.bundle_lint(
                 self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
-                declared_privacy={"minimized": True, "excluded_classes": ["raw-transcript-bodies"]}),
-            task_contract.BUNDLE_PRIVACY_MISMATCH)
+                declared_privacy=task_contract.BUNDLE_INPUT_POLICY.privacy()),
+            task_contract.BUNDLE_POLICY_DENIED)
 
-    def test_undeclared_class_present_is_not_flagged(self):
-        # The declaration only asserts what it claims excluded; a class present
-        # but never claimed excluded is not this predicate's concern (it only
-        # verifies the declared claims are true, never invents a stricter one).
+    def test_caller_cannot_remove_a_policy_forbidden_class(self):
         self._write_manifest(["rollout.txt"])
         (self.bundle_dir / "rollout.txt").write_text(
             "Human: hi\nAssistant: hello\nHuman: again\nAssistant: sure\n", encoding="utf-8")
-        self.assertIsNone(task_contract.bundle_lint(
+        self.assertEqual(task_contract.bundle_lint(
             self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
-            declared_privacy={"minimized": True, "excluded_classes": []}))
+            declared_privacy={"minimized": True, "excluded_classes": []}),
+            task_contract.BUNDLE_POLICY_DENIED)
+
+    def test_duplicate_normalized_manifest_names_reject(self):
+        self._write_manifest(["nested/a.txt", "nested/./a.txt"])
+        (self.bundle_dir / "nested").mkdir()
+        (self.bundle_dir / "nested/a.txt").write_text("clean", encoding="utf-8")
+        self.assertEqual(task_contract.bundle_lint(
+            self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
+            declared_privacy=task_contract.BUNDLE_INPUT_POLICY.privacy()),
+            task_contract.BUNDLE_MEMBER_DUPLICATE)
+
+    def test_external_and_traversing_manifest_names_reject(self):
+        for value, code in (("/tmp/a.txt", task_contract.BUNDLE_PATH_EXTERNAL),
+                            ("../a.txt", task_contract.BUNDLE_PATH_INVALID),
+                            ("C:\\temp\\a.txt", task_contract.BUNDLE_PATH_EXTERNAL),
+                            ("file:///tmp/a.txt", task_contract.BUNDLE_PATH_EXTERNAL)):
+            with self.subTest(value=value):
+                self._write_manifest([value])
+                self.assertEqual(task_contract.bundle_lint(
+                    self.bundle_dir, manifest_path=self.manifest_path,
+                    verifier_path=self.verifier_path,
+                    declared_privacy=task_contract.BUNDLE_INPUT_POLICY.privacy()), code)
+
+    def test_symlink_escape_rejects_without_reading_target(self):
+        outside = self.bundle_dir.with_name(self.bundle_dir.name + "-outside.txt")
+        self.addCleanup(lambda: outside.unlink(missing_ok=True))
+        outside.write_text("clean", encoding="utf-8")
+        (self.bundle_dir / "escape.txt").symlink_to(outside)
+        self._write_manifest(["escape.txt"])
+        self.assertEqual(task_contract.bundle_lint(
+            self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
+            declared_privacy=task_contract.BUNDLE_INPUT_POLICY.privacy()),
+            task_contract.BUNDLE_MEMBER_UNSAFE)
+
+    def test_broken_symlink_rejects_without_following_it(self):
+        (self.bundle_dir / "broken.txt").symlink_to(self.bundle_dir / "missing.txt")
+        self._write_manifest(["broken.txt"])
+        self.assertEqual(task_contract.bundle_lint(
+            self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
+            declared_privacy=task_contract.BUNDLE_INPUT_POLICY.privacy()),
+            task_contract.BUNDLE_MEMBER_UNSAFE)
+
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "requires POSIX mkfifo")
+    def test_special_file_rejects_without_opening_it(self):
+        os.mkfifo(self.bundle_dir / "pipe")
+        self._write_manifest(["pipe"])
+        self.assertEqual(task_contract.bundle_lint(
+            self.bundle_dir, manifest_path=self.manifest_path, verifier_path=self.verifier_path,
+            declared_privacy=task_contract.BUNDLE_INPUT_POLICY.privacy()),
+            task_contract.BUNDLE_MEMBER_UNSAFE)
 
 class BatchRoutingAdmissionTests(unittest.TestCase):
     """P1.2: batch authority is enforced before a caller can create an attempt."""

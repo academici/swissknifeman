@@ -133,6 +133,14 @@ class ContinuityTests(unittest.TestCase):
         self.assertFalse(decision.runnable)
         self.assertEqual(decision_from_dict(decision.as_dict()), decision)
 
+    def test_terminal_is_a_valid_compact_persisted_context(self):
+        decision = parse_context("terminal")
+        self.assertEqual(decision.outcome, "terminal")
+        self.assertEqual(decision.reason, "terminal-evidence")
+        self.assertFalse(decision.runnable)
+        with self.assertRaisesRegex(ContinuityError, "no suffix"):
+            parse_context("terminal: extra")
+
     def test_persisted_context_and_decision_are_fail_closed(self):
         for reason in COLD_START_REASONS:
             self.assertEqual(

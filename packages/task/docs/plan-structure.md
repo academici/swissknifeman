@@ -25,6 +25,7 @@ plans/<PLAN-ID>/
 ├── handoff.md         # rolling owner/design/audit pointer; not executor input in v2
 ├── journal.jsonl      # append-only execution history
 ├── journal-exceptions.jsonl # optional D51 exact historical-schema exception sidecar
+├── journal-migrations/ # owner-gated preimage + exact manifest/receipt for sealed repair
 ├── brief/             # owner input/refinements
 ├── findings/          # RAG-выжимки и recon-отчёты
 ├── research/          # authored synthesis
@@ -49,6 +50,16 @@ bundle digest inputs, declared product paths и closure. До мутации `Fi
 минимальный product/closure split. При отсутствии коллизии используется один collapsed anchor.
 Closure доказывает byte identity product paths; registry-owned volatile projections, journal и
 handoff считаются bookkeeping, пока item явно не выводит их в Deliverables.
+
+## Public reason taxonomy
+
+`task.task_contract evaluate` и CLI `check` сохраняют точный внутренний diagnostic в
+`pre_mutation`/`pre_final` и дополнительно возвращают `reason_codes` для recovery-логики.
+Публичный закрытый набор: `schema-invalid`, `evidence-missing`, `evidence-stale`,
+`evidence-forged`, `policy-denied`, `conflict`, `corrupt-state`, `durability-failed`.
+Каждая запись несёт исходный `internal_code` и короткое действие; неизвестный внутренний
+diagnostic безопасно нормализуется в `policy-denied`. Это additive JSON-изменение: старые
+потребители продолжают читать прежние поля, новые не должны разбирать текст сообщения.
 
 ## Terminal admission lease
 
@@ -90,6 +101,19 @@ It may waive only an exact historical `friction` schema failure when the target 
 SHA-256, plan ID, exact field set, and an existing Owner D# all match. Any duplicate, malformed or
 valid target, foreign plan, hash mismatch, or additional invalid field fails closed. Create it only
 with `task.journal exception`; do not rewrite or compensate the historical journal event.
+
+## Sealed journal migration
+
+Ordinary execution remains append-only. If an already sealed row cannot be made valid by a
+compensating append or the deliberately narrow D51 `friction` exception, an accepted Owner D# may
+authorize one exact `journal-migration/v1`. The manifest lives at
+`journal-migrations/<migration-id>/manifest.json`, binds the complete source/target SHA-256 and
+every changed line, and permits only neutral missing-field backfill, bounded terminal-evidence
+recovery, explicit legacy enum/friction normalization, and reset of an orphan `in-progress` row
+that never had a durable session/run identity. `task.journal_migration` saves the original `journal.jsonl` bytes as
+`journal.preimage.jsonl`, writes a digest receipt, and fails closed on drift, path traversal,
+unlisted semantic edits, or an absent accepted decision. This is the sole exception to physical
+append-only storage; the preserved preimage remains the historical source.
 
 ## root/ против artifacts/ — смысловое различие
 

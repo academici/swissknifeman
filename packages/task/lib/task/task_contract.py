@@ -26,15 +26,18 @@ stdlib-only.
 from __future__ import annotations
 
 import copy
+from dataclasses import dataclass
 from datetime import datetime, timezone
+import fcntl
 import hashlib
 import json
 import os
 import platform
 import re
+import stat
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 SCHEMA_VERSION = "task-contract/v1"
 
@@ -87,6 +90,184 @@ _EXTERNAL_SUBSTRINGS = ("/../", "/tmp/", "://")
 # redefinition — D64).
 BUNDLE_ARTIFACT_MISSING = "BUNDLE_ARTIFACT_MISSING"
 BUNDLE_PRIVACY_MISMATCH = "BUNDLE_PRIVACY_MISMATCH"
+BUNDLE_POLICY_DENIED = "BUNDLE_POLICY_DENIED"
+BUNDLE_PATH_INVALID = "BUNDLE_PATH_INVALID"
+BUNDLE_PATH_EXTERNAL = "BUNDLE_PATH_EXTERNAL"
+BUNDLE_MEMBER_DUPLICATE = "BUNDLE_MEMBER_DUPLICATE"
+BUNDLE_MEMBER_UNSAFE = "BUNDLE_MEMBER_UNSAFE"
+PORTABILITY_INPUT_INVALID = "PORTABILITY_INPUT_INVALID"
+
+PUBLIC_REASON_MESSAGES = {
+    "schema-invalid": "Fix the input or selected schema version before retrying.",
+    "evidence-missing": "Produce the required evidence before retrying.",
+    "evidence-stale": "Recompute the evidence against the current state.",
+    "evidence-forged": "Do not reuse this evidence; inspect its producer and binding.",
+    "policy-denied": "Change the requested action or obtain the required authority.",
+    "conflict": "Read the authoritative winner and reconcile before retrying.",
+    "corrupt-state": "Stop mutation and repair the authoritative state separately.",
+    "durability-failed": "Treat the outcome as unknown and reconcile before retrying.",
+}
+
+_PUBLIC_REASON_EXACT = {
+    "VERSION_HASH_MISMATCH": "evidence-forged",
+    "CONFLICT_UNRESOLVED": "conflict",
+    "CONFLICT_PRECEDENCE_VIOLATION": "conflict",
+    "NEXT_CHANGED_WITHOUT_TRANSITION": "policy-denied",
+    "PORTABILITY_TIER_MISCLASSIFIED": "policy-denied",
+    "PORTABILITY_INPUT_MISSING": "evidence-missing",
+    "PORTABILITY_EXTERNAL_INPUT": "policy-denied",
+    PORTABILITY_INPUT_INVALID: "schema-invalid",
+    "ROUTE-UNVERIFIABLE": "evidence-missing",
+    "ROUTE_UNDERSHOOT": "policy-denied",
+    "CAPABILITY_UNSUPPORTED": "policy-denied",
+    "AUTHORITY_BOUNDARY": "policy-denied",
+    "SLICE_INCOMPLETE": "schema-invalid",
+    "COLD_START_INCOMPLETE": "evidence-missing",
+    "SELF_INVALIDATING_EVIDENCE_ANCHOR": "conflict",
+    "ACCEPTANCE_NOT_PUBLIC": "schema-invalid",
+    "EVIDENCE_REF_UNKNOWN": "schema-invalid",
+    "VALIDATION_RECEIPT_MISSING": "evidence-missing",
+    "VALIDATION_RECEIPT_STALE": "evidence-stale",
+    "VALIDATION_RECEIPT_NONZERO": "policy-denied",
+    "EVIDENCE_PROOF_CLASS_INSUFFICIENT": "policy-denied",
+    "PLAN_LAYOUT_V1_RETIRED": "schema-invalid",
+    "PLAN_CONTEXT_TRUNCATED": "evidence-missing",
+    "PLAN_CONTEXT_DIGEST_MISMATCH": "evidence-forged",
+    "BATCH_AMBIGUOUS": "schema-invalid",
+    "BATCH_REQUIRED": "policy-denied",
+    "BATCH_STALE": "evidence-stale",
+    BUNDLE_ARTIFACT_MISSING: "evidence-missing",
+    BUNDLE_PRIVACY_MISMATCH: "policy-denied",
+    BUNDLE_POLICY_DENIED: "policy-denied",
+    BUNDLE_PATH_INVALID: "schema-invalid",
+    BUNDLE_PATH_EXTERNAL: "policy-denied",
+    BUNDLE_MEMBER_DUPLICATE: "schema-invalid",
+    BUNDLE_MEMBER_UNSAFE: "policy-denied",
+    "OWNER_ATTESTATION_EXPIRED": "evidence-stale",
+    "OWNER_ATTESTATION_FORGED": "evidence-forged",
+    "OWNER_ATTESTATION_INVALID": "schema-invalid",
+    "OWNER_ATTESTATION_MISMATCH": "evidence-forged",
+    "OWNER_ATTESTATION_REPLAYED": "conflict",
+    "OWNER_ATTESTATION_UNSUPPORTED": "policy-denied",
+    "P5_DECISION_DIGEST_MISMATCH": "evidence-forged",
+    "P5_DECISION_OBSERVATION_UNVERIFIED": "evidence-missing",
+    "P5_DECISION_POLICY_ERROR": "policy-denied",
+    "P5_DECISION_RECLASSIFICATION_REQUIRED": "policy-denied",
+    "P5_DECISION_REJECTED": "policy-denied",
+    "P5_DECISION_RESPONSE_REUSED": "conflict",
+    "P5_DECISION_STORE_REQUIRED": "evidence-missing",
+    "P5_DECISION_UNCLASSIFIED_KIND": "schema-invalid",
+    "P5_DECISION_UNKNOWN_OPTION": "schema-invalid",
+    "JOURNAL_CONFLICT": "conflict",
+    "JOURNAL_CORRUPT": "corrupt-state",
+    "JOURNAL_DURABILITY_FAILED": "durability-failed",
+    "ROUTE_ACTUAL_SOURCE_UNDECLARED": "evidence-forged",
+    "ROUTE_BUDGET_AXIS_UNKNOWN": "schema-invalid",
+    "ROUTE_LAUNCH_MISMATCH": "evidence-forged",
+    "ROUTE_LAUNCH_UNAVAILABLE": "evidence-missing",
+    "ROUTE_RECEIPT_EXPIRED": "evidence-stale",
+    "ROUTE_RECEIPT_INVALID": "schema-invalid",
+    "ROUTE_RECEIPT_MISMATCH": "evidence-forged",
+    "ROUTE_REQUIRED_UNRESOLVED": "evidence-missing",
+}
+
+
+def public_reason(internal_code: str | None) -> dict | None:
+    """Map internal diagnostics to the small public recovery taxonomy.
+
+    Internal codes remain available for precise debugging. The additive public code is
+    stable across module-specific spellings and gives CLI/JSON consumers one recovery
+    action without collapsing the underlying diagnostic.
+    """
+    if internal_code is None:
+        return None
+    code = internal_code.removeprefix("block:")
+    category = _PUBLIC_REASON_EXACT.get(code, "policy-denied")
+    return {
+        "code": category,
+        "internal_code": code,
+        "message": PUBLIC_REASON_MESSAGES[category],
+    }
+
+
+@dataclass(frozen=True)
+class BundleInputPolicy:
+    """Policy-owned Bundle v1 privacy and filesystem boundary."""
+
+    schema_version: str = "BundleInputPolicy/v1"
+    minimized: bool = True
+    forbidden_classes: frozenset[str] = frozenset({
+        "raw-transcript-bodies", "chain-of-thought", "tool-payloads", "secrets",
+    })
+
+    def privacy(self) -> dict:
+        return {
+            "minimized": self.minimized,
+            "excluded_classes": sorted(self.forbidden_classes),
+        }
+
+
+BUNDLE_INPUT_POLICY = BundleInputPolicy()
+
+_WINDOWS_DRIVE_RE = re.compile(r"^[A-Za-z]:(?:[\\/]|$)")
+_WINDOWS_UNC_RE = re.compile(r"^(?:\\\\|//)[^/\\]+[\\/]")
+_URI_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
+_ENV_PATH_RE = re.compile(r"(?:^|/)(?:\$[A-Za-z_{]|%[A-Za-z_][A-Za-z0-9_]*%)")
+
+
+def classify_execution_input(value: str) -> dict:
+    """Classify one logical path without expanding host state or following links."""
+    original = value if isinstance(value, str) else ""
+    path = original.strip()
+    result = {"original": original, "normalized": path, "path_kind": "invalid",
+              "rejection": PORTABILITY_INPUT_INVALID}
+    if not path or "\x00" in path or path.endswith("/"):
+        return result
+    if (_WINDOWS_DRIVE_RE.match(path) or _WINDOWS_UNC_RE.match(path)
+            or path.startswith(("/", "~", "tmp/")) or _URI_RE.match(path)
+            or _ENV_PATH_RE.search(path)):
+        return {**result, "path_kind": "external",
+                "rejection": "PORTABILITY_EXTERNAL_INPUT"}
+    if "\\" in path:
+        return result
+    parts = PurePosixPath(path).parts
+    if not parts or any(part == ".." for part in parts):
+        return result
+    normalized = PurePosixPath(*[part for part in parts if part != "."]).as_posix()
+    if not normalized or normalized == ".":
+        return result
+    return {"original": original, "normalized": normalized,
+            "path_kind": "internal", "rejection": None}
+
+
+def contained_regular_path(root, logical_path: str) -> Path:
+    """Resolve one internal logical name without accepting links or special files."""
+    root = Path(root)
+    classified = classify_execution_input(logical_path)
+    if classified["path_kind"] != "internal":
+        raise ValueError(classified["rejection"])
+    if root.is_symlink() or not root.is_dir():
+        raise ValueError(BUNDLE_MEMBER_UNSAFE)
+    root_resolved = root.resolve(strict=True)
+    current = root
+    parts = PurePosixPath(classified["normalized"]).parts
+    for index, part in enumerate(parts):
+        current = current / part
+        try:
+            mode = current.lstat().st_mode
+        except OSError as exc:
+            raise ValueError(BUNDLE_ARTIFACT_MISSING) from exc
+        if stat.S_ISLNK(mode):
+            raise ValueError(BUNDLE_MEMBER_UNSAFE)
+        if index < len(parts) - 1 and not stat.S_ISDIR(mode):
+            raise ValueError(BUNDLE_MEMBER_UNSAFE)
+    if not stat.S_ISREG(current.lstat().st_mode):
+        raise ValueError(BUNDLE_MEMBER_UNSAFE)
+    try:
+        current.resolve(strict=True).relative_to(root_resolved)
+    except (OSError, ValueError) as exc:
+        raise ValueError(BUNDLE_MEMBER_UNSAFE) from exc
+    return current
 
 _SCOPE_CLAUSE_SPLIT_RE = re.compile(r";\s*")
 _INPUTS_SPLIT_RE = re.compile(r"\s*·\s*")
@@ -313,13 +494,13 @@ def _decision_number(value: str):
     return int(match.group(1)) if match else None
 
 
-def materialize_owner_invocation(plan_dir, item_id: str, *, command="plan-run") -> dict:
+def _materialize_owner_invocation_locked(plan_dir, item_id: str, *, command="plan-run") -> dict:
     """Bind the live owner's exact invocation to an already declared finite gate.
 
     No caller-supplied evidence, actor, branch or scope is accepted. The provider
     adapter must observe the user message in this session before any carrier write.
     """
-    from task import plan_lint, plan_layout, plan_decisions, route_evidence
+    from task import plan_authority, plan_lint, plan_layout, plan_decisions, route_evidence
     plan_dir = Path(plan_dir).resolve()
     if command != "plan-run" or not re.fullmatch(r"P\d+\.\d+", item_id):
         raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: требуется exact plan-run item")
@@ -343,6 +524,38 @@ def materialize_owner_invocation(plan_dir, item_id: str, *, command="plan-run") 
             or evidence.get("cwd") != str(checkout)
             or not evidence.get("thread_id") or not evidence.get("source_version")):
         raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_UNATTESTED: нужен current user-message adapter")
+    action = {"plan_id": plan_dir.name, "item_id": item_id, "gate": request,
+              "command": semantic, "cwd": str(checkout)}
+    action_digest = hashlib.sha256(json.dumps(
+        action, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    try:
+        issued = datetime.strptime(evidence["ts"], "%Y-%m-%dT%H:%M:%SZ").replace(
+            tzinfo=timezone.utc)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise TaskContractBuildError(
+            item_id, "authority", "OWNER_INVOCATION_UNATTESTED: invalid provider timestamp") from exc
+    expires = (issued.timestamp() + 300)
+    expires_at = datetime.fromtimestamp(expires, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    provider = "codex" if evidence["invocation"].startswith("$ ") else "claude-code"
+    attestation = evidence.get("owner_attestation")
+    if attestation is None:
+        attestation = route_evidence.build_owner_attestation(
+            evidence, provider=provider, plan_id=plan_dir.name, item_id=item_id,
+            action_digest=action_digest, audience="task.owner-authority",
+            expires_at=expires_at, nonce=evidence["owner_message_digest"],
+        )
+    expected_attestation = {**action, "provider": provider,
+                            "command": "task:plan-run",
+                            "action_digest": action_digest,
+                            "audience": "task.owner-authority",
+                            "arguments": f"{plan_dir.name} {item_id}",
+                            "session_id": evidence["thread_id"],
+                            "owner_message_digest": evidence["owner_message_digest"]}
+    verifier, nonce_consumer = route_evidence.provider_owner_verification(provider)
+    route_evidence.verify_owner_attestation(
+        attestation, expected=expected_attestation, verifier=verifier,
+        nonce_consumer=nonce_consumer, protected=True,
+    )
     decisions = plan_decisions.load_decisions(plan_dir)
     rows = [({"D#": decision.identifier}, 1) for decision in decisions]
     if not _has_contiguous_decision_identities(rows):
@@ -356,7 +569,7 @@ def materialize_owner_invocation(plan_dir, item_id: str, *, command="plan-run") 
             raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: существующий grant отозван или неоднозначен")
         return {"granted": True, "granted_by": authority[2], "reused": True}
     digest = hashlib.sha256(json.dumps({"plan": plan_dir.name, "item": item_id,
-                                       "gate": request, "evidence": evidence},
+                                       "gate": request, "attestation": attestation},
                                       sort_keys=True).encode()).hexdigest()
     message_id = f"invocation-{digest[:16]}"
     filename = f"owner-invocation-{digest[:16]}.md"
@@ -367,7 +580,8 @@ def materialize_owner_invocation(plan_dir, item_id: str, *, command="plan-run") 
     message = (f"# Exact owner invocation: {plan_dir.name} {item_id}\n\n"
                f"[REPOSITORY-OWNER-MESSAGE:{message_id}] {marker} "
                f"branch=`{request['branch']}`; scope=`{request['scope']}`; provenance=`repository-owner`\n\n"
-               "```owner-invocation-evidence/v1\n" + json.dumps(evidence, ensure_ascii=False, sort_keys=True)
+               "Boundary: `security-boundary` (provider-verified owner attestation).\n\n"
+               "```provider-attestation/v1\n" + json.dumps(attestation, ensure_ascii=False, sort_keys=True)
                + "\n```\n")
     identifier = f"D{len(decisions) + 1}"
     decision_path = plan_dir / "decisions" / f"{identifier}-owner-invocation.md"
@@ -378,19 +592,57 @@ def materialize_owner_invocation(plan_dir, item_id: str, *, command="plan-run") 
                 f"items: [{item_id}]\nsupersedes: []\nsuperseded_by: null\n---\n\n## Решение\n\n"
                 f"{marker} branch=`{request['branch']}`; scope=`{request['scope']}`; owner-message=`{reference}`\n\n"
                 "## Почему\n\nExact provider-attested owner invocation; declared finite scope only.\n")
-    # Exclusive writes preserve an existing carrier; partial failure remains denied.
-    with message_path.open("x", encoding="utf-8") as output:
-        output.write(message)
-        output.flush()
-        os.fsync(output.fileno())
-    with decision_path.open("x", encoding="utf-8") as output:
-        output.write(decision)
-        output.flush()
-        os.fsync(output.fileno())
     from task import plan_bundle
-    plan_decisions.build_views(plan_dir)
-    plan_bundle.build(plan_dir, item_id)
-    return {"granted": True, "granted_by": f"decisions/{identifier}:1 {marker}", "reused": False}
+    created = []
+    try:
+        # The files are prepared under the plan lock, but remain inactive until the
+        # durable activation record is published after every validation succeeds.
+        for path, payload in ((message_path, message), (decision_path, decision)):
+            with path.open("x", encoding="utf-8") as output:
+                output.write(payload)
+                output.flush()
+                os.fsync(output.fileno())
+            created.append(path)
+        plan_decisions.build_views(plan_dir)
+        plan_bundle.build(plan_dir, item_id)
+        activation_key = f"{plan_dir.name}\0{item_id}\0{gate_id}"
+        activation = {
+            "schema_version": "owner-activation/v1", "plan_id": plan_dir.name,
+            "item_id": item_id, "gate_id": gate_id, "decision_id": identifier,
+            "owner_message": reference, "action_digest": action_digest,
+            "attestation_sha256": hashlib.sha256(json.dumps(
+                attestation, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":")).encode()).hexdigest(),
+            "boundary": "security-boundary",
+        }
+        if not plan_authority.DurableAuthorityStore.for_plan(plan_dir).activate(
+                activation_key, activation):
+            raise TaskContractBuildError(item_id, "authority", "OWNER_ACTIVATION_CONFLICT")
+    except Exception:
+        for path in reversed(created):
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                pass
+        try:
+            plan_decisions.build_views(plan_dir)
+            plan_bundle.build(plan_dir, item_id)
+        except Exception:
+            pass
+        raise
+    return {"granted": False, "prepared": True,
+            "granted_by": f"decisions/{identifier}:1 {marker}",
+            "reused": False, "boundary": "security-boundary"}
+
+
+def materialize_owner_invocation(plan_dir, item_id: str, *, command="plan-run") -> dict:
+    """Serialize preparation and publish the authority activation last."""
+    root = Path(plan_dir).resolve()
+    lock_path = root / ".plan-cache" / "owner-materialization.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a+") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        return _materialize_owner_invocation_locked(root, item_id, command=command)
 
 
 def _has_contiguous_decision_identities(rows) -> bool:
@@ -501,7 +753,36 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
             or not _owner_message_matches(plan_dir, record.group("owner_message"), request)
             or any(revocation > decision_id for revocation in revocations)):
         return "owner-gate", False, item_carrier
-    return "owner-gate", True, f"decisions/D{decision_id}:{lineno} {marker}"
+    # Legacy message/decision pairs stay readable but inactive.  Only the durable
+    # activation-last record can turn the workflow guard into an executable grant.
+    from task import plan_authority
+    activation_key = f"{plan_dir.name}\0{item_id}\0{request['gate_id']}"
+    try:
+        activation = plan_authority.DurableAuthorityStore.for_plan(plan_dir).activation(
+            activation_key)
+    except plan_authority.AuthorityFrameError:
+        return "owner-gate", False, item_carrier
+    expected_action = {"plan_id": plan_dir.name, "item_id": item_id,
+                       "gate": request,
+                       "command": f"task:plan-run {plan_dir.name} {item_id}",
+                       "cwd": str(plan_dir.parent.parent)}
+    expected_digest = hashlib.sha256(json.dumps(
+        expected_action, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":")).encode()).hexdigest()
+    if (not isinstance(activation, dict)
+            or activation.get("schema_version") != "owner-activation/v1"
+            or activation.get("plan_id") != plan_dir.name
+            or activation.get("item_id") != item_id
+            or activation.get("gate_id") != request["gate_id"]
+            or activation.get("decision_id") != f"D{decision_id}"
+            or activation.get("owner_message") != record.group("owner_message")
+            or activation.get("action_digest") != expected_digest
+            or activation.get("boundary") != "security-boundary"):
+        return "owner-gate", False, item_carrier
+    # The activation record is local agent-writable state.  Current providers expose
+    # no independently re-verifiable grant channel, so protected execution stays
+    # fail-closed even when legacy/local carriers are internally consistent.
+    return "owner-gate", False, item_carrier
 
 
 # D78/2026.07.24-AGENT-RELIABILITY P2.10 — closed literal set of §3 Routing route-column headers `plan-protocol` §9
@@ -1115,6 +1396,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     from task import route_evidence  # lazy — same reasoning, route assembly only
     from task import review_policy  # lazy — reuse of loop_budget constants only
     from task import command_catalog  # lazy — same reasoning, class_selectors carrier only
+    from task import plan_weight  # lazy — shared execution-path tokenization
 
     plan_dir = Path(plan_dir)
     phase_token = item_id.split(".")[0]
@@ -1178,12 +1460,27 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
 
     evidence = []
     execution_inputs = []
+
+    def add_execution_inputs(clause: str) -> None:
+        # Preserve every explicit execution path until policy has classified it.
+        # The legacy ``kind`` remains readable by v1 consumers; the additive
+        # path_kind/original/normalized/rejection fields carry BundleInputPolicy/v1.
+        paths = [token for token, declared in plan_weight.path_candidates(clause) if declared]
+        for path in paths:
+            classified = classify_execution_input(path)
+            execution_inputs.append({
+                "path": classified["normalized"] or classified["original"],
+                "kind": "committed",
+                "producer": None,
+                **classified,
+            })
+
     for clause in _split_nonempty(inputs_text, _INPUTS_SPLIT_RE):
         path = _first_backtick_or_text(clause)
         evidence.append({"id": f"E{len(evidence) + 1}", "path": path,
                          "proof_class": "unknown", "algorithm": "doc-citation"})
-        if _BACKTICK_RE.search(clause) and not is_external_path(path):
-            execution_inputs.append({"path": path, "kind": "committed", "producer": None})
+        if _BACKTICK_RE.search(clause):
+            add_execution_inputs(clause)
     required_reads_ids = []
     for clause in _marker_clauses(required_reads_text, _REQUIRED_READS_SPLIT_RE):
         path = _first_backtick_or_text(clause)
@@ -1191,8 +1488,8 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
         evidence.append({"id": eid, "path": path, "proof_class": "unknown",
                          "algorithm": "doc-citation"})
         required_reads_ids.append(eid)
-        if _BACKTICK_RE.search(clause) and not is_external_path(path):
-            execution_inputs.append({"path": path, "kind": "committed", "producer": None})
+        if _BACKTICK_RE.search(clause):
+            add_execution_inputs(clause)
     if not evidence:
         raise TaskContractBuildError(item_id, "Required Reads", "no evidence entry found")
 
@@ -1234,8 +1531,13 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
 
     tier = "committed-bundle" if plan_lint._plan_declares_committed_bundle_tier(plan_dir) \
         else "brief-acceptance"
-    if bundle_privacy is None:
-        bundle_privacy = {"minimized": True, "excluded_classes": []}
+    policy_privacy = BUNDLE_INPUT_POLICY.privacy()
+    if bundle_privacy is not None and bundle_privacy != policy_privacy:
+        raise TaskContractBuildError(
+            item_id, "portability.privacy",
+            "BUNDLE_POLICY_DENIED: caller declaration cannot weaken BundleInputPolicy/v1",
+        )
+    bundle_privacy = policy_privacy
 
     plan_id = plan_dir.name
     if carrier is None:
@@ -1343,14 +1645,46 @@ def _scan_content_classes(data: bytes) -> set:
     return found
 
 
-def bundle_lint(bundle_dir, *, manifest_path, verifier_path, declared_privacy) -> str | None:
-    """plan-portability-v1.md §Bundle requirements (F2/F4) — COMPUTES, never
-    reads, the declaration: minimization is the actual bundle file set against
-    the manifest's own declared file list; content classes are found by
-    signature scan over the ACTUAL bytes on disk (secrets/chain-of-thought/
-    tool-payloads/raw-transcript-bodies), never by trusting
-    `declared_privacy` as ground truth (that was exactly F2/F4: the fields
-    were self-declared and self-read by the same generator).
+def _bundle_regular_members(bundle_dir: Path) -> tuple[dict[str, Path] | None, str | None]:
+    """Walk a bundle without following links or reading special files."""
+    members: dict[str, Path] = {}
+
+    def visit(directory: Path, prefix: PurePosixPath) -> str | None:
+        try:
+            entries = tuple(os.scandir(directory))
+        except OSError:
+            return BUNDLE_MEMBER_UNSAFE
+        for entry in entries:
+            logical = (prefix / entry.name).as_posix()
+            try:
+                if entry.is_symlink():
+                    return BUNDLE_MEMBER_UNSAFE
+                if entry.is_dir(follow_symlinks=False):
+                    code = visit(Path(entry.path), prefix / entry.name)
+                    if code:
+                        return code
+                elif entry.is_file(follow_symlinks=False):
+                    members[logical] = Path(entry.path)
+                else:
+                    return BUNDLE_MEMBER_UNSAFE
+            except OSError:
+                return BUNDLE_MEMBER_UNSAFE
+        return None
+
+    if bundle_dir.is_symlink() or not bundle_dir.is_dir():
+        return None, BUNDLE_ARTIFACT_MISSING
+    code = visit(bundle_dir, PurePosixPath())
+    return (None, code) if code else (members, None)
+
+
+def bundle_lint(bundle_dir, *, manifest_path, verifier_path,
+                declared_privacy=None, policy: BundleInputPolicy = BUNDLE_INPUT_POLICY) -> str | None:
+    """Enforce BundleInputPolicy/v1 over bytes and no-follow filesystem facts.
+
+    ``declared_privacy`` is a compatibility assertion only: it must exactly match
+    the frozen policy and can never remove a forbidden class. Minimization is the
+    normalized manifest set against regular no-follow members; content classes
+    are detected from the actual bytes.
 
     New reason codes (2026.07.24-AGENT-RELIABILITY P2.6 — not pre-declared by 2026.07.24-AGENT-RELIABILITY P2.1's frozen
     `state-transition-cases.json::new_reason_codes`; this item introduces
@@ -1389,25 +1723,63 @@ def bundle_lint(bundle_dir, *, manifest_path, verifier_path, declared_privacy) -
     bundle_dir = Path(bundle_dir)
     manifest_path = Path(manifest_path)
     verifier_path = Path(verifier_path)
-    if not manifest_path.is_file() or not verifier_path.is_file():
-        return BUNDLE_ARTIFACT_MISSING
+    expected_privacy = policy.privacy()
+    if declared_privacy is not None and declared_privacy != expected_privacy:
+        return BUNDLE_POLICY_DENIED
 
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    declared_set = {entry["path"] if isinstance(entry, dict) else entry
-                    for entry in manifest["files"]}
-    exempt = {manifest_path.resolve(), verifier_path.resolve()}
-    actual_set = {str(p.relative_to(bundle_dir)) for p in bundle_dir.rglob("*")
-                 if p.is_file() and p.resolve() not in exempt}
-    minimized = actual_set == declared_set
+    required_relatives = []
+    for required in (manifest_path, verifier_path):
+        try:
+            relative = required.relative_to(bundle_dir).as_posix()
+            contained_regular_path(bundle_dir, relative)
+        except (ValueError, OSError):
+            return BUNDLE_ARTIFACT_MISSING
+        required_relatives.append(relative)
+
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        declared_files = manifest["files"]
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, KeyError, TypeError):
+        return BUNDLE_PATH_INVALID
+    if not isinstance(declared_files, list):
+        return BUNDLE_PATH_INVALID
+    if "privacy" in manifest and manifest["privacy"] != expected_privacy:
+        return BUNDLE_POLICY_DENIED
+
+    declared_names = []
+    for entry in declared_files:
+        value = entry.get("path") if isinstance(entry, dict) else entry
+        classified = classify_execution_input(value)
+        if classified["path_kind"] == "external":
+            return BUNDLE_PATH_EXTERNAL
+        if classified["path_kind"] != "internal":
+            return BUNDLE_PATH_INVALID
+        declared_names.append(classified["normalized"])
+    if len(declared_names) != len(set(declared_names)):
+        return BUNDLE_MEMBER_DUPLICATE
+
+    members, code = _bundle_regular_members(bundle_dir)
+    if code:
+        return code
+    assert members is not None
+    actual_set = set(members) - set(required_relatives)
+    declared_set = set(declared_names)
+    if actual_set != declared_set:
+        return BUNDLE_PRIVACY_MISMATCH
+    for relative in declared_names:
+        try:
+            contained_regular_path(bundle_dir, relative)
+        except ValueError:
+            return BUNDLE_MEMBER_UNSAFE
 
     found_classes = set()
     for rel in actual_set:
-        found_classes |= _scan_content_classes((bundle_dir / rel).read_bytes())
-
-    declared_excluded = set(declared_privacy["excluded_classes"])
-    violated = found_classes & declared_excluded
-    if declared_privacy["minimized"] != minimized or violated:
-        return BUNDLE_PRIVACY_MISMATCH
+        try:
+            found_classes |= _scan_content_classes(members[rel].read_bytes())
+        except OSError:
+            return BUNDLE_MEMBER_UNSAFE
+    if found_classes & policy.forbidden_classes:
+        return BUNDLE_POLICY_DENIED
     return None
 
 
@@ -1453,7 +1825,10 @@ def classify_tier(work: dict) -> str:
 def is_external_path(path: str) -> bool:
     """task-contract-v1.md §Portability — string test over a path ALREADY known to be an
     execution input (role decided elsewhere). Not the D47 role test."""
-    return path.startswith(_EXTERNAL_PREFIXES) or any(s in path for s in _EXTERNAL_SUBSTRINGS)
+    classified = classify_execution_input(path)
+    return (classified["path_kind"] == "external"
+            or path.startswith(_EXTERNAL_PREFIXES)
+            or any(s in path for s in _EXTERNAL_SUBSTRINGS))
 
 
 def portability_lint(portability: dict, *, work: dict | None = None) -> str | None:
@@ -1480,6 +1855,11 @@ def portability_lint(portability: dict, *, work: dict | None = None) -> str | No
         path = entry["path"]
         if path in provenance_only:
             return "PORTABILITY_TIER_MISCLASSIFIED"
+        path_kind = entry.get("path_kind")
+        if path_kind == "invalid":
+            return PORTABILITY_INPUT_INVALID
+        if path_kind == "external":
+            return "PORTABILITY_EXTERNAL_INPUT"
         if is_external_path(path):
             return "PORTABILITY_EXTERNAL_INPUT"
         if entry["kind"] == "produced-by-predecessor" and not entry["producer"]:
@@ -1744,11 +2124,13 @@ def evaluate(contract: dict, *, work: dict | None = None,
     """Run both boundaries in the canonical order and return a compact typed result —
     the shape a plan command reports verbatim (journal/handoff/subagent slice, 2026.07.24-AGENT-RELIABILITY P2.2
     Code Guidance): `{"pre_mutation": "allow"|"block:<CODE>", "pre_final":
-    "allow"|"block:<CODE>"|"n/a", "content_hash": <sha256>}`."""
+    "allow"|"block:<CODE>"|"n/a", "reason_codes": {<boundary>: <public reason|null>},
+    "content_hash": <sha256>}`."""
     mutation_code = pre_mutation(
         contract, work=work, evidence_graph=evidence_graph,
         requires_closure_freshness=requires_closure_freshness,
     )
+    final_code = None
     if mutation_code is None:
         final_code = pre_final(
             contract, validation_receipts=validation_receipts,
@@ -1760,6 +2142,10 @@ def evaluate(contract: dict, *, work: dict | None = None,
     return {
         "pre_mutation": "allow" if mutation_code is None else f"block:{mutation_code}",
         "pre_final": final,
+        "reason_codes": {
+            "pre_mutation": public_reason(mutation_code),
+            "pre_final": public_reason(final_code),
+        },
         "content_hash": content_hash(contract),
     }
 

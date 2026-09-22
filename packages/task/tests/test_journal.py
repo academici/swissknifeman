@@ -1,6 +1,7 @@
 """unittest для task.journal — append-only писатель пер-планового журнала (P1.1).
 Запуск: cd packages/task && python3 -m unittest discover -s tests"""
 import json
+import multiprocessing
 import tempfile
 import unittest
 from pathlib import Path
@@ -15,6 +16,15 @@ from task.journal import (  # noqa: E402
     new_entry, new_exception, validate_entry, validate_exception, validate_exception_target,
 )
 from task import terminal_policy
+
+
+def _terminal_writer(plan_dir, entry, barrier, queue):
+    barrier.wait()
+    try:
+        _path, line, appended = append_idempotent_terminal(plan_dir, entry)
+        queue.put(("ok", line, appended))
+    except Exception as exc:  # pragma: no cover - child diagnostic
+        queue.put(("error", type(exc).__name__, str(exc)))
 
 
 def _validation_decision(plan_dir, item_id="P1.3", result="closed-green"):
@@ -42,6 +52,30 @@ def _validation_decision(plan_dir, item_id="P1.3", result="closed-green"):
     )
 
 
+def _exception_decision(identifier, *, plan_id, item_id, target_sha256,
+                        status="accepted", superseded_by="null"):
+    return f"""---
+id: {identifier}
+date: 2026-09-22
+status: {status}
+item: {item_id}
+items: [{item_id}]
+supersedes: []
+superseded_by: {superseded_by}
+---
+## Решение
+
+[JOURNAL-EXCEPTION:{target_sha256}]
+fields=`friction`;
+plan=`{plan_id}`;
+item=`{item_id}`
+
+## Почему
+
+Exact historical exception fixture.
+"""
+
+
 class TmpDirTestCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -54,6 +88,22 @@ class TmpDirTestCase(unittest.TestCase):
 
 
 class TestNewEntryAndValidate(TmpDirTestCase):
+    def test_timestamp_and_metrics_are_strict(self):
+        invalid = {
+            "ts": ("2026-02-30T10:00:00Z", "2026-09-22T10:00:00+00:00"),
+            "cost_usd": (-1, float("nan"), float("inf")),
+            "duration_ms": (-1, float("nan")),
+            "num_turns": (-1, 1.5, True),
+        }
+        for field, values in invalid.items():
+            for value in values:
+                with self.subTest(field=field, value=value):
+                    entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+                                      actor="model/medium", result="in-progress")
+                    entry[field] = value
+                    with self.assertRaises(JournalValidationError):
+                        validate_entry(entry)
+
     def test_new_entry_has_all_required_fields_and_validates(self):
         entry = new_entry(
             plan_id="2026.07.18-FOREMAN", item_id="P1.3", command="plan-exec",
@@ -183,6 +233,58 @@ class TestTraceRef(TmpDirTestCase):
 
 
 class TestAppend(TmpDirTestCase):
+    def test_malformed_history_blocks_append_without_changing_bytes(self):
+        path = self.plan_dir / "journal.jsonl"
+        path.write_text("{bad\n", encoding="utf-8")
+        before = path.read_bytes()
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+                          actor="model/medium", result="in-progress")
+        with self.assertRaisesRegex(JournalValidationError, "JOURNAL_CORRUPT"):
+            append(self.plan_dir, entry)
+        self.assertEqual(path.read_bytes(), before)
+
+    def test_synchronized_duplicate_terminal_race_appends_once(self):
+        run_id = derive_run_id(
+            plan_id="P", item_id="P1.3", attempt=1, session_id="session-1")
+        start = new_entry(
+            plan_id="P", item_id="P1.3", command="plan-run", actor="model/medium",
+            result="in-progress", session_id="session-1", run_id=run_id)
+        terminal = new_entry(
+            plan_id="P", item_id="P1.3", command="plan-run", actor="model/medium",
+            result="closed-green", session_id="session-1", run_id=run_id,
+            fingerprint="a" * 64, decision=_validation_decision(self.plan_dir))
+        append(self.plan_dir, start)
+        context = multiprocessing.get_context("fork")
+        barrier, queue = context.Barrier(2), context.Queue()
+        processes = [context.Process(
+            target=_terminal_writer, args=(self.plan_dir, terminal, barrier, queue))
+            for _ in range(2)]
+        for process in processes:
+            process.start()
+        results = [queue.get(timeout=5) for _ in processes]
+        for process in processes:
+            process.join(timeout=5)
+            self.assertEqual(process.exitcode, 0)
+        self.assertEqual(sorted(result[2] for result in results), [False, True], results)
+        rows = [json.loads(raw) for raw in
+                (self.plan_dir / "journal.jsonl").read_text(encoding="utf-8").splitlines()]
+        self.assertEqual(sum(row["result"] == "closed-green" for row in rows), 1)
+
+    def test_terminal_timestamp_before_paired_start_is_rejected(self):
+        run_id = derive_run_id(
+            plan_id="P", item_id="P1.3", attempt=1, session_id="session-1")
+        append(self.plan_dir, new_entry(
+            plan_id="P", item_id="P1.3", command="plan-run", actor="model/medium",
+            result="in-progress", session_id="session-1", run_id=run_id,
+            ts="2026-09-22T10:00:01Z"))
+        terminal = new_entry(
+            plan_id="P", item_id="P1.3", command="plan-run", actor="model/medium",
+            result="closed-green", session_id="session-1", run_id=run_id,
+            ts="2026-09-22T10:00:00Z", fingerprint="a" * 64,
+            decision=_validation_decision(self.plan_dir))
+        with self.assertRaisesRegex(JournalValidationError, "раньше start"):
+            append_idempotent_terminal(self.plan_dir, terminal)
+
     def test_malformed_decision_rejects_terminal_before_journal_mutation(self):
         decision = _validation_decision(self.plan_dir)
         records = self.plan_dir / "decisions"
@@ -220,6 +322,9 @@ class TestAppend(TmpDirTestCase):
         self.assertEqual(first[2], True)
         self.assertEqual(second[1:], (2, False))
         self.assertEqual((self.plan_dir / "journal.jsonl").read_bytes(), before)
+        conflicting = dict(terminal, fingerprint="b" * 64)
+        with self.assertRaisesRegex(JournalValidationError, "terminal conflict"):
+            append_idempotent_terminal(self.plan_dir, conflicting)
 
     def test_attention_is_distinct_from_audit_red(self):
         entry = new_entry(
@@ -364,7 +469,9 @@ class TestHistoricalSchemaException(TmpDirTestCase):
             "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
             encoding="utf-8")
         (self.plan_dir / "decisions" / "D51-owner-gate.md").write_text(
-            "# D51\n", encoding="utf-8")
+            _exception_decision(
+                "D51", plan_id="P", item_id="design", target_sha256=line_sha256(raw)),
+            encoding="utf-8")
         return raw
 
     def _exception(self, raw):
@@ -389,7 +496,7 @@ class TestHistoricalSchemaException(TmpDirTestCase):
         raw = self._invalid_target()
         exception = self._exception(raw)
         exception["owner_decision"] = "D52"
-        with self.assertRaisesRegex(JournalValidationError, "отсутствует"):
+        with self.assertRaisesRegex(JournalValidationError, "ровно один"):
             append_exception(self.plan_dir, exception)
 
     def test_exception_rejects_unknown_fields(self):
@@ -513,7 +620,11 @@ class TestCli(TmpDirTestCase):
             encoding="utf-8")
         decisions = self.plan_dir / "decisions"
         decisions.mkdir()
-        (decisions / "D51-owner-gate.md").write_text("# D51\n", encoding="utf-8")
+        raw = (self.plan_dir / "journal.jsonl").read_text(encoding="utf-8").strip()
+        (decisions / "D51-owner-gate.md").write_text(
+            _exception_decision(
+                "D51", plan_id="P", item_id="design", target_sha256=line_sha256(raw)),
+            encoding="utf-8")
         rc = main([
             "exception", "--plan-dir", str(self.plan_dir), "--plan", "P",
             "--target-line", "1", "--invalid-fields", "friction",
@@ -533,17 +644,44 @@ class TestV2DecisionCarrier(TmpDirTestCase):
         (self.plan_dir / "phases" / "P1" / "P1.md").write_text("# P1\n", encoding="utf-8")
         decisions = self.plan_dir / "decisions"
         decisions.mkdir()
-        (decisions / "D42-owner-gate.md").write_text("# D42\n", encoding="utf-8")
         entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                           actor="implementation/high", result="in-progress")
         del entry["friction"]
         raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
         (self.plan_dir / "journal.jsonl").write_text(raw + "\n", encoding="utf-8")
+        (decisions / "D42-owner-gate.md").write_text(
+            _exception_decision(
+                "D42", plan_id="P", item_id="P1.1", target_sha256=line_sha256(raw)),
+            encoding="utf-8")
         exception = new_exception(
             plan_id="P", target_line=1, target_sha256=line_sha256(raw),
             invalid_fields=["friction"], owner_decision="D42", actor="owner",
             reason="v2 carrier fixture")
         validate_exception_target(self.plan_dir, exception)
+
+    def test_exception_rejects_proposed_decision(self):
+        (self.plan_dir / "phases" / "P1").mkdir(parents=True)
+        (self.plan_dir / "plan.md").write_text(
+            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+            encoding="utf-8")
+        (self.plan_dir / "phases" / "P1" / "P1.md").write_text("# P1\n", encoding="utf-8")
+        decisions = self.plan_dir / "decisions"
+        decisions.mkdir()
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
+                          actor="implementation/medium", result="in-progress")
+        del entry["friction"]
+        raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
+        (self.plan_dir / "journal.jsonl").write_text(raw + "\n", encoding="utf-8")
+        (decisions / "D42-owner-gate.md").write_text(
+            _exception_decision(
+                "D42", plan_id="P", item_id="P1.1", target_sha256=line_sha256(raw),
+                status="proposed"), encoding="utf-8")
+        exception = new_exception(
+            plan_id="P", target_line=1, target_sha256=line_sha256(raw),
+            invalid_fields=["friction"], owner_decision="D42", actor="owner",
+            reason="fixture")
+        with self.assertRaisesRegex(JournalValidationError, "accepted/current"):
+            validate_exception_target(self.plan_dir, exception)
 
 
 if __name__ == "__main__":

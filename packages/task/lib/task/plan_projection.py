@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import hashlib
+import fcntl
 import os
-import tempfile
+import secrets
+import stat
 from pathlib import Path
 
 
@@ -65,26 +67,80 @@ def rendered_file(*, metadata: str, title: str, body: str) -> str:
 
 
 def write_or_check(target, expected: str, *, check: bool) -> bool:
-    """Atomically write a projection, or compare its bytes in ``--check`` mode."""
+    """Publish/check a regular projection under one no-follow durable lock domain."""
     target = Path(target)
     encoded = expected.encode("utf-8")
-    if check:
-        try:
-            actual = target.read_bytes()
-        except OSError as exc:
-            raise ProjectionError(f"вид отсутствует или не читается: {target}") from exc
-        if actual != encoded:
-            raise ProjectionError(f"вид устарел: {target}")
-        return False
-    if target.is_file() and target.read_bytes() == encoded:
-        return False
-    target.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(dir=target.parent, prefix=f".{target.name}.", delete=False) as tmp:
-        tmp.write(encoded)
-        temporary = Path(tmp.name)
+    if not check:
+        target.parent.mkdir(parents=True, exist_ok=True)
+    if (not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_DIRECTORY")
+            or target.parent.is_symlink()):
+        raise ProjectionError(f"вид не может гарантировать no-follow durability: {target}")
     try:
-        os.replace(temporary, target)
+        directory = os.open(target.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    except OSError as exc:
+        raise ProjectionError(f"каталог вида недоступен: {target.parent}") from exc
+    temporary = None
+    try:
+        fcntl.flock(directory, fcntl.LOCK_EX)
+        current = None
+        try:
+            descriptor = os.open(target.name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=directory)
+        except FileNotFoundError:
+            descriptor = None
+        except OSError as exc:
+            raise ProjectionError(f"вид не является безопасным regular file: {target}") from exc
+        if descriptor is not None:
+            try:
+                if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                    raise ProjectionError(f"вид не regular file: {target}")
+                with os.fdopen(descriptor, "rb", closefd=False) as stream:
+                    current = stream.read()
+                if check:
+                    if current != encoded:
+                        raise ProjectionError(f"вид устарел: {target}")
+                    return False
+                if current == encoded:
+                    os.fsync(descriptor)
+                    os.fsync(directory)
+                    return False
+            finally:
+                os.close(descriptor)
+        elif check:
+            raise ProjectionError(f"вид отсутствует или не читается: {target}")
+
+        for _attempt in range(32):
+            temporary = f".{target.name}.{os.getpid()}.{secrets.token_hex(8)}.tmp"
+            try:
+                descriptor = os.open(
+                    temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                    0o600, dir_fd=directory)
+                break
+            except FileExistsError:
+                continue
+        else:
+            raise ProjectionError(f"не удалось создать temporary вид: {target}")
+        try:
+            cursor = 0
+            while cursor < len(encoded):
+                written = os.write(descriptor, encoded[cursor:])
+                if written <= 0:
+                    raise OSError("short projection write")
+                cursor += written
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+        os.replace(temporary, target.name, src_dir_fd=directory, dst_dir_fd=directory)
+        temporary = None
+        os.fsync(directory)
+        return True
+    except ProjectionError:
+        raise
+    except OSError as exc:
+        raise ProjectionError(f"запись вида не дошла до durable boundary: {target}: {exc}") from exc
     finally:
-        if temporary.exists():
-            temporary.unlink()
-    return True
+        if temporary is not None:
+            try:
+                os.unlink(temporary, dir_fd=directory)
+            except FileNotFoundError:
+                pass
+        os.close(directory)

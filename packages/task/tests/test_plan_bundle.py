@@ -50,6 +50,22 @@ class PlanBundleTest(unittest.TestCase):
             plan_bundle.build(self.plan, "P1.1")
         self.assertEqual(target.read_bytes(), expected)
 
+    def test_external_declared_input_is_rejected_before_open(self):
+        spec = self.plan / "phases/P1/P1.1.md"
+        spec.write_text(spec.read_text(encoding="utf-8").replace(
+            "`brief/00-brief.md`", "`file:///tmp/secret.json`"), encoding="utf-8")
+        with self.assertRaisesRegex(plan_bundle.BundleError, "PORTABILITY_EXTERNAL_INPUT"):
+            plan_bundle.model(self.plan, "P1.1")
+
+    def test_symlink_input_is_rejected_without_reading_external_target(self):
+        source = self.plan / "brief/00-brief.md"
+        outside = Path(self.tmp.name) / "outside.md"
+        outside.write_text("external", encoding="utf-8")
+        source.unlink()
+        source.symlink_to(outside)
+        with self.assertRaisesRegex(plan_bundle.BundleError, "unsafe_input"):
+            plan_bundle.model(self.plan, "P1.1")
+
     def test_unicode_cross_plan_decision_path_builds_as_one_declared_input(self):
         plans = Path(self.tmp.name) / "plans"
         source = plans / "2026.09.12-№1-SOURCE"

@@ -10,10 +10,11 @@ if str(_LIB) not in sys.path:
 from task import plan_decisions
 
 
-def decision(identifier, *, status="accepted", supersedes="[]", superseded_by="null"):
+def decision(identifier, *, status="accepted", supersedes="[]", superseded_by="null",
+             date_value="2026-08-08"):
     return f"""---
 id: {identifier}
-date: 2026-08-08
+date: {date_value}
 status: {status}
 item: P2.2
 items: [P2.2]
@@ -31,6 +32,17 @@ superseded_by: {superseded_by}
 
 
 class PlanDecisionsTest(unittest.TestCase):
+    def test_date_is_calendar_valid_without_imposing_monotonic_order(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = self._plan(tmp)
+            path = plan / "decisions" / "D1-first.md"
+            for invalid in ("2026-99-99", "2025-02-29"):
+                path.write_text(decision("D1", date_value=invalid), encoding="utf-8")
+                with self.subTest(invalid=invalid), self.assertRaisesRegex(
+                        plan_decisions.DecisionError, "календарно-валидной"):
+                    plan_decisions.load_decisions(plan)
+            path.write_text(decision("D1", date_value="2024-02-29"), encoding="utf-8")
+            self.assertEqual(plan_decisions.load_decisions(plan)[0].date, "2024-02-29")
     def test_distributed_templates_parse_without_manual_schema_repairs(self):
         root = Path(__file__).resolve().parents[3]
         paths = (root / "packages/skiller/skills/general/plan-protocol/snippets/decision-record-template.md",

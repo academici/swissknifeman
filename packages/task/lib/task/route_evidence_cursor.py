@@ -1,9 +1,11 @@
 """Cursor adapter for current-session route provenance.
 
 Primary path: inspect the nearest ``agent`` ancestor argv for ``--workspace``,
-``--model`` and the semantic ``task:`` prompt.  When process ancestry is
-unavailable, callers may supply an explicit attestation record that still
-fails closed on selector mismatch.
+``--model`` and the semantic ``task:`` prompt.  When that launch has no
+``--model``, the live ``~/.cursor/cli-config.json`` ``selectedModel`` and
+``reasoning_effort`` resolve through ``command-routing.json`` selectors.
+An explicit attestation remains only when that config is unreadable, and it
+still fails closed on selector mismatch.
 """
 from __future__ import annotations
 
@@ -17,6 +19,7 @@ from task.route_evidence import RouteEvidenceError, capture_actual
 
 
 CLI_SOURCE_VERSION = "cursor-ancestor-argv-v1"
+_CLI_CONFIG_SOURCE_VERSION = "cursor-cli-config-v1"
 _ATTEST_SOURCE_VERSION = "cursor-explicit-attestation-v1"
 _ROUTING_PATH = Path(__file__).resolve().parents[2] / "configs" / "command-routing.json"
 
@@ -58,7 +61,7 @@ def _agent_ancestor(start_pid: int, process_table=None) -> tuple[str, ...]:
             raise RouteEvidenceError(
                 "ROUTE_LAUNCH_UNAVAILABLE",
                 f"process {pid} is absent from the ancestry snapshot") from error
-        if Path(argv[0]).name == "agent":
+        if Path(argv[0]).name in {"agent", "cursor-agent"}:
             return tuple(argv)
         pid = parent
     raise RouteEvidenceError(
@@ -157,9 +160,59 @@ def _capture_argv(*, expected_invocation: str, expected_cwd: str | Path,
     return evidence
 
 
+def _cli_config_file(explicit: str | Path | None) -> Path:
+    if explicit is not None:
+        return Path(explicit)
+    return Path.home() / ".cursor" / "cli-config.json"
+
+
+def _capture_cli_config(*, expected_invocation: str, expected_cwd: str | Path,
+                        routing_path: Path, cli_config_path: Path) -> dict:
+    try:
+        payload = json.loads(cli_config_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_UNAVAILABLE", f"Cursor cli-config is unreadable: {error}") from error
+    selected = payload.get("selectedModel") if isinstance(payload, dict) else None
+    if not isinstance(selected, dict):
+        raise RouteEvidenceError("ROUTE_LAUNCH_UNAVAILABLE", "Cursor cli-config has no selectedModel")
+    model = selected.get("modelId")
+    if not isinstance(model, str) or not model:
+        raise RouteEvidenceError("ROUTE_LAUNCH_UNAVAILABLE", "Cursor selectedModel.modelId is absent")
+    parameters = selected.get("parameters")
+    if not isinstance(parameters, list):
+        raise RouteEvidenceError("ROUTE_LAUNCH_UNAVAILABLE", "Cursor selectedModel.parameters is absent")
+    efforts = tuple(
+        item.get("value") for item in parameters
+        if isinstance(item, dict) and item.get("id") == "reasoning_effort"
+        and isinstance(item.get("value"), str) and item.get("value")
+    )
+    effort_selector = _one(efforts, "Cursor reasoning_effort")
+    cwd = Path.cwd().resolve()
+    if cwd != Path(expected_cwd).resolve():
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_MISMATCH",
+            f"Cursor cwd {str(cwd)!r} != expected {str(expected_cwd)!r}")
+    evidence = capture_actual(
+        _selector_class(model, routing_path),
+        _selector_effort(effort_selector, routing_path),
+        source="provider-config",
+        model=model,
+    )
+    thread = os.environ.get("CURSOR_CONVERSATION_ID") or os.environ.get("CURSOR_AGENT_CHAT_ID")
+    evidence.update({
+        "thread_id": thread.strip() if isinstance(thread, str) and thread.strip() else f"cursor-cli-config:{model}",
+        "source_version": _CLI_CONFIG_SOURCE_VERSION,
+        "cwd": str(cwd),
+        "invocation": _normalize_invocation(expected_invocation),
+    })
+    return evidence
+
+
 def capture_current(*, expected_invocation: str, expected_cwd: str | Path,
                     attestation: dict | None = None, start_pid: int | None = None,
-                    process_table=None, routing_path: str | Path = _ROUTING_PATH) -> dict:
+                    process_table=None, routing_path: str | Path = _ROUTING_PATH,
+                    cli_config_path: str | Path | None = None) -> dict:
     """Capture and validate the current Cursor route for this session."""
     routing_path = Path(routing_path)
     semantic = _normalize_invocation(expected_invocation)
@@ -172,7 +225,16 @@ def capture_current(*, expected_invocation: str, expected_cwd: str | Path,
             routing_path=routing_path,
         )
     except RouteEvidenceError:
-        if attestation is None:
+        pass
+    try:
+        return _capture_cli_config(
+            expected_invocation=semantic,
+            expected_cwd=expected_cwd,
+            routing_path=routing_path,
+            cli_config_path=_cli_config_file(cli_config_path),
+        )
+    except RouteEvidenceError as error:
+        if error.code != "ROUTE_LAUNCH_UNAVAILABLE" or attestation is None:
             raise
     if not isinstance(attestation, dict):
         raise RouteEvidenceError("ROUTE_LAUNCH_UNAVAILABLE", "cursor attestation is invalid")
@@ -208,6 +270,8 @@ def main(argv=None) -> int:
     capture.add_argument("--expected-cwd", required=True)
     capture.add_argument("--attestation", default=None,
                          help="path to an explicit attestation JSON fallback")
+    capture.add_argument("--cli-config", default=None,
+                         help="path to Cursor cli-config.json; default is ~/.cursor/cli-config.json")
     args = parser.parse_args(argv)
     attestation = None
     if args.attestation:
@@ -217,6 +281,7 @@ def main(argv=None) -> int:
             expected_invocation=args.expected_invocation,
             expected_cwd=args.expected_cwd,
             attestation=attestation,
+            cli_config_path=args.cli_config,
         )
     except RouteEvidenceError as error:
         parser.error(str(error))

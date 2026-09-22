@@ -1,7 +1,7 @@
 {
   "contract_version": "1.0.0",
   "catalog_version": "1.0.0",
-  "plugin_version": "0.20.4",
+  "plugin_version": "0.20.5",
   "commands": [
     {
       "command_id": "task:design",
@@ -179,7 +179,7 @@
       "class_selectors": {
         "economy": ["composer-2.5-fast"],
         "implementation": ["composer-2.5"],
-        "frontier": ["claude-opus-5-thinking-high"]
+        "frontier": ["claude-opus-5-thinking-high", "grok-4.7"]
       },
       "effort_selectors": {"low": ["low"], "medium": ["medium"], "high": ["high"], "xhigh": ["xhigh"]},
       "capability_bindings": {
@@ -195,6 +195,7 @@
           {"id": "composer-2.5-fast", "roles": ["economy", "explore"]},
           {"id": "composer-2.5", "roles": ["implementation"]},
           {"id": "claude-opus-5-thinking-high", "roles": ["frontier", "design", "audit"]},
+          {"id": "grok-4.7", "roles": ["frontier"], "notes": "live cli-config selectedModel; reasoning_effort=high maps through effort_selectors"},
           {"id": "gpt-5.6-sol-medium", "roles": ["alternate"]},
           {"id": "auto", "roles": ["routing-assist"], "policy": "never-substitute-fixed-frontier"}
         ],

@@ -44,6 +44,11 @@ cost/turns/duration — `root/contracts/plan-journal-schema.md` §2–§2.2.
 **Правило append-only.** Существующие строки НИКОГДА не переписываются/не удаляются
 (контракт §1) — ошибочная запись компенсируется НОВОЙ строкой с
 `friction:["deviation"]` + поясняющим `note`, не правкой задним числом.
+Единственное исключение — owner-gated `journal-migration/v1` для sealed-строк,
+которые нельзя легализовать append/узким D51 exception: accepted Owner D#,
+полный preimage, exact per-line operations, source/target SHA-256 и receipt обязательны.
+Применять только `python3 <task-package-root>/scripts/journal-migrate.py --plan-dir ...
+--manifest ...`; ручная перезапись по-прежнему запрещена.
 
 Компенсирующая event-строка не может сделать историческую schema-invalid строку валидной:
 `plan-lint` проверяет строки независимо. Для такого единственного случая нужен явный

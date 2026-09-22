@@ -174,12 +174,20 @@ class TestJournalIndexLayer(TmpPlanTestCase):
 
     def test_owner_gated_historical_exception_suppresses_exact_field_only(self):
         plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
-        write_decision_record(plan_dir, "D2", decision="historical schema exception")
+        decision_path = write_decision_record(
+            plan_dir, "D2", decision="historical schema exception")
         journal = plan_dir / "journal.jsonl"
         entry = json.loads(journal.read_text(encoding="utf-8"))
         entry["friction"] = ["Major: historical free-form value"]
         raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
         journal.write_text(raw + "\n", encoding="utf-8")
+        decision_path.write_text(
+            decision_path.read_text(encoding="utf-8").replace(
+                "historical schema exception",
+                "historical schema exception\n\n"
+                f"[JOURNAL-EXCEPTION:{line_sha256(raw)}]\n"
+                "fields=`friction`;\nplan=`2026.07.18-DEMO`;\nitem=`P1.1`"),
+            encoding="utf-8")
         plan = plan_dir / "plan.md"
         plan.write_text(
             plan.read_text(encoding="utf-8").replace(
@@ -333,11 +341,17 @@ class TestJournalIndexLayer(TmpPlanTestCase):
     def test_validated_exception_suppresses_only_exact_schema_error(self):
         plan_id = "2026.07.19-DEMO"
         plan_dir = write_valid_plan(self.root, plan_id=plan_id)
-        write_decision_record(plan_dir, "D51", decision="owner")
+        decision_path = write_decision_record(plan_dir, "D51", decision="owner")
         entry = json.loads((plan_dir / "journal.jsonl").read_text(encoding="utf-8"))
         entry["friction"] = "legacy"
         raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
         (plan_dir / "journal.jsonl").write_text(raw + "\n", encoding="utf-8")
+        decision_path.write_text(
+            decision_path.read_text(encoding="utf-8").replace(
+                "owner", "owner\n\n"
+                f"[JOURNAL-EXCEPTION:{__import__('hashlib').sha256(raw.encode()).hexdigest()}]\n"
+                f"fields=`friction`;\nplan=`{plan_id}`;\nitem=`P1.1`"),
+            encoding="utf-8")
         plan = (plan_dir / "plan.md").read_text(encoding="utf-8")
         (plan_dir / "plan.md").write_text(
             plan.replace("## 6. Update Log", "## 5. Decision Log\n\n| D# | Дата | Решение | Почему |\n|:--|:--|:--|:--|\n| D51 | 2026-07-20 | owner | test |\n\n## 6. Update Log"),

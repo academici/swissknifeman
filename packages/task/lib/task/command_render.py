@@ -1205,6 +1205,13 @@ def _duplicates(values: tuple[str, ...]) -> list[str]:
     return sorted(value for value in set(values) if values.count(value) > 1)
 
 
+def _extra_selectors_are_ambiguous(mapping: ProviderCommandMapping, values: tuple[str, ...]) -> bool:
+    """The launch pin is selectors[0]. Cursor may recognize later live model names."""
+    if len(values) <= 1:
+        return False
+    return mapping.provider_id != "cursor"
+
+
 def _mapping_diagnostics(record: CommandRecord,
                          mapping: ProviderCommandMapping) -> tuple[CommandDiagnostic, ...]:
     diagnostics = []
@@ -1218,7 +1225,7 @@ def _mapping_diagnostics(record: CommandRecord,
                 diagnostics.append(_diag("CMD_MAPPING_MISSING", record, path,
                                          {"semantic_value": required}, {"selectors": values}, mapping,
                                          "provider selector mapping is missing"))
-            elif len(values) != 1:
+            elif _extra_selectors_are_ambiguous(mapping, values):
                 diagnostics.append(_diag("CMD_MAPPING_AMBIGUOUS", record, path,
                                          {"selector_count": 1}, {"selectors": values}, mapping,
                                          "provider selector mapping is ambiguous"))
@@ -1251,7 +1258,7 @@ def _route_mapping_diagnostics(
                 "CMD_MAPPING_MISSING", record, path,
                 {"semantic_value": value}, {"selectors": values}, mapping,
                 "provider selector mapping is missing"))
-        elif len(values) != 1:
+        elif _extra_selectors_are_ambiguous(mapping, values):
             diagnostics.append(_diag(
                 "CMD_MAPPING_AMBIGUOUS", record, path,
                 {"selector_count": 1}, {"selectors": values}, mapping,

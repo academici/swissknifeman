@@ -2,6 +2,7 @@
 import copy
 import hashlib
 import json
+import multiprocessing
 import os
 import shutil
 import subprocess
@@ -15,7 +16,8 @@ try:
 except ImportError:  # direct discovery from tests/
     import fixtures  # noqa: F401,E402
 from task.plan_authority import (  # noqa: E402
-    AuthorityFrameError, CommitmentStore, ResponseStore, apply_response,
+    AuthorityFrameError, CommitmentStore, DurableAuthorityStore, ObservedAction,
+    ResponseStore, apply_response,
     auto_answer_clarification, authorize, canonical_action, default_frame_path, evaluate, load_frame,
 )
 
@@ -57,6 +59,26 @@ def _request(**overrides):
     return request
 
 
+def _observed(request=None, **overrides):
+    action = (request or _request())["action"]
+    values = {
+        "affected_surfaces": tuple(action["affected_surfaces"]),
+        "declared_scope": tuple(action["declared_scope"]),
+        "frozen_contract_change": action["frozen_contract_change"],
+        "closed_set_extension": action["closed_set_extension"],
+        "reversible": action["reversible"],
+        "decision_recorded": action["decision_recorded"],
+        "provenance": "repository-diff:v1", "verified": True,
+    }
+    values.update(overrides)
+    return ObservedAction(**values)
+
+
+def _consume_response_process(path, request, response, queue):
+    result = apply_response(request, response, store=DurableAuthorityStore(path))
+    queue.put(result["verdict"] if isinstance(result, dict) else result.reason_code)
+
+
 class AuthorityEvaluationTests(unittest.TestCase):
     def test_contract_metadata_is_package_owned(self):
         frame = json.loads(FRAME_PATH.read_text(encoding="utf-8"))
@@ -90,7 +112,8 @@ class AuthorityEvaluationTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_constructive_is_delegated(self):
-        result = evaluate(_request())
+        request = _request()
+        result = evaluate(request, observed=_observed(request))
         self.assertEqual(result.verdict, "delegated")
         self.assertEqual(result.reason_code, "P5_DECISION_POLICY_APPROVED")
 
@@ -130,17 +153,57 @@ class AuthorityEvaluationTests(unittest.TestCase):
     def test_aggregation_cannot_widen_first_item_scope(self):
         store = CommitmentStore()
         first = _request()
-        self.assertEqual(authorize(first, store=store).verdict, "delegated")
+        self.assertEqual(authorize(first, store=store, observed=_observed(first),
+                                   mode="diagnostic").verdict, "delegated")
         second = _request(decision_id="D-test-2")
         second["action"]["affected_surfaces"] = ["packages/task/lib/task/other.py"]
         second["action"]["declared_scope"] = ["packages/task/lib/task/other.py"]
-        self.assertEqual(authorize(second, store=store).verdict, "approval_required")
+        self.assertEqual(authorize(second, store=store, observed=_observed(second),
+                                   mode="diagnostic").verdict, "approval_required")
 
     def test_shadow_never_records_commitment(self):
         store = CommitmentStore()
-        result = authorize(_request(), store=store, shadow=True)
+        request = _request()
+        result = authorize(request, store=store, observed=_observed(request), shadow=True)
         self.assertEqual(result["would_verdict"], "delegated")
         self.assertEqual(store.for_request(_request()), [])
+
+    def test_claimed_safe_cannot_override_observed_risky(self):
+        request = _request()
+        observed = _observed(request, reversible=False)
+        self.assertEqual(evaluate(request, observed=observed).verdict, "approval_required")
+
+    def test_missing_observation_never_delegates(self):
+        self.assertEqual(evaluate(_request()).verdict, "approval_required")
+
+    def test_enforced_authorize_requires_durable_store(self):
+        request = _request()
+        result = authorize(request, observed=_observed(request))
+        self.assertEqual(result.reason_code, "P5_DECISION_STORE_REQUIRED")
+
+    def test_enforced_commitments_fail_closed_without_trusted_analyzer(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "authority.json"
+            first = _request()
+            self.assertEqual(authorize(
+                first, store=DurableAuthorityStore(path),
+                observed=_observed(first)).reason_code,
+                "P5_DECISION_OBSERVATION_UNVERIFIED")
+            second = _request(decision_id="D-test-2")
+            second["action"]["affected_surfaces"] = ["packages/task/lib/task/other.py"]
+            second["action"]["declared_scope"] = ["packages/task/lib/task/other.py"]
+            self.assertEqual(authorize(
+                second, store=DurableAuthorityStore(path),
+                observed=_observed(second)).reason_code,
+                "P5_DECISION_OBSERVATION_UNVERIFIED")
+
+    def test_enforced_authorize_rejects_caller_fabricated_observation(self):
+        request = _request()
+        with tempfile.TemporaryDirectory() as tmp:
+            result = authorize(
+                request, store=DurableAuthorityStore(Path(tmp) / "authority.json"),
+                observed=_observed(request, provenance="caller-says-so"))
+        self.assertEqual(result.reason_code, "P5_DECISION_OBSERVATION_UNVERIFIED")
 
 
 class ClarificationAndResponseTests(unittest.TestCase):
@@ -190,9 +253,43 @@ class ClarificationAndResponseTests(unittest.TestCase):
         request = _request()
         response = {"selected_option": "apply", "policy_digest": _frame()["_policy_digest"], "action_digest": request["action_digest"]}
         store = ResponseStore()
-        self.assertEqual(apply_response(request, response, store=store)["verdict"], "applied")
-        self.assertEqual(apply_response(request, response, store=store).reason_code,
+        self.assertEqual(apply_response(request, response, store=store,
+                                        mode="diagnostic")["verdict"], "applied")
+        self.assertEqual(apply_response(request, response, store=store,
+                                        mode="diagnostic").reason_code,
                          "P5_DECISION_RESPONSE_REUSED")
+
+    def test_durable_response_is_single_use_after_reopen(self):
+        request = _request()
+        response = {"selected_option": "apply", "policy_digest": _frame()["_policy_digest"],
+                    "action_digest": request["action_digest"]}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "authority.json"
+            self.assertEqual(apply_response(
+                request, response, store=DurableAuthorityStore(path))["verdict"], "applied")
+            self.assertEqual(apply_response(
+                request, response, store=DurableAuthorityStore(path)).reason_code,
+                "P5_DECISION_RESPONSE_REUSED")
+
+    def test_concurrent_processes_consume_response_exactly_once(self):
+        request = _request()
+        response = {"selected_option": "apply", "policy_digest": _frame()["_policy_digest"],
+                    "action_digest": request["action_digest"]}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = str(Path(tmp) / "authority.json")
+            context = multiprocessing.get_context("fork")
+            queue = context.Queue()
+            processes = [context.Process(
+                target=_consume_response_process,
+                args=(path, request, response, queue)) for _ in range(2)]
+            for process in processes:
+                process.start()
+            for process in processes:
+                process.join(5)
+                self.assertEqual(process.exitcode, 0)
+            self.assertCountEqual(
+                [queue.get(timeout=1), queue.get(timeout=1)],
+                ["applied", "P5_DECISION_RESPONSE_REUSED"])
 
     def test_unknown_response_option_is_rejected(self):
         request = _request()

@@ -15,10 +15,16 @@
 
 stdlib-only (json/argparse/pathlib) — конвенция пакета task."""
 import argparse
+from datetime import datetime, timezone
+import fcntl
 import hashlib
 import json
+import math
+import os
 import re
+import stat
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 
 try:
@@ -61,6 +67,13 @@ EXCEPTION_REQUIRED_FIELDS = (
 EXEMPTABLE_FIELDS = ("friction",)
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _DECISION_RE = re.compile(r"^D[1-9][0-9]*$")
+_UTC_TS_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$")
+_EXCEPTION_GRANT_RE = re.compile(
+    r"\[JOURNAL-EXCEPTION:(?P<digest>[0-9a-f]{64})\]\s*\n"
+    r"fields=`(?P<fields>[^`]*)`;\s*\n"
+    r"plan=`(?P<plan>[^`]*)`;\s*\n"
+    r"item=`(?P<item>[^`]*)`",
+)
 
 
 class JournalValidationError(ValueError):
@@ -92,8 +105,9 @@ def entry_validation_errors(entry):
 
     def _check_number(name):
         v = entry[name]
-        if v is not None and (isinstance(v, bool) or not isinstance(v, (int, float))):
-            errors.append((name, f"{name}: обязано быть number|null"))
+        if (v is not None and (isinstance(v, bool) or not isinstance(v, (int, float))
+                               or not math.isfinite(v) or v < 0)):
+            errors.append((name, f"{name}: обязано быть finite number ≥0|null"))
 
     _check_str("ts")
     _check_str("plan_id")
@@ -102,6 +116,10 @@ def entry_validation_errors(entry):
     _check_str("run_id", allow_none=True)
     _check_str("actor")
     _check_str("note", allow_none=True)
+    try:
+        _parse_utc(entry["ts"])
+    except ValueError as exc:
+        errors.append(("ts", str(exc)))
 
     if entry["command"] not in COMMANDS:
         errors.append(("command", f"command: «{entry['command']}» не входит в {COMMANDS}"))
@@ -119,8 +137,11 @@ def entry_validation_errors(entry):
             f"friction: обязан быть массивом значений из {FRICTION_VALUES}",
         ))
 
-    for name in ("cost_usd", "num_turns", "duration_ms"):
+    for name in ("cost_usd", "duration_ms"):
         _check_number(name)
+    turns = entry["num_turns"]
+    if turns is not None and (isinstance(turns, bool) or not isinstance(turns, int) or turns < 0):
+        errors.append(("num_turns", "num_turns: обязано быть int ≥0|null"))
 
     fingerprint = entry.get("fingerprint")
     if fingerprint is not None and (
@@ -162,6 +183,18 @@ def entry_validation_errors(entry):
             errors.append(("candidate_snapshot", "candidate_snapshot допустим только как полный audit candidate"))
 
     return errors
+
+
+def _parse_utc(value, *, field="ts"):
+    if not isinstance(value, str) or not _UTC_TS_RE.fullmatch(value):
+        raise ValueError(f"{field}: обязано быть strict UTC timestamp с Z")
+    try:
+        parsed = datetime.fromisoformat(value[:-1] + "+00:00")
+    except ValueError as exc:
+        raise ValueError(f"{field}: календарно невалидно") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() != timezone.utc.utcoffset(parsed):
+        raise ValueError(f"{field}: обязано быть UTC")
+    return parsed
 
 
 def validate_entry(entry):
@@ -255,6 +288,10 @@ def validate_exception(exception):
         value = exception[name]
         if not isinstance(value, str) or not value:
             errors.append(f"{name}: обязано быть непустой str")
+    try:
+        _parse_utc(exception["ts"])
+    except ValueError as exc:
+        errors.append(str(exc))
 
     target_line = exception["target_line"]
     if isinstance(target_line, bool) or not isinstance(target_line, int) or target_line < 1:
@@ -354,15 +391,30 @@ def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
         raise JournalValidationError(
             f"invalid_fields: ожидалось точное множество {sorted(target_fields)}")
 
+    from task import plan_decisions
     try:
-        plan_layout.layout_version(plan_dir)
-        decision_glob = plan_layout.carrier_glob(plan_dir, "decision-record")
-        exists = any(p.name.startswith(exception["owner_decision"] + "-")
-                     for p in decision_glob.parent.glob(decision_glob.name))
-    except (OSError, UnicodeDecodeError, plan_layout.PlanLayoutError) as exc:
-        raise JournalValidationError(f"owner_decision: носитель решений не читается: {exc}") from exc
-    if not exists:
-        raise JournalValidationError("owner_decision: D# отсутствует в объявленном носителе решений")
+        decisions = plan_decisions.load_decisions(plan_dir)
+    except (OSError, UnicodeDecodeError, plan_layout.PlanLayoutError,
+            plan_decisions.DecisionError) as exc:
+        raise JournalValidationError(f"owner_decision: носитель решений невалиден: {exc}") from exc
+    matches = [decision for decision in decisions
+               if decision.identifier == exception["owner_decision"]]
+    if len(matches) != 1:
+        raise JournalValidationError("owner_decision: требуется ровно один разрешающий D#")
+    decision = matches[0]
+    target_item = target.get("item_id")
+    if (decision.status != "accepted" or decision.superseded_by is not None
+            or target_item not in decision.items):
+        raise JournalValidationError(
+            "owner_decision: решение не accepted/current или не связано с target item")
+    grants = list(_EXCEPTION_GRANT_RE.finditer(decision.body))
+    expected_fields = ",".join(sorted(exception["invalid_fields"]))
+    if len(grants) != 1:
+        raise JournalValidationError("owner_decision: требуется ровно один JOURNAL-EXCEPTION grant")
+    grant = grants[0].groupdict()
+    if grant != {"digest": exception["target_sha256"], "fields": expected_fields,
+                  "plan": canonical_plan_id, "item": target_item}:
+        raise JournalValidationError("owner_decision: JOURNAL-EXCEPTION grant не связан с exact target/scope")
 
     if check_duplicate:
         exceptions_path = plan_dir / EXCEPTIONS_FILENAME
@@ -436,42 +488,164 @@ def _canonical_phase_audit_item_id(command, item_id):
     return review_policy.phase_audit_subject(item_id) or item_id
 
 
+@contextmanager
+def _journal_lock(plan_dir):
+    plan_dir = Path(plan_dir)
+    cache = plan_dir / ".plan-cache"
+    cache.mkdir(parents=True, exist_ok=True)
+    if cache.is_symlink() or not cache.is_dir() or not hasattr(os, "O_NOFOLLOW"):
+        raise JournalValidationError("JOURNAL_DURABILITY_FAILED: lock domain небезопасен")
+    path = cache / "journal.lock"
+    try:
+        descriptor = os.open(path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    except OSError as exc:
+        raise JournalValidationError(f"JOURNAL_DURABILITY_FAILED: lock недоступен: {exc}") from exc
+    try:
+        with os.fdopen(descriptor, "a+") as stream:
+            fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
+            yield
+    finally:
+        pass
+
+
+def _read_json_lines(path, *, validator, label):
+    path = Path(path)
+    if not path.exists():
+        return []
+    if path.is_symlink():
+        raise JournalValidationError(f"JOURNAL_CORRUPT: {label} является symlink")
+    try:
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+        mode = os.fstat(descriptor).st_mode
+        if not stat.S_ISREG(mode):
+            raise JournalValidationError(f"JOURNAL_CORRUPT: {label} не regular file")
+        with os.fdopen(descriptor, "rb") as stream:
+            payload = stream.read()
+        text = payload.decode("utf-8")
+    except JournalValidationError:
+        raise
+    except (OSError, UnicodeDecodeError) as exc:
+        raise JournalValidationError(f"JOURNAL_CORRUPT: {label} не читается: {exc}") from exc
+    records = []
+    for line_number, raw in enumerate(text.splitlines(), start=1):
+        if not raw.strip():
+            continue
+        try:
+            record = json.loads(raw)
+            validator(record)
+        except (json.JSONDecodeError, JournalValidationError) as exc:
+            raise JournalValidationError(
+                f"JOURNAL_CORRUPT: {label}:{line_number}: {exc}") from exc
+        records.append((line_number, raw, record))
+    return records
+
+
+def _authoritative_state_locked(plan_dir, *, allow_invalid_target=None):
+    plan_dir = Path(plan_dir)
+    journal_rows = _read_json_lines(
+        plan_dir / FILENAME, validator=lambda record: None, label=FILENAME)
+    for line_number, raw, record in journal_rows:
+        try:
+            validate_entry(record)
+        except JournalValidationError as exc:
+            allowed = (allow_invalid_target is not None
+                       and line_number == allow_invalid_target[0]
+                       and line_sha256(raw) == allow_invalid_target[1])
+            if not allowed:
+                raise JournalValidationError(
+                    f"JOURNAL_CORRUPT: {FILENAME}:{line_number}: {exc}") from exc
+    sidecar_path = plan_dir / EXCEPTIONS_FILENAME
+    sidecar_rows = _read_json_lines(
+        sidecar_path, validator=validate_exception, label=EXCEPTIONS_FILENAME)
+    for _line_number, _raw, exception in sidecar_rows:
+        validate_exception_target(plan_dir, exception, check_duplicate=False)
+    targets = [(row[2]["target_line"], row[2]["target_sha256"]) for row in sidecar_rows]
+    if len(targets) != len(set(targets)):
+        raise JournalValidationError("JOURNAL_CORRUPT: duplicate schema exception")
+    return journal_rows, sidecar_rows
+
+
+def _write_line_durable(path, line):
+    path = Path(path)
+    if path.exists() and (path.is_symlink() or not path.is_file()):
+        raise JournalValidationError("JOURNAL_DURABILITY_FAILED: append target не regular file")
+    flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND | os.O_NOFOLLOW
+    payload = (line + "\n").encode("utf-8")
+    try:
+        descriptor = os.open(path, flags, 0o600)
+        try:
+            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                raise JournalValidationError("JOURNAL_DURABILITY_FAILED: append target не regular file")
+            cursor = 0
+            while cursor < len(payload):
+                written = os.write(descriptor, payload[cursor:])
+                if written <= 0:
+                    raise OSError("short append")
+                cursor += written
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+        directory = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+    except JournalValidationError:
+        raise
+    except OSError as exc:
+        raise JournalValidationError(f"JOURNAL_DURABILITY_FAILED: {exc}") from exc
+
+
+def _validate_terminal_order(rows, entry):
+    if entry.get("result") not in TERMINAL_CLOSE_RESULTS or not entry.get("run_id"):
+        return
+    identity = (entry.get("item_id"), entry.get("attempt"), entry.get("run_id"))
+    starts = [record for _line, _raw, record in rows
+              if (record.get("item_id"), record.get("attempt"), record.get("run_id")) == identity
+              and record.get("result") == "in-progress"]
+    if not starts:
+        raise JournalValidationError("JOURNAL_CONFLICT: terminal без start")
+    if len(starts) != 1:
+        raise JournalValidationError("JOURNAL_CONFLICT: terminal требует ровно один start")
+    if _parse_utc(entry["ts"]) < _parse_utc(starts[0]["ts"]):
+        raise JournalValidationError("JOURNAL_CONFLICT: terminal timestamp раньше start")
+
+
+def _append_locked(plan_dir, entry, rows, *, enforce_terminal_order=False):
+    canonical_plan_id = Path(plan_dir).name
+    if entry["plan_id"] != canonical_plan_id:
+        raise JournalValidationError(
+            f"event plan_id «{entry['plan_id']}» ≠ canonical plan directory «{canonical_plan_id}»")
+    if enforce_terminal_order:
+        _validate_terminal_order(rows, entry)
+    path = Path(plan_dir) / FILENAME
+    _write_line_durable(path, json.dumps(entry, ensure_ascii=False, sort_keys=True))
+    return path
+
+
 def append(plan_dir, entry):
     """Дописывает ОДНУ запись в `plans/<ID>/journal.jsonl`. Валидирует ДО записи
     (§2) — битая запись не попадает в durable-историю плана (§1). Возвращает путь
     файла. Файла нет — создаётся (append-режим сам создаёт)."""
     validate_entry(entry)
     plan_dir = Path(plan_dir)
-    validate_append_policy(entry, plan_dir=plan_dir)
-    canonical_plan_id = plan_dir.name
-    if entry["plan_id"] != canonical_plan_id:
-        raise JournalValidationError(
-            f"event plan_id «{entry['plan_id']}» ≠ canonical plan directory "
-            f"«{canonical_plan_id}»")
-    path = plan_dir / FILENAME
-    line = json.dumps(entry, ensure_ascii=False, sort_keys=True)
-    with open(path, "a", encoding="utf-8") as fh:
-        fh.write(line + "\n")
-    return path
+    with _journal_lock(plan_dir):
+        rows, _exceptions = _authoritative_state_locked(plan_dir)
+        validate_append_policy(entry, plan_dir=plan_dir)
+        return _append_locked(plan_dir, entry, rows)
 
 
 def append_idempotent_terminal(plan_dir, entry):
     """Append one terminal, or return its existing line without changing bytes."""
     validate_entry(entry)
-    validate_append_policy(entry, plan_dir=plan_dir)
-    if entry.get("result") not in TERMINAL_CLOSE_RESULTS or not entry.get("run_id"):
-        return append(plan_dir, entry), None, True
     plan_dir = Path(plan_dir)
     path = plan_dir / FILENAME
-    if path.is_file():
-        for line_number, raw in enumerate(
-                path.read_text(encoding="utf-8").splitlines(), start=1):
-            if not raw.strip():
-                continue
-            try:
-                current = json.loads(raw)
-            except json.JSONDecodeError:
-                continue
+    with _journal_lock(plan_dir):
+        rows, _exceptions = _authoritative_state_locked(plan_dir)
+        validate_append_policy(entry, plan_dir=plan_dir)
+        if entry.get("result") not in TERMINAL_CLOSE_RESULTS or not entry.get("run_id"):
+            return _append_locked(plan_dir, entry, rows), None, True
+        for line_number, _raw, current in rows:
             identity = (entry.get("item_id"), entry.get("attempt"), entry.get("run_id"))
             if (current.get("item_id"), current.get("attempt"), current.get("run_id")) != identity:
                 continue
@@ -481,17 +655,22 @@ def append_idempotent_terminal(plan_dir, entry):
                 return path, line_number, False
             raise JournalValidationError(
                 f"terminal conflict: run_id уже закрыт в {FILENAME}:{line_number}")
-    return append(plan_dir, entry), None, True
+        return _append_locked(
+            plan_dir, entry, rows, enforce_terminal_order=True), None, True
 
 
 def append_exception(plan_dir, exception):
     """Append-only дописывает ровно одно owner-gated historical schema exception."""
-    validate_exception_target(plan_dir, exception)
-    path = Path(plan_dir) / EXCEPTIONS_FILENAME
-    line = json.dumps(exception, ensure_ascii=False, sort_keys=True)
-    with open(path, "a", encoding="utf-8") as fh:
-        fh.write(line + "\n")
-    return path
+    validate_exception(exception)
+    with _journal_lock(plan_dir):
+        _authoritative_state_locked(
+            plan_dir,
+            allow_invalid_target=(exception["target_line"], exception["target_sha256"]),
+        )
+        validate_exception_target(plan_dir, exception)
+        path = Path(plan_dir) / EXCEPTIONS_FILENAME
+        _write_line_durable(path, json.dumps(exception, ensure_ascii=False, sort_keys=True))
+        return path
 
 
 # --- CLI: `python3 -m task.journal append --plan … --item … …` (вызов из команд) --

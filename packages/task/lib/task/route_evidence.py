@@ -26,8 +26,9 @@ stdlib-only.
 """
 from __future__ import annotations
 
-import json
 import importlib
+import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -69,6 +70,15 @@ ROUTE_UNDERSHOOT = "ROUTE_UNDERSHOOT"
 ROUTE_UNVERIFIABLE = "ROUTE-UNVERIFIABLE"
 CAPABILITY_UNSUPPORTED = "CAPABILITY_UNSUPPORTED"
 
+ATTESTATION_SCHEMA = "provider-attestation/v1"
+ATTESTATION_BOUNDARIES = ("workflow-guard", "security-boundary")
+_ATTESTATION_FIELDS = frozenset({
+    "schema_version", "boundary", "issuer", "provider", "subject", "command",
+    "arguments", "cwd", "plan_id", "item_id", "action_digest", "issued_at",
+    "expires_at", "nonce", "proof", "adapter_version",
+})
+_DIGEST_RE = re.compile(r"^[0-9a-f]{64}$")
+
 
 class RouteEvidenceError(ValueError):
     """A refusal named by its own typed reason code — never a silent downgrade."""
@@ -76,6 +86,136 @@ class RouteEvidenceError(ValueError):
     def __init__(self, code: str, message: str):
         super().__init__(f"{code}: {message}")
         self.code = code
+
+
+def build_owner_attestation(evidence: dict, *, provider: str, plan_id: str,
+                            item_id: str, action_digest: str, audience: str,
+                            expires_at: str, nonce: str) -> dict:
+    """Normalize local provider evidence without overstating its trust boundary.
+
+    Current Codex/Claude adapters read agent-accessible local state.  Their output is
+    therefore useful for workflow continuity but can never become a protected owner
+    assertion merely because it has a digest.  A future provider adapter may return a
+    security-boundary envelope only through ``verify_owner_attestation`` with an
+    independent verifier and nonce consumer.
+    """
+    required = {
+        "source", "source_version", "thread_id", "cwd", "invocation", "ts",
+        "owner_message_digest",
+    }
+    if not isinstance(evidence, dict) or not required <= set(evidence):
+        raise RouteEvidenceError("OWNER_ATTESTATION_INVALID", "provider evidence is incomplete")
+    invocation = evidence["invocation"]
+    if not isinstance(invocation, str) or not invocation:
+        raise RouteEvidenceError("OWNER_ATTESTATION_INVALID", "invocation is absent")
+    command, _, arguments = invocation.removeprefix("$ ").removeprefix("/").partition(" ")
+    if not command.startswith("task:") or not arguments:
+        raise RouteEvidenceError("OWNER_ATTESTATION_INVALID", "invocation is not a Task command")
+    values = (provider, plan_id, item_id, audience, expires_at, nonce)
+    if any(not isinstance(value, str) or not value for value in values) \
+            or not _DIGEST_RE.fullmatch(str(action_digest)):
+        raise RouteEvidenceError("OWNER_ATTESTATION_INVALID", "attestation binding is incomplete")
+    return {
+        "schema_version": ATTESTATION_SCHEMA,
+        "boundary": "workflow-guard",
+        "issuer": f"local:{evidence['source']}",
+        "provider": provider,
+        "subject": {"session_id": evidence["thread_id"],
+                    "owner_message_digest": evidence["owner_message_digest"],
+                    "audience": audience},
+        "command": command,
+        "arguments": arguments,
+        "cwd": evidence["cwd"],
+        "plan_id": plan_id,
+        "item_id": item_id,
+        "action_digest": action_digest,
+        "issued_at": evidence["ts"],
+        "expires_at": expires_at,
+        "nonce": nonce,
+        "proof": None,
+        "adapter_version": evidence["source_version"],
+    }
+
+
+def verify_owner_attestation(attestation: dict, *, expected: dict,
+                             verifier=None, nonce_consumer=None,
+                             now: datetime | None = None,
+                             protected: bool = True) -> dict:
+    """Verify exact binding; protected mode requires an out-of-principal adapter.
+
+    ``verifier`` and ``nonce_consumer`` are provider-owned callables.  Task never
+    manufactures a signing key or silently substitutes its local durable store for a
+    provider nonce service.
+    """
+    if (not isinstance(attestation, dict) or set(attestation) != _ATTESTATION_FIELDS
+            or attestation.get("schema_version") != ATTESTATION_SCHEMA
+            or attestation.get("boundary") not in ATTESTATION_BOUNDARIES):
+        raise RouteEvidenceError("OWNER_ATTESTATION_INVALID", "unsupported exact envelope")
+    subject = attestation.get("subject")
+    if (not isinstance(subject, dict)
+            or set(subject) != {"session_id", "owner_message_digest", "audience"}
+            or any(not isinstance(subject.get(field), str) or not subject[field]
+                   for field in ("session_id", "owner_message_digest", "audience"))
+            or not _DIGEST_RE.fullmatch(subject["owner_message_digest"])
+            or any(not isinstance(attestation.get(field), str) or not attestation[field]
+                   for field in ("issuer", "provider", "command", "arguments", "cwd",
+                                 "plan_id", "item_id", "action_digest", "nonce",
+                                 "adapter_version"))
+            or not _DIGEST_RE.fullmatch(attestation["action_digest"])):
+        raise RouteEvidenceError("OWNER_ATTESTATION_INVALID", "attestation fields are malformed")
+    for field in ("provider", "cwd", "plan_id", "item_id", "action_digest"):
+        if attestation.get(field) != expected.get(field):
+            raise RouteEvidenceError("OWNER_ATTESTATION_MISMATCH", f"{field} changed")
+    if attestation.get("command") != expected.get("command") \
+            or attestation.get("arguments") != expected.get("arguments"):
+        raise RouteEvidenceError("OWNER_ATTESTATION_MISMATCH", "command binding changed")
+    for field in ("session_id", "owner_message_digest", "audience"):
+        if subject[field] != expected.get(field):
+            raise RouteEvidenceError("OWNER_ATTESTATION_MISMATCH", f"subject.{field} changed")
+    try:
+        issued = datetime.strptime(attestation["issued_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        expires = datetime.strptime(attestation["expires_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise RouteEvidenceError("OWNER_ATTESTATION_INVALID", "attestation time is invalid") from exc
+    observed = now or datetime.now(timezone.utc)
+    if expires <= issued or observed < issued or observed >= expires:
+        raise RouteEvidenceError("OWNER_ATTESTATION_EXPIRED", "attestation is outside its validity window")
+    if protected:
+        if attestation["boundary"] != "security-boundary" or verifier is None or nonce_consumer is None:
+            raise RouteEvidenceError(
+                "OWNER_ATTESTATION_UNSUPPORTED",
+                "protected mode requires provider proof and an independent nonce store",
+            )
+        if (attestation["issuer"] != f"provider:{attestation['provider']}"
+                or not isinstance(attestation["proof"], str) or not attestation["proof"]):
+            raise RouteEvidenceError(
+                "OWNER_ATTESTATION_INVALID", "protected proof has no provider-owned issuer")
+        if not verifier(attestation):
+            raise RouteEvidenceError("OWNER_ATTESTATION_FORGED", "provider proof rejected")
+        if not nonce_consumer(attestation["issuer"], attestation["nonce"],
+                              attestation["action_digest"]):
+            raise RouteEvidenceError("OWNER_ATTESTATION_REPLAYED", "nonce was already consumed")
+    elif attestation["boundary"] != "workflow-guard" or attestation["proof"] is not None \
+            or not attestation["issuer"].startswith("local:"):
+        raise RouteEvidenceError(
+            "OWNER_ATTESTATION_INVALID", "workflow guard must carry local unsigned provenance")
+    return {"verified": True, "boundary": attestation["boundary"],
+            "action_digest": attestation["action_digest"]}
+
+
+def provider_owner_verification(provider: str):
+    """Return a provider-owned verifier/nonce consumer, or an unsupported pair.
+
+    Local Task state must not register these functions.  A provider adapter may add
+    them only when the provider exposes an out-of-agent verification channel.
+    """
+    module_name = {"codex": "task.route_evidence_codex",
+                   "claude-code": "task.route_evidence_claude"}.get(provider)
+    if module_name is None:
+        return None, None
+    adapter = importlib.import_module(module_name)
+    return (getattr(adapter, "verify_owner_attestation", None),
+            getattr(adapter, "consume_owner_nonce", None))
 
 
 def required_route(record: CommandRecord, *, inherited_minimum: tuple | None = None) -> dict:

@@ -50,12 +50,12 @@ plans/<PLAN-ID>/artifacts/<Pn.m>/evidence/
 
 ```bash
 PYTHONPATH="<task-package-root>/lib" python3 -c '
-from task.task_contract import bundle_lint
+from task.task_contract import BUNDLE_INPUT_POLICY, bundle_lint
 code = bundle_lint(
     "plans/<PLAN-ID>/artifacts/<Pn.m>/evidence",
     manifest_path="plans/<PLAN-ID>/artifacts/<Pn.m>/evidence/manifest.json",
     verifier_path="plans/<PLAN-ID>/artifacts/<Pn.m>/evidence/verify.py",
-    declared_privacy={"minimized": True, "excluded_classes": ["raw-transcript-bodies", "chain-of-thought", "tool-payloads", "secrets"]},
+    policy=BUNDLE_INPUT_POLICY,
 )
 print(code or "allow")
 '

@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 from task import plan_layout, plan_projection
@@ -92,6 +93,10 @@ def parse_decision(path) -> Decision:
         raise DecisionError(f"{path}: id не совпадает с именем файла")
     if not isinstance(fields["date"], str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", fields["date"]):
         raise DecisionError(f"{path}: date должен быть ISO-датой")
+    try:
+        date.fromisoformat(fields["date"])
+    except ValueError as exc:
+        raise DecisionError(f"{path}: date должен быть календарно-валидной ISO-датой") from exc
     if fields["status"] not in STATUSES:
         raise DecisionError(f"{path}: неизвестный status {fields['status']!r}")
     if not isinstance(fields["item"], str):

@@ -96,6 +96,10 @@ class LifecycleScenarios(unittest.TestCase):
             evidence = [{'carrier': 'python3 validate.py', 'status': 'green',
                          'evidence_ids': ['actual-subprocess:exit-0']}]
             decision = terminal_policy.build_decision(plan, 'P1.1', result='closed-green', validation=evidence)
+            journal.append(plan, journal.new_entry(
+                plan_id=plan.name, item_id='P1.1', command='plan-run',
+                actor='implementation/high', result='in-progress',
+                session_id='scenario', run_id='scenario-run'))
             event = journal.new_entry(plan_id=plan.name, item_id='P1.1', command='plan-run',
                                       actor='implementation/high', result='closed-green',
                                       session_id='scenario', run_id='scenario-run', decision=decision,
@@ -121,8 +125,12 @@ class LifecycleScenarios(unittest.TestCase):
                 plan_closure.build_closure(plan, 'P1')
                 journal.append(plan, journal.new_entry(
                     plan_id=plan.name, item_id='P1', command='plan-close',
+                    actor='implementation/high', result='in-progress',
+                    session_id='scenario', run_id='scenario-phase-run'))
+                journal.append(plan, journal.new_entry(
+                    plan_id=plan.name, item_id='P1', command='plan-close',
                     actor='implementation/high', result='closed-green',
-                    session_id='scenario', run_id='scenario-run',
+                    session_id='scenario', run_id='scenario-phase-run',
                     fingerprint=candidate['fingerprint']))
                 plan_bundle.build(plan, 'P2.1')
                 receipt = plan_delivery.build_terminal_receipt(plan, 'P1.1')
@@ -139,7 +147,7 @@ class LifecycleScenarios(unittest.TestCase):
             self.assertEqual(int(run('git', 'rev-list', '--count', 'HEAD')) - before, 1)
             self.assertEqual(sum(argv == validation for argv, _, _ in commands), 1)
             events = [json.loads(line) for line in (plan / 'journal.jsonl').read_text().splitlines()]
-            self.assertEqual(len(events), 2)
+            self.assertEqual(len(events), 4)
             self.assertFalse(any(event['command'] == 'plan-audit' for event in events))
             self.assertEqual(events[-1]['item_id'], 'P1')
             self.assertEqual(run('git', 'status', '--porcelain'), '')

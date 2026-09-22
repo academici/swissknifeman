@@ -184,6 +184,19 @@ def _completed_user_prompt(payload: dict, turn_id: str | None) -> str | None:
     return "\n".join(texts) if texts else None
 
 
+def _task_invocation(line: str) -> str | None:
+    """Return the semantic Task invocation from either Codex prompt spelling."""
+    candidate = line.removeprefix("$ ")
+    return candidate if candidate.startswith("task:") else None
+
+
+def _contains_invocation(prompt: str, expected_invocation: str) -> bool:
+    expected = _task_invocation(expected_invocation)
+    return expected is not None and any(
+        _task_invocation(line) == expected for line in prompt.splitlines()
+    )
+
+
 def _read_thread_state(path: Path, thread_id: str, *, require_current_owner_invocation=False) -> tuple[dict, tuple[str, ...]]:
     session_ids = []
     context = None
@@ -213,14 +226,14 @@ def _read_thread_state(path: Path, thread_id: str, *, require_current_owner_invo
                     if (prompt := _user_prompt(payload)) is not None:
                         if require_current_owner_invocation:
                             task_prompts = [prompt]
-                        if any(line.startswith("$ task:") for line in prompt.splitlines()):
+                        if any(_task_invocation(line) is not None for line in prompt.splitlines()):
                             task_prompts = [prompt]
                 elif context is not None and event.get("type") == "event_msg":
                     if (prompt := _completed_user_prompt(
                             payload, context.get("turn_id"))) is not None:
                         if require_current_owner_invocation:
                             task_prompts = [prompt]
-                        if any(line.startswith("$ task:") for line in prompt.splitlines()):
+                        if any(_task_invocation(line) is not None for line in prompt.splitlines()):
                             task_prompts = [prompt]
     except OSError as error:
         raise RouteEvidenceError(
@@ -252,7 +265,7 @@ def _capture_thread_state(*, thread_id: str, expected_invocation: str,
     if not all(isinstance(value, str) and value for value in (model, effort, cwd)):
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_UNAVAILABLE", "Codex turn_context не содержит model/effort/cwd")
-    if not any(expected_invocation in prompt.splitlines() for prompt in prompts):
+    if not any(_contains_invocation(prompt, expected_invocation) for prompt in prompts):
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_MISMATCH",
             "текущий Codex turn не содержит exact Task invocation line",

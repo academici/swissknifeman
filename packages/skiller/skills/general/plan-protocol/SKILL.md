@@ -51,7 +51,9 @@ Rules common to layouts v1 and v2:
   use `[UNVERIFIED]`. Ambiguity that blocks readiness is `[NEEDS CLARIFICATION …]`.
 - A phase skeleton starts with `> СКЕЛЕТ — не детализирован`; execution requires a detailed item.
 - Plans are Markdown SSOT. JSON is a contract, bundle, append-only event stream, or derived view,
-  never an alternate handwritten plan.
+  never an alternate handwritten plan. A sealed journal may be rewritten only by an accepted
+  Owner-D# `journal-migration/v1` whose complete preimage, per-line operations, source/target
+  digests and receipt remain in `journal-migrations/`; ordinary repair stays append-only.
 - Re-opened phase handoff starts with `> УСТАРЕЛ — фаза реопенена`.
 
 ## 2. Layout selection and read paths

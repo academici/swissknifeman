@@ -15,7 +15,7 @@ CODEX = shutil.which("codex")
 
 @unittest.skipUnless(CODEX, "native Codex discovery requires the installed CLI")
 class NativeCommandDiscoveryTests(unittest.TestCase):
-    def test_fresh_native_install_discovers_only_the_eleven_task_adapters(self):
+    def test_fresh_native_install_keeps_task_out_of_idle_prompt(self):
         # An isolated home and local marketplace exercise the provider installer;
         # no credentials, user configuration, existing caches or network are needed.
         with tempfile.TemporaryDirectory(prefix="task-native-discovery-") as folder:
@@ -52,5 +52,8 @@ class NativeCommandDiscoveryTests(unittest.TestCase):
                              for block in message.get("content", []))
             identities = re.findall(r"^- task:([^:]+):", text, re.MULTILINE)
             expected = {"task-" + path.stem for path in (plugin / "commands").glob("*.md")}
-            self.assertEqual(set(identities), expected)
-            self.assertEqual(len(identities), 11)
+            self.assertEqual(identities, [])
+            skills = installed / "adapters/codex/skills"
+            self.assertEqual({path.parent.name for path in skills.glob("*/SKILL.md")}, expected)
+            for policy in skills.glob("*/agents/openai.yaml"):
+                self.assertIn("allow_implicit_invocation: false", policy.read_text())

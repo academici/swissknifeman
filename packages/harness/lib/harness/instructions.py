@@ -870,6 +870,7 @@ def _validate_projection_semantics(value: dict[str, object],
                                    ) -> tuple[InstructionDiagnostic, ...]:
     """Validate rendered IDs, common parity, extensions, and compatibility before P2."""
     diagnostics = []
+    projection_policy = load_projection_catalog()
     records = {record["id"]: record for scope in value["scopes"]
                for record in scope["sections"]}
     by_scope = {scope_id: tuple(item for item in projections if item.scope_id == scope_id)
@@ -879,6 +880,13 @@ def _validate_projection_semantics(value: dict[str, object],
             continue
         for projection in scoped:
             rendered = projection.result.managed_bytes.decode("utf-8")
+            expected_common = (COMMON_IDS[scope_id] if scope_id != "root" and
+                project_common_instructions(projection_policy, ProviderId(projection.provider_id)) else ())
+            if projection.common_ids != expected_common:
+                diagnostics.append(_diag(
+                    "INSTRUCTION_PARITY_MISMATCH", scope_id=scope_id,
+                    provider_id=projection.provider_id,
+                    expected=_display(expected_common), observed=_display(projection.common_ids)))
             if projection.common_ids:
                 common_found = tuple(re.findall(r"<!-- semantic:([^ ]+) -->", rendered))[
                     :len(projection.common_ids)]
@@ -908,11 +916,6 @@ def _validate_projection_semantics(value: dict[str, object],
                         observation="semantic-invalid", semantic_id=semantic_id,
                         expected=_display(missing), observed="rendered assertion missing"))
         if len(scoped) == len(PROVIDERS):
-            left, right = scoped[0], scoped[1]
-            if left.common_ids != right.common_ids:
-                diagnostics.append(_diag(
-                    "INSTRUCTION_PARITY_MISMATCH", scope_id=scope_id,
-                    expected=_display(left.common_ids), observed=_display(right.common_ids)))
             for semantic_id in COMMON_IDS[scope_id]:
                 obligation = tuple(tuple(record.items()) for record in records[semantic_id]["obligations"])
                 if not obligation:
@@ -975,8 +978,10 @@ def _projection(value: dict[str, object], scope: dict, provider: str, *,
     if hint is not None:
         semantic["adoption"] = dict(hint)
     catalog = load_projection_catalog()
-    projected_common_ids = (common_ids if project_common_instructions(catalog, ProviderId(provider))
-                            else ())
+    # Repository-wide common guidance is on demand for every provider. Package
+    # guides retain their provider policy, so entering a package still supplies it.
+    projected_common_ids = (common_ids if scope_id != "root" and
+                            project_common_instructions(catalog, ProviderId(provider)) else ())
     common_text = (common.read_text(encoding="utf-8") if projected_common_ids else "")
     result = plan_artifact_render(ArtifactRenderRequest(
         artifact_id, sources,

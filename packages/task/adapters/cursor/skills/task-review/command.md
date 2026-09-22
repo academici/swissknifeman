@@ -1,9 +1,10 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/review.md
-Canonical SHA-256: sha256:2a027c9f5d627305927c3ec38525b15858ca2902df082b883ab95b5c367b5c66
+Canonical SHA-256: sha256:541d71ed58c765e34d50dcde3ca6ccc62d60e677fb1423fcfd0f1e172b2fa9ab
 Adapter: task.cursor-command/1.0.16
 -->
 ---
+disable-model-invocation: true
 description: "Read-only review of code, docs or specs; rank findings by demonstrated impact."
 argument-hint: "[что ревьюим: дифф / ветка / PR# / docs-путь]"
 model: opus

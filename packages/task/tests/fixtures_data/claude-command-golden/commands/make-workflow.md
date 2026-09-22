@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 description: "Explicit workflow authoring: fill a canonical template and validate its stages."
 argument-hint: "[тип/цель workflow: разработка | проектирование | аудит | что оркеструем]"
 model: sonnet

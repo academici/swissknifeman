@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:d5d75c7d162f7221c1057b2970b1e4e4026cd06e8f835a9f580479ecd788fc9c
+Canonical SHA-256: sha256:9afa1e387236b5d08866b1e4dd112595ee9320a6fb560d191f60fa50d399f9d1
 Adapter: task.codex-command/1.0.16
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -40,45 +40,28 @@ do not reuse the preceding session's route. Current Codex mapping: economy=gpt-5
 low=low, medium=medium, high=high, xhigh=xhigh. At a fresh-session boundary, keep the provider-neutral Next too; its
 `$ task:…` form alone or an unpinned `codex` command is not a native fresh launch.
 
-## Codex current-route binding — provider-specific
+## Codex design route
 
-Before the first product-journal mutation, capture the effective route for this exact command:
-
-```bash
-export TASK_CODEX_PLUGIN_ROOT="$(codex plugin marketplace list --json | python3 -c 'import json,sys,pathlib; data=json.load(sys.stdin); roots=[item["root"] for item in data.get("marketplaces", []) if item.get("name")=="swissknifeman" and (pathlib.Path(item["root"])/"packages/task/lib/task").is_dir()]; len(roots)==1 or sys.exit("task runtime unavailable: expected one marketplace root with packages/task/lib/task"); print(roots[0]+"/packages/task")')"
-export TASK_CODEX_ROUTE_EVIDENCE="$(PYTHONPATH="${TASK_CODEX_PLUGIN_ROOT}/lib:${TASK_CODEX_PLUGIN_ROOT}/../.."   python3 -m task.route_evidence_codex capture   --expected-invocation '$ task:plan-design <arguments>' --expected-cwd <repo-cwd>)"
-```
-
-Replace `<arguments>` and `<repo-cwd>` with the exact current invocation payload and repository
-cwd. A non-zero exit is `ROUTE-UNVERIFIABLE`; do not start or mutate the product item.
-
-For Codex, `task.route_evidence_codex.capture_current(...)` resolves the current
-`CODEX_THREAD_ID` first and validates the latest provider-written `turn_context`: concrete
-model, reasoning effort, cwd, approval policy, sandbox policy, and the exact current Task
-prompt. The resulting actual-route record carries `source="provider-thread-state"` and
-`source_version="codex-turn-context-v1"`.
-
-This path is valid both after a full native launch and after the Codex clear command, which
-starts a fresh chat inside the same CLI process. A model or reasoning change before product
-journal start is therefore checked from the current chat state, never from stale process argv.
-If persisted thread state is genuinely absent, exact ancestor argv remains a compatibility
-fallback with `source="cli-flag"`. Malformed/mismatched thread state fails closed; config,
-doctor output, actor prose, and self-attestation remain forbidden substitutes.
-
-This provider binding defines how Codex satisfies the D24 write-site checks in the canonical
-command below. The projected contract snippets consume exactly
-`json.loads(os.environ["TASK_CODEX_ROUTE_EVIDENCE"])`; do not recreate route evidence from
-placeholders, `codex doctor`, configuration, or agent prose. Its fresh-native-only wording constrains the `cli-flag` compatibility fallback;
-its private-rollout prohibition forbids manual probing but not this validated adapter-owned
-read; neither rule prohibits a verified cleared chat or overrides current `turn_context`
-evidence.
+Use the current provider route once; honor the requested design budget. Design-only Markdown
+does not require execution admission, a durable execution start, or a terminal-admission lease.
+Use `plan-work.py design-context` and `finalize-design` for compact context and generated carriers.
+Do not capture execution route proof or load raw five-carrier snapshots merely to author a phase.
+Fixed design routing is frontier/high; diagnose an unrequested cost overshoot before authoring.
 
 Invocation payload: `$ARGUMENTS`.
+
+Activate only when the owner explicitly invokes Task. Use the owner's time/research budget as
+an execution constraint: inspect only evidence that can change the decision, reuse known findings,
+and stop expanding once the implementation choices and acceptance are clear. Audit inventories
+are references, not automatic acceptance checklists. Do not impose research quotas or exhaustive
+caller/test census. If a hard authority/security boundary cannot fit, report that concrete conflict.
 
 Read `runtime/plan-protocol/references/common-principles.md` and
 `runtime/plan-protocol/references/design-mode.md` from the configured Task package root.
 The full schema canon and snippets are on-demand references, not mandatory execution context.
 
+Start with `scripts/plan-work.py design-context --plan-dir <dir> --phase <Pn>` for an existing plan.
+Use its compact schema and current phase/Routing context; open full canon only for a named ambiguity.
 Design creates a v2 plan contract, not a second execution protocol. Read repository evidence,
 declare `Phase Assurance | v1` in every new phase (impact, named seams, live/irreversible,
 audit intent, rationale), Routing Batch/Review, Required Reads, Files, Validation and Deliverables, then generate
@@ -96,8 +79,21 @@ does.
 
 Design completion records exactly one semantic Next. A bounded remediation does not manufacture a
 fresh audit/root; only a concrete context-budget, capability, owner-pause, independent review,
-public/authority, or material-risk boundary does. `DESIGN-ROOT-TERMINAL` remains a design-result
-handoff boundary: it must not execute or spawn a successor in the same design invocation.
+public/authority, or material-risk boundary does. Design-only scope must not execute or spawn
+an unauthorized successor. Completion alone does not require a fresh process: use `scope-complete`
+and a same-root recommendation; the owner may invoke execution in this session.
+
+Prefer a few outcome items (normally at most four), at most eight necessary reads per item, and
+about 250 lines/2,000 words per ordinary phase. These are advisory economy targets, not lint gates;
+explain a necessary security/public-contract exception briefly. Reconciliation is an inline step,
+not a separate item without an independent product outcome. After the second owner urgency signal,
+stop optional research and complete the smallest sufficient result. Report artifacts and remaining
+work, never an unsupported percentage.
+
+Finalize once with `scripts/plan-work.py finalize-design --plan-dir <dir> --phase <Pn>
+--actor <actor> --session-id <session>`. Author the semantic handoff first; this operation owns
+generated views, eligible bundles, design journal and receipt. Make one focused repair if needed;
+a persistent diagnostic is a specific reported conflict, not permission for an unbounded audit.
 
 An applicable terminal-admission lease is a provider adapter concern: design supplies only typed
 continuity and delivery carriers, never free-prose terminal authorization.

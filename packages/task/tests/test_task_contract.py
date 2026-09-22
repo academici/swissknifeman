@@ -347,6 +347,10 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
     """TASK-AUTHORITY-CARRIER-01: build-time provenance is plan-native, never kwargs."""
 
     def setUp(self):
+        from task.session_context import SessionContext
+        session = patch("task.session_context.resolve", return_value=SessionContext("codex", "owner-thread", "test"))
+        session.start()
+        self.addCleanup(session.stop)
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
         decision_rows = self._decision_rows(
@@ -503,7 +507,9 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
                                             require_current_owner_invocation=True)
         self.assertFalse(task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())["authority"]["granted"])
         self.assertFalse(self._protected(scope="other-scope")["authority"]["granted"])
-        with patch("task.route_evidence.capture_launch", return_value={**evidence, "invocation": "$ task:plan-run OTHER P1.1"}):
+        with patch("task.route_evidence.capture_launch", return_value={**evidence, "invocation": "$ task:plan-run OTHER P1.1"}), \
+                patch("task.route_evidence.provider_owner_verification",
+                      return_value=(lambda value: True, lambda issuer, nonce, digest: True)):
             with self.assertRaisesRegex(task_contract.TaskContractBuildError, "UNATTESTED"):
                 task_contract.materialize_owner_invocation(self.plan_dir, "P1.1")
         with self.assertRaises(TypeError):
@@ -523,6 +529,71 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
                 task_contract.materialize_owner_invocation(self.plan_dir, "P1.1")
         self.assertFalse(task_contract.build(
             self.plan_dir, "P1.1", actual_route=self._actual_route())["authority"]["granted"])
+
+    def _declare_local_gate(self, environment="checkout"):
+        self._declare_gate()
+        path = fixtures.item_spec_path(self.plan_dir)
+        path.write_text(path.read_text().replace("scope=`finite-scope`\n",
+            f"scope=`finite-scope`; boundary=`owner-session`; effect=`local-source`; environment=`{environment}`\n"), encoding="utf-8")
+        self._replace_decision_rows(self._decision_rows(prefix_count=64))
+        plan_authority.DurableAuthorityStore.for_plan(self.plan_dir).path.unlink()
+        state = path.with_name(path.stem + ".state.md")
+        state.write_text(state.read_text().replace("🟢 Done", "🟡 In progress"), encoding="utf-8")
+
+    def test_local_grant_is_narrow_session_bound_and_idempotent(self):
+        self._declare_local_gate("corex_test")
+        evidence = self._security_evidence()
+        evidence.pop("owner_attestation")
+        with patch("task.route_evidence.capture_launch", return_value=evidence):
+            first = task_contract.materialize_owner_invocation(self.plan_dir, "P1.1")
+            second = task_contract.materialize_owner_invocation(self.plan_dir, "P1.1")
+            self.assertTrue(first["granted"])
+            self.assertEqual(first["boundary"], "workflow-guard")
+            self.assertTrue(second["reused"])
+            self.assertEqual(len(list((self.plan_dir / "decisions").glob("D*.md"))), 65)
+            self.assertTrue(task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())["authority"]["granted"])
+        with patch("task.route_evidence.capture_launch", return_value={**evidence, "thread_id": "other"}):
+            self.assertFalse(task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())["authority"]["granted"])
+        path = fixtures.item_spec_path(self.plan_dir)
+        path.write_text(path.read_text().replace("finite-scope", "wider-scope"), encoding="utf-8")
+        with patch("task.route_evidence.capture_launch", return_value=evidence):
+            self.assertFalse(task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())["authority"]["granted"])
+
+    def test_provider_unavailable_precedes_owner_prompt_capture(self):
+        self._declare_gate()
+        with patch("task.route_evidence.capture_launch") as capture:
+            with self.assertRaisesRegex(ValueError, "AUTHORITY_PROVIDER_UNAVAILABLE"):
+                task_contract.materialize_owner_invocation(self.plan_dir, "P1.1")
+            capture.assert_not_called()
+
+    def test_local_grant_retry_after_runtime_failure_and_completion(self):
+        self._declare_local_gate()
+        evidence = self._security_evidence()
+        evidence.pop("owner_attestation")
+        with patch("task.route_evidence.capture_launch", return_value=evidence):
+            with patch("task.plan_bundle.build", side_effect=RuntimeError("transport")):
+                with self.assertRaisesRegex(RuntimeError, "transport"):
+                    task_contract.materialize_owner_invocation(self.plan_dir, "P1.1")
+            self.assertEqual(len(list((self.plan_dir / "decisions").glob("D*.md"))), 64)
+            self.assertTrue(task_contract.materialize_owner_invocation(self.plan_dir, "P1.1")["granted"])
+            path = fixtures.item_spec_path(self.plan_dir)
+            original = path.read_text()
+            path.write_text(original.replace("lib/pkg/config.py", "lib/pkg/other.py"), encoding="utf-8")
+            self.assertFalse(task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())["authority"]["granted"])
+            path.write_text(original, encoding="utf-8")
+            state = path.with_name(path.stem + ".state.md")
+            state.write_text(state.read_text().replace("🟡 In progress", "🟢 Done"), encoding="utf-8")
+            self.assertFalse(task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())["authority"]["granted"])
+            with self.assertRaisesRegex(task_contract.TaskContractBuildError, "run уже завершён"):
+                task_contract.materialize_owner_invocation(self.plan_dir, "P1.1")
+
+    def test_local_boundary_rejects_external_targets_and_effects(self):
+        for environment, effect in (("production", "local-source"), ("checkout", "deploy"),
+                                    ("checkout", "release"), ("checkout", "secrets"), ("checkout", "fleet")):
+            with self.subTest(environment=environment, effect=effect):
+                declaration = f"[OWNER-GATE:G-TEST] branch=`go`; scope=`finite`; boundary=`owner-session`; effect=`{effect}`; environment=`{environment}`"
+                with self.assertRaisesRegex(task_contract.TaskContractBuildError, "AUTHORITY_BOUNDARY"):
+                    task_contract.declared_authority("P1.1", {"Authority": declaration})
 
     def test_missing_forged_wrong_scope_and_revoked_grants_fail_closed(self):
         cases = {
@@ -1515,6 +1586,32 @@ class ExecutableRoutingTableTests(unittest.TestCase):
         path.write_text(path.read_text(encoding="utf-8").replace(
             "## 3. Routing\n\n", "## 3. Routing\n\n" + self.routing + suffix),
             encoding="utf-8")
+
+    def test_pinned_bounded_route_rejects_overshoot_but_owner_run_accepts(self):
+        from task import route_evidence
+        self.routing = self.routing.replace("manual", "plan-exec")
+        self._write_routing()
+        actual = route_evidence.capture_actual("frontier", "xhigh", source="provider-thread-state", model="gpt-test")
+        with self.assertRaisesRegex(task_contract.TaskContractBuildError, "ECONOMY_ROUTE_OVERSHOOT"):
+            task_contract.build(self.plan_dir, "P1.1", actual_route=actual)
+        contract = task_contract.build(self.plan_dir, "P1.1", actual_route=actual,
+            carrier=f"task:plan-run {self.plan_dir.name} P1.1")
+        self.assertEqual(contract["route"]["actual"]["model_class"], "frontier")
+
+    def test_declared_frontier_route_has_no_economy_ceiling(self):
+        from task import route_evidence
+        self.routing = self.routing.replace("manual", "plan-exec").replace("implementation/high", "frontier/high")
+        self._write_routing()
+        actual = route_evidence.capture_actual("frontier", "xhigh", source="provider-thread-state", model="gpt-test")
+        task_contract.build(self.plan_dir, "P1.1", actual_route=actual)
+
+    def test_recommended_batch_does_not_authorize_a_more_expensive_route(self):
+        from task import route_evidence
+        self.routing = self.routing.replace("manual", "plan-exec").replace("| test |", "| recommended: test |")
+        self._write_routing()
+        actual = route_evidence.capture_actual("frontier", "xhigh", source="provider-thread-state", model="gpt-test")
+        with self.assertRaisesRegex(task_contract.TaskContractBuildError, "ECONOMY_ROUTE_OVERSHOOT"):
+            task_contract.build(self.plan_dir, "P1.1", actual_route=actual)
 
     def test_adjacent_mapping_table_does_not_change_compiled_route_or_digest(self):
         self._write_routing(

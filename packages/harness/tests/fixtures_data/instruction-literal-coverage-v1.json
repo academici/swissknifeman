@@ -4,9 +4,9 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "a95030cfcfdeee170a04923286836e131b1f29b406ee1a3d8884d98ee0ff6d1a",
+    "source_sha256": "cae34671c0e21618e6261c09e5cdfb6f001eaa8754b1bea758458433cd23c783",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
-    "literal_count": 299
+    "literal_count": 298
   },
   "literals": [
     {
@@ -191,11 +191,11 @@
     },
     {
       "semantic_id": "root.plan-lifecycle",
-      "literal": "Keep executable master plans in `plans/<ID>/`, use the `plan-protocol` schema and commands, and reference items as `<PLAN-ID> Pn.m`. Vault topology and authoring-provenance carriers are defined by that on-demand protocol. Ordinary bounded work may use a message or task file; cross-module scope alone does not require a plan."
+      "literal": "Task commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate Task."
     },
     {
       "semantic_id": "root.development-validation",
-      "literal": "Run affected package qualification before handoff; scope plan regression to the selected plan and dependency closure, and keep fleet health at CI/release boundaries and use Russian Conventional Commit messages. Also, record release-visible changes in the single root `CHANGELOG.md` under `[Unreleased]`, with no per-package release ledger."
+      "literal": "Run affected package qualification before handoff; keep fleet health at CI/release boundaries and use Russian Conventional Commit messages. Record release-visible changes in the single root `CHANGELOG.md` under `[Unreleased]`, with no per-package release ledger."
     },
     {
       "semantic_id": "root.reference-provenance",
@@ -239,11 +239,7 @@
     },
     {
       "semantic_id": "root.evidence-integrity",
-      "literal": "never treat a failed or skipped check as green"
-    },
-    {
-      "semantic_id": "root.evidence-integrity",
-      "literal": "capture observed defects in the active plan evidence"
+      "literal": "Disclose an environment defect as soon as it could affect model/effort, filesystem access, MCP, hooks, sandbox, context budget, or validation trust: never treat a failed or skipped check as green. Repair defects at the owning source or generator."
     },
     {
       "semantic_id": "root.generated-artifacts",
@@ -319,11 +315,11 @@
     },
     {
       "semantic_id": "root.codex.launch-and-hook-integrity",
-      "literal": "For a Codex launch, name the intended cwd, routed model/effort, `-a never` and `-s danger-full-access`. Check cwd and working-tree state before edits. Run doctor, hook/settings integrity and maind health on installation, environment changes or symptoms, not every code task. Treat hook exit `127` as a path defect and repair its effective registration. A runnable plan handoff includes provider-neutral Next and the native launch block; an ordinary completed task needs no new launch."
+      "literal": "For a Codex launch, name the intended cwd, routed model/effort, `-a never` and `-s danger-full-access`. Check cwd and working-tree state before edits. Run doctor, hook/settings integrity and maind health on installation, environment changes or symptoms, not every code task. Treat hook exit `127` as a path defect and repair its effective registration."
     },
     {
       "semantic_id": "root.codex.fresh-agent-execution",
-      "literal": "For an active executable plan, use the committed handoff and typed continuity. Continue in the current root when context and capabilities suffice; delegate for useful independent work or required independent review. Fix regressions through the owning item; escalate only a real authority or frozen-contract change. Respect a separately requested design/review boundary."
+      "literal": "Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Task workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them."
     },
     {
       "semantic_id": "root.codex.package-scope-routing",

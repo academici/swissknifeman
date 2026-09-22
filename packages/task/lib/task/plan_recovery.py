@@ -160,7 +160,7 @@ def prepare(plan_dir, item_id: str) -> dict:
 
 
 def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
-          contract: dict, batch_receipt=None) -> dict:
+          contract: dict, batch_receipt=None, route_evidence=None) -> dict:
     """Admit one durable start; a restarted session reuses the open run identity."""
     from task import plan_context, task_contract
 
@@ -208,9 +208,17 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
         attempt = int(positions.get(item_id, {}).get("attempt", 0)) + 1
         run_id = journal.derive_run_id(plan_id=root.name, item_id=item_id,
                                        attempt=attempt, session_id=session_id)
+        decision = None
+        if route_evidence is not None:
+            from task import route_evidence as route_owner
+            receipt = route_owner.build_run_receipt(
+                plan_id=root.name, item_id=item_id, attempt=attempt,
+                session_id=session_id, run_id=run_id, evidence=route_evidence)
+            decision = route_owner.start_decision(receipt)
         event = journal.new_entry(plan_id=root.name, item_id=item_id, command=command,
                                   actor=actor, result="in-progress", session_id=session_id,
-                                  run_id=run_id, attempt=attempt, batch_receipt=batch_receipt)
+                                  run_id=run_id, attempt=attempt, batch_receipt=batch_receipt,
+                                  decision=decision)
         path = journal.append(root, event)
         with path.open("a") as stream:
             os.fsync(stream.fileno())

@@ -12,6 +12,12 @@ PACKAGE = ROOT / "packages/task"
 
 
 class IntentOptInTests(unittest.TestCase):
+    def test_ordinary_requests_do_not_activate_any_task_route(self):
+        contract = (PACKAGE / "references/intent-routing.md").read_text()
+        self.assertIn("only when the owner explicitly invokes", contract)
+        self.assertIn("existing plan files, and old handoffs do not activate it", contract)
+        self.assertIn("without loading Task commands, runtime references, workflow rules, or plan gates", contract)
+
     def test_single_contract_covers_direct_and_explicit_plan_requests(self):
         contract = (PACKAGE / "references/intent-routing.md").read_text()
         scenarios = (
@@ -49,7 +55,8 @@ class IntentOptInTests(unittest.TestCase):
                                    "task:plan-close", "task.plan_lifecycle", "task.task_contract"):
                     self.assertNotIn(dependency, text)
             wrapper = artifacts[f"packages/task/adapters/codex/skills/task-{command}/SKILL.md"]
-            self.assertIn("Skill relevance alone is not workflow authority", wrapper)
+            self.assertIn("Activate only when the owner explicitly invokes this Task command or skill", wrapper)
+            self.assertIn("automatic workflow for development", wrapper)
             reference = (PACKAGE / f"adapters/codex/skills/task-{command}" /
                          "../../../../references/intent-routing.md").resolve()
             self.assertEqual(reference, PACKAGE / "references/intent-routing.md")

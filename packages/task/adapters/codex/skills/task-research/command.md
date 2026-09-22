@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/research.md
-Canonical SHA-256: sha256:417b37dbca208f58ec3ca9373736dde751db43be02d2910180377649df631d9b
+Canonical SHA-256: sha256:496ce8ae1b95b6df6c4f25578178abc103713742d8080edf91606597ba7d82c6
 Adapter: task.codex-command/1.0.16
 -->
 Это задача ИССЛЕДОВАНИЯ. Ввод пользователя: «$ARGUMENTS».

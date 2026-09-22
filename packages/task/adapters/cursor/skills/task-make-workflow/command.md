@@ -1,9 +1,10 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/make-workflow.md
-Canonical SHA-256: sha256:f0c032bd66f9f19cf4e1b52c9ffca5cce6d6cd3b4029b29e7b587d13d76ec472
+Canonical SHA-256: sha256:d1bd1f94d90501e252b007d22a680d2fe51748e5786006e6afd9ffb5cd31f13a
 Adapter: task.cursor-command/1.0.16
 -->
 ---
+disable-model-invocation: true
 description: "Explicit workflow authoring: fill a canonical template and validate its stages."
 argument-hint: "[тип/цель workflow: разработка | проектирование | аудит | что оркеструем]"
 model: sonnet

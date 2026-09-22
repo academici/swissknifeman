@@ -117,8 +117,10 @@ class CursorLifecycleGateTests(unittest.TestCase):
                 "workspace_roots": [str(ROOT)],
             }
             blocked = _run_handler(handler, "lifecycle.daemon-safety", payload)
-            self.assertEqual(blocked.returncode, 2)
-            self.assertIn(b"daemon-safety", blocked.stderr)
+            self.assertEqual(blocked.returncode, 0)
+            blocked_verdict = json.loads(blocked.stdout)
+            self.assertEqual(blocked_verdict["permission"], "deny")
+            self.assertIn("daemon-safety", blocked_verdict["user_message"])
             bypassed = _run_handler(
                 handler,
                 "lifecycle.daemon-safety",
@@ -126,6 +128,7 @@ class CursorLifecycleGateTests(unittest.TestCase):
                 env={**os.environ, "PERPLEXITY_DAEMON_GUARD": "off"},
             )
             self.assertEqual(bypassed.returncode, 0)
+            self.assertEqual(json.loads(bypassed.stdout), {"permission": "allow"})
 
     def test_daemon_safety_false_positive_case_is_pinned(self):
         with tempfile.TemporaryDirectory() as scratch:
@@ -138,8 +141,10 @@ class CursorLifecycleGateTests(unittest.TestCase):
                 "workspace_roots": [str(ROOT)],
             }
             result = _run_handler(handler, "lifecycle.daemon-safety", payload)
-            self.assertEqual(result.returncode, 2)
-            self.assertIn(b"matched rule", result.stderr)
+            self.assertEqual(result.returncode, 0)
+            verdict = json.loads(result.stdout)
+            self.assertEqual(verdict["permission"], "deny")
+            self.assertIn("matched rule", verdict["user_message"])
 
     def test_git_guardrails_binding_and_render_use_before_shell(self):
         plan = self._cursor_plan("lifecycle.git-guardrails")
@@ -167,7 +172,8 @@ class CursorLifecycleGateTests(unittest.TestCase):
             }
             (cursor_dir / "git-guardrails.env.ini").write_text("MODE=strict\n", encoding="utf-8")
             blocked = _run_handler(handler, "lifecycle.git-guardrails", payload)
-            self.assertEqual(blocked.returncode, 2)
+            self.assertEqual(blocked.returncode, 0)
+            self.assertEqual(json.loads(blocked.stdout)["permission"], "deny")
             (cursor_dir / "git-guardrails.env.ini").write_text("MODE=warn\n", encoding="utf-8")
             warned = _run_handler(handler, "lifecycle.git-guardrails", payload)
             self.assertEqual(warned.returncode, 0)
@@ -177,7 +183,7 @@ class CursorLifecycleGateTests(unittest.TestCase):
             (cursor_dir / "git-guardrails.env.ini").write_text("MODE=off\n", encoding="utf-8")
             inactive = _run_handler(handler, "lifecycle.git-guardrails", payload)
             self.assertEqual(inactive.returncode, 0)
-            self.assertEqual(inactive.stdout, b"")
+            self.assertEqual(json.loads(inactive.stdout), {"permission": "allow"})
 
     def test_git_guardrails_false_positive_case_is_pinned(self):
         with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:
@@ -194,8 +200,10 @@ class CursorLifecycleGateTests(unittest.TestCase):
                 "command": 'echo "git reset --hard"',
             }
             result = _run_handler(handler, "lifecycle.git-guardrails", payload)
-            self.assertEqual(result.returncode, 2)
-            self.assertIn(b"matched rule", result.stderr)
+            self.assertEqual(result.returncode, 0)
+            verdict = json.loads(result.stdout)
+            self.assertEqual(verdict["permission"], "deny")
+            self.assertIn("matched rule", verdict["user_message"])
 
     def test_changelog_gate_binding_and_render_use_before_shell(self):
         plan = self._cursor_plan("lifecycle.changelog-gate")
@@ -224,7 +232,8 @@ class CursorLifecycleGateTests(unittest.TestCase):
             }
             (cursor_dir / "changelog-gate.env.ini").write_text("MODE=strict\n", encoding="utf-8")
             blocked = _run_handler(handler, "lifecycle.changelog-gate", payload)
-            self.assertEqual(blocked.returncode, 2)
+            self.assertEqual(blocked.returncode, 0)
+            self.assertEqual(json.loads(blocked.stdout)["permission"], "deny")
             (cursor_dir / "changelog-gate.env.ini").write_text("MODE=warn\n", encoding="utf-8")
             warned = _run_handler(handler, "lifecycle.changelog-gate", payload)
             self.assertEqual(warned.returncode, 0)
@@ -234,11 +243,11 @@ class CursorLifecycleGateTests(unittest.TestCase):
             skipped = {**payload, "command": 'git commit -m "fix: y [changelog-skip]"'}
             allowed = _run_handler(handler, "lifecycle.changelog-gate", skipped)
             self.assertEqual(allowed.returncode, 0)
-            self.assertEqual(allowed.stdout, b"")
+            self.assertEqual(json.loads(allowed.stdout), {"permission": "allow"})
             (cursor_dir / "changelog-gate.env.ini").write_text("MODE=off\n", encoding="utf-8")
             inactive = _run_handler(handler, "lifecycle.changelog-gate", payload)
             self.assertEqual(inactive.returncode, 0)
-            self.assertEqual(inactive.stdout, b"")
+            self.assertEqual(json.loads(inactive.stdout), {"permission": "allow"})
 
     def test_changelog_gate_false_positive_case_is_pinned(self):
         with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:
@@ -256,8 +265,10 @@ class CursorLifecycleGateTests(unittest.TestCase):
                 "command": 'echo git commit -m "feat: add x"',
             }
             result = _run_handler(handler, "lifecycle.changelog-gate", payload)
-            self.assertEqual(result.returncode, 2)
-            self.assertIn(b"matched rule", result.stderr)
+            self.assertEqual(result.returncode, 0)
+            verdict = json.loads(result.stdout)
+            self.assertEqual(verdict["permission"], "deny")
+            self.assertIn("matched rule", verdict["user_message"])
 
     def test_pack_guard_binding_and_render_use_pretooluse(self):
         plan = self._cursor_plan("lifecycle.pack-guard")
@@ -300,8 +311,10 @@ class CursorLifecycleGateTests(unittest.TestCase):
             (Path(project) / ".cursor" / "pack-guard.env.ini").write_text(
                 "MODE=strict\n", encoding="utf-8")
             blocked = _run_handler(handler, "lifecycle.pack-guard", payload)
-            self.assertEqual(blocked.returncode, 2)
-            self.assertIn(b"demo", blocked.stderr)
+            self.assertEqual(blocked.returncode, 0)
+            blocked_verdict = json.loads(blocked.stdout)
+            self.assertEqual(blocked_verdict["permission"], "deny")
+            self.assertIn("demo", blocked_verdict["user_message"])
             (Path(project) / ".cursor" / "pack-guard.env.ini").write_text(
                 "MODE=warn\n", encoding="utf-8")
             warned = _run_handler(handler, "lifecycle.pack-guard", payload)
@@ -313,7 +326,7 @@ class CursorLifecycleGateTests(unittest.TestCase):
                 "MODE=off\n", encoding="utf-8")
             inactive = _run_handler(handler, "lifecycle.pack-guard", payload)
             self.assertEqual(inactive.returncode, 0)
-            self.assertEqual(inactive.stdout, b"")
+            self.assertEqual(json.loads(inactive.stdout), {"permission": "allow"})
 
     def test_pack_guard_false_positive_case_is_pinned(self):
         with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:
@@ -344,8 +357,10 @@ class CursorLifecycleGateTests(unittest.TestCase):
                 },
             }
             result = _run_handler(handler, "lifecycle.pack-guard", payload)
-            self.assertEqual(result.returncode, 2)
-            self.assertIn(b"matched managed target", result.stderr)
+            self.assertEqual(result.returncode, 0)
+            verdict = json.loads(result.stdout)
+            self.assertEqual(verdict["permission"], "deny")
+            self.assertIn("matched managed target", verdict["user_message"])
 
     def test_manifest_review_gate_row_is_adapted_with_named_adapter(self):
         manifest = load_provider_manifest(MANIFEST)

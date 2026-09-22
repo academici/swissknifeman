@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 description: "Execute authorized Task plan items using declared routing and inline closure."
 argument-hint: "<PLAN-ID> Pn.m [Pn.k]"
 model: sonnet
@@ -8,9 +9,9 @@ Read `runtime/plan-protocol/references/common-principles.md` and
 `runtime/plan-protocol/references/execution-mode.md` from the configured Task package root.
 The full schema canon and snippets are on-demand references, not mandatory execution context.
 
-Execute the admitted Routing group or ready subset of a recommended group for `$ARGUMENTS`. The pinned route is a minimum;
-provider-attested overshoot is recorded and undershoot stops before mutation.
-Activation follows explicit owner plan intent or an exact cited local workflow policy in the
+Execute the admitted Routing group or ready subset of a recommended group for `$ARGUMENTS`.
+Undershoot stops before mutation; bounded pinned work also rejects unrequested expensive overshoot.
+Activation requires an explicit owner Task invocation, as defined in the
 shared [intent routing canon](../references/intent-routing.md).
 
 ## Continuous execution
@@ -36,27 +37,15 @@ stays in `task.plan_admission`/`task_contract`, route proof in `route_evidence`,
 Commands must not copy those algorithms. Choose any safe order consistent with their data
 dependencies, Scope and Acceptance; recommended Next is not exclusive execution authority.
 
-1. Run `task.plan_recovery.prepare()` and then capture exactly the v2 five-carrier context once; consume
-   contiguous terminal-marked chunks. Missing or changed input is `PLAN_CONTEXT_TRUNCATED` or
-   `PLAN_CONTEXT_DIGEST_MISMATCH` before journal mutation.
-   The ordered carriers are `plans/<PLAN-ID>/plan.md` → `plans/<PLAN-ID>/phases/<Pn>/<Pn>.md` →
-   `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md` → `plans/<PLAN-ID>/bundles/<Pn.m>.json` →
-   `plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md`.
-2. Capture provider route and call `batch_admission`; unknown route is `ROUTE-UNVERIFIABLE`, not an
-   item attempt. Start one route-run receipt and reuse it until `route_change_boundary()` proves a change.
-   Before journal or product mutation, compile `task.plan_evidence.compile_graph()` from the item
-   spec and bundle, then pass it to `task_contract.pre_mutation()`. A real digest-input/write
-   collision is `SELF_INVALIDATING_EVIDENCE_ANCHOR`: split product and closure anchors; otherwise
-   collapse them into one anchor.
-   After normal admission and before the first product write, call
-   `plan_recovery.start(plan_dir, item_id, command=command, actor=actor, session_id=session_id,
-   contract=contract, batch_receipt=batch_receipt)` and retain its durable run ID/attempt.
-   An interrupted resume reuses that run without appending a second start; an independent ready
-   successor may proceed only after recovery preflight proves its dependencies satisfied.
-   If journal start survived interruption before state projection, regenerate that owning state
-   before recapture; reuse the journal identity. After terminal evidence and any inline phase closure,
-   call `plan_recovery.materialize_next_ready(plan_dir, item_id)` before delivery so a newly ready
-   successor receives its generated bundle.
+1. Call `scripts/plan-work.py prepare --plan-dir <dir> --item <Pn.m> --command plan-exec
+   --actor <actor> --session-id <session>` once. It owns recovery, route capture, snapshot validation,
+   batch admission, evidence graph, `task_contract.pre_mutation()` and durable start. Consume its
+   compact execution capsule; full plan/phase/bundle/state are internal runtime inputs.
+   `PLAN_CONTEXT_TRUNCATED` and `PLAN_CONTEXT_DIGEST_MISMATCH` still block before product writes.
+2. Retain the returned run identity and route-run receipt. A retry reuses the durable start;
+   a changed route or scope needs fresh admission. Open full carriers only for a named ambiguity
+   or diagnostic. A real `SELF_INVALIDATING_EVIDENCE_ANCHOR` requires separate anchors; routine
+   bookkeeping does not. Do not repeat preflight merely because the workflow advances a step.
 3. Implement only Scope Included. Ordinary low-risk work uses a self-check and affected tests;
    bounded integration adds the necessary package/integration check. Independent review requires a
    concrete item risk—security/auth, destructive migration, irreversible external action,
@@ -67,7 +56,7 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
    Audit is read-only: it returns one owning continuation for a product finding and never starts a
    second audit/full replay without a new material hypothesis.
 5. After GREEN acceptance, persist evidence and the terminal journal event, then call
-   `task.plan_reconcile.reconcile_terminal()` to converge changed terminal projections, the
+   `scripts/plan-work.py finalize --plan-dir <dir> --item <Pn.m>` to converge changed terminal projections, the
    selected successor bundle, freshness and delivery receipt. Close the item in this invocation. If this is the last item, phase gates are
    GREEN, and no audit was explicitly admitted, create its phase closure before deriving Next. Derive and validate
    one semantic Next through `plan_delivery` from the resulting state and dependencies; never emit

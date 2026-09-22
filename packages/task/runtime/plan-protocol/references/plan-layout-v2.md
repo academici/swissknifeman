@@ -173,11 +173,10 @@ Context is chosen from the boundary predicate, not from command name:
 - `owner-pause-no-resume` — owner paused and no resumable root exists;
 - `owner-requested-new-session` — owner explicitly requested a fresh session; persist a new checkpoint;
 - `whole-plan-independent-audit` — adversarial audit of the whole plan requires independence.
-- `design-root-terminal` — a completed `task:plan-design` hands its recommendation to a separately
-  routed root and never executes or spawns the successor itself;
+- `design-root-terminal` — historical design handoff, retained for compatibility only;
 
 Ordinary item sequencing, local repair, or plan close does not itself justify a cold start.
-A completed `task:plan-design` and an explicit owner new-session request are named boundaries.
+A completed design uses `scope-complete` unless a real boundary or owner new-session request exists.
 Lifecycle `scope-complete` records a narrower chat stop after the requested work is closed; its
 `continue-root` decision carries `authorized-scope-complete` and a checkpoint. The successor is a
 recommendation in the current chat, with no automatic authority or fresh launch. Audit

@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:08477e5dd99ae24350e8489c70d85028ee97d3d4c0560a8425318a40d853e77d
+Canonical SHA-256: sha256:cf2723f693c8b68f48226a7015fb63d6f1738412f3e1d7faa0d8ab933dd73d80
 Adapter: task.cursor-command/1.0.16
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -18,6 +18,7 @@ agent --workspace <repo-cwd> --model <model-selector> --force --sandbox disabled
 `auto` never substitutes a fixed frontier or implementation pin. Current Cursor mapping: economy=composer-2.5-fast, implementation=composer-2.5, frontier=claude-opus-5-thinking-high.
 
 ---
+disable-model-invocation: true
 description: "Read-only Task design or phase audit; phase audit needs owner-bound consent."
 argument-hint: "<PLAN-ID> <Pn|design>"
 model: opus

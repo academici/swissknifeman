@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 description: "Implement an authorized feature directly, with checks proportionate to risk."
 argument-hint: "[что строим: бриф / срезы / ссылка на план]"
 model: sonnet

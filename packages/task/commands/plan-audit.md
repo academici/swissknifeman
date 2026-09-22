@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 description: "Read-only Task design or phase audit; phase audit needs owner-bound consent."
 argument-hint: "<PLAN-ID> <Pn|design>"
 model: opus

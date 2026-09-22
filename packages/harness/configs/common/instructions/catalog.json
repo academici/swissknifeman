@@ -36,7 +36,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -71,7 +71,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -101,7 +101,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -132,7 +132,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -168,7 +168,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -201,7 +201,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -232,7 +232,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -249,7 +249,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 8,
-          "intent": "Apply this source-derived instruction: Keep executable master plans in `plans/<ID>/`, use the `plan-protocol` schema and commands, and reference items as `<PLAN-ID> Pn.m`. Vault topology and authoring-provenance carriers are defined by that on-demand protocol. Ordinary bounded work may use a message or task file; cross-module scope alone does not require a plan.",
+          "intent": "Apply this source-derived instruction: Task commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate Task.",
           "obligations": [
             {
               "modality": "must",
@@ -257,24 +257,17 @@
               "action": "manage",
               "object": "root.plan-lifecycle.requirements",
               "boundary": "root.all"
-            },
-            {
-              "modality": "must",
-              "subject": "root.maintainer",
-              "action": "record",
-              "object": "root.plan-lifecycle.model-provenance",
-              "boundary": "root.all"
             }
           ],
           "sources": [
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
-            "Keep executable master plans in `plans/<ID>/`, use the `plan-protocol` schema and commands, and reference items as `<PLAN-ID> Pn.m`. Vault topology and authoring-provenance carriers are defined by that on-demand protocol. Ordinary bounded work may use a message or task file; cross-module scope alone does not require a plan."
+            "Task commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate Task."
           ]
         },
         {
@@ -283,7 +276,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 9,
-          "intent": "Apply this source-derived instruction: Run affected package qualification before handoff; scope plan regression to the selected plan and dependency closure, and keep fleet health at CI/release boundaries and use Russian Conventional Commit messages. Also, record release-visible changes in the single root `CHANGELOG.md` under `[Unreleased]`, with no per-package release ledger.",
+          "intent": "Apply this source-derived instruction: Run affected package qualification before handoff; keep fleet health at CI/release boundaries and use Russian Conventional Commit messages. Record release-visible changes in the single root `CHANGELOG.md` under `[Unreleased]`, with no per-package release ledger.",
           "obligations": [
             {
               "modality": "must",
@@ -297,11 +290,11 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
-            "Run affected package qualification before handoff; scope plan regression to the selected plan and dependency closure, and keep fleet health at CI/release boundaries and use Russian Conventional Commit messages. Also, record release-visible changes in the single root `CHANGELOG.md` under `[Unreleased]`, with no per-package release ledger."
+            "Run affected package qualification before handoff; keep fleet health at CI/release boundaries and use Russian Conventional Commit messages. Record release-visible changes in the single root `CHANGELOG.md` under `[Unreleased]`, with no per-package release ledger."
           ]
         },
         {
@@ -324,7 +317,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -356,7 +349,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -383,7 +376,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -410,7 +403,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -437,7 +430,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -450,7 +443,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 15,
-          "intent": "Apply this source-derived instruction: never treat a failed or skipped check as green; capture observed defects in the active plan evidence and repair them at the owning source.",
+          "intent": "Apply this source-derived instruction: Disclose an environment defect as soon as it could affect model/effort, filesystem access, MCP, hooks, sandbox, context budget, or validation trust: never treat a failed or skipped check as green. Repair defects at the owning source or generator.",
           "obligations": [
             {
               "modality": "must-not",
@@ -464,12 +457,11 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
-            "never treat a failed or skipped check as green",
-            "capture observed defects in the active plan evidence"
+            "Disclose an environment defect as soon as it could affect model/effort, filesystem access, MCP, hooks, sandbox, context budget, or validation trust: never treat a failed or skipped check as green. Repair defects at the owning source or generator."
           ]
         },
         {
@@ -492,7 +484,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -519,7 +511,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -546,7 +538,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "6c9d5394dc3eda9cd8deb4798781a3cbb14dbde76023e45de41df21b1477174d"
+              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
             }
           ],
           "compatibility_assertions": [
@@ -661,7 +653,7 @@
             {
               "source_id": "instruction.fragment.root.codex",
               "path": "packages/harness/configs/common/instructions/root/codex.md",
-              "sha256": "07c6e90aa7e9df368b5576c17c50dfc0234afa50c4b84e16c0e94894b9315fbb"
+              "sha256": "ef834e5a051a791c437fdf6a17ea747d89131d5cc7d116203a22f498922af969"
             }
           ],
           "compatibility_assertions": [
@@ -678,7 +670,7 @@
           "kind": "provider-extension",
           "provider_id": "codex",
           "order": 2,
-          "intent": "Apply this source-derived instruction: For a Codex launch, name the intended cwd, routed model/effort, `-a never` and `-s danger-full-access`. Check cwd and working-tree state before edits. Run doctor, hook/settings integrity and maind health on installation, environment changes or symptoms, not every code task. Treat hook exit `127` as a path defect and repair its effective registration. A runnable plan handoff includes provider-neutral Next and the native launch block; an ordinary completed task needs no new launch.",
+          "intent": "Apply this source-derived instruction: For a Codex launch, name the intended cwd, routed model/effort, `-a never` and `-s danger-full-access`. Check cwd and working-tree state before edits. Run doctor, hook/settings integrity and maind health on installation, environment changes or symptoms, not every code task. Treat hook exit `127` as a path defect and repair its effective registration.",
           "obligations": [
             {
               "modality": "must",
@@ -692,11 +684,11 @@
             {
               "source_id": "instruction.fragment.root.codex",
               "path": "packages/harness/configs/common/instructions/root/codex.md",
-              "sha256": "07c6e90aa7e9df368b5576c17c50dfc0234afa50c4b84e16c0e94894b9315fbb"
+              "sha256": "ef834e5a051a791c437fdf6a17ea747d89131d5cc7d116203a22f498922af969"
             }
           ],
           "compatibility_assertions": [
-            "For a Codex launch, name the intended cwd, routed model/effort, `-a never` and `-s danger-full-access`. Check cwd and working-tree state before edits. Run doctor, hook/settings integrity and maind health on installation, environment changes or symptoms, not every code task. Treat hook exit `127` as a path defect and repair its effective registration. A runnable plan handoff includes provider-neutral Next and the native launch block; an ordinary completed task needs no new launch."
+            "For a Codex launch, name the intended cwd, routed model/effort, `-a never` and `-s danger-full-access`. Check cwd and working-tree state before edits. Run doctor, hook/settings integrity and maind health on installation, environment changes or symptoms, not every code task. Treat hook exit `127` as a path defect and repair its effective registration."
           ]
         },
         {
@@ -705,7 +697,7 @@
           "kind": "provider-extension",
           "provider_id": "codex",
           "order": 3,
-          "intent": "Apply this source-derived instruction: For an active executable plan, use the committed handoff and typed continuity. Continue in the current root when context and capabilities suffice; delegate for useful independent work or required independent review. Fix regressions through the owning item; escalate only a real authority or frozen-contract change. Respect a separately requested design/review boundary.",
+          "intent": "Apply this source-derived instruction: Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Task workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them.",
           "obligations": [
             {
               "modality": "must",
@@ -719,11 +711,11 @@
             {
               "source_id": "instruction.fragment.root.codex",
               "path": "packages/harness/configs/common/instructions/root/codex.md",
-              "sha256": "07c6e90aa7e9df368b5576c17c50dfc0234afa50c4b84e16c0e94894b9315fbb"
+              "sha256": "ef834e5a051a791c437fdf6a17ea747d89131d5cc7d116203a22f498922af969"
             }
           ],
           "compatibility_assertions": [
-            "For an active executable plan, use the committed handoff and typed continuity. Continue in the current root when context and capabilities suffice; delegate for useful independent work or required independent review. Fix regressions through the owning item; escalate only a real authority or frozen-contract change. Respect a separately requested design/review boundary."
+            "Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Task workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them."
           ]
         },
         {
@@ -746,7 +738,7 @@
             {
               "source_id": "instruction.fragment.root.codex",
               "path": "packages/harness/configs/common/instructions/root/codex.md",
-              "sha256": "07c6e90aa7e9df368b5576c17c50dfc0234afa50c4b84e16c0e94894b9315fbb"
+              "sha256": "ef834e5a051a791c437fdf6a17ea747d89131d5cc7d116203a22f498922af969"
             }
           ],
           "compatibility_assertions": [

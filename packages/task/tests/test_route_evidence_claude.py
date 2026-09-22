@@ -14,6 +14,22 @@ from task import route_evidence, route_evidence_claude
 
 
 class ClaudeRouteEvidenceTests(unittest.TestCase):
+    def test_local_owner_invocation_survives_addition_but_not_revoke(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._session(Path(directory))
+            options = dict(expected_invocation="/task:plan-run PLAN P0.15", expected_cwd="/workspace/repo",
+                           session_id="claude-1", state_root=directory, require_current_owner_invocation=True,
+                           allow_additive_owner_followup=True)
+            original = route_evidence_claude.capture_current(**options)
+            for message in ("Also explain the result", "revoke this grant"):
+                with path.open("a") as stream:
+                    stream.write(json.dumps({"type": "user", "message": {"role": "user", "content": message}}) + "\n")
+                if message.startswith("revoke"):
+                    with self.assertRaisesRegex(route_evidence.RouteEvidenceError, "ROUTE_LAUNCH_MISMATCH"):
+                        route_evidence_claude.capture_current(**options)
+                else:
+                    self.assertEqual(route_evidence_claude.capture_current(**options)["owner_message_digest"], original["owner_message_digest"])
+
     def _session(self, root: Path, *, session_id="claude-1", invocation=None,
                  model="claude-opus-5", effort="high", cwd="/workspace/repo"):
         project = root / "-workspace-repo"

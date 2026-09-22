@@ -1,9 +1,10 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/dev.md
-Canonical SHA-256: sha256:80eca26ed89d46495b3a7487b28849d5f2728c41d7b19f305c6fc117a7433cef
+Canonical SHA-256: sha256:ee2b29790bd36d9861240fbe71a94b35ddbc2092e7f64dc5970cc723dcd804c2
 Adapter: task.cursor-command/1.0.16
 -->
 ---
+disable-model-invocation: true
 description: "Implement an authorized feature directly, with checks proportionate to risk."
 argument-hint: "[что строим: бриф / срезы / ссылка на план]"
 model: sonnet

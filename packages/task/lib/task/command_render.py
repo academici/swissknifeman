@@ -461,7 +461,8 @@ def plan_provider_invocation(
         catalog: CommandCatalog, carrier: PlanNextCarrier,
         mapping: ProviderCommandMapping, capability_support: Mapping[str, str] | None = None, *,
         observed_class: str, observed_effort: str,
-        inherited_minimum: tuple[str, str] | None = None) -> PlanProviderInvocation:
+        inherited_minimum: tuple[str, str] | None = None,
+        owner_accepts_overshoot: bool = False) -> PlanProviderInvocation:
     """Gate a semantic plan carrier, then render exactly one provider invocation."""
     capability_support = (dict(mapping.capability_bindings) if capability_support is None
                           else capability_support)
@@ -501,11 +502,13 @@ def plan_provider_invocation(
                     {"model_class": observed_class, "effort": observed_effort}, mapping,
                     "observed route is below the plan minimum"))
             elif observed[0] > required[0] or observed[1] > required[1]:
+                economy_block = record.command_id == "task:plan-design" and not owner_accepts_overshoot
                 diagnostics.append(_diag(
-                    "CMD_ROUTE_OVERSHOOT", record, "/routing",
+                    "ECONOMY_ROUTE_OVERSHOOT" if economy_block else "CMD_ROUTE_OVERSHOOT", record, "/routing",
                     {"model_class": required_class, "effort": required_effort},
                     {"model_class": observed_class, "effort": observed_effort}, mapping,
-                    "observed route exceeds the plan minimum", severity="info"))
+                    "observed route exceeds the plan minimum",
+                    severity="error" if economy_block else "info"))
 
     for requirement in record.capability_requirements:
         level = capability_support.get(requirement.capability_id)
@@ -545,7 +548,8 @@ def plan_provider_invocation(
 
 
 def validate_route(record: CommandRecord, observed_class: str, observed_effort: str,
-                   mapping: ProviderCommandMapping) -> tuple[CommandDiagnostic, ...]:
+                   mapping: ProviderCommandMapping, *,
+                   owner_accepts_overshoot: bool = False) -> tuple[CommandDiagnostic, ...]:
     """Validate both neutral axes before an invocation or write."""
     diagnostics = list(_mapping_diagnostics(record, mapping))
     if record.routing.mode == "inherited-plan":
@@ -566,12 +570,13 @@ def validate_route(record: CommandRecord, observed_class: str, observed_effort: 
                                  {"model_class": observed_class, "effort": observed_effort},
                                  mapping, "observed route is below the command minimum"))
     elif observed[0] > required_class or observed[1] > required_effort:
-        diagnostics.append(_diag("CMD_ROUTE_OVERSHOOT", record, "/routing",
+        economy_block = record.command_id == "task:plan-design" and not owner_accepts_overshoot
+        diagnostics.append(_diag("ECONOMY_ROUTE_OVERSHOOT" if economy_block else "CMD_ROUTE_OVERSHOOT", record, "/routing",
                                  {"model_class": record.routing.model_class,
                                   "effort": record.routing.effort},
                                  {"model_class": observed_class, "effort": observed_effort},
                                  mapping, "observed route exceeds the command minimum",
-                                 severity="info"))
+                                 severity="error" if economy_block else "info"))
     return tuple(diagnostics)
 
 
@@ -670,6 +675,12 @@ def plan_codex_command_render(
                                  mapping.capability_catalog_version,
                                  {"command_id": record.command_id,
                                   "kind": "runtime-projection"}))
+        results.append(_artifact(
+            f"task.codex.{name.replace('-', '.')}.invocation-policy",
+            f"{base}/agents/openai.yaml", b"policy:\n  allow_implicit_invocation: false\n",
+            (_source(record),), ("skills.repository",), catalog,
+            mapping.capability_catalog_version,
+            {"command_id": record.command_id, "kind": "invocation-policy"}))
 
     records = [{
         "path": result.target.path,
@@ -892,6 +903,8 @@ def build_provider_command_parity_report(
             f"packages/task/adapters/codex/skills/task-{name}/SKILL.md")
         expected_codex.add(
             f"packages/task/adapters/codex/skills/task-{name}/command.md")
+        expected_codex.add(
+            f"packages/task/adapters/codex/skills/task-{name}/agents/openai.yaml")
         record = catalog.by_id()[command_id]
         cursor_supported = all(
             cursor_support.get(requirement.capability_id) in requirement.accepted_levels
@@ -1301,7 +1314,8 @@ def _cursor_wrapper_bytes(record: CommandRecord, description: str,
         route = "inherited-plan -> validate the current session against the selected plan item"
     text = f'''---
 name: task-{name}
-description: {json.dumps(description, ensure_ascii=False)}
+description: {json.dumps('Only when explicitly invoked. ' + description, ensure_ascii=False)}
+disable-model-invocation: true
 ---
 
 # Task {name}
@@ -1386,7 +1400,7 @@ def _wrapper_bytes(record: CommandRecord, description: str,
         route = "inherited-plan -> validate the current session against the selected plan item"
     text = f'''---
 name: task-{name}
-description: {json.dumps(description, ensure_ascii=False)}
+description: {json.dumps('Only when explicitly invoked. ' + description, ensure_ascii=False)}
 ---
 
 # Task {name}
@@ -1399,9 +1413,8 @@ Generated Codex adapter for semantic command `{record.command_id}`.
 - Canonical SHA-256: `{source_hash}`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
-Read `references/intent-routing.md` from the configured Task marketplace runtime before selecting
-the workflow. Skill relevance alone is not workflow authority; the latest explicit owner
-request determines the work product. Direct development and fixes require no plan lifecycle.
+Activate only when the owner explicitly invokes this Task command or skill. Task is not an
+automatic workflow for development, fixes, design, or a repository containing plans.
 
 Read `command.md` completely and execute it with the invocation payload as `$ARGUMENTS`.
 Preserve the semantic command ID, gates, status literals, scope, and validation behavior.
@@ -1490,20 +1503,25 @@ def _codex_current_route_rule(record: CommandRecord) -> str:
     """Bind every plan command's route to Codex's current chat state."""
     invocation = f"$ {record.command_id} <arguments>"
     task_root = codex_task_plugin_root_expression()
+    if record.command_id == "task:plan-design":
+        return '''## Codex design route
+
+Use the current provider route once; honor the requested design budget. Design-only Markdown
+does not require execution admission, a durable execution start, or a terminal-admission lease.
+Use `plan-work.py design-context` and `finalize-design` for compact context and generated carriers.
+Do not capture execution route proof or load raw five-carrier snapshots merely to author a phase.
+Fixed design routing is frontier/high; diagnose an unrequested cost overshoot before authoring.
+
+'''
     context_rule = ""
     if record.command_id in {"task:plan-exec", "task:plan-run"}:
         context_rule = '''
 ## Codex snapshot transport guard — provider-specific
 
-Run `task.plan_recovery.prepare()` before analysis, then consume its immutable v2 five-carrier
-snapshot. Set both
-the nested `exec_command.max_output_tokens` and the outer `// @exec: {"max_output_tokens": ...}`
-budget high enough for the current immutable byte chunk; never treat a successful shell exit as a
-complete read. Every chunk must retain `snapshot_sha256`, byte `offset`/`next_offset`, and the
-terminal marker. A missing terminal marker, a cursor gap, visible transport truncation, or a
-live/snapshot digest mismatch is `PLAN_CONTEXT_TRUNCATED`/`PLAN_CONTEXT_DIGEST_MISMATCH` before
-the product journal starts. Continue only from the same snapshot; never reread a live carrier to
-replace a lost chunk.
+Use `plan-work.py prepare` for the compact execution capsule. Its runtime validates the immutable
+five-carrier snapshot internally; do not transport full plan/phase/bundle/state into model context.
+`PLAN_CONTEXT_TRUNCATED`/`PLAN_CONTEXT_DIGEST_MISMATCH` remain real errors, not prompts to reread
+everything. Open a full carrier only for a named ambiguity or repair diagnostic.
 
 '''
     return f'''## Codex current-route binding — provider-specific

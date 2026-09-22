@@ -41,11 +41,31 @@ Item execution additionally supports an optional exact `Authority` field:
 it without caller transition kwargs; known legacy durable-owner-authorization prose without this
 machine gate returns `AUTHORITY_CONTRACT_GAP`. The migration diagnostic deliberately recognizes
 only the published English/Russian legacy phrases and never decides or grants authority from prose.
-`materialize_owner_invocation()` captures the current provider's user message itself, but activates
-an owner gate only from an exact `provider-attestation/v1` verified by a provider-owned verifier and
-independent nonce consumer. Current Codex and Claude local-state adapters are labelled
-`workflow-guard` and fail closed for this protected path; neither CLI fallback nor editable local
-transcript can mint a grant. Activation is persisted last, after carrier/view/bundle validation.
+The default boundary is `provider-proof`. It requires an exact `provider-attestation/v1`
+verified by a provider-owned verifier and independent nonce consumer. Capability preflight runs
+before owner-message capture and returns `AUTHORITY_PROVIDER_UNAVAILABLE` when that channel is
+absent. A fresh session cannot add a missing capability. Current Codex/Claude adapters do not
+provide this strict channel; strict execution remains fail-closed.
+
+Bounded local development can explicitly declare:
+
+```markdown
+**Authority:** [OWNER-GATE:GATE-ID] branch=`source-edit`; scope=`two migration sources`; boundary=`owner-session`; effect=`local-source`; environment=`corex_test`
+```
+
+`environment` accepts `checkout` or a named `*_test` target. Production DDL, deploy, release,
+fleet and secret operations require a separate `provider-proof` item. Local validation must
+use the declared target; known live commands/non-test targets are rejected. This is a workflow
+guard for declared work, not a shell sandbox or authentication proof.
+
+`materialize_owner_invocation()` captures the exact owner invocation in the current provider
+session. An `owner-session` grant carries unsigned `workflow-guard` provenance, the original
+message digest and a one-time activation key. It binds the item, gate, branch, scope, Files,
+Validation, Implementation Rules and included/excluded scope. Additive same-session messages
+preserve the original invocation; explicit revoke/stop/cancel or another Task invocation
+invalidate it. A matching retry reuses its Decision Log entry. Changing the bound declaration,
+switching sessions, revocation or terminal item status closes the grant. Activation is persisted
+last, after carrier/view/bundle validation. No local grant satisfies `provider-proof`.
 An altered scope, branch or item, discontinuous Decision Log, revocation or ambiguous grant fails
 closed. Generated bundles carry the gate plus digest-qualified grant/message/revocation paths.
 

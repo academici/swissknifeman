@@ -1,9 +1,10 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/fix.md
-Canonical SHA-256: sha256:4d63fbb7b4b281671c9be62d149dd3c203400287b76e0fccff8b76e600866019
+Canonical SHA-256: sha256:fbb5d186d8100ec8fd136b5b9d17aabc1d6b949bfc3ba4cc40c2947889d7e693
 Adapter: task.cursor-command/1.0.16
 -->
 ---
+disable-model-invocation: true
 description: "Fix a scoped defect directly; preserve existing work and verify the change."
 argument-hint: "[что починить]"
 model: sonnet

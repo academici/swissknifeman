@@ -1,99 +1,10 @@
 {
-  "$comment": "Данные agent-router (не код). Режим/порог/escape — в env.ini. Тексты политики и hint — здесь, правятся без Python. Per-project каталог возможностей генерит 'harness router --generate' в <project>/.claude/agent-router.config.json; этот файл — глобальный fallback (политика + 5 /task:*).",
-  "version": 2,
-  "policy": "[intent-router] Task-routing policy (whole session).\nClassify EVERY user message before acting:\n• QUESTION (wants an answer/explanation) → reply normally, propose no command.\n• TASK (do work: build/change/design/research/review/fix code or artifacts) → STOP-GATE. On your FIRST turn, BEFORE ANY tool (Bash/Read/Grep/Glob/Write/Edit/Task/Workflow — no scouting, file reads, planning, or running a workflow by hand), output ONE best command as a ready-to-paste console line with a sharpened brief, then STOP and wait for the user to run it (or decline):\n    /task:design \"<brief>\"   — plan/ADR, no code\n    /task:dev \"<brief>\"      — build/change code\n    /task:research \"<brief>\" — multi-source research\n    /task:review \"<what>\"    — read-only adversarial review\n    /task:fix \"<small>\"      — tiny fix\nRecon, planning, and the workflow run INSIDE /task:* after launch — never do them yourself here. Brief must be concrete and self-contained.\nIf the user declines or just replies → work normally and do NOT re-ask (one proposal per intent, no nagging).\nThe [intent-router] bias line from UserPromptSubmit is a keyword HINT, not a directive: you decide (question vs task, which command).",
-  "policy_auto_suffix": "auto_dispatch mode: for SAFE tasks you may invoke the right /task:* yourself via the SlashCommand tool (model/effort pin applies); for risky or expensive ones, still propose first and await confirmation.",
+  "$comment": "Opt-in non-Task capability hints. Task requires explicit native invocation; SessionStart adds no policy.",
+  "version": 3,
+  "policy": "",
+  "policy_auto_suffix": "",
   "hint_template": "[intent-router] bias (non-authoritative): top={name} score={score}{runners}",
-  "commands": [
-    {
-      "name": "/task:design",
-      "weight": 1,
-      "keywords": [
-        "спроектир",
-        "проектир",
-        "дизайн",
-        "архитектур",
-        "design",
-        "architecture",
-        "adr",
-        "распланируй",
-        "продумай",
-        "схему",
-        "модель данных",
-        "concept"
-      ]
-    },
-    {
-      "name": "/task:dev",
-      "weight": 1,
-      "keywords": [
-        "сделай",
-        "добавь",
-        "реализуй",
-        "построй",
-        "напиши",
-        "внедри",
-        "build",
-        "implement",
-        "feature",
-        "фича",
-        "эндпоинт",
-        "endpoint",
-        "команду",
-        "миграци",
-        "интеграци"
-      ]
-    },
-    {
-      "name": "/task:research",
-      "weight": 1,
-      "keywords": [
-        "исследуй",
-        "research",
-        "сравни",
-        "compare",
-        "разузнай",
-        "investigate",
-        "актуально",
-        "best practice",
-        "варианты",
-        "какой лучше",
-        "изучи"
-      ]
-    },
-    {
-      "name": "/task:review",
-      "weight": 1,
-      "keywords": [
-        "ревью",
-        "отревьюй",
-        "review",
-        "audit",
-        "аудит",
-        "diff",
-        "pr",
-        "проверь код",
-        "code review",
-        "посмотри дифф"
-      ]
-    },
-    {
-      "name": "/task:fix",
-      "weight": 1,
-      "keywords": [
-        "почини",
-        "fix",
-        "баг",
-        "bug",
-        "опечатк",
-        "typo",
-        "поправь",
-        "мелкая правка",
-        "small fix",
-        "сломал"
-      ]
-    }
-  ],
+  "commands": [],
   "agents": [],
   "skills": []
 }

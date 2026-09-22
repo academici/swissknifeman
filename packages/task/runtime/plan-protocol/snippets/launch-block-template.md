@@ -101,8 +101,9 @@ Legacy-строка таблицы `Команда` остаётся читае�
   - `isolated-child-return` — один ограниченный reviewer/worker возвращает evidence root'у;
   - `cold-start-root` — только с одной причиной: `context-budget`, `capability-missing`,
     `owner-pause-no-resume`, `whole-plan-independent-audit` или `design-root-terminal`.
-    После terminal `task:plan-design` используется только `design-root-terminal`:
-    текущий design root возвращает recommendation владельцу и не исполняет successor.
+    `design-root-terminal` сохранён для старых handoff. После design используй
+    `scope-complete` / `continue-root`, если нет настоящей границы новой сессии;
+    рекомендация сама по себе не разрешает исполнение successor.
     Terminal `task:plan-audit` does not select Context by command name; use its persisted
     `plan_continuity` decision.
 - **Exec = manual (§9)** → форма «ЗАПУСК ВРУЧНУЮ» — правило целиком в SKILL разделе 8

@@ -1,5 +1,4 @@
 """Internal documentation."""
-import json
 import re
 from pathlib import Path
 
@@ -9,28 +8,11 @@ from .common import parse_flags
 from .settings import write_json
 
 
-_HOOK_CONFIG = (Path(__file__).resolve().parents[2]
-                / "configs" / "claude-code" / "hooks" / "agent-router" / "config.json")
-
 _STOPWORDS = {
     "the", "a", "an", "and", "or", "for", "with", "use", "this", "that", "when",
     "и", "в", "во", "на", "по", "для", "с", "со", "от", "до", "из", "как", "что",
     "это", "или", "при", "над", "под", "без", "если",
 }
-
-
-def _load_task_commands():
-    """Internal documentation."""
-    try:
-        cfg = json.loads(_HOOK_CONFIG.read_text(encoding="utf-8"))
-        cmds = cfg.get("commands")
-        if isinstance(cmds, list) and cmds:
-            return [dict(c) for c in cmds]
-    except Exception:
-        pass
-
-    return [{"name": f"/task:{k}", "weight": 1, "keywords": [k]}
-            for k in ("design", "dev", "research", "review", "fix")]
 
 
 def _keywords_from_description(desc, limit=12):
@@ -76,6 +58,8 @@ def _scan_local_skills(claude_dir):
             continue
         fm = _frontmatter(f)
         name = fm.get("name") or d.name
+        if name.startswith(("task-", "task:")):
+            continue
         out.append({"name": f"skill:{name}", "weight": 1,
                     "keywords": _keywords_from_description(fm.get("description", ""))})
     return out
@@ -90,7 +74,7 @@ def cmd_router(env, argv):
         return
     target = Path(opts["target"]).expanduser()
     claude = target / ".claude"
-    commands = _load_task_commands()
+    commands = []
     agents = _scan_agents(claude)
     skills = _scan_local_skills(claude)
     catalog = {

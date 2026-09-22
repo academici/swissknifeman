@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 description: "Research an explicit question using verified sources; return findings and Next."
 argument-hint: "[вопрос / тема]"
 model: opus

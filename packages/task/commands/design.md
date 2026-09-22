@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 description: "Explicit design request: produce a plan or ADR; implementation is separate."
 argument-hint: "[что проектируем]"
 model: opus

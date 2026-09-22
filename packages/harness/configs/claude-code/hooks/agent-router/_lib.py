@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 
-_DEFAULTS = {"POLICY": "propose", "THRESHOLD": "2", "ESCAPE_PREFIX": "~"}
+_DEFAULTS = {"POLICY": "off", "THRESHOLD": "2", "ESCAPE_PREFIX": "~"}
 
 
 def read_env(cfg_dir, cwd):
@@ -48,6 +48,9 @@ def score_entries(text, entries):
     for e in entries:
         name = e.get("name")
         if not name:
+            continue
+        # Task requires explicit invocation, even in legacy consumer catalogs.
+        if name.startswith(("/task:", "task:", "skill:task-", "skill:task:")):
             continue
         weight = e.get("weight", 1)
         s = sum(weight for kw in e.get("keywords", []) if kw and kw.lower() in low)

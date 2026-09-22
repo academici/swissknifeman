@@ -2,7 +2,19 @@
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-09-22
+
 ### Fixed
+
+- **Task 0.21.0 / harness 0.5.6: явный opt-in и экономный workflow.** Убраны
+  SessionStart STOP-GATE и keyword-маршрутизация Task; Codex skills запрещают неявный
+  вызов, Claude commands используют `disable-model-invocation`, Cursor router стал
+  ручным. Root projections сохраняют компактность после повторной генерации.
+  Design соблюдает бюджет владельца, не требует новой сессии по факту завершения;
+  `plan-work.py` объединяет получение компактного контекста и служебное завершение.
+  Локальные finite grants явно отделены как `owner-session` от `provider-proof`;
+  отсутствие strict provider capability диагностируется до повторных owner prompts.
+  Детали и границы: `tasks/2026.09.22-task-native-work/README.md`.
 
 - **task public recovery reasons.** Task Contract JSON сохраняет точные внутренние
   diagnostics и добавляет стабильные `reason_codes` с восемью recovery-категориями;
@@ -26,15 +38,10 @@
   переписывания истории; Codex route evidence принимает семантически одинаковые строки
   `task:…` и `$ task:…`; перед одноразовым применением owner-response теперь сначала
   валидируется continuation, поэтому ошибочный fallback не расходует ответ.
-- **Cursor consumer workspace-contained.** SSOT
-  `packages/harness/configs/cursor/config/consumer-workspace-extensions.json` — append
-  `Shell(docker|make|curl)`, Laravel Write globs, terminal/MCP allowlists; merge в
-  `cursor_render.py`. Rollout: `configs/cursor/config/OPERATOR-ROLLOUT-cursor-consumer.md`.
-- **Cursor security.safe-dirs fail-closed envelope.** Генерируемый `lifecycle.py` больше
-  не блокирует Shell при пустом/битом stdin или неполном `beforeShellExecution` payload
-  для surface `security.safe-dirs` (non-rm default allow); остальные surfaces пишут
-  stderr при invalid envelope. `conversation_id` optional. Roadmap:
-  `roadmap/2026.09.21-cursor-safe-dirs-fail-closed-non-rm-shell.md`.
+- **Cursor lifecycle fail-closed verdict.** Генерируемый `lifecycle.py` всегда пишет
+  JSON `permission=allow|deny` для `beforeShellExecution` и `preToolUse`: allow-path,
+  пустой/битый stdin и неполный payload больше не блокируют Shell/Write из-за пустого
+  stdout, а policy deny возвращается структурированным verdict с exit 0.
 
 ## [0.23.0] - 2026-09-21
 

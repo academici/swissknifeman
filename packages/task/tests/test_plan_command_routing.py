@@ -63,18 +63,30 @@ class ProviderPlanRoutingTests(unittest.TestCase):
         self.assertIn("semantic Next", audit)
         self.assertNotIn("AUDIT-ROOT-TERMINAL", protocol)
 
-    def test_terminal_design_handoff_cannot_auto_execute_its_successor(self):
+    def test_design_scope_does_not_force_a_new_process_or_authorize_execution(self):
         design = (COMMAND_ROOT / "plan-design.md").read_text(encoding="utf-8")
         codex_design = (REPO_ROOT / "packages/task/adapters/codex/skills/task-plan-design/command.md"
                         ).read_text(encoding="utf-8")
         protocol = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md").read_text(
             encoding="utf-8")
-        self.assertIn("DESIGN-ROOT-TERMINAL", design)
+        self.assertIn("scope-complete", design)
         self.assertIn("must not execute or spawn", design)
-        self.assertIn("DESIGN-ROOT-TERMINAL", codex_design)
+        self.assertIn("scope-complete", codex_design)
         self.assertIn("must not execute or spawn", codex_design)
-        self.assertIn("DESIGN-ROOT-TERMINAL", protocol)
-        self.assertIn("must not execute or spawn the successor", protocol)
+        self.assertIn("Design completion alone never requires a fresh process", protocol)
+        self.assertIn("must not execute or spawn an unauthorized successor", protocol)
+
+    def test_design_overshoot_requires_owner_acceptance_before_invocation(self):
+        mapping = mapping_from_catalog(self.catalog, "codex")
+        carrier = PlanNextCarrier("design-phase", "task:plan-design", "PLAN", ("PLAN", "P1"))
+        blocked = plan_provider_invocation(self.catalog, carrier, mapping,
+                                          observed_class="frontier", observed_effort="xhigh")
+        self.assertFalse(blocked.ok)
+        self.assertIn("ECONOMY_ROUTE_OVERSHOOT", [item.code for item in blocked.diagnostics])
+        accepted = plan_provider_invocation(self.catalog, carrier, mapping,
+                                           observed_class="frontier", observed_effort="xhigh",
+                                           owner_accepts_overshoot=True)
+        self.assertTrue(accepted.ok, accepted.diagnostics)
 
     def test_new_plan_batch_is_mandatory_and_survives_every_handoff_writer(self):
         protocol = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md"

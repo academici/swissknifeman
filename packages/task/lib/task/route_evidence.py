@@ -88,6 +88,11 @@ class RouteEvidenceError(ValueError):
         self.code = code
 
 
+def owner_followup_revokes(text: str) -> bool:
+    """Conservative explicit stop/revoke markers for the local workflow guard."""
+    return bool(re.search(r"OWNER-REVOKE|\b(?:revoke|cancel|stop)\b|review only|отзыва|отмени|отменить|останови|стоп|только ревью|не выполняй", text, re.IGNORECASE))
+
+
 def build_owner_attestation(evidence: dict, *, provider: str, plan_id: str,
                             item_id: str, action_digest: str, audience: str,
                             expires_at: str, nonce: str) -> dict:
@@ -216,6 +221,27 @@ def provider_owner_verification(provider: str):
     adapter = importlib.import_module(module_name)
     return (getattr(adapter, "verify_owner_attestation", None),
             getattr(adapter, "consume_owner_nonce", None))
+
+
+def authority_preflight(boundary: str, *, provider: str | None = None) -> tuple:
+    """Check capability before asking for an owner invocation or writing carriers."""
+    if boundary == "owner-session":
+        return None, None
+    if boundary != "provider-proof":
+        raise RouteEvidenceError("AUTHORITY_BOUNDARY", "неизвестная граница authority")
+    if provider is None:
+        from task.session_context import resolve, SessionContextError
+        try:
+            provider = resolve().provider
+        except SessionContextError as exc:
+            raise RouteEvidenceError("AUTHORITY_PROVIDER_UNAVAILABLE", str(exc)) from exc
+    verifier, consumer = provider_owner_verification(provider)
+    if not callable(verifier) or not callable(consumer):
+        raise RouteEvidenceError(
+            "AUTHORITY_PROVIDER_UNAVAILABLE",
+            "provider-proof требует внешнего verifier и nonce store; подключите approval channel "
+            "либо отдельно объявите local-source item с owner-session. Новая сессия capability не добавит")
+    return verifier, consumer
 
 
 def required_route(record: CommandRecord, *, inherited_minimum: tuple | None = None) -> dict:

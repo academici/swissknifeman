@@ -15,7 +15,7 @@ import re
 from pathlib import Path
 
 from task.command_catalog import load_routing_metadata
-from task.route_evidence import RouteEvidenceError, capture_actual
+from task.route_evidence import RouteEvidenceError, capture_actual, owner_followup_revokes
 
 
 SOURCE_VERSION = "claude-project-jsonl-v1"
@@ -88,7 +88,8 @@ def _effort_for(effort: str, metadata: dict) -> str:
 
 def capture_current(*, expected_invocation: str, expected_cwd: str | Path,
                     session_id: str | None = None, state_root: str | Path | None = None,
-                    routing_path: str | Path = _ROUTING_PATH, require_current_owner_invocation=False) -> dict:
+                    routing_path: str | Path = _ROUTING_PATH, require_current_owner_invocation=False,
+                    allow_additive_owner_followup=False) -> dict:
     observed = session_id if session_id is not None else os.environ.get("CLAUDE_CODE_SESSION_ID")
     if not isinstance(observed, str) or not observed.strip() or any(char.isspace() for char in observed):
         raise RouteEvidenceError(
@@ -113,10 +114,11 @@ def capture_current(*, expected_invocation: str, expected_cwd: str | Path,
             message = event.get("message", {})
             content = message.get("content", []) if isinstance(message, dict) else []
             is_tool_result = isinstance(content, list) and content and all(isinstance(p, dict) and p.get("type") == "tool_result" for p in content)
-            if not is_tool_result:
+            if not is_tool_result and (not allow_additive_owner_followup
+                    or invocation is not None or owner_followup_revokes(json.dumps(content, ensure_ascii=False))):
                 invocation_index = None
                 route_event = None
-        if invocation == expected_invocation:
+        if invocation == expected_invocation and not (allow_additive_owner_followup and owner_followup_revokes(json.dumps(event.get("message", {}), ensure_ascii=False))):
             invocation_index = index
             route_event = None
             continue

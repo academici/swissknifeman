@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:fcec0c67bb951c1d274dc40fed4b2c390f498fa22b22c3f9ae3f02275381b82d
+Canonical SHA-256: sha256:a921400e7a4555c463850b57038b33ee7765b2573fb32b4618a189b55ed703d9
 Adapter: task.cursor-command/1.0.16
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -18,6 +18,7 @@ agent --workspace <repo-cwd> --model <model-selector> --force --sandbox disabled
 `auto` never substitutes a fixed frontier or implementation pin. Current Cursor mapping: economy=composer-2.5-fast, implementation=composer-2.5, frontier=claude-opus-5-thinking-high.
 
 ---
+disable-model-invocation: true
 description: "Execute authorized Task plan items with the attested current-session route."
 argument-hint: "<PLAN-ID> Pn.m [Pn.k]"
 ---
@@ -27,8 +28,9 @@ The full schema canon and snippets are on-demand references, not mandatory execu
 
 Execute `$ARGUMENTS` by the canonical `task:plan-exec` lifecycle. `plan-run` inherits the current
 provider-attested route; it never pins model or effort and it never substitutes config or prose for
-route evidence. Capture five v2 carriers once, admit the Routing group or ready subset of a recommended group, persist one
-`route-run-receipt/v1`, then reuse route/context evidence until `route_change_boundary()` proves change.
+route evidence. Use `plan-work.py prepare --command plan-run` with the plan, item, actor and
+session to validate carriers internally and return compact context plus one `route-run-receipt/v1`.
+Reuse route/context evidence until `route_change_boundary()` proves change.
 
 After each GREEN item, close the item and any directly closable GREEN phase in this invocation,
 then compute Next from the resulting state. Continue a compatible ready successor inside the
@@ -42,7 +44,7 @@ fresh post-close checkpoint and render exactly one native launch for that succes
 item/phase transition or test failure does not imply a session boundary. A real external wait keeps
 its time/predicate gate visible. Design-only/review-only requests remain separate deliverables.
 
-Activate only for explicit owner plan intent or an exact cited local workflow policy; use the
+Activate only for explicit owner Task invocation; use the
 shared [intent routing canon](../references/intent-routing.md). An exact current owner `plan-run`
 is intent to execute the declared item. Before protected writes, an item-declared finite `Authority`
 gate may be materialized through `task_contract.materialize_owner_invocation(plan_dir, item_id)`:

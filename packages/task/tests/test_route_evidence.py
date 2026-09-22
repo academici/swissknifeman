@@ -552,6 +552,27 @@ class JournalActorIntegrationTests(unittest.TestCase):
 
 
 class CodexLaunchEvidenceTests(unittest.TestCase):
+    def test_local_owner_invocation_survives_addition_but_not_revoke(self):
+        from task import route_evidence_codex
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            prompt = "$ task:plan-run PLAN P0.3"
+            path = self._write_thread_state(root, thread_id="owner-local", model="gpt-5.6-terra",
+                                            effort="high", prompt=prompt)
+            options = dict(expected_invocation=prompt, expected_cwd="/workspace/repo",
+                           thread_id="owner-local", state_root=root,
+                           require_current_owner_invocation=True, allow_additive_owner_followup=True)
+            original = route_evidence_codex.capture_current(**options)
+            for message in ("Also explain the result", "revoke this grant"):
+                with path.open("a") as stream:
+                    stream.write(json.dumps({"type": "response_item", "payload": {
+                        "type": "message", "role": "user", "content": [{"type": "input_text", "text": message}]}}) + "\n")
+                if message.startswith("revoke"):
+                    with self.assertRaisesRegex(re.RouteEvidenceError, "ROUTE_LAUNCH_MISMATCH"):
+                        route_evidence_codex.capture_current(**options)
+                else:
+                    self.assertEqual(route_evidence_codex.capture_current(**options)["owner_message_digest"], original["owner_message_digest"])
+
     def _write_thread_state(self, root, *, thread_id, model, effort, prompt,
                             cwd="/workspace/repo"):
         path = root / "2026" / "08" / "12" / f"rollout-{thread_id}.jsonl"

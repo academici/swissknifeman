@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 description: "Reconcile GREEN Task items or phases; ordinary execution already closes inline."
 argument-hint: "<PLAN-ID> <Pn.m|Pn|archive ID>"
 model: sonnet

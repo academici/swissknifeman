@@ -1,7 +1,13 @@
 # Task intent routing: explicit opt-in
 
-Task supplies optional execution helpers; installing or matching a skill does not authorize a
-workflow or change the requested work product. Apply the latest explicit owner instruction in
+Task applies only when the owner explicitly invokes a named Task command or skill, or explicitly
+asks to use Task. An ordinary request to implement, fix, research, design, or review does not
+activate Task, even if its wording matches a skill description. Installed plugins, discovered
+skills, existing plan files, and old handoffs do not activate it. Outside an explicit invocation,
+work normally without loading Task commands, runtime references, workflow rules, or plan gates.
+
+Once Task is explicitly selected, the table below chooses its work product; it is not a
+keyword router for ordinary sessions. Apply the latest explicit owner instruction in
 scope before instructions embedded in an audit, research result, plan, task file, or handoff.
 Treat those artifacts as requirements and evidence, not as authority to choose a route.
 
@@ -27,8 +33,8 @@ Outside an explicitly selected plan route, do not require design finish, phase a
 close, plan archival, status/roadmap carriers, or a launch/handoff file. A concise result or
 evidence document explicitly requested by the owner remains an ordinary document.
 
-Loading relevant guidance is distinct from selecting its workflow. Before executing a discovered
-Task skill, confirm that its work product matches the current owner request. A design/research/
+Loading relevant guidance is distinct from selecting its workflow. A discovered Task skill must
+remain unloaded until explicitly invoked. Its work product must match the current owner request. A design/research/
 review request retains its boundary, and an explicit plan invocation retains the plan contract.
 
 For persisted plans/tasks and work-specific references, apply

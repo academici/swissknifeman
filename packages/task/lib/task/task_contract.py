@@ -149,6 +149,8 @@ _PUBLIC_REASON_EXACT = {
     "OWNER_ATTESTATION_MISMATCH": "evidence-forged",
     "OWNER_ATTESTATION_REPLAYED": "conflict",
     "OWNER_ATTESTATION_UNSUPPORTED": "policy-denied",
+    "AUTHORITY_PROVIDER_UNAVAILABLE": "policy-denied",
+    "ECONOMY_ROUTE_OVERSHOOT": "policy-denied",
     "P5_DECISION_DIGEST_MISMATCH": "evidence-forged",
     "P5_DECISION_OBSERVATION_UNVERIFIED": "evidence-missing",
     "P5_DECISION_POLICY_ERROR": "policy-denied",
@@ -283,7 +285,9 @@ _OWNER_REVOKE_RE = re.compile(r"\[OWNER-REVOKE:([A-Z0-9][A-Z0-9.-]+)\]")
 _NEEDS_CLARIFICATION_RE = re.compile(r"\[NEEDS\s+CLARIFICATION\s*:", re.IGNORECASE)
 _AUTHORITY_DECLARATION_RE = re.compile(
     r"^\[OWNER-GATE:(?P<gate_id>[A-Z0-9][A-Z0-9.-]+)\]\s+"
-    r"branch=`(?P<branch>[^`\n]+)`;\s*scope=`(?P<scope>[^`\n]+)`$")
+    r"branch=`(?P<branch>[^`\n]+)`;\s*scope=`(?P<scope>[^`\n]+)`"
+    r"(?:;\s*boundary=`(?P<boundary>provider-proof|owner-session)`"
+    r"(?:;\s*effect=`(?P<effect>[^`\n]+)`;\s*environment=`(?P<environment>[^`\n]+)`)?\s*)?$")
 # Migration diagnostic only: machine authority is always the explicit declaration.
 _LEGACY_AUTHORITY_RE = re.compile(
     r"durable\s+owner\s+authori[sz]ation|only\s+after\s+owner\s+authori[sz]ation|"
@@ -448,11 +452,11 @@ def _authority_request(item_id: str, protected_transition):
     if not isinstance(protected_transition, dict):
         raise TaskContractBuildError(item_id, "authority", "protected_transition must be a mapping")
     expected = {"gate_id", "branch", "scope"}
-    if set(protected_transition) != expected:
+    if not expected <= set(protected_transition) or set(protected_transition) - expected - {"boundary", "effect", "environment", "contract_digest"}:
         raise TaskContractBuildError(
             item_id, "authority",
             "protected_transition must contain exactly gate_id, branch and scope")
-    request = {key: protected_transition[key] for key in expected}
+    request = dict(protected_transition)
     if any(not isinstance(value, str) or not value.strip() for value in request.values()):
         raise TaskContractBuildError(item_id, "authority",
                                      "protected_transition values must be non-empty strings")
@@ -483,7 +487,23 @@ def declared_authority(item_id: str, fields: dict, *, for_execution: bool = Fals
         match = _AUTHORITY_DECLARATION_RE.fullmatch(declaration)
         if match is None:
             raise TaskContractBuildError(item_id, "authority", "AUTHORITY_CONTRACT_GAP: неверное объявление Authority")
-        return _authority_request(item_id, match.groupdict())
+        request = {key: value for key, value in match.groupdict().items() if value is not None}
+        if request.get("boundary") == "owner-session":
+            if (request.get("effect") != "local-source"
+                    or not re.fullmatch(r"checkout|[A-Za-z0-9_]+_test", request.get("environment", ""))):
+                raise TaskContractBuildError(item_id, "authority", "AUTHORITY_BOUNDARY: owner-session требует local-source и checkout либо *_test")
+            validation = str(text("Validation"))
+            if (re.search(r"\b(?:deploy|release|fleet|production|secret(?:s)?|rotate[- ]?key)\b", validation, re.IGNORECASE)
+                    or re.search(r"\b(?:DB_DATABASE|PGDATABASE)=(?!" + re.escape(request["environment"]) + r"(?:\s|$))", validation)
+                    or (request["environment"] == "checkout" and re.search(r"\b(?:migrate|psql)\b", validation))):
+                raise TaskContractBuildError(item_id, "authority", "AUTHORITY_BOUNDARY: внешние эффекты требуют provider-proof")
+            # Bind executable scope, not progress/status prose. Changing a target,
+            # validation command or declared file invalidates the local activation.
+            bound = {name: text(name) for name in ("Authority", "Files", "Validation",
+                     "Scope Included", "Scope Excluded", "Implementation Rules")}
+            request["contract_digest"] = hashlib.sha256(json.dumps(
+                bound, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+        return _authority_request(item_id, request)
     if _LEGACY_AUTHORITY_RE.search("\n".join(str(text(name)) for name in fields)):
         raise TaskContractBuildError(item_id, "authority", "AUTHORITY_CONTRACT_GAP: owner authorization требует finite Authority gate")
     return None
@@ -514,10 +534,15 @@ def _materialize_owner_invocation_locked(plan_dir, item_id: str, *, command="pla
     request = declared_authority(item_id, occurrences[0]["fields"], for_execution=True)
     if request is None:
         raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: finite gate не объявлен")
+    boundary = request.get("boundary", "provider-proof")
+    if boundary == "owner-session" and occurrences[0]["fields"].get("Status", ("", None))[0] in plan_lint.TERMINAL_STATUSES:
+        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: run уже завершён")
+    verifier, nonce_consumer = route_evidence.authority_preflight(boundary)
     checkout = plan_dir.parent.parent
     semantic = f"task:plan-run {plan_dir.name} {item_id}"
+    capture_options = {"allow_additive_owner_followup": True} if boundary == "owner-session" else {}
     evidence = route_evidence.capture_launch(expected_invocation=semantic, expected_cwd=checkout,
-                                           require_current_owner_invocation=True)
+                                           require_current_owner_invocation=True, **capture_options)
     # The CLI process fallback proves route flags, not a current owner user message.
     if (evidence.get("source") != "provider-thread-state"
             or evidence.get("invocation") not in ("$ " + semantic, "/" + semantic)
@@ -528,6 +553,16 @@ def _materialize_owner_invocation_locked(plan_dir, item_id: str, *, command="pla
               "command": semantic, "cwd": str(checkout)}
     action_digest = hashlib.sha256(json.dumps(
         action, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    # A retry after successful activation reuses the same decision. It must still
+    # observe this session's invocation and pass the full current scope resolver.
+    existing = plan_authority.DurableAuthorityStore.for_plan(plan_dir).activation(
+        f"{plan_dir.name}\0{item_id}\0{request['gate_id']}")
+    if boundary == "owner-session" and existing is not None:
+        authority = _resolve_authority(plan_lint, [], plan_dir, item_id, phase_path, "", None, request)
+        if not authority[1]:
+            raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: grant отозван, завершён либо scope/session изменились")
+        return {"granted": True, "granted_by": authority[2], "reused": True,
+                "boundary": "workflow-guard"}
     try:
         issued = datetime.strptime(evidence["ts"], "%Y-%m-%dT%H:%M:%SZ").replace(
             tzinfo=timezone.utc)
@@ -551,10 +586,9 @@ def _materialize_owner_invocation_locked(plan_dir, item_id: str, *, command="pla
                             "arguments": f"{plan_dir.name} {item_id}",
                             "session_id": evidence["thread_id"],
                             "owner_message_digest": evidence["owner_message_digest"]}
-    verifier, nonce_consumer = route_evidence.provider_owner_verification(provider)
     route_evidence.verify_owner_attestation(
         attestation, expected=expected_attestation, verifier=verifier,
-        nonce_consumer=nonce_consumer, protected=True,
+        nonce_consumer=nonce_consumer, protected=boundary == "provider-proof",
     )
     decisions = plan_decisions.load_decisions(plan_dir)
     rows = [({"D#": decision.identifier}, 1) for decision in decisions]
@@ -580,7 +614,7 @@ def _materialize_owner_invocation_locked(plan_dir, item_id: str, *, command="pla
     message = (f"# Exact owner invocation: {plan_dir.name} {item_id}\n\n"
                f"[REPOSITORY-OWNER-MESSAGE:{message_id}] {marker} "
                f"branch=`{request['branch']}`; scope=`{request['scope']}`; provenance=`repository-owner`\n\n"
-               "Boundary: `security-boundary` (provider-verified owner attestation).\n\n"
+               f"Boundary: `{attestation['boundary']}` ({boundary}).\n\n"
                "```provider-attestation/v1\n" + json.dumps(attestation, ensure_ascii=False, sort_keys=True)
                + "\n```\n")
     identifier = f"D{len(decisions) + 1}"
@@ -613,7 +647,9 @@ def _materialize_owner_invocation_locked(plan_dir, item_id: str, *, command="pla
             "attestation_sha256": hashlib.sha256(json.dumps(
                 attestation, ensure_ascii=False, sort_keys=True,
                 separators=(",", ":")).encode()).hexdigest(),
-            "boundary": "security-boundary",
+            "boundary": attestation["boundary"],
+            "provider": provider, "session_id": evidence["thread_id"],
+            "owner_message_digest": evidence["owner_message_digest"],
         }
         if not plan_authority.DurableAuthorityStore.for_plan(plan_dir).activate(
                 activation_key, activation):
@@ -630,9 +666,9 @@ def _materialize_owner_invocation_locked(plan_dir, item_id: str, *, command="pla
         except Exception:
             pass
         raise
-    return {"granted": False, "prepared": True,
+    return {"granted": boundary == "owner-session", "prepared": True,
             "granted_by": f"decisions/{identifier}:1 {marker}",
-            "reused": False, "boundary": "security-boundary"}
+            "reused": False, "boundary": attestation["boundary"]}
 
 
 def materialize_owner_invocation(plan_dir, item_id: str, *, command="plan-run") -> dict:
@@ -777,8 +813,26 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
             or activation.get("decision_id") != f"D{decision_id}"
             or activation.get("owner_message") != record.group("owner_message")
             or activation.get("action_digest") != expected_digest
-            or activation.get("boundary") != "security-boundary"):
+            or activation.get("boundary") != ("workflow-guard" if request.get("boundary") == "owner-session" else "security-boundary")):
         return "owner-gate", False, item_carrier
+    if request.get("boundary") == "owner-session":
+        from task import route_evidence
+        try:
+            evidence = route_evidence.capture_launch(
+                expected_invocation=expected_action["command"], expected_cwd=plan_dir.parent.parent,
+                require_current_owner_invocation=True, allow_additive_owner_followup=True)
+            # Completion consumes this finite run even while its decision remains
+            # auditable. A later run needs a new gate, never an old activation.
+            phase = plan_lint.parse_phase_md(phase_path, item_id.split(".")[0], plan_lint.Diagnostics(), layout="v2")
+            item = phase["items"][item_id][0]
+            completed = item["fields"].get("Status", ("", None))[0] in plan_lint.TERMINAL_STATUSES
+        except (route_evidence.RouteEvidenceError, KeyError, TypeError):
+            return "owner-gate", False, item_carrier
+        if (completed or evidence.get("thread_id") != activation.get("session_id")
+                or not evidence.get("invocation", "").startswith("$ " if activation.get("provider") == "codex" else "/")
+                or evidence.get("owner_message_digest") != activation.get("owner_message_digest")):
+            return "owner-gate", False, item_carrier
+        return "owner-gate", True, f"decisions/D{decision_id}:1 {marker}"
     # The activation record is local agent-writable state.  Current providers expose
     # no independently re-verifiable grant channel, so protected execution stays
     # fail-closed even when legacy/local carriers are internally consistent.
@@ -1519,9 +1573,20 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
         routing = _find_routing_row(plan_lint, plan_lines, item_id, routing_metadata)
     else:
         try:
-            routing = compiled["items"][item_id]["route"]
+            routing_entry = compiled["items"][item_id]
+            routing = routing_entry["route"]
         except KeyError as exc:
             raise TaskContractBuildError(item_id, "Routing", "no §3 Routing row found for this item") from exc
+        if (routing_entry["exec"] == "plan-exec" and routing_entry["review"] in {"self", "light"}
+                and routing["model_class"] != "frontier"
+                and not (carrier and re.search(r"task:plan-run\b", carrier))
+                and actual_route is not None):
+            for axis, order in (("model_class", MODEL_CLASS_ORDER), ("effort", EFFORT_ORDER)):
+                actual = actual_route.get(axis)
+                if actual in order and order.index(actual) > order.index(routing[axis]):
+                    raise TaskContractBuildError(item_id, "Routing",
+                        "ECONOMY_ROUTE_OVERSHOOT: bounded pinned plan-exec превышает объявленный маршрут; "
+                        "используйте объявленный маршрут либо явный owner plan-run")
         routing = (routing["model_class"], routing["effort"])
     required_route = {"model_class": routing[0], "effort": routing[1]}
     if actual_route is None:

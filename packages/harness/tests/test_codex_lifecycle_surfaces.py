@@ -273,17 +273,14 @@ class CodexLifecycleSurfaceTests(unittest.TestCase):
             self.assertEqual(record["schema"], 1)
             self.assertEqual(record["session_id"], "s1")
 
-    def test_router_emits_bare_task_command_bias_above_threshold_and_stays_silent_below(self):
+    def test_router_does_not_inject_task_for_ordinary_prompts(self):
         with tempfile.TemporaryDirectory() as scratch:
             handler = self._write_handler(scratch)
             strong = _run_handler(handler, "lifecycle.router", {
                 **_COMMON_FIELDS, "hook_event_name": "UserPromptSubmit",
                 "prompt": "please implement a new feature endpoint"})
             self.assertEqual(strong.returncode, 0)
-            hint = json.loads(strong.stdout)["systemMessage"]
-            self.assertIn("[intent-router] bias (non-authoritative)", hint)
-            self.assertIn("task:", hint)
-            self.assertNotIn("/task:", hint)
+            self.assertEqual(strong.stdout, b"")
             weak = _run_handler(handler, "lifecycle.router", {
                 **_COMMON_FIELDS, "hook_event_name": "UserPromptSubmit", "prompt": "hello there"})
             self.assertEqual(weak.returncode, 0)

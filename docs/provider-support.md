@@ -6,9 +6,9 @@
 
 - Contract: `1.0.0`
 - Catalog: `1.0.0`
-- Canonical JSON SHA-256 (without carrier LF): `8ac06cb7ef59969934231291ffa001a23aeef21ec848e0c51e916d1adbc7778c`
-- Carrier SHA-256 (canonical bytes plus one LF): `e83542be06544661ff35d93071c2b115a50e1c804164030cd09dc9ab80d5987a`
-- Common capabilities: `36`; Native Extensions: `0`
+- Canonical JSON SHA-256 (without carrier LF): `a38bb141a8583f4b83010da399d88ca1ae68cf8757cedfcb8ec339040119b6f0`
+- Carrier SHA-256 (canonical bytes plus one LF): `0d8929870db2c1fdd33446445d09f2184e994d7d8a6af0d515c081595ea36400`
+- Common capabilities: `37`; Native Extensions: `0`
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
 
@@ -50,6 +50,7 @@ Support levels, provider bindings, limitations, evidence and diagnostics below c
 | `lifecycle.router` | adapted | adapted | adapted |
 | `lifecycle.run-report` | adapted | adapted | adapted |
 | `lifecycle.terminal-admission` | adapted | adapted | adapted |
+| `lifecycle.tool-telemetry` | unsupported | adapted | adapted |
 | `mcp.catalog` | adapted | adapted | native |
 | `security.safe-dirs` | adapted | adapted | adapted |
 | `settings.audit` | adapted | adapted | adapted |
@@ -633,10 +634,10 @@ Project semantic routing into native lifecycle activation.
   Limitations: delivers the bias as `systemMessage`, the form the generated Codex handler already uses, not as Claude's `hookSpecificOutput.additionalContext`; the `SessionStart` half of the Claude pair (static policy) is not part of this surface at Codex, where `SessionStart` is owned by `context.observer`.
   Evidence: [2026-07-30] the deterministic adapter `harness.codex.lifecycle.router` emits at most one non-authoritative routing bias line per prompt from the shared router catalog and never refuses a turn — `plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md` (codex lifecycle.router bias injection on UserPromptSubmit).
 
-- **cursor** — `adapted`; binding: `{"alwaysApply": true, "surface": "static Cursor rule", "target": ".cursor/rules/swissknifeman-router.mdc"}`; adapter: `harness.cursor.lifecycle.router`.
-  Diagnostic: Cursor lifecycle.router is carried by a static session-scoped rule over frozen command-routing selectors
+- **cursor** — `adapted`; binding: `{"alwaysApply": false, "surface": "static Cursor rule", "target": ".cursor/rules/swissknifeman-router.mdc"}`; adapter: `harness.cursor.lifecycle.router`.
+  Diagnostic: Cursor lifecycle.router is a manual Task rule requiring explicit invocation
   Limitations: routing bias is session-scoped through a static rule projection; Cursor provides no per-prompt project hook field for routing context injection; sessionStart.additional_context is intentionally not required.
-  Evidence: [2026-09-18] the Cursor rules renderer generates the routing carrier from command-routing mappings and provider audit validates static rule activation for lifecycle.router — `packages/harness/lib/harness/cursor_render.py` (cursor lifecycle.router static session-scoped carrier).
+  Evidence: [2026-09-18] the Cursor rules renderer generates a manual routing carrier with alwaysApply false and no description or globs; Task does not activate from ordinary prompts — `packages/harness/lib/harness/cursor_render.py` (cursor lifecycle.router explicit-only carrier).
 
 ### `lifecycle.run-report`
 
@@ -675,6 +676,25 @@ Adapt an opted-in provider Stop boundary to Task terminal admission.
   Diagnostic: deterministic cursor adapter satisfies lifecycle.terminal-admission via stop continuation
   Limitations: inactive by default; MODE=on must be set explicitly via harness hooks; continuation depends on documented stop payload fields (status and loop_count); without lease/session evidence, the adapter refuses final completion with a deterministic diagnostic.
   Evidence: [2026-09-18] Cursor stop adapter reuses Task terminal-admission contracts and open-run decision core, emits continuation followups with loop_count-aware loop_limit=3 handling, and refuses repeated unchanged followups — `packages/harness/tests/test_cursor_lifecycle_gates.py` (cursor lifecycle.terminal-admission stop-boundary decision and continuation behavior).
+
+### `lifecycle.tool-telemetry`
+
+Capture provider-native tool-call sidecar evidence for run-report enrichment.
+
+- **claude-code** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: unsupported claude-code lifecycle.tool-telemetry; run-report derives tool counts from the SessionEnd transcript instead
+  Limitations: codegraph telemetry is derived from the SessionEnd transcript parser, not a PreToolUse hook.
+  Evidence: [2026-09-18] Claude SessionEnd run-report extracts codegraph and tool counts from the transcript; a separate PreToolUse sidecar is redundant — `packages/harness/configs/claude-code/hooks/run-report/_lib.py` (claude-code lifecycle.tool-telemetry surface).
+
+- **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.tool-telemetry`.
+  Diagnostic: deterministic harness adapter appends tool-call sidecar lines on PreToolUse for run-report merge
+  Limitations: records only tool calls exposed on the Codex PreToolUse boundary; merges into run-report at SessionEnd; empty sidecar yields transcript-only counts when available.
+  Evidence: [2026-09-18] Codex lifecycle handler records tool_name and codegraph counters to .codex/state/<session>.tools.jsonl and SessionEnd run-report merges the sidecar — `packages/harness/tests/test_codex_lifecycle_surfaces.py` (codex lifecycle.tool-telemetry PreToolUse sidecar and run-report enrichment).
+
+- **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.lifecycle.tool-telemetry`.
+  Diagnostic: deterministic cursor adapter appends tool-call sidecar lines on preToolUse for run-report merge
+  Limitations: records only tool calls exposed on the Cursor preToolUse boundary; merges into run-report at sessionEnd; uses conversation_id as the correlation key.
+  Evidence: [2026-09-18] Cursor lifecycle handler records tool_name and codegraph counters to .cursor/state/<conversation>.tools.jsonl and sessionEnd run-report merges the sidecar — `packages/harness/tests/test_cursor_hook_render.py` (cursor lifecycle.tool-telemetry preToolUse sidecar and run-report enrichment).
 
 ### `mcp.catalog`
 

@@ -1,9 +1,10 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.36.0
-description: "Executable plans in plans/<ID>: strict contracts, adaptive execution, and semantic handoff."
-when_to_use: "Use when designing, executing, closing, or auditing an executable master plan."
+version: 2.37.0
+description: "On-demand schema reference for explicitly invoked Task plan commands."
+when_to_use: "Only after explicit Task invocation, when a named plan schema detail is needed."
+disable-model-invocation: true
 risk: write
 persona: oss-dev
 tags: [workflow, planning, handoff, routing, multi-model]
@@ -91,6 +92,11 @@ empty. Inputs are predecessor evidence, Required Reads precede work, Files bound
 Validation/Deliverables are observable. Closure prints exactly
 `write-site: pre_mutation: <code> · pre_final: <code>`; both codes must be `allow`.
 Optional `Authority` declares `routine` or one finite `[OWNER-GATE:GATE-ID]` with exact branch/scope.
+Protected gates default to `provider-proof`. Explicit local-only gates may add
+``boundary=`owner-session`; effect=`local-source`; environment=`checkout` `` (or an isolated
+database name ending in `_test`). This produces session-bound `workflow-guard` evidence only;
+production, release, deploy, fleet and secrets still require provider proof. Missing strict
+provider capability is `AUTHORITY_PROVIDER_UNAVAILABLE`; repeating the prompt cannot add it.
 Read the authority/calendar contract in the layout reference for protected execution or timed waits.
 
 ## 4. Status, readiness, and adaptive execution
@@ -249,7 +255,9 @@ rewrites the RED/blocked item history, audit evidence, or release authorization.
 
 Model order is `economy < implementation < frontier`; effort order is `low < medium < high < xhigh`.
 Compare both independently: undershoot, ambiguity, or unsupported capability blocks before mutation;
-overshoot is recorded. Frozen-spec implementation normally uses implementation/high; frontier is for
+overshoot is recorded for inherited routes; bounded pinned work rejects unrequested overshoot
+with `ECONOMY_ROUTE_OVERSHOOT`. Fixed design uses frontier/high unless the owner accepts a more
+expensive route. Frozen-spec implementation normally uses implementation/high; frontier is for
 open design or irreversible choices. Routing rows are
 `| Batch | Items | Model class/effort | Exec | Review | Почему |`; `Exec` is `plan-exec`, `manual` (also accepted as `plan-run`),
 or `plan-design`. Choose Review from concrete item risk: ordinary low-risk work uses self-check and
@@ -385,13 +393,14 @@ the reducer selects `continue-root`, `isolated-child-return`, or a supported col
 from route, capability, context, owner-pause, and independence evidence. The audit root may
 continue when that evidence permits it; independent review and route evidence remain mandatory.
 
-**DESIGN-ROOT-TERMINAL.** A completed `task:plan-design` invocation is an authoring boundary:
-its root must not execute or spawn the successor, even when the successor is compatible, ready,
-or the original brief also mentions later implementation. A design launch block is a routed
-recommendation, never execution authority. Every runnable successor has
-`cold-start-root: design-root-terminal` and a native fresh routed root launch block that pins the
-successor's model and effort. Execution begins only in a separate routed invocation after the
-design result has been returned to the owner.
+**DESIGN SCOPE.** A design-only invocation ends with its authored result and recommendation;
+it must not execute or spawn an unauthorized successor. Record `scope-complete` with
+`continue-root` when the current root remains usable. The owner can invoke execution in the
+same session. Design completion alone never requires a fresh process. The historical
+`design-root-terminal` value remains readable for existing handoffs but is not a new default.
+Honor explicit time/research limits, reuse known evidence and author outcome-sized items.
+Audit inventories do not become mandatory acceptance inventories without a concrete risk.
+Use compact `plan-work.py` context/finalization operations; full schema references are on demand.
 
 ## 7. Command protocol, evidence, and safe fallbacks
 

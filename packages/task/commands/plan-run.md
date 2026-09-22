@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 description: "Execute authorized Task plan items with the attested current-session route."
 argument-hint: "<PLAN-ID> Pn.m [Pn.k]"
 ---
@@ -8,8 +9,9 @@ The full schema canon and snippets are on-demand references, not mandatory execu
 
 Execute `$ARGUMENTS` by the canonical `task:plan-exec` lifecycle. `plan-run` inherits the current
 provider-attested route; it never pins model or effort and it never substitutes config or prose for
-route evidence. Capture five v2 carriers once, admit the Routing group or ready subset of a recommended group, persist one
-`route-run-receipt/v1`, then reuse route/context evidence until `route_change_boundary()` proves change.
+route evidence. Use `plan-work.py prepare --command plan-run` with the plan, item, actor and
+session to validate carriers internally and return compact context plus one `route-run-receipt/v1`.
+Reuse route/context evidence until `route_change_boundary()` proves change.
 
 After each GREEN item, close the item and any directly closable GREEN phase in this invocation,
 then compute Next from the resulting state. Continue a compatible ready successor inside the
@@ -23,7 +25,7 @@ fresh post-close checkpoint and render exactly one native launch for that succes
 item/phase transition or test failure does not imply a session boundary. A real external wait keeps
 its time/predicate gate visible. Design-only/review-only requests remain separate deliverables.
 
-Activate only for explicit owner plan intent or an exact cited local workflow policy; use the
+Activate only for explicit owner Task invocation; use the
 shared [intent routing canon](../references/intent-routing.md). An exact current owner `plan-run`
 is intent to execute the declared item. Before protected writes, an item-declared finite `Authority`
 gate may be materialized through `task_contract.materialize_owner_invocation(plan_dir, item_id)`:

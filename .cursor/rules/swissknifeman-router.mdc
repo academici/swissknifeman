@@ -1,13 +1,12 @@
 ---
-description: Static session-scoped Cursor routing carrier derived from command-routing.
-alwaysApply: true
+alwaysApply: false
 ---
 <!-- semantic:cursor.lifecycle.router.session-scoped-static -->
-## Cursor routing policy (session-scoped static carrier)
+## Cursor Task routing (explicit invocation only)
 
 This managed rule is generated from `packages/task/configs/command-routing.json`.
-The carrier is static and session-scoped; it intentionally avoids
-`sessionStart.additional_context` and per-prompt injection claims.
+Apply only when the owner explicitly invokes Task or attaches this manual rule.
+Ordinary requests and existing plan files do not activate Task.
 
 - Fixed economy commands: none.
 - Fixed implementation commands: `task:dev`, `task:fix`, `task:make-workflow`, `task:plan-close`, `task:plan-exec`.

@@ -1614,13 +1614,13 @@
           "binding": {
             "surface": "static Cursor rule",
             "target": ".cursor/rules/swissknifeman-router.mdc",
-            "alwaysApply": true
+            "alwaysApply": false
           },
-          "diagnostic": "Cursor lifecycle.router is carried by a static session-scoped rule over frozen command-routing selectors",
+          "diagnostic": "Cursor lifecycle.router is a manual Task rule requiring explicit invocation",
           "evidence": [
             {
-              "claim": "the Cursor rules renderer generates the routing carrier from command-routing mappings and provider audit validates static rule activation for lifecycle.router",
-              "scope": "cursor lifecycle.router static session-scoped carrier",
+              "claim": "the Cursor rules renderer generates a manual routing carrier with alwaysApply false and no description or globs; Task does not activate from ordinary prompts",
+              "scope": "cursor lifecycle.router explicit-only carrier",
               "source": "packages/harness/lib/harness/cursor_render.py",
               "verified_at": "2026-09-18"
             }

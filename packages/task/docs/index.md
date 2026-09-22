@@ -2,6 +2,9 @@
 
 **Что это.** Опциональные помощники Claude Code (`/task:*`), Codex (`$ task:*`) и Cursor (`task:*`)
 для явного выбора работы.
+С версии Task **0.21.0** workflows включаются только явным вызовом команды/skill. Codex
+получает `allow_implicit_invocation: false`, Claude — `disable-model-invocation: true`;
+harness не внедряет Task-политику в SessionStart и не выбирает команды по ключевым словам.
 Каждая команда **пинит модель + reasoning effort + профиль workflow**, перебивая настройки сессии,
 чтобы не переключать их вручную. Default-on в каждом онбордженном проекте (connect-канал);
 резидентного налога нет — описания команд не инжектятся в каждый запрос.
@@ -35,6 +38,18 @@ Native-установка Task включает команды, конфигур
 | `/task:plan-audit` | Opus / xhigh | один pre-exec или pre-close аудит по material trigger |
 
 ## Как этим пользоваться
+
+Для существующего плана `scripts/plan-work.py` внутри установленного Task объединяет
+служебные операции: `design-context` даёт компактный контекст, `finalize-design` проверяет
+дизайн и обновляет производные файлы, `prepare` выполняет admission/start и возвращает
+execution capsule, `finalize` согласует уже записанное terminal evidence. Запускайте скрипт
+через `python3` с `--help` для параметров. Семантический handoff и фактическое evidence
+остаются входом; операция не выдумывает успешные проверки.
+
+Design соблюдает бюджет владельца, переиспользует известные findings и не требует census
+всех callers/tests. Завершение design не требует нового процесса. Для ограниченной локальной
+работы доступна явная граница `owner-session`; внешние эффекты сохраняют `provider-proof` —
+см. [полномочия](./reference/plan-authority.md).
 
 Выбор конкретной команды описан в таблице выше; мастер-планы (plan-протокол) — скилл
 `general/plan-protocol`. Процесс день за днём — [Методология](./methodology.md).

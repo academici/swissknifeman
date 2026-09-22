@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/design.md
-Canonical SHA-256: sha256:3e2215a33373d1403e46b7c083a0d8f9b1ce8f52b203f33db6b75c349e52c0a9
+Canonical SHA-256: sha256:06f407bd9341ea0fe1973a9f857e2c529e457fe6cbf325b0a64c59c30d12d3c1
 Adapter: task.codex-command/1.0.16
 -->
 Это задача ПРОЕКТИРОВАНИЯ — выход артефакты, НЕ код. Ввод пользователя: «$ARGUMENTS».

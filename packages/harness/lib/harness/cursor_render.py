@@ -136,8 +136,7 @@ _RULES = (
     _CursorRule(
         ".cursor/rules/swissknifeman-router.mdc",
         "cursor.lifecycle.router.session-scoped-static",
-        ("description: Static session-scoped Cursor routing carrier derived from command-routing.",
-         "alwaysApply: true"),
+        ("alwaysApply: false",),
         False,
         "router",
     ),
@@ -242,10 +241,10 @@ def _router_rule_section(semantic_id: str, root: Path | None) -> bytes:
     )
     text = (
         f"<!-- semantic:{semantic_id} -->\n"
-        "## Cursor routing policy (session-scoped static carrier)\n\n"
+        "## Cursor Task routing (explicit invocation only)\n\n"
         "This managed rule is generated from `packages/task/configs/command-routing.json`.\n"
-        "The carrier is static and session-scoped; it intentionally avoids\n"
-        "`sessionStart.additional_context` and per-prompt injection claims.\n\n"
+        "Apply only when the owner explicitly invokes Task or attaches this manual rule.\n"
+        "Ordinary requests and existing plan files do not activate Task.\n\n"
         f"{fixed_rows}\n"
         f"- Model selectors: {classes}.\n"
         "- Never replace fixed frontier or fixed implementation routes with `auto`.\n"
@@ -334,9 +333,10 @@ def assert_rule_frontmatter(path: str, content: bytes) -> None:
         if "globs:" in text.split("---", 2)[1]:
             raise ValueError("HARNESS_CURSOR_RULE_FRONTMATTER:observer-has-globs")
     elif path.endswith("swissknifeman-router.mdc"):
-        if "alwaysApply: true" not in text or "description:" not in text:
+        frontmatter = text.split("---", 2)[1]
+        if "alwaysApply: false" not in frontmatter or "description:" in frontmatter:
             raise ValueError("HARNESS_CURSOR_RULE_FRONTMATTER:router-trigger")
-        if "globs:" in text.split("---", 2)[1]:
+        if "globs:" in frontmatter:
             raise ValueError("HARNESS_CURSOR_RULE_FRONTMATTER:router-has-globs")
     else:
         raise ValueError(f"HARNESS_CURSOR_RULE_FRONTMATTER:unknown:{path}")

@@ -93,14 +93,13 @@ class SemanticCatalogTests(unittest.TestCase):
             by_provider = {item.provider_id: item
                            for item in result.targets if item.scope_id == scope}
             claude, codex, cursor = (by_provider[provider] for provider in PROVIDERS)
-            common = COMMON_IDS[scope]
+            common = COMMON_IDS[scope] if scope != "root" else ()
             self.assertEqual(claude.ordered_semantic_ids[:len(common)], common)
-            self.assertEqual(codex.ordered_semantic_ids[:len(common)], common)
             self.assertEqual(
                 claude.ordered_semantic_ids[len(common):],
                 EXTENSION_IDS[(scope, "claude-code")])
             self.assertEqual(
-                codex.ordered_semantic_ids[len(common):],
+                codex.ordered_semantic_ids,
                 EXTENSION_IDS[(scope, "codex")])
             self.assertEqual(cursor.ordered_semantic_ids,
                              EXTENSION_IDS[(scope, "cursor")])

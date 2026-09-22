@@ -52,7 +52,7 @@ class InstructionCompatibilityTests(unittest.TestCase):
                     for assertion in records[semantic_id]["assertions"]:
                         self.assertIn(assertion, rendered, semantic_id)
 
-    def test_common_inventory_is_identical_in_each_installed_provider_pair(self):
+    def test_common_inventory_respects_provider_projection_policy(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()
             planned = plan_instructions(default_request("plan", root))
@@ -64,12 +64,13 @@ class InstructionCompatibilityTests(unittest.TestCase):
                                for item in applied.targets if item.scope_id == scope}
                 self.assertEqual(set(by_provider), set(PROVIDERS))
                 common_count = sum(
-                    record["kind"] == "common"
+                    record["kind"] == "common" and scope != "root"
                     for record in next(item for item in load_catalog()["scopes"]
                                        if item["id"] == scope)["sections"])
-                self.assertEqual(
-                    by_provider["claude-code"].ordered_semantic_ids[:common_count],
-                    by_provider["codex"].ordered_semantic_ids[:common_count])
+                self.assertEqual(len(by_provider["claude-code"].ordered_semantic_ids),
+                                 common_count + len(EXTENSION_IDS[(scope, "claude-code")]))
+                self.assertEqual(by_provider["codex"].ordered_semantic_ids,
+                                 EXTENSION_IDS[(scope, "codex")])
                 self.assertEqual(by_provider["cursor"].ordered_semantic_ids,
                                  EXTENSION_IDS[(scope, "cursor")])
 

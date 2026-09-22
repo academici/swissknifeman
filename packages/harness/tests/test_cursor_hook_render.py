@@ -183,6 +183,36 @@ class CursorHookRenderTests(unittest.TestCase):
             }
             result = _run_handler(handler, "security.safe-dirs", payload)
             self.assertEqual(result.returncode, 0)
+            self.assertEqual(json.loads(result.stdout), {"permission": "allow"})
+
+    def test_handler_safe_dirs_permits_hook_without_stdin(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            handler = Path(scratch) / "lifecycle.py"
+            handler.write_bytes(render_cursor_hook_handler())
+            result = subprocess.run(
+                [sys.executable, str(handler), "--surface", "security.safe-dirs"],
+                input=b"",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=20,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr.decode())
+            self.assertEqual(json.loads(result.stdout), {"permission": "allow"})
+
+    def test_handler_safe_dirs_allows_docker_command_with_wire_payload(self):
+        wire = json.loads(
+            (PACKAGE / "tests/fixtures_data/cursor-hook-wire-before-v1.json").read_text(
+                encoding="utf-8"))
+        payload = {
+            **wire["payload"],
+            "command": "cd /home/vostrikov/sibintek/projects/insiders && make up",
+        }
+        with tempfile.TemporaryDirectory() as scratch:
+            handler = Path(scratch) / "lifecycle.py"
+            handler.write_bytes(render_cursor_hook_handler())
+            result = _run_handler(handler, "security.safe-dirs", payload)
+            self.assertEqual(result.returncode, 0, result.stderr.decode())
+            self.assertEqual(json.loads(result.stdout), {"permission": "allow"})
 
     def test_handler_uses_workspace_root_fallback_for_cwd(self):
         with tempfile.TemporaryDirectory() as scratch, tempfile.TemporaryDirectory() as allowed:
@@ -208,9 +238,13 @@ class CursorHookRenderTests(unittest.TestCase):
             }
             result = _run_handler(handler, "security.safe-dirs", payload, env=env)
             self.assertEqual(result.returncode, 0)
+            self.assertEqual(json.loads(result.stdout), {"permission": "allow"})
             outside = {**payload, "workspace_roots": [scratch], "command": "rm -rf ."}
             refused = _run_handler(handler, "security.safe-dirs", outside, env=env)
-            self.assertEqual(refused.returncode, 2)
+            self.assertEqual(refused.returncode, 0)
+            verdict = json.loads(refused.stdout)
+            self.assertEqual(verdict["permission"], "deny")
+            self.assertIn("safe-dirs allowlist", verdict["user_message"])
 
     def test_handler_command_log_writes_without_output_payload_field(self):
         with tempfile.TemporaryDirectory() as project, tempfile.TemporaryDirectory() as scratch:
@@ -277,7 +311,9 @@ class CursorHookRenderTests(unittest.TestCase):
                 "tool_name": "MCP:plugin-core-codegraph:find_symbol",
                 "tool_input": {"name": "Foo"},
             }
-            self.assertEqual(_run_handler(handler, "lifecycle.tool-telemetry", tool_payload).returncode, 0)
+            tool_result = _run_handler(handler, "lifecycle.tool-telemetry", tool_payload)
+            self.assertEqual(tool_result.returncode, 0)
+            self.assertEqual(json.loads(tool_result.stdout), {"permission": "allow"})
             end_payload = {
                 **common,
                 "hook_event_name": "sessionEnd",

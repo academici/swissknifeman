@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 description: "Read-only review of code, docs or specs; rank findings by demonstrated impact."
 argument-hint: "[что ревьюим: дифф / ветка / PR# / docs-путь]"
 model: opus

@@ -346,6 +346,36 @@ _CHANGELOG_SKIP_MARKER = "[changelog-skip]"
 _CHANGELOG_NAME_RE = re.compile(r"changelog", re.IGNORECASE)
 _CHANGELOG_SEGMENT_RE = re.compile(r"&&|\\|\\||;|\\|")
 _CURSOR_FOLLOWUP_LOOP_LIMIT = 3
+_PERMISSION_EMITTED = False
+
+
+def _emit_permission(permission, *, user_message=None, agent_message=None):
+    global _PERMISSION_EMITTED
+    if _PERMISSION_EMITTED:
+        return
+    out = {"permission": permission}
+    if user_message:
+        out["user_message"] = user_message
+    if agent_message:
+        out["agent_message"] = agent_message
+    print(json.dumps(out, ensure_ascii=False))
+    _PERMISSION_EMITTED = True
+
+
+def _emit_shell_allow(*, agent_message=None):
+    _emit_permission("allow", agent_message=agent_message)
+
+
+def _emit_shell_deny(reason):
+    _emit_permission("deny", user_message=reason)
+
+
+def _emit_tool_allow(*, agent_message=None):
+    _emit_permission("allow", agent_message=agent_message)
+
+
+def _emit_tool_deny(reason):
+    _emit_permission("deny", user_message=reason)
 
 
 def _utc_now():
@@ -568,8 +598,8 @@ def _safe_dirs(payload):
         return
     root = _find_repo_root(payload)
     if root is None:
-        sys.stderr.write("security.safe-dirs: refusing rm/rmdir - harness checkout unreachable\\n")
-        sys.exit(2)
+        _emit_shell_deny("security.safe-dirs: refusing rm/rmdir - harness checkout unreachable")
+        sys.exit(0)
     module_path = os.path.join(root, "packages", "harness", "configs", "claude-code",
                                "hooks", "auto-approve", "lib", "safedirs.py")
     try:
@@ -583,8 +613,9 @@ def _safe_dirs(payload):
     except Exception:
         safe = False
     if not safe:
-        sys.stderr.write(f"security.safe-dirs: refusing rm/rmdir - '{command}' is not covered by the safe-dirs allowlist\\n")
-        sys.exit(2)
+        _emit_shell_deny(
+            f"security.safe-dirs: refusing rm/rmdir - '{command}' is not covered by the safe-dirs allowlist")
+        sys.exit(0)
 
 
 def _daemon_safety(payload):
@@ -593,8 +624,8 @@ def _daemon_safety(payload):
         return
     root = _find_repo_root(payload)
     if root is None:
-        sys.stderr.write("lifecycle.daemon-safety: refusing command - harness core unreachable\\n")
-        sys.exit(2)
+        _emit_shell_deny("lifecycle.daemon-safety: refusing command - harness core unreachable")
+        sys.exit(0)
     lib_root = os.path.join(root, "packages", "harness", "lib")
     try:
         if lib_root not in sys.path:
@@ -602,17 +633,18 @@ def _daemon_safety(payload):
         from harness.lifecycle_daemon_safety_core import daemon_safety_verdict
         gate = daemon_safety_verdict(command, mode="strict")
     except Exception:
-        sys.stderr.write("lifecycle.daemon-safety: refusing command - policy core failed\\n")
-        sys.exit(2)
+        _emit_shell_deny("lifecycle.daemon-safety: refusing command - policy core failed")
+        sys.exit(0)
     match = gate.match
     if gate.decision != "deny" or match is None:
         return
-    sys.stderr.write(
+    reason = (
         "BLOCKED (daemon-safety): %r matched rule %s (%s). One-time bypass: "
-        "PERPLEXITY_DAEMON_GUARD=off.\\n"
+        "PERPLEXITY_DAEMON_GUARD=off."
         % (command, match.id, match.pattern)
     )
-    sys.exit(2)
+    _emit_shell_deny(reason)
+    sys.exit(0)
 
 
 def _git_guardrails(payload):
@@ -625,8 +657,8 @@ def _git_guardrails(payload):
         return
     root = _find_repo_root(payload)
     if root is None:
-        sys.stderr.write("lifecycle.git-guardrails: refusing command - harness core unreachable\\n")
-        sys.exit(2)
+        _emit_shell_deny("lifecycle.git-guardrails: refusing command - harness core unreachable")
+        sys.exit(0)
     lib_root = os.path.join(root, "packages", "harness", "lib")
     try:
         if lib_root not in sys.path:
@@ -634,20 +666,17 @@ def _git_guardrails(payload):
         from harness.lifecycle_git_guardrails_core import git_guardrails_verdict
         gate = git_guardrails_verdict(command, mode=mode)
     except Exception:
-        sys.stderr.write("lifecycle.git-guardrails: refusing command - policy core failed\\n")
-        sys.exit(2)
+        _emit_shell_deny("lifecycle.git-guardrails: refusing command - policy core failed")
+        sys.exit(0)
     match = gate.match
     if match is None or gate.decision == "allow":
         return
     reason = ("git-guardrails: %r matched rule %s (%s)."
               % (command, match.id, match.pattern))
     if gate.decision == "deny":
-        sys.stderr.write(reason + "\\n")
-        sys.exit(2)
-    print(json.dumps({
-        "permission": "allow",
-        "agent_message": "[warn] " + reason,
-    }))
+        _emit_shell_deny(reason)
+        sys.exit(0)
+    _emit_shell_allow(agent_message="[warn] " + reason)
 
 
 def _commit_messages(command):
@@ -697,8 +726,8 @@ def _changelog_gate(payload):
         return
     root = _find_repo_root(payload)
     if root is None:
-        sys.stderr.write("lifecycle.changelog-gate: refusing command - harness core unreachable\\n")
-        sys.exit(2)
+        _emit_shell_deny("lifecycle.changelog-gate: refusing command - harness core unreachable")
+        sys.exit(0)
     lib_root = os.path.join(root, "packages", "harness", "lib")
     try:
         if lib_root not in sys.path:
@@ -706,8 +735,8 @@ def _changelog_gate(payload):
         from harness.lifecycle_changelog_gate_core import changelog_gate_verdict
         gate = changelog_gate_verdict(messages[0], mode=mode)
     except Exception:
-        sys.stderr.write("lifecycle.changelog-gate: refusing command - policy core failed\\n")
-        sys.exit(2)
+        _emit_shell_deny("lifecycle.changelog-gate: refusing command - policy core failed")
+        sys.exit(0)
     if gate.match is None or gate.decision == "allow":
         return
     files = _git_lines(cwd, "ls-files")
@@ -721,12 +750,9 @@ def _changelog_gate(payload):
               "Stage a CHANGELOG entry or add [changelog-skip]."
               % (head, gate.match.id))
     if gate.decision == "deny":
-        sys.stderr.write(reason + "\\n")
-        sys.exit(2)
-    print(json.dumps({
-        "permission": "allow",
-        "agent_message": "[warn] " + reason,
-    }))
+        _emit_shell_deny(reason)
+        sys.exit(0)
+    _emit_shell_allow(agent_message="[warn] " + reason)
 
 
 def _managed_pack_files(cwd):
@@ -768,8 +794,8 @@ def _pack_guard(payload):
         return
     root = _find_repo_root(payload)
     if root is None:
-        sys.stderr.write("lifecycle.pack-guard: refusing command - harness core unreachable\\n")
-        sys.exit(2)
+        _emit_tool_deny("lifecycle.pack-guard: refusing command - harness core unreachable")
+        sys.exit(0)
     lib_root = os.path.join(root, "packages", "harness", "lib")
     try:
         if lib_root not in sys.path:
@@ -777,8 +803,8 @@ def _pack_guard(payload):
         from harness.lifecycle_pack_guard_core import matched_target, pack_guard_verdict
         gate = pack_guard_verdict(haystack, mode=mode, managed_targets=tuple(managed))
     except Exception:
-        sys.stderr.write("lifecycle.pack-guard: refusing command - policy core failed\\n")
-        sys.exit(2)
+        _emit_tool_deny("lifecycle.pack-guard: refusing command - policy core failed")
+        sys.exit(0)
     match = gate.match
     if match is None or gate.decision == "allow":
         return
@@ -787,12 +813,9 @@ def _pack_guard(payload):
     reason = ("pack-guard: payload matched managed target %r from pack %r."
               % (hit, pack))
     if gate.decision == "deny":
-        sys.stderr.write(reason + "\\n")
-        sys.exit(2)
-    print(json.dumps({
-        "permission": "allow",
-        "agent_message": "[warn] " + reason,
-    }))
+        _emit_tool_deny(reason)
+        sys.exit(0)
+    _emit_tool_allow(agent_message="[warn] " + reason)
 
 
 def _review_gate(payload):
@@ -1130,15 +1153,47 @@ if args.surface not in _SURFACE_EVENTS:
 try:
     payload = json.load(sys.stdin)
 except (json.JSONDecodeError, TypeError):
+    event = _SURFACE_EVENTS[args.surface]
+    if event == "beforeShellExecution":
+        _emit_shell_allow()
+        sys.exit(0)
+    if event == "preToolUse":
+        _emit_tool_allow()
+        sys.exit(0)
+    sys.stderr.write(f"lifecycle: invalid JSON stdin for {args.surface}\\n")
     sys.exit(2)
 if not isinstance(payload, dict):
+    event = _SURFACE_EVENTS[args.surface]
+    if event == "beforeShellExecution":
+        _emit_shell_allow()
+        sys.exit(0)
+    if event == "preToolUse":
+        _emit_tool_allow()
+        sys.exit(0)
+    sys.stderr.write(f"lifecycle: non-object payload for {args.surface}\\n")
     sys.exit(2)
 event = _SURFACE_EVENTS[args.surface]
 required = set(_COMMON_FIELDS)
 required.update(_EVENT_FIELDS.get(event, ()))
-if not required.issubset(payload) or payload["hook_event_name"] != event:
+optional = {"conversation_id"}
+missing = required - set(payload.keys()) - optional
+if missing or payload.get("hook_event_name") != event:
+    if event == "beforeShellExecution":
+        _emit_shell_allow()
+        sys.exit(0)
+    if event == "preToolUse":
+        _emit_tool_allow()
+        sys.exit(0)
+    sys.stderr.write(
+        f"lifecycle: invalid payload for {args.surface}: "
+        f"missing={{sorted(missing)}} event={{payload.get('hook_event_name')!r}}\\n"
+    )
     sys.exit(2)
 _HANDLERS[args.surface](payload)
+if event == "beforeShellExecution":
+    _emit_shell_allow()
+elif event == "preToolUse":
+    _emit_tool_allow()
 '''
 
 

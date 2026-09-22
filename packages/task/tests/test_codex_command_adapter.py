@@ -45,9 +45,13 @@ class CodexCommandAdapterTests(unittest.TestCase):
             self.assertEqual(render_invocation(records[command_id], arguments, self.mapping), expected)
         plan = self.render()
         self.assertTrue(plan.ok)
-        self.assertEqual(len(plan.artifacts), 24)
+        self.assertEqual(len(plan.artifacts), 35)
         paths = {artifact.path for artifact in plan.artifacts}
         self.assertIn("packages/task/.codex-plugin/plugin.json", paths)
+        policies = [artifact for artifact in plan.artifacts if artifact.path.endswith("/agents/openai.yaml")]
+        self.assertEqual(len(policies), len(self.catalog.records))
+        for policy in policies:
+            self.assertEqual(policy.managed_bytes, b"policy:\n  allow_implicit_invocation: false\n")
         self.assertIn("packages/task/adapters/codex/publication-lock.json", paths)
         for command_id in self.expected["command_ids"]:
             name = command_id.removeprefix("task:")
@@ -141,7 +145,7 @@ class CodexCommandAdapterTests(unittest.TestCase):
 
     def test_every_plan_runtime_binds_route_to_provider_thread_state(self):
         plan_commands = (
-            "plan-design", "plan-exec", "plan-run", "plan-audit", "plan-close",
+            "plan-exec", "plan-run", "plan-audit", "plan-close",
         )
         runtimes = {
             artifact.path.rsplit("/task-", 1)[1].removesuffix("/command.md"):
@@ -157,6 +161,8 @@ class CodexCommandAdapterTests(unittest.TestCase):
                 self.assertIn('source="provider-thread-state"', runtime)
                 self.assertIn("doctor output", runtime)
                 self.assertIn("forbidden substitutes", runtime)
+        self.assertIn("Codex design route", runtimes["plan-design"])
+        self.assertNotIn("TASK_CODEX_ROUTE_EVIDENCE", runtimes["plan-design"])
 
     def test_plan_runtimes_do_not_reintroduce_the_retired_route_recipe(self):
         plan_commands = (

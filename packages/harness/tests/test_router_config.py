@@ -9,15 +9,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 PKG = Path(__file__).resolve().parents[1]
 CONFIG = PKG / "configs" / "claude-code" / "hooks" / "agent-router" / "config.json"
 
-TASK_COMMANDS = (
-    "/task:design",
-    "/task:dev",
-    "/task:research",
-    "/task:review",
-    "/task:fix",
-)
-
-
 class RouterConfigCase(unittest.TestCase):
     def setUp(self):
         self.cfg = json.loads(CONFIG.read_text(encoding="utf-8"))
@@ -30,14 +21,12 @@ class RouterConfigCase(unittest.TestCase):
     def test_version_bumped(self):
         self.assertGreaterEqual(self.cfg["version"], 2)
 
-    def test_all_task_commands_present(self):
-        """Internal documentation."""
-        policy = self.cfg["policy"]
-        for cmd in TASK_COMMANDS:
-            self.assertIn(cmd, policy, f"в policy пропала команда {cmd}")
+    def test_no_resident_task_policy_or_keyword_commands(self):
+        self.assertEqual(self.cfg["policy"], "")
+        self.assertEqual(self.cfg["commands"], [])
 
-    def test_auto_suffix_present(self):
-        self.assertTrue((self.cfg.get("policy_auto_suffix") or "").strip())
+    def test_no_automatic_task_dispatch(self):
+        self.assertEqual(self.cfg["policy_auto_suffix"], "")
 
 
 if __name__ == "__main__":

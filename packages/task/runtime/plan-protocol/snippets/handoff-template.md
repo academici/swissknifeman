@@ -15,8 +15,8 @@
 `cold-start-root`. Последнее требует reason из закрытого enum:
 `context-budget` · `capability-missing` · `owner-pause-no-resume` ·
 `whole-plan-independent-audit` · `design-root-terminal`.
-`design-root-terminal` обязателен для runnable successor после terminal
-`task:plan-design`; design root его не исполняет. После terminal `task:plan-audit` Context
+`design-root-terminal` сохранён только для старых handoff. Завершённый design использует
+`scope-complete` / `continue-root`; рекомендация не разрешает исполнение. После terminal `task:plan-audit` Context
 определяет сохранённое решение `plan_continuity`, а не имя команды.
 
 Runnable Next для фактического successor обязан нести launch-block (полная форма и правила cold-start —

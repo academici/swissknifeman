@@ -124,11 +124,10 @@ MANDATORY_PATH_LITERALS = (
     "**Required Reads**",
 )
 V2_MANDATORY_PATH_LITERALS = (
-    "plans/<PLAN-ID>/plan.md",
-    "plans/<PLAN-ID>/phases/<Pn>/<Pn>.md",
-    "plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.md",
-    "plans/<PLAN-ID>/bundles/<Pn.m>.json",
-    "plans/<PLAN-ID>/phases/<Pn>/<Pn.m>.state.md",
+    "scripts/plan-work.py prepare",
+    "compact execution capsule",
+    "full plan/phase/bundle/state are internal runtime inputs",
+    "scripts/plan-work.py finalize",
 )
 PLAN_EXEC_RELPATH = Path("packages/task/commands/plan-exec.md")
 

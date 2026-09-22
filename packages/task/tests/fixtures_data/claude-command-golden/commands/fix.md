@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 description: "Fix a scoped defect directly; preserve existing work and verify the change."
 argument-hint: "[что починить]"
 model: sonnet

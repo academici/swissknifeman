@@ -1002,8 +1002,29 @@ def run_codex_native_install(*, repo_root: Path, plugin: str, dry_run: bool,
                                     check=False, capture_output=True, text=True)
                     sources = [m.get("marketplaceSource", {}) for m in json.loads(listed.stdout).get("marketplaces", [])
                                if m.get("name") == MARKETPLACE]
-                    if listed.returncode or origin.returncode or len(sources) != 1 or sources[0].get("sourceType") != "git" or sources[0].get("source") != origin.stdout.strip():
-                        return False, "SPUB_INSTALL_UNAVAILABLE: existing marketplace source does not match repository origin"
+                    expected_origin = origin.stdout.strip()
+                    source = sources[0] if len(sources) == 1 else {}
+                    matches_git_origin = (source.get("sourceType") == "git"
+                                          and source.get("source") == expected_origin)
+                    matches_local_checkout = False
+                    if source.get("sourceType") == "local" and isinstance(source.get("source"), str):
+                        local_root = source["source"]
+                        local_origin = runner(["git", "-C", local_root, "remote", "get-url", "origin"],
+                                              check=False, capture_output=True, text=True)
+                        local_head = runner(["git", "-C", local_root, "rev-parse", "HEAD"],
+                                            check=False, capture_output=True, text=True)
+                        release_head = runner(["git", "-C", str(repo_root), "rev-parse", "HEAD"],
+                                              check=False, capture_output=True, text=True)
+                        matches_local_checkout = (local_origin.returncode == 0 and local_head.returncode == 0
+                                                  and release_head.returncode == 0
+                                                  and local_origin.stdout.strip() == expected_origin
+                                                  and local_head.stdout.strip() == release_head.stdout.strip())
+                    if listed.returncode or origin.returncode or not (matches_git_origin or matches_local_checkout):
+                        return False, "SPUB_INSTALL_UNAVAILABLE: existing marketplace source does not match repository origin and release commit"
+                    if matches_local_checkout:
+                        # Local marketplaces have no Codex upgrade transaction. The exact
+                        # checked-out release is already their source; proceed to plugin add.
+                        continue
                     upgraded = runner([executable, "plugin", "marketplace", "upgrade", MARKETPLACE],
                                       check=False, capture_output=True, text=True)
                     if upgraded.returncode == 0:

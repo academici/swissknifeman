@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.24.2] - 2026-09-22
+
+### Fixed
+
+- **Codex fleet delivery:** registered local `swissknifeman` marketplace is reused only
+  after its Git origin and checked-out commit match the tagged release. This lets every
+  registered project update from the current attested checkout without replacing an
+  unrelated source.
+
+- **Codex consumer acceptance:** the native gate verifies marketplace inventory, enabled
+  installation, exact version and byte-exact isolated cache surfaces through supported
+  CLI contracts instead of the internal `debug prompt-input` rendering.
+
 ## [0.24.1] - 2026-09-22
 
 ### Added

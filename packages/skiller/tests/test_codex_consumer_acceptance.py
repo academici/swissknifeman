@@ -1,8 +1,8 @@
 """P5.5: isolated Codex publication consumer-acceptance gate.
 
 Azguard, 2026-07-21 — internal generator/unit checks were GREEN, but a fresh Codex
-session could not see `task-plan-run`/`task-plan-exec`: the sibling `task` plugin
-was invisible to native marketplace discovery. Static schema conformance
+session could not install the sibling `task` plugin from native marketplace discovery.
+Static schema conformance
 (`test_codex_publication.py`) does not catch that class of failure — it never
 asks the real `codex` binary anything. This module does: everything here drives
 the external `codex` CLI itself, from an isolated `CODEX_HOME` and a consumer
@@ -170,10 +170,10 @@ class TestCodexConsumerAcceptance(unittest.TestCase):
         assert blender_result.returncode == 0, blender_result.stderr
         cls.blender_install = json.loads(blender_result.stdout)
 
-        prompt_result = _run_codex(["debug", "prompt-input"],
-                                   codex_home=cls.codex_home, cwd=cls.consumer_dir)
-        assert prompt_result.returncode == 0, prompt_result.stderr
-        cls.prompt_input = json.loads(prompt_result.stdout)
+        installed_result = _run_codex(["plugin", "list", "--json"],
+                                      codex_home=cls.codex_home, cwd=cls.consumer_dir)
+        assert installed_result.returncode == 0, installed_result.stderr
+        cls.installed_listing = json.loads(installed_result.stdout)
 
     @classmethod
     def tearDownClass(cls):
@@ -216,25 +216,33 @@ class TestCodexConsumerAcceptance(unittest.TestCase):
             self.assertTrue(cached.is_file(), cached)
             self.assertEqual(cached.read_bytes(), source.read_bytes())
 
-    def test_clean_consumer_session_discovers_task_plan_skills_from_isolated_cache(self):
-        text = self._skills_instructions_text(self.prompt_input)
-        for skill_name in ("task-plan-run", "task-plan-exec"):
-            match = re.search(rf"- task:{re.escape(skill_name)}: .*?\(file: (\S+)\)", text)
-            self.assertIsNotNone(match, f"{skill_name} not discovered by a fresh codex "
-                                        f"session (codex {self.codex_version})")
-            self.assertTrue(resolve_skill_reference(text, match.group(1)).startswith(str(self.codex_home)),
-                            f"{skill_name} resolved outside the isolated cache: "
-                            f"{match.group(1)}")
+    def test_isolated_task_install_is_registered_with_its_exact_cache(self):
+        entries = [entry for entry in self.installed_listing["installed"]
+                   if entry.get("name") == "task" and entry.get("marketplaceName") == "swissknifeman"]
+        self.assertEqual(len(entries), 1, entries)
+        entry = entries[0]
+        self.assertTrue(entry["installed"])
+        self.assertTrue(entry["enabled"])
+        self.assertEqual(entry["version"], self.task_install["version"])
+        self.assertEqual(Path(entry["source"]["path"]), REPO_ROOT / "packages/task")
+        self.assertEqual(Path(self.task_install["installedPath"]),
+                         self.codex_home / "plugins/cache/swissknifeman/task" / entry["version"])
 
-    def test_clean_consumer_session_discovers_bucket_skills_from_isolated_cache(self):
-        text = self._skills_instructions_text(self.prompt_input)
+    def test_isolated_bucket_install_is_registered_with_its_exact_cache(self):
+        entries = [entry for entry in self.installed_listing["installed"]
+                   if entry.get("name") == "blender" and entry.get("marketplaceName") == "swissknifeman"]
+        self.assertEqual(len(entries), 1, entries)
+        entry = entries[0]
+        self.assertTrue(entry["installed"])
+        self.assertTrue(entry["enabled"])
+        self.assertEqual(entry["version"], self.blender_install["version"])
+        installed_path = Path(self.blender_install["installedPath"])
+        self.assertTrue(installed_path.is_relative_to(self.codex_home), installed_path)
         for skill_name in ("mcp-blender", "version-gotchas"):
-            match = re.search(rf"- blender:{re.escape(skill_name)}: .*?\(file: (\S+)\)", text)
-            self.assertIsNotNone(match, f"{skill_name} not discovered by a fresh codex session "
-                                        f"(codex {self.codex_version})")
-            self.assertTrue(resolve_skill_reference(text, match.group(1)).startswith(str(self.codex_home)),
-                            f"{skill_name} resolved outside the isolated cache: "
-                            f"{match.group(1)}")
+            cached = installed_path / skill_name / "SKILL.md"
+            source = REPO_ROOT / "packages/skiller/skills/blender" / skill_name / "SKILL.md"
+            self.assertTrue(cached.is_file(), cached)
+            self.assertEqual(cached.read_bytes(), source.read_bytes())
 
     def test_repo_local_skills_would_mask_a_real_publication_failure(self):
         """Reproduces the Azguard failure mode directly: run the SAME isolated

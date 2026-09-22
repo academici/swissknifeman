@@ -468,6 +468,28 @@ class ProviderDistributionCase(unittest.TestCase):
         self.assertEqual(commands[1][0], ["codex", "plugin", "add", "core@swissknifeman"])
         self.assertTrue(all(item[1].get("shell") is None for item in commands))
 
+    def test_native_install_upgrades_matching_local_checkout_at_release_commit(self):
+        commands = []
+
+        def runner(command, **kwargs):
+            commands.append(command)
+            if command[2:4] == ["marketplace", "add"]:
+                return subprocess.CompletedProcess(command, 1, "", "already added from a different source")
+            if command[-2:] == ["list", "--json"]:
+                return subprocess.CompletedProcess(command, 0, json.dumps({"marketplaces": [{"name": "swissknifeman", "marketplaceSource": {"sourceType": "local", "source": "/canonical/swissknifeman"}}]}), "")
+            if command[0] == "git" and command[-3:] == ["remote", "get-url", "origin"]:
+                return subprocess.CompletedProcess(command, 0, "https://example.test/repo.git\n", "")
+            if command[0] == "git" and command[-2:] == ["rev-parse", "HEAD"]:
+                return subprocess.CompletedProcess(command, 0, "abcdef\n", "")
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        with mock.patch("skiller.publication.shutil.which", return_value="/bin/codex"):
+            ok, _ = run_codex_native_install(repo_root=self.root, plugin="core", dry_run=False, runner=runner)
+        self.assertTrue(ok)
+        self.assertIn(["codex", "plugin", "add", "core@swissknifeman"], commands)
+        self.assertNotIn(["codex", "plugin", "marketplace", "upgrade", "swissknifeman"], commands)
+        self.assertFalse(any("remove" in command for command in commands))
+
     def test_native_install_upgrades_matching_git_source_without_replacement(self):
         commands = []
 

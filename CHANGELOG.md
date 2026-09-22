@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-09-22
+
 ### Added
 
 - **release-fleet workflow:** единая локальная команда валидирует tag и attestation,

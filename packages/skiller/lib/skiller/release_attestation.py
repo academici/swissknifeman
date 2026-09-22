@@ -123,6 +123,11 @@ def _expected_plugin_version(source, policy, name, umbrella_version):
         package = rule.get("package", name)
         package_path = f"packages/{package}/package.json"
         return source.json(package_path)["version"], package_path
+    if owner == "explicit":
+        expected = rule.get("expected_version")
+        if not isinstance(expected, str) or not expected:
+            raise ValueError(f"RELEASE_UNIT_POLICY_INVALID: {name}: explicit version missing")
+        return expected, "configs/release-units.json"
     if owner == "skiller-publication-map":
         path = "packages/skiller/configs/publication-versions.json"
         versions = source.json(path)

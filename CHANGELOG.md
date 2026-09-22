@@ -14,7 +14,8 @@
   version с package/plugin/publication/provider surfaces и включает Claude-only
   units; circular snapshot consistency больше не скрывает устаревшую версию.
 - **Task/maind/analyst publication versions:** Task выровнен на `0.24.0`, maind на
-  `0.4.3`, analyst на `0.2.3`; lock-файлы и generated provider projections
+  `0.4.4`, analyst на `0.2.3`, а изменённый skiller выпущен как `0.17.11`;
+  lock-файлы и generated provider projections
   регенерированы из owning sources.
 - **fleet migration:** трёхпровайдерный контракт применяется ко всем активным
   проектам; cleanup обнаруживает legacy Claude manifest даже после смены provider

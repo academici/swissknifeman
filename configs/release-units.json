@@ -3,7 +3,8 @@
   "_doc": "Independent version ownership for release attestation. Snapshot bytes never define the expected version.",
   "plugins": {
     "task": {
-      "version_owner": "umbrella",
+      "version_owner": "explicit",
+      "expected_version": "0.24.0",
       "required_providers": ["claude-code", "codex"]
     },
     "maind": {

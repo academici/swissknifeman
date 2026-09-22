@@ -540,25 +540,94 @@ def _read_json_lines(path, *, validator, label):
     return records
 
 
+_HISTORICAL_ABSENT_NEUTRAL = frozenset(("friction", "cost_usd", "num_turns", "duration_ms"))
+
+
+def _historical_schema_errors(entry):
+    """Historical rows may omit neutral metric fields; free-form values stay invalid.
+
+    New appends still pass through :func:`validate_entry`.  This filter is only
+    the read of an already durable journal.
+    """
+    return [
+        (field, message)
+        for field, message in entry_validation_errors(entry)
+        if not (field in _HISTORICAL_ABSENT_NEUTRAL
+                and str(message).startswith("нет обязательного поля"))
+    ]
+
+
+def _sidecar_waivers(plan_dir, journal_rows, sidecar_rows):
+    """Bind an existing sidecar to exact lines without requiring a later grant marker.
+
+    Decisions accepted before the JOURNAL-EXCEPTION grant (D249) stay authoritative
+    when they name the target item.  A decision that already carries grants must
+    match one of them; a sha or field mismatch never becomes a waiver.
+    """
+    from task import plan_decisions
+
+    try:
+        decisions = plan_decisions.load_decisions(plan_dir)
+    except (OSError, UnicodeDecodeError, plan_decisions.DecisionError) as exc:
+        raise JournalValidationError(
+            f"owner_decision: носитель решений невалиден: {exc}") from exc
+    by_id = {}
+    for decision in decisions:
+        by_id.setdefault(decision.identifier, []).append(decision)
+    by_line = {line_number: (raw, record) for line_number, raw, record in journal_rows}
+    waivers = {}
+    for _sidecar_line, _raw_exception, exception in sidecar_rows:
+        target_line = exception["target_line"]
+        if target_line not in by_line:
+            raise JournalValidationError("target_line: нет такой непустой строки journal")
+        raw, record = by_line[target_line]
+        if line_sha256(raw) != exception["target_sha256"]:
+            raise JournalValidationError("target_sha256: не совпадает с raw journal line")
+        fields = {field for field, _message in _historical_schema_errors(record)}
+        if fields != set(exception["invalid_fields"]):
+            raise JournalValidationError(
+                f"invalid_fields: ожидалось точное множество {sorted(fields)}")
+        matches = by_id.get(exception["owner_decision"], [])
+        if len(matches) != 1:
+            raise JournalValidationError("owner_decision: требуется ровно один разрешающий D#")
+        decision = matches[0]
+        target_item = record.get("item_id") if isinstance(record, dict) else None
+        if (decision.status != "accepted" or decision.superseded_by is not None
+                or target_item not in decision.items):
+            raise JournalValidationError(
+                "owner_decision: решение не accepted/current или не связано с target item")
+        grants = list(_EXCEPTION_GRANT_RE.finditer(decision.body))
+        if grants:
+            expected_fields = ",".join(sorted(exception["invalid_fields"]))
+            expected = {"digest": exception["target_sha256"], "fields": expected_fields,
+                        "plan": Path(plan_dir).name, "item": target_item}
+            if not any(grant.groupdict() == expected for grant in grants):
+                raise JournalValidationError(
+                    "owner_decision: JOURNAL-EXCEPTION grant не связан с exact target/scope")
+        waivers[(target_line, exception["target_sha256"])] = fields
+    return waivers
+
+
 def _authoritative_state_locked(plan_dir, *, allow_invalid_target=None):
     plan_dir = Path(plan_dir)
     journal_rows = _read_json_lines(
         plan_dir / FILENAME, validator=lambda record: None, label=FILENAME)
-    for line_number, raw, record in journal_rows:
-        try:
-            validate_entry(record)
-        except JournalValidationError as exc:
-            allowed = (allow_invalid_target is not None
-                       and line_number == allow_invalid_target[0]
-                       and line_sha256(raw) == allow_invalid_target[1])
-            if not allowed:
-                raise JournalValidationError(
-                    f"JOURNAL_CORRUPT: {FILENAME}:{line_number}: {exc}") from exc
     sidecar_path = plan_dir / EXCEPTIONS_FILENAME
     sidecar_rows = _read_json_lines(
         sidecar_path, validator=validate_exception, label=EXCEPTIONS_FILENAME)
-    for _line_number, _raw, exception in sidecar_rows:
-        validate_exception_target(plan_dir, exception, check_duplicate=False)
+    waivers = _sidecar_waivers(plan_dir, journal_rows, sidecar_rows) if sidecar_rows else {}
+    for line_number, raw, record in journal_rows:
+        errors = _historical_schema_errors(record)
+        if not errors:
+            continue
+        digest = line_sha256(raw)
+        allowed = (allow_invalid_target is not None
+                   and line_number == allow_invalid_target[0]
+                   and digest == allow_invalid_target[1])
+        if not allowed and waivers.get((line_number, digest)) != {field for field, _message in errors}:
+            message = "; ".join(error for _field, error in errors)
+            raise JournalValidationError(
+                f"JOURNAL_CORRUPT: {FILENAME}:{line_number}: {message}")
     targets = [(row[2]["target_line"], row[2]["target_sha256"]) for row in sidecar_rows]
     if len(targets) != len(set(targets)):
         raise JournalValidationError("JOURNAL_CORRUPT: duplicate schema exception")

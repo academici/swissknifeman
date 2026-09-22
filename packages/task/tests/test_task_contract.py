@@ -10,7 +10,10 @@ test, never a hand-authored contract that could silently satisfy the wrong branc
 """
 import copy
 import json
+import os
 import re
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -20,7 +23,7 @@ try:
     from . import fixtures  # noqa: F401,E402 — package invocation from repository root
 except ImportError:  # pragma: no cover - discovery from packages/task
     import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
-from task import plan_layout, task_contract  # noqa: E402
+from task import journal, plan_item_state, plan_layout, task_contract, terminal_policy  # noqa: E402
 from core.repo import resolve_plan_dir  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -547,7 +550,8 @@ class ArtifexOrdinaryAuthorityRegressionTests(unittest.TestCase):
                     ts="t", model="regression")
                 contract = task_contract.build(ARTIFEX_PLAN_ROOT, item_id, actual_route=actual)
                 self.assertEqual(task_contract.evaluate(contract), {
-                    "pre_mutation": "allow", "pre_final": "allow",
+                    "pre_mutation": "allow",
+                    "pre_final": "block:VALIDATION_RECEIPT_MISSING",
                     "content_hash": task_contract.content_hash(contract)})
                 self.assertNotIn("D50", contract["authority"]["granted_by"])
 
@@ -619,6 +623,61 @@ class PreFinalTests(unittest.TestCase):
         self.assertEqual(task_contract.pre_final(contract), "EVIDENCE_PROOF_CLASS_INSUFFICIENT")
 
 
+class RuntimeValidationReceiptTests(unittest.TestCase):
+    def setUp(self):
+        self.contract = _load_base_contract()
+        evidence = self.contract["evidence"][0]
+        evidence.update(path="python3 -m unittest", proof_class="declared",
+                        algorithm="shell-command")
+        self.contract["done"]["public_acceptance"][0].update(
+            check="python3 -m unittest", evidence_ref=evidence["id"])
+        self.contract = _rehashed(self.contract)
+        self.context = {
+            "schema_version": "validation-context/v1",
+            "spec_sha256": "a" * 64,
+            "head": "b" * 40,
+            "tree": "c" * 40,
+            "environment_sha256": "d" * 64,
+        }
+
+    def _receipt(self, exit_code=0):
+        return task_contract.build_validation_receipt(
+            self.contract, "E1", exit_code=exit_code,
+            context=self.context, executed_at="2026-09-22T00:00:00Z",
+        )
+
+    def test_declared_validation_without_runtime_receipt_blocks(self):
+        self.assertEqual(
+            task_contract.pre_final(self.contract, validation_context=self.context),
+            "VALIDATION_RECEIPT_MISSING",
+        )
+
+    def test_nonzero_runtime_receipt_blocks(self):
+        self.assertEqual(
+            task_contract.pre_final(
+                self.contract, validation_receipts=[self._receipt(1)],
+                validation_context=self.context,
+            ),
+            "VALIDATION_RECEIPT_NONZERO",
+        )
+
+    def test_stale_repository_context_blocks(self):
+        changed = {**self.context, "head": "e" * 40}
+        self.assertEqual(
+            task_contract.pre_final(
+                self.contract, validation_receipts=[self._receipt()],
+                validation_context=changed,
+            ),
+            "VALIDATION_RECEIPT_STALE",
+        )
+
+    def test_successful_bound_runtime_receipt_allows(self):
+        self.assertIsNone(task_contract.pre_final(
+            self.contract, validation_receipts=[self._receipt()],
+            validation_context=self.context,
+        ))
+
+
 class AuditRoundCountingTests(unittest.TestCase):
     def test_only_fingerprinted_candidate_audits_consume_the_phase_budget(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -657,6 +716,37 @@ class EvaluateTests(unittest.TestCase):
         result = task_contract.evaluate(contract)
         self.assertEqual(result["pre_mutation"], "block:AUTHORITY_BOUNDARY")
         self.assertEqual(result["pre_final"], "n/a")
+
+
+class CliGateTests(unittest.TestCase):
+    def _check(self, contract):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "contract.json"
+            path.write_text(json.dumps(contract), encoding="utf-8")
+            env = dict(os.environ)
+            env["PYTHONPATH"] = os.pathsep.join((str(REPO_ROOT / "packages/task/lib"),
+                                                  str(REPO_ROOT)))
+            return subprocess.run(
+                (sys.executable, "-m", "task.task_contract", "check",
+                 "--contract", str(path)),
+                cwd=REPO_ROOT, env=env, text=True, capture_output=True,
+            )
+
+    def test_full_check_exits_nonzero_when_final_gate_blocks(self):
+        contract = _load_base_contract()
+        contract["done"]["public_acceptance"][0]["scope"] = "internal"
+        result = self._check(_rehashed(contract))
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["pre_mutation"], "allow")
+        self.assertEqual(payload["pre_final"], "block:ACCEPTANCE_NOT_PUBLIC")
+
+    def test_full_check_keeps_allow_allow_exit_zero_and_json_shape(self):
+        result = self._check(_load_base_contract())
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["pre_mutation"], "allow")
+        self.assertEqual(payload["pre_final"], "allow")
 
 
 class EvaluateFindingHookTests(unittest.TestCase):
@@ -717,7 +807,7 @@ class BuildSelfConformanceTests(unittest.TestCase):
         self.assertEqual(re_.dispatch_guard(required, actual, contract["route"]["capabilities"]),
                          "ROUTE-UNVERIFIABLE")
 
-    def test_live_actual_route_matching_required_allows_both_predicates(self):
+    def test_live_actual_route_matching_required_allows_mutation_but_needs_runtime_validation(self):
         from task import route_evidence as re_
         # P1 has already consumed its two phase-audit attempts, so its historical
         # items must fail the loop gate even with a matching live route.  Keep this
@@ -732,7 +822,8 @@ class BuildSelfConformanceTests(unittest.TestCase):
                 contract["route"] = re_.build_task_contract_route(required, actual, caps)
                 contract["version"]["content_hash"] = task_contract.content_hash(contract)
                 self.assertIsNone(task_contract.pre_mutation(contract))
-                self.assertIsNone(task_contract.pre_final(contract))
+                self.assertEqual(task_contract.pre_final(contract),
+                                 "VALIDATION_RECEIPT_MISSING")
 
     def test_live_items_in_an_audit_capped_phase_remain_blocked(self):
         from task import route_evidence as re_
@@ -1088,6 +1179,7 @@ class BatchRoutingAdmissionTests(unittest.TestCase):
             "| B1 | P1.1–P1.3 | implementation/high | manual | full | test |\n")
         plan = fixtures.plan_md("BATCH-DEMO").replace("## 3. Routing\n\n", "## 3. Routing" + routing)
         (self.plan_dir / "plan.md").write_text(plan, encoding="utf-8")
+        (self.plan_dir / "journal.jsonl").write_text("", encoding="utf-8")
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -1118,6 +1210,19 @@ class BatchRoutingAdmissionTests(unittest.TestCase):
     def test_checkpoint_bound_suffix_and_stale_spec_refusal(self):
         batch = task_contract.compile_batch_routing(self.plan_dir)["batches"]["B1"]
         receipt = task_contract.build_batch_receipt(batch, completed_prefix=("P1.1",))
+        self.assertEqual(task_contract.admit_batch(self.plan_dir, ("P1.2", "P1.3"),
+                                                   receipt=receipt)["verdict"], "BATCH_STALE")
+        decision = terminal_policy.build_decision(
+            self.plan_dir, "P1.1", result="closed-green",
+            validation=[{"carrier": "fixture", "status": "green",
+                         "evidence_ids": ["test:terminal"]}],
+        )
+        journal.append(self.plan_dir, journal.new_entry(
+            plan_id=self.plan_dir.name, item_id="P1.1", command="plan-exec",
+            actor="implementation/high", result="closed-green", decision=decision,
+        ))
+        plan_item_state.build_states(self.plan_dir, item_id="P1.1",
+                                     materialize_successor=False)
         self.assertEqual(task_contract.admit_batch(self.plan_dir, ("P1.2", "P1.3"),
                                                    receipt=receipt)["verdict"], "ALLOW")
         spec = fixtures.item_spec_path(self.plan_dir, "P1.2")
@@ -1150,6 +1255,49 @@ class BatchRoutingAdmissionTests(unittest.TestCase):
         verdict = task_contract.admit_batch(self.plan_dir, ("P1.2", "P1.1"))
         self.assertEqual(verdict["verdict"], "BATCH_REQUIRED")
         self.assertEqual(verdict["canonical"], ["P1.1", "P1.2"])
+
+    def test_recommended_batch_rejects_caller_fabricated_completed_prefix(self):
+        path = self.plan_dir / "plan.md"
+        path.write_text(path.read_text().replace("| test |", "| recommended: ordered |"),
+                        encoding="utf-8")
+        batch = task_contract.compile_batch_routing(self.plan_dir)["batches"]["B1"]
+        receipt = task_contract.build_batch_receipt(
+            batch, membership=("P1.1", "P1.2"), completed_prefix=("P1.1",),
+        )
+        verdict = task_contract.admit_batch(self.plan_dir, "P1.2", receipt=receipt)
+        self.assertEqual(verdict["verdict"], "BATCH_STALE")
+
+    def test_receipt_binds_plan_spec_routing_and_handoff_identity(self):
+        batch = task_contract.compile_batch_routing(self.plan_dir)["batches"]["B1"]
+        receipt = task_contract.build_batch_receipt(batch)
+        for field in ("routing_digest", "spec_digest", "handoff_digest"):
+            with self.subTest(field=field):
+                tampered = copy.deepcopy(receipt)
+                tampered[field] = "0" * 64
+                verdict = task_contract.admit_batch(
+                    self.plan_dir, ("P1.2", "P1.3"), receipt=tampered)
+                self.assertEqual(verdict["verdict"], "BATCH_STALE")
+
+        plan_path = self.plan_dir / "plan.md"
+        original = plan_path.read_text(encoding="utf-8")
+        plan_path.write_text(original.replace("implementation/high", "frontier/high"),
+                             encoding="utf-8")
+        try:
+            verdict = task_contract.admit_batch(
+                self.plan_dir, ("P1.2", "P1.3"), receipt=receipt)
+            self.assertEqual(verdict["verdict"], "BATCH_STALE")
+        finally:
+            plan_path.write_text(original, encoding="utf-8")
+
+        handoff = self.plan_dir / "handoff.md"
+        original_handoff = handoff.read_text(encoding="utf-8")
+        handoff.write_text(original_handoff + "\nchanged\n", encoding="utf-8")
+        try:
+            verdict = task_contract.admit_batch(
+                self.plan_dir, ("P1.2", "P1.3"), receipt=receipt)
+            self.assertEqual(verdict["verdict"], "BATCH_STALE")
+        finally:
+            handoff.write_text(original_handoff, encoding="utf-8")
 
     def test_request_across_groups_is_ambiguous(self):
         plan = (self.plan_dir / "plan.md").read_text(encoding="utf-8").replace(

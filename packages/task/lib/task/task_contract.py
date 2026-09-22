@@ -26,10 +26,14 @@ stdlib-only.
 from __future__ import annotations
 
 import copy
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
+import platform
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 SCHEMA_VERSION = "task-contract/v1"
@@ -588,6 +592,13 @@ def _routing_digest(plan_dir: Path, items: tuple[str, ...]) -> tuple[str, str]:
     return hashlib.sha256(plan_bytes).hexdigest(), hashlib.sha256(spec_bytes).hexdigest()
 
 
+def _file_digest(path: Path) -> str | None:
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
 def executable_routing_table(plan_dir: Path | str) -> dict:
     """Return the sole executable ``§3 Routing`` table for a v2 plan.
 
@@ -748,6 +759,7 @@ def compile_batch_routing(plan_dir, *, routing_config_path=None) -> dict:
         compiled[batch_key] = {"batch_id": batch, "items": items, "route": route,
                            "exec": next(iter(execs)), "review": review,
                            "routing_digest": routing_digest, "spec_digest": spec_digest,
+                           "handoff_digest": _file_digest(plan_dir / "handoff.md"),
                            "recommended": all(entry["recommended"] for entry in members)}
     return {"items": item_rows, "batches": compiled, "routing_digest": table["digest"]}
 
@@ -785,6 +797,8 @@ def build_batch_receipt(batch: dict, *, membership=None, completed_prefix=(), ha
         raise ValueError("BATCH_STALE: membership is not an ordered batch subset")
     if items[:len(prefix)] != prefix:
         raise ValueError("BATCH_STALE: completed prefix is not a batch prefix")
+    if handoff_digest is None:
+        handoff_digest = batch.get("handoff_digest")
     if handoff_digest is not None and not _SHA256_RE.fullmatch(handoff_digest):
         raise ValueError("BATCH_STALE: handoff digest must be SHA-256")
     return {"schema_version": "batch-receipt/v1", "batch_id": batch["batch_id"],
@@ -813,6 +827,39 @@ def validate_batch_receipt(receipt: dict) -> None:
         raise ValueError("BATCH_STALE: malformed handoff digest")
 
 
+def _derived_completed_prefix(plan_dir, membership) -> tuple[str, ...]:
+    """Read the contiguous GREEN prefix from authoritative terminal evidence."""
+    from task import plan_item_state, terminal_policy
+
+    prefix = []
+    for item in membership:
+        try:
+            evidence = plan_item_state.material_terminal_evidence(plan_dir, item)
+        except plan_item_state.ItemStateError:
+            break
+        if evidence.get("result") not in {"closed-green", "closed-deviations"}:
+            break
+        try:
+            terminal_policy.validate(
+                evidence.get("decision"), result=evidence["result"],
+                plan_dir=Path(plan_dir), item_id=item,
+            )
+        except terminal_policy.TerminalPolicyError as exc:
+            raise ValueError(f"BATCH_STALE: invalid terminal evidence for {item}: {exc}") from exc
+        prefix.append(item)
+    return tuple(prefix)
+
+
+def _receipt_matches_batch(receipt: dict, batch: dict, membership) -> bool:
+    return (
+        receipt["batch_id"] == batch["batch_id"]
+        and receipt["membership"] == list(membership)
+        and receipt["routing_digest"] == batch["routing_digest"]
+        and receipt["spec_digest"] == batch["spec_digest"]
+        and receipt["handoff_digest"] == batch.get("handoff_digest")
+    )
+
+
 def admit_batch(plan_dir, request, *, receipt=None, routing_config_path=None) -> dict:
     """Return the sole pre-mutation batch verdict; this function never mutates state."""
     try:
@@ -836,8 +883,14 @@ def admit_batch(plan_dir, request, *, receipt=None, routing_config_path=None) ->
                     "requested": list(requested), "canonical": sorted(requested, key=exact.index)}
         if receipt is None:
             workset = requested
-            prefix = ()
-            checkpoint = build_batch_receipt(batch, membership=workset)
+            try:
+                prefix = _derived_completed_prefix(plan_dir, workset)
+            except ValueError as exc:
+                return {"verdict": "BATCH_STALE", "batch": batch,
+                        "requested": list(requested), "canonical": list(workset),
+                        "reason": str(exc)}
+            checkpoint = build_batch_receipt(
+                batch, membership=workset, completed_prefix=prefix)
         else:
             try:
                 validate_batch_receipt(receipt)
@@ -848,11 +901,21 @@ def admit_batch(plan_dir, request, *, receipt=None, routing_config_path=None) ->
             if (receipt["batch_id"] != batch["batch_id"]
                     or receipt["routing_digest"] != batch["routing_digest"]
                     or receipt["spec_digest"] != batch["spec_digest"]
+                    or receipt["handoff_digest"] != batch.get("handoff_digest")
                     or any(item not in exact for item in workset)
                     or [exact.index(item) for item in workset] != sorted(exact.index(item) for item in workset)):
                 return {"verdict": "BATCH_STALE", "batch": batch,
                         "requested": list(requested), "canonical": list(workset)}
-            prefix = tuple(receipt["completed_prefix"])
+            try:
+                prefix = _derived_completed_prefix(plan_dir, workset)
+            except ValueError as exc:
+                return {"verdict": "BATCH_STALE", "batch": batch,
+                        "requested": list(requested), "canonical": list(workset),
+                        "reason": str(exc)}
+            if tuple(receipt["completed_prefix"]) != prefix:
+                return {"verdict": "BATCH_STALE", "batch": batch,
+                        "requested": list(requested), "canonical": list(workset),
+                        "reason": "completed prefix does not match terminal evidence"}
             suffix = workset[len(prefix):]
             if requested != suffix:
                 return {"verdict": "BATCH_REQUIRED", "batch": batch,
@@ -894,7 +957,13 @@ def admit_batch(plan_dir, request, *, receipt=None, routing_config_path=None) ->
         return {"verdict": "ALLOW", "batch": batch,
                 "requested": list(requested), "canonical": list(workset),
                 "batch_receipt": checkpoint}
-    if requested == exact:
+    try:
+        derived_prefix = _derived_completed_prefix(plan_dir, exact)
+    except ValueError as exc:
+        return {"verdict": "BATCH_STALE", "batch": batch,
+                "requested": list(requested), "canonical": list(exact),
+                "reason": str(exc)}
+    if requested == exact and not derived_prefix:
         return {"verdict": "ALLOW", "batch": batch, "requested": list(requested), "canonical": list(exact)}
     if batch["batch_id"].lower() == "solo":
         return {"verdict": "BATCH_REQUIRED", "batch": batch, "requested": list(requested), "canonical": list(exact)}
@@ -904,10 +973,13 @@ def admit_batch(plan_dir, request, *, receipt=None, routing_config_path=None) ->
         validate_batch_receipt(receipt)
     except ValueError:
         return {"verdict": "BATCH_STALE", "batch": batch, "requested": list(requested), "canonical": list(exact)}
-    if (receipt["batch_id"] != batch["batch_id"] or receipt["membership"] != list(exact)
-            or receipt["routing_digest"] != batch["routing_digest"] or receipt["spec_digest"] != batch["spec_digest"]):
+    if not _receipt_matches_batch(receipt, batch, exact):
         return {"verdict": "BATCH_STALE", "batch": batch, "requested": list(requested), "canonical": list(exact)}
-    suffix = exact[len(receipt["completed_prefix"]):]
+    if tuple(receipt["completed_prefix"]) != derived_prefix:
+        return {"verdict": "BATCH_STALE", "batch": batch,
+                "requested": list(requested), "canonical": list(exact),
+                "reason": "completed prefix does not match terminal evidence"}
+    suffix = exact[len(derived_prefix):]
     if requested != suffix:
         return {"verdict": "BATCH_REQUIRED", "batch": batch, "requested": list(requested), "canonical": list(suffix)}
     return {"verdict": "ALLOW", "batch": batch, "requested": list(requested), "canonical": list(suffix)}
@@ -1127,7 +1199,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     public_acceptance = []
     for clause in _split_nonempty(validation_text, _INPUTS_SPLIT_RE):
         eid = f"E{len(evidence) + 1}"
-        evidence.append({"id": eid, "path": clause, "proof_class": "cross-checked",
+        evidence.append({"id": eid, "path": clause, "proof_class": "declared",
                          "algorithm": "shell-command"})
         path_tokens = plan_lint.PORTABILITY_PATH_RE.findall(clause)
         scope = "internal" if any(is_external_path(tok) for tok in path_tokens) else "public"
@@ -1507,7 +1579,135 @@ def pre_mutation(contract: dict, *, work: dict | None = None,
     return None
 
 
-def pre_final(contract: dict) -> str | None:
+_VALIDATION_CONTEXT_FIELDS = {
+    "schema_version", "spec_sha256", "head", "tree", "environment_sha256",
+}
+_VALIDATION_RECEIPT_FIELDS = {
+    "schema_version", "evidence_id", "command", "contract_sha256", "spec_sha256",
+    "head", "tree", "environment_sha256", "exit_code", "executed_at",
+}
+_GIT_OBJECT_RE = re.compile(r"^[0-9a-f]{40,64}$")
+
+
+def current_validation_context(plan_dir, item_id: str) -> dict:
+    """Bind runtime validation to the current spec, Git state and Python environment."""
+    from task import plan_evidence, plan_layout, plan_weight
+
+    root = Path(plan_dir).resolve()
+    repo_root = plan_weight.repo_root_for(root)
+
+    def git(*args):
+        result = subprocess.run(
+            ("git", *args), cwd=repo_root, text=True, capture_output=True, check=False,
+        )
+        if result.returncode:
+            raise TaskContractBuildError(
+                item_id, "Validation", f"git {' '.join(args)}: {result.stderr.strip()}")
+        return result.stdout.strip()
+
+    environment = {
+        "implementation": platform.python_implementation(),
+        "python": platform.python_version(),
+        "platform": platform.platform(),
+        "executable": str(Path(sys.executable).resolve()),
+    }
+    environment_sha = hashlib.sha256(json.dumps(
+        environment, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")).hexdigest()
+    spec = plan_layout.carrier_path(root, "item-spec", item_id=item_id)
+    product_members = []
+    for relative in plan_evidence.material_product_paths(root, item_id):
+        path = repo_root / relative
+        if path.is_symlink():
+            member = {"path": relative, "state": "symlink", "target": str(path.readlink())}
+        elif path.is_file():
+            member = {"path": relative, "state": "file",
+                      "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+        else:
+            member = {"path": relative, "state": "missing"}
+        product_members.append(member)
+    product_tree_sha = hashlib.sha256(json.dumps(
+        product_members, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")).hexdigest()
+    return {
+        "schema_version": "validation-context/v1",
+        "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
+        "head": git("rev-parse", "HEAD"),
+        "tree": product_tree_sha,
+        "environment_sha256": environment_sha,
+    }
+
+
+def _validate_validation_context(context: dict) -> None:
+    if (not isinstance(context, dict) or set(context) != _VALIDATION_CONTEXT_FIELDS
+            or context.get("schema_version") != "validation-context/v1"
+            or not _SHA256_RE.fullmatch(str(context.get("spec_sha256", "")))
+            or not _GIT_OBJECT_RE.fullmatch(str(context.get("head", "")))
+            or not _GIT_OBJECT_RE.fullmatch(str(context.get("tree", "")))
+            or not _SHA256_RE.fullmatch(str(context.get("environment_sha256", "")))):
+        raise ValueError("VALIDATION_RECEIPT_STALE: invalid validation context")
+
+
+def build_validation_receipt(contract: dict, evidence_id: str, *, exit_code: int,
+                             context: dict, executed_at: str | None = None) -> dict:
+    """Create a versioned execution receipt for one declared validation carrier."""
+    _validate_validation_context(context)
+    matches = [entry for entry in contract.get("evidence", [])
+               if entry.get("id") == evidence_id]
+    if len(matches) != 1 or matches[0].get("algorithm") != "shell-command":
+        raise ValueError("VALIDATION_RECEIPT_STALE: evidence is not one shell command")
+    if isinstance(exit_code, bool) or not isinstance(exit_code, int):
+        raise ValueError("VALIDATION_RECEIPT_STALE: exit_code must be int")
+    return {
+        "schema_version": "validation-receipt/v1",
+        "evidence_id": evidence_id,
+        "command": matches[0]["path"],
+        "contract_sha256": content_hash(contract),
+        "spec_sha256": context["spec_sha256"],
+        "head": context["head"],
+        "tree": context["tree"],
+        "environment_sha256": context["environment_sha256"],
+        "exit_code": exit_code,
+        "executed_at": executed_at or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+
+
+def _validation_receipt_code(contract: dict, evidence: dict, receipts, context) -> str | None:
+    if context is None:
+        return "VALIDATION_RECEIPT_MISSING"
+    try:
+        _validate_validation_context(context)
+    except ValueError:
+        return "VALIDATION_RECEIPT_STALE"
+    matches = [receipt for receipt in receipts
+               if isinstance(receipt, dict) and receipt.get("evidence_id") == evidence["id"]]
+    if not matches:
+        return "VALIDATION_RECEIPT_MISSING"
+    if len(matches) != 1:
+        return "VALIDATION_RECEIPT_STALE"
+    receipt = matches[0]
+    if (set(receipt) != _VALIDATION_RECEIPT_FIELDS
+            or receipt.get("schema_version") != "validation-receipt/v1"
+            or receipt.get("command") != evidence.get("path")
+            or receipt.get("contract_sha256") != content_hash(contract)
+            or any(receipt.get(key) != context.get(key)
+                   for key in ("spec_sha256", "head", "tree", "environment_sha256"))
+            or not isinstance(receipt.get("executed_at"), str)
+            or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z",
+                                receipt.get("executed_at", ""))):
+        return "VALIDATION_RECEIPT_STALE"
+    exit_code = receipt.get("exit_code")
+    if isinstance(exit_code, bool) or not isinstance(exit_code, int):
+        return "VALIDATION_RECEIPT_STALE"
+    if exit_code != 0:
+        return "VALIDATION_RECEIPT_NONZERO"
+    return None
+
+
+def pre_final(contract: dict, *, validation_receipts=(),
+              validation_context: dict | None = None) -> str | None:
     """task-contract-v1.md §Pre-final predicate — ordered, first failure wins.
     Returns `None` (allow) or a typed reason code. Caller is responsible for the `n/a`
     branch (task-contract-v1.md: evaluated only when pre-mutation allowed)."""
@@ -1523,7 +1723,14 @@ def pre_final(contract: dict) -> str | None:
     for entry in acceptance:
         if entry["scope"] != "public":
             continue
-        proof_class = by_id[entry["evidence_ref"]]["proof_class"]
+        evidence = by_id[entry["evidence_ref"]]
+        if evidence.get("algorithm") == "shell-command" or evidence.get("proof_class") == "declared":
+            receipt_code = _validation_receipt_code(
+                contract, evidence, tuple(validation_receipts or ()), validation_context)
+            if receipt_code:
+                return receipt_code
+            continue
+        proof_class = evidence["proof_class"]
         if proof_class not in DETERMINISTIC_PROOF_CLASSES:
             return "EVIDENCE_PROOF_CLASS_INSUFFICIENT"
 
@@ -1532,7 +1739,8 @@ def pre_final(contract: dict) -> str | None:
 
 def evaluate(contract: dict, *, work: dict | None = None,
              evidence_graph: dict | None = None,
-             requires_closure_freshness: bool = False) -> dict:
+             requires_closure_freshness: bool = False,
+             validation_receipts=(), validation_context: dict | None = None) -> dict:
     """Run both boundaries in the canonical order and return a compact typed result —
     the shape a plan command reports verbatim (journal/handoff/subagent slice, 2026.07.24-AGENT-RELIABILITY P2.2
     Code Guidance): `{"pre_mutation": "allow"|"block:<CODE>", "pre_final":
@@ -1542,7 +1750,10 @@ def evaluate(contract: dict, *, work: dict | None = None,
         requires_closure_freshness=requires_closure_freshness,
     )
     if mutation_code is None:
-        final_code = pre_final(contract)
+        final_code = pre_final(
+            contract, validation_receipts=validation_receipts,
+            validation_context=validation_context,
+        )
         final = "allow" if final_code is None else f"block:{final_code}"
     else:
         final = "n/a"
@@ -1564,7 +1775,6 @@ def _load_json(path: str) -> dict:
 
 def main(argv=None) -> int:
     import argparse
-    import sys
 
     parser = argparse.ArgumentParser(
         description="Task Contract v1 compiler — evaluate pre-mutation/pre-final.")
@@ -1574,6 +1784,10 @@ def main(argv=None) -> int:
     check.add_argument("--work", default=None,
                        help="optional JSON {sessions,risk,handoff,audit} for the portability "
                             "tier-classification sub-check")
+    check.add_argument("--validation-receipts", default=None,
+                       help="JSON array of validation-receipt/v1 records")
+    check.add_argument("--validation-context", default=None,
+                       help="JSON validation-context/v1 record for current state")
     build_cmd = sub.add_parser("build", help="compile one item's Task Contract v1 JSON")
     build_cmd.add_argument("--plan-dir", required=True, help="plans/<PLAN-ID>")
     build_cmd.add_argument("--item", required=True, help="Pn.m")
@@ -1588,9 +1802,15 @@ def main(argv=None) -> int:
         return 1
     contract = _load_json(args.contract)
     work = _load_json(args.work) if args.work else None
-    result = evaluate(contract, work=work)
+    receipts = _load_json(args.validation_receipts) if args.validation_receipts else ()
+    context = _load_json(args.validation_context) if args.validation_context else None
+    result = evaluate(
+        contract, work=work, validation_receipts=receipts,
+        validation_context=context,
+    )
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
-    return 0 if result["pre_mutation"] == "allow" else 1
+    return 0 if (result["pre_mutation"] == "allow"
+                 and result["pre_final"] == "allow") else 1
 
 
 

@@ -3,7 +3,7 @@ projection: status-view
 projection_version: v1
 source_scope: plan core + phases + journal
 through: 2026-09-22
-inputs_sha256: cdc10368aace0013c5856d97857dfcaf9d190d65983e533fbc3c539be6de1749
+inputs_sha256: 46e1152574c17cfd7a7016d04c58339e63fd7c657c4d5b29bee6bc7a28864b1b
 generated_by: task plan-views status
 -->
 
@@ -24,7 +24,7 @@ generated_by: task plan-views status
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Независимая перепроверка аудита и frozen remediation contract | 1/1 | 🟢 Done |
-| P2 | Закрытие false-green, context transport, batch continuation и CI | 0/1 | ⬜ Not started |
+| P2 | Закрытие false-green, context transport, batch continuation и CI | 1/1 | 🟢 Done |
 | P3 | Provider-rooted owner attestation и durable authority | 0/1 | ⬜ Not started |
 | P4 | Journal, decision и projection integrity/durability | 0/1 | ⬜ Not started |
 | P5 | Bundle privacy и portability containment | 0/1 | ⬜ Not started |
@@ -40,7 +40,7 @@ generated_by: task plan-views status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P2.1 | Перевести execution admission и CI в fail-closed semantics | ⬜ Not started | — |
+| P2.1 | Перевести execution admission и CI в fail-closed semantics | 🟢 Done | 2026-09-22 |
 
 ## Phase P3
 
@@ -85,6 +85,14 @@ write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-22 | gpt-5.6-sol/high | plan-run · closed-green · digests: L=5963a6eddbc86ef024716372806db4d983b25eafbfb859da4d07fa1bcfb6db29 R=e139fb3901c1c9cb8d6f7fbbec6fb8deb145a53d72e5ca654bd2c1817d86058f F=4d6d52597711971c3982358e230e540fdf3c817463a69ef70bfff516e4b6d977
 write-site: pre_mutation: allow · pre_final: allow |
 | 2026-09-22 | gpt-5.6-sol/high | plan-close · closed-green · Reclosed P1 with the owner-directed practical integrated plan. |
+| 2026-09-22 | gpt-5.6-sol/high | plan-exec · in-progress · — |
+| 2026-09-22 | gpt-5.6-sol/high | plan-exec · closed-green · digests: C=27015c5cdb085b32cd8e0542f4ee723d2bc5bc2c29b2ca9f1a10944da9a80d08 V=630839667d8141e3e05c6aa175e741d97ec8a29ecbde815b26f58cd4124dbe20 T=817ee5e581f636582dfd806ebec5f7a6cf37396e165d3d8d83e91cf889a93222
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-22 | gpt-5.6-sol/high | plan-close · closed-green · Closed P2 after bounded light review and GREEN package-level evidence. |
+| 2026-09-22 | gpt-5.6-sol/high | plan-exec · local-repair · Added the required durable checkpoint to the typed continuity handoff. |
+| 2026-09-22 | gpt-5.6-sol/high | plan-exec · closed-green · digests: C=27015c5cdb085b32cd8e0542f4ee723d2bc5bc2c29b2ca9f1a10944da9a80d08 V=599092e6f8066b848087851175e55687598e46a7aa49f2bbc704f5726fffcb3f T=817ee5e581f636582dfd806ebec5f7a6cf37396e165d3d8d83e91cf889a93222
+write-site: pre_mutation: allow · pre_final: allow |
+| 2026-09-22 | gpt-5.6-sol/high | plan-close · closed-green · Reclosed P2 after typed continuity checkpoint repair. |
 
 ## Owner Gates
 

@@ -35,6 +35,23 @@ jobs:
       - name: Test core (stdlib фундамент)
         run: PYTHONPATH=. python3 -m unittest discover -s core/tests -v
 
+  task:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Validate task
+        run: bash packages/task/scripts/validate.sh
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -44,4 +61,4 @@ jobs:
       - name: Ruff (баги — pyflakes F + bugbear B)
         # lib + tests: раньше линтовался только lib/, и в tests/ копился мусор (неиспользуемые
         # импорты/переменные). Теперь оба — чтобы тестовый код держал ту же планку.
-        run: pipx run ruff==0.15.19 check core/ core/tests packages/skiller/lib packages/skiller/tests packages/harness/lib packages/harness/tests packages/maind/lib packages/maind/tests
+        run: pipx run ruff==0.15.19 check core/ core/tests packages/skiller/lib packages/skiller/tests packages/harness/lib packages/harness/tests packages/maind/lib packages/maind/tests packages/task/lib packages/task/tests

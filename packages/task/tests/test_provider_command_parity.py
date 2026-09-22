@@ -154,7 +154,14 @@ class ProviderCommandParityTests(unittest.TestCase):
             next_carriers=cls.next_carriers)
 
     def test_contract_fixture_and_canonical_files_define_expected_set(self):
-        contract = _contract_inventory()
+        # The archived v1 contract is historical provenance. Review deliberately
+        # moved from frontier/xhigh to the current risk-scaled implementation/high
+        # default; do not rewrite an archived plan to pretend it always said so.
+        contract = [
+            {**row, "routing": ["fixed", "implementation", "high"]}
+            if row["command_id"] == "task:review" else row
+            for row in _contract_inventory()
+        ]
         fixture = self.expected["commands"]
         self.assertEqual(
             [{key: row[key] for key in ("command_id", "kind", "source", "routing")}

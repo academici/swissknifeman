@@ -38,3 +38,13 @@ class PlanLifecycleTests(unittest.TestCase):
     def test_route_is_reused_until_a_real_change(self):
         self.assertEqual(select(LifecycleInput()).route_evidence, "reuse")
         self.assertEqual(select(LifecycleInput(route_changed=True)).route_evidence, "recapture")
+
+    def test_domain_risk_tags_are_accepted_as_advisory_metadata(self):
+        result = select(LifecycleInput(
+            risk_tags=frozenset(("privacy-retention", "availability-slo"))))
+        self.assertEqual(result.validation, ("focused",))
+        self.assertEqual(result.review, "none")
+
+    def test_unknown_hard_risk_still_fails_closed(self):
+        with self.assertRaisesRegex(ValueError, "risk_tags"):
+            select(LifecycleInput(risks=frozenset(("medical",))))

@@ -40,7 +40,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        # Oldest, midpoint and newest supported runtimes catch compatibility
+        # drift without repeating the full package/static gate five times.
+        python-version: ['3.9', '3.11', '3.13']
     steps:
       - uses: actions/checkout@v4
 

@@ -34,13 +34,8 @@ Code Guidance = «—»; без неё пустой Code Guidance — дефек
 <Опционально (contract-first, скилл plan-protocol §5) — контракт-блок фазы:>
 > **Контракт фазы (contract-first).** Потребляет: … · Производит: … · Границы: …
 
-> **Phase Assurance | v1.**
-> Impact: <isolated | internal-integration | public-contract | security | live>
-> Integration Seams: <конкретные seams или —>
-> Live or Irreversible: <yes | no>
-> Audit Intent: direct-close-eligible
-> Rationale: <почему item Validation и phase gates достаточны для штатного direct-close;
-> residual risk без отдельного owner-bound audit-admission остаётся recommendation>
+<!-- Phase Assurance omitted = isolated/reversible/direct-close. Add the v1 block only for an
+integration seam, hard risk, live/irreversible action, owner-requested audit, or ambiguous default. -->
 
 ## DoR (Definition of Ready)
 

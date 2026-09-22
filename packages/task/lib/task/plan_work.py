@@ -12,7 +12,7 @@ import re
 import sys
 from pathlib import Path
 
-from task import (journal, plan_admission, plan_bundle, plan_context, plan_decisions,
+from task import (journal, plan_admission, plan_bundle, plan_decisions,
                   plan_delivery, plan_evidence, plan_item_state, plan_layout,
                   plan_lint, plan_projection, plan_readiness, plan_reconcile,
                   plan_recovery, plan_status, plan_weight,
@@ -57,7 +57,7 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
         raise WorkError("PLAN_WORK_INVALID_COMMAND", command)
     session_id = session_id or session_context.current_id()
     plan_readiness.validate_execution_target(root, (item_id,))
-    prepared = plan_recovery.prepare(root, item_id)
+    plan_recovery.validate_request(root, item_id)
     admission = plan_admission.batch_admission(
         root, request or [item_id], receipt=batch_receipt)
     if admission["verdict"] != "ALLOW":
@@ -71,19 +71,25 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
             expected_cwd=plan_weight.repo_root_for(root))
     contract = task_contract.build(root, item_id, actual_route=actual_route,
                                    capabilities=capabilities, carrier=invocation)
-    graph = plan_evidence.compile_graph(root, item_id)
-    code = task_contract.pre_mutation(contract, evidence_graph=graph)
-    if code:
-        raise WorkError(code, "допуск до записи не пройден")
+    bundle_model = plan_bundle.model(root, item_id)
+    producer_readiness = plan_bundle.producer_readiness(root, item_id)
+    graph = plan_evidence.compile_graph(
+        root, item_id, bundle=bundle_model, readiness=producer_readiness)
     validation = validation_admission.inspect(root, item_id)
-    prepared["snapshot"].assert_live_integrity()
-    position = plan_recovery.start(
-        root, item_id, command=command, actor=actor, session_id=session_id,
-        contract=contract, batch_receipt=admission.get("batch_receipt", batch_receipt),
-        route_evidence=actual_route)
-    # Start updates item state; capture the resulting context without asking the
-    # caller to serialize/echo five carriers or mint a context proof.
-    snapshot = plan_context.capture(root, item_id)
+    bundle_rendered = plan_bundle.canonical_json(bundle_model)
+    try:
+        started = plan_recovery.start(
+            root, item_id, command=command, actor=actor, session_id=session_id,
+            contract=contract, batch_receipt=admission.get("batch_receipt", batch_receipt),
+            route_evidence=actual_route, evidence_graph=graph,
+            bundle_rendered=bundle_rendered, producer_readiness=producer_readiness,
+            return_context=True)
+    except plan_recovery.RecoveryError as exc:
+        if exc.code in {"ROUTE_UNDERSHOOT", "ROUTE_UNVERIFIABLE", "AUTHORITY_BOUNDARY",
+                        "ECONOMY_ROUTE_OVERSHOOT", "CAPABILITY_UNSUPPORTED"}:
+            raise WorkError(exc.code, exc.verdict) from exc
+        raise
+    position, snapshot = started["position"], started["snapshot"]
     selected = {member.role: member for member in snapshot.members}
     result = {
         "plan_id": root.name, "item_id": item_id, "position": position,
@@ -143,7 +149,7 @@ def finalize_design(plan_dir, phase_id: str, *, actor: str,
     session_id = session_id or session_context.current_id()
     for path in plan_layout.item_spec_paths(root, phase_id):
         plan_item_state.build_states(root, item_id=path.stem, materialize_successor=False)
-    phase = _phase(root, phase_id)
+    _phase(root, phase_id)
     task_contract.compile_batch_routing(root)
     plan_decisions.build_views(root)
     plan_status.build_status(root)
@@ -184,12 +190,10 @@ def finalize_design(plan_dir, phase_id: str, *, actor: str,
             plan_id=root.name, item_id=phase_id, command="plan-design", actor=actor,
             result="no-op", session_id=session_id, fingerprint=fingerprint,
             note="Design finalized; execution has not started."))
-    # The journal changes projection digests, so converge the owners once more.
-    for item in phase["items"]:
-        plan_item_state.build_states(root, item_id=item, materialize_successor=False)
+    # The phase-level design event changes the global status journal input. Item
+    # states are scoped to their own Pn.m rows and bundles contain no journal
+    # input, so rebuilding them here only repeats identical work.
     plan_status.build_status(root)
-    for item in ready:
-        plan_bundle.build(root, item)
     receipt = plan_delivery.build_handoff_receipt(root, phase_id)
     target = root / ".plan-cache" / "design-receipt.json"
     plan_delivery.write_receipt(target, receipt)

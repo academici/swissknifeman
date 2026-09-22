@@ -12,6 +12,14 @@
 
 ### Fixed
 
+- **Task productivity audit:** normal plan execution reuses recovery admission without a
+  second prepare or snapshot; no generated carrier is mutated before admission; terminal
+  reconciliation is incremental; review and plan-run carriers are shorter; missing Phase
+  Assurance uses the isolated/reversible default; `risk_tags` remain extensible; final
+  rendering is exact only when required; and the PR Python matrix covers the oldest,
+  midpoint and newest supported runtimes. Deferred disputed continuations are recorded in
+  `roadmap/2026.09.22-task-productivity-residuals.md`.
+
 - **release version integrity:** attestation теперь независимо сверяет expected unit
   version с package/plugin/publication/provider surfaces и включает Claude-only
   units; circular snapshot consistency больше не скрывает устаревшую версию.

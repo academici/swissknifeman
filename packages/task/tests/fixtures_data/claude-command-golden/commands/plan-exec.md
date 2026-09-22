@@ -100,7 +100,6 @@ decision, rebuilt terminal receipt and in-memory proposed final fragment to
 `plan_delivery.required_final_message(receipt)`; no lease is `NOT_APPLICABLE`. The reducer stores
 only hashes and reason codes. Providers render its verdict but never decide terminality.
 
-At every actual final after closure, render the shared receipt fragment through worktree-local
-`plan-delivery.py --plan-dir <plan-dir> --subject <subject> --kind terminal --render-final`
-(or the same command with `--verify <receipt>`). This delivery rule applies even without an optional
-terminal-admission lease. A lease controls transport admission, not whether Next is reported.
+At final, always report the exact semantic Next from the receipt. Render the byte-exact shared final
+fragment only for a terminal-admission lease, cross-session/provider handoff, owner/external wait,
+or release/public boundary. Same-session local closure uses the internal receipt and a concise result.

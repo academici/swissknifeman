@@ -10,7 +10,7 @@ Generated Codex adapter for semantic command `task:plan-design`.
 - Invocation: `$ task:plan-design <arguments>`
 - Routing: `frontier/high -> gpt-5.6-sol/high`
 - Canonical source: `packages/task/commands/plan-design.md`
-- Canonical SHA-256: `sha256:9afa1e387236b5d08866b1e4dd112595ee9320a6fb560d191f60fa50d399f9d1`
+- Canonical SHA-256: `sha256:94ff873887684608d02a5280a1ad5562930cfb7e85c89a450e5d6e93e6ef5140`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Activate only when the owner explicitly invokes this Task command or skill. Task is not an

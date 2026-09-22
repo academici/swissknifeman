@@ -170,7 +170,8 @@ def material_product_paths(plan_dir, item_id: str) -> tuple[str, ...]:
     return tuple(sorted(set(paths)))
 
 
-def compile_graph(plan_dir, item_id: str, *, execution_ref: str | None = None) -> dict:
+def compile_graph(plan_dir, item_id: str, *, execution_ref: str | None = None,
+                  bundle: dict | None = None, readiness=None) -> dict:
     """Compile one deterministic graph using only declared plan carriers.
 
     Bundle entries include Inputs, Required Reads and resolved decisions, which keeps
@@ -183,14 +184,14 @@ def compile_graph(plan_dir, item_id: str, *, execution_ref: str | None = None) -
         spec_path = plan_layout.carrier_path(plan_dir, "item-spec", item_id=item_id)
     except plan_layout.PlanLayoutError as exc:
         raise EvidenceError("EVIDENCE_ITEM_MISSING", str(exc)) from exc
-    fields = plan_bundle._fields(plan_dir, item_id)
     repo_root = plan_weight.repo_root_for(plan_dir)
     product_paths = tuple(sorted({_repository_path(path, plan_dir=plan_dir, repo_root=repo_root)
                                   for path in material_product_paths(plan_dir, item_id)}))
-    bundle = plan_bundle.model(plan_dir, item_id)
+    bundle = bundle if bundle is not None else plan_bundle.model(plan_dir, item_id)
     inputs = _bundle_inputs(bundle, plan_dir=plan_dir, repo_root=repo_root)
     collisions = sorted(set(product_paths) & set(inputs))
-    readiness = plan_bundle.producer_readiness(plan_dir, item_id)
+    readiness = (plan_bundle.producer_readiness(plan_dir, item_id)
+                 if readiness is None else tuple(readiness))
     nodes = [
         {"id": "spec", "kind": "item-spec", "path": spec_path.relative_to(plan_dir).as_posix(),
          "sha256": _sha(spec_path.read_bytes())},

@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:9afa1e387236b5d08866b1e4dd112595ee9320a6fb560d191f60fa50d399f9d1
+Canonical SHA-256: sha256:94ff873887684608d02a5280a1ad5562930cfb7e85c89a450e5d6e93e6ef5140
 Adapter: task.cursor-command/1.0.16
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -39,8 +39,9 @@ The full schema canon and snippets are on-demand references, not mandatory execu
 Start with `scripts/plan-work.py design-context --plan-dir <dir> --phase <Pn>` for an existing plan.
 Use its compact schema and current phase/Routing context; open full canon only for a named ambiguity.
 Design creates a v2 plan contract, not a second execution protocol. Read repository evidence,
-declare `Phase Assurance | v1` in every new phase (impact, named seams, live/irreversible,
-audit intent, rationale), Routing Batch/Review, Required Reads, Files, Validation and Deliverables, then generate
+declare `Phase Assurance | v1` only for an integration seam, hard risk, live/irreversible action,
+owner-requested audit, or ambiguous default; omission means isolated/reversible/direct-close.
+Declare Routing Batch/Review, Required Reads, Files, Validation and Deliverables, then generate
 owned views. Use `task.plan_lifecycle.select(task.plan_lifecycle.LifecycleInput())` as the normal-path vocabulary: focused validation,
 selective projections, one semantic Next, and a measured context boundary.
 

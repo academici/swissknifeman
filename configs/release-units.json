@@ -4,7 +4,7 @@
   "plugins": {
     "task": {
       "version_owner": "explicit",
-      "expected_version": "0.24.0",
+      "expected_version": "0.24.1",
       "required_providers": ["claude-code", "codex"]
     },
     "maind": {

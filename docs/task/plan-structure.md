@@ -66,11 +66,12 @@ records `audit-finalization/v1` with `close_admission=allow`. Phase close consum
 
 ## Phase Assurance | v1
 
-Каждая новая фаза фиксирует в `## Phase Context` один handwritten block с `Impact`, named
-`Integration Seams`, `Live or Irreversible`, `Audit Intent` и непустым `Rationale`.
+Отсутствующий блок означает isolated, seam-free, reversible и direct-close. Handwritten block с
+`Impact`, named `Integration Seams`, `Live or Irreversible`, `Audit Intent` и непустым `Rationale`
+нужен только для seam/hard-risk/live boundary, owner-requested audit или неоднозначного default.
 `plan_assurance.evaluate()` — единственный reducer для первого audit/direct close и для
-post-GREEN impact. `direct-close-eligible` допустим только для isolated, seam-free, non-live
-green candidate; public/security/live/non-green/material risk остаются audit-required. Candidate
+post-GREEN impact. Явный `direct-close-eligible` сохраняется для совместимости; material risk без
+fresh owner-bound admission остаётся recommendation, а не автоматически назначенным audit. Candidate
 строится runtime из plan-dir + phase-id. После GREEN runtime сохраняет snapshot и классифицирует
 расхождение по полям как `audit-impact/v1`, возвращая только `gate-rebind`, `delta`, justified
 `full`, `gather-evidence` или `owner-review`; bare stale/full запрещён.

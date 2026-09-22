@@ -159,12 +159,34 @@ def prepare(plan_dir, item_id: str) -> dict:
             "snapshot": snapshot}
 
 
+def _read_only_prepare(plan_dir: Path, item_id: str) -> dict:
+    """Resolve start inputs without touching generated carriers."""
+    verdict = validate_request(plan_dir, item_id)
+    try:
+        rendered = plan_bundle.render(plan_dir, item_id)
+        readiness = plan_bundle.producer_readiness(plan_dir, item_id)
+    except plan_bundle.BundleError as exc:
+        command = (f"python3 packages/task/scripts/plan-views.py bundle --plan-dir "
+                   f"{plan_dir} --item {item_id} --stdout")
+        raise RecoveryError({
+            "code": "PLAN_BUNDLE_UNRESOLVABLE", "reason": str(exc),
+            "requested_item": item_id, "active_item": item_id,
+            "mode": verdict["mode"], "entry": str(exc).removeprefix("unresolvable_entry: "),
+            "recovery_command": command,
+        }) from exc
+    return {"recovery": verdict, "bundle_rendered": rendered,
+            "producer_readiness": readiness}
+
+
 def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
-          contract: dict, batch_receipt=None, route_evidence=None) -> dict:
+          contract: dict, batch_receipt=None, route_evidence=None,
+          evidence_graph=None, bundle_rendered: str | None = None,
+          producer_readiness=None,
+          return_context: bool = False) -> dict:
     """Admit one durable start; a restarted session reuses the open run identity."""
     from task import plan_context, task_contract
 
-    code = task_contract.pre_mutation(contract)
+    code = task_contract.pre_mutation(contract, evidence_graph=evidence_graph)
     if code:
         raise RecoveryError({"code": code, "reason": "pre-mutation admission запрещает старт"})
     root = Path(plan_dir)
@@ -195,35 +217,58 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
         if not authority[1] or (contract.get("authority", {}).get("class") == "owner-gate" and
                                 (authority[0] != "owner-gate" or contract["authority"].get("granted_by") != authority[2])):
             raise RecoveryError({"code": "AUTHORITY_BOUNDARY", "reason": "live declared gate/grant изменён или отозван"})
-        verdict = validate_request(root, item_id)
+        prepared = _read_only_prepare(root, item_id)
+        verdict = prepared["recovery"]
+        if bundle_rendered is not None and prepared["bundle_rendered"] != bundle_rendered:
+            raise RecoveryError({
+                "code": "RECOVERY_INPUT_CHANGED",
+                "reason": "bundle inputs изменились после admission; повторите prepare",
+            })
+        if (producer_readiness is not None
+                and tuple(producer_readiness) != prepared["producer_readiness"]):
+            raise RecoveryError({
+                "code": "RECOVERY_INPUT_CHANGED",
+                "reason": "producer readiness изменился после admission; повторите prepare",
+            })
         if verdict["mode"] == "resume":
             if not verdict["run_id"]:
                 raise RecoveryError({"code": "RECOVERY_RUN_ID_UNAVAILABLE",
                                      "reason": f"{item_id}: durable start не содержит run_id"})
-            prepare(root, item_id)
-            return verdict
-        prepared = prepare(root, item_id)
-        snapshot = prepared["snapshot"]
-        positions = _positions(root)
-        attempt = int(positions.get(item_id, {}).get("attempt", 0)) + 1
-        run_id = journal.derive_run_id(plan_id=root.name, item_id=item_id,
-                                       attempt=attempt, session_id=session_id)
-        decision = None
-        if route_evidence is not None:
-            from task import route_evidence as route_owner
-            receipt = route_owner.build_run_receipt(
-                plan_id=root.name, item_id=item_id, attempt=attempt,
-                session_id=session_id, run_id=run_id, evidence=route_evidence)
-            decision = route_owner.start_decision(receipt)
-        event = journal.new_entry(plan_id=root.name, item_id=item_id, command=command,
-                                  actor=actor, result="in-progress", session_id=session_id,
-                                  run_id=run_id, attempt=attempt, batch_receipt=batch_receipt,
-                                  decision=decision)
-        path = journal.append(root, event)
-        with path.open("a") as stream:
-            os.fsync(stream.fileno())
-        plan_item_state.build_states(root, item_id=item_id)
-        verdict.update(run_id=run_id, attempt=attempt)
+        else:
+            positions = _positions(root)
+            attempt = int(positions.get(item_id, {}).get("attempt", 0)) + 1
+            run_id = journal.derive_run_id(plan_id=root.name, item_id=item_id,
+                                           attempt=attempt, session_id=session_id)
+            decision = None
+            if route_evidence is not None:
+                from task import route_evidence as route_owner
+                receipt = route_owner.build_run_receipt(
+                    plan_id=root.name, item_id=item_id, attempt=attempt,
+                    session_id=session_id, run_id=run_id, evidence=route_evidence)
+                decision = route_owner.start_decision(receipt)
+            event = journal.new_entry(plan_id=root.name, item_id=item_id, command=command,
+                                      actor=actor, result="in-progress", session_id=session_id,
+                                      run_id=run_id, attempt=attempt, batch_receipt=batch_receipt,
+                                      decision=decision)
+            path = journal.append(root, event)
+            with path.open("a") as stream:
+                os.fsync(stream.fileno())
+            verdict.update(run_id=run_id, attempt=attempt)
+
+        # The start/resume event is now final for this admission. Materialize its
+        # two selected generated carriers once, then capture the one snapshot the
+        # caller will consume.
+        plan_item_state.build_states(
+            root, item_id=item_id, materialize_successor=False)
+        target = plan_layout.carrier_path(root, "bundle", item_id=item_id)
+        from task import plan_context, plan_projection
+        plan_projection.write_or_check(
+            target, prepared["bundle_rendered"], check=False)
+        snapshot = plan_context.capture(root, item_id)
+        snapshot.assert_live_integrity()
+        if return_context:
+            return {"position": verdict, "snapshot": snapshot,
+                    "producer_readiness": prepared["producer_readiness"]}
         return verdict
 
 

@@ -58,7 +58,7 @@
       "command_id": "task:review",
       "kind": "intent",
       "source": "packages/task/commands/review.md",
-      "routing": ["fixed", "frontier", "xhigh"],
+      "routing": ["fixed", "implementation", "high"],
       "capabilities": ["skills.repository", "command.filesystem-read", "command.git-read", "command.external-research", "command.subagents"]
     },
     {

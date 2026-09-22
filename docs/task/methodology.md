@@ -124,8 +124,9 @@ delivery receipt, связанный с terminal state и exact persisted handof
 Ревью диспетчируется по типу артефакта, но не по ритуальному статусу. Один scoped verdict
 переиспользуется, пока не изменились material scope, SHA или risk. Терминальные items образуют
 runtime-built кандидата фазы. Единый `plan_assurance.evaluate()` выбирает следующий carrier без
-пробного `plan-close`: handwritten `Phase Assurance | v1` несёт impact, seams, live/irreversible
-и intent, а `Routing.Review` и число items остаются глубиной item review, не фазовым риском.
+пробного `plan-close`: отсутствующий `Phase Assurance | v1` означает isolated/reversible default;
+явный блок нужен для seam/hard-risk/live или owner audit. `Routing.Review` и число items остаются
+глубиной item review, не фазовым риском.
 Default для GREEN acceptance — direct-close. Legacy `required/auto/light` не назначает audit;
 `required` даёт advisory migration hint. Отсутствующий candidate собирается существующим runtime,
 неполная/красная приёмка возвращается исполнителю. Дополнительный phase audit допускается только

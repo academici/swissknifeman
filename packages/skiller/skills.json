@@ -2294,9 +2294,9 @@
       "bucket": "general",
       "path": "skills/general/plan-protocol/SKILL.md",
       "version": "2.37.0",
-      "description": "On-demand schema reference for explicitly invoked Task plan commands.",
-      "sha256": "f80f6e839c10667ada264ac8cb1192fede7bf255c302096e487c90d67a81a569",
-      "content_sha256": "d0b26eebe2b9c1c39d7445c52f6f6000e12de31b0010a5a9861f6bcbd292e329",
+      "description": "Use when an explicitly invoked Task plan command needs a schema reference.",
+      "sha256": "46024e4178e070982b17c6019e24da939ca1c3e4d305201c7f53d06cb5c5e76e",
+      "content_sha256": "6ae99ccfc95d804557bdece008f495d2772679be99a90706e4a494d4ce442ce5",
       "tags": [
         "workflow",
         "planning",

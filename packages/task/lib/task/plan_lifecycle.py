@@ -5,6 +5,7 @@ Mechanical operations and their evidence remain owned by the existing modules.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 
 
 HARD_RISKS = frozenset((
@@ -17,6 +18,7 @@ HARD_RISKS = frozenset((
 @dataclass(frozen=True)
 class LifecycleInput:
     risks: frozenset[str] = frozenset()
+    risk_tags: frozenset[str] = frozenset()
     bounded_integration: bool = False
     foreign_baseline_intersects: bool = False
     route_changed: bool = False
@@ -49,7 +51,11 @@ def select(data: LifecycleInput) -> LifecycleSelection:
         raise ValueError("risks: нужен frozenset имён рисков")
     unknown = data.risks - HARD_RISKS
     if unknown:
-        raise ValueError(f"неизвестный риск: {sorted(unknown)}; уточните воздействие")
+        raise ValueError(f"неизвестный hard risk: {sorted(unknown)}; используйте risk_tags для доменных меток")
+    if (not isinstance(data.risk_tags, frozenset)
+            or not all(isinstance(tag, str) and re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", tag)
+                       for tag in data.risk_tags)):
+        raise ValueError("risk_tags: нужен frozenset непустых kebab-case меток")
     for name in ("bounded_integration", "foreign_baseline_intersects", "route_changed",
                  "audit", "audit_product_finding", "ownership_boundary", "session_boundary",
                  "release_or_authority"):

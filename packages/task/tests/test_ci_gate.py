@@ -44,7 +44,7 @@ class TaskCiGateTests(unittest.TestCase):
         self.assertEqual(owners, ["task"])
         self.assertEqual(
             self.jobs["task"]["python_versions"],
-            ("3.9", "3.10", "3.11", "3.12", "3.13"),
+            ("3.9", "3.11", "3.13"),
         )
         self.assertEqual(self.jobs["task"]["runs"].count(command), 1)
 

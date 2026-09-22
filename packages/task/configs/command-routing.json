@@ -1,7 +1,7 @@
 {
   "contract_version": "1.0.0",
   "catalog_version": "1.0.0",
-  "plugin_version": "0.24.0",
+  "plugin_version": "0.24.1",
   "commands": [
     {
       "command_id": "task:design",
@@ -63,8 +63,8 @@
       "kind": "intent",
       "source": "packages/task/commands/review.md",
       "argument_contract": "code/doc artifact reference",
-      "output_contract": "read-only adversarial findings",
-      "routing": {"mode": "fixed", "model_class": "frontier", "effort": "xhigh"},
+      "output_contract": "risk-scaled read-only findings",
+      "routing": {"mode": "fixed", "model_class": "implementation", "effort": "high"},
       "capability_requirements": ["skills.repository", "command.filesystem-read", "command.git-read", "command.external-research", "command.subagents"],
       "plan_semantics": [],
       "aliases": []
@@ -201,7 +201,7 @@
         ],
         "auto_mode": {
           "allowed_for": ["economy", "adhoc-explore"],
-          "forbidden_for": ["fixed-frontier-commands", "plan-design", "plan-audit", "task:review"]
+          "forbidden_for": ["fixed-frontier-commands", "plan-design", "plan-audit"]
         }
       },
       "evidence": [{"source": "docs/reference.md#cursor-models", "verified_at": "2026-09-17", "scope": "Cursor task skill carrier", "claim": "semantic task:<id> invocation and class pins verified against agent --list-models"}]

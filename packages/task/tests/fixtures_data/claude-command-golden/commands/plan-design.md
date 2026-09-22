@@ -20,8 +20,9 @@ The full schema canon and snippets are on-demand references, not mandatory execu
 Start with `scripts/plan-work.py design-context --plan-dir <dir> --phase <Pn>` for an existing plan.
 Use its compact schema and current phase/Routing context; open full canon only for a named ambiguity.
 Design creates a v2 plan contract, not a second execution protocol. Read repository evidence,
-declare `Phase Assurance | v1` in every new phase (impact, named seams, live/irreversible,
-audit intent, rationale), Routing Batch/Review, Required Reads, Files, Validation and Deliverables, then generate
+declare `Phase Assurance | v1` only for an integration seam, hard risk, live/irreversible action,
+owner-requested audit, or ambiguous default; omission means isolated/reversible/direct-close.
+Declare Routing Batch/Review, Required Reads, Files, Validation and Deliverables, then generate
 owned views. Use `task.plan_lifecycle.select(task.plan_lifecycle.LifecycleInput())` as the normal-path vocabulary: focused validation,
 selective projections, one semantic Next, and a measured context boundary.
 

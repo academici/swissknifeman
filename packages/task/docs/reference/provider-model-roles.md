@@ -67,7 +67,7 @@ Fixed commands and launch-blocks pin **one** selector per class. Inventory-only 
 **Auto policy** (`auto` routing-assist only):
 
 - `allowed_for`: `economy`, `adhoc-explore`
-- `forbidden_for`: `fixed-frontier-commands`, `plan-design`, `plan-audit`, `task:review`
+- `forbidden_for`: `fixed-frontier-commands`, `plan-design`, `plan-audit`
 
 `auto` never substitutes a fixed `frontier` or `implementation` pin in a launch-block or fixed command.
 

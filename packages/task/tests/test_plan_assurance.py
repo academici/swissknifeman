@@ -123,6 +123,8 @@ class PhaseAssuranceTests(unittest.TestCase):
         result = plan_assurance.evaluate(plan, "P1", candidate=candidate())
         self.assertTrue(result["close_allowed"])
         self.assertFalse(result["audit_required"])
+        self.assertEqual(result["assurance"]["schema_version"], "phase-assurance/implicit-v1")
+        self.assertEqual(result["diagnostics"], [])
 
     def test_facade_rebuilds_candidate_once_when_not_supplied(self):
         plan = self.plan()

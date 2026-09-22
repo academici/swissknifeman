@@ -201,7 +201,7 @@ swissknifeman — **зонтик из четырёх пакетов**, а не �
 | **plan-design** | `opus/high` | Авторинг мастер-плана; тяжёлая схема/RAG-маркеры/DoR/pre-mortem; SSOT, дешёвая модель исполнит БЕЗ чата. Плохой план → cheap-исполнители падают без чата. | **keep-Opus** — наивысший рычаг, Owner-blessed (D1); downgrade-risk HIGH. Не трогать |
 | **research** | `opus/high` | Многоисточниковый retrieval + верификация + синтез с цитатами; fanout Sonnet, Opus reduce/синтезирует. | **needs-Owner** — Sonnet 5 near-par, но fidelity цитат + кросс-источниковое reasoning — зона, где Opus чуть впереди. Возможный A/B `sonnet/high` → **OQ-4** (Decision pending), низкий приоритет |
 | **plan-audit** | `opus/xhigh` | Adversarial-аудит закрытой фазы; ~15 finding-типов, no-op-детект, scope-drift, re-run Validation. | **keep-Opus/xhigh** — bug-finding = сильнейшая зона Opus 4.8 («stronger real-bug finding»); недо-аудит пропускает дефекты тихо; xhigh оправдан. Не трогать |
-| **review** | `opus/xhigh` | Read-only adversarial code/doc-ревью; Stage A стек→скиллы, B классика+conformance, C adversarial verify; coverage-first. | **keep-Opus/xhigh** — тот же класс adversarial bug-finding, Opus 4.8 best-in-class; xhigh оправдан. Не трогать |
+| **review** | `sonnet/high` | Risk-scaled read-only review: quick для docs/малого diff, standard обычно, adversarial только по наблюдаемой hard-risk boundary. | **downgrade applied** — default review больше не платит за registry-wide conformance и xhigh; отдельный независимый проход остаётся для security/data/concurrency/public-contract риска |
 
 Аудит-факты (RAG:✅ 2026-07, canonical `claude-api` reference + `perplexity-web`): Sonnet 5 ≈93%
 способностей Opus 4.8 при ~60% цены, обгоняет на autonomous-agentic (80.4/74.6); Opus 4.8 лидер

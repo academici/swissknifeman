@@ -186,8 +186,18 @@ def evaluate(plan_dir: Path | str, phase_id: str, *, candidate: dict | None,
     try:
         assurance = read(plan_dir, phase_id)
     except AssuranceError as exc:
-        assurance = None
-        diagnostics.append(f"{exc.code}: Phase Assurance advisory; восстановите описание при следующей правке фазы")
+        if exc.code == "PHASE_ASSURANCE_MISSING":
+            assurance = {
+                "schema_version": "phase-assurance/implicit-v1",
+                "impact": "isolated",
+                "integration_seams": (),
+                "live_or_irreversible": False,
+                "audit_intent": "direct-close-eligible",
+                "rationale": "implicit isolated/reversible default",
+            }
+        else:
+            assurance = None
+            diagnostics.append(f"{exc.code}: Phase Assurance advisory; исправьте явно объявленный блок")
     if assurance and assurance["audit_intent"] in {"required", "legacy-light", "auto"}:
         diagnostics.append("PHASE_AUDIT_INTENT_ADVISORY: legacy Audit Intent не назначает audit; default direct-close")
     heads = candidate.get("terminal_item_heads") if isinstance(candidate, dict) else None

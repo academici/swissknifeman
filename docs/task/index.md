@@ -26,7 +26,7 @@ Native-установка Task включает команды, конфигур
 | `/task:design` | Opus / high | проектирование (артефакты, не код) |
 | `/task:dev` | Sonnet / high | разработка вертикальными срезами с risk-адаптивным review-gate |
 | `/task:research` | Opus / high | многоисточниковый research с RAG-верификацией |
-| `/task:review` | Opus / xhigh | read-only adversarial-ревью |
+| `/task:review` | Sonnet / high | risk-scaled read-only ревью |
 | `/task:plan-design` | Opus / high | создать/детализировать мастер-план `plans/<ID>/` |
 | `/task:plan-exec` | Sonnet / medium | исполнить item плана по ТЗ |
 | `/task:plan-run` | маршрут текущей сессии | исполнить manual item без повторного выбора модели/effort |

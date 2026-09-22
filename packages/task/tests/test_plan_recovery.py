@@ -87,7 +87,7 @@ class PlanRecoveryTests(unittest.TestCase):
         calls = [0]
         def interrupt_after_start(*args, **kwargs):
             calls[0] += 1
-            if calls[0] == 3:
+            if calls[0] == 1:
                 raise OSError("interrupted")
             return original_builder(*args, **kwargs)
         with patch("task.plan_item_state.build_states", side_effect=interrupt_after_start):

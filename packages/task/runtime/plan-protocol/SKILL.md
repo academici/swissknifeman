@@ -2,7 +2,7 @@
 name: plan-protocol
 bucket: general
 version: 2.37.0
-description: "On-demand schema reference for explicitly invoked Task plan commands."
+description: "Use when an explicitly invoked Task plan command needs a schema reference."
 when_to_use: "Only after explicit Task invocation, when a named plan schema detail is needed."
 disable-model-invocation: true
 risk: write
@@ -230,10 +230,10 @@ attempt; dynamic Make definitions remain unknown rather than manufacturing a mis
 generated `[v2]` phase-closure view. A ready-to-close phase is a candidate. Execution/handoff and
 standalone close call
 `task.plan_assurance.evaluate()` (through the compatibility facade
-`task.plan_gates.phase_audit_policy`) over the same runtime-built candidate snapshot. Every new
-phase declares one handwritten `Phase Assurance | v1` block: Impact, Integration Seams, Live or
-Irreversible, Audit Intent, and Rationale. `Routing.Review` and item count are item-execution
-depth, never phase-audit admission. Missing legacy assurance is an advisory migration finding.
+`task.plan_gates.phase_audit_policy`) over the same runtime-built candidate snapshot. An omitted
+`Phase Assurance | v1` means isolated, seam-free, reversible and direct-close. Declare the block
+only for an integration seam, hard risk, live/irreversible action, owner-requested audit, or an
+ambiguous default. `Routing.Review` and item count are item-execution depth, never phase-audit admission.
 <!-- i18n-keep: Audit Intent: light -->
 Historical `Audit Intent: light` normalizes to `legacy-light`; `required` and `auto` retain their
 enum values. All three remain readable but advisory: none admits audit or rewrites historical

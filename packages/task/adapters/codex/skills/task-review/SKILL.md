@@ -1,6 +1,6 @@
 ---
 name: task-review
-description: "Only when explicitly invoked. Read-only review of code, docs or specs; rank findings by demonstrated impact."
+description: "Only when explicitly invoked. Risk-scaled read-only review of code, docs or specs."
 ---
 
 # Task review
@@ -8,9 +8,9 @@ description: "Only when explicitly invoked. Read-only review of code, docs or sp
 Generated Codex adapter for semantic command `task:review`.
 
 - Invocation: `$ task:review <arguments>`
-- Routing: `frontier/xhigh -> gpt-5.6-sol/xhigh`
+- Routing: `implementation/high -> gpt-5.6-terra/high`
 - Canonical source: `packages/task/commands/review.md`
-- Canonical SHA-256: `sha256:541d71ed58c765e34d50dcde3ca6ccc62d60e677fb1423fcfd0f1e172b2fa9ab`
+- Canonical SHA-256: `sha256:c04416db5b4c7e82a9fc2194453ea1c4c05809ef6fd0f425a1f0f929c315d40c`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Activate only when the owner explicitly invokes this Task command or skill. Task is not an

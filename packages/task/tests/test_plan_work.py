@@ -54,10 +54,21 @@ class PlanWorkTests(unittest.TestCase):
         self.assertEqual((self.plan / "journal.jsonl").read_bytes(), before)
 
     def test_route_failure_does_not_create_an_attempt(self):
+        state = (self.plan / "phases/P1/P1.1.state.md").read_bytes()
+        bundle = (self.plan / "bundles/P1.1.json").read_bytes()
         self.actual["model_class"] = "economy"
         with self.assertRaisesRegex(plan_work.WorkError, "ROUTE_UNDERSHOOT"):
             self.prepare()
         self.assertEqual((self.plan / "journal.jsonl").read_text(), "")
+        self.assertEqual((self.plan / "phases/P1/P1.1.state.md").read_bytes(), state)
+        self.assertEqual((self.plan / "bundles/P1.1.json").read_bytes(), bundle)
+
+    def test_prepare_captures_context_once(self):
+        from task import plan_context
+
+        with patch("task.plan_context.capture", wraps=plan_context.capture) as capture:
+            self.prepare()
+        self.assertEqual(capture.call_count, 1)
 
     def test_explicit_plan_run_passes_its_inherited_carrier_to_contract(self):
         core = self.plan / "plan.md"

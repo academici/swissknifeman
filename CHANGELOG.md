@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+## [0.24.3] - 2026-09-23
+
+### Changed
+
+- **mAInd memory economy and isolation:** project recall is private by default; graph and memory
+  namespaces are separate; onboarding defaults to explicit `MODE=manual`; SessionStart health,
+  digest and SessionEnd feature logging are opt-in; normal health is read-only with `--deep` for
+  round-trip verification. Durable `active-handoff` writes replace their previous slot, while
+  checkpoint-style journal keys are rejected. Code graph can now be limited per provider.
+- **Task design gate:** a plan must finish all detailed phases and pass one current GREEN design
+  audit before execution. Local design returns its own diagnostics while summarizing foreign
+  errors; `Next` does not materialize successor bundles. A design dossier remains optional, but a
+  started dossier must be complete and is bound into the audit fingerprint.
+- **Skiller protocol and memory guidance:** the `general` plan protocol and `system` shared-memory
+  skill now document the design gate, semantic batch routing, manual memory mode and explicit
+  shared-scope permission.
+
+### Fixed
+
+- **Task routing and provider projections:** final design validates one provider-neutral
+  execution-sheet row per batch, admission applies the batch's maximum semantic route, and Cursor
+  route evidence recognizes the `grok-4.6` `effort` alias.
+
 ## [0.24.2] - 2026-09-22
 
 ### Fixed

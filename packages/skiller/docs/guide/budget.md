@@ -166,7 +166,7 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻503"]:::warm
-    plan_protocol["plan-protocol<br/>⊕26 ↻10050"]:::cool
+    plan_protocol["plan-protocol<br/>⊕26 ↻10271"]:::cool
     project_map["project-map<br/>⊕83 ↻618"]:::warm
     session_handoff["session-handoff<br/>⊕29 ↻590"]:::cool
     shell["shell<br/>⊕73 ↻1997"]:::warm
@@ -337,7 +337,7 @@ flowchart LR
     cross_project_coordinator["cross-project-coordinator<br/>⊕83 ↻1402"]:::warm
     local_topology["local-topology<br/>⊕62 ↻1362"]:::warm
     session_observer["session-observer<br/>⊕117 ↻1622"]:::hot
-    shared_memory["shared-memory<br/>⊕124 ↻1423"]:::hot
+    shared_memory["shared-memory<br/>⊕62 ↻1389"]:::warm
     swissknifeman_locator["swissknifeman-locator<br/>⊕54 ↻1397"]:::warm
   end
   subgraph voice_ai["voice-ai"]
@@ -437,19 +437,19 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 232 скиллов · ⊕ always **12648** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 311116 ток · ⌥ on-demand 850818 ток (сниппеты + references).
+**Итого:** 232 скиллов · ⊕ always **12586** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 311303 ток · ⌥ on-demand 851937 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1260 | 33156 | 28885 |
+| `general` | 22 | 1260 | 33377 | 30004 |
 | `repository-bootstrap` | 14 | 1047 | 29277 | 0 |
 | `architect` | 15 | 937 | 19897 | 33252 |
-| `system` | 7 | 607 | 10821 | 834 |
 | `laravel-architecture` | 6 | 596 | 9567 | 7994 |
 | `blender-modeling` | 7 | 582 | 11570 | 14235 |
 | `devops` | 11 | 553 | 8909 | 16993 |
+| `system` | 7 | 545 | 10787 | 834 |
 | `php` | 17 | 531 | 18326 | 55411 |
 | `pm` | 10 | 462 | 10825 | 23524 |
 | `founder` | 10 | 430 | 15002 | 578 |
@@ -503,12 +503,12 @@ flowchart LR
 | `domain-modeling` | architect | 128 |
 | `livewire-blade-attributes` | laravel-livewire | 128 |
 | `voice-ai` | voice-ai | 125 |
-| `shared-memory` | system | 124 |
 | `pm-super-skill` | pm | 120 |
 | `agent-packs` | system | 120 |
 | `eloquent-accessors` | laravel-architecture | 119 |
 | `mcp-blender` | blender | 118 |
 | `codebase-design` | architect | 117 |
+| `session-observer` | system | 117 |
 
 ## Топ ↻ on-trigger (цена срабатывания)
 
@@ -516,7 +516,7 @@ flowchart LR
 
 | Скилл | Бакет | ток |
 |---|---|--:|
-| `plan-protocol` | general | 10050 |
+| `plan-protocol` | general | 10271 |
 | `project-tooling-runbook` | repository-bootstrap | 7297 |
 | `package-architecture` | repository-bootstrap | 3740 |
 | `workflow-craft` | general | 3349 |

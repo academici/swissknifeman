@@ -22,7 +22,6 @@ architect/domain-modeling
 voice-ai/voice-ai
 frontend-nuxt/nuxt-modules
 laravel-livewire/livewire-blade-attributes
-system/shared-memory
 php/production-readiness-checklist
 frontend-vue/vue-router-best-practices
 laravel-data-layer/laravel-data

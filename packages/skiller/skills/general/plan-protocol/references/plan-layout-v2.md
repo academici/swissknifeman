@@ -24,9 +24,10 @@ This reference expands the compact `plan-protocol` entry carrier for the sole ex
 | history view | `.plan-cache/history/<Pn.m>.md` | auditor | generated/on-demand | bounded journal projection |
 | journal | `journal.jsonl` | auditor | append-only/volatile | execution events |
 | handoff | `handoff.md` | owner | handwritten/volatile | next semantic action and launch block |
-| brief/findings/research | named Markdown files | designer | handwritten/stable | evidence layers |
+| brief/findings/research | named Markdown files | designer | handwritten/stable | evidence layers and implementation dossiers |
+| design artifacts | `artifacts/Pn-design*/` | designer | handwritten/stable | worked examples plus retrieval/no-search provenance |
 | bundle | `bundles/<Pn.m>.json` | executor | generated/stable | ordered digest-qualified inputs |
-| roadmap | `roadmap.md` | owner | handwritten/slow | execution grouping, never routing override |
+| roadmap | `roadmap.md` | owner | handwritten/slow | validated execution sheet; never routing override |
 | canon | `packages/skiller/skills/general/plan-protocol/SKILL.md` | designer | handwritten/stable | protocol identity, invariants, enums, navigation |
 
 The machine-readable registry for the plan programme is
@@ -55,12 +56,16 @@ gap, or a changed live member fails before journal mutation with
 reads; every entry is resolved and digest checked before mutation. Missing, unreadable, stale, or
 digest-mismatched input fails closed.
 
-`plan-lint` verifies that the first runnable item behind the terminal phase/item prefix has a
-byte-fresh bundle. This catches a plan that looks valid but cannot fill the executor's fourth
-mandatory slot. It intentionally does not require bundles for later predecessor-dependent items:
-those artifacts can become resolvable only after the preceding item commits its declared output.
-Build the eligible carrier with `plan-views.py bundle --plan-dir <plan> --item Pn.m`, then rerun
-the check; never hand-edit the JSON.
+A phase may add a dossier for a complex fresh-executor handoff. If it does, link
+`research/Pn-design.md`, `research/Pn-design-rag.md`, `artifacts/Pn-design/examples.md`,
+and a capture or explicit no-search record under `artifacts/Pn-design-rag/` from the phase.
+Affected item `Inputs` name the first three. Raw retrieval remains non-normative provenance.
+`plan-work.py ... --finish` validates a declared dossier; ordinary phases need none.
+
+For an execution-sheet plan, `plan-lint` verifies the next runnable bundle can be rendered;
+the selected execution start writes the byte-fresh bundle before product mutation. Historical
+plans retain the existing byte-fresh prebuilt-bundle check. Later predecessor-dependent items
+remain deferred until their declared inputs exist. Never hand-edit generated JSON.
 
 ### Designer
 

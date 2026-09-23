@@ -26,6 +26,7 @@
 | `brief/` | слой 0 «вход»: бриф владельца + уточнения |
 | `findings/` | слой 1 «сырьё»: RAG-выжимки, recon |
 | `research/` | слой 2 «синтез»: авторские design-документы |
+| `artifacts/` | worked examples и raw retrieval/no-search provenance для self-contained design |
 | `root/` | долгоживущий материал (контракты и т.п. — см. секцию ниже) |
 | `open-questions.md` | спорное/нерешённое |
 

@@ -60,7 +60,10 @@ plan-protocol; не копировать его целиком. Минимум:>
 причиной; связные adjacent items одной фазы группировать, если общий контекст экономит
 повторное чтение/setup/validation. Группа не пересекает audit/close и не смешивает Exec.
 Review выбирается по конкретному item risk или прямому требованию владельца: неизвестность
-сначала собирает evidence и не превращается автоматически в full.>
+сначала собирает evidence и не превращается автоматически в full.
+Только semantic classes `economy|implementation|frontier`, не provider selectors.
+Design finish поднимает batch до максимума class/effort/review и фиксирует
+exact admission в `roadmap.md` execution sheet.>
 
 | Batch | Items | Model class/effort | Exec | Review | Почему |
 |:--|:--|:--|:--|:--|:--|

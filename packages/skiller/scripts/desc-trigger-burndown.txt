@@ -79,5 +79,4 @@ repository-bootstrap/field-feedback-loop
 system/brain-locator
 system/cross-project-coordinator
 system/local-topology
-system/shared-memory
 system/swissknifeman-locator

@@ -1,5 +1,7 @@
 # Roadmap исполнения — <PLAN-ID>
 
+<!-- execution-sheet/v1 -->
+
 <!-- Живая карта «что запускать дальше», не второй план. Roadmap группирует только ready
      adjacent items с совместимым scope/route; локальный порядок остаётся адаптивным в sealed
      contract. Она не переопределяет Routing §3, owner gates или material-review trigger. -->
@@ -14,6 +16,18 @@
 - `solo` допустим только с конкретной причиной: несовместимый Exec, owner/irreversible gate,
   отдельная capability/hard boundary или ожидаемое переполнение контекста.
 - Batch не пересекает phase audit/close; launch использует максимум route/review и union capabilities.
+- Phase design предлагает группы; design finish пересчитывает их по всему dependency graph.
+- Конкретные provider model selectors в Routing запрещены; один semantic maximum
+  даёт provider adapter одну модель на весь admission.
+
+## Execution sheet — единственный источник launch-команд
+
+<!-- Finish валидирует exact row для каждого compiled batch. -->
+
+| Command | Unified route | Review |
+|:--|:--|:--|
+| `task:plan-exec <PLAN-ID> P0.1 P0.2` | `implementation/medium` | `light` |
+| `task:plan-run <PLAN-ID> P1.1` | `frontier/high` | `full` |
 
 ## Карта исполнения
 

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.24.6] - 2026-09-23
+
 ### Fixed
 
 - **mAInd ownership:** `maind sync` сохраняет тонкие root-bootstrap проекции

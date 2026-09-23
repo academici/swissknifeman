@@ -11,8 +11,10 @@ PROVISIONERS + порядок ORDER; `--only` сужает набор. Режи�
 from __future__ import annotations
 
 import copy
+import contextlib
 import json
 import os
+import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -662,6 +664,24 @@ def instruction_conformance_markdown(cases, checks):
     return "\n".join(lines)
 
 
+@contextlib.contextmanager
+def _json_stdout_boundary(enabled):
+    """Keep provider subprocess chatter off the single-document JSON stdout contract."""
+    if not enabled:
+        yield
+        return
+    stdout_fd = sys.stdout.fileno()
+    saved_stdout = os.dup(stdout_fd)
+    try:
+        sys.stdout.flush()
+        os.dup2(sys.stderr.fileno(), stdout_fd)
+        yield
+    finally:
+        sys.stdout.flush()
+        os.dup2(saved_stdout, stdout_fd)
+        os.close(saved_stdout)
+
+
 def provisioner_provider_matrix(results, provider_ids):
     """Describe every selected provider against every current semantic provisioner.
 
@@ -983,13 +1003,15 @@ def cmd_sync(env, argv):
         die(f"--mode: {', '.join(MODES)} (получено: {mode})")
     config, _src = load_config(env)
     projects = select_projects(env, config, opts)
-    results = run_sync(env, config, projects, only=opts["only"], mode=mode,
-                       dry=opts["dry_run"])
+    # Provisioners use their public CLIs and may report normal diagnostics to stdout.
+    # Redirect the file descriptor too: subprocesses inherit it, unlike Python's stdout object.
+    with _json_stdout_boundary(opts["json"]):
+        results = run_sync(env, config, projects, only=opts["only"], mode=mode,
+                           dry=opts["dry_run"])
     failed = [r for r in results if r["status"] == "failed"]
     if opts["json"]:
         print(json.dumps(results, ensure_ascii=False, indent=2))
         if failed:
-            import sys
             sys.exit(1)
         return
     tag = "[dry-run] " if opts["dry_run"] else ""
@@ -1005,6 +1027,5 @@ def cmd_sync(env, argv):
             note = ""
         print(f"  {mark} {r['provisioner']:<11} {r['id']:<18} {r.get('detail', '')}{note}")
     if failed:
-        import sys
         warn(f"провиженеров упало: {len(failed)} (см. ✗ выше)")
         sys.exit(1)

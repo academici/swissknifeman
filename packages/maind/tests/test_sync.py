@@ -1,6 +1,8 @@
 """Тесты sync.py (фан-аут + провиженеры mcp/graph/memory-hook) и common.managed_block."""
 import json
+import os
 import shutil
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -630,6 +632,30 @@ class TestRouterConfigProvisioner(unittest.TestCase):
 
 
 class TestSyncCliExitStatus(unittest.TestCase):
+    def test_json_stdout_boundary_moves_provider_fd_output_to_stderr(self):
+        stdout_read, stdout_write = os.pipe()
+        stderr_read, stderr_write = os.pipe()
+        saved_stdout, saved_stderr = os.dup(1), os.dup(2)
+        try:
+            sys.stdout.flush()
+            sys.stderr.flush()
+            os.dup2(stdout_write, 1)
+            os.dup2(stderr_write, 2)
+            with sync._json_stdout_boundary(True):
+                os.write(1, b"provider chatter\\n")
+            os.write(1, b"[]\\n")
+        finally:
+            sys.stdout.flush()
+            sys.stderr.flush()
+            os.dup2(saved_stdout, 1)
+            os.dup2(saved_stderr, 2)
+            for descriptor in (saved_stdout, saved_stderr, stdout_write, stderr_write):
+                os.close(descriptor)
+        self.assertEqual(os.read(stdout_read, 1024), b"[]\\n")
+        self.assertEqual(os.read(stderr_read, 1024), b"provider chatter\\n")
+        os.close(stdout_read)
+        os.close(stderr_read)
+
     def test_json_mode_exits_nonzero_when_a_provisioner_failed(self):
         rows = [{"provisioner": "mcp", "id": "demo", "status": "failed",
                  "detail": "repair-required"}]

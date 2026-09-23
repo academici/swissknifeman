@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **mAInd ownership:** `maind sync` сохраняет тонкие root-bootstrap проекции
+  `ecosystem-mcp` и `ecosystem-setup`, которыми владеет `skiller registry`; doctor не
+  выдаёт эти файлы за дрейф шаблона maind.
+
 ## [0.24.5] - 2026-09-23
 
 ### Changed

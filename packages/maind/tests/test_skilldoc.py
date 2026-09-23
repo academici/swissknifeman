@@ -27,6 +27,28 @@ def _setup(tmp):
 
 
 class TestEcosystemSkill(unittest.TestCase):
+    def test_skiller_root_bootstrap_projection_is_preserved(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            for name, apply in (("ecosystem-mcp", skilldoc.apply_ecosystem_skill),
+                                ("ecosystem-setup", skilldoc.apply_setup_skill)):
+                paths = (pdir / ".claude/skills" / name / "SKILL.md",
+                         pdir / ".agents/skills" / name / "SKILL.md")
+                text = ("---\nname: " + name + "\ncanonical: packages/skiller/skills/"
+                        "repository-bootstrap/" + name + "/SKILL.md\n"
+                        "generator: packages/skiller/lib/skiller/registry.py\n---\n"
+                        "Thin projection.\n")
+                for path in paths:
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text(text, encoding="utf-8")
+                self.assertEqual(apply(env, config, proj, "auto", True)["state"],
+                                 "foreign-owner")
+                result = apply(env, config, proj, "auto", False)
+                self.assertEqual(result["status"], "skip")
+                self.assertFalse(result["changed"])
+                for path in paths:
+                    self.assertEqual(path.read_text(encoding="utf-8"), text)
+
     def test_install_then_idempotent(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, proj, pdir = _setup(tmp)

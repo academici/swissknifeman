@@ -41,7 +41,7 @@ def _skill_drift(env, config):
                 res = fn(env, config, p, "auto", True)
             except Exception:
                 continue
-            if res.get("state") != "fresh":
+            if res.get("state") not in {"fresh", "foreign-owner"}:
                 drifted.append((p.get("id"), label, res["state"]))
     return drifted
 

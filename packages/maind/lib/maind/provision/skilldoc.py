@@ -23,6 +23,22 @@ SETUP_SKILL_PATHS = (
 SETUP_TEMPLATE = "skills/ecosystem-setup/SKILL.md"
 
 
+def _skiller_bootstrap_owned(target):
+    """A root-bootstrap projection belongs to skiller registry, not maind sync."""
+    if not target.is_file():
+        return False
+    try:
+        frontmatter = target.read_text(encoding="utf-8").split("---", 2)
+    except (OSError, UnicodeError):
+        return False
+    if len(frontmatter) < 3 or frontmatter[0].strip():
+        return False
+    fields = frontmatter[1].splitlines()
+    return (f"canonical: packages/skiller/skills/repository-bootstrap/"
+            f"{target.parent.name}/SKILL.md" in fields
+            and any(line.startswith("generator: packages/skiller/") for line in fields))
+
+
 def _subst(env, config, project):
     pid = project["id"]
     ns = sorted(namespaces_of(project))
@@ -45,6 +61,9 @@ def _apply_managed_skill(env, config, project, mode, dry, *, label, template, sk
         return _result(pid, label, "absent", False, dry, "нет пути")
     content = _render(env, template, _subst(env, config, project))
     targets = tuple((skill_path, path / skill_path) for skill_path in skill_paths)
+    if any(_skiller_bootstrap_owned(target) for _skill_path, target in targets):
+        return _result(pid, label, "foreign-owner", False, dry,
+                       "skiller registry owns root-bootstrap projection")
     states = tuple(_file_state(target, content) for _skill_path, target in targets)
     selected = tuple((skill_path, target) for (skill_path, target), state in zip(targets, states)
                      if _act(mode, state))

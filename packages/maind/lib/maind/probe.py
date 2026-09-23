@@ -79,10 +79,14 @@ def probe_project(env, config, project, *, memory_reachable=None, trusted=None,
 
     mem_mcp = any_has("maind")       # maind replaces the raw agentmemory server.
     code_server = codegraph.server_name(project, codegraph.settings(config))
+    # Provider-neutral projections historically used the semantic role id
+    # ``codegraph`` even when the configured engine/server name is ``serena`` (or
+    # another project override).  Accept both so health reflects deployed files.
+    code_mcp = any_has(code_server) or (code_server != "codegraph" and any_has("codegraph"))
     configured = {
         "agentmemory_mcp": any_has("agentmemory"),   # Informational: raw-server footgun.
         "maind_mcp": mem_mcp,
-        "code_mcp": any_has(code_server), "mcp_files": files,
+        "code_mcp": code_mcp, "mcp_files": files,
         "skills_lock": lock is not None, "skills_count": skills["total"],
         "boost": (path / "boost.json").is_file(),
         "deployed_flag": bool(project.get("deployed")),

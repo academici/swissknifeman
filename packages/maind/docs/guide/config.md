@@ -122,9 +122,13 @@ GitHub-slug `owner/name`, путь к коду — `local_path`. В brain-схе
   "ignores": ["vendor","node_modules","packages","..."],          // дефолтный режим
   "workspace_ignores": ["vendor","**/vendor","..."],              // режим единого графа (packages не игнорим)
   "pre_index": true,                   // фоновая прогрев-индексация при включении
-  "feature_log_hook": true             // SessionEnd-хук фиксации коммитов в общую память
+  "feature_log_hook": false            // opt-in SessionEnd-публикация коммитов
 }
 ```
+
+В проекте `code_providers: ["claude-code", "cursor"]` ограничивает codegraph указанными
+провайдерами. `namespaces` относится к графу, а `memory_namespaces` перечисляет общие memory
+scope, которые проект может запросить явно; они не входят в обычный recall.
 
 Игноры `vendor`/`packages` и пр. — **здесь**, а не захардкожены. См. [Граф кода](./code-graph).
 

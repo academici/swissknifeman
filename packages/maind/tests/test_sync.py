@@ -486,6 +486,21 @@ class TestMemoryHookProvisioner(unittest.TestCase):
                     for h in g["hooks"]]
             self.assertFalse(any("maind-memory" in c for c in cmds))
 
+    def test_manual_removes_digest_and_keeps_native_disabled(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = self._with_templates(tmp)
+            (proj / ".claude").mkdir(parents=True, exist_ok=True)
+            (proj / ".claude" / "memory.env.ini").write_text("MODE=maind\n", encoding="utf-8")
+            projs = sync.select_projects(env, config, {"all": True})
+            sync.run_sync(env, config, projs, only="memory-hook")
+            (proj / ".claude" / "memory.env.ini").write_text("MODE=manual\n", encoding="utf-8")
+            sync.run_sync(env, config, projs, only="memory-hook")
+            s = json.loads((proj / ".claude" / "settings.json").read_text())
+            self.assertIs(s["autoMemoryEnabled"], False)
+            cmds = [h["command"] for g in s.get("hooks", {}).get("SessionStart", [])
+                    for h in g["hooks"]]
+            self.assertFalse(any("maind-memory" in c for c in cmds))
+
 
 class TestOutputStyleProvisioner(unittest.TestCase):
     """output-style: outputStyle=lean во все .claude/settings.local.json (env:hooks), опт-аут

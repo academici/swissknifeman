@@ -114,8 +114,9 @@ def memory_roundtrip(env, config, project, memory_reachable):
 
 
 # ── отчёт ────────────────────────────────────────────────────────────────────
-def health_report(env, config, project, *, memory_reachable=None, provider_context=None):
-    """Состояние связи одного проекта с хабом + проба памяти + подсказки по починке."""
+def health_report(env, config, project, *, memory_reachable=None, provider_context=None,
+                  deep=False):
+    """Состояние связи проекта; мутирующий round-trip выполняется только в deep-режиме."""
     pid = project["id"]
     if memory_reachable is None:
         _, _, url = resolve_ports(env, config)
@@ -125,19 +126,22 @@ def health_report(env, config, project, *, memory_reachable=None, provider_conte
     c = rep.get("configured", {})
     hook_mode = hook_memory_mode(project)
     native_off, digest_hook = _native_memory_state(project)
-    roundtrip = memory_roundtrip(env, config, project, memory_reachable)
+    roundtrip = (memory_roundtrip(env, config, project, memory_reachable) if deep
+                 else {"ok": None, "detail": "пропущен (используйте --deep)"})
     local = project.get("local_path")
     hygiene = check_hygiene(os.path.expanduser(local)) if local else []
     hints = []
     if not memory_reachable:
         hints.append("демон памяти не запущен → maind start --only memory")
-    if hook_mode != "maind":
-        hints.append("хук памяти не в режиме maind → maind onboard "
-                     f"{pid} (запишет .claude/memory.env.ini MODE=maind)")
-    elif not (native_off and digest_hook):
+    if hook_mode not in ("maind", "manual"):
+        hints.append(f"память проекта не настроена → maind onboard {pid} --memory manual")
+    elif hook_mode == "maind" and not (native_off and digest_hook):
         hints.append("MODE=maind, но native-память не выключена / нет digest-инжекта → "
-                     f"maind onboard {pid} (autoMemoryEnabled:false + .claude/maind-memory.sh)")
-    if not roundtrip["ok"] and memory_reachable:
+                     f"maind onboard {pid} --memory maind")
+    elif hook_mode == "manual" and not native_off:
+        hints.append("MODE=manual, но native-память включена → "
+                     f"maind onboard {pid} --memory manual")
+    if deep and not roundtrip["ok"] and memory_reachable:
         hints.append(f"память не проходит round-trip ({roundtrip['detail']}) — "
                      "remember/recall идут в разные сторы?")
     if not c.get("maind_mcp"):
@@ -250,6 +254,39 @@ def _merge_session_hook(settings, command, event="SessionStart", marker="maind-h
     return settings, True
 
 
+def _remove_script_hook(project, dry, *, name, script_rel, event, marker, detail):
+    """Remove a managed hook registration and script while preserving other hooks."""
+    pid = project["id"]
+    local = project.get("local_path")
+    path = Path(os.path.expanduser(local)) if local else None
+    if not path or not path.is_dir():
+        return _result(pid, name, "absent", False, dry, "нет пути")
+    settings_path = path / ".claude" / "settings.json"
+    settings, existed = load_settings(settings_path)
+    changed = False
+    groups = (settings.get("hooks") or {}).get(event) or []
+    kept_groups = []
+    for group in groups:
+        hooks = [h for h in group.get("hooks", []) if marker not in h.get("command", "")]
+        if len(hooks) != len(group.get("hooks", [])):
+            changed = True
+        if hooks:
+            kept_groups.append({**group, "hooks": hooks})
+    if changed:
+        settings["hooks"][event] = kept_groups
+        if not kept_groups:
+            settings["hooks"].pop(event, None)
+    script_path = path / script_rel
+    if script_path.exists():
+        changed = True
+    if changed and not dry:
+        if existed:
+            backup_file(settings_path)
+            atomic_write_json(settings_path, settings)
+        script_path.unlink(missing_ok=True)
+    return _result(pid, name, "stale" if changed else "fresh", changed, dry, detail)
+
+
 def _apply_script_hook(env, project, mode, dry, *, name, template, script_rel, detail,
                        skip_detail=".claude/", subst=None, event="SessionStart",
                        marker="maind-health", render_safe=False, extra_stale=None,
@@ -316,6 +353,19 @@ def apply_feature_log_hook(env, config, project, mode, dry):
         detail=".claude/maind-feature-log.sh + settings")
 
 
+def revert_health_hook(env, config, project, mode, dry):
+    return _remove_script_hook(project, dry, name="health-hook", script_rel=HOOK_SCRIPT,
+                               event="SessionStart", marker="maind-health",
+                               detail="SessionStart health отключён")
+
+
+def revert_feature_log_hook(env, config, project, mode, dry):
+    return _remove_script_hook(project, dry, name="feature-log-hook",
+                               script_rel=FEATURE_HOOK_SCRIPT, event="SessionEnd",
+                               marker="maind-feature-log",
+                               detail="автопубликация коммитов отключена")
+
+
 def apply_memory_hook(env, config, project, mode, dry):
     """SessionStart-хук инжекта дайджеста памяти (additionalContext) + выключение НАТИВНОЙ
     авто-памяти (`autoMemoryEnabled:false`). Ставится для проектов на `MODE=maind`: maind
@@ -359,18 +409,42 @@ def revert_memory_hook(env, config, project, dry):
                    "native восстановлена")
 
 
+def configure_manual_memory(env, config, project, dry):
+    """Keep mAInd available through MCP, remove digest injection, keep native auto-memory off."""
+    result = _remove_script_hook(project, dry, name="memory-hook",
+                                 script_rel=MEMORY_HOOK_SCRIPT, event="SessionStart",
+                                 marker="maind-memory", detail="manual MCP mode")
+    local = project.get("local_path")
+    path = Path(os.path.expanduser(local)) if local else None
+    if not path or not path.is_dir():
+        return result
+    settings_path = path / ".claude" / "settings.json"
+    settings, existed = load_settings(settings_path)
+    native_changed = settings.get("autoMemoryEnabled") is not False
+    if native_changed and not dry:
+        settings["autoMemoryEnabled"] = False
+        if existed:
+            backup_file(settings_path)
+        atomic_write_json(settings_path, settings)
+    if native_changed:
+        result["changed"] = not dry
+        result["status"] = "dry" if dry else "ok"
+        result["state"] = "stale"
+    return result
+
+
 # ── CLI ─────────────────────────────────────────────────────────────────────
 def cmd_health(env, argv):
     opts, _ = parse_args(argv, {"--project": "str", "--cwd": "bool", "--fix": "bool",
-                                "--strict": "bool", "--json": "bool"})
+                                "--strict": "bool", "--json": "bool", "--deep": "bool"})
     if opts["help"]:
-        print("maind health [--project ID | --cwd] [--fix] [--strict] [--json]")
+        print("maind health [--project ID | --cwd] [--fix] [--strict] [--deep] [--json]")
         return
     config, _src = load_config(env)
     project = _target(env, config, opts)
     from .provision.sync import contexts
     context = contexts(env, config, [project])[0]
-    rep = health_report(env, config, project, provider_context=context)
+    rep = health_report(env, config, project, provider_context=context, deep=opts["deep"])
 
     hygiene_fixable = any("missing-example" in i["problems"] for i in rep["mcp_hygiene"])
     if opts["fix"] and (rep["status"] != "connected" or hygiene_fixable):
@@ -382,7 +456,7 @@ def cmd_health(env, argv):
                 warn(f"не удалось поднять память: {e}")
         from .provision.sync import run_sync
         run_sync(env, config, [project], only="mcp")
-        rep = health_report(env, config, project, provider_context=context)
+        rep = health_report(env, config, project, provider_context=context, deep=opts["deep"])
 
     if opts["json"]:
         print(json.dumps(rep, ensure_ascii=False, indent=2))
@@ -397,7 +471,10 @@ def cmd_health(env, argv):
         if rep['hook_memory_mode'] == 'maind':
             print(f"  [{_status(rep['native_memory_off'] and rep['digest_hook'])}] native off + "
                   "digest-инжект (SessionStart)")
-        print(f"  [{_status(rep['memory_roundtrip'])}] память round-trip (write→recall→forget)")
+        if opts["deep"]:
+            print(f"  [{_status(rep['memory_roundtrip'])}] память round-trip (write→recall→forget)")
+        else:
+            print("  [skip] память round-trip (только --deep)")
         print(f"  [{_status(not rep['mcp_hygiene'])}] конфиг-гигиена .mcp.json "
               "(real gitignored + .example в репо)")
         print(f"  ns: [{', '.join(rep['namespaces'])}]  статус: {rep['status']}")
@@ -409,6 +486,6 @@ def cmd_health(env, argv):
     # strict падает, если связь не connected, память не проходит round-trip
     # или доверие любого включённого/обязательного provider не подтверждено.
     trust_failed = any(not row["green"] for row in rep.get("provider_trust", ()))
-    if opts["strict"] and (rep["status"] != "connected" or not rep["memory_roundtrip"]
-                           or trust_failed):
+    deep_failed = opts["deep"] and not rep["memory_roundtrip"]
+    if opts["strict"] and (rep["status"] != "connected" or deep_failed or trust_failed):
         raise SystemExit(1)

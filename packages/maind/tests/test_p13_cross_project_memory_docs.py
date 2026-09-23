@@ -63,13 +63,14 @@ class TestDigestOnDemandCaveat(unittest.TestCase):
 
     def test_ecosystem_mcp_template_has_project_only_caveat(self):
         text = _ECOSYSTEM_MCP_TEMPLATE.read_text(encoding="utf-8")
-        self.assertIn("shared_max=0", text)
+        self.assertIn("MODE=manual", text)
+        self.assertIn("Обычный recall остаётся в приватном scope проекта", text)
         self.assertIn("Межпроектная задача", text)
-        # оговорка должна идти сразу после утверждения «память общая внутри namespace»
-        idx_shared = text.index("Память **общая внутри namespace**")
-        idx_caveat = text.index("Дайджест на старте сессии — только свой проект")
-        self.assertGreater(idx_caveat, idx_shared)
-        self.assertLess(idx_caveat - idx_shared, 400, "оговорка про digest должна идти сразу рядом")
+        idx_private = text.index("Обычный recall остаётся в приватном scope проекта")
+        idx_manual = text.index("MODE=manual")
+        self.assertGreater(idx_manual, idx_private)
+        self.assertLess(idx_manual - idx_private, 600,
+                        "оговорка про ручную память должна идти рядом с описанием scope")
 
     def test_memory_doc_states_project_only_default(self):
         text = _MEMORY_DOC.read_text(encoding="utf-8")

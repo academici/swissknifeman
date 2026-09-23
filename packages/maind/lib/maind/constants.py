@@ -116,7 +116,7 @@ CODE_GRAPH_DEFAULTS = {
         "— изменение затронет сам пакет и всех его консьюмеров."
     ),
     "pre_index": False,
-    "feature_log_hook": True,
+    "feature_log_hook": False,
 }
 
 # perplexity-web — keyless-мост (браузерный профиль) как hub-managed MCP-сервер.

@@ -193,10 +193,12 @@ def _missing_required(tool, args):
     return [k for k in tool["inputSchema"].get("required", []) if not args.get(k)]
 
 
-def _recall_union(config, url, scope, query, *, include_related_scopes=True, headers=None):
-    """Recall с изоляцией + объединением scope'ов проекта: project:<id> разворачивается в
-    приватный + ns:<группы> + global (recall_scopes), чтобы Claude видел и приватную, и
-    общую-по-тегу память. Явно запрошенный scope не расширяется: публичный MCP-ответ
+def _recall_union(config, url, scope, query, *, include_related_scopes=False, headers=None):
+    """Recall с изоляцией. Project scope остаётся приватным по умолчанию.
+
+    Shared scope читается только при явном ``scope=ns:<name>``. Параметр
+    include_related_scopes сохранён для внутренних диагностических вызовов. Явно
+    запрошенный scope не расширяется: публичный MCP-ответ
     обязан содержать только записи этого scope. Сырой/непроектный scope → ровно он.
     Дедуп по тексту.
 
@@ -212,7 +214,7 @@ def _recall_union(config, url, scope, query, *, include_related_scopes=True, hea
     if include_related_scopes and isinstance(scope, str) and scope.startswith("project:"):
         proj = find(config, scope.split(":", 1)[1])
         if proj:
-            scopes = recall_scopes(proj)
+            scopes = recall_scopes(proj, include_shared=True)
             expanded = True
     seen, out = set(), []
     for i, sc in enumerate(scopes):
@@ -241,9 +243,9 @@ def _allowed_scopes(config, default_scope):
         return None
     if not (isinstance(default_scope, str) and default_scope.startswith("project:")):
         return None
-    from .namespaces import find, recall_scopes
+    from .namespaces import allowed_memory_scopes, find
     proj = find(config, default_scope.split(":", 1)[1])
-    return recall_scopes(proj) if proj else [default_scope]
+    return allowed_memory_scopes(proj) if proj else [default_scope]
 
 
 def _scope_error(scope, allowed):
@@ -297,11 +299,11 @@ def _run_tool(env, config, name, args, default_scope):
         if denied:
             return denied
         if name == "maind_memory_store":
-            return _content(memory_mod.store(url, scope, args.get("key", "fact"), args["value"],
-                                             headers=headers))
+            return _content(memory_mod.store_managed(
+                url, scope, args.get("key", "fact"), args["value"], headers=headers))
         if name == "maind_memory_recall":
             return _content(_recall_union(config, url, scope, args["query"],
-                                          include_related_scopes=not bool(requested_scope),
+                                          include_related_scopes=False,
                                           headers=headers))
         # forget: scope-арг разрешён, но memoryId глобален — подтверждаем владение по маркеру,
         # иначе клиент удалил бы чужой факт по известному id, не выходя за свой scope.
@@ -352,7 +354,7 @@ def _run_tool(env, config, name, args, default_scope):
         _, _, url = memory_mod.resolve_ports(env, config)
         mem = []
         if memory_mod.health(url):
-            for sc in recall_scopes(proj):   # project:<id> + ns:<группы> + global
+            for sc in recall_scopes(proj, include_shared=bool(args.get("namespace"))):
                 for r in memory_mod.recall(url, sc, "maind:ecosystem-link"):
                     mem.append({**r, "scope": sc})
         return _content({"project": pid, "graph": links, "memory": mem})

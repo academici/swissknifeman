@@ -94,7 +94,23 @@ class TestProviderDeploy(unittest.TestCase):
                 "skiller.test", "packages/skiller/test", sha256_digest(body)),),
             ArtifactTarget(".agents/skills/test/SKILL.md", ("whole-file", ())),
             ArtifactAdapterIdentity("skiller.test", "1.0.0", ProviderId.CODEX,
-                                    "1.0.0", ()), (), {}, lambda _request: body))
+            "1.0.0", ()), (), {}, lambda _request: body))
+
+    def test_provider_specific_codegraph_exclusion(self):
+        harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
+        bases = tuple(plan_mcp_projection(
+            catalog, provider_id=provider,
+            bindings_path=harness / provider.value / "mcp/bindings.json",
+            selected=(), trusted=True) for provider in ProviderId)
+        servers = semantic_servers(maind={"command": "maind"},
+                                   codegraph={"command": "uvx", "args": ["serena"]})
+        plan = plan_provider_deploy(
+            bases, servers, excluded_server_ids_by_provider={"codex": ("codegraph",)})
+        by_provider = {row.provider_id.value: row.server_ids for row in plan.results}
+        self.assertEqual(by_provider["codex"], ("maind",))
+        self.assertIn("codegraph", by_provider["claude-code"])
+        self.assertIn("codegraph", by_provider["cursor"])
 
     def test_ordinary_deploy_and_skiller_alternating_writers_preserve_ownership(self):
         harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"

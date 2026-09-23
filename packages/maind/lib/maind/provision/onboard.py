@@ -83,15 +83,15 @@ def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
     return config, proj, True
 
 
-def _wire_memory(env, config, proj, namespaces=None, mechanism="maind", dry=False):
-    """Проводка памяти проекта по выбранному механизму (гибко, дефолт `maind`):
-    - **maind** (рекомендуется): namespaces (`axioma` + свой) + `.claude/memory.env.ini`
-      MODE=maind + SessionStart-инжект дайджеста + выключение нативной авто-памяти
-      (`autoMemoryEnabled:false`). Демон — единый источник памяти и контекста.
+def _wire_memory(env, config, proj, namespaces=None, mechanism="manual", dry=False):
+    """Проводка памяти проекта по выбранному механизму (дефолт `manual`):
+    - **maind**: MODE=maind + SessionStart-инжект дайджеста.
+    - **manual** (рекомендуется): MCP-память доступна явно, без стартового дайджеста;
+      нативная авто-память также выключена.
     - **native**: вернуть нативную авто-память Claude Code (revert хука), MODE=off.
     - **off**: память выключена (MODE=off, native не трогаем).
     Идемпотентно; доводит и уже подключённый проект."""
-    from ..health import apply_memory_hook, revert_memory_hook
+    from ..health import apply_memory_hook, configure_manual_memory, revert_memory_hook
     changed = False
     if mechanism == "maind":
         if namespaces and proj.get("namespaces") != list(namespaces):
@@ -106,7 +106,8 @@ def _wire_memory(env, config, proj, namespaces=None, mechanism="maind", dry=Fals
             write_config(env, config)
     wrote = False
     lp = proj.get("local_path")
-    mode = {"maind": "maind", "native": "off", "off": "off"}.get(mechanism, "maind")
+    mode = {"maind": "maind", "manual": "manual", "native": "off",
+            "off": "off"}.get(mechanism, "manual")
     if lp and not dry:
         cdir = Path(os.path.expanduser(lp)) / ".claude"
         f = cdir / "memory.env.ini"
@@ -117,9 +118,11 @@ def _wire_memory(env, config, proj, namespaces=None, mechanism="maind", dry=Fals
                          f"# maind = демон + изоляция по scope; native = авто-память Claude Code.\n"
                          f"MODE={mode}\n", encoding="utf-8")
             wrote = True
-    # maind → ставим digest-хук + выключаем native; иначе — revert на нативную память.
+    # maind → digest; manual → только явный MCP; иначе → native/revert.
     if mechanism == "maind":
         hook = apply_memory_hook(env, config, proj, "auto", dry)
+    elif mechanism == "manual":
+        hook = configure_manual_memory(env, config, proj, dry)
     else:
         hook = revert_memory_hook(env, config, proj, dry)
     return {"mechanism": mechanism, "namespaces": proj.get("namespaces"),
@@ -134,9 +137,9 @@ def onboard(env, config, project_or_path, opts):
     steps.append({"name": "register", "status": "ok",
                   "detail": f"{'создан' if created else 'найден'} project:{proj['id']}"})
 
-    # 0. память: выбранный механизм (дефолт maind = демон + изоляция + native off + digest-инжект).
+    # 0. память: по умолчанию ручной MCP без стартового контекста.
     mw = _wire_memory(env, config, proj, namespaces=opts.get("namespaces"),
-                      mechanism=opts.get("memory") or "maind", dry=dry)
+                      mechanism=opts.get("memory") or "manual", dry=dry)
     steps.append({"name": "memwire", "status": "ok",
                   "detail": f"механизм={mw['mechanism']} ns=[{','.join(mw['namespaces'] or [])}] "
                             f"hook={mw.get('memory_hook')}"})
@@ -332,20 +335,20 @@ def cmd_onboard(env, argv):
                                "--allow-partial": "bool",
                                "--yes": "bool", "--json": "bool"}, max_pos=1)
     if not pos:
-        die("использование: maind onboard <project|path> [--memory maind|native|off] "
+        die("использование: maind onboard <project|path> [--memory manual|maind|native|off] "
             "[--skills-channel connect|vendor] [--allow-partial] "
             "[--namespace a,b] [--bundle B --yes --with-code --with-brain --dry-run]")
     config, _src = load_config(env)
     ns = [s.strip() for s in (o["namespace"] or "").split(",") if s.strip()] or None
-    # Чек-лист: механизм памяти. Дефолт — maind (демон + изоляция + авто-инжект контекста).
+    # Чек-лист: дефолт — ручной MCP без авто-инжекта контекста.
     memory = o["memory"]
-    if memory and memory not in ("maind", "native", "off"):
-        die(f"--memory: {memory} (допустимо: maind|native|off)")
+    if memory and memory not in ("manual", "maind", "native", "off"):
+        die(f"--memory: {memory} (допустимо: manual|maind|native|off)")
     if not memory and not o["yes"] and sys.stdin.isatty():
-        ans = input("Механизм памяти проекта [maind]/native/off: ").strip().lower()
-        memory = ans or "maind"
-        if memory not in ("maind", "native", "off"):
-            memory = "maind"
+        ans = input("Механизм памяти проекта [manual]/maind/native/off: ").strip().lower()
+        memory = ans or "manual"
+        if memory not in ("manual", "maind", "native", "off"):
+            memory = "manual"
     # Чек-лист: канал публикации скиллов. КАСАЕТСЯ ТОЛЬКО СКИЛЛОВ — память/граф/MCP
     # настраиваются как обычно. connect=плагины (не в репо, нужен реестр swissknifeman);
     # vendor=физ.копии в .claude/skills (коммитятся в репо — для проектов, которые

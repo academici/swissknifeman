@@ -516,7 +516,8 @@ def semantic_servers(*, maind, agentmemory=None, codegraph=None, perplexity=None
 
 
 def plan_provider_deploy(base_projections, servers, *, selected=None, required_providers=None,
-                         disabled=(), secret_values=(), manifest_path=None):
+                         disabled=(), secret_values=(), manifest_path=None,
+                         excluded_server_ids_by_provider=None):
     """Project caller-owned descriptors through P5-owned target/serialization records."""
     from harness.mcp import McpProjection, render_mcp_projection
     manifest_path = Path(manifest_path) if manifest_path is not None else (
@@ -545,7 +546,7 @@ def plan_provider_deploy(base_projections, servers, *, selected=None, required_p
         if isinstance(value, list): return [scrub(item) for item in value]
         if isinstance(value, dict): return {key: scrub(item) for key, item in value.items()}
         return value
-    entries = tuple((item.id, scrub(dict(item.binding))) for item in servers)
+    excluded_server_ids_by_provider = excluded_server_ids_by_provider or {}
     source_bytes = canonical_json_bytes({"servers": [{"id": item.id, "binding": dict(item.binding)}
                                                for item in servers]})
     source = ArtifactSource("maind.provider-deploy.semantic-inventory",
@@ -571,6 +572,9 @@ def plan_provider_deploy(base_projections, servers, *, selected=None, required_p
                 provider_id, "", "", b"", (), "failed",
                 f"MAIND_CAPABILITY_UNSUPPORTED:{provider_id.value}:mcp.catalog"))
             continue
+        excluded_ids = set(excluded_server_ids_by_provider.get(provider_id.value, ()))
+        provider_servers = tuple(item for item in servers if item.id not in excluded_ids)
+        entries = tuple((item.id, scrub(dict(item.binding))) for item in provider_servers)
         projection = McpProjection(base.provider_id, base.target_scope, base.target_path,
                                    entries, tuple())
         rendered = render_mcp_projection(projection)
@@ -582,7 +586,8 @@ def plan_provider_deploy(base_projections, servers, *, selected=None, required_p
                 capability_catalog.catalog_version,
                 (CapabilityRequirement(CapabilityId("mcp.catalog"),
                                        (SupportLevel.ADAPTED, SupportLevel.NATIVE)),)),
-            (), {"target_scope": base.target_scope, "server_ids": [item.id for item in servers]},
+            (), {"target_scope": base.target_scope,
+                 "server_ids": [item.id for item in provider_servers]},
             lambda _request, value=rendered: value))
         if provider_id is ProviderId.CODEX:
             provenance = replace(
@@ -590,7 +595,8 @@ def plan_provider_deploy(base_projections, servers, *, selected=None, required_p
                 managed_boundary=("managed-blocks", _CODEX_MCP_BLOCK_IDS))
             artifact = replace(artifact, provenance=provenance)
         results.append(ProviderDeployResult(provider_id, base.target_scope, base.target_path,
-                                             rendered, tuple(item.id for item in servers), "planned",
+                                             rendered, tuple(item.id for item in provider_servers),
+                                             "planned",
                                              artifact=artifact))
     if required - {row.provider_id for row in results}:
         raise ProviderDeployError("MAIND_PROJECTION_MISSING")

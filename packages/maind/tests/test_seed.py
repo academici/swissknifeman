@@ -42,32 +42,31 @@ class TestSeed(unittest.TestCase):
             with FakeMemoryServer() as url:
                 env, config, flex = _setup(tmp, url)
                 text = seed.seed_text(env, config, flex)
-                self.assertIn("ОБЩАЯ", text)
+                self.assertIn("изолирована", text)
                 self.assertIn("project:flexcrm", text)
                 self.assertIn("azguard", text)  # связанный проект из графа
 
-    def test_seed_writes_private_and_group_scope(self):
+    def test_seed_writes_private_scope_only(self):
         with tempfile.TemporaryDirectory() as tmp:
             with FakeMemoryServer() as url:
-                # без namespaces → группа default → cross-ref в ns:default (не в global)
                 env, config, flex = _setup(tmp, url)
                 r = seed.seed_memory(env, config, flex)
                 self.assertEqual(r["status"], "ok")
                 self.assertTrue(r["changed"])
                 priv = memory_mod.recall(url, "project:flexcrm", "ecosystem-link")
-                self.assertTrue(any("ОБЩАЯ" in m["text"] for m in priv))
+                self.assertTrue(any("изолирована" in m["text"] for m in priv))
                 grp = memory_mod.recall(url, "ns:default", "ecosystem-link")
-                self.assertTrue(any("flexcrm" in m["text"] for m in grp))
+                self.assertEqual(grp, [])
                 self.assertEqual(memory_mod.recall(url, "global", "ecosystem-link"), [])
 
     def test_namespace_isolation(self):
         with tempfile.TemporaryDirectory() as tmp:
             with FakeMemoryServer() as url:
-                # обе в axioma → cross-ref в ns:axioma; ns:other/global/ns:default — пусты
+                # graph namespace не публикует память автоматически.
                 env, config, flex = _setup(tmp, url, namespaces=["axioma"])
                 seed.seed_memory(env, config, flex)
                 shared = memory_mod.recall(url, "ns:axioma", "ecosystem-link")
-                self.assertTrue(any("flexcrm" in m["text"] for m in shared))
+                self.assertEqual(shared, [])
                 self.assertEqual(memory_mod.recall(url, "ns:other", "ecosystem-link"), [])
                 self.assertEqual(memory_mod.recall(url, "global", "ecosystem-link"), [])
                 self.assertEqual(memory_mod.recall(url, "ns:default", "ecosystem-link"), [])

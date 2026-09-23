@@ -176,7 +176,8 @@ def validate_config(config, cfg_file):
                     "max_idle_ms": int, "definitions": list})
     _check_section(cfg_file, "observability", config.get("observability", {}),
                    {"service_name": str, "metrics_enabled": bool,
-                    "traces_enabled": bool},
+                    "traces_enabled": bool, "session_start_health_hook": bool,
+                    "session_log_retention_days": int, "serena_log_retention_days": int},
                    {"log_level": LOG_LEVELS})
     if "providers" in config and not isinstance(config["providers"].get("defaults"), dict):
         die(f"{cfg_file}: providers.defaults должно быть объектом")
@@ -207,6 +208,16 @@ def validate_config(config, cfg_file):
                 if registry and n not in registry and n not in ("*", "default"):
                     warn(f"{cfg_file}: projects[{i}] ссылается на незарегистрированный "
                          f"namespace '{n}' (нет в секции namespaces)")
+        if "memory_namespaces" in proj:
+            memory_ns = proj["memory_namespaces"]
+            if not isinstance(memory_ns, list) or not all(isinstance(x, str)
+                                                           for x in memory_ns):
+                die(f"{cfg_file}: projects[{i}].memory_namespaces должно быть списком строк")
+        if "code_providers" in proj:
+            code_providers = proj["code_providers"]
+            if not isinstance(code_providers, list) or not all(isinstance(x, str)
+                                                                for x in code_providers):
+                die(f"{cfg_file}: projects[{i}].code_providers должно быть списком строк")
         if "docs_folders" in proj:
             df = proj["docs_folders"]
             if not isinstance(df, list):
@@ -273,6 +284,7 @@ def merge_defaults(config):
     obs.setdefault("log_level", "info")
     obs.setdefault("metrics_enabled", True)
     obs.setdefault("traces_enabled", False)
+    obs.setdefault("session_start_health_hook", False)
     config["observability"] = obs
 
     config["node"] = config.get("node") or {}

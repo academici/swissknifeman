@@ -42,8 +42,9 @@ maind health --project flexcrm --strict   # exit 1, если не connected (д�
 
 - **health-doc** — управляемый блок (маркер `maind:healthcheck`) в `<project>/CLAUDE.md`;
   идемпотентно по content-hash, чужой текст файла сохраняется.
-- **health-hook** — SessionStart-хук в `<project>/.claude/settings.json` (+ скрипт
-  `.claude/maind-health.sh`); **не блокирует** сессию, выходит чисто даже если `maind` недоступен.
+- **health-hook** — opt-in SessionStart-хук (`observability.session_start_health_hook=true`).
+  По умолчанию sync снимает регистрацию и `.claude/maind-health.sh`; полную проверку запускают
+  вручную через `maind health --deep` после установки, изменений окружения или при симптомах.
 
 ```bash
 maind sync --project flexcrm --only health-doc,health-hook

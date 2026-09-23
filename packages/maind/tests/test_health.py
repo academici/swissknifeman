@@ -119,7 +119,7 @@ class TestReport(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp, FakeMemoryServer() as url:
             env, config, proj, _ = _setup(tmp, with_mcp=True, memory_url=url, hook_maind=True)
             health.apply_memory_hook(env, config, proj, "auto", dry=False)  # native off + digest hook
-            rep = health.health_report(env, config, proj, memory_reachable=True)
+            rep = health.health_report(env, config, proj, memory_reachable=True, deep=True)
             self.assertEqual(rep["status"], "connected")
             self.assertTrue(rep["maind_mcp"])
             self.assertEqual(rep["hook_memory_mode"], "maind")
@@ -131,10 +131,10 @@ class TestReport(unittest.TestCase):
         # Демон есть, но хук не в режиме maind → подсказка про режим (ловит раскол).
         with tempfile.TemporaryDirectory() as tmp, FakeMemoryServer() as url:
             env, config, proj, _ = _setup(tmp, with_mcp=True, memory_url=url, hook_maind=False)
-            rep = health.health_report(env, config, proj, memory_reachable=True)
+            rep = health.health_report(env, config, proj, memory_reachable=True, deep=True)
             self.assertTrue(rep["memory_roundtrip"])       # сам демон отвечает
             self.assertNotEqual(rep["hook_memory_mode"], "maind")
-            self.assertTrue(any("режиме maind" in h for h in rep["hints"]))
+            self.assertTrue(any("--memory manual" in h for h in rep["hints"]))
 
     def test_roundtrip_reports_unauthorized_not_generic_failure(self):
         # 401 на протектед-эндпоинте различается от «недоступен»/«раскол» (findings §2) —

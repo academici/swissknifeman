@@ -6,7 +6,7 @@
 плодит фактов (дедуп по маркеру/тексту)."""
 from .common import content_hash
 from .memory import health, recall, resolve_ports, store
-from .namespaces import group_scopes, namespaces_of, private_scope, recall_scopes
+from .namespaces import memory_namespaces_of, namespaces_of, private_scope, recall_scopes
 
 MARKER = "maind:ecosystem-link"
 
@@ -42,9 +42,11 @@ def seed_text(env, config, project):
     if linked:
         parts.append("Связан с: " + ", ".join(linked) + ".")
     parts.append(
-        f"Память ОБЩАЯ (демон mAInd :{http_port}); бакеты этого проекта — "
-        f"{', '.join(recall_scopes(project))}; внутри namespace память общая, между "
-        f"namespace изолирована. Связи: maind graph --project {pid}.")
+        f"Память проекта изолирована (демон mAInd :{http_port}); основной бакет — "
+        f"{', '.join(recall_scopes(project))}. Общие области доступны только явным scope"
+        + ((": " + ", ".join(sorted(memory_namespaces_of(project))))
+           if memory_namespaces_of(project) else "")
+        + f". Связи: maind graph --project {pid}.")
     body = " ".join(parts)
     return f"{body} #{content_hash(body)}"
 
@@ -60,19 +62,18 @@ def seed_memory(env, config, project, *, dry=False):
     if not health(url):
         return {"provisioner": "memory", "id": pid, "status": "skip",
                 "changed": False, "detail": "демон памяти не запущен"}
-    existing = [r.get("text") for r in recall(url, scope, MARKER)]
-    if text in existing:
+    existing = [item for item in recall(url, scope, MARKER)
+                if (item.get("text") or "").startswith(f"[{MARKER}]")]
+    if len(existing) == 1 and existing[0].get("text") == text:
         return {"provisioner": "memory", "id": pid, "status": "ok",
                 "changed": False, "state": "fresh", "detail": scope}
     if dry:
         return {"provisioner": "memory", "id": pid, "status": "dry", "changed": False}
+    from .memory import forget
+    for item in existing:
+        if item.get("id"):
+            forget(url, scope, item["id"])
     store(url, scope, "ecosystem-link", text)
-    linked = linked_projects(env, config, project)
-    shared = group_scopes(project)
-    if linked:
-        cross = f"[{MARKER}] {pid} → {', '.join(linked)}"
-        for bucket in shared:                # ns:<имя> группы (или global для wildcard)
-            store(url, bucket, "ecosystem-link", cross)
     return {"provisioner": "memory", "id": pid, "status": "ok", "changed": True,
             "state": "stale" if existing else "absent",
-            "detail": scope + (f" +{','.join(shared)}" if linked else "")}
+            "detail": scope}

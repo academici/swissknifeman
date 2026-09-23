@@ -41,6 +41,18 @@ class TestProbe(unittest.TestCase):
             self.assertTrue(r["configured"]["maind_mcp"])         # сервер памяти = maind
             self.assertFalse(r["configured"]["agentmemory_mcp"])  # raw-сервер выведен
 
+    def test_code_probe_accepts_provider_neutral_role_name(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _proj(tmp, "coded")
+            (ppath / ".mcp.json").write_text(json.dumps({
+                "mcpServers": {"codegraph": {"command": "uvx", "args": []}}
+            }), encoding="utf-8")
+            cfg = _cfg(ppath, "coded", code=True)
+            self.assertTrue(probe.probe_project(
+                env, cfg, cfg["projects"][0], memory_reachable=False
+            )["configured"]["code_mcp"])
+
     def test_standalone(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)

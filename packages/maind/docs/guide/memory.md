@@ -87,24 +87,25 @@ maind memory stop      # SIGTERM→SIGKILL; чужой демон (без pidfil
 > демон в обход maind (`maind memory` / `maind_memory_*` MCP) — записи без маркера
 > будут невидимы для scoped-recall.
 
-Модель скоупов: при `maind onboard`/`sync` seed пишет базовый факт о связях в приватный
-`project:<id>`, а короткий cross-ref — в бакеты группы (`ns:<имя>`; wildcard → `global`).
-Запись через `maind memory remember` идёт в приватный scope; `--share` дублирует в группы.
-Recall объединяет `project:<id>` + `ns:<все группы>` + `global` (`namespaces.recall_scopes`)
-с дедупом по тексту. Так проект из `axioma` видит общий дом и инфраструктуру, но не приватную
-память чужого проекта. Деривация бакетов — `namespaces.py`, seed — `seed.py`. Группы —
+Модель скоупов: seed пишет один обновляемый факт о связях только в приватный
+`project:<id>`. Graph namespaces (`namespaces`) и разрешённые общие области памяти
+(`memory_namespaces`) разделены. Обычный recall читает только `project:<id>`; `ns:<имя>`
+читается или записывается лишь при явно переданном `scope`. Автоматической публикации seed
+в общий бакет нет. Деривация бакетов — `namespaces.py`, seed — `seed.py`. Группы —
 [Namespaces](./namespaces).
 
 ## Единый путь записи/чтения: хук + MCP через maind
 
 Чтобы «запомнил» (хук памяти) и «вспомнил» (MCP/CLI) шли в ОДИН изолированный стор:
 
-- **Хук памяти** в режиме `MODE=maind` (`~/.claude/hooks/memory/modes/maind.sh`) делегирует
+- **Ручной режим `MODE=manual`** — рекомендуемый: память доступна через MCP/CLI, но не
+  загружается в каждую сессию; нативная авто-память также выключена.
+- **Legacy auto-режим `MODE=maind`** (`~/.claude/hooks/memory/modes/maind.sh`) делегирует
   `remember`/`recall` в `maind memory`; scope берётся из проекта (`CLAUDE_PROJECT_DIR` →
   `match_cwd`), brain игнорируется. `maind onboard` сам пишет `<project>/.claude/memory.env.ini`
   `MODE=maind`.
 - **MCP** `maind_memory_store|recall|forget` идут через те же `memory.py`-обёртки;
-  `maind_memory_recall(project:<id>)` разворачивается в полный набор recall-scope'ов.
+  `maind_memory_recall(project:<id>)` остаётся в приватном scope. Общий `ns:*` указывается явно.
 - **CLI** для человека: `maind memory remember|recall|forget [--project ID|--scope S] [--share]`.
 
 ## Авто-загрузка контекста на старте сессии (digest) и native-память
@@ -130,9 +131,9 @@ Recall объединяет `project:<id>` + `ns:<все группы>` + `globa
   после private. См. «Межпроектная задача» ниже — как поднять общий контекст без изменения
   дефолта дайджеста.
 
-**Гибко (per-project):** `maind onboard <id> --memory maind|native|off` (дефолт `maind`; в
-интерактиве — вопрос). `native` делает revert (вернуть авто-память, снять digest-хук). Проверка
-консистентности — в `maind health` (MODE=maind ⇒ native off + digest-хук на месте).
+**Гибко (per-project):** `maind onboard <id> --memory manual|maind|native|off` (дефолт
+`manual`). `maind` явно включает старый SessionStart digest; `native` возвращает авто-память.
+Проверка консистентности — в `maind health`.
 
 ## Межпроектная задача — как явно поднять shared-контекст
 
@@ -158,9 +159,10 @@ Recall объединяет `project:<id>` + `ns:<все группы>` + `globa
 
 Два слоя комплементарны, **не дублируй один и тот же факт в оба**:
 
-- **maind** (`maind memory` / `maind_memory_*`) — память проекта и дома: приватное `project:<id>`,
-  общее по тегу `--share`, ищется `recall`, видна кросс-проектно/кросс-агентно (Cursor и др.).
-  Дайджест авто-инжектится на старте. ← **дефолт для проектов**.
+- **maind** (`maind memory` / `maind_memory_*`) — явная долговременная память: приватное
+  `project:<id>` по умолчанию, общий scope только по прямому запросу. Для continuity используйте
+  ключ `active-handoff`: новая запись заменяет старую. Ключи `progress`, `checkpoint`,
+  `session-log` отклоняются — этот журнал принадлежит репозиторию.
 - **native MEMORY.md** — выключена при `MODE=maind`. Если осознанно `--memory native`: только
   мелкий курируемый набор инвариантов «всегда под рукой», без копий maind-фактов.
 - **file-federation (`MODE=file/federation`, brain `core`)** — legacy, только для инфра-узлов
@@ -188,8 +190,9 @@ operation-id в контракте).
 
 ## Проверка «реально ли работает» и troubleshooting
 
-`maind health [--project ID]` гоняет **round-trip** write→recall→forget по приватному scope и
-проверяет, что хук в `MODE=maind`. `--strict` падает при провале. Частые случаи:
+`maind health [--project ID]` выполняет read-only проверку. Мутирующий **round-trip**
+write→recall→forget запускается только с `--deep`; `--strict --deep` падает при его провале.
+Частые случаи:
 
 - **remember и recall расходятся** (записал — не вспоминается): хук не в `MODE=maind` (пишет в
   файловый `core`-brain мимо демона) → `maind onboard <id>` или поставь `.claude/memory.env.ini`
@@ -202,7 +205,7 @@ operation-id в контракте).
 
 > **Коллизия имён «federation».** В хуке памяти `MODE=federation` — это файловый бэкенд
 > (`~/.swissknifeman/memory/<brain>/*.md`), он НЕ связан с graph-federation maind (граф по
-> проектам + индекс). Для прикладных проектов канон — `MODE=maind` (демон), файловый
+> проектам + индекс). Для прикладных проектов канон — `MODE=manual` (демон по запросу), файловый
 > `federation`/`core` оставлен для инфра-узлов.
 
 Дальше: [Граф →](./graph)

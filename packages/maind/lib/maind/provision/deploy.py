@@ -235,7 +235,17 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
             if not dry:
                 apply_d108_operation(project_path, operation)
         else:
-            provider_plan = plan_provider_deploy(provider_projections, inventory)
+            exclusions = {}
+            code_providers = project.get("code_providers")
+            if with_code is not False and isinstance(code_providers, list):
+                allowed_code = set(code_providers)
+                for projection in provider_projections:
+                    provider_id = projection.provider_id.value
+                    if provider_id not in allowed_code:
+                        exclusions[provider_id] = ("codegraph",)
+            provider_plan = plan_provider_deploy(
+                provider_projections, inventory,
+                excluded_server_ids_by_provider=exclusions)
         if d108:
             ordinary_check = {"severity": "green", "plan": operation.chained_plan}
         else:

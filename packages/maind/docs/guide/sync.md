@@ -24,11 +24,11 @@ maind sync --all --dry-run --json                  # план без запис�
 | `mcp` | пишет MCP-серверы хаба (agent-memory + maind [+ код-граф]) в `.mcp.json` проекта | `deploy.py` |
 | `code-graph` | стартовый `.serena/project.yml` (при `code:true`, движок Serena) — язык + игноры + initial_prompt | `codegraph.py` |
 | `graph` | `derive` графа проекта из источников + пересборка `_index.db` | `derive.py` |
-| `memory` | seed базового факта о связях в `project:<id>` + `ns:<группа>` | `seed.py` |
-| `memory-hook` | SessionStart-инжект дайджеста памяти + `autoMemoryEnabled:false` для проектов на `MODE=maind` (revert для ушедших на native/off) — авто-загрузка памяти | `health.py` |
-| `health-hook` | SessionStart-хук связи с хабом в `.claude/settings.json` | `health.py` |
+| `memory` | upsert базового факта о связях только в `project:<id>` | `seed.py` |
+| `memory-hook` | `MODE=manual`: снять digest и оставить native off; `MODE=maind`: явно включить SessionStart digest | `health.py` |
+| `health-hook` | opt-in SessionStart-хук (`observability.session_start_health_hook`; по умолчанию снят) | `health.py` |
 | `health-doc` | управляемый блок «приоритет №1» в `CLAUDE.md` | `health.py` |
-| `feature-log-hook` | SessionEnd-хук фиксации нового коммита в общую память (при `code_graph.feature_log_hook`) | `health.py` |
+| `feature-log-hook` | opt-in SessionEnd-публикация коммита (`code_graph.feature_log_hook`; по умолчанию снята) | `health.py` |
 | `ecosystem-skill` | управляемый скилл `ecosystem-mcp` (что за MCP-инструменты, связи, починка) в `.claude/skills/` | `skilldoc.py` |
 | `setup-skill` | управляемый скилл `ecosystem-setup` (дерево решений тулинга проекта) в `.claude/skills/` | `skilldoc.py` |
 | `skills-catalog` | `skiller update` — пере-резолв каталога скиллов (buckets/exclude с диска); новый скилл уже выбранного бакета (напр. `pao` в `php`) доезжает без ручного re-run | `orchestrate.py` → `skm:update` |

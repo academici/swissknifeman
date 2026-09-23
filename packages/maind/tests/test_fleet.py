@@ -11,7 +11,7 @@ from maind.config import load_config
 from tests.fixtures import FakeMemoryServer, make_repo, write_maind_config
 
 
-def _setup(tmp, url, namespaces=None):
+def _setup(tmp, url, namespaces=None, memory_namespaces=None):
     """flexcrm + azguard, оба требуют axioma-studio/azguard-core (общий пакет)."""
     root, env = make_repo(tmp)
     flex, az = Path(tmp) / "flexcrm", Path(tmp) / "azguard"
@@ -30,6 +30,8 @@ def _setup(tmp, url, namespaces=None):
            "enabled": True, "local_path": str(az)}
     if namespaces is not None:
         flexp["namespaces"] = azp["namespaces"] = namespaces
+    if memory_namespaces is not None:
+        flexp["memory_namespaces"] = azp["memory_namespaces"] = memory_namespaces
     write_maind_config(root, graph={"adapter": "federation"},
                        memory={"url": url}, projects=[flexp, azp])
     config, _ = load_config(env)
@@ -88,7 +90,8 @@ class TestDuplicatesParsing(unittest.TestCase):
 class TestFeatureLog(unittest.TestCase):
     def test_log_and_recall_cross_project(self):
         with tempfile.TemporaryDirectory() as tmp, FakeMemoryServer() as url:
-            env, config = _setup(tmp, url, namespaces=["axioma"])
+            env, config = _setup(tmp, url, namespaces=["axioma"],
+                                 memory_namespaces=["axioma"])
             flex = config["projects"][0]
             r = fleet.log_feature(env, config, flex, "добавил импорт CSV")
             self.assertEqual(r["status"], "ok")

@@ -245,8 +245,10 @@ def _memory_run(env, config, projects, mode, dry):
 
 def _health_hook_run(env, config, projects, mode, dry):
     """SessionStart-хук связи с хабом (НЕ блокирует) в .claude/settings.json проектов."""
-    from ..health import apply_health_hook
-    return [apply_health_hook(env, config, p, mode, dry) for p in projects]
+    from ..health import apply_health_hook, revert_health_hook
+    enabled = bool((config.get("observability") or {}).get("session_start_health_hook", False))
+    fn = apply_health_hook if enabled else revert_health_hook
+    return [fn(env, config, p, mode, dry) for p in projects]
 
 
 def _memory_hook_run(env, config, projects, mode, dry):
@@ -254,12 +256,15 @@ def _memory_hook_run(env, config, projects, mode, dry):
     проекта из .claude/memory.env.ini: MODE=maind → ставим (apply_memory_hook), MODE=off →
     откатываем на native (revert_memory_hook), нет конфига → не трогаем. Так `maind sync`
     раскатывает авто-загрузку памяти на уже подключённые проекты, не гоняя полный onboard."""
-    from ..health import (apply_memory_hook, hook_memory_mode, revert_memory_hook)
+    from ..health import (apply_memory_hook, configure_manual_memory, hook_memory_mode,
+                          revert_memory_hook)
     results = []
     for p in projects:
         hmode = hook_memory_mode(p)
         if hmode == "maind":
             results.append(apply_memory_hook(env, config, p, mode, dry))
+        elif hmode == "manual":
+            results.append(configure_manual_memory(env, config, p, dry))
         elif hmode is not None:                       # off/native — вернуть нативную память
             results.append(revert_memory_hook(env, config, p, dry))
         else:                                         # память проекта не сконфигурирована
@@ -382,11 +387,10 @@ def _instruction_run(env, config, projects, mode, dry):
 def _feature_log_hook_run(env, config, projects, mode, dry):
     """SessionEnd-хук фиксации коммитов в общую память (если code_graph.feature_log_hook)."""
     from ..codegraph import settings
-    if not settings(config).get("feature_log_hook", True):
-        return [_result("feature-log-hook", p["id"], "skip", state="disabled",
-                        detail="выключен в конфиге") for p in projects]
-    from ..health import apply_feature_log_hook
-    return [apply_feature_log_hook(env, config, p, mode, dry) for p in projects]
+    from ..health import apply_feature_log_hook, revert_feature_log_hook
+    enabled = bool(settings(config).get("feature_log_hook", False))
+    fn = apply_feature_log_hook if enabled else revert_feature_log_hook
+    return [fn(env, config, p, mode, dry) for p in projects]
 
 
 def _setup_skill_run(env, config, projects, mode, dry):
@@ -766,7 +770,7 @@ def generate_instruction_conformance(env, output_path):
                                      and all(row["status"] != "failed"
                                              for row in first["providers"] + second["providers"])
                                      and len(health["provider_trust"]) == len(checked.request.provider_ids)
-                                     and common and own >= 0 else "RED"})
+                                     and common >= 0 and own >= 0 else "RED"})
             semantic_result = (f"semantic IDs={common}; single-provider projection; public checker GREEN"
                                if len(checked.request.provider_ids) == 1 else
                                f"common parity IDs={common}; provider-own extensions={own}; public checker GREEN")

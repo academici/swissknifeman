@@ -31,6 +31,18 @@ class TestWrapper(unittest.TestCase):
     def test_health_false_when_down(self):
         self.assertFalse(memory.health("http://127.0.0.1:1"))
 
+    def test_active_handoff_replaces_previous_slot(self):
+        with FakeMemoryServer() as url:
+            memory.store_managed(url, "project:p", "active-handoff", "first")
+            memory.store_managed(url, "project:p", "active-handoff", "second")
+            rows = memory.recall(url, "project:p", "active-handoff")
+            self.assertEqual([r["text"] for r in rows], ["[active-handoff] second"])
+
+    def test_ephemeral_progress_key_is_rejected(self):
+        with FakeMemoryServer() as url:
+            with self.assertRaisesRegex(ValueError, "not durable memory"):
+                memory.store_managed(url, "project:p", "checkpoint", "temporary")
+
 
 class TestScopeMarker(unittest.TestCase):
     def test_roundtrip_single(self):

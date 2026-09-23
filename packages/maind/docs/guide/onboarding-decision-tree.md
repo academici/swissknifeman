@@ -32,11 +32,12 @@
 
 ## Слой 1 — Механизм памяти
 
-**Вопрос:** как вести память/контекст проекта? `maind onboard --memory <…>` (дефолт `maind`).
+**Вопрос:** как вести память/контекст проекта? `maind onboard --memory <…>` (дефолт `manual`).
 
 | Вариант | Действие | Когда |
 |:--|:--|:--|
-| **maind** (реком.) | демон + изоляция по scope; `.claude/memory.env.ini MODE=maind`; SessionStart-инжект дайджеста; `autoMemoryEnabled:false` | по умолчанию для узлов экосистемы |
+| **manual** (реком.) | mAInd через MCP/CLI по запросу; без SessionStart digest; `autoMemoryEnabled:false` | по умолчанию для узлов экосистемы |
+| **maind** | явно включить SessionStart digest mAInd | только при измеренной пользе авто-контекста |
 | **native** | вернуть нативную авто-память Claude Code; `MODE=off`, revert хука | проект вне экосистемы |
 | **off** | память выключена | временно/особый случай |
 

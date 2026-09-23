@@ -47,26 +47,43 @@ def in_namespace(project, namespace):
     return WILDCARD in ns or namespace in ns
 
 
-# ── Memory scopes aligned with graph namespaces ──────────────────────────────
+# ── Memory scopes (explicitly separate from graph namespaces) ────────────────
 def private_scope(project):
     """Return configured private memory scope or project:<id>."""
     return project.get("memory_scope") or f"project:{project['id']}"
 
 
+def memory_namespaces_of(project):
+    """Return namespaces that may be accessed explicitly by memory tools.
+
+    Graph namespaces do not imply shared memory.  Projects opt in separately
+    through ``memory_namespaces``; missing or empty means private-only memory.
+    """
+    ns = project.get("memory_namespaces")
+    return set(ns) if ns else set()
+
+
 def group_scopes(project):
-    """Return shared link-reference scopes; wildcard projects use global."""
+    """Return explicitly allowed shared memory scopes; wildcard uses global."""
     out = []
-    for n in sorted(namespaces_of(project)):
+    for n in sorted(memory_namespaces_of(project)):
         scope = GLOBAL_SCOPE if n == WILDCARD else f"{NS_SCOPE_PREFIX}{n}"
         if scope not in out:
             out.append(scope)
     return out
 
 
-def recall_scopes(project):
-    """Return deduplicated private, group, and global recall scopes."""
+def recall_scopes(project, *, include_shared=False):
+    """Return recall scopes; project-only unless shared access is explicit."""
     out = [private_scope(project)]
-    for s in group_scopes(project) + [GLOBAL_SCOPE]:
+    if not include_shared:
+        return out
+    for s in group_scopes(project):
         if s not in out:
             out.append(s)
     return out
+
+
+def allowed_memory_scopes(project):
+    """Scopes a project-pinned MCP may address explicitly."""
+    return recall_scopes(project, include_shared=True)

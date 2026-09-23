@@ -79,31 +79,36 @@ class TestRules(unittest.TestCase):
         self.assertTrue(namespaces.in_namespace({"id": "x"}, "default"))
 
 
-# ── память: scope-бакеты по namespace'ам (паритет с графом) ──────────────────
+# ── память: отдельный opt-in поверх graph namespaces ─────────────────────────
 class TestMemoryScopes(unittest.TestCase):
     def test_private_scope(self):
         self.assertEqual(namespaces.private_scope({"id": "flexcrm"}), "project:flexcrm")
         self.assertEqual(namespaces.private_scope(
             {"id": "flexcrm", "memory_scope": "project:custom"}), "project:custom")
 
-    def test_group_scopes_default_and_named(self):
-        self.assertEqual(namespaces.group_scopes({"id": "x"}), ["ns:default"])
-        self.assertEqual(namespaces.group_scopes({"id": "x", "namespaces": ["axioma"]}),
+    def test_group_scopes_private_by_default_and_explicit_when_named(self):
+        self.assertEqual(namespaces.group_scopes({"id": "x"}), [])
+        self.assertEqual(namespaces.group_scopes({"id": "x", "namespaces": ["axioma"]}), [])
+        self.assertEqual(namespaces.group_scopes(
+            {"id": "x", "memory_namespaces": ["axioma"]}),
                          ["ns:axioma"])
         self.assertEqual(
-            namespaces.group_scopes({"id": "x", "namespaces": ["b", "a"]}),
+            namespaces.group_scopes({"id": "x", "memory_namespaces": ["b", "a"]}),
             ["ns:a", "ns:b"])  # отсортировано
 
     def test_group_scopes_wildcard_is_global(self):
         # инфраструктура (wildcard) → бакет global (видна всей экосистеме)
-        self.assertEqual(namespaces.group_scopes({"id": "x", "namespaces": ["*"]}),
+        self.assertEqual(namespaces.group_scopes({"id": "x", "memory_namespaces": ["*"]}),
                          ["global"])
 
-    def test_recall_scopes_include_private_and_global(self):
-        rs = namespaces.recall_scopes({"id": "flexcrm", "namespaces": ["axioma"]})
-        self.assertEqual(rs, ["project:flexcrm", "ns:axioma", "global"])
-        # wildcard: приватный + global (без дублей)
-        self.assertEqual(namespaces.recall_scopes({"id": "z", "namespaces": ["*"]}),
+    def test_recall_scopes_are_private_unless_shared_is_explicit(self):
+        project = {"id": "flexcrm", "namespaces": ["axioma"],
+                   "memory_namespaces": ["axioma"]}
+        self.assertEqual(namespaces.recall_scopes(project), ["project:flexcrm"])
+        self.assertEqual(namespaces.recall_scopes(project, include_shared=True),
+                         ["project:flexcrm", "ns:axioma"])
+        self.assertEqual(namespaces.recall_scopes(
+            {"id": "z", "memory_namespaces": ["*"]}, include_shared=True),
                          ["project:z", "global"])
 
 

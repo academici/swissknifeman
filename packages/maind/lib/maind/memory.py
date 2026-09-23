@@ -328,6 +328,35 @@ def store(url, scope, key, value, headers=None):
                            "type": key}, headers=headers)
 
 
+EPHEMERAL_KEYS = {"progress", "plan-progress", "checkpoint", "session-log"}
+ACTIVE_HANDOFF_MARKER = "[active-handoff]"
+
+
+def store_managed(url, scope, key, value, headers=None):
+    """Apply the durable-memory write policy before storing a fact.
+
+    Session/checkpoint journals belong in repository artifacts.  ``active-handoff``
+    is the single mutable continuity slot and is replaced atomically enough for the
+    underlying append-only engine (forget old slots, then write one current value).
+    """
+    normalized = (key or "fact").strip().lower()
+    if normalized in EPHEMERAL_KEYS:
+        raise ValueError("ephemeral progress is not durable memory; update the repository "
+                         "handoff or use key=active-handoff")
+    if normalized != "active-handoff":
+        return store(url, scope, key, value, headers=headers)
+    text = value if value.startswith(ACTIVE_HANDOFF_MARKER) else \
+        f"{ACTIVE_HANDOFF_MARKER} {value}"
+    for item in export(url, scope, headers):
+        raw = item.get("content") or item.get("narrative") or item.get("title") or ""
+        owner, clean = split_scope(raw)
+        if owner == scope and (clean or "").startswith(ACTIVE_HANDOFF_MARKER):
+            mid = item.get("id")
+            if mid:
+                forget(url, scope, mid, headers=headers)
+    return store(url, scope, "active-handoff", text, headers=headers)
+
+
 def recall(url, scope, query, limit=RECALL_LIMIT, headers=None):
     """Поиск С ИЗОЛЯЦИЕЙ: демон ищет по ГЛОБАЛЬНОМУ пулу (namespace не фильтрует),
     поэтому берём широкий топ и оставляем ТОЛЬКО факты запрошенного `scope` по маркеру
@@ -476,7 +505,10 @@ def _cmd_remember(env, config, argv):
     key = opts.get("type") or "fact"
     written = []
     for sc in write_scopes:
-        res = store(url, sc, key, pos[0], headers=headers)
+        try:
+            res = store_managed(url, sc, key, pos[0], headers=headers)
+        except ValueError as e:
+            die(str(e))
         mid = (res.get("memory") or {}).get("id") if isinstance(res, dict) else None
         written.append({"scope": sc, "id": mid})
     if opts["json"]:

@@ -11,7 +11,7 @@ Generated Cursor adapter for semantic command `task:plan-audit`.
 - Invocation: `task:plan-audit <arguments>`
 - Routing: `frontier/xhigh -> claude-opus-5-thinking-high/xhigh`
 - Canonical source: `packages/task/commands/plan-audit.md`
-- Canonical SHA-256: `sha256:cf2723f693c8b68f48226a7015fb63d6f1738412f3e1d7faa0d8ab933dd73d80`
+- Canonical SHA-256: `sha256:03aec4d7e720de6c50f4c10b7d2ecf8d596cca9077d8b6940e096a255be06f83`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as the user prompt.

@@ -59,6 +59,8 @@ class CodexInventoryRouteTests(unittest.TestCase):
                          ["gpt-5.6-sol"])
         self.assertEqual(route_evidence_codex._selector_class("gpt-6-astra", ROUTING_PATH),
                          "frontier")
+        self.assertEqual(route_evidence_codex._selector_class("gpt-6-sol", ROUTING_PATH),
+                         "frontier")
         with self.assertRaises(re.RouteEvidenceError):
             route_evidence_codex._selector_class("unlisted-model", ROUTING_PATH)
 

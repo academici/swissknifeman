@@ -1407,7 +1407,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
          protected_transition=None,
          next_form="exec-items", next_context=None,
          next_origin="approved-goal", next_changed_by=None, carrier=None,
-         routing_config_path=None) -> dict:
+         routing_config_path=None, admission_route=None) -> dict:
     """Task Contract v1 producer (2026.07.24-AGENT-RELIABILITY P2.6, F1) — compiles `phases/Pn.md` + `plan.md`
     §3/§0 fields for one item into the exact 15-key schema
     `task-contract-v1.schema.json` declares. Full field-mapping table:
@@ -1577,6 +1577,13 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
             routing = routing_entry["route"]
         except KeyError as exc:
             raise TaskContractBuildError(item_id, "Routing", "no §3 Routing row found for this item") from exc
+        if admission_route is not None:
+            batch_route = compiled["batches"][routing_entry["batch_key"]]["route"]
+            if admission_route != batch_route:
+                raise TaskContractBuildError(
+                    item_id, "Routing",
+                    "BATCH_ROUTE_MISMATCH: admission route must equal the compiled batch maximum")
+            routing = batch_route
         if (routing_entry["exec"] == "plan-exec" and routing_entry["review"] in {"self", "light"}
                 and routing["model_class"] != "frontier"
                 and not (carrier and re.search(r"task:plan-run\b", carrier))

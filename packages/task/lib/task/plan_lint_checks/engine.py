@@ -208,6 +208,8 @@ def _lint_next_runnable_bundle(plan_dir, layout, phases, all_items, diag):
             "decision surface",
         )
         return
+    if plan_readiness.design_gate_enabled(plan_dir):
+        return  # selected execution start materializes the validated bundle
     try:
         actual = target.read_bytes()
     except OSError:

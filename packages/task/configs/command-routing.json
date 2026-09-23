@@ -1,7 +1,7 @@
 {
   "contract_version": "1.0.0",
   "catalog_version": "1.0.0",
-  "plugin_version": "0.24.1",
+  "plugin_version": "0.24.2",
   "commands": [
     {
       "command_id": "task:design",
@@ -161,14 +161,15 @@
       },
       "invocation_binding": {"template": "$ {command_id} {arguments}"},
       "model_inventory": {
-        "verified_at": "2026-09-17",
-        "source": "plans/2026.07.19-DUAL-PROVIDER/plan.md#D84",
-        "verification": "frozen D84 mapping; no machine-readable catalogue exists",
+        "verified_at": "2026-09-23",
+        "source": "plans/2026.07.19-DUAL-PROVIDER/plan.md#D84 and Codex provider thread state",
+        "verification": "frozen D84 mapping; gpt-6-sol observed in provider thread state; no machine-readable catalogue exists",
         "entries": [
           {"id": "gpt-5.6-luna", "roles": ["economy"]},
           {"id": "gpt-5.6-terra", "roles": ["implementation"]},
           {"id": "gpt-5.6-sol", "roles": ["frontier", "design", "audit"]},
-          {"id": "gpt-6-astra", "roles": ["frontier", "design", "audit"]}
+          {"id": "gpt-6-astra", "roles": ["frontier", "design", "audit"]},
+          {"id": "gpt-6-sol", "roles": ["frontier", "design", "audit"]}
         ]
       },
       "evidence": [{"source": "plans/2026.07.19-DUAL-PROVIDER/plan.md#D84", "verified_at": "2026-07-21", "scope": "Codex command routing and invocation", "claim": "D84 freezes selectors and the mandatory `$ ` invocation prefix"}]
@@ -179,7 +180,7 @@
       "class_selectors": {
         "economy": ["composer-2.5-fast"],
         "implementation": ["composer-2.5"],
-        "frontier": ["claude-opus-5-thinking-high", "grok-4.7"]
+        "frontier": ["claude-opus-5-thinking-high", "grok-4.7", "grok-4.6"]
       },
       "effort_selectors": {"low": ["low"], "medium": ["medium"], "high": ["high"], "xhigh": ["xhigh"]},
       "capability_bindings": {
@@ -196,6 +197,7 @@
           {"id": "composer-2.5", "roles": ["implementation"]},
           {"id": "claude-opus-5-thinking-high", "roles": ["frontier", "design", "audit"]},
           {"id": "grok-4.7", "roles": ["frontier"], "notes": "live cli-config selectedModel; reasoning_effort=high maps through effort_selectors"},
+          {"id": "grok-4.6", "roles": ["frontier"], "notes": "live cli-config selectedModel; effort=high is the Grok 4.6 alias of reasoning_effort"},
           {"id": "gpt-5.6-sol-medium", "roles": ["alternate"]},
           {"id": "auto", "roles": ["routing-assist"], "policy": "never-substitute-fixed-frontier"}
         ],

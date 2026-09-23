@@ -50,6 +50,16 @@ integration seam, hard risk, live/irreversible action, owner-requested audit, or
 
 <!-- Phase Status lives in status.md. -->
 
+## Supporting artifacts (only for a complex handoff)
+
+- Full implementation dossier: `research/<Pn>-design.md`.
+- Retrieval synthesis and verification boundary: `research/<Pn>-design-rag.md`.
+- Concrete execution examples: `artifacts/<Pn>-design/examples.md`.
+- Raw capture or explicit no-search record: `artifacts/<Pn>-design-rag/capture.md` or `README.md`.
+
+Remove this entire section for an ordinary phase. If used, affected items name the first three
+carriers in `Inputs`. Raw retrieval is provenance, not a normative decision.
+
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | P1.1 | Валидация конфига при загрузке | ⬜ Not started | <YYYY-MM-DD> |
@@ -62,7 +72,7 @@ integration seam, hard risk, live/irreversible action, owner-requested audit, or
 **Why:** Битый конфиг сейчас падает глубоко в рантайме с невнятным KeyError — диагностика дорогая; ~треть инцидентов онбординга — битые конфиги [UNVERIFIED].
 **Scope Included:** функция load_config() и её тесты.
 **Scope Excluded:** формат самого конфига; миграция существующих конфигов; CLI-флаги.
-**Inputs:** список обязательных ключей — в докстринге load_config(); схема — schema/config.json.
+**Inputs:** список обязательных ключей — в докстринге load_config(); схема — schema/config.json. (Добавь dossier carriers только если созданы и нужны исполнителю.)
 **Files:** lib/pkg/config.py · tests/test_config.py
 **Required Reads:** 1) lib/pkg/config.py 2) tests/test_config.py 3) schema/config.json
 **Implementation Rules:** stdlib-only (RAG:✅ 2026-07-02 «python json schema validation stdlib» — jsonschema требует pip, а pip в целевом окружении запрещён); сообщения die() на русском; существующее поведение валидных конфигов не менять.

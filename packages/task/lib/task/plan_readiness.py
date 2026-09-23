@@ -27,6 +27,122 @@ _EXECUTABLE_ITEM_FIELDS = (
     "Intent", "Why", "Scope Included", "Scope Excluded", "Inputs", "Files",
     "Required Reads", "Implementation Rules", "Code Guidance", "Validation", "Deliverables",
 )
+_DESIGN_SHEET_MARKER = "<!-- execution-sheet/v1 -->"
+_DESIGN_GATE_CUTOFF = "2026.09.24"
+_SKELETON = re.compile(r"^>\s*СКЕЛЕТ\s*—", re.MULTILINE)
+
+
+def design_gate_enabled(plan_dir) -> bool:
+    """Current plans cannot bypass the design gate by deleting a roadmap marker."""
+    name = Path(plan_dir).name
+    if re.match(r"^\d{4}\.\d{2}\.\d{2}(?:-|$)", name) and name[:10] >= _DESIGN_GATE_CUTOFF:
+        return True
+    try:
+        return _DESIGN_SHEET_MARKER in (Path(plan_dir) / "roadmap.md").read_text(encoding="utf-8")
+    except OSError:
+        return False
+
+
+def design_snapshot(plan_dir) -> dict:
+    """Fingerprint authored design inputs, without generated state or handoff prose."""
+    from task import plan_layout
+
+    root = Path(plan_dir)
+    plan = root / "plan.md"
+    roadmap = root / "roadmap.md"
+    phase_paths = plan_layout.phase_paths(root)
+    try:
+        plan_text = plan.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: plan.md не читается: {exc}") from exc
+    declared = set(re.findall(r"^\|\s*(P\d+)\s*\|", plan_text, re.MULTILINE))
+    if declared and declared != set(phase_paths):
+        raise ReadinessError(
+            f"PLAN_DESIGN_INCOMPLETE: declared phases {sorted(declared)} != "
+            f"phase carriers {sorted(phase_paths)}")
+    paths = [plan, roadmap]
+    for phase_id, phase_path in phase_paths.items():
+        try:
+            phase_text = phase_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} не читается: {exc}") from exc
+        if _SKELETON.search(phase_text) or "[NEEDS CLARIFICATION]" in phase_text:
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} остаётся skeleton/unclear")
+        paths.append(phase_path)
+        specs = plan_layout.item_spec_paths(root, phase_id)
+        if not specs:
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} не содержит items")
+        for spec in specs:
+            try:
+                spec_text = spec.read_text(encoding="utf-8")
+            except (OSError, UnicodeError) as exc:
+                raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {spec.name} не читается: {exc}") from exc
+            for field in _EXECUTABLE_ITEM_FIELDS:
+                match = re.search(rf"^\*\*{re.escape(field)}:\*\*\s*(.*)$", spec_text, re.MULTILINE)
+                if match is None or match[1].strip() in {"", "—"}:
+                    raise ReadinessError(
+                        f"PLAN_DESIGN_INCOMPLETE: {spec.stem} требует {field}")
+            if "[NEEDS CLARIFICATION]" in spec_text:
+                raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {spec.stem} содержит open clarification")
+            paths.append(spec)
+        for relative in (f"research/{phase_id}-design.md",
+                         f"research/{phase_id}-design-rag.md",
+                         f"artifacts/{phase_id}-design/examples.md",
+                         f"artifacts/{phase_id}-design-rag/capture.md",
+                         f"artifacts/{phase_id}-design-rag/README.md"):
+            optional = root / relative
+            if optional.is_file():
+                paths.append(optional)
+    digest = hashlib.sha256()
+    for path in sorted(paths, key=lambda value: value.relative_to(root).as_posix()):
+        try:
+            payload = path.read_bytes()
+        except OSError as exc:
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {path} не читается: {exc}") from exc
+        digest.update(path.relative_to(root).as_posix().encode("utf-8") + b"\0")
+        digest.update(payload + b"\0")
+    return {"fingerprint": digest.hexdigest(), "phases": sorted(phase_paths),
+            "items": sum(len(plan_layout.item_spec_paths(root, phase)) for phase in phase_paths)}
+
+
+def design_gate(plan_dir) -> dict:
+    """Only a GREEN audit of the current finished design admits new plan execution."""
+    from task import journal, plan_layout
+
+    root = Path(plan_dir)
+    if not design_gate_enabled(root):
+        return {"allowed": True, "code": "LEGACY_DESIGN_GATE_NOT_APPLICABLE"}
+    try:
+        snapshot = design_snapshot(root)
+    except (ReadinessError, plan_layout.PlanLayoutError, OSError, UnicodeError) as exc:
+        return {"allowed": False, "code": "PLAN_DESIGN_INCOMPLETE", "reason": str(exc)}
+    if not (root / "journal.jsonl").exists():
+        return {"allowed": False, "code": "PLAN_DESIGN_AUDIT_MISSING", **snapshot}
+    try:
+        events = journal.read_authoritative_entries(root)
+    except (OSError, UnicodeError, journal.JournalValidationError) as exc:
+        return {"allowed": False, "code": "PLAN_JOURNAL_INVALID", "reason": str(exc)}
+    finished = [index for index, event in enumerate(events)
+                if event.get("command") == "plan-design" and event.get("item_id") == "finish"
+                and event.get("fingerprint") == snapshot["fingerprint"]]
+    if not finished:
+        return {"allowed": False, "code": "PLAN_DESIGN_FINISH_MISSING", **snapshot}
+    audits = [(index, event) for index, event in enumerate(events)
+              if event.get("command") == "plan-audit" and event.get("item_id") == "design"]
+    if not audits or audits[-1][0] <= finished[-1]:
+        return {"allowed": False, "code": "PLAN_DESIGN_AUDIT_MISSING", **snapshot}
+    audit = audits[-1][1]
+    if audit.get("fingerprint") != snapshot["fingerprint"]:
+        return {"allowed": False, "code": "PLAN_DESIGN_AUDIT_STALE", **snapshot}
+    if audit.get("result") != "audit-green":
+        return {"allowed": False, "code": "PLAN_DESIGN_AUDIT_NOT_GREEN", **snapshot}
+    return {"allowed": True, "code": "PLAN_DESIGN_AUDIT_GREEN", **snapshot}
+
+
+def validate_execution_design(plan_dir) -> None:
+    verdict = design_gate(plan_dir)
+    if not verdict["allowed"]:
+        raise ReadinessError(f"{verdict['code']}: {verdict.get('reason', 'finish and audit current design')}")
 
 
 def _closed(value, fields, name):

@@ -49,6 +49,31 @@ class CursorCliConfigRouteTests(unittest.TestCase):
         self.assertEqual(evidence["source"], "provider-config")
         self.assertIn(evidence["model_class"], MODEL_CLASS_ORDER)
 
+    def test_grok_46_effort_alias_maps_to_frontier_high(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            config = Path(temporary) / "cli-config.json"
+            config.write_text(json.dumps({
+                "selectedModel": {
+                    "modelId": "grok-4.6",
+                    "parameters": [
+                        {"id": "effort", "value": "high"},
+                        {"id": "fast", "value": "false"},
+                    ],
+                },
+            }), encoding="utf-8")
+            evidence = capture_current(
+                expected_invocation="task:plan-run 2026.09.22-№1-CHATOM-PRODUCT-FOUNDATION P00.4 P00.5",
+                expected_cwd=os.getcwd(),
+                routing_path=ROUTING,
+                cli_config_path=config,
+                process_table={},
+            )
+
+        self.assertEqual(evidence["model"], "grok-4.6")
+        self.assertEqual(evidence["model_class"], "frontier")
+        self.assertEqual(evidence["effort"], "high")
+        self.assertEqual(evidence["source"], "provider-config")
+
 
 if __name__ == "__main__":
     unittest.main()

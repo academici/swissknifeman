@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.37.0
+version: 2.38.0
 description: "Use when an explicitly invoked Task plan command needs a schema reference."
 when_to_use: "Only after explicit Task invocation, when a named plan schema detail is needed."
 disable-model-invocation: true
@@ -50,6 +50,9 @@ Rules common to layouts v1 and v2:
   bundles remain deferred until their producer commits its declared artifact.
 - External claims use `RAG:✅`; repository-grounded claims use `RAG:—`; unresolved external claims
   use `[UNVERIFIED]`. Ambiguity that blocks readiness is `[NEEDS CLARIFICATION …]`.
+- Design finish requires each detailed phase's linked implementation dossier, verified research
+  note, concrete examples and retrieval/no-search provenance; every item digest-binds the normative
+  three through `Inputs`. Read the design-mode reference for exact paths and trust boundaries.
 - A phase skeleton starts with `> СКЕЛЕТ — не детализирован`; execution requires a detailed item.
 - Plans are Markdown SSOT. JSON is a contract, bundle, append-only event stream, or derived view,
   never an alternate handwritten plan. A sealed journal may be rewritten only by an accepted
@@ -294,6 +297,12 @@ historical unmarked groups and their receipts keep exact membership/order or bou
 semantics. Changing a frozen mandatory group requires its existing decision carrier.
 Ambiguous and stale requests stay non-mutating (`BATCH_REQUIRED`, `BATCH_AMBIGUOUS`, `BATCH_STALE`).
 
+Phase design proposes local grouping; design finish re-evaluates the full dependency graph and binds
+every final group to exactly one `execution-sheet/v1` row in `roadmap.md`: exact provider-neutral
+command, maximum semantic route, and maximum review. Routing cells use semantic classes only, never
+provider selectors. When execution is requested, select the eligible command from that sheet;
+handoff points to it and may not synthesize a different membership or cheaper route.
+
 Workflow requirement is a line-scoped positive declaration in Phase Context, not a keyword grep:
 `scriptPath` or a positive orchestration/multi-agent statement requires a canonical workflow asset.
 An explicit negation in that same statement does not; it never suppresses a separate positive line.
@@ -411,10 +420,10 @@ Before mutation and before final close, `task:plan-exec` and `task:plan-close` c
 not a claim that runtime behavior was exhaustively proved.
 
 Before recommending `task:plan-design` for an existing phase, inspect its actual item carriers and
-generated state. A phase whose items are already detailed and whose first unfinished item is ready
-for execution receives `task:plan-exec`, not another design pass. `task:plan-design` is for
-new/from-draft scope or a concrete new contract decision; a file count, a failed ordinary check, or
-the phrase “next/new phase” is not a design trigger. Use `task:plan-exec` for pinned
+generated state. A detailed phase advances to the next undetailed phase; after all declared phases
+are detailed, finish the whole plan and run one design audit. In execution-sheet plans, only a
+GREEN audit of the current authored fingerprint opens execution. A failed ordinary check or a
+file count does not reopen design. Use `task:plan-exec` for pinned
 implementation items; `task:plan-run` for manual-route items in the current session;
 `task:plan-audit` for a design audit or an explicitly admitted adversarial phase audit;
 `task:plan-close` for explicitly

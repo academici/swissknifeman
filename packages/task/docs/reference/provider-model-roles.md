@@ -39,9 +39,9 @@ Fixed commands and launch-blocks pin **one** selector per class. Inventory-only 
 
 ### `codex`
 
-- `verified_at`: `2026-09-17`
-- `source`: plans/2026.07.19-DUAL-PROVIDER/plan.md#D84
-- `verification`: frozen D84 mapping; no machine-readable catalogue exists
+- `verified_at`: `2026-09-23`
+- `source`: plans/2026.07.19-DUAL-PROVIDER/plan.md#D84 and Codex provider thread state
+- `verification`: frozen D84 mapping; gpt-6-sol observed in provider thread state; no machine-readable catalogue exists
 
 | Model id | Roles | Notes |
 |:--|:--|:--|
@@ -49,6 +49,7 @@ Fixed commands and launch-blocks pin **one** selector per class. Inventory-only 
 | `gpt-5.6-terra` | implementation | — |
 | `gpt-5.6-sol` | frontier, design, audit | — |
 | `gpt-6-astra` | frontier, design, audit | — |
+| `gpt-6-sol` | frontier, design, audit | — |
 
 ### `cursor`
 
@@ -61,6 +62,7 @@ Fixed commands and launch-blocks pin **one** selector per class. Inventory-only 
 | `composer-2.5` | implementation | — |
 | `claude-opus-5-thinking-high` | frontier, design, audit | — |
 | `grok-4.7` | frontier | live cli-config selectedModel; reasoning_effort=high maps through effort_selectors |
+| `grok-4.6` | frontier | live cli-config selectedModel; effort=high is the Grok 4.6 alias of reasoning_effort |
 | `gpt-5.6-sol-medium` | alternate | — |
 | `auto` | routing-assist | policy=never-substitute-fixed-frontier |
 

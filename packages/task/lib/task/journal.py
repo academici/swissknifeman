@@ -211,6 +211,25 @@ def validate_append_policy(entry, *, plan_dir=None):
     new append is rejected, before any bytes are written.
     """
     note = entry.get("note") if isinstance(entry, dict) else None
+    if (isinstance(entry, dict) and plan_dir is not None
+            and entry.get("command") == "plan-audit"
+            and entry.get("item_id") == "design"):
+        from task import plan_readiness
+        if plan_readiness.design_gate_enabled(plan_dir):
+            try:
+                snapshot = plan_readiness.design_snapshot(plan_dir)
+            except (ValueError, OSError) as exc:
+                raise JournalValidationError(f"PLAN_DESIGN_INCOMPLETE: {exc}") from exc
+            if entry.get("fingerprint") != snapshot["fingerprint"]:
+                raise JournalValidationError(
+                    "PLAN_DESIGN_AUDIT_STALE: audit fingerprint не совпадает с design inputs")
+            events = [json.loads(line) for line in (Path(plan_dir) / FILENAME).read_text(
+                encoding="utf-8").splitlines() if line.strip()]
+            if not any(event.get("command") == "plan-design"
+                       and event.get("item_id") == "finish"
+                       and event.get("fingerprint") == snapshot["fingerprint"]
+                       for event in events):
+                raise JournalValidationError("PLAN_DESIGN_FINISH_MISSING: сначала finalize-design --finish")
     if isinstance(entry, dict) and "repair_decision" in entry:
         from task import plan_repair
         if entry.get("repair_action") != plan_repair.evaluate(entry["repair_decision"], plan_dir=plan_dir)["action"]:
@@ -632,6 +651,12 @@ def _authoritative_state_locked(plan_dir, *, allow_invalid_target=None):
     if len(targets) != len(set(targets)):
         raise JournalValidationError("JOURNAL_CORRUPT: duplicate schema exception")
     return journal_rows, sidecar_rows
+
+
+def read_authoritative_entries(plan_dir):
+    """Read validated history, including exact owner-approved schema exceptions."""
+    rows, _exceptions = _authoritative_state_locked(plan_dir)
+    return [record for _line_number, _raw, record in rows]
 
 
 def _write_line_durable(path, line):

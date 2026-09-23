@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:6ae5cf6c1db923a06372e0288222be13f94e4810b08c115838027b18d54ca111
+Canonical SHA-256: sha256:9cf2b9df3668132211fa5051765f1a2c870022992f09db15c40cde97e016cdb8
 Adapter: task.cursor-command/1.0.16
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -29,6 +29,9 @@ Read `runtime/plan-protocol/references/common-principles.md` and
 The full schema canon and snippets are on-demand references, not mandatory execution context.
 
 Execute the admitted Routing group or ready subset of a recommended group for `$ARGUMENTS`.
+For execution-sheet plans, `prepare` requires all declared phases detailed, finish recorded and
+a GREEN design audit bound to the current authored inputs. A stale or missing audit returns a typed
+refusal before the durable execution start. The selected bundle is built at start.
 Undershoot stops before mutation; bounded pinned work also rejects unrequested expensive overshoot.
 Activation requires an explicit owner Task invocation, as defined in the
 shared [intent routing canon](../references/intent-routing.md).

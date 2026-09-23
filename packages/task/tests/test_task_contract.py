@@ -1565,6 +1565,25 @@ class BatchRoutingAdmissionTests(unittest.TestCase):
         self.assertEqual(task_contract.admit_batch(self.plan_dir, ("P1.1", "P1.2"))["verdict"],
                          "BATCH_AMBIGUOUS")
 
+    def test_admission_route_uses_batch_maximum_for_the_first_item(self):
+        path = self.plan_dir / "plan.md"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "| B1 | P1.1–P1.3 | implementation/high | manual | full | test |",
+            "| B1 | P1.1 | implementation/medium | manual | none | recommended: shared |\n"
+            "| B1 | P1.2 | frontier/high | manual | full | recommended: hard seam |\n"
+            "| B1 | P1.3 | implementation/high | manual | light | recommended: shared |"),
+            encoding="utf-8")
+        compiled = task_contract.compile_batch_routing(self.plan_dir)
+        batch_route = compiled["batches"]["B1"]["route"]
+        self.assertEqual(batch_route, {"model_class": "frontier", "effort": "high"})
+        contract = task_contract.build(self.plan_dir, "P1.1", admission_route=batch_route)
+        self.assertEqual(contract["route"]["required"], batch_route)
+        with self.assertRaisesRegex(task_contract.TaskContractBuildError,
+                                    "BATCH_ROUTE_MISMATCH"):
+            task_contract.build(
+                self.plan_dir, "P1.1",
+                admission_route={"model_class": "implementation", "effort": "medium"})
+
 
 class ExecutableRoutingTableTests(unittest.TestCase):
     """P3.2/D6: only the exact executable header is a Routing carrier."""

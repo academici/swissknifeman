@@ -18,6 +18,9 @@ when a named schema/detail is actually needed.
    and triggers recovery; it does not prove product RED or GREEN.
 6. Owner budget constrains method and research breadth. Prefer one focused validation and
    reuse unchanged evidence; do not add proofs, phases or reviews to optimize formal completeness.
+   This economy rule does not permit hiding execution-critical design reasoning: a finished plan
+   preserves the code map, algorithms, examples, failure modes and verification boundary in linked,
+   digest-bound supporting artifacts.
 
 Preserve unrelated work and provider parity.  Schema names, status literals, carrier
 layout, and compatibility rules are owned by `../SKILL.md` and its layout reference, not

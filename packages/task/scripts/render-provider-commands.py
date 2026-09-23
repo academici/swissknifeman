@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 from hashlib import sha256
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -43,7 +44,7 @@ _PLAN_PROTOCOL_RUNTIME = Path("packages/task/runtime/plan-protocol/SKILL.md")
 _PLAN_PROTOCOL_PROVENANCE = Path("packages/task/runtime/plan-protocol/provenance.json")
 
 
-def _build_plans(root: Path):
+def _build_plans(root: Path, *, allow_managed_drift: bool = False):
     command_root = root / "packages/task/commands"
     routing_path = root / "packages/task/configs/command-routing.json"
     catalog = build_command_catalog(command_root, routing_path)
@@ -52,10 +53,22 @@ def _build_plans(root: Path):
     support = {provider_id: dict(mapping.capability_bindings)
                for provider_id, mapping in mappings.items()}
     plugin_bytes = (root / "packages/task/.claude-plugin/plugin.json").read_bytes()
+    if allow_managed_drift:
+        plugin_text = plugin_bytes.decode("utf-8")
+        plugin_data = json.loads(plugin_text)
+        if plugin_data.get("name") == "task" and plugin_data.get("version") != catalog.plugin_version:
+            plugin_text, count = re.subn(
+                r'("version"\s*:\s*")[^"]+(")',
+                rf'\g<1>{catalog.plugin_version}\2', plugin_text, count=1)
+            if count != 1:
+                raise ValueError("CMD_SOURCE_DRIFT: Claude plugin version is not replaceable")
+            plugin_bytes = plugin_text.encode("utf-8")
     claude_plan = plan_claude_command_render(
         catalog, mappings["claude-code"], support["claude-code"], plugin_bytes=plugin_bytes)
     codex_plan = plan_codex_command_render(catalog, mappings["codex"], support["codex"])
     cursor_plan = plan_cursor_command_render(catalog, mappings["cursor"], support["cursor"])
+    if allow_managed_drift and not (claude_plan.ok and codex_plan.ok and cursor_plan.ok):
+        return claude_plan, codex_plan, cursor_plan, None, None
     fixture = json.loads((root / _PARITY_FIXTURE).read_text(encoding="utf-8"))
     report = build_provider_command_parity_report(
         catalog, claude_plan, codex_plan, cursor_plan, mappings,
@@ -139,6 +152,29 @@ def _write_cursor(root: Path, cursor_plan) -> int:
             target.write_bytes(artifact.managed_bytes)
             written += 1
     return written
+
+
+def _repair_version_transition(root: Path, claude_plan, codex_plan, cursor_plan) -> int:
+    """Repair only generator-owned targets before rebuilding a clean parity report."""
+    diagnostics = (*claude_plan.diagnostics, *codex_plan.diagnostics, *cursor_plan.diagnostics)
+    if any(item.code != "CMD_SOURCE_DRIFT" for item in diagnostics):
+        return 1
+    for artifact in claude_plan.artifacts:
+        target = root / artifact.path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(artifact.managed_bytes)
+    lock_path = root / PROVIDER_LOCK_PATH
+    lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
+    probe = plan_codex_command_apply(root, codex_plan, lock_bytes=lock_bytes)
+    repair_ids = tuple(action.artifact_id for action in probe.actions
+                       if action.action.value == "refuse")
+    artifact_plan = plan_codex_command_apply(
+        root, codex_plan, lock_bytes=lock_bytes, repair_artifact_ids=repair_ids)
+    if any(action.action.value == "refuse" for action in artifact_plan.actions):
+        return 1
+    apply_codex_command_plan(root, artifact_plan)
+    _write_cursor(root, cursor_plan)
+    return 0
 
 
 def cmd_check(root: Path, claude_plan, codex_plan, cursor_plan, reference_bytes: bytes,
@@ -236,7 +272,20 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--repair-owned requires --write")
     root = Path(args.root).resolve()
 
-    claude_plan, codex_plan, cursor_plan, reference_bytes, model_roles_bytes = _build_plans(root)
+    try:
+        claude_plan, codex_plan, cursor_plan, reference_bytes, model_roles_bytes = _build_plans(root)
+    except ValueError as exc:
+        if not (args.write and args.repair_owned and "CMD_SOURCE_DRIFT" in str(exc)):
+            raise
+        # A publication-version bump makes every owned provider target stale at
+        # once. Repair those generated targets first, then rebuild the parity
+        # report from a clean projection. Source/catalog validation has already
+        # succeeded; only managed output drift reaches this branch.
+        claude_plan, codex_plan, cursor_plan, _reference, _roles = _build_plans(
+            root, allow_managed_drift=True)
+        if _repair_version_transition(root, claude_plan, codex_plan, cursor_plan):
+            return 1
+        claude_plan, codex_plan, cursor_plan, reference_bytes, model_roles_bytes = _build_plans(root)
     if not claude_plan.ok or not codex_plan.ok or not cursor_plan.ok:
         _print_diagnostics("claude-code", claude_plan)
         _print_diagnostics("codex", codex_plan)

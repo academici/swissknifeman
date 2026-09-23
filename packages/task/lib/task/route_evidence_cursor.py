@@ -3,7 +3,8 @@
 Primary path: inspect the nearest ``agent`` ancestor argv for ``--workspace``,
 ``--model`` and the semantic ``task:`` prompt.  When that launch has no
 ``--model``, the live ``~/.cursor/cli-config.json`` ``selectedModel`` and
-``reasoning_effort`` resolve through ``command-routing.json`` selectors.
+``reasoning_effort`` (or Grok 4.6 ``effort``) resolve through
+``command-routing.json`` selectors.
 An explicit attestation remains only when that config is unreadable, and it
 still fails closed on selector mismatch.
 """
@@ -166,6 +167,34 @@ def _cli_config_file(explicit: str | Path | None) -> Path:
     return Path.home() / ".cursor" / "cli-config.json"
 
 
+def _effort_from_cli_parameters(parameters: list) -> str:
+    """Grok 4.7 uses ``reasoning_effort``; Grok 4.6 uses ``effort``."""
+    by_id: dict[str, tuple[str, ...]] = {}
+    for item in parameters:
+        if not isinstance(item, dict):
+            continue
+        key = item.get("id")
+        value = item.get("value")
+        if key not in {"reasoning_effort", "effort"}:
+            continue
+        if not isinstance(value, str) or not value:
+            continue
+        by_id[key] = by_id.get(key, ()) + (value,)
+    if "reasoning_effort" in by_id and "effort" in by_id:
+        reasoning = _one(by_id["reasoning_effort"], "Cursor reasoning_effort")
+        effort = _one(by_id["effort"], "Cursor effort")
+        if reasoning != effort:
+            raise RouteEvidenceError(
+                "ROUTE_LAUNCH_MISMATCH",
+                f"Cursor reasoning_effort {reasoning!r} != effort {effort!r}")
+        return reasoning
+    if "reasoning_effort" in by_id:
+        return _one(by_id["reasoning_effort"], "Cursor reasoning_effort")
+    if "effort" in by_id:
+        return _one(by_id["effort"], "Cursor effort")
+    return _one((), "Cursor reasoning_effort")
+
+
 def _capture_cli_config(*, expected_invocation: str, expected_cwd: str | Path,
                         routing_path: Path, cli_config_path: Path) -> dict:
     try:
@@ -182,12 +211,7 @@ def _capture_cli_config(*, expected_invocation: str, expected_cwd: str | Path,
     parameters = selected.get("parameters")
     if not isinstance(parameters, list):
         raise RouteEvidenceError("ROUTE_LAUNCH_UNAVAILABLE", "Cursor selectedModel.parameters is absent")
-    efforts = tuple(
-        item.get("value") for item in parameters
-        if isinstance(item, dict) and item.get("id") == "reasoning_effort"
-        and isinstance(item.get("value"), str) and item.get("value")
-    )
-    effort_selector = _one(efforts, "Cursor reasoning_effort")
+    effort_selector = _effort_from_cli_parameters(parameters)
     cwd = Path.cwd().resolve()
     if cwd != Path(expected_cwd).resolve():
         raise RouteEvidenceError(

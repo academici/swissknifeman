@@ -186,6 +186,11 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
     """Admit one durable start; a restarted session reuses the open run identity."""
     from task import plan_context, task_contract
 
+    try:
+        plan_readiness.validate_execution_design(plan_dir)
+    except plan_readiness.ReadinessError as exc:
+        raise RecoveryError({"code": "PLAN_DESIGN_GATE_BLOCKED", "reason": str(exc)}) from exc
+
     code = task_contract.pre_mutation(contract, evidence_graph=evidence_graph)
     if code:
         raise RecoveryError({"code": code, "reason": "pre-mutation admission запрещает старт"})

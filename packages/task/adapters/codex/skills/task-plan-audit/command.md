@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:cf2723f693c8b68f48226a7015fb63d6f1738412f3e1d7faa0d8ab933dd73d80
+Canonical SHA-256: sha256:03aec4d7e720de6c50f4c10b7d2ecf8d596cca9077d8b6940e096a255be06f83
 Adapter: task.codex-command/1.0.16
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -81,6 +81,11 @@ The full schema canon and snippets are on-demand references, not mandatory revie
 
 Audit is adversarial and read-only over product work. Read the declared assurance, the Task Contract's
 sole exact executable Routing compiler result, and prior terminal evidence; compare only the changed-risk delta.
+For `design`, first run `scripts/plan-work.py design-gate --plan-dir <dir>`. Require a completed
+`finalize-design --finish` and audit the returned current fingerprint across every declared phase,
+item, dependency and execution-sheet row. Persist the audit journal event with that fingerprint
+using the existing `--fingerprint` field. A changed design input makes the verdict stale; after
+correction, repeat finish and the design audit. GREEN is the only result that opens plan execution.
 Before phase audit, consume one accepted, unsuperseded `audit-admission/v2` decision whose bounded
 residual-risk question, target phase, material candidate fingerprint, audit run, owner-message
 provenance, and scope digest all match. Foreign, stale, ambiguous, or already consumed consent does

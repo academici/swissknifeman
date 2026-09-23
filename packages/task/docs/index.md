@@ -109,6 +109,7 @@ python3 packages/task/scripts/plan-views.py closure --plan-dir plans/<ID> --phas
 | [Шаблоны](./templates) | референс snippets: plan/phase/handoff/launch-block/code-guidance — что где лежит |
 | [Provider model roles](./reference/provider-model-roles) | pins economy/implementation/frontier + inventory и Auto policy для трёх провайдеров |
 | [Plan tooling](./reference/plan-tooling) | launch-block: Codex/Cursor native-формы, route evidence |
+| [Control plane map](./reference/control-plane-map) | источники истины, design gate, виды и диагностика отказов |
 | [Конструктор workflow](./workflows) | 4 канонических шаблон-скрипта оркестрации: когда какой, правила слотов |
 
 Обычная межмодульная разработка принимает сообщение или файл задания без `plans/` и фаз.

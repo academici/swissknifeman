@@ -13,8 +13,10 @@ from core import (ProviderId, ProviderManifestError, SupportLevel,
 
 ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_PATH = ROOT / "configs" / "provider-capabilities.json"
-APPROVED_CANONICAL_SHA256 = "43b252d393b302633624d3a3589ecd9d576fafedf2c068e2d0806a096f045ae8"
-APPROVED_CARRIER_SHA256 = "2e5144b97745c655ef1d7ecd10354e6095f45246569a13f80c74b8eb5fbe93d8"
+# Reviewed against b51b1a2d: Cursor adaptations and lifecycle.tool-telemetry are
+# committed capabilities, not a generator rewrite of the hand-authored manifest.
+APPROVED_CANONICAL_SHA256 = "a38bb141a8583f4b83010da399d88ca1ae68cf8757cedfcb8ec339040119b6f0"
+APPROVED_CARRIER_SHA256 = "0d8929870db2c1fdd33446445d09f2184e994d7d8a6af0d515c081595ea36400"
 
 REGENERATION_DIAGNOSTIC = (
     "manifest hash mismatch — configs/provider-capabilities.json was likely "
@@ -60,7 +62,7 @@ class TestProviderManifest(unittest.TestCase):
         self.assertEqual(parse_provider_manifest(raw),
                          parse_provider_manifest(provider_manifest_canonical_bytes(manifest)))
         self.assertEqual((len(manifest.providers), len(manifest.capabilities),
-                          len(manifest.native_extensions)), (3, 36, 0))
+                          len(manifest.native_extensions)), (3, 37, 0))
 
     def test_contract_compatibility_accepts_v1_minor_and_rejects_next_major(self):
         compatible = manifest_value()
@@ -93,10 +95,10 @@ class TestProviderManifest(unittest.TestCase):
         manifest = load_provider_manifest(MANIFEST_PATH)
         catalog = provider_config_catalog(manifest)
         self.assertEqual(catalog.catalog_version, "1.0.0")
-        self.assertEqual(len(catalog.capability_support), 108)
+        self.assertEqual(len(catalog.capability_support), 111)
         for provider in ProviderId:
             projection = provider_support_projection(manifest, provider)
-            self.assertEqual(len(projection), 36)
+            self.assertEqual(len(projection), 37)
             self.assertEqual(projection["skills.repository"], SupportLevel.NATIVE)
             with self.assertRaises(TypeError):
                 projection["skills.repository"] = SupportLevel.UNSUPPORTED

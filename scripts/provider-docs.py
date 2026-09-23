@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+from html import escape
 import json
 from pathlib import Path
 import sys
@@ -281,7 +282,8 @@ def render_guide(manifest, report) -> bytes:
         lines.extend([f"### `{capability.capability_id.value}`", "", capability.intent, ""])
         for support in capability.support:
             evidence = "; ".join(
-                f"[{item.verified_at}] {item.claim} — `{item.source}` ({item.scope})"
+                f"[{item.verified_at}] {escape(item.claim, quote=False)} — "
+                f"`{item.source}` ({escape(item.scope, quote=False)})"
                 for item in support.evidence)
             binding = (json.dumps(_thaw(support.binding), ensure_ascii=False, sort_keys=True)
                        if support.binding is not None else "—")

@@ -8,7 +8,7 @@ hero:
   actions:
     - theme: brand
       text: Начать
-      link: /skiller/guide/
+      link: /getting-started
     - theme: alt
       text: Установка
       link: /skiller/guide/installation

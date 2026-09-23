@@ -200,7 +200,7 @@ Build a deterministic one-project/session run report from normalized semantic ev
 - **cursor** — `adapted`; binding: `—`; adapter: `analyst.neutral-run-report`.
   Diagnostic: provider-neutral run-report projection is available for Cursor-origin normalized events
   Limitations: requires Cursor events normalized through analyst.cursor-capture-reader; missing semantic metrics remain omitted and are never inferred as zero.
-  Evidence: [2026-09-18] the cursor schema=1 envelope path reaches neutral run-report through normalize -> append_event -> neutral_run_report without provider-specific fallback — `packages/analyst/tests/test_provider_readers.py` (cursor envelope to neutral run-report end-to-end chain).
+  Evidence: [2026-09-18] the cursor schema=1 envelope path reaches neutral run-report through normalize -&gt; append_event -&gt; neutral_run_report without provider-specific fallback — `packages/analyst/tests/test_provider_readers.py` (cursor envelope to neutral run-report end-to-end chain).
 
 ### `command.external-research`
 
@@ -689,12 +689,12 @@ Capture provider-native tool-call sidecar evidence for run-report enrichment.
 - **codex** — `adapted`; binding: `—`; adapter: `harness.codex.lifecycle.tool-telemetry`.
   Diagnostic: deterministic harness adapter appends tool-call sidecar lines on PreToolUse for run-report merge
   Limitations: records only tool calls exposed on the Codex PreToolUse boundary; merges into run-report at SessionEnd; empty sidecar yields transcript-only counts when available.
-  Evidence: [2026-09-18] Codex lifecycle handler records tool_name and codegraph counters to .codex/state/<session>.tools.jsonl and SessionEnd run-report merges the sidecar — `packages/harness/tests/test_codex_lifecycle_surfaces.py` (codex lifecycle.tool-telemetry PreToolUse sidecar and run-report enrichment).
+  Evidence: [2026-09-18] Codex lifecycle handler records tool_name and codegraph counters to .codex/state/&lt;session&gt;.tools.jsonl and SessionEnd run-report merges the sidecar — `packages/harness/tests/test_codex_lifecycle_surfaces.py` (codex lifecycle.tool-telemetry PreToolUse sidecar and run-report enrichment).
 
 - **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.lifecycle.tool-telemetry`.
   Diagnostic: deterministic cursor adapter appends tool-call sidecar lines on preToolUse for run-report merge
   Limitations: records only tool calls exposed on the Cursor preToolUse boundary; merges into run-report at sessionEnd; uses conversation_id as the correlation key.
-  Evidence: [2026-09-18] Cursor lifecycle handler records tool_name and codegraph counters to .cursor/state/<conversation>.tools.jsonl and sessionEnd run-report merges the sidecar — `packages/harness/tests/test_cursor_hook_render.py` (cursor lifecycle.tool-telemetry preToolUse sidecar and run-report enrichment).
+  Evidence: [2026-09-18] Cursor lifecycle handler records tool_name and codegraph counters to .cursor/state/&lt;conversation&gt;.tools.jsonl and sessionEnd run-report merges the sidecar — `packages/harness/tests/test_cursor_hook_render.py` (cursor lifecycle.tool-telemetry preToolUse sidecar and run-report enrichment).
 
 ### `mcp.catalog`
 

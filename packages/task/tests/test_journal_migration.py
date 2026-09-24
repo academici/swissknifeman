@@ -11,7 +11,7 @@ try:
 except ImportError:
     import fixtures  # noqa: F401,E402
 
-from task import journal, journal_migration  # noqa: E402
+from task import journal, journal_migration, task_contract  # noqa: E402
 
 
 class TestJournalMigration(unittest.TestCase):
@@ -150,6 +150,38 @@ class TestJournalMigration(unittest.TestCase):
             journal_migration._allowed_operation({
                 "op": "replace", "path": "/friction", "before": [], "value": ["deviation"],
             })
+
+    def test_historical_batch_receipt_repair_preserves_batch_identity(self):
+        batch = {
+            "batch_id": "E11e", "items": ["P11.6", "P11.7"],
+            "routing_digest": "a" * 64, "spec_digest": "b" * 64,
+            "handoff_digest": None,
+        }
+        valid = task_contract.build_batch_receipt(batch, completed_prefix=("P11.6",))
+        invalid = {key: value for key, value in valid.items()
+                   if key not in {"invocation_digest", "routing_digest", "spec_digest", "handoff_digest"}}
+        event = {"batch_receipt": invalid}
+        operation = {"op": "replace", "path": "/batch_receipt",
+                     "before": invalid, "value": valid}
+
+        journal_migration._apply_operation(event, operation)
+        self.assertEqual(event["batch_receipt"], valid)
+
+        changed_membership = copy.deepcopy(operation)
+        changed_membership["value"]["membership"] = ["P11.7"]
+        changed_membership["value"]["completed_prefix"] = []
+        changed_membership["value"]["invocation_digest"] = self._digest(b"P11.7")
+        with self.assertRaisesRegex(journal_migration.JournalMigrationError, "membership"):
+            journal_migration._allowed_operation(changed_membership)
+
+        changed_digest = copy.deepcopy(operation)
+        changed_digest["before"]["routing_digest"] = "c" * 64
+        with self.assertRaisesRegex(journal_migration.JournalMigrationError, "routing_digest"):
+            journal_migration._allowed_operation(changed_digest)
+
+        already_valid = {**operation, "before": valid}
+        with self.assertRaisesRegex(journal_migration.JournalMigrationError, "уже валиден"):
+            journal_migration._allowed_operation(already_valid)
 
 
 if __name__ == "__main__":

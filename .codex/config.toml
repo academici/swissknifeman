@@ -11,3 +11,158 @@ args = ["mcp", "--scope", "project:swissknifeman"]
 [mcp_servers.perplexity]
 command = "/home/vostrikov/projects/packages/perplexity-web-mcp/start.sh"
 args = ["--pool=default"]
+[plugins."ai@swissknifeman"]
+enabled = false
+
+[plugins."architect@swissknifeman"]
+enabled = false
+
+[plugins."axioma@swissknifeman"]
+enabled = false
+
+[plugins."azguard@swissknifeman"]
+enabled = false
+
+[plugins."blender@swissknifeman"]
+enabled = false
+
+[plugins."blender-modeling@swissknifeman"]
+enabled = false
+
+[plugins."botkit@swissknifeman"]
+enabled = false
+
+[plugins."core@swissknifeman"]
+enabled = true
+
+[plugins."creative@swissknifeman"]
+enabled = false
+
+[plugins."dart@swissknifeman"]
+enabled = false
+
+[plugins."devops@swissknifeman"]
+enabled = false
+
+[plugins."finance@swissknifeman"]
+enabled = false
+
+[plugins."founder@swissknifeman"]
+enabled = false
+
+[plugins."frontend@swissknifeman"]
+enabled = false
+
+[plugins."frontend-animations@swissknifeman"]
+enabled = false
+
+[plugins."frontend-backend@swissknifeman"]
+enabled = false
+
+[plugins."frontend-figma@swissknifeman"]
+enabled = false
+
+[plugins."frontend-linting@swissknifeman"]
+enabled = false
+
+[plugins."frontend-naive-ui@swissknifeman"]
+enabled = false
+
+[plugins."frontend-nuxt@swissknifeman"]
+enabled = false
+
+[plugins."frontend-reka@swissknifeman"]
+enabled = false
+
+[plugins."frontend-tailwind@swissknifeman"]
+enabled = false
+
+[plugins."frontend-vite@swissknifeman"]
+enabled = false
+
+[plugins."frontend-vue@swissknifeman"]
+enabled = false
+
+[plugins."frontend-wayfinder@swissknifeman"]
+enabled = false
+
+[plugins."general@swissknifeman"]
+enabled = true
+
+[plugins."generate-skill@swissknifeman"]
+enabled = false
+
+[plugins."laravel-architecture@swissknifeman"]
+enabled = false
+
+[plugins."laravel-auth@swissknifeman"]
+enabled = false
+
+[plugins."laravel-data-layer@swissknifeman"]
+enabled = false
+
+[plugins."laravel-extras@swissknifeman"]
+enabled = false
+
+[plugins."laravel-filament@swissknifeman"]
+enabled = false
+
+[plugins."laravel-livewire@swissknifeman"]
+enabled = false
+
+[plugins."laravel-testing@swissknifeman"]
+enabled = false
+
+[plugins."legal@swissknifeman"]
+enabled = false
+
+[plugins."marketing@swissknifeman"]
+enabled = false
+
+[plugins."mobile@swissknifeman"]
+enabled = false
+
+[plugins."operator@swissknifeman"]
+enabled = false
+
+[plugins."oss-dev@swissknifeman"]
+enabled = true
+
+[plugins."php@swissknifeman"]
+enabled = false
+
+[plugins."php-packages@swissknifeman"]
+enabled = false
+
+[plugins."pm@swissknifeman"]
+enabled = false
+
+[plugins."python@swissknifeman"]
+enabled = false
+
+[plugins."quality@swissknifeman"]
+enabled = false
+
+[plugins."research@swissknifeman"]
+enabled = false
+
+[plugins."roles@swissknifeman"]
+enabled = false
+
+[plugins."sales@swissknifeman"]
+enabled = false
+
+[plugins."security@swissknifeman"]
+enabled = false
+
+[plugins."skm@swissknifeman"]
+enabled = false
+
+[plugins."system@swissknifeman"]
+enabled = false
+
+[plugins."task@swissknifeman"]
+enabled = true
+
+[plugins."voice-ai@swissknifeman"]
+enabled = false

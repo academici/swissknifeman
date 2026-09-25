@@ -162,6 +162,37 @@ class PlanWorkTests(unittest.TestCase):
         self.assertTrue(result["supporting_artifacts"]["complete"])
         self.assertTrue(result["execution_sheet"]["complete"])
 
+    def test_design_finish_can_rebind_an_unchanged_terminal_phase(self):
+        from task import journal, terminal_policy
+
+        self.add_supporting_artifacts()
+        handoff = self.plan / "handoff.md"
+        handoff.write_text(handoff.read_text().replace(
+            "/task:plan-exec WORK P1.1", "/task:plan-audit WORK design"))
+        decision = terminal_policy.build_decision(
+            self.plan, "P1.1", result="closed-green",
+            validation=[{"carrier": "fixture", "evidence_ids": ["fixture:green"],
+                         "status": "green"}],
+        )
+        journal.append(self.plan, journal.new_entry(
+            plan_id="WORK", item_id="P1.1", command="plan-run",
+            actor="test/high", result="closed-green", decision=decision,
+            note="Fixture complete.",
+        ))
+        journal.append(self.plan, journal.new_entry(
+            plan_id="WORK", item_id="P1.1", command="plan-run",
+            actor="test/high", result="no-op",
+            note="write-site: pre_mutation: allow · pre_final: allow",
+        ))
+        plan_item_state.build_states(self.plan, item_id="P1.1")
+        plan_status.build_status(self.plan)
+
+        capsule = plan_work.design_context(self.plan, finish=True)
+        self.assertEqual(capsule["phase_id"], "finish")
+        result = plan_work.finalize_design(
+            self.plan, finish=True, actor="test/high", session_id="design")
+        self.assertEqual(result["phase_id"], "finish")
+
     def test_execution_sheet_requires_finished_design_and_matching_green_audit(self):
         from task import journal, plan_readiness
 

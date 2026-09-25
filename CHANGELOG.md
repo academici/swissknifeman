@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+## [0.24.7] - 2026-09-25
+
+### Added
+
+- **Provider-aware context doctor:** `skiller doctor --context --provider codex` и
+  `budget --first-turn --provider codex` теперь читают фактический native prompt
+  inventory, показывают managed/observed разницу, дубли имён и включённые вне
+  project policy плагины, а также желаемые плагины, отсутствующие в effective state.
+
+### Fixed
+
+- **Codex first-turn receipt:** замер использует `AGENTS.md`, не приписывает Codex
+  Claude-only agents и SessionStart hooks и возвращает `INCOMPLETE`, если native
+  inventory нельзя проверить.
+- **Task 0.24.3:** repair digest-bound batch receipts, уточнения plan gates/work и
+  journal migration; пересобраны provider projections и publication locks.
+
+### Changed
+
+- **skiller 0.17.14:** provider-aware `--context` diagnostics и Codex-native inventory в
+  `budget`/`doctor` без изменения Claude default JSON contract.
+
 ## [0.24.6] - 2026-09-23
 
 ### Fixed

@@ -190,7 +190,7 @@ class ProviderPlanRoutingTests(unittest.TestCase):
             inherited_minimum=("implementation", "high"))
         self.assertTrue(plan.ok, plan.diagnostics)
         expected = (
-            "codex -C /workspace/repo -m gpt-5.6-terra "
+            "codex -C /workspace/repo -m gpt-6-sol "
             "-c 'model_reasoning_effort=\"high\"' -a never -s danger-full-access "
             "'$ task:plan-run PLAN P2.7'"
         )

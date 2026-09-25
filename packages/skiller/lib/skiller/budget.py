@@ -32,6 +32,7 @@ from .config import (CORE_SKILLS, DEFAULT_EXCLUDE, RESIDENT_BUDGET_TARGET,
                      find_project_root, load_config, resolve_selection,
                      validate_config)
 from .plugins import plugins_summary
+from .native_codex import native_inventory
 from .vendor import build_requires_index, collect_skills, resolve_requires
 
 # Символов на токен — РАЗНЫЕ для кириллицы и латиницы/кода: кириллица у токенайзера
@@ -687,8 +688,9 @@ def format_profiles_listing_report(rows):
     return "\n".join(out)
 
 
-def _measure_skills(env, target, *, listing_fraction=SKILL_LISTING_BUDGET_FRACTION,
-                    listing_context_window=SKILL_LISTING_CONTEXT_WINDOW):
+def _managed_skill_measurement(env, target, provider, *,
+                               listing_fraction=SKILL_LISTING_BUDGET_FRACTION,
+                               listing_context_window=SKILL_LISTING_CONTEXT_WINDOW):
     """Резидент листинга активного набора скиллов проекта — модель бюджета
     выше (cap на запись + потолок = context_window*fraction), не сумма всех
     описаний (тот переучёт был причиной D22/[POSSIBLE-DEFECT] в разведке P3.4).
@@ -698,7 +700,7 @@ def _measure_skills(env, target, *, listing_fraction=SKILL_LISTING_BUDGET_FRACTI
         config = load_config(env, target)
         skills, meta = resolve_active_set(env, target, config)
         all_dirs = [d for _bucket, _rel, d, _fm in skills]
-        dirs, excluded = _split_listing_entries(all_dirs, DEFAULT_LISTING_PROVIDER)
+        dirs, excluded = _split_listing_entries(all_dirs, provider)
         raw = sum(_listing_entry_tokens(d) for d in dirs)
         budget = int(listing_context_window * listing_fraction)
         resident = min(raw, budget)
@@ -709,6 +711,7 @@ def _measure_skills(env, target, *, listing_fraction=SKILL_LISTING_BUDGET_FRACTI
             detail += (f", листинг {raw} > бюджет {budget} ток → резидент "
                       f"{resident} (клиент дропает редко вызываемые описания)")
         return {"tokens": resident, "raw_tokens": raw, "listing_budget": budget,
+                "desired_plugins": list(config.plugins),
                 "excluded": sum(len(ds) for ds in excluded.values()),
                 "excluded_by": {f: len(ds) for f, ds in sorted(excluded.items())},
                 "excluded_raw": sum(_listing_entry_tokens(d)
@@ -718,9 +721,81 @@ def _measure_skills(env, target, *, listing_fraction=SKILL_LISTING_BUDGET_FRACTI
         return {"tokens": None, "detail": f"n/a ({e})"}
 
 
-def _measure_agents(target):
+def _measure_skills(env, target, *, provider=DEFAULT_LISTING_PROVIDER,
+                    listing_fraction=SKILL_LISTING_BUDGET_FRACTION,
+                    listing_context_window=SKILL_LISTING_CONTEXT_WINDOW):
+    """Use provider-observed skill inventory when the provider exposes it."""
+    managed = _managed_skill_measurement(
+        env, target, provider,
+        listing_fraction=listing_fraction,
+        listing_context_window=listing_context_window)
+    if provider != "codex":
+        managed["measurement"] = "managed-estimate"
+        return managed
+
+    observed = native_inventory(env, target)
+    managed_fields = {
+        "managed_tokens": managed.get("tokens"),
+        "managed_raw_tokens": managed.get("raw_tokens"),
+        "managed_detail": managed.get("detail"),
+        "desired_plugins": managed.get("desired_plugins", []),
+    }
+    if not observed["ok"]:
+        return {
+            **managed_fields,
+            "tokens": None,
+            "detail": "; ".join(observed["notes"]),
+            "measurement": "provider-unavailable",
+            "observed_count": None,
+            "enabled_plugins": observed.get("enabled", []),
+            "duplicates": [],
+        }
+
+    entries = []
+    for name, paths in sorted(observed["paths"].items()):
+        for raw_path in paths:
+            path = Path(raw_path)
+            tokens = None
+            try:
+                fm = parse_frontmatter(path)
+                tokens = estimate_tokens(
+                    f"{fm.get('name', name) or name} {fm.get('description', '')}")
+            except (OSError, ValueError, TypeError):
+                pass
+            entries.append({"name": name, "path": raw_path, "tokens": tokens})
+    missing = [entry for entry in entries if entry["tokens"] is None]
+    duplicates = [
+        {"name": name, "paths": list(paths)}
+        for name, paths in sorted(observed["paths"].items()) if len(paths) > 1
+    ]
+    total = None if missing else sum(entry["tokens"] for entry in entries)
+    desired = set(managed.get("desired_plugins", []))
+    outside_policy = sorted(set(observed["enabled"]) - desired) if desired else []
+    not_effective = sorted(desired - set(observed["enabled"]))
+    return {
+        **managed_fields,
+        "tokens": total,
+        "raw_tokens": total,
+        "detail": (f"Codex observed: {len(entries)} entries / "
+                   f"{len(observed['names'])} unique names; managed: "
+                   f"{managed.get('detail', 'n/a')}")
+                  + (f"; {len(missing)} unreadable" if missing else ""),
+        "measurement": "provider-observed" if total is not None else "provider-partial",
+        "observed_count": len(entries),
+        "observed_unique_names": len(observed["names"]),
+        "enabled_plugins": observed["enabled"],
+        "enabled_outside_project_policy": outside_policy,
+        "desired_plugins_not_effective": not_effective,
+        "duplicates": duplicates,
+    }
+
+
+def _measure_agents(target, provider=DEFAULT_LISTING_PROVIDER):
     """name+description каждого .claude/agents/*.md (frontmatter) — тот же
     always-on «налог», что у скиллов, но для субагентов проекта."""
+    if provider == "codex":
+        return {"tokens": 0,
+                "detail": "Codex repo agents are provider-managed, not .claude/agents"}
     d = Path(target) / ".claude" / "agents"
     if not d.is_dir():
         return {"tokens": 0, "detail": "нет .claude/agents"}
@@ -766,6 +841,22 @@ def _measure_claude_md(target):
     if n_rules:
         detail += f" + {n_rules} rules без paths"
     return {"tokens": total, "detail": detail}
+
+
+def _measure_instructions(target, provider=DEFAULT_LISTING_PROVIDER):
+    if provider == "claude-code":
+        value = _measure_claude_md(target)
+        value["surface"] = "CLAUDE.md + .claude/rules"
+        return value
+    target = Path(target)
+    agents_md = target / "AGENTS.md"
+    if not agents_md.is_file():
+        return {"tokens": 0, "detail": "нет AGENTS.md", "surface": "AGENTS.md"}
+    try:
+        tokens = estimate_tokens(agents_md.read_text(encoding="utf-8", errors="ignore"))
+    except OSError as error:
+        return {"tokens": None, "detail": f"n/a ({error})", "surface": "AGENTS.md"}
+    return {"tokens": tokens, "detail": f"AGENTS.md={tokens}", "surface": "AGENTS.md"}
 
 
 def _settings_hook_commands(target, event="SessionStart"):
@@ -817,7 +908,10 @@ def _run_hook(cmd, target, timeout=HOOK_TIMEOUT):
     return estimate_tokens(ctx), True
 
 
-def _measure_hooks(target, timeout=HOOK_TIMEOUT):
+def _measure_hooks(target, timeout=HOOK_TIMEOUT, provider=DEFAULT_LISTING_PROVIDER):
+    if provider != "claude-code":
+        return {"tokens": 0,
+                "detail": f"нет измеряемого SessionStart-контракта для {provider}"}
     cmds = _settings_hook_commands(target, "SessionStart")
     if not cmds:
         return {"tokens": 0, "detail": "нет SessionStart-хуков"}
@@ -909,7 +1003,8 @@ def _first_turn_verdict(total):
     return "WARN"
 
 
-def first_turn_report(env, target, *, timeout=HOOK_TIMEOUT,
+def first_turn_report(env, target, *, provider=DEFAULT_LISTING_PROVIDER,
+                      timeout=HOOK_TIMEOUT,
                       listing_fraction=SKILL_LISTING_BUDGET_FRACTION,
                       listing_context_window=SKILL_LISTING_CONTEXT_WINDOW):
     """Сумма always-on футпринта первого хода проекта по пяти источникам.
@@ -923,16 +1018,24 @@ def first_turn_report(env, target, *, timeout=HOOK_TIMEOUT,
     захардкоженный дефолт протухнет при смене `skillListingBudgetFraction`)."""
     target = Path(target).resolve()
     sources = {
-        "skills": _measure_skills(env, target, listing_fraction=listing_fraction,
+        "skills": _measure_skills(env, target, provider=provider,
+                                  listing_fraction=listing_fraction,
                                   listing_context_window=listing_context_window),
-        "agents": _measure_agents(target),
-        "claude_md": _measure_claude_md(target),
-        "hooks": _measure_hooks(target, timeout=timeout),
+        "agents": _measure_agents(target, provider=provider),
+        "claude_md": _measure_instructions(target, provider=provider),
+        "hooks": _measure_hooks(target, timeout=timeout, provider=provider),
         "mcp": _measure_mcp(target),
     }
     total = sum(s["tokens"] for s in sources.values() if s["tokens"] is not None)
-    return {"target": str(target), "sources": sources, "total": total,
-           "verdict": _first_turn_verdict(total)}
+    complete = all(source["tokens"] is not None for source in sources.values())
+    report = {"target": str(target), "sources": sources, "total": total,
+              "verdict": _first_turn_verdict(total) if complete else "INCOMPLETE"}
+    if provider != DEFAULT_LISTING_PROVIDER:
+        report["provider"] = provider
+        report["measurement_status"] = "complete" if complete else "incomplete"
+        report["scope"] = "managed-first-turn"
+        report["platform_overhead"] = "excluded"
+    return report
 
 
 def _format_plugins_block(plugins):
@@ -962,9 +1065,14 @@ def _format_plugins_block(plugins):
 
 def format_first_turn_report(report):
     out = ["", "━━━ FIRST-TURN БЮДЖЕТ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-          f"Проект: {report['target']}", ""]
+          f"Проект: {report['target']}",
+          f"Provider: {report.get('provider', 'claude-code')}", ""]
     for key, label in _FIRST_TURN_SOURCE_LABELS:
         s = report["sources"].get(key, {})
+        if key == "claude_md":
+            label = s.get("surface", label)
+        elif key == "agents" and report.get("provider") == "codex":
+            label = "provider agents"
         tok = s.get("tokens")
         tok_str = "   n/a" if tok is None else f"{tok:>6}"
         out.append(f"  {label:<28} {tok_str} ток  ({s.get('detail', '')})")
@@ -976,6 +1084,14 @@ def format_first_turn_report(report):
             # публикуется отдельной строкой (эффект ПРИБОРА, не диеты реестра).
             out.append(f"  {'  ' + format_listing_exclusions(s['excluded_by']):<28} "
                        f"{-s['excluded_raw']:>6} ток вне листинга")
+        if key == "skills" and s.get("managed_tokens") is not None:
+            out.append(f"  {'  managed estimate':<28} {s['managed_tokens']:>6} ток")
+        if key == "skills" and s.get("duplicates"):
+            names = ", ".join(row["name"] for row in s["duplicates"])
+            out.append(f"  {'  duplicate names':<28} {names}")
+        if key == "skills" and s.get("enabled_outside_project_policy"):
+            names = ", ".join(s["enabled_outside_project_policy"])
+            out.append(f"  {'  plugins outside policy':<28} {names}")
         if key == "mcp" and s.get("mode"):
             out.append(f"  {'  tool search':<28} {s['mode']} "
                        f"(источник: {s['mode_source']}) — {s['estimate_class']}")
@@ -1088,15 +1204,17 @@ def cmd_budget(env, argv):
               "               [--profile P | --buckets a,b] [--exclude x,y]\n"
               "               [--provider claude-code|codex|cursor] [--profiles]\n"
               "               [--no-core] [--json] [--write-map] [--check-core [--strict]]\n"
-              "               [--first-turn [--json] [--strict]]\n"
+              "               [--first-turn [--provider claude-code|codex|cursor] "
+              "[--json] [--strict]]\n"
               "  Трёхъярусный токеновый бюджет набора скиллов (⊕ always / ↻ on-trigger\n"
               "  / ⌥ on-demand). --write-map перегенерит docs/guide/budget.md.\n"
               "  --check-core: резидентный (⊕ tier-0) бюджет CORE_SKILLS vs target (гейт\n"
               "  против тихого роста ядра И против тихого недобора — пропавший по пути\n"
               "  CORE-скилл занижает резидент, а не улучшает его); --strict — ненулевой\n"
               "  код при превышении ИЛИ недоборе (CI).\n"
-              "  --first-turn: always-on футпринт первого хода проекта (skills meta +\n"
-              "  agents + CLAUDE.md/rules + живой прогон SessionStart-хуков + MCP) —\n"
+              "  --first-turn: provider-aware always-on футпринт первого хода проекта.\n"
+              "  Claude измеряет CLAUDE.md/rules, agents и SessionStart; Codex — AGENTS.md\n"
+              "  и фактический native prompt inventory с duplicate/policy diagnostics;\n"
               "  target ≤16K / warn >23K ток; --strict — exit 1 при WARN (CI).\n"
               "  --with-plugins (только вместе с --first-turn): добавляет always-on цену\n"
               "  установленных marketplace-плагинов проекта (`claude plugin list/details`)\n"
@@ -1131,8 +1249,14 @@ def cmd_budget(env, argv):
             target, _via = find_project_root(env)
             if target is None:
                 die("корень проекта не найден выше CWD — укажи --target")
-        report = first_turn_report(env, target)
+        provider = opts.get("provider") or DEFAULT_LISTING_PROVIDER
+        if provider not in ("claude-code", "codex", "cursor"):
+            die("--provider: ожидался claude-code|codex|cursor")
+        report = first_turn_report(env, target, provider=provider)
         if opts.get("with_plugins"):
+            if provider != "claude-code":
+                die("--with-plugins пока измеряет только Claude Code; для Codex используй "
+                    "provider-observed inventory без этого флага")
             plugins = plugins_summary(target)
             report["plugins"] = plugins
             session_total = (report["total"] if plugins["total"] is None
@@ -1143,9 +1267,9 @@ def cmd_budget(env, argv):
             print(json.dumps(report, ensure_ascii=False, indent=2))
         else:
             print(format_first_turn_report(report))
-        if opts.get("strict") and report["verdict"] == "WARN":
+        if opts.get("strict") and report["verdict"] in {"WARN", "INCOMPLETE"}:
             die(f"first-turn бюджет {report['total']} ток > warn-порог "
-                f"{FIRST_TURN_WARN} ({target}) — см. таблицу выше")
+                f"{FIRST_TURN_WARN} либо измерение неполно ({target}) — см. таблицу выше")
         return
 
     if opts.get("check_core"):

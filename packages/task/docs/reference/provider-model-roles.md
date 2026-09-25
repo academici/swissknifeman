@@ -20,7 +20,7 @@ Fixed commands and launch-blocks pin **one** selector per class. Inventory-only 
 | Provider | economy | implementation | frontier |
 |:--|:--|:--|:--|
 | `claude-code` | `haiku` | `sonnet` | `opus` |
-| `codex` | `gpt-5.6-luna` | `gpt-5.6-terra` | `gpt-5.6-sol` |
+| `codex` | `gpt-5.6-luna` | `gpt-6-sol` | `gpt-6-astra` |
 | `cursor` | `composer-2.5-fast` | `composer-2.5` | `claude-opus-5-thinking-high` |
 
 ## Model inventory
@@ -49,7 +49,7 @@ Fixed commands and launch-blocks pin **one** selector per class. Inventory-only 
 | `gpt-5.6-terra` | implementation | — |
 | `gpt-5.6-sol` | frontier, design, audit | — |
 | `gpt-6-astra` | frontier, design, audit | — |
-| `gpt-6-sol` | frontier, design, audit | — |
+| `gpt-6-sol` | implementation | — |
 
 ### `cursor`
 

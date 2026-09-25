@@ -977,7 +977,8 @@ def lint_read_path_boundaries(plan_dir, layout: str, diag) -> None:
         return
     repo_root = plan_weight.repo_root_for(plan_dir)
     for item in measured["items"]:
-        if item["phase_id"] not in active_phases:
+        if (item["phase_id"] not in active_phases
+                or item.get("status") in TERMINAL_ITEM_STATUSES):
             continue
         try:
             fields = plan_bundle._fields(plan_dir, item["item_id"])

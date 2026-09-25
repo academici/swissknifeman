@@ -183,6 +183,16 @@ class TestJournalMigration(unittest.TestCase):
         with self.assertRaisesRegex(journal_migration.JournalMigrationError, "уже валиден"):
             journal_migration._allowed_operation(already_valid)
 
+        wrong_invocation = copy.deepcopy(valid)
+        wrong_invocation["invocation_digest"] = "d" * 64
+        corrected_invocation = {
+            "op": "replace", "path": "/batch_receipt",
+            "before": wrong_invocation, "value": valid,
+        }
+        event = {"batch_receipt": wrong_invocation}
+        journal_migration._apply_operation(event, corrected_invocation)
+        self.assertEqual(event["batch_receipt"], valid)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -166,7 +166,11 @@ def _allowed_operation(operation: dict) -> None:
         for field in ("schema_version", "batch_id", "membership", "completed_prefix", "stop_disposition"):
             if before.get(field) != after[field]:
                 raise JournalMigrationError(f"/batch_receipt: {field} нельзя менять")
-        for field in ("invocation_digest", "routing_digest", "spec_digest", "handoff_digest"):
+        # invocation_digest is fully derived from the unchanged membership, so an
+        # invalid historical value can be corrected without changing batch
+        # identity. The remaining digests bind external carriers and stay
+        # immutable once present.
+        for field in ("routing_digest", "spec_digest", "handoff_digest"):
             if before.get(field) is not None and before[field] != after[field]:
                 raise JournalMigrationError(f"/batch_receipt: {field} нельзя менять")
         return

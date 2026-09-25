@@ -16,6 +16,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from skiller.budget import cmd_budget, first_turn_report
+from skiller.doctor import cmd_doctor
 import tests.fixtures as fx
 
 
@@ -276,6 +277,74 @@ class FirstTurnReportCase(unittest.TestCase):
         self.assertIn("verdict", data)
         self.assertEqual(set(data["sources"]),
                          {"skills", "agents", "claude_md", "hooks", "mcp"})
+
+    def test_codex_first_turn_uses_provider_observed_skills_and_agents_md(self):
+        (self.proj / "AGENTS.md").write_text("codex instruction " * 20,
+                                              encoding="utf-8")
+        observed_skill = self.registry_root / "skills" / "quality" / "observed"
+        fx.write_skill(observed_skill, "observed", description="Observed by Codex")
+        inventory = {
+            "ok": True,
+            "names": {"observed"},
+            "native_names": {"observed"},
+            "paths": {"observed": [str(observed_skill / "SKILL.md")]},
+            "enabled": ["quality"],
+            "notes": [],
+        }
+        with mock.patch("skiller.budget.native_inventory", return_value=inventory):
+            report = first_turn_report(self.env, self.proj, provider="codex")
+        self.assertEqual(report["provider"], "codex")
+        self.assertEqual(report["measurement_status"], "complete")
+        self.assertEqual(report["scope"], "managed-first-turn")
+        self.assertEqual(report["platform_overhead"], "excluded")
+        self.assertEqual(report["sources"]["skills"]["measurement"],
+                         "provider-observed")
+        self.assertEqual(report["sources"]["skills"]["observed_count"], 1)
+        self.assertGreater(report["sources"]["skills"]["managed_tokens"], 0)
+        self.assertEqual(report["sources"]["agents"]["tokens"], 0)
+        self.assertEqual(report["sources"]["claude_md"]["surface"], "AGENTS.md")
+        self.assertGreater(report["sources"]["claude_md"]["tokens"], 0)
+        self.assertEqual(report["sources"]["hooks"]["tokens"], 0)
+
+    def test_codex_native_inventory_failure_is_incomplete_and_strict_fails(self):
+        unavailable = {
+            "ok": False, "names": set(), "native_names": set(), "paths": {},
+            "enabled": [], "notes": ["Codex native discovery unavailable: test"],
+        }
+        with mock.patch("skiller.budget.native_inventory", return_value=unavailable):
+            report = first_turn_report(self.env, self.proj, provider="codex")
+            self.assertEqual(report["verdict"], "INCOMPLETE")
+            self.assertEqual(report["measurement_status"], "incomplete")
+            self.assertIsNone(report["sources"]["skills"]["tokens"])
+            with contextlib.redirect_stdout(io.StringIO()):
+                with self.assertRaises(SystemExit):
+                    cmd_budget(self.env, ["--first-turn", "--provider", "codex",
+                                         "--target", str(self.proj), "--strict"])
+
+    def test_context_doctor_reports_codex_collisions_and_policy_drift(self):
+        (self.proj / ".swissknife.json").write_text(
+            json.dumps({"plugins": ["quality", "php"]}), encoding="utf-8")
+        observed_skill = self.registry_root / "skills" / "quality" / "observed"
+        fx.write_skill(observed_skill, "observed", description="Observed by Codex")
+        inventory = {
+            "ok": True,
+            "names": {"observed"},
+            "native_names": {"observed"},
+            "paths": {"observed": [str(observed_skill / "SKILL.md"),
+                                    str(observed_skill / "SKILL.md")]},
+            "enabled": ["quality", "devops"],
+            "notes": [],
+        }
+        stdout = io.StringIO()
+        with mock.patch("skiller.budget.native_inventory", return_value=inventory), \
+                contextlib.redirect_stdout(stdout):
+            cmd_doctor(self.env, ["--context", "--provider", "codex",
+                                  "--target", str(self.proj), "--json"])
+        report = json.loads(stdout.getvalue())
+        self.assertEqual(report["status"], "degraded")
+        self.assertEqual({row["code"] for row in report["diagnostics"]}, {
+            "SKILL_DUPLICATE_NAME", "CODEX_PLUGIN_ENABLED_OUTSIDE_PROJECT_POLICY",
+            "CODEX_DESIRED_PLUGIN_NOT_EFFECTIVE"})
 
     # --- модель листинга: нативные поля, снимающие запись (P3.2, D95/D96) ------
     def _write_skill_fm(self, name, extra_fm=""):

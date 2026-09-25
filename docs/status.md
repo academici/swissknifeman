@@ -43,6 +43,19 @@
 | core | `core.io` — атомарная запись (tmp + `os.replace`) | available | `PYTHONPATH=. python3 -m unittest discover -s core/tests` |
 | core | `core.repo` — единый поиск корня репо/монорепо | available | используется лаунчерами всех пяти пакетов (`find_repo_root`/`find_monorepo_root`), покрыт `core/tests/test_core.py` |
 
+## Какие риски покрывают проверки
+
+Эта карта связывает механизм с проверяемым сбоем. Статус `available` выше не означает,
+что все свойства проверены на живом клиенте или при выключении питания.
+
+| Сбой | Механизм и автоматическая проверка | Предел доказательства / полевая проверка |
+|:--|:--|:--|
+| Чужой файл перезаписан проекцией | `core.provider.lock` отказывает при ownership conflict и managed drift; `core/tests/provider/test_lock.py`, `packages/harness/tests/test_provider_instructions.py` | Проверки идут в изолированных каталогах; фактическую активную проекцию конкретного проекта смотрите через `skiller doctor --effective-source --json` и provider audit. |
+| Два локальных writer'а или погибший holder оставили lock | `flock` сериализует записи; `core/tests/provider/test_lock.py` проверяет конкуренцию и освобождение после `SIGKILL` | Это семантика одного Linux-хоста с локальной ФС; NFS/SMB и атомарность нескольких provider-файлов этим тестом не доказаны. |
+| Плановый item ошибочно закрыт GREEN | `task_contract`, terminal journal и digest-bound delivery receipt; `packages/task/tests/test_plan_delivery.py`, `packages/task/tests/test_plan_work.py` | Тесты не заменяют живое выполнение declared Validation и проверку результата пользователем; прямые задачи вне Task не получают такой receipt автоматически. |
+| Релизная поставка разошлась с тегом | `verify-tag`, release attestation и `release-fleet` проверяют локальную поставку; `packages/skiller/tests/test_release_attestation.py` | Публикация GitHub Release — отдельная операция; наличие тега и локального receipt её не доказывает. |
+| Секрет попал в отслеживаемый файл | `scripts/public-hygiene.py` запрещает имена ключей и приватных артефактов | Это проверка **имён файлов**, не содержимого. Она не доказывает отсутствие секретов в JSON, shell-скриптах или примерах. |
+
 ## Known limitations
 
 - **Видимая CLI-группа не доказывает, что её рантайм включён.** Наличие команды в `--help`

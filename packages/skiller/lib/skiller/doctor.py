@@ -908,6 +908,7 @@ def _effective_carrier_set_document(gate_result, *, commit_sha, repo_root):
 def cmd_doctor(env, argv):
     opts = parse_flags(argv, {"--downstream": "bool", "--vendor-drift": "bool",
                               "--settings": "bool", "--provider-distribution": "bool",
+                              "--context": "bool", "--provider": "str",
                               "--effective-runtime": "bool", "--fixture-out": "str",
                               "--carrier-out": "str", "--target": "str",
                               "--effective-source": "bool", "--json": "bool"})
@@ -919,6 +920,9 @@ def cmd_doctor(env, argv):
               "(новые/изменившиеся managed-скиллы; сухой расчёт).\n"
               "  --provider-distribution: read-only preflight Claude/Codex delivery; "
               "не запускает native installer.\n"
+              "  --context [--provider claude-code|codex|cursor] [--target P]: "
+              "provider-aware first-turn footprint; Codex reads its effective native "
+              "prompt inventory and reports duplicate skills / plugins outside policy.\n"
               "  --effective-runtime [--fixture-out F] [--carrier-out F]: P1.4 cold "
               "install/discover conformance gate (declared fixture, catalog-wide "
               "uniqueness, D42 negative fixture); опц. запись declared-literal/carrier-set.\n"
@@ -930,6 +934,42 @@ def cmd_doctor(env, argv):
         return
     if opts.get("settings"):
         _delegate_settings_doctor(env, opts)
+        return
+    if opts.get("context"):
+        from .budget import first_turn_report, format_first_turn_report
+        from .config import resolve_target
+        provider = opts.get("provider") or "claude-code"
+        if provider not in {"claude-code", "codex", "cursor"}:
+            raise SystemExit("--provider: ожидался claude-code|codex|cursor")
+        target, _ = resolve_target(env, opts)
+        report = first_turn_report(env, target, provider=provider)
+        skills = report["sources"]["skills"]
+        diagnostics = []
+        if skills.get("duplicates"):
+            diagnostics.append({
+                "code": "SKILL_DUPLICATE_NAME",
+                "names": [row["name"] for row in skills["duplicates"]],
+            })
+        if skills.get("enabled_outside_project_policy"):
+            diagnostics.append({
+                "code": "CODEX_PLUGIN_ENABLED_OUTSIDE_PROJECT_POLICY",
+                "plugins": skills["enabled_outside_project_policy"],
+            })
+        if skills.get("desired_plugins_not_effective"):
+            diagnostics.append({
+                "code": "CODEX_DESIRED_PLUGIN_NOT_EFFECTIVE",
+                "plugins": skills["desired_plugins_not_effective"],
+            })
+        report["diagnostics"] = diagnostics
+        report["status"] = ("degraded" if diagnostics or
+                            report.get("measurement_status") == "incomplete" else "ok")
+        if opts.get("json"):
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+        else:
+            print(format_first_turn_report(report))
+            for diagnostic in diagnostics:
+                values = diagnostic.get("names", diagnostic.get("plugins", []))
+                print(f"{diagnostic['code']}: {', '.join(values)}")
         return
     if opts.get("effective_source"):
         from core import find_repo_root

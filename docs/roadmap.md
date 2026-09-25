@@ -43,6 +43,15 @@ terminal output gap: `handoff.md` и delivery receipt содержали native 
 
 ## Ближайшая фаза
 
+**Контекст сессий — release v0.24.7 (2026-09-25).** Выпущены skiller `0.17.14` и task
+`0.24.3` (commit `e4fa1fbf`, tag `v0.24.7`): provider-aware `budget`/`doctor` для Codex,
+исправленный first-turn receipt (`AGENTS.md`, без Claude-only surfaces, `INCOMPLETE` при
+сбое native discovery). Fleet delivery GREEN
+([`fleet receipt`](../roadmap/evidence/2026.09.25-v0.24.7-fleet-receipt.md)); plugin/skill
+reconcile и Cursor parity остаются полевым остатком. Аудиты:
+[`session context telemetry`](../roadmap/2026.09.25-session-context-telemetry-audit.md),
+[`Codex empty greeting`](../roadmap/2026.09.25-codex-empty-greeting-context-audit.md).
+
 **Полевые исправления 2026-09-13 реализованы.** Task сохраняет явный opt-in маршрут,
 восстанавливает незавершённый predecessor и отделяет finite owner authority от external/calendar wait.
 Релиз проверяет immutable `(unit, version) → bytes`; delivery сохраняет общий owner-union lock,

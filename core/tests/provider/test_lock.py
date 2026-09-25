@@ -1,8 +1,11 @@
 """Conformance tests for P2.2 fail-closed artifact lock lifecycle."""
 import json
 import os
+import select
+import subprocess
+import sys
 from contextlib import contextmanager
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from dataclasses import replace
 from pathlib import Path
 import tempfile
@@ -740,6 +743,47 @@ class ProviderLockTests(unittest.TestCase):
         lock = parse_lock((self.root / provider_lock.LOCK_RELATIVE_PATH).read_bytes())
         self.assertEqual({record.artifact_id for record in lock.records},
                          {"skiller.artifact", "maind.artifact"})
+
+    def test_writer_guard_releases_after_killed_process(self):
+        script = (
+            "from pathlib import Path\n"
+            "from core.provider.lock import _writer_guard\n"
+            "import signal, sys\n"
+            "with _writer_guard(Path(sys.argv[1])):\n"
+            "    print('locked', flush=True)\n"
+            "    signal.pause()\n"
+        )
+        env = os.environ.copy()
+        repo = str(Path(__file__).resolve().parents[3])
+        env["PYTHONPATH"] = os.pathsep.join(filter(None, (repo, env.get("PYTHONPATH"))))
+        holder = subprocess.Popen(
+            (sys.executable, "-c", script, str(self.root)),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env,
+        )
+        try:
+            ready, _, _ = select.select((holder.stdout,), (), (), 5)
+            self.assertTrue(ready, "lock holder did not start")
+            self.assertEqual(holder.stdout.readline().strip(), "locked")
+            planned = self.plan()
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                writer = pool.submit(apply_plan, self.root, planned)
+                try:
+                    with self.assertRaises(FutureTimeoutError):
+                        writer.result(timeout=0.2)
+                finally:
+                    holder.kill()
+                    holder.wait(timeout=5)
+                writer.result(timeout=5)
+            lock = parse_lock((self.root / provider_lock.LOCK_RELATIVE_PATH).read_bytes())
+            self.assertEqual(lock.records, (self.expected.provenance,))
+            self.assertEqual(self.plan(lock_bytes=serialize_lock(lock)).actions[0].action,
+                             ArtifactActionKind.NOOP)
+        finally:
+            if holder.poll() is None:
+                holder.kill()
+                holder.wait(timeout=5)
+            holder.stdout.close()
+            holder.stderr.close()
 
     def test_owner_cleanup_replaces_only_own_records_even_for_noop_targets(self):
         own = result(artifact_id="skiller.first", target="first.txt")

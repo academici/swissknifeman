@@ -56,11 +56,11 @@ class CodexInventoryRouteTests(unittest.TestCase):
         from task import route_evidence_codex
         metadata = json.loads(ROUTING_PATH.read_text())
         self.assertEqual(metadata["mappings"]["codex"]["class_selectors"]["frontier"],
-                         ["gpt-5.6-sol"])
+                         ["gpt-6-astra"])
         self.assertEqual(route_evidence_codex._selector_class("gpt-6-astra", ROUTING_PATH),
                          "frontier")
         self.assertEqual(route_evidence_codex._selector_class("gpt-6-sol", ROUTING_PATH),
-                         "frontier")
+                         "implementation")
         with self.assertRaises(re.RouteEvidenceError):
             route_evidence_codex._selector_class("unlisted-model", ROUTING_PATH)
 

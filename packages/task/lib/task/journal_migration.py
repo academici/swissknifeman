@@ -144,6 +144,36 @@ def _allowed_operation(operation: dict) -> None:
             raise JournalMigrationError(
                 f"{path}: допускается только additive neutral backfill {_NEUTRAL_ROOT_VALUES[path]!r}")
         return
+    if path == "/batch_receipt":
+        if op != "replace" or not isinstance(operation.get("before"), dict) \
+                or not isinstance(operation["value"], dict):
+            raise JournalMigrationError(
+                "/batch_receipt: допускается только replace невалидного historical receipt")
+        from task.task_contract import validate_batch_receipt
+
+        before = operation["before"]
+        after = operation["value"]
+        try:
+            validate_batch_receipt(before)
+        except ValueError:
+            pass
+        else:
+            raise JournalMigrationError("/batch_receipt: исходный receipt уже валиден")
+        try:
+            validate_batch_receipt(after)
+        except ValueError as exc:
+            raise JournalMigrationError(f"/batch_receipt: итоговый receipt невалиден: {exc}") from exc
+        for field in ("schema_version", "batch_id", "membership", "completed_prefix", "stop_disposition"):
+            if before.get(field) != after[field]:
+                raise JournalMigrationError(f"/batch_receipt: {field} нельзя менять")
+        # invocation_digest is fully derived from the unchanged membership, so an
+        # invalid historical value can be corrected without changing batch
+        # identity. The remaining digests bind external carriers and stay
+        # immutable once present.
+        for field in ("routing_digest", "spec_digest", "handoff_digest"):
+            if before.get(field) is not None and before[field] != after[field]:
+                raise JournalMigrationError(f"/batch_receipt: {field} нельзя менять")
+        return
     if path in _LEGACY_DECISION_ADDITIONS:
         if op != "add" or operation["value"] != _LEGACY_DECISION_ADDITIONS[path]:
             raise JournalMigrationError(

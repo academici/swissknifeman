@@ -104,6 +104,27 @@ class TestSkillDrift(unittest.TestCase):
             apply_setup_skill(env, config, config["projects"][0], "auto", False)
             self.assertEqual(_skill_drift(env, config), [])
 
+    def test_skiller_root_bootstrap_projection_is_not_maind_drift(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            _write_ecosystem_templates(root)
+            projdir = Path(tmp) / "swissknifeman"
+            projdir.mkdir()
+            write_maind_config(root, projects=[
+                {"id": "swissknifeman", "name": "SKM", "type": "standalone",
+                 "status": "active", "local_path": str(projdir)}])
+            from maind.config import load_config
+            config, _ = load_config(env)
+            for name in ("ecosystem-mcp", "ecosystem-setup"):
+                text = (f"---\nname: {name}\ncanonical: packages/skiller/skills/"
+                        f"repository-bootstrap/{name}/SKILL.md\n"
+                        "generator: packages/skiller/lib/skiller/registry.py\n---\n")
+                for provider in (".claude", ".agents"):
+                    target = projdir / provider / "skills" / name / "SKILL.md"
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_text(text, encoding="utf-8")
+            self.assertEqual(_skill_drift(env, config), [])
+
     def test_reports_stale_when_template_changed_after_deploy(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, env = make_repo(tmp)

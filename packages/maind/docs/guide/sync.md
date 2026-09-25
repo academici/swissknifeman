@@ -59,6 +59,12 @@ maind sync --all --dry-run --json                  # план без запис�
 `changed` в отчёте — честный: graph-провиженер сравнивает содержимое стора (сериализация
 детерминирована), а doc/hook — content-hash блока. `--dry-run` ничего не пишет и показывает план.
 
+В корневом репозитории SwissKnifeMan `ecosystem-mcp` и `ecosystem-setup` также существуют как
+тонкие проекции `repository-bootstrap`, принадлежащие `skiller registry`. Если файл явно
+указывает этот `canonical` и `generator`, `maind sync` возвращает `foreign-owner` и не
+перезаписывает ни одну из двух проекций скилла. `maind doctor --skill-drift` не считает их
+дрейфом шаблона maind; исправлять такие проекции нужно через `skiller registry`.
+
 ## Как узнать, что sync вообще нужен (drift-gate)
 
 `sync` детерминирован (content-hash), но **сам себя не вызывает**. Шаблоны провиженеров

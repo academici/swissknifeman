@@ -68,6 +68,10 @@ PYTHONPATH=. python3 -m unittest discover -s core/tests -v   # фундамен�
 - После тега: `skiller deliver --release vX.Y.Z --all --dry-run`, затем та же команда
   без `--dry-run`. Только receipt GREEN доказывает полную поставку; PARTIAL перечисляет
   сохранённые конфликтующие targets. Provider sessions требуют перезапуска.
+- Git-тег и attestation фиксируют версию исходников; `release-fleet` проверяет локальную
+  поставку, но не создаёт GitHub Release. Страница GitHub Releases публикуется отдельно и
+  может отставать от тегов. Для выбора версии сверяйте теги и release attestation, а не
+  считайте метку Latest на GitHub Releases доказательством актуальной поставки.
 - API теги используют `packages/<name>/vX.Y.Z`; plugin теги — `<name>--vX.Y.Z`.
 
 ## PR

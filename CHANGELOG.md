@@ -2,6 +2,58 @@
 
 ## [Unreleased]
 
+## [0.24.7] - 2026-09-25
+
+### Added
+
+- **Provider-aware context doctor:** `skiller doctor --context --provider codex` и
+  `budget --first-turn --provider codex` теперь читают фактический native prompt
+  inventory, показывают managed/observed разницу, дубли имён и включённые вне
+  project policy плагины, а также желаемые плагины, отсутствующие в effective state.
+
+### Fixed
+
+- **Codex first-turn receipt:** замер использует `AGENTS.md`, не приписывает Codex
+  Claude-only agents и SessionStart hooks и возвращает `INCOMPLETE`, если native
+  inventory нельзя проверить.
+- **Task 0.24.3:** repair digest-bound batch receipts, уточнения plan gates/work и
+  journal migration; пересобраны provider projections и publication locks.
+
+### Changed
+
+- **skiller 0.17.14:** provider-aware `--context` diagnostics и Codex-native inventory в
+  `budget`/`doctor` без изменения Claude default JSON contract.
+
+## [0.24.6] - 2026-09-23
+
+### Fixed
+
+- **mAInd ownership:** `maind sync` сохраняет тонкие root-bootstrap проекции
+  `ecosystem-mcp` и `ecosystem-setup`, которыми владеет `skiller registry`; doctor не
+  выдаёт эти файлы за дрейф шаблона maind.
+
+## [0.24.5] - 2026-09-23
+
+### Changed
+
+- **Стартовый маршрут:** короткое руководство ведёт от установки к первой задаче и показывает,
+  когда достаточно прямой правки, а когда явно подключать Task. README и сайт ведут на этот
+  маршрут вместо длинного раннбука Claude Code; вступление README теперь отражает поддержку
+  трёх клиентов и необязательность Task.
+- **Границы доказательств:** `docs/status.md` связывает основные риски с проверками и прямо
+  отмечает пределы локальных lock, Task receipt, релизной поставки и сканирования имён файлов.
+- **Поставка:** `CONTRIBUTING.md` различает Git-тег, attestation, локальную поставку и отдельно
+  публикуемый GitHub Release.
+
+### Fixed
+
+- **Документация провайдеров:** генератор экранирует угловые скобки в полях evidence, чтобы
+  пути вида `<session>` не ломали сборку VitePress.
+- **Контракт провайдеров:** утверждённые хеши и число capabilities в тестах синхронизированы
+  с проверенным manifest из текущего HEAD; CI снова проверяет все 37 возможностей.
+- **Локальный provider lock:** межпроцессный тест проверяет ожидание конкурирующего writer и
+  освобождение `flock` после `SIGKILL` holder-процесса.
+
 ## [0.24.4] - 2026-09-23
 
 ### Fixed

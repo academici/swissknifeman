@@ -438,6 +438,20 @@ class TestReadBudgetGate(unittest.TestCase):
         rows = [row for row in diag.errors if plan_gates.PATH_GATE_ID in row]
         self.assertTrue(any("терминальной фазы" in row and "P1.1" in row for row in rows), rows)
 
+    def test_terminal_consumer_is_outside_the_live_read_path(self):
+        plan_dir = self.copied_fixture("plan-v2")
+        spec = plan_dir / "phases" / "P1" / "P1.1.md"
+        spec.write_text(spec.read_text(encoding="utf-8").replace(
+            "`brief/00-brief.md`", "`phases/P0/P0.1.md`", 1), encoding="utf-8")
+        state = plan_dir / "phases" / "P1" / "P1.1.state.md"
+        state.write_text(state.read_text(encoding="utf-8").replace(
+            "**Status:** 🟡 In progress", "**Status:** 🟢 Done"), encoding="utf-8")
+
+        diag = lint(plan_dir)
+
+        rows = [row for row in diag.errors if plan_gates.PATH_GATE_ID in row]
+        self.assertFalse(any("терминальной фазы" in row and "P1.1" in row for row in rows), rows)
+
 
 if __name__ == "__main__":
     unittest.main()

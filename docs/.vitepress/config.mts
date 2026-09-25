@@ -233,6 +233,7 @@ export default withMermaid(defineConfig({
           text: 'Экосистема',
           items: [
             { text: 'Обзор', link: '/' },
+            { text: 'Начать работу', link: '/getting-started' },
             { text: 'Разработка с Claude Code', link: '/develop' },
             { text: 'Развёртывание: новая машина / команда', link: '/deploy' },
             { text: 'Роутинг источников и задач', link: '/routing' },

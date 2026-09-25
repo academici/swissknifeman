@@ -25,7 +25,7 @@ Adding a fourth provider or a new channel means extending the JSON catalog and t
 
 | File | Role |
 |:--|:--|
-| `configs/provider-capabilities.json` | 36-capability matrix (native/adapted/unsupported) |
+| `configs/provider-capabilities.json` | 37-capability matrix (native/adapted/unsupported) |
 | `configs/provider-distribution.json` | Skill connect/vendor/discovery channels |
 | `configs/provider-projection.json` | Instruction/route/command projection policies |
 | `configs/command-routing.json` | Task command routing SSOT |

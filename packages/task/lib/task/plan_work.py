@@ -233,8 +233,6 @@ def design_context(plan_dir, phase_id: str | None = None, *, finish: bool = Fals
     _design_route(actual_route, owner_accepts_overshoot=owner_accepts_overshoot)
     if finish:
         phase_ids = list(plan_layout.phase_paths(root))
-        for selected in phase_ids:
-            plan_readiness.validate_design_target(root, selected)
         routing = task_contract.compile_batch_routing(root)
         diagnostics = plan_lint.Diagnostics()
         plan_lint.lint_plan(root, diagnostics)
@@ -288,8 +286,8 @@ def finalize_design(plan_dir, phase_id: str | None = None, *, finish: bool = Fal
     phase_ids = list(plan_layout.phase_paths(root)) if finish else [phase_id]
     if not phase_ids or any(selected is None for selected in phase_ids):
         raise WorkError("PLAN_WORK_INVALID_TARGET", "укажите --phase или --finish")
-    for selected in phase_ids:
-        plan_readiness.validate_design_target(root, selected)
+    if not finish:
+        plan_readiness.validate_design_target(root, phase_ids[0])
     support = _supporting_artifacts(root, phase_ids, strict=True) if finish else None
     receipt_phase = phase_ids[-1]
     session_id = session_id or session_context.current_id()

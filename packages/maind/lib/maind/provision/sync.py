@@ -464,6 +464,16 @@ def _installed_agent_packs(local_path):
     return set((lock.get("packs") or {}).keys())
 
 
+def _capability_changed(rc, dry):
+    """Успешный delegated dry-run доказывает только успешное построение плана.
+
+    Внешние CLI пока отдают ожидаемый diff только в human-output, без машиночитаемого
+    результата. ``changed`` в sync receipt описывает применённое состояние, поэтому
+    dry-run не должен утверждать мутацию только из-за ``rc=0``.
+    """
+    return rc == 0 and not dry
+
+
 def _agent_pack_run(env, config, projects, mode, dry):
     """Детерминированно раскатать agent-pack(и) профиля проекта в .claude/ через harness
     (без агента в цикле). install — только если ещё не стоит; update — версионный апгрейд
@@ -490,7 +500,8 @@ def _agent_pack_run(env, config, projects, mode, dry):
                 # rc!=0 — провал рендера пака (НЕ 'skip', иначе провал невидим); harness
                 # недоступен ловится отдельно ниже как graceful skip.
                 results.append(_result("agent-pack", p["id"], "ok" if rc == 0 else "failed",
-                                       changed=rc == 0, detail=f"pack={pack} rc={rc}"))
+                                       changed=_capability_changed(rc, dry),
+                                       detail=f"pack={pack} rc={rc}"))
             except SystemExit:
                 results.append(_result("agent-pack", p["id"], "skip",
                                        detail=f"pack={pack}: harness недоступен"))
@@ -511,7 +522,7 @@ def _skills_catalog_run(env, config, projects, mode, dry):
         try:
             rc = run_capability(env, config, p["id"], "skm:update", dry=dry)
             results.append(_result("skills-catalog", p["id"], "ok" if rc == 0 else "failed",
-                                   changed=rc == 0, detail=f"rc={rc}"))
+                                   changed=_capability_changed(rc, dry), detail=f"rc={rc}"))
         except SystemExit:
             results.append(_result("skills-catalog", p["id"], "skip",
                                    detail="skiller недоступен"))
@@ -540,7 +551,8 @@ def _output_style_run(env, config, projects, mode, dry):
             rc = run_capability(env, config, p["id"], "env:hooks",
                                 ["--output-style", style], dry=dry)
             results.append(_result("output-style", p["id"], "ok" if rc == 0 else "failed",
-                                   changed=rc == 0, detail=f"style={style} rc={rc}"))
+                                   changed=_capability_changed(rc, dry),
+                                   detail=f"style={style} rc={rc}"))
         except SystemExit:
             results.append(_result("output-style", p["id"], "skip",
                                    detail="harness недоступен"))
@@ -571,7 +583,7 @@ def _router_config_run(env, config, projects, mode, dry):
         try:
             rc = run_capability(env, config, p["id"], "env:router", [], dry=dry)
             results.append(_result("router-config", p["id"], "ok" if rc == 0 else "failed",
-                                   changed=rc == 0, detail=f"rc={rc}"))
+                                   changed=_capability_changed(rc, dry), detail=f"rc={rc}"))
         except SystemExit:
             results.append(_result("router-config", p["id"], "skip",
                                    detail="harness недоступен"))

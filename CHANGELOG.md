@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.24.8] - 2026-09-26
+
+### Fixed
+
+- **mAInd dry-run receipt:** успешное планирование delegated provisioner больше не
+  помечается как применённое изменение; post-apply `sync --dry-run --json` честно
+  проходит fleet idempotence gate.
+
 ## [0.24.7] - 2026-09-25
 
 ### Added

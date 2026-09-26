@@ -67,6 +67,13 @@ class TestManagedBlock(unittest.TestCase):
         self.assertIn("hash=", managed_block("x", self.MARK))
 
 
+class TestDelegatedCapabilityReceipt(unittest.TestCase):
+    def test_dry_run_success_is_not_an_applied_change(self):
+        self.assertFalse(sync._capability_changed(0, True))
+        self.assertTrue(sync._capability_changed(0, False))
+        self.assertFalse(sync._capability_changed(1, False))
+
+
 class TestInstructionsApplicability(unittest.TestCase):
     def test_consumer_project_skips_instructions_provisioner(self):
         with tempfile.TemporaryDirectory() as tmp:

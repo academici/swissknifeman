@@ -744,6 +744,15 @@ def lint_read_budget(plan_dir, layout: str, diag) -> None:
                         and item.get("status") not in TERMINAL_ITEM_STATUSES]
     if not active_items:
         return
+    from task import plan_recovery
+    try:
+        ready_items = plan_recovery.design_ready_items(plan_dir)
+    except (plan_recovery.RecoveryError, ValueError) as exc:
+        _error(diag, plan_dir / "plan.md", str(exc))
+        return
+    active_items = [item for item in active_items if item["item_id"] in ready_items]
+    if not active_items:
+        return
 
     admission = measured["totals"].get("admission") or {}
     contract = admission.get("contract")

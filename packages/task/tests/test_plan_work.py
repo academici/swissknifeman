@@ -187,11 +187,37 @@ class PlanWorkTests(unittest.TestCase):
         plan_item_state.build_states(self.plan, item_id="P1.1")
         plan_status.build_status(self.plan)
 
+        # A completed refactor may delete an input it originally required.
+        # Its sealed spec and terminal evidence remain authoritative history.
+        (self.plan / "lib/pkg/config.py").unlink()
+        sealed_spec = (self.plan / "phases/P1/P1.1.md").read_bytes()
+        historical_bundle = (self.plan / "bundles/P1.1.json").read_bytes()
         capsule = plan_work.design_context(self.plan, finish=True)
         self.assertEqual(capsule["phase_id"], "finish")
         result = plan_work.finalize_design(
             self.plan, finish=True, actor="test/high", session_id="design")
         self.assertEqual(result["phase_id"], "finish")
+        self.assertNotIn("P1.1", result["ready_items"])
+        self.assertEqual((self.plan / "phases/P1/P1.1.md").read_bytes(), sealed_spec)
+        self.assertEqual((self.plan / "bundles/P1.1.json").read_bytes(), historical_bundle)
+        spec = self.plan / "phases/P1/P1.1.md"
+        spec.write_text(spec.read_text().replace("**Intent:**", "**Intent:** Changed requirement;"))
+        changed = plan_work.finalize_design(
+            self.plan, finish=True, actor="test/high", session_id="design")
+        # Undated WORK is a legacy warning fixture; dated plans fail this lint.
+        self.assertTrue(any("TERMINAL_SPEC_STALE" in warning
+                            for warning in changed["warnings"]))
+
+    def test_design_finish_still_rejects_missing_input_for_unfinished_work(self):
+        self.add_supporting_artifacts()
+        handoff = self.plan / "handoff.md"
+        handoff.write_text(handoff.read_text().replace(
+            "/task:plan-exec WORK P1.1", "/task:plan-audit WORK design"))
+        (self.plan / "lib/pkg/config.py").unlink()
+        with self.assertRaisesRegex(plan_bundle.BundleError, "unresolvable_entry"):
+            plan_work.finalize_design(
+                self.plan, finish=True, actor="test/high", session_id="design")
+        self.assertEqual((self.plan / "journal.jsonl").read_text(), "")
 
         # A later phase may move a file a closed item once read; its frozen
         # spec must not block finish (editing it would stale terminal evidence).

@@ -160,7 +160,7 @@ def _lint_routing_coverage(plan_path, plan_id, layout, routing_rows, all_items, 
                        f"Routing Batch {batch} не является adjacent-цепочкой")
 
 
-def _next_runnable_item(phases, all_items):
+def _next_runnable_item(phases, all_items, *, ready_items=None):
     """Return the first item that may enter an execution dispatch.
 
     Bundles are generated evidence, not authoring input.  A future item can
@@ -176,6 +176,8 @@ def _next_runnable_item(phases, all_items):
             if status in TERMINAL_STATUSES:
                 continue
             if status in ("⬜ Not started", STATUS_IN_PROGRESS):
+                if ready_items is not None and item_id not in ready_items:
+                    continue
                 return item_id
             return None
     return None
@@ -185,7 +187,13 @@ def _lint_next_runnable_bundle(plan_dir, layout, phases, all_items, diag):
     """Fail closed when the next executable Layout-v2 item lacks a fresh bundle."""
     if layout != "v2":
         return
-    item_id = _next_runnable_item(phases, all_items)
+    from task import plan_recovery
+    try:
+        ready_items = plan_recovery.design_ready_items(plan_dir)
+    except (plan_recovery.RecoveryError, ValueError) as exc:
+        diag.error(Path(plan_dir) / "plan.md", None, str(exc))
+        return
+    item_id = _next_runnable_item(phases, all_items, ready_items=ready_items)
     if item_id is None:
         return
 

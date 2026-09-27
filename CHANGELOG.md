@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.24.10] - 2026-09-27
+
+### Fixed
+
+- **Fleet delivery:** prune stale Claude/Codex plugin cache versions after attested release.
+
 ## [0.24.9] - 2026-09-26
 
 ### Fixed

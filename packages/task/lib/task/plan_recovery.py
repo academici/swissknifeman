@@ -93,6 +93,42 @@ def _dependencies(plan_dir: Path, item_id: str, items: dict[str, dict]) -> set[s
     return producers
 
 
+def design_ready_items(plan_dir) -> frozenset[str]:
+    """Validate the producer graph before selecting current execution reads.
+
+    An active reconciliation can depend on later repair items. Its historic
+    bundle stays evidence until those producers close; lint must validate the
+    actual ready frontier, without turning unknown producers or cycles into
+    silently deferred work.
+    """
+    root = Path(plan_dir)
+    items = plan_downstream._all_items(root)
+    dependencies = {item: _dependencies(root, item, items) for item in items}
+    visited, active = set(), set()
+
+    def visit(item):
+        if item not in dependencies:
+            raise RecoveryError({"code": "PLAN_DEPENDENCY_UNKNOWN", "active_item": item,
+                                 "reason": f"unknown producer {item}"})
+        if item in active:
+            raise RecoveryError({"code": "PLAN_DEPENDENCY_CYCLE", "active_item": item,
+                                 "reason": f"producer cycle through {item}"})
+        if item in visited:
+            return
+        active.add(item)
+        for producer in sorted(dependencies[item], key=_key):
+            visit(producer)
+        active.remove(item)
+        visited.add(item)
+
+    for item in dependencies:
+        visit(item)
+    positions = _positions(root)
+    return frozenset(item for item, producers in dependencies.items()
+                     if all(positions.get(producer, {}).get("result") in _READY_RESULTS
+                            for producer in producers))
+
+
 def inspect(plan_dir, item_id: str) -> dict:
     """Diagnose execution order before attempting the five-carrier snapshot."""
     root = Path(plan_dir)

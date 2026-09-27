@@ -15,6 +15,19 @@ from task import plan_bundle, plan_evidence, plan_gates, task_contract
 
 
 class EvidenceGraphTests(unittest.TestCase):
+    def test_deliverable_namespaces_do_not_become_evidence_paths(self):
+        for namespace in (r"Chatom\Outbox", r"Chatom\\Outbox"):
+            with self.subTest(namespace=namespace):
+                self.assertEqual(
+                    plan_evidence._declared_paths(
+                        f"core `{namespace}`; output `packages/core/src/Outbox/Writer.php`",
+                        allow_prose=True,
+                    ),
+                    ("packages/core/src/Outbox/Writer.php",),
+                )
+                with self.assertRaisesRegex(plan_evidence.EvidenceError, "EVIDENCE_PATH_INVALID"):
+                    plan_evidence._declared_paths(f"`{namespace}`")
+
     def test_missing_only_and_empty_anchors_are_not_product_coverage(self):
         for paths in ([], [{"path": "a.py; b.py", "state": "missing"}]):
             anchor = {"paths": paths, "sha256": "0" * 64}

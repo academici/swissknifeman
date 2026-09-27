@@ -46,6 +46,10 @@ def _declared_paths(value: str, *, allow_prose: bool = False) -> tuple[str, ...]
                  for part in re.split(r"\s*[·,]\s*", entry) if part.strip()]
     normalized = []
     for path in paths:
+        if allow_prose and re.fullmatch(r"[A-Za-z_]\w*(?:\\+[A-Za-z_]\w*)+", path):
+            # Deliverables can name PHP namespaces as well as output files.
+            # These identifiers are prose, never repository path declarations.
+            continue
         if allow_prose and not quoted and any(char.isspace() for char in path):
             continue
         candidate = PurePosixPath(path)

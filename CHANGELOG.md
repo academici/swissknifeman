@@ -4,6 +4,9 @@
 
 ### Fixed
 
+- **Task evidence parsing:** quoted PHP namespaces in prose `Deliverables` are
+  treated as identifiers instead of invalid repository paths; `Files` path
+  validation remains strict.
 - **Task plan validation:** generated blocked-item escalation is read from its state
   carrier; typed waiting continuations use the same continuity validation as delivery,
   including rejection of mismatched handoff metadata.

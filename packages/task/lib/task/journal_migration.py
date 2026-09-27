@@ -32,6 +32,8 @@ _MIGRATION_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _VALIDATION_EVIDENCE_RE = re.compile(
     r"^/decision/terminal_evidence/validation/(0|[1-9][0-9]*)/evidence_ids$")
+_VALIDATION_ROW_RE = re.compile(
+    r"^/decision/terminal_evidence/validation/(0|[1-9][0-9]*)$")
 _TERMINAL_SCALAR_PATHS = frozenset((
     "/decision/terminal_evidence/spec_sha256",
     "/decision/terminal_evidence/repair_exhausted",
@@ -188,6 +190,29 @@ def _allowed_operation(operation: dict) -> None:
     if path == "/decision":
         if op != "add" or not isinstance(operation["value"], dict):
             raise JournalMigrationError("/decision: допускается только additive object recovery")
+        return
+    if _VALIDATION_ROW_RE.fullmatch(path):
+        before = operation.get("before")
+        after = operation["value"]
+        expected = {"carrier", "status", "evidence_ids"}
+        if (op != "replace"
+                or not isinstance(before, dict) or set(before) != expected
+                or not isinstance(after, dict) or set(after) != expected
+                or before.get("carrier") != after.get("carrier")
+                or not isinstance(after.get("carrier"), str) or not after["carrier"]
+                or before.get("status") != "skipped" or after.get("status") != "green"
+                or not isinstance(before.get("evidence_ids"), list)
+                or not before["evidence_ids"]
+                or any(not isinstance(item, str) or not item
+                       for item in before["evidence_ids"])
+                or not isinstance(after.get("evidence_ids"), list)
+                or not after["evidence_ids"]
+                or len(after["evidence_ids"]) != len(set(after["evidence_ids"]))
+                or any(not isinstance(item, str) or not item
+                       for item in after["evidence_ids"])):
+            raise JournalMigrationError(
+                f"{path}: допускается только exact skipped→green validation repair "
+                "с неизменным carrier и непустыми evidence_ids")
         return
     if path in _TERMINAL_SCALAR_PATHS:
         if path.endswith("/repair_exhausted") and (op != "add" or operation["value"] is not None):

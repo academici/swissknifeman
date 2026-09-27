@@ -151,6 +151,39 @@ class TestJournalMigration(unittest.TestCase):
                 "op": "replace", "path": "/friction", "before": [], "value": ["deviation"],
             })
 
+    def test_skipped_validation_repair_requires_green_evidence_and_same_carrier(self):
+        before = {
+            "carrier": "composer strict-psr",
+            "status": "skipped",
+            "evidence_ids": ["historical-gap"],
+        }
+        after = {
+            "carrier": "composer strict-psr",
+            "status": "green",
+            "evidence_ids": ["findings/P16-repair.md#strict-psr"],
+        }
+        event = {"decision": {"terminal_evidence": {"validation": [before]}}}
+        operation = {
+            "op": "replace",
+            "path": "/decision/terminal_evidence/validation/0",
+            "before": before,
+            "value": after,
+        }
+
+        journal_migration._apply_operation(event, operation)
+        self.assertEqual(
+            event["decision"]["terminal_evidence"]["validation"][0], after)
+
+        changed_carrier = copy.deepcopy(operation)
+        changed_carrier["value"]["carrier"] = "different"
+        with self.assertRaisesRegex(journal_migration.JournalMigrationError, "skipped→green"):
+            journal_migration._allowed_operation(changed_carrier)
+
+        red_target = copy.deepcopy(operation)
+        red_target["value"]["status"] = "red"
+        with self.assertRaisesRegex(journal_migration.JournalMigrationError, "skipped→green"):
+            journal_migration._allowed_operation(red_target)
+
     def test_historical_batch_receipt_repair_preserves_batch_identity(self):
         batch = {
             "batch_id": "E11e", "items": ["P11.6", "P11.7"],

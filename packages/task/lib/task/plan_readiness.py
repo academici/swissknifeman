@@ -385,6 +385,12 @@ def validate_design_handoff_target(plan_dir, phase_id: str) -> None:
     from task import plan_layout
 
     plan_dir = Path(plan_dir)
+    phase_path = plan_layout.phase_paths(plan_dir).get(phase_id)
+    try:
+        if phase_path is not None and _SKELETON.search(phase_path.read_text(encoding="utf-8")):
+            return
+    except (OSError, UnicodeDecodeError):
+        return
     specs = plan_layout.item_spec_paths(plan_dir, phase_id)
     if not specs:
         return

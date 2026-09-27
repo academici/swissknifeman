@@ -147,6 +147,17 @@ class PlanReadinessTest(unittest.TestCase):
             with self.assertRaisesRegex(plan_readiness.ReadinessError, "PLAN_DESIGN_NOT_NEEDED"):
                 plan_readiness.validate_design_handoff_target(plan, "P1")
 
+    def test_generated_design_handoff_accepts_a_skeleton_phase(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = write_valid_plan(Path(tmp), "SKELETON-PHASE", layout="v2")
+            state = plan / "phases" / "P1" / "P1.1.state.md"
+            state.write_text(state.read_text(encoding="utf-8").replace(
+                "🟢 Done", "⬜ Not started"), encoding="utf-8")
+            index = plan / "phases" / "P1" / "P1.md"
+            index.write_text(index.read_text(encoding="utf-8")
+                             + "\n> СКЕЛЕТ — не детализирован\n", encoding="utf-8")
+            plan_readiness.validate_design_handoff_target(plan, "P1")
+
     def test_all_three_reentry_triggers_reduce_to_reopen(self):
         for trigger in ("owner-decision-change", "terminal-evidence-invalid",
                         "safety-or-authority-boundary"):

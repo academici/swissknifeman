@@ -63,6 +63,22 @@ def _routing_items(cell):
     return None
 
 
+def _handoff_run_items(value):
+    from task import task_contract
+
+    match = re.search(
+        r"(?:/|\b)task:plan-run\s+\S+\s+"
+        r"(P\d+\.\d+(?:\s*-\s*P\d+\.\d+)?"
+        r"(?:\s+P\d+\.\d+(?:\s*-\s*P\d+\.\d+)?)*)", value)
+    if not match:
+        return []
+    tokens = re.sub(r"\s*-\s*", "-", match.group(1)).split()
+    try:
+        return list(task_contract.normalize_batch_request(tokens))
+    except ValueError:
+        return []
+
+
 def _lint_routing(plan_lines, plan_path, plan_id, layout, diag):
     """Validate canonical batch routing and return expanded rows for handoff checks."""
     strict = layout == "v2" and bool(PLAN_ID_NUMBERED_RE.match(plan_id))
@@ -611,18 +627,12 @@ def lint_plan(plan_dir, diag):
                                    f"для {first_item}")
                     if expected and batch_values[0] == expected:
                         if kind == "run":
-                            command_items = _routing_items(
-                                first_item + (f"-{execution_match.group(3)}"
-                                              if execution_match.group(3) else "")) or []
+                            command_items = _handoff_run_items(next_decl)
                         elif kind == "exec":
                             command_items = re.findall(r"\bP\d+\.\d+\b", next_decl)
                         else:
-                            run = re.search(
-                                r"(?:/|\b)task:plan-run\s+\S+\s+"
-                                r"(P\d+\.\d+)(?:\s*-\s*(P\d+\.\d+))?", next_val)
-                            command_items = (_routing_items(
-                                run.group(1) + (f"-{run.group(2)}" if run.group(2) else ""))
-                                if run else re.findall(r"\bP\d+\.\d+\b", next_decl)) or []
+                            command_items = (_handoff_run_items(next_val)
+                                             or re.findall(r"\bP\d+\.\d+\b", next_decl))
                         members = ([first_item] if expected.lower() == "solo" else sorted(
                             (item_id for row in routing_rows
                              if row.get("Batch", "").strip() == expected

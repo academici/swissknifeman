@@ -268,6 +268,12 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
         self.assertEqual(_errors_containing(diag, "весь оставшийся adjacent-суффикс"), [],
                          diag.errors)
 
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "P1.1-P1.2", "P1.1 P1.2"), encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "весь оставшийся adjacent-суффикс"), [],
+                         diag.errors)
+
 
 class TestExecutableRoutingTableBoundary(TmpPlanTestCase):
     def _plan(self, suffix):

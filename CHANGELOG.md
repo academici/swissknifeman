@@ -7,6 +7,8 @@
 - **Task plan validation:** generated blocked-item escalation is read from its state
   carrier; typed waiting continuations use the same continuity validation as delivery,
   including rejection of mismatched handoff metadata.
+- **Task batch handoff:** explicit item lists retain their full membership during
+  lint validation, using the same request grammar as batch admission.
 
 ## [0.24.10] - 2026-09-27
 

@@ -678,7 +678,7 @@ def _parse_v2_item_file(path, item_id, diag):
     return {"title": title, "header_lineno": header_lineno, "fields": merged,
             "has_escalation": any(ESCALATION_RE.match(line)
                                     and ESCALATION_RE.match(line).group(1) == actual_id
-                                    for line in lines),
+                                    for line in (*lines, *state_lines)),
             "spec_lines": lines, "state_lines": state_lines}
 
 

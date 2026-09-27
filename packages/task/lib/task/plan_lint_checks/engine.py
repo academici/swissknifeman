@@ -656,8 +656,10 @@ def lint_plan(plan_dir, diag):
                 )
             else:
                 try:
-                    plan_continuity.parse_context(contexts[0])
-                except plan_continuity.ContinuityError as exc:
+                    from task import plan_delivery
+                    route = plan_delivery._route_from_lines(next_val.splitlines())
+                    plan_delivery._continuity(route, allow_legacy=False)
+                except (plan_continuity.ContinuityError, plan_delivery.DeliveryError) as exc:
                     diag.error(
                         handoff_path, next_lineno,
                         f"handoff.Next: CONTINUITY_CONTEXT_INVALID ({exc})",

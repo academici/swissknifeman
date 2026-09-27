@@ -94,6 +94,28 @@ class TestNextFormsEnum(TmpPlanTestCase):
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "не соответствует ни одной из допустимых форм"))
 
+    def test_typed_waiting_owner_handoff_passes_continuity_gate(self):
+        import json
+        from task import plan_continuity
+        plan_dir = write_valid_plan(self.root, "2026.09.27-OWNER-WAIT")
+        handoff = plan_dir / "handoff.md"
+        decision = plan_continuity.evaluate(
+            route_attested=True, context_attested=True, batch_receipt_valid=True,
+            waiting_owner=True)
+        handoff.write_text(
+            "# HANDOFF — 2026-09-27 — after P1.1\n\n"
+            "**Next:** manual: owner decision required before continuing\n\n"
+            "| Параметр | Значение |\n|:--|:--|\n| Context | waiting-owner |\n\n"
+            "```session-continuity-decision/v1\n"
+            + json.dumps(decision.as_dict()) + "\n```\n\n**Done:** checkpoint\n",
+            encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertFalse(_errors_containing(diag, "CONTINUITY_CONTEXT_INVALID"))
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "| Context | waiting-owner |", "| Context | continue-root |"), encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "CONTINUITY_CONTEXT_INVALID"))
+
 
 class TestRoutingItemsGrammar(TmpPlanTestCase):
     def _with_items(self, cell):

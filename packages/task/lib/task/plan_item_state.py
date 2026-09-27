@@ -216,7 +216,11 @@ def _render_state(plan_dir, item_id):
               # for historical/procedural provenance, but the generated carrier
               # must never emit a status that its own plan linter rejects.
               ("Escalation Needed", "yes" if state["position"]["status"] == "🔴 Blocked" else "no"))
-    return plan_projection.rendered_file(metadata=block, title=f"Состояние {item_id}", body="\n".join(f"**{k}:** {v}" for k, v in fields))
+    body = "\n".join(f"**{k}:** {v}" for k, v in fields)
+    if state["position"]["status"] == "🔴 Blocked":
+        reason = " ".join(note.split()) if note != "—" else "See the terminal journal decision."
+        body += f"\n\n> 🔴 ESCALATION {item_id}: {reason}"
+    return plan_projection.rendered_file(metadata=block, title=f"Состояние {item_id}", body=body)
 
 def render_state(plan_dir, item_id):
     return _render_state(plan_dir, item_id)

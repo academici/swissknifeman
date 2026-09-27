@@ -421,6 +421,17 @@ class TestEscalationConsistency(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertFalse(_errors_containing(diag, "рассогласованы"))
 
+    def test_escalation_in_generated_state_does_not_require_spec_mutation(self):
+        plan_dir = self._write("🔴 Blocked", "yes")
+        state = item_state_path(plan_dir)
+        state.write_text(state.read_text(encoding="utf-8")
+                         + "\n> 🔴 ESCALATION P1.1: owner decision pending\n", encoding="utf-8")
+        from task.plan_lint_checks import parsing
+        parsed = parsing._parse_v2_item_file(item_spec_path(plan_dir), "P1.1", Diagnostics())
+        self.assertTrue(parsed["has_escalation"])
+        _, diag = _lint(plan_dir)
+        self.assertFalse(_errors_containing(diag, "рассогласованы"))
+
 
 class TestPhaseStatusConsistency(TmpPlanTestCase):
     def test_generated_item_row_is_not_a_second_execution_source(self):

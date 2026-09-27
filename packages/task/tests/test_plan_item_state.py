@@ -6,7 +6,7 @@ try:
     from .fixtures import write_valid_plan
 except ImportError:
     from fixtures import write_valid_plan
-from task import journal, plan_item_state, terminal_policy
+from task import journal, plan_item_state, plan_lint, terminal_policy
 
 class PlanItemStateTests(unittest.TestCase):
     def setUp(self):
@@ -54,6 +54,12 @@ class PlanItemStateTests(unittest.TestCase):
         text = plan_item_state.render_state(self.plan, "P1.1")
         self.assertIn("**Status:** 🔴 Blocked", text)
         self.assertIn("**Escalation Needed:** yes", text)
+        self.assertIn("> 🔴 ESCALATION P1.1:", text)
+        plan_item_state.build_states(self.plan)
+        diagnostics = plan_lint.Diagnostics()
+        plan_lint.lint_plan(self.plan, diagnostics)
+        self.assertFalse(any("рассогласованы" in error for error in diagnostics.errors),
+                         diagnostics.errors)
 
     def test_design_event_is_history_but_not_execution_position(self):
         journal.append(self.plan, journal.new_entry(

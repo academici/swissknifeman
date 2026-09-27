@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Task plan validation:** generated blocked-item escalation is read from its state
+  carrier; typed waiting continuations use the same continuity validation as delivery,
+  including rejection of mismatched handoff metadata.
+
 ## [0.24.10] - 2026-09-27
 
 ### Fixed

@@ -54,6 +54,18 @@ class PlanRecoveryTests(unittest.TestCase):
             actor="implementation/high", result="closed-green", session_id="session-1",
             run_id=position["run_id"], attempt=position["attempt"], decision=decision))
 
+    def test_declared_phase_order_overrides_numeric_order_for_path_edges(self):
+        phase = self.plan / "phases" / "P1" / "P1.md"
+        phase.write_text(phase.read_text() + "\n## Planned Items (outcomes)\n"
+                         "- **P1.1 — first**\n- **P1.3 — characterization**\n- **P1.2 — CI integrator**\n")
+        items = {"P1.1": {}, "P1.2": {"Files": "`shared.php`"},
+                 "P1.3": {"Inputs": "`shared.php`", "Files": "`golden.php`"}}
+        self.assertNotIn("P1.2", plan_recovery._dependencies(self.plan, "P1.3", items))
+        items["P1.2"]["Inputs"] = "`golden.php`"
+        self.assertIn("P1.3", plan_recovery._dependencies(self.plan, "P1.2", items))
+        items["P1.3"]["Inputs"] += " (producer: P1.2)"
+        self.assertIn("P1.2", plan_recovery._dependencies(self.plan, "P1.3", items))
+
     def test_successor_diagnosis_precedes_missing_bundle_capture(self):
         self.assertFalse((self.plan / "bundles" / "P1.2.json").exists())
         with self.assertRaises(plan_recovery.RecoveryError) as raised:

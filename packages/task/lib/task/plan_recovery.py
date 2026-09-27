@@ -50,6 +50,30 @@ def _positions(plan_dir: Path) -> dict[str, dict]:
             if (position := plan_item_state.latest_execution_event(history)) is not None}
 
 
+def _execution_ranks(plan_dir: Path, items: dict[str, dict]) -> dict[str, tuple]:
+    """Use a complete declared Planned Items order for inferred path edges.
+
+    Item numbers identify specs; they do not override an explicitly reordered phase.
+    Explicit producer annotations remain authoritative regardless of this order.
+    """
+    ranks = {item: _key(item) for item in items}
+    for phase in {item.split(".")[0] for item in items}:
+        path = plan_layout.phase_path(plan_dir, phase)
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        section = re.search(r"^## Planned Items(?:[ \t]+[^\n]*)?\n(.*?)(?=^## |\Z)", text, re.M | re.S)
+        if section is None:
+            continue
+        order = re.findall(r"^\s*-\s+\*\*(P[0-9]+\.[0-9]+)\s+[—–-]", section.group(1), re.M)
+        members = {item for item in items if item.split(".")[0] == phase}
+        if len(order) != len(set(order)) or set(order) != members:
+            continue
+        for index, item in enumerate(order):
+            ranks[item] = (_key(item)[0], index + 1)
+     return ranks
+
+
 def terminal_items(plan_dir) -> frozenset[str]:
     """Items whose latest execution event closed them."""
     return frozenset(item_id for item_id, position in _positions(Path(plan_dir)).items()
@@ -59,6 +83,7 @@ def terminal_items(plan_dir) -> frozenset[str]:
 def _dependencies(plan_dir: Path, item_id: str, items: dict[str, dict]) -> set[str]:
     """Reuse declared producer/path ownership; Next alone never grants exclusivity."""
     fields = items[item_id]
+    ranks = _execution_ranks(plan_dir, items)
     producers = set()
     for field in ("Inputs", "Required Reads"):
         for entry in plan_weight.split_entries(fields.get(field, "")):
@@ -71,7 +96,7 @@ def _dependencies(plan_dir: Path, item_id: str, items: dict[str, dict]) -> set[s
         inputs.update(plan_downstream._field_paths(
             fields.get(field, ""), plan_dir=plan_dir, repo_root=repo_root))
     for producer, spec in items.items():
-        if _key(producer) >= _key(item_id):
+        if ranks[producer] >= ranks[item_id]:
             continue
         declared = plan_readiness.directive(spec.get("Deliverables", ""))
         if declared and declared["consumer_item"] == item_id:

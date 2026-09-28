@@ -146,3 +146,52 @@ Explicit owner instruction.
         with self.assertRaises(ValueError):
             self.prepare(repeat_admission=self.record)
         self.assertEqual((self.plan/'journal.jsonl').read_bytes(),self.before)
+
+    def close_repeat(self):
+        start = self.prepare(repeat_admission=self.record)
+        decision = terminal_policy.build_decision(
+            self.plan, 'P1.1', result='closed-green', validation=[
+                {'carrier': 'local check', 'status': 'green', 'evidence_ids': ['test']}])
+        journal.append(self.plan, journal.new_entry(
+            plan_id='WORK', item_id='P1.1', command='plan-run', actor='test',
+            result='closed-green', run_id=start['position']['run_id'],
+            session_id='test-session', attempt=2, decision=decision))
+        return start['position']['run_id']
+
+    def test_completed_repeat_projects_after_future_design_without_admitting_execution(self):
+        from task import plan_status
+        run_id = self.close_repeat()
+        core = self.plan/'plan.md'
+        core.write_text(core.read_text()+'\nFuture authored scope.\n')
+        self.assertFalse(plan_readiness.design_gate(self.plan)['allowed'])
+        before = (self.plan/'journal.jsonl').read_bytes()
+        plan_status.build_status(self.plan)
+        self.assertEqual(plan_repeat.for_run(self.plan, 'P1.1', run_id), self.record)
+        with self.assertRaises(ValueError):
+            plan_repeat.validate(self.plan, self.record, allow_run=run_id)
+        self.assertEqual((self.plan/'journal.jsonl').read_bytes(), before)
+
+    def test_active_repeat_cannot_use_historical_mode_after_design_changes(self):
+        run_id = self.prepare(repeat_admission=self.record)['position']['run_id']
+        core = self.plan/'plan.md'
+        core.write_text(core.read_text()+'\nFuture authored scope.\n')
+        with self.assertRaises(ValueError):
+            plan_repeat.for_run(self.plan, 'P1.1', run_id)
+        with self.assertRaisesRegex(ValueError, 'REPEAT_HISTORY_UNQUALIFIED'):
+            plan_repeat.validate(self.plan, self.record, allow_run=run_id, historical=True)
+
+    def test_completed_repeat_still_rejects_revoked_owner_provenance(self):
+        run_id = self.close_repeat()
+        self.decision.write_text(self.decision.read_text().replace(
+            'status: accepted', 'status: rejected'))
+        with self.assertRaisesRegex(ValueError, 'REPEAT_OWNER_GRANT_MISSING'):
+            plan_repeat.for_run(self.plan, 'P1.1', run_id)
+
+    def test_historical_projection_requires_its_original_green_before_start(self):
+        run_id = self.close_repeat()
+        journal_file = self.plan/'journal.jsonl'
+        rows = [json.loads(line) for line in journal_file.read_text().splitlines()]
+        rows = [r for r in rows if r.get('command') != 'plan-audit']
+        journal_file.write_text(''.join(json.dumps(r)+'\n' for r in rows))
+        with self.assertRaisesRegex(ValueError, 'REPEAT_HISTORY_DESIGN_UNQUALIFIED'):
+            plan_repeat.for_run(self.plan, 'P1.1', run_id)

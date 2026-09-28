@@ -74,7 +74,8 @@ def build(plan_dir, item_id, *, decision_id, owner_message_path, session_id,
                                            attempt=attempt, session_id=session_id)}
 
 
-def validate(plan_dir, record, *, requested=None, session_id=None, allow_run=None):
+def validate(plan_dir, record, *, requested=None, session_id=None, allow_run=None,
+             historical=False):
     root = Path(plan_dir)
     if not isinstance(record, dict) or set(record) != FIELDS or record['schema_version'] != 'repeat-admission/v1':
         raise RepeatError('REPEAT_CONTRACT_INVALID: closed schema repeat-admission/v1')
@@ -98,9 +99,35 @@ def validate(plan_dir, record, *, requested=None, session_id=None, allow_run=Non
     if (not message.resolve().is_relative_to(root.resolve()) or not message.is_file()
             or sha(message) != record['owner_message_sha256']):
         raise RepeatError('REPEAT_OWNER_MESSAGE_STALE: owner provenance изменён')
-    plan_readiness.validate_execution_design(root)
-    if (plan_readiness.design_snapshot(root)['fingerprint'] != record['design_fingerprint']
-            or sha(plan_layout.carrier_path(root, 'item-spec', item_id=item)) != record['spec_sha256']):
+    rows = _rows(root)
+    starts = [r for r in rows if (r.get('decision') or {}).get('repeat_admission') == record]
+    if historical:
+        # Reading a completed run cannot require a new admission for a later
+        # authored phase. Authenticate its actual consumed grant and the GREEN
+        # that preceded its start; unfinished runs retain current-design gates.
+        run_rows = [r for r in rows if r.get('item_id') == item
+                    and r.get('run_id') == record['run_id']]
+        terminal = plan_item_state.latest_execution_event(run_rows)
+        if (len(starts) != 1 or allow_run != record['run_id']
+                or starts[0].get('result') != 'in-progress'
+                or starts[0].get('run_id') != allow_run
+                or terminal is None or terminal.get('result') not in TERMINAL):
+            raise RepeatError('REPEAT_HISTORY_UNQUALIFIED: нужен завершённый consumed run')
+        preceding = rows[:rows.index(starts[0])]
+        finishes = [i for i, r in enumerate(preceding)
+                    if r.get('command') == 'plan-design' and r.get('item_id') == 'finish'
+                    and r.get('fingerprint') == record['design_fingerprint']]
+        audits = [(i, r) for i, r in enumerate(preceding)
+                  if r.get('command') == 'plan-audit' and r.get('item_id') == 'design'
+                  and r.get('fingerprint') == record['design_fingerprint']]
+        if (not finishes or not audits or audits[-1][0] <= finishes[-1]
+                or audits[-1][1].get('result') != 'audit-green'):
+            raise RepeatError('REPEAT_HISTORY_DESIGN_UNQUALIFIED: нет GREEN до start')
+    else:
+        plan_readiness.validate_execution_design(root)
+        if plan_readiness.design_snapshot(root)['fingerprint'] != record['design_fingerprint']:
+            raise RepeatError('REPEAT_DESIGN_STALE: design/spec изменён')
+    if sha(plan_layout.carrier_path(root, 'item-spec', item_id=item)) != record['spec_sha256']:
         raise RepeatError('REPEAT_DESIGN_STALE: design/spec изменён')
     phase = item.split('.')[0]
     members = list(plan_layout.item_spec_paths(root, phase))
@@ -108,8 +135,6 @@ def validate(plan_dir, record, *, requested=None, session_id=None, allow_run=Non
             or record['sibling_spec_hashes'] != {p.stem: sha(p) for p in members if p.stem != item}
             or sha(plan_layout.phase_path(root, phase)) != record['phase_sha256']):
         raise RepeatError('REPEAT_PHASE_STALE: историческая фаза изменена')
-    rows = _rows(root)
-    starts = [r for r in rows if (r.get('decision') or {}).get('repeat_admission') == record]
     if starts and (allow_run != record['run_id'] or any(r.get('run_id') != allow_run for r in starts)):
         raise RepeatError('REPEAT_ALREADY_CONSUMED: grant уже использован')
     if starts:
@@ -138,7 +163,9 @@ def for_run(plan_dir, item_id, run_id):
     if len(starts) != 1:
         raise RepeatError('REPEAT_START_AMBIGUOUS: нужен один durable start')
     record = starts[0]['decision']['repeat_admission']
-    validate(plan_dir, record, requested=[item_id], allow_run=run_id)
+    event = plan_item_state.latest_execution_event(rows)
+    validate(plan_dir, record, requested=[item_id], allow_run=run_id,
+             historical=event is not None and event.get('result') in TERMINAL)
     return record
 
 

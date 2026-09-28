@@ -16,6 +16,15 @@
   in prose deliverables no longer prevent plan execution; standalone file declarations
   continue to reject backslashes.
 
+## [0.25.2] - 2026-09-28
+
+### Fixed
+
+- **Task completed repeat projection:** later plan authoring no longer prevents
+  status/finish views from reading an already completed repeat. Historical reads
+  authenticate the original pre-start finish/GREEN and consumed owner grant;
+  new execution and unfinished resumes still require current design admission.
+
 ## [0.25.1] - 2026-09-28
 
 ### Fixed

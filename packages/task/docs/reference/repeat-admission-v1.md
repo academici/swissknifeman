@@ -19,3 +19,10 @@ No historical outcome is upgraded to contemporary acceptance by this contract.
 Phase aggregates retain the authenticated historical phase outcome. Item state
 and item tables expose the current repeat run independently; revoking the owner
 grant invalidates this projection. No status-board design rewrite is required.
+
+A completed repeat is historical evidence when later authored scope changes the
+whole-plan fingerprint. Projection and delivery authenticate its consumed start,
+original pre-start finish/GREEN, owner provenance and unchanged item/phase/siblings;
+they do not require the later design to be ready. New admission and unfinished
+resume still require the current GREEN and exact bound fingerprint. A historical
+read never admits execution or reuses a consumed grant.

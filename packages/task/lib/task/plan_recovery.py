@@ -249,7 +249,7 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
           contract: dict, batch_receipt=None, route_evidence=None,
           evidence_graph=None, bundle_rendered: str | None = None,
           producer_readiness=None,
-          return_context: bool = False) -> dict:
+          return_context: bool = False, repeat_admission=None) -> dict:
     """Admit one durable start; a restarted session reuses the open run identity."""
     from task import plan_context, task_contract
 
@@ -302,7 +302,9 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
                 "code": "RECOVERY_INPUT_CHANGED",
                 "reason": "producer readiness изменился после admission; повторите prepare",
             })
+        from task import plan_repeat
         if verdict["mode"] == "resume":
+            plan_repeat.for_run(root, item_id, verdict["run_id"])
             if not verdict["run_id"]:
                 raise RecoveryError({"code": "RECOVERY_RUN_ID_UNAVAILABLE",
                                      "reason": f"{item_id}: durable start не содержит run_id"})
@@ -311,6 +313,10 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
             attempt = int(positions.get(item_id, {}).get("attempt", 0)) + 1
             run_id = journal.derive_run_id(plan_id=root.name, item_id=item_id,
                                            attempt=attempt, session_id=session_id)
+            if repeat_admission is not None:
+                plan_repeat.validate(root, repeat_admission, requested=[item_id], session_id=session_id)
+                if (attempt, run_id) != (repeat_admission["attempt"], repeat_admission["run_id"]):
+                    raise RecoveryError({"code": "REPEAT_IDENTITY_CHANGED", "reason": "identity changed before start"})
             decision = None
             if route_evidence is not None:
                 from task import route_evidence as route_owner
@@ -318,6 +324,10 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
                     plan_id=root.name, item_id=item_id, attempt=attempt,
                     session_id=session_id, run_id=run_id, evidence=route_evidence)
                 decision = route_owner.start_decision(receipt)
+            if repeat_admission is not None:
+                if decision is None:
+                    raise RecoveryError({"code": "ROUTE_UNVERIFIABLE", "reason": "repeat требует route receipt"})
+                decision["repeat_admission"] = repeat_admission
             event = journal.new_entry(plan_id=root.name, item_id=item_id, command=command,
                                       actor=actor, result="in-progress", session_id=session_id,
                                       run_id=run_id, attempt=attempt, batch_receipt=batch_receipt,

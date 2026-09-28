@@ -39,7 +39,7 @@ class AdmissionError(ValueError):
     """The public admission contract cannot be applied deterministically."""
 
 
-def batch_admission(plan_dir, request, *, receipt=None, routing_config_path=None) -> dict:
+def batch_admission(plan_dir, request, *, receipt=None, routing_config_path=None, repeat_admission=None) -> dict:
     """Apply the Routing-owned execution-unit gate before journal mutation.
 
     Parsing and digest binding stay in ``task_contract``; this policy module is
@@ -48,7 +48,8 @@ def batch_admission(plan_dir, request, *, receipt=None, routing_config_path=None
     from task import task_contract
 
     return task_contract.admit_batch(
-        plan_dir, request, receipt=receipt, routing_config_path=routing_config_path)
+        plan_dir, request, receipt=receipt, routing_config_path=routing_config_path,
+        repeat_admission=repeat_admission)
 
 
 def producer_annotation(entry: str) -> str | None:

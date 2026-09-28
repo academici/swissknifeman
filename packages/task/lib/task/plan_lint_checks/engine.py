@@ -203,6 +203,11 @@ def _lint_next_runnable_bundle(plan_dir, layout, phases, all_items, diag):
     """Fail closed when the next executable Layout-v2 item lacks a fresh bundle."""
     if layout != "v2":
         return
+    # The journal's owning check applies the D22 soft/hard cutoff.  Without
+    # that carrier there is no execution position to check here; execution
+    # admission still fails closed in plan_recovery.
+    if not (Path(plan_dir) / "journal.jsonl").is_file():
+        return
     from task import plan_recovery
     try:
         ready_items = plan_recovery.design_ready_items(plan_dir)
@@ -440,6 +445,13 @@ def lint_plan(plan_dir, diag):
             diag.error(plan_md, None, f"Routing compiler: {exc}")
 
     # --- Status Board согласован с фазами: счётчик 🟢/всего и статус фазы --
+    from task import plan_repeat
+    try:
+        aggregate_statuses = plan_repeat.aggregate_statuses(
+            plan_dir, {iid: info['status'] for iid, info in all_items.items()})
+    except (ValueError, OSError) as exc:
+        diag.error(plan_md, None, str(exc))
+        aggregate_statuses = {iid: info['status'] for iid, info in all_items.items()}
     board_by_phase = {row.get("Phase"): (row, lineno) for row, lineno in status_board}
     for pid in phases:
         row = board_by_phase.get(pid)
@@ -449,7 +461,7 @@ def lint_plan(plan_dir, diag):
         phase_item_ids = list(phases[pid].get("items", {}).keys())
         total = len(phase_item_ids)
         done = sum(1 for iid in phase_item_ids
-                   if all_items.get(iid, {}).get("status") == STATUS_DONE)
+                   if aggregate_statuses.get(iid) == STATUS_DONE)
         items_cell = row_dict.get(STATUS_BOARD_ITEMS_COL, "")
         m = DONE_TOTAL_RE.match(items_cell)
         if not m:
@@ -462,7 +474,7 @@ def lint_plan(plan_dir, diag):
                        f"≠ фактическому {done}/{total}")
 
         phase_status = row_dict.get("Status", "")
-        item_statuses = [all_items[iid]["status"] for iid in phase_item_ids if iid in all_items]
+        item_statuses = [aggregate_statuses[iid] for iid in phase_item_ids if iid in all_items]
         terminal_block_override = plan_gates.terminal_blocked_phase_closure(plan_dir, pid)
         if (item_statuses and any(s == STATUS_BLOCKED for s in item_statuses)
                 and phase_status != STATUS_BLOCKED

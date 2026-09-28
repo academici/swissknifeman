@@ -164,7 +164,7 @@ def _execution_sheet(root: Path, routing: dict, *, strict: bool) -> dict:
 
 def prepare(plan_dir, item_id: str, *, command: str, actor: str,
             session_id: str | None = None, actual_route: dict | None = None,
-            capabilities=(), request=None, batch_receipt=None) -> dict:
+            capabilities=(), request=None, batch_receipt=None, repeat_admission=None) -> dict:
     """Admit and durably start one item, exposing only its selected context."""
     from task import route_evidence
 
@@ -178,8 +178,14 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
         raise WorkError("PLAN_DESIGN_GATE_BLOCKED", str(exc)) from exc
     plan_readiness.validate_execution_target(root, (item_id,))
     plan_recovery.validate_request(root, item_id)
+    if repeat_admission is not None:
+        from task import plan_repeat
+        plan_repeat.validate(root, repeat_admission, requested=request or [item_id],
+                             session_id=session_id)
+        if repeat_admission["command"] != command:
+            raise WorkError("REPEAT_COMMAND_MISMATCH", command)
     admission = plan_admission.batch_admission(
-        root, request or [item_id], receipt=batch_receipt)
+        root, request or [item_id], receipt=batch_receipt, repeat_admission=repeat_admission)
     if admission["verdict"] != "ALLOW":
         raise WorkError(admission["verdict"], admission)
     if item_id not in admission["requested"]:
@@ -204,7 +210,7 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
             contract=contract, batch_receipt=admission.get("batch_receipt", batch_receipt),
             route_evidence=actual_route, evidence_graph=graph,
             bundle_rendered=bundle_rendered, producer_readiness=producer_readiness,
-            return_context=True)
+            return_context=True, repeat_admission=repeat_admission)
     except plan_recovery.RecoveryError as exc:
         if exc.code in {"ROUTE_UNDERSHOOT", "ROUTE_UNVERIFIABLE", "AUTHORITY_BOUNDARY",
                         "ECONOMY_ROUTE_OVERSHOOT", "CAPABILITY_UNSUPPORTED"}:
@@ -399,6 +405,7 @@ def main(argv=None) -> int:
             action.add_argument("--actual-route", type=Path)
             action.add_argument("--request", nargs="+")
             action.add_argument("--batch-receipt", type=Path)
+            action.add_argument("--repeat-admission", type=Path)
             action.add_argument("--capability", action="append", default=[],
                                 help="JSON capability binding: id и support")
     args = parser.parse_args(argv)
@@ -409,7 +416,8 @@ def main(argv=None) -> int:
                              session_id=args.session_id, request=args.request,
                              capabilities=[json.loads(value) for value in args.capability],
                              actual_route=json.loads(args.actual_route.read_text()) if args.actual_route else None,
-                             batch_receipt=json.loads(args.batch_receipt.read_text()) if args.batch_receipt else None)
+                             batch_receipt=json.loads(args.batch_receipt.read_text()) if args.batch_receipt else None,
+                             repeat_admission=json.loads(args.repeat_admission.read_text()) if args.repeat_admission else None)
         elif args.action == "design-context":
             from task import route_evidence
 

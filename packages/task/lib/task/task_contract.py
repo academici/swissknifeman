@@ -1195,7 +1195,7 @@ def _receipt_matches_batch(receipt: dict, batch: dict, membership) -> bool:
     )
 
 
-def admit_batch(plan_dir, request, *, receipt=None, routing_config_path=None) -> dict:
+def admit_batch(plan_dir, request, *, receipt=None, routing_config_path=None, repeat_admission=None) -> dict:
     """Return the sole pre-mutation batch verdict; this function never mutates state."""
     try:
         requested = normalize_batch_request(request)
@@ -1207,6 +1207,18 @@ def admit_batch(plan_dir, request, *, receipt=None, routing_config_path=None) ->
         return {"verdict": "BATCH_AMBIGUOUS", "batch": None, "requested": list(requested), "canonical": None}
     batch = compiled["batches"][owners[0]]
     exact = tuple(batch["items"])
+    if repeat_admission is not None:
+        from task import plan_repeat
+        try:
+            plan_repeat.validate(plan_dir, repeat_admission, requested=requested)
+        except (ValueError, OSError) as exc:
+            return {"verdict": "REPEAT_ADMISSION_REJECTED", "batch": batch,
+                    "requested": list(requested), "canonical": list(exact), "reason": str(exc)}
+        if batch["batch_id"].lower() != "solo" or requested != exact:
+            return {"verdict": "BATCH_REQUIRED", "batch": batch,
+                    "requested": list(requested), "canonical": list(exact)}
+        return {"verdict": "ALLOW", "batch": batch, "requested": list(requested),
+                "canonical": list(exact), "repeat_admission": repeat_admission}
     if batch["recommended"]:
         # Membership/order and the currently runnable frontier are separate
         # predicates.  Future consumers are checked only after their producers

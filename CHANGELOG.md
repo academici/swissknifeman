@@ -10,6 +10,26 @@
   in prose deliverables no longer prevent plan execution; standalone file declarations
   continue to reject backslashes.
 
+## [0.25.1] - 2026-09-28
+
+### Fixed
+
+- **Task independent repeat status:** phase boards preserve authenticated historical
+  phase outcomes while item tables expose the current repeat attempt. Revoked
+  grants fail closed; no design carrier rewrite or lint exception is needed.
+- **Task legacy journal lint:** keep the owning D22 missing-journal severity;
+  execution recovery still rejects unavailable authoritative positions.
+
+## [0.25.0] - 2026-09-28
+
+### Added
+
+- **Task independent repeats:** owner-bound `repeat-admission/v1` admits a new solo
+  run for a terminal item, preserves historical outcomes, and retains current
+  design/route/authority/input gates. Repeat delivery validates its grant and
+  siblings without reclosing the historical phase. Ungranted, stale, foreign,
+  revoked and consumed grants fail closed.
+
 ## [0.24.11] - 2026-09-28
 
 ### Fixed

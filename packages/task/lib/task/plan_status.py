@@ -186,6 +186,15 @@ def status_model(plan_dir) -> dict:
                        "status": _phase_status([item["status"] for item in items],
                                                plan_dir=plan_dir, phase_id=phase_id)})
     journal = plan_dir / "journal.jsonl"
+    from task import plan_repeat
+    aggregate = plan_repeat.aggregate_statuses(
+        plan_dir, {item['id']: item['status'] for phase in phases for item in phase['items']})
+    for phase in phases:
+        phase['status'] = _phase_status(
+            [aggregate[item['id']] for item in phase['items']],
+            plan_dir=plan_dir, phase_id=phase['id'])
+        for item in phase['items']:
+            item['phase_status'] = aggregate[item['id']]
     journal_rows, last_updated, item_updated, corrections = _journal_rows(journal)
     if journal.is_file():
         input_paths.append(journal)
@@ -210,7 +219,7 @@ def render_status(plan_dir) -> str:
     board = []
     phase_sections = []
     for phase in model["phases"]:
-        done = sum(item["status"] == STATUS_DONE for item in phase["items"])
+        done = sum(item["phase_status"] == STATUS_DONE for item in phase["items"])
         board.append((phase["id"], phase["title"], f"{done}/{len(phase['items'])}", phase["status"]))
         phase_sections.extend((f"## Phase {phase['id']}", "", _table(
             _ITEM_COLUMNS, [(item["id"], item["title"], item["status"], item["updated"])

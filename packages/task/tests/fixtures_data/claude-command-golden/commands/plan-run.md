@@ -12,6 +12,11 @@ low-risk выбор выражается один раз:
 1. Вызови `scripts/plan-work.py prepare` один раз с `--command plan-run`. Он владеет recovery,
    batch/route/authority admission, evidence graph, generated carriers, durable start и единым
    execution snapshot. Повторный запуск продолжает тот же durable run.
+   Для явно разрешённого отдельного повтора terminal solo item передай
+   `--repeat-admission <plan-owned JSON>`: owner decision несёт exact marker
+   `[REPEAT-ADMISSION:<digest>]`; контракт строит `task.plan_repeat.build()`.
+   Он связывает историю, текущий GREEN дизайн и новую run identity; стандартные
+   route/authority/input gates сохраняются. Без grant terminal item не переисполняй.
 2. Реализуй только Scope Included. Выбирай порядок чтения и работы самостоятельно. Для обычной
    обратимой работы достаточно self-check и affected tests. Расширяй validation или независимое
    review только из-за конкретного риска либо явного требования владельца.

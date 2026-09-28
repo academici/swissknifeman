@@ -660,9 +660,11 @@ def build_terminal_receipt(plan_dir, subject: str) -> dict:
         terminal = _terminal_journal(plan_dir, subject)
         if _STATUS_BY_RESULT.get(terminal["result"]) != status:
             raise DeliveryError("STALE_TERMINAL_RECEIPT", "journal result не совпадает с item state")
+        from task import plan_repeat
+        repeat = plan_repeat.for_run(plan_dir, subject, terminal.get("run_id"))
         required_next_exact = (
             _require_completed_phase_before_item_handoff(plan_dir, subject)
-            if status == _STATUS_BY_RESULT["closed-green"] else None
+            if status == _STATUS_BY_RESULT["closed-green"] and repeat is None else None
         )
         phase_id = subject.split(".", 1)[0]
         return _base_receipt(

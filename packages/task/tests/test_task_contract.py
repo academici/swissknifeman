@@ -1057,6 +1057,31 @@ class BuildFixtureTests(unittest.TestCase):
             self.assertEqual(contract["goal"]["outcome"], "Добавить проверку.")
             self.assertEqual(contract["next"]["context"], "continue-root")
 
+    def test_validation_bullets_keep_product_checks_distinct_from_external_tooling(self):
+        path = fixtures.item_spec_path(self.plan_dir)
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "**Validation:** bash scripts/test.sh — зелёный.",
+            "**Validation:**\n- bash scripts/test.sh — зелёный.\n"
+            "- python3 <task>/scripts/plan-lint.py plans/DEMO-1 — зелёный."),
+            encoding="utf-8")
+        contract = task_contract.build(self.plan_dir, "P1.1")
+        acceptance = contract["done"]["public_acceptance"]
+        self.assertEqual([entry["scope"] for entry in acceptance], ["public", "internal"])
+        self.assertEqual(task_contract.pre_final(contract), "VALIDATION_RECEIPT_MISSING")
+        context = {
+            "schema_version": "validation-context/v1",
+            "spec_sha256": "a" * 64, "head": "b" * 40, "tree": "c" * 40,
+            "environment_sha256": "d" * 64,
+        }
+        receipt = task_contract.build_validation_receipt(
+            contract, acceptance[0]["evidence_ref"], exit_code=0, context=context)
+        self.assertIsNone(task_contract.pre_final(
+            contract, validation_receipts=[receipt], validation_context=context))
+        receipt["exit_code"] = 1
+        self.assertEqual(task_contract.pre_final(
+            contract, validation_receipts=[receipt], validation_context=context),
+            "VALIDATION_RECEIPT_NONZERO")
+
     def test_build_preserves_external_input_until_portability_gate(self):
         phase_path = fixtures.item_spec_path(self.plan_dir)
         phase_path.write_text(

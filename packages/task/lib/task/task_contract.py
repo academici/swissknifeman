@@ -273,6 +273,7 @@ def contained_regular_path(root, logical_path: str) -> Path:
 
 _SCOPE_CLAUSE_SPLIT_RE = re.compile(r";\s*")
 _INPUTS_SPLIT_RE = re.compile(r"\s*·\s*")
+_VALIDATION_SPLIT_RE = re.compile(r"\s*·\s*|\n(?=-[ \t]+)")
 _REQUIRED_READS_SPLIT_RE = re.compile(r"(?:^|\s)\d+\)\s+")
 _IMPL_RULE_SPLIT_RE = re.compile(r"\*\*\(\d+\)\*\*\s*")
 _ANTI_CLAUSE_SPLIT_RE = re.compile(r"\*{0,2}(?:Анти|Anti)[\w-]*\s*:\*{0,2}\s*")
@@ -1560,7 +1561,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
         raise TaskContractBuildError(item_id, "Required Reads", "no evidence entry found")
 
     public_acceptance = []
-    for clause in _split_nonempty(validation_text, _INPUTS_SPLIT_RE):
+    for clause in _split_nonempty(validation_text, _VALIDATION_SPLIT_RE):
         eid = f"E{len(evidence) + 1}"
         evidence.append({"id": eid, "path": clause, "proof_class": "declared",
                          "algorithm": "shell-command"})

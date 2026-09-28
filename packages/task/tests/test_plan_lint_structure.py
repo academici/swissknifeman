@@ -506,6 +506,19 @@ class TestStatusBoardConsistency(TmpPlanTestCase):
 
 
 class TestPhaseHandoffGating(TmpPlanTestCase):
+    def test_fresh_v2_closure_supplies_terminal_handoff_without_design_edits(self):
+        from task import plan_closure
+        plan_dir = write_valid_plan(self.root)
+        text = phase_index_md(handoff_text="—").replace(
+            "Демо-фаза.", "> **Контракт фазы.** Демо-фаза.")
+        write_v2_carriers(plan_dir, phase_index=text)
+        target = plan_closure.build_closure(plan_dir, "P1")
+        _, diag = _lint(plan_dir)
+        self.assertFalse(_errors_containing(diag, "Phase Handoff» пуст"))
+        target.write_text(target.read_text(encoding="utf-8") + "stale\n", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "Phase Handoff» пуст"))
+
     def test_done_phase_with_empty_phase_handoff(self):
         plan_dir = write_valid_plan(self.root)
         write_v2_carriers(plan_dir, phase_index=phase_index_md(handoff_text="—"))

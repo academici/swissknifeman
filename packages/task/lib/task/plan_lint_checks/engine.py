@@ -513,8 +513,19 @@ def lint_plan(plan_dir, diag):
             if handoff_text is None:
                 pass  # отсутствие секции уже отражено отдельной ошибкой
             elif _is_empty(handoff_text):
-                diag.error(phases[pid]["path"], None,
-                           f"фаза {pid} статус «{phase_status}», но «## Phase Handoff» пуст")
+                closure_fresh = False
+                if layout == "v2":
+                    # Execution output belongs in the generated closure; editing
+                    # authored phase prose would stale its immutable design audit.
+                    from task import plan_closure
+                    try:
+                        plan_closure.build_closure(plan_dir, pid, check=True)
+                        closure_fresh = True
+                    except plan_closure.ClosureError:
+                        pass
+                if not closure_fresh:
+                    diag.error(phases[pid]["path"], None,
+                               f"фаза {pid} статус «{phase_status}», но «## Phase Handoff» пуст")
 
         # --- 2026.07.13-PLAN-PROTOCOL-GAP P2.15/D34 WARNING: зеркальный гейт — фаза НЕтерминальна, а Phase Handoff
         # УТВЕРЖДАЕТ закрытие и не помечен маркером инвалидации (H2, SKILL §3, 4-й шаг).

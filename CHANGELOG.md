@@ -4,6 +4,12 @@
 
 ### Fixed
 
+- **Task Validation bullets:** compile each top-level bullet as its own evidence
+  carrier so an external bookkeeping command does not hide repository acceptance.
+  Public checks still require current successful validation receipts.
+- **Task immutable phase design:** a fresh generated layout-v2 phase closure
+  supplies terminal handoff evidence without editing the audited phase context;
+  missing or stale closure evidence still fails the gate.
 - **Task waiting delivery:** an escalated or blocked item may resume itself after
   its explicit waiting gate; completed GREEN items still reject replay recommendations.
 - **Task evidence parsing:** leading PHP namespace segments such as `\\Internal\\`

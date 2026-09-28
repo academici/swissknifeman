@@ -99,6 +99,13 @@ PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHO
 
 # P0.7 — паритет провайдерских проекций команд держался только на unit-тестах; гейт
 # генератора покрывает ещё и claude-golden, runtime-копию plan-protocol и publication-lock.
+
+echo "[5b/6] publication version ↔ umbrella ↔ manifests"
+if [[ -n "$MONOREPO_ROOT" ]]; then
+  python3 "$REPO_ROOT/scripts/check-publication-version.py" "$MONOREPO_ROOT" \
+    || err "publication version drift — bump plugin_version + render-provider-commands"
+fi
+
 echo "[6/6] проекции команд провайдеров (render-provider-commands --check)"
 if [[ -n "$MONOREPO_ROOT" ]]; then
   python3 scripts/render-provider-commands.py --check --root "$MONOREPO_ROOT" \

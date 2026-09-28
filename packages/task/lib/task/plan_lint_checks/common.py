@@ -695,6 +695,10 @@ def _parse_fields(body_lines, body_start_lineno, field_re):
             cur_lineno = body_start_lineno + i
             rest = m.group(2).strip()
             cur_val = [rest] if rest else []
+        elif ESCALATION_RE.match(ln):
+            # The generated state keeps the escalation quote after the last field.
+            # It is a sibling marker, not a continuation of Escalation Needed.
+            continue
         elif cur_key is not None:
             if ln.strip() or cur_val:
                 cur_val.append(ln.rstrip())

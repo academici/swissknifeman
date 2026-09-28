@@ -111,7 +111,11 @@ authorize one exact `journal-migration/v1`. The manifest lives at
 `journal-migrations/<migration-id>/manifest.json`, binds the complete source/target SHA-256 and
 every changed line, and permits only neutral missing-field backfill, bounded terminal-evidence
 recovery, explicit legacy enum/friction normalization, and reset of an orphan `in-progress` row
-that never had a durable session/run identity. `task.journal_migration` saves the original `journal.jsonl` bytes as
+that never had a durable session/run identity. A later duplicate qualified execution start may
+also become `no-op` only when one earlier start of the same plan/item/attempt/run survives,
+its session derives that run ID, timestamps are ordered, and the run has no terminal. All other
+fields and the first start remain unchanged; the accepted decision and exact manifest still apply.
+`task.journal_migration` saves the original `journal.jsonl` bytes as
 `journal.preimage.jsonl`, writes a digest receipt, and fails closed on drift, path traversal,
 unlisted semantic edits, or an absent accepted decision. This is the sole exception to physical
 append-only storage; the preserved preimage remains the historical source.

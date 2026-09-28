@@ -231,7 +231,35 @@ def _allowed_operation(operation: dict) -> None:
     raise JournalMigrationError(f"operation.path: путь не входит в migration allow-list: {path}")
 
 
-def _apply_operation(entry: dict, operation: dict) -> None:
+def _duplicate_start(entry: dict, earlier_entries, later_entries) -> bool:
+    """A qualified start can be normalized only when its actual start survives."""
+    identity_fields = ("plan_id", "item_id", "attempt", "run_id")
+    identity = tuple(entry.get(field) for field in identity_fields)
+    if (not entry.get("run_id") or not entry.get("session_id")
+            or entry.get("command") not in {"plan-run", "plan-exec"}):
+        return False
+    same_run = lambda row: tuple(row.get(field) for field in identity_fields) == identity
+    starts = [row for row in earlier_entries
+              if same_run(row) and row.get("result") == "in-progress"]
+    if len(starts) != 1:
+        return False
+    start = starts[0]
+    if start.get("command") != entry["command"] or not start.get("session_id"):
+        return False
+    if any(same_run(row) and row.get("result") in journal.TERMINAL_CLOSE_RESULTS
+           for row in (*earlier_entries, *later_entries)):
+        return False
+    try:
+        derived = journal.derive_run_id(
+            plan_id=start["plan_id"], item_id=start["item_id"],
+            attempt=start["attempt"], session_id=start["session_id"])
+        return (derived == entry["run_id"]
+                and journal._parse_utc(entry["ts"]) >= journal._parse_utc(start["ts"]))
+    except (KeyError, journal.JournalValidationError, TypeError, ValueError):
+        return False
+
+
+def _apply_operation(entry: dict, operation: dict, *, earlier_entries=(), later_entries=()) -> None:
     _allowed_operation(operation)
     parent, key = _parent_and_key(entry, operation["path"])
     exists = key < len(parent) if isinstance(parent, list) else key in parent
@@ -247,9 +275,10 @@ def _apply_operation(entry: dict, operation: dict) -> None:
                 f"replace precondition не совпадает для {operation['path']}")
         if (operation["path"] == "/result"
                 and operation["before"] == "in-progress"
-                and (entry.get("session_id") is not None or entry.get("run_id") is not None)):
+                and (entry.get("session_id") is not None or entry.get("run_id") is not None)
+                and not _duplicate_start(entry, earlier_entries, later_entries)):
             raise JournalMigrationError(
-                "/result: сброс допустим только для orphan in-progress без session_id/run_id")
+                "/result: сброс допустим только для orphan in-progress или доказанного duplicate start")
     parent[key] = operation["value"]
 
 
@@ -342,8 +371,11 @@ def render_target(plan_dir, manifest_path) -> tuple[bytes, bytes, dict]:
             raise JournalMigrationError(f"line {change['line']}: невалидный UTF-8 JSON") from exc
         if not isinstance(entry, dict):
             raise JournalMigrationError(f"line {change['line']}: event обязан быть object")
+        earlier_entries = tuple(json.loads(line) for line in lines[:index])
+        later_entries = tuple(json.loads(line) for line in lines[index + 1:])
         for operation in change["operations"]:
-            _apply_operation(entry, operation)
+            _apply_operation(entry, operation, earlier_entries=earlier_entries,
+                             later_entries=later_entries)
         if entry.get("plan_id") != plan_dir.name:
             raise JournalMigrationError(f"line {change['line']}: plan_id изменён/невалиден")
         try:

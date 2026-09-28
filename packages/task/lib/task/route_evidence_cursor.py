@@ -21,6 +21,7 @@ from task.route_evidence import RouteEvidenceError, capture_actual
 
 CLI_SOURCE_VERSION = "cursor-ancestor-argv-v1"
 _CLI_CONFIG_SOURCE_VERSION = "cursor-cli-config-v1"
+_RESUME_SOURCE_VERSION = "cursor-chat-store-v1"
 _ATTEST_SOURCE_VERSION = "cursor-explicit-attestation-v1"
 _ROUTING_PATH = Path(__file__).resolve().parents[2] / "configs" / "command-routing.json"
 
@@ -67,6 +68,22 @@ def _agent_ancestor(start_pid: int, process_table=None) -> tuple[str, ...]:
         pid = parent
     raise RouteEvidenceError(
         "ROUTE_LAUNCH_UNAVAILABLE", "current process is not a descendant of a Cursor agent launch")
+
+
+def _cursor_thread_id() -> str | None:
+    """Session id already observed by ``session_context_cursor``.
+
+    A fresh ``agent --model`` launch is not a resume, so the chat-store path
+    does not run. The conversation id is still the session the runtime binds.
+    """
+    for key in ("CURSOR_CONVERSATION_ID", "CURSOR_AGENT_CHAT_ID", "CURSOR_SESSION_ID"):
+        value = os.environ.get(key)
+        if not isinstance(value, str):
+            continue
+        session_id = value.strip()
+        if session_id and not any(char.isspace() for char in session_id):
+            return session_id
+    return None
 
 
 def _option_values(argv: tuple[str, ...], short: str, long: str) -> tuple[str, ...]:
@@ -125,6 +142,38 @@ def _normalize_invocation(value: str) -> str:
     raise RouteEvidenceError("ROUTE_LAUNCH_MISMATCH", "expected semantic task:<command> form")
 
 
+def _invocation_extends(actual: str, expected: str) -> bool:
+    """Admit the execution-sheet prompt when it continues the admitted command."""
+    if actual == expected:
+        return True
+    if not actual.startswith(expected):
+        return False
+    rest = actual[len(expected):]
+    return bool(rest) and rest[0].isspace()
+
+
+def _model_and_effort(selector: str, routing_path: Path) -> tuple[str, str]:
+    """Map a Cursor ``--model`` slug onto catalog id plus effort.
+
+    A whole catalog id such as ``claude-opus-5-thinking-high`` stays intact and
+    keeps the argv default effort. ``grok-4.7-high`` is the CLI form of catalog
+    model ``grok-4.7`` with effort ``high``.
+    """
+    try:
+        _selector_class(selector, routing_path)
+    except RouteEvidenceError as whole:
+        base, separator, effort = selector.rpartition("-")
+        if not separator:
+            raise
+        try:
+            _selector_effort(effort, routing_path)
+            _selector_class(base, routing_path)
+        except RouteEvidenceError:
+            raise whole from None
+        return base, effort
+    return selector, "medium"
+
+
 def _capture_argv(*, expected_invocation: str, expected_cwd: str | Path,
                   start_pid: int | None, process_table, routing_path: Path) -> dict:
     argv = _agent_ancestor(start_pid or os.getpid(), process_table)
@@ -132,10 +181,11 @@ def _capture_argv(*, expected_invocation: str, expected_cwd: str | Path,
     workspace = _one(_option_values(argv, "", "--workspace"), "Cursor workspace")
     invocations = tuple(_normalize_invocation(value) for value in argv if "task:" in value)
     invocation = _one(invocations, "Task prompt")
-    if invocation != _normalize_invocation(expected_invocation):
+    expected = _normalize_invocation(expected_invocation)
+    if not _invocation_extends(invocation, expected):
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_MISMATCH",
-            f"Cursor Task prompt {invocation!r} != expected {expected_invocation!r}")
+            f"Cursor Task prompt {invocation!r} != expected {expected!r}")
     if Path(workspace).resolve() != Path(expected_cwd).resolve():
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_MISMATCH",
@@ -143,20 +193,20 @@ def _capture_argv(*, expected_invocation: str, expected_cwd: str | Path,
     if "--force" not in argv and "--yolo" not in argv:
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_MISMATCH", "Cursor launch is missing --force/--yolo")
-    effort_selector = "medium"
+    catalog_model, effort_selector = _model_and_effort(model, routing_path)
     evidence = capture_actual(
-        _selector_class(model, routing_path),
+        _selector_class(catalog_model, routing_path),
         _selector_effort(effort_selector, routing_path),
         source="cli-flag",
         model=model,
     )
     evidence.update({
-        "thread_id": os.environ.get("CURSOR_AGENT_CHAT_ID") or os.environ.get("CURSOR_SESSION_ID"),
+        "thread_id": _cursor_thread_id(),
         "source_version": CLI_SOURCE_VERSION,
         "cwd": str(Path(workspace).resolve()),
         "invocation": invocation,
     })
-    if not isinstance(evidence.get("thread_id"), str) or not evidence["thread_id"].strip():
+    if evidence["thread_id"] is None:
         evidence["thread_id"] = f"cursor-argv:{evidence['cwd']}:{invocation}"
     return evidence
 
@@ -233,10 +283,109 @@ def _capture_cli_config(*, expected_invocation: str, expected_cwd: str | Path,
     return evidence
 
 
+def _resume_argv(start_pid: int | None, process_table) -> tuple[str, ...] | None:
+    try:
+        argv = _agent_ancestor(start_pid or os.getpid(), process_table)
+    except RouteEvidenceError:
+        return None
+    if "resume" not in argv or "--model" in argv or "-m" in argv:
+        return None
+    return argv
+
+
+def _chat_directory(conversation_id: str, chats_root: Path) -> Path:
+    matches = [path for path in chats_root.glob(f"*/{conversation_id}") if path.is_dir()]
+    if len(matches) != 1:
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_UNAVAILABLE",
+            f"expected one Cursor chat directory for this session, observed {len(matches)}")
+    return matches[0]
+
+
+def _last_used_model(store: Path) -> str:
+    import sqlite3
+
+    try:
+        connection = sqlite3.connect(f"file:{store}?mode=ro", uri=True)
+    except sqlite3.Error as error:
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_UNAVAILABLE", "cursor chat store is unreadable") from error
+    try:
+        row = connection.execute("SELECT value FROM meta LIMIT 1").fetchone()
+    except sqlite3.Error as error:
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_UNAVAILABLE", "cursor chat store is unreadable") from error
+    finally:
+        connection.close()
+    if row is None or not isinstance(row[0], str):
+        raise RouteEvidenceError("ROUTE_LAUNCH_UNAVAILABLE", "cursor chat store has no meta")
+    try:
+        payload = bytes.fromhex(row[0])
+        data = json.loads(payload.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_UNAVAILABLE", "cursor chat meta is unreadable") from error
+    model = data.get("lastUsedModel") if isinstance(data, dict) else None
+    if not isinstance(model, str) or not model:
+        raise RouteEvidenceError("ROUTE_LAUNCH_UNAVAILABLE", "cursor chat has no lastUsedModel")
+    return model
+
+
+def _capture_resume(*, expected_invocation: str, expected_cwd: str | Path,
+                    start_pid: int | None, process_table, routing_path: Path,
+                    chats_root: Path, conversation_id: str | None) -> dict:
+    argv = _resume_argv(start_pid, process_table)
+    if argv is None:
+        raise RouteEvidenceError("ROUTE_LAUNCH_UNAVAILABLE", "current process is not a Cursor resume")
+    if "--force" not in argv and "--yolo" not in argv:
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_MISMATCH", "Cursor resume is missing --force/--yolo")
+    if not isinstance(conversation_id, str) or not conversation_id.strip():
+        raise RouteEvidenceError("ROUTE_LAUNCH_UNAVAILABLE", "Cursor conversation id is absent")
+    conversation_id = conversation_id.strip()
+    chat = _chat_directory(conversation_id, chats_root)
+    try:
+        sidecar = json.loads((chat / "meta.json").read_text(encoding="utf-8"))
+        history = json.loads((chat / "prompt_history.json").read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_UNAVAILABLE", "cursor chat sidecar is unreadable") from error
+    cwd = sidecar.get("cwd") if isinstance(sidecar, dict) else None
+    if not isinstance(cwd, str) or Path(cwd).resolve() != Path(expected_cwd).resolve():
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_MISMATCH",
+            f"Cursor chat cwd {cwd!r} != expected {str(expected_cwd)!r}")
+    if not isinstance(history, list) or not history or not isinstance(history[0], str):
+        raise RouteEvidenceError("ROUTE_LAUNCH_UNAVAILABLE", "cursor prompt history is empty")
+    invocation = _normalize_invocation(history[0])
+    expected = _normalize_invocation(expected_invocation)
+    if not _invocation_extends(invocation, expected):
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_MISMATCH",
+            f"Cursor resume prompt {invocation!r} != expected {expected!r}")
+    model = _last_used_model(chat / "store.db")
+    catalog_model, effort_selector = _model_and_effort(model, routing_path)
+    evidence = capture_actual(
+        _selector_class(catalog_model, routing_path),
+        _selector_effort(effort_selector, routing_path),
+        source="provider-thread-state",
+        model=model,
+    )
+    evidence.update({
+        "thread_id": conversation_id,
+        "source_version": _RESUME_SOURCE_VERSION,
+        "cwd": str(Path(cwd).resolve()),
+        "invocation": invocation,
+    })
+    return evidence
+
+
 def capture_current(*, expected_invocation: str, expected_cwd: str | Path,
                     attestation: dict | None = None, start_pid: int | None = None,
                     process_table=None, routing_path: str | Path = _ROUTING_PATH,
-                    cli_config_path: str | Path | None = None) -> dict:
+                    cli_config_path: str | Path | None = None,
+                    chats_root: str | Path | None = None,
+                    conversation_id: str | None = None) -> dict:
     """Capture and validate the current Cursor route for this session."""
     routing_path = Path(routing_path)
     semantic = _normalize_invocation(expected_invocation)
@@ -248,8 +397,26 @@ def capture_current(*, expected_invocation: str, expected_cwd: str | Path,
             process_table=process_table,
             routing_path=routing_path,
         )
-    except RouteEvidenceError:
-        pass
+    except RouteEvidenceError as error:
+        # A modeled launch that disagrees with the admitted command must not
+        # fall through to cli-config. A resume argv has no --model; that miss
+        # is the resume path, not a second model source.
+        if error.code != "ROUTE_LAUNCH_UNAVAILABLE" and _resume_argv(start_pid, process_table) is None:
+            raise
+    if _resume_argv(start_pid, process_table) is not None:
+        try:
+            return _capture_resume(
+                expected_invocation=semantic,
+                expected_cwd=expected_cwd,
+                start_pid=start_pid,
+                process_table=process_table,
+                routing_path=routing_path,
+                chats_root=Path(chats_root) if chats_root is not None else Path.home() / ".cursor" / "chats",
+                conversation_id=conversation_id or os.environ.get("CURSOR_CONVERSATION_ID"),
+            )
+        except RouteEvidenceError as error:
+            if error.code != "ROUTE_LAUNCH_UNAVAILABLE":
+                raise
     try:
         return _capture_cli_config(
             expected_invocation=semantic,

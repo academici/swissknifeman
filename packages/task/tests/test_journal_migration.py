@@ -139,6 +139,76 @@ class TestJournalMigration(unittest.TestCase):
         with self.assertRaisesRegex(journal_migration.JournalMigrationError, "orphan in-progress"):
             journal_migration._apply_operation(event, operation)
 
+    def _duplicate_manifest(self, *, original_line=False, different_run=False, terminal=False):
+        run = journal.derive_run_id(plan_id=self.plan_dir.name, item_id="P1.1",
+                                    attempt=1, session_id="original-session")
+        start = journal.new_entry(
+            plan_id=self.plan_dir.name, item_id="P1.1", command="plan-run",
+            actor="model/high", result="in-progress", attempt=1,
+            session_id="original-session", run_id=run, ts="2026-09-21T10:00:00Z")
+        duplicate = {**start, "session_id": "resumed-session", "ts": "2026-09-21T11:00:00Z"}
+        if different_run:
+            duplicate["run_id"] = "a" * 64
+        entries = [start, duplicate]
+        if terminal:
+            entries.append({**start, "result": "blocked", "ts": "2026-09-21T12:00:00Z"})
+        source_lines = [journal_migration._canonical_line(row) for row in entries]
+        self.source = b"".join(source_lines)
+        (self.plan_dir / "journal.jsonl").write_bytes(self.source)
+        path, _unused = self._manifest()
+        index = 0 if original_line else 1
+        changed = {**entries[index], "result": "no-op"}
+        target_lines = source_lines.copy()
+        target_lines[index] = journal_migration._canonical_line(changed)
+        target = b"".join(target_lines)
+        manifest = json.loads(path.read_text())
+        manifest.update(source_sha256=self._digest(self.source), target_sha256=self._digest(target))
+        manifest["changes"] = [{
+            "line": index + 1, "before_sha256": self._digest(source_lines[index][:-1]),
+            "after_sha256": self._digest(target_lines[index][:-1]),
+            "operations": [{"op": "replace", "path": "/result",
+                            "before": "in-progress", "value": "no-op"}],
+        }]
+        path.write_text(json.dumps(manifest))
+        return path, target, source_lines[0]
+
+    def test_duplicate_start_repair_preserves_first_start_and_preimage(self):
+        path, target, first_line = self._duplicate_manifest()
+        receipt = journal_migration.apply(self.plan_dir, path)
+        self.assertEqual((self.plan_dir / receipt["preimage_path"]).read_bytes(), self.source)
+        self.assertEqual((self.plan_dir / "journal.jsonl").read_bytes(), target)
+        self.assertTrue(target.startswith(first_line))
+        self.assertEqual(receipt["changed_lines"], [2])
+        rows = [(i, line, json.loads(line))
+                for i, line in enumerate(target.decode().splitlines(), 1)]
+        terminal = {**rows[0][2], "result": "blocked", "ts": "2026-09-21T12:00:00Z"}
+        journal._validate_terminal_order(rows, terminal)
+        self.assertEqual(journal_migration.apply(self.plan_dir, path), receipt)
+
+    def test_first_qualified_start_cannot_be_normalized(self):
+        path, _target, _first = self._duplicate_manifest(original_line=True)
+        with self.assertRaisesRegex(journal_migration.JournalMigrationError, "duplicate start"):
+            journal_migration.apply(self.plan_dir, path)
+        self.assertEqual((self.plan_dir / "journal.jsonl").read_bytes(), self.source)
+
+    def test_different_run_cannot_be_normalized_as_duplicate(self):
+        path, _target, _first = self._duplicate_manifest(different_run=True)
+        with self.assertRaisesRegex(journal_migration.JournalMigrationError, "duplicate start"):
+            journal_migration.apply(self.plan_dir, path)
+
+    def test_terminal_run_cannot_have_a_start_normalized(self):
+        path, _target, _first = self._duplicate_manifest(terminal=True)
+        with self.assertRaisesRegex(journal_migration.JournalMigrationError, "duplicate start"):
+            journal_migration.apply(self.plan_dir, path)
+
+    def test_duplicate_requires_first_session_to_derive_run_identity(self):
+        path, _target, _first = self._duplicate_manifest()
+        entries = [json.loads(line) for line in self.source.splitlines()]
+        entries[0]["session_id"] = "forged-session"
+        operation = {"op": "replace", "path": "/result", "before": "in-progress", "value": "no-op"}
+        with self.assertRaisesRegex(journal_migration.JournalMigrationError, "duplicate start"):
+            journal_migration._apply_operation(entries[1], operation, earlier_entries=entries[:1])
+
     def test_legacy_friction_replacement_preserves_only_enum_semantics(self):
         event = {"friction": ["free-form historical note"]}
         journal_migration._apply_operation(event, {

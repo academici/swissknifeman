@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.24.11] - 2026-09-28
+
+### Fixed
+
+- **Task plugin cache revision:** task publication version tracks the umbrella release
+  again; Codex/Claude cache keys advance with attested bytes so deleting
+  `~/.codex/plugins/cache/swissknifeman/task/*` no longer recreates a misleading
+  frozen `0.24.4` slot after post-release task changes.
+
 ### Fixed
 
 - **Task file annotations:** PHP namespace prefixes in parenthetical `Files` explanations

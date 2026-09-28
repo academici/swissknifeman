@@ -16,6 +16,28 @@ from task import plan_readiness
 
 
 class PlanDeliveryTests(unittest.TestCase):
+    def test_waiting_owner_can_resume_escalated_item_but_cannot_replay_green_item(self):
+        for result in ("escalated", "closed-green"):
+            with self.subTest(result=result):
+                plan = self._terminal_plan(result=result, root=self.root / result)
+                decision = plan_continuity.evaluate(
+                    route_attested=True, context_attested=True,
+                    batch_receipt_valid=True, waiting_owner=True,
+                )
+                (plan / "handoff.md").write_text(
+                    "# HANDOFF — 2026-09-28 — after P1.1\n\n"
+                    "**Next:** waiting: owner approval → exec-items: task:plan-exec DEMO-DELIVERY P1.1\n\n"
+                    "| Model | implementation |\n| Thinking | high |\n| Context | waiting-owner |\n\n"
+                    "```session-continuity-decision/v1\n"
+                    + json.dumps(decision.as_dict()) + "\n```\n\n**Done:** pending approval\n",
+                )
+                if result == "escalated":
+                    receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")
+                    self.assertEqual(receipt["continuity"]["outcome"], "waiting-owner")
+                else:
+                    with self.assertRaisesRegex(plan_delivery.DeliveryError, "FINAL_BEFORE_TERMINAL_FORBIDDEN"):
+                        plan_delivery.build_terminal_receipt(plan, "P1.1")
+
     def test_required_final_message_is_machine_authored_and_exact(self):
         message = plan_delivery.required_final_message({
             "schema_version": "terminal-delivery-receipt/v1", "recommendation": "Run P4.2.",

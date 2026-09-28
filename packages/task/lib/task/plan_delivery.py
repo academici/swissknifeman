@@ -375,7 +375,10 @@ def _handoff(plan_dir: Path, *, closed_subject: str | None = None) -> dict:
             and re.search(
                 rf"(?:task:plan-exec|task:plan-run|task:plan-close)\s+\S+\s+"
                 rf"{re.escape(closed_subject)}(?:\s|$)",
-                next_exact)):
+                next_exact)
+            and not (next_exact.startswith("waiting:")
+                     and _terminal_journal(plan_dir, closed_subject)["result"]
+                     in {"blocked", "escalated"})):
         raise DeliveryError(
             "FINAL_BEFORE_TERMINAL_FORBIDDEN",
             f"Next повторно запускает terminal subject {closed_subject}",

@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- **Task waiting delivery:** an escalated or blocked item may resume itself after
+  its explicit waiting gate; completed GREEN items still reject replay recommendations.
 - **Task evidence parsing:** leading PHP namespace segments such as `\\Internal\\`
   in prose deliverables no longer prevent plan execution; standalone file declarations
   continue to reject backslashes.

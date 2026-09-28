@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Task evidence parsing:** leading PHP namespace segments such as `\\Internal\\`
+  in prose deliverables no longer prevent plan execution; standalone file declarations
+  continue to reject backslashes.
+
 ## [0.24.11] - 2026-09-28
 
 ### Fixed

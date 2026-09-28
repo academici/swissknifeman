@@ -53,7 +53,7 @@ def _declared_paths(value: str, *, allow_prose: bool = False) -> tuple[str, ...]
     normalized = []
     for index, path in enumerate(paths):
         if (allow_prose or index in annotations) and re.fullmatch(
-                r"[A-Za-z_]\w*(?:\\+[A-Za-z_]\w*)+(?:\\+)?", path):
+                r"(?:\\+[A-Za-z_]\w*(?:\\+[A-Za-z_]\w*)*|[A-Za-z_]\w*(?:\\+[A-Za-z_]\w*)+)(?:\\+)?", path):
             # Deliverables and parenthetical file annotations can name PHP namespaces.
             # These identifiers are prose, never repository path declarations.
             continue

@@ -16,7 +16,7 @@ from task import plan_bundle, plan_evidence, plan_gates, task_contract
 
 class EvidenceGraphTests(unittest.TestCase):
     def test_deliverable_namespaces_do_not_become_evidence_paths(self):
-        for namespace in (r"Chatom\Outbox", r"Chatom\\Outbox"):
+        for namespace in (r"Chatom\Outbox", r"Chatom\\Outbox", "\\Internal\\", r"\\Internal\\"):
             with self.subTest(namespace=namespace):
                 self.assertEqual(
                     plan_evidence._declared_paths(

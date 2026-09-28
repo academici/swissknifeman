@@ -28,6 +28,23 @@ class EvidenceGraphTests(unittest.TestCase):
                 with self.assertRaisesRegex(plan_evidence.EvidenceError, "EVIDENCE_PATH_INVALID"):
                     plan_evidence._declared_paths(f"`{namespace}`")
 
+    def test_file_annotations_keep_paths_and_ignore_namespace_prefixes(self):
+        for namespace in ('Chatom\\Tests\\', 'Chatom\\\\Tests\\\\'):
+            with self.subTest(namespace=namespace):
+                self.assertEqual(
+                    plan_evidence._declared_paths(
+                        f"`composer.json` (autoload-dev: `{namespace}`; "
+                        "factories → `packages/core/composer.json`); `tests/**`"
+                    ),
+                    ("composer.json", "packages/core/composer.json", "tests/**"),
+                )
+                with self.assertRaisesRegex(plan_evidence.EvidenceError, "EVIDENCE_PATH_INVALID"):
+                    plan_evidence._declared_paths(f"`{namespace}`")
+        with self.assertRaisesRegex(plan_evidence.EvidenceError, "EVIDENCE_PATH_INVALID"):
+            plan_evidence._declared_paths("`composer.json` (output `../outside.py`)")
+        with self.assertRaisesRegex(plan_evidence.EvidenceError, "EVIDENCE_PATH_INVALID"):
+            plan_evidence._declared_paths(r"`composer.json` (`Chatom\Tests`) · `Chatom\Tests`")
+
     def test_missing_only_and_empty_anchors_are_not_product_coverage(self):
         for paths in ([], [{"path": "a.py; b.py", "state": "missing"}]):
             anchor = {"paths": paths, "sha256": "0" * 64}

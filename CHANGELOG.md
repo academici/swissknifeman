@@ -4,6 +4,9 @@
 
 ### Fixed
 
+- **Task file annotations:** PHP namespace prefixes in parenthetical `Files` explanations
+  remain prose while paths inside the explanation are still validated; malformed
+  standalone declarations still fail admission.
 - **Task evidence parsing:** quoted PHP namespaces in prose `Deliverables` are
   treated as identifiers instead of invalid repository paths; `Files` path
   validation remains strict.

@@ -39,15 +39,22 @@ def _canonical(value) -> bytes:
 
 
 def _declared_paths(value: str, *, allow_prose: bool = False) -> tuple[str, ...]:
-    paths = _BACKTICK_PATH.findall(value or "")
+    matches = list(_BACKTICK_PATH.finditer(value or ""))
+    paths = [match.group(1) for match in matches]
     quoted = bool(paths)
+    annotations = set()
+    for index, match in enumerate(matches):
+        prefix = _BACKTICK_PATH.sub("", value[:match.start()])
+        if prefix.count("(") > prefix.count(")"):
+            annotations.add(index)
     if not paths and value and value.strip() != "—":
         paths = [part.strip() for entry in plan_weight.split_semicolon_entries(value)
                  for part in re.split(r"\s*[·,]\s*", entry) if part.strip()]
     normalized = []
-    for path in paths:
-        if allow_prose and re.fullmatch(r"[A-Za-z_]\w*(?:\\+[A-Za-z_]\w*)+", path):
-            # Deliverables can name PHP namespaces as well as output files.
+    for index, path in enumerate(paths):
+        if (allow_prose or index in annotations) and re.fullmatch(
+                r"[A-Za-z_]\w*(?:\\+[A-Za-z_]\w*)+(?:\\+)?", path):
+            # Deliverables and parenthetical file annotations can name PHP namespaces.
             # These identifiers are prose, never repository path declarations.
             continue
         if allow_prose and not quoted and any(char.isspace() for char in path):

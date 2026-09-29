@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- **Task phase fingerprints:** nested brace alternatives in declared `Files`
+  resolve to their tracked members, retaining expansion limits and path guards.
 - **Task Validation bullets:** compile each top-level bullet as its own evidence
   carrier so an external bookkeeping command does not hide repository acceptance.
   Public checks still require current successful validation receipts.

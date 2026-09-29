@@ -109,6 +109,7 @@ class TestReadBudgetGate(unittest.TestCase):
                 "products/tree",
                 "products/tree/**",
                 "products/brace/{left,right}.txt",
+                "products/{exact.txt,brace/{left,right}.txt}",
                 "products/link.txt",
                 "artifacts/result.txt",
             }
@@ -123,6 +124,10 @@ class TestReadBudgetGate(unittest.TestCase):
             self.assertEqual(
                 [member["path"] for member in rows["products/brace/{left,right}.txt"]["members"]],
                 ["products/brace/left.txt", "products/brace/right.txt"],
+            )
+            self.assertEqual(
+                [member["path"] for member in rows["products/{exact.txt,brace/{left,right}.txt}"]["members"]],
+                ["products/brace/left.txt", "products/brace/right.txt", "products/exact.txt"],
             )
 
             ignored = root / "products" / "tree" / "__pycache__" / "cache.pyc"
@@ -152,13 +157,28 @@ class TestReadBudgetGate(unittest.TestCase):
             plan_dir.mkdir(parents=True)
             invalid = (
                 "../escape.txt", "/absolute.txt", "~/home.txt", "bad\\path.txt",
-                "bad/{left,right.txt", "bad/{left,{middle,right}}.txt", "bad/[abc.txt",
+                "bad/{left,right.txt", "bad/{left,{middle,right}.txt", "bad/[abc.txt",
                 "bad/{" + ",".join(str(number) for number in range(65)) + "}.txt",
             )
             for declared in invalid:
                 with self.subTest(declared=declared):
                     with self.assertRaises(ValueError):
                         plan_gates._product_tree(plan_dir, {declared})
+
+    def test_nested_brace_paths_preserve_expansion_bounds_and_path_guards(self):
+        path = "packages/core/src/Configuration/{Data,Internal/{Sections,Settings,Services}}/**"
+        self.assertEqual(plan_gates._expand_braces(path), (
+            "packages/core/src/Configuration/Data/**",
+            "packages/core/src/Configuration/Internal/Sections/**",
+            "packages/core/src/Configuration/Internal/Services/**",
+            "packages/core/src/Configuration/Internal/Settings/**",
+        ))
+        with self.assertRaises(ValueError):
+            plan_gates._expand_braces("p/{a,{b,c}}", limit=2)
+        for invalid in ("p/{a,{b,../c}}", "p/{a,{b,}}", "p/{a,{b}}"):
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(ValueError):
+                    plan_gates._expand_braces(invalid)
 
     def test_audit_fixer_rebind_distinguishes_product_change_from_bookkeeping(self):
         before = {

@@ -75,7 +75,7 @@ def _validate_declared_path(value: str) -> None:
 
 
 def _expand_braces(value: str, *, limit: int = _BRACE_EXPANSION_LIMIT) -> tuple[str, ...]:
-    """Expand bounded, non-nested ``{a,b}`` groups without shell semantics."""
+    """Expand bounded brace alternatives, including nested groups, without a shell."""
     _validate_declared_path(value)
     expanded = [value]
     while any("{" in item or "}" in item for item in expanded):
@@ -83,12 +83,28 @@ def _expand_braces(value: str, *, limit: int = _BRACE_EXPANSION_LIMIT) -> tuple[
         for item in expanded:
             opening = item.find("{")
             closing = item.find("}")
+            if opening < 0 and closing < 0:
+                next_items.append(item)
+                continue
             if opening < 0 or closing < 0 or closing < opening:
                 raise ValueError(f"unbalanced brace path: {value!r}")
-            body = item[opening + 1:closing]
-            if "{" in body or "}" in body or "{" in item[closing + 1:closing + 2]:
-                raise ValueError(f"nested brace path is not supported: {value!r}")
-            alternatives = body.split(",")
+            depth = 1
+            start = opening + 1
+            alternatives = []
+            for closing in range(start, len(item)):
+                character = item[closing]
+                if character == "{":
+                    depth += 1
+                elif character == "}":
+                    depth -= 1
+                    if depth == 0:
+                        alternatives.append(item[start:closing])
+                        break
+                elif character == "," and depth == 1:
+                    alternatives.append(item[start:closing])
+                    start = closing + 1
+            if depth != 0:
+                raise ValueError(f"unbalanced brace path: {value!r}")
             if len(alternatives) < 2 or any(not alternative for alternative in alternatives):
                 raise ValueError(f"brace path needs non-empty alternatives: {value!r}")
             prefix, suffix = item[:opening], item[closing + 1:]

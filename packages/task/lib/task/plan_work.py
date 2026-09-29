@@ -308,9 +308,12 @@ def finalize_design(plan_dir, phase_id: str | None = None, *, finish: bool = Fal
     if (match and not plan_readiness.design_gate_enabled(root)
             and match[1] not in {path.stem for path in specs}):
         specs.append(plan_layout.carrier_path(root, "item-spec", item_id=match[1]))
+    # A closed item's spec is frozen by its terminal evidence; later phases may
+    # legitimately move the files it once read, so it is not re-rendered.
+    closed = plan_recovery.terminal_items(root)
     for path in specs:
         item = path.stem
-        if plan_recovery.inspect(root, item)["allowed"]:
+        if item not in closed and plan_recovery.inspect(root, item)["allowed"]:
             if plan_readiness.design_gate_enabled(root):
                 plan_bundle.model(root, item)  # validate without an early projection write
             else:

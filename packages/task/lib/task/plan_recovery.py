@@ -50,6 +50,12 @@ def _positions(plan_dir: Path) -> dict[str, dict]:
             if (position := plan_item_state.latest_execution_event(history)) is not None}
 
 
+def terminal_items(plan_dir) -> frozenset[str]:
+    """Items whose latest execution event closed them."""
+    return frozenset(item_id for item_id, position in _positions(Path(plan_dir)).items()
+                     if position.get("result") in _READY_RESULTS)
+
+
 def _dependencies(plan_dir: Path, item_id: str, items: dict[str, dict]) -> set[str]:
     """Reuse declared producer/path ownership; Next alone never grants exclusivity."""
     fields = items[item_id]

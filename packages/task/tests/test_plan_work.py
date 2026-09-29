@@ -193,6 +193,15 @@ class PlanWorkTests(unittest.TestCase):
             self.plan, finish=True, actor="test/high", session_id="design")
         self.assertEqual(result["phase_id"], "finish")
 
+        # A later phase may move a file a closed item once read; its frozen
+        # spec must not block finish (editing it would stale terminal evidence).
+        moved = self.plan / "lib/pkg/config.py"
+        self.assertTrue(moved.is_file())
+        moved.unlink()
+        result = plan_work.finalize_design(
+            self.plan, finish=True, actor="test/high", session_id="design")
+        self.assertEqual(result["phase_id"], "finish")
+
     def test_execution_sheet_requires_finished_design_and_matching_green_audit(self):
         from task import journal, plan_readiness
 

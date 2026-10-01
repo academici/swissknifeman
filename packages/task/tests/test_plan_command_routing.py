@@ -82,7 +82,6 @@ class ProviderPlanRoutingTests(unittest.TestCase):
         result = plan_provider_invocation(self.catalog, carrier, mapping,
                                           observed_class="frontier", observed_effort="xhigh")
         self.assertTrue(result.ok, result.diagnostics)
-        self.assertNotIn("ECONOMY_ROUTE_OVERSHOOT", [item.code for item in result.diagnostics])
 
     def test_new_plan_batch_is_mandatory_and_survives_every_handoff_writer(self):
         protocol = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md"
@@ -92,13 +91,13 @@ class ProviderPlanRoutingTests(unittest.TestCase):
         self.assertIn("| Batch | Items | Model class/effort | Exec | Review | Почему |", protocol)
         self.assertIn("For every new layout-v2 plan, `Batch` and `Review` are mandatory", protocol)
         self.assertIn("| Batch | Items | Model class/effort | Exec | Review | Почему |", template)
-        for command in ("plan-design", "plan-exec"):
+        for command in ("plan-design", "plan-run"):
             with self.subTest(command=command):
                 body = (COMMAND_ROOT / f"{command}.md").read_text(encoding="utf-8")
                 self.assertIn("Batch", body)
 
     def test_terminal_phase_handoff_uses_audit_policy_instead_of_probe_close(self):
-        execution = (COMMAND_ROOT / "plan-exec.md").read_text(encoding="utf-8")
+        execution = (COMMAND_ROOT / "plan-run.md").read_text(encoding="utf-8")
         close = (COMMAND_ROOT / "plan-close.md").read_text(encoding="utf-8")
         protocol = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md"
                     ).read_text(encoding="utf-8")
@@ -167,7 +166,7 @@ class ProviderPlanRoutingTests(unittest.TestCase):
                 continuity=decision,
             )
         waiting = parse_next_carrier(
-            "waiting: gate D1 → exec-items: task:plan-exec PLAN P4.4",
+            "waiting: gate D1 → run-items: task:plan-run PLAN P4.4",
             context_kind="continue-root",
             continuity=ContinuityDecision(
                 "waiting-owner", "owner-wait", ("request:Q1",), False),

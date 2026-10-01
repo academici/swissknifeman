@@ -25,7 +25,7 @@ the snippets are copies, not independent rules.
 
 ## 1. When to activate and invariants
 
-Activate for `task:plan-design`, `task:plan-exec`, `task:plan-run`, `task:plan-close`,
+Activate for `task:plan-design`, `task:plan-run`, `task:plan-close`,
 `task:plan-audit` when the owner explicitly selects plan work or an exact cited local workflow
 policy requires it. Follow the Task package's shared intent-routing canon; ordinary work may proceed
 directly from a message or task file. Create a plan only when requested; preserve an explicitly
@@ -173,7 +173,7 @@ rerun green in a later immutable record.
 
 Phase audit is read-only over product. `audit-attention` or `audit-red` can finish the reviewer
 with `decision.action=return-owning-continuation`, reproduced evidence IDs, `scope_class=<owning item>`, `recovered=false`,
-`terminal=false`, and an exact `exec-items:`/`run-items:` owning item of the same phase.
+`terminal=false`, and an exact `run-items:` owning item of the same phase.
 The phase remains open; journal, lint and delivery consume the same policy. Without an admitted
 audit, GREEN alone admits close. Missing or RED acceptance evidence is owning repair, not audit admission. After executor
 repair, verify the changed risk delta and retain unaffected evidence.
@@ -262,8 +262,8 @@ Model order is `economy < implementation < frontier`; effort order is `low < med
 Compare both independently: undershoot, ambiguity, or unsupported capability blocks before mutation;
 overshoot is only recorded (`over`), never a stop. Fixed design uses frontier/high; xhigh is recorded. Frozen-spec implementation normally uses implementation/high; frontier is for
 open design or irreversible choices. Routing rows are
-`| Batch | Items | Model class/effort | Exec | Review | Почему |`; `Exec` is `plan-exec`, `manual` (also accepted as `plan-run`),
-or `plan-design`. Model pool: Routing declares only a minimum semantic class/effort. Any model whose entry in
+`| Batch | Items | Model class/effort | Exec | Review | Почему |`; `Exec` is `run` or `plan-design`
+(legacy `plan-exec`, `manual` and `plan-run` are accepted as `run`). Model pool: Routing declares only a minimum semantic class/effort. Any model whose entry in
 `command-routing.json` `model_inventory` covers that class is admitted: roles overlap, the admitted
 class is the highest class among them, and an entry matches by id, `aliases` or regex `patterns`
 (new versions of a family need no plan edit). A model missing from the pool is
@@ -272,7 +272,7 @@ class is the highest class among them, and an entry matches by id, `aliases` or 
 defaults, not admission contracts. Only a lower class stops (`ROUTE_UNDERSHOOT`).
 Review shape is part of the plan, not an item ritual: item Review defaults to `none` (self-check and
 affected tests). Independent review is a dedicated read-only review item (`Ревью Pn`, numeric `Pn.m`,
-Exec `manual`, Deliverable = verdict file) at the end of a phase; a large phase gets slice review
+Exec `run`, Deliverable = verdict file) at the end of a phase; a large phase gets slice review
 items between slices. Never put `Independent review` into an item's Validation. Findings get one
 owning correction; the re-review checks only the findings. The reviewer is a fresh session; another
 model only for a named hard risk or an owner requirement, picked from pool entries tagged `review`.
@@ -281,12 +281,12 @@ affected tests, bounded integration adds the necessary package/integration check
 review requires a named hard risk or explicit owner requirement. Uncertainty gathers evidence rather
 than defaulting to full. A batch inherits its highest justified review depth.
 `task_contract.resolve_exec` owns execution-mode normalization for both compiler and lint.
-`plan-run` resolves to the existing `manual` mode: it shares the canonical `plan-exec` lifecycle,
-keeps the raw command in `declared_exec` and routing digests, and preserves the attested owner route.
-Unknown spellings fail closed; alias resolution never substitutes pinned model/effort or authority.
+There is one execution mode, `run`; legacy `plan-exec`, `manual` and `plan-run` resolve to it. The raw
+cell stays in `declared_exec` and routing digests. Unknown spellings fail closed; alias resolution
+never substitutes pinned model/effort or authority.
 
-`plan-exec` requires implementation/medium; `plan-run` executes manual items and prints its actual
-class/effort as evidence.
+`plan-run` is the single execution command: it inherits the session route, takes the minimum
+class/effort from the item's Routing row, and records its actual class/effort as evidence.
 
 `plan-run` resolves the installed canonical command through `task.command_catalog`, then captures
 the current route only through provider-neutral `task.route_evidence.capture_launch()`. Codex argv
@@ -329,7 +329,7 @@ Authoring and audit use this one predicate rather than copying a regex into comm
 Open risks, and Workarounds/Deferred/Open questions. The first non-empty Next line declares the
 form; prose below cannot change it.
 
-Semantic Next is one of `exec-items`, `run-items`, `audit-design`, `design-phase`, `design-item`,
+Semantic Next is one of `run-items`, `exec-items` (legacy alias), `audit-design`, `design-phase`, `design-item`,
 `design-finish`, `design-roadmap`, `audit-phase`, `close`, `archive`, `terminal`, `manual`, or
 `waiting`; its command is the corresponding `task:plan-*` form. Manual carries a bare prompt;
 waiting carries its executable condition and target form.
@@ -339,12 +339,12 @@ store the provider-neutral semantic form and separately render Claude `/task:…
 `$ task:…`. A waiting launch includes `# НЕ раньше:`. Audit findings include, in order,
 `РЕЖИМ:`, `ВХОД:`, `СКОУП:`, `НЕ ТРОГАТЬ:`; an audit block declares `Вердикт:`.
 
-A GREEN item closes inside its `plan-exec`/`plan-run` invocation: persist terminal evidence and
+A GREEN item closes inside its `plan-run` invocation: persist terminal evidence and
 journal, regenerate changed views, and, when it is the final item of a directly closable phase,
 create the phase closure before deriving Next. Evaluate `phase_audit_policy` once over the rebuilt
 candidate. Matching consent may produce `next_kind=audit-phase`; the default GREEN result closes the
 phase in place. Handoff is computed from post-closure state and dependencies and never launches
-`plan-close` for the current result or repeats `plan-exec`/`plan-run` for the current item. The
+`plan-close` for the current result or repeats `plan-run` for the current item. The
 `close` form remains compatible for an explicitly requested standalone reconciliation.
 
 Completion of one item or an admitted batch is not terminality of the whole plan. An unfinished
@@ -398,7 +398,7 @@ DecisionRequest recovery preserves `resume-root` whenever that root still exists
 directory, ordinary test failure, generated drift, or a design-looking file name is never a context
 boundary by itself.
 
-Before a terminal response, `plan-exec`, `plan-run`, and `plan-close` build a
+Before a terminal response, `plan-run` and `plan-close` build a
 `terminal-delivery-receipt/v1` from the terminal journal pointer/run ID, current state/closure,
 and exact persisted handoff recommendation. A nonterminal or stale carrier returns
 `FINAL_BEFORE_TERMINAL_FORBIDDEN` and keeps the dispatch active. Design/audit delivery builds the
@@ -429,7 +429,7 @@ Use compact `plan-work.py` context/finalization operations; full schema referenc
 
 Commands read repository instructions root→cwd, then the layout-specific read path. They record
 session identity, route evidence, journal start/terminal events, exact validation, and commits.
-Before mutation and before final close, `task:plan-exec` and `task:plan-close` call
+Before mutation and before final close, `task:plan-run` and `task:plan-close` call
 `task_contract.build` and `task_contract.evaluate`. Green closure is the spec's FORM boundary,
 not a claim that runtime behavior was exhaustively proved.
 
@@ -437,8 +437,8 @@ Before recommending `task:plan-design` for an existing phase, inspect its actual
 generated state. A detailed phase advances to the next undetailed phase; after all declared phases
 are detailed, finish the whole plan and run one design audit. In execution-sheet plans, only a
 GREEN audit of the current authored fingerprint opens execution. A failed ordinary check or a
-file count does not reopen design. Use `task:plan-exec` for pinned
-implementation items; `task:plan-run` for manual-route items in the current session;
+file count does not reopen design. Use `task:plan-run` for item
+execution under the session route;
 `task:plan-audit` for a design audit or an explicitly admitted adversarial phase audit;
 `task:plan-close` for explicitly
 requested standalone reconciliation or archive. Item execution owns its GREEN item close and an

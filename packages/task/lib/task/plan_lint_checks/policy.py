@@ -585,7 +585,7 @@ CANON_LITERALS = (
     "Контракт | Версия | Статус | Потребители | Уведомлены",   # шапка Contracts/Exported (§7)
     "Контракт | Донор-план | Pinned | Замечено | Реакция",     # шапка Contracts/Consumed (§7)
     "> СКЕЛЕТ — не детализирован",                            # маркер фазы-скелета (§5)
-    MANUAL_RUN_MARKER,                                        # «ЗАПУСК ВРУЧНУЮ» — Exec=manual (§9)
+    MANUAL_RUN_MARKER,                                        # «ЗАПУСК ВРУЧНУЮ» — owner-run form
     "[NEEDS CLARIFICATION",                                   # маркер неоднозначности (§7)
     "RAG:✅",                                                  # enum RAG-маркеров (§7, D29)
     "RAG:" + EMPTY_PLACEHOLDER,
@@ -619,7 +619,7 @@ C2_WAITING_STEMS_RE = re.compile(
     "|".join(re.escape(s) for s in C2_WAITING_STEMS), re.IGNORECASE)
 # Формы Next, несущие исполнимую slash-команду СЕЙЧАС (не waiting/manual/closed) — только на
 # них C2 срабатывает: прозаическая оговорка при runnable-команде и есть анти-паттерн.
-C2_RUNNABLE_KINDS = frozenset({"exec", "run", "design-item", "design-phase", "audit",
+C2_RUNNABLE_KINDS = frozenset({"run", "design-item", "design-phase", "audit",
                                "audit-design", "close", "close-archive"})
 
 # Якоря `--conflicts` (P5.9 + D79 EN-only) грепаются в каноническом `SKILL.md`.

@@ -497,8 +497,8 @@ def _adapter_attestation(terminal: dict | None) -> dict | None:
     if terminal is None:
         return None
     command = terminal.get("command")
-    # Journal commands already use the canonical basename (`plan-run`, `plan-exec`, …).
-    command_id = f"task:{command}"
+    # Journal commands use the canonical basename; a legacy spelling maps to its command.
+    command_id = f"task:{journal.canonical_command(command)}"
     try:
         path = command_catalog.package_command_path(command_id)
         metadata = command_catalog.load_routing_metadata(

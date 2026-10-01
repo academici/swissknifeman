@@ -26,7 +26,7 @@ class CommandCatalogTests(unittest.TestCase):
         self.assertEqual(catalog.contract_version, self.expected["contract_version"])
         self.assertEqual([record.command_id for record in catalog.records],
                          self.expected["command_ids"])
-        self.assertEqual(len(catalog.records), 11)
+        self.assertEqual(len(catalog.records), 10)
         self.assertTrue(all(record.source.content_hash.startswith("sha256:") and
                             len(record.source.content_hash) == 71
                             for record in catalog.records))
@@ -48,7 +48,7 @@ class CommandCatalogTests(unittest.TestCase):
                          self.expected["command_ids"])
 
     def test_parent_command_resolves_in_source_and_installed_package_layouts(self):
-        self.assertEqual(package_command_path("task:plan-exec"), COMMAND_ROOT / "plan-exec.md")
+        self.assertEqual(package_command_path("task:plan-run"), COMMAND_ROOT / "plan-run.md")
         with tempfile.TemporaryDirectory() as temporary:
             installed = Path(temporary) / "task" / "0.15.4"
             (installed / "lib" / "task").mkdir(parents=True)
@@ -64,8 +64,8 @@ class CommandCatalogTests(unittest.TestCase):
             self.addCleanup(sys.modules.pop, spec.name, None)
             spec.loader.exec_module(module)
             self.assertEqual(
-                module.package_command_path("task:plan-exec"),
-                installed / "commands" / "plan-exec.md")
+                module.package_command_path("task:plan-run"),
+                installed / "commands" / "plan-run.md")
 
     def test_missing_extra_and_duplicate_fail_closed(self):
         cases = ("missing", "extra", "duplicate")

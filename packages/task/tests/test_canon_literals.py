@@ -10,12 +10,12 @@ PROTOCOL = ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md"
 
 class CompactCanonTests(unittest.TestCase):
     def test_plan_commands_delegate_to_one_runtime_lifecycle(self):
-        for name in ("plan-exec.md", "plan-run.md", "plan-audit.md", "plan-design.md"):
+        for name in ("plan-run.md", "plan-audit.md", "plan-design.md"):
             with self.subTest(name=name):
                 self.assertIn("task.plan_lifecycle", (COMMANDS / name).read_text(encoding="utf-8"))
 
     def test_execution_still_names_hard_safety_boundaries(self):
-        text = (COMMANDS / "plan-exec.md").read_text(encoding="utf-8")
+        text = (COMMANDS / "plan-run.md").read_text(encoding="utf-8")
         for risk in ("security/auth", "destructive migration", "irreversible external action",
                      "payment/accounting", "concurrency/shared state", "public API/schema",
                      "low-confidence impact"):
@@ -26,7 +26,7 @@ class CompactCanonTests(unittest.TestCase):
         self.assertLessEqual(total, 105795)
 
     def test_commands_preserve_v2_and_delivery_owners(self):
-        text = (COMMANDS / "plan-exec.md").read_text(encoding="utf-8")
+        text = (COMMANDS / "plan-run.md").read_text(encoding="utf-8")
         self.assertIn("scripts/plan-work.py prepare", text)
         self.assertIn("PLAN_CONTEXT_TRUNCATED", text)
         self.assertIn("phase_audit_policy", text)

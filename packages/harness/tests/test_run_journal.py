@@ -113,7 +113,7 @@ class MaybeWriteTest(unittest.TestCase):
         entry = entries[0]
         self.assertEqual(entry["run_id"], "wave-1")
         self.assertEqual(entry["item_id"], "P9.1")
-        self.assertEqual(entry["command"], "plan-exec")
+        self.assertEqual(entry["command"], "plan-run")
         self.assertEqual(entry["result"], "block-candidate")
         self.assertNotIn(entry["result"], ("blocked", "escalated"))
         self.assertTrue(entry["note"].startswith("[wave wave-1]"))
@@ -121,7 +121,7 @@ class MaybeWriteTest(unittest.TestCase):
     def test_routing_blocked_writes_routing_rejected_with_friction(self):
         journal.maybe_write(
             self.plan.plan_dir, PLAN_ID, "P9.2", run_id="wave-1", attempt=1,
-            actor="sonnet/high", pre_launch=True, refusal_detail="EXEC-NOT-PLAN-EXEC",
+            actor="sonnet/high", pre_launch=True, refusal_detail="EXEC-NOT-RUN",
             monorepo_root=REPO_ROOT)
         entries = self.plan.entries()
         self.assertEqual(len(entries), 1)

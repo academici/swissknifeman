@@ -167,7 +167,7 @@ malformed, duplicate или stale ключ) fail-closed только для эт
       а сессия теряет тир. **Не форсировать override на advisory-классе — не пробел, а
       находка P3.5** (`findings/P3-desc-burndown.md` §Тиры).
 - [ ] `plan-protocol` и весь контур `task:plan-*` — исключение по конструкции: маршрут КАЖДОГО
-      item'а уже неймится §3 Routing плана (`plan-exec`/`plan-run` его же читают и пинуют),
+      item'а уже неймится §3 Routing плана (`plan-run` читает его же),
       бланкетный override поверх этого — второй, конфликтующий источник правды. Скилл несёт
       `Exec`-таблицу как канон, а не собственный `model:`/`effort:`.
 

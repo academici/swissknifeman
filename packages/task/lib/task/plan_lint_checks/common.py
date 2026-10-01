@@ -117,9 +117,8 @@ HANDOFF_TITLE_HELP = ("заголовок не соответствует ни �
 # Bootstrap-форма стартового handoff'а: план ещё не тронут, фазы `P0` не бывает.
 # Ровно эта строка — не «любая фаза P0» и не «любой item .0»: расширение = дыра в гейте.
 HANDOFF_TITLE_BOOTSTRAP = "P0.0"
-PLAN_EXEC_RE = re.compile(r"/task:plan-exec\s+(\S+)\s+(P\d+\.\d+)")
 # `handoff.Next` accepts the closed semantic enum, including D80 design finish/roadmap.
-# ниже регулярки на каждую (кроме plan-exec/«план закрыт», уже объявленных). Порядок
+# ниже регулярки на каждую (кроме plan-run/«план закрыт», уже объявленных). Порядок
 # проверки в резолвере (см. lint_plan) идёт от специфичной к общей: design-item ДО
 # design-phase (иначе `(?!\.\d)`-lookahead фазовой формы просто не даст матчу проиграть
 # ветке item), plan-close-archive ДО общего plan-close (иначе «archive» читался бы как
@@ -127,39 +126,39 @@ PLAN_EXEC_RE = re.compile(r"/task:plan-exec\s+(\S+)\s+(P\d+\.\d+)")
 # не менее порядок фиксируем явно, а не полагаемся на побочный эффект regex).
 PLAN_DESIGN_ITEM_RE = re.compile(r"/task:plan-design\s+(\S+)\s+(P\d+\.\d+)")
 # Следующий шаг допустим и как «сначала детализировать фазу-скелет» (Execution Rules
-# протокола прямо предписывают plan-design перед plan-exec на фазах без заполненных
+# протокола прямо предписывают plan-design перед plan-run на фазах без заполненных
 # 16 полей) — ссылка на ФАЗУ (Pn), не на item (Pn.m).
 PLAN_DESIGN_PHASE_RE = re.compile(r"/task:plan-design\s+(\S+)\s+(P\d+)(?!\.\d)\b")
 PLAN_DESIGN_FINISH_RE = re.compile(r"/task:plan-design\s+(\S+)\s+finish\b")
 PLAN_DESIGN_ROADMAP_RE = re.compile(r"/task:plan-design\s+(\S+)\s+roadmap\b")
-# Батч-серия roadmap (SKILL §8): одна сессия закрывает диапазон items текущей моделью.
-PLAN_RUN_RE = re.compile(r"/task:plan-run\s+(\S+)\s+(P\d+\.\d+)(?:\s*-\s*(P\d+\.\d+))?")
+# One execution command; `plan-exec` is its legacy spelling (readers accept both).
+PLAN_RUN_RE = re.compile(r"/task:plan-(?:run|exec)\s+(\S+)\s+(P\d+\.\d+)(?:\s*-\s*(P\d+\.\d+))?")
 # Pre-exec design-ревью всего плана (plan-audit, режим design).
 PLAN_AUDIT_DESIGN_RE = re.compile(r"/task:plan-audit\s+(\S+)\s+design\b")
 PLAN_AUDIT_RE = re.compile(r"/task:plan-audit\s+(\S+)\s+(P\d+)(?!\.\d)\b")
 PLAN_CLOSE_ARCHIVE_RE = re.compile(r"/task:plan-close\s+archive\s+(\S+)")
 PLAN_CLOSE_RE = re.compile(r"/task:plan-close\s+(\S+)\s+(P\d+)(\.\d+)?\b")
 SEMANTIC_NEXT_RE = re.compile(
-    r"^(exec-items|run-items|audit-design|design-phase|design-item|design-finish|"
+    r"^(run-items|exec-items|audit-design|design-phase|design-item|design-finish|"
     r"design-roadmap|audit-phase|close|archive|terminal|manual|waiting):\s*(.*)$")
 SEMANTIC_NEXT_COMMANDS = {
-    "exec-items": ("task:plan-exec", "exec"),
-    "run-items": ("task:plan-run", "run"),
-    "audit-design": ("task:plan-audit", "audit-design"),
-    "design-phase": ("task:plan-design", "design-phase"),
-    "design-item": ("task:plan-design", "design-item"),
-    "design-finish": ("task:plan-design", "design-finish"),
-    "design-roadmap": ("task:plan-design", "design-roadmap"),
-    "audit-phase": ("task:plan-audit", "audit"),
-    "close": ("task:plan-close", "close"),
-    "archive": ("task:plan-close", "close-archive"),
+    "run-items": (("task:plan-run", "task:plan-exec"), "run"),
+    "exec-items": (("task:plan-run", "task:plan-exec"), "run"),  # legacy spelling
+    "audit-design": (("task:plan-audit",), "audit-design"),
+    "design-phase": (("task:plan-design",), "design-phase"),
+    "design-item": (("task:plan-design",), "design-item"),
+    "design-finish": (("task:plan-design",), "design-finish"),
+    "design-roadmap": (("task:plan-design",), "design-roadmap"),
+    "audit-phase": (("task:plan-audit",), "audit"),
+    "close": (("task:plan-close",), "close"),
+    "archive": (("task:plan-close",), "close-archive"),
 }
-MANUAL_RUN_MARKER = "ЗАПУСК ВРУЧНУЮ"  # Exec=manual (§9): форма без slash-команды, ищется подстрокой
+MANUAL_RUN_MARKER = "ЗАПУСК ВРУЧНУЮ"  # owner-run form: без slash-команды, ищется подстрокой
 LITERAL_WAITING = "ОЖИДАНИЕ:"  # 9-я форма Next (§8, D8): здоровое ожидание внешнего времени/гейта, ищется подстрокой
 NEXT_FORMS_HELP = (
     "Next не соответствует ни одной из допустимых форм (SKILL §8): "
     "`<kind>: task:<plan-command> <arguments>` (provider-neutral канон) · "
-    "/task:plan-exec <ID> Pn.m · /task:plan-run <ID> Pn.a[-Pn.b] · "
+    "/task:plan-run <ID> Pn.a[-Pn.b] (legacy: /task:plan-exec) · "
     "/task:plan-design <ID> Pn · /task:plan-design <ID> Pn.m · "
     "/task:plan-design <ID> finish · /task:plan-design <ID> roadmap · "
     "/task:plan-audit <ID> Pn · /task:plan-audit <ID> design · "

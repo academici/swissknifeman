@@ -76,7 +76,7 @@ health-hook · health-doc · feature-log-hook · ecosystem-skill · agent-pack`.
 
 ## Исполнение плана волной
 
-`swissknifeman env run <PLAN-ID> <Pn>` ведёт готовые `plan-exec` items одной фазы
+`swissknifeman env run <PLAN-ID> <Pn>` ведёт готовые `plan-run` items одной фазы
 последовательно: сначала строит очередь, затем останавливается на первом RED. Начинай с
 `--dry-run`: он показывает, какие items водитель возьмёт или откажется вести, и ничего не
 пишет. Ручные и terminal items остаются за оператором; контракт, журнал и итоговый verdict

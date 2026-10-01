@@ -26,7 +26,7 @@ class IntentOptInTests(unittest.TestCase):
             ("Research only", "task:research"),
             ("Explicit design/specification request", "task:design"),
             ("Explicit creation/refinement of an executable plan", "task:plan-design"),
-            ("Explicit execution of an existing plan/item", "task:plan-exec"),
+            ("Explicit execution of an existing plan/item", "task:plan-run"),
             ("Review", "task:review"),
         )
         for intent, route in scenarios:

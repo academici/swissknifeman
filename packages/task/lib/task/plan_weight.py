@@ -1,7 +1,7 @@
 """plan_weight — вес обязательного чтения пункта плана.
 
 Инструмент воспроизводит ОБЯЗАТЕЛЬНЫЙ ПУТЬ ЧТЕНИЯ исполнителя из
-`packages/task/commands/plan-exec.md` §1 буквально и считает его вес в оценочных
+`packages/task/commands/plan-run.md` буквально и считает его вес в оценочных
 токенах поверх ЗАМОРОЖЕННОЙ калибровки P0.1 (`task.token_estimate`, артефакт
 `configs/token-estimate-calibration.json`), проверяя каждый обязательный файл против
 ИЗМЕРЕННОГО лимита одного чтения P0.2 (`configs/read-limit.json`).
@@ -113,10 +113,10 @@ from pathlib import Path
 from task import (plan_admission, plan_bundle, plan_item_state, plan_lint, plan_layout,
                   token_estimate)
 
-# --- обязательный путь чтения (`plan-exec.md` §1) ----------------------------------
+# --- обязательный путь чтения (`plan-run.md`) ----------------------------------
 
 # Литералы §1 в порядке следования; тест сверяет их с актуальным текстом команды —
-# правка `plan-exec.md` обязана ломать тест, а не расходиться с инструментом молча.
+# правка `plan-run.md` обязана ломать тест, а не расходиться с инструментом молча.
 MANDATORY_PATH_LITERALS = (
     "plans/<PLAN-ID>/plan.md",
     "plans/<PLAN-ID>/handoff.md",
@@ -129,7 +129,7 @@ V2_MANDATORY_PATH_LITERALS = (
     "full plan/phase/bundle/state are internal runtime inputs",
     "scripts/plan-work.py finalize",
 )
-PLAN_EXEC_RELPATH = Path("packages/task/commands/plan-exec.md")
+PLAN_RUN_RELPATH = Path("packages/task/commands/plan-run.md")
 
 V1_ROLES = ("plan", "handoff", "phase", "required_read")
 V2_CARRIER_ROLES = (
@@ -1075,7 +1075,7 @@ def main(argv=None):
 
     parser = argparse.ArgumentParser(
         prog="plan-weight",
-        description="Вес обязательного чтения пункта плана (plan-exec.md §1) в оценочных "
+        description="Вес обязательного чтения пункта плана (plan-run.md) в оценочных "
                     "токенах, с проверкой каждого файла против обоих гейтов лимита чтения "
                     "и закрытой таксономией пробелов.")
     _add_common_options(parser, suppress=False)

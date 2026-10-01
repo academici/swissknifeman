@@ -222,7 +222,7 @@ class TestNumberedPlanIdentity(TmpPlanTestCase):
             "## 3. Routing\n\n"
             "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
-            "| solo | P1.1 | implementation/medium | plan-exec | full | fixture |\n",
+            "| solo | P1.1 | implementation/medium | run | full | fixture |\n",
         ), encoding="utf-8")
         handoff = plan_dir / "handoff.md"
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
@@ -702,7 +702,7 @@ class TestHandoffMd(TmpPlanTestCase):
     def test_handoff_next_missing_reference(self):
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("/task:plan-exec DEMO-1 P1.1", "сделай что-нибудь")
+        text = text.replace("/task:plan-run DEMO-1 P1.1", "сделай что-нибудь")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
@@ -711,7 +711,7 @@ class TestHandoffMd(TmpPlanTestCase):
     def test_handoff_next_wrong_plan_id(self):
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("/task:plan-exec DEMO-1 P1.1", "/task:plan-exec OTHER-ID P1.1")
+        text = text.replace("/task:plan-run DEMO-1 P1.1", "/task:plan-run OTHER-ID P1.1")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
@@ -720,17 +720,17 @@ class TestHandoffMd(TmpPlanTestCase):
     def test_handoff_next_nonexistent_item(self):
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("/task:plan-exec DEMO-1 P1.1", "/task:plan-exec DEMO-1 P9.9")
+        text = text.replace("/task:plan-run DEMO-1 P1.1", "/task:plan-run DEMO-1 P9.9")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "item «P9.9» не существует ни в одной фазе"))
 
     def test_handoff_next_plan_closed_allowed(self):
-        # все items терминальны → Next «план закрыт» без ссылки plan-exec — валиден
+        # все items терминальны → Next «план закрыт» без ссылки plan-run — валиден
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("/task:plan-exec DEMO-1 P1.1", "план закрыт — все фазы терминальны.")
+        text = text.replace("/task:plan-run DEMO-1 P1.1", "план закрыт — все фазы терминальны.")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok)
@@ -739,7 +739,7 @@ class TestHandoffMd(TmpPlanTestCase):
         # фаза-скелет впереди → Next «/task:plan-design <ID> Pn» (ссылка на фазу, не item) — валиден
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("/task:plan-exec DEMO-1 P1.1", "/task:plan-design DEMO-1 P1")
+        text = text.replace("/task:plan-run DEMO-1 P1.1", "/task:plan-design DEMO-1 P1")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok)
@@ -748,7 +748,7 @@ class TestHandoffMd(TmpPlanTestCase):
         plan_dir = write_valid_plan(self.root)
         handoff = plan_dir / "handoff.md"
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
-            "/task:plan-exec DEMO-1 P1.1", "/task:plan-design DEMO-1 P2"), encoding="utf-8")
+            "/task:plan-run DEMO-1 P1.1", "/task:plan-design DEMO-1 P2"), encoding="utf-8")
         backlog = plan_dir / "backlog"
         backlog.mkdir()
         target = backlog / "P2.md"
@@ -762,7 +762,7 @@ class TestHandoffMd(TmpPlanTestCase):
     def test_handoff_next_plan_design_wrong_plan_id(self):
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("/task:plan-exec DEMO-1 P1.1", "/task:plan-design OTHER-ID P1")
+        text = text.replace("/task:plan-run DEMO-1 P1.1", "/task:plan-design OTHER-ID P1")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
@@ -771,7 +771,7 @@ class TestHandoffMd(TmpPlanTestCase):
     def test_handoff_next_plan_design_nonexistent_phase(self):
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("/task:plan-exec DEMO-1 P1.1", "/task:plan-design DEMO-1 P9")
+        text = text.replace("/task:plan-run DEMO-1 P1.1", "/task:plan-design DEMO-1 P9")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
@@ -783,7 +783,7 @@ class TestHandoffMd(TmpPlanTestCase):
         (plan_dir / "backlog").mkdir()
         (plan_dir / "backlog" / "P9.md").write_text("# P9 — skeleton\n", encoding="utf-8")
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("/task:plan-exec DEMO-1 P1.1", "/task:plan-design DEMO-1 P9")
+        text = text.replace("/task:plan-run DEMO-1 P1.1", "/task:plan-design DEMO-1 P9")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "фаза «P9» не существует в плане"), [])
@@ -795,7 +795,7 @@ class TestHandoffMd(TmpPlanTestCase):
             plan_dir, item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"))
         ho = plan_dir / "handoff.md"
         text = ho.read_text(encoding="utf-8")
-        text = text.replace("/task:plan-exec DEMO-1 P1.1", "план закрыт.")
+        text = text.replace("/task:plan-run DEMO-1 P1.1", "план закрыт.")
         ho.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)

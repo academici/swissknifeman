@@ -26,7 +26,7 @@ class PlanDeliveryTests(unittest.TestCase):
                 )
                 (plan / "handoff.md").write_text(
                     "# HANDOFF — 2026-09-28 — after P1.1\n\n"
-                    "**Next:** waiting: owner approval → exec-items: task:plan-exec DEMO-DELIVERY P1.1\n\n"
+                    "**Next:** waiting: owner approval → exec-items: task:plan-run DEMO-DELIVERY P1.1\n\n"
                     "| Model | implementation |\n| Thinking | high |\n| Context | waiting-owner |\n\n"
                     "```session-continuity-decision/v1\n"
                     + json.dumps(decision.as_dict()) + "\n```\n\n**Done:** pending approval\n",
@@ -81,7 +81,7 @@ class PlanDeliveryTests(unittest.TestCase):
         (plan / "journal.jsonl").write_text("", encoding="utf-8")
         handoff = plan / "handoff.md"
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
-            "/task:plan-exec DEMO-DELIVERY P1.1",
+            "/task:plan-run DEMO-DELIVERY P1.1",
             "archive: task:plan-close DEMO-DELIVERY archive"), encoding="utf-8")
         subprocess.run(("git", "add", "."), cwd=fixture_root, check=True)
         subprocess.run(("git", "commit", "-qm", "fixture"), cwd=fixture_root, check=True)
@@ -351,7 +351,7 @@ class PlanDeliveryTests(unittest.TestCase):
         receipt = plan_delivery.build_handoff_receipt(plan, "design")
         self.assertEqual(receipt["schema_version"], "handoff-recommendation-receipt/v1")
         self.assertEqual(receipt["status"], "handoff-persisted")
-        self.assertEqual(receipt["next_exact"], "/task:plan-exec DEMO-HANDOFF P1.1")
+        self.assertEqual(receipt["next_exact"], "/task:plan-run DEMO-HANDOFF P1.1")
         self.assertEqual(receipt["continuity"]["outcome"], "cold-start-root")
         self.assertEqual(receipt["continuity"]["reason"], "owner-pause-no-resume")
 
@@ -359,7 +359,7 @@ class PlanDeliveryTests(unittest.TestCase):
         plan = write_valid_plan(self.root, "2026.09.09-№1-DEMO-REENTRY", layout="v2")
         handoff = plan / "handoff.md"
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
-            "/task:plan-exec 2026.09.09-№1-DEMO-REENTRY P1.1",
+            "/task:plan-run 2026.09.09-№1-DEMO-REENTRY P1.1",
             "/task:plan-design 2026.09.09-№1-DEMO-REENTRY P1"), encoding="utf-8")
         with self.assertRaisesRegex(plan_delivery.DeliveryError,
                                     "PHASE_REENTRY_UNJUSTIFIED"):
@@ -385,7 +385,7 @@ class PlanDeliveryTests(unittest.TestCase):
             "🟢 Done", "⬜ Not started"), encoding="utf-8")
         handoff = plan / "handoff.md"
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
-            "/task:plan-exec 2026.09.14-№1-DEMO-READY P1.1",
+            "/task:plan-run 2026.09.14-№1-DEMO-READY P1.1",
             "/task:plan-design 2026.09.14-№1-DEMO-READY P1"), encoding="utf-8")
         with self.assertRaisesRegex(plan_delivery.DeliveryError, "PLAN_DESIGN_NOT_NEEDED"):
             plan_delivery.build_handoff_receipt(plan, "design")
@@ -609,12 +609,9 @@ class PlanDeliveryTests(unittest.TestCase):
 
     def test_all_canonical_commands_require_a_delivery_receipt(self):
         command_dir = Path(__file__).resolve().parents[1] / "commands"
-        for name in ("plan-design.md", "plan-exec.md", "plan-audit.md", "plan-close.md"):
+        for name in ("plan-design.md", "plan-run.md", "plan-audit.md", "plan-close.md"):
             source = (command_dir / name).read_text(encoding="utf-8")
             self.assertIn("semantic Next", source, name)
-
-        plan_run = (command_dir / "plan-run.md").read_text(encoding="utf-8")
-        self.assertIn("canonical `task:plan-exec` lifecycle", plan_run)
 
 
 if __name__ == "__main__":

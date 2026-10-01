@@ -69,13 +69,6 @@
       "capabilities": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.external-research"]
     },
     {
-      "command_id": "task:plan-exec",
-      "kind": "plan-protocol",
-      "source": "packages/task/commands/plan-exec.md",
-      "routing": ["fixed", "implementation", "medium"],
-      "capabilities": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.git-write"]
-    },
-    {
       "command_id": "task:plan-run",
       "kind": "plan-protocol",
       "source": "packages/task/commands/plan-run.md",
@@ -112,8 +105,8 @@
     "CMD_SOURCE_DRIFT"
   ],
   "next_forms": [
-    {"kind": "exec-items", "valid": "exec-items: task:plan-exec PLAN P4.5", "invalid": "exec-items: task:plan-run PLAN P4.5"},
-    {"kind": "run-items", "valid": "run-items: task:plan-run PLAN P4.5", "invalid": "run-items: task:plan-exec PLAN P4.5"},
+    {"kind": "exec-items", "valid": "exec-items: task:plan-exec PLAN P4.5", "invalid": "exec-items: task:plan-audit PLAN P4.5"},
+    {"kind": "run-items", "valid": "run-items: task:plan-run PLAN P4.5", "invalid": "run-items: task:plan-close PLAN P4.5"},
     {"kind": "audit-design", "valid": "audit-design: task:plan-audit PLAN design", "invalid": "audit-design: task:plan-design PLAN design"},
     {"kind": "design-phase", "valid": "design-phase: task:plan-design PLAN P5", "invalid": "design-phase: task:plan-audit PLAN P5"},
     {"kind": "design-item", "valid": "design-item: task:plan-design PLAN P4.5", "invalid": "design-item: task:plan-audit PLAN P4.5"},
@@ -121,7 +114,7 @@
     {"kind": "design-roadmap", "valid": "design-roadmap: task:plan-design PLAN roadmap", "invalid": "design-roadmap: task:plan-audit PLAN roadmap"},
     {"kind": "audit-phase", "valid": "audit-phase: task:plan-audit PLAN P4", "invalid": "audit-phase: task:plan-close PLAN P4"},
     {"kind": "close", "valid": "close: task:plan-close PLAN P4", "invalid": "close: task:plan-audit PLAN P4"},
-    {"kind": "archive", "valid": "archive: task:plan-close archive PLAN", "invalid": "archive: task:plan-exec archive PLAN"},
+    {"kind": "archive", "valid": "archive: task:plan-close archive PLAN", "invalid": "archive: task:plan-run archive PLAN"},
     {"kind": "terminal", "valid": "terminal: план закрыт", "invalid": "terminal: plan remains open"},
     {"kind": "manual", "valid": "manual: frontier/xhigh", "invalid": "manual: opus/max"},
     {"kind": "waiting", "valid": "waiting: gate P4 terminal → audit-phase: task:plan-audit PLAN P4", "invalid": "waiting: someday"}

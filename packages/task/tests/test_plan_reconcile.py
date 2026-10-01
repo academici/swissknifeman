@@ -40,8 +40,8 @@ class TerminalReconciliationTests(unittest.TestCase):
             # The journal is terminal while owner views intentionally remain stale.
             self.assertIn("⬜ Not started", (plan / "phases/P1/P1.1.state.md").read_text())
             handoff = handoff_md(plan.name, item_id="P1.1").replace(
-                f"/task:plan-exec {plan.name} P1.1",
-                f"/task:plan-exec {plan.name} P1.2")
+                f"/task:plan-run {plan.name} P1.1",
+                f"/task:plan-run {plan.name} P1.2")
             (plan / "handoff.md").write_text(handoff, encoding="utf-8")
 
             before = (plan / "journal.jsonl").read_bytes()

@@ -32,8 +32,7 @@ Native-установка Task включает команды, конфигур
 | `/task:research` | Opus / high | многоисточниковый research с RAG-верификацией |
 | `/task:review` | Sonnet / high | risk-scaled read-only ревью |
 | `/task:plan-design` | Opus / high | создать/детализировать мастер-план `plans/<ID>/` |
-| `/task:plan-exec` | Sonnet / medium | исполнить item плана по ТЗ |
-| `/task:plan-run` | маршрут текущей сессии | исполнить manual item без повторного выбора модели/effort |
+| `/task:plan-run` | session route | execute plan items under the current session route; the minimum comes from the plan's Routing row |
 | `/task:plan-close` | Sonnet / low | recovery-сверка item либо закрытие фазы после свежего GREEN |
 | `/task:plan-audit` | Opus / xhigh | один pre-exec или pre-close аудит по material trigger |
 
@@ -64,7 +63,7 @@ material scope/SHA/risk change не запускается.
 `continue-root` продолжает совместимый ready item того же Routing batch в текущей root-сессии;
 новый launch-block печатается только на настоящей cold-start/wait boundary. Перед `plan-design`
 для существующей фазы Task сверяет item carriers: детализированная незавершённая фаза идёт в
-`plan-exec`, а не в повторный дизайн.
+`plan-run`, а не в повторный дизайн.
 
 ## Отпечатки возвратов
 

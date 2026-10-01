@@ -24,7 +24,8 @@ RESULT_STATUS = {
 _ITEM = re.compile(r"^P\d+\.\d+$")
 _WRITE_SITE = re.compile(
     r"^write-site: pre_mutation: \S+ · pre_final: \S+$")
-_EXECUTION_COMMANDS = frozenset(("plan-exec", "plan-run", "plan-close", "plan-audit"))
+# `plan-exec` is the legacy spelling of `plan-run`; readers accept both.
+_EXECUTION_COMMANDS = frozenset(("plan-run", "plan-exec", "plan-close", "plan-audit"))
 _TERMINAL_RESULTS = frozenset(("closed-green", "closed-deviations", "blocked", "escalated", "audit-red"))
 OBSERVATION_RESULTS = frozenset((
     "no-op", "routing-rejected", "decision-pending", "local-repair", "rag-pending", "block-candidate",

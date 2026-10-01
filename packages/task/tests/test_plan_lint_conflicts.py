@@ -120,7 +120,7 @@ class TestConflictsFlagUnits(unittest.TestCase):
     def test_launch_table_regex_matches_canon_rows_is_silent(self):
         lines = ["| Параметр | Значение |", "|:--|:--|", "| Model class | ... |",
                  "| Effort | ... |", "| Context | ... |", "| Суть | ... |", "",
-                 "**Provider-native command:**", "", "```text", "/task:plan-exec X P1.1", "```"]
+                 "**Provider-native command:**", "", "```text", "/task:plan-run X P1.1", "```"]
         diag = self._diag()
         _conflicts_launch_table_regex(lines, Path("SKILL.md"), diag)
         self.assertTrue(diag.ok, diag.errors)
@@ -136,7 +136,7 @@ class TestConflictsFlagUnits(unittest.TestCase):
     def test_launch_table_command_row_is_rejected_by_canon_conflict(self):
         lines = ["| Параметр | Значение |", "|:--|:--|", "| Model class | ... |",
                  "| Команда | `...` |", "", "**Provider-native command:**", "",
-                 "```text", "/task:plan-exec X P1.1", "```"]
+                 "```text", "/task:plan-run X P1.1", "```"]
         diag = self._diag()
         _conflicts_launch_table_regex(lines, Path("SKILL.md"), diag)
         self.assertFalse(diag.ok)
@@ -392,7 +392,7 @@ class TestLint20Warnings(TmpPlanTestCase):
         plan_dir = write_valid_plan(self.root)
         ho = plan_dir / "handoff.md"
         text = ho.read_text(encoding="utf-8")
-        text = text.replace("/task:plan-exec DEMO-1 P1.1", "план закрыт — все фазы терминальны.")
+        text = text.replace("/task:plan-run DEMO-1 P1.1", "план закрыт — все фазы терминальны.")
         head, _, tail = text.partition("\n| Параметр | Значение |")
         _, _, after = tail.partition("````\n\n")
         ho.write_text(head + "\n" + after, encoding="utf-8")

@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:e8e7690dbb0c1491e3b3a7f4eca458486149cd2baced866a713b4745e47c6909
+Canonical SHA-256: sha256:1f060e4a595f9a6eb197f2e9ec00d59148faa1f814d0a3afc330fe10c1280a0c
 Adapter: task.cursor-command/1.0.17
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -65,4 +65,4 @@ typed continuation until a fresh terminal receipt and exact final fragment exist
 Persist a product finding as audit-attention (or audit-red) with decision action
 `return-owning-continuation`, evidence IDs, reason_code, scope_class=<owning item>,
 recovered=false, terminal=false,
-and exact exec-items/run-items owning continuation. Reviewer completion leaves the phase open.
+and exact run-items owning continuation. Reviewer completion leaves the phase open.

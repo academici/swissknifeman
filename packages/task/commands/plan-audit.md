@@ -46,4 +46,4 @@ typed continuation until a fresh terminal receipt and exact final fragment exist
 Persist a product finding as audit-attention (or audit-red) with decision action
 `return-owning-continuation`, evidence IDs, reason_code, scope_class=<owning item>,
 recovered=false, terminal=false,
-and exact exec-items/run-items owning continuation. Reviewer completion leaves the phase open.
+and exact run-items owning continuation. Reviewer completion leaves the phase open.

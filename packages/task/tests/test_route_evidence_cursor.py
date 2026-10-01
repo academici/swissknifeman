@@ -90,9 +90,9 @@ class CursorArgvRouteTests(unittest.TestCase):
         }
 
     def test_grok_47_high_slug_admits_session_suffix(self):
-        prompt = "task:plan-exec LOQUM-DEV P1.8 — session E10. rest"
+        prompt = "task:plan-run LOQUM-DEV P1.8 — session E10. rest"
         evidence = capture_current(
-            expected_invocation="task:plan-exec LOQUM-DEV P1.8",
+            expected_invocation="task:plan-run LOQUM-DEV P1.8",
             expected_cwd=os.getcwd(),
             routing_path=ROUTING,
             process_table=self._table("grok-4.7-high", prompt),
@@ -106,7 +106,7 @@ class CursorArgvRouteTests(unittest.TestCase):
         self.assertEqual(evidence["invocation"], prompt)
 
     def test_unknown_explicit_model_fails_closed_without_cli_config_fallback(self):
-        prompt = "task:plan-exec LOQUM-DEV P1.8"
+        prompt = "task:plan-run LOQUM-DEV P1.8"
         with tempfile.TemporaryDirectory() as temporary:
             config = Path(temporary) / "cli-config.json"
             config.write_text(json.dumps({"selectedModel": {
@@ -120,14 +120,14 @@ class CursorArgvRouteTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, "ROUTE_MODEL_UNKNOWN")
 
     def test_argv_thread_uses_cursor_conversation_id(self):
-        prompt = "task:plan-exec LOQUM-DEV P1.9 — session E11. rest"
+        prompt = "task:plan-run LOQUM-DEV P1.9 — session E11. rest"
         with unittest.mock.patch.dict(
             os.environ,
             {"CURSOR_CONVERSATION_ID": "conv-e11"},
             clear=False,
         ):
             evidence = capture_current(
-                expected_invocation="task:plan-exec LOQUM-DEV P1.9",
+                expected_invocation="task:plan-run LOQUM-DEV P1.9",
                 expected_cwd=os.getcwd(),
                 routing_path=ROUTING,
                 process_table=self._table("grok-4.7-high", prompt),
@@ -138,10 +138,10 @@ class CursorArgvRouteTests(unittest.TestCase):
 
     def test_catalog_model_without_effort_suffix_stays_medium(self):
         evidence = capture_current(
-            expected_invocation="task:plan-exec LOQUM-DEV P1.8",
+            expected_invocation="task:plan-run LOQUM-DEV P1.8",
             expected_cwd=os.getcwd(),
             routing_path=ROUTING,
-            process_table=self._table("grok-4.7", "task:plan-exec LOQUM-DEV P1.8"),
+            process_table=self._table("grok-4.7", "task:plan-run LOQUM-DEV P1.8"),
             start_pid=10,
         )
         self.assertEqual(evidence["model"], "grok-4.7")
@@ -150,12 +150,12 @@ class CursorArgvRouteTests(unittest.TestCase):
 
     def test_thinking_high_catalog_id_is_not_split(self):
         evidence = capture_current(
-            expected_invocation="task:plan-exec LOQUM-DEV P1.8",
+            expected_invocation="task:plan-run LOQUM-DEV P1.8",
             expected_cwd=os.getcwd(),
             routing_path=ROUTING,
             process_table=self._table(
                 "claude-opus-5-thinking-high",
-                "task:plan-exec LOQUM-DEV P1.8",
+                "task:plan-run LOQUM-DEV P1.8",
             ),
             start_pid=10,
         )
@@ -166,12 +166,12 @@ class CursorArgvRouteTests(unittest.TestCase):
     def test_item_prefix_does_not_match_longer_id(self):
         with self.assertRaises(RouteEvidenceError) as raised:
             capture_current(
-                expected_invocation="task:plan-exec LOQUM-DEV P1.8",
+                expected_invocation="task:plan-run LOQUM-DEV P1.8",
                 expected_cwd=os.getcwd(),
                 routing_path=ROUTING,
                 process_table=self._table(
                     "grok-4.7-high",
-                    "task:plan-exec LOQUM-DEV P1.80",
+                    "task:plan-run LOQUM-DEV P1.80",
                 ),
                 start_pid=10,
             )
@@ -180,7 +180,7 @@ class CursorArgvRouteTests(unittest.TestCase):
 
 class CursorResumeRouteTests(unittest.TestCase):
     def test_resume_reads_last_used_model_and_latest_prompt(self):
-        prompt = "task:plan-exec LOQUM-DEV P1.8 — session E10. rest"
+        prompt = "task:plan-run LOQUM-DEV P1.8 — session E10. rest"
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             chat = root / "bucket" / "chat-1"
@@ -198,7 +198,7 @@ class CursorResumeRouteTests(unittest.TestCase):
             connection.commit()
             connection.close()
             evidence = capture_current(
-                expected_invocation="task:plan-exec LOQUM-DEV P1.8",
+                expected_invocation="task:plan-run LOQUM-DEV P1.8",
                 expected_cwd=os.getcwd(),
                 routing_path=ROUTING,
                 process_table={10: (1, ("cursor-agent", "resume", "--force", "--sandbox", "disabled"))},

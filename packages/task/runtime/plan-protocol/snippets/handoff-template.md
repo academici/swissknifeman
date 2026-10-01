@@ -30,8 +30,7 @@ Runnable Next для фактического successor обязан нести 
 
 | Форма Next | Когда |
 |:--|:--|
-| `exec-items: task:plan-exec <ID> Pn.m` | следующий item детализирован, Exec = plan-exec (§9) |
-| `run-items: task:plan-run <ID> Pn.a[-Pn.b]` | manual-item(ы) под проверенным inherited-plan route |
+| `run-items: task:plan-run <ID> Pn.a[-Pn.b]` | next item(s) detailed, Exec = run (§9); legacy spelling `exec-items: task:plan-exec` stays readable |
 | `audit-design: task:plan-audit <ID> design` | pre-exec аудит дизайна |
 | `design-phase: task:plan-design <ID> Pn` | следующая фаза — скелет |
 | `design-item: task:plan-design <ID> Pn.m` | item эскалирован (🔴) либо требует ре-дизайна |
@@ -41,19 +40,18 @@ Runnable Next для фактического successor обязан нести 
 | `close: task:plan-close <ID> Pn[.m]` | только явно запрошенная standalone reconciliation; не handoff текущего результата |
 | `archive: task:plan-close archive <ID>` | план терминален целиком |
 | `terminal: план закрыт` | все items терминальны, следующий шаг вне протокола |
-| `manual: <model-class/effort>` | Exec = manual (§9): команды нет — launch-block несёт route и ГОЛЫЙ ПРОМПТ item'а |
+| `manual: <model-class/effort>` | owner-run step with no command — launch-block carries the route and a BARE item prompt |
 | `waiting: <условие> → <целевая semantic форма>` | шаг реален, но неисполним сейчас — launch-block несёт целевой carrier с guard-строкой `# НЕ раньше:` |
 
 Historical `/task:…` declarations remain compatibility inputs. New plans write the semantic
 form above; provider renderers emit Claude `/task:…` or Codex `$ task:…` without changing payload.
-`plan-exec`/`plan-run` сами закрывают GREEN item и eligible final-item phase; handoff строится после
+`plan-run` сам закрывает GREEN item и eligible final-item phase; handoff строится после
 closure и не может повторять текущий item или запускать `plan-close` для него.
 
-Форма «ЗАПУСК ВРУЧНУЮ» (item с Exec = manual — модель выше пина `plan-exec`):
+Форма «ЗАПУСК ВРУЧНУЮ» (owner-run step outside the command surface):
 
 `````markdown
-**Next:** manual: frontier/high — Pn.m (§3 Routing: Exec = manual;
-`task:plan-exec` minimum implementation/medium обязан отказать)
+**Next:** manual: frontier/high — Pn.m (owner-run; no Task command carries it)
 
 | Параметр | Значение |
 |:--|:--|
@@ -73,7 +71,7 @@ closure и не может повторять текущий item или зап�
 терминален; условие структурно, launch-block несёт целевую команду с guard-строкой):
 
 `````markdown
-**Next:** waiting: ≥2026-07-16 (baseline usage-trend ≥1–2 недель) → exec-items: task:plan-exec <ID> P8.5
+**Next:** waiting: ≥2026-07-16 (baseline usage-trend ≥1–2 недель) → run-items: task:plan-run <ID> P8.5
 
 | Параметр | Значение |
 |:--|:--|
@@ -85,14 +83,14 @@ closure и не может повторять текущий item или зап�
 
 ````
 # НЕ раньше: baseline usage-trend ≥1–2 недель, ≥2026-07-16
-<provider-rendered invocation for `exec-items: task:plan-exec <ID> P8.5`>
+<provider-rendered invocation for `run-items: task:plan-run <ID> P8.5`>
 ````
 `````
 
 `````markdown
 # HANDOFF — <YYYY-MM-DD> — after Pn.m
 
-**Next:** exec-items: task:plan-exec <PLAN-ID> Pn.k
+**Next:** run-items: task:plan-run <PLAN-ID> Pn.k
 
 | Параметр | Значение |
 |:--|:--|
@@ -103,7 +101,7 @@ closure и не может повторять текущий item или зап�
 | Суть | <1 строка: что делает следующий запуск> |
 
 ````
-<provider-rendered invocation for `task:plan-exec <PLAN-ID> Pn.k`; cold-start payload не менять>
+<provider-rendered invocation for `task:plan-run <PLAN-ID> Pn.k`; cold-start payload не менять>
 ````
 
 **Done:** <что закрыто с прошлого handoff: items, фазы, решения>

@@ -10,7 +10,7 @@ Execute exactly one assigned master-plan item.
 Read the applicable AGENTS.md and the requested task-plan skill completely. Follow
 plan.md, handoff.md, the phase file, and Required Reads in their prescribed order.
 Verify that your actual model and effort satisfy the item's Routing row before changing
-files. Use task-plan-run for Exec=manual and task-plan-exec for Exec=plan-exec.
+files. Use task-plan-run (the single execution command; legacy Exec spellings plan-exec/manual read as run).
 
 Stay strictly inside Scope Included and preserve unrelated worktree changes. Obey any
 active-plan phase-first execution decision (D80+): run targeted checks for the changed seam

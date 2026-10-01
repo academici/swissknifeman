@@ -26,6 +26,7 @@ from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_
 
 ADAPTER_VERSION = "1.0.17"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
+PROVIDER_LOCK_OWNER = "task.codex"
 _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
     "capability_bindings", "invocation_binding", "model_inventory", "evidence",
@@ -33,7 +34,7 @@ _MAPPING_KEYS = frozenset({
 _PROVIDER_IDS = frozenset({"claude-code", "codex", "cursor"})
 _PROVIDER_ORDER = ("claude-code", "codex", "cursor")
 _PLAN_NEXT_COMMANDS = {
-    "exec-items": "task:plan-exec",
+    "exec-items": "task:plan-run",  # legacy kind spelling, same command
     "run-items": "task:plan-run",
     "audit-design": "task:plan-audit",
     "design-phase": "task:plan-design",
@@ -45,6 +46,8 @@ _PLAN_NEXT_COMMANDS = {
     "archive": "task:plan-close",
 }
 _PLAN_NEXT_TERMINALS = ("terminal", "manual", "waiting")
+# Readers accept the legacy command spelling; carriers always hold the canonical one.
+_LEGACY_COMMAND_IDS = {"task:plan-exec": "task:plan-run"}
 _CODEX_MODEL_CLASS_PROJECTIONS = {
     "haiku": "economy",
     "sonnet": "implementation",
@@ -434,6 +437,7 @@ def parse_next_carrier(declaration: str, *, context_kind: str = "same-session",
             tuple(tuple(item) for item in cold_start_scope),
             tuple(orchestration_capabilities), continuity)
     command_id, separator, raw_arguments = payload.partition(" ")
+    command_id = _LEGACY_COMMAND_IDS.get(command_id, command_id)
     if not separator:
         raise ValueError("CMD_INVOCATION_INVALID: plan arguments are missing")
     try:
@@ -461,8 +465,7 @@ def plan_provider_invocation(
         catalog: CommandCatalog, carrier: PlanNextCarrier,
         mapping: ProviderCommandMapping, capability_support: Mapping[str, str] | None = None, *,
         observed_class: str, observed_effort: str,
-        inherited_minimum: tuple[str, str] | None = None,
-        owner_accepts_overshoot: bool = False) -> PlanProviderInvocation:
+        inherited_minimum: tuple[str, str] | None = None) -> PlanProviderInvocation:
     """Gate a semantic plan carrier, then render exactly one provider invocation."""
     capability_support = (dict(mapping.capability_bindings) if capability_support is None
                           else capability_support)
@@ -547,8 +550,7 @@ def plan_provider_invocation(
 
 
 def validate_route(record: CommandRecord, observed_class: str, observed_effort: str,
-                   mapping: ProviderCommandMapping, *,
-                   owner_accepts_overshoot: bool = False) -> tuple[CommandDiagnostic, ...]:
+                   mapping: ProviderCommandMapping) -> tuple[CommandDiagnostic, ...]:
     """Validate both neutral axes before an invocation or write."""
     diagnostics = list(_mapping_diagnostics(record, mapping))
     if record.routing.mode == "inherited-plan":
@@ -781,9 +783,13 @@ def plan_codex_command_apply(root: Path, render_plan: CodexCommandRenderPlan, *,
     """Classify one complete render plan through the frozen P2 lock engine."""
     if not render_plan.ok or not render_plan.results:
         raise ValueError("render diagnostics must be resolved before write planning")
+    # Owner-scoped, so the lock drops records of commands that no longer exist.
     planned = plan_artifact_lock(Path(root), render_plan.results, lock_bytes=lock_bytes,
-                                 repair_artifact_ids=repair_artifact_ids)
-    return ArtifactPlan(planned.actions, planned.next_lock, PROVIDER_LOCK_PATH)
+                                 repair_artifact_ids=repair_artifact_ids,
+                                 owner_namespace=PROVIDER_LOCK_OWNER)
+    return ArtifactPlan(planned.actions, planned.next_lock, PROVIDER_LOCK_PATH,
+                        owner_namespace=planned.owner_namespace,
+                        observed_lock=planned.observed_lock)
 
 
 def apply_codex_command_plan(root: Path, artifact_plan: ArtifactPlan) -> ArtifactPlan:
@@ -1113,7 +1119,7 @@ def render_provider_model_roles_reference(catalog: CommandCatalog) -> bytes:
         "| Work kind | Neutral class | Typical commands |",
         "|:--|:--|:--|",
         "| Economy / ad-hoc explore | `economy` | low-risk fixes, scans |",
-        "| Implementation / execution | `implementation` | `task:dev`, `task:plan-exec`, `task:plan-close` |",
+        "| Implementation / execution | `implementation` | `task:dev`, `task:plan-run`, `task:plan-close` |",
         "| Design / audit / review | `frontier` | `task:design`, `task:plan-design`, `task:plan-audit`, `task:review` |",
         "",
         "Fixed commands and launch-blocks pin **one** default selector per class. The model pool below "
@@ -1519,7 +1525,7 @@ Fixed design routing is frontier/high; diagnose an unrequested cost overshoot be
 
 '''
     context_rule = ""
-    if record.command_id in {"task:plan-exec", "task:plan-run"}:
+    if record.command_id == "task:plan-run":
         context_rule = '''
 ## Codex snapshot transport guard — provider-specific
 

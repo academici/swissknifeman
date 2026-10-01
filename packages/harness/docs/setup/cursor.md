@@ -91,7 +91,7 @@ cd /path/to/swissknifeman
 agent --workspace "$(pwd)" \
       --model composer-2.5 \
       --force --sandbox disabled --trust --approve-mcps \
-      'task:plan-exec <PLAN-ID> <Pn.m>'
+      'task:plan-run <PLAN-ID> <Pn.m>'
 ```
 
 ### IDE checklist (обязательно для trusted)

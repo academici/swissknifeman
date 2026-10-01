@@ -551,7 +551,9 @@ def main(argv=None) -> int:
     parser.add_argument("--state-dir", required=True)
     parser.add_argument("--plan", required=True)
     parser.add_argument("--subject", required=True)
-    parser.add_argument("--command", dest="task_command", required=True, choices=("plan-exec", "plan-run", "plan-close", "plan-audit"))
+    # `plan-exec` is the legacy spelling of `plan-run`.
+    parser.add_argument("--command", dest="task_command", required=True,
+                        choices=("plan-run", "plan-exec", "plan-close", "plan-audit"))
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--task-session", required=True)
     parser.add_argument("--provider", required=True)

@@ -10,8 +10,7 @@ from pathlib import Path
 from core import find_monorepo_root
 
 
-EXEC_NOT_PLAN_EXEC = "EXEC-NOT-PLAN-EXEC"
-ROUTING_INCONSISTENT = "ROUTING-INCONSISTENT"
+EXEC_NOT_RUN = "EXEC-NOT-RUN"
 ROUTING_UNRESOLVED = "ROUTING-UNRESOLVED"
 NEXT_FORM_UNSUPPORTED = "NEXT-FORM-UNSUPPORTED"
 PLAN_UNREADABLE = "PLAN-UNREADABLE"
@@ -26,8 +25,10 @@ TERMINAL_STATUSES = ("🟢 Done", "🟠 Done with deviations", "⛔ Skipped by d
 
 
 
-MODEL_CLASS_ORDER = ("economy", "implementation", "frontier")
-EFFORT_ORDER = ("low", "medium", "high", "xhigh", "max")
+# Routing `Exec` spellings that resolve to the one execution mode `run` (mirrors
+# `task_contract.resolve_exec`; `plan-exec`/`manual`/`plan-run` are legacy aliases).
+EXEC_RUN_SPELLINGS = frozenset({"run", "plan-run", "plan-exec", "manual"})
+EXEC_RUN = "run"
 
 
 
@@ -44,7 +45,7 @@ _ROUTING_EXEC_HEADER = "Exec"
 
 
 _NEXT_FORM_RE = re.compile(
-    r"^(exec-items|run-items|audit-design|design-phase|design-item|audit-phase|close|archive|"
+    r"^(run-items|exec-items|audit-design|design-phase|design-item|audit-phase|close|archive|"
     r"terminal|manual|waiting):")
 
 
@@ -125,7 +126,7 @@ def _resolve_exec_cell(plan_lines, item_id):
         cell = (row.get(_ROUTING_ITEMS_HEADER, "") or "").strip().strip("`")
         if _row_covers_item(cell, item_id, phase_token, item_n):
             value = (row.get(_ROUTING_EXEC_HEADER, "") or "").strip().strip("`")
-            return value, None
+            return (EXEC_RUN if value in EXEC_RUN_SPELLINGS else value), None
 
     for row, lineno in rows:
         cell = (row.get(_ROUTING_ITEMS_HEADER, "") or "").strip().strip("`")
@@ -224,20 +225,11 @@ def _call_plan_layout(plan_dir, monorepo_root, *, timeout=60):
 
 
 def _classify_drivability(exec_value, exec_error, route, route_error):
-    """Internal documentation."""
-    if exec_value != "plan-exec":
-        detail = exec_error or f"Exec={exec_value!r} (ожидается дословно «plan-exec», D31)"
-        return False, EXEC_NOT_PLAN_EXEC, detail
+    """Drivable iff `Exec` resolves to `run` and the item's route resolves."""
+    if exec_value != EXEC_RUN:
+        return False, EXEC_NOT_RUN, exec_error or f"Exec={exec_value!r} does not resolve to `run`"
     if route is None:
-        return False, ROUTING_UNRESOLVED, route_error or "маршрут item'а не резолвится (S2)"
-    derived_manual = (
-        MODEL_CLASS_ORDER.index(route["model_class"]) > MODEL_CLASS_ORDER.index("implementation")
-        or EFFORT_ORDER.index(route["effort"]) > EFFORT_ORDER.index("medium")
-    )
-    if derived_manual:
-        return False, ROUTING_INCONSISTENT, (
-            f"Exec=plan-exec при {route['model_class']}/{route['effort']} — деривация §9 "
-            "даёт manual (плановый дефект, драйвер его не «чинит»)")
+        return False, ROUTING_UNRESOLVED, route_error or "item route does not resolve (S2)"
     return True, None, None
 
 

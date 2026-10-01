@@ -34,8 +34,8 @@ MCP_PREIMAGE = (b'{"mcpServers":{"maind":{"command":"maind"},'
 MCP_DIGEST = "sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283"
 
 
-def result(*, body=b"managed\n", artifact_id="task.plan-exec.codex-skill",
-           target=".agents/skills/task-plan-exec/SKILL.md", adapter_version="1.0.0",
+def result(*, body=b"managed\n", artifact_id="task.plan-run.codex-skill",
+           target=".agents/skills/task-plan-run/SKILL.md", adapter_version="1.0.0",
            boundary=("whole-file", ()), contract_version="1.0.0",
            semantic_parameters=None):
     adapter = ArtifactAdapterIdentity(
@@ -43,7 +43,7 @@ def result(*, body=b"managed\n", artifact_id="task.plan-exec.codex-skill",
         (CapabilityRequirement(CapabilityId("skills.repository"), (SupportLevel.NATIVE,)),),
     )
     return plan_artifact_render(ArtifactRenderRequest(
-        artifact_id, (ArtifactSource("task.command.plan-exec", "packages/task/commands/plan-exec.md", HASH),),
+        artifact_id, (ArtifactSource("task.command.plan-run", "packages/task/commands/plan-run.md", HASH),),
         ArtifactTarget(target, boundary), adapter, (),
         semantic_parameters or {"title": "Plan exec"}, lambda _request: body,
         contract_version,

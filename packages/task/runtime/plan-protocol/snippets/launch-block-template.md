@@ -1,7 +1,7 @@
 # Шаблон launch-block — фиксированная форма «что запускать дальше»
 
 Каждая выдача реального следующего шага — handoff.Next и финалы отчётов
-plan-exec/plan-close/plan-audit — обязана иметь эту форму (SKILL раздел 6):
+plan-run/plan-close/plan-audit — обязана иметь эту форму (SKILL раздел 6):
 semantic carrier + таблица требований БЕЗ команды + отдельный копируемый блок команды
 активного provider adapter.
 
@@ -32,13 +32,12 @@ Cursor — `agent --workspace … --model … --force …` в `bash`-блоке 
 Markdown не считается продолжением shell-команды. Исполнимый Next без fenced command block
 неполон; финал нельзя заканчивать на «готово», если следующий запуск существует.
 GREEN item и eligible final-item phase закрываются до вычисления Next: нельзя печатать launch для
-`plan-close` текущего результата или повторного `plan-exec`/`plan-run` текущего item.
+`plan-close` текущего результата или повторного `plan-run` текущего item.
 
 Отдельный блок может нести provider invocation ИЛИ голый промпт:
 
-- **`Exec = manual`** — эквивалента в одну команду нет (последовательность
-  `/model`+`/effort`+`/task:plan-run`, либо ГОЛЫЙ ПРОМПТ item'а): fenced block несёт
-  эту последовательность или prompt;
+- **owner-run step** (`manual:` Next) — no single command expresses it: the fenced block carries
+  a BARE item prompt (or a `/model`+`/effort`+`/task:plan-run` sequence);
 - **scope-payload** (находки/реопен, см. ниже) — code-block несёт invocation ПЛЮС
   четыре строки `РЕЖИМ:`/`ВХОД:`/`СКОУП:`/`НЕ ТРОГАТЬ:`, в одну строку таблицы не
   умещается;
@@ -48,8 +47,8 @@ Legacy-строка таблицы `Команда` остаётся читае�
 не выводят. Канонический носитель команды — только fenced block.
 
 `````markdown
-<!-- пример: обычный exec-item, следующий шаг полностью выражается командой -->
-**Next:** exec-items: task:plan-exec <PLAN-ID> Pn.k
+<!-- example: an ordinary run item whose next step is fully expressed by one command -->
+**Next:** run-items: task:plan-run <PLAN-ID> Pn.k
 
 | Параметр | Значение |
 |:--|:--|
@@ -62,7 +61,7 @@ Legacy-строка таблицы `Команда` остаётся читае�
 **Provider-native command:**
 
 ```text
-/task:plan-exec <PLAN-ID> Pn.k
+/task:plan-run <PLAN-ID> Pn.k
 ```
 `````
 
@@ -106,11 +105,10 @@ Legacy-строка таблицы `Команда` остаётся читае�
     рекомендация сама по себе не разрешает исполнение successor.
     Terminal `task:plan-audit` does not select Context by command name; use its persisted
     `plan_continuity` decision.
-- **Exec = manual (§9)** → форма «ЗАПУСК ВРУЧНУЮ» — правило целиком в SKILL разделе 8
-  (единственный SSOT), здесь только напоминание: `Model class` = предписанная Routing,
-  fenced block ОБЯЗАТЕЛЕН и несёт **ГОЛЫЙ ПРОМПТ item'а** (либо последовательность
-  `/model`+`/effort`+`/task:plan-run`)
-  вместо invocation, `Context` = `continue-root`, если нет фактической hard boundary.
+- **owner-run step** → «ЗАПУСК ВРУЧНУЮ» form — the rule lives in SKILL section 8 (single SSOT).
+  Reminder: `Model class` = the Routing class, the fenced block is REQUIRED and carries a
+  **BARE item prompt** (or a `/model`+`/effort`+`/task:plan-run` sequence)
+  instead of an invocation, `Context` = `continue-root`, если нет фактической hard boundary.
 - **Форма «ОЖИДАНИЕ: `<условие>` → `<целевая форма>`» (§8, D8)** — шаг реален, но неисполним
   сейчас (time-gate/накопление данных/кросс-план-гейт не терминален; НЕ дефект `🔴`, НЕ терминал
   «план закрыт»). Правило целиком в SKILL разделе 8; здесь напоминание: условие СТРУКТУРНО

@@ -21,6 +21,10 @@ from task import (journal, plan_admission, plan_bundle, plan_decisions,
                   session_context, task_contract, validation_admission)
 
 
+# `plan-exec` is the legacy spelling of `plan-run`; it is accepted and recorded as `plan-run`.
+_EXECUTION_COMMANDS = ("plan-run", "plan-exec")
+
+
 class WorkError(ValueError):
     def __init__(self, code: str, detail):
         self.code = code
@@ -59,13 +63,13 @@ def _design_diagnostics(root: Path, diagnostics, phase_id: str) -> dict:
             "foreign_error_summary": {"count": len(foreign), "sha256": digest}}
 
 
-def _design_route(actual_route, *, owner_accepts_overshoot: bool) -> None:
+def _design_route(actual_route) -> None:
     if actual_route is None:
         return
     effort = actual_route.get("effort")
     if actual_route.get("model_class") != "frontier" or effort not in {"high", "xhigh"}:
-        raise WorkError("ROUTE_UNDERSHOOT", "design требует frontier/high")
-    # Overshoot (xhigh) is recorded by route evidence, never a stop; the flag is a legacy no-op.
+        raise WorkError("ROUTE_UNDERSHOOT", "design requires frontier/high")
+    # A stronger route (xhigh) is recorded by route evidence, never a stop.
 
 
 def _supporting_artifacts(root: Path, phase_ids, *, strict: bool) -> dict:
@@ -142,8 +146,7 @@ def _execution_sheet(root: Path, routing: dict, *, strict: bool) -> dict:
                 f"а не provider selector {declared!r}")
     rows = []
     for batch in routing["batches"].values():
-        command_name = "plan-run" if batch["exec"] == "manual" else batch["exec"]
-        command = f"task:{command_name} {root.name} " + " ".join(batch["items"])
+        command = f"task:plan-run {root.name} " + " ".join(batch["items"])
         route = f'{batch["route"]["model_class"]}/{batch["route"]["effort"]}'
         expected = f"| `{command}` | `{route}` | `{batch['review']}` |"
         if expected not in text_value:
@@ -166,8 +169,9 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
     from task import route_evidence
 
     root = Path(plan_dir)
-    if command not in {"plan-exec", "plan-run"}:
+    if command not in _EXECUTION_COMMANDS:
         raise WorkError("PLAN_WORK_INVALID_COMMAND", command)
+    command = journal.canonical_command(command)
     session_id = session_id or session_context.current_id()
     try:
         plan_readiness.validate_execution_design(root, (item_id,))
@@ -210,7 +214,7 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
             return_context=True, repeat_admission=repeat_admission)
     except plan_recovery.RecoveryError as exc:
         if exc.code in {"ROUTE_UNDERSHOOT", "ROUTE_UNVERIFIABLE", "AUTHORITY_BOUNDARY",
-                        "ECONOMY_ROUTE_OVERSHOOT", "CAPABILITY_UNSUPPORTED"}:
+                        "CAPABILITY_UNSUPPORTED"}:
             raise WorkError(exc.code, exc.verdict) from exc
         raise
     position, snapshot = started["position"], started["snapshot"]
@@ -230,10 +234,10 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
 
 
 def design_context(plan_dir, phase_id: str | None = None, *, finish: bool = False,
-                   actual_route=None, owner_accepts_overshoot: bool = False) -> dict:
+                   actual_route=None) -> dict:
     """Expose canonical field names and current selected phase/routing only."""
     root = Path(plan_dir)
-    _design_route(actual_route, owner_accepts_overshoot=owner_accepts_overshoot)
+    _design_route(actual_route)
     if finish:
         phase_ids = list(plan_layout.phase_paths(root))
         routing = task_contract.compile_batch_routing(root)
@@ -394,11 +398,8 @@ def main(argv=None) -> int:
         if name in {"prepare", "finalize-design"}:
             action.add_argument("--actor", required=True)
             action.add_argument("--session-id")
-        if name == "design-context":
-            action.add_argument("--owner-accepts-overshoot", action="store_true",
-                                help="устарело: более сильный маршрут больше не блокируется (no-op)")
         if name == "prepare":
-            action.add_argument("--command", choices=("plan-exec", "plan-run"), required=True)
+            action.add_argument("--command", choices=_EXECUTION_COMMANDS, required=True)
             action.add_argument("--actual-route", type=Path)
             action.add_argument("--request", nargs="+")
             action.add_argument("--batch-receipt", type=Path)
@@ -422,8 +423,7 @@ def main(argv=None) -> int:
             actual = route_evidence.capture_launch(
                 expected_invocation=f"task:plan-design {args.plan_dir.name} {target}",
                 expected_cwd=plan_weight.repo_root_for(args.plan_dir))
-            result = design_context(args.plan_dir, args.phase, finish=args.finish, actual_route=actual,
-                                    owner_accepts_overshoot=args.owner_accepts_overshoot)
+            result = design_context(args.plan_dir, args.phase, finish=args.finish, actual_route=actual)
         elif args.action == "finalize-design":
             result = finalize_design(args.plan_dir, args.phase, finish=args.finish, actor=args.actor,
                                      session_id=args.session_id)

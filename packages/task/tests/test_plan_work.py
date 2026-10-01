@@ -27,15 +27,15 @@ class PlanWorkTests(unittest.TestCase):
 
 | Batch | Items | Model class/effort | Exec | Review | Почему |
 |:--|:--|:--|:--|:--|:--|
-| solo | P1.1 | implementation/medium | manual | light | recommended: bounded work |
+| solo | P1.1 | implementation/medium | run | light | recommended: bounded work |
 """))
         self.actual = route_evidence.capture_actual(
             "implementation", "medium", source="provider-thread-state", model="test")
         self.actual.update(thread_id="test-session", source_version="test",
-                           cwd=self.tmp.name, invocation="task:plan-exec WORK P1.1")
+                           cwd=self.tmp.name, invocation="task:plan-run WORK P1.1")
 
     def prepare(self):
-        return plan_work.prepare(self.plan, "P1.1", command="plan-exec",
+        return plan_work.prepare(self.plan, "P1.1", command="plan-run",
                                  actor="test/medium", session_id="test-session",
                                  actual_route=self.actual)
 
@@ -97,7 +97,7 @@ class PlanWorkTests(unittest.TestCase):
 
     def test_explicit_plan_run_passes_its_inherited_carrier_to_contract(self):
         core = self.plan / "plan.md"
-        core.write_text(core.read_text().replace("| manual |", "| plan-exec |"))
+        core.write_text(core.read_text().replace("| manual |", "| run |"))
         self.actual.update(model_class="frontier", effort="high",
                            invocation="task:plan-run WORK P1.1")
         result = plan_work.prepare(self.plan, "P1.1", command="plan-run",
@@ -112,7 +112,7 @@ class PlanWorkTests(unittest.TestCase):
             "**Inputs:** `phases/P1/P1.1.state.md` (producer: P1.1)."))
         plan_item_state.build_states(self.plan, item_id="P1.2")
         with self.assertRaisesRegex(plan_recovery.RecoveryError, "OUT_OF_ORDER_REQUEST"):
-            plan_work.prepare(self.plan, "P1.2", command="plan-exec",
+            plan_work.prepare(self.plan, "P1.2", command="plan-run",
                               actor="test/medium", session_id="test-session",
                               actual_route=self.actual)
         self.assertEqual((self.plan / "journal.jsonl").read_text(), "")
@@ -152,7 +152,7 @@ class PlanWorkTests(unittest.TestCase):
         self.add_supporting_artifacts()
         handoff = self.plan / "handoff.md"
         handoff.write_text(handoff.read_text().replace(
-            "/task:plan-exec WORK P1.1", "/task:plan-audit WORK design"))
+            "/task:plan-run WORK P1.1", "/task:plan-audit WORK design"))
         capsule = plan_work.design_context(self.plan, finish=True)
         self.assertTrue(capsule["supporting_artifacts"]["complete"])
         self.assertTrue(capsule["execution_sheet"]["complete"])
@@ -168,7 +168,7 @@ class PlanWorkTests(unittest.TestCase):
         self.add_supporting_artifacts()
         handoff = self.plan / "handoff.md"
         handoff.write_text(handoff.read_text().replace(
-            "/task:plan-exec WORK P1.1", "/task:plan-audit WORK design"))
+            "/task:plan-run WORK P1.1", "/task:plan-audit WORK design"))
         decision = terminal_policy.build_decision(
             self.plan, "P1.1", result="closed-green",
             validation=[{"carrier": "fixture", "evidence_ids": ["fixture:green"],
@@ -212,7 +212,7 @@ class PlanWorkTests(unittest.TestCase):
         self.add_supporting_artifacts()
         handoff = self.plan / "handoff.md"
         handoff.write_text(handoff.read_text().replace(
-            "/task:plan-exec WORK P1.1", "/task:plan-audit WORK design"))
+            "/task:plan-run WORK P1.1", "/task:plan-audit WORK design"))
         (self.plan / "lib/pkg/config.py").unlink()
         with self.assertRaisesRegex(plan_bundle.BundleError, "unresolvable_entry"):
             plan_work.finalize_design(
@@ -234,7 +234,7 @@ class PlanWorkTests(unittest.TestCase):
             self.prepare()
         handoff = self.plan / "handoff.md"
         handoff.write_text(handoff.read_text().replace(
-            "/task:plan-exec WORK P1.1", "/task:plan-audit WORK design"))
+            "/task:plan-run WORK P1.1", "/task:plan-audit WORK design"))
         finished = plan_work.finalize_design(
             self.plan, finish=True, actor="test/high", session_id="design")
         self.assertEqual(finished["phase_id"], "finish")
@@ -303,7 +303,7 @@ class PlanWorkTests(unittest.TestCase):
             self.prepare()
         with self.assertRaisesRegex(plan_recovery.RecoveryError, "PLAN_DESIGN_GATE_BLOCKED"):
             plan_recovery.start(
-                self.plan, "P1.1", command="plan-exec", actor="test/medium",
+                self.plan, "P1.1", command="plan-run", actor="test/medium",
                 session_id="test", contract={"cold_start": {"plan_id": "WORK",
                                                         "item_id": "P1.1"}})
         with self.assertRaisesRegex(plan_delivery.DeliveryError, "PLAN_DESIGN_GATE_BLOCKED"):
@@ -327,7 +327,7 @@ class PlanWorkTests(unittest.TestCase):
 
         self.add_supporting_artifacts()
         event = journal.new_entry(plan_id="WORK", item_id="P1.1",
-                                  command="plan-exec", actor="test/medium",
+                                  command="plan-run", actor="test/medium",
                                   result="in-progress")
         event["result"] = "pending-validation"
         (self.plan / "journal.jsonl").write_text(json.dumps(event) + "\n")
@@ -396,7 +396,7 @@ class PlanWorkTests(unittest.TestCase):
 
     def test_bad_handoff_cannot_be_finalized_or_journaled(self):
         path = self.plan / "handoff.md"
-        path.write_text(path.read_text().replace("/task:plan-exec WORK P1.1", "nonsense"))
+        path.write_text(path.read_text().replace("/task:plan-run WORK P1.1", "nonsense"))
         with self.assertRaises(ValueError):
             plan_work.finalize_design(self.plan, "P1", actor="test/high", session_id="test")
         self.assertEqual((self.plan / "journal.jsonl").read_text(), "")

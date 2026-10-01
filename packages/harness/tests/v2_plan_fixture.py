@@ -76,7 +76,7 @@ def write_v2_plan(root, *, plan_id, items, routing_rows, next_line):
         "# Roadmap исполнения — fixture\n\n"
         "| Item | Batch | Запуск | Model/Thinking | Гейт владельца | Примечание |\n"
         "|---|---|---|---|---|---|\n" + "".join(
-            f"| {item_id} | solo | plan-exec | implementation/medium | — | fixture |\n"
+            f"| {item_id} | solo | run | implementation/medium | — | fixture |\n"
             for item_id, _status in items
         ),
         encoding="utf-8",

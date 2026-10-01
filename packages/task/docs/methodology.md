@@ -22,7 +22,7 @@ flowchart TD
     D --> RF{refine-цикл<br>DoR-гейт · pre-mortem}
     RF -- маркеры NEEDS CLARIFICATION --> D
     RF -- 0 маркеров, DoR пройден --> A[approve<br>владелец плана]
-    A --> E[exec<br>/task:plan-exec<br>commit-гейт · два дома]
+    A --> E[exec<br>/task:plan-run<br>commit-гейт · два дома]
     E --> C[phase candidate<br>terminal items]
     C --> AP{GREEN acceptance<br>остаточный риск и согласие?}
     AP -- адресное согласие --> RV[bounded audit<br>/task:plan-audit]
@@ -78,7 +78,7 @@ pending` / `Resolved → D#`, скилл §3) — но закрыть план �
 
 ## exec (commit-гейт, два дома)
 
-`task:plan-exec` (implementation/medium) исполняет item строго по ТЗ. В layout v2 он читает
+`task:plan-run` (session route) исполняет item строго по ТЗ. В layout v2 он читает
 пять объявленных носителей и не использует handoff как execution input. **Commit-гейт**:
 статус `🟢`/`🟠` не ставится без закоммиченного диффа item'а — Conventional Commits,
 проверки по риску и declared Validation до коммита; связанные фиксы и bookkeeping вместе. **Два дома** (скилл §12):
@@ -93,11 +93,11 @@ item проходят его собственные acceptance/commit/close gate
 обязательную полноту/порядок. Изменение frozen-группы фиксируется существующим решением.
 Закрытие item и допустимый direct-close фазы выполняются в текущем invocation до handoff;
 наличие отдельной команды `plan-close` не требует новой сессии.
-Для `plan-run` canonical `plan-exec` резолвится через установленный `task.command_catalog`, а
-маршрут снимается provider-neutral функцией `task.route_evidence.capture_launch()`: Codex argv и
-Claude Code session JSONL остаются additive adapters одного record. Missing/ambiguous evidence —
-`ROUTE-UNVERIFIABLE`, не undershoot. Start event хранит `route-run-receipt/v1`; route/context
-evidence переиспользуются до доказанной смены session/model/effort/cwd/invocation.
+`plan-run` resolves through the installed `task.command_catalog`. The route is captured by the
+provider-neutral `task.route_evidence.capture_launch()`; Codex argv and Claude Code session JSONL are
+additive adapters of one record. Missing or ambiguous evidence is `ROUTE-UNVERIFIABLE`, not an
+undershoot. The start event stores `route-run-receipt/v1`; route/context evidence is reused until a
+proven change of session/model/effort/cwd/invocation.
 
 Перед journal/product mutation executor компилирует `evidence-graph/v1` из immutable item-spec,
 digest-qualified bundle, declared `Files` и registry владельцев carriers. Реальное

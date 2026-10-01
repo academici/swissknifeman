@@ -8,7 +8,6 @@
     "task:research",
     "task:review",
     "task:plan-design",
-    "task:plan-exec",
     "task:plan-run",
     "task:plan-close",
     "task:plan-audit"

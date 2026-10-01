@@ -112,7 +112,7 @@ class PlanLayoutTest(unittest.TestCase):
             plan = write_valid_plan(Path(tmp), layout="v2")
             path = plan / "plan.md"
             text = path.read_text(encoding="utf-8").replace(
-                "## 3. Routing\n\n", "## 3. Routing\n\n| Items | Model class/effort | Exec | Почему |\n|:--|:--|:--|:--|\n| P1.1 | implementation/medium | plan-exec | fixture |\n\n")
+                "## 3. Routing\n\n", "## 3. Routing\n\n| Items | Model class/effort | Exec | Почему |\n|:--|:--|:--|:--|\n| P1.1 | implementation/medium | run | fixture |\n\n")
             path.write_text(text, encoding="utf-8")
             contract = task_contract.build(plan, "P1.1")
             self.assertIn("route", contract)

@@ -30,8 +30,8 @@
 
 | Items | Model class/effort | Exec | Почему |
 |:--|:--|:--|:--|
-| P1.1 | implementation/medium | plan-exec | одиночная форма ячейки `Items` — базовый drivable-кейс |
-| P1.3–P1.5 | implementation/medium | plan-exec | диапазонная форма одной фазы — покрывает P1.3 (P1.4/P1.5 в фазе нет) |
+| P1.1 | implementation/medium | run | одиночная форма ячейки `Items` — базовый drivable-кейс |
+| P1.3–P1.5 | implementation/medium | run | диапазонная форма одной фазы — покрывает P1.3 (P1.4/P1.5 в фазе нет) |
 
 ## 4. Phase Index & Status Board
 

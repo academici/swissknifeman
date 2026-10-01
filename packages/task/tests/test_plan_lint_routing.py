@@ -12,7 +12,7 @@ class TestNextFormsEnum(TmpPlanTestCase):
     def _next(self, plan_dir, new_next):
         ho = plan_dir / "handoff.md"
         text = ho.read_text(encoding="utf-8")
-        text = text.replace("/task:plan-exec DEMO-1 P1.1", new_next)
+        text = text.replace("/task:plan-run DEMO-1 P1.1", new_next)
         ho.write_text(text, encoding="utf-8")
 
     def test_plan_design_item_form_accepted(self):
@@ -124,7 +124,7 @@ class TestRoutingItemsGrammar(TmpPlanTestCase):
         path = plan_dir / "plan.md"
         table = ("## 3. Routing\n\n| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
                  "|:--|:--|:--|:--|:--|:--|\n"
-                 f"| B1 | {cell} | implementation/high | manual | full | test |")
+                 f"| B1 | {cell} | implementation/high | run | full | test |")
         path.write_text(path.read_text(encoding="utf-8").replace(
             "## 3. Routing", table), encoding="utf-8")
         return plan_dir
@@ -180,7 +180,7 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
         routing = (
             "| Items | Model class/effort | Exec | Почему |\n"
             "|:--|:--|:--|:--|\n"
-            "| P1.1 | implementation/medium | plan-exec | test |"
+            "| P1.1 | implementation/medium | run | test |"
         )
         _, diag = _lint(self._plan(routing))
         self.assertTrue(_errors_containing(diag, "Routing schema"), diag.errors)
@@ -189,7 +189,7 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
         routing = (
             "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
-            "| solo | P1.1 | implementation/medium | plan-exec | full | test |"
+            "| solo | P1.1 | implementation/medium | run | full | test |"
         )
         _, diag = _lint(self._plan(routing))
         self.assertEqual(_errors_containing(diag, "Routing schema"), [], diag.errors)
@@ -199,7 +199,7 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
         routing = (
             "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
-            "| solo | P1.1 | implementation/medium | plan-exec | full | test |"
+            "| solo | P1.1 | implementation/medium | run | full | test |"
         )
         _, diag = _lint(self._plan(routing, batch_in_handoff=False))
         self.assertTrue(_errors_containing(diag, "handoff.Next: нет строки `| Batch |"),
@@ -209,7 +209,7 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
         routing = (
             "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
-            "| solo | P1.1 | implementation/medium | plan-exec | full | test |"
+            "| solo | P1.1 | implementation/medium | run | full | test |"
         )
         plan_dir = self._plan(routing)
         handoff = plan_dir / "handoff.md"
@@ -218,13 +218,13 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "≠ Routing «solo»"), diag.errors)
 
-    def test_plan_run_alias_and_manual_share_one_lint_execution_mode(self):
+    def test_legacy_exec_spellings_share_one_lint_execution_mode(self):
         from task import task_contract
         routing = (
             "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
-            "| B1 | P1.1 | implementation/high | manual | full | shared reads |\n"
-            "| B1 | P1.2 | implementation/high | plan-run | light | same lifecycle |"
+            "| B1 | P1.1 | implementation/high | plan-exec | full | shared reads |\n"
+            "| B1 | P1.2 | implementation/high | manual | light | same lifecycle |"
         )
         plan_dir = self._plan(routing)
         from fixtures import write_v2_carriers
@@ -232,7 +232,7 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertFalse(_errors_containing(diag, "invalid Exec"), diag.errors)
         self.assertFalse(_errors_containing(diag, "несовместимые Exec"), diag.errors)
-        self.assertEqual(task_contract.compile_batch_routing(plan_dir)["batches"]["B1"]["exec"], "manual")
+        self.assertEqual(task_contract.compile_batch_routing(plan_dir)["batches"]["B1"]["exec"], "run")
 
     def test_handoff_cannot_collapse_batch_to_one_item(self):
         from task import plan_bundle, plan_item_state, plan_status
@@ -240,8 +240,8 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
         routing = (
             "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
-            "| B1 | P1.1 | implementation/high | manual | full | shared reads |\n"
-            "| B1 | P1.2 | implementation/high | manual | light | producer chain |"
+            "| B1 | P1.1 | implementation/high | run | full | shared reads |\n"
+            "| B1 | P1.2 | implementation/high | run | light | producer chain |"
         )
         plan_dir = self._plan(routing)
         phase = plan_dir / "phases" / "P1"
@@ -255,8 +255,7 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
         plan_status.build_status(plan_dir)
         handoff = plan_dir / "handoff.md"
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
-            "| Batch | solo |", "| Batch | B1 |").replace(
-            "/task:plan-exec", "/task:plan-run"), encoding="utf-8")
+            "| Batch | solo |", "| Batch | B1 |"), encoding="utf-8")
 
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "весь оставшийся adjacent-суффикс"), diag.errors)
@@ -281,7 +280,7 @@ class TestExecutableRoutingTableBoundary(TmpPlanTestCase):
         routing = (
             "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
-            "| solo | P1.1 | implementation/medium | plan-exec | full | test |\n")
+            "| solo | P1.1 | implementation/medium | run | full | test |\n")
         plan = plan_dir / "plan.md"
         plan.write_text(plan.read_text(encoding="utf-8").replace(
             "## 3. Routing\n\n", "## 3. Routing\n\n" + routing + suffix),
@@ -299,7 +298,7 @@ class TestExecutableRoutingTableBoundary(TmpPlanTestCase):
         duplicate = (
             "\n| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
-            "| solo | P1.1 | implementation/medium | plan-exec | full | duplicate |\n")
+            "| solo | P1.1 | implementation/medium | run | full | duplicate |\n")
         _model, diag = _lint(self._plan(duplicate))
         self.assertTrue(_errors_containing(diag, "duplicate executable Routing tables"),
                         diag.errors)
@@ -322,7 +321,7 @@ class TestContinuityHandoffGate(TmpPlanTestCase):
                 "## 3. Routing\n\n"
                 "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
                 "|:--|:--|:--|:--|:--|:--|\n"
-                "| solo | P1.1 | implementation/medium | plan-exec | full | test |",
+                "| solo | P1.1 | implementation/medium | run | full | test |",
             ),
             encoding="utf-8",
         )
@@ -373,7 +372,7 @@ class TestNextDeclarationLine(TmpPlanTestCase):
         """Переписывает handoff: объявление формы + ячейка «Суть» launch-block'а."""
         ho = plan_dir / "handoff.md"
         text = ho.read_text(encoding="utf-8")
-        text = text.replace("**Next:** /task:plan-exec DEMO-1 P1.1", f"**Next:** {next_decl}")
+        text = text.replace("**Next:** /task:plan-run DEMO-1 P1.1", f"**Next:** {next_decl}")
         text = text.replace("| Суть | закрыть следующий item |", f"| Суть | {sut_cell} |")
         ho.write_text(text, encoding="utf-8")
 
@@ -411,7 +410,7 @@ class TestWaitingForm(TmpPlanTestCase):
     launch-block; C2-WARNING на прозаическую gate-оговорку в runnable-форме."""
 
     def _waiting_handoff(self, plan_id="DEMO-1", *, cond="≥2026-07-16",
-                         target="/task:plan-exec DEMO-1 P1.1", guard=True):
+                         target="/task:plan-run DEMO-1 P1.1", guard=True):
         guard_line = f"# НЕ раньше: {cond}\n" if guard else ""
         return f"""# HANDOFF — 2026-07-02 — after P1.1
 
@@ -445,10 +444,10 @@ class TestWaitingForm(TmpPlanTestCase):
         self.assertTrue(diag.ok, diag.errors)
 
     def test_waiting_resolves_before_exec_no_item_ref_error(self):
-        # целевой /task:plan-exec … P9.9 в ОБЪЯВЛЕНИИ не должен резолвиться как exec и ловить
+        # целевой /task:plan-run … P9.9 в ОБЪЯВЛЕНИИ не должен резолвиться как run и ловить
         # ERROR по несуществующему item'у — форма waiting перехватывает резолвер раньше.
         plan_dir = write_valid_plan(self.root)
-        ho = self._waiting_handoff(target="/task:plan-exec DEMO-1 P9.9")
+        ho = self._waiting_handoff(target="/task:plan-run DEMO-1 P9.9")
         (plan_dir / "handoff.md").write_text(ho, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
@@ -478,8 +477,8 @@ class TestWaitingForm(TmpPlanTestCase):
         ho = plan_dir / "handoff.md"
         text = ho.read_text(encoding="utf-8")
         text = text.replace(
-            "**Next:** /task:plan-exec DEMO-1 P1.1",
-            "**Next:** /task:plan-exec DEMO-1 P1.1 — НО не раньше ~2026-07-16 (тайм-гейт)")
+            "**Next:** /task:plan-run DEMO-1 P1.1",
+            "**Next:** /task:plan-run DEMO-1 P1.1 — НО не раньше ~2026-07-16 (тайм-гейт)")
         ho.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
@@ -643,7 +642,7 @@ class TestSemanticNextCarrier(TmpPlanTestCase):
         plan_dir = write_valid_plan(self.root)
         handoff = plan_dir / "handoff.md"
         text = handoff.read_text(encoding="utf-8").replace(
-            "/task:plan-exec DEMO-1 P1.1",
+            "/task:plan-run DEMO-1 P1.1",
             "audit-phase: task:plan-audit DEMO-1 P1")
         handoff.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
@@ -659,7 +658,7 @@ class TestSemanticNextCarrier(TmpPlanTestCase):
         ), encoding="utf-8")
         handoff = plan_dir / "handoff.md"
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
-            "/task:plan-exec DEMO-1 P1.1",
+            "/task:plan-run DEMO-1 P1.1",
             "audit-phase: task:plan-audit DEMO-1 P1",
         ), encoding="utf-8")
 
@@ -679,8 +678,8 @@ class TestSemanticNextCarrier(TmpPlanTestCase):
         plan_dir = write_valid_plan(self.root)
         handoff = plan_dir / "handoff.md"
         text = handoff.read_text(encoding="utf-8").replace(
-            "/task:plan-exec DEMO-1 P1.1",
-            "audit-phase: task:plan-exec DEMO-1 P1.1")
+            "/task:plan-run DEMO-1 P1.1",
+            "audit-phase: task:plan-run DEMO-1 P1.1")
         handoff.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(any("Next не соответствует" in item for item in diag.errors),
@@ -694,7 +693,7 @@ class TestSemanticNextCarrier(TmpPlanTestCase):
                 plan_dir = write_valid_plan(self.root, plan_id="DEMO-1")
                 handoff = plan_dir / "handoff.md"
                 text = handoff.read_text(encoding="utf-8").replace(
-                    "/task:plan-exec DEMO-1 P1.1", declaration)
+                    "/task:plan-run DEMO-1 P1.1", declaration)
                 handoff.write_text(text, encoding="utf-8")
                 _, diag = _lint(plan_dir)
                 self.assertTrue(diag.ok, diag.errors)
@@ -703,7 +702,7 @@ class TestSemanticNextCarrier(TmpPlanTestCase):
         fixture = Path(__file__).with_name("fixtures_data") / "provider-plan-cases.json"
         declarations = json.loads(fixture.read_text(encoding="utf-8"))["next_declarations"]
         expected = {
-            "exec-items": "exec", "run-items": "run", "audit-design": "audit-design",
+            "exec-items": "run", "run-items": "run", "audit-design": "audit-design",
             "design-phase": "design-phase", "design-item": "design-item",
             "design-finish": "design-finish", "design-roadmap": "design-roadmap",
             "audit-phase": "audit", "close": "close", "archive": "close-archive",

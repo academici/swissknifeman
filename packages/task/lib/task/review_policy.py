@@ -175,7 +175,9 @@ def phase_audit_terminal_policy(entry: dict, *, plan_dir=None) -> dict:
         continuation = evidence.get("continuation")
         ids = evidence.get("evidence_ids")
         plan_id = entry.get("plan_id", "")
-        pattern = rf"(?:exec-items: task:plan-exec|run-items: task:plan-run) {re.escape(plan_id)} ({phase_id}\.[0-9]+)"
+        # `exec-items`/`task:plan-exec` are the legacy spellings of `run-items`/`task:plan-run`.
+        pattern = (rf"(?:exec|run)-items: task:plan-(?:exec|run) "
+                   rf"{re.escape(plan_id)} ({phase_id}\.[0-9]+)")
         if (not isinstance(continuation, str) or re.fullmatch(pattern, continuation) is None
                 or evidence.get("recovered") is not False
                 or evidence.get("terminal") is not False

@@ -98,7 +98,7 @@ class TestNewEntryAndValidate(TmpDirTestCase):
         for field, values in invalid.items():
             for value in values:
                 with self.subTest(field=field, value=value):
-                    entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+                    entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                                       actor="model/medium", result="in-progress")
                     entry[field] = value
                     with self.assertRaises(JournalValidationError):
@@ -106,7 +106,7 @@ class TestNewEntryAndValidate(TmpDirTestCase):
 
     def test_new_entry_has_all_required_fields_and_validates(self):
         entry = new_entry(
-            plan_id="2026.07.18-DEMO-PLAN", item_id="P1.3", command="plan-exec",
+            plan_id="2026.07.18-DEMO-PLAN", item_id="P1.3", command="plan-run",
             actor="sonnet/high", result="in-progress",
         )
         validate_entry(entry)  # не бросает
@@ -121,56 +121,56 @@ class TestNewEntryAndValidate(TmpDirTestCase):
         self.assertTrue(entry["ts"].endswith("Z"))
 
     def test_missing_field_rejected(self):
-        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                            actor="sonnet/high", result="in-progress")
         del entry["cost_usd"]
         with self.assertRaises(JournalValidationError):
             validate_entry(entry)
 
     def test_bad_command_rejected(self):
-        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                            actor="sonnet/high", result="in-progress")
         entry["command"] = "plan-nope"
         with self.assertRaises(JournalValidationError):
             validate_entry(entry)
 
     def test_bad_result_rejected(self):
-        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                            actor="sonnet/high", result="in-progress")
         entry["result"] = "not-an-enum-value"
         with self.assertRaises(JournalValidationError):
             validate_entry(entry)
 
     def test_bad_friction_value_rejected(self):
-        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                            actor="sonnet/high", result="in-progress",
                            friction=["deviation", "не-из-списка"])
         with self.assertRaises(JournalValidationError):
             validate_entry(entry)
 
     def test_attempt_must_be_positive_int(self):
-        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                            actor="sonnet/high", result="in-progress")
         entry["attempt"] = 0
         with self.assertRaises(JournalValidationError):
             validate_entry(entry)
 
     def test_numeric_fields_reject_non_number(self):
-        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                            actor="sonnet/high", result="in-progress")
         entry["cost_usd"] = "1.83"
         with self.assertRaises(JournalValidationError):
             validate_entry(entry)
 
     def test_numeric_fields_accept_none(self):
-        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                            actor="sonnet/high", result="in-progress")
         validate_entry(entry)  # cost_usd/num_turns/duration_ms — None по дефолту
 
     def test_all_result_and_friction_enum_values_accepted(self):
         from task.journal import FRICTION_VALUES, RESULT_VALUES
         for result in RESULT_VALUES:
-            entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+            entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                                actor="sonnet/high", result=result, friction=FRICTION_VALUES)
             validate_entry(entry)  # не бросает ни на одном каноническом значении
 
@@ -216,13 +216,13 @@ class TestTraceRef(TmpDirTestCase):
     `trace_ref` is additive — omitted by default, present only when passed."""
 
     def test_omitted_by_default_entry_unchanged(self):
-        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                            actor="sonnet/high", result="in-progress")
         self.assertNotIn("trace_ref", entry)
         validate_entry(entry)  # не бросает — trace_ref не входит в REQUIRED_FIELDS
 
     def test_supplied_trace_ref_is_carried_and_appended(self):
-        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                            actor="sonnet/high", result="in-progress",
                            trace_ref="a" * 64)
         self.assertEqual(entry["trace_ref"], "a" * 64)
@@ -237,7 +237,7 @@ class TestAppend(TmpDirTestCase):
         path = self.plan_dir / "journal.jsonl"
         path.write_text("{bad\n", encoding="utf-8")
         before = path.read_bytes()
-        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-exec",
+        entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                           actor="model/medium", result="in-progress")
         with self.assertRaisesRegex(JournalValidationError, "JOURNAL_CORRUPT"):
             append(self.plan_dir, entry)
@@ -387,7 +387,7 @@ class TestAppend(TmpDirTestCase):
             append(self.plan_dir, entry)
 
     def test_append_writes_one_valid_json_line(self):
-        entry = new_entry(plan_id="P", item_id="P1.3", command="plan-exec",
+        entry = new_entry(plan_id="P", item_id="P1.3", command="plan-run",
                            actor="sonnet/high", result="in-progress")
         path = append(self.plan_dir, entry)
         self.assertEqual(path, self.plan_dir / "journal.jsonl")
@@ -396,9 +396,9 @@ class TestAppend(TmpDirTestCase):
         self.assertEqual(json.loads(lines[0]), entry)
 
     def test_append_is_append_only_existing_lines_untouched(self):
-        first = new_entry(plan_id="P", item_id="P1.3", command="plan-exec",
+        first = new_entry(plan_id="P", item_id="P1.3", command="plan-run",
                            actor="sonnet/high", result="in-progress")
-        second = new_entry(plan_id="P", item_id="P1.3", command="plan-exec",
+        second = new_entry(plan_id="P", item_id="P1.3", command="plan-run",
                             actor="sonnet/high", result="closed-green",
                             decision=_validation_decision(self.plan_dir))
         append(self.plan_dir, first)
@@ -409,7 +409,7 @@ class TestAppend(TmpDirTestCase):
         self.assertEqual(json.loads(lines[1])["result"], "closed-green")
 
     def test_invalid_entry_not_written(self):
-        entry = new_entry(plan_id="P", item_id="P1.3", command="plan-exec",
+        entry = new_entry(plan_id="P", item_id="P1.3", command="plan-run",
                            actor="sonnet/high", result="in-progress")
         entry["result"] = "garbage"
         with self.assertRaises(JournalValidationError):
@@ -417,7 +417,7 @@ class TestAppend(TmpDirTestCase):
         self.assertFalse((self.plan_dir / "journal.jsonl").exists())
 
     def test_overlong_note_is_schema_valid_but_writer_rejects_before_io(self):
-        entry = new_entry(plan_id="P", item_id="P1.3", command="plan-exec",
+        entry = new_entry(plan_id="P", item_id="P1.3", command="plan-run",
                           actor="sonnet/high", result="closed-green", note="x" * 301)
         validate_entry(entry)  # sealed v1 schema still accepts historical rows
         with self.assertRaisesRegex(JournalValidationError, "301 символов > 300"):
@@ -426,7 +426,7 @@ class TestAppend(TmpDirTestCase):
 
     def test_foreign_plan_id_not_written(self):
         entry = new_entry(
-            plan_id="FOREIGN", item_id="P1.3", command="plan-exec",
+            plan_id="FOREIGN", item_id="P1.3", command="plan-run",
             actor="sonnet/high", result="in-progress",
         )
         with self.assertRaisesRegex(JournalValidationError, "FOREIGN.*P"):
@@ -444,7 +444,7 @@ class TestAppend(TmpDirTestCase):
                     "action": "approval-required", "recovered": False, "terminal": True,
                 }
             append(self.plan_dir, new_entry(
-                plan_id="P", item_id="P1.3", command="plan-exec",
+                plan_id="P", item_id="P1.3", command="plan-run",
                 actor="sonnet/high", result=result, decision=decision))
         path = self.plan_dir / "journal.jsonl"
         for ln in path.read_text(encoding="utf-8").splitlines():
@@ -600,7 +600,7 @@ class TestCli(TmpDirTestCase):
         # значит смоделируем несогласованность через невалидный --friction-элемент.
         rc = main([
             "append", "--plan-dir", str(self.plan_dir), "--plan", "P",
-            "--item", "P1.1", "--command", "plan-exec", "--actor", "sonnet/high",
+            "--item", "P1.1", "--command", "plan-run", "--actor", "sonnet/high",
             "--result", "in-progress", "--friction", "не-из-enum",
         ])
         self.assertEqual(rc, 1)

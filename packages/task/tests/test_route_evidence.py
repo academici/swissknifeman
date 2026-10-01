@@ -745,12 +745,12 @@ class CodexLaunchEvidenceTests(unittest.TestCase):
     def test_thread_state_accepts_semantic_task_invocation_without_shell_prompt_marker(self):
         from task import route_evidence_codex
 
-        expected = "$ task:plan-exec PLAN P5.6"
+        expected = "$ task:plan-run PLAN P5.6"
         with tempfile.TemporaryDirectory() as directory:
             state_root = Path(directory)
             self._write_thread_state(
                 state_root, thread_id="thread-natural-invocation", model="gpt-5.6-sol",
-                effort="high", prompt="task:plan-exec PLAN P5.6",
+                effort="high", prompt="task:plan-run PLAN P5.6",
             )
 
             evidence = route_evidence_codex.capture_current(

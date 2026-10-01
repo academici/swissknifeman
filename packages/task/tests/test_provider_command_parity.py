@@ -61,8 +61,8 @@ def _write_routing(root, mutation):
 class ProviderCommandParityTests(unittest.TestCase):
     def test_canonical_and_both_provider_examples_execute_the_same_policy(self):
         import task.plan_lifecycle
-        expected = {"plan-audit": "read-only", "plan-exec": "not-requested",
-                    "plan-run": "not-requested", "plan-design": "not-requested"}
+        expected = {"plan-audit": "read-only", "plan-run": "not-requested",
+                    "plan-design": "not-requested"}
         for command, action in expected.items():
             paths = (COMMAND_ROOT / f"{command}.md",
                      REPO_ROOT / f"packages/task/adapters/codex/skills/task-{command}/command.md",

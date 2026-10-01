@@ -223,7 +223,7 @@ def evaluate(plan_dir: Path | str, phase_id: str, *, candidate: dict | None,
         item = next((row.get("item_id") for row in heads if isinstance(row, dict)
                      and row.get("status") != plan_status.STATUS_DONE), None)
         if isinstance(item, str) and re.fullmatch(rf"{re.escape(phase_id)}\.\d+", item):
-            result.update(next_kind="exec-items", next_exact=f"exec-items: task:plan-run {plan_dir.name} {item}")
+            result.update(next_kind="run-items", next_exact=f"run-items: task:plan-run {plan_dir.name} {item}")
         return result
     impact = None
     if baseline is not _NO_BASELINE:

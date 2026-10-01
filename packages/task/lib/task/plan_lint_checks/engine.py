@@ -67,7 +67,7 @@ def _handoff_run_items(value):
     from task import task_contract
 
     match = re.search(
-        r"(?:/|\b)task:plan-run\s+\S+\s+"
+        r"(?:/|\b)task:plan-(?:run|exec)\s+\S+\s+"
         r"(P\d+\.\d+(?:\s*-\s*P\d+\.\d+)?"
         r"(?:\s+P\d+\.\d+(?:\s*-\s*P\d+\.\d+)?)*)", value)
     if not match:
@@ -627,12 +627,12 @@ def lint_plan(plan_dir, diag):
         # roadmap batch into an unlabelled single-item launch.
         if layout == "v2" and PLAN_ID_NUMBERED_RE.match(plan_id):
             execution_match = None
-            if kind in ("exec", "run"):
+            if kind == "run":
                 execution_match = m
             elif kind == "manual":
                 execution_match = re.search(
                     r"(?:/|\b)task:plan-run\s+\S+\s+(P\d+\.\d+)", next_val)
-            if kind in ("exec", "run", "manual"):
+            if kind in ("run", "manual"):
                 batch_rows = [LAUNCH_BATCH_ROW_RE.match(line) for line in next_val.splitlines()]
                 batch_values = [match.group(1).strip() for match in batch_rows if match]
                 if not batch_values:
@@ -640,7 +640,7 @@ def lint_plan(plan_dir, diag):
                                "handoff.Next: нет строки `| Batch | <id|solo> |`; "
                                "граница нового исполнения теряет batch/solo")
                 elif execution_match:
-                    first_item = (execution_match.group(2) if kind in ("exec", "run")
+                    first_item = (execution_match.group(2) if kind == "run"
                                   else execution_match.group(1))
                     expected = next((row.get("Batch", "").strip() for row in routing_rows
                                      if first_item in row.get("_items", [])), None)
@@ -651,8 +651,6 @@ def lint_plan(plan_dir, diag):
                     if expected and batch_values[0] == expected:
                         if kind == "run":
                             command_items = _handoff_run_items(next_decl)
-                        elif kind == "exec":
-                            command_items = re.findall(r"\bP\d+\.\d+\b", next_decl)
                         else:
                             command_items = (_handoff_run_items(next_val)
                                              or re.findall(r"\bP\d+\.\d+\b", next_decl))
@@ -725,7 +723,7 @@ def lint_plan(plan_dir, diag):
         # Условие СОЗНАТЕЛЬНО мягче резолвера (`kind`): любое утверждение о закрытии в
         # ЛЮБОМ месте поля снимает требование launch-block'а. Ужесточение до `kind` дало бы
         # новый WARNING живому плану флота (PILOT-AZG: первая строка несёт и «план закрыт
-        # целиком», и lint-ссылку `/task:plan-exec` → резолвится как exec) — back-compat §2.
+        # целиком», и lint-ссылку `/task:plan-exec` → резолвится как run) — back-compat §2.
         #
         # Новая canonical форма всегда использует fenced command block вне таблицы. Старую
         # строку `| Команда |` продолжаем принимать reader-side, чтобы правка формата не
@@ -776,12 +774,6 @@ def lint_plan(plan_dir, diag):
                   # launch-block'е; ссылки объявления не резолвим (целевая форма проверится
                   # при реальном запуске по снятии гейта). launch-block требуется — как у
                   # прочих runnable-форм (не exempt): гейт launch-block выше не смотрит kind.
-        elif kind == "exec":
-            ref_plan_id, ref_item = m.group(1), m.group(2)
-            _check_plan_id(ref_plan_id)
-            _check_item(ref_item)
-            _lint_priority_continuation(
-                plan_dir, handoff_path, plan_id, [ref_item], next_lineno, diag)
         elif kind == "run":
             ref_plan_id, ref_from, ref_to = m.group(1), m.group(2), m.group(3)
             _check_plan_id(ref_plan_id)

@@ -52,8 +52,8 @@ def _plan_md():
 
 | Items | Model class/effort | Exec | Почему |
 |:--|:--|:--|:--|
-| {DRIVABLE_ID} | implementation/medium | plan-exec | фикстура cmd_run |
-| {MANUAL_ID} | frontier/high | manual | фикстура cmd_run — отказ |
+| {DRIVABLE_ID} | implementation/medium | run | фикстура cmd_run |
+| {MANUAL_ID} | frontier/high | plan-design | фикстура cmd_run — отказ |
 
 ## 4. Phase Index & Status Board
 
@@ -87,7 +87,7 @@ def _phase_md():
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
 | {DRIVABLE_ID} | Ведомый item | ⬜ Not started | 2026-08-01 |
-| {MANUAL_ID} | Ручной item | ⬜ Not started | 2026-08-01 |
+| {MANUAL_ID} | Недрайвабельный item | ⬜ Not started | 2026-08-01 |
 
 ### {DRIVABLE_ID} — Ведомый item
 
@@ -108,10 +108,10 @@ def _phase_md():
 **Known Deviations:** —
 **Escalation Needed:** no
 
-### {MANUAL_ID} — Ручной item
+### {MANUAL_ID} — Недрайвабельный item
 
 **Status:** ⬜ Not started
-**Intent:** Демонстрирует отказ вождения (Exec=manual).
+**Intent:** Демонстрирует отказ вождения (Exec=plan-design).
 **Why:** Базовый кейс.
 **Scope Included:** ничего — фикстура.
 **Scope Excluded:** реальная логика.
@@ -175,8 +175,8 @@ def _init_repo(root):
         root, plan_id=PLAN_ID,
         items=[(DRIVABLE_ID, "🟡 In progress"), (MANUAL_ID, "🟡 In progress")],
         routing_rows=[
-            f"| {DRIVABLE_ID} | implementation/medium | plan-exec | fixture cmd_run |",
-            f"| {MANUAL_ID} | frontier/high | manual | fixture cmd_run |",
+            f"| {DRIVABLE_ID} | implementation/medium | run | fixture cmd_run |",
+            f"| {MANUAL_ID} | frontier/high | plan-design | fixture cmd_run |",
         ],
         next_line=f"run-items: task:plan-run {PLAN_ID} {DRIVABLE_ID}-{MANUAL_ID}",
     )
@@ -237,9 +237,9 @@ class DryRunTest(unittest.TestCase):
     def test_text_output_shows_argv_and_refusal(self):
         out = self._run([])
         self.assertIn(f"[ВОЖДЕНИЕ] {DRIVABLE_ID}", out)
-        self.assertIn("/task:plan-exec CLI-FIXTURE P9.1", out)
+        self.assertIn("/task:plan-run CLI-FIXTURE P9.1", out)
         self.assertIn(f"[ОТКАЗ] {MANUAL_ID}", out)
-        self.assertIn("EXEC-NOT-PLAN-EXEC", out)
+        self.assertIn("EXEC-NOT-RUN", out)
 
     def test_json_output_is_valid(self):
         import json
@@ -263,12 +263,12 @@ def _queue_item(item_id, *, drivable=True):
     if drivable:
         return {"item_id": item_id, "status": "⬜ Not started",
                 "route": {"model_class": "implementation", "effort": "medium"},
-                "route_error": None, "exec": "plan-exec", "exec_error": None,
+                "route_error": None, "exec": "run", "exec_error": None,
                 "drivable": True, "refusal": None, "refusal_detail": None}
     return {"item_id": item_id, "status": "⬜ Not started", "route": None,
-           "route_error": None, "exec": "manual", "exec_error": None,
-           "drivable": False, "refusal": "EXEC-NOT-PLAN-EXEC",
-           "refusal_detail": "Exec='manual'"}
+           "route_error": None, "exec": "plan-design", "exec_error": None,
+           "drivable": False, "refusal": "EXEC-NOT-RUN",
+           "refusal_detail": "Exec='plan-design'"}
 
 
 def _canned_queue(*item_ids):

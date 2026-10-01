@@ -16,7 +16,8 @@ class TerminalPolicyError(ValueError):
 
 _ITEM_RE = re.compile(r"^P[0-9]+\.[0-9]+$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
-_EXECUTION_COMMANDS = frozenset(("plan-exec", "plan-run", "plan-close", "plan-audit"))
+# `plan-exec` is the legacy spelling of `plan-run`; readers accept both.
+_EXECUTION_COMMANDS = frozenset(("plan-run", "plan-exec", "plan-close", "plan-audit"))
 _CLOSE_RESULTS = frozenset(("closed-green", "closed-deviations"))
 _BLOCK_RESULTS = frozenset(("blocked", "escalated"))
 _TERMINAL_ACTIONS = frozenset(("terminal-block", "approval-required", "authority-denied"))

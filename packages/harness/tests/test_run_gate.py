@@ -46,7 +46,7 @@ def _plan_md(*, done, phase_status):
 
 | Items | Model class/effort | Exec | Почему |
 |:--|:--|:--|:--|
-| {ITEM_ID} | implementation/medium | plan-exec | фикстура гейта |
+| {ITEM_ID} | implementation/medium | run | фикстура гейта |
 
 ## 4. Phase Index & Status Board
 
@@ -117,7 +117,7 @@ def _bootstrap_handoff_md():
     """Internal documentation."""
     return f"""# HANDOFF — 2026-08-01 — after P0.0
 
-**Next:** exec-items: task:plan-exec {PLAN_ID} {ITEM_ID}
+**Next:** exec-items: task:plan-run {PLAN_ID} {ITEM_ID}
 
 | Параметр | Значение |
 |:--|:--|
@@ -127,7 +127,7 @@ def _bootstrap_handoff_md():
 | Суть | фикстура — план ещё не тронут |
 
 ```
-/task:plan-exec {PLAN_ID} {ITEM_ID}
+/task:plan-run {PLAN_ID} {ITEM_ID}
 ```
 
 **Done:** —
@@ -218,7 +218,7 @@ class _Repo:
             "🔴 Blocked": "blocked",
         }.get(status, "in-progress")
         event = {
-            "actor": "implementation/medium", "attempt": 1, "command": "plan-exec",
+            "actor": "implementation/medium", "attempt": 1, "command": "plan-run",
             "cost_usd": None, "duration_ms": None, "friction": [], "item_id": ITEM_ID,
             "note": "v2 gate fixture", "num_turns": None, "plan_id": PLAN_ID,
             "result": result, "run_id": f"{self._phase_writes:064x}", "session_id": "fixture",
@@ -298,8 +298,8 @@ class _Repo:
         from packages.harness.tests.v2_plan_fixture import write_v2_plan
         self.plan_dir = write_v2_plan(
             self.root, plan_id=PLAN_ID, items=[(ITEM_ID, "🟡 In progress")],
-            routing_rows=[f"| {ITEM_ID} | implementation/medium | plan-exec | fixture |"],
-            next_line=f"exec-items: task:plan-exec {PLAN_ID} {ITEM_ID}",
+            routing_rows=[f"| {ITEM_ID} | implementation/medium | run | fixture |"],
+            next_line=f"exec-items: task:plan-run {PLAN_ID} {ITEM_ID}",
         )
         self.write_plan()
         self.write_phase(status="🟡 In progress")
@@ -617,10 +617,10 @@ class GateVerdictTest(unittest.TestCase):
 class PreLaunchVerdictTest(unittest.TestCase):
     def test_not_drivable_is_red_without_spawning_worker(self):
         queue_item = {"item_id": ITEM_ID, "drivable": False,
-                     "refusal": "EXEC-NOT-PLAN-EXEC", "refusal_detail": "Exec=manual"}
+                     "refusal": "EXEC-NOT-RUN", "refusal_detail": "Exec=plan-design"}
         result = gate.pre_launch_verdict(queue_item)
         self.assertEqual(result["verdict"], gate.RED)
-        self.assertEqual(result["raw"]["refusal"], "EXEC-NOT-PLAN-EXEC")
+        self.assertEqual(result["raw"]["refusal"], "EXEC-NOT-RUN")
 
     def test_drivable_item_raises(self):
         with self.assertRaises(ValueError):

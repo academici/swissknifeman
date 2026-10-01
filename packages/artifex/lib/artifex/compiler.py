@@ -195,10 +195,8 @@ def compile_slice(repo_root: str | Path, plan_dir: str | Path, item_id: str, *, 
     if s3_item.get("status") != item["fields"]["Status"] or s3_item.get("route") != route:
         raise CompileRefusal("SOURCE_DRIFT", "S1/S3 status or route")
     exec_value = s3_item.get("exec")
-    if exec_value not in ("manual", "plan-exec"):
+    if exec_value != "run":
         raise CompileRefusal("ROUTE_EXEC_MISMATCH", str(exec_value))
-    if exec_value == "manual" and s3_item.get("refusal") not in (None, "EXEC-NOT-PLAN-EXEC"):
-        raise CompileRefusal("ROUTE_EXEC_MISMATCH", "manual S3 refusal")
     scope, _ = _scope(root, item, s2)
     contract_hash = s2.get("version", {}).get("content_hash")
     if not isinstance(contract_hash, str) or len(contract_hash) != 64:

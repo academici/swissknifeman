@@ -147,7 +147,7 @@ append-only storage; the preserved preimage remains the historical source.
 
 Новый layout-v2 план использует ровно шесть колонок:
 `Batch | Items | Model class/effort | Exec | Review | Почему`. Routing покрывает каждый item
-ровно один раз. `Exec` — enum `plan-exec` | `manual` | `plan-design`; `Review` —
+ровно один раз. `Exec` — enum `run` | `plan-design` (legacy `plan-exec`/`manual`/`plan-run` read as `run`); `Review` —
 `full` | `light` | `none`.
 
 Adjacent items одной фазы объединяются, когда общий producer/consumer, Required Reads, setup
@@ -233,7 +233,7 @@ item обязан НАПЕЧАТАТЬ в `Completion Notes`
 item'е, чья дата в колонке `Updated` таблицы `## Phase Status` не меньше порога, а кода нет
 или он отличен от `allow`. Скоуп forward-only по дате **item'а**: закрытое до порога не
 диагностируется вовсе — новый гейт не перекрашивает чужие живые планы задним числом.
-После первого non-GREEN phase audit `plan-exec`/`plan-run` может один раз вернуть явно названный
+После первого non-GREEN phase audit `plan-run` может один раз вернуть явно названный
 terminal item в `🟡 In progress` без ре-дизайна, если стабильное ТЗ не менялось и Pre-mutation
 Task Contract остаётся `allow`. Второй audit финальный: его non-GREEN исчерпывает
 `audit_rounds_max`, поэтому следующий item execution получает `LOOP_BUDGET_EXCEEDED` и не создаёт

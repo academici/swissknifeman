@@ -50,7 +50,7 @@ contract conflict с `phase-reentry-justification/v1` → `reopen-phase`; зак
 объявленным target → `priority-fix`. Решение всегда nonterminal и проецируется в status/returns.
 Lint и delivery отклоняют `plan-design` для терминальной фазы без exact re-entry evidence. Delivery
 также отклоняет автоматически сгенерированный `plan-design`, если фаза уже детализирована и имеет
-незавершённый item: следующий шаг тогда `plan-exec`, а не повторный дорогой design pass.
+незавершённый item: следующий шаг тогда `plan-run`, а не повторный дорогой design pass.
 
 ## Плановый протокол без отдельного CORE-скилла
 
@@ -107,10 +107,9 @@ repair, смена item/фазы, generated drift и failed check не обра�
 проверяет terminal receipt текущего subject; scope-complete и cold-start не разрешают закрыть
 незавершённый item. Обычный active continue-root остаётся nonterminal.
 
-В Routing `Exec=plan-run` — совместимое написание существующего `manual`: используется lifecycle
-`plan-exec`, сохраняется provider-attested owner route. Compiler и lint вызывают один
-`task_contract.resolve_exec`; исходная команда хранится отдельно в `declared_exec` и digest.
-Неизвестные spelling и смешение pinned/manual режимов отклоняются.
+In Routing there is one execution mode, `Exec=run`; legacy `plan-exec`, `manual` and `plan-run` resolve to it.
+The compiler and lint call one `task_contract.resolve_exec`; the raw cell is kept in `declared_exec` and
+the digest. Unknown spellings are rejected.
 
 ## Когда допустим Blocked
 
@@ -152,7 +151,7 @@ continuation для owning item той же фазы. Journal/lint/delivery пр
 
 ## Защита от преждевременного final
 
-После terminal journal event и записи `handoff.md` команды `plan-exec`, `plan-run` и `plan-close`
+После terminal journal event и записи `handoff.md` команды `plan-run` и `plan-close`
 вызывают `plan-delivery.py --kind terminal`. Receipt связывает plan/subject, terminal run ID и
 journal pointer, commit, digests plan/handoff/state/closure и точную рекомендацию из сохранённого
 handoff. Нетерминальный state возвращает `FINAL_BEFORE_TERMINAL_FORBIDDEN`; stale handoff —

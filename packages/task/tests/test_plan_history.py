@@ -40,7 +40,7 @@ class PlanHistoryTests(unittest.TestCase):
         (self.plan / "findings" / "P1.1-fixture.md").write_text(
             "---\nitem: P1.1\ndate: 2026-07-02\n---\n\n# Finding\n", encoding="utf-8")
         (self.plan / "journal.jsonl").write_text(
-            '{"ts":"2026-07-02T00:00:00Z","plan_id":"DEMO-V2","item_id":"P1.1","command":"plan-exec","session_id":null,"run_id":null,"attempt":1,"actor":"sonnet/medium","friction":[],"result":"closed-green","cost_usd":null,"num_turns":null,"duration_ms":null,"note":null}\n',
+            '{"ts":"2026-07-02T00:00:00Z","plan_id":"DEMO-V2","item_id":"P1.1","command":"plan-run","session_id":null,"run_id":null,"attempt":1,"actor":"sonnet/medium","friction":[],"result":"closed-green","cost_usd":null,"num_turns":null,"duration_ms":null,"note":null}\n',
             encoding="utf-8")
 
     def tearDown(self):

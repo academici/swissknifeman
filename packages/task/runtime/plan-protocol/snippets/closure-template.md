@@ -6,7 +6,7 @@ opt-in полем `## 0. Meta` плана: `Closure Protocol | v1` — един�
 Плана без поля правило не касается ни одной диагностикой; уже закрытые записи не
 переписываются (SKILL §8, «Отчёт закрытия фазы»).
 
-Пишет phase-closing lifecycle текущего `plan-exec`/`plan-run` либо явно вызванный standalone
+Пишет phase-closing lifecycle текущего `plan-run` либо явно вызванный standalone
 `plan-close <ID> Pn` из полей items/state (пересказ запрещён).
 Читают: `plan_lint` (схема + сверка с `## Phase Status` и Status Board) и `plan-audit <ID> Pn`
 (проверка актуальности evidence bindings; повтор только invalid/changed delta и live boundary,
@@ -20,7 +20,7 @@ opt-in полем `## 0. Meta` плана: `Closure Protocol | v1` — един�
   "plan": "",
   "phase": "P8",
   "closed_at": "2026-07-30",
-  "closed_by": {"command": "plan-exec", "actor": "implementation/medium"},
+  "closed_by": {"command": "plan-run", "actor": "implementation/medium"},
   "phase_status": "🟢 Done",
   "git": {"head_sha": "<40 hex>", "branch": "<ветка>", "dirty": false},
   "inputs_sha256": {"plan.md": "<64 hex>", "phases/P8.md": "<64 hex>"},
@@ -52,7 +52,7 @@ opt-in полем `## 0. Meta` плана: `Closure Protocol | v1` — един�
 | `schema_version` | ровно `1` (число). Иных версий схемы не существует |
 | `plan` / `phase` | совпадают с фактическим PLAN-ID и `Pn` — иначе ERROR линтера |
 | `closed_at` | ISO-дата закрытия фазы (та же, что `Last Updated` в Meta) |
-| `closed_by` | `command` — фактический phase-closing lifecycle (`plan-exec`, `plan-run` или standalone `plan-close`); `actor` — её neutral route `<model class>/<effort>` |
+| `closed_by` | `command` — фактический phase-closing lifecycle (`plan-run` или standalone `plan-close`; legacy `plan-exec` stays readable); `actor` — её neutral route `<model class>/<effort>` |
 | `phase_status` | БАЙТ-В-БАЙТ строка статуса фазы из `## 4. Phase Index & Status Board` |
 | `git` | `head_sha` (40 hex, якорь чисел §8), `branch`, `dirty` (bool — было ли дерево грязным) |
 | `inputs_sha256` | sha256 `plan.md` и `phases/<Pn>.md` на момент закрытия; потребитель — `plan-audit` |

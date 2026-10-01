@@ -20,7 +20,6 @@
     "packages/task/commands/plan-audit.md",
     "packages/task/commands/plan-close.md",
     "packages/task/commands/plan-design.md",
-    "packages/task/commands/plan-exec.md",
     "packages/task/commands/plan-run.md",
     "packages/task/lib/task/plan_lint.py",
     "packages/task/tests/test_canon_literals.py",

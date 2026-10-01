@@ -1,6 +1,6 @@
 # HANDOFF — 2026-08-01 — after P1.2
 
-**Next:** exec-items: task:plan-exec sample-plan P1.1
+**Next:** exec-items: task:plan-run sample-plan P1.1
 
 | Параметр | Значение |
 |:--|:--|
@@ -10,7 +10,7 @@
 | Суть | фикстура — драйвер `plan_reader` читает форму Next |
 
 ````
-/task:plan-exec sample-plan P1.1
+/task:plan-run sample-plan P1.1
 ````
 
 **Done:** фикстура создана (P4.2).

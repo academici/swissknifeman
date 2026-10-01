@@ -66,7 +66,7 @@ class CompilerTests(unittest.TestCase):
         first = compiler.compile_slice(self.root, self.plan, ITEM, sources=clone(sources))
         second = compiler.compile_slice(self.root, self.plan, ITEM, sources=clone(sources))
         self.assertEqual(first["content_hash"], second["content_hash"])
-        self.assertEqual("manual", first["route"]["exec"])
+        self.assertEqual("run", first["route"]["exec"])
         self.assertEqual("implementation", first["route"]["model_class"])
         self.assertEqual("high", first["route"]["effort"])
         self.assertEqual(first["task_contract"]["public_acceptance_ids"], first["scope"]["evidence_refs"])

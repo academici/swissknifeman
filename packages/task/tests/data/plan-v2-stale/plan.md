@@ -30,7 +30,7 @@
 
 | Items | Model class/effort | Exec | Почему |
 |:--|:--|:--|:--|
-| P1.1 | implementation/medium | plan-exec | fixture v2 |
+| P1.1 | implementation/medium | run | fixture v2 |
 
 ## 5. Decision Log
 

@@ -81,22 +81,11 @@
       "aliases": []
     },
     {
-      "command_id": "task:plan-exec",
-      "kind": "plan-protocol",
-      "source": "packages/task/commands/plan-exec.md",
-      "argument_contract": "plan ID and item list",
-      "output_contract": "implementation, validation, closed item and handoff",
-      "routing": {"mode": "fixed", "model_class": "implementation", "effort": "medium"},
-      "capability_requirements": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.git-write"],
-      "plan_semantics": ["statuses", "item-fields", "next", "journal", "commit-topology"],
-      "aliases": []
-    },
-    {
       "command_id": "task:plan-run",
       "kind": "plan-protocol",
       "source": "packages/task/commands/plan-run.md",
-      "argument_contract": "plan ID and manual item list",
-      "output_contract": "the plan-exec lifecycle under the session route",
+      "argument_contract": "plan ID and item list",
+      "output_contract": "implementation, validation, closed item and handoff under the session route",
       "routing": {"mode": "inherited-plan", "model_class": "routing-required", "effort": "routing-required"},
       "capability_requirements": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.git-write"],
       "plan_semantics": ["statuses", "item-fields", "next", "journal", "commit-topology"],

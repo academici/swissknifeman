@@ -209,7 +209,7 @@ class TestCodexConsumerAcceptance(unittest.TestCase):
                          "plugin cache — CODEX_HOME isolation failed")
         installed_path = Path(self.task_install["installedPath"])
         self.assertTrue(installed_path.is_relative_to(self.codex_home), installed_path)
-        for skill_name in ("task-plan-run", "task-plan-exec"):
+        for skill_name in ("task-plan-run",):
             cached = installed_path / "adapters" / "codex" / "skills" / skill_name / "SKILL.md"
             source = REPO_ROOT / "packages" / "task" / "adapters" / "codex" / "skills" / \
                 skill_name / "SKILL.md"

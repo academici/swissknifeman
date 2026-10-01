@@ -155,10 +155,10 @@ class QueueSamplePlanTest(unittest.TestCase):
             items=[("P1.3", "🟡 In progress"), ("P1.1", "🟡 In progress"),
                    ("P1.2", "🟢 Done")],
             routing_rows=[
-                "| P1.1 | implementation/medium | plan-exec | одиночный item |",
-                "| P1.3–P1.5 | implementation/medium | plan-exec | диапазон |",
+                "| P1.1 | implementation/medium | run | одиночный item |",
+                "| P1.3–P1.5 | implementation/medium | run | диапазон |",
             ],
-            next_line="exec-items: task:plan-exec RUN-FIXTURE P1.1",
+            next_line="exec-items: task:plan-run RUN-FIXTURE P1.1",
         )
 
     def tearDown(self):
@@ -175,7 +175,7 @@ class QueueSamplePlanTest(unittest.TestCase):
         for item in result["items"]:
             self.assertTrue(item["drivable"], item)
             self.assertIsNone(item["refusal"])
-            self.assertEqual(item["exec"], "plan-exec")
+            self.assertEqual(item["exec"], "run")
             self.assertEqual(item["route"], {"model_class": "implementation", "effort": "medium"})
         self.assertEqual(result["next_form"]["kind"], "exec-items")
 
@@ -191,8 +191,8 @@ class ExecCellTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = _write_fixture(
                 tmp, plan_id="V2-STATE", item_ids=["P1.1"],
-                routing_rows=["| P1.1 | implementation/medium | plan-exec | тест |"],
-                next_line="exec-items: task:plan-exec V2-STATE P1.1", layout="v2")
+                routing_rows=["| P1.1 | implementation/medium | run | тест |"],
+                next_line="exec-items: task:plan-run V2-STATE P1.1", layout="v2")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
             state = (plan_dir / "phases" / "P1" / "P1.1.state.md").read_text(encoding="utf-8")
         self.assertFalse(result["degraded"], result["degraded_reasons"])
@@ -204,49 +204,75 @@ class ExecCellTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = _write_fixture(
                 tmp, plan_id="V2-BAD-HANDOFF", item_ids=["P1.1"],
-                routing_rows=["| P1.1 | implementation/medium | plan-exec | тест |"],
+                routing_rows=["| P1.1 | implementation/medium | run | тест |"],
                 next_line="unsupported: V2-BAD-HANDOFF P1.1", layout="v2")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
         self.assertTrue(result["degraded"])
         self.assertEqual(result["items"], [])
         self.assertIn("Next не соответствует", result["degraded_reasons"][0])
-    def test_exec_manual_refuses(self):
+    def test_legacy_exec_spellings_are_drivable_as_run(self):
+        for spelling in ("run", "plan-run", "plan-exec", "manual"):
+            with self.subTest(spelling=spelling), tempfile.TemporaryDirectory() as tmp:
+                plan_dir = _write_fixture(
+                    tmp, plan_id="EXEC-SPELLING",
+                    item_ids=["P1.1"],
+                    routing_rows=[f"| P1.1 | implementation/medium | {spelling} | test |"],
+                    next_line="run-items: task:plan-run EXEC-SPELLING P1.1")
+                result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
+                self.assertFalse(result["degraded"], result["degraded_reasons"])
+                item = result["items"][0]
+                self.assertTrue(item["drivable"], item)
+                self.assertEqual(item["exec"], "run")
+
+    def test_legacy_next_form_is_still_read(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = _write_fixture(
-                tmp, plan_id="EXEC-MANUAL",
+                tmp, plan_id="NEXT-LEGACY-FORM",
                 item_ids=["P1.1"],
-                routing_rows=["| P1.1 | implementation/medium | manual | тест |"],
-                next_line="exec-items: task:plan-exec EXEC-MANUAL P1.1")
+                routing_rows=["| P1.1 | implementation/medium | run | test |"],
+                next_line="exec-items: task:plan-exec NEXT-LEGACY-FORM P1.1")
+            result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
+        self.assertFalse(result["degraded"], result["degraded_reasons"])
+        self.assertEqual(result["next_form"]["kind"], "exec-items")
+        self.assertTrue(result["items"][0]["drivable"])
+
+    def test_exec_other_than_run_refuses(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan_dir = _write_fixture(
+                tmp, plan_id="EXEC-DESIGN",
+                item_ids=["P1.1"],
+                routing_rows=["| P1.1 | implementation/medium | plan-design | test |"],
+                next_line="run-items: task:plan-run EXEC-DESIGN P1.1")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
         self.assertFalse(result["degraded"], result["degraded_reasons"])
         item = result["items"][0]
         self.assertFalse(item["drivable"])
-        self.assertEqual(item["refusal"], plan_reader.EXEC_NOT_PLAN_EXEC)
-        self.assertEqual(item["exec"], "manual")
+        self.assertEqual(item["refusal"], plan_reader.EXEC_NOT_RUN)
+        self.assertEqual(item["exec"], "plan-design")
 
     def test_comma_list_items_cell_refuses_both(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = _write_fixture(
                 tmp, plan_id="COMMA-LIST",
                 item_ids=["P1.1", "P1.2"],
-                routing_rows=["| P1.1, P1.2 | implementation/medium | plan-exec | тест |"],
-                next_line="exec-items: task:plan-exec COMMA-LIST P1.1")
+                routing_rows=["| P1.1, P1.2 | implementation/medium | run | тест |"],
+                next_line="exec-items: task:plan-run COMMA-LIST P1.1")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
         self.assertTrue(result["degraded"])
         self.assertIn("вне закрытой грамматики", result["degraded_reasons"][0])
 
-    def test_routing_inconsistent_at_frontier_high(self):
+    def test_frontier_high_route_is_drivable(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = _write_fixture(
-                tmp, plan_id="ROUTE-INCONSISTENT",
+                tmp, plan_id="ROUTE-FRONTIER",
                 item_ids=["P1.1"],
-                routing_rows=["| P1.1 | frontier/high | plan-exec | тест |"],
-                next_line="exec-items: task:plan-exec ROUTE-INCONSISTENT P1.1")
+                routing_rows=["| P1.1 | frontier/high | run | test |"],
+                next_line="run-items: task:plan-run ROUTE-FRONTIER P1.1")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
         self.assertFalse(result["degraded"], result["degraded_reasons"])
         item = result["items"][0]
-        self.assertFalse(item["drivable"])
-        self.assertEqual(item["refusal"], plan_reader.ROUTING_INCONSISTENT)
+        self.assertTrue(item["drivable"], item)
+        self.assertIsNone(item["refusal"])
         self.assertEqual(item["route"], {"model_class": "frontier", "effort": "high"})
 
     def test_routing_unresolved_on_malformed_row(self):
@@ -254,8 +280,8 @@ class ExecCellTest(unittest.TestCase):
             plan_dir = _write_fixture(
                 tmp, plan_id="ROUTE-UNRESOLVED",
                 item_ids=["P1.1"],
-                routing_rows=["| P1.1 | notaslasheffort | plan-exec | тест |"],
-                next_line="exec-items: task:plan-exec ROUTE-UNRESOLVED P1.1")
+                routing_rows=["| P1.1 | notaslasheffort | run | тест |"],
+                next_line="exec-items: task:plan-run ROUTE-UNRESOLVED P1.1")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
         self.assertFalse(result["degraded"], result["degraded_reasons"])
         item = result["items"][0]
@@ -271,8 +297,8 @@ class NextFormTest(unittest.TestCase):
             plan_dir = _write_fixture(
                 tmp, plan_id="NEXT-LEGACY",
                 item_ids=["P1.1"],
-                routing_rows=["| P1.1 | implementation/medium | plan-exec | тест |"],
-                next_line="/task:plan-exec NEXT-LEGACY P1.1")
+                routing_rows=["| P1.1 | implementation/medium | run | тест |"],
+                next_line="/task:plan-run NEXT-LEGACY P1.1")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
         self.assertFalse(result["degraded"], result["degraded_reasons"])
         self.assertIsNone(result["next_form"]["kind"])
@@ -323,9 +349,9 @@ class RoutingMatcherDriftTest(unittest.TestCase):
 
 | Items | Model class/effort | Exec | Почему |
 |:--|:--|:--|:--|
-| P9.1 | implementation/medium | plan-exec | одиночная форма |
-| P9.2-P9.4 | implementation/medium | plan-exec | диапазон, покрывает P9.3 |
-| P9.5, P9.6 | implementation/medium | plan-exec | список через запятую — нелегален |
+| P9.1 | implementation/medium | run | одиночная форма |
+| P9.2-P9.4 | implementation/medium | run | диапазон, покрывает P9.3 |
+| P9.5, P9.6 | implementation/medium | run | список через запятую — нелегален |
 
 ## 4. Дальше секция
 """.splitlines()

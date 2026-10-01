@@ -176,8 +176,8 @@ GREEN.
 2. Установка `task@swissknifeman` в изолированный temp `CODEX_HOME` + сверка кэша
    байт-в-байт с исходником, без касания реального `~/.codex`.
 3. `codex debug prompt-input` (офлайн-рендер prompt'а модели, без сети/auth) из temp
-   consumer-каталога ВНЕ репозитория — подтверждает, что `task-plan-run`/`task-plan-exec`
-   видны по имени и резолвятся из изолированного кэша, а не из репозиторного
+   consumer-каталога ВНЕ репозитория — подтверждает, что `task-plan-run`
+   виден по имени и резолвится из изолированного кэша, а не из репозиторного
    `.agents/skills` (последнее — доказанный источник ложного GREEN, см. тест
    `test_repo_local_skills_would_mask_a_real_publication_failure`: тот же прогон из корня
    репозитория действительно подмешивает `.agents/skills` в discovery).

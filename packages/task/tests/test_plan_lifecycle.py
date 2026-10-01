@@ -12,7 +12,7 @@ class PlanLifecycleTests(unittest.TestCase):
         self.assertEqual(result.projections, ("state", "handoff"))
         self.assertEqual(result.commits, 1)
         self.assertEqual(result.context, "continue-root")
-        self.assertEqual(result.semantic_next, "exec-items")
+        self.assertEqual(result.semantic_next, "run-items")
 
     def test_every_hard_boundary_widens(self):
         for risk in ("security-auth", "destructive-migration", "irreversible-external",

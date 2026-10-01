@@ -86,6 +86,6 @@ def select(data: LifecycleInput) -> LifecycleSelection:
         projections=tuple(dict.fromkeys(data.changed_projections)),
         commits=2 if data.ownership_boundary or data.session_boundary else 1,
         context="cold-start-root" if data.session_boundary else "continue-root",
-        semantic_next="waiting" if data.release_or_authority else "exec-items",
+        semantic_next="waiting" if data.release_or_authority else "run-items",
         foreign_baseline=("gating" if data.foreign_baseline_intersects else "visible-non-gating"),
     )

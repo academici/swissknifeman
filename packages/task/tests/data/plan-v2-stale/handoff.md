@@ -1,6 +1,6 @@
 # HANDOFF — 2026-07-02 — after P1.1
 
-**Next:** /task:plan-exec plan-v2 P1.1
+**Next:** /task:plan-run plan-v2 P1.1
 
 | Параметр | Значение |
 |:--|:--|
@@ -10,7 +10,7 @@
 | Суть | закрыть следующий item |
 
 ````
-/task:plan-exec plan-v2 P1.1
+/task:plan-run plan-v2 P1.1
 ````
 
 **Done:** P1.1 закрыт.

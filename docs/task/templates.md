@@ -21,7 +21,7 @@
 
 - **Новый план / фаза** — не собирать руками: `/task:plan-design` разворачивает
   `plan-template.md` и `phase-template.md` сам.
-- **Handoff** — `plan-exec`/`plan-close` перезаписывают `handoff.md` по
+- **Handoff** — `plan-run`/`plan-close` перезаписывают `handoff.md` по
   `handoff-template.md`; блок Next обязан быть launch-block'ом
   (`launch-block-template.md`) — проверяется `plan-lint`.
 - **Code Guidance item'а** — формулировки не изобретаются: берётся подходящий паттерн из

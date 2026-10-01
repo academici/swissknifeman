@@ -26,7 +26,7 @@ No live target write, activation, apply authority, MCP start, hook start or work
 | source:configs/cursor/config/profile-bindings.json | `sha256:8772a33bbdf9d5082bc12457d135e2a29c3faf945a5f8f3c11a9954695bf1594` |
 | source:configs/cursor/hooks/lifecycle-context-bindings.json | `sha256:d7d7b241afd84add521435197c86b98904d63bd2ea8825d3b513a8bf9af19273` |
 | source:configs/cursor/mcp/bindings.json | `sha256:c4a5b15e4417cdf05da6cd6130b05890b3feca860c09cb19342754f776a218a6` |
-| render-manifest:all-provider-qualified-outputs | `sha256:52d027f2bf980d490718f9d4b8165e8b76b195351435c46793bfd6408917588c` |
+| render-manifest:all-provider-qualified-outputs | `sha256:4fb70755e68949afd6c0d0ddbb1461f1dc04aa61edf4d2a7dbe158b4d2354d9b` |
 
 The read-only JSON report retains every individual provider-qualified render hash; this manifest hash covers all of them deterministically.
 

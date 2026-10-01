@@ -9,7 +9,7 @@ Apply only when the owner explicitly invokes Task or attaches this manual rule.
 Ordinary requests and existing plan files do not activate Task.
 
 - Fixed economy commands: none.
-- Fixed implementation commands: `task:dev`, `task:fix`, `task:make-workflow`, `task:plan-close`, `task:plan-exec`, `task:review`.
+- Fixed implementation commands: `task:dev`, `task:fix`, `task:make-workflow`, `task:plan-close`, `task:review`.
 - Fixed frontier commands: `task:design`, `task:plan-audit`, `task:plan-design`, `task:research`.
 - Model selectors: economy=composer-2.5-fast, implementation=composer-2.5, frontier=claude-opus-5-thinking-high.
 - Never replace fixed frontier or fixed implementation routes with `auto`.

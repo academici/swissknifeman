@@ -79,7 +79,7 @@ class LifecycleScenarios(unittest.TestCase):
             plan_bundle.build(plan, 'P1.1')
             handoff = plan / 'handoff.md'
             handoff.write_text(handoff.read_text().replace(
-                '/task:plan-exec SCENARIO P1.1', '/task:plan-exec SCENARIO P2.1'))
+                '/task:plan-run SCENARIO P1.1', '/task:plan-run SCENARIO P2.1'))
             (plan / 'journal.jsonl').write_text('')
             plan_item_state.build_states(plan, item_id='P1.1')
             (root / 'validate.py').write_text("from pathlib import Path; assert Path('result.txt').read_text() == 'after\\n'\n")
@@ -139,7 +139,7 @@ class LifecycleScenarios(unittest.TestCase):
                 writes_before_rebuild = writes.call_count
                 plan_item_state.build_states(plan, item_id='P1.1')
                 self.assertEqual(writes.call_count, writes_before_rebuild)
-                self.assertEqual(receipt['next_exact'], '/task:plan-exec SCENARIO P2.1')
+                self.assertEqual(receipt['next_exact'], '/task:plan-run SCENARIO P2.1')
                 self.assertIsNotNone(receipt['digests']['closure'])
             run('git', 'add', '.')
             run('git', 'commit', '-qm', 'fix: результат и evidence')
@@ -317,7 +317,7 @@ class LifecycleScenarios(unittest.TestCase):
             core.write_text(core.read_text().replace('## 3. Routing\n\n',
                 '## 3. Routing\n\n| Batch | Items | Model class/effort | Exec | Review | Почему |\n'
                 '|:--|:--|:--|:--|:--|:--|\n'
-                '| B1 | P1.1–P1.2 | implementation/high | manual | light | recommended: independent |\n'))
+                '| B1 | P1.1–P1.2 | implementation/high | run | light | recommended: independent |\n'))
             (plan / 'journal.jsonl').write_text('')
             for item in ('P1.1', 'P1.2'):
                 plan_item_state.build_states(plan, item_id=item)

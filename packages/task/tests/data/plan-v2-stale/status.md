@@ -42,8 +42,8 @@ generated_by: task plan-views status
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
-| 2026-07-02 | sonnet/medium | plan-exec · closed-green · closure fixture |
-| 2026-07-03 | sonnet/medium | plan-exec · in-progress · fixture remains live |
+| 2026-07-02 | sonnet/medium | plan-run · closed-green · closure fixture |
+| 2026-07-03 | sonnet/medium | plan-run · in-progress · fixture remains live |
 
 ## Owner Gates
 

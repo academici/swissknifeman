@@ -62,7 +62,7 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             "## 3. Routing\n\n"
             "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
-            f"| solo | {items} | implementation/high | manual | {review} | test |\n",
+            f"| solo | {items} | implementation/high | run | {review} | test |\n",
             encoding="utf-8",
         )
         phase = plan / "phases" / "P1"
@@ -120,7 +120,7 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             route.write_text(route.read_text(encoding="utf-8") + (
                 "\n| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
                 "|:--|:--|:--|:--|:--|:--|\n"
-                "| solo | P1.1 | implementation/high | manual | full | duplicate |\n"),
+                "| solo | P1.1 | implementation/high | run | full | duplicate |\n"),
                 encoding="utf-8")
             snapshot = self._candidate()
             policy = plan_gates.phase_audit_policy(
@@ -862,7 +862,7 @@ class LoopBudgetFromCommittedTests(unittest.TestCase):
         entries = [
             {"command": "plan-audit", "note": "recurring: lib/foo.py:10-20 unresolved"},
             {"command": "plan-audit", "note": "recurring: lib/foo.py:10-20 unresolved (2)"},
-            {"command": "plan-exec", "note": "lib/foo.py:10-20 mentioned in passing"},
+            {"command": "plan-run", "note": "lib/foo.py:10-20 mentioned in passing"},
         ]
         with open(self.plan_dir / "journal.jsonl", "w", encoding="utf-8") as fh:
             for e in entries:

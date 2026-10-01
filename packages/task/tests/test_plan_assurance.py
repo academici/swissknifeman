@@ -145,7 +145,7 @@ class PhaseAssuranceTests(unittest.TestCase):
         plan = self.plan()
         snapshot = candidate(statuses=("🔴 Blocked",))
         result = plan_assurance.evaluate(plan, "P1", candidate=snapshot)
-        self.assertEqual(result["next_exact"], "exec-items: task:plan-run P P1.1")
+        self.assertEqual(result["next_exact"], "run-items: task:plan-run P P1.1")
         gate = plan_gates.phase_close_gate(
             plan, "P1", candidate_snapshot=snapshot,
             candidate_fingerprint=plan_gates._candidate_snapshot_fingerprint(snapshot))

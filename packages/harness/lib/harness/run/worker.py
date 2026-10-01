@@ -23,7 +23,7 @@ CLAUDE_BIN_ENV = "SKM_CLAUDE_BIN"
 
 
 PROVIDER_ID = "claude-code"
-WORKER_COMMAND_ID = "task:plan-exec"
+WORKER_COMMAND_ID = "task:plan-run"
 
 
 

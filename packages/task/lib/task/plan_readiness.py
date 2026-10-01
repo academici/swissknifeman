@@ -537,7 +537,7 @@ def validate_design_handoff_target(plan_dir, phase_id: str) -> None:
     terminal = {"🟢 Done", "🟠 Done with deviations", "⛔ Skipped by decision"}
     if any(status not in terminal for status in states):
         raise ReadinessError(
-            f"PLAN_DESIGN_NOT_NEEDED: phase {phase_id} already has detailed unfinished items; use plan-exec")
+            f"PLAN_DESIGN_NOT_NEEDED: phase {phase_id} already has detailed unfinished items; use plan-run")
 
 
 def terminal_projection(record: dict, *, plan_dir: Path | None = None) -> dict:

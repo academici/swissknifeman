@@ -68,7 +68,7 @@ class TestBriefLayer(TmpPlanTestCase):
         lines = [line for line in text.splitlines()
                  if (not line.startswith("|") or line.startswith("| Context |"))
                  and not line.startswith("```")
-                 and not line.startswith("/task:plan-exec")]
+                 and not line.startswith("/task:plan-run")]
         handoff.write_text("\n".join(lines) + "\n", encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "Next без launch-block"), [], diag.errors)
@@ -94,10 +94,10 @@ class TestBriefLayer(TmpPlanTestCase):
         text = text.replace(
             "| Суть | закрыть следующий item |\n",
             "| Суть | закрыть следующий item |\n"
-            "| Команда | `/task:plan-exec 2026.07.16-DEMO P1.1` |\n",
+            "| Команда | `/task:plan-run 2026.07.16-DEMO P1.1` |\n",
         )
         lines = [ln for ln in text.splitlines() if "```" not in ln
-                 and not ln.startswith("/task:plan-exec")]
+                 and not ln.startswith("/task:plan-run")]
         handoff.write_text("\n".join(lines) + "\n", encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "Next без launch-block"), [], diag.errors)
@@ -118,7 +118,7 @@ class TestBriefLayer(TmpPlanTestCase):
         text = text.replace(
             "| Суть | закрыть следующий item |\n",
             "| Суть | закрыть следующий item |\n"
-            "| Команда | `/task:plan-exec 2026.07.16-DEMO P1.1` |\n",
+            "| Команда | `/task:plan-run 2026.07.16-DEMO P1.1` |\n",
         )
         handoff.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
@@ -651,7 +651,7 @@ class TestAuditTerminalPolicy(TmpPlanTestCase):
         plan = write_valid_plan(self.root, plan_id="2026.09.09-№1-DEMO-REENTRY-LINT")
         handoff = plan / "handoff.md"
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
-            "/task:plan-exec 2026.09.09-№1-DEMO-REENTRY-LINT P1.1",
+            "/task:plan-run 2026.09.09-№1-DEMO-REENTRY-LINT P1.1",
             "/task:plan-design 2026.09.09-№1-DEMO-REENTRY-LINT P1"), encoding="utf-8")
 
         _, diag = _lint(plan)

@@ -2295,8 +2295,8 @@
       "path": "skills/general/plan-protocol/SKILL.md",
       "version": "2.38.0",
       "description": "Use when an explicitly invoked Task plan command needs a schema reference.",
-      "sha256": "fceb21212998289051308f39cac2ad5439deb9a68f9634088052c11670604d79",
-      "content_sha256": "d0b921eb8b18683d8db9476b52663f07ec6f1f01283899c4eacd0ffc1b4af42b",
+      "sha256": "c7bb7dce52c0f279294f912f2d8efa94186edee72bb7ddd46186d9603cfe8012",
+      "content_sha256": "548341ebc9f0d3257f96ac74863b0031b5b05f0f2c97521361adb286f205c0d7",
       "tags": [
         "workflow",
         "planning",

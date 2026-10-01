@@ -41,7 +41,7 @@ class CodexCommandAdapterTests(unittest.TestCase):
             self.assertEqual(render_invocation(records[command_id], arguments, self.mapping), expected)
         plan = self.render()
         self.assertTrue(plan.ok)
-        self.assertEqual(len(plan.artifacts), 35)
+        self.assertEqual(len(plan.artifacts), 32)
         paths = {artifact.path for artifact in plan.artifacts}
         self.assertIn("packages/task/.codex-plugin/plugin.json", paths)
         policies = [artifact for artifact in plan.artifacts if artifact.path.endswith("/agents/openai.yaml")]
@@ -71,12 +71,12 @@ class CodexCommandAdapterTests(unittest.TestCase):
             self.assertIn(record.source.content_hash.encode(), runtime)
 
     def test_task_runtime_paths_are_provider_specific_and_never_project_relative(self):
-        canonical = self.catalog.content_for("task:plan-exec").decode("utf-8")
+        canonical = self.catalog.content_for("task:plan-run").decode("utf-8")
         self.assertIn("task.plan_lifecycle", canonical)
         self.assertNotIn("PYTHONPATH=packages/task/lib", canonical)
         codex_runtime = next(
             artifact.managed_bytes.decode("utf-8") for artifact in self.render().artifacts
-            if artifact.path.endswith("/task-plan-exec/command.md"))
+            if artifact.path.endswith("/task-plan-run/command.md"))
         self.assertIn("codex plugin marketplace list --json", codex_runtime)
         self.assertIn("packages/task/lib/task", codex_runtime)
         self.assertIn('export TASK_CODEX_PLUGIN_ROOT="$(codex plugin marketplace', codex_runtime)
@@ -89,7 +89,7 @@ class CodexCommandAdapterTests(unittest.TestCase):
 
     def test_plan_runtime_requires_a_native_launch_only_at_a_real_boundary(self):
         plan_commands = {
-            "plan-design", "plan-exec", "plan-run", "plan-audit", "plan-close",
+            "plan-design", "plan-run", "plan-audit", "plan-close",
         }
         runtimes = {
             artifact.path.rsplit("/task-", 1)[1].removesuffix("/command.md"):
@@ -141,7 +141,7 @@ class CodexCommandAdapterTests(unittest.TestCase):
 
     def test_every_plan_runtime_binds_route_to_provider_thread_state(self):
         plan_commands = (
-            "plan-exec", "plan-run", "plan-audit", "plan-close",
+            "plan-run", "plan-audit", "plan-close",
         )
         runtimes = {
             artifact.path.rsplit("/task-", 1)[1].removesuffix("/command.md"):
@@ -162,7 +162,7 @@ class CodexCommandAdapterTests(unittest.TestCase):
 
     def test_plan_runtimes_do_not_reintroduce_the_retired_route_recipe(self):
         plan_commands = (
-            "plan-design", "plan-exec", "plan-run", "plan-audit", "plan-close",
+            "plan-design", "plan-run", "plan-audit", "plan-close",
         )
         runtimes = {
             artifact.path.rsplit("/task-", 1)[1].removesuffix("/command.md"):

@@ -150,7 +150,6 @@ _PUBLIC_REASON_EXACT = {
     "OWNER_ATTESTATION_REPLAYED": "conflict",
     "OWNER_ATTESTATION_UNSUPPORTED": "policy-denied",
     "AUTHORITY_PROVIDER_UNAVAILABLE": "policy-denied",
-    "ECONOMY_ROUTE_OVERSHOOT": "policy-denied",
     "P5_DECISION_DIGEST_MISMATCH": "evidence-forged",
     "P5_DECISION_OBSERVATION_UNVERIFIED": "evidence-missing",
     "P5_DECISION_POLICY_ERROR": "policy-denied",
@@ -851,14 +850,21 @@ _ROUTING_HEADER_CANDIDATES = (_ROUTING_HEADER_CANON,)
 _EXECUTABLE_ROUTING_COLUMNS = (
     "Batch", "Items", "Model class/effort", "Exec", "Review", "Почему",
 )
-def resolve_exec(value: str) -> str:
-    """Resolve command spelling to execution mode without changing route authority.
+# Canonical Exec spellings; the rest are legacy aliases of `run`.
+EXEC_MODE_RUN = "run"
+EXEC_MODE_DESIGN = "plan-design"
+_EXEC_MODES = {"run": EXEC_MODE_RUN, "plan-run": EXEC_MODE_RUN,
+               "plan-exec": EXEC_MODE_RUN, "manual": EXEC_MODE_RUN,
+               "plan-design": EXEC_MODE_DESIGN}
 
-    plan-run shares plan-exec lifecycle but retains manual/owner route semantics.
-    The raw Routing cell stays in the table digest and item projection.
+
+def resolve_exec(value: str) -> str:
+    """Resolve a Routing `Exec` cell to its one execution mode (`run` or `plan-design`).
+
+    Legacy `plan-exec`/`manual`/`plan-run` resolve to `run`; the raw cell stays in the
+    table digest and item projection.
     """
-    modes = {"plan-exec": "plan-exec", "manual": "manual",
-             "plan-run": "manual", "plan-design": "plan-design"}
+    modes = _EXEC_MODES
     try:
         return modes[value.strip()]
     except (KeyError, AttributeError) as exc:
@@ -1419,7 +1425,7 @@ def _find_routing_row(plan_lint_mod, plan_lines, item_id: str, routing_metadata:
 
 def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_privacy=None,
          protected_transition=None,
-         next_form="exec-items", next_context=None,
+         next_form="run-items", next_context=None,
          next_origin="approved-goal", next_changed_by=None, carrier=None,
          routing_config_path=None, admission_route=None) -> dict:
     """Task Contract v1 producer — compiles `phases/Pn.md` + `plan.md`
@@ -1618,9 +1624,9 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
 
     plan_id = plan_dir.name
     if carrier is None:
-        carrier = f"task:plan-exec {plan_id} {item_id}"
-    claude_render = f"/task:plan-exec {plan_id} {item_id}"
-    codex_render = f"$ task:plan-exec {plan_id} {item_id}"
+        carrier = f"task:plan-run {plan_id} {item_id}"
+    claude_render = f"/task:plan-run {plan_id} {item_id}"
+    codex_render = f"$ task:plan-run {plan_id} {item_id}"
 
     phase_lines = plan_lint._read_lines(phase_path) or []
     observed_rounds = _count_audit_rounds(plan_dir, phase_lines, phase_token)
@@ -1659,7 +1665,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
             "execution_inputs": execution_inputs,
             "provenance_only": [],
             "privacy": bundle_privacy,
-            "semantic_carrier": "task:plan-exec",
+            "semantic_carrier": "task:plan-run",
             "provider_renderers": {"claude": claude_render, "codex": codex_render},
         },
         "conflicts": [],

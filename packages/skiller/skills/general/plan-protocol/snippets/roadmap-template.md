@@ -26,16 +26,16 @@
 
 | Command | Unified route | Review |
 |:--|:--|:--|
-| `task:plan-exec <PLAN-ID> P0.1 P0.2` | `implementation/medium` | `light` |
+| `task:plan-run <PLAN-ID> P0.1 P0.2` | `implementation/medium` | `light` |
 | `task:plan-run <PLAN-ID> P1.1` | `frontier/high` | `full` |
 
 ## Карта исполнения
 
 | Item | Batch | Запуск | Model class/Effort | Гейт владельца | Примечание |
 |---|---|---|---|---|---|
-| P0.1 | B1 | plan-exec серия | implementation/medium | — | ready adjacent scope |
+| P0.1 | B1 | plan-run series | implementation/medium | — | ready adjacent scope |
 | P0.2 | B1 | ↑ | implementation/medium | — | shared validation boundary |
-| P1.1 | solo | plan-run (manual) | frontier/high | ✅ утверждение матрицы | owner gate исключает безопасную цепочку |
+| P1.1 | solo | plan-run | frontier/high | ✅ утверждение матрицы | owner gate исключает безопасную цепочку |
 | P2.1–P2.3 | W1 | orchestration | implementation/medium | — | independent scope and declared capability |
 | … | | | | | |
 
@@ -53,12 +53,11 @@
 | Суть | Серия <Pn.a>–<Pn.b> одной сессией, гейты между items — внутри сессии |
 
 ```
-exec-items: task:plan-exec <PLAN-ID> <Pn.a> <Pn.b> <Pn.c>
+run-items: task:plan-run <PLAN-ID> <Pn.a> <Pn.b> <Pn.c>
 ```
 
-<!-- Батч-серии — ТОЛЬКО через plan-exec (список items): её минимум
-     implementation/medium — жёсткий гейт тира. task:plan-run — inherited-plan,
-     для manual design-items под проверенным route сессии. -->
+<!-- Batch series go through plan-run (item list); it takes the minimum route from the
+     plan's Routing row and runs under the verified session route. -->
 
 ### W1 — <суть workflow-группы>
 

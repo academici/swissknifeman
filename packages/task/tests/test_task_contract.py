@@ -652,15 +652,13 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
 
 
 class AuthorityCommandBoundaryTests(unittest.TestCase):
-    """Both write-sites consume the compiler; plan-run inherits rather than forks it."""
+    """Both write-sites consume the compiler; plan-run is the single execution command."""
 
-    def test_plan_exec_boundaries_and_plan_run_share_the_checked_compiler(self):
-        exec_text = (REPO_ROOT / "packages/task/commands/plan-exec.md").read_text(encoding="utf-8")
+    def test_plan_run_boundaries_use_the_checked_compiler(self):
         run_text = (REPO_ROOT / "packages/task/commands/plan-run.md").read_text(encoding="utf-8")
-        self.assertIn("task_contract", exec_text)
-        self.assertNotIn("authority_granted", exec_text)
-        self.assertNotIn("authority_granted_by", exec_text)
-        self.assertIn("canonical `task:plan-exec` lifecycle", run_text)
+        self.assertIn("task_contract", run_text)
+        self.assertNotIn("authority_granted", run_text)
+        self.assertNotIn("authority_granted_by", run_text)
 
 
 class SliceTests(unittest.TestCase):
@@ -692,7 +690,7 @@ class ColdStartTests(unittest.TestCase):
 
     def test_carrier_mismatch_blocks(self):
         base = _load_base_contract()
-        base["cold_start"]["carrier"] = "task:plan-exec 2026.07.24-DEMO-PLAN P9.9"
+        base["cold_start"]["carrier"] = "task:plan-run 2026.07.24-DEMO-PLAN P9.9"
         contract = _rehashed(base)
         self.assertEqual(task_contract.pre_mutation(contract), "COLD_START_INCOMPLETE")
 
@@ -912,7 +910,7 @@ class EvaluateFindingHookTests(unittest.TestCase):
 def _routing_row(model_effort="implementation/medium"):
     return (f"\n\n| Items | Model class/effort | Exec | Почему |\n"
            f"|:--|:--|:--|:--|\n"
-           f"| P1.1 | {model_effort} | plan-exec | test |\n")
+           f"| P1.1 | {model_effort} | run | test |\n")
 
 
 class BuildFixtureTests(unittest.TestCase):
@@ -1050,7 +1048,7 @@ class BuildFixtureTests(unittest.TestCase):
                 "| Codex | gpt-5.6-terra | implementation |\n\n"
                 "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
                 "|:--|:--|:--|:--|:--|:--|\n"
-                "| solo | P1.1 | implementation/high | plan-exec | full | test |\n")
+                "| solo | P1.1 | implementation/high | run | full | test |\n")
             plan_md = (plan / "plan.md").read_text(encoding="utf-8").replace(
                 "## 3. Routing\n\n", "## 3. Routing\n\n" + routing)
             (plan / "plan.md").write_text(plan_md, encoding="utf-8")
@@ -1090,7 +1088,7 @@ class BuildFixtureTests(unittest.TestCase):
 def _routing_row_with_header(header, model_effort="implementation/medium", items="P1.1"):
     return (f"\n\n| Items | {header} | Exec | Почему |\n"
            f"|:--|:--|:--|:--|\n"
-           f"| {items} | {model_effort} | plan-exec | test |\n")
+           f"| {items} | {model_effort} | run | test |\n")
 
 
 class RoutingFormTests(unittest.TestCase):
@@ -1388,7 +1386,7 @@ class BatchRoutingAdmissionTests(unittest.TestCase):
         routing = (
             "\n\n| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
-            "| B1 | P1.1–P1.3 | implementation/high | manual | full | test |\n")
+            "| B1 | P1.1–P1.3 | implementation/high | run | full | test |\n")
         plan = fixtures.plan_md("BATCH-DEMO").replace("## 3. Routing\n\n", "## 3. Routing" + routing)
         (self.plan_dir / "plan.md").write_text(plan, encoding="utf-8")
         (self.plan_dir / "journal.jsonl").write_text("", encoding="utf-8")
@@ -1396,12 +1394,13 @@ class BatchRoutingAdmissionTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_plan_run_alias_preserves_owner_mode_route_and_admission(self):
+    def test_exec_spellings_resolve_to_one_mode_route_and_admission(self):
         path = self.plan_dir / "plan.md"
         baseline = task_contract.compile_batch_routing(self.plan_dir)
-        path.write_text(path.read_text().replace("| manual |", "| plan-run |"))
+        self.assertEqual(baseline["batches"]["B1"]["exec"], "run")
+        path.write_text(path.read_text().replace("| run |", "| plan-run |"))
         compiled = task_contract.compile_batch_routing(self.plan_dir)
-        self.assertEqual(compiled["batches"]["B1"]["exec"], "manual")
+        self.assertEqual(compiled["batches"]["B1"]["exec"], "run")
         self.assertEqual(compiled["items"]["P1.1"]["declared_exec"], "plan-run")
         self.assertEqual(compiled["batches"]["B1"]["route"], baseline["batches"]["B1"]["route"])
         self.assertNotEqual(compiled["routing_digest"], baseline["routing_digest"])
@@ -1430,7 +1429,7 @@ class BatchRoutingAdmissionTests(unittest.TestCase):
                          "evidence_ids": ["test:terminal"]}],
         )
         journal.append(self.plan_dir, journal.new_entry(
-            plan_id=self.plan_dir.name, item_id="P1.1", command="plan-exec",
+            plan_id=self.plan_dir.name, item_id="P1.1", command="plan-run",
             actor="implementation/high", result="closed-green", decision=decision,
         ))
         plan_item_state.build_states(self.plan_dir, item_id="P1.1",
@@ -1513,9 +1512,9 @@ class BatchRoutingAdmissionTests(unittest.TestCase):
 
     def test_request_across_groups_is_ambiguous(self):
         plan = (self.plan_dir / "plan.md").read_text(encoding="utf-8").replace(
-            "| B1 | P1.1–P1.3 | implementation/high | manual | full | test |",
-            "| solo | P1.1 | implementation/high | manual | full | test |\n"
-            "| B1 | P1.2–P1.3 | implementation/high | manual | full | test |")
+            "| B1 | P1.1–P1.3 | implementation/high | run | full | test |",
+            "| solo | P1.1 | implementation/high | run | full | test |\n"
+            "| B1 | P1.2–P1.3 | implementation/high | run | full | test |")
         (self.plan_dir / "plan.md").write_text(plan, encoding="utf-8")
         self.assertEqual(task_contract.admit_batch(self.plan_dir, ("P1.1", "P1.2"))["verdict"],
                          "BATCH_AMBIGUOUS")
@@ -1523,10 +1522,10 @@ class BatchRoutingAdmissionTests(unittest.TestCase):
     def test_admission_route_uses_batch_maximum_for_the_first_item(self):
         path = self.plan_dir / "plan.md"
         path.write_text(path.read_text(encoding="utf-8").replace(
-            "| B1 | P1.1–P1.3 | implementation/high | manual | full | test |",
-            "| B1 | P1.1 | implementation/medium | manual | none | recommended: shared |\n"
-            "| B1 | P1.2 | frontier/high | manual | full | recommended: hard seam |\n"
-            "| B1 | P1.3 | implementation/high | manual | light | recommended: shared |"),
+            "| B1 | P1.1–P1.3 | implementation/high | run | full | test |",
+            "| B1 | P1.1 | implementation/medium | run | none | recommended: shared |\n"
+            "| B1 | P1.2 | frontier/high | run | full | recommended: hard seam |\n"
+            "| B1 | P1.3 | implementation/high | run | light | recommended: shared |"),
             encoding="utf-8")
         compiled = task_contract.compile_batch_routing(self.plan_dir)
         batch_route = compiled["batches"]["B1"]["route"]
@@ -1550,7 +1549,7 @@ class ExecutableRoutingTableTests(unittest.TestCase):
         self.routing = (
             "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
-            "| solo | P1.1 | implementation/high | manual | light | test |\n")
+            "| solo | P1.1 | implementation/high | run | light | test |\n")
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -1563,7 +1562,6 @@ class ExecutableRoutingTableTests(unittest.TestCase):
 
     def test_pinned_bounded_route_accepts_stronger_model_and_records_over(self):
         from task import route_evidence
-        self.routing = self.routing.replace("manual", "plan-exec")
         self._write_routing()
         actual = route_evidence.capture_actual("frontier", "xhigh", source="provider-thread-state", model="gpt-test")
         task_contract.build(self.plan_dir, "P1.1", actual_route=actual)
@@ -1573,14 +1571,14 @@ class ExecutableRoutingTableTests(unittest.TestCase):
 
     def test_declared_frontier_route_has_no_economy_ceiling(self):
         from task import route_evidence
-        self.routing = self.routing.replace("manual", "plan-exec").replace("implementation/high", "frontier/high")
+        self.routing = self.routing.replace("implementation/high", "frontier/high")
         self._write_routing()
         actual = route_evidence.capture_actual("frontier", "xhigh", source="provider-thread-state", model="gpt-test")
         task_contract.build(self.plan_dir, "P1.1", actual_route=actual)
 
     def test_recommended_batch_accepts_a_stronger_route(self):
         from task import route_evidence
-        self.routing = self.routing.replace("manual", "plan-exec").replace("| test |", "| recommended: test |")
+        self.routing = self.routing.replace("| test |", "| recommended: test |")
         self._write_routing()
         actual = route_evidence.capture_actual("frontier", "xhigh", source="provider-thread-state", model="gpt-test")
         task_contract.build(self.plan_dir, "P1.1", actual_route=actual)
@@ -1604,7 +1602,7 @@ class ExecutableRoutingTableTests(unittest.TestCase):
 
     def test_duplicate_item_refuses_from_the_same_compiler(self):
         self._write_routing(
-            "| solo | P1.1 | implementation/high | manual | full | duplicate |\n")
+            "| solo | P1.1 | implementation/high | run | full | duplicate |\n")
         with self.assertRaisesRegex(task_contract.TaskContractBuildError,
                                     "item is assigned more than once"):
             task_contract.compile_batch_routing(self.plan_dir)

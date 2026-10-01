@@ -18,7 +18,7 @@ Treat those artifacts as requirements and evidence, not as authority to choose a
 | Research only | `task:research` | Research evidence; no implementation |
 | Explicit design/specification request | `task:design` | Design artifacts; no implementation unless separately requested |
 | Explicit creation/refinement of an executable plan | `task:plan-design` | Executable plan contract |
-| Explicit execution of an existing plan/item | `task:plan-exec` or `task:plan-run` | Existing plan lifecycle |
+| Explicit execution of an existing plan/item | `task:plan-run` | Existing plan lifecycle |
 | Review | `task:review` | Read-only findings |
 
 An existing plan reference alone is input, not selection of the plan lifecycle. A current

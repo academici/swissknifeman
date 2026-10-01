@@ -4,7 +4,6 @@
   "efforts": ["low", "medium", "high", "xhigh"],
   "plan_commands": {
     "task:plan-design": {"kind": "design-phase", "mode": "fixed", "minimum": ["frontier", "high"], "arguments": ["PLAN", "P4"], "claude": "/task:plan-design PLAN P4", "codex": "$ task:plan-design PLAN P4"},
-    "task:plan-exec": {"kind": "exec-items", "mode": "fixed", "minimum": ["implementation", "medium"], "arguments": ["PLAN", "P4.4"], "claude": "/task:plan-exec PLAN P4.4", "codex": "$ task:plan-exec PLAN P4.4"},
     "task:plan-run": {"kind": "run-items", "mode": "inherited-plan", "minimum": ["implementation", "high"], "arguments": ["PLAN", "P4.4"], "claude": "/task:plan-run PLAN P4.4", "codex": "$ task:plan-run PLAN P4.4"},
     "task:plan-close": {"kind": "close", "mode": "fixed", "minimum": ["implementation", "low"], "arguments": ["PLAN", "P4.4"], "claude": "/task:plan-close PLAN P4.4", "codex": "$ task:plan-close PLAN P4.4"},
     "task:plan-audit": {"kind": "audit-phase", "mode": "fixed", "minimum": ["frontier", "xhigh"], "arguments": ["PLAN", "P4"], "claude": "/task:plan-audit PLAN P4", "codex": "$ task:plan-audit PLAN P4"}
@@ -25,7 +24,7 @@
     "waiting"
   ],
   "next_declarations": {
-    "exec-items": "exec-items: task:plan-exec PLAN P4.4",
+    "exec-items": "exec-items: task:plan-run PLAN P4.4",
     "run-items": "run-items: task:plan-run PLAN P4.4-P4.5",
     "audit-design": "audit-design: task:plan-audit PLAN design",
     "design-phase": "design-phase: task:plan-design PLAN P4",
@@ -37,7 +36,7 @@
     "archive": "archive: task:plan-close archive PLAN",
     "terminal": "terminal: план закрыт",
     "manual": "manual: frontier/high P4.4",
-    "waiting": "waiting: gate D79 → exec-items: task:plan-exec PLAN P4.4"
+    "waiting": "waiting: gate D79 → run-items: task:plan-run PLAN P4.4"
   },
   "cold_start_next": {
     "declaration": "audit-phase: task:plan-audit PLAN P4",
@@ -62,9 +61,9 @@
   "route_cases": [
     {
       "id": "fixed-exact",
-      "kind": "exec-items",
-      "command_id": "task:plan-exec",
-      "observed": ["implementation", "medium"],
+      "kind": "close",
+      "command_id": "task:plan-close",
+      "observed": ["implementation", "low"],
       "minimum": null,
       "ok": true,
       "diagnostics": []
@@ -80,10 +79,10 @@
     },
     {
       "id": "legal-overshoot",
-      "kind": "exec-items",
-      "command_id": "task:plan-exec",
+      "kind": "run-items",
+      "command_id": "task:plan-run",
       "observed": ["frontier", "high"],
-      "minimum": null,
+      "minimum": ["implementation", "high"],
       "ok": true,
       "diagnostics": ["CMD_ROUTE_OVERSHOOT"]
     },
@@ -107,9 +106,9 @@
     },
     {
       "id": "unknown-observed",
-      "kind": "exec-items",
-      "command_id": "task:plan-exec",
-      "observed": ["unknown", "medium"],
+      "kind": "close",
+      "command_id": "task:plan-close",
+      "observed": ["unknown", "low"],
       "minimum": null,
       "ok": false,
       "diagnostics": ["CMD_MAPPING_MISSING"]

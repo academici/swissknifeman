@@ -11,12 +11,11 @@
 - **`plan_reader`** читает очередь исполнения ОДНОЙ фазы: item'ы в порядке
   `## Phase Status`, терминальные (`🟢`/`🟠`/`⛔`) исключены, по каждому
   оставшемуся — маршрут (`task.task_contract build`), значение `Exec`, право
-  вождения. Право вождения даёт РОВНО дословное значение `Exec = plan-exec` в
-  `## 3. Routing` — деривация из тира §9 никогда его не выдаёт (только
-  отказывает на противоречии). Semantic `Next` для v1 и v2 берётся только из
+  вождения. Drive right = `Exec` in `## 3. Routing` resolves to `run` (legacy
+  `plan-exec`/`manual`/`plan-run` spellings included) and the item route resolves. Semantic `Next` для v1 и v2 берётся только из
   owner `handoff.md`; layout-v2 item-state содержит только result fields и не является
   fallback-источником orchestration.
-- **`worker`** запускает ОДИН item процессом `claude -p "/task:plan-exec
+- **`worker`** запускает ОДИН item процессом `claude -p "/task:plan-run
   &lt;PLAN-ID&gt; &lt;Pn.m&gt;" --output-format json` под таймаутом (по умолчанию 1800s),
   строго один воркер за раз (последовательная волна — параллельный fan-out на
   общей кодовой базе не заводится). Селекторы модели/effort берутся из
@@ -28,7 +27,7 @@
   признаков сам по себе RED (fail-safe).
 - **`journal`** дозаписывает строку в `journal.jsonl` РОВНО когда сессия
   воркера не дошла до close-протокола сама (timeout/transport/quota/error/
-  routing-blocked/no-op) — успешное самозакрытие `/task:plan-exec` не
+  routing-blocked/no-op) — успешное самозакрытие `/task:plan-run` не
   дублируется (D32).
 
 ## Использование

@@ -27,7 +27,7 @@ actually declared. It records a digest of authored plan, roadmap, phases, item s
 supporting files. A `task:plan-audit <ID> design` GREEN against that digest is required only for
 `**Design Audit:** required` or on owner request.
 `plan-work.py design-gate --plan-dir <dir>` reports the digest and current gate verdict.
-By default `plan-exec`/`plan-run` are gated per phase: the target phase and item must be detailed;
+By default `plan-run` is gated per phase: the target phase and item must be detailed;
 other phases may remain skeletons or backlog. Only `Design Audit: required` also needs finish, a
 current fingerprint and a GREEN audit.
 Phase-local design proposes batches from shared context; finish evaluates the whole dependency graph

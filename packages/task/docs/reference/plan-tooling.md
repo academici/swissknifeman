@@ -76,7 +76,7 @@ Approval mode не project-configurable; `deny` floor в `.cursor/cli.json` пе
 
 ### Codex
 
-Перед любой plan-командой (`plan-design`, `plan-exec`, `plan-run`, `plan-audit`,
+Перед любой plan-командой (`plan-design`, `plan-run`, `plan-audit`,
 `plan-close`) Codex-проекция получает current-route provenance автоматически до первой
 product-journal мутации. Команда ниже показана для `plan-run`; проекция подставляет exact
 текущую Task-команду и её аргументы:

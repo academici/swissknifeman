@@ -903,16 +903,16 @@ def _resolve_next_form(text):
     """Резолвит форму `Next` из enum'а §8 в тексте: `(kind, match)` либо `(None, None)`.
 
     Порядок — от специфичной формы к общей; первая сматчившая определяет проверку ссылок,
-    остальные не пробуются. «план закрыт» проверяется СРАЗУ после plan-exec (а не
+    остальные не пробуются. «план закрыт» проверяется СРАЗУ после plan-run (а не
     среди прочих regex-форм): это цельное утверждение о состоянии плана, а не slash-команда
     — Next закрытого плана иногда УПОМИНАЕТ следующую команду прозой («… решает владелец:
     `/task:plan-close archive <ID>` либо …», см. EDUFY-2), и эта проза не должна
     перехватывать резолвер. Manual-маркер — последним: у формы нет ссылок, она резолвится
     лишь тем, что ни одна slash-форма не объявлена.
 
-    Форма «ОЖИДАНИЕ» — ПЕРВОЙ, ДО plan-exec: её строка-объявление embed'ит целевой
-    `/task:plan-exec` (запустится по снятии гейта), который иначе перехватил бы резолвер как
-    `exec` — зеркало того, почему «план закрыт» стоит сразу после exec.
+    Форма «ОЖИДАНИЕ» — ПЕРВОЙ, ДО plan-run: её строка-объявление embed'ит целевой
+    `/task:plan-run` (запустится по снятии гейта), который иначе перехватил бы резолвер как
+    `run` — зеркало того, почему «план закрыт» стоит сразу после run.
     """
     semantic = SEMANTIC_NEXT_RE.match(text.strip())
     if semantic:
@@ -924,18 +924,15 @@ def _resolve_next_form(text):
             return "manual", None
         if semantic_kind == "waiting":
             return "waiting", None
-        expected_command, expected_kind = SEMANTIC_NEXT_COMMANDS[semantic_kind]
+        expected_commands, expected_kind = SEMANTIC_NEXT_COMMANDS[semantic_kind]
         command, separator, arguments = payload.partition(" ")
-        if command != expected_command or not separator:
+        if command not in expected_commands or not separator:
             return "invalid-semantic", None
         legacy_kind, match = _resolve_next_form("/" + command + " " + arguments)
         return (legacy_kind, match) if legacy_kind == expected_kind else (
             "invalid-semantic", None)
     if LITERAL_WAITING in text:
         return "waiting", None
-    m = PLAN_EXEC_RE.search(text)
-    if m:
-        return "exec", m
     m = PLAN_RUN_RE.search(text)
     if m:
         return "run", m

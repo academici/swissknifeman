@@ -44,7 +44,15 @@ NOTE_MAX_CHARS = 300
 UPDATE_LOG_WHAT_MAX_CHARS = 300
 
 # --- канон схемы -----
-COMMANDS = ("plan-exec", "plan-run", "plan-close", "plan-audit", "plan-design")
+COMMANDS = ("plan-run", "plan-exec", "plan-close", "plan-audit", "plan-design")
+# Readers accept the legacy spelling; writers emit only the canonical command.
+LEGACY_COMMAND_ALIASES = {"plan-exec": "plan-run"}
+
+
+def canonical_command(command: str) -> str:
+    """Map a legacy command spelling (`plan-exec`) to its canonical name (`plan-run`)."""
+    return LEGACY_COMMAND_ALIASES.get(command, command)
+
 FRICTION_VALUES = (
     "escalation", "routing-blocked", "route-deviation", "red-audit", "deviation", "retry", "no-op",
     "local-repair", "block-review", "external-evidence",

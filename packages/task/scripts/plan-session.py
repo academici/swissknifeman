@@ -13,7 +13,7 @@ from pathlib import Path
 _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT / "lib"))
 
-from task import session_context  # noqa: E402
+from task import journal, session_context  # noqa: E402
 
 def migrated_command_skill(source, relative_path):
     # Current session discovery also runs in Task-only caches; core is needed only
@@ -41,7 +41,8 @@ def main(argv=None) -> int:
     start.add_argument("--plan-dir", required=True, type=Path)
     start.add_argument("--item", required=True)
     start.add_argument("--command", dest="execution_command", required=True,
-                       choices=("plan-exec", "plan-run"))
+                       choices=("plan-run", "plan-exec"),  # `plan-exec`: legacy spelling
+                       help="execution command (legacy `plan-exec` is recorded as `plan-run`)")
     start.add_argument("--actor", required=True)
     start.add_argument("--session-id")
     start.add_argument("--contract", required=True, type=Path)
@@ -102,7 +103,7 @@ def main(argv=None) -> int:
             receipt = (json.loads(args.batch_receipt.read_text(encoding="utf-8"))
                        if args.batch_receipt else None)
             verdict = plan_recovery.start(
-                args.plan_dir, args.item, command=args.execution_command,
+                args.plan_dir, args.item, command=journal.canonical_command(args.execution_command),
                 actor=args.actor, session_id=args.session_id or session_context.current_id(),
                 contract=contract, batch_receipt=receipt)
             print(json.dumps(verdict, ensure_ascii=False))

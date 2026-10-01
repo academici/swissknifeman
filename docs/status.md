@@ -37,7 +37,7 @@
 | maind | `onboard`/`sync`/`deploy` — раскатка артефактов на проекты флота | available | `packages/maind/bin/maind status` — «проекты: 25 (подключено: 22)»; раскатка воспроизводится `maind sync --only <artefact> --dry-run` |
 | analyst | `digest`/`review`/`promote` — конвейер continuous learning (human-gate) | available | `packages/analyst/bin/analyst status --project .` — 5 уроков в `ephemeral`, счётчики по стадиям |
 | analyst | `scan`/`suggest` — cross-project паттерны → черновик скилла | experimental | P2/P3 по roadmap пакета (`packages/analyst/CLAUDE.md`): механизм есть, кросс-проектный прогон этим репо не выполнялся |
-| task | `/task:plan-*` — исполнимые мастер-планы | available | этот же документ — продукт `/task:plan-exec `; `packages/task/scripts/validate.sh` зелёный |
+| task | `/task:plan-*` — исполнимые мастер-планы | available | этот же документ — продукт `/task:plan-run`; `packages/task/scripts/validate.sh` зелёный |
 | task | `plan-lint --conflicts` — согласованность плановых проекций | available | `python3 packages/task/scripts/plan-lint.py --conflicts` сверяет канонический русский источник и provider-проекции; launch-block принимает явную строку команды или legacy fence |
 | task | `task_contract` — pre-mutation/pre-final гейт | available | `PYTHONPATH=packages/task/lib python3 -m task.task_contract` (вызов из этой же команды, п. 2/7 протокола) даёт `pre_mutation: allow` |
 | core | `core.io` — атомарная запись (tmp + `os.replace`) | available | `PYTHONPATH=. python3 -m unittest discover -s core/tests` |

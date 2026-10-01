@@ -877,7 +877,7 @@ class EffectiveRuntimeGateCase(unittest.TestCase):
                 ("package-contribution-protocol", "unit:architect"),
                 ("task-design", "unit:task"), ("task-plan-audit", "unit:task"),
                 ("task-plan-close", "unit:task"), ("task-plan-design", "unit:task"),
-                ("task-plan-exec", "unit:task"), ("task-plan-run", "unit:task")):
+                ("task-plan-run", "unit:task")):
             self.assertEqual(result["positive_maps"]["codex"].get(identity), [expected_unit],
                              f"{identity}: expected exactly-once {expected_unit}, no root carrier")
         # class-A resolves via root only (private bucket, never a unit member) on both

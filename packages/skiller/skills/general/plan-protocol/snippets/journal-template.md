@@ -15,11 +15,11 @@ command, never a consumer-local package copy or another provider's environment v
 ```bash
 PYTHONPATH="<task-package-root>/lib" python3 -m task.journal append \
   --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item <Pn.m> \
-  --command plan-exec --actor sonnet/medium --result in-progress
+  --command plan-run --actor sonnet/medium --result in-progress
 # … исполнение …
 PYTHONPATH="<task-package-root>/lib" python3 -m task.journal append \
   --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item <Pn.m> \
-  --command plan-exec --actor sonnet/medium --result closed-green \
+  --command plan-run --actor sonnet/medium --result closed-green \
   --note "1 строка сути закрытия"
 ```
 

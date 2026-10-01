@@ -271,7 +271,7 @@ def handoff_md(plan_id, *, item_id="P1.1"):
     # без него green-path ловил бы warning «Next без launch-block».
     return f"""# HANDOFF — 2026-07-02 — after {item_id}
 
-**Next:** /task:plan-exec {plan_id} {item_id}
+**Next:** /task:plan-run {plan_id} {item_id}
 
 | Параметр | Значение |
 |:--|:--|
@@ -281,7 +281,7 @@ def handoff_md(plan_id, *, item_id="P1.1"):
 | Суть | закрыть следующий item |
 
 ````
-/task:plan-exec {plan_id} {item_id}
+/task:plan-run {plan_id} {item_id}
 ````
 
 **Done:** {item_id} закрыт.
@@ -336,7 +336,7 @@ def roadmap_md(plan_id):
 
 | Item | Batch | Запуск | Model/Thinking | Гейт владельца | Примечание |
 |---|---|---|---|---|---|
-| P1.1 | solo | plan-exec | sonnet/medium | — | единственный item демо-плана |
+| P1.1 | solo | run | sonnet/medium | — | единственный item демо-плана |
 """
 
 
@@ -345,7 +345,7 @@ def journal_jsonl(plan_id, *, item_id="P1.1"):
     import json as _json
     entry = {
         "ts": "2026-07-02T00:00:00Z", "plan_id": plan_id, "item_id": item_id,
-        "command": "plan-exec", "session_id": None, "run_id": None, "attempt": 1,
+        "command": "plan-run", "session_id": None, "run_id": None, "attempt": 1,
         "actor": "sonnet/medium", "friction": [], "result": "closed-green",
         "cost_usd": None, "num_turns": None, "duration_ms": None, "note": "тест",
     }

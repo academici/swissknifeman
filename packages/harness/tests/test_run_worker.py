@@ -17,7 +17,7 @@ class BuildArgvTest(unittest.TestCase):
             model_class="implementation", effort="medium",
             monorepo_root=REPO_ROOT, claude_bin="/usr/bin/fake-claude")
         self.assertEqual(argv, [
-            "/usr/bin/fake-claude", "-p", "/task:plan-exec 2026.07.31-DEMO-PLAN P4.3",
+            "/usr/bin/fake-claude", "-p", "/task:plan-run 2026.07.31-DEMO-PLAN P4.3",
             "--output-format", "json", "--model", "sonnet", "--effort", "medium",
         ])
 

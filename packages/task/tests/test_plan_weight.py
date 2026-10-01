@@ -26,7 +26,7 @@ from task.token_estimate import CLASSIFIER  # noqa: E402
 from task.plan_weight import (  # noqa: E402
     GAP_KINDS, GAP_MISSING_FILE, GAP_OVERSIZED_FILE, GAP_UNREADABLE_ROOT,
     GAP_UNRESOLVED_ENTRY, GATE_BOTH, GATE_SIZE_BYTES, GATE_TOKENS,
-    MANDATORY_PATH_LITERALS, V2_MANDATORY_PATH_LITERALS, PLAN_EXEC_RELPATH,
+    MANDATORY_PATH_LITERALS, V2_MANDATORY_PATH_LITERALS, PLAN_RUN_RELPATH,
     Measurer, PlanWeightError,
     dense_ascii_share, evaluate_canon_budget, expand_braces, load_canon_budget,
     load_read_limit, main, measure_document, measure_item, measure_plan, path_candidates,
@@ -152,23 +152,23 @@ class TestScopedMeasurement(MeasurerTestCase):
 
 class TestMandatoryPath(unittest.TestCase):
     """Обязательный путь воспроизводится ИЗ текста команды, а не по памяти: правка
-    `plan-exec.md` §1 обязана ломать этот тест, а не расходиться с инструментом молча."""
+    `plan-run.md` must break this test instead of silently diverging from the tool."""
 
-    def plan_exec_text(self):
-        path = plan_weight._MONOREPO_ROOT / PLAN_EXEC_RELPATH
+    def plan_run_text(self):
+        path = plan_weight._MONOREPO_ROOT / PLAN_RUN_RELPATH
         if not path.is_file():  # standalone-раскладка пакета без монорепо-родителя
             self.skipTest(f"нет {path} — standalone-раскладка")
         return path.read_text(encoding="utf-8")
 
     def test_v2_literals_present_in_order(self):
-        text = self.plan_exec_text()
+        text = self.plan_run_text()
         positions = []
         for literal in V2_MANDATORY_PATH_LITERALS:
             idx = text.find(literal)
-            self.assertNotEqual(idx, -1, f"литерал v2 §1 «{literal}» исчез из plan-exec.md")
+            self.assertNotEqual(idx, -1, f"литерал v2 §1 «{literal}» исчез из plan-run.md")
             positions.append(idx)
         self.assertEqual(positions, sorted(positions),
-                         "порядок обязательного пути v2 в plan-exec.md §1 изменился")
+                         "порядок обязательного пути v2 в plan-run.md изменился")
 
 
 class TestLayoutAwareMeasurement(MeasurerTestCase):

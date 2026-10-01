@@ -10,7 +10,7 @@ Generated from the validated command-routing mappings. Do not edit the tables ma
 | Work kind | Neutral class | Typical commands |
 |:--|:--|:--|
 | Economy / ad-hoc explore | `economy` | low-risk fixes, scans |
-| Implementation / execution | `implementation` | `task:dev`, `task:plan-exec`, `task:plan-close` |
+| Implementation / execution | `implementation` | `task:dev`, `task:plan-run`, `task:plan-close` |
 | Design / audit / review | `frontier` | `task:design`, `task:plan-design`, `task:plan-audit`, `task:review` |
 
 Fixed commands and launch-blocks pin **one** default selector per class. The model pool below is the admission list: any entry whose roles cover the required class is admitted (roles overlap, the highest class wins, a stronger model is never a stop). Entries match by id, `aliases` or regex `patterns`; `status: retired` leaves the pool. A model outside the pool is `ROUTE_MODEL_UNKNOWN`: extend the pool, never the plan. `auto` never substitutes a pin.

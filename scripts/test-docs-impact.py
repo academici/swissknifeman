@@ -44,7 +44,7 @@ class DocsImpactTests(unittest.TestCase):
         self.assertEqual(missing_count(entries), 0)
 
     def test_e_editing_command_body_is_an_interface_trigger(self):
-        entries = [("M", "packages/task/commands/plan-exec.md")]
+        entries = [("M", "packages/task/commands/plan-run.md")]
         self.assertEqual(missing_count(entries), 1)
         entries_with_docs = entries + [("M", "docs/task/index.md")]
         self.assertEqual(missing_count(entries_with_docs), 0)

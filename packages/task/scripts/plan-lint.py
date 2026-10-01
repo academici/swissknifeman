@@ -5,7 +5,7 @@
 импортировать напрямую, а тестам нужно дёргать парсер/чеки поштучно, не только
 через subprocess).
 
-Вызывается командами протокола (`plan-design`/`plan-exec`/`plan-close`):
+Вызывается командами протокола (`plan-design`/`plan-run`/`plan-close`):
     python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-lint.py" plans/<PLAN-ID>
 """
 import sys

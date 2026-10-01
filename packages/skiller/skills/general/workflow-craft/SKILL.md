@@ -104,7 +104,7 @@ reference (stage structure, what each type does NOT contain) — **cross-ref by
 absolute path, don't vendor** (they belong to other plans; a copy drifts from
 the source):
 
-- **design-only, high-water-mark:** `/home/vostrikov/Vaults/Brain/plans/
+- **design-only, high-water-mark:** `~/Vaults/Brain/plans/
   EDUFY-2/workflows/wf-edufy-2-design-wave.js` — the strongest live example
   surveyed (findings P1-recon §1.4 "Reference irony"): `// SLOT:` markers on
   every constant (the only one of ~44 fleet files carrying them), judge-panel
@@ -112,10 +112,10 @@ the source):
   everywhere), `MAX_FIX_ROUNDS` on EVERY audit→fix cycle (not just the main
   one), pipeline + phase dependency graph. Look at its structure FIRST — it's
   above the baseline of the two references below.
-- **design-only, baseline:** `/home/vostrikov/Vaults/Brain/plans/ECOSYSTEM/
+- **design-only, baseline:** `~/Vaults/Brain/plans/ECOSYSTEM/
   workflows/wf-design-fleet.js` — RAG research → design → adversarial
   audit/DoR gate → fixes → re-audit, with zero lines of code/tests.
-- **dev, baseline:** `/home/vostrikov/Vaults/Brain/plans/AGENTOOLS/workflows/
+- **dev, baseline:** `~/Vaults/Brain/plans/AGENTOOLS/workflows/
   wf-agentools-drive.js` — slice → impl → tests-to-green → review → gates →
   commit, with a `designOnly` slot flag branching between the two modes
   within one template family; L195 is a guarded-optional-args example

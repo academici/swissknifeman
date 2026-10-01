@@ -2,6 +2,56 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **maind memory host address:** the LAN IP of the memory host machine is no longer a hand-edit in the
+  tracked `config/memory/iii-config.yaml`. The tracked file stays a portable loopback template; the node sets
+  `memory.bind_host` (`config.json`) or `AGENTMEMORY_BIND_HOST` (`auto` = this machine's LAN IPv4), and maind
+  renders a gitignored `data/iii-config.runtime.yaml` for the daemon. Non-loopback bind needs
+  `memory.role=host`; `0.0.0.0`/`::` stay forbidden. The docs example uses `<HOST_LAN_IP>`, and two skills
+  no longer hardcode `/home/<user>/` paths.
+
+### Changed
+
+- **No machine paths in the repository:** the owner's home-directory paths were removed from tracked
+  product files (fixtures use `/home/user/…`, docs use `<REPO_ROOT>`/`~`); `scripts/public-hygiene.py` now
+  also scans file content for real-environment absolute paths (sealed working documents under `plans/`,
+  `roadmap/`, `tasks/` and one hash-pinned fixture are explicitly exempt). Token-estimate calibration records
+  neutral `corpus/<name>` labels instead of plan paths (lookup is by content sha256); `plan_weight` resolves
+  repo-relative `source_path` from the repository root.
+
+### Added
+
+- **Next plan number:** `packages/task/scripts/plan-id.py --codename <NAME>` scans live and archived
+  plans and returns the next day ordinal `№N`, the next repository-wide `PLAN<N>` Short ID, the ready
+  `plan_id` and `title_prefix`. plan-protocol, work-references, plan-template and `plan-design` tell
+  agents to use it instead of guessing `№1`/`PLAN1`.
+- **Service-file gitignore map:** `configs/gitignore-policy.json` classifies every generated service
+  file (`ignore` / `commit` / `portable-or-ignore` / `project`, owner, reason; calibrated on the 24-project
+  fleet). Committed: `CLAUDE.md`/`AGENTS.md`, all skills, agent-pack artifacts, hook scripts, examples,
+  skiller config. Ignored: logs, runtime state, backups, local settings; `*.env.ini`/configs only when
+  they hold machine paths (`/home/…`) or secrets and `maind doctor --gitignore-drift [--project ID] [--block] [--json]` reports per-project drift
+  (tracked-but-must-be-ignored, unignored runtime/backups, machine-specific content, mixed groups); the
+  default `maind doctor` prints a one-line summary. `core.gitignore_policy` is the shared checker.
+
+### Changed
+
+- **Task lean execution:** execution is gated per phase (target phase/item detailed); a
+  whole-plan design finish and GREEN design audit are opt-in via `**Design Audit:** required`.
+  A stronger model/effort than declared is recorded as `over`, never a stop. Models resolve
+  through one provider pool (`model_inventory`: overlapping roles, `aliases`/`patterns`,
+  `status: retired`, highest class wins); an unlisted model is nonterminal
+  `ROUTE_MODEL_UNKNOWN` that fails closed (no cli-config fallback for an explicit Cursor `--model`). An unstarted workset remainder no longer forbids a final
+  (`TASK_WORKSET_REMAINING`); an open run still does. Canon: review is plan shape (read-only
+  `Ревью Pn` item, Review defaults to `none`), broad suites run once per phase, bulk output
+  stays in files. `task-development-philosophy` 0.3.0.
+- **Task evidence freshness:** a validation receipt stays current across an ordinary commit
+  (`head` is provenance; the product `tree` decides) and across sessions/providers (the
+  environment identity is interpreter family, major.minor and OS family, no patch/kernel/path).
+- **Task continuity:** an owner-requested new session or pause saves its checkpoint and prompt
+  without a route/batch/capability attestation of the current executor (recorded as
+  `transfer:manual-unattested`); an ordinary continuation still fails closed.
+
 ### Added
 
 - **Task owner design-audit waiver:** a selected accepted owner decision can

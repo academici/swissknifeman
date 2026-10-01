@@ -42,7 +42,7 @@ flowchart LR
     ecosystem_map["ecosystem-map<br/>⊕47 ↻643"]:::warm
   end
   subgraph azguard["azguard"]
-    azguard["azguard<br/>⊕37 ↻1651"]:::mild
+    azguard["azguard<br/>⊕37 ↻1647"]:::mild
   end
   subgraph blender["blender"]
     mcp_blender["mcp-blender<br/>⊕118 ↻1475"]:::hot
@@ -166,7 +166,7 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻503"]:::warm
-    plan_protocol["plan-protocol<br/>⊕26 ↻10271"]:::cool
+    plan_protocol["plan-protocol<br/>⊕26 ↻10705"]:::cool
     project_map["project-map<br/>⊕83 ↻618"]:::warm
     session_handoff["session-handoff<br/>⊕29 ↻590"]:::cool
     shell["shell<br/>⊕73 ↻1997"]:::warm
@@ -174,7 +174,7 @@ flowchart LR
     spec_interview["spec-interview<br/>⊕35 ↻725"]:::mild
     task_brief_template["task-brief-template<br/>⊕47 ↻1226"]:::warm
     verify_claims["verify-claims<br/>⊕41 ↻341"]:::mild
-    workflow_craft["workflow-craft<br/>⊕48 ↻3349"]:::warm
+    workflow_craft["workflow-craft<br/>⊕48 ↻3337"]:::warm
     writing_style["writing-style<br/>⊕98 ↻1878"]:::hot
   end
   subgraph laravel_architecture["laravel-architecture"]
@@ -310,10 +310,10 @@ flowchart LR
     harness_operations["harness-operations<br/>⊕87 ↻2105"]:::warm
     maind_overview["maind-overview<br/>⊕80 ↻1626"]:::warm
     package_architecture["package-architecture<br/>⊕85 ↻3740"]:::warm
-    project_tooling_runbook["project-tooling-runbook<br/>⊕42 ↻7297"]:::mild
+    project_tooling_runbook["project-tooling-runbook<br/>⊕42 ↻7433"]:::mild
     release_discipline["release-discipline<br/>⊕64 ↻1049"]:::warm
     skill_authoring["skill-authoring<br/>⊕44 ↻1846"]:::warm
-    task_development_philosophy["task-development-philosophy<br/>⊕74 ↻3222"]:::warm
+    task_development_philosophy["task-development-philosophy<br/>⊕74 ↻3596"]:::warm
   end
   subgraph research["research"]
     query_craft["query-craft<br/>⊕35 ↻257"]:::mild
@@ -437,14 +437,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 232 скиллов · ⊕ always **12586** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 311303 ток · ⌥ on-demand 851937 ток (сниппеты + references).
+**Итого:** 232 скиллов · ⊕ always **12586** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 312231 ток · ⌥ on-demand 852631 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1260 | 33377 | 30004 |
-| `repository-bootstrap` | 14 | 1047 | 29277 | 0 |
+| `general` | 22 | 1260 | 33799 | 30698 |
+| `repository-bootstrap` | 14 | 1047 | 29787 | 0 |
 | `architect` | 15 | 937 | 19897 | 33252 |
 | `laravel-architecture` | 6 | 596 | 9567 | 7994 |
 | `blender-modeling` | 7 | 582 | 11570 | 14235 |
@@ -487,7 +487,7 @@ flowchart LR
 | `laravel-data-layer` | 2 | 61 | 3287 | 3977 |
 | `dart` | 1 | 56 | 801 | 0 |
 | `frontend-animations` | 1 | 55 | 920 | 5285 |
-| `azguard` | 1 | 37 | 1651 | 7293 |
+| `azguard` | 1 | 37 | 1647 | 7293 |
 | `botkit` | 1 | 35 | 206 | 698 |
 | `frontend-wayfinder` | 1 | 31 | 966 | 1765 |
 | `laravel-filament` | 1 | 31 | 2374 | 3182 |
@@ -516,11 +516,11 @@ flowchart LR
 
 | Скилл | Бакет | ток |
 |---|---|--:|
-| `plan-protocol` | general | 10271 |
-| `project-tooling-runbook` | repository-bootstrap | 7297 |
+| `plan-protocol` | general | 10705 |
+| `project-tooling-runbook` | repository-bootstrap | 7433 |
 | `package-architecture` | repository-bootstrap | 3740 |
-| `workflow-craft` | general | 3349 |
-| `task-development-philosophy` | repository-bootstrap | 3222 |
+| `task-development-philosophy` | repository-bootstrap | 3596 |
+| `workflow-craft` | general | 3337 |
 | `mcp-advisor` | general | 3188 |
 | `voice-ai` | voice-ai | 3165 |
 | `modular-architecture` | laravel-architecture | 3112 |

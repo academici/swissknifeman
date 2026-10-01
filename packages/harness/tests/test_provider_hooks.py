@@ -202,7 +202,7 @@ class ProviderHookTests(unittest.TestCase):
         self.assertEqual(fragment.target_path, ".codex/hooks.json")
         self.assertEqual(fragment.event, "SessionStart")
         self.assertEqual(fragment.handler_bytes, render_codex_hook_handler())
-        memory_command = "bash /home/vostrikov/projects/packages/swissknifeman/.claude/maind-memory.sh"
+        memory_command = "bash /home/user/projects/packages/swissknifeman/.claude/maind-memory.sh"
         document = {"hooks": {"SessionStart": [
             {"hooks": [{"type": "command", "command": memory_command}]}, fragment.group
         ]}}
@@ -239,7 +239,7 @@ class ProviderHookTests(unittest.TestCase):
         "hooks": [
           {
             "type": "command",
-            "command": "bash /home/vostrikov/projects/packages/swissknifeman/.claude/maind-memory.sh"
+            "command": "bash /home/user/projects/packages/swissknifeman/.claude/maind-memory.sh"
           }
         ]
       }

@@ -37,6 +37,20 @@ class TestPublicHygiene(unittest.TestCase):
         )
         self.assertEqual(len(violations), 3)
 
+    def test_content_rule_flags_real_environment_paths_only(self):
+        # Built from parts so this test file does not trip the very rule it checks.
+        files = {
+            "a.md": "cd /home/" + "ivan/projects/app && make",
+            "b.json": '{"p": "/Users/' + 'maria/.claude/settings.json"}',
+            "c.md": "example /home/user/projects/x and `~/projects/app` and <REPO_ROOT>/plans",
+            "d.md": "C:" + "\\Users\\" + "ivan\\proj",
+        }
+        found = public_hygiene.content_violations(sorted(files), read=files.get)
+        self.assertEqual(sorted(path.split(" ")[0] for path, _ in found), ["a.md", "b.json", "d.md"])
+
+    def test_binary_or_unreadable_files_are_skipped(self):
+        self.assertEqual(public_hygiene.content_violations(["x.bin"], read=lambda _p: None), [])
+
     def test_reason_named_in_output(self):
         violations = public_hygiene.check(["secret.pem"])
         self.assertEqual(violations, [("secret.pem", "приватный ключ/сертификат")])

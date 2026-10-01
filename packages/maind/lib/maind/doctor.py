@@ -123,6 +123,71 @@ def _channel_hygiene_report(env, config, detail):
               "вендор через .swissknifeman/config.json, не legacy .swissknife.json)")
 
 
+def _gitignore_drift(config, only=None):
+    """Сверка каждого enabled-проекта с картой `configs/gitignore-policy.json` (read-only):
+    что должно быть в .gitignore, а что коммититься. Возвращает [(project_id, findings)]."""
+    from core.gitignore_policy import PolicyError, check_project, load_policy
+
+    from .federation import _enabled_projects
+    policy = load_policy()
+    rows = []
+    for p in _enabled_projects(config):
+        if only and p.get("id") != only:
+            continue
+        local = p.get("local_path")
+        path = Path(os.path.expanduser(local)) if local else None
+        if not path or not path.is_dir():
+            continue
+        try:
+            rows.append((p.get("id"), check_project(path, policy), policy))
+        except PolicyError:
+            continue
+    return rows
+
+
+def _gitignore_drift_report(config, detail, *, only=None, as_json=False, block=False):
+    """detail=False: одна summary-строка для дефолтного doctor. detail=True
+    (--gitignore-drift): по-проектная разбивка, --json, --block (готовые строки .gitignore)."""
+    from core.gitignore_policy import PolicyError, recommended_block
+    try:
+        rows = _gitignore_drift(config, only)
+    except PolicyError as exc:
+        print(f"  [warn] карта gitignore недоступна: {exc}")
+        return
+    errors = {pid: [f for f in found if f["level"] == "error"] for pid, found, _ in rows}
+    if as_json:
+        print(json.dumps({"projects": [{"id": pid, "findings": found} for pid, found, _ in rows]},
+                         ensure_ascii=False, indent=2))
+        return
+    if not detail:
+        bad = sorted(pid for pid, errs in errors.items() if errs)
+        if bad:
+            print(f"  [warn] .gitignore ↔ карта служебных файлов: {len(bad)} проект(ов) расходятся "
+                  "(детали: maind doctor --gitignore-drift)")
+        else:
+            print("  [ok ] .gitignore ↔ карта служебных файлов: расхождений нет")
+        return
+    print("\nРасхождения .gitignore с картой служебных файлов (configs/gitignore-policy.json):")
+    clean = True
+    for pid, found, policy in rows:
+        problems = [f for f in found if f["level"] != "info"]
+        if not problems:
+            continue
+        clean = False
+        print(f"  {pid}: {len([f for f in problems if f['level'] == 'error'])} ошибок, "
+              f"{len([f for f in problems if f['level'] == 'warn'])} предупреждений")
+        for f in problems:
+            print(f"    [{f['level']:<5}] {f['code']}: {f['path']} — {f['fix']}")
+        if block:
+            lines = recommended_block(found, policy)
+            if lines:
+                print("    # добавить в .gitignore:")
+                for line in lines:
+                    print(f"    {line}")
+    if clean:
+        print("  (расхождений нет ни в одном enabled-проекте)")
+
+
 def _fleet_context(env, config):
     """Флот-агрегация футпринта первого хода: цикл по registered-проектам → subprocess
     `skiller budget --first-turn --target <path> --json` (2026.07.12-CONTEXT-ECONOMY P5.1) — токен-математика
@@ -180,7 +245,8 @@ def _context_report(env, config, as_json):
 def cmd_doctor(env, argv):
     opts, _ = parse_args(argv, {"--quiet": "bool", "--audit": "str", "--json": "bool",
                                 "--skill-drift": "bool", "--channel-drift": "bool",
-                                "--context": "bool", "--provider-trust": "bool"})
+                                "--context": "bool", "--provider-trust": "bool",
+                                "--gitignore-drift": "bool", "--project": "str", "--block": "bool"})
     if opts["help"]:
         print("maind doctor [--quiet] — проверка окружения узла\n"
               "maind doctor --audit mcp|claude|deny|core|pao|settings|all [--json] — "
@@ -189,6 +255,9 @@ def cmd_doctor(env, argv):
               "ecosystem-mcp/ecosystem-setup от текущего шаблона\n"
               "maind doctor --channel-drift — по-проектная разбивка дубль-канала "
               "skiller (connect+vendor на один бакет)\n"
+              "maind doctor --gitignore-drift [--project ID] [--block] [--json] — сверка "
+              ".gitignore/tracking каждого проекта с картой служебных файлов "
+              "(configs/gitignore-policy.json; --block печатает строки для .gitignore)\n"
               "maind doctor --context [--json] — флот-агрегация футпринта первого "
               "хода (skiller budget --first-turn по каждому проекту)")
         return
@@ -216,6 +285,18 @@ def cmd_doctor(env, argv):
             except SystemExit:
                 config = {}
         _context_report(env, config, as_json=opts["json"])
+        return
+
+    if opts["gitignore_drift"]:
+        config = {}
+        if env.default_config.exists():
+            try:
+                from .config import load_config
+                config, _ = load_config(env)
+            except SystemExit:
+                config = {}
+        _gitignore_drift_report(config, True, only=opts["project"], as_json=opts["json"],
+                                block=opts["block"])
         return
 
     if opts["provider_trust"]:
@@ -280,6 +361,7 @@ def cmd_doctor(env, argv):
     if config:
         _skill_drift_report(env, config, detail=opts.get("skill_drift"))
         _channel_hygiene_report(env, config, detail=opts.get("channel_drift"))
+        _gitignore_drift_report(config, False)
         from .codegraph import check_schema_connectivity
         schema_issues = check_schema_connectivity(config)
         check(not schema_issues, "пин Serena/схема .serena/project.yml связны",

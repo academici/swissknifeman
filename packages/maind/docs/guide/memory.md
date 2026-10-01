@@ -33,7 +33,8 @@ maind memory stop      # SIGTERM→SIGKILL; чужой демон (без pidfil
 ```json
 "memory": {
   "role": "host",                          // | "standalone" (дефолт) | "client"
-  "url": "http://192.168.31.93:4111",       // ОБЯЗАТЕЛЕН для role=client, НЕ loopback
+  "url": "http://<HOST_LAN_IP>:4111",       // ОБЯЗАТЕЛЕН для role=client, НЕ loopback
+  "bind_host": "auto",                      // только role=host: LAN-адрес ЭТОЙ машины (или явный IP)
   "secret_file": "memory.secret"            // путь (относительно корня узла), 0600
 }
 ```
@@ -47,9 +48,14 @@ maind memory stop      # SIGTERM→SIGKILL; чужой демон (без pidfil
   Секрет НЕ хранится инлайном в конфиге (диффы/копии конфига light его бы утекли) и не
   печатается в логах/сообщениях об ошибке.
 - **LAN-стадия (ближайшая, D80).** Транспорт — LAN: демон бинденд не на `127.0.0.1`, а на
-  **конкретный LAN-адрес хоста** — `config/memory/iii-config.yaml` → `workers[iii-http].host`.
-  Это **управляемый конфиг движка**: правка обязана остаться здесь, иначе следующий
-  `npm install`/апгрейд `@agentmemory/agentmemory` тихо вернёт дефолт `127.0.0.1`. Bind
+  **конкретный LAN-адрес хоста**. Адрес машины НЕ хранится в репозитории: tracked
+  `config/memory/iii-config.yaml` остаётся портируемым шаблоном (`host: 127.0.0.1`), а адрес
+  задаёт узел — `memory.bind_host` в `config.json` (gitignored) либо env `AGENTMEMORY_BIND_HOST`;
+  `auto` берёт LAN-IPv4 текущей машины. При старте maind рендерит из шаблона рантайм-копию
+  `data/iii-config.runtime.yaml` (gitignored) с подставленным `workers[iii-http].host` и отдаёт её
+  демону (`AGENTMEMORY_III_CONFIG`), поэтому `npm install`/апгрейд движка адрес не сбросят, а
+  перенос на другой комп = `bind_host: "auto"` (или другой IP) + `memory.url` у клиентов, без правки
+  репо. Не-loopback `bind_host` допустим только при `memory.role=host`. Bind
   `0.0.0.0` ЗАПРЕЩЁН (поверхность атаки на весь LAN + key expiry перестаёт быть
   предохранителем); `iii-stream` (стрим-порт) НЕ бинденд на LAN — cross-machine
   store/recall/forget/export идут только через `iii-http` REST.

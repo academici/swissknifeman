@@ -37,8 +37,8 @@ class EncodeCwdCase(unittest.TestCase):
     def test_slash_to_dash(self):
         # подтверждено чтением живых ~/.claude/projects/* этой машины (см. докстринг
         # модуля) — единственное, что проверено, остальное не угадываем
-        self.assertEqual(ss.encode_cwd("/home/vostrikov/projects/packages/swissknifeman"),
-                         "-home-vostrikov-projects-packages-swissknifeman")
+        self.assertEqual(ss.encode_cwd("/home/user/projects/packages/swissknifeman"),
+                         "-home-user-projects-packages-swissknifeman")
 
     def test_sessions_dir_under_home(self):
         d = ss.sessions_dir("/a/b", home="/fake-home")

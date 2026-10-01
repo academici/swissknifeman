@@ -88,7 +88,7 @@ php artisan migrate
 
 ## Links
 
-- Source: `/home/vostrikov/projects/packages/azguard` (docs/guide: basic-usage, permissions, roles, panels, entity-scopes, direct-grants, policies-and-gates, abilities-frontend, testing)
+- Source: `~/projects/packages/azguard` (docs/guide: basic-usage, permissions, roles, panels, entity-scopes, direct-grants, policies-and-gates, abilities-frontend, testing)
 - Manual RBAC without package — skill `laravel-auth/laravel-permissions`
 - Filament integration — package `azguard/filament`, skill `laravel-filament/filament`
 - Declarative perm checks on actions via attribute — `laravel-auth/attribute-authorization` (orthogonal layer over Gate)

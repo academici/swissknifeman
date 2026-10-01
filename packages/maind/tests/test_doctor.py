@@ -10,7 +10,8 @@ from pathlib import Path
 from unittest import mock
 
 from maind import doctor
-from maind.doctor import _channel_overlap, _fleet_context, _skill_drift, cmd_doctor
+from maind.doctor import (_channel_overlap, _fleet_context, _gitignore_drift,
+                          _gitignore_drift_report, _skill_drift, cmd_doctor)
 from tests.fixtures import FakeMemoryServer, capture, make_repo, write_maind_config
 
 
@@ -348,3 +349,41 @@ class TestMemoryAuthDiagnostic(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestGitignoreDrift(unittest.TestCase):
+    """doctor --gitignore-drift: сверка проектов с картой configs/gitignore-policy.json."""
+
+    def _project(self, tmp):
+        import subprocess
+        root, env = make_repo(tmp)
+        projdir = Path(tmp) / "proj"
+        projdir.mkdir()
+        subprocess.run(["git", "-C", str(projdir), "init", "-q"], check=True)
+        (projdir / ".claude" / "runs").mkdir(parents=True)
+        (projdir / ".claude" / "runs" / "1.json").write_text("{}")
+        write_maind_config(root, projects=[
+            {"id": "proj", "name": "Proj", "type": "node-package",
+             "status": "active", "local_path": str(projdir)}])
+        from maind.config import load_config
+        config, _ = load_config(env)
+        return config
+
+    def test_reports_unignored_runtime_state_with_a_ready_block(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config = self._project(tmp)
+            rows = _gitignore_drift(config)
+            self.assertEqual([pid for pid, _f, _p in rows], ["proj"])
+            self.assertIn(("unignored", ".claude/runs/1.json"),
+                          {(f["code"], f["path"]) for f in rows[0][1]})
+            _, out = capture(_gitignore_drift_report, config, True, block=True)
+            self.assertIn("proj:", out)
+            self.assertIn(".claude/runs/", out)
+
+    def test_summary_line_and_json_do_not_require_detail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config = self._project(tmp)
+            _, out = capture(_gitignore_drift_report, config, False)
+            self.assertIn("расходятся", out)
+            _, out = capture(_gitignore_drift_report, config, True, as_json=True)
+            self.assertEqual(json.loads(out)["projects"][0]["id"], "proj")

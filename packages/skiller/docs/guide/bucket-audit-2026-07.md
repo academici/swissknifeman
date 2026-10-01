@@ -456,7 +456,7 @@ PYTHONPATH="$(pwd)/lib:$(cd ../.. && pwd)" python3 -m skiller "$(pwd)" bucket-au
 **Контрольная сверка (воспроизвести):**
 
 ```bash
-cd /home/vostrikov/projects/packages/swissknifeman
+cd <REPO_ROOT>
 PYTHONPATH=packages/skiller/lib python3 -c "
 from pathlib import Path
 from skiller.common import parse_frontmatter

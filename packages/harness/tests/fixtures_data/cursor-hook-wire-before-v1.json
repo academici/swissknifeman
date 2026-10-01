@@ -7,13 +7,13 @@
     "generation_id": "8fb9d9da-2a40-4ed1-b70b-8838e131e7f5",
     "model": "gpt-5.3-codex",
     "command": "echo native-before-probe-retry3;",
-    "cwd": "/home/vostrikov/projects/packages/swissknifeman",
+    "cwd": "/home/user/projects/packages/swissknifeman",
     "sandbox": false,
     "session_id": "8fb9d9da-2a40-4ed1-b70b-8838e131e7f5",
     "hook_event_name": "beforeShellExecution",
     "cursor_version": "2026.09.15-d2fe57e",
     "workspace_roots": [
-      "/home/vostrikov/projects/packages/swissknifeman"
+      "/home/user/projects/packages/swissknifeman"
     ],
     "user_email": "probe@example.invalid",
     "transcript_path": null

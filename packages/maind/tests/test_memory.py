@@ -9,6 +9,7 @@ import os
 import stat
 import tempfile
 import unittest
+from unittest import mock
 
 from core.http import HTTPUnauthorizedError
 
@@ -338,3 +339,70 @@ class TestAuth(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestBindHost(unittest.TestCase):
+    """memory.bind_host: адрес машины — в узловом конфиге/env, не в tracked iii-config."""
+
+    TEMPLATE = ("workers:\n  - name: iii-http\n    config:\n      port: 4111\n"
+                "      host: 127.0.0.1\n  - name: iii-stream\n    config:\n      port: 4112\n"
+                "      host: 127.0.0.1\n")
+
+    def _env(self, tmp):
+        _, env = make_repo(tmp)
+        env.memory_config.parent.mkdir(parents=True, exist_ok=True)
+        env.memory_config.write_text(self.TEMPLATE, encoding="utf-8")
+        return env
+
+    def test_without_bind_host_the_tracked_template_is_used_unchanged(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = self._env(tmp)
+            self.assertEqual(memory.effective_memory_config(env, {}), env.memory_config)
+
+    def test_host_role_renders_runtime_copy_only_for_iii_http(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = self._env(tmp)
+            path = memory.effective_memory_config(
+                env, {"memory": {"role": "host", "bind_host": "192.0.2.10"}})
+            self.assertNotEqual(path, env.memory_config)
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("host: 192.0.2.10", text)
+            self.assertEqual(text.count("host: 127.0.0.1"), 1)  # iii-stream stays loopback
+            self.assertEqual(env.memory_config.read_text(encoding="utf-8"), self.TEMPLATE)
+
+    def test_auto_uses_this_machines_lan_address(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = self._env(tmp)
+            with mock.patch.object(memory, "lan_address", return_value="192.0.2.77"):
+                path = memory.effective_memory_config(
+                    env, {"memory": {"role": "host", "bind_host": "auto"}})
+            self.assertIn("host: 192.0.2.77", path.read_text(encoding="utf-8"))
+
+    def test_env_overrides_config(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = self._env(tmp)
+            with mock.patch.dict(os.environ, {"AGENTMEMORY_BIND_HOST": "192.0.2.5"}):
+                path = memory.effective_memory_config(env, {"memory": {"role": "host"}})
+            self.assertIn("host: 192.0.2.5", path.read_text(encoding="utf-8"))
+
+    def test_unsafe_or_misplaced_bind_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = self._env(tmp)
+            for cfg in ({"memory": {"role": "host", "bind_host": "0.0.0.0"}},
+                        {"memory": {"role": "host", "bind_host": "::"}},
+                        {"memory": {"role": "host", "bind_host": "not-an-ip"}},
+                        {"memory": {"role": "standalone", "bind_host": "192.0.2.10"}},
+                        {"memory": {"role": "client", "bind_host": "192.0.2.10"}}):
+                with self.subTest(cfg=cfg), self.assertRaises(SystemExit):
+                    memory.effective_memory_config(env, cfg)
+
+    def test_daemon_gets_the_runtime_config_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = self._env(tmp)
+            with mock.patch.object(memory.shutil, "which", return_value="/usr/bin/node"):
+                bin_path = env.root / "node_modules" / ".bin" / "agentmemory"
+                bin_path.parent.mkdir(parents=True, exist_ok=True)
+                bin_path.write_text("")
+                _, child_env, _ = memory._daemon_argv(
+                    env, {"memory": {"role": "host", "bind_host": "192.0.2.10"}})
+            self.assertTrue(child_env["AGENTMEMORY_III_CONFIG"].endswith("iii-config.runtime.yaml"))

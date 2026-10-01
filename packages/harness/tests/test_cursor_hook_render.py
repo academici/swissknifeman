@@ -205,7 +205,7 @@ class CursorHookRenderTests(unittest.TestCase):
                 encoding="utf-8"))
         payload = {
             **wire["payload"],
-            "command": "cd /home/vostrikov/sibintek/projects/insiders && make up",
+            "command": "cd /home/user/sibintek/projects/insiders && make up",
         }
         with tempfile.TemporaryDirectory() as scratch:
             handler = Path(scratch) / "lifecycle.py"

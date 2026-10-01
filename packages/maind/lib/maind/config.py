@@ -147,7 +147,7 @@ def validate_config(config, cfg_file):
     _check_section(cfg_file, "memory", config.get("memory", {}),
                    {"enabled": bool, "config_path": str, "http_port": int,
                     "stream_port": int, "data_dir": str, "url": str, "digest": dict,
-                    "role": str, "secret_file": str},
+                    "role": str, "secret_file": str, "bind_host": str},
                    {"role": MEMORY_ROLES})
     mem = config.get("memory") or {}
     if mem.get("role") == "client":

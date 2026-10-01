@@ -63,6 +63,9 @@ maind doctor --context [--json]        # флот-агрегация always-on �
                                         #   (skiller budget --first-turn по каждому проекту)
 maind doctor --skill-drift             # дрейф ecosystem-mcp/ecosystem-setup от шаблона, по проектам
 maind doctor --channel-drift           # дубль-канал skiller (connect+vendor на один бакет)
+maind doctor --gitignore-drift [--project ID] [--block] [--json]
+                                        # .gitignore/tracking каждого проекта vs карта служебных файлов
+                                        #   (configs/gitignore-policy.json); --block — готовые строки .gitignore
 maind verify [--json]                  # пруф работы 3 плоскостей: пишут реально или вхолостую
 maind analyze [--cwd | --project ID] [--session ID] [--no-health] [--json]
                                         # post-run verdict с проверкой provenance run-report

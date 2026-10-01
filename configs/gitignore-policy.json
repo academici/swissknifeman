@@ -1,0 +1,216 @@
+{
+  "schema_version": "gitignore-policy/v1",
+  "_doc": "Карта служебных файлов, которые раздают swissknifeman/maind/harness/skiller/task в проекты флота: что должно быть в .gitignore, а что коммититься. Источник — единая рекомендация; `maind doctor --gitignore-drift` сверяет с ней каждый проект (read-only). Пути — от корня проекта, gitignore-синтаксис, привязаны к корню (`**` — любая глубина, завершающий `/` — каталог целиком). policy: `ignore` — всегда в .gitignore, никогда не коммитится (машинные/рантайм/личные настройки); `commit` — всегда в репозитории (портируемые общие артефакты и шаблоны); `portable-or-ignore` — коммитится, пока не содержит машинных путей (/home/…, /Users/…) и секретов, иначе в .gitignore (+ `.example`); `project` — выбор проекта, doctor сверяет только согласованность внутри `group`. Основания: skill project-tooling-runbook «Machine-specific config hygiene», skiller CLAUDE.md (vendor-targets committed), собственный .gitignore swissknifeman; карта снята с 24 проектов флота 2026-10-01.",
+  "entries": [
+    {
+      "id": "machine-mcp",
+      "policy": "portable-or-ignore",
+      "paths": [
+        ".mcp.json",
+        ".cursor/mcp.json",
+        ".vscode/mcp.json"
+      ],
+      "owner": "maind sync (mcpconfig.write_mcp)",
+      "why": "MCP-конфиг с абсолютным путём к лаунчеру/Serena или секретом ломает чужой клон и течёт в историю. Предпочтительно indirection (`${MAIND_BIN:-maind}`) и коммит; иначе в .gitignore + `.example`."
+    },
+    {
+      "id": "mcp-example",
+      "policy": "commit",
+      "paths": [
+        ".mcp.json.example",
+        ".cursor/mcp.json.example",
+        ".claude/settings.json.example",
+        ".claude/settings.local.json.example"
+      ],
+      "owner": "maind sync (mcpconfig.write_example)",
+      "why": "Портируемый шаблон с плейсхолдерами рядом с игнорируемым реальным файлом; обновляется синхронно с ним."
+    },
+    {
+      "id": "claude-local-settings",
+      "policy": "ignore",
+      "paths": [
+        ".claude/settings.local.json"
+      ],
+      "owner": "Claude Code / harness permissions",
+      "why": "Личные права и defaultMode (возможен bypassPermissions), абсолютные пути; машинно-специфично."
+    },
+    {
+      "id": "claude-settings",
+      "policy": "portable-or-ignore",
+      "paths": [
+        ".claude/settings.json"
+      ],
+      "owner": "harness (permissions/hooks/mcp presets)",
+      "why": "Хуки и MCP в settings.json часто несут абсолютные пути лаунчеров; коммитить только портируемый вариант."
+    },
+    {
+      "id": "provider-configs",
+      "policy": "portable-or-ignore",
+      "paths": [
+        ".codex/config.toml",
+        ".codex/hooks.json",
+        ".cursor/hooks.json",
+        ".cursor/cli.json",
+        ".cursor/permissions.json"
+      ],
+      "owner": "harness / maind provider deploy",
+      "why": "Генерируемые provider-конфиги: общие, пока без машинных путей; с абсолютными путями — только локально."
+    },
+    {
+      "id": "provider-locks",
+      "policy": "portable-or-ignore",
+      "paths": [
+        ".swissknife.json",
+        ".claude/agent-pack.lock.json",
+        ".swissknifeman/provider-artifacts.lock.json",
+        ".agents/.swissknifeman-codex-links.json"
+      ],
+      "owner": "skiller / harness agent-packs / provider artifacts",
+      "why": "Locks и выбор каналов фиксируют владение артефактами; коммитятся для воспроизводимости, но абсолютные ссылки на локальный клон (links, lock с путями) — машинные."
+    },
+    {
+      "id": "hook-modes",
+      "policy": "portable-or-ignore",
+      "paths": [
+        ".claude/auto-approve.env.ini",
+        ".claude/auto-approve.config.json",
+        ".claude/memory.env.ini",
+        ".claude/memory.config.json",
+        ".claude/run-report.env.ini",
+        ".codex/memory.env.ini",
+        ".cursor/*.env.ini",
+        ".claude/review-gate.env.ini",
+        ".claude/terminal-admission.env.ini",
+        ".codex/terminal-admission.env.ini",
+        ".claude/agent-router.env.ini",
+        ".claude/observer.env.ini"
+      ],
+      "owner": "harness hooks / maind sync",
+      "why": "Режимы хуков (`*.env.ini`, `*.config.json`: автономия, память, телеметрия, гейты): коммитятся, пока не содержат путей на компьютере (/home/…, /Users/…) или секретов; с такими путями — только в .gitignore."
+    },
+    {
+      "id": "tool-backups",
+      "policy": "ignore",
+      "paths": [
+        ".mcp.json.bak",
+        ".claude/**/*.bak",
+        ".cursor/**/*.bak",
+        ".codex/**/*.bak",
+        ".agents/**/*.bak",
+        ".swissknifeman/backups/",
+        ".codex/hooks.pre-telemetry-*"
+      ],
+      "owner": "maind / harness / skiller (merge-only writers)",
+      "why": "Бэкапы перед merge-записью: мусор в истории, накапливаются (десятки `.codex/config.toml.*.bak`)."
+    },
+    {
+      "id": "agent-runtime-state",
+      "policy": "ignore",
+      "paths": [
+        ".claude/runs/",
+        ".claude/analyze/",
+        ".claude/analyst/lessons/ephemeral/",
+        ".claude/worktrees/",
+        ".claude/scheduled_tasks.lock",
+        ".claude/.maind-feature-log.last",
+        ".claude/maind-*.sh",
+        ".cursor/state/",
+        ".cursor/logs/",
+        ".cursor/runs/",
+        ".codex/state/",
+        ".codex/runs/",
+        ".swissknifeman/task-terminal/",
+        ".swissknifeman/terminal-admission/",
+        ".swissknifeman/instruction-adopt/",
+        ".plan-cache/history/",
+        ".playwright-mcp/",
+        ".serena/cache/",
+        ".serena/logs/",
+        ".serena/project.local.yml"
+      ],
+      "owner": "harness hooks / maind sync / task / Serena",
+      "why": "Рантайм-следы агентов: телеметрия, запуски, lease terminal-admission, кэши и память Serena, сгенерированные maind-хуки (пересоздаются `maind sync`)."
+    },
+    {
+      "id": "instructions",
+      "policy": "commit",
+      "paths": [
+        "CLAUDE.md",
+        "AGENTS.md"
+      ],
+      "owner": "skiller instructions / agent owners",
+      "why": "CLAUDE.md и AGENTS.md — инструкции проекта для агентов: всегда в репозитории (часть review и онбординга)."
+    },
+    {
+      "id": "skiller-config",
+      "policy": "commit",
+      "paths": [
+        "skills-lock.json",
+        ".swissknifeman/config.json"
+      ],
+      "owner": "skiller (vendor sync)",
+      "why": "Выбор и lock vendor-скиллов нужны отключённым потребителям и CI (skiller CLAUDE.md: vendor-targets committed)."
+    },
+    {
+      "id": "agent-pack-artifacts",
+      "policy": "commit",
+      "paths": [
+        ".claude/agents/",
+        ".claude/rules/",
+        ".claude/commands/",
+        ".claude/workflows/",
+        ".claude/guidelines/",
+        ".claude/output-styles/",
+        ".codex/agents/",
+        ".cursor/rules/"
+      ],
+      "owner": "harness agent-packs",
+      "why": "Роли, правила, команды и гайды агентов — общий командный артефакт (`.claude/guidelines/` явно коммитится, runbook)."
+    },
+    {
+      "id": "hook-scripts",
+      "policy": "commit",
+      "paths": [
+        ".claude/hooks/",
+        ".codex/hooks/",
+        ".cursor/hooks/"
+      ],
+      "owner": "harness hooks",
+      "why": "Скрипты хуков без машинных путей (лаунчер резолвится из env/PATH): общие для команды; должны идти в ногу с tracking settings/hooks.json, которые на них ссылаются."
+    },
+    {
+      "id": "vendored-skills",
+      "policy": "commit",
+      "paths": [
+        ".claude/skills/",
+        ".agents/skills/",
+        ".cursor/skills/",
+        ".codex/skills/"
+      ],
+      "owner": "skiller (connect/vendor)",
+      "why": "Скиллы всегда в репозитории: нужны отключённым потребителям, CI и свежему клону без `skiller sync` (skiller CLAUDE.md: vendor-targets committed)."
+    },
+    {
+      "id": "codex-marketplace",
+      "policy": "project",
+      "group": "codex-plugins",
+      "paths": [
+        ".agents/plugins/"
+      ],
+      "owner": "skiller connect (codex-marketplace)",
+      "why": "Marketplace-манифест Codex: общий для команды или локальный выбор проекта."
+    },
+    {
+      "id": "serena-project",
+      "policy": "project",
+      "group": "serena",
+      "paths": [
+        ".serena/project.yml",
+        ".serena/.gitignore",
+        ".serena/memories/"
+      ],
+      "owner": "maind codegraph / Serena",
+      "why": "Пин Serena-проекта и её memories: командное знание или локальный кэш — выбор проекта; Serena сама ведёт `.serena/.gitignore` для кэшей."
+    }
+  ]
+}

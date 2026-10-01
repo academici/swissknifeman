@@ -11,6 +11,7 @@ _SHARED = {
     "provider-capabilities": "provider-capabilities.json",
     "provider-distribution": "provider-distribution.json",
     "provider-projection": "provider-projection.json",
+    "gitignore-policy": "gitignore-policy.json",
 }
 
 _PACKAGE_FALLBACKS = {

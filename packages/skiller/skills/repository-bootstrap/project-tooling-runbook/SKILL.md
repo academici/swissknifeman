@@ -278,6 +278,12 @@ The old flat `["docs","docs-public"]` form is migrated on the fly. Details — B
 
 ## Machine-specific config hygiene (gitignore + synced `.example`)
 
+> **Fleet map.** Which generated service files belong in `.gitignore` and which are committed is
+> one table: `configs/gitignore-policy.json` (policies `ignore` / `commit` / `portable-or-ignore` /
+> `project`, owner and reason per file). Check a project with
+> `maind doctor --gitignore-drift --project <id>` (read-only; `--block` prints the lines to add).
+> Only the repository's own `.gitignore` counts — a user-global excludes file does not protect teammates.
+
 A config that "bakes in" an **absolute local path** (`/home/<user>/…/bin/maind`, a Serena
 project path), a **secret** (proxy credentials, a token), or a **personal host:port**, must not
 be committed as-is: another developer/CI has a different path, a secret leaks into git history.

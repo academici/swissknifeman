@@ -6,11 +6,13 @@ agent-memory — внешний Node-демон (@agentmemory/agentmemory на i
 
 HTTP-контракт демона: GET /health · POST /memories {namespace,type,text} ·
 GET /search?namespace=&q= → {results:[{score,text}]}."""
+import ipaddress
 import json
 import os
 import re
 import shutil
 import signal
+import socket
 import subprocess
 import time
 from pathlib import Path
@@ -62,6 +64,76 @@ def refuse_if_client_role(config):
         die("роль узла memory.role='client' — локальный демон памяти НЕ поднимается "
             "(второй писатель ломает cross-machine память, ADR-0001). Используйте "
             "хост памяти по memory.url или смените memory.role на этой машине.")
+
+
+# ── bind-адрес демона: адрес машины НЕ живёт в tracked-конфиге ───────────────────
+_BIND_FORBIDDEN = {"0.0.0.0", "::", "0:0:0:0:0:0:0:0"}
+
+
+def lan_address():
+    """Основной LAN-IPv4 ЭТОЙ машины (UDP-connect без отправки пакетов) или None."""
+    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        probe.connect(("10.255.255.255", 1))
+        address = probe.getsockname()[0]
+    except OSError:
+        return None
+    finally:
+        probe.close()
+    return None if address.startswith("127.") else address
+
+
+def resolve_bind_host(config):
+    """Адрес bind для iii-http, заданный УЗЛОМ, а не репозиторием: env `AGENTMEMORY_BIND_HOST`
+    → `memory.bind_host` в config.json (gitignored). `auto` — LAN-адрес текущей машины.
+    None → tracked-шаблон остаётся как есть (loopback). Не-loopback допустим только для
+    memory.role='host'; `0.0.0.0`/`::` запрещены (ADR-0001, D28)."""
+    mem = (config or {}).get("memory") or {}
+    value = (os.environ.get("AGENTMEMORY_BIND_HOST") or mem.get("bind_host") or "").strip()
+    if not value:
+        return None
+    if value == "auto":
+        value = lan_address()
+        if value is None:
+            die("memory.bind_host='auto': LAN-адрес этой машины не определён — задайте "
+                "AGENTMEMORY_BIND_HOST/memory.bind_host явно или подключите сеть")
+    try:
+        parsed = ipaddress.ip_address(value)
+    except ValueError:
+        die(f"memory.bind_host='{value}' — ожидается IP-адрес или 'auto'")
+    if value in _BIND_FORBIDDEN or parsed.is_unspecified:
+        die("memory.bind_host: bind на все интерфейсы (0.0.0.0/::) запрещён — укажите конкретный "
+            "LAN-адрес или 'auto' (ADR-0001, D28)")
+    if not parsed.is_loopback and memory_role(config) != "host":
+        die(f"memory.bind_host='{value}' не loopback, но memory.role != 'host' — LAN-bind "
+            "включается только на host-машине памяти (ADR-0001)")
+    return value
+
+
+def effective_memory_config(env, config):
+    """Путь iii-config для демона. Tracked-шаблон портируем (host: 127.0.0.1); адрес этой
+    машины подставляется в РАНТАЙМ-копию `data/iii-config.runtime.yaml` (gitignored) —
+    перенос на другой комп = поменять `memory.bind_host`/`auto`, а не править репозиторий."""
+    host = resolve_bind_host(config)
+    if host is None:
+        return env.memory_config
+    lines = env.memory_config.read_text(encoding="utf-8").splitlines()
+    out, in_http, done = [], False, False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("- name:"):
+            in_http = stripped == "- name: iii-http"
+        if in_http and not done and stripped.startswith("host:"):
+            line = f"{line[:len(line) - len(line.lstrip())]}host: {host}"
+            done = True
+        out.append(line)
+    if not done:
+        die(f"в {env.memory_config} не найден workers[iii-http].host — bind-адрес не подставить")
+    env.data_dir.mkdir(parents=True, exist_ok=True)
+    target = env.data_dir / "iii-config.runtime.yaml"
+    target.write_text("# сгенерировано maind из tracked-шаблона; не править и не коммитить\n"
+                      + "\n".join(out) + "\n", encoding="utf-8")
+    return target
 
 
 # ── аутентификация (ADR-0001 п.3/п.4, D29) ───────────────────────────────────
@@ -170,7 +242,7 @@ def _daemon_argv(env, config):
         "AGENTMEMORY_PORT": str(http_port),
         "AGENTMEMORY_STREAM_PORT": str(stream_port),
         "AGENTMEMORY_URL": url,
-        "AGENTMEMORY_III_CONFIG": str(env.memory_config),
+        "AGENTMEMORY_III_CONFIG": str(effective_memory_config(env, config)),
     }
     return cmd, child_env, url
 

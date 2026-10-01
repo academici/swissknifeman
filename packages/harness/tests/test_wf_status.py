@@ -239,8 +239,8 @@ class DiscoverRunsCase(unittest.TestCase):
 class ProjectSlugCase(unittest.TestCase):
     def test_matches_findings_example(self):
         self.assertEqual(
-            project_slug("/home/vostrikov/projects/packages/loqum"),
-            "-home-vostrikov-projects-packages-loqum",
+            project_slug("/home/user/projects/packages/loqum"),
+            "-home-user-projects-packages-loqum",
         )
 
 

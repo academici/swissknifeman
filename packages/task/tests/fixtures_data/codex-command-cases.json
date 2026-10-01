@@ -15,7 +15,7 @@
   ],
   "invocations": {
     "task:fix": "$ task:fix repair parser",
-    "task:plan-run": "$ task:plan-run 2026.07.19-DUAL-PROVIDER P4.2"
+    "task:plan-run": "$ task:plan-run 2026.07.19-DEMO-PLAN P4.2"
   },
   "negative_diagnostics": [
     "CMD_CAPABILITY_UNSUPPORTED",

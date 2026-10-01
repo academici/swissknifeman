@@ -22,7 +22,7 @@ Main trap: those who mis-identify early traction as PMF usually started measurin
 ## Do NOT apply when
 
 - No working MVP with real users yet (idea stage) → `customer-discovery`.
-- Need roadmap/scope, not diagnostics → `product-roadmap`.
+- Need a product roadmap or scope, not diagnostics → `product-roadmap`.
 
 ## 1. Measurement framework (set BEFORE launch)
 

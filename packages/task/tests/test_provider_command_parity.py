@@ -28,8 +28,6 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 COMMAND_ROOT = REPO_ROOT / "packages/task/commands"
 ROUTING_PATH = REPO_ROOT / "packages/task/configs/command-routing.json"
 PLUGIN_PATH = REPO_ROOT / "packages/task/.claude-plugin/plugin.json"
-CONTRACT_PATH = (REPO_ROOT / "plans/archive/2026.07.19-DUAL-PROVIDER/root/contracts/"
-                 "provider-command-routing-contract.md")
 FIXTURE_PATH = (REPO_ROOT / "packages/task/tests/fixtures_data/"
                 "provider-command-parity.json")
 REFERENCE_PATH = REPO_ROOT / "packages/task/docs/reference/provider-commands.md"
@@ -50,26 +48,6 @@ _PLAN_ITEM_FIELDS = (
     "Validation", "Deliverables", "Completion Notes", "Pending Work",
     "Known Deviations", "Escalation Needed",
 )
-
-
-def _contract_inventory():
-    """Read the frozen Markdown inventory without consulting either renderer."""
-    lines = CONTRACT_PATH.read_text(encoding="utf-8").splitlines()
-    start = lines.index("## Command inventory")
-    end = next(index for index in range(start + 1, len(lines))
-               if lines[index].startswith("## "))
-    records = []
-    for line in lines[start:end]:
-        if not line.startswith("| `task:"):
-            continue
-        cells = [cell.strip() for cell in line.strip("|").split("|")]
-        records.append({
-            "command_id": cells[0].strip("`"),
-            "kind": cells[1],
-            "source": cells[2].strip("`"),
-            "routing": [cells[5], cells[6].strip("`"), cells[7].strip("`")],
-        })
-    return records
 
 
 def _write_routing(root, mutation):
@@ -154,18 +132,7 @@ class ProviderCommandParityTests(unittest.TestCase):
             next_carriers=cls.next_carriers)
 
     def test_contract_fixture_and_canonical_files_define_expected_set(self):
-        # The archived v1 contract is historical provenance. Review deliberately
-        # moved from frontier/xhigh to the current risk-scaled implementation/high
-        # default; do not rewrite an archived plan to pretend it always said so.
-        contract = [
-            {**row, "routing": ["fixed", "implementation", "high"]}
-            if row["command_id"] == "task:review" else row
-            for row in _contract_inventory()
-        ]
         fixture = self.expected["commands"]
-        self.assertEqual(
-            [{key: row[key] for key in ("command_id", "kind", "source", "routing")}
-             for row in fixture], contract)
         canonical = tuple(sorted(
             f"task:{path.stem}" for path in COMMAND_ROOT.glob("*.md") if path.is_file()))
         expected = tuple(sorted(row["command_id"] for row in fixture))
@@ -269,7 +236,7 @@ class ProviderCommandParityTests(unittest.TestCase):
         literal = "runtime/plan-protocol/references/work-references.md"
         source = self.catalog.content_for("task:plan-design").decode("utf-8")
         self.assertIn(literal, source)
-        self.assertIn("`PLAN1.D35`, `PLAN1.P2.3`; legacy: `<PLAN-ID> <local-ID>`", source)
+        self.assertIn("`PLAN<N>.D35`, `PLAN<N>.P2.3`; legacy: `<PLAN-ID> <local-ID>`", source)
         for provider_id, plan in (("claude-code", self.claude_plan), ("codex", self.codex_plan),
                                   ("cursor", self.cursor_plan)):
             with self.subTest(provider=provider_id):
@@ -280,7 +247,7 @@ class ProviderCommandParityTests(unittest.TestCase):
                     or "task-plan-design" in artifact.path
                 )
                 self.assertIn(literal, rendered)
-                self.assertIn("`PLAN1.D35`, `PLAN1.P2.3`; legacy: `<PLAN-ID> <local-ID>`", rendered)
+                self.assertIn("`PLAN<N>.D35`, `PLAN<N>.P2.3`; legacy: `<PLAN-ID> <local-ID>`", rendered)
 
     def test_all_contract_diagnostics_have_fail_closed_negative_cases(self):
         observed = set()

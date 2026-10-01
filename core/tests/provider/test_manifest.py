@@ -15,8 +15,8 @@ ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_PATH = ROOT / "configs" / "provider-capabilities.json"
 # Reviewed against b51b1a2d: Cursor adaptations and lifecycle.tool-telemetry are
 # committed capabilities, not a generator rewrite of the hand-authored manifest.
-APPROVED_CANONICAL_SHA256 = "a38bb141a8583f4b83010da399d88ca1ae68cf8757cedfcb8ec339040119b6f0"
-APPROVED_CARRIER_SHA256 = "0d8929870db2c1fdd33446445d09f2184e994d7d8a6af0d515c081595ea36400"
+APPROVED_CANONICAL_SHA256 = "cec032979b131fda6314a5e4ae0803ee75508f1c1f31dcf26c36a727c2206315"
+APPROVED_CARRIER_SHA256 = "e1ffeba33b752eb4942b04e98193c0e5caf829ff62c593095f7a7aea23b220b1"
 
 REGENERATION_DIAGNOSTIC = (
     "manifest hash mismatch — configs/provider-capabilities.json was likely "

@@ -1,1 +1,1 @@
-"""Plan-local Artifex deterministic supervisor prototype."""
+"""Artifex: standalone deterministic supervisor runtime."""

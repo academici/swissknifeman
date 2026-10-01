@@ -7,10 +7,9 @@ import unittest
 from pathlib import Path
 
 from artifex import authority, scheduler, store
+from support import FIXTURE_PLAN as PLAN
 
 
-ROOT = Path(__file__).resolve().parents[3]
-PLAN = ROOT / "plans" / ("2026" + ".08.03-ARTIFEX-SUPERVISOR")
 CASES = PLAN / "artifacts/P1/supervisor-run-cases-v1.json"
 
 

@@ -1,0 +1,167 @@
+{
+  "schema_version": "task-contract/v1",
+  "contract_id": "demo-routine-continuation",
+  "version": {
+    "revision": 1,
+    "content_hash": "15b97b06f5a54878ba202eb3a216269f4e55da3687e6e5c29835e642907f9343",
+    "supersedes": null
+  },
+  "goal": {
+    "outcome": "Seal the task contract carrier that every later item compiles before mutation.",
+    "non_goals": [
+      "task package implementation",
+      "owner-intent inference",
+      "any behavior mutation"
+    ]
+  },
+  "must": [
+    {
+      "id": "M1",
+      "requirement": "Write only the Files declared by the item.",
+      "source_ref": "plans/DEMO-1/phases/P0.md#P0.2 Files"
+    },
+    {
+      "id": "M2",
+      "requirement": "Every acceptance predicate resolves to evidence with a deterministic proof class.",
+      "source_ref": "plans/DEMO-1/plan.md#Proof classes"
+    }
+  ],
+  "never": [
+    {
+      "id": "N1",
+      "prohibition": "No behavior mutation before the acceptance freeze.",
+      "source_ref": "plans/DEMO-1/plan.md#Execution Rules"
+    },
+    {
+      "id": "N2",
+      "prohibition": "No pinned-not-recomputable quantity used as a deterministic acceptance predicate.",
+      "source_ref": "plans/DEMO-1/plan.md#Acceptance"
+    }
+  ],
+  "done": {
+    "public_acceptance": [
+      {
+        "id": "A1",
+        "predicate": "The committed validator exits 0 over the committed schema and examples.",
+        "scope": "public",
+        "check": "python3 plans/DEMO-1/artifacts/validate_task_contract.py --schema … --examples …",
+        "evidence_ref": "E1"
+      }
+    ]
+  },
+  "authority": {
+    "class": "routine",
+    "granted": true,
+    "granted_by": "owner approval for self-host execution",
+    "auto_allowed": [
+      "write the item's declared Files",
+      "run the item's Validation",
+      "close the item with the two-commit topology"
+    ],
+    "stop_boundaries": [
+      "tag/push/release",
+      "fleet rollout",
+      "consumer repositories"
+    ],
+    "loop_budget": {
+      "audit_rounds_max": 2,
+      "same_finding_max": 2
+    },
+    "observed_rounds": 0
+  },
+  "next": {
+    "form": "exec-items",
+    "carrier": "task:plan-run DEMO-1 P0.3",
+    "context": "same-session — item",
+    "origin": "approved-goal",
+    "changed_by": null
+  },
+  "route": {
+    "required": {
+      "model_class": "frontier",
+      "effort": "high"
+    },
+    "actual": {
+      "model_class": "frontier",
+      "effort": "high"
+    },
+    "capabilities": [
+      {
+        "id": "command.subagents",
+        "support": "native"
+      }
+    ]
+  },
+  "evidence": [
+    {
+      "id": "E1",
+      "path": "plans/DEMO-1/artifacts/verification-report.json",
+      "proof_class": "cross-checked",
+      "algorithm": "Semantic verifier report: every assertion over the immutable bundle carries a declared proof class."
+    },
+    {
+      "id": "E2",
+      "path": "plans/DEMO-1/artifacts/precomputed/baseline.json",
+      "proof_class": "pinned-not-recomputable",
+      "algorithm": "Stored totals: labelled context only, no committed classifier derives them."
+    }
+  ],
+  "portability": {
+    "tier": "committed-bundle",
+    "execution_inputs": [
+      {
+        "path": "plans/DEMO-1/artifacts/verification-report.json",
+        "kind": "committed",
+        "producer": null
+      },
+      {
+        "path": "plans/DEMO-1/artifacts/precomputed/corpus.json",
+        "kind": "committed",
+        "producer": null
+      }
+    ],
+    "provenance_only": [
+      "chat: owner directive"
+    ],
+    "privacy": {
+      "minimized": true,
+      "excluded_classes": [
+        "raw session bodies",
+        "chain-of-thought",
+        "tool payloads",
+        "secrets"
+      ]
+    },
+    "semantic_carrier": "task:plan-run",
+    "provider_renderers": {
+      "claude": "/task:plan-run DEMO-1 P0.3",
+      "codex": "$ task:plan-run DEMO-1 P0.3"
+    }
+  },
+  "conflicts": [],
+  "slice": {
+    "subagent_keys": [
+      "goal",
+      "must",
+      "never",
+      "done",
+      "authority",
+      "next",
+      "route",
+      "version"
+    ],
+    "root_only_keys": [
+      "evidence",
+      "portability",
+      "conflicts"
+    ]
+  },
+  "cold_start": {
+    "plan_id": "DEMO-1",
+    "item_id": "P0.3",
+    "reads": [
+      "E1"
+    ],
+    "carrier": "task:plan-run DEMO-1 P0.3"
+  }
+}

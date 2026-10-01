@@ -77,7 +77,7 @@ scripts/bootstrap-machine.sh --projects ~/.swissknifeman/machine-manifest.json
 
 ## Вторая машина: cross-machine память (host/client)
 
-Начиная с `2026.07.25-ECO-OPT P4`, память (`agent-memory`) может жить **на одной машине-хосте**,
+Начиная с `, память (`agent-memory`) может жить **на одной машине-хосте**,
 а остальные постоянные машины владельца — сетевые **клиенты** (вариант 1 закрытого
 roadmap-стаба; решения и отвергнутые варианты —
 `packages/maind/docs/adr/ADR-0001-cross-machine-memory.md`). Роль узла — поле
@@ -96,7 +96,7 @@ roadmap-стаба; решения и отвергнутые варианты �
    MCP-хуки этой же машины) начнут падать `недоступен` при следующем перезапуске демона, хотя
    он жив и отвечает по LAN (воспроизведено при исполнении P4.3: рестарт демона после того, как
    `iii-config.yaml` уже нёс LAN-bind, а `config.json` — ещё нет, дал полный локальный простой
-   памяти до правки `memory.url`; см. `findings/P4.3-rollout-report.md`).
+   памяти до правки `memory.url`; см.).
 3. Автозапуск без логина — `loginctl enable-linger $USER` (см.
    [systemd.md «Автостарт без логина»](/maind/guide/systemd)) — условие роли `host`, не опция.
 4. Firewall хоста — разрешить входящие на порт памяти ТОЛЬКО из подсети LAN.
@@ -109,11 +109,10 @@ roadmap-стаба; решения и отвергнутые варианты �
    остальные ступени идентичны.
 3. Приёмка — `maind health --strict --json` (round-trip store→recall→forget через сеть) и
    `maind doctor` (не считает отсутствие локального Node/agentmemory ошибкой на клиенте —
-   известный пробел на момент P4.3, см. Pending Work `findings/P4.3-rollout-report.md`).
+   известный пробел на момент P4.3, см. Pending Work).
 
 Известные ограничения LAN-стадии (секрет — единственный предохранитель, ротация ручная,
-сегмент LAN шире tailnet) и путь роста к `tailscale serve` — см. ADR-0001 «Известные ограничения»
-и [`roadmap/2026.07.25-memory-hub-service.md`](https://github.com/academici/swissknifeman/blob/main/roadmap/2026.07.25-memory-hub-service.md).
+сегмент LAN шире tailnet) и путь роста к `tailscale serve` — см. ADR-0001 «Известные ограничения».
 
 ## Сценарий «команда»
 

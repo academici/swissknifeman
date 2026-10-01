@@ -36,15 +36,15 @@ except ImportError:  # pragma: no cover - standalone-фолбэк, см. docstri
     def _core_warn(msg):
         print(f"WARN: {msg}", file=sys.stderr)
 
-# task.journal — SSOT схемы записи 2026.07.18-FOREMAN P1.1 и historical exception sidecar; лint
-# журнала реюзает её вместо дубля правил (Code Guidance 2026.07.18-FOREMAN P1.4 «анти-подгонка»), тот же
+# task.journal — SSOT схемы записи и historical exception sidecar; лint
+# журнала реюзает её вместо дубля правил (Code Guidance «анти-подгонка»), тот же
 # пакет `task`, тот же lib/ на sys.path (см. scripts/plan-lint.py лаунчер).
 from task import journal as _journal
 from task import plan_continuity, plan_layout, terminal_admission
 from task import review_policy as _review_policy
 from task import plan_status
 # task.task_contract — единственный владелец строкового теста «внешности» execution
-# input'а (task-contract-v1.md §Portability, frozen 2026.07.24-AGENT-RELIABILITY P0.2); tiered-portability lint (2026.07.24-AGENT-RELIABILITY P2.2)
+# input'а (task-contract-v1.md §Portability, frozen); tiered-portability lint
 # зовёт его, а не пересказывает список префиксов вторым списком (Implementation Rules P2.2).
 from task import task_contract
 
@@ -114,7 +114,7 @@ ESCALATION_RE = re.compile(r"^>\s*🔴\s*ESCALATION\s+(P\d+\.\d+)\s*:")
 HANDOFF_TITLE_RE = re.compile(r"^#\s+HANDOFF\s+—.*—\s+after\s+(P\d+(?:\.\d+)?)\s*$")
 HANDOFF_TITLE_HELP = ("заголовок не соответствует ни одной из двух форм (SKILL §8): "
                       "«# HANDOFF — … — after Pn.m» (item) · «# HANDOFF — … — after Pn» (фаза)")
-# Bootstrap-форма стартового handoff'а: план ещё не тронут, фазы `P0` не бывает (D37).
+# Bootstrap-форма стартового handoff'а: план ещё не тронут, фазы `P0` не бывает.
 # Ровно эта строка — не «любая фаза P0» и не «любой item .0»: расширение = дыра в гейте.
 HANDOFF_TITLE_BOOTSTRAP = "P0.0"
 PLAN_EXEC_RE = re.compile(r"/task:plan-exec\s+(\S+)\s+(P\d+\.\d+)")
@@ -179,7 +179,7 @@ README_FILENAME = "README.md"
 SKELETON_MARKER_RE = re.compile(r"^>\s*СКЕЛЕТ\s+—\s+не детализирован")
 # Маркер неоднозначности (SKILL §7): в фазе со статусом 🟡+ (не ⬜) = DoR-warning.
 NEEDS_CLARIFICATION_RE = re.compile(r"\[NEEDS CLARIFICATION")
-# 2026.07.13-PLAN-PROTOCOL-GAP P3.8/D52: append-only блок `## Audit Pn` ИСКЛЮЧЁН из региона грепов по фазе. Аудитор
+# append-only блок `## Audit Pn` ИСКЛЮЧЁН из региона грепов по фазе. Аудитор
 # отчитывается о проверке предиката («маркеров X — 0») и обязан УПОМЯНУТЬ маркер дословно;
 # греп по всему файлу бил бы по честному отчёту (A4: первая версия `## Audit P3` уронила
 # гейт собственной строкой). Регион гейтов кончается на ПЕРВОМ `## Audit` — ниже него живого
@@ -205,7 +205,7 @@ LAUNCH_COMMAND_ROW_RE = re.compile(r"^\|\s*Команда\s*\|")
 LAUNCH_CONTEXT_ROW_RE = re.compile(r"^\|\s*Context\s*\|\s*([^|]+?)\s*\|")
 CODE_FENCE_RE = re.compile(r"^\s*```")
 # Layout-v2 `Context` launch-block'а (SKILL §6, D16/D30/D125) — РОВНО три
-# значения. Реестр НЕ используется НИГДЕ вне `--conflicts` (2026.07.31-SKM-LEAN P5.9): до этого
+# значения. Реестр НЕ используется НИГДЕ вне `--conflicts`: до этого
 # item'а поле `Context` не гейтилось ни одним registry ни разу — сверка канон↔реализация для
 # него добавляется здесь ВПЕРВЫЕ, а не переиздаётся из существующего гейта (Pending Work P5.9
 # называет расширение до live-гейта отдельной задачей — этот item лишь делает класс сверяемым).
@@ -215,7 +215,7 @@ CONTEXT_VALUES = (
     "cold-start-root",
 )
 CONTINUITY_GATE_DATE = "2026.09.09"
-# Директива канонического литерала (D28/D79) живёт в EN-only `SKILL.md`;
+# Директива канонического литерала живёт в EN-only `SKILL.md`;
 # регексом владеет этот модуль, а `--conflicts` и тесты его переиспользуют.
 I18N_KEEP_RE = re.compile(r"<!--\s*i18n-keep:\s*(.+?)\s*-->")
 # Канонический порядок нумерованных секций plan.md (P0.3 рек#6).
@@ -227,7 +227,7 @@ PLAN_SECTION_TITLES = {
 # --- m7/D10: `## 7. Contracts` — носитель cross-plan notification ---------------
 # Секция опциональна и молода → ВСЕ находки по ней WARNING-уровня (ERROR сломал бы
 # back-compat-гейт: ни один живой план флота секции не имеет).
-# Опознаётся по ЗАГОЛОВКУ, не по номеру (D20): номер 7 — канон для НОВЫХ планов, но
+# Опознаётся по ЗАГОЛОВКУ, не по номеру: номер 7 — канон для НОВЫХ планов, но
 # живые планы уже заняли его своими секциями (VLT-HSEAM «## 7. Обсуждение») — жёсткая
 # привязка номера дала бы им новые WARNING «≠ канонической «## 7. Contracts»».
 CONTRACTS_HEADER_RE = re.compile(r"^##\s+(?:\d+\.\s+)?Contracts\s*$")
@@ -243,7 +243,7 @@ PHASE_CONTEXT_HEADER_RE = re.compile(r"^##\s+Phase Context\s*$")
 # порог «item по сути пуст» для требования скелет-маркера
 SKELETON_EMPTY_RATIO = 0.5
 
-# --- 2026.07.10-SKM-ROADMAP-005 P4.3: канон ID / места-имени workflow-скрипта / supersedes (D24/D27/D28) --
+# --- канон ID / места-имени workflow-скрипта / supersedes --
 # С 2026-08-12 forward-only канон нового PLAN-ID несёт положительный дневной ordinal:
 # `ГГГГ.ММ.ДД-№N-КОДОВОЕ-ИМЯ`.  Прежний датовый формат остаётся
 # readable для истории; `PLAN_ID_DATED_RE` намеренно объединяет обе формы, чтобы
@@ -258,19 +258,19 @@ PLAN_ID_DATED_RE = re.compile(
     r"^\d{4}\.\d{2}\.\d{2}-(?:№[1-9][0-9]*-)?[A-Z][A-Z0-9-]*$")
 PLAN_ID_LEGACY_RE = re.compile(r"^[A-Z][A-Z0-9-]+$")
 # Маркер workflow-скрипта в теле .js — детект ПОДСТРОКОЙ (не eval/import JS,
-# прецедент 2026.07.10-SKM-ROADMAP-005 P2.1/D19 `parse_script_meta`).
+# прецедент `parse_script_meta`).
 WORKFLOW_META_MARKER = "export const meta"
-WORKFLOW_DIR_NAME = "workflows"  # единственный дом скриптов плана (D28)
+WORKFLOW_DIR_NAME = "workflows" # единственный дом скриптов плана
 # Резидентный agent-pack класс (harness dev-loop.js) — не плановый артефакт, exempt по
-# имени файла от места/имени-проверки (findings A4, 2026.07.15-PLANFLOW-UX P3.3).
+# имени файла от места/имени-проверки (findings A4).
 DEV_LOOP_EXEMPT_NAME = "dev-loop.js"
 
-# --- 2026.07.10-SKM-ROADMAP-005 P4.6: workflow-как-DoR — грепаемый признак заявленной оркестрации (D29) ---
+# --- workflow-как-DoR — грепаемый признак заявленной оркестрации ---
 # КОНСЕРВАТИВНЫЙ набор маркеров в Phase Context: явный `scriptPath` launch-block'а,
 # «оркестрац», «мультиагент»/`multi-agent`. Правило Code Guidance «при сомнении НЕ
 # срабатывать» перевешивает буквальный список: бумерный `fan-out` НАМЕРЕННО исключён —
 # как одиночное слово он ловит нерелевантную прозу (напр. «искажение при fan-out» в
-# Known Deviations про токен-учёт), давая ложный warning. Условность (D29): ручное
+# Known Deviations про токен-учёт), давая ложный warning. Условность: ручное
 # item-by-item исполнение workflow не требует — маркер должен быть намеренным.
 ORCHESTRATION_MARKER_RE = re.compile(r"scriptPath|оркестрац|мультиагент|multi-agent", re.IGNORECASE)
 ORCHESTRATION_NEGATION_RE = re.compile(
@@ -292,7 +292,7 @@ def phase_declares_orchestration(line):
     """
     return bool(ORCHESTRATION_MARKER_RE.search(line) and not ORCHESTRATION_NEGATION_RE.search(line))
 
-# --- 2026.07.13-PLAN-PROTOCOL-GAP P2.15/D34: протухший `## Phase Handoff` при реопене фазы (H2) --------------
+# --- протухший `## Phase Handoff` при реопене фазы (H2) --------------
 # Реопен (SKILL §3, 4-й шаг) НЕ удаляет блок сдачи, а помечает его ПЕРВОЙ НЕПУСТОЙ строкой
 # маркером `> УСТАРЕЛ — фаза реопенена <D#>` (провенанс сдачи сохраняется, ложь снимается);
 # перезаписывает блок `plan-close` при следующем закрытии фазы. Жирное начертание маркера
@@ -300,18 +300,18 @@ def phase_declares_orchestration(line):
 # «где-то в тексте»: иначе гейт обходится упоминанием слова.
 PHASE_HANDOFF_STALE_RE = re.compile(r"^>\s*\*{0,2}\s*УСТАРЕЛ\b")
 # УЗКИЙ предикат «блок УТВЕРЖДАЕТ закрытие фазы». Формы взяты из замера по флоту
-# (findings/P2-third-reopen-fleet-measurements.md §1, 8 корней / 38 планов): наивное «блок
+# (8 корней / 38 планов): наивное «блок
 # непуст при нетерминальной фазе» бьёт 104 фазы (скелеты/заготовки — ложно-положительные),
 # эти три формы — 4 фазы, все истинно-положительные. Список НЕ расширять «на всякий случай»:
 # каждое лишнее слово — риск ложного WARNING на сотне фаз (пойдёт в реестр CANON_LITERALS,
-# 2026.07.13-PLAN-PROTOCOL-GAP P2.16). Регистронезависимо (флот пишет и «Терминальн…», и «терминальн…»).
+#). Регистронезависимо (флот пишет и «Терминальн…», и «терминальн…»).
 PHASE_HANDOFF_CLOSURE_LITERALS = ("терминальн", "фаза закрыта", "Сдано:")
 PHASE_HANDOFF_CLOSURE_RE = re.compile(
     "|".join(re.escape(lit) for lit in PHASE_HANDOFF_CLOSURE_LITERALS), re.IGNORECASE)
-# 2026.07.13-PLAN-PROTOCOL-GAP P3.7/D50: гейт судит по СУБЪЕКТУ утверждения, а не по встреченному слову. Закрывающий
+# гейт судит по СУБЪЕКТУ утверждения, а не по встреченному слову. Закрывающий
 # литерал ищется ТОЛЬКО в ПЕРВОЙ непустой строке блока (там же, где ищется маркер
 # `> УСТАРЕЛ`), и гасится ОТРИЦАНИЕМ на той же строке. Основание (J1, живая форма флота
-# `themeon/2026.07.12-BASE/P5`): «**Фаза P5 НЕ закрыта.** Терминальны только P5.1 и P5.2
+# `themeon//P5`): «**Фаза P5 НЕ закрыта.** Терминальны только P5.1 и P5.2
 # (2/10)» — слово «Терминальны» относится к ITEMS, блок буквально отрицает закрытие фазы,
 # а греп по всему блоку давал ЛОЖНО-положительный WARNING. Отрицание проверяется на ТОЙ ЖЕ
 # строке, а не по блоку: «фаза закрыта … но P5.3 ещё не закрыта» ниже по тексту не должно
@@ -320,7 +320,7 @@ PHASE_HANDOFF_NEGATION_LITERALS = ("не закрыт",)
 PHASE_HANDOFF_NEGATION_RE = re.compile(
     "|".join(re.escape(lit) for lit in PHASE_HANDOFF_NEGATION_LITERALS), re.IGNORECASE)
 
-# --- 2026.07.24-AGENT-RELIABILITY P2.2/D26/D47: tiered-portability lint (plan-portability-v1.md, task_contract.py) ---
+# --- tiered-portability lint (plan-portability-v1.md, task_contract.py) ---
 # Классификация РОЛИ пути (execution input vs provenance) — ПОЗИЦИОННЫЙ тест: путь
 # execution-input, только если появляется в ЗНАЧЕНИИ полей Inputs/Required Reads/Validation
 # КОНКРЕТНОГО item'а (то самое «что item реально читает» — plan-portability-v1.md
@@ -328,14 +328,14 @@ PHASE_HANDOFF_NEGATION_RE = re.compile(
 # brief/, findings/) НЕ сканируется вовсе — упоминание пути там по построению не может стать
 # execution input, что и есть self-conformance fixture этого плана (tmp/-ссылка в
 # brief/00-brief.md обязана проходить). Регекс по подстроке `tmp/` для ЭТОГО шага (роль)
-# ЗАПРЕЩЁН (D47) — используется только позиция поля. Строковый тест «внешности» пути
+# ЗАПРЕЩЁН — используется только позиция поля. Строковый тест «внешности» пути
 # (абсолютный/`~`/`../`/URL/`tmp/`-корень) — ОТДЕЛЬНЫЙ шаг ПОСЛЕ того, как роль уже решена
-# позиционно (task_contract.is_external_path, task-contract-v1.md §Portability, frozen 2026.07.24-AGENT-RELIABILITY P0.2).
+# позиционно (task_contract.is_external_path, task-contract-v1.md §Portability, frozen).
 # Severity-cutoff (тот же паттерн, что у BRIEF_CANON_DATE/JOURNAL_CANON_DATE): датовые
 # планы ОТ этой даты — ERROR, старее — WARNING. Дата НАМЕРЕННО позже дня запечатывания
 # правила (2026-07-26, P2.2): fleet-замер на живом дереве (`bash
 # packages/task/scripts/validate.sh`) вскрыл ~40 `~`/абсолютных путей в Required
-# Reads/Validation ДРУГИХ активных планов (`2026.07.18-FOREMAN`, `2026.07.25-ECO-OPT`) —
+# Reads/Validation ДРУГИХ активных планов —
 # датируй правило раньше их даты, и чужая поверхность (И2) ловит новые ERROR без их
 # участия. Правило само по себе уже применено и протестировано (юнит-тесты гоняют его на
 # ERROR-тир синтетическими датовыми фикстурами); отложенный cutoff — только про то, какие
@@ -357,9 +357,9 @@ PORTABILITY_PATH_RE = re.compile(
 
 
 def _plan_codename(plan_id):
-    """Кодовое имя плана (D28) — для деривации имени workflow-скрипта и supersedes-сверки:
+    """Кодовое имя плана — для деривации имени workflow-скрипта и supersedes-сверки:
     датовый ID `ГГГГ.ММ.ДД-ИМЯ` → часть после даты; старый ID → весь ID; всегда `.lower()`.
-    Примеры: `2026.07.10-FLEX` → `flex`; `SKM-ROADMAP-005` → `skm-roadmap-005`."""
+    Примеры: → `flex`; `SKM-ROADMAP-005` → `skm-roadmap-005`."""
     numbered = PLAN_ID_NUMBERED_RE.match(plan_id)
     if numbered:
         return numbered.group("codename").lower()
@@ -369,14 +369,14 @@ def _plan_codename(plan_id):
 
 
 def _workflow_name_re(codename):
-    """Каноничное имя workflow-скрипта — `wf-<кодовое-имя-lower>-<назначение>.js` (D28)."""
+    """Каноничное имя workflow-скрипта — `wf-<кодовое-имя-lower>-<назначение>.js`."""
     return re.compile(r"^wf-" + re.escape(codename) + r"-[a-z0-9-]+\.js$")
 
 
 def _plan_has_workflow_script(plan_dir):
     """Есть ли у плана хоть один `.js`-workflow-скрипт (с маркером `export const meta`)
-    в `plans/<ID>/workflows/` — признак «готового workflow» для DoR-проверки 2026.07.10-SKM-ROADMAP-005 P4.6 (D29).
-    Детект БЕЗ исполнения JS (подстрока-маркер, прецедент 2026.07.10-SKM-ROADMAP-005 P2.1/D19)."""
+    в `plans/<ID>/workflows/` — признак «готового workflow» для DoR-проверки.
+    Детект БЕЗ исполнения JS (подстрока-маркер, прецедент)."""
     workflows_dir = Path(plan_dir) / WORKFLOW_DIR_NAME
     if not workflows_dir.is_dir():
         return False
@@ -397,7 +397,7 @@ class Diagnostics:
     def __init__(self):
         self.errors = []
         self.warnings = []
-        self._raw_errors = []  # (path, msg) — для normalized_keys (2026.07.13-PLAN-PROTOCOL-GAP P1.2/B1)
+        self._raw_errors = [] # (path, msg) — для normalized_keys
         self._raw_warnings = []
 
     def error(self, path, line, msg):
@@ -414,7 +414,7 @@ class Diagnostics:
 
     def normalized_keys(self, base_dir):
         """Мультимножество `(kind, отн_путь, msg)` для сравнения деревьев (`--baseline`,
-        2026.07.13-PLAN-PROTOCOL-GAP P1.2/D5/D6): путь — относительно `base_dir` (если под ним, иначе как есть),
+        ): путь — относительно `base_dir` (если под ним, иначе как есть),
         номер строки НЕ участвует (сдвиг строк от собственного диффа не должен превращать
         старую ошибку в «новую»)."""
         base_dir = Path(base_dir).resolve()
@@ -502,7 +502,7 @@ def _find_section(lines, header_re):
 
 
 def _lines_before_audit(lines):
-    """Строки фазы ДО первого append-блока `## Audit` — регион грепов по фазе (D52).
+    """Строки фазы ДО первого append-блока `## Audit` — регион грепов по фазе.
     Префикс исходного списка ⇒ номера строк (i + 1) остаются валидными для диагностик."""
     for i, ln in enumerate(lines):
         if AUDIT_BLOCK_HEADER_RE.match(ln):
@@ -516,7 +516,7 @@ def _lint_audit_scope_payload(lines, path, plan_id, diag):
     Аудит с вердиктом RED/ATTENTION ПЕРЕДАЁТ находки следующей сессии, и голая команда их
     теряет: принимающая сессия переоткрывает находки сама, а `handoff.md` в этот момент ещё
     указывает на ПРЕДЫДУЩИЙ шаг и уводит мимо. Инцидент-основание — аудит P0 плана
-    2026.07.16-INS-EVO: launch-block `/task:plan-design <ID> P0` без payload'а владелец
+    : launch-block `/task:plan-design <ID> P0` без payload'а владелец
     прочитал как «фазу предлагают разрабатывать заново», а `plan-audit.md` ровно голую
     команду и предписывал. Правило cold-start («пути входных доков») существовало и до
     инцидента — не хватало формы и гейта.
@@ -669,7 +669,7 @@ def _parse_fields(body_lines, body_start_lineno, field_re):
     вхождение ключа, по порядку появления (D90: `**Поле:**`-строка внутри свободной прозы
     другого поля — напр. `**Validation:**`, дописанная в Completion Notes, — матчит тот же
     `field_re` и молча подменяет собой раннее легитимное значение поля; вызывающий решает,
-    диагностировать находку или пропустить — handoff-поля вне Scope 2026.07.31-SKM-LEAN P5.9,
+    диагностировать находку или пропустить — handoff-поля вне Scope,
     только item-поля)."""
     fields = {}
     first_seen = {}

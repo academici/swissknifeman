@@ -1,4 +1,4 @@
-"""unittest for analyst.metrics — reliability metric arithmetic and paired digest (P3.2).
+"""unittest for analyst.metrics — reliability metric arithmetic and paired digest.
 Run: PYTHONPATH=packages/analyst/lib python3 -m unittest discover -s packages/analyst/tests -p 'test_metrics.py'"""
 import unittest
 
@@ -14,7 +14,7 @@ def _trace(*, turn_id="t1", **overrides):
         "provenance": {"provider_id": "claude-code", "raw_ref": "local:s1", "sha256": "0" * 64,
                        "reader_id": "harness.provider_trace", "reader_version": "1.0.0"},
         "occurred_at": "2026-07-26T00:00:00Z",
-        "plan_ref": {"plan_id": "2026.07.24-AGENT-RELIABILITY", "item_id": "P3.2", "command": "plan-run"},
+        "plan_ref": {"plan_id": "2026.07.24-DEMO-PLAN", "item_id": "P3.2", "command": "plan-run"},
         "contract_ref": {"contract_id": "task-contract-v1", "version_hash": "a" * 64},
         "route": {"model_class": "implementation", "effort": "high", "model": "sonnet"},
         "dispatch": {"state": "EXECUTING", "event": "dispatch"},
@@ -129,7 +129,7 @@ class TestSliceBy(unittest.TestCase):
         by_project = slice_by(entries, "project")
         self.assertEqual(set(by_project), {"swissknifeman", "azguard"})
         by_plan = slice_by(entries, "plan")
-        self.assertEqual(set(by_plan), {"2026.07.24-AGENT-RELIABILITY", "OTHER-PLAN"})
+        self.assertEqual(set(by_plan), {"2026.07.24-DEMO-PLAN", "OTHER-PLAN"})
         by_item = slice_by(entries, "item")
         self.assertEqual(set(by_item), {"P3.2", "P1.1"})
 

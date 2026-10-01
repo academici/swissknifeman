@@ -1,4 +1,4 @@
-"""P3.1 (2026.07.12-CONTEXT-ECONOMY): гейт «description ≤450 симв» на РЕАЛЬНОМ реестре.
+"""P3.1: гейт «description ≤450 симв» на РЕАЛЬНОМ реестре.
 
 Гейт batch-укорочения — не синтетический fixtures-реестр (тот не отражает факт
 живых SKILL.md), а прямой скан packages/skiller/skills/**/SKILL.md. Порог 450 —

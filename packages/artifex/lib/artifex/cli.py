@@ -1,4 +1,4 @@
-"""Explicit-root command surface for the plan-local Artifex P2 candidate."""
+"""Explicit-root command line surface of the Artifex supervisor."""
 from __future__ import annotations
 
 import argparse
@@ -10,7 +10,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import activity, authority, business_dispatch, compiler, dispatch, scheduler, security, store, telemetry, worktree
+from . import activity, authority, compiler, dispatch, scheduler, security, store, telemetry, worktree
 
 MAX_RESULT_BYTES = 32_768
 EXIT_OK, EXIT_REFUSAL, EXIT_NOT_FOUND, EXIT_ERROR = 0, 2, 3, 1
@@ -190,7 +190,7 @@ def _report(args: argparse.Namespace, _repo: Path, plan: Path, runs: Path) -> di
 
 
 def _dispatch(args: argparse.Namespace, repo: Path, plan: Path, runs: Path) -> dict:
-    """Consume exactly one indexed admission through the P2 no-provider port."""
+    """Consume exactly one indexed admission; without ``--provider`` no provider is ever started."""
     admission_path = _file(_inside(repo, repo / args.admission))
     admission = security.indexed_admission(plan, admission_path)
     identity = admission["dispatch"]
@@ -210,7 +210,7 @@ def _dispatch(args: argparse.Namespace, repo: Path, plan: Path, runs: Path) -> d
     authority_input = dict(admitted.frozen.cases["base_input"])
     authority_input.update({"operation": "dispatch_worker", "requested_class": "AUTO"})
     projected = dispatch.scheduler_slice(admission, authority_input)
-    # Omission preserves the P2 provider-free refusal; an explicit provider is
+    # Omitting --provider keeps the provider-free refusal port; a provider is
     # selected only after the indexed admission has bound task and provider.
     selected_activity = None if args.provider is None else activity.ProviderActivityPort(plan, admission)
     result = scheduler.Scheduler(run, admitted, now=_now, activity=selected_activity).schedule([projected])
@@ -218,35 +218,6 @@ def _dispatch(args: argparse.Namespace, repo: Path, plan: Path, runs: Path) -> d
     observation = result.get("observation", {})
     return {"status": result["status"], "run_id": args.run_id, "task_id": admitted.task_id,
             "admission_hash": admission["admission_hash"], "process_count": observation.get("process_count", 0)}
-
-
-def _dispatch_business(args: argparse.Namespace, repo: Path, plan: Path, _runs: Path) -> dict:
-    """Validate a D105 carrier through G2→G2B without issuing provider intent."""
-    admission_path = _file(_inside(repo, repo / args.admission))
-    admission = security.indexed_business_admission(plan, admission_path, g2_digest=args.g2_predecessor,
-                                                     g2b_digest=args.g2b_successor)
-    return {"status": "admitted", "trial_id": admission["trial_id"], "provider": admission["task"]["provider"],
-            "usage": 0, "intent_written": False}
-
-
-def _dispatch_business_intent(args: argparse.Namespace, repo: Path, plan: Path, _runs: Path) -> dict:
-    """Execute exactly one indexed D105 business admission through the D118 seam.
-
-    Sibling to ``dispatch-business``, which stays validate-only: this command is the
-    sole package entry point that turns an admitted D105 carrier into real provider
-    intent, via ``activity.BusinessProviderActivityPort.run``.
-    """
-    admission_path = _file(_inside(repo, repo / args.admission))
-    admission = security.indexed_business_admission(plan, admission_path, g2_digest=args.g2_predecessor,
-                                                     g2b_digest=args.g2b_successor)
-    cwd = _directory(Path(args.cwd))
-    port = activity.BusinessProviderActivityPort(plan, admission, g2_digest=args.g2_predecessor,
-                                                 g2b_digest=args.g2b_successor)
-    observation = port.run(cwd=cwd, binary=args.binary)
-    return {"status": "success" if observation.get("kind") == "success" else "refused",
-            "trial_id": admission["trial_id"], "provider": admission["task"]["provider"],
-            "admission_hash": admission["admission_hash"], "process_count": observation.get("process_count", 0),
-            "reason_code": observation.get("reason_code"), "intent_written": observation.get("kind") == "success"}
 
 
 def _worktree_inventory(args: argparse.Namespace, repo: Path, _plan: Path, _runs: Path) -> dict:
@@ -277,16 +248,6 @@ def build_parser() -> argparse.ArgumentParser:
     dispatch_command.add_argument("--run-id", required=True)
     dispatch_command.add_argument("--admission", required=True)
     dispatch_command.add_argument("--provider", choices=("codex", "claude-code"))
-    business_command = sub.add_parser("dispatch-business")
-    business_command.add_argument("--admission", required=True)
-    business_command.add_argument("--g2-predecessor", required=True)
-    business_command.add_argument("--g2b-successor", required=True)
-    business_intent_command = sub.add_parser("dispatch-business-intent")
-    business_intent_command.add_argument("--admission", required=True)
-    business_intent_command.add_argument("--g2-predecessor", required=True)
-    business_intent_command.add_argument("--g2b-successor", required=True)
-    business_intent_command.add_argument("--cwd", required=True)
-    business_intent_command.add_argument("--binary")
     sub.add_parser("worktree-inventory")
     return parser
 
@@ -296,8 +257,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         repo, plan, runs = _roots(args)
         result = {"start": _start, "status": _status, "resume": _resume, "reconcile": _reconcile, "stop": _stop, "report": _report, "telemetry": _telemetry, "dispatch": _dispatch,
-                  "worktree-inventory": _worktree_inventory, "dispatch-business": _dispatch_business,
-                  "dispatch-business-intent": _dispatch_business_intent}[args.command](args, repo, plan, runs)
+                  "worktree-inventory": _worktree_inventory}[args.command](args, repo, plan, runs)
         code = EXIT_OK
     except (CliRefusal, compiler.CompileRefusal, dispatch.DispatchRefusal, security.SecurityRefusal, store.StoreRefusal, scheduler.SchedulerRefusal) as exc:
         result, code = {"status": "refused", "reason": getattr(exc, "reason", str(exc))}, EXIT_NOT_FOUND if getattr(exc, "reason", "") == "RUN_NOT_FOUND" else EXIT_REFUSAL

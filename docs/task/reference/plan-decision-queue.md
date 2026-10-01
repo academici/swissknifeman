@@ -9,7 +9,7 @@ or response shape, authority-frame assignment, timestamp, provenance, options, a
 canonical/policy digests. The request must contain both reserved `escalate` and `reject` choices;
 the frozen 2–5 bound applies only to substantive choices. The transient construction `action` is
 folded into the durable `canonical_action` projection and is never stored as an extra request field
-(D145).
+.
 
 A request parks only its subject through a journal `blocked` event. Resolution requires the lease
 and exact continuation identity. One semantic outcome reducer governs item state, the owner-gate
@@ -27,7 +27,7 @@ different payload or resolver remains fail-closed. A durable response never stor
 the API returns it only after all four carriers have been regenerated and byte-checked.
 
 The producer acceptance at
-`plans/archive/2026.08.07-PLAN-ECONOMY/artifacts/P5/validate_acceptance.py` uses fresh fixture copies to
+ uses fresh fixture copies to
 exercise policy apply and its single-use boundary, authorization reclassification with its permitted
 owner flow, P4→P5 owner `continue`/`park`/`reject`,
 the 2- and 5-substantive-option boundaries, mandatory-only rejection, and one-shot request/resolve

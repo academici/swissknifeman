@@ -48,7 +48,7 @@ Disclose an environment defect as soon as it could affect model/effort, filesyst
 By convention, generated manifests and documents are produced by their generator and never hand-edited; regenerate through the owning tool and re-run its `--check`.
 <!-- instruction:root.speculative-work -->
 ## root.speculative-work
-By repository convention, record speculative work in `roadmap/` and implement only against a measured problem, not in anticipation of one.
+By repository convention, implement optimizations only against a measured problem, not in anticipation of one.
 <!-- instruction:root.docs-build -->
 ## root.docs-build
 By convention, package documentation builds standalone and in the umbrella aggregate; internal documentation links stay relative, without a package-name prefix.

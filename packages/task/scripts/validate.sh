@@ -61,7 +61,7 @@ for f in sorted(glob.glob("commands/*.md")):
         continue
     if not fm.get("description"):
         bad.append(f"{f}: пустой/нет description")
-    # plan-run.md (D18) намеренно БЕЗ model/effort — наследует сессию, единственное исключение
+    # plan-run.md намеренно БЕЗ model/effort — наследует сессию, единственное исключение
     if f != "commands/plan-run.md":
         if fm.get("model") not in VALID_MODELS:
             bad.append(f"{f}: model «{fm.get('model')}» не из {sorted(VALID_MODELS)}")
@@ -92,7 +92,7 @@ if [[ ${#plan_targets[@]} -eq 0 ]]; then
   echo "  plan regression не запрошен; --plan PATH для задачи, --fleet для CI/release"
 fi
 
-# --conflicts (2026.07.31-SKM-LEAN P5.9, roadmap plan-audit-loop.md §A.1) — дешёвая
+# --conflicts — дешёвая
 # сверка «EN-only канон ↔ реализация» без плана на входе; отсутствие канона fail-closed.
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
   python3 scripts/plan-lint.py --conflicts || err "plan-lint.py --conflicts — см. вывод выше"

@@ -11,7 +11,7 @@ Generated Cursor adapter for semantic command `task:plan-design`.
 - Invocation: `task:plan-design <arguments>`
 - Routing: `frontier/high -> claude-opus-5-thinking-high/high`
 - Canonical source: `packages/task/commands/plan-design.md`
-- Canonical SHA-256: `sha256:b8a040d8ef0adce9833e66f045ba38f20f5b9b48bf713b700e9eea44e54bf702`
+- Canonical SHA-256: `sha256:3fbad6a15d03d2a915b6966739f9124244cad178dd76dcf7f41ecfadfbc113a3`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as the user prompt.

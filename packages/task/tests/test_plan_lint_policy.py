@@ -137,7 +137,7 @@ class TestBriefLayer(TmpPlanTestCase):
 
 
 class TestJournalIndexLayer(TmpPlanTestCase):
-    """journal.jsonl/index.md (P1.4/D22): датовый план от 2026.07.18 без валидного
+    """journal.jsonl/index.md: датовый план от 2026.07.18 без валидного
     journal.jsonl — ERROR, старее/legacy — WARNING; index.md отсутствует — ВСЕГДА
     WARNING (не носитель факта, в отличие от журнала)."""
 
@@ -210,14 +210,14 @@ class TestJournalIndexLayer(TmpPlanTestCase):
         plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
         journal = plan_dir / "journal.jsonl"
         entry = json.loads(journal.read_text(encoding="utf-8"))
-        entry["plan_id"] = "2026.07.18-FOREIGN"
+        entry["plan_id"] = "2026.07.18-DEMO-FOREIGN"
         journal.write_text(
             json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n",
             encoding="utf-8",
         )
         _, diag = _lint(plan_dir)
         self.assertTrue(
-            _errors_containing(diag, "2026.07.18-FOREIGN")
+            _errors_containing(diag, "2026.07.18-DEMO-FOREIGN")
             and _errors_containing(diag, "2026.07.18-DEMO"),
             diag.errors,
         )
@@ -227,7 +227,7 @@ class TestJournalIndexLayer(TmpPlanTestCase):
         write_decision_record(plan_dir, "D2", decision="historical schema exception")
         journal = plan_dir / "journal.jsonl"
         entry = json.loads(journal.read_text(encoding="utf-8"))
-        entry["plan_id"] = "2026.07.18-FOREIGN"
+        entry["plan_id"] = "2026.07.18-DEMO-FOREIGN"
         entry["friction"] = ["Major: historical free-form value"]
         raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
         journal.write_text(raw + "\n", encoding="utf-8")
@@ -240,7 +240,7 @@ class TestJournalIndexLayer(TmpPlanTestCase):
             encoding="utf-8",
         )
         exception = new_exception(
-            plan_id="2026.07.18-FOREIGN", target_line=1,
+            plan_id="2026.07.18-DEMO-FOREIGN", target_line=1,
             target_sha256=line_sha256(raw), invalid_fields=["friction"],
             owner_decision="D2", actor="owner", reason="foreign probe",
             ts="2026-07-19T20:00:00Z",
@@ -251,7 +251,7 @@ class TestJournalIndexLayer(TmpPlanTestCase):
         )
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "schema exception"), diag.errors)
-        self.assertTrue(_errors_containing(diag, "2026.07.18-FOREIGN"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "2026.07.18-DEMO-FOREIGN"), diag.errors)
         self.assertTrue(_errors_containing(diag, "2026.07.18-DEMO"), diag.errors)
 
     def test_historical_exception_rejects_inexact_invalid_field_set(self):
@@ -401,7 +401,7 @@ class TestJournalIndexLayer(TmpPlanTestCase):
 class TestAuditScopePayload(TmpPlanTestCase):
     """Scope-payload launch-block'а в блоке `## Audit Pn` (SKILL §8, D-канон 2026-07-17).
 
-    Инцидент-основание: аудит P0 плана 2026.07.16-INS-EVO выдал `/task:plan-design <ID> P0`
+    Инцидент-основание: аудит P0 плана выдал `/task:plan-design <ID> P0`
     голым — владелец прочитал это как «фазу разрабатывают заново». Вердикт RED/ATTENTION
     передаёт находки ⇒ launch-block обязан нести РЕЖИМ:/ВХОД:/СКОУП:/НЕ ТРОГАТЬ:.
     """
@@ -524,10 +524,10 @@ class TestAuditTerminalPolicy(TmpPlanTestCase):
 
     def test_audit_red_to_plan_design_without_reducer_evidence_is_error(self):
         from task import journal
-        plan = write_valid_plan(self.root, plan_id="2026.08.14-AUDIT-POLICY")
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-DEMO-AUDIT-POLICY")
         self._append_block(
             plan, verdict="RED",
-            semantic_next="design-phase: task:plan-design 2026.08.14-AUDIT-POLICY P1")
+            semantic_next="design-phase: task:plan-design 2026.08.14-DEMO-AUDIT-POLICY P1")
         self._append_raw_event(plan, journal.new_entry(
             plan_id=plan.name, item_id="P1 — режим фазы", command="plan-audit",
             actor="frontier/xhigh", result="audit-red", fingerprint="a" * 64))
@@ -539,10 +539,10 @@ class TestAuditTerminalPolicy(TmpPlanTestCase):
 
     def test_audit_green_requires_exact_close_successor(self):
         from task import journal
-        plan = write_valid_plan(self.root, plan_id="2026.08.14-AUDIT-GREEN")
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-DEMO-AUDIT-GREEN")
         self._append_block(
             plan, verdict="GREEN",
-            semantic_next="design-phase: task:plan-design 2026.08.14-AUDIT-GREEN P1")
+            semantic_next="design-phase: task:plan-design 2026.08.14-DEMO-AUDIT-GREEN P1")
         self._append_raw_event(plan, journal.new_entry(
             plan_id=plan.name, item_id="P1", command="plan-audit",
             actor="frontier/xhigh", result="audit-green", fingerprint="a" * 64))
@@ -554,10 +554,10 @@ class TestAuditTerminalPolicy(TmpPlanTestCase):
 
     def test_audit_green_with_exact_close_successor_is_clean(self):
         from task import journal
-        plan = write_valid_plan(self.root, plan_id="2026.08.14-AUDIT-CLOSE")
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-DEMO-AUDIT-CLOSE")
         self._append_block(
             plan, verdict="GREEN",
-            semantic_next="close: task:plan-close 2026.08.14-AUDIT-CLOSE P1")
+            semantic_next="close: task:plan-close 2026.08.14-DEMO-AUDIT-CLOSE P1")
         self._append_raw_event(plan, journal.new_entry(
             plan_id=plan.name, item_id="P1", command="plan-audit",
             actor="frontier/xhigh", result="audit-green", fingerprint="a" * 64))
@@ -569,10 +569,10 @@ class TestAuditTerminalPolicy(TmpPlanTestCase):
 
     def test_historical_audit_without_new_terminal_policy_is_readable(self):
         from task import journal
-        plan = write_valid_plan(self.root, plan_id="2026.08.14-HISTORICAL-AUDIT")
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-DEMO-HISTORICAL-AUDIT")
         self._append_block(
             plan, verdict="RED",
-            semantic_next="design-phase: task:plan-design 2026.08.14-HISTORICAL-AUDIT P1",
+            semantic_next="design-phase: task:plan-design 2026.08.14-DEMO-HISTORICAL-AUDIT P1",
             audit_date="2026-08-13")
         self._append_raw_event(plan, journal.new_entry(
             plan_id=plan.name, item_id="P1", command="plan-audit",
@@ -589,7 +589,7 @@ class TestAuditTerminalPolicy(TmpPlanTestCase):
 
     def test_new_terminal_item_without_validation_evidence_is_error(self):
         from task import journal
-        plan = write_valid_plan(self.root, plan_id="2026.08.14-TERMINAL-EVIDENCE")
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-DEMO-TERMINAL-EVIDENCE")
         self._append_raw_event(plan, journal.new_entry(
             plan_id=plan.name, item_id="P1.1", command="plan-run",
             actor="implementation/high", result="closed-deviations",
@@ -602,7 +602,7 @@ class TestAuditTerminalPolicy(TmpPlanTestCase):
 
     def test_historical_terminal_item_without_validation_evidence_is_readable(self):
         from task import journal
-        plan = write_valid_plan(self.root, plan_id="2026.08.14-HISTORICAL-TERMINAL")
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-DEMO-HISTORICAL-TERMINAL")
         self._append_raw_event(plan, journal.new_entry(
             plan_id=plan.name, item_id="P1.1", command="plan-run",
             actor="implementation/high", result="closed-deviations",
@@ -615,7 +615,7 @@ class TestAuditTerminalPolicy(TmpPlanTestCase):
 
     def test_current_spec_requires_fresh_terminal_evidence(self):
         from task import journal
-        plan = write_valid_plan(self.root, plan_id="2026.08.14-SPEC-STALE")
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-DEMO-SPEC-STALE")
         self._append_raw_event(plan, journal.new_entry(
             plan_id=plan.name, item_id="P1.1", command="plan-run",
             actor="implementation/high", result="closed-green",
@@ -630,7 +630,7 @@ class TestAuditTerminalPolicy(TmpPlanTestCase):
 
     def test_audit_repair_supersedes_old_spec_digest_without_rewriting_history(self):
         from task import journal
-        plan = write_valid_plan(self.root, plan_id="2026.08.14-SPEC-REBOUND")
+        plan = write_valid_plan(self.root, plan_id="2026.08.14-DEMO-SPEC-REBOUND")
         self._append_raw_event(plan, journal.new_entry(
             plan_id=plan.name, item_id="P1.1", command="plan-run",
             actor="implementation/high", result="closed-green",
@@ -648,11 +648,11 @@ class TestAuditTerminalPolicy(TmpPlanTestCase):
         self.assertEqual(_errors_containing(diag, "TERMINAL_SPEC_STALE"), [], diag.errors)
 
     def test_terminal_phase_design_handoff_requires_reentry_evidence(self):
-        plan = write_valid_plan(self.root, plan_id="2026.09.09-№1-REENTRY-LINT")
+        plan = write_valid_plan(self.root, plan_id="2026.09.09-№1-DEMO-REENTRY-LINT")
         handoff = plan / "handoff.md"
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
-            "/task:plan-exec 2026.09.09-№1-REENTRY-LINT P1.1",
-            "/task:plan-design 2026.09.09-№1-REENTRY-LINT P1"), encoding="utf-8")
+            "/task:plan-exec 2026.09.09-№1-DEMO-REENTRY-LINT P1.1",
+            "/task:plan-design 2026.09.09-№1-DEMO-REENTRY-LINT P1"), encoding="utf-8")
 
         _, diag = _lint(plan)
 
@@ -752,7 +752,7 @@ class TestTieredPortability(TmpPlanTestCase):
 
 
 class TestWriteSiteCodesGate(TmpPlanTestCase):
-    """P4.4/D91 (ремонт находки Ф2, findings/P3.11-terminal-audit-2.md § Ф2): item со
+    """P4.4/D91 (ремонт находки Ф2): item со
     статусом 🟢/🟠, чей `Updated` (Phase Status) ≥ cutoff, обязан нести оба кода
     `pre_mutation:`/`pre_final:` со значением `allow` в Completion Notes; item ДО cutoff'а
     не диагностируется вовсе (forward-only, D91). Каждый различающий кейс (b)/(c) ниже
@@ -789,7 +789,7 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
 
     def test_c_post_cutoff_item_with_pre_final_na_is_error(self):
         """(в) Updated ≥ cutoff, `pre_final: n/a` → ERROR (D76: `n/a` — не зелёное).
-        Фикстура конвертирована на каноническую строку `write-site:` (D102, P10.1) —
+        Фикстура конвертирована на каноническую строку `write-site:` —
         старая свободная форма `` `pre_mutation: allow`, `pre_final: n/a` `` покраснела
         по плану после починки fail-open/ложного ERROR (гейт теперь матчит ТОЛЬКО
         каноническую строку); предмет проверки не изменился."""
@@ -801,7 +801,7 @@ class TestWriteSiteCodesGate(TmpPlanTestCase):
 
     def test_d_post_cutoff_item_with_both_allow_is_silent(self):
         """(г) Updated ≥ cutoff, оба `allow` → молчание. Фикстура конвертирована на
-        каноническую строку `write-site:` (D102, P10.1) — см. докстринг test_c."""
+        каноническую строку `write-site:` — см. докстринг test_c."""
         plan_dir = self._write(
             updated="2026-08-12",
             completion_notes="Сделано.\nwrite-site: pre_mutation: allow · pre_final: allow")
@@ -1009,7 +1009,7 @@ class TestClosureReports81(TmpPlanTestCase):
                          (diag.errors, diag.warnings))
 
     def test_missing_required_key_is_schema_error(self):
-        """Отсутствие ключа схемы = ОШИБКА СХЕМЫ, а не «нет данных» (D42): «нет данных»
+        """Отсутствие ключа схемы = ОШИБКА СХЕМЫ, а не «нет данных»: «нет данных»
         выражается значением `baseline_pending`, а не пропуском строки."""
         plan_dir = self._plan()
         report = json.loads(closure_json(plan_dir.name))

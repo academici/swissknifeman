@@ -1,15 +1,15 @@
 """metrics — reliability metric arithmetic and paired digest (P3.2,
-`plans/2026.07.24-AGENT-RELIABILITY/phases/P3.md` P3.2).
+ P3.2).
 
 Derives paired reliability metrics from committed `analyst.trace.TraceRecord`s and the
 frozen P0.3 reliability bank (`artifacts/reliability-bank-v1/bank-manifest.json`) — never
 from re-parsing provider logs a second way (`unified-agent-trace-v1.md` § Consumers). This
 module owns metric arithmetic only: no trace schema (`analyst.trace` still owns
-`TraceRecord`), no eval adapter (P3.3), no canary dispatch (P3.4).
+`TraceRecord`), no eval adapter, no canary dispatch.
 
 Proof-class discipline (`source-evidence-verification-v1.md`, `reliability-acceptance-v1.md`):
 a baseline whose `baseline_proof_class` is `pinned-not-recomputable`/`unknown` can never be
-silently promoted to a recomputed comparator or GREEN predicate (D30) — `pair_metric`
+silently promoted to a recomputed comparator or GREEN predicate — `pair_metric`
 enforces this rather than restating it in prose. The proof-class vocabulary is cited from
 those two contracts, not imported: analyst does not depend on `task` hard (mirrors
 `doctor.py`'s optional `task.route_evidence` check), and each contract owns its own closed
@@ -31,7 +31,7 @@ SCHEMA_VERSION = "reliability-metrics-digest/v1"
 # Closed proof-class vocabulary (source-evidence-verification-v1.md § Proof classes,
 # reliability-acceptance-v1.md § proof-class rule) — cited here, not imported.
 PROOF_CLASSES = frozenset(("recomputed", "cross-checked", "pinned-not-recomputable", "unknown"))
-# The two classes a floor/metric may rest a deterministic acceptance predicate on (D30).
+# The two classes a floor/metric may rest a deterministic acceptance predicate on.
 COMPARABLE_PROOF_CLASSES = frozenset(("recomputed", "cross-checked"))
 SLICE_AXES = frozenset(("project", "plan", "item"))
 
@@ -87,7 +87,7 @@ def build_metric_record(metric, *, numerator, denominator, baseline_proof_class,
 
 def pair_metric(baseline, candidate):
     """Pair a baseline `MetricRecord` against a candidate one, or `None` when the
-    2026.07.24-AGENT-RELIABILITY P3.3
+
     live paired run has not produced it yet — never a silent zero (Execution Rules:
     "Missing evidence/route/capability остаётся unknown/red... ноль и silent skip
     запрещены"). Layer-2 absence is reported as `status: "deferred"`, exactly what

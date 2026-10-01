@@ -12,7 +12,7 @@ export default defineConfig({
   base: '/analyst/',
   lastUpdated: true,
 
-  ignoreDeadLinks: [/^\/harness\//, /^\/maind\//, /^\/skiller\//, /^\/routing/, /^\/roadmap/,
+  ignoreDeadLinks: [/^\/harness\//, /^\/maind\//, /^\/skiller\//, /^\/routing/, /^\/roadmap\b/,
     /^\/reference/],
 
   themeConfig: {

@@ -3,6 +3,10 @@ from __future__ import annotations
 
 import copy
 import json
+from pathlib import Path
+
+
+FIXTURE_PLAN = Path(__file__).resolve().parent / "fixtures_data" / "plan"
 
 
 def load_json(path):

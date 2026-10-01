@@ -1,6 +1,6 @@
 """P1.3: гайдлайн межпроектной памяти (D10 — digest project-only, shared по запросу).
 
-Проверяет ДВЕ вещи из Validation фазы P1 (плана 2026.07.12-CONTEXT-ECONOMY):
+Проверяет ДВЕ вещи из Validation фазы P1 (плана):
 1) обновлённые скиллы/доки не утверждают «digest несёт namespace/global» без оговорки
    on-demand — грепом по канонической фразе, которая обязана присутствовать рядом;
 2) все команды, упомянутые в новом гайдлайне (`maind memory digest|recall|remember --help`,
@@ -26,7 +26,7 @@ _ECOSYSTEM_MCP_TEMPLATE = (_REPO_ROOT / "packages" / "maind" / "templates" / "sk
 _BOOTSTRAP_SKILLS = _REPO_ROOT / "packages" / "skiller" / "skills" / "repository-bootstrap"
 _LOCAL_SKILLS = {
     # Root-bootstrap projections under .claude/skills/ are thin pointer stubs (Class-A
-    # projection design, P1.2 2026.07.24-AGENT-RELIABILITY) — no copied body, so the caveat
+    # projection design, P1.2) — no copied body, so the caveat
     # phrase is checked against the canonical source they point back at.
     "maind-overview": _BOOTSTRAP_SKILLS / "maind-overview" / "SKILL.md",
     "cross-project-optimizer": _BOOTSTRAP_SKILLS / "cross-project-optimizer" / "SKILL.md",

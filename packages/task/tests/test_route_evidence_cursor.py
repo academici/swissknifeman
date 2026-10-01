@@ -31,7 +31,7 @@ class CursorCliConfigRouteTests(unittest.TestCase):
                 },
             }), encoding="utf-8")
             evidence = capture_current(
-                expected_invocation="task:plan-run 2026.08.06-EDUFY-BUILD P14.4",
+                expected_invocation="task:plan-run 2026.08.06-DEMO-PLAN P14.4",
                 expected_cwd=os.getcwd(),
                 routing_path=ROUTING,
                 cli_config_path=config,
@@ -64,7 +64,7 @@ class CursorCliConfigRouteTests(unittest.TestCase):
                 },
             }), encoding="utf-8")
             evidence = capture_current(
-                expected_invocation="task:plan-run 2026.09.22-№1-CHATOM-PRODUCT-FOUNDATION P00.4 P00.5",
+                expected_invocation="task:plan-run 2026.09.22-№1-DEMO-PLAN P00.4 P00.5",
                 expected_cwd=os.getcwd(),
                 routing_path=ROUTING,
                 cli_config_path=config,

@@ -20,9 +20,9 @@ SERVER_INFO = {"name": "maind", "version": "0.2.0"}
 # Цель тримминга — НИЖЕ warning-порога Claude Code (10 000 токенов), а не под дефолтный
 # потолок клиента (25 000, после которого клиент сам выгружает ответ на диск и подставляет
 # file-reference — это аварийный выход клиента, не канал доставки сервера, см.
-# findings/P3-mcp-result-field-practice.md). Оценщик токенов — grep-эвристика (stdlib, без
+#). Оценщик токенов — grep-эвристика (stdlib, без
 # токенайзера): символы/3.2 — консервативнее «символы/4» для кириллицы+JSON-пунктуации
-# (2026.07.25-ECO-OPT findings/P3.2-maind-tool-result-sizes.md — сверка оценки с явным запасом).
+#.
 TRIM_TARGET_TOKENS = 10_000
 CHARS_PER_TOKEN_ESTIMATE = 3.2
 
@@ -123,7 +123,7 @@ def _list_candidates(payload):
 def _with_truncation_receipt(payload, path, trimmed, total_count):
     """Данные, а не только флаг: `truncated`/`returned_count`/`total_count` + человекочитаемая
     подсказка дозапроса — голый `truncated: true` не снимает ни один из трёх отказов молчаливого
-    усечения (findings/P3-mcp-result-field-practice.md). `isError` НЕ переиспользуется — он занят
+    усечения. `isError` НЕ переиспользуется — он занят
     классом «ошибка инструмента» (`_run_tool`/`_tools_call`)."""
     receipt = {
         "truncated": True,
@@ -146,7 +146,7 @@ def _truncate_largest_list(payload, limit_tokens):
     спуском по числу элементов (JSON пересобирается на каждой пробе — списков ≤ пары сотен
     элементов на практике, цена приемлема). None-кандидатов (ни payload, ни его значения не
     список) — возвращает исходный payload как есть: свободных байт для тримминга нет, это
-    хвостовой случай эскалации (Implementation Rules 2026.07.25-ECO-OPT P3.2), не молчаливая потеря данных."""
+    хвостовой случай эскалации (Implementation Rules), не молчаливая потеря данных."""
     candidates = list(_list_candidates(payload))
     if not candidates:
         return payload
@@ -202,7 +202,7 @@ def _recall_union(config, url, scope, query, *, include_related_scopes=False, he
     обязан содержать только записи этого scope. Сырой/непроектный scope → ровно он.
     Дедуп по тексту.
 
-    Приоритет private vs shared (2026-08-06, roadmap/memory-recall-shared-namespace-priority):
+    Приоритет private vs shared:
     при project:<id>-expansion приватный scope (recall_scopes()[0]) опрашивается без капа
     (RECALL_LIMIT), а shared-scope'ы (ns:*/global) — с RECALL_SHARED_LIMIT ниже RECALL_LIMIT,
     иначе крупный ns:<группа> (десятки записей) вытесняет малый приватный scope проекта

@@ -4,7 +4,7 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "cae34671c0e21618e6261c09e5cdfb6f001eaa8754b1bea758458433cd23c783",
+    "source_sha256": "f9c4532efcda627833204dcc9f1c37325ff6e22f23b9a5cc1540c142231cbf58",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
     "literal_count": 298
   },
@@ -247,7 +247,7 @@
     },
     {
       "semantic_id": "root.speculative-work",
-      "literal": "record speculative work in `roadmap/` and implement only against a measured problem"
+      "literal": "implement optimizations only against a measured problem"
     },
     {
       "semantic_id": "root.docs-build",

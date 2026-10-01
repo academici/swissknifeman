@@ -38,7 +38,7 @@ Rules common to layouts v1 and v2:
   `python3 packages/task/scripts/plan-id.py --codename <NAME>` (scans `plans/` and `plans/archive/`)
   and use its `plan_id`, `title_prefix` and `short_id` verbatim. Historical plan IDs remain readable and are never renamed.
 - New persisted work has a stable repository-local `Short ID` (`PLAN1` plan, `TASK1` task).
-  Outside its directory, qualify local references (`PLAN1.D35`, `PLAN1.P2.3`); legacy work uses
+  Outside its directory, qualify local references (`PLAN<N>.D35`, `PLAN<N>.P2.3`); legacy work uses
   `<PLAN-ID> <local-ID>`. Read [work references](references/work-references.md) when assigning
   IDs or citing work, including in code or generated text.
 - Repository files are the source of truth; chat, memory, MCP output, and generated views are not.

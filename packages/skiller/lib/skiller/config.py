@@ -109,7 +109,7 @@ def core_skill_tuples(env, exclude):
 @dataclass(frozen=True, eq=False)
 class ProjectConfig(Mapping):
     """Конфиг проекта `.swissknife.json` как объект: типизированный доступ вместо
-    голого `dict` (аудит `audits/skm.md` §4, план 2026.07.31-SKM-LEAN P6.2).
+    голого `dict` (аудит `audits/skm.md` §4, план).
 
     **Единственный носитель перечня ключей.** Раньше ключи жили в трёх местах
     (`CONFIG_KEYS` в `common.py`, `schema/swissknife.schema.json`, код); поля этого
@@ -198,7 +198,7 @@ class ProjectConfig(Mapping):
         return cls.from_raw(config)
 
 
-# Производное от полей ProjectConfig (P6.2): имя-носитель одно, значение собирается.
+# Производное от полей ProjectConfig: имя-носитель одно, значение собирается.
 # Реэкспортируется как `skiller.common.CONFIG_KEYS` — исторический дом имени, откуда
 # его берут оба гейта синхрона со схемой и документация.
 CONFIG_KEYS = {f.name: f.metadata["json_type"]

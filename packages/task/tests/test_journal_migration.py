@@ -18,7 +18,7 @@ class TestJournalMigration(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.plan_dir = fixtures.write_valid_plan(
-            Path(self._tmp.name), plan_id="2026.09.21-MIGRATION")
+            Path(self._tmp.name), plan_id="2026.09.21-DEMO-MIGRATION")
         fixtures.write_decision_record(
             self.plan_dir, "D2", item_id="P1.1",
             decision="Разрешить точную миграцию sealed journal с preimage и manifest.")

@@ -1,4 +1,4 @@
-"""Тесты `skiller.plugins` / `skiller budget --with-plugins` (2026.07.31-SKM-LEAN
+"""Тесты `skiller.plugins` / `skiller budget --with-plugins` (
 P1.1). Фикстуры — дословный вывод живого `claude` 2.1.220 (`claude plugin list
 --json` / `claude plugin details <id>`, captured 2026-07-31), подставляются
 через `SKM_CLAUDE_BIN` (тот же паттерн, что online-тесты `test_eval.py`). Никакой
@@ -236,7 +236,7 @@ class PluginsAggregateCase(unittest.TestCase):
 
 
 class PluginsCliIntegrationCase(unittest.TestCase):
-    """`skiller budget --first-turn --with-plugins` — аддитивность JSON (D16) и
+    """`skiller budget --first-turn --with-plugins` — аддитивность JSON и
     `die` при флаге без `--first-turn`."""
 
     def setUp(self):

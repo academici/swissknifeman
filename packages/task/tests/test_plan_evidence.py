@@ -190,12 +190,8 @@ class EvidenceGraphTests(unittest.TestCase):
             self.assertEqual(before["fingerprint"], after["fingerprint"])
 
     def test_task_contract_surfaces_anchor_refusal_at_pre_mutation_boundary(self):
-        fixture = (Path(__file__).resolve().parents[3]
-                   / "plans/archive/2026.07.24-AGENT-RELIABILITY/"
-                     "artifacts/P0.2/task-contract-examples.json")
-        contract = next(example["contract"] for example in json.loads(
-            fixture.read_text(encoding="utf-8"))["examples"]
-            if example["id"] == "routine-continuation")
+        fixture = Path(__file__).resolve().parent / "fixtures_data/task-contract-routine-continuation.json"
+        contract = json.loads(fixture.read_text(encoding="utf-8"))
         graph = {"schema_version": plan_evidence.SCHEMA_VERSION, "collisions": ["product.txt"],
                  "sha256": "a" * 64}
 

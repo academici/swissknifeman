@@ -32,7 +32,7 @@ def channel_overlap(enabled, vendored_buckets):
 
 
 def detect_raw_vendor_path(target, config):
-    """Вендорный канал БЕЗ манифеста (P3.5, D76): скиллы приехали симлинками/копиями
+    """Вендорный канал БЕЗ манифеста: скиллы приехали симлинками/копиями
     из стороннего источника (`.ai/skills` и т.п.), не через `skiller sync` — у
     `detect_vendor_path` (нужен `.swissknifeman-manifest.json`) такой канал невидим,
     и `channel_overlap` на нём молчит (репо-факт `flexcrm`,
@@ -255,7 +255,7 @@ def cmd_status(env, argv):
                 f"(добавить: skiller update)")
         if extra:
             out(f"  Сверх профиля: {' '.join(extra)}")
-        # 2026.07.02-SKM-MASTER-002 P7.5: включённый бакет слит в другой (alias) — одна строка-подсказка, без
+        # включённый бакет слит в другой (alias) — одна строка-подсказка, без
         # нагнетания; status read-only, ничего не переключает сама.
         alias_hints = alias_migration_hints(load_bucket_aliases(env), enabled)
         for h in alias_hints:

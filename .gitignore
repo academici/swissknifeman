@@ -35,8 +35,7 @@ config.json
 # (машинно-локальный экземпляр живёт вне репо, в ~/.claude/hooks/review-gate/), не
 # приватный конфиг — трекается вопреки правилу выше (найдено P9.1, D135 в plan.md).
 !packages/harness/configs/claude-code/hooks/review-gate/config.json
-# skiller eval раннер — сгенерированный benchmark любого скилла (провенанс прогона,
-# не ручной артефакт; см. plan 2026.07.25-ECO-OPT P6 реконсиляция F5).
+# skiller eval runner — generated benchmark of any skill (run provenance, not a manual artifact).
 packages/skiller/skills/**/evals/benchmark.json
 # Machine-owned allowlist safe-dirs (пути машины); шаблон — safe-dirs.example.json,
 # читают хук auto-approve (lib/safedirs.py) и CLI `harness safe-dirs`
@@ -89,3 +88,10 @@ docs/analyst/
 .plan-cache/history/
 # Project-local Task terminal-admission runtime state (leases and hash-only events).
 .swissknifeman/task-terminal/
+
+# Local-only working documents (never tracked)
+/plans/
+/roadmap/
+/tasks/
+/.cursor/plans/
+/tmp/

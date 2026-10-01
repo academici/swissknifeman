@@ -193,14 +193,14 @@ def budget_for_set(skills, pulled=None):
     }
 
 
-# --- first-turn footprint (2026.07.12-CONTEXT-ECONOMY P5.1) --------------------
-# Невидимый always-on бюджет — первопричина инцидента (findings/P0-rag-context-economy.md,
+# --- first-turn footprint --------------------
+# Невидимый always-on бюджет — первопричина инцидента (
 # RAG:✅ 2026-07-12). Пять источников always-on нагрузки первого хода проекта:
 # skills meta (⊕ tier-0), .claude/agents description, CLAUDE.md + path-less rules,
 # живой прогон SessionStart-хуков, MCP tool-defs.
 #
-# Пороги пере-изданы 2026-07-31 (2026.07.31-SKM-LEAN D83, решение владельца по OQ-1)
-# против baseline флота — plans/archive/2026.07.31-SKM-LEAN/findings/P1-fleet-baseline.md,
+# Пороги пере-изданы 2026-07-31
+# против baseline флота —,
 # n=22, якорь 3003d352. Прежняя пара 7 000/10 000 калибровалась на величине, которая
 # НЕ считала marketplace-плагины (считать их было нечем до P1.1), и потому давала
 # WARN у 95 % флота: гейт, красный у всех, нормы от аварии не отличает. Медиана
@@ -225,7 +225,7 @@ KNOWN_MCP_TOOLS = {
 FALLBACK_MCP_TOOLS = 5
 TOKENS_PER_MCP_TOOL = 150
 
-# --- режим-зависимая модель стоимости MCP (P2.3, D19/D22) ---------------------
+# --- режим-зависимая модель стоимости MCP ---------------------
 # RAG:✅ 2026-07-31 <https://code.claude.com/docs/en/mcp> §«Scale with MCP tool
 # search» + <https://code.claude.com/docs/en/context-window> §«MCP tools
 # (deferred)» + <https://code.claude.com/docs/en/features-overview> §«Context
@@ -234,7 +234,7 @@ TOKENS_PER_MCP_TOOL = 150
 # схемы подгружаются по запросу; `ENABLE_TOOL_SEARCH=auto` — пороговый режим
 # (грузит схемы вперёд, если укладываются в 10% контекстного окна модели);
 # `ENABLE_TOOL_SEARCH=false` — старая модель, все схемы вперёд (TOKENS_PER_MCP_TOOL
-# выше — эта ветка). Переменная НЕ выставляется нигде в репозитории (D22) —
+# выше — эта ветка). Переменная НЕ выставляется нигде в репозитории —
 # измеритель её только ЧИТАЕТ.
 ENABLE_TOOL_SEARCH_ENV = "ENABLE_TOOL_SEARCH"
 MCP_MODE_DEFERRED = "deferred"
@@ -321,11 +321,11 @@ SKILL_LISTING_CONTEXT_WINDOW = 1_000_000
 # the context window is unknown.» / «If many skills are installed, Codex shortens skill
 # descriptions first. For large skill sets, Codex may omit some skills from the initial list
 # and show a warning.» ЕДИНИЦА — СИМВОЛЫ напрямую (не токены, не переводится ×3, как у
-# Claude Code выше) — единицы двух моделей НЕ смешиваются (D52). Реальное контекстное окно,
+# Claude Code выше) — единицы двух моделей НЕ смешиваются. Реальное контекстное окно,
 # которое Codex CLI считает «известным» для текущей модели, не измерено (round-trip вне
 # скоупа, D3) — поэтому расчёт всегда ведётся по ХУДШЕМУ случаю: фолбэк-бюджету, а не по
 # `CODEX_LISTING_BUDGET_FRACTION * окно` (зависимость от реального окна — [UNVERIFIED],
-# см. artifacts/P3-skill-listing-budget.md). Per-entry cap на запись Codex первоисточник не
+# см.). Per-entry cap на запись Codex первоисточник не
 # называет (в отличие от `SKILL_LISTING_MAX_ENTRY_CHARS` у Claude) — измеряется сырая сумма.
 CODEX_LISTING_FALLBACK_CHARS = 8_000
 CODEX_LISTING_BUDGET_FRACTION = 0.02
@@ -340,12 +340,12 @@ MEASUREMENT_CLASSES = frozenset({
 MEASUREMENT_STATUSES = frozenset({"pass", "over-budget", "stale", "unknown"})
 MEASUREMENT_TTL = timedelta(days=30)
 
-# --- какие записи в резидентный листинг НЕ входят (P3.2, D95/D96) --------------
+# --- какие записи в резидентный листинг НЕ входят --------------
 # Пере-издание модели по НАБЛЮДЕНИЮ стенда P3.1/P3.6 на живой 2.1.220, а не по
 # доку (`plan.md` §2 «Правило внешних фактов»). Оба поля сняли запись целиком,
 # дельта воспроизведена байт-в-байт в обоих прогонах:
 #   • `disable-model-invocation: true` — ось A −88
-#     (`plans/archive/2026.07.31-SKM-LEAN/findings/P3-native-fields-smoke.md` §3.2), это же
+# (§3.2), это же
 #     говорит first-party док: «Description **not** in context»
 #     (<https://code.claude.com/docs/en/skills> §«Control who invokes a skill»);
 #   • `paths:` — ось A −88, ТА ЖЕ величина (там же §3.1/§4). Доку это
@@ -444,8 +444,8 @@ def _listing_entry_chars(skill_dir):
 
 def measure_listing_budget(skills, provider=DEFAULT_LISTING_PROVIDER):
     """Provider-aware бюджет обнаружения (листинга) для активного набора скиллов
-    `[(bucket, rel, dir, fm_name)]` (P3.4). Две модели, две единицы — НЕ смешиваются
-    (D52): Claude Code — 1% контекстного окна в ТОКЕНАХ (см. `_listing_entry_tokens`);
+    `[(bucket, rel, dir, fm_name)]`. Две модели, две единицы — НЕ смешиваются
+: Claude Code — 1% контекстного окна в ТОКЕНАХ (см. `_listing_entry_tokens`);
     Codex — фолбэк 8 000 СИМВОЛОВ (худший случай — реальное окно [UNVERIFIED], D3).
     Записи, снятые с листинга нативным полем (`LISTING_EXCLUDED_BY_FIELDS`,
     P3.2/D95/D96), в `raw` не входят; их число и цена приезжают АДДИТИВНЫМИ
@@ -1024,7 +1024,7 @@ def first_turn_report(env, target, *, provider=DEFAULT_LISTING_PROVIDER,
     n/a-источники (fail-soft) не участвуют в сумме — total считает только то,
     что реально измерено. Вердикт: OK ≤16K · ELEVATED ≤23K · WARN >23K
     (пороги — FIRST_TURN_TARGET_MAX/FIRST_TURN_WARN, обоснование там же:
-    baseline флота plans/archive/2026.07.31-SKM-LEAN/findings/P1-fleet-baseline.md,
+    baseline флота,
     D83). `listing_fraction`/
     `listing_context_window` — доля бюджета листинга скиллов и контекстное окно
     целевой модели; параметры, а не константы (P3.4 Implementation Rules —

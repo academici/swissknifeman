@@ -64,16 +64,14 @@
         },
         {
           "id": "trace-quality",
-          "owner": "P3.1/P3.2 (unified-agent-trace-v1.md)",
-          "source": "plans/2026.07.24-AGENT-RELIABILITY/findings/P3.11-terminal-audit-2.md",
-          "status": "degraded",
+          "owner": "unified agent trace",
+          "source": "analyst.trace/analyst.metrics",
+          "status": "unknown",
           "evidence": {
-            "measured_scope": "declared subset 5/31 (bank-layer-2-live-paired)",
-            "F1_critical_requirement_retention": "0.96 measured vs 1.0 required (full critical bank, not-met)",
-            "F10_owner_intervention_ratio": "unknown — no owner_question channel in headless dispatch"
+            "gap": "no per-project trace store reader exists; measure with the analyst doctor"
           },
-          "quality": {"completeness": 1.0, "note": "citation of a committed, hash-checkable finding"},
-          "next_command": "cat plans/2026.07.24-AGENT-RELIABILITY/findings/P3.11-terminal-audit-2.md"
+          "quality": {"completeness": 0.0, "note": "instrument present, no stored measurement to read"},
+          "next_command": "PYTHONPATH=packages/analyst/lib python3 -m analyst doctor"
         }
       ]
     }

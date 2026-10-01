@@ -151,7 +151,7 @@ packages/skiller/bin/skiller connect --target /path/to/project --native-codex
 Уникальные локальные скиллы без явного отключения остаются. Это также позволяет снять старые
 ссылки в клиентах, где project-level per-skill selection ещё не влияет на discovery.
 
-## Codex publication — consumer-acceptance гейт (P5.5)
+## Codex publication — consumer-acceptance гейт
 
 > Не относится к `skiller distribute` (фича выше остаётся нереализованным dev-планом) — это
 > отдельная, уже РАБОТАЮЩАЯ проверка существующей раздачи Codex-плагинов через
@@ -164,7 +164,7 @@ packages/skiller/bin/skiller connect --target /path/to/project --native-codex
 Codex-сессия не видела `task-plan-run`/`task-plan-exec` — sibling-плагин `task` был
 невидим нативному marketplace discovery. Package-level GREEN без прохождения всей цепочки
 `source → marketplace → install/cache → clean consumer → fresh session` не является release
-GREEN (`roadmap/codex-publication-consumer-acceptance.md`, снят этим item'ом).
+GREEN.
 
 **Что проверяет** `packages/skiller/tests/test_codex_consumer_acceptance.py`:
 

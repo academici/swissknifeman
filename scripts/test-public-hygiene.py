@@ -48,6 +48,31 @@ class TestPublicHygiene(unittest.TestCase):
         found = public_hygiene.content_violations(sorted(files), read=files.get)
         self.assertEqual(sorted(path.split(" ")[0] for path, _ in found), ["a.md", "b.json", "d.md"])
 
+    def test_working_directories_must_not_be_tracked(self):
+        found = public_hygiene.plan_reference_violations(
+            ["plans/ACTIVE.md", "road" + "map/x.md", "tas" + "ks/y/README.md", ".cursor/plans/z.md", "docs/a.md"],
+            read=lambda _p: "")
+        self.assertEqual(sorted(path for path, _ in found),
+                         [".cursor/plans/z.md", "plans/ACTIVE.md", "road" + "map/x.md", "tas" + "ks/y/README.md"])
+
+    def test_plan_reference_rules_flag_concrete_identity_only(self):
+        # Built from parts so this test file does not trip the rules it checks.
+        date = "2026" + ".07.24"
+        files = {
+            "a.md": f"see {date}-AGENT-RELIABILITY for details",
+            "b.md": "cite PLAN" + "1.D35 here",
+            "c.md": "link roadmap" + "/slug.md",
+            "d.md": f"plans/{date}-X/phases",
+            "ok1.md": f"fixture {date}-DEMO-ONE and plans/{date}-DEMO/phases",
+            "ok2.md": "generic plans/<PLAN-ID>/journal.jsonl and PLAN<N>.D35 and product-roadmap/SKILL.md",
+        }
+        found = public_hygiene.plan_reference_violations(sorted(files), read=files.get)
+        self.assertEqual(sorted({path.split(" ")[0] for path, _ in found}), ["a.md", "b.md", "c.md", "d.md"])
+
+    def test_sealed_measurement_evidence_is_the_only_content_exemption(self):
+        self.assertEqual(sorted(public_hygiene.CONTENT_PLAN_EXEMPT),
+                         ["packages/task/configs/calibration-probe-log-v2.json"])
+
     def test_binary_or_unreadable_files_are_skipped(self):
         self.assertEqual(public_hygiene.content_violations(["x.bin"], read=lambda _p: None), [])
 

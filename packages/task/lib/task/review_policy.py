@@ -10,7 +10,7 @@ import json
 import re
 from pathlib import Path
 
-# risk-review-loop-budget-v1.md §Declared sets (D51/D65) — closed enums, cited not re-minted.
+# risk-review-loop-budget-v1.md §Declared sets — closed enums, cited not re-minted.
 FINDING_TYPES = ("product", "evidence", "process")
 SEVERITIES = ("blocker", "major", "minor", "nit")
 AUTHORITY_PROFILES = ("owner-gated", "self-host")
@@ -36,7 +36,7 @@ AUDIT_ROUNDS_MAX = 2
 POSITIVE_CASE_MINIMUM = 5
 
 # risk-review-loop-budget-v1.md §Authority profiles — the subject at an exhausted
-# cap is a parameter of the profile, never hardcoded (D68).
+# cap is a parameter of the profile, never hardcoded.
 CAP_SUBJECT_BY_PROFILE = {
     "owner-gated": "owner",
     "self-host": "agent",
@@ -50,7 +50,7 @@ CAP_SUBJECT_BY_PROFILE = {
 _READY_OR_DONE_REOPEN_TARGET = "ESCALATED"
 _VERIFYING_REOPEN_TARGET = "FIXING"
 
-# `LoopBudget.from_committed` (2026.07.24-AGENT-RELIABILITY P2.6, F5) — locates each `## Audit <phase_id>` block
+# `LoopBudget.from_committed` — locates each `## Audit <phase_id>` block
 # in a committed phase file, the same append-only audit region `plan-audit.md`'s
 # own two-round-cap grep already reads.
 _AUDIT_BLOCK_HEADER_RE = re.compile(r"^##\s+Audit\s+(P\d+)\b")
@@ -379,7 +379,7 @@ class LoopBudget:
     @classmethod
     def from_committed(cls, plan_dir, phase_id: str, finding: dict, *,
                        same_finding_max: int = SAME_FINDING_MAX):
-        """§Loop budget and cadence + F5 (2026.07.24-AGENT-RELIABILITY P2.6) — reconstructs ONE finding's
+        """§Loop budget and cadence + F5 — reconstructs ONE finding's
         cross-session occurrence count from the two committed carriers this
         contract already names: `journal.jsonl` `command == "plan-audit"`
         entries and `## Audit <phase_id>` blocks in the phase file.
@@ -399,7 +399,7 @@ class LoopBudget:
         vocabulary): it is used, verbatim, as the substring searched for in
         both carriers. Distinct from `task_contract._count_audit_rounds`
         (phase-level `authority.observed_rounds`, not per-finding) —
-        `plans/2026.07.24-AGENT-RELIABILITY/findings/P2.6-contract-mapping.md`.
+        .
         """
         locus = finding.get("rule_or_contract_locus")
         if not isinstance(locus, str) or not locus:
@@ -456,9 +456,9 @@ def review_transition(state: str, finding: dict, *, budget: LoopBudget, profile:
     guard for the calling state, records a fix round when the guard fires from
     `VERIFYING`, and converts the round that reaches `same_finding_max + 1` into the
     `same-finding-third` event — `INCIDENT` with no inline repair, its cap subject
-    parameterized by `profile` (D68). Never re-derives the 135-cell matrix: this is
+    parameterized by `profile`. Never re-derives the 135-cell matrix: this is
     the ONE call site the compiler owns for a single finding, not a second copy of
-    the abstract validator (2026.07.24-AGENT-RELIABILITY `artifacts/P2.1/validate_state_cases.py`, which proves
+    the abstract validator (which proves
     the matrix itself and is not imported here)."""
     reopens = reopens_product(finding)
 

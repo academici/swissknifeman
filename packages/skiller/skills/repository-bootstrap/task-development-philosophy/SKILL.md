@@ -76,7 +76,7 @@ Keep plans detailed enough for cold start, but do not make every item repeat the
 Prefer a small number of meaningful items over artificial micro-items, and prefer a new phase only
 when it creates a real integration or authority boundary.
 
-Do not prebuild speculative machinery. Record an unmeasured idea in `roadmap/` with a trigger. Turn
+Do not prebuild speculative machinery. Record an unmeasured idea in a roadmap note with a trigger. Turn
 it into plan scope only after the trigger occurs or the owner explicitly prioritizes it.
 
 ## Review, pacing and model pool
@@ -135,9 +135,9 @@ expired live receipt are not by themselves reasons to replay the whole phase. Re
 gate at its boundary; keep deterministic product evidence reusable.
 
 For the measured repeat-audit contract and thresholds, read
-[`2026.08.14-repeat-audit-evidence-reuse-budget.md`](../../../../../plans/archive/2026.09.09-№1-LEAN-EXECUTION/artifacts/source-roadmap/2026.08.14-repeat-audit-evidence-reuse-budget.md)
+[`2026.08.14-repeat-audit-evidence-reuse-budget.md`](../../../../../)
 when changing audit policy. For evidence-anchor topology, also read
-[`2026.08.10-plan-evidence-anchor-audit-loop.md`](../../../../../plans/archive/2026.09.09-№1-LEAN-EXECUTION/artifacts/source-roadmap/2026.08.10-plan-evidence-anchor-audit-loop.md).
+[`2026.08.10-plan-evidence-anchor-audit-loop.md`](../../../../../).
 
 ## Repair and escalation
 
@@ -152,7 +152,7 @@ after one concrete decomposition attempt. A reducer may confirm the boundary; pr
 "complex" or "safer to revisit" may not.
 
 When a machine gate conflicts with this philosophy, obey the current gate, preserve evidence, and
-record the measured mismatch at its owning source or in `roadmap/`. Do not silently bypass the gate,
+record the measured mismatch at its owning source or in a roadmap note. Do not silently bypass the gate,
 and do not describe the resulting overhead as successful policy.
 
 ## Audit role

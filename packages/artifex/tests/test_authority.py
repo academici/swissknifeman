@@ -1,13 +1,9 @@
 from __future__ import annotations
 
 import unittest
-from pathlib import Path
 
 from artifex import authority
-
-
-ROOT = Path(__file__).resolve().parents[3]
-PLAN = ROOT / "plans" / ("2026" + ".08.03-ARTIFEX-SUPERVISOR")
+from support import FIXTURE_PLAN as PLAN
 
 
 class AuthorityTests(unittest.TestCase):
@@ -38,7 +34,7 @@ class AuthorityTests(unittest.TestCase):
         self.assertEqual(64, len(self.frozen.mandate_hash))
         self.assertEqual(64, len(self.frozen.source_set_hash))
 
-    def test_exact_p1_operation_and_routine_parity(self):
+    def test_exact_operation_and_routine_parity(self):
         for row in self.bank["operation_class_cases"]:
             with self.subTest(case=row["id"]):
                 self.assert_case(row["id"], [
@@ -94,7 +90,7 @@ class AuthorityTests(unittest.TestCase):
             with self.subTest(case=row["id"]):
                 self.assert_case(row["id"], [{"path": ["authority_sources"], "value": row["sources"]}], row["expected"])
 
-    def test_multifault_unknown_and_p0_compatibility_banks(self):
+    def test_multifault_unknown_and_legacy_compatibility_banks(self):
         for section in ("precedence_multifault_cases", "unknown_cases"):
             for row in self.bank[section]:
                 with self.subTest(case=row["id"]):

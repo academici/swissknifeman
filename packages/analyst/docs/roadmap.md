@@ -18,13 +18,12 @@ state-machine `recompute`; **P4** — [`suggest`](./guide/suggest) → черн�
 
 - Числовые гейты `suggest` (`--min-tier`) станут дешёвыми, когда P3 начнёт штамповать
   агрегат-confidence в индекс паттерна (сейчас confidence — per-lesson).
-- Дизайн P4 целиком — спека `roadmap/analyst-suggest-draft-skill.md` (закрыта реализацией и удалена 2026-07-25; текст — в git-истории репо).
 
-## Перенесено из корневого `roadmap/` (2026-08-02)
+## Перенесено из корневого roadmap (2026-08-02)
 
 ### `analyst digest` читает Known Deviations/Pending Work закрытых планов как источник уроков
 
-**Статус:** ⬜ отложено (идея Owner 2026-07-12, `2026.07.12-CONTEXT-ECONOMY` post-релиз).
+**Статус:** ⬜ отложено (идея Owner 2026-07-12, post-релиз).
 **Критерий внедрения:** накопится ≥2-3 плана с содержательными Known Deviations/Escalation
 Needed после этого — конкретный сигнал, что ручной просмотр plan.md перестаёт масштабироваться.
 
@@ -71,12 +70,11 @@ curated`:
 
 #### Источник
 
-Диалог Owner 2026-07-12 (после закрытия `2026.07.12-CONTEXT-ECONOMY`, релиз v0.9.0) ·
+Диалог Owner 2026-07-12 (после закрытия, релиз v0.9.0) ·
 `packages/analyst/lib/analyst/digest.py` (текущий единственный источник — run-report) ·
 `packages/skiller/skills/general/plan-protocol/SKILL.ru.md` (структура Known
 Deviations/Pending Work/Escalation Needed, обязательна на закрытии item'а).
 
-Провенанс: перенесено из `roadmap/analyst-plan-scan.md`, 2026-07-31, `2026.07.31-SKM-LEAN` P7.2.
 
 ### Покрытие analyst-цикла по флоту онбордженных проектов
 
@@ -90,7 +88,7 @@ Deviations/Pending Work/Escalation Needed, обязательна на закр�
 P3.1/P3.2) показала: из ~20 онбордженных проектов лишь малая часть пишет run-report
 вообще, и ещё меньше накопили analyst-state/token-trend. Отсутствие сигнала — не баг
 `digest` (перепроверено read-only на трёх проектах, см. R3 в
-`plans/2026.07.07-SKM-AUDIT-004/findings/P3-recommendations.md`: `--dry-run` корректно резолвит
+: `--dry-run` корректно резолвит
 бинарь и легитимно возвращает `candidates: []`), а data-coverage gap: хук `run-report`
 per-project настройка (harness-хуки), не глобальный демон.
 
@@ -119,7 +117,6 @@ per-project настройка (harness-хуки), не глобальный д�
 
 #### Источник
 
-`plans/2026.07.07-SKM-AUDIT-004/findings/P3-stats.md` (табл. 2) ·
-`plans/2026.07.07-SKM-AUDIT-004/findings/P3-recommendations.md` (R6).
+ (табл. 2) ·
+ (R6).
 
-Провенанс: перенесено из `roadmap/analyst-fleet-coverage.md`, 2026-07-31, `2026.07.31-SKM-LEAN` P7.2.

@@ -28,9 +28,9 @@
   "binding_for_plan_prose": "tokens",
   "probe": {
     "size_gate": {
-      "path": "plans/archive/2026.08.07-PLAN-ECONOMY/plan.md",
+      "path": "<repo>/large-file.md",
       "bytes": 316886,
-      "call": "Read(plans/archive/2026.08.07-PLAN-ECONOMY/plan.md)",
+      "call": "Read(<repo>/large-file.md)",
       "refusal_message": "File content (309.5KB) exceeds maximum allowed size (256KB). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file."
     },
     "token_gate": {

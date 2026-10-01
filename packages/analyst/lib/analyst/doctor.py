@@ -2,7 +2,7 @@
 
 Проверяет: python3, наличие пакета `core` на PYTHONPATH (общий фундамент), доступность
 CLI `maind` (нужен для surfacing curated-уроков в память — необязателен, только warn) и
-`task.route_evidence` (2026.07.24-AGENT-RELIABILITY P2.4 route/budget evidence — опционально, analyst не зависит от
+`task.route_evidence` (route/budget evidence — опционально, analyst не зависит от
 `task` жёстко)."""
 import shutil
 import sys
@@ -19,7 +19,7 @@ def _check_core():
 
 
 def _check_route_evidence():
-    """P2.4 (plans/2026.07.24-AGENT-RELIABILITY): опциональный маркер того, что
+    """P2.4: опциональный маркер того, что
     `task.route_evidence` (нормализованное route/budget evidence) виден с текущего
     PYTHONPATH — analyst не зависит от `task` жёстко, как и от `maind`."""
     try:

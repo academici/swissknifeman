@@ -25,7 +25,7 @@
   ],
   "class_b": [
     {
-      "_doc": "P1.5 (D43): a public-bucket canon whose unit (`general`) is not enabled — the root carrier has no owner/provenance/hash otherwise. Codex-only by declared asymmetry (a Claude root projection changes first-turn budget, requires `skiller budget --first-turn`, outside this scope). Exact acceptance record: plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.5/root-bootstrap-extension-map.json. `precondition` is enforced against an explicitly-passed enabled-inventory only — this renderer never reads a live provider profile/cache.",
+      "_doc": "A public-bucket canon whose unit (`general`) is not enabled — the root carrier has no owner/provenance/hash otherwise. Codex-only by declared asymmetry (a Claude root projection changes first-turn budget, requires `skiller budget --first-turn`, outside this scope). `precondition` is enforced against an explicitly-passed enabled-inventory only — this renderer never reads a live provider profile/cache.",
       "identity": "workflow-craft",
       "source_class": "public-bucket",
       "canonical": "packages/skiller/skills/general/workflow-craft/SKILL.md",

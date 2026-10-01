@@ -155,7 +155,7 @@
       "immediate"
     ],
     "extension_allowed": false,
-    "source": "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/authority-policy-v1.md"
+    "source": "authority-policy-v1"
   },
   "advisory_mode": false
 }

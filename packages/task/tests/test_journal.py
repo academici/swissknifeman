@@ -1,4 +1,4 @@
-"""unittest для task.journal — append-only писатель пер-планового журнала (P1.1).
+"""unittest для task.journal — append-only писатель пер-планового журнала.
 Запуск: cd packages/task && python3 -m unittest discover -s tests"""
 import json
 import multiprocessing
@@ -106,7 +106,7 @@ class TestNewEntryAndValidate(TmpDirTestCase):
 
     def test_new_entry_has_all_required_fields_and_validates(self):
         entry = new_entry(
-            plan_id="2026.07.18-FOREMAN", item_id="P1.3", command="plan-exec",
+            plan_id="2026.07.18-DEMO-PLAN", item_id="P1.3", command="plan-exec",
             actor="sonnet/high", result="in-progress",
         )
         validate_entry(entry)  # не бросает
@@ -546,7 +546,7 @@ class TestHistoricalSchemaException(TmpDirTestCase):
 
 class TestCli(TmpDirTestCase):
     def test_main_append_writes_entry(self):
-        plan_dir = self.root / "2026.07.18-FOREMAN"
+        plan_dir = self.root / "2026.07.18-DEMO-PLAN"
         plan_dir.mkdir()
         (plan_dir / "plan.md").write_text(
             "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n", encoding="utf-8")
@@ -554,7 +554,7 @@ class TestCli(TmpDirTestCase):
         (plan_dir / "phases" / "P1" / "P1.3.md").write_text("# P1.3\n", encoding="utf-8")
         decision = json.dumps(_validation_decision(plan_dir), ensure_ascii=False)
         rc = main([
-            "append", "--plan-dir", str(plan_dir), "--plan", "2026.07.18-FOREMAN",
+            "append", "--plan-dir", str(plan_dir), "--plan", "2026.07.18-DEMO-PLAN",
             "--item", "P1.3", "--command", "plan-run", "--actor", "sonnet/high",
             "--result", "closed-green", "--friction", "deviation,retry",
             "--attempt", "2", "--note", "test stub", "--decision-json", decision,
@@ -563,14 +563,14 @@ class TestCli(TmpDirTestCase):
         lines = (plan_dir / "journal.jsonl").read_text(encoding="utf-8").splitlines()
         self.assertEqual(len(lines), 1)
         entry = json.loads(lines[0])
-        self.assertEqual(entry["plan_id"], "2026.07.18-FOREMAN")
+        self.assertEqual(entry["plan_id"], "2026.07.18-DEMO-PLAN")
         self.assertEqual(entry["item_id"], "P1.3")
         self.assertEqual(entry["command"], "plan-run")
         self.assertEqual(entry["friction"], ["deviation", "retry"])
         self.assertEqual(entry["attempt"], 2)
 
     def test_main_append_with_trace_ref_writes_it(self):
-        plan_dir = self.root / "2026.07.18-FOREMAN"
+        plan_dir = self.root / "2026.07.18-DEMO-PLAN"
         plan_dir.mkdir()
         (plan_dir / "plan.md").write_text(
             "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n", encoding="utf-8")
@@ -578,7 +578,7 @@ class TestCli(TmpDirTestCase):
         (plan_dir / "phases" / "P1" / "P1.3.md").write_text("# P1.3\n", encoding="utf-8")
         decision = json.dumps(_validation_decision(plan_dir), ensure_ascii=False)
         rc = main([
-            "append", "--plan-dir", str(plan_dir), "--plan", "2026.07.18-FOREMAN",
+            "append", "--plan-dir", str(plan_dir), "--plan", "2026.07.18-DEMO-PLAN",
             "--item", "P1.3", "--command", "plan-run", "--actor", "sonnet/high",
             "--result", "closed-green", "--trace-ref", "b" * 64,
             "--decision-json", decision,

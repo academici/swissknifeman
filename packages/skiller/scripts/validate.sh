@@ -250,7 +250,7 @@ for skill_md in skill_files:
                       f"EN-only канон (резидентный tier-0 в КАЖДОМ запросе)")
     if CYRILLIC_RE.search(fm.get("name", "")):
         errors.append(f"{rel}: frontmatter name содержит кириллицу (имя скилла — EN-kebab)")
-    # СОВОКУПНАЯ запись листинга (P3.5) — та же формула, что budget.py
+    # СОВОКУПНАЯ запись листинга — та же формула, что budget.py
     # `_listing_entry_tokens`/`_listing_entry_chars`: `description` + `when_to_use` одной
     # строкой (пустой when_to_use не меняет результат). Гейты длины/триггера ниже читают
     # ИМЕННО её, не голый `desc`, — иначе перенос фразы в `when_to_use` рвёт оба гейта.
@@ -789,7 +789,7 @@ for tr_file in sorted(root.glob("skills/*/*/evals/triggers.json")):
         if not isinstance(v, list) or not v:
             errors.append(f"{rel}: '{key}' должен быть непустым массивом")
 
-# --- 5c. Pressure-кейсы обязательны при evals.json + покрытие triggers[] (P8.8) --
+# --- 5c. Pressure-кейсы обязательны при evals.json + покрытие triggers[] --
 # Долг нулевой (замер: 4/4 evals.json уже несут pressure.json) ⇒ ERROR без рэтчета.
 # triggers[]-покрытие — WARNING (поле новое, у существующих сценариев его пока нет).
 for skill_md in sorted(root.glob("skills/*/*/SKILL.md")):
@@ -831,7 +831,7 @@ for skill_md in sorted(root.glob("skills/*/*/SKILL.md")):
             warnings.append(f"{rel_sd}: should_trigger {q!r} не покрыт ни одним "
                             f"pressure-сценарием (поле triggers[])")
 
-# --- 5d. Тонкие проекции не дублируют канон (P8.8, D50/D89) -----------------
+# --- 5d. Тонкие проекции не дублируют канон -----------------
 # Пары «проекция↔канон» из publication-lock.json (repository-bootstrap), при
 # его отсутствии — configs/repository-bootstrap-skills.json. Проекции есть,
 # источника нет ⇒ ERROR (противоречивое состояние); ни проекций, ни источника
@@ -1002,7 +1002,7 @@ def expected_skills_dirs(plugin_root):
 
 
 STALE_HINT = "run 'skiller registry' (or ./sync.sh --update-registry)"
-# P1.2 (D31): a private/source-only bucket (repository-bootstrap) never gets an ordinary
+# P1.2: a private/source-only bucket (repository-bootstrap) never gets an ordinary
 # `.claude-plugin/plugin.json` — `publication.py`'s catalog builder excludes it from unit
 # construction outright, so validating one here would demand an artifact the generator never
 # produces. Same `private_source_only` flag `skillset.py`/`publication.py` already read.
@@ -1358,7 +1358,7 @@ PY
 # ⊕ tier-0 CORE_SKILLS грузится в КАЖДЫЙ запрос — гейт против тихого роста ядра выше
 # target (resident_budget_target в core-policy.json). --strict = ненулевой код при
 # превышении. Раньше здесь был `|| true` (soft, вопреки этому же комменту) — честно
-# сделан реальным гейтом (D3): коммент обещал strict — теперь он и работает.
+# сделан реальным гейтом: коммент обещал strict — теперь он и работает.
 bash "$REPO_ROOT/bin/skiller" budget --check-core --strict || {
   echo "ERROR: CORE резидентный бюджет превышен — сократи описания/скиллы ядра (skiller budget)" >&2
   exit 1; }
@@ -1389,7 +1389,7 @@ if not overview.is_file():
           "гейт свежести пропущен")
     sys.exit(0)
 
-# Формат якоря закрыт (P3.1): заголовок «| Пак | Версия |», разделитель, строки
+# Формат якоря закрыт: заголовок «| Пак | Версия |», разделитель, строки
 # «| <пак> | <x.y.z> |». Эвристик нет — что не легло в форму, то ERROR с фиксом.
 HEADER = re.compile(r"^\|\s*Пак\s*\|\s*Версия\s*\|\s*$")
 SEP = re.compile(r"^\|[\s:|-]+\|\s*$")
@@ -1458,11 +1458,11 @@ if errors:
 print(f"канон каркаса: таблица «пак → версия» совпадает с pack.json ({len(actual)} паков)")
 PY
 
-# --- 17. WARN: листинг обнаружения профилей против фолбэк-бюджета Codex (P3.4) ---
-# Гейт WARN, не ERROR (D26/D29): структурный перебор — известная проблема состава раздачи,
+# --- 17. WARN: листинг обнаружения профилей против фолбэк-бюджета Codex ---
+# Гейт WARN, не ERROR: структурный перебор — известная проблема состава раздачи,
 # не гигиены, красный CI её не чинит (см. budget.py CODEX_LISTING_FALLBACK_CHARS). Профиль,
 # чей листинг превышает фолбэк-бюджет Codex 8 000 симв, печатает число и профиль; решение
-# (сужение/skillOverrides/принятая деградация) — roadmap/, не этот скрипт (D29/OQ-7).
+# (сужение/skillOverrides/принятая деградация) — решение владельца, не этот скрипт.
 # Python сам зовёт CLI сабпроцессом (а не читает его stdout через pipe в `python3 -
 # <<heredoc`) — конфликт: heredoc и pipe одновременно кормят один stdin, второй молча
 # теряется (питон читает СВОЙ скрипт из heredoc, а не JSON из pipe).
@@ -1481,8 +1481,7 @@ except json.JSONDecodeError:
 over = [r for r in rows if r["codex"]["over"]]
 if over:
     print(f"WARN: {len(over)} профил(ей) листинга превышают фолбэк-бюджет обнаружения "
-          f"Codex (8 000 симв) — структурный перебор, см. roadmap/ "
-          f"(D29/OQ-7, 2026.07.29-HARNESS-AGNOSTIC P3.4):")
+          f"Codex (8 000 симв) — структурный перебор:")
     for r in over:
         c = r["codex"]
         print(f"  {r['profile']}: {c['raw']} симв (×{c['raw'] / c['budget']:.1f})")
@@ -1490,13 +1489,12 @@ else:
     print("листинг обнаружения Codex: все профили укладываются в фолбэк-бюджет 8 000 симв")
 PY
 
-# --- 18. Codex publication consumer-acceptance (P5.5) -----------------------
+# --- 18. Codex publication consumer-acceptance -----------------------
 # Изолированный round-trip живым `codex` CLI: marketplace add → plugin list/add →
 # clean-consumer discovery в temp CODEX_HOME — то, чего НЕ проверяет статическая
 # схема (`test_codex_publication.py`). Azguard, 2026-07-21: пакетный GREEN был,
 # consumer path — нет. Явное различение skip/GREEN/RED в выводе — "гейт не
-# прогонялся" и "гейт прошёл" не одно и то же (roadmap/codex-publication-consumer-
-# acceptance.md). Тест сам предполагает монорепо-раскладку (sibling packages/task) —
+# прогонялся" и "гейт прошёл" не одно и то же. Тест сам предполагает монорепо-раскладку (sibling packages/task) —
 # та же граница портируемости, что у остального пакета tests/ этого гейта.
 if [ ! -d "$REPO_ROOT/../task" ]; then
   echo "SKIP: Codex publication consumer-acceptance гейт — нет sibling packages/task (standalone-раскладка skiller вне монорепо)"

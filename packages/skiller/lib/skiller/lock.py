@@ -21,7 +21,7 @@ LOCK_VERSION = 1
 
 def _registry_map(env):
     """skills.json реестра → {skill_name: bucket}. Private/source-only записи
-    (`buckets.json` `private_source_only`, 2026.07.24-AGENT-RELIABILITY P1.2/D31 — сейчас: `repository-bootstrap`)
+    (`buckets.json` `private_source_only`, — сейчас: `repository-bootstrap`)
     исключены: они никогда не являются legit swissknifeman-источником установленной
     копии в проекте-потребителе (единственный производитель — root-bootstrap
     рендерер `publication.py`, не этот композитор)."""

@@ -1,4 +1,4 @@
-"""Bounded, fresh POSIX provider process runner for the P3.4 activity port."""
+"""Bounded runner that starts each provider as a fresh POSIX process."""
 from __future__ import annotations
 
 import hashlib
@@ -121,12 +121,9 @@ def run(argv: list[str], *, cwd: str | Path, env: dict[str, str], stdin: bytes,
         if not isinstance(normalized, dict):
             return {"kind": "provider_unavailable", "reason_code": "MAPPING_UNKNOWN", "process_count": 1,
                     "duration_ms": duration}
-        outcome = {"kind": "success" if normalized.get("worker_succeeded") else "provider_unavailable",
-                  "reason_code": normalized.get("reason_code", "PROVIDER_PROTOCOL_UNKNOWN"), "process_count": 1,
-                  "duration_ms": duration, "event_count": normalized.get("event_count", len(out.splitlines()))}
-        if "economy" in normalized:
-            outcome["economy"] = normalized["economy"]
-        return outcome
+        return {"kind": "success" if normalized.get("worker_succeeded") else "provider_unavailable",
+                "reason_code": normalized.get("reason_code", "PROVIDER_PROTOCOL_UNKNOWN"), "process_count": 1,
+                "duration_ms": duration, "event_count": normalized.get("event_count", len(out.splitlines()))}
     return {"kind": "success", "process_count": 1, "exit_code": proc.returncode,
             "duration_ms": duration, "output_hash": _digest(out), "event_count": len(out.splitlines())}
 

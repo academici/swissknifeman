@@ -1,4 +1,4 @@
-"""Pure, version-gated mapper for the terminal P0 Codex CLI surface."""
+"""Pure, version-gated mapper for the Codex CLI surface."""
 from __future__ import annotations
 
 import json
@@ -6,12 +6,10 @@ import os
 import shutil
 from pathlib import Path
 
-from . import common
 from .common import AdapterRefusal, failed, load_json, require_request
 
 
 PROBE_VERSION = "codex-cli 0.146.0"
-BUSINESS_VERSION = "codex-cli 0.146.0"
 ALLOWED_EVENTS = frozenset({"thread.started", "turn.started", "item.started", "item.completed",
                             "turn.completed", "turn.failed", "error"})
 
@@ -43,7 +41,7 @@ def build_argv(request: dict, *, routing_path: str | Path, schema_path: str | Pa
     if not native_tools:
         raise AdapterRefusal("CAPABILITY_UNSUPPORTED")
     raise AdapterRefusal("CAPABILITY_UNSUPPORTED")
-    # A future owner-bound native mapping belongs below this point; P3.4 never guesses it.
+    # A future owner-bound native mapping belongs below this point; it is never guessed.
     if request["provider"].get("cli_version") != PROBE_VERSION:
         raise AdapterRefusal("MAPPING_UNKNOWN")
     if request["permissions"].get("sandbox_mode") not in ("read_only", "workspace_write", "danger_full_access"):
@@ -58,22 +56,6 @@ def build_argv(request: dict, *, routing_path: str | Path, schema_path: str | Pa
             "--ignore-user-config", "-C", str(Path(cwd)), "-m", model, "-s",
             request["permissions"]["sandbox_mode"].replace("_", "-"), *config,
             "--output-schema", str(Path(schema_path)), "-"]
-
-
-def build_business_argv(request: dict, *, schema_path: str | Path, cwd: str | Path, binary: str | None = None) -> list[str]:
-    """D112 R2 mapping, distinct from the intentionally refusing smoke mapper.
-
-    The native CLI has no enforceable turn or money cap.  The caller therefore
-    owns the hard process limits; this list deliberately contains neither.
-    """
-    require_request(request)
-    if (request["provider"].get("cli_version") != BUSINESS_VERSION
-            or request["permissions"].get("sandbox_mode") != "workspace_write"
-            or request["permissions"].get("network_mode") != "disabled"):
-        raise AdapterRefusal("MAPPING_UNKNOWN")
-    if request.get("child_policy", {}).get("mode") != "forbidden" or not Path(schema_path).is_file() or not Path(cwd).is_dir():
-        raise AdapterRefusal("CAPABILITY_UNSUPPORTED")
-    return [binary or resolve_binary(), "exec", "--json", "--ephemeral", "--ignore-user-config", "--ignore-rules", "--strict-config", "--skip-git-repo-check", "-C", str(Path(cwd)), "-s", "workspace-write", "--disable", "multi_agent", "-c", "sandbox_workspace_write.network_access=false", "-c", "approval_policy=never", "--output-schema", str(Path(schema_path)), "-"]
 
 
 def prepare(request: dict, *, plan_dir: Path, native_tools: tuple[str, ...],
@@ -105,58 +87,7 @@ def normalize_record(line: str, request: dict) -> dict:
             "session_observed": isinstance(record.get("thread_id"), str)}
 
 
-def _economy_from_records(records: list[str], *, wall_duration_ms: int | None) -> dict:
-    """EXTRACTION only (D123/D127 rule 1). `duration_ms` is wrapper-measured — codex's own
-    protocol carries no timestamp field, so no in-band derivation exists; `turns` is
-    event-derived from the count of terminal `turn.completed` events."""
-    completed = []
-    for line in records:
-        try:
-            value = json.loads(line)
-        except (TypeError, json.JSONDecodeError):
-            continue
-        if isinstance(value, dict) and value.get("type") == "turn.completed":
-            completed.append(value)
-    usage = completed[-1].get("usage") if completed and isinstance(completed[-1].get("usage"), dict) else None
-    input_tokens, input_r = common.extract_metric(
-        usage, "input_tokens",
-        reason="codex usage.input_tokens missing or not a non-negative integer on the terminal turn.completed event")
-    cached_tokens, cached_r = common.extract_metric(
-        usage, "cached_input_tokens",
-        reason="codex usage.cached_input_tokens missing or not a non-negative integer on the terminal turn.completed event")
-    output_tokens, output_r = common.extract_metric(
-        usage, "output_tokens",
-        reason="codex usage.output_tokens missing or not a non-negative integer on the terminal turn.completed event")
-    reasoning_tokens, reasoning_r = common.extract_metric(
-        usage, "reasoning_output_tokens",
-        reason="codex usage.reasoning_output_tokens missing or not a non-negative integer on the terminal turn.completed event")
-    cost_microunits = None
-    cost_r = "codex CLI reports no cost field on turn.completed usage; a price-table conversion is banned (D25)"
-    if isinstance(wall_duration_ms, int) and not isinstance(wall_duration_ms, bool) and wall_duration_ms >= 0:
-        duration_ms, duration_r = wall_duration_ms, None
-    else:
-        duration_ms, duration_r = None, (
-            "codex CLI reports no per-turn duration; wrapper wall-clock measurement was not supplied to the fold")
-    if completed:
-        turns, turns_r = len(completed), None
-    else:
-        turns, turns_r = None, "no turn.completed event observed; turn count could not be measured"
-
-    worker = {"input_tokens": input_tokens, "cached_input_tokens": cached_tokens,
-              "output_tokens": output_tokens, "reasoning_tokens": reasoning_tokens,
-              "cost_microunits": cost_microunits, "duration_ms": duration_ms, "turns": turns}
-    unknown_reasons = {f"worker/{field}": reason for field, reason in (
-        ("input_tokens", input_r), ("cached_input_tokens", cached_r), ("output_tokens", output_r),
-        ("reasoning_tokens", reasoning_r), ("cost_microunits", cost_r), ("duration_ms", duration_r),
-        ("turns", turns_r),
-    ) if reason is not None}
-    envelope = common.zero_coordinator_envelope()
-    return {"worker": worker, "coordinator": envelope["coordinator"], "unknown_reasons": unknown_reasons,
-            "inclusion_bases": {}, "zero_bases": envelope["zero_bases"]}
-
-
-def fold_records(records: list[str], request: dict, *, exit_code: int, include_economy: bool = False,
-                 wall_duration_ms: int | None = None) -> dict:
+def fold_records(records: list[str], request: dict, *, exit_code: int) -> dict:
     if not isinstance(records, list) or len(records) > request["budgets"].get("max_event_count", 0):
         return failed("BUDGET_EVENT_COUNT", "budget_exhausted")
     normalized = [normalize_record(line, request) for line in records]
@@ -168,9 +99,6 @@ def fold_records(records: list[str], request: dict, *, exit_code: int, include_e
         return failed("PROVIDER_NONZERO", "provider_failure")
     if not terminal:
         return failed("PROVIDER_PROTOCOL_UNKNOWN", "provider_failure")
-    result = {"worker_succeeded": True, "acceptance_state": "not_evaluated", "exit_class": "success",
-             "reason_code": "OK", "event_count": len(normalized),
-             "usage_observed": any(row.get("usage_observed") for row in normalized)}
-    if include_economy:
-        result["economy"] = _economy_from_records(records, wall_duration_ms=wall_duration_ms)
-    return result
+    return {"worker_succeeded": True, "acceptance_state": "not_evaluated", "exit_class": "success",
+            "reason_code": "OK", "event_count": len(normalized),
+            "usage_observed": any(row.get("usage_observed") for row in normalized)}

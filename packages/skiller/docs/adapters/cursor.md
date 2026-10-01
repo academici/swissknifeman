@@ -8,9 +8,9 @@
 
 | Surface | Канал | Примечание |
 |:--|:--|:--|
-| Скиллы | `.agents/skills/` | Cursor читает нативно (D8); skiller **не** пишет `.cursor/skills` |
+| Скиллы | `.agents/skills/` | Cursor читает нативно; skiller **не** пишет `.cursor/skills` |
 | Connect/vendor | — | Каналы объявлены в `configs/provider-distribution.json` (`discovery` only); без `if cursor` в Python |
-| Инструкции (extension) | `.cursor/rules/swissknifeman-*.mdc` | только self-host umbrella; trigger-scoped (D11) |
+| Инструкции (extension) | `.cursor/rules/swissknifeman-*.mdc` | только self-host umbrella; trigger-scoped |
 | MCP | `.cursor/mcp.json` | merge-only; пишет `maind sync` при включённом провайдере |
 | CLI permissions | `.cursor/cli.json` | только `permissions`; `deny` переживает `--force` |
 | IDE allowlists | `.cursor/permissions.json` | merge-only; repo только **расширяет** user-level |
@@ -140,4 +140,3 @@ python3 packages/task/scripts/render-provider-commands.py --check --root .
 - [Harness setup: Cursor](/harness/setup/cursor) — permissions, MCP, профили
 - [Provider model roles](/task/reference/provider-model-roles) — design/exec/audit/economy
 - [Plan tooling: launch-block](/task/reference/plan-tooling) — handoff-форма
-- Freeze: `.cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md`

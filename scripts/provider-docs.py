@@ -16,7 +16,6 @@ if str(ROOT) not in sys.path:
 
 from core import (ProviderId, SupportLevel, load_provider_manifest,
                   provider_manifest_sha256, support_for)
-from core.repo import resolve_plan_dir
 
 
 MANIFEST_PATH = ROOT / "configs/provider-capabilities.json"
@@ -25,6 +24,8 @@ GUIDE_PATH = ROOT / "docs/provider-support.md"
 BEGIN = "<!-- BEGIN GENERATED PROVIDER CAPABILITIES -->"
 END = "<!-- END GENERATED PROVIDER CAPABILITIES -->"
 _ALL_LEVELS = frozenset({"native", "adapted", "unsupported"})
+# Analytics capabilities are owned by the analyst package and declared here once.
+_ANALYTICS_CAPABILITIES = ("analytics.normalized-events", "analytics.run-report", "analytics.legacy-migration")
 
 
 def independent_inventory(root: Path = ROOT) -> dict[str, object]:
@@ -38,17 +39,7 @@ def independent_inventory(root: Path = ROOT) -> dict[str, object]:
     harness_ids = {surface["id"] for surface in profile["surfaces"]}
     instructions = json.loads((root / "packages/harness/configs/common/instructions/catalog.json").read_text())
     instruction_ids = {item["id"] for item in instructions["capability_requirements"]}
-    plan_dir = resolve_plan_dir(root, "2026.07.19-DUAL-PROVIDER")
-    analytics_contract = (plan_dir / "root/contracts/"
-                           "provider-analytics-contract.md").read_text(encoding="utf-8")
-    analytics_sections = {
-        "## Event envelope": "analytics.normalized-events",
-        "## Run report": "analytics.run-report",
-        "## Migration": "analytics.legacy-migration",
-    }
-    missing_sections = sorted(section for section in analytics_sections
-                              if section not in analytics_contract)
-    analytics_ids = set(analytics_sections.values()) if not missing_sections else set()
+    analytics_ids = set(_ANALYTICS_CAPABILITIES)
     expected = task_ids | harness_ids | instruction_ids | analytics_ids
     return {
         "expected": tuple(sorted(expected)),
@@ -61,7 +52,6 @@ def independent_inventory(root: Path = ROOT) -> dict[str, object]:
             provider: sorted(task_ids - values) for provider, values in mapping_ids.items()},
         "task_mapping_extra": {
             provider: sorted(values - task_ids) for provider, values in mapping_ids.items()},
-        "analytics_contract_missing_sections": missing_sections,
     }
 
 
@@ -154,7 +144,6 @@ def conformance(root: Path = ROOT) -> dict[str, object]:
     report["green"] = not any((report["missing"], report["extra"], report["duplicates"],
                                report["matrix_missing"], report["matrix_extra"],
                                report["requirement_failures"],
-                               report["analytics_contract_missing_sections"],
                                *report["task_mapping_missing"].values(),
                                *report["task_mapping_extra"].values()))
     return report

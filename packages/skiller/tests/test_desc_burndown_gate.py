@@ -1,4 +1,4 @@
-"""P3.2 (2026.07.12-CONTEXT-ECONOMY): validate.sh description-гейт — error>450/warn>300 +
+"""P3.2: validate.sh description-гейт — error>450/warn>300 +
 burn-down-рэтчет (scripts/desc-burndown.txt).
 
 scripts/validate.sh — bash-обёртка вокруг python-heredoc'а (см. test_validate_upstream_body_path.py

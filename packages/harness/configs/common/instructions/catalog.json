@@ -36,7 +36,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -71,7 +71,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -101,7 +101,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -132,7 +132,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -168,7 +168,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -201,7 +201,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -232,7 +232,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -263,7 +263,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -290,7 +290,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -317,7 +317,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -349,7 +349,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -376,7 +376,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -403,7 +403,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -430,7 +430,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -457,7 +457,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -484,7 +484,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
@@ -497,7 +497,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 17,
-          "intent": "Apply this source-derived instruction: record speculative work in `roadmap/` and implement only against a measured problem.",
+          "intent": "Apply this source-derived instruction: implement optimizations only against a measured problem.",
           "obligations": [
             {
               "modality": "must",
@@ -511,11 +511,11 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [
-            "record speculative work in `roadmap/` and implement only against a measured problem"
+            "implement optimizations only against a measured problem"
           ]
         },
         {
@@ -538,7 +538,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "d078c8de777aa9c6bbe5b65592bcfded7609566e429e7b53a7f4cb842112a377"
+              "sha256": "2fe36a2d3b4dbf54460acb09e07c7283ec6f671a7a58d01b46a8106c9e03a0ef"
             }
           ],
           "compatibility_assertions": [

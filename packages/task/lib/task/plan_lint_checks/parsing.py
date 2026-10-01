@@ -120,12 +120,12 @@ def _lint_v2_decision_pointer(plan_dir, plan_lines, plan_md, diag):
 
 def _contract_key(value):
     """Нормализация имени контракта — последний сегмент пути: донор пишет
-    `root/contracts/module-manifest.md`, потребитель — `REGHUB/root/contracts/…`."""
+    , потребитель — `REGHUB/root/contracts/…`."""
     return (value or "").strip().strip("`").rsplit("/", 1)[-1]
 
 
 def _semver_tuple(value):
-    """`v2.0.2` → (2, 0, 2); пре-релизы не поддерживаем (D10). Нет матча → None."""
+    """`v2.0.2` → (2, 0, 2); пре-релизы не поддерживаем. Нет матча → None."""
     m = SEMVER_RE.search(value or "")
     return tuple(int(g) for g in m.groups()) if m else None
 
@@ -250,11 +250,11 @@ def _lint_plan_roadmap_20(plan_dir, plan_id, phase_files, diag):
         diag.warning(plan_dir / "plan.md", None, msg)
 
 
-# --- Слой журнала/индекса (2026.07.18-FOREMAN P1.4/D22) — soft/hard-гейт по дате-cutoff ------------
+# --- Слой журнала/индекса — soft/hard-гейт по дате-cutoff ------------
 # Датовые планы ОТ этой даты обязаны нести валидный journal.jsonl (ERROR); старее/
 # legacy — WARNING (тот же паттерн, что у brief/roadmap-гейтов, back-compat — не ломаем
-# уже идущий флот). Cutoff = дата запечатывания этого канона (P1.4/D47): план
-# 2026.07.18-FOREMAN сам датовый от этой даты — обязан бэкфиллить свой journal.jsonl
+# уже идущий флот). Cutoff = дата запечатывания этого канона: план
+# сам датовый от этой даты — обязан бэкфиллить свой journal.jsonl
 # ДО коммита этой правки, иначе первым же ловит собственный ERROR-гейт.
 JOURNAL_CANON_DATE = "2026.07.18"
 
@@ -305,7 +305,7 @@ def _lint_journal_exceptions_20(plan_dir, plan_id, report):
 
 
 def _lint_plan_journal_20(plan_dir, plan_id, diag):
-    """journal.jsonl (2026.07.18-FOREMAN P1.1, root/contracts/plan-journal-schema.md) — append-only NDJSON,
+    """journal.jsonl — append-only NDJSON,
     одна запись на исполнение item'а любым запуском `/task:plan-*`. Отсутствие/пустой/
     невалидный файл — ERROR для датовых планов от JOURNAL_CANON_DATE, WARNING для
     старее/legacy. Схема записи реюзается из `task.journal` (SSOT — не дублируем enum'ы)."""
@@ -378,7 +378,7 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
 
 
 def _lint_plan_index_20(plan_dir, plan_id, diag):
-    """index.md (2026.07.18-FOREMAN P1.2, root/contracts/plan-index-schema.md) — карта файлов+провенанс,
+    """index.md — карта файлов+провенанс,
     ОПЦИОНАЛЕН (не носитель факта, в отличие от журнала/брифа — P1.2 §1). Отсутствие —
     ВСЕГДА WARNING, независимо от даты плана (нет ERROR-ветки в отличие от журнала)."""
     plan_dir = Path(plan_dir)
@@ -390,14 +390,14 @@ def _lint_plan_index_20(plan_dir, plan_id, diag):
                      f"snippets/index-template.md")
 
 
-# --- 2026.07.10-SKM-ROADMAP-005 P4.3 warning-проверки: ID / workflow-скрипты / supersedes (D24/D27/D28) ----
+# --- warning-проверки: ID / workflow-скрипты / supersedes ----
 
 def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
     """Три WARNING-проверки идентичности плана (все — warning, back-compat D24):
-    (1) имя каталога-плана против union PLAN-ID-паттернов (D24);
+    (1) имя каталога-плана против union PLAN-ID-паттернов;
     (2) workflow-скрипты (`*.js` c `export const meta`) вне `plans/<ID>/workflows/`
-        или с неканоничным именем (D28) — два раздельных сообщения (место / имя);
-    (3) план без Meta `supersedes` при совпадении кодового имени с архивным (D27).
+        или с неканоничным именем — два раздельных сообщения (место / имя);
+    (3) план без Meta `supersedes` при совпадении кодового имени с архивным.
     `meta` — dict[name] = (value, lineno) из parse_plan_md (может быть None/пустым)."""
     plan_dir = Path(plan_dir)
     meta = meta or {}
@@ -802,7 +802,7 @@ def parse_phase_md(path, phase_id, diag, *, layout="v2"):
     if ctx_body is not None:
         is_skeleton = any(SKELETON_MARKER_RE.match(ln) for ln in ctx_body)
 
-    # --- 2026.07.13-PLAN-PROTOCOL-GAP P3.8/D52: регион ОБОИХ грепов по фазе — до первого `## Audit` (append-блок
+    # --- регион ОБОИХ грепов по фазе — до первого `## Audit` (append-блок
     # аудита законно цитирует маркеры, по которым отчитывается; см. AUDIT_BLOCK_HEADER_RE)
     gate_lines = _lines_before_audit(lines)
 
@@ -810,7 +810,7 @@ def parse_phase_md(path, phase_id, diag, *, layout="v2"):
     needs_clarification = [i + 1 for i, ln in enumerate(gate_lines)
                            if NEEDS_CLARIFICATION_RE.search(ln)]
 
-    # --- 2026.07.10-SKM-ROADMAP-005 P4.6: заявляет ли фаза оркестрацию (грепаемый признак, D29) — линуется
+    # --- заявляет ли фаза оркестрацию (грепаемый признак, D29) — линуется
     # в lint_plan (workflow-как-DoR: фаза с оркестрацией без workflow-скрипта = warning)
     _, phase_context, _ = _find_section(gate_lines, PHASE_CONTEXT_HEADER_RE)
     declares_orchestration = any(phase_declares_orchestration(ln) for ln in (phase_context or ()))
@@ -887,8 +887,8 @@ def parse_phase_md(path, phase_id, diag, *, layout="v2"):
     else:
         handoff_text = "\n".join(handoff_body).strip()
         handoff_lineno = handoff_start - 1  # строка самого заголовка «## Phase Handoff»
-        # 2026.07.13-PLAN-PROTOCOL-GAP P2.15/D34: маркер инвалидации — ПЕРВАЯ непустая строка блока (линуется в lint_plan);
-        # 2026.07.13-PLAN-PROTOCOL-GAP P3.7/D50: по ней же судит предикат «блок утверждает закрытие фазы» (субъект, не слово)
+        # маркер инвалидации — ПЕРВАЯ непустая строка блока (линуется в lint_plan);
+        # по ней же судит предикат «блок утверждает закрытие фазы» (субъект, не слово)
         handoff_first_line = next((ln for ln in handoff_body if ln.strip()), "").strip()
         handoff_stale = bool(PHASE_HANDOFF_STALE_RE.match(handoff_first_line))
 
@@ -903,14 +903,14 @@ def _resolve_next_form(text):
     """Резолвит форму `Next` из enum'а §8 в тексте: `(kind, match)` либо `(None, None)`.
 
     Порядок — от специфичной формы к общей; первая сматчившая определяет проверку ссылок,
-    остальные не пробуются (D4). «план закрыт» проверяется СРАЗУ после plan-exec (а не
+    остальные не пробуются. «план закрыт» проверяется СРАЗУ после plan-exec (а не
     среди прочих regex-форм): это цельное утверждение о состоянии плана, а не slash-команда
     — Next закрытого плана иногда УПОМИНАЕТ следующую команду прозой («… решает владелец:
     `/task:plan-close archive <ID>` либо …», см. EDUFY-2), и эта проза не должна
     перехватывать резолвер. Manual-маркер — последним: у формы нет ссылок, она резолвится
     лишь тем, что ни одна slash-форма не объявлена.
 
-    Форма «ОЖИДАНИЕ» (D8) — ПЕРВОЙ, ДО plan-exec: её строка-объявление embed'ит целевой
+    Форма «ОЖИДАНИЕ» — ПЕРВОЙ, ДО plan-exec: её строка-объявление embed'ит целевой
     `/task:plan-exec` (запустится по снятии гейта), который иначе перехватил бы резолвер как
     `exec` — зеркало того, почему «план закрыт» стоит сразу после exec.
     """
@@ -978,7 +978,7 @@ def parse_handoff_md(path, diag):
         diag.error(path, None, "нет заголовка «# HANDOFF — … — after Pn.m» / «… — after Pn»")
 
     body_start = (title_lineno or 0) + 1
-    # handoff-поля вне Scope 2026.07.31-SKM-LEAN P5.9 (D90 — только REQUIRED_ITEM_FIELDS
+    # handoff-поля вне Scope (D90 — только REQUIRED_ITEM_FIELDS
     # items'ов) — duplicates осознанно отброшены, не диагностируются здесь.
     fields, _dup_handoff_fields = _parse_fields(lines[body_start - 1:], body_start, FIELD_RE)
     for f in HANDOFF_REQUIRED_FIELDS:

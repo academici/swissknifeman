@@ -8,7 +8,7 @@
 | Шаблон (snippet) | Для чего | Ключевое в v2 |
 |:--|:--|:--|
 | `plan-template.md` | скелет `plan.md`: Meta, Context, Execution Rules, Routing, Status Board, Decision/Update Log | обязательные Batch/Items/route/Exec/Review/Почему; `solo` только с причиной |
-| `phase-template.md` | stable phase index/item spec; v1 compatibility block | v2 отделяет spec от generated state |
+| `phase-template.md` | stable phase index/item spec | v2 отделяет spec от generated state |
 | `handoff-template.md` | скелет rolling `handoff.md`: Next/Done/Remaining/Sources of truth/Open risks | execution Next сохраняет Batch и remaining suffix |
 | `launch-block-template.md` | фиксированная форма «что запускать дальше»: таблица Batch/Model/Thinking/Context/Суть + отдельный command block | provider-native copy-safe команда; Batch из Routing; правила cold-start и hard boundary |
 | `active-template.md` | 4-строчный указатель `plans/ACTIVE.md` | парсится `plan-lint` байт-в-байт |

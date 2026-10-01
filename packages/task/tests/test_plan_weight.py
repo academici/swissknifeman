@@ -1,4 +1,4 @@
-"""unittest для task.plan_weight — вес обязательного чтения пункта (P0.3).
+"""unittest для task.plan_weight — вес обязательного чтения пункта.
 
 По классу дефекта отдельный кейс; фикстуры плана — общие `fixtures.py` (шаблоны
 plan.md/phases/Pn.md/handoff.md), артефакты калибровки и лимита пишутся во временный
@@ -305,7 +305,7 @@ class TestGapTaxonomy(MeasurerTestCase):
         self.assertEqual({g["gate"] for g in gaps}, {GATE_BOTH})
 
     def test_gate_conjunction_passes_only_when_both_hold(self):
-        """`pass(f) = bytes ≤ size_bytes И est_tokens ≤ tokens` (D108) — один зелёный
+        """`pass(f) = bytes ≤ size_bytes И est_tokens ≤ tokens` — один зелёный
         гейт файл не спасает."""
         self.write_limits(size_bytes=10 ** 9, tokens=10 ** 9)
         record = self.item("1) `phases/P1/P1.md`")
@@ -327,7 +327,7 @@ class TestGapTaxonomy(MeasurerTestCase):
 
 
 class TestRequiredReadsResolution(MeasurerTestCase):
-    """Эвристика резолвинга — вход будущего контракта bundle (P3), поэтому проверяется
+    """Эвристика резолвинга — вход будущего контракта bundle, поэтому проверяется
     поштучно, а не «в среднем»."""
 
     def test_split_entries_by_numbering(self):
@@ -341,7 +341,7 @@ class TestRequiredReadsResolution(MeasurerTestCase):
                          [("lib/pkg/config.py", True)])
 
     def test_backticked_unicode_plan_identifier_is_a_declared_path(self):
-        path = "plans/2026.09.12-№1-COREX-SUCCESSOR/decisions/D16-owner.md"
+        path = "plans/2026.09.12-№1-DEMO-PLAN/decisions/D16-owner.md"
 
         self.assertEqual(path_candidates(f"1) `{path}`"), [(path, True)])
 
@@ -431,7 +431,7 @@ class TestDenseAsciiShare(unittest.TestCase):
 
 
 class TestDenseAsciiIsNotAGate(MeasurerTestCase):
-    """ЗАПРЕЩЕНО вводить порог по `dense_ascii_share` (D109): плотный, но помещающийся в
+    """ЗАПРЕЩЕНО вводить порог по `dense_ascii_share`: плотный, но помещающийся в
     лимиты файл пробелом не становится и «подозрительным» не помечается."""
 
     def test_dense_file_within_limits_produces_no_gap(self):
@@ -584,7 +584,7 @@ class TestJsonOutput(MeasurerTestCase):
 
 
 class TestExactMode(MeasurerTestCase):
-    """`--exact` — дифференциальный харнесс P0.1, а не `count_tokens` (D92/D99)."""
+    """`--exact` — дифференциальный харнесс P0.1, а не `count_tokens`."""
 
     def probe_log(self, path, text):
         log = {"protocol_version": "differential-usage-v1", "measured": 1, "min_corpus": 1,
@@ -718,7 +718,7 @@ class TestRealFleetPlan(unittest.TestCase):
 
     def test_measures_live_plan(self):
         repo_root = plan_weight._MONOREPO_ROOT
-        plan_dir = repo_root / "plans" / "2026.08.07-PLAN-ECONOMY"
+        plan_dir = repo_root / "plans" / "2026.08.07-DEMO-PLAN"
         if not (plan_dir / "plan.md").is_file():
             self.skipTest("живой план недоступен — standalone-раскладка")
         measurer = Measurer()

@@ -35,8 +35,7 @@ class ProviderDocsTests(unittest.TestCase):
         report = provider_docs.conformance(ROOT)
         self.assertTrue(report["green"], json.dumps(report, indent=2))
         for key in ("missing", "extra", "duplicates", "matrix_missing", "matrix_extra",
-                    "requirement_failures", "native_extensions",
-                    "analytics_contract_missing_sections"):
+                    "requirement_failures", "native_extensions"):
             self.assertEqual(report[key], [])
         self.assertEqual(report["canonical_sha256"],
                          manifest_snapshot.APPROVED_CANONICAL_SHA256,
@@ -63,12 +62,7 @@ class ProviderDocsTests(unittest.TestCase):
             (root / "docs").mkdir()
             (root / "packages/task/configs").mkdir(parents=True)
             (root / "packages/harness/configs/common/instructions").mkdir(parents=True)
-            (root / "plans/2026.07.19-DUAL-PROVIDER/root/contracts").mkdir(parents=True)
             # The generator intentionally consumes these bounded sources; copy exact fixtures.
-            # The analytics contract's SOURCE path resolves via `resolve_plan_dir` (live or
-            # archived); the FIXTURE tree always uses the live layout (D91/D95 scope: the
-            # resolver is the fix, this fixture just exercises the reader against it).
-            plan_dir = provider_docs.resolve_plan_dir(ROOT, "2026.07.19-DUAL-PROVIDER")
             for relative in (
                 "configs/provider-capabilities.json",
                 "packages/task/configs/command-routing.json",
@@ -78,9 +72,6 @@ class ProviderDocsTests(unittest.TestCase):
                 target = root / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes((ROOT / relative).read_bytes())
-            (root / "plans/2026.07.19-DUAL-PROVIDER/root/contracts/"
-             "provider-analytics-contract.md").write_bytes(
-                (plan_dir / "root/contracts/provider-analytics-contract.md").read_bytes())
             prefix = b"# Fixture\n\n## \xd0\x92\xd0\xbe\xd0\xb7\xd0\xbc\xd0\xbe\xd0\xb6\xd0\xbd\xd0\xbe\xd1\x81\xd1\x82\xd0\xb8\n\nforeign before\n\n"
             suffix = b"\nforeign after\n"
             (root / "README.md").write_bytes(prefix + suffix)

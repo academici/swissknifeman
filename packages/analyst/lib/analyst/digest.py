@@ -13,8 +13,8 @@
      шум одной сессии, урок не создаёт (остальное — сигнал для `maind analyze`, не для памяти);
   D. workflow_relaunch — run-report hook (P1.2, `_lib.py`) уже сгруппировал вызовы `Workflow`
      по `runId`/имени и отдал готовую группу `{name, count, statuses}` при `count ≥
-     _WF_RELAUNCH_MIN`. Диагностический, не тревожный сигнал (findings/P1-workflow-rootcause.md,
-     plans/2026.07.15-TELEMETRY-OPT): «воркфлоу-скрипт потребовал N итераций resume/отладки
+     _WF_RELAUNCH_MIN`. Диагностический, не тревожный сигнал (
+     ): «воркфлоу-скрипт потребовал N итераций resume/отладки
      внутри одной сессии» — не ошибка (штатный `resumeFromRunId`-паттерн), но кандидат-урок
      «доводить скрипт в изолированном dev-loop, не в основной интерактивной сессии».
 
@@ -252,11 +252,11 @@ def extract_pathologies(run_report, project_path):
 
 
 def extract_workflow_relaunch(run_report, *, scope, project):
-    """Сигнал D: срез `workflow_relaunch` run-report'а (2026.07.15-TELEMETRY-OPT P1.2) — готовые группы
+    """Сигнал D: срез `workflow_relaunch` run-report'а — готовые группы
     `{name, count, statuses}` уже отфильтрованы хуком по порогу `_WF_RELAUNCH_MIN`.
     Диагностический кандидат, не «ошибка»: N resume/relaunch одного воркфлоу в одной
     сессии — прокси «скрипт нестабилен, дебажился на лету внутри основной сессии»
-    (findings/P1-workflow-rootcause.md)."""
+    ."""
     sid = run_report.get("session_id") or ""
     out = []
     for g in (run_report.get("workflow_relaunch") or []):

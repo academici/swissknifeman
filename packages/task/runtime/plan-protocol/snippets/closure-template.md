@@ -17,7 +17,7 @@ opt-in полем `## 0. Meta` плана: `Closure Protocol | v1` — един�
 ```json
 {
   "schema_version": 1,
-  "plan": "2026.07.25-ECO-OPT",
+  "plan": "",
   "phase": "P8",
   "closed_at": "2026-07-30",
   "closed_by": {"command": "plan-exec", "actor": "implementation/medium"},

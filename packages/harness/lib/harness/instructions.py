@@ -18,7 +18,6 @@ from core.cli import parse_args
 from core.io import atomic_write_text
 from core.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
 from core.provider.projection import load_projection_catalog, project_common_instructions
-from core.repo import resolve_plan_dir
 from core.provider.artifact import (
     ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
     canonical_json_bytes, plan_artifact_render, sha256_digest,
@@ -333,8 +332,7 @@ def catalog_path() -> Path:
 
 
 def contract_path() -> Path:
-    return resolve_plan_dir(repository_root(), "2026.07.19-DUAL-PROVIDER") / (
-        "root/contracts/provider-instruction-contract.md")
+    return package_root() / "docs/reference/provider-instruction-contract.md"
 
 
 def compatibility_path() -> Path:
@@ -1263,23 +1261,11 @@ def _validate_compatibility_fixture(records: dict[str, dict],
                                      observed="catalog compatibility record differs"))
 
 
-_PLAN_RELATIVE_SOURCE = re.compile(r"^plans/([^/]+)/(.+)$")
-
-
 def _literal_coverage_source_text(source: object) -> str:
-    """Read the D76/D81 provenance source, archive-resilient: `plans/<PLAN-ID>/…`
-    resolves `<PLAN-ID>` through `resolve_plan_dir` (same precedent as
-    `contract_path()`), so archiving the donor plan does not turn this gate red.
-    Patchable by name from tests."""
+    """Read the provenance source (repository-relative path). Patchable by name from tests."""
     if not isinstance(source, str):
         raise ValueError("provenance.source must be a string")
-    match = _PLAN_RELATIVE_SOURCE.match(source)
-    if match:
-        plan_id, rest = match.group(1), match.group(2)
-        path = resolve_plan_dir(repository_root(), plan_id) / rest
-    else:
-        path = repository_root() / source
-    return path.read_text(encoding="utf-8")
+    return (repository_root() / source).read_text(encoding="utf-8")
 
 
 def _provenance_diagnostics(provenance: object) -> tuple[InstructionDiagnostic, ...]:

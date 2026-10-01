@@ -574,22 +574,6 @@ def render_operator_reference(report: ProviderAuditReport) -> str:
             + _render_validated_report(report))
 
 
-def render_p5_artifact(report: ProviderAuditReport) -> str:
-    return ("# P5 harness conformance — P6/P7 inputs\n\n"
-            "> Generated from the validated deterministic provider-audit report; no second inventory is maintained.\n\n"
-            f"Catalog `{report.catalog_hash}` is the P5.5 preflight input. Run `harness doctor --provider-audit --json` twice and require byte-identical green output with empty missing/extra/duplicates.\n\n"
-            "The audit and named Claude settings doctor are separate consumers. It writes no audited package source or target.\n\n"
-            "## Exact P6 deployment inputs\n\n"
-            "- Use this report's catalog/source hashes and complete evidence matrix as the preflight input.\n"
-            "- Check and repair are managed-only; repair may change matching managed fixture paths only.\n"
-            "- No live target write, activation, apply authority, MCP start, hook start or workflow start is granted.\n\n"
-            "## Exact P7 self-host acceptance inputs\n\n"
-            "- Re-run the byte-identical read-only report twice; retain supported and provider-qualified unsupported rows.\n"
-            "- Accept full access only for exact `self-host-apply` plus trusted `repo:` target; reject project, fleet-project and fleet-defaults inheritance.\n"
-            "- Keep secret evidence value-free and preserve named Claude settings audit as a separate consumer.\n\n"
-            + _render_validated_report(report))
-
-
 def _render_validated_report(report):
     return _render_hash_matrix(report) + "\n" + _render_surface_matrix(report) + "\n" + _render_managed_lifecycle(report)
 

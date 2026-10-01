@@ -9,7 +9,7 @@ import json
 
 
 class TestConflictsFlagUnits(unittest.TestCase):
-    """Юниты `--conflicts` (2026.07.31-SKM-LEAN P5.9) на СИНТЕТИЧЕСКОМ каноне — фиксируют
+    """Юниты `--conflicts` на СИНТЕТИЧЕСКОМ каноне — фиксируют
     ФОРМУ сверки, независимо от текущего текста живого `SKILL.md` (тот же принцип, что
     `test_canon_literals.py::TestT1CollectorVectors`). Живой прогон против реального канона
     покрыт `TestConflictsFlagLiveRepo` ниже."""
@@ -285,7 +285,7 @@ class TestLint20Warnings(TmpPlanTestCase):
         self.assertEqual(self._warnings_containing(diag, "RAG:✅»/«[UNVERIFIED]"), [])
 
     def test_decision_log_with_rag_dash_marker_no_warning(self):
-        # третий маркер enum'а §7 (D29): `RAG:—` — repo-grounded факт, WARNING'а быть не должно
+        # третий маркер enum'а §7: `RAG:—` — repo-grounded факт, WARNING'а быть не должно
         plan_dir = write_valid_plan(self.root)
         self._write_decisions(plan_dir, ("тест", "RAG:— (repo-grounded: lib/pkg/config.py)", "RAG:—"))
         _, diag = _lint(plan_dir)
@@ -402,7 +402,7 @@ class TestLint20Warnings(TmpPlanTestCase):
 
 
 class TestPlanIdentity43Warnings(TmpPlanTestCase):
-    """P4.3 (D24/D27/D28) — три WARNING-проверки идентичности плана: регулярка PLAN-ID,
+    """P4.3 — три WARNING-проверки идентичности плана: регулярка PLAN-ID,
     место/имя workflow-скрипта, supersedes-преемственность. ВСЕ warning: diag.ok=True."""
 
     def _warnings_containing(self, diag, needle):
@@ -415,7 +415,7 @@ class TestPlanIdentity43Warnings(TmpPlanTestCase):
         p.write_text(body, encoding="utf-8")
         return p
 
-    # --- (1) регулярка PLAN-ID (D24) -----------------------------------------
+    # --- (1) регулярка PLAN-ID -----------------------------------------
     def test_legacy_id_no_warning(self):
         plan_dir = write_valid_plan(self.root, "OLD-STYLE")
         _, diag = _lint(plan_dir)
@@ -435,7 +435,7 @@ class TestPlanIdentity43Warnings(TmpPlanTestCase):
         self.assertTrue(diag.ok, diag.errors)
         self.assertTrue(self._warnings_containing(diag, "канону PLAN-ID"), diag.warnings)
 
-    # --- (2) место/имя workflow-скрипта (D28) --------------------------------
+    # --- (2) место/имя workflow-скрипта --------------------------------
     def test_canonical_workflow_script_silent(self):
         plan_dir = write_valid_plan(self.root, "DEMO-1")  # codename = demo-1
         self._add_js(plan_dir, "workflows/wf-demo-1-drive.js")
@@ -476,7 +476,7 @@ class TestPlanIdentity43Warnings(TmpPlanTestCase):
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(self._warnings_containing(diag, "workflow-скрипт"), [], diag.warnings)
 
-    # --- (3) supersedes-преемственность (D27) --------------------------------
+    # --- (3) supersedes-преемственность --------------------------------
     def test_supersedes_missing_with_archived_codename_warns(self):
         plan_dir = write_valid_plan(self.root, "DEMO-1")
         (self.root / "plans" / "archive" / "DEMO-1").mkdir(parents=True)
@@ -503,7 +503,7 @@ class TestPlanIdentity43Warnings(TmpPlanTestCase):
 
 
 class TestWorkflowDoRWarning46(TmpPlanTestCase):
-    """P4.6 (D29) — workflow-как-DoR: фаза со статусом 🟡+, ЗАЯВЛЯЮЩАЯ оркестрацию
+    """P4.6 — workflow-как-DoR: фаза со статусом 🟡+, ЗАЯВЛЯЮЩАЯ оркестрацию
     (грепаемый признак multi-agent/fan-out), но без workflow-скрипта в
     `plans/<ID>/workflows/` = WARNING. Условность: без признака / при статусе ⬜ /
     при наличии скрипта — тишина. Всё warning-only: diag.ok=True."""

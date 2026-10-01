@@ -1,13 +1,11 @@
-"""Closed security boundary for admitted Artifex provider work.
+"""Closed security boundary for admitted provider work.
 
-This module keeps untrusted provider data out of durable evidence.  It is deliberately
-small: admission verification remains owned by :mod:`dispatch`; this layer makes that
-verified identity mandatory at each package boundary.
+Keeps untrusted provider data out of durable evidence. Admission verification stays
+in :mod:`dispatch`; this layer makes the verified identity mandatory at each boundary.
 """
 from __future__ import annotations
 
 import hashlib
-import json
 import re
 from pathlib import Path
 from typing import Any
@@ -53,15 +51,6 @@ def indexed_admission(plan_dir: Path, admission_path: Path) -> dict[str, Any]:
     return value
 
 
-def indexed_business_admission(plan_dir: Path, admission_path: Path, *, g2_digest: str, g2b_digest: str) -> dict[str, Any]:
-    """Additive D108 boundary; smoke admissions stay owned by ``indexed_admission``."""
-    from . import business_dispatch
-    try:
-        return business_dispatch.load_indexed(plan_dir, admission_path, g2_digest=g2_digest, g2b_digest=g2b_digest)
-    except business_dispatch.BusinessRefusal as exc:
-        raise SecurityRefusal(exc.reason) from exc
-
-
 def request(admission: dict[str, Any], value: Any) -> dict[str, Any]:
     """Require an exact, bounded provider request derived from that admission."""
     if not isinstance(value, dict) or set(value) != {"provider", "route", "permissions", "budgets", "bundle", "child_policy"}:
@@ -95,22 +84,16 @@ def environment(value: dict[str, str]) -> dict[str, str]:
     return dict(value)
 
 
-_ECONOMY_KEYS = {"worker", "coordinator", "unknown_reasons", "inclusion_bases", "zero_bases"}
-
-
 def observation(value: Any) -> dict[str, Any]:
     """Accept only the normalized, non-content worker outcome."""
     if not isinstance(value, dict):
         raise SecurityRefusal("OBSERVATION_SCHEMA")
-    allowed = {"kind", "reason_code", "process_count", "duration_ms", "event_count", "output_hash", "exit_code",
-              "economy"}
+    allowed = {"kind", "reason_code", "process_count", "duration_ms", "event_count", "output_hash", "exit_code"}
     if set(value) - allowed or not isinstance(value.get("kind"), str):
         raise SecurityRefusal("OBSERVATION_SCHEMA")
     if not isinstance(value.get("process_count", 0), int) or value["process_count"] < 0:
         raise SecurityRefusal("OBSERVATION_SCHEMA")
     if "output_hash" in value and (not isinstance(value["output_hash"], str) or not _HEX.fullmatch(value["output_hash"])):
-        raise SecurityRefusal("OBSERVATION_SCHEMA")
-    if "economy" in value and (not isinstance(value["economy"], dict) or set(value["economy"]) != _ECONOMY_KEYS):
         raise SecurityRefusal("OBSERVATION_SCHEMA")
     _reject_sensitive(value)
     return value

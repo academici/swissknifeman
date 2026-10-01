@@ -246,7 +246,7 @@ class ParseCase(unittest.TestCase):
         self.assertEqual(r["tools"]["total"], 5000)
 
 
-# ── workflow_relaunch (P1.2, plans/2026.07.15-TELEMETRY-OPT) ────────────────────
+# ── workflow_relaunch (P1.2) ────────────────────
 class WorkflowRelaunchCase(unittest.TestCase):
     def test_three_same_name_async_flags(self):
         t = "\n".join(_wf_line(f"w{i}", "dterema-site-p3-api", "async_launched")

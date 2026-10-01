@@ -264,7 +264,7 @@ def lint_plan(plan_dir, diag):
     _lint_terminal_admission_contract(plan_md, diag)
     meta, status_board = parse_plan_md(plan_md, diag)
 
-    # 2026.07.10-SKM-ROADMAP-005 P4.3: warning-проверки идентичности (ID / workflow-скрипты / supersedes) — D24/D27/D28.
+    # warning-проверки идентичности (ID / workflow-скрипты / supersedes) — D24/D27/D28.
     # meta здесь — сырой dict[name]=(value,lineno) до маппинга в модель ниже.
     _meta_raw = meta if isinstance(meta, dict) else {}
     _lint_plan_identity_20(plan_dir, plan_id, _meta_raw, plan_md, diag)
@@ -279,7 +279,7 @@ def lint_plan(plan_dir, diag):
     contracts = (parse_contracts(plan_lines, plan_md, diag) if plan_lines is not None
                  else {"exported": [], "consumed": []})
 
-    # 2026.07.25-ECO-OPT P8.2/D103-D105: `Consequences` в D-записи (opt-in `Closure Protocol | v1` + forward-only).
+    # -D105: `Consequences` в D-записи (opt-in `Closure Protocol | v1` + forward-only).
     if plan_lines is not None:
         _lint_consequences_82(plan_dir, plan_id, _meta_raw, plan_lines, plan_md, diag)
 
@@ -301,7 +301,7 @@ def lint_plan(plan_dir, diag):
     # Roadmap-гейт (SKILL §8): полностью детализированный план обязан нести roadmap.md.
     _lint_plan_roadmap_20(plan_dir, plan_id, phase_files, diag)
 
-    # Журнал/индекс (2026.07.18-FOREMAN P1.4/D22): journal.jsonl soft/hard по дате-cutoff, index.md WARNING-only.
+    # Журнал/индекс: journal.jsonl soft/hard по дате-cutoff, index.md WARNING-only.
     _lint_plan_journal_20(plan_dir, plan_id, diag)
     _lint_plan_index_20(plan_dir, plan_id, diag)
 
@@ -406,13 +406,13 @@ def lint_plan(plan_dir, diag):
                 if _is_empty(va_val):
                     diag.warning(path, va_lineno, f"item {item_id}: пустая Validation при статусе «{status_val}»")
 
-        # --- 2026.07.24-AGENT-RELIABILITY P4.4/D91: гейт напечатанных кодов границ pre_mutation/pre_final --
+        # --- гейт напечатанных кодов границ pre_mutation/pre_final --
         _lint_write_site_codes_44(parsed["status_table"], parsed["items"], path, diag)
 
-        # --- 2026.07.25-ECO-OPT P8.3/D44: 🔴/⛔ обязаны нести `Возобновление:` (opt-in Closure Protocol) --
+        # --- 🔴/⛔ обязаны нести `Возобновление:` (opt-in Closure Protocol) --
         _lint_checkpointed_83(_meta_raw, parsed["items"], path, diag)
 
-    # --- 2026.07.24-AGENT-RELIABILITY P2.2/D26/D47: tiered-portability (committed-bundle плана без committed
+    # --- tiered-portability (committed-bundle плана без committed
     # execution input, либо внешний путь в роли execution input) ----------------
     _lint_tiered_portability_22(plan_dir, plan_id, all_items, phases, diag)
     _lint_next_runnable_bundle(plan_dir, layout, phases, all_items, diag)
@@ -496,7 +496,7 @@ def lint_plan(plan_dir, diag):
                              f"{len(nc)} маркер(ов) [NEEDS CLARIFICATION] "
                              f"(строки {nc}) — DoR-гейт не пройден (SKILL §7)")
 
-        # --- 2026.07.10-SKM-ROADMAP-005 P4.6 WARNING: workflow-как-DoR (D29) — фаза со статусом 🟡+, ЗАЯВЛЯЮЩАЯ
+        # --- WARNING: workflow-как-DoR — фаза со статусом 🟡+, ЗАЯВЛЯЮЩАЯ
         # оркестрацию (грепаемый признак), но у плана нет workflow-скрипта в
         # `plans/<ID>/workflows/`. Условность: без признака оркестрации — молчит
         # (ручное item-by-item исполнение workflow не требует). warning-only.
@@ -527,11 +527,11 @@ def lint_plan(plan_dir, diag):
                     diag.error(phases[pid]["path"], None,
                                f"фаза {pid} статус «{phase_status}», но «## Phase Handoff» пуст")
 
-        # --- 2026.07.13-PLAN-PROTOCOL-GAP P2.15/D34 WARNING: зеркальный гейт — фаза НЕтерминальна, а Phase Handoff
+        # --- WARNING: зеркальный гейт — фаза НЕтерминальна, а Phase Handoff
         # УТВЕРЖДАЕТ закрытие и не помечен маркером инвалидации (H2, SKILL §3, 4-й шаг).
         # WARNING, не ERROR: три плана флота (истинно-положительные, carve-out D34) иначе
         # получили бы недостижимый commit-гейт в ЧУЖИХ репозиториях.
-        # 2026.07.13-PLAN-PROTOCOL-GAP P3.7/D50: утверждение о закрытии ФАЗЫ читается по ПЕРВОЙ НЕПУСТОЙ СТРОКЕ блока и
+        # утверждение о закрытии ФАЗЫ читается по ПЕРВОЙ НЕПУСТОЙ СТРОКЕ блока и
         # снимается ОТРИЦАНИЕМ на ней же — иначе гейт ловит слово, а не субъект (J1).
         elif phase_status and phase_status not in TERMINAL_STATUSES:
             handoff_text = phases[pid].get("phase_handoff")
@@ -547,7 +547,7 @@ def lint_plan(plan_dir, diag):
                              f"(SKILL §3, 4-й шаг реопена: блок не удаляется, его перезапишет "
                              f"plan-close при следующем закрытии фазы)")
 
-    # --- 2026.07.25-ECO-OPT P8.1/D42: отчёт закрытия фазы (opt-in `Closure Protocol | v1`) ----------
+    # --- отчёт закрытия фазы (opt-in `Closure Protocol | v1`) ----------
     _lint_closure_reports_81(plan_dir, plan_id, _meta_raw, phases, board_by_phase, diag)
 
     # D2 is a layout-v2 hard gate.  Its implementation stays outside this
@@ -584,20 +584,20 @@ def lint_plan(plan_dir, diag):
     handoff_path = plan_dir / "handoff.md"
     handoff = parse_handoff_md(handoff_path, diag)
 
-    # 2026.07.25-ECO-OPT P11.3/D129: handoff.md ↔ Status Board «Pn a/b» — вне `if handoff:`
+    # handoff.md ↔ Status Board «Pn a/b» — вне `if handoff:`
     # блока Next-резолвера ниже (независимая проверка, форма-нейтральна к Next).
     _lint_handoff_board_113(handoff, handoff_path, plan_id, board_by_phase, diag)
 
     if handoff:
         next_val, next_lineno = handoff["fields"].get("Next", ("", None))
 
-        # Заголовок (D30/D37) — ссылка обязана резолвиться, иначе расширение regex'а просто
+        # Заголовок — ссылка обязана резолвиться, иначе расширение regex'а просто
         # «разрешило всё»: у ОБЕИХ форм (`after Pn` — фаза, `after Pn.m` — item) гейтится
         # существование ФАЗЫ `Pn`. Исключение — bootstrap `P0.0` (замер флота: единственное
         # попадание item-формы — стартовый handoff, не дефект). Существование самого ITEM'а
         # `Pn.m` НЕ гейтится: 12 планов флота несут `after P0.0` (плана ещё не касались,
         # item'а P0.0 не бывает) — гейт на неё = новые ERROR флоту, back-compat запрещает.
-        # Оракул «фаза существует» — ОБЪЕДИНЕНИЕ Status Board и файлов фаз (D41): это гейт
+        # Оракул «фаза существует» — ОБЪЕДИНЕНИЕ Status Board и файлов фаз: это гейт
         # висячей ССЫЛКИ, а рассинхрон board↔файлы — отдельный дефект со своей диагностикой
         # («фаза Pn есть в Status Board, но нет phases/Pn.md»), дублировать её здесь нечем.
         known_phases = set(phases) | set(board_by_phase)
@@ -608,7 +608,7 @@ def lint_plan(plan_dir, diag):
                 diag.error(handoff_path, handoff.get("title_lineno"),
                            f"заголовок: фаза «{title_phase}» не существует в плане")
 
-        # ФОРМА `Next` ОБЪЯВЛЯЕТСЯ ПЕРВОЙ НЕПУСТОЙ СТРОКОЙ поля (D40). Само поле
+        # ФОРМА `Next` ОБЪЯВЛЯЕТСЯ ПЕРВОЙ НЕПУСТОЙ СТРОКОЙ поля. Само поле
         # МНОГОСТРОЧНОЕ: ниже идёт launch-block (таблица Model/Thinking/Context/Суть +
         # code-block), и его проза законно ЦИТИРУЕТ другие формы enum'а — голый промпт
         # item'а, чинящего сам протокол, называет и slash-команды, и «план закрыт».
@@ -698,7 +698,7 @@ def lint_plan(plan_dir, diag):
                         f"handoff.Next: CONTINUITY_CONTEXT_INVALID ({exc})",
                     )
 
-        # --- C2 (D8): прозаическая gate-оговорка при runnable-форме → WARNING ------
+        # --- C2: прозаическая gate-оговорка при runnable-форме → WARNING ------
         # Автор вписал в объявление runnable slash-форму «команда есть, но не сейчас»
         # (стем «не раньше»/«делать нечего»/time-gate) вместо структурной формы «ОЖИДАНИЕ».
         # Скан — только СТРОКА-ОБЪЯВЛЕНИЕ (`next_decl`): guard-строка `# НЕ раньше:` формы
@@ -772,7 +772,7 @@ def lint_plan(plan_dir, diag):
         if kind == "manual":
             pass  # «ЗАПУСК ВРУЧНУЮ: <model/effort>» — форма без slash-команды, ссылок нет
         elif kind == "waiting":
-            pass  # «ОЖИДАНИЕ: <условие> → <целевая форма>» (D8): целевая команда guarded в
+            pass # «ОЖИДАНИЕ: <условие> → <целевая форма>»: целевая команда guarded в
                   # launch-block'е; ссылки объявления не резолвим (целевая форма проверится
                   # при реальном запуске по снятии гейта). launch-block требуется — как у
                   # прочих runnable-форм (не exempt): гейт launch-block выше не смотрит kind.
@@ -983,7 +983,7 @@ def discover_plan_dirs(root):
     return dirs
 
 
-# --- --conflicts: канон ↔ реализация (2026.07.31-SKM-LEAN P5.9, roadmap plan-audit-loop.md §A.1) -----
+# --- --conflicts: канон ↔ реализация -----
 # Конфликт-скан сверяет EN-only `SKILL.md` с реестрами-константами реализации.
 # Точные литералы переиспользуют общий `CANON_LITERALS`, а не второй реестр.
 #

@@ -17,7 +17,7 @@
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",
-    "by": "2026.07.31-SKM-LEAN P5.1",
+    "by": "vendor audit",
     "upstream_sha": "8eb99a76ba75b6afd7d1a9872ad1a30e53fb436ccc7e47f8b45be9497a338efe"
   }
 }

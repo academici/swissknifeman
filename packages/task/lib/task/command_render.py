@@ -1800,8 +1800,3 @@ def _json_bytes(value: object) -> bytes:
     return (json.dumps(value, sort_keys=True, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
 
 
-def render_locale_context(locale_result) -> dict[str, object]:
-    """Expose already-resolved plan/diagnostic locales without becoming their owner."""
-    if getattr(locale_result, "surfaces", None) is None:
-        raise ValueError("CMD_LOCALE_CONTEXT_REFUSED")
-    return {"provider_boundary": "task", "surfaces": [row.as_dict() for row in locale_result.surfaces]}

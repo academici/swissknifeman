@@ -1,0 +1,12 @@
+{
+  "schema_version": "provider-parity-cases-v1",
+  "contract_version": "1.0.0",
+  "cases": [
+    {"id":"claude-malformed","provider":"claude-code","input":{"records":["{"],"exit_code":0},"expected":{"exit_class":"provider_failure","reason_code":"PROVIDER_PROTOCOL_UNKNOWN"}},
+    {"id":"claude-missing-usage","provider":"claude-code","input":{"records":["result-without-usage"],"exit_code":0},"expected":{"reason_code":"OK","usage_observed":false}},
+    {"id":"claude-success","provider":"claude-code","input":{"records":["valid-result"],"exit_code":0},"expected":{"exit_class":"success","reason_code":"OK"}},
+    {"id":"codex-malformed","provider":"codex","input":{"records":["{"],"exit_code":0},"expected":{"exit_class":"provider_failure","reason_code":"PROVIDER_PROTOCOL_UNKNOWN"}},
+    {"id":"codex-missing-usage","provider":"codex","input":{"records":["terminal-without-usage"],"exit_code":0},"expected":{"reason_code":"OK","usage_observed":false}},
+    {"id":"codex-success","provider":"codex","input":{"records":["terminal-success"],"exit_code":0},"expected":{"exit_class":"success","reason_code":"OK"}}
+  ]
+}

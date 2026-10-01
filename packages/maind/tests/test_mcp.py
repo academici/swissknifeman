@@ -121,7 +121,7 @@ class TestToolCalls(unittest.TestCase):
                 self.assertEqual(data[0]["text"], "hello world")
 
     def test_recall_union_private_survives_large_shared_namespace(self):
-        # roadmap/memory-recall-shared-namespace-priority: без капа крупный ns:<группа>
+        # Без капа крупный ns:<группа>
         # вытеснял малый приватный scope проекта из выдачи (измерено 84-96% ответа из shared
         # на 6 проектах). project:<id>-expansion теперь опрашивает private без капа
         # (RECALL_LIMIT), shared — с RECALL_SHARED_LIMIT.
@@ -401,7 +401,7 @@ class TestScopeIsolation(unittest.TestCase):
 
 
 class TestContentTrimming(unittest.TestCase):
-    """`_content` — единая воронка тримминга (P3.2): ниже порога — байт-в-байт как раньше;
+    """`_content` — единая воронка тримминга: ниже порога — байт-в-байт как раньше;
     выше — снятие `indent=2`, а если и этого не хватило — receipt с `truncated`/
     `returned_count`/`total_count` на крупнейшем топ-уровневом списке. `isError` не
     пересекается с `truncated`-путём (разные классы — ошибка инструмента vs частичность)."""

@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from harness.provider_audit import (ProviderAuditReport, audit_package, audited_paths,
-                                    render_operator_reference, render_p5_artifact,
+                                    render_operator_reference,
                                     _map_diagnostics)
 from harness.profiles import load_catalog, resolve_profile
 from harness.mcp import load_mcp_catalog, plan_mcp_projection
@@ -194,11 +194,9 @@ class ProviderConformanceTests(unittest.TestCase):
             with self.assertRaisesRegex(SystemExit, "2"):
                 cmd_doctor(Env(PACKAGE, "doctor"), ["--provider-audit"])
 
-    def test_generated_docs_and_p5_artifact_are_the_validated_report_consumers(self):
+    def test_generated_docs_are_the_validated_report_consumer(self):
         report = audit_package(PACKAGE)
         self.assertEqual((PACKAGE / "docs/reference/provider-harness.md").read_text(), render_operator_reference(report))
-        artifact = PACKAGE.parents[1] / "plans/archive/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md"
-        self.assertEqual(artifact.read_text(), render_p5_artifact(report))
         evidence = report.as_dict()["evidence"]
         self.assertIn({"category": "activation", "provider": "codex",
                        "identity": "surface:context.output-style", "polarity": "negative",
@@ -215,13 +213,10 @@ class ProviderConformanceTests(unittest.TestCase):
                     continue
                 self.assertTrue(any(item["category"] == category and item["polarity"] == polarity
                                     for item in evidence), f"{category}/{polarity}")
-        for generated in (render_operator_reference(report), render_p5_artifact(report)):
+        for generated in (render_operator_reference(report),):
             self.assertIn("Exact provider-surface map", generated)
             self.assertIn("HARNESS_ACTIVATION_UNSUPPORTED", generated)
             self.assertNotIn("literal-", generated)
-        self.assertIn("Exact P6 deployment inputs", render_p5_artifact(report))
-        self.assertIn("Exact P7 self-host acceptance inputs", render_p5_artifact(report))
-        for generated in (render_operator_reference(report), render_p5_artifact(report)):
             self.assertIn("Source and render hashes", generated)
             self.assertIn("Exact provider-surface map", generated)
             self.assertIn("Temp-contained managed lifecycle evidence", generated)

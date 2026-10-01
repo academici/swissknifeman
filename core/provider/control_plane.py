@@ -92,20 +92,12 @@ class ControlPlaneResolution:
 
 
 def resolve_desired_snapshot(*, project_id: str, config: ResolvedProviderConfig,
-                             catalog: ProviderConfigCatalog,
-                             locale_policy: Mapping[str, object] | None = None) -> ControlPlaneResolution:
-    """Compose an immutable desired snapshot from already-read, typed inputs.
-
-    ``locale_policy`` is intentionally accepted only as a separately owned
-    canonical input.  It is never rendered, persisted, or folded into provider
-    semantic identity.
-    """
+                             catalog: ProviderConfigCatalog) -> ControlPlaneResolution:
+    """Compose an immutable desired snapshot from already-read, typed inputs."""
     if not isinstance(project_id, str) or not _PROJECT_ID_RE.fullmatch(project_id):
         return _failure("PCP_IDENTITY_INVALID", "project identity is invalid")
     if not isinstance(config, ResolvedProviderConfig) or not isinstance(catalog, ProviderConfigCatalog):
         return _failure("PCP_SCHEMA_INVALID", "typed configuration and catalog are required")
-    if locale_policy is not None and not isinstance(locale_policy, Mapping):
-        return _failure("PCP_SCHEMA_INVALID", "locale policy must be an already-read mapping")
     if not _is_v1(config.contract_version) or not _is_v1(config.catalog_version) or not _is_v1(catalog.catalog_version):
         return _failure("PCP_VERSION_UNSUPPORTED", "provider configuration or catalog version is unsupported")
     if config.catalog_version != catalog.catalog_version:

@@ -77,5 +77,5 @@ pass появиться лишь из-за дробления, переноса,
 
 ## Provenance
 
-Контракт архивирован из плана `2026.08.10-TASK-LEAN-AUTONOMY`; исходный immutable carrier:
-`plans/archive/2026.08.10-TASK-LEAN-AUTONOMY/root/contracts/read-budget-v1.md`.
+Контракт архивирован из плана; исходный immutable carrier:
+.

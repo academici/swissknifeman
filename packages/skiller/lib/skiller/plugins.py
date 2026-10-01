@@ -1,8 +1,8 @@
-"""plugins — видимость marketplace-плагинов Claude Code в первом ходе (P1.1).
+"""plugins — видимость marketplace-плагинов Claude Code в первом ходе.
 
 `skiller budget --first-turn` видит только проектную поверхность; плагин
 резидентен в КАЖДОЙ сессии (~449/~450 ток always-on,
-`plans/archive/2026.07.31-SKM-LEAN/findings/P1-plugin-cli-probe-2026-07-31.md` §3), но
+ §3), но
 измерителем не учитывается. Этот модуль склеивает два вывода чужого CLI —
 `claude plugin list --json` (перечисление, CWD-зависимо, недокументированный
 флаг) и `claude plugin details <id>` (Always-on-цена, текстовый вывод, своего

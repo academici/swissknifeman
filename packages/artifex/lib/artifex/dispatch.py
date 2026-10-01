@@ -1,4 +1,4 @@
-"""Pure dispatch-admission projection for the P2 no-provider seam."""
+"""Pure dispatch-admission projection; no provider is ever touched here."""
 from __future__ import annotations
 
 import hashlib
@@ -19,6 +19,7 @@ GRANT_KEYS = frozenset(("schema_version", "grant_version", "grant_id", "grant_ha
 BUDGET_KEYS = frozenset(("max_slices", "timeout_ms", "max_envelope_bytes", "max_event_count",
                          "max_turns", "max_output_bytes", "token_limit", "cost_limit_microunits"))
 SOURCE_KEYS = frozenset(("plan", "p3_phase", "provider_matrix", "worker_contract", "parity"))
+SMOKE_GRANT_DECISION = "D74"
 WORKSPACE = {"kind": "temporary-empty-git", "creation": "fresh-per-attempt",
              "preimage": "empty-git-tree", "postimage": "equals-preimage"}
 
@@ -61,7 +62,8 @@ def verify_task(value: Any) -> dict[str, Any]:
         raise DispatchRefusal("UNKNOWN_SCHEMA_VERSION")
     if set(task) != TASK_KEYS:
         raise DispatchRefusal("UNKNOWN_FIELD")
-    if task.get("parent_plan_id") != "2026.08.03-ARTIFEX-SUPERVISOR" or task.get("parent_item_id") != "P3.4":
+    parent_plan = task.get("parent_plan_id")
+    if not isinstance(parent_plan, str) or not parent_plan or task.get("parent_item_id") != "P3.4":
         raise DispatchRefusal("PARENT_ITEM_AS_TASK")
     if task.get("purpose") != "provider-readiness-smoke":
         raise DispatchRefusal("PURPOSE_MISMATCH")
@@ -97,7 +99,7 @@ def verify_grant(value: Any, task: dict[str, Any]) -> dict[str, Any]:
         raise DispatchRefusal("GRANT_HASH_MISMATCH")
     if grant.get("revoked") is not False:
         raise DispatchRefusal("GRANT_REVOKED")
-    if grant.get("owner_decision") != "D74" or grant.get("purpose") != task["purpose"]:
+    if grant.get("owner_decision") != SMOKE_GRANT_DECISION or grant.get("purpose") != task["purpose"]:
         raise DispatchRefusal("GRANT_SCOPE_MISMATCH")
     for key in ("task_id", "task_hash", "provider", "workspace", "permissions", "budgets"):
         if grant.get(key) != task.get(key):

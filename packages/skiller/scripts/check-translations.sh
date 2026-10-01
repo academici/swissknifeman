@@ -21,7 +21,7 @@ if [[ -n "$direction" && "$direction" != "en-source" ]]; then
 fi
 
 python3 - "$PACKAGE_ROOT" "$strict" <<'PY'
-"""Structure-only source-direction check; corpus admission belongs to locale-corpus."""
+"""Structure-only source-direction check."""
 from __future__ import annotations
 
 import re

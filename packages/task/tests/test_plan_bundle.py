@@ -21,14 +21,11 @@ class PlanBundleTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_lifted_schema_preserves_historical_fields_with_optional_authority_extension(self):
+    def test_authority_extension_is_optional_in_the_bundle_schema(self):
         root = Path(__file__).resolve().parents[3]
         current = json.loads((root / "packages/task/configs/bundle-v1.schema.json").read_text())
-        historical = json.loads((root / "plans/archive/2026.08.07-PLAN-ECONOMY/root/contracts/bundle-v1.schema.json").read_text())
         self.assertNotIn("authority", current["required"])
-        authority = current["properties"].pop("authority")
-        self.assertEqual(authority["required"], ["gate", "evidence_paths"])
-        self.assertEqual(current, historical)
+        self.assertEqual(current["properties"]["authority"]["required"], ["gate", "evidence_paths"])
 
     def test_build_is_deterministic_and_check_is_byte_fresh(self):
         one = plan_bundle.render(self.plan, "P1.1")
@@ -68,14 +65,14 @@ class PlanBundleTest(unittest.TestCase):
 
     def test_unicode_cross_plan_decision_path_builds_as_one_declared_input(self):
         plans = Path(self.tmp.name) / "plans"
-        source = plans / "2026.09.12-№1-SOURCE"
-        consumer = plans / "2026.09.12-№2-CONSUMER"
+        source = plans / "2026.09.12-№1-DEMO-SOURCE"
+        consumer = plans / "2026.09.12-№2-DEMO-CONSUMER"
         shutil.copytree(self.plan, source)
         shutil.copytree(self.plan, consumer)
 
         decision = source / "decisions" / "D16-owner-domain-control-plane.md"
         decision.write_text("# D16\n", encoding="utf-8")
-        path = "plans/2026.09.12-№1-SOURCE/decisions/D16-owner-domain-control-plane.md"
+        path = "plans/2026.09.12-№1-DEMO-SOURCE/decisions/D16-owner-domain-control-plane.md"
         spec = consumer / "phases" / "P1" / "P1.1.md"
         spec.write_text(
             spec.read_text(encoding="utf-8")

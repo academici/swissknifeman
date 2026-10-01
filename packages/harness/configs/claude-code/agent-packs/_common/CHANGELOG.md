@@ -6,7 +6,7 @@
 
 ### Added
 
-- **Delegation contract в грамматике PLAN** (`2026.07.29-HARNESS-AGNOSTIC` P4.4, D58): новое
+- **Delegation contract в грамматике PLAN**: новое
   поле формата возврата `; output: <формат возврата>` в строке `Task N -> @<role> : <цель>` и
   секция «Контракт задания» с пятью обязательными элементами задания субагенту
   (`objective`/`output`/`tools`/`sources`/`boundaries`, first-party Anthropic) и правилом

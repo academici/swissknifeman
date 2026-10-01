@@ -98,7 +98,7 @@ def _base_policy():
                     "field_markers": dict(ep._FIELD_MARKERS),
                     "grammar_marker": ep._GRAMMAR_MARKER,
                     "status": "pending",
-                    "pending_until": "2026.07.29-HARNESS-AGNOSTIC P4.4",
+                    "pending_until": "2026.07.29-DEMO-PLAN P4.4",
                 },
                 {
                     "id": "plan-grammar-template", "carrier": "orchestrator.md",
@@ -106,7 +106,7 @@ def _base_policy():
                     "field_markers": dict(ep._FIELD_MARKERS),
                     "grammar_marker": ep._GRAMMAR_MARKER,
                     "status": "pending",
-                    "pending_until": "2026.07.29-HARNESS-AGNOSTIC P4.4",
+                    "pending_until": "2026.07.29-DEMO-PLAN P4.4",
                 },
             ],
         },

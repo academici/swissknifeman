@@ -5,7 +5,6 @@ from core import (CapabilityId, CapabilitySupport, ConfigSource, NativeExtension
                   NativeExtensionId, ProviderConfigCatalog, ProviderConfigLayer, ProviderId, SupportLevel,
                   canonical_desired_bytes, parse_desired_snapshot,
                   resolve_desired_snapshot, resolve_provider_config)
-from core.locale import resolve_locale
 
 
 def catalog():
@@ -24,20 +23,14 @@ def layer(selection):
 
 
 class TestDesiredSnapshot(unittest.TestCase):
-    def test_locale_context_stays_outside_provider_semantic_digest(self):
-        registry = Path(__file__).resolve().parents[2] / "locale/data/language-subtag-registry.txt"
-        locale = resolve_locale(({"contract_version": "1.0.0", "rank": 5, "kind": "built-in", "locale": {"response": "en", "plan": "en", "diagnostics": "en"}},), registry_path=registry)
-        self.assertEqual(locale.surfaces[0].resolved, "en")
-    def test_snapshot_is_deterministic_immutable_and_locale_independent(self):
+    def test_snapshot_is_deterministic_and_immutable(self):
         config = resolve_provider_config(
             catalog=catalog(),
             project=layer({"codex": {"enabled": True}, "claude-code": {
                 "capabilities": {"instructions.project": True}}}),
         )
-        first = resolve_desired_snapshot(project_id="demo", config=config, catalog=catalog(),
-                                         locale_policy={"response": "ru"})
-        second = resolve_desired_snapshot(project_id="demo", config=config, catalog=catalog(),
-                                          locale_policy={"response": "en"})
+        first = resolve_desired_snapshot(project_id="demo", config=config, catalog=catalog())
+        second = resolve_desired_snapshot(project_id="demo", config=config, catalog=catalog())
         self.assertIsNotNone(first.desired)
         self.assertEqual(first.desired, second.desired)
         self.assertEqual(canonical_desired_bytes(first.desired), canonical_desired_bytes(second.desired))

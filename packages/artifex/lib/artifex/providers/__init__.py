@@ -1,4 +1,4 @@
-"""Pure provider adapters; process ownership starts only in P3.4."""
+"""Pure provider adapters; process ownership lives in the worker, not here."""
 
 from .codex import build_argv, fold_records, normalize_record, resolve_binary
 

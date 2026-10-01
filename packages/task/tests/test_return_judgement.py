@@ -1,4 +1,3 @@
-import filecmp
 import json
 import shutil
 import tempfile
@@ -16,7 +15,7 @@ from task import plan_returns
 ROOT = Path(__file__).resolve().parents[3]
 SCHEMA = ROOT / "packages/task/configs/return-judgement-v1.schema.json"
 CALIBRATION = ROOT / "packages/task/configs/return-judgement-calibration.json"
-BANK = ROOT / "plans/archive/2026.08.07-PLAN-ECONOMY/artifacts/P6/judge-calibration-bank.jsonl"
+BANK = ROOT / "packages/task/configs/return-judgement-bank.jsonl"
 RUBRIC = ROOT / "packages/task/prompts/return-judgement-rubric-v1.md"
 
 
@@ -65,13 +64,6 @@ class ReturnJudgementTests(unittest.TestCase):
 
     def tearDown(self):
         self.tmp.cleanup()
-
-    def test_lifted_schema_is_byte_identical(self):
-        self.assertTrue(filecmp.cmp(
-            SCHEMA,
-            ROOT / "plans/archive/2026.08.07-PLAN-ECONOMY/root/contracts/return-judgement-v1.schema.json",
-            shallow=False,
-        ))
 
     def test_calibration_registry_pins_rubric_and_discovery_bank(self):
         import hashlib

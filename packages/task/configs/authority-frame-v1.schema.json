@@ -52,7 +52,7 @@
     "rule": "union_crosses_reserved_predicate=>reserved"
   },
   "borrowed_sets": {
-    "source": "plans/2026.08.03-ARTIFEX-SUPERVISOR/root/contracts/authority-policy-v1.md",
+    "source": "authority-policy-v1",
     "action_classes": [
       "AUTO",
       "AUTO-FIX",

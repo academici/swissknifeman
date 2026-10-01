@@ -31,11 +31,11 @@ ARTIFACT_PATH = _PKG_ROOT / "configs" / "token-estimate-calibration.json"
 V1_SNAPSHOT_PATH = _PKG_ROOT / "configs" / "token-estimate-calibration-v1.json"
 PROBE_LOG_PATH = _PKG_ROOT / "configs" / "calibration-probe-log-v2.json"
 
-# Exactly eight distinct real sources.  The first three are the measured dense-ASCII artefacts.
+# Exactly eight distinct real sources; the first three are dense-ASCII JSON samples.
 CORPUS = (
-    _REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admission-index-v1.json",
-    _REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P3/package-promotion-manifest-v1.json",
-    _REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admission-index-v3-p5.4-paired.json",
+    _PKG_ROOT / "configs" / "return-judgement-bank.jsonl",
+    _PKG_ROOT / "configs" / "bundle-v1.schema.json",
+    _PKG_ROOT / "configs" / "command-routing.json",
     _PKG_ROOT / "configs" / "token-estimate-calibration-v1.json",
     _PKG_ROOT / "configs" / "read-limit.json",
     _REPO_ROOT / "packages/task/lib/task/token_estimate.py",
@@ -58,7 +58,7 @@ def _sha256(data):
 
 def _source_label(path):
     relative = path.resolve().relative_to(_REPO_ROOT.resolve()).as_posix()
-    return f"corpus/{path.name}" if relative.startswith("plans/") else relative
+    return relative
 
 
 def _read_sample(path):

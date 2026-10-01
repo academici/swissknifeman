@@ -1,4 +1,3 @@
-import filecmp
 import json
 import shutil
 import tempfile
@@ -59,12 +58,6 @@ class PlanReturnsTests(unittest.TestCase):
         self.assertEqual(result["fingerprints"][1]["namespace"], "ungroupable")
         (self.plan / "journal.jsonl").unlink()
         self.assertEqual(plan_returns.durable_count(self.plan, "a" * 64), "unknown")
-
-    def test_lifted_schema_is_byte_identical(self):
-        root = Path(__file__).resolve().parents[3]
-        self.assertTrue(filecmp.cmp(root / "packages/task/configs/return-fingerprint-v1.schema.json",
-                                     root / "plans/archive/2026.08.07-PLAN-ECONOMY/root/contracts/return-fingerprint-v1.schema.json",
-                                     shallow=False))
 
     def test_return_fingerprint_accepts_every_journal_friction_value(self):
         properties = plan_returns._schema()["$defs"]["valid_friction_class"]["properties"]
@@ -179,9 +172,3 @@ class PlanReturnsTests(unittest.TestCase):
         self.assertEqual(gate["action"], "isolated-review")
         self.assertTrue(gate["blocks"])
         self.assertTrue(gate["review_required"])
-
-    def test_lifted_return_loop_spec_is_byte_identical(self):
-        root = Path(__file__).resolve().parents[3]
-        self.assertTrue(filecmp.cmp(root / "packages/task/configs/return-loop-v1.spec.json",
-                                     root / "plans/archive/2026.08.07-PLAN-ECONOMY/root/contracts/return-loop-v1.spec.json",
-                                     shallow=False))

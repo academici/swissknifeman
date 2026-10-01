@@ -1,5 +1,5 @@
 """provider_trace — thin Unified Agent Trace v1 (P3.1,
-`plans/2026.07.24-AGENT-RELIABILITY/root/contracts/unified-agent-trace-v1.md`) readers.
+) readers.
 
 Maps an already-captured provider structure into the RAW payload keys
 `analyst.trace.build_trace_record` consumes. Contains no validation and no

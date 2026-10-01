@@ -131,23 +131,23 @@ Read-only отчёт: корень и маркер, каналы, дрейф п�
 | `skiller doctor` | python3, симлинк, PATH, projects.json, чистота реестра, профили |
 | `skiller doctor --context --provider codex [--target DIR] [--json]` | читает фактический Codex prompt inventory через native CLI и выдаёт typed diagnostics `SKILL_DUPLICATE_NAME`, `CODEX_PLUGIN_ENABLED_OUTSIDE_PROJECT_POLICY` и `CODEX_DESIRED_PLUGIN_NOT_EFFECTIVE`; команда read-only, отделяет observed inventory от managed project estimate и явно исключает platform overhead из итога |
 | `skiller budget --first-turn [--provider claude-code\|codex\|cursor] [--target DIR] [--json] [--strict]` | provider-aware always-on футпринт первого хода. Claude Code считает skills+agents+CLAUDE.md/rules+живой SessionStart+MCP; Codex считает `AGENTS.md`, исключает Claude agents/hooks и заменяет managed skill estimate фактическим native prompt inventory. Недоступный native inventory даёт `INCOMPLETE`, а `--strict` завершается ненулевым кодом. Порог managed footprint: OK ≤16K / ELEVATED ≤23K / WARN >23K. Флот — `maind doctor --context`. MCP остаётся режим-зависимой оценкой `deferred|auto|off` |
-| `skiller budget --first-turn --with-plugins [--target DIR] [--json]` | добавляет always-on цену установленных marketplace-плагинов проекта (`claude plugin list/details`, вызов `details` — под `cwd` проекта, local-scope плагины чужого CWD не резолвятся) аддитивными ключами `plugins`/`session_total`/`session_verdict`; без флага вывод не меняется. Требует `--first-turn`; сбой листинга → `n/a`; невзятая цена плагина — `broken` (сам листинг объявил плагин сломанным полем `errors`) отдельно от `unparsed` (нераспознанный формат апстрима), никогда молчаливый 0. **Пороги вердикта откалиброваны именно на этой, плагин-инклюзивной величине** (`session_total`): baseline флота n=22, медиана плагинной суммы 8 741 ток → `16K`/`23K` вместо прежних `7K`/`10K`, посчитанных до того, как плагины вообще стали считаться (2026.07.31-SKM-LEAN D83) |
+| `skiller budget --first-turn --with-plugins [--target DIR] [--json]` | добавляет always-on цену установленных marketplace-плагинов проекта (`claude plugin list/details`, вызов `details` — под `cwd` проекта, local-scope плагины чужого CWD не резолвятся) аддитивными ключами `plugins`/`session_total`/`session_verdict`; без флага вывод не меняется. Требует `--first-turn`; сбой листинга → `n/a`; невзятая цена плагина — `broken` (сам листинг объявил плагин сломанным полем `errors`) отдельно от `unparsed` (нераспознанный формат апстрима), никогда молчаливый 0. **Пороги вердикта откалиброваны именно на этой, плагин-инклюзивной величине** (`session_total`): baseline флота n=22, медиана плагинной суммы 8 741 ток → `16K`/`23K` вместо прежних `7K`/`10K`, посчитанных до того, как плагины вообще стали считаться |
 | `skiller budget --provider claude-code\|codex [--profile P\|--config F\|--target DIR]` | добавляет к обычному skill-budget модель листинга без остальных first-turn поверхностей. Для полного provider receipt используй сочетание `--first-turn --provider ...`. `--profiles` сравнивает каждый поставляемый профиль с обоими провайдерами |
 
 **Строка «исключено записей: N (по полю …)»** в отчётах `--first-turn` и `--provider`
-(2026.07.31-SKM-LEAN P3.2, D95/D96). Запись скилла, несущего `disable-model-invocation: true`
+. Запись скилла, несущего `disable-model-invocation: true`
 или `paths:`, в резидентный листинг Claude Code **не входит** — измеритель её не считает и
 печатает число исключений с полем-причиной, а рядом — цену, ушедшую из листинга. Основание —
 НАБЛЮДЕНИЕ стенда на живой 2.1.220, не документация: оба поля дали одну и ту же дельту оси A
 (−88 на запись, воспроизведено байт-в-байт в двух прогонах), причём для `paths:` это
 противоречит доковой строке «The listing always contains every skill name»
-(`plans/archive/2026.07.31-SKM-LEAN/findings/P3-native-fields-smoke.md` §3.1–3.2). Условие механизма
+(§3.1–3.2). Условие механизма
 `paths:` — «сессия ПРОЧЛА совпавший файл», а не «файл лежит в дереве»
 (`findings/P3-paths-mechanism.md` §2), и на ПЕРВОМ ходу прочитанных файлов нет по построению,
 поэтому исключение безусловно. В JSON сведения приезжают аддитивно:
 `sources.skills.excluded`/`excluded_by`/`excluded_raw` (`--first-turn`) и
 `listing.excluded`/`excluded_by`/`excluded_raw` (`--provider`) — ключи `total`/`verdict` и
-смысл прежних ключей не меняются (D16). Для `--provider codex` исключение **не применяется**:
+смысл прежних ключей не меняются. Для `--provider codex` исключение **не применяется**:
 поля измерены только на Claude Code, и codex-ветка сознательно продолжает завышать, вместо
 недоказанного занижения.
 | `swissknifeman version` | git SHA + путь к реестру |

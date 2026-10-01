@@ -9,9 +9,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code agent-packs.lifecycle",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -27,7 +27,7 @@
             {
               "claim": "the deterministic adapter harness.codex.agent-packs.lifecycle renders, checks, diagnoses and removes locked Codex role projections through the same semantic role catalog and the same byte-level classification the Claude projection uses",
               "scope": "codex agent-packs.lifecycle over role projections .codex/agents/*.toml with a provider-qualified lock, excluding Claude-runtime pack members",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -67,9 +67,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code agents.catalog",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -83,9 +83,9 @@
           "diagnostic": "deterministic harness adapter satisfies codex agents.catalog",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -122,9 +122,9 @@
           "diagnostic": "bounded Claude legacy migration is available through explicit plan/dry-run/check/apply operations",
           "evidence": [
             {
-              "claim": "accepted P6 review and terminal implementation evidence prove named provider readers, neutral run projection and bounded legacy migration",
+              "claim": "the analytics contract and its implementation prove named provider readers, neutral run projection and bounded legacy migration",
               "scope": "frozen neutral analytics readers, store and migration",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P6-analytics-contract-review.md",
+              "source": "packages/analyst/docs/architecture.md",
               "verified_at": "2026-07-22"
             }
           ],
@@ -139,7 +139,7 @@
             {
               "claim": "no committed Codex legacy analytics carrier exists to migrate, and new Codex evidence is normalized into the neutral store directly, so the migration intent does not apply to this provider",
               "scope": "codex analytics.legacy-migration applicability",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -154,7 +154,7 @@
           "level": "unsupported",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
               "scope": "cursor analytics.legacy-migration applicability",
               "claim": "no committed legacy Cursor analytics carrier exists to migrate; new Cursor evidence is written directly to the neutral store"
@@ -177,9 +177,9 @@
           "diagnostic": "Claude SCHEMA=2 input is normalized only through the named fail-closed reader",
           "evidence": [
             {
-              "claim": "accepted P6 review and terminal implementation evidence prove named provider readers, neutral run projection and bounded legacy migration",
+              "claim": "the analytics contract and its implementation prove named provider readers, neutral run projection and bounded legacy migration",
               "scope": "frozen neutral analytics readers, store and migration",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P6-analytics-contract-review.md",
+              "source": "packages/analyst/docs/architecture.md",
               "verified_at": "2026-07-22"
             }
           ],
@@ -193,9 +193,9 @@
           "diagnostic": "Codex capture input is normalized only through the named fail-closed reader",
           "evidence": [
             {
-              "claim": "accepted P6 review and terminal implementation evidence prove named provider readers, neutral run projection and bounded legacy migration",
+              "claim": "the analytics contract and its implementation prove named provider readers, neutral run projection and bounded legacy migration",
               "scope": "frozen neutral analytics readers, store and migration",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P6-analytics-contract-review.md",
+              "source": "packages/analyst/docs/architecture.md",
               "verified_at": "2026-07-22"
             }
           ],
@@ -233,9 +233,9 @@
           "diagnostic": "provider-neutral run-report projection is available for Claude-origin normalized events",
           "evidence": [
             {
-              "claim": "accepted P6 review and terminal implementation evidence prove named provider readers, neutral run projection and bounded legacy migration",
+              "claim": "the analytics contract and its implementation prove named provider readers, neutral run projection and bounded legacy migration",
               "scope": "frozen neutral analytics readers, store and migration",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P6-analytics-contract-review.md",
+              "source": "packages/analyst/docs/architecture.md",
               "verified_at": "2026-07-22"
             }
           ],
@@ -249,9 +249,9 @@
           "diagnostic": "provider-neutral run-report projection is available for Codex-origin normalized events",
           "evidence": [
             {
-              "claim": "accepted P6 review and terminal implementation evidence prove named provider readers, neutral run projection and bounded legacy migration",
+              "claim": "the analytics contract and its implementation prove named provider readers, neutral run projection and bounded legacy migration",
               "scope": "frozen neutral analytics readers, store and migration",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P6-analytics-contract-review.md",
+              "source": "packages/analyst/docs/architecture.md",
               "verified_at": "2026-07-22"
             }
           ],
@@ -288,7 +288,7 @@
           "diagnostic": "deterministic claude-code adapter satisfies command.external-research",
           "evidence": [
             {
-              "claim": "D84 mapping declares exact support levels for every v1 command capability",
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
               "scope": "frozen task command capability mappings",
               "source": "packages/task/configs/command-routing.json",
               "verified_at": "2026-07-21"
@@ -304,7 +304,7 @@
           "diagnostic": "deterministic codex adapter satisfies command.external-research",
           "evidence": [
             {
-              "claim": "D84 mapping declares exact support levels for every v1 command capability",
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
               "scope": "frozen task command capability mappings",
               "source": "packages/task/configs/command-routing.json",
               "verified_at": "2026-07-21"
@@ -319,10 +319,10 @@
           "level": "adapted",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             }
           ],
           "limitations": [
@@ -344,7 +344,7 @@
           "diagnostic": "native claude-code binding satisfies command.filesystem-read",
           "evidence": [
             {
-              "claim": "D84 mapping declares exact support levels for every v1 command capability",
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
               "scope": "frozen task command capability mappings",
               "source": "packages/task/configs/command-routing.json",
               "verified_at": "2026-07-21"
@@ -360,7 +360,7 @@
           "diagnostic": "native codex binding satisfies command.filesystem-read",
           "evidence": [
             {
-              "claim": "D84 mapping declares exact support levels for every v1 command capability",
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
               "scope": "frozen task command capability mappings",
               "source": "packages/task/configs/command-routing.json",
               "verified_at": "2026-07-21"
@@ -373,10 +373,10 @@
           "level": "native",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             }
           ],
           "limitations": [],
@@ -398,7 +398,7 @@
           "diagnostic": "native claude-code binding satisfies command.filesystem-write",
           "evidence": [
             {
-              "claim": "D84 mapping declares exact support levels for every v1 command capability",
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
               "scope": "frozen task command capability mappings",
               "source": "packages/task/configs/command-routing.json",
               "verified_at": "2026-07-21"
@@ -414,7 +414,7 @@
           "diagnostic": "native codex binding satisfies command.filesystem-write",
           "evidence": [
             {
-              "claim": "D84 mapping declares exact support levels for every v1 command capability",
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
               "scope": "frozen task command capability mappings",
               "source": "packages/task/configs/command-routing.json",
               "verified_at": "2026-07-21"
@@ -427,10 +427,10 @@
           "level": "native",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             }
           ],
           "limitations": [],
@@ -452,7 +452,7 @@
           "diagnostic": "native claude-code binding satisfies command.git-read",
           "evidence": [
             {
-              "claim": "D84 mapping declares exact support levels for every v1 command capability",
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
               "scope": "frozen task command capability mappings",
               "source": "packages/task/configs/command-routing.json",
               "verified_at": "2026-07-21"
@@ -468,7 +468,7 @@
           "diagnostic": "native codex binding satisfies command.git-read",
           "evidence": [
             {
-              "claim": "D84 mapping declares exact support levels for every v1 command capability",
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
               "scope": "frozen task command capability mappings",
               "source": "packages/task/configs/command-routing.json",
               "verified_at": "2026-07-21"
@@ -481,10 +481,10 @@
           "level": "native",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             }
           ],
           "limitations": [],
@@ -506,7 +506,7 @@
           "diagnostic": "native claude-code binding satisfies command.git-write",
           "evidence": [
             {
-              "claim": "D84 mapping declares exact support levels for every v1 command capability",
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
               "scope": "frozen task command capability mappings",
               "source": "packages/task/configs/command-routing.json",
               "verified_at": "2026-07-21"
@@ -522,7 +522,7 @@
           "diagnostic": "native codex binding satisfies command.git-write",
           "evidence": [
             {
-              "claim": "D84 mapping declares exact support levels for every v1 command capability",
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
               "scope": "frozen task command capability mappings",
               "source": "packages/task/configs/command-routing.json",
               "verified_at": "2026-07-21"
@@ -535,10 +535,10 @@
           "level": "native",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             }
           ],
           "limitations": [],
@@ -560,7 +560,7 @@
           "diagnostic": "native claude-code binding satisfies command.subagents",
           "evidence": [
             {
-              "claim": "D84 mapping declares exact support levels for every v1 command capability",
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
               "scope": "frozen task command capability mappings",
               "source": "packages/task/configs/command-routing.json",
               "verified_at": "2026-07-21"
@@ -576,7 +576,7 @@
           "diagnostic": "native codex binding satisfies command.subagents",
           "evidence": [
             {
-              "claim": "D84 mapping declares exact support levels for every v1 command capability",
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
               "scope": "frozen task command capability mappings",
               "source": "packages/task/configs/command-routing.json",
               "verified_at": "2026-07-21"
@@ -589,10 +589,10 @@
           "level": "native",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             }
           ],
           "limitations": [],
@@ -614,7 +614,7 @@
           "diagnostic": "native claude-code binding satisfies command.workflow-carrier",
           "evidence": [
             {
-              "claim": "D84 mapping declares exact support levels for every v1 command capability",
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
               "scope": "frozen task command capability mappings",
               "source": "packages/task/configs/command-routing.json",
               "verified_at": "2026-07-21"
@@ -628,7 +628,7 @@
           "diagnostic": "deterministic codex adapter satisfies command.workflow-carrier",
           "evidence": [
             {
-              "claim": "D84 mapping declares exact support levels for every v1 command capability",
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
               "scope": "frozen task command capability mappings",
               "source": "packages/task/configs/command-routing.json",
               "verified_at": "2026-07-21"
@@ -666,9 +666,9 @@
           "diagnostic": "unsupported claude-code context.observer; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -685,9 +685,9 @@
           "diagnostic": "native codex binding satisfies context.observer",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -732,9 +732,9 @@
           "diagnostic": "native claude-code binding satisfies context.output-style",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -749,7 +749,7 @@
             {
               "claim": "the Codex configuration reference documents no output-style key, so no configuration binding or deterministic adapter can satisfy this surface",
               "scope": "codex context.output-style configuration key",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -764,7 +764,7 @@
           "level": "unsupported",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
               "scope": "cursor context.output-style capability cap",
               "claim": "Cursor exposes no project-scoped output-style binding in managed project configuration surfaces"
@@ -789,9 +789,9 @@
           "diagnostic": "native claude-code binding satisfies context.plans-directory",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -806,7 +806,7 @@
             {
               "claim": "the Codex configuration reference documents no plan-directory key, so no configuration binding or deterministic adapter can satisfy this surface",
               "scope": "codex context.plans-directory configuration key",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -821,7 +821,7 @@
           "level": "unsupported",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
               "scope": "cursor context.plans-directory capability cap",
               "claim": "Cursor exposes no project-scoped plan-directory binding; plan paths remain repository convention only"
@@ -844,9 +844,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code doctor.environment",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -860,9 +860,9 @@
           "diagnostic": "deterministic harness adapter satisfies codex doctor.environment",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -875,10 +875,10 @@
           "level": "adapted",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             }
           ],
           "limitations": [
@@ -898,9 +898,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code doctor.provider",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -914,9 +914,9 @@
           "diagnostic": "deterministic harness adapter satisfies codex doctor.provider",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -929,10 +929,10 @@
           "level": "adapted",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             }
           ],
           "limitations": [
@@ -955,9 +955,9 @@
           "diagnostic": "native Claude Code project instructions; activation remains trust-gated",
           "evidence": [
             {
-              "claim": "terminal P5 conformance proves exact common semantic parity and provider-owned extensions across both native instruction targets",
+              "claim": "the instruction conformance report proves exact common semantic parity and provider-owned extensions across both native instruction targets",
               "scope": "root and package instruction projections",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-instruction-conformance.md",
+              "source": "packages/harness/docs/reference/provider-instructions.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -971,9 +971,9 @@
           "diagnostic": "native Codex repository instruction chain; activation remains trust-gated",
           "evidence": [
             {
-              "claim": "terminal P5 conformance proves exact common semantic parity and provider-owned extensions across both native instruction targets",
+              "claim": "the instruction conformance report proves exact common semantic parity and provider-owned extensions across both native instruction targets",
               "scope": "root and package instruction projections",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-instruction-conformance.md",
+              "source": "packages/harness/docs/reference/provider-instructions.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -984,10 +984,10 @@
           "level": "native",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             }
           ],
           "limitations": [],
@@ -1007,9 +1007,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.auto-approval",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1026,9 +1026,9 @@
           "diagnostic": "native codex binding satisfies lifecycle.auto-approval",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1041,10 +1041,10 @@
           "level": "adapted",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             }
           ],
           "limitations": [
@@ -1064,9 +1064,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.changelog-gate",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1082,7 +1082,7 @@
             {
               "claim": "the deterministic adapter harness.codex.lifecycle.changelog-gate refuses a git commit of a release-sensitive type without a staged changelog edit in mode strict, warns in warn, and is inactive by default",
               "scope": "codex lifecycle.changelog-gate refusal on release-sensitive commits",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -1122,9 +1122,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.command-log",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1140,7 +1140,7 @@
             {
               "claim": "the deterministic adapter `harness.codex.lifecycle.command-log` writes one provider-qualified command-log line per matched Bash tool call and is observed as a green `surface_map` row for codex",
               "scope": "codex lifecycle.command-log surface, hook-native binding on PreToolUse",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -1236,7 +1236,7 @@
             {
               "claim": "settings.global.json registers ~/.claude/hooks/daemon-safety/block-daemon-ops.sh on PreToolUse/Bash and apply-permissions.sh installs it, so the surface is satisfied by a committed deterministic adapter",
               "scope": "claude-code lifecycle.daemon-safety registration already shipped by the harness global preset",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -1254,7 +1254,7 @@
             {
               "claim": "the deterministic adapter harness.codex.lifecycle.daemon-safety refuses a matched destructive daemon command with exit 2 and a reason, from the same pattern set as the shipped Claude hook",
               "scope": "codex lifecycle.daemon-safety refusal on destructive shared-daemon commands",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -1296,7 +1296,7 @@
             {
               "claim": "the implementation is committed but nothing registers or installs it: no preset, apply-permissions.sh branch or harness hooks flag activates it",
               "scope": "claude-code lifecycle.git-guardrails activation state",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -1313,7 +1313,7 @@
             {
               "claim": "the deterministic adapter harness.codex.lifecycle.git-guardrails refuses a matched dangerous git command in mode strict, warns in warn, and is inactive by default",
               "scope": "codex lifecycle.git-guardrails refusal on declared dangerous version-control commands",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -1353,9 +1353,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.memory",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1371,7 +1371,7 @@
             {
               "claim": "the deterministic adapter `harness.codex.lifecycle.memory` activates the selected memory backend for a Codex session without writing memory state itself and without changing state paths owned by skiller",
               "scope": "codex lifecycle.memory activation at SessionStart against unchanged `~/.swissknifeman` state ownership",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -1410,9 +1410,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.notification",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1427,7 +1427,7 @@
             {
               "claim": "Codex exposes no Notification hook event and delivers notifications only through the user-scope notify key, which a project-scoped configuration may not override, so no managed project artifact can satisfy this surface",
               "scope": "codex lifecycle.notification within the managed-project-artifact model",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -1442,7 +1442,7 @@
           "level": "unsupported",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
               "scope": "cursor lifecycle.notification capability cap",
               "claim": "Cursor notification control is global CLI configuration and cannot be managed through repository-scoped bindings"
@@ -1465,9 +1465,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.pack-guard",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1483,7 +1483,7 @@
             {
               "claim": "the deterministic adapter harness.codex.lifecycle.pack-guard refuses an apply_patch over a managed generated asset in mode strict, warns in warn, and is inactive by default",
               "scope": "codex lifecycle.pack-guard refusal over managed pack assets recorded in the project's pack lock",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -1523,9 +1523,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.review-gate",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1541,7 +1541,7 @@
             {
               "claim": "the deterministic adapter harness.codex.lifecycle.review-gate runs the project-declared check at SubagentStop and, in mode strict, exits 2 so the subagent continues with the violation text instead of finishing",
               "scope": "codex lifecycle.review-gate enforcement at SubagentStop by preventing the subagent from stopping",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -1581,9 +1581,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.router",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1599,7 +1599,7 @@
             {
               "claim": "the deterministic adapter `harness.codex.lifecycle.router` emits at most one non-authoritative routing bias line per prompt from the shared router catalog and never refuses a turn",
               "scope": "codex lifecycle.router bias injection on UserPromptSubmit",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -1643,9 +1643,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.run-report",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1661,7 +1661,7 @@
             {
               "claim": "the deterministic adapter `harness.codex.lifecycle.run-report` writes one provider-qualified run record per session end from the documented `SessionEnd` payload; the transcript is not parsed",
               "scope": "codex lifecycle.run-report boundary capture at SessionEnd, without transcript-derived outcome extraction",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -1701,9 +1701,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code mcp.catalog",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1717,9 +1717,9 @@
           "diagnostic": "deterministic harness adapter satisfies codex mcp.catalog",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1732,10 +1732,10 @@
           "level": "native",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             }
           ],
           "limitations": [],
@@ -1755,9 +1755,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code security.safe-dirs",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1773,7 +1773,7 @@
             {
               "claim": "the deterministic adapter harness.codex.security.safe-dirs reaches its verdict by calling the single allowlist verdict core used by the Claude hook, refuses fail-closed on any doubt, and does not project the sandbox configuration half",
               "scope": "codex security.safe-dirs fail-closed refusal over the machine-owned allowlist, hook half only",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -1788,16 +1788,16 @@
           "level": "adapted",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             },
             {
               "source": "packages/harness/tests/test_cursor_hook_render.py",
               "verified_at": "2026-09-17",
               "scope": "cursor security.safe-dirs hook registration, native before/after wire shape and fail-closed verdict path",
-              "claim": "P0 conformance covers native hooks.json v1 rendering, merge-preserving registration, pinned beforeShellExecution/afterShellExecution payload fixtures, and handler behavior without hard dependency on session_id"
+              "claim": "conformance covers native hooks.json v1 rendering, merge-preserving registration, pinned beforeShellExecution/afterShellExecution payload fixtures, and handler behavior without hard dependency on session_id"
             }
           ],
           "limitations": [
@@ -1817,9 +1817,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code settings.audit",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1835,7 +1835,7 @@
             {
               "claim": "the deterministic adapter harness.codex.settings.audit reads the documented Codex layers, reports named conformance findings with layer provenance, and reports an unreadable layer as a finding instead of asserting conformance",
               "scope": "codex settings.audit over the documented Codex configuration layers, Codex-specific check set",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -1850,10 +1850,10 @@
           "level": "adapted",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             }
           ],
           "limitations": [
@@ -1873,9 +1873,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code settings.permissions",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1889,9 +1889,9 @@
           "diagnostic": "deterministic harness adapter satisfies codex settings.permissions",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1904,10 +1904,10 @@
           "level": "adapted",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             }
           ],
           "limitations": [
@@ -1929,9 +1929,9 @@
           "diagnostic": "native Claude Code repository/plugin skill projection is available",
           "evidence": [
             {
-              "claim": "terminal P3 conformance proves both native repository/plugin projections preserve one canonical skill inventory",
+              "claim": "skill publication conformance proves both native repository/plugin projections preserve one canonical skill inventory",
               "scope": "dual-provider skill publication",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P3-skill-publication-conformance.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1945,9 +1945,9 @@
           "diagnostic": "native Codex repository/plugin skill projection is available",
           "evidence": [
             {
-              "claim": "terminal P3 conformance proves both native repository/plugin projections preserve one canonical skill inventory",
+              "claim": "skill publication conformance proves both native repository/plugin projections preserve one canonical skill inventory",
               "scope": "dual-provider skill publication",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P3-skill-publication-conformance.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1958,10 +1958,10 @@
           "level": "native",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
-              "scope": "cursor third provider P0 capability matrix",
-              "claim": "P0 committed support level per freeze §2 design freeze S1"
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
             }
           ],
           "limitations": [],
@@ -1981,9 +1981,9 @@
           "diagnostic": "deterministic harness adapter satisfies claude-code workflows.status",
           "evidence": [
             {
-              "claim": "terminal P5 conformance supplies one exact support row and diagnostic for every provider and frozen surface",
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
               "scope": "frozen provider-qualified harness surface matrix",
-              "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md",
+              "source": "packages/harness/docs/reference/provider-harness.md",
               "verified_at": "2026-07-21"
             }
           ],
@@ -1998,7 +1998,7 @@
             {
               "claim": "the Claude surface parses the internal Claude Code workflow run directory, and the documented Codex surfaces expose no workflow-run store to read, so the surface has no Codex object to report",
               "scope": "codex workflows.status as a reader of workflow run state",
-              "source": "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/codex-parity-verdicts-v1.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-07-30"
             }
           ],
@@ -2013,7 +2013,7 @@
           "level": "unsupported",
           "evidence": [
             {
-              "source": ".cursor/plans/2026.09.17-cursor-third-provider-design-freeze.md",
+              "source": "docs/provider-support.md",
               "verified_at": "2026-09-17",
               "scope": "cursor workflows.status capability cap",
               "claim": "Cursor exposes no provider-native workflow run store; generated workflow carriers are instruction-only"

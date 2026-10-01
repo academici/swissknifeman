@@ -3,12 +3,9 @@ from __future__ import annotations
 import json
 import sys
 import unittest
-from pathlib import Path
 
 from artifex import activity
-
-
-PLAN = Path(__file__).resolve().parents[3] / "plans" / "2026.08.03-ARTIFEX-SUPERVISOR"
+from support import FIXTURE_PLAN as PLAN
 
 
 class FakeAdapter:

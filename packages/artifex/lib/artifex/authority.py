@@ -1,7 +1,7 @@
-"""Frozen, deterministic authority evaluator for the plan-local Artifex prototype.
+"""Frozen, deterministic authority evaluator.
 
-The evaluator never executes an action.  It turns the immutable authority-policy
-inputs into one closed decision record that later scheduler code may consume.
+The evaluator never executes an action. It turns the immutable authority-policy
+inputs into one closed decision record that the scheduler may consume.
 """
 from __future__ import annotations
 
@@ -95,7 +95,7 @@ class FrozenAuthority:
 
 @dataclass(frozen=True)
 class AdmittedAuthority:
-    """Frozen evaluator plus the one verified D74 grant it may consume."""
+    """Frozen evaluator plus the one verified dispatch grant it may consume."""
 
     frozen: FrozenAuthority
     grant_id: str
@@ -151,7 +151,7 @@ def _declared_sets(contract_text: str) -> dict[str, tuple[str, ...]]:
 
 
 def load_frozen_authority(plan_dir: str | Path) -> FrozenAuthority:
-    """Load exactly the frozen P0/P1 inputs and fail before a decision on drift."""
+    """Load exactly the frozen authority inputs and fail before a decision on drift."""
     root = Path(plan_dir).resolve()
     contract = _safe_file(root, "root/contracts/authority-policy-v1.md")
     cases_path = _safe_file(root, "artifacts/P1/authority-policy-cases-v1.json")
@@ -218,7 +218,7 @@ def mutate(base: dict, mutations: list[dict]) -> dict:
 
 
 def normalize_legacy(base: dict, case: dict) -> dict:
-    """The contract's compatibility adapter; P0 expected outcomes remain untouched."""
+    """The contract's compatibility adapter; legacy expected outcomes remain untouched."""
     requested = case.get("requested_class")
     operation = {"AUTO": "validate_result", "AUTO-FIX": "integrate_owned_delta", "OWNER": "project_plan_bookkeeping"}.get(
         requested, "validate_result")

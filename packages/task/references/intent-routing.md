@@ -40,4 +40,4 @@ review request retains its boundary, and an explicit plan invocation retains the
 For persisted plans/tasks and work-specific references, apply
 [work identity and references](../runtime/plan-protocol/references/work-references.md):
 assign stable `PLAN<N>`/`TASK<N>` when creating a document; qualify external references such as
-`PLAN1.D35` or `TASK1.D2`. A message-only task needs no document or ID allocation.
+`PLAN<N>.D35` or `TASK<N>.D2`. A message-only task needs no document or ID allocation.

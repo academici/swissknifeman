@@ -42,7 +42,7 @@ class TestContractsSection(TmpPlanTestCase):
         hits = [w for w in diag.warnings if "уведомление не разнесено" in w]
         self.assertEqual(len(hits), 1, diag.warnings)
         self.assertIn("потребитель CONSUMER запинен на v2.0.0", hits[0])
-        self.assertEqual(diag.errors, [])  # только WARNING — механизм молод (D10)
+        self.assertEqual(diag.errors, []) # только WARNING — механизм молод
 
     def test_no_section_silent(self):
         plan_dir = write_valid_plan(self.root, "DEMO-1")
@@ -358,7 +358,7 @@ class TestHandoffBoardGate113(TmpPlanTestCase):
         шаблона `Pn a/b` в handoff'е, даёт РОВНО тот же набор диагностик, что тот же план с
         гейтом молчащим (handoff < канон-даты) — сравнение МНОЖЕСТВ (D129, план без
         handoff-числа не получает НИ ОДНОЙ новой диагностики)."""
-        baseline_dir = self._write(plan_id="2026.07.28-BASE", handoff_date="2026-07-27")
+        baseline_dir = self._write(plan_id="2026.07.28-DEMO-PLAN", handoff_date="2026-07-27")
         _, baseline_diag = _lint(baseline_dir)
         baseline = set(baseline_diag.normalized_keys(baseline_dir))
 

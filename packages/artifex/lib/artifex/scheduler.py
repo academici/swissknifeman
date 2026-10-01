@@ -19,7 +19,7 @@ class SchedulerRefusal(ValueError):
 
 @dataclass(frozen=True)
 class DefaultActivityPort:
-    """The P2 activity port: it makes no external call and refuses before a boundary."""
+    """Default activity port: makes no external call and refuses before any boundary."""
 
     def __call__(self, _slice: dict) -> dict:
         return {"kind": "provider_unavailable", "reason": "PROVIDER_UNAVAILABLE"}
@@ -158,7 +158,7 @@ class Scheduler:
         return self._append("budget_exhausted", slice_value, evidence={"authority_decision": decision})
 
     def schedule(self, slices: list[dict], *, accepted: set[str] | None = None) -> dict:
-        """Select one legal slice and record its full P2 boundary sequence."""
+        """Select one legal slice and record its full boundary sequence."""
         accepted = set() if accepted is None else set(accepted)
         with self.store.acquire_writer():
             replay = self.store.replay()

@@ -198,7 +198,7 @@ class ProviderReaderTests(unittest.TestCase):
 
 
 class DoctorRouteEvidenceTests(unittest.TestCase):
-    """P2.4 (plans/2026.07.24-AGENT-RELIABILITY): `analyst doctor` optionally reports
+    """P2.4: `analyst doctor` optionally reports
     whether `task.route_evidence` is importable — analyst does not depend on `task`
     hard, mirroring the existing optional `maind` check."""
 

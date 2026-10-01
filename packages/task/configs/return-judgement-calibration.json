@@ -11,8 +11,7 @@
       "rubric_sha256": "63323e5565fa2c321354e36ebe47624f37f86c3c3372ba01efaedcc61b6c2e1e",
       "status": "verified",
       "mode": "rubric-discovery",
-      "bank": "plans/archive/2026.08.07-PLAN-ECONOMY/artifacts/P6/judge-calibration-bank.jsonl",
-      "report": "plans/archive/2026.08.07-PLAN-ECONOMY/artifacts/P6/judge-calibration-report.md"
+      "bank": "packages/task/configs/return-judgement-bank.jsonl"
     }
   ],
   "pending_provider": [

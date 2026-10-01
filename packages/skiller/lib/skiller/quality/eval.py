@@ -174,7 +174,7 @@ def validate_pressure(data, label="pressure.json"):
 
     Сценарий — тот же грейд-контракт (assertions), плюс поле `tempts` (что агента
     подмывает сделать, пропустив скилл) для читаемости. Опциональное поле
-    `triggers` (P8.8) — список строк `should_trigger` из triggers.json, которые
+    `triggers` — список строк `should_trigger` из triggers.json, которые
     сценарий покрывает; форма проверяется здесь, полнота покрытия — в validate.sh
     (кросс-файловая сверка со скиллом же triggers.json)."""
     if not isinstance(data, dict):
@@ -337,7 +337,7 @@ def score_description(description, trigger_set, judge):
     fp = sum(1 for q in sn if judge(description, q))
     tn = len(sn) - fp
     total = tp + fn + fp + tn
-    # Fraction — точные отношения (P8.9), не round()-искажение; Fraction полностью
+    # Fraction — точные отношения, не round()-искажение; Fraction полностью
     # упорядочен, select_best_description сортирует по нему без изменений.
     precision = Fraction(tp, tp + fp) if (tp + fp) else Fraction(0)
     recall = Fraction(tp, tp + fn) if (tp + fn) else Fraction(0)
@@ -415,7 +415,7 @@ def run_case(skill_dir, case, *, with_skill, workspace, timeout=DEFAULT_TIMEOUT,
 
     with_skill=True → тело SKILL.md подмешивается в системный промт (baseline без
     него — изоляция эффекта скилла). case.files[] (если есть) пишутся в workspace
-    до прогона. `clock_ns` (P8.9) — инжектируемые часы (дефолт `time.monotonic_ns`);
+    до прогона. `clock_ns` — инжектируемые часы (дефолт `time.monotonic_ns`);
     тесты подставляют детерминированный счётчик ⇒ отчёт побайтно воспроизводим.
     duration_s — точный `Fraction(ns, 10**9)`, не float. →
     {id, output, returncode, duration_s, tokens, error?}."""
@@ -449,7 +449,7 @@ def run_case(skill_dir, case, *, with_skill, workspace, timeout=DEFAULT_TIMEOUT,
 def run_suite(skill_dir, cases, *, with_skill, timeout=DEFAULT_TIMEOUT,
               claude=None, clock_ns=time.monotonic_ns):
     """Прогнать набор кейсов (каждый в своём временном workspace) и оценить.
-    → [{...run_case, **grade_case}]. Online. `clock_ns` — см. run_case (P8.9)."""
+    → [{...run_case, **grade_case}]. Online. `clock_ns` — см. run_case."""
     results = []
     for case in cases:
         with tempfile.TemporaryDirectory(prefix="skiller-eval-") as ws:
@@ -461,9 +461,9 @@ def run_suite(skill_dir, cases, *, with_skill, timeout=DEFAULT_TIMEOUT,
 
 
 # ============================================================================ #
-#  SYSTEM BANK ADAPTER (P3.3) — deterministic structured graders               #
+# SYSTEM BANK ADAPTER — deterministic structured graders #
 # ============================================================================ #
-# The frozen P0.3 reliability bank (`plans/2026.07.24-AGENT-RELIABILITY/
+# The frozen P0.3 reliability bank (
 # artifacts/reliability-bank-v1/`) grades a case by a TRANSCRIPT (ordered typed
 # events) + OUTCOME (dict) record, not a single free-text string — a different
 # vocabulary from ASSERTION_TYPES above (which grades one string). Its own
@@ -474,7 +474,7 @@ def run_suite(skill_dir, cases, *, with_skill, timeout=DEFAULT_TIMEOUT,
 # dependency surface for a package). Reimplemented here, not imported — cited
 # in this module's own docstring convention (`analyst.metrics`: "each contract
 # owns its own closed enum rather than sharing a runtime module across an
-# unrelated boundary"). No LLM judge anywhere in this path (D15).
+# unrelated boundary"). No LLM judge anywhere in this path.
 SYSTEM_OPERATORS = {"event_present", "event_absent", "event_order", "event_count_max",
                    "event_count_min", "outcome_field_equals", "outcome_list_contains",
                    "outcome_list_excludes"}
@@ -566,7 +566,7 @@ def validate_system_graders(data, label="graders.json"):
     """Structural validation of a system-bank graders document (`reliability-
     bank/v1` shape): no-LLM-judge policy, operator closure. → errors (empty =
     valid). Generic — validates ANY system-bank-shaped doc, not only the frozen
-    2026.07.24-AGENT-RELIABILITY P0.3 one (its own `run_bank.py` keeps ownership of THAT bank's schema)."""
+     one (its own `run_bank.py` keeps ownership of THAT bank's schema)."""
     if not isinstance(data, dict):
         return [f"{label}: root must be an object"]
     errors = []
@@ -775,7 +775,7 @@ def pair_system_metric(baseline, candidate):
     """Pair one baseline metric (`{metric, value, baseline_proof_class}`) with
     an optional live candidate. `candidate=None` → `status: 'deferred'` (never
     a silent zero). A baseline whose proof class is not `recomputed`/`cross-
-    checked` can never ground a comparison (D30) — mirrors
+    checked` can never ground a comparison — mirrors
     `analyst.metrics.pair_metric`'s discipline, cited rather than imported
     (cross-package rationale in that module's own docstring)."""
     comparable = {"recomputed", "cross-checked"}
@@ -800,7 +800,7 @@ def build_system_benchmark(cases_doc, graders_doc, *, generated_at, sample_size=
     (`{case_id: {transcript, outcome}}`) is supplied, pair the resulting
     `first_pass_success` metric against it; omitted → the pair is `deferred`
     (no live paired run yet exists — never fabricated, Execution Rules: "ноль
-    и silent skip запрещены"). → the 2026.07.24-AGENT-RELIABILITY P3.3 benchmark artifact shape."""
+    и silent skip запрещены"). → the benchmark artifact shape."""
     graders_by_id = {g["id"]: g for g in graders_doc.get("graders", [])}
     cases = cases_doc.get("cases", [])
     baseline_records = {c["case_id"]: c["baseline"] for c in cases}
@@ -824,7 +824,7 @@ def build_system_benchmark(cases_doc, graders_doc, *, generated_at, sample_size=
                         "value": candidate_metrics["first_pass_success"]}
                        if candidate_metrics is not None else None)
     # Sampled from baseline-PASSING cases only — same selection rule the frozen
-    # 2026.07.24-AGENT-RELIABILITY P0.3 bank's own manifest uses (a case whose declared baseline already
+    # bank's own manifest uses (a case whose declared baseline already
     # fails is not a representative "smoke" sample of steady-state behaviour).
     passing_ids = [g["case_id"] for g in baseline_graded if g["passed"]]
     sample = seeded_system_sample(
@@ -1015,7 +1015,7 @@ def _offline_report(skill_dir):
 
 
 def cmd_eval(env, argv, *, clock_ns=None, now_iso=None):
-    """CLI-обвязка `skiller eval`. `clock_ns`/`now_iso` (P8.9) — точка внедрения
+    """CLI-обвязка `skiller eval`. `clock_ns`/`now_iso` — точка внедрения
     инжектируемых часов для детерминированных тестов (побайтная воспроизводимость
     benchmark.json); дефолт `None` → реальное время, `provenance.clock: "wall"`.
     Поведение CLI без флагов не меняется (обратная совместимость)."""

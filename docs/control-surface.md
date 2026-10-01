@@ -99,12 +99,7 @@ health-hook · health-doc · feature-log-hook · ecosystem-skill · agent-pack`.
 сравнением `git status --porcelain=v1` до и после) и печатает по каждому диагносту
 `owner/source/status/evidence/quality/next_command` со статусом `ok`/`degraded`/`unknown`/`n/a`.
 
-**Качество печатается измеренным, а не округлённым.** Там, где источник неполон, диагностика
-даёт число и причину вместо «ok»: например, `trace-quality` печатает измеренное подмножество
-`5/31` наблюдаемых кейсов, `F1 = 0.96`, `F10 = unknown` (снапшот последнего закоммиченного
-измерения плана `2026.07.24-AGENT-RELIABILITY`, а не живой инструмент — при архивации плана
-диагностика деградирует к `unknown` с названным пробелом). Детали и разбор частых случаев —
-[диагностика skiller](/skiller/guide/troubleshooting).
+**Quality is printed as measured, never rounded.** Where a source is incomplete, the diagnostic prints a named `unknown` gap instead of `ok` (for example `trace-quality` while no per-project trace store exists). Details and common cases: [диагностика skiller](/skiller/guide/troubleshooting).
 
 Один конкретный механизм, живущий целиком в слое `generated` (двенадцать проекций
 `CLAUDE.md`/`AGENTS.md` из общего канона, два наблюдения дрейфа, два машинных гейта) —

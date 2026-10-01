@@ -1,4 +1,4 @@
-"""unittest for analyst.trace — Unified Agent Trace v1 schema owner (P3.1).
+"""unittest for analyst.trace — Unified Agent Trace v1 schema owner.
 Run: PYTHONPATH=packages/analyst/lib python3 -m unittest discover -s packages/analyst/tests -p 'test_trace.py'"""
 import hashlib
 import json
@@ -20,7 +20,7 @@ def _raw(**overrides):
     base = {
         "provenance": _provenance(),
         "occurred_at": "2026-07-26T00:00:00Z",
-        "plan_ref": {"plan_id": "2026.07.24-AGENT-RELIABILITY", "item_id": "P3.1", "command": "plan-run"},
+        "plan_ref": {"plan_id": "2026.07.24-DEMO-PLAN", "item_id": "P3.1", "command": "plan-run"},
         "contract_ref": {"contract_id": "task-contract-v1", "version_hash": "a" * 64},
         "route": {"model_class": "implementation", "effort": "high", "model": "sonnet"},
         "dispatch": {"state": "EXECUTING", "event": "dispatch"},

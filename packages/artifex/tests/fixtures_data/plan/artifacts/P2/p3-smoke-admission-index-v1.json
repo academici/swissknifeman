@@ -1,0 +1,20 @@
+{
+  "schema_version": "p3-smoke-admission-index-v1",
+  "index_version": "1.0.0",
+  "admissions": [
+    {
+      "task_id": "p3-smoke-claude-code-v1",
+      "provider": "claude-code",
+      "path": "artifacts/P2/p3-smoke-admissions/claude-code.json",
+      "sha256": "77b543dcca36b9f6b4edddd40cdbc39e5e1525a09a4caf57d87b05b90e11ea4d",
+      "admission_hash": "eee11cdda09b850539c1b5b94661c7e4cd4af3763393d8c5cb100f2cdca09eb4"
+    },
+    {
+      "task_id": "p3-smoke-codex-v1",
+      "provider": "codex",
+      "path": "artifacts/P2/p3-smoke-admissions/codex.json",
+      "sha256": "2e3e591be08948772266886405ac1b456850139baa7bb2aee6136efea9108a28",
+      "admission_hash": "e51259ac86b60195e20c1c2b2caef9731c925c00b5036ea521455b9870f8c3eb"
+    }
+  ]
+}

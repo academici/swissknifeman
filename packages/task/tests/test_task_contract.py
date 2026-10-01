@@ -1,10 +1,10 @@
 """Tests for `task.task_contract` — the P2.2 Task Contract v1 compiler.
 
 Exercises every one of the twelve pre-mutation and three pre-final reason codes declared
-by the frozen `root/contracts/task-contract-v1.md` (P0.2), plus the portability tier
+by the frozen `root/contracts/task-contract-v1.md`, plus the portability tier
 classification/lint layer added by `plan-portability-v1.md` (P2.1,
 `PORTABILITY_TIER_MISCLASSIFIED`). A base contract is copied from the committed P0.2
-example (`artifacts/P0.2/task-contract-examples.json` example `routine-continuation`) so
+example (.json` example `routine-continuation`) so
 every mutation starts from a schema-valid, allow/allow baseline — one mutated field per
 test, never a hand-authored contract that could silently satisfy the wrong branch.
 """
@@ -27,21 +27,13 @@ except ImportError:  # pragma: no cover - discovery from packages/task
     import fixtures  # noqa: F401,E402 — puts lib/ on sys.path
 from task import (journal, plan_authority, plan_item_state, plan_layout, task_contract,
                   terminal_policy)  # noqa: E402
-from core.repo import resolve_plan_dir  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-PLAN_ROOT = resolve_plan_dir(REPO_ROOT, "2026.08.12-№1-TASK-RESILIENCE")
-EXAMPLES_PATH = (REPO_ROOT / "plans/archive/2026.07.24-AGENT-RELIABILITY/"
-                 "artifacts/P0.2/task-contract-examples.json")
-ARTIFEX_PLAN_ROOT = REPO_ROOT / "plans/2026.08.03-ARTIFEX-SUPERVISOR"
+EXAMPLES_PATH = Path(__file__).resolve().parent / "fixtures_data/task-contract-routine-continuation.json"
 
 
 def _load_base_contract():
-    document = json.loads(EXAMPLES_PATH.read_text(encoding="utf-8"))
-    for example in document["examples"]:
-        if example["id"] == "routine-continuation":
-            return copy.deepcopy(example["contract"])
-    raise AssertionError("fixture example 'routine-continuation' not found")
+    return copy.deepcopy(json.loads(EXAMPLES_PATH.read_text(encoding="utf-8")))
 
 
 def _rehashed(contract):
@@ -142,7 +134,7 @@ class NextTransitionTests(unittest.TestCase):
 
 class PortabilityTierTests(unittest.TestCase):
     """Table-driven over the exact five worked cases of
-    `artifacts/P2.1/state-transition-cases.json::portability_cases` — the compiler and the
+    ::portability_cases` — the compiler and the
     sealed fixture must agree on every one."""
 
     CASES = (
@@ -194,7 +186,7 @@ class PortabilityTierTests(unittest.TestCase):
     def test_predecessor_input_without_producer_blocks(self):
         base = _load_base_contract()
         base["portability"]["execution_inputs"].append(
-            {"path": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P2.2/base-sha.txt",
+            {"path": "plans/2026.07.24-DEMO-PLAN/artifacts/P2.2/base-sha.txt",
              "kind": "produced-by-predecessor", "producer": None})
         contract = _rehashed(base)
         self.assertEqual(task_contract.pre_mutation(contract), "PORTABILITY_INPUT_MISSING")
@@ -202,7 +194,7 @@ class PortabilityTierTests(unittest.TestCase):
     def test_predecessor_input_with_producer_allows(self):
         base = _load_base_contract()
         base["portability"]["execution_inputs"].append(
-            {"path": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P2.2/base-sha.txt",
+            {"path": "plans/2026.07.24-DEMO-PLAN/artifacts/P2.2/base-sha.txt",
              "kind": "produced-by-predecessor", "producer": "P2.2 step 0"})
         contract = _rehashed(base)
         self.assertIsNone(task_contract.pre_mutation(contract))
@@ -659,44 +651,6 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
             task_contract.build(self.plan_dir, "P1.1", authority_granted_by="D50 (foreign)")
 
 
-@unittest.skipUnless(ARTIFEX_PLAN_ROOT.is_dir(), "Artifex plan is not present in this checkout")
-class ArtifexOrdinaryAuthorityRegressionTests(unittest.TestCase):
-    """The prerequisite's ordinary-path proof: every current Artifex item stays runnable."""
-
-    def test_all_current_unique_items_allow_without_foreign_d50_provenance(self):
-        if plan_layout.layout_version(ARTIFEX_PLAN_ROOT) == "v2":
-            item_ids = [spec.stem for phase_id in plan_layout.phase_paths(ARTIFEX_PLAN_ROOT)
-                        for spec in plan_layout.item_spec_paths(ARTIFEX_PLAN_ROOT, phase_id)]
-        else:
-            item_ids = []
-            for phase_path in sorted((ARTIFEX_PLAN_ROOT / "phases").glob("P*.md")):
-                item_ids.extend(re.findall(r"^###\s+(P\d+\.\d+)\b", phase_path.read_text(encoding="utf-8"), re.M))
-        self.assertTrue(item_ids)
-        self.assertEqual(len(item_ids), len(set(item_ids)))
-        self.assertTrue({"P3.5", "P3.6", "P3.7", "P3.8"}.issubset(item_ids))
-        from task import route_evidence
-        for item_id in item_ids:
-            with self.subTest(item=item_id):
-                required = task_contract.build(ARTIFEX_PLAN_ROOT, item_id)["route"]["required"]
-                actual = route_evidence.capture_actual(
-                    required["model_class"], required["effort"], source="provider-doctor",
-                    ts="t", model="regression")
-                contract = task_contract.build(ARTIFEX_PLAN_ROOT, item_id, actual_route=actual)
-                self.assertEqual(task_contract.evaluate(contract), {
-                    "pre_mutation": "allow",
-                    "pre_final": "block:VALIDATION_RECEIPT_MISSING",
-                    "reason_codes": {
-                        "pre_mutation": None,
-                        "pre_final": {
-                            "code": "evidence-missing",
-                            "internal_code": "VALIDATION_RECEIPT_MISSING",
-                            "message": "Produce the required evidence before retrying.",
-                        },
-                    },
-                    "content_hash": task_contract.content_hash(contract)})
-                self.assertNotIn("D50", contract["authority"]["granted_by"])
-
-
 class AuthorityCommandBoundaryTests(unittest.TestCase):
     """Both write-sites consume the compiler; plan-run inherits rather than forks it."""
 
@@ -738,7 +692,7 @@ class ColdStartTests(unittest.TestCase):
 
     def test_carrier_mismatch_blocks(self):
         base = _load_base_contract()
-        base["cold_start"]["carrier"] = "task:plan-exec 2026.07.24-AGENT-RELIABILITY P9.9"
+        base["cold_start"]["carrier"] = "task:plan-exec 2026.07.24-DEMO-PLAN P9.9"
         contract = _rehashed(base)
         self.assertEqual(task_contract.pre_mutation(contract), "COLD_START_INCOMPLETE")
 
@@ -928,7 +882,7 @@ class CliGateTests(unittest.TestCase):
 
 
 class EvaluateFindingHookTests(unittest.TestCase):
-    """`evaluate_finding` (P2.3) — the ONE new call-site this compiler gains for
+    """`evaluate_finding` — the ONE new call-site this compiler gains for
     `task.review_policy`, lazily imported so the predicate tests above never need
     it importable. Behavioural coverage of the policy itself lives in
     `test_review_policy.py`; this class only proves the hook actually delegates."""
@@ -953,72 +907,6 @@ class EvaluateFindingHookTests(unittest.TestCase):
                                                      profile="owner-gated")["decision"]
                     for _ in range(3)]
         self.assertEqual(decisions, ["retry-fix", "retry-fix", "incident"])
-
-
-class BuildSelfConformanceTests(unittest.TestCase):
-    """P2.6 F1 — `build()` self-conformance over REAL, already-closed items of
-    this same plan: P2.1 (a terminal P2 item), P2.6 (this item, live), and
-    P0.1 (a terminal P0 item) — Implementation Rules' own anti-self-deception
-    requirement (не только собранный самим item свежий кейс)."""
-
-    def test_builds_over_three_real_items_with_nonempty_required_arrays(self):
-        for item_id in ("P1.1", "P1.5", "P2.1"):
-            with self.subTest(item=item_id):
-                contract = task_contract.build(PLAN_ROOT, item_id)
-                self.assertGreaterEqual(len(contract["must"]), 1)
-                self.assertGreaterEqual(len(contract["never"]), 1)
-                self.assertGreaterEqual(len(contract["evidence"]), 1)
-                self.assertGreaterEqual(len(contract["done"]["public_acceptance"]), 1)
-                self.assertEqual(contract["version"]["content_hash"],
-                                task_contract.content_hash(contract))
-
-    def test_build_is_byte_deterministic_across_two_calls(self):
-        first = json.dumps(task_contract.build(PLAN_ROOT, "P1.5"), sort_keys=True)
-        second = json.dumps(task_contract.build(PLAN_ROOT, "P1.5"), sort_keys=True)
-        self.assertEqual(first, second)
-
-    def test_default_actual_route_is_unresolved_and_dispatch_guard_denies_it(self):
-        from task import route_evidence as re_
-        contract = task_contract.build(PLAN_ROOT, "P1.5")
-        required, actual = contract["route"]["required"], contract["route"]["actual"]
-        self.assertIsNone(actual["model_class"])
-        self.assertEqual(re_.dispatch_guard(required, actual, contract["route"]["capabilities"]),
-                         "ROUTE-UNVERIFIABLE")
-
-    def test_live_actual_route_matching_required_allows_mutation_but_needs_runtime_validation(self):
-        from task import route_evidence as re_
-        # P1 has already consumed its two phase-audit attempts, so its historical
-        # items must fail the loop gate even with a matching live route.  Keep this
-        # positive route regression on the un-audited current P2 items instead.
-        for item_id in ("P2.1", "P2.2"):
-            with self.subTest(item=item_id):
-                contract = task_contract.build(PLAN_ROOT, item_id)
-                required = contract["route"]["required"]
-                actual = re_.capture_actual(required["model_class"], required["effort"],
-                                           source="provider-doctor", ts="t", model="sonnet")
-                caps = re_.capability_support(["command.subagents"], {"command.subagents": "native"})
-                contract["route"] = re_.build_task_contract_route(required, actual, caps)
-                contract["version"]["content_hash"] = task_contract.content_hash(contract)
-                self.assertIsNone(task_contract.pre_mutation(contract))
-                self.assertEqual(task_contract.pre_final(contract),
-                                 "VALIDATION_RECEIPT_MISSING")
-
-    def test_live_items_in_an_audit_capped_phase_remain_blocked(self):
-        from task import route_evidence as re_
-        for item_id in ("P1.1", "P1.5"):
-            with self.subTest(item=item_id):
-                contract = task_contract.build(PLAN_ROOT, item_id)
-                required = contract["route"]["required"]
-                actual = re_.capture_actual(required["model_class"], required["effort"],
-                                            source="provider-doctor", ts="t", model="sonnet")
-                caps = re_.capability_support(["command.subagents"], {"command.subagents": "native"})
-                contract["route"] = re_.build_task_contract_route(required, actual, caps)
-                contract["version"]["content_hash"] = task_contract.content_hash(contract)
-                self.assertIsNone(task_contract.pre_mutation(contract))
-
-    def test_unknown_item_id_fails_closed(self):
-        with self.assertRaises(task_contract.TaskContractBuildError):
-            task_contract.build(PLAN_ROOT, "P2.999")
 
 
 def _routing_row(model_effort="implementation/medium"):
@@ -1049,6 +937,43 @@ class BuildFixtureTests(unittest.TestCase):
         self.assertEqual(contract["route"]["required"],
                          {"model_class": "implementation", "effort": "medium"})
         self.assertEqual(contract["next"]["context"], "continue-root")
+
+    def test_built_contract_has_nonempty_required_arrays_and_matching_hash(self):
+        contract = task_contract.build(self.plan_dir, "P1.1")
+        self.assertGreaterEqual(len(contract["must"]), 1)
+        self.assertGreaterEqual(len(contract["never"]), 1)
+        self.assertGreaterEqual(len(contract["evidence"]), 1)
+        self.assertGreaterEqual(len(contract["done"]["public_acceptance"]), 1)
+        self.assertEqual(contract["version"]["content_hash"], task_contract.content_hash(contract))
+
+    def test_build_is_byte_deterministic_across_two_calls(self):
+        first = json.dumps(task_contract.build(self.plan_dir, "P1.1"), sort_keys=True)
+        second = json.dumps(task_contract.build(self.plan_dir, "P1.1"), sort_keys=True)
+        self.assertEqual(first, second)
+
+    def test_default_actual_route_is_unresolved_and_dispatch_guard_denies_it(self):
+        from task import route_evidence as re_
+        contract = task_contract.build(self.plan_dir, "P1.1")
+        required, actual = contract["route"]["required"], contract["route"]["actual"]
+        self.assertIsNone(actual["model_class"])
+        self.assertEqual(re_.dispatch_guard(required, actual, contract["route"]["capabilities"]),
+                         "ROUTE-UNVERIFIABLE")
+
+    def test_live_actual_route_matching_required_allows_mutation_but_needs_runtime_validation(self):
+        from task import route_evidence as re_
+        contract = task_contract.build(self.plan_dir, "P1.1")
+        required = contract["route"]["required"]
+        actual = re_.capture_actual(required["model_class"], required["effort"],
+                                    source="provider-doctor", ts="t", model="sonnet")
+        caps = re_.capability_support(["command.subagents"], {"command.subagents": "native"})
+        contract["route"] = re_.build_task_contract_route(required, actual, caps)
+        contract["version"]["content_hash"] = task_contract.content_hash(contract)
+        self.assertIsNone(task_contract.pre_mutation(contract))
+        self.assertEqual(task_contract.pre_final(contract), "VALIDATION_RECEIPT_MISSING")
+
+    def test_unknown_item_id_fails_closed(self):
+        with self.assertRaises(task_contract.TaskContractBuildError):
+            task_contract.build(self.plan_dir, "P1.999")
 
     def test_v2_phase_carrier_builds_through_layout_resolver(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1146,7 +1071,7 @@ class BuildFixtureTests(unittest.TestCase):
 
     def test_missing_routing_row_fails_closed(self):
         # fixtures.plan_md() leaves §3 Routing empty; P1.1's default row was added in
-        # setUp only for THIS plan.md, so an item absent from it (P1.2) has no row.
+        # setUp only for THIS plan.md, so an item absent from it has no row.
         fixtures.write_v2_carriers(self.plan_dir, item_id="P1.2", refresh_views=False)
         with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
             task_contract.build(self.plan_dir, "P1.2")
@@ -1270,7 +1195,7 @@ class RoutingFormTests(unittest.TestCase):
         self._assert_comma_list_diagnostic(str(ctx.exception), "P1.1, P1.2", "P1.2")
 
     def test_mixed_range_and_list_cell_is_diagnosed_too(self):
-        # The live `2026.07.18-FOREMAN` shape (`P4.1–P4.2, P4.4`): a range AND a list in one
+        # The live shape (`P4.1–P4.2, P4.4`): a range AND a list in one
         # cell — the matched token here is covered by neither способ of the two matchers.
         self._write_phase_item("P1.4")
         self._write_plan(_routing_row_with_header("Model class/effort", items="P1.1–P1.2, P1.4"))

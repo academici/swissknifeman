@@ -258,9 +258,7 @@
   reconciliation is incremental; review and plan-run carriers are shorter; missing Phase
   Assurance uses the isolated/reversible default; `risk_tags` remain extensible; final
   rendering is exact only when required; and the PR Python matrix covers the oldest,
-  midpoint and newest supported runtimes. Deferred disputed continuations are recorded in
-  `roadmap/2026.09.22-task-productivity-residuals.md`.
-
+  midpoint and newest supported runtimes. Deferred disputed continuations are tracked outside the repository.
 - **release version integrity:** attestation теперь независимо сверяет expected unit
   version с package/plugin/publication/provider surfaces и включает Claude-only
   units; circular snapshot consistency больше не скрывает устаревшую версию.
@@ -286,7 +284,7 @@
   `plan-work.py` объединяет получение компактного контекста и служебное завершение.
   Локальные finite grants явно отделены как `owner-session` от `provider-proof`;
   отсутствие strict provider capability диагностируется до повторных owner prompts.
-  Детали и границы: `tasks/2026.09.22-task-native-work/README.md`.
+  
 
 - **task public recovery reasons.** Task Contract JSON сохраняет точные внутренние
   diagnostics и добавляет стабильные `reason_codes` с восемью recovery-категориями;
@@ -390,7 +388,7 @@
 
 ### Fixed
 
-- **Cursor lifecycle hooks (P0).** `harness hooks --provider cursor --safe-dirs` теперь
+- **Cursor lifecycle hooks.** `harness hooks --provider cursor --safe-dirs` теперь
   рендерит корректный `.cursor/hooks.json` (`version: 1`, плоские entries) и
   публикует `.cursor/hooks/lifecycle.py` через provider-artifact lock с сохранением
   user entries и детерминированным повторным render.
@@ -507,7 +505,7 @@
 
 - **skiller distribution (Cursor).** `build_connect_distribution_plan()` и
   `build_vendor_distribution_plan()` пропускают `cursor` — нет marketplace/vendor
-  канала (D8); без этого `skiller update`/`deliver` падали на cursor-enabled проектах.
+  канала; без этого `skiller update`/`deliver` падали на cursor-enabled проектах.
   Package `skiller` 0.17.1 → 0.17.2.
 
 ## [0.21.0] - 2026-09-17
@@ -515,23 +513,23 @@
 ### Fixed
 
 - **skiller connect (Cursor).** `build_connect_distribution_plan()` пропускает `cursor` — нет
-  marketplace-канала (D8); без этого `skiller update`/`deliver` падали на cursor-enabled проектах.
+  marketplace-канала; без этого `skiller update`/`deliver` падали на cursor-enabled проектах.
   Package `skiller` 0.17.0 → 0.17.1.
 
 ## [0.20.0] - 2026-09-17
 
 ### Added
 
-- **Cursor third provider (P5).** Релиз v0.20.0: validate, attest, fleet `maind sync` +
+- **Cursor third provider.** Релиз v0.20.0: validate, attest, fleet `maind sync` +
   `skiller deliver`; явный enable Cursor на self-host и проектах с `.cursor/mcp.json`.
 
-- **Cursor third provider (P4).** Документация: адаптер Cursor (install, trusted profile, MCP,
+- **Cursor third provider.** Документация: адаптер Cursor (install, trusted profile, MCP,
   permissions); generated [Provider model roles](packages/task/docs/reference/provider-model-roles.md)
   (pins design/exec/audit/economy + inventory и запрет Auto на fixed frontier); harness
   [setup/cursor](packages/harness/docs/setup/cursor.md); launch-block с таблицей class→selector,
   `agent --workspace` и IDE Run Mode checklist; instruction `root.cursor.launch-and-autonomy` в catalog.
 
-- **Cursor third provider (P3).** Task: `mappings.cursor` + `model_inventory` для всех трёх
+- **Cursor third provider.** Task: `mappings.cursor` + `model_inventory` для всех трёх
   провайдеров; `command_render` (launch через `agent --workspace`, не `-C`); `route_evidence_cursor`
   и generated `packages/task/adapters/cursor/`; parity/reference на три колонки. mAInd:
   `provider_deploy` для `.cursor/mcp.json`, `REQUIRED_PROVIDERS` включает `cursor`, health
@@ -590,7 +588,7 @@
 
 - **Task: короткие ссылки без коллизий.** Постоянные Short ID `PLAN<N>`/`TASK<N>` для
   новых файловых планов и задач; внешние ссылки квалифицируют решения и пункты
-  (`PLAN1.D35`, `PLAN1.P2.3`). Проверка дублей планов учитывает архив; старые ID сохраняются.
+  (`PLAN<N>.D35`, `PLAN<N>.P2.3`). Проверка дублей планов учитывает архив; старые ID сохраняются.
   Skiller больше не генерирует неоднозначный провенанс `P1.2, D31` в bootstrap.
   Версии: Skiller API `0.16.0`, Task `0.18.0`, general `0.14.0`.
 
@@ -905,7 +903,7 @@
 
 - **`roadmap`: завершённые Task-спеки удалены из активной очереди.**
   Использованные исходники и disposition-карта сохранены в артефактах архивного плана
-  `2026.08.12-№1-TASK-RESILIENCE`; частичные записи оставлены только с точным остатком.
+  ; частичные записи оставлены только с точным остатком.
 
 ## [0.13.2] - 2026-08-13
 
@@ -1089,23 +1087,20 @@
 
 - **`task`: freshness item-state изолирована по item journal scope.**
   Append события одного item больше не инвалидирует state views остальных: digest и `through`
-  следуют declared `item_id`, а двух-item regression сохраняет D148 execution semantics
-  (`2026.08.07-PLAN-ECONOMY` P6.8, D156).
+  следуют declared `item_id`, а двух-item regression сохраняет D148 execution semantics.
 
 - **`task`: exact five-slot acceptance v1.1.1 завершилась arm-A fail.**
   Repair-pinned measurement сохранил raw evidence, обнаружил 30/30 ready failures и по
-  frozen reducer остановил arm B/session canary; P6.9 и снятие паузы ARTIFEX запрещены
-  (`2026.08.07-PLAN-ECONOMY` P6.8, D154).
+  frozen reducer остановил arm B/session canary; P6.9 и снятие паузы ARTIFEX запрещены.
 
 - **`task`: acceptance protocol получил repair-pinned v1.1.1 identity.**
   Successor сохраняет threshold/scope/reducer/arms/canary v1.1.0, пинует exact five-slot
-  implementation `c0ee730c` и хранит v1.0.0 RED вместе с v1.1.0 NOT-RUN
-  (`2026.08.07-PLAN-ECONOMY` P6.7, D153).
+  implementation `c0ee730c` и хранит v1.0.0 RED вместе с v1.1.0 NOT-RUN.
 
 - **`task`: `plan-weight` измеряет объявленный executor path для обеих раскладок.**
   Layout v1 сохраняет legacy `plan → handoff → phase → Required Reads`; layout v2
   fail-closed проверяет свежие bundle/state, считает digest-qualified selections и
-  измеряет пять carrier slots без `handoff.md` (`2026.08.07-PLAN-ECONOMY` P2.10, D152).
+  измеряет пять carrier slots без `handoff.md`.
 
 - **`task`: downstream consumer validation защищена от рекурсивного self-poisoning.**
   Вложенный `plan-lint` больше не перечитывает append-only downstream RED во время проверки,
@@ -1114,100 +1109,95 @@
 - **`task`: `acceptance-protocol` перезаморожен как stage-aware v1.1.0.**
   После сохранённого RED v1.0.0 reducer различает `ready`, evidence-only
   `historical-pre-v2` и deferred `pending-producer`; threshold, scope traversal, arms и
-  session canary остались неизменными (`2026.08.07-PLAN-ECONOMY` P6.7, D150).
+  session canary остались неизменными.
 
 - **`task`: двурукая приёмка остановлена на честном RED руке A.**
-  Мигрированный `2026.08.07-PLAN-ECONOMY` превысил D2(a) (`101744 > 100000`) и сохранил четыре
+  Мигрированный превысил D2(a) (`101744 > 100000`) и сохранил четыре
   нерезолвленных входа; порог и frozen protocol не менялись, arm B/session canary не выдаются за
-  пройденные, а снятие паузы ARTIFEX запрещено (`2026.08.07-PLAN-ECONOMY` P6.8).
+  пройденные, а снятие паузы ARTIFEX запрещено.
 
 - **`task`: протокол приёмки v1.0.0 заморожен до первого замера.**
   `acceptance-protocol` v1.0.0 машинно фиксирует scope, две несмешиваемые руки,
   пороги, антисмещение, failure policy, роли, конфаунды и четыре точные ветви
-  `session_canary`; правка после прогона требует видимого реопена (`2026.08.07-PLAN-ECONOMY` P6.7).
+  `session_canary`; правка после прогона требует видимого реопена.
 
 - **`skiller`/`task`: добавлены инвентарь раскатки и безопасный runbook миграции раскладки.**
   Для `skiller update --all` зафиксирован инвентарь адопции, который отделяет актуальность канона
   `plan-protocol` от доставки инстанса `authority-frame`; недоступные или устаревшие декларации
   остаются явно помеченными как `unknown`, а не выдаются за актуальные. Владельцы также получили
-  fail-closed процедуру dry-run миграции v1→v2 (`2026.08.07-PLAN-ECONOMY` P6.6).
+  fail-closed процедуру dry-run миграции v1→v2.
 
 - **`skiller`/`task`: plan-protocol переведён на EN-only compact canon и layout-v2 authoring.**
   Удалены 230 `SKILL.ru.md`, translation gate и RU→EN prompt; canonical `SKILL.md` стал
   маршрутизатором на reader-specific reference, получил две design-формы Next и три v2 context
   значения. Новый двухпороговый D93 weight-gate уменьшил carrier с 36 651 до 4 575 оценочных
-  токенов и fail-closed сверяет семь классов canon↔implementation
-  (`2026.08.07-PLAN-ECONOMY` P6.5).
+  токенов и fail-closed сверяет семь классов canon↔implementation.
 
 - **`task`: четыре hard gate plan-protocol включаются forward-only.** Общий реестр хранит
   дату и append-only journal boundary активации; per-item status projection больше не
   подменяет историю глобальной датой. Downstream, return qualification, return owner gate и
-  terminal decision join применяются к новой когорте без ретроактивной красноты (`2026.08.07-PLAN-ECONOMY` P6.4).
+  terminal decision join применяются к новой когорте без ретроактивной красноты.
 
 - **`task`: model judgement и уточнения получили fail-closed command seams.** Пять plan-команд
   создают `DecisionRequest` вместо свободной прозы и исполняют закрытые исходы authority resolver;
   отдельная рубрика `return-judgement@1.0.0`, provider-qualified calibration registry и reducer
   превращают неизвестную пару либо order-sensitive swap в воздержание. Codex подтверждён на
-  discovery-bank, Claude остаётся `pending-provider` (`2026.08.07-PLAN-ECONOMY` P6.3).
+  discovery-bank, Claude остаётся `pending-provider`.
 
 - **`task`: закрывающие команды plan-protocol теперь производят v2-следы.** Они записывают
   session provenance, регенерируют projections, фиксируют downstream-gate record и сохраняют
   fail-closed квалификацию эскалаций; Codex подтверждён, Claude ожидает provider-owned replay
-  (`2026.08.07-PLAN-ECONOMY` P6.2, D147–D149).
+  (–D149).
 
 ## [0.10.0] - 2026-08-09
 
 - **`task`: пять protocol commands теперь выбирают declared read path по `Layout`.** Планы без
   поля сохраняют literal v1-ветвь; `Layout: v2` читает ровно plan core, phase context, item spec,
   digest-qualified bundle и fresh item state, без обязательного `handoff.md`. Codex-проекция
-  регенерирована и проверена; Claude остаётся `pending-provider` с явным replay
-  (`2026.08.07-PLAN-ECONOMY` P6.1).
+  регенерирована и проверена; Claude остаётся `pending-provider` с явным replay.
 
 - **`task`: очередь решений P5.4 теперь принуждает frozen contract fail-closed.** Semantic outcome
   единообразно удерживает authorization auto-answer в owner/join pending, frozen bounds считают
   substantive options отдельно от mandatory, а exact retry восстанавливает journal и все views без
-  дублирования queue events или durable continuation (`2026.08.07-PLAN-ECONOMY` P5.4, D144–D146).
+  дублирования queue events или durable continuation (–D146).
 
 - **`task`: return-loop owner gate теперь создаёт ссылочный DecisionRequest.** Замороженный
   P4 packet не копируется в очередь, affected subject паркуется адресно, а policy auto-answer
-  снимает только свою локальную паузу (`2026.08.07-PLAN-ECONOMY` P5.5).
+  снимает только свою локальную паузу.
 
 - **`task`: P5.5 теперь доказывает queue semantics исполняемым producer acceptance.** Двенадцать
   fresh-copy сценариев покрывают terminal policy auto-answer без повторного owner ingress,
   единственный разрешённый `pending-authorization` owner-flow, owner `continue`/`park`/`reject`,
   границы 2/5 substantive options, mandatory-only reject и exact retry после request/resolve
-  projection failure с byte-replay generated results/report (`2026.08.07-PLAN-ECONOMY` P5.5, D146).
+  projection failure с byte-replay generated results/report.
 
 - **`task`: добавлена durable очередь решений планов.** Append-only запросы, lease-claim,
   адресная пауза субъекта, exact root continuation, owner-gate projection и выключенный
-  join-gate реализованы без добавления очереди на обязательный путь чтения
-  (`2026.08.07-PLAN-ECONOMY` P5.4, D64).
+  join-gate реализованы без добавления очереди на обязательный путь чтения.
 
 - **`task`: добавлен fail-closed резолвер полномочий планов.** Единственная точка
   `authorize()` возвращает закрытый структурированный вердикт, пинует активную
   authority-frame, агрегирует решения внутри item, безопасно автоотвечает только
-  provenance-подтверждённые уточнения и поддерживает shadow-наблюдение
-  (`2026.08.07-PLAN-ECONOMY` P5.3).
+  provenance-подтверждённые уточнения и поддерживает shadow-наблюдение.
 
 - **`task`: заморожена deny-by-default рамка полномочий `authority-frame` v1.**
   Машинный контракт и действующий владельческий инстанс задают единственный делегированный класс
   `constructive`, три зарезервированные границы, монотонное сужение и item-scoped агрегацию против
-  дробления решений (`2026.08.07-PLAN-ECONOMY` P5.2, D60–D61, D143).
+  дробления решений (–D61, D143).
 
 - **`task`: history событий возврата теперь содержит plan-local `return_event_id`.** Он равен
   физическому адресу `journal.jsonl:<line>` и связывает judgement carrier с конкретным return event,
-  не меняя frozen fingerprint tuple, digest, namespace или `same_return_max`
-  (`2026.08.07-PLAN-ECONOMY` P4.2, D142).
+  не меняя frozen fingerprint tuple, digest, namespace или `same_return_max`.
 
 - **`task`: return-judgement v1 теперь детерминированно потребляется return-loop.** Редьюсер
   выбирает первую schema-valid независимую запись для точного return event, собирает полный
   event-scoped owner packet, не допускает `blocks=true` вместе с continuation и воспроизводит
-  acceptance из item tree (`2026.08.07-PLAN-ECONOMY` P4.6).
+  acceptance из item tree.
 
 - **`task`: добавлен return-loop v1 для возвратов plan-protocol.** `returns --gate`
   применяет lifted лимит, печатает hard-stop owner packet над durable history и даёт
   выключенные по умолчанию opt-in lint-проверки квалификации/owner authorization
-  через существующий item-scoped finding (`2026.08.07-PLAN-ECONOMY` P4.4, D138–D139).
+  через существующий item-scoped finding (–D139).
 
 - Добавлен детерминированный вычислитель отпечатков возврата и durable-счётчик для планов.
 
@@ -1215,7 +1205,7 @@
   Инструмент механически выводит потребителей из путей плана, исполняет только применимое
   подмножество их `Validation`, сохраняет `green`/`red`/`unknown` с ключом «SHA-256 ТЗ
   потребителя × item-коммит продюсера» и предоставляет выключенную по умолчанию opt-in
-  проверку `plan-lint` (`2026.08.07-PLAN-ECONOMY` P3.7).
+  проверку `plan-lint`.
 
 - **`task`: сохранена непрерывность `plan-lint` при layout v2.** Реестр
   диспозиций с интроспекционной проверкой покрывает все `_lint_*`-проверки;
@@ -1224,26 +1214,26 @@
 
 - **`task`: `plan-lint` теперь проверяет frozen read-path v1.** Проверяются порядок
   volatility, исключение history из executor path и запрет active item’у читать item-spec
-  терминальной фазы; проверки опираются на registry/spec/resolver (`2026.08.07-PLAN-ECONOMY` P3.5).
+  терминальной фазы; проверки опираются на registry/spec/resolver.
 
 - **`task`: layout-v2 Bundle v1 теперь fail-closed проверяется для ready item'ов.**
   `plan-lint` различает declaration drift, missing/extraneous entries, changed input
   bytes и unresolved declaration, не пересобирает artifact и byte-checks decision,
-  status и item-state projections (`2026.08.07-PLAN-ECONOMY` P3.4, D133–D135).
+  status и item-state projections (–D135).
 
 - **`task`: layout-v2 планы теперь hard-fail проверяются по бюджету обязательного чтения D2.**
   Новый shared `plan_gates` использует единственные владельцы веса и admission, называет пункт,
   численный порог, qualified calibration и отдельный нечитаемый файл; v1-планы молчат
-  без opt-in (`2026.08.07-PLAN-ECONOMY` P3.3).
+  без opt-in.
 
 - **`task`: детерминированный schema-valid Bundle v1 для входов item’а
-  (`2026.08.07-PLAN-ECONOMY` P3.2, D132).** Единый `plan-views.py bundle`
+  .** Единый `plan-views.py bundle`
   строит и byte-checks committed manifests, хеширует сырые/выбранные байты и
   оценивает вес по frozen calibration; неразрешимая декларация атомарно отказывает
   до записи, а P3.4 выводит её отдельным `unresolvable_entry`.
 
 - **`task`: stage-aware admission бюджета чтения и bounded `plan-lint` carriers
-  (`2026.08.07-PLAN-ECONOMY` P2.9, D131).** `plan-weight` различает
+  .** `plan-weight` различает
   `historical-pre-v2`/`pending-producer`/`ready`, валидирует fail-closed producer edges и
   применяет неизменные D2(a)+D2(b) только к `ready`. Монолитные lint implementation/tests
   механически разделены на bounded modules с сохранёнными public imports и byte-parity
@@ -1266,17 +1256,17 @@
 - **`task`: journal-backed Update Log больше не создаёт незакрываемый lint-конфликт.**
   Новые `note` длиннее 300 символов отклоняются до записи, а layout-v2 status детерминированно
   проецирует historical long note коротким указателем на исходную строку без изменения
-  append-only journal (`2026.08.07-PLAN-ECONOMY` P4.5, D141).
+  append-only journal.
 - **`skiller`: validation snapshots согласованы с текущими additive carriers.** Public config
   snapshot включает `plugins`, а publication guards фиксируют фактический Codex marketplace
   locator и полный набор Claude artifacts.
 - **`task`: dry-run миграция legacy-планов больше не отвергает отсутствие
   необязательного `## Обсуждение`.** Инвентарь фиксирует отсутствие носителя без
   выдуманного файла, а blocked journal-state проецируется в обязательную v2-тройку
-  эскалации (`2026.08.07-PLAN-ECONOMY` P2.10).
+  эскалации.
 - **`task`: исправлена единственная рассинхронизация имени v2 phase-closure carrier.** Реестр и
   read-path specification теперь одинаково адресуют `phases/<Pn>/<Pn>.closed.md`, как D34/D77 и
-  проектные потребители (`2026.08.07-PLAN-ECONOMY` D130); до реализации генератора не существовало
+  проектные потребители; до реализации генератора не существовало
   runtime consumer устаревшего `.closure.md`.
 - **Codex plan handoff теперь пинует полный маршрут запуска.** Generated runtime проекций
   `task:plan-*` требует отдельный native launch-block с `-C`, `-m`,
@@ -1284,7 +1274,7 @@
   только внутрисессионным invocation. Для `plan-run` маршрут выводится из Routing
   следующего item'а, а не наследуется от прошлой сессии.
 - **`plan-weight.py sweep` больше не роняет весь замер флота одним недоступным корнём.**
-  (`2026.08.07-PLAN-ECONOMY` P0.4, D110–D112.) У `sweep` появилась учётная единица «корень
+  (–D112.) У `sweep` появилась учётная единица «корень
   входа» — top-level `roots[]` с закрытым статусом `resolved`/`unreadable`/`missing` на
   каждый переданный каталог; недоступный корень (`PermissionError`) перехватывается и не
   уносит остальные, а читаемый корень без планов больше не исчезает из вывода бесследно.
@@ -1292,7 +1282,7 @@
 - **`maind_memory_recall` больше не тонет в общем namespace.** `_recall_union` (mid-session
   recall) наследует принцип D10 из SessionStart-дайджеста: приватный scope проекта опрашивается
   без капа (`RECALL_LIMIT=200`), а shared-scope'ы (`ns:*`/`global`) при `project:<id>`-expansion —
-  под новым `RECALL_SHARED_LIMIT=40`. Замер (roadmap/memory-recall-shared-namespace-priority):
+  под новым `RECALL_SHARED_LIMIT=40`. Замер :
   на 6 проектах общий пул давал 84–96% ответа при малой приватной памяти проекта (напр. Agelto
   2 записи vs ns:axioma 47).
 - **`task` больше не приписывает всем планам чужой D50 authority grant.** Task Contract
@@ -1319,7 +1309,7 @@
 ### Added
 
 - **`task`: provider-qualified калибровка оценки токенов v2
-  (`2026.08.07-PLAN-ECONOMY` P0.1, D114/D118–D122).** Появились stdlib-only
+  (–D122).** Появились stdlib-only
   neutral contract `task.token_probe` и изолированный адаптер `codex exec --json`;
   активный артефакт теперь пинует provider/model/protocol, fail-closed отвергает v1 и
   несовпавший classifier, а `dense_ascii` стал пятым классом с единственным SSOT.
@@ -1328,7 +1318,7 @@
   сохранены отдельно.
 
 - **`task`: машинный замер веса обязательного чтения пункта плана
-  (`2026.08.07-PLAN-ECONOMY` P0.3, D16/D107–D109).** `task.plan_weight` + лаунчер
+  (–D109).** `task.plan_weight` + лаунчер
   `scripts/plan-weight.py` (подкоманды `item`/`plan`/`sweep`, `--json`) воспроизводят
   обязательный путь чтения исполнителя из `commands/plan-exec.md` §1 буквально
   (`plan.md` + `handoff.md` + `phases/Pn.md` + `Required Reads`), считают его вес
@@ -1337,21 +1327,21 @@
   D108) с указанием нарушенного гейта. Нерезолвленное классифицируется закрытой
   таксономией (`unreadable_root`/`unresolved_entry`/`missing_file`/`oversized_file`),
   и сумма НИКОГДА не печатается без перечня пробелов. По каждому файлу считается
-  `dense_ascii_share` (D109) — замер без порога. Режим `--exact` сверяет оценку с
+  `dense_ascii_share` — замер без порога. Режим `--exact` сверяет оценку с
   истиной дифференциального харнесса P0.1 и остаётся ручным, вне CI; `count_tokens`
   не вызывается ни в одном режиме.
 
 ### Added
 
 - **`task`: детерминированный конвертер executable plan v1→v2 и self-host migration
-  (`2026.08.07-PLAN-ECONOMY` P2.8).** Новый `plan-migrate.py` переводит только
+  .** Новый `plan-migrate.py` переводит только
   разрешённый self-host plan inplace либо любой plan в безопасную read-only dry-run
   проекцию с явным output; migration inventory и before/after read-weight сохраняют
   lossless evidence. Owner status теперь корректно считает фазы с terminal
   deviations завершёнными.
 
 - **`task`: детерминированная оценка веса чтения плана СВЕРХУ, откалиброванная против
-  настоящего токенизатора (`2026.08.07-PLAN-ECONOMY` P0.1, D11/D14/D92).**
+  настоящего токенизатора.**
   `task.token_estimate` (stdlib-only) считает токены по закрытому набору классов символов
   (`ascii_word`/`ascii_other`/`cyrillic`/`other`) и замороженному артефакту калибровки —
   без сети и ключей, никогда не занижая. Артефакт получен ДИФФЕРЕНЦИАЛЬНЫМ харнессом
@@ -1367,9 +1357,9 @@
 - **`dart`: подключаемый через `connect` набор для Dart-пакетов и SDK.** Новый
   `dart-package-development` покрывает публичный API, null safety, async-совместимость,
   conformance fixtures, проверки и релизную границу; Flutter-верстка остаётся в `mobile`.
-- **(сводная запись плана 2026.07.31-SKM-LEAN): измеритель first-turn, резидентная диета,
+- **(сводная запись плана): измеритель first-turn, резидентная диета,
   нативный скоуп навыков, exec-волна, гигиена и раскладка `core/`
-  (`plans/archive/2026.07.31-SKM-LEAN/`).** P1.1 добавил к `skiller budget --first-turn`
+  (`).** P1.1 добавил к `skiller budget --first-turn`
   плагинную составляющую, а P1.3 поднял порог до 16K/23K; P1.4 исправил CWD-зависимый
   подсчёт и различил `broken`/`unparsed`. P2.1 закрепил измеримый предел корневого
   канона, P2.4 сделал `.mcp.json.example` default-on только в зелёной provider-ветке,
@@ -1383,7 +1373,7 @@
   provider-кластер `core` в пакетную раскладку без изменения публичного фасада.
 
 - **Политика доверия вендоренному классу стала исполнимой: блок `audit` в `upstream.json` +
-  гейт «нет вердикта / вердикт протух» (`2026.07.31-SKM-LEAN` P5.11).** Человеческий вердикт
+  гейт «нет вердикта / вердикт протух».** Человеческий вердикт
   по бандлу переехал из таблицы внутри плана в аддитивный блок рядом со скиллом (`verdict`
   ∈ `clean`/`attention`/`risk`, `at`, `by` — адрес читавшего, `upstream_sha` — якорь, `note` —
   обязателен при `attention`/`risk`); форму блока проверяет `validate.sh`. `--check` получил
@@ -1398,7 +1388,7 @@
   артефакт пользователя — принятый класс» записана дословно в
   `skiller/guide/vendored-skills`.
 - **`frontend/web-design-guidelines`: снята зависимость от сетевого канала правил, бандл
-  переведён в `strategy: fork` (`2026.07.31-SKM-LEAN` P5.10).** Скилл раньше на каждый вызов
+  переведён в `strategy: fork`.** Скилл раньше на каждый вызов
   тянул `raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md` и
   применял полученное КАК ПРАВИЛА поведения (находка аудита `PRM_REMOTE_INSTRUCTIONS`,
   единственная из шести `attention`-находок P5.1, где удалённый контент — инструкции, а не
@@ -1410,17 +1400,17 @@
   2026-04-06, цена на замере равна нулю. Процедура пиновки/пере-пиновки — новый раздел
   `skiller/guide/vendored-skills`.
 - **Supply-chain вендоренных скиллов: разовый человеческий аудит 56 бандлов + триаж-ступень в
-  `update-upstreams.sh --check` (`2026.07.31-SKM-LEAN` P5.1).** Первый содержательный аудит
+  `update-upstreams.sh --check`.** Первый содержательный аудит
   внешних скиллов за всю историю реестра — до него проверялась ТОЛЬКО целостность байтов.
   Поимённые вердикты 56 бандлов (**50 clean / 6 attention / 0 risk**), сплошное машинное
   покрытие 100 % байтов (599 файлов, 3 070 592 б) по четырём классам угрозы, полное чтение всех
   56 `SKILL.md` и всех 27 файлов с исполняемым содержимым, названные границы покрытия —
-  `plans/archive/2026.07.31-SKM-LEAN/findings/P5-vendored-audit.md`. Подчинённая аудиту триаж-ступень:
+  . Подчинённая аудиту триаж-ступень:
   13 стдлиб-правил (+ `BIN_UNREADABLE`), выведенных ИЗ находок аудита, **новый код выхода `11`**
   (намеренно не слит с `10` — «апстрим изменился» и «подозрительный паттерн» разные события),
   ключи `triage`/`stale_verdicts`/`triage_disclaimer` в `--json`, дословная оговорка
   **«no findings ≠ safe»** в обоих каналах. Дрейф байтов относительно `audited_at` помечает
-  человеческий вердикт протухшим (D65). Процедура и её границы — новая док-страница
+  человеческий вердикт протухшим. Процедура и её границы — новая док-страница
   `skiller/guide/vendored-skills`. Внешний сканер НЕ подключён зависимостью — паттерны
   переписаны своими (`root.engineering-invariants`), провенанс в `docs/reference.md`.
 - **`update-upstreams.sh`: починен отказ всего `--check` на провенанс-записи без зеркала.**
@@ -1431,22 +1421,22 @@
   P5.1, закрыто регресс-тестом.
 
 - **Паритет провайдеров Claude Code/Codex по корневым инструкциям, capability и декларативной
-  политике исполнения (`2026.07.29-HARNESS-AGNOSTIC`, фазы P1–P4).** Четыре фазы, терминальные
-  🟠 Done with deviations: (P1) канон корневых инструкций сверен с деревом (матрица «правило →
+  политике исполнения (фазы P1–P4).** Четыре фазы, терминальные
+  🟠 Done with deviations: канон корневых инструкций сверен с деревом (матрица «правило →
   дом», каталог утверждений `1.0.1→1.1.1`, гейт покрытия литералов 105/105), заведён
   adoption-режим `harness instructions <plan|check|adopt|apply|repair>` и живая транзакция на
-  двенадцати целях с гейтом дрейфа; (P2) 17 `unsupported`-возможностей второго провайдера
+  двенадцати целях с гейтом дрейфа; 17 `unsupported`-возможностей второго провайдера
   протриажены (закрыто/адаптер/`Claude-only` с честной причиной), диспетчер Codex-обработчиков и
   группа наблюдателей/гейтов класса B доведены до конформанс-артефакта с гейтом дрейфа в
-  `hygiene.yml`; (P3) канон каркаса и реестр решений приведены к измеренной реальности, петля
+  `hygiene.yml`; канон каркаса и реестр решений приведены к измеренной реальности, петля
   аудита замкнута машинным гейтом свежести версий паков в `validate.sh`, бюджет обнаружения
-  скиллов получил provider-aware модель (Codex/Claude Code) с WARN-гейтом перебора; (P4)
+  скиллов получил provider-aware модель (Codex/Claude Code) с WARN-гейтом перебора;
   запечатан контракт декларативной политики исполнения (`execution-policy.json` +
   `execpolicy.py`, гейт `[10/10]` в `validate.sh`), delegation contract приземлён в грамматику
   оркестратора PLAN и переведён `pending → enforced`. Подробности, D-лог и артефакты —
-  `plans/archive/2026.07.29-HARNESS-AGNOSTIC/`.
+  /`.
 - **Плановые команды `plan-*.md`: кап делегирования, `confidence` в находке аудита, пункт DoR
-  «внешние факт-классы» (P2.3, `2026.07.25-ECO-OPT`).** То же правило A/B/C и тот же ФОРМАТ карты,
+  «внешние факт-классы» (P2.3).** То же правило A/B/C и тот же ФОРМАТ карты,
   что у P2.2, применены к пяти `packages/task/commands/plan-{design,exec,run,close,audit}.md`.
   **Класс A снова пуст** (единственное грep-совпадение — перепрогон детерминированного линтера,
   класс B2; лесов статус-апдейтов 0): кап делегирования добавлен `plan-design.md` — единственной
@@ -1457,10 +1447,10 @@
   их снос «как лесов самопроверки» запрещён D86/D93. Отдельно, по D81, в `plan-design.md` внесён
   пункт DoR «внешние факт-классы фазы перечислены, у каждого — источник» ДОСЛОВНО по спеке
   `research/14-P6.3-dor-delta-spec.md` §1.2 (побайтная сверка). Карта решений —
-  `plans/2026.07.25-ECO-OPT/artifacts/P2.3/opus5-revision-map.md`; `model`/`effort`-пины и
-  `description` не тронуты (D16).
+  ; `model`/`effort`-пины и
+  `description` не тронуты.
 - **Интент-команды: капы делегирования + `confidence` в формате находки ревью (P2.2,
-  `2026.07.25-ECO-OPT`).** Ревизия шести интент-команд `packages/task/commands/` и двенадцати
+  ).** Ревизия шести интент-команд `packages/task/commands/` и двенадцати
   файлов agent-packs по правилу A/B/C (`research/01` §1, расширено D19) под гайды Claude 5.
   **Класс A (содержательно-пустые ритуалы самопроверки и леса статус-апдейтов) — пуст**, работа
   ушла в «добавить недостающее»: кап делегирования в `design.md`/`research.md`/`review.md`
@@ -1469,28 +1459,28 @@
   (гайд Sonnet 5, «Code review harnesses»). Adversarial-verify чужих находок и RAG-верификация
   внешних фактов явно выведены из-под капа — гайд адресует самопроверку собственного вывода.
   Пятнадцать файлов закрыты как «изменений нет» с разобранными кандидатами; карта решений —
-  `plans/2026.07.25-ECO-OPT/artifacts/P2.2/opus5-revision-map.md`. `model`/`effort`-пины и
-  `description` не тронуты (D16).
+  . `model`/`effort`-пины и
+  `description` не тронуты.
 - **`general/verify-claims`: anti-overconfidence — coverage-шаг + perplexity как отдельный класс
-  + делегирование сводки (P6.3, `2026.07.25-ECO-OPT`).** Три дельты по двум датированным полевым
+  + делегирование сводки (P6.3).** Три дельты по двум датированным полевым
   кейсам этого же плана (D20 — тихое сужение рамки «Opus 5» вместо «Claude 5 family»; D53 —
   сводка WebSearch-only делегата принята за исчерпывающий перечень hook-событий): (1)
   coverage-шаг — перед фиксацией плана/фазы/вердикта перечислить внешние факт-классы, включая те,
   ответ на которые кажется известным; (2) `perplexity-web` переформулирован из фолбэка на промах
   доки в отдельный класс знания (полевая практика), вызываемый ДАЖЕ когда first-party попал; (3)
   раздел «Делегирование: не ронять ступень» расширен со «проверь факт» на «сводку/перечень».
-  Жёсткая граница класса A/B (D15/D19) соблюдена — ни одна добавленная строка не предписывает
+  Жёсткая граница класса A/B соблюдена — ни одна добавленная строка не предписывает
   самопроверку собственного вывода. Аддитивный абзац в корневом `CLAUDE.md` § «Методология
   решений». Три новых pressure-сценария (`evals/pressure.json` id 3–5, по D20/D53/time-pressure);
   прогон `skiller eval general/verify-claims` — 6/7 зелёных (пре-существующий кейс id:2 остаётся
-  красным, вне Scope этого item'а — `plans/2026.07.25-ECO-OPT/findings/P6.3-pressure-run.md`).
-  **Честная граница (D58):** 7 текстовых кейсов — smoke-тест формулировки, не измерение
+  красным, вне Scope этого item'а —).
+  **Честная граница:** 7 текстовых кейсов — smoke-тест формулировки, не измерение
   overconfidence-поведения. Третий усилитель D20 (пункт DoR) — анкерованная спека для P2.3
   (`research/14-P6.3-dor-delta-spec.md`, D81), файл под cross-plan гейтом здесь не правится.
   RU-источник → регенерированный EN-канон → `check-translations.sh --stamp` → `skiller registry`;
-  `description` не тронут (P3.1).
+  `description` не тронут.
 - **harness: statusline context-notify — окно в фактический процент контекста (P6.1,
-  `2026.07.25-ECO-OPT`).** Новая поверхность `configs/claude-code/statusline/`: скрипт
+  ).** Новая поверхность `configs/claude-code/statusline/`: скрипт
   `context-notify.sh` печатает строку `модель · каталог · бар · N%` и на ПЕРЕСЕЧЕНИИ полосы
   порога (дефолт `80,90`, кулдаун 15 мин) отсоединённо (`setsid`) дёргает существующий
   `hooks/notify/notify.sh` — второго нотификатора не заводим. Состояние на сессию пишется
@@ -1502,9 +1492,9 @@
   `outputStyle`; чужое значение уважается skip+warn), файлы ставит ветка `--global`.
   Замеры: дельта `skiller budget --first-turn` = 0 ток (statusline не тратит контекст-токенов
   по построению), медиана рендера 5.4 мс при максимуме 6.9 мс на 50 прогонах (порог приёмки
-  50/150 мс) — числа и таблица полос в `plans/2026.07.25-ECO-OPT/findings/P6.1-statusline-measure.md`.
+  50/150 мс) — числа и таблица полос в.
 - **`general/context-economy` + `general/compact-responses`: compact-дисциплина (P6.2,
-  `2026.07.25-ECO-OPT`).** `context-economy` §3 получила три дельты: граница сессии по шву
+  ).** `context-economy` §3 получила три дельты: граница сессии по шву
   задачи (завершённая единица работы/смена фазы/повторный `/compact`), а не по проценту —
   фактический процент модель не видит; что теряет компактизация (отклонённые альтернативы,
   «почему НЕ выбрали») и что решения фиксируются в файл, не только в чате; первопартийный
@@ -1512,9 +1502,9 @@
   получил дельту `answer-first` (действие раньше обоснования). Кандидат D8 `no
   preamble/closers` закрыт как уже покрытый (строки предъявлены, не переписаны). RU-источник →
   регенерированный EN-канон → `check-translations.sh --stamp` → `skiller registry`;
-  `description` обоих скиллов не тронут (P3.1).
+  `description` обоих скиллов не тронут.
 - **`scripts/bootstrap-machine.sh`: роль-осознанная ступень 5 + rollout-документация второй машины
-  (P4.3, `2026.07.25-ECO-OPT`, ADR-0001).** Ступень `maind service install` читает `memory.role`
+  (P4.3,, ADR-0001).** Ступень `maind service install` читает `memory.role`
   из локального `config.json` ДО ветки `--dry-run` — на `role=client` печатает информативный
   `SKIP` и НЕ поднимает локальный демон (второй писатель), поведение `standalone`/`host` не
   меняется. `docs/deploy.md` получил раздел «Вторая машина: cross-machine память (host/client)»
@@ -1526,10 +1516,9 @@
   подключает любой локальный процесс `agentmemory` к общей группе НЕЗАВИСИМО от каталога
   данных/порта (угроза инварианту «один писатель» при локальном тестировании) — инцидент
   устранён без потери данных (254/254 записей), root cause (`config.json` без `memory.url` на
-  LAN-адрес после LAN-bind) задокументирован и исправлен на этой машине. Полный протокол —
-  `plans/2026.07.25-ECO-OPT/findings/P4.3-rollout-report.md`.
+  LAN-адрес после LAN-bind) задокументирован и исправлен на этой машине. Полный протокол —.
 - **`maind`: cross-machine режим памяти — `memory.role` (standalone/host/client) +
-  bearer-аутентификация (P4.2, `2026.07.25-ECO-OPT`, ADR-0001).** Новое поле
+  bearer-аутентификация (P4.2,, ADR-0001).** Новое поле
   `memory.role` (дефолт `standalone`, back-compat — существующие узлы не меняют поведение);
   `role=client` запрещает КОДОМ поднимать локальный демон (`maind memory start|run`,
   `maind service install` отказывают), чтобы не завести второго писателя. Аддитивное
@@ -1541,13 +1530,13 @@
   поэтому раньше это было неразличимо). Настраиваемый бюджет ожидания
   (`MEMORY_LIGHT_TIMEOUT_S`/`MEMORY_HEAVY_TIMEOUT_S`/`MEMORY_RETRIES`) с ретраями ТОЛЬКО на
   read-путях (`export`, не `store`/`forget` — контракт без operation-id, риск дубля).
-  LAN-стадия (D80): `config/memory/iii-config.yaml` бинденд `iii-http` на конкретный
+  LAN-стадия: `config/memory/iii-config.yaml` бинденд `iii-http` на конкретный
   LAN-адрес хоста (не `0.0.0.0`) — управляемый конфиг движка, обратим одной строкой при
   срабатывании триггера `tailscale serve`. Замер канала —
   `findings/P4.2-remote-link-measure.md` (честная граница: настоящей второй машины ещё
   нет, P4.3 переизмерит).
 - **`skiller budget --first-turn`: резидент листинга скиллов считается по модели бюджета
-  Claude Code, не суммой описаний (P3.4, `2026.07.25-ECO-OPT`).** `_measure_skills` теперь
+  Claude Code, не суммой описаний (P3.4).** `_measure_skills` теперь
   капает каждую запись листинга на 1 536 симв (`description`+`when_to_use`, first-party дефолт)
   и держит сумму под потолком `context_window × listing_fraction` (дефолт 1M × 1% = 10 000 ток;
   оба параметра, не константы) — раньше суммировались ВСЕ описания активного набора, тот же
@@ -1557,17 +1546,17 @@
   `claude-opus-5` — **не выполнена** (нет сети с креденшелами/SDK в исполнительной песочнице),
   Pending Work следующего захода (`findings/P3.4-tokenizer-calibration.md` §3).
 - **`docs/guide/upstream-sync.md`: критерий перевода живого скилла `notify` → `fork` +
-  признание цены (P3.6, `2026.07.25-ECO-OPT`).** Новые разделы «Когда переводить скилл в
+  признание цены (P3.6).** Новые разделы «Когда переводить скилл в
   `fork`» (две обязательные оси — механическая переприменимость правки × наблюдённая стоимость
   последних синков, плюс отсекающая ось дифф-поверхности; числовые пороги операционным
   критерием запрещены) и «Цена `fork`» (permanent merge tax · drift · security backports +
   наша специфика: `review_pending` блокирует релиз всего репо). Классификация всех 56
-  паспортов `upstream.json` по критерию (`findings/P3.6-vendoring-policy.md`): переводов — 0
+  паспортов `upstream.json` по критерию: переводов — 0
   (легальный и ожидаемый исход, ни один паспорт не наблюдал ручного синк-долга с момента
   импорта). Устранено расхождение доки с кодом: корневой `CLAUDE.md` § «Референсы и
   провенанс» перечислял `strategy = notify | fork | merge`, пропуская `replace` — добавлен.
 - **`skiller status`: две новые дельты гигиены каналов — вендор без манифеста + дубли имён с
-  реестром (P3.5, `2026.07.25-ECO-OPT`).** `detect_raw_vendor_path` видит вендорный канал,
+  реестром (P3.5).** `detect_raw_vendor_path` видит вендорный канал,
   доставленный НЕ через `skiller sync` (симлинки/копии со стороны, без
   `.swissknifeman-manifest.json`) — раньше такой канал был невидим и `channel_overlap` на нём
   молчал (репо-факт `flexcrm`: 58 записей без манифеста). `name_duplicates` ловит дубль
@@ -1576,13 +1565,13 @@
   диагностирует битые симлинки/каталоги без `SKILL.md` числом и списком. Живой прогон на
   `flexcrm`: 9 дублей имён, 41 мёртвая запись; контроль на проекте без vendor-канала — тишина.
 - **`packages/skiller/tests/test_profile_listing_budget.py`: инвариант бюджета листинга
-  поставляемых профилей (P3.5, `2026.07.25-ECO-OPT`).** Реальный бюджет 1M-модели — 30 000
+  поставляемых профилей (P3.5).** Реальный бюджет 1M-модели — 30 000
   символов (не 10 000, единица бюджета — токены, не проценты контекста напрямую в символах,
   диагноз P3.1); с исправленным числом 9 из 10 поставляемых профилей УЖЕ укладываются — ни один
   `profiles/*.json` править не потребовалось. `standalone` — именованное исключение
   (`buckets: ["*"]`, сузить — потерять смысл профиля), тест документирует и фиксирует границу.
 - **`docs/guide/profiles.md` § «Бюджет листинга» + `docs/guide/bucket-audit-2026-07.md` §
-  «P3.5 приписка» (P3.5, `2026.07.25-ECO-OPT`).** Таблица профилей против исправленного бюджета
+  «P3.5 приписка» (P3.5).** Таблица профилей против исправленного бюджета
   (30 000/6 000 симв) + карточка рекомендаций (`skillOverrides: "name-only"`,
   `skillListingBudgetFraction`) для чужих конфигов; обновлённое предложение по консолидации
   бакетов (46→48, D83) с обязательным расчётом листинга ДО/ПОСЛЕ у фактических подписчиков —
@@ -1590,21 +1579,21 @@
   запрещено — гранулярность экономит, слияние отнимает).
 
 - **`review-gate`: третья точка принуждения гейта цитат — `checks/plan-citations.sh` (P11.7,
-  `2026.07.25-ECO-OPT`).** Изменения задели `plans/<ID>/` → прогон `packages/task/scripts/verify-plan-citations.py
+  ).** Изменения задели `plans/<ID>/` → прогон `packages/task/scripts/verify-plan-citations.py
   plans/<ID> --strict` по каждому задетому плану поверх диспетчера P9.1 (`run-checks.sh`);
   строка `{"name":"plan-citations","mode":"warn"}` в `config.json` — режим по факту чистоты
-  (`--strict` красный на живом дереве `2026.07.25-ECO-OPT`: 16 пред-существующих находок P11.5,
+  (`--strict` красный на живом дереве: 16 пред-существующих находок P11.5,
   Open risk (25) — `strict` даст необъяснённый шум, upgrade условен на их адресации); граceful
   skip, если `packages/task/scripts/verify-plan-citations.py` в дереве отсутствует. Два реальных live-прогона
   субагента (Agent-тул): битая цитата в `handoff.md` ловится `[WARN] plan-citations: …`,
-  генуинно чистый план (`2026.07.24-AGENT-RELIABILITY`, 0 находок) остаётся молчаливым в этом
-  же прогоне (замена цели B — на `2026.07.25-ECO-OPT` «чистого» состояния сегодня нет, тот же
+  генуинно чистый план (0 находок) остаётся молчаливым в этом
+  же прогоне (замена цели B — на «чистого» состояния сегодня нет, тот же
   confound P11.6). Раскатано на машину владельца (`~/.claude/hooks/review-gate/`), sha256
   репо↔машина сверен; `harness doctor` — третье состояние не деградировало (`plan-citations`
   добавлена как объявленная, короткого кода нет — fallback на сырое имя, `doctor.py` не тронут).
 
 - **`plan-protocol` §8 «Порядок закрытия item'а» + `plan-close.md`: обязательный прогон гейта
-  цитат при закрытии (P11.6, `2026.07.25-ECO-OPT`).** Рядом с шагом 4 (plan-lint, после
+  цитат при закрытии (P11.6).** Рядом с шагом 4 (plan-lint, после
   перезаписи handoff'а, на итоговом дереве) — `python3 packages/task/scripts/verify-plan-citations.py plans/<ID>
   --strict`; шаг 5 несёт вторую строку счёта с атрибуцией: «цитаты: N находок — новых от диффа
   item'а: K» (K>0 чинится ДО bookkeeping-коммита, N−K>0 — Pending Work + Open risks). Та же
@@ -1613,27 +1602,27 @@
   item'а). Шаги существующего канона НЕ перенумерованы (F4-рецидив: счёт без атрибуции).
 
 - **`packages/task/configs/verify-citations-known-exceptions.json`: baseline-перечень + триаж остаточного
-  корпуса гейта цитат (P11.5, `2026.07.25-ECO-OPT`).** Прогон гейта на живых планах после
+  корпуса гейта цитат (P11.5).** Прогон гейта на живых планах после
   P11.1–P11.4 дал 105 находок (52 уникальных цитаты) — по четырём механическим правилам
   R1–R4 (`packages/task/docs/reference/plan-tooling.md` § «Известные исключения»): 18 цитат
   починены на полный путь (короткая форма восстановлена однозначно, `git ls-files`), 19
   занесены в перечень исключений с адресной причиной (внешние файлы — Claude Code CLI
   бандл/Serena, неоднозначные пути — несколько кандидатов `validate.sh`, цитаты в закрытых
   item'ах и в чужих планах). `python3 packages/task/scripts/verify-plan-citations.py --strict` — 0 находок на всех
-  живых планах (было 52); гейт готов к strict-классу (P11.7).
+  живых планах (было 52); гейт готов к strict-классу.
 
 - **`plan_lint.py`: кросс-документный чек `handoff.md` ↔ «## 4. Phase Index & Status Board»
-  (P11.3, `2026.07.25-ECO-OPT`, D129).** Каждое вхождение шаблона `Pn a/b` в `handoff.md`
+  (P11.3,, D129).** Каждое вхождение шаблона `Pn a/b` в `handoff.md`
   сверяется со значением колонки `Items 🟢/всего` строки `Pn` доски — расхождение диагностируется
   с ОБЕИМИ сторонами, отсутствующая в доске фаза — «висячая ссылка» (класс защищает от находки F8
   аудита P9: handoff соврал `P9 4/4`, доска несла `2/4`). Forward-only по дате заголовка handoff'а
   (`HANDOFF_BOARD_CANON_DATE = "2026-07-28"`); severity — как у launch-block-гейта (датовый
   `plan_id` от `2026.07.16` → ERROR, легаси → WARNING). На живом дереве ECO-OPT гейт сразу
   нашёл реальное расхождение (`handoff.md:44` — `P3 1/6` vs доска `P3 0/6`), непочиненное до
-  P11.8 (Scope Excluded этого item'а). Дом — структурный линтер, не `verify-citations.py` (D129).
+  P11.8 (Scope Excluded этого item'а). Дом — структурный линтер, не `verify-citations.py`.
 
 - **`packages/task/scripts/verify-plan-citations.py`: класс цитаты `` `file.json::a.b.c` `` через `json.load`
-  с greedy-обходом (P11.2, `2026.07.25-ECO-OPT`, `research/27-P11-citation-gate-target-design.md`
+  с greedy-обходом (P11.2,, `research/27-P11-citation-gate-target-design.md`
   §2.3).** Раньше такая цитата резолвилась старой веткой `::symbol` — точка пути работала
   как метасимвол регэкспа, проверка была ложно-зелёной. Теперь: файл распарсен как JSON →
   путь резолвится по ключам/индексам, на каждом уровне берётся ДЛИННЕЙШИЙ дотированный
@@ -1642,7 +1631,7 @@
   Граница: «ключ существует», значение не сверяется.
 
 - **`packages/task/scripts/verify-plan-citations.py`: двухшаговый резолвер пути + семь шаблонов поверхности
-  скана (P11.1, `2026.07.25-ECO-OPT`, D128).** Резолв цитаты — по ДВУМ базам в фиксированном
+  скана (P11.1,, D128).** Резолв цитаты — по ДВУМ базам в фиксированном
   порядке (корень репо → каталог плана-источника); внутриплановая короткая ссылка
   (`` `phases/P1.md:80` ``) резолвится второй базой вместо ложной находки — на живых планах
   снимает 79% ложного фона (114/144). Поверхность скана расширена с `plan.md`+`phases/*.md`
@@ -1650,7 +1639,7 @@
   рекурсивно) — было слепых 120 файлов слоёв знаний. Голое path-упоминание без суффикса
   сознательно НЕ проверяется (класс отклонён по измеренному шуму 16%, D128).
 
-- **Реестр ролей ревью как данные (P9.2, `2026.07.25-ECO-OPT`, D126).** Extension-таблица
+- **Реестр ролей ревью как данные (P9.2,, D126).** Extension-таблица
   `packages/harness/configs/common/agent-packs/review-roles.json` (ключ `(pack_id, role_id)`,
   рядом с каноном `roles.json`) индексирует пять reviewer-ролей: проекция/оверрайды,
   фактические заголовки четырёх обязательных секций, измерения из закрытого словаря.
@@ -1658,9 +1647,9 @@
   `harness.reviewroles` (stdlib, восемь проверок, каждая — под конкретный режим отказа
   policy-as-data) — шаг `[8/8]` `packages/harness/scripts/validate.sh`, единственная точка
   принуждения. Фактический дрейф пяти паков (разные заголовки, разный набор `skills`) —
-  `plans/2026.07.25-ECO-OPT/findings/P9.2-review-roles-drift.md`, адресован треку 1 OQ-4.
+  , адресован треку 1 OQ-4.
 
-- **docs-impact гейт в CI (P8.4, `2026.07.25-ECO-OPT`, D119–D123).** Новый
+- **docs-impact гейт в CI (P8.4,, D119–D123).** Новый
   `scripts/docs-impact.py` + `.github/workflows/hygiene.yml` останавливает change-set,
   который вводит/убирает/переименовывает файл поверхности пакета или правит его интерфейс
   (`bin`/`commands`/`configs`/`install.sh`), без правки доков ТОГО ЖЕ пакета в том же
@@ -1670,14 +1659,14 @@
   8/12 PR, 11/41 коммит на дереве `cd93dbc8`; граница покрытия (не ловит правку тела
   `lib/**` без нового файла/интерфейса) названа в докстринге и `docs/develop.md` §11.
 
-- **Матрица возможностей `docs/status.md` (P8.5, `2026.07.25-ECO-OPT`).** Таблица
+- **Матрица возможностей `docs/status.md` (P8.5).** Таблица
   «Пакет | Возможность | Зрелость | Evidence / boundary» по пяти пакетам + `core` + корневому
   роутеру, зрелость — словарь `plan-protocol` § Statuses; каждая строка несёт воспроизводимую
   команду или названную границу. Проверяется `scripts/status-check.py` (шаг `status-check` в
   CI-job `hygiene`); честно называет границу: «видимая CLI-группа не доказывает, что её рантайм
   включён», сверка полноты со списком реальных возможностей отложена (кандидат D2).
 
-- **CI-гигиена дерева: запрещённые пути + тег = версия (P8.6, `2026.07.25-ECO-OPT`).**
+- **CI-гигиена дерева: запрещённые пути + тег = версия (P8.6).**
   `scripts/public-hygiene.py` — fail-closed по `git ls-files` на запрещённые суффиксы/имена/
   каталоги (`.sqlite`/`.log`/`.pem`/`.key`/архивы, `.env` кроме `*.example`, `__pycache__`/
   `.venv`/`node_modules`); `scripts/verify-tag.py <tag>` — тег `vX.Y.Z` обязан быть верхним
@@ -1685,7 +1674,7 @@
   `public-hygiene` в job `hygiene` и новый job `release-tag` (`on: push: tags: ['v*']`) в
   `.github/workflows/hygiene.yml`; раздел в `docs/develop.md`.
 
-- **`core.io.assert_safe_replace_target` (P8.7, `2026.07.25-ECO-OPT`).** Инвариант цели
+- **`core.io.assert_safe_replace_target` (P8.7).** Инвариант цели
   атомарной записи: перед `os.replace` `atomic_write_text`/`atomic_write_json` отказывают, если
   существующая цель — symlink, не-регулярный файл или жёсткая ссылка (`st_nlink != 1`); отказ
   называет путь и причину. Несуществующая цель и обычный файл — поведение байт-в-байт прежнее;
@@ -1694,7 +1683,7 @@
   хелпер — roadmap-кандидат, вне скоупа этого item'а).
 
 - **`validate.sh`: секции тела CORE-девятки, анти-дублирование проекции, полнота pressure
-  (P8.8, `2026.07.25-ECO-OPT`).** Три детерминированных гейта дельтой: (1) резидентные
+  (P8.8).** Три детерминированных гейта дельтой: (1) резидентные
   `core-policy.json::skills` (9 шт.) обязаны нести активационную секцию (`##When…`/
   `##Activate…`, ERROR с рэтчетом `scripts/skill-sections-burndown.txt`, 3 стартовые
   записи) и секцию ссылок (`##Links`/`References`/`Related skills`/`Related`, ERROR без
@@ -1706,7 +1695,7 @@
   `triggers.json`'s `should_trigger` без покрывающего pressure-сценария (новое поле
   `triggers[]`) — WARNING. `eval.py::validate_pressure` валидирует форму `triggers[]`.
 
-- **`skiller eval`: детерминизм `benchmark.json` (P8.9, `2026.07.25-ECO-OPT`).**
+- **`skiller eval`: детерминизм `benchmark.json` (P8.9).**
   Метрики (`pass_rate`/`duration_*`/`tokens_*`/`delta.*`) — точная арифметика
   `fractions.Fraction` внутри (√ для stddev — целочисленно, `math.isqrt`), строка
   фиксированной точности на границе записи — ни одного `float` в отчёте.
@@ -1721,7 +1710,7 @@
 ### Changed
 
 - **Корневой `AGENTS.md`: router-таблица + untrusted-import инвариант + починка по адресам
-  поломок Codex-догфуда (P7.2, `2026.07.25-ECO-OPT`, D62/D143).** Новая секция `## Operation
+  поломок Codex-догфуда (P7.2,, D62/D143).** Новая секция `## Operation
   router` (таблица `Operation | Canonical procedure`, приём A2) отправляет к канону
   `general/plan-protocol` §8 для plan-item'ов и вводит правило «работа внутри пакета —
   перезапусти `codex -C packages/<name>`» (D62(3), закрывает owner-вопрос судьбы per-package
@@ -1735,16 +1724,16 @@
   носителя `Next` больше не переписывается здесь — строка router-таблицы отправляет к канону
   `general/plan-protocol` §8. Размер склейки
   `AGENTS.md` — 7 252 б против потолка 32 768 б (≈22%, запас ≈4,5× — 32 768 / 7 252). Спека —
-  `plans/2026.07.25-ECO-OPT/research/21-P7.2-instruction-slice-spec.md`.
+  /research/21-P7.2-instruction-slice-spec.md`.
 
-- **Ремедиация реопена P7 (P7.4, `2026.07.25-ECO-OPT`, D144).** Аудит P7 (RED) нашёл ложное
+- **Ремедиация реопена P7 (P7.4,, D144).** Аудит P7 (RED) нашёл ложное
   основание в правке выше: корневой `AGENTS.md` утверждал, что `codex doctor --json` не
   принимает `-c` — принимает, отвергает только `-m`; преflight-буллет приведён к факту.
   Launch-буллет требовал `-a never` от headless `codex exec`, у которого такого флага нет —
   форма разделена на TUI-путь (`-a never`) и headless-путь (`-c 'approval_policy="never"'`).
 
 - **Форма ячейки `Items` в `## 3. Routing` — закрытый набор + диагностичный отказ
-  (P8.10, `2026.07.25-ECO-OPT`, D124/D125).** Канон `plan-protocol` §9 объявляет значение
+  (P8.10,, D124/D125).** Канон `plan-protocol` §9 объявляет значение
   ячейки закрытым набором из двух форм — один item (`Pn.m`) либо диапазон одной фазы
   (`Pn.a–Pn.b`); список через запятую (`P8.5, P8.6`) и склейка диапазона со списком
   (`P4.1–P4.2, P4.4`) нелегальны — группу подфаз несёт колонка `Batch`. Оговорка Back-compat
@@ -1755,7 +1744,7 @@
   из совпавшего токена не берётся. Ячейка без запятой и без совпадения даёт прежний текст
   байт-в-байт. Замер, породивший правку: 7 живых items флота не строили Task Contract.
 
-- **`SERENA_SCHEMA_FIELDS` сужена до факта апстрима (P5.6, `2026.07.25-ECO-OPT`, D117).**
+- **`SERENA_SCHEMA_FIELDS` сужена до факта апстрима (P5.6,, D117).**
   Константа несла 12 ключей под именем `FIELDS_WITHOUT_DEFAULTS` пиннованной Serena
   (`026b007b…`, `1.6.2.dev0`), где апстрим на этом SHA держит два — `project_name`,
   `language_servers`; остальные одиннадцать имеют дефолты (`data.setdefault`). Комментарий
@@ -1766,7 +1755,7 @@
   (`language_servers`), но больше не красит уход необязательного ключа (`encoding`) ложным
   расхождением.
 
-- **`code-review-graph` — вердикт `skip`, вопрос закрыт числом (P5.2, `2026.07.25-ECO-OPT`, D112/D113).**
+- **`code-review-graph` — вердикт `skip`, вопрос закрыт числом (P5.2,, D112/D113).**
   Внешний граф кода как retrieval-слой под ревью **не подключается**: `Ops` у кандидата отличные
   (build 1.66 с на 405 файлах, инкремент 0.24 с), но precision blast-radius против co-change ground
   truth `P_impact` = **0.039** при пороге `≥ 0.40`, объявленном ДО замера. Порог не двигали —
@@ -1795,11 +1784,11 @@
   consumer-acceptance теперь проверяет `blender` в изолированном `CODEX_HOME`.
 
 - **harness: стартовая уборка statusline удаляет осиротевшие `*.tmp` (P6.4,
-  `2026.07.25-ECO-OPT`).** Единственный `find` в ветке новой сессии теперь убирает
+  ).** Единственный `find` в ветке новой сессии теперь убирает
   устаревшие `*.state` и `*.tmp` с тем же порогом `-mtime +1`; регресс-тест сохраняет
   свежие файлы обоих видов.
 
-- **Пин Serena восстановлен в первопричину — `SERENA_SRC`/`config.json`/`.mcp.json` флота (P5.3, `2026.07.25-ECO-OPT`, D109/D110).**
+- **Пин Serena восстановлен в первопричину — `SERENA_SRC`/`config.json`/`.mcp.json` флота (P5.3,, D109/D110).**
   Политика `code_graph.args`/`index_args` корневого `config.json` перебивала пиннованный дефолт
   `SERENA_SRC` (`packages/maind/lib/maind/constants.py`) непиннованным
   `git+https://github.com/oraios/serena` — весь живой флот резолвил плавающий HEAD.
@@ -1807,17 +1796,17 @@
   переименовал `languages` → `language_servers` ПОСЛЕ релиза `v1.6.1`, а наш провиженер перешёл на
   новый ключ ещё 2026-07-23 (`ccd4505b`) — любой тег сегодня оказывается downgrade, ломающий
   загрузку `.serena/project.yml` на каждом зарегистрированном проекте. Владелец расширил форму
-  пина (D110): неизменяемая ссылка = тег ИЛИ полный commit-SHA; значение —
+  пина: неизменяемая ссылка = тег ИЛИ полный commit-SHA; значение —
   `@026b007bb889366283c925527e9a3bab317f66c1` (`main` HEAD, `Serena 1.6.2.dev0`) — внесено тем же
   швом в `constants.py`, `config.json` (`args`+`index_args`) и `serena.args` десяти живых
   `.mcp.json` (`agelto`/`flexcrm`/`vaulter`/`swissknifeman`/`corex`/`memster`/`cms`/`edufy`/
   `chatom`/`perplexity-web-mcp`). Smoke на двух типах проектов (python-монорепо `swissknifeman`,
   php/laravel `flexcrm`) подтвердил полный JSON-RPC цикл (`initialize` → `get_symbols_overview`)
   без фатала. Повторный `maind sync --only mcp --dry-run` подтверждает, что `unmanaged-target`
-  (P10.4/D106) остаётся отдельным, не исчезнувшим дефектом — доставка `.mcp.json` во флот
+ остаётся отдельным, не исчезнувшим дефектом — доставка `.mcp.json` во флот
   по-прежнему ручная.
 
-- **Пин Serena перенесён в версионируемый слой + гейт связности в `maind doctor` (P5.5, `2026.07.25-ECO-OPT`, D115/D116).**
+- **Пин Serena перенесён в версионируемый слой + гейт связности в `maind doctor` (P5.5,, D115/D116).**
   P5.3 пиннована три поверхности, но `config.json` — **gitignored**; единственный версионируемый
   носитель той же политики, `config.example.json`, оставался непиннованным, и
   `packages/maind/install.sh` копирует его в живой `config.json` на любом новом узле — свежая
@@ -1828,9 +1817,9 @@
   `test_tracked_templates_pin_serena_same_as_source` (`test_constants.py`) сверяет шаблоны
   побайтно с `constants.SERENA_SRC`, и `maind doctor` теперь зовёт
   `codegraph.check_schema_connectivity` на РЕАЛЬНОМ конфиге узла — расхождение печатается,
-  не чинится (D111).
+  не чинится.
 
-- **`core.provider_lock._classify`: `unmanaged-target` теперь может быть принят под управление явным `--repair` (P10.4, `2026.07.25-ECO-OPT`, D92/D106).**
+- **`core.provider_lock._classify`: `unmanaged-target` теперь может быть принят под управление явным `--repair` (P10.4,, D92/D106).**
   Ветка `record is None` возвращала `OWNERSHIP_CONFLICT`/`REFUSE` РАНЬШЕ, чем в потоке
   появлялся учёт `repair_requested` — неуправляемая существующая цель не могла быть усыновлена
   никогда, даже при явном `--repair` (найдено D65, гипотеза D82). Двухтирное правило, заданное
@@ -1845,7 +1834,7 @@
   `"maind"`, а раскатанные `.mcp.json` несут `serena`/`perplexity-web` + `${MAIND_BIN:-maind}`),
   не по-проектный дрейф; починка конвенции рендерера — отдельный дефект, `--adopt` для тира 2
   осознанно НЕ реализован (owner-решение, D106). Доставка `.mcp.json` на флот остаётся ручной
-  по факту (P5.3).
+  по факту.
 
 - **`plan_lint.py`: гейт напечатанных кодов границ (`_lint_write_site_codes_44`) ошибался
   в ОБЕ стороны из-за `re.search` по всему полю `Completion Notes`.** Fail-open: item,
@@ -1854,7 +1843,7 @@
   по тексту `block:*`/`n/a` чужого item'а, краснел — `search` брал ПЕРВОЕ вхождение. Обе
   цены реальны с активации гейта (`WRITE_SITE_CODES_CANON_DATE = 2026-07-27`). Починка —
   каноническая строка-носитель `write-site: pre_mutation: <код> · pre_final: <код>`
-  (D88): гейт матчит ТОЛЬКО её, построчно; коды на других строках (цитаты, объяснения)
+: гейт матчит ТОЛЬКО её, построчно; коды на других строках (цитаты, объяснения)
   больше не считаются. Литерал `write-site:` зарегистрирован в `CANON_LITERALS` +
   `i18n-keep`; инструкция печатать строку добавлена в `plan-exec.md`/`plan-close.md`.
   Пять новых различающих тестов (два из них — на коде ДО правки, красные) + два
@@ -1873,8 +1862,8 @@
   обязателен. Регрессионный тест —
   `test_repair_restores_managed_skill_deleted_from_project`.
 
-- **Резолвинг пути плана после архивации: `core.resolve_plan_dir` (P10.3, `2026.07.25-ECO-OPT`).**
-  `scripts/provider-docs.py` жёстко читал живой путь `plans/2026.07.19-DUAL-PROVIDER/…` и падал
+- **Резолвинг пути плана после архивации: `core.resolve_plan_dir` (P10.3).**
+  `scripts/provider-docs.py` жёстко читал живой путь /…` и падал
   `FileNotFoundError` после архивации того плана (файл фактически лежит в `plans/archive/…`), а
   `packages/skiller/lib/skiller/doctor.py` те же две диагностики (`capability-reference-coverage`,
   `trace-quality`) молча деградировали в `unknown` с неразрешимым `next_command: cat …` —
@@ -1888,36 +1877,36 @@
 
 ### Added
 
-- **`maind.codegraph.check_schema_connectivity`: офлайновый гейт связности «пин Serena ↔ схема `.serena/project.yml`» (P5.4, `2026.07.25-ECO-OPT`, D111).**
+- **`maind.codegraph.check_schema_connectivity`: офлайновый гейт связности «пин Serena ↔ схема `.serena/project.yml`» (P5.4,, D111).**
   Версия Serena живёт в репо двумя независимыми местами (`constants.SERENA_SRC` и шаблон
-  `render_project_yaml`) — они уже расходились молча (D109) и упали фаталом только у живого
+  `render_project_yaml`) — они уже расходились молча и упали фаталом только у живого
   сервера. Новая функция сверяет пин (`SERENA_SRC` + `code_graph.args`/`index_args` конфига)
   с обязательными ключами схемы (`constants.SERENA_SCHEMA_FIELDS`, офлайновая копия факта,
   без сети) против того, что реально печатает рендерер — не значение пина, только связность.
   Подключено к `packages/maind/scripts/test.sh` через `tests/test_codegraph.py`.
 - **`packages/task/scripts/verify-plan-citations.py`: гейт «ссылка-доказательство резолвится до символа»
-  (P10.2, `2026.07.25-ECO-OPT`).** Переносит в репозиторий класс проверки, дыру в котором
+  (P10.2).** Переносит в репозиторий класс проверки, дыру в котором
   чужой закрытый план назвал своим долгом (`verify_claim_verdicts.py` проверял только
   существование ФАЙЛА из `ref` до `::`, символ после `::` не валидировался — через эту
   дыру прошёл mis-cite H06). Новый stdlib-скрипт проверяет четыре формы ссылок
   (`path:line`, `path:line-line`, `path:line,line`, `path::symbol`) во всех живых планах,
   закрывая заодно второй класс — протухшие линейные якоря на файлы, переписанные другим
-  планом (D89). `--strict` для CI/предстартовой дисциплины, отчёт печатается всегда;
-  `--selftest` — embedded unittest. Первый прогон на `2026.07.25-ECO-OPT`: 154 цитаты,
+  планом. `--strict` для CI/предстартовой дисциплины, отчёт печатается всегда;
+  `--selftest` — embedded unittest. Первый прогон на: 154 цитаты,
   39 находок (документированы в Completion Notes P10.2 — не подогнаны под ноль).
-- **maind MCP: tool-result trimming + PARTIAL-receipt (P3.2, `2026.07.25-ECO-OPT`).**
+- **maind MCP: tool-result trimming + PARTIAL-receipt (P3.2).**
   Единая воронка `_content()` (`packages/maind/lib/maind/mcp.py`) целится ниже
   warning-порога Claude Code (10 000 токенов): (1) над порогом сначала снимается
   `indent=2` (чистая экономия без потери данных); (2) если и компактный JSON не
   укладывается — крупнейший топ-уровневый список урезается бинарным спуском с честным
   receipt (`truncated`/`returned_count`/`total_count`/`hint`), без ветвления по имени
   инструмента. Ответ, укладывающийся в порог, не меняется байт-в-байт. Живой замер
-  11 инструментов (`findings/P3.2-maind-tool-result-sizes.md`) показал: снятия `indent=2`
+  11 инструментов показал: снятия `indent=2`
   хватает всем текущим ответам узла флота (крупнейший — `maind_projects_list`,
   ~8,3К оценочных токенов после снятия отступов против ~10,6К с ними) — расчётный путь
   «(2) потолок+receipt» кодом покрыт и протестирован синтетическими фикстурами, но на
   живом узле пока не срабатывает.
-- **`review-gate`: гейт с содержанием вместо тихого но-опа (P9.1, `2026.07.25-ECO-OPT`).**
+- **`review-gate`: гейт с содержанием вместо тихого но-опа (P9.1).**
   Содержание проверок переехало в `hooks/review-gate/checks/` (диспетчер `run-checks.sh` +
   `generated-assets`/`plan-lint` strict + `tests-touched` warn); `config.json` объявляет
   ТОЛЬКО набор и per-check режим, `check_command` — одна стабильная строка-вызов
@@ -1928,11 +1917,10 @@
   выбор, skip + точная команда). `harness doctor` печатает одно из трёх состояний
   (`unconfigured (no-op)` / `configured: …` / `disabled (MODE=off)`) вместо молчания.
   Live-прогон субагента подтвердил семантику `exit 2` (принуждает продолжать, не
-  прерывает) и снял `[UNVERIFIED]` про `stop_hook_active` (поле реально есть в рантайме) —
-  `findings/P9.1-review-gate-proof.md`.
+  прерывает) и снял `[UNVERIFIED]` про `stop_hook_active` (поле реально есть в рантайме) —.
 
 - **`CHECKPOINTED`: отказ item'а обязан нести точную команду возобновления (P8.3,
-  `2026.07.25-ECO-OPT`).** Item со статусом `🔴 Blocked` мог закрываться отчётом «не
+  ).** Item со статусом `🔴 Blocked` мог закрываться отчётом «не
   смог» без пути назад. Носитель — строка `Возобновление: <точная команда>` в поле
   `Pending Work` item'а (НЕ седьмой статус и НЕ семнадцатое поле — оба варианта сломали
   бы контракт `plan_lint.STATUSES`/`TERMINAL_STATUSES` и межплановый гейт
@@ -1946,7 +1934,7 @@
   `2.18.0 → 2.19.0`, units `core`/`general` + skiller package API `0.11.0 → 0.12.0`).
 
 - **`**Consequences:**` в D-записи + словарь зрелости возможности (P8.2,
-  `2026.07.25-ECO-OPT`).** D-лог фиксировал решение и причину, но не цену: отменяющая/
+  ).** D-лог фиксировал решение и причину, но не цену: отменяющая/
   заменяющая D-запись (`supersedes D#`/«отменяет D#»/причастие) теперь несёт инлайн-
   подполе `**Consequences:**` внутри ячейки `Решение` (пятая колонка отклонена — шапка
   D-лога канон-литерал). Гейт `plan_lint.py` — opt-in ДВАЖДЫ (`Closure Protocol | v1` +
@@ -1963,7 +1951,7 @@
   `2.17.0 → 2.18.0`, units `core`/`general` + skiller package API `0.10.0 → 0.11.0`).
 
 - **Отчёт закрытия фазы `plans/<ID>/closure/<Pn>.json` (схема v1) с классом свидетельства
-  (P8.1, `2026.07.25-ECO-OPT`).** `## Phase Handoff` — проза плюс git-хеш: класс
+  (P8.1).** `## Phase Handoff` — проза плюс git-хеш: класс
   свидетельства не фиксировался нигде, и синтетика читалась как результат. Теперь фаза
   сдаётся ещё и машиночитаемым отчётом: `evidence_class` — enum РОВНО из трёх (`real` /
   `synthetic` / `baseline_pending`), «нет числа» выражается ЗАПИСЬЮ с причиной, а не
@@ -1981,7 +1969,7 @@
   (skill `2.16.0 → 2.17.0`, units `core`/`general` + skiller package API `0.9.0 → 0.10.0`).
 
 - **docs/plan — canonical docs synchronised and the measured-scope Owner decision
-  packet assembled (P4.3, `2026.07.24-AGENT-RELIABILITY`).** Terminal item of the plan.
+  packet assembled (P4.3).** Terminal item of the plan.
   Docs now state the three source layers explicitly — canonical (hand-written), generated
   (`skiller registry` / `render-provider-commands.py`, never hand-edited, drift repaired by
   regeneration) and effective (what the runtime actually resolves, read via
@@ -2007,7 +1995,7 @@
   `repository-bootstrap@0.2.0` unit is recounted from its own lock — 27 thin root
   projections (26 class-A + class-B `workflow-craft`), one combined lock, **zero** ordinary
   marketplace entries. The packet
-  (`plans/2026.07.24-AGENT-RELIABILITY/artifacts/P4.3/owner-decision-packet.md`) states in
+   states in
   its first sentence that acceptance is formally NOT met, prints what is unproven as numbers
   (`F1 = 0.96`, `F10 = unknown`, declared subset 5/31, F6 on a denominator of 1, Codex side
   never attempted), lists every residual debt with a named carrier, records the rehearsed
@@ -2015,11 +2003,11 @@
   exactly one owner decision (G1 go/hold) with a **hold** recommendation and falsifiable
   criteria that would change it. One honest gap is recorded rather than repaired:
   `scripts/provider-docs.py` — the generator/checker behind `docs/provider-support.md` —
-  still reads `plans/2026.07.19-DUAL-PROVIDER/...` after that plan was archived, so it fails
+  still reads /...` after that plan was archived, so it fails
   closed with `FileNotFoundError` and is wired into no `validate.sh`; that page is therefore
-  **not** claimed proven closed, and the repair belongs to the script's owner (D27/D31).
+  **not** claimed proven closed, and the repair belongs to the script's owner.
 - **skiller — read-only composed effective-source doctor
-  (P4.2, `2026.07.24-AGENT-RELIABILITY`).** `skiller doctor --effective-source [--json]`
+  (P4.2).** `skiller doctor --effective-source [--json]`
   composes five read-only diagnostics — active semantic owner/provenance/collisions
   (reused verbatim from the P1.4 gate, `run_effective_runtime_gate`, never re-derived),
   cache (a structural `n/a`: identity detection is repo-derived/cold, D44 — no provider
@@ -2034,8 +2022,8 @@
   (Scope Excluded, D92): an extension of the existing `skiller doctor` facade only,
   proven no-write by `git status --porcelain=v1` before/after in Validation.
 - **analyst/harness — Contribution gate minor bumps paid (P4.5,
-  `2026.07.24-AGENT-RELIABILITY`, `analyst@0.2.0`, `harness@0.4.0`).**
-  Package-API minor bumps owed by `unified-agent-trace-v1.md` § Contribution gate (D23) —
+  , `analyst@0.2.0`, `harness@0.4.0`).**
+  Package-API minor bumps owed by `unified-agent-trace-v1.md` § Contribution gate —
   `analyst 0.1.0 → 0.2.0`, `harness 0.3.0 → 0.4.0` — were recorded as debt in P3.1
   Pending Work / P3.2 Completion Notes (the contract's own consumer-surveyed SemVer/ADR
   result) but left unpaid because `package.json` sat outside those items' declared
@@ -2048,7 +2036,7 @@
   against plugin `0.2.0` before this bump) — and no generated artifact drifts
   (`skiller registry --check` and diff-scope guard both confirm a no-op).
 - **task/general — machine gate for printed pre_mutation/pre_final boundary codes
-  (P4.4, `2026.07.24-AGENT-RELIABILITY`, `plan-protocol@2.15.0`, `skiller@0.8.0`).**
+  (P4.4,, `plan-protocol@2.15.0`, `skiller@0.8.0`).**
   `plan_lint.py` gains a new rule: a `🟢`/`🟠` item whose `Updated` cell (Phase Status
   table) is ISO-dated `≥ 2026-07-27` must print BOTH `pre_mutation:`/`pre_final:` codes
   in its Completion Notes, and both must read `allow` (D76: `n/a` is not green) — a
@@ -2061,19 +2049,19 @@
   `allow`/`allow`) but the RECORD was silently absent, and a real `block:*` under a
   `🟢` would have stayed invisible until the next audit, which this phase no longer
   has. The scope anchor is the ITEM's own `Updated` date, not the plan's — a
-  plan-dated cutoff would miss this very plan's own future `P4.*` items (D91); items
+  plan-dated cutoff would miss this very plan's own future `P4.*` items; items
   closed before the cutoff are never diagnosed at all (forward-only, no existing
   fleet plan is repainted retroactively). `plan-protocol` §8 canon gains one line
   (both languages) naming the machine check; `pre_mutation:`/`pre_final:` are
   registered in `CANON_LITERALS` with matching `i18n-keep` directives (test T2).
 - **skiller — system-bank adapter for the P0.3 reliability bank (P3.3,
-  `2026.07.24-AGENT-RELIABILITY`).** `skiller.quality.eval` gains a second,
+  ).** `skiller.quality.eval` gains a second,
   distinct deterministic grading vocabulary alongside its existing per-skill
   `ASSERTION_TYPES` (which grade one free-text string): eight structured
   transcript/outcome operators (`event_present/absent/order/count_max/
   count_min`, `outcome_field_equals/list_contains/list_excludes`) matching
   `reliability-acceptance-v1.md` § Graders exactly — no LLM judge anywhere in
-  this path (D15). `apply_system_operator`/`grade_system_case` grade a case
+  this path. `apply_system_operator`/`grade_system_case` grade a case
   against a structured transcript+outcome record; `validate_system_graders`/
   `validate_system_cases` structurally validate ANY `reliability-bank/v1`-
   shaped document, not only the frozen P0.3 one; `compute_system_metrics`
@@ -2096,7 +2084,7 @@
   never ground a comparison) as its own small local implementation, per that
   module's own stated cross-package-boundary rule. `build_system_benchmark`
   orchestrates all of the above into the P3.3 benchmark artifact
-  (`plans/2026.07.24-AGENT-RELIABILITY/artifacts/P3.3/benchmark.json` +
+  (+
   `benchmark-manifest.json`, generated against the real frozen bank,
   candidate-less/`deferred` — no live paired (layer-2) transcript-capturing
   harness exists yet for the bank's multi-round, typed-event cases; that gap
@@ -2105,7 +2093,7 @@
   v1.json`) exercise all eight operators and every `compute_system_metrics`
   path without touching the frozen plan-owned bank.
 - **analyst — reliability metric arithmetic and paired digest (P3.2,
-  `2026.07.24-AGENT-RELIABILITY`).** `analyst.metrics` derives paired reliability
+  ).** `analyst.metrics` derives paired reliability
   metrics only from committed `analyst.trace.TraceRecord`s and the frozen P0.3
   reliability bank, never by re-parsing provider logs a second way. `build_metric_record`
   emits the numerator/denominator/exclusions/completeness/source-trace-IDs/baseline-proof-
@@ -2114,7 +2102,7 @@
   never a silent zero) and fails closed (`METRIC_PINNED_BASELINE_FORBIDDEN`) if the
   baseline's proof class is `pinned-not-recomputable`/`unknown`, so a historical pinned
   quantity (e.g. `journals.classified_lifecycle_events`) can never be silently promoted to
-  a recomputed comparator (D30). `slice_by` groups by project/plan/item over a caller-side
+  a recomputed comparator. `slice_by` groups by project/plan/item over a caller-side
   `{project_id, trace}` wrapper — the frozen `TraceRecord` carries no `project_id` field of
   its own, so slicing does not widen that closed schema. `build_digest`/`digest_to_json`
   produce the one compact, byte-stable JSON shape Code Guidance asks for (no dashboard, no
@@ -2125,9 +2113,9 @@
   pass — no new central `analyst <cmd>` is wired (`cli.py` is outside this item's declared
   `Files`); `doctor.py`/`test_provider_readers.py`/`test_cli.py` were declared in scope but
   left untouched for lack of a concrete requirement against any of them.
-- **analyst/harness/task — Unified Agent Trace v1 (P3.1, `2026.07.24-AGENT-RELIABILITY`).**
+- **analyst/harness/task — Unified Agent Trace v1 (P3.1).**
   New versioned, stdlib-only trace schema
-  (`plans/2026.07.24-AGENT-RELIABILITY/root/contracts/unified-agent-trace-v1.md`)
+
   links a requirement to its contract identity, route, dispatch state, findings and
   public outcome in one closed-field record, distinct from the unrelated D90
   normalized analytics envelope (`analyst.events`/`runs`/`readers`). `analyst.trace`
@@ -2148,7 +2136,7 @@
   (`0.1.0`→`0.2.0`, `0.3.0`→`0.4.0`) are owed but deferred to the next item touching
   those manifests — `package.json` is outside this item's declared `Files`.
 - **task/general — pre-final boundary closes fail-closed on both closing paths
-  (P2.11 reopen-remediation, `2026.07.24-AGENT-RELIABILITY`, `task@0.9.0`,
+  (P2.11 reopen-remediation,, `task@0.9.0`,
   `plan-protocol@2.14.0`, `skiller@0.7.0`).** `task:plan-close`'s pre-final
   checkpoint (step 4) no longer greenlights `n/a`: the gate is now the binary
   `pre_mutation == "allow" and pre_final == "allow"`, with `n/a` reported by
@@ -2159,7 +2147,7 @@
   (`implementation/low`), below every item's required route, so
   `pre_mutation` always failed and `pre_final` always reported `n/a` (M1,
   `findings/14`). The `actual_route` on pre-final is now resolved as the
-  item's EXECUTOR route (D75) via a fail-closed ladder — Completion Notes
+  item's EXECUTOR route via a fail-closed ladder — Completion Notes
   routing-adherence line, cross-checked against the item's terminal
   `journal.jsonl` entry — instead of the closing command's pin; an
   unresolvable or mismatched route stops with a named PASS rather than
@@ -2169,17 +2157,17 @@
   the item itself and `plan-close Pn.m` is never invoked on that path.
   `plan-run.md` and `plan-audit.md` are synced to the same binary gate and
   dual-boundary reporting requirement. Both checkpoints now name what
-  `pre_final` actually asserts (D77): a property of the item spec's FORM —
+  `pre_final` actually asserts: a property of the item spec's FORM —
   whether at least one publicly checkable acceptance entry rests on a
   deterministic proof class — never that the item was executed well. §13 of
   `plan-protocol` (both languages) is rewritten to state all of this
   truthfully, and the literal test in `test_canon_literals.py` gains a new
-  class asserting the DIFFERENTIATING predicate (D79) rather than mere
+  class asserting the DIFFERENTIATING predicate rather than mere
   identifier presence — every new assertion was verified red against the
   pre-fix command bodies before being added (M6: the pre-existing literal
   test passed green through the `n/a` and missing-step-7-call defects both).
 - **task — compiler reads all §3 Routing forms and never crashes
-  (P2.10 reopen-remediation, `2026.07.24-AGENT-RELIABILITY`, `task@0.8.0`).**
+  (P2.10 reopen-remediation,, `task@0.8.0`).**
   `task_contract._find_routing_row` now recognizes a closed literal set of
   route-column headers — the canon `Model class/effort` plus the two legacy
   spellings `Model/effort`/`Model/Effort` `plan-protocol` §9 Back-compat already
@@ -2196,11 +2184,11 @@
   D74's `.index(None)` root cause defensively, for any contract reaching `check`
   regardless of producer) and returns the frozen `ROUTE_UNDERSHOOT` code rather
   than raising. New committed probe
-  `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P2.10/routing_form_coverage.py`
+
   reproduces the walk over all 14 root plans and exits 1 on any unhandled
   exception (none observed after the fix — 9 `ok`, 5 typed refusals, 0 `EXC`).
 - **task/general — Task Contract write-site and truthful canon
-  (P2.7 reopen-remediation, `2026.07.24-AGENT-RELIABILITY`, `task@0.7.0`,
+  (P2.7 reopen-remediation,, `task@0.7.0`,
   `plan-protocol@2.13.0`, `skiller@0.6.0`).** `task:plan-exec`'s pre-mutation
   checkpoint and `task:plan-close`'s pre-final checkpoint now CALL the P2.6
   compiler — an executable step (build a live Task Contract v1 payload via
@@ -2215,7 +2203,7 @@
   wording diverges from the command bodies. New
   `snippets/source-evidence-template.md` delivers the evidence-bundle Files
   entry P2.2 left undelivered — manifest structure, required fields,
-  verification command via `task_contract.bundle_lint` (P2.6), and the
+  verification command via `task_contract.bundle_lint`, and the
   explicit forbidden-content-class list — cited from, not duplicating,
   `plan-portability-v1.md` §Bundle requirements (also newly cited by the
   canon). Discovered along the way: the CLI form `task_contract build` (no
@@ -2225,15 +2213,14 @@
   (`.index(None)`), so the write-site calls the compiler's documented Python
   API (`build`/`evaluate`) instead of a literal `build | check` shell pipe.
 - **task — compiler producer, bundle predicate, cross-session cap, actor repair
-  (P2.6 reopen-remediation, `2026.07.24-AGENT-RELIABILITY`, `task@0.6.0`).**
+  (P2.6 reopen-remediation,, `task@0.6.0`).**
   `packages/task/lib/task/task_contract.py` gains `build(plan_dir, item_id, …)`
   — the Task Contract v1 PRODUCER a transaction can actually call before
   `pre_mutation`/`pre_final` existed only as predicates over a hand-authored
   JSON: compiles `phases/Pn.md` + `plan.md` §3 fields into the exact 15-key
   schema, deterministic across repeat calls on the same committed tree, and
   fails closed with a typed `TaskContractBuildError` on an empty item field
-  rather than fabricating a placeholder. Full field mapping:
-  `plans/2026.07.24-AGENT-RELIABILITY/findings/P2.6-contract-mapping.md`.
+  rather than fabricating a placeholder. Full field mapping:.
   `bundle_lint(bundle_dir, …)` computes minimization and content-class evidence
   (secrets/chain-of-thought/tool-payloads/raw-transcript-bodies, by signature
   scan over actual bundle bytes) instead of trusting a self-declared
@@ -2251,14 +2238,14 @@
   an optional `model` evidence field; `journal.py --route-evidence` repaired
   to match (a historical evidence blob lacking `model` renders `unknown/…`,
   never crashes).
-- **task — route/budget evidence (P2.4, `2026.07.24-AGENT-RELIABILITY`).** New
+- **task — route/budget evidence (P2.4).** New
   `packages/task/lib/task/route_evidence.py`: normalized `required`/`actual` route
   capture with a named source (`self-attested`/`provider-doctor`/`cli-flag`) and
   timestamp — never inferred from static config, an actor string or the requested
   model. `classify` gives the four-way `exact/over/under/unknown` label (one axis
   never compensates the other — an unresolved model class outweighs a generous
   effort); `dispatch_guard` is the fail-closed boundary strictly upstream of
-  `task_contract.pre_mutation` (P2.2) — it reuses the two frozen P0.2 `route` deny
+  `task_contract.pre_mutation` — it reuses the two frozen P0.2 `route` deny
   codes verbatim (`ROUTE_UNDERSHOOT` also for an `unknown` axis, `CAPABILITY_UNSUPPORTED`)
   and is what prevents that predicate's `.index()` lookup from ever seeing a `None`.
   `build_task_contract_route` assembles the exact `task-contract-v1.schema.json`
@@ -2273,19 +2260,19 @@
   evidence can come from (`analyst doctor`'s is the existing `task.route_evidence`
   importability pattern already used for `maind`).
 - **task — typed finding/review enforcement and loop breaker (P2.3,
-  `2026.07.24-AGENT-RELIABILITY`).** New `packages/task/lib/task/review_policy.py`
+  ).** New `packages/task/lib/task/review_policy.py`
   implements `risk-review-loop-budget-v1.md` as executable policy: seam-derived
   `finding_id` (file/rule-locus/defect-class, split-ban — cosmetic re-wording never
   resets the loop-budget cap), the `reopens_product` predicate (product-typed, security
   blocker, or evidence invalidating acceptance), and `same_finding_max = 2` — the third
   occurrence of one stable identity becomes an `INCIDENT` with no inline repair, its cap
   subject parameterized by authority profile (`owner-gated` → owner, `self-host` → agent,
-  never hardcoded). `task_contract.py` (P2.2) gains one lazy-imported hook,
+  never hardcoded). `task_contract.py` gains one lazy-imported hook,
   `evaluate_finding`, so the independently-green compiler's own tests never need the new
   module importable. Task plugin/routing bumps `0.4.0` → `0.5.0`; full adapter/lock/golden
   regeneration proven no-op on the second check.
 - **task — Task Contract v1 compiler and tiered-portability lint (P2.2,
-  `2026.07.24-AGENT-RELIABILITY`).** New `packages/task/lib/task/task_contract.py`: the
+  ).** New `packages/task/lib/task/task_contract.py`: the
   single checked seam owning content-hash recomputation, the precedence/conflict-resolution
   ladder, the twelve pre-mutation and three pre-final reason codes of
   `task-contract-v1.md`, plus the portability tier classification/lint layer of
@@ -2298,7 +2285,7 @@
   dated `2026.07.27` or later (back-compat, existing fleet plans stay WARNING). Versions:
   `plan-protocol@2.12.0`, skiller package API + `general`/`core` publication units to
   `0.5.0`, task plugin/routing to `0.4.0`.
-- **skiller — effective-runtime conformance gate (P1.4, D51/D62/D63).** New
+- **skiller — effective-runtime conformance gate.** New
   `skiller doctor --effective-runtime`: cold per-provider install/discover of the declared
   positive fixture (every repository-marketplace unit minus exactly the three donor buckets
   `general`/`research`/`oss-dev`) into a `tempfile.TemporaryDirectory`, proving catalog-wide
@@ -2310,7 +2297,7 @@
   (`effective-carrier-set.json`), the latter reconciling every one of the 29 frozen
   collision records from P1.1's `remediation-map.json` as `resolved` or `still-measured`
   (0 `unowned-or-unexplained`).
-- **skiller — root-bootstrap class-B publication and collision closure (P1.5, D40/D42/D43).**
+- **skiller — root-bootstrap class-B publication and collision closure.**
   Four duplicate `architect` root identities (`architecture`, `codebase-design`,
   `domain-modeling`, `package-contribution-protocol`) removed from `.agents/skills/` after
   per-identity ownership proof against the installed `architect` bucket unit. `workflow-craft`
@@ -2326,7 +2313,7 @@
   every identity the curated `core` unit shares with a donor bucket (`general`/`research`/
   `oss-dev`) under the worst-case declared set — never a live-profile read, never a repair.
 - **plan — agent reliability and SSOT recovery.** Добавлен исполнимый план
-  `2026.07.24-AGENT-RELIABILITY`: полевая root-cause модель по четырём проектам,
+  : полевая root-cause модель по четырём проектам,
   единый task contract, runtime-dedup skills/hooks, bounded review loop,
   unified traces, behavioral evals и self-host canary до fleet-гейта.
 - **harness/core — dual-provider environment and instruction projections.** Provider-neutral
@@ -2341,7 +2328,7 @@
 - **skiller:** provider-aware Claude/Codex distribution preflight, provider-qualified
   vendor locks and explicit `skiller codex-install`; normal connect/update/doctor and
   dry-runs never invoke the native user-global installer.
-- **task/harness — root task-adapter dedup (P1.3, D28/D40).** `task` publication bumps to
+- **task/harness — root task-adapter dedup.** `task` publication bumps to
   `0.3.1`: regenerated Codex adapter tree (24 artifacts), `provider-artifacts.lock.json` and
   `publication-lock.json` via a new stdlib CLI front
   (`packages/task/scripts/render-provider-commands.py --write --repair-owned` /
@@ -2352,14 +2339,14 @@
   `0.3.0` (plugin `0.2.0`) alongside. `AGENTS.md` now describes `.agents/skills/*` as
   generator-owned bootstrap-only projections for identities not served by an authoritative
   installed bundle, sourced from the private `repository-bootstrap` bucket.
-- **skiller — root-bootstrap class-A publication (P1.2, D31/D38).** 13 private/source-only
+- **skiller — root-bootstrap class-A publication.** 13 private/source-only
   bilingual canonical skills (`skills/repository-bootstrap/<id>/{SKILL.ru.md,SKILL.md}`)
   replace the 13 hand-maintained duplicate root copies with 26 thin generated
   `.claude/skills/<id>/`+`.agents/skills/<id>/` projections (trigger metadata + canonical
   path/hash, no copied body) plus one combined `publication-lock.json`. `registry.py` →
   `publication.py` is the sole producer; `build_publication_catalog` excludes the private
   bucket from every ordinary Claude/Codex/marketplace unit and `skillset.py` rejects it from
-  vendor/connect selection outright. `configs/publication-versions.json` (D27) now separates
+  vendor/connect selection outright. `configs/publication-versions.json` now separates
   the skiller package API SemVer from finite per-unit manifest versions — `core`/`skm` bump to
   `0.4.1` alongside the package API, every other unit stays byte-identical at the frozen
   `0.4.0` baseline. Six duplicate root `core` identities
@@ -2378,12 +2365,12 @@
   `.codex/hooks/lifecycle.py`; `.swissknifeman/provider-artifacts.lock.json`
   теперь владеет обоими. `run-report/_lib.py` в `~/.claude/hooks/` синхронизирован
   повторным `harness hooks --global` (протух после последнего апдейта).
-- **harness — protracted stale path после архивации `2026.07.19-DUAL-PROVIDER`.**
+- **harness — protracted stale path после архивации.**
   `instructions.py:contract_path()` и один тестовый фикстур несли путь до
   архивации плана (`5b79f926`), из-за чего `test_provider_instructions.py`,
   `test_instruction_compatibility.py` и `packages/harness/scripts/validate.sh`
   падали целиком независимо от текущей задачи. Путь синхронизирован на
-  `plans/archive/2026.07.19-DUAL-PROVIDER/...`.
+  /...`.
 - **harness — `agent-packs upgrade` сверяет факт файлов, а не только версию пака.**
   План апгрейда строится из хэшей (источник и диск против `base_sha256` лока), поэтому
   забытый бамп `pack.json:version` больше не даёт тихого «уже актуален» (изменение
@@ -2424,7 +2411,7 @@
   historical `friction` schema error; strict writer/linter validation and negative tests.
 - **skiller — `plan-protocol` 2.9.0 → 2.10.0.** Documents the sealed D51 exception lifecycle.
 
-### Added (2026.07.18-FOREMAN P1.4 — plan-protocol 2.9.0)
+### Added
 
 - **skiller — `plan-protocol` 2.8.0 → 2.9.0.** Scope-payload launch-block'а для `RED`/`ATTENTION`
   аудитов (`РЕЖИМ:`/`ВХОД:`/`СКОУП:`/`НЕ ТРОГАТЬ:`), литерал `Вердикт:`; журнал
@@ -2437,7 +2424,7 @@
 - **docs — `reference.md`.** Карточки gstack, last30days-skill, llm-council, codex-plugin-cc;
   roadmap `codex-subagent-offload.md`, `plan-design-vs-exec-status-check.md`.
 
-### Added (2026.07.13-PLAN-PROTOCOL-GAP — кластер protocol-gap plan-протокола)
+### Added
 
 - **task — скилл `plan-protocol` 2.4.0 → 2.7.0.** Итог кластера (F7/m7/m8/A5/B1, эскалация REGHUB):
   **2.4.0** — routing-гейт (§9 колонка `Exec`: `plan-exec`/`manual`/`plan-design`, деривация по
@@ -2462,42 +2449,42 @@
 
 ## [0.9.0] - 2026-07-12
 
-### Added (2026.07.12-CONTEXT-ECONOMY — тощий старт сессии + footprint-доктор + bootstrap + доктрина)
+### Added
 
-- **maind — digest-бюджет project-only + байт-кап (P1.1).** `select_digest_items`: байт-бюджет на
+- **maind — digest-бюджет project-only + байт-кап.** `select_digest_items`: байт-бюджет на
   дайджест памяти + `shared_max=0` по умолчанию (D10 supersede D5) — межпроектные (`ns:*`) факты в
   дайджест не попадают без явного запроса; `--shared-max`/config-флаги для точечного включения.
-- **maind — тихий health-хук + digest-шаблон v2 (P1.2).** `session-start-hook.sh` больше не печатает
+- **maind — тихий health-хук + digest-шаблон v2.** `session-start-hook.sh` больше не печатает
   ничего при OK (только `--strict` даёт rc-гейт); `memory-digest-hook.sh` — компактный шаблон v2.
-- **maind — гайдлайн межпроектной памяти (P1.3).** `ecosystem-mcp` + доки `guide/{memory,namespaces}.md`:
+- **maind — гайдлайн межпроектной памяти.** `ecosystem-mcp` + доки `guide/{memory,namespaces}.md`:
   межпроектная задача → `graph` → `recall --scope ns:<имя>` → `remember --scope ns:<имя>`, дайджест —
-  только project-only (D10).
-- **harness — agent-router policy v2 (P2.1).** Policy-конфиг сжат до терс-EN ≤400 ток (было RU ≈600–900
+  только project-only.
+- **harness — agent-router policy v2.** Policy-конфиг сжат до терс-EN ≤400 ток (было RU ≈600–900
   ток каждую сессию), семантика (6 инвариантов роутинга) сохранена полностью.
-- **skiller — диета описаний скиллов + desc-гейт (P3.1/P3.2).** 24 самых длинных описания сокращены;
+- **skiller — диета описаний скиллов + desc-гейт.** 24 самых длинных описания сокращены;
   новый жёсткий гейт `validate.sh` (`DESC_WARN_MAX=300`/`DESC_ERROR_MAX=450`) + burn-down-рэтчет
   (`scripts/desc-burndown.txt`, one-way, протухшая запись — warn) для оставшихся скиллов.
-- **harness — диета agent-packs (P4.1/P4.2).** Описания субагентов всех 10 паков сжаты (1 пример вместо
+- **harness — диета agent-packs.** Описания субагентов всех 10 паков сжаты (1 пример вместо
   2–3 + одна анти-триггер-фраза), regression cap-тест на реальном реестре + `.bak`-warn в `agent-packs
   doctor`.
-- **skiller — `budget --first-turn` (P5.1).** Замер always-on футпринта проекта первого хода: skills
+- **skiller — `budget --first-turn`.** Замер always-on футпринта проекта первого хода: skills
   tier-0, agents, CLAUDE.md/rules без paths, живой fail-soft прогон SessionStart-хуков, MCP tool-defs;
   вердикт OK/ELEVATED/WARN (пороги 7K/10K), `--json`/`--strict`.
-- **maind — `doctor --context` (P5.2).** Флот-агрегация `_fleet_context`: subprocess `skiller budget
+- **maind — `doctor --context`.** Флот-агрегация `_fleet_context`: subprocess `skiller budget
   --first-turn --json` по всем `_enabled_projects`, fail-soft `n/a` при недоступности.
-- **analyst — сессионная токен-аналитика (P5.3).** `core/usage.py` — `first_turn_overhead` (первая
+- **analyst — сессионная токен-аналитика.** `core/usage.py` — `first_turn_overhead` (первая
   assistant-запись, главный транскрипт); run-report `usage.first_turn_overhead`/`usage.turns`; новая
   команда `analyst sessions [--project ID] [--weeks N] [--json]` — недельные ISO-медианы из живых
   transcript-jsonl с trend-warn (week-over-week >20%, только календарно смежные недели).
-- **root — bootstrap-machine.sh (P7.1/P7.2).** Идемпотентный скрипт развёртывания новой машины/команды
+- **root — bootstrap-machine.sh.** Идемпотентный скрипт развёртывания новой машины/команды
   (`swissknifeman setup --machine`): install → hooks/permissions --global → MCP soft-skip → maind
   service install → doctor, плюс манифест-шаг `--projects FILE` (клонирует только отсутствующие
   проекты, не трогает существующие); `docs/deploy.md` + `docs/machine-manifest.example.json`.
-- **root — доктрина budget-гейта (P8.1).** root CLAUDE.md «Рамки»: любой новый always-on инжект (hook
+- **root — доктрина budget-гейта.** root CLAUDE.md «Рамки»: любой новый always-on инжект (hook
   additionalContext/description скилла-агента-команды/CLAUDE.md-блок/MCP-сервер) до раскатки проходит
   `skiller budget --first-turn` и вписывается в бюджет (target 3–7K, warn 10K); компактная запись в
   память mAInd (`ns:axioma`).
-- **Локальные скиллы/доки синхронизированы с релизом (P8.2).** `package-architecture`/
+- **Локальные скиллы/доки синхронизированы с релизом.** `package-architecture`/
   `project-tooling-runbook`/шаблон `ecosystem-setup` (maind) + CLI-доки `analyst`/`maind`/`skiller`
   дополнены новыми командами (`budget --first-turn`, `doctor --context`, `analyst sessions`,
   bootstrap-machine); устаревшая формулировка «дайджест топ-8» (без `project-only`-оговорки) в
@@ -2505,8 +2492,8 @@
 
 ### Changed
 
-- **P5.4 (OTEL-пресет) — ⛔ Skipped by decision (D7).** Без работающего внешнего коллектора — мёртвый
-  код; спека сохранена в `roadmap/otel-preset.md`. Новый каталог `docs/rejected-optimizations.md` —
+- **P5.4 (OTEL-пресет) — ⛔ Skipped by decision.** Без работающего внешнего коллектора — мёртвый
+  код; спека сохранена в a roadmap note. Новый каталог `docs/rejected-optimizations.md` —
   осознанно отклонённые идеи (не «отложено», как `roadmap/`).
 
 
@@ -2521,7 +2508,7 @@
 
 ### Внедрено (settings-doctor — SKM-ROADMAP-005 P1 закрыт)
 
-- Конфликт-линтер настроек Claude Code (`roadmap/settings-doctor.md`) полностью внедрён:
+- Конфликт-линтер настроек Claude Code (a roadmap note) полностью внедрён:
   таксономия 13 проверок, 2 policy-профиля, CLI `harness doctor --settings` + фасад
   `skiller doctor --settings` + fleet `maind doctor --audit settings`. Полевой кейс 2026-07-10
   ловится целиком (интеграционный тест P1.5); реальный прогон по флоту (21 проект) подтвердил.
@@ -2806,13 +2793,13 @@
   закреплён тестом; дока pack-guard в `agent-packs.md` (+58 строк); roadmap-доки
   синхронизированы с реализацией (analyst-suggest/self-learning-memory/README —
   «реализовано», остаток — event-stream capture).
-- **Догфудинг и починка протокола по field-feedback пилота (D9):** сам план волны —
-  `plans/SKM-MASTER-003/` (транскрибирован первым агентом, закрыт целиком 19/19,
+- **Догфудинг и починка протокола по field-feedback пилота:** сам план волны —
+  a master plan (транскрибирован первым агентом, закрыт целиком 19/19,
   `plan-lint plans/` 0/0, ACTIVE → «—»). По находкам пилота: узаконен bootstrap-заголовок
   handoff `after P0.0` (plan-design), `plan-close` при закрытии плана целиком обновляет
   `Meta.Status` и пишет `Next: план закрыт`, `plan_lint` допускает «план закрыт» только
   при полностью терминальном плане (+2 теста). Deferred: honest `changed` у `plans-dir`
-  (F3), per-skill сигнал в SCHEMA=2-тренде (Known Deviations P2.2).
+, per-skill сигнал в SCHEMA=2-тренде (Known Deviations P2.2).
 
 ### Added (SKM-MASTER-002, волна 4 — pack-guard · живой цикл протокола · метрики ДО)
 
@@ -2832,7 +2819,7 @@
   закрываемой фазы + «🟢 требует коммита» + реконсиляция устаревших deviations; plan-audit —
   явная сверка committed vs working-tree; plan-design — правило «тайм-гейтовый Deliverable —
   отдельный item» (применено к самому плану: выделен P8.5 «пин baseline пилотов»).
-- **Метрики ДО (P8.1):** глобальный хук run-report обновлён до SCHEMA=2 (стоял протухший
+- **Метрики ДО:** глобальный хук run-report обновлён до SCHEMA=2 (стоял протухший
   SCHEMA=1 от раскатки 1 июля — реальный дрейф, пойманный исполнителем; `harness doctor`
   чист); телеметрия включена на пилотах azguard и chatom (ENABLED=on + SessionEnd);
   SCHEMA=2-механика проверена на реальном транскрипте в изолированном scratch-cwd (пилотные
@@ -2853,7 +2840,7 @@
   (>1.3×медиана или >p90), pinned-снимок `--baseline set --note …` → `.claude/analyze/baseline.json`
   (формат совместим с уже читающим его `maind analyze`; 21 тест). **Агент-аналитик**
   `packages/analyst/agents/analyst.md` (opus, read-only) + команда **`/analyst:deep`** —
-  digest-first (D16): скрипты собирают JSON-выжимки (`maind analyze` / `token-report` / `review`)
+  digest-first: скрипты собирают JSON-выжимки (`maind analyze` / `token-report` / `review`)
   в `.claude/analyst/deep/`, агенту передаются пути; raw-транскрипты запрещены промптом; выход —
   findings под контракт **`analyst ingest --file F`** (валидация целиком до первой записи;
   ТОЛЬКО ephemeral-уроки, detector=agent-finding — enforced кодом; промоут за человеком;
@@ -2869,8 +2856,8 @@
   вердикты keep/thin/retrieval-only/merge/dead (структурные факты приоритетнее usage-сигнала;
   20+ тестов). **Решение-документ** `docs/guide/bucket-audit-2026-07.md`: 206 скиллов / 45
   бакетов / 21 проект, вердикты с числами (dead=180 · keep=13 · thin=8 · merge=3 ·
-  retrieval-only=2), эскиз топологии 45→~34 (только эскиз), раздел «что НЕ делаем» (D13/D14).
-  **10 монолитов → thin-navigator** (D13): тела 55–102KB перенесены байт-в-байт в
+  retrieval-only=2), эскиз топологии 45→~34 (только эскиз), раздел «что НЕ делаем».
+  **10 монолитов → thin-navigator**: тела 55–102KB перенесены байт-в-байт в
   `references/full.md`, SKILL.md — компактный EN-навигатор с картой якорей; аддитивное поле
   **`body_path`** в upstream-схеме + гейты в validate.sh/update-upstreams.sh (sha/дрейф — по
   телу, не по навигатору). Итог по budget: **on-trigger ярус 512 608 → 279 802 ток
@@ -2957,7 +2944,7 @@
 
 ### Added (SKM-MASTER-002, волна 1 — plan-протокол · токен-телеметрия SCHEMA=2 · защита generated-ассетов)
 
-Мастер-план `plans/SKM-MASTER-002` (операционная система планов): сильная модель проектирует,
+Мастер-план a master plan (операционная система планов): сильная модель проектирует,
 дешёвая исполняет, телеметрия делает утечки токенов видимыми, generated-ассеты защищены.
 
 - **Plan-протокол (фаза A):** скилл `general/plan-protocol` (SSOT: схемы `plans/<ID>/{plan.md,
@@ -2966,7 +2953,7 @@
   `/task:plan-{design,exec,close,audit}` с пинами (opus/high · sonnet/medium · sonnet/low ·
   opus/xhigh); детерминированный `plan-lint` (`packages/task/lib/task/plan_lint.py` + тонкий
   `scripts/plan-lint.py`, 45 тестов) и первый `validate.sh` пакета task; сам мастер-план
-  транскрибирован в `plans/SKM-MASTER-002` (dogfooding, lint зелёный).
+  транскрибирован в a master plan (dogfooding, lint зелёный).
 - **Токен-телеметрия end-to-end (фаза B):** `core/usage.py` — единый самодостаточный
   транскрипт-парсер usage (вендорится байт-в-байт в хук как `_usage.py`; `sync-usage.sh` +
   cmp-гейт в validate.sh harness — дрейф копии валит валидацию); run-report **SCHEMA=2**
@@ -3116,7 +3103,7 @@
   дефисов и reserved `claude`/`anthropic`; кириллица не образует name → латинский токен/`skill`,
   финализирует человек); `--min-weight` (индекс не несёт confidence → `--min-tier` отложен, D7).
   Чистые генераторы (`build_skill_ru`/`build_meta`/`_slug_name`) + writer с I/O в `cmd_suggest`;
-  +13 offline-тестов. Дизайн: [`roadmap/analyst-suggest-draft-skill.md`](roadmap/analyst-suggest-draft-skill.md).
+  +13 offline-тестов. Дизайн: a roadmap note.
   Заодно исправлены устаревшие указатели «промоут = `skiller integrate`» в `scan.py`/CHANGELOG
   (integrate вшивает скиллы В проект, не регистрирует новый).
 - **Документация пакета `analyst`** — добавлен `packages/analyst/docs/` (VitePress: index + guide
@@ -3141,12 +3128,12 @@
   mAInd (`maind memory remember`, graceful — демон лёг → урок на диске, повторим позже). Soft-деприкейт.
 - **Провенанс:** каждый урок несёт `source`/`session_id`/`scope`/`evidence`; каждый переход — запись в
   append-only `.claude/analyst/audit.ndjson`.
-- **`analyst scan` (P2)** — cross-project агрегатор: пакет сам обходит реестр `config.json:projects[]`,
+- **`analyst scan`** — cross-project агрегатор: пакет сам обходит реестр `config.json:projects[]`,
   читает per-project уроки, greedy-Jaccard-кластеризует и детектит паттерны, повторяющиеся в **≥N
   проектах** (по умолчанию 3) → draft-**предложения** (не скиллы!) в `~/.swissknifeman/analyst/suggestions/`
   + индекс `index/by_pattern/`. **Namespace-изоляция** (наследуется от maind): уроки кластеризуются
   только среди проектов, делящих namespace — паттерн из `ns:axioma` не течёт в чужой. Детерминизм
-  (сортировка по id). Черновик скилла из предложения — `analyst suggest` (P4); промоут в бакет — человек.
+  (сортировка по id). Черновик скилла из предложения — `analyst suggest`; промоут в бакет — человек.
 - **Обвязка:** root-router `swissknifeman analyst …` + `doctor` fan-out; зонтичный `install.sh`;
   marketplace-запись (авто-подхват `skiller registry`). `Env(BaseEnv)`, atomic JSON, тесты offline (37).
 - **Реконсиляция `analyst scan` (P2-долг закрыт)** — после записи артефактов детерминированный прун
@@ -3195,7 +3182,7 @@
 - **README** — строка «📈 Аналитика и обучение»: реальное (захват `run-report` → `maind analyze`
   с метриками памяти/графа; экспериментальный `session-observer`; петля `field-feedback-loop` с
   ручным промо) + кросс-проектный **Continuous Learning** помечен как спроектированный/roadmap
-  (ссылки на `roadmap/self-learning-memory.md` и дизайн `research/analyst-package-design.md`).
+  (ссылки на a roadmap note и дизайн `research/analyst-package-design.md`).
 - **`docs/develop.md` §9** — блок «Самообучение — контур и статус»: ручная петля с человеком в гейте
   сейчас; автоматический кросс-проектный контур — отложен (confidence + ручное промо как guardrail).
 
@@ -3260,7 +3247,7 @@ Field-feedback: после задачи-с-планом (напр. на azguard)
 ### Added (intent-router — свободный текст → оптимальная команда; активация roadmap-хука)
 
 Field-feedback: владелец забывает ставить задачи через `/task:*` (замеренный мисроут → триггер
-активации отложенного `roadmap/agent-command-router-hook.md`). Верификация капабилити — целиком через
+активации отложенного a roadmap note). Верификация капабилити — целиком через
 `perplexity-web` (нашла 2 ошибки в исходном плане: auto-run первоклассный через `SlashCommand`;
 SessionStart-политику слать через `additionalContext`, не `systemMessage`).
 
@@ -3464,7 +3451,7 @@ Field-feedback: агенты неохотно жмут RAG при формиро
   его `.example` → вне (remove-if-present, чтобы шаблон коммитился); идемпотентно; warn, если реальный
   файл уже трекается git. **Opt-in** (по умолчанию выключено — не трогаем чужие репо без флага).
   Закрывает машинно-специфичный серена-путь `--project <abs>`, который индирекция `maind` (PR #94) не
-  решала. +тесты `test_mcpconfig`; статус `roadmap/mcp-config-example-emit.md` → реализовано (opt-in).
+  решала. +тесты `test_mcpconfig`; статус a roadmap note → реализовано (opt-in).
 
 ### Fixed (skiller — ложный `[ПЕРЕЕХАЛ]` в `skiller status` на монорепо-реестре)
 
@@ -3528,10 +3515,10 @@ Field-feedback: агенты неохотно жмут RAG при формиро
   (`test_deploy.py`), пример в `docs/guide/mcp.md` обновлён.
 - Уже онбордженные проекты мигрируются идемпотентно: `maind sync --only mcp --all` (недеструктивный
   merge + `.bak`). Серена-путь `--project <abs>` остаётся машинно-специфичным — отдельная фаза
-  (`roadmap/mcp-config-example-emit.md`).
+  (a roadmap note).
 - Гайды приведены в соответствие реальности: `project-tooling-runbook` §«Гигиена» (нюанс
   `${VAR:-default}` — Claude Code раскрывает из окружения процесса, не из проектного `.env`; maind-путь
-  индиректирован, остаётся серена-путь) и `roadmap/mcp-config-example-emit.md` (проблема сужена до серена-пути).
+  индиректирован, остаётся серена-путь) и a roadmap note (проблема сужена до серена-пути).
 
 ### Added
 
@@ -3579,7 +3566,7 @@ Field-feedback: агенты неохотно жмут RAG при формиро
 
 ### Roadmap
 
-- **`roadmap/mcp-config-example-emit.md`** — отложено: научить `maind deploy/sync` самому эмитить
+- **roadmap note** — отложено: научить `maind deploy/sync` самому эмитить
   `.mcp.json.example` (плейсхолдеры) + вести `.gitignore` (механизм вместо дисциплины агента).
   Критерий внедрения — повторная утечка абс.путей/секретов или невозможность поднять MCP без `.example`.
   Маршрутизировано через `field-feedback-loop` из полевого кейса agelto (настройка playwright-MCP).
@@ -3627,7 +3614,7 @@ Field-feedback: агенты неохотно жмут RAG при формиро
   связи из полевой работы: отклонение тулинга/раннбука от обещанного при внедрении/синхронизации
   проекта маршрутизируется в очевидный-баг→фикс-сразу либо новое/сомнительное→предложение
   (`roadmap/`/issue + захват в память), а не глотается. Механизм принципа «по факту измеренной
-  проблемы» (`roadmap/README.md`); связан с `release-discipline`/`decision-verification`.
+  проблемы»; связан с `release-discipline`/`decision-verification`.
 
 ### Changed
 

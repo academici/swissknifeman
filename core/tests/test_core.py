@@ -306,25 +306,25 @@ class TestResolvePlanDir(unittest.TestCase):
     def test_live_plan_wins_over_archive(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            (root / "plans" / "2026.01.01-X").mkdir(parents=True)
-            self.assertEqual(resolve_plan_dir(root, "2026.01.01-X"),
-                             root / "plans" / "2026.01.01-X")
+            (root / "plans" / "2026.01.01-DEMO-X").mkdir(parents=True)
+            self.assertEqual(resolve_plan_dir(root, "2026.01.01-DEMO-X"),
+                             root / "plans" / "2026.01.01-DEMO-X")
 
     def test_archived_plan_resolves_when_live_absent(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            (root / "plans" / "archive" / "2026.01.01-X").mkdir(parents=True)
-            self.assertEqual(resolve_plan_dir(root, "2026.01.01-X"),
-                             root / "plans" / "archive" / "2026.01.01-X")
+            (root / "plans" / "archive" / "2026.01.01-DEMO-X").mkdir(parents=True)
+            self.assertEqual(resolve_plan_dir(root, "2026.01.01-DEMO-X"),
+                             root / "plans" / "archive" / "2026.01.01-DEMO-X")
 
     def test_missing_from_both_raises_with_both_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             with self.assertRaises(FileNotFoundError) as ctx:
-                resolve_plan_dir(root, "2026.01.01-X")
+                resolve_plan_dir(root, "2026.01.01-DEMO-X")
             message = str(ctx.exception)
-            self.assertIn(str(root / "plans" / "2026.01.01-X"), message)
-            self.assertIn(str(root / "plans" / "archive" / "2026.01.01-X"), message)
+            self.assertIn(str(root / "plans" / "2026.01.01-DEMO-X"), message)
+            self.assertIn(str(root / "plans" / "archive" / "2026.01.01-DEMO-X"), message)
 
 
 class TestSiblingBin(unittest.TestCase):

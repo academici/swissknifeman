@@ -10,15 +10,15 @@
 
 ## [0.3.0] — 2026-07-12
 
-### Added (2026.07.12-CONTEXT-ECONOMY — тощий старт сессии)
+### Added
 
-- **`select_digest_items` — digest-бюджет project-only + байт-кап (P1.1).** Байт-бюджет на дайджест
+- **`select_digest_items` — digest-бюджет project-only + байт-кап.** Байт-бюджет на дайджест
   памяти + `shared_max=0` по умолчанию (D10, supersede D5): межпроектные (`ns:*`) факты в дайджест не
   попадают без явного запроса; конфиг/CLI-флаги `--shared-max` для точечного включения.
-- **`session-start-hook.sh`/`memory-digest-hook.sh` — тихий health + шаблон v2 (P1.2).** Хук здоровья
+- **`session-start-hook.sh`/`memory-digest-hook.sh` — тихий health + шаблон v2.** Хук здоровья
   сессии больше не печатает ничего при OK (только `--strict` даёт rc-гейт); дайджест-хук — компактный
   шаблон v2.
-- **`doctor --context` — footprint флота (P5.2).** Флот-агрегация `_fleet_context`: subprocess `skiller
+- **`doctor --context` — footprint флота.** Флот-агрегация `_fleet_context`: subprocess `skiller
   budget --first-turn --json` по каждому `_enabled_projects` (без кросс-импортов), fail-soft
   `context: "n/a"` при недоступности.
 
@@ -42,7 +42,7 @@
   ATTENTION (той же механикой, что `pack_drift`), info-находки — в machine-readable
   `rep['efficiency']` и человеко-читаемую секцию «Эффективность» перед «ИТОГ». Инвариант
   зафиксирован в докстрингах: RED от патологий не бывает никогда. SCHEMA=1-отчёты — блок
-  молча опускается. +8 тестов (`PathologyCase`). Контекст: SKM-MASTER-002 фаза C (P3.2).
+  молча опускается. +8 тестов (`PathologyCase`). Контекст: SKM-MASTER-002 фаза C.
 - **`maind sync` — провиженеры `skills-catalog` и `output-style`.** Ретроактивная раздача на уже
   онбордженные проекты: `skills-catalog` (`skm:update` — пере-резолв каталога скиллов с диска,
   новый скилл уже выбранного бакета докатывается без ручного re-onboard) и `output-style`

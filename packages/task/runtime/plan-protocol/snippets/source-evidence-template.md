@@ -1,11 +1,11 @@
-# Шаблон evidence bundle — `committed-bundle`-тир (P2.7)
+# Шаблон evidence bundle — `committed-bundle`-тир
 
 Resolve `<task-package-root>` from the configured Task runtime before copying a command; it is
 the package directory containing `lib/task/`. Use the same provider runtime locator as the Task
 command, never a consumer-local package copy or another provider's environment variable.
 
 Исполнимая форма bundle-требований (SSOT формулировок — `plan-portability-v1.md`
-§Bundle requirements плана `2026.07.24-AGENT-RELIABILITY`; здесь — ЦИТАТА и структура,
+§Bundle requirements плана; здесь — ЦИТАТА и структура,
 не переписывание). Нужен КАЖДОМУ item'у, чей `portability.tier == "committed-bundle"`
 (multi-session/high-risk/handoff/audit-работа, D26) и который несёт committed evidence
 input сверх обычных `Files`/`Required Reads`.

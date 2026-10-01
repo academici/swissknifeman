@@ -274,7 +274,7 @@ context7 ──▶ perplexity-web ──▶ WebSearch
 | Окружение Claude Code (permissions/MCP/хуки) | `harness doctor` |
 | Всё сразу (fan-out) | `swissknifeman doctor` |
 
-### Provider operations, locale, and rollback
+### Provider operations and rollback
 
 Use the generated [provider support](./provider-support) page as the capability matrix. It is
 provider-qualified: `native`, `adapted`, and `unsupported` are different states, and one green
@@ -290,11 +290,7 @@ select provider and operation
 → roll back on a mismatch
 ```
 
-`response`, `plan`, and `diagnostics` are independent locale surfaces. Each resolves from
-`command-session > environment > project > user > built-in en`; an unset value inherits only for
-that surface. Language-tag syntax, registry canonicalization, and the `en`/`ru` catalog choice
-are separate stages. Do not copy a provider state into locale preference, and never put raw
-environment values, credentials, absolute host paths, or provider payloads in a diagnostic.
+Never put raw environment values, credentials, absolute host paths, or provider payloads in a diagnostic.
 
 `plan`, `check`, and `--dry-run` are no-write operations. Apply or repair needs the exact managed
 target, an accepted action digest or owner authority where the command requires it, ownership and
@@ -310,7 +306,7 @@ change-set, который вводит/убирает/переименовыв�
 **того же пакета** (`packages/<pkg>/docs/**`; у `task` — вторым легальным домом `docs/task/**`;
 корень — `docs/*.md`) в том же диапазоне. Обход — трейлер коммита `Docs-Not-Needed: <причина>`
 (причина печатается, пустое значение обходом не считается).
-Измеренная частота (`plans/archive/2026.07.25-ECO-OPT/research/24-P8.4-refine-2026-07-27.md` §1–§2,
+Измеренная частота (research/24-P8.4-refine-2026-07-27.md` §1–§2,
 дерево `cd93dbc8`): **8 из 12** PR, **11 из 41** коммит. Граница покрытия: гейт **НЕ ловит**
 изменение поведения существующего модуля `lib/**`/`core/*.py`/`scripts/*.{sh,py}` без нового
 файла и без правки интерфейса — это осознанное сужение (форма «любая правка поверхности» красила

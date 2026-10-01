@@ -1,5 +1,5 @@
 """trace — schema owner of Unified Agent Trace v1 (P3.1,
-`plans/2026.07.24-AGENT-RELIABILITY/root/contracts/unified-agent-trace-v1.md`).
+).
 
 Links requirement→contract→route→dispatch→finding→public outcome into one record so
 P3.2/P3.3 derive metrics from one instrument instead of re-parsing provider logs per

@@ -1,18 +1,15 @@
 from __future__ import annotations
 
 import copy
-import importlib.util
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
 from artifex import dispatch
+from support import FIXTURE_PLAN as PLAN
 
 
-ROOT = Path(__file__).resolve().parents[3]
-PLAN = ROOT / "plans" / ("2026" + ".08.03-ARTIFEX-SUPERVISOR")
-P1 = PLAN / "artifacts/P1"
 P2 = PLAN / "artifacts/P2"
 
 
@@ -66,17 +63,22 @@ class DispatchTests(unittest.TestCase):
         with self.assertRaisesRegex(dispatch.DispatchRefusal, "USAGE_LIMIT_EXCEEDED"):
             dispatch.strict_replay(replay, task, grant, identity)
 
-    def test_builder_reproduces_committed_carriers_byte_for_byte(self):
-        spec = importlib.util.spec_from_file_location("admission_builder", P2 / "build-p3-smoke-admissions.py")
-        module = importlib.util.module_from_spec(spec); assert spec.loader is not None; spec.loader.exec_module(module)
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp) / "plan"; output = root / "artifacts/P2/p3-smoke-admissions"
-            replay, manifest, admission = root / "artifacts/P2/p3-smoke-replay-v1.jsonl", root / "artifacts/P2/p3-smoke-dispatch-manifest-index-v1.json", root / "artifacts/P2/p3-smoke-admission-index-v1.json"
-            module.build(P1 / "p3-smoke-task-set-v1.json", P1 / "p3-smoke-dispatch-grants-v1.json", replay, manifest, admission, output)
-            for generated, committed in ((replay, P2 / replay.name), (manifest, P2 / manifest.name), (admission, P2 / admission.name),
-                                         (output / "codex.json", P2 / "p3-smoke-admissions/codex.json"),
-                                         (output / "claude-code.json", P2 / "p3-smoke-admissions/claude-code.json")):
-                self.assertEqual(committed.read_bytes(), generated.read_bytes(), generated.name)
+    def test_projection_reproduces_each_indexed_admission_exactly(self):
+        for row in json.loads((P2 / "p3-smoke-admission-index-v1.json").read_text(encoding="utf-8"))["admissions"]:
+            admission = json.loads((PLAN / row["path"]).read_text(encoding="utf-8"))
+            identity = admission["dispatch"]
+            projected = dispatch.project(admission["task"], admission["grant"], [], run_id=identity["run_id"],
+                                         slice_id=identity["slice_id"], attempt=identity["attempt"],
+                                         idempotency_key=identity["idempotency_key"])["admission"]
+            self.assertEqual(admission, projected, row["provider"])
+
+    def test_parent_plan_id_must_be_a_non_empty_string(self):
+        for value in ("", None, 7):
+            task = copy.deepcopy(self.admission["task"])
+            task["parent_plan_id"] = value
+            task["task_hash"] = dispatch.canonical_hash(task, "task_hash")
+            with self.subTest(value=value), self.assertRaisesRegex(dispatch.DispatchRefusal, "PARENT_ITEM_AS_TASK"):
+                dispatch.verify_task(task)
 
 
 if __name__ == "__main__":

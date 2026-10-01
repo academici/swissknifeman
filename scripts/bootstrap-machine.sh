@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # bootstrap-machine.sh — идемпотентный machine-bootstrap зонтика (dotfiles-паттерн,
-# RAG:✅ 2026-07-12 plans/2026.07.12-CONTEXT-ECONOMY/findings/P0-rag-bootstrap-memory-sync.md).
+# RAG:✅ 2026-07-12).
 #
 # Тонкий оркестратор: логика — в пакетах (install.sh / harness / maind), скрипт только
 # вызывает их CLI в правильном порядке и проверяет rc (единый источник истины — рамка

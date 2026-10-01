@@ -17,7 +17,7 @@ class DesignAuditWaiverTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
-        self.root = write_valid_plan(Path(temporary.name), "2026.09.30-OWNER-WAIVER")
+        self.root = write_valid_plan(Path(temporary.name), "2026.09.30-DEMO-OWNER-WAIVER")
         (self.root / "journal.jsonl").write_text("")
         core = self.root / "plan.md"
         core.write_text(core.read_text() + "\n**Design Audit Waiver:** D7\n")

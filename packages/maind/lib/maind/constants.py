@@ -22,18 +22,18 @@ MEMORY_WORKERS = (
 GLOBAL_SCOPE = "global"
 NS_SCOPE_PREFIX = "ns:"
 
-# Digest-бюджет SessionStart (2026.07.12-CONTEXT-ECONOMY D10, P1.1): дайджест — project-only по умолчанию, ограничен
+# Digest-бюджет SessionStart: дайджест — project-only по умолчанию, ограничен
 # байтами (не только count), с per-item обрезкой. Нормы — findings/P0-rag-context-economy.md
 # (additionalContext ≤500–1500 ток/сессию; ~4 симв/ток → 4000 симв ≈ 1000–1200 ток).
 DIGEST_BUDGET_CHARS = 4000
 DIGEST_ITEM_MAX_CHARS = 500
-DIGEST_SHARED_MAX = 0          # project-only дефолт (D10); shared — явно, флагом/конфигом
+DIGEST_SHARED_MAX = 0 # project-only дефолт; shared — явно, флагом/конфигом
 DIGEST_TRUNCATE_SUFFIX = "… (→ recall)"
 DIGEST_MIN_TAIL_CHARS = 150    # переполняющий item обрезаем только если остаток бюджета ≥ это
 
 # Бюджет ожидания cross-machine вызовов памяти (ADR-0001 P4.2). ЛЁГКИЕ — health/auth-пробник
 # (маленький ответ); ТЯЖЁЛЫЕ — export/digest (весь пул, до нескольких МБ). Измерено по каналу
-# на LAN-адресе хоста (не loopback) — plans/2026.07.25-ECO-OPT/findings/P4.2-remote-link-measure.md;
+# на LAN-адресе хоста (не loopback) —;
 # дефолты держат запас НАД измеренным числом (реальный LAN/Wi-Fi добавит джиттер, которого
 # однохостовый замер не видит) — ориентир практики findings §6 (1-2с лёгкие, 5-10с тяжёлые).
 MEMORY_LIGHT_TIMEOUT_S = 3
@@ -71,10 +71,10 @@ GRAPH_VERSION = 1
 # с ccd4505b (language_servers); стабильного тега с этой схемой у апстрима нет)
 SERENA_SRC = "git+https://github.com/oraios/serena@026b007bb889366283c925527e9a3bab317f66c1"
 # Обязательные ключи .serena/project.yml (Serena `_from_dict` FIELDS_WITHOUT_DEFAULTS), которых
-# ожидает пиннованная выше версия — офлайновая копия факта, а не запрос к апстриму (D111, P5.4).
+# ожидает пиннованная выше версия — офлайновая копия факта, а не запрос к апстриму.
 # Факт снят прямым чтением исходника пина (Serena 1.6.2.dev0, пин 026b007b…):
 # serena/config/serena_config.py:341 (путь внутри uv-архива, вне этого репозитория),
-# сверка 2026-07-27 (findings/P5-audit-closure-facts.md §3, plan D117). Остальные ключи
+# сверка 2026-07-27. Остальные ключи
 # .serena/project.yml имеют дефолты (data.setdefault) и сюда не входят.
 # Обновляется ТЕМ ЖЕ швом, что SERENA_SRC: бампнул пин — сверь этот набор с новым
 # serena/resources/project.template.yml (или релиз-нотами схемы), иначе гейт связности
@@ -137,7 +137,7 @@ PERPLEXITY_WEB_DEFAULTS = {
     "server_name": "perplexity-web",
 }
 
-# mcp.emit_example — default-on (P2.4): рядом с реальным .mcp.json эмитить портируемый
+# mcp.emit_example — default-on: рядом с реальным.mcp.json эмитить портируемый
 # .mcp.json.example с плейсхолдерами вместо machine-specific путей и вести .gitignore.
 # Единственный носитель дефолта — merge_defaults читает отсюда; opt-out — явный `false`
 # в config.json (уважается, см. mcpconfig.write_example/reconcile_gitignore).

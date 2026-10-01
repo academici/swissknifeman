@@ -1,5 +1,5 @@
 """Tests for `task.route_evidence` — the P2.4 route/budget evidence layer over the
-frozen `task.task_contract` route boundary (P2.2) and `task.command_catalog` (P1/P2.1).
+frozen `task.task_contract` route boundary and `task.command_catalog`.
 
 Covers: deterministic REQUIRED derivation (`fixed` vs `inherited-plan` routing modes,
 `command-routing.json` via a real `CommandCatalog`); ACTUAL capture with a named,
@@ -39,16 +39,11 @@ from core.repo import resolve_plan_dir  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parents[3]
 COMMAND_ROOT = REPO_ROOT / "packages/task/commands"
 ROUTING_PATH = REPO_ROOT / "packages/task/configs/command-routing.json"
-EXAMPLES_PATH = (resolve_plan_dir(REPO_ROOT, "2026.07.24-AGENT-RELIABILITY")
-                  / "artifacts/P0.2/task-contract-examples.json")
+EXAMPLES_PATH = Path(__file__).resolve().parent / "fixtures_data/task-contract-routine-continuation.json"
 
 
 def _load_base_contract():
-    document = json.loads(EXAMPLES_PATH.read_text(encoding="utf-8"))
-    for example in document["examples"]:
-        if example["id"] == "routine-continuation":
-            return copy.deepcopy(example["contract"])
-    raise AssertionError("fixture example 'routine-continuation' not found")
+    return copy.deepcopy(json.loads(EXAMPLES_PATH.read_text(encoding="utf-8")))
 
 
 class CodexInventoryRouteTests(unittest.TestCase):
@@ -444,7 +439,7 @@ class BuildTaskContractRouteTests(unittest.TestCase):
     def test_guard_denies_before_pre_mutation_ever_sees_an_unknown_actual(self):
         # `dispatch_guard` denies EARLY, before a `None` axis ever reaches a compiled
         # contract. `task_contract.pre_mutation` itself also guards the same axis as
-        # defense in depth (P2.10/D78): a caller that skips the guard and feeds
+        # defense in depth: a caller that skips the guard and feeds
         # `pre_mutation` an unresolved actual gets the distinct nonterminal code,
         # never the raw `.index()` crash this predicate used to raise.
         contract = _load_base_contract()
@@ -512,7 +507,7 @@ class BuildTaskContractRouteTests(unittest.TestCase):
 
 
 class JournalActorIntegrationTests(unittest.TestCase):
-    """`task.journal append --route-evidence` (P2.4) — the canonical actor spelling
+    """`task.journal append --route-evidence` — the canonical actor spelling
     derives from captured route evidence instead of being hand-typed at the call
     site (`findings/02` — 34 observed spellings). Exercised here, not in
     `test_journal.py`, since it is this item's own new call path, not journal's."""
@@ -544,7 +539,7 @@ class JournalActorIntegrationTests(unittest.TestCase):
         self.assertEqual(entry["actor"], "sonnet/high")
 
     def test_historical_evidence_without_a_model_field_renders_the_literal_unknown(self):
-        # Backward-compat (D72): an evidence blob predating this item's `model`
+        # Backward-compat: an evidence blob predating this item's `model`
         # field must not crash the CLI — `.get("model")` renders `unknown`.
         evidence_path = self._write_evidence({"model_class": "implementation", "effort": "high"})
         rc = journal.main([
@@ -815,13 +810,13 @@ class CodexLaunchEvidenceTests(unittest.TestCase):
                 "codex", "-C", "/workspace/repo", "-m", "gpt-5.6-sol",
                 "-c", 'model_reasoning_effort="high"', "-a", "never",
                 "-s", "danger-full-access",
-                "$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.3",
+                "$ task:plan-run 2026.08.12-№1-DEMO-PLAN P0.3",
             )),
         }
 
         with tempfile.TemporaryDirectory() as directory:
             evidence = route_evidence_codex.capture_current(
-                expected_invocation="$ task:plan-run 2026.08.12-№1-TASK-RESILIENCE P0.3",
+                expected_invocation="$ task:plan-run 2026.08.12-№1-DEMO-PLAN P0.3",
                 expected_cwd="/workspace/repo",
                 thread_id="thread-123",
                 start_pid=300,

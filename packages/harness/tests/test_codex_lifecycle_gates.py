@@ -60,8 +60,7 @@ class CodexLifecycleGateTests(unittest.TestCase):
             self.assertTrue(support.evidence)
             for evidence in support.evidence:
                 self.assertEqual(evidence.source,
-                                 "plans/archive/2026.07.29-HARNESS-AGNOSTIC/root/contracts/"
-                                 "codex-parity-verdicts-v1.md")
+                                 "docs/provider-support.md")
 
     def test_bindings_are_hook_native_with_manifest_synchronized(self):
         requests = tuple(LifecycleRequest(surface_id) for surface_id in CLASS_B_SURFACES)

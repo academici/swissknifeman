@@ -31,7 +31,7 @@ invocation renderer — not scattering conditionals across packages.
 | `configs/provider-capabilities.json` | 36-capability matrix |
 | `configs/provider-distribution.json` | Skill connect/vendor/discovery channels |
 | `configs/provider-projection.json` | Instruction/route/command projection policies |
-| `configs/command-routing.json` | Task command routing SSOT |
+| `packages/task/configs/command-routing.json` | Task command routing SSOT |
 | `configs/profile-catalog.json` | Harness profile catalog SSOT |
 
 Package-local trees under `packages/*/configs/` remain **provider render bindings**

@@ -15,7 +15,7 @@ export default withMermaid(defineConfig({
   base: '/skiller/',
   lastUpdated: true,
 
-  ignoreDeadLinks: [/^\/harness\//, /^\/task\//, /^\/routing/, /^\/roadmap/, /^\/maind\//],
+  ignoreDeadLinks: [/^\/harness\//, /^\/task\//, /^\/routing/, /^\/roadmap\b/, /^\/maind\//],
 
   themeConfig: {
     nav: [

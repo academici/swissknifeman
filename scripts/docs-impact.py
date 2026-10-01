@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""docs-impact gate (2026.07.25-ECO-OPT P8.4): package-scoped docs-in-the-same-change-set.
+"""docs-impact gate: package-scoped docs-in-the-same-change-set.
 
 Reads one `git diff --name-status -M` over a change-set and fails (exit 1) when the
 change-set introduces/removes/renames a surface file, or touches an interface path, of a
@@ -37,7 +37,7 @@ SURFACE_PKG = re.compile(r"^packages/([^/]+)/(bin|lib|commands|configs)/")
 SURFACE_CORE = re.compile(r"^core/.*\.py$")
 SURFACE_ROOT = re.compile(r"^(bin/|install\.sh$|scripts/[^/]+\.(sh|py)$)")
 
-# НЕ поверхности — проверяется ПЕРВЫМ. Исключение `.md` сужено до ДОК-md (D120):
+# НЕ поверхности — проверяется ПЕРВЫМ. Исключение `.md` сужено до ДОК-md:
 # тела slash-команд packages/*/commands/**.md и agent-pack-конфиги packages/*/configs/**.md
 # — продукт, не документация, и под общее "**/*.md" не подпадают.
 NON_SURFACE = [

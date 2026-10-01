@@ -1,126 +1,32 @@
 # Roadmap
 
-Идеи развития пакета. Порядок внутри блоков — примерный приоритет;
-реализация — по мере реальной потребности, в духе принципа «сначала каркас,
-наполнение постепенно».
+Directions only; order within a block is rough priority. Work starts on measured need, not in anticipation of it.
 
-Каталог отложенных тем в `roadmap/` ведётся отдельно от этой обзорной страницы: после
-`2026.07.31-SKM-LEAN` у каждой его записи есть явный адрес — закрывший item, решение,
-переезд или структурный критерий возврата. Эта страница оставляет только тематические
-направления, а не дублирует рабочий каталог.
+## Near term
 
-По записям 15 сентября выполнено ограниченное исправление Task:
-parser-compatible decision template, terminal preflight решений, semicolon reads/Files,
-отклонение пустого product proof, измерение только выбранного item и multi-item history.
-Включённые Stop-адаптеры проверяют открытый run текущей сессии без optional payload/lease.
-Результаты, замер и незакрытые ограничения находятся в
-[`roadmap field fixes`](../tasks/2026.09.15-roadmap-field-fixes/README.md).
-Проверка реального transport и экономии на consumer-проектах ещё предстоит.
+- **Session efficiency.** Accumulated tool results, not the resident skill set, dominate Codex session growth; duplicate skill names exist in the umbrella and in Vaulter. Next: safe pilots that trim tool-result carry-over and remove the duplicates.
+- **Provider parity.** Plugin/skill reconcile and Cursor parity remain a field residue after the provider-aware `budget`/`doctor` work.
+- **Own skills migration.** Analyze local projects listed in `.skills-scanner.json`, move the universal part into the registry (via the [scanner](/skiller/guide/scanner) or by hand), connect it back with `skiller connect` / `skiller vendor`, delete local copies.
+- **Vendor skills in packages.** Apply the [publication mechanism](/skiller/guide/vendor-skills) in own open-source packages: `resources/skills/` + ServiceProvider publication + a full-cycle test (`composer install → vendor:publish → agent sees the skill`).
+- **`configs/` content.** Preconfigured subagents (`.claude/agents/`), hooks (auto-format, pre-commit validation), other IDE configs — see the [configs overview](/harness/configs/). Verified `.mcp.json` presets already ship (`context7` + a curated subset), see [Integrations](/harness/integrations/).
 
-Аудит 14 сентября и его локальная реализация собраны в
-`tasks/2026.09.14-skills-and-task-audit/implementation.md`: краткий native skill discovery,
-минимальный CORE, исправление plan-run alias и уточнённый Next. В Edufy/Flexcrm/CoreX
-native startup больше не сокращает descriptions. Полевое поведение Task и фактический
-final transport отделены от проверки кода и cache; соответствующие carrier сохраняют
-этот остаток, а исправленный alias перенесён в archive.
+## Strategic
 
-Инциденты Task от 10–11 сентября 2026 сведены в одно аудит-задание
-`tasks/2026.09.11-task-execution-cost/README.md` в репозитории. Локальные исправления завершены:
-direct-close на обычном GREEN пути, проверки по риску с reuse актуального evidence и закрытие
-текущего пункта в той же сессии. Позднейший Delivery обновил и подтвердил 19 consumer roots,
-но четыре остались заблокированы без перезаписи. Причины version/cache/ownership drift и
-проект исправления собраны в
-[`release-to-runtime attestation and recovery`](../roadmap/archive/2026.09.11-release-to-runtime-attestation-and-recovery.md).
-Исходные Task roadmap-записи сохранены рядом с заданием.
+- **Cross-project optimizer** — the read-only overview ships as `system/cross-project-coordinator` plus the `code-coordinator` agent. Next: turn findings into action (auto-extraction to a shared package, PRs to target projects) and write cross-project facts to shared memory.
+- **Skills Marketplace UI** — web UI over the registry: tag search, snippet preview, "Install to project". Minimum: VitePress + GitHub API.
+- **Skill Composition** — `extends: laravel` in frontmatter: the agent loads the parent context first.
+- **Versioned Snapshots** — SemVer tags on the repository and a version pin in `skiller vendor` (`swissknifeman@1.2.0`); sha256 in the registry already exists.
+- **Skill Chains** — the `requires` / `produces_for` graph already exists in frontmatter; visualize it as a DAG and run a chain in one call.
 
-Полевая регрессия 13 сентября закрыла непрерывное исполнение compatible ready batch и выбор
-`plan-design` для уже детализированной незавершённой фазы. Но 14 сентября в Edufy повторился
-terminal output gap: `handoff.md` и delivery receipt содержали native launch, а user-facing final
-его не вывел. Живой roadmap-carrier
-[`task terminal command emission regression`](../roadmap/2026.09.14-task-terminal-command-emission-regression.md)
-задаёт обязательный finalization seam и регрессионные проверки; архивный результат не считается
-достаточным, пока это не станет write-site enforcement.
+## Technical
 
-## Ближайшая фаза
+- **Snippet auto-scoring** — GitHub Action runs phpcs/phpstan/hadolint on new snippets and writes a score to `index.json`; candidates below threshold are blocked.
+- **Obsidian plugin** — `skills.json` in the sidebar, open SKILL.md, insert a snippet with `/skill`.
+- **MCP server for skills** — `get_skill(name)`, `list_skills(bucket)`, `search_snippets(query)` instead of file reads.
+- **Quality badges** — generated per-skill badges: `snippets: 5`, `used_in: 3 projects`, `last_tested: <date>`.
 
-**Аудит эффективности сессий (2026-09-28).** Трёхдневный fleet-аудит Codeburn
-показал, что главный источник раздувания Codex-сессий — накопленные результаты
-инструментов, а не resident-набор скиллов; также выявлены дубли skill names в
-самом Swiss Knife Man и Vaulter. Доказательства, ограничения телеметрии и
-очередь безопасных пилотов собраны в
-[`session efficiency fleet audit`](../roadmap/2026.09.28-session-efficiency-fleet-audit.md).
+## Experimental
 
-**Контекст сессий — release v0.24.7 (2026-09-25).** Выпущены skiller `0.17.14` и task
-`0.24.3` (commit `e4fa1fbf`, tag `v0.24.7`): provider-aware `budget`/`doctor` для Codex,
-исправленный first-turn receipt (`AGENTS.md`, без Claude-only surfaces, `INCOMPLETE` при
-сбое native discovery). Fleet delivery GREEN
-([`fleet receipt`](../roadmap/evidence/2026.09.25-v0.24.7-fleet-receipt.md)); plugin/skill
-reconcile и Cursor parity остаются полевым остатком. Аудиты:
-[`session context telemetry`](../roadmap/2026.09.25-session-context-telemetry-audit.md),
-[`Codex empty greeting`](../roadmap/2026.09.25-codex-empty-greeting-context-audit.md).
-
-**Полевые исправления 2026-09-13 реализованы.** Task сохраняет явный opt-in маршрут,
-восстанавливает незавершённый predecessor и отделяет finite owner authority от external/calendar wait.
-Релиз проверяет immutable `(unit, version) → bytes`; delivery сохраняет общий owner-union lock,
-восстанавливает только известные preimages и проверяет cache/project bytes по digest.
-Оригиналы сохранены в `roadmap/archive/`; фактический результат fleet находится в machine-local receipt.
-
-**Миграция собственных скиллов из локальных проектов.** Анализ наработок
-в проектах из `.skills-scanner.json`, перенос универсальной части в реестр
-(через [сканер](/skiller/guide/scanner) и вручную), затем подключение в проекты через
-`skiller connect` / `skiller vendor` и удаление локальных копий —
-чтобы источник истины был один.
-
-**Vendor-skills в боевых пакетах.** Применить
-[механизм публикации скиллов](/skiller/guide/vendor-skills) в собственных open-source
-пакетах: `resources/skills/` + публикация в ServiceProvider + тест полного
-цикла `composer install → vendor:publish → агент видит скилл`.
-
-**Наполнение `configs/`.** Преднастроенные субагенты (`.claude/agents/`),
-хуки (автоформатирование, валидация перед коммитом), конфиги других IDE — см.
-[обзор конфигов](/harness/configs/). Проверенные `.mcp.json` уже раздаются пресетами
-(`context7` + курированный сабсет) — каталог в разделе [Интеграции](/harness/integrations/).
-
-## Стратегические
-
-- **Межпроектный агент-оптимизатор** — read-only обзор реализован как
-  `system/cross-project-coordinator` (скилл) + агент `code-coordinator`: поверх
-  топологии обходит связанные проекты (`git ls-files`, уважает `.gitignore`),
-  находит дубли/расхождения/кандидатов в общий пакет и выдаёт приоритизированный
-  отчёт. **Дальше:** перевод находок в действие — авто-вынесение в общий пакет и
-  PR в целевые проекты (сейчас правки делает человек); связь с памятью —
-  координатор пишет межпроектные факты в общий «мозг».
-- **Skills Marketplace UI** — веб-интерфейс поверх реестра: поиск по тегам,
-  просмотр сниппетов, кнопка «Install to project». Минимум: VitePress +
-  GitHub API (документация уже на VitePress — половина пути пройдена).
-- **Skill Composition** — `extends: laravel` во frontmatter: агент загружает
-  родительский контекст перед выполнением дочернего скилла. Аналог наследования.
-- **Versioned Snapshots** — SemVer-теги на репозиторий и pin версии
-  в `skiller vendor` (`swissknifeman@1.2.0`). Потребители фиксируют версию,
-  а не latest; sha256 в реестре уже есть.
-- **Skill Chains (pipeline)** — граф `requires` / `produces_for` уже есть
-  во frontmatter. Идея: визуализировать как DAG и выполнять цепочку
-  `founder.idea-discovery → pm.brd → architect.architecture` одним вызовом.
-
-## Технические
-
-- **Auto-scoring сниппетов** — GitHub Action: при PR с новым сниппетом
-  запускать phpcs/phpstan/hadolint и писать score в `index.json`; кандидаты
-  ниже порога из `.skills-scanner.json` блокируются автоматически.
-- **Obsidian-плагин** — `skills.json` в sidebar, открытие SKILL.md,
-  вставка сниппета в заметку командой `/skill`.
-- **MCP-сервер для скиллов** — `get_skill(name)`, `list_skills(bucket)`,
-  `search_snippets(query)` через MCP вместо чтения файлов:
-  skills-as-a-service для любого MCP-совместимого агента.
-- **Quality badges** — автогенерируемые бейджи скилла: `snippets: 5`,
-  `used_in: 3 projects`, `last_tested: <дата>`.
-
-## Экспериментальные
-
-- **LLM-generated Gap Analysis** — ежемесячный агент анализирует PR и issues
-  в рабочих проектах, находит паттерны, не покрытые скиллами, и создаёт
-  draft-PR с новыми SKILL.md.
-- **Cross-repo Snippet Leaderboard** — отслеживать, какие сниппеты копируются
-  в проекты и насколько остаются неизменными (высокое сходство = хороший сниппет).
-- **Skill Health Monitor** — GitHub Action по расписанию: проверять, что
-  сниппеты компилируются / проходят lint на актуальных версиях PHP, Node, Docker.
+- **LLM gap analysis** — a monthly agent reads PRs/issues of working projects, finds patterns no skill covers, drafts new SKILL.md files.
+- **Snippet leaderboard** — track which snippets are copied into projects and how stable they stay.
+- **Skill health monitor** — scheduled Action checks that snippets compile/lint on current PHP, Node and Docker versions.

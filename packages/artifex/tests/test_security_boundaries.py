@@ -1,16 +1,11 @@
 from __future__ import annotations
 
-import copy
-import json
 import tempfile
 import unittest
 from pathlib import Path
 
 from artifex import security
-
-
-ROOT = Path(__file__).resolve().parents[3]
-PLAN = ROOT / "plans" / "2026.08.03-ARTIFEX-SUPERVISOR"
+from support import FIXTURE_PLAN as PLAN
 
 
 class SecurityBoundaryTests(unittest.TestCase):
@@ -44,26 +39,6 @@ class SecurityBoundaryTests(unittest.TestCase):
             value = self.request(); mutate(value)
             with self.subTest(name=name), self.assertRaises(security.SecurityRefusal):
                 security.request(self.admission, value)
-
-    def test_observation_accepts_a_well_shaped_economy_object(self) -> None:
-        fields = ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_tokens",
-                 "cost_microunits", "duration_ms", "turns")
-        value = {"kind": "success", "process_count": 1,
-                "economy": {"worker": {field: 1 for field in fields},
-                           "coordinator": {field: 0 for field in fields},
-                           "unknown_reasons": {}, "inclusion_bases": {}, "zero_bases": {}}}
-        self.assertEqual("success", security.observation(value)["kind"])
-
-    def test_observation_rejects_a_malformed_economy_object(self) -> None:
-        base = {"kind": "success", "process_count": 1, "economy": {"worker": {}, "coordinator": {},
-                "unknown_reasons": {}, "inclusion_bases": {}, "zero_bases": {}}}
-        with self.assertRaises(security.SecurityRefusal):
-            security.observation({**base, "economy": {**base["economy"], "extra_key": {}}})
-        missing = dict(base["economy"]); del missing["zero_bases"]
-        with self.assertRaises(security.SecurityRefusal):
-            security.observation({**base, "economy": missing})
-        with self.assertRaises(security.SecurityRefusal):
-            security.observation({**base, "economy": "not-a-dict"})
 
     def test_foreign_path_secret_and_raw_observation_refuse(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

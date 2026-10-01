@@ -4,7 +4,7 @@
       "artifact_id": "task.codex.plugin",
       "path": "packages/task/.codex-plugin/plugin.json",
       "rendered_hash": "sha256:9cb16e3efca01caed27631b1c1294f91639e0c97fd04fa6c9435a8930a0874d4",
-      "source_hash": "sha256:eb5229f55b67ce9bb1d98b1c9a2e1e8a6216c59c80f40fb102fa0749812522af"
+      "source_hash": "sha256:78829034a0eaaff3211cfc6d9e46f209de25ce6af3179031dbd696b9e089e25e"
     },
     {
       "artifact_id": "task.codex.design.skill",
@@ -117,20 +117,20 @@
     {
       "artifact_id": "task.codex.plan.design.skill",
       "path": "packages/task/adapters/codex/skills/task-plan-design/SKILL.md",
-      "rendered_hash": "sha256:dada78d3e404ef0aa9d96ea72fbce337e8904718d6723cddc74000b8a623b16c",
-      "source_hash": "sha256:e29fd6fa9fa9e04c81c3865b1154aa6322702a9af6c1a9ffe8f80ef8cc5ebc88"
+      "rendered_hash": "sha256:abe695471e6075f0f8d7a2d89c906405cbe935d1611f82380751f327705bcdcc",
+      "source_hash": "sha256:5def2c0f002d8453f92c19caca429e16adaa76ad63504d9400f663906353d07a"
     },
     {
       "artifact_id": "task.codex.plan.design.invocation-policy",
       "path": "packages/task/adapters/codex/skills/task-plan-design/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:4b89281d16212fcc0454df4cbf54928858bdec0f69d0ae497cb77bb6de0601b0"
+      "source_hash": "sha256:4b0be04b6af23720b383c608309c9f2c061e946d2e7e049a40eacb1c83672f08"
     },
     {
       "artifact_id": "task.codex.plan.design.runtime",
       "path": "packages/task/adapters/codex/skills/task-plan-design/command.md",
-      "rendered_hash": "sha256:52132c86d670503a60066655fea58be148ec225baf933aad374abfca822726d3",
-      "source_hash": "sha256:40012acc0912e12520683c059055158ddc1b2e6d1759eee5b68762b14721ad31"
+      "rendered_hash": "sha256:3ef7dfb1fa7a7f0cf1e263b007275c4b633be616988f520d5f831e5a709988d9",
+      "source_hash": "sha256:277912c787bf82ba736af9e80b9774d0dcf2165033a96f297592deb2d150baaa"
     },
     {
       "artifact_id": "task.codex.plan.exec.skill",

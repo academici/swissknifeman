@@ -1,4 +1,4 @@
-"""P3.5 (2026.07.31-SKM-LEAN): validate.sh description+when_to_use гейты (длина и
+"""P3.5: validate.sh description+when_to_use гейты (длина и
 триггер) читают СОВОКУПНУЮ запись листинга, не голый `description` — та же формула, что
 `budget.py::_listing_entry_tokens`/`_listing_entry_chars`
 (`(description + " " + when_to_use).strip()`, upstream кап 1 536 симв). Дополняет

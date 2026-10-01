@@ -3,7 +3,7 @@
 Генератор живёт здесь (импортируемый и тестируемый), `scripts/generate-hub.sh` —
 тонкий лаунчер поверх `python3 -m skiller.hub` (как `bin/skiller`).
 
-ФОРМА БЛОКА ОПРЕДЕЛЯЕТСЯ КАНАЛОМ-ЦЕЛЬЮ, не проектом (2026.07.31-SKM-LEAN D20/P2.5):
+ФОРМА БЛОКА ОПРЕДЕЛЯЕТСЯ КАНАЛОМ-ЦЕЛЬЮ, не проектом:
 
   краткая (`short`)  — цель, у которой ЕСТЬ нативный листинг скиллов: `CLAUDE.md`
       Claude Code и Boost-фрагмент `.ai/guidelines/swissknifeman-hub.md` (Boost
@@ -497,7 +497,7 @@ def upsert_block(out, block):
 
 
 def target_form(name, *, boost_mode=False, full_index=False, legacy_short=False):
-    """Форма блока по КАНАЛУ-ЦЕЛИ (D20). `--full-index` возвращает полную всем."""
+    """Форма блока по КАНАЛУ-ЦЕЛИ. `--full-index` возвращает полную всем."""
     if full_index:
         return FORM_FULL
     if legacy_short:

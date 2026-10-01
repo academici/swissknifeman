@@ -119,6 +119,18 @@ delivery receipt, связанный с terminal state и exact persisted handof
 доказанно отсутствующий локальный target создаёт `local-repair` того же attempt, после чего
 исходный carrier повторяется; dynamic Makefile остаётся `unknown`, а не ложным блоком.
 
+### Execution economy and stop rule
+
+When the owner asks for a fast, practical implementation, treat that as a validation-budget
+constraint. Once affected tests are green, do not start another review/rewrite loop unless a
+remaining defect can break the requested real-project check, corrupt data, or cross an actual
+security/authority boundary. Repair concrete blockers once and stop. Record unsupported future
+capabilities as fail-closed limitations instead of designing speculative infrastructure.
+
+If work becomes disproportionate, narrow immediately to the smallest safe patch, affected tests,
+one package validator, and concise evidence. Do not add agents, schemas, byte-level comparisons, or
+another review round merely to increase confidence beyond that boundary.
+
 ## review (по material trigger)
 
 Ревью диспетчируется по типу артефакта, но не по ритуальному статусу. Один scoped verdict

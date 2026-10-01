@@ -25,6 +25,7 @@ plans/<PLAN-ID>/
 ├── handoff.md         # rolling owner/design/audit pointer; not executor input in v2
 ├── journal.jsonl      # append-only execution history
 ├── journal-exceptions.jsonl # optional D51 exact historical-schema exception sidecar
+├── journal-migrations/ # owner-gated preimage + exact manifest/receipt for sealed repair
 ├── brief/             # owner input/refinements
 ├── findings/          # RAG-выжимки и recon-отчёты
 ├── research/          # authored synthesis
@@ -49,6 +50,16 @@ bundle digest inputs, declared product paths и closure. До мутации `Fi
 минимальный product/closure split. При отсутствии коллизии используется один collapsed anchor.
 Closure доказывает byte identity product paths; registry-owned volatile projections, journal и
 handoff считаются bookkeeping, пока item явно не выводит их в Deliverables.
+
+## Public reason taxonomy
+
+`task.task_contract evaluate` и CLI `check` сохраняют точный внутренний diagnostic в
+`pre_mutation`/`pre_final` и дополнительно возвращают `reason_codes` для recovery-логики.
+Публичный закрытый набор: `schema-invalid`, `evidence-missing`, `evidence-stale`,
+`evidence-forged`, `policy-denied`, `conflict`, `corrupt-state`, `durability-failed`.
+Каждая запись несёт исходный `internal_code` и короткое действие; неизвестный внутренний
+diagnostic безопасно нормализуется в `policy-denied`. Это additive JSON-изменение: старые
+потребители продолжают читать прежние поля, новые не должны разбирать текст сообщения.
 
 ## Terminal admission lease
 
@@ -84,13 +95,30 @@ fresh owner-bound admission остаётся recommendation, а не автом�
 (парсится `plan-lint`); плоские `.md` прямо в `plans/` — черновики plan mode,
 разворачиваются `/task:plan-design from-draft <файл>`.
 
-## Historical journal exception (D51)
+## Historical journal exception
 
 `journal-exceptions.jsonl` optional and append-only: it never carries an event, status, or Next.
 It may waive only an exact historical `friction` schema failure when the target physical line, raw
 SHA-256, plan ID, exact field set, and an existing Owner D# all match. Any duplicate, malformed or
 valid target, foreign plan, hash mismatch, or additional invalid field fails closed. Create it only
 with `task.journal exception`; do not rewrite or compensate the historical journal event.
+
+## Sealed journal migration
+
+Ordinary execution remains append-only. If an already sealed row cannot be made valid by a
+compensating append or the deliberately narrow D51 `friction` exception, an accepted Owner D# may
+authorize one exact `journal-migration/v1`. The manifest lives at
+`journal-migrations/<migration-id>/manifest.json`, binds the complete source/target SHA-256 and
+every changed line, and permits only neutral missing-field backfill, bounded terminal-evidence
+recovery, explicit legacy enum/friction normalization, and reset of an orphan `in-progress` row
+that never had a durable session/run identity. A later duplicate qualified execution start may
+also become `no-op` only when one earlier start of the same plan/item/attempt/run survives,
+its session derives that run ID, timestamps are ordered, and the run has no terminal. All other
+fields and the first start remain unchanged; the accepted decision and exact manifest still apply.
+`task.journal_migration` saves the original `journal.jsonl` bytes as
+`journal.preimage.jsonl`, writes a digest receipt, and fails closed on drift, path traversal,
+unlisted semantic edits, or an absent accepted decision. This is the sole exception to physical
+append-only storage; the preserved preimage remains the historical source.
 
 ## root/ против artifacts/ — смысловое различие
 
@@ -144,7 +172,7 @@ Exported-контракт, обязан в том же bookkeeping-коммит�
 заданием, чтобы холодная сессия исполнила его без чата. Enum тиров, оба кода отказа
 (`PORTABILITY_INPUT_MISSING`, `PORTABILITY_EXTERNAL_INPUT`), блок `privacy` и пара
 `semantic_carrier`/`provider_renderers` принадлежат Task Contract v1; **правило
-классификации** — Plan Portability v1 (оба контракта — план `2026.07.24-AGENT-RELIABILITY`,
+классификации** — Plan Portability v1 (оба контракта — план,
 `root/contracts/`).
 
 ```text
@@ -249,7 +277,7 @@ runnable successor.
 Новый план хранит в Meta `Short ID | PLAN1`, отдельное файловое задание — `Short ID: TASK1`
 в заголовке документа. Номера постоянны и уникальны по репозиторию в своей серии,
 включая архив; дневной № в имени папки остаётся отдельным номером.
-Вне папки работы ссылки имеют вид `PLAN1.D35`, `PLAN1.P2.3`, `TASK1.D2`; между проектами —
-`swissknifeman:PLAN1.D35`. Старые планы без Short ID используют полный ID перед локальной
+Вне папки работы ссылки имеют вид `PLAN<N>.D35`, `PLAN<N>.P2.3`, `TASK<N>.D2`; между проектами —
+`swissknifeman:PLAN<N>.D35`. Старые планы без Short ID используют полный ID перед локальной
 ссылкой. Команды по-прежнему принимают полный PLAN-ID.
 Канон назначения и ссылок: `plan-protocol/references/work-references.md`.

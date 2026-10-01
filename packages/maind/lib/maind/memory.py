@@ -361,8 +361,7 @@ RECALL_LIMIT = 200
 # Кап для shared-scope'ов (ns:*/global) при project:<id>-expansion в _recall_union (mcp.py):
 # без него один общий ns: (напр. ns:axioma, 47 записей) забивал ответ и вытеснял приватный
 # scope проекта (напр. 2 записи) — измерено на 6 проектах, 84-96% ответа из shared
-# (roadmap/memory-recall-shared-namespace-priority). Приватный scope остаётся без капа
-# (RECALL_LIMIT) — recall целенаправленный, не пассивный SessionStart-инжект (в отличие от
+# Приватный scope остаётся без капа (RECALL_LIMIT) — recall целенаправленный, не пассивный SessionStart-инжект (в отличие от
 # дайджеста, где shared_max=0 режет shared в ноль, см. DIGEST_SHARED_MAX/select_digest_items).
 RECALL_SHARED_LIMIT = 40
 
@@ -472,7 +471,7 @@ def export(url, scope, headers=None, *, timeout=MEMORY_HEAVY_TIMEOUT_S, retries=
     """Дамп памяти scope: GET /agentmemory/memories?namespace= (весь ГЛОБАЛЬНЫЙ пул —
     namespace демон игнорит). Самый дорогой по каналу вызов (SessionStart-дайджест
     тянет его целиком, research/06 §4) — настраиваемый таймаут/ретраи (measured:
-    findings/P4.2-remote-link-measure.md); ретраится (read, не мутация)."""
+    ); ретраится (read, не мутация)."""
     def _do():
         return http_get_json(f"{url}/agentmemory/memories?namespace={quote(scope)}",
                              timeout=timeout, headers=headers)
@@ -655,7 +654,7 @@ def select_digest_items(raw, private, want, *, limit, budget_chars, item_max_cha
     дампа памяти `raw` (список dict export()-формы: content/narrative/title + timestamp).
 
     `private` — приватный scope проекта (первым в выдаче); `want` — видимые scope'ы
-    (приватный + ns:*/global по recall_scopes). Алгоритм (2026.07.12-CONTEXT-ECONOMY D10, P1.1):
+    (приватный + ns:*/global по recall_scopes). Алгоритм:
     1) фильтр по scope-маркеру/want + дедуп + ecosystem-link cross-ref (как раньше) →
        партиция private_rows/shared_rows, каждая отсортирована свежее-сверху;
     2) кандидаты = весь private + shared[:shared_max] (дефолт shared_max=0 → shared не
@@ -707,7 +706,7 @@ def select_digest_items(raw, private, want, *, limit, budget_chars, item_max_cha
 def _cmd_digest(env, config, argv):
     """Компактный дайджест памяти проекта для SessionStart-хука (additionalContext).
     ДЕТЕРМИНИРОВАННО (не семантика): берём ВСЕ факты scope'ов проекта через list+фильтр по
-    scope-маркеру, приоритет приватному, свежее сверху, байт-бюджет (2026.07.12-CONTEXT-ECONOMY D10, P1.1) — по
+    scope-маркеру, приоритет приватному, свежее сверху, байт-бюджет — по
     умолчанию project-only (shared_max=0), shared — явно флагом/конфигом. ХУК-БЕЗОПАСНО:
     демон лёг / scope не определён → молча пусто, без die."""
     opts, _ = parse_args(argv, {"--project": "str", "--scope": "str", "--limit": "str",

@@ -97,7 +97,7 @@ class TestNextFormsEnum(TmpPlanTestCase):
     def test_typed_waiting_owner_handoff_passes_continuity_gate(self):
         import json
         from task import plan_continuity
-        plan_dir = write_valid_plan(self.root, "2026.09.27-OWNER-WAIT")
+        plan_dir = write_valid_plan(self.root, "2026.09.27-DEMO-OWNER-WAIT")
         handoff = plan_dir / "handoff.md"
         decision = plan_continuity.evaluate(
             route_attested=True, context_attested=True, batch_receipt_valid=True,
@@ -277,7 +277,7 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
 
 class TestExecutableRoutingTableBoundary(TmpPlanTestCase):
     def _plan(self, suffix):
-        plan_dir = write_valid_plan(self.root, "2026.09.10-№1-ROUTING", layout="v2")
+        plan_dir = write_valid_plan(self.root, "2026.09.10-№1-DEMO-ROUTING", layout="v2")
         routing = (
             "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
@@ -306,7 +306,7 @@ class TestExecutableRoutingTableBoundary(TmpPlanTestCase):
 
 
 class TestContinuityHandoffGate(TmpPlanTestCase):
-    PLAN_ID = "2026.09.09-№1-CONTINUITY"
+    PLAN_ID = "2026.09.09-№1-DEMO-CONTINUITY"
 
     def _plan(self, context, suffix="BASE"):
         from task import plan_bundle, plan_status
@@ -446,7 +446,7 @@ class TestWaitingForm(TmpPlanTestCase):
 
     def test_waiting_resolves_before_exec_no_item_ref_error(self):
         # целевой /task:plan-exec … P9.9 в ОБЪЯВЛЕНИИ не должен резолвиться как exec и ловить
-        # ERROR по несуществующему item'у — форма waiting перехватывает резолвер раньше (D8).
+        # ERROR по несуществующему item'у — форма waiting перехватывает резолвер раньше.
         plan_dir = write_valid_plan(self.root)
         ho = self._waiting_handoff(target="/task:plan-exec DEMO-1 P9.9")
         (plan_dir / "handoff.md").write_text(ho, encoding="utf-8")
@@ -546,10 +546,10 @@ class TestArchivePlansNotPhantomPlan(TmpPlanTestCase):
 
     def test_pre_cutover_v2_archive_is_inert_for_root_wide_validation(self):
         write_valid_plan(self.root, "DEMO-1")
-        archived_dir = self._write_archived_plan("2026.08.02-OLD")
+        archived_dir = self._write_archived_plan("2026.08.02-DEMO-OLD")
         text = (archived_dir / "plan.md").read_text(encoding="utf-8")
         (archived_dir / "plan.md").write_text(
-            text.replace("| Plan ID | 2026.08.02-OLD |\n", ""), encoding="utf-8")
+            text.replace("| Plan ID | 2026.08.02-DEMO-OLD |\n", ""), encoding="utf-8")
 
         found = discover_plan_dirs(self.root / "plans")
 
@@ -716,7 +716,7 @@ class TestSemanticNextCarrier(TmpPlanTestCase):
 
 
 class TestPlansRoot(TmpPlanTestCase):
-    """Root-level проверки (path = plans/ целиком): ACTIVE.md + черновики (P1.5)."""
+    """Root-level проверки (path = plans/ целиком): ACTIVE.md + черновики."""
 
     def _plans_root(self):
         return self.root / "plans"
@@ -876,7 +876,7 @@ class TestDiscoveryAndCli(TmpPlanTestCase):
 
 
 class TestDuplicateItemFieldGate(unittest.TestCase):
-    """D90 (2026.07.31-SKM-LEAN P5.9) — `**Поле:**`-строка внутри свободной прозы другого
+    """D90 — `**Поле:**`-строка внутри свободной прозы другого
     поля (напр. Completion Notes) молча подменяла приёмочное значение: и `plan_lint`, и
     `task_contract` берут ПОСЛЕДНЕЕ вхождение ключа. Воспроизведено на P2.2 2026-07-31
     (`research/10-validation-acceptance-form-2026-07-31.md`)."""

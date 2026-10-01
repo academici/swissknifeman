@@ -230,7 +230,7 @@ def compile_slice(repo_root: str | Path, plan_dir: str | Path, item_id: str, *, 
     if revision == 1 and supersedes is not None:
         raise CompileRefusal("REPLAN_SUPERSEDES_REQUIRED")
     manifest["content_hash"] = sha256_bytes(canonical_bytes({key: value for key, value in manifest.items() if key != "content_hash"}))
-    # Re-observe the pins immediately before returning a publishable candidate.
+    # Re-observe the pins immediately before returning a publishable manifest.
     if _source_hashes(root, plan, phase, item, s2) != source_hashes:
         raise CompileRefusal("SOURCE_DRIFT")
     return manifest

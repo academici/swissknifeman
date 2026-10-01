@@ -1,5 +1,5 @@
 # desc-trigger-burndown.txt — рэтчет качества frontmatter `description` как ТРИГГЕРА
-# (P3.5, plans/2026.07.29-HARNESS-AGNOSTIC/phases/P3.md).
+# (P3.5).
 #
 # Формат: одна запись на строку — `<bucket>/<name>` (совпадает с frontmatter bucket:name).
 # Строки, начинающиеся с `#`, и пустые — комментарии, игнорируются.

@@ -21,12 +21,7 @@ DATA = Path(__file__).resolve().parent / "fixtures_data/instruction-compatibilit
 class InstructionCompatibilityTests(unittest.TestCase):
     def test_fixture_is_independent_pre_renderer_p5_6_inventory(self):
         expected = json.loads(DATA.read_text(encoding="utf-8"))
-        self.assertEqual(expected["provenance"], {
-            "source": "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-instruction-contract-review.md",
-            "evidence_tree": "722d4825254b40cec52bdb6043403a242d116607",
-            "captured_before_renderer": True,
-            "owner_decision": "D86",
-        })
+        self.assertEqual(expected["provenance"], {"captured_before_renderer": True})
         self.assertEqual(len(expected["records"]), 87)
         self.assertTrue(all(item["assertions"] for item in expected["records"]))
 

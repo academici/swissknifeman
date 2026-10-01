@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:b8a040d8ef0adce9833e66f045ba38f20f5b9b48bf713b700e9eea44e54bf702
+Canonical SHA-256: sha256:3fbad6a15d03d2a915b6966739f9124244cad178dd76dcf7f41ecfadfbc113a3
 Adapter: task.codex-command/1.0.17
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -88,7 +88,7 @@ For `new`/`from-draft` allocate the identity with
 re-run it right before writing the plan directory.
 
 Назначай Short ID и оформляй ссылки по `runtime/plan-protocol/references/work-references.md`
-из установленного пакета Task (`PLAN1.D35`, `PLAN1.P2.3`; legacy: `<PLAN-ID> <local-ID>`).
+из установленного пакета Task (`PLAN<N>.D35`, `PLAN<N>.P2.3`; legacy: `<PLAN-ID> <local-ID>`).
 
 Design completion records exactly one semantic Next. A bounded remediation does not manufacture a
 fresh audit/root; only a concrete context-budget, capability, owner-pause, independent review,

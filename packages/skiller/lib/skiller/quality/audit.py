@@ -341,7 +341,7 @@ def verdict(item, *, overlap_partners, loaded_count, scanned_projects, resident=
       2) thin            — тело-монолит (tier1 >= TIER1_MONOLITH_TOKENS).
       3) dead            — usage-данные ЕСТЬ (scanned_projects>0) И 0 загрузок в окне
                             И скилл НЕ резидентный (см. resident_skill_names) — иначе
-                            keep (2026.07.02-SKM-MASTER-003 P2.2: резидент без skill-вызовов ≠ мёртв, это второй
+                            keep (: резидент без skill-вызовов ≠ мёртв, это второй
                             источник видимости, транскрипт-скан его просто не ловит).
       4) retrieval-only  — заметное тело (>= TIER1_LARGE_TOKENS) при редком
                             использовании (<= LOW_USAGE_MAX_LOADS, включая «нет данных»).

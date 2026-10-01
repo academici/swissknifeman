@@ -82,8 +82,7 @@ an interview question, it's a given).
 This table is the skill's SSOT — the `/task:make-workflow` command and its
 output reviewer cite THIS table, not their own copy; fix drift here only.
 
-**Don't invent mandatory stages beyond this table** (source: `roadmap/
-workflow-craft.md` §1.5 + `packages/task/workflows/README.md`) — if it seems
+**Don't invent mandatory stages beyond this table** (source: `packages/task/workflows/README.md`) — if it seems
 like another mandatory stage is needed, propose a matrix edit explicitly,
 don't quietly bolt it onto one script.
 
@@ -150,8 +149,8 @@ The run-report field `workflow_relaunch` (harness detector `_lib.py`, fires at
 ≥3 launches/resumes of one workflow in one session) is not a core-tool bug:
 `resumeFromRunId` after an `Edit` to the script is a documented, sanctioned
 pattern ("the longest unchanged prefix of agent() calls returns cached
-results instantly"). Field precedent (`plans/archive/2026.07.15-TELEMETRY-OPT/
-findings/P1-workflow-rootcause.md`): a dterema session called `Workflow` 15×
+results instantly"). Field precedent (
+): a dterema session called `Workflow` 15×
 in a row — not "relaunch without a signal", but **8 rounds of fixing the
 workflow script from inside the main interactive session** (relative-path
 bug, top-level `return`, gate prompt missing scope, docblock/formatting,

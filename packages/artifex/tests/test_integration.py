@@ -2,32 +2,32 @@ from __future__ import annotations
 
 import json
 import subprocess
-import tempfile
 import unittest
 from pathlib import Path
 
+from support import FIXTURE_PLAN
 
-ROOT = Path(__file__).resolve().parents[3]
-PLAN = ROOT / "plans" / ("2026" + ".08.03-ARTIFEX-SUPERVISOR")
-ARTIFEX = ROOT / "packages/artifex"
+
+ARTIFEX = Path(__file__).resolve().parents[1]
 
 
 class IntegrationTests(unittest.TestCase):
     def invoke(self, *args):
-        return subprocess.run(["python3", "-m", "artifex", *args], cwd=ROOT, text=True, capture_output=True,
+        return subprocess.run(["python3", "-m", "artifex", *args], cwd=ARTIFEX, text=True, capture_output=True,
                               env={"PYTHONPATH": str(ARTIFEX / "lib"), "PATH": "/usr/bin:/bin"}, check=False)
 
     def test_not_found_is_read_only_and_provider_free(self):
-        with tempfile.TemporaryDirectory() as temp:
-            run_root = Path(temp) / "runs"
-            result = self.invoke("--repo-root", ".", "--plan-dir", str(PLAN.relative_to(ROOT)), "--runs-root", str(run_root.relative_to(Path(temp))) if False else "plans/" + PLAN.name + "/runs", "status", "--run-id", "DOES-NOT-EXIST")
+        runs = FIXTURE_PLAN / "runs"
+        result = self.invoke("--repo-root", ".", "--plan-dir", str(FIXTURE_PLAN.relative_to(ARTIFEX)),
+                             "--runs-root", str(runs.relative_to(ARTIFEX)), "status", "--run-id", "DOES-NOT-EXIST")
         self.assertEqual(3, result.returncode)
         self.assertEqual("RUN_NOT_FOUND", json.loads(result.stdout)["reason"])
         self.assertEqual("", result.stderr)
+        self.assertFalse(runs.exists())
 
-    def test_p2_core_remains_provider_free_and_cli_only_exposes_selection(self):
-        # P3.4 may add an explicit provider selector to the existing CLI, but the
-        # frozen P2 authority/dispatch/scheduler core never imports or launches one.
+    def test_core_remains_provider_free_and_cli_only_exposes_selection(self):
+        # The CLI may carry an explicit provider selector, but the authority, dispatch
+        # and scheduler core never imports or launches a provider.
         for name in ("dispatch.py", "authority.py", "scheduler.py"):
             source = (ARTIFEX / "lib/artifex" / name).read_text(encoding="utf-8")
             for forbidden in ("providers.", "subprocess", "Popen", "codex", "claude", "input(", "os.environ"):

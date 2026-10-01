@@ -183,7 +183,7 @@ swissknifeman — **зонтик из четырёх пакетов**, а не �
 Каждая `/task:*`-команда пинит `model`/`effort` во frontmatter `packages/task/commands/*.md`,
 перебивая настройки сессии (SSOT-матрица тиров — скилл `general/plan-protocol` §9, здесь **не
 дублируется**, а обосновывается per-command). Секция фиксирует **рационал каждого пина + вердикт
-аудита P3.1** (`plans/archive/2026.07.15-TELEMETRY-OPT/findings/P3-routing-audit.md`) — провенанс, чтобы
+аудита P3.1** — провенанс, чтобы
 не second-guess'ить пины повторно. Ось оптимизации — **токен-экономия** (Opus доминирует по out:
 8.1M vs Sonnet 5.4M — самый дорогой рычаг). Ось downgrade — **только Opus → Sonnet 5**: Fable 5
 дороже Opus (out $50 = 2× Opus, up-tier для frontier-сложности) → как цель-даунгрейда исключён.
@@ -198,7 +198,7 @@ swissknifeman — **зонтик из четырёх пакетов**, а не �
 | **design** | `opus/high` | Синтез research-fanout → durable план/ADR; кросс-источниковое reasoning, SSOT архитектуры (propagates во все проекты). Плохой дизайн тиражируется ecosystem-wide. Fanout уже Sonnet. | **keep-Opus** — correctness-critical, downgrade-risk HIGH, quality-телеметрии нет; Sonnet 5 (~93% Opus) — лишь *плаузибельный* Owner-A/B, не слепой downgrade |
 | **dev** | `sonnet/high` | Opus-пин был тонким планировочным слоем (нарезка вертикальных срезов + risk/blast-radius); impl-субагенты уже Lean-tiered (Sonnet impl / Opus xhigh на HIGH-review / Haiku тривиал). Планирование = coding-agentic домен. | **downgrade-candidate → применён P3.2** (Owner-делегировано): Sonnet 5 par/обгоняет Opus на agentic (80.4 vs 74.6); плохая нарезка recoverable per-slice через review-gate → risk MODERATE |
 | **make-workflow** | `sonnet/high` | Процедурный контур: матчинг 1/4 шаблонов → slot-fill → статический выходной ревьюер (RED блокирует). Низкий open-ended синтез; гейт ловит выпиленные обязательные стадии. | **downgrade-candidate → применён P3.2** (Owner-делегировано): «копия шаблона + слоты + чеклист-гейт», статический ревьюер — safety-net → risk LOW-MODERATE |
-| **plan-design** | `opus/high` | Авторинг мастер-плана; тяжёлая схема/RAG-маркеры/DoR/pre-mortem; SSOT, дешёвая модель исполнит БЕЗ чата. Плохой план → cheap-исполнители падают без чата. | **keep-Opus** — наивысший рычаг, Owner-blessed (D1); downgrade-risk HIGH. Не трогать |
+| **plan-design** | `opus/high` | Авторинг мастер-плана; тяжёлая схема/RAG-маркеры/DoR/pre-mortem; SSOT, дешёвая модель исполнит БЕЗ чата. Плохой план → cheap-исполнители падают без чата. | **keep-Opus** — наивысший рычаг, Owner-blessed; downgrade-risk HIGH. Не трогать |
 | **research** | `opus/high` | Многоисточниковый retrieval + верификация + синтез с цитатами; fanout Sonnet, Opus reduce/синтезирует. | **needs-Owner** — Sonnet 5 near-par, но fidelity цитат + кросс-источниковое reasoning — зона, где Opus чуть впереди. Возможный A/B `sonnet/high` → **OQ-4** (Decision pending), низкий приоритет |
 | **plan-audit** | `opus/xhigh` | Adversarial-аудит закрытой фазы; ~15 finding-типов, no-op-детект, scope-drift, re-run Validation. | **keep-Opus/xhigh** — bug-finding = сильнейшая зона Opus 4.8 («stronger real-bug finding»); недо-аудит пропускает дефекты тихо; xhigh оправдан. Не трогать |
 | **review** | `sonnet/high` | Risk-scaled read-only review: quick для docs/малого diff, standard обычно, adversarial только по наблюдаемой hard-risk boundary. | **downgrade applied** — default review больше не платит за registry-wide conformance и xhigh; отдельный независимый проход остаётся для security/data/concurrency/public-contract риска |

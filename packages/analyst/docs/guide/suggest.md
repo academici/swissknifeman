@@ -1,9 +1,8 @@
-# suggest — cross-project паттерн → черновик скилла (P4)
+# suggest — cross-project паттерн → черновик скилла
 
 `analyst suggest` закрывает разрыв между «нашли межпроектный паттерн» ([scan](./lifecycle#cross-project-scan-p2))
 и «есть переиспользуемый [скилл](/skiller/guide/)». Это детерминированный мост: паттерн →
-**staged-ЧЕРНОВИК** `SKILL.ru.md`, который человек дорабатывает и промоутит. Полный дизайн-документ —
-[`roadmap/analyst-suggest-draft-skill.md`](/roadmap) в корне репо.
+**staged-ЧЕРНОВИК** `SKILL.ru.md`, который человек дорабатывает и промоутит. Дальнейшие направления — [roadmap](/roadmap).
 
 ```
 analyst suggest <pattern_id> | --all [--bucket B] [--min-weight N] [--dry-run] [--json] [--force]

@@ -28,12 +28,12 @@
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",
-    "by": "2026.07.31-SKM-LEAN P5.1",
+    "by": "vendor audit",
     "upstream_sha": "f21b1850f0499f91d67021ebe44e7042c4c25a2bb028d457a97b4c958b6f0612"
   },
   "local_adaptation": {
     "at": "2026-09-14",
-    "reason": "tasks/2026.09.14-skills-and-task-audit W3/W6",
+    "reason": "skills audit",
     "strategy_note": "notify preserves reviewed local adaptations; upstream changes remain reported, not auto-applied."
   }
 }

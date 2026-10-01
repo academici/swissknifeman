@@ -313,11 +313,11 @@ class PlanWorkTests(unittest.TestCase):
     def test_dated_plan_cannot_disable_gate_by_removing_sheet_marker(self):
         from task import plan_readiness
 
-        historical = self.plan.parent / "2026.09.22-EXISTING"
+        historical = self.plan.parent / "2026.09.22-DEMO-EXISTING"
         historical.mkdir()
         (historical / "roadmap.md").write_text("# ordinary roadmap\n")
         self.assertFalse(plan_readiness.design_gate_enabled(historical))
-        dated = self.plan.parent / "2026.09.24-NEW"
+        dated = self.plan.parent / "2026.09.24-DEMO-NEW"
         dated.mkdir()
         (dated / "roadmap.md").write_text("# ordinary roadmap\n")
         self.assertTrue(plan_readiness.design_gate_enabled(dated))

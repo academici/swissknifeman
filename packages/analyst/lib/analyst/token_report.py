@@ -1,4 +1,4 @@
-"""analyst token-report — токен-репорт по срезам (model/role) + двухслойный baseline (2026.07.02-SKM-MASTER-002 P4.1).
+"""analyst token-report — токен-репорт по срезам (model/role) + двухслойный baseline.
 
 Источник — `<project>/.claude/analyze/usage-trend.ndjson` (пишет SessionEnd-хук run-report,
 см. `packages/harness/configs/claude-code/hooks/run-report/run-report.py:_append_trend`,
@@ -17,8 +17,8 @@ tools_total, files_changed, agents, wall_s, retr_chars}`.
     первично, `by_model.<model>.median_out` — fallback. Наш файл — надмножество (добавляет
     `median_in`/`p90_out`/`note`/`sessions`/`generated_at`) — maind эти поля просто не читает.
 
-`--vs-baseline` без пина (2026.07.02-SKM-MASTER-003 P2.6, LOW-находка аудита фазы P8 плана
-2026.07.02-SKM-MASTER-002): НЕ ошибка запроса — rolling-отчёт сам
+`--vs-baseline` без пина (LOW-находка аудита фазы P8 плана
+): НЕ ошибка запроса — rolling-отчёт сам
 по себе полон и полезен без сравнения. `cmd_token_report` печатает `warn()` в stderr
 (мягкая деградация, exit=0), тот же паттерн, что у соседних команд при отсутствии
 опциональных данных (`promote.py`: не всплыло в память → warn; `scan.py`: пустой реестр →

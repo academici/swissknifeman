@@ -1,13 +1,13 @@
-"""release — сборка предложения релиза монорепо (2026.07.10-SKM-ROADMAP-005 P5.3, опциональная механизация).
+"""release — сборка предложения релиза монорепо.
 
 Читает `[Unreleased]` корневого `CHANGELOG.md`, классифицирует semver-bump из
 conventional commits со времени последнего umbrella-тега (`vX.Y.Z`) и —
 БЕЗ `--dry-run` — переносит секцию в `[X.Y.Z] - <дата>` + печатает готовую
-команду тега. НИКОГДА не тегает/не пушит сам (D34) и НЕ выводит MAJOR: признак
+команду тега. НИКОГДА не тегает/не пушит сам и НЕ выводит MAJOR: признак
 breaking-изменения — отказ, версия остаётся ручным решением владельца.
 
 Semver-oracle (minor=capability/feat, patch=fix/perf) — из
-`plans/SKM-AUDIT-004/findings/P5-release.md`, НЕ переизобретён здесь.
+an earlier audit, NOT reinvented here.
 stdlib-only, `Env` передаётся явно (тестируемо в tmpdir)."""
 import re
 import sys

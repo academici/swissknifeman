@@ -7,10 +7,10 @@ import unittest
 
 from artifex.providers import claude_code, codex, parity
 from artifex.providers.common import AdapterRefusal
+from support import FIXTURE_PLAN as PLAN
 
 
 ROOT = Path(__file__).resolve().parents[3]
-PLAN = ROOT / "plans" / ("2026" + ".08.03-ARTIFEX-SUPERVISOR")
 PARITY = PLAN / "artifacts/P3/provider-parity-v1.json"
 CASES = PLAN / "artifacts/P3/provider-parity-cases-v1.json"
 ROUTING = ROOT / "packages/task/configs/command-routing.json"

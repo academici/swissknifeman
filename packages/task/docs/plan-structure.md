@@ -95,7 +95,7 @@ fresh owner-bound admission остаётся recommendation, а не автом�
 (парсится `plan-lint`); плоские `.md` прямо в `plans/` — черновики plan mode,
 разворачиваются `/task:plan-design from-draft <файл>`.
 
-## Historical journal exception (D51)
+## Historical journal exception
 
 `journal-exceptions.jsonl` optional and append-only: it never carries an event, status, or Next.
 It may waive only an exact historical `friction` schema failure when the target physical line, raw
@@ -172,7 +172,7 @@ Exported-контракт, обязан в том же bookkeeping-коммит�
 заданием, чтобы холодная сессия исполнила его без чата. Enum тиров, оба кода отказа
 (`PORTABILITY_INPUT_MISSING`, `PORTABILITY_EXTERNAL_INPUT`), блок `privacy` и пара
 `semantic_carrier`/`provider_renderers` принадлежат Task Contract v1; **правило
-классификации** — Plan Portability v1 (оба контракта — план `2026.07.24-AGENT-RELIABILITY`,
+классификации** — Plan Portability v1 (оба контракта — план,
 `root/contracts/`).
 
 ```text
@@ -277,7 +277,7 @@ runnable successor.
 Новый план хранит в Meta `Short ID | PLAN1`, отдельное файловое задание — `Short ID: TASK1`
 в заголовке документа. Номера постоянны и уникальны по репозиторию в своей серии,
 включая архив; дневной № в имени папки остаётся отдельным номером.
-Вне папки работы ссылки имеют вид `PLAN1.D35`, `PLAN1.P2.3`, `TASK1.D2`; между проектами —
-`swissknifeman:PLAN1.D35`. Старые планы без Short ID используют полный ID перед локальной
+Вне папки работы ссылки имеют вид `PLAN<N>.D35`, `PLAN<N>.P2.3`, `TASK<N>.D2`; между проектами —
+`swissknifeman:PLAN<N>.D35`. Старые планы без Short ID используют полный ID перед локальной
 ссылкой. Команды по-прежнему принимают полный PLAN-ID.
 Канон назначения и ссылок: `plan-protocol/references/work-references.md`.

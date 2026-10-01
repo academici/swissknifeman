@@ -1,21 +1,19 @@
-"""CLI-edge binding of one indexed admission to one bounded provider activity."""
+"""Binds one indexed admission to one bounded provider activity at the CLI edge."""
 from __future__ import annotations
 
-import json
 import hashlib
-import os
-import subprocess
+import json
 import tempfile
 from pathlib import Path
 from typing import Any, Callable
 
-from . import business_dispatch, dispatch, security, worker
+from . import dispatch, security, worker
 from .providers import claude_code, codex, parity
 from .providers.common import AdapterRefusal
 
 
 class ProviderActivityPort:
-    """Run only an already-indexed admission; scheduler remains provider-free."""
+    """Runs only an already-indexed admission; the scheduler stays provider-free."""
 
     def __init__(self, plan_dir: Path, admission: dict[str, Any], *,
                  registry: dict[str, Any] | None = None,
@@ -83,118 +81,3 @@ class ProviderActivityPort:
                 return security.observation(result)
         except (KeyError, TypeError, OSError, security.SecurityRefusal):
             return self._refusal("MAPPING_UNKNOWN")
-
-
-class BusinessProviderActivityPort:
-    """D108-only request projection.
-
-    It deliberately does not run a provider: P5.5 can prove the argv projection
-    without turning one of the fourteen D105 admissions into pilot evidence.
-    """
-
-    def __init__(self, plan_dir: Path, admission: dict[str, Any], *, g2_digest: str,
-                 g2b_digest: str, modules: dict[str, Any] | None = None,
-                 runner: Callable[..., dict[str, Any]] = worker.run,
-                 version_probe: Callable[[str, str], str | None] | None = None) -> None:
-        self.plan_dir = plan_dir.resolve()
-        self.admission = admission
-        self.g2_digest, self.g2b_digest = g2_digest, g2b_digest
-        self.modules = modules or {"codex": codex, "claude-code": claude_code}
-        if set(self.modules) != {"codex", "claude-code"}:
-            raise AdapterRefusal("MAPPING_UNKNOWN")
-        self.runner = runner
-        self.version_probe = version_probe or self._live_version
-
-    def request(self, *, provider_version: str, cwd: Path) -> dict[str, Any]:
-        return business_dispatch.request(self.admission, provider_version=provider_version, cwd=cwd)
-
-    @staticmethod
-    def _live_version(binary: str, _provider_id: str) -> str | None:
-        try:
-            completed = subprocess.run([binary, "--version"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                                       check=False, env={"PATH": os.defpath})
-        except OSError:
-            return None
-        return completed.stdout.decode("utf-8", "replace").strip() or None
-
-    def _prompt(self, row: dict[str, Any]) -> str:
-        files = ", ".join(self.admission["task"]["files"])
-        return (f"Scenario: {row['scenario']} (kind: {row['kind']}). "
-                "Work only in these admission-declared files: " + files
-                + ". A declared file may not exist yet at the base commit; if so, create it "
-                  "there. Implement the bounded repository slice, modify no other path, "
-                  "create no commit, then return only a JSON object satisfying the supplied "
-                  "schema.")
-
-    def run(self, *, cwd: Path, binary: str | None = None) -> dict[str, Any]:
-        """Execute exactly one D105 business admission through a fresh provider process.
-
-        Composes the same admission→argv→activity→schedule shape as
-        ``ProviderActivityPort`` (D108/P5.5), routed through ``build_business_argv``/
-        ``fold_business_records``/``worker.run`` instead of the smoke mapper pair.
-        """
-        provider_id = self.admission["task"]["provider"]
-        adapter = self.modules.get(provider_id)
-        if adapter is None:
-            return {"kind": "provider_unavailable", "reason_code": "MAPPING_UNKNOWN", "process_count": 0}
-        try:
-            resolved_binary = binary or adapter.resolve_binary()
-        except AdapterRefusal as exc:
-            return {"kind": "provider_unavailable", "reason_code": exc.reason, "process_count": 0}
-        if self.version_probe(resolved_binary, provider_id) != adapter.BUSINESS_VERSION:
-            return {"kind": "provider_unavailable", "reason_code": "MAPPING_UNKNOWN", "process_count": 0}
-        try:
-            request = self.request(provider_version=adapter.BUSINESS_VERSION, cwd=cwd)
-            batch = business_dispatch.GRANT_BATCHES.get(self.admission.get("grant", {}).get("owner_decision"))
-            if batch is None:
-                raise business_dispatch.BusinessRefusal("CATALOG_UNAVAILABLE")
-            catalog_path = self.plan_dir / batch["catalog_path"]
-            row = business_dispatch.resolve_task_description(catalog_path, self.admission)
-        except business_dispatch.BusinessRefusal as exc:
-            return {"kind": "provider_unavailable", "reason_code": exc.reason, "process_count": 0}
-        schema = self.plan_dir / "artifacts/P5/business-worker-output-schema-v1.json"
-        mcp_config: Path | None = None
-        try:
-            if provider_id == "codex":
-                argv = adapter.build_business_argv(request, schema_path=schema, cwd=cwd, binary=resolved_binary)
-                stdin = self._prompt(row).encode("utf-8")
-                fold: Callable[[list[str], int], dict[str, Any]] = (
-                    lambda rows, exit_code: adapter.fold_records(rows, request, exit_code=exit_code,
-                                                                  include_economy=True))
-            else:
-                fd, mcp_name = tempfile.mkstemp(prefix="artifex-p5-mcp-", suffix=".json")
-                mcp_config = Path(mcp_name)
-                os.close(fd)
-                mcp_config.write_text('{"mcpServers":{}}', encoding="utf-8")
-                argv = adapter.build_business_argv(request, schema_path=schema, cwd=cwd,
-                                                   mcp_config_path=mcp_config, binary=resolved_binary)
-                argv[-1] = self._prompt(row)
-                stdin = b""
-                fold = lambda rows, exit_code: adapter.fold_business_records(rows, request, exit_code=exit_code)
-        except AdapterRefusal as exc:
-            return {"kind": "provider_unavailable", "reason_code": exc.reason, "process_count": 0}
-        try:
-            result = self.runner(argv, cwd=cwd, env=security.environment({}), stdin=stdin,
-                                timeout_ms=request["budgets"]["timeout_ms"],
-                                max_output_bytes=request["budgets"]["max_output_bytes"],
-                                max_event_count=request["budgets"]["max_event_count"], normalizer=fold)
-            self._fill_wrapper_duration(provider_id, result)
-            return security.observation(result)
-        finally:
-            if mcp_config is not None:
-                mcp_config.unlink(missing_ok=True)
-
-    @staticmethod
-    def _fill_wrapper_duration(provider_id: str, result: dict[str, Any]) -> None:
-        """codex reports no per-turn duration (D123/D127); the wrapper's own measured
-        wall-clock time (``result["duration_ms"]``, already the whole process duration)
-        is the only source, so it is applied here rather than threaded into the
-        provider-neutral ``worker.run`` normalizer contract."""
-        if provider_id != "codex":
-            return
-        economy = result.get("economy")
-        if not isinstance(economy, dict) or not isinstance(economy.get("worker"), dict):
-            return
-        if economy["worker"].get("duration_ms") is None:
-            economy["worker"]["duration_ms"] = result.get("duration_ms")
-            economy.get("unknown_reasons", {}).pop("worker/duration_ms", None)

@@ -330,11 +330,11 @@ def run_conflicts_check(diag):
     _conflicts_layout_v2(skill_lines, skill_path, diag)
 
 
-# --- --baseline: детерминированный счёт новых ошибок (2026.07.13-PLAN-PROTOCOL-GAP P1.2/B1/D5/D6) ---------
+# --- --baseline: детерминированный счёт новых ошибок ---------
 
 def _git_run(args, cwd, timeout=15):
     """`check=False`, перехватывает `FileNotFoundError`/таймаут — линтер обязан
-    работать вне git-репо (гоняют по Brain-vault'у и чужим корням, 2026.07.13-PLAN-PROTOCOL-GAP P1.2 Implementation
+    работать вне git-репо (гоняют по Brain-vault'у и чужим корням, Implementation
     Rules). None — команда не выполнилась вовсе (нет git / таймаут)."""
     try:
         return subprocess.run(["git"] + args, cwd=str(cwd), capture_output=True,

@@ -1,4 +1,4 @@
-"""P3.5 (2026.07.29-HARNESS-AGNOSTIC): validate.sh description-триггер-гейт — description
+"""P3.5: validate.sh description-триггер-гейт — description
 обязано отвечать «когда звать» + burn-down-рэтчет (scripts/desc-trigger-burndown.txt).
 
 Зеркалит test_desc_burndown_gate.py (та же обёртка, тот же приём: реальный запуск

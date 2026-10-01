@@ -12,9 +12,9 @@ Re-run it immediately before writing the plan; concurrent allocations are reconc
 A plan item keeps its existing `Pn.m`; it does not receive a standalone `TASK<N>`.
 
 Outside the owning work directory, qualify every work-specific decision, phase, item or finding:
-`PLAN1.D35`, `PLAN1.P2`, `PLAN1.P2.3`, `PLAN1.F4`, `TASK1.D2`. This applies to code comments, docstrings,
+`PLAN<N>.D35`, `PLAN<N>.P2`, `PLAN<N>.P2.3`, `PLAN<N>.F4`, `TASK<N>.D2`. This applies to code comments, docstrings,
 PRs, reviews, docs and generated text. Inside that directory, bare local IDs are allowed.
-Across repositories, prepend the repository identity: `swissknifeman:PLAN1.D35`.
+Across repositories, prepend the repository identity: `swissknifeman:PLAN<N>.D35`.
 `#` is optional presentation, not part of the ID. Short ID maps directly to its owning document;
 keep it when archiving, renaming a directory or handing off. Do not create comments just to cite work.
 

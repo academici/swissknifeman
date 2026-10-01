@@ -1,6 +1,6 @@
 """journal — append-only писатель пер-планового журнала исполнения
-`plans/<PLAN-ID>/journal.jsonl` (схема 2026.07.18-FOREMAN P1.1 sealed v1,
-`root/contracts/plan-journal-schema.md`) и optional append-only sidecar
+`plans/<PLAN-ID>/journal.jsonl` (схема sealed v1,
+) и optional append-only sidecar
 `journal-exceptions.jsonl` для owner-gated historical schema exceptions.
 
 Одна запись = одна строка валидного JSON (NDJSON, D20). Запись только ДОПИСЫВАЕТСЯ —
@@ -9,7 +9,7 @@
 конкурентные сессии дописывают свою строку без чужого построчного разрыва (git-merge
 разрешается конкатенацией строк, контракт §1).
 
-Вызывается close-протоколом команд `/task:plan-*` (2026.07.18-FOREMAN P1.3) — старт-запись
+Вызывается close-протоколом команд `/task:plan-*` — старт-запись
 (`result="in-progress"`) в начале исполнения item'а, финал-запись (терминальный
 `result` + запечённые cost/turns/duration) при закрытии (контракт §2, «пара записей»).
 
@@ -43,7 +43,7 @@ EXCEPTIONS_FILENAME = "journal-exceptions.jsonl"
 NOTE_MAX_CHARS = 300
 UPDATE_LOG_WHAT_MAX_CHARS = 300
 
-# --- канон схемы 2026.07.18-FOREMAN P1.1 (root/contracts/plan-journal-schema.md §2, §2.1, §2.2) -----
+# --- канон схемы -----
 COMMANDS = ("plan-exec", "plan-run", "plan-close", "plan-audit", "plan-design")
 FRICTION_VALUES = (
     "escalation", "routing-blocked", "route-deviation", "red-audit", "deviation", "retry", "no-op",
@@ -77,7 +77,7 @@ _EXCEPTION_GRANT_RE = re.compile(
 
 
 class JournalValidationError(ValueError):
-    """Запись не прошла schema-валидацию 2026.07.18-FOREMAN P1.1 — `append()` не пишет строку."""
+    """Запись не прошла schema-валидацию — `append()` не пишет строку."""
 
 
 def entry_validation_errors(entry):
@@ -111,7 +111,7 @@ def entry_validation_errors(entry):
 
     _check_str("ts")
     _check_str("plan_id")
-    _check_str("item_id")  # 2026.07.18-FOREMAN P1.1 — всегда set (сужение 2026.07.18-FOREMAN P0.6 str|null, §5)
+    _check_str("item_id") # всегда set (сужение str|null, §5)
     _check_str("session_id", allow_none=True)
     _check_str("run_id", allow_none=True)
     _check_str("actor")
@@ -198,7 +198,7 @@ def _parse_utc(value, *, field="ts"):
 
 
 def validate_entry(entry):
-    """Сверяет event-запись со схемой 2026.07.18-FOREMAN P1.1 (§2), копя все нарушения разом."""
+    """Сверяет event-запись со схемой (§2), копя все нарушения разом."""
     errors = entry_validation_errors(entry)
     if errors:
         raise JournalValidationError("; ".join(message for _, message in errors))
@@ -460,10 +460,10 @@ def new_entry(*, plan_id, item_id, command, actor, result, session_id=None, run_
               attempt=1, friction=(), cost_usd=None, num_turns=None, duration_ms=None,
               note=None, ts=None, trace_ref=None, fingerprint=None, decision=None,
               batch_receipt=None, candidate_snapshot=None, second_full_justification=None):
-    """Собирает запись по схеме 2026.07.18-FOREMAN P1.1 с дефолтами контракта (§2) — единая точка сборки,
+    """Собирает запись по схеме с дефолтами контракта (§2) — единая точка сборки,
     чтобы close-протокол команд не собирал dict вручную по месту россыпью полей.
 
-    `trace_ref` (2026.07.24-AGENT-RELIABILITY P3.1, `root/contracts/unified-agent-trace-v1.md` § Journal reference)
+    `trace_ref`
     — ADDITIVE optional linkage to a Unified Agent Trace `trace_id`, outside
     `REQUIRED_FIELDS`: omitted (`None`, the default) it is not written at all, so
     every caller that does not pass it gets a byte-identical entry to before this
@@ -579,7 +579,7 @@ def _historical_schema_errors(entry):
 def _sidecar_waivers(plan_dir, journal_rows, sidecar_rows):
     """Bind an existing sidecar to exact lines without requiring a later grant marker.
 
-    Decisions accepted before the JOURNAL-EXCEPTION grant (D249) stay authoritative
+    Decisions accepted before the JOURNAL-EXCEPTION grant stay authoritative
     when they name the target item.  A decision that already carries grants must
     match one of them; a sha or field mismatch never becomes a waiver.
     """
@@ -859,13 +859,13 @@ def main(argv=None):
         return 1
     actor = args.actor
     if args.route_evidence is not None:
-        # Lazy import (task_contract.evaluate_finding 2026.07.24-AGENT-RELIABILITY P2.3 pattern): journal.py's own
+        # Lazy import (task_contract.evaluate_finding pattern): journal.py's own
         # schema/writer stay importable without task.route_evidence on the path.
         from task.route_evidence import RouteEvidenceError, canonical_actor
         try:
             evidence = json.loads(Path(args.route_evidence).read_text(encoding="utf-8"))
             # D72/F8: canonical_actor now reads the concrete `model` evidence field
-            # (2026.07.24-AGENT-RELIABILITY P2.6), never `model_class` — a historical evidence blob predating
+            # never `model_class` — a historical evidence blob predating
             # this item simply lacks "model" and renders `unknown/<effort>`.
             actor = canonical_actor(evidence.get("model"), evidence.get("effort"))
         except (OSError, UnicodeDecodeError, json.JSONDecodeError, KeyError,

@@ -194,7 +194,7 @@ class TestNumberedPlanIdentity(TmpPlanTestCase):
 
     def test_same_day_ordinal_must_be_unique_across_active_and_archive(self):
         plan_dir = self._numbered()
-        archived = self.root / "plans" / "archive" / "2026.08.12-№1-OLD"
+        archived = self.root / "plans" / "archive" / "2026.08.12-№1-DEMO-OLD"
         shutil.copytree(plan_dir, archived)
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "дублирует порядковый номер"), diag.errors)
@@ -212,7 +212,7 @@ class TestNumberedPlanIdentity(TmpPlanTestCase):
 
     def test_numbered_plan_codename_excludes_ordinal(self):
         from task.plan_lint import _plan_codename
-        self.assertEqual(_plan_codename("2026.08.12-№12-TASK-RESILIENCE"), "task-resilience")
+        self.assertEqual(_plan_codename("2026.08.12-№12-DEMO-PLAN"), "demo-plan")
 
     def test_numbered_plan_id_round_trips_through_unicode_cli(self):
         plan_dir = self._numbered()
@@ -558,7 +558,7 @@ class TestStalePhaseHandoff(TmpPlanTestCase):
     def test_nonterminal_phase_with_closure_claim_warns(self):
         plan_dir = self._write_reopened_phase(self.STALE_TEXT)
         _, diag = _lint(plan_dir)
-        self.assertTrue(diag.ok, diag.errors)  # именно WARNING, не ERROR (D34)
+        self.assertTrue(diag.ok, diag.errors) # именно WARNING, не ERROR
         self.assertEqual(len(self._stale_warnings(diag)), 1, diag.warnings)
         self.assertIn("> УСТАРЕЛ — фаза реопенена <D#>", self._stale_warnings(diag)[0])
 
@@ -580,11 +580,11 @@ class TestStalePhaseHandoff(TmpPlanTestCase):
                 shutil.rmtree(plan_dir.parent)
 
     # --- P3.7/D50 (J1): гейт судит по СУБЪЕКТУ утверждения, а не по встреченному слову.
-    # Обе фикстуры — ДОСЛОВНЫЕ формы флота (findings/P3-reopen-gates-and-fleet.md §1),
+    # Обе фикстуры — ДОСЛОВНЫЕ формы флота,
     # не «удобные» синтетические строки: ровно на них гейт разошёлся с истиной.
 
     def test_honest_interim_handoff_is_silent(self):
-        """themeon/2026.07.12-BASE/P5: первая строка ОТРИЦАЕТ закрытие фазы, а слово
+        """themeon//P5: первая строка ОТРИЦАЕТ закрытие фазы, а слово
         «Терминальны» относится к ITEMS → ложно-положительный WARNING (J1, Blocker)."""
         plan_dir = self._write_reopened_phase(
             "**Фаза P5 НЕ закрыта.** Терминальны только P5.1 и P5.2 (2/10); P5.3–P5.10 (8/10) — "
@@ -632,7 +632,7 @@ class TestHandoffMd(TmpPlanTestCase):
         self.assertTrue(_errors_containing(diag, "нет заголовка «# HANDOFF"))
 
     def test_handoff_title_after_item_valid(self):
-        # форма `after Pn.m` (закрыт item) — базовая, остаётся валидной (D30)
+        # форма `after Pn.m` (закрыт item) — базовая, остаётся валидной
         plan_dir = write_valid_plan(self.root)
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)

@@ -28,7 +28,7 @@ Fixed commands and launch-blocks pin **one** default selector per class. The mod
 ### `claude-code`
 
 - `verified_at`: `2026-09-17`
-- `source`: claude --help @ 2.1.266 + command-routing.json D84
+- `source`: claude --help @ 2.1.266
 - `verification`: cli-help-and-frozen-mapping; no machine-readable catalogue exists; 2026-10-01 pool extended by owner (fable, overlapping roles, family patterns)
 
 | Model id | Roles | Notes |
@@ -41,8 +41,8 @@ Fixed commands and launch-blocks pin **one** default selector per class. The mod
 ### `codex`
 
 - `verified_at`: `2026-09-23`
-- `source`: plans/2026.07.19-DUAL-PROVIDER/plan.md#D84 and Codex provider thread state
-- `verification`: frozen D84 mapping; gpt-6-sol observed in provider thread state; no machine-readable catalogue exists; 2026-10-01 pool extended by owner (gpt-6.1-sol frontier, overlapping roles)
+- `source`: docs/provider-support.md and Codex provider thread state
+- `verification`: frozen mapping; gpt-6-sol observed in provider thread state; no machine-readable catalogue exists; 2026-10-01 pool extended by owner (gpt-6.1-sol frontier, overlapping roles)
 
 | Model id | Roles | Notes |
 |:--|:--|:--|

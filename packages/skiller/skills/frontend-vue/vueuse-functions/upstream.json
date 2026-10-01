@@ -1606,13 +1606,13 @@
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",
-    "by": "2026.07.31-SKM-LEAN P5.1",
+    "by": "vendor audit",
     "upstream_sha": "e833f58780207770088609af97b35d72d14bfa9a3cf7389fa345d142007630c3"
   },
   "body_path": "references/catalog.md",
   "local_adaptation": {
     "at": "2026-09-14",
-    "reason": "tasks/2026.09.14-skills-and-task-audit W6",
+    "reason": "skills audit",
     "catalog": "references/catalog.md",
     "reference_policy": "unchanged per-function reference bytes"
   }

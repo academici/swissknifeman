@@ -356,11 +356,11 @@ class PlanDeliveryTests(unittest.TestCase):
         self.assertEqual(receipt["continuity"]["reason"], "owner-pause-no-resume")
 
     def test_terminal_phase_design_handoff_requires_typed_reentry(self):
-        plan = write_valid_plan(self.root, "2026.09.09-№1-REENTRY", layout="v2")
+        plan = write_valid_plan(self.root, "2026.09.09-№1-DEMO-REENTRY", layout="v2")
         handoff = plan / "handoff.md"
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
-            "/task:plan-exec 2026.09.09-№1-REENTRY P1.1",
-            "/task:plan-design 2026.09.09-№1-REENTRY P1"), encoding="utf-8")
+            "/task:plan-exec 2026.09.09-№1-DEMO-REENTRY P1.1",
+            "/task:plan-design 2026.09.09-№1-DEMO-REENTRY P1"), encoding="utf-8")
         with self.assertRaisesRegex(plan_delivery.DeliveryError,
                                     "PHASE_REENTRY_UNJUSTIFIED"):
             plan_delivery.build_handoff_receipt(plan, "design")
@@ -379,14 +379,14 @@ class PlanDeliveryTests(unittest.TestCase):
         self.assertIn("plan-design", receipt["next_exact"])
 
     def test_generated_design_handoff_rejects_a_ready_unfinished_phase(self):
-        plan = write_valid_plan(self.root, "2026.09.14-№1-READY", layout="v2")
+        plan = write_valid_plan(self.root, "2026.09.14-№1-DEMO-READY", layout="v2")
         state = plan / "phases" / "P1" / "P1.1.state.md"
         state.write_text(state.read_text(encoding="utf-8").replace(
             "🟢 Done", "⬜ Not started"), encoding="utf-8")
         handoff = plan / "handoff.md"
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
-            "/task:plan-exec 2026.09.14-№1-READY P1.1",
-            "/task:plan-design 2026.09.14-№1-READY P1"), encoding="utf-8")
+            "/task:plan-exec 2026.09.14-№1-DEMO-READY P1.1",
+            "/task:plan-design 2026.09.14-№1-DEMO-READY P1"), encoding="utf-8")
         with self.assertRaisesRegex(plan_delivery.DeliveryError, "PLAN_DESIGN_NOT_NEEDED"):
             plan_delivery.build_handoff_receipt(plan, "design")
 

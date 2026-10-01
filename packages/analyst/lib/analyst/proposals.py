@@ -1,4 +1,4 @@
-"""analyst proposals (2026.07.02-SKM-MASTER-002 P4.3) — черновики СИСТЕМНЫХ предложений улучшений.
+"""analyst proposals — черновики СИСТЕМНЫХ предложений улучшений.
 
 Мост между тем, что analyst НАБЛЮДАЕТ (digest/scan/ingest — данные о конкретном проекте/
 паттерне), и тем, что улучшить стоило бы НА УРОВНЕ ЭКОСИСТЕМЫ: стек-пак (`stack-pack`),
@@ -16,7 +16,7 @@ override целевого проекта (`project-override`) или докум�
 plan-design; этот модуль лишь копит черновик и печатает handoff-последовательность
 «что и куда применить» (см. `handoff_lines`/`build_handoff_lines`).
 
-Writer edit-safe как в `suggest.py` (D6): тело — детерминированная функция входа (без
+Writer edit-safe как в `suggest.py`: тело — детерминированная функция входа (без
 timestamp — иначе seed_sha256-детект ручных правок ложно срабатывал бы на каждый ре-create).
 Статус живёт ТОЛЬКО в proposal.meta.json (текущий указатель) — смена статуса НЕ переписывает
 тело и не двигает файл между каталогами (в отличие от lessons.move_lesson: `<type>/<id>/`
@@ -55,7 +55,7 @@ _HANDOFF_STEPS = {
         "валидация — стандартный dev-loop целевого проекта",
     ),
     "docs": (
-        "правки — в целевой документации: docs/reference.md · roadmap/ (зонтик) или "
+        "правки — в целевой документации: docs/reference.md · docs/roadmap.md (зонтик) или "
         "packages/<pkg>/docs/ (per-package, standalone-сборка); analyst НЕ пишет в docs/",
         "per-package правки — при необходимости прогнать scripts/docs-sync.sh (зонтичный агрегат)",
         "если предложение про сам пакет analyst — отметить в packages/analyst/CLAUDE.md",
@@ -115,7 +115,7 @@ def build_proposal_md(ptype, pid, title, summary, body, target):
 
 
 def _seed_hash(text):
-    """sha256-хэш тела — маркер «сгенерённого» состояния для детекта ручных правок (D6)."""
+    """sha256-хэш тела — маркер «сгенерённого» состояния для детекта ручных правок."""
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
@@ -204,7 +204,7 @@ def audit_append(env, record):
 
 # ── writer с edit-safety (I/O, как suggest.write_draft) ──────────────────────
 def write_proposal(env, ptype, title, *, summary="", body="", target="", force=False):
-    """Записать/обновить черновик предложения в proposals/<type>/<id>/. Edit-safe (D6):
+    """Записать/обновить черновик предложения в proposals/<type>/<id>/. Edit-safe:
     - каталога/файла нет            → создать (status="created", meta.status="draft");
     - тело совпадает с генерённым    → нечего менять (status="unchanged");
     - тело == прошлый seed (не правили) либо --force → перегенерить (status="updated"/"forced");

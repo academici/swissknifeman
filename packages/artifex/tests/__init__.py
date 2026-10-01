@@ -1,1 +1,1 @@
-"""Tests for the plan-local Artifex prototype."""
+"""Artifex package tests."""

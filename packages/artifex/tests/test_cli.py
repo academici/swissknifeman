@@ -3,18 +3,17 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
 from artifex import cli, store
+from support import FIXTURE_PLAN
 
 
-PLAN_SOURCE = Path(__file__).resolve().parents[3] / "plans" / "2026.08.03-ARTIFEX-SUPERVISOR" / "artifacts/P1/supervisor-run-cases-v1.json"
-PLAN = Path(__file__).resolve().parents[3] / "plans" / "2026.08.03-ARTIFEX-SUPERVISOR"
-G2 = "ef08406d7ca630d46e9e9e8bca0d10ea73b141d984615bded75f19d7eea13f09"
-G2B = "1" * 64
+PLAN_SOURCE = FIXTURE_PLAN / "artifacts/P1/supervisor-run-cases-v1.json"
 
 
 class CliTests(unittest.TestCase):
@@ -65,10 +64,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual((2, "UNRESOLVED_INTENT_MISSING"), (code, result["reason"]))
 
     def test_dispatch_requires_an_indexed_matching_ready_run(self):
-        source_plan = Path(__file__).resolve().parents[3] / "plans" / "2026.08.03-ARTIFEX-SUPERVISOR"
         target = self.repo / "plan"
-        import shutil
-        shutil.rmtree(target); shutil.copytree(source_plan, target)
+        shutil.rmtree(target); shutil.copytree(FIXTURE_PLAN, target)
         admission = json.loads((target / "artifacts/P2/p3-smoke-admissions/codex.json").read_text(encoding="utf-8"))
         run_id = admission["dispatch"]["run_id"]
         rules, states, events = cli._rules(target)
@@ -90,10 +87,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual((2, "UNKNOWN_SCHEMA_VERSION"), (code, result["reason"]))
 
     def test_explicit_provider_uses_activity_port_not_default_refusal_port(self):
-        source_plan = Path(__file__).resolve().parents[3] / "plans" / "2026.08.03-ARTIFEX-SUPERVISOR"
         target = self.repo / "plan"
-        import shutil
-        shutil.rmtree(target); shutil.copytree(source_plan, target)
+        shutil.rmtree(target); shutil.copytree(FIXTURE_PLAN, target)
         admission = json.loads((target / "artifacts/P2/p3-smoke-admissions/codex.json").read_text(encoding="utf-8"))
         run_id = admission["dispatch"]["run_id"]
         rules, states, events = cli._rules(target)
@@ -106,50 +101,3 @@ class CliTests(unittest.TestCase):
         with mock.patch("artifex.cli.scheduler.DefaultActivityPort", side_effect=AssertionError("fallback")):
             code, result = self.call("dispatch", "--run-id", run_id, "--provider", "codex", "--admission", "plan/artifacts/P2/p3-smoke-admissions/codex.json")
         self.assertEqual((0, "provider_unavailable", 0), (code, result["status"], result["process_count"]))
-
-
-class BusinessDispatchIntentCliTests(unittest.TestCase):
-    """D118 CLI wiring: dispatch-business stays validate-only; the new seam runs only on demand."""
-
-    def setUp(self):
-        import shutil
-        self.temp = tempfile.TemporaryDirectory()
-        self.repo = Path(self.temp.name) / "repo"
-        shutil.copytree(PLAN, self.repo / "plan")
-
-    def tearDown(self):
-        self.temp.cleanup()
-
-    def call(self, *tail):
-        stream = io.StringIO()
-        with contextlib.redirect_stdout(stream):
-            code = cli.main(["--repo-root", str(self.repo), "--plan-dir", "plan", "--runs-root", "plan/runs", *tail])
-        return code, json.loads(stream.getvalue())
-
-    def test_dispatch_business_stays_validate_only_and_never_touches_the_seam(self):
-        admission = "plan/artifacts/P5/trial-admissions/p5.2-slice-01-worktree-core.json"
-        with mock.patch("artifex.cli.activity.BusinessProviderActivityPort", side_effect=AssertionError("seam touched")):
-            code, result = self.call("dispatch-business", "--admission", admission,
-                                     "--g2-predecessor", G2, "--g2b-successor", G2B)
-        self.assertEqual((0, False), (code, result["intent_written"]))
-
-    def test_dispatch_business_intent_runs_the_seam_and_shapes_the_result(self):
-        admission = "plan/artifacts/P5/trial-admissions/p5.2-slice-01-worktree-core.json"
-        cwd = self.repo / "worktree"; cwd.mkdir()
-        fake_port = mock.Mock()
-        fake_port.run.return_value = {"kind": "success", "reason_code": "OK", "process_count": 1}
-        with mock.patch("artifex.cli.activity.BusinessProviderActivityPort", return_value=fake_port) as ctor:
-            code, result = self.call("dispatch-business-intent", "--admission", admission,
-                                     "--g2-predecessor", G2, "--g2b-successor", G2B, "--cwd", str(cwd))
-        self.assertEqual((0, True), (code, result["intent_written"]))
-        self.assertEqual("p5.2-slice-01-worktree-core", result["trial_id"])
-        fake_port.run.assert_called_once_with(cwd=cwd.resolve(), binary=None)
-        ctor.assert_called_once()
-
-    def test_dispatch_business_intent_refuses_pin_mismatch_before_touching_the_seam(self):
-        admission = "plan/artifacts/P5/trial-admissions/p5.2-slice-01-worktree-core.json"
-        cwd = self.repo / "worktree"; cwd.mkdir()
-        with mock.patch("artifex.cli.activity.BusinessProviderActivityPort", side_effect=AssertionError("seam touched")):
-            code, result = self.call("dispatch-business-intent", "--admission", admission,
-                                     "--g2-predecessor", "0" * 64, "--g2b-successor", G2B, "--cwd", str(cwd))
-        self.assertEqual((2, "G2_PREDECESSOR_MISMATCH"), (code, result["reason"]))

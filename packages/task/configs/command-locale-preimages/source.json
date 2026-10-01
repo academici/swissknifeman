@@ -1,6 +1,0 @@
-{
-  "repository": "academici/swissknifeman",
-  "commit": "980ee79d968e8440ab57b1cb36f986e7bae7bd88",
-  "source_paths": ["packages/task/commands/plan-exec.md", "packages/task/commands/plan-run.md"],
-  "purpose": "Frozen internal command-locale preimages, byte-checked by command_locale._PREIMAGE_DIGESTS without requiring Git history in installed plugin runtimes."
-}

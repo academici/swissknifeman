@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""P8.4 docs-impact gate conformance tests (2026.07.25-ECO-OPT)."""
+"""P8.4 docs-impact gate conformance tests."""
 from __future__ import annotations
 
 import importlib.util
@@ -52,7 +52,7 @@ class DocsImpactTests(unittest.TestCase):
     def test_f_non_surface_paths_are_never_triggers(self):
         entries = [
             ("A", "packages/maind/tests/test_x.py"),
-            ("A", "plans/2026.07.25-ECO-OPT/research/99.md"),
+            ("A", "plans/DEMO-1/research/99.md"),
             ("A", "CHANGELOG.md"),
             ("A", "packages/skiller/skills/general/plan-protocol/SKILL.md"),
         ]

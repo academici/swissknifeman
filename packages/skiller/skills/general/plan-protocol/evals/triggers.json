@@ -1,7 +1,7 @@
 {
   "skill": "plan-protocol",
   "should_trigger": [
-    "execute item P3.5 of the 2026.07.31-SKM-LEAN master plan",
+    "execute item P3.5 of the master plan",
     "start a new executable plan for the resident-diet initiative in plans/"
   ],
   "should_not": [

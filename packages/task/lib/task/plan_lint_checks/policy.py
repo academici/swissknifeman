@@ -25,13 +25,13 @@ def _plan_declares_committed_bundle_tier(plan_dir):
 
 
 def _lint_tiered_portability_22(plan_dir, plan_id, all_items, phases, diag):
-    """2026.07.24-AGENT-RELIABILITY P2.2/D26/D47: план tier=committed-bundle (что верно для любого исполняемого
+    """: план tier=committed-bundle (что верно для любого исполняемого
     мастер-плана по конструкции, см. `_plan_declares_committed_bundle_tier`) обязан
     нести ≥1 committed/predecessor-produced execution input и не содержать внешний
     (host/chat/mAInd/tmp/foreign) путь В РОЛИ execution input — иначе `plan_lint`
     отказывает (`task_contract.PORTABILITY_INPUT_MISSING`/`PORTABILITY_EXTERNAL_INPUT`).
     Датовые планы от PORTABILITY_TIER_CANON_DATE — ERROR, старее/legacy — WARNING
-    (back-compat, тот же паттерн, что у brief/roadmap/journal-гейтов)."""
+    (back-compat, тот же паттерн, что у brief, roadmap и journal-гейтов)."""
     if not _plan_declares_committed_bundle_tier(plan_dir):
         return
     report = (diag.error if (PLAN_ID_DATED_RE.match(plan_id)
@@ -54,8 +54,8 @@ def _lint_tiered_portability_22(plan_dir, plan_id, all_items, phases, diag):
                f"item'е (PORTABILITY_INPUT_MISSING)")
 
 
-# --- 2026.07.24-AGENT-RELIABILITY P4.4/D91: машинный гейт напечатанных кодов границ (ремонт находки Ф2) ------
-# findings/P3.11-terminal-audit-2.md § Ф2, событие 2 из 2: канон уже требовал печати ОБОИХ
+# --- машинный гейт напечатанных кодов границ (ремонт находки Ф2) ------
+# канон уже требовал печати ОБОИХ
 # кодов write-site (`plan-audit.md` чеклист), но проверка была НЕ машинной — пять items
 # подряд (P3.6-P3.10) прошли аудит перепрогоном предиката ВРУЧНУЮ (все пять → allow/allow),
 # сама ЗАПИСЬ в Completion Notes осталась отсутствующей. Якорь скоупа — ДАТА ITEM'а
@@ -75,13 +75,13 @@ WRITE_SITE_CODES_V2_CANON_DATE = "2026-08-12"
 ITEM_UPDATED_ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # Канон кодов — `task_contract.evaluate()`: `pre_mutation` ∈ {allow, block:<CODE>};
 # `pre_final` ∈ {allow, block:<CODE>, n/a} (D76: `n/a` — НЕ зелёное).
-# --- 2026.07.25-ECO-OPT P10.1/D88/D102: каноническая строка вместо re.search по всему полю --------
+# --- каноническая строка вместо re.search по всему полю --------
 # Старая форма (`WRITE_SITE_PRE_MUTATION_RE.search(clean)` по ВСЕМУ Completion Notes)
 # ошибалась в ОБЕ стороны: (1) fail-open — item без своих кодов, но ЦИТИРУЮЩИЙ чужие в
 # прозе, проходил гейт; (2) ложный ERROR — item со своими `allow`, процитировавший ВЫШЕ
 # по тексту `block:*`/`n/a` чужого item'а, краснел, потому что `search` берёт ПЕРВОЕ
 # вхождение. Обе цены реальны с даты активации гейта. Починка: ОДНА каноническая строка
-# `write-site: pre_mutation: <код> · pre_final: <код>` (D88) — коды item'а живут ТОЛЬКО
+# `write-site: pre_mutation: <код> · pre_final: <код>` — коды item'а живут ТОЛЬКО
 # на строке с этим префиксом; прозаические цитаты на других строках гейт не видит.
 WRITE_SITE_LINE_FORM = "write-site: pre_mutation: <код> · pre_final: <код>"
 _WRITE_SITE_CODE = r"(allow|n/a|block:[A-Za-z0-9_]+)"
@@ -92,7 +92,7 @@ WRITE_SITE_CODE_PAIR_RE = re.compile(
 
 
 def _write_site_canonical_codes(completion_notes):
-    """Находит каноническую строку `write-site:` (D88) в Completion Notes и
+    """Находит каноническую строку `write-site:` в Completion Notes и
     возвращает `(pre_mutation, pre_final)` — ПОСТРОЧНО (поле парсер отдаёт
     многострочным), а не `re.search` по всему полю. Markdown-обёртка строки
     (бэктики, `**`, ведущие `- `/`> `, пробелы) срезается ДО матча — форма печати
@@ -118,7 +118,7 @@ def _write_site_canonical_codes(completion_notes):
 
 
 def _lint_write_site_codes_44(status_table, items, path, diag):
-    """2026.07.24-AGENT-RELIABILITY P4.4/D91 (ремонт находки Ф2), точность — 2026.07.25-ECO-OPT P10.1/D88/D102: item со статусом
+    """ (ремонт находки Ф2), точность —: item со статусом
     🟢/🟠, чей `Updated` ISO-датирован после layout-specific forward-only cutoff
     (`WRITE_SITE_CODES_CANON_DATE` для v1, `WRITE_SITE_CODES_V2_CANON_DATE` для v2),
     обязан нести каноническую строку `write-site:` (см. `_write_site_canonical_codes`)
@@ -157,7 +157,7 @@ def _lint_write_site_codes_44(status_table, items, path, diag):
                        f"«{status_val}» — закрытие на не-allow (D76)")
 
 
-# --- 2026.07.25-ECO-OPT P8.1/D42: отчёт закрытия фазы `closure/<Pn>.json` (схема v1) --------------
+# --- отчёт закрытия фазы `closure/<Pn>.json` (схема v1) --------------
 # Класс свидетельства фазы не фиксировался нигде: `Phase Handoff` — проза плюс git-хеш, и
 # синтетика читается как результат (research/11-P8-target-design.md §1). Отчёт закрытия —
 # машиночитаемый файл на фазу, ВКЛЮЧАЕТСЯ opt-in полем `## 0. Meta` → `Closure Protocol | v1`:
@@ -168,10 +168,10 @@ def _lint_write_site_codes_44(status_table, items, path, diag):
 # У КАЖДОГО хеша схемы назван потребитель (иначе «provenance theatre», §9.6): `git.head_sha` —
 # якорь чисел §8 канона; `inputs_sha256` — детект правки ТЗ фазы после закрытия (`plan-audit`).
 CLOSURE_META_FIELD = "Closure Protocol"
-CLOSURE_PROTOCOL_V1 = "v1"  # ЕДИНСТВЕННОЕ легальное значение поля (D42)
+CLOSURE_PROTOCOL_V1 = "v1" # ЕДИНСТВЕННОЕ легальное значение поля
 CLOSURE_DIR_NAME = "closure"
 CLOSURE_SCHEMA_VERSION = 1
-# Класс свидетельства — enum РОВНО из трёх (D42): на каких ДАННЫХ получен результат.
+# Класс свидетельства — enum РОВНО из трёх: на каких ДАННЫХ получен результат.
 # НЕ путать с закрытым перечнем классов ДОКАЗАТЕЛЬСТВА `recomputed`/`cross-checked`/
 # `pinned-not-recomputable`/`unknown` (`source-evidence-verification-v1.md`, другая ось —
 # выводимо ли утверждение из коммиченного bundle'а): оба словаря действуют, ни один не
@@ -191,7 +191,7 @@ CLOSURE_LIST_KEYS = ("items", "gates", "metrics", "limitations", "external_side_
 
 
 def _closure_report_path(plan_dir, phase_id):
-    """Дом отчёта закрытия — `plans/<PLAN-ID>/closure/<Pn>.json` (D42)."""
+    """Дом отчёта закрытия — `plans/<PLAN-ID>/closure/<Pn>.json`."""
     return Path(plan_dir) / CLOSURE_DIR_NAME / f"{phase_id}.json"
 
 
@@ -314,7 +314,7 @@ def _closure_lint_correspondence(data, report_path, phase_id, parsed_phase, boar
 
 
 def _lint_closure_reports_81(plan_dir, plan_id, meta, phases, board_by_phase, diag):
-    """2026.07.25-ECO-OPT P8.1/D42, все пять проверок отчёта закрытия. Активация — opt-in Meta-поле
+    """, все пять проверок отчёта закрытия. Активация — opt-in Meta-поле
     `Closure Protocol | v1`: без него функция молчит целиком (аддитивность). Проверка 2 —
     фаза терминальна, поле включено, файла нет → ERROR с ОЖИДАЕМЫМ ПУТЁМ (fail-closed
     называет объект). Нетерминальная фаза отчёта не обязана иметь; но ЕСЛИ файл лежит —
@@ -348,7 +348,7 @@ def _lint_closure_reports_81(plan_dir, plan_id, meta, phases, board_by_phase, di
                                      board_row, diag)
 
 
-# --- 2026.07.25-ECO-OPT P8.2/D103-D105: `Consequences` в D-записи (research/11 §2, research/23) ---
+# --- -D105: `Consequences` в D-записи (research/11 §2, research/23) ---
 # Носитель — инлайн-подполе `**Consequences:**` внутри ячейки `Решение` (пятая колонка
 # отклонена: шапка D-лога — литерал реестра CANON_LITERALS, её правка = переписывание
 # шапки во всех планах флота, D43). Гейт — ОПТ-IN ДВАЖДЫ (та же дисциплина, что у
@@ -371,14 +371,14 @@ CONSEQUENCES_DATE_PREFIX_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})")
 # ОТРИЦАНИЕ «не отменяет»/«не отменена» (ложный ERROR). Негативный lookbehind
 # `(?<!не )` СНИМАТЬ НЕЛЬЗЯ: без него 4 из 6 срабатываний на этом же плане ложные
 # (D11/D19/D26 и др., research/23 §1). Стем-лист держать УЗКИМ — три семантики, не
-# десять слов (Code Guidance 2026.07.25-ECO-OPT P8.2): каждый лишний стем — риск ложного ERROR на сотнях
+# десять слов (Code Guidance): каждый лишний стем — риск ложного ERROR на сотнях
 # планов флота.
 CONSEQUENCES_STEMS_RE = re.compile(
     r"supersedes D|отменяет D|(?<!не )отмен(?:ён|ен|ена|ено|ены)\b")
 
 
 def _lint_consequences_82(plan_dir, plan_id, meta, plan_lines, plan_md, diag):
-    """2026.07.25-ECO-OPT P8.2/D103-D105: ячейка `Решение` строки `## 5. Decision Log`, матчащая
+    """-D105: ячейка `Решение` строки `## 5. Decision Log`, матчащая
     CONSEQUENCES_STEMS_RE (отмена/замена решения) и датированная (`Дата`) ≥
     CONSEQUENCES_CANON_DATE, обязана нести `**Consequences:**` — иначе ERROR с
     номером D-записи (fail-closed называет объект). Активация — ДВОЙНОЙ opt-in:
@@ -440,10 +440,10 @@ def _lint_consequences_82(plan_dir, plan_id, meta, plan_lines, plan_md, diag):
                        f"с {CONSEQUENCES_CANON_DATE}, D103)")
 
 
-# --- 2026.07.25-ECO-OPT P8.3/D44: `CHECKPOINTED` — отказ несёт точную команду возобновления ------
+# --- `CHECKPOINTED` — отказ несёт точную команду возобновления ------
 # Носитель — строка `Возобновление: <команда>` в поле `Pending Work` item'а (НЕ седьмой
 # статус, НЕ семнадцатое поле — оба варианта отклонены D44, ломают контракт трёх живых
-# планов/`packages/task/scripts/cross-plan-files.py`). Активация — тот же opt-in, что у 2026.07.25-ECO-OPT P8.1/P8.2:
+# планов/`packages/task/scripts/cross-plan-files.py`). Активация — тот же opt-in, что у:
 # Meta-поле `Closure Protocol | v1` (без даты-канона — на дату детализации в этом плане
 # живых 🔴/⛔ items с включённым протоколом нет, задним числом красить нечего).
 STATUS_SKIPPED = "⛔ Skipped by decision"
@@ -467,7 +467,7 @@ def _find_resume_line(pending_work):
 
 
 def _lint_checkpointed_83(meta, items, path, diag):
-    """2026.07.25-ECO-OPT P8.3/D44: item со статусом `🔴 Blocked` обязан нести в Pending Work непустую
+    """: item со статусом `🔴 Blocked` обязан нести в Pending Work непустую
     строку `Возобновление: <команда>` (форма `Возобновление: — (внешний блокер: …)` —
     легальное «непусто» для блокера без локального шага, Code Guidance P8.3); item со
     статусом `⛔ Skipped by decision` обязан нести РОВНО `Возобновление: —` И ссылку
@@ -497,9 +497,9 @@ def _lint_checkpointed_83(meta, items, path, diag):
                            f"решение о пропуске обязано быть предъявлено D-записью (D44)")
 
 
-# --- 2026.07.25-ECO-OPT P11.3/D129: кросс-документный чек `handoff.md` ↔ «## 4. Phase Index
+# --- кросс-документный чек `handoff.md` ↔ «## 4. Phase Index
 # & Status Board» (F8 аудита P9: handoff соврал `P9 4/4`, доска несла `2/4`, права доска).
-# Дом — plan_lint.py, не verify-plan-citations.py (D129): это согласованность двух секций ОДНОГО
+# Дом — plan_lint.py, не verify-plan-citations.py: это согласованность двух секций ОДНОГО
 # плана, не резолв пути/цитаты — обратное решение размыло бы оба инструмента (`research/27-…`
 # §2.4, Scope Excluded P10.2 остаётся в силе). Forward-only по ДАТЕ ЗАГОЛОВКА handoff'а
 # (та же дисциплина, что WRITE_SITE_CODES_CANON_DATE/CONSEQUENCES_CANON_DATE): handoff старше
@@ -510,13 +510,13 @@ HANDOFF_BOARD_CANON_DATE = "2026-07-28"
 HANDOFF_TITLE_DATE_RE = re.compile(r"^#\s+HANDOFF\s+—\s*(\d{4}-\d{2}-\d{2})\s+—")
 # Узкий шаблон намеренно (Code Guidance P11.3, анти-самообман): РОВНО `Pn a/b` — не «33/44»,
 # не проценты, не голая проза «закрыто 4 из 4». Замер (`findings/P11-citation-gate-
-# measurements.md` §4) — 3 вхождения на трёх живых планах, 1 расхождение (F8), 0 ложных;
+# measurements.md` §4) — 3 вхождения на трёх живых планах, 1 расхождение, 0 ложных;
 # расширение на прозу вернуло бы шум, который узость сегодня держит на нуле.
 HANDOFF_BOARD_REF_RE = re.compile(r"\bP(\d+)\s+(\d+)/(\d+)\b")
 
 
 def _lint_handoff_board_113(handoff, handoff_path, plan_id, board_by_phase, diag):
-    """2026.07.25-ECO-OPT P11.3/D129: каждое вхождение `Pn a/b` в handoff.md обязано совпадать
+    """: каждое вхождение `Pn a/b` в handoff.md обязано совпадать
     со значением колонки `STATUS_BOARD_ITEMS_COL` строки `Pn` доски «## 4. Phase Index &
     Status Board»; расхождение — диагностика, называющая ОБЕ стороны. Фаза `Pn`, отсутствующая
     в доске, — «висячая ссылка». Непарсимая/более старая дата заголовка handoff'а — МОЛЧАНИЕ
@@ -550,7 +550,7 @@ def _lint_handoff_board_113(handoff, handoff_path, plan_id, board_by_phase, diag
                        f"(расхождение)")
 
 
-# --- 2026.07.13-PLAN-PROTOCOL-GAP P2.16/D35: реестр непереводимых литералов (H3) ---------------------------
+# --- реестр непереводимых литералов (H3) ---------------------------
 # ЕДИНСТВЕННЫЙ источник строк, которые линтер сверяет с ТЕКСТОМ ПЛАНА байт-в-байт.
 # Дисциплина (гейт — tests/test_canon_literals.py):
 #   * `CANON_LITERALS` — строка, которую протокол ТРЕБУЕТ писать дословно (шапки таблиц,
@@ -595,20 +595,20 @@ CANON_LITERALS = (
     LITERAL_WAITING,                                          # форма `Next` «ОЖИДАНИЕ» (SKILL §8, D8)
     LITERAL_AUDIT_VERDICT,                                    # шапка вердикта `## Audit Pn` (§8)
     *SCOPE_PAYLOAD_MARKERS,                                   # scope-payload launch-block'а (§8)
-    "pre_mutation:",                                          # write-site код границы (§8, 2026.07.24-AGENT-RELIABILITY P4.4/D91)
+    "pre_mutation:", # write-site код границы (§8)
     "pre_final:",                                             # write-site код границы (§8, P4.4/D91)
-    "write-site:",                                            # каноническая строка (§8, 2026.07.25-ECO-OPT P10.1/D102:
+    "write-site:", # каноническая строка (§8,:
                                                                # T1 латиницу не ловит, регистрация решением)
     CLOSURE_META_FIELD,                                       # Meta-поле активации отчёта закрытия
-                                                               # (§8, 2026.07.25-ECO-OPT P8.1/D42: латиница — та же
+                                                               # (§8,: латиница — та же
                                                                # регистрация решением, что у write-site:)
-    CONSEQUENCES_LITERAL,                                     # §6, 2026.07.25-ECO-OPT P8.2/D103-D105: латиница — та же
+    CONSEQUENCES_LITERAL, # §6, -D105: латиница — та же
                                                                # регистрация решением, T1 её не ловит
-    RESUME_LITERAL,                                           # §6, 2026.07.25-ECO-OPT P8.3/D44: кириллица — обязательна
+    RESUME_LITERAL, # §6,: кириллица — обязательна
                                                                # i18n-директива в EN-only SKILL.md
     "Команда",                                                # legacy reader compatibility (LAUNCH_COMMAND_ROW_RE)
 )
-# --- 2026.07.15-PLANFLOW-UX P2.1/D8: C2-детектор прозы-оговорки в объявлении `Next` (WARNING) ----------
+# --- C2-детектор прозы-оговорки в объявлении `Next` (WARNING) ----------
 # Автор пишет runnable slash-форму «команда есть, но не сейчас» вместо структурной формы
 # «ОЖИДАНИЕ: <условие> → <целевая форма>» (recon §3.2, живой SKM-MASTER-002). Стем-лист
 # УЗКИЙ и финализирован по замеру ДЕЛЬТЫ флота (§8 D53), не «на глаз»: каждый лишний стем —
@@ -632,9 +632,9 @@ CONFLICTS_ANCHOR_LAUNCH_TABLE = "| Параметр | Значение |"
 CONFLICTS_ANCHOR_LAYOUT_V2 = "Layout v2 carrier contract"
 
 # Эвристики: `оркестрац`/`мультиагент` — детект заявленной оркестрации (ORCHESTRATION_MARKER_RE,
-# D29); `PHASE_HANDOFF_CLOSURE_LITERALS` — детект «блок утверждает закрытие фазы» (D34);
-# `PHASE_HANDOFF_NEGATION_LITERALS` — детект отрицания в том же утверждении (D50); C2-стемы
-# (кириллические) — детект прозы-оговорки в `Next` (D8); CONFLICTS_ANCHOR_* — см. комментарий
+# D29); `PHASE_HANDOFF_CLOSURE_LITERALS` — детект «блок утверждает закрытие фазы»;
+# `PHASE_HANDOFF_NEGATION_LITERALS` — детект отрицания в том же утверждении; C2-стемы
+# (кириллические) — детект прозы-оговорки в `Next`; CONFLICTS_ANCHOR_* — см. комментарий
 # выше. Все группы ищут СМЫСЛ в прозе автора/канона, а не канонический токен для стороннего
 # читателя ⇒ присутствие в EN не требуется (i18n-keep не нужен).
 HEURISTIC_LITERALS = (("оркестрац", "мультиагент") + PHASE_HANDOFF_CLOSURE_LITERALS
@@ -643,7 +643,7 @@ HEURISTIC_LITERALS = (("оркестрац", "мультиагент") + PHASE_H
                       + (CONFLICTS_ANCHOR_STATUSES, CONFLICTS_ANCHOR_ITEM_FIELDS,
                          CONFLICTS_ANCHOR_NEXT_FORMS, CONFLICTS_ANCHOR_CONTEXT,
                          CONFLICTS_ANCHOR_LAUNCH_TABLE, CONFLICTS_ANCHOR_LAYOUT_V2)
-                      # 2026.07.25-ECO-OPT P8.2/D103-D105: стемы CONSEQUENCES_STEMS_RE — детектор НАМЕРЕНИЯ
+                      # -D105: стемы CONSEQUENCES_STEMS_RE — детектор НАМЕРЕНИЯ
                       # (отмена/замена решения) в свободной прозе D-лога; EN-канон их не
                       # несёт и нести не обязан (research/23 §3).
                       + ("отменяет", "отменён", "отменен", "отменена", "отменено", "отменены"))

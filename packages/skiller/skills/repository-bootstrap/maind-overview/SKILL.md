@@ -101,7 +101,7 @@ other projects' memory/graph are unreachable (scope reduces to `recall_scopes`: 
 
 ## Provenance (root-bootstrap, P1.2)
 
-Class-A private/source-only root-bootstrap identity (D31/D38, `plans/2026.07.24-AGENT-RELIABILITY`):
+Class-A private/source-only root-bootstrap identity (D31/D38):
 canonical source is this `SKILL.md`; thin projections —
 `.claude/skills/maind-overview/SKILL.md` and `.agents/skills/maind-overview/SKILL.md` (generated
 by `skiller registry`, never hand-edited). Bucket `repository-bootstrap` is private/source-only:

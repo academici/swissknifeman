@@ -18,7 +18,7 @@ Task и длинные workflow вызываются только для зад�
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
 ### Поддержка провайдеров (generated)
 
-Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `a38bb141a8583f4b83010da399d88ca1ae68cf8757cedfcb8ec339040119b6f0`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Подробности и операции: [provider support](docs/provider-support.md).
+Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `cec032979b131fda6314a5e4ae0803ee75508f1c1f31dcf26c36a727c2206315`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Подробности и операции: [provider support](docs/provider-support.md).
 
 | Capability | Claude Code | Codex | Cursor |
 |:--|:--:|:--:|:--:|
@@ -125,7 +125,6 @@ analyst <cmd>                 # continuous learning (digest, scan, review, promo
   [роутинг источников/задач](docs/routing.md) · [референсы](docs/reference.md).
 - Пакеты: [скиллы](packages/skiller/docs/) · [окружение](packages/harness/docs/) ·
   [память и граф](packages/maind/docs/) · [continuous learning](packages/analyst/README.md).
-- Развитие: [`roadmap/`](roadmap/) — реализованные спеки называют результат без ссылки (см. `roadmap/README.md`).
 
 ## Разработка
 

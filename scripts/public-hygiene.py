@@ -5,6 +5,7 @@
 Источник списка — `git ls-files` (индекс), не `os.walk` (P8.6, перенос raytsystem
 public_hygiene.py).
 """
+import hashlib
 import re
 import subprocess
 import sys
@@ -55,9 +56,49 @@ CONTENT_EXEMPT = {
     "packages/maind/tests/test_provider_deploy.py":
         "точный исторический preimage D108/D115, sha256 которого закреплён в provider_deploy.py",
 }
-# Рабочие документы (планы, roadmap, задания): sha256-запечатаны, подлежат выводу из публичного дерева
-# (tasks/2026.10.01-task-lean-execution/REVISION-private-working-docs.md). До решения не сканируются.
-CONTENT_EXEMPT_PREFIXES = ("plans/", '"plans/', "roadmap/", "tasks/", ".cursor/plans/")
+# Sealed measurement evidence: its text is the measured input, so rewriting it would falsify the measurement.
+CONTENT_PLAN_EXEMPT = {
+    "packages/task/configs/calibration-probe-log-v2.json":
+        "sealed provider-probe measurement; sample text is hash-bound input",
+}
+# The exemption holds only while the sealed file is byte-identical to the reviewed one.
+CONTENT_PLAN_EXEMPT_SHA256 = {
+    "packages/task/configs/calibration-probe-log-v2.json": "16cacebfb6d44dc51d678d875fccef1fd427f0e8c9f1c4bc70f4b30650242d14",
+}
+
+# Working documents are local-only; nothing tracked may live under or point into them.
+WORKING_DOC_DIRS = ("plans/", "roadmap/", "tasks/", ".cursor/plans/")
+# Concrete plan identity: dated plan ID, Short-ID citation, or a link into the working directories.
+# Synthetic fixture IDs are namespaced `DEMO...` and are allowed.
+PLAN_REFERENCE_RULES = [
+    (re.compile(r"20\d\d\.[01]\d\.[0-3]\d-(?:№\d+-)?(?!DEMO(?:-|\b))[A-Z]"), "concrete plan ID"),
+    (re.compile(r"PLAN\d+\.[DPF]\d"), "Short-ID plan citation"),
+    (re.compile(r"(?<![\w<{./-])(?:roadmap|tasks)/(?![<{])[\w.№-]"), "link into a working directory"),
+    (re.compile(r"(?<![\w<{./-])plans/(?:archive/)?(?:20\d\d\.[01]\d\.[0-3]\d-(?:№\d+-)?)?(?!DEMO)[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+"),
+     "path into a plan directory"),
+]
+
+
+def plan_reference_violations(paths, read=None):
+    """Tracked files must not sit in working directories or reference concrete plans."""
+    read = read or _read_text
+    found = [(path, "tracked working document (plans/, roadmap/, tasks/, .cursor/plans/ are local-only)")
+             for path in paths if path.startswith(WORKING_DOC_DIRS)]
+    for path in paths:
+        if path.startswith(WORKING_DOC_DIRS):
+            continue
+        text = read(path)
+        if path in CONTENT_PLAN_EXEMPT:
+            if text is not None and hashlib.sha256(text.encode("utf-8")).hexdigest() != CONTENT_PLAN_EXEMPT_SHA256[path]:
+                found.append((path, "sealed measurement changed; exemption no longer applies"))
+            continue
+        if text is None:
+            continue
+        for pattern, reason in PLAN_REFERENCE_RULES:
+            match = pattern.search(text)
+            if match:
+                found.append((f"{path} ({match.group(0)})", reason))
+    return found
 
 
 def content_violations(paths, read=None):
@@ -65,7 +106,7 @@ def content_violations(paths, read=None):
     read = read or _read_text
     found = []
     for path in paths:
-        if path in CONTENT_EXEMPT or path.startswith(CONTENT_EXEMPT_PREFIXES):
+        if path in CONTENT_EXEMPT:
             continue
         text = read(path)
         if text is None:
@@ -126,7 +167,7 @@ def check(paths):
 
 def main(argv):
     paths = list_tracked_files()
-    violations = check(paths) + content_violations(paths)
+    violations = check(paths) + content_violations(paths) + plan_reference_violations(paths)
     if violations:
         for path, reason in violations:
             print(f"{path} — запрещено правилом «{reason}»")

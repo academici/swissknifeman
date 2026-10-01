@@ -13,25 +13,25 @@ from harness.run import worker
 class BuildArgvTest(unittest.TestCase):
     def test_literal_argv_for_implementation_medium(self):
         argv = worker.build_argv(
-            "2026.07.31-SKM-LEAN", "P4.3",
+            "2026.07.31-DEMO-PLAN", "P4.3",
             model_class="implementation", effort="medium",
             monorepo_root=REPO_ROOT, claude_bin="/usr/bin/fake-claude")
         self.assertEqual(argv, [
-            "/usr/bin/fake-claude", "-p", "/task:plan-exec 2026.07.31-SKM-LEAN P4.3",
+            "/usr/bin/fake-claude", "-p", "/task:plan-exec 2026.07.31-DEMO-PLAN P4.3",
             "--output-format", "json", "--model", "sonnet", "--effort", "medium",
         ])
 
     def test_unknown_model_class_is_worker_unavailable(self):
         with self.assertRaises(worker.WorkerUnavailable):
             worker.build_argv(
-                "2026.07.31-SKM-LEAN", "P4.3",
+                "2026.07.31-DEMO-PLAN", "P4.3",
                 model_class="not-a-class", effort="medium",
                 monorepo_root=REPO_ROOT, claude_bin="/usr/bin/fake-claude")
 
     def test_missing_routing_carrier_is_worker_unavailable(self):
         with self.assertRaises(worker.WorkerUnavailable):
             worker.build_argv(
-                "2026.07.31-SKM-LEAN", "P4.3",
+                "2026.07.31-DEMO-PLAN", "P4.3",
                 model_class="implementation", effort="medium",
                 monorepo_root="/definitely/not/a/monorepo/root", claude_bin="/usr/bin/fake-claude")
 
@@ -39,7 +39,7 @@ class BuildArgvTest(unittest.TestCase):
 class RunOutcomeTest(unittest.TestCase):
     def _run(self, fixture_name, *, timeout=worker.DEFAULT_TIMEOUT):
         return worker.run(
-            "2026.07.31-SKM-LEAN", "P4.3",
+            "2026.07.31-DEMO-PLAN", "P4.3",
             model_class="implementation", effort="medium",
             monorepo_root=REPO_ROOT, claude_bin=str(FAKE_CLAUDE / fixture_name),
             timeout=timeout)
@@ -84,7 +84,7 @@ class RunOutcomeTest(unittest.TestCase):
         os.environ[worker.CLAUDE_BIN_ENV] = "/definitely/not/a/real/claude-binary"
         try:
             with self.assertRaises(worker.WorkerUnavailable):
-                worker.run("2026.07.31-SKM-LEAN", "P4.3",
+                worker.run("2026.07.31-DEMO-PLAN", "P4.3",
                           model_class="implementation", effort="medium",
                           monorepo_root=REPO_ROOT, claude_bin=None)
         finally:

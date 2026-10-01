@@ -25,7 +25,7 @@
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",
-    "by": "2026.07.31-SKM-LEAN P5.10",
+    "by": "vendor audit",
     "upstream_sha": "eea73cb6dd46fee9faec9973e8e7fe198b5f07ec326f14d276a56e50287e1cab",
     "note": "attention §3.1 (правила поведения приходили из сети) снят ремедиацией P5.10: payload vercel вендорен pristine-копией под sha256 на пинованном коммите 4e799d45, сетевых инструкций в canonical SKILL.md нет, триаж по бандлу — ноль находок"
   }

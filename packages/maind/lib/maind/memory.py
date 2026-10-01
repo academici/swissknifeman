@@ -651,7 +651,8 @@ def _truncate_item(text, max_chars):
 
 def select_digest_items(raw, private, want, *, limit, budget_chars, item_max_chars, shared_max):
     """Pure function (without I/O/Env) — selection of facts for SessionStart-digest from raw
-    memory dump `raw` (list dict export()-forms: content/narrative/title + timestamp).
+    memory dump `raw` (list dict export()-forms: content/narrative/title + timestamp|updatedAt|createdAt;
+    records with isLatest=false are skipped).
 
     `private` — private scope project (first in search results); `want` — visible scope's
     (private + ns:*/global by recall_scopes). Algorithm:
@@ -669,6 +670,8 @@ def select_digest_items(raw, private, want, *, limit, budget_chars, item_max_cha
     Returns (items: list[str], dropped: int)."""
     seen, priv_rows, shared_rows = set(), [], []
     for m in raw:
+        if m.get("isLatest") is False:      # superseded version — a newer record replaces it
+            continue
         text = m.get("content") or m.get("narrative") or m.get("title") or ""
         sc, clean = split_scope(text)
         clean = (clean or "").strip()
@@ -678,7 +681,9 @@ def select_digest_items(raw, private, want, *, limit, budget_chars, item_max_cha
         if sc != private and clean.startswith("[maind:ecosystem-link]") and " → " in clean:
             continue
         seen.add(clean)
-        ts = m.get("timestamp") or ""
+        # agentmemory 0.9.x dumps updatedAt/createdAt (no `timestamp`); without a key the
+        # sort keeps dump order (oldest first) and the digest serves the stalest facts.
+        ts = m.get("timestamp") or m.get("updatedAt") or m.get("createdAt") or ""
         (priv_rows if sc == private else shared_rows).append((ts, clean))
     priv_rows.sort(key=lambda r: r[0], reverse=True)     # fresh on top
     shared_rows.sort(key=lambda r: r[0], reverse=True)

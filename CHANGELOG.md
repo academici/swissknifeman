@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **maind memory digest:** the SessionStart digest sorted by a `timestamp` field that agentmemory 0.9.x
+  never returns (records carry `updatedAt`/`createdAt`), so it kept dump order and injected the oldest
+  facts instead of the freshest. It now sorts by `updatedAt`/`createdAt` and skips superseded
+  (`isLatest=false`) records. `maind` 0.4.10.
+
 ## [0.26.0] - 2026-10-01
 
 ### Fixed

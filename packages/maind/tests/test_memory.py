@@ -150,6 +150,22 @@ class TestDigestSelection(unittest.TestCase):
     def _row(self, scope, text, ts):
         return {"content": memory.mark_scope(scope, text), "timestamp": ts}
 
+    def test_real_dump_shape_sorts_by_updated_at_and_skips_superseded(self):
+        # agentmemory 0.9.x export: updatedAt/createdAt, no `timestamp`; oldest-first dump order
+        def rec(text, created, updated, **extra):
+            return {"content": memory.mark_scope("project:p", text), "createdAt": created,
+                    "updatedAt": updated, **extra}
+        raw = [
+            rec("old fact", "2026-06-01T00:00:00Z", "2026-06-01T00:00:00Z"),
+            rec("replaced fact", "2026-06-02T00:00:00Z", "2026-06-02T00:00:00Z", isLatest=False),
+            rec("fresh fact", "2026-09-01T00:00:00Z", "2026-09-01T00:00:00Z", isLatest=True),
+        ]
+        items, dropped = memory.select_digest_items(
+            raw, "project:p", {"project:p"}, limit=8, budget_chars=4000,
+            item_max_chars=500, shared_max=0)
+        self.assertEqual(items, ["fresh fact", "old fact"])
+        self.assertEqual(dropped, 0)
+
     def test_item_truncated_by_word_with_suffix(self):
         raw = [self._row("project:p", "word " * 200, "2026-01-01T00:00:00Z")]
         items, dropped = memory.select_digest_items(

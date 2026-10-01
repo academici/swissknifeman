@@ -143,7 +143,11 @@ def cmd_bump(args: argparse.Namespace) -> int:
         versions["units"][name] = target
         PUBLICATION_VERSIONS.write_text(json.dumps(versions, indent=2, ensure_ascii=False) + "\n",
                                         encoding="utf-8")
-        print(f"{name}: {current} -> {target} (packages/skiller/configs/publication-versions.json)")
+        touched = ["packages/skiller/configs/publication-versions.json"]
+        static = Path("packages/skiller") / name / ".claude-plugin/plugin.json"  # hand-kept plugin manifest
+        if set_json_version(ROOT / static, target):
+            touched.append(str(static))
+        print(f"{name}: {current} -> {target} ({', '.join(touched)})")
     else:
         sys.exit(f"ERROR: unknown unit {name}")
     print("next: skiller registry, then version-guard.py status")

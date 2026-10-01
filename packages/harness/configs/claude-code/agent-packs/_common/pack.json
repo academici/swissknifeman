@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "_common",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Stack-agnostic orchestrator-subagent: delegate-only tech-lead, reads the available project roles and produces a machine-readable plan (Task N -> @<prefix>-<role>) with modes Sequential/Parallel-max2/Gated. Stretches as general prerequisite stack packs (backend-laravel/node-frontend/dart-flutter/python-backend).",
   "stack": {
     "shape": "agnostic"

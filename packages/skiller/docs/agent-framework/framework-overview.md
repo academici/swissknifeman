@@ -14,11 +14,11 @@ Statuses: ✅ yes · 🔜 in progress (plan phase) · ⏸ deferred.
 - ✅ **agent-packs** — versioned packs (`harness/configs/claude-code/agent-packs/<pack>/`):
   `pack.json` (semver) + `CHANGELOG.md` + agents/workflows/hooks/settings/docs.
   Per-pack version. Installation/upgrade — agent-driven via skill `system/agent-packs`.
-  Ten live packs (`configs/claude-code/agent-packs/backend-laravel/pack.json` 0.12.2,
-  `_common/pack.json` 0.5.0, `dart-flutter/pack.json` 0.5.2, `laravel-package/pack.json`
-  0.2.2, `node-frontend/pack.json` 0.5.2, `python-backend/pack.json` 0.5.2,
-  `role-cto/pack.json` 0.1.2, `role-founder/pack.json` 0.1.2, `role-maintainer/pack.json`
-  0.2.2, `role-tech-lead/pack.json` 0.2.2).
+  Ten live packs (`configs/claude-code/agent-packs/backend-laravel/pack.json` 0.12.3,
+  `_common/pack.json` 0.5.1, `dart-flutter/pack.json` 0.5.3, `laravel-package/pack.json`
+  0.2.3, `node-frontend/pack.json` 0.5.3, `python-backend/pack.json` 0.5.3,
+  `role-cto/pack.json` 0.1.3, `role-founder/pack.json` 0.1.3, `role-maintainer/pack.json`
+  0.2.3, `role-tech-lead/pack.json` 0.2.3).
 - ✅ **lock** — `.claude/agent-pack.lock.json` in project: version + interview answers +
   `sha256` rendered files → upgrade without diff-engine (hash comparison + CHANGELOG).
   Carrier - `packages/harness/lib/harness/agentpacks.py`.
@@ -99,16 +99,16 @@ verified 2026-07-29)
 
 | Pack | Version |
 |:--|:--|
-| _common | 0.5.0 |
-| backend-laravel | 0.12.2 |
-| dart-flutter | 0.5.2 |
-| laravel-package | 0.2.2 |
-| node-frontend | 0.5.2 |
-| python-backend | 0.5.2 |
-| role-cto | 0.1.2 |
-| role-founder | 0.1.2 |
-| role-maintainer | 0.2.2 |
-| role-tech-lead | 0.2.2 |
+| _common | 0.5.1 |
+| backend-laravel | 0.12.3 |
+| dart-flutter | 0.5.3 |
+| laravel-package | 0.2.3 |
+| node-frontend | 0.5.3 |
+| python-backend | 0.5.3 |
+| role-cto | 0.1.3 |
+| role-founder | 0.1.3 |
+| role-maintainer | 0.2.3 |
+| role-tech-lead | 0.2.3 |
 
 Table - freshness gate machine anchor (P3.3): versions are checked against `pack.json` of each pack
 in `packages/harness/configs/claude-code/agent-packs/*/pack.json`. Update this file and stamp

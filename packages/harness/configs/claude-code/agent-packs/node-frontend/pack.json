@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "node-frontend",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Frontend dev-loop for Vue/Vite (SPA or Inertia): agents component-builder/slice-builder/test-writer/reviewer (preloaded frontend-skills), serial one-branch workflow, SubagentStop review-gate (tsc/eslint) + PostToolUse-validator (does not block). Roles are universal, stack - Vue/Vite/Tailwind/Pinia.",
   "stack": {
     "shape": "frontend",

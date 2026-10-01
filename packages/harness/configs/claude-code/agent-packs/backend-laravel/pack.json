@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "backend-laravel",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "description": "Backend dev-loop for Laravel: agents slice-builder/test-writer/reviewer, sequential single-branch workflow (slice→impl→test→review), SubagentStop review-gate. v0.5.0: risk-adaptive review-gate (risk_level/risk_markers in the schema, adversarial-mode on HIGH, severity-enum detect≠gating, config-honesty, fairness of tests [POSSIBLE-DEFECT]), Lean-tiered model/effort-lanes at risk of cutting (Sonnet impl, Opus review/HIGH, Haiku trivial), env-preflight in Setup, layout-agnostic globs rules. Summarized from retrospective chatom + overnight-artifacts memster.",
   "stack": {
     "shape": "backend",

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "python-backend",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Dev-loop for Python web-backend (FastAPI/Django/Flask): agents slice-builder/test-writer/reviewer/type-checker(mypy)/spec-writer(opt.), serial one-branch workflow, SubagentStop review-gate (ruff) + PostToolUse-validator. Knowledge of frameworks is in agent prompts (bucket python thin).",
   "stack": {
     "shape": "backend",

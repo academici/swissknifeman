@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "role-cto",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Persona-pack startup-CTO: set delegate/read-first technical leader level subagents - architecture-decision (ADR/C4/boundaries/scalability + data/api/observability/security), tech-radar-curator (stack selection and build-vs-buy like trade-off matrix + tech radar adopt/trial/hold with audit supply-chain), ai-viability-assessor (reality vs hype AI-directions via agent design, eval-metrics and product-market risks). Stack-agnostic role: connects explicitly as a companion to any stack pack, not auto-detected.",
   "stack": {
     "shape": "role"

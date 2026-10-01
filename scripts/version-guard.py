@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -36,7 +37,14 @@ def _key(version: str) -> tuple[int, ...]:
 def latest_snapshot(since: str | None) -> dict:
     releases = {path.stem[1:]: path for path in (ROOT / "releases").glob("v*.json")
                 if SEMVER.match(path.stem[1:])}
-    version = since.lstrip("v") if since else max(releases, key=_key)
+    if since is None:  # draft snapshots (no git tag yet) are regenerated, so never a baseline
+        tagged = [v for v in releases if subprocess.run(
+            ["git", "rev-parse", "--verify", "--quiet", f"refs/tags/v{v}"], cwd=ROOT,
+            capture_output=True).returncode == 0]
+        releases_pool = {v: releases[v] for v in tagged} or releases
+    else:
+        releases_pool = releases
+    version = since.lstrip("v") if since else max(releases_pool, key=_key)
     if version not in releases:
         sys.exit(f"ERROR: no releases/v{version}.json")
     return json.loads(releases[version].read_text(encoding="utf-8"))

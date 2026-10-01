@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "dart-flutter",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Dev-loop for Flutter/Dart (mobile / POS / embedded): agents slice-builder/test-writer/reviewer (POS/embedded-aware)/ffi-reviewer(opt.), serial one-branch workflow, SubagentStop review-gate (dart analyze/format) + PostToolUse-validator. Knowledge Flutter/state/FFI — in agent prompts (bucket mobile thin).",
   "stack": {
     "shape": "mobile",

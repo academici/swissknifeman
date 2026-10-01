@@ -2,6 +2,14 @@
 
 Format - [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/); versions - per-PACK (semver).
 
+## [0.5.3] - 2026-10-01
+
+### Changed
+
+- **English-only pack content:** agent prompts, templates, docs and the manifest are translated to
+  English. Affected install-files: every file the pack installs (`.claude/agents/{PACK_PREFIX}-*.md`
+  and the other `files[]` targets); upgrade with `harness agent-packs upgrade --pack dart-flutter`.
+
 ## [0.5.2] - 2026-07-12
 
 ### Changed

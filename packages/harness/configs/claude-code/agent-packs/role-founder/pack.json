@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "role-founder",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Solo founder persona pack: three subagent consultants - idea-validator (hypothesis validation before code: JTBD/discovery/competitors/moat/pre-mortem), mvp-scoper (narrowing to MVP, roadmap, brd→prd) and founder-cadence (weekly rhythm + decision-log, monetization/unit-economics). Role pack: not tied to the stack, not auto-detected - selected explicitly and installed with any stack pack (PACK_PREFIX matches).",
   "stack": {
     "shape": "role"

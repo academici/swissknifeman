@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "laravel-package",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Dev-loop for Laravel-composer-packages: agents slice-builder/test-writer/reviewer are tailored to a public contract (BC/SemVer), ServiceProvider register-vs-boot, publishables, Testbench-infra - instead app-canon access-layer. Fork backend-laravel under the world of packages (see notes.origin): recon-set added api-surface (BC-public surface diff), review-gate/settings/hooks fumbling around with backend-laravel via src_pack.",
   "stack": {
     "shape": "backend",

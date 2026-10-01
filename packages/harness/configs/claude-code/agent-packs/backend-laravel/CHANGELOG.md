@@ -4,6 +4,14 @@ Versions per-PACK (one version - one changelog). Format Keep a Changelog. Each
 entry marks affected install-file for the upgrade agent to match
 change with a specific project file.
 
+## [0.12.3] - 2026-10-01
+
+### Changed
+
+- **English-only pack content:** agent prompts, templates, docs and the manifest are translated to
+  English. Affected install-files: every file the pack installs (`.claude/agents/{PACK_PREFIX}-*.md`
+  and the other `files[]` targets); upgrade with `harness agent-packs upgrade --pack backend-laravel`.
+
 ## [0.12.2] - 2026-07-12
 
 ### Changed

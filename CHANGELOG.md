@@ -20,7 +20,8 @@
   `.codex/agents` re-rendered from the English packs; the Codex role lock
   `.codex/agent-roles.lock.json` is now tracked) — are translated to English. Kept verbatim by design:
   the immutable `docs/audits/*.raw.md` archive and the generated
-  `calibration-probe-log-v2.json`. The release umbrella and `task` move to 0.26.0; package and
+  `calibration-probe-log-v2.json`. All ten agent packs are bumped one patch (e.g. `role-maintainer`
+  0.2.3) so project upgrades pick up the English content by version, not only by hash. The release umbrella and `task` move to 0.26.0; package and
   skill-unit versions were already above the last tag.
 - **Productization cleanup:** `task:plan-run` is the only emitted execution command;
   tracked product files no longer reference working-plan IDs or paths, and

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "role-tech-lead",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Persona-pack tech-lead (role, not stack): subagents sprint-planner (kickoff/decomposition/context distribution), delegation-triage (do-it-yourselfvs-delegate + brief with DoD + technical debt accounting), review-gatekeeper (review process with severity-gradation, reconciliation with the branch model, escalation of architecture to CTO). Delegate-only/coordination - roles are not written in code. Stretches like companion to a stack pack with the same PACK_PREFIX.",
   "stack": {
     "shape": "role"

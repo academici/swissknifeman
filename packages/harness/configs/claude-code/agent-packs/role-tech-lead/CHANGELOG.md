@@ -3,6 +3,14 @@
 Versions per-PACK (Keep a Changelog). Each entry is marked affected install-file,
 so that the upgrade agent matches the change with a specific project file.
 
+## [0.2.3] - 2026-10-01
+
+### Changed
+
+- **English-only pack content:** agent prompts, templates, docs and the manifest are translated to
+  English. Affected install-files: every file the pack installs (`.claude/agents/{PACK_PREFIX}-*.md`
+  and the other `files[]` targets); upgrade with `harness agent-packs upgrade --pack role-tech-lead`.
+
 ## [0.2.2] - 2026-07-12
 
 ### Changed

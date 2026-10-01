@@ -18,7 +18,7 @@ color: blue
 ---
 <!-- swissknifeman:generated
 Generated-by: harness agent-packs
-Pack: role-tech-lead@0.2.2
+Pack: role-tech-lead@0.2.3
 Template: agents/sprint-planner.md
 Edit-policy: generated-core — DO NOT edit; expand through extension-point
 Extension-points: —

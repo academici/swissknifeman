@@ -17,7 +17,7 @@ color: magenta
 ---
 <!-- swissknifeman:generated
 Generated-by: harness agent-packs
-Pack: role-maintainer@0.2.2
+Pack: role-maintainer@0.2.3
 Template: agents/release-conductor.md
 Edit-policy: generated-core — DO NOT edit; expand through extension-point
 Extension-points: —

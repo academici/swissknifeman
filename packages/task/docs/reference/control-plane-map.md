@@ -24,12 +24,12 @@ Task включается только явной командой владел�
 | Шаг | Источник истины | Проверка | Эффект |
 |---|---|---|---|
 | Design фазы | `plan.md`, `phases/Pn/Pn.md`, `phases/Pn/Pn.m.md`, решения владельца | Парсер фазы, локальные diagnostics | Меняются только авторские carriers |
-| Finish всего плана | Все объявленные фазы + `roadmap.md` | Полный lint, coverage, Routing/execution sheet | `plan-design` event `item_id=finish` с fingerprint исходных design-файлов |
-| Общий design audit | Тот же fingerprint, независимая оценка целого плана | `plan-work.py design-gate`; journal append проверяет fingerprint и наличие finish | `plan-audit` event `item_id=design`; только `audit-green` открывает execution |
-| Start item | Выбранная группа Routing и route evidence текущего вызова | `plan_work.prepare` / `plan_recovery.start`, authority, dependencies, bundle inputs | Один durable start; bundle материализуется для выбранного item |
+| Finish всего плана (опционально) | Все объявленные фазы + `roadmap.md` | Полный lint, coverage, Routing/execution sheet | `plan-design` event `item_id=finish` с fingerprint исходных design-файлов |
+| Общий design audit (только `**Design Audit:** required` или по запросу) | Тот же fingerprint, независимая оценка целого плана | `plan-work.py design-gate`; journal append проверяет fingerprint и наличие finish | `plan-audit` event `item_id=design`; при `required` только `audit-green` открывает execution |
+| Start item | Выбранная группа Routing и route evidence текущего вызова | `plan_work.prepare` / `plan_recovery.start`: фаза и item детализированы (phase-scoped gate), authority, dependencies, bundle inputs | Один durable start; bundle материализуется для выбранного item |
 | Closure | Реальные validation/evidence и terminal decision | `task_contract`, `terminal_policy`, `plan_reconcile` | Один terminal journal event, затем обновление видов |
 
-Планы с `execution-sheet/v1` используют общий design gate уже сейчас. Для планов с датой от 2026-09-24 gate действует и без marker, поэтому его нельзя обойти удалением строки из нового плана. Планы 2026-09-22, начавшие исполнение до этого изменения и не имеющие marker, остаются на прежнем пути; marker у старого плана означает осознанное включение нового контракта. Пока хотя бы одна объявленная фаза остаётся skeleton, `plan-exec` и `plan-run` получают typed refusal. После исправления design нужно снова выполнить finish и audit на новом fingerprint. Сам `Next` не даёт права на старт.
+По умолчанию gate phase-scoped: execution требует детализированных фазы и item, а не всего плана; остальные фазы могут оставаться skeleton/backlog. Строгий whole-plan режим (finish + GREEN audit по fingerprint) включается строкой `**Design Audit:** required` в `plan.md`; ниже описан именно он. Планы с `execution-sheet/v1` используют design gate уже сейчас. Для планов с датой от 2026-09-24 gate действует и без marker, поэтому его нельзя обойти удалением строки из нового плана. Планы 2026-09-22, начавшие исполнение до этого изменения и не имеющие marker, остаются на прежнем пути; marker у старого плана означает осознанное включение нового контракта. Пока хотя бы одна объявленная фаза остаётся skeleton, `plan-exec` и `plan-run` получают typed refusal. После исправления design нужно снова выполнить finish и audit на новом fingerprint. Сам `Next` не даёт права на старт.
 
 ## Классы данных
 
@@ -58,6 +58,7 @@ Optional design dossier (`research/Pn-design.md`, verified retrieval note, examp
 
 ## Где смотреть при отказе
 
+0. `PLAN_DESIGN_INCOMPLETE` в phase-scoped режиме относится к фазе/item запуска: детализировать её (`task:plan-design <ID> Pn`). Пункты 2–4 применимы только при `Design Audit: required`.
 1. `PLAN_DESIGN_INCOMPLETE`: проверить объявленные фазы, skeleton marker, обязательные поля item spec и открытые clarification.
 2. `PLAN_DESIGN_FINISH_MISSING`: выполнить `finalize-design --finish` на текущих authored carriers; он не выполняет item.
 3. `PLAN_DESIGN_AUDIT_MISSING` или `PLAN_DESIGN_AUDIT_NOT_GREEN`: проверить последний design audit в journal и исправить его замечания.

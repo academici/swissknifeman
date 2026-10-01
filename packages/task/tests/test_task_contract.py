@@ -802,8 +802,8 @@ class RuntimeValidationReceiptTests(unittest.TestCase):
             "VALIDATION_RECEIPT_NONZERO",
         )
 
-    def test_stale_repository_context_blocks(self):
-        changed = {**self.context, "head": "e" * 40}
+    def test_changed_product_tree_blocks(self):
+        changed = {**self.context, "tree": "e" * 40}
         self.assertEqual(
             task_contract.pre_final(
                 self.contract, validation_receipts=[self._receipt()],
@@ -811,6 +811,11 @@ class RuntimeValidationReceiptTests(unittest.TestCase):
             ),
             "VALIDATION_RECEIPT_STALE",
         )
+
+    def test_commit_without_product_change_keeps_receipt_fresh(self):
+        moved = {**self.context, "head": "e" * 40}
+        self.assertIsNone(task_contract.pre_final(
+            self.contract, validation_receipts=[self._receipt()], validation_context=moved))
 
     def test_successful_bound_runtime_receipt_allows(self):
         self.assertIsNone(task_contract.pre_final(
@@ -1631,13 +1636,12 @@ class ExecutableRoutingTableTests(unittest.TestCase):
             "## 3. Routing\n\n", "## 3. Routing\n\n" + self.routing + suffix),
             encoding="utf-8")
 
-    def test_pinned_bounded_route_rejects_overshoot_but_owner_run_accepts(self):
+    def test_pinned_bounded_route_accepts_stronger_model_and_records_over(self):
         from task import route_evidence
         self.routing = self.routing.replace("manual", "plan-exec")
         self._write_routing()
         actual = route_evidence.capture_actual("frontier", "xhigh", source="provider-thread-state", model="gpt-test")
-        with self.assertRaisesRegex(task_contract.TaskContractBuildError, "ECONOMY_ROUTE_OVERSHOOT"):
-            task_contract.build(self.plan_dir, "P1.1", actual_route=actual)
+        task_contract.build(self.plan_dir, "P1.1", actual_route=actual)
         contract = task_contract.build(self.plan_dir, "P1.1", actual_route=actual,
             carrier=f"task:plan-run {self.plan_dir.name} P1.1")
         self.assertEqual(contract["route"]["actual"]["model_class"], "frontier")
@@ -1649,13 +1653,12 @@ class ExecutableRoutingTableTests(unittest.TestCase):
         actual = route_evidence.capture_actual("frontier", "xhigh", source="provider-thread-state", model="gpt-test")
         task_contract.build(self.plan_dir, "P1.1", actual_route=actual)
 
-    def test_recommended_batch_does_not_authorize_a_more_expensive_route(self):
+    def test_recommended_batch_accepts_a_stronger_route(self):
         from task import route_evidence
         self.routing = self.routing.replace("manual", "plan-exec").replace("| test |", "| recommended: test |")
         self._write_routing()
         actual = route_evidence.capture_actual("frontier", "xhigh", source="provider-thread-state", model="gpt-test")
-        with self.assertRaisesRegex(task_contract.TaskContractBuildError, "ECONOMY_ROUTE_OVERSHOOT"):
-            task_contract.build(self.plan_dir, "P1.1", actual_route=actual)
+        task_contract.build(self.plan_dir, "P1.1", actual_route=actual)
 
     def test_adjacent_mapping_table_does_not_change_compiled_route_or_digest(self):
         self._write_routing(

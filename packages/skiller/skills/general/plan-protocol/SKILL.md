@@ -34,7 +34,9 @@ selected plan and a separately requested design/review boundary.
 Rules common to layouts v1 and v2:
 
 - New plans use `YYYY.MM.DD-№N-CODENAME` with a positive ordinal unique within that date;
-  Meta `Title` starts with `План №N — …`. Historical plan IDs remain readable and are never renamed.
+  Meta `Title` starts with `План №N — …`. Never guess `№N` or `PLAN<N>`: run
+  `python3 packages/task/scripts/plan-id.py --codename <NAME>` (scans `plans/` and `plans/archive/`)
+  and use its `plan_id`, `title_prefix` and `short_id` verbatim. Historical plan IDs remain readable and are never renamed.
 - New persisted work has a stable repository-local `Short ID` (`PLAN1` plan, `TASK1` task).
   Outside its directory, qualify local references (`PLAN1.D35`, `PLAN1.P2.3`); legacy work uses
   `<PLAN-ID> <local-ID>`. Read [work references](references/work-references.md) when assigning
@@ -258,12 +260,23 @@ rewrites the RED/blocked item history, audit evidence, or release authorization.
 
 Model order is `economy < implementation < frontier`; effort order is `low < medium < high < xhigh`.
 Compare both independently: undershoot, ambiguity, or unsupported capability blocks before mutation;
-overshoot is recorded for inherited routes; bounded pinned work rejects unrequested overshoot
-with `ECONOMY_ROUTE_OVERSHOOT`. Fixed design uses frontier/high unless the owner accepts a more
-expensive route. Frozen-spec implementation normally uses implementation/high; frontier is for
+overshoot is only recorded (`over`), never a stop. Fixed design uses frontier/high; xhigh is recorded. Frozen-spec implementation normally uses implementation/high; frontier is for
 open design or irreversible choices. Routing rows are
 `| Batch | Items | Model class/effort | Exec | Review | Почему |`; `Exec` is `plan-exec`, `manual` (also accepted as `plan-run`),
-or `plan-design`. Choose Review from concrete item risk: ordinary low-risk work uses self-check and
+or `plan-design`. Model pool: Routing declares only a minimum semantic class/effort. Any model whose entry in
+`command-routing.json` `model_inventory` covers that class is admitted: roles overlap, the admitted
+class is the highest class among them, and an entry matches by id, `aliases` or regex `patterns`
+(new versions of a family need no plan edit). A model missing from the pool is
+`ROUTE_MODEL_UNKNOWN` (nonterminal): add it to the pool, never rewrite the plan; set
+`status: retired` to leave the pool. Execution-sheet Executor/Reviewer cells are recommended
+defaults, not admission contracts. Only a lower class stops (`ROUTE_UNDERSHOOT`).
+Review shape is part of the plan, not an item ritual: item Review defaults to `none` (self-check and
+affected tests). Independent review is a dedicated read-only review item (`Ревью Pn`, numeric `Pn.m`,
+Exec `manual`, Deliverable = verdict file) at the end of a phase; a large phase gets slice review
+items between slices. Never put `Independent review` into an item's Validation. Findings get one
+owning correction; the re-review checks only the findings. The reviewer is a fresh session; another
+model only for a named hard risk or an owner requirement, picked from pool entries tagged `review`.
+Choose Review from concrete item risk: ordinary low-risk work uses self-check and
 affected tests, bounded integration adds the necessary package/integration check, and independent
 review requires a named hard risk or explicit owner requirement. Uncertainty gathers evidence rather
 than defaulting to full. A batch inherits its highest justified review depth.
@@ -297,7 +310,8 @@ historical unmarked groups and their receipts keep exact membership/order or bou
 semantics. Changing a frozen mandatory group requires its existing decision carrier.
 Ambiguous and stale requests stay non-mutating (`BATCH_REQUIRED`, `BATCH_AMBIGUOUS`, `BATCH_STALE`).
 
-Phase design proposes local grouping; design finish re-evaluates the full dependency graph and binds
+Execution is gated per phase (target phase/item detailed); a whole-plan finish and GREEN design
+audit are required only for `**Design Audit:** required`. Phase design proposes local grouping; design finish re-evaluates the full dependency graph and binds
 every final group to exactly one `execution-sheet/v1` row in `roadmap.md`: exact provider-neutral
 command, maximum semantic route, and maximum review. Routing cells use semantic classes only, never
 provider selectors. When execution is requested, select the eligible command from that sheet;

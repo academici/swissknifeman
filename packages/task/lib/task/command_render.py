@@ -502,13 +502,12 @@ def plan_provider_invocation(
                     {"model_class": observed_class, "effort": observed_effort}, mapping,
                     "observed route is below the plan minimum"))
             elif observed[0] > required[0] or observed[1] > required[1]:
-                economy_block = record.command_id == "task:plan-design" and not owner_accepts_overshoot
+                # A stronger model is never a stop; overshoot is only recorded.
                 diagnostics.append(_diag(
-                    "ECONOMY_ROUTE_OVERSHOOT" if economy_block else "CMD_ROUTE_OVERSHOOT", record, "/routing",
+                    "CMD_ROUTE_OVERSHOOT", record, "/routing",
                     {"model_class": required_class, "effort": required_effort},
                     {"model_class": observed_class, "effort": observed_effort}, mapping,
-                    "observed route exceeds the plan minimum",
-                    severity="error" if economy_block else "info"))
+                    "observed route exceeds the plan minimum", severity="info"))
 
     for requirement in record.capability_requirements:
         level = capability_support.get(requirement.capability_id)
@@ -570,13 +569,12 @@ def validate_route(record: CommandRecord, observed_class: str, observed_effort: 
                                  {"model_class": observed_class, "effort": observed_effort},
                                  mapping, "observed route is below the command minimum"))
     elif observed[0] > required_class or observed[1] > required_effort:
-        economy_block = record.command_id == "task:plan-design" and not owner_accepts_overshoot
-        diagnostics.append(_diag("ECONOMY_ROUTE_OVERSHOOT" if economy_block else "CMD_ROUTE_OVERSHOOT", record, "/routing",
+        diagnostics.append(_diag("CMD_ROUTE_OVERSHOOT", record, "/routing",
                                  {"model_class": record.routing.model_class,
                                   "effort": record.routing.effort},
                                  {"model_class": observed_class, "effort": observed_effort},
                                  mapping, "observed route exceeds the command minimum",
-                                 severity="error" if economy_block else "info"))
+                                 severity="info"))
     return tuple(diagnostics)
 
 
@@ -1118,8 +1116,11 @@ def render_provider_model_roles_reference(catalog: CommandCatalog) -> bytes:
         "| Implementation / execution | `implementation` | `task:dev`, `task:plan-exec`, `task:plan-close` |",
         "| Design / audit / review | `frontier` | `task:design`, `task:plan-design`, `task:plan-audit`, `task:review` |",
         "",
-        "Fixed commands and launch-blocks pin **one** selector per class. Inventory-only models never "
-        "substitute a missing pin (fail-closed, same as an unknown spelling in plan-protocol).",
+        "Fixed commands and launch-blocks pin **one** default selector per class. The model pool below "
+        "is the admission list: any entry whose roles cover the required class is admitted (roles "
+        "overlap, the highest class wins, a stronger model is never a stop). Entries match by id, "
+        "`aliases` or regex `patterns`; `status: retired` leaves the pool. A model outside the pool "
+        "is `ROUTE_MODEL_UNKNOWN`: extend the pool, never the plan. `auto` never substitutes a pin.",
         "",
         "## Class pins",
         "",
@@ -1152,6 +1153,10 @@ def render_provider_model_roles_reference(catalog: CommandCatalog) -> bytes:
                 notes.append(f"status={entry['status']}")
             if entry.get("policy"):
                 notes.append(f"policy={entry['policy']}")
+            if entry.get("aliases"):
+                notes.append("aliases=" + ", ".join(f"`{item}`" for item in entry["aliases"]))
+            if entry.get("patterns"):
+                notes.append("patterns=" + ", ".join(f"`{item}`" for item in entry["patterns"]))
             if entry.get("notes"):
                 notes.append(entry["notes"])
             note_cell = "; ".join(notes) if notes else "—"

@@ -177,8 +177,8 @@ package-owned границу до `final`, но не заявляет недос
 --project-root <cwd> --provider-session <session>`. Этот шаг не требует lease или специального
 payload: он проверяет latest execution state текущей сессии в живых `plans/*/journal.jsonl`.
 `in-progress` отклоняет final с `TASK_OPEN_RUN_FINAL_FORBIDDEN`; промежуточные успехи выводятся
-как progress. Session-bound batch receipt с незапущенным остатком отдельно отклоняет final с
-`TASK_WORKSET_INCOMPLETE`. Проверка не закрывает item и не заменяет существующий receipt gate.
+как progress. Session-bound batch receipt с незапущенным остатком final не запрещает: причина
+`TASK_WORKSET_REMAINING` попадает в отчёт, а final обязан назвать точный semantic Next. Проверка не закрывает item и не заменяет существующий receipt gate.
 Реальная защита требует доставленного Task CLI и включённого native Stop hook; перенос run в
 новую сессию и полный structured waiting handoff требуют отдельной привязки.
 

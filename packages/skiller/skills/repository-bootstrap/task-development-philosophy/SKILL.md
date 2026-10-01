@@ -1,7 +1,7 @@
 ---
 name: task-development-philosophy
 bucket: repository-bootstrap
-version: 0.2.0
+version: 0.3.0
 description: "Guardrails for keeping Task plans flexible, proportional, and loop-free. Activate before creating or revising a plan in this repository or changing packages/task planning, validation, audit, close, retry, or budget policy."
 when_to_use: "Use for swissknifeman plan authoring and Task workflow-policy changes."
 risk: read
@@ -78,6 +78,22 @@ when it creates a real integration or authority boundary.
 
 Do not prebuild speculative machinery. Record an unmeasured idea in `roadmap/` with a trigger. Turn
 it into plan scope only after the trigger occurs or the owner explicitly prioritizes it.
+
+## Review, pacing and model pool
+
+- **Review is plan shape.** Item `Review` defaults to `none` (self-check plus affected tests).
+  Independent review is a dedicated read-only item (`Ревью Pn`) at the end of a phase, or between
+  slices of a large phase; never a step inside every item and never a line of an item's Validation.
+  Findings get one owning correction; the re-review checks only the findings. A different model is
+  required only by a named hard risk or the owner.
+- **Design pacing is the owner's choice.** Detailing every phase first and detailing one phase,
+  executing it and detailing the next from real code are both valid. Execution is gated per phase;
+  a whole-plan design audit is opt-in (`Design Audit: required`) or on request.
+- **Models are a pool, not a contract.** A plan names a minimum semantic class; any pool model that
+  covers it is admitted, a stronger one is recorded not stopped, only a weaker one stops. New models
+  and retired ones change the pool config, never the plan.
+- **Broad checks run once.** Executors run affected checks; the one broad pass of a phase lives in
+  its review/last item and is reused by every later reader.
 
 ## Validation economy
 
@@ -169,7 +185,8 @@ Reject these designs:
 - a remediation item per symptom when one shared seam caused them;
 - owner interruption for choices already bounded by scope and reversible implementation;
 - safety language used to justify unlimited cost without a concrete failure scenario;
-- gates that make the valid path impossible and then blame execution for looping.
+- gates that make the valid path impossible and then blame execution for looping;
+- independent review attached to every item, or a plan rewrite to swap one model for a stronger one.
 
 ## Decision test
 

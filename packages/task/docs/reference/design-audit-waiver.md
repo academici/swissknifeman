@@ -1,6 +1,6 @@
 # Owner waiver of a repeated whole-plan design audit
 
-Normal execution still requires a completed finish and an audit GREEN for its current authored design fingerprint. When the owner explicitly waives the repeated audit, select one accepted decision in `plan.md`:
+By default execution is gated per phase and needs no design audit. A plan that declares `**Design Audit:** required` still needs a completed finish and an audit GREEN for its current authored design fingerprint. When the owner explicitly waives the repeated audit, select one accepted decision in `plan.md`:
 
 ```markdown
 **Design Audit Waiver:** D52

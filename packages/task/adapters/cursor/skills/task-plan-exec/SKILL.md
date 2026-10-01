@@ -11,7 +11,7 @@ Generated Cursor adapter for semantic command `task:plan-exec`.
 - Invocation: `task:plan-exec <arguments>`
 - Routing: `implementation/medium -> composer-2.5/medium`
 - Canonical source: `packages/task/commands/plan-exec.md`
-- Canonical SHA-256: `sha256:9cf2b9df3668132211fa5051765f1a2c870022992f09db15c40cde97e016cdb8`
+- Canonical SHA-256: `sha256:4f59377b17e4c4d2d13a578e9c69fa20a86250d29b37814d7aa005f24daae275`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as the user prompt.

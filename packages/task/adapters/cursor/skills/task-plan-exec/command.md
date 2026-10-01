@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
-Canonical SHA-256: sha256:9cf2b9df3668132211fa5051765f1a2c870022992f09db15c40cde97e016cdb8
+Canonical SHA-256: sha256:4f59377b17e4c4d2d13a578e9c69fa20a86250d29b37814d7aa005f24daae275
 Adapter: task.cursor-command/1.0.17
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -29,10 +29,13 @@ Read `runtime/plan-protocol/references/common-principles.md` and
 The full schema canon and snippets are on-demand references, not mandatory execution context.
 
 Execute the admitted Routing group or ready subset of a recommended group for `$ARGUMENTS`.
-For execution-sheet plans, `prepare` requires all declared phases detailed, finish recorded and
-a GREEN design audit bound to the current authored inputs. A stale or missing audit returns a typed
-refusal before the durable execution start. The selected bundle is built at start.
-Undershoot stops before mutation; bounded pinned work also rejects unrequested expensive overshoot.
+`prepare` is phase-scoped: only the phases of the requested items must be detailed. Other phases may
+stay skeletons or backlog; detail-all and detail-one-execute-detail-next are both valid. A whole-plan
+design finish and GREEN design audit gate execution only when plan.md declares
+`**Design Audit:** required`. An undetailed target phase returns a typed refusal before the durable
+start. The selected bundle is built at start.
+Undershoot stops before mutation. A stronger model or higher effort than declared is admitted and
+recorded as `over`; any model of the provider pool that covers the required class is valid.
 Activation requires an explicit owner Task invocation, as defined in the
 shared [intent routing canon](../references/intent-routing.md).
 
@@ -72,8 +75,9 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
    bounded integration adds the necessary package/integration check. Independent review requires a
    concrete item risk—security/auth, destructive migration, irreversible external action,
    payment/accounting, concurrency/shared state, public API/schema, low-confidence impact, or release
-   authority—or an explicit owner requirement. Uncertainty gathers evidence; it does not default to
-   full review.
+   authority—or an explicit owner requirement, and then it is a separate read-only review item of the
+   plan (`Ревью Pn`), never a step run inside this item. Uncertainty gathers evidence; it does not
+   default to full review.
 4. A foreign baseline stays visible but non-gating unless ownership/dependency closure intersects.
    Audit is read-only: it returns one owning continuation for a product finding and never starts a
    second audit/full replay without a new material hypothesis.
@@ -92,6 +96,12 @@ delta after change and rerun a live gate at its live boundary. A closure/bookkee
 one regeneration and structural check and does not invalidate independent product evidence. An
 explicit Validation/security/release carrier remains binding until transparently amended through the
 existing contract rules; do not silently skip it.
+
+Validation economy: run this item's affected commands. Broad suites (full root/package/DB/mutation/
+replay) run once in the phase's review or last item, not in every item and not again in a replay;
+a replay proves reproducibility (byte equality plus an environment witness) and does not repeat
+behavioral suites. Write large logs/JSON to a file and read status, counts and the first few
+diagnostics; never paste bulk output into the context.
 
 Close only with green evidence, `task_contract` allow at both write sites, generated views/lint, and
 `plan-delivery --kind terminal`. For a terminal phase use `plan_assurance.evaluate()` through

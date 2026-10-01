@@ -167,6 +167,7 @@ _PUBLIC_REASON_EXACT = {
     "ROUTE_BUDGET_AXIS_UNKNOWN": "schema-invalid",
     "ROUTE_LAUNCH_MISMATCH": "evidence-forged",
     "ROUTE_LAUNCH_UNAVAILABLE": "evidence-missing",
+    "ROUTE_MODEL_UNKNOWN": "evidence-missing",
     "ROUTE_RECEIPT_EXPIRED": "evidence-stale",
     "ROUTE_RECEIPT_INVALID": "schema-invalid",
     "ROUTE_RECEIPT_MISMATCH": "evidence-forged",
@@ -1597,16 +1598,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
                     item_id, "Routing",
                     "BATCH_ROUTE_MISMATCH: admission route must equal the compiled batch maximum")
             routing = batch_route
-        if (routing_entry["exec"] == "plan-exec" and routing_entry["review"] in {"self", "light"}
-                and routing["model_class"] != "frontier"
-                and not (carrier and re.search(r"task:plan-run\b", carrier))
-                and actual_route is not None):
-            for axis, order in (("model_class", MODEL_CLASS_ORDER), ("effort", EFFORT_ORDER)):
-                actual = actual_route.get(axis)
-                if actual in order and order.index(actual) > order.index(routing[axis]):
-                    raise TaskContractBuildError(item_id, "Routing",
-                        "ECONOMY_ROUTE_OVERSHOOT: bounded pinned plan-exec превышает объявленный маршрут; "
-                        "используйте объявленный маршрут либо явный owner plan-run")
+        # A stronger/costlier actual route than declared is recorded as `over`, never a stop.
         routing = (routing["model_class"], routing["effort"])
     required_route = {"model_class": routing[0], "effort": routing[1]}
     if actual_route is None:
@@ -2070,11 +2062,13 @@ def current_validation_context(plan_dir, item_id: str) -> dict:
                 item_id, "Validation", f"git {' '.join(args)}: {result.stderr.strip()}")
         return result.stdout.strip()
 
+    # Stable identity only: interpreter family, major.minor and OS family. The exact patch
+    # version, kernel string and interpreter path change between sessions/providers without
+    # changing what a check proves, and used to stale every receipt.
     environment = {
         "implementation": platform.python_implementation(),
-        "python": platform.python_version(),
-        "platform": platform.platform(),
-        "executable": str(Path(sys.executable).resolve()),
+        "python": ".".join(platform.python_version_tuple()[:2]),
+        "system": platform.system(),
     }
     environment_sha = hashlib.sha256(json.dumps(
         environment, ensure_ascii=False, sort_keys=True,
@@ -2157,8 +2151,10 @@ def _validation_receipt_code(contract: dict, evidence: dict, receipts, context) 
             or receipt.get("schema_version") != "validation-receipt/v1"
             or receipt.get("command") != evidence.get("path")
             or receipt.get("contract_sha256") != content_hash(contract)
+            # `head` is provenance only: an ordinary commit or bookkeeping move does not change
+            # the product bytes (`tree`), so it never invalidates a receipt by itself.
             or any(receipt.get(key) != context.get(key)
-                   for key in ("spec_sha256", "head", "tree", "environment_sha256"))
+                   for key in ("spec_sha256", "tree", "environment_sha256"))
             or not isinstance(receipt.get("executed_at"), str)
             or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z",
                                 receipt.get("executed_at", ""))):

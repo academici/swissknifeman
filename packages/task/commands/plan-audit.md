@@ -17,7 +17,7 @@ For `design`, first run `scripts/plan-work.py design-gate --plan-dir <dir>`. Req
 `finalize-design --finish` and audit the returned current fingerprint across every declared phase,
 item, dependency and execution-sheet row. Persist the audit journal event with that fingerprint
 using the existing `--fingerprint` field. A changed design input makes the verdict stale; after
-correction, repeat finish and the design audit. GREEN is the only result that opens plan execution.
+correction, repeat finish and the design audit. GREEN is the only result that satisfies a `Design Audit: required` gate; by default the design audit is optional.
 Before phase audit, consume one accepted, unsuperseded `audit-admission/v2` decision whose bounded
 residual-risk question, target phase, material candidate fingerprint, audit run, owner-message
 provenance, and scope digest all match. Foreign, stale, ambiguous, or already consumed consent does

@@ -969,7 +969,11 @@ def exact_compare(paths, measurer, probe_log_path):
             by_sha[sha] = rec
         source_path = rec.get("source_path", rec.get("path"))
         if source_path:
-            by_path[str(Path(source_path).resolve())] = rec
+            # Records store repo-relative paths (portable across machines); a legacy absolute
+            # path is still honoured.  The repository root is the parent of packages/task/configs.
+            resolved_log = Path(probe_log_path).resolve()
+            anchor = resolved_log.parents[3] if len(resolved_log.parents) > 3 else resolved_log.parent
+            by_path[str((anchor / source_path).resolve())] = rec
 
     rows = []
     for path in paths:

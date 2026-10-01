@@ -110,6 +110,16 @@ Codex runtime передаёт этот JSON-объект непосредств
 В `plan_lint.py` самом (`packages/task/lib/task/plan_lint.py` + лаунчер
 `packages/task/scripts/plan-lint.py`) — режим `--conflicts`, задокументирован ниже.
 
+## Следующий номер плана: `plan-id.py`
+
+`python3 packages/task/scripts/plan-id.py --codename <КОДОВОЕ-ИМЯ> [--date ГГГГ.ММ.ДД] [--plans-root plans]`
+(лаунчер над `task.plan_numbering`, stdlib, read-only) сканирует `plans/` и `plans/archive/` и печатает
+JSON: `plan_id` (`ГГГГ.ММ.ДД-№N-КОДОВОЕ-ИМЯ`), `ordinal` (`№N`, уникальный внутри даты, максимум по живым и
+архивным + 1), `short_id` (`PLAN<N>`, максимум Short ID по репозиторию + 1, никогда не переиспользуется),
+`title_prefix` (`План №N —`) и счётчики `scanned`. Агент подставляет значения как есть и повторно запускает
+утилиту прямо перед созданием каталога плана; коллизии Short ID ловит `plan-lint`. Ошибки — JSON в stderr,
+exit 1 (`PLAN_NUMBER_DATE_INVALID`, `PLAN_NUMBER_CODENAME_INVALID`, `PLAN_NUMBER_COLLISION`).
+
 ## Калибровка верхней оценки токенов v2
 
 `packages/task/scripts/calibrate-token-estimate.py` вручную замораживает активный

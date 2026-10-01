@@ -130,12 +130,12 @@ class PlanWorkTests(unittest.TestCase):
         self.assertEqual(capsule["routing"]["P1.1"]["route"]["effort"], "medium")
         self.assertNotIn("bundle", capsule)
 
-    def test_design_route_budget_is_checked_before_baseline_write(self):
-        with self.assertRaisesRegex(plan_work.WorkError, "ECONOMY_ROUTE_OVERSHOOT"):
-            plan_work.design_context(self.plan, "P1", actual_route={"model_class": "frontier", "effort": "xhigh"})
+    def test_design_route_undershoot_stops_but_overshoot_does_not(self):
+        with self.assertRaisesRegex(plan_work.WorkError, "ROUTE_UNDERSHOOT"):
+            plan_work.design_context(self.plan, "P1", actual_route={"model_class": "implementation", "effort": "high"})
         self.assertFalse((self.plan / ".plan-cache/design-P1-baseline.json").exists())
         result = plan_work.design_context(self.plan, "P1",
-            actual_route={"model_class": "frontier", "effort": "xhigh"}, owner_accepts_overshoot=True)
+            actual_route={"model_class": "frontier", "effort": "xhigh"})
         self.assertEqual(result["phase_id"], "P1")
 
     def test_design_finish_reports_and_enforces_supporting_artifacts(self):
@@ -219,19 +219,15 @@ class PlanWorkTests(unittest.TestCase):
                 self.plan, finish=True, actor="test/high", session_id="design")
         self.assertEqual((self.plan / "journal.jsonl").read_text(), "")
 
-        # A later phase may move a file a closed item once read; its frozen
-        # spec must not block finish (editing it would stale terminal evidence).
-        moved = self.plan / "lib/pkg/config.py"
-        self.assertTrue(moved.is_file())
-        moved.unlink()
-        result = plan_work.finalize_design(
-            self.plan, finish=True, actor="test/high", session_id="design")
-        self.assertEqual(result["phase_id"], "finish")
+    def require_design_audit(self):
+        core = self.plan / "plan.md"
+        core.write_text(core.read_text() + "\n**Design Audit:** required\n")
 
     def test_execution_sheet_requires_finished_design_and_matching_green_audit(self):
         from task import journal, plan_readiness
 
         self.add_supporting_artifacts()
+        self.require_design_audit()
         bundle = self.plan / "bundles/P1.1.json"
         bundle.unlink()
         with self.assertRaisesRegex(plan_work.WorkError, "PLAN_DESIGN_GATE_BLOCKED"):
@@ -259,10 +255,43 @@ class PlanWorkTests(unittest.TestCase):
         self.assertEqual(plan_readiness.design_gate(self.plan)["code"],
                          "PLAN_DESIGN_FINISH_MISSING")
 
+    def test_default_gate_is_phase_scoped_and_needs_no_design_audit(self):
+        from task import plan_readiness
+
+        self.add_supporting_artifacts()
+        phase_dir = self.plan / "phases/P2"
+        phase_dir.mkdir()
+        (phase_dir / "P2.md").write_text(
+            "# P2\n\n## Phase Context\n\n> СКЕЛЕТ — не детализирован\n\n"
+            "## Phase Handoff\n\nСначала уточнить.\n")
+        # A skeleton later phase and no finish/audit do not block P1.1.
+        self.assertEqual(plan_readiness.design_gate(self.plan)["code"], "PLAN_DESIGN_INCOMPLETE")
+        plan_readiness.validate_execution_design(self.plan, ("P1.1",))
+        self.prepare()
+        # The skeleton phase itself is still not executable.
+        with self.assertRaisesRegex(plan_readiness.ReadinessError, "PLAN_DESIGN_INCOMPLETE"):
+            plan_readiness.validate_execution_design(self.plan, ("P2.1",))
+        # Editing a different phase never stales the target phase.
+        spec = self.plan / "phases/P1/P1.1.md"
+        before = spec.read_bytes()
+        (phase_dir / "P2.md").write_text((phase_dir / "P2.md").read_text() + "\nнабросок\n")
+        self.assertEqual(spec.read_bytes(), before)
+        plan_readiness.validate_execution_design(self.plan, ("P1.1",))
+
+    def test_default_gate_rejects_target_item_missing_required_field(self):
+        from task import plan_readiness
+
+        self.add_supporting_artifacts()
+        spec = self.plan / "phases/P1/P1.1.md"
+        spec.write_text(spec.read_text().replace("**Validation:**", "**Validation:** —\n**Gone:**", 1))
+        with self.assertRaisesRegex(plan_readiness.ReadinessError, "требует Validation"):
+            plan_readiness.validate_execution_design(self.plan, ("P1.1",))
+
     def test_early_execution_next_is_rejected_before_design_journal(self):
         from task import plan_readiness
 
         self.add_supporting_artifacts()
+        self.require_design_audit()
         phase_dir = self.plan / "phases/P2"
         phase_dir.mkdir()
         (phase_dir / "P2.md").write_text(

@@ -254,7 +254,7 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
     from task import plan_context, task_contract
 
     try:
-        plan_readiness.validate_execution_design(plan_dir)
+        plan_readiness.validate_execution_design(plan_dir, (item_id,))
     except plan_readiness.ReadinessError as exc:
         raise RecoveryError({"code": "PLAN_DESIGN_GATE_BLOCKED", "reason": str(exc)}) from exc
 

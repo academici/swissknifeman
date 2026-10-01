@@ -88,6 +88,36 @@ class RouteEvidenceError(ValueError):
         self.code = code
 
 
+def resolve_model_class(provider: str, model: str, metadata: dict) -> str:
+    """Class of an actual model from the provider pool (`model_inventory.entries`).
+
+    The pool is the one place models are listed. A model matches by class pin, id,
+    `aliases` or regex `patterns`; roles may overlap, and the admitted class is the
+    highest class among its roles, so a stronger model never trips a lower-class
+    plan. A model absent from the pool is `ROUTE_MODEL_UNKNOWN` (nonterminal
+    evidence-missing): add it to `command-routing.json`, do not rewrite the plan.
+    """
+    mapping = metadata.get("mappings", {}).get(provider, {})
+    classes = set()
+    for model_class, selectors in mapping.get("class_selectors", {}).items():
+        if model in selectors:
+            classes.add(model_class)
+    for entry in mapping.get("model_inventory", {}).get("entries", ()):
+        if entry.get("status") == "retired":
+            continue  # out of the current pool; flip status instead of editing plans
+        if (model == entry.get("id") or model in entry.get("aliases", ())
+                or any(re.fullmatch(pattern, model, re.IGNORECASE)
+                       for pattern in entry.get("patterns", ()))):
+            classes.update(role for role in entry.get("roles", ()) if role in MODEL_CLASS_ORDER)
+    classes &= set(MODEL_CLASS_ORDER)
+    if not classes:
+        raise RouteEvidenceError(
+            "ROUTE_MODEL_UNKNOWN",
+            f"{provider} model {model!r} is not in the model pool; add it to "
+            "packages/task/configs/command-routing.json model_inventory")
+    return max(classes, key=MODEL_CLASS_ORDER.index)
+
+
 def owner_followup_revokes(text: str) -> bool:
     """Conservative explicit stop/revoke markers for the local workflow guard."""
     return bool(re.search(r"OWNER-REVOKE|\b(?:revoke|cancel|stop)\b|review only|отзыва|отмени|отменить|останови|стоп|только ревью|не выполняй", text, re.IGNORECASE))

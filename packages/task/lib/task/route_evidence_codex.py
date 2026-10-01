@@ -20,7 +20,8 @@ import os
 from pathlib import Path
 
 from task.command_catalog import load_routing_metadata
-from task.route_evidence import RouteEvidenceError, capture_actual, owner_followup_revokes
+from task.route_evidence import (
+    RouteEvidenceError, capture_actual, owner_followup_revokes, resolve_model_class)
 
 
 CLI_SOURCE_VERSION = "codex-ancestor-argv-v1"
@@ -98,25 +99,7 @@ def _one(values: tuple[str, ...], label: str) -> str:
 
 
 def _selector_class(model: str, routing_path: Path) -> str:
-    metadata = load_routing_metadata(routing_path)
-    mapping = metadata.get("mappings", {}).get("codex", {})
-    matches = [
-        model_class
-        for model_class, selectors in mapping.get("class_selectors", {}).items()
-        if model in selectors
-    ]
-    # Launch defaults remain single-valued. An explicitly selected model may
-    # instead be classified by the same committed provider model inventory.
-    if not matches:
-        classes = mapping.get("class_selectors", {})
-        matches = [
-            role
-            for entry in mapping.get("model_inventory", {}).get("entries", ())
-            if entry.get("id") == model
-            for role in entry.get("roles", ())
-            if role in classes
-        ]
-    return _one(tuple(matches), f"Codex model-class mapping for {model!r}")
+    return resolve_model_class("codex", model, load_routing_metadata(routing_path))
 
 
 def _selector_effort(selector: str, routing_path: Path) -> str:

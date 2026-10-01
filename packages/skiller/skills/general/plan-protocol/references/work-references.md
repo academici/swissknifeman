@@ -4,7 +4,11 @@ When creating a persisted plan or standalone task, assign `Short ID`: `PLAN<N>` 
 `TASK<N>` for a task (positive integer). Store it in plan Meta or the task document header,
 alongside its title and existing directory ID. Allocate the next unused number above the
 maximum in that repository and namespace, including archived work; never recycle or renumber.
-Check existing assignments again before writing; concurrent allocations must be reconciled.
+Do not count by hand: `python3 packages/task/scripts/plan-id.py --codename <NAME>` scans live and
+archived plans and returns the next day ordinal `№N` (`ordinal`, unique within the date), the
+next repository-wide `short_id`, the ready `plan_id` and the `title_prefix`; use them verbatim.
+Re-run it immediately before writing the plan; concurrent allocations are reconciled by
+`plan-lint` (Short ID collisions).
 A plan item keeps its existing `Pn.m`; it does not receive a standalone `TASK<N>`.
 
 Outside the owning work directory, qualify every work-specific decision, phase, item or finding:

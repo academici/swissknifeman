@@ -13,7 +13,7 @@ Generated from the validated command-routing mappings. Do not edit the tables ma
 | Implementation / execution | `implementation` | `task:dev`, `task:plan-exec`, `task:plan-close` |
 | Design / audit / review | `frontier` | `task:design`, `task:plan-design`, `task:plan-audit`, `task:review` |
 
-Fixed commands and launch-blocks pin **one** selector per class. Inventory-only models never substitute a missing pin (fail-closed, same as an unknown spelling in plan-protocol).
+Fixed commands and launch-blocks pin **one** default selector per class. The model pool below is the admission list: any entry whose roles cover the required class is admitted (roles overlap, the highest class wins, a stronger model is never a stop). Entries match by id, `aliases` or regex `patterns`; `status: retired` leaves the pool. A model outside the pool is `ROUTE_MODEL_UNKNOWN`: extend the pool, never the plan. `auto` never substitutes a pin.
 
 ## Class pins
 
@@ -29,41 +29,44 @@ Fixed commands and launch-blocks pin **one** selector per class. Inventory-only 
 
 - `verified_at`: `2026-09-17`
 - `source`: claude --help @ 2.1.266 + command-routing.json D84
-- `verification`: cli-help-and-frozen-mapping; no machine-readable catalogue exists
+- `verification`: cli-help-and-frozen-mapping; no machine-readable catalogue exists; 2026-10-01 pool extended by owner (fable, overlapping roles, family patterns)
 
 | Model id | Roles | Notes |
 |:--|:--|:--|
-| `opus` | frontier, design, audit | — |
-| `sonnet` | implementation | — |
-| `haiku` | economy | status=confirmed |
+| `fable` | frontier, implementation, review, design, audit | patterns=`.*fable.*` |
+| `opus` | frontier, implementation, review, design, audit | patterns=`.*opus.*` |
+| `sonnet` | implementation, review | patterns=`.*sonnet.*` |
+| `haiku` | economy, explore | status=confirmed; patterns=`.*haiku.*` |
 
 ### `codex`
 
 - `verified_at`: `2026-09-23`
 - `source`: plans/2026.07.19-DUAL-PROVIDER/plan.md#D84 and Codex provider thread state
-- `verification`: frozen D84 mapping; gpt-6-sol observed in provider thread state; no machine-readable catalogue exists
+- `verification`: frozen D84 mapping; gpt-6-sol observed in provider thread state; no machine-readable catalogue exists; 2026-10-01 pool extended by owner (gpt-6.1-sol frontier, overlapping roles)
 
 | Model id | Roles | Notes |
 |:--|:--|:--|
-| `gpt-5.6-luna` | economy | — |
-| `gpt-5.6-terra` | implementation | — |
-| `gpt-5.6-sol` | frontier, design, audit | — |
-| `gpt-6-astra` | frontier, design, audit | — |
-| `gpt-6-sol` | implementation | — |
+| `gpt-5.6-luna` | economy, explore | — |
+| `gpt-5.6-terra` | implementation, review | — |
+| `gpt-5.6-sol` | frontier, implementation, review, design, audit | — |
+| `gpt-6-astra` | frontier, implementation, review, design, audit | patterns=`gpt-6(\.\d+)*-astra` |
+| `gpt-6-sol` | implementation, review | — |
+| `gpt-6.1-sol` | frontier, implementation, review, design, audit | patterns=`gpt-6\.[1-9]\d*-sol` |
 
 ### `cursor`
 
 - `verified_at`: `2026-09-17`
 - `source`: agent --list-models @ 2026.09.15-d2fe57e
+- `verification`: 2026-10-01 pool extended by owner (overlapping roles, family patterns); ids not re-listed from the CLI
 
 | Model id | Roles | Notes |
 |:--|:--|:--|
 | `composer-2.5-fast` | economy, explore | — |
-| `composer-2.5` | implementation | — |
-| `claude-opus-5-thinking-high` | frontier, design, audit | — |
-| `grok-4.7` | frontier | live cli-config selectedModel; reasoning_effort=high maps through effort_selectors |
-| `grok-4.6` | frontier | live cli-config selectedModel; effort=high is the Grok 4.6 alias of reasoning_effort |
-| `gpt-5.6-sol-medium` | alternate | — |
+| `composer-2.5` | implementation, review | — |
+| `claude-opus-5-thinking-high` | frontier, implementation, review, design, audit | patterns=`claude-(opus|fable)-.*` |
+| `grok-4.7` | frontier, implementation, review | patterns=`grok-4\.\d+`; live cli-config selectedModel; reasoning_effort=high maps through effort_selectors |
+| `grok-4.6` | frontier, implementation, review | live cli-config selectedModel; effort=high is the Grok 4.6 alias of reasoning_effort |
+| `gpt-5.6-sol-medium` | frontier, implementation, review, alternate | — |
 | `auto` | routing-assist | policy=never-substitute-fixed-frontier |
 
 **Auto policy** (`auto` routing-assist only):

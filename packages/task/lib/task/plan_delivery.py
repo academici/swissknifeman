@@ -73,10 +73,6 @@ def _validate_priority_continuation(plan_dir: Path, next_exact: str) -> None:
     match = _EXEC_TARGET_RE.search(next_exact)
     if match is None or match.group(1) != plan_dir.name:
         return
-    try:
-        plan_readiness.validate_execution_design(plan_dir)
-    except plan_readiness.ReadinessError as exc:
-        raise DeliveryError("PLAN_DESIGN_GATE_BLOCKED", str(exc)) from exc
     requested = [match.group(2)]
     if match.group(3):
         first_phase, first_number = match.group(2)[1:].split(".", 1)
@@ -86,6 +82,10 @@ def _validate_priority_continuation(plan_dir: Path, next_exact: str) -> None:
                          range(int(first_number), int(last_number) + 1)]
         else:
             requested = [match.group(2), match.group(3)]
+    try:
+        plan_readiness.validate_execution_design(plan_dir, requested)
+    except plan_readiness.ReadinessError as exc:
+        raise DeliveryError("PLAN_DESIGN_GATE_BLOCKED", str(exc)) from exc
     try:
         plan_readiness.validate_execution_target(plan_dir, requested)
     except plan_readiness.ReadinessError as exc:

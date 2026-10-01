@@ -56,6 +56,11 @@ def _sha256(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def _source_label(path):
+    relative = path.resolve().relative_to(_REPO_ROOT.resolve()).as_posix()
+    return f"corpus/{path.name}" if relative.startswith("plans/") else relative
+
+
 def _read_sample(path):
     raw = path.read_bytes()
     if len(raw) <= MAX_SAMPLE_BYTES:
@@ -74,7 +79,9 @@ def _read_sample(path):
         whole_file = False
     text = sample.decode("utf-8")
     return {
-        "source_path": str(path),
+        # Plan artefacts are private working documents: record only a neutral corpus label
+        # (lookups are by content sha256 first); product sources keep a repo-relative path.
+        "source_path": _source_label(path),
         "full_source_sha256": _sha256(raw),
         "byte_range": {"start": 0, "end_exclusive": len(sample)},
         "sample_sha256": _sha256(sample),

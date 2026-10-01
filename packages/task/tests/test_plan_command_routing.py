@@ -76,17 +76,13 @@ class ProviderPlanRoutingTests(unittest.TestCase):
         self.assertIn("Design completion alone never requires a fresh process", protocol)
         self.assertIn("must not execute or spawn an unauthorized successor", protocol)
 
-    def test_design_overshoot_requires_owner_acceptance_before_invocation(self):
+    def test_design_overshoot_is_recorded_not_blocked(self):
         mapping = mapping_from_catalog(self.catalog, "codex")
         carrier = PlanNextCarrier("design-phase", "task:plan-design", "PLAN", ("PLAN", "P1"))
-        blocked = plan_provider_invocation(self.catalog, carrier, mapping,
+        result = plan_provider_invocation(self.catalog, carrier, mapping,
                                           observed_class="frontier", observed_effort="xhigh")
-        self.assertFalse(blocked.ok)
-        self.assertIn("ECONOMY_ROUTE_OVERSHOOT", [item.code for item in blocked.diagnostics])
-        accepted = plan_provider_invocation(self.catalog, carrier, mapping,
-                                           observed_class="frontier", observed_effort="xhigh",
-                                           owner_accepts_overshoot=True)
-        self.assertTrue(accepted.ok, accepted.diagnostics)
+        self.assertTrue(result.ok, result.diagnostics)
+        self.assertNotIn("ECONOMY_ROUTE_OVERSHOOT", [item.code for item in result.diagnostics])
 
     def test_new_plan_batch_is_mandatory_and_survives_every_handoff_writer(self):
         protocol = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md"

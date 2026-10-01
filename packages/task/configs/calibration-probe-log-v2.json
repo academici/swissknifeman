@@ -47,7 +47,7 @@
       "right_control_input_tokens": 13429,
       "sample_bytes": 8996,
       "sample_sha256": "b9995a60410a3a4148c21f9588ccd7996ab743cb543fb5625bafa7273ba00f30",
-      "source_path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admission-index-v1.json",
+      "source_path": "corpus/trial-admission-index-v1.json",
       "true_tokens": 4071.0,
       "whole_file": true
     },
@@ -97,7 +97,7 @@
       "right_control_input_tokens": 13429,
       "sample_bytes": 16384,
       "sample_sha256": "736554e2c67a4ec0be94112816e6f6890c6b87463bc377def2a7f0b5c2fde0fc",
-      "source_path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P3/package-promotion-manifest-v1.json",
+      "source_path": "corpus/package-promotion-manifest-v1.json",
       "true_tokens": 6592.0,
       "whole_file": false
     },
@@ -147,7 +147,7 @@
       "right_control_input_tokens": 13429,
       "sample_bytes": 6634,
       "sample_sha256": "c8f7f6c7908de3416dcb9661e17d67a3c10833bd76a74e38f5ff461c2fa193f2",
-      "source_path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.03-ARTIFEX-SUPERVISOR/artifacts/P5/trial-admission-index-v3-p5.4-paired.json",
+      "source_path": "corpus/trial-admission-index-v3-p5.4-paired.json",
       "true_tokens": 3002.0,
       "whole_file": true
     },
@@ -197,7 +197,7 @@
       "right_control_input_tokens": 13429,
       "sample_bytes": 9114,
       "sample_sha256": "e293e251cf7ed366a95f0914e0f06bc4ee4ab3946926e2904de4e870be85fa40",
-      "source_path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.07-PLAN-ECONOMY/research/15-p0.1-provider-neutral-calibration-2026-08-08.md",
+      "source_path": "corpus/15-p0.1-provider-neutral-calibration-2026-08-08.md",
       "true_tokens": 1807.0,
       "whole_file": true
     },
@@ -247,7 +247,7 @@
       "right_control_input_tokens": 13429,
       "sample_bytes": 4330,
       "sample_sha256": "cad5ce41a68e7e10f8dcbc379b4ec719c755e690b2980a6602f6820a3c8de4ec",
-      "source_path": "/home/vostrikov/projects/packages/swissknifeman/plans/2026.08.07-PLAN-ECONOMY/findings/18-codex-token-usage-2026-08-08.md",
+      "source_path": "corpus/18-codex-token-usage-2026-08-08.md",
       "true_tokens": 873.0,
       "whole_file": true
     },
@@ -297,7 +297,7 @@
       "right_control_input_tokens": 13429,
       "sample_bytes": 9306,
       "sample_sha256": "40c3ac7f28647071947f4bc45b73060e89152cd4099edee6167594808ff54a20",
-      "source_path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/lib/task/token_estimate.py",
+      "source_path": "packages/task/lib/task/token_estimate.py",
       "true_tokens": 2114.0,
       "whole_file": true
     },
@@ -347,7 +347,7 @@
       "right_control_input_tokens": 13427,
       "sample_bytes": 4118,
       "sample_sha256": "2b9856c54ebb4171a89e2b48d6ab5d1d48f99d3bc910d218eb261ac751fbfdcc",
-      "source_path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/lib/task/token_probe.py",
+      "source_path": "packages/task/lib/task/token_probe.py",
       "true_tokens": 819.0,
       "whole_file": true
     },
@@ -397,7 +397,7 @@
       "right_control_input_tokens": 13427,
       "sample_bytes": 7114,
       "sample_sha256": "430294d4b4b5a1f73747e65d7a02006ca9223072ad727f6ab5f391a4a0b9ccfb",
-      "source_path": "/home/vostrikov/projects/packages/swissknifeman/packages/task/tests/test_token_estimate.py",
+      "source_path": "packages/task/tests/test_token_estimate.py",
       "true_tokens": 1784.0,
       "whole_file": true
     }

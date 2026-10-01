@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:596348032dd0ec0b227dca35acadeb5b430587e382868acfba7b2696c43826bf
+Canonical SHA-256: sha256:b8a040d8ef0adce9833e66f045ba38f20f5b9b48bf713b700e9eea44e54bf702
 Adapter: task.cursor-command/1.0.17
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -51,11 +51,17 @@ diagnostic suggestions outside the blocking acceptance list. An explicitly decla
 binding until its contract is transparently changed.
 
 For an existing phase, inspect its item carriers and state before designing. If its items are already
-detailed, continue to the first undetailed phase; after the last phase, run design finish and one
-whole-plan design audit. Recommend execution only after that audit is GREEN for the current authored
-design. “Next/new phase”, item count, local repair, or an ordinary failed check
+detailed, execution may start for that phase: either detail every phase first (then design finish)
+or detail one phase, execute it, and detail the next from the real code. Execution is admitted per
+phase; a whole-plan design finish and one `task:plan-audit <ID> design` are required only when
+plan.md declares `**Design Audit:** required` or the owner asks for them. “Next/new phase”, item count, local repair, or an ordinary failed check
 does not justify design; only new/from-draft scope or a concrete `design-required` contract decision
 does.
+
+For `new`/`from-draft` allocate the identity with
+`python3 scripts/plan-id.py --codename <NAME>` (it scans `plans/` and `plans/archive/`): use the returned
+`plan_id`, `title_prefix` (`План №N —`) and `short_id` (`PLAN<N>`) verbatim, never a guessed `№1`/`PLAN1`;
+re-run it right before writing the plan directory.
 
 Назначай Short ID и оформляй ссылки по `runtime/plan-protocol/references/work-references.md`
 из установленного пакета Task (`PLAN1.D35`, `PLAN1.P2.3`; legacy: `<PLAN-ID> <local-ID>`).
@@ -65,6 +71,13 @@ fresh audit/root; only a concrete context-budget, capability, owner-pause, indep
 public/authority, or material-risk boundary does. Design-only scope must not execute or spawn
 an unauthorized successor. Completion alone does not require a fresh process: use `scope-complete`
 and a same-root recommendation; the owner may invoke execution in this session.
+
+Plan the shape of review, not a ritual: item Review defaults to `none` (self-check plus affected
+tests). Independent review is a dedicated read-only item (`Ревью Pn`, numeric `Pn.m`, Deliverable =
+verdict file) at the end of the phase; a large phase gets slice review items between slices. Never
+write `Independent review` into an item's Validation. Routing names a minimum semantic class; the
+Executor/Reviewer cells of the execution sheet are recommended defaults from the provider model
+pool, so the owner may swap models inside the pool without editing the plan.
 
 Prefer a few outcome items (normally at most four), at most eight necessary reads per item, and
 about 250 lines/2,000 words for an ordinary phase/item contract. These are advisory targets.
@@ -80,8 +93,8 @@ work, never an unsupported percentage.
 Finalize a phase with `scripts/plan-work.py finalize-design --plan-dir <dir> --phase <Pn>
 --actor <actor> --session-id <session>`. For `task:plan-design <ID> finish`, use the same command
 with `--finish`; it validates any declared supporting artifacts and records a design fingerprint.
-After finish, `task:plan-audit <ID> design` records an independent GREEN verdict for that exact
-fingerprint. Use `scripts/plan-work.py design-gate --plan-dir <dir>` to see the allowed transition.
+After finish, `task:plan-audit <ID> design` (only for `Design Audit: required`/on request) records
+an independent GREEN verdict for that exact fingerprint. Use `scripts/plan-work.py design-gate --plan-dir <dir>` to see the allowed transition.
 Phase design proposes local groups; finish re-evaluates all phases and dependencies together. Write
 the final groups to the `<!-- execution-sheet/v1 -->` table in `roadmap.md`, one exact row per
 admission: provider-neutral command, one unified semantic route, and the batch's maximum review.

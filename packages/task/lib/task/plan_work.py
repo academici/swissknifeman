@@ -65,10 +65,7 @@ def _design_route(actual_route, *, owner_accepts_overshoot: bool) -> None:
     effort = actual_route.get("effort")
     if actual_route.get("model_class") != "frontier" or effort not in {"high", "xhigh"}:
         raise WorkError("ROUTE_UNDERSHOOT", "design требует frontier/high")
-    if effort == "xhigh" and not owner_accepts_overshoot:
-        raise WorkError(
-            "ECONOMY_ROUTE_OVERSHOOT",
-            "design использует frontier/high; более дорогой маршрут требует выбора владельца")
+    # Overshoot (xhigh) is recorded by route evidence, never a stop; the flag is a legacy no-op.
 
 
 def _supporting_artifacts(root: Path, phase_ids, *, strict: bool) -> dict:
@@ -173,7 +170,7 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
         raise WorkError("PLAN_WORK_INVALID_COMMAND", command)
     session_id = session_id or session_context.current_id()
     try:
-        plan_readiness.validate_execution_design(root)
+        plan_readiness.validate_execution_design(root, (item_id,))
     except plan_readiness.ReadinessError as exc:
         raise WorkError("PLAN_DESIGN_GATE_BLOCKED", str(exc)) from exc
     plan_readiness.validate_execution_target(root, (item_id,))
@@ -253,7 +250,7 @@ def design_context(plan_dir, phase_id: str | None = None, *, finish: bool = Fals
             "routing": routing["items"],
             "supporting_artifacts": _supporting_artifacts(root, phase_ids, strict=False),
             "execution_sheet": _execution_sheet(root, routing, strict=False),
-            "design_gate": plan_readiness.design_gate(root),
+            "design_gate": {**plan_readiness.design_gate(root), "mode": plan_readiness.gate_mode(root)},
             "handoff": (root / "handoff.md").read_text(encoding="utf-8"),
             "baseline_errors": diagnostics.errors,
         }
@@ -399,7 +396,7 @@ def main(argv=None) -> int:
             action.add_argument("--session-id")
         if name == "design-context":
             action.add_argument("--owner-accepts-overshoot", action="store_true",
-                                help="только при явном выборе более дорогого маршрута владельцем")
+                                help="устарело: более сильный маршрут больше не блокируется (no-op)")
         if name == "prepare":
             action.add_argument("--command", choices=("plan-exec", "plan-run"), required=True)
             action.add_argument("--actual-route", type=Path)
@@ -431,7 +428,7 @@ def main(argv=None) -> int:
             result = finalize_design(args.plan_dir, args.phase, finish=args.finish, actor=args.actor,
                                      session_id=args.session_id)
         elif args.action == "design-gate":
-            result = plan_readiness.design_gate(args.plan_dir)
+            result = {**plan_readiness.design_gate(args.plan_dir), "mode": plan_readiness.gate_mode(args.plan_dir)}
         else:
             result = finalize(args.plan_dir, args.item)
     except (OSError, ValueError) as exc:

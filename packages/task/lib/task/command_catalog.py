@@ -285,6 +285,20 @@ def _validate_model_inventory(raw: object, provider_id: str) -> None:
             raise _catalog_error("CMD_MAPPING_MISSING",
                                  f"/mappings/{provider_id}/model_inventory/entries/{index}/roles",
                                  {}, {"roles": roles}, "model inventory roles are invalid")
+    for index, entry in enumerate(entries):
+        for key in ("aliases", "patterns"):
+            values = entry.get(key, [])
+            if not isinstance(values, list) or not all(isinstance(item, str) and item for item in values):
+                raise _catalog_error("CMD_MAPPING_MISSING",
+                                     f"/mappings/{provider_id}/model_inventory/entries/{index}/{key}",
+                                     {}, {key: values}, f"model inventory {key} are invalid")
+        for pattern in entry.get("patterns", []):
+            try:
+                re.compile(pattern)
+            except re.error as error:
+                raise _catalog_error("CMD_MAPPING_MISSING",
+                                     f"/mappings/{provider_id}/model_inventory/entries/{index}/patterns",
+                                     {}, {"pattern": pattern}, f"model inventory pattern is invalid: {error}") from error
     auto_mode = raw.get("auto_mode")
     if auto_mode is not None:
         if not isinstance(auto_mode, dict) or set(auto_mode) != {"allowed_for", "forbidden_for"}:

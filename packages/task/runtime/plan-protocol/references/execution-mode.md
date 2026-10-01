@@ -24,5 +24,7 @@ workset.
 Final is allowed only after the whole requested workset is accepted, the owner stops, or a
 reproduced narrow boundary prevents its remaining member.  `check-open` also rejects a
 terminal response when a session-bound batch receipt still has unstarted remaining work.
+Run an item's affected checks only; broad suites run once in the phase's review/last item.
+Keep large logs/JSON in files and read status, counts and a few diagnostics.
 Read `../SKILL.md` or `plan-layout-v2.md` only for a named schema/detail needed during
 recovery or mutation.

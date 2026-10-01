@@ -15,7 +15,8 @@ import re
 from pathlib import Path
 
 from task.command_catalog import load_routing_metadata
-from task.route_evidence import RouteEvidenceError, capture_actual, owner_followup_revokes
+from task.route_evidence import (
+    RouteEvidenceError, capture_actual, owner_followup_revokes, resolve_model_class)
 
 
 SOURCE_VERSION = "claude-project-jsonl-v1"
@@ -55,26 +56,8 @@ def _invocation_from_event(event: dict) -> str | None:
     return None
 
 
-def _selector(model: str, mapping: dict) -> str:
-    lowered = model.lower()
-    matches = [
-        selector
-        for selectors in mapping.values()
-        for selector in selectors
-        if re.search(rf"(?:^|[-_/]){re.escape(selector.lower())}(?:$|[-_/0-9])", lowered)
-    ]
-    if len(matches) != 1:
-        raise RouteEvidenceError(
-            "ROUTE_LAUNCH_MISMATCH",
-            f"Claude model {model!r} has {len(matches)} selector mappings",
-        )
-    return matches[0]
-
-
 def _class_for(model: str, metadata: dict) -> str:
-    mapping = metadata["mappings"]["claude-code"]["class_selectors"]
-    selector = _selector(model, mapping)
-    return next(model_class for model_class, selectors in mapping.items() if selector in selectors)
+    return resolve_model_class("claude-code", model, metadata)
 
 
 def _effort_for(effort: str, metadata: dict) -> str:

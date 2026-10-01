@@ -105,6 +105,20 @@ class CursorArgvRouteTests(unittest.TestCase):
         self.assertEqual(evidence["source_version"], "cursor-ancestor-argv-v1")
         self.assertEqual(evidence["invocation"], prompt)
 
+    def test_unknown_explicit_model_fails_closed_without_cli_config_fallback(self):
+        prompt = "task:plan-exec LOQUM-DEV P1.8"
+        with tempfile.TemporaryDirectory() as temporary:
+            config = Path(temporary) / "cli-config.json"
+            config.write_text(json.dumps({"selectedModel": {
+                "modelId": "grok-4.7",
+                "parameters": [{"id": "reasoning_effort", "value": "high"}]}}), encoding="utf-8")
+            with self.assertRaises(RouteEvidenceError) as caught:
+                capture_current(
+                    expected_invocation=prompt, expected_cwd=os.getcwd(), routing_path=ROUTING,
+                    cli_config_path=config,
+                    process_table=self._table("mystery-model-9-high", prompt), start_pid=10)
+        self.assertEqual(caught.exception.code, "ROUTE_MODEL_UNKNOWN")
+
     def test_argv_thread_uses_cursor_conversation_id(self):
         prompt = "task:plan-exec LOQUM-DEV P1.9 — session E11. rest"
         with unittest.mock.patch.dict(

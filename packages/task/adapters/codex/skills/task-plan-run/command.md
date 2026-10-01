@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:6c420f5f37689d7d76abae710f281ae09fa891a5a86f97ffd9a58c95e682b3cf
+Canonical SHA-256: sha256:430dc7d96ec0b0f2ea7e11da019ea911887ae13a859bec58b3b0ec1a473251d3
 Adapter: task.codex-command/1.0.17
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -96,8 +96,10 @@ low-risk выбор выражается один раз:
    Он связывает историю, текущий GREEN дизайн и новую run identity; стандартные
    route/authority/input gates сохраняются. Без grant terminal item не переисполняй.
 2. Реализуй только Scope Included. Выбирай порядок чтения и работы самостоятельно. Для обычной
-   обратимой работы достаточно self-check и affected tests. Расширяй validation или независимое
-   review только из-за конкретного риска либо явного требования владельца.
+   обратимой работы достаточно self-check и affected tests. Расширяй validation только из-за
+   конкретного риска либо явного требования владельца; независимое review — отдельный read-only
+   пункт плана (`Ревью Pn`), не шаг внутри пункта. Широкие suite — один раз в review/последнем
+   пункте фазы; большие логи — в файл, в контекст status/counts/первые диагностики.
 3. Сохрани GREEN evidence и terminal journal event, затем один раз вызови
    `scripts/plan-work.py finalize`. Runtime обновит затронутые views, следующий ready bundle и
    delivery receipt. Не повторяй preflight и не перечитывай полные carriers без именованной

@@ -510,10 +510,12 @@ def pre_final_open_runs(project_root: Path, provider_session: str) -> dict:
     open_run = any(row["state"] == "in-progress" for row in observed)
     incomplete_workset = any(row["remaining"] and row["terminal_boundary"] is None
                              for row in worksets)
-    blocked = open_run or incomplete_workset
+    # An unstarted remainder is reported, not forbidden: the final must name the exact
+    # semantic Next. Only a run left open (in-progress) blocks the final.
+    blocked = open_run
     verdict = {"final_allowed": not blocked,
                "reason": ("TASK_OPEN_RUN_FINAL_FORBIDDEN" if open_run else
-                          "TASK_WORKSET_INCOMPLETE" if incomplete_workset else
+                          "TASK_WORKSET_REMAINING" if incomplete_workset else
                           "NO_OPEN_SESSION_RUN"),
                "observed": observed, "worksets": worksets}
     if observed or worksets:

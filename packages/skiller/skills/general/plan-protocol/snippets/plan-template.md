@@ -7,6 +7,8 @@
 back-compat. Новый план получает Meta `Short ID | PLAN<N>`: постоянный номер по репозиторию,
 включая архив, независимо от дневного №N. Внешние ссылки: `PLAN1.D35`, `PLAN1.P2.3`;
 правило назначения и legacy fallback — `references/work-references.md`.
+Номера не выдумывать и не считать вручную: `python3 packages/task/scripts/plan-id.py --codename <КОДОВОЕ-ИМЯ>`
+(сканирует `plans/` и `plans/archive/`) отдаёт готовые `plan_id`, `title_prefix` и `short_id` — подставить как есть.
 Хранимый формат — только Markdown с жёсткими маркерами; JSON — производный
 артефакт парсера, не источник истины.
 
@@ -60,7 +62,9 @@ plan-protocol; не копировать его целиком. Минимум:>
 причиной; связные adjacent items одной фазы группировать, если общий контекст экономит
 повторное чтение/setup/validation. Группа не пересекает audit/close и не смешивает Exec.
 Review выбирается по конкретному item risk или прямому требованию владельца: неизвестность
-сначала собирает evidence и не превращается автоматически в full.
+сначала собирает evidence и не превращается автоматически в full. По умолчанию Review=`none`;
+независимое ревью — отдельный пункт `Ревью Pn` (read-only, verdict-файл) в конце фазы, у большой
+фазы — срезами. Не пиши `Independent review` в Validation пункта.
 Только semantic classes `economy|implementation|frontier`, не provider selectors.
 Design finish поднимает batch до максимума class/effort/review и фиксирует
 exact admission в `roadmap.md` execution sheet.>

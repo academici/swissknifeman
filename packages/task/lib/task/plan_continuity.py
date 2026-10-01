@@ -201,10 +201,18 @@ def reduce(estimate: WorkEstimate) -> ContinuityDecision:
             return ContinuityDecision("waiting-external", "external-wait", evidence, False)
     if estimate.lifecycle == "terminal":
         return ContinuityDecision("terminal", "terminal-evidence", evidence, False)
-    if not estimate.route_attested or not estimate.batch_receipt_valid:
-        raise ContinuityError("CONTINUITY_EVIDENCE_MISSING: route or batch receipt")
-    if not estimate.capabilities_attested:
-        raise ContinuityError("CONTINUITY_EVIDENCE_MISSING: capability attestation")
+    # An owner-requested transfer saves a checkpoint and a prompt; it launches nothing here, so it
+    # needs no route/batch/capability attestation of the *current* executor (the new session
+    # admits its own route at start). Never a fake attestation: the gap is recorded as evidence.
+    owner_transfer = estimate.lifecycle in {"owner-requested-new-session", "owner-pause-no-resume"}
+    attested = (estimate.route_attested and estimate.batch_receipt_valid
+                and estimate.capabilities_attested)
+    if not attested:
+        if not owner_transfer:
+            if not estimate.route_attested or not estimate.batch_receipt_valid:
+                raise ContinuityError("CONTINUITY_EVIDENCE_MISSING: route or batch receipt")
+            raise ContinuityError("CONTINUITY_EVIDENCE_MISSING: capability attestation")
+        evidence += ("transfer:manual-unattested",)
 
     reason = None
     if estimate.lifecycle in COLD_START_REASONS:

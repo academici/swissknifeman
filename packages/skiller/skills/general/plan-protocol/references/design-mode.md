@@ -1,9 +1,8 @@
 # Design mode
 
 Use only for an explicitly requested plan design/refinement result or a concrete
-`design-required` contract choice. Existing detailed, ready work routes to the remaining
-whole-plan design steps before execution;
-ordinary repair, a failed check, or the next phase name does not reopen design.
+`design-required` contract choice. Existing detailed, ready work may go to execution
+phase by phase; ordinary repair, a failed check, or the next phase name does not reopen design.
 
 Obey the owner's time/research budget. Reuse existing evidence and read only what can change a
 decision. An audit ledger is not an acceptance checklist; exhaustive proofs require an explicit
@@ -25,10 +24,12 @@ still invalidates the relevant seal and needs a recorded delta assessment.
 Use `plan-work.py finalize-design --phase <Pn>` for a phase. The `finish` invocation uses
 `design-context --finish` and `finalize-design --finish`; finish checks any dossier that was
 actually declared. It records a digest of authored plan, roadmap, phases, item specs and selected
-supporting files. Then one `task:plan-audit <ID> design` must record GREEN against that digest.
+supporting files. A `task:plan-audit <ID> design` GREEN against that digest is required only for
+`**Design Audit:** required` or on owner request.
 `plan-work.py design-gate --plan-dir <dir>` reports the digest and current gate verdict.
-An incomplete phase, missing finish, stale audit or non-GREEN verdict blocks `plan-exec`/`plan-run`.
-Do not route a ready P1 to execution while another declared phase remains a skeleton.
+By default `plan-exec`/`plan-run` are gated per phase: the target phase and item must be detailed;
+other phases may remain skeletons or backlog. Only `Design Audit: required` also needs finish, a
+current fingerprint and a GREEN audit.
 Phase-local design proposes batches from shared context; finish evaluates the whole dependency graph
 and writes the final one-row-per-admission `execution-sheet/v1` table in `roadmap.md`. Each row has
 one exact provider-neutral command, the maximum semantic class/effort, and maximum review across its

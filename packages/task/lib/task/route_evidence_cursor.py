@@ -16,7 +16,7 @@ import os
 from pathlib import Path
 
 from task.command_catalog import load_routing_metadata
-from task.route_evidence import RouteEvidenceError, capture_actual
+from task.route_evidence import RouteEvidenceError, capture_actual, resolve_model_class
 
 
 CLI_SOURCE_VERSION = "cursor-ancestor-argv-v1"
@@ -112,14 +112,7 @@ def _one(values: tuple[str, ...], label: str) -> str:
 
 
 def _selector_class(model: str, routing_path: Path) -> str:
-    metadata = load_routing_metadata(routing_path)
-    mapping = metadata.get("mappings", {}).get("cursor", {})
-    matches = [
-        model_class
-        for model_class, selectors in mapping.get("class_selectors", {}).items()
-        if model in selectors
-    ]
-    return _one(tuple(matches), f"Cursor model-class mapping for {model!r}")
+    return resolve_model_class("cursor", model, load_routing_metadata(routing_path))
 
 
 def _selector_effort(selector: str, routing_path: Path) -> str:

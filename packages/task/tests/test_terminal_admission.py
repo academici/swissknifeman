@@ -89,7 +89,7 @@ class TerminalAdmissionTests(unittest.TestCase):
         self.assertTrue(terminal_admission.pre_final_open_runs(root, "thread-1")["final_allowed"])
         self.assertFalse((root / ".swissknifeman").exists())
 
-    def test_closed_first_member_does_not_hide_unstarted_workset_remainder(self):
+    def test_closed_first_member_reports_unstarted_workset_remainder_without_blocking(self):
         root = Path(self.directory.name)
         plan = write_valid_plan(root, "WORKSET", layout="v2")
         batch = {"batch_id": "B1", "items": ("P1.1", "P1.2"),
@@ -109,8 +109,8 @@ class TerminalAdmissionTests(unittest.TestCase):
             actor="implementation/high", result="closed-green", session_id="thread-1",
             run_id=run_id, attempt=1, decision=decision, batch_receipt=checkpoint))
         verdict = terminal_admission.pre_final_open_runs(root, "thread-1")
-        self.assertFalse(verdict["final_allowed"])
-        self.assertEqual(verdict["reason"], "TASK_WORKSET_INCOMPLETE")
+        self.assertTrue(verdict["final_allowed"])
+        self.assertEqual(verdict["reason"], "TASK_WORKSET_REMAINING")
         self.assertEqual(verdict["worksets"][0]["remaining"], ["P1.2"])
 
     def test_chat_scope_stop_and_fresh_handoff_require_terminal_receipt(self):

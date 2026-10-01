@@ -140,11 +140,12 @@
       "model_inventory": {
         "verified_at": "2026-09-17",
         "source": "claude --help @ 2.1.266 + command-routing.json D84",
-        "verification": "cli-help-and-frozen-mapping; no machine-readable catalogue exists",
+        "verification": "cli-help-and-frozen-mapping; no machine-readable catalogue exists; 2026-10-01 pool extended by owner (fable, overlapping roles, family patterns)",
         "entries": [
-          {"id": "opus", "roles": ["frontier", "design", "audit"]},
-          {"id": "sonnet", "roles": ["implementation"]},
-          {"id": "haiku", "roles": ["economy"], "status": "confirmed"}
+          {"id": "fable", "roles": ["frontier", "implementation", "review", "design", "audit"], "patterns": [".*fable.*"]},
+          {"id": "opus", "roles": ["frontier", "implementation", "review", "design", "audit"], "patterns": [".*opus.*"]},
+          {"id": "sonnet", "roles": ["implementation", "review"], "patterns": [".*sonnet.*"]},
+          {"id": "haiku", "roles": ["economy", "explore"], "patterns": [".*haiku.*"], "status": "confirmed"}
         ]
       },
       "evidence": [{"source": "packages/task/commands", "verified_at": "2026-07-21", "scope": "current Claude task plugin", "claim": "committed slash command and frontmatter surface"}]
@@ -163,13 +164,14 @@
       "model_inventory": {
         "verified_at": "2026-09-23",
         "source": "plans/2026.07.19-DUAL-PROVIDER/plan.md#D84 and Codex provider thread state",
-        "verification": "frozen D84 mapping; gpt-6-sol observed in provider thread state; no machine-readable catalogue exists",
+        "verification": "frozen D84 mapping; gpt-6-sol observed in provider thread state; no machine-readable catalogue exists; 2026-10-01 pool extended by owner (gpt-6.1-sol frontier, overlapping roles)",
         "entries": [
-          {"id": "gpt-5.6-luna", "roles": ["economy"]},
-          {"id": "gpt-5.6-terra", "roles": ["implementation"]},
-          {"id": "gpt-5.6-sol", "roles": ["frontier", "design", "audit"]},
-          {"id": "gpt-6-astra", "roles": ["frontier", "design", "audit"]},
-          {"id": "gpt-6-sol", "roles": ["implementation"]}
+          {"id": "gpt-5.6-luna", "roles": ["economy", "explore"]},
+          {"id": "gpt-5.6-terra", "roles": ["implementation", "review"]},
+          {"id": "gpt-5.6-sol", "roles": ["frontier", "implementation", "review", "design", "audit"]},
+          {"id": "gpt-6-astra", "roles": ["frontier", "implementation", "review", "design", "audit"], "patterns": ["gpt-6(\\.\\d+)*-astra"]},
+          {"id": "gpt-6-sol", "roles": ["implementation", "review"]},
+          {"id": "gpt-6.1-sol", "roles": ["frontier", "implementation", "review", "design", "audit"], "patterns": ["gpt-6\\.[1-9]\\d*-sol"]}
         ]
       },
       "evidence": [{"source": "plans/2026.07.19-DUAL-PROVIDER/plan.md#D84", "verified_at": "2026-07-21", "scope": "Codex command routing and invocation", "claim": "D84 freezes selectors and the mandatory `$ ` invocation prefix"}]
@@ -192,13 +194,14 @@
       "model_inventory": {
         "verified_at": "2026-09-17",
         "source": "agent --list-models @ 2026.09.15-d2fe57e",
+        "verification": "2026-10-01 pool extended by owner (overlapping roles, family patterns); ids not re-listed from the CLI",
         "entries": [
           {"id": "composer-2.5-fast", "roles": ["economy", "explore"]},
-          {"id": "composer-2.5", "roles": ["implementation"]},
-          {"id": "claude-opus-5-thinking-high", "roles": ["frontier", "design", "audit"]},
-          {"id": "grok-4.7", "roles": ["frontier"], "notes": "live cli-config selectedModel; reasoning_effort=high maps through effort_selectors"},
-          {"id": "grok-4.6", "roles": ["frontier"], "notes": "live cli-config selectedModel; effort=high is the Grok 4.6 alias of reasoning_effort"},
-          {"id": "gpt-5.6-sol-medium", "roles": ["alternate"]},
+          {"id": "composer-2.5", "roles": ["implementation", "review"]},
+          {"id": "claude-opus-5-thinking-high", "roles": ["frontier", "implementation", "review", "design", "audit"], "patterns": ["claude-(opus|fable)-.*"]},
+          {"id": "grok-4.7", "roles": ["frontier", "implementation", "review"], "patterns": ["grok-4\\.\\d+"], "notes": "live cli-config selectedModel; reasoning_effort=high maps through effort_selectors"},
+          {"id": "grok-4.6", "roles": ["frontier", "implementation", "review"], "notes": "live cli-config selectedModel; effort=high is the Grok 4.6 alias of reasoning_effort"},
+          {"id": "gpt-5.6-sol-medium", "roles": ["frontier", "implementation", "review", "alternate"]},
           {"id": "auto", "roles": ["routing-assist"], "policy": "never-substitute-fixed-frontier"}
         ],
         "auto_mode": {

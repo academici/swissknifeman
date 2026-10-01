@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 import unittest
 
+import fixtures  # noqa: F401 — puts lib/ and the monorepo root on sys.path
+
 from task.plan_continuity import (COLD_START_REASONS, ContinuityDecision,
                                   ContinuityError, WorkEstimate, evaluate,
                                   decision_from_dict, estimate_from_dict,
@@ -71,6 +73,21 @@ class ContinuityTests(unittest.TestCase):
         for telemetry in (True, None):
             self.assertEqual(evaluate(route_attested=True, context_attested=telemetry,
                                       batch_receipt_valid=True).outcome, "continue-root")
+
+    def test_owner_requested_transfer_needs_no_current_route_attestation(self):
+        decision = reduce(estimate(
+            lifecycle="owner-requested-new-session", checkpoint="journal:impl-P4.2",
+            route_attested=False, batch_receipt_valid=False, capabilities_attested=False))
+        self.assertEqual(decision.outcome, "cold-start-root")
+        self.assertEqual(decision.reason, "owner-requested-new-session")
+        self.assertIn("transfer:manual-unattested", decision.evidence)
+        validate_decision(decision)
+        # An ordinary active continuation still fails closed without attestation.
+        with self.assertRaises(ContinuityError):
+            reduce(estimate(route_attested=False))
+        # A manual transfer still needs a durable checkpoint.
+        with self.assertRaises(ContinuityError):
+            reduce(estimate(lifecycle="owner-requested-new-session", route_attested=False))
 
     def test_owner_wait_and_isolated_review_are_not_cold_starts(self):
         self.assertFalse(evaluate(route_attested=True, context_attested=True,

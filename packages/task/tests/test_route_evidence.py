@@ -64,16 +64,57 @@ class CodexInventoryRouteTests(unittest.TestCase):
         with self.assertRaises(re.RouteEvidenceError):
             route_evidence_codex._selector_class("unlisted-model", ROUTING_PATH)
 
-    def test_ambiguous_inventory_roles_fail_closed(self):
+    def test_overlapping_roles_admit_the_highest_class(self):
         from task import route_evidence_codex
         metadata = json.loads(ROUTING_PATH.read_text())
         metadata["mappings"]["codex"]["model_inventory"]["entries"].append(
-            {"id": "ambiguous-model", "roles": ["implementation", "frontier"]})
+            {"id": "overlap-model", "roles": ["implementation", "frontier", "review"]})
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "routing.json"
             path.write_text(json.dumps(metadata))
-            with self.assertRaises(re.RouteEvidenceError):
-                route_evidence_codex._selector_class("ambiguous-model", path)
+            self.assertEqual(route_evidence_codex._selector_class("overlap-model", path), "frontier")
+
+
+class ModelPoolResolverTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.metadata = json.loads(ROUTING_PATH.read_text())
+
+    def resolve(self, provider, model):
+        return re.resolve_model_class(provider, model, self.metadata)
+
+    def test_family_patterns_and_versions_resolve_without_plan_edits(self):
+        self.assertEqual(self.resolve("claude-code", "claude-sonnet-5-5"), "implementation")
+        self.assertEqual(self.resolve("claude-code", "claude-opus-5-5"), "frontier")
+        self.assertEqual(self.resolve("claude-code", "claude-fable-5-1"), "frontier")
+        self.assertEqual(self.resolve("claude-code", "claude-haiku-4-5-20251001"), "economy")
+        self.assertEqual(self.resolve("codex", "gpt-6.1-sol"), "frontier")
+        self.assertEqual(self.resolve("codex", "gpt-6.2-sol"), "frontier")
+        self.assertEqual(self.resolve("codex", "gpt-6-sol"), "implementation")
+        self.assertEqual(self.resolve("cursor", "grok-4.7"), "frontier")
+        self.assertEqual(self.resolve("cursor", "grok-4.8"), "frontier")
+
+    def test_unknown_model_is_nonterminal_evidence_missing(self):
+        for provider, model in (("codex", "unlisted-model"), ("cursor", "auto"),
+                                ("claude-code", "claude-mystery-1")):
+            with self.assertRaises(re.RouteEvidenceError) as caught:
+                self.resolve(provider, model)
+            self.assertEqual(caught.exception.code, "ROUTE_MODEL_UNKNOWN")
+
+    def test_retired_entry_leaves_the_pool(self):
+        metadata = json.loads(json.dumps(self.metadata))
+        for entry in metadata["mappings"]["codex"]["model_inventory"]["entries"]:
+            if entry["id"] == "gpt-5.6-terra":
+                entry["status"] = "retired"
+        with self.assertRaises(re.RouteEvidenceError):
+            re.resolve_model_class("codex", "gpt-5.6-terra", metadata)
+
+    def test_stronger_actual_class_admits_and_weaker_stops(self):
+        required = {"model_class": "implementation", "effort": "high"}
+        stronger = re.capture_actual("frontier", "high", source="provider-thread-state", model="m")
+        weaker = re.capture_actual("economy", "high", source="provider-thread-state", model="m")
+        self.assertIsNone(re.dispatch_guard(required, stronger, ()))
+        self.assertEqual(re.dispatch_guard(required, weaker, ()), "ROUTE_UNDERSHOOT")
 
 
 class RequiredRouteTests(unittest.TestCase):

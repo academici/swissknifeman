@@ -192,10 +192,64 @@ def design_gate(plan_dir) -> dict:
     return {"allowed": False, "code": code, **snapshot}
 
 
-def validate_execution_design(plan_dir) -> None:
-    verdict = design_gate(plan_dir)
-    if not verdict["allowed"]:
-        raise ReadinessError(f"{verdict['code']}: {verdict.get('reason', 'finish and audit current design')}")
+_AUDIT_REQUIRED = re.compile(r"^\*\*Design Audit:\*\*\s*required\s*$", re.MULTILINE | re.IGNORECASE)
+
+
+def design_audit_required(plan_dir) -> bool:
+    """Whole-plan design audit is opt-in: `**Design Audit:** required` in plan.md."""
+    try:
+        return bool(_AUDIT_REQUIRED.search((Path(plan_dir) / "plan.md").read_text(encoding="utf-8")))
+    except (OSError, UnicodeError):
+        return False
+
+
+def gate_mode(plan_dir) -> str:
+    """`audit-required` (strict whole-plan) or `phase-scoped` (default)."""
+    return "audit-required" if design_audit_required(plan_dir) else "phase-scoped"
+
+
+def phase_ready(plan_dir, item_ids) -> None:
+    """Require only the phases of the requested items to be detailed.
+
+    Other declared phases may stay skeletons, backlog or unaudited: detail-one,
+    execute, detail-next is a valid order. Only the target items must carry
+    every executable field and no open clarification.
+    """
+    from task import plan_layout
+
+    root = Path(plan_dir)
+    for item_id in item_ids:
+        if not _ITEM.fullmatch(item_id):
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: некорректный item {item_id!r}")
+        phase_id = item_id.split(".")[0]
+        phase_path = plan_layout.phase_paths(root).get(phase_id)
+        if phase_path is None:
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} не детализирована")
+        try:
+            phase_text = phase_path.read_text(encoding="utf-8")
+            spec_text = plan_layout.carrier_path(root, "item-spec", item_id=item_id).read_text(encoding="utf-8")
+        except (OSError, UnicodeError, plan_layout.PlanLayoutError) as exc:
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {item_id} не читается: {exc}") from exc
+        if _SKELETON.search(phase_text) or "[NEEDS CLARIFICATION]" in phase_text:
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} остаётся skeleton/unclear")
+        for field in _EXECUTABLE_ITEM_FIELDS:
+            match = re.search(rf"^\*\*{re.escape(field)}:\*\*\s*(.*)$", spec_text, re.MULTILINE)
+            if match is None or match[1].strip() in {"", "—"}:
+                raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {item_id} требует {field}")
+        if "[NEEDS CLARIFICATION]" in spec_text:
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {item_id} содержит open clarification")
+
+
+def validate_execution_design(plan_dir, item_ids=None) -> None:
+    """Admit execution: phase-scoped by default, whole-plan audit only when required."""
+    root = Path(plan_dir)
+    if design_audit_required(root):
+        verdict = design_gate(root)
+        if not verdict["allowed"]:
+            raise ReadinessError(f"{verdict['code']}: {verdict.get('reason', 'finish and audit current design')}")
+        return
+    if design_gate_enabled(root) and item_ids:
+        phase_ready(root, tuple(item_ids))
 
 
 def _closed(value, fields, name):

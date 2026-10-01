@@ -71,7 +71,7 @@ def _execution_ranks(plan_dir: Path, items: dict[str, dict]) -> dict[str, tuple]
             continue
         for index, item in enumerate(order):
             ranks[item] = (_key(item)[0], index + 1)
-     return ranks
+    return ranks
 
 
 def terminal_items(plan_dir) -> frozenset[str]:

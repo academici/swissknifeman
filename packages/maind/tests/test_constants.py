@@ -1,4 +1,4 @@
-"""Тесты constants.py: инварианты наборов/портов/scope'ов (защита от рассинхрона)."""
+"""Tests constants.py: set invariants/ports/scope'ov (protection against desync)."""
 import json
 import unittest
 
@@ -14,11 +14,11 @@ class TestConstants(unittest.TestCase):
     def test_graph_adapters_canonical_and_legacy(self):
         self.assertEqual(c.GRAPH_ADAPTERS, {"federation", "disabled"})
         self.assertEqual(c.LEGACY_GRAPH_ADAPTERS, {"memory", "graphify", "networkx"})
-        # канонический и legacy наборы не пересекаются
+        # canonical and legacy sets do not intersect
         self.assertFalse(c.GRAPH_ADAPTERS & c.LEGACY_GRAPH_ADAPTERS)
 
     def test_node_and_edge_types_cover_derive(self):
-        # типы, которые реально создаёт derive/seed
+        # types that actually creates derive/seed
         self.assertLessEqual({"project", "package", "skill", "tool"}, c.NODE_TYPES)
         self.assertLessEqual({"depends_on", "requires", "provided_by", "uses"},
                              c.EDGE_TYPES)
@@ -26,7 +26,7 @@ class TestConstants(unittest.TestCase):
     def test_memory_ports_distinct_ints(self):
         ports = [c.MEMORY_HTTP_PORT, c.MEMORY_STREAM_PORT, c.MEMORY_VIEWER_PORT]
         self.assertTrue(all(isinstance(p, int) for p in ports))
-        self.assertEqual(len(set(ports)), len(ports))   # без коллизий
+        self.assertEqual(len(set(ports)), len(ports))   # without collisions
         self.assertIn(str(c.MEMORY_HTTP_PORT), c.MEMORY_DEFAULT_URL)
 
     def test_scope_buckets(self):
@@ -43,14 +43,14 @@ class TestConstants(unittest.TestCase):
         self.assertGreaterEqual(c.AGENT_STALE_FACTOR, 1)
 
     def test_tracked_templates_pin_serena_same_as_source(self):
-        # F1 (P5.5, D115/D116): версионируемые шаблоны политики code_graph обязаны нести
-        # тот же REF, что constants.SERENA_SRC — иначе свежая установка (install.sh
-        # `cp config.example.json → config.json`) раскатывает непиннованную политику.
+        # F1 (P5.5, D115/D116): versionable policy templates code_graph are required to bear
+        # same REF, what constants.SERENA_SRC — otherwise fresh installation (install.sh
+        # `cp config.example.json → config.json`) rolls out unpinned politics.
         if find_monorepo_root is None:
-            self.skipTest("core.repo недоступен (standalone-раскладка пакета)")
+            self.skipTest("core.repo not available (standalone-package layout)")
         root = find_monorepo_root(__file__)
         if root is None:
-            self.skipTest("корень монорепо не найден (standalone-раскладка пакета)")
+            self.skipTest("monorepo root not found (standalone-package layout)")
 
         with open(root / "config.example.json", encoding="utf-8") as f:
             cfg_example = json.load(f)
@@ -58,7 +58,7 @@ class TestConstants(unittest.TestCase):
         for field in ("args", "index_args"):
             values = [a for a in code_graph[field] if a.startswith("git+")]
             self.assertEqual(values, [c.SERENA_SRC],
-                              f"config.example.json code_graph.{field} не пиннован на "
+                              f"config.example.json code_graph.{field} is not pinned on "
                               f"constants.SERENA_SRC ({c.SERENA_SRC!r}): {values!r}")
 
         with open(root / ".mcp.json.example", encoding="utf-8") as f:
@@ -66,11 +66,11 @@ class TestConstants(unittest.TestCase):
         servers = (mcp_example.get("mcpServers") or {})
         codegraph = servers.get("codegraph") or servers.get("serena")
         if codegraph is None:
-            return  # umbrella без codegraph — пин Serena проверяется через code_graph выше
+            return  # umbrella without codegraph — pin Serena is checked via code_graph above
         serena_args = codegraph["args"]
         from_idx = serena_args.index("--from")
         self.assertEqual(serena_args[from_idx + 1], c.SERENA_SRC,
-                          f".mcp.json.example codegraph.args не пиннован на "
+                          f".mcp.json.example codegraph.args is not pinned on "
                           f"constants.SERENA_SRC ({c.SERENA_SRC!r}): "
                           f"{serena_args[from_idx + 1]!r}")
 

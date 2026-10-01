@@ -1,75 +1,75 @@
-# Пресеты: именованные кластеры скиллов
+# Presets: named skill clusters
 
-Бакеты крупные (`php` — десятки скиллов), а проекту обычно нужен поднабор: один —
-Filament-админка, другой — пакет, третий — чистый API. **Пресет** — именованная группа
-скиллов, на которую ссылается проектный `.swissknifeman/config.json`, чтобы не перечислять
-скиллы руками.
+Large buckets (`php` — dozens of skills), and a project usually needs a subset: one -
+Filament-admin, the other is a package, the third is pure API. **Preset** — named group
+skills referred to by the project `.swissknifeman/config.json`, not to list
+hand skills.
 
-Пресеты — концепт **vendor-канала** (`skiller sync`): они раскрываются в per-skill набор.
-В `connect` бакет атомарен, поэтому пресеты там не действуют.
+Presets - concept **vendor-channel** (`skiller sync`): they expand in per-skill set.
+B `connect` the bucket is atomic, so presets have no effect there.
 
-## Формат
+## Format
 
-`presets/<name>.json` в реестре (рядом с `profiles/`):
+`presets/<name>.json` in the registry (next to `profiles/`):
 
 ```json
 {
   "name": "laravel-admin",
-  "description": "Админка на Filament: ресурсы/панели, права, авторизация-атрибуты, медиа, настройки",
+  "description": "Admin on Filament: resources/panels, rights, authorization-attributes, media, settings",
   "extends": ["laravel-core"],
   "include": ["laravel-filament/filament", "laravel-auth/laravel-permissions", "laravel-auth/attribute-authorization",
               "laravel-extras/medialibrary", "laravel-extras/spatie-settings"]
 }
 ```
 
-- `name` — kebab-case, совпадает с именем файла.
-- `extends` — список родительских пресетов (раскрываются рекурсивно, циклы запрещены).
-- `include` — скиллы по `"bucket/rel"` (точно) или по `"name"`.
-- `buckets` — (опц.) целые бакеты внутри пресета.
+- `name` — kebab-case, is the same as the file name.
+- `extends` — list of parent presets (are expanded recursively, loops are not allowed).
+- `include` — skills by `"bucket/rel"` (exactly) or by `"name"`.
+- `buckets` — (opt.) entire buckets inside a preset.
 
-## Как применяется
+## How to use
 
-В проектном `.swissknifeman/config.json`:
+In the design `.swissknifeman/config.json`:
 
 ```json
 { "mode": "vendor", "presets": ["laravel-admin"], "exclude": ["laravel-extras/medialibrary"] }
 ```
 
-Итоговый набор = **(presets ∪ buckets ∪ include) − exclude**. Пресеты раскрываются в
-`buckets`/`include` ДО вычитания, затем `skiller sync` дотягивает `requires` и пишет
-`skills-lock.json`. `exclude` бьёт и пресет, и зависимость (с warning).
+Final set = **(presets ∪ buckets ∪ include) − exclude**. Presets are expanded to
+`buckets`/`include` BEFORE subtraction, then `skiller sync` reaches `requires` and writes
+`skills-lock.json`. `exclude` hits both the preset and the dependency (with warning).
 
 ```bash
-skiller sync --dry-run    # план: что развернётся из пресета
-skiller sync              # применить → .claude/skills/ + skills-lock.json
+skiller sync --dry-run    # plan: what will unfold from the preset
+skiller sync              # apply → .claude/skills/ + skills-lock.json
 ```
 
-## Доступные пресеты
+## Available presets
 
-> **PHP и Frontend разбиты на тонкие бакеты.** PHP: ядро `php` + `laravel-{testing,filament,livewire,
-> data-layer,auth,architecture,extras}` (+ `php-packages`). Frontend: ядро `frontend` + `frontend-{vue,
-> nuxt,tailwind,naive-ui,reka,vite,linting,animations,figma,wayfinder,backend}`. Для **одной** области
-> бери **бакет** (`buckets: ["laravel-filament"]`). Пресеты ниже — **сквозные стеки**, компонующие
-> несколько бакетов (часто php + frontend).
+> **PHP and Frontend are divided into thin buckets.** PHP: core `php` + `laravel-{testing,filament,livewire,
+> data-layer,auth,architecture,extras}` (+ `php-packages`). Frontend: core `frontend` + `frontend-{vue,
+> nuxt,tailwind,naive-ui,reka,vite,linting,animations,figma,wayfinder,backend}`. For **one** areas
+> take **bucket** (`buckets: ["laravel-filament"]`). Presets below - **end-to-end stacks**, components
+> several buckets (often php + frontend).
 
-| Область | Пресет | Состав (компонует бакеты) |
+| Area | Preset | Composition (builds buckets) |
 |:--|:--|:--|
-| php-стек | `laravel-admin` | php + laravel-filament + laravel-auth + laravel-extras |
-| php-стек | `laravel-enterprise` | php + laravel-architecture + laravel-auth |
+| php-stack | `laravel-admin` | php + laravel-filament + laravel-auth + laravel-extras |
+| php-stack | `laravel-enterprise` | php + laravel-architecture + laravel-auth |
 | php+front | `laravel-inertia` | php + laravel-data-layer + frontend-backend + frontend-wayfinder |
 | php+front | `laravel-livewire-stack` | php + laravel-livewire + laravel-data-layer |
 | frontend | `vue-spa` | frontend + frontend-vue + frontend-vite + frontend-linting + frontend-tailwind |
 | front+arch | `figma-to-frontend` | frontend-figma + architect/figma-mcp-core |
-| architect | `agents-eval` · `api-data` · `system-design` · `compliance-security` | агенты/оценка · API/данные · арх./стек/observability · безопасность/комплаенс |
-| pm | `pm-discovery` · `pm-strategy` · `pm-delivery` · `pm-metrics` | BRD/PMF · GTM/монетизация · PRD/роадмап · unit-экономика |
-| general | `agent-context` · `agent-tasks` · `project-conventions` | контекст-дисциплина · постановка задач · конвенции проекта |
-| quality | `code-quality` · `testing-quality` | ревью/рефакторинг/долг · стратегия/мутации/E2E |
+| architect | `agents-eval` · `api-data` · `system-design` · `compliance-security` | agents/rating · API/data · arch./stack/observability · security/compliance |
+| pm | `pm-discovery` · `pm-strategy` · `pm-delivery` · `pm-metrics` | BRD/PMF · GTM/monetization · PRD/roadmap · unit-economics |
+| general | `agent-context` · `agent-tasks` · `project-conventions` | context-discipline · task setting · project conventions |
+| quality | `code-quality` · `testing-quality` | review/refactoring/debt · strategy/mutations/E2E |
 
-## Добавить пресет
+## Add preset
 
-1. `presets/<name>.json` (`name` = файл, непустой `description`, валидные `extends`/`include`/`buckets`).
-2. `bash scripts/validate.sh` — проверит, что токены резолвятся и нет циклов `extends`.
-3. `skiller registry` (если индексируется) → PR.
+1. `presets/<name>.json` (`name` = file, non-empty `description`, valid `extends`/`include`/`buckets`).
+2. `bash scripts/validate.sh` — will check that tokens resolve and there are no loops `extends`.
+3. `skiller registry` (if indexed) → PR.
 
-См. также [Vendor-режим](./vendor-mode) (конфиг и поток sync) и [Профили](./profiles)
-(автоподбор бакетов по типу проекта).
+See also [Vendor-mode](./vendor-mode) (config and flow sync) and [Profiles](./profiles)
+(automatic selection of buckets by project type).

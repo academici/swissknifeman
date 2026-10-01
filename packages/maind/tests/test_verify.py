@@ -1,5 +1,5 @@
-"""Тесты verify.py: классификация памяти (seed vs реал), покрытие графа, наличие .serena.
-Сетевую часть (живой демон) не трогаем — проверяем чистую логику и файловые замеры в tmp."""
+"""Tests verify.py: memory classification (seed vs real), graph coverage, presence .serena.
+Network part (living demon) do not touch - we check pure logic and file measurements in tmp."""
 import json
 import tempfile
 import unittest
@@ -19,15 +19,15 @@ TWO = [
 class TestVerify(unittest.TestCase):
     def test_classify_seed_vs_real(self):
         mems = [
-            {"content": "[maind:ecosystem-link] alpha — узел", "createdAt": "2026-06-20T10:00:00Z"},
+            {"content": "[maind:ecosystem-link] alpha — node", "createdAt": "2026-06-20T10:00:00Z"},
             {"content": "[maind:ecosystem-link] beta", "createdAt": "2026-06-21T10:00:00Z"},
-            {"content": "решили использовать JWT для авторизации", "createdAt": "2026-06-22T10:00:00Z"},
+            {"content": "decided to use JWT for authorization", "createdAt": "2026-06-22T10:00:00Z"},
         ]
         r = classify_memories(mems)
         self.assertEqual(r["total"], 3)
         self.assertEqual(r["seed"], 2)
         self.assertEqual(r["real"], 1)
-        self.assertTrue(r["last"].startswith("2026-06-22"))   # самая свежая
+        self.assertTrue(r["last"].startswith("2026-06-22"))   # the latest
 
     def test_classify_empty(self):
         r = classify_memories([])
@@ -38,7 +38,7 @@ class TestVerify(unittest.TestCase):
             root, env = make_repo(tmp)
             write_maind_config(root, projects=TWO)
             config, _ = load_config(env)
-            sp = Path(store_path(env, config, config["projects"][0]))   # стор только alpha
+            sp = Path(store_path(env, config, config["projects"][0]))   # side only alpha
             sp.parent.mkdir(parents=True, exist_ok=True)
             sp.write_text(json.dumps({"version": 1, "directed": True,
                                       "nodes": [{"id": "project:alpha", "type": "project"}],

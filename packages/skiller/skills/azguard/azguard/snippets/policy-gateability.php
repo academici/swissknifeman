@@ -13,17 +13,17 @@ use AzGuard\Attributes\GateAbility;
 use AzGuard\Attributes\GuardPolicy;
 
 /**
- * Авторегистрация: при boot панели PanelProvider рекурсивно сканирует
- * каталоги Policies/ (файлы *Policy.php), читает атрибуты и сам вызывает:
+ * Auto-registration: when boot panels PanelProvider scans recursively
+ * directories Policies/ (files *Policy.php), reads the attributes and calls itself:
  *   - Gate::define(resolvedAbility, [Policy::class, 'method'])
- *     для каждого метода с #[GateAbility(permission: ...)];
+ *     for each method with #[GateAbility(permission: ...)];
  *   - Gate::policy(Document::class, DocumentsPolicy::class)
- *     по #[GuardPolicy(model: ...)].
- * Ничего руками в AuthServiceProvider регистрировать не нужно.
+ *     by #[GuardPolicy(model: ...)].
+ * Nothing with your hands AuthServiceProvider does not need to be registered.
  *
- * Gate::before зарегистрирован самим AzGuard и срабатывает ТОЛЬКО для
- * wildcard-ролей (permissions() === ['*']) — политика тогда не вызывается.
- * Вся остальная логика — здесь, через hasAzPermission().
+ * Gate::before registered by itself AzGuard and works ONLY for
+ * wildcard-roles (permissions() === ['*']) — policy is then not called.
+ * All other logic is here, via hasAzPermission().
  */
 #[GuardPolicy(model: Document::class)]
 class DocumentsPolicy
@@ -49,24 +49,24 @@ class DocumentsPolicy
     }
 }
 
-// ── Вызов Gate: всегда enum-кейс, не строка ────────────────────────────────
+// ── Call Gate: always enum-case, not string ────────────────────────────────
 //
 // Gate::allows(DocumentsPermission::View, $document);     // bool
-// Gate::authorize(DocumentsPermission::Edit, $document);  // 403 при отказе
-// $this->authorize(DocumentsPermission::Edit, $document); // в контроллере
+// Gate::authorize(DocumentsPermission::Edit, $document);  // 403 on failure
+// $this->authorize(DocumentsPermission::Edit, $document); // in the controller
 //
-// Blade — передавай готовые bool из контроллера (предпочтительно)
-// или FQCN + ->value:
+// Blade — pass the finished ones bool from controller (preferred)
+// or FQCN + ->value:
 //
 // @can(\App\AzGuard\App\Permissions\DocumentsPermission::Edit->value, $document)
 //     <button>Edit</button>
 // @endcan
 //
-// @azcan('documents.view')   {{-- короткий ключ, панель из контекста --}}
+// @azcan('documents.view')   {{-- short key, panel from context --}}
 //     <a href="...">View</a>
 // @endazcan
 //
 // ── Artisan ────────────────────────────────────────────────────────────────
 //
 // php artisan azguard:make-policy Documents --panel=app
-// php artisan azguard:doctor   // найдёт enum-кейсы без policy-метода и orphan-политики
+// php artisan azguard:doctor   // will find enum-cases without policy-method and orphan-policies

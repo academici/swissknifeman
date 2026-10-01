@@ -1,46 +1,46 @@
-# Реестр skills.json
+# Registry skills.json
 
-`skills.json` в корне репозитория — машиночитаемый каталог всех скиллов.
-Файл **генерируется**, руками его не правят.
+`skills.json` at the root of the repository is a machine-readable catalog of all skills.
+File **is generated**, his hands do not rule.
 
-## Что хранит
+## What does it store?
 
-Для каждого скилла:
+For each skill:
 
-- путь и версию;
-- `sha256` каждого файла — целостность и детект изменений;
-- **provenance**: `source: local | github | http`, URL апстрима, `fetched_at`;
-- **граф и маршрутизация** (реестр v5): `tags`, `requires`, `produces_for`
-  из frontmatter — поля опциональны и опускаются, если пусты.
+- path and version;
+- `sha256` of each file - integrity and change detection;
+- **provenance**: `source: local | github | http`, URL upstream, `fetched_at`;
+- **graph and routing** (registry v5): `tags`, `requires`, `produces_for`
+  from frontmatter — fields are optional and omitted if empty.
 
-По реестру всегда видно, что в библиотеке самописное, что откуда взято и
-какой давности.
+The registry always shows what is written in the library, where it came from and
+how old.
 
-Поля графа использует [страница графа зависимостей](./graph) (генерируется
-`registry.render_graph` при каждом `skiller registry`);
-`skiller vendor` читает `requires` напрямую из frontmatter и транзитивно
-дотягивает зависимости при выборочной установке.
+Graph fields are used [dependency graph page](./graph) (is generated
+`registry.render_graph` every time `skiller registry`);
+`skiller vendor` reads `requires` directly from frontmatter and transitively
+does not meet the dependencies in a custom installation.
 
-## Пересборка
+## Reassembly
 
 ```bash
-# Пересобрать реестр (skills.json, манифесты плагинов, граф)
+# Rebuild the registry (skills.json, plugin manifests, graph)
 skiller registry
 ```
 
-`skiller registry` парсит frontmatter каждого `SKILL.md` (только
-frontmatter, не всё тело файла), считает хеши и собирает итоговый JSON.
+`skiller registry` parses frontmatter each `SKILL.md` (only
+frontmatter, not the entire file body), counts hashes and collects the final JSON.
 
-## Автоматизация
+## Automation
 
-- `sha256-update.yml` — пересчитывает хеши реестра при каждом пуше.
+- `sha256-update.yml` — recalculates registry hashes on each push.
 
-Отдельного зеркалирования в Obsidian vault больше нет: vault — обычный
-проект-потребитель, который подключается через `skiller vendor`
-и обновляется командой `skiller update` (см. [CLI](./cli)).
+Separate mirroring in Obsidian vault no longer exists: vault — normal
+consumer project that connects via `skiller vendor`
+and updated with the command `skiller update` (see [CLI](./cli)).
 
-## Когда пересобирать вручную
+## When to rebuild manually
 
-После любого изменения скиллов: добавили новый, обновили версию во frontmatter,
-импортировали внешний. Валидатор и CI заметят рассинхрон реестра с содержимым
+After any change in skills: added a new one, updated the version in frontmatter,
+imported external. Validator and CI will notice that the registry is out of sync with the contents
 `skills/`.

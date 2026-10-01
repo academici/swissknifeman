@@ -234,7 +234,7 @@ class DoctorRouteEvidenceTests(unittest.TestCase):
             for p in blocked:
                 sys.path.insert(0, p)
         self.assertIn("· task.route_evidence", text)
-        self.assertIn("Окружение готово.", text)
+        self.assertIn("The environment is ready.", text)
 
 
 if __name__ == "__main__":

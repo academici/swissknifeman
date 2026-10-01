@@ -1,61 +1,61 @@
-# pack-guard — слой 2 mutation-защиты generated-ассетов (опционально)
+# pack-guard — layer 2 mutation-protection generated-assets (optional)
 
-Опциональный **Python-хук** Claude Code (`PreToolUse`), который ловит правку generated-файла
-agent-pack'а **до** того, как она случится — в отличие от слоя 1 (`lock_drift()` /
-[`harness agent-packs doctor --drift`](../../../lib/harness/agentpacks.py) / `pack_drift()` в
-`maind analyze`), который ловит правку **постфактум**. По умолчанию **НЕ устанавливается**:
-включается явно per-project, рекомендация — overnight/unattended dev-loop.
+Optional **Python-hook** Claude Code (`PreToolUse`), which catches the edit generated-file
+agent-pack'a **to** how it will happen - unlike layer 1 (`lock_drift()` /
+[`harness agent-packs doctor --drift`](../../../lib/harness/agentpacks.py) / `pack_drift()` in
+`maind analyze`), which catches the edit **after the fact**. Default **NOT installed**:
+is included explicitly per-project, recommendation - overnight/unattended dev-loop.
 
-## Режимы
+## Modes
 
-| Режим | Поведение |
+| Mode | Behavior |
 |:--|:--|
-| `off` (дефолт) | хук не регистрируется в проекте |
-| `warn` | stderr-предупреждение при правке generated-файла, **не блокирует** |
-| `strict` | **блокирует** Edit/Write/MultiEdit/NotebookEdit по generated-файлу (exit 2) |
+| `off` (default) | hook is not registered in the project |
+| `warn` | stderr-warning when editing generated-file, **does not block** |
+| `strict` | **blocks** Edit/Write/MultiEdit/NotebookEdit by generated-file (exit 2) |
 
-`user_owned`-файлы (оверлеи — точка расширения base+overlay, D11) guard'ом НЕ трогает: их
-редактировать можно и нужно.
+`user_owned`-files (overlays - extension point base+overlay, D11) guard'ohm does NOT touch: them
+can and should be edited.
 
-## Решение — по lock-файлу проекта
+## Solution - by lock-project file
 
-Хук читает `<project>/.claude/agent-pack.lock.json`, собирает `packs[].files[].target` БЕЗ
-`user_owned` — это и есть managed-набор. Тот же разбор, что `_protected_sets()` в
-[`../run-report/_lib.py`](../run-report/_lib.py) (осознанный маленький дубль — автономность
-хука, PYTHONPATH монорепо в `~/.claude/hooks` недоступен). Нет lock'а / он битый / файл не под
-управлением пака → пропуск (exit 0), никогда не блокирует «на всякий случай».
+Hook reads `<project>/.claude/agent-pack.lock.json`, collects `packs[].files[].target` WITHOUT
+`user_owned` — this is it managed-set. Same analysis as `_protected_sets()` in
+[`../run-report/_lib.py`](../run-report/_lib.py) (conscious small take - autonomy
+hook, PYTHONPATH monorepo in `~/.claude/hooks` not available). No lock'a / he's broken / file not under
+pack control → pass (exit 0), never blocks «just in case».
 
-## Файлы
+## Files
 
-| Файл | Роль |
+| File | Role |
 |:--|:--|
-| `pack-guard.py` | PreToolUse-хук: stdin → решение по lock → exit 0/2 (+ stderr-сообщение) |
-| `env.ini` | `MODE` (off/warn/strict). Per-project override в `.claude/pack-guard.env.ini` |
+| `pack-guard.py` | PreToolUse-hook: stdin → solution for lock → exit 0/2 (+ stderr-message) |
+| `env.ini` | `MODE` (off/warn/strict). Per-project override in `.claude/pack-guard.env.ini` |
 
-## Установка / включение
+## Installation / enable
 
 ```bash
-harness hooks --global                              # копирует хук в ~/.claude/hooks/pack-guard/
-harness hooks --target . --pack-guard strict         # включить в проекте (env.ini + регистрация PreToolUse)
-harness hooks --target . --pack-guard off            # выключить (kill-switch, хук остаётся зарегистрирован, но неактивен)
+harness hooks --global                              # copies the hook to ~/.claude/hooks/pack-guard/
+harness hooks --target . --pack-guard strict         # include in the project (env.ini + registration PreToolUse)
+harness hooks --target . --pack-guard off            # turn off (kill-switch, hook remains registered but inactive)
 ```
 
-## I/O-контракт (для отладки)
+## I/O-contract (for debugging)
 
-Хук читает JSON payload PreToolUse на stdin (`cwd`/`tool_name`/`tool_input`), решение — по
-lock-файлу `<cwd>/.claude/agent-pack.lock.json`. Ничего на диск не пишет.
+Hook reads JSON payload PreToolUse on stdin (`cwd`/`tool_name`/`tool_input`), solution - by
+lock-file `<cwd>/.claude/agent-pack.lock.json`. Doesn't write anything to disk.
 
 ```bash
 echo '{"cwd":"/proj","tool_name":"Edit","tool_input":{"file_path":"/proj/.claude/agents/x.md"}}' \
-  | python3 pack-guard.py   # strict + managed-файл → exit 2, причина в stderr
-echo 'not json{' | python3 pack-guard.py   # → exit 0 (никогда не роняет сессию)
+  | python3 pack-guard.py   # strict + managed-file → exit 2, reason is stderr
+echo 'not json{' | python3 pack-guard.py   # → exit 0 (never drops the session)
 ```
 
-## Честные лимиты (не переобещаем)
+## Fair limits (we will not overpromise)
 
-- **Дубль разбора lock'а с `run-report/_lib.py`** — сознательный (оба хука автономны в
-  `~/.claude/hooks`, PYTHONPATH монорепо там недоступен); дрейф между копиями ловить некому
-  автоматически (см. D8 для аналогичного случая `_usage.py` — здесь sync-скрипта нет,
-  разбор простой ~15 строк).
-- **Сообщение в stderr — best-effort**, не содержит точный путь к оверлею конкретного
-  файла (это несёт `Extension-points:` в самом provenance-header) — только имя пака.
+- **Double parsing lock'and with `run-report/_lib.py`** — conscious (both hooks are autonomous in
+  `~/.claude/hooks`, PYTHONPATH monorepo not available there); there is no one to catch the drift between copies
+  automatically (see D8 for a similar case `_usage.py` — here sync-no script,
+  parsing is simple ~15 lines).
+- **Message to stderr — best-effort**, does not contain the exact path to the specific overlay
+  file (it carries `Extension-points:` in the provenance-header) — only the name of the pack.

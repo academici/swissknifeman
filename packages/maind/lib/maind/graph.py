@@ -1,11 +1,11 @@
-"""Property-граф узла: nodes/edges/neighbors/path/subgraph/stats + node-link JSON.
+"""Property-node graph: nodes/edges/neighbors/path/subgraph/stats + node-link JSON.
 
-Движок — чистый stdlib (BFS/кратчайший путь), без сторонних зависимостей. Это примитив
-хранения: федерация (federation.py) держит граф на проект поверх этого класса; читать
-граф нужно через federation.graph_reader (единый фасад), а не напрямую.
+Engine is clean stdlib (BFS/shortest path), without third-party dependencies. This is primitive
+storage: federation (federation.py) holds a project graph on top of this class; read
+graph is needed via federation.graph_reader (single facade), and not directly.
 
-Узлы именуются '<type>:<key>' (например project:brain) — это даёт бесконфликтную
-склейку доменов и позволяет выводить тип узла из id."""
+The nodes are named '<type>:<key>' (for example project:brain) — this gives conflict-free
+joins domains and allows you to infer the node type from id."""
 import json
 import os
 from collections import Counter, deque
@@ -16,13 +16,13 @@ from .constants import EDGE_TYPES, GRAPH_VERSION, NODE_TYPES
 
 
 def _infer_node_type(node_id):
-    """Тип узла из префикса '<type>:<key>'; иначе 'entity'."""
+    """Node type from prefix '<type>:<key>'; otherwise 'entity'."""
     prefix = node_id.split(":", 1)[0] if ":" in node_id else ""
     return prefix if prefix in NODE_TYPES else "entity"
 
 
 def _resolve_path(env, persist):
-    """persist_path из конфига относительно корня узла; абсолютный — как есть."""
+    """persist_path from the config relative to the node root; absolute - as is."""
     if not persist:
         return env.graph_db
     p = Path(os.path.expanduser(persist))
@@ -30,7 +30,7 @@ def _resolve_path(env, persist):
 
 
 class Graph:
-    """In-memory property-граф с персистом в node-link JSON (stdlib-движок)."""
+    """In-memory property-graph with persister in node-link JSON (stdlib-engine)."""
 
     def __init__(self, env, config=None, path=None):
         self.env = env
@@ -38,10 +38,10 @@ class Graph:
         self.db_path = Path(path) if path is not None else _resolve_path(env, persist)
         self.nodes = {}        # id -> {"type":.., "attrs":{..}}
         self.adj = {}          # src -> {dst -> {"type":.., "attrs":{..}}}
-        self.radj = {}         # dst -> {src -> edge}  (обратный индекс)
+        self.radj = {}         # dst -> {src -> edge}  (reverse index)
         self._loaded = False
 
-    # ── персист ──────────────────────────────────────────────────────────────
+    # ── persistent ──────────────────────────────────────────────────────────────
     def load(self):
         if self._loaded:
             return self
@@ -51,7 +51,7 @@ class Graph:
         try:
             data = json.loads(self.db_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as e:
-            die(f"{self.db_path}: битый граф JSON: {e}")
+            die(f"{self.db_path}: broken graph JSON: {e}")
         for n in data.get("nodes", []):
             self.nodes[n["id"]] = {
                 "type": n.get("type", _infer_node_type(n["id"])),
@@ -77,13 +77,13 @@ class Graph:
                               "attrs": e["attrs"]})
         return {"directed": True, "nodes": nodes, "edges": edges}
 
-    # ── мутации ──────────────────────────────────────────────────────────────
+    # ── mutations ──────────────────────────────────────────────────────────────
     def add_node(self, node_id, type_=None, **attrs):
         self.load()
         type_ = type_ or _infer_node_type(node_id)
         if type_ not in NODE_TYPES:
-            raise ValueError(f"недопустимый тип узла: {type_} "
-                             f"(допустимо: {', '.join(sorted(NODE_TYPES))})")
+            raise ValueError(f"invalid node type: {type_} "
+                             f"(valid: {', '.join(sorted(NODE_TYPES))})")
         node = self.nodes.get(node_id)
         if node is None:
             self.nodes[node_id] = {"type": type_, "attrs": dict(attrs)}
@@ -100,15 +100,15 @@ class Graph:
     def add_edge(self, src, dst, type_, **attrs):
         self.load()
         if type_ not in EDGE_TYPES:
-            raise ValueError(f"недопустимый тип ребра: {type_} "
-                             f"(допустимо: {', '.join(sorted(EDGE_TYPES))})")
+            raise ValueError(f"invalid edge type: {type_} "
+                             f"(valid: {', '.join(sorted(EDGE_TYPES))})")
         for nid in (src, dst):
             if nid not in self.nodes:
                 self.add_node(nid, _infer_node_type(nid))
         self._link(src, dst, type_, attrs)
         return (src, dst)
 
-    # ── обход ────────────────────────────────────────────────────────────────
+    # ── bypass ────────────────────────────────────────────────────────────────
     def _step(self, nid, edge_types, direction):
         if direction in ("out", "both"):
             for dst, e in self.adj.get(nid, {}).items():
@@ -120,7 +120,7 @@ class Graph:
                     yield src
 
     def neighbors(self, node_id, depth=1, edge_types=None, direction="out"):
-        """BFS до глубины depth. Возвращает [{id,type,attrs,distance}] без корня."""
+        """BFS to depth depth. Returns [{id,type,attrs,distance}] without root."""
         self.load()
         if node_id not in self.nodes:
             return []
@@ -142,7 +142,7 @@ class Graph:
         return out
 
     def path(self, src, dst, edge_types=None, direction="out"):
-        """Кратчайший путь (по числу рёбер) [src..dst] или None."""
+        """Shortest path (by number of edges) [src..dst] or None."""
         self.load()
         if src not in self.nodes or dst not in self.nodes:
             return None
@@ -165,7 +165,7 @@ class Graph:
         return None
 
     def subgraph(self, ids, depth=0, direction="both", edge_types=None):
-        """Подграф. depth=0 → индуцированный по ids; depth>0 → BFS-замыкание сначала."""
+        """Subgraph. depth=0 → induced by ids; depth>0 → BFS-short circuit first."""
         self.load()
         selected = {i for i in ids if i in self.nodes}
         if depth > 0:
@@ -201,7 +201,7 @@ class Graph:
         }
 
     def _components(self):
-        """Число слабо-связных компонент (рёбра как ненаправленные)."""
+        """Number of weakly connected components (edges as undirected)."""
         seen = set()
         comps = 0
         for start in self.nodes:
@@ -220,16 +220,16 @@ class Graph:
         return comps
 
     def query(self, frm, depth=1, edge_types=None, direction="out"):
-        """Удобный вызов для CLI/MCP: соседи + метаданные."""
+        """Convenient call for CLI/MCP: neighbors + metadata."""
         nb = self.neighbors(frm, depth, edge_types, direction)
         return {"root": frm, "depth": depth, "count": len(nb), "neighbors": nb}
 
 
 def empty_graph(env, config):
-    """Пустой in-memory граф (тот же движок), который НЕ читает с диска и не должен
-    сохраняться. Используется федерацией для union'а нескольких per-project сторов."""
+    """Empty in-memory graph (same engine), which does NOT read from disk and should not
+    be saved. Used by the federation for union'and several per-project store."""
     g = Graph(env, config)
-    g._loaded = True  # запретить load() читать persist_path
+    g._loaded = True  # deny load() read persist_path
     return g
 
 
@@ -247,7 +247,7 @@ def _edge_types_opt(opts):
 
 
 def _reader(env, config):
-    """Единый read-фасад графа (federation.graph_reader); lazy-import против цикла."""
+    """Single read-graph facade (federation.graph_reader); lazy-import vs. loop."""
     from .federation import graph_reader
     return graph_reader(env, config)
 
@@ -257,9 +257,9 @@ def cmd_graph(env, argv):
         print("maind graph <query|stats|neighbors|view|derive|rebuild|export> "
               "[--from ID] [--node ID] [--project ID] [--cross] [--namespace NS] "
               "[--depth N] [--edge-types a,b] [--direction out|in|both] [--all] [--json]")
-        print("  export [--project ID | --cross] [--format mermaid] [--raw]  → Mermaid-диаграмма")
+        print("  export [--project ID | --cross] [--format mermaid] [--raw]  → Mermaid-diagram")
         return
-    # `maind graph --project X` / `maind graph --cross` — короткая форма view
+    # `maind graph --project X` / `maind graph --cross` — short form view
     if argv[0] in ("--project", "--cross"):
         return _cmd_view(env, argv)
     sub, rest = argv[0], argv[1:]
@@ -268,13 +268,13 @@ def cmd_graph(env, argv):
                 "export": _cmd_export}
     handler = handlers.get(sub)
     if handler is None:
-        die(f"неизвестная подкоманда graph: {sub} "
+        die(f"unknown subcommand graph: {sub} "
             f"(query|stats|neighbors|view|derive|rebuild|export)")
     handler(env, rest)
 
 
 def _cmd_view(env, argv):
-    """Подграф одного проекта (--project) или весь межпроектный слой (--cross)."""
+    """Subgraph of one project (--project) or the entire cross-project layer (--cross)."""
     from .config import load_config
     from .federation import Federation
     opts, _ = parse_args(argv, {"--project": "str", "--cross": "bool",
@@ -283,17 +283,17 @@ def _cmd_view(env, argv):
     fed = Federation(env, config)
     if opts["cross"]:
         sub = fed.cross(opts["namespace"] or None)
-        label = "межпроектный слой" + (f" [ns {opts['namespace']}]"
+        label = "cross-project layer" + (f" [ns {opts['namespace']}]"
                                        if opts["namespace"] else "")
     elif opts["project"]:
         sub = fed.project_view(opts["project"])
-        label = f"граф проекта {opts['project']}"
+        label = f"project graph {opts['project']}"
     else:
-        die("укажите --project <id> или --cross")
+        die("specify --project <id> or --cross")
     if opts["json"]:
         print(json.dumps(sub, ensure_ascii=False, indent=2))
         return
-    print(f"{label}: {len(sub['nodes'])} узлов, {len(sub['edges'])} рёбер")
+    print(f"{label}: {len(sub['nodes'])} nodes, {len(sub['edges'])} ribs")
     for n in sub["nodes"]:
         name = n["attrs"].get("name", "")
         print(f"  {n['id']:<32} {n['type']:<10} {name}")
@@ -304,8 +304,8 @@ def _cmd_view(env, argv):
 
 
 def _mermaid(sub, title):
-    """Подграф {nodes,edges} → Mermaid flowchart. Рендерится в GitHub/VitePress без рантайма.
-    Форма узла по типу: project — прямоугольник, package — скруглённый, прочее — по умолчанию."""
+    """Subgraph {nodes,edges} → Mermaid flowchart. Rendered in GitHub/VitePress without runtime.
+    Node shape by type: project — rectangle, package — rounded, other - default."""
     safe = {}
     for i, n in enumerate(sub["nodes"]):
         safe[n["id"]] = f"n{i}"
@@ -327,31 +327,31 @@ def _mermaid(sub, title):
 
 
 def _cmd_export(env, argv):
-    """Экспорт графа в Mermaid: --project <id> (один) или --cross (весь межпроектный слой).
-    Копи-пейст в .md (обёрнуто в ```mermaid; --raw — без обёртки)."""
+    """Export graph to Mermaid: --project <id> (one) or --cross (entire cross-project layer).
+    Copy-paste in .md (wrapped in ```mermaid; --raw — without wrapper)."""
     from .config import load_config
     from .federation import Federation
     opts, _ = parse_args(argv, {"--project": "str", "--cross": "bool",
                                 "--namespace": "str", "--format": "str", "--raw": "bool"})
     if opts["format"] and opts["format"] != "mermaid":
-        die(f"формат не поддержан: {opts['format']} (пока только mermaid)")
+        die(f"format not supported: {opts['format']} (only for now mermaid)")
     config, _src = load_config(env)
     fed = Federation(env, config)
     if opts["cross"]:
         sub = fed.cross(opts["namespace"] or None)
-        title = "maind-граф: межпроектный слой" + (f" [ns {opts['namespace']}]"
+        title = "maind-graph: cross-project layer" + (f" [ns {opts['namespace']}]"
                                                     if opts["namespace"] else "")
     elif opts["project"]:
         sub = fed.project_view(opts["project"])
-        title = f"maind-граф: проект {opts['project']}"
+        title = f"maind-graph: project {opts['project']}"
     else:
-        die("укажите --project <id> или --cross")
+        die("specify --project <id> or --cross")
     body = _mermaid(sub, title)
     print(body if opts["raw"] else f"```mermaid\n{body}\n```")
 
 
 def _cmd_derive(env, argv):
-    """Пересобрать графы проектов из источников (composer/Brain/override) + индекс."""
+    """Rebuild project graphs from sources (composer/Brain/override) + index."""
     from .config import load_config
     from .derive import derive_all, derive_project_graph
     from .projects import get as get_project
@@ -360,7 +360,7 @@ def _cmd_derive(env, argv):
     if opts["project"]:
         proj = get_project(config, opts["project"])
         if proj is None:
-            die(f"проект не найден в config.json: {opts['project']}")
+            die(f"project not found in config.json: {opts['project']}")
         stats = [derive_project_graph(env, config, proj)]
     else:
         stats = derive_all(env, config)
@@ -368,13 +368,13 @@ def _cmd_derive(env, argv):
         print(json.dumps(stats, ensure_ascii=False, indent=2))
         return
     for s in stats:
-        print(f"  {s['id']:<18} узлов {s['nodes']}, рёбер {s['edges']} "
+        print(f"  {s['id']:<18} nodes {s['nodes']}, ribs {s['edges']} "
               f"(code {s['by_via'].get('code', 0)}, doc {s['by_via'].get('doc', 0)}, "
               f"override {s['by_via'].get('override', 0)})")
 
 
 def _cmd_rebuild(env, argv):
-    """Пересобрать только индекс из существующих per-project сторов."""
+    """Rebuild only the index from existing ones per-project store."""
     from .config import load_config
     from .federation import rebuild_index
     opts, _ = parse_args(argv, {"--json": "bool"})
@@ -383,8 +383,8 @@ def _cmd_rebuild(env, argv):
     if opts["json"]:
         print(json.dumps(res, ensure_ascii=False, indent=2))
         return
-    print(f"Индекс пересобран: {res['projects']} проектов, "
-          f"{res['cross_edges']} межпроектных рёбер")
+    print(f"Index rebuilt: {res['projects']} projects, "
+          f"{res['cross_edges']} cross-project edges")
 
 
 def _cmd_query(env, argv):
@@ -393,7 +393,7 @@ def _cmd_query(env, argv):
                                 "--edge-types": "str", "--direction": "str",
                                 "--json": "bool"})
     if not opts["from"]:
-        die("укажите --from <node-id> (например project:brain)")
+        die("specify --from <node-id> (for example project:brain)")
     config, _src = load_config(env)
     res = _reader(env, config).query(
         opts["from"], _parse_depth(opts["depth"], 1),
@@ -401,7 +401,7 @@ def _cmd_query(env, argv):
     if opts["json"]:
         print(json.dumps(res, ensure_ascii=False, indent=2))
         return
-    print(f"{res['root']} — соседей в радиусе {res['depth']}: {res['count']}")
+    print(f"{res['root']} — neighbors in radius {res['depth']}: {res['count']}")
     for n in res["neighbors"]:
         name = n["attrs"].get("name", "")
         print(f"  d{n['distance']}  {n['id']:<28} {n['type']:<10} {name}")
@@ -415,12 +415,12 @@ def _cmd_stats(env, argv):
     if opts["json"]:
         print(json.dumps(s, ensure_ascii=False, indent=2))
         return
-    print(f"Граф: {s['nodes']} узлов, {s['edges']} рёбер, "
-          f"{s['components']} компонент(ы), max степень {s['max_degree']}")
+    print(f"Graph: {s['nodes']} nodes, {s['edges']} ribs, "
+          f"{s['components']} component(s), max degree {s['max_degree']}")
     if s["by_node_type"]:
-        print("  узлы:  " + ", ".join(f"{k}={v}" for k, v in s["by_node_type"].items()))
+        print("  nodes:  " + ", ".join(f"{k}={v}" for k, v in s["by_node_type"].items()))
     if s["by_edge_type"]:
-        print("  рёбра: " + ", ".join(f"{k}={v}" for k, v in s["by_edge_type"].items()))
+        print("  edges: " + ", ".join(f"{k}={v}" for k, v in s["by_edge_type"].items()))
 
 
 def _cmd_neighbors(env, argv):
@@ -429,7 +429,7 @@ def _cmd_neighbors(env, argv):
                                 "--direction": "str", "--edge-types": "str",
                                 "--json": "bool"})
     if not opts["node"]:
-        die("укажите --node <node-id>")
+        die("specify --node <node-id>")
     config, _src = load_config(env)
     nb = _reader(env, config).neighbors(
         opts["node"], _parse_depth(opts["depth"], 1),

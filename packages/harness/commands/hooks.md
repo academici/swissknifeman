@@ -1,19 +1,19 @@
 ---
-description: "Включить хуки Claude Code (auto-approve/memory) по проекту или поставить файлы хуков глобально."
+description: "Enable hooks Claude Code (auto-approve/memory) by project or install hook files globally."
 ---
-Настрой хуки харнеса.
+Harness hook setup.
 
-Глобальная установка файлов хуков (один раз на машину — кладёт `auto-approve/`, `memory/`, `notify/`, `log-bash-command` в `~/.claude/hooks/`):
+Global installation of hook files (once on the car - puts `auto-approve/`, `memory/`, `notify/`, `log-bash-command` in `~/.claude/hooks/`):
 ```
 harness hooks --global [--dry-run]
 ```
 
-По проекту (включить режимы — файлы хуков должны быть уже установлены глобально):
+By project (enable modes - hook files must already be installed globally):
 ```
 harness hooks --target . [--auto-approve strict|permissive|bypass|off] [--memory core:federation] [--statusline context|off] [--file settings.json] [--dry-run]
 ```
-- `--auto-approve` пишет `.claude/auto-approve.env.ini` и регистрирует хук на Bash/ExitPlanMode (merge-only).
-- `--memory BRAIN:MODE` присоединяет проект к мозгу: `.swissknife.json:memory_brain` + `.claude/memory.env.ini`.
-- `--statusline context` ставит ключ `statusLine` в `.claude/settings.local.json` — строка с процентом контекста + ОС-уведомление на пересечении порога (`off` снимает, но только наш ключ).
+- `--auto-approve` writes `.claude/auto-approve.env.ini` and registers a hook on Bash/ExitPlanMode (merge-only).
+- `--memory BRAIN:MODE` attaches the project to the brain: `.swissknife.json:memory_brain` + `.claude/memory.env.ini`.
+- `--statusline context` puts the key `statusLine` in `.claude/settings.local.json` — string with context percentage + OS notification when threshold is crossed (`off` removes, but only our key).
 
-Разбери намерение из «$ARGUMENTS»; для bypass-режима предупреди, что он снимает подтверждения (только для контейнеров/VM).
+Parse the intent from «$ARGUMENTS»; for bypass-mode warn that it removes confirmations (for containers only/VM).

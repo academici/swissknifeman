@@ -25,14 +25,14 @@ Each physical entity (part, material, insert/purchased element) gets its own `@d
 ```python
 @dataclass
 class ShellConfig:
-    height: float = 60.0          # высота, мм
-    wall: float = 2.8             # толщина стенки, мм
-    outer_diameter: float = 40.0  # наружный диаметр, мм
+    height: float = 60.0          # height, mm
+    wall: float = 2.8             # wall thickness, mm
+    outer_diameter: float = 40.0  # outer diameter, mm
 
 @dataclass
-class InsertConfig:                # внешний/покупной элемент, вставляемый в деталь
-    outer_diameter: float = 40.2  # посадочный ⌀, мм
-    thickness: float = 3.5        # толщина, мм
+class InsertConfig:                # external/purchased item inserted into a part
+    outer_diameter: float = 40.2  # landing ⌀, mm
+    thickness: float = 3.5        # thickness, mm
 ```
 
 Rules:
@@ -44,14 +44,14 @@ Rules:
 - Methods depending on other configs take them as **arguments** (never read globals).
 
 ```python
-# Правильно: аргументы явные
+# Correct: arguments are explicit
 def full_stack_height(self, insert: InsertConfig, plate: PlateConfig) -> float:
     return 2 * self.wall + 2 * insert.thickness + plate.thickness
 
-# Неправильно: скрытая зависимость от глобала
+# Wrong: hidden dependency on global
 @property
 def full_stack_height(self):
-    return 2 * self.wall + 2 * insert_config.thickness  # хрупко
+    return 2 * self.wall + 2 * insert_config.thickness  # fragile
 ```
 
 ## 2. Variable naming in part code (`parts/*.py`)
@@ -63,18 +63,18 @@ Full name tables (radii `r_*`, heights/`z*`, thicknesses/clearances) + local con
 
 ## 3. Profile `pts`: how to build
 
-Point order, closing rule, non-manifold diagnostics → skill `blender-modeling/parametric-config` (snippet `internals.md`, section «Профиль `pts`»).
+Point order, closing rule, non-manifold diagnostics → skill `blender-modeling/parametric-config` (snippet `internals.md`, section «Profile `pts`»).
 
 Point-naming rule: each point gets an inline comment with its meaning:
 
 ```python
 pts = [
-    (r_outer, 0.0),          # наружный низ
-    (r_outer, h_cap),        # наружный верх
-    (r_rim,   h_cap),        # бортик: шаг внутрь
-    (r_rim,   h_cap - gw),   # вертикаль бортика вниз
-    (r_inner, h_cap - gw),   # горизонт (дно паза)
-    (r_inner, 0.0),          # внутренняя стенка вниз
+    (r_outer, 0.0),          # outer bottom
+    (r_outer, h_cap),        # outer top
+    (r_rim,   h_cap),        # side: step inward
+    (r_rim,   h_cap - gw),   # side vertical down
+    (r_inner, h_cap - gw),   # horizon (groove bottom)
+    (r_inner, 0.0),          # inner wall down
 ]
 ```
 
@@ -84,8 +84,8 @@ Step 1 — config in `config.py`:
 ```python
 @dataclass
 class InsertConfig:
-    outer_diameter: float = 40.2   # посадочный ⌀, мм
-    thickness: float = 3.5         # толщина, мм
+    outer_diameter: float = 40.2   # landing ⌀, mm
+    thickness: float = 3.5         # thickness, mm
 
 insert_config = InsertConfig()
 ```
@@ -103,10 +103,10 @@ def build_insert(col):
 
 Step 3 — checks in `test/check.py` (cross-part) or `parts/{name}.test.py` (local):
 ```python
-# В test/check.py — если новая деталь взаимодействует с существующей:
+# B test/check.py — if the new part interacts with the existing one:
 check(ic.outer_diameter <= mt.seat_inner_diameter + 0.4, ...)
 
-# В parts/insert.test.py → test_config() — локальные инварианты самой детали:
+# B parts/insert.test.py → test_config() — local invariants of the part itself:
 assert ic.outer_diameter > 0
 assert ic.thickness >= 1.0
 ```
@@ -117,7 +117,7 @@ Step 5 — part description in `models/{name}/docs/tech.md`: row in parts table 
 
 ## 5. Units
 
-Full picture (table, `mm()` function, rule, examples) → skill `blender-modeling/parametric-config` (snippet `internals.md`, section «Единицы измерения»).
+Full picture (table, `mm()` function, rule, examples) → skill `blender-modeling/parametric-config` (snippet `internals.md`, section «Units of measurement»).
 
 Config specifics:
 - All fields in `config.py` — **mm**: `height = 60.0`, `wall = 2.8`.
@@ -131,11 +131,11 @@ All part geometry params must be **derived from config by formulas**, not litera
 External/purchased parts also go in config: any part that is not printed but constrains geometry (insert, glass, board, battery, fastener) must have its own `*Config` with physical sizes. Those sizes feed formulas; changing a part's size = one config line, rest recomputes automatically.
 
 ```python
-# Правильно: паз под плату берётся из конфига платы
+# Correct: the slot for the board is taken from the board config
 board_r = board_config.width * 0.5 + board_config.clearance
 
-# Неправильно: размер платы зашит в детали
-board_r = 17.5   # откуда это число? не очевидно, не обновляется
+# Incorrect: the board size is included in the details
+board_r = 17.5   # where does this number come from? not obvious, not updated
 ```
 
 Rules:
@@ -143,14 +143,14 @@ Rules:
 - Part must **match another part's slot** → read slot params from that part's config, don't duplicate numbers:
 
 ```python
-# Правильно: размер папы берётся из конфига мамы
-jd = float(mt.joint_depth)     # глубина посадки
-jw = float(mt.joint_wall)      # толщина стенки папы
+# Correct: dad's size is taken from mom's config
+jd = float(mt.joint_depth)     # planting depth
+jw = float(mt.joint_wall)      # male wall thickness
 jclr = float(mt.joint_clearance)
-r_papa_out = r_wall_top         # наружный r папы = внутренний r мамы
+r_papa_out = r_wall_top         # external r dads = internal r moms
 r_papa_in  = r_papa_out - jw
 
-# Неправильно: числа прописаны вручную
+# Incorrect: numbers are entered manually
 r_papa_out = 32.35
 r_papa_in  = 29.85
 ```
@@ -161,9 +161,9 @@ r_papa_in  = 29.85
 Example: connection ring element
 ```
 ring_inner_r = inner_r_mating_part
-             - conn.inner_margin        # отступ от внутренней стенки
-             - conn.element_diameter/2  # радиус встраиваемого элемента (магнит, штырь)
-             - conn.inner_margin        # ещё отступ до края кольца
+             - conn.inner_margin        # distance from the inner wall
+             - conn.element_diameter/2  # radius of the embedded element (magnet, pin)
+             - conn.inner_margin        # more space to the edge of the ring
 ```
 This is a formula, not a number. Change `element_diameter` in config → ring recomputes automatically.
 

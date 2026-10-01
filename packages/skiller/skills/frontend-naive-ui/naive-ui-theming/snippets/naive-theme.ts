@@ -1,22 +1,22 @@
 // Source: anonymized production project (Vue + Naive UI)
-// Единый источник правды темы: resources/js/config/naive-ui.ts
-// Сначала common (наследуется всеми компонентами), затем точечные пер-компонентные блоки.
+// Single source of truth topic: resources/js/config/naive-ui.ts
+// First common (is inherited by all components), then point per-component blocks.
 
 import type { GlobalThemeOverrides } from 'naive-ui';
 
-// Бренд-палитра вынесена в CSS-переменные на :root (и переопределена под .dark),
-// чтобы Naive UI и Tailwind ссылались на ОДИН источник цвета. Подставляем те же
-// переменные сюда — переключение класса .dark на <html> перекрашивает оба слоя.
+// The brand palette is placed in CSS-variables on:root (and redefined under .dark),
+// to Naive UI and Tailwind referenced ONE color source. We substitute the same
+// variables here - class switching.dark on <html> recolors both layers.
 export const theme: GlobalThemeOverrides = {
     common: {
-        // Типографика и геометрия
+        // Typography and Geometry
         fontFamily: 'Inter, system-ui, sans-serif',
         fontSizeMedium: '14px',
         fontSizeLarge: '16px',
         heightMedium: '40px',
         borderRadius: '8px',
 
-        // Палитра (через CSS-переменные — общий источник с Tailwind)
+        // Palette (via CSS-variables - shared source with Tailwind)
         primaryColor: 'var(--color-primary)',
         primaryColorHover: 'var(--color-primary-hover)',
         primaryColorPressed: 'var(--color-primary-pressed)',
@@ -25,13 +25,13 @@ export const theme: GlobalThemeOverrides = {
         warningColor: 'var(--color-warning)',
         errorColor: 'var(--color-error)',
 
-        // Поверхности и границы
+        // Surfaces and boundaries
         bodyColor: 'var(--color-body)',
         borderColor: 'var(--color-border)',
         placeholderColor: 'var(--color-placeholder)',
     },
 
-    // Пер-компонентные блоки — только то, чего недостаточно в common.
+    // Per-component blocks are just what is not enough in common.
     Button: {
         heightMedium: '40px',
         paddingMedium: '5px 16px',
@@ -68,8 +68,8 @@ export const theme: GlobalThemeOverrides = {
     },
 };
 
-// Опционально: переопределения, валидные только в тёмном режиме.
-// Применяются ПОВЕРХ darkTheme при isDark (см. snippets/app.ts).
+// Optional: overrides valid only in dark mode.
+// Apply OVER darkTheme when isDark (see snippets/app.ts).
 export const darkThemeOverrides: GlobalThemeOverrides = {
     common: {
         bodyColor: 'var(--color-body-dark)',

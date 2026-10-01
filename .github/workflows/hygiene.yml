@@ -11,8 +11,8 @@ jobs:
   hygiene:
     runs-on: ubuntu-latest
     steps:
-      # fetch-depth: 0 — дефолт checkout@v4 (fetch-depth: 1) не кладёт базу PR в клон
-      # (в т.ч. для fork-PR); docs-impact.py диффит по merge-base, ему нужна полная история.
+      # fetch-depth: 0 — default checkout@v4 (fetch-depth: 1) does not lay the base PR to clone
+      # (in t.h. For fork-PR); docs-impact.py diff by merge-base, he needs the full story.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -36,12 +36,12 @@ jobs:
           python3 scripts/test-status-check.py -v
           python3 scripts/status-check.py docs/status.md
 
-      - name: public-hygiene (запрещённые пути в дереве)
+      - name: public-hygiene (forbidden paths in a tree)
         run: |
           python3 scripts/test-public-hygiene.py -v
           python3 scripts/public-hygiene.py
 
-      - name: provider-docs (конформанс манифеста возможностей провайдеров)
+      - name: provider-docs (conformity of the manifesto of providers' capabilities)
         run: |
           python3 scripts/test-provider-docs.py -v
           python3 scripts/provider-docs.py --check
@@ -54,7 +54,8 @@ jobs:
         with:
           fetch-depth: 0  # Immutable tuples are compared with earlier source tags.
 
-      - name: verify-tag (тег ↔ CHANGELOG.md)
+      - name: verify-tag (tag ↔ CHANGELOG.md)
         run: |
           python3 scripts/test-verify-tag.py -v
+          python3 scripts/test-version-guard.py -v
           python3 scripts/verify-tag.py "${GITHUB_REF_NAME}"

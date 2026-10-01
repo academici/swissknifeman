@@ -4,10 +4,10 @@ paths:
   - "lib/**/native/**"
 ---
 
-FFI / нативная граница (POS-периферия):
+FFI / native border (POS-peripherals):
 
-- Парность памяти: `malloc`/`calloc` ↔ `free` на всех путях, включая ошибочные.
-- Проверяй код возврата каждого нативного вызова; ненулевой → исключение с диагностикой.
-- Нативные вызовы — вне UI-isolate (`Isolate.run`/изолированный поток); путь к `.so` не
-  захардкожен под одну архитектуру; `DynamicLibrary.open()` в try/catch.
-- Логируй коды возврата периферии (фискальник/принтер) в отдельный канал.
+- Memory pairing: `malloc`/`calloc` ↔ `free` on all paths, including erroneous ones.
+- Check the return code of each native call; non-zero → diagnostic exception.
+- Native calls - out UI-isolate (`Isolate.run`/isolated thread); path to `.so` not
+  is hardcoded for one architecture; `DynamicLibrary.open()` in try/catch.
+- Log peripheral return codes (fiscal officer/printer) into a separate channel.

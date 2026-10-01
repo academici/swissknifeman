@@ -1,6 +1,6 @@
-# Острая грань: XSS в Blade
+# Sharp Edge: XSS in Blade
 
-## Паттерны поиска
+## Search patterns
 
 ```bash
 grep -rnE '\{!!' resources/views/
@@ -9,38 +9,38 @@ grep -rnE 'v-html=' resources/js/ resources/views/
 grep -rnE 'href="\{\{|\:href="' resources/views/ resources/js/
 ```
 
-## Что считается уязвимостью
+## What is considered a vulnerability
 
 ```blade
-{{-- УЯЗВИМО: неэкранированный вывод пользовательских данных --}}
+{{-- VULNERABLE: Unescaped output of user data --}}
 {!! $comment->body !!}
 
-{{-- БЕЗОПАСНО: автоэкранирование --}}
+{{-- SAFE: auto-escaping --}}
 {{ $comment->body }}
 
-{{-- УЯЗВИМО: пользовательский URL в href — javascript: схема --}}
+{{-- VULNERABLE: custom URL in href — javascript: schema --}}
 <a href="{{ $user->website }}">
 
-{{-- УЯЗВИМО: данные в инлайн-скрипт без Js::from --}}
+{{-- VULNERABLE: data in an inline script without Js::from --}}
 <script>const config = {!! json_encode($userData) !!};</script>
-{{-- БЕЗОПАСНО --}}
+{{-- SAFE --}}
 <script>const config = {{ Js::from($userData) }};</script>
 ```
 
-## На что смотреть при верификации
+## What to look for during verification
 
-- `{!! !!}` оправдан только для доверенного HTML (свой WYSIWYG после
-  санитизации, рендер markdown через библиотеку с purify). Спросить:
-  кто пишет в это поле?
-- Пользовательский ввод в HTML-атрибутах без кавычек — экранирование
-  Blade не спасает от выхода из атрибута.
-- `v-html` во Vue-компонентах — тот же `{!! !!}`.
-- `json_encode` в `<script>` без флагов `JSON_HEX_TAG|JSON_HEX_APOS` —
-  закрытие тега `</script>` строкой данных.
+- `{!! !!}` justified only for trusted HTML (yours WYSIWYG after
+  sanitization, render markdown via library with purify). Ask:
+  who writes in this field?
+- User input in HTML-attributes without quotes - escaping
+  Blade does not prevent the attribute from being exited.
+- `v-html` in Vue-components - the same `{!! !!}`.
+- `json_encode` in `<script>` without flags `JSON_HEX_TAG|JSON_HEX_APOS` —
+  closing tag `</script>` data string.
 
 ## Severity
 
-- `{!! !!}` с полем, которое заполняет пользователь, — **high/critical**
-  (critical, если страница видна другим пользователям — stored XSS).
-- Пользовательский URL в href/src без валидации схемы — **medium/high**.
-- `{!! !!}` с константой/доверенным источником — не находка.
+- `{!! !!}` with a field that the user fills in - **high/critical**
+  (critical, if the page is visible to other users - stored XSS).
+- Custom URL in href/src without schema validation - **medium/high**.
+- `{!! !!}` with constant/trusted source is not a godsend.

@@ -9,43 +9,43 @@
       "url": "https://developers.openai.com/api/docs/guides/realtime-vad",
       "sha256": "",
       "fetched_at": "2026-07-03",
-      "notes": "OpenAI Realtime: server_vad / semantic_vad, eagerness, interrupt_response — паттерн turn-detection и barge-in на LLM-стороне."
+      "notes": "OpenAI Realtime: server_vad / semantic_vad, eagerness, interrupt_response — pattern turn-detection and barge-in on LLM-side."
     },
     {
       "path": "",
       "url": "https://huggingface.co/pipecat-ai/smart-turn-v2",
       "sha256": "",
       "fetched_at": "2026-07-03",
-      "notes": "Pipecat smart-turn-v2: семантический end-of-utterance, мультиязычный (RU в наборе) — паттерн semantic VAD как отдельного слоя turn-detection."
+      "notes": "Pipecat smart-turn-v2: semantic end-of-utterance, multilingual (RU in the set) — pattern semantic VAD as a separate layer turn-detection."
     },
     {
       "path": "",
       "url": "https://docs.livekit.io/agents/",
       "sha256": "",
       "fetched_at": "2026-07-03",
-      "notes": "LiveKit Agents: SFU + WebRTC media-путь, agent-узел читает треки — паттерн media/runtime и разделения media↔control."
+      "notes": "LiveKit Agents: SFU + WebRTC media-path, agent-node reads tracks - pattern media/runtime and divisions media↔control."
     },
     {
       "path": "",
       "url": "https://www.rfc-editor.org/rfc/rfc8825",
       "sha256": "",
       "fetched_at": "2026-07-03",
-      "notes": "WebRTC overview (RFC 8825) + Opus/RTP — спецификация media-транспорта голосового контура. Взят только паттерн транспорта, кода не вендорим."
+      "notes": "WebRTC overview (RFC 8825) + Opus/RTP — specification media-voice circuit transport. We took only the transport pattern, we do not vendor the code."
     },
     {
       "path": "",
       "url": "https://aistudio.yandex.ru/docs/en/speechkit/stt/",
       "sha256": "",
       "fetched_at": "2026-07-03",
-      "notes": "Yandex SpeechKit STT (streaming gRPC v3, партиалы, лимит сессии ≤5 мин) — RU-стек, паттерн стриминговой STT-сессии и её ротации."
+      "notes": "Yandex SpeechKit STT (streaming gRPC v3, partials, session limit ≤5 min) — RU-stack, streaming pattern STT-session and its rotation."
     }
   ],
-  "notes": "Авторский скилл (canonical SKILL.md написан у нас, не зеркало апстрима): собран по ВНЕШНИМ паттернам и спецификациям голосовых агентов реального времени (WebRTC/Opus транспорт, OpenAI Realtime turn-detection/barge-in, Pipecat/LiveKit turn-taking, Yandex SpeechKit RU-стек). Чужой код НЕ вендорим — files[].path пусты (референсы, не локальные зеркала); url ведёт на спеку/доку/паттерн. strategy=notify — апстрим только репортится (не автонакат); факты подтверждены RAG на fetched_at. Тела скилла upstream НЕ определяет — правь SKILL.md и регенерируй registry/provider projections.",
+  "notes": "Author's skill (canonical SKILL.md was written by us, not a mirror of the upstream): compiled according to EXTERNAL patterns and specifications of real-time voice agents (WebRTC/Opus transport, OpenAI Realtime turn-detection/barge-in, Pipecat/LiveKit turn-taking, Yandex SpeechKit RU-stack). We DO NOT vendor other people's code - files[].path are empty (references, not local mirrors); url leads to spec/doc/pattern. strategy=notify — upstream only reporting (not autorun); facts confirmed RAG on fetched_at. Skill bodies upstream does NOT define - correct SKILL.md and regenerate registry/provider projections.",
   "kind": "reference-only",
   "audit": {
     "verdict": "attention",
     "at": "2026-08-01",
     "by": "vendor audit",
-    "note": "НЕ вендоренный бандл: files[] — провенанс-ССЫЛКИ на внешние спеки (path пусты), чужой код не вендорился, SKILL.md написан у нас; целостность содержимого не покрыта ничем"
+    "note": "NOT a vendor bundle: files[] — provenance-LINKS to external specs (path are empty), other people's code was not vendored, SKILL.md written by us; the integrity of the content is not covered by anything"
   }
 }

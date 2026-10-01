@@ -1,17 +1,17 @@
 import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
 
-// Standalone-сборка доков пакета skiller (реестр AI-скиллов). В зонтичном агрегате
-// эта .vitepress отбрасывается (scripts/docs-sync.sh), а доки собираются общим
-// docs/.vitepress/config.mts под базой /swissknifeman/. Внутренние ссылки доков
-// относительные → один и тот же источник собирается и здесь, и в агрегате.
-// Кросс-пакетные ссылки (на доки harness и зонтичный /routing) резолвятся только
-// в агрегате — в standalone они «наружу», поэтому помечены ignoreDeadLinks.
+// Standalone-building package docks skiller (registry AI-skills). In an umbrella unit
+// this .vitepress discarded (scripts/docs-sync.sh), and the docks are collected in common
+// docs/.vitepress/config.mts under the base /swissknifeman/. Internal Dock Links
+// relative → the same source is collected here too, and in the unit.
+// Cross-package links (to the docks harness and umbrella /routing) only resolve
+// in the unit — V standalone They «outward», therefore marked ignoreDeadLinks.
 export default withMermaid(defineConfig({
-  lang: 'ru-RU',
+  lang: 'en-US',
   title: 'SwissKnifeMan',
   description:
-    'Универсальный личный реестр AI-скиллов: один источник истины, установка в любой проект и любую IDE',
+    'Universal personal registry AI-skills: one source of truth, installation in any project and any IDE',
   base: '/skiller/',
   lastUpdated: true,
 
@@ -19,50 +19,50 @@ export default withMermaid(defineConfig({
 
   themeConfig: {
     nav: [
-      { text: 'Обзор', link: '/' },
-      { text: 'Гайд', link: '/guide/', activeMatch: '/guide/' },
-      { text: 'Адаптеры', link: '/adapters/claude-code', activeMatch: '/adapters/' },
-      { text: 'Воркфлоу', link: '/workflows/', activeMatch: '/workflows/' },
-      { text: 'Примеры', link: '/examples/laravel', activeMatch: '/examples/' },
+      { text: 'Overview', link: '/' },
+      { text: 'Hyde', link: '/guide/', activeMatch: '/guide/' },
+      { text: 'Adapters', link: '/adapters/claude-code', activeMatch: '/adapters/' },
+      { text: 'Workflow', link: '/workflows/', activeMatch: '/workflows/' },
+      { text: 'Examples', link: '/examples/laravel', activeMatch: '/examples/' },
     ],
 
     sidebar: {
       '/': [
         {
-          text: 'Скиллы (skiller)',
+          text: 'Skills (skiller)',
           items: [
-            { text: 'Что такое SwissKnifeMan', link: '/guide/' },
-            { text: 'Архитектура скиллов (реальность)', link: '/guide/skills-architecture' },
-            { text: 'Установка скиллов', link: '/guide/installation' },
-            { text: 'Vendor-режим (sync)', link: '/guide/vendor-mode' },
-            { text: 'Чеклист интеграции', link: '/guide/integration-checklist' },
+            { text: 'About SwissKnifeMan', link: '/guide/' },
+            { text: 'Skill architecture (reality)', link: '/guide/skills-architecture' },
+            { text: 'Installing skills', link: '/guide/installation' },
+            { text: 'Vendor-mode (sync)', link: '/guide/vendor-mode' },
+            { text: 'Integration checklist', link: '/guide/integration-checklist' },
             { text: 'CLI swissknifeman', link: '/guide/cli' },
-            { text: 'Профили и автодетект', link: '/guide/profiles' },
-            { text: 'Архетипы: рецепты и развилки', link: '/guide/archetypes' },
-            { text: 'Анатомия скилла', link: '/guide/skill-anatomy' },
-            { text: 'Таксономия и гранулярность', link: '/guide/skill-taxonomy' },
-            { text: 'Адаптерные дельты', link: '/guide/adapter-deltas' },
-            { text: 'Методология: против раздувания кода', link: '/guide/methodology' },
-            { text: 'Семантика loop’ов', link: '/guide/loop-semantics' },
-            { text: 'Создание скиллов', link: '/guide/creating-skills' },
-            { text: 'Поведенческие тесты (evals)', link: '/guide/evals' },
-            { text: 'Скиллы из пакетов', link: '/guide/vendor-skills' },
+            { text: 'Profiles and auto detection', link: '/guide/profiles' },
+            { text: 'Archetypes: recipes and forks', link: '/guide/archetypes' },
+            { text: 'Anatomy of a skill', link: '/guide/skill-anatomy' },
+            { text: 'Taxonomy and granularity', link: '/guide/skill-taxonomy' },
+            { text: 'Adapter deltas', link: '/guide/adapter-deltas' },
+            { text: 'Methodology: against code bloat', link: '/guide/methodology' },
+            { text: 'Loop semantics', link: '/guide/loop-semantics' },
+            { text: 'Creating skills', link: '/guide/creating-skills' },
+            { text: 'Behavioral tests (evals)', link: '/guide/evals' },
+            { text: 'Skills from packages', link: '/guide/vendor-skills' },
             { text: 'Upstream-sync', link: '/guide/upstream-sync' },
-            { text: 'Вендоренные скиллы: доверие и триаж', link: '/guide/vendored-skills' },
-            { text: 'Реестр skills.json', link: '/guide/registry' },
-            { text: 'Граф зависимостей', link: '/guide/graph' },
-            { text: 'Карта токенового бюджета', link: '/guide/budget' },
-            { text: 'Bucket-аудит 2026-07', link: '/guide/bucket-audit-2026-07' },
-            { text: 'Polyglot-монорепо', link: '/guide/polyglot-monorepo' },
-            { text: 'Сканер сниппетов', link: '/guide/scanner' },
+            { text: 'Vendor skills: trust and triage', link: '/guide/vendored-skills' },
+            { text: 'Registry skills.json', link: '/guide/registry' },
+            { text: 'Dependency graph', link: '/guide/graph' },
+            { text: 'Token Budget Map', link: '/guide/budget' },
+            { text: 'Bucket-audit 2026-07', link: '/guide/bucket-audit-2026-07' },
+            { text: 'Polyglot-monorepo', link: '/guide/polyglot-monorepo' },
+            { text: 'Snippet scanner', link: '/guide/scanner' },
             { text: 'CI/CD', link: '/guide/ci' },
-            { text: 'Диагностика и обновление', link: '/guide/troubleshooting' },
-            { text: 'Совместимость с Laravel Boost', link: '/boost-compatibility' },
-            { text: 'Раздача локального .ai/ на провайдеры (dev-план)', link: '/multi-provider-distribution' },
+            { text: 'Diagnostics and update', link: '/guide/troubleshooting' },
+            { text: 'Compatible with Laravel Boost', link: '/boost-compatibility' },
+            { text: 'Local distribution .ai/ to providers (dev-plan)', link: '/multi-provider-distribution' },
           ],
         },
         {
-          text: 'Адаптеры IDE',
+          text: 'Adapters IDE',
           items: [
             { text: 'Claude Code', link: '/adapters/claude-code' },
             { text: 'Cursor', link: '/adapters/cursor' },
@@ -70,7 +70,7 @@ export default withMermaid(defineConfig({
           ],
         },
         {
-          text: 'Воркфлоу',
+          text: 'Workflow',
           items: [
             { text: 'AI-assisted development', link: '/workflows/' },
             { text: 'Perplexity', link: '/workflows/perplexity' },
@@ -78,28 +78,28 @@ export default withMermaid(defineConfig({
             { text: 'Claude Fable 5', link: '/workflows/fable-5' },
             { text: 'Cursor / VS Code', link: '/workflows/cursor' },
             { text: 'Python / 3D', link: '/workflows/python-3d' },
-            { text: 'Фоновые агенты', link: '/workflows/background-agents' },
-            { text: 'Аудит каркаса (Perplexity)', link: '/workflows/framework-audit' },
+            { text: 'Background agents', link: '/workflows/background-agents' },
+            { text: 'Frame audit (Perplexity)', link: '/workflows/framework-audit' },
           ],
         },
         {
           text: 'Agent Framework',
           items: [
-            { text: 'Обзор каркаса', link: '/agent-framework/' },
-            { text: 'Текущее состояние', link: '/agent-framework/framework-overview' },
-            { text: 'Реестр решений', link: '/agent-framework/decisions-ledger' },
-            { text: 'Универсальные роли', link: '/agent-framework/roles' },
+            { text: 'Frame overview', link: '/agent-framework/' },
+            { text: 'Current Status', link: '/agent-framework/framework-overview' },
+            { text: 'Register of decisions', link: '/agent-framework/decisions-ledger' },
+            { text: 'Universal roles', link: '/agent-framework/roles' },
             { text: 'Hub = Skills Index', link: '/agent-framework/skills-index-and-hub' },
-            { text: 'Чеклист после внедрения', link: '/agent-framework/post-integration-checklist' },
+            { text: 'Checklist after implementation', link: '/agent-framework/post-integration-checklist' },
             { text: 'Agent Teams (Mesh)', link: '/agent-framework/agent-teams' },
-            { text: 'Архив аудитов', link: '/audits/' },
+            { text: 'Audit archive', link: '/audits/' },
           ],
         },
         {
-          text: 'Примеры',
+          text: 'Examples',
           items: [
-            { text: 'Laravel-проект с нуля', link: '/examples/laravel' },
-            { text: 'PHP-пакет', link: '/examples/php-package' },
+            { text: 'Laravel-project from scratch', link: '/examples/laravel' },
+            { text: 'PHP package', link: '/examples/php-package' },
             { text: 'Obsidian vault', link: '/examples/obsidian' },
           ],
         },
@@ -114,21 +114,21 @@ export default withMermaid(defineConfig({
       provider: 'local',
       options: {
         translations: {
-          button: { buttonText: 'Поиск', buttonAriaLabel: 'Поиск' },
+          button: { buttonText: 'Search', buttonAriaLabel: 'Search' },
           modal: {
-            noResultsText: 'Ничего не найдено',
-            resetButtonTitle: 'Сбросить',
-            footer: { selectText: 'выбрать', navigateText: 'навигация', closeText: 'закрыть' },
+            noResultsText: 'Nothing found',
+            resetButtonTitle: 'Reset',
+            footer: { selectText: 'choose', navigateText: 'navigation', closeText: 'close' },
           },
         },
       },
     },
 
-    outline: { label: 'На этой странице' },
-    docFooter: { prev: 'Назад', next: 'Вперёд' },
-    lastUpdated: { text: 'Обновлено' },
-    darkModeSwitchLabel: 'Тема',
-    sidebarMenuLabel: 'Меню',
-    returnToTopLabel: 'Наверх',
+    outline: { label: 'On this page' },
+    docFooter: { prev: 'Back', next: 'Forward' },
+    lastUpdated: { text: 'Updated' },
+    darkModeSwitchLabel: 'Subject',
+    sidebarMenuLabel: 'Menu',
+    returnToTopLabel: 'Top',
   },
 }))

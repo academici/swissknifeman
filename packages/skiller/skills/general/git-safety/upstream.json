@@ -12,7 +12,7 @@
       "fetched_at": "2026-06-26"
     }
   ],
-  "notes": "Производное от mattpocock/skills misc/git-guardrails-claude-code. У нас хуки = пакет harness, поэтому SKILL.md переписан как RU-обёртка: сам скрипт block-dangerous-git.sh лежит в packages/harness/configs/claude-code/hooks/git-guardrails/, а этот скилл (lifecycle:init) объясняет и включает. strategy=notify.",
+  "notes": "Derived from mattpocock/skills misc/git-guardrails-claude-code. We have hooks = package harness, therefore SKILL.md rewritten as RU-wrapper: the script itself block-dangerous-git.sh lies in packages/harness/configs/claude-code/hooks/git-guardrails/, and this skill (lifecycle:init) explains and includes. strategy=notify.",
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",

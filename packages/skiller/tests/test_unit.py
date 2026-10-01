@@ -1,10 +1,10 @@
-"""Юнит-тесты чистых функций: frontmatter, flag-parsing, selection, flat-names."""
+"""Unit tests for pure functions: frontmatter, flag-parsing, selection, flat-names."""
 import unittest
 from pathlib import Path
 import sys
 import tempfile
 
-# tests/ запускаются с lib/ на sys.path (см. scripts/test.sh); подстрахуемся.
+# tests/ start with lib/ on sys.path (see scripts/test.sh); let's play it safe.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from skiller.common import (parse_flags, parse_frontmatter,
@@ -39,7 +39,7 @@ class TestFrontmatter(unittest.TestCase):
         self.assertEqual(fm["description"], "single")
 
     def test_block_scalar_literal(self):
-        # `description: |` — многострочный литерал собирается с переносами
+        # `description: |` — multiline literal is collected with hyphens
         f = self._write(
             "---\nname: foo\ndescription: |\n  line one\n  line two\n---\nbody\n")
         fm = parse_frontmatter(f)
@@ -47,14 +47,14 @@ class TestFrontmatter(unittest.TestCase):
         self.assertEqual(fm["description"], "line one\nline two")
 
     def test_block_scalar_folded_then_next_key(self):
-        # `description: >` — фолдинг через пробел; ключ после блока не потерян
+        # `description: >` — folding with space; the key after the block is not lost
         f = self._write("---\ndescription: >\n  a\n  b\nrisk: low\n---\n")
         fm = parse_frontmatter(f)
         self.assertEqual(fm["description"], "a b")
         self.assertEqual(fm["risk"], "low")
 
     def test_value_starting_with_gt_is_not_block_scalar(self):
-        # описание, начинающееся с '>', НЕ должно съедаться как блок-скаляр
+        # description starting with '>', Should NOT be eaten as a block scalar
         f = self._write("---\ndescription: > see the docs\nname: foo\n---\n")
         fm = parse_frontmatter(f)
         self.assertEqual(fm["description"], "> see the docs")
@@ -65,7 +65,7 @@ class TestFrontmatter(unittest.TestCase):
         self.assertNotIn("key", parse_frontmatter(f))
 
     def test_bom_prefixed_frontmatter(self):
-        # UTF-8 BOM перед `---` не должен ронять парсинг (utf-8-sig срезает BOM)
+        # UTF-8 BOM before `---` should not fail parsing (utf-8-sig cuts BOM)
         f = self._write("﻿---\nname: foo\n---\nbody\n")
         self.assertEqual(parse_frontmatter(f)["name"], "foo")
 
@@ -182,15 +182,15 @@ class TestResolveSelection(unittest.TestCase):
         self.assertEqual(src, "autodetect")
 
     def test_star_expands_with_include_meta(self):
-        # ЯВНЫЙ project_type=standalone (в .swissknife.json) → legitimate «поставь всё».
+        # EXPLICIT project_type=standalone (in .swissknife.json) → legitimate «put everything».
         items, name, _, _, include_meta = resolve_selection(
             self.env, self.proj, {"project_type": "standalone"}, "", [])
         self.assertEqual(set(items), {"php", "quality", "devops"})
         self.assertTrue(include_meta)
 
     def test_autodetect_fallback_not_all_buckets(self):
-        # Тип НЕ распознан (autodetect → standalone) → минимальный набор, НЕ «всё подряд»,
-        # и маркер источника autodetect-fallback (вызывающий печатает warn).
+        # Type NOT recognized (autodetect → standalone) → minimum set, NOT «everything»,
+        # and source marker autodetect-fallback (caller types warn).
         blank = fx.make_standalone_project(self.tmp)
         items, name, src, _, include_meta = resolve_selection(
             self.env, blank, {}, "", [])
@@ -200,7 +200,7 @@ class TestResolveSelection(unittest.TestCase):
         self.assertFalse(include_meta)
 
     def test_explicit_standalone_profile_still_expands(self):
-        # Явный --profile standalone остаётся «поставь всё» (не fallback).
+        # Explicit --profile standalone remains «put everything» (not fallback).
         blank = fx.make_standalone_project(self.tmp)
         items, name, src, label, _ = resolve_selection(
             self.env, blank, {}, "standalone", [])
@@ -232,7 +232,7 @@ class TestRequiresResolution(unittest.TestCase):
         d = self.root / "skills" / "php" / "laravel-conventions"
         skills = [("php", "laravel-conventions", d, "laravel-conventions")]
         index = build_requires_index(self.env)
-        resolve_requires(skills, index, {"code-style"})  # мутирует skills на месте
+        resolve_requires(skills, index, {"code-style"})  # mutates skills in place
         names = {fm for _, _, _, fm in skills}
         self.assertNotIn("code-style", names)
 
@@ -252,10 +252,10 @@ class TestFlatNames(unittest.TestCase):
 
 
 class TestSkillContentHash(unittest.TestCase):
-    """__pycache__/*.pyc не должны влиять на content_sha256: найдено при
-    расследовании нестабильного skills.json (registry --check зеленел на машине с
-    локально запущенным .py-сниппетом, но дрейфовал в чистом чекауте/CI — байткод-
-    кэш от `python3 snippets/check.py` считался частью содержимого скилла)."""
+    """__pycache__/*.pyc should not affect content_sha256: found at
+    investigating unstable skills.json (registry --check turned green on the machine with
+    running locally.py-snippet, but drifted in a clean checkout/CI — bytecode-
+    cache from `python3 snippets/check.py` was considered part of the skill content)."""
     def _make_skill(self, tmp):
         d = tmp / "skill"
         d.mkdir()
@@ -280,8 +280,8 @@ class TestSkillContentHash(unittest.TestCase):
             self.assertEqual(before, after)
 
     def test_real_content_change_still_detected(self):
-        # Регресс-предохранитель: исключение __pycache__ не должно случайно
-        # исключить реальные правки .py-файлов (только их скомпилированный кэш).
+        # Regression-fuse: exception __pycache__ should not be accidental
+        # exclude real edits .py-files (only their compiled cache).
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             d = self._make_skill(tmp)

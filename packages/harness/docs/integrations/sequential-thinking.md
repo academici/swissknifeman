@@ -1,23 +1,23 @@
 # sequential-thinking MCP
 
-## Что это
+## What is this
 
-Официальный (Anthropic / Model Context Protocol) сервер: инструмент для **пошагового
-структурированного рассуждения** — агент разбивает сложную задачу на явные шаги с
-возможностью ревизий и ветвлений.
+Official (Anthropic / Model Context Protocol) server: tool for **step by step
+structured reasoning** — agent breaks a complex task into explicit steps with
+the possibility of revisions and branches.
 
-- Репозиторий: `modelcontextprotocol/servers` (`src/sequentialthinking`)
+- Repository: `modelcontextprotocol/servers` (`src/sequentialthinking`)
 - npm: `@modelcontextprotocol/server-sequential-thinking`
 
-## Установка
+## Installation
 
-Пресетом (opt-in):
+Preset (opt-in):
 
 ```bash
 skiller integrate --mcp sequential-thinking
 ```
 
-Пресет — `configs/claude-code/mcp/sequential-thinking.json`:
+Preset - `configs/claude-code/mcp/sequential-thinking.json`:
 
 ```json
 {
@@ -26,8 +26,8 @@ skiller integrate --mcp sequential-thinking
 }
 ```
 
-## Когда полезен
+## When useful
 
-Многошаговые задачи с неочевидной декомпозицией: сложный рефакторинг, разбор зависимостей,
-архитектурные развилки. Современные модели Claude умеют extended thinking и так — сервер
-даёт явный, наблюдаемый протокол шагов, который удобно ревизовать.
+Multi-step tasks with non-obvious decomposition: complex refactoring, dependency parsing,
+architectural forks. Modern models Claude can extended thinking and so - server
+provides an explicit, observable protocol of steps that is easy to audit.

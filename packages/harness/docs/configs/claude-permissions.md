@@ -1,196 +1,196 @@
-# Permissions для Claude Code
+# Permissions for Claude Code
 
-Готовые пресеты разрешений (пакет `harness`, `packages/harness/configs/claude-code/`)
-решают главную боль нового проекта: десятки permission-промптов в первые полчаса
-работы. Один запуск `harness permissions` — и агент может выполнять весь типовой
-инструментарий стека, а опасные операции остаются под контролем.
+Ready-made permission presets (package `harness`, `packages/harness/configs/claude-code/`)
+solve the main pain of the new project: dozens permission-prompts in the first half hour
+work. One run `harness permissions` — and the agent can perform all typical
+stack instrumentation, and dangerous operations remain under control.
 
-> Полная настройка машины (глобальный baseline + лог всех команд агента) —
-> в гайде [Настройка окружения Claude Code](../setup/claude).
+> Complete machine setup (global baseline + log of all agent commands) —
+> in the guide [Setting up the environment Claude Code](../setup/claude).
 
-## Пресеты
+## Presets
 
-| Пресет | Файл | Что разрешает |
+| Preset | File | What it allows |
 |---|---|---|
-| `base` | `settings.base.json` | git (push — с подтверждением), gh, файловые операции, curl/wget, jq/rg/sed/awk, make, оркестрация (`Workflow`/`Agent`/`TodoWrite`); deny на секреты и `sudo` |
+| `base` | `settings.base.json` | git (push — with confirmation), gh, file operations, curl/wget, jq/rg/sed/awk, make, orchestration (`Workflow`/`Agent`/`TodoWrite`); deny for secrets and `sudo` |
 | `laravel` | `settings.laravel.json` | `php artisan`, composer, pest/phpunit/pint/phpstan/rector, sail, npm/vite |
-| `php-package` | `settings.php-package.json` | composer, тесты и линтеры — без artisan |
+| `php-package` | `settings.php-package.json` | composer, tests and linters - without artisan |
 | `node` | `settings.node.json` | node/npm/npx/pnpm/yarn, tsc, vitest, eslint, prettier |
 | `python` | `settings.python.json` | python/pip/pytest, uv, poetry, ruff/black/mypy |
-| `docker` | `settings.docker.json` | docker + docker compose; удаление и prune — с подтверждением |
-| `product-boundary` | `settings.product-boundary.json` | deny на запись в зависимый пакет (`Write/Edit(vendor/**)`) — граница «проект ↔ пакет» |
-| `yolo` | `settings.yolo.json` | `bypassPermissions` — только для изолированных окружений |
+| `docker` | `settings.docker.json` | docker + docker compose; deletion and prune — with confirmation |
+| `product-boundary` | `settings.product-boundary.json` | deny to write to the dependent package (`Write/Edit(vendor/**)`) — border «project ↔ package» |
+| `yolo` | `settings.yolo.json` | `bypassPermissions` — only for isolated environments |
 
-Пресет `product-boundary` **opt-in** (не входит в автодетект): применяй его в
-проектах-потребителях, которые дорабатывают свои пакеты, чтобы агент не правил
-код пакета «по ходу» продуктовой задачи. Подробнее — скилл
+Preset `product-boundary` **opt-in** (is not included in autodetect): use it in
+consumer projects that modify their packages so that the agent does not rule
+package code «along the way» product task. More details - skill
 [`package-contribution-protocol`](https://github.com/academici/swissknifeman/blob/main/skills/architect/package-contribution-protocol/SKILL.md);
-вариант для path-репо (`packages/**`) — в его сниппете `permissions-deny.md`.
+option for path-repo (`packages/**`) — in his snippet `permissions-deny.md`.
 
-Логика каждого пресета трёхуровневая:
+The logic of each preset is three-level:
 
-- **allow** — повседневный инструментарий стека работает без промптов;
-- **ask** — необратимое или внешнее (git push, `migrate:fresh`,
-  `docker system prune`, `npm publish`) требует подтверждения;
-- **deny** — секреты (`.env`, `*.pem`, `*.key`, `~/.ssh`, `~/.aws`) и `sudo`
-  заблокированы всегда.
+- **allow** — everyday stack instrumentation works without prompts;
+- **ask** — irreversible or external (git push, `migrate:fresh`,
+  `docker system prune`, `npm publish`) requires confirmation;
+- **deny** — secrets (`.env`, `*.pem`, `*.key`, `~/.ssh`, `~/.aws`) and `sudo`
+  are always blocked.
 
-::: tip rm управляется хуком, не ask-правилами
-`rm`/`rmdir` в пресетах **не стоят в ask**: их жёстко блокирует deny_hard
-auto-approve-хука, а внутри доверенных директорий (machine-owned allowlist
-`safe-dirs.json` в корне монорепо swissknifeman, команда `harness safe-dirs`) —
-пропускает.
-Статическое ask-правило здесь только мешало бы: hook-`allow` не пробивает ask
-из settings (официальная семантика permissions), и rm в safe-dirs промптил бы
-всегда. Если ask-правила rm остались в проекте от старых пресетов — сними их:
+::: tip rm is controlled by a hook, not ask-rules
+`rm`/`rmdir` in presets **are not in ask**: hard blocks them deny_hard
+auto-approve-hook, and inside the trusted directories (machine-owned allowlist
+`safe-dirs.json` at the root of the monorepo swissknifeman, command `harness safe-dirs`) —
+skips.
+Static The ask-rule would only get in the way here: hook-`allow` does not penetrate ask
+from settings (official semantics permissions), and rm in safe-dirs would prompt
+always. If ask-rules rm are left in the project from old presets - remove them:
 `harness safe-dirs prune-ask --global --all-projects`.
 :::
 
-## Оркестрация: `Workflow` / `Agent` / `TodoWrite`
+## Orchestration: `Workflow` / `Agent` / `TodoWrite`
 
-В `allow` пресетов `base` **и** `global` добавлены три инструмента оркестрации —
-`Workflow`, `Agent`, `TodoWrite`. Они не привязаны к стеку: доступны в любом
-проекте, поэтому живут в универсальном слое (а не в `laravel`/`node`/`python`).
+B `allow` presets `base` **and** `global` added three orchestration tools -
+`Workflow`, `Agent`, `TodoWrite`. They are not stack bound: they are available in any
+project, so they live in the universal layer (and not in `laravel`/`node`/`python`).
 
-Зачем: при запуске `Workflow` каждый прогон спавнит субагентов (`Agent`),
-ведёт план (`TodoWrite`) и сам по себе — вызов инструмента `Workflow`. Без этих
-правил Claude Code просил подтверждение **после каждой фазы/стадии**, и длинный
-многофазный воркфлоу превращался в череду промптов. Авто-allow снимает эту боль.
+Why: at startup `Workflow` each run will spawn subagents (`Agent`),
+leads the plan (`TodoWrite`) and itself is a tool call `Workflow`. Without these
+rules Claude Code asked for confirmation **after each phase/stage**, and long
+multiphase work flow turned into a series of prompts. Auto-allow relieves this pain.
 
-Безопасность не страдает: разрешён лишь сам факт вызова инструмента. Субагент,
-порождённый `Agent`/`Workflow`, исполняет свои Bash/Read/Edit-вызовы **через тот
-же permission-слой** — широкий allow тут ничего не открывает, а `TodoWrite`
-правит только локальный список задач. Точечное правило на конкретного субагента
-(`Agent(Explore)`) по-прежнему работает поверх (см. раздел «Синтаксис правил»).
+Security is not affected: only the fact of calling the tool is allowed. Subagent,
+generated `Agent`/`Workflow`, performs his Bash/Read/Edit-calls **via that
+same permission-layer** — wide allow doesn't open anything here, but `TodoWrite`
+edits only the local task list. Point rule for a specific subagent
+(`Agent(Explore)`) still works on top (see section «Rules syntax»).
 
-Источник истины — пресеты; чтобы правило долетело до уже онбордженного проекта,
-перекати его (`harness permissions --target .` или `--global`).
+The source of truth is presets; so that the rule reaches the already onboarded project,
+roll it over (`harness permissions --target .` or `--global`).
 
 ## CLI `harness permissions`
 
 ```bash
-# base + автодетект стека по маркерам проекта
+# base + stack auto-detect based on project markers
 harness permissions --target ~/projects/my-laravel-app
 
-# Явный набор пресетов
+# Explicit set of presets
 harness permissions --target . --preset base,laravel,docker
 
-# Превью без записи
+# Preview without recording
 harness permissions --target . --dry-run
 
-# Список доступных пресетов
+# List of available presets
 harness permissions --list
 
-# В шаримый settings.json вместо локального
+# Shared settings.json instead of local
 harness permissions --target . --file settings.json
 ```
 
-Автодетект использует те же маркеры, что и `skiller vendor`:
+Autodetect uses the same markers as `skiller vendor`:
 
-| Маркер | Пресет |
+| Marker | Preset |
 |---|---|
 | `artisan` + `composer.json` | `laravel` |
-| `composer.json` без `artisan` | `php-package` |
+| `composer.json` without `artisan` | `php-package` |
 | `package.json` | `node` |
 | `pyproject.toml` / `requirements.txt` | `python` |
 | `Dockerfile` / `compose.yaml` | `docker` |
 
-Merge-семантика безопасна: `allow`/`ask`/`deny` объединяются с уже существующими
-правилами цели без дублей, ничего не затирается, `defaultMode` берётся из
-пресета только если в цели он не задан. Перед записью создаётся бэкап
+Merge-semantics are safe: `allow`/`ask`/`deny` are merged with existing
+goal rules without duplicates, nothing is overwritten, `defaultMode` is taken from
+preset only if it is not specified in the target. A backup is created before recording
 `settings.local.json.bak`.
 
-## Куда применять: settings.json vs settings.local.json
+## Where to use: settings.json vs settings.local.json
 
-| Файл | Кому виден | Когда использовать |
+| File | Who can see it | When to use |
 |---|---|---|
-| `.claude/settings.local.json` | только вам (не коммитится) | **по умолчанию** — личные разрешения |
-| `.claude/settings.json` | всей команде (в git) | согласованные командные правила |
-| `~/.claude/settings.json` | все ваши проекты | глобальные предпочтения |
+| `.claude/settings.local.json` | just for you (does not commit) | **default** — personal permissions |
+| `.claude/settings.json` | to the whole team (in git) | consistent command rules |
+| `~/.claude/settings.json` | all your projects | global preferences |
 
-Приоритет (от высшего): managed-настройки → CLI-аргументы →
+Priority (from higher): managed-settings → CLI-arguments →
 `settings.local.json` → `settings.json` → `~/.claude/settings.json`.
-**Deny на любом уровне нельзя перебить allow-ом на другом.**
+**Deny cannot be interrupted at any level allow-ohm on the other.**
 
-## Синтаксис правил — шпаргалка
+## Rules syntax - cheat sheet
 
-Правила оцениваются в порядке **deny → ask → allow**, побеждает первое
-совпадение. Поэтому в пресетах работает связка «широкий allow + точечный ask»:
-`Bash(git *)` в allow и `Bash(git push *)` в ask — push спросит, остальной
-git нет.
+Rules are evaluated in order **deny → ask → allow**, wins first
+match. Therefore, the combination works in presets «wide allow + spot ask»:
+`Bash(git *)` in allow and `Bash(git push *)` in ask — push will ask the rest
+git no.
 
 ### Bash
 
 ```json
-"Bash(npm run build)"   // точное совпадение
-"Bash(npm run *)"       // префикс: npm run lint, npm run test:unit, ...
-"Bash(git * main)"      // wildcard в любой позиции
-"Bash(* --version)"     // и в начале тоже
+"Bash(npm run build)"   // exact match
+"Bash(npm run *)"       // prefix: npm run lint, npm run test:unit, ...
+"Bash(git * main)"      // wildcard in any position
+"Bash(* --version)"     // and at the beginning too
 ```
 
-Нюансы, проверенные по официальной документации:
+Nuances verified according to official documentation:
 
-- пробел перед `*` важен: `Bash(ls *)` матчит `ls -la`, но не `lsof`;
-  `Bash(ls*)` матчит оба. Суффикс `:*` эквивалентен ` *`;
-- один `*` покрывает любую последовательность символов, включая пробелы:
-  `Bash(git *)` матчит `git log --oneline --all`;
-- **составные команды** разбираются по операторам `&&`, `||`, `;`, `|` —
-  правило должно матчить каждую подкоманду отдельно. `Bash(safe-cmd *)`
-  не разрешит `safe-cmd && rm -rf .`;
-- обёртки `timeout`, `time`, `nice`, `nohup`, `stdbuf` и голый `xargs`
-  срезаются перед матчингом; а вот `npx`, `docker exec`, `devbox run` — нет:
-  `Bash(devbox run *)` разрешит всё, что идёт после `run`;
-- read-only команды (`ls`, `cat`, `grep`, `pwd`, читающие формы `git` и т.д.)
-  встроенно разрешены во всех режимах и в allow не нуждаются.
+- space before `*` is important: `Bash(ls *)` matchit `ls -la`, but not `lsof`;
+  `Bash(ls*)` matches both. Suffix `:*` is equivalent ` *`;
+- one `*` covers any sequence of characters, including spaces:
+  `Bash(git *)` matchit `git log --oneline --all`;
+- **compound commands** are sorted by operator `&&`, `||`, `;`, `|` —
+  the rule must match each subcommand separately. `Bash(safe-cmd *)`
+  will not allow `safe-cmd && rm -rf .`;
+- wrappers `timeout`, `time`, `nice`, `nohup`, `stdbuf` and naked `xargs`
+  are cut off before matching; and here `npx`, `docker exec`, `devbox run` — no:
+  `Bash(devbox run *)` will allow everything that comes after `run`;
+- read-only commands (`ls`, `cat`, `grep`, `pwd`, reading forms `git` etc.)
+  are natively enabled in all modes and allow are not needed.
 
 ### Read / Edit
 
-Пути — в gitignore-семантике, **четыре якоря**:
+Paths - in gitignore-semantics, **four anchors**:
 
 ```json
-"Read(//etc/hosts)"      // абсолютный путь (двойной слэш!)
-"Read(~/.zshrc)"         // от home
-"Edit(/src/**/*.ts)"     // от корня проекта (одинарный слэш)
-"Read(*.env)"            // от текущего каталога
+"Read(//etc/hosts)"      // absolute path (double slash!)
+"Read(~/.zshrc)"         // from home
+"Edit(/src/**/*.ts)"     // from project root (single slash)
+"Read(*.env)"            // from current directory
 ```
 
-::: warning Частая ошибка
-`/Users/alice/file` — это **не** абсолютный путь, а путь от корня проекта.
-Для абсолютных путей нужен двойной слэш: `//Users/alice/file`.
+::: warning Common error
+`/Users/alice/file` — this **not** is an absolute path, and the path is from the project root.
+For absolute paths, you need a double slash: `//Users/alice/file`.
 :::
 
-Голое имя файла матчится на любой глубине: `Read(.env)` ≡ `Read(**/.env)`.
+The bare file name matches at any depth: `Read(.env)` ≡ `Read(**/.env)`.
 
-### Остальные инструменты
+### Other tools
 
 ```json
-"WebFetch(domain:github.com)"        // fetch только на домен
-"mcp__github"                        // все инструменты MCP-сервера github
-"mcp__github__get_*"                 // его get-инструменты
-"Agent(Explore)"                     // правило на субагента
+"WebFetch(domain:github.com)"        // fetch only for domain
+"mcp__github"                        // all tools MCP-server github
+"mcp__github__get_*"                 // him get-tools
+"Agent(Explore)"                     // rule for subagent
 ```
 
-## Режимы: defaultMode
+## Modes: defaultMode
 
-| Режим | Поведение |
+| Mode | Behavior |
 |---|---|
-| `default` | промпт при первом использовании каждого инструмента |
-| `acceptEdits` | автопринятие правок файлов и fs-команд в рабочем каталоге — **используется в пресете base** |
-| `plan` | только чтение и анализ |
-| `dontAsk` | автоотказ всему, что не разрешено явно |
-| `bypassPermissions` | без промптов вообще — **только пресет yolo** |
+| `default` | prompt on first use of each tool |
+| `acceptEdits` | auto-accept file edits and fs-commands in the working directory - **is used in the preset base** |
+| `plan` | read and parse only |
+| `dontAsk` | auto-deny everything that is not explicitly allowed |
+| `bypassPermissions` | without prompts at all - **preset only yolo** |
 
-::: danger Пресет yolo
-`settings.yolo.json` включает `bypassPermissions`: Claude Code не спрашивает
-ничего, кроме явных ask-правил и встроенного предохранителя на `rm -rf /` и
-`rm -rf ~`. Используйте **только в изолированных окружениях** — контейнерах,
-VM, devcontainer-ах, где агент не может навредить основной системе. Пресет
-сохраняет deny на `~/.ssh`, `~/.aws`, `*.pem` и `sudo` и ask на `git push --force`.
+::: danger Preset yolo
+`settings.yolo.json` includes `bypassPermissions`: Claude Code doesn't ask
+nothing but explicit ask-rules and built-in fuse on `rm -rf /` and
+`rm -rf ~`. Use **only in isolated environments** — containers,
+VM, devcontainer-ah, where the agent cannot harm the main system. Preset
+saves deny on `~/.ssh`, `~/.aws`, `*.pem` and `sudo` and ask on `git push --force`.
 :::
 
-## Пример: содержимое base
+## Example: content base
 
-::: details settings.base.json целиком
+::: details settings.base.json in full
 ```json
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
@@ -226,45 +226,45 @@ VM, devcontainer-ах, где агент не может навредить ос
 ```
 :::
 
-> Источник пресета — `packages/harness/configs/claude-code/settings.base.json`
-> (фрагмент выше — копия для удобства). Остальные пресеты —
+> Preset source - `packages/harness/configs/claude-code/settings.base.json`
+> (fragment above - copy for convenience). Other presets -
 > [packages/harness/configs/claude-code/](https://github.com/academici/swissknifeman/tree/main/packages/harness/configs/claude-code).
 
-## Аудит настроек: `harness doctor --settings`
+## Settings audit: `harness doctor --settings`
 
-Пресеты применяет писатель (`harness permissions`); проверяет получившуюся
-конфигурацию — парный **read-only** аудит `harness doctor --settings`
-(settings-doctor). Он читает все слои (`user → project → local → managed`),
-строит эффективную конфигурацию с провенансом и репортит конфликты: битый JSON
-слоя, неканонические ключи (напр. `permissions.autoApprove` — Claude Code молча
-игнорирует), конфликт `defaultMode` между слоями, недоступные/неисполнимые
-хук-команды, секреты плейнтекстом в `env`, расхождение с ожидаемым
-policy-профилем.
+Presets are applied by the writer (`harness permissions`); checks the resulting
+configuration - paired **read-only** audit `harness doctor --settings`
+(settings-doctor). It reads all layers (`user → project → local → managed`),
+builds an effective configuration with provenance and reports conflicts: broken JSON
+layer, non-canonical keys (e.g. `permissions.autoApprove` — Claude Code silently
+ignores), conflict `defaultMode` between layers, inaccessible/unexecutable
+hook commands, plaintext secrets in `env`, discrepancy with expectation
+policy-profile.
 
 ```bash
-# отчёт по текущему проекту
+# report on the current project
 harness doctor --settings --target .
 
-# машинный вывод (CI/fleet): единый JSON, exit-code 0 чисто / 1 warn / 2 error
+# machine output (CI/fleet): single JSON, exit-code 0 clean / 1 warn / 2 error
 harness doctor --settings --target . --json
 
-# сверить с явным policy-профилем (перекрывает .swissknife.json:policy_profile)
+# check with explicit policy-profile (overlaps .swissknife.json:policy_profile)
 harness doctor --settings --profile max-permissive
 ```
 
-Проект объявляет ожидаемую политику ключом `policy_profile` в `.swissknife.json`
-(профили — `configs/claude-code/policy/<name>.json`: `base`, `max-permissive`);
-doctor сверяет факт с декларацией. Аудит **ничего не чинит** — писатель остаётся
-`harness permissions`. Тот же аудит доступен из реестра скиллов фасадом
+Project declares expected policy as key `policy_profile` in `.swissknife.json`
+(profiles - `configs/claude-code/policy/<name>.json`: `base`, `max-permissive`);
+doctor checks the fact against the declaration. Audit **doesn't fix anything** — writer remains
+`harness permissions`. The same audit is available from the skill registry by facade
 `skiller doctor --settings`.
 
-## Тонкая настройка под проект
+## Fine-tuning for the project
 
-Пресет — отправная точка. После применения правьте
-`.claude/settings.local.json` под проект или используйте `/permissions` прямо
-в Claude Code — интерфейс показывает все правила и файлы-источники.
+The preset is the starting point. Edit after use
+`.claude/settings.local.json` for the project or use `/permissions` straight
+in Claude Code — interface shows all rules and source files.
 
-Типовые доработки:
+Typical modifications:
 
 ```json
 {

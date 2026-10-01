@@ -20,13 +20,13 @@ items: [P1.1]
 supersedes: []
 superseded_by: null
 ---
-## Решение
+## Solution
 
-Тест.
+Test.
 
-## Почему
+## Why
 
-Проверка.
+Verification.
 """
 
 

@@ -6,9 +6,9 @@
 
 ## Payload (2026-08-01, P5.10)
 
-Бандл переведён в `strategy: fork` (см. `upstream.json`). Второй внешний источник —
-правила `vercel-labs/web-interface-guidelines`, ранее подтягивавшиеся сетью на каждый
-вызов (`PRM_REMOTE_INSTRUCTIONS`), теперь вендорены pristine-копией по пинованному SHA.
+Bundle moved to `strategy: fork` (see `upstream.json`). Second external source -
+rules `vercel-labs/web-interface-guidelines`, previously pulled up by the network for each
+call (`PRM_REMOTE_INSTRUCTIONS`), are now vendors pristine-copy of the pinned one SHA.
 
 - **Payload source:** `vercel-labs/web-interface-guidelines`
 - **Commit SHA:** `4e799d45c17aec1498c269287a83b9dba22b966b`

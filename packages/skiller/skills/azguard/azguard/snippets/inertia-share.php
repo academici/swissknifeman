@@ -12,13 +12,13 @@ use Illuminate\Http\Request;
 use Inertia\Middleware;
 
 /**
- * Глобальная карта прав текущего пользователя для Inertia SPA —
- * доступна как prop на каждой странице. Шарь только то, что нужно
- * фронтенду; пер-ресурсные флаги — через Abilities DTO (abilities-dto.php).
+ * Global map of current user rights for Inertia SPA —
+ * available as prop on every page. Share only what you need
+ * frontend; per-resource flags - via Abilities DTO (abilities-dto.php).
  *
- * ВАЖНО: фронтенд-проверки — только UX (скрыть/показать кнопку),
- * не безопасность. Каждое действие валидируется на сервере
- * (Gate::allows() / политика / middleware).
+ * IMPORTANT: frontend checks only UX (hide/show button),
+ * is not security. Each action is validated on the server
+ * (Gate::allows() / policy / middleware).
  */
 class HandleInertiaRequests extends Middleware
 {
@@ -44,7 +44,7 @@ class HandleInertiaRequests extends Middleware
     }
 }
 
-// ── TypeScript-константы прав ───────────────────────────────────────────────
+// ── TypeScript-rights constants ───────────────────────────────────────────────
 //
 // php artisan azguard:export-ts
 // # outputs: resources/js/permissions.ts (auto-generated, do not edit)
@@ -58,7 +58,7 @@ class HandleInertiaRequests extends Middleware
 //   },
 // } as const;
 //
-// ── Потребление в Vue (computed по page.props) ──────────────────────────────
+// ── Consumption in Vue (computed by page.props) ──────────────────────────────
 //
 // <!-- resources/js/Pages/Documents/Index.vue -->
 // <script setup lang="ts">

@@ -1,87 +1,87 @@
-# Воркфлоу: AI-assisted development
+# Workflow: AI-assisted development
 
-> Методология организации разработки с использованием AI-инструментов на каждом
-> этапе жизненного цикла проекта.
+> Methodology for organizing development using AI-tools on each
+> stage of the project life cycle.
 
-## Скиллы vs. воркфлоу
+## Skills vs. work flow
 
-Важно различать два слоя реестра:
+It is important to distinguish between two layers of the registry:
 
-- **Скиллы** (`skills/`) — утилитарны. Один скилл = один навык, работающий
-  **внутри конкретной IDE/агента** (Claude Code, Cursor). Скилл не описывает
-  совместное поведение разных систем — только то, как сделать конкретную вещь
-  там, где он запущен.
-- **Воркфлоу** (этот раздел) — **межсистемный слой**. Описывает, как
-  инструменты передают работу друг другу: исследование → проектирование →
-  реализация → ревью. Это методология, а не исполняемый навык.
+- **Skills** (`skills/`) — are utilitarian. One skill = one skill working
+  **inside a specific IDE/agent** (Claude Code, Cursor). Skill does not describe
+  joint behavior of different systems - only how to do a specific thing
+  where it is running.
+- **Workflow** (this section) — **intersystem layer**. Describes how
+  tools transfer work to each other: study → design →
+  implementation → review. It's a methodology, not an executable skill.
 
-Скилл «как написать тесты пакета» живёт в `skills/php-packages/laravel-package-testing`.
-Методология «Perplexity собирает ТЗ → Claude проектирует → Cursor реализует»
-живёт здесь.
+Skill «how to write package tests» lives in `skills/php-packages/laravel-package-testing`.
+Methodology «Perplexity collects technical specifications → Claude designs → Cursor implements»
+lives here.
 
-## Цепочка инструментов
+## Toolchain
 
 ```
-Perplexity (исследование + первичное ТЗ)
+Perplexity (research + primary technical specification)
     ↓
-Claude (детальное ТЗ + архитектурные решения)
+Claude (detailed technical specification + architectural solutions)
     ↓
-Cursor / VS Code + дешёвая модель (реализация)
+Cursor / VS Code + cheap model (implementation)
     ↓
-Claude / Perplexity (код-ревью)
+Claude / Perplexity (code review)
     ↓
-dev-review через gh (PR-ревью и хендофф с экономией контекста)
+dev-review via gh (PR-review and handoff with context saving)
 ```
 
-Ключевая идея — **разделение ответственности между инструментами**:
-исследование и аналитика, детальное проектирование, реализация и контроль
-качества — это разные задачи, требующие разных моделей.
+Key Idea - **separation of responsibilities between tools**:
+research and analytics, detailed design, implementation and control
+qualities are different tasks that require different models.
 
-## Сводная таблица инструментов
+## Tool Summary Table
 
-| Этап | Инструмент | Задача | Модель |
+| Stage | Tool | Task | Model |
 |------|-----------|--------|--------|
-| Исследование | **Perplexity** | Аналитика, референсы, первичное ТЗ | Pro Search |
-| Проектирование | **Claude** | Детальное ТЗ, архитектура, паттерны | Fable 5 / Sonnet |
-| Реализация | **Cursor / VS Code** | Написание кода по ТЗ | Haiku / GPT-4o mini |
-| Точечная помощь | **Claude** | Сложные вопросы в процессе реализации | Sonnet |
-| Код-ревью | **Claude + Perplexity** | Анализ качества, актуальность | Fable 5 |
-| dev-review / хендофф | **gh CLI** | PR-ревью и передача работы точечно (`gh pr diff/view/comment`), без загрузки файлов целиком | любая |
-| Python / 3D | **Claude + Vilis** | Скрипты, алгоритмы, визуал | Fable 5 / Claude Code |
+| Research | **Perplexity** | Analytics, references, primary technical specifications | Pro Search |
+| Design | **Claude** | Detailed technical specifications, architecture, patterns | Fable 5 / Sonnet |
+| Implementation | **Cursor / VS Code** | Writing code according to technical specifications | Haiku / GPT-4o mini |
+| Spot help | **Claude** | Complex issues in the implementation process | Sonnet |
+| Code review | **Claude + Perplexity** | Quality analysis, relevance | Fable 5 |
+| dev-review / handoff | **gh CLI** | PR-review and transfer of work point by point (`gh pr diff/view/comment`), without downloading entire files | any |
+| Python / 3D | **Claude + Vilis** | Scripts, algorithms, visuals | Fable 5 / Claude Code |
 
-## Разделы
+## Sections
 
-| Страница | Содержание |
+| Page | Contents |
 |----------|------------|
-| [Perplexity](./perplexity) | Настройки, шаблоны промтов, блок ресурсов |
-| [Claude](./claude) | Промты для детального ТЗ, архитектуры, код-ревью |
-| [Claude Fable 5](./fable-5) | Специфика промтинга Fable 5 (XML, effort) |
-| [Cursor / VS Code](./cursor) | Рабочий цикл реализации по ТЗ |
-| [Python / 3D](./python-3d) | Инструменты для Python и 3D-задач |
+| [Perplexity](./perplexity) | Settings, templates, resource block |
+| [Claude](./claude) | Prompts for detailed technical specifications, architecture, code review |
+| [Claude Fable 5](./fable-5) | Promting specifics Fable 5 (XML, effort) |
+| [Cursor / VS Code](./cursor) | Implementation work cycle according to technical specifications |
+| [Python / 3D](./python-3d) | Tools for Python and 3D-tasks |
 
-## Практические правила
+## Rules of thumb
 
-### Передача между этапами
+### Transfer between stages
 
-- ТЗ из Perplexity передавать в Claude **целиком**, не резюмируя.
-- Ссылки из блока «Ресурсы» — включать в промт для Claude.
-- Детальное ТЗ для Cursor сохранять в репозитории (`.cursorrules`,
+- TK from Perplexity transfer to Claude **in full**, without summarizing.
+- Links from the block «Resources» — include in the promt for Claude.
+- Detailed technical specifications for Cursor save to repository (`.cursorrules`,
   `AGENTS.md`, `docs/spec.md`).
-- **Платформенный хендофф — через `gh`, не дампом.** Передавая работу на
-  ревью/мердж, ссылайся на PR/issue (`gh pr view <N> --json url`), а не вставляй
-  дифф телом. Следующий агент подтянет нужный срез сам (`gh pr diff <N>`,
-  `gh pr view <N> --comments`) — это экономит контекст против переноса всего
-  артефакта между сессиями. Локальный VCS остаётся за `git`. Правила — скилл
-  `oss-dev/gh-review`, дисциплина токенов — `general/context-economy`.
+- **Platform handoff - via `gh`, not a dump.** Transferring work to
+  review/merge, refer to PR/issue (`gh pr view <N> --json url`), instead of pasting
+  body diff. The next agent will pull up the required cut himself (`gh pr diff <N>`,
+  `gh pr view <N> --comments`) — this saves context vs moving everything
+  artifact between sessions. Local VCS remains for `git`. Rules - skill
+  `oss-dev/gh-review`, token discipline - `general/context-economy`.
 
-### Контроль качества
+### Quality control
 
-- После каждого этапа — короткая ревизия: соответствует ли результат ожиданиям.
-- Код-ревью — не финальный шаг, а **регулярная практика** на протяжении всей
-  разработки.
-- Perplexity-ревью актуальности — раз в спринт для долгосрочных проектов.
+- After each stage - a short audit: does the result meet expectations.
+- Code review is not the final step, but **regular practice** throughout
+  development.
+- Perplexity-relevance review - once per sprint for long-term projects.
 
 ---
 
-*Источник методологии — личный vault `40-AI/Workflow`. Актуализировать по
-мере появления новых инструментов.*
+*Source of methodology - personal vault `40-AI/Workflow`. Update by
+as new tools become available.*

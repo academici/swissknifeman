@@ -1,27 +1,27 @@
-# git-guardrails — хук блокировки опасных git-команд
+# git-guardrails — dangerous blocking hook git-commands
 
-PreToolUse-хук Claude Code, который перехватывает и блокирует деструктивные git-команды **до**
-исполнения (на уровне `Bash`-инструмента). Особенно важно для production и embedded-проектов, где
-случайный `git reset --hard`/`git push` на ветке устройства может потребовать физического доступа
-к железу для восстановления.
+PreToolUse-hook Claude Code, which intercepts and blocks destructive git-commands **to**
+execution (at level `Bash`-tool). Particularly important for production and embedded-projects, where
+random `git reset --hard`/`git push` on the device branch may require physical access
+to the hardware for recovery.
 
-## Что блокируется
+## What is blocked
 
-`git push` (включая `--force`/`--force-with-lease`), `git reset --hard`, `git clean -f`/`-fd`,
+`git push` (including `--force`/`--force-with-lease`), `git reset --hard`, `git clean -f`/`-fd`,
 `git branch -D`, `git checkout .`/`git restore .`, `git rebase --onto`.
 
-## Провенанс
+## Provenance
 
-Производное от [mattpocock/skills](https://github.com/mattpocock/skills) →
-`misc/git-guardrails-claude-code/scripts/block-dangerous-git.sh` (MIT, © Matt Pocock). Расширено
-паттернами `force-with-lease` и `rebase --onto`, сообщение переведено на русский. В нашей архитектуре
-хуки принадлежат пакету **harness** (skiller делегирует окружение сюда) — поэтому скрипт живёт здесь,
-а не как скилл.
+Derived from [mattpocock/skills](https://github.com/mattpocock/skills) →
+`misc/git-guardrails-claude-code/scripts/block-dangerous-git.sh` (MIT, © Matt Pocock). Expanded
+patterns `force-with-lease` and `rebase --onto`, message translated into Russian. In our architecture
+hooks belong to the package **harness** (skiller delegates the environment here) — so the script lives here,
+and not as a skill.
 
-## Как включить
+## How to enable
 
-Файл хука ставится глобально вместе с остальными (`harness hooks --global` → `~/.claude/hooks/`).
-Затем зарегистрировать PreToolUse-хук в settings проекта (`.claude/settings.json`) или глобально
+The hook file is installed globally along with the others (`harness hooks --global` → `~/.claude/hooks/`).
+Then register PreToolUse-hook in settings project (`.claude/settings.json`) or globally
 (`~/.claude/settings.json`), merge-only:
 
 ```json
@@ -36,16 +36,16 @@ PreToolUse-хук Claude Code, который перехватывает и бл
 }
 ```
 
-Скилл-обёртка с пошаговой инструкцией — `general/git-safety` (реестр skiller).
+Skill wrapper with step-by-step instructions - `general/git-safety` (registry skiller).
 
-## Проверка
+## Verification
 
 ```bash
 echo '{"tool_input":{"command":"git push origin main"}}' | ./block-dangerous-git.sh
-# → exit 2 + сообщение BLOCKED в stderr
+# → exit 2 + message BLOCKED in stderr
 ```
 
 ## TODO (follow-up)
 
-Завести флаг `harness hooks --git-guardrails on|off` (по образцу `--auto-approve`), который сам
-регистрирует PreToolUse-хук в settings проекта — чтобы не править settings.json руками.
+Start a flag `harness hooks --git-guardrails on|off` (according to the example `--auto-approve`), who himself
+registers PreToolUse-hook in settings project - so as not to edit settings.json hands.

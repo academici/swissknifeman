@@ -1,56 +1,56 @@
 # [1.1.0] - 2025-12-10
 
-Справочник к скиллу `release-engineering`.
+Skill reference `release-engineering`.
 
 ...
 ```
 
-**Автоматизация** — рекомендую один из:
-- `changesets` (JS): PR-driven, контрибьютор пишет changeset в PR
-- `release-please` (Google, поддерживает много языков): commit-conventional, автогенерация
-- Ручное — для совсем маленьких пакетов
+**Automation** — I recommend one of:
+- `changesets` (JS): PR-driven, contributor writes changeset in PR
+- `release-please` (Google, supports many languages): commit-conventional, auto-generation
+- Manual - for very small packages
 
-Не использовать «дамп git log» — это не changelog.
+Do not use «dump git log» — this is not changelog.
 
 ### 4. Release pipeline (CI/CD)
-Минимум для `v1.0+`:
+Minimum for `v1.0+`:
 
 ```yaml
-# .github/workflows/release.yml (схема, не финал)
+# .github/workflows/release.yml (diagram, not final)
 on:
   push:
     tags: ['v*']
 
 jobs:
   test:
-    # полный test matrix (все версии runtime + OS)
+    # full test matrix (all versions runtime + OS)
   build:
     needs: test
-    # сборка артефактов
+    # artifact assembly
   publish:
     needs: build
-    # publish на npm / Packagist / pub.dev
-    # требует secret (NPM_TOKEN и т.п.) через OIDC если возможно
+    # publish on npm / Packagist / pub.dev
+    # requires secret (NPM_TOKEN etc.) via OIDC if possible
   sign:
-    # GPG-подпись релиза в GitHub Releases
+    # GPG-release signature in GitHub Releases
   changelog:
-    # секция [Unreleased] → новая версия в CHANGELOG.md
+    # section [Unreleased] → new version in CHANGELOG.md
 ```
 
-**Правила:**
-- Релиз только из тэгов, не из main-веток (предотвращает accidental publish)
-- Provenance (npm `--provenance`, GitHub OIDC) — обязательно для `v1.0+`
-- 2FA на публикацию пакета — обязательно для всех мейнтейнеров
+**Rules:**
+- Release only from tags, not from main-branches (prevents accidental publish)
+- Provenance (npm `--provenance`, GitHub OIDC) — required for `v1.0+`
+- 2FA for publishing the package - required for all maintainers
 
 ### 5. Deprecation policy
-Когда что-то надо удалить — **не удалять сразу**. Стандартный flow:
+When something needs to be deleted - **do not delete immediately**. Standard flow:
 
-| Шаг | Когда | Действие |
+| Step | When | Action |
 |:---|:---|:---|
-| 1. Mark deprecated | MINOR | JSDoc `@deprecated`, console warn при использовании |
-| 2. Wait | минимум 1 MAJOR cycle (≥ 6 мес) | пользователи мигрируют |
-| 3. Remove | следующий MAJOR | breaking change в CHANGELOG |
+| 1. Mark deprecated | MINOR | JSDoc `@deprecated`, console warn when used |
+| 2. Wait | minimum 1 MAJOR cycle (≥ 6 months) | users are migrating |
+| 3. Remove | next MAJOR | breaking change in CHANGELOG |
 
-**Исключение — security**: уязвимый API можно удалить раньше с явным notice + миграционный гайд.
+**Exception - security**: vulnerable API can be removed earlier with an explicit notice + migration guide.
 
 ---

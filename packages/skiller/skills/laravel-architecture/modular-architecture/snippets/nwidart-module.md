@@ -1,29 +1,29 @@
 # Source: anonymized production project
-# Модульный монолит на nwidart/laravel-modules: дерево модуля, module.json,
-# composer.json (namespace без префикса Modules\), регистрация Filament discovery.
+# Modular monolith on nwidart/laravel-modules: module tree, module.json,
+# composer.json (namespace without prefix Modules\), registration Filament discovery.
 
-## Дерево модуля `Modules/Billing`
+## Module tree `Modules/Billing`
 
 ```text
 Modules/
   Billing/
     app/
       Filament/
-        Resources/        # Filament-ресурсы модуля (namespace Billing\Filament\Resources)
+        Resources/        # Filament-module resources (namespace Billing\Filament\Resources)
       Http/
         Controllers/
         Middleware/
       Models/
-        Invoice/          # группировка по сущности: Invoice.php, InvoiceItem.php
+        Invoice/          # grouping by entity: Invoice.php, InvoiceItem.php
       Observers/
       Providers/
-        BillingServiceProvider.php   # главный провайдер модуля
+        BillingServiceProvider.php   # main module provider
         RouteServiceProvider.php
         EventServiceProvider.php
       Repositories/
       Enums/
     config/
-      config.php          # сливается в config('billing.*')
+      config.php          # merges into config('billing.*')
     database/
       factories/
       migrations/
@@ -38,16 +38,16 @@ Modules/
     tests/
       Feature/
       Unit/
-    composer.json         # PSR-4 модуля, сливается merge-plugin'ом в корень
-    module.json           # манифест: имя, провайдеры, приоритет
-    vite.config.js         # отдельная сборка фронта модуля (build-billing)
+    composer.json         # PSR-4 module, merged merge-plugin'ohm to the root
+    module.json           # manifest: name, providers, priority
+    vite.config.js         # separate module front assembly (build-billing)
     package.json
 ```
 
 ## `module.json`
 
-Манифест модуля для nwidart: имя, alias, приоритет загрузки и список провайдеров.
-Провайдер регистрируется БЕЗ префикса `Modules\` — в соответствии с конвенцией ниже.
+Module manifest for nwidart: name, alias, download priority and list of providers.
+Provider is registered WITHOUT prefix `Modules\` — in accordance with the convention below.
 
 ```json
 {
@@ -63,12 +63,12 @@ Modules/
 }
 ```
 
-## `composer.json` модуля — конвенция namespace без `Modules\`
+## `composer.json` module - convention namespace without `Modules\`
 
-По умолчанию nwidart раскладывает классы под `Modules\Billing\...`.
-Конвенция проекта: неймспейс начинается с ИМЕНИ модуля (`Billing\Models\Invoice`),
-а не с `Modules\Billing\Models\Invoice`. Это задаётся PSR-4 автозагрузкой модуля плюс
-`'namespace' => ''` в `config/modules.php` (см. ниже).
+Default nwidart lays out classes under `Modules\Billing\...`.
+Project convention: namespace begins with the module NAME (`Billing\Models\Invoice`),
+and not with `Modules\Billing\Models\Invoice`. This is set PSR-4 autoload module plus
+`'namespace' => ''` in `config/modules.php` (see below).
 
 ```json
 {
@@ -90,8 +90,8 @@ Modules/
 }
 ```
 
-Корневой `composer.json` сливает все модульные `composer.json` через merge-plugin,
-поэтому отдельный `composer dump-autoload` для модуля не нужен:
+Root `composer.json` merges all modular `composer.json` via merge-plugin,
+therefore separate `composer dump-autoload` is not needed for the module:
 
 ```json
 {
@@ -112,26 +112,26 @@ Modules/
 }
 ```
 
-В `config/modules.php` пустой `namespace` включает конвенцию `Billing\...` вместо `Modules\Billing\...`:
+B `config/modules.php` empty `namespace` includes convention `Billing\...` instead `Modules\Billing\...`:
 
 ```php
 // config/modules.php
 return [
-    'namespace' => '',   // классы модулей резолвятся как Billing\..., а не Modules\Billing\...
+    'namespace' => '',   // module classes resolve as Billing\..., and not Modules\Billing\...
     // ...
 ];
 ```
 
-## Генерация файлов модуля — `php artisan module:make*`
+## Generating module files - `php artisan module:make*`
 
 ```bash
-# Создать сам модуль (скелет: app/, database/, routes/, tests/, module.json, composer.json, vite.config.js)
+# Create the module itself (skeleton: app/, database/, routes/, tests/, module.json, composer.json, vite.config.js)
 php artisan module:make Billing
 
-# Список всех доступных module:* команд
+# List of all available module:* commands
 php artisan list module
 
-# Файлы ВНУТРИ модуля — последний аргумент это имя модуля
+# Files INSIDE a module - the last argument is the name of the module
 php artisan module:make-model Invoice Billing
 php artisan module:make-controller InvoiceController Billing
 php artisan module:make-migration create_invoices_table Billing
@@ -139,26 +139,26 @@ php artisan module:make-provider InvoiceServiceProvider Billing
 php artisan module:make-seeder InvoiceSeeder Billing
 php artisan module:make-test InvoiceTest Billing
 
-# Группировка сущностей в подпапки — путь прямо в имени:
+# Grouping entities into subfolders - the path is right in the name:
 php artisan module:make-model Invoice/Invoice Billing      # Billing\Models\Invoice\Invoice
 php artisan module:make-model Invoice/InvoiceItem Billing
 ```
 
-## Filament-ресурсы внутри модуля
+## Filament-resources inside the module
 
-nwidart не генерирует Filament-ресурсы напрямую в модуль. Рабочий цикл:
+nwidart does not generate Filament-resources directly into the module. Duty Cycle:
 
 ```bash
-# 1. Сгенерировать ресурс штатной командой Filament (попадёт в app/Filament/Resources)
+# 1. Generate resource using standard command Filament (will hit app/Filament/Resources)
 php artisan make:filament-resource Invoice --generate
 
-# 2. Перенести файлы из app/Filament/Resources в Modules/Billing/app/Filament/Resources
-# 3. Поправить namespace во ВСЕХ перенесённых файлах (Resource, Pages, RelationManagers):
+# 2. Transfer files from app/Filament/Resources in Modules/Billing/app/Filament/Resources
+# 3. Correct namespace in ALL transferred files (Resource, Pages, RelationManagers):
 #    App\Filament\Resources\...  ->  Billing\Filament\Resources\...
 ```
 
-Регистрация (discovery) ресурсов модуля в панели — в `app/Providers/Filament/AdminPanelProvider.php`.
-Каждый модуль добавляет свой `discoverResources` с базовым путём и неймспейсом модуля:
+Registration (discovery) module resources in the panel - in `app/Providers/Filament/AdminPanelProvider.php`.
+Each module adds its own `discoverResources` with the base path and namespace of the module:
 
 ```php
 // app/Providers/Filament/AdminPanelProvider.php
@@ -167,12 +167,12 @@ public function panel(Panel $panel): Panel
     return $panel
         ->id('admin')
         ->path('admin')
-        // ресурсы ядра
+        // kernel resources
         ->discoverResources(
             in: app_path('Filament/Resources'),
             for: 'App\\Filament\\Resources',
         )
-        // ресурсы модуля Billing — обрати внимание: namespace БЕЗ префикса Modules\
+        // module resources Billing — please note: namespace WITHOUT prefix Modules\
         ->discoverResources(
             in: base_path('Modules/Billing/app/Filament/Resources'),
             for: 'Billing\\Filament\\Resources',
@@ -182,10 +182,10 @@ public function panel(Panel $panel): Panel
 }
 ```
 
-## `vite.config.js` модуля — изолированная сборка фронта
+## `vite.config.js` module - isolated front assembly
 
-У каждого модуля свой `buildDirectory` (например `build-billing`), чтобы ассеты модулей
-не перетирали друг друга. Входы — `resources/css/app.css` и `resources/js/app.js` модуля.
+Each module has its own `buildDirectory` (for example `build-billing`), so that module assets
+did not grind each other. Inputs - `resources/css/app.css` and `resources/js/app.js` module.
 
 ```js
 // Modules/Billing/vite.config.js
@@ -213,7 +213,7 @@ export default defineConfig({
     ],
 });
 
-// Экспорт путей для общего vite-module-loader.js (агрегатора входов модулей)
+// Export paths for general vite-module-loader.js (module input aggregator)
 export const paths = [
     'Modules/Billing/resources/css/app.css',
     'Modules/Billing/resources/js/app.js',

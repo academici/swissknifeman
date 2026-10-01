@@ -1,15 +1,15 @@
-"""Федерация графов слоя 2 (топология между проектами).
+"""Layer 2 Graph Federation (topology between projects).
 
-Вместо одного общего graph.db — граф-файл на проект (`data/graphs/<id>.db`, или в репо
-проекта при `graph_store=local`) плюс тонкий регенерируемый `_index.db` (только
-`project:*`-узлы + межпроектные рёбра). Запрос, пересекающий границу проекта, сшивает
-нужные сторы в один in-memory union и гоняет по нему обычный BFS (`graph.Graph`).
+Instead of one general graph.db — graph file for the project (`data/graphs/<id>.db`, or in the repo
+project when `graph_store=local`) plus thin regenerable `_index.db` (only
+`project:*`-nodes + cross-project edges). Request crossing project boundary stitches
+necessary stores in one in-memory union and drives the usual BFS (`graph.Graph`).
 
-Принцип владения: узел ПРИНАДЛЕЖИТ проекту pid, если в сторе pid у него `attrs.project==pid`
-(так помечает derive). Конечные узлы рёбер, авто-созданные как заглушки (`add_edge`), не
-владеются — их канонический владелец резолвится по индексу. Cross-ребро — то, у которого
-владельцы src и dst разные. Индекс держит карту владения (узлы-ссылки) + cross-рёбра, поэтому
-регенерируется из per-project сторов и сам по себе не источник истины."""
+Ownership principle: the node BELONGS to the project pid, if in the store pid he has `attrs.project==pid`
+(so marks derive). Edge end nodes auto-generated as stubs (`add_edge`), not
+are owned - their canonical owner is resolved by index. Cross-edge - the one with
+owners src and dst different. Index holds the ownership card (link nodes) + cross-edges, so
+is regenerated from The per-project story is not in itself a source of truth."""
 import os
 from pathlib import Path
 
@@ -23,29 +23,29 @@ def _enabled_projects(config):
 
 
 def graph_disabled(config):
-    """Граф выключен (adapter=disabled)?"""
+    """Graph disabled (adapter=disabled)?"""
     return ((config or {}).get("graph") or {}).get("adapter") == "disabled"
 
 
 def graph_reader(env, config):
-    """Единый read-фасад топологии графа: федерация — единственная раскладка.
-    Дуктайп-совместим с graph.Graph по чтению (query/neighbors/path/subgraph/stats).
-    adapter=disabled → die. Используется CLI/MCP/probe/status — без дублей выбора движка."""
+    """Single read-graph topology façade: federation is the only layout.
+    Ductype compatible graph.Graph by reading (query/neighbors/path/subgraph/stats).
+    adapter=disabled → die. Used CLI/MCP/probe/status — without engine selection duplicates."""
     if graph_disabled(config):
-        die("граф отключён (graph.adapter = disabled)")
+        die("graph disabled (graph.adapter = disabled)")
     return Federation(env, config)
 
 
 def _owners_share_ns(so, do, pmap):
-    """Делят ли проекты-владельцы namespace. Неизвестный владелец (внешний узел, нет
-    записи) → True: namespace неизвестен, cross-ребро сохраняем (как derive.link_allowed)."""
+    """Do owning projects share namespace. Unknown owner (external node, no
+    records) → True: namespace unknown, cross-save the edge (like derive.link_allowed)."""
     a, b = pmap.get(so), pmap.get(do)
     return True if a is None or b is None else shares(a, b)
 
 
 def store_path(env, config, project):
-    """Путь графа проекта. По умолчанию data/graphs/<id>.db; graph_store=local →
-    <local_path>/.maind/graph.db (граф живёт в самом репо проекта)."""
+    """Project graph path. Default data/graphs/<id>.db; graph_store=local →
+    <local_path>/.maind/graph.db (the graph lives in the project repo itself)."""
     pid = project["id"]
     if project.get("graph_store") == "local" and project.get("local_path"):
         return Path(os.path.expanduser(project["local_path"])) / ".maind" / "graph.db"
@@ -57,15 +57,15 @@ def index_path(env):
 
 
 def project_graph(env, config, project):
-    """Загруженный граф одного проекта (примитив graph.Graph над его стором)."""
+    """Loaded graph of one project (primitive graph.Graph over his store)."""
     return Graph(env, config, path=store_path(env, config, project)).load()
 
 
 def _merge_into(union, src):
-    """Скопировать узлы/рёбра стора src в union-граф (upsert; владеющие attrs выигрывают)."""
+    """Copy nodes/store edges src in union-graph (upsert; owning attrs win)."""
     for nid, n in src.nodes.items():
         cur = union.nodes.get(nid)
-        # узел с явным project (владелец) перетирает заглушку
+        # node with explicit project (owner) grinds the plug
         if cur is None or (not cur["attrs"].get("project") and n["attrs"].get("project")):
             union.nodes[nid] = {"type": n["type"], "attrs": dict(n["attrs"])}
     for src_id, dsts in src.adj.items():
@@ -74,8 +74,8 @@ def _merge_into(union, src):
 
 
 def federated_graph(env, config, projects=None):
-    """Union сторов проектов в один in-memory граф (federate-on-read). projects=None → все
-    enabled. Возвращает graph.Graph — дальше доступны query/neighbors/path/subgraph/stats."""
+    """Union project stores in one in-memory graph (federate-on-read). projects=None → all
+    enabled. Returns graph.Graph — further available query/neighbors/path/subgraph/stats."""
     projects = _enabled_projects(config) if projects is None else projects
     union = empty_graph(env, config)
     for p in projects:
@@ -86,14 +86,14 @@ def federated_graph(env, config, projects=None):
 
 
 def _owner(nid, owners):
-    """Владелец узла: `project:<x>` всегда принадлежит x (даже внешний/без стора)."""
+    """Node owner: `project:<x>` always belongs x (even external/without store)."""
     if nid.startswith("project:"):
         return nid.split(":", 1)[1]
     return owners.get(nid)
 
 
 def _owner_map(env, config):
-    """node_id → pid (владелец). Скан всех сторов: владелец = стор, где attrs.project==pid."""
+    """node_id → pid (owner). Scan of all stores: owner = store, where attrs.project==pid."""
     owners = {}
     for p in _enabled_projects(config):
         sp = store_path(env, config, p)
@@ -107,13 +107,13 @@ def _owner_map(env, config):
 
 
 def rebuild_index(env, config):
-    """Пересобрать _index.db из per-project сторов: все `project:*`-узлы (как ссылки с
-    attrs.project) + межпроектные рёбра (владельцы src/dst различны). Регенерируемо.
-    Возвращает {projects, cross_edges}."""
+    """Rebuild _index.db from per-project stores: all `project:*`-nodes (as links with
+    attrs.project) + cross-project edges (owners src/dst are different). Regenerable.
+    Returns {projects, cross_edges}."""
     owners = _owner_map(env, config)
     pmap = {p["id"]: p for p in _enabled_projects(config)}
     idx = Graph(env, config, path=index_path(env))
-    idx._loaded = True  # строим с нуля, не читаем старый индекс
+    idx._loaded = True  # building from scratch, not reading the old index
     cross = 0
     for p in _enabled_projects(config):
         sp = store_path(env, config, p)
@@ -128,8 +128,8 @@ def rebuild_index(env, config):
         for src_id, dsts in g.adj.items():
             for dst_id, e in dsts.items():
                 so, do = _owner(src_id, owners), _owner(dst_id, owners)
-                # defense-in-depth: меж-namespace cross-ребро не индексируем
-                # (на случай устаревших/локальных сторов, не прошедших derive-гейт)
+                # defense-in-depth: inter-namespace cross-edge is not indexed
+                # (in case of outdated/local stores that did not pass derive-gate)
                 if (so is not None and do is not None and so != do
                         and _owners_share_ns(so, do, pmap)):
                     for nid in (src_id, dst_id):
@@ -146,18 +146,18 @@ def rebuild_index(env, config):
 
 
 def index_graph(env, config):
-    """Только межпроектный слой: `project:*`-узлы + cross-рёбра (для `graph --cross`)."""
+    """Cross-project layer only: `project:*`-nodes + cross-ribs (for `graph --cross`)."""
     return Graph(env, config, path=index_path(env)).load()
 
 
 class Federation:
-    """Read-фасад поверх per-project сторов, дуктайп-совместимый с graph.Graph по чтению.
-    Запросы федерируют (union) релевантные сторы и делегируют обычному BFS."""
+    """Read-facade on top per-project store, ducttype-compatible graph.Graph on reading.
+    Queries are federated (union) relevant stores and delegate to the usual BFS."""
 
     def __init__(self, env, config):
         self.env = env
         self.config = config
-        self._union_cache = {}   # namespace → union-граф (инстанс короткоживущий, read-only)
+        self._union_cache = {}   # namespace → union-graph (instance is short-lived, read-only)
 
     def _union(self, namespace=None):
         if namespace in self._union_cache:
@@ -183,7 +183,7 @@ class Federation:
         return self._union().subgraph(ids, depth, direction, edge_types)
 
     def project_view(self, pid):
-        """Подграф одного проекта: индуцированный по его стору (с исходящими cross-рёбрами)."""
+        """Subgraph of one project: induced by its side (with outgoing cross-edges)."""
         proj = next((p for p in _enabled_projects(self.config) if p["id"] == pid), None)
         if proj is None:
             return {"directed": True, "nodes": [], "edges": []}
@@ -191,8 +191,8 @@ class Federation:
         return g.subgraph(list(g.nodes), depth=0)
 
     def cross(self, namespace=None):
-        """Межпроектный слой (узлы project:* + cross-рёбра). namespace → только узлы
-        проектов этого namespace (wildcard-проекты попадают в любой namespace)."""
+        """Cross-project layer (nodes project:* + cross-ribs). namespace → nodes only
+        projects of this namespace (wildcard-projects fall into any namespace)."""
         ig = index_graph(self.env, self.config)
         ids = list(ig.nodes)
         if namespace:

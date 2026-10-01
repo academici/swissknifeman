@@ -1,81 +1,81 @@
-# Матрица доверия Laravel Boost
+# Trust Matrix Laravel Boost
 
-**Политика.** Laravel Boost — доверенный источник версионно-специфичных скиллов и гайдлайнов: он поставляется с пакетами, знает установленные версии (`boost:update`) и обновляется вместе с экосистемой. Наш реестр **не дублирует** Boost, а **дополняет** его архитектурой, проектными конвенциями и практиками, которых в Boost нет. Версионно-специфичная тема → Boost; архитектура/процессы/инфраструктура → swissknifeman.
+**Politics.** Laravel Boost — trusted source of version-specific skills and guidelines: it comes with packages, knows installed versions (`boost:update`) and is updated along with the ecosystem. Our registry **is not a duplicate** Boost, a **complements** its architecture, design conventions and practices, which Boost no. Version-specific theme → Boost; architecture/processes/infrastructure → swissknifeman.
 
-Дата ревизии: 2026-06-15.
+Revision date: 2026-06-15.
 
-> **Следующий шаг.** Есть проекты, где Boost хотят оставить **только как MCP**, а раздачу
-> локального `.ai/` контента на провайдеров (CLAUDE.md/AGENTS.md/Cursor) увести в skiller — см.
-> [Раздача локального `.ai/` на провайдеры (dev-план)](./multi-provider-distribution).
+> **Next step.** There are projects where Boost want to leave **just like MCP**, and distribution
+> local `.ai/` content on providers (CLAUDE.md/AGENTS.md/Cursor) take to skiller — see
+> [Local distribution `.ai/` to providers (dev-plan)](./multi-provider-distribution).
 
-**Где живёт Boost:**
+**Where does he live? Boost:**
 
-- Репозиторий: https://github.com/laravel/boost — скиллы/гайдлайны в [`/.ai/`](https://github.com/laravel/boost/tree/main/.ai) (`*/core.blade.php` и `*/skill/*/SKILL.blade.php` по пакетам и версиям); документация: https://laravel.com/docs/boost
-- В установленном проекте: `vendor/laravel/boost/.ai/` (обновляются с composer-пакетом); выбор — `boost.json` проекта; рендер в CLAUDE.md/AGENTS.md — `php artisan boost:update`
-- Third-party гайдлайны приходят из самих пакетов через `boost.json::packages` (filament/filament, spatie/laravel-medialibrary, …)
-- Карточка источника в реестре: [references/laravel-boost.md](https://github.com/academici/swissknifeman/blob/main/references/laravel-boost.md)
+- Repository: https://github.com/laravel/boost — skills/guidelines in [`/.ai/`](https://github.com/laravel/boost/tree/main/.ai) (`*/core.blade.php` and `*/skill/*/SKILL.blade.php` by package and version); documentation: https://laravel.com/docs/boost
+- In the installed project: `vendor/laravel/boost/.ai/` (are updated from composer-package); selection - `boost.json` project; render in CLAUDE.md/AGENTS.md — `php artisan boost:update`
+- Third-party guidelines come from the packages themselves via `boost.json::packages` (filament/filament, spatie/laravel-medialibrary, …)
+- Source card in the registry: [references/laravel-boost.md](https://github.com/academici/swissknifeman/blob/main/references/laravel-boost.md)
 
-## Таблица 1. Доверенные Boost-скиллы/гайдлайны
+## Table 1. Trusted Boost-skills/guidelines
 
-| Boost-скилл / гайдлайн | Что это | Статус |
+| Boost-skill / guideline | What is this | Status |
 |:---|:---|:---|
-| laravel core + 11/12 | базовые и версионные правила фреймворка | trusted |
-| php/8.2–8.5 | версионные возможности и правила PHP | trusted |
-| pest 3/4 (core + skill) | синтаксис и приёмы Pest по версиям | trusted |
-| inertia-laravel + inertia-vue 1/2 | серверная и Vue-часть Inertia по версиям | trusted |
-| inertia-react / inertia-svelte | React/Svelte-адаптеры Inertia | trusted, не используем в наших стеках |
-| livewire 2/3/4 | версионные правила Livewire | trusted |
-| tailwindcss 3/4 | версионные правила Tailwind CSS | trusted |
-| wayfinder | генерация типизированных роутов | trusted |
-| volt | однофайловые Livewire-компоненты | trusted |
+| laravel core + 11/12 | basic and versioned rules of the framework | trusted |
+| php/8.2–8.5 | version features and rules PHP | trusted |
+| pest 3/4 (core + skill) | syntax and techniques Pest by version | trusted |
+| inertia-laravel + inertia-vue 1/2 | server and Vue-part Inertia by version | trusted |
+| inertia-react / inertia-svelte | React/Svelte-adapters Inertia | trusted, are not used in our stacks |
+| livewire 2/3/4 | version rules Livewire | trusted |
+| tailwindcss 3/4 | version rules Tailwind CSS | trusted |
+| wayfinder | generation of typed routes | trusted |
+| volt | single-file Livewire-components | trusted |
 | folio | file-based routing | trusted |
 | pennant | feature flags | trusted |
-| fluxui free/pro | UI-компоненты Flux | trusted |
-| mcp | Laravel MCP (серверы, инструменты) | trusted |
-| herd | локальное окружение Herd | trusted |
-| sail | Docker-окружение Sail | trusted |
+| fluxui free/pro | UI-components Flux | trusted |
+| mcp | Laravel MCP (servers, tools) | trusted |
+| herd | local environment Herd | trusted |
+| sail | Docker-environment Sail | trusted |
 | pint | code style fixer | trusted |
-| foundation/enforce-tests | требование тестов на изменения | trusted |
-| third-party: filament/filament | гайдлайны Filament из пакета | trusted |
-| third-party: spatie/laravel-medialibrary | гайдлайны medialibrary из пакета | trusted |
-| third-party: spatie/guidelines-skills | гайдлайны кода Spatie из пакета | trusted |
+| foundation/enforce-tests | change test requirement | trusted |
+| third-party: filament/filament | guidelines Filament from package | trusted |
+| third-party: spatie/laravel-medialibrary | guidelines medialibrary from package | trusted |
+| third-party: spatie/guidelines-skills | code guidelines Spatie from package | trusted |
 
-## Таблица 2. Наши скиллы × Boost
+## Table 2. Our skills × Boost
 
-### use-boost — наши дубли удалены из реестра (2026-06-12)
+### use-boost — our duplicates have been removed from the registry (2026-06-12)
 
-| Был наш скилл | Используем вместо него |
+| Was our skill | Use it instead |
 |:---|:---|
 | `php/livewire` | Boost livewire 2/3/4 |
 | `frontend/tailwindcss` | Boost tailwindcss 3/4 |
 | `general/mcp-development` | Boost mcp |
 
-### complementary — Boost даёт версионную базу, наш скилл даёт дельту
+### complementary — Boost gives a versioned base, our skill gives a delta
 
-| Наш скилл | Boost-источник | Наша дельта |
+| Our skill | Boost-source | Our delta |
 |:---|:---|:---|
-| `php/laravel-best-practices` | laravel-best-practices (Boost) | полный свод для проектов **без** Boost; с Boost — используем Boost-версию |
-| `frontend-backend/inertia-vue` | inertia-vue-development | слоистая организация `resources/js/`, проектные конвенции размещения файлов |
-| `frontend-wayfinder/wayfinder` | wayfinder-development | ESLint-границы импортов, слой actions/composables |
-| `laravel-filament/filament` | filament/filament (third-party) | структура ресурсов, проектные паттерны админки |
-| `laravel-extras/medialibrary` | spatie/laravel-medialibrary (third-party) | самодостаточный вариант для проектов без Boost |
-| `laravel-testing/laravel-testing` | pest-testing | изоляция тестовой БД, детект окружения, coverage gate |
-| `frontend-tailwind/tailwind-conventions` | tailwindcss 3/4 | v4 CSS-first: токены `@theme`, тёмная тема `.dark`+`useAppearance`, `cn()` (clsx+tailwind-merge), сортировка классов Prettier, дисциплина отступов |
-| `laravel-data-layer/laravel-data` | spatie/laravel-data (third-party) | авторский паттерн поверх версионного API: вложенные `DataCollection`, casts, `from(request)`, отдача в Inertia/API, `#[TypeScript]` |
-| `laravel-extras/spatie-settings` | spatie/laravel-settings (third-party) | самодостаточно для проектов без Boost; привязка формы (Filament) к классу настроек |
-| `laravel-livewire/livewire-blade-attributes` | livewire 2/3/4 | дельта-гочизы: атрибуты Blade-компонентов (нет `@if`/`@js()` в списке атрибутов, `ComponentAttributeBag`) |
+| `php/laravel-best-practices` | laravel-best-practices (Boost) | complete summary for projects **without** Boost; with Boost — use Boost-version |
+| `frontend-backend/inertia-vue` | inertia-vue-development | layered organization `resources/js/`, design file placement conventions |
+| `frontend-wayfinder/wayfinder` | wayfinder-development | ESLint-import boundaries, layer actions/composables |
+| `laravel-filament/filament` | filament/filament (third-party) | resource structure, admin panel design patterns |
+| `laravel-extras/medialibrary` | spatie/laravel-medialibrary (third-party) | self-contained option for projects without Boost |
+| `laravel-testing/laravel-testing` | pest-testing | test database isolation, environment detection, coverage gate |
+| `frontend-tailwind/tailwind-conventions` | tailwindcss 3/4 | v4 CSS-first: tokens `@theme`, dark theme `.dark`+`useAppearance`, `cn()` (clsx+tailwind-merge), class sorting Prettier, indentation discipline |
+| `laravel-data-layer/laravel-data` | spatie/laravel-data (third-party) | author's pattern on top of the versioned one API: nested `DataCollection`, casts, `from(request)`, return to Inertia/API, `#[TypeScript]` |
+| `laravel-extras/spatie-settings` | spatie/laravel-settings (third-party) | is self-sufficient for projects without Boost; form binding (Filament) to settings class |
+| `laravel-livewire/livewire-blade-attributes` | livewire 2/3/4 | delta gochises: attributes Blade-components (no `@if`/`@js()` in the attribute list, `ComponentAttributeBag`) |
 
-### ours-only — аналога в Boost нет
+### ours-only — analogue in Boost no
 
-`php/laravel-structure`, `php/repositories`, `php/dependency-injection`, `azguard/azguard`, `php/database`, `laravel-architecture/enum-attributes`, `laravel-data-layer/laravel-broadcasting`, `laravel-testing/laravel-dusk`, `php/code-style-spatie`, `php/static-analysis`, `php/laravel`, `laravel-auth/laravel-permissions`, `php/php-patterns`, `laravel-architecture/modular-architecture`, `botkit/botkit`, все `php/laravel-package-*` (scaffold, testing, docs, release, service-provider, compatibility, generate-skill, expressive) и `php-packages/laravel-packages`, `laravel-testing/test-isolation-guard`, `laravel-auth/attribute-authorization`, `laravel-testing/health-checks`, все `devops/docker-*` (а также `devops/ci-cd`, `devops/gitops`, `devops/makefile`, `devops/node-pnpm-preflight`, `devops/db-test-preflight`), `frontend-vite/vite-multi-build`, `frontend-vite/vite-module-loader`, `frontend-vue/vitest`, `frontend-linting/js-code-style`, `frontend-vue/vue-composition-api`, `frontend-backend/backend-type-sync`, `frontend-linting/eslint-flat-config`, `frontend-reka/reka-ui-cva`, `frontend-tailwind/dark-mode`, `frontend-naive-ui/naive-ui-theming`, `frontend-backend/laravel-echo-client`, `frontend/filepond-upload`, `frontend-vue/vue-dynamic-icons`, `frontend-vue/pinia-stores`, и все не-Laravel бакеты целиком: `architect/*`, `blender/*`, `founder/*`, `general/*`, `imported/*`, `operator/*`, `oss-dev/*`, `pm/*`, `python/*`, `quality/*`, `roles/*`.
+`php/laravel-structure`, `php/repositories`, `php/dependency-injection`, `azguard/azguard`, `php/database`, `laravel-architecture/enum-attributes`, `laravel-data-layer/laravel-broadcasting`, `laravel-testing/laravel-dusk`, `php/code-style-spatie`, `php/static-analysis`, `php/laravel`, `laravel-auth/laravel-permissions`, `php/php-patterns`, `laravel-architecture/modular-architecture`, `botkit/botkit`, all `php/laravel-package-*` (scaffold, testing, docs, release, service-provider, compatibility, generate-skill, expressive) and `php-packages/laravel-packages`, `laravel-testing/test-isolation-guard`, `laravel-auth/attribute-authorization`, `laravel-testing/health-checks`, all `devops/docker-*` (and `devops/ci-cd`, `devops/gitops`, `devops/makefile`, `devops/node-pnpm-preflight`, `devops/db-test-preflight`), `frontend-vite/vite-multi-build`, `frontend-vite/vite-module-loader`, `frontend-vue/vitest`, `frontend-linting/js-code-style`, `frontend-vue/vue-composition-api`, `frontend-backend/backend-type-sync`, `frontend-linting/eslint-flat-config`, `frontend-reka/reka-ui-cva`, `frontend-tailwind/dark-mode`, `frontend-naive-ui/naive-ui-theming`, `frontend-backend/laravel-echo-client`, `frontend/filepond-upload`, `frontend-vue/vue-dynamic-icons`, `frontend-vue/pinia-stores`, and all not-Laravel entire buckets: `architect/*`, `blender/*`, `founder/*`, `general/*`, `imported/*`, `operator/*`, `oss-dev/*`, `pm/*`, `python/*`, `quality/*`, `roles/*`.
 
-## Как применять
+## How to use
 
-При старте Laravel-проекта с Boost:
+At startup Laravel-project with Boost:
 
-1. Установить Boost-скиллы как есть (`boost.json`, `php artisan boost:update`) — они версионно-специфичны и приоритетны.
-2. Наши **complementary**-скиллы подключать ради их дельты (структура, границы, изоляция БД и т.п.) — каждый содержит строку-границу «**Laravel Boost**: …» в секции «Контекст», объясняющую разделение.
-3. **use-boost**-скиллы не устанавливаются — они уже удалены из реестра.
-4. В проектах **без** Boost complementary-скиллы работают самодостаточно.
+1. Install Boost-skills as is (`boost.json`, `php artisan boost:update`) — they are version specific and priority.
+2. Ours **complementary**-connect skills for the sake of their delta (structure, boundaries, database isolation, etc.) — each contains a border line «**Laravel Boost**: …» in section «Context», explaining the division.
+3. **use-boost**-skills are not installed - they have already been deleted from the registry.
+4. In projects **without** Boost complementary-skills work independently.
 
-Приоритеты источников и роутинг задач — см. [routing](/routing).
+Source priorities and task routing - see. [routing](/routing).

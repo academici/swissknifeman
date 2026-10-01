@@ -1,6 +1,6 @@
-"""Тесты analyst sessions (P5.3): недельные медианы first_turn_overhead/fresh-per-turn
-из синтетических jsonl-транскриптов, encode_cwd (подтверждено на живых каталогах —
-только '/'→'-'), trend-warn week-over-week >20%, CLI (--project реестр/--weeks/--json)."""
+"""Tests analyst sessions (P5.3): weekly medians first_turn_overhead/fresh-per-turn
+from synthetic jsonl-transcripts, encode_cwd (confirmed on live directories -
+only '/'→'-'), trend-warn week-over-week >20%, CLI (--project registry/--weeks/--json)."""
 import io
 import json
 import os
@@ -35,8 +35,8 @@ def _write_jsonl(path, events, extra_lines=None):
 
 class EncodeCwdCase(unittest.TestCase):
     def test_slash_to_dash(self):
-        # подтверждено чтением живых ~/.claude/projects/* этой машины (см. докстринг
-        # модуля) — единственное, что проверено, остальное не угадываем
+        # confirmed by live reading ~/.claude/projects/* of this machine (see docstring
+        # module) — the only thing that has been verified, we can’t guess the rest
         self.assertEqual(ss.encode_cwd("/home/user/projects/packages/swissknifeman"),
                          "-home-user-projects-packages-swissknifeman")
 
@@ -61,7 +61,7 @@ class SessionMetricsCase(unittest.TestCase):
         ])
         m = ss.session_metrics(p)
         self.assertEqual(m["session"], "sess-1")
-        self.assertEqual(m["first_turn_overhead"], 150)   # 100+50 первой записи
+        self.assertEqual(m["first_turn_overhead"], 150)   # 100+50 first entry
         self.assertEqual(m["turns"], 2)
         # fresh_per_turn = (Σin+Σcache_creation)/turns = (110+50)/2
         self.assertAlmostEqual(m["fresh_per_turn"], 80.0)
@@ -70,7 +70,7 @@ class SessionMetricsCase(unittest.TestCase):
     def test_broken_line_skipped_not_raising(self):
         p = self.root / "sess-2.jsonl"
         _write_jsonl(p, [_assistant(in_=5, out=1, ts="2026-07-06T10:00:00Z")],
-                     extra_lines=["{битая строка без закрытия"])
+                     extra_lines=["{broken line without closing"])
         m = ss.session_metrics(p)
         self.assertIsNotNone(m)
         self.assertEqual(m["turns"], 1)
@@ -81,7 +81,7 @@ class SessionMetricsCase(unittest.TestCase):
         self.assertIsNone(ss.session_metrics(p))
 
     def test_no_timestamp_returns_none(self):
-        # без timestamp — неделя не определяется, сессия честно выпадает (не 1970-я неделя)
+        # without timestamp — week is not determined, the session is honestly lost (not 1970 week)
         p = self.root / "no-ts.jsonl"
         _write_jsonl(p, [_assistant(in_=5, out=1)])
         self.assertIsNone(ss.session_metrics(p))
@@ -110,10 +110,10 @@ class WeeklyReportCase(unittest.TestCase):
             _assistant(in_=overhead_in, out=10, ts=ts)])
 
     def test_weekly_medians_and_trend_warn(self):
-        # неделя W27: две сессии медиана overhead 1000; неделя W28: рост >20% (медиана 1500)
+        # week W27: two sessions median overhead 1000; week W28: height >20% (median 1500)
         self._add("s1", 900, "2026-06-29T10:00:00Z")   # W27
-        self._add("s2", 1100, "2026-06-30T10:00:00Z")  # W27 → медиана 1000
-        self._add("s3", 1500, "2026-07-06T10:00:00Z")  # W28 → медиана 1500 (рост 50%)
+        self._add("s2", 1100, "2026-06-30T10:00:00Z")  # W27 → median 1000
+        self._add("s3", 1500, "2026-07-06T10:00:00Z")  # W28 → median 1500 (height 50%)
         rep = ss.build_report(self.cwd, home=self.home)
         self.assertIsNotNone(rep)
         weeks = {w["week"]: w for w in rep["weeks"]}
@@ -125,7 +125,7 @@ class WeeklyReportCase(unittest.TestCase):
 
     def test_no_warn_within_20_percent(self):
         self._add("s1", 1000, "2026-06-29T10:00:00Z")   # W27
-        self._add("s2", 1150, "2026-07-06T10:00:00Z")   # W28, +15% — не WARN
+        self._add("s2", 1150, "2026-07-06T10:00:00Z")   # W28, +15% — not WARN
         rep = ss.build_report(self.cwd, home=self.home)
         self.assertEqual(rep["trend_warnings"], [])
 
@@ -141,8 +141,8 @@ class WeeklyReportCase(unittest.TestCase):
         self.assertIsNone(ss.build_report("/nowhere/else", home=self.home))
 
     def test_no_warn_across_week_gap(self):
-        # W20 → W28: рост >20%, но недели не смежные (7-недельный разрыв без сессий) —
-        # не рецидив, а разрыв данных, warn не должен печататься
+        # W20 → W28: height >20%, but the weeks are not adjacent (7-week gap without sessions) —
+        # is not a relapse, but a data gap, warn should not be printed
         self._add("s1", 1000, "2026-05-11T10:00:00Z")   # W20
         self._add("s2", 2000, "2026-07-06T10:00:00Z")   # W28
         rep = ss.build_report(self.cwd, home=self.home)
@@ -189,7 +189,7 @@ class CliCase(unittest.TestCase):
         finally:
             os.chdir(cwd)
         self.assertEqual(code, 1)
-        self.assertIn("нет сессий", err)
+        self.assertIn("no sessions", err)
 
     def test_json_output(self):
         cwd_dir = self.root / "proj"
@@ -214,7 +214,7 @@ class CliCase(unittest.TestCase):
             encoding="utf-8")
         code, _, err = self._run(["--project", "ghost"])
         self.assertEqual(code, 1)
-        self.assertIn("не найден", err)
+        self.assertIn("not found", err)
 
     def test_bad_weeks_dies(self):
         code, _, err = self._run(["--weeks", "abc"])

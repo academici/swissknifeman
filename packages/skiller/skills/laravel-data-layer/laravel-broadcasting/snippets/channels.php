@@ -4,26 +4,26 @@
 
 declare(strict_types=1);
 
-// routes/channels.php — авторизация broadcast-каналов.
-// Проверьте, что файл подключён в bootstrap/app.php: ->withRouting(channels: ...).
-// Список зарегистрированных каналов: php artisan channel:list
+// routes/channels.php — authorization broadcast-channels.
+// Check that the file is included in bootstrap/app.php: ->withRouting(channels: ...).
+// List of registered channels: php artisan channel:list
 
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
-// Private-канал: возвращаем bool.
+// Private-channel: return bool.
 Broadcast::channel('orders.{orderId}', function (User $user, int $orderId) {
     return $user->id === Order::findOrNew($orderId)->user_id;
 });
 
-// Model binding: Laravel сам резолвит модель из параметра канала.
+// Model binding: Laravel itself resolves the model from the channel parameter.
 Broadcast::channel('orders.{order}', function (User $user, Order $order) {
     return $user->id === $order->user_id;
 });
 
-// Presence-канал: возвращаем МАССИВ данных пользователя, НЕ true.
-// Вернуть true — подписка молча не сработает.
+// Presence-channel: return ARRAY of user data, NOT true.
+// Return true — subscription will not work silently.
 Broadcast::channel('warehouse.{warehouseId}', function (User $user, int $warehouseId) {
     if (! $user->worksAt($warehouseId)) {
         return false;
@@ -35,12 +35,12 @@ Broadcast::channel('warehouse.{warehouseId}', function (User $user, int $warehou
     ];
 });
 
-// Несколько guard'ов: канал доступен и web-, и admin-пользователям.
+// Several guard'ov: the channel is available and web-, and admin-users.
 Broadcast::channel('announcements', function ($user) {
     return true;
 }, ['guards' => ['web', 'admin']]);
 
-// Сложная авторизация — канал-класс с DI:
+// Complex authorization - channel-class with DI:
 //     php artisan make:channel OrderChannel
 //
 // Broadcast::channel('orders.{order}', OrderChannel::class);

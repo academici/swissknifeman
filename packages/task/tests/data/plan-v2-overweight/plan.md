@@ -1,8 +1,8 @@
-# plan-v2-overweight — Демо-план
+# plan-v2-overweight - Demo plan
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Plan ID | plan-v2-overweight |
 | Layout | v2 |

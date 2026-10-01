@@ -48,7 +48,7 @@ children and `⬜ Not started`, like any child `🟡 In progress`, is `🟡 In p
 provenance marker, so `status.md` can render that value without inventing it.
 New journal appends reject `note` values longer than 300 characters before
 writing. Existing journal bytes remain immutable and schema-valid; when an
-owner-facing `Что` cell would exceed 300 characters, the projector renders a
+owner-facing `What` cell would exceed 300 characters, the projector renders a
 deterministic `journal.jsonl:<line>` pointer to the full source row instead.
 
 ## Retired layout
@@ -99,7 +99,7 @@ root-level `open-questions.md` — are generated through
 `python3 packages/task/scripts/plan-views.py decisions --plan-dir <plan>`.
 Use `--check` in automation; it regenerates in memory and rejects any byte
 drift. A v2 `## 5. Decision Log` is only a pointer to that catalog and command;
-`## Обсуждение` is replaced by the proposed-decision view.
+`## Discussion` is replaced by the proposed-decision view.
 
 ## Linter continuity
 

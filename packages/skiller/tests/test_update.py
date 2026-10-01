@@ -1,8 +1,8 @@
-"""Тесты update-реплея: подключаем проект, затем update восстанавливает выбор
-из projects.json и повторно применяет его идемпотентно.
+"""Tests update-replay: connect the project, then update restores selection
+from projects.json and reapplies it idempotently.
 
-Диск — источник истины: update детектит маркеры (settings/манифест) и проигрывает
-сохранённые опции. Сеть/composer не нужны — всё в tmpdir против фикстуры."""
+The disk is the source of truth: update detects markers (settings/manifest) and loses
+saved options. Network/composer are not needed - everything is in tmpdir against fixture."""
 import io
 import contextlib
 import json
@@ -185,7 +185,7 @@ class UpdateCase(unittest.TestCase):
         self.assertEqual(replay_opts({"profile_source": "buckets",
                                       "buckets": ["php"]}),
                          {"buckets": "php"})
-        # autodetect/config переразрешаются с диска — флаги не навязываются
+        # autodetect/config are re-resolved from disk - flags are not enforced
         self.assertEqual(replay_opts({"profile_source": "autodetect"}), {})
 
     def test_update_marketplace_idempotent(self):
@@ -194,7 +194,7 @@ class UpdateCase(unittest.TestCase):
         before = (proj / ".claude" / "settings.local.json").read_text()
         silently(cmd_update, self.env, ["--target", str(proj)])
         after = (proj / ".claude" / "settings.local.json").read_text()
-        # повторный update не меняет включённые плагины
+        # repeated update does not change enabled plugins
         b = {k for k, v in json.loads(before)["enabledPlugins"].items() if v}
         a = {k for k, v in json.loads(after)["enabledPlugins"].items() if v}
         self.assertEqual(a, b)
@@ -269,15 +269,15 @@ class UpdateCase(unittest.TestCase):
                  {"agent": "generic", "buckets": "devops"})
         dest = proj / ".ai" / "skills"
         self.assertTrue((dest / "devops" / "docker").exists())
-        # update должен переразложить тот же набор по записи projects.json
+        # update should re-decompose the same set by record projects.json
         silently(cmd_update, self.env, ["--target", str(proj)])
         self.assertTrue((dest / "devops" / "docker" / "SKILL.md").exists())
         manifest = json.loads((dest / MANIFEST).read_text())
         self.assertEqual(manifest["agent"], "generic")
 
     def test_update_routes_sync_config_to_sync(self):
-        # sync-проект (.swissknifeman/config.json) обновляется sync'ом, а НЕ legacy
-        # vendor: update должен пере-применить skill-granular include из конфига.
+        # sync-project (.swissknifeman/config.json) is being updated sync'ohm, NOT legacy
+        # vendor: update should be re-applied skill-granular include from the config.
         _materialize(self.env)
         proj = fx.make_laravel_project(self.tmp)
         _write_sync_config(proj, {"mode": "vendor", "include": ["code-style"]})
@@ -285,19 +285,19 @@ class UpdateCase(unittest.TestCase):
         skills = proj / ".claude" / "skills"
         self.assertTrue((skills / "code-style" / "SKILL.md").exists())
         self.assertFalse((skills / "test-writer").exists())
-        # расширяем конфиг → update должен пере-sync'нуть из него
+        # expand the config → update must be re-sync'extract from it
         _write_sync_config(proj, {"mode": "vendor",
                                   "include": ["code-style", "test-writer"]})
         silently(cmd_update, self.env, ["--target", str(proj)])
         self.assertTrue((skills / "test-writer" / "SKILL.md").exists())
 
     def test_update_all_survives_broken_manifest(self):
-        """U-1: битый манифест одного vendor-проекта не должен ронять весь
-        `update --all` НЕОБРАБОТАННЫМ исключением. Без манифеста do_vendor не может
-        отличить старые свои файлы от чужих — legitimate die()/collision (нужен
-        --force), что и раньше (безопасное поведение, паритет с V-6): но теперь это
-        КОНТРОЛИРУЕМЫЙ SystemExit, пойманный циклом --all как "failed", а НЕ краш,
-        уносящий весь батч и остальные проекты."""
+        """U-1: broken manifest of one vendor-of the project should not drop the entire
+        `update --all` UNHANDLED exception. Without a manifesto do_vendor cannot
+        distinguish your old files from others - legitimate die()/collision (needed
+        --force), as before (safe behavior, parity with V-6): but now it's
+        CONTROLLED SystemExit, caught in loop --all like "failed", and NOT crash,
+        taking away the entire batch and other projects."""
         (self.tmp / "p1").mkdir()
         (self.tmp / "p2").mkdir()
         proj1 = fx.make_laravel_project(self.tmp / "p1")
@@ -310,10 +310,10 @@ class UpdateCase(unittest.TestCase):
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             with contextlib.redirect_stderr(io.StringIO()):
-                with self.assertRaises(SystemExit):  # p1 легитимно failed (см. докстринг)
-                    cmd_update(self.env, ["--all"])  # раньше падало здесь НЕОБРАБОТАННО
+                with self.assertRaises(SystemExit):  # p1 legit failed (see docstring)
+                    cmd_update(self.env, ["--all"])  # used to crash here RAW
 
-        # соседний проект реально дообновился — батч не прервался на первом же
+        # the neighboring project was actually updated - the batch was not interrupted on the first
         self.assertTrue(
             (proj2 / ".ai" / "skills" / "devops" / "docker" / "SKILL.md").exists())
         self.assertIn(str(proj1), buf.getvalue())

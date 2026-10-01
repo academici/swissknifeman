@@ -3,10 +3,10 @@
   "cases": [
     {
       "id": 1,
-      "prompt": "Сделай ревью PR: добавили HTTP-эндпоинт без валидации входных данных и без тестов. Дай замечания.",
+      "prompt": "Do a review PR: added HTTP-endpoint without input data validation and without tests. Give comments.",
       "assertions": [
-        {"type": "regex", "value": "severity|blocker|critical|major|nit|p0|p1|p2|критич"},
-        {"type": "regex", "value": "валидаци|valid|тест|test|безопасн|security"}
+        {"type": "regex", "value": "severity|blocker|critical|major|nit|p0|p1|p2|critical"},
+        {"type": "regex", "value": "validation|valid|test|test|safe|security"}
       ]
     }
   ]

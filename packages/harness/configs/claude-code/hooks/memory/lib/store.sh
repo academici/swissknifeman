@@ -60,7 +60,7 @@ rank_dirs() {
 recall_print() {
   local query="$1" top="$2"; shift 2
   local out; out="$(rank_dirs "$query" "$@")"
-  [ -n "$out" ] || { echo "(ничего не найдено по: $query)"; return; }
+  [ -n "$out" ] || { echo "(nothing found for: $query)"; return; }
   local i=0 score file
   while IFS=$'\t' read -r score file; do
     i=$((i + 1)); [ "$i" -le "$top" ] || break

@@ -34,7 +34,7 @@ else:
 
 _FAILING_GIT = """#!/usr/bin/env python3
 import sys
-sys.exit(128)  # git всегда падает — не репозиторий / git недоступен
+sys.exit(128)  # git always crashes - not a repository / git not available
 """
 
 

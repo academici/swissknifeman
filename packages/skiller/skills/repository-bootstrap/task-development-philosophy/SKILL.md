@@ -82,7 +82,7 @@ it into plan scope only after the trigger occurs or the owner explicitly priorit
 ## Review, pacing and model pool
 
 - **Review is plan shape.** Item `Review` defaults to `none` (self-check plus affected tests).
-  Independent review is a dedicated read-only item (`Ревью Pn`) at the end of a phase, or between
+  Independent review is a dedicated read-only item (`Review Pn`) at the end of a phase, or between
   slices of a large phase; never a step inside every item and never a line of an item's Validation.
   Findings get one owning correction; the re-review checks only the findings. A different model is
   required only by a named hard risk or the owner.
@@ -218,7 +218,7 @@ For every new or materially revised plan in this repository, silently verify bef
 - no generated carrier is accidentally both audit bookkeeping and self-invalidating product;
 - owner-visible value dominates orchestration overhead.
 
-Record a decision or `## Обсуждение` only when a real trade-off exists. Do not add boilerplate
+Record a decision or `## Discussion` only when a real trade-off exists. Do not add boilerplate
 "philosophy compliance" sections to every plan.
 
 ## Provenance (root-bootstrap, P1.2)

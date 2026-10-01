@@ -1,24 +1,22 @@
 ---
 disable-model-invocation: true
 description: "Fix a scoped defect directly; preserve existing work and verify the change."
-argument-hint: "[что починить]"
+argument-hint: "[what to fix]"
 model: sonnet
 effort: medium
 ---
-Это МЕЛКАЯ инкрементальная правка. Ввод пользователя: «$ARGUMENTS».
-Применяй общий opt-in контракт `references/intent-routing.md` из установленного пакета Task.
-Заверши исправление напрямую: design, план, phase audit и plan close не являются
-условием готовности; старые инструкции в файле задания не отменяют текущий запрос владельца.
-Модель/effort запинены (Sonnet/medium) — не переключай вручную (Opus тут избыточен).
+This is a SMALL incremental repair. User input: `$ARGUMENTS`.
+Apply the shared opt-in contract in `references/intent-routing.md` from the installed Task package.
+Complete the repair directly: design, a plan, phase audit, and plan close are not completion prerequisites;
+old task-file instructions do not override the current owner request. The route is pinned to Sonnet/medium.
 
-Профиль `fix` (token-frugal):
-1. **Один проход, без fan-out и без субагентов** — задача мелкая, координация не окупится.
-2. **Selective-input**: читай slice — функцию/класс/роут ±контекст, не файлы целиком; логи —
-   `tail -n`/`grep` по идентификатору, не весь файл; ошибки — последний stack-frame; PR/дифф — `git diff`/
-   `gh pr diff`, не файлы. «Point, don't paste»: указывай путь и дочитывай нужное.
-3. **Минимальное изменение** под задачу; на изменённое поведение — тест/проверка; не разводи абстракции
-   «на вырост».
-4. Внешний факт под сомнением → `verify-claims`-лестница (context7 → `perplexity-web`), не утверждай по памяти.
-5. Зафиксируй исходный `git status` и прочитай пересекающийся diff. Dirty baseline сам по себе
-   не блокирует правку: компонуй изменения, сохраняй чужую работу; останови только несовместимый
-   участок при конкретном конфликте ownership. НЕ git push / PR без явной просьбы.
+Profile `fix`:
+
+1. Use one pass without fan-out or subagents; coordination is not justified for a small repair.
+2. Read the relevant slice rather than whole files. Filter logs by identifier, inspect the last useful stack
+   frame, and use the diff as review context. Point to material and read it on demand instead of pasting it.
+3. Make the smallest sufficient change and verify changed behavior. Do not add speculative abstractions.
+4. If an external fact is uncertain, use the `verify-claims` ladder (context7, then `perplexity-web`).
+5. Record initial `git status` and inspect overlapping diffs. A dirty baseline is not a blocker by itself:
+   preserve other people's work and stop only at a concrete incompatible ownership conflict. Do not push or
+   open a PR without an explicit request.

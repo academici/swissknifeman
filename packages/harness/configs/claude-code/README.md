@@ -1,167 +1,167 @@
-# Пресеты permissions для Claude Code
+# Presets permissions for Claude Code
 
-Готовые наборы разрешений для `.claude/settings.local.json` — чтобы новый проект
-сразу работал без бесконечных permission-промптов.
+Ready-made permission sets for `.claude/settings.local.json` — for a new project
+worked immediately without endless permission-prompts.
 
-| Пресет | Что разрешает |
+| Preset | What it allows |
 |---|---|
-| `base` | git (push — с подтверждением), gh, файловые операции, curl/wget, jq/rg/sed; deny на секреты (`.env`, ключи, `~/.ssh`) и `sudo` |
-| `laravel` | `php artisan`, composer, pest/phpunit/pint/phpstan/rector, sail, npm/vite; деструктивные миграции — с подтверждением; deny на токен-шум (`storage/logs`, `node_modules`, `*.lock`, кэши) — `vendor/` **не** блокируется: там Boost-гайдлайны (`vendor/laravel/boost/.ai/`) |
-| `php-package` | composer, pest/phpunit/pint/phpstan/rector/infection — без artisan |
-| `node` | node/npm/npx/pnpm/yarn, tsc, vitest, eslint, prettier; publish — с подтверждением; deny на токен-шум (`node_modules`, `dist`, `build`, `coverage`, `*.lock`, минифицированные бандлы) |
+| `base` | git (push — with confirmation), gh, file operations, curl/wget, jq/rg/sed; deny for secrets (`.env`, keys, `~/.ssh`) and `sudo` |
+| `laravel` | `php artisan`, composer, pest/phpunit/pint/phpstan/rector, sail, npm/vite; destructive migrations - with confirmation; deny to token noise (`storage/logs`, `node_modules`, `*.lock`, caches) — `vendor/` **not** blocked: there Boost-guidelines (`vendor/laravel/boost/.ai/`) |
+| `php-package` | composer, pest/phpunit/pint/phpstan/rector/infection — without artisan |
+| `node` | node/npm/npx/pnpm/yarn, tsc, vitest, eslint, prettier; publish — with confirmation; deny to token noise (`node_modules`, `dist`, `build`, `coverage`, `*.lock`, minified bundles) |
 | `python` | python/pip/pytest, uv, poetry, ruff/black/mypy |
-| `docker` | docker + docker compose; удаление контейнеров/volumes/prune — с подтверждением |
-| `yolo` | `bypassPermissions` — только для контейнеров и VM, см. предупреждение в доке |
-| `global` | baseline для `~/.claude/settings.json`: read-only команды (grep/find/ls/cat, git diff/log/status), безопасный git (add/commit/checkout/stash), deny на sudo/force-push/секреты + **hook-логгер команд** (активен) + **notify** — ОС-уведомления на запрос подтверждения/утверждения (активен) + установка файлов **auto-approve** (включается по проекту, см. ниже) (через `--global`) |
+| `docker` | docker + docker compose; deleting containers/volumes/prune — with confirmation |
+| `yolo` | `bypassPermissions` — only for containers and VM, see warning in doc |
+| `global` | baseline for `~/.claude/settings.json`: read-only commands (grep/find/ls/cat, git diff/log/status), safe git (add/commit/checkout/stash), deny on sudo/force-push/secrets + **hook-command logger** (active) + **notify** — OS notifications for confirmation request/statements (active) + installing files **auto-approve** (is included by design, see below) (via `--global`) |
 
-## Быстрый старт
+## Quick start
 
 ```bash
-# base + автодетект стека по маркерам проекта (artisan, package.json, pyproject.toml, ...)
+# base + stack auto-detect based on project markers (artisan, package.json, pyproject.toml, ...)
 ./scripts/apply-permissions.sh --target ~/projects/my-laravel-app
 
-# явный набор
+# explicit set
 ./scripts/apply-permissions.sh --target . --preset base,laravel,docker
 
-# превью без записи
+# preview without recording
 ./scripts/apply-permissions.sh --target . --dry-run
 
-# глобальный baseline + hook-логгер в ~/.claude (один раз на машину)
+# global baseline + hook-logger in ~/.claude (once per machine)
 ./scripts/apply-permissions.sh --global
 ```
 
-Скрипт объединяет `allow`/`ask`/`deny` с уже существующими правилами цели
-(ничего не затирает, дубликаты убирает) и делает бэкап `settings.local.json.bak`.
+The script combines `allow`/`ask`/`deny` with existing goal rules
+(does not overwrite anything, removes duplicates) and makes a backup `settings.local.json.bak`.
 
-## Лог команд («прокси»)
+## Command log («proxy»)
 
-Пресет `global` регистрирует PreToolUse-hook ([hooks/log-bash-command.sh](hooks/log-bash-command.sh)):
-каждая Bash-команда Claude Code пишется в `~/.claude/logs/bash-commands.jsonl` —
-в любой момент можно проверить, что агент реально выполнял. Hook только логирует,
-никогда не блокирует. Подхватывается при старте сессии — после установки
-перезапустите Claude Code.
+Preset `global` registers PreToolUse-hook ([hooks/log-bash-command.sh](hooks/log-bash-command.sh)):
+each Bash-command Claude Code is written in `~/.claude/logs/bash-commands.jsonl` —
+at any time you can check what the agent actually did. Hook only logs,
+never blocks. Picked up at the start of the session - after installation
+restart Claude Code.
 
 ```bash
-# последние 20 команд
+# last 20 commands
 tail -20 ~/.claude/logs/bash-commands.jsonl | jq -r '"\(.ts) [\(.cwd)] \(.command)"'
 
-# команды конкретного проекта
+# project-specific commands
 jq -r 'select(.cwd | test("myproject")) | .command' ~/.claude/logs/bash-commands.jsonl
 ```
 
-## MCP-серверы (`mcp/`)
+## MCP-servers (`mcp/`)
 
-Пресеты `.mcp.json` под рабочие сценарии — голый объект конфига сервера в
-`mcp/<имя>.json` (ключ в `mcpServers` = имя файла). `skiller integrate`
-вливает выбранные пресеты в `<проект>/.mcp.json` merge-only (чужие серверы целы,
-бэкап `*.bak`, `--dry-run`). Описание каждого инструмента — в
-[каталоге интеграций](https://academici.github.io/swissknifeman/integrations/).
+Presets `.mcp.json` for working scenarios - a bare server config object in
+`mcp/<name>.json` (key in `mcpServers` = file name). `skiller integrate`
+pours the selected presets into `<project>/.mcp.json` merge-only (other people's servers are intact,
+backup `*.bak`, `--dry-run`). Description of each tool - in
+[integration directory](https://academici.github.io/swissknifeman/integrations/).
 
-| Сервер | Конфиг | Когда |
+| Server | Config | When |
 |---|---|---|
-| `context7` | `mcp/context7.json` (remote HTTP `mcp.context7.com/mcp`) | dev-дефолт: среды разработки (всё, кроме obsidian-vault); `recommended`/`full` — по умолчанию |
-| `playwright` | `mcp/playwright.json` (npx `@playwright/mcp`, headless) | opt-in: браузерная автоматизация / E2E |
-| `filesystem` | `mcp/filesystem.json` (npx `@modelcontextprotocol/server-filesystem`) | opt-in: доступ к ФС в заданных каталогах |
+| `context7` | `mcp/context7.json` (remote HTTP `mcp.context7.com/mcp`) | dev-default: development environments (everything except obsidian-vault); `recommended`/`full` — default |
+| `playwright` | `mcp/playwright.json` (npx `@playwright/mcp`, headless) | opt-in: browser automation / E2E |
+| `filesystem` | `mcp/filesystem.json` (npx `@modelcontextprotocol/server-filesystem`) | opt-in: access to the file system in specified directories |
 | `fetch` | `mcp/fetch.json` (uvx `mcp-server-fetch`, **Python/uv**) | opt-in: HTTP → markdown |
-| `memory` | `mcp/memory.json` (npx `@modelcontextprotocol/server-memory`) | opt-in: knowledge graph между сессиями |
-| `sequential-thinking` | `mcp/sequential-thinking.json` (npx) | opt-in: пошаговое рассуждение |
-| `github` | `mcp/github.json` (remote `api.githubcopilot.com/mcp/`) | opt-in: Issues/PR/репозитории |
+| `memory` | `mcp/memory.json` (npx `@modelcontextprotocol/server-memory`) | opt-in: knowledge graph between sessions |
+| `sequential-thinking` | `mcp/sequential-thinking.json` (npx) | opt-in: step-by-step reasoning |
+| `github` | `mcp/github.json` (remote `api.githubcopilot.com/mcp/`) | opt-in: Issues/PR/repositories |
 
-Курированный сабсет (всё, кроме `context7`) — **opt-in**, по умолчанию не ставится:
+Curated subset (everything except `context7`) — **opt-in**, is not set by default:
 
 ```bash
 skiller integrate --mcp playwright,filesystem
 ```
 
-Добавить сервер: положить пресет в `mcp/`; чтобы он раздавался по умолчанию в
-dev-проекты — добавить имя в `DEV_MCP` (`lib/skiller/integrate.py`).
+Add server: put preset in `mcp/`; so that it is distributed by default in
+dev-projects - add name to `DEV_MCP` (`lib/skiller/integrate.py`).
 
-## ОС-уведомления (notify)
+## OS notifications (notify)
 
-Пресет `global` регистрирует Notification-hook
-([hooks/notify/notify.sh](hooks/notify/notify.sh)): как только Claude Code
-ждёт человека — **запрос разрешения на инструмент**, **утверждение плана**
-(ExitPlanMode) или простой промпта дольше ~60 сек — всплывает ОС-уведомление
-с текстом запроса и именем проекта. Удобно, когда агент работает в фоне и
-не нужно держать терминал в фокусе. Hook только уведомляет, никогда не блокирует.
+Preset `global` registers Notification-hook
+([hooks/notify/notify.sh](hooks/notify/notify.sh)): as soon as Claude Code
+is waiting for a person - **tool permission request**, **plan approval**
+(ExitPlanMode) or a simple prompt longer ~60 sec - OS notification pops up
+with the request text and project name. It is convenient when the agent works in the background and
+no need to keep the terminal in focus. Hook only notifies, never blocks.
 
-Кросс-платформенно, бэкенд выбирается по ОС (если ни одного нет — тихо выходит):
+Cross-platform, backend selected by OS (if there is none, it leaves quietly):
 
-| ОС | Бэкенд |
+| OS | Backend |
 |---|---|
 | Linux | `notify-send` (libnotify) |
 | macOS | `terminal-notifier` → `osascript` |
 | WSL / Windows | PowerShell toast → `MessageBox` → `msg.exe` |
 
-Подхватывается при старте сессии — после `--global` перезапустите Claude Code.
+Picked up at the start of the session - after `--global` restart Claude Code.
 
-## Авто-апрув команд (hooks)
+## Auto-approval of commands (hooks)
 
-Префиксные allow-правила (`Bash(grep *)`) не матчат **компаунд-команды** —
-с `cd ... &&`, циклами `for`, пайпами, подстановками `$(...)`. Такие команды
-каждый раз уникальны и упираются в permission-промпт, сколько паттернов ни добавь.
-Решение — PreToolUse-хуки, которые разбирают **всю** строку и принимают решение.
+Prefix allow-rules (`Bash(grep *)`) not matched **compound commands** —
+with `cd ... &&`, loops `for`, pipes, substitutions `$(...)`. Such commands
+are unique each time and depend on permission-prompt, no matter how many patterns you add.
+Solution - PreToolUse-hooks that parse **all** line and make a decision.
 
-### Один переключатель, режим в `env.ini`
+### One switch, mode in `env.ini`
 
-Всё в самодостаточной папке [`hooks/auto-approve/`](hooks/auto-approve/) — её целиком
-публикует swissknifeman, а ты выбираешь режим в файле. Корневой
-[`auto-approve.sh`](hooks/auto-approve/auto-approve.sh) — **переключатель**: читает
-режим из [`env.ini`](hooks/auto-approve/env.ini) и вызывает один из
-[`modes/`](hooks/auto-approve/modes/). Источники — [`CREDITS.md`](hooks/auto-approve/CREDITS.md).
+Everything in a self-contained folder [`hooks/auto-approve/`](hooks/auto-approve/) — her whole
+publishes swissknifeman, and you select the mode in the file. Root
+[`auto-approve.sh`](hooks/auto-approve/auto-approve.sh) — **switch**: reads
+mode from [`env.ini`](hooks/auto-approve/env.ini) and calls one of
+[`modes/`](hooks/auto-approve/modes/). Sources - [`CREDITS.md`](hooks/auto-approve/CREDITS.md).
 
 ```
 hooks/auto-approve/
-  auto-approve.sh   # переключатель (регистрируется на Bash + ExitPlanMode)
-  env.ini           # MODE=strict|permissive|bypass|off  ← выбор режима
-  config.json       # конструкции (allow/deny/субкоманды)
+  auto-approve.sh   # switch (is registered on Bash + ExitPlanMode)
+  env.ini           # MODE=strict|permissive|bypass|off  ← mode selection
+  config.json       # designs (allow/deny/subcommands)
   lib/{common,analyze}.sh
   modes/{strict,permissive,bypass}.sh
 ```
 
-Зарегистрирован один файл на оба матчера; смена `MODE` в `env.ini` → **перезапусти
-Claude Code**. Режимы — спектр автономности:
+One file is registered for both matchers; shift `MODE` in `env.ini` → **restart
+Claude Code**. Modes - range of autonomy:
 
-| `MODE` | Команды (Bash) | План (ExitPlanMode) |
+| `MODE` | Commands (Bash) | Plan (ExitPlanMode) |
 |---|---|---|
-| `strict` | allowlist-first: read-only → allow, мутации → промпт, катастрофа → deny | промпт |
-| `permissive` | denylist-first: всё кроме денилиста → allow, мутации → промпт, катастрофа → deny | промпт |
-| `bypass` | всё, кроме катастрофичного (`deny_hard`) → allow | **авто-подтверждение** |
-| `off` | обычный permission-флоу | обычный |
+| `strict` | allowlist-first: read-only → allow, mutations → prompt, disaster → deny | prompt |
+| `permissive` | denylist-first: everything except denilista → allow, mutations → prompt, disaster → deny | prompt |
+| `bypass` | everything but catastrophic (`deny_hard`) → allow | **auto-confirm** |
+| `off` | normal permission-flow | normal |
 
-**Денилисты (общие, из `config.json`):**
-- `deny_hard` (катастрофично: `sudo`/`rm`/`mkfs`/fork-bomb/`\| sh`/запись на диск) →
-  **активный `deny`** во всех режимах.
-- `deny_block_approve` (мутация: `mv`/`cp`/запись в файл/`git push`·`commit`/`docker run`/
-  `npm install`/`sed -i`) → **промпт** (в `strict`/`permissive`).
-- `strict` дополнительно требует, чтобы голова каждого сегмента была из `allow`
-  (read-only coreutils, read-субкоманды `git`/`gh`/`docker`, `jq`/`awk`/`sed`,
-  инлайн `python3 -c`/`node -e`).
+**Denilistas (general, from `config.json`):**
+- `deny_hard` (catastrophic: `sudo`/`rm`/`mkfs`/fork-bomb/`\| sh`/writing to disk) →
+  **active `deny`** in all modes.
+- `deny_block_approve` (mutation: `mv`/`cp`/write to file/`git push`·`commit`/`docker run`/
+  `npm install`/`sed -i`) → **prompt** (in `strict`/`permissive`).
+- `strict` additionally requires that the head of each segment be from `allow`
+  (read-only coreutils, read-subcommands `git`/`gh`/`docker`, `jq`/`awk`/`sed`,
+  inline `python3 -c`/`node -e`).
 
-Конфиг и режим имеют per-project override:
-`<project>/.claude/auto-approve.config.json` и `auto-approve.env.ini`.
+Config and mode have per-project override:
+`<project>/.claude/auto-approve.config.json` and `auto-approve.env.ini`.
 
-Парсинг: если установлен `shfmt` — AST-разбор как доп. проверка (union: может только
-ужесточить); иначе встроенный regex-разбор. Содержимое кавычек вырезается до анализа
-⇒ тела `python3 -c`/`node -e` доверяются (флаг `trust_inline_interpreters`).
+Parsing: if installed `shfmt` — AST-parsing as additional. check (union: can only
+tighten); otherwise inline regex-parsing. Contents of quotes are stripped before parsing
+⇒ bodies `python3 -c`/`node -e` are trusted (flag `trust_inline_interpreters`).
 
-### Лог решений
+### Decision log
 
-Каждый проход хука пишется в `~/.claude/logs/auto-approve-decisions.jsonl`
-(`ts`, `hook`, `cwd`, `decision`, `command`, `reason`) — видно, какие команды вызывает
-агент, и можно докрутить конфиг:
+Each pass of the hook is written to `~/.claude/logs/auto-approve-decisions.jsonl`
+(`ts`, `hook`, `cwd`, `decision`, `command`, `reason`) — shows what commands it calls
+agent, and you can add the config:
 ```bash
-# что упёрлось в промпт (decision=ask) — кандидаты в allow/deny
+# that ran into a prompt (decision=ask) — candidates for allow/deny
 jq -r 'select(.decision=="ask") | .command' ~/.claude/logs/auto-approve-decisions.jsonl | sort | uniq -c | sort -rn | head
-# распределение решений
+# solution distribution
 jq -r .decision ~/.claude/logs/auto-approve-decisions.jsonl | sort | uniq -c
 ```
 
-### Включение по проекту
+### Inclusion by project
 
-Глобально (`global`) **только устанавливаются файлы** `~/.claude/hooks/auto-approve/`
-и активируется лог-логгер — сам auto-approve **глобально НЕ зарегистрирован** (никакого
-авто-одобрения в случайных каталогах). Включаешь хук точечно в нужном проекте,
+Global (`global`) **only files are installed** `~/.claude/hooks/auto-approve/`
+and the log-logger itself is activated auto-approve **is NOT registered globally** (none
+auto-approval in random directories). You enable the hook specifically in the desired project,
 `<project>/.claude/settings.json`:
 ```jsonc
 { "hooks": { "PreToolUse": [
@@ -169,63 +169,63 @@ jq -r .decision ~/.claude/logs/auto-approve-decisions.jsonl | sort | uniq -c
   { "matcher": "ExitPlanMode","hooks": [{ "type": "command", "command": "~/.claude/hooks/auto-approve/auto-approve.sh" }] }
 ] } }
 ```
-Режим для проекта — `<project>/.claude/auto-approve.env.ini` (иначе берётся дефолт из
+Project mode - `<project>/.claude/auto-approve.env.ini` (otherwise the default is taken from
 `~/.claude/hooks/auto-approve/env.ini`):
 ```ini
 MODE=strict
 ```
-После подключения/смены режима — перезапусти Claude Code.
+After connecting/mode change - restart Claude Code.
 
-> ⚠️ **Риск-компромиссы.** `permissive` одобрит незнакомую команду вне денилиста;
-> `bypass` одобрит любую команду кроме катастрофичной и сам подтвердит план — только
-> доверенные проекты/контейнеры. `python3 -c`/`node -e` доверяются (тело не
-> анализируется). Для полного «bypass всех команд после плана» в `bypass`-режиме
-> добавь в настройки проекта `"permissions": { "defaultMode": "bypassPermissions" }`.
+> ⚠️ **Risk trade-offs.** `permissive` will approve an unfamiliar command outside of denilista;
+> `bypass` will approve any command other than a catastrophic one and will confirm the plan himself - only
+> trusted projects/containers. `python3 -c`/`node -e` are trusted (body not
+> is being analyzed). For complete «bypass all commands after the plan» in `bypass`-mode
+> add to project settings `"permissions": { "defaultMode": "bypassPermissions" }`.
 
-Подробный разбор синтаксиса правил и логики пресетов — в
-[документации](../../docs/configs/claude-permissions.md).
+Detailed analysis of the syntax of rules and logic of presets - in
+[documentation](../../docs/configs/claude-permissions.md).
 
-## Единая память (memory)
+## Unified memory (memory)
 
-Силос-проблема: что выучено в одном проекте, не вспоминается в связанном.
-Самодостаточная папка [`hooks/memory/`](hooks/memory/) даёт **общий «мозг»** —
-но не всем подряд, а **только участникам одной группы** (`brain`). Структура и
-эргономика — как у auto-approve: переключатель [`memory.sh`](hooks/memory/memory.sh),
-режим в [`env.ini`](hooks/memory/env.ini), группы и участники в
-[`config.json`](hooks/memory/config.json), бэкенды в [`modes/`](hooks/memory/modes/).
+Silo problem: what is learned in one project is not remembered in a related one.
+Self-contained folder [`hooks/memory/`](hooks/memory/) gives **general «brain»** —
+but not to everyone, but **only to members of the same group** (`brain`). Structure and
+ergonomics - like auto-approve: switch [`memory.sh`](hooks/memory/memory.sh),
+mode in [`env.ini`](hooks/memory/env.ini), groups and members in
+[`config.json`](hooks/memory/config.json), backends in [`modes/`](hooks/memory/modes/).
 
 ```
 hooks/memory/
   memory.sh        # remember | recall | members | status | sync
-  env.ini          # MODE=file|federation|agentmemory|off  ← выбор бэкенда
-  config.json      # default_brain + brains{ <имя>: { members, store, agentmemory } }
+  env.ini          # MODE=file|federation|agentmemory|off  ← backend selection
+  config.json      # default_brain + brains{ <name>: { members, store, agentmemory } }
   lib/{common,store}.sh
   modes/{file,federation,agentmemory,off}.sh
 ```
 
-| `MODE` | Хранилище | Поиск | Демон |
+| `MODE` | Storage | Search | Demon |
 |---|---|---|---|
-| `file` | один общий store на группу (markdown) | grep + ранжирование | нет |
-| `federation` | свои `memory/` участников + нативная память Claude Code + общий store | grep по всем + ранжирование | нет |
-| `agentmemory` | сторонний AgentMemory (демон на Brain) | семантический | да |
+| `file` | one common store per group (markdown) | grep + ranking | no |
+| `federation` | theirs `memory/` members + native memory Claude Code + general store | grep for all + ranking | no |
+| `agentmemory` | third party AgentMemory (demon on Brain) | semantic | yes |
 | `off` | — | — | — |
 
-Режимы взаимозаменяемы — переключаешь `MODE` и сравниваешь на одной группе.
+The modes are interchangeable - you switch `MODE` and compare on the same group.
 
-**Membership.** `members` группы — имена узлов топологии (`brain`/`swissknifeman`)
-или ключи/пути проектов (резолв через `~/.swissknifeman/topology.json` +
-`projects.json`). Участник видит мозг, только если он в `members`.
+**Membership.** `members` groups - names of topology nodes (`brain`/`swissknifeman`)
+or keys/project paths (resolve via `~/.swissknifeman/topology.json` +
+`projects.json`). The participant sees the brain only if it is in `members`.
 
 ```bash
-# в начале задачи — спросить общий мозг
+# at the beginning of the task - ask the general brain
 ~/.claude/hooks/memory/memory.sh recall "retry backoff"
-# зафиксировать межпроектно-полезный факт
-~/.claude/hooks/memory/memory.sh remember --type project "retry-логика дублируется в botkit и azguard"
-~/.claude/hooks/memory/memory.sh status      # режим, группа, участники, число фактов
+# capture cross-project-useful fact
+~/.claude/hooks/memory/memory.sh remember --type project "retry-logic is duplicated in botkit and azguard"
+~/.claude/hooks/memory/memory.sh status      # mode, group, participants, number of facts
 ```
 
-**Per-project override** (как auto-approve): `<project>/.claude/memory.env.ini`
-(MODE) и `<project>/.claude/memory.config.json` (группа/участники); плюс
-`memory_brain` в `<project>/.swissknife.json`. Установка файлов —
-`./scripts/apply-permissions.sh --global` (код/lib/modes обновляются, `env.ini`/
-`config.json` не перезатираются). Агент-обвязка — скилл `system/shared-memory`.
+**Per-project override** (like auto-approve): `<project>/.claude/memory.env.ini`
+(MODE) and `<project>/.claude/memory.config.json` (group/members); plus
+`memory_brain` in `<project>/.swissknife.json`. Installing files -
+`./scripts/apply-permissions.sh --global` (code/lib/modes are updated, `env.ini`/
+`config.json` are not overwritten). Tie Agent - skill `system/shared-memory`.

@@ -1,28 +1,28 @@
-# Адаптер: Cursor
+# Adapter: Cursor
 
-Полный цикл интеграции с Cursor как **третьим managed-провайдером** (Codex-sibling):
-скиллы через `.agents/skills`, окружение через `.cursor/*`, без dual-write в
-`.cursor/skills` и без переписывания Codex-owned `AGENTS.md`.
+Full cycle of integration with Cursor like **third managed-provider** (Codex-sibling):
+skills through `.agents/skills`, environment via `.cursor/*`, without dual-write in
+`.cursor/skills` and without rewriting Codex-owned `AGENTS.md`.
 
-## Проекция и discovery
+## Projection and discovery
 
-| Surface | Канал | Примечание |
+| Surface | Channel | Note |
 |:--|:--|:--|
-| Скиллы | `.agents/skills/` | Cursor читает нативно; skiller **не** пишет `.cursor/skills` |
-| Connect/vendor | — | Каналы объявлены в `configs/provider-distribution.json` (`discovery` only); без `if cursor` в Python |
-| Инструкции (extension) | `.cursor/rules/swissknifeman-*.mdc` | только self-host umbrella; trigger-scoped |
-| MCP | `.cursor/mcp.json` | merge-only; пишет `maind sync` при включённом провайдере |
-| CLI permissions | `.cursor/cli.json` | только `permissions`; `deny` переживает `--force` |
-| IDE allowlists | `.cursor/permissions.json` | merge-only; repo только **расширяет** user-level |
+| Skills | `.agents/skills/` | Cursor reads natively; skiller **not** writes `.cursor/skills` |
+| Connect/vendor | — | Channels are declared in `configs/provider-distribution.json` (`discovery` only); without `if cursor` in Python |
+| Instructions (extension) | `.cursor/rules/swissknifeman-*.mdc` | only self-host umbrella; trigger-scoped |
+| MCP | `.cursor/mcp.json` | merge-only; writes `maind sync` when the provider is enabled |
+| CLI permissions | `.cursor/cli.json` | only `permissions`; `deny` is worried `--force` |
+| IDE allowlists | `.cursor/permissions.json` | merge-only; repo only **expands** user-level |
 
-Общий контракт репозитория Cursor уже подхватывает из `AGENTS.md`; в `.mdc` — только
-`root.cursor.*` extension и строка precedence для `root.codex.*`.
+General repository contract Cursor is already picking up from `AGENTS.md`; in `.mdc` — only
+`root.cursor.*` extension and the line precedence for `root.codex.*`.
 
-## Установка (проект)
+## Installation (project)
 
-### 1. Включить провайдер
+### 1. Enable provider
 
-В `.swissknife.json` проекта:
+B `.swissknife.json` project:
 
 ```json
 {
@@ -34,71 +34,71 @@
 }
 ```
 
-Everyday fleet-путь — `workspace-contained`. `trusted-full-access` только для self-host
-под гейтом `self-host-apply` / `repo:<name>` (см. [Harness setup: Cursor](/harness/setup/cursor)).
+Everyday fleet-path - `workspace-contained`. `trusted-full-access` only for self-host
+under the gate `self-host-apply` / `repo:<name>` (see [Harness setup: Cursor](/harness/setup/cursor)).
 
-### 2. Скиллы (vendor/sync)
+### 2. Skills (vendor/sync)
 
 ```bash
 cd ~/projects/my-app
 
-# Рекомендуемый путь: managed sync в .agents/skills (Cursor читает нативно)
+# Recommended path: managed sync in .agents/skills (Cursor reads natively)
 skiller sync
 
-# Legacy-совместимость
-skiller vendor --agent cursor   # deprecated: копирует в .cursor/skills — избегайте dual-write
+# Legacy-compatibility
+skiller vendor --agent cursor   # deprecated: copies to .cursor/skills — avoid dual-write
 ```
 
-`render_cursor_publication` — ownership assertion: один writer на дерево скиллов, без
-параллельной записи в `.agents` и `.cursor`.
+`render_cursor_publication` — ownership assertion: one writer on the skill tree, without
+parallel write to `.agents` and `.cursor`.
 
-### 3. MCP и память (onboard/sync)
+### 3. MCP and memory (onboard/sync)
 
 ```bash
-maind onboard --cwd ~/projects/my-app    # первое подключение: память + MCP + health
-maind sync --project my-app              # докатка MCP в .cursor/mcp.json
+maind onboard --cwd ~/projects/my-app    # first connection: memory + MCP + health
+maind sync --project my-app              # dokatka MCP in .cursor/mcp.json
 maind health --cwd                       # round-trip + provider:cursor trust
 ```
 
-Hub-серверы (`plugin-core-maind`, `plugin-core-serena`) попадают в `.cursor/mcp.json`
-через provider deploy, не через legacy `harness mcp` (тот пишет только `.mcp.json` Claude).
+Hub-servers (`plugin-core-maind`, `plugin-core-serena`) fall into `.cursor/mcp.json`
+via provider deploy, not via legacy `harness mcp` (he only writes `.mcp.json` Claude).
 
-### 4. Permissions (everyday и trusted)
+### 4. Permissions (everyday and trusted)
 
-Everyday (`workspace-contained`) — scoped allowlists в `.cursor/permissions.json` и
-`.cursor/cli.json` без Run Everything на флот.
+Everyday (`workspace-contained`) — scoped allowlists in `.cursor/permissions.json` and
+`.cursor/cli.json` without Run Everything to the fleet.
 
-Trusted self-host (`trusted-full-access`) — широкие allowlists **только** при явном
-`operation_id=self-host-apply` и `target_identity=repo:swissknifeman`. Наследование
-флотом запрещено (`HARNESS_FULL_ACCESS_INHERITANCE_FORBIDDEN`).
+Trusted self-host (`trusted-full-access`) — wide allowlists **only** with explicit
+`operation_id=self-host-apply` and `target_identity=repo:swissknifeman`. Inheritance
+prohibited by the fleet (`HARNESS_FULL_ACCESS_INHERITANCE_FORBIDDEN`).
 
-Операторский контракт (shapes и аудит):
+Operator contract (shapes and audit):
 
 ```bash
 harness doctor --settings --provider cursor --target .
 ```
 
-Публикация managed shapes на проект — через onboard/sync с включённым `cursor` в
-`.swissknife.json`; подробности — [Harness setup: Cursor](/harness/setup/cursor).
+Publication managed shapes for the project - via onboard/sync with enabled `cursor` in
+`.swissknife.json`; details - [Harness setup: Cursor](/harness/setup/cursor).
 
-## Autonomy: две дорожки
+## Autonomy: two tracks
 
-| Дорожка | Файлы | Launch / Run Mode |
+| Track | Files | Launch / Run Mode |
 |:--|:--|:--|
-| Everyday onboard | `workspace-contained` shapes | Auto-review / allowlist; без `--force` на флот |
+| Everyday onboard | `workspace-contained` shapes | Auto-review / allowlist; without `--force` to the fleet |
 | Self-host trusted | `trusted-full-access` shapes | CLI: `--force --sandbox disabled --trust --approve-mcps`; IDE: **Run Everything** |
 
-**Критично:** `approvalMode` и sandbox **не** project-scoped (E14.1). Режим — только
-launch flags + UI Run Mode; harness пишет allowlist/deny half. `deny` в `.cursor/cli.json`
-— единственный project-scoped floor под `--force`.
+**Critical:** `approvalMode` and sandbox **not** project-scoped (E14.1). Mode - only
+launch flags + UI Run Mode; harness writes allowlist/deny half. `deny` in `.cursor/cli.json`
+— the only one project-scoped floor under `--force`.
 
-Семантика launch: instruction `root.cursor.launch-and-autonomy` (agent-requested rule
-`swissknifeman-launch.mdc` на self-host).
+Semantics launch: instruction `root.cursor.launch-and-autonomy` (agent-requested rule
+`swissknifeman-launch.mdc` on self-host).
 
 ## Launch-block (cold-start)
 
-Таблица Model class / Effort / Context — provider-neutral (plan-protocol §8). Для Cursor
-после таблицы — **Native Cursor command**:
+Table Model class / Effort / Context — provider-neutral (plan-protocol §8). For Cursor
+after the table - **Native Cursor command**:
 
 ```bash
 agent --workspace <repo-cwd> \
@@ -107,26 +107,26 @@ agent --workspace <repo-cwd> \
       'task:<command> <arguments>'
 ```
 
-- `--workspace`, не `-C` (freeze E3).
-- Пин модели: `composer-2.5-fast` / `composer-2.5` / `claude-opus-5-thinking-high` — см.
+- `--workspace`, not `-C` (freeze E3).
+- Model pin: `composer-2.5-fast` / `composer-2.5` / `claude-opus-5-thinking-high` — see
   [Provider model roles](/task/reference/provider-model-roles).
-- `auto` **не** заменяет fixed frontier/implementation pin.
+- `auto` **not** replaces fixed frontier/implementation pin.
 
 IDE checklist (trusted): workspace root → Run Everything → MCP health → pinned model.
 
-## Модели и Auto
+## Models and Auto
 
-Hand-verified inventory в `packages/task/configs/command-routing.json` →
-`mappings.cursor.model_inventory`. Полный гайд (pins + inventory + Auto policy):
+Hand-verified inventory in `packages/task/configs/command-routing.json` →
+`mappings.cursor.model_inventory`. Full guide (pins + inventory + Auto policy):
 [Provider model roles](/task/reference/provider-model-roles).
 
-## Delta-файлы скиллов
+## Delta-skill files
 
-Специфика Cursor — в `adapters/cursor.md` внутри скилла (overrides для `.cursor/rules`).
-Основной `SKILL.md` остаётся provider-neutral. Формат — в
-[спецификации адаптерных дельт](../guide/adapter-deltas).
+Specifics Cursor — in `adapters/cursor.md` inside the skill (overrides for `.cursor/rules`).
+Main `SKILL.md` remains provider-neutral. Format - in
+[adapter delta specifications](../guide/adapter-deltas).
 
-## Диагностика
+## Diagnostics
 
 ```bash
 skiller budget --provider cursor --target .
@@ -135,8 +135,8 @@ harness doctor --settings --provider cursor --target .
 python3 packages/task/scripts/render-provider-commands.py --check --root .
 ```
 
-## См. также
+## See also
 
-- [Harness setup: Cursor](/harness/setup/cursor) — permissions, MCP, профили
+- [Harness setup: Cursor](/harness/setup/cursor) — permissions, MCP, profiles
 - [Provider model roles](/task/reference/provider-model-roles) — design/exec/audit/economy
-- [Plan tooling: launch-block](/task/reference/plan-tooling) — handoff-форма
+- [Plan tooling: launch-block](/task/reference/plan-tooling) — handoff-form

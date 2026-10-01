@@ -91,59 +91,59 @@ requires_lawyer_review: true
 
 # Legal Compliance — [ProjectName]
 
-## Применимые режимы (агент)
-- GDPR: [yes/no/conditional] — обоснование
+## Applicable modes (agent)
+- GDPR: [yes/no/conditional] — rationale
 - CCPA: ...
-- AI Act: [класс]
+- AI Act: [class]
 - DMCA: ...
 - COPPA: ...
 - DSA: ...
-- Country-specific: [список]
+- Country-specific: [list]
 
-## Overall risk: [уровень] (агент)
+## Overall risk: [level] (agent)
 
 ## Data inventory (Article 30)
-[таблица]
+[table]
 
 ## Data flow diagram
 ```mermaid
-[диаграмма потоков данных с EU/US границами]
+[data flow diagram with EU/US boundaries]
 ```
 
 ## Sub-processors
-[список с DPA-статусом]
+[list with DPA-status]
 
-## GDPR-чеклист
-- [ ] Legal basis для каждой категории данных
+## GDPR-checklist
+- [ ] Legal basis for each data category
 - [ ] User rights: access / rectification / erasure / portability / objection
 - [ ] Consent management
 - [ ] Privacy Policy (draft)
 - [ ] ToS (draft)
-- [ ] DPA подписаны со всеми sub-processors
+- [ ] DPA subscribed to everyone sub-processors
 - [ ] Breach response plan
 
-## AI Act (если применимо)
-- Классификация: ...
-- Transparency обязательства: ...
+## AI Act (if applicable)
+- Classification: ...
+- Transparency obligations: ...
 - Human oversight: ...
 
-## DMCA (если UGC)
+## DMCA (if UGC)
 - Designated agent registered: yes/no
 - Takedown flow: ...
 - Counter-notice flow: ...
 - Repeat infringer policy: ...
 
-## COPPA (если <13 users)
-- Возрастной gate / verifiable parental consent: ...
+## COPPA (if <13 users)
+- Age gate / verifiable parental consent: ...
 
-## Открытые вопросы для юриста
+## Open questions for a lawyer
 - ...
 
-## Следующие шаги
-1. Передать draft Privacy Policy и ToS юристу
-2. Подписать DPA с [список процессоров]
-3. Зарегистрировать DMCA agent (если применимо)
-4. AI Act conformity assessment для high-risk компонентов
+## Next steps
+1. Send draft Privacy Policy and ToS lawyer
+2. Sign DPA with [list of processors]
+3. Register DMCA agent (if applicable)
+4. AI Act conformity assessment for high-risk components
 ```
 
 ### `docs/01_Business/Privacy_Policy_Draft.md`

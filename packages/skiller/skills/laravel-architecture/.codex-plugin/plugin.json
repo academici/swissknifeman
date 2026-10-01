@@ -1,6 +1,6 @@
 {
   "name": "laravel-architecture",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration",
   "skills": [
     "./config-driven-abstraction",

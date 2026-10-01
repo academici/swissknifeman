@@ -34,22 +34,22 @@ def _read(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
-        raise HistoryError(f"вход истории не читается: {path}") from exc
+        raise HistoryError(f"history input not readable: {path}") from exc
 
 
 def _event_time(value: str, *, path: Path, field: str, date_only: bool = False) -> datetime:
     if not isinstance(value, str):
-        raise HistoryError(f"{path}: {field} должен быть строкой времени")
+        raise HistoryError(f"{path}: {field} must be a time string")
     if date_only:
         if not _DATE_RE.fullmatch(value):
-            raise HistoryError(f"{path}: {field} должен быть ISO-датой")
+            raise HistoryError(f"{path}: {field} should be ISO-date")
         value = value + "T00:00:00Z"
     elif not _TIMESTAMP_RE.fullmatch(value):
-        raise HistoryError(f"{path}: {field} должен быть UTC timestamp")
+        raise HistoryError(f"{path}: {field} should be UTC timestamp")
     try:
         return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
     except ValueError as exc:
-        raise HistoryError(f"{path}: {field} содержит несуществующую дату") from exc
+        raise HistoryError(f"{path}: {field} contains a non-existent date") from exc
 
 
 def _journal_records(plan_dir: Path, item_id: str) -> tuple[list[HistoryRecord], Path]:
@@ -61,13 +61,13 @@ def _journal_records(plan_dir: Path, item_id: str) -> tuple[list[HistoryRecord],
         try:
             entry = json.loads(raw)
         except json.JSONDecodeError as exc:
-            raise HistoryError(f"{path}:{line_number}: журнал невалиден") from exc
+            raise HistoryError(f"{path}:{line_number}: log is invalid") from exc
         try:
             journal.validate_entry(entry)
         except journal.JournalValidationError as exc:
-            raise HistoryError(f"{path}:{line_number}: журнал не проходит sealed schema: {exc}") from exc
+            raise HistoryError(f"{path}:{line_number}: log does not pass sealed schema: {exc}") from exc
         if entry["plan_id"] != plan_dir.name:
-            raise HistoryError(f"{path}:{line_number}: plan_id не совпадает с каталогом плана")
+            raise HistoryError(f"{path}:{line_number}: plan_id does not match plan directory")
         if entry["item_id"] != item_id:
             continue
         identity = f"{line_number}:{journal.line_sha256(raw)}"
@@ -79,7 +79,7 @@ def _journal_records(plan_dir: Path, item_id: str) -> tuple[list[HistoryRecord],
 def _findings(plan_dir: Path, item_id: str) -> tuple[list[HistoryRecord], list[Path]]:
     directory = plan_dir / "findings"
     if not directory.is_dir():
-        raise HistoryError(f"каталог item-scoped findings отсутствует: {directory}")
+        raise HistoryError(f"directory item-scoped findings missing: {directory}")
     records, inputs = [], []
     for path in sorted(directory.rglob("*.md")):
         text = _read(path)
@@ -91,16 +91,16 @@ def _findings(plan_dir: Path, item_id: str) -> tuple[list[HistoryRecord], list[P
             if not line.strip() or line.lstrip().startswith("#"):
                 continue
             if ":" not in line or line.startswith((" ", "\t")):
-                raise HistoryError(f"{path}: недопустимая строка frontmatter {line!r}")
+                raise HistoryError(f"{path}: invalid string frontmatter {line!r}")
             key, value = line.split(":", 1)
             key = key.strip()
             if key in fields:
-                raise HistoryError(f"{path}: повторный ключ frontmatter {key!r}")
+                raise HistoryError(f"{path}: repeat key frontmatter {key!r}")
             fields[key] = value.strip().strip("'\"")
         if fields.get("item") != item_id:
             continue
         if "date" not in fields:
-            raise HistoryError(f"{path}: item-scoped finding не несёт date")
+            raise HistoryError(f"{path}: item-scoped finding does not carry date")
         relative = path.relative_to(plan_dir).as_posix()
         records.append(HistoryRecord(
             "findings", relative, _event_time(fields["date"], path=path, field="date", date_only=True),
@@ -125,9 +125,9 @@ def _decision_records(plan_dir: Path, item_id: str) -> tuple[list[HistoryRecord]
 def history_records(plan_dir, item_id: str) -> tuple[list[HistoryRecord], list[Path]]:
     plan_dir = Path(plan_dir)
     if not _ITEM_RE.fullmatch(item_id):
-        raise HistoryError("item должен иметь форму Pn.m")
+        raise HistoryError("item should be of the form Pn.m")
     if plan_layout.layout_version(plan_dir) != "v2":
-        raise HistoryError("исторический вид существует только для Layout v2")
+        raise HistoryError("historical view exists only for Layout v2")
     journal_records, journal_path = _journal_records(plan_dir, item_id)
     decision_records, decision_paths = _decision_records(plan_dir, item_id)
     finding_records, finding_paths = _findings(plan_dir, item_id)
@@ -160,9 +160,9 @@ def render_history(plan_dir, item_id: str) -> str:
     lines = ["| Time | Source | Identity | Status |", "|:--|:--|:--|:--|"]
     lines.extend(_record_line(record) for record in records)
     if not records:
-        lines.append("| — | — | — | Нет записей |")
+        lines.append("| — | — | — | No entries |")
     return plan_projection.rendered_file(
-        metadata=metadata, title=f"История {item_id}", body="\n".join(lines))
+        metadata=metadata, title=f"History {item_id}", body="\n".join(lines))
 
 
 def materialize_history(plan_dir, item_id: str, output=None, *, check=False) -> Path:

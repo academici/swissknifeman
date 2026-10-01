@@ -1,103 +1,103 @@
-# Framework Overview — текущее состояние
+# Framework Overview — current state
 
-Канонический срез того, что уже есть в каркасе. **Это вход для аудита**
-([framework-audit](../workflows/framework-audit)): подаёшь Perplexity вместе с
-[decisions-ledger](./decisions-ledger), чтобы аудит искал дельты, а не
-перепредлагал готовое.
+A canonical slice of what is already in the framework. **This is an audit input**
+([framework-audit](../workflows/framework-audit)): you submit Perplexity along with
+[decisions-ledger](./decisions-ledger), so that the audit looks for deltas and not
+re-offered what was ready.
 
-Статусы: ✅ есть · 🔜 в работе (фаза плана) · ⏸ отложено.
+Statuses: ✅ yes · 🔜 in progress (plan phase) · ⏸ deferred.
 
-## Дистрибуция и версионность
+## Distribution and versioning
 
-- ✅ **Пакеты:** `harness` (окружение Claude Code: хуки/settings/MCP/паки),
-  `skiller` (скиллы + hub), `maind` (память/граф). Запись в проекты — merge-only + `.bak`.
-- ✅ **agent-packs** — версионируемые паки (`harness/configs/claude-code/agent-packs/<pack>/`):
+- ✅ **Packages:** `harness` (environment Claude Code: hooks/settings/MCP/packs),
+  `skiller` (skills + hub), `maind` (memory/graph). Writing to projects - merge-only + `.bak`.
+- ✅ **agent-packs** — versioned packs (`harness/configs/claude-code/agent-packs/<pack>/`):
   `pack.json` (semver) + `CHANGELOG.md` + agents/workflows/hooks/settings/docs.
-  Per-pack версия. Установка/upgrade — агент-driven через скилл `system/agent-packs`.
-  Десять живых паков (`configs/claude-code/agent-packs/backend-laravel/pack.json` 0.12.2,
+  Per-pack version. Installation/upgrade — agent-driven via skill `system/agent-packs`.
+  Ten live packs (`configs/claude-code/agent-packs/backend-laravel/pack.json` 0.12.2,
   `_common/pack.json` 0.5.0, `dart-flutter/pack.json` 0.5.2, `laravel-package/pack.json`
   0.2.2, `node-frontend/pack.json` 0.5.2, `python-backend/pack.json` 0.5.2,
   `role-cto/pack.json` 0.1.2, `role-founder/pack.json` 0.1.2, `role-maintainer/pack.json`
   0.2.2, `role-tech-lead/pack.json` 0.2.2).
-- ✅ **lock** — `.claude/agent-pack.lock.json` в проекте: версия + ответы интервью +
-  `sha256` отрендеренных файлов → upgrade без diff-движка (хэш-сравнение + CHANGELOG).
-  Носитель — `packages/harness/lib/harness/agentpacks.py`.
-- ⏸ **профили-наследование** (`extends`) — как данные, не движок (отложено); в
-  `profiles/*.json` не используется (`grep -l extends packages/skiller/profiles/*.json` — пусто).
+- ✅ **lock** — `.claude/agent-pack.lock.json` in project: version + interview answers +
+  `sha256` rendered files → upgrade without diff-engine (hash comparison + CHANGELOG).
+  Carrier - `packages/harness/lib/harness/agentpacks.py`.
+- ⏸ **profiles-inheritance** (`extends`) — as data, not engine (deferred); in
+  `profiles/*.json` not used (`grep -l extends packages/skiller/profiles/*.json` — empty).
 
-## Скиллы и их видимость
+## Skills and their visibility
 
-- ✅ **Реестр** `skills.json` (+ `_index.md`, marketplace) — `skiller registry`.
-- ✅ **Hub = AI Skills Index**: `scripts/generate-hub.sh`; в Boost-проектах пишется в
-  `.ai/guidelines/swissknifeman-hub.md` (маркеры `<!-- swissknifeman:hub:start/end -->`),
-  не в сгенерённый CLAUDE.md.
-- ✅ **Нативное поле `skills:`** на субагенте (preload, Claude Code ≥2.0.43); на
-  неизвестном/отключённом имени — пропуск + запись в debug-лог, не тихий no-op без следа
-  (first-party `https://code.claude.com/docs/en/sub-agents`, проверено 2026-07-29) — отсюда
-  регрессия «скиллы не видны», пока имена не сверены.
-- ✅ **Фикс видимости** (Фаза 1, `packages/skiller/scripts/generate-hub.sh`): hub получает
-  agent-routing срез + сверку имён `skills:` со `skills.json` (`⚠` на несостыковке) +
-  freshness-штамп; `skiller doctor` флагит дрейф (`generate-hub.sh:194` freshness-хэш,
-  `:253-255` `⚠` на несостыковке; `packages/skiller/lib/skiller/doctor.py:1062-1090` дрейф хабов).
+- ✅ **Registry** `skills.json` (+ `_index.md`, marketplace) — `skiller registry`.
+- ✅ **Hub = AI Skills Index**: `scripts/generate-hub.sh`; in Boost-projects is written in
+  `.ai/guidelines/swissknifeman-hub.md` (markers `<!-- swissknifeman:hub:start/end -->`),
+  not generated CLAUDE.md.
+- ✅ **Native field `skills:`** on subagent (preload, Claude Code ≥2.0.43); on
+  unknown/disabled name - skip + entry in debug-log, not quiet no-op without a trace
+  (first-party `https://code.claude.com/docs/en/sub-agents`, verified 2026-07-29) — from here
+  regression «skills are not visible», names are not verified yet.
+- ✅ **Fix visibility** (Phase 1, `packages/skiller/scripts/generate-hub.sh`): hub gets
+  agent-routing slice + name matching `skills:` with `skills.json` (`⚠` on inconsistency) +
+  freshness-stamp; `skiller doctor` flagit drift (`generate-hub.sh:194` freshness-hash,
+  `:253-255` `⚠` on inconsistency; `packages/skiller/lib/skiller/doctor.py:1062-1090` hub drift).
 
-## Роли и оркестрация
+## Roles and orchestration
 
-- ✅ **Плагин-агенты**: `laravel-reviewer`, `laravel-test-writer` (php), `code-coordinator` (system).
-- ✅ **Скилл оркестрации** `laravel-architecture/laravel-subagents` (порог делегирования, ревью/тесты, worktree).
-- ✅ **Универсальные роли** (`configs/claude-code/agent-packs/role-bindings.json`):
-  reviewer/implementer(slice-builder)/test-writer/explore/plan/spec-writer как seed-агенты
-  рендерятся из паков через связывание (`binding_version 1.0.0`, роли `_common` +
-  стек-паков); общие, стек — из профиля.
-  `skills:` preload + self-load fallback — preload **не применяется**, когда роль
-  запущена как teammate агент-команды (см. [roles](./roles), [agent-teams](./agent-teams)).
-- 🔜 **path-scoped rules** (`.claude/rules/`, нативно) — тонкие правила по путям есть у пяти
-  паков (`agent-packs/{_common,backend-laravel,dart-flutter,laravel-package,node-frontend,
-  python-backend}/rules`), **индекса правил в hub нет** (`grep -n rules
-  packages/skiller/scripts/generate-hub.sh` — пусто).
+- ✅ **Plugin agents**: `laravel-reviewer`, `laravel-test-writer` (php), `code-coordinator` (system).
+- ✅ **Orchestration Skill** `laravel-architecture/laravel-subagents` (delegation threshold, review/tests, worktree).
+- ✅ **Universal roles** (`configs/claude-code/agent-packs/role-bindings.json`):
+  reviewer/implementer(slice-builder)/test-writer/explore/plan/spec-writer like seed-agents
+  are rendered from packs via linking (`binding_version 1.0.0`, roles `_common` +
+  stack packs); general, stack - from profile.
+  `skills:` preload + self-load fallback — preload **not applicable**, when role
+  started as teammate agent-commands (see [roles](./roles), [agent-teams](./agent-teams)).
+- 🔜 **path-scoped rules** (`.claude/rules/`, native) — five have subtle rules on paths
+  packs (`agent-packs/{_common,backend-laravel,dart-flutter,laravel-package,node-frontend,
+  python-backend}/rules`), **rules index in hub no** (`grep -n rules
+  packages/skiller/scripts/generate-hub.sh` — empty).
 
-## Хуки и гейты
+## Hooks and gates
 
 - ✅ **auto-approve** (PreToolUse), **memory**, **notify**, **log** (`packages/harness/configs/claude-code/hooks/`).
 - ✅ **review-gate** (SubagentStop, off|warn|strict, `packages/harness/configs/claude-code/hooks/review-gate/review-gate.sh`)
-  — полноценный generic-раннер, 128 строк, диспетчер `checks/`.
-- ✅ **Agent Teams** (опц., эксперимент, CC ≥2.1.178, дефолт `teammateMode` — `in-process`
-  с v2.1.179): пресет `harness/configs/claude-code/settings.agent-teams.json` (env-флаг +
-  `teammateMode`) + doc [agent-teams](./agent-teams) (spawn-шаблоны, module-boundaries,
-  quality-gate хуки). Config форвард-совместим; роли каркаса годятся как teammates, **но без
-  своего `skills:`-preload** — см. [agent-teams](./agent-teams) «Ограничения».
+  — full generic-runner, 128 lines, dispatcher `checks/`.
+- ✅ **Agent Teams** (opt., experiment, CC ≥2.1.178, default `teammateMode` — `in-process`
+  with v2.1.179): preset `harness/configs/claude-code/settings.agent-teams.json` (env-flag +
+  `teammateMode`) + doc [agent-teams](./agent-teams) (spawn-templates, module-boundaries,
+  quality-gate hooks). Config forward compatible; frame roles are suitable as teammates, **but without
+  of his `skills:`-preload** — see [agent-teams](./agent-teams) «Limitations».
 
-## Воркфлоу
+## Workflow
 
-- ✅ **Workflow-инструмент** (нативный, ~16 конкуррентно / 1000 на прогон — потолок workflow-рантайма, `findings/04` Ф17) — Agent-тул несёт СВОИ потолки, см. «Лимиты
-  субагентов» ниже; агенты workflow в них не считаются.
-- ✅ **dev-loop** как pack-шаблон (`workflows/dev-loop.js`) у пяти паков
+- ✅ **Workflow-tool** (native, ~16 competitive / 1000 for run - ceiling workflow-runtime, `findings/04` F17) — Agent-tul carries ITS ceilings, see. «Limits
+  subagents» below; agents workflow are not counted in them.
+- ✅ **dev-loop** like pack-template (`workflows/dev-loop.js`) for five packs
   (backend-laravel, node-frontend, python-backend, dart-flutter, laravel-package),
-  срез→impl→test→review. Уроки зашиты: один branch на прогон, хард-кап литералом
-  (переживает resume), circuit-breaker.
+  slice→impl→test→review. Defense lessons: one branch per run, hard cap literal
+  (is worried resume), circuit-breaker.
 
-## Лимиты субагентов (Agent-тул, first-party `https://code.claude.com/docs/en/sub-agents`,
-проверено 2026-07-29)
+## Subagent limits (Agent-tul, first-party `https://code.claude.com/docs/en/sub-agents`,
+verified 2026-07-29)
 
-- Всего субагентов за сессию: **200** (`CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION`, v2.1.212+).
-- Одновременно: **20** (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`, v2.1.217+).
-- Глубина вложенности: **3** (v2.1.219; было 1 в v2.1.217–218, 5 неизменяемо до v2.1.172–216).
+- Total subagents per session: **200** (`CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION`, v2.1.212+).
+- Simultaneously: **20** (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`, v2.1.217+).
+- Nesting depth: **3** (v2.1.219; was 1 in v2.1.217–218, 5 immutable until v2.1.172–216).
 
-## Задачи и память
+## Tasks and memory
 
-- ✅ TodoWrite (сессия) + `args.slices` (прогон dev-loop).
-- ⏸ Персистентный task-граф (next-task между сессиями) — на `maind`/agentmemory, отложено.
+- ✅ TodoWrite (session) + `args.slices` (run dev-loop).
+- ⏸ Persistent task-graph (next-task between sessions) — on `maind`/agentmemory, deferred.
 
-## Качество
+## Quality
 
 - ✅ `quality/code-simplifier`, `general/anti-drift`.
-- ✅ **ponytail-дисциплина** (YAGNI-лесенка + over-engineering-проход, `agent-packs/{backend-laravel,laravel-package}/agents/reviewer.md`)
-  впитана в reviewer-роль; опциональный скилл `quality/lean-code` не заведён и не
-  планировался обязательным (`packages/skiller/skills/quality/` — 11 скиллов, `lean-code`
-  среди них нет).
+- ✅ **ponytail-discipline** (YAGNI-ladder + over-engineering-passage, `agent-packs/{backend-laravel,laravel-package}/agents/reviewer.md`)
+  absorbed into reviewer-role; optional skill `quality/lean-code` is not started and
+  was planned to be mandatory (`packages/skiller/skills/quality/` — 11 skills, `lean-code`
+  is not among them).
 
-## Проверено против дерева: 2026-07-30
+## Tested against tree: 2026-07-30
 
-| Пак | Версия |
+| Pack | Version |
 |:--|:--|
 | _common | 0.5.0 |
 | backend-laravel | 0.12.2 |
@@ -110,6 +110,6 @@
 | role-maintainer | 0.2.2 |
 | role-tech-lead | 0.2.2 |
 
-Таблица — машинный якорь гейта свежести (P3.3): версии сверяются с `pack.json` каждого пака
-в `packages/harness/configs/claude-code/agent-packs/*/pack.json`. Обновляй этот файл и штамп
-в конце каждой фазы/аудита — он вход следующего аудита.
+Table - freshness gate machine anchor (P3.3): versions are checked against `pack.json` of each pack
+in `packages/harness/configs/claude-code/agent-packs/*/pack.json`. Update this file and stamp
+at the end of each phase/audit - it is the input of the next audit.

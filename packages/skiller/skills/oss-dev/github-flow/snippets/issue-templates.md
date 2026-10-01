@@ -1,4 +1,4 @@
-# Issue Templates для .github/ISSUE_TEMPLATE/
+# Issue Templates for .github/ISSUE_TEMPLATE/
 
 ## bug_report.md
 
@@ -10,10 +10,10 @@ labels: ["bug", "needs-triage"]
 ---
 
 ## Summary
-<!-- [bug] заголовок ≤72 символов, повелительное наклонение -->
+<!-- [bug] header ≤72 characters, imperative -->
 
 ## Affected version
-<!-- Версия пакета, где воспроизводится -->
+<!-- Package version where played -->
 
 ## Steps to reproduce
 1.
@@ -37,23 +37,23 @@ labels: ["enhancement"]
 ---
 
 ## Problem
-<!-- Какую задачу пользователя это решает -->
+<!-- What user problem does this solve -->
 
 ## Proposed solution
-<!-- Желаемое API/поведение, пример кода -->
+<!-- Wishful API/behavior, example code -->
 
 ## Alternatives considered
 
 ## Breaking change?
-<!-- Затронет ли существующий публичный API -->
+<!-- Will an existing public API -->
 ```
 
-## config.yml (отключить пустые Issues)
+## config.yml (disable empty Issues)
 
 ```yaml
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
     url: https://github.com/<owner>/<repo>/security/advisories/new
-    about: Не открывайте публичный Issue для уязвимостей
+    about: Do not open public Issue for vulnerabilities
 ```

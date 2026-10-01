@@ -1,18 +1,18 @@
-"""maind fleet — межпроектный слой для агента-оптимизатора.
+"""maind fleet — cross-project layer for the optimizer agent.
 
-Три функции под кросс-проектную оптимизацию ~N похожих проектов (общие пакеты-ядро):
-- manifest  — единый JSON: проекты (пути/namespaces/scopes) + группы по ОБЩИМ пакетам
-              (кто что требует) → точка входа агента, «где искать».
-- duplicates — кросс-проектный поиск дублей кода (обёртка над jscpd) по сгруппированным
-              путям → «что именно повторяется» (cross-project клоны первыми).
-- feature-log — факты «сделал фичу X» в общую память (ns/global), чтобы агент коррелировал
-              похожие изменения между проектами.
-- similar    — СЕМАНТИЧЕСКАЯ похожесть кода (эмбеддинги функций/классов) поверх литеральных
-              дублей jscpd: «похоже по смыслу, не дословно». Бэкенд эмбеддингов — внешний
-              (config code_graph.embed), оркеструется; без него — внятный die.
+Three functions for cross-project optimization ~N similar projects (common core packages):
+- manifest  — single JSON: projects (paths/namespaces/scopes) + groups by COMMON packages
+              (who demands what) → agent entry point, «where to look».
+- duplicates — cross-project search for code duplicates (wrapper over jscpd) by grouped
+              paths → «what exactly is repeated» (cross-project clones first).
+- feature-log — facts «made a feature X» to shared memory (ns/global), so that the agent correlates
+              similar changes between projects.
+- similar    — SEMANTIC similarity of code (function embeddings/classes) over literals
+              takes jscpd: «similar in meaning, not verbatim». Backend of embeddings - external
+              (config code_graph.embed), orchestrated; without it - intelligible die.
 
-«Слитого» графа кода нет и не нужно: сигнал = топология (группы) + дубли + память; точечную
-правку даёт Serena в нужном проекте. stdlib-only; jscpd/эмбеддер — внешние, оркеструются."""
+«Leaked» there is no code graph and no need: signal = topology (groups) + duplicates + memory; point
+gives the edit Serena in the desired project. stdlib-only; jscpd/embedder - external, orchestrated."""
 import json
 import math
 import os
@@ -34,7 +34,7 @@ from ..projects import listing
 FEATURE_MARKER = "maind:feature-log"
 
 
-# ── манифест ─────────────────────────────────────────────────────────────────
+# ── manifest ─────────────────────────────────────────────────────────────────
 def _proj_entry(project):
     local = project.get("local_path")
     return {
@@ -48,8 +48,8 @@ def _proj_entry(project):
 
 
 def shared_packages(env, config):
-    """[{package, name, provider, consumers[], consumer_count}] — first-party пакеты,
-    которые требуют ≥2 проекта. Это и есть группы межпроектной оптимизации."""
+    """[{package, name, provider, consumers[], consumer_count}] — first-party packages,
+    which require ≥2 project. These are cross-project optimization groups."""
     if graph_disabled(config):
         return []
     g = federated_graph(env, config)
@@ -80,9 +80,9 @@ def manifest(env, config):
             "shared_packages": shared_packages(env, config)}
 
 
-# ── кросс-проектные дубли (jscpd) ────────────────────────────────────────────
+# ── cross-project duplicates (jscpd) ────────────────────────────────────────────
 def _resolve_targets(env, config, opts):
-    """(pmap: path→pid, [paths]) по --projects / --group / все enabled с путём."""
+    """(pmap: path→pid, [paths]) by --projects / --group / all enabled with path."""
     projects = [p for p in listing(env, config)
                 if p.get("enabled", True) and p.get("local_path")]
     if opts.get("projects"):
@@ -92,7 +92,7 @@ def _resolve_targets(env, config, opts):
         grp = next((s for s in shared_packages(env, config)
                     if opts["group"] in (s["package"], s["name"])), None)
         if grp is None:
-            die(f"группа (общий пакет) не найдена: {opts['group']}")
+            die(f"group (general package) not found: {opts['group']}")
         ids = set(grp["consumers"]) | ({grp["provider"]} if grp["provider"] else set())
         projects = [p for p in projects if p["id"] in ids]
     pmap, paths = {}, []
@@ -117,7 +117,7 @@ def _which_project(file_path, pmap):
 
 
 def _parse_report(report, pmap):
-    """jscpd-report.json → клоны; cross-project (между разными проектами) первыми."""
+    """jscpd-report.json → clones; cross-project (between different projects) first."""
     out = []
     for d in (report.get("duplicates", []) if isinstance(report, dict) else []):
         f1, f2 = d.get("firstFile", {}), d.get("secondFile", {})
@@ -138,10 +138,10 @@ def _parse_report(report, pmap):
 
 def find_duplicates(env, config, opts):
     if shutil.which("npx") is None:
-        die("npx не найден — нужен Node.js для jscpd (детектор кросс-проектных дублей)")
+        die("npx not found - needed Node.js for jscpd (cross-project duplicate detector)")
     pmap, paths = _resolve_targets(env, config, opts)
     if not paths:
-        die("нет проектов с local_path для анализа (укажите --projects или --group)")
+        die("no projects with local_path for analysis (specify --projects or --group)")
     min_tokens = int(opts.get("min_tokens") or 50)
     pattern = opts.get("pattern") or "**/*.php"
     ignore = opts.get("ignore") or "**/vendor/**,**/node_modules/**,**/packages/**"
@@ -149,11 +149,11 @@ def find_duplicates(env, config, opts):
         proc = subprocess.run(_jscpd_cmd(paths, out, min_tokens=min_tokens, pattern=pattern,
                                          ignore=ignore), capture_output=True, text=True)
         if proc.returncode != 0:
-            die(f"jscpd завершился с кодом {proc.returncode} — проверьте npx/сеть "
-                f"(первый запуск ставит пакет):\n{(proc.stderr or '').strip()[:500]}")
+            die(f"jscpd failed with code {proc.returncode} — check npx/network "
+                f"(first run installs the package):\n{(proc.stderr or '').strip()[:500]}")
         rp = Path(out) / "jscpd-report.json"
         if not rp.is_file():
-            die("jscpd не создал отчёт — проверьте npx/сеть (первый запуск ставит пакет)")
+            die("jscpd did not create a report - check npx/network (first run installs the package)")
         report = json.loads(rp.read_text(encoding="utf-8"))
     clones = _parse_report(report, pmap)
     return {"projects": sorted(set(pmap.values())), "min_tokens": min_tokens,
@@ -162,14 +162,14 @@ def find_duplicates(env, config, opts):
             "clones": clones}
 
 
-# ── feature-log в общей памяти ───────────────────────────────────────────────
+# ── feature-log in shared memory ───────────────────────────────────────────────
 def log_feature(env, config, project, text, *, dry=False):
-    """Записать факт «сделал фичу» в группу (ns/global) + приватный бакет — для корреляции
-    похожих изменений между проектами агентом-оптимизатором."""
+    """Write fact «made a feature» to group (ns/global) + private bucket - for correlation
+    similar changes between projects by the optimization agent."""
     pid = project["id"]
     _, _, url = resolve_ports(env, config)
     if not mem_health(url):
-        return {"status": "skip", "detail": "демон памяти не запущен"}
+        return {"status": "skip", "detail": "memory daemon not running"}
     fact = f"[{FEATURE_MARKER}] {pid}: {text}"
     scopes = [private_scope(project)] + group_scopes(project)
     if not dry:
@@ -179,10 +179,10 @@ def log_feature(env, config, project, text, *, dry=False):
 
 
 def features(env, config, *, namespace=None):
-    """Собрать feature-факты, видимые группе: ns:<namespace> (если задан) + global."""
+    """Collect feature-facts visible to the group: ns:<namespace> (if specified) + global."""
     _, _, url = resolve_ports(env, config)
     if not mem_health(url):
-        die("демон памяти не запущен — maind start --only memory")
+        die("memory daemon not running - maind start --only memory")
     scopes = ([f"ns:{namespace}"] if namespace else []) + ["global"]
     out, seen = [], set()
     for sc in scopes:
@@ -193,12 +193,12 @@ def features(env, config, *, namespace=None):
     return out
 
 
-# ── семантическая похожесть (эмбеддинги) ─────────────────────────────────────
-# Чанк кода = объявление функции/класса/метода + следующие строки (контекст). Простой
-# language-agnostic-ish захват по ключевым словам: function (PHP/JS/TS), class/interface/trait
-# (PHP/TS), def (Python) — ровно языки расширений по умолчанию (.php/.py/.ts/.js, см.
-# extract_chunks(exts=...)). Глубокий разбор не нужен — для эмбеддинга важен текст фрагмента,
-# а не точный AST; межъязыковые ложные пары отсекаются порогом косинуса в cross_project_pairs.
+# ── semantic similarity (embeddings) ─────────────────────────────────────
+# Code chunk = function declaration/class/method + following lines (context). Simple
+# language-agnostic-ish capture by keywords: function (PHP/JS/TS), class/interface/trait
+# (PHP/TS), def (Python) — exactly the default extension languages (.php/.py/.ts/.js, see
+# extract_chunks(exts=...)). Deep parsing is not needed - the text of the fragment is important for embedding,
+# not accurate AST; interlingual false pairs are cut off by a cosine threshold of cross_project_pairs.
 _DECL_RE = re.compile(
     r"^\s*(?:(?:public|private|protected|static|final|abstract|async)\s+)*"
     r"(?:function|class|interface|trait|def)\s+(\w+)", re.MULTILINE)
@@ -214,7 +214,7 @@ def _iter_code_files(base, exts):
 
 
 def extract_chunks(pmap, exts=(".php", ".py", ".ts", ".js"), context=24, min_chars=80):
-    """[{project, file, name, text}] — объявления функций/классов + контекст из путей pmap."""
+    """[{project, file, name, text}] — function declarations/classes + context from paths pmap."""
     out = []
     for base, pid in pmap.items():
         for fp in _iter_code_files(base, set(exts)):
@@ -222,7 +222,7 @@ def extract_chunks(pmap, exts=(".php", ".py", ".ts", ".js"), context=24, min_cha
                 lines = Path(fp).read_text(encoding="utf-8", errors="ignore").splitlines()
             except OSError:
                 continue
-            text = "\n".join(lines)  # один раз на файл (а не на каждое совпадение)
+            text = "\n".join(lines)  # once per file (and not per match)
             for m in _DECL_RE.finditer(text):
                 start = text.count("\n", 0, m.start())
                 chunk = "\n".join(lines[start:start + context]).strip()
@@ -239,11 +239,11 @@ def _cosine(a, b):
 
 
 def cross_project_pairs(chunks, vectors, threshold):
-    """Пары чанков из РАЗНЫХ проектов с косинусом ≥ threshold (по убыванию)."""
+    """Pairs of chunks from DIFFERENT projects with cosine ≥ threshold (descending)."""
     n = len(chunks)
-    if n > 2000:  # чистый python O(N²): предупредить до зависания (numpy/faiss — вне stdlib-only)
-        warn(f"fleet similar: {n} чанков → ~{n * n // 2:,} сравнений в чистом python; "
-             "сузьте набор через --projects/--group")
+    if n > 2000:  # clean python O(N²): warn before freezing (numpy/faiss — out stdlib-only)
+        warn(f"fleet similar: {n} chunks → ~{n * n // 2:,} comparisons in pure python; "
+             "narrow down the set via --projects/--group")
     pairs = []
     for i in range(len(chunks)):
         for j in range(i + 1, len(chunks)):
@@ -259,12 +259,12 @@ def cross_project_pairs(chunks, vectors, threshold):
 
 
 def _embed(texts, embed_cfg):
-    """Эмбеддинги через ВНЕШНИЙ бэкенд из config.code_graph.embed:
-    {command:[...], input_env|input_arg, output} — пишем JSONL текстов во временный файл,
-    запускаем команду, читаем JSON-массив векторов. Без конфига — die."""
+    """Embeddings via EXTERNAL backend from config.code_graph.embed:
+    {command:[...], input_env|input_arg, output} — write JSONL texts to a temporary file,
+    run the command, read JSON-array of vectors. Without config - die."""
     if not embed_cfg or not embed_cfg.get("command"):
-        die("эмбеддер не настроен — задайте code_graph.embed.command в config.json "
-            "(внешний инструмент: текст→вектор). Без него доступен только `fleet duplicates`.")
+        die("embedder is not configured - specify code_graph.embed.command in config.json "
+            "(external tool: text→vector). Without it, only available `fleet duplicates`.")
     with tempfile.TemporaryDirectory() as tmp:
         inp, outp = Path(tmp) / "in.jsonl", Path(tmp) / "out.json"
         inp.write_text("\n".join(json.dumps(t, ensure_ascii=False) for t in texts),
@@ -273,20 +273,20 @@ def _embed(texts, embed_cfg):
                 for a in embed_cfg["command"]]
         proc = subprocess.run(argv, capture_output=True, text=True)
         if proc.returncode != 0:
-            die(f"эмбеддер завершился с кодом {proc.returncode} "
+            die(f"embedder exited with code {proc.returncode} "
                 f"(code_graph.embed.command):\n{(proc.stderr or '').strip()[:500]}")
         if not outp.is_file():
-            die("эмбеддер не создал {output} — проверьте code_graph.embed.command")
+            die("embedder not created {output} — check code_graph.embed.command")
         vecs = json.loads(outp.read_text(encoding="utf-8"))
     if len(vecs) != len(texts):
-        die(f"эмбеддер вернул {len(vecs)} векторов на {len(texts)} текстов")
+        die(f"embedder returned {len(vecs)} vectors on {len(texts)} texts")
     return vecs
 
 
 def find_similar(env, config, opts):
     pmap, _paths = _resolve_targets(env, config, opts)
     if not pmap:
-        die("нет проектов для анализа (укажите --projects или --group)")
+        die("no projects to analyze (specify --projects or --group)")
     chunks = extract_chunks(pmap)
     if not chunks:
         return {"projects": sorted(set(pmap.values())), "chunks": 0, "pairs": []}
@@ -324,12 +324,12 @@ def cmd_fleet(env, argv):
         if opts["json"]:
             print(json.dumps(res, ensure_ascii=False, indent=2))
         else:
-            print(f"дубли: {res['total']} (кросс-проектных {res['cross_project']}) "
-                  f"в {', '.join(res['projects'])}, min-tokens={res['min_tokens']}")
+            print(f"duplicates: {res['total']} (cross-project {res['cross_project']}) "
+                  f"in {', '.join(res['projects'])}, min-tokens={res['min_tokens']}")
             for c in res["clones"][:30]:
                 tag = "⇄" if c["cross_project"] else " "
                 a, b = c["files"]
-                print(f"  {tag} {c['lines']}стр  {a['project']}:{a['name']} ↔ "
+                print(f"  {tag} {c['lines']}page  {a['project']}:{a['name']} ↔ "
                       f"{b['project']}:{b['name']}")
         return
 
@@ -342,8 +342,8 @@ def cmd_fleet(env, argv):
         if opts["json"]:
             print(json.dumps(res, ensure_ascii=False, indent=2))
         else:
-            print(f"семантически похожих пар: {len(res['pairs'])} "
-                  f"(чанков {res['chunks']}, порог {res.get('threshold')})")
+            print(f"semantically similar pairs: {len(res['pairs'])} "
+                  f"(chunks {res['chunks']}, threshold {res.get('threshold')})")
             for p in res["pairs"][:30]:
                 print(f"  {p['similarity']}  {p['a']['project']}:{p['a']['name']} ~ "
                       f"{p['b']['project']}:{p['b']['name']}")
@@ -353,11 +353,11 @@ def cmd_fleet(env, argv):
         opts, pos = parse_args(rest, {"--project": "str", "--dry-run": "bool",
                                       "--json": "bool"})
         if not pos:
-            die("использование: maind fleet log <text> [--project ID]")
+            die("usage: maind fleet log <text> [--project ID]")
         proj = get_project(config, opts["project"]) if opts["project"] else None
         if proj is None and opts["project"]:
-            die(f"проект не найден: {opts['project']}")
-        if proj is None:  # дефолт — по cwd
+            die(f"project not found: {opts['project']}")
+        if proj is None:  # default - by cwd
             from ..health import _target
             proj = _target(env, config, {})
         r = log_feature(env, config, proj, " ".join(pos), dry=opts["dry_run"])
@@ -375,5 +375,5 @@ def cmd_fleet(env, argv):
                 print(f"  [{f['scope']}] {f['text']}")
         return
 
-    die(f"неизвестная подкоманда fleet: {sub} "
+    die(f"unknown subcommand fleet: {sub} "
         "(manifest|duplicates|similar|log|features)")

@@ -21,14 +21,14 @@ def parse_flags(args: list[str], spec: dict[str, str]) -> dict[str, object]:
             i += 1
             continue
         if a not in spec:
-            die(f"неизвестный флаг: {a}")
+            die(f"unknown flag: {a}")
         key = a.lstrip("-").replace("-", "_")
         if spec[a] == "bool":
             out[key] = True
             i += 1
         else:
             if i + 1 >= len(args):
-                die(f"флаг {a} требует значение")
+                die(f"flag {a} requires value")
             out[key] = args[i + 1]
             i += 2
     out.setdefault("help", False)
@@ -56,21 +56,21 @@ def parse_args(args: list[str], spec: dict[str, str],
             continue
         if a.startswith("-") and a != "-":
             if a not in spec:
-                die(f"неизвестный флаг: {a}")
+                die(f"unknown flag: {a}")
             key = a.lstrip("-").replace("-", "_")
             if spec[a] == "bool":
                 opts[key] = True
                 i += 1
             else:
                 if i + 1 >= len(args):
-                    die(f"флаг {a} требует значение")
+                    die(f"flag {a} requires value")
                 opts[key] = args[i + 1]
                 i += 2
         else:
             pos.append(a)
             i += 1
     if len(pos) > max_pos:
-        die(f"лишние аргументы: {' '.join(pos[max_pos:])}")
+        die(f"extra arguments: {' '.join(pos[max_pos:])}")
     return opts, pos
 
 
@@ -88,15 +88,15 @@ def run_cmd(argv: list[str], *, cwd: "str | Path | None" = None,
             capture_output=capture, text=text, timeout=timeout, check=False,
         )
     except FileNotFoundError:
-        die(f"команда не найдена: {argv[0]}")
+        die(f"command not found: {argv[0]}")
     except subprocess.TimeoutExpired:
-        die(f"команда не уложилась в {timeout}s: {' '.join(argv)}")
+        die(f"command did not meet deadline {timeout}s: {' '.join(argv)}")
     except OSError as e:
-        die(f"ошибка запуска {argv[0]}: {e}")
+        die(f"startup error {argv[0]}: {e}")
     if check and result.returncode != 0:
         tail = ""
         if capture and result.stderr:
             tail = f"\n{result.stderr.strip()}"
-        die(f"команда завершилась с кодом {result.returncode}: "
+        die(f"command failed with code {result.returncode}: "
             f"{' '.join(argv)}{tail}")
     return result

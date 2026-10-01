@@ -16,5 +16,5 @@ def current() -> SessionContext | None:
         return None
     session_id = value.strip()
     if not session_id or any(char.isspace() for char in session_id):
-        raise SessionContextError("Codex session context невалиден: CODEX_THREAD_ID пуст или содержит пробел")
+        raise SessionContextError("Codex session context is invalid: CODEX_THREAD_ID is empty or contains a space")
     return SessionContext(provider="codex", session_id=session_id, source="CODEX_THREAD_ID")

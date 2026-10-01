@@ -156,7 +156,7 @@ Performance work is a post-functionality pass. Do not optimize before core behav
 
 ## Related Skills
 
-- **`vue`** — справочник по API (ref, computed, watch, macros): **загружать вместе — это основа**
-- **`pinia`** — store-паттерны: загружать при работе с глобальным состоянием
-- **`vue-testing-best-practices`** — паттерны тестирования компонентов
-- **`nuxt`** — Nuxt-специфичные паттерны поверх Vue
+- **`vue`** — reference API (ref, computed, watch, macros): **loading together is the basis**
+- **`pinia`** — store-patterns: load when working with global state
+- **`vue-testing-best-practices`** — component testing patterns
+- **`nuxt`** — Nuxt-specific patterns on top Vue

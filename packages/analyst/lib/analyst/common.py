@@ -1,8 +1,8 @@
-"""Общие утилиты analyst: окружение (Env) + реэкспорт общего core.
+"""General utilities analyst: environment (Env) + re-export general core.
 
-Примитивы (die/warn/now_iso/confirm/sanitize, parse_args, run_cmd, atomic/safe JSON,
-поиск корня монорепо) — из общего пакета `core` (подключается лаунчером через
-PYTHONPATH). Реэкспортируем ради `from .common import ...` в модулях пакета."""
+Primitives (die/warn/now_iso/confirm/sanitize, parse_args, run_cmd, atomic/safe JSON,
+search for monorepo root) — from the general package `core` (is connected by the launcher via
+PYTHONPATH). We re-export for `from .common import ...` in package modules."""
 import os
 from dataclasses import dataclass
 
@@ -15,30 +15,30 @@ from core import (  # noqa: F401
 
 @dataclass(frozen=True)
 class Env(BaseEnv):
-    """Контекст запуска analyst: ядро (root/cmd/home) — из BaseEnv; здесь только
-    path-property. Cross-project слой (P2+) живёт в ~/.swissknifeman/analyst; per-project
-    уроки — в <project>/.claude/analyst (см. lessons.project_dir)."""
+    """Launch context analyst: core (root/cmd/home) — from BaseEnv; here only
+    path-property. Cross-project layer (P2+) lives in ~/.swissknifeman/analyst; per-project
+    lessons - in <project>/.claude/analyst (see lessons.project_dir)."""
 
     @property
     def state_dir(self):
-        """Единый cross-project слой (кластеры/suggestions). Общий state зонтика —
-        ~/.swissknifeman (им владеет skiller); analyst кладёт свой подкаталог."""
+        """Single cross-project layer (clusters/suggestions). General state umbrella -
+        ~/.swissknifeman (owns it skiller); analyst puts its own subdirectory."""
         return state_dir(self.home, "analyst")
 
     @property
     def monorepo_root(self):
-        """Корень монорепо (каталог с packages//core/). Fallback: сам root (standalone)."""
+        """Root monorepo (directory with packages//core/). Fallback: himself root (standalone)."""
         return find_monorepo_root(self.root) or self.root
 
     @property
     def default_config(self):
-        """Конфиг узла экосистемы (config.json в корне монорепо) — реестр проектов для
-        cross-project scan (P2). В P1 не обязателен; путь по умолчанию для чтения."""
+        """Ecosystem node config (config.json at the root of the monorepo) — project registry for
+        cross-project scan (P2). B P1 is optional; default reading path."""
         return self.monorepo_root / "config.json"
 
 
 def project_path_from_opts(env, opts):
-    """Путь проекта из --cwd (текущий каталог) или дефолт (cwd). --project (по реестру
-    config.json) — P2; в P1 работаем с одним проектом из cwd."""
+    """Project path from --cwd (current directory) or default (cwd). --project (by registry
+    config.json) — P2; in P1 working with one project from cwd."""
     _ = env, opts
     return os.getcwd()

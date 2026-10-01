@@ -1,35 +1,35 @@
-# Шаблон loop-kickoff — скопировать в .claude/commands/loop.md проекта
+# Template loop-kickoff — copy to .claude/commands/loop.md project
 
-Стартовый промпт для итеративной задачи: задаёт цель, проверку между кругами,
-предел итераций, критерий выхода и hard-stop. Запускается встроенным `/loop`
-(self-paced) — агент сам выдерживает темп. Раннер даёт Claude Code; этот шаблон
-даёт содержимое (что проверять и когда стоп).
+Start prompt for an iterative task: sets the goal, check between circles,
+iteration limit, exit criterion and hard-stop. Runs built-in `/loop`
+(self-paced) — the agent maintains the pace himself. Runner gives Claude Code; this template
+gives the contents (what to check and when to stop).
 
 ```markdown
 ---
-description: Запустить задачу в итеративном режиме с проверкой между кругами
-argument-hint: <цель задачи>
+description: Run the task in iterative mode with checking between circles
+argument-hint: <task goal>
 ---
 
-Исполняй задачу в loop-режиме. Self-pace: после каждого круга гоняй проверку,
-читай вывод и продолжай, только если exit condition не достигнут.
+Execute the task in loop-mode. Self-pace: run a check after each lap,
+read the output and continue only if exit condition not reached.
 
 Goal:            $ARGUMENTS
-Активные скиллы: task-brief-template (контракт), anti-drift (стоп-контроллер),
+Active skills: task-brief-template (contract), anti-drift (stop controller),
                  cross-layer-change-checklist (verifier), code-simplifier (gate)
-Between-check:   <команда проверки: тест / линт / `git log --oneline`>
-Max iterations:  <3–12; страховка от зацикливания>
-Exit condition:  <объективное состояние = задача завершена, по выводу проверки>
+Between-check:   <test command: test / lint / `git log --oneline`>
+Max iterations:  <3–12; loop insurance>
+Exit condition:  <objective state = task completed, according to the check output>
 
-Hard stop — остановись и запроси согласование, если:
-- второй фикс одного и того же симптома (ищи root cause, не третий патч);
-- растёт число файлов/абстракций, а exit condition не приближается;
-- ~20 итераций без рабочего результата → сделай handoff (см. anti-drift).
+Hard stop — stop and request approval if:
+- second fix of the same symptom (search root cause, not the third patch);
+- the number of files is growing/abstractions, and exit condition is not approaching;
+- ~20 iterations without working result → do handoff (see anti-drift).
 
-Guardrails (anti-gaming): не меняй проверку, чтобы она прошла; не пропускай
-верификацию; не подделывай успех манипуляцией метрик. Exit оценивается по
-честному выводу Between-check, а не по твоему утверждению.
+Guardrails (anti-gaming): don't change the check to make it pass; don't miss it
+verification; Don't fake success by manipulating metrics. Exit is estimated by
+honest conclusion Between-check, and not according to your statement.
 
-После каждого круга — короткий статус: что сделано, что показала проверка,
-достигнут ли exit.
+After each lap - a short status: what has been done, what the check showed,
+has been reached exit.
 ```

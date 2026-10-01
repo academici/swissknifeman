@@ -39,29 +39,29 @@ Detailed OSS repo structure (dirs, required files) → [references/repo-structur
 
 [![npm version](badge)] [![license](badge)] [![CI](badge)]
 
-## Почему [ProjectName]?
-[3-5 конкретных преимущества перед альтернативами]
+## Why [ProjectName]?
+[3-5 specific advantages over alternatives]
 
-## Быстрый старт
-[Минимум 3 строки кода для получения результата]
+## Quick start
+[Minimum 3 lines of code to get the result]
 
-## Установка
-[Команда установки]
+## Installation
+[Installation command]
 
-## Использование
-[Основные примеры]
+## Usage
+[Basic examples]
 
-## API / Документация
-[Ссылка на полную документацию или inline]
+## API / Documentation
+[Link to full documentation or inline]
 
-## Требования
-[Версии зависимостей]
+## Requirements
+[Dependency versions]
 
-## Контрибьюция
-[Ссылка на CONTRIBUTING.md]
+## Contribution
+[Link to CONTRIBUTING.md]
 
-## Лицензия
-[Тип лицензии]
+## License
+[License type]
 ```
 
 ## Step 3. Architecture
@@ -91,24 +91,24 @@ Rules:
 CONTRIBUTING.md must contain:
 
 ```markdown
-## Как запустить локально
-[Команды для setup]
+## How to run locally
+[Commands for setup]
 
-## Структура проекта
-[Кратко что где лежит]
+## Project structure
+[Briefly what is where]
 
-## Как запустить тесты
-[Команда]
+## How to run tests
+[Command]
 
-## Как создать PR
-1. Fork репозитория
-2. Создать ветку: `git checkout -b feature/название`
-3. Коммиты: [conventional commits формат]
-4. Тесты: все должны проходить
-5. PR: заполнить шаблон
+## How to create PR
+1. Fork repository
+2. Create branch: `git checkout -b feature/name`
+3. Commits: [conventional commits format]
+4. Tests: everyone must pass
+5. PR: fill out the template
 
 ## Code style
-[Линтер, форматтер, pre-commit hooks]
+[Linter, formatter, pre-commit hooks]
 ```
 
 ## Step 6. CI/CD minimum
@@ -116,21 +116,21 @@ CONTRIBUTING.md must contain:
 ```yaml
 # .github/workflows/ci.yml
 - Lint
-- Type check (если TypeScript/Go/Rust)
+- Type check (if TypeScript/Go/Rust)
 - Tests
 - Build
-- (опционально) Publish на npm/crates.io при теге
+- (optional) Publish on npm/crates.io with tag
 ```
 
 ## Vault file formats (OSS project)
 
 ```
 05 - Projects/03 - OpenSource/ProjectName/
-├── ProjectName.md          # Индекс: статус, ссылка на GitHub, ключевые решения
+├── ProjectName.md          # Index: status, link to GitHub, key solutions
 ├── Architecture.md         # C4 + Mermaid
 ├── ADR/
 │   └── ADR-001_*.md
-├── Roadmap.md              # Фазы, planned features
+├── Roadmap.md              # Phases, planned features
 └── _index.md
 ```
 

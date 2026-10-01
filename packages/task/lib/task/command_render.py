@@ -414,7 +414,7 @@ def parse_next_carrier(declaration: str, *, context_kind: str = "same-session",
     if kind not in PlanNextCarrier.allowed_kinds():
         raise ValueError("CMD_INVOCATION_INVALID: unknown Next kind")
     if kind in _PLAN_NEXT_TERMINALS:
-        if kind == "terminal" and payload.strip().lower() != "план закрыт":
+        if kind == "terminal" and payload.strip().lower() != "plan closed":
             raise ValueError("CMD_INVOCATION_INVALID: malformed terminal Next")
         if kind == "manual" and not re.fullmatch(
                 r"(economy|implementation|frontier)/(low|medium|high|xhigh)"
@@ -1480,7 +1480,7 @@ the owner-authorized scope in this root. If that scope is complete, report the e
 recommendation for this chat; a final answer does not require a new `codex` process. A command, phase, directory, local repair, or ordinary test failure is not a session
 boundary.
 
-At a fresh-session boundary, keep Batch/Model/Thinking/Context/Суть in the metadata table,
+At a fresh-session boundary, keep Batch/Model/Thinking/Context/The bottom line in the metadata table,
 but never put the command in a table
 cell or column. Immediately after the table print `**Native Codex command:**` and a fenced `bash`
 block which explicitly pins the repository cwd, mapped model, reasoning effort, approval policy,
@@ -1598,18 +1598,18 @@ def _project_codex_runtime_tokens(text: str) -> str:
         text,
     )
     text = text.replace(
-        '''Если API не даёт модель или effort, вызови `capture_actual(None, None,
-   source="self-attested")`, напечатай `unknown/unknown` и остановись до мутации: selector
-   остаётся только частью fresh launch, а не подменой доказательства.''',
-        '''Codex runtime получает запись только из provider-specific binding выше. Если захват
-   не удался, это `ROUTE-UNVERIFIABLE`: не начинай item и не подставляй другой источник.''',
+        '''If API does not give the model or effort, call `capture_actual(None, None,
+   source="self-attested")`, print `unknown/unknown` and stop before mutation: selector
+   remains only part fresh launch, and not by substitution of evidence.''',
+        '''Codex runtime only gets a record from provider-specific binding above. If capture
+   failed, this `ROUTE-UNVERIFIABLE`: don't start item and do not substitute another source.''',
     )
     text = text.replace(
-        '''Provider API не аттестует модель/effort → передай `capture_actual(None, None,
-   source="self-attested")`, запиши unknown и остановись: self-attestation не заменяет selector.''',
-        '''Codex runtime получает запись только из provider-specific binding выше. Если захват
-   не удался, это `ROUTE-UNVERIFIABLE`: не закрывай item и не подставляй модель/effort
-   из другого источника.''',
+        '''Provider API does not certify the model/effort → pass `capture_actual(None, None,
+   source="self-attested")`, write down unknown and stop: self-attestation does not replace selector.''',
+        '''Codex runtime only gets a record from provider-specific binding above. If capture
+   failed, this `ROUTE-UNVERIFIABLE`: do not close item and do not substitute the model/effort
+   from another source.''',
     )
     def replacement(match: re.Match[str]) -> str:
         if match.group("workflow_path") or match.group("workflow"):

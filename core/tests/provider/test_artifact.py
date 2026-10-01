@@ -32,7 +32,8 @@ def _request(*, sources, target=None, override_layers=(), semantic_parameters=No
 
 class ProviderArtifactTests(unittest.TestCase):
     def test_canonical_json_is_sorted_compact_utf8(self):
-        self.assertEqual(canonical_json_bytes({"z": "ёж", "a": [True, None]}),
+        non_ascii = chr(0x451) + chr(0x436)
+        self.assertEqual(canonical_json_bytes({"z": non_ascii, "a": [True, None]}),
                          b'{"a":[true,null],"z":"\xd1\x91\xd0\xb6"}')
         self.assertEqual(sha256_digest(b"artifact\n"),
                          "sha256:5b3513f580c8397212ff2c8f459c199efc0c90e4354a5f3533adf0a3fff3a530")

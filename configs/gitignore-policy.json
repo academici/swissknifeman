@@ -1,6 +1,6 @@
 {
   "schema_version": "gitignore-policy/v1",
-  "_doc": "Карта служебных файлов, которые раздают swissknifeman/maind/harness/skiller/task в проекты флота: что должно быть в .gitignore, а что коммититься. Источник — единая рекомендация; `maind doctor --gitignore-drift` сверяет с ней каждый проект (read-only). Пути — от корня проекта, gitignore-синтаксис, привязаны к корню (`**` — любая глубина, завершающий `/` — каталог целиком). policy: `ignore` — всегда в .gitignore, никогда не коммитится (машинные/рантайм/личные настройки); `commit` — всегда в репозитории (портируемые общие артефакты и шаблоны); `portable-or-ignore` — коммитится, пока не содержит машинных путей (/home/…, /Users/…) и секретов, иначе в .gitignore (+ `.example`); `project` — выбор проекта, doctor сверяет только согласованность внутри `group`. Основания: skill project-tooling-runbook «Machine-specific config hygiene», skiller CLAUDE.md (vendor-targets committed), собственный .gitignore swissknifeman; карта снята с 24 проектов флота 2026-10-01.",
+  "_doc": "Map of service files that are distributed swissknifeman/maind/harness/skiller/task into fleet projects: what should be in .gitignore, and what to commit. Source - single recommendation; `maind doctor --gitignore-drift` checks every project against it (read-only). Paths - from the project root, gitignore-syntax, bound to root (`**` — any depth, final `/` — entire directory). policy: `ignore` — is always in .gitignore, never commits (machine/runtime/personal settings); `commit` — always in the repository (portable common artifacts and templates); `portable-or-ignore` — commits until it contains machine paths (/home/…, /Users/…) and secrets, otherwise in .gitignore (+ `.example`); `project` — project selection, doctor only checks internal consistency `group`. Reasons: skill project-tooling-runbook «Machine-specific config hygiene», skiller CLAUDE.md (vendor-targets committed), own .gitignore swissknifeman; map removed from 24 fleet projects 2026-10-01.",
   "entries": [
     {
       "id": "machine-mcp",
@@ -11,7 +11,7 @@
         ".vscode/mcp.json"
       ],
       "owner": "maind sync (mcpconfig.write_mcp)",
-      "why": "MCP-конфиг с абсолютным путём к лаунчеру/Serena или секретом ломает чужой клон и течёт в историю. Предпочтительно indirection (`${MAIND_BIN:-maind}`) и коммит; иначе в .gitignore + `.example`."
+      "why": "MCP-config with absolute path to the launcher/Serena or breaks someone else's clone with a secret and flows into history. Preferably indirection (`${MAIND_BIN:-maind}`) and commit; otherwise in .gitignore + `.example`."
     },
     {
       "id": "mcp-example",
@@ -23,7 +23,7 @@
         ".claude/settings.local.json.example"
       ],
       "owner": "maind sync (mcpconfig.write_example)",
-      "why": "Портируемый шаблон с плейсхолдерами рядом с игнорируемым реальным файлом; обновляется синхронно с ним."
+      "why": "Portable template with placeholders next to the ignored real file; is updated synchronously with it."
     },
     {
       "id": "claude-local-settings",
@@ -32,7 +32,7 @@
         ".claude/settings.local.json"
       ],
       "owner": "Claude Code / harness permissions",
-      "why": "Личные права и defaultMode (возможен bypassPermissions), абсолютные пути; машинно-специфично."
+      "why": "Personal rights and defaultMode (possible bypassPermissions), absolute paths; machine-specific."
     },
     {
       "id": "claude-settings",
@@ -41,7 +41,7 @@
         ".claude/settings.json"
       ],
       "owner": "harness (permissions/hooks/mcp presets)",
-      "why": "Хуки и MCP в settings.json часто несут абсолютные пути лаунчеров; коммитить только портируемый вариант."
+      "why": "Hooks and MCP in settings.json often carry absolute paths of launchers; commit only the ported version."
     },
     {
       "id": "provider-configs",
@@ -54,7 +54,7 @@
         ".cursor/permissions.json"
       ],
       "owner": "harness / maind provider deploy",
-      "why": "Генерируемые provider-конфиги: общие, пока без машинных путей; с абсолютными путями — только локально."
+      "why": "Generated provider-configs: general, no machine paths yet; with absolute paths - only locally."
     },
     {
       "id": "provider-locks",
@@ -66,7 +66,7 @@
         ".agents/.swissknifeman-codex-links.json"
       ],
       "owner": "skiller / harness agent-packs / provider artifacts",
-      "why": "Locks и выбор каналов фиксируют владение артефактами; коммитятся для воспроизводимости, но абсолютные ссылки на локальный клон (links, lock с путями) — машинные."
+      "why": "Locks and channel selection capture artifact ownership; committed for reproducibility, but absolute references to local clone (links, lock with paths) — machine."
     },
     {
       "id": "hook-modes",
@@ -86,7 +86,7 @@
         ".claude/observer.env.ini"
       ],
       "owner": "harness hooks / maind sync",
-      "why": "Режимы хуков (`*.env.ini`, `*.config.json`: автономия, память, телеметрия, гейты): коммитятся, пока не содержат путей на компьютере (/home/…, /Users/…) или секретов; с такими путями — только в .gitignore."
+      "why": "Hook modes (`*.env.ini`, `*.config.json`: autonomy, memory, telemetry, gates): are committed until they contain paths on the computer (/home/…, /Users/…) or secrets; with such paths - only in .gitignore."
     },
     {
       "id": "tool-backups",
@@ -101,7 +101,7 @@
         ".codex/hooks.pre-telemetry-*"
       ],
       "owner": "maind / harness / skiller (merge-only writers)",
-      "why": "Бэкапы перед merge-записью: мусор в истории, накапливаются (десятки `.codex/config.toml.*.bak`)."
+      "why": "Backups before merge-entry: garbage in history, accumulating (tens `.codex/config.toml.*.bak`)."
     },
     {
       "id": "agent-runtime-state",
@@ -129,7 +129,7 @@
         ".serena/project.local.yml"
       ],
       "owner": "harness hooks / maind sync / task / Serena",
-      "why": "Рантайм-следы агентов: телеметрия, запуски, lease terminal-admission, кэши и память Serena, сгенерированные maind-хуки (пересоздаются `maind sync`)."
+      "why": "Agent runtime traces: telemetry, launches, lease terminal-admission, caches and memory Serena, generated maind-hooks (are being recreated `maind sync`)."
     },
     {
       "id": "instructions",
@@ -139,7 +139,7 @@
         "AGENTS.md"
       ],
       "owner": "skiller instructions / agent owners",
-      "why": "CLAUDE.md и AGENTS.md — инструкции проекта для агентов: всегда в репозитории (часть review и онбординга)."
+      "why": "CLAUDE.md and AGENTS.md — project instructions for agents: always in the repository (part review and onboarding)."
     },
     {
       "id": "skiller-config",
@@ -149,7 +149,7 @@
         ".swissknifeman/config.json"
       ],
       "owner": "skiller (vendor sync)",
-      "why": "Выбор и lock vendor-скиллов нужны отключённым потребителям и CI (skiller CLAUDE.md: vendor-targets committed)."
+      "why": "Select and lock vendor-skills are needed by disconnected consumers and CI (skiller CLAUDE.md: vendor-targets committed)."
     },
     {
       "id": "agent-pack-artifacts",
@@ -165,7 +165,7 @@
         ".cursor/rules/"
       ],
       "owner": "harness agent-packs",
-      "why": "Роли, правила, команды и гайды агентов — общий командный артефакт (`.claude/guidelines/` явно коммитится, runbook)."
+      "why": "Roles, rules, commands and agent guides - a common team artifact (`.claude/guidelines/` is explicitly committed, runbook)."
     },
     {
       "id": "hook-scripts",
@@ -176,7 +176,7 @@
         ".cursor/hooks/"
       ],
       "owner": "harness hooks",
-      "why": "Скрипты хуков без машинных путей (лаунчер резолвится из env/PATH): общие для команды; должны идти в ногу с tracking settings/hooks.json, которые на них ссылаются."
+      "why": "Hook scripts without native paths (launcher resolves from env/PATH): common to the command; must keep up with tracking settings/hooks.json, that refer to them."
     },
     {
       "id": "vendored-skills",
@@ -188,7 +188,7 @@
         ".codex/skills/"
       ],
       "owner": "skiller (connect/vendor)",
-      "why": "Скиллы всегда в репозитории: нужны отключённым потребителям, CI и свежему клону без `skiller sync` (skiller CLAUDE.md: vendor-targets committed)."
+      "why": "Skills are always in the repository: needed by disconnected consumers, CI and a fresh clone without `skiller sync` (skiller CLAUDE.md: vendor-targets committed)."
     },
     {
       "id": "codex-marketplace",
@@ -198,7 +198,7 @@
         ".agents/plugins/"
       ],
       "owner": "skiller connect (codex-marketplace)",
-      "why": "Marketplace-манифест Codex: общий для команды или локальный выбор проекта."
+      "why": "Marketplace-manifest Codex: team-wide or local project selection."
     },
     {
       "id": "serena-project",
@@ -210,7 +210,7 @@
         ".serena/memories/"
       ],
       "owner": "maind codegraph / Serena",
-      "why": "Пин Serena-проекта и её memories: командное знание или локальный кэш — выбор проекта; Serena сама ведёт `.serena/.gitignore` для кэшей."
+      "why": "Pin Serena-project and its memories: command knowledge or local cache - project selection; Serena leads herself `.serena/.gitignore` for caches."
     }
   ]
 }

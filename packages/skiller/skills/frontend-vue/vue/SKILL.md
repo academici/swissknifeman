@@ -86,13 +86,13 @@ import { nextTick, defineComponent, defineAsyncComponent } from 'vue'
 
 ## Related Skills
 
-- **`vue-best-practices`** — архитектурные паттерны (когда composable, когда store, SSR, TypeScript): **загружать вместе с этим скиллом для любой Vue-разработки**
-- **`pinia`** — управление состоянием; дополняет этот скилл для сложной доменной логики
-- **`vue-router-best-practices`** — если задача затрагивает маршрутизацию
+- **`vue-best-practices`** — architectural patterns (when composable, when store, SSR, TypeScript): **load along with this skill for any Vue-development**
+- **`pinia`** — state management; complements this skill for complex domain logic
+- **`vue-router-best-practices`** — if the task affects routing
 
 ## Related Skills
 
-- **[vue-best-practices](.agents/skills/vue-best-practices/SKILL.md)** — архитектурные паттерны: когда composable, когда store, SSR-правила, TypeScript в Vue. Загружать **всегда вместе** с `vue` для реальных задач
+- **[vue-best-practices](.agents/skills/vue-best-practices/SKILL.md)** — architectural patterns: when composable, when store, SSR-rules, TypeScript in Vue. Load **always together** with `vue` for real-life problems
 - **[pinia](.agents/skills/pinia/SKILL.md)** — state management
-- **[vue-router-best-practices](.agents/skills/vue-router-best-practices/SKILL.md)** — маршрутизация и навигация
-- **[vue-testing-best-practices](.agents/skills/vue-testing-best-practices/SKILL.md)** — тестирование Vue-компонентов
+- **[vue-router-best-practices](.agents/skills/vue-router-best-practices/SKILL.md)** — routing and navigation
+- **[vue-testing-best-practices](.agents/skills/vue-testing-best-practices/SKILL.md)** — testing Vue-components

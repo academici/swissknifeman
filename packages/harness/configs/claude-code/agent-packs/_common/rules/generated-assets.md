@@ -5,8 +5,8 @@ paths:
   - ".claude/hooks/**"
 ---
 
-Файл с блоком `swissknifeman:generated` — собственность пака: не редактируй его
-ни при каких находках ревью. Расширение — ТОЛЬКО через файл из `Extension-points`
-в заголовке файла или через `.claude/rules/*-overrides.md`. Если правка core
-действительно необходима — остановись и отчитайся: upgrade пака или правку
-шаблона в harness делает человек, а не агент.
+File with block `swissknifeman:generated` — pack property: do not edit it
+under no review findings. Extension - ONLY through a file from `Extension-points`
+in the file header or via `.claude/rules/*-overrides.md`. If the edit core
+is really necessary - stop and report: upgrade pack or edit
+template in harness is done by a person, not an agent.

@@ -29,11 +29,11 @@ Answer three questions:
 ```markdown
 ## MVP Definition
 
-**Пользователь:** [Кто конкретно]
-**Job-to-be-done:** [Что хочет сделать]
-**Proof of value:** [Как докажем, что ценность есть]
-**Метрика успеха:** [Конкретная цифра через X недель]
-**Out of scope MVP:** [Что явно не входит в MVP]
+**User:** [Who exactly]
+**Job-to-be-done:** [What does he want to do?]
+**Proof of value:** [How to prove that there is value]
+**Success Metric:** [Specific figure via X weeks]
+**Out of scope MVP:** [What is clearly not included MVP]
 ```
 
 ## Step 1.5. Scope guard: feature-amendment criteria
@@ -44,10 +44,10 @@ Agentic coding removed the traditional anti-scope-creep forcing function (engine
 
 ```markdown
 ## Scope guard
-**Продукт делает:** [одно предложение — core]
-**Продукт намеренно НЕ делает:** [список — важнее, чем in-scope]
-**Feature-amendment criteria:** новая фича добавляется ТОЛЬКО если ___
-  (конкретное доказательство от реальных пользователей, не founder-энтузиазм под видом product thinking)
+**The product does:** [one sentence - core]
+**The product does NOT intentionally:** [list - more important than in-scope]
+**Feature-amendment criteria:** a new feature is added ONLY if ___
+  (concrete proof from real users, not founder-enthusiasm under the guise product thinking)
 ```
 
 When a new feature idea surfaces — run it through the criterion: genuine user signal or enthusiasm? Use `adversarial-check` to distinguish.
@@ -56,47 +56,47 @@ When a new feature idea surfaces — run it through the criterion: genuine user 
 
 Impact/Effort matrix:
 
-| Фича | Impact (1-5) | Effort (1-5) | Ratio | Фаза |
+| Feature | Impact (1-5) | Effort (1-5) | Ratio | Phase |
 |:---|:---|:---|:---|:---|
-| [Фича A] | 5 | 1 | 5.0 | ✅ MVP |
-| [Фича B] | 4 | 2 | 2.0 | ✅ MVP |
-| [Фича C] | 3 | 4 | 0.75 | 🔜 v1 |
-| [Фича D] | 2 | 5 | 0.4 | ❌ Backlog |
+| [Feature A] | 5 | 1 | 5.0 | ✅ MVP |
+| [Feature B] | 4 | 2 | 2.0 | ✅ MVP |
+| [Feature C] | 3 | 4 | 0.75 | 🔜 v1 |
+| [Feature D] | 2 | 5 | 0.4 | ❌ Backlog |
 
 **Rule:** MVP = everything with Ratio ≥ 2 and Impact ≥ 4.
 
 ## Step 3. Phases
 
 ```markdown
-## MVP (0 → первый платящий пользователь)
-**Длительность:** [X недель]
-**Фичи:**
-- [Фича 1] — критично для core job
-- [Фича 2] — без неё невозможно
+## MVP (0 → first paying user)
+**Duration:** [X weeks]
+**Features:**
+- [Feature 1] — critical for core job
+- [Feature 2] — impossible without it
 
-**NOT в MVP:**
-- [Перечисление]
+**NOT in MVP:**
+- [Enumeration]
 
 ---
 
 ## v1 (MVP → Product-Market Fit)
-**Цель:** Retention ≥ 40% (Day 30), NPS ≥ 40
-**Фичи:**
-- [Фичи, улучшающие retention]
-- [Основные болевые точки из feedback]
+**Target:** Retention ≥ 40% (Day 30), NPS ≥ 40
+**Features:**
+- [Features that improve retention]
+- [Key pain points from feedback]
 
 ---
 
 ## v2 (PMF → Growth)
-**Цель:** Включить growth-каналы
-**Фичи:**
-- [Фичи, улучшающие CAC: viral loop, referral, SEO]
-- [Монетизация: тарифы, апселл]
+**Target:** Enable growth-channels
+**Features:**
+- [Features that improve CAC: viral loop, referral, SEO]
+- [Monetization: tariffs, upselling]
 
 ---
 
-## Backlog (когда-нибудь)
-- [Всё остальное]
+## Backlog (someday)
+- [Everything else]
 ```
 
 ## Document format

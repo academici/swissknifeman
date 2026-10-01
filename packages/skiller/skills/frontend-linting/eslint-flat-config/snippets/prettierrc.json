@@ -1,6 +1,6 @@
 // Source: anonymized production Vue 3 + TS project (.prettierrc, plugin chain)
-// Значения форматирования (tabWidth/printWidth/singleQuote/semi) — из скилла frontend/js-code-style.
-// Здесь ВАЖЕН ПОРЯДОК плагинов: organize-imports перед tailwindcss, а tailwindcss — СТРОГО последним.
+// Formatting values (tabWidth/printWidth/singleQuote/semi) — from skill frontend/js-code-style.
+// The ORDER of plugins is IMPORTANT here: organize-imports before tailwindcss, a tailwindcss — STRICTLY last.
 {
     "semi": true,
     "singleQuote": true,

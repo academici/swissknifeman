@@ -36,7 +36,7 @@ OUT="$(bash -c "$CMD" 2>&1)"; RC=$?
 [[ $RC -eq 0 ]] && exit 0
 
 TRIM="$(printf '%s' "$OUT" | tail -n 30)"
-MSG="validate-python: ruff упал после правки — почини (advisory).
+MSG="validate-python: ruff fell after editing - fix it (advisory).
 \$ $CMD
 $TRIM"
 python3 - "$MSG" <<'PY' 2>/dev/null || true

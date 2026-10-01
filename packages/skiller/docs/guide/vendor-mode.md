@@ -1,33 +1,33 @@
-# Vendor-режим: физический перенос скиллов (`sync`)
+# Vendor-mode: physical transfer of skills (`sync`)
 
-Два канала доставки скиллов в проект:
+Two channels for delivering skills to the project:
 
-| Канал | Команда | Что делает | Гранулярность |
+| Channel | Command | What it does | Granularity |
 |---|---|---|---|
-| **connect** (marketplace) | `skiller connect` | Включает плагины-бакеты Claude Code через `enabledPlugins`. Файлы скиллов **не копируются** в репо. | Бакет целиком |
-| **vendor** (физ. перенос) | `skiller sync` | **Копирует** выбранные скиллы в репо, пишет производный `skills-lock.json`. | Отдельные скиллы |
+| **connect** (marketplace) | `skiller connect` | Includes plugin buckets Claude Code via `enabledPlugins`. Skill files **are not copied** in the repo. | Entire bucket |
+| **vendor** (physical. transfer) | `skiller sync` | **Copies** selected skills in the repo, writes derivative `skills-lock.json`. | Individual skills |
 
-`connect` хорош, когда не нужна фиксация в репозитории и устраивает «весь бакет».
-**vendor-режим** — когда нужно: видеть скиллы в репо, выбирать ровно нужные позиции
-из разных областей, фиксировать набор и обновлять его из библиотеки по lock-файлу.
+`connect` is good when you don't need a commit to the repository and are happy with «whole bucket».
+**vendor-mode** — when needed: see skills in the repo, select exactly the right positions
+from different areas, fix the set and update it from the library by lock-file.
 
-::: tip Главный кейс vendor — внешние разработчики
-`connect` подключает плагины через `extraKnownMarketplaces`, который указывает на
-**локальный путь к реестру swissknifeman**. У разработчика, которому отдали репозиторий
-проекта, но **нет** репо swissknifeman, плагины не подключатся — скиллов он не увидит.
+::: tip Main case vendor — external developers
+`connect` connects plugins via `extraKnownMarketplaces`, which points to
+**local registry path swissknifeman**. From the developer who was given the repository
+project, but **no** repo swissknifeman, plugins will not connect - it will not see the skills.
 
-`vendor` (`sync`) кладёт **файлы скиллов прямо в репо проекта** (`.claude/skills/`,
-git-tracked). Любой, кто клонировал проект, сразу получает скиллы — реестр swissknifeman
-ему не нужен. Это канал для проектов с внешней командой.
+`vendor` (`sync`) puts **skill files directly in the project repo** (`.claude/skills/`,
+git-tracked). Anyone who cloned the project immediately receives skills - registry swissknifeman
+he doesn't need. This is a channel for projects with an external team.
 :::
 
-Выбор канала касается **только скиллов** — у них нет другого функционала, кроме раздачи
-файлов. Память, граф и MCP-инструменты хаба mAInd настраиваются независимо от канала.
+Channel selection concerns **only skills** — they have no other functionality except distribution
+files. Memory, graph and MCP-hub tools mAInd are configured regardless of channel.
 
-## Конфиг — единый источник истины
+## Config - a single source of truth
 
-В корне проекта — `.swissknifeman/config.json`. Один настраиваемый конфиг вместо
-россыпи: правила разворачиваются в плоский набор скиллов.
+At the root of the project - `.swissknifeman/config.json`. One custom config instead
+scattered: the rules unfold into a flat set of skills.
 
 ```json
 {
@@ -41,50 +41,50 @@ git-tracked). Любой, кто клонировал проект, сразу �
 }
 ```
 
-Правила комбинируются: **набор = (presets ∪ buckets ∪ include) − exclude**.
+The rules are combined: **set = (presets ∪ buckets ∪ include) − exclude**.
 
-- `presets` — именованные кластеры скиллов (`presets/<name>.json`): раскрываются в
-  `buckets`/`include` (с рекурсивным `extends`). Удобные «куски» вместо ручного перечисления —
-  напр. `laravel-admin` = ядро Laravel + Filament/права/медиа. См. [Пресеты](./presets).
-- `include` — конкретные скиллы из любых областей: `"bucket/rel"` или просто `"name"`.
-- `buckets` — бакеты целиком.
-- `exclude` — вычитание (имя или `"bucket/rel"`); бьёт и пресеты, и зависимости.
-- Можно задать только `presets` или только `include` — переносится ровно нужное.
+- `presets` — named skill clusters (`presets/<name>.json`): are expanded in
+  `buckets`/`include` (with recursive `extends`). Comfortable «pieces» instead of manual enumeration -
+  e.g. `laravel-admin` = core Laravel + Filament/rights/media. See [Presets](./presets).
+- `include` — specific skills from any area: `"bucket/rel"` or simply `"name"`.
+- `buckets` — entire buckets.
+- `exclude` — subtraction (name or `"bucket/rel"`); hits both presets and dependencies.
+- Can only be set `presets` or only `include` — is transferred exactly what is needed.
 
-> Пресеты — концепт **vendor-канала** (раскрываются в per-skill набор). В `connect`
-> бакет атомарен, поэтому пресеты там не действуют (как и skill-level `exclude`).
+> Presets - concept **vendor-channel** (are expanded in per-skill set). B `connect`
+> the bucket is atomic, so presets do not work there (like skill-level `exclude`).
 
-## Поток синхронизации
+## Synchronization thread
 
 ```
-.swissknifeman/config.json   (источник истины — правит человек)
-        ↓ resolve            (buckets ∪ include) − exclude → плоский набор
-   набор скиллов библиотеки   (резолвится по skills.json реестра)
-        ↓ sync               install + update(по sha256) + prune(по managed)
-                             + CORE-скиллы по умолчанию (как vendor/connect)
-.claude/skills/<name>/        физические копии (видит Claude)
-skills-lock.json             производная карта: managed-записи + чужие нетронуты
-.swissknifeman-manifest.json  манифест в skills_path (переустановка + индекс хаба)
-CLAUDE.md / .ai/guidelines    индекс скиллов (managed-блок), если есть или --hub
+.swissknifeman/config.json   (source of truth - man rules)
+        ↓ resolve            (buckets ∪ include) − exclude → flat set
+   set of library skills   (resolves by skills.json registry)
+        ↓ sync               install + update(by sha256) + prune(by managed)
+                             + CORE-default skills (like vendor/connect)
+.claude/skills/<name>/        physical copies (sees Claude)
+skills-lock.json             derived map: managed-entries + aliens untouched
+.swissknifeman-manifest.json  manifest in skills_path (reinstallation + hub index)
+CLAUDE.md / .ai/guidelines    skill index (managed-block), if available or --hub
 ```
 
 ```bash
-skiller sync --dry-run     # показать план: +add ~update -remove =keep
-skiller sync               # применить (CORE раздаётся по умолчанию)
-skiller sync --force       # перетереть чужой путь версией из библиотеки
-skiller sync --hub         # дополнительно сгенерировать индекс скиллов
-skiller sync --no-core     # без CORE-скиллов; --no-hub — без индекса
+skiller sync --dry-run     # show plan: +add ~update -remove =keep
+skiller sync               # apply (CORE is heard by default)
+skiller sync --force       # overwrite someone else's path with a version from the library
+skiller sync --hub         # additionally generate a skill index
+skiller sync --no-core     # without CORE-skills; --no-hub — without index
 ```
 
-`sync` пишет `.swissknifeman-manifest.json` в `skills_path` (контракт чистой
-переустановки и источник для `generate-hub.sh`), раздаёт `CORE_SKILLS` по
-умолчанию (`--no-core` отключает) и обновляет индекс скиллов в корне проекта
-(managed-блок `CLAUDE.md` или `.ai/guidelines/swissknifeman-hub.md` для Boost),
-если он уже есть в проекте или передан `--hub`.
+`sync` writes `.swissknifeman-manifest.json` in `skills_path` (contract clean
+reinstallation and source for `generate-hub.sh`), distributes `CORE_SKILLS` by
+default (`--no-core` disables) and updates the skill index in the project root
+(managed-block `CLAUDE.md` or `.ai/guidelines/swissknifeman-hub.md` for Boost),
+if it is already in the project or transferred `--hub`.
 
-## skills-lock.json — производный, не источник
+## skills-lock.json — derived, not source
 
-`sync` пишет на каждый наш скилл запись с пометкой происхождения:
+`sync` writes for each of our skills an entry marked with origin:
 
 ```json
 "laravel-best-practices": {
@@ -96,72 +96,72 @@ skiller sync --no-core     # без CORE-скиллов; --no-hub — без и�
 }
 ```
 
-- **`managed: true`** — скилл под управлением vendor-режима. **Удаление**: при синке
-  берётся полная выборка `managed`-записей, сверяется с конфигом; то, чего больше нет
-  в конфиге, **удаляется** из lock и из репо.
-- **Чужие записи** (`managed` отсутствует/false — ручной вендоринг, скиллы из другого
-  хаба, наследие Boost) синк **не трогает**: ни удаляет, ни перетирает. Можно дописывать
-  в `skills-lock.json` собственные скиллы вручную — `sync` синхронизирует **только
-  `managed: true`** и чужие записи переживают синк (даже при пустом конфиге).
-- **Дрейф** — при расхождении `sha256` с библиотекой файл перекопируется (`~update`).
-- **Ручная чистка lock.** Если удалить нашу `managed`-запись вручную, а папка скилла
-  осталась — `sync` без `--force` сочтёт путь чужим (пропуск с warning), `--force`
-  чисто пере-усыновит скилл (одна `managed`-запись, без хвостов).
+- **`managed: true`** — skill under control vendor-mode. **Removal**: with sync
+  full sample is taken `managed`-records, checked against the config; something that no longer exists
+  in the config, **is removed** from lock and from the repo.
+- **Other people's posts** (`managed` missing/false — manual vendoring, skills from another
+  hub, legacy Boost) sync **does not touch**: neither deletes nor erases. You can add more
+  in `skills-lock.json` own skills manually - `sync` synchronizes **only
+  `managed: true`** and other people's records are experiencing sync (even with an empty config).
+- **Drift** — for discrepancy `sha256` with the library the file is copied (`~update`).
+- **Manual cleaning lock.** If you delete our `managed`-entry manually, and skill folder
+  remains - `sync` without `--force` will consider the path foreign (pass with warning), `--force`
+  will purely re-adopt the skill (one `managed`-record, without tails).
 
-## Гигиена каналов: не держи бакет в обоих сразу
+## Channel hygiene: do not hold the bucket in both at once
 
-Один бакет не должен раздаваться **одновременно** плагином (`connect`) и вендором
-(`vendor`) — иначе скиллы приедут дважды. `skiller status` это ловит и печатает
-`⚠ ДУБЛЬ КАНАЛОВ: …` со списком пересекающихся бакетов. Проверка живёт в skiller
-(владелец скиллов) и доступна из зонтика — `swissknifeman skills status`. Лечение:
-убрать бакет из `enabledPlugins` (connect) **или** из `.swissknifeman/config.json`
+One bucket should not be distributed **at the same time** plugin (`connect`) and vendor
+(`vendor`) — otherwise the skills will arrive twice. `skiller status` this catches and prints
+`⚠ DOUBLE CHANNELS: …` with a list of intersecting buckets. Check lives in skiller
+(skill owner) and is accessible from the umbrella - `swissknifeman skills status`. Treatment:
+remove the bucket from `enabledPlugins` (connect) **or** from `.swissknifeman/config.json`
 (vendor) + `skiller sync`.
 
-## Конфликты
+## Conflicts
 
-Если путь нашего скилла уже занят **чужим** (каталог/симлинк/файл, который не наш
-`managed`), `sync` без `--force` его **пропускает** с warning, чтобы не затереть
-чужое. `--force` заменяет занятый путь версией из библиотеки (симлинк снимается,
-цель симлинка остаётся на месте).
+If the path of our skill is already taken **strangers** (directory/symlink/file that is not ours
+`managed`), `sync` without `--force` him **skips** with warning, so as not to overwrite
+alien. `--force` replaces the occupied path with the version from the library (the symlink is removed,
+symlink target remains in place).
 
-## Выбор канала при онбординге (`integrate` / `onboard` / `setup`)
+## Channel selection during onboarding (`integrate` / `onboard` / `setup`)
 
-Канал спрашивается заранее — не нужно вручную писать `.swissknifeman/config.json`:
+The channel is asked in advance - no need to write it manually `.swissknifeman/config.json`:
 
 ```bash
-# визард спросит канал (connect/vendor) интерактивно
+# the wizard will ask for the channel (connect/vendor) interactive
 skiller integrate
-# или без вопроса:
-skiller integrate --skills-channel vendor --yes   # vendor → sync в .claude/skills
-skiller integrate --skills-channel connect --yes  # плагины marketplace
+# or without asking:
+skiller integrate --skills-channel vendor --yes   # vendor → sync in .claude/skills
+skiller integrate --skills-channel connect --yes  # plugins marketplace
 
-# на полном онбординге в экосистему (тоже спрашивает; флаг для неинтерактива):
+# on full onboarding into the ecosystem (also asks; flag for non-interactive):
 maind onboard <project> --skills-channel vendor
 swissknifeman setup <project> --skills-channel vendor
 ```
 
-При `--skills-channel vendor` для Claude-проекта `integrate` **сам генерит**
-`.swissknifeman/config.json` из профиля проекта (`buckets` по типу) и сразу применяет
-`sync` — скиллы оказываются в `.claude/skills/`. Дальше уточняй набор правкой
-конфига (`include`/`exclude`) и повторным `skiller sync`. Для Cursor/Gemini физический
-перенос в `.ai/.cursor` — отдельная legacy-команда `skiller vendor --agent cursor`.
+When `--skills-channel vendor` for Claude-project `integrate` **generates itself**
+`.swissknifeman/config.json` from the project profile (`buckets` by type) and immediately applies
+`sync` — skills are in `.claude/skills/`. Then refine the set by editing
+config (`include`/`exclude`) and repeat `skiller sync`. For Cursor/Gemini physical
+transfer to `.ai/.cursor` — separate legacy-command `skiller vendor --agent cursor`.
 
-## Философия: Laravel Boost не использовать как канал
+## Philosophy: Laravel Boost do not use as a channel
 
-Laravel Boost — это **MCP-сервер** (database-query, tinker, logs, docs…) **и** канал
-скиллов. Полезен как MCP, но как **источник скиллов** его убираем: все скиллы должны
-проходить единую проверку библиотеки swissknifeman, без отдельной совместимости с Boost.
+Laravel Boost — this **MCP-server** (database-query, tinker, logs, docs…) **and** channel
+skills. Useful as MCP, but how **skill source** we remove it: all skills must
+undergo a single library check swissknifeman, without separate compatibility with Boost.
 
-- Boost **остаётся как MCP** (`boost.json: "mcp": true`, сервер `laravel-boost` в
-  `.mcp.json`) и может оставлять свои guidelines (`"guidelines": true`).
-- Boost **перестаёт быть каналом скиллов**: `boost.json::skills` → `[]`. Его прежние
-  скиллы заменяются **прямыми аналогами из библиотеки** (`managed`, через config) —
-  напр. `inertia-vue-development`→`frontend-backend/inertia-vue`,
+- Boost **remains as MCP** (`boost.json: "mcp": true`, server `laravel-boost` in
+  `.mcp.json`) and can leave their guidelines (`"guidelines": true`).
+- Boost **ceases to be a skill channel**: `boost.json::skills` → `[]`. His former
+  skills are replaced **direct analogues from the library** (`managed`, via config) —
+  e.g. `inertia-vue-development`→`frontend-backend/inertia-vue`,
   `tailwindcss-development`→`frontend-tailwind/tailwind-conventions`.
-- нужный, но отсутствующий в библиотеке Boost-скилл **импортируется в неё** как внешний
-  (`source: external`), проходит валидацию реестра и дальше живёт как обычный.
-- собственные скиллы проекта (git-tracked, напр. в `.ai/skills/`) остаются нетронутыми —
-  `sync` их не перетирает (они не `managed`).
+- needed, but missing in the library Boost-skill **is imported into it** as external
+  (`source: external`), undergoes registry validation and then lives as usual.
+- own project skills (git-tracked, e.g. in `.ai/skills/`) remain untouched -
+  `sync` does not grind them (they don't `managed`).
 
-См. также [Установка скиллов](./installation) (канал connect) и
-[Реестр skills.json](./registry) (источник истины набора).
+See also [Installing skills](./installation) (channel connect) and
+[Registry skills.json](./registry) (source of truth set).

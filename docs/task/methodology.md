@@ -1,8 +1,8 @@
-# Методология Task plan-protocol v2 — полный цикл
+# Methodology Task plan-protocol v2 - full cycle
 
-Эта карта действует при явном выборе планового workflow. Обычная разработка и исправления
-завершаются напрямую через `task:dev`/`task:fix`; масштаб задачи и инструкции в старом аудите
-не выбирают план. Общая граница маршрутизации — `references/intent-routing.md` пакета Task.
+This card is valid when a planned workflow is explicitly selected. Regular development and fixes
+are completed directly via `task:dev`/`task:fix`; scope of task and instructions in old audit
+do not select a plan. The general routing boundary is `references/intent-routing.md` of the Task package.
 
 ## Compact normal path
 
@@ -11,113 +11,113 @@ items use focused validation, changed projections once, one semantic Next and on
 Declared hard risk widens validation and review; audits are read-only and return product findings to
 their owning item.
 
-Как план проживает жизнь от исследования до документации проекта. SSOT схем, гейтов и
-маркеров — компактный скилл `general/plan-protocol`; эта страница — карта цикла со ссылками
-на команды и секции скилла. Протокол фиксирует ТОЛЬКО Axioma-специфику — то, что plan mode
-и модель не выведут сами: схемы, гейты, маркеры, конвейеры.
+How a plan lives life from research to project documentation. SSOT circuits, gates and
+markers - compact skill `general/plan-protocol`; this page is a cycle map with links
+for commands and skill sections. The protocol captures ONLY Axioma specifics - what plan mode
+and the model will not be derived by itself: circuits, gates, markers, conveyors.
 
 ```mermaid
 flowchart TD
     R[research<br>/task:research] --> D[design<br>/task:plan-design]
-    D --> RF{refine-цикл<br>DoR-гейт · pre-mortem}
-    RF -- маркеры NEEDS CLARIFICATION --> D
-    RF -- 0 маркеров, DoR пройден --> A[approve<br>владелец плана]
-    A --> E[exec<br>/task:plan-run<br>commit-гейт · два дома]
+    D --> RF{refine-cycle<br>DoR-gate · pre-mortem}
+    RF -- NEEDS CLARIFICATION markers --> D
+    RF -- 0 markers, DoR passed --> A[approve<br>plan owner]
+    A --> E[exec<br>/task:plan-run<br>commit-gate · two houses]
     E --> C[phase candidate<br>terminal items]
-    C --> AP{GREEN acceptance<br>остаточный риск и согласие?}
-    AP -- адресное согласие --> RV[bounded audit<br>/task:plan-audit]
+    C --> AP{GREEN acceptance<br>residual risk and consent?}
+    AP -- address consent --> RV[bounded audit<br>/task:plan-audit]
     AP -- default direct-close --> PC
-    RV -- product finding --> RE[owning executor repair<br>фаза остаётся открытой]
+    RV -- product finding --> RE[owning executor repair<br>phase remains open]
     RE -- affected validation --> AP
     RV -- final GREEN --> PC[phase close<br>/task:plan-close]
     RV -- proven boundary --> INC[DecisionRequest / block evidence]
     PC --> AR[archive<br>/task:plan-close archive]
-    AR --> DOCS[docs-миграция<br>root/ → документация проекта]
+    AR --> DOCS[docs-migration<br>root/ → project documentation]
 ```
 
 ## research
 
-Несущие решения плана не берутся из памяти модели: внешние факты (версии, API, best
-practices, рынок) добываются `/task:research` — многоисточниковый fan-out с adversarial-
-верификацией. Выжимки ложатся в `plans/<ID>/20_research/` и `findings/` (скилл §16), а не
-остаются в чате: downstream-исполнитель читает файл, не восстанавливает контекст. Каждый
-верифицированный факт несёт след `RAG:✅ <дата/суть>`, неверифицированный — `[UNVERIFIED]`.
+Carrying decisions of the plan are not taken from the model memory: external facts (versions, API, best
+practices, market) are mined `/task:research` - multi-source fan-out with adversarial-
+verification. The extracts go to `plans/<ID>/20_research/` and `findings/` (skill §16), not
+remain in the chat: the downstream performer reads the file, does not restore the context. Everyone
+a verified fact carries the trace `RAG:✅ <date/gist>`, an unverified fact - `[UNVERIFIED]`.
 
 ## design
 
-`task:plan-design` (frontier/high) строит layout-v2 план: stable `plan.md`, phase index/item
-specs, append-only decisions и generated state/views/bundles. `design-finish` сверяет
-детализированный дизайн, `design-roadmap` обновляет только execution map. Каждый item нового
-плана обязан иметь `Batch`: `solo` с причиной или стабильный batch-ID. Смежные items одной
-фазы объединяются, когда общие reads/files/setup/validation экономят контекст; отдельные
-deliverables, commit-гейты и item acceptance внутри batch сохраняются. Phase audit/close,
-разный `Exec`, authority/irreversible gate или ожидаемое переполнение контекста — границы
-объединения. Спорное место —
-либо маркер `[NEEDS CLARIFICATION: <вопрос>]`, либо вопрос владельцу; самовольное допущение
-запрещено. Незатребованные фазы несут скелет-маркер, а не «просто пустые поля».
-План создаётся по явному запросу владельца; обычная задача любого размера может идти
-напрямую через `/task:dev`, а мелкая правка — через `/task:fix`.
+`task:plan-design` (frontier/high) builds layout-v2 plan: stable `plan.md`, phase index/item
+specs, append-only decisions and generated state/views/bundles. `design-finish` checks
+detailed design, `design-roadmap` updates only the execution map. Every item is new
+plan must have `Batch`: `solo` with reason or stable batch-ID. Adjacent items of one
+phases are combined when common reads/files/setup/validation save context; separate
+deliverables, commit gates and item acceptance inside the batch are saved. Phase audit/close
+various `Exec`, authority/irreversible gate or expected context overflow - boundaries
+associations. Disputed place -
+either marker `[NEEDS CLARIFICATION: <question>]` or question to the owner; unauthorized admission
+prohibited. Unrequested phases carry a skeleton marker rather than "just empty fields".
+The plan is created at the explicit request of the owner; a normal task of any size can go
+directly via `/task:dev`, and minor edits via `/task:fix`.
 
-## refine (DoR-гейт, pre-mortem)
+## refine (DoR-gate, pre-mortem)
 
-Канонический контур авторинга (скилл §7): design → self-audit по DoR-чеклисту → правка →
-повтор до 0 маркеров. Definition of Ready фазы: все `[NEEDS CLARIFICATION]` сняты; Scope
-Included/Excluded заполнены; Alternatives несущих решений — в D-логе; Open Questions
-разнесены по статусам `open-questions.md`; несущие факты несут RAG-маркеры. Для high-stakes
-планов (фискалка/платежи/tenant-isolation/ядро экосистемы) перед закрытием фазы дизайна —
-pre-mortem раунд по протоколу Klein: «план провалился через 6–12 мес — почему», mitigations
-с owner в Risks/D-лог.
+Canonical authoring circuit (skill §7): design → self-audit according to the DoR checklist → editing →
+repeat up to 0 markers. Definition of Ready phases: all `[NEEDS CLARIFICATION]` are cleared; Scope
+Included/Excluded are filled; Alternatives of carrier solutions - in the D-log; Open Questions
+separated by status `open-questions.md`; Bearing facts carry RAG markers. For high stakes
+plans (fiscal/payments/tenant-isolation/ecosystem core) before closing the design phase -
+pre-mortem round according to the Klein protocol: “the plan failed after 6–12 months - why”, mitigations
+with owner in Risks/D-log.
 
 ## approve
 
-Сформированный план не исполняется до утверждения владельцем (Approval Owner в Meta).
-Правки до утверждения — правки к плану, не старт исполнения. Спорные пункты не блокируют
-утверждение, если вынесены в `open-questions.md` (статусы `Exploration` / `Decision
-pending` / `Resolved → D#`, скилл §3) — но закрыть план с pending-вопросами можно только
-как `🟠 Done with deviations`.
+The generated plan is not executed until approved by the owner (Approval Owner in Meta).
+Edits before approval - edits to the plan, not the start of execution. Disputed items are not blocked
+approval, if submitted to `open-questions.md` (statuses `Exploration` / `Decision
+pending` / `Resolved → D#`, skill §3) - but you can only close a plan with pending questions
+as `🟠 Done with deviations`.
 
-## exec (commit-гейт, два дома)
+## exec (commit gate, two houses)
 
-`task:plan-run` (session route) исполняет item строго по ТЗ. В layout v2 он читает
-пять объявленных носителей и не использует handoff как execution input. **Commit-гейт**:
-статус `🟢`/`🟠` не ставится без закоммиченного диффа item'а — Conventional Commits,
-проверки по риску и declared Validation до коммита; связанные фиксы и bookkeeping вместе. **Два дома** (скилл §12):
-до старта exec базовый план живёт в Brain; на старте переезжает в репо проекта (Meta
-`Home: repo:<путь>`), SSOT = репо, Brain — зеркало; расхождение базового с working-копией —
-не молчаливый merge, а `temporary divergence` + эскалация §10. Exec также сверяет свою
-модель/effort с Routing плана — расхождение фиксируется в Known Deviations. Execution handoff
-всегда показывает `Batch`; batch выполняется последовательно в одной сессии, после каждого
-item проходят его собственные acceptance/commit/close gates, а следующий carrier сохраняет
-рекомендованный остаток группы. Новые строки `Почему: recommended:` допускают ready subset
-и порядок независимых items; `required:` и исторические немаркированные группы сохраняют
-обязательную полноту/порядок. Изменение frozen-группы фиксируется существующим решением.
-Закрытие item и допустимый direct-close фазы выполняются в текущем invocation до handoff;
-наличие отдельной команды `plan-close` не требует новой сессии.
+`task:plan-run` (session route) executes the item strictly according to the specifications. In layout v2 it reads
+five declared media and does not use handoff as execution input. **Commit gate**:
+status `🟢`/`🟠` is not set without a committed diff item'a - Conventional Commits,
+risk checks and declared Validation before commit; related fixes and bookkeeping together. **Two houses** (skill §12):
+before exec starts, the basic plan lives in Brain; at the start it moves to the project repo (Meta
+`Home: repo:<path>`), SSOT = repo, Brain - mirror; discrepancy between the base and working copy -
+is not silent merge, but `temporary divergence` + escalation §10. Exec also checks its
+model/effort with Routing plan - the discrepancy is recorded in Known Deviations. Execution handoff
+always shows `Batch`; batch is executed sequentially in one session, after each
+item passes its own acceptance/commit/close gates, and the next carrier saves
+recommended remainder of the group. New lines `Why: recommended:` allow ready subset
+and order of independent items; `required:` and historical unlabeled groups retain
+completeness/order required. A change to a frozen group is fixed by the existing solution.
+Closing item and valid direct-close phases are performed in the current invocation before handoff;
+the presence of a separate command `plan-close` does not require a new session.
 `plan-run` resolves through the installed `task.command_catalog`. The route is captured by the
 provider-neutral `task.route_evidence.capture_launch()`; Codex argv and Claude Code session JSONL are
 additive adapters of one record. Missing or ambiguous evidence is `ROUTE-UNVERIFIABLE`, not an
 undershoot. The start event stores `route-run-receipt/v1`; route/context evidence is reused until a
 proven change of session/model/effort/cwd/invocation.
 
-Перед journal/product mutation executor компилирует `evidence-graph/v1` из immutable item-spec,
-digest-qualified bundle, declared `Files` и registry владельцев carriers. Реальное
-`Files ∩ digest_inputs` при требовании свежего closure carrier возвращает
-`SELF_INVALIDATING_EVIDENCE_ANCHOR`: сначала product anchor, затем closure anchor. Если
-пересечения нет, anchors схлопываются. В closure product paths обязаны быть byte-identical;
-volatile generated journal/view/handoff carriers не становятся product semantics без явного
+Before journal/product mutation executor compiles `evidence-graph/v1` from immutable item-spec,
+digest-qualified bundle, declared `Files` and registry of carrier owners. Real
+`Files ∩ digest_inputs` returns when a fresh closure carrier is required
+`SELF_INVALIDATING_EVIDENCE_ANCHOR`: first product anchor, then closure anchor. If
+there is no intersection, anchors collapse. In the closure, product paths must be byte-identical;
+volatile generated journal/view/handoff carriers do not become product semantics without explicit
 Deliverable declaration.
 
-Ошибка в ходе exec проходит continue-first gate: малый обратимый дефект чинится в том же attempt,
-а Blocked появляется только после isolated `JUSTIFIED`, concrete `boundary_evidence` и verified RAG
-для внешнего класса. Масштаб диагностики не является границей: `scope_coverage=in-scope` всегда
-декомпозируется и чинится в том же attempt. Terminal item event несёт `terminal-evidence/v1`,
-привязанное к digest текущего ТЗ и всем Validation carriers; любой red оставляет item в progress.
-`closed-deviations` требует той же зелёной Validation и отдельного закрытого
-`recoverable-validation-gap/v1`, а не заменяет ремонт. Перед final terminal-команды собирают
-delivery receipt, связанный с terminal state и exact persisted handoff. См. [Continue-first](./continue-first).
-После journal start `validation-admission/v1` проверяет literal `make <target>` из Validation:
-доказанно отсутствующий локальный target создаёт `local-repair` того же attempt, после чего
-исходный carrier повторяется; dynamic Makefile остаётся `unknown`, а не ложным блоком.
+Error during exec passes continue-first gate: small reversible defect is repaired in the same attempt,
+and Blocked appears only after isolated `JUSTIFIED`, concrete `boundary_evidence` and verified RAG
+for outer class. The diagnostic scope is not a boundary: `scope_coverage=in-scope` always
+is decomposed and repaired in the same attempt. Terminal item event carries `terminal-evidence/v1`,
+linked to the digest of the current TK and all Validation carriers; any red leaves item in progress.
+`closed-deviations` requires the same green Validation and a separate closed
+`recoverable-validation-gap/v1` and does not replace repairs. Before the final terminal commands are collected
+delivery receipt associated with terminal state and exact persisted handoff. See [Continue-first](./continue-first).
+After journal start `validation-admission/v1` checks the literal `make <target>` from Validation:
+a proven missing local target creates `local-repair` of the same attempt, after which
+original carrier is repeated; dynamic Makefile remains `unknown`, not a dummy block.
 
 ### Execution economy and stop rule
 
@@ -131,76 +131,76 @@ If work becomes disproportionate, narrow immediately to the smallest safe patch,
 one package validator, and concise evidence. Do not add agents, schemas, byte-level comparisons, or
 another review round merely to increase confidence beyond that boundary.
 
-## review (по material trigger)
+## review (by material trigger)
 
-Ревью диспетчируется по типу артефакта, но не по ритуальному статусу. Один scoped verdict
-переиспользуется, пока не изменились material scope, SHA или risk. Терминальные items образуют
-runtime-built кандидата фазы. Единый `plan_assurance.evaluate()` выбирает следующий carrier без
-пробного `plan-close`: отсутствующий `Phase Assurance | v1` означает isolated/reversible default;
-явный блок нужен для seam/hard-risk/live или owner audit. `Routing.Review` и число items остаются
-глубиной item review, не фазовым риском.
-Default для GREEN acceptance — direct-close. Legacy `required/auto/light` не назначает audit;
-`required` даёт advisory migration hint. Отсутствующий candidate собирается существующим runtime,
-неполная/красная приёмка возвращается исполнителю. Дополнительный phase audit допускается только
-с конкретным непокрытым вопросом и адресным owner consent в существующем decision record:
-`audit-admission/v2` привязан к фазе, material candidate и одному run. По завершении run согласие
-потреблено; повторный audit требует нового согласия. Поля и owner-message формат описаны в
-каноническом `plan-protocol/references/plan-layout-v2.md`, раздел Phase Assurance.
-Impact classification остаётся информацией для выбора affected проверки, а не правом на новый audit.
-GREEN audit регенерирует свои owned views ровно один раз, пересобирает candidate и сохраняет
-`audit-finalization/v1` с exact close admission. Поэтому следующий `plan-close` потребляет
-доказанно тот же candidate, а не обнаруживает self-invalidation повторным аудитом.
-Audit остаётся read-only и возвращает дефект owning executor. Исполнитель чинит его в своей
-сессии, повторяет affected Validation и обновляет views; новое независимое full review не добавляется
-по самому факту ремонта.
-Routine `audit → repair-run → second audit → AUDIT-CAP` запрещён. Первый same fingerprint меняет
-tactic; лишь повтор или новый material risk допускает один isolated reviewer return в этот же root.
-Acceptance failure остаётся работой owning root. Authority/public-frozen сигнал проходит
-`plan_authority`: delegated продолжает repair, `approval_required`/`denied` создаёт exact
-waiting/terminal continuation. Safety проходит `plan_blocking`, и только `terminal-block` после
-distinct `JUSTIFIED` терминален. В phase-режиме `ATTENTION` не завершает root: non-gating остаток
-репортится под GREEN, исправимый — чинится. `plan-design` не является successor phase RED;
-одобренное изменение stable Intent/Scope/Files/Validation выполняет возобновлённый owning root.
+Reviews are dispatched by artifact type, but not by ritual status. One scoped verdict
+is reused as long as the material scope, SHA or risk has not changed. Terminal items form
+runtime-built phase candidate. A single `plan_assurance.evaluate()` selects the next carrier without
+trial `plan-close`: missing `Phase Assurance | v1` means isolated/reversible default;
+an explicit block is needed for seam/hard-risk/live or owner audit. `Routing.Review` and the number of items remain
+depth of item review, not phase risk.
+Default for GREEN acceptance is direct-close. Legacy `required/auto/light` does not assign audit;
+`required` gives advisory migration hint. The missing candidate is collected by the existing runtime,
+incomplete/red acceptance is returned to the contractor. Additional phase audit is only allowed
+with a specific uncovered issue and targeted owner consent in the existing decision record:
+`audit-admission/v2` is assigned to a phase, material candidate and one run. Upon completion of run, consent
+consumed; a repeat audit requires new consent. The fields and owner-message format are described in
+canonical `plan-protocol/references/plan-layout-v2.md`, Phase Assurance section.
+Impact classification remains information for selecting the affected audit, and not the right to a new audit.
+GREEN audit regenerates its owned views exactly once, rebuilds candidate and saves
+`audit-finalization/v1` with exact close admission. Therefore the next `plan-close` consumes
+is proven to be the same candidate, and does not detect self-invalidation by repeated audit.
+Audit remains read-only and returns the owning executor defect. The performer repairs it in his own
+session, repeats affected Validation and updates views; new independent full review is not added
+on the very fact of repair.
+Routine `audit → repair-run → second audit → AUDIT-CAP` is prohibited. The first same fingerprint changes
+tactic; only a repeat or a new material risk allows one isolated reviewer return to the same root.
+Acceptance failure remains the job of owning root. Authority/public-frozen signal passes
+`plan_authority`: delegated continues repair, `approval_required`/`denied` creates exact
+waiting/terminal continuation. Safety passes `plan_blocking`, and only `terminal-block` after
+distinct `JUSTIFIED` is terminal. In phase mode, `ATTENTION` does not complete root: non-gating remainder
+is reported under GREEN, the correctable one is repaired. `plan-design` is not a successor phase RED;
+approved change stable Intent/Scope/Files/Validation performed by resumed owning root.
 
-Исторические исключения совместимо читаются через `phase_close_gate(..., owner_decision="D#")`.
-Direct-green-validation требует один accepted, phase-scoped и superseding decision carrier с
-literal `phase-close: direct-green-validation`. После исчерпанного AUDIT-CAP отдельный remediation
-carrier должен покрывать точный полный набор items фазы и явно фиксировать, что третьего audit нет,
-а фаза закрывается штатным `task:plan-close`; разрешение действует только после самого ремонта и
-повторного deterministic gate. Невалидное явное исключение остаётся fail-closed. Для обычной
-GREEN-фазы такой carrier не нужен.
+Historical exceptions are compatible read via `phase_close_gate(..., owner_decision="D#")`.
+Direct-green-validation requires one accepted, phase-scoped and superseding decision carrier with
+literal `phase-close: direct-green-validation`. After exhausted AUDIT-CAP separate remediation
+carrier must cover the exact full set of phase items and explicitly state that there is no third audit,
+and the phase is closed with the regular `task:plan-close`; the permit is valid only after the repair itself and
+re-deterministic gate. An invalid explicit exception remains fail-closed. For regular
+GREEN-phase such a carrier is not needed.
 
-Отдельное исключение для terminal blocked phase требует accepted, non-superseded D# с `item: Pn`,
-точным набором `Pn` и всех `Pn.*`, а также literal
-`phase-close: terminal-blocked-deviations`. Оно допускает только `closed-deviations` phase close:
-сама фаза проецируется как `🟠 Done with deviations`, тогда как RED/blocked item states, audit
-history и release authorization не меняются. Без такой D# blocked item по-прежнему закрывает фазу
+A separate exception for terminal blocked phase requires accepted, non-superseded D# with `item: Pn`,
+exact set `Pn` and all `Pn.*`, as well as literal
+`phase-close: terminal-blocked-deviations`. It only allows `closed-deviations` phase close:
+the phase itself is projected as `🟠 Done with deviations`, while RED/blocked item states, audit
+history and release authorization do not change. Without such D# the blocked item still closes the phase
 fail-closed.
 
-**Вердикт аудита ≠ приёмка плана.** Это две независимые оси, и смешивать их запрещено:
-вердикт phase audit (`GREEN`/reducer-confirmed `RED`) говорит «запись фазы сходится с кодом и git-фактами»,
-а приёмка — что ИЗМЕРЕННЫЕ величины плана взяли объявленные пороги (floors). План с
-безупречной записью может остаться с невыполненной приёмкой; тогда item остаётся в progress и
-owning root продолжает repair. `🟠 Done with deviations` допустим только после зелёной обязательной
-Validation и отдельного reducer evidence о неремонтируемом residual; он не повышает недостающее
-измерение до зелёного. Повышение `not-met`/`unknown` до met, пересчёт порога под результат и «зелёный
-по умолчанию» на неизмеренном — запрещены; неизмеренная величина публикуется как `unknown` со
-скоупом, датой и названной причиной, а не округляется. Число, стоящее на классе
-`pinned-not-recomputable`/`unknown`, не может обосновывать приёмочный предикат
-([структура плана](./plan-structure) → «Портируемость»).
+**Audit verdict ≠ acceptance of the plan.** These are two independent axes, and it is prohibited to mix them:
+phase audit verdict (`GREEN`/reducer-confirmed `RED`) says “phase record agrees with code and git facts”,
+and acceptance - that the MEASURED values of the plan took the declared thresholds (floors). Plan with
+a perfect record may remain with unfulfilled acceptance; then item remains in progress and
+owning root continues repair. `🟠 Done with deviations` is acceptable only after the green mandatory
+Validation and separate reducer evidence about unrepairable residual; it does not increase what is missing
+measure to green. Raising `not-met`/`unknown` to met, recalculating the threshold to match the result and “green”
+by default" on unmeasured - prohibited; unmeasured quantity is published as `unknown` with
+by scope, date and stated reason, rather than rounded. The number on the class
+`pinned-not-recomputable`/`unknown`, cannot justify an acceptance predicate
+([plan structure](./plan-structure) → “Portable”).
 
 ## archive
 
-Терминальный план уходит в архив командой `/task:plan-close archive <ID>` (конвейер в
-скилле §12): перенос в `plans/archive/<ID>` ОТДЕЛЬНЫМ коммитом `chore(plan): archive <ID>`,
-обновление `ACTIVE.md` и реестров, чек-лист миграции — в финальный handoff. `artifacts/`
-уезжает в архив вместе с планом — это рабочий материал фаз. Archive не проверяет и не
-вызывает Brain: синхронизация Brain остаётся отдельной opt-in docs-операцией.
+The terminal plan is archived with the command `/task:plan-close archive <ID>` (pipeline in
+skill §12): moved to `plans/archive/<ID>` by a SEPARATE commit `chore(plan): archive <ID>`,
+update `ACTIVE.md` and registries, migration checklist - to the final handoff. `artifacts/`
+goes into the archive along with the plan - this is the working material of the phases. Archive does not check or
+calls Brain: Brain synchronization remains a separate opt-in docs operation.
 
-## docs-миграция
+## docs-migration
 
-Долгоживущий материал из `root/` не архивируется, а становится документацией проекта по
-Diátaxis-типам: architecture/philosophy → explanation, data-model/contracts → reference,
-гайды фаз → how-to. Что и куда мигрирует — таблица на странице
-[Структура плана](./plan-structure); чек-лист миграции (что перенесено, что осталось
-в архиве) обязателен в финальном handoff.
+Long-lived material from `root/` is not archived but becomes project documentation for
+Diátaxis-types: architecture/philosophy → explanation, data-model/contracts → reference,
+phase guides → how-to. What migrates where and where - table on the page
+[Plan structure](./plan-structure); migration checklist (what was transferred, what remained
+in the archive) is required in the final handoff.

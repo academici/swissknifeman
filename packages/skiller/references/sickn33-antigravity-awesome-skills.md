@@ -1,17 +1,17 @@
 # sickn33/antigravity-awesome-skills
 
 - **URL:** https://github.com/sickn33/antigravity-awesome-skills
-- **Статус:** imported
-- **Проверено:** 2026-06-12
+- **Status:** imported
+- **Checked:** 2026-06-12
 
-Коллекция агентских скиллов; источник vendor-скилла docker-expert
-(пришёл через skills-lock.json эталонного Laravel-проекта).
+Collection of agent skills; source vendor-skill docker-expert
+(arrived via skills-lock.json reference Laravel-project).
 
-## Взято
+## Taken
 
 - `skills/docker-expert/SKILL.md` → `skills/devops/docker/snippets/docker-expert.md`
   (upstream.json, strategy=notify)
 
-## Целевые bucket-ы
+## Targets bucket-s
 
-`devops/docker`. Остальное — не смотрели, при необходимости изучить отдельно.
+`devops/docker`. The rest - have not been looked at, if necessary, study separately.

@@ -1,19 +1,19 @@
-# skill-sections-burndown.txt — рэтчет активационной секции CORE-девятки (P8.8,
+# skill-sections-burndown.txt — activation section ratchet CORE-nines (P8.8,
 #)
 #
-# Формат: одна запись на строку — `<bucket>/<name>` (совпадает с core-policy.json::skills).
-# Строки, начинающиеся с `#`, и пустые — комментарии, игнорируются.
+# Format: one entry per line - `<bucket>/<name>` (matches core-policy.json::skills).
+# Lines starting with `#`, and empty comments are ignored.
 #
-# Правила (see validate.sh, секция «CORE-девятка — обязательные секции тела»):
-#   - у CORE-скилла из core-policy.json::skills нет заголовка `##`, матчащего
-#     `(?i)^\s*\d*\.?\s*(when|activate)` (активационная секция):
-#       * скилл ЕСТЬ в этом списке → warn (легально, унаследованный долг);
-#       * скилла НЕТ в списке → error (новый долг запрещён — рэтчет).
-#   - протухшая запись (скилл уже несёт секцию, или скилла нет в CORE-девятке) → warn,
-#     убери строку.
+# Rules (see validate.sh, section «CORE-nine - mandatory body sections»):
+#   - y CORE-skill from core-policy.json::skills no header `##`, match
+#     `(?i)^\s*\d*\.?\s*(when|activate)` (activation section):
+#       * skill IS in this list → warn (legal, inherited debt);
+#       * skill is NOT in the list → error (new debt prohibited - Ratchet).
+#   - rotten recording (skill already carries a section, or the skill is not in CORE-nine) → warn,
+#     remove the line.
 #
-# Долг закрывается ПРАВКОЙ секции скилла (не этим item'ом, P8.8 Scope Excluded),
-# запись убирается тем же коммитом.
+# The debt is closed by EDITING the skill section (not this item'ohm, P8.8 Scope Excluded),
+# entry is removed by the same commit.
 
 general/context-economy
 general/compact-responses

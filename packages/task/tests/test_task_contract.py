@@ -259,7 +259,7 @@ class RouteAndCapabilityTests(unittest.TestCase):
         self.assertEqual(task_contract.pre_mutation(contract), "ROUTE-UNVERIFIABLE")
 
     def test_out_of_ladder_required_model_class_blocks_as_route_undershoot_not_crash(self):
-        # D78 М4: an unresolved §3 Routing cell used to fabricate `required = ""` and
+        # D78 M4: an unresolved §3 Routing cell used to fabricate `required = ""` and
         # crash `_rank`; `pre_mutation` now guards the required side too, defensively,
         # for any contract fed to `check` regardless of how it was produced.
         base = _load_base_contract()
@@ -283,7 +283,7 @@ class AuthorityTests(unittest.TestCase):
             decision.parent.mkdir()
             decision.write_text(
                 "---\nstatus: accepted\nitem: P5.6\n---\n"
-                "AUDIT-CAP: P5.6 обязан закрыть без waiver; третьего Audit P5 нет.\n",
+                "AUDIT-CAP: P5.6 must close without waiver; third Audit P5 no.\n",
                 encoding="utf-8")
             self.assertTrue(task_contract._has_audit_cap_remediation_grant(plan, "P5.6"))
             self.assertFalse(task_contract._has_audit_cap_remediation_grant(plan, "P5.5"))
@@ -296,10 +296,10 @@ class AuthorityTests(unittest.TestCase):
             decision.write_text(
                 "---\nstatus: accepted\nitem: P6.7\n"
                 "items: [P6.1, P6.2, P6.3, P6.4, P6.5, P6.6, P6.7]\n---\n"
-                "AUDIT-CAP P6 закрывается bounded recovery без третьего Audit P6. "
-                "Владелец разрешает повторить исходные Validation для P6.1/P6.3/P6.5, "
-                "P6.6 и P6.7 только в fresh native roots с provider-attested маршрутами; "
-                "новых terminal attempts недостаточно без route evidence.\n",
+                "AUDIT-CAP P6 closes bounded recovery without third Audit P6. "
+                "The owner allows to repeat the original Validation for P6.1/P6.3/P6.5, "
+                "P6.6 and P6.7 only in fresh native roots with provider-attested routes; "
+                "new terminal attempts is not enough without route evidence.\n",
                 encoding="utf-8",
             )
             for item_id in ("P6.1", "P6.3", "P6.5", "P6.6", "P6.7"):
@@ -476,7 +476,7 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
     def test_unresolved_clarification_cannot_fall_through_to_routine_authority(self):
         path = fixtures.item_spec_path(self.plan_dir)
         path.write_text(path.read_text().replace(
-            "**Code Guidance:** ручная проверка dict-ключей.",
+            "**Code Guidance:** manual check dict-keys.",
             "**Code Guidance:** [NEEDS CLARIFICATION: consumer owner and paths]."),
             encoding="utf-8")
         with self.assertRaisesRegex(task_contract.TaskContractBuildError, "AUTHORITY_CONTRACT_GAP"):
@@ -576,7 +576,7 @@ class AuthorityCarrierBuildTests(unittest.TestCase):
             state = path.with_name(path.stem + ".state.md")
             state.write_text(state.read_text().replace("🟡 In progress", "🟢 Done"), encoding="utf-8")
             self.assertFalse(task_contract.build(self.plan_dir, "P1.1", actual_route=self._actual_route())["authority"]["granted"])
-            with self.assertRaisesRegex(task_contract.TaskContractBuildError, "run уже завершён"):
+            with self.assertRaisesRegex(task_contract.TaskContractBuildError, "run is already completed"):
                 task_contract.materialize_owner_invocation(self.plan_dir, "P1.1")
 
     def test_local_boundary_rejects_external_targets_and_effects(self):
@@ -781,8 +781,8 @@ class AuditRoundCountingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             plan = Path(tmp)
             phase_lines = [
-                "# P1", "## Audit P1 — legacy", "**Вердикт: RED**",
-                "## Audit P1 — candidate", "**Вердикт: RED**",
+                "# P1", "## Audit P1 — legacy", "**Verdict: RED**",
+                "## Audit P1 — candidate", "**Verdict: RED**",
             ]
             events = [
                 {"command": "plan-audit", "item_id": "P1", "result": "audit-red"},
@@ -908,7 +908,7 @@ class EvaluateFindingHookTests(unittest.TestCase):
 
 
 def _routing_row(model_effort="implementation/medium"):
-    return (f"\n\n| Items | Model class/effort | Exec | Почему |\n"
+    return (f"\n\n| Items | Model class/effort | Exec | Why |\n"
            f"|:--|:--|:--|:--|\n"
            f"| P1.1 | {model_effort} | run | test |\n")
 
@@ -982,15 +982,15 @@ class BuildFixtureTests(unittest.TestCase):
             contract = task_contract.build(plan, "P1.1")
             self.assertEqual(contract["route"]["required"],
                              {"model_class": "implementation", "effort": "medium"})
-            self.assertEqual(contract["goal"]["outcome"], "Добавить проверку.")
+            self.assertEqual(contract["goal"]["outcome"], "Add check.")
             self.assertEqual(contract["next"]["context"], "continue-root")
 
     def test_validation_bullets_keep_product_checks_distinct_from_external_tooling(self):
         path = fixtures.item_spec_path(self.plan_dir)
         path.write_text(path.read_text(encoding="utf-8").replace(
-            "**Validation:** bash scripts/test.sh — зелёный.",
-            "**Validation:**\n- bash scripts/test.sh — зелёный.\n"
-            "- python3 <task>/scripts/plan-lint.py plans/DEMO-1 — зелёный."),
+            "**Validation:** bash scripts/test.sh — green.",
+            "**Validation:**\n- bash scripts/test.sh — green.\n"
+            "- python3 <task>/scripts/plan-lint.py plans/DEMO-1 — green."),
             encoding="utf-8")
         contract = task_contract.build(self.plan_dir, "P1.1")
         acceptance = contract["done"]["public_acceptance"]
@@ -1046,7 +1046,7 @@ class BuildFixtureTests(unittest.TestCase):
                 "| Provider | Model | Selector |\n"
                 "|:--|:--|:--|\n"
                 "| Codex | gpt-5.6-terra | implementation |\n\n"
-                "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+                "| Batch | Items | Model class/effort | Exec | Review | Why |\n"
                 "|:--|:--|:--|:--|:--|:--|\n"
                 "| solo | P1.1 | implementation/high | run | full | test |\n")
             plan_md = (plan / "plan.md").read_text(encoding="utf-8").replace(
@@ -1060,7 +1060,7 @@ class BuildFixtureTests(unittest.TestCase):
         phase_path = fixtures.item_spec_path(self.plan_dir)
         phase_path.write_text(
             phase_path.read_text(encoding="utf-8").replace(
-                "**Validation:** bash scripts/test.sh — зелёный.", "**Validation:** —"),
+                "**Validation:** bash scripts/test.sh — green.", "**Validation:** —"),
             encoding="utf-8")
         with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
             task_contract.build(self.plan_dir, "P1.1")
@@ -1086,7 +1086,7 @@ class BuildFixtureTests(unittest.TestCase):
 
 
 def _routing_row_with_header(header, model_effort="implementation/medium", items="P1.1"):
-    return (f"\n\n| Items | {header} | Exec | Почему |\n"
+    return (f"\n\n| Items | {header} | Exec | Why |\n"
            f"|:--|:--|:--|:--|\n"
            f"| {items} | {model_effort} | run | test |\n")
 
@@ -1119,7 +1119,7 @@ class RoutingFormTests(unittest.TestCase):
         # `findings/14` M4.1: this exact composite header appears live on the fleet and
         # is NOT in the closed set (Scope Excluded) — must stay a typed refusal, never
         # a fabricated empty `required` (D78 M4).
-        self._write_plan(_routing_row_with_header("Model/effort И/ИЛИ Tool Capability",
+        self._write_plan(_routing_row_with_header("Model/effort AND/OR Tool Capability",
                                                    "implementation/high"))
         with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
             task_contract.build(self.plan_dir, "P1.1")
@@ -1140,13 +1140,13 @@ class RoutingFormTests(unittest.TestCase):
 
     def test_prose_tail_in_cell_fails_closed(self):
         self._write_plan(_routing_row_with_header(
-            "Model class/effort", "sonnet/medium (экстракция fan-out)"))
+            "Model class/effort", "sonnet/medium (extraction fan-out)"))
         with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
             task_contract.build(self.plan_dir, "P1.1")
         self.assertEqual(ctx.exception.field, "Routing")
 
     def test_cell_without_slash_fails_closed(self):
-        self._write_plan(_routing_row_with_header("Model class/effort", "fable ИЛИ opus"))
+        self._write_plan(_routing_row_with_header("Model class/effort", "fable OR opus"))
         with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
             task_contract.build(self.plan_dir, "P1.1")
         self.assertEqual(ctx.exception.field, "Routing")
@@ -1194,7 +1194,7 @@ class RoutingFormTests(unittest.TestCase):
 
     def test_mixed_range_and_list_cell_is_diagnosed_too(self):
         # The live shape (`P4.1–P4.2, P4.4`): a range AND a list in one
-        # cell — the matched token here is covered by neither способ of the two matchers.
+        # cell — the matched token here is covered by neither way of the two matchers.
         self._write_phase_item("P1.4")
         self._write_plan(_routing_row_with_header("Model class/effort", items="P1.1–P1.2, P1.4"))
         with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
@@ -1204,7 +1204,7 @@ class RoutingFormTests(unittest.TestCase):
 
     def test_absent_row_keeps_the_previous_blind_text(self):
         # Anti-regress (Implementation Rules): a cell with neither a comma nor a matching
-        # token is «строки действительно нет» — the diagnostic must NOT claim a comma list.
+        # token is «there really is no line» — the diagnostic must NOT claim a comma list.
         self._write_plan(_routing_row_with_header("Model class/effort", items="P1.3"))
         with self.assertRaises(task_contract.TaskContractBuildError) as ctx:
             task_contract.build(self.plan_dir, "P1.1")
@@ -1384,7 +1384,7 @@ class BatchRoutingAdmissionTests(unittest.TestCase):
         for item in ("P1.2", "P1.3"):
             fixtures.write_v2_carriers(self.plan_dir, item_id=item, refresh_views=False)
         routing = (
-            "\n\n| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "\n\n| Batch | Items | Model class/effort | Exec | Review | Why |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
             "| B1 | P1.1–P1.3 | implementation/high | run | full | test |\n")
         plan = fixtures.plan_md("BATCH-DEMO").replace("## 3. Routing\n\n", "## 3. Routing" + routing)
@@ -1547,7 +1547,7 @@ class ExecutableRoutingTableTests(unittest.TestCase):
         self.plan_dir = fixtures.write_valid_plan(
             Path(self.tmp.name), "ROUTING-TABLE", layout="v2")
         self.routing = (
-            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "| Batch | Items | Model class/effort | Exec | Review | Why |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
             "| solo | P1.1 | implementation/high | run | light | test |\n")
 

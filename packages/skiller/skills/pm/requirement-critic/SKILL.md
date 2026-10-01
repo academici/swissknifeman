@@ -44,7 +44,7 @@ Find contradictions inside the doc:
 - **Role**: one req grants a right, another forbids it
 - **Temporal**: operation order contradicts across scenarios
 
-Format: `⚠️ Конфликт: [Требование A] vs [Требование B] — [суть проблемы]`
+Format: `⚠️ Conflict: [Requirement A] vs [Requirement B] — [the essence of the problem]`
 
 ## Step 4 — Implicit assumptions
 Surface what's taken for granted but not recorded:
@@ -55,7 +55,7 @@ Surface what's taken for granted but not recorded:
 - Response time (unmentioned → dev decides → expectation conflict)
 - Data access rights (who sees other users' data?)
 
-Format: `❓ Допущение: [что не сказано, но подразумевается]`
+Format: `❓ Assumption: [what is not said, but is implied]`
 
 ## Step 5 — Gap analysis
 Walk typical modules for the product type, check nothing is missed:
@@ -98,31 +98,31 @@ Format: `🔶 Optimism: [claim] — no risk/source → [UNVERIFIED] / needs cont
 ```markdown
 # Requirement Critique: [ProjectName / BRD]
 
-## ✅ Что хорошо
-- [Конкретно что сделано правильно]
+## ✅ What's good
+- [Specifically what was done correctly]
 
-## ⚠️ Конфликты
-- [Конфликт 1]
-- [Конфликт 2]
+## ⚠️ Conflicts
+- [Conflict 1]
+- [Conflict 2]
 
-## ❓ Неявные допущения
-- [Допущение 1]
-- [Допущение 2]
+## ❓ Implicit assumptions
+- [Assumption 1]
+- [Assumption 2]
 
-## 🕳️ Пробелы (Gap)
-- [Что не покрыто]
+## 🕳️ Spaces (Gap)
+- [What's not covered]
 
-## 🔶 Оптимизм-байас / [UNVERIFIED]
-- [утверждение без риска или без источника] → [UNVERIFIED] / нужен contra-сценарий
+## 🔶 Optimism-bias / [UNVERIFIED]
+- [statement without risk or without source] → [UNVERIFIED] / needed contra-script
 
 ## 📊 MoSCoW
-| Требование | Приоритет | Комментарий |
+| Requirement | Priority | Comment |
 |:---|:---|:---|
-| [название] | Must | |
-| [название] | Should | |
+| [name] | Must | |
+| [name] | Should | |
 
-## 🔑 Вопросы к уточнению (топ-3)
-1. [Самый критичный вопрос]
+## 🔑 Questions for clarification (top 3)
+1. [The most critical question]
 2.
 3.
 ```

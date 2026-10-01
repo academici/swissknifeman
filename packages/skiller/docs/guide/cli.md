@@ -1,36 +1,36 @@
 # CLI swissknifeman
 
-`bin/skiller` — единая точка входа: подключение проектов, обновление,
-диагностика и мейнтенанс реестра. Устанавливается симлинком в `~/.local/bin`
-(см. [Установка](./installation)); путь к реестру определяет сам через
-`readlink` собственного файла — никакой конфигурации пути нет.
+`bin/skiller` — single entry point: connecting projects, updating,
+diagnostics and registry maintenance. Installed by symlink in `~/.local/bin`
+(see [Installation](./installation)); determines the path to the registry itself via
+`readlink` own file - there is no path configuration.
 
-## Команды для проектов
+## Commands for projects
 
-Все команды находят корень проекта автоматически — подъёмом вверх от текущей
-директории до ближайшего маркера: `.swissknife.json` → `.claude/` → `.git`
-(каталог или файл — worktree и submodule считаются). Ближайший маркер
-побеждает: submodule — это свой проект; чтобы сместить корень, положите
-`.swissknife.json` в нужный каталог. Внутри самого реестра project-команды
-отказываются работать.
+All commands find the project root automatically - by moving up from the current one
+directories to the nearest marker: `.swissknife.json` → `.claude/` → `.git`
+(directory or file - worktree and submodule are considered). Nearest marker
+wins: submodule — is its own project; to move the root, put
+`.swissknife.json` to the desired directory. Inside the registry itself project-commands
+refuse to work.
 
 ### `skiller connect`
 
-Подключает проект к нативному plugin marketplace Claude Code: пишет
-`extraKnownMarketplaces.swissknifeman` и `enabledPlugins."<bucket>@swissknifeman"`
-в `.claude/settings.local.json`. Merge-only: явный `false` не перетирается,
-включённое сверх профиля не отключается, бэкап в `*.bak`.
+Connects the project to the native one plugin marketplace Claude Code: writes
+`extraKnownMarketplaces.swissknifeman` and `enabledPlugins."<bucket>@swissknifeman"`
+in `.claude/settings.local.json`. Merge-only: explicit `false` does not fray,
+enabled above the profile is not disabled, backup in `*.bak`.
 
-Provider selection берётся из `.swissknife.json::providers`: при отсутствии
-слоя сохраняется legacy-режим только для Claude Code. Self-host checkout
-использует thin Codex marketplace, а внешний connect-проект получает
-repo-contained marketplace и self-contained bundles только выбранных plugins,
-включая runtime-файлы скиллов (`snippets/`, `references/`, scripts/assets).
-Проектная публикация не меняет user-level plugin state: базовые `core` + `task`
-устанавливает машинный `install.sh`, а профильные Codex plugins добавляются только
-явно. Native manifest каждого bucket перечисляет skill-каталоги явно, поэтому Codex
-раскрывает их после установки. Dual-selection проходит preflight всех provider-целей
-до первой записи, поэтому конфликт не оставляет успешную половину подключения.
+Provider selection is taken from `.swissknife.json::providers`: in the absence
+layer is saved legacy-mode only for Claude Code. Self-host checkout
+uses thin Codex marketplace, and external connect-project receives
+repo-contained marketplace and self-contained bundles only selected plugins,
+including runtime-skill files (`snippets/`, `references/`, scripts/assets).
+Project publication does not change user-level plugin state: basic `core` + `task`
+sets machine `install.sh`, and profile Codex plugins are added only
+explicitly. Native manifest each bucket lists skill-directories explicitly, so Codex
+reveals them after installation. Dual-selection passes preflight all provider-targets
+before the first write, so the conflict does not leave the successful half of the connection.
 
 ```
 skiller connect [--profile P | --plugins a,b]
@@ -40,20 +40,20 @@ skiller connect [--profile P | --plugins a,b]
 
 ### `./install.sh [--no-codex-plugins]`
 
-Машинная установка добавляет marketplace текущего checkout в Codex и по умолчанию
-устанавливает базовые плагины из CORE-политики (`core` + `task`). Если Codex CLI
-отсутствует, этот шаг явно пропускается без поломки установки остальных CLI;
-`--no-codex-plugins` — явный opt-out. Дополнительный глобальный плагин ставится
-повторяемым `./packages/skiller/install.sh --codex-plugin NAME`.
+Machine installation adds marketplace current checkout in Codex and default
+installs basic plugins from CORE-policies (`core` + `task`). If Codex CLI
+is missing, this step is clearly skipped without breaking the installation of the others CLI;
+`--no-codex-plugins` — explicit opt-out. An additional global plugin is installed
+repeatable `./packages/skiller/install.sh --codex-plugin NAME`.
 
-`connect`, `sync`, `update`, `doctor` и `--dry-run` user-global Codex state не
-меняют. Профильные плагины не устанавливаются глобально автоматически.
+`connect`, `sync`, `update`, `doctor` and `--dry-run` user-global Codex state not
+are changing. Profile plugins are not automatically installed globally.
 
 ### `skiller vendor`
 
-Вендорит скиллы в проект (Cursor и другие агенты): профили, автодетект,
-транзитивный резолв `requires`, манифест-переустановка — см.
-[Установка](./installation) и [Вендоринг](./vendor-skills).
+Vendors skills to the project (Cursor and other agents): profiles, autodetection,
+transitive resolve `requires`, manifest-reinstall - see.
+[Installation](./installation) and [Vendoring](./vendor-skills).
 
 ```
 skiller vendor [--agent claude|cursor|generic]
@@ -63,12 +63,12 @@ skiller vendor [--agent claude|cursor|generic]
 
 ### `skiller integrate`
 
-Интерактивный визард интеграции: проходит [чеклист](./integration-checklist) по
-всему функционалу (скиллы, permissions, MCP, хуки auto-approve/память/output-style,
-hub) и применяет выбранное. Скиллы/hub — сам skiller; окружение (permissions/MCP/
-хуки, включая терсе output-style `lean` — включён во всех бандлах) делегируется
-пакету [`harness`](/harness/) через subprocess. Безопасно —
-`--dry-run`, merge-only, бэкапы.
+Interactive integration wizard: passing [checklist](./integration-checklist) by
+all functionality (skills, permissions, MCP, hooks auto-approve/memory/output-style,
+hub) and applies the selection. Skills/hub — himself skiller; environment (permissions/MCP/
+hooks, including terse output-style `lean` — is included in all bundles) is delegated
+package [`harness`](/harness/) via subprocess. Safe -
+`--dry-run`, merge-only, backups.
 
 ```
 skiller integrate [--target P]
@@ -78,83 +78,83 @@ skiller integrate [--target P]
 
 ### `skiller update [--all] [--dry-run]`
 
-Обновляет подключение проекта. Диск — источник истины: каналы определяются
-по маркерам (`extraKnownMarketplaces.swissknifeman` в `.claude/settings*.json`;
-`.swissknifeman-manifest.json` в `skills_path` / `.claude/skills` /
-`.cursor/skills` / `.ai/skills`), проект может быть на обоих каналах сразу.
+Updates the project connection. Disk is the source of truth: channels are determined
+by markers (`extraKnownMarketplaces.swissknifeman` in `.claude/settings*.json`;
+`.swissknifeman-manifest.json` in `skills_path` / `.claude/skills` /
+`.cursor/skills` / `.ai/skills`), the project can be on both channels at once.
 
-- **marketplace**: чинит путь к реестру, если репозиторий переехал
-  (с бэкапом), доливает плагины, появившиеся в профиле, регенерирует хаб,
-  показывает HEAD SHA реестра и предупреждает о незакоммиченных скиллах
-  (marketplace видит только коммиты).
-- **vendor**: чистая переустановка по манифесту — удалённые/переименованные
-  в реестре скиллы убираются из проекта.
+- **marketplace**: fixes the registry path if the repository has moved
+  (with backup), adds plugins that appear in the profile, regenerates the hub,
+  shows HEAD SHA registry and warns about uncommitted skills
+  (marketplace only sees commits).
+- **vendor**: clean reinstallation according to manifest - deleted/renamed
+  in the registry, skills are removed from the project.
 
-::: warning Чистая переустановка удаляет ранее вендоренные скиллы
-`vendor` (и `update`) читает `.swissknifeman-manifest.json` и **удаляет** скиллы,
-которые были вендорены ранее, но больше не входят в текущий набор реестра
-(скилл убрали/переименовали в реестре, либо он выпал из выбора `--buckets`/
-`--exclude`). Это касается и **незакоммиченных** локальных копий с тем же путём.
-Проектные скиллы, которые нужно сохранить, **держите в git** (или вне
-`skills_path`/манифеста); при Boost их копии остаются в `.cursor/skills`,
-`.claude/skills` и восстанавливаются оттуда. Превью удаляемого — `--dry-run`.
+::: warning A clean reinstall removes previously vendor skills
+`vendor` (and `update`) reads `.swissknifeman-manifest.json` and **deletes** skills,
+that were previously vendored but are no longer part of the current registry set
+(skill removed/was renamed in the registry, or it fell out of selection `--buckets`/
+`--exclude`). This also applies to **uncommitted** local copies with the same path.
+Project skills that need to be saved **keep in git** (or outside
+`skills_path`/manifest); when Boost copies of them remain in `.cursor/skills`,
+`.claude/skills` and are restored from there. Preview of the deleted item - `--dry-run`.
 :::
 
-Проект с маркерами, но без записи в `projects.json`, регистрируется
-автоматически (adopt) — карта проектов самовосстанавливается.
-`--all` обходит все зарегистрированные проекты, пропуская отсутствующие
-каталоги, и печатает сводку.
+Project with markers, but no entry in `projects.json`, is registered
+automatically (adopt) — project map is self-healing.
+`--all` crawls all registered projects, skipping missing ones
+directories, and prints a summary.
 
 ### `skiller status`
 
-Read-only отчёт: корень и маркер, каналы, дрейф плагинов относительно профиля,
-переехавший путь marketplace, состояние вендоренных скиллов, SHA реестра.
+Read-only report: root and marker, channels, drift of plugins relative to the profile,
+crossed path marketplace, status of vendor skills, SHA registry.
 
 ### `skiller list [--prune]`
 
-Таблица зарегистрированных проектов со статусом `ok|missing`. Записи никогда
-не удаляются автоматически — только явный `--prune`.
+Table of registered projects with status `ok|missing`. Entries never
+are not deleted automatically - only explicit `--prune`.
 
 ### `skiller analyze-run [--last | --session ID] [--project DIR] [--json] [--store]`
 
-Пост-ран разбор прогона по JSONL-логам Claude Code (детерминированно, без трат
-токенов): факт-токены/тайминги/cache-hit по агентам + эффективные/мёртвые скиллы +
-рантайм-отказы. Дополняет качественный скилл `system/session-observer`. Подробности,
-формат и ограничения — [analyze-run](./analyze-run.md).
+Post-run analysis of the run JSONL-logs Claude Code (deterministic, no waste
+tokens): fact tokens/timings/cache-hit by agent + effective/dead skills +
+runtime failures. Complements quality skill `system/session-observer`. Details,
+format and restrictions - [analyze-run](./analyze-run.md).
 
-## Команды мейнтейнера
+## Maintainer Commands
 
-| Команда | Что делает |
+| Command | What it does |
 |---|---|
-| `skiller registry` | регенерирует `skills.json`, плагин-манифесты `.claude-plugin/*` и `docs/guide/graph.md` (бывший `./sync.sh --update-registry`) |
-| `swissknifeman validate` | `scripts/validate.sh` (то же, что CI) |
-| `skiller doctor` | python3, симлинк, PATH, projects.json, чистота реестра, профили |
-| `skiller doctor --context --provider codex [--target DIR] [--json]` | читает фактический Codex prompt inventory через native CLI и выдаёт typed diagnostics `SKILL_DUPLICATE_NAME`, `CODEX_PLUGIN_ENABLED_OUTSIDE_PROJECT_POLICY` и `CODEX_DESIRED_PLUGIN_NOT_EFFECTIVE`; команда read-only, отделяет observed inventory от managed project estimate и явно исключает platform overhead из итога |
-| `skiller budget --first-turn [--provider claude-code\|codex\|cursor] [--target DIR] [--json] [--strict]` | provider-aware always-on футпринт первого хода. Claude Code считает skills+agents+CLAUDE.md/rules+живой SessionStart+MCP; Codex считает `AGENTS.md`, исключает Claude agents/hooks и заменяет managed skill estimate фактическим native prompt inventory. Недоступный native inventory даёт `INCOMPLETE`, а `--strict` завершается ненулевым кодом. Порог managed footprint: OK ≤16K / ELEVATED ≤23K / WARN >23K. Флот — `maind doctor --context`. MCP остаётся режим-зависимой оценкой `deferred|auto|off` |
-| `skiller budget --first-turn --with-plugins [--target DIR] [--json]` | добавляет always-on цену установленных marketplace-плагинов проекта (`claude plugin list/details`, вызов `details` — под `cwd` проекта, local-scope плагины чужого CWD не резолвятся) аддитивными ключами `plugins`/`session_total`/`session_verdict`; без флага вывод не меняется. Требует `--first-turn`; сбой листинга → `n/a`; невзятая цена плагина — `broken` (сам листинг объявил плагин сломанным полем `errors`) отдельно от `unparsed` (нераспознанный формат апстрима), никогда молчаливый 0. **Пороги вердикта откалиброваны именно на этой, плагин-инклюзивной величине** (`session_total`): baseline флота n=22, медиана плагинной суммы 8 741 ток → `16K`/`23K` вместо прежних `7K`/`10K`, посчитанных до того, как плагины вообще стали считаться |
-| `skiller budget --provider claude-code\|codex [--profile P\|--config F\|--target DIR]` | добавляет к обычному skill-budget модель листинга без остальных first-turn поверхностей. Для полного provider receipt используй сочетание `--first-turn --provider ...`. `--profiles` сравнивает каждый поставляемый профиль с обоими провайдерами |
+| `skiller registry` | regenerates `skills.json`, plugin manifests `.claude-plugin/*` and `docs/guide/graph.md` (ex `./sync.sh --update-registry`) |
+| `swissknifeman validate` | `scripts/validate.sh` (same as CI) |
+| `skiller doctor` | python3, symlink, PATH, projects.json, registry cleanliness, profiles |
+| `skiller doctor --context --provider codex [--target DIR] [--json]` | reads the actual Codex prompt inventory via native CLI and displays typed diagnostics `SKILL_DUPLICATE_NAME`, `CODEX_PLUGIN_ENABLED_OUTSIDE_PROJECT_POLICY` and `CODEX_DESIRED_PLUGIN_NOT_EFFECTIVE`; command read-only, separates observed inventory from managed project estimate and explicitly excludes platform overhead from the total |
+| `skiller budget --first-turn [--provider claude-code\|codex\|cursor] [--target DIR] [--json] [--strict]` | provider-aware always-on footprint of the first move. Claude Code believes skills+agents+CLAUDE.md/rules+alive SessionStart+MCP; Codex believes `AGENTS.md`, excludes Claude agents/hooks and replaces managed skill estimate actual native prompt inventory. Unavailable native inventory gives `INCOMPLETE`, a `--strict` terminates with a non-zero code. Threshold managed footprint: OK ≤16K / ELEVATED ≤23K / WARN >23K. Fleet - `maind doctor --context`. MCP remains a mode-dependent evaluation `deferred|auto|off` |
+| `skiller budget --first-turn --with-plugins [--target DIR] [--json]` | adds always-on price installed marketplace-project plugins (`claude plugin list/details`, call `details` — under `cwd` project, local-scope alien plugins CWD do not resolve) additive keys `plugins`/`session_total`/`session_verdict`; without the flag, the output does not change. Requires `--first-turn`; listing failure → `n/a`; unclaimed plugin price - `broken` (the listing itself declared the plugin a broken field `errors`) separate from `unparsed` (unrecognized upstream format), never silent 0. **The verdict thresholds are calibrated precisely at this plugin-inclusive value** (`session_total`): baseline fleet n=22, median plugin sum 8,741 current → `16K`/`23K` instead of the previous ones `7K`/`10K`, counted before plugins were even counted |
+| `skiller budget --provider claude-code\|codex [--profile P\|--config F\|--target DIR]` | adds to normal skill-budget listing model without the rest first-turn surfaces. For complete provider receipt use the combination `--first-turn --provider ...`. `--profiles` compares each supplied profile with both providers |
 
-**Строка «исключено записей: N (по полю …)»** в отчётах `--first-turn` и `--provider`
-. Запись скилла, несущего `disable-model-invocation: true`
-или `paths:`, в резидентный листинг Claude Code **не входит** — измеритель её не считает и
-печатает число исключений с полем-причиной, а рядом — цену, ушедшую из листинга. Основание —
-НАБЛЮДЕНИЕ стенда на живой 2.1.220, не документация: оба поля дали одну и ту же дельту оси A
-(−88 на запись, воспроизведено байт-в-байт в двух прогонах), причём для `paths:` это
-противоречит доковой строке «The listing always contains every skill name»
-(§3.1–3.2). Условие механизма
-`paths:` — «сессия ПРОЧЛА совпавший файл», а не «файл лежит в дереве»
-(`findings/P3-paths-mechanism.md` §2), и на ПЕРВОМ ходу прочитанных файлов нет по построению,
-поэтому исключение безусловно. В JSON сведения приезжают аддитивно:
-`sources.skills.excluded`/`excluded_by`/`excluded_raw` (`--first-turn`) и
-`listing.excluded`/`excluded_by`/`excluded_raw` (`--provider`) — ключи `total`/`verdict` и
-смысл прежних ключей не меняются. Для `--provider codex` исключение **не применяется**:
-поля измерены только на Claude Code, и codex-ветка сознательно продолжает завышать, вместо
-недоказанного занижения.
-| `swissknifeman version` | git SHA + путь к реестру |
+**String «excluded entries: N (by field …)»** in reports `--first-turn` and `--provider`
+. Recording a skill that carries `disable-model-invocation: true`
+or `paths:`, to resident listing Claude Code **not included** — the meter does not count it and
+prints the number of exceptions with a reason field, and next to it the price that was removed from the listing. Base -
+OBSERVATION of the stand on live 2.1.220, not documentation: both fields gave the same axis delta A
+(−88 for recording, played back byte-by-byte in two runs), and for `paths:` this
+contradicts dockline «The listing always contains every skill name»
+(§3.1–3.2). Mechanism condition
+`paths:` — «session READ matched file», and not «file is in the tree»
+(`findings/P3-paths-mechanism.md` §2), and on the FIRST move there are no read files by construction,
+so the exception is unconditional. B JSON information arrives additively:
+`sources.skills.excluded`/`excluded_by`/`excluded_raw` (`--first-turn`) and
+`listing.excluded`/`excluded_by`/`excluded_raw` (`--provider`) — keys `total`/`verdict` and
+the meaning of the previous keys does not change. For `--provider codex` exception **not applicable**:
+fields measured only on Claude Code, and codex-thread deliberately continues to overestimate, instead
+unproven understatement.
+| `swissknifeman version` | git SHA + path to the registry |
 
-## Карта проектов: `~/.swissknifeman/projects.json`
+## Project map: `~/.swissknifeman/projects.json`
 
-Пополняется автоматически при `connect`/`vendor`/`update`. Записи с ключом
+Replenishes automatically when `connect`/`vendor`/`update`. Records with a key
 (path, channel):
 
 ```json
@@ -176,66 +176,66 @@ Read-only отчёт: корень и маркер, каналы, дрейф п�
 }
 ```
 
-`profile_source` управляет поведением `update`: `autodetect`/`config`
-пере-резолвятся с диска, явные `flag`/`plugins`/`buckets` воспроизводятся.
-Запись атомарная; повреждённый файл переименовывается в
-`projects.json.corrupt.<дата>` и пересоздаётся — записи восстанавливаются
-adopt-ом при следующем `update` в проекте.
+`profile_source` controls behavior `update`: `autodetect`/`config`
+will be re-resolved from disk, explicit `flag`/`plugins`/`buckets` are being reproduced.
+Write is atomic; the damaged file is renamed to
+`projects.json.corrupt.<date>` and is recreated - records are restored
+adopt-ohm at the next `update` in the project.
 
-Provider-aware vendor lock хранит legacy Claude entries в `skills`, а Codex — в
-`providers.codex`; ключ карты проекта — `(path, channel, provider)`. Два
-provider-а не могут владеть одним physical skills path: операция fail-closed до
-копирования или prune.
+Provider-aware vendor lock stores legacy Claude entries in `skills`, a Codex — in
+`providers.codex`; project map key - `(path, channel, provider)`. Two
+provider-and cannot own one physical skills path: operation fail-closed to
+copy or prune.
 
 ## Troubleshooting
 
-- **`bash: swissknifeman: No such file or directory`** — симлинк повис
-  (репозиторий реестра переехал или удалён). Перезапустите `./install.sh`
-  из нового расположения репозитория.
-- **`~/.local/bin` не в PATH** — `install.sh` печатает команду для вашего
-  шелла; после добавления перезапустите терминал.
-- **`python3 is required`** — установите python3 (`apt install python3` /
+- **`bash: swissknifeman: No such file or directory`** — symlink hung
+  (registry repository has moved or been deleted). Restart `./install.sh`
+  from the new repository location.
+- **`~/.local/bin` not in PATH** — `install.sh` prints the command for your
+  shell; After adding, restart the terminal.
+- **`python3 is required`** — install python3 (`apt install python3` /
   `brew install python3`).
-- **Проект не находится** — нет ни `.swissknife.json`, ни `.claude/`, ни
-  `.git` вверх по дереву; создайте `.swissknife.json` в корне проекта.
-- Общая диагностика: `skiller doctor`.
+- **Project not found** — no `.swissknife.json`, neither `.claude/`, neither
+  `.git` up the tree; create `.swissknife.json` in the project root.
+- General diagnostics: `skiller doctor`.
 
 ## Deprecated
 
-`scripts/connect-claude.sh` и `./sync.sh --update-registry` — тонкие
-wrapper'ы на один релиз, переадресуют в CLI. Brain-sync (`BRAIN_PATH`)
-удалён: brain подключается как обычный проект (`cd <brain> && swissknifeman
-vendor`, дальше `skiller update`).
-# Проверяемая поставка релиза
+`scripts/connect-claude.sh` and `./sync.sh --update-registry` — thin
+wrapper's for one release, will be redirected to CLI. Brain-sync (`BRAIN_PATH`)
+deleted: brain connects as a regular project (`cd <brain> && swissknifeman
+vendor`, next `skiller update`).
+# Verified release delivery
 
-`skiller version --json` показывает umbrella tag/commit и независимые unit versions/digests.
-`skiller attest --release vX.Y.Z --previous vA.B.C` генерирует `releases/vX.Y.Z.json`;
-`--check` проверяет свежесть и immutable version tuple. После проверки generator locks
-и commit запустите `python3 scripts/verify-tag.py vX.Y.Z` до создания annotated tag.
+`skiller version --json` shows umbrella tag/commit and independent unit versions/digests.
+`skiller attest --release vX.Y.Z --previous vA.B.C` generates `releases/vX.Y.Z.json`;
+`--check` checks freshness and immutable version tuple. After verification generator locks
+and commit run `python3 scripts/verify-tag.py vX.Y.Z` before creation annotated tag.
 
-`skiller deliver --release vX.Y.Z --all --dry-run` классифицирует lost ownership без записи.
-Без `--dry-run` команда обновляет registered projects и установленные native plugins,
-восстанавливая только exact-current/exact-known-old или закрытую generated marketplace форму.
-Modified/unknown файлы сохраняются и оставляют PARTIAL. До изменения сохраняются preimages.
-`--target PATH` ограничивает project delivery; `--no-native` явно исключает cache stage.
+`skiller deliver --release vX.Y.Z --all --dry-run` classifies lost ownership without entry.
+Without `--dry-run` command updates registered projects and installed native plugins,
+restoring only exact-current/exact-known-old or closed generated marketplace form.
+Modified/unknown files are saved and left PARTIAL. Until changes are saved preimages.
+`--target PATH` limits project delivery; `--no-native` explicitly excludes cache stage.
 
-Штатный post-tag путь — `./bin/swissknifeman release-fleet vX.Y.Z [--dry-run]`. Он требует,
-чтобы локальный annotated tag указывал на `HEAD`, проверяет tag и release attestation, выполняет
-`skiller deliver --all` и `maind sync --all`, затем повторяет оба dry-run и fleet diagnostics.
-Команда не создаёт и не перемещает теги, не делает push и не публикует GitHub Release.
+Standard post-tag path - `./bin/swissknifeman release-fleet vX.Y.Z [--dry-run]`. He demands,
+to local annotated tag pointed to `HEAD`, checks tag and release attestation, executes
+`skiller deliver --all` and `maind sync --all`, then repeats both dry-run and fleet diagnostics.
+The command does not create or move tags, does not push and does not publish GitHub Release.
 
-Delivery строит историю из release snapshot, закоммиченных под реально существующими тегами.
-После provider update он удаляет из Claude/Codex cache только непривязанные каталоги прежних
-версий, чьи managed bytes точно совпали с такой attestation. Текущие и ещё referenced каталоги
-сохраняются; unknown/modified cache и недоступный provider state дают blocked/PARTIAL. Решение,
-digest и readback удаления записываются в delivery receipt; dry-run показывает тот же план без
-удаления.
+Delivery builds a story from release snapshot, committed under real-life tags.
+After provider update it removes from Claude/Codex cache only unlinked legacy directories
+versions whose managed bytes exactly coincided with this attestation. Current and more referenced directories
+are saved; unknown/modified cache and unavailable provider state give blocked/PARTIAL. Solution,
+digest and readback deletions are recorded in delivery receipt; dry-run shows the same plan without
+removal.
 
-Receipt хранится в `~/.swissknifeman/receipts/delivery/<release>/`; GREEN требует readback
-всех выбранных targets. Existing sessions отмечаются `restart-required`: начните новую сессию.
-Source-managed bytes, native cache, project projection и loaded session — разные поверхности.
-Commit SHA добавляется к runtime receipt через annotated tag: committed attestation хранит tag,
-date и tree digests, чтобы не создавать самоссылочный SHA release commit.
+Receipt is stored in `~/.swissknifeman/receipts/delivery/<release>/`; GREEN requires readback
+all selected targets. Existing sessions are marked `restart-required`: start a new session.
+Source-managed bytes, native cache, project projection and loaded session — different surfaces.
+Commit SHA is added to runtime receipt via annotated tag: committed attestation stores tag,
+date and tree digests, to avoid creating a self-referencing SHA release commit.
 # Native cache and legacy Codex copies
 
 `connect --cleanup-codex-vendored` explicitly retires only directories declared by a known v1 `.agents/skills` vendor manifest. It keeps unlisted local skills, refuses foreign lock ownership, and moves the old copies into `.swissknifeman/backups/` so they can be restored. It does not change the project's configured plugin selection.

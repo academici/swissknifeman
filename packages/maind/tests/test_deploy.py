@@ -1,4 +1,4 @@
-"""Тесты deploy — провижининг MCP-серверов хаба в проекты (недеструктивно, идемпотентно)."""
+"""Tests deploy — provisioning MCP-hub servers into projects (non-destructive, idempotent)."""
 import json
 import tempfile
 import unittest
@@ -173,16 +173,16 @@ class TestDeploy(unittest.TestCase):
             self.assertIsNotNone(res)
             servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
             self.assertIn("maind", servers)
-            self.assertNotIn("agentmemory", servers)   # raw-сервер больше не раскатывается
+            self.assertNotIn("agentmemory", servers)   # raw-server no longer rolls out
             self.assertEqual(res["scope"], "project:flexcrm")
             self.assertEqual(servers["maind"]["args"], ["mcp", "--scope", "project:flexcrm"])
-            # MCP-клиент запускает bare command без shell expansion.
+            # MCP-client starts bare command without shell expansion.
             self.assertEqual(servers["maind"]["command"], "maind")
             self.assertNotIn("/", servers["maind"]["command"])
 
     def test_emits_example_by_default(self):
-        # P2.4: default-on — без явного mcp.emit_example деплой пишет .mcp.json.example
-        # и вносит реальный файл в .gitignore.
+        # P2.4: default-on — without explicit mcp.emit_example deployment writes .mcp.json.example
+        # and brings the real file into the .gitignore.
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             ppath = _project(tmp)
@@ -212,13 +212,13 @@ class TestDeploy(unittest.TestCase):
             deploy.deploy_project(env, cfg, cfg["projects"][0])
             first_example = (ppath / ".mcp.json.example").read_text(encoding="utf-8")
             first_gitignore = (ppath / ".gitignore").read_text(encoding="utf-8")
-            deploy.deploy_project(env, cfg, cfg["projects"][0])  # второй прогон — без дублей
+            deploy.deploy_project(env, cfg, cfg["projects"][0])  # second run - no duplicates
             self.assertEqual((ppath / ".mcp.json.example").read_text(encoding="utf-8"),
                              first_example)
             self.assertEqual((ppath / ".gitignore").read_text(encoding="utf-8"), first_gitignore)
 
     def test_removes_stale_agentmemory(self):
-        # старый .mcp.json с raw-сервером agentmemory → деплой его убирает (footgun)
+        # old .mcp.json with raw-server agentmemory → deployment removes it (footgun)
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             ppath = _project(tmp)
@@ -237,12 +237,12 @@ class TestDeploy(unittest.TestCase):
             cfg = _config(ppath)
             deploy.deploy_project(env, cfg, cfg["projects"][0])
             cursor = json.loads((ppath / ".cursor" / "mcp.json").read_text())["mcpServers"]
-            self.assertIn("laravel-boost", cursor)  # чужой сохранён
+            self.assertIn("laravel-boost", cursor)  # alien saved
             self.assertIn("maind", cursor)
             self.assertTrue((ppath / ".mcp.json").exists())  # cursor auto-detected → both
 
     def test_preserves_foreign_server_in_mcp_json(self):
-        # Ручной сторонний сервер (playwright) в .mcp.json НЕ выкидывается при деплое.
+        # Manual third party server (playwright) in .mcp.json is NOT thrown out during deployment.
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             ppath = _project(tmp)
@@ -253,12 +253,12 @@ class TestDeploy(unittest.TestCase):
             cfg = _config(ppath)
             deploy.deploy_project(env, cfg, cfg["projects"][0])
             servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
-            self.assertIn("playwright", servers)            # чужой сохранён
+            self.assertIn("playwright", servers)            # alien saved
             self.assertEqual(servers["playwright"]["args"], ["scripts/playwright-mcp.sh"])
             self.assertIn("maind", servers)
 
     def test_broken_channel_skipped_others_continue(self):
-        # Битый .cursor/mcp.json НЕ валит деплой: его пропускаем (не трогаем), .mcp.json пишем.
+        # Broken .cursor/mcp.json Deployment does NOT fail: we skip it (do not touch), .mcp.json we write.
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             ppath = _project(tmp)
@@ -266,11 +266,11 @@ class TestDeploy(unittest.TestCase):
             broken = ppath / ".cursor" / "mcp.json"
             broken.write_text("{ broken json", encoding="utf-8")
             cfg = _config(ppath)
-            res = deploy.deploy_project(env, cfg, cfg["projects"][0])  # не бросает
+            res = deploy.deploy_project(env, cfg, cfg["projects"][0])  # does not throw
             self.assertIn(".cursor/mcp.json", res["skipped"])
-            self.assertEqual(broken.read_text(encoding="utf-8"), "{ broken json")  # не тронут
+            self.assertEqual(broken.read_text(encoding="utf-8"), "{ broken json")  # untouched
             servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
-            self.assertIn("maind", servers)                 # валидный канал отработал
+            self.assertIn("maind", servers)                 # valid channel completed
 
     def test_idempotent(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -282,7 +282,7 @@ class TestDeploy(unittest.TestCase):
             self.assertTrue(all(not w["changed"] for w in res2["written"]))
 
     def test_graphify_absent_skipped(self):
-        # Команды код-графа нет в PATH → skipped-not-installed, остальное пишется.
+        # There is no code graph command in PATH → skipped-not-installed, the rest is written.
         orig = deploy.shutil.which
         deploy.shutil.which = lambda name: None
         try:
@@ -294,12 +294,12 @@ class TestDeploy(unittest.TestCase):
                 self.assertEqual(res["code"], "skipped-not-installed")
                 servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
                 self.assertNotIn("serena", servers)
-                self.assertIn("maind", servers)   # сервер памяти на месте
+                self.assertIn("maind", servers)   # memory server in place
         finally:
             deploy.shutil.which = orig
 
     def test_graphify_present_written_serena_default(self):
-        # Код-граф по умолчанию — Serena через uvx; {root} → путь проекта. Мокаем uvx.
+        # Default code graph is Serena via uvx; {root} → project path. Let's mokay uvx.
         orig = deploy.shutil.which
         deploy.shutil.which = lambda name: f"/usr/bin/{name}"
         try:
@@ -312,13 +312,13 @@ class TestDeploy(unittest.TestCase):
                 servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
                 self.assertEqual(servers["serena"]["command"], "uvx")
                 self.assertIn("start-mcp-server", servers["serena"]["args"])
-                self.assertIn(str(ppath), servers["serena"]["args"])   # {root} подставлен
+                self.assertIn(str(ppath), servers["serena"]["args"])   # {root} substituted
                 self.assertNotIn("{root}", servers["serena"]["args"])
         finally:
             deploy.shutil.which = orig
 
     def test_graphify_override(self):
-        # graphify_command/args/server_name → произвольный code-intelligence MCP.
+        # graphify_command/args/server_name → arbitrary code-intelligence MCP.
         orig = deploy.shutil.which
         deploy.shutil.which = lambda name: f"/usr/bin/{name}"
         try:
@@ -349,7 +349,7 @@ class TestDeploy(unittest.TestCase):
             self.assertTrue(p["deployed"])
             self.assertEqual(p["mcp"]["scope"], "project:flexcrm")
             self.assertTrue(p["mcp"]["maind"])
-            self.assertFalse(p["mcp"]["agentmemory"])   # raw-сервер выведен из деплоя
+            self.assertFalse(p["mcp"]["agentmemory"])   # raw-server has been taken out of deployment
 
     def test_mark_deployed_preserves_extra_servers(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -364,7 +364,7 @@ class TestDeploy(unittest.TestCase):
             self.assertEqual(p["mcp"]["extra_servers"], extra)
 
     def test_url_from_resolve_ports(self):
-        # legacy raw-сервер (--with-agentmemory) несёт разрешённый URL из resolve_ports
+        # legacy raw-server (--with-agentmemory) carries permitted URL from resolve_ports
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             ppath = _project(tmp)
@@ -374,7 +374,7 @@ class TestDeploy(unittest.TestCase):
             self.assertIn("4211", servers["agentmemory"]["env"]["AGENTMEMORY_URL"])
 
     def test_perplexity_web_disabled_by_default(self):
-        # Без секции mcp.perplexity_web сервер не раскатывается (opt-in).
+        # Without section mcp.perplexity_web server does not roll out (opt-in).
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             ppath = _project(tmp)
@@ -400,7 +400,7 @@ class TestDeploy(unittest.TestCase):
             self.assertIn("perplexity-web", servers)
             self.assertIn("perplexity-web", res["servers"])
             self.assertEqual(servers["perplexity-web"]["args"], ["--pool=default"])
-            # MCP-клиент запускает launcher напрямую, поэтому shell-indirection недопустима.
+            # MCP-client starts launcher directly, so shell-indirection is not valid.
             self.assertEqual(servers["perplexity-web"]["command"],
                              "/opt/pplx/start.sh")
 
@@ -423,7 +423,7 @@ class TestDeploy(unittest.TestCase):
             self.assertEqual(servers["perplexity-web"]["args"], ["--pool=ns-axioma"])
 
     def test_perplexity_web_per_project_override(self):
-        # per-project override отключает сервер даже при глобальном enabled.
+        # per-project override shuts down the server even with global enabled.
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             ppath = _project(tmp)

@@ -7,14 +7,14 @@ docs/.vitepress/dist/
 docs/.vitepress/cache/
 packages/*/docs/.vitepress/dist/
 packages/*/docs/.vitepress/cache/
-# playwright MCP --output-dir (P5.6): скриншоты/снапшоты сессии, не покрыты
-# раздаваемым .gitignore-шаблоном (harness такого не раздаёт) — проект,
-# подключивший пресет playwright, обязан игнорировать это сам.
+# playwright MCP --output-dir (P5.6): screenshots/session snapshots, not covered
+# distributed .gitignore-template (harness doesn't give out stuff like that) — project,
+# connected preset playwright, I have to ignore it myself.
 .playwright-mcp/
 .claude/settings.json
-# personal/local Claude-настройки проекта (права, defaultMode — могут содержать
-# bypassPermissions; машинно-специфичны, в публичный репо не коммитим). Раньше
-# ловилось только глобальным ~/.config/git/ignore — добавлено явно для свежих клонов/CI.
+# personal/local Claude-project settings (rights, defaultMode — may contain
+# bypassPermissions; mechanically-specific, We don’t commit to a public repo). Earlier
+# caught only global ~/.config/git/ignore — added explicitly for fresh clones/CI.
 .claude/settings.local.json
 # personal per-project hook overrides (autonomy/mode — must not be committed)
 .claude/auto-approve.env.ini
@@ -23,59 +23,59 @@ packages/*/docs/.vitepress/cache/
 .claude/memory.config.json
 .claude/run-report.env.ini
 .codex/memory.env.ini
-# Эфемерные (временные) артефакты analyst-уроков — машинно-специфичны, не коммитим.
-# Важные файлы (events.ndjson, audit.ndjson) остаются.
+# Ephemeral (temporary) artifacts analyst-lessons — mechanically-specific, we don't commit.
+# Important files (events.ndjson, audit.ndjson) remain.
 .claude/analyst/lessons/ephemeral/
 .claude/analyst/**/*.ndjson
 settings.local.json.bak
 MERGE-PLAN.snapshots/
-# Приватный конфиг узла maind (пути ко всем проектам); шаблон — config.example.json
+# Private node config maind (paths to all projects); sample — config.example.json
 config.json
-# review-gate: шаблон check_command/checks[] — репозиторный источник истины пресета
-# (машинно-локальный экземпляр живёт вне репо, в ~/.claude/hooks/review-gate/), не
-# приватный конфиг — трекается вопреки правилу выше (найдено P9.1, D135 в plan.md).
+# review-gate: sample check_command/checks[] — preset repository source of truth
+# (mechanically-local instance lives outside the repo, V ~/.claude/hooks/review-gate/), Not
+# private config — tracks contrary to the rule above (found P9.1, D135 V plan.md).
 !packages/harness/configs/claude-code/hooks/review-gate/config.json
 # skiller eval runner — generated benchmark of any skill (run provenance, not a manual artifact).
 packages/skiller/skills/**/evals/benchmark.json
-# Machine-owned allowlist safe-dirs (пути машины); шаблон — safe-dirs.example.json,
-# читают хук auto-approve (lib/safedirs.py) и CLI `harness safe-dirs`
+# Machine-owned allowlist safe-dirs (car path); sample — safe-dirs.example.json,
+# read the hook auto-approve (lib/safedirs.py) And CLI `harness safe-dirs`
 safe-dirs.json
 
-# Машинно-специфичный MCP-конфиг проекта: абсолютные пути к лаунчеру maind (утечка
-# пути + ломает клон у других). Шаблон — .mcp.json.example; реальный файл генерит
-# `maind` (sync/deploy → mcpconfig.write_mcp). .bak — бэкап от write_mcp.
+# Machine-specific MCP-project config: absolute paths to the launcher maind (leakage
+# ways + breaks the clone of others). Sample — .mcp.json.example; generates real file
+# `maind` (sync/deploy → mcpconfig.write_mcp). .bak — backup from write_mcp.
 .mcp.json
 .mcp.json.bak
 .cursor/mcp.json
 .cursor/mcp.json.bak
-# Cursor lifecycle: режимы поверхностей (как .claude/*.env.ini) — пишет `harness hooks --provider cursor`.
+# Cursor lifecycle: surface modes (How .claude/*.env.ini) — writes `harness hooks --provider cursor`.
 .cursor/*.env.ini
-# Cursor/Codex hook runtime: tool-telemetry sidecars (harness.hooks), не коммитим.
+# Cursor/Codex hook runtime: tool-telemetry sidecars (harness.hooks), we don't commit.
 .cursor/state/
 .cursor/logs/
 .codex/state/
-# Запуски агентов с cwd внутри пакета (тот же sidecar, иной корень).
+# Agent launches from cwd inside the package (same sidecar, different root).
 packages/*/.cursor/
 
-# Генерируемые maind хук-скрипты проекта (SessionStart/SessionEnd) + их рантайм-state:
-# пишет `maind sync` из templates/health/*; лаунчер maind резолвится в самих скриптах
-# из env MAIND_BIN → PATH (без машинно-специфичного пути). Не коммитим — как .mcp.json.
+# Generated maind hook-project scripts (SessionStart/SessionEnd) + their runtime-state:
+# writes `maind sync` from templates/health/*; launcher maind resolves in the scripts themselves
+# from env MAIND_BIN → PATH (without machine-specific path). We don't commit — How .mcp.json.
 .claude/maind-*.sh
 .claude/.maind-feature-log.last
 .claude/scheduled_tasks.lock
 
-# Сборочные копии per-package доков (источник — packages/<pkg>/docs; см. scripts/docs-sync.sh)
+# Assembly copies per-package docks (source — packages/<pkg>/docs; cm. scripts/docs-sync.sh)
 docs/skiller/
 docs/harness/
 docs/maind/
 docs/analyst/
 
-# Внутренние research-доки (аудиты/трекеры) — локально, не публиковать
-# (анкор к корню: НЕ затрагивать бакет skills/research реестра)
+# Domestic research-docks (audits/trackers) — locally, do not publish
+# (anchor to root: DO NOT touch the bucket skills/research registry)
 /research/
 /RESEARCH/
-# Локальные рабочие следы analyst и черновые аудиты: не являются плановыми
-# findings/research и не должны попадать в публичную историю репозитория.
+# Local work traces analyst and draft audits: are not planned
+# findings/research and should not be included in the public history of the repository.
 /.swissknife/
 /audits/
 *.bak
@@ -84,7 +84,7 @@ docs/analyst/
 
 /.p*
 
-# Исторические проекции пунктов materialize только по явной команде аудитора.
+# Historical projections of points materialize only by explicit command of the auditor.
 .plan-cache/history/
 # Project-local Task terminal-admission runtime state (leases and hash-only events).
 .swissknifeman/task-terminal/

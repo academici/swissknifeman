@@ -1,42 +1,42 @@
 #!/usr/bin/env bash
-# harness — CLI настройки окружения Claude Code (permissions, MCP, хуки).
-# Тонкий лаунчер: проверяет окружение и передаёт управление пакету lib/harness
-# (python3 -m harness). Вся логика — в lib/ (импортируемо и тестируемо: см. tests/).
+# harness — CLI environment settings Claude Code (permissions, MCP, hooks).
+# Thin launcher: checks the environment and transfers control to the package lib/harness
+# (python3 -m harness). All logic is in lib/ (importable and testable: see tests/).
 #
-# Команды (запускаются из потребляющего проекта / с --target):
-#   permissions  влить permissions-пресеты в .claude/settings*.json (alias: apply)
+# Commands (run from the consuming project / with --target):
+#   permissions  pour in permissions-presets in .claude/settings*.json (alias: apply)
 #                [--target P] [--preset a,b] [--file F] [--dry-run] [--list] [--global]
-#   mcp          влить MCP-пресеты в .mcp.json, merge-only [--target P] [--mcp a,b] [--list] [--dry-run]
-#   hooks        включить хуки по проекту / поставить файлы хуков глобально
+#   mcp          pour in MCP-presets in .mcp.json, merge-only [--target P] [--mcp a,b] [--list] [--dry-run]
+#   hooks        enable project hooks / install hook files globally
 #                [--target P] [--auto-approve MODE] [--memory BRAIN:MODE] [--router MODE] [--run-report on|off] [--output-style lean|off] [--file F] [--global] [--dry-run]
-#   router       сгенерить каталог возможностей intent-router в .claude/agent-router.config.json
+#   router       generate feature catalog intent-router in .claude/agent-router.config.json
 #                --generate --target P [--dry-run]
-#   agent-packs  детерминированный рендер/апгрейд пака субагентов в проект (без агента)
+#   agent-packs  deterministic render/upgrade of a pack of subagents to the project (without agent)
 #                <list|render|upgrade|doctor> [--pack P] [--target P] [--auto] [--answer K=V] [--dry-run]
-#   safe-dirs    allowlist доверенных директорий для rm/rmdir (machine-owned)
+#   safe-dirs    allowlist trusted directories for rm/rmdir (machine-owned)
 #                <init|list|add|remove|prune-ask> [PATH] [--exclude] [--global] [--target P] [--all-projects] [--dry-run]
-#   wf           статус фонового workflow-прогона Claude Code (детерминированный парс)
+#   wf           background status workflow-run Claude Code (deterministic pars)
 #                status [--run WF_ID] [--project PATH] [--json] [--last N] [--watch] [--interval S]
-#   run          exec-волна плана (драйвер P4.2-P4.6): очередь → воркер → вердикт → журнал
+#   run          exec-plan wave (driver P4.2-P4.6): queue → worker → verdict → log
 #                <PLAN-ID> <Pn> [--dry-run] [--limit N] [--timeout S] [--plans-root PATH] [--json]
-#   instructions владение корневых/пакетных CLAUDE.md/AGENTS.md (паритет провайдеров,
-#                owner-gated adoption, гейт дрейфа): <plan|check|adopt|apply|repair>
+#   instructions root ownership/batch CLAUDE.md/AGENTS.md (provider parity,
+#                owner-gated adoption, drift gate): <plan|check|adopt|apply|repair>
 #                [--target P] [--scope a,b] [--provider a,b] [--authorize a,b]
 #                [--owner-decision D#] [--mapping FILE] [--preimage-dir DIR] [--json]
-#   doctor       диагностика окружения (пресеты, скрипт, файлы хуков в ~/.claude)
-#   version      версия (git SHA) и путь к пакету
+#   doctor       environment diagnostics (presets, script, hook files in ~/.claude)
+#   version      version (git SHA) and package path
 set -euo pipefail
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
 
 if ! command -v python3 >/dev/null 2>&1; then
-  echo "ERROR: harness требует python3 (apt install python3 / brew install python3)" >&2
+  echo "ERROR: harness requires python3 (apt install python3 / brew install python3)" >&2
   exit 1
 fi
 if [[ ! -d "$REPO_ROOT/lib/harness" || ! -d "$REPO_ROOT/configs/claude-code" ]]; then
-  echo "ERROR: пакет harness повреждён (нет lib/harness или configs/claude-code) в $REPO_ROOT" >&2
-  echo "Если репозиторий переехал — перезапустите install.sh из нового расположения." >&2
+  echo "ERROR: package harness damaged (no lib/harness or configs/claude-code) in $REPO_ROOT" >&2
+  echo "If the repository has moved, restart install.sh from the new location." >&2
   exit 1
 fi
 
@@ -52,13 +52,13 @@ case "$CMD" in
     echo "harness $sha ($REPO_ROOT)"
     exit 0 ;;
   permissions|apply|mcp|hooks|router|agent-packs|safe-dirs|wf|run|instructions|doctor) ;;
-  *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
+  *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 
-# Корень монорепо (на два уровня выше пакета) даёт пакет `core` (общий фундамент).
-# Fallback на standalone-раскладку: если каталога core рядом нет — путь не добавляется.
-# (Python-эквивалент — core.repo.find_monorepo_root; здесь фикс. ../.., т.к. core
-#  ещё не на PYTHONPATH — осознанный дубль bash-стороны.)
+# Root monorepo (two levels above the package) gives the package `core` (general foundation).
+# Fallback on standalone-layout: if directory core is not nearby - the path is not added.
+# (Python-equivalent - core.repo.find_monorepo_root; fixed here. ../.., because core
+#  not yet PYTHONPATH — conscious take bash-sides.)
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
 exec env PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \

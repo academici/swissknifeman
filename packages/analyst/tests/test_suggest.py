@@ -1,5 +1,5 @@
-"""Тесты suggest (P4): чистые генераторы, slug-правила, edit-safety re-suggest, dry-run,
---min-weight, сироты-WARN, mutual-exclusion. Изоляция в tmpdir; без сети/демонов."""
+"""Tests suggest (P4): pure generators, slug-rules, edit-safety re-suggest, dry-run,
+--min-weight, orphans-WARN, mutual-exclusion. Isolation in tmpdir; without network/demons."""
 import io
 import json
 import tempfile
@@ -22,9 +22,9 @@ class TestSuggest(unittest.TestCase):
     def tearDown(self):
         self._tmp.cleanup()
 
-    def _seed_index(self, pid, namespace, projects, *, trigger="положить сервис в domain-слой",
-                    action="классы сервисов под Domain", kind="gotcha", members=None):
-        """Засеять полный index/by_pattern/<pid>.json (как пишет scan.write_artifacts)."""
+    def _seed_index(self, pid, namespace, projects, *, trigger="put the service in domain-layer",
+                    action="service classes under Domain", kind="gotcha", members=None):
+        """Seed full index/by_pattern/<pid>.json (as he writes scan.write_artifacts)."""
         data = {
             "pattern_id": pid, "namespace": namespace, "projects": list(projects),
             "weight": len(projects), "lessons": len(projects),
@@ -47,20 +47,21 @@ class TestSuggest(unittest.TestCase):
         d = self.env.state_dir / "drafts" / pid
         return d / "SKILL.ru.md", d / "draft.meta.json"
 
-    # ── чистые генераторы ─────────────────────────────────────────────────────
+    # ── pure generators ─────────────────────────────────────────────────────
     def test_slug_name_rules(self):
         self.assertEqual(suggest._slug_name({"trigger": "Put Service In Domain"}),
                          "put-service-in-domain")
-        # reserved слова вырезаются, ведущие/хвостовые дефисы сняты
+        # reserved words are cut out, leading/tail hyphens removed
         self.assertEqual(suggest._slug_name({"trigger": "  Claude helper for Anthropic  "}),
                          "helper-for")
-        # Кириллица не образует валидное name скилла (офиц. ограничение — только [a-z0-9-]) →
-        # выживает лишь латинский токен; сплошная кириллица → fallback. Человек финализирует name.
-        self.assertEqual(suggest._slug_name({"trigger": "положить сервис в Domain"}), "domain")
-        self.assertEqual(suggest._slug_name({"trigger": "только кириллица"}), "skill")
-        # пусто → fallback
+        # Cyrillic does not form a valid name skill (official. limitation - only [a-z0-9-]) →
+        # only the Latin token survives; solid Cyrillic → fallback. Man finalizes name.
+        foreign = "".join(chr(code) for code in (0x43F, 0x43E, 0x43B, 0x43E, 0x436, 0x438, 0x442, 0x44C))
+        self.assertEqual(suggest._slug_name({"trigger": foreign + " Domain"}), "domain")
+        self.assertEqual(suggest._slug_name({"trigger": foreign}), "skill")
+        # empty → fallback
         self.assertEqual(suggest._slug_name({}), "skill")
-        # ≤64 и без хвостового дефиса после обрезки
+        # ≤64 and without a trailing hyphen after trimming
         long = suggest._slug_name({"trigger": "x" * 200})
         self.assertLessEqual(len(long), 64)
         self.assertFalse(long.startswith("-") or long.endswith("-"))
@@ -70,24 +71,24 @@ class TestSuggest(unittest.TestCase):
                                 trigger="put service in domain layer")
         t1 = suggest.build_skill_ru(data, "TODO")
         t2 = suggest.build_skill_ru(data, "TODO")
-        self.assertEqual(t1, t2)                       # детерминизм (нет timestamp в теле)
+        self.assertEqual(t1, t2)                       # determinism (no timestamp in the body)
         self.assertIn("name: put-service-in-domain-layer", t1)
         self.assertIn("bucket: TODO", t1)
-        self.assertIn("повторился в **3 проектах**", t1)
-        self.assertIn("`a` —", t1)                     # members-экземпляры
-        self.assertNotIn("2026-01-01", t1)             # generated_at НЕ в теле
+        self.assertIn("repeated in **3 projects**", t1)
+        self.assertIn("`a` —", t1)                     # members-instances
+        self.assertNotIn("2026-01-01", t1)             # generated_at NOT in the body
 
     def test_description_escapes_yaml_breakers(self):
-        # action с backslash (PHP namespace) в double-quoted YAML description → должен быть экранирован
+        # action with backslash (PHP namespace) in double-quoted YAML description → must be escaped
         data = self._seed_index("p-1", "axioma", ["a", "b", "c"],
                                 action='put under App\\Domain', trigger='say "hi"')
         ru = suggest.build_skill_ru(data, "TODO")
         desc_line = next(l for l in ru.splitlines() if l.startswith("description:"))
-        self.assertIn("App\\\\Domain", desc_line)     # backslash удвоен
-        self.assertNotIn('say "hi"', desc_line)        # голая кавычка не просочилась
-        self.assertIn('say \\"hi\\"', desc_line)       # кавычки экранированы
+        self.assertIn("App\\\\Domain", desc_line)     # backslash doubled
+        self.assertNotIn('say "hi"', desc_line)        # naked quote not leaked
+        self.assertIn('say \\"hi\\"', desc_line)       # quotes escaped
 
-    # ── запись / meta ─────────────────────────────────────────────────────────
+    # ── entry / meta ─────────────────────────────────────────────────────────
     def test_create_draft_writes_ru_and_meta(self):
         self._seed_index("p-1", "axioma", ["a", "b", "c"])
         payload = self._run_json(["p-1"])
@@ -114,30 +115,30 @@ class TestSuggest(unittest.TestCase):
     def test_resuggest_unedited_updates_not_skips(self):
         self._seed_index("p-1", "axioma", ["a", "b", "c"])
         self._run_json(["p-1"])                         # created
-        # тот же паттерн → тело идентично → unchanged
+        # same pattern → body identical → unchanged
         p2 = self._run_json(["p-1"])
         self.assertEqual(p2["results"][0]["status"], "unchanged")
-        # паттерн изменился, тело НЕ правили руками → updated
+        # pattern changed, body was NOT controlled by hands → updated
         self._seed_index("p-1", "axioma", ["a", "b", "c", "d"])
         p3 = self._run_json(["p-1"])
         self.assertEqual(p3["results"][0]["status"], "updated")
         ru, _ = self._draft_paths("p-1")
-        self.assertIn("4 проектах", ru.read_text(encoding="utf-8"))
+        self.assertIn("4 projects", ru.read_text(encoding="utf-8"))
 
     def test_resuggest_preserves_human_edits(self):
         self._seed_index("p-1", "axioma", ["a", "b", "c"])
         self._run_json(["p-1"])
         ru, _ = self._draft_paths("p-1")
-        ru.write_text(ru.read_text(encoding="utf-8") + "\nРУЧНАЯ ПРАВКА ЧЕЛОВЕКА\n", encoding="utf-8")
+        ru.write_text(ru.read_text(encoding="utf-8") + "\nHUMAN MANUAL EDITING\n", encoding="utf-8")
         p2 = self._run_json(["p-1"])
         self.assertEqual(p2["results"][0]["status"], "skipped-edited")
-        self.assertIn("РУЧНАЯ ПРАВКА ЧЕЛОВЕКА", ru.read_text(encoding="utf-8"))   # тело не тронуто
-        # --force перезаписывает правку
+        self.assertIn("HUMAN MANUAL EDITING", ru.read_text(encoding="utf-8"))   # body untouched
+        # --force overwrites the edit
         p3 = self._run_json(["p-1", "--force"])
         self.assertEqual(p3["results"][0]["status"], "forced")
-        self.assertNotIn("РУЧНАЯ ПРАВКА ЧЕЛОВЕКА", ru.read_text(encoding="utf-8"))
+        self.assertNotIn("HUMAN MANUAL EDITING", ru.read_text(encoding="utf-8"))
 
-    # ── флаги ─────────────────────────────────────────────────────────────────
+    # ── flags ─────────────────────────────────────────────────────────────────
     def test_dry_run_writes_nothing(self):
         self._seed_index("p-1", "axioma", ["a", "b", "c"])
         payload = self._run_json(["p-1", "--dry-run"])
@@ -158,26 +159,26 @@ class TestSuggest(unittest.TestCase):
             suggest.cmd_suggest(self.env, ["--all", "--min-weight", "abc"])
 
     def test_all_generates_each_pattern(self):
-        self._seed_index("p-1", "axioma", ["a", "b", "c"], trigger="первый паттерн триггер")
-        self._seed_index("p-2", "other", ["x", "y", "z"], trigger="второй паттерн триггер")
+        self._seed_index("p-1", "axioma", ["a", "b", "c"], trigger="first pattern trigger")
+        self._seed_index("p-2", "other", ["x", "y", "z"], trigger="second trigger pattern")
         payload = self._run_json(["--all"])
         self.assertEqual(len(payload["results"]), 2)
         for pid in ("p-1", "p-2"):
             self.assertTrue((self.env.state_dir / "drafts" / pid / "SKILL.ru.md").is_file())
 
-    # ── сироты (D6): WARN, не delete ──────────────────────────────────────────
+    # ── orphans (D6): WARN, not delete ──────────────────────────────────────────
     def test_orphan_draft_reported_not_deleted(self):
-        # черновик есть, паттерна в индексе нет → сирота
+        # there is a draft, there is no pattern in the index → orphan
         self._seed_index("live", "axioma", ["a", "b", "c"])
         self._run_json(["live"])
-        # засеять черновик без индекса
+        # seed draft without index
         orphan_dir = self.env.state_dir / "drafts" / "gone"
         orphan_dir.mkdir(parents=True)
         (orphan_dir / "SKILL.ru.md").write_text("draft", encoding="utf-8")
         (orphan_dir / "draft.meta.json").write_text(json.dumps({"pattern_id": "gone"}), encoding="utf-8")
         payload = self._run_json(["--all"])
         self.assertIn("gone", payload["orphans"])
-        self.assertTrue((orphan_dir / "SKILL.ru.md").exists())   # НЕ удалён
+        self.assertTrue((orphan_dir / "SKILL.ru.md").exists())   # NOT deleted
 
     def test_bucket_override_in_frontmatter(self):
         self._seed_index("p-1", "axioma", ["a", "b", "c"])

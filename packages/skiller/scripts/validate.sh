@@ -19,10 +19,10 @@ python3 - "$REPO_ROOT" <<'PY'
 import json, re, sys
 from pathlib import Path
 
-root = Path(sys.argv[1])  # корень пакета (skills/, lib/, buckets.json)
-# marketplace.json — в корне монорепо; source-пути плагинов относительны корня репо.
-# (Канон — core.repo.find_repo_root; здесь самодостаточный дубль: heredoc гоняется
-#  до установки PYTHONPATH на core — осознанно не импортируем.)
+root = Path(sys.argv[1])  # package root (skills/, lib/, buckets.json)
+# marketplace.json — in root monorepo; source-plugin paths are relative to the repo root.
+# (Canon - core.repo.find_repo_root; here is a self-contained take: heredoc is chasing
+#  before installation PYTHONPATH on core — we do not consciously import.)
 def _repo_root(p):
     for cand in (p, *p.parents):
         if (cand / ".git").exists():
@@ -32,100 +32,100 @@ repo_root = _repo_root(root)
 errors = []
 warnings = []
 
-# --- CLAUDE.md line-count (токен-экономия; WARN, не fail) ------------------
-# CLAUDE.md резидентен КАЖДУЮ сессию (Anthropic target ≤200 строк). Мягкий гейт по
-# монорепо: root + packages/*/CLAUDE.md. Root — зонтичный гид, может легитимно расти →
-# держим warning, не блок.
+# --- CLAUDE.md line-count (token-saving; WARN, not fail) ------------------
+# CLAUDE.md is resident EVERY session (Anthropic target ≤200 lines). Soft gate
+# monorepo: root + packages/*/CLAUDE.md. Root — umbrella guide, can grow legitimately →
+# hold warning, is not a block.
 CLAUDE_MD_MAX_LINES = 200
 for _cmd_md in [repo_root / "CLAUDE.md", *sorted((repo_root / "packages").glob("*/CLAUDE.md"))]:
     if _cmd_md.is_file():
         _n = len(_cmd_md.read_text(encoding="utf-8", errors="replace").splitlines())
         if _n > CLAUDE_MD_MAX_LINES:
-            warnings.append(f"{_cmd_md.relative_to(repo_root)}: {_n} строк "
-                            f"(> {CLAUDE_MD_MAX_LINES}) — CLAUDE.md резидентен каждую сессию, "
-                            "вынеси детали в docs/скиллы (токен-экономия)")
+            warnings.append(f"{_cmd_md.relative_to(repo_root)}: {_n} lines "
+                            f"(> {CLAUDE_MD_MAX_LINES}) — CLAUDE.md is resident every session, "
+                            "put the details in docs/skills (token-saving)")
 
-# --- core-policy.json (декларативная CORE-политика, источник config.py) --------
+# --- core-policy.json (declarative CORE-policy, source config.py) --------
 _core_policy_path = root / "configs" / "core-policy.json"
 if _core_policy_path.is_file():
     try:
         _cp = json.loads(_core_policy_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as _e:
-        errors.append(f"configs/core-policy.json: невалидный JSON: {_e}")
+        errors.append(f"configs/core-policy.json: invalid JSON: {_e}")
         _cp = None
     if isinstance(_cp, dict):
         for _sk in _cp.get("skills", []):
             if not (root / "skills" / _sk / "SKILL.md").is_file():
-                errors.append(f"core-policy.json skills[]: '{_sk}' — нет skills/{_sk}/SKILL.md")
+                errors.append(f"core-policy.json skills[]: '{_sk}' — no skills/{_sk}/SKILL.md")
         for _ex in _cp.get("default_exclude", []):
             if not (root / "skills" / _ex / "SKILL.md").is_file():
                 warnings.append(f"core-policy.json default_exclude[]: '{_ex}' — "
-                                f"нет skills/{_ex}/SKILL.md")
+                                f"no skills/{_ex}/SKILL.md")
 else:
-    warnings.append("configs/core-policy.json отсутствует — config.py на встроенном фолбэке")
+    warnings.append("configs/core-policy.json missing - config.py on built-in fallback")
 
 UPSTREAM_SOURCES = {"github", "http", "file"}
-# replace = зеркало (автонакат); notify = адаптированная копия (только сообщать);
-# fork = форк с нашими правками (обёртка + pristine-зеркало в files[].path; на дрейфе
-#        review_pending=true блокирует распространение — ручной перенос, потом --resolve);
-# merge = композит из ≥2 внешних источников (origins[]: base + supplement/«suggest»),
-#        собранный в единый скилл; синк РУЧНОЙ под управлением агента (на дрейфе любого
-#        origin merge.review_pending=true блокирует — агент пере-мерджит, потом --resolve).
+# replace = mirror (autoroll); notify = adapted copy (report only);
+# fork = fork with our changes (wrapper + pristine-mirror in files[].path; on the drift
+#        review_pending=true blocks distribution - manual transfer, then --resolve);
+# merge = composite of ≥2 external sources (origins[]: base + supplement/«suggest»),
+#        collected into a single skill; sync MANUAL under agent control (on the drift of any
+#        origin merge.review_pending=true blocks - the agent re-merges, then --resolve).
 UPSTREAM_STRATEGIES = {"replace", "notify", "fork", "merge"}
-# Роли источников в composite-скилле (strategy=merge): base — взят за основу;
-# supplement — дополняющий источник-«suggest» (что из него вмерджено — в note/suggest).
+# Roles of sources in composite-skill (strategy=merge): base — is taken as a basis;
+# supplement — complementary source-«suggest» (what is merged from it - into note/suggest).
 ORIGIN_ROLES = {"base", "supplement"}
-# P5.11 (ветка (B) OQ-6): человеческий вердикт по бандлу — машинно читаемая запись
-# рядом со скиллом, а не строка в таблице внутри плана. verdict — что увидел
-# читавший; kind различает бандл, который не вендорит НИЧЕГО (все files[].path
-# пусты — провенанс-ССЫЛКИ на внешние спеки), от вендоренного: знаменатель
-# «N вендоренных бандлов» иначе неоднороден, а якорь вердикта у такого бандла
-# бессмысленен по конструкции. См. docs/guide/vendored-skills.md.
+# P5.11 (thread (B) OQ-6): human verdict on the bundle - machine readable record
+# next to the skill, not a row in the table inside the plan. verdict — what I saw
+# read; kind distinguishes a bundle that does not vendor ANYTHING (all files[].path
+# are empty - provenance-LINKS to external specs), from vendor: denominator
+# «N vendor bundles» is otherwise heterogeneous, and the verdict anchor for such a bundle
+# is meaningless by design. See docs/guide/vendored-skills.md.
 AUDIT_VERDICTS = {"clean", "attention", "risk"}
 UPSTREAM_KINDS = {"reference-only"}
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-# Допустимые значения enum-полей frontmatter + формат версии (semver).
+# Valid values enum-fields frontmatter + version format (semver).
 RISK_VALUES = {"read", "draft", "write", "external"}
 ADAPTER_VALUES = {"claude", "cursor", "fable"}
-LEVEL_VALUES = {"core", "foundation", "extension"}  # опц. поле level (иерархия)
+LEVEL_VALUES = {"core", "foundation", "extension"}  # opt. field level (hierarchy)
 SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
-# Внутрискилловые относительные ссылки (snippets/…, references/…) в теле SKILL.md —
-# должны резолвиться. ../ и .agents/.claude (раскладка проекта-потребителя) и
-# прозовые URL'ы НЕ проверяем (ложные срабатывания на upstream/imported).
+# Intra-skill relative links (snippets/…, references/…) in the body SKILL.md —
+# should resolve. ../ and .agents/.claude (consumer project layout) and
+# prose URL'we DO NOT check (false positives on upstream/imported).
 INTRA_LINK_RE = re.compile(r"\]\((snippets/[^)#]+|references/[^)#]+)\)")
-# lean SKILL.md: тело — точка входа, детали в references/snippets (progressive disclosure).
-# Мягкий порог: тело сверх него → warn (не error), подсказка вынести детали.
-# См. docs/guide/skill-taxonomy.md.
+# lean SKILL.md: body - entry point, details in references/snippets (progressive disclosure).
+# Soft threshold: body above it → warn (not error), hint to take out details.
+# See docs/guide/skill-taxonomy.md.
 LEAN_MAX_BODY_LINES = 150
-# Кириллица в загружаемом EN-only каноне SKILL.md. Жёсткий гейт на frontmatter
-# `description` (резидентный ⊕ tier-0 — постоянный налог в КАЖДОМ запросе).
+# Cyrillic in downloadable EN-only canon SKILL.md. Hard gate on frontmatter
+# `description` (resident ⊕ tier-0 — constant tax in EVERY request).
 CYRILLIC_RE = re.compile(r"[Ѐ-ӿ]")
-# Пороги гейта СОВОКУПНОЙ записи листинга (резидентный tier-0, P3.2 рэтчет,
-# пере-базировано на объединённое поле P3.5): first-party кап записи листинга —
-# 1 536 симв (`name` + `description` + `when_to_use`, см. budget.py `_listing_entry_tokens`/
-# `_listing_entry_chars` — та же формула `(description + " " + when_to_use).strip()`).
-# DESC_WARN_MAX/DESC_ERROR_MAX — консервативный ВНУТРЕННИЙ запас под этим капом (не сам кап):
-# DESC_ERROR_MAX — жёсткий потолок, без исключений (burn-down не спасает выше него).
-# DESC_WARN_MAX — целевая норма; скиллы между WARN и ERROR легальны только если внесены в
-# burn-down (унаследованный долг), иначе — error (новый долг запрещён). См.
-# scripts/desc-burndown.txt. Считается ПО СУММЕ `description` + `when_to_use` — перенос
-# триггер-фразы между полями эту сумму не меняет (§4 findings/P3-native-fields-context-cost).
+# CUMULATIVE listing record gate thresholds (resident tier-0, P3.2 ratchet,
+# re-based on merged field P3.5): first-party listing entry cap -
+# 1 536 char (`name` + `description` + `when_to_use`, see budget.py `_listing_entry_tokens`/
+# `_listing_entry_chars` — same formula `(description + " " + when_to_use).strip()`).
+# DESC_WARN_MAX/DESC_ERROR_MAX — conservative INTERNAL reserve under this cap (not the cap itself):
+# DESC_ERROR_MAX — hard ceiling, no exceptions (burn-down does not save above it).
+# DESC_WARN_MAX — target rate; skills between WARN and ERROR are only legal if included in
+# burn-down (inherited debt), otherwise - error (new debt prohibited). See
+# scripts/desc-burndown.txt. Calculated BY TOTAL `description` + `when_to_use` — transfer
+# trigger phrases between fields do not change this amount (§4 findings/P3-native-fields-context-cost).
 DESC_WARN_MAX = 300
 DESC_ERROR_MAX = 450
-# Нижняя граница качества СОВОКУПНОЙ записи листинга как ТРИГГЕРА (P3.5, рэтчет по образцу
-# верхней — см. desc-trigger-burndown.txt): запись обязана отвечать «когда звать», не только
-# «что это» — фраза ищется в `description` + `when_to_use` вместе (та же сумма, что у гейта
-# длины выше), а не в одном `description`, иначе перенос фразы в `when_to_use` при переносе
-# создал бы ложный новый долг. Регулярка — набор устойчивых маркеров условия применения (не
-# жанра скилла).
+# Lower bound on the quality of an CUMULATIVE listing record as a TRIGGER (P3.5, ratchet according to the pattern
+# top - see. desc-trigger-burndown.txt): entry must respond «when to call», not only
+# «what is this» — phrase is searched in `description` + `when_to_use` together (same amount as gate
+# lengths above), and not in one `description`, otherwise transfer the phrase to `when_to_use` when transferring
+# would create a false new debt. Regular marker - a set of permanent markers, conditions of use (not
+# skill genre).
 DESC_TRIGGER_RE = re.compile(
     r"(use when|activate|use for|use to|when you|whenever|trigger|use this)", re.I
 )
 
 def _load_burndown_file(repo_root_pkg, filename):
-    """scripts/<filename> → set('bucket/name'), комменты(#)/пустые строки игнор.
-    Общий загрузчик для desc-burndown.txt и desc-trigger-burndown.txt (тот же формат)."""
+    """scripts/<filename> → set('bucket/name'), comments(#)/ignore empty lines.
+    General loader for desc-burndown.txt and desc-trigger-burndown.txt (same format)."""
     p = repo_root_pkg / "scripts" / filename
     if not p.is_file():
         return set()
@@ -139,16 +139,16 @@ def _load_burndown_file(repo_root_pkg, filename):
 
 DESC_BURNDOWN = _load_burndown_file(root, "desc-burndown.txt")
 DESC_BURNDOWN_SEEN = set()
-DESC_BY_KEY = {}  # 'bucket/name' -> len(description + " " + when_to_use), протухшая запись ниже
+DESC_BY_KEY = {}  # 'bucket/name' -> len(description + " " + when_to_use), rotten entry below
 TRIG_BURNDOWN = _load_burndown_file(root, "desc-trigger-burndown.txt")
 TRIG_BURNDOWN_SEEN = set()
-TRIG_HAS_TRIGGER_BY_KEY = {}  # 'bucket/name' -> bool(триггер в description+when_to_use), протухшая запись ниже
+TRIG_HAS_TRIGGER_BY_KEY = {}  # 'bucket/name' -> bool(trigger in description+when_to_use), rotten entry below
 
 
 def _collect_block_scalar(lines, start):
-    """Отступные строки YAML-блок-скаляра начиная с lines[start] → (строки, next_i).
-    Пустые сохраняются как переносы; хвостовые обрезаются (clip-чомп). Зеркалит
-    lib/skiller/common.py::_collect_block_scalar (gate должен читать как generate)."""
+    """Indent lines YAML-block scalar starting from lines[start] → (lines, next_i).
+    Empty ones are stored as hyphens; tails are trimmed (clip-chomp). Mirrors
+    lib/skiller/common.py::_collect_block_scalar (gate should read as generate)."""
     block, i = [], start
     while i < len(lines):
         ln = lines[i]
@@ -167,13 +167,13 @@ def _collect_block_scalar(lines, start):
 
 
 def parse_frontmatter(path):
-    """Frontmatter первого ---блока, или None если блока нет/не закрыт.
+    """Frontmatter of the first ---block, or None if there is no block/is not closed.
 
-    Собирает YAML-блок-скаляры (`key: |` / `key: >` + опц. чомп) и срезает BOM
-    (utf-8-sig) — ИНАЧЕ `description: >` даёт gate только маркер '>', и кириллица/
-    длина реального (блочного) описания не проверяются = ложно-зелёный. Читает так же,
-    как generate-путь lib/skiller/common.py::parse_frontmatter (осознанный
-    самодостаточный дубль: heredoc гоняется до PYTHONPATH на core, не импортируем)."""
+    Collects YAML-block scalars (`key: |` / `key: >` + opt. Chomp) and cuts BOM
+    (utf-8-sig) — ELSE `description: >` gives gate marker only '>', and Cyrillic/
+    real length (block) descriptions are not checked = false green. Reads the same way
+    like generate-path lib/skiller/common.py::parse_frontmatter (conscious
+    self-contained take: heredoc chases to PYTHONPATH on core, not imported)."""
     lines = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n").splitlines()
     if not lines or lines[0].strip() != "---":
         return None
@@ -243,19 +243,19 @@ for skill_md in skill_files:
         if not fm.get(field):
             errors.append(f"{rel}: missing required frontmatter field: {field}")
 
-    # --- 1·токены: description — EN-канон (резидентный ⊕ tier-0), без кириллицы, не раздут ---
+    # --- 1·tokens: description — EN-canon (resident ⊕ tier-0), without Cyrillic, not bloated ---
     desc = fm.get("description", "")
     if CYRILLIC_RE.search(desc):
-        errors.append(f"{rel}: frontmatter description содержит кириллицу — SKILL.md это "
-                      f"EN-only канон (резидентный tier-0 в КАЖДОМ запросе)")
+        errors.append(f"{rel}: frontmatter description contains Cyrillic - SKILL.md this "
+                      f"EN-only canon (resident tier-0 in EVERY request)")
     if CYRILLIC_RE.search(fm.get("name", "")):
-        errors.append(f"{rel}: frontmatter name содержит кириллицу (имя скилла — EN-kebab)")
-    # СОВОКУПНАЯ запись листинга — та же формула, что budget.py
-    # `_listing_entry_tokens`/`_listing_entry_chars`: `description` + `when_to_use` одной
-    # строкой (пустой when_to_use не меняет результат). Гейты длины/триггера ниже читают
-    # ИМЕННО её, не голый `desc`, — иначе перенос фразы в `when_to_use` рвёт оба гейта.
+        errors.append(f"{rel}: frontmatter name contains Cyrillic (skill name - EN-kebab)")
+    # CUMULATIVE listing record - same formula as budget.py
+    # `_listing_entry_tokens`/`_listing_entry_chars`: `description` + `when_to_use` one
+    # line (empty when_to_use does not change the result). Length gates/trigger below read
+    # EXACTLY her, not naked `desc`, — otherwise transfer the phrase to `when_to_use` breaks both gates.
     listing_text = (desc + " " + fm.get("when_to_use", "")).strip()
-    # ключ бакета — из ПУТИ (не frontmatter): upstream-скиллы часто без поля `bucket`.
+    # bucket key - from PATH (not frontmatter): upstream-skills often without a field `bucket`.
     _desc_parts = rel.parts
     _desc_bn = _desc_parts[1] if _desc_parts[0] == "skills" and len(_desc_parts) > 2 else None
     _desc_nm = fm.get("name", "").strip('"').strip("'") or skill_dir.name
@@ -263,41 +263,41 @@ for skill_md in skill_files:
     if _desc_key:
         DESC_BY_KEY[_desc_key] = len(listing_text)
     if len(listing_text) > DESC_ERROR_MAX:
-        errors.append(f"{rel}: запись листинга (description+when_to_use) {len(listing_text)} симв "
-                      f"(> {DESC_ERROR_MAX} hard-потолок) — сократи (триггеры можно ужать), "
-                      f"burn-down не спасает выше {DESC_ERROR_MAX}, см. skiller budget")
+        errors.append(f"{rel}: listing entry (description+when_to_use) {len(listing_text)} char "
+                      f"(> {DESC_ERROR_MAX} hard-ceiling) — shorten (triggers can be shrunk), "
+                      f"burn-down does not help above {DESC_ERROR_MAX}, see skiller budget")
     elif len(listing_text) > DESC_WARN_MAX:
         if _desc_key and _desc_key in DESC_BURNDOWN:
             DESC_BURNDOWN_SEEN.add(_desc_key)
-            warnings.append(f"{rel}: запись листинга (description+when_to_use) "
-                            f"{len(listing_text)} симв (> {DESC_WARN_MAX}) — унаследованный долг "
-                            f"в scripts/desc-burndown.txt (легально, но сокращай при следующей "
-                            f"правке)")
+            warnings.append(f"{rel}: listing entry (description+when_to_use) "
+                            f"{len(listing_text)} char (> {DESC_WARN_MAX}) — inherited debt "
+                            f"in scripts/desc-burndown.txt (legal, but cut back next time "
+                            f"edit)")
         else:
-            errors.append(f"{rel}: запись листинга (description+when_to_use) "
-                          f"{len(listing_text)} симв (> {DESC_WARN_MAX}) и НЕ в "
-                          f"scripts/desc-burndown.txt — новый долг запрещён (рэтчет P3.2): "
-                          f"сократи запись до <= {DESC_WARN_MAX} симв или добавь в "
-                          f"desc-burndown.txt с обоснованием")
+            errors.append(f"{rel}: listing entry (description+when_to_use) "
+                          f"{len(listing_text)} char (> {DESC_WARN_MAX}) and NOT in "
+                          f"scripts/desc-burndown.txt — new debt prohibited (ratchet P3.2): "
+                          f"shorten the entry to <= {DESC_WARN_MAX} character or add to "
+                          f"desc-burndown.txt with justification")
 
-    # --- 1·триггер: запись листинга отвечает «когда звать» (P3.5 рэтчет, upstream пропускаем) ---
+    # --- 1·trigger: listing entry responds «when to call» (P3.5 ratchet, upstream skip) ---
     if _desc_key and upstream is None:
         has_trigger = bool(DESC_TRIGGER_RE.search(listing_text))
         TRIG_HAS_TRIGGER_BY_KEY[_desc_key] = has_trigger
         if not has_trigger:
             if _desc_key in TRIG_BURNDOWN:
                 TRIG_BURNDOWN_SEEN.add(_desc_key)
-                warnings.append(f"{rel}: description+when_to_use без триггерной фразы (use "
-                                f"when/activate/use for/…) — унаследованный долг в "
-                                f"scripts/desc-trigger-burndown.txt (легально, но чини при "
-                                f"следующей правке)")
+                warnings.append(f"{rel}: description+when_to_use without trigger phrase (use "
+                                f"when/activate/use for/…) — inherited debt in "
+                                f"scripts/desc-trigger-burndown.txt (legal, but fix it when "
+                                f"next edit)")
             else:
-                errors.append(f"{rel}: description+when_to_use без триггерной фразы (use "
+                errors.append(f"{rel}: description+when_to_use without trigger phrase (use "
                               f"when/activate/use for/use to/when you/whenever/trigger/use "
-                              f"this) и НЕ в scripts/desc-trigger-burndown.txt — новый долг "
-                              f"запрещён (рэтчет P3.5): опиши, КОГДА звать скилл (в description "
-                              f"или when_to_use), или добавь в desc-trigger-burndown.txt с "
-                              f"обоснованием")
+                              f"this) and NOT in scripts/desc-trigger-burndown.txt — new debt "
+                              f"prohibited (ratchet P3.5): describe WHEN to call the skill (in description "
+                              f"or when_to_use), or add to desc-trigger-burndown.txt with "
+                              f"justification")
 
     # --- 1a. enum / semver / bucket-vs-dir / declared snippets / intra-links ---
     parts = rel.parts
@@ -305,43 +305,43 @@ for skill_md in skill_files:
 
     risk = fm.get("risk", "")
     if risk and risk not in RISK_VALUES:
-        errors.append(f"{rel}: risk '{risk}' не из {sorted(RISK_VALUES)}")
+        errors.append(f"{rel}: risk '{risk}' not from {sorted(RISK_VALUES)}")
 
     level = fm.get("level", "")
     if level and level not in LEVEL_VALUES:
-        errors.append(f"{rel}: level '{level}' не из {sorted(LEVEL_VALUES)}")
+        errors.append(f"{rel}: level '{level}' not from {sorted(LEVEL_VALUES)}")
 
     bad_adapters = [a for a in parse_inline_list(fm.get("adapters", ""))
                     if a not in ADAPTER_VALUES]
     if bad_adapters:
-        errors.append(f"{rel}: неизвестные adapters {bad_adapters} "
-                      f"(допустимо {sorted(ADAPTER_VALUES)})")
+        errors.append(f"{rel}: unknown adapters {bad_adapters} "
+                      f"(valid {sorted(ADAPTER_VALUES)})")
 
-    # version/bucket — только для локальных (upstream-скиллы держат минимальный frontmatter)
+    # version/bucket — only for local (upstream-skills are kept to a minimum frontmatter)
     if upstream is None:
         ver = fm.get("version", "")
         if ver and not SEMVER_RE.match(ver):
-            errors.append(f"{rel}: version '{ver}' не semver (\\d+.\\d+.\\d+)")
+            errors.append(f"{rel}: version '{ver}' not semver (\\d+.\\d+.\\d+)")
         fm_bucket = fm.get("bucket", "")
         if path_bucket and fm_bucket and fm_bucket != path_bucket:
-            errors.append(f"{rel}: frontmatter bucket '{fm_bucket}' != каталог "
+            errors.append(f"{rel}: frontmatter bucket '{fm_bucket}' != directory "
                           f"'{path_bucket}'")
 
-    # объявленные в frontmatter сниппеты должны существовать на диске
+    # declared in frontmatter snippets must exist on disk
     for snip in parse_inline_list(fm.get("snippets", "")):
         if not (skill_dir / "snippets" / snip).exists():
-            errors.append(f"{rel}: snippets[{snip}] объявлен, но файла нет на диске")
+            errors.append(f"{rel}: snippets[{snip}] is declared, but the file is not on disk")
 
-    # внутрискилловые ссылки snippets/… references/… в теле — должны резолвиться
+    # intra-skill links snippets/… references/… in the body - must resolve
     body = skill_md.read_text(encoding="utf-8")
     for m in INTRA_LINK_RE.finditer(body):
         tgt = m.group(1).split("#")[0]
         if not (skill_dir / tgt).exists():
-            errors.append(f"{rel}: битая ссылка на {tgt} (файла нет)")
+            errors.append(f"{rel}: broken link to {tgt} (no file)")
 
-    # lean SKILL.md: тело (без frontmatter) сверх порога → мягкий warn.
-    # upstream-скиллы (imported/external) пропускаем — их объём интенциональный (адаптированная
-    # копия внешнего документа), lean-стандарт распространяется на АВТОРСКИЕ local-скиллы.
+    # lean SKILL.md: body (without frontmatter) above threshold → soft warn.
+    # upstream-skills (imported/external) skip - their volume is intentional (adapted
+    # copy of external document), lean-standard applies to COPYRIGHT local-skills.
     lines = body.splitlines()
     body_start = 0
     if lines and lines[0].strip() == "---":
@@ -351,48 +351,48 @@ for skill_md in skill_files:
                 break
     body_lines = len([ln for ln in lines[body_start:] if ln.strip()])
     if body_lines > LEAN_MAX_BODY_LINES and load_upstream(skill_dir) is None:
-        warnings.append(f"{rel}: тело SKILL.md {body_lines} непустых строк "
-                        f"(> {LEAN_MAX_BODY_LINES}) — вынеси детали в references/snippets "
+        warnings.append(f"{rel}: body SKILL.md {body_lines} non-empty lines "
+                        f"(> {LEAN_MAX_BODY_LINES}) — put the details in references/snippets "
                         f"(lean SKILL.md, docs/guide/skill-taxonomy.md)")
 
-# --- 1b. desc-burndown.txt — протухшие записи (one-way рэтчет, P3.2/P3.5) -----------
-# Запись легальна, только пока: скилл существует И его запись листинга
-# (description+when_to_use) всё ещё > DESC_WARN_MAX. Иначе — протухла (скилл
-# удалён/переименован, либо уже сокращён до нормы) — убери строку.
+# --- 1b. desc-burndown.txt — rotten records (one-way ratchet, P3.2/P3.5) -----------
+# The entry is legal, only for now: the skill exists AND its listing entry
+# (description+when_to_use) still > DESC_WARN_MAX. Otherwise - rotten (skill
+# deleted/renamed, or already shortened to normal) — remove the line.
 for _bn_key in sorted(DESC_BURNDOWN):
     if _bn_key not in DESC_BY_KEY:
-        warnings.append(f"scripts/desc-burndown.txt: '{_bn_key}' — протухшая запись (скилла нет "
-                        f"в реестре под этим bucket/name), убери строку")
+        warnings.append(f"scripts/desc-burndown.txt: '{_bn_key}' — rotten recording (no skill "
+                        f"in the registry below this bucket/name), remove the line")
     elif DESC_BY_KEY[_bn_key] <= DESC_WARN_MAX:
-        warnings.append(f"scripts/desc-burndown.txt: '{_bn_key}' — протухшая запись (запись "
-                        f"листинга уже {DESC_BY_KEY[_bn_key]} симв <= {DESC_WARN_MAX}), убери "
-                        f"строку")
+        warnings.append(f"scripts/desc-burndown.txt: '{_bn_key}' — rotten recording (entry "
+                        f"listing already {DESC_BY_KEY[_bn_key]} char <= {DESC_WARN_MAX}), remove "
+                        f"line")
 
-# --- 1b·триггер. desc-trigger-burndown.txt — протухшие записи (one-way рэтчет, P3.5) -----
-# Запись легальна, только пока: скилл существует И его запись листинга
-# (description+when_to_use) всё ещё без триггера.
+# --- 1b·trigger. desc-trigger-burndown.txt — rotten records (one-way ratchet, P3.5) -----
+# The entry is legal, only for now: the skill exists AND its listing entry
+# (description+when_to_use) still without a trigger.
 for _tb_key in sorted(TRIG_BURNDOWN):
     if _tb_key not in TRIG_HAS_TRIGGER_BY_KEY:
-        warnings.append(f"scripts/desc-trigger-burndown.txt: '{_tb_key}' — протухшая запись "
-                        f"(скилла нет в реестре под этим bucket/name), убери строку")
+        warnings.append(f"scripts/desc-trigger-burndown.txt: '{_tb_key}' — rotten recording "
+                        f"(skill is not in the registry under this bucket/name), remove the line")
     elif TRIG_HAS_TRIGGER_BY_KEY[_tb_key]:
-        warnings.append(f"scripts/desc-trigger-burndown.txt: '{_tb_key}' — протухшая запись "
-                        f"(description+when_to_use уже несёт триггерную фразу), убери строку")
+        warnings.append(f"scripts/desc-trigger-burndown.txt: '{_tb_key}' — rotten recording "
+                        f"(description+when_to_use already carries a trigger phrase), remove the line")
 
-# --- 1c. CORE-девятка — обязательные секции тела (P8.8, рэтчет) ------------
-# Сплошной гейт по всем скиллам неисполним (замер: активационную секцию несут
-# 38/160). Сужено до резидентных CORE_SKILLS (core-policy.json::skills, 9 шт.).
-# (б) секция ссылок — ERROR без исключений (долг нулевой, 9/9 проходят).
-# (а) активационная секция — ERROR с рэтчетом skill-sections-burndown.txt (та
-# же механика, что desc-burndown.txt выше): запись легальна, пока скилл
-# существует И секции у него всё ещё нет.
+# --- 1c. CORE-nine - mandatory body sections (P8.8, ratchet) ------------
+# A complete gate for all skills is impossible (measurement: activation section is carried
+# 38/160). Narrowed to resident CORE_SKILLS (core-policy.json::skills, 9 pcs.).
+# (b) links section - ERROR no exceptions (debt zero, 9/9 pass).
+# (a) activation section - ERROR with Ratchet skill-sections-burndown.txt (that
+# the same mechanics as desc-burndown.txt above): entry is legal as long as skill
+# exists And it still doesn't have a section.
 CORE_ACTIVATION_RE = re.compile(r"(?i)^\s*\d*\.?\s*(when\b|activate\b)")
 CORE_LINKS_RE = re.compile(r"(?i)^\s*\d*\.?\s*(links|references|related skills|related)\s*$")
 HEADING2_RE = re.compile(r"^##[^#](.*)$", re.MULTILINE)
 
 def _load_sections_burndown(repo_root_pkg):
-    """scripts/skill-sections-burndown.txt → set('bucket/name'); тот же формат,
-    что desc-burndown.txt."""
+    """scripts/skill-sections-burndown.txt → set('bucket/name'); same format,
+    what desc-burndown.txt."""
     p = repo_root_pkg / "scripts" / "skill-sections-burndown.txt"
     if not p.is_file():
         return set()
@@ -414,35 +414,35 @@ if _core_policy_path.is_file():
         if isinstance(_csp, dict):
             _core_policy_skills = _csp.get("skills", []) or []
     except json.JSONDecodeError:
-        pass  # уже ERROR от core-policy.json-проверки выше
+        pass  # already ERROR from core-policy.json-checks above
 
 for _core_key in _core_policy_skills:
     _core_skill_md = root / "skills" / _core_key / "SKILL.md"
     if not _core_skill_md.is_file():
-        continue  # уже ERROR от core-policy.json-проверки выше
+        continue  # already ERROR from core-policy.json-checks above
     _core_headings = [m.group(1).strip()
                       for m in HEADING2_RE.finditer(_core_skill_md.read_text(encoding="utf-8"))]
     has_activation = any(CORE_ACTIVATION_RE.match(h) for h in _core_headings)
     has_links = any(CORE_LINKS_RE.match(h) for h in _core_headings)
     if not has_links:
-        errors.append(f"skills/{_core_key}/SKILL.md: нет секции ссылок "
-                      f"(##Links/References/Related skills/Related) — CORE-скилл")
+        errors.append(f"skills/{_core_key}/SKILL.md: no links section "
+                      f"(##Links/References/Related skills/Related) — CORE-skill")
     if not has_activation:
         if _core_key in SECTIONS_BURNDOWN:
             SECTIONS_BURNDOWN_SEEN.add(_core_key)
-            warnings.append(f"skills/{_core_key}/SKILL.md: нет активационной секции и скилл "
-                            f"в scripts/skill-sections-burndown.txt (унаследованный долг)")
+            warnings.append(f"skills/{_core_key}/SKILL.md: no activation section and skill "
+                            f"in scripts/skill-sections-burndown.txt (inherited debt)")
         else:
-            errors.append(f"skills/{_core_key}/SKILL.md: нет активационной секции и скилла "
-                          f"нет в skill-sections-burndown.txt")
+            errors.append(f"skills/{_core_key}/SKILL.md: no activation section and skill "
+                          f"not in skill-sections-burndown.txt")
 
 for _sb_key in sorted(SECTIONS_BURNDOWN):
     if _sb_key not in _core_policy_skills:
-        warnings.append(f"scripts/skill-sections-burndown.txt: '{_sb_key}' — протухшая "
-                        f"запись (скилла нет в CORE-девятке core-policy.json), убери строку")
+        warnings.append(f"scripts/skill-sections-burndown.txt: '{_sb_key}' — rotten "
+                        f"entry (skill is not in CORE-nine core-policy.json), remove the line")
     elif _sb_key not in SECTIONS_BURNDOWN_SEEN:
-        warnings.append(f"scripts/skill-sections-burndown.txt: '{_sb_key}' — протухшая "
-                        f"запись (скилл уже несёт активационную секцию), убери строку")
+        warnings.append(f"scripts/skill-sections-burndown.txt: '{_sb_key}' — rotten "
+                        f"entry (skill already has an activation section), remove the line")
 
 # --- 2. upstream.json -----------------------------------------------------
 for up_file in sorted(root.glob("skills/**/upstream.json")) + \
@@ -463,30 +463,30 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
         errors.append(f"{rel}: source must be one of {sorted(UPSTREAM_SOURCES)}")
     if data.get("strategy") not in UPSTREAM_STRATEGIES:
         errors.append(f"{rel}: strategy must be one of {sorted(UPSTREAM_STRATEGIES)}")
-    # fork: форк-скилл с локальными правками. review_pending=true — апстрим разошёлся с
-    # зеркалом, нужна ручная доработка → ГЕЙТ: блокируем валидацию (и тем самым registry/релиз),
-    # пока агент не перенесёт дифф и не сделает update-upstreams.sh --resolve.
+    # fork: fork skill with local edits. review_pending=true — upstream parted ways with
+    # mirror, needs manual modification → GATE: blocking validation (and thereby registry/release),
+    # until the agent transfers the diff and does update-upstreams.sh --resolve.
     if data.get("strategy") == "fork":
         rp = data.get("review_pending")
         if rp is not None and not isinstance(rp, bool):
             errors.append(f"{rel}: review_pending must be a boolean")
         if rp is True:
             errors.append(
-                f"{rel}: review_pending=true — upstream форка разошёлся с зеркалом; "
-                f"сверь diff и перенеси правки в SKILL.md, затем "
+                f"{rel}: review_pending=true — upstream fork separated from the mirror; "
+                f"check diff and transfer the changes to SKILL.md, then "
                 f"scripts/update-upstreams.sh --resolve --skill <id>")
         lr = data.get("last_review", "")
         if lr and not DATE_RE.match(lr):
             errors.append(f"{rel}: last_review must be YYYY-MM-DD or empty")
-    # merge: композит из ≥2 внешних источников. origins[] фиксирует провенанс с
-    # ролями (base — взят за основу; supplement/«suggest» — что дополнительно
-    # вмерджено). Синк ручной: на дрейфе любого origin merge.review_pending=true
-    # блокирует валидацию (и registry/релиз), пока агент не пере-мерджит и не
-    # снимет гейт (scripts/update-upstreams.sh --resolve).
+    # merge: composite of ≥2 external sources. origins[] fixes provenance with
+    # roles (base — is taken as a basis; supplement/«suggest» — what's extra
+    # merged). Manual sync: on the drift of any origin merge.review_pending=true
+    # blocks validation (and registry/release), until the agent re-merges and
+    # will remove the gate (scripts/update-upstreams.sh --resolve).
     if data.get("strategy") == "merge":
         origins = data.get("origins")
         if not isinstance(origins, list) or len(origins) < 2:
-            errors.append(f"{rel}: strategy=merge требует origins[] из ≥2 источников "
+            errors.append(f"{rel}: strategy=merge requires origins[] from ≥2 sources "
                           f"(base + ≥1 supplement)")
             origins = []
         roles = []
@@ -499,16 +499,16 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
                     errors.append(f"{rel}: origins[{k}] missing key: {key}")
             role = org.get("role", "")
             if role and role not in ORIGIN_ROLES:
-                errors.append(f"{rel}: origins[{k}].role '{role}' не из "
+                errors.append(f"{rel}: origins[{k}].role '{role}' not from "
                               f"{sorted(ORIGIN_ROLES)}")
             roles.append(role)
             of = org.get("fetched_at", "")
             if of and not DATE_RE.match(of):
                 errors.append(f"{rel}: origins[{k}].fetched_at must be YYYY-MM-DD")
         if origins and roles.count("base") != 1:
-            errors.append(f"{rel}: strategy=merge требует РОВНО один origin role=base")
+            errors.append(f"{rel}: strategy=merge requires EXACTLY one origin role=base")
         if origins and "supplement" not in roles:
-            errors.append(f"{rel}: strategy=merge требует ≥1 origin role=supplement")
+            errors.append(f"{rel}: strategy=merge requires ≥1 origin role=supplement")
         merge = data.get("merge") or {}
         if not isinstance(merge, dict):
             errors.append(f"{rel}: merge must be an object")
@@ -518,14 +518,14 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
             errors.append(f"{rel}: merge.review_pending must be a boolean")
         if rp is True:
             errors.append(
-                f"{rel}: merge.review_pending=true — один из origins разошёлся с "
-                f"зеркалом; пере-мерджи источники в SKILL.md, затем "
+                f"{rel}: merge.review_pending=true — one of origins separated from "
+                f"mirror; re-merge sources in SKILL.md, then "
                 f"scripts/update-upstreams.sh --resolve --skill <id>")
         mlr = merge.get("last_review", "")
         if mlr and not DATE_RE.match(mlr):
             errors.append(f"{rel}: merge.last_review must be YYYY-MM-DD or empty")
     elif data.get("origins") is not None:
-        errors.append(f"{rel}: origins[] допустим только при strategy=merge")
+        errors.append(f"{rel}: origins[] is only valid when strategy=merge")
     if data.get("source") == "file":
         warnings.append(f"{rel}: source=file is for local fixtures/tests only")
 
@@ -548,12 +548,12 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
         if fetched and not DATE_RE.match(fetched):
             errors.append(f"{rel}: files[{i}].fetched_at must be YYYY-MM-DD or empty")
 
-    # body_path (P7.3, thin-navigator): опционально — путь (относительно skill_dir),
-    # где реально лежит апстримное тело, когда SKILL.md стал локально написанным
-    # навигатором, а НЕ зеркалом апстрима (см. update-upstreams.sh, docs/guide/
-    # upstream-sync.md). Аддитивное поле; отсутствие = тело в SKILL.md (back-compat).
-    # Он ДОЛЖЕН совпадать с одной из files[].path — иначе update-upstreams.sh не
-    # будет считать sha/дрейф по заявленному телу (тихая дыра в отслеживании).
+    # body_path (P7.3, thin-navigator): optional - path (regarding skill_dir),
+    # where the upstream body actually lies when SKILL.md became locally written
+    # a navigator, NOT an upstream mirror (see update-upstreams.sh, docs/guide/
+    # upstream-sync.md). Additive field; absence = body in SKILL.md (back-compat).
+    # It MUST match one of files[].path — otherwise update-upstreams.sh not
+    # will count sha/drift along the declared body (silent tracking hole).
     body_path = data.get("body_path")
     if body_path is not None:
         if not isinstance(body_path, str) or not body_path:
@@ -580,24 +580,24 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
                     f"would overwrite the hand-authored navigator; drop the SKILL.md "
                     f"files[] entry")
 
-    # --- audit: человеческий вердикт по бандлу (P5.11, ветка (B) OQ-6) --------
-    # ОТСУТСТВИЕ блока ловит НЕ этот гейт, а триаж-ступень update-upstreams.sh
-    # --check (находка AUDIT_MISSING): «бандла без вердикта не бывает» — правило
-    # раздачи, а не структурная поломка файла. Здесь проверяется ФОРМА записи:
-    # молчаливый attention неотличим от опечатки, вердикт без адреса читавшего
-    # бессмысленен, а вердикт без собственного якоря не может протухнуть.
+    # --- audit: human verdict on the bundle (P5.11, thread (B) OQ-6) --------
+    # THE ABSENCE of a block is NOT caught by this gate, but by the triage stage update-upstreams.sh
+    # --check (find AUDIT_MISSING): «there is no bundle without a verdict» — rule
+    # distributions, not a structural failure of the file. Here the FORM of the record is checked:
+    # silent attention indistinguishable from a typo, verdict without the address of the reader
+    # is meaningless, and a verdict without its own anchor cannot go rotten.
     entry_paths = [entry.get("path", "") for entry in files if isinstance(entry, dict)]
     ref_only = bool(entry_paths) and not any(entry_paths)
     kind = data.get("kind")
     if kind is not None and kind not in UPSTREAM_KINDS:
         errors.append(f"{rel}: kind must be one of {sorted(UPSTREAM_KINDS)}")
     elif kind == "reference-only" and not ref_only:
-        errors.append(f"{rel}: kind=reference-only, но files[] несёт локальные "
-                      f"зеркала (непустой path) — признак машинный, не мнение")
+        errors.append(f"{rel}: kind=reference-only, but files[] carries local "
+                      f"mirrors (non-empty path) — machine sign, not an opinion")
     elif kind is None and ref_only:
-        errors.append(f"{rel}: все files[].path пусты (бандл не вендорит ничего) — "
-                      f"объяви kind: \"reference-only\", иначе класс машинно "
-                      f"неотличим от вендоренного")
+        errors.append(f"{rel}: all files[].path are empty (bundle does not vendor anything) — "
+                      f"announce kind: \"reference-only\", otherwise class machine "
+                      f"indistinguishable from vendor")
 
     audit = data.get("audit")
     if audit is not None and not isinstance(audit, dict):
@@ -609,28 +609,28 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
                           f"{sorted(AUDIT_VERDICTS)}")
         at = audit.get("at", "")
         if not at or not DATE_RE.match(at):
-            errors.append(f"{rel}: audit.at must be YYYY-MM-DD (дата чтения бандла)")
+            errors.append(f"{rel}: audit.at must be YYYY-MM-DD (date the bundle was read)")
         if not audit.get("by"):
-            errors.append(f"{rel}: audit.by missing — адрес читавшего бандл "
-                          f"(<PLAN-ID> <item> либо дата ручного чтения); запись "
-                          f"без адреса ничего не значит")
+            errors.append(f"{rel}: audit.by missing — address of the bundle reader "
+                          f"(<PLAN-ID> <item> or manual reading date); entry "
+                          f"without an address means nothing")
         if verdict in ("attention", "risk") and not audit.get("note"):
-            errors.append(f"{rel}: audit.note обязателен при verdict={verdict} — "
-                          f"молчаливый вердикт неотличим от опечатки")
+            errors.append(f"{rel}: audit.note is required when verdict={verdict} — "
+                          f"silent verdict indistinguishable from a typo")
         if ref_only:
             if "upstream_sha" in audit:
-                errors.append(f"{rel}: audit.upstream_sha при kind=reference-only "
-                              f"обязан быть опущен — якорить нечего, зеркал нет")
+                errors.append(f"{rel}: audit.upstream_sha when kind=reference-only "
+                              f"must be omitted - there is nothing to anchor, there are no mirrors")
         elif not SHA256_RE.match(audit.get("upstream_sha", "")):
             errors.append(f"{rel}: audit.upstream_sha must be a sha256 hex digest — "
-                          f"без собственного якоря вердикт не может протухнуть "
+                          f"without its own anchor, the verdict cannot go rotten "
                           f"(update-upstreams.sh: AUDIT_STALE)")
 
 # --- 3. profiles/*.json ---------------------------------------------------
-# Канон таксономии — core.project.PROJECT_TYPES; здесь самодостаточный дубль
-# (heredoc гоняется до PYTHONPATH на core — осознанно не импортируем; держать
-#  в синхроне с core/project.py). Ссылки на пресеты/паки/mcp живут в пакете
-# harness — проверяем только если он на месте (монорепо), иначе graceful skip.
+# Taxonomy Canon - core.project.PROJECT_TYPES; here is a self-contained take
+# (heredoc chases to PYTHONPATH on core — we do not consciously import; hold
+#  in sync with core/project.py). Links to presets/packs/mcp live in the package
+# harness — we check only if it is in place (monorepo), otherwise graceful skip.
 PROJECT_TYPE_IDS = {
     "obsidian-vault", "laravel-project", "php-package", "dart-flutter",
     "python-backend", "node-frontend", "node-package", "standalone",
@@ -659,7 +659,7 @@ if profiles_dir.is_dir():
             for b in buckets:
                 if not (root / "skills" / b).is_dir():
                     errors.append(f"{rel}: unknown bucket: {b}")
-        # --- расширенные опц. ключи: agent_pack/presets/mcp/hooks/model_tiers ---
+        # --- extended options keys: agent_pack/presets/mcp/hooks/model_tiers ---
         pack = data.get("agent_pack")
         if pack is not None and not isinstance(pack, (str, list)):
             errors.append(f"{rel}: agent_pack must be a string or list")
@@ -667,23 +667,23 @@ if profiles_dir.is_dir():
         if hc_dir.is_dir():
             for pk in packs:
                 if not (hc_dir / "agent-packs" / str(pk) / "pack.json").exists():
-                    errors.append(f"{rel}: agent_pack '{pk}' — нет pack.json в harness")
+                    errors.append(f"{rel}: agent_pack '{pk}' — no pack.json in harness")
             for preset in data.get("harness_presets", []) or []:
                 if not (hc_dir / f"settings.{preset}.json").exists():
-                    errors.append(f"{rel}: harness_preset '{preset}' — нет settings.{preset}.json")
+                    errors.append(f"{rel}: harness_preset '{preset}' — no settings.{preset}.json")
             for srv in data.get("mcp", []) or []:
                 if not (hc_dir / "mcp" / f"{srv}.json").exists():
-                    errors.append(f"{rel}: mcp '{srv}' — нет mcp/{srv}.json")
+                    errors.append(f"{rel}: mcp '{srv}' — no mcp/{srv}.json")
         hooks = data.get("hooks") or {}
         if not isinstance(hooks, dict):
             errors.append(f"{rel}: hooks must be an object")
         else:
             aa = hooks.get("auto_approve")
             if aa is not None and aa not in AA_MODES:
-                errors.append(f"{rel}: hooks.auto_approve '{aa}' не из {sorted(AA_MODES)}")
+                errors.append(f"{rel}: hooks.auto_approve '{aa}' not from {sorted(AA_MODES)}")
             mem = hooks.get("memory")
             if mem is not None and mem not in MEM_MODES:
-                errors.append(f"{rel}: hooks.memory '{mem}' не из {sorted(MEM_MODES)}")
+                errors.append(f"{rel}: hooks.memory '{mem}' not from {sorted(MEM_MODES)}")
         tiers = data.get("model_tiers") or {}
         if not isinstance(tiers, dict):
             errors.append(f"{rel}: model_tiers must be an object")
@@ -691,12 +691,12 @@ if profiles_dir.is_dir():
             for role, tier in tiers.items():
                 if tier not in MODEL_TIERS:
                     errors.append(f"{rel}: model_tiers.{role} '{tier}' "
-                                  f"не из {sorted(MODEL_TIERS)}")
-    # --- 3b. покрытие: каждый id таксономии имеет profiles/<id>.json ---
+                                  f"not from {sorted(MODEL_TIERS)}")
+    # --- 3b. coverage: each id taxonomy has profiles/<id>.json ---
     missing = PROJECT_TYPE_IDS - profile_names
     if missing:
-        errors.append(f"profiles/: нет профилей для типов {sorted(missing)} "
-                      f"(см. core.project.PROJECT_TYPES)")
+        errors.append(f"profiles/: no profiles for types {sorted(missing)} "
+                      f"(see core.project.PROJECT_TYPES)")
 
 # --- 4. skills.json -------------------------------------------------------
 reg = root / "skills.json"
@@ -721,39 +721,39 @@ for manifest in sorted(root.glob("skills/**/snippets/index.json")):
         if not f.exists():
             errors.append(f"{rel}: missing snippet: {s.get('file')}")
 
-# --- 5b. evals/ (поведенческие тесты скиллов) -------------------------------
-# Структурная проверка имеющихся evals.json/pressure.json/triggers.json (если
-# заведены) + сводка покрытия. Глубокая семантика (типы ассершенов, прогон) — в
-# lib/skiller/eval.py + tests/test_eval.py; здесь только мягкий гейт формата.
-# Покрытие — ОДНОЙ строкой (не per-skill warning), чтобы не зашумлять вывод.
+# --- 5b. evals/ (behavioral skill tests) -------------------------------
+# Structural check of existing evals.json/pressure.json/triggers.json (if
+# started) + coverage summary. Deep semantics (types of assertions, run) — in
+# lib/skiller/eval.py + tests/test_eval.py; here is only a soft format gate.
+# Coverage - ONE line (not per-skill warning), to avoid making the output noisy.
 def _check_cases(node, where, key):
     cases = node.get(key)
     if not isinstance(cases, list) or not cases:
-        errors.append(f"{where}: '{key}' должен быть непустым массивом")
+        errors.append(f"{where}: '{key}' must be a non-empty array")
         return
     ids = set()
     for k, c in enumerate(cases):
         w = f"{where}.{key}[{k}]"
         if not isinstance(c, dict):
-            errors.append(f"{w}: кейс должен быть объектом"); continue
+            errors.append(f"{w}: case must be an object"); continue
         cid = c.get("id")
         if cid is None:
-            errors.append(f"{w}: нет id")
+            errors.append(f"{w}: no id")
         elif cid in ids:
-            errors.append(f"{w}: дубликат id {cid!r}")
+            errors.append(f"{w}: duplicate id {cid!r}")
         else:
             ids.add(cid)
         if not c.get("prompt"):
-            errors.append(f"{w}: нет непустого prompt")
+            errors.append(f"{w}: no non-empty prompt")
         for j, a in enumerate(c.get("assertions", []) or []):
             if not isinstance(a, dict) or not a.get("type") or "value" not in a:
-                errors.append(f"{w}.assertions[{j}]: нужен объект с type+value")
+                errors.append(f"{w}.assertions[{j}]: need an object with type+value")
 
 local_total = local_with_evals = 0
 for skill_md in sorted(root.glob("skills/*/*/SKILL.md")):
     sd = skill_md.parent
     if (sd / "upstream.json").exists():
-        continue                       # eval-стандарт — на авторские (не upstream)
+        continue                       # eval-standard - for copyright (not upstream)
     local_total += 1
     ev = sd / "evals" / "evals.json"
     if ev.exists():
@@ -765,7 +765,7 @@ for ev_file in sorted(root.glob("skills/*/*/evals/evals.json")):
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
         errors.append(f"{rel}: invalid JSON: {e}"); continue
     if not isinstance(data, dict) or not data.get("skill"):
-        errors.append(f"{rel}: нужен объект с полем skill")
+        errors.append(f"{rel}: need an object with a field skill")
     else:
         _check_cases(data, str(rel), "cases")
 for pr_file in sorted(root.glob("skills/*/*/evals/pressure.json")):
@@ -775,7 +775,7 @@ for pr_file in sorted(root.glob("skills/*/*/evals/pressure.json")):
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
         errors.append(f"{rel}: invalid JSON: {e}"); continue
     if not isinstance(data, dict) or not data.get("skill"):
-        errors.append(f"{rel}: нужен объект с полем skill")
+        errors.append(f"{rel}: need an object with a field skill")
     else:
         _check_cases(data, str(rel), "scenarios")
 for tr_file in sorted(root.glob("skills/*/*/evals/triggers.json")):
@@ -787,11 +787,11 @@ for tr_file in sorted(root.glob("skills/*/*/evals/triggers.json")):
     for key in ("should_trigger", "should_not"):
         v = data.get(key) if isinstance(data, dict) else None
         if not isinstance(v, list) or not v:
-            errors.append(f"{rel}: '{key}' должен быть непустым массивом")
+            errors.append(f"{rel}: '{key}' must be a non-empty array")
 
-# --- 5c. Pressure-кейсы обязательны при evals.json + покрытие triggers[] --
-# Долг нулевой (замер: 4/4 evals.json уже несут pressure.json) ⇒ ERROR без рэтчета.
-# triggers[]-покрытие — WARNING (поле новое, у существующих сценариев его пока нет).
+# --- 5c. Pressure-cases are required when evals.json + coating triggers[] --
+# Zero debt (measurement: 4/4 evals.json are already carrying pressure.json) ⇒ ERROR without Ratchet.
+# triggers[]-coating - WARNING (field is new, existing scripts do not have it yet).
 for skill_md in sorted(root.glob("skills/*/*/SKILL.md")):
     sd = skill_md.parent
     if (sd / "upstream.json").exists():
@@ -802,15 +802,15 @@ for skill_md in sorted(root.glob("skills/*/*/SKILL.md")):
     rel_sd = sd.relative_to(root)
     pr_p8 = sd / "evals" / "pressure.json"
     if not pr_p8.exists():
-        errors.append(f"{rel_sd}: есть evals.json, нет pressure.json")
+        errors.append(f"{rel_sd}: yes evals.json, no pressure.json")
         continue
     try:
         pr_p8_data = json.loads(pr_p8.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, UnicodeDecodeError):
-        continue  # уже ERROR от 5b выше
+        continue  # already ERROR from 5b above
     p8_scenarios = pr_p8_data.get("scenarios") if isinstance(pr_p8_data, dict) else None
     if not isinstance(p8_scenarios, list) or not p8_scenarios:
-        errors.append(f"{rel_sd}: есть evals.json, pressure.json без сценариев")
+        errors.append(f"{rel_sd}: yes evals.json, pressure.json without scripts")
         continue
     tr_p8 = sd / "evals" / "triggers.json"
     if not tr_p8.exists():
@@ -818,7 +818,7 @@ for skill_md in sorted(root.glob("skills/*/*/SKILL.md")):
     try:
         tr_p8_data = json.loads(tr_p8.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, UnicodeDecodeError):
-        continue  # уже ERROR от 5b выше
+        continue  # already ERROR from 5b above
     should_trigger = tr_p8_data.get("should_trigger") if isinstance(tr_p8_data, dict) else None
     if not isinstance(should_trigger, list):
         continue
@@ -828,14 +828,14 @@ for skill_md in sorted(root.glob("skills/*/*/SKILL.md")):
             covered.update(t for t in (_sc.get("triggers") or []) if isinstance(t, str))
     for q in should_trigger:
         if q not in covered:
-            warnings.append(f"{rel_sd}: should_trigger {q!r} не покрыт ни одним "
-                            f"pressure-сценарием (поле triggers[])")
+            warnings.append(f"{rel_sd}: should_trigger {q!r} is not covered by any "
+                            f"pressure-script (field triggers[])")
 
-# --- 5d. Тонкие проекции не дублируют канон -----------------
-# Пары «проекция↔канон» из publication-lock.json (repository-bootstrap), при
-# его отсутствии — configs/repository-bootstrap-skills.json. Проекции есть,
-# источника нет ⇒ ERROR (противоречивое состояние); ни проекций, ни источника
-# ⇒ проверка молча пропускается (standalone-раскладка пакета).
+# --- 5d. Thin projections do not duplicate canon -----------------
+# Couples «projection↔canon» from publication-lock.json (repository-bootstrap), when
+# its absence - configs/repository-bootstrap-skills.json. There are projections,
+# no source ⇒ ERROR (inconsistent state); no projections, no source
+# ⇒ check silently skipped (standalone-package layout).
 PROJECTION_MAX_BODY_LINES = 15
 _proj_lock = root / "adapters" / "repository-bootstrap" / "publication-lock.json"
 _proj_lock_fallback = root / "configs" / "repository-bootstrap-skills.json"
@@ -845,8 +845,8 @@ if _proj_glob:
     _proj_source = _proj_lock if _proj_lock.is_file() else (
         _proj_lock_fallback if _proj_lock_fallback.is_file() else None)
     if _proj_source is None:
-        errors.append(f"проекции ({len(_proj_glob)}) есть, но нет объявленного источника "
-                      f"пар (adapters/repository-bootstrap/publication-lock.json или "
+        errors.append(f"projections ({len(_proj_glob)}) exists, but no declared source "
+                      f"steam (adapters/repository-bootstrap/publication-lock.json or "
                       f"configs/repository-bootstrap-skills.json)")
     else:
         try:
@@ -862,7 +862,7 @@ if _proj_glob:
                 continue
             _p_path = repo_root / _p_target
             if not _p_path.is_file():
-                continue  # проекция не сгенерена — вне scope P8.8 (не гейт генератора)
+                continue  # projection not generated - out scope P8.8 (is not a generator gate)
             _p_text = _p_path.read_text(encoding="utf-8")
             _p_lines = _p_text.splitlines()
             _p_start = 0
@@ -873,11 +873,11 @@ if _proj_glob:
                         break
             _p_body = [ln for ln in _p_lines[_p_start:] if ln.strip()]
             if len(_p_body) > PROJECTION_MAX_BODY_LINES:
-                errors.append(f"{_p_target}: тело {len(_p_body)} строк "
-                              f"(> {PROJECTION_MAX_BODY_LINES}) — проекция дублирует "
-                              f"канон {_p_canon}")
+                errors.append(f"{_p_target}: body {len(_p_body)} lines "
+                              f"(> {PROJECTION_MAX_BODY_LINES}) — projection duplicates "
+                              f"canon {_p_canon}")
             if _p_canon not in _p_text:
-                errors.append(f"{_p_target}: нет ссылки на канон {_p_canon}")
+                errors.append(f"{_p_target}: no link to canon {_p_canon}")
             _p_canon_path = repo_root / _p_canon
             if _p_canon_path.is_file():
                 _p_canon_headings = {m.group(1).strip() for m in
@@ -885,8 +885,8 @@ if _proj_glob:
                 _p_proj_headings = {m.group(1).strip() for m in HEADING2_RE.finditer(_p_text)}
                 _p_dup = _p_canon_headings & _p_proj_headings
                 if _p_dup:
-                    errors.append(f"{_p_target}: проекция воспроизводит заголовки канона "
-                                  f"{sorted(_p_dup)} — тело <проекция> дублирует канон {_p_canon}")
+                    errors.append(f"{_p_target}: projection reproduces canon titles "
+                                  f"{sorted(_p_dup)} — body <projection> duplicates canon {_p_canon}")
 
 # --- 6. buckets.json --------------------------------------------------------
 KEBAB_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
@@ -905,23 +905,23 @@ else:
         if b not in bucket_meta:
             errors.append(f"buckets.json: missing entry for bucket: {b}")
     for b, meta in bucket_meta.items():
-        # Alias-бакет (P7.5, слияния бакетов — механизм без применения, D14): метаданные-
-        # запись БЕЗ skills/<bucket>, `alias_of` указывает на целевой бакет. Не orphan.
+        # Alias-bucket (P7.5, merging buckets - mechanism without application, D14): metadata-
+        # entry WITHOUT skills/<bucket>, `alias_of` points to the target bucket. Not orphan.
         is_alias = isinstance(meta, dict) and meta.get("alias_of")
         if b not in bucket_dirs and not is_alias:
             errors.append(f"buckets.json: entry without skills/ dir: {b}")
         if is_alias and meta["alias_of"] not in bucket_dirs:
-            errors.append(f"buckets.json: {b}: alias_of указывает на несуществующий "
-                          f"бакет: {meta['alias_of']}")
+            errors.append(f"buckets.json: {b}: alias_of points to a non-existent "
+                          f"bucket: {meta['alias_of']}")
         if not (isinstance(meta, dict) and meta.get("description")):
             errors.append(f"buckets.json: {b}: description must be non-empty")
 
 
-# --- 6b. presets/*.json (именованные кластеры скиллов) ----------------------
-# Пресет = группа скиллов для vendor-выборки: {name, description, extends?,
-# buckets?, include?}. resolve_skillset раскрывает presets → buckets/include.
-# Проверяем: name==файл (kebab), непустой description, extends/buckets/include
-# резолвятся, циклов в extends нет. Каталог опционален (graceful skip).
+# --- 6b. presets/*.json (named skill clusters) ----------------------
+# Preset = group of skills for vendor-samples: {name, description, extends?,
+# buckets?, include?}. resolve_skillset reveals presets → buckets/include.
+# Checking: name==file (kebab), non-empty description, extends/buckets/include
+# resolve, cycles in extends no. Catalog optional (graceful skip).
 presets_dir = root / "presets"
 if presets_dir.is_dir():
     skill_names, skill_paths = set(), set()
@@ -961,9 +961,9 @@ if presets_dir.is_dir():
                 errors.append(f"{rel}: unknown bucket '{b}'")
         for tok in data.get("include", []) or []:
             if tok not in skill_names and tok not in skill_paths:
-                errors.append(f"{rel}: include '{tok}' не резолвится в скилл "
-                              f"(нужно имя или bucket/rel)")
-    # циклы в extends (iterative DFS, white/grey/black)
+                errors.append(f"{rel}: include '{tok}' does not resolve into skill "
+                              f"(need name or bucket/rel)")
+    # loops in extends (iterative DFS, white/grey/black)
     PW, PG, PB = 0, 1, 2
     pcol = {n: PW for n in preset_extends}
     for pstart in sorted(preset_extends):
@@ -1010,14 +1010,14 @@ plugin_roots = {b: root / "skills" / b for b in bucket_dirs
                if not (isinstance(bucket_meta.get(b), dict)
                        and bucket_meta[b].get("private_source_only"))}
 plugin_roots["generate-skill"] = root / "generate-skill"
-# Management plugin (командное лицо CLI, без скиллов) — валидируем как обычный плагин,
-# если каталог есть; registry.py добавляет его в marketplace.json синхронно.
+# Management plugin (command person CLI, without skills) — is validated as a regular plugin,
+# if the directory exists; registry.py adds it to marketplace.json synchronously.
 if (root / "skm" / ".claude-plugin" / "plugin.json").exists():
     plugin_roots["skm"] = root / "skm"
 
-# Соседние пакеты монорепо (packages/<name>, кроме swissknifeman) — командные/MCP-плагины
-# без skills-поля; их plugin.json — источник истины, registry добавляет их в marketplace.
-# Здесь только собираем их имена для match-проверки (полная валидация — в их пакете).
+# Neighboring monorepo packages (packages/<name>, except swissknifeman) — command/MCP-plugins
+# without skills-fields; them plugin.json — source of truth, registry adds them to marketplace.
+# Here we only collect their names for match-checks (full validation - in their package).
 sibling_plugin_names = []
 pkgs_dir = repo_root / "packages"
 if root != repo_root and pkgs_dir.is_dir():
@@ -1072,9 +1072,9 @@ else:
         names = [p.get("name", "") for p in entries]
         if len(names) != len(set(names)):
             errors.append(".claude-plugin/marketplace.json: duplicate plugin names")
-        # Курируемые (не-бакетные) плагины: каталога-плагина на диске НЕТ — плагин ссылается на
-        # скиллы из РАЗНЫХ бакетов через skills[] (source:"./"). Имя мирроит config.CORE_PLUGIN;
-        # сами пути skills[] проверяем на существование ниже. (Дубль имени — stdlib-only heredoc.)
+        # Supervised (non-bucket) plugins: there is NO plugin directory on disk - the plugin refers to
+        # skills from DIFFERENT buckets via skills[] (source:"./"). Name mirroite config.CORE_PLUGIN;
+        # the paths themselves skills[] check for existence below. (Double name - stdlib-only heredoc.)
         curated_plugin_names = ["core"]
         expected_names = list(plugin_roots) + sibling_plugin_names + curated_plugin_names
         if sorted(names) != sorted(expected_names):
@@ -1083,7 +1083,7 @@ else:
                 f"({STALE_HINT})")
         for p in entries:
             src = p.get("source", "")
-            # source-пути относительны корня репо (./packages/skiller/... или ./ для curated)
+            # source-paths are relative to the repo root (./packages/skiller/... or ./ for curated)
             if not (repo_root / src).is_dir():
                 errors.append(
                     f".claude-plugin/marketplace.json: {p.get('name')}: "
@@ -1092,7 +1092,7 @@ else:
                 errors.append(
                     f".claude-plugin/marketplace.json: {p.get('name')}: "
                     f"description must be non-empty")
-            # курируемый плагин: каждый путь skills[] (от корня репо) должен существовать
+            # curated plugin: every path skills[] (from the root of the repo) must exist
             if p.get("name") in curated_plugin_names:
                 for sk in (p.get("skills") or []):
                     if not (repo_root / sk).is_dir():
@@ -1202,13 +1202,13 @@ for start in sorted(all_names):
             stack.pop()
 
 # --- 10. internal project skills (.claude/skills/) ---------------------------
-# Внутренние скиллы разработки реестра: НЕ экспортируются и НЕ попадают в
-# skills.json — линтуются мягко (только name+description, без полей реестра).
+# Internal registry development skills: NOT exported and NOT included in
+# skills.json — lint softly (only name+description, without registry fields).
 registry_names = set(seen_names)
-# Локальные dev-скиллы могут жить и в .claude/skills пакета, и в КОРНЕ МОНОРЕПО
-# (перенесены туда ради видимости из корня). Линтуем оба места (standalone-safe).
+# Local dev-skills can live in .claude/skills package, and in the ROOT MONOREPO
+# (moved there for visibility from the root). Lint both places (standalone-safe).
 _skill_roots = [root]
-_mono = root.parent.parent          # packages/<pkg> → корень монорепо
+_mono = root.parent.parent          # packages/<pkg> → monorepo root
 if _mono != root and (_mono / ".claude" / "skills").is_dir():
     _skill_roots.append(_mono)
 _internal_skills = []
@@ -1233,22 +1233,22 @@ for _sr, skill_md in _internal_skills:
         warnings.append(
             f"{rel}: internal skill name '{name}' collides with a registry skill")
 
-# --- 10b. slash-команды плагина skm (frontmatter) ----------------------------
-# Командное лицо CLI: каждый skm/commands/*.md должен иметь frontmatter с
-# непустым description (иначе команда без подписи в меню Claude Code).
+# --- 10b. slash-plugin commands skm (frontmatter) ----------------------------
+# Command Person CLI: each skm/commands/*.md must have frontmatter with
+# non-empty description (otherwise the command is without a signature in the menu Claude Code).
 for cmd_md in sorted(root.glob("skm/commands/*.md")):
     rel = cmd_md.relative_to(root)
     fm = parse_frontmatter(cmd_md)
     if fm is None:
         errors.append(f"{rel}: missing/unterminated frontmatter block")
     elif not fm.get("description"):
-        errors.append(f"{rel}: slash-команда без непустого description")
+        errors.append(f"{rel}: slash-command without non-empty description")
 
 # --- 10c. agent `skills:` references resolve to registry skills --------------
-# Агенты бакетов (skills/<bucket>/agents/*.md) предзагружают скиллы нативным
-# полем `skills: [bucket:name, ...]` (Claude Code subagent preload). Каждый
-# namespaced-элемент обязан указывать на реальный скилл реестра — иначе CC
-# тихо пропускает его с warning в debug-лог.
+# Bucket Agents (skills/<bucket>/agents/*.md) preload skills with native ones
+# field `skills: [bucket:name, ...]` (Claude Code subagent preload). Everyone
+# namespaced-element must point to a real registry skill - otherwise CC
+# quietly lets him through with warning in debug-log.
 registry_bn = set()
 for skill_md in skill_files:
     fm = parse_frontmatter(skill_md)
@@ -1266,10 +1266,10 @@ for agent_md in sorted(root.glob("skills/*/agents/*.md")):
     for entry in parse_inline_list(fm.get("skills", "")):
         if ":" not in entry:
             warnings.append(
-                f"{rel}: skills-элемент '{entry}' без namespace (нужно bucket:name)")
+                f"{rel}: skills-element '{entry}' without namespace (needed bucket:name)")
         elif entry not in registry_bn:
             errors.append(
-                f"{rel}: skills-элемент '{entry}' не резолвится в скилл реестра")
+                f"{rel}: skills-element '{entry}' does not resolve to the registry skill")
 
 # --- report ----------------------------------------------------------------
 for w in warnings:
@@ -1279,8 +1279,8 @@ for e in errors:
 
 if local_total:
     pct = 100 * local_with_evals // local_total
-    print(f"evals coverage: {local_with_evals}/{local_total} локальных скиллов "
-          f"имеют evals/ ({pct}%) — eval-first для новых (skiller eval <skill>)")
+    print(f"evals coverage: {local_with_evals}/{local_total} local skills "
+          f"have evals/ ({pct}%) — eval-first for new (skiller eval <skill>)")
 
 checked = len(skill_files)
 if errors:
@@ -1296,39 +1296,39 @@ for sh in "$REPO_ROOT/bin/skiller" "$REPO_ROOT/install.sh" \
           "$REPO_ROOT/sync.sh" "$REPO_ROOT"/scripts/*.sh; do
   bash -n "$sh" || { echo "ERROR: bash -n failed: $sh" >&2; exit 1; }
 done
-# Пресеты/хуки Claude Code вынесены в пакет harness (см. packages/harness);
-# их bash-проверка — в packages/harness/scripts/validate.sh.
+# Presets/hooks Claude Code included in the package harness (see packages/harness);
+# them bash-check - in packages/harness/scripts/validate.sh.
 echo "CLI + shell scripts: syntax OK"
 
 # --- 12. lib/skiller package + unit/integration tests --------------------------
 [[ -d "$REPO_ROOT/lib/skiller" ]] || {
   echo "ERROR: lib/skiller package missing" >&2; exit 1; }
-# MONOREPO_ROOT (на два уровня выше пакета) — чтобы импортировался пакет `core`;
-# опционально: в standalone-раскладке каталога core нет, путь не добавляется.
+# MONOREPO_ROOT (two levels above the package) — to import the package `core`;
+# optional: in standalone-directory layout core no, the path is not added.
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "import skiller.cli" || {
   echo "ERROR: lib/skiller fails to import" >&2; exit 1; }
 "$REPO_ROOT/scripts/test.sh" || { echo "ERROR: tests failed" >&2; exit 1; }
 
-# --- 12b. registry drift-gate (skills.json/_index.md/манифесты vs источники) ----
-# Пересобирает реестр В ПАМЯТИ и сверяет с закоммиченными артефактами. Ловит тихий
-# дрейф (правка SKILL.md/buckets.json/соседних plugin.json без `skiller registry`) —
-# раньше validate лишь json.loads'ил skills.json, не проверяя свежесть. Гейт для CI.
+# --- 12b. registry drift-gate (skills.json/_index.md/manifests vs sources) ----
+# Rebuilds the registry IN MEMORY and checks it against committed artifacts. Catches the quiet one
+# drift (edit SKILL.md/buckets.json/neighboring plugin.json without `skiller registry`) —
+# before validate only json.loads'or skills.json, without checking freshness. Gate for CI.
 "$REPO_ROOT/bin/skiller" registry --check || {
-  echo "ERROR: реестр устарел относительно источников — прогони: skiller registry" >&2; exit 1; }
+  echo "ERROR: registry is out of date with respect to sources - run: skiller registry" >&2; exit 1; }
 
-# --- 13. bucket-path drift lint (после раскола php/frontend) --------------------
-# Ловит протухшие ссылки `php/<skill>` / `frontend/<skill>` в телах скиллов и доках
-# пакета, где <skill> по skills.json уже живёт в другом бакете (laravel-*/frontend-*).
-# Защищает от регресса свода путей (аудит). Только within-package (skiller); корневые
-# docs/ — зонтичные, вне scope пакета.
+# --- 13. bucket-path drift lint (after the split php/frontend) --------------------
+# Catches rotten links `php/<skill>` / `frontend/<skill>` in skill bodies and docks
+# package, where <skill> by skills.json already lives in another bucket (laravel-*/frontend-*).
+# Protects against path arch regression (audit). Only within-package (skiller); root
+# docs/ — umbrella, out scope package.
 python3 - "$REPO_ROOT" <<'PY'
 import json, re, sys, pathlib
 root = pathlib.Path(sys.argv[1])
 sj = root / "skills.json"
 if not sj.is_file():
-    print("bucket-path lint: skills.json нет — пропуск"); sys.exit(0)
+    print("bucket-path lint: skills.json no - skip"); sys.exit(0)
 skills = json.loads(sj.read_text(encoding="utf-8"))
 skills = skills["skills"] if isinstance(skills, dict) else skills
 name2bucket = {}
@@ -1347,31 +1347,31 @@ for base in ("skills", "docs"):
                 if cur and cur != m.group(1):
                     stale.append(f"{f.relative_to(root)}:{ln}: {m.group(0)} → {cur}/{m.group(2)}")
 if stale:
-    print(f"ERROR: протухшие bucket-пути после раскола ({len(stale)}):", file=sys.stderr)
+    print(f"ERROR: rotten bucket-paths after split ({len(stale)}):", file=sys.stderr)
     for s in stale[:40]:
         print("  " + s, file=sys.stderr)
     sys.exit(1)
-print("bucket-path drift: нет протухших php/<skill>|frontend/<skill> ссылок")
+print("bucket-path drift: no rotten php/<skill>|frontend/<skill> links")
 PY
 
-# --- 14. CORE резидентный бюджет (ЖЁСТКИЙ гейт) --------------------------------
-# ⊕ tier-0 CORE_SKILLS грузится в КАЖДЫЙ запрос — гейт против тихого роста ядра выше
-# target (resident_budget_target в core-policy.json). --strict = ненулевой код при
-# превышении. Раньше здесь был `|| true` (soft, вопреки этому же комменту) — честно
-# сделан реальным гейтом: коммент обещал strict — теперь он и работает.
+# --- 14. CORE resident budget (HARD gate) --------------------------------
+# ⊕ tier-0 CORE_SKILLS is loaded into EVERY request - gate against silent kernel growth above
+# target (resident_budget_target in core-policy.json). --strict = non-zero code when
+# exceeded. Was here before `|| true` (soft, contrary to the same comment) — honestly
+# made by a real gate: comment promised strict — now it works.
 bash "$REPO_ROOT/bin/skiller" budget --check-core --strict || {
-  echo "ERROR: CORE резидентный бюджет превышен — сократи описания/скиллы ядра (skiller budget)" >&2
+  echo "ERROR: CORE resident budget exceeded - shorten descriptions/core skills (skiller budget)" >&2
   exit 1; }
 
-# --- 16. канон каркаса: таблица «пак → версия» vs pack.json (гейт свежести) ------
-# `docs/agent-framework/framework-overview.md` объявлен ВХОДОМ следующего прогона
-# framework-audit — и один раз уже отстал от дерева на 36 дней: аудитор получил семь
-# «🔜 в работе» при готовой реализации и добросовестно предложил построить уже стоящее
-# (docs/audits/2026-07-29-harness-agnostic — мета-находка). Ручное напоминание «обнови
-# обзор» этот класс отказа не поймало, поэтому свежесть входа держит машина.
-# Проверка того же класса, что drift-гейт реестра (§12b): ни сети, ни git-истории, ни
-# календарных порогов — сверка ОБЪЯВЛЕННЫХ версий с `pack.json` каждого пака.
-# В standalone-раскладке (пакет без соседнего `harness`) гейт деградирует в явный пропуск.
+# --- 16. framework canon: table «pack → version» vs pack.json (freshness gate) ------
+# `docs/agent-framework/framework-overview.md` is declared as the INPUT of the next run
+# framework-audit — and was already 36 days behind the tree once: the auditor received seven
+# «🔜 in progress» with the finished implementation and in good faith offered to build an already standing
+# (docs/audits/2026-07-29-harness-agnostic — meta find). Manual reminder «update
+# review» this class of failure was not caught, so the freshness of the input is kept by the machine.
+# Checking the same class as drift-registry gate (§12b): neither network nor git-history, nor
+# calendar thresholds - reconciliation of ANNOUNCED versions with `pack.json` of each pack.
+# B standalone-layout (packet without neighbor `harness`) gate degrades into an explicit pass.
 _AGENT_PACKS_DIR="$(cd "$REPO_ROOT/../harness/configs/claude-code/agent-packs" 2>/dev/null && pwd || true)"
 python3 - "$REPO_ROOT" "${_AGENT_PACKS_DIR:-}" <<'PY'
 import json, re, sys, pathlib
@@ -1381,17 +1381,17 @@ packs_dir = sys.argv[2]
 overview = root / "docs" / "agent-framework" / "framework-overview.md"
 
 if not packs_dir:
-    print("канон каркаса: packages/harness/configs/claude-code/agent-packs не найден "
-          "(standalone-раскладка) — гейт свежести пропущен")
+    print("framework canon: packages/harness/configs/claude-code/agent-packs not found "
+          "(standalone-layout) — freshness gate missed")
     sys.exit(0)
 if not overview.is_file():
-    print("канон каркаса: docs/agent-framework/framework-overview.md нет — "
-          "гейт свежести пропущен")
+    print("framework canon: docs/agent-framework/framework-overview.md no - "
+          "freshness gate missed")
     sys.exit(0)
 
-# Формат якоря закрыт: заголовок «| Пак | Версия |», разделитель, строки
-# «| <пак> | <x.y.z> |». Эвристик нет — что не легло в форму, то ERROR с фиксом.
-HEADER = re.compile(r"^\|\s*Пак\s*\|\s*Версия\s*\|\s*$")
+# Anchor format closed: header «| Pack | Version |», delimiter, lines
+# «| <pack> | <x.y.z> |». There are no heuristics - what doesn’t fit into the form, then ERROR with fix.
+HEADER = re.compile(r"^\|\s*Pack\s*\|\s*Version\s*\|\s*$")
 SEP = re.compile(r"^\|[\s:|-]+\|\s*$")
 ROW = re.compile(r"^\|\s*([A-Za-z0-9_][A-Za-z0-9_.-]*)\s*\|\s*(\d+\.\d+\.\d+)\s*\|\s*$")
 
@@ -1411,14 +1411,14 @@ for ln, line in enumerate(overview.read_text(encoding="utf-8").splitlines(), 1):
         continue
     m = ROW.match(line)
     if not m:
-        errors.append(f"docs/agent-framework/framework-overview.md:{ln}: строка таблицы "
-                      f"«пак → версия» не в формате `| <пак> | <x.y.z> |`: {line.strip()}")
+        errors.append(f"docs/agent-framework/framework-overview.md:{ln}: table row "
+                      f"«pack → version» not in format `| <pack> | <x.y.z> |`: {line.strip()}")
         continue
     declared[m.group(1)] = m.group(2)
 
 if not declared and not errors:
-    errors.append("docs/agent-framework/framework-overview.md: нет таблицы «пак → версия» "
-                  "(заголовок `| Пак | Версия |`) — она машинный якорь гейта свежести")
+    errors.append("docs/agent-framework/framework-overview.md: no table «pack → version» "
+                  "(header `| Pack | Version |`) — she is the machine anchor of the freshness gate")
 
 actual = {}
 for pj in sorted(pathlib.Path(packs_dir).glob("*/pack.json")):
@@ -1426,46 +1426,46 @@ for pj in sorted(pathlib.Path(packs_dir).glob("*/pack.json")):
     try:
         data = json.loads(pj.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
-        errors.append(f"agent-packs/{name}/pack.json: невалидный JSON: {e}")
+        errors.append(f"agent-packs/{name}/pack.json: invalid JSON: {e}")
         continue
     version = data.get("version")
     if not isinstance(version, str):
-        errors.append(f"agent-packs/{name}/pack.json: нет строкового поля version")
+        errors.append(f"agent-packs/{name}/pack.json: no string field version")
         continue
     actual[name] = version
 
 for name in sorted(actual):
     if name not in declared:
-        errors.append(f"пак `{name}` не объявлен в каноне — обнови таблицу в "
+        errors.append(f"pack `{name}` is not declared in canon - update the table in "
                       f"`framework-overview.md`: `{name}` `{actual[name]}`")
     elif declared[name] != actual[name]:
-        errors.append(f"пак `{name}`: канон объявляет `{declared[name]}`, pack.json несёт "
-                      f"`{actual[name]}` — обнови таблицу в `framework-overview.md`: "
+        errors.append(f"pack `{name}`: canon announces `{declared[name]}`, pack.json carries "
+                      f"`{actual[name]}` — update the table in `framework-overview.md`: "
                       f"`{name}` `{actual[name]}`")
 for name in sorted(declared):
     if name not in actual:
-        errors.append(f"строка `{name}` в каноне лишняя (пака нет в "
-                      f"packages/harness/configs/claude-code/agent-packs) — убери строку из "
-                      f"таблицы в `framework-overview.md`")
+        errors.append(f"string `{name}` is superfluous in canon (pack is not in "
+                      f"packages/harness/configs/claude-code/agent-packs) — remove line from "
+                      f"tables in `framework-overview.md`")
 
 if errors:
-    print(f"ERROR: канон каркаса отстал от дерева ({len(errors)}) — "
-          f"`framework-overview.md` объявлен входом следующего аудита:", file=sys.stderr)
+    print(f"ERROR: frame canon has fallen behind the tree ({len(errors)}) — "
+          f"`framework-overview.md` is declared as the input of the following audit:", file=sys.stderr)
     for e in errors:
         print("  " + e, file=sys.stderr)
     sys.exit(1)
 
-print(f"канон каркаса: таблица «пак → версия» совпадает с pack.json ({len(actual)} паков)")
+print(f"framework canon: table «pack → version» matches pack.json ({len(actual)} packs)")
 PY
 
-# --- 17. WARN: листинг обнаружения профилей против фолбэк-бюджета Codex ---
-# Гейт WARN, не ERROR: структурный перебор — известная проблема состава раздачи,
-# не гигиены, красный CI её не чинит (см. budget.py CODEX_LISTING_FALLBACK_CHARS). Профиль,
-# чей листинг превышает фолбэк-бюджет Codex 8 000 симв, печатает число и профиль; решение
-# (сужение/skillOverrides/принятая деградация) — решение владельца, не этот скрипт.
-# Python сам зовёт CLI сабпроцессом (а не читает его stdout через pipe в `python3 -
-# <<heredoc`) — конфликт: heredoc и pipe одновременно кормят один stdin, второй молча
-# теряется (питон читает СВОЙ скрипт из heredoc, а не JSON из pipe).
+# --- 17. WARN: listing of profile detection against fallback budget Codex ---
+# Gate WARN, not ERROR: structural brute force is a known distribution composition problem,
+# not hygienic, red CI doesn't fix it (see budget.py CODEX_LISTING_FALLBACK_CHARS). Profile,
+# whose listing exceeds the fallback budget Codex 8 000 character, prints number and profile; decision
+# (narrowing/skillOverrides/accepted degradation) — owner's decision, not this script.
+# Python himself is calling CLI subprocess (and does not read it stdout via pipe in `python3 -
+# <<heredoc`) — conflict: heredoc and pipe feed one at a time stdin, second silently
+# is lost (python reads YOUR script from heredoc, and not JSON from pipe).
 python3 - "$REPO_ROOT" <<'PY'
 import json, subprocess, sys
 
@@ -1475,31 +1475,31 @@ result = subprocess.run(["bash", f"{repo_root}/bin/skiller", "budget",
 try:
     rows = json.loads(result.stdout)
 except json.JSONDecodeError:
-    print("листинг обнаружения Codex: пропущен (--profiles --json не отдал валидный вывод)")
+    print("detection listing Codex: missing (--profiles --json did not produce valid output)")
     sys.exit(0)
 
 over = [r for r in rows if r["codex"]["over"]]
 if over:
-    print(f"WARN: {len(over)} профил(ей) листинга превышают фолбэк-бюджет обнаружения "
-          f"Codex (8 000 симв) — структурный перебор:")
+    print(f"WARN: {len(over)} profile(to her) listings exceed fallback detection budget "
+          f"Codex (8 000 char) — structural search:")
     for r in over:
         c = r["codex"]
-        print(f"  {r['profile']}: {c['raw']} симв (×{c['raw'] / c['budget']:.1f})")
+        print(f"  {r['profile']}: {c['raw']} char (×{c['raw'] / c['budget']:.1f})")
 else:
-    print("листинг обнаружения Codex: все профили укладываются в фолбэк-бюджет 8 000 симв")
+    print("detection listing Codex: all profiles fit within the fallback budget of 8,000 characters")
 PY
 
 # --- 18. Codex publication consumer-acceptance -----------------------
-# Изолированный round-trip живым `codex` CLI: marketplace add → plugin list/add →
-# clean-consumer discovery в temp CODEX_HOME — то, чего НЕ проверяет статическая
-# схема (`test_codex_publication.py`). Azguard, 2026-07-21: пакетный GREEN был,
-# consumer path — нет. Явное различение skip/GREEN/RED в выводе — "гейт не
-# прогонялся" и "гейт прошёл" не одно и то же. Тест сам предполагает монорепо-раскладку (sibling packages/task) —
-# та же граница портируемости, что у остального пакета tests/ этого гейта.
+# Isolated round-trip alive `codex` CLI: marketplace add → plugin list/add →
+# clean-consumer discovery in temp CODEX_HOME — what the static does NOT check
+# diagram (`test_codex_publication.py`). Azguard, 2026-07-21: batch GREEN was,
+# consumer path — no. Explicit discrimination skip/GREEN/RED in the output - "gate not
+# ran" and "gate passed" are not the same thing. The test itself assumes a monorepo layout (sibling packages/task) —
+# same portability limit as the rest of the package tests/ of this gate.
 if [ ! -d "$REPO_ROOT/../task" ]; then
-  echo "SKIP: Codex publication consumer-acceptance гейт — нет sibling packages/task (standalone-раскладка skiller вне монорепо)"
+  echo "SKIP: Codex publication consumer-acceptance gate - no sibling packages/task (standalone-layout skiller outside monorepo)"
 elif ! command -v codex >/dev/null 2>&1; then
-  echo "SKIP: Codex publication consumer-acceptance гейт — бинарь 'codex' не найден в PATH (гейт НЕ прогонялся, не считать за GREEN)"
+  echo "SKIP: Codex publication consumer-acceptance gate - binary 'codex' not found in PATH (gate was NOT driven, do not count as GREEN)"
 else
   codex_version="$(codex --version 2>/dev/null || echo unknown)"
   _MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
@@ -1509,7 +1509,7 @@ else
     echo "Codex publication consumer-acceptance: GREEN (codex ${codex_version})"
   else
     cat "$_codex_gate_log" >&2
-    echo "ERROR: Codex publication consumer-acceptance гейт красный (codex ${codex_version})" >&2
+    echo "ERROR: Codex publication consumer-acceptance gate red (codex ${codex_version})" >&2
     rm -f "$_codex_gate_log"
     exit 1
   fi

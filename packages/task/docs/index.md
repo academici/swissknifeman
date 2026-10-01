@@ -1,85 +1,85 @@
-# task — команды постановки и выполнения задач
+# task - commands for setting and completing tasks
 
-**Что это.** Опциональные помощники Claude Code (`/task:*`), Codex (`$ task:*`) и Cursor (`task:*`)
-для явного выбора работы.
-С версии Task **0.21.0** workflows включаются только явным вызовом команды/skill. Codex
-получает `allow_implicit_invocation: false`, Claude — `disable-model-invocation: true`;
-harness не внедряет Task-политику в SessionStart и не выбирает команды по ключевым словам.
-Каждая команда **пинит модель + reasoning effort + профиль workflow**, перебивая настройки сессии,
-чтобы не переключать их вручную. Default-on в каждом онбордженном проекте (connect-канал);
-резидентного налога нет — описания команд не инжектятся в каждый запрос.
+**What is it.** Optional helpers Claude Code (`/task:*`), Codex (`$ task:*`) and Cursor (`task:*`)
+for explicit job selection.
+From version Task **0.21.0** workflows are enabled only by explicitly calling the command/skill. Codex
+gets `allow_implicit_invocation: false`, Claude - `disable-model-invocation: true`;
+harness does not implement Task policy in SessionStart and does not select commands by keywords.
+Each command **pins the model + reasoning effort + workflow profile**, interrupting the session settings,
+to avoid switching them manually. Default-on in each onboarded project (connect channel);
+no resident tax - command descriptions are not injected into every request.
 
-**Когда брать.** Когда полезен явный маршрут для разработки, исследования, дизайна или ревью.
-Обычная задача может выполняться напрямую; команды не требуют создания плана.
+**When to take.** When an explicit route is useful for development, research, design or review.
+The normal task can be executed directly; teams do not require the creation of a plan.
 
-Native-установка Task включает команды, конфигурацию и Python runtime, а не только
-проекции скиллов. Начиная с v0.16.1 release attestation проверяет этот полный native-кеш
-отдельно от компактного project bundle. Локальная игнорируемая телеметрия в релиз не входит.
-После обновления откройте новую сессию Codex/Claude: receipt подтверждает файлы на диске,
-но не переинициализацию уже работающего агента.
+Native installation of Task includes commands, configuration and Python runtime, not only
+skill projections. Since v0.16.1 release attestation checks this full native cache
+separate from the compact project bundle. Local ignored telemetry is not included in the release.
+After the update, open a new Codex/Claude session: receipt confirms the files on disk,
+but not reinitializing an already running agent.
 
-**Когда НЕ трогать.** Это не движок — он лишь роутит на модель/effort/профиль. Сам workflow и
-субагенты живут в `harness` (agent-packs); протокол мастер-планов — в скилле
+**When NOT to touch.** This is not an engine - it only routes to the model/effort/profile. The workflow itself and
+subagents live in `harness` (agent-packs); master plan protocol - in skill
 `general/plan-protocol`.
 
-## Команды
+## Commands
 
-| Команда | Пинит | Для чего |
+| Team | Pinit | For what |
 |:--|:--|:--|
-| `/task:fix` | Sonnet / medium | мелкая правка (узкий single-agent, без fan-out) |
-| `/task:design` | Opus / high | проектирование (артефакты, не код) |
-| `/task:dev` | Sonnet / high | разработка вертикальными срезами с risk-адаптивным review-gate |
-| `/task:research` | Opus / high | многоисточниковый research с RAG-верификацией |
-| `/task:review` | Sonnet / high | risk-scaled read-only ревью |
-| `/task:plan-design` | Opus / high | создать/детализировать мастер-план `plans/<ID>/` |
+| `/task:fix` | Sonnet/medium | minor edits (narrow single-agent, no fan-out) |
+| `/task:design` | Opus/high | design (artifacts, not code) |
+| `/task:dev` | Sonnet/high | development by vertical slices with risk-adaptive review-gate |
+| `/task:research` | Opus/high | multi-source research with RAG verification |
+| `/task:review` | Sonnet/high | risk-scaled read-only review |
+| `/task:plan-design` | Opus/high | create/detail a master plan `plans/<ID>/` |
 | `/task:plan-run` | session route | execute plan items under the current session route; the minimum comes from the plan's Routing row |
-| `/task:plan-close` | Sonnet / low | recovery-сверка item либо закрытие фазы после свежего GREEN |
-| `/task:plan-audit` | Opus / xhigh | один pre-exec или pre-close аудит по material trigger |
+| `/task:plan-close` | Sonnet/low | recovery-reconciliation of item or closing the phase after a fresh GREEN |
+| `/task:plan-audit` | Opus/xhigh | one pre-exec or pre-close audit by material trigger |
 
-## Как этим пользоваться
+## How to use it
 
-Для существующего плана `scripts/plan-work.py` внутри установленного Task объединяет
-служебные операции: `design-context` даёт компактный контекст, `finalize-design` проверяет
-дизайн и обновляет производные файлы, `prepare` выполняет admission/start и возвращает
-execution capsule, `finalize` согласует уже записанное terminal evidence. Запускайте скрипт
-через `python3` с `--help` для параметров. Семантический handoff и фактическое evidence
-остаются входом; операция не выдумывает успешные проверки.
+For an existing plan `scripts/plan-work.py` inside the installed Task combines
+service operations: `design-context` gives compact context, `finalize-design` checks
+design and updates derived files, `prepare` performs admission/start and returns
+execution capsule, `finalize` matches the already recorded terminal evidence. Run the script
+via `python3` with `--help` for parameters. Semantic handoff and factual evidence
+remain an input; the operation does not invent successful checks.
 
-Design соблюдает бюджет владельца, переиспользует известные findings и не требует census
-всех callers/tests. Завершение design не требует нового процесса. Для ограниченной локальной
-работы доступна явная граница `owner-session`; внешние эффекты сохраняют `provider-proof` —
-см. [полномочия](./reference/plan-authority.md).
+Design respects the owner's budget, reuses known findings and does not require a census
+all callers/tests. Completing design does not require a new process. For limited local
+work available explicit boundary `owner-session`; externalities preserve `provider-proof` —
+see [authority](./reference/plan-authority.md).
 
-Выбор конкретной команды описан в таблице выше; мастер-планы (plan-протокол) — скилл
-`general/plan-protocol`. Процесс день за днём — [Методология](./methodology.md).
+The specific command selection is described in the table above; master plans (plan-protocol) - skill
+`general/plan-protocol`. Process day by day - [Methodology](./methodology.md).
 
-Валидатор планов: `python3 packages/task/scripts/plan-lint.py plans/<PLAN-ID>`.
+Plan validator: `python3 packages/task/scripts/plan-lint.py plans/<PLAN-ID>`.
 
-Сбой инструмента или bookkeeping-дефект не открывает новый цикл дизайна. Исполнитель сначала
-воспроизводит влияние, чинит обратимую локальную причину в том же attempt и продолжает. Остановка
-нужна только для подтверждённой acceptance/safety/authority границы; повторный аудит без
-material scope/SHA/risk change не запускается.
+A tool failure or bookkeeping defect does not open a new design cycle. Performer first
+reproduces the influence, repairs the reversible local cause in the same attempt and continues. Stop
+is needed only for confirmed acceptance/safety/authority border; re-audit without
+material scope/SHA/risk change does not run.
 
-`continue-root` продолжает совместимый ready item того же Routing batch в текущей root-сессии;
-новый launch-block печатается только на настоящей cold-start/wait boundary. Перед `plan-design`
-для существующей фазы Task сверяет item carriers: детализированная незавершённая фаза идёт в
-`plan-run`, а не в повторный дизайн.
+`continue-root` continues a compatible ready item of the same Routing batch in the current root session;
+new launch-block is printed only on the real cold-start/wait boundary. Before `plan-design`
+for an existing Task phase checks item carriers: the detailed unfinished phase goes to
+`plan-run` rather than re-design.
 
-## Отпечатки возвратов
+## Return fingerprints
 
-Для диагностики повторных возвратов между исполнением и проектированием используйте
-детерминированный вид `returns`. Он сохраняет проверяемый канонический кортеж рядом с digest,
-а не выводит причину из текста заметок:
+To diagnose repeated returns between execution and design, use
+deterministic view `returns`. It stores the canonical tuple being checked next to the digest.
+rather than inferring the reason from the text of the notes:
 
 ```bash
 python3 packages/task/scripts/plan-views.py returns --plan-dir plans/<ID> --json
 ```
 
-## История пункта layout v2
+## History of item layout v2
 
-История — это не файл, который ведут вручную, а on-demand вид для аудитора над тремя
-источниками: журналом, неизменяемыми решениями и item-scoped findings. По умолчанию команда
-печатает её в stdout; постоянную копию создаёт только явный `--output` и она игнорируется Git:
+History is not a file that is maintained manually, but an on-demand view for the auditor over three
+sources: log, immutable solutions and item-scoped findings. Default command
+prints it to stdout; Only the explicit `--output` creates a permanent copy and is ignored by Git:
 
 ```bash
 python3 packages/task/scripts/plan-views.py history --plan-dir plans/<ID> --item Pn.m
@@ -87,32 +87,32 @@ python3 packages/task/scripts/plan-views.py history --plan-dir plans/<ID> --item
   --output .plan-cache/history/Pn.m.md --check
 ```
 
-## Дайджест закрытой фазы layout v2
+## Digest of the closed phase layout v2
 
-Закрытая фаза сохраняет исходный адрес `phases/Pn/Pn.md`, но получает детерминированный
-дайджест `phases/Pn/Pn.closed.md` для дизайнера. Генератор работает только для терминальной
-фазы и отказывает для живой; `--check` проверяет байтовую свежесть:
+The closed phase retains the original address `phases/Pn/Pn.md`, but receives a deterministic
+digest `phases/Pn/Pn.closed.md` for the designer. The generator only works for the terminal
+phase and fails for live; `--check` checks byte freshness:
 
 ```bash
 python3 packages/task/scripts/plan-views.py closure --plan-dir plans/<ID> --phase Pn
 python3 packages/task/scripts/plan-views.py closure --plan-dir plans/<ID> --phase Pn --check
 ```
 
-## Методология plan-protocol 2.0
+## Methodology plan-protocol 2.0
 
-| Страница | Что там |
+| Page | What's there |
 |:--|:--|
-| [Методология — полный цикл](./methodology) | Mermaid-карта research → design → refine (DoR, pre-mortem) → approve → exec (commit-гейт, два дома) → review (таксономия) → archive → docs |
-| [Continue-first, block confirmation и delivery receipt](./continue-first) | Автофикс малых отклонений, isolated-подтверждение реального Blocked, 100% RAG для external-кандидатов и защита от раннего final |
-| [Структура плана](./plan-structure) | канон папок `plans/<ID>/` 2.0, различие `root/`/`artifacts/`, таблица миграции root/ → docs |
-| [Шаблоны](./templates) | референс snippets: plan/phase/handoff/launch-block/code-guidance — что где лежит |
-| [Provider model roles](./reference/provider-model-roles) | pins economy/implementation/frontier + inventory и Auto policy для трёх провайдеров |
-| [Plan tooling](./reference/plan-tooling) | launch-block: Codex/Cursor native-формы, route evidence |
-| [Control plane map](./reference/control-plane-map) | источники истины, design gate, виды и диагностика отказов |
-| [Конструктор workflow](./workflows) | 4 канонических шаблон-скрипта оркестрации: когда какой, правила слотов |
+| [Methodology - full cycle](./methodology) | Mermaid map research → design → refine (DoR, pre-mortem) → approve → exec (commit gate, two houses) → review (taxonomy) → archive → docs |
+| [Continue-first, block confirmation and delivery receipt](./continue-first) | Autofix of small deviations, isolated confirmation of real Blocked, 100% RAG for external candidates and protection from early final |
+| [Plan structure](./plan-structure) | folder canon `plans/<ID>/` 2.0, diff `root/`/`artifacts/`, migration table root/ → docs |
+| [Templates](./templates) | reference snippets: plan/phase/handoff/launch-block/code-guidance - what is where |
+| [Provider model roles](./reference/provider-model-roles) | pins economy/implementation/frontier + inventory and Auto policy for three providers |
+| [Plan tooling](./reference/plan-tooling) | launch-block: Codex/Cursor native-forms, route evidence |
+| [Control plane map](./reference/control-plane-map) | sources of truth, design gate, types and diagnostics of failures |
+| [Workflow Designer](./workflows) | 4 canonical orchestration script templates: when which one, slot rules |
 
-Обычная межмодульная разработка принимает сообщение или файл задания без `plans/` и фаз.
-Executable plan создаётся только по явному запросу; размер, риск и перенос исполнения
-не меняют маршрут сами по себе. Общий контракт — `references/intent-routing.md` пакета Task;
-текущий запрос владельца старше указаний внутри старого аудита или хендоффа. Отдельный заказ
-дизайна/review сохраняет границу. Next рекомендует продолжение в рамках Scope и Acceptance.
+Normal cross-module development accepts a message or task file without `plans/` and phases.
+Executable plan is created only upon explicit request; size, risk and carryover
+do not change the route on their own. General contract - `references/intent-routing.md` of the Task package;
+The owner's current request is older than the instructions within the old audit or handoff. Separate order
+design/review retains the border. Next recommends continuation within Scope and Acceptance.

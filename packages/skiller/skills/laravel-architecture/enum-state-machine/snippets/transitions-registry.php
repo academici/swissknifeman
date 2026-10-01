@@ -1,8 +1,8 @@
 <?php
 
 // Source: generalized from a runtime transition registry (anonymized)
-// Тонкий рантайм-реестр поверх графа enum: строит adjacency лениво и кэширует в статике.
-// Источник данных — только OrderStatus::transitionDefinitions().
+// Thin runtime registry on top of the graph enum: builds adjacency is lazy and caches statically.
+// Data source - only OrderStatus::transitionDefinitions().
 
 declare(strict_types=1);
 
@@ -34,7 +34,7 @@ final class OrderStatusTransitions
             return;
         }
 
-        // Дедуп целей по value, чтобы повторное ребро не плодило дубли в списке.
+        // Dedup targets by value, so that the repeated edge does not create duplicates in the list.
         /** @var array<string, array<string, OrderStatus>> $byFrom */
         $byFrom = [];
 

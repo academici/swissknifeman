@@ -2,7 +2,7 @@
   "schema": 1,
   "pack": "role-cto",
   "version": "0.1.2",
-  "description": "Персона-пак стартап-CTO: набор delegate/read-first субагентов уровня технического лидера — architecture-decision (ADR/C4/границы/scalability + data/api/observability/security), tech-radar-curator (выбор стека и build-vs-buy как trade-off матрица + tech radar adopt/trial/hold с аудитом supply-chain), ai-viability-assessor (реальность vs хайп AI-направления через дизайн агента, eval-метрики и продуктово-рыночные риски). Стек-агностичная роль: подключается явно как компаньон любого стек-пака, не автодетектится.",
+  "description": "Persona-pack startup-CTO: set delegate/read-first technical leader level subagents - architecture-decision (ADR/C4/boundaries/scalability + data/api/observability/security), tech-radar-curator (stack selection and build-vs-buy like trade-off matrix + tech radar adopt/trial/hold with audit supply-chain), ai-viability-assessor (reality vs hype AI-directions via agent design, eval-metrics and product-market risks). Stack-agnostic role: connects explicitly as a companion to any stack pack, not auto-detected.",
   "stack": {
     "shape": "role"
   },
@@ -31,7 +31,7 @@
   "interview": [
     {
       "id": "PACK_PREFIX",
-      "q": "Префикс имён агентов проекта (как у стек-пака-компаньона)?",
+      "q": "Project agent name prefix (like the companion stack pack)?",
       "default": "{project_dirname}",
       "kind": "slug"
     }
@@ -57,8 +57,8 @@
     }
   ],
   "notes": {
-    "prerequisite": "Персона-пак уровня CTO/tech-lead: стек-агностичен (shape=role), без detect — подключается явно как компаньон стек-пака. {PACK_PREFIX} должен совпадать с префиксом стек-пака, чтобы @<prefix>-<role> резолвились и оркестратор стек-пака мог маршрутизировать к этим ролям.",
-    "persona": "Роли — это технический лидер/архитектор/CTO-помощник, а не кодер: read-first, выдают ADR/trade-off матрицы/радар/оценки жизнеспособности. Пишут только документы решений (ADR/radar/spec), не реализацию.",
-    "verify_workflow": "Все файлы — агенты (.md frontmatter), не воркфлоу; node --check не применяется."
+    "prerequisite": "Persona-pack level CTO/tech-lead: stack-agnostic (shape=role), without detect — is connected explicitly as a companion to the stack pack. {PACK_PREFIX} must match the stackpack prefix in order for @<prefix>-<role> resolved and the stack pack orchestrator could route to these roles.",
+    "persona": "Roles - Technical Leader/architect/CTO-helper, not coder: read-first, issue ADR/trade-off matrices/radar/viability assessments. Write only decision documents (ADR/radar/spec), is not an implementation.",
+    "verify_workflow": "All files are agents (.md frontmatter), not a work flow; node --check does not apply."
   }
 }

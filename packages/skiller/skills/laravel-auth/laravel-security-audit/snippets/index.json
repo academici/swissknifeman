@@ -3,7 +3,7 @@
   "snippets": [
     {
       "file": "security-audit-scheduled.yml",
-      "description": "Шаблон GitHub Actions: еженедельный фоновый security-аудит Laravel, результат — Issue с severity",
+      "description": "Template GitHub Actions: weekly background security-audit Laravel, result - Issue with severity",
       "tags": ["github-actions", "background-agent", "security"]
     }
   ]

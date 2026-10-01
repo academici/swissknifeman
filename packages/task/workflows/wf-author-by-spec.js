@@ -1,95 +1,95 @@
-// Шаблон 2: author-by-spec — спека → N файловых заданий × author → self-check (pipeline, без барьера).
-// Прототип: рабочий скрипт ECOSYSTEM P5 (wf-p5-author.js). Правила слотов — README.md рядом.
+// Template 2: author-by-spec — spec → N file jobs × author → self-check (pipeline, without barrier).
+// Prototype: working script ECOSYSTEM P5 (wf-p5-author.js). Slot Rules - README.md nearby.
 export const meta = {
-  name: 'author-by-spec', // SLOT: имя под конкретный запуск
-  description: 'Авторинг по спеке-SSOT: параллельные файловые задания + self-check каждого результата',
-  whenToUse: 'Stage авторинга после готовой спеки; запускать через scriptPath (НЕ named-workflow — args приходит строкой)',
+  name: 'author-by-spec', // SLOT: name for a specific launch
+  description: 'Authoring by spec-SSOT: parallel file jobs + self-check of each result',
+  whenToUse: 'Stage authoring after the finished spec; run through scriptPath (NOT named-workflow — args comes as a string)',
   phases: [
-    { title: 'Author', detail: 'файловые задания параллельно по спеке', model: 'sonnet' },
-    { title: 'Self-check', detail: 'сверка результата со спекой + валидация', model: 'sonnet' },
+    { title: 'Author', detail: 'file jobs in parallel on the spec', model: 'sonnet' },
+    { title: 'Self-check', detail: 'checking the result with the spec + validation', model: 'sonnet' },
   ],
 }
 
-// ── Конфиг (embedded, НЕ через args-строку) ──────────────────────────────────
-// SLOT: пути — репозиторий-цель и спека-SSOT (абсолютные: cwd субагента сбрасывается).
-// ИНВАРИАНТ: абсолютный путь обязателен — assert ловит относительный на живом прогоне,
-// не срабатывает на незаполненном шаблоне (плейсхолдер `/abs/path/to/…` сам абсолютен).
+// ── Config (embedded, NOT via args-line) ──────────────────────────────────
+// SLOT: paths - repository-target and spec-SSOT (absolute: cwd subagent is reset).
+// INVARIANT: absolute path is required - assert catches relative on a live run,
+// does not fire on an empty template (placeholder `/abs/path/to/…` itself is absolute).
 const REPO = '/abs/path/to/repo'
 const SPEC = '/abs/path/to/spec.md'
-if (!REPO.startsWith('/')) throw new Error(`REPO должен быть абсолютным путём: "${REPO}"`)
-if (!SPEC.startsWith('/')) throw new Error(`SPEC должен быть абсолютным путём: "${SPEC}"`)
+if (!REPO.startsWith('/')) throw new Error(`REPO must be an absolute path: "${REPO}"`)
+if (!SPEC.startsWith('/')) throw new Error(`SPEC must be an absolute path: "${SPEC}"`)
 
-// SLOT: FILES — файловые задания. Одно задание = один агент = один коммит.
-//   files      — какие файлы правит/создаёт (дисциплина: ТОЛЬКО их);
-//   brief      — плотное ТЗ со ссылкой на блок спеки (агент обязан читать спеку сам);
-//   validation — команда/греп, которыми агент И self-check проверяют результат;
-//   commit     — готовый subject Conventional Commits (агент не сочиняет свой).
-// cache-bust: `agent()` кэширует по (prompt, opts) — на `resumeFromRunId` ОДНОГО задания
-// без глобального инвалидатора добавь опц. поле `asOf` (дата/тег) в объект задания и подмешай
-// в `label` (см. README §Общие инварианты; паттерн — roadmap-заметка dterema-p4).
+// SLOT: FILES — file jobs. One task = one agent = one commit.
+//   files      — which files are edited/creates (discipline: ONLY them);
+//   brief      — dense technical specification with reference to the spec block (the agent must read the spec himself);
+//   validation — command/grep, which agent AND self-check check the result;
+//   commit     — ready subject Conventional Commits (agent does not compose his).
+// cache-bust: `agent()` caches by (prompt, opts) — on `resumeFromRunId` ONE job
+// without global invalidator add opt. field `asOf` (date/tag) into the job object and mix
+// in `label` (see README §General invariants; pattern - roadmap-note dterema-p4).
 const FILES = [
   {
     key: 'block-1',
     files: ['path/inside/repo/file.md'],
-    brief: 'ЗАДАЧА (блок N спеки): что сделать, границы, чего НЕ трогать.',
-    validation: 'grep -c "маркер" path/inside/repo/file.md — ожидается ≥1',
-    commit: 'feat(scope): суть (PLAN-ID блок N)',
+    brief: 'TASK (block N specs): what to do, boundaries, what NOT to touch.',
+    validation: 'grep -c "marker" path/inside/repo/file.md — pending ≥1',
+    commit: 'feat(scope): essence (PLAN-ID block N)',
   },
 ]
 
-// SLOT: конвейер-команды — обязательные прогоны после правки (пусто, если их нет).
-// Пример swissknifeman: check-translations.sh --stamp → skiller registry → validate.sh.
-// guarded-optional-args: пустой массив — явный дефолт «конвейера нет» (см. `CONVEYOR.length ?
-// … : null` ниже), не пропуск проверки — паттерн из `wf-agentools-drive` (cross-ref, не вендорить).
+// SLOT: pipeline commands - mandatory runs after editing (empty if not present).
+// Example swissknifeman: check-translations.sh --stamp → skiller registry → validate.sh.
+// guarded-optional-args: empty array - obvious default «no pipeline» (see `CONVEYOR.length ?
+// … : null` below), not skipping a check - a pattern from `wf-agentools-drive` (cross-ref, do not vendor).
 const CONVEYOR = []
 
-// SLOT: model/effort — авторинг обычно sonnet/medium, self-check sonnet/low.
+// SLOT: model/effort — authoring usually sonnet/medium, self-check sonnet/low.
 const AUTHOR_MODEL = { model: 'sonnet', effort: 'medium' }
 const CHECK_MODEL = { model: 'sonnet', effort: 'low' }
 
-// ── Схема structured-summary (единая для author и self-check) ────────────────
+// ── Schema structured-summary (single for author and self-check) ────────────────
 const REPORT = {
   type: 'object',
   properties: {
     files_changed: { type: 'array', items: { type: 'string' } },
-    commits: { type: 'array', items: { type: 'string' }, description: 'sha + subject каждого коммита; пусто если коммиты запрещены' },
-    validation: { type: 'string', description: 'что прогнал и результаты (exit-коды, грепы)' },
-    issues: { type: 'array', items: { type: 'string' }, description: 'что не удалось / отклонения от спеки с причиной' },
-    summary: { type: 'string', description: 'суть сделанного, 3-5 строк' },
+    commits: { type: 'array', items: { type: 'string' }, description: 'sha + subject of each commit; empty if commits are disabled' },
+    validation: { type: 'string', description: 'that I ran and the results (exit-codes, greps)' },
+    issues: { type: 'array', items: { type: 'string' }, description: 'which failed / deviations from specification with reason' },
+    summary: { type: 'string', description: 'essence of what was done, 3-5 lines' },
   },
   required: ['files_changed', 'commits', 'validation', 'issues', 'summary'],
 }
 
-// Общая дисциплина всех author-агентов — не размазывать по brief'ам.
+// General discipline of all author-agents - do not spread over brief'am.
 const COMMON = [
-  `Репозиторий: ${REPO}. Спека-SSOT: прочитай ${SPEC} ЦЕЛИКОМ прежде чем править.`,
-  `Дисциплина: правишь ТОЛЬКО файлы своего задания; стиль — как соседний текст файла; ничего не выдумывать сверх спеки — неясность фиксируй в issues, не импровизируй.`,
-  `Коммиты: свои файлы отдельным коммитом с заданным subject (тело — зачем, 1-3 строки). Перед коммитом git status — чужие файлы НЕ добавлять (git add только свои пути).`,
-  `Финальный текст = данные по схеме, не сообщение человеку.`,
+  `Repository: ${REPO}. Speca-SSOT: read ${SPEC} ENTIRELY before editing.`,
+  `Discipline: edit ONLY the files of your assignment; style - like the adjacent text of the file; do not invent anything beyond the specification - fix ambiguity in issues, don't improvise.`,
+  `Commits: your files are a separate commit with a given subject (body - why, 1-3 lines). Before commit git status — DO NOT add other people's files (git add only your paths).`,
+  `Final text = data according to the scheme, not a message to the person.`,
 ].join('\n')
 
 function authorPrompt(f) {
   return [
     COMMON,
     f.brief,
-    `Файлы задания: ${f.files.join(', ')}`,
-    CONVEYOR.length ? `Конвейер после правки (обязательно, по порядку): ${CONVEYOR.join(' → ')}` : null,
-    `Самопроверка перед коммитом: ${f.validation}`,
-    `Коммит: ${f.commit}`,
+    `Job files: ${f.files.join(', ')}`,
+    CONVEYOR.length ? `Conveyor after editing (mandatory, in order): ${CONVEYOR.join(' → ')}` : null,
+    `Pre-commit self-test: ${f.validation}`,
+    `Commit: ${f.commit}`,
   ].filter(Boolean).join('\n\n')
 }
 
 function checkPrompt(f, res) {
   return [
-    `Self-check задания «${f.key}» свежим контекстом (ты НЕ автор). Репозиторий: ${REPO}, спека: ${SPEC} — прочитай блок задания в спеке и сами файлы: ${f.files.join(', ')}.`,
-    `Отчёт автора: ${res.summary}\nЗаявленные коммиты: ${(res.commits || []).join('; ') || '—'}`,
-    `Проверь: (1) результат соответствует блоку спеки — ничего не выброшено и не выдумано; (2) валидация реально зелёная — прогони сам: ${f.validation}; (3) коммит содержит только файлы задания (git show --stat).`,
-    `НИЧЕГО не правь и не коммить — только вердикт. Расхождения — в issues (пустой массив = чисто). Финальный текст = данные по схеме.`,
+    `Self-check jobs «${f.key}» fresh context (you are NOT the author). Repository: ${REPO}, spec: ${SPEC} — read the task block in the spec and the files themselves: ${f.files.join(', ')}.`,
+    `Author's report: ${res.summary}\nReported commits: ${(res.commits || []).join('; ') || '—'}`,
+    `Check: (1) the result corresponds to the spec block - nothing was thrown out or made up; (2) validation is really green - run it yourself: ${f.validation}; (3) commit contains only job files (git show --stat).`,
+    `Don't edit or commit ANYTHING - just a verdict. Discrepancies - in issues (empty array = clean). Final text = schema data.`,
   ].join('\n\n')
 }
 
-// ── Оркестрация: pipeline без барьера — self-check стартует сразу после авторинга файла ──
-log(`author-by-spec: ${FILES.length} заданий по спеке ${SPEC}`)
+// ── Orchestration: pipeline without barrier - self-check starts immediately after authoring the file ──
+log(`author-by-spec: ${FILES.length} spec jobs ${SPEC}`)
 
 const results = await pipeline(
   FILES,
@@ -109,8 +109,8 @@ const results = await pipeline(
 const ok = results.filter(Boolean)
 const failed = FILES.filter(f => !ok.some(r => r.key === f.key)).map(f => f.key)
 const issues = ok.flatMap(r => [...(r.author.issues || []), ...((r.check && r.check.issues) || [])])
-if (failed.length) log(`ВНИМАНИЕ: задания без результата (пересобрать в main loop): ${failed.join(', ')}`)
-if (issues.length) log(`issues по итогам self-check: ${issues.length}`)
+if (failed.length) log(`WARNING: tasks without result (rebuild to main loop): ${failed.join(', ')}`)
+if (issues.length) log(`issues based on the results self-check: ${issues.length}`)
 
 return {
   done: ok.map(r => ({ key: r.key, commits: r.author.commits, check_issues: (r.check && r.check.issues) || [] })),

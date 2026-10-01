@@ -1,8 +1,8 @@
 {
   "_version": "1",
-  "_comment": "Главный конфиг узла mAInd. Скопируй в .maind.json и поправь под себя. Надмножество .projects.json из brain — поля projects[].{id,name,repo,local_path,type} совместимы с brain, остальное — расширения maind.",
+  "_comment": "Main node config mAInd. Copy to .maind.json and adjust it to suit you. Superset.projects.json from brain — fields projects[].{id,name,repo,local_path,type} are compatible with brain, the rest are extensions maind.",
 
-  "_comment_node": "Идентификация узла. role: primary | secondary | mirror.",
+  "_comment_node": "Node identification. role: primary | secondary | mirror.",
   "node": {
     "id": "hub",
     "name": "Academici Hub",
@@ -10,7 +10,7 @@
     "description": "Central knowledge and agent hub"
   },
 
-  "_comment_memory": "agent-memory демон. Порты можно переопределить через .env (AGENTMEMORY_PORT/AGENTMEMORY_STREAM_PORT) — env приоритетнее этих значений.",
+  "_comment_memory": "agent-memory demon. Ports can be overridden via .env (AGENTMEMORY_PORT/AGENTMEMORY_STREAM_PORT) — env takes precedence over these values.",
   "memory": {
     "enabled": true,
     "config_path": "config/memory/iii-config.yaml",
@@ -19,14 +19,14 @@
     "data_dir": "./data"
   },
 
-  "_comment_graph": "Граф связей (топология между проектами). adapter: federation (по умолчанию, единственная раскладка — граф на проект в data/graphs/<id>.db + тонкий _index.db; связи derive'ятся из composer/Brain/.maind.graph.json/skills-lock) | disabled. Устаревшие memory/graphify/networkx принимаются с предупреждением и нормализуются в federation. store_layout: hub (графы в data/graphs/) | project-local (через projects[].graph_store=local — граф в самом репо проекта). код-граф (Serena) — отдельный MCP-слой над КОДОМ проекта (deploy --with-code; legacy --with-graphify), не адаптер этого графа.",
+  "_comment_graph": "Connection graph (topology between projects). adapter: federation (by default, the only layout is the graph per project in data/graphs/<id>.db + thin _index.db; communications derive'are removed from composer/Brain/.maind.graph.json/skills-lock) | disabled. Obsolete memory/graphify/networkx are accepted with a warning and normalized to federation. store_layout: hub (graphs in data/graphs/) | project-local (via projects[].graph_store=local — graph in the project repo itself). code graph (Serena) — separate MCP-layer above the project CODE (deploy --with-code; legacy --with-graphify), is not an adapter for this graph.",
   "graph": {
     "enabled": true,
     "adapter": "federation",
     "store_layout": "hub"
   },
 
-  "_comment_code_graph": "Граф КОДА внутри проекта (отдельный per-project MCP, движок Serena через uvx). ПОЛИТИКА ЗДЕСЬ, не в коде — правь под себя. Включается на проект полем projects[].code:true (legacy-alias graphify:true). ignores — что НЕ индексировать (сторонние + симлинкнутые first-party пакеты графятся как свои проекты). workspace_ignores — для проекта, что разрабатывается ВМЕСТЕ с пакетами под packages/* (монорепо/консьюмер): packages НЕ игнорим (единый граф), но режем vendor и вложенные **/vendor; режим включается авто при наличии packages/ или явно projects[].code_workspace. pre_index — фоновая прогрев-индексация при включении. feature_log_hook — SessionEnd-хук фиксации коммитов в общую память. Движок переопределяется на проект: code_command/code_args({root})/code_server_name; язык — code_language (str|список, перебивает language_by_type: смешанный репо с python-кодом при type=node-package графится как python, без правки общих констант).",
+  "_comment_code_graph": "CODE graph inside the project (separate per-project MCP, engine Serena via uvx). THE POLICY IS HERE, not in the code - edit it to your liking. Included on the project field projects[].code:true (legacy-alias graphify:true). ignores — what NOT to index (third-party + symlinked first-party packages are graphed as their own projects). workspace_ignores — for a project that is being developed TOGETHER with packages under packages/* (monorepo/consumer): packages DO NOT ignore (single graph), but we cut it vendor and nested **/vendor; mode is activated automatically if available packages/ or explicitly projects[].code_workspace. pre_index — background warm-up-indexing when turned on. feature_log_hook — SessionEnd-hook for committing commits to shared memory. The engine is redefined for the project: code_command/code_args({root})/code_server_name; language - code_language (str|list, interrupts language_by_type: mixed repo with python-code when type=node-package is graphed as python, without editing common constants).",
   "code_graph": {
     "enabled_default": false,
     "engine": "serena",
@@ -42,7 +42,7 @@
     "embed": null
   },
 
-  "_comment_agents": "Реестр агентов узла. definitions — дескрипторы агентов, которые крутятся здесь.",
+  "_comment_agents": "Node agent registry. definitions — descriptors for the agents who hang around here.",
   "agents": {
     "registry_enabled": true,
     "heartbeat_interval_ms": 30000,
@@ -58,13 +58,13 @@
     ]
   },
 
-  "_comment_namespaces": "Необязательный реестр namespace-групп (id → {name, description}). Изоляция межпроектных связей: ребро A↔B в графе строится, только если A и B делят хотя бы один namespace (поле projects[].namespaces). Реестр нужен лишь для метаданных и подсказок на опечатки — членство задаётся в проектах. Нет реестра → namespace свободны.",
+  "_comment_namespaces": "Optional registry namespace-groups (id → {name, description}). Cross-project link isolation: edge A↔B in the graph is built only if A and B share at least one namespace (field projects[].namespaces). The registry is needed only for metadata and typo hints - membership is set in projects. No registry → namespace are free.",
   "namespaces": {
-    "axioma": { "name": "Axioma", "description": "Продукты и пакеты линейки Axioma" },
-    "flexcrm": { "name": "FlexCRM", "description": "Продуктовая группа FlexCRM" }
+    "axioma": { "name": "Axioma", "description": "Line products and packages Axioma" },
+    "flexcrm": { "name": "FlexCRM", "description": "Product group FlexCRM" }
   },
 
-  "_comment_projects": "Проекты экосистемы. Минимум для совместимости с brain: id, name, repo, local_path, type. Остальные поля — расширения maind. namespaces: список групп проекта — связи изолируются группой; нет/пусто → неявный 'default' (всё связано, как раньше); ['*'] → общая инфраструктура, связывается со ВСЕМИ namespace. Доп. опции федерации: graph_store=local (граф проекта в <local_path>/.maind/graph.db, а не на хабе); vault_path — для derive doc-связей из Brain frontmatter; межпроектные связи, не выводимые из кода/доков, объявляй в <local_path>/.maind.graph.json: {\"links\":[{\"to\":\"getchat\",\"type\":\"relates_to\",\"plane\":\"runtime\",\"note\":\"REST\"}]}. docs_folders: doc-папки {id,vault,repo,visibility} — кэш из frontmatter Brain (источник истины visibility — там, не здесь; имена сторон vault/repo могут отличаться). repo = GitHub-slug owner/name; путь к коду — local_path (в brain-схеме .projects.json repo = путь, при импорте → local_path).",
+  "_comment_projects": "Ecosystem projects. Minimum for compatibility with brain: id, name, repo, local_path, type. The remaining fields are extensions maind. namespaces: list of project groups - connections are isolated by group; no/empty → implicit 'default' (everything is connected as before); ['*'] → common infrastructure, communicates with EVERYONE namespace. Add. federation options: graph_store=local (project graph in <local_path>/.maind/graph.db, and not on the hub); vault_path — for derive doc-connections from Brain frontmatter; inter-project relationships not inferred from code/docks, announce in <local_path>/.maind.graph.json: {\"links\":[{\"to\":\"getchat\",\"type\":\"relates_to\",\"plane\":\"runtime\",\"note\":\"REST\"}]}. docs_folders: doc-folders {id,vault,repo,visibility} — cache from frontmatter Brain (source of truth visibility — there, not here; names of the parties vault/repo may vary). repo = GitHub-slug owner/name; path to code - local_path (in brain-schema .projects.json repo = path, when importing → local_path).",
   "projects": [
     {
       "id": "brain",
@@ -113,7 +113,7 @@
     }
   ],
 
-  "_comment_integrations": "Связи со смежными проектами. sync_direction: import | export | bidirectional.",
+  "_comment_integrations": "Links to related projects. sync_direction: import | export | bidirectional.",
   "integrations": {
     "swissknifeman": {
       "enabled": true,
@@ -126,7 +126,7 @@
     }
   },
 
-  "_comment_mcp": "MCP-серверы, к которым подключается узел (и которые он публикует). emit_example (default-on, по умолчанию true — P2.4): при deploy/sync рядом с реальным .mcp.json эмитить .mcp.json.example с плейсхолдерами (<ABS_PATH_TO_PROJECT>/<HOME>) вместо machine-specific путей + вести .gitignore (реальный файл — в .gitignore, .example — вне, чтобы коммитился); opt-out — явный false. perplexity_web (opt-in, disabled-by-default): hub-managed keyless-мост perplexity-web — раскатывается в проекты тем же deploy/sync, что maind/Serena, вместо ручной хардкод-записи в каждом .mcp.json. enabled — глобальный фан-аут (per-project override projects[].perplexity_web:true|false). pool — модель пулов браузера (пул=демон+профиль+окно): 'default'/литерал → общий пул (переиспользует текущий логин); 'per-project' → пул=id (свой логин на проект); 'per-namespace' → пул=ns-<namespace> (логин на группу); per-project override projects[].perplexity_web_pool. bin — machine-local путь к исполняемому start.sh; MCP-клиенты запускают его напрямую, без shell-подстановок.",
+  "_comment_mcp": "MCP-servers to which the node connects (and which he publishes). emit_example (default-on, default true — P2.4): when deploy/sync next to the real one.mcp.json issue .mcp.json.example with placeholders (<ABS_PATH_TO_PROJECT>/<HOME>) instead machine-specific paths + lead .gitignore (real file - in .gitignore, .example — out to commit); opt-out — explicit false. perplexity_web (opt-in, disabled-by-default): hub-managed keyless-bridge perplexity-web — is rolled out into projects in the same way deploy/sync, what maind/Serena, instead of manual hardcode entry in each .mcp.json. enabled — global fan-out (per-project override projects[].perplexity_web:true|false). pool — browser pooling model (pool=demon+profile+window): 'default'/literal → shared pool (reuses the current login); 'per-project' → pool=id (your login for the project); 'per-namespace' → pool=ns-<namespace> (group login); per-project override projects[].perplexity_web_pool. bin — machine-local path to executable start.sh; MCP-clients run it directly, without shell-substitutions.",
   "mcp": {
     "emit_example": true,
     "perplexity_web": {

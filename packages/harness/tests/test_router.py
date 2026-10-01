@@ -87,10 +87,10 @@ class GenerateCatalogCase(unittest.TestCase):
         (claude / "skills" / "sales-report").mkdir(parents=True)
         (claude / "agents" / "acme-reviewer.md").write_text(
             "---\nname: acme-reviewer\ndescription: >-\n"
-            "  Ревью PR с severity-градацией находок и проверкой зависимостей.\n---\nбоди\n")
+            "  Review PR with severity-by grading findings and checking dependencies.\n---\nbodysuit\n")
         (claude / "skills" / "sales-report" / "SKILL.md").write_text(
-            '---\nname: sales-report\ndescription: "Локальный скилл отчётов по продажам"\n'
-            "---\nбоди\n")
+            '---\nname: sales-report\ndescription: "Local sales reporting skill"\n'
+            "---\nbodysuit\n")
         (claude / "skills" / "task-dev").mkdir()
         (claude / "skills" / "task-dev" / "SKILL.md").write_text(
             "---\nname: task-dev\ndescription: Implement features\n---\n")
@@ -107,7 +107,7 @@ class GenerateCatalogCase(unittest.TestCase):
         self.assertEqual([a["name"] for a in cat["agents"]], ["@acme-reviewer"])
         self.assertEqual([s["name"] for s in cat["skills"]], ["skill:sales-report"])
 
-        self.assertIn("ревью", cat["agents"][0]["keywords"])
+        self.assertIn("review", cat["agents"][0]["keywords"])
 
 
 
@@ -116,19 +116,19 @@ class HookBehaviorCase(unittest.TestCase):
         return json.loads(out)["hookSpecificOutput"]["additionalContext"]
 
     def test_task_like_is_silent_by_default(self):
-        out, rc = hook(ROUTER_PY, {"user_input": "добавь эндпоинт создания заказа",
+        out, rc = hook(ROUTER_PY, {"user_input": "add an order creation endpoint",
                                    "cwd": "/nonexistent"})
         self.assertEqual(rc, 0)
         self.assertEqual(out, "")
 
     def test_question_below_threshold_silent(self):
-        out, rc = hook(ROUTER_PY, {"user_input": "что такое CAP-теорема?",
+        out, rc = hook(ROUTER_PY, {"user_input": "what is CAP-theorem?",
                                    "cwd": "/nonexistent"})
         self.assertEqual(rc, 0)
         self.assertEqual(out.strip(), "")
 
     def test_escape_prefix_silent(self):
-        out, rc = hook(ROUTER_PY, {"user_input": "~добавь эндпоинт заказа",
+        out, rc = hook(ROUTER_PY, {"user_input": "~add order endpoint",
                                    "cwd": "/nonexistent"})
         self.assertEqual(out.strip(), "")
 

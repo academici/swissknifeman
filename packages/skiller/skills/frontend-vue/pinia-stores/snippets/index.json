@@ -3,17 +3,17 @@
   "snippets": [
     {
       "file": "useExampleStore.ts",
-      "description": "Setup-стор Pinia: ref=state, computed=getters, function=actions, приватное поле вне return, init от сервера, закомментированный пример persist",
+      "description": "Setup-side Pinia: ref=state, computed=getters, function=actions, private field outside return, init from the server, commented example persist",
       "tags": ["pinia", "setup-store", "state", "getters", "actions", "persist"]
     },
     {
       "file": "store-in-component.vue",
-      "description": "Подключение стора в <script setup>: storeToRefs для state/getters, вызов actions, hydration серверного значения в onMounted",
+      "description": "Connecting the store to <script setup>: storeToRefs for state/getters, call actions, hydration server value in onMounted",
       "tags": ["pinia", "vue", "storeToRefs", "hydration", "component"]
     },
     {
       "file": "store-composition.ts",
-      "description": "Композиция сторов (стор внутри стора через useOtherStore) и доступ к стору вне компонента: useXxxStore() внутри обработчика, антипаттерн вызова на верхнем уровне модуля",
+      "description": "Store composition (store within store via useOtherStore) and accessing the store outside the component: useXxxStore() inside the handler, call antipattern at the top level of the module",
       "tags": ["pinia", "composition", "store-in-store", "outside-component", "ssr"]
     }
   ]

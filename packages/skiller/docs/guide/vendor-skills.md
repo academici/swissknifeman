@@ -1,84 +1,84 @@
-# Скиллы из пакетов (vendor-skills)
+# Skills from packages (vendor-skills)
 
-Скиллы попадают в проект двумя путями, и они дополняют друг друга:
+Skills get into the project in two ways, and they complement each other:
 
-| Направление | Механизм | Кто источник |
+| Direction | Mechanism | Who is the source |
 |---|---|---|
-| **Реестр → проект** | `skiller vendor` | SwissKnifeMan: универсальные скиллы под тип проекта |
-| **Пакет → приложение** | `vendor:publish` | Composer-пакет: доменные скиллы о самом пакете |
+| **Registry → project** | `skiller vendor` | SwissKnifeMan: universal skills for the project type |
+| **Package → application** | `vendor:publish` | Composer-package: domain skills about the package itself |
 
-Первое направление описано в [Установке](./installation). Эта страница —
-про второе: как пакет возит свои скиллы с собой.
+The first direction is described in [Installation](./installation). This page -
+about the second: how the package carries its skills with it.
 
-## Идея
+## Idea
 
-Пакет, решающий доменную задачу (безопасность, биллинг, интеграции), знает
-о своей предметной области больше, чем любой универсальный реестр: паттерны
-использования, миграционные сценарии, типовые ошибки. Логично, чтобы такой
-пакет **сам поставлял скиллы** для AI-агента потребителя:
+Package that solves a domain problem (security, billing, integrations), knows
+about its subject area more than any universal registry: patterns
+usage, migration scenarios, common errors. It is logical that such
+package **supplied the skills himself** for AI-consumer agent:
 
 ```
 composer require acme/my-package
 php artisan vendor:publish --tag=my-package-skills
-# → агент приложения умеет работать с пакетом
+# → application agent can work with the package
 ```
 
-Так скиллы остаются рядом с кодом, который они описывают, версионируются
-вместе с пакетом и обновляются при его апгрейде.
+So the skills remain next to the code they describe and are versioned
+along with the package and are updated when it is upgraded.
 
-## Структура внутри пакета
+## Structure inside the package
 
 ```
 vendor/acme/my-package/
 └── resources/
     └── skills/
-        └── my-package-security/      ← имя папки с префиксом пакета!
+        └── my-package-security/      ← folder name with package prefix!
             ├── SKILL.md
             └── snippets/
                 ├── threat-detection.php
                 └── rbac-policy.php
 ```
 
-::: warning Префикс пакета обязателен
-Имя папки скилла — `<package>-<skill>`, не просто `<skill>`. У потребителя
-скиллы из разных источников лежат в одном каталоге; префикс исключает коллизии.
+::: warning Package prefix is required
+Skill folder name - `<package>-<skill>`, not just `<skill>`. At the consumer
+skills from different sources are in the same directory; the prefix eliminates collisions.
 :::
 
-## Публикация в ServiceProvider
+## Publication in ServiceProvider
 
 ```php
-// В PackageServiceProvider::boot()
+// B PackageServiceProvider::boot()
 if ($this->app->runningInConsole()) {
-    // Вариант A: агент-нейтральная раскладка
+    // Option A: agent-neutral layout
     $this->publishes([
         __DIR__.'/../resources/skills' => base_path('.ai/skills/vendor/my-package'),
     ], 'my-package-skills');
 
-    // Вариант B: плоская раскладка для Claude Code
+    // Option B: flat layout for Claude Code
     $this->publishes([
         __DIR__.'/../resources/skills' => base_path('.claude/skills'),
     ], 'my-package-skills-claude');
 }
 ```
 
-У потребителя:
+For the consumer:
 
 ```bash
 php artisan vendor:publish --tag=my-package-skills-claude
 
-# после апгрейда пакета — обновить скиллы:
+# after upgrading the package - update skills:
 php artisan vendor:publish --tag=my-package-skills-claude --force
 ```
 
-## Сосуществование с skiller vendor
+## Coexistence with skiller vendor
 
-Оба механизма работают в одном проекте и не мешают друг другу:
+Both mechanisms work in the same project and do not interfere with each other:
 
-- `skiller vendor` ведёт манифест `.swissknifeman-manifest.json` и при
-  переустановке чистит **только свои** скиллы — опубликованные пакетами
-  не трогаются;
-- префикс пакета в имени папки гарантирует отсутствие коллизий имён;
-- в реестре проекта vendor-скилл можно пометить provenance-полями:
+- `skiller vendor` maintains the manifesto `.swissknifeman-manifest.json` and when
+  reinstallation cleans **only yours** skills - published in batches
+  are not touched;
+- the package prefix in the folder name ensures there are no name collisions;
+- in the project registry vendor-skill can be marked provenance-fields:
 
 ```json
 {
@@ -90,23 +90,23 @@ php artisan vendor:publish --tag=my-package-skills-claude --force
 }
 ```
 
-## Как добавить публикацию скиллов в свой пакет
+## How to add skills publication to your package
 
-Готовый рецепт — скилл `php-packages/laravel-packages` (ставится с профилями
-`php-package` и `laravel-project`): scaffold пакета, сниппет
-`boost-skill-publisher.php` и чеклист с проверкой полного цикла
-`composer install → vendor:publish → агент видит SKILL.md`.
+Ready recipe - skill `php-packages/laravel-packages` (is installed with profiles
+`php-package` and `laravel-project`): scaffold package, snippet
+`boost-skill-publisher.php` and a checklist with a full cycle check
+`composer install → vendor:publish → agent sees SKILL.md`.
 
-## Круговорот скиллов
+## Cycle of skills
 
-Полный цикл экосистемы выглядит так:
+The complete ecosystem cycle looks like this:
 
 ```
-SwissKnifeMan ──skiller vendor──→ проект пакета (скиллы для разработки пакета)
-проект пакета ──разработка──→ доменные скиллы   (resources/skills/)
-пакет ──vendor:publish──→ приложения-потребители (скиллы для использования пакета)
-приложения ──сканер──→ SwissKnifeMan             (новые сниппеты из практики)
+SwissKnifeMan ──skiller vendor──→ package project (skills for package development)
+package project ──development──→ domain skills   (resources/skills/)
+package ──vendor:publish──→ consuming applications (skills for using the package)
+applications ──scanner──→ SwissKnifeMan             (new snippets from practice)
 ```
 
-Сканер ([scanner](./scanner)) замыкает цикл: удачные паттерны из боевых
-проектов возвращаются в реестр.
+Scanner ([scanner](./scanner)) closes the cycle: successful patterns from combat
+projects are returned to the registry.

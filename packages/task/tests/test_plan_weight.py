@@ -1,9 +1,9 @@
-"""unittest для task.plan_weight — вес обязательного чтения пункта.
+"""unittest for task.plan_weight — weight of required reading item.
 
-По классу дефекта отдельный кейс; фикстуры плана — общие `fixtures.py` (шаблоны
-plan.md/phases/Pn.md/handoff.md), артефакты калибровки и лимита пишутся во временный
-каталог, чтобы гейты можно было двигать по одному.
-Запуск: cd packages/task && python3 -m unittest tests.test_plan_weight -v
+Separate case for defect class; plan fixtures - general `fixtures.py` (templates
+plan.md/phases/Pn.md/handoff.md), calibration and limit artifacts are written to temporary
+directory so that gates can be moved one at a time.
+Launch: cd packages/task && python3 -m unittest tests.test_plan_weight -v
 """
 import hashlib
 import io
@@ -15,9 +15,9 @@ import unittest
 import unittest.mock
 from pathlib import Path
 
-try:  # пакетный запуск
+try:  # batch run
     from .fixtures import write_valid_plan
-except ImportError:  # прямой discovery из packages/task
+except ImportError:  # direct discovery from packages/task
     from fixtures import write_valid_plan
 
 import task.plan_weight as plan_weight  # noqa: E402
@@ -50,12 +50,12 @@ CALIBRATION = {
     "tightness": {"p50": 1.05, "p95": 1.2, "max": 1.35},
 }
 
-# Оба гейта заведомо недостижимы — «зелёная» рамка, в которой ни один файл не оверсайз.
+# Both gates are obviously unreachable - «green» frame in which not a single file is oversized.
 LIMITS_WIDE = {"size_bytes": 10 ** 9, "tokens": 10 ** 9}
 
 
 def read_limit(size_bytes, tokens):
-    """Артефакт лимита формы `research/12-…` §3 (минимум обязательных полей)."""
+    """Shape Limit Artifact `research/12-…` §3 (minimum required fields)."""
     return {
         "version": "1.0.0",
         "measured_at": "2026-08-07T00:00:00Z",
@@ -91,7 +91,7 @@ class MeasurerTestCase(unittest.TestCase):
                         model_id="gpt-5.6-terra", provider_id="codex")
 
     def plan_with_reads(self, required_reads, plan_id="DEMO-1"):
-        """Валидный план, у единственного item'а которого подменено `Required Reads`."""
+        """Valid plan, the only one item'and which is replaced `Required Reads`."""
         plan_dir = write_valid_plan(self.root, plan_id=plan_id)
         spec = plan_dir / "phases" / "P1" / "P1.1.md"
         spec.write_text(spec.read_text(encoding="utf-8").replace(
@@ -117,7 +117,7 @@ class MeasurerTestCase(unittest.TestCase):
         spec = plan_dir / "phases" / "P1" / "P1.1.md"
         spec.write_text(
             spec.read_text(encoding="utf-8").replace(
-                "**Inputs:** список ключей.",
+                "**Inputs:** list of keys.",
                 "**Inputs:** `lib/pkg/config.py`."),
             encoding="utf-8")
         plan_item_state.build_states(plan_dir, item_id="P1.1")
@@ -151,13 +151,13 @@ class TestScopedMeasurement(MeasurerTestCase):
 
 
 class TestMandatoryPath(unittest.TestCase):
-    """Обязательный путь воспроизводится ИЗ текста команды, а не по памяти: правка
+    """Mandatory path is reproduced FROM the command text, not from memory: edit
     `plan-run.md` must break this test instead of silently diverging from the tool."""
 
     def plan_run_text(self):
         path = plan_weight._MONOREPO_ROOT / PLAN_RUN_RELPATH
-        if not path.is_file():  # standalone-раскладка пакета без монорепо-родителя
-            self.skipTest(f"нет {path} — standalone-раскладка")
+        if not path.is_file():  # standalone-package layout without monorepo parent
+            self.skipTest(f"no {path} — standalone-layout")
         return path.read_text(encoding="utf-8")
 
     def test_v2_literals_present_in_order(self):
@@ -165,10 +165,10 @@ class TestMandatoryPath(unittest.TestCase):
         positions = []
         for literal in V2_MANDATORY_PATH_LITERALS:
             idx = text.find(literal)
-            self.assertNotEqual(idx, -1, f"литерал v2 §1 «{literal}» исчез из plan-run.md")
+            self.assertNotEqual(idx, -1, f"literal v2 §1 «{literal}» disappeared from plan-run.md")
             positions.append(idx)
         self.assertEqual(positions, sorted(positions),
-                         "порядок обязательного пути v2 в plan-run.md изменился")
+                         "required path order v2 in plan-run.md changed")
 
 
 class TestLayoutAwareMeasurement(MeasurerTestCase):
@@ -208,19 +208,19 @@ class TestLayoutAwareMeasurement(MeasurerTestCase):
 
 
 class TestArtifactsAreMandatory(MeasurerTestCase):
-    """Литеральных дефолтов нет: нет артефакта — внятная ошибка и код возврата ≠ 0."""
+    """No literal defaults: no artifact - clear error and return code ≠ 0."""
 
     def test_missing_calibration_artifact_is_error(self):
         self.calibration_path.unlink()
         with self.assertRaises(PlanWeightError) as ctx:
             self.measurer()
-        self.assertIn("калибровки", str(ctx.exception))
+        self.assertIn("calibration", str(ctx.exception))
 
     def test_missing_read_limit_artifact_is_error(self):
         self.limit_path.unlink()
         with self.assertRaises(PlanWeightError) as ctx:
             self.measurer()
-        self.assertIn("лимита чтения", str(ctx.exception))
+        self.assertIn("read limit", str(ctx.exception))
 
     def test_read_limit_without_token_gate_is_invalid(self):
         data = read_limit(1, 1)
@@ -255,7 +255,7 @@ class TestArtifactsAreMandatory(MeasurerTestCase):
 
 
 class TestGapTaxonomy(MeasurerTestCase):
-    """Каждая категория закрытой таксономии (`research/02-…` §5) — отдельным кейсом."""
+    """Each category of a closed taxonomy (`research/02-…` §5) — in a separate case."""
 
     def test_gap_kinds_are_closed(self):
         self.assertEqual(GAP_KINDS, ("unreadable_root", "unresolved_entry",
@@ -273,13 +273,13 @@ class TestGapTaxonomy(MeasurerTestCase):
         self.assertEqual([g["path"] for g in gaps], ["lib/pkg/nope.py"])
 
     def test_unreadable_root(self):
-        """Корень репозитория недоступен — отдельная категория, и позиции «от корня»
-        честно падают в `missing_file`, а не тихо исчезают из суммы."""
+        """Repository root unavailable - separate category, and positions «from root»
+        honestly fall into `missing_file`, rather than quietly disappearing from the sum."""
         plan_dir = self.plan_with_reads("1) `packages/task/lib/task/plan_weight.py`")
         fields = {"Required Reads": "1) `packages/task/lib/task/plan_weight.py`"}
         record = measure_item(plan_dir, "P1.1", fields, self.measurer(),
                               phase_file=plan_dir / "phases" / "P1" / "P1.md",
-                              repo_root=self.root / "нет-такого-корня")
+                              repo_root=self.root / "no-such-root")
         self.assertEqual(len(self.gaps_of(record, GAP_UNREADABLE_ROOT)), 1)
         self.assertEqual(len(self.gaps_of(record, GAP_MISSING_FILE)), 1)
 
@@ -305,16 +305,16 @@ class TestGapTaxonomy(MeasurerTestCase):
         self.assertEqual({g["gate"] for g in gaps}, {GATE_BOTH})
 
     def test_gate_conjunction_passes_only_when_both_hold(self):
-        """`pass(f) = bytes ≤ size_bytes И est_tokens ≤ tokens` — один зелёный
-        гейт файл не спасает."""
+        """`pass(f) = bytes ≤ size_bytes AND est_tokens ≤ tokens` — one green
+        gate file does not help."""
         self.write_limits(size_bytes=10 ** 9, tokens=10 ** 9)
         record = self.item("1) `phases/P1/P1.md`")
         self.assertTrue(all(f["passes"] for f in record["files"]))
         self.assertEqual(self.gaps_of(record, GAP_OVERSIZED_FILE), [])
 
     def test_gaps_are_never_silent(self):
-        """Отчёт печатает перечень пробелов рядом с суммой — сумма без перечня есть
-        нижняя оценка, выданная за измеренную."""
+        """The report prints a list of spaces next to the amount - there is an amount without a list
+        lower estimate given as measured."""
         plan_dir = self.plan_with_reads("1) P0.1 Completion Notes")
         stdout = io.StringIO()
         with unittest.mock.patch("sys.stdout", stdout):
@@ -322,22 +322,22 @@ class TestGapTaxonomy(MeasurerTestCase):
                          "--read-limit", str(self.limit_path), "plan", str(plan_dir)])
         self.assertEqual(code, 0)
         out = stdout.getvalue()
-        self.assertIn("вес:", out)
+        self.assertIn("weight:", out)
         self.assertIn(GAP_UNRESOLVED_ENTRY, out)
 
 
 class TestRequiredReadsResolution(MeasurerTestCase):
-    """Эвристика резолвинга — вход будущего контракта bundle, поэтому проверяется
-    поштучно, а не «в среднем»."""
+    """Resolving heuristic - future contract input bundle, is therefore checked
+    per piece, not «on average»."""
 
     def test_split_entries_by_numbering(self):
         self.assertEqual(split_entries("1) a 2) b 3) c."), ["a", "b", "c"])
 
     def test_split_entries_without_numbering_is_single_entry(self):
-        self.assertEqual(split_entries("просто проза"), ["просто проза"])
+        self.assertEqual(split_entries("just prose"), ["just prose"])
 
     def test_backticked_span_is_a_declared_path(self):
-        self.assertEqual(path_candidates("1) `lib/pkg/config.py` и проза"),
+        self.assertEqual(path_candidates("1) `lib/pkg/config.py` and prose"),
                          [("lib/pkg/config.py", True)])
 
     def test_backticked_unicode_plan_identifier_is_a_declared_path(self):
@@ -346,24 +346,24 @@ class TestRequiredReadsResolution(MeasurerTestCase):
         self.assertEqual(path_candidates(f"1) `{path}`"), [(path, True)])
 
     def test_bare_strong_path_is_a_declaration(self):
-        """Планы флота до 2026.07 пишут пути без бэктиков: `каталог/файл.ext` — такое же
-        объявление, и его промах обязан называться `missing_file`."""
-        self.assertEqual(path_candidates("см. lib/pkg/config.py без бэктиков"),
+        """Fleet plans until 2026.07 write routes without backticks: `directory/file.ext` — same
+        announcement, and his mistake must be called `missing_file`."""
+        self.assertEqual(path_candidates("see lib/pkg/config.py without backticks"),
                          [("lib/pkg/config.py", True)])
         record = self.item("1) lib/pkg/no-such-file.py")
         self.assertEqual(len(self.gaps_of(record, GAP_MISSING_FILE)), 1)
 
     def test_bare_weak_token_is_a_guess_and_its_miss_mints_nothing(self):
-        """«P4 finding/research» — проза, а не путь: `missing_file` из неё выдумывать
-        запрещено, позиция честно остаётся `unresolved_entry`."""
-        self.assertEqual(path_candidates("P4 finding/research по теме"),
+        """«P4 finding/research» — prose, not the path: `missing_file` invent from it
+        is prohibited, the position honestly remains `unresolved_entry`."""
+        self.assertEqual(path_candidates("P4 finding/research on topic"),
                          [("finding/research", False)])
-        record = self.item("1) P4 finding/research по теме")
+        record = self.item("1) P4 finding/research on topic")
         self.assertEqual(self.gaps_of(record, GAP_MISSING_FILE), [])
         self.assertEqual(len(self.gaps_of(record, GAP_UNRESOLVED_ENTRY)), 1)
 
     def test_bare_path_that_exists_is_measured(self):
-        record = self.item("1) phases/P1/P1.md (существующий файл без бэктиков)")
+        record = self.item("1) phases/P1/P1.md (existing file without backticks)")
         self.assertEqual(record["gaps"], [])
         self.assertTrue(any(f["path"].endswith("phases/P1/P1.md") for f in record["files"]))
 
@@ -373,9 +373,9 @@ class TestRequiredReadsResolution(MeasurerTestCase):
         self.assertGreater(record["required_reads_tokens"], 0)
 
     def test_item_reference_is_not_a_path(self):
-        """`P0.1` из прозы «P0.1 Completion Notes» не должен выглядеть файлом: расширение
-        обязано начинаться с БУКВЫ, иначе позиция ушла бы в `missing_file` вместо
-        `unresolved_entry` и класс пробела был бы назван неверно."""
+        """`P0.1` from prose «P0.1 Completion Notes» should not look like file: extension
+        must begin with a LETTER, otherwise the position would go to `missing_file` instead
+        `unresolved_entry` and the space class would be named incorrectly."""
         self.assertEqual(path_candidates("`P0.1` Completion Notes"), [])
 
     def test_brace_expansion(self):
@@ -386,15 +386,15 @@ class TestRequiredReadsResolution(MeasurerTestCase):
 
     def test_resolution_prefers_plan_dir_then_repo_root(self):
         (self.root / "packages").mkdir(exist_ok=True)
-        (self.root / "packages" / "AGENTS.md").write_text("корневой", encoding="utf-8")
+        (self.root / "packages" / "AGENTS.md").write_text("root", encoding="utf-8")
         record = self.item("1) `phases/P1/P1.md` 2) `packages/AGENTS.md`")
         paths = [f["path"] for f in record["files"]]
         self.assertIn("packages/AGENTS.md", paths)
         self.assertEqual(self.gaps_of(record, GAP_MISSING_FILE), [])
 
     def test_duplicate_read_is_not_double_counted(self):
-        """Файл читается один раз: повтор в Required Reads вес не удваивает, и уже
-        прочитанный файл раскладки (`phases/P1/P1.md`) сохраняет свою роль `phase-context`."""
+        """File read once: repeat in Required Reads the weight does not double, and already
+        read layout file (`phases/P1/P1.md`) retains its role `phase-context`."""
         record = self.item("1) `phases/P1/P1.md` 2) `phases/P1/P1.md`")
         phase_files = [f for f in record["files"] if f["path"].endswith("phases/P1/P1.md")]
         self.assertEqual(len(phase_files), 1)
@@ -403,7 +403,7 @@ class TestRequiredReadsResolution(MeasurerTestCase):
         self.assertGreater(record["required_reads_tokens"], 0)
 
     def test_weight_is_sum_of_resolved_only(self):
-        record = self.item("1) `phases/P1/P1.md` 2) `нет/такого.md`")
+        record = self.item("1) `phases/P1/P1.md` 2) `no/like this.md`")
         self.assertEqual(record["weight_tokens"], sum(f["est_tokens"] for f in record["files"]))
         self.assertEqual(record["floor_tokens"],
                          sum(f["est_tokens"] for f in record["files"]
@@ -411,10 +411,10 @@ class TestRequiredReadsResolution(MeasurerTestCase):
 
 
 class TestDenseAsciiShare(unittest.TestCase):
-    """D109: замер, не гейт. Известные векторы — проза около нуля, hex-простыня около 1."""
+    """D109: frozen, not a gate. Famous vectors - prose near zero, hex-sheet about 1."""
 
     def test_prose_is_near_zero(self):
-        prose = ("Протокол планов рассчитан на планы, которые помещались в одно чтение. "
+        prose = ("The plan protocol is designed for plans that fit into one reading. "
                  "Plain English prose with normal short words too.\n")
         self.assertLess(dense_ascii_share(prose), 0.05)
 
@@ -431,8 +431,8 @@ class TestDenseAsciiShare(unittest.TestCase):
 
 
 class TestDenseAsciiIsNotAGate(MeasurerTestCase):
-    """ЗАПРЕЩЕНО вводить порог по `dense_ascii_share`: плотный, но помещающийся в
-    лимиты файл пробелом не становится и «подозрительным» не помечается."""
+    """IT IS PROHIBITED to enter a threshold according to `dense_ascii_share`: dense, but fits in
+    limits the file does not become a space and «suspicious» is not marked."""
 
     def test_dense_file_within_limits_produces_no_gap(self):
         plan_dir = self.plan_with_reads("1) `dense.txt`")
@@ -447,7 +447,7 @@ class TestDenseAsciiIsNotAGate(MeasurerTestCase):
 
 
 class TestJsonOutput(MeasurerTestCase):
-    """`--json` стабилен по ключам — на нём стоят P0.4 и будущий гейт P3."""
+    """`--json` is stable in terms of keys - they stand on it P0.4 and future gate P3."""
 
     def run_json(self, *argv):
         stdout = io.StringIO()
@@ -547,7 +547,7 @@ class TestJsonOutput(MeasurerTestCase):
 
     def test_sweep_root_unreadable(self):
         if os.geteuid() == 0:
-            self.skipTest("сессия от root — chmod 000 не даёт PermissionError")
+            self.skipTest("session from root — chmod 000 does not work PermissionError")
         blocked_root = self.root / "blocked-root"
         blocked_root.mkdir()
         os.chmod(blocked_root, 0o000)
@@ -563,7 +563,7 @@ class TestJsonOutput(MeasurerTestCase):
 
     def test_sweep_unreadable_root_does_not_block_neighbor(self):
         if os.geteuid() == 0:
-            self.skipTest("сессия от root — chmod 000 не даёт PermissionError")
+            self.skipTest("session from root — chmod 000 does not work PermissionError")
         blocked_root = self.root / "blocked-root"
         blocked_root.mkdir()
         os.chmod(blocked_root, 0o000)
@@ -584,7 +584,7 @@ class TestJsonOutput(MeasurerTestCase):
 
 
 class TestExactMode(MeasurerTestCase):
-    """`--exact` — дифференциальный харнесс P0.1, а не `count_tokens`."""
+    """`--exact` — differential harness P0.1, and not `count_tokens`."""
 
     def probe_log(self, path, text):
         log = {"protocol_version": "differential-usage-v1", "measured": 1, "min_corpus": 1,
@@ -598,7 +598,7 @@ class TestExactMode(MeasurerTestCase):
 
     def test_exact_compares_against_harness_truth(self):
         target = self.root / "corpus.md"
-        text = "Проза плана для сверки оценки с истиной прогона.\n"
+        text = "Plan prose to check the estimate against the truth of the run.\n"
         target.write_text(text, encoding="utf-8")
         log_path = self.probe_log(target, text)
         stdout, stderr = io.StringIO(), io.StringIO()
@@ -612,12 +612,12 @@ class TestExactMode(MeasurerTestCase):
         self.assertEqual(row["truth"], 1234.0)
         self.assertEqual(row["match"], "sha256")
         self.assertIn("true_over_estimate", row)
-        self.assertIn("вне CI", stderr.getvalue())
+        self.assertIn("outside CI", stderr.getvalue())
 
     def test_exact_names_files_without_truth(self):
         target = self.root / "unknown.md"
-        target.write_text("нет такого файла в корпусе прогона\n", encoding="utf-8")
-        log_path = self.probe_log(self.root / "другой.md", "другое содержимое")
+        target.write_text("no such file in the run body\n", encoding="utf-8")
+        log_path = self.probe_log(self.root / "different.md", "other content")
         stdout = io.StringIO()
         with unittest.mock.patch("sys.stdout", stdout), unittest.mock.patch("sys.stderr", io.StringIO()):
             code = main(["--calibration", str(self.calibration_path),
@@ -626,20 +626,20 @@ class TestExactMode(MeasurerTestCase):
         self.assertEqual(code, 0)
         row = json.loads(stdout.getvalue())["exact"]["files"][0]
         self.assertIsNone(row["truth"])
-        self.assertIn("истины нет", row["note"])
+        self.assertIn("there is no truth", row["note"])
 
     def test_module_never_calls_count_tokens_or_opens_network(self):
-        """`count_tokens` этим item'ом НЕ реализуется и не вызывается ни в одном режиме;
-        сети инструмент не открывает и учётных данных не читает."""
+        """`count_tokens` this item'om is NOT implemented or called in any mode;
+        the tool does not open the network and does not read the credentials."""
         source = Path(plan_weight.__file__).read_text(encoding="utf-8")
         code = "\n".join(ln for ln in source.splitlines() if not ln.lstrip().startswith("#"))
         code = re.sub(r'""".*?"""', "", code, flags=re.S)
-        # Вызов эндпоинта, а не упоминание запрета: `count_tokens(` — единственная форма,
-        # которой он мог бы быть позван (упоминание в тексте предупреждения законно).
-        self.assertNotIn("count_tokens(", code, "появился вызов count_tokens")
+        # Calling the endpoint rather than mentioning the ban: `count_tokens(` — is the only form,
+        # which he could be called (mention in warning text is legal).
+        self.assertNotIn("count_tokens(", code, "a call appeared count_tokens")
         for forbidden in ("import urllib", "import http", "import socket", "import requests",
                           "import subprocess", "ANTHROPIC_API_KEY"):
-            self.assertNotIn(forbidden, code, f"в исполняемом коде появился «{forbidden}»")
+            self.assertNotIn(forbidden, code, f"appeared in the executable code «{forbidden}»")
 
 
 class TestCanonWeightGate(MeasurerTestCase):
@@ -694,7 +694,7 @@ class TestCanonWeightGate(MeasurerTestCase):
 
 
 class TestSessionModelWarning(MeasurerTestCase):
-    """WARNING (не блокирующий) при расхождении model_id калибровки с окружением."""
+    """WARNING (non-blocking) for discrepancy model_id calibration with the environment."""
 
     def test_mismatch_warns_and_continues(self):
         stderr = io.StringIO()
@@ -713,14 +713,14 @@ class TestSessionModelWarning(MeasurerTestCase):
 
 
 class TestRealFleetPlan(unittest.TestCase):
-    """Разбор обязан работать ОБЩИМ путём на реальных планах флота, а не только на
-    фикстурах (Code Guidance P0.3): замер живого плана этого репозитория."""
+    """Analysis must work in a GENERAL way on real fleet plans, and not just on
+    fixtures (Code Guidance P0.3): captured the live plan of this repository."""
 
     def test_measures_live_plan(self):
         repo_root = plan_weight._MONOREPO_ROOT
         plan_dir = repo_root / "plans" / "2026.08.07-DEMO-PLAN"
         if not (plan_dir / "plan.md").is_file():
-            self.skipTest("живой план недоступен — standalone-раскладка")
+            self.skipTest("live plan unavailable - standalone-layout")
         measurer = Measurer()
         plan = measure_plan(plan_dir, measurer, only_item="P2.10")
         record = plan["items"][0]

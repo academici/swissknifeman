@@ -1,38 +1,38 @@
-"""BRAIN docs-sync — синхронизация файлов между Brain-валтом и проектом.
+"""BRAIN docs-sync — synchronize files between Brain-valt and project.
 
-До этого блок brain в integrate печатал ТОЛЬКО подсказку (настраивалось со стороны
-волта). Здесь — минимальный детерминированный слой (stdlib-only): pull glob-паттернов
-из BRAIN в проект и генерация bash-скрипта `.claude/sync-brain.sh` (двусторонняя
-обёртка над rsync-подобной копией через shell, чтобы разработчик мог гонять синк вне
+Before this block brain in integrate was printing ONLY a hint (was configured from the outside
+volta). Here is the minimum deterministic layer (stdlib-only): pull glob-patterns
+from BRAIN to project and generation bash-script `.claude/sync-brain.sh` (double-sided
+wrapper over rsync-a similar copy via shell, so that the developer can drive the sync outside
 Claude Code).
 
-Конфиг brain — из `.swissknife.json::memory_brain` (см. common.CONFIG_KEYS):
-  строка          → путь к волту, без правил синка (доку-sync выключен, только
-                    memory-хук в integrate — back-compat);
-  объект {path,    → doc-sync: path + sync{direction, on_integrate, patterns}.
+Config brain — from `.swissknife.json::memory_brain` (see common.CONFIG_KEYS):
+  string          → path to volt, no sin rules (documentsync disabled, only
+                    memory-hook in integrate — back-compat);
+  object {path,    → doc-sync: path + sync{direction, on_integrate, patterns}.
           sync?}
 
-BrainSync нормализует обе формы: строка превращается в {"path": <строка>}.
+BrainSync normalizes both forms: the string becomes {"path": <string>}.
 """
 import shutil
 from pathlib import Path
 
 from core import atomic_write_text
 
-# Дефолтные glob-паттерны doc-sync, если в конфиге patterns не заданы. docs/ —
-# основная документация; README — точка входа. Относительны корня BRAIN/проекта.
+# Default glob-patterns doc-sync, if in the config patterns are not specified. docs/ —
+# main documentation; README — entry point. Relative to the root BRAIN/project.
 DEFAULT_PATTERNS = ("docs/**/*.md", "README.md")
-# Направление по умолчанию, если sync.direction не указан: pull (BRAIN → проект) —
-# самое безопасное (в проект тянем готовую доку, из проекта в волт не пишем молча).
+# Default direction if sync.direction not specified: pull (BRAIN → project) —
+# the safest (we pull a ready-made document into the project, we don’t write silently from the project to volt).
 DEFAULT_DIRECTION = "pull"
 DIRECTIONS = ("push", "pull", "bidirectional")
 
 
 def normalize_brain_config(brain_config):
-    """Привести конфиг brain к каноничному словарю {"path": str, "sync": {...}}.
+    """Bring config brain to canonical dictionary {"path": str, "sync": {...}}.
 
-    Строка → {"path": строка} (back-compat: путь без правил синка). Объект берётся
-    как есть. None/пусто → {}. Возвращает НОВЫЙ словарь (вход не мутируется)."""
+    String → {"path": string} (back-compat: path without synchronization rules). The object is taken
+    as is. None/empty → {}. Returns a NEW dictionary (input is not mutated)."""
     if not brain_config:
         return {}
     if isinstance(brain_config, str):
@@ -43,10 +43,10 @@ def normalize_brain_config(brain_config):
 
 
 class BrainSync:
-    """Синхронизатор файлов проект↔BRAIN по glob-паттернам.
+    """File synchronizer project↔BRAIN by glob-patterns.
 
-    project_path — корень потребляющего проекта; brain_config — значение
-    `memory_brain` из .swissknife.json (строка-путь ИЛИ объект {path, sync?})."""
+    project_path — consuming project root; brain_config — value
+    `memory_brain` from .swissknife.json (path string OR object {path, sync?})."""
 
     def __init__(self, project_path, brain_config):
         self.project_path = Path(project_path)
@@ -57,14 +57,14 @@ class BrainSync:
         self.on_integrate = bool(sync.get("on_integrate", False))
         self.patterns = list(sync.get("patterns") or DEFAULT_PATTERNS)
 
-    # --- pull (BRAIN → проект) -------------------------------------------------
+    # --- pull (BRAIN → project) -------------------------------------------------
     def sync_pull(self):
-        """Скопировать файлы из BRAIN в проект по self.patterns. Для каждого glob
-        (относительно корня BRAIN) — mkdir каталога назначения + copy2 с сохранением
-        относительного пути. Возвращает список скопированных файлов (пути в проекте).
+        """Copy files from BRAIN to the project by self.patterns. For everyone glob
+        (relative to root BRAIN) — mkdir destination directory + copy2 with saving
+        relative path. Returns a list of copied files (paths in the project).
 
-        Идемпотентно (перезапись), НЕ удаляет лишнее в проекте (safety: pull только
-        добавляет/обновляет). Если brain_path не задан или не существует — [] (мягко)."""
+        Idempotent (overwrite), DOES NOT remove unnecessary things in the project (safety: pull only
+        adds/updates). If brain_path is not specified or does not exist - [] (softly)."""
         if not self.brain_path or not self.brain_path.is_dir():
             return []
         copied = []
@@ -79,14 +79,14 @@ class BrainSync:
                 copied.append(dst)
         return copied
 
-    # --- генерация shell-скрипта -----------------------------------------------
+    # --- generation shell-script -----------------------------------------------
     def generate_sync_script(self, script_path=None):
-        """Сгенерировать `.claude/sync-brain.sh` — bash-обёртка ручного синка
-        BRAIN↔проект (rsync). Записывает атомарно; возвращает Path скрипта.
+        """Generate `.claude/sync-brain.sh` — bash-manual sync wrapper
+        BRAIN↔project (rsync). Writes atomically; returns Path script.
 
-        Скрипт умеет pull/push по аргументу (по умолчанию — self.direction) и знает
-        зашитый путь к BRAIN и паттерны из конфига. chmod 755 навешивает вызывающий
-        (integrate) — здесь только контент."""
+        The script can pull/push by argument (default - self.direction) and knows
+        hardwired path to BRAIN and patterns from the config. chmod 755 hangs the caller
+        (integrate) — there is only content here."""
         if script_path is None:
             script_path = self.project_path / ".claude" / "sync-brain.sh"
         script_path = Path(script_path)
@@ -95,7 +95,7 @@ class BrainSync:
         return script_path
 
     def _render_script(self):
-        """Тело bash-скрипта синка. Паттерны и путь к BRAIN — из конфига."""
+        """Body bash-sync script. Patterns and the way to BRAIN — from the config."""
         brain = str(self.brain_path) if self.brain_path else ""
         patterns = " ".join(_shell_quote(p) for p in self.patterns)
         default_dir = self.direction if self.direction in DIRECTIONS else DEFAULT_DIRECTION
@@ -107,16 +107,16 @@ class BrainSync:
 
 
 def _shell_quote(s):
-    """Заключить строку в одинарные кавычки для безопасной подстановки в bash."""
+    """Enclose string in single quotes for safe substitution bash."""
     return "'" + str(s).replace("'", "'\\''") + "'"
 
 
-# Шаблон генерируемого .claude/sync-brain.sh. Синхронизирует по glob-паттернам через
-# rsync (сохраняя относительный путь). Аргумент 1 — направление (pull|push), дефолт
-# зашит из конфига. Комментарии/сообщения на русском.
+# Template of the generated .claude/sync-brain.sh. Synchronizes by glob-patterns via
+# rsync (keeping relative path). Argument 1 - direction (pull|push), default
+# is programmed from the config. Comments/messages in Russian.
 _SCRIPT_TEMPLATE = """#!/usr/bin/env bash
-# Сгенерировано skiller (brain_sync) — синхронизация документации проект↔BRAIN.
-# Правь конфиг .swissknife.json::memory_brain, затем `skiller integrate` перегенерит.
+# Generated skiller (brain_sync) — project documentation synchronization↔BRAIN.
+# Edit config.swissknife.json::memory_brain, then `skiller integrate` will be regenerated.
 set -euo pipefail
 
 BRAIN={brain}
@@ -125,11 +125,11 @@ PATTERNS=({patterns})
 DIRECTION="${{1:-{default_dir}}}"
 
 if [[ -z "$BRAIN" ]]; then
-  echo "BRAIN не задан в .swissknife.json::memory_brain — нечего синхронизировать" >&2
+  echo "BRAIN is not set in .swissknife.json::memory_brain — nothing to sync" >&2
   exit 1
 fi
 
-pull() {{  # BRAIN → проект
+pull() {{  # BRAIN → project
   for pat in "${{PATTERNS[@]}}"; do
     ( cd "$BRAIN" && find . -path "./$pat" -type f -print0 2>/dev/null ) \\
       | while IFS= read -r -d '' rel; do
@@ -137,10 +137,10 @@ pull() {{  # BRAIN → проект
           cp -p "$BRAIN/$rel" "$PROJECT/$rel"
         done
   done
-  echo "pull готов: BRAIN → проект"
+  echo "pull ready: BRAIN → project"
 }}
 
-push() {{  # проект → BRAIN
+push() {{  # project → BRAIN
   for pat in "${{PATTERNS[@]}}"; do
     ( cd "$PROJECT" && find . -path "./$pat" -type f -print0 2>/dev/null ) \\
       | while IFS= read -r -d '' rel; do
@@ -148,13 +148,13 @@ push() {{  # проект → BRAIN
           cp -p "$PROJECT/$rel" "$BRAIN/$rel"
         done
   done
-  echo "push готов: проект → BRAIN"
+  echo "push ready: project → BRAIN"
 }}
 
 case "$DIRECTION" in
   pull) pull ;;
   push) push ;;
   bidirectional) pull; push ;;
-  *) echo "неизвестное направление: $DIRECTION (pull|push|bidirectional)" >&2; exit 2 ;;
+  *) echo "unknown direction: $DIRECTION (pull|push|bidirectional)" >&2; exit 2 ;;
 esac
 """

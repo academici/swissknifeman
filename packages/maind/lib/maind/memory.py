@@ -1,10 +1,10 @@
-"""Память узла: жизненный цикл agent-memory демона + HTTP-обёртка со scope'ами.
+"""Node Memory: Lifecycle agent-memory demon + HTTP-wrapper with scope'ami.
 
-agent-memory — внешний Node-демон (@agentmemory/agentmemory на iii-sdk); maind его
-ОРКЕСТРИРУЕТ (start/stop/status), а не переписывает. Порты берутся из env/конфига
-(никаких хардкодов), чтобы не конфликтовать с другим узлом (например Brain).
+agent-memory — external Node-demon (@agentmemory/agentmemory on iii-sdk); maind him
+ORCHESTRATED (start/stop/status), and does not rewrite. Ports are taken from env/config
+(no hardcodes), so as not to conflict with another node (for example Brain).
 
-HTTP-контракт демона: GET /health · POST /memories {namespace,type,text} ·
+HTTP-daemon contract: GET /health · POST /memories {namespace,type,text} ·
 GET /search?namespace=&q= → {results:[{score,text}]}."""
 import ipaddress
 import json
@@ -29,10 +29,10 @@ from .constants import (DIGEST_BUDGET_CHARS, DIGEST_ITEM_MAX_CHARS, DIGEST_MIN_T
                         MEMORY_RETRY_BACKOFF_S, MEMORY_STREAM_PORT, MEMORY_WORKERS)
 
 
-# ── разрешение портов/URL (env → конфиг → дефолт) ───────────────────────────
+# ── port resolution/URL (env → config → default) ───────────────────────────
 def resolve_ports(env, config):
-    """(http_port, stream_port, url). Приоритет: env (AGENTMEMORY_*) → config.memory
-    → дефолты 4111/4112. URL — из AGENTMEMORY_URL или http://127.0.0.1:<http_port>."""
+    """(http_port, stream_port, url). Priority: env (AGENTMEMORY_*) → config.memory
+    → defaults 4111/4112. URL — from AGENTMEMORY_URL or http://127.0.0.1:<http_port>."""
     mem = (config or {}).get("memory") or {}
     http_port = int(os.environ.get("AGENTMEMORY_PORT")
                     or mem.get("http_port") or MEMORY_HTTP_PORT)
@@ -44,34 +44,34 @@ def resolve_ports(env, config):
 
 
 def health(url):
-    """True, если демон отвечает на /agentmemory/health (или /livez). Оба эндпойнта
-    ВСЕГДА публичны у движка (даже с заданным AGENTMEMORY_SECRET) — это НЕ проверка
-    авторизации, только «демон жив» (см. check_auth для 401 vs недоступен)."""
+    """True, if the daemon responds to /agentmemory/health (or /livez). Both endpoints
+    are ALWAYS public in the engine (even with the specified AGENTMEMORY_SECRET) — this is NOT a check
+    authorization, only «demon alive» (see check_auth for 401 vs not available)."""
     return (ping(f"{url}/agentmemory/health", timeout=3)
             or ping(f"{url}/agentmemory/livez", timeout=3))
 
 
-# ── роль узла (ADR-0001 п.1/п.5, D27/D80) ────────────────────────────────────
+# ── node role (ADR-0001 p.1/clause 5, D27/D80) ────────────────────────────────────
 def memory_role(config):
     return ((config or {}).get("memory") or {}).get("role", "standalone")
 
 
 def refuse_if_client_role(config):
-    """die(), если этот узел — client: локальный демон памяти НЕ поднимается —
-    второй писатель ломает единственность стора варианта 1 (ADR-0001 п.1/п.5, D27).
-    Запрет — КОД, а не документация (Implementation Rules P4.2)."""
+    """die(), if this node is client: local memory daemon NOT raised -
+    the second writer breaks the uniqueness of option 1 (ADR-0001 p.1/clause 5, D27).
+    The ban is a CODE, not documentation (Implementation Rules P4.2)."""
     if memory_role(config) == "client":
-        die("роль узла memory.role='client' — локальный демон памяти НЕ поднимается "
-            "(второй писатель ломает cross-machine память, ADR-0001). Используйте "
-            "хост памяти по memory.url или смените memory.role на этой машине.")
+        die("node role memory.role='client' — local memory daemon NOT raised "
+            "(the second writer breaks cross-machine memory, ADR-0001). Use "
+            "memory host by memory.url or change memory.role on this machine.")
 
 
-# ── bind-адрес демона: адрес машины НЕ живёт в tracked-конфиге ───────────────────
+# ── bind-daemon address: machine address does NOT live in tracked-config ───────────────────
 _BIND_FORBIDDEN = {"0.0.0.0", "::", "0:0:0:0:0:0:0:0"}
 
 
 def lan_address():
-    """Основной LAN-IPv4 ЭТОЙ машины (UDP-connect без отправки пакетов) или None."""
+    """Main LAN-IPv4 THIS car (UDP-connect without sending packets) or None."""
     probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         probe.connect(("10.255.255.255", 1))
@@ -84,10 +84,10 @@ def lan_address():
 
 
 def resolve_bind_host(config):
-    """Адрес bind для iii-http, заданный УЗЛОМ, а не репозиторием: env `AGENTMEMORY_BIND_HOST`
-    → `memory.bind_host` в config.json (gitignored). `auto` — LAN-адрес текущей машины.
-    None → tracked-шаблон остаётся как есть (loopback). Не-loopback допустим только для
-    memory.role='host'; `0.0.0.0`/`::` запрещены (ADR-0001, D28)."""
+    """Address bind for iii-http, specified by NODE, not by repository: env `AGENTMEMORY_BIND_HOST`
+    → `memory.bind_host` in config.json (gitignored). `auto` — LAN-address of the current machine.
+    None → tracked-the template remains as is (loopback). Non-loopback is only valid for
+    memory.role='host'; `0.0.0.0`/`::` are prohibited (ADR-0001, D28)."""
     mem = (config or {}).get("memory") or {}
     value = (os.environ.get("AGENTMEMORY_BIND_HOST") or mem.get("bind_host") or "").strip()
     if not value:
@@ -95,25 +95,25 @@ def resolve_bind_host(config):
     if value == "auto":
         value = lan_address()
         if value is None:
-            die("memory.bind_host='auto': LAN-адрес этой машины не определён — задайте "
-                "AGENTMEMORY_BIND_HOST/memory.bind_host явно или подключите сеть")
+            die("memory.bind_host='auto': LAN-the address of this machine is not defined - specify "
+                "AGENTMEMORY_BIND_HOST/memory.bind_host explicitly or connect the network")
     try:
         parsed = ipaddress.ip_address(value)
     except ValueError:
-        die(f"memory.bind_host='{value}' — ожидается IP-адрес или 'auto'")
+        die(f"memory.bind_host='{value}' — pending IP-address or 'auto'")
     if value in _BIND_FORBIDDEN or parsed.is_unspecified:
-        die("memory.bind_host: bind на все интерфейсы (0.0.0.0/::) запрещён — укажите конкретный "
-            "LAN-адрес или 'auto' (ADR-0001, D28)")
+        die("memory.bind_host: bind to all interfaces (0.0.0.0/::) is prohibited - please specify specific "
+            "LAN-address or 'auto' (ADR-0001, D28)")
     if not parsed.is_loopback and memory_role(config) != "host":
-        die(f"memory.bind_host='{value}' не loopback, но memory.role != 'host' — LAN-bind "
-            "включается только на host-машине памяти (ADR-0001)")
+        die(f"memory.bind_host='{value}' not loopback, but memory.role != 'host' — LAN-bind "
+            "is only enabled on host-memory machine (ADR-0001)")
     return value
 
 
 def effective_memory_config(env, config):
-    """Путь iii-config для демона. Tracked-шаблон портируем (host: 127.0.0.1); адрес этой
-    машины подставляется в РАНТАЙМ-копию `data/iii-config.runtime.yaml` (gitignored) —
-    перенос на другой комп = поменять `memory.bind_host`/`auto`, а не править репозиторий."""
+    """Path iii-config for the daemon. Tracked-template ported (host: 127.0.0.1); address of this
+    of the machine is substituted into the RUNTIME copy `data/iii-config.runtime.yaml` (gitignored) —
+    transfer to another computer = change `memory.bind_host`/`auto`, rather than editing the repository."""
     host = resolve_bind_host(config)
     if host is None:
         return env.memory_config
@@ -128,20 +128,20 @@ def effective_memory_config(env, config):
             done = True
         out.append(line)
     if not done:
-        die(f"в {env.memory_config} не найден workers[iii-http].host — bind-адрес не подставить")
+        die(f"in {env.memory_config} not found workers[iii-http].host — bind-address cannot be substituted")
     env.data_dir.mkdir(parents=True, exist_ok=True)
     target = env.data_dir / "iii-config.runtime.yaml"
-    target.write_text("# сгенерировано maind из tracked-шаблона; не править и не коммитить\n"
+    target.write_text("# generated maind from tracked-template; do not edit or commit\n"
                       + "\n".join(out) + "\n", encoding="utf-8")
     return target
 
 
-# ── аутентификация (ADR-0001 п.3/п.4, D29) ───────────────────────────────────
+# ── authentication (ADR-0001 p.3/clause 4, D29) ───────────────────────────────────
 def resolve_secret(env, config):
-    """Bearer-токен для протектед-вызовов памяти. Порядок (ADR-0001): env
-    `AGENTMEMORY_SECRET` → `memory.secret_file` (путь к 0600-файлу; относительный —
-    от корня узла) → нет секрета (анонимный локальный демон, как сегодня — дефолт
-    не меняет ничего)."""
+    """Bearer-token for protected memory calls. Order (ADR-0001): env
+    `AGENTMEMORY_SECRET` → `memory.secret_file` (path to 0600 file; relative -
+    from node root) → no secret (anonymous local daemon, like today - default
+    doesn't change anything)."""
     env_secret = os.environ.get("AGENTMEMORY_SECRET")
     if env_secret:
         return env_secret
@@ -154,21 +154,21 @@ def resolve_secret(env, config):
     try:
         return path.read_text(encoding="utf-8").strip() or None
     except OSError as e:
-        warn(f"memory.secret_file не читается ({path}: {e}) — вызовы памяти пойдут без токена")
+        warn(f"memory.secret_file not readable ({path}: {e}) — memory calls will proceed without a token")
         return None
 
 
 def auth_headers(secret):
-    """{'Authorization': 'Bearer <secret>'} либо None (без секрета — как сегодня,
-    заголовки не идут вовсе)."""
+    """{'Authorization': 'Bearer <secret>'} or None (without a secret - like today,
+    headers don't work at all)."""
     return {"Authorization": f"Bearer {secret}"} if secret else None
 
 
 def check_auth(url, headers, *, timeout=MEMORY_LIGHT_TIMEOUT_S):
-    """Различает «недоступен» от «неавторизован» на протектед-эндпоинте (findings
-    §2: /agentmemory/health ВСЕГДА публичен и не даёт 401 — правду про bearer можно
-    узнать только реальным протектед-вызовом). None — секрет не настроен (проверка
-    неприменима) · True — авторизован · False — демон ответил 401."""
+    """Distinguishes «not available» from «unauthorized» on protected endpoint (findings
+    §2: /agentmemory/health is ALWAYS public and does not give 401 - the truth about bearer you can
+    find out only with a real protected call). None — secret not configured (check
+    not applicable) · True — authorized · False — the demon responded with 401."""
     if not headers:
         return None
     try:
@@ -179,24 +179,24 @@ def check_auth(url, headers, *, timeout=MEMORY_LIGHT_TIMEOUT_S):
     except HTTPUnauthorizedError:
         return False
     except RuntimeError:
-        return None   # недоступен/иная ошибка — не про авторизацию
+        return None   # not available/another error - not about authorization
 
 
 def unavailable_message(config, url):
-    """Роль-осознанный текст недоступности памяти (единственная точка врезки MCP,
-    `_run_tool` в mcp.py): на client НЕ подсказываем поднять локальный демон — это
-    инструкция создать второго писателя (findings §2 «в)»)."""
+    """Role-aware memory inaccessibility text (single cut-in point MCP,
+    `_run_tool` in mcp.py): on client We do NOT prompt you to raise the local daemon - this is
+    instructions to create a second writer (findings §2 «in)»)."""
     if memory_role(config) == "client":
-        return f"хост памяти {url} недоступен (роль client — локальный демон не поднимается)"
-    return f"демон памяти не запущен ({url}) — maind start --only memory"
+        return f"memory host {url} not available (role client — local daemon does not rise)"
+    return f"memory daemon not running ({url}) — maind start --only memory"
 
 
 def _retry_read(fn, *, retries=MEMORY_RETRIES, backoff=MEMORY_RETRY_BACKOFF_S):
-    """Ретраи ТОЛЬКО для read-путей (export/digest) — контракт `store` не несёт
-    operation-id, ретрай мутации рискует дублем (ADR-0001 п.5, `research/06` §5),
-    поэтому store/forget им НЕ оборачиваются. HTTPUnauthorizedError не ретраится —
-    тот же токен даст тот же 401 (findings §6 — ретраи против transient-сбоя канала,
-    не против авторизации)."""
+    """Retrays ONLY for read-paths (export/digest) — contract `store` does not carry
+    operation-id, mutation retry risks double (ADR-0001 clause 5, `research/06` §5),
+    therefore store/forget are NOT wrapped around them. HTTPUnauthorizedError does not retract -
+    the same token will give the same 401 (findings §6 — retrays against transient-channel failure,
+    doesn't mind authorization)."""
     last = None
     for attempt in range(retries + 1):
         try:
@@ -219,20 +219,20 @@ def _read_pid(env):
         return None
 
 
-# ── жизненный цикл демона ────────────────────────────────────────────────────
+# ── daemon life cycle ────────────────────────────────────────────────────
 def _daemon_argv(env, config):
-    """(cmd, child_env, url) для запуска Node-демона памяти. Общий для start()/run() —
-    оба пути обязаны отказать на роли client (ADR-0001 п.5, D27), поэтому проверка
-    здесь, а не в каждом из них по отдельности. Проверяет node и бинарь демона —
-    иначе die с подсказкой."""
+    """(cmd, child_env, url) to run Node-memory daemon. Common for start()/run() —
+    both paths must refuse the role client (ADR-0001 clause 5, D27), so check
+    here, and not in each of them separately. Checks node and the daemon binary -
+    otherwise die with a hint."""
     refuse_if_client_role(config)
     http_port, stream_port, url = resolve_ports(env, config)
     if shutil.which("node") is None:
-        die("node не найден в PATH — agent-memory это Node-демон")
+        die("node not found in PATH — agent-memory this Node-demon")
     bin_path = env.root / "node_modules" / ".bin" / "agentmemory"
     if not bin_path.exists():
-        die("agentmemory не установлен — выполните `npm install` в корне maind "
-            "(демон памяти @agentmemory/agentmemory)")
+        die("agentmemory not installed - run `npm install` at the root maind "
+            "(memory daemon @agentmemory/agentmemory)")
     cmd = ["node"]
     if env.env_file.exists():
         cmd.append(f"--env-file={env.env_file}")
@@ -248,23 +248,23 @@ def _daemon_argv(env, config):
 
 
 def run_foreground(env, config):
-    """Запустить демон памяти в ПЕРЕДНЕМ плане (для systemd Type=simple): exec node,
-    заменяя текущий процесс — systemd трекает демон как MAINPID и сам рулит рестартом.
-    При успехе НЕ возвращается."""
+    """Start memory daemon in FOREIGN (for systemd Type=simple): exec node,
+    replacing the current process - systemd tracks the demon as MAINPID and himself rules the restart.
+    If successful, it is NOT returned."""
     cmd, child_env, _ = _daemon_argv(env, config)
     env.data_dir.mkdir(parents=True, exist_ok=True)
-    # exec сохраняет PID → pidfile корректно указывает на node, и `maind memory
-    # status`/`stop` видят реальный процесс (даже под управлением systemd).
+    # exec saves PID → pidfile correctly points to node, and `maind memory
+    # status`/`stop` see the real process (even under control systemd).
     env.memory_pidfile.write_text(str(os.getpid()), encoding="utf-8")
     os.chdir(str(env.root))
     os.execvpe(cmd[0], cmd, child_env)
 
 
 def start(env, config, *, detach=True, timeout_s=10):
-    """Запускает Node-демон отдельной сессией, пишет pidfile, ждёт health. 0 — успех."""
+    """Launches Node-daemon in a separate session, writes pidfile, is waiting health. 0 — success."""
     _, stream_port, url = resolve_ports(env, config)
     if health(url):
-        print(f"память уже запущена: {url}")
+        print(f"memory already running: {url}")
         return 0
     env.data_dir.mkdir(parents=True, exist_ok=True)
     cmd, child_env, _ = _daemon_argv(env, config)
@@ -281,33 +281,33 @@ def start(env, config, *, detach=True, timeout_s=10):
     deadline = time.time() + timeout_s
     while time.time() < deadline:
         if health(url):
-            print(f"память запущена: {url} (pid {proc.pid}, stream :{stream_port}, "
+            print(f"memory started: {url} (pid {proc.pid}, stream :{stream_port}, "
                   f"service maind)")
             return 0
         if proc.poll() is not None:
-            die(f"демон памяти завершился сразу (код {proc.returncode}) — "
-                f"см. лог {env.memory_log}")
+            die(f"memory daemon exited immediately (code {proc.returncode}) — "
+                f"see log {env.memory_log}")
         time.sleep(0.5)
-    die(f"память не поднялась за {timeout_s}s на {url} — проверьте порт/конфиг, "
-        f"см. лог {env.memory_log}")
+    die(f"memory did not rise beyond {timeout_s}s on {url} — check the port/config, "
+        f"see log {env.memory_log}")
 
 
 def stop(env, config, *, timeout_s=5):
-    """Останавливает демон, запущенный через maind (SIGTERM→SIGKILL). Чужой не трогает."""
+    """Stops a daemon started via maind (SIGTERM→SIGKILL). The Alien does not touch."""
     _, _, url = resolve_ports(env, config)
     pid = _read_pid(env)
     if pid is None:
         if health(url):
-            warn(f"демон отвечает на {url}, но запущен не через maind (нет pidfile) — "
-                 f"не останавливаю чужой процесс")
+            warn(f"daemon responds to {url}, but not launched via maind (no pidfile) — "
+                 f"do not stop someone else's process")
         else:
-            print("память не запущена")
+            print("memory not running")
         return 0
     try:
         os.kill(pid, signal.SIGTERM)
     except (ProcessLookupError, OSError):
         env.memory_pidfile.unlink(missing_ok=True)
-        print("процесс уже мёртв — pidfile очищен")
+        print("process is already dead - pidfile cleared")
         return 0
     deadline = time.time() + timeout_s
     while time.time() < deadline and health(url):
@@ -316,14 +316,14 @@ def stop(env, config, *, timeout_s=5):
         try:
             os.kill(pid, signal.SIGKILL)
         except (ProcessLookupError, OSError):
-            pass  # процесс уже исчез между health-проверкой и SIGKILL — это и была цель
+            pass  # process has already disappeared between health-checking and SIGKILL — that was the goal
     env.memory_pidfile.unlink(missing_ok=True)
-    print(f"память остановлена (pid {pid})")
+    print(f"memory stopped (pid {pid})")
     return 0
 
 
 def status(env, config):
-    """Снимок состояния памяти для status/doctor/MCP."""
+    """Memory snapshot for status/doctor/MCP."""
     http_port, stream_port, url = resolve_ports(env, config)
     pid = _read_pid(env)
     running = health(url)
@@ -344,44 +344,44 @@ def status(env, config):
     }
 
 
-# ── HTTP-обёртка со scope'ами + ИЗОЛЯЦИЯ НА СТОРОНЕ maind ─────────────────────
-# agentmemory 0.9.x: REST под префиксом /agentmemory/* (сверено с живым демоном).
+# ── HTTP-wrapper with scope'ami + INSULATION ON SIDE maind ─────────────────────
+# agentmemory 0.9.x: REST under the prefix /agentmemory/* (checked with living demon).
 #
-# ВАЖНО: демон — ЕДИНЫЙ глобальный пул. Эмпирически (живой curl) поле `namespace`
-# в remember/search/list ИГНОРИРУЕТСЯ, а `type` демон ПЕРЕОПРЕДЕЛЯЕТ (classifier).
-# Дословно сохраняется только `content`. Поэтому изоляцию по scope обеспечивает САМ
-# maind: при записи встраиваем scope-маркер в начало контента, при чтении — фильтруем
-# результаты по маркеру и снимаем его. Это единственный надёжный канал на этой версии
-# движка (см. docs/maind/guide/federation.md — «изоляция на стороне maind»).
+# IMPORTANT: the daemon is a SINGLE global pool. Empirically (alive curl) field `namespace`
+# in remember/search/list IS IGNORED and `type` daemon OVERRIDES (classifier).
+# Only saved verbatim `content`. Therefore, insulation according to scope provides CAM
+# maind: when recording we embed scope-marker to the beginning of the content, when reading - filter
+# results for the marker and remove it. This is the only reliable channel on this version
+# engine (see docs/maind/guide/federation.md — «side insulation maind»).
 SCOPE_MARK_RE = re.compile(r"^\[\[s:(?P<scope>[^\]]+)\]\]\s?")
-# Кандидатов из ГЛОБАЛЬНОГО пула до фильтра по scope. Пул общий на все проекты экосистемы
-# (17+), поэтому маленькое окно вытесняло релевантные факты нужного scope чужими (crowding).
-# Берём шире; при насыщении (демон вернул ровно лимит) предупреждаем — факты могли не влезть.
+# Candidates from the GLOBAL pool before filtering by scope. The pool is common to all ecosystem projects
+# (17+), so the small window supplanted the relevant facts of the desired scope strangers (crowding).
+# Take it wider; at saturation (the demon returned exactly the limit) we warn you - the facts may not fit.
 RECALL_LIMIT = 200
-# Кап для shared-scope'ов (ns:*/global) при project:<id>-expansion в _recall_union (mcp.py):
-# без него один общий ns: (напр. ns:axioma, 47 записей) забивал ответ и вытеснял приватный
-# scope проекта (напр. 2 записи) — измерено на 6 проектах, 84-96% ответа из shared
-# Приватный scope остаётся без капа (RECALL_LIMIT) — recall целенаправленный, не пассивный SessionStart-инжект (в отличие от
-# дайджеста, где shared_max=0 режет shared в ноль, см. DIGEST_SHARED_MAX/select_digest_items).
+# Cap for shared-scope'ov (ns:*/global) when project:<id>-expansion in _recall_union (mcp.py):
+# without it one common ns: (e.g. ns:axioma, 47 records) hammered the answer and supplanted the private one
+# scope project (e.g. 2 entries) — measured on 6 projects, 84-96% response from shared
+# Private scope remains without a cap (RECALL_LIMIT) — recall purposeful, not passive SessionStart-injection (unlike
+# digest, where shared_max=0 cuts shared to zero, see DIGEST_SHARED_MAX/select_digest_items).
 RECALL_SHARED_LIMIT = 40
 
 
 def mark_scope(scope, value):
-    """Встроить scope-маркер в начало контента: единственный канал, который демон
-    сохраняет дословно (namespace игнорит, type переопределяет)."""
+    """Embed scope-marker to the beginning of the content: the only channel that is a daemon
+    saves verbatim (namespace ignores, type overrides)."""
     return f"[[s:{scope}]] {value}"
 
 
 def split_scope(text):
-    """(scope|None, чистый_текст) из контента. scope — ВЛАДЕЛЕЦ (первый маркер; его ставит
-    mark_scope при записи, подделать нельзя). Снимаем ВСЕ ведущие маркеры `[[s:…]]` — на случай
-    вложенных/повторных в контенте, чтобы marker-артефакты не утекали в выдачу. Немаркированный
-    (легаси/чужой) → (None, text)."""
+    """(scope|None, clean_text) from content. scope — OWNER (first token; puts it
+    mark_scope when recording, cannot be faked). Remove ALL leading markers `[[s:…]]` — in case
+    nested/repeated in the content to marker-artifacts were not leaked to the SERP. Unlabeled
+    (legacy/alien) → (None, text)."""
     m = SCOPE_MARK_RE.match(text or "")
     if not m:
         return None, text
     owner, rest = m.group("scope"), text[m.end():]
-    while True:                       # снять остаточные ведущие маркеры (владельца не меняем)
+    while True:                       # remove residual leading markers (we do not change the owner)
         m2 = SCOPE_MARK_RE.match(rest)
         if not m2:
             return owner, rest
@@ -389,11 +389,11 @@ def split_scope(text):
 
 
 def store(url, scope, key, value, headers=None):
-    """Сохранить факт: POST /agentmemory/remember. scope встраивается в КОНТЕНТ маркером
-    `[[s:<scope>]]` (демон игнорит namespace и переопределяет type — это единственный
-    надёжный канал изоляции на стороне maind). `namespace`/`type` шлём как было — на
-    будущее, если движок начнёт их уважать. `headers` — bearer-аутентификация (ADR-0001),
-    без секрета не передаются вовсе (дефолт не меняет ничего)."""
+    """Save fact: POST /agentmemory/remember. scope is embedded in the CONTENT with a marker
+    `[[s:<scope>]]` (demon ignores namespace and overrides type — is the only one
+    reliable isolation channel on the side maind). `namespace`/`type` we send it as it was - on
+    future, if the engine starts to respect them. `headers` — bearer-authentication (ADR-0001),
+    without a secret are not transmitted at all (default does not change anything)."""
     return http_post_json(f"{url}/agentmemory/remember",
                           {"namespace": scope, "content": mark_scope(scope, value),
                            "type": key}, headers=headers)
@@ -429,9 +429,9 @@ def store_managed(url, scope, key, value, headers=None):
 
 
 def recall(url, scope, query, limit=RECALL_LIMIT, headers=None):
-    """Поиск С ИЗОЛЯЦИЕЙ: демон ищет по ГЛОБАЛЬНОМУ пулу (namespace не фильтрует),
-    поэтому берём широкий топ и оставляем ТОЛЬКО факты запрошенного `scope` по маркеру
-    в контенте; маркер из текста снимаем. Немаркированные факты (легаси) — режем."""
+    """Search WITH ISOLATION: the demon searches in the GLOBAL pool (namespace does not filter),
+    so we take a wide top and leave ONLY the facts of the requested `scope` by marker
+    in content; remove the marker from the text. Unlabeled facts (legacy) — cut."""
     res = http_post_json(f"{url}/agentmemory/search",
                          {"query": query, "namespace": scope, "limit": limit}, headers=headers)
     results = res.get("results", []) if isinstance(res, dict) else []
@@ -441,23 +441,23 @@ def recall(url, scope, query, limit=RECALL_LIMIT, headers=None):
         raw = (obs.get("narrative") or obs.get("title")
                or " ".join(obs.get("facts") or []))
         sc, text = split_scope(raw)
-        if sc != scope:           # чужой scope или немаркированный легаси → изолируем
+        if sc != scope:           # alien scope or untagged legacy → isolate
             continue
         out.append({"score": r.get("score"), "text": text, "id": obs.get("id")})
-    # Насыщение: демон вернул ровно весь candidate-пул (общий на все проекты) — релевантные
-    # факты scope могли не попасть в окно. Сообщаем, чтобы сузить запрос/поднять лимит.
+    # Saturation: the demon returned exactly all candidate-pool (common to all projects) — relevant
+    # facts scope might not have hit the window. Let us know to narrow down your request./raise the limit.
     if len(results) >= limit:
-        warn(f"recall: candidate-пул насыщен ({limit}) — часть фактов scope '{scope}' могла "
-             f"не влезть; сузьте запрос или поднимите limit.")
+        warn(f"recall: candidate-pool is saturated ({limit}) — part of the facts scope '{scope}' could "
+             f"won't fit; narrow your request or raise it limit.")
     return out
 
 
 def forget(url, scope, key, headers=None):
-    """Удалить факт по memoryId: POST /agentmemory/forget {memoryId}.
+    """Delete fact by memoryId: POST /agentmemory/forget {memoryId}.
 
-    agentmemory 0.9.x ждёт ИМЕННО `memoryId` (id памяти глобально уникален);
-    прежний payload {namespace, id} давал HTTP 400 (сверено живым curl к демону).
-    scope сохранён в сигнатуре для совместимости вызовов, но в запрос не идёт.
+    agentmemory 0.9.x is waiting EXACTLY `memoryId` (id memory is globally unique);
+    former payload {namespace, id} gave HTTP 400 (verified alive curl to the daemon).
+    scope is stored in the signature for call compatibility, but is not included in the request.
     """
     try:
         return http_post_json(f"{url}/agentmemory/forget", {"memoryId": key}, headers=headers)
@@ -468,10 +468,10 @@ def forget(url, scope, key, headers=None):
 
 
 def export(url, scope, headers=None, *, timeout=MEMORY_HEAVY_TIMEOUT_S, retries=MEMORY_RETRIES):
-    """Дамп памяти scope: GET /agentmemory/memories?namespace= (весь ГЛОБАЛЬНЫЙ пул —
-    namespace демон игнорит). Самый дорогой по каналу вызов (SessionStart-дайджест
-    тянет его целиком, research/06 §4) — настраиваемый таймаут/ретраи (measured:
-    ); ретраится (read, не мутация)."""
+    """Memory dump scope: GET /agentmemory/memories?namespace= (entire GLOBAL pool -
+    namespace demon ignores). Most expensive call per channel (SessionStart-digest
+    pulls it whole, research/06 §4) — custom timeout/retrays (measured:
+    ); retracts (read, not a mutation)."""
     def _do():
         return http_get_json(f"{url}/agentmemory/memories?namespace={quote(scope)}",
                              timeout=timeout, headers=headers)
@@ -480,12 +480,12 @@ def export(url, scope, headers=None, *, timeout=MEMORY_HEAVY_TIMEOUT_S, retries=
 
 
 def memory_owner_scope(url, memory_id, scopes, headers=None):
-    """Best-effort: scope-владелец факта `memory_id` среди `scopes` — по маркеру
-    `[[s:<scope>]]` в контенте (а нет маркера → бакету, в котором найден), или None,
-    если факт не найден ни в одном scope. Нужен forget'у: memoryId глобально уникален,
-    демон удаляет по нему БЕЗ оглядки на scope, поэтому до удаления подтверждаем, что
-    факт действительно принадлежит разрешённому проекту (защита кросс-namespace
-    удаления). Устойчив к форме элемента дампа (raw `content` или observation)."""
+    """Best-effort: scope-fact owner `memory_id` among `scopes` — by marker
+    `[[s:<scope>]]` in content (but there is no marker → to the bucket in which it was found), or None,
+    if the fact is not found in any scope. Needed forget'at: memoryId is globally unique,
+    the demon deletes it without regard to scope, therefore, before deleting, we confirm that
+    fact actually belongs to an authorized project (cross-protectionnamespace
+    removal). Resistant to dump element shape (raw `content` or observation)."""
     for sc in scopes:
         for m in export(url, sc, headers):
             if str(m.get("id")) != str(memory_id):
@@ -508,7 +508,7 @@ def cmd_memory(env, argv):
     if sub == "start":
         start(env, config)
     elif sub == "run":
-        run_foreground(env, config)  # foreground для systemd (exec, не возвращается)
+        run_foreground(env, config)  # foreground for systemd (exec, not returned)
     elif sub == "stop":
         stop(env, config)
     elif sub == "status":
@@ -524,16 +524,16 @@ def cmd_memory(env, argv):
     elif sub == "digest":
         _cmd_digest(env, config, rest)
     else:
-        die(f"неизвестная подкоманда memory: {sub} "
+        die(f"unknown subcommand memory: {sub} "
             "(start|stop|status|remember|recall|forget|count|digest)")
 
 
-# ── память: scope-aware CLI (единый путь для хука и человека) ─────────────────
-# remember/recall/forget считают scope из конфига проекта через namespaces.py —
-# тот же источник истины, что у MCP и seed. Хук памяти делегирует сюда (modes/maind.sh),
-# поэтому «запомнил» (хук) и «вспомнил» (MCP/CLI) гарантированно идут в один стор.
+# ── memory: scope-aware CLI (single path for hook and person) ─────────────────
+# remember/recall/forget believe scope from the project config via namespaces.py —
+# same source of truth as MCP and seed. Memory hook delegates here (modes/maind.sh),
+# therefore «remembered» (hook) and «remembered» (MCP/CLI) are guaranteed to go to one side.
 def _memory_target(env, config, opts):
-    """(project|None, write_scopes, read_scopes). --scope = raw-режим без проекта."""
+    """(project|None, write_scopes, read_scopes). --scope = raw-mode without project."""
     from .namespaces import find as ns_find
     from .namespaces import group_scopes, private_scope, recall_scopes
     from .projects import match_cwd
@@ -544,13 +544,13 @@ def _memory_target(env, config, opts):
     if pid:
         proj = ns_find(config, pid)
         if not proj:
-            die(f"проект не найден в config.json: {pid}")
+            die(f"project not found in config.json: {pid}")
     else:
         proj = match_cwd(env, config)
         if not proj:
-            die("не определить проект из cwd — укажи --project <id> или --scope <scope>")
+            die("does not define project from cwd — specify --project <id> or --scope <scope>")
     write = [private_scope(proj)]
-    if opts.get("share"):                 # --share → ещё и в общие бакеты группы (ns:<тег>)
+    if opts.get("share"):                 # --share → also to the general buckets of the group (ns:<tag>)
         for s in group_scopes(proj):
             if s not in write:
                 write.append(s)
@@ -558,10 +558,10 @@ def _memory_target(env, config, opts):
 
 
 def _require_daemon(env, config):
-    """(url, headers) — headers несёт bearer, если секрет настроен (ADR-0001)."""
+    """(url, headers) — headers carries bearer, if the secret is configured (ADR-0001)."""
     _, _, url = resolve_ports(env, config)
     if not health(url):
-        die(f"демон памяти не запущен ({url}) — подними: maind start --only memory")
+        die(f"memory daemon not running ({url}) — raise: maind start --only memory")
     return url, auth_headers(resolve_secret(env, config))
 
 
@@ -569,7 +569,7 @@ def _cmd_remember(env, config, argv):
     opts, pos = parse_args(argv, {"--project": "str", "--scope": "str", "--share": "bool",
                                   "--type": "str", "--json": "bool"}, max_pos=1)
     if opts["help"] or not pos:
-        print('maind memory remember [--project ID | --scope S] [--share] [--type T] "<факт>"')
+        print('maind memory remember [--project ID | --scope S] [--share] [--type T] "<fact>"')
         return
     url, headers = _require_daemon(env, config)
     _proj, write_scopes, _read = _memory_target(env, config, opts)
@@ -585,14 +585,14 @@ def _cmd_remember(env, config, argv):
     if opts["json"]:
         print(json.dumps({"written": written}, ensure_ascii=False))
     else:
-        print("memory(maind): записано → " + ", ".join(w["scope"] for w in written))
+        print("memory(maind): recorded → " + ", ".join(w["scope"] for w in written))
 
 
 def _cmd_recall(env, config, argv):
     opts, pos = parse_args(argv, {"--project": "str", "--scope": "str",
                                   "--limit": "str", "--json": "bool"}, max_pos=1)
     if opts["help"] or not pos:
-        print('maind memory recall [--project ID | --scope S] [--limit N] "<запрос>"')
+        print('maind memory recall [--project ID | --scope S] [--limit N] "<request>"')
         return
     try:
         limit = int(opts.get("limit") or 10)
@@ -601,9 +601,9 @@ def _cmd_recall(env, config, argv):
     url, headers = _require_daemon(env, config)
     _proj, _write, read_scopes = _memory_target(env, config, opts)
     seen, merged = set(), []
-    for sc in read_scopes:                # union по приватному + ns:<тег> + global
+    for sc in read_scopes:                # union private + ns:<tag> + global
         for r in recall(url, sc, pos[0], headers=headers):
-            text = r.get("text")          # один факт, всплывший в неск. scope'ах — раз
+            text = r.get("text")          # one fact that surfaced in several times. scope'ah - time
             if text in seen:
                 continue
             seen.add(text)
@@ -613,7 +613,7 @@ def _cmd_recall(env, config, argv):
     if opts["json"]:
         print(json.dumps(merged, ensure_ascii=False))
     elif not merged:
-        print("memory(maind): ничего не найдено")
+        print("memory(maind): nothing found")
     else:
         for r in merged:
             print(f"— [{r.get('score')}] {r.get('text')}  ({r.get('scope')})")
@@ -623,7 +623,7 @@ def _cmd_forget(env, config, argv):
     opts, pos = parse_args(argv, {"--project": "str", "--scope": "str",
                                   "--json": "bool"}, max_pos=1)
     if opts["help"] or not pos:
-        print("maind memory forget [--project ID] <memoryId>   # id памяти глобально уникален")
+        print("maind memory forget [--project ID] <memoryId>   # id memory is globally unique")
         return
     url, headers = _require_daemon(env, config)
     res = forget(url, None, pos[0], headers=headers)
@@ -635,8 +635,8 @@ def _cmd_forget(env, config, argv):
 
 
 def _truncate_item(text, max_chars):
-    """Обрезать `text` до `max_chars` по последнему пробелу + суффикс DIGEST_TRUNCATE_SUFFIX.
-    Не режет посреди слова (кроме вырожденного случая — суффикс сам не влезает в max_chars)."""
+    """Trim `text` to `max_chars` by last space + suffix DIGEST_TRUNCATE_SUFFIX.
+    Doesn't cut in the middle of a word (except for the degenerate case - the suffix itself does not fit into max_chars)."""
     if len(text) <= max_chars:
         return text
     room = max_chars - len(DIGEST_TRUNCATE_SUFFIX)
@@ -650,23 +650,23 @@ def _truncate_item(text, max_chars):
 
 
 def select_digest_items(raw, private, want, *, limit, budget_chars, item_max_chars, shared_max):
-    """Чистая функция (без I/O/Env) — отбор фактов для SessionStart-дайджеста из сырого
-    дампа памяти `raw` (список dict export()-формы: content/narrative/title + timestamp).
+    """Pure function (without I/O/Env) — selection of facts for SessionStart-digest from raw
+    memory dump `raw` (list dict export()-forms: content/narrative/title + timestamp).
 
-    `private` — приватный scope проекта (первым в выдаче); `want` — видимые scope'ы
-    (приватный + ns:*/global по recall_scopes). Алгоритм:
-    1) фильтр по scope-маркеру/want + дедуп + ecosystem-link cross-ref (как раньше) →
-       партиция private_rows/shared_rows, каждая отсортирована свежее-сверху;
-    2) кандидаты = весь private + shared[:shared_max] (дефолт shared_max=0 → shared не
-       участвует вовсе — project-only digest, D10);
-    3) каждый кандидат обрезается до item_max_chars (по слову + суффикс);
-    4) аккумулируются до budget_chars: переполняющий item обрезается до остатка бюджета,
-       если остаток ≥ DIGEST_MIN_TAIL_CHARS, иначе — дропается;
-    5) финально — count-cap `limit`;
-    6) возвращает (items, dropped) — dropped = сколько фактов из видимого пула (private+shared,
-       без учёта cap'а до этого) не попало в итог (обрезано целиком/лимитом/бюджетом).
+    `private` — private scope project (first in search results); `want` — visible scope's
+    (private + ns:*/global by recall_scopes). Algorithm:
+    1) filter by scope-token/want + dedup + ecosystem-link cross-ref (as before) →
+       partition private_rows/shared_rows, each sorted fresh-from-top;
+    2) candidates = all private + shared[:shared_max] (default shared_max=0 → shared not
+       participates at all - project-only digest, D10);
+    3) each candidate is trimmed to item_max_chars (by word + suffix);
+    4) accumulate until budget_chars: overflowing item is trimmed to the remaining budget,
+       if the remainder ≥ DIGEST_MIN_TAIL_CHARS, otherwise - drops;
+    5) final - count-cap `limit`;
+    6) returns (items, dropped) — dropped = how many facts from the visible pool (private+shared,
+       excluding cap'and before that) was not included in the total (cut off entirely/limit/budget).
 
-    Возвращает (items: list[str], dropped: int)."""
+    Returns (items: list[str], dropped: int)."""
     seen, priv_rows, shared_rows = set(), [], []
     for m in raw:
         text = m.get("content") or m.get("narrative") or m.get("title") or ""
@@ -674,13 +674,13 @@ def select_digest_items(raw, private, want, *, limit, budget_chars, item_max_cha
         clean = (clean or "").strip()
         if sc not in want or not clean or clean in seen:
             continue
-        # чужие seed-cross-ref'ы ("[maind:ecosystem-link] a → b") — graph-сиды, не контекст
+        # strangers seed-cross-ref's ("[maind:ecosystem-link] a → b") — graph-seeds, no context
         if sc != private and clean.startswith("[maind:ecosystem-link]") and " → " in clean:
             continue
         seen.add(clean)
         ts = m.get("timestamp") or ""
         (priv_rows if sc == private else shared_rows).append((ts, clean))
-    priv_rows.sort(key=lambda r: r[0], reverse=True)     # свежее сверху
+    priv_rows.sort(key=lambda r: r[0], reverse=True)     # fresh on top
     shared_rows.sort(key=lambda r: r[0], reverse=True)
     total_pool = len(priv_rows) + len(shared_rows)
     shared_cap = shared_rows[:shared_max] if shared_max > 0 else []
@@ -697,24 +697,24 @@ def select_digest_items(raw, private, want, *, limit, budget_chars, item_max_cha
         if remaining >= DIGEST_MIN_TAIL_CHARS:
             items.append(_truncate_item(cand, remaining))
             used = budget_chars
-        # иначе — молча дропаем (учтётся в dropped ниже), пробуем следующего кандидата
+        # otherwise - silently drop (will be taken into account in dropped below), try the next candidate
     items = items[:limit]
     dropped = total_pool - len(items)
     return items, dropped
 
 
 def _cmd_digest(env, config, argv):
-    """Компактный дайджест памяти проекта для SessionStart-хука (additionalContext).
-    ДЕТЕРМИНИРОВАННО (не семантика): берём ВСЕ факты scope'ов проекта через list+фильтр по
-    scope-маркеру, приоритет приватному, свежее сверху, байт-бюджет — по
-    умолчанию project-only (shared_max=0), shared — явно флагом/конфигом. ХУК-БЕЗОПАСНО:
-    демон лёг / scope не определён → молча пусто, без die."""
+    """Compact project memory digest for SessionStart-hook (additionalContext).
+    DETERMINISTIC (not semantics): take ALL the facts scope'ov of the project via list+filter by
+    scope-token, priority private, freshest on top, byte budget - by
+    default project-only (shared_max=0), shared — explicitly with the flag/config. HOOK-SAFE:
+    the demon lay down / scope undefined → silently empty, without die."""
     opts, _ = parse_args(argv, {"--project": "str", "--scope": "str", "--limit": "str",
                                 "--budget-chars": "str", "--item-max": "str",
                                 "--shared-max": "str", "--json": "bool"}, max_pos=0)
     if opts["help"]:
         print("maind memory digest [--project ID|--scope S] [--limit N] [--budget-chars N] "
-              "[--item-max N] [--shared-max N]  # дайджест для SessionStart")
+              "[--item-max N] [--shared-max N]  # digest for SessionStart")
         return
     dg = (config.get("memory") or {}).get("digest") or {}
     try:
@@ -743,15 +743,15 @@ def _cmd_digest(env, config, argv):
         retries = MEMORY_RETRIES
     _, _, url = resolve_ports(env, config)
     if not health(url):
-        return                                   # демон лёг → тихо (хук-безопасно)
+        return                                   # the demon lay down → quiet (hook-safe)
     try:
         proj, _w, read_scopes = _memory_target(env, config, opts)
     except SystemExit:
-        return                                   # scope не определён → тихо
+        return                                   # scope undefined → quiet
     private = read_scopes[0] if read_scopes else None
     want = set(read_scopes)
     headers = auth_headers(resolve_secret(env, config))
-    try:                                         # весь пул (namespace игнор) → фильтр по маркеру
+    try:                                         # entire pool (namespace ignore) → filter by marker
         raw = export(url, "", headers, timeout=timeout_s, retries=retries)
     except RuntimeError:
         return
@@ -765,32 +765,32 @@ def _cmd_digest(env, config, argv):
         print(json.dumps(items, ensure_ascii=False))
         return
     pid = proj["id"] if proj else (opts.get("scope") or "?")
-    print(f"Память проекта {pid} (mAInd — детали: `maind memory recall \"<тема>\"`):")
+    print(f"Project memory {pid} (mAInd — details: `maind memory recall \"<topic>\"`):")
     for t in items:
         print(f"- {t}")
     if shared_max == 0:
-        # D10: project-only дефолт — межпроектное поднимается явно, не проглатывается в digest
-        print("  (межпроектное: maind memory recall --scope ns:<name> — digest project-only)")
+        # D10: project-only default - cross-project is raised explicitly, not swallowed in digest
+        print("  (cross-project: maind memory recall --scope ns:<name> — digest project-only)")
     if dropped > 0:
-        print(f"  (+{dropped} фактов — maind memory recall)")
+        print(f"  (+{dropped} facts - maind memory recall)")
 
 
 def _cmd_count(env, config, argv):
-    """Сколько фактов в памяти проекта по scope'ам (приватный + ns:<тег> + global) — наблюдаемость
-    «наполнена ли память». Считаем по scope-МАРКЕРУ в контенте, как recall/digest: демон-пул общий и
-    namespace не фильтрует, поэтому export('') даёт весь пул, а принадлежность scope'у решает маркер
-    (иначе посчитали бы факты всех проектов экосистемы)."""
+    """How many facts are in the project memory according to scope'am (private + ns:<tag> + global) — observability
+    «is the memory full». We count by scope-MARKER in the content, like recall/digest: daemon pool shared and
+    namespace does not filter, so export('') gives the entire pool, and the membership scope'y decides the marker
+    (otherwise they would count the facts of all ecosystem projects)."""
     opts, _ = parse_args(argv, {"--project": "str", "--scope": "str", "--json": "bool"}, max_pos=0)
     if opts["help"]:
         print("maind memory count [--project ID | --scope S] [--json]  "
-              "# сколько фактов в памяти по scope")
+              "# how many facts are in memory by scope")
         return
     url, headers = _require_daemon(env, config)
     proj, _write, read_scopes = _memory_target(env, config, opts)
     try:
-        raw = export(url, "", headers)            # весь пул (namespace игнор) → фильтр по маркеру
+        raw = export(url, "", headers)            # entire pool (namespace ignore) → filter by marker
     except RuntimeError as e:
-        die(f"не прочитать память: {e}")
+        die(f"does not read memory: {e}")
     per = {sc: 0 for sc in read_scopes}
     seen = set()
     for m in raw:
@@ -807,7 +807,7 @@ def _cmd_count(env, config, argv):
         return
     pid = proj["id"] if proj else (opts.get("scope") or "?")
     parts = ", ".join(f"{sc}={n}" for sc, n in per.items())
-    print(f"Память проекта {pid}: {parts} (уникальных {total_unique})")
+    print(f"Project memory {pid}: {parts} (unique {total_unique})")
 
 
 def _cmd_status(env, config, argv):
@@ -816,12 +816,12 @@ def _cmd_status(env, config, argv):
     if opts["json"]:
         print(json.dumps(st, ensure_ascii=False, indent=2))
         return
-    state = "запущена" if st["running"] else "остановлена"
-    print(f"Память: {state} — {st['url']} "
+    state = "started" if st["running"] else "stopped"
+    print(f"Memory: {state} — {st['url']} "
           f"(http :{st['http_port']}, stream :{st['stream_port']})")
     if st["pid"]:
-        tail = "" if st["pid_alive"] else "  [pidfile устарел]"
+        tail = "" if st["pid_alive"] else "  [pidfile is deprecated]"
         print(f"  pid {st['pid']}{tail}")
     elif st["running"]:
-        print("  запущена не через maind (нет pidfile)")
-    print("  воркеры: " + ", ".join(f"{w['name']}={w['state']}" for w in st["workers"]))
+        print("  was not launched via maind (no pidfile)")
+    print("  workers: " + ", ".join(f"{w['name']}={w['state']}" for w in st["workers"]))

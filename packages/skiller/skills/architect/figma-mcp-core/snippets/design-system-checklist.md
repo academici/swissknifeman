@@ -1,16 +1,16 @@
-# Чеклист готовности Figma design-system
+# Readiness checklist Figma design-system
 
-Пройти до начала разработки по незнакомому файлу. Данные брать через `get_metadata` /
-`get_variable_defs`, не из скриншота.
+Walk through an unfamiliar file before starting development. Take data via `get_metadata` /
+`get_variable_defs`, not from the screenshot.
 
-- [ ] Все цвета вынесены в Variables/Styles (нет сырого `fills.color` без привязки).
-- [ ] Типографика задана только текстовыми стилями (нет inline-шрифтов без стиля).
-- [ ] Spacing кратен базовой единице (4px или 8px grid).
-- [ ] Все интерактивные компоненты имеют Variants: Default, Hover, Active, Disabled, Focus.
-- [ ] Компоненты с текстом имеют вариант с длинным текстом (overflow-тест).
-- [ ] Иконки — отдельный Component Set, не растровые изображения.
-- [ ] Dark mode — отдельный Variable Mode, а не дублированные компоненты.
-- [ ] Responsive — Auto-layout + Min/Max width вместо фиксированных рамок.
-- [ ] Имена слоёв семантичны (`card/surface`, а не `Rectangle 42`).
-- [ ] Компоненты опубликованы в Team Library (не дублируются по страницам) — проверить `search_design_system`.
-- [ ] Узлы с готовыми компонентами кодовой базы видны в `get_code_connect_map` (переиспользовать).
+- [ ] All colors are displayed in Variables/Styles (no raw `fills.color` without binding).
+- [ ] Typography is set to text styles only (no inline-fonts without style).
+- [ ] Spacing is a multiple of the base unit (4px or 8px grid).
+- [ ] All interactive components have Variants: Default, Hover, Active, Disabled, Focus.
+- [ ] Components with text have a long text option (overflow-test).
+- [ ] Icons - separate Component Set, are not bitmaps.
+- [ ] Dark mode — separate Variable Mode, rather than duplicate components.
+- [ ] Responsive — Auto-layout + Min/Max width instead of fixed frames.
+- [ ] Layer names are semantic (`card/surface`, and not `Rectangle 42`).
+- [ ] Components published in Team Library (are not duplicated across pages) — check `search_design_system`.
+- [ ] Nodes with ready-made codebase components are visible in `get_code_connect_map` (reuse).

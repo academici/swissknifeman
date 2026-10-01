@@ -1,61 +1,61 @@
 # Roadmap
 
-Честное состояние: что работает, что осталось до «идеальной» межпроектной разработки, и что
-зависит от внешних вещей. Не обещания — направление.
+Honest state: what works, what's left to do «perfect» cross-project development, and that
+depends on external things. Not promises - direction.
 
-## Что уже работает
+## What already works
 
-- **Общая память** (agent-memory) + namespace-изоляция (`project`/`ns`/`global`), демон под
-  **systemd** (автозапуск + рестарт + linger).
-- **Граф топологии** между проектами (федерация, `derive` из composer/доков/скиллов).
-- **Граф кода** — пер-проектный MCP **Serena** (language-agnostic, через `uvx`), config-driven
-  (`code:true`), дефолтный `.serena/project.yml` с правильными игнорами.
-- **Workspace-режим** (авто по наличию `packages/`): единый граф «проект + локальные пакеты»,
-  правки идут в реальные репозитории пакетов. Проверено на flexcrm+corex.
-- **Межпроектный слой** `maind fleet`: manifest (группы по общим пакетам), duplicates (jscpd),
-  feature-log; скилл `cross-project-optimizer`.
-- **Провижининг** `maind sync` + `onboard` + healthcheck + скиллы (`ecosystem-mcp`).
-- **Единая терминология трёх плоскостей** (agent-memory / maind-граф / код-граф): имя `graphify`
-  выпилено из прозы и доков, осталось только как legacy-alias в конфиге/флагах (back-compat).
+- **Shared memory** (agent-memory) + namespace-insulation (`project`/`ns`/`global`), demon under
+  **systemd** (autorun + restart + linger).
+- **Topology graph** between projects (federation, `derive` from composer/docks/skills).
+- **Code graph** — per-project MCP **Serena** (language-agnostic, via `uvx`), config-driven
+  (`code:true`), default `.serena/project.yml` with correct ignores.
+- **Workspace-mode** (auto upon availability `packages/`): single graph «project + local packages»,
+  edits go to real package repositories. Tested on flexcrm+corex.
+- **Cross-project layer** `maind fleet`: manifest (groups by common packages), duplicates (jscpd),
+  feature-log; skill `cross-project-optimizer`.
+- **Provisioning** `maind sync` + `onboard` + healthcheck + skills (`ecosystem-mcp`).
+- **Unified terminology of three planes** (agent-memory / maind-graph / code graph): name `graphify`
+  cut out from prose and documents, all that remains is how legacy-alias in the config/flags (back-compat).
 
-## Идеал межпроектной разработки — что осталось
+## The Ideal of Cross-Project Development - What's Left
 
-Целевой сценарий: открываю IDE в CRM, ядро и пакеты пролинкованы и **видны как связный граф**,
-агент сразу знает, что файл уходит в ядро, и берёт это из графа.
+Target script: opening IDE in CRM, kernel and packages linked and **are visible as a connected graph**,
+the agent immediately knows that the file goes to the kernel, and takes it from the graph.
 
-**Где мы сейчас:** workspace-режим даёт это для PHP как **один объединённый граф** (app + пакеты
-под одним корнем, LSP резолвит ссылки в ядро). Это закрывает суть запроса.
+**Where are we now:** workspace-mode gives this for PHP like **one merged graph** (app + packages
+under one root, LSP resolves links into the kernel). This closes the essence of the request.
 
-**Честный нюанс:** «у каждого пакета свой отдельный граф, но связанный с остальными» (N
-независимых графов с кросс-ссылками) — для PHP **пока недостижимо**: Serena-фича
-`additional_workspace_folders` поддерживает кросс-ссылки только для TypeScript. Мы обходим это
-объединением в один корень (работает), но это не N-федеративных-графов. Зависит от upstream
-(Serena/LSP) либо кастомной мультирут-обвязки — **внешняя зависимость, не закрывается в maind**.
+**Honest point:** «each package has its own separate graph, but connected to the others» (N
+independent graphs with cross-references) — for PHP **not yet available**: Serena-feature
+`additional_workspace_folders` supports cross-references only for TypeScript. We get around this
+by merging into one root (works), but it's not N-federate-graphs. Depends on upstream
+(Serena/LSP) or custom multi-root binding - **external dependency, not closed in maind**.
 
-## Что maind может закрыть сам (близко)
+## What maind can close itself (close)
 
-- **Авто feature-log**: хук, мягко фиксирующий «что изменилось» в общую память — чтобы
-  оптимизатор видел историю без ручного `maind fleet log`.
-- **jscpd по монорепо**: умный дефолт игнора (сейчас `--ignore` для пакета-монорепо задаётся
-  вручную; сделать автоматически по типу проекта).
-- **Pre-index Serena при включении** (`serena project index`) — чтобы первый вызов в сессии не
-  ждал индексацию.
-- **Семантическая похожесть** для fleet (эмбеддинги функций/классов) — поверх литеральных дублей
-  jscpd: находить «похоже по смыслу, не дословно».
+- **Auto feature-log**: hook, soft fixing «what has changed» to shared memory - to
+  the optimizer saw the history without manual `maind fleet log`.
+- **jscpd by monorepo**: smart default ignore (now `--ignore` for the monorepo package is set
+  manually; do automatically by project type).
+- **Pre-index Serena when enabled** (`serena project index`) — so that the first call in the session does not
+  was waiting for indexing.
+- **Semantic similarity** for fleet (function embeddings/classes) — over literal duplicates
+  jscpd: find «similar in meaning, not verbatim».
 
-## Внешнее / эксплуатация
+## External / operation
 
-- **Brain-инструкция** в репозитории brain (раскатка при инсталляции) — отдельная задача вне maind.
-- **Битые конфиги проектов** (напр. невалидный `.cursor/mcp.json` у agelto) maind осознанно не
-  трогает — чинятся на стороне проекта, затем `maind sync`.
-- Онбординг остальных приложений в реестр (`maind onboard`) — по мере надобности.
+- **Brain-instructions** in the repository brain (rolling during installation) — separate task outside maind.
+- **Broken project configs** (e.g. invalid `.cursor/mcp.json` y agelto) maind not knowingly
+  touches - they fix it on the project side, then `maind sync`.
+- Onboarding other applications to the registry (`maind onboard`) — as needed.
 
-## Память / граф (точечно)
+## Memory / graph (dotted)
 
-- Семантический recall с ранжированием/суммаризацией (через `ANTHROPIC_API_KEY`).
-- Авто-связывание новых фактов в граф (`memory`-узел + `belongs_to`).
-- `graph path --from --to` в CLI (сейчас — только MCP-tool); экспорт подграфа в HTML/SVG.
+- Semantic recall with ranking/summarization (via `ANTHROPIC_API_KEY`).
+- Auto-linking of new facts into a graph (`memory`-node + `belongs_to`).
+- `graph path --from --to` in CLI (now - only MCP-tool); export subgraph to HTML/SVG.
 
-## Мульти-хаб
+## Multi-hub
 
-- `node.role: secondary | mirror` — несколько хабов с синком графа/памяти; экспорт обратно в brain.
+- `node.role: secondary | mirror` — several hubs with graph sync/memory; export back to brain.

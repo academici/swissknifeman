@@ -1,10 +1,10 @@
 # Source: anonymized production project
 """
-Параметры детали (generic Part) — по сущностям, без единого глобального PARAMS.
+Part parameters (generic Part) — by entities, without a single global PARAMS.
 
-Все линейные размеры — в МИЛЛИМЕТРАХ (мм), если не указано иное.
-Экземпляры *Config создаются ВНИЗУ файла — их и правит пользователь.
-Зависимые размеры считает derive_all() из profile.py (вызов в конце файла).
+All linear dimensions are in MILLIMETERS (mm), unless otherwise noted.
+Instances *Config are created at the BOTTOM of the file - they are edited by the user.
+Dependent dimensions counts derive_all() from profile.py (call at the end of the file).
 """
 
 from __future__ import annotations
@@ -12,84 +12,84 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
-# Узел силуэта: z — локальный от 0 до высоты ДАННОГО сегмента (мм); r — наружный радиус (мм).
+# Silhouette node: z — local from 0 to the height of THIS segment (mm); r — outer radius (mm).
 ProfileKnot = Tuple[float, float]
 
-# Цвет материала Blender: (R, G, B, A), каждое значение 0..1
+# Material color Blender: (R, G, B, A), each value 0..1
 Color = Tuple[float, float, float, float]
 
 
-# ── Модель в целом (общий силуэт и разрешение) ───────────────────────────────
+# ── Model as a whole (general silhouette and resolution) ───────────────────────────────
 
 
 @dataclass
 class ModelConfig:
-    height: float = 120.0           # полная высота детали, мм
-    wall: float = 2.4               # номинальная толщина стенки, мм
-    profile_points: int = 200       # число точек интерполяции профиля (гладкость)
-    segments: int = 128             # число сегментов тела вращения (грани по окружности)
+    height: float = 120.0           # full height of the part, mm
+    wall: float = 2.4               # nominal wall thickness, mm
+    profile_points: int = 200       # number of profile interpolation points (smoothness)
+    segments: int = 128             # number of segments of a body of rotation (edges around the circle)
 
-    base_radius: float = field(default=0.0, init=False)  # наружный r на z=0; считает derive_all()
+    base_radius: float = field(default=0.0, init=False)  # external r on z=0; believes derive_all()
 
 
-# ── Сегмент оболочки (тело вращения по узлам профиля) ────────────────────────
+# ── Shell segment (body of revolution by profile nodes) ────────────────────────
 
 
 @dataclass
 class ShellConfig:
-    """Один сегмент наружной оболочки: силуэт задаётся узлами profile_knots."""
+    """One outer shell segment: silhouette defined by nodes profile_knots."""
 
     color: Color = (0.85, 0.85, 0.85, 1.0)
-    height: float = 60.0            # высота сегмента по Z, мм
-    radius_bottom: float = 30.0     # наружный r на нижнем торце, мм (стык с предыдущим сегментом)
-    radius_top: float = 24.0        # наружный r на верхнем торце, мм (стык со следующим)
-    # Силуэт: локальный z ∈ [0, height]. ВНИМАНИЕ: последний z всегда == height.
-    # derive_all() синхронизирует последний узел с актуальной height.
+    height: float = 60.0            # segment height by Z, mm
+    radius_bottom: float = 30.0     # external r at the bottom end, mm (junction with the previous segment)
+    radius_top: float = 24.0        # external r at the upper end, mm (junction with the following)
+    # Silhouette: local z ∈ [0, height]. WARNING: last z always == height.
+    # derive_all() synchronizes the last node with the current one height.
     profile_knots: List[ProfileKnot] = field(
         default_factory=lambda: [
-            (0.0,  30.0),           # нижний торец
-            (20.0, 30.0),           # ровная зона
-            (45.0, 28.0),           # начало сужения
-            (60.0, 24.0),           # верхний торец
+            (0.0,  30.0),           # bottom end
+            (20.0, 30.0),           # flat area
+            (45.0, 28.0),           # beginning of narrowing
+            (60.0, 24.0),           # top end
         ]
     )
 
 
-# ── Посадка/гнездо (joint) — соединение двух деталей ─────────────────────────
+# ── Landing/socket (joint) — connection of two parts ─────────────────────────
 
 
 @dataclass
 class JointConfig:
-    """Цилиндрическая посадка «папа в маму»."""
+    """Cylindrical fit «mom and dad»."""
 
-    seat_inner_diameter: float = 24.0  # внутренний диаметр гнезда, мм
-    depth: float = 10.0                # глубина посадки (высота цилиндра), мм
-    wall: float = 2.0                  # толщина стенки посадочного цилиндра, мм
-    clearance: float = 0.15            # зазор на сторону между папой и мамой, мм
+    seat_inner_diameter: float = 24.0  # internal diameter of the socket, mm
+    depth: float = 10.0                # planting depth (cylinder height), mm
+    wall: float = 2.0                  # wall thickness of the landing cylinder, mm
+    clearance: float = 0.15            # side gap between male and female, mm
 
 
-# ── Резьба (параметры — см. навык blender-modeling/threading) ─────────────────────────
+# ── Thread (parameters - see skill blender-modeling/threading) ─────────────────────────
 
 
 @dataclass
 class ThreadConfig:
-    """Печатаемая резьба (FDM/SLA). Зазор обязателен — точная резьба не вкрутится."""
+    """Printable thread (FDM/SLA). A gap is required - the exact thread will not screw in."""
 
-    pitch: float = 1.0                 # шаг резьбы, мм
-    depth: float = 0.4                 # глубина профиля зубца по R, мм
-    turns: int = 3                     # число витков, шт
-    clearance: float = 0.15            # радиальный зазор между резьбами на сторону, мм
+    pitch: float = 1.0                 # thread pitch, mm
+    depth: float = 0.4                 # tooth profile depth according to R, mm
+    turns: int = 3                     # number of turns, pcs
+    clearance: float = 0.15            # radial clearance between threads per side, mm
 
 
-# ── Производные функции (чистые, без bpy — переиспользуются в check.py) ───────
+# ── Derived functions (clean, without bpy — are reused in check.py) ───────
 
 
 def joint_outer_radius(joint: "JointConfig") -> float:
-    """Наружный радиус посадочного цилиндра (папа), мм: r_seat + стенка."""
+    """Outer radius of landing cylinder (dad), mm: r_seat + wall."""
     return joint.seat_inner_diameter * 0.5 + joint.wall
 
 
-# ── Экземпляры (редактировать здесь) ─────────────────────────────────────────
+# ── Instances (edit here) ─────────────────────────────────────────
 
 
 model_config = ModelConfig()
@@ -97,7 +97,7 @@ shell_config = ShellConfig()
 joint_config = JointConfig()
 thread_config = ThreadConfig()
 
-from .profile import derive_all  # noqa: E402 — после экземпляров, избежать цикла импорта
+from .profile import derive_all  # noqa: E402 — after instances, avoid import loop
 
 derive_all(model_config, shell_config, joint_config)
 

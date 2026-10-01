@@ -1,15 +1,15 @@
 {
   "$schema": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schema/swissknifeman-config.schema.json",
-  "_comment": "Конфиг vendor-режима (физический перенос скиллов в репо). Скопируй в целевой проект как .swissknifeman/config.json. Источник истины: правила ниже разворачиваются в плоский набор, sync копирует скиллы из библиотеки swissknifeman в skills_path и пишет skills-lock.json (managed). Команда: skiller sync [--dry-run]. $schema даёт автодополнение в редакторе.",
+  "_comment": "Config vendor-mode (physical transfer of skills to the repo). Copy to the target project as .swissknifeman/config.json. Source of truth: the rules below unfold into a flat set, sync copies skills from the library swissknifeman in skills_path and writes skills-lock.json (managed). Command: skiller sync [--dry-run]. $schema gives autocompletion in the editor.",
   "version": 1,
-  "_comment_mode": "пока только vendor (физический перенос + lock)",
+  "_comment_mode": "only for now vendor (physical transfer + lock)",
   "mode": "vendor",
-  "_comment_skills_path": "куда копировать; по умолчанию .claude/skills (Claude находит автоматически)",
+  "_comment_skills_path": "where to copy; default .claude/skills (Claude finds automatically)",
   "skills_path": ".claude/skills",
-  "_comment_include": "конкретные скиллы из любых областей: 'bucket/rel' или просто 'name'",
+  "_comment_include": "specific skills from any area: 'bucket/rel' or simply 'name'",
   "include": ["php/eloquent-performance", "architect/api-design"],
-  "_comment_buckets": "бакеты целиком (объединяются с include)",
+  "_comment_buckets": "entire buckets (are combined with include)",
   "buckets": ["quality"],
-  "_comment_exclude": "вычитание из (buckets ∪ include): имя скилла или 'bucket/rel'",
+  "_comment_exclude": "subtraction from (buckets ∪ include): skill name or 'bucket/rel'",
   "exclude": ["quality/mutation-testing"]
 }

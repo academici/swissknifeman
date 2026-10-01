@@ -1,59 +1,59 @@
-# `skiller analyze-run` — пост-ран разбор прогона
+# `skiller analyze-run` — post-run run analysis
 
-Детерминированный разбор того, что происходило в прогоне (особенно фонового
-`dev-loop`), по JSONL-логам Claude Code — **без запуска агентов и трат токенов**.
-Отвечает на «куда ушли токены/время, где узкие места, какие скиллы сработали, а
-какие мёртвые».
+Deterministic parsing of what happened in the run (especially background
+`dev-loop`), by JSONL-logs Claude Code — **without running agents and spending tokens**.
+Replies to «where did the tokens go/time, where are the bottlenecks, what skills worked, and
+how dead».
 
 ```bash
 skiller analyze-run [--last | --session ID] [--project DIR] [--json] [--store]
 ```
 
-- `--last` (дефолт) — последний прогон проекта; `--session ID` — конкретный.
-- `--project DIR` — проект (иначе автопоиск вверх от CWD).
-- `--json` — машинный вывод (для скриптов/будущей агрегации).
-- `--store` — сохранить JSON-отчёт в `<project>/.claude/analyze/<session>.json`
-  (задел под кросс-сессионный тренд; `.claude/analyze/` стоит добавить в `.gitignore`).
+- `--last` (default) — last run of the project; `--session ID` — specific.
+- `--project DIR` — project (otherwise auto search up from CWD).
+- `--json` — machine output (for scripts/future aggregation).
+- `--store` — save JSON-report in `<project>/.claude/analyze/<session>.json`
+  (hit the cross-session trend; `.claude/analyze/` should be added to `.gitignore`).
 
-## Что показывает
+## What it shows
 
-- **По агентам:** факт-токены `in/out`, **cache-hit%** (`cache_read`), модель,
-  wall-clock, топ-инструменты, ретраи, tool-ошибки — из поля `usage` транскрипта.
-- **Скиллы:** активный набор проекта (`resolve_active_set`/`budget_for_set`) ×
-  фактически загруженные (`Skill`-вызовы) → **эффективные** (загружены), **DEAD**
-  (в наборе, 0 загрузок → кандидат снять или чинить `description`-триггеры,
-  ср. `skiller eval --triggers`), загруженные вне набора.
-- **Рантайм-отказы** (эвристика): `Rate limited` / `SingletonLock` / `API Error` и
-  т.п. — заметно в итог.
+- **By agent:** fact tokens `in/out`, **cache-hit%** (`cache_read`), model,
+  wall-clock, top tools, retrays, tool-errors - from the field `usage` transcript.
+- **Skills:** active project set (`resolve_active_set`/`budget_for_set`) ×
+  actually loaded (`Skill`-calls) → **effective** (loaded), **DEAD**
+  (in set, 0 downloads → candidate remove or repair `description`-triggers,
+  avg. `skiller eval --triggers`), loaded outside the set.
+- **Runtime failures** (heuristic): `Rate limited` / `SingletonLock` / `API Error` and
+  etc. - noticeably in the end.
 
-## Источник данных
+## Data source
 
-`~/.claude/projects/<slug>/<session>.jsonl` (главный) + `<slug>/<session>/subagents/
-agent-*.jsonl`, где `<slug>` = абсолютный путь проекта с `/`→`-`. Тот же путь-резолв,
-что у скилла `system/session-observer`.
+`~/.claude/projects/<slug>/<session>.jsonl` (main) + `<slug>/<session>/subagents/
+agent-*.jsonl`, where `<slug>` = absolute project path with `/`→`-`. Same resolve path,
+what is the skill `system/session-observer`.
 
-## Честные ограничения
+## Fair restrictions
 
-- **Детект загрузки скиллов частичный:** видны только явные `Skill`-tool-вызовы;
-  нативный `skills:`-preload субагента и авто-триггер плагина по `description` как
-  Skill-вызов **не видны** → «DEAD» эвристичен.
-- **Резидентность tier-0** (name+description в каждом запросе) в `usage` не выделяется
-  отдельным событием — это по-прежнему теория `skiller budget`. analyze-run считает
-  ФАКТ-токены суммарно и tier-1-загрузки, но не атрибутирует tier-0 по скиллам.
-- Рантайм-маркеры — эвристика: могут ловить и упоминания фраз в тексте самой задачи.
-- Схема транскрипта внутренняя для Claude Code; парсер толерантный, но при смене
-  формата CC поля могут поехать.
+- **Partial skill loading detection:** only explicit ones are visible `Skill`-tool-calls;
+  native `skills:`-preload subagent and auto-trigger plugin by `description` like
+  Skill-call **are not visible** → «DEAD» is heuristic.
+- **Residence tier-0** (name+description in every request) in `usage` is not highlighted
+  separate event - it's still a theory `skiller budget`. analyze-run believes
+  FACT tokens in total and tier-1-downloads, but does not attribute tier-0 by skills.
+- Runtime markers are heuristics: they can also catch mentions of phrases in the text of the task itself.
+- Transcript scheme internal to Claude Code; parser is tolerant, but when changing
+  format CC fields can go.
 
-## Роли: analyze-run vs `session-observer`
+## Roles: analyze-run vs `session-observer`
 
-Дополняют, не конкурируют:
+Complement, do not compete:
 
-| | `skiller analyze-run` | скилл `system/session-observer` |
+| | `skiller analyze-run` | skill `system/session-observer` |
 |---|---|---|
-| Как | детерминир. CLI (Python) | агент-driven (jq-рецепты + синтез) |
-| Про что | **числа**: токены/тайминги/cache/мёртвые скиллы | **почему**: дрейф, skill-skip, петли, коррекции |
-| Стоимость | не жжёт токены | тратит контекст агента |
-| Выход | markdown + JSON | learnings в память, промоция человеком |
+| How | deterministic CLI (Python) | agent-driven (jq-recipes + synthesis) |
+| About what | **numbers**: tokens/timings/cache/dead skills | **why**: drift, skill-skip, loops, corrections |
+| Cost | does not burn tokens | spends agent context |
+| Exit | markdown + JSON | learnings in memory, promotion by man |
 
-Практика: `analyze-run` — быстрый количественный снимок после задачи; если цифры
-подсветили проблему — `session-observer` для качественного разбора «почему».
+Practice: `analyze-run` — quick quantitative snapshot after task; if the numbers
+highlighted the problem - `session-observer` for quality analysis «why».

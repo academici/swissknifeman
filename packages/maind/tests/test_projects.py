@@ -1,4 +1,4 @@
-"""Тесты projects.py: синк из brain (маппинг, идемпотентность, сохранение полей)."""
+"""Tests projects.py: sync from brain (mapping, idempotency, field saving)."""
 import contextlib
 import io
 import os
@@ -22,19 +22,19 @@ class TestSync(unittest.TestCase):
             cfg, source = load_config(env)
             self.assertEqual(source, "config.json")
             cfg, stats = sync_from_brain(env, cfg, bpath)
-            self.assertEqual(stats["added"], 1)    # swiss-knife-man — новый
-            self.assertEqual(stats["updated"], 1)  # brain — обновлён
+            self.assertEqual(stats["added"], 1)    # swiss-knife-man — new
+            self.assertEqual(stats["updated"], 1)  # brain — updated
             brain = get(cfg, "brain")
-            self.assertEqual(brain["name"], "Brain")       # обновлено из brain
-            self.assertEqual(brain["skills"], ["arch"])    # maind-only сохранено
+            self.assertEqual(brain["name"], "Brain")       # updated from brain
+            self.assertEqual(brain["skills"], ["arch"])    # maind-only saved
             self.assertEqual(brain["dependencies"], ["maind"])
-            # идемпотентность: второй синк ничего не добавляет
+            # idempotency: second sync adds nothing
             cfg, stats2 = sync_from_brain(env, cfg, bpath)
             self.assertEqual(stats2["added"], 0)
 
     def test_brain_visibility_wins_and_warns(self):
-        """visibility — из frontmatter Brain → .projects.json; синк её обновляет (brain
-        «выигрывает», owner-of-fact) и предупреждает о смене (защита от протухшего кэша)."""
+        """visibility — from frontmatter Brain → .projects.json; sync updates it (brain
+        «wins», owner-of-fact) and warns about the change (protection against bad cache)."""
         with tempfile.TemporaryDirectory() as tmp:
             root, env = make_repo(tmp)
             write_maind_config(root, projects=[
@@ -49,18 +49,18 @@ class TestSync(unittest.TestCase):
             with contextlib.redirect_stderr(buf):
                 cfg, _ = sync_from_brain(env, cfg, bpath)
             docs = next(f for f in get(cfg, "botkit")["docs_folders"] if f["id"] == "docs")
-            self.assertEqual(docs["visibility"], "private")   # brain выиграл (owner-of-fact)
-            self.assertIn("public→private", buf.getvalue())   # предупреждение было
+            self.assertEqual(docs["visibility"], "private")   # brain won (owner-of-fact)
+            self.assertIn("public→private", buf.getvalue())   # warning was
 
     def test_write_config_roundtrip(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, env = make_repo(tmp)
-            cfg, source = load_config(env)        # пусто
+            cfg, source = load_config(env)        # empty
             self.assertEqual(source, "empty")
             cfg, _ = sync_from_brain(env, cfg, write_brain_projects(root))
             write_config(env, cfg)
             cfg2, source2 = load_config(env)
-            self.assertEqual(source2, "config.json")  # .maind.json приоритетнее
+            self.assertEqual(source2, "config.json")  # .maind.json takes priority
             self.assertTrue(get(cfg2, "brain"))
             self.assertEqual(len(listing(env, cfg2)), 2)
 

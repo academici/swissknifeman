@@ -1,40 +1,40 @@
-"""hub — корневой хаб скиллов в проекте (managed-блок CLAUDE.md / .ai/guidelines).
+"""hub — root hub of skills in the project (managed-block CLAUDE.md / .ai/guidelines).
 
-Генератор живёт здесь (импортируемый и тестируемый), `scripts/generate-hub.sh` —
-тонкий лаунчер поверх `python3 -m skiller.hub` (как `bin/skiller`).
+The generator lives here (importable and testable), `scripts/generate-hub.sh` —
+thin launcher on top `python3 -m skiller.hub` (like `bin/skiller`).
 
-ФОРМА БЛОКА ОПРЕДЕЛЯЕТСЯ КАНАЛОМ-ЦЕЛЬЮ, не проектом:
+BLOCK SHAPE IS DETERMINED BY THE TARGET CHANNEL, not by the project:
 
-  краткая (`short`)  — цель, у которой ЕСТЬ нативный листинг скиллов: `CLAUDE.md`
-      Claude Code и Boost-фрагмент `.ai/guidelines/swissknifeman-hub.md` (Boost
-      вставляет его в CLAUDE.md — резидентность та же). Клиент и так держит
-      резидентно имя+описание каждого доступного скилла (RAG:✅ 2026-07-31
-      <https://code.claude.com/docs/en/features-overview> §Skills), поэтому индекс
-      в блоке — второй платный экземпляр: он не печатается, остаются приоритеты
-      источников, правила поиска и указатель на полный индекс.
-  Codex (`AGENTS.md`) — краткая форма; подтверждение через реальный offline
-      `codex debug prompt-input` из cwd проекта. Неподтверждённые имена остаются.
-  полная (`full`)    — цель БЕЗ нативного листинга: `--root-files GEMINI.md`
-      и любые сторонние корневые файлы. Там индекс — единственный носитель
-      обнаружения, он остаётся.
-  заглушка (`stub`)  — по умолчанию для `CLAUDE.md` и `AGENTS.md`: между маркерами
-      только HTML-комментарии (registry stamp + указатель на `--full-index`).
-      Скиллы и task-команды подключаются нативно; prose-хаб не дублируется.
+  short (`short`)  — target that HAS a native skill listing: `CLAUDE.md`
+      Claude Code and Boost-fragment `.ai/guidelines/swissknifeman-hub.md` (Boost
+      inserts it into CLAUDE.md — residency is the same). The client keeps it anyway
+      resident name+description of each available skill (RAG:✅ 2026-07-31
+      <https://code.claude.com/docs/en/features-overview> §Skills), therefore the index
+      in the block - the second paid copy: it is not printed, priorities remain
+      sources, search rules, and a pointer to the full index.
+  Codex (`AGENTS.md`) — short form; confirmation via real offline
+      `codex debug prompt-input` from cwd project. Unconfirmed names remain.
+  full (`full`)    — target WITHOUT native listing: `--root-files GEMINI.md`
+      and any third party root files. There the index is the only carrier
+      detection, it remains.
+  stub (`stub`)  — default for `CLAUDE.md` and `AGENTS.md`: between markers
+      only HTML-comments (registry stamp + pointer to `--full-index`).
+      Skills and task-commands are connected natively; prose-hub is not duplicated.
 
-`--full-index` возвращает полную форму ВСЕМ целям одной командой (путь отката).
-`--hub-legacy-short` — прежняя краткая форма с приоритетами/поиском (без полного индекса).
+`--full-index` returns the full form to ALL targets with one command (rollback path).
+`--hub-legacy-short` — former short form with priorities/search (without full index).
 
-СВЕРКА ПЕРЕД СОКРАЩЕНИЕМ (обязательна): скилл убирается из блока, только если он
-подтверждён в нативном активном наборе проекта ДВУМЯ независимыми условиями —
-(1) он есть в наборе измерителя `budget.resolve_active_set` (источник, названный
-ТЗ P2.5) И (2) он доставлен КАНАЛОМ, который Claude Code перечисляет нативно
-(включённый плагин маркетплейса либо физическая копия в `.claude/skills`).
-Второе условие добавлено, потому что `resolve_active_set` моделирует ось
-vendor-выборки и НЕ читает `enabledPlugins`: на connect-проекте он отвечает не на
-тот вопрос (замер agelto 2026-07-31 — 86 скиллов набора против 20 доставленных
-клиентом). Конъюнкция строго сильнее требования ТЗ: всё, что уходит из блока,
-лежит и в наборе измерителя, и в нативном канале. Неподтверждённые скиллы
-остаются перечисленными отдельным разделом, а расхождение печатается."""
+REVIEW BEFORE REDUCTION (is required): a skill is removed from the block only if it
+is confirmed in the native active set of the project by TWO independent conditions -
+(1) it is included in the meter kit `budget.resolve_active_set` (source named
+TK P2.5) AND (2) it is delivered by CHANNEL, which Claude Code enumerates natively
+(enabled marketplace plugin or physical copy in `.claude/skills`).
+The second condition is added because `resolve_active_set` models an axis
+vendor-samples and does NOT read `enabledPlugins`: on connect-project he does not respond to
+that question (froze agelto 2026-07-31 — 86 skills set versus 20 delivered
+by client). The conjunction is strictly stronger than the requirements of the technical specifications: everything that leaves the block
+is in both the meter set and the native channel. Unconfirmed skills
+remain listed as a separate section and the discrepancy is printed."""
 import hashlib
 import json
 import os
@@ -52,9 +52,9 @@ FORM_STUB = "stub"
 
 CLAUDE_TARGET = "CLAUDE.md"
 BOOST_TARGET = Path(".ai") / "guidelines" / "swissknifeman-hub.md"
-# Раскладки физических копий, где ищется манифест вендоринга (источник индекса).
+# Layouts of physical copies where the vendor manifest is searched (index source).
 SCAN_ROOTS = (".claude/skills", ".cursor/skills", ".ai/skills")
-# Раскладка, которую Claude Code перечисляет нативно как скиллы ПРОЕКТА.
+# The layout that Claude Code lists natively as PROJECT skills.
 CLAUDE_SKILLS_DIR = ".claude/skills"
 MARKETPLACE_SUFFIX = "@swissknifeman"
 
@@ -75,7 +75,7 @@ def generate_hub(env, target, *, full_index=False, root_files=()):
     run_cmd(argv)
 
 
-# --- источники установленного --------------------------------------------------
+# --- installed sources --------------------------------------------------
 def _load_json(path):
     try:
         return json.loads(Path(path).read_text(encoding="utf-8"))
@@ -84,7 +84,7 @@ def _load_json(path):
 
 
 def enabled_marketplace_buckets(target):
-    """Бакеты, включённые каналом marketplace: enabledPlugins."<bucket>@swissknifeman"."""
+    """Buckets enabled by channel marketplace: enabledPlugins."<bucket>@swissknifeman"."""
     names = []
     for settings_name in ("settings.local.json", "settings.json"):
         data = _load_json(Path(target) / ".claude" / settings_name)
@@ -99,10 +99,10 @@ def enabled_marketplace_buckets(target):
 
 
 def collect_installed(registry, target):
-    """Установленное в проекте: {bucket: {name: entry}} + список найденных каналов.
+    """Installed in the project: {bucket: {name: entry}} + list of found channels.
 
-    Два канала (объединяются, как и раньше): marketplace-плагины по имени бакета
-    и манифесты вендоринга в известных раскладках."""
+    Two channels (are merged as before): marketplace-plugins by bucket name
+    and vendor manifests in known layouts."""
     target = Path(target)
     by_bucket = {}
     for s in registry["skills"]:
@@ -142,9 +142,9 @@ def installed_names(installed):
     return {name for bucket in installed.values() for name in bucket}
 
 
-# --- агенты проекта ------------------------------------------------------------
+# --- project agents -------------------------------------------------------------
 def parse_agent_frontmatter(path):
-    """name + description (скаляры) + skills (inline [..] или блок-список)."""
+    """name + description (scalars) + skills (inline [..] or block list)."""
     fm = {"name": "", "description": "", "skills": []}
     text = Path(path).read_text(encoding="utf-8").replace("\r\n", "\n")
     lines_ = text.splitlines()
@@ -169,15 +169,15 @@ def parse_agent_frontmatter(path):
                     fm["skills"] = [v.strip().strip('"').strip("'")
                                     for v in value.strip("[]").split(",") if v.strip()]
                 elif value == "":
-                    list_key = "skills"  # дальше блок-список
+                    list_key = "skills"  # next block list
     return fm
 
 
 def collect_agents(target, registry_names):
-    """Агенты проекта (.claude/agents/*.md) + сверка их `skills:` с реестром.
+    """Project Agents (.claude/agents/*.md) + checking them `skills:` with the registry.
 
-    Регрессия «скиллы не видны»: нативное поле skills: у субагента молча no-op на
-    неизвестном имени, поэтому каждое имя проверяется."""
+    Regression «skills are not visible»: native field skills: at the subagent silently no-op on
+    unknown name, so each name is checked."""
     agents, unknown = [], set()
     agents_dir = Path(target) / ".claude" / "agents"
     if not agents_dir.is_dir():
@@ -187,7 +187,7 @@ def collect_agents(target, registry_names):
         a["file"] = af.name
         checked = []
         for sk in a["skills"]:
-            bare = sk.split(":", 1)[1] if ":" in sk else sk  # допускаем bucket:name
+            bare = sk.split(":", 1)[1] if ":" in sk else sk  # allowed bucket:name
             ok = bare in registry_names
             if not ok:
                 unknown.add(sk)
@@ -197,17 +197,17 @@ def collect_agents(target, registry_names):
     return agents, unknown
 
 
-# --- нативный активный набор (сверка перед сокращением) -------------------------
+# --- native active set (reconciliation before reduction) -------------------------
 def _marketplace_plugin_skills(env, registry):
-    """Скиллы, которые НАТИВНО перечисляет клиент по каждому плагину маркетплейса.
+    """Skills that are NATIVELY listed by the client for each marketplace plugin.
 
-    Источник — сгенерированный `.claude-plugin/marketplace.json` умбреллы, то есть
-    ровно то, что читает клиент, а НЕ отображение «бакет → реестр», по которому
-    строится индекс блока (иначе сверка проверяла бы саму себя). Курируемый плагин
-    перечисляет скиллы явно (`skills: [...]`), бакетный отдаёт каталог целиком
-    (`source: ./packages/skiller/skills/<bucket>`), пакетный (`./packages/task`)
-    офлайн не разворачивается — его скиллы просто не подтверждаются.
-    → {plugin: set(names)}; пустой dict, если манифест недоступен."""
+    Source - generated `.claude-plugin/marketplace.json` umbrellas, that is
+    is exactly what the client reads, NOT the display «bucket → registry», by which
+    block index is being built (otherwise the reconciliation would check itself). Curated plugin
+    lists skills explicitly (`skills: [...]`), bucket gives the entire directory
+    (`source: ./packages/skiller/skills/<bucket>`), batch (`./packages/task`)
+    doesn't work offline - his skills simply aren't confirmed.
+    → {plugin: set(names)}; empty dict, if the manifest is not available."""
     monorepo = find_monorepo_root(env.root)
     if monorepo is None:
         return {}
@@ -243,8 +243,8 @@ def _marketplace_plugin_skills(env, registry):
 
 
 def _project_skill_names(target):
-    """Скиллы, физически лежащие в `.claude/skills/<name>/SKILL.md` — их клиент
-    перечисляет нативно как скиллы проекта."""
+    """Skills that are physically located in `.claude/skills/<name>/SKILL.md` — their client
+    lists natively as project skills."""
     d = Path(target) / CLAUDE_SKILLS_DIR
     if not d.is_dir():
         return set()
@@ -301,22 +301,22 @@ def _codex_installed(env, target, registry, installed, channels, inventory):
 
 
 def _measurer_active_names(env, target):
-    """Активный набор ИЗМЕРИТЕЛЯ (`budget.resolve_active_set`) — источник, названный
-    ТЗ P2.5. Импорт ленивый: budget → vendor → hub, прямой импорт замкнул бы цикл.
-    → (names, detail); names=None, если набор не резолвится (тогда не сокращаем)."""
+    """Active METER set (`budget.resolve_active_set`) — source named
+    TK P2.5. Lazy import: budget → vendor → hub, direct import would close the loop.
+    → (names, detail); names=None, if the set does not resolve (then we don’t reduce)."""
     try:
         from .budget import resolve_active_set
         from .config import load_config
         config = load_config(env, Path(target))
         skills, _meta = resolve_active_set(env, Path(target), config)
         names = {fm_name or Path(d).name for _b, _r, d, fm_name in skills}
-        return names, f"{len(names)} скиллов"
-    except (Exception, SystemExit) as error:  # noqa: BLE001 — fail-closed, не молча
+        return names, f"{len(names)} skills"
+    except (Exception, SystemExit) as error:  # noqa: BLE001 — fail-closed, not silently
         return None, f"n/a ({error})"
 
 
 def native_check(env, target, names):
-    """Сверка перед сокращением: какие из `names` подтверждены нативным набором.
+    """Reconciliation before reduction: which of `names` are confirmed by the native set.
 
     → {confirmed, unconfirmed, native_channel, measurer_detail, notes}."""
     plugin_skills = _marketplace_plugin_skills(env, registry_of(env))
@@ -324,7 +324,7 @@ def native_check(env, target, names):
     for bucket in enabled_marketplace_buckets(target):
         known = plugin_skills.get(bucket)
         if known is None:
-            plugin_notes.append(f"плагин {bucket}@ не найден в marketplace.json")
+            plugin_notes.append(f"plugin {bucket}@ not found in marketplace.json")
             continue
         delivered |= known
     project_skills = _project_skill_names(target)
@@ -333,7 +333,7 @@ def native_check(env, target, names):
     measurer_names, measurer_detail = _measurer_active_names(env, target)
     if measurer_names is None:
         confirmed = set()
-        notes = [f"набор измерителя не резолвится — сокращение отключено: {measurer_detail}"]
+        notes = [f"meter set does not resolve - abbreviation is disabled: {measurer_detail}"]
     else:
         confirmed = set(names) & delivered & measurer_names
         notes = []
@@ -351,7 +351,7 @@ _REGISTRY_CACHE = {}
 
 
 def registry_of(env):
-    """skills.json реестра (кэш на процесс — сверка и индекс читают один файл)."""
+    """skills.json registry (cache per process - reconciliation and index read one file)."""
     key = str(env.root)
     if key not in _REGISTRY_CACHE:
         _REGISTRY_CACHE[key] = json.loads(
@@ -359,46 +359,46 @@ def registry_of(env):
     return _REGISTRY_CACHE[key]
 
 
-# --- сборка markdown ------------------------------------------------------------
+# --- assembly markdown ------------------------------------------------------------
 def _priority_lines(boost_mode, form):
-    where = ("индекс ниже" if form == FORM_FULL
-             else "нативный листинг скиллов клиента")
-    out = ["## Приоритет источников правил", "",
-           "1. Проектные правила и скиллы (`.ai/guidelines/`, `.ai/skills/`, "
-           "корневые инструкции проекта) задают локальные соглашения."]
+    where = ("index below" if form == FORM_FULL
+             else "native listing of client skills")
+    out = ["## Rule source priority", "",
+           "1. Project rules and skills (`.ai/guidelines/`, `.ai/skills/`, "
+           "project root instructions) specify local conventions."]
     if boost_mode:
-        out.append("2. Laravel Boost: для версионно-специфичных тем (Laravel, Pest, "
-                   "Inertia, Livewire, Tailwind, Filament) используй встроенные "
-                   "скиллы/гайдлайны Boost — они привязаны к версиям пакетов.")
-        out.append(f"3. Скиллы swissknifeman ({where}) — архитектура, структура, "
-                   "практики, процессы.")
+        out.append("2. Laravel Boost: for version-specific themes (Laravel, Pest, "
+                   "Inertia, Livewire, Tailwind, Filament) use built-in "
+                   "skills/guidelines Boost — they are tied to package versions.")
+        out.append(f"3. Skills swissknifeman ({where}) — architecture, structure, "
+                   "practices, processes.")
     else:
-        out.append(f"2. Скиллы swissknifeman ({where}) — архитектура, структура, "
-                   "практики, процессы. Если в проект добавят Laravel Boost, его "
-                   "версионно-специфичные скиллы приоритетнее пересекающихся.")
-    out += ["", "Скиллы дополняют инструкции среды и запрос владельца; внутри совместимых правил выбирай более специфичный источник "
-                "(проект > Boost > реестр swissknifeman).", ""]
+        out.append(f"2. Skills swissknifeman ({where}) — architecture, structure, "
+                   "practices, processes. If they add to the project Laravel Boost, him "
+                   "version-specific skills have priority over overlapping ones.")
+    out += ["", "Skills complement the environment's instructions and the owner's request; within compatible rules, choose a more specific source "
+                "(project > Boost > registry swissknifeman).", ""]
     return out
 
 
 def _search_lines(form):
-    out = ["## Как найти нужный скилл", ""]
+    out = ["## How to find the skill you need", ""]
     if form == FORM_FULL:
-        out.append("1. Определи область задачи и найди бакет в индексе ниже.")
+        out.append("1. Define the task scope and find the bucket in the index below.")
     else:
-        out.append("1. Скиллы swissknifeman уже перечислены НАТИВНЫМ листингом "
-                   "клиента (имя + описание каждого доступного скилла резидентны "
-                   "с начала сессии) — ищи по нему; здесь индекс не дублируется.")
-    out += ["2. Выбери скилл по описанию; внутри скилла открывай сниппеты только "
-            "по его таблице «когда какой сниппет открывать» — не загружай всё подряд.",
-            "3. Открывай архитектурные скиллы при изменении соответствующих контрактов; "
-            "обычная правка следует существующей структуре проекта.",
-            "4. Устройство системы скиллов в проекте (источник истины, симлинки, "
-            "gitignore) — скилл `skills-ssot`."]
+        out.append("1. Skills swissknifeman are already listed by NATIVE listing "
+                   "client (name + description of each available resident skill "
+                   "since the beginning of the session) — search for it; the index is not duplicated here.")
+    out += ["2. Select a skill according to the description; inside the skill, open snippets only "
+            "according to his table «when to open which snippet» — don't download everything.",
+            "3. Unlock architectural skills when changing the corresponding contracts; "
+            "normal edits follow the existing project structure.",
+            "4. The structure of the skill system in the project (source of truth, symlinks, "
+            "gitignore) — skill `skills-ssot`."]
     if form == FORM_SHORT:
-        out.append("5. Полный индекс с описаниями (если нужен человеку): "
-                   "`skiller status` в проекте либо "
-                   "`generate-hub.sh --target <проект> --full-index --dry-run`.")
+        out.append("5. Full index with descriptions (if a person needs): "
+                   "`skiller status` in the project or "
+                   "`generate-hub.sh --target <project> --full-index --dry-run`.")
     out.append("")
     return out
 
@@ -406,10 +406,10 @@ def _search_lines(form):
 def _agents_lines(agents, unknown_skills):
     if not agents:
         return []
-    out = [f"## Агенты проекта ({len(agents)})", "",
-           "Роли в `.claude/agents/`. Преднагруженные скиллы — поле `skills:` "
-           "(⚠ = имя не найдено в реестре, preload молча не сработает).", "",
-           "| Агент | Назначение | Преднагруженные скиллы |", "|---|---|---|"]
+    out = [f"## Project Agents ({len(agents)})", "",
+           "Roles in `.claude/agents/`. Preloaded skills - field `skills:` "
+           "(⚠ = name not found in the registry, preload will not work silently).", "",
+           "| Agent | Purpose | Preloaded skills |", "|---|---|---|"]
     for a in agents:
         sk = ", ".join((f"⚠ {n}" if not ok else n)
                        for n, ok in a["skills_checked"]) or "—"
@@ -419,10 +419,10 @@ def _agents_lines(agents, unknown_skills):
         out.append(f"| `{a['name'] or a['file']}` | {desc} | {sk} |")
     out.append("")
     if unknown_skills:
-        out.append("> ⚠ **Несостыковка:** имена в `skills:` не найдены в реестре: "
+        out.append("> ⚠ **Inconsistency:** names in `skills:` not found in the registry: "
                    + ", ".join("`" + u + "`" for u in sorted(unknown_skills))
-                   + ". Проверь имена или подключи нужный бакет — иначе preload молча "
-                     "не сработает.")
+                   + ". Check the names or connect the right bucket - otherwise preload silently "
+                     "won't work.")
         out.append("")
     return out
 
@@ -445,46 +445,46 @@ def _index_lines(installed, buckets_meta, title, note=""):
 def build_stub_markdown(*, reg_sha, reg_count):
     """Comment-only hub: no resident prose; discovery stays native (plugins/skills/commands)."""
     return "\n".join([
-        "<!-- swissknifeman hub: stub — скиллы и task-команды подключаются нативно; "
-        "индекс и правила приоритета здесь не дублируются. -->",
+        "<!-- swissknifeman hub: stub — skills and task-commands are connected natively; "
+        "index and priority rules are not duplicated here. -->",
         f"<!-- swissknifeman:registry sha={reg_sha} skills={reg_count} -->",
-        "<!-- Полный индекс: `skiller status` или generate-hub.sh --target <dir> --full-index. -->",
+        "<!-- Full index: `skiller status` or generate-hub.sh --target <dir> --full-index. -->",
         "",
     ])
 
 
 def build_hub_markdown(*, installed, buckets_meta, agents, unknown_skills, reg_sha,
                        reg_count, boost_mode, form, unconfirmed=()):
-    """Markdown блока в заданной ФОРМЕ. Краткая форма не печатает индекс, кроме
-    скиллов, не подтверждённых нативным набором (они остаются перечисленными)."""
+    """Markdown block in the given FORM. The short form does not print the index except
+    skills not confirmed by the native set (they remain listed)."""
     if form == FORM_STUB:
         return build_stub_markdown(reg_sha=reg_sha, reg_count=reg_count)
-    lines = ["# Swissknifeman: хаб скиллов", "",
-             "<!-- Сгенерировано scripts/generate-hub.sh из реестра swissknifeman. -->",
-             "<!-- НЕ редактируйте вручную: перегенерация затрёт правки. -->",
+    lines = ["# Swissknifeman: skills hub", "",
+             "<!-- Generated scripts/generate-hub.sh from the registry swissknifeman. -->",
+             "<!-- DO NOT edit manually: regeneration will overwrite the edits. -->",
              f"<!-- swissknifeman:registry sha={reg_sha} skills={reg_count} -->", ""]
     lines += _priority_lines(boost_mode, form)
     lines += _search_lines(form)
     lines += _agents_lines(agents, unknown_skills)
     if form == FORM_FULL:
-        lines += _index_lines(installed, buckets_meta, "Установленные скиллы")
+        lines += _index_lines(installed, buckets_meta, "Installed skills")
     else:
         residual = {b: {n: e for n, e in skills.items() if n in set(unconfirmed)}
                     for b, skills in installed.items()}
         residual = {b: s for b, s in residual.items() if s}
         if residual:
             lines += _index_lines(
-                residual, buckets_meta, "Скиллы вне нативного листинга",
-                "> Эти скиллы установлены swissknifeman, но не подтверждены в "
-                "нативном активном наборе проекта — перечислены поимённо, чтобы "
-                "не потерять обнаружение.")
+                residual, buckets_meta, "Skills outside the native listing",
+                "> These skills are installed swissknifeman, but not confirmed in "
+                "in the project's native active set - listed by name so that "
+                "do not lose detection.")
     return "\n".join(lines).rstrip() + "\n"
 
 
-# --- запись ---------------------------------------------------------------------
+# --- entry ------------------------------------------------------------------------------
 def upsert_block(out, block):
-    """Вставить/обновить managed-блок между маркерами; контент вне маркеров не
-    трогается; файл создаётся при отсутствии."""
+    """Paste/update managed-block between markers; content outside markers is not
+    starts moving; the file is created if it is missing."""
     if out.exists():
         text = out.read_text(encoding="utf-8")
         if HUB_START in text and HUB_END in text:
@@ -497,7 +497,7 @@ def upsert_block(out, block):
 
 
 def target_form(name, *, boost_mode=False, full_index=False, legacy_short=False):
-    """Форма блока по КАНАЛУ-ЦЕЛИ. `--full-index` возвращает полную всем."""
+    """Block shape according to the TARGET CHANNEL. `--full-index` returns full to everyone."""
     if full_index:
         return FORM_FULL
     if legacy_short:
@@ -511,20 +511,20 @@ def target_form(name, *, boost_mode=False, full_index=False, legacy_short=False)
 
 def run(env, target, *, dry_run=False, root_files=(), full_index=False, legacy_short=False,
         out=print):
-    """Сгенерировать и записать хаб. → dict со сводкой (для тестов и отчётов)."""
+    """Generate and record hub. → dict with summary (for tests and reports)."""
     target = Path(os.path.expanduser(str(target))).resolve()
     registry = registry_of(env)
     buckets_meta = json.loads(
         (Path(env.root) / "buckets.json").read_text(encoding="utf-8"))
 
     installed, channels = collect_installed(registry, target)
-    # Гейт КАНАЛЬНЫЙ, не индексный: раздача есть — блок пишем, даже если индекс
-    # пуст (краткой форме он не нужен; полная форма при пустом индексе получает
-    # WARNING ниже). Раздачи нет вовсе — писать нечего.
+    # CHANNEL gate, not index: there is a distribution - we write the block, even if the index
+    # empty (the short form does not need it; the full form with an empty index gets
+    # WARNING below). There is no distribution at all - there is nothing to write.
     if not (channels["plugins"] or channels["manifests"]):
-        out("ERROR: в проекте не найдено раздачи скиллов swissknifeman\n"
-            "  (нет enabledPlugins в .claude/settings*.json и нет "
-            f"{MANIFEST}) — сначала connect-claude.sh или install.sh",
+        out("ERROR: no skill distribution found in project swissknifeman\n"
+            "  (no enabledPlugins in .claude/settings*.json and no "
+            f"{MANIFEST}) — first connect-claude.sh or install.sh",
             file=sys.stderr)
         raise SystemExit(1)
 
@@ -542,21 +542,21 @@ def run(env, target, *, dry_run=False, root_files=(), full_index=False, legacy_s
              for name in targets}
 
     if not names and channels["plugins"]:
-        out("WARNING: индекс пуст: включённые плагины ("
-            + ", ".join(channels["plugins"]) + ") не разворачиваются в бакеты "
-            "реестра — их скиллы перечисляет только нативный листинг клиента",
+        out("WARNING: index empty: enabled plugins ("
+            + ", ".join(channels["plugins"]) + ") do not expand into buckets "
+            "registry - their skills are listed only by the native client listing",
             file=sys.stderr)
 
     check = None
     if any(form == FORM_SHORT and name != "AGENTS.md" for name, form in forms.items()) and names:
         check = native_check(env, target, names)
         for note in check["notes"]:
-            out(f"WARNING: сверка нативного набора: {note}", file=sys.stderr)
-        out(f"Сверка перед сокращением: подтверждено {len(check['confirmed'])} "
-            f"из {len(names)} (набор измерителя: {check['measurer_detail']})")
+            out(f"WARNING: verification of the native set: {note}", file=sys.stderr)
+        out(f"Reconciliation before reduction: confirmed {len(check['confirmed'])} "
+            f"from {len(names)} (meter set: {check['measurer_detail']})")
         if check["unconfirmed"]:
-            out(f"Не подтверждены нативным набором ({len(check['unconfirmed'])}), "
-                "остаются перечисленными: " + ", ".join(check["unconfirmed"]))
+            out(f"Not confirmed by native set ({len(check['unconfirmed'])}), "
+                "remain listed: " + ", ".join(check["unconfirmed"]))
     unconfirmed = check["unconfirmed"] if check else sorted(names)
 
     codex_check = None
@@ -566,7 +566,7 @@ def run(env, target, *, dry_run=False, root_files=(), full_index=False, legacy_s
         codex_check = native_inventory(env, target)
         codex_installed = _codex_installed(env, target, registry, installed, channels, codex_check)
         for note in codex_check["notes"]:
-            out(f"WARNING: {note}; AGENTS.md сохраняет неподтверждённые скиллы", file=sys.stderr)
+            out(f"WARNING: {note}; AGENTS.md saves unverified skills", file=sys.stderr)
 
     rendered = {}
     for name, form in forms.items():
@@ -579,60 +579,60 @@ def run(env, target, *, dry_run=False, root_files=(), full_index=False, legacy_s
             reg_count=len(registry["skills"]), boost_mode=boost_mode, form=form,
             unconfirmed=remaining)
         if form == FORM_FULL and not names:
-            out(f"WARNING: {name}: полная форма при пустом индексе — канал без "
-                "нативного листинга остаётся без обнаружения", file=sys.stderr)
+            out(f"WARNING: {name}: full form with an empty index - channel without "
+                "of the native listing remains undetected", file=sys.stderr)
 
     written = []
     for name, hub_md in rendered.items():
         out_path = target / name
         if boost_mode:
             if dry_run:
-                out(f"[dry-run] записал бы {out_path} "
-                    f"({len(hub_md.splitlines())} строк)")
+                out(f"[dry-run] would write {out_path} "
+                    f"({len(hub_md.splitlines())} lines)")
                 out(hub_md)
             else:
                 out_path.parent.mkdir(parents=True, exist_ok=True)
                 out_path.write_text(hub_md, encoding="utf-8")
-                out(f"Хаб записан: {out_path}")
-                out("Обнаружен Laravel Boost: выполните `php artisan boost:update`, "
-                    "чтобы фрагмент попал в CLAUDE.md/AGENTS.md.")
+                out(f"Hub recorded: {out_path}")
+                out("Detected Laravel Boost: do `php artisan boost:update`, "
+                    "so that the fragment gets into CLAUDE.md/AGENTS.md.")
         else:
             block = f"{HUB_START}\n{hub_md}{HUB_END}\n"
             new_text = upsert_block(out_path, block)
             if dry_run:
-                out(f"[dry-run] обновил бы managed-блок в {out_path} "
-                    f"(форма: {forms[name]}, {len(hub_md.splitlines())} строк)")
+                out(f"[dry-run] would update managed-block in {out_path} "
+                    f"(form: {forms[name]}, {len(hub_md.splitlines())} lines)")
                 out(block)
             else:
                 out_path.write_text(new_text, encoding="utf-8")
-                out(f"Хаб записан: {out_path} (форма: {forms[name]}, managed-блок "
-                    "между маркерами swissknifeman:hub)")
+                out(f"Hub recorded: {out_path} (form: {forms[name]}, managed-block "
+                    "between markers swissknifeman:hub)")
         written.append(name)
 
     total = len(names)
-    out(f"Скиллов в индексе: {total}, бакетов: {len(installed)}")
-    out("Формы целей: " + ", ".join(f"{n}={forms[n]}" for n in targets))
+    out(f"Skills in the index: {total}, buckets: {len(installed)}")
+    out("Goal forms: " + ", ".join(f"{n}={forms[n]}" for n in targets))
     if agents:
-        out(f"Агентов проиндексировано: {len(agents)}")
+        out(f"Agents indexed: {len(agents)}")
     if unknown_skills:
-        out("WARNING: skills: у агентов не найдены в реестре (preload no-op): "
+        out("WARNING: skills: for agents were not found in the registry (preload no-op): "
             + ", ".join(sorted(unknown_skills)), file=sys.stderr)
     return {"forms": forms, "written": written, "rendered": rendered,
             "installed": installed, "check": check, "codex_check": codex_check, "channels": channels}
 
 
-USAGE = """generate-hub.sh — корневой «хаб» скиллов в проекте.
+USAGE = """generate-hub.sh — root «hub» skills in the project.
 
-  --target <dir>        целевой проект (обязателен)
-  --dry-run             ничего не писать, показать блок
-  --root-files A,B      дополнительные корневые файлы (AGENTS.md,GEMINI.md)
-  --full-index          полная форма (с индексом) ВСЕМ целям — путь отката
-  --hub-legacy-short    краткая форма с приоритетами (до stub по умолчанию)
+  --target <dir>        target project (required)
+  --dry-run             do not write anything, show block
+  --root-files A,B      additional root files (AGENTS.md,GEMINI.md)
+  --full-index          full form (with index) ALL targets - rollback path
+  --hub-legacy-short    short form with priorities (to stub default)
 """
 
 
 def main(argv=None):
-    """argv: [repo_root, *args] — как у `python3 -m skiller`."""
+    """argv: [repo_root, *args] — like `python3 -m skiller`."""
     from .common import Env
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv:
@@ -656,14 +656,14 @@ def main(argv=None):
             print(USAGE)
             return 0
         else:
-            print(f"Неизвестный аргумент: {arg}", file=sys.stderr)
+            print(f"Unknown argument: {arg}", file=sys.stderr)
             print(USAGE, file=sys.stderr)
             return 1
     if not target:
-        print("Ошибка: --target обязателен", file=sys.stderr)
+        print("Error: --target required", file=sys.stderr)
         return 1
     if not Path(os.path.expanduser(target)).is_dir():
-        print(f"Ошибка: каталог не найден: {target}", file=sys.stderr)
+        print(f"Error: directory not found: {target}", file=sys.stderr)
         return 1
     run(Env(root, "generate-hub"), target, dry_run=dry_run,
         root_files=root_files, full_index=full_index, legacy_short=legacy_short)

@@ -1,117 +1,117 @@
-# Как это всё работает вместе
+# How it all works together
 
-Эта страница — сквозная картина: что подключается к проекту, где физически лежат данные, и что
-происходит, когда агент выполняет задачу. Если после неё остались вопросы — значит, тут чего-то
-не хватает; дополняйте.
+This page is an end-to-end picture: what is connected to the project, where the data is physically located, and what
+occurs when the agent performs a task. If there are still questions after it, it means there’s something here.
+is missing; complement.
 
-## Три разные вещи (не путать)
+## Three different things (not to be confused)
 
-Слова «граф» и «база» в экосистеме означают **три независимых** механизма с разными задачами:
+Words «graph» and «base» in the ecosystem mean **three independent** mechanism with different tasks:
 
-| Механизм | Что хранит | Где живёт | Статус |
+| Mechanism | What does it store? | Where does he live? | Status |
 |:--|:--|:--|:--|
-| **agent-memory** | факты/решения/контекст (общая память) | демон на хабе `:4111` | работает (под systemd) |
-| **maind-граф** | топология **между** проектами (кто от кого зависит) | в хабе `data/graphs/<id>.db` | работает |
-| **код-MCP (Serena)** | граф **кода внутри** проекта (символы/ссылки/реализации) | отдельный MCP-сервер в проекте (uvx Serena) | работает (универсальный, по `code:true`) |
+| **agent-memory** | facts/solutions/context (shared memory) | daemon on the hub `:4111` | works (under systemd) |
+| **maind-graph** | topology **between** projects (who depends on whom) | in the hub `data/graphs/<id>.db` | works |
+| **code-MCP (Serena)** | graph **code inside** project (characters/links/implementations) | separate MCP-server in the project (uvx Serena) | works (universal, according to `code:true`) |
 
-Ключевое: **agent-memory централизован специально** (в этом смысл общей памяти — проекты видят
-решения друг друга внутри namespace). **код-MCP (Serena), наоборот, пер-проектный** — код у каждого свой.
-maind-граф — это НЕ код, а топология зависимостей.
+Key: **agent-memory is centralized specifically** (this is the meaning of shared memory - projects see
+solutions to each other inside namespace). **code-MCP (Serena), on the contrary, per-project** — everyone has their own code.
+maind-a graph is NOT code, but a topology of dependencies.
 
-### Где данные физически лежат
+### Where is the data physically located?
 
-Частая путаница: «искал файлы в проекте — не нашёл». Потому что **две из трёх плоскостей живут в
-хабе** (пакете `maind`), а не в репозитории проекта:
+Common confusion: «looked for files in the project - did not find them». Because **two of the three planes live in
+hub** (package `maind`), and not in the project repository:
 
-| Плоскость | Точный путь | Где это |
+| Plane | Exact path | Where is it |
 |:--|:--|:--|
-| **agent-memory** | `<maind>/data/state_store.db/` (каталог; один на всю экосистему) + `stream_store/` | **хаб** (один демон, все namespace внутри) |
-| **maind-граф** | `<maind>/data/graphs/<project_id>.db` + `_index.db` (или `<repo>/.maind/graph.db` при `graph_store: local`) | **хаб** (по умолчанию) |
-| **код-граф (Serena)** | `<repo_проекта>/.serena/` — `project.yml` + `cache/` (индекс символов) | **в репозитории проекта** |
+| **agent-memory** | `<maind>/data/state_store.db/` (directory; one for the entire ecosystem) + `stream_store/` | **hub** (one demon, all namespace inside) |
+| **maind-graph** | `<maind>/data/graphs/<project_id>.db` + `_index.db` (or `<repo>/.maind/graph.db` when `graph_store: local`) | **hub** (default) |
+| **code graph (Serena)** | `<repo_project>/.serena/` — `project.yml` + `cache/` (character index) | **in the project repository** |
 
-То есть память и maind-граф ищи в `data/` пакета maind (не в проекте); код-граф Serena — наоборот,
-в `.serena/` каждого репозитория. Проверить наполнение по факту — `maind verify`.
+That is, memory and maind-graph look in `data/` package maind (not in the project); code graph Serena — on the contrary,
+in `.serena/` of each repository. Check the content after the fact - `maind verify`.
 
-## 1. Топология: что подключено к проекту
+## 1. Topology: what is connected to the project The project's
 
 ```mermaid
 graph TB
-  subgraph proj["проект (напр. flexcrm)"]
+  subgraph proj["project (e.g. flexcrm)"]
     MCPJSON[".mcp.json"]
     SKILL[".claude/skills/ecosystem-mcp"]
   end
-  subgraph hub["хаб mAInd"]
+  subgraph hub["hub mAInd"]
     MEM["agent-memory daemon :4111"]
-    GR["maind-граф: data/graphs/*.db"]
-    SRV["maind MCP-сервер"]
+    GR["maind-graph: data/graphs/*.db"]
+    SRV["maind MCP-server"]
   end
-  GFY["serena (код-MCP в проекте)"]
+  GFY["serena (code-MCP in the project)"]
   MCPJSON -- "agentmemory" --> MEM
   MCPJSON -- "maind" --> SRV
-  MCPJSON -. "serena (если code:true)" .-> GFY
+  MCPJSON -. "serena (if code:true)" .-> GFY
   SRV --> GR
   SRV --> MEM
 ```
 
-`.mcp.json` проекта перечисляет MCP-серверы. Клиент (Claude Code) при старте сессии их поднимает —
-и их инструменты появляются у агента. Скилл `ecosystem-mcp` объясняет агенту, что это и когда звать.
+`.mcp.json` lists MCP-servers. Client (Claude Code) raises them when the session starts -
+and their tools appear on the agent. Skill `ecosystem-mcp` explains to the agent what it is and when to call.
 
-## 2. Поток выполнения задачи (pull, не «перехват»)
+## 2. Task execution flow (pull, not «interception»)
 
-MCP-серверы **пассивны**: они не следят за кодом и ничего не «перехватывают». Запрос инициирует
-**сама модель**, когда решает вызвать инструмент.
+MCP-servers **passive**: they don't follow the code and don't do anything «intercept». Request initiates
+**the model itself**, when he decides to call the tool.
 
 ```mermaid
 sequenceDiagram
-  participant A as Агент в проекте
+  participant A as Agent in the project
   participant M as MCP (agentmemory / maind)
-  participant D as Демон/граф на хабе
-  A->>M: recall("прошлые решения по X")
+  participant D as Demon/graph on the hub
+  A->>M: recall("past decisions on X")
   M->>D: search namespace=project:flexcrm (+ns:axioma, +global)
-  D-->>M: факты
-  M-->>A: контекст
-  Note over A: ...агент делает работу...
-  A->>M: store("принятое решение Y")
+  D-->>M: facts
+  M-->>A: context
+  Note over A: ...agent does the job...
+  A->>M: store("accepted solution Y")
   M->>D: remember namespace=project:flexcrm
 ```
 
-scope (`project:flexcrm`) зашит в `.mcp.json` проекта (`AGENTMEMORY_NAMESPACE`), поэтому проект по
-умолчанию пишет/читает **свою** память + общие бакеты группы. Никакой автоматики «само записалось»
-нет — агент явно вызывает `store`/`recall` (скилл `ecosystem-mcp` подсказывает когда).
+scope (`project:flexcrm`) is hardwired into `.mcp.json` project (`AGENTMEMORY_NAMESPACE`), therefore the project
+by default writes/reads **your** memory + group shared buckets. No automation «recorded itself»
+no - the agent explicitly calls `store`/`recall` (skill `ecosystem-mcp` tells you when).
 
-## 3. Три слоя данных — кто за что
+## 3. Three layers of data - who does what
 
 ```mermaid
 flowchart LR
-  subgraph code["код проекта"]
-    GFY["serena: символы/ссылки/реализации"]
+  subgraph code["project code"]
+    GFY["serena: characters/links/implementations"]
   end
-  subgraph topo["между проектами"]
-    MG["maind-граф: зависимости composer/доки/скиллы"]
+  subgraph topo["between projects"]
+    MG["maind-graph: dependencies composer/docks/skills"]
   end
-  subgraph mem["общая память"]
-    AM["agent-memory: факты/решения по namespace"]
+  subgraph mem["shared memory"]
+    AM["agent-memory: facts/solutions for namespace"]
   end
-  GFY -. "навигация по коду" .-> DEV["агент"]
-  MG -. "связи проекта" .-> DEV
-  AM -. "история/контекст" .-> DEV
+  GFY -. "code navigation" .-> DEV["agent"]
+  MG -. "project communications" .-> DEV
+  AM -. "history/context" .-> DEV
 ```
 
-- **agent-memory** отвечает на «что мы уже решали».
-- **maind-граф** — на «что с чем связано» (зависимости, соседи по экосистеме).
-- **код-MCP (Serena)** — на «где определён символ / кто его вызывает» (когда включён).
+- **agent-memory** answers to «what we have already solved».
+- **maind-graph** — on «what is connected with what» (dependencies, ecosystem neighbors).
+- **code-MCP (Serena)** — on «where the symbol is defined / who calls it» (when enabled).
 
-## 4. Namespace-изоляция в действии
+## 4. Namespace-isolation in action
 
-Связи и память изолируются по группам. Внутри группы — общее, между группами — закрыто; `["*"]` —
-инфраструктура, видна всем.
+Links and memory are isolated into groups. Within a group - general, between groups - closed; `["*"]` —
+infrastructure, visible to everyone.
 
 ```mermaid
 graph TB
   subgraph axioma["namespace: axioma"]
     FX["flexcrm"]
     AZ["azguard"]
-    NSA["ns:axioma (общая память группы)"]
+    NSA["ns:axioma (group shared memory)"]
     FX --- NSA
     AZ --- NSA
   end
@@ -120,100 +120,100 @@ graph TB
     NSD["ns:diabox"]
     DB --- NSD
   end
-  GL["global (вся экосистема)"]
+  GL["global (entire ecosystem)"]
   NSA --- GL
   NSD --- GL
 ```
 
-flexcrm видит: `project:flexcrm` + `ns:axioma` + `global`. diabox из другой группы `ns:axioma`
-**не видит**. Так же режутся и рёбра графа: межпроектная связь строится, только если проекты делят
+flexcrm sees: `project:flexcrm` + `ns:axioma` + `global`. diabox from another group `ns:axioma`
+**doesn't see**. The edges of the graph are cut in the same way: inter-project communication is built only if projects share
 namespace.
 
-## 5. Когда что переиндексировать (частота и стоимость)
+## 5. When to reindex what (frequency and cost)
 
-Частый вопрос: «как часто гонять индексацию, чтобы был эффект?». Ответа «раз в N часов» нет —
-у каждой плоскости свой триггер. Правило: **думай о событии, которое изменило данные, а не о таймере.**
+Frequently asked question: «how often should I run indexing to have an effect?». Reply «times every N hours» no -
+each plane has its own trigger. Rule: **think about the event that changed the data, not the timer.**
 
-| Плоскость | Устаревает, когда… | Команда обновить | Стоимость |
+| Plane | Deprecated when… | Update command | Cost |
 |:--|:--|:--|:--|
-| **agent-memory** | никогда вручную — пишется по ходу через `store` | — (авто) | 0 |
-| **maind-граф** | меняются *связи*: новая зависимость (composer/npm), кросс-проектный линк, `uses/used_by` в Brain, набор скиллов | `maind graph derive --project <id>` (или `--all`); `maind sync --only graph` | секунды, полная пересборка |
-| **код-граф (Serena)** | обновляется сам через LSP по мере правок | (опц.) прогрев `serena project index` | первый вызов в сессии дольше (поднимает LSP) |
+| **agent-memory** | never manually - written as you go through `store` | — (auto) | 0 |
+| **maind-graph** | change *communications*: new dependency (composer/npm), cross-project link, `uses/used_by` in Brain, set of skills | `maind graph derive --project <id>` (or `--all`); `maind sync --only graph` | seconds, complete rebuild |
+| **code graph (Serena)** | updates itself via LSP as edits | (opt.) warming up `serena project index` | first call in session longer (raises LSP) |
 
-Факты движка (почему так):
+Engine Facts (why is this so):
 
-- **maind-граф пересобирается целиком, не инкрементально** — намеренно, чтобы не оставалось
-  устаревших рёбер (идемпотентно). **Watcher'а / гит-хука / демона-сторожа нет** — переиндексация
-  только по `derive` / `sync` / `onboard`.
-- **Правки кода день-в-день НЕ делают maind-граф устаревшим** — он про зависимости, не про строки.
-  Пересобирать его осмысленно только когда поменялась топология (зависимости/скиллы/линки).
-- **Serena живёт через LSP** — отдельной «переиндексации» не требует. Вопрос не «как часто», а
-  «подключён ли её MCP к сессии». Окупается на крупных репах; на мелких пакетах — лишний LSP-процесс.
+- **maind-the graph is rebuilt entirely, not incrementally** — intentionally so that there is no
+  obsolete edges (idempotent). **Watcher'a / git hook / there is no guard demon** — reindexing
+  only by `derive` / `sync` / `onboard`.
+- **Code edits are NOT done on a daily basis maind-graph obsolete** — it's about dependencies, not strings.
+  Rebuilding it makes sense only when the topology has changed (dependencies/skills/links).
+- **Serena lives through LSP** — separate «reindexing» is not required. The question is not «how often», a
+  «is it connected MCP to session». Pays off on large turnips; on small packages - extra LSP-process.
 
-Практика по событиям:
-
-```bash
-maind graph derive --project flexcrm   # после правки composer.json / связей одного проекта
-maind sync --only graph                # дёшево раскатать свежий граф по всем enabled-проектам
-maind onboard ~/projects/newrepo       # новый проект: память + граф + MCP + скиллы за один проход
-maind graph derive --all               # массовая пересборка (напр. после рефактора зависимостей)
-```
-
-Лёгкий cron `maind sync --only graph` (раз в день/неделю) оправдан как страховка от дрейфа
-зависимостей — стоит копейки. Но «по событию» достаточно; по таймеру гонять код-граф смысла нет.
-
-## 6. Как убедиться, что работает (а не «вхолостую»)
-
-Инфраструктура может быть поднята (демоны живы, MCP подключён), но **не наполняться** — память
-копит только seed-факты onboard, граф не derive'ится. Чтобы это увидеть одной командой:
+Practice on events:
 
 ```bash
-maind verify          # пруф 3 плоскостей: жив демон, наполняется ли память, покрытие графа, Serena
-maind verify --json   # то же машинно
+maind graph derive --project flexcrm   # after editing composer.json / connections of one project
+maind sync --only graph                # cheaply roll out a fresh graph to all enabled-projects
+maind onboard ~/projects/newrepo       # new project: memory + graph + MCP + skills in one pass
+maind graph derive --all               # mass rebuild (e.g. after dependency refactor)
 ```
 
-Что показывает (живой замер, read-only):
+Lightweight cron `maind sync --only graph` (once a day/week) justified as insurance against drift
+dependencies - costs a penny. But «by event» is enough; There is no point in running a code graph on a timer.
 
-- **agent-memory** — отвечает ли демон; сколько записей, из них **seed** (авто от onboard) vs
-  **реальные**; когда последняя запись; URL вьюера. Если `реальных 0` — проекты не пишут знаний.
-- **maind-граф** — **покрытие** (сколько enabled-проектов имеют стор из всех), узлы/рёбра, свежесть.
-  Подсветит «не построен для N проектов → `maind graph derive --all`».
-- **код-граф (Serena)** — на каких проектах раскатан `.serena/`, есть ли кэш символов, свежесть.
+## 6. How to make sure it works (and not «idle»)
 
-Секция **ИТОГ** агрегирует «вхолостую»-симптомы. Это и есть честный ответ «работает или нет».
+Infrastructure can be raised (demons are alive, MCP connected), but **not filled** — memory
+only saves seed-facts onboard, graph not derive'appears. To see this with one command:
 
-## Визуализация: где что смотреть глазами
+```bash
+maind verify          # proof of 3 planes: the demon is alive, whether the memory is full, graph coverage, Serena
+maind verify --json   # the same machine
+```
 
-| Плоскость | Как увидеть | Из коробки? |
+What it shows (live measurement, read-only):
+
+- **agent-memory** — whether the daemon is responding; how many records, of which **seed** (auto from onboard) vs
+  **real**; when last entry; URL viewer. If `real 0` — projects do not write knowledge.
+- **maind-graph** — **coating** (how much enabled-projects have stories from all), nodes/ribs, freshness.
+  Will highlight «not built for N projects → `maind graph derive --all`».
+- **code graph (Serena)** — on which projects it was rolled out `.serena/`, is there a symbol cache, freshness.
+
+Section **RESULT** aggregates «idle»-symptoms. This is the honest answer «works or not».
+
+## Visualization: where to look with your eyes
+
+| Plane | How to see | Out of the box? |
 |:--|:--|:--|
-| **agent-memory** | веб-вьюер **http://127.0.0.1:3113** — записи, поиск, сессии | да (встроен в agentmemory) |
-| **maind-граф** | `maind graph export --cross` / `--project <id>` → **Mermaid** (рендерится в GitHub/VitePress) | да (без рантайма) |
-| **код-граф (Serena)** | symbol-инструменты в сессии; опц. web-dashboard Serena (флаг в `code_graph.args`) | да (per-project) |
+| **agent-memory** | web viewer **http://127.0.0.1:3113** — records, search, sessions | yes (is built into agentmemory) |
+| **maind-graph** | `maind graph export --cross` / `--project <id>` → **Mermaid** (is rendered in GitHub/VitePress) | yes (without runtime) |
+| **code graph (Serena)** | symbol-tools in session; opt. web-dashboard Serena (flag in `code_graph.args`) | yes (per-project) |
 
-::: warning Слово «граф» = ЧЕТЫРЕ разные вещи
-1. **maind-граф** — топология между проектами (этот слой; `graph export`).
-2. **код-граф (Serena)** — символы внутри одного проекта.
-3. **knowledge-graph во вьюере памяти** — вкладка `http://127.0.0.1:3113/#graph`: сущности,
-   извлечённые из памяти **через LLM**. По умолчанию **выключена** (`GRAPH_EXTRACTION` off,
-   провайдер `noop` без ключа) — поэтому вкладка пишет «Graph query failed». Это **не** межпроектный
-   граф; чтобы её включить, нужен LLM-ключ и флаг extraction. Без них — норма, просто не используется.
-4. Само слово «граф» в прозе.
+::: warning Word «graph» = FOUR different things
+1. **maind-graph** — topology between projects (this layer; `graph export`).
+2. **code graph (Serena)** — symbols within the same project.
+3. **knowledge-graph in the memory viewer** — tab `http://127.0.0.1:3113/#graph`: entities,
+   retrieved from memory **via LLM**. Default **disabled** (`GRAPH_EXTRACTION` off,
+   provider `noop` without key) — so the tab says «Graph query failed». This **not** cross-project
+   graph; to turn it on you need LLM-key and flag extraction. Without them - the norm, just not used.
+4. The word itself «graph» in prose.
 
-Для межпроектных связей смотри `maind graph export`, а не вкладку `#graph` вьюера памяти.
+For cross-project communications, see `maind graph export`, and not a tab `#graph` memory viewer.
 :::
 
-## Надёжность «всё всегда поднято»
+## Reliability «everything is always up»
 
-- Демон памяти — под **systemd** (`maind service install`), автозапуск + авто-рестарт. Для старта
-  при загрузке ОС (без логина) — `loginctl enable-linger $USER`. См.
-  [Демон памяти (systemd)](./systemd).
-- MCP-серверы прописаны в `.mcp.json` каждого проекта — клиент поднимает их сам при старте сессии.
-- SessionStart-хук печатает статус связи; чинит — `maind health --cwd --fix`.
-- Жив ли демон ≠ наполняется ли система. Периодически (или при сомнениях) — `maind verify`:
-  отличает «поднято» от «реально пишут». Связь одного проекта — `maind health --cwd`.
+- Memory Daemon - under **systemd** (`maind service install`), autorun + auto-restart. To start
+  when loading OS (without login) — `loginctl enable-linger $USER`. See
+  [Memory Daemon (systemd)](./systemd).
+- MCP-servers are registered in `.mcp.json` of each project - the client picks them up himself at the start of the session.
+- SessionStart-hook prints connection status; repairs - `maind health --cwd --fix`.
+- Is the demon alive? ≠ whether the system is filling up. Periodically (or when in doubt) — `maind verify`:
+  features «raised» from «really write». Linking one project - `maind health --cwd`.
 
-Нюансы, границы каждого слоя и чего система **не делает** — отдельно:
-[Решения, трейд-оффы, ограничения](./design-notes).
+Nuances, boundaries of each layer and what the system **doesn't** — separately:
+[Solutions, trade-offs, restrictions](./design-notes).
 
-Дальше: [Память →](./memory) · [Граф →](./graph) · [Namespaces →](./namespaces) ·
-[Граф кода →](./code-graph).
+Next: [Memory →](./memory) · [Graph →](./graph) · [Namespaces →](./namespaces) ·
+[Code graph →](./code-graph).

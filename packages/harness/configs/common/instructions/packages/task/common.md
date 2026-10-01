@@ -15,7 +15,7 @@ Keep command Markdown in `commands/`, the deterministic plan linter in `lib/task
 Treat `plan_lint.py` and the `plan-protocol` skill as synchronized sources of the plan schema; change both when the schema changes.
 <!-- instruction:task.engineering-invariants -->
 ## task.engineering-invariants
-Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use Russian diagnostics.
+Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.
 <!-- instruction:task.validation-release -->
 ## task.validation-release
 Before release run `bash packages/task/scripts/validate.sh` and use Russian Conventional Commit messages.

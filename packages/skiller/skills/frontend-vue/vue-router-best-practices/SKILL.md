@@ -16,124 +16,124 @@ author: github.com/vuejs-ai
 sha256: ""
 ---
 
-# Skill: Vue Router 4 — маршрутизация и навигация
+# Skill: Vue Router 4 — routing and navigation
 
-## Контекст
+## Context
 
-Клиентская маршрутизация Vue 3 на Vue Router 4: объявление маршрутов, защита через гварды,
-ленивая загрузка страниц, восстановление скролла, обработка сбоев навигации. Скилл собран вокруг
-главной ломки Vue Router 4 — **отказа от колбэка `next()` в пользу возврата значения из гварда**
-(см. миграцию ниже), плюс типобезопасные именованные маршруты и Composition API (`useRoute`/`useRouter`).
+Client routing Vue 3 on Vue Router 4: route announcement, protection through guards,
+lazy page loading, scroll recovery, navigation failure handling. Skill is gathered around
+main breakdown Vue Router 4 — **callback refusal `next()` in favor of returning the value from guard**
+(see migration below), plus type-safe named routes and Composition API (`useRoute`/`useRouter`).
 
-**Когда активировать:**
-- создаётся или правится `router/index.ts`, массив `routes`, навигационные гварды;
-- в коде есть `createRouter`, `beforeEach`/`beforeEnter`/`beforeRouteEnter`, `useRoute`/`useRouter`/`RouterLink`;
-- вопрос «как защитить страницу авторизацией», «почему навигация висит / редирект зациклился»,
-  «как лениво грузить компонент страницы», «как восстановить позицию скролла», «как типизировать маршруты».
+**When to activate:**
+- is being created or edited `router/index.ts`, array `routes`, navigation guards;
+- is in the code `createRouter`, `beforeEach`/`beforeEnter`/`beforeRouteEnter`, `useRoute`/`useRouter`/`RouterLink`;
+- question «how to protect a page with authorization», «why the navigation hangs / redirect went into a loop»,
+  «how to lazily load a page component», «how to restore scroll position», «how to type routes».
 
-**ГРАНИЦЫ.** Здесь — только маршрутизация. Синтаксис `<script setup>`, `ref`/`computed`/`watch` — в
-`frontend-vue/vue`. Архитектура компонентов и where-to-split — в `frontend-vue/vue-best-practices`. Глобальное
-состояние (в т.ч. флаг авторизации, который читает гвард) — в `frontend-vue/pinia-stores`. Гвард только
-**спрашивает** стор, но не реализует логику стора.
+**BOUNDARIES.** Here - only routing. Syntax `<script setup>`, `ref`/`computed`/`watch` — in
+`frontend-vue/vue`. Component architecture and where-to-split — in `frontend-vue/vue-best-practices`. Global
+status (incl. authorization flag that guard reads) — in `frontend-vue/pinia-stores`. Guard only
+**asks** store, but does not implement the store logic.
 
-## Алгоритм
+## Algorithm
 
-1. **Именованные + typed routes.** У каждого маршрута задавай `name` (стабильный идентификатор) и
-   навигируй по `name`, а не по строковому `path` — пути меняются, имена нет. Для типобезопасности
-   расширяй `RouteMeta` через `declare module 'vue-router'` (типы `meta.requiresAuth`, `meta.roles`).
-   В новых проектах можно включить experimental typed routes (`unplugin-vue-router`), но базовый
-   контракт — именованные маршруты + типизированный `meta`.
-2. **Lazy-loading view-компонентов.** View-компоненты (страницы) подключай динамическим импортом:
-   `component: () => import('@/views/AdminView.vue')` — каждый попадёт в свой чанк и загрузится по
-   требованию. Статический `import` оставляй только для часто используемых лэйаут-обёрток. Сбой
-   загрузки чанка ловится через `router.onError`.
-3. **route meta — для декларативных флагов.** Требования к маршруту (`requiresAuth`, `roles`, `title`,
-   `layout`) держи в `meta`, а решение принимай в глобальном гварде, читая `to.meta`. Это держит
-   логику доступа в одном месте, а маршруты — декларативными.
-4. **Навигационные гварды на ВОЗВРАТ-API (главное).** В Vue Router 4 третий аргумент `next`
-   **deprecated**. Гвард принимает `(to, from)` и **возвращает** значение:
-   - `return undefined` / `return true` — пропустить навигацию;
-   - `return false` — отменить, остаться на текущем маршруте;
-   - `return '/login'` — редирект по path;
-   - `return { name: 'login', query: { redirect: to.fullPath } }` — редирект объектом (типобезопасно);
-   - `return new Error('...')` — отменить и триггернуть `router.onError()`.
+1. **Named + typed routes.** For each route, set `name` (stable identifier) and
+   navigate by `name`, and not by string `path` — paths change, names do not. For type safety
+   expand `RouteMeta` via `declare module 'vue-router'` (types `meta.requiresAuth`, `meta.roles`).
+   In new projects you can enable experimental typed routes (`unplugin-vue-router`), but basic
+   contract - named routes + typed `meta`.
+2. **Lazy-loading view-components.** View-components (pages) connect by dynamic import:
+   `component: () => import('@/views/AdminView.vue')` — everyone will end up in their own chunk and load according to
+   requirement. Static `import` leave only for frequently used layout wrappers. Crash
+   chunk loading is caught via `router.onError`.
+3. **route meta — for declarative flags.** Route requirements (`requiresAuth`, `roles`, `title`,
+   `layout`) keep in `meta`, and make your decision in the global guard by reading `to.meta`. This holds
+   access logic in one place, and routes are declarative.
+4. **Navigation guards on RETURN-API (main).** B Vue Router 4 third argument `next`
+   **deprecated**. Guard accepts `(to, from)` and **returns** value:
+   - `return undefined` / `return true` — skip navigation;
+   - `return false` — cancel, stay on current route;
+   - `return '/login'` — redirect by path;
+   - `return { name: 'login', query: { redirect: to.fullPath } }` — redirect object (type safe);
+   - `return new Error('...')` — cancel and trigger `router.onError()`.
 
-   **Миграция `next()` → `return`** (показывай старый и новый код рядом):
+   **Migration `next()` → `return`** (show old and new code side by side):
    ```ts
-   // БЫЛО (deprecated): легко забыть return после next() → двойная/висящая навигация
+   // WAS (deprecated): easy to forget return after next() → double/floating navigation
    router.beforeEach((to, from, next) => {
-     if (!isAuthed()) next('/login') // забыл return
-     next()                          // BUG: вызовется повторно
+     if (!isAuthed()) next('/login') // forgot return
+     next()                          // BUG: will be called again
    })
-   // СТАЛО: чистый возврат, без next, одна точка выхода на ветку
+   // NOW: net return, no next, one exit point per branch
    router.beforeEach((to, from) => {
      if (!isAuthed()) return { name: 'login', query: { redirect: to.fullPath } }
-     // ничего не вернули → навигация продолжается
+     // did not return anything → navigation continues
    })
    ```
-   Если **обязан** оставить legacy-`next()` — ровно один вызов на ветку и `return` сразу после него.
-5. **Async-гвард через `await`, не через `next()` в колбэке.** Делай гвард `async` и просто
-   `await`/`return`. Не вызывай `next()` внутри `.then()` — это источник гонок и двойных вызовов.
-   Асинхронную загрузку (например, текущего пользователя) делай идемпотентной, чтобы повторная
-   навигация не дёргала сеть.
-6. **Защита от бесконечного редиректа.** Перед редиректом на `login`/`forbidden` проверь, что
-   **целевой** маршрут — не сам `login`/`forbidden` (`if (to.name === 'login') return`). Иначе гвард
-   будет редиректить страницу логина на саму себя.
-7. **Per-route vs global.** `beforeEach` (global) — сквозные правила (авторизация, заголовок вкладки).
-   `beforeEnter` (per-route) — правило, осмысленное только для конкретного маршрута (роль admin для
-   `/admin`); можно массив гвардов. `beforeRouteEnter`/`beforeRouteUpdate`/`beforeRouteLeave`
-   (in-component) — привязка к жизненному циклу компонента; в `<script setup>` используй
-   `onBeforeRouteUpdate`/`onBeforeRouteLeave` из `vue-router`. **`beforeRouteEnter` не имеет `this`**
-   (компонент ещё не создан) — нужный экземпляр получай иначе (см. reference).
-8. **Реакция на смену параметров того же маршрута.** При навигации `/user/1` → `/user/2`
-   компонент **переиспользуется**, `onMounted`/`created` не сработают повторно. Следи за параметром:
-   `watch(() => route.params.id, load, { immediate: true })` — иначе данные останутся «застывшими».
-   То же про `beforeEnter`: он не срабатывает при смене только параметров (см. reference).
-9. **scrollBehavior.** Восстановление скролла задаётся в опции роутера: `savedPosition` (Назад/Вперёд)
-   → якорь `to.hash` → `{ top: 0 }` для нового перехода.
-10. **Обработка сбоев навигации.** Отменённая гвардом навигация (`return false`) — это **не ошибка**,
-    а `NavigationFailure`. Различай через `isNavigationFailure(failure, NavigationFailureType.aborted)`
-    в `afterEach` / в результате `await router.push(...)`. Реальные ошибки (исключения из гвардов,
-    сбой lazy-чанка) лови в `router.onError`.
-11. **Composition API.** В компоненте: `const route = useRoute()` (реактивный текущий маршрут, для
-    чтения `params`/`query`/`meta`), `const router = useRouter()` (императивная навигация
-    `router.push`/`replace`/`back`). Для кастомных навигационных ссылок — `useLink({ to })`
-    (`href`, `isActive`, `navigate`). **Не деструктурируй `route`** напрямую — потеряешь
-    реактивность; читай через `route.params.x` или `toRef`.
+   If **obliged** leave legacy-`next()` — exactly one call per branch and `return` immediately after it.
+5. **Async-guard via `await`, not via `next()` in the callback.** Do the guard `async` and simply
+   `await`/`return`. Don't call `next()` inside `.then()` — is a source of races and double calls.
+   Asynchronous loading (for example, current user) make it idempotent so that it can be repeated
+   navigation did not work on the network.
+6. **Protection against endless redirect.** Before redirecting to `login`/`forbidden` check that
+   **target** route - not itself `login`/`forbidden` (`if (to.name === 'login') return`). Otherwise guard
+   will redirect the login page to itself.
+7. **Per-route vs global.** `beforeEach` (global) — end-to-end rules (authorization, tab title).
+   `beforeEnter` (per-route) — rule that is meaningful only for a specific route (role admin for
+   `/admin`); you can have an array of guards. `beforeRouteEnter`/`beforeRouteUpdate`/`beforeRouteLeave`
+   (in-component) — binding to component lifecycle; in `<script setup>` use
+   `onBeforeRouteUpdate`/`onBeforeRouteLeave` from `vue-router`. **`beforeRouteEnter` does not have `this`**
+   (component has not yet been created) — get the required copy otherwise (see reference).
+8. **Reaction to changing the parameters of the same route.** When navigating `/user/1` → `/user/2`
+   component **is reused**, `onMounted`/`created` will not work again. Follow the parameter:
+   `watch(() => route.params.id, load, { immediate: true })` — otherwise the data will remain «frozen».
+   Same about `beforeEnter`: it does not work when changing only the parameters (see reference).
+9. **scrollBehavior.** Scroll recovery is set in the router option: `savedPosition` (Back/Forward)
+   → anchor `to.hash` → `{ top: 0 }` for a new transition.
+10. **Handle navigation failures.** Navigation canceled by the guard (`return false`) — this **not an error**,
+    a `NavigationFailure`. Distinguish through `isNavigationFailure(failure, NavigationFailureType.aborted)`
+    in `afterEach` / as a result `await router.push(...)`. Real errors (exceptions from guards,
+    failure lazy-chunk) catch in `router.onError`.
+11. **Composition API.** In the component: `const route = useRoute()` (reactive current route, for
+    read `params`/`query`/`meta`), `const router = useRouter()` (imperative navigation
+    `router.push`/`replace`/`back`). For custom navigation links - `useLink({ to })`
+    (`href`, `isActive`, `navigate`). **Don't destructure `route`** directly - you'll lose
+    reactivity; read through `route.params.x` or `toRef`.
 
-## Когда какой сниппет / reference открывать
+## When what snippet / reference open
 
-| Ситуация | Где смотреть |
+| Situation | Where to watch |
 |:---|:---|
-| Написать гварды (return-API, миграция next(), async, anti-loop, beforeEnter, scrollBehavior, onError) | `snippets/router-guards.ts` |
-| `beforeEnter` не срабатывает при смене только `params` | `reference/router-beforeenter-no-param-trigger.md` |
-| Нужен `this`/экземпляр компонента в `beforeRouteEnter` | `reference/router-beforerouteenter-no-this.md` |
-| Гвард делает API-вызов — как правильно `await` | `reference/router-guard-async-await-pattern.md` |
-| Пользователь застрял в бесконечном редиректе | `reference/router-navigation-guard-infinite-loop.md` |
-| Подробный разбор deprecated `next()` и миграции | `reference/router-navigation-guard-next-deprecated.md` |
-| Застывшие данные при навигации между одним маршрутом | `reference/router-param-change-no-lifecycle.md` |
-| Слушатели/таймеры не очищаются при размонтировании view | `reference/router-simple-routing-cleanup.md` |
-| Зачем Vue Router для production SPA (vs ручная маршрутизация) | `reference/router-use-vue-router-for-production.md` |
+| Write guards (return-API, migration next(), async, anti-loop, beforeEnter, scrollBehavior, onError) | `snippets/router-guards.ts` |
+| `beforeEnter` does not work when changing only `params` | `reference/router-beforeenter-no-param-trigger.md` |
+| Needed `this`/component instance in `beforeRouteEnter` | `reference/router-beforerouteenter-no-this.md` |
+| Guard does API-call - how to do it correctly `await` | `reference/router-guard-async-await-pattern.md` |
+| User stuck in endless redirect | `reference/router-navigation-guard-infinite-loop.md` |
+| Detailed analysis deprecated `next()` and migrations | `reference/router-navigation-guard-next-deprecated.md` |
+| Frozen data when navigating between one route | `reference/router-param-change-no-lifecycle.md` |
+| Listeners/timers are not cleared when unmounted view | `reference/router-simple-routing-cleanup.md` |
+| Why Vue Router for production SPA (vs manual routing) | `reference/router-use-vue-router-for-production.md` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Маршруты имеют `name`; навигация и редиректы — по `name`/объекту, не по сырому `path`
-- [ ] `RouteMeta` типизирован (`declare module 'vue-router'`); флаги доступа лежат в `meta`
-- [ ] View-компоненты подключены ленивым `() => import(...)`
-- [ ] В гвардах НЕТ `next()` — только `return undefined/false/path/route/Error` (или legacy: ровно один `next()` + `return` после)
-- [ ] Async-гвард — `async` + `await`/`return`, без `next()` в `.then()`; загрузка идемпотентна
-- [ ] Есть защита от бесконечного редиректа (целевой `login`/`forbidden` пропускается)
-- [ ] Global (`beforeEach`) и per-route (`beforeEnter`) гварды разделены по назначению
-- [ ] Смена `params` того же маршрута обрабатывается через `watch(() => route.params...)`
-- [ ] Задан `scrollBehavior` (savedPosition → hash → top:0)
-- [ ] `NavigationFailure` (отмена гвардом) отделена от реальных ошибок; есть `router.onError`
-- [ ] В компонентах `useRoute`/`useRouter`, `route` не деструктурируется без `toRef`/`storeToRefs`
+- [ ] Routes have `name`; navigation and redirects - by `name`/object, not raw `path`
+- [ ] `RouteMeta` typed (`declare module 'vue-router'`); access flags are in `meta`
+- [ ] View-components are connected lazy `() => import(...)`
+- [ ] In the guards NO `next()` — only `return undefined/false/path/route/Error` (or legacy: exactly one `next()` + `return` after)
+- [ ] Async-guard - `async` + `await`/`return`, without `next()` in `.then()`; loading is idempotent
+- [ ] There is protection against endless redirect (target `login`/`forbidden` skipped)
+- [ ] Global (`beforeEach`) and per-route (`beforeEnter`) guards are divided by purpose
+- [ ] Change `params` of the same route is processed via `watch(() => route.params...)`
+- [ ] Set `scrollBehavior` (savedPosition → hash → top:0)
+- [ ] `NavigationFailure` (canceled by guard) is separated from real errors; yes `router.onError`
+- [ ] In components `useRoute`/`useRouter`, `route` is not destructured without `toRef`/`storeToRefs`
 
-## Ссылки
+## Links
 
-- `frontend-vue/vue` — справочник API Composition API (`<script setup>`, `ref`/`computed`/`watch`): база, грузить вместе
-- `frontend-vue/vue-composition-api` — проектные конвенции composables (где живёт логика загрузки данных по `route.params`)
-- `frontend-vue/pinia-stores` — глобальное состояние, которое читает гвард (флаг авторизации, текущий пользователь, роли)
-- `frontend-vue/vue-best-practices` — архитектура view-компонентов и разбиение на части
+- `frontend-vue/vue` — reference API Composition API (`<script setup>`, `ref`/`computed`/`watch`): base, ship together
+- `frontend-vue/vue-composition-api` — design conventions composables (where the logic for loading data by `route.params`)
+- `frontend-vue/pinia-stores` — global state read by guard (authorization flag, current user, roles)
+- `frontend-vue/vue-best-practices` — architecture view-components and partitioning
 - https://router.vuejs.org/guide/advanced/navigation-guards.html · https://router.vuejs.org/guide/advanced/lazy-loading.html · https://router.vuejs.org/guide/advanced/scroll-behavior.html
-- Провенанс импорта (antfu/vuejs-ai) — `upstream.json` (strategy=notify), `SYNC.md`; reference/ — оригинальные gotcha-заметки
+- Import provenance (antfu/vuejs-ai) — `upstream.json` (strategy=notify), `SYNC.md`; reference/ — original gotcha-notes

@@ -1,5 +1,5 @@
-"""unittest для task.journal — append-only писатель пер-планового журнала.
-Запуск: cd packages/task && python3 -m unittest discover -s tests"""
+"""unittest for task.journal — append-only writer for a per-plan magazine.
+Launch: cd packages/task && python3 -m unittest discover -s tests"""
 import json
 import multiprocessing
 import tempfile
@@ -31,7 +31,7 @@ def _validation_decision(plan_dir, item_id="P1.3", result="closed-green"):
     plan_dir = Path(plan_dir)
     if not (plan_dir / "plan.md").exists():
         (plan_dir / "plan.md").write_text(
-            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+            "## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n",
             encoding="utf-8")
     phase = plan_dir / "phases" / "P1"
     phase.mkdir(parents=True, exist_ok=True)
@@ -63,14 +63,14 @@ items: [{item_id}]
 supersedes: []
 superseded_by: {superseded_by}
 ---
-## Решение
+## Solution
 
 [JOURNAL-EXCEPTION:{target_sha256}]
 fields=`friction`;
 plan=`{plan_id}`;
 item=`{item_id}`
 
-## Почему
+## Why
 
 Exact historical exception fixture.
 """
@@ -109,7 +109,7 @@ class TestNewEntryAndValidate(TmpDirTestCase):
             plan_id="2026.07.18-DEMO-PLAN", item_id="P1.3", command="plan-run",
             actor="sonnet/high", result="in-progress",
         )
-        validate_entry(entry)  # не бросает
+        validate_entry(entry)  # does not throw
         for field in ("ts", "plan_id", "item_id", "command", "session_id", "run_id",
                       "attempt", "actor", "friction", "result", "cost_usd", "num_turns",
                       "duration_ms", "note"):
@@ -144,7 +144,7 @@ class TestNewEntryAndValidate(TmpDirTestCase):
     def test_bad_friction_value_rejected(self):
         entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                            actor="sonnet/high", result="in-progress",
-                           friction=["deviation", "не-из-списка"])
+                           friction=["deviation", "not-from-list"])
         with self.assertRaises(JournalValidationError):
             validate_entry(entry)
 
@@ -165,14 +165,14 @@ class TestNewEntryAndValidate(TmpDirTestCase):
     def test_numeric_fields_accept_none(self):
         entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                            actor="sonnet/high", result="in-progress")
-        validate_entry(entry)  # cost_usd/num_turns/duration_ms — None по дефолту
+        validate_entry(entry)  # cost_usd/num_turns/duration_ms — None by default
 
     def test_all_result_and_friction_enum_values_accepted(self):
         from task.journal import FRICTION_VALUES, RESULT_VALUES
         for result in RESULT_VALUES:
             entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                                actor="sonnet/high", result=result, friction=FRICTION_VALUES)
-            validate_entry(entry)  # не бросает ни на одном каноническом значении
+            validate_entry(entry)  # does not throw on any canonical value
 
     def test_continue_first_observations_are_not_terminal_results(self):
         from task.journal import RESULT_VALUES, TERMINAL_CLOSE_RESULTS
@@ -219,14 +219,14 @@ class TestTraceRef(TmpDirTestCase):
         entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                            actor="sonnet/high", result="in-progress")
         self.assertNotIn("trace_ref", entry)
-        validate_entry(entry)  # не бросает — trace_ref не входит в REQUIRED_FIELDS
+        validate_entry(entry)  # does not throw - trace_ref is not included REQUIRED_FIELDS
 
     def test_supplied_trace_ref_is_carried_and_appended(self):
         entry = new_entry(plan_id="P", item_id="P1.1", command="plan-run",
                            actor="sonnet/high", result="in-progress",
                            trace_ref="a" * 64)
         self.assertEqual(entry["trace_ref"], "a" * 64)
-        validate_entry(entry)  # extra key — не отклоняется схемой P1.1
+        validate_entry(entry)  # extra key — is not rejected by the schema P1.1
         path = append(self.plan_dir, entry)
         written = json.loads(path.read_text(encoding="utf-8").splitlines()[0])
         self.assertEqual(written["trace_ref"], "a" * 64)
@@ -282,7 +282,7 @@ class TestAppend(TmpDirTestCase):
             result="closed-green", session_id="session-1", run_id=run_id,
             ts="2026-09-22T10:00:00Z", fingerprint="a" * 64,
             decision=_validation_decision(self.plan_dir))
-        with self.assertRaisesRegex(JournalValidationError, "раньше start"):
+        with self.assertRaisesRegex(JournalValidationError, "before start"):
             append_idempotent_terminal(self.plan_dir, terminal)
 
     def test_malformed_decision_rejects_terminal_before_journal_mutation(self):
@@ -337,7 +337,7 @@ class TestAppend(TmpDirTestCase):
         for result in ("audit-attention", "audit-red"):
             with self.subTest(result=result):
                 entry = new_entry(
-                    plan_id="P", item_id="P1 — режим фазы", command="plan-audit",
+                    plan_id="P", item_id="P1 — phase mode", command="plan-audit",
                     actor="model/high", result=result, fingerprint="b" * 64)
                 with self.assertRaisesRegex(
                         JournalValidationError,
@@ -420,7 +420,7 @@ class TestAppend(TmpDirTestCase):
         entry = new_entry(plan_id="P", item_id="P1.3", command="plan-run",
                           actor="sonnet/high", result="closed-green", note="x" * 301)
         validate_entry(entry)  # sealed v1 schema still accepts historical rows
-        with self.assertRaisesRegex(JournalValidationError, "301 символов > 300"):
+        with self.assertRaisesRegex(JournalValidationError, "301 characters > 300"):
             append(self.plan_dir, entry)
         self.assertFalse((self.plan_dir / "journal.jsonl").exists())
 
@@ -448,7 +448,7 @@ class TestAppend(TmpDirTestCase):
                 actor="sonnet/high", result=result, decision=decision))
         path = self.plan_dir / "journal.jsonl"
         for ln in path.read_text(encoding="utf-8").splitlines():
-            json.loads(ln)  # не бросает — валидный NDJSON построчно
+            json.loads(ln)  # does not throw - valid NDJSON line by line
 
 
 class TestHistoricalSchemaException(TmpDirTestCase):
@@ -466,7 +466,7 @@ class TestHistoricalSchemaException(TmpDirTestCase):
         raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
         (self.plan_dir / "journal.jsonl").write_text(raw + "\n", encoding="utf-8")
         (self.plan_dir / "plan.md").write_text(
-            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+            "## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n",
             encoding="utf-8")
         (self.plan_dir / "decisions" / "D51-owner-gate.md").write_text(
             _exception_decision(
@@ -496,21 +496,21 @@ class TestHistoricalSchemaException(TmpDirTestCase):
         raw = self._invalid_target()
         exception = self._exception(raw)
         exception["owner_decision"] = "D52"
-        with self.assertRaisesRegex(JournalValidationError, "ровно один"):
+        with self.assertRaisesRegex(JournalValidationError, "exactly one"):
             append_exception(self.plan_dir, exception)
 
     def test_exception_rejects_unknown_fields(self):
         raw = self._invalid_target()
         exception = self._exception(raw)
         exception["future"] = True
-        with self.assertRaisesRegex(JournalValidationError, "неизвестные поля"):
+        with self.assertRaisesRegex(JournalValidationError, "unknown fields"):
             append_exception(self.plan_dir, exception)
 
     def test_exception_rejects_duplicate_target(self):
         raw = self._invalid_target()
         exception = self._exception(raw)
         append_exception(self.plan_dir, exception)
-        with self.assertRaisesRegex(JournalValidationError, "уже существует"):
+        with self.assertRaisesRegex(JournalValidationError, "already exists"):
             append_exception(self.plan_dir, exception)
 
     def test_exception_rejects_valid_target(self):
@@ -520,7 +520,7 @@ class TestHistoricalSchemaException(TmpDirTestCase):
         raw = json.dumps(valid, ensure_ascii=False, sort_keys=True)
         (self.plan_dir / "journal.jsonl").write_text(raw + "\n", encoding="utf-8")
         exception = self._exception(raw)
-        with self.assertRaisesRegex(JournalValidationError, "уже проходит"):
+        with self.assertRaisesRegex(JournalValidationError, "is already running"):
             append_exception(self.plan_dir, exception)
 
     def test_exception_rejects_foreign_event_plan_id(self):
@@ -549,7 +549,7 @@ class TestCli(TmpDirTestCase):
         plan_dir = self.root / "2026.07.18-DEMO-PLAN"
         plan_dir.mkdir()
         (plan_dir / "plan.md").write_text(
-            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n", encoding="utf-8")
+            "## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n", encoding="utf-8")
         (plan_dir / "phases" / "P1").mkdir(parents=True)
         (plan_dir / "phases" / "P1" / "P1.3.md").write_text("# P1.3\n", encoding="utf-8")
         decision = json.dumps(_validation_decision(plan_dir), ensure_ascii=False)
@@ -573,7 +573,7 @@ class TestCli(TmpDirTestCase):
         plan_dir = self.root / "2026.07.18-DEMO-PLAN"
         plan_dir.mkdir()
         (plan_dir / "plan.md").write_text(
-            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n", encoding="utf-8")
+            "## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n", encoding="utf-8")
         (plan_dir / "phases" / "P1").mkdir(parents=True)
         (plan_dir / "phases" / "P1" / "P1.3.md").write_text("# P1.3\n", encoding="utf-8")
         decision = json.dumps(_validation_decision(plan_dir), ensure_ascii=False)
@@ -596,12 +596,12 @@ class TestCli(TmpDirTestCase):
             ])
 
     def test_main_returns_1_on_validation_error(self):
-        # attempt по схеме требует int≥1 — argparse не ловит это (валидация в append()),
-        # значит смоделируем несогласованность через невалидный --friction-элемент.
+        # attempt according to the scheme requires int≥1 — argparse doesn't catch this (validation in append()),
+        # means we model the inconsistency through an invalid --friction-element.
         rc = main([
             "append", "--plan-dir", str(self.plan_dir), "--plan", "P",
             "--item", "P1.1", "--command", "plan-run", "--actor", "sonnet/high",
-            "--result", "in-progress", "--friction", "не-из-enum",
+            "--result", "in-progress", "--friction", "not-from-enum",
         ])
         self.assertEqual(rc, 1)
         self.assertFalse((self.plan_dir / "journal.jsonl").exists())
@@ -616,7 +616,7 @@ class TestCli(TmpDirTestCase):
         (self.plan_dir / "phases" / "P1").mkdir(parents=True)
         (self.plan_dir / "phases" / "P1" / "P1.md").write_text("# P1\n", encoding="utf-8")
         (self.plan_dir / "plan.md").write_text(
-            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+            "## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n",
             encoding="utf-8")
         decisions = self.plan_dir / "decisions"
         decisions.mkdir()
@@ -639,7 +639,7 @@ class TestV2DecisionCarrier(TmpDirTestCase):
     def test_exception_owner_decision_resolves_from_v2_decisions_carrier(self):
         (self.plan_dir / "phases" / "P1").mkdir(parents=True)
         (self.plan_dir / "plan.md").write_text(
-            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+            "## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n",
             encoding="utf-8")
         (self.plan_dir / "phases" / "P1" / "P1.md").write_text("# P1\n", encoding="utf-8")
         decisions = self.plan_dir / "decisions"
@@ -662,7 +662,7 @@ class TestV2DecisionCarrier(TmpDirTestCase):
     def test_exception_rejects_proposed_decision(self):
         (self.plan_dir / "phases" / "P1").mkdir(parents=True)
         (self.plan_dir / "plan.md").write_text(
-            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+            "## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n",
             encoding="utf-8")
         (self.plan_dir / "phases" / "P1" / "P1.md").write_text("# P1\n", encoding="utf-8")
         decisions = self.plan_dir / "decisions"

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Фейковый клиент (P4.3): пустой stdout, exit 0 — исход `transport`."""
+"""Fake client (P4.3): empty stdout, exit 0 — outcome `transport`."""
 import sys
 
 if "--version" in sys.argv:

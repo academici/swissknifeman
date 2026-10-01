@@ -39,10 +39,10 @@ def summarize_result(result):
                 return _truncate(f"{key}={val!r}")
             return "{}"
         if isinstance(result, str):
-            return _truncate(result.strip()) if result.strip() else "(пустая строка)"
+            return _truncate(result.strip()) if result.strip() else "(empty string)"
         return _truncate(repr(result))
     except Exception:
-        return "(результат не распознан)"
+        return "(result not recognized)"
 
 
 def _truncate(s, limit=160):
@@ -142,11 +142,11 @@ def parse_run(run_dir):
     events, garbage, journal_exists = _read_journal(run_dir / "journal.jsonl")
     if not journal_exists:
         degraded = True
-        reasons.append(f"journal.jsonl не найден: {run_dir / 'journal.jsonl'}")
+        reasons.append(f"journal.jsonl not found: {run_dir / 'journal.jsonl'}")
     elif not events and garbage > 0:
         degraded = True
         reasons.append(
-            f"journal.jsonl не распознан ({garbage} строк(и) не JSON-объект — версия CC?)"
+            f"journal.jsonl not recognized ({garbage} lines(and) not JSON-object - version CC?)"
         )
 
     started_ids, done_ids, results = set(), set(), []
@@ -293,7 +293,7 @@ def render_text(status):
     meta = status.get("meta") or {}
     lines = []
     lines.append(f"run: {status.get('run_id')}")
-    lines.append(f"имя: {meta.get('name') or '(без имени)'}")
+    lines.append(f"name: {meta.get('name') or '(without name)'}")
 
     if status.get("degraded"):
         state = "degraded"
@@ -301,20 +301,20 @@ def render_text(status):
         state = "running"
     else:
         state = "done"
-    lines.append(f"статус: {state}")
+    lines.append(f"status: {state}")
 
     if status.get("degraded"):
-        lines.append("формат не распознан (версия CC?):")
+        lines.append("format not recognized (version CC?):")
         for reason in status.get("degraded_reasons") or []:
             lines.append(f"  — {reason}")
 
-    lines.append("фазы (декларация скрипта; привязка агентов недоступна — D18):")
+    lines.append("phases (script declaration; agent binding is not available - D18):")
     phases = meta.get("phases") or []
     if not phases:
-        lines.append("  (фазы не распознаны)")
+        lines.append("  (phases not recognized)")
     else:
         for phase in phases:
-            title = phase.get("title") or "(без названия)"
+            title = phase.get("title") or "(untitled)"
             detail = (phase.get("detail") or "").strip()
             lines.append(f"  - {title}: {detail}" if detail else f"  - {title}")
 
@@ -324,13 +324,13 @@ def render_text(status):
     total = status.get("agents_total", 0)
     pct = round(done / started * 100) if started > 0 else 0
     lines.append(
-        f"агенты: всего={total} started={started} done={done} inflight={inflight}")
-    lines.append(f"% готово (грубо, done/started): {pct}%")
+        f"agents: total={total} started={started} done={done} inflight={inflight}")
+    lines.append(f"% ready (rude, done/started): {pct}%")
 
     results = status.get("results") or []
-    lines.append(f"последние результаты ({len(results)}):")
+    lines.append(f"latest results ({len(results)}):")
     if not results:
-        lines.append("  (пока нет)")
+        lines.append("  (not yet)")
     else:
         for r in results:
             agent_id = r.get("agent_id") or "?"
@@ -376,14 +376,14 @@ def watch_loop(run_dir, interval=2.0, out=None, sleep_fn=time.sleep, max_iterati
 _WF_USAGE = (
     "harness wf status [--run WF_ID] [--project PATH] [--json] [--last N]\n"
     "                   [--watch] [--interval SEC]\n"
-    "  --run WF_ID     точный id прогона (имя каталога wf_<id>)\n"
-    "  --project PATH  сузить discovery до прогонов этого проекта (CC-слаг пути)\n"
-    "  --last N        сколько самых свежих прогонов показать (дефолт 1, игнорируется с --run)\n"
-    "  --json          та же структура, valid JSON (ensure_ascii=False)\n"
-    "  --watch         перепечатка кадром до Ctrl-C / пока прогон не завершится\n"
-    "  --interval SEC  интервал --watch в секундах (дефолт 2)\n"
-    "exit-code: 0 — всегда (включая «нет прогонов»/degraded — это info, не ошибка);\n"
-    "ненулевой — ТОЛЬКО ошибка использования флагов."
+    "  --run WF_ID     accurate id run (directory name wf_<id>)\n"
+    "  --project PATH  narrow down discovery before runs of this project (CC-path slug)\n"
+    "  --last N        how many most recent runs to show (default 1, ignored from --run)\n"
+    "  --json          same structure, valid JSON (ensure_ascii=False)\n"
+    "  --watch         reprint frame before Ctrl-C / until the run completes\n"
+    "  --interval SEC  interval --watch in seconds (default 2)\n"
+    "exit-code: 0 — always (including «no runs»/degraded — this info, not an error);\n"
+    "non-zero - flags ONLY error."
 )
 
 
@@ -402,18 +402,18 @@ def _cmd_wf_status(argv):
     try:
         last = int(last_raw)
     except ValueError:
-        die(f"--last ожидает целое число, получено: {last_raw!r}")
+        die(f"--last expects an integer, received: {last_raw!r}")
         return
     try:
         interval = float(opts["interval"]) if opts["interval"] else 2.0
     except ValueError:
-        die(f"--interval ожидает число секунд, получено: {opts['interval']!r}")
+        die(f"--interval expects number of seconds, received: {opts['interval']!r}")
         return
 
     limit = None if run_id else last
     candidates = discover_runs(run=run_id, project=project, limit=limit)
     if not candidates:
-        print("прогонов не найдено"
+        print("runs not found"
               f"{f' (run={run_id})' if run_id else ''}"
               f"{f' (project={project})' if project else ''}")
         return
@@ -437,6 +437,6 @@ def cmd_wf(env, argv):
         return
     sub, rest = argv[0], argv[1:]
     if sub != "status":
-        die(f"неизвестная подкоманда wf: {sub} (ожидается: status)")
+        die(f"unknown subcommand wf: {sub} (expected: status)")
         return
     _cmd_wf_status(rest)

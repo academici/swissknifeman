@@ -1,8 +1,8 @@
-"""Тесты команды topology: схема ~/.swissknifeman/topology.json, init/show,
-сохранение created_at, бэкап, авто-детект базы проектов.
+"""Command tests topology: diagram ~/.swissknifeman/topology.json, init/show,
+save created_at, backup, auto-detection of the project database.
 
-Гоняются против синтетического реестра в tmpdir (tests/fixtures), реальный
-~/.swissknifeman не трогается (Env.home указывает на tmp)."""
+Racing against a synthetic registry in tmpdir (tests/fixtures), real
+~/.swissknifeman does not touch (Env.home indicates tmp)."""
 import contextlib
 import io
 import json
@@ -66,7 +66,7 @@ class TopologyCase(unittest.TestCase):
         second = load_topology(self.env)
         self.assertEqual(first["created_at"], second["created_at"])
         self.assertEqual(second["nodes"]["brain"]["path"], "/b")
-        # бэкап предыдущего конфига
+        # backup of the previous config
         bak = self.env.topology_file.with_suffix(".json.bak")
         self.assertTrue(bak.exists())
         self.assertEqual(json.loads(bak.read_text())["nodes"]["brain"]["path"], "/a")

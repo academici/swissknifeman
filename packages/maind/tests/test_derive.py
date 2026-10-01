@@ -1,4 +1,4 @@
-"""Тесты derive.py: code (composer), doc (Brain frontmatter), override, provider-index."""
+"""Tests derive.py: code (composer), doc (Brain frontmatter), override, provider-index."""
 import json
 import tempfile
 import unittest
@@ -59,7 +59,7 @@ class TestDerive(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             env, config = _setup(tmp)
             self.assertEqual(derive.resolve_project("AzGuard", config), ("azguard", True))
-            # GetChat — не в .maind.json: алиас, но registered=False
+            # GetChat — not in .maind.json: alias, but registered=False
             self.assertEqual(derive.resolve_project("GetChat", config), ("getchat", False))
 
     def test_code_creates_cross_depends_on(self):
@@ -67,7 +67,7 @@ class TestDerive(unittest.TestCase):
             env, config = _setup(tmp)
             stats = {s["id"]: s for s in derive.derive_all(env, config)}
             self.assertGreaterEqual(stats["flexcrm"]["by_via"]["code"], 3)
-            # laravel/framework отфильтрован, остался только first-party
+            # laravel/framework filtered, only first-party
             g = federation.project_graph(env, config, config["projects"][0])
             self.assertIn("package:axioma-studio/azguard-core", g.nodes)
             self.assertNotIn("package:laravel/framework", g.nodes)
@@ -115,14 +115,14 @@ class TestDerive(unittest.TestCase):
             self.assertIn("tool:swissknifeman", g.nodes)
 
     def test_skills_plane_list_lock(self):
-        # свой формат lock-файла (напр. Brain-валт): "skills" — список, не dict {name: entry}
+        # custom format lock-file (e.g. Brain-valt): "skills" — list, not dict {name: entry}
         with tempfile.TemporaryDirectory() as tmp:
             env, config = _setup(tmp)
             flex = Path(config["projects"][0]["local_path"])
             _write(flex / "skills-lock.json", {"skills": [
                 {"name": "tech-stack-selection", "persona": "architect"}]})
             stats = {s["id"]: s for s in derive.derive_all(env, config)}
-            self.assertEqual(stats["flexcrm"]["by_via"]["skills"], 1)  # без source — без tool-рёбра
+            self.assertEqual(stats["flexcrm"]["by_via"]["skills"], 1)  # without source — without tool-ribs
             g = federation.project_graph(env, config, config["projects"][0])
             self.assertEqual(g.nodes["skill:tech-stack-selection"]["attrs"]["bucket"], "architect")
 

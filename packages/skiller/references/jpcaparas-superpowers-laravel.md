@@ -1,25 +1,25 @@
 # jpcaparas/superpowers-laravel
 
 - **URL:** https://github.com/jpcaparas/superpowers-laravel
-- **Статус:** planned
-- **Проверено:** 2026-06-11
+- **Status:** planned
+- **Checked:** 2026-06-11
 
-Laravel-ориентированные скиллы для Claude Code: TDD, debugging, planning,
-структурированные workflow. ~15k звёзд. Главный PHP-референс.
+Laravel-oriented skills for Claude Code: TDD, debugging, planning,
+structured workflow. ~15k stars. Chief PHP-reference.
 
-## Брать выборочно
+## Take selectively
 
-- Workflow-цепочка plan → implement → debug → review — кандидат в `php/laravel`
-  или `quality/`
-- `examples.md` как отдельный ресурс с готовыми кодовыми паттернами — паттерн
-  для наших snippets/
-- RELEASE-NOTES.md подход к версионированию пакета скиллов
+- Workflow-chain plan → implement → debug → review — candidate `php/laravel`
+  or `quality/`
+- `examples.md` as a separate resource with ready-made code patterns - pattern
+  for our snippets/
+- RELEASE-NOTES.md approach to versioning a skill pack
 
-## Не брать
+## Do not take
 
-- Скиллы, дублирующие наши `quality/code-review`, `quality/test-strategy` —
-  сравнить и взять только недостающее
+- Skills that duplicate ours `quality/code-review`, `quality/test-strategy` —
+  compare and take only what is missing
 
-## Целевые bucket-ы
+## Targets bucket-s
 
 `php/laravel`, `php/laravel-testing`, `quality/`.

@@ -11,20 +11,20 @@ SAMPLE_PLAN = FIXTURES_ROOT / "sample-plan"
 from harness.run import plan_reader
 
 
-_ITEM_TEMPLATE = """### {item_id} — Тестовый item
+_ITEM_TEMPLATE = """### {item_id} — Test item
 
 **Status:** {status}
-**Intent:** Тестовый item для `test_run_plan_reader.py`.
-**Why:** Нужен для юнит-теста `plan_reader`.
-**Scope Included:** ничего не реализует — фикстура.
-**Scope Excluded:** реальная логика.
+**Intent:** Test item for `test_run_plan_reader.py`.
+**Why:** Needed for unit testing `plan_reader`.
+**Scope Included:** does not implement anything - a fixture.
+**Scope Excluded:** real logic.
 **Inputs:** —
 **Files:** —
-**Required Reads:** 1) не применимо (фикстура).
-**Implementation Rules:** нет — фикстура.
-**Code Guidance:** нет — фикстура.
-**Validation:** не применимо.
-**Deliverables:** синтетические данные теста.
+**Required Reads:** 1) not applicable (fixture).
+**Implementation Rules:** no - fixture.
+**Code Guidance:** no - fixture.
+**Validation:** not applicable.
+**Deliverables:** synthetic test data.
 **Completion Notes:** —
 **Pending Work:** —
 **Known Deviations:** —
@@ -48,19 +48,19 @@ def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line, layout="v
 
     total = len(item_ids)
     status_rows = "\n".join(
-        f"| {iid} | Тестовый item | 🟡 In progress | 2026-08-01 |" for iid in item_ids)
+        f"| {iid} | Test item | 🟡 In progress | 2026-08-01 |" for iid in item_ids)
     item_blocks = "\n".join(
         _ITEM_TEMPLATE.format(item_id=iid, status="🟡 In progress") for iid in item_ids)
     routing_table = "\n".join(routing_rows)
 
-    (plan_dir / "plan.md").write_text(f"""# {plan_id} — Синтетический план теста
+    (plan_dir / "plan.md").write_text(f"""# {plan_id} — Synthetic test plan
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Plan ID | {plan_id} |
-| Title | Синтетический план теста |
+| Title | Synthetic test plan |
 | Version | 0.1.0 |
 | Status | 🟡 In progress |
 | Last Updated | 2026-08-01 |
@@ -68,42 +68,42 @@ def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line, layout="v
 
 ## 1. Context
 
-Синтетика теста `test_run_plan_reader.py`.
+Synthetic dough `test_run_plan_reader.py`.
 
 ## 2. Execution Rules
 
-- Один item за раз.
+- One item at a time.
 
 ## 3. Routing
 
-| Items | Model class/effort | Exec | Почему |
+| Items | Model class/effort | Exec | Why |
 |:--|:--|:--|:--|
 {routing_table}
 
 ## 4. Phase Index & Status Board
 
-| Phase | Title | Items 🟢/всего | Status |
+| Phase | Title | Items 🟢/total | Status |
 |:--|:--|:--|:--|
-| P1 | Фаза раз | 0/{total} | 🟡 In progress |
+| P1 | Phase times | 0/{total} | 🟡 In progress |
 
 ## 5. Decision Log
 
-| D# | Дата | Решение | Почему |
+| D# | Date | Solution | Why |
 |:--|:--|:--|:--|
-| D1 | 2026-08-01 | тест | тест |
+| D1 | 2026-08-01 | test | test |
 
 ## 6. Update Log
 
-| Дата | Кто (role/model) | Что |
+| Date | Who (role/model) | What |
 |:--|:--|:--|
-| 2026-08-01 | package-implementer/sonnet | план создан |
+| 2026-08-01 | package-implementer/sonnet | plan created |
 """, encoding="utf-8")
 
-    (phase_dir / "P1.md").write_text(f"""# P1 — Фаза раз
+    (phase_dir / "P1.md").write_text(f"""# P1 — Phase times
 
 ## Phase Context
 
-Синтетика теста.
+Synthetic dough.
 
 ## Phase Status
 
@@ -114,18 +114,18 @@ def _write_fixture(tmp, *, plan_id, item_ids, routing_rows, next_line, layout="v
 {item_blocks}
 ## Phase Handoff
 
-Синтетика теста.
+Synthetic dough.
 """, encoding="utf-8")
     (plan_dir / "handoff.md").write_text(f"""# HANDOFF — 2026-08-01 — after {item_ids[0]}
 
 **Next:** {next_line}
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |:--|:--|
 | Model | sonnet |
 | Thinking | medium |
 | Context | continue-root |
-| Суть | тест |
+| The bottom line | test |
 
 ````
 {next_line}
@@ -155,8 +155,8 @@ class QueueSamplePlanTest(unittest.TestCase):
             items=[("P1.3", "🟡 In progress"), ("P1.1", "🟡 In progress"),
                    ("P1.2", "🟢 Done")],
             routing_rows=[
-                "| P1.1 | implementation/medium | run | одиночный item |",
-                "| P1.3–P1.5 | implementation/medium | run | диапазон |",
+                "| P1.1 | implementation/medium | run | single item |",
+                "| P1.3–P1.5 | implementation/medium | run | range |",
             ],
             next_line="exec-items: task:plan-run RUN-FIXTURE P1.1",
         )
@@ -191,7 +191,7 @@ class ExecCellTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = _write_fixture(
                 tmp, plan_id="V2-STATE", item_ids=["P1.1"],
-                routing_rows=["| P1.1 | implementation/medium | run | тест |"],
+                routing_rows=["| P1.1 | implementation/medium | run | test |"],
                 next_line="exec-items: task:plan-run V2-STATE P1.1", layout="v2")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
             state = (plan_dir / "phases" / "P1" / "P1.1.state.md").read_text(encoding="utf-8")
@@ -204,12 +204,12 @@ class ExecCellTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             plan_dir = _write_fixture(
                 tmp, plan_id="V2-BAD-HANDOFF", item_ids=["P1.1"],
-                routing_rows=["| P1.1 | implementation/medium | run | тест |"],
+                routing_rows=["| P1.1 | implementation/medium | run | test |"],
                 next_line="unsupported: V2-BAD-HANDOFF P1.1", layout="v2")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
         self.assertTrue(result["degraded"])
         self.assertEqual(result["items"], [])
-        self.assertIn("Next не соответствует", result["degraded_reasons"][0])
+        self.assertIn("Next does not match", result["degraded_reasons"][0])
     def test_legacy_exec_spellings_are_drivable_as_run(self):
         for spelling in ("run", "plan-run", "plan-exec", "manual"):
             with self.subTest(spelling=spelling), tempfile.TemporaryDirectory() as tmp:
@@ -255,11 +255,11 @@ class ExecCellTest(unittest.TestCase):
             plan_dir = _write_fixture(
                 tmp, plan_id="COMMA-LIST",
                 item_ids=["P1.1", "P1.2"],
-                routing_rows=["| P1.1, P1.2 | implementation/medium | run | тест |"],
+                routing_rows=["| P1.1, P1.2 | implementation/medium | run | test |"],
                 next_line="exec-items: task:plan-run COMMA-LIST P1.1")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
         self.assertTrue(result["degraded"])
-        self.assertIn("вне закрытой грамматики", result["degraded_reasons"][0])
+        self.assertIn("outside closed grammar", result["degraded_reasons"][0])
 
     def test_frontier_high_route_is_drivable(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -280,7 +280,7 @@ class ExecCellTest(unittest.TestCase):
             plan_dir = _write_fixture(
                 tmp, plan_id="ROUTE-UNRESOLVED",
                 item_ids=["P1.1"],
-                routing_rows=["| P1.1 | notaslasheffort | run | тест |"],
+                routing_rows=["| P1.1 | notaslasheffort | run | test |"],
                 next_line="exec-items: task:plan-run ROUTE-UNRESOLVED P1.1")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
         self.assertFalse(result["degraded"], result["degraded_reasons"])
@@ -297,7 +297,7 @@ class NextFormTest(unittest.TestCase):
             plan_dir = _write_fixture(
                 tmp, plan_id="NEXT-LEGACY",
                 item_ids=["P1.1"],
-                routing_rows=["| P1.1 | implementation/medium | run | тест |"],
+                routing_rows=["| P1.1 | implementation/medium | run | test |"],
                 next_line="/task:plan-run NEXT-LEGACY P1.1")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
         self.assertFalse(result["degraded"], result["degraded_reasons"])
@@ -325,7 +325,7 @@ class DegradedTest(unittest.TestCase):
 
 
 
-            (plan_dir / "plan.md").write_text("# BROKEN — план без Meta\n", encoding="utf-8")
+            (plan_dir / "plan.md").write_text("# BROKEN — plan without Meta\n", encoding="utf-8")
             result = plan_reader.queue(plan_dir, "P1", monorepo_root=REPO_ROOT)
         self.assertTrue(result["degraded"])
         self.assertEqual(result["items"], [])
@@ -347,13 +347,13 @@ class RoutingMatcherDriftTest(unittest.TestCase):
     def test_matcher_mirrors_task_contract_find_routing_row(self):
         plan_lines = """## 3. Routing
 
-| Items | Model class/effort | Exec | Почему |
+| Items | Model class/effort | Exec | Why |
 |:--|:--|:--|:--|
-| P9.1 | implementation/medium | run | одиночная форма |
-| P9.2-P9.4 | implementation/medium | run | диапазон, покрывает P9.3 |
-| P9.5, P9.6 | implementation/medium | run | список через запятую — нелегален |
+| P9.1 | implementation/medium | run | single form |
+| P9.2-P9.4 | implementation/medium | run | range, covers P9.3 |
+| P9.5, P9.6 | implementation/medium | run | comma separated list - illegal |
 
-## 4. Дальше секция
+## 4. Next section
 """.splitlines()
 
         candidate_items = ["P9.1", "P9.3", "P9.5", "P9.6", "P9.9"]

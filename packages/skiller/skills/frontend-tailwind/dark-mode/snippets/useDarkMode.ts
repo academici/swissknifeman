@@ -1,13 +1,13 @@
 // Source: anonymized production project
 //
-// Composable тёмной темы light | dark | system для Vue 3.
-// - source of truth: localStorage (клиент) + cookie (для SSR);
-// - класс `.dark` на <html> через classList.toggle;
-// - matchMedia('(prefers-color-scheme: dark)') для режима system + слушатель change;
-// - все обращения к window/document/localStorage под SSR-guard.
+// Composable dark theme light | dark | system for Vue 3.
+// - source of truth: localStorage (client) + cookie (for SSR);
+// - class `.dark` on <html> via classList.toggle;
+// - matchMedia('(prefers-color-scheme: dark)') for mode system + listener change;
+// - all calls to window/document/localStorage under SSR-guard.
 //
-// updateTheme / initializeTheme экспортируются отдельно: их зовут из точки входа
-// ДО маунта приложения (см. bootstrap-init.ts), а не только из компонентов.
+// updateTheme / initializeTheme are exported separately: they are called from the entry point
+// BEFORE application mount (see bootstrap-init.ts), and not just from components.
 
 import type { ComputedRef, Ref } from 'vue';
 import { computed, onMounted, ref } from 'vue';
@@ -21,11 +21,11 @@ export type UseDarkModeReturn = {
     updateAppearance: (value: Appearance) => void;
 };
 
-// Одно имя для localStorage и cookie. Меняешь — меняй и в SSR-шаблоне.
+// One name for localStorage and cookie. If you change it, change it SSR-template.
 const STORAGE_KEY = 'appearance';
 const COOKIE_MAX_AGE_DAYS = 365;
 
-// --- низкоуровневые помощники (все SSR-safe) -------------------------------
+// --- low-level helpers (all SSR-safe) -------------------------------
 
 const isClient = (): boolean => typeof window !== 'undefined';
 
@@ -48,9 +48,9 @@ const setCookie = (name: string, value: string, days = COOKIE_MAX_AGE_DAYS): voi
     document.cookie = `${name}=${value};path=/;max-age=${maxAge};SameSite=Lax`;
 };
 
-// --- применение темы (чистое, без хранения) --------------------------------
+// --- theme application (clean, no storage) --------------------------------
 
-// Ставит/снимает класс `.dark` на <html>. Для 'system' разрешает через matchMedia.
+// Sets/removes class `.dark` on <html>. For 'system' resolves via matchMedia.
 export function updateTheme(value: Appearance): void {
     if (!isClient()) {
         return;
@@ -61,10 +61,10 @@ export function updateTheme(value: Appearance): void {
     document.documentElement.classList.toggle('dark', isDark);
 }
 
-// --- boot: вызвать в точке входа ДО маунта (см. bootstrap-init.ts) ----------
+// --- boot: call at the entry point BEFORE the mount (see bootstrap-init.ts) ----------
 
 const handleSystemThemeChange = (): void => {
-    // Системная смена влияет на экран, только пока выбран 'system'.
+    // System change affects the screen only while selected 'system'.
     updateTheme(getStoredAppearance() ?? 'system');
 };
 
@@ -73,21 +73,21 @@ export function initializeTheme(): void {
         return;
     }
 
-    // Немедленно применяем сохранённый выбор (или system) — до первого кадра.
+    // Immediately apply the saved selection (or system) — before the first frame.
     updateTheme(getStoredAppearance() ?? 'system');
 
-    // Реакция на смену системной темы на лету.
+    // Reaction to changing the system theme on the fly.
     systemMediaQuery()?.addEventListener('change', handleSystemThemeChange);
 }
 
-// --- composable для компонентов --------------------------------------------
+// --- composable for components ------------------------------------------
 
-// Модульный ref: переживает повторные вызовы useDarkMode в разных компонентах.
+// Modular ref: is experiencing repeated calls useDarkMode in different components.
 const appearance = ref<Appearance>('system');
 
 export function useDarkMode(): UseDarkModeReturn {
     onMounted(() => {
-        // Синхронизация после SSR-гидрации: на сервере ref был дефолтным.
+        // Synchronization after SSR-hydration: on server ref was defaulted.
         const saved = getStoredAppearance();
 
         if (saved) {
@@ -106,9 +106,9 @@ export function useDarkMode(): UseDarkModeReturn {
     function updateAppearance(value: Appearance): void {
         appearance.value = value;
 
-        // Источник правды на клиенте.
+        // The source of truth is on the client.
         localStorage.setItem(STORAGE_KEY, value);
-        // Копия для сервера: localStorage серверу недоступен.
+        // Server copy: localStorage is not available to the server.
         setCookie(STORAGE_KEY, value);
 
         updateTheme(value);

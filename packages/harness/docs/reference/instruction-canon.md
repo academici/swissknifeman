@@ -1,52 +1,52 @@
-# Канон корневых инструкций
+# Canon of root instructions
 
-Механизм `harness instructions` управляет двенадцатью проекциями корневых/пакетных
-инструкций (шесть scope × два провайдера: `CLAUDE.md`/`AGENTS.md` в корне и по одному
-на `skiller`/`harness`/`maind`/`analyst`/`task`) из ОДНОГО источника — без ручной
-синхронизации между Claude Code и Codex.
+Mechanism `harness instructions` manages twelve root projections/batch
+instructions (six scope × two providers: `CLAUDE.md`/`AGENTS.md` at the root and one at a time
+on `skiller`/`harness`/`maind`/`analyst`/`task`) from ONE source - without manual
+synchronization between Claude Code and Codex.
 
-## Источник и цели
+## Source and targets
 
-Источник — фрагменты `packages/harness/configs/common/instructions/**` (правило на
-файл) плюс `catalog.json` (76 семантических ID: 56 общих + 20 provider-extension,
-D86). Каждая из двенадцати целей рендерится из среза каталога по своему scope и
-провайдеру; провайдер-специфичные расширения — аддитивный слой поверх общих правил
-(`root.provider-parity`), не замена. Машинный референс с точной картой «scope →
-target → счётчики» — [`provider-instructions.md`](./provider-instructions) (генерируется
-`operator_reference()`, пинится тестом байт-в-байт — руками не правится).
+Source - fragments `packages/harness/configs/common/instructions/**` (rule on
+file) plus `catalog.json` (76 semantic ID: 56 general + 20 provider-extension,
+D86). Each of the twelve targets is rendered from the directory slice in its own way scope and
+provider; provider-specific extensions - an additive layer on top of the general rules
+(`root.provider-parity`), is not a replacement. Machine reference with accurate map «scope →
+target → counters» — [`provider-instructions.md`](./provider-instructions) (is generated
+`operator_reference()`, pins with byte-to-byte test - can't be corrected by hand).
 
-Один семантический ID может нести НЕСКОЛЬКО `obligations` (список, не единичное поле):
-`root.plan-lifecycle` с ` несёт две — исходную про размещение
-планов и новую про обязательство провенанса авторской модели (какая модель спроектировала
-часть плана, три носителя поимённо — `Authoring Model` в Meta, колонка Update Log,
-`actor` журнала). Каждая запись `compatibility_assertions` обязана быть substring'ом тела
-фрагмента И зеркалиться байт-в-байт в `tests/fixtures_data/instruction-compatibility-v1.json`
-(`_validate_compatibility_fixture`) — расширение списка требует правки в обоих местах.
+One semantic ID can carry SEVERAL `obligations` (list, not a single field):
+`root.plan-lifecycle` with ` carries two - the original one about placement
+plans and a new commitment to the provenance of the author's model (which model designed
+part of the plan, three carriers by name - `Authoring Model` in Meta, column Update Log,
+`actor` log). Each entry `compatibility_assertions` must be substring'body ohm
+fragment AND mirrored byte-by-byte in `tests/fixtures_data/instruction-compatibility-v1.json`
+(`_validate_compatibility_fixture`) — list expansion requires editing in both places.
 
-## Управляемые блоки
+## Managed blocks
 
-В каждой цели правило живёт между парой HTML-маркеров
+In each target, the rule lives between a pair HTML-markers
 (`<!-- swissknifeman:instructions:<scope>:<provider>:<common|extension>:begin/end -->`).
-**Ручная правка содержимого между маркерами запрещена навсегда**: следующий прогон
-`check`/`repair` увидит расхождение хеша и поднимет `managed-drift` на шаге `[9/10]`
-`packages/harness/scripts/validate.sh`. Байты вне блоков (заголовок файла, разделы,
-не покрытые каталогом) сохраняются вербатим — правятся только фрагменты и
-перегенерация.
+**Manual editing of content between markers is permanently disabled**: next run
+`check`/`repair` will see a hash discrepancy and raise `managed-drift` at step `[9/10]`
+`packages/harness/scripts/validate.sh`. Bytes outside blocks (file header, sections,
+not covered by the catalog) are saved verbatim - only fragments are edited and
+regeneration.
 
-## Три наблюдения
+## Three observations
 
-- **`stale-source`** — исходный фрагмент изменился, а цель ещё несёт старый рендер.
-  Чинится обычным `apply --authorize <target>` (создание/обновление).
-- **`managed-drift`** — содержимое управляемого блока изменено МИМО механизма (ручная
-  правка, чужой коммит). Чинится ТОЛЬКО `repair` с явными `--observed-hash` на каждую
-  дрейфующую цель и `--preimage-dir` (см. ниже) — сужение проверки, `|| true` или
-  исключение цели из гейта запрещены.
-- **`ownership-conflict`** — цель существует, но не несёт маркеров и записи в
-  `.swissknifeman/provider-artifacts.lock.json` (типичный случай — вручную написанный
-  `CLAUDE.md` до внедрения механизма). `apply`/`repair` такую цель не трогают; путь
-  наружу — `adopt` (ниже).
+- **`stale-source`** — the source fragment has changed, and the target still carries the old render.
+  Repaired normally `apply --authorize <target>` (creation/update).
+- **`managed-drift`** — contents of a controlled block changed BY the mechanism (manual
+  edit, someone else's commit). Repairs ONLY `repair` with explicit `--observed-hash` for each
+  drifting target and `--preimage-dir` (see below) — narrowing of the check, `|| true` or
+  target exclusion from the gate is prohibited.
+- **`ownership-conflict`** — target exists, but does not carry markers or records in
+  `.swissknifeman/provider-artifacts.lock.json` (typical case - manually written
+  `CLAUDE.md` before implementing the mechanism). `apply`/`repair` such a target is not touched; way
+  out — `adopt` (below).
 
-## Пять операций `harness instructions`
+## Five operations `harness instructions`
 
 ```
 harness instructions <plan|check|adopt|apply|repair> [--target P]
@@ -55,34 +55,34 @@ harness instructions <plan|check|adopt|apply|repair> [--target P]
   [--observed-hash path=hash,...] [--json]
 ```
 
-- **`plan`** — no-write снимок: что рендерится и как это соотносится с текущим
-  деревом. Ничего не пишет.
-- **`check`** — то же плюс гейт покрытия обязательных литералов (см. ниже); modular
-  entry point для CI/validate.sh — `python3 -m harness.instructions --check`, вердикт
-  обязан совпадать с `harness instructions check` байт-в-байт.
-- **`adopt`** — owner-gated принятие СУЩЕСТВУЮЩЕГО неуправляемого файла под
-  управление: требует ОБЯЗАТЕЛЬНО все три — `--owner-decision D#` (авторитет
-  решения), `--mapping FILE` (посекционная карта «источник → семантический ID»,
-  покрывающая файл целиком) и `--preimage-dir DIR` (куда пишется байт-в-байт
-  pre-image ДО мутации, restore-путь — `rollback_adoption`). Отказывает на любой
-  цели, которая не `ownership-conflict`.
-- **`apply`** — пишет РОВНО цели, перечисленные `--authorize` (missing/create или
-  stale-source/update); список обязан совпадать И по составу, И по ПОРЯДКУ с тем, что
-  спланировал `plan` — иначе `INSTRUCTION_WRITE_FORBIDDEN`.
-- **`repair`** — чинит `managed-drift`: тот же список-и-порядок в `--authorize`, плюс
-  `--observed-hash target=hash` на КАЖДУЮ дрейфующую цель (доказательство, что
-  оператор видел актуальное состояние), плюс `--preimage-dir adjacent-backup`
-  (буквальная строка — pre-image пишется рядом с целью, не в отдельный каталог).
+- **`plan`** — no-write snapshot: what is being rendered and how it compares to the current one
+  tree. Doesn't write anything.
+- **`check`** — same plus mandatory literal coverage gate (see below); modular
+  entry point for CI/validate.sh — `python3 -m harness.instructions --check`, verdict
+  must match `harness instructions check` byte-to-byte.
+- **`adopt`** — owner-gated accepting an EXISTING unmanaged file under
+  control: MUST require all three - `--owner-decision D#` (authority
+  solutions), `--mapping FILE` (sectional map «source → semantic ID»,
+  covering the entire file) and `--preimage-dir DIR` (where byte-to-byte is written
+  pre-image BEFORE mutation, restore-path - `rollback_adoption`). Refuses any
+  target that is not `ownership-conflict`.
+- **`apply`** — writes EXACTLY the goals listed `--authorize` (missing/create or
+  stale-source/update); the list must match BOTH in composition AND IN ORDER with what
+  planned `plan` — otherwise `INSTRUCTION_WRITE_FORBIDDEN`.
+- **`repair`** — repairs `managed-drift`: same list-and-order in `--authorize`, plus
+  `--observed-hash target=hash` on EACH drifting target (proof that
+  operator saw the current status), plus `--preimage-dir adjacent-backup`
+  (literal string - pre-image is written next to the target, not in a separate directory).
 
-**Порядок целей в `--authorize` — АЛФАВИТНЫЙ по `target_path`** (авторитетная
-формулировка). Любой другой порядок (например, «сначала корневые, потом пакетные»)
-даёт `INSTRUCTION_WRITE_FORBIDDEN`, потому что механизм сравнивает кортежи позиционно.
-Отказ печатает этот порядок целиком (через `--authorize`-совместимую строку в
-диагностике `INSTRUCTION_WRITE_FORBIDDEN`) — копируется буквально в повторный вызов,
-без второй попытки вслепую.
+**Order of targets in `--authorize` — ALPHABETICAL order `target_path`** (authoritative
+wording). Any other order (for example, «first root, then batch»)
+gives `INSTRUCTION_WRITE_FORBIDDEN`, because the mechanism compares tuples positionally.
+Failure prints this entire order (via `--authorize`-compatible string in
+diagnostics `INSTRUCTION_WRITE_FORBIDDEN`) — is copied literally into the re-call,
+without a second blind attempt.
 
-`plan` и `check` — no-write; `apply`/`repair`/`adopt` пишут только после явной
-авторизации оператора.
+`plan` and `check` — no-write; `apply`/`repair`/`adopt` are written only after an explicit
+operator authorization.
 
 ### Provider-safe operations
 
@@ -94,77 +94,77 @@ needed by the documented rollback path. A failed readback stays non-green: resto
 declared owned preimage, then repeat `check`. Do not treat a dry-run, generated reference, or this
 page as permission to mutate a project or publish a release.
 
-## Adoption-режим: откат
+## Adoption-mode: rollback
 
-Каждое `adopt` перед мутацией пишет pre-image в `--preimage-dir` и записывает его
-хеш/путь в `semantic_metadata.adoption` соответствующей lock-записи. Откат —
-`rollback_adoption`: байт-в-байт восстановление из pre-image и снятие lock-записи;
-без записанного pre-image откат fail-closed (отказывает, а не аппроксимирует).
+Each `adopt` before the mutation writes pre-image in `--preimage-dir` and writes it
+hash/path to `semantic_metadata.adoption` corresponding lock-entries. Rollback -
+`rollback_adoption`: byte-to-byte recovery from pre-image and removal lock-records;
+without recorded pre-image rollback fail-closed (fails rather than approximates).
 
-## Три машинных гейта
+## Three machine gates
 
-- **Гейт дрейфа `[9/10]`** — предпоследний шаг `packages/harness/scripts/validate.sh`:
-  `python3 -m harness.instructions --check`, зелёный только если все двенадцать целей
-  `clean`. Единственный CI-носитель на сегодня (`analyst` в этом CI не покрыт).
-- **Гейт равенства provenance покрытия литералов** — `validate_literal_coverage` проверяет
-  digest текущего compatibility source и присутствие его assertions в живом каталоге.
-  Fixture регенерируется `generate-provider-instructions.py`. Исторический section-hash
-  остаётся читаемым, архивная матрица не задаёт текущую семантику.
-- **Гейт размера канона** — `validate_canon_size`, тот же вход `--check`: каждая
-  существующая проекция обязана уместиться в потолок своего класса и по строкам, и
-  по оценке токенов. Правило «канон инструкций ≤ 200 строк» после
-  ` живёт здесь, а не в прозе (подробности — ниже).
+- **Drift gate `[9/10]`** — penultimate step `packages/harness/scripts/validate.sh`:
+  `python3 -m harness.instructions --check`, green only if all twelve targets
+  `clean`. The only one CI-carrier for today (`analyst` in this CI not covered).
+- **Equality gate provenance covering literals** — `validate_literal_coverage` checks
+  digest current compatibility source and his presence assertions in the live directory.
+  Fixture is being regenerated `generate-provider-instructions.py`. Historical section-hash
+  remains readable, the archive matrix does not define the current semantics.
+- **Canon size gate** — `validate_canon_size`, same input `--check`: each
+  the existing projection must fit into the ceiling of its class both in rows and
+  by token valuation. Rule «canon of instructions ≤ 200 lines» after
+  ` lives here, not in prose (details - below).
 
-## Потолок размера канона
+## Canon Size Ceiling
 
-Носитель правила — четыре именованные константы `lib/harness/instructions.py`, по две
-на класс артефакта; «магических» чисел в теле проверки нет.
+The carrier of the rule is four named constants `lib/harness/instructions.py`, two each
+per artifact class; «magical» there are no numbers in the body of the check.
 
-| Класс | Цели | Строк | Токенов |
+| Class | Goals | Lines | Tokens |
 |:--|:--|:--|:--|
-| корневой | `CLAUDE.md`, `AGENTS.md` | `ROOT_CANON_LINE_LIMIT` = 200 | `ROOT_CANON_TOKEN_LIMIT` = 6 000 |
-| пакетный | `packages/<name>/{CLAUDE,AGENTS}.md` | `PACKAGE_CANON_LINE_LIMIT` = 100 | `PACKAGE_CANON_TOKEN_LIMIT` = 3 000 |
+| root | `CLAUDE.md`, `AGENTS.md` | `ROOT_CANON_LINE_LIMIT` = 200 | `ROOT_CANON_TOKEN_LIMIT` = 6 000 |
+| batch | `packages/<name>/{CLAUDE,AGENTS}.md` | `PACKAGE_CANON_LINE_LIMIT` = 100 | `PACKAGE_CANON_TOKEN_LIMIT` = 3 000 |
 
-Потолок строк корневого класса — апстрим-рекомендация Claude Code («keep `CLAUDE.md`
-files under 200 lines and move reference material to skills»), а не текущий размер
-файла; токенный выведен из наблюдаемой плотности этого канона на потолке строк
-(~28 ток/строку × 200 ≈ 5 600 → 6 000) и независимо сходится с бюджетной рамкой:
-6 000 — 37 % target'а первого хода 16 000. Пакетный класс вдвое строже, потому что
-пакетная проекция грузится В ДОПОЛНЕНИЕ к корневой, когда агент заходит в пакет.
+Root class row ceiling - upstream recommendation Claude Code («keep `CLAUDE.md`
+files under 200 lines and move reference material to skills»), and not the current size
+file; token inferred from the observed density of this canon on the row ceiling
+(~28 current/line × 200 ≈ 5 600 → 6 000) and independently converges with the budget frame:
+6 000 — 37 % target'and the first move is 16,000. The batch class is twice as strict because
+the package projection is loaded IN ADDITION to the root one when the agent enters the package.
 
-Три свойства гейта, которые важно не потерять при правках:
+Three gate properties that are important not to lose when editing:
 
-- **Меряется файл целиком**, а не только управляемые блоки: сессия платит за весь
-  `CLAUDE.md`, включая байты вне маркеров, и апстрим-рекомендация тоже про файл.
-- **Оценка токенов — та же формула, что у `skiller budget`** (`budget.py:48–64`).
-  Импорта через границу пакетов нет (harness не зависит от skiller), поэтому формула
-  продублирована явно, а равенство двух реализаций на общем входе пинится тестом
+- **The entire file is measured**, and not just managed blocks: the session pays for the entire
+  `CLAUDE.md`, including bytes outside the markers, and the upstream recommendation is also about the file.
+- **Token valuation is the same formula as `skiller budget`** (`budget.py:48–64`).
+  No import across package border (harness does not depend on skiller), therefore the formula
+  is duplicated explicitly, and the equality of two implementations at the common input is pinned by the test
   `tests/test_instruction_size_gate.py::test_token_estimate_matches_skiller_formula`.
-  Два независимых счёта одного файла — гарантированный спор цифр, и он закрыт тестом.
-- **Находка размера — не диагностика.** Таблица кодов `InstructionDiagnostic`
-  заморожена контрактом `provider-instruction-contract` v1.0.0; семнадцатый код бампнул
-  бы замороженный контракт, а переиспользование чужого соврало бы в машинном поле.
-  Поэтому гейт аддитивен: собственный тип `CanonSizeFinding` и новый ключ отчёта
-  `size_findings` поверх неизменных `targets`/`diagnostics`/`green`. Как и гейт
-  покрытия литералов, он подключён ТОЛЬКО к `check`: в `plan`/`apply`/`repair` красный
-  вердикт размера заклинил бы ровно ту операцию, которой его чинят.
+  Two independent accounts of one file are a guaranteed dispute of numbers, and it is closed by the test.
+- **Finding size is not diagnostic.** Code table `InstructionDiagnostic`
+  frozen by contract `provider-instruction-contract` v1.0.0; seventeenth code bumped
+  would be a frozen contract, and reusing someone else's would lie in the machine field.
+  Therefore the gate is additive: its own type `CanonSizeFinding` and new report key
+  `size_findings` over immutable ones `targets`/`diagnostics`/`green`. Like gate
+  covering literals, it is connected ONLY to `check`: in `plan`/`apply`/`repair` red
+  the size verdict would jam exactly the operation with which it is repaired.
 
-## Отношение к слоям `control-surface`
+## Relation to layers `control-surface`
 
-В терминах трёх слоёв источника зонтичного `control-surface` (canonical → generated →
-effective): фрагменты + `catalog.json` — canonical, двенадцать проекций — generated
-(дрейф чинится перегенерацией, не правкой файла), то, что реально видит агент в
-сессии, — effective.
+In terms of the three layers of the umbrella source `control-surface` (canonical → generated →
+effective): fragments + `catalog.json` — canonical, twelve projections - generated
+(drift is corrected by regeneration, not editing the file), what the agent actually sees in
+sessions, — effective.
 
-## Текущая семантика и исторический provenance
+## Current semantics and historical provenance
 
-Текущая literal coverage генерируется `scripts/generate-provider-instructions.py` из
-`tests/fixtures_data/instruction-compatibility-v1.json`. `--check` проверяет обе проекции.
-Архивная матрица остаётся историческим evidence, но не навязывает отменённые требования
-текущим правилам. Старый section-hash provenance читается; новый file-hash связывает
-coverage с текущим compatibility source. Изменение runtime-политики обновляет этот source
-и semantic tests, после чего штатно регенерируются root/provider carriers.
+Current literal coverage is generated `scripts/generate-provider-instructions.py` from
+`tests/fixtures_data/instruction-compatibility-v1.json`. `--check` checks both projections.
+The archival matrix remains historical evidence, but does not impose the canceled requirements
+current rules. Old section-hash provenance read; new file-hash links
+coverage with current compatibility source. Change runtime-policy updates this source
+and semantic tests, after which they are regenerated normally root/provider carriers.
 
-Root требует package guides, scope/authority и правдивое evidence. Общий doctor/health
-выполняется при настройке среды или симптомах; переход каталога и номер item не требуют
-новой сессии. Обычная задача может выполняться по брифу без плана.
+Root requires package guides, scope/authority and truthful evidence. General doctor/health
+is executed when setting up the environment or symptoms; directory transition and number item do not require
+new session. A regular task can be completed according to a brief without a plan.

@@ -8,7 +8,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 if ! command -v python3 >/dev/null 2>&1; then
-  echo "ERROR: тесты требуют python3" >&2
+  echo "ERROR: tests require python3" >&2
   exit 1
 fi
 
@@ -31,7 +31,7 @@ if [[ -n "$verbose" ]]; then
 else
   out="$(python3 -m unittest discover -s tests -p "test_*.py" 2>&1)" || {
     echo "$out" >&2
-    echo "ERROR: тесты упали" >&2
+    echo "ERROR: tests failed" >&2
     exit 1
   }
   echo "tests: OK ($(echo "$out" | grep -oE 'Ran [0-9]+ tests' | head -1))"

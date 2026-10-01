@@ -212,7 +212,7 @@ def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=
     """Build D14's stable scope/item-head/risk fingerprint for a terminal candidate."""
     plan_dir = Path(plan_dir)
     if not re.fullmatch(r"P\d+", phase_id):
-        raise ValueError("phase_id должен иметь форму Pn")
+        raise ValueError("phase_id should be of the form Pn")
     items = []
     declared_paths = set()
     plan_layout.layout_version(plan_dir)
@@ -226,7 +226,7 @@ def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=
         if status not in {
                 plan_status.STATUS_DONE, plan_status.STATUS_DEVIATIONS,
                 plan_status.STATUS_BLOCKED}:
-            raise ValueError(f"{phase_id} не candidate: {item_id} имеет статус {status}")
+            raise ValueError(f"{phase_id} not candidate: {item_id} has the status {status}")
         material_evidence = plan_item_state.material_terminal_evidence(plan_dir, item_id)
         material_bytes = json.dumps(
             material_evidence, ensure_ascii=False, sort_keys=True,
@@ -239,7 +239,7 @@ def phase_candidate_fingerprint(plan_dir, phase_id, *, scope=(), material_risks=
             "terminal_evidence_sha256": hashlib.sha256(material_bytes).hexdigest(),
         })
     if not items:
-        raise ValueError(f"{phase_id} не содержит items")
+        raise ValueError(f"{phase_id} does not contain items")
     completed = subprocess.run(
         ["git", "rev-parse", "HEAD"], cwd=plan_dir, text=True,
         capture_output=True, check=False)
@@ -334,7 +334,7 @@ def phase_audit_policy(plan_dir, phase_id, *, candidate_snapshot=None):
     """
     plan_dir = Path(plan_dir)
     if not re.fullmatch(r"P\d+", phase_id):
-        raise ValueError("phase_id должен иметь форму Pn")
+        raise ValueError("phase_id should be of the form Pn")
     snapshot = candidate_snapshot if isinstance(candidate_snapshot, dict) else None
     if snapshot is None:
         try:
@@ -400,8 +400,8 @@ def _phase_close_owner_override(plan_dir: Path, phase_id: str, owner_decision: s
     if set(decision.items) != phase_items:
         return {"allow": False, "code": "PHASE_OWNER_DECISION_ITEM_SET_MISMATCH"}
     if not ("AUDIT-CAP" in decision.body
-            and f"третьего Audit {phase_id}" in decision.body
-            and "фаза закрывается штатным `task:plan-close`" in decision.body):
+            and f"third Audit {phase_id}" in decision.body
+            and "phase closes with regular `task:plan-close`" in decision.body):
         return {"allow": False, "code": "PHASE_OWNER_DECISION_LITERAL_MISSING"}
     return {"allow": True, "code": "allow", "owner_decision": decision.identifier}
 
@@ -647,7 +647,7 @@ def _lint_return_escalation_qualification(plan_dir, layout: str, diag) -> None:
         row = evidence.get(digest)
         if row is None:
             _return_error(diag, plan_dir / "findings",
-                          f"RETURN_LOOP_QUALIFICATION_REQUIRED: {digest}: evidence отсутствует")
+                          f"RETURN_LOOP_QUALIFICATION_REQUIRED: {digest}: evidence missing")
             continue
         fields = row["fields"]
         expected = "new" if occurrences == 1 else "repeat"
@@ -656,7 +656,7 @@ def _lint_return_escalation_qualification(plan_dir, layout: str, diag) -> None:
         if (fields.get("qualification") != expected or int(fields["occurrences"]) != occurrences
                 or fields.get("item") != subject):
             _return_error(diag, row["path"],
-                          f"RETURN_LOOP_QUALIFICATION_REQUIRED: {digest}: ожидается "
+                          f"RETURN_LOOP_QUALIFICATION_REQUIRED: {digest}: pending "
                           f"item={subject}, qualification={expected}, occurrences={occurrences}")
 
 
@@ -685,8 +685,8 @@ def _lint_return_owner_authorization(plan_dir, layout: str, diag) -> None:
         authorization = row["fields"].get("owner_authorization") if row else None
         if not isinstance(authorization, str) or authorization not in decision_ids:
             _return_error(diag, row["path"] if row else plan_dir / "findings",
-                          f"RETURN_LOOP_OWNER_GATE_REQUIRED: {digest}: требуется существующий D# "
-                          "в owner_authorization")
+                          f"RETURN_LOOP_OWNER_GATE_REQUIRED: {digest}: requires existing D# "
+                          "in owner_authorization")
 
 
 def lint_return_loop(plan_dir, layout: str, diag) -> None:
@@ -743,7 +743,7 @@ def lint_read_budget(plan_dir, layout: str, diag) -> None:
         measurer = plan_weight.Measurer()
         measured = plan_weight.measure_plan(plan_dir, measurer)
     except plan_weight.PlanWeightError as exc:
-        _error(diag, plan_dir / "plan.md", f"не удалось загрузить вход гейта: {exc}")
+        _error(diag, plan_dir / "plan.md", f"failed to load gate input: {exc}")
         return
 
     try:
@@ -774,7 +774,7 @@ def lint_read_budget(plan_dir, layout: str, diag) -> None:
     contract = admission.get("contract")
     if contract is None:
         _error(diag, plan_dir / "root" / "contracts" / "read-budget-v1.md",
-               "контракт порога отсутствует или невалиден; D2 не может быть применён")
+               "threshold contract is missing or invalid; D2 cannot be applied")
         return
 
     threshold = contract["item_tokens"]
@@ -787,28 +787,28 @@ def lint_read_budget(plan_dir, layout: str, diag) -> None:
         item_id = item["item_id"]
         if item.get("d2a_pass") is False:
             _error(diag, plan_dir / "plan.md",
-                   f"пункт {item_id}: вес {item['weight_tokens']} > порога {threshold} "
-                   f"оценочных токенов ({calibration})")
+                   f"item {item_id}: weight {item['weight_tokens']} > threshold {threshold} "
+                   f"evaluation tokens ({calibration})")
 
         for gap in item.get("gaps", []):
             kind = gap.get("kind")
             if kind == plan_weight.GAP_OVERSIZED_FILE:
                 _error(diag, plan_dir / "plan.md",
-                       f"пункт {item_id}: файл {gap['path']} — {gap['bytes']} байт, "
-                       f"{gap['est_tokens']} оценочных токенов; лимиты одного чтения "
-                       f"{limits['size_bytes']} байт / {limits['tokens']} токенов "
+                       f"item {item_id}: file {gap['path']} — {gap['bytes']} bytes, "
+                       f"{gap['est_tokens']} evaluation tokens; limits per reading "
+                       f"{limits['size_bytes']} bytes / {limits['tokens']} tokens "
                        f"({calibration})")
             elif kind in (plan_weight.GAP_MISSING_FILE, plan_weight.GAP_UNREADABLE_ROOT,
                           plan_weight.GAP_UNRESOLVED_ENTRY):
-                subject = gap.get("path") or gap.get("entry") or "обязательный вход"
+                subject = gap.get("path") or gap.get("entry") or "required entry"
                 _error(diag, plan_dir / "plan.md",
-                       f"пункт {item_id}: обязательный вход {subject!r} не проходит "
+                       f"item {item_id}: required entry {subject!r} does not work "
                        f"D2(b): {gap['detail']}")
 
         for gap in item.get("admission_gaps", []):
             if gap.get("code") == "read_budget_contract_invalid":
                _error(diag, plan_dir / "root" / "contracts" / "read-budget-v1.md",
-                       f"пункт {item_id}: {gap.get('detail')}")
+                       f"item {item_id}: {gap.get('detail')}")
 
 
 def lint_bundle_freshness(plan_dir, layout: str, diag) -> None:
@@ -821,10 +821,10 @@ def lint_bundle_freshness(plan_dir, layout: str, diag) -> None:
         active_phases = {phase_id for phase_id, status in plan_layout.phase_statuses(plan_dir).items()
                          if status == plan_status.STATUS_PROGRESS}
     except plan_weight.PlanWeightError as exc:
-        _bundle_error(diag, plan_dir / "plan.md", f"не удалось загрузить ready-область: {exc}")
+        _bundle_error(diag, plan_dir / "plan.md", f"failed to load ready-area: {exc}")
         return
     except plan_layout.PlanLayoutError as exc:
-        _bundle_error(diag, plan_dir / "status.md", f"не удалось определить активную фазу: {exc}")
+        _bundle_error(diag, plan_dir / "status.md", f"could not determine the active phase: {exc}")
         return
     ready_items = [item for item in measured["items"]
                    if item.get("admission_state") == "ready"
@@ -840,7 +840,7 @@ def lint_bundle_freshness(plan_dir, layout: str, diag) -> None:
         except plan_bundle.BundleError as exc:
             target = plan_layout.carrier_path(plan_dir, "bundle", item_id=item["item_id"])
             _bundle_error(diag, target,
-                          f"пункт {item['item_id']}: declaration-not-renderable: {exc}")
+                          f"item {item['item_id']}: declaration-not-renderable: {exc}")
 
     active_items = [item for item in ready_items
                     if item.get("admission_state") == "ready"
@@ -858,7 +858,7 @@ def lint_bundle_freshness(plan_dir, layout: str, diag) -> None:
             plan_bundle.validate(json.loads(target.read_text(encoding="utf-8")))
         except (OSError, UnicodeDecodeError, json.JSONDecodeError, plan_bundle.BundleError) as exc:
             _bundle_error(diag, target,
-                          f"пункт {item['item_id']}: terminal evidence schema invalid: {exc}")
+                          f"item {item['item_id']}: terminal evidence schema invalid: {exc}")
     # Bundle v1 became a committed carrier in P3. A v2 plan that has not entered
     # that producer surface must remain compatible with the pre-P3 reader path.
     if not any(plan_layout.carrier_path(plan_dir, "bundle", item_id=item["item_id"]).is_file()
@@ -871,10 +871,10 @@ def lint_bundle_freshness(plan_dir, layout: str, diag) -> None:
             expected = plan_bundle.render(plan_dir, item_id).encode("utf-8")
             actual = target.read_bytes()
         except plan_bundle.BundleError as exc:
-            _bundle_error(diag, target, f"пункт {item_id}: {exc}")
+            _bundle_error(diag, target, f"item {item_id}: {exc}")
             continue
         except OSError:
-            _bundle_error(diag, target, f"пункт {item_id}: missing_entry: bundle отсутствует")
+            _bundle_error(diag, target, f"item {item_id}: missing_entry: bundle missing")
             continue
         if actual == expected:
             continue
@@ -890,13 +890,13 @@ def lint_bundle_freshness(plan_dir, layout: str, diag) -> None:
             elif expected_entries - current_entries:
                 code = "missing_entry"
             elif current_entries - expected_entries:
-                diag.warning(target, None, f"{BUNDLE_GATE_ID}: пункт {item_id}: extraneous_entry")
+                diag.warning(target, None, f"{BUNDLE_GATE_ID}: item {item_id}: extraneous_entry")
                 continue
             else:
                 code = "hash_mismatch"
         except Exception:
             code = "hash_mismatch"
-        _bundle_error(diag, target, f"пункт {item_id}: {code}")
+        _bundle_error(diag, target, f"item {item_id}: {code}")
     for builder in (plan_decisions.build_views, plan_status.build_status, plan_item_state.build_states):
         try:
             builder(plan_dir, check=True)
@@ -920,7 +920,7 @@ def lint_static_bundle_evidence(plan_dir, layout: str, diag) -> None:
     try:
         measured = plan_weight.measure_plan(plan_dir, plan_weight.Measurer())
     except plan_weight.PlanWeightError as exc:
-        _bundle_error(diag, plan_dir / "plan.md", f"не удалось загрузить terminal evidence: {exc}")
+        _bundle_error(diag, plan_dir / "plan.md", f"failed to load terminal evidence: {exc}")
         return
     for item in measured["items"]:
         if item.get("status") not in TERMINAL_ITEM_STATUSES:
@@ -932,7 +932,7 @@ def lint_static_bundle_evidence(plan_dir, layout: str, diag) -> None:
             plan_bundle.validate(json.loads(target.read_text(encoding="utf-8")))
         except (OSError, UnicodeDecodeError, json.JSONDecodeError, plan_bundle.BundleError) as exc:
             _bundle_error(diag, target,
-                          f"пункт {item['item_id']}: terminal evidence schema invalid: {exc}")
+                          f"item {item['item_id']}: terminal evidence schema invalid: {exc}")
 
 
 def lint_read_path_boundaries(plan_dir, layout: str, diag) -> None:
@@ -946,7 +946,7 @@ def lint_read_path_boundaries(plan_dir, layout: str, diag) -> None:
         registry = plan_layout.registry()
         ranks = spec["volatility_rank"]
     except (KeyError, plan_layout.PlanLayoutError) as exc:
-        _path_error(diag, plan_dir / "plan.md", f"контракт пути не читается: {exc}")
+        _path_error(diag, plan_dir / "plan.md", f"path contract is not readable: {exc}")
         return
 
     for reader, path in spec.get("paths", {}).items():
@@ -956,22 +956,22 @@ def lint_read_path_boundaries(plan_dir, layout: str, diag) -> None:
             carrier = registry.get(carrier_id)
             if carrier is None:
                 _path_error(diag, plan_dir / "plan.md",
-                            f"путь {reader}, слот {slot.get('id')}: неизвестный носитель {carrier_id!r}")
+                            f"path {reader}, slot {slot.get('id')}: unknown media {carrier_id!r}")
                 continue
             rank = ranks.get(carrier.get("volatility"))
             if rank is None:
                 _path_error(diag, plan_dir / "plan.md",
-                            f"путь {reader}, слот {slot.get('id')}, носитель {carrier_id}: неизвестная волатильность")
+                            f"path {reader}, slot {slot.get('id')}, media {carrier_id}: unknown volatility")
                 continue
             if rank < prior_rank:
                 _path_error(diag, plan_dir / "plan.md",
-                            f"путь {reader}, слот {slot.get('id')}, носитель {carrier_id}: "
-                            "волатильность нарушает монотонный предикат порядка")
+                            f"path {reader}, slot {slot.get('id')}, media {carrier_id}: "
+                            "volatility violates monotonic order predicate")
             prior_rank = max(prior_rank, rank)
             if reader == "executor" and carrier.get("class") == "history":
                 _path_error(diag, plan_dir / "plan.md",
-                            f"путь executor, слот {slot.get('id')}, носитель {carrier_id} класса history "
-                            "стоит на обязательном пути")
+                            f"path executor, slot {slot.get('id')}, media {carrier_id} class history "
+                            "is on a required path")
 
     for carrier_id, sections in spec.get("section_order", {}).items():
         prior_rank = -1
@@ -979,16 +979,16 @@ def lint_read_path_boundaries(plan_dir, layout: str, diag) -> None:
             rank = ranks.get(section.get("volatility"))
             if rank is None:
                 _path_error(diag, plan_dir / "plan.md",
-                            f"носитель {carrier_id}, секция {section.get('section')}: неизвестная волатильность")
+                            f"media {carrier_id}, section {section.get('section')}: unknown volatility")
                 continue
             if rank < prior_rank:
                 _path_error(diag, plan_dir / "plan.md",
-                            f"носитель {carrier_id}, секция {section.get('section')}: "
-                            "волатильность нарушает монотонный предикат порядка")
+                            f"media {carrier_id}, section {section.get('section')}: "
+                            "volatility violates monotonic order predicate")
             prior_rank = max(prior_rank, rank)
             if carrier_id == "plan-core" and rank == ranks.get("volatile"):
                 _path_error(diag, plan_dir / "plan.md",
-                            f"носитель plan-core, секция {section.get('section')}: volatile запрещён")
+                            f"media plan-core, section {section.get('section')}: volatile prohibited")
 
     try:
         terminal_specs = {path.resolve() for phase_id in plan_layout.phase_paths(plan_dir)
@@ -998,7 +998,7 @@ def lint_read_path_boundaries(plan_dir, layout: str, diag) -> None:
                          if status == plan_status.STATUS_PROGRESS}
         measured = plan_weight.measure_plan(plan_dir, plan_weight.Measurer())
     except (plan_layout.PlanLayoutError, plan_weight.PlanWeightError) as exc:
-        _path_error(diag, plan_dir / "plan.md", f"не удалось разрешить терминальную фазу: {exc}")
+        _path_error(diag, plan_dir / "plan.md", f"failed to resolve terminal phase: {exc}")
         return
     repo_root = plan_weight.repo_root_for(plan_dir)
     for item in measured["items"]:
@@ -1017,8 +1017,8 @@ def lint_read_path_boundaries(plan_dir, layout: str, diag) -> None:
                     resolved = plan_weight.resolve_candidate(candidate, (plan_dir, repo_root))
                     if resolved is not None and resolved.resolve() in terminal_specs:
                         _path_error(diag, plan_dir / "plan.md",
-                                    f"пункт {item['item_id']}, {field}: {candidate} адресует файл "
-                                    "терминальной фазы; допустим только её closure digest")
+                                    f"item {item['item_id']}, {field}: {candidate} addresses the file "
+                                    "terminal phase; Let's just let her closure digest")
     _lint_downstream_records(plan_dir, layout, diag)
 
 

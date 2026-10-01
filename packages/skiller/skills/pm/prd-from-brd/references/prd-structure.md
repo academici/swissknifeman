@@ -1,28 +1,28 @@
-# Структура PRD
+# Structure PRD
 
-Справочник к скиллу `prd-from-brd`.
+Skill reference `prd-from-brd`.
 
 
 ```
-1. TL;DR (3–5 строк) — что и для кого выпускаем
-2. Цели и не-цели (in-scope / out-of-scope)
-3. User personas (детали поверх BRD)
-4. User flows (mermaid + текстовое описание)
+1. TL;DR (3–5 lines) — what we release and for whom
+2. Goals and non-goals (in-scope / out-of-scope)
+3. User personas (details on top BRD)
+4. User flows (mermaid + text description)
 5. Detailed user stories
-   - Для каждой:
-     - User story (как роль, я хочу..., чтобы...)
+   - For each:
+     - User story (as a role, I want... to...)
      - Acceptance criteria (Given / When / Then)
      - Edge cases / error states
      - Success metric
-     - Приоритет (RICE score + версия)
-     - Зависимости (другие stories или внешние)
+     - Priority (RICE score + version)
+     - Dependencies (others stories or external)
 6. UX requirements
-   - Состояния экрана: empty / loading / success / error / partial
-   - Accessibility minimum (WCAG 2.1 AA если применимо)
-   - Mobile breakpoints (если веб)
-7. Метрики запуска (north star + per-feature)
-8. Открытые UX-вопросы (для дизайнера)
-9. Out of scope для v1 (явный список)
+   - Screen states: empty / loading / success / error / partial
+   - Accessibility minimum (WCAG 2.1 AA if applicable)
+   - Mobile breakpoints (if web)
+7. Launch metrics (north star + per-feature)
+8. Open UX-questions (for the designer)
+9. Out of scope for v1 (explicit list)
 ```
 
 ---

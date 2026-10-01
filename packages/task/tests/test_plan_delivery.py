@@ -42,7 +42,7 @@ class PlanDeliveryTests(unittest.TestCase):
         message = plan_delivery.required_final_message({
             "schema_version": "terminal-delivery-receipt/v1", "recommendation": "Run P4.2.",
         })
-        self.assertEqual(message, "Рекомендация следующего шага:\nRun P4.2.")
+        self.assertEqual(message, "Next step recommendation:\nRun P4.2.")
         with self.assertRaisesRegex(plan_delivery.DeliveryError, "STALE_TERMINAL_RECEIPT"):
             plan_delivery.required_final_message({"schema_version": "unknown"})
 
@@ -76,7 +76,7 @@ class PlanDeliveryTests(unittest.TestCase):
         phase = plan / "phases" / "P1" / "P1.md"
         phase.write_text(
             phase.read_text(encoding="utf-8")
-            + "\n> **Контракт фазы | v1.**\n> Delivery fixture contract.\n",
+            + "\n> **Phase Contract | v1.**\n> Delivery fixture contract.\n",
             encoding="utf-8")
         (plan / "journal.jsonl").write_text("", encoding="utf-8")
         handoff = plan / "handoff.md"
@@ -413,14 +413,14 @@ class PlanDeliveryTests(unittest.TestCase):
         phase = plan / "phases" / "P1" / "P1.md"
         phase.write_text(
             phase.read_text(encoding="utf-8")
-            + "\n## Audit P1 — 2026-08-12\n\n**Вердикт: RED**\n\n"
-            "### Что запускать\n\n"
-            "| Batch | Model | Thinking | Context | Суть | Команда |\n"
+            + "\n## Audit P1 — 2026-08-12\n\n**Verdict: RED**\n\n"
+            "### What to run\n\n"
+            "| Batch | Model | Thinking | Context | The bottom line | Command |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
             "| repair | frontier | high | `continue-root` | fix | "
             "`$ task:plan-run DEMO-AUDIT P1.1` |\n\n"
             "```text\n$ task:plan-run DEMO-AUDIT P1.1\n\n"
-            "РЕЖИМ: bounded audit repair-forward\nВХОД: audit\nСКОУП: fix\nНЕ ТРОГАТЬ: other\n```\n",
+            "MODE: bounded audit repair-forward\nENTRANCE: audit\nSCORE: fix\nDO NOT TOUCH: other\n```\n",
             encoding="utf-8",
         )
         journal.append(plan, journal.new_entry(
@@ -437,17 +437,17 @@ class PlanDeliveryTests(unittest.TestCase):
         phase = plan / "phases" / "P1" / "P1.md"
         phase.write_text(
             phase.read_text(encoding="utf-8")
-            + "\n## Audit P1 — 2026-08-13\n\n**Вердикт: GREEN**\n\n"
-            "### Что запускать\n\n"
+            + "\n## Audit P1 — 2026-08-13\n\n**Verdict: GREEN**\n\n"
+            "### What to run\n\n"
             "Semantic Next: `close: task:plan-close DEMO-AUDIT-GREEN P1`.\n\n"
-            "| Batch | Model | Thinking | Context | Суть | Команда |\n"
+            "| Batch | Model | Thinking | Context | The bottom line | Command |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
             "| n/a | implementation | high | `continue-root` | close | "
             "`$ task:plan-close DEMO-AUDIT-GREEN P1` |\n",
             encoding="utf-8",
         )
         journal.append(plan, journal.new_entry(
-            plan_id=plan.name, item_id="P1 — режим фазы", command="plan-audit",
+            plan_id=plan.name, item_id="P1 — phase mode", command="plan-audit",
             actor="frontier/xhigh", result="audit-green", session_id="session-audit",
             fingerprint="b" * 64,
         ))

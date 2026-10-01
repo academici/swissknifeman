@@ -8,12 +8,12 @@ from task import terminal_policy
 
 
 def _lint_plan_md_20(lines, path, diag):
-    """Warning-проверки схемы 2.0 поверх plan.md (существующее поведение не трогают):
-    (а) порядок/заголовки нумерованных секций `## 0-6` (P0.3 рек#6);
-    (б) Update Log: ячейка «Что» длиннее UPDATE_LOG_MAX_CHARS (P0.3 рек#5);
-    (в) D-лог с ≥3 решениями без единого RAG-маркера — эвристика отсутствия
-        маркировки несущих фактов (SKILL §7)."""
-    # (а) нумерованные секции: номера по возрастанию, заголовки зависят от layout.
+    """Warning-schema checks 2.0 on top plan.md (do not touch existing behavior):
+    (a) order/headers of numbered sections `## 0-6` (P0.3 rivers#6);
+    (b) Update Log: cell «What» longer UPDATE_LOG_MAX_CHARS (P0.3 rivers#5);
+    (in) D-log s ≥3 solutions without a single RAG-token - missing heuristic
+        carrier fact markings (SKILL §7)."""
+    # (a) numbered sections: numbers in ascending order, headings depend on layout.
     numbered = []
     for i, ln in enumerate(lines):
         m = PLAN_SECTION_NUM_RE.match(ln)
@@ -22,7 +22,7 @@ def _lint_plan_md_20(lines, path, diag):
     nums = [n for n, _, _ in numbered]
     if nums != sorted(nums):
         diag.warning(path, numbered[0][2],
-                     f"секции plan.md идут не по порядку: {nums} (канон — ## 0…6 по возрастанию)")
+                     f"sections plan.md are out of order: {nums} (canon - ## 0…6 ascending)")
     try:
         layout = plan_layout.layout_version(Path(path).parent)
     except plan_layout.PlanLayoutError:
@@ -32,7 +32,7 @@ def _lint_plan_md_20(lines, path, diag):
         expected = expected_titles.get(n)
         if expected and title != expected:
             diag.warning(path, lineno,
-                         f"секция «## {n}. {title}» ≠ канонической «## {n}. {expected}»")
+                         f"section «## {n}. {title}» ≠ canonical «## {n}. {expected}»")
 
     if layout == "v2":
         # The v2 core deliberately has neither an inline Update Log nor an inline
@@ -50,9 +50,9 @@ def _lint_plan_md_20(lines, path, diag):
             what = plan_journal.project_update_log_what(entry, lineno)
             if len(what) > UPDATE_LOG_MAX_CHARS:
                 diag.warning(journal_path, lineno,
-                             f"Update Log: запись «Что» {len(what)} символов > "
-                             f"{UPDATE_LOG_MAX_CHARS} — канон: ≤2 строк + ссылка на "
-                             "Completion Notes, не пересказ")
+                             f"Update Log: entry «What» {len(what)} characters > "
+                             f"{UPDATE_LOG_MAX_CHARS} — canon: ≤2 lines + link to "
+                             "Completion Notes, not a retelling")
         try:
             decisions = plan_decisions.load_decisions(Path(path).parent)
         except plan_decisions.DecisionError:
@@ -60,25 +60,25 @@ def _lint_plan_md_20(lines, path, diag):
         if len(decisions) >= 3 and not any(RAG_MARKER_RE.search(decision.body)
                                            for decision in decisions):
             diag.warning(Path(path).parent / "decisions", 0,
-                         f"Decision Log: {len(decisions)} решений и ни одного маркера "
-                         f"«RAG:✅»/«RAG:{EMPTY_PLACEHOLDER}»/«[UNVERIFIED]» — несущие "
-                         "факты не промаркированы (SKILL §7)")
+                         f"Decision Log: {len(decisions)} solutions and not a single marker "
+                         f"«RAG:✅»/«RAG:{EMPTY_PLACEHOLDER}»/«[UNVERIFIED]» — carriers "
+                         "facts are not marked (SKILL §7)")
         return
 
-    # (б) Update Log — лимит «Что»
+    # (b) Update Log — limit «What»
     _, ul_body, ul_start = _find_section(lines, UPDATE_LOG_HEADER_RE)
     if ul_body is not None:
         headers, rows, _ = _parse_table(ul_body, ul_start)
-        if headers and "Что" in headers:
+        if headers and "What" in headers:
             for row, lineno in rows:
-                what_val = row.get("Что", "")
+                what_val = row.get("What", "")
                 if len(what_val) > UPDATE_LOG_MAX_CHARS:
                     diag.warning(path, lineno,
-                                 f"Update Log: запись «Что» {len(what_val)} символов > "
-                                 f"{UPDATE_LOG_MAX_CHARS} — канон: ≤2 строк + ссылка на "
-                                 f"Completion Notes, не пересказ")
+                                 f"Update Log: entry «What» {len(what_val)} characters > "
+                                 f"{UPDATE_LOG_MAX_CHARS} — canon: ≤2 lines + link to "
+                                 f"Completion Notes, not a retelling")
 
-    # (в) D-лог ≥3 решений без единого RAG-маркера
+    # (in) D-log ≥3 solutions without a single RAG-marker
     _, dl_body, dl_start = _find_section(lines, DECISION_LOG_HEADER_RE)
     if dl_body is not None:
         _, rows, _ = _parse_table(dl_body, dl_start)
@@ -86,9 +86,9 @@ def _lint_plan_md_20(lines, path, diag):
                 RAG_MARKER_RE.search(" ".join(str(v) for v in row.values()))
                 for row, _ in rows):
             diag.warning(path, dl_start,
-                         f"Decision Log: {len(rows)} решений и ни одного маркера "
-                         f"«RAG:✅»/«RAG:{EMPTY_PLACEHOLDER}»/«[UNVERIFIED]» — несущие "
-                         f"факты не промаркированы (SKILL §7)")
+                         f"Decision Log: {len(rows)} solutions and not a single marker "
+                         f"«RAG:✅»/«RAG:{EMPTY_PLACEHOLDER}»/«[UNVERIFIED]» — carriers "
+                         f"facts are not marked (SKILL §7)")
 
 
 def _lint_v2_decision_pointer(plan_dir, plan_lines, plan_md, diag):
@@ -104,36 +104,36 @@ def _lint_v2_decision_pointer(plan_dir, plan_lines, plan_md, diag):
         return
     _, body, start = _find_section(plan_lines, DECISION_LOG_HEADER_RE)
     if body is None:
-        diag.error(plan_md, None, "Layout v2: нет секции «## 5. Decision Log»")
+        diag.error(plan_md, None, "Layout v2: no section «## 5. Decision Log»")
     else:
         text = "\n".join(body).strip()
         if "|" in text or "decisions/" not in text or "plan-views.py decisions" not in text:
             diag.error(plan_md, start,
-                       "Layout v2: Decision Log должен быть строкой-указателем на decisions/ и plan-views.py decisions")
-    if any(re.match(r"^##\s+(?:\d+\.\s+)?Обсуждение\s*$", line) for line in plan_lines):
-        diag.error(plan_md, None, "Layout v2: «## Обсуждение» запрещён; используйте open-questions.md")
+                       "Layout v2: Decision Log must be a pointer string to decisions/ and plan-views.py decisions")
+    if any(re.match(r"^##\s+(?:\d+\.\s+)?Discussion\s*$", line) for line in plan_lines):
+        diag.error(plan_md, None, "Layout v2: «## Discussion» prohibited; use open-questions.md")
     if not (Path(plan_dir) / "decisions").is_dir():
-        diag.error(plan_md, None, "Layout v2: отсутствует каталог decisions/")
+        diag.error(plan_md, None, "Layout v2: missing directory decisions/")
 
 
-# --- m7/D10: парсер секции `## 7. Contracts` -----------------------------------
+# --- m7/D10: section parser `## 7. Contracts` -----------------------------------
 
 def _contract_key(value):
-    """Нормализация имени контракта — последний сегмент пути: донор пишет
-    , потребитель — `REGHUB/root/contracts/…`."""
+    """Contract name normalization - last path segment: donor writes
+    , consumer - `REGHUB/root/contracts/…`."""
     return (value or "").strip().strip("`").rsplit("/", 1)[-1]
 
 
 def _semver_tuple(value):
-    """`v2.0.2` → (2, 0, 2); пре-релизы не поддерживаем. Нет матча → None."""
+    """`v2.0.2` → (2, 0, 2); we do not support pre-releases. No match → None."""
     m = SEMVER_RE.search(value or "")
     return tuple(int(g) for g in m.groups()) if m else None
 
 
 def parse_contracts(lines, path, diag):
-    """Опциональная секция `## 7. Contracts` → {"exported": [...], "consumed": [...]}.
-    Секции нет — молча пустая модель (отсутствие не дефект). Кривые колонки/подсекции —
-    WARNING (механизм молод: ERROR сломал бы back-compat-гейт)."""
+    """Optional section `## 7. Contracts` → {"exported": [...], "consumed": [...]}.
+    No section - silently empty model (absence is not a defect). Crooked columns/subsections -
+    WARNING (mechanism is young: ERROR would break back-compat-gate)."""
     model = {"exported": [], "consumed": []}
     _, body, body_start = _find_section(lines, CONTRACTS_HEADER_RE)
     if body is None:
@@ -147,7 +147,7 @@ def parse_contracts(lines, path, diag):
             subs.append(("consumed", i))
     if not subs:
         diag.warning(path, body_start,
-                     "«## 7. Contracts»: нет подсекций «### Exported» / «### Consumed»")
+                     "«## 7. Contracts»: no subsections «### Exported» / «### Consumed»")
         return model
 
     expected = {"exported": EXPORTED_COLUMNS, "consumed": CONSUMED_COLUMNS}
@@ -157,11 +157,11 @@ def parse_contracts(lines, path, diag):
                                                     body_start + start + 1)
         title = kind.capitalize()
         if headers is None:
-            diag.warning(path, body_start + start, f"«### {title}»: таблица не найдена")
+            diag.warning(path, body_start + start, f"«### {title}»: table not found")
             continue
         if tuple(headers) != expected[kind]:
             diag.warning(path, header_lineno,
-                         f"«### {title}»: колонки {headers} ≠ канонических "
+                         f"«### {title}»: columns {headers} ≠ canonical "
                          f"{list(expected[kind])}")
             continue
         for row, lineno in rows:
@@ -170,53 +170,53 @@ def parse_contracts(lines, path, diag):
 
 
 def _lint_contracts_cross_plan(models, diag):
-    """(m7/D10) Сверка потребителей с донорами В ПРЕДЕЛАХ одного корня `plans/`.
-    Связь строится ОТ потребителя (`Consumed.Донор-план`) — единственное детерминированное
-    направление. Донор вне корня (кросс-репо) не проверяется — граница §11.
-    `Pinned` ≠ `Версия` донора → WARNING «уведомление не разнесено»."""
-    exported = {}  # (plan_id, contract_key) -> версия-строка
+    """(m7/D10) Reconciliation of consumers with donors WITHIN the same root `plans/`.
+    Communication is built FROM the consumer (`Consumed.Donor plan`) — the only deterministic
+    direction. Donor outside the root (cross-repo) not checked - boundary §11.
+    `Pinned` ≠ `Version` donor → WARNING «notification not posted»."""
+    exported = {}  # (plan_id, contract_key) -> version-string
     for pid, model in models.items():
         for row in (model or {}).get("contracts", {}).get("exported", []):
-            key = _contract_key(row.get("Контракт"))
+            key = _contract_key(row.get("Contract"))
             if key:
-                exported[(pid, key)] = (row.get("Версия") or "").strip()
+                exported[(pid, key)] = (row.get("Version") or "").strip()
 
     for pid, model in models.items():
         plan_md = Path((model or {}).get("path", pid)) / "plan.md"
         for row in (model or {}).get("contracts", {}).get("consumed", []):
-            donor = (row.get("Донор-план") or "").strip()
-            key = _contract_key(row.get("Контракт"))
+            donor = (row.get("Donor plan") or "").strip()
+            key = _contract_key(row.get("Contract"))
             donor_ver = exported.get((donor, key))
             if donor_ver is None:
-                continue  # донора нет в этом корне — линтер честно молчит (§11)
+                continue  # there is no donor in this root - the linter is honestly silent (§11)
             pinned = (row.get("Pinned") or "").strip()
             dv, pv = _semver_tuple(donor_ver), _semver_tuple(pinned)
             if dv is None or pv is None or dv == pv:
                 continue
             diag.warning(plan_md, row.get("_lineno"),
-                         f"донор {donor}: контракт {key} = {donor_ver}, потребитель {pid} "
-                         f"запинен на {pinned} — уведомление не разнесено (§11)")
+                         f"donor {donor}: contract {key} = {donor_ver}, consumer {pid} "
+                         f"pinned to {pinned} — notification not posted (§11)")
 
 
-# --- Слой 0 «бриф» — обязательный вход плана (SKILL §16) ------------------------
-# С этой даты (датовый PLAN-ID) отсутствие brief/ — ERROR; старее/legacy — WARNING
-# (back-compat: существующие планы не ломаем, новые без брифа утверждение не проходят).
+# --- Layer 0 «brief» — required plan input (SKILL §16) ------------------------
+# From this date (dated PLAN-ID) absence brief/ — ERROR; older/legacy — WARNING
+# (back-compat: we don’t break existing plans, new ones without a brief are not approved).
 BRIEF_CANON_DATE = "2026.07.16"
 
 
 def _lint_plan_brief_20(plan_dir, plan_id, diag):
-    """brief/ — слой 0 «вход»: переформулированное без потери мыслей исходное
-    сообщение владельца (00-brief.md) + дописываемые датированные уточнения.
-    Задача: из плана видно «что было на входе → к чему пришли». План без brief/
-    не проходит утверждение (SKILL §16)."""
+    """brief/ — layer 0 «input»: reformulated without loss of thoughts original
+    owner message (00-brief.md) + added dated clarifications.
+    Task: it is clear from the plan «what was at the input → what we came to». Plan without brief/
+    fails approval (SKILL §16)."""
     plan_dir = Path(plan_dir)
     brief_dir = plan_dir / "brief"
     has_md = brief_dir.is_dir() and any(
         f.is_file() and f.stat().st_size > 0 for f in brief_dir.glob("*.md"))
     if has_md:
         return
-    msg = (f"нет слоя 0 «бриф»: {plan_dir.name}/brief/ с ≥1 непустым .md "
-           f"(00-brief.md — переформулированный вход владельца, уточнения дописываются; "
+    msg = (f"no layer 0 «brief»: {plan_dir.name}/brief/ with ≥1 non-empty .md "
+           f"(00-brief.md — reformulated owner input, clarifications are being added; "
            f"SKILL §16)")
     if PLAN_ID_DATED_RE.match(plan_id) and plan_id[:10] >= BRIEF_CANON_DATE:
         diag.error(plan_dir / "plan.md", None, msg)
@@ -225,10 +225,10 @@ def _lint_plan_brief_20(plan_dir, plan_id, diag):
 
 
 def _lint_plan_roadmap_20(plan_dir, plan_id, phase_files, diag):
-    """roadmap.md обязателен, когда план полностью детализирован (нет скелет-маркеров
-    ни в одной фазе) — SKILL §8: исполнение идёт батчами по исполнительской карте,
-    а не поштучным бэбиситтингом. Severity как у brief-гейта: датовые планы от
-    BRIEF_CANON_DATE — ERROR, старее/legacy — WARNING."""
+    """roadmap.md is required when the plan is fully detailed (no skeleton markers
+    in no phase) — SKILL §8: execution occurs in batches according to the performance map,
+    and not individual babysitting. Severity like brief-gate: date plans from
+    BRIEF_CANON_DATE — ERROR, older/legacy — WARNING."""
     plan_dir = Path(plan_dir)
     if not phase_files:
         return
@@ -238,33 +238,33 @@ def _lint_plan_roadmap_20(plan_dir, plan_id, phase_files, diag):
         except (OSError, UnicodeDecodeError):
             continue
         if any(SKELETON_MARKER_RE.match(ln) for ln in text.splitlines()):
-            return  # есть скелеты — план ещё в авторинге, roadmap не требуется
+            return  # there are skeletons - the plan is still in authoring, roadmap not required
     rm = plan_dir / "roadmap.md"
     if rm.is_file() and rm.stat().st_size > 0:
         return
-    msg = (f"план полностью детализирован (скелет-маркеров нет), а {plan_dir.name}/roadmap.md "
-           f"отсутствует — исполнительская карта обязательна (SKILL §8)")
+    msg = (f"plan fully detailed (no skeleton markers), a {plan_dir.name}/roadmap.md "
+           f"missing - performance card required (SKILL §8)")
     if PLAN_ID_DATED_RE.match(plan_id) and plan_id[:10] >= BRIEF_CANON_DATE:
         diag.error(plan_dir / "plan.md", None, msg)
     else:
         diag.warning(plan_dir / "plan.md", None, msg)
 
 
-# --- Слой журнала/индекса — soft/hard-гейт по дате-cutoff ------------
-# Датовые планы ОТ этой даты обязаны нести валидный journal.jsonl (ERROR); старее/
-# legacy — WARNING (тот же паттерн, что у brief/roadmap-гейтов, back-compat — не ломаем
-# уже идущий флот). Cutoff = дата запечатывания этого канона: план
-# сам датовый от этой даты — обязан бэкфиллить свой journal.jsonl
-# ДО коммита этой правки, иначе первым же ловит собственный ERROR-гейт.
+# --- Log Layer/index - soft/hard-gate by date-cutoff ------------
+# Date plans FROM this date must be valid journal.jsonl (ERROR); older/
+# legacy — WARNING (same pattern as brief/roadmap-gates, back-compat — do not break
+# fleet already on its way). Cutoff = sealing date of this canon: plan
+# itself dated from this date is obliged to backfill its journal.jsonl
+# BEFORE committing this edit, otherwise it catches your own first ERROR-gate.
 JOURNAL_CANON_DATE = "2026.07.18"
 
 
 def _lint_journal_exceptions_20(plan_dir, plan_id, report):
-    """Валидирует optional append-only sidecar historical schema exceptions.
+    """Validates optional append-only sidecar historical schema exceptions.
 
-    Возвращает ``target_line -> exception`` только для полностью валидных записей.
-    Sidecar не является журналом событий и конструктивно не может образовать
-    correction-цикл: его target всегда строка отдельного ``journal.jsonl``.
+    Returns ``target_line -> exception`` only for fully valid records.
+    Sidecar is not an event log and structurally cannot form
+    correction-loop: its target is always a separate string ``journal.jsonl``.
     """
     exceptions_path = Path(plan_dir) / _journal.EXCEPTIONS_FILENAME
     if not exceptions_path.is_file():
@@ -272,10 +272,10 @@ def _lint_journal_exceptions_20(plan_dir, plan_id, report):
     try:
         lines = exceptions_path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeDecodeError):
-        report(exceptions_path, None, "journal exceptions sidecar не читается (кодировка/IO)")
+        report(exceptions_path, None, "journal exceptions sidecar not readable (encoding/IO)")
         return {}
     if not any(line.strip() for line in lines):
-        report(exceptions_path, None, "journal exceptions sidecar пуст")
+        report(exceptions_path, None, "journal exceptions sidecar empty")
         return {}
 
     by_target = {}
@@ -286,19 +286,19 @@ def _lint_journal_exceptions_20(plan_dir, plan_id, report):
             exception = json.loads(raw)
         except json.JSONDecodeError as exc:
             report(exceptions_path, i,
-                   f"строка не валидный JSON (append-only exception NDJSON): {exc}")
+                   f"string is not valid JSON (append-only exception NDJSON): {exc}")
             continue
         try:
             _journal.validate_exception_target(
                 plan_dir, exception, check_duplicate=False)
         except _journal.JournalValidationError as exc:
-            report(exceptions_path, i, f"schema exception не проходит контракт: {exc}")
+            report(exceptions_path, i, f"schema exception contract fails: {exc}")
             continue
 
         target_line = exception["target_line"]
         if target_line in by_target:
             report(exceptions_path, i,
-                   f"duplicate schema exception для journal.jsonl:{target_line}")
+                   f"duplicate schema exception for journal.jsonl:{target_line}")
             continue
         by_target[target_line] = exception
     return by_target
@@ -306,9 +306,9 @@ def _lint_journal_exceptions_20(plan_dir, plan_id, report):
 
 def _lint_plan_journal_20(plan_dir, plan_id, diag):
     """journal.jsonl — append-only NDJSON,
-    одна запись на исполнение item'а любым запуском `/task:plan-*`. Отсутствие/пустой/
-    невалидный файл — ERROR для датовых планов от JOURNAL_CANON_DATE, WARNING для
-    старее/legacy. Схема записи реюзается из `task.journal` (SSOT — не дублируем enum'ы)."""
+    one record per execution item'and any launch `/task:plan-*`. Absence/empty/
+    invalid file - ERROR for date plans from JOURNAL_CANON_DATE, WARNING for
+    older/legacy. The recording scheme is reused from `task.journal` (SSOT — do not duplicate enum's)."""
     plan_dir = Path(plan_dir)
     jf = plan_dir / _journal.FILENAME
     is_dated_new = bool(PLAN_ID_DATED_RE.match(plan_id)) and plan_id[:10] >= JOURNAL_CANON_DATE
@@ -316,15 +316,15 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
 
     if not jf.is_file() or jf.stat().st_size == 0:
         report(plan_dir / "plan.md", None,
-               f"нет {plan_dir.name}/{_journal.FILENAME} (append-only история "
-               f"исполнения, P1.1) или файл пуст — пишется close-протоколом "
+               f"no {plan_dir.name}/{_journal.FILENAME} (append-only history "
+               f"execution, P1.1) or the file is empty is written close-protocol "
                f"/task:plan-* (lib/task/journal.py)")
         return
 
     try:
         lines = jf.read_text(encoding="utf-8").split("\n")
     except (OSError, UnicodeDecodeError):
-        report(jf, None, "journal.jsonl не читается (кодировка/IO)")
+        report(jf, None, "journal.jsonl not readable (encoding/IO)")
         return
 
     exceptions = _lint_journal_exceptions_20(plan_dir, plan_id, report)
@@ -336,19 +336,19 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
         try:
             entry = json.loads(ln)
         except json.JSONDecodeError as e:
-            report(jf, i + 1, f"строка не валидный JSON (append-only NDJSON, §1): {e}")
+            report(jf, i + 1, f"string is not valid JSON (append-only NDJSON, §1): {e}")
             continue
         if isinstance(entry, dict) and entry.get("plan_id") != plan_id:
             report(
                 jf,
                 i + 1,
                 f"event plan_id «{entry.get('plan_id')}» ≠ canonical plan directory "
-                f"«{plan_id}»; mismatch не допускает schema exception",
+                f"«{plan_id}»; mismatch does not allow schema exception",
             )
         errors = _journal.entry_validation_errors(entry)
         if errors and i + 1 not in exceptions:
             message = "; ".join(error for _, error in errors)
-            report(jf, i + 1, f"запись не проходит схему P1.1: {message}")
+            report(jf, i + 1, f"record does not pass the schema P1.1: {message}")
             continue
         parsed_entries.append((i + 1, entry))
 
@@ -378,27 +378,27 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
 
 
 def _lint_plan_index_20(plan_dir, plan_id, diag):
-    """index.md — карта файлов+провенанс,
-    ОПЦИОНАЛЕН (не носитель факта, в отличие от журнала/брифа — P1.2 §1). Отсутствие —
-    ВСЕГДА WARNING, независимо от даты плана (нет ERROR-ветки в отличие от журнала)."""
+    """index.md — file map+provenance,
+    OPTIONAL (is not a carrier of fact, unlike a journal/brief - P1.2 §1). Absence -
+    ALWAYS WARNING, regardless of plan date (no ERROR-branches as opposed to log)."""
     plan_dir = Path(plan_dir)
     idx = plan_dir / "index.md"
     if not idx.is_file() or idx.stat().st_size == 0:
         diag.warning(plan_dir / "plan.md", None,
-                     f"нет {plan_dir.name}/index.md (карта файлов + провенанс "
-                     f"findings/research→фаза, P1.2, опционален) — снипет "
+                     f"no {plan_dir.name}/index.md (file map + provenance "
+                     f"findings/research→phase, P1.2, optional) — snippet "
                      f"snippets/index-template.md")
 
 
-# --- warning-проверки: ID / workflow-скрипты / supersedes ----
+# --- warning-checks: ID / workflow-scripts / supersedes ----
 
 def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
-    """Три WARNING-проверки идентичности плана (все — warning, back-compat D24):
-    (1) имя каталога-плана против union PLAN-ID-паттернов;
-    (2) workflow-скрипты (`*.js` c `export const meta`) вне `plans/<ID>/workflows/`
-        или с неканоничным именем — два раздельных сообщения (место / имя);
-    (3) план без Meta `supersedes` при совпадении кодового имени с архивным.
-    `meta` — dict[name] = (value, lineno) из parse_plan_md (может быть None/пустым)."""
+    """Three WARNING-plan identity checks (all - warning, back-compat D24):
+    (1) directory-name vs. union PLAN-ID-patterns;
+    (2) workflow-scripts (`*.js` c `export const meta`) out `plans/<ID>/workflows/`
+        or with a non-canonical name - two separate messages (place / name);
+    (3) plan without Meta `supersedes` when the code name matches the archive one.
+    `meta` — dict[name] = (value, lineno) from parse_plan_md (maybe None/empty)."""
     plan_dir = Path(plan_dir)
     meta = meta or {}
 
@@ -406,7 +406,7 @@ def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
     short_id, short_line = meta.get("Short ID", (None, None))
     if short_id is not None:
         if not re.fullmatch(r"PLAN[1-9][0-9]*", short_id):
-            diag.error(plan_md, short_line, "Short ID должен иметь вид PLAN<N>, N > 0")
+            diag.error(plan_md, short_line, "Short ID should look like PLAN<N>, N > 0")
         else:
             plans_root = plan_dir.parent.parent if plan_dir.parent.name == "archive" else plan_dir.parent
             candidates = list(plans_root.glob("*/plan.md"))
@@ -420,34 +420,34 @@ def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
                     match = re.fullmatch(r"\s*\|\s*Short ID\s*\|\s*(PLAN[1-9][0-9]*)\s*\|\s*", line)
                     if match and match.group(1) == short_id:
                         diag.error(plan_md, short_line,
-                                   f"Short ID {short_id} дублирует {peer_md.relative_to(plans_root)}")
+                                   f"Short ID {short_id} duplicate {peer_md.relative_to(plans_root)}")
                         break
 
-    # (1) PLAN-ID: исторические формы readable, но новые датовые планы
-    # обязаны нести `№N`; ordinal связан с Title и уникален внутри даты.
+    # (1) PLAN-ID: historical forms readable, but new date plans
+    # are required to bear `№N`; ordinal linked to Title and is unique within the date.
     if not (PLAN_ID_LEGACY_RE.match(plan_id) or PLAN_ID_DATED_RE.match(plan_id)):
         diag.warning(plan_dir, None,
-                     f"имя каталога-плана «{plan_id}» не соответствует канону PLAN-ID "
-                     f"(старый `[A-Z][A-Z0-9-]+` ИЛИ новый "
-                     f"`ГГГГ.ММ.ДД-№N-КОДОВОЕ-ИМЯ`)")
+                     f"directory-plan name «{plan_id}» is not canon PLAN-ID "
+                     f"(old `[A-Z][A-Z0-9-]+` OR new "
+                     f"`YYYY.MM.DD-№N-CODE-NAME`)")
 
     numbered = PLAN_ID_NUMBERED_RE.match(plan_id)
     numbered_candidate = PLAN_ID_NUMBERED_CANDIDATE_RE.match(plan_id)
     if (PLAN_ID_LEGACY_DATED_RE.match(plan_id)
             and plan_id[:10] >= NUMBERED_PLAN_ID_CANON_DATE):
         diag.error(plan_dir, None,
-                   f"новый датовый PLAN-ID «{plan_id}» требует порядковый номер: "
-                   "`ГГГГ.ММ.ДД-№N-КОДОВОЕ-ИМЯ`")
+                   f"new date PLAN-ID «{plan_id}» requires a sequence number: "
+                   "`YYYY.MM.DD-№N-CODE-NAME`")
     if numbered_candidate and int(numbered_candidate.group("ordinal")) == 0:
-        diag.error(plan_dir, None, "порядковый номер PLAN-ID должен быть положительным")
+        diag.error(plan_dir, None, "sequence number PLAN-ID must be positive")
     if numbered:
         ordinal = numbered.group("ordinal")
         title = (meta.get("Title", ("", None))[0] or "").strip()
-        expected_prefix = f"План №{ordinal}"
+        expected_prefix = f"Plan №{ordinal}"
         if not (title == expected_prefix or title.startswith(expected_prefix + " — ")):
             diag.error(plan_md, meta.get("Title", ("", None))[1],
-                       f"Title должен начинаться с «{expected_prefix} — …» "
-                       f"для PLAN-ID «{plan_id}»")
+                       f"Title must start with «{expected_prefix} — …» "
+                       f"for PLAN-ID «{plan_id}»")
 
         plans_root = plan_dir.parent.parent if plan_dir.parent.name == "archive" else plan_dir.parent
         peers = [p for p in plans_root.iterdir() if p.is_dir() and p.name != "archive"]
@@ -469,12 +469,12 @@ def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
                 duplicates.append(peer.relative_to(plans_root).as_posix())
         if duplicates:
             diag.error(plan_dir, None,
-                       f"PLAN-ID «{plan_id}» дублирует порядковый номер "
-                       f"№{ordinal} за {numbered.group('date')}: {', '.join(sorted(duplicates))}")
+                       f"PLAN-ID «{plan_id}» duplicates the sequence number "
+                       f"№{ordinal} for {numbered.group('date')}: {', '.join(sorted(duplicates))}")
 
     codename = _plan_codename(plan_id)
 
-    # (2) место/имя workflow-скриптов (только `.js` с маркером `export const meta`)
+    # (2) place/name workflow-scripts (only `.js` with marker `export const meta`)
     name_re = _workflow_name_re(codename)
     for js in sorted(plan_dir.rglob("*.js")):
         if not js.is_file():
@@ -495,14 +495,14 @@ def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
         rel = js.relative_to(plan_dir)
         if not (rel.parts and rel.parts[0] == WORKFLOW_DIR_NAME):
             diag.warning(js, None,
-                         f"workflow-скрипт «{rel}» вне `plans/{plan_id}/workflows/` — "
-                         f"единственный дом workflow-скриптов плана (D28)")
+                         f"workflow-script «{rel}» out `plans/{plan_id}/workflows/` — "
+                         f"only house workflow-plan scripts (D28)")
         if not name_re.match(js.name):
             diag.warning(js, None,
-                         f"workflow-скрипт «{js.name}» с неканоничным именем — "
-                         f"канон `wf-{codename}-<назначение>.js` (D28)")
+                         f"workflow-script «{js.name}» with a non-canonical name - "
+                         f"canon `wf-{codename}-<purpose>.js` (D28)")
 
-    # (3) supersedes: совпадение кодового имени с архивным планом без Meta supersedes
+    # (3) supersedes: code name matches archive plan without Meta supersedes
     archive_dir = plan_dir.parent / "archive"
     if archive_dir.is_dir():
         archived = {
@@ -514,18 +514,18 @@ def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
         supersedes_val = (meta.get("supersedes", ("", None))[0] or "").strip()
         if codename in archived and _is_empty(supersedes_val):
             diag.warning(plan_md, None,
-                         f"план «{plan_id}» повторяет кодовое имя «{codename}» архивного "
-                         f"плана, но не несёт Meta `supersedes` — преемственность волны "
-                         f"трека не объявлена (D27)")
+                         f"plan «{plan_id}» repeats codename «{codename}» archived "
+                         f"plan, but does not carry Meta `supersedes` — wave continuity "
+                         f"track not declared (D27)")
 
 
-# --- парсинг файлов схемы -----------------------------------------------------
+# --- parsing schema files --------------------------------------------------------------
 
 def parse_plan_md(path, diag):
     """plan.md → (meta: dict[name]=(value,lineno), status_board: list[(row,lineno)])."""
     lines = _read_lines(path)
     if lines is None:
-        diag.error(path, None, "plan.md отсутствует или не читается")
+        diag.error(path, None, "plan.md missing or unreadable")
         return None, []
 
     _lint_plan_md_20(lines, path, diag)
@@ -538,21 +538,21 @@ def parse_plan_md(path, diag):
     meta = {}
     _, meta_body, meta_start = _find_section(lines, META_HEADER_RE)
     if meta_body is None:
-        diag.error(path, None, "нет секции «## 0. Meta»")
+        diag.error(path, None, "no section «## 0. Meta»")
     else:
         headers, rows, header_lineno = _parse_table(meta_body, meta_start)
         if headers is None:
-            diag.error(path, meta_start, "Meta: таблица `Поле|Значение` не найдена")
+            diag.error(path, meta_start, "Meta: table `Field|Meaning` not found")
         elif tuple(headers) != META_TABLE_COLUMNS:
             diag.error(path, header_lineno,
-                       f"Meta: колонки {headers} ≠ ожидаемых {list(META_TABLE_COLUMNS)}")
+                       f"Meta: columns {headers} ≠ expected {list(META_TABLE_COLUMNS)}")
         else:
             for row, lineno in rows:
-                meta[row.get("Поле", "")] = (row.get("Значение", ""), lineno)
+                meta[row.get("Field", "")] = (row.get("Meaning", ""), lineno)
         required_fields = V2_CORE_META_FIELDS if layout == "v2" else REQUIRED_META_FIELDS
         for field in required_fields:
             if field not in meta:
-                diag.error(path, meta_start, f"Meta: нет обязательного поля «{field}»")
+                diag.error(path, meta_start, f"Meta: no required field «{field}»")
 
     if layout == "v2":
         numbered = {int(match.group(1)): match.group(2)
@@ -560,11 +560,11 @@ def parse_plan_md(path, diag):
         allowed = {0, 1, 2, 3, 4, 5, 7}
         for number in sorted(set(numbered) - allowed):
             diag.error(path, None,
-                       f"Layout v2: секция «## {number}. {numbered[number]}» не входит в закрытый состав ядра")
+                       f"Layout v2: section «## {number}. {numbered[number]}» is not part of the closed kernel")
         for field in V2_STATUS_META_FIELDS:
             if field in meta:
                 diag.error(path, meta[field][1],
-                           f"Layout v2: поле Meta «{field}» живёт только в status.md")
+                           f"Layout v2: field Meta «{field}» lives only in status.md")
         try:
             status_meta, status_board = plan_status.parse_status_view(Path(path).parent)
         except plan_status.StatusError as exc:
@@ -574,29 +574,29 @@ def parse_plan_md(path, diag):
         core_row = plan_layout.registry().get("plan-core", {})
         if core_row.get("volatility") not in ("stable", "slow"):
             diag.error(path, None,
-                       "Layout v2: plan-core не объявлен stable/slow в реестре носителей")
+                       "Layout v2: plan-core not declared stable/slow in the media registry")
         return meta, status_board
 
     status_board = []
     _, board_body, board_start = _find_section(lines, STATUS_BOARD_HEADER_RE)
     if board_body is None:
-        diag.error(path, None, "нет секции «## 4. Phase Index & Status Board»")
+        diag.error(path, None, "no section «## 4. Phase Index & Status Board»")
     else:
         headers, rows, header_lineno = _parse_table(board_body, board_start)
         if headers is None:
-            diag.error(path, board_start, "Status Board: таблица не найдена")
+            diag.error(path, board_start, "Status Board: table not found")
         elif tuple(headers) != STATUS_BOARD_COLUMNS:
             diag.error(path, header_lineno,
-                       f"Status Board: колонки {headers} ≠ ожидаемых {list(STATUS_BOARD_COLUMNS)}")
+                       f"Status Board: columns {headers} ≠ expected {list(STATUS_BOARD_COLUMNS)}")
         else:
             status_board = rows
             for row, lineno in rows:
                 st = row.get("Status", "")
                 if st not in STATUSES:
-                    diag.error(path, lineno, f"Status Board: недопустимый статус «{st}»")
+                    diag.error(path, lineno, f"Status Board: invalid status «{st}»")
                 if not PHASE_TOKEN_RE.match(row.get("Phase", "")):
                     diag.error(path, lineno,
-                               f"Status Board: Phase «{row.get('Phase')}» не похож на Pn")
+                               f"Status Board: Phase «{row.get('Phase')}» doesn't look like Pn")
 
     return meta, status_board
 
@@ -605,63 +605,63 @@ def _parse_v2_item_file(path, item_id, diag):
     """Read one handwritten item spec plus its generated state carrier."""
     lines = _read_lines(path)
     if lines is None:
-        diag.error(path, None, "файл ТЗ item отсутствует или не читается")
+        diag.error(path, None, "technical specification file item is missing or unreadable")
         return None
     item_blocks = [item for item in _find_items(lines) if item[0] == item_id]
     if len(item_blocks) != 1:
         diag.error(path, None,
-                   f"item {item_id}: ожидается ровно один заголовок «### {item_id} — …»")
+                   f"item {item_id}: exactly one header expected «### {item_id} — …»")
         return None
     actual_id, title, header_lineno, body_lines, body_start = item_blocks[0]
     fields, duplicates = _parse_fields(body_lines, body_start, FIELD_RE)
     for field in ITEM_SPEC_FIELDS:
         if field not in fields:
-            diag.error(path, header_lineno, f"item {item_id}: нет поля ТЗ «{field}»")
+            diag.error(path, header_lineno, f"item {item_id}: no TK field «{field}»")
     for field in ITEM_STATE_FIELDS:
         if field in fields:
             diag.error(path, fields[field][1],
-                       f"item {item_id}: поле исхода «{field}» запрещено в файле ТЗ")
+                       f"item {item_id}: origin field «{field}» is prohibited in the technical specification file")
     for field, (_value, lineno) in fields.items():
         if field not in ITEM_SPEC_FIELDS and field not in ITEM_STATE_FIELDS and field != "Authority":
             diag.error(path, lineno,
-                       f"item {item_id}: поле «{field}» не входит в закрытый список файла ТЗ")
+                       f"item {item_id}: field «{field}» is not included in the closed list of the technical specifications file")
     for name, first_ln, first_val, dup_ln, dup_val in duplicates:
         if name in ITEM_SPEC_FIELDS or name == "Authority":
             diag.error(path, dup_ln,
-                       f"item {item_id}: поле ТЗ «{name}» встречается повторно "
-                       f"(первое {path.name}:{first_ln} → «{_preview(first_val)}», "
-                       f"повтор {path.name}:{dup_ln} → «{_preview(dup_val)}»)")
+                       f"item {item_id}: TK field «{name}» occurs repeatedly "
+                       f"(first {path.name}:{first_ln} → «{_preview(first_val)}», "
+                       f"repeat {path.name}:{dup_ln} → «{_preview(dup_val)}»)")
 
     canonical_index = {field: index for index, field in enumerate(ITEM_SPEC_FIELDS)}
     present_order = [field for field in fields if field in canonical_index]
     if present_order != sorted(present_order, key=canonical_index.get):
         diag.warning(path, header_lineno,
-                     f"item {item_id}: поля идут не в каноническом порядке "
-                     "(канон — SKILL §5 / phase-template)")
+                     f"item {item_id}: fields are not in canonical order "
+                     "(canon - SKILL §5 / phase-template)")
 
     state_path = path.with_name(path.stem + ".state.md")
     state_lines = _read_lines(state_path)
     if state_lines is None:
-        diag.error(state_path, None, f"item {item_id}: обязательный слепок состояния отсутствует или не читается")
+        diag.error(state_path, None, f"item {item_id}: required state snapshot missing or unreadable")
         return None
     state_fields, state_duplicates = _parse_fields(state_lines, 1, FIELD_RE)
     for field in ITEM_STATE_FIELDS:
         if field not in state_fields:
-            diag.error(state_path, None, f"item {item_id}: в слепке нет поля исхода «{field}»")
+            diag.error(state_path, None, f"item {item_id}: there is no outcome field in the nugget «{field}»")
     for field in ITEM_SPEC_FIELDS:
         if field in state_fields:
             diag.error(state_path, state_fields[field][1],
-                       f"item {item_id}: поле ТЗ «{field}» запрещено в слепке состояния")
+                       f"item {item_id}: TK field «{field}» not allowed in status nugget")
     for field, (_value, lineno) in state_fields.items():
         if field not in ITEM_STATE_FIELDS and field not in ITEM_SPEC_FIELDS:
             diag.error(state_path, lineno,
-                       f"item {item_id}: поле «{field}» не входит в закрытый список слепка состояния")
+                       f"item {item_id}: field «{field}» is not in the private list of the status nugget")
     for name, first_ln, first_val, dup_ln, dup_val in state_duplicates:
         if name in ITEM_STATE_FIELDS:
             diag.error(state_path, dup_ln,
-                       f"item {item_id}: поле исхода «{name}» встречается повторно "
-                       f"(первое {state_path.name}:{first_ln} → «{_preview(first_val)}», "
-                       f"повтор {state_path.name}:{dup_ln} → «{_preview(dup_val)}»)")
+                       f"item {item_id}: origin field «{name}» occurs repeatedly "
+                       f"(first {state_path.name}:{first_ln} → «{_preview(first_val)}», "
+                       f"repeat {state_path.name}:{dup_ln} → «{_preview(dup_val)}»)")
 
     merged = {}
     if "Authority" in fields:
@@ -674,7 +674,7 @@ def _parse_v2_item_file(path, item_id, diag):
     status_value, status_lineno = merged.get("Status", ("", header_lineno))
     if status_value and status_value not in STATUSES:
         diag.error(state_path, status_lineno,
-                   f"item {item_id}: недопустимый статус «{status_value}»")
+                   f"item {item_id}: invalid status «{status_value}»")
     return {"title": title, "header_lineno": header_lineno, "fields": merged,
             "has_escalation": any(ESCALATION_RE.match(line)
                                     and ESCALATION_RE.match(line).group(1) == actual_id
@@ -686,20 +686,20 @@ def _parse_phase_v2(path, phase_id, diag):
     """Assemble a v2 phase model from its thin index, item specs, and states."""
     lines = _read_lines(path)
     if lines is None:
-        diag.error(path, None, "индекс фазы отсутствует или не читается")
+        diag.error(path, None, "phase index missing or unreadable")
         return None
     if _find_section(lines, PHASE_STATUS_HEADER_RE)[1] is not None:
-        diag.error(path, None, "Layout v2: «## Phase Status» запрещён в тонком индексе фазы")
+        diag.error(path, None, "Layout v2: «## Phase Status» not allowed in thin phase index")
     if _find_items(lines):
-        diag.error(path, None, "Layout v2: item-блоки живут только в отдельных файлах ТЗ")
+        diag.error(path, None, "Layout v2: item-blocks live only in separate technical specification files")
 
     _, ctx_body, _ = _find_section(lines, PHASE_CONTEXT_HEADER_RE)
     if ctx_body is None:
-        diag.error(path, None, "нет секции «## Phase Context»")
+        diag.error(path, None, "no section «## Phase Context»")
     is_skeleton = bool(ctx_body and any(SKELETON_MARKER_RE.match(line) for line in ctx_body))
     _, handoff_body, handoff_start = _find_section(lines, PHASE_HANDOFF_HEADER_RE)
     if handoff_body is None:
-        diag.error(path, None, "нет секции «## Phase Handoff»")
+        diag.error(path, None, "no section «## Phase Handoff»")
         handoff_text = None
         handoff_lineno = None
         handoff_first_line = ""
@@ -724,7 +724,7 @@ def _parse_phase_v2(path, phase_id, diag):
         }
     except (plan_status.StatusError, plan_layout.PlanLayoutError) as exc:
         diag.error(path.parents[2] / "status.md", None,
-                   f"Layout v2: не удалось получить journal-backed Updated: {exc}")
+                   f"Layout v2: could not be retrieved journal-backed Updated: {exc}")
         updated_by_id = {}
     try:
         spec_paths = plan_layout.item_spec_paths(path.parents[2], phase_id)
@@ -747,9 +747,9 @@ def _parse_phase_v2(path, phase_id, diag):
                     if _is_empty(item["fields"].get(field, ("",))[0]))
         if not is_skeleton and empty >= len(REQUIRED_ITEM_FIELDS) * SKELETON_EMPTY_RATIO:
             diag.warning(spec_path, item["header_lineno"],
-                         f"item {item_id}: {empty}/{len(REQUIRED_ITEM_FIELDS)} полей пусты, "
-                         "а в Phase Context нет маркера «> СКЕЛЕТ — не детализирован…» — "
-                         "либо детализировать, либо пометить фазу скелетом")
+                         f"item {item_id}: {empty}/{len(REQUIRED_ITEM_FIELDS)} fields are empty, "
+                         "and in Phase Context no marker «> SKELETON — not detailed…» — "
+                         "either detail or mark the phase with a skeleton")
 
     return {"status_table": status_table, "items": items, "phase_handoff": handoff_text,
             "phase_handoff_stale": bool(PHASE_HANDOFF_STALE_RE.match(handoff_first_line)),
@@ -762,56 +762,56 @@ def _parse_phase_v2(path, phase_id, diag):
 
 
 def parse_phase_md(path, phase_id, diag, *, layout="v2"):
-    """phases/Pn.md → dict со status_table/items/handoff (см. lint_plan)."""
+    """phases/Pn.md → dict with status_table/items/handoff (see lint_plan)."""
     if layout == "v2":
         return _parse_phase_v2(path, phase_id, diag)
-    diag.error(path, None, "PLAN_LAYOUT_V1_RETIRED: исполняется только Layout v2")
+    diag.error(path, None, "PLAN_LAYOUT_V1_RETIRED: is executed only Layout v2")
     return None
 
     # Historical parser retained below only for source archive compatibility.
     lines = _read_lines(path)
     if lines is None:
-        diag.error(path, None, "файл фазы отсутствует или не читается")
+        diag.error(path, None, "phase file missing or unreadable")
         return None
 
     status_table = []
     _, ps_body, ps_start = _find_section(lines, PHASE_STATUS_HEADER_RE)
     if ps_body is None:
-        diag.error(path, None, "нет секции «## Phase Status»")
+        diag.error(path, None, "no section «## Phase Status»")
     else:
         headers, rows, header_lineno = _parse_table(ps_body, ps_start)
         if headers is None:
-            diag.error(path, ps_start, "Phase Status: таблица не найдена")
+            diag.error(path, ps_start, "Phase Status: table not found")
         elif tuple(headers) != PHASE_STATUS_COLUMNS:
             diag.error(path, header_lineno,
-                       f"Phase Status: колонки {headers} ≠ ожидаемых {list(PHASE_STATUS_COLUMNS)}")
+                       f"Phase Status: columns {headers} ≠ expected {list(PHASE_STATUS_COLUMNS)}")
         else:
             status_table = rows
             for row, lineno in rows:
                 st = row.get("Status", "")
                 if st not in STATUSES:
-                    diag.error(path, lineno, f"Phase Status: недопустимый статус «{st}»")
+                    diag.error(path, lineno, f"Phase Status: invalid status «{st}»")
 
     for bad_ln, lineno in _malformed_item_headers(lines):
         diag.error(path, lineno,
-                    f"заголовок item не соответствует regex `^### (P\\d+\\.\\d+) — `: «{bad_ln}»")
+                    f"header item does not match regex `^### (P\\d+\\.\\d+) — `: «{bad_ln}»")
 
-    # --- 2.0: скелет-маркер в Phase Context (легализует пустые поля items) ------
+    # --- 2.0: skeleton marker in Phase Context (legalizes empty fields items) ------
     is_skeleton = False
     _, ctx_body, _ = _find_section(lines, PHASE_CONTEXT_HEADER_RE)
     if ctx_body is not None:
         is_skeleton = any(SKELETON_MARKER_RE.match(ln) for ln in ctx_body)
 
-    # --- регион ОБОИХ грепов по фазе — до первого `## Audit` (append-блок
-    # аудита законно цитирует маркеры, по которым отчитывается; см. AUDIT_BLOCK_HEADER_RE)
+    # --- region of BOTH greps in phase - before the first `## Audit` (append-block
+    # audit legitimately quotes the markers on which it is reporting; see AUDIT_BLOCK_HEADER_RE)
     gate_lines = _lines_before_audit(lines)
 
-    # --- 2.0: маркеры [NEEDS CLARIFICATION] — линуются в lint_plan по статусу фазы
+    # --- 2.0: markers [NEEDS CLARIFICATION] — are lined into lint_plan by phase status
     needs_clarification = [i + 1 for i, ln in enumerate(gate_lines)
                            if NEEDS_CLARIFICATION_RE.search(ln)]
 
-    # --- заявляет ли фаза оркестрацию (грепаемый признак, D29) — линуется
-    # в lint_plan (workflow-как-DoR: фаза с оркестрацией без workflow-скрипта = warning)
+    # --- does the phase state orchestration (grabable sign, D29) — is being lined
+    # in lint_plan (workflow-like-DoR: phase with orchestration without workflow-script = warning)
     _, phase_context, _ = _find_section(gate_lines, PHASE_CONTEXT_HEADER_RE)
     declares_orchestration = any(phase_declares_orchestration(ln) for ln in (phase_context or ()))
 
@@ -820,48 +820,48 @@ def parse_phase_md(path, phase_id, diag, *, layout="v2"):
         prefix_m = PHASE_TOKEN_RE.match(item_id.split(".")[0])
         if prefix_m and item_id.split(".")[0] != phase_id:
             diag.error(path, header_lineno,
-                       f"item {item_id}: префикс «{item_id.split('.')[0]}» не совпадает "
-                       f"с файлом фазы «{phase_id}»")
+                       f"item {item_id}: prefix «{item_id.split('.')[0]}» does not match "
+                       f"with phase file «{phase_id}»")
         fields, dup_fields = _parse_fields(body_lines, body_start, FIELD_RE)
         for f in REQUIRED_ITEM_FIELDS:
             if f not in fields:
                 diag.error(path, header_lineno,
-                           f"item {item_id}: нет обязательного поля «{f}» (item фазы-скелета "
-                           f"обязан нести все 16 полей со значением «—»; детализация — "
+                           f"item {item_id}: no required field «{f}» (item skeleton-phase "
+                           f"is required to carry all 16 fields with the value «—»; detail - "
                            f"/task:plan-design <ID> {phase_id})")
 
-        # --- D90: повтор поля в теле item'а — последнее вхождение молча подменяет
-        # раннее легитимное значение (у linter'а И у task_contract) --------------
+        # --- D90: repeat field in body item'a - the last occurrence silently replaces
+        # early legitimate value (y linter'a I y task_contract) --------------
         for name, first_ln, first_val, dup_ln, dup_val in dup_fields:
             if name in REQUIRED_ITEM_FIELDS:
                 diag.error(path, dup_ln,
-                           f"item {item_id}: поле «{name}» встречается повторно "
-                           f"(первое {path.name}:{first_ln} → «{_preview(first_val)}», "
-                           f"повтор {path.name}:{dup_ln} → «{_preview(dup_val)}») — плановый "
-                           f"парсер и task_contract молча берут ПОСЛЕДНЕЕ вхождение (D90): "
-                           f"строка `**{name}:**` внутри прозы другого поля (например, "
-                           f"Completion Notes) подменяет собой приёмочное значение — уберите "
-                           f"звёздочки/двоеточие у инлайн-упоминания или перенесите его в "
-                           f"свободный текст без формы поля")
+                           f"item {item_id}: field «{name}» occurs repeatedly "
+                           f"(first {path.name}:{first_ln} → «{_preview(first_val)}», "
+                           f"repeat {path.name}:{dup_ln} → «{_preview(dup_val)}») — scheduled "
+                           f"parser and task_contract silently take the LAST occurrence (D90): "
+                           f"string `**{name}:**` inside the prose of another field (for example, "
+                           f"Completion Notes) replaces the acceptance value - remove "
+                           f"stars/colon at the inline mention or move it to "
+                           f"free text without form field")
 
-        # --- 2.0 WARNING: порядок 16 канонических полей (P0.3 рек#6) ------------
+        # --- 2.0 WARNING: order 16 canonical fields (P0.3 rivers#6) ------------
         canon_index = {f: i for i, f in enumerate(REQUIRED_ITEM_FIELDS)}
         present_order = [f for f in fields if f in canon_index]
         if present_order != sorted(present_order, key=canon_index.get):
             diag.warning(path, header_lineno,
-                         f"item {item_id}: поля идут не в каноническом порядке "
-                         f"(канон — SKILL §5 / phase-template)")
+                         f"item {item_id}: fields are not in canonical order "
+                         f"(canon - SKILL §5 / phase-template)")
 
-        # --- 2.0 WARNING: ≥50% пустых полей без скелет-маркера (P0.3 рек#1) -----
+        # --- 2.0 WARNING: ≥50% empty fields without skeleton marker (P0.3 rivers#1) -----
         empty = sum(1 for f in REQUIRED_ITEM_FIELDS if _is_empty(fields.get(f, ("",))[0]))
         if not is_skeleton and empty >= len(REQUIRED_ITEM_FIELDS) * SKELETON_EMPTY_RATIO:
             diag.warning(path, header_lineno,
-                         f"item {item_id}: {empty}/{len(REQUIRED_ITEM_FIELDS)} полей пусты, "
-                         f"а в Phase Context нет маркера «> СКЕЛЕТ — не детализирован…» — "
-                         f"либо детализировать, либо пометить фазу скелетом")
+                         f"item {item_id}: {empty}/{len(REQUIRED_ITEM_FIELDS)} fields are empty, "
+                         f"and in Phase Context no marker «> SKELETON — not detailed…» — "
+                         f"either detail or mark the phase with a skeleton")
         status_val, _ = fields.get("Status", ("", header_lineno))
         if status_val and status_val not in STATUSES:
-            diag.error(path, header_lineno, f"item {item_id}: недопустимый статус «{status_val}»")
+            diag.error(path, header_lineno, f"item {item_id}: invalid status «{status_val}»")
         has_escalation = any(
             ESCALATION_RE.match(ln) and ESCALATION_RE.match(ln).group(1) == item_id
             for ln in body_lines
@@ -875,20 +875,20 @@ def parse_phase_md(path, phase_id, diag, *, layout="v2"):
         if len(occurrences) > 1:
             lns = ", ".join(str(o["header_lineno"]) for o in occurrences)
             diag.error(path, occurrences[0]["header_lineno"],
-                       f"item {item_id}: повторяется в файле (строки {lns})")
+                       f"item {item_id}: is repeated in the file (lines {lns})")
 
     _, handoff_body, handoff_start = _find_section(lines, PHASE_HANDOFF_HEADER_RE)
     handoff_stale = False
     handoff_first_line = ""
     if handoff_body is None:
-        diag.error(path, None, "нет секции «## Phase Handoff»")
+        diag.error(path, None, "no section «## Phase Handoff»")
         handoff_text = None
         handoff_lineno = None
     else:
         handoff_text = "\n".join(handoff_body).strip()
-        handoff_lineno = handoff_start - 1  # строка самого заголовка «## Phase Handoff»
-        # маркер инвалидации — ПЕРВАЯ непустая строка блока (линуется в lint_plan);
-        # по ней же судит предикат «блок утверждает закрытие фазы» (субъект, не слово)
+        handoff_lineno = handoff_start - 1  # header line itself «## Phase Handoff»
+        # invalidation token - FIRST non-empty line of block (lines to lint_plan);
+        # the predicate judges by it «block asserts phase closure» (subject, not word)
         handoff_first_line = next((ln for ln in handoff_body if ln.strip()), "").strip()
         handoff_stale = bool(PHASE_HANDOFF_STALE_RE.match(handoff_first_line))
 
@@ -900,19 +900,19 @@ def parse_phase_md(path, phase_id, diag, *, layout="v2"):
 
 
 def _resolve_next_form(text):
-    """Резолвит форму `Next` из enum'а §8 в тексте: `(kind, match)` либо `(None, None)`.
+    """Resolve form `Next` from enum'a §8 in the text: `(kind, match)` or `(None, None)`.
 
-    Порядок — от специфичной формы к общей; первая сматчившая определяет проверку ссылок,
-    остальные не пробуются. «план закрыт» проверяется СРАЗУ после plan-run (а не
-    среди прочих regex-форм): это цельное утверждение о состоянии плана, а не slash-команда
-    — Next закрытого плана иногда УПОМИНАЕТ следующую команду прозой («… решает владелец:
-    `/task:plan-close archive <ID>` либо …», см. EDUFY-2), и эта проза не должна
-    перехватывать резолвер. Manual-маркер — последним: у формы нет ссылок, она резолвится
-    лишь тем, что ни одна slash-форма не объявлена.
+    Order - from specific form to general; the first match determines the checking of links,
+    the rest are not tried. «plan closed» is checked IMMEDIATELY after plan-run (and not
+    among others regex-forms): is a complete statement about the state of the plan, not slash-command
+    — Next closed plan sometimes MENTIONS the following command in prose («… owner decides:
+    `/task:plan-close archive <ID>` or …», see EDUFY-2), and this prose should not
+    intercept the resolver. Manual-marker - last: the form has no links, it resolves
+    only because none slash-form not declared.
 
-    Форма «ОЖИДАНИЕ» — ПЕРВОЙ, ДО plan-run: её строка-объявление embed'ит целевой
-    `/task:plan-run` (запустится по снятии гейта), который иначе перехватил бы резолвер как
-    `run` — зеркало того, почему «план закрыт» стоит сразу после run.
+    Form «WAITING» — FIRST, BEFORE plan-run: its declaration line embed'it target
+    `/task:plan-run` (will start when the gate is removed), which would otherwise intercept the resolver as
+    `run` — mirror of why «plan closed» comes right after run.
     """
     semantic = SEMANTIC_NEXT_RE.match(text.strip())
     if semantic:
@@ -957,11 +957,11 @@ def _resolve_next_form(text):
 def parse_handoff_md(path, diag):
     lines = _read_lines(path)
     if lines is None:
-        diag.error(path, None, "handoff.md отсутствует или не читается")
+        diag.error(path, None, "handoff.md missing or unreadable")
         return None
 
     title_lineno = None
-    title_ref = None  # `Pn.m` (item) либо `Pn` (фаза) — резолвится в lint_plan
+    title_ref = None  # `Pn.m` (item) or `Pn` (phase) — resolves to lint_plan
     for i, ln in enumerate(lines):
         if ln.startswith("# "):
             m = HANDOFF_TITLE_RE.match(ln)
@@ -972,20 +972,20 @@ def parse_handoff_md(path, diag):
                 diag.error(path, title_lineno, HANDOFF_TITLE_HELP)
             break
     else:
-        diag.error(path, None, "нет заголовка «# HANDOFF — … — after Pn.m» / «… — after Pn»")
+        diag.error(path, None, "no header «# HANDOFF — … — after Pn.m» / «… — after Pn»")
 
     body_start = (title_lineno or 0) + 1
-    # handoff-поля вне Scope (D90 — только REQUIRED_ITEM_FIELDS
-    # items'ов) — duplicates осознанно отброшены, не диагностируются здесь.
+    # handoff-fields out Scope (D90 — only REQUIRED_ITEM_FIELDS
+    # items'ov) — duplicates deliberately discarded, not diagnosed here.
     fields, _dup_handoff_fields = _parse_fields(lines[body_start - 1:], body_start, FIELD_RE)
     for f in HANDOFF_REQUIRED_FIELDS:
         if f not in fields:
-            diag.error(path, body_start, f"нет обязательного поля «{f}»")
+            diag.error(path, body_start, f"no required field «{f}»")
 
     return {"title_ref": title_ref, "title_lineno": title_lineno,
             "fields": fields, "lines": lines}
 
 
-# --- линт одного плана ---------------------------------------------------
+# --- lint of one plan ------------------------------------------------------------------
 
 __all__ = tuple(name for name in globals() if not name.startswith("__"))

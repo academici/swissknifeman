@@ -52,13 +52,13 @@ class LifecycleScenarios(unittest.TestCase):
                              '> Live or Irreversible: no\n'
                              '> Audit Intent: required\n'
                              '> Rationale: legacy required must remain advisory\n\n'
-                             '> **Контракт фазы | v1.**\n'
+                             '> **Phase Contract | v1.**\n'
                              '> Produce one validated result for the successor.\n')
             # Product is distinct from digest inputs: no synthetic collision waiver.
             product = root / 'result.txt'
             product.write_text('before\n')
             spec.write_text(spec.read_text().replace('**Files:** lib/pkg/config.py',
-                                                     '**Files:** `result.txt`').replace('**Validation:** bash scripts/test.sh — зелёный.',
+                                                     '**Files:** `result.txt`').replace('**Validation:** bash scripts/test.sh — green.',
                                                      '**Validation:** `python3 validate.py`'))
             successor_spec = spec.read_text().replace('P1.1', 'P2.1').replace(
                 '**Inputs:** `lib/pkg/config.py`.',
@@ -142,7 +142,7 @@ class LifecycleScenarios(unittest.TestCase):
                 self.assertEqual(receipt['next_exact'], '/task:plan-run SCENARIO P2.1')
                 self.assertIsNotNone(receipt['digests']['closure'])
             run('git', 'add', '.')
-            run('git', 'commit', '-qm', 'fix: результат и evidence')
+            run('git', 'commit', '-qm', 'fix: result and evidence')
             self.assertTrue(plan_delivery.verify_receipt(plan, receipt))
             self.assertEqual(int(run('git', 'rev-list', '--count', 'HEAD')) - before, 1)
             self.assertEqual(sum(argv == validation for argv, _, _ in commands), 1)
@@ -161,9 +161,9 @@ class LifecycleScenarios(unittest.TestCase):
             phase = plan / 'phases/P1/P1.md'
             next_exact = 'run-items: task:plan-run AUDIT-RETURN P1.1'
             phase.write_text(phase.read_text() + '\n## Audit P1 — 2026-09-10\n\n'
-                             '**Вердикт: ATTENTION**\n\n### Что запускать\n\n'
+                             '**Verdict: ATTENTION**\n\n### What to run\n\n'
                              f'Semantic Next: `{next_exact}`.\n\n'
-                             '| Batch | Model | Thinking | Context | Суть | Команда |\n'
+                             '| Batch | Model | Thinking | Context | The bottom line | Command |\n'
                              '|:--|:--|:--|:--|:--|:--|\n'
                              '| solo | implementation | high | `continue-root` | repair | '
                              '`$ task:plan-run AUDIT-RETURN P1.1` |\n')
@@ -315,7 +315,7 @@ class LifecycleScenarios(unittest.TestCase):
             write_v2_carriers(plan, item_id='P1.2', refresh_views=False)
             core = plan / 'plan.md'
             core.write_text(core.read_text().replace('## 3. Routing\n\n',
-                '## 3. Routing\n\n| Batch | Items | Model class/effort | Exec | Review | Почему |\n'
+                '## 3. Routing\n\n| Batch | Items | Model class/effort | Exec | Review | Why |\n'
                 '|:--|:--|:--|:--|:--|:--|\n'
                 '| B1 | P1.1–P1.2 | implementation/high | run | light | recommended: independent |\n'))
             (plan / 'journal.jsonl').write_text('')

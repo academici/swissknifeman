@@ -18,7 +18,7 @@ def _json(path: str) -> dict:
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="Append-only очередь решений планов (P5.4)")
+    parser = argparse.ArgumentParser(description="Append-only plan decision queue (P5.4)")
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("request", "resolve"):
         item = sub.add_parser(name)
@@ -40,7 +40,7 @@ def main(argv=None) -> int:
     listing = sub.add_parser("list")
     listing.add_argument("--plan-dir", required=True)
     listing.add_argument("--json", action="store_true",
-                         help="явно подтвердить машинный JSON-вывод")
+                         help="explicitly confirm machine JSON-output")
     rendering = sub.add_parser("render")
     rendering.add_argument("--plan-dir", required=True)
     rendering.add_argument("--out")

@@ -1,11 +1,11 @@
-"""Паритет каналов vendor vs sync (skillset) — golden-тест.
+"""Channel parity vendor vs sync (skillset) — golden-test.
 
-vendor.collect_skills сканирует бакеты живым FS-rglob; skillset.resolve_skillset
-разворачивает их через registry-индекс (skills.json). Это два независимых
-исполнения одной формулы «бакеты ∪ include − exclude» (аудит V-5) — если бы они
-разошлись (напр. кто-то поправил один путь и забыл другой), обычные тесты каждого
-канала по отдельности этого не поймали бы. Здесь сверяем результат ОБОИХ каналов
-на одном синтетическом реестре."""
+vendor.collect_skills scans buckets alive FS-rglob; skillset.resolve_skillset
+unrolls them through registry-index (skills.json). These are two independent
+execution of one formula «buckets ∪ include − exclude» (audit V-5) — if they
+separated (e.g. someone corrected one path and forgot the other), usual tests of everyone The
+channel alone would not have caught this. Here we compare the results of BOTH channels
+on one synthetic registry."""
 import json
 import tempfile
 import unittest
@@ -54,8 +54,8 @@ class TestChannelParity(unittest.TestCase):
                 env, {"buckets": ["php"], "exclude": sorted(exclude)})
             sync_names = {e["name"] for e in entries}
 
-            # laravel-conventions requires code-style — исключён, оба канала
-            # пропускают зависимость (warning), сам бакет отдаёт laravel-conventions.
+            # laravel-conventions requires code-style — excluded, both channels
+            # skip dependency (warning), the bucket itself gives laravel-conventions.
             self.assertEqual(vendor_names, {"laravel-conventions"})
             self.assertEqual(sync_names, {"laravel-conventions"})
             self.assertEqual(vendor_names, sync_names)

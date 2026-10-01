@@ -241,7 +241,7 @@ def load_frame(path: str | Path | None = None) -> dict[str, Any]:
     try:
         raw = frame_path.read_bytes()
     except OSError as exc:
-        raise AuthorityFrameError(f"authority-frame не найден: {frame_path}") from exc
+        raise AuthorityFrameError(f"authority-frame not found: {frame_path}") from exc
     try:
         frame = json.loads(raw)
     except json.JSONDecodeError as exc:
@@ -522,8 +522,8 @@ def apply_response(request: dict[str, Any], response: dict[str, Any], *,
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Детерминированный резолвер полномочий P5")
-    parser.add_argument("--shadow", action="store_true", help="записать would-verdict без принуждения")
+    parser = argparse.ArgumentParser(description="Deterministic permission resolver P5")
+    parser.add_argument("--shadow", action="store_true", help="write would-verdict without coercion")
     args = parser.parse_args(argv)
     try:
         request = json.load(sys.stdin)

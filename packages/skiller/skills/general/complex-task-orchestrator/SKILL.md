@@ -40,15 +40,15 @@ sha256: ""
 
 ## Decomposition template
 ```text
-Цель:
-Границы:
-Инварианты:
-Слои:
-Подзадачи:
+Target:
+Boundaries:
+Invariants:
+Layers:
+Subtasks:
 1) ...
 2) ...
-Проверки:
-Риски/что осталось:
+Checks:
+Risks/what's left:
 ```
 
 ## Definition of Done

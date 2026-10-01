@@ -19,13 +19,13 @@ while [[ $# -gt 0 ]]; do
     --bin-dir) BIN_DIR="$2"; shift 2 ;;
     --force) FORCE=true; shift ;;
     -h|--help) usage; exit 0 ;;
-    *) echo "ERROR: неизвестный аргумент: $1" >&2; usage >&2; exit 1 ;;
+    *) echo "ERROR: unknown argument: $1" >&2; usage >&2; exit 1 ;;
   esac
 done
 
-[[ -x "$CLI" ]] || { echo "ERROR: $CLI не найден или не исполняем" >&2; exit 1; }
+[[ -x "$CLI" ]] || { echo "ERROR: $CLI not found or not executable" >&2; exit 1; }
 command -v python3 >/dev/null 2>&1 || \
-  echo "WARN: python3 не найден — CLI потребует его при запуске" >&2
+  echo "WARN: python3 not found - CLI will require it at startup" >&2
 
 mkdir -p "$BIN_DIR"
 
@@ -37,20 +37,20 @@ if [[ -e "$LINK" || -L "$LINK" ]]; then
   elif [[ "$FORCE" == true ]]; then
     : # Explicit override.
   elif [[ -t 0 ]]; then
-    read -r -p "$LINK уже существует и не похож на harness. Заменить? [y/N] " answer
-    [[ "$answer" =~ ^[yY] ]] || { echo "Отменено."; exit 1; }
+    read -r -p "$LINK already exists and is not similar to harness. Replace? [y/N] " answer
+    [[ "$answer" =~ ^[yY] ]] || { echo "Canceled."; exit 1; }
   else
-    echo "ERROR: $LINK уже существует — перезапустите с --force" >&2
+    echo "ERROR: $LINK already exists - restart with --force" >&2
     exit 1
   fi
 fi
 ln -sfn "$CLI" "$LINK"
-echo "Установлено: $LINK -> $CLI"
+echo "Installed: $LINK -> $CLI"
 
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
   *)
-    echo "WARN: $BIN_DIR не в PATH. Добавьте:"
+    echo "WARN: $BIN_DIR not in PATH. Add:"
     case "$(basename "${SHELL:-bash}")" in
       zsh)  echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc" ;;
       fish) echo "  fish_add_path $BIN_DIR" ;;
@@ -58,4 +58,4 @@ case ":$PATH:" in
     esac ;;
 esac
 
-echo "Проверка: harness doctor"
+echo "Check: harness doctor"

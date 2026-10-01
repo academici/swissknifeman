@@ -1,22 +1,22 @@
-# Проекты
+# Projects
 
-Реестр проектов экосистемы — в `config.json` (в корне монорепо, надмножество brain
+Ecosystem Project Registry - in `config.json` (at root monorepo, superset brain
 `.projects.json`).
 
-## Приоритет загрузки
+## Load priority
 
 ```
-config.json      (primary — в корне монорепо, если есть)
+config.json      (primary — at the root of the monorepo, if any)
     ↓ fallback
-.maind.json      (legacy-имя того же конфига — обратная совместимость)
+.maind.json      (legacy-name of the same config - backward compatibility)
     ↓ fallback
-.projects.json   (legacy brain — только чтение, с предупреждением о миграции)
+.projects.json   (legacy brain — read-only, with migration warning)
     ↓
-пустой конфиг
+empty config
 ```
 
-`load_config` возвращает `(config, source)`, где `source ∈ {"config.json", ".maind.json",
-"brain-fallback", "empty"}` — чтобы было видно происхождение.
+`load_config` returns `(config, source)`, where `source ∈ {"config.json", ".maind.json",
+"brain-fallback", "empty"}` — so that the origin can be seen.
 
 ## CLI
 
@@ -24,47 +24,47 @@ config.json      (primary — в корне монорепо, если есть)
 maind projects list [--namespace NS] [--json]
 maind projects health [--project ID | --namespace NS | --all] --evidence-set FILE --json
 maind projects sync --from brain [--path ~/Vaults/Brain]
-maind namespaces [--json]            # namespace-группы и их проекты-члены
+maind namespaces [--json]            # namespace-groups and their member projects
 ```
 
-`sync` идемпотентен: мерджит по `id`, обновляет brain-источные поля
-(`name`/`local_path`/`vault_path`/`type`/`enabled`/`docs_folders`) и **сохраняет**
-maind-only поля (`skills`/`tags`/`namespaces`/`dependencies`/`agents`/`repo`).
+`sync` idempotent: merge by `id`, updates brain-source fields
+(`name`/`local_path`/`vault_path`/`type`/`enabled`/`docs_folders`) and **saves**
+maind-only fields (`skills`/`tags`/`namespaces`/`dependencies`/`agents`/`repo`).
 
 ## Provider health
 
-`projects health` — read-only exact-set проверка по frozen `provider-health-v1`. Файл
-`--evidence-set` фиксирует sealed project/provider/axis requirements и redacted evidence
-identities; mAInd дополняет package-owned наблюдения только через публичные worktree-local CLI с
-ограниченным timeout. Команда не читает provider targets как intent и ничего не исправляет.
+`projects health` — read-only exact-set check by frozen `provider-health-v1`. File
+`--evidence-set` commits sealed project/provider/axis requirements and redacted evidence
+identities; mAInd complements package-owned observations only through public worktree-local CLI with
+limited timeout. Command does not read provider targets like intent and doesn't fix anything.
 
-`aggregate=green` возможен только при точном совпадении project set и полном свежем покрытии всех
-required provider/axis rows. Missing/extra/duplicate project или provider, timeout, malformed JSON,
-stale/unknown evidence, required unsupported capability и успешный только один provider остаются
-явным `non-green`. Корректно построенный `non-green` отчёт означает, что проверка выполнена, но не
-является разрешением на rollout или repair.
+`aggregate=green` is only possible with an exact match project set and complete fresh coverage of all
+required provider/axis rows. Missing/extra/duplicate project or provider, timeout, malformed JSON,
+stale/unknown evidence, required unsupported capability and only one successful provider remain
+explicit `non-green`. Well-constructed `non-green` report means that the check was completed, but not
+is permission to rollout or repair.
 
-Durable JSON содержит только стабильные project/provider/axis/source/evidence identities и
-диагностики; absolute roots, secrets и raw subprocess output отклоняются.
+Durable JSON contains only stable project/provider/axis/source/evidence identities and
+diagnostics; absolute roots, secrets and raw subprocess output are rejected.
 
 ## Namespaces
 
-Поле `projects[].namespaces` группирует проекты и **изолирует** межпроектные связи: ребро
-строится только между проектами одной группы (`["*"]` — общая инфраструктура, связывается со
-всеми). `--namespace NS` фильтрует `projects list`/`status` и `sync`. Подробнее —
-[Архитектура → Namespaces](../architecture#namespaces-изоляция-связей).
+Field `projects[].namespaces` groups projects and **isolates** cross-project links: edge
+is built only between projects of the same group (`["*"]` — general infrastructure, communicates with
+everyone). `--namespace NS` filters `projects list`/`status` and `sync`. More details -
+[Architecture → Namespaces](../architecture#namespaces-bond-isolation).
 
-## Маппинг из brain
+## Mapping from brain
 
-Реальная схема brain — `{name, enabled, vault_path, repo, folders}` (поля `id`/`local_path`/
-`type` из старого описания в brain отсутствуют — синтезируются):
+Actual diagram brain — `{name, enabled, vault_path, repo, folders}` (fields `id`/`local_path`/
+`type` from the old description in brain missing - synthesized):
 
-| brain | maind | правило |
+| brain | maind | rule |
 |:--|:--|:--|
-| `name` | `name`, `id` | `id` = slug от `name` |
-| `repo` | `local_path` | путь к коду |
-| `vault_path` | `vault_path` | как есть |
-| `folders` | `docs_folders` | как есть |
-| — | `type` | по маркерам репозитория (composer.json→php, package.json→node, .obsidian→vault) |
+| `name` | `name`, `id` | `id` = slug from `name` |
+| `repo` | `local_path` | path to code |
+| `vault_path` | `vault_path` | as is |
+| `folders` | `docs_folders` | as is |
+| — | `type` | by repository markers (composer.json→php, package.json→node, .obsidian→vault) |
 
-Дальше: [Миграция →](./migration)
+Next: [Migration →](./migration)

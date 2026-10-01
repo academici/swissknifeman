@@ -1,10 +1,10 @@
-"""maind deploy — провижининг: раскатать MCP-серверы хаба на проекты («клонировать сеть»).
+"""maind deploy — provisioning: roll out MCP-hub servers for projects («clone network»).
 
-Из config.json вписываем в MCP-конфиг каждого проекта серверы хаба (agent-memory + maind),
-со scope project:<id>. Слияние недеструктивное (mcpconfig: upsert + .bak), идемпотентное, opt-in.
-Демон не обязателен — пишем клиентский конфиг и при выключенном демоне (с предупреждением).
-Код-граф (движок Serena) опционален: --with-code (legacy --with-graphify), и только если бинарь
-движка установлен в PATH (иначе warn-and-skip). Политика — из секции code_graph конфига."""
+From config.json enter in MCP-config of each project hub servers (agent-memory + maind),
+with scope project:<id>. Non-destructive merger (mcpconfig: upsert + .bak), idempotent, opt-in.
+The daemon is not required - we write the client config even when the daemon is turned off (with warning).
+Code graph (engine Serena) optional: --with-code (legacy --with-graphify), and only if the binary
+engine is installed in PATH (otherwise warn-and-skip). Politics - from section code_graph config."""
 import json
 import os
 import shutil
@@ -139,14 +139,14 @@ def _maind_entry(scope):
 
 
 def _code_entry(project_path, command, args):
-    """MCP-сервер код-графа проекта (по умолчанию Serena). Плейсхолдер {root} в args →
-    путь проекта. command/args/имя сервера — из политики code_graph + per-project override."""
+    """MCP-project code graph server (default Serena). Placeholder {root} in args →
+    project path. command/args/server name - from policy code_graph + per-project override."""
     root = str(project_path)
     return {"command": command, "args": [a.replace("{root}", root) for a in args]}
 
 
 def _resolve_targets(project_path, opt_targets):
-    """[(channel, path)]: .mcp.json всегда; .cursor/mcp.json если есть .cursor/ или указан явно."""
+    """[(channel, path)]: .mcp.json always; .cursor/mcp.json if available .cursor/ or specified explicitly."""
     if opt_targets:
         channels = [c.strip() for c in opt_targets.split(",") if c.strip()]
     else:
@@ -156,7 +156,7 @@ def _resolve_targets(project_path, opt_targets):
     out = []
     for ch in channels:
         if ch not in MCP_FILES:
-            die(f"неизвестный target: {ch} (claude|cursor|vscode)")
+            die(f"unknown target: {ch} (claude|cursor|vscode)")
         out.append((ch, mcp_path(project_path, ch)))
     return out
 
@@ -198,19 +198,19 @@ def provider_semantic_inventory(env, config, project, *, with_code, maind_server
 def deploy_project(env, config, project, *, targets=None, with_code=None,
                    maind_server=True, with_agentmemory=False, dry=False,
                    provider_projections=None, provider_repair=False, d108=False):
-    """Раскатать серверы хаба в один проект. with_code=None → берётся из политики/полей проекта
-    (code|graphify). Память проекта — через сервер `maind` (изоляция по scope на стороне maind);
-    raw-сервер `agentmemory` НЕ раскатывается (он пишет мимо scope-маркера → невидимо для
-    scoped-recall) и УДАЛЯЕТСЯ из .mcp.json, если остался от старых деплоев. Возвращает
-    result-dict или None (пропуск)."""
+    """Roll out the hub servers into one project. with_code=None → is taken from the policy/project fields
+    (code|graphify). Project memory - via server `maind` (insulation by scope on the side maind);
+    raw-server `agentmemory` DOES NOT roll out (he writes by scope-marker → invisible to
+    scoped-recall) and REMOVED from .mcp.json, if left over from old deployments. Returns
+    result-dict or None (pass)."""
     pid = project["id"]
     local = project.get("local_path")
     if not local:
-        warn(f"проект '{pid}': нет local_path — пропускаю")
+        warn(f"project '{pid}': no local_path — skipping")
         return None
     project_path = Path(os.path.expanduser(local))
     if not project_path.is_dir():
-        warn(f"проект '{pid}': путь не найден — {project_path}")
+        warn(f"project '{pid}': path not found - {project_path}")
         return None
     scope = project.get("memory_scope") or f"project:{pid}"
     provider_plan = None
@@ -301,8 +301,8 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
                     raise ValueError("MAIND_PROVIDER_DEPLOY_REFUSED")
             if not dry:
                 apply_plan(project_path, provider_check["plan"])
-    # default-on (P2.4): merge_defaults уже подставил EMIT_EXAMPLE_DEFAULT, если ключ
-    # не задан — здесь только читаем итог, opt-out `false` в config.json уважается.
+    # default-on (P2.4): merge_defaults already set up EMIT_EXAMPLE_DEFAULT, if the key
+    # is not specified - here we only read the total, opt-out `false` in config.json respected.
     emit_example = bool((config.get("mcp") or {}).get("emit_example"))
 
     st = codegraph.settings(config)
@@ -310,10 +310,10 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         with_code = codegraph.enabled(project, st)
     entries = {}
     if maind_server:
-        entries["maind"] = _maind_entry(scope)               # память через maind (изоляция)
-    if with_agentmemory:                                     # legacy/opt-in raw-сервер
+        entries["maind"] = _maind_entry(scope)               # memory via maind (insulation)
+    if with_agentmemory:                                     # legacy/opt-in raw-server
         entries["agentmemory"] = _agentmemory_entry(env, config, scope)
-    drop = [] if with_agentmemory else ["agentmemory"]       # чистим raw-сервер из старых .mcp.json
+    drop = [] if with_agentmemory else ["agentmemory"]       # clean raw-server from old .mcp.json
     code_state = "disabled"
     if with_code:
         gcmd = codegraph.command(project, st)
@@ -324,8 +324,8 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
             code_state = "written"
         else:
             code_state = "skipped-not-installed"
-            warn(f"проект '{pid}': команда '{gcmd}' код-графа не найдена в PATH — пропускаю "
-                 f"(установите, напр. uvx для Serena, или задайте code_command)")
+            warn(f"project '{pid}': command '{gcmd}' code-graph not found in PATH — skipping "
+                 f"(set e.g. uvx for Serena, or set code_command)")
 
     pw = pplxweb.settings(config)                            # hub-managed perplexity-web
     if pplxweb.enabled(project, pw):                         # opt-in: mcp.perplexity_web.enabled
@@ -339,21 +339,21 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         try:
             data, _existed = load_mcp(path)
         except MCPConfigError as e:
-            # Битый конфиг ОДНОГО канала (напр. .cursor/mcp.json) не должен валить весь
-            # деплой/sync — файл не трогаем, предупреждаем и идём к следующему каналу.
-            warn(f"проект '{pid}': {e} — канал пропущен")
+            # Broken config of ONE channel (e.g. .cursor/mcp.json) should not fall all
+            # deployment/sync — do not touch the file, warn and move on to the next channel.
+            warn(f"project '{pid}': {e} — channel skipped")
             skipped.append(rel)
             continue
         changed_any = False
         for name, entry in entries.items():
             data, changed = merge_server(data, name, entry)
             changed_any = changed_any or changed
-        for name in drop:                                    # снять устаревший raw-сервер
+        for name in drop:                                    # remove obsolete raw-server
             data, changed = remove_server(data, name)
             changed_any = changed_any or changed
         if changed_any:
             write_mcp(path, data, dry=dry)
-        if emit_example:                                     # портируемый .example + гигиена .gitignore
+        if emit_example:                                     # portable .example + hygiene .gitignore
             write_example(path, data, project_path, dry=dry)
             reconcile_gitignore(project_path, rel, dry=dry)
         written.append({"file": rel, "servers": list(entries), "changed": changed_any})
@@ -362,9 +362,9 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         written = [{"file": row.target_path, "servers": list(row.server_ids),
                     "changed": provider_changed} for row in provider_plan.results
                    if row.status == "planned"]
-        # provider-managed .example + .gitignore (P2.4, D91): предикат — emit_example
-        # включён, операция не refused, строка "planned", канал claude-code; байты
-        # .example — из row.rendered (тот же рендер, что лёг в цель), второго рендера нет.
+        # provider-managed .example + .gitignore (P2.4, D91): predicate — emit_example
+        # enabled, operation not refused, string "planned", channel claude-code; bytes
+        # .example — from row.rendered (the same render that hit the target), there is no second render.
         if emit_example and not refused:
             for row in provider_plan.results:
                 if row.status == "planned" and row.provider_id is ProviderId.CLAUDE_CODE:
@@ -381,7 +381,7 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
 
 
 def mark_deployed(config, project_id, result):
-    """Отметить проект deployed в config.json (вызывающий сохраняет через write_config)."""
+    """Mark project deployed in config.json (caller saves via write_config)."""
     proj = get_project(config, project_id)
     if proj is None:
         return config
@@ -434,22 +434,22 @@ def cmd_deploy(env, argv):
     if opts["project"]:
         proj = get_project(config, opts["project"])
         if proj is None:
-            die(f"проект не найден в config.json: {opts['project']}")
+            die(f"project not found in config.json: {opts['project']}")
         projects = [proj]
     elif opts["all"]:
         projects = [p for p in listing(env, config) if p.get("enabled", True)]
     else:
-        die("укажите --project <id> или --all")
+        die("specify --project <id> or --all")
 
     _, _, url = resolve_ports(env, config)
     if not health(url):
-        warn(f"демон памяти не отвечает на {url} — конфиг всё равно пишу "
-             f"(поднимите: maind start --only memory)")
+        warn(f"memory daemon not responding to {url} — I’m still writing the config "
+             f"(raise: maind start --only memory)")
 
     results = []
     config_changed = False
     for proj in projects:
-        # флаг (--with-code|--with-graphify) форсит код-граф; иначе None → из конфига проекта
+        # flag (--with-code|--with-graphify) force code graph; otherwise None → from the project config
         with_code = True if (opts["with_code"] or opts["with_graphify"]) else None
         projections = _provider_projections(env, config, proj)
         res = deploy_project(env, config, proj, targets=opts["targets"] or None,
@@ -470,10 +470,10 @@ def cmd_deploy(env, argv):
         print(json.dumps(results, ensure_ascii=False, indent=2))
         return
     if not results:
-        print("нечего деплоить (нет проектов с существующим local_path)")
+        print("nothing to deploy (no projects with existing local_path)")
         return
     for r in results:
         gf = "" if r["code"] == "disabled" else f", code:{r['code']}"
-        sk = f"  ⚠ пропущено битых: {', '.join(r['skipped'])}" if r.get("skipped") else ""
+        sk = f"  ⚠ missing bits: {', '.join(r['skipped'])}" if r.get("skipped") else ""
         print(f"  {r['id']:<18} scope={r['scope']:<24} → {', '.join(r['targets'])} "
               f"({', '.join(r['servers'])}{gf}){sk}")

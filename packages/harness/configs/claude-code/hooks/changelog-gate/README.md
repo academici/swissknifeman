@@ -1,76 +1,76 @@
-# changelog-gate — commit-гейт CHANGELOG-дисциплины (опционально)
+# changelog-gate — commit-gate CHANGELOG-disciplines (optional)
 
-Опциональный **Python-хук** Claude Code (`PreToolUse`, matcher `Bash`), который ловит
-`git commit` содержательного типа (`feat`/`fix`/`perf`/`refactor`) без правки CHANGELOG среди
-застейдженных файлов — enforcement секции «Повседневная дисциплина CHANGELOG» скилла
+Optional **Python-hook** Claude Code (`PreToolUse`, matcher `Bash`), which catches
+`git commit` content type (`feat`/`fix`/`perf`/`refactor`) without editing CHANGELOG among
+staged files - enforcement sections «Daily Discipline CHANGELOG» skill
 [`oss-dev/release-engineering`](../../../../../skiller/skills/oss-dev/release-engineering/SKILL.ru.md)
-(правило держится на памяти модели — гейт детерминированно ловит пропуск). По умолчанию
-**НЕ устанавливается**: включается явно per-project.
+(the rule is based on the model's memory - the gate deterministically catches a pass). Default
+**NOT installed**: is included explicitly per-project.
 
-## Режимы
+## Modes
 
-| Режим | Поведение |
+| Mode | Behavior |
 |:--|:--|
-| `off` (дефолт) | хук не регистрируется в проекте |
-| `warn` (рекомендуется) | warning **в контекст модели** (`hookSpecificOutput.additionalContext`), **не блокирует** |
-| `strict` | **блокирует** `git commit` (exit 2 + причина в stderr) |
+| `off` (default) | hook is not registered in the project |
+| `warn` (recommended) | warning **into the model context** (`hookSpecificOutput.additionalContext`), **does not block** |
+| `strict` | **blocks** `git commit` (exit 2 + reason is stderr) |
 
-## Детекция (D33)
+## Detection (D33)
 
-- тип коммита и skip-маркер парсятся **ТОЛЬКО** из `-m`-сообщения самой команды: сообщение
-  через `$EDITOR` (`git commit` без `-m`) не парсится — no-op, гейт не угадывает;
-- содержательный тип — **ровно** `feat`/`fix`/`perf`/`refactor` (по началу первого `-m`);
-  `docs`/`chore`/`test`/`style`/`ci`/`build` и любой иной префикс — авто-skip, без warning;
-- маркер `[changelog-skip]` в любом `-m` — осознанное исключение, skip без warning;
-- «CHANGELOG затронут» = среди `git diff --cached --name-only` есть путь, матчащий
-  `(?i)changelog` — **любой** CHANGELOG (корневой либо per-package) удовлетворяет условие
-  (монорепо-дружественно, путь не захардкожен);
-- репо **без единого** `CHANGELOG*` в дереве (`git ls-files` не находит совпадения) → exit 0
-  (проект не ведёт эту дисциплину — безопасный no-op, зеркалит pack-guard «нет lock'а»).
+- commit type and skip-token is parsed **ONLY** from `-m`-messages from the command itself: message
+  via `$EDITOR` (`git commit` without `-m`) is not parsed - no-op, gate does not guess;
+- content type - **exactly** `feat`/`fix`/`perf`/`refactor` (at the beginning of the first `-m`);
+  `docs`/`chore`/`test`/`style`/`ci`/`build` and any other prefix is auto-skip, without warning;
+- marker `[changelog-skip]` in any `-m` — deliberate exception, skip without warning;
+- «CHANGELOG affected» = among `git diff --cached --name-only` there is a path matching
+  `(?i)changelog` — **any** CHANGELOG (root or per-package) satisfies the condition
+  (monorepo-friendly, path not hardcoded);
+- repo **without a single** `CHANGELOG*` in the tree (`git ls-files` does not find a match) → exit 0
+  (project does not follow this discipline - safe no-op, mirrors pack-guard «no lock'a»).
 
-MAJOR/breaking гейт НЕ классифицирует (D32/D33 — это вручную владелец, вне скоупа гейта).
+MAJOR/breaking gate does NOT classify (D32/D33 — this is manually the owner, outside the gate scope).
 
-## Файлы
+## Files
 
-| Файл | Роль |
+| File | Role |
 |:--|:--|
-| `changelog-gate.py` | PreToolUse-хук: stdin → решение по `-m` + staged-файлам → exit 0/2 (+ warning) |
-| `env.ini` | `MODE` (off/warn/strict). Per-project override в `.claude/changelog-gate.env.ini` |
+| `changelog-gate.py` | PreToolUse-hook: stdin → solution for `-m` + staged-files → exit 0/2 (+ warning) |
+| `env.ini` | `MODE` (off/warn/strict). Per-project override in `.claude/changelog-gate.env.ini` |
 
-## Установка / включение
+## Installation / enable
 
 ```bash
-harness hooks --global                                  # копирует хук в ~/.claude/hooks/changelog-gate/
-harness hooks --target . --changelog-gate warn           # включить в проекте (env.ini + регистрация PreToolUse)
-harness hooks --target . --changelog-gate strict         # блокирующий режим
-harness hooks --target . --changelog-gate off             # выключить (kill-switch, хук остаётся зарегистрирован, но неактивен)
+harness hooks --global                                  # copies the hook to ~/.claude/hooks/changelog-gate/
+harness hooks --target . --changelog-gate warn           # include in the project (env.ini + registration PreToolUse)
+harness hooks --target . --changelog-gate strict         # blocking mode
+harness hooks --target . --changelog-gate off             # turn off (kill-switch, hook remains registered but inactive)
 ```
 
-## I/O-контракт (для отладки)
+## I/O-contract (for debugging)
 
-Хук читает JSON payload PreToolUse на stdin (`cwd`/`tool_name`/`tool_input.command`), решение —
-по `-m`-сообщению команды и `git diff --cached --name-only`/`git ls-files` в `cwd`. Ничего на
-диск не пишет.
+Hook reads JSON payload PreToolUse on stdin (`cwd`/`tool_name`/`tool_input.command`), solution -
+by `-m`-command message and `git diff --cached --name-only`/`git ls-files` in `cwd`. Nothing on
+the disk does not write.
 
 ```bash
 echo '{"cwd":"/proj","tool_name":"Bash","tool_input":{"command":"git commit -m \"feat: X\""}}' \
-  | python3 changelog-gate.py   # warn + содержательный тип без CHANGELOG staged → JSON на stdout, exit 0
-echo 'not json{' | python3 changelog-gate.py   # → exit 0 (никогда не роняет сессию)
+  | python3 changelog-gate.py   # warn + content type without CHANGELOG staged → JSON on stdout, exit 0
+echo 'not json{' | python3 changelog-gate.py   # → exit 0 (never drops the session)
 ```
 
-## Non-blocking warning в контекст модели
+## Non-blocking warning into the model context
 
-RAG:✅ 2026-07-11 (`code.claude.com/docs/en/hooks.md`, perplexity-web): для `PreToolUse`
-non-blocking контекст доставляется через JSON на stdout с exit 0 —
+RAG:✅ 2026-07-11 (`code.claude.com/docs/en/hooks.md`, perplexity-web): for `PreToolUse`
+non-blocking context is delivered via JSON on stdout with exit 0 —
 `hookSpecificOutput.{hookEventName:"PreToolUse", permissionDecision:"allow", additionalContext:<reason>}`
-(поле `additionalContext` игнорируется только при `permissionDecision:"defer"`, поэтому warn
-всегда несёт явный `"allow"`). `strict` не использует JSON-канал — блокирует стандартным
-`exit 2` + причина в stderr (как `pack-guard`/`block-dangerous-git.sh`).
+(field `additionalContext` is only ignored when `permissionDecision:"defer"`, therefore warn
+always carries an explicit `"allow"`). `strict` does not use JSON-channel - blocks with standard
+`exit 2` + reason is stderr (like `pack-guard`/`block-dangerous-git.sh`).
 
-## Честные лимиты (не переобещаем)
+## Fair limits (we will not overpromise)
 
-- Тип и skip-маркер видны только если коммит делается через `-m` в самой Bash-команде;
-  `git commit` без `-m` (открывает `$EDITOR`) хук не видит — не угадывает, no-op.
-- «Содержательность» — исключительно по conventional-commit префиксу (D33): path-эвристика
-  по изменённым файлам сознательно отвергнута как хрупкая.
-- Гейт не классифицирует MAJOR/breaking — это всегда ручное решение владельца (D32).
+- Type and skip-marker are visible only if the commit is made via `-m` in the most Bash-command;
+  `git commit` without `-m` (opens `$EDITOR`) hook doesn't see - doesn't guess, no-op.
+- «Content» — exclusively by conventional-commit prefix (D33): path-heuristic
+  on modified files was deliberately rejected as fragile.
+- Gate does not classify MAJOR/breaking — this is always a manual decision of the owner (D32).

@@ -1,9 +1,9 @@
 # Claude Code Adapter
 
-Установка скиллов в Claude Code:
+Installing skills in Claude Code:
 
 ```bash
 ./install.sh ~/.claude/skills
 ```
 
-Delta-файлы (`adapters/claude.md` внутри скилла) — overrides для CLAUDE.md-специфики.
+Delta-files (`adapters/claude.md` inside the skill) — overrides For CLAUDE.md-specifics.

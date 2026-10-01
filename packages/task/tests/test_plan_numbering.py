@@ -33,7 +33,7 @@ class PlanNumberingTests(unittest.TestCase):
         result = plan_numbering.next_identity(self.root, date="2026.10.01", codename="DEMO-NEW")
         self.assertEqual((result["ordinal"], result["short_id"]), (1, "PLAN1"))
         self.assertEqual(result["plan_id"], "2026.10.01-№1-DEMO-NEW")
-        self.assertEqual(result["title_prefix"], "План №1 —")
+        self.assertEqual(result["title_prefix"], "Plan №1 —")
 
     def test_missing_plans_directory_is_an_empty_repository(self):
         result = plan_numbering.next_identity(self.root / "absent", date="2026.10.01")

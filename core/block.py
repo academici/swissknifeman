@@ -15,7 +15,7 @@ def content_hash(text: str) -> str:
 def managed_block(content: str, marker: str, *, owner: str = "maind") -> str:
     """Build a managed begin/end-marker block; ``owner`` is its sole writer."""
     h = content_hash(content)
-    return (f"<!-- {marker} hash={h} (managed by {owner} — не редактировать вручную) -->\n"
+    return (f"<!-- {marker} hash={h} (managed by {owner} — do not edit manually) -->\n"
             f"{content.rstrip()}\n<!-- /{marker} -->")
 
 

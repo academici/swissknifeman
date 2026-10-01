@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Тонкий stdlib CLI-фронт над `command_render.py` planning/apply API (P1.3).
+"""Thin stdlib CLI-front over `command_render.py` planning/apply API (P1.3).
 
-Никакой собственной рендер-логики: только загрузка канонического каталога
-(`command_catalog.build_command_catalog`), построение обоих provider-планов
-(`plan_claude_command_render`/`plan_codex_command_render`) и их read-only/write
-применение (`apply_claude_command_plan`/`plan_codex_command_apply` +
-`apply_codex_command_plan`) под явным `--root`.
+No custom rendering logic: only loading the canonical directory
+(`command_catalog.build_command_catalog`), building both provider-plans
+(`plan_claude_command_render`/`plan_codex_command_render`) and their read-only/write
+application (`apply_claude_command_plan`/`plan_codex_command_apply` +
+`apply_codex_command_plan`) explicitly `--root`.
 
     python3 packages/task/scripts/render-provider-commands.py --check --root .
     python3 packages/task/scripts/render-provider-commands.py --write --repair-owned --root .
@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 _PKG_ROOT = Path(__file__).resolve().parent.parent       # packages/task
-_MONOREPO_ROOT = _PKG_ROOT.parent.parent                 # корень монорепо
+_MONOREPO_ROOT = _PKG_ROOT.parent.parent                 # root monorepo
 sys.path.insert(0, str(_PKG_ROOT / "lib"))
 if (_MONOREPO_ROOT / "core").is_dir():
     sys.path.insert(0, str(_MONOREPO_ROOT))

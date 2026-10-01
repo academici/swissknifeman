@@ -28,7 +28,7 @@ BLOCK_ACTIONS = frozenset({
 PHASE_AUDIT_TERMINAL_ACTIONS = frozenset({
     "approval-required", "authority-denied", "terminal-block",
 })
-_PHASE_AUDIT_SUBJECT_RE = re.compile(r"^(P[0-9]+)(?:\s+—\s+режим фазы)?$")
+_PHASE_AUDIT_SUBJECT_RE = re.compile(r"^(P[0-9]+)(?:\s+—\s+phase mode)?$")
 
 # risk-review-loop-budget-v1.md §Loop budget and cadence.
 SAME_FINDING_MAX = 2
@@ -151,7 +151,7 @@ def audit_fixer_action(*, in_scope: bool, bounded_incidental: bool = False,
 def phase_audit_subject(item_id: object) -> str | None:
     """Return canonical ``Pn`` for a phase-audit journal subject.
 
-    Historical commands used both ``P1`` and ``P1 — режим фазы``.  Normalising at
+    Historical commands used both ``P1`` and ``P1 — phase mode``.  Normalising at
     the policy boundary prevents delivery from silently treating the latter as an
     unrelated event and falling back to a stale generic handoff.
     """
@@ -186,17 +186,17 @@ def phase_audit_terminal_policy(entry: dict, *, plan_dir=None) -> dict:
                 or len(ids) != len(set(ids))
                 or not isinstance(evidence.get("reason_code"), str) or not evidence["reason_code"]):
             raise ReviewPolicyError("AUDIT_TERMINAL_EVIDENCE_REQUIRED",
-                                    "замечание требует evidence и точный owning item той же фазы")
+                                    "note requires evidence and accurate owning item same phase")
         owner_item = continuation.rsplit(" ", 1)[1]
         if evidence.get("scope_class") != owner_item:
             raise ReviewPolicyError("AUDIT_TERMINAL_EVIDENCE_REQUIRED",
-                                    "scope_class должен называть exact owning item")
+                                    "scope_class should call exact owning item")
         if plan_dir is not None:
             from task import plan_layout, plan_bundle
             try:
                 spec = plan_layout.carrier_path(plan_dir, "item-spec", item_id=owner_item)
                 if not spec.is_file():
-                    raise ValueError(f"owning item отсутствует: {owner_item}")
+                    raise ValueError(f"owning item missing: {owner_item}")
                 plan_bundle.producer_readiness(plan_dir, owner_item)
             except ValueError as exc:
                 raise ReviewPolicyError("AUDIT_TERMINAL_CONTINUATION_INVALID", str(exc)) from exc
@@ -205,7 +205,7 @@ def phase_audit_terminal_policy(entry: dict, *, plan_dir=None) -> dict:
                 "terminal": True, "phase_closed": False}
     if result == "audit-attention":
         raise ReviewPolicyError("AUDIT_ATTENTION_NONTERMINAL",
-                                "ATTENTION требует доказанное замечание и owning continuation")
+                                "ATTENTION requires a proven remark and owning continuation")
     if result != "audit-red":
         raise ReviewPolicyError(
             "AUDIT_TERMINAL_EVENT_INVALID", f"unsupported phase audit result {result!r}")
@@ -420,13 +420,13 @@ class LoopBudget:
             try:
                 phase_path = plan_layout.phase_path(plan_dir, phase_id)
             except plan_layout.PlanLayoutError as exc:
-                raise ReviewPolicyError("CARRIER_UNRESOLVED", f"носитель фазы не резолвится: {exc}") from exc
+                raise ReviewPolicyError("CARRIER_UNRESOLVED", f"phase carrier does not resolve: {exc}") from exc
         try:
             phase_lines = phase_path.read_text(encoding="utf-8").splitlines()
         except OSError as exc:
             if not (plan_dir / "plan.md").is_file():
                 return budget, "unknown"
-            raise ReviewPolicyError("CARRIER_UNREADABLE", f"носитель фазы не читается: {exc}") from exc
+            raise ReviewPolicyError("CARRIER_UNREADABLE", f"phase carrier not readable: {exc}") from exc
 
         phase_count = 0
         for start, end in _audit_blocks(phase_lines, phase_id):

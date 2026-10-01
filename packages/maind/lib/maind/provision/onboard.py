@@ -1,9 +1,9 @@
-"""maind onboard <project> — единый онбординг: скиллы (skiller) + подключение к мозгу.
+"""maind onboard <project> — unified onboarding: skills (skiller) + connection to the brain.
 
-Оркеструет цепочку: зарегистрировать проект → skiller integrate (скиллы+хуки) →
-maind deploy (память+граф) → seed графа. Каждый шаг standalone-safe: нет соседа — шаг
-пропускается с предупреждением, онбординг продолжается. integrate идёт ДО deploy/seed,
-чтобы к моменту seed уже существовал skills-lock.json."""
+Orchestrates chain: register project → skiller integrate (skills+hooks) →
+maind deploy (memory+graph) → seed column. Every step standalone-safe: no neighbor - step
+is skipped with a warning and onboarding continues. integrate goes BEFORE deploy/seed,
+so that by the time seed already existed skills-lock.json."""
 import json
 import os
 import sys
@@ -19,16 +19,16 @@ from ..projects import write_config
 
 
 def _infer_type(path):
-    """Тип проекта по маркерам — единый детектор core (path уже существует:
-    _ensure_project проверил is_dir перед вызовом)."""
+    """Project type by markers - single detector core (path already exists:
+    _ensure_project checked is_dir before calling)."""
     return detect_project_type(path)
 
 
 def _register_namespaces(config, namespaces):
-    """Наполняет реестр `config["namespaces"]` (dict имя→метаданные) записями по умолчанию
-    для тех ns, которых там ещё нет — setdefault, чтобы не затирать уже заданные метаданные
-    при повторном онбординге (идемпотентно). Реестр — TOP_KEYS['namespaces']=dict, НЕ list;
-    projects[i].namespaces — отдельное поле (list строк), сюда не относится."""
+    """Fills the registry `config["namespaces"]` (dict name→metadata) default entries
+    for those ns, which are not there yet - setdefault, so as not to overwrite already specified metadata
+    when re-onboarding (idempotent). Registry - TOP_KEYS['namespaces']=dict, NOT list;
+    projects[i].namespaces — separate field (list lines), does not apply here."""
     registry = config.get("namespaces")
     if not isinstance(registry, dict):
         registry = {}
@@ -42,16 +42,16 @@ def _register_namespaces(config, namespaces):
 
 
 def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
-    """(config, project, created). Новый путь → синтез записи (+ write_config, если не dry).
-    namespaces по умолчанию — общий `axioma` + свой `<id>` (несколько на проект).
-    Заодно регистрирует эти namespaces в общем реестре `config["namespaces"]`, если их там
-    ещё нет (dict-реестр, setdefault — идемпотентно, метаданные не перетираются)."""
+    """(config, project, created). New path → record synthesis (+ write_config, if not dry).
+    namespaces default - general `axioma` + yours `<id>` (several per project).
+    At the same time registers these namespaces in the general registry `config["namespaces"]`, if there are any
+    not yet (dict-registry, setdefault — idempotent, metadata is not overwritten)."""
     proj = get_project(config, project_or_path)
     if proj is None:
-        # get_project матчит ТОЛЬКО по id — `maind onboard <тот же путь>` повторно (не по
-        # id, а по абсолютному пути) иначе штампует дубль-запись с тем же id каждый раз
-        # (инцидент: loqum x3 в config.json). Доп. матч по local_path (нормализованному),
-        # если аргумент похож на реальный каталог.
+        # get_project matches ONLY by id — `maind onboard <same path>` again (not by
+        # id, and by absolute path) otherwise stamps a duplicate record with the same id every time
+        # (incident: loqum x3 in config.json). Add. match by local_path (normalized),
+        # if the argument is similar to a real directory.
         from .workspace import norm_path
         cand = norm_path(project_or_path)
         if os.path.isdir(cand):
@@ -64,7 +64,7 @@ def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
         return config, proj, False
     path = Path(os.path.expanduser(project_or_path))
     if not path.is_dir():
-        die(f"проект не найден: '{project_or_path}' — ни id в config.json, ни каталог")
+        die(f"project not found: '{project_or_path}' — neither id in config.json, neither directory")
     pid = sanitize(path.name)
     ptype = _infer_type(path)
     vis = docs_visibility_for(ptype)            # package→public, product→private
@@ -84,13 +84,13 @@ def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
 
 
 def _wire_memory(env, config, proj, namespaces=None, mechanism="manual", dry=False):
-    """Проводка памяти проекта по выбранному механизму (дефолт `manual`):
-    - **maind**: MODE=maind + SessionStart-инжект дайджеста.
-    - **manual** (рекомендуется): MCP-память доступна явно, без стартового дайджеста;
-      нативная авто-память также выключена.
-    - **native**: вернуть нативную авто-память Claude Code (revert хука), MODE=off.
-    - **off**: память выключена (MODE=off, native не трогаем).
-    Идемпотентно; доводит и уже подключённый проект."""
+    """Posting project memory to the selected mechanism (default `manual`):
+    - **maind**: MODE=maind + SessionStart-digest injection.
+    - **manual** (recommended): MCP-memory is accessed explicitly, without a start digest;
+      native auto-memory is also disabled.
+    - **native**: return native auto-memory Claude Code (revert hook), MODE=off.
+    - **off**: memory disabled (MODE=off, native do not touch).
+    Idempotent; The already connected project also completes."""
     from ..health import apply_memory_hook, configure_manual_memory, revert_memory_hook
     changed = False
     if mechanism == "maind":
@@ -114,11 +114,11 @@ def _wire_memory(env, config, proj, namespaces=None, mechanism="manual", dry=Fal
         cur = f.read_text(encoding="utf-8") if f.is_file() else ""
         if f"MODE={mode}" not in cur:
             cdir.mkdir(parents=True, exist_ok=True)
-            f.write_text(f"# Память проекта — механизм '{mechanism}'.\n"
-                         f"# maind = демон + изоляция по scope; native = авто-память Claude Code.\n"
+            f.write_text(f"# Project memory - mechanism '{mechanism}'.\n"
+                         f"# maind = demon + insulation by scope; native = auto-memory Claude Code.\n"
                          f"MODE={mode}\n", encoding="utf-8")
             wrote = True
-    # maind → digest; manual → только явный MCP; иначе → native/revert.
+    # maind → digest; manual → explicit only MCP; otherwise → native/revert.
     if mechanism == "maind":
         hook = apply_memory_hook(env, config, proj, "auto", dry)
     elif mechanism == "manual":
@@ -135,18 +135,18 @@ def onboard(env, config, project_or_path, opts):
     config, proj, created = _ensure_project(env, config, project_or_path,
                                             namespaces=opts.get("namespaces"), dry=dry)
     steps.append({"name": "register", "status": "ok",
-                  "detail": f"{'создан' if created else 'найден'} project:{proj['id']}"})
+                  "detail": f"{'created' if created else 'found'} project:{proj['id']}"})
 
-    # 0. память: по умолчанию ручной MCP без стартового контекста.
+    # 0. memory: default manual MCP without starting context.
     mw = _wire_memory(env, config, proj, namespaces=opts.get("namespaces"),
                       mechanism=opts.get("memory") or "manual", dry=dry)
     steps.append({"name": "memwire", "status": "ok",
-                  "detail": f"механизм={mw['mechanism']} ns=[{','.join(mw['namespaces'] or [])}] "
+                  "detail": f"mechanism={mw['mechanism']} ns=[{','.join(mw['namespaces'] or [])}] "
                             f"hook={mw.get('memory_hook')}"})
 
-    # 1. skiller integrate — скиллы + окружение (integrate делегирует permissions/MCP/
-    # хуки пакету harness). standalone-safe. При --skip-skills окружение всё равно
-    # настраиваем напрямую через harness (env:apply), т.к. integrate не вызывался.
+    # 1. skiller integrate — skills + environment (integrate delegates permissions/MCP/
+    # package hooks harness). standalone-safe. When --skip-skills environment anyway
+    # configured directly via harness (env:apply), because integrate was not called.
     if opts.get("skip_skills"):
         steps.append({"name": "skills", "status": "skipped", "detail": "--skip-skills"})
         try:
@@ -155,19 +155,19 @@ def onboard(env, config, project_or_path, opts):
                           "detail": f"harness permissions rc={rc}"})
         except SystemExit:
             steps.append({"name": "env", "status": "skipped",
-                          "detail": "harness недоступен — пропуск"})
+                          "detail": "harness not available - skip"})
     else:
         extra = ["--bundle", opts.get("bundle") or "recommended"]
-        # тип проекта (== имя профиля skiller) → явный --profile, чтобы выбор
-        # скиллов/пресетов/mcp шёл по профилю типа, а не только по дефолтам бандла.
-        # standalone/unknown НЕ передаём явно: пусть skiller сам уйдёт в autodetect-fallback
-        # (минимальный набор + warn), а не «поставит всё» по standalone=["*"].
+        # project type (== profile name skiller) → explicit --profile, to select
+        # skills/presets/mcp followed the type profile, and not just the bundle defaults.
+        # standalone/unknown DO NOT pass explicitly: let skiller will go to autodetect-fallback
+        # (minimum set + warn), and not «will supply everything» by standalone=["*"].
         ptype = proj.get("type")
         if ptype and ptype not in ("unknown", "standalone"):
             extra += ["--profile", ptype]
-        # Канал публикации скиллов (только скиллы; память/граф — отдельные плоскости):
-        # connect=плагины (не в репо) · vendor=физ.копии в .claude/skills (в репо, для
-        # внешних разработчиков без доступа к реестру swissknifeman).
+        # Skills publication channel (skills only; memory/graph - individual planes):
+        # connect=plugins (not in repo) · vendor=physical copy in .claude/skills (in the repo, for
+        # external developers without registry access swissknifeman).
         if opts.get("skills_channel"):
             extra += ["--skills-channel", opts["skills_channel"]]
         if opts.get("yes"):
@@ -178,10 +178,10 @@ def onboard(env, config, project_or_path, opts):
                           "detail": f"skiller integrate rc={rc}"})
         except SystemExit:
             steps.append({"name": "skills", "status": "skipped",
-                          "detail": "skiller недоступен — пропуск"})
+                          "detail": "skiller not available - skip"})
 
-    # 1b. PAO (php/laravel-проект, PHP≥8.3) — токен-экономия вывода PHP-инструментов;
-    # инвариант онбординга (SKM-AUDIT-004 P6): доставка скилла ≠ установка зависимости.
+    # 1b. PAO (php/laravel-project, PHP≥8.3) — token-saving output PHP-tools;
+    # onboarding invariant (SKM-AUDIT-004 P6): skill delivery ≠ installation of dependency.
     lp = proj.get("local_path")
     if lp:
         from .. import pao
@@ -189,9 +189,9 @@ def onboard(env, config, project_or_path, opts):
                               interactive=sys.stdin.isatty() and not opts.get("yes"), dry=dry)
         steps.append(pstep)
 
-    # 2. maind deploy — память + граф (MCP-серверы хаба)
-    # --with-code (legacy --with-graphify) фиксируем как намерение в записи проекта, чтобы
-    # последующие `maind sync` тоже раскатывали код-граф (config-driven, см. _mcp_run).
+    # 2. maind deploy — memory + graph (MCP-hub servers)
+    # --with-code (legacy --with-graphify) is recorded as an intent in the project record so that
+    # subsequent `maind sync` also rolled out the code graph (config-driven, see _mcp_run).
     want_code = opts.get("with_code") or opts.get("with_graphify")
     if want_code and not (proj.get("code") or proj.get("graphify")):
         proj["code"] = True
@@ -205,10 +205,10 @@ def onboard(env, config, project_or_path, opts):
                          provider_projections=project_context.provider_context.projections,
                          provider_repair=bool(opts.get("repair")))
     from .. import codegraph
-    if codegraph.enabled(proj, codegraph.settings(config)):  # дефолтный .serena/project.yml
+    if codegraph.enabled(proj, codegraph.settings(config)):  # default .serena/project.yml
         codegraph.apply_serena_config(env, config, proj, "install", dry)
     if res is None:
-        steps.append({"name": "deploy", "status": "failed", "detail": "нет пути проекта"})
+        steps.append({"name": "deploy", "status": "failed", "detail": "no project path"})
     else:
         steps.append({"name": "deploy", "status": "ok",
                       "detail": f"MCP → {', '.join(res['targets'])} "
@@ -227,13 +227,13 @@ def onboard(env, config, project_or_path, opts):
                   "status": "ok" if instruction["status"] in ("ok", "dry") else "failed",
                   "detail": instruction["detail"]})
 
-    # 3. derive графа из источников истины (код/доки/override/skills) → стор проекта + индекс
+    # 3. derive graph from sources of truth (code/docks/override/skills) → project store + index
     gstats = {}
     from ..federation import graph_disabled
     if dry:
         steps.append({"name": "graph", "status": "skipped", "detail": "--dry-run"})
     elif graph_disabled(config):
-        steps.append({"name": "graph", "status": "skipped", "detail": "граф отключён"})
+        steps.append({"name": "graph", "status": "skipped", "detail": "graph disabled"})
     else:
         from ..derive import derive_project_graph
         from ..federation import Federation, rebuild_index
@@ -241,18 +241,18 @@ def onboard(env, config, project_or_path, opts):
         rebuild_index(env, config)
         gstats = Federation(env, config).stats()
         steps.append({"name": "graph", "status": "ok",
-                      "detail": f"derive {proj['id']}: {d['nodes']} узлов, "
-                                f"{d['edges']} рёбер (code {d['by_via']['code']}, "
+                      "detail": f"derive {proj['id']}: {d['nodes']} nodes, "
+                                f"{d['edges']} ribs (code {d['by_via']['code']}, "
                                 f"doc {d['by_via']['doc']})"})
 
-    # 3b. seed-память: базовый факт о связях (видимость «память общая»)
+    # 3b. seed-memory: a basic fact about connections (visibility «shared memory»)
     if not dry:
         from ..seed import seed_memory
         ms = seed_memory(env, config, proj)
         steps.append({"name": "memory", "status": "ok" if ms["status"] == "ok" else "skipped",
                       "detail": ms.get("detail", ms["status"])})
 
-    # 3c. ecosystem-skill: управляемый скилл с инструкцией про MCP-инструменты и связи
+    # 3c. ecosystem-skill: guided skill with instructions about MCP-tools and connections
     from .skilldoc import apply_ecosystem_skill, apply_setup_skill
     try:
         sk = apply_ecosystem_skill(env, config, proj, "auto", dry)
@@ -260,9 +260,9 @@ def onboard(env, config, project_or_path, opts):
                       "status": "ok" if sk["status"] in ("ok", "dry") else "skipped",
                       "detail": f"ecosystem-mcp ({sk.get('detail', sk['status'])})"})
     except OSError as e:
-        steps.append({"name": "skill", "status": "skipped", "detail": f"шаблон недоступен: {e}"})
+        steps.append({"name": "skill", "status": "skipped", "detail": f"template not available: {e}"})
 
-    # 3c-bis. setup-skill: дерево решений тулинга (доезжает до внешних репо — governance B)
+    # 3c-bis. setup-skill: tooling decision tree (reaches external repos - governance B)
     try:
         ss = apply_setup_skill(env, config, proj, "auto", dry)
         steps.append({"name": "setup-skill",
@@ -270,10 +270,10 @@ def onboard(env, config, project_or_path, opts):
                       "detail": f"ecosystem-setup ({ss.get('detail', ss['status'])})"})
     except OSError as e:
         steps.append({"name": "setup-skill", "status": "skipped",
-                      "detail": f"шаблон недоступен: {e}"})
+                      "detail": f"template not available: {e}"})
 
-    # 3d. agent-pack профиля проекта — детерминированная доставка субагентов через harness
-    # (без агента в цикле). Пак из project.agent_pack или profile.agent_pack по type.
+    # 3d. agent-pack project profile - deterministic delivery of subagents via harness
+    # (without agent in loop). Pack from project.agent_pack or profile.agent_pack by type.
     from .sync import _profile_answers, _resolve_agent_pack
     packs = _resolve_agent_pack(config, proj)
     if packs:
@@ -287,32 +287,32 @@ def onboard(env, config, project_or_path, opts):
                               "detail": f"pack={pack} rc={rc}"})
             except SystemExit:
                 steps.append({"name": "agent-pack", "status": "skipped",
-                              "detail": f"pack={pack}: harness недоступен"})
+                              "detail": f"pack={pack}: harness not available"})
     else:
         steps.append({"name": "agent-pack", "status": "skipped",
-                      "detail": "профиль без agent_pack"})
+                      "detail": "profile without agent_pack"})
 
-    # 4. опционально brain
+    # 4. optional brain
     if opts.get("with_brain"):
         try:
             run_capability(env, config, proj["id"], "brain:status", dry=dry)
             steps.append({"name": "brain", "status": "ok", "detail": "brain status"})
         except SystemExit:
-            steps.append({"name": "brain", "status": "skipped", "detail": "brain недоступен"})
+            steps.append({"name": "brain", "status": "skipped", "detail": "brain not available"})
 
     return {"project": proj["id"], "created": created, "steps": steps,
             "deployed": res is not None, "graph": gstats}
 
 
-# Шаги, невыполнение которых означает НЕ поставленное окружение/скиллы/MCP — не
-# маскируем «зелёным» онбордингом (S9): failed или skipped из-за НЕДОСТУПНОЙ зависимости
-# → эскалация в rc≠0 + ATTENTION. Осознанный частичный онбординг снимает --allow-partial.
+# Steps, failure to complete which means the environment is NOT installed/skills/MCP — not
+# mask «green» onboarding (S9): failed or skipped due to UNAVAILABLE dependency
+# → escalation to rc≠0 + ATTENTION. Conscious partial onboarding removes --allow-partial.
 _CRITICAL_STEPS = {"skills", "env", "deploy", "instructions"}
 
 
 def _unmet_steps(report, *, dry):
-    """Критичные шаги, не выполненные из-за сбоя/недоступной зависимости (не user-choice).
-    В dry-run эскалации нет (это превью). skipped из-за --skip-skills/отключений не считаем."""
+    """Critical steps not completed due to failure/unavailable dependency (not user-choice).
+    B dry-run no escalation (this is a preview). skipped due to --skip-skills/we do not count outages."""
     if dry:
         return []
     out = []
@@ -320,7 +320,7 @@ def _unmet_steps(report, *, dry):
         if s["name"] not in _CRITICAL_STEPS:
             continue
         if s["status"] == "failed" or (
-                s["status"] == "skipped" and "недоступен" in (s.get("detail") or "")):
+                s["status"] == "skipped" and "not available" in (s.get("detail") or "")):
             out.append(s)
     return out
 
@@ -335,31 +335,31 @@ def cmd_onboard(env, argv):
                                "--allow-partial": "bool",
                                "--yes": "bool", "--json": "bool"}, max_pos=1)
     if not pos:
-        die("использование: maind onboard <project|path> [--memory manual|maind|native|off] "
+        die("usage: maind onboard <project|path> [--memory manual|maind|native|off] "
             "[--skills-channel connect|vendor] [--allow-partial] "
             "[--namespace a,b] [--bundle B --yes --with-code --with-brain --dry-run]")
     config, _src = load_config(env)
     ns = [s.strip() for s in (o["namespace"] or "").split(",") if s.strip()] or None
-    # Чек-лист: дефолт — ручной MCP без авто-инжекта контекста.
+    # Checklist: default - manual MCP without context auto-injection.
     memory = o["memory"]
     if memory and memory not in ("manual", "maind", "native", "off"):
-        die(f"--memory: {memory} (допустимо: manual|maind|native|off)")
+        die(f"--memory: {memory} (valid: manual|maind|native|off)")
     if not memory and not o["yes"] and sys.stdin.isatty():
-        ans = input("Механизм памяти проекта [manual]/maind/native/off: ").strip().lower()
+        ans = input("Project memory mechanism [manual]/maind/native/off: ").strip().lower()
         memory = ans or "manual"
         if memory not in ("manual", "maind", "native", "off"):
             memory = "manual"
-    # Чек-лист: канал публикации скиллов. КАСАЕТСЯ ТОЛЬКО СКИЛЛОВ — память/граф/MCP
-    # настраиваются как обычно. connect=плагины (не в репо, нужен реестр swissknifeman);
-    # vendor=физ.копии в .claude/skills (коммитятся в репо — для проектов, которые
-    # отдают сторонним разработчикам без доступа к swissknifeman).
+    # Checklist: channel for publishing skills. ONLY CONCERNS SKILLS - memory/graph/MCP
+    # are configured as usual. connect=plugins (not in repo, need registry swissknifeman);
+    # vendor=physical copy in .claude/skills (are committed to the repo - for projects that
+    # are given to third party developers without access to swissknifeman).
     channel = o["skills_channel"]
     if channel and channel not in ("connect", "vendor"):
-        die(f"--skills-channel: {channel} (допустимо: connect|vendor)")
+        die(f"--skills-channel: {channel} (valid: connect|vendor)")
     if not channel and not o["yes"] and not o["skip_skills"] and sys.stdin.isatty():
-        ans = input("Публикация скиллов [connect]/vendor "
-                    "(connect=плагины, не в репо · vendor=физ.копии в репо для "
-                    "внешних разработчиков): ").strip().lower()
+        ans = input("Publishing skills [connect]/vendor "
+                    "(connect=plugins, not in repo · vendor=physical copies in the repo for "
+                    "external developers): ").strip().lower()
         channel = ans if ans in ("connect", "vendor") else "connect"
     opts = {"bundle": o["bundle"], "skip_skills": o["skip_skills"], "targets": o["targets"],
             "with_code": o["with_code"], "with_graphify": o["with_graphify"],
@@ -372,15 +372,15 @@ def cmd_onboard(env, argv):
     if o["json"]:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
-        print(f"Онбординг project:{report['project']} "
-              f"({'создан' if report['created'] else 'обновлён'}):")
+        print(f"Onboarding project:{report['project']} "
+              f"({'created' if report['created'] else 'updated'}):")
         for s in report["steps"]:
             mark = {"ok": "✓", "skipped": "○", "failed": "✗"}.get(s["status"], "·")
             print(f"  {mark} {s['name']:<9} {s['detail']}")
         if unmet:
             names = ", ".join(f"{s['name']} ({s['detail']})" for s in unmet)
-            print(f"\n⚠ ATTENTION: критичные шаги не выполнены: {names}")
+            print(f"\n⚠ ATTENTION: critical steps not completed: {names}")
     if unmet and not o["allow_partial"]:
-        die("онбординг НЕ полон (окружение/скиллы/MCP не поставлены): "
-            f"{', '.join(report['attention'])}. Поставь harness/skiller и повтори, "
-            "либо запусти с --allow-partial.")
+        die("onboarding is NOT complete (environment/skills/MCP not supplied): "
+            f"{', '.join(report['attention'])}. Put harness/skiller and repeat, "
+            "or run with --allow-partial.")

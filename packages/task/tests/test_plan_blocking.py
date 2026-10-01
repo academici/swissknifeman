@@ -74,7 +74,7 @@ class PlanBlockingTests(unittest.TestCase):
         )
 
     def test_generic_boundary_evidence_is_rejected(self):
-        with self.assertRaisesRegex(plan_blocking.BlockCandidateError, "конкретные"):
+        with self.assertRaisesRegex(plan_blocking.BlockCandidateError, "specific"):
             plan_blocking.validate(candidate(boundary_evidence=["generic"]))
 
     def test_external_candidate_requires_verified_rag_before_review(self):
@@ -130,7 +130,7 @@ class PlanBlockingTests(unittest.TestCase):
         self.assertDecision(value, "terminal-block", terminal=True)
 
     def test_closed_schema_validator_rejects_unknown_field(self):
-        with self.assertRaisesRegex(plan_blocking.BlockCandidateError, "неизвестные поля"):
+        with self.assertRaisesRegex(plan_blocking.BlockCandidateError, "unknown fields"):
             plan_blocking.validate(candidate(extra=True))
 
     def test_malformed_candidate_fails_closed_to_nonterminal_repair(self):

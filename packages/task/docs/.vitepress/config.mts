@@ -2,29 +2,29 @@ import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
 
 export default withMermaid(defineConfig({
-  lang: 'ru-RU',
+  lang: 'en-US',
   title: 'Task',
-  description: 'Команды задач и executable plan protocol',
+  description: 'Task commands and executable plan protocol',
   base: '/task/',
   lastUpdated: true,
   ignoreDeadLinks: [/^\/harness\//, /^\/develop/],
   themeConfig: {
-    nav: [{ text: 'Обзор', link: '/' }, { text: 'Методология', link: '/methodology' }],
+    nav: [{ text: 'Overview', link: '/' }, { text: 'Methodology', link: '/methodology' }],
     sidebar: {
       '/': [{
         text: 'Task',
         items: [
-          { text: 'Обзор', link: '/' },
-          { text: 'Методология', link: '/methodology' },
-          { text: 'Структура плана', link: '/plan-structure' },
-          { text: 'Шаблоны', link: '/templates' },
+          { text: 'Overview', link: '/' },
+          { text: 'Methodology', link: '/methodology' },
+          { text: 'Plan Structure', link: '/plan-structure' },
+          { text: 'Templates', link: '/templates' },
           { text: 'Workflow', link: '/workflows' },
-          { text: 'Контракт read-budget', link: '/reference/read-budget-contract' },
+          { text: 'Contract read-budget', link: '/reference/read-budget-contract' },
         ],
       }],
     },
     search: { provider: 'local' },
-    outline: { label: 'На этой странице' },
-    docFooter: { prev: 'Назад', next: 'Вперёд' },
+    outline: { label: 'On this page' },
+    docFooter: { prev: 'Back', next: 'Forward' },
   },
 }))

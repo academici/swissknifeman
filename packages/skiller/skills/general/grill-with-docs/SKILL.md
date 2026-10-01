@@ -17,49 +17,49 @@ sha256: ""
 
 # Grill with Docs
 
-Грилинг = безжалостное уточнение по одному вопросу до тех пор, пока требование не станет
-строгим. Этот скилл объединяет грилинг (`spec-interview`) с **активным построением доменной
-модели** (`domain-modeling`): пока вытаскиваешь требования — параллельно фиксируешь термины и
-решения. Отличие от `spec-interview`: тот грилит код + пользователя; здесь добавляется сверка с
-**внешней документацией** и запись глоссария/ADR инлайн.
+Grilling = relentless clarification on one issue until the requirement becomes
+strict. This skill combines grilling (`spec-interview`) with **active construction of domain
+models** (`domain-modeling`): while you pull out the requirements - at the same time you fix the terms and
+solutions. Difference from `spec-interview`: he grills the code + user; here a reconciliation with
+**external documentation** and glossary entry/ADR inline.
 
-## Когда активировать
+## When to activate
 
-Только **явный вызов** (`disable-model-invocation: true`). Запускают, когда:
-- идея расплывчата, а цена ошибки высока (финтех-интеграция, фискальный документооборот);
-- термины перегружены и путаются между сессиями («операция» / «платёж» / «перевод» — у каждого
-  банковского API своё значение);
-- требование надо сверить с внешней спекой (СБП, SberBusiness, ОФД, libfptr10).
+Only **explicit call** (`disable-model-invocation: true`). Triggered when:
+- the idea is vague and the cost of error is high (fintech integration, fiscal document flow);
+- terms are overloaded and confused between sessions («operation» / «payment» / «translation» — for everyone
+  banking API its meaning);
+- requirement must be checked with external spec (SBP, SberBusiness, OFD, libfptr10).
 
-Для очевидного однофайлового фикса — overhead, не запускать.
+For an obvious single-file fix - overhead, do not run.
 
-## Алгоритм
+## Algorithm
 
-1. **Грилинг по правилам `spec-interview`** — один вопрос → рекомендованный ответ с обоснованием →
-   ветвление. Категории прохода: цель → границы → инварианты → edge cases → данные → верификация.
-   Нельзя к «как», пока не закрыто «что» и «где».
-2. **Сначала источники, потом пользователь.** Ответ ищем в порядке: (а) кодовая база, (б) **внешняя
-   документация** (официальные API-доки, RFC, спеки протокола), (в) только потом спрашиваем человека.
-   Цитируй источник: «по спеке СБП поле X обязательно — подтверждаешь?».
-3. **Активная доменная модель параллельно** (`domain-modeling`): при перегруженном/нечётком термине —
-   останавливай и уточняй каноническое имя; стресс-тестируй сценарием на границы понятий; найдя
-   расхождение «код ↔ слова пользователя ↔ спека» — сразу вскрывай.
-4. **Пиши инлайн, не батчами.** Решённый термин → сразу в `CONTEXT.md` (только глоссарий, без
-   деталей реализации). Трудно-обратимое решение с реальным trade-off → предложи ADR (скупо: только
-   если «трудно откатить» И «удивит без контекста» И «был выбор»).
-5. **Итог** — заполненное ТЗ по `task-brief-template` (с «Явные предположения / Out of Scope /
-   Definition of Done») + обновлённые `CONTEXT.md`/ADR. Дальше — `to-issues`.
+1. **Grilling by the rules `spec-interview`** — one question → recommended answer with rationale →
+   branching. Passage categories: target → boundaries → invariants → edge cases → data → verification.
+   Cannot be accessed «like», not closed yet «what» and «where».
+2. **Sources first, user second.** We are looking for the answer in order: (a) codebase, (b) **external
+   documentation** (official API-docks, RFC, protocol specs), (in) only then we ask the person.
+   Quote source: «according to the SBP spec field X mandatory - can you confirm?».
+3. **Active domain model in parallel** (`domain-modeling`): when overloaded/fuzzy term -
+   stop and qualify canonical name; stress test the boundaries of concepts with a scenario; having found
+   discrepancy «code ↔ user words ↔ spec» — open it immediately.
+4. **Write online, not in batches.** Resolved term → immediately in `CONTEXT.md` (glossary only, without
+   implementation details). Hard-to-reversible solution with real trade-off → suggest ADR (sparingly: only
+   if «difficult to rollback» AND «surprises without context» AND «was a choice»).
+5. **Summary** — completed technical specifications for `task-brief-template` (with «Explicit assumptions / Out of Scope /
+   Definition of Done») + updated `CONTEXT.md`/ADR. Next - `to-issues`.
 
-## Анти-паттерны
+## Anti-patterns
 
-- Спрашивать то, что есть в коде или в официальной доке.
-- Списком из десяти вопросов вместо одного-за-раз.
-- Складывать детали реализации в `CONTEXT.md` (там только язык предметной области).
-- Плодить ADR на каждое решение (только трудно-обратимые с trade-off).
+- Ask what is in the code or in the official doc.
+- A list of ten questions instead of one at a time.
+- Put implementation details into `CONTEXT.md` (there is only the domain language).
+- Produce ADR for each solution (only difficult-to-reversible with trade-off).
 
-## Связанные скиллы
+## Related skills
 
-- `spec-interview` (general) — базовые правила грилинга (этот скилл — его расширение под доки + домен).
-- `domain-modeling` (architect) — формат `CONTEXT.md` и ADR (snippets), активная дисциплина модели.
-- `task-brief-template` (general) — куда ложится итог.
-- `to-issues` (oss-dev) — следующий шаг: разбить готовое ТЗ на вертикальные срезы-issue.
+- `spec-interview` (general) — basic grilling rules (this skill is its extension for docks + domain).
+- `domain-modeling` (architect) — format `CONTEXT.md` and ADR (snippets), active model discipline.
+- `task-brief-template` (general) — where the total goes.
+- `to-issues` (oss-dev) — next step: break the finished technical specification into vertical sections -issue.

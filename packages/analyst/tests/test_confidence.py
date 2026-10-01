@@ -1,4 +1,4 @@
-"""Тесты чистой арифметики confidence: формула, decay/полураспад, тиры, границы."""
+"""Pure arithmetic tests confidence: formula, decay/half-life, ranges, boundaries."""
 import math
 import unittest
 
@@ -8,7 +8,7 @@ from analyst import confidence as C
 class TestConfidence(unittest.TestCase):
     # ── beta_mean ────────────────────────────────────────────────────────────
     def test_beta_mean_neutral_prior(self):
-        # S=N=0 → α/(α+β)=0.5 (нейтральный приор, а не 0/0)
+        # S=N=0 → α/(α+β)=0.5 (neutral priority, not 0/0)
         self.assertAlmostEqual(C.beta_mean(0, 0), 0.5)
 
     def test_beta_mean_success(self):
@@ -28,12 +28,12 @@ class TestConfidence(unittest.TestCase):
     def test_volume_saturates(self):
         self.assertGreater(C.volume_factor(1000), 0.99)
 
-    # ── time_decay + полураспад ──────────────────────────────────────────────
+    # ── time_decay + half-life ──────────────────────────────────────────────
     def test_decay_zero_days(self):
         self.assertEqual(C.time_decay(0), 1.0)
 
     def test_decay_half_life_14d(self):
-        # λ=0.95: 0.95^14 ≈ 0.49 (полураспад ≈ 14 дней)
+        # λ=0.95: 0.95^14 ≈ 0.49 (half-life ≈ 14 days)
         self.assertAlmostEqual(C.time_decay(14), 0.95 ** 14)
         self.assertTrue(0.45 < C.time_decay(14) < 0.5)
 
@@ -43,9 +43,9 @@ class TestConfidence(unittest.TestCase):
     def test_decay_monotonic(self):
         self.assertGreater(C.time_decay(1), C.time_decay(5))
 
-    # ── confidence (композиция) ──────────────────────────────────────────────
+    # ── confidence (composition) ──────────────────────────────────────────────
     def test_confidence_no_volume_is_zero(self):
-        # N=0 → volume=0 → confidence=0 независимо от S/decay
+        # N=0 → volume=0 → confidence=0 regardless S/decay
         self.assertEqual(C.confidence(0, 0, 0), 0.0)
 
     def test_confidence_composition(self):
@@ -64,7 +64,7 @@ class TestConfidence(unittest.TestCase):
     def test_confidence_bounded(self):
         self.assertLess(C.confidence(10 ** 6, 10 ** 6, 0), 1.0)
 
-    # ── тиры ─────────────────────────────────────────────────────────────────
+    # ── shooting ranges ─────────────────────────────────────────────────────────────────
     def test_tiers_thresholds(self):
         self.assertEqual(C.tier(0.95), "core")
         self.assertEqual(C.tier(0.90), "core")

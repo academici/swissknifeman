@@ -1,7 +1,7 @@
-// Source: tokens.json (из figma-mcp-core) → Flutter ThemeData. Генерируется из токенов, не вручную.
+// Source: tokens.json (from figma-mcp-core) → Flutter ThemeData. Generated from tokens, not manually.
 import 'package:flutter/material.dart';
 
-/// Дизайн-токены из Figma Variables. Имена сохраняют семантику Figma-переменных.
+/// Design tokens from Figma Variables. Names preserve semantics Figma-variables.
 abstract class AppTokens {
   // color.* (mode: light)
   static const primary = Color(0xFF3B82F6); // figma:variable/Primary/Blue-500

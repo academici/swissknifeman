@@ -1,4 +1,4 @@
-"""Тесты pao — детект/статус laravel/pao (SKM-AUDIT-004 P6.2), без реального composer/php."""
+"""Tests pao — detect/status laravel/pao (SKM-AUDIT-004 P6.2), without real composer/php."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -53,7 +53,7 @@ class TestApplyPao(unittest.TestCase):
             step = pao.apply_pao({"id": "p", "type": "node-package"}, Path(tmp),
                                  interactive=True, dry=False)
             self.assertEqual(step, {"name": "pao", "status": "skipped",
-                                    "detail": "не PHP-проект"})
+                                    "detail": "not PHP-project"})
 
     @mock.patch.object(pao, "status", return_value="missing")
     def test_dry_run_skips_without_prompt(self, _m):

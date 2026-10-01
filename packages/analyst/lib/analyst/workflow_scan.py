@@ -246,11 +246,11 @@ def cmd_workflow_scan(env, argv):
     if opts["help"]:
         print("analyst workflow-scan [--project ID] [--output DIR|FILE.json] [--now ISO] [--json]")
         return
-    if not opts["now"]: die("workflow-scan требует --now для воспроизводимого отчёта")
+    if not opts["now"]: die("workflow-scan requires --now for the reproducible report")
     projects = load_projects(env.default_config)
     if opts["project"]:
         projects = [row for row in projects if row["id"] == opts["project"]]
-        if not projects: die(f"enabled проект не найден: {opts['project']}")
+        if not projects: die(f"enabled project not found: {opts['project']}")
     sources, missing, diagnostics = inventory(projects)
     report = build_report(projects, template_sources(env.monorepo_root), sources, missing, diagnostics, opts["now"])
     if opts["output"]:

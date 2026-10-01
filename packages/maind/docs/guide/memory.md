@@ -1,217 +1,217 @@
-# Память (agent-memory)
+# Memory (agent-memory)
 
-Долгосрочная память — внешний **Node-демон** `@agentmemory/agentmemory` (на `iii-sdk`).
-maind его **оркестрирует** (не переписывает на Python) и говорит по HTTP, скоупя запросы
-по проекту.
+Long-term memory - external **Node-demon** `@agentmemory/agentmemory` (on `iii-sdk`).
+maind him **orchestrates** (does not rewrite to Python) and speaks HTTP, collecting requests
+for the project.
 
-## Жизненный цикл
+## Life cycle
 
 ```bash
-maind memory start     # запуск отдельной сессией, pidfile в data/, health-poll
-maind memory run       # foreground (exec node) — для systemd Type=simple
-maind memory status    # running / url / pid / порты / воркеры
-maind memory stop      # SIGTERM→SIGKILL; чужой демон (без pidfile) не трогается
+maind memory start     # launch in a separate session, pidfile in data/, health-poll
+maind memory run       # foreground (exec node) — for systemd Type=simple
+maind memory status    # running / url / pid / ports / workers
+maind memory stop      # SIGTERM→SIGKILL; alien demon (without pidfile) does not touch
 ```
 
-`maind start` без `--only` поднимает и память, и граф. Для автозапуска при логине/загрузке —
-зарегистрируйте демон как systemd-сервис: [`maind service install`](./systemd).
+`maind start` without `--only` raises both memory and graph. For autostart upon login/loading -
+register the daemon as systemd-service: [`maind service install`](./systemd).
 
-## Порты — из env/конфига
+## Ports - from env/config
 
-`memory.resolve_ports` берёт значения по приоритету: **env** (`AGENTMEMORY_PORT` /
+`memory.resolve_ports` takes values by priority: **env** (`AGENTMEMORY_PORT` /
 `AGENTMEMORY_STREAM_PORT` / `AGENTMEMORY_URL`) → **`.maind.json`** (`memory.http_port` /
-`stream_port` / `url`) → **дефолт** `4111/4112`. Никаких хардкодов — два узла на одной
-машине разводятся по портам через `.env`.
+`stream_port` / `url`) → **default** `4111/4112`. No hardcodes - two nodes on one
+to the machine are routed to ports via `.env`.
 
-## Cross-machine режим: `memory.role` (ADR-0001)
+## Cross-machine mode: `memory.role` (ADR-0001)
 
-По умолчанию узел — `standalone` (сегодняшний режим, свой демон на loopback; back-compat —
-существующие узлы поведения не меняют). Для нескольких постоянных машин
-(`docs/adr/ADR-0001-cross-machine-memory.md`) — единственный живой демон на
-**host**-машине, остальные — **client**:
+The default node is `standalone` (today's regime, its demon on loopback; back-compat —
+existing nodes do not change behavior). For multiple persistent machines
+(`docs/adr/ADR-0001-cross-machine-memory.md`) — the only living demon on
+**host**-car, the rest - **client**:
 
 ```json
 "memory": {
-  "role": "host",                          // | "standalone" (дефолт) | "client"
-  "url": "http://<HOST_LAN_IP>:4111",       // ОБЯЗАТЕЛЕН для role=client, НЕ loopback
-  "bind_host": "auto",                      // только role=host: LAN-адрес ЭТОЙ машины (или явный IP)
-  "secret_file": "memory.secret"            // путь (относительно корня узла), 0600
+  "role": "host",                          // | "standalone" (default) | "client"
+  "url": "http://<HOST_LAN_IP>:4111",       // REQUIRED for role=client, NOT loopback
+  "bind_host": "auto",                      // only role=host: LAN-address of THIS machine (or explicit IP)
+  "secret_file": "memory.secret"            // path (relative to the node root), 0600
 }
 ```
 
-- **`role=client` запрещает поднимать локальный демон КОДОМ** (не только документацией):
-  `maind memory start`/`maind memory run`/`maind service install` откажут с ненулевым
-  кодом — второй писатель ломает единственность стора (LWW/перезапись целого scope при
-  конфликте, `findings/P4-cross-machine-facts.md` §4). Указывайте хост через `memory.url`.
-- **`secret_file`** — bearer-токен для `AGENTMEMORY_SECRET` на хосте; порядок разрешения:
-  env `AGENTMEMORY_SECRET` → `memory.secret_file` → без токена (анонимно, как сегодня).
-  Секрет НЕ хранится инлайном в конфиге (диффы/копии конфига light его бы утекли) и не
-  печатается в логах/сообщениях об ошибке.
-- **LAN-стадия (ближайшая, D80).** Транспорт — LAN: демон бинденд не на `127.0.0.1`, а на
-  **конкретный LAN-адрес хоста**. Адрес машины НЕ хранится в репозитории: tracked
-  `config/memory/iii-config.yaml` остаётся портируемым шаблоном (`host: 127.0.0.1`), а адрес
-  задаёт узел — `memory.bind_host` в `config.json` (gitignored) либо env `AGENTMEMORY_BIND_HOST`;
-  `auto` берёт LAN-IPv4 текущей машины. При старте maind рендерит из шаблона рантайм-копию
-  `data/iii-config.runtime.yaml` (gitignored) с подставленным `workers[iii-http].host` и отдаёт её
-  демону (`AGENTMEMORY_III_CONFIG`), поэтому `npm install`/апгрейд движка адрес не сбросят, а
-  перенос на другой комп = `bind_host: "auto"` (или другой IP) + `memory.url` у клиентов, без правки
-  репо. Не-loopback `bind_host` допустим только при `memory.role=host`. Bind
-  `0.0.0.0` ЗАПРЕЩЁН (поверхность атаки на весь LAN + key expiry перестаёт быть
-  предохранителем); `iii-stream` (стрим-порт) НЕ бинденд на LAN — cross-machine
-  store/recall/forget/export идут только через `iii-http` REST.
-  При срабатывании триггера **`tailscale serve`** (третья постоянная машина ИЛИ работа вне
-  LAN) — правка ОБРАТИМА одной строкой: `host` возвращается к `127.0.0.1`, публикация
-  делается снаружи (`tailscale serve --http=4111 127.0.0.1:4111`), `AGENTMEMORY_SECRET`
-  остаётся включённым (ADR-0001).
-- **Различение «недоступен» от «неавторизован» (401).** `GET /agentmemory/health` ВСЕГДА
-  публичен у движка (даже с заданным секретом) — «демон отвечает» ≠ «наши вызовы
-  авторизованы». `maind doctor`/`maind health` различают это явным протектед-вызовом
-  (`memory.check_auth`), а не полагаются на `ping`.
-- **Известные ограничения LAN-стадии** (полностью — `root/adr/ADR-0001-cross-machine-memory.md`):
-  секрет — единственный предохранитель (нет автоотзыва по key expiry, как у Tailscale);
-  ротация секрета — ручная операция; сегмент LAN шире tailnet (кто в том же сегменте и
-  получил секрет — читает/пишет память ВСЕХ проектов); офлайн-машина (нет сети до хоста)
-  работает БЕЗ памяти — локального кэша/очереди отложенной записи НЕТ (сознательный отказ,
-  версионирования/идемпотентности записи у контракта `store` нет).
+- **`role=client` prohibits raising the local daemon with CODE** (not only documentation):
+  `maind memory start`/`maind memory run`/`maind service install` will fail with non-zero
+  code - the second writer breaks the uniqueness of the store (LWW/overwrite whole scope when
+  conflict, `findings/P4-cross-machine-facts.md` §4). Specify the host via `memory.url`.
+- **`secret_file`** — bearer-token for `AGENTMEMORY_SECRET` on host; resolution order:
+  env `AGENTMEMORY_SECRET` → `memory.secret_file` → without token (anonymous, like today).
+  The secret is NOT stored inline in the config (diffs/copies of the config light it would have been leaked) and not
+  is printed in the logs/error messages.
+- **LAN-stage (closest, D80).** Transport - LAN: daemon bindend not on `127.0.0.1`, and on
+  **specific LAN-host address**. The machine address is NOT stored in the repository: tracked
+  `config/memory/iii-config.yaml` remains a portable template (`host: 127.0.0.1`), and the address
+  specifies the node - `memory.bind_host` in `config.json` (gitignored) or env `AGENTMEMORY_BIND_HOST`;
+  `auto` takes LAN-IPv4 of the current machine. At start maind renders a runtime copy from the template
+  `data/iii-config.runtime.yaml` (gitignored) with substituted `workers[iii-http].host` and gives it away
+  to the demon (`AGENTMEMORY_III_CONFIG`), therefore `npm install`/engine upgrade the address will not be reset, but
+  transfer to another computer = `bind_host: "auto"` (or other IP) + `memory.url` from clients, without editing
+  repo. Not-loopback `bind_host` is only valid when `memory.role=host`. Bind
+  `0.0.0.0` PROHIBITED (entire attack surface LAN + key expiry ceases to be
+  fuse); `iii-stream` (stream port) NOT bind to LAN — cross-machine
+  store/recall/forget/export go only through `iii-http` REST.
+  When trigger fires **`tailscale serve`** (third permanent machine OR work outside
+  LAN) — edit is REVERSIBLE in one line: `host` returns to `127.0.0.1`, publication
+  is done from the outside (`tailscale serve --http=4111 127.0.0.1:4111`), `AGENTMEMORY_SECRET`
+  remains enabled (ADR-0001).
+- **Discrimination «not available» from «unauthorized» (401).** `GET /agentmemory/health` ALWAYS
+  is public on the engine (even with a given secret) — «daemon responds» ≠ «our calls
+  authorized». `maind doctor`/`maind health` distinguish this with an explicit protected call
+  (`memory.check_auth`), rather than relying on `ping`.
+- **Known limitations LAN-stage** (completely - `root/adr/ADR-0001-cross-machine-memory.md`):
+  secret - the only fuse (no auto-recall key expiry, like Tailscale);
+  secret rotation is a manual operation; segment LAN wider tailnet (who is in the same segment and
+  received a secret - reads/writes the memory of ALL projects); offline machine (no network to host)
+  works WITHOUT memory - local cache/deferred write queue NO (conscious refusal,
+  versioning/idempotency of the contract record `store` no).
 
-## Scopes (бакеты памяти) и где живёт изоляция
+## Scopes (memory buckets) and where the insulation lives
 
-| scope | назначение |
+| scope | purpose |
 |:--|:--|
-| `project:<id>` | приватная память проекта (его собственные факты) |
-| `ns:<имя>` | **общий бакет namespace-группы** — факты, видимые всем её проектам |
-| `global` | вся экосистема: wildcard-инфраструктура (`["*"]`) + ecosystem-wide факты |
+| `project:<id>` | private project memory (his own facts) |
+| `ns:<name>` | **general bucket namespace-groups** — facts visible to all her projects |
+| `global` | entire ecosystem: wildcard-infrastructure (`["*"]`) + ecosystem-wide facts |
 
-> ⚠️ **Изоляция — на стороне maind, не движка.** agentmemory 0.9.x — **единый
-> глобальный пул**: поле `namespace` в `remember`/`search`/`memories` он
-> **игнорирует**, `sessionId` тоже, а присланный `type` **переопределяет** своим
-> классификатором (сверено живым `curl`). Дословно сохраняется только `content`.
-> Поэтому scope-изоляцию обеспечивает **сам maind**: при записи встраивает маркер
-> `[[s:<scope>]]` в начало контента, при чтении — фильтрует результаты глобального
-> поиска по этому маркеру и снимает его (`memory.mark_scope`/`split_scope`).
-> Без этого слоя проект видел бы «приватную» память чужих проектов. Не пишите в
-> демон в обход maind (`maind memory` / `maind_memory_*` MCP) — записи без маркера
-> будут невидимы для scoped-recall.
+> ⚠️ **Insulation - on the side maind, not an engine.** agentmemory 0.9.x — **single
+> global pool**: field `namespace` in `remember`/`search`/`memories` he
+> **ignores**, `sessionId` too, and the one sent `type` **overrides** to your
+> classifier (verified alive `curl`). Only saved verbatim `content`.
+> Therefore scope-provides insulation **himself maind**: embeds a marker when writing
+> `[[s:<scope>]]` to the beginning of the content, when reading - filters the results of the global
+> search for this marker and remove it (`memory.mark_scope`/`split_scope`).
+> Without this layer the project would see «private» memory of other people's projects. Don't write to
+> daemon bypass maind (`maind memory` / `maind_memory_*` MCP) — records without marker
+> will be invisible to scoped-recall.
 
-Модель скоупов: seed пишет один обновляемый факт о связях только в приватный
-`project:<id>`. Graph namespaces (`namespaces`) и разрешённые общие области памяти
-(`memory_namespaces`) разделены. Обычный recall читает только `project:<id>`; `ns:<имя>`
-читается или записывается лишь при явно переданном `scope`. Автоматической публикации seed
-в общий бакет нет. Деривация бакетов — `namespaces.py`, seed — `seed.py`. Группы —
+Scope model: seed writes one updated fact about connections only in private
+`project:<id>`. Graph namespaces (`namespaces`) and allowed shared memory areas
+(`memory_namespaces`) are separated. Regular recall reads only `project:<id>`; `ns:<name>`
+is read or written only when explicitly passed `scope`. Automatic publication seed
+not included in the general bucket. Derivation of buckets - `namespaces.py`, seed — `seed.py`. Groups -
 [Namespaces](./namespaces).
 
-## Единый путь записи/чтения: хук + MCP через maind
+## Single write path/read: hook + MCP via maind
 
-Чтобы «запомнил» (хук памяти) и «вспомнил» (MCP/CLI) шли в ОДИН изолированный стор:
+To «remembered» (memory hook) and «remembered» (MCP/CLI) went to ONE isolated side:
 
-- **Ручной режим `MODE=manual`** — рекомендуемый: память доступна через MCP/CLI, но не
-  загружается в каждую сессию; нативная авто-память также выключена.
-- **Legacy auto-режим `MODE=maind`** (`~/.claude/hooks/memory/modes/maind.sh`) делегирует
-  `remember`/`recall` в `maind memory`; scope берётся из проекта (`CLAUDE_PROJECT_DIR` →
-  `match_cwd`), brain игнорируется. `maind onboard` сам пишет `<project>/.claude/memory.env.ini`
+- **Manual mode `MODE=manual`** — recommended: memory accessible via MCP/CLI, but not
+  is loaded in every session; native auto-memory is also disabled.
+- **Legacy auto-mode `MODE=maind`** (`~/.claude/hooks/memory/modes/maind.sh`) delegates
+  `remember`/`recall` in `maind memory`; scope taken from the project (`CLAUDE_PROJECT_DIR` →
+  `match_cwd`), brain is ignored. `maind onboard` writes himself `<project>/.claude/memory.env.ini`
   `MODE=maind`.
-- **MCP** `maind_memory_store|recall|forget` идут через те же `memory.py`-обёртки;
-  `maind_memory_recall(project:<id>)` остаётся в приватном scope. Общий `ns:*` указывается явно.
-- **CLI** для человека: `maind memory remember|recall|forget [--project ID|--scope S] [--share]`.
+- **MCP** `maind_memory_store|recall|forget` go through the same `memory.py`-wrappers;
+  `maind_memory_recall(project:<id>)` remains private scope. General `ns:*` is specified explicitly.
+- **CLI** for humans: `maind memory remember|recall|forget [--project ID|--scope S] [--share]`.
 
-## Авто-загрузка контекста на старте сессии (digest) и native-память
+## Auto-load context at session start (digest) and native-memory
 
-У нативной памяти Claude Code (`~/.claude/projects/<proj>/memory/MEMORY.md`) есть свойство,
-которого у демона нет «из коробки»: она **авто-инжектится** в контекст каждой сессии. Чтобы
-демон не проигрывал в этом (иначе агент должен ПОМНИТЬ сделать `recall` — недетерминированно):
+For native memory Claude Code (`~/.claude/projects/<proj>/memory/MEMORY.md`) is a property,
+which the demon does not have «out of the box»: she **auto-injected** into the context of each session. To
+the demon didn't lose in this (otherwise the agent MUST REMEMBER to do `recall` — non-deterministic):
 
-- `MODE=maind` ставит SessionStart-хук `<project>/.claude/maind-memory.sh`, который зовёт
-  **`maind memory digest`** (детерминированный дайджест памяти проекта: list+фильтр по
-  scope-маркеру, приватный scope первым, свежее сверху; байт-бюджет + per-item обрезка; хук-
-  безопасно — демон лёг → no-op) и инжектит его через `additionalContext` (Claude Code ≥ 2.1.59).
-- Одновременно ставится **`autoMemoryEnabled:false`** — нативная авто-память выключается, чтобы
-  не было дублирования. Демон становится единым источником и памяти, и стартового контекста.
-- **Дайджест — project-only по умолчанию.** `shared_max=0` (дефолт): в `additionalContext` идёт
-  ТОЛЬКО приватная память проекта (`project:<id>`); `ns:<группа>`/`global` в дайджест не
-  попадают вовсе, даже если факты там есть. Это осознанное сужение (context-economy: общий
-  namespace без оговорки раздувал старт каждой сессии и тянул чужой контекст группы —
-  «negative» был только у digest, не у recall/графа). Когда `shared_max=0`, digest печатает
-  однострочную подсказку `(межпроектное: maind memory recall --scope ns:<name> — digest
-  project-only)`. Включить shared в дайджест явно — `--shared-max N` (CLI) или
-  `memory.digest.shared_max` в конфиге проекта; тогда добавляются N свежайших shared-фактов
-  после private. См. «Межпроектная задача» ниже — как поднять общий контекст без изменения
-  дефолта дайджеста.
+- `MODE=maind` puts SessionStart-hook `<project>/.claude/maind-memory.sh`, who calls
+  **`maind memory digest`** (deterministic project memory digest: list+filter by
+  scope-token, private scope first, freshest on top; byte budget + per-item trim; hook-
+  safe - the demon is down → no-op) and injects it through `additionalContext` (Claude Code ≥ 2.1.59).
+- Placed at the same time **`autoMemoryEnabled:false`** — native auto-memory is turned off to
+  there was no duplication. The demon becomes a single source of both memory and starting context.
+- **Digest — project-only default.** `shared_max=0` (default): in `additionalContext` is coming
+  Project private memory ONLY (`project:<id>`); `ns:<group>`/`global` is not included in the digest
+  fall at all, even if the facts are there. This is a conscious narrowing (context-economy: general
+  namespace without reservation inflated the start of each session and pulled someone else's group context -
+  «negative» only had digest, not at recall/column). When `shared_max=0`, digest prints
+  one-line tooltip `(cross-project: maind memory recall --scope ns:<name> — digest
+  project-only)`. Enable shared in the digest explicitly - `--shared-max N` (CLI) or
+  `memory.digest.shared_max` in the project config; then added N the latest shared-facts
+  after private. See «Cross-project task» below - how to raise the general context without changing
+  digest default.
 
-**Гибко (per-project):** `maind onboard <id> --memory manual|maind|native|off` (дефолт
-`manual`). `maind` явно включает старый SessionStart digest; `native` возвращает авто-память.
-Проверка консистентности — в `maind health`.
+**Flexible (per-project):** `maind onboard <id> --memory manual|maind|native|off` (default
+`manual`). `maind` clearly includes the old one SessionStart digest; `native` returns auto-memory.
+Consistency check - in `maind health`.
 
-## Межпроектная задача — как явно поднять shared-контекст
+## Cross-project task - how to explicitly raise shared-context
 
-Дайджест на старте сессии несёт только свой проект (см. выше). Когда задача реально
-межпроектная («проанализируй проект A и B и улучши общее между ними») — поднимай shared-
-контекст тремя явными шагами (без изменения дефолта дайджеста):
+The digest at the start of the session carries only its project (see above). When the task is real
+cross-project («analyze the project A and B and improve the commonality between them») — raise shared-
+context in three explicit steps (without changing digest default):
 
-1. **Связи** — какие проекты вообще связаны и как: `maind graph --project <id>` (CLI, короткая
-   форма `view`) или MCP `maind_graph_path`/`maind_graph_neighbors` — путь/соседи в графе.
-2. **Контекст группы** — поднять общую память namespace явно (её нет в дайджесте):
-   `maind memory recall --scope ns:<имя> "<запрос>"` (CLI) или `maind_memory_recall` c этим
+1. **Connections** — what projects are generally connected and how: `maind graph --project <id>` (CLI, short
+   form `view`) or MCP `maind_graph_path`/`maind_graph_neighbors` — path/neighbors in the graph.
+2. **Group context** — raise shared memory namespace explicit (it's not in the digest):
+   `maind memory recall --scope ns:<name> "<request>"` (CLI) or `maind_memory_recall` c with this
    `scope` (MCP).
-3. **Запись вывода** — межпроектный факт пишется в scope группы, не в приватный `project:<id>`,
-   иначе другие проекты группы его не увидят: `maind memory remember --scope ns:<имя> "<факт>"`
-   (CLI) или `maind_memory_store` с `scope: "ns:<имя>"` (MCP).
+3. **Write output** — cross-project fact is written in scope groups, not private `project:<id>`,
+   otherwise other projects in the group will not see it: `maind memory remember --scope ns:<name> "<fact>"`
+   (CLI) or `maind_memory_store` with `scope: "ns:<name>"` (MCP).
 
-Скилл-ориентир с этим же гайдлайном раскатан в каждый подключённый проект — `ecosystem-mcp`
-(источник — `packages/maind/templates/skills/ecosystem-mcp/SKILL.md`). Межпроектная оптимизация
-кода (дубли/общие пакеты) — отдельный локальный скилл `cross-project-optimizer`
+The skill guide with the same guideline was rolled out to each connected project - `ecosystem-mcp`
+(source - `packages/maind/templates/skills/ecosystem-mcp/SKILL.md`). Cross-project optimization
+code (duplicates/common packages) — separate local skill `cross-project-optimizer`
 (`maind fleet manifest|duplicates|features`).
 
-## Куда писать факт — правило роутинга (не плодить дубли)
+## Where to write a fact - routing rule (do not create duplicates)
 
-Два слоя комплементарны, **не дублируй один и тот же факт в оба**:
+The two layers are complementary, **do not duplicate the same fact in both**:
 
-- **maind** (`maind memory` / `maind_memory_*`) — явная долговременная память: приватное
-  `project:<id>` по умолчанию, общий scope только по прямому запросу. Для continuity используйте
-  ключ `active-handoff`: новая запись заменяет старую. Ключи `progress`, `checkpoint`,
-  `session-log` отклоняются — этот журнал принадлежит репозиторию.
-- **native MEMORY.md** — выключена при `MODE=maind`. Если осознанно `--memory native`: только
-  мелкий курируемый набор инвариантов «всегда под рукой», без копий maind-фактов.
-- **file-federation (`MODE=file/federation`, brain `core`)** — legacy, только для инфра-узлов
-  (brain/swissknifeman). Для app-проектов не использовать.
+- **maind** (`maind memory` / `maind_memory_*`) — explicit long-term memory: private
+  `project:<id>` default, general scope by direct request only. For continuity use
+  key `active-handoff`: new entry replaces old one. Keys `progress`, `checkpoint`,
+  `session-log` rejected - This log belongs to the repository.
+- **native MEMORY.md** — is disabled when `MODE=maind`. If consciously `--memory native`: only
+  small curated set of invariants «always at hand», without copies maind-facts.
+- **file-federation (`MODE=file/federation`, brain `core`)** — legacy, for infranodes only
+  (brain/swissknifeman). For app-projects should not be used.
 
-## HTTP-контракт демона
+## HTTP-demon contract
 
-| Операция | Запрос (agentmemory 0.9.x, сверено с живым демоном) |
+| Operation | Request (agentmemory 0.9.x, checked with living demon) |
 |:--|:--|
 | health | `GET /agentmemory/health` |
-| store | `POST /agentmemory/remember {namespace, content, type}` — `content` несёт маркер `[[s:<scope>]]` |
-| recall | `POST /agentmemory/search {query, namespace, limit}` → `{results:[{observation, score}]}` (фильтр по маркеру — в maind) |
-| forget | `POST /agentmemory/forget {memoryId}` — **именно `memoryId`** (не `{namespace,id}` → HTTP 400) |
+| store | `POST /agentmemory/remember {namespace, content, type}` — `content` carries a marker `[[s:<scope>]]` |
+| recall | `POST /agentmemory/search {query, namespace, limit}` → `{results:[{observation, score}]}` (filter by marker - in maind) |
+| forget | `POST /agentmemory/forget {memoryId}` — **exactly `memoryId`** (not `{namespace,id}` → HTTP 400) |
 
-Обёртка в `memory.py`: `store`/`recall` (маркер + фильтр + нормализация в `[{score, text, id}]`),
-`forget`/`export`. Конфиг воркеров — `config/memory/iii-config.yaml` (7 воркеров `iii-*`).
+Wrapper in `memory.py`: `store`/`recall` (marker + filter + normalization in `[{score, text, id}]`),
+`forget`/`export`. Worker config - `config/memory/iii-config.yaml` (7 workers `iii-*`).
 
-При настроенном `memory.secret_file`/`AGENTMEMORY_SECRET` все протектед-вызовы несут
-`Authorization: Bearer <секрет>` (`core.http` — аддитивный параметр `headers`, дефолт не
-меняет ничего); `GET /agentmemory/health` — исключение, он публичен всегда. Бюджет ожидания
-(таймауты/ретраи) — `MEMORY_LIGHT_TIMEOUT_S`/`MEMORY_HEAVY_TIMEOUT_S`/`MEMORY_RETRIES` в
-`constants.py`, измерено в;
-ретраятся только read-вызовы (`export`), не мутации (`store`/`forget` — риск дубля без
-operation-id в контракте).
+When configured `memory.secret_file`/`AGENTMEMORY_SECRET` all protected calls carry
+`Authorization: Bearer <secret>` (`core.http` — additive parameter `headers`, default not
+changes nothing); `GET /agentmemory/health` — exception, it is always public. Expectation budget
+(timeouts/retrays) — `MEMORY_LIGHT_TIMEOUT_S`/`MEMORY_HEAVY_TIMEOUT_S`/`MEMORY_RETRIES` in
+`constants.py`, measured in;
+retract only read-calls (`export`), not mutations (`store`/`forget` — risk of double without
+operation-id in the contract).
 
-## Проверка «реально ли работает» и troubleshooting
+## Verification «does it really work?» and troubleshooting
 
-`maind health [--project ID]` выполняет read-only проверку. Мутирующий **round-trip**
-write→recall→forget запускается только с `--deep`; `--strict --deep` падает при его провале.
-Частые случаи:
+`maind health [--project ID]` executes read-only check. Mutating **round-trip**
+write→recall→forget starts only with `--deep`; `--strict --deep` falls if it fails.
+Common cases:
 
-- **remember и recall расходятся** (записал — не вспоминается): хук не в `MODE=maind` (пишет в
-  файловый `core`-brain мимо демона) → `maind onboard <id>` или поставь `.claude/memory.env.ini`
-  `MODE=maind` + переподними сессию.
-- **`forget` отдаёт HTTP 400**: старый payload `{namespace,id}` — нужен `{memoryId}` (починено).
-- **recall видит «приватные» факты чужого проекта**: запись шла в обход maind (без маркера) —
-  пиши только через `maind memory` / `maind_memory_*`.
-- **граф проекта пуст**: derive не прогонялся → `maind graph derive --project <id>` (онбординг
-  делает это сам; пустой у свежего app-проекта без внутри-экосистемных зависимостей — норма).
+- **remember and recall diverge** (wrote down - can't remember): hook not in `MODE=maind` (writes in
+  file `core`-brain past the demon) → `maind onboard <id>` or put `.claude/memory.env.ini`
+  `MODE=maind` + restart the session.
+- **`forget` gives HTTP 400**: old payload `{namespace,id}` — needed `{memoryId}` (fixed).
+- **recall sees «private» facts of someone else's project**: recording was bypassed maind (without marker) —
+  write only through `maind memory` / `maind_memory_*`.
+- **project graph is empty**: derive was not run → `maind graph derive --project <id>` (onboarding
+  does it himself; empty at fresh app-project without intra-ecosystem dependencies - the norm).
 
-> **Коллизия имён «federation».** В хуке памяти `MODE=federation` — это файловый бэкенд
-> (`~/.swissknifeman/memory/<brain>/*.md`), он НЕ связан с graph-federation maind (граф по
-> проектам + индекс). Для прикладных проектов канон — `MODE=manual` (демон по запросу), файловый
-> `federation`/`core` оставлен для инфра-узлов.
+> **Name collision «federation».** In memory hook `MODE=federation` — is a file backend
+> (`~/.swissknifeman/memory/<brain>/*.md`), it is NOT associated with graph-federation maind (graph by
+> projects + index). For applied projects canon - `MODE=manual` (daemon on request), file
+> `federation`/`core` is left for infra-nodes.
 
-Дальше: [Граф →](./graph)
+Next: [Graph →](./graph)

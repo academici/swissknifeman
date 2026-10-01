@@ -75,7 +75,7 @@ def _read_sample(path):
             except UnicodeDecodeError as exc:
                 sample = sample[:exc.start]
         if not sample:
-            raise CalibrationError(f"sample не удаётся обрезать по UTF-8: {path}")
+            raise CalibrationError(f"sample cannot trim at UTF-8: {path}")
         whole_file = False
     text = sample.decode("utf-8")
     return {
@@ -96,12 +96,12 @@ def collect_samples():
     samples = [_read_sample(path) for path in CORPUS]
     paths = {sample["source_path"] for sample in samples}
     if len(samples) != 8 or len(paths) != 8:
-        raise CalibrationError("corpus обязан содержать ровно 8 разных real sources")
+        raise CalibrationError("corpus must contain exactly 8 different real sources")
     total_bytes = sum(sample["sample_bytes"] for sample in samples)
     if total_bytes > MAX_TOTAL_SAMPLE_BYTES:
         raise CalibrationError(f"corpus sample_bytes={total_bytes} > {MAX_TOTAL_SAMPLE_BYTES}")
     if sum(sample["whole_file"] for sample in samples) < 2:
-        raise CalibrationError("corpus обязан нести минимум 2 whole-file samples")
+        raise CalibrationError("corpus is required to carry a minimum of 2 whole-file samples")
     return samples
 
 
@@ -136,7 +136,7 @@ def run_brackets(adapter, samples):
                 rejected.append(row)
             elif row["true_tokens"] < 0:
                 row["rejected"] = True
-                row["reject_reason"] = "payload input total меньше среднего controls"
+                row["reject_reason"] = "payload input total less than average controls"
                 rejected.append(row)
             else:
                 row["rejected"] = False
@@ -194,7 +194,7 @@ def preserve_v1_snapshot():
     active = ARTIFACT_PATH.read_bytes()
     if V1_SNAPSHOT_PATH.exists():
         if V1_SNAPSHOT_PATH.read_bytes() != active:
-            raise CalibrationError("existing token-estimate-calibration-v1 snapshot отличается от active v1")
+            raise CalibrationError("existing token-estimate-calibration-v1 snapshot is different from active v1")
         return
     V1_SNAPSHOT_PATH.parent.mkdir(parents=True, exist_ok=True)
     V1_SNAPSHOT_PATH.write_bytes(active)
@@ -202,7 +202,7 @@ def preserve_v1_snapshot():
 
 def generate(provider, model, *, smoke_probe=False):
     if provider != "codex":
-        raise CalibrationError(f"provider {provider!r} не поддержан; скрытый fallback запрещён")
+        raise CalibrationError(f"provider {provider!r} not supported; hidden fallback prohibited")
     adapter = CodexExecProbeAdapter(model)
     if smoke_probe:
         print(json.dumps(adapter.probe("").as_dict(), ensure_ascii=False, indent=2, sort_keys=True))
@@ -211,19 +211,19 @@ def generate(provider, model, *, smoke_probe=False):
     samples = collect_samples()
     accepted, rejected, calls = run_brackets(adapter, samples)
     if len(accepted) != 8:
-        raise CalibrationError(f"accepted samples={len(accepted)}, ожидается ровно 8")
+        raise CalibrationError(f"accepted samples={len(accepted)}, expected exactly 8")
     if sum(row["counts"]["dense_ascii"] > 0 for row in accepted) < 3:
         raise CalibrationError("accepted_dense_samples < 3")
     if any(not any(row["counts"][name] for row in accepted) for name in token_estimate.CLASSES):
-        raise CalibrationError("corpus не покрывает все пять classifier classes")
+        raise CalibrationError("corpus does not cover all five classifier classes")
     records = [row["probe"] for row in accepted]
     ensure_same_target([adapter_record(row) for row in records])
     rates, overhead = fit_rates(accepted)
     multiplier, observed_max, violations, tightness = bound_and_tighten(accepted, rates, overhead)
     if rates["dense_ascii"] <= 0:
-        raise CalibrationError("dense_ascii rate обязан быть положительным")
+        raise CalibrationError("dense_ascii rate must be positive")
     if violations != 0 or tightness["p95"] > 1.6:
-        raise CalibrationError(f"acceptance не пройден: violations={violations}, p95={tightness['p95']:.3f}")
+        raise CalibrationError(f"acceptance failed: violations={violations}, p95={tightness['p95']:.3f}")
     target = records[0]
     artifact = {
         "version": "2.0.0", "calibrated_at": _now_iso(),
@@ -242,7 +242,7 @@ def generate(provider, model, *, smoke_probe=False):
         "tightness": tightness,
         "fingerprints": {"wrapper_sha256": target["wrapper_sha256"],
                          "command_sha256": target["environment"]["command_sha256"]},
-        "_generated_by": "packages/task/scripts/calibrate-token-estimate.py — НЕ РЕДАКТИРОВАТЬ РУКАМИ, перегенерировать",
+        "_generated_by": "packages/task/scripts/calibrate-token-estimate.py — DO NOT EDIT BY HAND, regenerate",
     }
     canary = []
     for row, sample in zip(accepted, samples):
@@ -250,14 +250,14 @@ def generate(provider, model, *, smoke_probe=False):
         canary.append({"source_path": sample["source_path"], "est_tokens": estimate,
                        "passed": estimate >= row["true_tokens"]})
     if not all(row["passed"] for row in canary):
-        raise CalibrationError("full-source offline canary обнаружил занижение")
+        raise CalibrationError("full-source offline canary detected underestimation")
     artifact["corpus"]["full_source_offline_canary"] = canary
     log = {
         "schema_version": "calibration-probe-log-v2", "generated_at": _now_iso(),
         "probe_protocol_version": PROBE_PROTOCOL_VERSION, "provider_calls": len(calls),
         "delta_tokens": DELTA_TOKENS, "accepted_samples": accepted, "rejected_samples": rejected,
         "controls": [calls[0].as_dict(), calls[4].as_dict(), calls[8].as_dict(), calls[11].as_dict()],
-        "_generated_by": "packages/task/scripts/calibrate-token-estimate.py — НЕ РЕДАКТИРОВАТЬ РУКАМИ, перегенерировать",
+        "_generated_by": "packages/task/scripts/calibrate-token-estimate.py — DO NOT EDIT BY HAND, regenerate",
     }
     ARTIFACT_PATH.write_text(json.dumps(artifact, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     PROBE_LOG_PATH.write_text(json.dumps(log, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")

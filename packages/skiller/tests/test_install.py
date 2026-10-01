@@ -1,4 +1,4 @@
-"""Регрессии машинной установки базовых Codex-плагинов."""
+"""Basic machine installation regressions Codex-plugins."""
 
 import os
 import subprocess
@@ -69,7 +69,7 @@ class InstallScriptCase(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(self.log.exists())
-        self.assertIn("Codex plugins: пропуск (--no-codex-plugins)", result.stdout)
+        self.assertIn("Codex plugins: pass (--no-codex-plugins)", result.stdout)
 
     def test_explicit_codex_plugin_survives_default_opt_out(self):
         result = self.run_installer(
@@ -104,7 +104,7 @@ class InstallScriptCase(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(self.log.exists())
-        self.assertIn("Codex plugins: пропуск (--no-codex-plugins)", result.stdout)
+        self.assertIn("Codex plugins: pass (--no-codex-plugins)", result.stdout)
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@
     {
       "name": "analyst",
       "source": "./packages/analyst",
-      "description": "analyst — continuous learning экосистемы: детерминированный захват кандидат-уроков из прогонов (digest), человеко-гейт (review/promote), провенанс; агент-аналитик (/analyst:deep, digest-first). Команды + агент.",
+      "description": "analyst — continuous learning ecosystems: deterministic capture of candidate lessons from runs (digest), man-gate (review/promote), provenance; agent-analyst (/analyst:deep, digest-first). Commands + agent.",
       "category": "ecosystem",
       "tags": [
         "analyst",
@@ -188,7 +188,7 @@
     {
       "name": "frontend",
       "source": "./packages/skiller/skills/frontend",
-      "description": "Frontend core: общие фронт-скиллы (web design guidelines, document writer, file upload)",
+      "description": "Frontend core: general front skills (web design guidelines, document writer, file upload)",
       "category": "engineering",
       "tags": [
         "frontend",
@@ -354,7 +354,7 @@
     {
       "name": "harness",
       "source": "./packages/harness",
-      "description": "harness — настройка окружения Claude Code: пресеты permissions, auto-approve/bypass, MCP-серверы и хуки (memory/notify). Тонкое лицо над CLI harness.",
+      "description": "harness — environment settings Claude Code: presets permissions, auto-approve/bypass, MCP-servers and hooks (memory/notify). Thin face above CLI harness.",
       "category": "ecosystem",
       "tags": [
         "harness",
@@ -466,7 +466,7 @@
     {
       "name": "maind",
       "source": "./packages/maind",
-      "description": "mAInd hub — тонкое лицо над CLI: онбординг проектов в экосистему academici (скиллы + память + граф + MCP), sync, статус, здоровье связи.",
+      "description": "mAInd hub — thin face above CLI: onboarding projects into the ecosystem academici (skills + memory + graph + MCP), sync, status, communication health.",
       "category": "ecosystem",
       "tags": [
         "maind",
@@ -633,7 +633,7 @@
     {
       "name": "skm",
       "source": "./packages/skiller/skm",
-      "description": "skiller CLI — управление скиллами проекта: бакеты (connect/vendor), integrate, статус",
+      "description": "skiller CLI — managing project skills: buckets (connect/vendor), integrate, status",
       "category": "meta",
       "tags": [
         "cli",

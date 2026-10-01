@@ -1,85 +1,85 @@
-# `*.env.ini` — хуковый интент, а не конфиг узла
+# `*.env.ini` — hook intent, not node config
 
-`*.env.ini` — спроектированный носитель **интента хука per-project** (какой режим включён в
-ЭТОМ дереве): не разрозненные локальные конфиги и не дубль конфига узла mAInd. Файл
-`~/.swissknifeman/config.json` предположение аудита не подтвердило: там нет `config.json`
-вовсе — есть `projects.json`/`topology.json`/`memory/` (реестр флота), а шаблон конфига узла
-maind — корневой `config.example.json` (ключи `node`/`memory`/`graph`/`agents`/`namespaces`/
-`projects`/`mcp`/`observability`) — другой предмет, сливать их значило бы сломать работающий
-механизм ради устранения дублирования, которого нет (P5.3, `research/05-p5-hygiene-model.md`,
+`*.env.ini` — designed media **hook intent per-project** (what mode is included in
+THIS tree): not scattered local configs and not a duplicate node config mAInd. File
+`~/.swissknifeman/config.json` audit assumption was not confirmed: there is no `config.json`
+at all - yes `projects.json`/`topology.json`/`memory/` (fleet register), and node config template
+maind — root `config.example.json` (keys `node`/`memory`/`graph`/`agents`/`namespaces`/
+`projects`/`mcp`/`observability`) — another item, merging them would mean breaking the working one
+mechanism for the sake of eliminating duplication that does not exist (P5.3, `research/05-p5-hygiene-model.md`,
 `findings/P5-hygiene-surfaces-2026-07-31.md` §4).
 
-## Два класса файла — и правило трекинга по классу
+## Two file classes - and a tracking rule by class
 
-| Класс | Путь | В git? | Почему |
+| Class | Path | B git? | Why |
 |:--|:--|:--|:--|
-| **Per-project intent** (машиноспецифичен) | `<project>/.claude/<hook>.env.ini`, `<project>/.codex/memory.env.ini` | **НЕТ** — `.gitignore` | Это выбор ЭТОГО дерева (bypass/strict/maind/off), не общая база; коммит унёс бы чужой выбор в чужой репозиторий |
-| **Шаблон-дефолт хука** | `configs/claude-code/hooks/<hook>/env.ini`, `configs/claude-code/agent-packs/<pack>/hooks/review-gate.env.ini` | **ДА** | Это раздаваемый дефолт: `harness hooks`/agent-pack копируют его в проект как исходное значение лестницы |
+| **Per-project intent** (machine specific) | `<project>/.claude/<hook>.env.ini`, `<project>/.codex/memory.env.ini` | **NO** — `.gitignore` | This is the choice of THIS tree (bypass/strict/maind/off), not a common base; the commit would take someone else's choice to someone else's repository |
+| **Hook default pattern** | `configs/claude-code/hooks/<hook>/env.ini`, `configs/claude-code/agent-packs/<pack>/hooks/review-gate.env.ini` | **YES** | This is the default being distributed: `harness hooks`/agent-pack copy it to the project as the original stair value |
 
-Правило класса, а не список файлов: следующий хук получает судьбу автоматически по тому,
-в какой из двух директорий он живёт. `.gitignore` ловит класс "per-project intent" паттернами
-без ведущего `/` (`.claude/auto-approve.env.ini`, `.claude/memory.env.ini`,
-`.claude/run-report.env.ini`, `.codex/memory.env.ini`) — совпадают на любой глубине дерева.
+Class rule, not file list: the next hook gets its fate automatically based on
+in which of the two directories it lives. `.gitignore` catches the class "per-project intent" patterns
+without a leader `/` (`.claude/auto-approve.env.ini`, `.claude/memory.env.ini`,
+`.claude/run-report.env.ini`, `.codex/memory.env.ini`) — match at any tree depth.
 
-**Находка инвентаризации (не гипотеза):** до P5.3 трекинг был непоследовательным — один
-класс, три судьбы. `.claude/run-report.env.ini` (per-project intent) был закоммичен вопреки
-своему классу; `packages/skiller/.claude/auto-approve.env.ini` (тоже per-project intent, внутри
-монорепо) был закоммичен исторически, до того как правило класса появилось в `.gitignore`.
-Оба untracked этим item'ом (`git update-index --force-remove`, без команды с подстрокой `rm`);
-`.gitignore` дополнен строками `.claude/run-report.env.ini` и `.codex/memory.env.ini`
-(`auto-approve`/`memory` per-project паттерны уже покрывали любую глубину, включая
+**Inventory Find (not a hypothesis):** to P5.3 tracking was inconsistent - one
+class, three destinies. `.claude/run-report.env.ini` (per-project intent) was committed contrary to
+to its class; `packages/skiller/.claude/auto-approve.env.ini` (too per-project intent, inside
+monorepo) was committed historically, before the class rule appeared in `.gitignore`.
+Both untracked with this item'ohm (`git update-index --force-remove`, without command with substring `rm`);
+`.gitignore` added with lines `.claude/run-report.env.ini` and `.codex/memory.env.ini`
+(`auto-approve`/`memory` per-project patterns have already covered any depth, including
 `packages/skiller/.claude/`).
 
-## Лестница приоритета
+## Priority ladder
 
-Одинакова у обоих bash-читателей (`auto-approve`, `memory`):
+Same for both bash-readers (`auto-approve`, `memory`):
 
 ```
-$CLAUDE_PROJECT_DIR/.claude/<hook>.env.ini   (per-project override — если файл есть, используется он)
-      ↓ (не найден)
-<hookdir>/env.ini                             (шаблон-дефолт хука)
-      ↓ (не найден)
-"off"                                          (жёсткий дефолт в коде)
+$CLAUDE_PROJECT_DIR/.claude/<hook>.env.ini   (per-project override — if the file exists, it is used)
+      ↓ (not found)
+<hookdir>/env.ini                             (hook default template)
+      ↓ (not found)
+"off"                                          (hard default in the code)
 ```
 
-`memory`-хук на Codex-стороне дополнительно смотрит `.codex/memory.env.ini` (тот же
-per-project класс, тот же формат) — `packages/harness/lib/harness/hooks.py:365`.
+`memory`-hook on Codex-side additionally looks `.codex/memory.env.ini` (the same
+per-project class, same format) — `packages/harness/lib/harness/hooks.py:365`.
 
-`run-report.py` и `maind/health.py` **не несут этой лестницы**: они читают ровно один путь
-(`<cwd>/.claude/run-report.env.ini`, `<project>/.claude/memory.env.ini`) и на его отсутствие
-падают на жёсткий дефолт в коде — второго слоя (`<hookdir>/env.ini`) у них нет. Не путать
-«одна точка чтения + дефолт в коде» с лестницей приоритета — это разные конструкции одного
-семейства.
+`run-report.py` and `maind/health.py` **do not carry this ladder**: they read exactly one path
+(`<cwd>/.claude/run-report.env.ini`, `<project>/.claude/memory.env.ini`) and its absence
+fall on a hard default in the code - the second layer (`<hookdir>/env.ini`) they don't have it. Don't be confused
+«one read point + default in code» with a priority ladder are different designs of the same
+family.
 
-Для новых run-report'ов каталог вывода определяется отдельно: `run-report.py` получает
-repository root через `git rev-parse --show-toplevel` от фактического `cwd` и пишет в
-`<git-root>/.claude/runs/`; вне Git fallback остаётся `<cwd>/.claude/runs/`. Исторические
-вложенные отчёты не перемещаются.
+For new run-report'The output directory is defined separately: `run-report.py` gets
+repository root via `git rev-parse --show-toplevel` from actual `cwd` and writes to
+`<git-root>/.claude/runs/`; out Git fallback remains `<cwd>/.claude/runs/`. Historical
+nested reports are not moved.
 
-## Схема формата (измерено, не предположено)
+## Format scheme (measured, not expected)
 
-`KEY=VALUE`, один ключ на строку, `#`-комментарии и пустые строки пропускаются. Формат
-разбирается самописно в четырёх местах (`auto-approve/lib/common.sh`, `memory/lib/common.sh`,
-`run-report.py`, `maind/health.py`) — общий модуль-парсер здесь не заводится (кросс-языковая
-граница bash↔python, P5.3 Scope Excluded).
+`KEY=VALUE`, one key per line, `#`-comments and empty lines are skipped. Format
+is parsed manually in four places (`auto-approve/lib/common.sh`, `memory/lib/common.sh`,
+`run-report.py`, `maind/health.py`) — the general parser module does not start here (cross-lingual
+border bash↔python, P5.3 Scope Excluded).
 
-**Неизвестный ключ (измерено прогоном, `packages/harness/tests/test_hooks.py`
-`test_read_mode_ignores_unknown_key`):** все четыре читателя молча его игнорируют — ни ошибки,
-ни варнинга. `FOO=bar` рядом с `MODE=permissive` не меняет разобранное значение `MODE`.
-Практическое следствие: опечатка в имени ключа (`MODEE=…`) не диагностируется этим слоем —
-хук просто откатится на следующую ступень лестницы/дефолт.
+**Unknown key (measured by run, `packages/harness/tests/test_hooks.py`
+`test_read_mode_ignores_unknown_key`):** all four readers silently ignore him - no mistakes,
+no warning. `FOO=bar` next to `MODE=permissive` does not change the parsed value `MODE`.
+Practical consequence: typo in key name (`MODEE=…`) is not diagnosed by this layer -
+the hook will simply roll back to the next rung of the ladder/default.
 
-Известные ключи по хуку:
+Known keys by hook:
 
-| Хук | Ключи | Допустимые значения |
+| Hook | Keys | Valid values |
 |:--|:--|:--|
 | `auto-approve` | `MODE` | `strict` \| `permissive` \| `bypass` \| `off` |
 | `memory` (Claude Code) | `MODE` | `maind` \| `file` \| `federation` \| `agentmemory` \| `off` |
-| `memory` (Codex) | `MODE`, `BRAIN` | `MODE` — тот же набор; `BRAIN` — имя brain (свободная строка) |
-| `run-report` | `ENABLED`, `RUNS_KEEP`, `DIGEST` | `ENABLED`/`DIGEST` — `on`/`off`/`0`/`1`/`true`/`false`/`yes`/`no` (регистронезависимо); `RUNS_KEEP` — целое ≥ 1 |
-| `agent-router` | `POLICY` | режимы `agent-router` (см. `hooks.py:block_router`) |
+| `memory` (Codex) | `MODE`, `BRAIN` | `MODE` — same set; `BRAIN` — name brain (free line) |
+| `run-report` | `ENABLED`, `RUNS_KEEP`, `DIGEST` | `ENABLED`/`DIGEST` — `on`/`off`/`0`/`1`/`true`/`false`/`yes`/`no` (case insensitive); `RUNS_KEEP` — integer ≥ 1 |
+| `agent-router` | `POLICY` | modes `agent-router` (see `hooks.py:block_router`) |
 
-## Процедура правки
+## Editing procedure
 
-Правится вручную человеком/агентом — генератора нет. Новый хук с собственным `env.ini`
-автоматически получает класс и судьбу трекинга по правилу выше — отдельного шага не требует.
+Edited manually by a person/agent - there is no generator. New hook with own `env.ini`
+automatically receives the tracking class and fate according to the rule above - it does not require a separate step.

@@ -36,12 +36,12 @@ class TestSharedBlocksParity(unittest.TestCase):
     def test_packs_have_shared_blocks(self):
 
 
-        self.assertTrue(self.bl, "backend-laravel: ни одного shared:NAME не найдено")
-        self.assertTrue(self.lp, "laravel-package: ни одного shared:NAME не найдено")
+        self.assertTrue(self.bl, "backend-laravel: none shared:NAME not found")
+        self.assertTrue(self.lp, "laravel-package: none shared:NAME not found")
 
     def test_shared_names_are_byte_identical_across_packs(self):
         common = set(self.bl) & set(self.lp)
-        self.assertTrue(common, "ожидались общие shared:NAME между паками (напр. risk-adaptive)")
+        self.assertTrue(common, "expected general shared:NAME between packs (e.g. risk-adaptive)")
         for name in sorted(common):
 
 
@@ -50,14 +50,14 @@ class TestSharedBlocksParity(unittest.TestCase):
             lp_bodies = {body for _f, body in self.lp[name]}
             self.assertEqual(
                 len(bl_bodies), 1,
-                f"shared:{name} расходится ВНУТРИ backend-laravel: {[f for f, _ in self.bl[name]]}")
+                f"shared:{name} diverges INSIDE backend-laravel: {[f for f, _ in self.bl[name]]}")
             self.assertEqual(
                 len(lp_bodies), 1,
-                f"shared:{name} расходится ВНУТРИ laravel-package: {[f for f, _ in self.lp[name]]}")
+                f"shared:{name} diverges INSIDE laravel-package: {[f for f, _ in self.lp[name]]}")
             self.assertEqual(
                 bl_bodies, lp_bodies,
-                f"shared:{name} разошёлся между паками (backend-laravel vs laravel-package) — "
-                f"перенеси правку в оба места или заведи под другим NAME, если блок больше не общий")
+                f"shared:{name} was distributed between packs (backend-laravel vs laravel-package) — "
+                f"move the edit to both places or make it under another NAME, if the block is no longer shared")
 
 
 class TestPackageReviewerHasNoAppCanon(unittest.TestCase):
@@ -69,7 +69,7 @@ class TestPackageReviewerHasNoAppCanon(unittest.TestCase):
         f = PACKS_DIR / "laravel-package" / "agents" / "reviewer.md"
         text = f.read_text(encoding="utf-8")
         hits = self._FORBIDDEN.findall(text)
-        self.assertFalse(hits, f"найдены app-канон термины в laravel-package/reviewer.md: {hits}")
+        self.assertFalse(hits, f"found app-canon terms in laravel-package/reviewer.md: {hits}")
 
 
 if __name__ == "__main__":

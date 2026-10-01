@@ -1,4 +1,4 @@
-"""Тесты cli.py: диспетчер команд (маршрутизация, неизвестная команда, exit-коды)."""
+"""Tests cli.py: command manager (routing, unknown command, exit-codes)."""
 import contextlib
 import io
 import unittest
@@ -10,7 +10,7 @@ class TestCli(unittest.TestCase):
     def test_too_few_args_exits_2(self):
         with contextlib.redirect_stderr(io.StringIO()):
             with self.assertRaises(SystemExit) as cm:
-                cli.main(["/root"])          # есть root, нет команды
+                cli.main(["/root"])          # yes root, no command
         self.assertEqual(cm.exception.code, 2)
 
     def test_unknown_command_exits_1(self):
@@ -37,7 +37,7 @@ class TestCli(unittest.TestCase):
         self.assertEqual(captured["args"], ["--json"])
 
     def test_all_handlers_callable(self):
-        self.assertTrue(cli.COMMANDS)        # реестр не пуст
+        self.assertTrue(cli.COMMANDS)        # registry is not empty
         for name, fn in cli.COMMANDS.items():
             self.assertTrue(callable(fn), name)
 

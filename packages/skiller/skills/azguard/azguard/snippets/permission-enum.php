@@ -10,20 +10,20 @@ use AzGuard\Attributes\GateAbility;
 use AzGuard\Attributes\RoleOnly;
 
 /**
- * Permissions — это PHP enum cases, не записи в БД. Один enum на ресурс
- * (DocumentsPermission, UsersPermission), не один гигантский AppPermission.
+ * Permissions — this PHP enum cases, not recorded in the database. One enum to resource
+ * (DocumentsPermission, UsersPermission), more than one giant AppPermission.
  *
- * Полный ключ: {panel}.{resource}.{action} — префикс панели ('app.')
- * добавляет AzGuard по месту регистрации enum'а в PanelProvider,
- * внутри enum'а объявляется только 'documents.view'.
+ * Full key: {panel}.{resource}.{action} — panel prefix ('app.')
+ * adds AzGuard at the place of registration enum'and in PanelProvider,
+ * inside enum'and is declared only 'documents.view'.
  *
- * Атрибуты:
- *   #[GateAbility] — регистрируется в Laravel Gate как '{panel}.{value}'
- *                    (доступно в Gate::allows, @can, политиках); это default,
- *                    но указывай явно — намерение видно на ревью.
- *   #[RoleOnly]    — есть в каталоге, но в Gate НЕ регистрируется:
- *                    проверяется только через $user->hasPermission();
- *                    в политике или @can всегда вернёт false.
+ * Attributes:
+ *   #[GateAbility] — is registered in Laravel Gate like '{panel}.{value}'
+ *                    (available in Gate::allows, @can, policies); this default,
+ *                    but indicate it explicitly - the intention is visible in the review.
+ *   #[RoleOnly]    — is in the catalog, but in Gate NOT registered:
+ *                    is only checked via $user->hasPermission();
+ *                    in policy or @can will always return false.
  */
 enum DocumentsPermission: string
 {
@@ -39,38 +39,38 @@ enum DocumentsPermission: string
     #[GateAbility]
     case Export = 'documents.export';
 
-    // Внутренняя проверка, не экспонируется через Gate
+    // Internal check, not exposed through Gate
     #[RoleOnly]
     case Purge = 'documents.purge';
 }
 
-// ── Проверки прав ───────────────────────────────────────────────────────────
+// ── Permission checks ───────────────────────────────────────────────────────────
 //
-// Всегда enum-кейсы, никогда сырые строки: опечатка в строке
-// (Gate::allows('app.documents.veiw')) молча вернёт false — незаметная дыра.
+// Always enum-cases, never raw lines: typo in line
+// (Gate::allows('app.documents.veiw')) will silently return false — inconspicuous hole.
 //
-// На модели (HasAzGuard):
+// On the model (HasAzGuard):
 //   $user->hasPermission(DocumentsPermission::View);
-//   $user->hasPermission('app.documents.view');         // полный строковый ключ тоже работает
+//   $user->hasPermission('app.documents.view');         // full string key also works
 //   $user->hasAnyPermission([DocumentsPermission::Edit, DocumentsPermission::Export]);
 //   $user->hasAllPermissions([DocumentsPermission::View, DocumentsPermission::Edit]);
 //
-// Через Gate (нужен #[GateAbility]; Gate принимает BackedEnum напрямую):
+// Via Gate (needed #[GateAbility]; Gate accepts BackedEnum directly):
 //   Gate::allows(DocumentsPermission::View);             // bool
-//   Gate::allows(DocumentsPermission::Edit, $document);  // через политику
-//   $this->authorize(DocumentsPermission::View);         // 403 при отказе
+//   Gate::allows(DocumentsPermission::Edit, $document);  // via policy
+//   $this->authorize(DocumentsPermission::View);         // 403 on failure
 //
-// Middleware — единственное место, где строка неизбежна:
+// Middleware — is the only place where the line is unavoidable:
 //   Route::get('/documents', DocumentController::class)
 //       ->middleware('can:' . DocumentsPermission::View->value);
 //
-// Blade (нет use-statements — FQCN + ->value, либо передавай готовые bool):
+// Blade (no use-statements — FQCN + ->value, or transfer ready bool):
 //   @can(\App\AzGuard\App\Permissions\DocumentsPermission::Edit->value) ... @endcan
 //
-// Интроспекция:
-//   $user->getAllPermissions();        // роли + direct grants, Collection<string>
-//   $user->getPermissionsViaRoles();   // только из ролей
-//   $user->getDirectPermissions();     // только прямые гранты
+// Introspection:
+//   $user->getAllPermissions();        // roles + direct grants, Collection<string>
+//   $user->getPermissionsViaRoles();   // only from roles
+//   $user->getDirectPermissions();     // direct grants only
 //
 // ── Artisan ────────────────────────────────────────────────────────────────
 //

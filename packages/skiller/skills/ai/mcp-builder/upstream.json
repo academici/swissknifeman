@@ -60,12 +60,12 @@
       "fetched_at": "2026-07-11"
     }
   ],
-  "notes": "Зеркало anthropics/skills skills/mcp-builder (Apache-2.0). strategy=replace: файлы зеркалируются как есть; апстримный reference/ переименован в references/ под конвенцию репо. LICENSE.md — полный текст Apache-2.0 из upstream LICENSE.txt.",
+  "notes": "Mirror anthropics/skills skills/mcp-builder (Apache-2.0). strategy=replace: files are mirrored as is; upstream reference/ renamed to references/ under the repo convention. LICENSE.md — full text Apache-2.0 from upstream LICENSE.txt.",
   "audit": {
     "verdict": "attention",
     "at": "2026-08-01",
     "by": "vendor audit",
     "upstream_sha": "eee57c3b23fd59391822a06efd0b49ce2592b1fcdea25262896493fd7071b6e6",
-    "note": "единственный бандл с исполняемым кодом (scripts/connections.py, scripts/evaluation.py — pip anthropic/mcp, сеть, ANTHROPIC_API_KEY; прочитаны целиком, вредоносного нет) + WebFetch README SDK с ветки main: payload — справка, не правила поведения, принятый класс"
+    "note": "the only bundle with executable code (scripts/connections.py, scripts/evaluation.py — pip anthropic/mcp, network, ANTHROPIC_API_KEY; read in full, no malware) + WebFetch README SDK from branch main: payload — help, not rules of conduct, accepted class"
   }
 }

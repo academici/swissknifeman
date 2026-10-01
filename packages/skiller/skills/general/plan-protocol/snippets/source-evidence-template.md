@@ -1,25 +1,25 @@
-# Шаблон evidence bundle — `committed-bundle`-тир
+# Evidence bundle template - `committed-bundle`-tier
 
 Resolve `<task-package-root>` from the configured Task runtime before copying a command; it is
 the package directory containing `lib/task/`. Use the same provider runtime locator as the Task
 command, never a consumer-local package copy or another provider's environment variable.
 
-Исполнимая форма bundle-требований (SSOT формулировок — `plan-portability-v1.md`
-§Bundle requirements плана; здесь — ЦИТАТА и структура,
-не переписывание). Нужен КАЖДОМУ item'у, чей `portability.tier == "committed-bundle"`
-(multi-session/high-risk/handoff/audit-работа, D26) и который несёт committed evidence
-input сверх обычных `Files`/`Required Reads`.
+Executable form of bundle requirements (SSOT formulations - `plan-portability-v1.md`
+§Bundle plan requirements; here is the QUOTE and structure,
+not a rewrite). Needed by EVERY item whose `portability.tier == "committed-bundle"`
+(multi-session/high-risk/handoff/audit work) and which carries committed evidence
+input beyond the normal `Files`/`Required Reads`.
 
-## Раскладка bundle-каталога
+## Bundle directory layout
 
 ```
 plans/<PLAN-ID>/artifacts/<Pn.m>/evidence/
-├── manifest.json     # обязателен — точный список членов bundle'а
-├── verify.py          # обязателен — верификатор (существование проверяется, не исполняется предикатом)
-└── <файлы>            # минимизированный набор, ровно то, что перечислено в manifest.json
+├── manifest.json # required - exact list of bundle members
+├── verify.py # required - verifier (existence is verified, not executed by predicate)
+└── <files> # minified set, exactly what is listed in manifest.json
 ```
 
-## `manifest.json` — обязательные поля
+## `manifest.json` - required fields
 
 ```json
 {
@@ -32,21 +32,21 @@ plans/<PLAN-ID>/artifacts/<Pn.m>/evidence/
     "minimized": true,
     "excluded_classes": ["raw-transcript-bodies", "chain-of-thought", "tool-payloads", "secrets"]
   },
-  "producer": "<команда/скрипт, которым bundle получен — детерминированно, без часов/случайности/сети>"
+  "producer": "<command/script that produced the bundle - deterministically, without clock/randomness/network>"
 }
 ```
 
-- `files` — ТОЧНЫЙ список members bundle'а (relative к каталогу bundle'а); `manifest.json`
-  и `verify.py` сами в этот список НЕ входят (исключены из сверки `task_contract.bundle_lint`).
-- `privacy.minimized` — `true`, только если bundle несёт РОВНО то, что было фактически
-  прочитано для execution input; `excluded_classes` называет, что осознанно оставлено ЗА
-  бортом (не «ничего», а именно перечень: `raw-transcript-bodies` / `chain-of-thought` /
-  `tool-payloads` / `secrets` — из тех, что реально могли бы попасть).
-- `producer` — команда, которой bundle воспроизводим (детерминированно, тем же прогоном
-  на том же дереве, без часов/случайности/сети — иначе `content_hash`/manifest не
-  воспроизводится независимым аудитором, ровно дефект F3/F4 аудита P2).
+- `files` — EXACT list of bundle members (relative to the bundle directory); `manifest.json`
+  and `verify.py` themselves are NOT included in this list (excluded from the `task_contract.bundle_lint` reconciliation).
+- `privacy.minimized` - `true`, only if the bundle carries EXACTLY what it actually was
+  read for execution input; `excluded_classes` names what is deliberately left FOR
+  board (not “nothing”, but a list: `raw-transcript-bodies` / `chain-of-thought` /
+  `tool-payloads` / `secrets` - one of those that could actually get there).
+- `producer` - the command with which the bundle is reproduced (deterministically, by the same run
+  on the same tree, without clock/randomness/network - otherwise `content_hash`/manifest is not
+  is reproduced by an independent auditor, exactly defect F3/F4 of audit P2).
 
-## Команда верификации
+## Verification command
 
 ```bash
 PYTHONPATH="<task-package-root>/lib" python3 -c '
@@ -61,34 +61,34 @@ print(code or "allow")
 '
 ```
 
-Зелёное — `allow`. Отказ — `BUNDLE_ARTIFACT_MISSING` (manifest/verifier не найдены на
-диске) либо `BUNDLE_PRIVACY_MISMATCH` (фактический набор файлов ≠ `manifest.json::files`,
-ИЛИ сигнатурный скан байтов нашёл класс содержимого, перечисленный в
-`declared_privacy.excluded_classes` как исключённый, — `bundle_lint` ВЫЧИСЛЯЕТ это по
-фактическим байтам, а не читает декларацию как данность, D23/F2/F4). Оба кода — реальные,
-не структурные: чинится САМИМ bundle'ом (убрать лишнее/добавить недостающее в manifest),
-не ослаблением проверки.
+Green - `allow`. Failure - `BUNDLE_ARTIFACT_MISSING` (manifest/verifier not found on
+disk) or `BUNDLE_PRIVACY_MISMATCH` (actual set of files ≠ `manifest.json::files`,
+OR signature byte scan found a content class listed in
+`declared_privacy.excluded_classes` as excluded, - `bundle_lint` CALCULATES this by
+actual bytes, rather than reading the declaration as given, D23/F2/F4). Both codes are real,
+not structural: repaired by the bundle ITSELF (remove unnecessary things/add missing ones to manifest),
+not by weakening the check.
 
-## Запрещённые классы содержимого (перечень, не пример)
+## Prohibited content classes (list, not example)
 
-- **Сырые тела транскриптов** (`raw-transcript-bodies`) — полные диалоги/логи агента как
-  есть; вместо них — извлечённый факт со ссылкой на источник.
-- **Chain-of-thought** — промежуточные рассуждения модели; вместо них — итоговое решение
-  и его обоснование в 1–3 строки.
-- **Tool-payloads** — сырые ответы инструментов (полные JSON API-вызовов и т.п.); вместо
-  них — извлечённое значение.
-- **Секреты** — токены/пароли/ключи/PII в любой форме, даже тестовые/примерные, похожие
-  на реальные по сигнатуре.
+- **Raw transcript-bodies** (`raw-transcript-bodies`) - full agent dialogues/logs as
+  yes; instead of them - an extracted fact with a link to the source.
+- **Chain-of-thought** - intermediate reasoning of the model; instead of them - the final solution
+  and its rationale in 1–3 lines.
+- **Tool-payloads** - raw tool responses (full JSON API calls, etc.); instead of
+  them is the extracted value.
+- **Secrets** - tokens/passwords/keys/PII in any form, even test/example, similar
+  to real ones by signature.
 
-## Полное замыкание зависимостей
+## Full dependency closure
 
-Если файл bundle'а ссылается на артефакт вне bundle'а (другой путь, другой bundle) —
-референс ЛИБО приносится внутрь bundle'а (замыкание полное), ЛИБО bundle не самодостаточен
-и холодная сессия падает на втором файле (`plan-portability-v1.md` §Bundle requirements).
+If the bundle file refers to an artifact outside the bundle (different path, different bundle) —
+the reference is EITHER brought inside the bundle (complete closure), OR the bundle is not self-sufficient
+and the cold session crashes on the second file (`plan-portability-v1.md` §Bundle requirements).
 
-## Один нейтральный semantic carrier
+## One neutral semantic carrier
 
-`portability.semantic_carrier` + `provider_renderers` — bundle несёт ОДНУ нейтральную
-форму; Claude/Codex-рендеры — проекции, никогда не источник истины
-(`task-contract-v1.md:187-200`, `context`-значения — та же таблица, что
+`portability.semantic_carrier` + `provider_renderers` - bundle carries ONE neutral
+form; Claude/Codex renderings are projections, never a source of truth
+(`task-contract-v1.md:187-200`, `context`-values - the same table as
 `snippets/launch-block-template.md`).

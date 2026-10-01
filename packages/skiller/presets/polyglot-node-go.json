@@ -1,6 +1,6 @@
 {
   "name": "polyglot-node-go",
-  "description": "Полиглот-стек Node + Go: общая инженерия + OSS-практики + фронтенд (Vue) + DevOps. Бакетов node/go в реестре нет — берём язык-агностичные (architect/oss-dev/general/devops) + frontend для Node-фронта.",
+  "description": "Polyglot stack Node + Go: general engineering + OSS-practices + frontend (Vue) + DevOps. Baketov node/go is not in the registry - take language-agnostic (architect/oss-dev/general/devops) + frontend for Node-front.",
   "buckets": [
     "architect",
     "oss-dev",

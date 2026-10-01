@@ -17,32 +17,32 @@ sha256: ""
 
 # Implement
 
-Реализуй работу, описанную в ТЗ / PRD / issue. Минималистичный скилл: ценность — в дисциплине
-цепочки, а не в объёме. Вызывается **только явно** (`disable-model-invocation: true`).
+Implement the work described in the statement of work / PRD / issue. Minimalist skill: value is in discipline
+chains, not in volume. Called **only explicitly** (`disable-model-invocation: true`).
 
-## Алгоритм
+## Algorithm
 
-1. **Контекст.** Прочитай ТЗ/issue. Если трогаешь схему БД — сначала проверь миграции
-   (`php artisan migrate:status` / состояние схемы), потом реализуй.
-2. **TDD где возможно.** Используй скилл `tdd-discipline` на **заранее согласованных seam'ах**
-   (red→green→refactor вертикальными срезами). Не пиши все тесты вперёд.
-3. **Проверки по риску.** Регулярно гоняй typecheck и отдельные тест-файлы. Финальная проверка
-   следует явно заданной Validation или правилам риска репозитория: этот скилл не требует
-   полный прогон сам по себе. Не повторяй успешную проверку без изменения, которое могло
-   обесценить её результат, или воспроизведённого дефекта. Конкретные команды по стеку:
-   - Laravel/PHP: `php artisan test` (или `./vendor/bin/pest`), `phpstan`/`./vendor/bin/phpstan`.
+1. **Context.** Read the technical specifications/issue. If you touch the database schema, check the migrations first
+   (`php artisan migrate:status` / schema state), then implement it.
+2. **TDD where possible.** Use skill `tdd-discipline` on **pre-agreed seam'ah**
+   (red→green→refactor vertical slices). Don't write all tests ahead.
+3. **Risk checks.** Drive regularly typecheck and separate test files. Final check
+   follows an explicit Validation or repository risk rules: this skill does not require
+   full run by itself. Do not repeat a successful test without a change that could
+   devalue its result, or the reproduced defect. Stack specific commands:
+   - Laravel/PHP: `php artisan test` (or `./vendor/bin/pest`), `phpstan`/`./vendor/bin/phpstan`.
    - Dart/Flutter: `dart analyze`, `flutter test`.
    - TS/Vue: `vitest`, `tsc --noEmit` / `vue-tsc`.
-4. **Ревью.** Применяй `code-review` (или команду `/code-review`) только когда его требует
-   риск, пользователь или принятый PR-процесс; достаточная проверка не ждёт дополнительного
+4. **Review.** Apply `code-review` (or command `/code-review`) only when required
+   risk, user or accepted PR-process; sufficient verification does not wait for additional
    reviewer verdict.
-5. **Коммит.** Закоммить в **текущую** ветку (Conventional Commits, на русском).
+5. **Commit.** Commit to **current** thread (Conventional Commits, in Russian).
 
-## Связанные скиллы
+## Related skills
 
-- `general/spec-interview` / `general/grill-with-docs` — откуда берётся ТЗ (вход этого скилла).
-- `oss-dev/to-issues` — если работа пришла набором issue вертикальными срезами.
-- `quality/tdd-discipline` — как реализуем срез (обязательная зависимость).
-- `quality/code-review` — финальная проверка, когда она требуется риском, пользователем или PR-процессом.
-- `general/git-commit-rules` — формат коммита.
-- `oss-dev/github-flow` — если дальше Issue→PR→Release.
+- `general/spec-interview` / `general/grill-with-docs` — where does the technical specification come from (input of this skill).
+- `oss-dev/to-issues` — if the work came as a set issue vertical slices.
+- `quality/tdd-discipline` — how to implement a slice (required dependency).
+- `quality/code-review` — final check when required by risk, user or PR-process.
+- `general/git-commit-rules` — commit format.
+- `oss-dev/github-flow` — if further Issue→PR→Release.

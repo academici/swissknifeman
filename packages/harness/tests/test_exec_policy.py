@@ -6,7 +6,7 @@ from pathlib import Path
 
 from harness import execpolicy as ep
 
-_ROLE_CONTENT = "Ты — оркестратор задач.\n\n## Формат плана\n\nplan text without markers\n"
+_ROLE_CONTENT = "You are a task orchestrator.\n\n## Plan Format\n\nplan text without markers\n"
 
 _ROLES_CANON = {
     "catalog_version": "1.0.0",
@@ -15,17 +15,17 @@ _ROLES_CANON = {
     ],
 }
 
-_TEMPLATE_TEXT = "# Оркестратор\n\ninstallation template without markers\n"
+_TEMPLATE_TEXT = "# Orchestrator\n\ninstallation template without markers\n"
 
 _LANDED_ROLE_CONTENT = (
-    "Ты — оркестратор задач.\n\n"
-    "PLAN\nTask 1 -> @role : goal ; deps: none ; output: <формат возврата>\nEND\n\n"
-    "## Контракт задания\n\n"
-    "- objective: одна цель задачи\n"
-    "- output: формат возврата результата\n"
-    "- tools: тулы и скиллы\n"
-    "- sources: источники и проверка фактов\n"
-    "- boundaries: где заканчивается работа роли\n"
+    "You are a task orchestrator.\n\n"
+    "PLAN\nTask 1 -> @role : goal ; deps: none ; output: <return format>\nEND\n\n"
+    "## Job Contract\n\n"
+    "- objective: one task target\n"
+    "- output: result return format\n"
+    "- tools: tools and skills\n"
+    "- sources: sources and fact checking\n"
+    "- boundaries: where the role ends\n"
 )
 
 _LANDED_TEMPLATE_TEXT = _LANDED_ROLE_CONTENT
@@ -37,15 +37,15 @@ def _base_policy():
         "spawn_threshold": {
             "decision_rule": "spawn only if EVERY positive condition holds AND NO negative condition holds; a doubt is a negative",
             "positive_conditions": [
-                {"id": "bulk-raw-material", "text": "flood", "provenance": "findings/05 Ф22"},
+                {"id": "bulk-raw-material", "text": "flood", "provenance": "findings/05 F22"},
             ],
             "negative_conditions": [
-                {"id": "parent-reuses-raw-material", "text": "reused", "provenance": "findings/05 Ф22"},
+                {"id": "parent-reuses-raw-material", "text": "reused", "provenance": "findings/05 F22"},
             ],
             "scale_by_task_class": [
                 {
                     "task_class": "fact-finding", "agents": "1", "tool_calls_hint": "3-10 per agent",
-                    "unverified": True, "provenance": "findings/05 Ф21 [UNVERIFIED]",
+                    "unverified": True, "provenance": "findings/05 F21 [UNVERIFIED]",
                 },
             ],
         },
@@ -54,17 +54,17 @@ def _base_policy():
                 {
                     "subject": "session-agent-tool", "provider": "claude-code", "total": 200,
                     "total_scope": "session", "concurrent": 20, "nesting_depth": 3,
-                    "settings": [], "controlled_by_us": False, "provenance": "findings/04 Ф17",
+                    "settings": [], "controlled_by_us": False, "provenance": "findings/04 F17",
                 },
                 {
                     "subject": "workflow-runtime", "provider": "claude-code", "total": 1000,
                     "total_scope": "run", "concurrent": 16, "nesting_depth": None,
-                    "settings": [], "controlled_by_us": False, "provenance": "findings/04 Ф17",
+                    "settings": [], "controlled_by_us": False, "provenance": "findings/04 F17",
                 },
                 {
                     "subject": "codex-subagents", "provider": "codex", "total": None,
                     "total_scope": "session", "concurrent": None, "nesting_depth": None,
-                    "settings": [], "controlled_by_us": False, "provenance": "findings/03 Ф11",
+                    "settings": [], "controlled_by_us": False, "provenance": "findings/03 F11",
                 },
             ],
             "fleet_cap": {
@@ -83,11 +83,11 @@ def _base_policy():
         },
         "delegation_contract": {
             "required_fields": [
-                {"id": "objective", "text": "goal", "provenance": "findings/05 Ф19"},
-                {"id": "output_format", "text": "shape", "provenance": "findings/05 Ф19"},
-                {"id": "tool_guidance", "text": "tools", "provenance": "findings/05 Ф19"},
-                {"id": "source_guidance", "text": "sources", "provenance": "findings/05 Ф19"},
-                {"id": "boundaries", "text": "boundaries", "provenance": "findings/05 Ф19"},
+                {"id": "objective", "text": "goal", "provenance": "findings/05 F19"},
+                {"id": "output_format", "text": "shape", "provenance": "findings/05 F19"},
+                {"id": "tool_guidance", "text": "tools", "provenance": "findings/05 F19"},
+                {"id": "source_guidance", "text": "sources", "provenance": "findings/05 F19"},
+                {"id": "boundaries", "text": "boundaries", "provenance": "findings/05 F19"},
             ],
             "refusal_rule": "an assignment without a declared return format is not issued",
             "enforcement_points": [
@@ -179,7 +179,7 @@ class ExecPolicyTestCase(unittest.TestCase):
         point["selector"] = {"pack_id": "_common", "role_id": "no-such-role", "field": "content"}
         violations, code = self._run(data)
         self.assertEqual(code, 1)
-        self.assertTrue(any(v.check == "delegation-contract" and "не резолвится" in v.message
+        self.assertTrue(any(v.check == "delegation-contract" and "does not resolve" in v.message
                             for v in violations))
 
     def test_negative_pending_point_without_pending_until(self):
@@ -226,7 +226,7 @@ class ExecPolicyTestCase(unittest.TestCase):
                 violations, code = self._run(data)
                 self.assertEqual(code, 1)
                 self.assertTrue(any(
-                    v.check == "delegation-contract" and "маркеры отсутствуют физически" in v.message
+                    v.check == "delegation-contract" and "markers are physically missing" in v.message
                     and field_id in v.message
                     for v in violations), [str(v) for v in violations])
 
@@ -238,7 +238,7 @@ class ExecPolicyTestCase(unittest.TestCase):
         violations, code = self._run(data)
         self.assertEqual(code, 1)
         self.assertTrue(any(
-            v.check == "delegation-contract" and "grammar_marker отсутствует физически" in v.message
+            v.check == "delegation-contract" and "grammar_marker is not physically present" in v.message
             for v in violations), [str(v) for v in violations])
 
 

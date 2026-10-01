@@ -1,8 +1,8 @@
-# Filament v5 — справочник компонентов (выжимка)
+# Filament v5 — component reference (squeeze)
 
-Namespaces см. в SKILL.md — они главный источник ошибок. Здесь — частые компоненты.
+Namespaces see SKILL.md — they are the main source of errors. Here are the common components.
 
-## Поля форм (`Filament\Forms\Components\`)
+## Form fields (`Filament\Forms\Components\`)
 
 ```php
 use Filament\Forms\Components\{
@@ -15,39 +15,39 @@ TextInput::make('email')->email()->unique(ignoreRecord: true);
 TextInput::make('price')->numeric()->prefix('€');
 
 Select::make('category_id')
-    ->relationship('category', 'name')   // BelongsTo; BelongsToSelect не существует
+    ->relationship('category', 'name')   // BelongsTo; BelongsToSelect does not exist
     ->searchable()
     ->preload()
-    ->createOptionForm([...]);           // inline-создание
+    ->createOptionForm([...]);           // inline-creation
 
 DateTimePicker::make('published_at')->timezone('Europe/Helsinki');
 
 FileUpload::make('avatar')
     ->image()->disk('public')->directory('avatars')
-    ->visibility('public');              // по умолчанию private!
+    ->visibility('public');              // default private!
 
 RichEditor::make('content')->toolbarButtons(['bold', 'italic', 'link', 'bulletList']);
 
-Repeater::make('contacts')               // ->schema(), не ->fields()
-    ->relationship()                      // inline HasMany по имени поля
+Repeater::make('contacts')               // ->schema(), not ->fields()
+    ->relationship()                      // inline HasMany by field name
     ->schema([TextInput::make('phone'), TextInput::make('label')])
     ->collapsible();
 ```
 
-## Layout (`Filament\Schemas\Components\`) — не Forms\Components!
+## Layout (`Filament\Schemas\Components\`) — not Forms\Components!
 
 ```php
 use Filament\Schemas\Components\{Section, Grid, Tabs};
 
 Section::make('Main Info')->schema([...])->columns(2);
-Grid::make(2)->schema([...]);            // детям — ->columnSpan()/->columnSpanFull()
+Grid::make(2)->schema([...]);            // children — ->columnSpan()/->columnSpanFull()
 Tabs::make()->tabs([
     Tabs\Tab::make('General')->schema([...]),
     Tabs\Tab::make('SEO')->schema([...]),
 ]);
 ```
 
-## Реактивность (`Filament\Schemas\Components\Utilities\Get|Set`)
+## Reactivity (`Filament\Schemas\Components\Utilities\Get|Set`)
 
 ```php
 use Filament\Schemas\Components\Utilities\{Get, Set};
@@ -58,11 +58,11 @@ TextInput::make('company_name')
     ->visible(fn (Get $get): bool => $get('type') === 'business'),
 
 TextInput::make('title')
-    ->live(onBlur: true)   // не на каждый keystroke
+    ->live(onBlur: true)   // not for everyone keystroke
     ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state ?? ''))),
 ```
 
-## Колонки и фильтры таблиц
+## Table columns and filters
 
 ```php
 use Filament\Tables\Columns\{TextColumn, ImageColumn, IconColumn};
@@ -81,14 +81,14 @@ TextColumn::make('full_name')
 ImageColumn::make('avatar')->circular();
 IconColumn::make('is_featured')->boolean();
 
-SelectFilter::make('status')->options(Status::class);          // из Enum
+SelectFilter::make('status')->options(Status::class);          // from Enum
 SelectFilter::make('author')->relationship('author', 'name');
 TernaryFilter::make('is_active');
 Filter::make('verified')
     ->query(fn (Builder $q) => $q->whereNotNull('email_verified_at'));
 ```
 
-## Actions (`Filament\Actions\` — единственный namespace)
+## Actions (`Filament\Actions\` — the only one namespace)
 
 ```php
 use Filament\Actions\{Action, EditAction, DeleteAction, BulkActionGroup, DeleteBulkAction};
@@ -99,7 +99,7 @@ Action::make('approve')
     ->requiresConfirmation()
     ->action(fn (Model $record) => $record->approve());
 
-Action::make('sendEmail')                 // модалка с формой — ->schema()
+Action::make('sendEmail')                 // modal with form — ->schema()
     ->schema([
         TextInput::make('subject')->required(),
         Textarea::make('body')->required(),
@@ -136,9 +136,9 @@ protected function getData(): array
 }
 ```
 
-Регистрация — `->widgets([...])` в PanelServiceProvider или `getHeaderWidgets()`/`getFooterWidgets()` страницы.
+Registration - `->widgets([...])` in PanelServiceProvider or `getHeaderWidgets()`/`getFooterWidgets()` pages.
 
-## Infolist (view-страницы)
+## Infolist (view-pages)
 
 ```php
 use Filament\Infolists\Components\{TextEntry, ImageEntry};
@@ -166,12 +166,12 @@ Notification::make()->title('Saved!')->success()->send();
 Notification::make()->title('New order')->sendToDatabase(auth()->user());
 ```
 
-## Тесты (pest-plugin-livewire)
+## Tests (pest-plugin-livewire)
 
 ```php
 use function Pest\Livewire\livewire;
 
-$this->actingAs(User::factory()->create());   // всегда перед панелью
+$this->actingAs(User::factory()->create());   // always before the panel
 
 livewire(ListUsers::class)
     ->assertCanSeeTableRecords($users)
@@ -185,7 +185,7 @@ livewire(CreateUser::class)
 
 livewire(EditUser::class, ['record' => $user->id])
     ->fillForm(['name' => 'Updated'])
-    ->call('save')                 // не 'create'; edit НЕ редиректит
+    ->call('save')                 // not 'create'; edit NOT a redirect
     ->assertHasNoFormErrors();
 
 // Table actions

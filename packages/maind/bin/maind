@@ -1,42 +1,42 @@
 #!/usr/bin/env bash
-# maind — CLI центрального узла экосистемы academici (память + граф + агенты).
-# Тонкий лаунчер: проверяет окружение и передаёт управление пакету lib/maind
-# (python3 -m maind). Вся логика — в lib/ (импортируемо и тестируемо: см. tests/).
+# maind — CLI central node of the ecosystem academici (memory + graph + agents).
+# Thin launcher: checks the environment and transfers control to the package lib/maind
+# (python3 -m maind). All logic is in lib/ (importable and testable: see tests/).
 #
-# Команды (корень узла = каталог установки maind):
-#   start     запустить воркеры узла (--only memory|graph)
-#   status    сводный статус: память, граф, агенты, проекты
-#   memory    демон памяти: start | run (foreground) | stop | status
-#   service   systemd --user для демона памяти: install | start | stop | logs | ...
-#   graph     граф (федерация): query | stats | neighbors | view | derive | rebuild
-#   agents    реестр агентов: list | kill | heartbeat | register
-#   projects  реестр проектов: list | status | sync (--namespace NS фильтрует)
-#   namespaces namespace-группы экосистемы и их проекты-члены
-#   deploy    раскатать MCP-серверы хаба на проекты (--project X | --all)
-#   sync      раскатать управляемые артефакты: --only ... (--project|--namespace|--all)
-#   health    healthcheck связи проекта с хабом: --cwd | --project X [--fix]
-#   workspace единое доверие Claude к проектам экосистемы: sync | status
-#   run       выполнить команду соседнего пакета: run <proj> <cap> (--list)
-#   fleet     межпроектный слой: manifest | duplicates | log | features
-#   onboard   единый онбординг проекта: skills (swissknifeman) + подключение к мозгу
-#   migrate   импорт: from-brain <.projects.json> | from-agentmemory <dir>
-#   mcp       запустить maind как MCP-сервер (stdio JSON-RPC)
-#   doctor    диагностика окружения
-#   verify    пруф работы: пишут ли в память/граф/код-граф или вхолостую (--json)
-#   analyze   пост-ран разбор прогона: run-report+bash-лог+git+health → GREEN/ATTENTION/RED
-#   version   версия (git SHA) и путь к узлу
+# Commands (node root = installation directory maind):
+#   start     start node workers (--only memory|graph)
+#   status    summary status: memory, graph, agents, projects
+#   memory    memory daemon: start | run (foreground) | stop | status
+#   service   systemd --user for the memory daemon: install | start | stop | logs | ...
+#   graph     graph (federation): query | stats | neighbors | view | derive | rebuild
+#   agents    agent registry: list | kill | heartbeat | register
+#   projects  project registry: list | status | sync (--namespace NS filters)
+#   namespaces namespace-ecosystem groups and their member projects
+#   deploy    roll out MCP-hub servers for projects (--project X | --all)
+#   sync      roll out controlled artifacts: --only ... (--project|--namespace|--all)
+#   health    healthcheck project connection with the hub: --cwd | --project X [--fix]
+#   workspace single trust Claude to ecosystem projects: sync | status
+#   run       execute the command of the neighboring package: run <proj> <cap> (--list)
+#   fleet     cross-project layer: manifest | duplicates | log | features
+#   onboard   unified project onboarding: skills (swissknifeman) + connection to the brain
+#   migrate   import: from-brain <.projects.json> | from-agentmemory <dir>
+#   mcp       run maind like MCP-server (stdio JSON-RPC)
+#   doctor    environment diagnostics
+#   verify    proof of work: is it written to memory/graph/code-graph or idle (--json)
+#   analyze   post-run analysis of the run: run-report+bash-log+git+health → GREEN/ATTENTION/RED
+#   version   version (git SHA) and path to node
 set -euo pipefail
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
 
 if ! command -v python3 >/dev/null 2>&1; then
-  echo "ERROR: maind требует python3 (apt install python3 / brew install python3)" >&2
+  echo "ERROR: maind requires python3 (apt install python3 / brew install python3)" >&2
   exit 1
 fi
 if [[ ! -d "$REPO_ROOT/lib/maind" ]]; then
-  echo "ERROR: пакет lib/maind не найден в $REPO_ROOT/lib" >&2
-  echo "Узел повреждён или это старая копия — git pull / перезапустите install.sh." >&2
+  echo "ERROR: package lib/maind not found in $REPO_ROOT/lib" >&2
+  echo "The node is damaged or it is an old copy - git pull / restart install.sh." >&2
   exit 1
 fi
 
@@ -52,13 +52,13 @@ case "$CMD" in
     echo "maind $sha ($REPO_ROOT)"
     exit 0 ;;
   start|status|memory|service|graph|agents|projects|namespaces|deploy|sync|health|workspace|run|fleet|onboard|migrate|mcp|doctor|verify|analyze) ;;
-  *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
+  *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 
-# Корень монорепо (на два уровня выше пакета) даёт пакет `core` (общий фундамент).
-# Fallback на standalone-раскладку: если каталога core рядом нет — путь не добавляется.
-# (Python-эквивалент — core.repo.find_monorepo_root; здесь фикс. ../.., т.к. core
-#  ещё не на PYTHONPATH — осознанный дубль bash-стороны.)
+# Root monorepo (two levels above the package) gives the package `core` (general foundation).
+# Fallback on standalone-layout: if directory core is not nearby - the path is not added.
+# (Python-equivalent - core.repo.find_monorepo_root; fixed here. ../.., because core
+#  not yet PYTHONPATH — conscious take bash-sides.)
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
 exec env PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \

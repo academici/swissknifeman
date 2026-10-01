@@ -96,11 +96,11 @@ class TestConflictSummary(unittest.TestCase):
                      dry=False, install_only=False, shell_policy="safe")
 
         rendered = proj / ".claude/agents/acme-reviewer.md"
-        rendered.write_text(rendered.read_text() + "\nЛОКАЛЬНАЯ ПРАВКА\n")
+        rendered.write_text(rendered.read_text() + "\nLOCAL EDIT\n")
 
         pdir = root / "configs/claude-code/agent-packs" / pack
         src = pdir / "agents/reviewer.md"
-        src.write_text(src.read_text() + "\nНОВОЕ В ПАКЕ\n")
+        src.write_text(src.read_text() + "\nNEW IN PACK\n")
         mf = pdir / "pack.json"
         m = json.loads(mf.read_text())
         m["version"] = "0.2.0"

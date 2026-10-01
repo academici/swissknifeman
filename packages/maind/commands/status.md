@@ -1,13 +1,13 @@
 ---
-description: Сводный статус хаба mAInd (память/граф/демоны) и проектов экосистемы.
+description: Summary hub status mAInd (memory/graph/demons) and ecosystem projects.
 allowed-tools: Bash(maind:*)
 ---
-## Статус узла
+## Node status
 !`maind status --json`
 
-## Проекты экосистемы
+## Ecosystem Projects
 !`maind projects list --json`
 
-Резюмируй для пользователя по выводу выше: что поднято (демон памяти, граф — узлы/рёбра, docs-watcher), сколько проектов подключено и в каких namespace, есть ли проблемы со связью. Если демон памяти не отвечает — подскажи `maind start --only memory`. Для проверки конкретного проекта — `/maind:health`.
+Summarize for the user from the output above: what is raised (memory daemon, graph - nodes/ribs, docs-watcher), how many projects are connected and in which namespace, are there any problems with communication. If the memory demon does not respond, tell me `maind start --only memory`. To check a specific project - `/maind:health`.
 
-> Если блоки выше пусты/с ошибкой — `maind` не в PATH: установи CLI (репозиторий хаба → `./install.sh`).
+> If the blocks above are empty/with error - `maind` not in PATH: install CLI (hub repository → `./install.sh`).

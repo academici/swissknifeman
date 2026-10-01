@@ -55,14 +55,14 @@ def _canon_reviewer_pack_ids(roles_canon):
 def check_schema(data):
     """Internal documentation."""
     if not isinstance(data, dict):
-        return [Violation("schema", "review-roles.json: корень не dict")]
+        return [Violation("schema", "review-roles.json: root not dict")]
     v = []
     if not isinstance(data.get("review_version"), str):
-        v.append(Violation("schema", "review_version отсутствует или не строка"))
+        v.append(Violation("schema", "review_version is missing or not a string"))
     if not isinstance(data.get("pack_root"), str):
-        v.append(Violation("schema", "pack_root отсутствует или не строка"))
+        v.append(Violation("schema", "pack_root is missing or not a string"))
     if not isinstance(data.get("roles"), list):
-        v.append(Violation("schema", "roles отсутствует или не список"))
+        v.append(Violation("schema", "roles missing or not listed"))
     return v
 
 
@@ -77,16 +77,16 @@ def check_default_deny(data, roles_canon=None):
         if pack_id not in known_packs:
             v.append(Violation(
                 "default-deny",
-                f"{pack_id}/agents/reviewer.md есть на диске, но записи в "
-                f"review-roles.json для pack_id={pack_id} нет"))
+                f"{pack_id}/agents/reviewer.md is on disk, but the entries in "
+                f"review-roles.json for pack_id={pack_id} no"))
     if roles_canon is None:
         roles_canon = safe_load_json(_ROLES_JSON, default={})
     for pack_id in sorted(_canon_reviewer_pack_ids(roles_canon)):
         if pack_id not in known_packs:
             v.append(Violation(
                 "default-deny",
-                f"{pack_id}: role_id=reviewer есть в roles.json, но записи в "
-                f"review-roles.json нет"))
+                f"{pack_id}: role_id=reviewer is in roles.json, but entries in "
+                f"review-roles.json no"))
     return v
 
 
@@ -100,7 +100,7 @@ def check_carrier_paths(data):
         for key in ("projection", "overrides"):
             rel = r.get(key)
             if not rel or not (agent_packs_dir / rel).is_file():
-                v.append(Violation("carrier-paths", f"{pack_id}: {key}={rel!r} не найден на диске"))
+                v.append(Violation("carrier-paths", f"{pack_id}: {key}={rel!r} not found on disk"))
     return v
 
 
@@ -129,13 +129,13 @@ def check_sections_present(data, roles_canon=None):
             if heading not in canon_lines:
                 v.append(Violation(
                     "sections-present",
-                    f"{pack_id}: заголовок sections.{name}={heading!r} не найден "
-                    f"буквально в roles.json content"))
+                    f"{pack_id}: header sections.{name}={heading!r} not found "
+                    f"literally in roles.json content"))
             elif heading not in projection_lines:
                 v.append(Violation(
                     "sections-present",
-                    f"{pack_id}: заголовок sections.{name}={heading!r} есть в каноне, "
-                    f"но расходится с проекцией {projection_rel}"))
+                    f"{pack_id}: header sections.{name}={heading!r} is in canon, "
+                    f"but diverges from the projection {projection_rel}"))
     return v
 
 
@@ -149,11 +149,11 @@ def check_required_sections(data):
         if set(required) != set(REQUIRED_SECTIONS):
             v.append(Violation(
                 "required-sections",
-                f"{pack_id}: required_sections={required!r}, ожидается ровно "
+                f"{pack_id}: required_sections={required!r}, expected exactly "
                 f"{sorted(REQUIRED_SECTIONS)!r}"))
         missing = [name for name in required if name not in sections]
         if missing:
-            v.append(Violation("required-sections", f"{pack_id}: sections не несёт {missing}"))
+            v.append(Violation("required-sections", f"{pack_id}: sections does not carry {missing}"))
     return v
 
 
@@ -164,10 +164,10 @@ def check_dimensions(data):
         pack_id = r.get("pack_id")
         dims = r.get("dimensions") or []
         if len(dims) != len(set(dims)):
-            v.append(Violation("dimensions", f"{pack_id}: dimensions содержит дубликаты"))
+            v.append(Violation("dimensions", f"{pack_id}: dimensions contains duplicates"))
         unknown = sorted(d for d in dims if d not in DIMENSIONS)
         if unknown:
-            v.append(Violation("dimensions", f"{pack_id}: измерения вне словаря: {unknown}"))
+            v.append(Violation("dimensions", f"{pack_id}: dimensions outside the dictionary: {unknown}"))
     return v
 
 
@@ -178,8 +178,8 @@ def check_skills(data, roles_canon=None, skills_index=None):
         roles_canon = safe_load_json(_ROLES_JSON, default={})
     if skills_index is None:
         if not _SKILLS_JSON.is_file():
-            return [Violation("skills", "индекс скиллов недоступен: "
-                               f"{_SKILLS_JSON} не найден (standalone-раскладка пакета)")]
+            return [Violation("skills", "skill index not available: "
+                               f"{_SKILLS_JSON} not found (standalone-package layout)")]
         raw = safe_load_json(_SKILLS_JSON, default={})
         skills_index = {s.get("name") for s in raw.get("skills", []) if isinstance(s, dict)}
     known_packs = set(_roles_by_pack(data))
@@ -191,7 +191,7 @@ def check_skills(data, roles_canon=None, skills_index=None):
             continue
         for name in r.get("skills") or []:
             if name not in skills_index:
-                v.append(Violation("skills", f"{pack_id}: skill {name!r} не найден в skills.json"))
+                v.append(Violation("skills", f"{pack_id}: skill {name!r} not found in skills.json"))
     return v
 
 
@@ -210,6 +210,7 @@ def _composition_fingerprint(data):
 
 _VERSION_FINGERPRINTS = {
     "1.0.0": "acf0b20936e11c64970fa9354350f000c55be4efaccff7f04b34424b1ffbbd76",
+    "1.0.1": "b3a45a771472aa93532414a1cdbe4e3c6726b3334fb607adae15e86c754a6ca2",
 }
 
 
@@ -220,13 +221,13 @@ def check_version_bump(data):
     if version not in _VERSION_FINGERPRINTS:
         return [Violation(
             "version-bump",
-            f"review_version={version!r} не зарегистрирован в _VERSION_FINGERPRINTS "
-            f"reviewroles.py — при бампе впишите новый отпечаток")]
+            f"review_version={version!r} is not registered in _VERSION_FINGERPRINTS "
+            f"reviewroles.py — when bumping, enter a new fingerprint")]
     if _VERSION_FINGERPRINTS[version] != fingerprint:
         return [Violation(
             "version-bump",
-            f"review_version={version!r} не сдвинут, а состав roles изменился "
-            f"(отпечаток разошёлся с зафиксированным)")]
+            f"review_version={version!r} is not shifted, but the composition roles changed "
+            f"(the fingerprint diverged from the recorded one)")]
     return []
 
 
@@ -241,7 +242,7 @@ def run_checks(review_roles_path=None):
     path = review_roles_path or _REVIEW_ROLES
     data = safe_load_json(path)
     if data is None:
-        return [Violation("schema", f"{path} не читается или содержит битый JSON")], 2
+        return [Violation("schema", f"{path} is not readable or contains a broken JSON")], 2
     violations = []
     for check in CHECKS:
         violations.extend(check(data))
@@ -255,11 +256,11 @@ def main(argv=None):
         return 2
     violations, code = run_checks()
     if not violations:
-        print(f"reviewroles: OK — {len(CHECKS)} проверок, {_REVIEW_ROLES.name} чист")
+        print(f"reviewroles: OK — {len(CHECKS)} checks, {_REVIEW_ROLES.name} clean")
     else:
         for v in violations:
             print(f"  FAIL: {v}", file=sys.stderr)
-        print(f"reviewroles: {len(violations)} нарушени(е/й)", file=sys.stderr)
+        print(f"reviewroles: {len(violations)} violation(e/th)", file=sys.stderr)
     return code
 
 

@@ -236,7 +236,7 @@ def render_artifact_projection(projection: dict[str, object]) -> str:
         raise ValueError("projection has an unsupported value")
     if not isinstance(plan_id, str) or not isinstance(actions, list):
         raise ValueError("projection has an unsupported shape")
-    lines = [f"Режим: {mode}", f"План: {plan_id}", f"Статус: {severity}"]
+    lines = [f"Mode: {mode}", f"Plan: {plan_id}", f"Status: {severity}"]
     for action in actions:
         if not isinstance(action, dict):
             raise ValueError("projection action has an unsupported shape")

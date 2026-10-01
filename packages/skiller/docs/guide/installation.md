@@ -1,87 +1,87 @@
-# Установка
+# Installation
 
-Установка состоит из двух шагов: один раз ставится CLI `swissknifeman`,
-дальше каждый проект подключается командой из его собственного каталога —
-реестру не нужно знать о ваших проектах.
+Installation consists of two steps: install once CLI `swissknifeman`,
+then each project is connected with a command from its own directory -
+the registry does not need to know about your projects.
 
-> Хочешь выбрать сразу весь функционал (скиллы + permissions + хуки + память + hub)
-> через один интерактивный визард — см. [Чеклист интеграции](./integration-checklist)
-> (`skiller integrate`). Ниже — установка скиллов по отдельности.
+> Do you want to select all the functionality at once? (skills + permissions + hooks + memory + hub)
+> through one interactive wizard - see. [Integration checklist](./integration-checklist)
+> (`skiller integrate`). Below is the installation of skills individually.
 
-## Шаг 1. CLI (один раз на машину)
+## Step 1. CLI (once per machine)
 
 ```bash
 cd ~/projects/packages/swissknifeman
 ./install.sh
 ```
 
-`install.sh` создаёт симлинк `~/.local/bin/skiller → <repo>/bin/skiller`,
-каталог состояния `~/.swissknifeman/` и, если Codex CLI доступен, автоматически
-добавляет локальный marketplace `swissknifeman` и устанавливает базовые плагины
-`core` + `task`. Поэтому `$ task:*` доступен в новой Codex-сессии без ручного
-`codex plugin add` или симлинка внутри проекта. Симлинк означает: после `git pull`
-CLI всегда свежий, а путь к реестру он определяет сам (через `readlink`).
-Репозиторий переехал — перезапустите `./install.sh` из нового места, чтобы обновить
-также источник Codex marketplace.
+`install.sh` creates a symlink `~/.local/bin/skiller → <repo>/bin/skiller`,
+status directory `~/.swissknifeman/` and if Codex CLI available, automatically
+adds local marketplace `swissknifeman` and installs basic plugins
+`core` + `task`. Therefore `$ task:*` available in new Codex-sessions without manual
+`codex plugin add` or a symlink within the project. Symlink means: after `git pull`
+CLI is always fresh, and it determines the path to the registry itself (via `readlink`).
+The repository has moved - restart `./install.sh` from the new location to update
+also source Codex marketplace.
 
-Флаги: `--bin-dir DIR` (по умолчанию `~/.local/bin`), `--force` (заменить
-чужой файл без вопроса), `--no-codex-plugins` (осознанно пропустить машинную
-установку `core` + `task`). Дополнительный плагин можно поставить повторяемым
-`./packages/skiller/install.sh --codex-plugin NAME`; базовые плагины при этом
-сохраняются. Если `~/.local/bin` не в `PATH`, установщик подскажет команду для
-вашего шелла. Проверка установки: `skiller doctor`.
+Flags: `--bin-dir DIR` (default `~/.local/bin`), `--force` (replace
+someone else's file without question), `--no-codex-plugins` (consciously skip the machine
+installation `core` + `task`). An additional plugin can be made repeatable
+`./packages/skiller/install.sh --codex-plugin NAME`; basic plugins in this case
+are saved. If `~/.local/bin` not in `PATH`, the installer will prompt you with the command to
+of your shell. Installation check: `skiller doctor`.
 
-## Шаг 2. Подключение проекта
+## Step 2. Connecting the project
 
-Из каталога проекта (корень ищется автоматически вверх от CWD по
+From the project directory (the root is searched automatically upwards from CWD by
 `.swissknife.json` → `.claude/` → `.git`):
 
 ```bash
-# Claude Code — нативный plugin marketplace (рекомендуется)
+# Claude Code — native plugin marketplace (recommended)
 cd ~/projects/my-app
 skiller connect
 
-# Cursor — managed sync (рекомендуется) или legacy vendor
+# Cursor — managed sync (recommended) or legacy vendor
 cd ~/projects/my-app
-# providers.selection.cursor.enabled=true в .swissknife.json, затем:
+# providers.selection.cursor.enabled=true in .swissknife.json, then:
 skiller sync
 maind onboard --cwd && maind sync --project <id>
 ```
 
-| Канал | Команда | Что попадает в проект |
+| Channel | Command | What goes into the project |
 |---|---|---|
-| **Claude Code** | `skiller connect` | только записи в `.claude/settings.local.json` |
-| **Cursor** | `skiller sync` + `maind onboard/sync` | скиллы в `.agents/skills` (native discovery); MCP в `.cursor/mcp.json`; permissions — [адаптер Cursor](../adapters/cursor) |
-| **Cursor (legacy)** | `skiller vendor --agent cursor` | копии в `.cursor/skills` — избегайте dual-write с `.agents` |
-| **Codex (vendor)** | `skiller sync` с `providers.codex.enabled=true` | managed copies в `.agents/skills` + provider-qualified lock |
+| **Claude Code** | `skiller connect` | only entries in `.claude/settings.local.json` |
+| **Cursor** | `skiller sync` + `maind onboard/sync` | skills in `.agents/skills` (native discovery); MCP in `.cursor/mcp.json`; permissions — [adapter Cursor](../adapters/cursor) |
+| **Cursor (legacy)** | `skiller vendor --agent cursor` | copies to `.cursor/skills` — avoid dual-write with `.agents` |
+| **Codex (vendor)** | `skiller sync` with `providers.codex.enabled=true` | managed copies in `.agents/skills` + provider-qualified lock |
 
-Базовые Codex-плагины устанавливаются один раз на машину шагом 1 и доступны во
-всех проектах. Профильные Codex skills по-прежнему доставляются в конкретный проект
-через vendor sync: установщик сознательно не включает глобально все профильные
-плагины, чтобы один проект не раздувал остальные сессии.
+Basic Codex-plugins are installed once per machine in steps of 1 and are available in
+all projects. Profile Codex skills are still delivered to the specific project
+via vendor sync: the installer deliberately does not include globally all profile
+plugins so that one project does not bloat other sessions.
 
-::: tip Агенты — только в plugin-канале
-Бакет-плагин может нести не только скиллы, но и каталог `agents/` в своём корне
-(`*.md` с YAML-frontmatter `name`/`description`/`tools`) — Claude Code
-обнаруживает его автоматически. Такие агенты доступны **только через канал
-`connect`**: `vendor` копирует скиллы, но не агентов, поэтому в Cursor и других
-generic-агентах их не будет. Пример — бакет `php` с агентами `laravel-reviewer`
-и `laravel-test-writer` (см. скилл `laravel-subagents`).
+::: tip Agents - only in plugin-channel
+The bucket plugin can carry not only skills, but also a catalog `agents/` at its root
+(`*.md` with YAML-frontmatter `name`/`description`/`tools`) — Claude Code
+detects it automatically. Such agents are available **via channel only
+`connect`**: `vendor` copies skills, but not agents, so in Cursor and others
+generic-agents will not have them. Example - bucket `php` with agents `laravel-reviewer`
+and `laravel-test-writer` (see skill `laravel-subagents`).
 :::
 
-Каждое подключение автоматически регистрирует проект в
-`~/.swissknifeman/projects.json` — это включает `skiller list` и
+Each connection automatically registers the project in
+`~/.swissknifeman/projects.json` — this includes `skiller list` and
 `skiller update --all`.
 
-## Проект с Laravel Boost (мульти-агент, единый источник истины)
+## Project with Laravel Boost (multi-agent, single source of truth)
 
-Если проект уже использует [Laravel Boost](../boost-compatibility) — у него есть
-`boost.json`, каталог `.ai/` (guidelines + skills) и команда
-`php artisan boost:update`, которая генерирует `CLAUDE.md`/`AGENTS.md` и
-раскидывает копии скиллов по `.cursor/`, `.gemini/`, `.codex/`, `.github/`.
-Чтобы скиллы swissknifeman жили в **одном источнике истины** и расходились по
-всем тулзам автоматически — вендорим прямо в `.ai/skills/` и отдаём раздачу
-Boost-у.
+If the project already uses [Laravel Boost](../boost-compatibility) — he has
+`boost.json`, directory `.ai/` (guidelines + skills) and the command
+`php artisan boost:update`, which generates `CLAUDE.md`/`AGENTS.md` and
+scatters copies of skills across `.cursor/`, `.gemini/`, `.codex/`, `.github/`.
+For skills swissknifeman lived in **one source of truth** and diverged along
+to all tools automatically - we vendor directly in `.ai/skills/` and give away the distribution
+Boost-y.
 
 ```bash
 cd ~/projects/my-laravel-app
@@ -91,106 +91,106 @@ skiller vendor \
   --profile laravel-project \
   --exclude code-style-spatie,node-pnpm-preflight \
   --hub
-php artisan boost:update      # или: composer ai:sync
+php artisan boost:update      # or: composer ai:sync
 ```
 
-Что происходит:
+What's happening:
 
-1. **`vendor --skills-path .ai/skills`** — скиллы копируются в источник истины
-   Boost. При обнаружении `boost.json` CLI автоматически берёт **flat-раскладку**
-   `.ai/skills/<skill>/SKILL.md` (Boost обнаруживает user-скиллы через
-   `glob('.ai/skills/*')` на один уровень — bucket-подпапки он бы не нашёл).
-   Если имя нашего скилла совпадает с уже существующим в проекте — установка
-   остановится на коллизии; добавь такой скилл в `--exclude` (проектная версия
-   приоритетна).
-2. **Обнаружен `boost.json`** — CLI идемпотентно дозаписывает вендоренные скиллы
-   в `boost.json::skills` (по `name` из frontmatter) и печатает подсказку
+1. **`vendor --skills-path .ai/skills`** — skills are copied to the source of truth
+   Boost. When detected `boost.json` CLI automatically takes **flat-layout**
+   `.ai/skills/<skill>/SKILL.md` (Boost detects user-skills through
+   `glob('.ai/skills/*')` one level - bucket-he would not have found the subfolder).
+   If the name of our skill matches an existing one in the project - installation
+   will stop on a collision; add this skill to `--exclude` (draft version
+   priority).
+2. **Detected `boost.json`** — CLI idempotently overwrites vendor skills
+   in `boost.json::skills` (by `name` from frontmatter) and prints the tooltip
    `php artisan boost:update`.
-3. **`--hub`** — индекс установленного пишется в
-   `.ai/guidelines/swissknifeman-hub.md`; Boost сам встроит его в
-   `CLAUDE.md`/`AGENTS.md` при `boost:update`.
-4. **`boost:update`** — перегенерирует корневые доки и копии скиллов по всем
-   агентам из `boost.json::agents`.
+3. **`--hub`** — installed index is written to
+   `.ai/guidelines/swissknifeman-hub.md`; Boost will build it into itself
+   `CLAUDE.md`/`AGENTS.md` when `boost:update`.
+4. **`boost:update`** — regenerates root docks and copies of skills for all
+   agents from `boost.json::agents`.
 
-::: warning Исключайте конфликтующее
-`--exclude` убирает скиллы, чьи правила противоречат проекту. Типичные
-конфликты: `code-style-spatie` (не-`final` по умолчанию) против проекта с
-обязательным `final`; `node-pnpm-preflight` (pnpm) против yarn-проекта.
-Политика совместимости — [boost-compatibility.md](../boost-compatibility),
-принцип ядра — [Что такое SwissKnifeMan](./#_6-совместимое-ядро-политика-конфликтов).
+::: warning Eliminate conflicting
+`--exclude` removes skills whose rules contradict the project. Typical
+conflicts: `code-style-spatie` (not-`final` default) against project with
+mandatory `final`; `node-pnpm-preflight` (pnpm) vs yarn-project.
+Compatibility Policy - [boost-compatibility.md](../boost-compatibility),
+core principle - [What is SwissKnifeMan](./#_6-compatible-kernel-conflict-policy).
 :::
 
-**Обновление** такого проекта — обычный `skiller update`: он повторно
-вендорит, дозаписывает `boost.json` и регенерирует хаб; затем вручную
+**Update** of such a project is normal `skiller update`: he re
+vendor, adding `boost.json` and regenerates the hub; then manually
 `php artisan boost:update`.
 
-### Тулзы вне Boost: managed-блок в корневых файлах
+### Tools out Boost: managed-block in root files
 
-Для проектов **без** Boost тот же индекс можно класть managed-блоком прямо в
-корневые файлы агентов:
+For projects **without** Boost the same index can be put managed-block directly in
+agent root files:
 
 ```bash
 ./scripts/generate-hub.sh --target . --root-files AGENTS.md,GEMINI.md
 ```
 
-Блок вставляется между маркерами `<!-- swissknifeman:hub:start -->` …
-`<!-- swissknifeman:hub:end -->` в `CLAUDE.md` (по умолчанию) и в каждый
-указанный файл; контент вне маркеров не трогается, файл создаётся при
-отсутствии.
+The block is inserted between markers `<!-- swissknifeman:hub:start -->` …
+`<!-- swissknifeman:hub:end -->` in `CLAUDE.md` (default) and in each
+specified file; content outside the markers is not touched, the file is created when
+missing.
 
-### Форма блока: по каналу-цели, а не по проекту
+### Block form: by target channel, not by project
 
-У Claude Code есть **свой** листинг скиллов: имя и описание каждого доступного
-скилла (проектного и плагинного) резидентны с начала сессии, тело грузится по
-вызову. Индекс внутри `CLAUDE.md` был бы вторым платным экземпляром того же
-списка, поэтому форма блока зависит от того, куда он пишется:
+U Claude Code yes **yours** skill listing: name and description of each available
+skill (project and plugin) are resident from the beginning of the session, the body is loaded by
+call. Index inside `CLAUDE.md` would be the second paid copy of the same
+list, so the shape of the block depends on where it is written:
 
-| Цель | Нативный листинг | Форма блока |
+| Purpose | Native listing | Block shape |
 |:--|:--|:--|
-| `CLAUDE.md` | есть | **краткая** — приоритеты источников, правила поиска, указатель |
-| `.ai/guidelines/swissknifeman-hub.md` (Boost) | есть (фрагмент едет в `CLAUDE.md`) | **краткая** |
-| `AGENTS.md`, `GEMINI.md` и прочие `--root-files` | нет | **полная** — с индексом скиллов |
+| `CLAUDE.md` | yes | **short** — source priorities, search rules, index |
+| `.ai/guidelines/swissknifeman-hub.md` (Boost) | yes (fragment goes to `CLAUDE.md`) | **short** |
+| `AGENTS.md`, `GEMINI.md` and others `--root-files` | no | **full** — with skill index |
 
-Один и тот же прогон пишет обе формы: `CLAUDE.md` получает краткую, а
-`AGENTS.md` из `--root-files` — полную. Вернуть индекс всем целям (откат):
+The same run writes both forms: `CLAUDE.md` gets short, and
+`AGENTS.md` from `--root-files` — full. Return index to all targets (rollback):
 
 ```bash
 ./scripts/generate-hub.sh --target . --full-index
-./scripts/generate-hub.sh --target . --full-index --dry-run   # только посмотреть
+./scripts/generate-hub.sh --target . --full-index --dry-run   # just look
 ```
 
-Перед сокращением генератор **сверяет обнаружение**: скилл уходит из блока,
-только если он есть и в активном наборе проекта (`skiller budget`), и в канале,
-который клиент перечисляет нативно (включённый плагин маркетплейса либо копия в
-`.claude/skills`). Неподтверждённые скиллы остаются в блоке разделом «Скиллы вне
-нативного листинга», а расхождение печатается в вывод команды. Freshness-штамп
-`<!-- swissknifeman:registry sha=… -->`, который сверяет `skiller doctor`,
-присутствует в обеих формах.
+Before abbreviation generator **checks detection**: skill leaves the block,
+only if it is also in the active project set (`skiller budget`), and in the channel,
+which the client lists natively (enabled marketplace plugin or copy in
+`.claude/skills`). Unconfirmed skills remain in the block section «Skills outside
+native listing», and the discrepancy is printed to the command output. Freshness-stamp
+`<!-- swissknifeman:registry sha=… -->`, which verifies `skiller doctor`,
+is present in both forms.
 
-## Шаг 3. Обновление
+## Step 3: Update
 
 ```bash
-cd ~/projects/my-app && skiller update   # текущий проект
-skiller update --all                     # все зарегистрированные
+cd ~/projects/my-app && skiller update   # current project
+skiller update --all                     # all registered
 ```
 
-`update` сам определяет канал(ы) проекта по маркерам на диске, обновляет
-вендоренные скиллы / настройки marketplace, чинит путь к реестру, если тот
-переехал, и регенерирует хаб. Подробности всех команд — в
-[справочнике CLI](./cli).
+`update` defines the channel itself(s) project by markers on disk, updates
+vendor skills / settings marketplace, repairs the registry path if it
+has moved and is regenerating the hub. Details of all commands are in
+[directory CLI](./cli).
 
-## Превью без установки
+## Preview without installation
 
 ```bash
-skiller vendor --list      # что будет установлено, файлы не трогаются
-skiller connect --dry-run  # итоговый settings.json без записи
+skiller vendor --list      # what will be installed, the files will not be touched
+skiller connect --dry-run  # final settings.json without entry
 ```
 
-## Явное управление
+## Explicit control
 
-Автодетект профиля (`.obsidian/` → obsidian-vault; `artisan`+`composer.json`
-→ laravel-project; `composer.json` → php-package; иначе standalone) можно
-переопределить:
+Auto profile detection (`.obsidian/` → obsidian-vault; `artisan`+`composer.json`
+→ laravel-project; `composer.json` → php-package; otherwise standalone) you can
+override:
 
 ```bash
 skiller vendor --profile php-package
@@ -199,39 +199,39 @@ skiller vendor --buckets php,quality --exclude botkit
 skiller connect --plugins php,quality
 ```
 
-Для Dart-библиотеки или SDK подключайте `dart` явно: `skiller connect --plugins dart`.
-Это пакетный набор (публичный API, null safety, тесты и совместимость); Flutter-верстка по
-Figma остаётся отдельным `mobile`-бакетом.
+For Dart-libraries or SDK connect `dart` explicitly: `skiller connect --plugins dart`.
+This is a batch set (public API, null safety, tests and compatibility); Flutter-layout by
+Figma remains separate `mobile`-with a bucket.
 
-Приоритет источников конфигурации: **флаги CLI → `.swissknife.json` → автодетект**.
-Явный выбор (`--profile`, `--buckets`, `--plugins`) запоминается в
-`projects.json` и воспроизводится при `update`; автодетект пере-резолвится
-с диска каждый раз.
+Configuration source priority: **flags CLI → `.swissknife.json` → autodetection**.
+Explicit selection (`--profile`, `--buckets`, `--plugins`) is stored in
+`projects.json` and plays when `update`; autodetect will re-resolve
+from disk every time.
 
-## Зависимости между скиллами
+## Dependencies between skills
 
-Поле `requires` во frontmatter скилла разрешается транзитивно: при выборочной
-установке (`--buckets`, `--exclude`) `vendor` дотягивает зависимости — в том
-числе из бакетов, которые вы не выбирали (в bucket-раскладке дотянутый скилл
-сохраняет директорию своего бакета, например `founder/competitive-analysis`
-при установке `--buckets pm`). Дотянутые скиллы помечаются в `--list` и
-`--dry-run` как `(dependency of <skill>)`.
+Field `requires` in frontmatter skill is resolved transitively: with selective
+installation (`--buckets`, `--exclude`) `vendor` falls short of dependencies - in that
+number from buckets that you did not select (in bucket-layout reached skill
+saves the directory of its bucket, for example `founder/competitive-analysis`
+during installation `--buckets pm`). Reached skills are marked in `--list` and
+`--dry-run` like `(dependency of <skill>)`.
 
-`--exclude` побеждает зависимость: исключённый скилл не ставится никогда,
-CLI лишь предупреждает (`WARN: ... excluded by --exclude, skipping`).
+`--exclude` defeats addiction: the excluded skill is never set,
+CLI only warns (`WARN: ... excluded by --exclude, skipping`).
 
-Картина связей целиком — на [странице графа зависимостей](./graph).
+The whole picture of connections is on [dependency graph page](./graph).
 
-::: warning Marketplace-канал не разрешает зависимости
-В plugin marketplace Claude Code плагин = бакет: включение плагина `php`
-не включит зависимый скилл из бакета `architect`. Resolution работает только
-в канале вендоринга. Включайте связанные бакеты вручную — по графу зависимостей.
+::: warning Marketplace-channel does not resolve dependencies
+B plugin marketplace Claude Code plugin = bucket: enable plugin `php`
+will not enable the dependent skill from the bucket `architect`. Resolution only works
+in the vendor channel. Include related buckets manually using the dependency graph.
 :::
 
-## Фиксация конфигурации: `.swissknife.json`
+## Fixing the configuration: `.swissknife.json`
 
-Проект может зафиксировать свою конфигурацию установки в `.swissknife.json`
-в корне — `connect`, `vendor` и `update` прочтут его автоматически:
+A project can commit its installation configuration to `.swissknife.json`
+at the root - `connect`, `vendor` and `update` will read it automatically:
 
 ```json
 {
@@ -243,57 +243,57 @@ CLI лишь предупреждает (`WARN: ... excluded by --exclude, skipp
 }
 ```
 
-Все ключи опциональны. Если задан `buckets`, поле `project_type` игнорируется.
-Файл проходит схема-валидацию: неизвестный ключ или неверный тип — понятная
-ошибка с подсказкой (`unknown key 'bucket' — did you mean 'buckets'?`).
-Ключи, начинающиеся с `_`, считаются комментариями.
-Шаблон — [.swissknife.example.json](https://github.com/academici/swissknifeman/blob/main/.swissknife.example.json).
+All keys are optional. If set `buckets`, field `project_type` is ignored.
+The file passes schema validation: unknown key or incorrect type - clear
+error with hint (`unknown key 'bucket' — did you mean 'buckets'?`).
+Keys starting with `_`, are considered comments.
+Template - [.swissknife.example.json](https://github.com/academici/swissknifeman/blob/main/.swissknife.example.json).
 
-### Носитель конфига внутри skiller
+### Config media inside skiller
 
-Прочитанный файл живёт в коде не голым словарём, а объектом
-`skiller.config.ProjectConfig` — frozen dataclass на stdlib (никаких `pydantic`
-или `jsonschema`). Поля объекта — единственный носитель перечня ключей: список
-`CONFIG_KEYS`, с которым `skiller doctor` и `tests/test_schema.py` сверяют
-`schema/swissknife.schema.json`, **выводится** из полей (`metadata["json_type"]`
-каждого поля несёт тот же Python-тип, которым валидируется значение). Добавить
-ключ = добавить поле и свойство в схему; третьего места, где ключи можно забыть
-обновить, нет.
+The read file lives in the code not as a bare dictionary, but as an object
+`skiller.config.ProjectConfig` — frozen dataclass on stdlib (none `pydantic`
+or `jsonschema`). Object fields are the only carrier of the list of keys: list
+`CONFIG_KEYS`, with whom `skiller doctor` and `tests/test_schema.py` are verified
+`schema/swissknife.schema.json`, **is output** from fields (`metadata["json_type"]`
+of each field carries the same Python-type with which the value is validated). Add
+key = add field and property to schema; third place where you can forget your keys
+update, no.
 
-Объект read-only: конфиг проекта после загрузки никто не мутирует, поэтому
-`frozen=True` (в отличие от обёртки конфига УЗЛА mAInd — там подкласс `dict`
-с `save()`). Исходный словарь сохраняется как `raw` — из него читаются
-`_`/`$`-ключи и подветка `providers`; старый доступ отображением
-(`config.get("agent")`, `config["agent"]`) продолжает работать байт-в-байт.
+Object read-only: no one mutates the project config after loading, so
+`frozen=True` (in contrast to the NODE config wrapper mAInd — there is a subclass `dict`
+with `save()`). The original dictionary is saved as `raw` — are read from it
+`_`/`$`-keys and subbranches `providers`; old access display
+(`config.get("agent")`, `config["agent"]`) continues to work byte-for-byte.
 
-Дом объекта — пакет `skiller`, а не общий `core/`: критерий приёма примитива в
-фундамент — «дублируется между ≥2 пакетами со стабильной границей», а валидация
-`.swissknife.json` завязана на локальное знание реестра (список профилей,
-`AGENT_DEFAULTS`, зарезервированные ключи). Единственный внешний читатель файла —
-`maind` — берёт только подветку `providers`, и она типизирована в `core`.
+Object Home - Package `skiller`, not generic `core/`: criterion for accepting a primitive into
+foundation - «is duplicated between ≥2 packets with stable boundary», and validation
+`.swissknife.json` is tied to local knowledge of the registry (list of profiles,
+`AGENT_DEFAULTS`, reserved keys). The only external file reader is
+`maind` — takes only the subbranch `providers`, and it is typed in `core`.
 
-## Манифест, переустановка и коллизии
+## Manifest, reinstallation and collisions
 
-`vendor` пишет манифест `.swissknifeman-manifest.json` рядом со скиллами —
-в обеих раскладках (плоской и bucket). Переустановка сначала удаляет
-**только** перечисленное в манифесте, затем ставит заново — чужие скиллы не
-трогаются.
+`vendor` writes a manifesto `.swissknifeman-manifest.json` next to the skills -
+in both layouts (flat and bucket). Reinstallation first removes
+**only** listed in the manifest, then reinstalls - other people's skills are not
+are starting to move.
 
-Если целевая папка скилла уже существует и не числится в манифесте, установка
-прерывается со списком коллизий. Перезаписать осознанно: `--force`.
+If the skill's target folder already exists and is not listed in the manifest, installation
+breaks with a collision list. Rewrite consciously: `--force`.
 
-## Режим `--agent claude` (deprecated)
+## Mode `--agent claude` (deprecated)
 
-Вендоринг для Claude Code оставлен для совместимости (плоская раскладка
-`.claude/skills/<name>/SKILL.md`, коллизии разрешаются префиксом bucket-а),
-но предпочтительный путь — `skiller connect` ([marketplace](../adapters/claude-code)).
-Мигрировать с вендоринга: `skiller connect --cleanup-vendored`.
-Флаг также снимает **raw vendor** (симлинки/копии в `.claude/skills` без
-`.swissknifeman-manifest.json`), если имя скилла уже раздаётся включённым
-marketplace-бакетом; project-specific записи и maind-managed
-`ecosystem-mcp`/`ecosystem-setup` не трогаются.
+Vendoring for Claude Code left for compatibility (flat layout
+`.claude/skills/<name>/SKILL.md`, collisions resolved by prefix bucket-a),
+but the preferred path is `skiller connect` ([marketplace](../adapters/claude-code)).
+Migrate from vendor: `skiller connect --cleanup-vendored`.
+The flag also removes **raw vendor** (symlinks/copies to `.claude/skills` without
+`.swissknifeman-manifest.json`), if the skill name is already turned on
+marketplace-bucket; project-specific records and maind-managed
+`ecosystem-mcp`/`ecosystem-setup` are not touched.
 
-## Что дальше
+## What's next
 
-После установки скиллов подтяните пресеты permissions, чтобы агент сразу мог
-работать без промптов — см. [Permissions для Claude Code](/harness/configs/claude-permissions).
+After installing skills, tighten up the presets permissions, so that the agent can immediately
+work without prompts - see. [Permissions for Claude Code](/harness/configs/claude-permissions).

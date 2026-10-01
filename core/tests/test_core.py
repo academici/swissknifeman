@@ -1,6 +1,6 @@
-"""Smoke-тесты пакета core — общий фундамент монорепо (stdlib-only).
+"""Smoke-package tests core — common monorepo foundation (stdlib-only).
 
-Запуск: PYTHONPATH=<корень монорепо> python3 -m unittest discover -s core/tests"""
+Launch: PYTHONPATH=<root monorepo> python3 -m unittest discover -s core/tests"""
 import inspect
 import json
 import os
@@ -26,8 +26,8 @@ from core.repo import resolve_plan_dir
 
 
 class _EchoAuthHandler(BaseHTTPRequestHandler):
-    """Сервер-двойник для http.py: отражает полученный заголовок Authorization и
-    401'ит protected-путь без корректного bearer'а — как agentmemory 0.9.x."""
+    """Twin server for http.py: reflects the received header Authorization and
+    401'etc protected-path without a valid bearer'a - how agentmemory 0.9.x."""
 
     def log_message(self, *a):
         pass
@@ -101,7 +101,7 @@ class TestHttp(unittest.TestCase):
         with _EchoAuthServer() as url:
             with self.assertRaises(HTTPUnauthorizedError):
                 http_get_json(f"{url}/protected")
-            with self.assertRaises(RuntimeError):  # HTTPUnauthorizedError — подкласс
+            with self.assertRaises(RuntimeError):  # HTTPUnauthorizedError — subclass
                 http_get_json(f"{url}/protected")
 
     def test_401_with_correct_bearer_succeeds(self):
@@ -110,8 +110,8 @@ class TestHttp(unittest.TestCase):
             self.assertEqual(res["authorization"], "Bearer good-token")
 
     def test_ping_returns_true_on_401_unchanged(self):
-        # ping не различает 401 от прочих 4xx — byte-в-byte прежнее поведение (D6/анти-самообман:
-        # различие даёт HTTPUnauthorizedError у http_get_json/http_post_json, не ping).
+        # ping does not distinguish 401 from other 4xx — byte-in-byte old behavior (D6/anti-self-deception:
+        # difference gives HTTPUnauthorizedError y http_get_json/http_post_json, not ping).
         with _EchoAuthServer() as url:
             self.assertTrue(ping(f"{url}/protected"))
 
@@ -131,8 +131,8 @@ class TestEnv(unittest.TestCase):
         self.assertEqual(env.cmd, "cmd")
 
     def test_base_env_home_reads_current_env(self):
-        # default_factory зовёт Path.home() при создании (не модульный снимок) —
-        # подменённый $HOME подхватывается (нужно для тестируемости).
+        # default_factory calling Path.home() when creating (not a modular snapshot) —
+        # spoofed $HOME is picked up (needed for testability).
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict(os.environ, {"HOME": tmp}):
                 self.assertEqual(BaseEnv("/r").home, Path(tmp))
@@ -165,14 +165,14 @@ class TestAtomicIO(unittest.TestCase):
     def test_write_text_creates_parents(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "a" / "b" / "f.txt"
-            atomic_write_text(p, "привет")
-            self.assertEqual(p.read_text(encoding="utf-8"), "привет")
-            # tmp-файл не остаётся после успешной записи
+            atomic_write_text(p, "hi")
+            self.assertEqual(p.read_text(encoding="utf-8"), "hi")
+            # tmp-file does not remain after successful write
             self.assertEqual(list(Path(tmp).rglob("*.tmp")), [])
 
     def test_write_text_cleans_tmp_on_failure(self):
-        # Если replace падает (кросс-устройство/нет места), осиротевший .tmp не
-        # должен оставаться на диске — иначе мусор копится в долгоживущих процессах.
+        # If replace falls (cross device/no space), orphaned .tmp not
+        # must remain on disk - otherwise garbage accumulates in long-lived processes.
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "f.txt"
             with mock.patch("core.io.os.replace", side_effect=OSError("boom")):
@@ -188,8 +188,8 @@ class TestAtomicIO(unittest.TestCase):
             text = p.read_text(encoding="utf-8")
             self.assertTrue(text.endswith("\n"))
             data = json.loads(text)
-            self.assertEqual(data["version"], 2)            # version переписан
-            self.assertEqual(list(data.keys())[0], "version")  # первым ключом
+            self.assertEqual(data["version"], 2)            # version rewritten
+            self.assertEqual(list(data.keys())[0], "version")  # as the first key
             self.assertEqual(data["a"], 1)
 
     def test_write_json_indent_param(self):
@@ -199,7 +199,7 @@ class TestAtomicIO(unittest.TestCase):
             self.assertIn('\n    "k"', p.read_text(encoding="utf-8"))
 
     def test_write_mode_0600(self):
-        # mode= ставит права атомарно (на .tmp до replace) — для конфигов с секретами.
+        # mode= sets permissions atomically (on .tmp to replace) — for configs with secrets.
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "secret.json"
             atomic_write_json(p, {"token": "x"}, mode=0o600)
@@ -213,7 +213,7 @@ class TestLoadJsonDb(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             out = load_json_db(Path(tmp) / "nope.json", self.DEFAULT)
             self.assertEqual(out, self.DEFAULT)
-            out["items"].append("x")                      # не мутирует исходный default
+            out["items"].append("x")                      # does not mutate the original default
             self.assertEqual(self.DEFAULT["items"], [])
 
     def test_corrupt_backs_up_and_returns_default(self):
@@ -222,7 +222,7 @@ class TestLoadJsonDb(unittest.TestCase):
             p.write_text("{ broken", encoding="utf-8")
             out = load_json_db(p, self.DEFAULT)
             self.assertEqual(out, self.DEFAULT)
-            self.assertFalse(p.exists())                   # переименован в .corrupt.<date>
+            self.assertFalse(p.exists())                   # renamed to .corrupt.<date>
             self.assertTrue(list(Path(tmp).glob("db.json.corrupt.*")))
 
     def test_version_too_new_dies(self):
@@ -246,7 +246,7 @@ class TestPaths(unittest.TestCase):
             child = root / "a" / "b"
             child.mkdir(parents=True)
             self.assertTrue(is_within(child, root))
-            self.assertTrue(is_within(root, root))         # совпадение
+            self.assertTrue(is_within(root, root))         # match
 
     def test_is_within_false_for_traversal(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -258,7 +258,7 @@ class TestPaths(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "dest"
             root.mkdir()
-            # имя с '../' лексически вырывается за dest → False
+            # name with '../' lexically escapes dest → False
             self.assertFalse(is_within_lexical(root / ".." / "evil", root))
             self.assertTrue(is_within_lexical(root / "skill", root))
 
@@ -549,7 +549,7 @@ class TestProjectDetect(unittest.TestCase):
             self.assertEqual(detect_project_type(root), "blender")
 
     def test_blender_by_bpy_import_beats_python(self):
-        # addon с requirements.txt: import bpy → blender, не python-backend
+        # addon with requirements.txt: import bpy → blender, not python-backend
         with tempfile.TemporaryDirectory() as tmp:
             root = self._mk(tmp, files=[("addon.py", "import bpy\n"),
                                         ("requirements.txt", "")])
@@ -585,7 +585,7 @@ class TestDocsVisibility(unittest.TestCase):
         self.assertEqual(DEFAULT_DOCS_VISIBILITY, "private")
 
     def test_every_project_type_has_default(self):
-        # каждый известный тип имеет явную видимость (не упадёт на дефолт молча)
+        # every known type has explicit visibility (will not default silently)
         from core import DOCS_VISIBILITY_BY_TYPE
         for t in PROJECT_TYPES:
             self.assertIn(t, DOCS_VISIBILITY_BY_TYPE, t)
@@ -601,7 +601,7 @@ class TestParseIso(unittest.TestCase):
         self.assertIsNotNone(parse_iso("2026-07-01T12:00:00+03:00"))
 
     def test_fractional_various_digit_counts(self):
-        # py39 fromisoformat не принимал 2/4/7 знаков дробной части — нормализуем
+        # py39 fromisoformat did not accept 2/4/7 signs of the fractional part - normalize
         for s in ("2026-07-01T12:00:00.1Z", "2026-07-01T12:00:00.12Z",
                   "2026-07-01T12:00:00.1234Z", "2026-07-01T12:00:00.1234567Z",
                   "2026-07-01T12:00:00.123456Z"):
@@ -634,11 +634,11 @@ class TestPidAlive(unittest.TestCase):
         self.assertIsNone(pid_alive(0))
 
     def test_huge_pid_no_crash(self):
-        # OverflowError на огромном pid не должен ронять вызывающего
+        # OverflowError on a huge pid should not drop the caller
         self.assertTrue(pid_alive(10 ** 12))
 
     def test_dead_pid(self):
-        # почти наверняка несуществующий pid
+        # almost certainly non-existent pid
         self.assertFalse(pid_alive(2 ** 22 - 1))
 
 
@@ -646,7 +646,7 @@ class TestReadNdjson(unittest.TestCase):
     def test_skips_blank_and_broken_and_nondict(self):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "x.ndjson"
-            p.write_text('{"a":1}\n\n  \nне-json\n[1,2]\n{"b":2}\n',
+            p.write_text('{"a":1}\n\n  \nnot-json\n[1,2]\n{"b":2}\n',
                          encoding="utf-8")
             self.assertEqual(read_ndjson(p), [{"a": 1}, {"b": 2}])
 
@@ -655,12 +655,12 @@ class TestReadNdjson(unittest.TestCase):
             self.assertEqual(read_ndjson(Path(d) / "nope.ndjson"), [])
 
     def test_iter_skips_blank_and_broken_and_nondict(self):
-        # проверка ФИЛЬТРАЦИИ независимо от read_ndjson — против hardcoded-ожидания,
-        # не против read_ndjson(p) (тот сам определён как list(read_ndjson_iter(p)),
-        # сравнение с самим собой ничего бы не поймало при сломанном фильтре)
+        # FILTERING check regardless read_ndjson — vs hardcoded-waiting,
+        # don't mind read_ndjson(p) (is itself defined as list(read_ndjson_iter(p)),
+        # comparison with itself would not catch anything with a broken filter)
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "x.ndjson"
-            p.write_text('{"a":1}\n\n  \nне-json\n[1,2]\n{"b":2}\n',
+            p.write_text('{"a":1}\n\n  \nnot-json\n[1,2]\n{"b":2}\n',
                          encoding="utf-8")
             self.assertEqual(list(read_ndjson_iter(p)), [{"a": 1}, {"b": 2}])
 
@@ -669,8 +669,8 @@ class TestReadNdjson(unittest.TestCase):
             self.assertEqual(list(read_ndjson_iter(Path(d) / "nope.ndjson")), [])
 
     def test_iter_is_lazy_generator(self):
-        # генератор-специфичное поведение: объект и потребление по одной записи,
-        # не список — ради этого read_ndjson_iter и был выделен (streaming-потребители)
+        # generator-specific behavior: object and consumption one record at a time,
+        # not a list - for the sake of this read_ndjson_iter and was allocated (streaming-consumers)
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "x.ndjson"
             p.write_text('{"a":1}\n{"b":2}\n', encoding="utf-8")
@@ -681,10 +681,10 @@ class TestReadNdjson(unittest.TestCase):
             self.assertRaises(StopIteration, next, gen)
 
     def test_read_ndjson_is_list_of_iter(self):
-        # read_ndjson — тонкая обёртка над read_ndjson_iter, не отдельная копия логики
+        # read_ndjson — thin wrapper over read_ndjson_iter, not a separate copy of the logic
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "x.ndjson"
-            p.write_text('{"a":1}\n\n  \nне-json\n[1,2]\n{"b":2}\n',
+            p.write_text('{"a":1}\n\n  \nnot-json\n[1,2]\n{"b":2}\n',
                          encoding="utf-8")
             self.assertEqual(read_ndjson(p), list(read_ndjson_iter(p)))
 
@@ -739,7 +739,7 @@ class TestFindRunReport(unittest.TestCase):
             )
 
     def test_expanduser(self):
-        # ~-путь должен раскрываться (расхождение, которое чинит вынос в core)
+        # ~-path should expand (discrepancy that fixes the offset in core)
         with tempfile.TemporaryDirectory() as home:
             with mock.patch.dict(os.environ, {"HOME": home}):
                 self._make(home, "s1", {"session_id": "s1"})

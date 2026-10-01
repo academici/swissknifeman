@@ -63,11 +63,11 @@ def load_json_db(path, default, *, max_version=None):
     except (json.JSONDecodeError, OSError, UnicodeDecodeError):
         backup = path.with_name(f"{path.name}.corrupt.{date.today().isoformat()}")
         path.rename(backup)
-        warn(f"{path} повреждён → сохранён в {backup.name} (начинаю заново)")
+        warn(f"{path} damaged → saved in {backup.name} (starting again)")
         return copy.deepcopy(default)
     if max_version is not None and isinstance(db, dict) and db.get("version", 1) > max_version:
-        die(f"{path} записан более новой версией — обновите репозиторий (git pull) и "
-            f"перезапустите установку")
+        die(f"{path} is overwritten by a newer version - update the repository (git pull) and "
+            f"restart installation")
     return db
 
 
@@ -82,13 +82,13 @@ def assert_safe_replace_target(path):
     except FileNotFoundError:
         return
     if os.path.islink(path):
-        raise OSError(f"{path}: небезопасная цель для атомарной замены — символьная ссылка")
+        raise OSError(f"{path}: unsafe target for atomic replacement - symbolic link")
     if not os.path.isfile(path):
-        raise OSError(f"{path}: небезопасная цель для атомарной замены — не регулярный файл")
+        raise OSError(f"{path}: unsafe target for atomic replacement - non-regular file")
     if st.st_nlink != 1:
         raise OSError(
-            f"{path}: небезопасная цель для атомарной замены — st_nlink={st.st_nlink} "
-            f"(жёсткая ссылка)"
+            f"{path}: unsafe target for atomic replacement - st_nlink={st.st_nlink} "
+            f"(hard link)"
         )
 
 

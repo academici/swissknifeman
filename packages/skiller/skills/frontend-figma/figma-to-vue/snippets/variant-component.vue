@@ -1,11 +1,11 @@
 <!-- Source: {project}/resources/js/components/ui/Button.vue (anonymized) -->
-<!-- Figma Component Set (Variant: Intent × Size × State) → cva-варианты. Токены из @theme. -->
+<!-- Figma Component Set (Variant: Intent × Size × State) → cva-options. Tokens from @theme. -->
 <script setup lang="ts">
 import { computed } from 'vue'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { cn } from '@/lib/cn' // см. skill tailwind-conventions (clsx + tailwind-merge)
+import { cn } from '@/lib/cn' // see skill tailwind-conventions (clsx + tailwind-merge)
 
-// Variant-оси из Figma маппятся 1:1 в variants. Имена — из Figma Variant properties.
+// Variant-axes from Figma are mapped 1:1 in variants. Names - from Figma Variant properties.
 const button = cva(
   'inline-flex items-center justify-center gap-sm rounded-md font-medium transition-colors disabled:opacity-50',
   {

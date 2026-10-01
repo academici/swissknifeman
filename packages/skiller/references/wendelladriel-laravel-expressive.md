@@ -1,19 +1,19 @@
 # WendellAdriel/laravel-expressive
 
 - **URL:** https://github.com/WendellAdriel/laravel-expressive/tree/main/.agents/skills
-- **Статус:** imported
-- **Проверено:** 2026-06-12
+- **Status:** imported
+- **Checked:** 2026-06-12
 
-Laravel-пакет с собственной папкой `.agents/skills/` — живой пример того, как
-пакет публикует скиллы для агентов. 8 скиллов по разработке пакетов (часто нужны).
+Laravel-package with its own folder `.agents/skills/` — a living example of how
+package publishes skills for agents. 8 Package Development Skills (are often needed).
 
-## Что взято
+## What's taken
 
-Все 8 скиллов импортированы в bucket `php` плоскими папками с префиксом
-`laravel-` (вложение SKILL.md внутрь существующего `laravel-packages/SKILL.md`
-невидимо для plugin discovery — см. коммит d6bc0f9 про docker):
+All 8 skills are imported into bucket `php` flat folders with prefix
+`laravel-` (attachment SKILL.md inside existing `laravel-packages/SKILL.md`
+invisible to plugin discovery — see commit d6bc0f9 about docker):
 
-| upstream `.agents/skills/` | наш скилл (`skills/php/`) |
+| upstream `.agents/skills/` | our skill (`skills/php/`) |
 |---|---|
 | `package-compatibility`    | `laravel-package-compatibility` |
 | `package-docs`             | `laravel-package-docs` |
@@ -24,11 +24,11 @@ Laravel-пакет с собственной папкой `.agents/skills/` — 
 | `package-testing`          | `laravel-package-testing` |
 | `skeleton-development` (name `expressive-development`) | `laravel-package-expressive` |
 
-Провенанс каждого — в `upstream.json` рядом со SKILL.md (`strategy: notify`,
-не авто-заменять). Bucket-frontmatter добавлен поверх оригинального тела.
+The provenance of each is in `upstream.json` next to SKILL.md (`strategy: notify`,
+do not auto-replace). Bucket-frontmatter added on top of the original body.
 
-## Связи
+## Connections
 
-- Пересекается с `oss-dev/release-engineering` (релизы) и нашим
-  `generate-skill/` (паттерн package-generate-skill) — оставлено отдельно как
+- Intersects with `oss-dev/release-engineering` (releases) and our
+  `generate-skill/` (pattern package-generate-skill) — left separately as
   package-specific.

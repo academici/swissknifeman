@@ -11,15 +11,15 @@ use AzGuard\Grants\GrantBuilder;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Pest-паттерны для AzGuard. Роли — PHP-классы: доступны без сидинга.
- * Правила:
- *   - тестируй обе стороны: на каждое «разрешено» — тест «запрещено»;
- *   - между сменами состояния в одном тесте — $user->flushPermissions();
- *   - assertForbidden(), не assertStatus(403);
- *   - в тестовом конфиге az-guard.php: 'cache' => ['enabled' => false].
+ * Pest-patterns for AzGuard. Roles - PHP-classes: available without seeding.
+ * Rules:
+ *   - test both sides: for each «allowed» — test «prohibited»;
+ *   - between state changes in one test - $user->flushPermissions();
+ *   - assertForbidden(), not assertStatus(403);
+ *   - in the test config az-guard.php: 'cache' => ['enabled' => false].
  */
 
-// ── Роли и права ────────────────────────────────────────────────────────────
+// ── Roles and rights ────────────────────────────────────────────────────────────
 
 it('allows editors to view documents', function () {
     $user = User::factory()->create();
@@ -40,11 +40,11 @@ it('checks any/all permission sets', function () {
 
     expect($user->hasAllPermissions([
         DocumentsPermission::Edit,
-        DocumentsPermission::Delete,   // у editor нет Delete
+        DocumentsPermission::Delete,   // y editor no Delete
     ]))->toBeFalse();
 });
 
-// ── HTTP: 403 для пользователя без права ────────────────────────────────────
+// ── HTTP: 403 for a user without permission ────────────────────────────────────
 
 it('returns 403 for users without permission', function () {
     $user = User::factory()->create();
@@ -60,7 +60,7 @@ it('allows editor through the route', function () {
         ->assertOk();
 });
 
-// ── Gate с моделью (через политику) ─────────────────────────────────────────
+// ── Gate with model (via policy) ─────────────────────────────────────────
 
 it('routes gate checks through the policy', function () {
     $user = User::factory()->create();
@@ -91,14 +91,14 @@ it('denies an expired grant', function () {
     (new GrantBuilder($user))
         ->on('app')
         ->give(DocumentsPermission::Export)
-        ->until(now()->subMinute());   // уже истёк
+        ->until(now()->subMinute());   // has already expired
 
-    $user->flushPermissions();          // сброс in-memory кеша
+    $user->flushPermissions();          // reset in-memory cache
 
     expect($user->hasPermission(DocumentsPermission::Export))->toBeFalse();
 });
 
-// ── Factory states — читаемая подготовка пользователей ──────────────────────
+// ── Factory states — readable user training ──────────────────────
 //
 // // database/factories/UserFactory.php
 // public function editor(): static
@@ -110,11 +110,11 @@ it('denies an expired grant', function () {
 //
 // $editor = User::factory()->editor()->create();
 //
-// ── Unit-тесты без БД — AzGuardFake ─────────────────────────────────────────
+// ── Unit-tests without database - AzGuardFake ─────────────────────────────────────────
 //
 // use AzGuard\Testing\AzGuardFake;
 //
-// beforeEach(fn () => AzGuardFake::install());   // in-memory резолвер
+// beforeEach(fn () => AzGuardFake::install());   // in-memory resolver
 //
 // it('checks permission in a service', function () {
 //     $user = User::factory()->make(['id' => 1]);

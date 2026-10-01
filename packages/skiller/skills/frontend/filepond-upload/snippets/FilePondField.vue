@@ -1,19 +1,19 @@
 <!-- Source: anonymized production project (FilePond field with laravel-filepond process/revert + v-model) -->
 <!--
-  Переиспользуемое поле загрузки. Инкапсулирует:
-    - server-конфиг на endpoints laravel-filepond (process/revert на /filepond, CSRF);
-    - v-model: список ссылок { id?, serverId? } — это то, что уходит в форму;
-    - восстановление уже сохранённых файлов как local-постеров (defaultFiles);
-    - привязку serverId при processfile и очистку при removefile.
+  Reused loading field. Encapsulates:
+    - server-config on endpoints laravel-filepond (process/revert on /filepond, CSRF);
+    - v-model: list of links { id?, serverId? } — is what goes into the form;
+    - restore already saved files as local-posters (defaultFiles);
+    - binding serverId when processfile and cleaning when removefile.
 
-  Контракт модели (нейтральный, подходит под любой домен Order/Document/Article):
-    { id?: number|string }   — уже сохранённый на сервере файл (Media/Attachment);
-    { serverId: string }     — временный файл, загруженный FilePond, ещё не привязан.
+  Model contract (neutral, suitable for any domain Order/Document/Article):
+    { id?: number|string }   — file already saved on the server (Media/Attachment);
+    { serverId: string }     — temporary file uploaded FilePond, is not linked yet.
 -->
 <script lang="ts" setup>
 import type { FilePondServerConfigProps, FilePondFile } from "filepond";
 import { ref, type Ref } from "vue";
-// Фабрика из snippets/register-filepond.ts (vue-filepond или локальная обёртка).
+// Factory from snippets/register-filepond.ts (vue-filepond or local wrapper).
 import { FilePond } from "@/components/forms/filepond";
 import { getCsrfToken } from "@/utils/csrf";
 
@@ -40,19 +40,19 @@ const {
   files?: ExistingFile[];
   multiple?: boolean;
   acceptedFileTypes?: string;
-  maxFileSize?: string; // напр. "10MB" — плагин file-validate-size
+  maxFileSize?: string; // e.g. "10MB" — plugin file-validate-size
 }>();
 
-// Модель-список ссылок: именно его родитель кладёт в payload формы.
+// Model-list of links: this is what the parent puts in payload forms.
 const model = defineModel<UploadedFileRef[]>({ default: () => [] });
 
-// Инициализируем модель уже сохранёнными файлами (их id), чтобы при сабмите
-// сервер понимал, какие записи оставить, а какие добавить по serverId.
+// Initialize the model with already saved files (them id), so that when submitting
+// the server understood which records to leave and which to add serverId.
 model.value = files.map((file) => ({ id: file.id }));
 
-// server-конфиг laravel-filepond: один URL /filepond обслуживает
-// process (POST), revert (DELETE), restore/load (GET) и patch (chunk).
-// CSRF и X-Requested-With обязательны — иначе Laravel вернёт 419/redirect.
+// server-config laravel-filepond: one URL /filepond serves
+// process (POST), revert (DELETE), restore/load (GET) and patch (chunk).
+// CSRF and X-Requested-With are required - otherwise Laravel will return 419/redirect.
 const server: FilePondServerConfigProps["server"] = {
   url: "/filepond",
   process: "/filepond",
@@ -70,7 +70,7 @@ interface FilePondLocalFile {
   options: { type: "local"; file?: { name: string; size: number; type: string } };
 }
 
-// Уже сохранённые файлы показываем как постеры (type: "local"), source = их id.
+// We show already saved files as posters (type: "local"), source = them id.
 const defaultFiles: Ref<FilePondLocalFile[]> = ref(
   files.map((file) => ({
     source: String(file.id),
@@ -85,14 +85,14 @@ const defaultFiles: Ref<FilePondLocalFile[]> = ref(
   })),
 );
 
-// processfile: FilePond отдал serverId временного файла — добавляем в модель.
+// processfile: FilePond gave serverId temporary file - add to the model.
 function onProcessFile(_error: unknown, file: FilePondFile): void {
   const serverId = String(file.serverId ?? "").trim();
   if (!serverId) return;
   model.value = [...model.value, { serverId }];
 }
 
-// removefile: убираем ссылку и по id (сохранённый), и по serverId (временный).
+// removefile: remove the link and id (saved), and by serverId (temporary).
 function onRemoveFile(_error: unknown, file: FilePondFile): void {
   const id = String(file.id ?? "").trim();
   const serverId = String(file.serverId ?? "").trim();
@@ -105,7 +105,7 @@ function onRemoveFile(_error: unknown, file: FilePondFile): void {
 <template>
   <FilePond
     :name="name"
-    label-idle="Перетащите файл или нажмите для выбора"
+    label-idle="Drag and drop file or click to select"
     :allow-multiple="multiple"
     :accepted-file-types="acceptedFileTypes"
     :max-file-size="maxFileSize"

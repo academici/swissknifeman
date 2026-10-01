@@ -54,12 +54,12 @@ def list_packs(env):
 def load_manifest(env, pack):
     f = pack_dir(env, pack) / "pack.json"
     if not f.exists():
-        die(f"agent-pack не найден: {pack} (нет {f})")
+        die(f"agent-pack not found: {pack} (no {f})")
     data = safe_load_json(f, default=None)
     if not isinstance(data, dict):
-        die(f"{f}: невалидный JSON")
+        die(f"{f}: invalid JSON")
     if data.get("schema") != 1:
-        die(f"{f}: schema должна быть 1")
+        die(f"{f}: schema should be 1")
     return data
 
 
@@ -222,8 +222,8 @@ def inject_header(rendered, header, target_rel):
 
 def _edit_policy(f):
     """Internal documentation."""
-    return ("user-owned — файл ваш, пак его не перезапишет" if f.get("user_owned")
-            else "generated-core — НЕ редактируй; расширяй через extension-point")
+    return ("user-owned — file is yours, the pack will not overwrite it" if f.get("user_owned")
+            else "generated-core — DO NOT edit; expand through extension-point")
 
 
 def _extension_points(manifest, answers):
@@ -306,7 +306,7 @@ def render_pack(env, pack, target, answers, *, dry=False, prior=None):
         if not sfile.exists():
             if f.get("optional"):
                 continue
-            die(f"{f.get('src_pack') or pack}: нет файла пака {src}")
+            die(f"{f.get('src_pack') or pack}: no pack file {src}")
         tgt_rel = _subst_single(f["target"], answers)
         tgt = target / tgt_rel
         prior_f = prior_files.get(src)
@@ -339,10 +339,10 @@ def render_pack(env, pack, target, answers, *, dry=False, prior=None):
                 _chmod_x(tgt)
             changed = True
         elif decision == "skip-foreign":
-            warn(f"  коллизия: {tgt_rel} уже существует и не принадлежит паку — пропуск")
+            warn(f"  collision: {tgt_rel} already exists and does not belong to the pack - skip")
             notes.append(f"collision:{tgt_rel}")
         elif decision == "skip-local-modified":
-            warn(f"  {tgt_rel} правлен локально — не затираю (см. upgrade)")
+            warn(f"  {tgt_rel} edited locally - I don’t overwrite it (see upgrade)")
         out_files.append({"src": src, "target": tgt_rel, "kind": kind,
                           "base_sha256": new_sha, "local_modified": local_mod,
                           "user_owned": bool(f.get("user_owned", False))})
@@ -368,7 +368,7 @@ def _merge_fragment(target, sfile, directive, answers, dry):
     if added:
         write_json(f, settings, dry)
     else:
-        print("  settings.json: хуки фрагмента уже на месте — пропуск")
+        print("  settings.json: fragment hooks are already in place - skipping")
     return added
 
 
@@ -384,7 +384,7 @@ def load_lock(target):
 def write_lock(target, lock, dry):
     lp = lock_path(target)
     if dry:
-        print(f"  [dry-run] обновил бы {lp}")
+        print(f"  [dry-run] would update {lp}")
         return
     lp.parent.mkdir(parents=True, exist_ok=True)
     from core import atomic_write_json
@@ -408,7 +408,7 @@ def do_render(env, pack, target, *, auto, overrides, dry, install_only, shell_po
     lock = load_lock(target)
     prior = lock.get("packs", {}).get(pack)
     if install_only and prior is not None:
-        print(f"agent-pack '{pack}' уже установлен (v{prior.get('version')}) — пропуск")
+        print(f"agent-pack '{pack}' is already installed (v{prior.get('version')}) — pass")
         return 0
 
     base_overrides = dict((prior or {}).get("answers", {}))
@@ -416,9 +416,9 @@ def do_render(env, pack, target, *, auto, overrides, dry, install_only, shell_po
     answers, rep = resolve_interview(manifest, target, base_overrides, shell_policy)
     print(f"=== agent-pack render: {pack} v{manifest['version']} → {target} ===")
     if rep["assumed"]:
-        warn(f"  допущения (проверь): {', '.join(rep['assumed'])}")
+        warn(f"  assumptions (check): {', '.join(rep['assumed'])}")
     if rep["skipped_probes"]:
-        warn(f"  пропущены небезопасные пробы: {len(rep['skipped_probes'])}")
+        warn(f"  unsafe samples skipped: {len(rep['skipped_probes'])}")
     report = render_pack(env, pack, target, answers, dry=dry, prior=prior)
     new_entry = _pack_lock_entry(env, pack, answers, report)
     lock.setdefault("packs", {})[pack] = new_entry
@@ -433,8 +433,8 @@ def do_render(env, pack, target, *, auto, overrides, dry, install_only, shell_po
     if report["changed"] or prior is None or new_entry != prior:
         write_lock(target, lock, dry)
     for pat in validate_expect_globs(manifest, target, answers):
-        warn(f"  ожидаемый путь '{pat}' матчит 0 файлов — проверь layout/answers "
-             f"(риск ложно-зелёного access-layer)")
+        warn(f"  expected path '{pat}' match 0 files - check layout/answers "
+             f"(risk of false green access-layer)")
     status = "needs-agent" if rep["unresolved"] else "ok"
     print(f"=== {status} (changed={report['changed']}) ===")
     return 0 if status == "ok" else 0
@@ -470,7 +470,7 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
     lock = load_lock(target)
     prior = lock.get("packs", {}).get(pack)
     if prior is None:
-        die(f"agent-pack '{pack}' не установлен — сначала render")
+        die(f"agent-pack '{pack}' not installed - first render")
     v_old, v_new = prior.get("version"), manifest["version"]
     same_version = v_old == v_new
     base_overrides = dict(prior.get("answers", {}))
@@ -518,37 +518,37 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
                 _chmod_x(tgt)
         elif cat == "conflict" and not dry:
             write_text(target / (tgt_rel + ".pack-new"), rendered, dry)
-            warn(f"  conflict: {tgt_rel} — новый вариант в {tgt_rel}.pack-new (смержи вручную)")
+            warn(f"  conflict: {tgt_rel} — new option in {tgt_rel}.pack-new (merge manually)")
         out_files.append({"src": src, "target": tgt_rel, "kind": kind,
                           "base_sha256": new_sha,
                           "local_modified": cat == "conflict",
                           "user_owned": bool(f.get("user_owned", False))})
     acted = [(c, t) for c, _s, t, a in plan if a]
     if same_version:
-        print(f"=== upgrade {pack}: v{v_new} (версия та же — сверка по факту файлов) ===")
+        print(f"=== upgrade {pack}: v{v_new} (version is the same - verification of actual files) ===")
     else:
         print(f"=== upgrade {pack}: {v_old} → {v_new} ===")
     for cat, _src, tgt_rel, a in plan:
         if a or cat != "nochange":
             print(f"  [{cat}] {tgt_rel}")
     if not acted:
-        print("  нечего делать: файлы совпадают с lock'ом")
+        print("  nothing to do: files match lock'ohm")
     elif same_version:
 
 
-        warn(f"  ⚠ пак '{pack}' не менял версию (v{v_new}), но {len(acted)} файл(ов) "
-             f"разошлись с lock'ом — применено по факту; авторам пака: бампайте "
-             f"pack.json:version, иначе апгрейд опирается только на хэши")
+        warn(f"  ⚠ pack '{pack}' did not change the version (v{v_new}), but {len(acted)} file(ov) "
+             f"separated from lock'ohm - applied after the fact; to the authors of the pack: bump it "
+             f"pack.json:version, otherwise the upgrade relies only on hashes")
     conflicts = [t for c, _s, t, _a in plan if c == "conflict"]
     if conflicts:
-        warn(f"  ⚠ {len(conflicts)} conflict → ручной мерж из .pack-new: "
+        warn(f"  ⚠ {len(conflicts)} conflict → manual merge from .pack-new: "
              + ", ".join(t + ".pack-new" for t in conflicts))
     for pat in validate_expect_globs(manifest, target, answers):
-        warn(f"  ожидаемый путь '{pat}' матчит 0 файлов — проверь layout/answers "
-             f"(риск ложно-зелёного access-layer)")
+        warn(f"  expected path '{pat}' match 0 files - check layout/answers "
+             f"(risk of false green access-layer)")
     removed = sorted(set(prior_files) - {f["src"] for f in manifest.get("files", [])})
     for src in removed:
-        warn(f"  removed в {v_new}: {src} — не удаляю авто (удали вручную при желании)")
+        warn(f"  removed in {v_new}: {src} — I don't delete the car (deleted manually if desired)")
     entry = _pack_lock_entry(env, pack, answers, {"files": out_files})
     entry["removed_optional"] = prior.get("removed_optional", [])
     lock.setdefault("packs", {})[pack] = entry
@@ -561,7 +561,7 @@ def do_remove(env, pack, target, *, dry):
     lock = load_lock(target)
     entry = lock.get("packs", {}).get(pack)
     if entry is None:
-        print(f"agent-pack '{pack}' не установлен в {target} — нечего удалять")
+        print(f"agent-pack '{pack}' is not set to {target} — nothing to delete")
         return 0
     tag = " [dry-run]" if dry else ""
     print(f"=== agent-pack remove: {pack} v{entry.get('version')} ← {target} ==={tag}")
@@ -573,26 +573,26 @@ def do_remove(env, pack, target, *, dry):
             merge_kept.append(tgt_rel)
             continue
         if f.get("user_owned"):
-            warn(f"  {tgt_rel}: user-owned — оставлен, удали вручную при желании")
+            warn(f"  {tgt_rel}: user-owned — left, delete manually if desired")
             continue
         if not tgt.exists():
             continue
         try:
             disk_sha = sha256_text(tgt.read_text(encoding="utf-8"))
         except (OSError, UnicodeDecodeError):
-            warn(f"  {tgt_rel}: не читается — оставлен на всякий случай")
+            warn(f"  {tgt_rel}: is not readable - left just in case")
             continue
         if disk_sha != f.get("base_sha256"):
-            warn(f"  {tgt_rel}: локально правлен — оставлен")
+            warn(f"  {tgt_rel}: locally edited - left")
             continue
         print(f"  [{'dry-run' if dry else 'remove'}] {tgt_rel}")
         if not dry:
             tgt.unlink()
     if merge_kept:
-        warn("  хуки в settings.json остаются — удали вручную при необходимости: "
+        warn("  hooks in settings.json remain - delete manually if necessary: "
              + ", ".join(merge_kept))
     if dry:
-        print(f"  [dry-run] lock: запись '{pack}' была бы удалена")
+        print(f"  [dry-run] lock: entry '{pack}' would have been removed")
         return 0
     lock.get("packs", {}).pop(pack, None)
     if lock.get("packs"):
@@ -601,7 +601,7 @@ def do_remove(env, pack, target, *, dry):
         lp = lock_path(target)
         if lp.exists():
             lp.unlink()
-        print(f"  lock: {lp} удалён (пуст)")
+        print(f"  lock: {lp} deleted (empty)")
     return 0
 
 
@@ -632,15 +632,15 @@ def do_doctor_drift(target, *, strict=False):
     """Internal documentation."""
     drift = lock_drift(target)
     if not drift:
-        print("[OK] дрейф generated-файлов не найден")
+        print("[OK] drift generated-files not found")
         return 0
     for d in drift:
         if d["status"] == "modified":
-            warn(f"[{d['pack']}] generated-файл правлен локально: {d['target']} — "
-                 f"перенеси правку в override и восстанови render")
+            warn(f"[{d['pack']}] generated-file edited locally: {d['target']} — "
+                 f"move the edit to override and restore render")
         else:
-            warn(f"[{d['pack']}] generated-файл отсутствует: {d['target']} — "
-                 f"восстанови render (harness agent-packs render --pack {d['pack']} "
+            warn(f"[{d['pack']}] generated-file missing: {d['target']} — "
+                 f"restore render (harness agent-packs render --pack {d['pack']} "
                  f"--target .)")
     return 1 if strict else 0
 
@@ -655,7 +655,7 @@ def do_doctor(env, pack=None, target=None, json_out=False):
         ids = {e["id"] for e in manifest.get("interview", [])}
         for f in manifest.get("files", []):
             if not src_file(env, pk, f).exists() and not f.get("optional"):
-                problems.append(f"нет {f['src']}")
+                problems.append(f"no {f['src']}")
 
         for f in manifest.get("files", []):
             if f.get("kind", "template") != "template":
@@ -665,7 +665,7 @@ def do_doctor(env, pack=None, target=None, json_out=False):
                 continue
             for tok in set(_DOUBLE_RE.findall(sfile.read_text(encoding="utf-8"))):
                 if tok not in ids:
-                    problems.append(f"{f['src']}: {{{{{tok}}}}} нет в interview")
+                    problems.append(f"{f['src']}: {{{{{tok}}}}} not in interview")
 
         defaults = {e["id"]: e.get("default", "") for e in manifest.get("interview", [])}
         for f in manifest.get("files", []):
@@ -677,7 +677,7 @@ def do_doctor(env, pack=None, target=None, json_out=False):
             left = _DOUBLE_RE.findall(_render_template_text(
                 sfile.read_text(encoding="utf-8"), defaults))
             if left:
-                problems.append(f"{f['src']}: остаточные {{{{{','.join(sorted(set(left)))}}}}}")
+                problems.append(f"{f['src']}: residual {{{{{','.join(sorted(set(left)))}}}}}")
         if problems:
             rc = 1
         catalog.append({"pack": pk, "version": manifest["version"],
@@ -700,7 +700,7 @@ def do_doctor(env, pack=None, target=None, json_out=False):
             if not json_out:
                 print("[BAD] lock: schema != 1")
         elif installed and not json_out:
-            print(f"Установлено в {target.name}: {', '.join(sorted(installed))}")
+            print(f"Installed in {target.name}: {', '.join(sorted(installed))}")
 
 
         owners = {}
@@ -709,17 +709,17 @@ def do_doctor(env, pack=None, target=None, json_out=False):
                 owners.setdefault(f.get("target", ""), set()).add(name)
         shared = {tt: sorted(pp) for tt, pp in owners.items() if len(pp) > 1}
         if shared and not json_out:
-            warn(f"пересечение targets: {len(shared)} файл(ов) принадлежат 2+ пакам — "
-                 f"remove одного унесёт файлы другого (восстановление: "
-                 f"harness agent-packs upgrade --pack <второй> --target .)")
+            warn(f"intersection targets: {len(shared)} file(ov) belong to 2+ packam - "
+                 f"remove of one will take away the files of another (recovery: "
+                 f"harness agent-packs upgrade --pack <second> --target .)")
             for t in sorted(shared):
                 warn(f"  {t} ← {', '.join(shared[t])}")
 
 
         bak_files = sorted(f.name for f in (target / ".claude" / "agents").glob("*.bak"))
         if bak_files and not json_out:
-            warn(f".claude/agents: {len(bak_files)} .bak-файл(ов) — "
-                 f"проверь и удали лишнее ({', '.join(bak_files)})")
+            warn(f".claude/agents: {len(bak_files)} .bak-file(ov) — "
+                 f"check and remove unnecessary ({', '.join(bak_files)})")
     if json_out:
         print(json.dumps({"catalog": catalog, "installed": installed,
                           "shared_targets": shared, "rc": rc},
@@ -762,42 +762,42 @@ def cmd_agent_packs(env, argv):
     shell_policy = opts.get("allow_shell") or "safe"
     provider = opts.get("provider") or "claude-code"
     if provider not in ("claude-code", "codex", "cursor"):
-        die(f"--provider неизвестен: {provider} (claude-code|codex|cursor)")
+        die(f"--provider unknown: {provider} (claude-code|codex|cursor)")
 
     if provider == "codex":
         if sub not in ("render", "remove", "doctor"):
-            die(f"--provider codex не поддерживает подкоманду '{sub}' "
-                f"(render объединяет install/upgrade — декларативная пересборка, D89)")
+            die(f"--provider codex does not support the subcommand '{sub}' "
+                f"(render combines install/upgrade — declarative reassembly, D89)")
         if not opts.get("target"):
-            die(f"нужен --target DIR для {sub} --provider codex")
+            die(f"needed --target DIR for {sub} --provider codex")
         target = Path(os.path.expanduser(opts["target"])).resolve()
         if not target.is_dir():
-            die(f"target не каталог: {target}")
+            die(f"target not a directory: {target}")
         dry = bool(opts.get("dry_run"))
         if sub == "render":
             raise SystemExit(do_codex_role_render(env, target, pack=opts.get("pack"), dry=dry))
         if sub == "remove":
             if not opts.get("pack"):
-                die("нужен --pack P для remove --provider codex")
+                die("needed --pack P for remove --provider codex")
             raise SystemExit(do_codex_role_remove(env, target, opts["pack"], dry=dry))
         raise SystemExit(do_codex_role_doctor(env, target, json_out=bool(opts.get("json")),
                                               strict=bool(opts.get("strict"))))
 
     if provider == "cursor":
         if sub not in ("render", "remove", "doctor"):
-            die("--provider cursor не поддерживает подкоманду "
+            die("--provider cursor does not support the subcommand "
                 f"'{sub}' (consumer mapping only: render/remove/doctor)")
         if not opts.get("target"):
-            die(f"нужен --target DIR для {sub} --provider cursor")
+            die(f"needed --target DIR for {sub} --provider cursor")
         target = Path(os.path.expanduser(opts["target"])).resolve()
         if not target.is_dir():
-            die(f"target не каталог: {target}")
+            die(f"target not a directory: {target}")
         dry = bool(opts.get("dry_run"))
         if sub == "render":
             raise SystemExit(do_cursor_role_render(env, target, pack=opts.get("pack"), dry=dry))
         if sub == "remove":
             if not opts.get("pack"):
-                die("нужен --pack P для remove --provider cursor")
+                die("needed --pack P for remove --provider cursor")
             raise SystemExit(do_cursor_role_remove(env, target, opts["pack"], dry=dry))
         raise SystemExit(do_cursor_role_doctor(
             env, target, json_out=bool(opts.get("json")), strict=bool(opts.get("strict")),
@@ -814,16 +814,16 @@ def cmd_agent_packs(env, argv):
         target = Path(opts["target"]).resolve() if opts.get("target") else None
         if opts.get("drift"):
             if target is None:
-                die("--drift требует --target DIR")
+                die("--drift requires --target DIR")
             raise SystemExit(do_doctor_drift(target, strict=bool(opts.get("strict"))))
         raise SystemExit(do_doctor(env, opts.get("pack"), target, json_out=opts.get("json")))
 
     if sub in ("render", "install", "upgrade", "remove"):
         if not opts.get("pack") or not opts.get("target"):
-            die(f"нужны --pack P и --target DIR для {sub}")
+            die(f"needed --pack P and --target DIR for {sub}")
         target = Path(os.path.expanduser(opts["target"])).resolve()
         if not target.is_dir():
-            die(f"target не каталог: {target}")
+            die(f"target not a directory: {target}")
         pack = opts["pack"]
         dry = bool(opts.get("dry_run"))
         if sub == "upgrade":
@@ -836,7 +836,7 @@ def cmd_agent_packs(env, argv):
                                    install_only=bool(opts.get("install_only")),
                                    shell_policy=shell_policy))
 
-    die(f"неизвестная подкоманда agent-packs: {sub}")
+    die(f"unknown subcommand agent-packs: {sub}")
 
 
 # provider projection seam. The role catalog is the semantic source; the
@@ -893,7 +893,7 @@ _CLAUDE_TOKENS = {
     "agent-roster": "`.claude/agents/{{PACK_PREFIX}}-*.md` (Glob/Read)",
     "managed-role-override-pattern": "`.claude/rules/*-overrides.md`",
     "managed-role-override": "`.claude/rules/{{PACK_PREFIX}}-reviewer-overrides.md`",
-    "background-orchestration": "**фоновый** Workflow `{{PACK_PREFIX}}-dev-loop` (не пошагово\nв основном контексте)",
+    "background-orchestration": "**background** Workflow `{{PACK_PREFIX}}-dev-loop` (not step by step\nin the main context)",
     "tool-read": "Read", "tool-grep": "Grep", "tool-glob": "Glob",
     "tool-shell": "Bash", "tool-edit": "Edit", "tool-write": "Write",
     "model-economy": "Haiku", "model-implementation": "Sonnet", "model-frontier": "Opus",
@@ -1250,7 +1250,7 @@ def load_codex_roles_lock(target):
 def write_codex_roles_lock(target, lock, dry):
     lp = codex_roles_lock_path(target)
     if dry:
-        print(f"  [dry-run] обновил бы {lp}")
+        print(f"  [dry-run] would update {lp}")
         return
     lp.parent.mkdir(parents=True, exist_ok=True)
     from core import atomic_write_json
@@ -1305,12 +1305,12 @@ def do_codex_role_render(env, target, *, pack=None, dry=False):
         state = codex_role_state(target, projection)
         path = Path(target) / projection.target_path
         if state == "ownership-conflict":
-            warn(f"  {projection.target_path}: файл существует и не отслежен этим lock'ом — пропуск")
+            warn(f"  {projection.target_path}: file exists and is not tracked by this lock'ohm - skip")
             continue
         if state == "clean":
             continue
         if dry:
-            print(f"  [dry-run] {'создал' if state == 'missing' else 'обновил'} бы "
+            print(f"  [dry-run] {'created' if state == 'missing' else 'updated'} would "
                  f"{projection.target_path}")
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -1322,7 +1322,7 @@ def do_codex_role_render(env, target, *, pack=None, dry=False):
         changed = True
         print(f"  {'create' if state == 'missing' else 'repair'}: {projection.target_path}")
     for pack_id, role_id, reason in excluded:
-        print(f"  · {pack_id}.{role_id}: не проецируется на Codex — {reason}")
+        print(f"  · {pack_id}.{role_id}: does not map to Codex — {reason}")
     if changed:
         write_codex_roles_lock(target, lock, dry)
     return 0
@@ -1332,7 +1332,7 @@ def do_codex_role_remove(env, target, pack, *, dry=False):
     """Internal documentation."""
     pairs, _excluded = expected_codex_role_projections(env, target, pack=pack)
     if not pairs:
-        print(f"agent-pack '{pack}' не спроецирован на Codex в {target} — нечего удалять")
+        print(f"agent-pack '{pack}' is not mapped to Codex in {target} — nothing to delete")
         return 0
     lock = load_codex_roles_lock(target)
     roles_lock = lock.setdefault("roles", {})
@@ -1341,8 +1341,8 @@ def do_codex_role_remove(env, target, pack, *, dry=False):
         state = codex_role_state(target, projection)
         path = Path(target) / projection.target_path
         if state not in ("clean", "missing"):
-            warn(f"  {projection.target_path}: {state} — оставлен, remove сносит только "
-                 f"неправленные файлы")
+            warn(f"  {projection.target_path}: {state} — left, remove demolishes only "
+                 f"incorrect files")
             continue
         if state == "clean":
             print(f"  [{'dry-run' if dry else 'remove'}] {projection.target_path}")
@@ -1358,7 +1358,7 @@ def do_codex_role_remove(env, target, pack, *, dry=False):
         lp = codex_roles_lock_path(target)
         if lp.exists():
             lp.unlink()
-        print(f"  lock: {lp} удалён (пуст)")
+        print(f"  lock: {lp} deleted (empty)")
     return 0
 
 
@@ -1381,7 +1381,7 @@ def do_codex_role_doctor(env, target, *, json_out=False, strict=False):
         print(f"[{row['state']}] {row['pack_id']}.{row['role_id']} → {row['target']}")
     for pack_id, role_id, reason in excluded:
         print(f"  · {pack_id}.{role_id}: excluded — {reason}")
-    print("[OK] дрейф не найден" if not drift else f"[WARN] дрейф: {len(drift)} запис(ей)")
+    print("[OK] drift not found" if not drift else f"[WARN] drift: {len(drift)} entry(to her)")
     return 1 if drift and strict else 0
 
 
@@ -1423,7 +1423,7 @@ def do_cursor_role_render(env, target, *, pack=None, dry=False):
             missing += 1
         print(f"  [{state}] {role.pack_id}.{role.role_id} → {target_path}")
     if not rows:
-        print("  нет установленных паков с role-проекцией для Cursor")
+        print("  there are no installed packages with role-projection for Cursor")
     print(f"  projection owner: {mapping.projection_owner}; disconnect policy: {mapping.disconnect_policy}")
     return 0 if missing == 0 else 1
 
@@ -1434,9 +1434,9 @@ def do_cursor_role_remove(env, target, pack, *, dry=False):
     tag = " [dry-run]" if dry else ""
     print(f"=== agent-packs remove --provider cursor: {pack} ← {target} ==={tag}")
     if not rows:
-        print("  нечего удалять: consumer mapping не владеет role-файлами")
+        print("  nothing to delete: consumer mapping does not own role-files")
         return 0
-    print("  shared .claude/agents projection остаётся без изменений (projection_owner=claude-code)")
+    print("  shared .claude/agents projection remains unchanged (projection_owner=claude-code)")
     for role, target_path in rows:
         print(f"  [preserve] {role.pack_id}.{role.role_id} → {target_path}")
     return 0
@@ -1464,6 +1464,6 @@ def do_cursor_role_doctor(env, target, *, json_out=False, strict=False, pack=Non
     for row in report:
         print(f"[{row['state']}] {row['pack_id']}.{row['role_id']} → {row['target']}")
     if not report:
-        print("нет установленных role-проекций для Cursor consumer mapping")
+        print("not installed role-projections for Cursor consumer mapping")
     print(f"[OK] projection owner: {mapping.projection_owner}; disconnect: {mapping.disconnect_policy}")
     return 1 if missing and strict else 0

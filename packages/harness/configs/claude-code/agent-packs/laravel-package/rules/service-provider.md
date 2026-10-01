@@ -3,15 +3,15 @@ paths:
   - "**/*ServiceProvider.php"
 ---
 
-ServiceProvider пакета (глубина — скилл `php-packages:laravel-package-service-provider`).
-Risk-слой: **все потребители сразу** — провайдер исполняется у каждого на каждый запрос.
+ServiceProvider package (depth - skill `php-packages:laravel-package-service-provider`).
+Risk-layer: **all consumers at once** — provider is executed for everyone for every request.
 
-- `register()` — только дешёвые bindings (`bind`/`singleton`/`scoped`) и `mergeConfigFrom`.
-  НИКАКОГО I/O (БД/HTTP/файловая система): контейнер ещё не готов, цена платится на
-  каждый запрос каждого потребителя.
+- `register()` — only cheap bindings (`bind`/`singleton`/`scoped`) and `mergeConfigFrom`.
+  NO I/O (DB/HTTP/file system): container is not ready yet, the price is paid for
+  every request of every consumer.
 - `boot()` — `publishes`, `loadRoutesFrom`/`loadMigrationsFrom`/`loadViewsFrom`/
   `loadTranslationsFrom`, `Gate::`/`Event::listen`.
-- Конфиг — `mergeConfigFrom` (не подмена целиком): частично опубликованный конфиг
-  потребителя не должен терять дефолты пакета.
-- Publish-tag существующих ресурсов не переименовывать — сломает
-  `vendor:publish --tag=...` у потребителей.
+- Config - `mergeConfigFrom` (not a complete replacement): partially published config
+  consumer should not lose package defaults.
+- Publish-tag do not rename existing resources - it will break
+  `vendor:publish --tag=...` from consumers.

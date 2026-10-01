@@ -1,18 +1,18 @@
 # Source: anonymized production project
 """
-Валидация инвариантов параметров детали БЕЗ запуска Blender.
+Validation of part parameter invariants WITHOUT running Blender.
 
-Запуск:
-    python models/part/check.py        # обычный Python, без bpy
+Launch:
+    python models/part/check.py        # normal Python, without bpy
 
-Каждая проверка печатает [ OK ] или [ FAIL ]. При добавлении нового параметра
-в config.py — добавляй сюда соответствующий инвариант. Ненулевой exit при FAIL.
+Each check prints [ OK ] or [ FAIL ]. When adding a new parameter
+in config.py — add the appropriate invariant here. Non-zero exit when FAIL.
 """
 
 import os
 import sys
 
-# Корень проекта в путь, чтобы импорт работал без установки пакета.
+# Project root in the path so that the import works without installing the package.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from models.part.config import (  # noqa: E402
@@ -25,9 +25,9 @@ from models.part.config import (  # noqa: E402
 
 _failures: list[str] = []
 
-# Минимальная печатаемая толщина стенки под FDM/SLA, мм.
+# Minimum printable wall thickness under FDM/SLA, mm.
 MIN_WALL = 0.8
-# Допуск стыковки радиусов соседних сегментов, мм (float не сравниваем точно).
+# Tolerance for joining radii of adjacent segments, mm (float not comparable exactly).
 TOL = 0.5
 
 
@@ -44,95 +44,95 @@ def check(condition: bool, msg_ok: str, msg_fail: str) -> None:
     ok(msg_ok) if condition else fail(msg_fail)
 
 
-# ── Высоты и единицы ─────────────────────────────────────────────────────────
-print("\n── Высоты ───────────────────────────────────────────────────────────────")
+# ── Heights and units ─────────────────────────────────────────────────────────
+print("\n── Heights ───────────────────────────────────────────────────────────────")
 
 check(
     sh.height > 0,
-    f"Высота сегмента положительна: {sh.height:.1f} мм",
-    f"Высота сегмента ≤ 0: {sh.height:.1f} мм",
+    f"Segment height is positive: {sh.height:.1f} mm",
+    f"Segment height ≤ 0: {sh.height:.1f} mm",
 )
 check(
     sh.height < m.height,
-    f"Сегмент ниже модели: {sh.height:.1f} < {m.height:.1f} мм",
-    f"Сегмент не ниже модели: {sh.height:.1f} ≥ {m.height:.1f} мм",
+    f"Segment below the model: {sh.height:.1f} < {m.height:.1f} mm",
+    f"Segment not lower than model: {sh.height:.1f} ≥ {m.height:.1f} mm",
 )
 check(
     abs(sh.profile_knots[-1][0] - sh.height) < TOL,
-    f"Последний узел профиля z ≈ height ({sh.height:.1f} мм)",
-    f"Последний узел z={sh.profile_knots[-1][0]} ≠ height={sh.height}",
+    f"Last profile node z ≈ height ({sh.height:.1f} mm)",
+    f"Last node z={sh.profile_knots[-1][0]} ≠ height={sh.height}",
 )
 
-# ── Стыковка радиусов (float — по допуску, не точно) ─────────────────────────
-print("\n── Стыковка радиусов ────────────────────────────────────────────────────")
+# ── Joining radii (float — according to tolerance, not exactly) ─────────────────────────
+print("\n── Joining radii ────────────────────────────────────────────────────")
 
 r_knot_bottom = sh.profile_knots[0][1]
 r_knot_top = sh.profile_knots[-1][1]
 check(
     abs(r_knot_bottom - sh.radius_bottom) <= TOL,
-    f"Нижний узел r={r_knot_bottom} совпадает с radius_bottom={sh.radius_bottom} (±{TOL})",
-    f"Нижний узел r={r_knot_bottom} ≠ radius_bottom={sh.radius_bottom} (допуск {TOL} мм)",
+    f"Bottom node r={r_knot_bottom} matches radius_bottom={sh.radius_bottom} (±{TOL})",
+    f"Bottom node r={r_knot_bottom} ≠ radius_bottom={sh.radius_bottom} (tolerance {TOL} mm)",
 )
 check(
     abs(r_knot_top - sh.radius_top) <= TOL,
-    f"Верхний узел r={r_knot_top} совпадает с radius_top={sh.radius_top} (±{TOL})",
-    f"Верхний узел r={r_knot_top} ≠ radius_top={sh.radius_top} (допуск {TOL} мм)",
+    f"Top node r={r_knot_top} matches radius_top={sh.radius_top} (±{TOL})",
+    f"Top node r={r_knot_top} ≠ radius_top={sh.radius_top} (tolerance {TOL} mm)",
 )
 
-# ── Толщина стенки (печать FDM/SLA) ──────────────────────────────────────────
-print("\n── Толщина стенки ───────────────────────────────────────────────────────")
+# ── Wall thickness (print FDM/SLA) ──────────────────────────────────────────
+print("\n── Wall thickness ───────────────────────────────────────────────────────")
 
 check(
     m.wall >= MIN_WALL,
-    f"Стенка wall={m.wall} ≥ MIN_WALL={MIN_WALL} мм: печатаема",
-    f"Стенка wall={m.wall} < MIN_WALL={MIN_WALL} мм: слишком тонкая для печати",
+    f"Wall wall={m.wall} ≥ MIN_WALL={MIN_WALL} mm: printable",
+    f"Wall wall={m.wall} < MIN_WALL={MIN_WALL} mm: too thin to print",
 )
 check(
     jt.wall >= MIN_WALL,
-    f"Стенка посадки joint.wall={jt.wall} ≥ {MIN_WALL} мм",
-    f"Стенка посадки joint.wall={jt.wall} < {MIN_WALL} мм: слишком тонкая",
+    f"Landing wall joint.wall={jt.wall} ≥ {MIN_WALL} mm",
+    f"Landing wall joint.wall={jt.wall} < {MIN_WALL} mm: too thin",
 )
 
-# ── Посадка (joint) ──────────────────────────────────────────────────────────
-print("\n── Посадка ──────────────────────────────────────────────────────────────")
+# ── Landing (joint) ──────────────────────────────────────────────────────────
+print("\n── Landing ──────────────────────────────────────────────────────────────")
 
 r_seat = jt.seat_inner_diameter * 0.5
 r_joint_outer = joint_outer_radius(jt)
 check(
     r_joint_outer > r_seat,
-    f"Папа r_outer={r_joint_outer:.2f} > r_seat={r_seat:.2f}: стенка посадки есть",
-    f"Папа r_outer={r_joint_outer:.2f} ≤ r_seat={r_seat:.2f}: нулевая стенка",
+    f"Dad r_outer={r_joint_outer:.2f} > r_seat={r_seat:.2f}: there is a landing wall",
+    f"Dad r_outer={r_joint_outer:.2f} ≤ r_seat={r_seat:.2f}: zero wall",
 )
 check(
     jt.clearance > 0,
-    f"clearance={jt.clearance} мм > 0: посадка собирается с зазором",
-    f"clearance={jt.clearance} мм ≤ 0: папа не войдёт в маму",
+    f"clearance={jt.clearance} mm > 0: landing is assembled with a gap",
+    f"clearance={jt.clearance} mm ≤ 0: dad won't enter mom",
 )
 check(
     jt.depth <= sh.height,
-    f"Глубина посадки depth={jt.depth} ≤ высота сегмента {sh.height} мм",
-    f"depth={jt.depth} > height={sh.height}: посадка выходит за деталь",
+    f"Planting depth depth={jt.depth} ≤ segment height {sh.height} mm",
+    f"depth={jt.depth} > height={sh.height}: fit extends beyond the part",
 )
 
-# ── Резьба (зазор vs профиль; параметры — навык blender-modeling/threading) ───────────
-print("\n── Резьба ───────────────────────────────────────────────────────────────")
+# ── Thread (gap vs profile; parameters - skill blender-modeling/threading) ───────────
+print("\n── Thread ───────────────────────────────────────────────────────────────")
 
 check(
     th.depth > th.clearance,
-    f"thread depth={th.depth} > clearance={th.clearance}: зубец выступает над зазором",
-    f"thread depth={th.depth} ≤ clearance={th.clearance}: зубец полностью в зазоре",
+    f"thread depth={th.depth} > clearance={th.clearance}: tooth protrudes above gap",
+    f"thread depth={th.depth} ≤ clearance={th.clearance}: tooth completely in gap",
 )
 check(
     th.pitch > 0 and th.turns >= 1,
-    f"Резьба корректна: pitch={th.pitch} мм, turns={th.turns}",
-    f"Некорректная резьба: pitch={th.pitch}, turns={th.turns}",
+    f"The thread is correct: pitch={th.pitch} mm, turns={th.turns}",
+    f"Incorrect thread: pitch={th.pitch}, turns={th.turns}",
 )
 
-# ── Итог ─────────────────────────────────────────────────────────────────────
-print("\n── Итог ─────────────────────────────────────────────────────────────────")
+# ── Summary ─────────────────────────────────────────────────────────────────────
+print("\n── Summary ─────────────────────────────────────────────────────────────────")
 if _failures:
-    print(f"\n  {len(_failures)} ошибок:\n")
+    print(f"\n  {len(_failures)} errors:\n")
     for f_ in _failures:
         print(f"    • {f_}")
     sys.exit(1)
-print("\n  Все проверки пройдены.\n")
+print("\n  All checks passed.\n")

@@ -1,6 +1,6 @@
 {
   "name": "laravel-livewire-stack",
-  "description": "Livewire-стек: ядро + Livewire-атрибуты + DTO/realtime",
+  "description": "Livewire-stack: kernel + Livewire-attributes + DTO/realtime",
   "buckets": [
     "php",
     "laravel-livewire",

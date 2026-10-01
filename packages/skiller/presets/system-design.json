@@ -1,6 +1,6 @@
 {
   "name": "system-design",
-  "description": "Системный дизайн: архитектура/ADR, выбор стека, observability, гейт вклада в пакеты",
+  "description": "System Design: Architecture/ADR, stack selection, observability, packet contribution gate",
   "include": [
     "architect/architecture",
     "architect/tech-stack-selection",

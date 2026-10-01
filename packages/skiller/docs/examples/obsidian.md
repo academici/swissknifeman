@@ -1,52 +1,52 @@
 # Obsidian vault
 
-Сценарий: AI-агент для работы с базой знаний — заметки, ТЗ, документация,
-анализ идей.
+Script: AI-agent for working with the knowledge base - notes, technical specifications, documentation,
+analysis of ideas.
 
-## Установка
+## Installation
 
 ```bash
 cd ~/vaults/brain && skiller vendor
 ```
 
-Автодетект видит `.obsidian/` → профиль `obsidian-vault` → bucket-ы
+Autodetect sees `.obsidian/` → profile `obsidian-vault` → bucket-s
 **architect, pm, founder, operator, roles, imported**:
 
-- `pm` — BRD, PRD, roadmap, монетизация: полный цикл проработки ТЗ;
-- `founder` — идеи, анализ конкурентов, питчи;
-- `architect` — когда заметка перерастает в архитектуру;
-- `imported` — research- и knowledge-super-skills;
-- `roles` — персоны для смены оптики (startup-cto, tech-lead).
+- `pm` — BRD, PRD, roadmap, monetization: full cycle of development of technical specifications;
+- `founder` — ideas, competitor analysis, pitches;
+- `architect` — when a note develops into architecture;
+- `imported` — research- and knowledge-super-skills;
+- `roles` — persons to change optics (startup-cto, tech-lead).
 
 ## Permissions
 
-Для vault-а достаточно `base` — кодовых стеков тут нет:
+For vault-but enough `base` — there are no code stacks here:
 
 ```bash
 ~/projects/packages/swissknifeman/packages/skiller/scripts/apply-permissions.sh --target ~/vaults/brain
 ```
 
-Автодетект не найдёт маркеров стека и применит только `base`: git, файловые
-операции, curl — без промптов; секреты — под запретом.
+Autodetect will not find stack markers and will only apply `base`: git, file
+operations, curl — without prompts; secrets are prohibited.
 
-## Связка с реестром
+## Link to the registry
 
-Отдельного зеркалирования реестра в vault больше нет: vault — обычный
-проект-потребитель. Скиллы ставятся один раз через `skiller vendor`,
-а дальше обновляются командой:
+Separate registry mirroring in vault no longer exists: vault — normal
+consumer project. Skills are installed once every `skiller vendor`,
+and then updated with the command:
 
 ```bash
 cd ~/vaults/brain && skiller update
 ```
 
-Так база знаний всегда видит актуальный каталог скиллов — полезно, когда
-заметки ссылаются на скиллы или агент в vault-е подбирает скилл под задачу.
+This way the knowledge base always sees the current catalog of skills - useful when
+notes refer to skills or agent in vault-does not match the skill to the task.
 
-## Типовой workflow
+## Typical workflow
 
-1. Идея фиксируется заметкой → скилл `founder/idea-analysis` раскладывает её
-   по структуре;
-2. идея зреет → `pm/brd`, затем `pm/prd-from-brd` превращают её в ТЗ;
-3. ТЗ готово → `architect/*` проектирует решение;
-4. проект стартует → [Laravel-сценарий](./laravel) разворачивает
-   рабочее окружение.
+1. The idea is recorded with a note → skill `founder/idea-analysis` unfolds it
+   by structure;
+2. the idea is maturing → `pm/brd`, then `pm/prd-from-brd` turn it into TK;
+3. Technical specification ready → `architect/*` designs the solution;
+4. project starts → [Laravel-script](./laravel) expands
+   working environment.

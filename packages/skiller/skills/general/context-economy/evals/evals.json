@@ -3,15 +3,15 @@
   "cases": [
     {
       "id": 1,
-      "prompt": "Реальный пользовательский запрос на языке экосистемы (конкретика: пути, имена). Замени на свой.",
+      "prompt": "Real user request in ecosystem language (specifics: paths, names). Replace with yours.",
       "assertions": [
         {
           "type": "contains",
-          "value": "ожидаемая-подстрока"
+          "value": "expected-substring"
         },
         {
           "type": "not_contains",
-          "value": "запрещённая-подстрока"
+          "value": "forbidden-substring"
         }
       ]
     }

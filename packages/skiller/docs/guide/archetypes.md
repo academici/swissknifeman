@@ -1,58 +1,58 @@
-# Архетипы проектов: рецепты и неочевидные развилки
+# Project archetypes: recipes and non-obvious forks
 
-Карта типовых проектов экосистемы: что детектится, какой набор раздаётся (`profiles/<type>.json`)
-и какие **неочевидные вопросы** решаются при онбординге. Цель — чтобы агент, получив проект, не
-гадал «что подключить». Полное дерево настройки — [onboarding-decision-tree](/maind/guide/onboarding-decision-tree);
-выбор канала скиллов (connect/vendor) — всегда **спрашивай у пользователя** (см. project-tooling-runbook).
+Map of typical ecosystem projects: what is detected, what set is distributed (`profiles/<type>.json`)
+and which **non-obvious questions** are resolved during onboarding. The goal is that the agent, having received the project, does not
+wondered «what to connect». Full configuration tree - [onboarding-decision-tree](/maind/guide/onboarding-decision-tree);
+skill channel selection (connect/vendor) — always **ask the user** (see project-tooling-runbook).
 
-> Источник истины рецептов — `packages/skiller/profiles/*.json` (детект — `core/project.py`).
-> Таблица ниже должна с ними совпадать; при расхождении правь профиль, не таблицу.
+> Source of Recipe Truth - `packages/skiller/profiles/*.json` (detect — `core/project.py`).
+> The table below should match them; If there is a discrepancy, edit the profile, not the table.
 
-## Сквозные неочевидные развилки (для любого архетипа)
+## Through non-obvious forks (for any archetype)
 
-| Развилка | По умолчанию | Когда менять |
+| Fork | Default | When to change |
 |:--|:--|:--|
-| **Канал скиллов** | спросить | `connect` (плагины, не в репо, нужен доступ к реестру) vs `vendor`/`sync` (физ.копии в репо — для внешних разработчиков). НЕ дефолт — выбор пользователя |
-| **CORE-раздача** | вкл (`--no-core` отключает) | connect → курируемый плагин `core` (РОВНО `CORE_SKILLS`, лёгкая замена бакетам general+oss-dev; актуальный резидент — `skiller budget --check-core`, не хардкодить снапшот); vendor → те же `CORE_SKILLS` (`context-economy`/`anti-drift`/`compact-responses`/`session-handoff`/`mcp-advisor`/`verify-claims`/`query-craft`/`gh-review`) пофайлово |
-| **Память** | `maind` | `maind` (хаб, общая) / `native` (agentmemory локально) / `off`. См. ecosystem-integration |
-| **namespace** | пусто → `default` | задать группы (`["axioma", …]`) для межпроектных связей; `["*"]` — общая инфраструктура |
-| **Код-граф (Serena)** | по типу (язык есть) | `--with-code` поднимает per-project `serena` через `uvx`; не для vault/standalone |
-| **Нераспознан** | МИНИМАЛЬНЫЙ набор (general+oss-dev), НЕ «всё» | укажи профиль явно или `--profile standalone` («поставь всё») |
+| **Skill channel** | ask | `connect` (plugins, not in repo, need registry access) vs `vendor`/`sync` (physical copies in the repo - for external developers). NOT default - user choice |
+| **CORE-distribution** | on (`--no-core` disables) | connect → curated plugin `core` (EXACTLY `CORE_SKILLS`, easy replacement for buckets general+oss-dev; current resident - `skiller budget --check-core`, don't hardcode snapshot); vendor → the same `CORE_SKILLS` (`context-economy`/`anti-drift`/`compact-responses`/`session-handoff`/`mcp-advisor`/`verify-claims`/`query-craft`/`gh-review`) file by file |
+| **Memory** | `maind` | `maind` (hub, general) / `native` (agentmemory locally) / `off`. See ecosystem-integration |
+| **namespace** | empty → `default` | set groups (`["axioma", …]`) for cross-project communications; `["*"]` — general infrastructure |
+| **Code graph (Serena)** | by type (language available) | `--with-code` raises per-project `serena` via `uvx`; not for vault/standalone |
+| **Unrecognized** | MINIMUM set (general+oss-dev), NOT «all» | specify the profile explicitly or `--profile standalone` («put everything») |
 
-## Рецепты по типу
+## Recipes by Type
 
-| Тип | Детект (`core/project.py`) | Бакеты | MCP | harness-пресеты | agent-pack |
+| Type | Detect (`core/project.py`) | Buckets | MCP | harness-presets | agent-pack |
 |:--|:--|:--|:--|:--|:--|
 | **laravel-project** | `composer.json` + `artisan` | system, architect, php, laravel-{testing,auth,data-layer}, devops, quality, operator | context7 | base, laravel | backend-laravel |
-| **php-package** | `composer.json` (без artisan) | system, oss-dev, php, php-packages, laravel-testing, quality, devops | — | — | — |
-| **node-frontend** | `package.json` + UI-фреймворк/сборщик | system, architect, frontend, frontend-{vue,vite,linting,tailwind}, quality, devops | context7, playwright | base, node | node-frontend |
-| **node-package** | `package.json` (без UI) | system, oss-dev, quality, devops | context7 | base, node | — |
+| **php-package** | `composer.json` (without artisan) | system, oss-dev, php, php-packages, laravel-testing, quality, devops | — | — | — |
+| **node-frontend** | `package.json` + UI-framework/collector | system, architect, frontend, frontend-{vue,vite,linting,tailwind}, quality, devops | context7, playwright | base, node | node-frontend |
+| **node-package** | `package.json` (without UI) | system, oss-dev, quality, devops | context7 | base, node | — |
 | **python-backend** | `pyproject.toml`/`requirements.txt`/`setup.py` | system, architect, python, devops, quality, operator | context7 | base, python | python-backend |
 | **blender** | `*.blend` / `blender_manifest.toml` / `import bpy` | blender, blender-modeling, python, quality | context7 | base, python | — |
 | **dart-flutter** | `pubspec.yaml` | system, architect, mobile, quality | context7 | base | dart-flutter |
 | **obsidian-vault** | `.obsidian/` | system, architect, pm, founder, operator, roles, finance, legal, marketing, sales, research, creative | — | — | — |
-| **standalone** | дефолт (ничего не совпало явно) | `*` (все — только по явному `--profile standalone`) | — | — | — |
+| **standalone** | default (nothing matched clearly) | `*` (all - only by explicit `--profile standalone`) | — | — | — |
 
-## Неочевидные вопросы по конкретным архетипам
+## Non-obvious questions about specific archetypes
 
-- **node-frontend → какой фронт-стек?** Профиль раздаёт **Vue-SPA** набор (`frontend-vue`/`vite`).
-  Для **Nuxt** добавь `frontend-nuxt` (бакет есть, но в профиль не входит — иначе бы тянулся всем
-  Vue-проектам); для React/Svelte профиля пока нет — задай бакеты явно. `playwright` MCP включён
-  (e2e), `figma` MCP — подключается вручную (нет в каталоге `harness mcp`).
-- **blender → addon или моделинг?** `blender` (общее) + `blender-modeling` (параметрика). Код-граф
-  Serena — `python`. Среда Blender нестандартна (встроенный python); пресет `python` — отправная
-  точка, проверь интерпретатор.
-- **obsidian-vault → не dev-проект.** Раздаются роль/доменные бакеты (pm/founder/research/…), НЕ
-  dev-стек; код-граф/Serena и dev-пресеты НЕ нужны; память полезна (knowledge base).
-- **php-package vs laravel-project.** Пакет (без `artisan`) — `oss-dev`+`php-packages` (разработка
-  пакета, релизы), без laravel-app-бакетов. Приложение — полный laravel-стек.
-- **standalone (нераспознан).** НЕ «дамп всего»: авто-фолбэк ставит ядро (general+oss-dev). «Всё» —
-  только осознанно через `--profile standalone`.
+- **node-frontend → what front stack?** Profile distributes **Vue-SPA** set (`frontend-vue`/`vite`).
+  For **Nuxt** add `frontend-nuxt` (there is a bucket, but it’s not included in the profile - otherwise it would be reaching out to everyone
+  Vue-projects); for React/Svelte there is no profile yet - set the buckets explicitly. `playwright` MCP enabled
+  (e2e), `figma` MCP — connected manually (not in the catalog `harness mcp`).
+- **blender → addon or modeling?** `blender` (general) + `blender-modeling` (parametrics). Code graph
+  Serena — `python`. Wednesday Blender non-standard (built-in python); preset `python` — starting
+  period, check the interpreter.
+- **obsidian-vault → not dev-project.** Roles are distributed/domain buckets (pm/founder/research/…), NOT
+  dev-stack; code-graph/Serena and dev-presets are NOT needed; memory is useful (knowledge base).
+- **php-package vs laravel-project.** Package (without `artisan`) — `oss-dev`+`php-packages` (development
+  package, releases), without laravel-app-buckets. Application - complete laravel-stack.
+- **standalone (unrecognized).** NOT «dump of everything»: auto-fallback puts the core (general+oss-dev). «All» —
+  only consciously through `--profile standalone`.
 
-## Сценарные кейсы (тексто-тесты)
+## Scenario cases (text tests)
 
-Поведение скиллов под типовые задачи проверяется **eval-харнесом** (`skiller eval <bucket>/<name>`):
-`evals/evals.json` (типовые задачи + детерминированные ассершены), `pressure.json` (соблазны
-пропустить скилл), `triggers.json` (точность срабатывания `description`). Это «мысленный прогон»
-типовых задач в дополнение к структурной валидации — заводи `evals/` приоритетным скиллам архетипа
-(`skiller eval <skill> --scaffold`). Канон — [evals.md](./evals.md).
+The behavior of skills for typical tasks is checked **eval-harnes** (`skiller eval <bucket>/<name>`):
+`evals/evals.json` (typical tasks + deterministic assertions), `pressure.json` (temptations
+skip skill), `triggers.json` (response accuracy `description`). This «mental run»
+typical tasks in addition to structural validation - backwater `evals/` priority skills of the archetype
+(`skiller eval <skill> --scaffold`). Canon - [evals.md](./evals.md).

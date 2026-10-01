@@ -1,25 +1,25 @@
 # VoltAgent/awesome-agent-skills
 
 - **URL:** https://github.com/VoltAgent/awesome-agent-skills
-- **Статус:** planned
-- **Проверено:** 2026-06-11
+- **Status:** planned
+- **Checked:** 2026-06-11
 
-Курируемая коллекция официальных скиллов от Anthropic, Google, Vercel, Stripe,
-Cloudflare, Sentry и др. Кросс-агентная совместимость (Claude Code, Cursor,
-Gemini CLI, Copilot). Активно поддерживается.
+A curated collection of official skills from Anthropic, Google, Vercel, Stripe,
+Cloudflare, Sentry etc. Cross-agent compatibility (Claude Code, Cursor,
+Gemini CLI, Copilot). Actively supported.
 
-## Брать выборочно
+## Take selectively
 
-- Паттерн триггерных фраз в description (`Use when asked to "add Sentry"...`) —
-  улучшить descriptions наших скиллов
-- Отдельные официальные вендорские скиллы, только если реально используем
-  сервис (например, Sentry)
+- Trigger phrase pattern in description (`Use when asked to "add Sentry"...`) —
+  improve descriptions of our skills
+- Separate official vendor skills, only if we actually use them
+  service (for example, Sentry)
 
-## Не брать
+## Do not take
 
-- Массовый импорт коллекции — 90% сервисов не используется
-- Структуру official/community группировки — у нас bucket-ы по доменам
+- Bulk collection import - 90% services not used
+- Structure official/community groups - we have bucket-s by domain
 
-## Целевые bucket-ы
+## Targets bucket-s
 
-`php/`, `devops/` (точечно), стиль descriptions — везде.
+`php/`, `devops/` (dotted), style descriptions — everywhere.

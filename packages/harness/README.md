@@ -1,61 +1,61 @@
 # harness
 
-**Настройка окружения Claude Code** для проектов экосистемы academici: пресеты
-permissions, режимы auto-approve/bypass, MCP-серверы и хуки (memory/notify/log).
-Один из пакетов зонтика [`swissknifeman`](../../README.md) (рядом — `skiller`
-для скиллов и `maind` для памяти/графа).
+**Setting up the environment Claude Code** for ecosystem projects academici: presets
+permissions, modes auto-approve/bypass, MCP-servers and hooks (memory/notify/log).
+One of the umbrella packages [`swissknifeman`](../../README.md) (nearby - `skiller`
+for skills and `maind` for memory/column).
 
-Раньше этот функционал жил внутри `skiller`; вынесен в отдельный пакет, потому что
-к управлению скиллами он не относится — это про харнес Claude Code.
+Previously, this functionality lived inside `skiller`; is placed in a separate package because
+it doesn’t relate to skill management - it’s about harnes Claude Code.
 
-## Установка
+## Installation
 
 ```bash
-./install.sh                 # симлинк harness в ~/.local/bin (пакет stateless)
-# или из корня монорепо: ./install.sh  (ставит skiller · maind · harness)
+./install.sh                 # symlink harness in ~/.local/bin (package stateless)
+# or from the monorepo root: ./install.sh  (puts skiller · maind · harness)
 ```
 
-## Использование
+## Usage
 
 ```bash
-# permissions: автодетект стека (base + laravel/php/node/python/docker)
-harness permissions --target .                 # или --preset base,laravel
-harness permissions --list                     # доступные пресеты
+# permissions: stack autodetect (base + laravel/php/node/python/docker)
+harness permissions --target .                 # or --preset base,laravel
+harness permissions --list                     # available presets
 harness permissions --target . --dry-run
 
-# MCP-серверы → .mcp.json (merge-only)
+# MCP-servers → .mcp.json (merge-only)
 harness mcp --list
 harness mcp --target . --mcp context7,playwright
 
-# хуки
-harness hooks --global                         # файлы хуков в ~/.claude/hooks (раз на машину)
-harness hooks --target . --auto-approve strict # включить авто-апрув по проекту
+# hooks
+harness hooks --global                         # hook files in ~/.claude/hooks (times per car)
+harness hooks --target . --auto-approve strict # enable auto-approve for the project
 harness hooks --target . --memory core:federation
 
-harness doctor                                 # диагностика
+harness doctor                                 # diagnostics
 ```
 
-Запись в проекты — **merge-only**: существующие правила/серверы сохраняются, файл
-бэкапится в `*.bak`.
+Writing to projects - **merge-only**: existing rules/servers are saved, file
+is backed up to `*.bak`.
 
-## Пресеты
+## Presets
 
-Источник истины — `configs/claude-code/`:
+Source of truth - `configs/claude-code/`:
 
-| Что | Где |
+| What | Where |
 |:--|:--|
-| permissions по стекам | `settings.{base,laravel,php-package,node,python,docker}.json` |
-| глобальный baseline / bypass / строгий | `settings.{global,yolo,product-boundary}.json` |
-| MCP-серверы | `mcp/{context7,playwright,filesystem,fetch,memory,github,sequential-thinking}.json` |
-| хуки | `hooks/{auto-approve,memory,notify}/`, `hooks/log-bash-command.sh` |
+| permissions by stacks | `settings.{base,laravel,php-package,node,python,docker}.json` |
+| global baseline / bypass / strict | `settings.{global,yolo,product-boundary}.json` |
+| MCP-servers | `mcp/{context7,playwright,filesystem,fetch,memory,github,sequential-thinking}.json` |
+| hooks | `hooks/{auto-approve,memory,notify}/`, `hooks/log-bash-command.sh` |
 
-Подробности по auto-approve и единой памяти — `configs/claude-code/README.md`.
+Details on auto-approve and unified memory - `configs/claude-code/README.md`.
 
-## Разработка
+## Development
 
 ```bash
-bash scripts/validate.sh     # py_compile + bash -n + JSON + frontmatter + тесты
+bash scripts/validate.sh     # py_compile + bash -n + JSON + frontmatter + tests
 bash scripts/test.sh         # unittest
 ```
 
-Гид для агентов — [CLAUDE.md](CLAUDE.md).
+Agent Guide - [CLAUDE.md](CLAUDE.md).

@@ -1,4 +1,4 @@
-"""Тесты config.py: валидация схемы, дефолты, приоритет, brain-маппинг."""
+"""Tests config.py: schema validation, defaults, priority, brain-mapping."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -22,19 +22,19 @@ class TestValidate(unittest.TestCase):
                          "graph": {"adapter": "federation"}}, "x")
 
     def test_legacy_adapter_accepted_with_warning(self):
-        # memory/graphify/networkx устарели → принимаются (нормализуются в federation),
-        # не падают
+        # memory/graphify/networkx are deprecated → accepted (are normalized to federation),
+        # do not fall
         validate_config({"graph": {"adapter": "memory"}}, "x")
         self.assertEqual(merge_defaults({"graph": {"adapter": "memory"}})["graph"]["adapter"],
                          "federation")
 
     def test_unknown_top_key_dies(self):
         with self.assertRaises(SystemExit):
-            validate_config({"grph": {}}, "x")  # опечатка
+            validate_config({"grph": {}}, "x")  # typo
 
     def test_wrong_type_dies(self):
         with self.assertRaises(SystemExit):
-            validate_config({"projects": {}}, "x")  # должно быть списком
+            validate_config({"projects": {}}, "x")  # must be a list
 
     def test_bad_adapter_enum_dies(self):
         with self.assertRaises(SystemExit):
@@ -68,7 +68,7 @@ class TestValidate(unittest.TestCase):
         validate_config({"memory": {"role": "client", "url": "http://192.168.1.5:4111"}}, "x")
 
     def test_memory_role_host_needs_no_url(self):
-        validate_config({"memory": {"role": "host"}}, "x")   # host не обязан задавать url
+        validate_config({"memory": {"role": "host"}}, "x")   # host does not have to be specified url
 
 
 class TestDefaults(unittest.TestCase):
@@ -87,7 +87,7 @@ class TestDefaults(unittest.TestCase):
         self.assertEqual(src, {"memory": {"http_port": 9}})
 
     def test_digest_defaults(self):
-        # P1.1 (D10): дайджест project-only по умолчанию — shared_max=0
+        # P1.1 (D10): digest project-only default - shared_max=0
         m = merge_defaults({})
         self.assertEqual(m["memory"]["digest"]["budget_chars"], 4000)
         self.assertEqual(m["memory"]["digest"]["item_max_chars"], 500)
@@ -96,11 +96,11 @@ class TestDefaults(unittest.TestCase):
     def test_digest_overrides_preserved(self):
         m = merge_defaults({"memory": {"digest": {"shared_max": 3}}})
         self.assertEqual(m["memory"]["digest"]["shared_max"], 3)
-        self.assertEqual(m["memory"]["digest"]["budget_chars"], 4000)  # остальные — дефолт
+        self.assertEqual(m["memory"]["digest"]["budget_chars"], 4000)  # others - default
 
     def test_memory_role_defaults_to_standalone(self):
-        # back-compat (D80/P4.2): конфиг без memory.role — существующие 17 узлов не
-        # меняют поведение после апгрейда.
+        # back-compat (D80/P4.2): config without memory.role — existing 17 nodes not
+        # change behavior after upgrade.
         m = merge_defaults({})
         self.assertEqual(m["memory"]["role"], "standalone")
 
@@ -109,7 +109,7 @@ class TestDefaults(unittest.TestCase):
         self.assertEqual(m["memory"]["role"], "host")
 
     def test_emit_example_defaults_on(self):
-        # P2.4: конфиг без ключа mcp вовсе → emit_example включён (дефолт, не фикстура).
+        # P2.4: config without key mcp at all → emit_example enabled (default, not fixture).
         m = merge_defaults({})
         self.assertTrue(m["mcp"]["emit_example"])
 
@@ -184,7 +184,7 @@ class TestPrecedence(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root, env = make_repo(tmp)
             write_maind_config(root)
-            write_brain_projects(root)  # присутствует, но .maind.json приоритетнее
+            write_brain_projects(root)  # is present, but .maind.json takes priority
             cfg, source = load_config(env)
             self.assertEqual(source, "config.json")
             self.assertEqual(cfg["projects"][0]["id"], "alpha")
@@ -197,7 +197,7 @@ class TestPrecedence(unittest.TestCase):
             self.assertEqual(source, "brain-fallback")
             ids = [p["id"] for p in cfg["projects"]]
             self.assertIn("brain", ids)
-            self.assertIn("swiss-knife-man", ids)  # slug из "Swiss Knife Man"
+            self.assertIn("swiss-knife-man", ids)  # slug from "Swiss Knife Man"
 
     def test_empty(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -216,7 +216,7 @@ class TestBrainMapping(unittest.TestCase):
         self.assertEqual(m["name"], "My Proj")
         self.assertEqual(m["local_path"], "/r/x")        # repo → local_path
         self.assertEqual(m["vault_path"], "/v/x")
-        # folders → docs_folders, нормализованы в объектную модель (standalone → private)
+        # folders → docs_folders, normalized into an object model (standalone → private)
         self.assertEqual(m["docs_folders"], [
             {"id": "docs", "vault": "docs", "repo": "docs", "visibility": "private"}])
         self.assertFalse(m["enabled"])
@@ -235,8 +235,8 @@ class TestNormalizeDocsFolders(unittest.TestCase):
     def test_empty_uses_default_visibility(self):
         from maind.config import normalize_docs_folders
         out = normalize_docs_folders(None, default_visibility="public")
-        self.assertEqual(out[0]["visibility"], "public")   # docs → дефолт по типу
-        self.assertEqual(out[1]["visibility"], "public")   # docs-public всегда public
+        self.assertEqual(out[0]["visibility"], "public")   # docs → default by type
+        self.assertEqual(out[1]["visibility"], "public")   # docs-public always public
 
     def test_object_different_names(self):
         from maind.config import normalize_docs_folders

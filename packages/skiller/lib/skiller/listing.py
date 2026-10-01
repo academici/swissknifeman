@@ -1,4 +1,4 @@
-"""list — зарегистрированные проекты (~/.swissknifeman/projects.json)."""
+"""list — registered projects (~/.swissknifeman/projects.json)."""
 from pathlib import Path
 
 from .common import parse_flags
@@ -12,8 +12,8 @@ def cmd_list(env, argv):
         return
     db = load_db(env)
     if not db["projects"]:
-        print("Нет зарегистрированных проектов — skiller connect/vendor "
-              "в проекте добавит запись.")
+        print("No projects registered - skiller connect/vendor "
+              "in the project will add an entry.")
         return
     rows, missing = [], []
     for rec in db["projects"]:
@@ -27,11 +27,11 @@ def cmd_list(env, argv):
         print(f"{state:8} {channel:12} {profile:18} {updated:22} {path}")
     if opts["prune"]:
         if not missing:
-            print("\nНечего чистить.")
+            print("\nNothing to clean.")
             return
         db["projects"] = [r for r in db["projects"] if Path(r["path"]).is_dir()]
         save_db(env, db)
-        print(f"\nУдалено записей: {len(missing)}")
+        print(f"\nRecords deleted: {len(missing)}")
     elif missing:
-        print(f"\n{len(missing)} запис(ей) указывают на отсутствующие каталоги — "
-              f"почистить: skiller list --prune")
+        print(f"\n{len(missing)} entry(to her) indicate missing directories - "
+              f"clean: skiller list --prune")

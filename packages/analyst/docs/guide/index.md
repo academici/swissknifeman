@@ -1,45 +1,45 @@
-# Что такое analyst
+# What is analyst
 
-**analyst** — пакет **непрерывного обучения** экосистемy academici. Он извлекает
-«выстраданные уроки» из потоков задач Claude Code (по `run-report` прогонов) и — **с человеком
-в гейте** — продвигает их в переиспользуемое знание: сначала в общую память [mAInd](/maind/),
-затем (по желанию человека) в [скиллы skiller](/skiller/guide/). CLI — `analyst`.
+**analyst** — package **lifelong learning** ecosystemsy academici. He extracts
+«hard-won lessons» from task threads Claude Code (by `run-report` runs) and - **with a person
+in the gate** — promotes them to reusable knowledge: first to shared memory [mAInd](/maind/),
+then (at the request of the person) in [skills skiller](/skiller/guide/). CLI — `analyst`.
 
-Пакет **детерминированный**: только stdlib Python, **on-demand** (без демона/сети), read-only по
-проектам. Тот же вход → тот же выход; ничего не решает за человека.
+Package **deterministic**: only stdlib Python, **on-demand** (without daemon/networks), read-only by
+projects. Same entrance → same output; does not decide anything for a person.
 
-## Два слоя (здесь — только слой-1)
+## Two layers (here - only layer-1)
 
-| Слой | Что | Где |
+| Layer | What | Where |
 |:--|:--|:--|
-| **Слой-1 — данные/пайплайн** | `digest` → lessons-store (state + провенанс) → `review`/`promote` → cross-project `scan` → `suggest` | **этот пакет** |
-| **Слой-2 — промпт-дисциплина** | скиллы (`field-feedback-loop` и др.) — как ловить уроки в проседи | вне пакета (skiller) |
+| **Layer-1 - data/pipeline** | `digest` → lessons-store (state + provenance) → `review`/`promote` → cross-project `scan` → `suggest` | **this package** |
+| **Layer-2 - prompt discipline** | skills (`field-feedback-loop` etc.) — how to catch lessons in gray hair | out of package (skiller) |
 
-## Главный инвариант
+## Main invariant
 
-> **Авто-запись в скиллы запрещена.** analyst лишь *предлагает*: извлекает, показывает, ранжирует.
-> Промоутит — **человек** (`confirm` на tty либо `--yes` = осознанный ввод).
+> **Auto-recording to skills is prohibited.** analyst only *suggests*: retrieves, displays, ranks.
+> Promotit - **person** (`confirm` on tty or `--yes` = conscious input).
 
-Из него следуют остальные правила: переход в `curated` требует согласия, `suggest` пишет только
-staged-черновик (не в `skills/`), а наружу уходит лишь абстрагированный урок.
+The rest of the rules follow from it: transition to `curated` requires consent, `suggest` writes only
+staged-draft (not in `skills/`), and only an abstract lesson comes out.
 
-## Приватность
+## Privacy
 
-Сырьё (raw-транскрипт прогона) — **LOCAL-only**, в `<project>/.claude/analyst/`. Наружу — в память
-[mAInd](/maind/guide/memory) на `curated` и в cross-project индекс — идёт только **абстрагированный**
-`trigger → action` (+ ссылки на evidence). Секреты — только по ссылке, не значением.
+Raw materials (raw-run transcript) — **LOCAL-only**, in `<project>/.claude/analyst/`. Out - into memory
+[mAInd](/maind/guide/memory) on `curated` and in cross-project index - goes only **abstracted**
+`trigger → action` (+ links to evidence). Secrets - only by reference, not by value.
 
-## Пять команд конвейера
+## Five Pipeline Commands
 
 ```
-digest    run-report прогона        → кандидат-уроки (ephemeral, LOCAL)
-review    показать по состояниям     + diff против активных
-recompute events.ndjson             → confidence + числовая state-machine (P3)
-promote   ephemeral→candidate→curated (человеко-гейт) → всплывает в память mAInd
-scan      реестр проектов            → cross-project паттерны (namespace-изолированно)
-suggest   cross-project паттерн      → ЧЕРНОВИК скилла (drafts/), промоут — человек (P4)
+digest    run-report run        → candidate-lessons (ephemeral, LOCAL)
+review    show by state     + diff against active
+recompute events.ndjson             → confidence + numeric state-machine (P3)
+promote   ephemeral→candidate→curated (man-gate) → comes to mind mAInd
+scan      project registry            → cross-project patterns (namespace-isolated)
+suggest   cross-project pattern      → DRAFT skill (drafts/), promoter - person (P4)
 ```
 
-Подробно: [CLI и команды →](./cli) · [Жизненный цикл урока →](./lifecycle) ·
-[Каталог патологий →](./pathologies) · [suggest — черновик скилла →](./suggest) ·
-[Архитектура пакета →](../architecture).
+Details: [CLI and commands →](./cli) · [Lesson life cycle →](./lifecycle) ·
+[Pathology catalog →](./pathologies) · [suggest — skill draft →](./suggest) ·
+[Package architecture →](../architecture).

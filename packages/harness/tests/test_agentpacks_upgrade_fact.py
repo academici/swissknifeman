@@ -47,8 +47,8 @@ class TestUpgradeByFact(UpgradeFactBase):
         self.assertEqual(rc, 0)
         self.assertIn("Glossary impact?", self.reviewer.read_text())
         self.assertIn("[safe-apply]", out)
-        self.assertIn("версия та же", out)
-        self.assertIn("не менял версию", err)
+        self.assertIn("version is the same", out)
+        self.assertIn("did not change the version", err)
 
     def test_deleted_target_restored_at_same_version(self):
         """Internal documentation."""
@@ -63,16 +63,16 @@ class TestUpgradeByFact(UpgradeFactBase):
 
     def test_local_edit_plus_source_drift_is_conflict_not_overwrite(self):
         """Internal documentation."""
-        self.reviewer.write_text(self.reviewer.read_text() + "\nЛОКАЛЬНАЯ ПРАВКА\n")
+        self.reviewer.write_text(self.reviewer.read_text() + "\nLOCAL EDIT\n")
         src = self.pack_src / "agents" / "reviewer.md"
-        src.write_text(src.read_text() + "\nновая строка апстрима\n")
+        src.write_text(src.read_text() + "\nnew upstream line\n")
         rc, out, err = self.upgrade()
         self.assertEqual(rc, 0)
-        self.assertIn("ЛОКАЛЬНАЯ ПРАВКА", self.reviewer.read_text())
-        self.assertNotIn("новая строка апстрима", self.reviewer.read_text())
+        self.assertIn("LOCAL EDIT", self.reviewer.read_text())
+        self.assertNotIn("new upstream line", self.reviewer.read_text())
         pack_new = self.proj / ".claude/agents/acme-reviewer.md.pack-new"
         self.assertTrue(pack_new.exists())
-        self.assertIn("новая строка апстрима", pack_new.read_text())
+        self.assertIn("new upstream line", pack_new.read_text())
         self.assertIn("[conflict]", out)
         self.assertIn("conflict", err)
 
@@ -80,16 +80,16 @@ class TestUpgradeByFact(UpgradeFactBase):
         """Internal documentation."""
         rc, out, err = self.upgrade()
         self.assertEqual(rc, 0)
-        self.assertIn("нечего делать", out)
-        self.assertNotIn("не менял версию", err)
+        self.assertIn("nothing to do", out)
+        self.assertNotIn("did not change the version", err)
 
     def test_user_owned_never_touched_at_same_version(self):
         """Internal documentation."""
         overrides = self.proj / ".claude/agents/acme-overrides.md"
-        overrides.write_text("моё содержимое\n")
+        overrides.write_text("my contents\n")
         rc, _out, _err = self.upgrade()
         self.assertEqual(rc, 0)
-        self.assertEqual(overrides.read_text(), "моё содержимое\n")
+        self.assertEqual(overrides.read_text(), "my contents\n")
 
     def test_lock_base_sha_follows_applied_source(self):
         """Internal documentation."""
@@ -123,14 +123,14 @@ class TestDoctorSharedTargets(UpgradeFactBase):
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             ap.do_doctor(self.env, pack=None, target=self.proj)
-        self.assertIn("пересечение targets", err.getvalue())
+        self.assertIn("intersection targets", err.getvalue())
         self.assertIn(".claude/hooks/gate.sh", err.getvalue())
 
     def test_single_pack_no_shared_warning(self):
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             ap.do_doctor(self.env, pack=None, target=self.proj)
-        self.assertNotIn("пересечение targets", err.getvalue())
+        self.assertNotIn("intersection targets", err.getvalue())
 
 
 if __name__ == "__main__":

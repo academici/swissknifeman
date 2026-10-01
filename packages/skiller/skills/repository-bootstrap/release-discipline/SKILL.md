@@ -63,8 +63,29 @@ generated and by what — [package-architecture]; the canonical Releases & Taggi
   is preserved and reported as blocked when its version is absent from committed tagged release
   snapshots, its attested bytes changed, or a provider still references it.
 
+## Versioning and provider caches
+
+Provider caches are keyed by plugin version (`~/.claude/plugins/cache/<marketplace>/<plugin>/<version>`).
+Changed bytes under an unchanged version are never re-fetched, so a stale `task` (or any unit)
+keeps serving old commands until its version changes. Every shipped change to a unit needs a bump.
+
+- Owners (`configs/release-units.json`): `task` follows the **umbrella** (top released CHANGELOG
+  heading, set by `skiller release`); `maind`/`analyst`/`harness`/`skiller` own
+  `packages/<name>/package.json` (+ `package-lock.json`, `.claude-plugin/plugin.json`);
+  skill units own their entry in `packages/skiller/configs/publication-versions.json`.
+- Changing only `task` still means a new umbrella version: bump through `skiller release`, not by hand.
+- Check: `python3 scripts/version-guard.py status [--installed]` lists units whose content differs
+  from the last `releases/v*.json` snapshot but keep the same version (exit 1), and with
+  `--installed` the installed plugin versions that lag behind the repo.
+- Fix: `python3 scripts/version-guard.py bump <unit> [--part patch|minor|X.Y.Z]`, then
+  `skiller registry` and `version-guard.py status` again.
+- Installed copies refresh only after the tag: `./bin/swissknifeman release-fleet vX.Y.Z`, then
+  restart provider sessions. A SHA-keyed install follows the marketplace ref instead
+  (`claude plugin marketplace update`).
+
 ## Checklist
 
+- [ ] `version-guard.py status` reports no NOT-BUMPED unit.
 - [ ] validate is green.
 - [ ] Regenerated output committed together with the change.
 - [ ] Generated files were not hand-edited.

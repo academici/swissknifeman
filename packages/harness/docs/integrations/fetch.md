@@ -1,28 +1,28 @@
 # fetch MCP
 
-## Что это
+## What is this
 
-Официальный (Anthropic / Model Context Protocol) сервер: тянет URL и отдаёт содержимое как
-markdown. Полезен, чтобы агент сам читал внешнюю документацию или страницы.
+Official (Anthropic / Model Context Protocol) server: pulling URL and returns the contents as
+markdown. It is useful to have the agent itself read external documentation or pages.
 
-- Репозиторий: `modelcontextprotocol/servers` (`src/fetch`)
-- Пакет: `mcp-server-fetch` (**Python**, PyPI) — запускается через `uvx`
+- Repository: `modelcontextprotocol/servers` (`src/fetch`)
+- Package: `mcp-server-fetch` (**Python**, PyPI) — is launched via `uvx`
 
-::: warning Рантайм — Python/uv
-В отличие от остальных серверов набора, это **не npm**-пакет. Нужен
-[uv](https://github.com/astral-sh/uv) (`uvx`). Если uv не установлен — поставь его или
-используй [Context7](./context7) для документации библиотек.
+::: warning Runtime — Python/uv
+Unlike other recruitment servers, this **not npm**-package. Needed
+[uv](https://github.com/astral-sh/uv) (`uvx`). If uv is not installed - install it or
+use [Context7](./context7) for library documentation.
 :::
 
-## Установка
+## Installation
 
-Пресетом (opt-in):
+Preset (opt-in):
 
 ```bash
 skiller integrate --mcp fetch
 ```
 
-Пресет — `configs/claude-code/mcp/fetch.json`:
+Preset - `configs/claude-code/mcp/fetch.json`:
 
 ```json
 {
@@ -31,9 +31,9 @@ skiller integrate --mcp fetch
 }
 ```
 
-## Ограничения
+## Limitations
 
-- robots.txt уважается по умолчанию; для отдельных сайтов нужен флаг `--ignore-robots-txt`.
-- Большие страницы отдаются кусками (есть параметры длины и старта).
-- В Claude Code есть нативный WebFetch — сервер нужен, когда fetch требуется как
-  MCP-инструмент (для субагентов, воркфлоу или другого клиента).
+- robots.txt is respected by default; Some sites need a flag `--ignore-robots-txt`.
+- Large pages are given in chunks (there are length and start parameters).
+- B Claude Code is native WebFetch — server is needed when fetch is required as
+  MCP-tool (for subagents, workflow or other client).

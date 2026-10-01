@@ -33,7 +33,7 @@ def main() -> int:
         for path in drift:
             print(f"drift: {path}", file=sys.stderr)
         if drift:
-            print("render-cursor-rules: запусти --write, правила правятся генератором",
+            print("render-cursor-rules: run --write, rules are edited by the generator",
                   file=sys.stderr)
             return 1
         print("render-cursor-rules: check OK (no-op)")

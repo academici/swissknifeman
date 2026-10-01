@@ -2,7 +2,7 @@
   "schema": 1,
   "pack": "laravel-package",
   "version": "0.2.2",
-  "description": "Dev-loop для Laravel-composer-пакетов: агенты slice-builder/test-writer/reviewer заточены на публичный контракт (BC/SemVer), ServiceProvider register-vs-boot, publishables, Testbench-инфру — вместо app-канона access-layer. Форк backend-laravel под мир пакетов (см. notes.origin): recon-набор дополнен api-surface (BC-дифф публичной поверхности), review-gate/settings/hooks шарятся с backend-laravel через src_pack.",
+  "description": "Dev-loop for Laravel-composer-packages: agents slice-builder/test-writer/reviewer are tailored to a public contract (BC/SemVer), ServiceProvider register-vs-boot, publishables, Testbench-infra - instead app-canon access-layer. Fork backend-laravel under the world of packages (see notes.origin): recon-set added api-surface (BC-public surface diff), review-gate/settings/hooks fumbling around with backend-laravel via src_pack.",
   "stack": {
     "shape": "backend",
     "language": "php",
@@ -15,7 +15,7 @@
       "none_of": [
         "artisan"
       ],
-      "_note": "информационный блок для человека/будущей авто-подсказки пака — agentpacks.py резолвит ТОЛЬКО interview[].detect (per-answer пробы), stack.detect (all_of/any_of/none_of) сейчас никем не читается (см. resolve_interview/_run_detect); none_of здесь как рабочая заметка отличия от backend-laravel (пакет не имеет artisan-входа), семантика не реализована рантаймом"
+      "_note": "information block for a person/future auto-prompt pack - agentpacks.py resolve ONLY interview[].detect (per-answer samples), stack.detect (all_of/any_of/none_of) is not readable by anyone right now (see resolve_interview/_run_detect); none_of here as a working note of differences from backend-laravel (package does not have artisan-login), semantics not implemented by runtime"
     }
   },
   "requires": {
@@ -39,37 +39,37 @@
   "interview": [
     {
       "id": "PACK_PREFIX",
-      "q": "Префикс имён агентов/воркфлоу?",
+      "q": "Agent name prefix/work flow?",
       "default": "{project_dirname}",
       "kind": "slug"
     },
     {
       "id": "PROJECT_DIR",
-      "q": "Абсолютный путь к проекту?",
+      "q": "Absolute path to the project?",
       "detect": "pwd"
     },
     {
       "id": "PHP_RUNNER",
-      "q": "Бинарь PHP для тестов/composer?",
+      "q": "Binary PHP for tests/composer?",
       "detect": "command -v php8.4 || command -v php",
       "default": "php"
     },
     {
       "id": "PACKAGE_SRC_ROOT",
-      "q": "Корень исходников пакета (src / packages/*/src в монорепо)?",
+      "q": "Package source root (src / packages/*/src in monorepo)?",
       "detect": "test -d src && echo src ; test ! -d src && ls -d packages/*/src >/dev/null 2>&1 && echo 'packages/*/src'",
       "default": "src"
     },
     {
       "id": "PACKAGE_NAMESPACE",
-      "q": "Корневой PSR-4 namespace пакета?",
+      "q": "Root PSR-4 namespace package?",
       "detect": "php -r 'echo rtrim((array_key_first((@json_decode(@file_get_contents(\"composer.json\"), true) ?: [])[\"autoload\"][\"psr-4\"] ?? []) ?: array_reduce(array_filter(array_map(fn ($p) => (string) array_key_first((@json_decode(@file_get_contents($p), true) ?: [])[\"autoload\"][\"psr-4\"] ?? []), glob(\"packages/*/composer.json\") ?: [])), fn ($c, $n) => ($c === \"\" or strlen($n) < strlen($c)) ? $n : $c, \"\")) ?: \"\", \"\\\\\") ?>'",
       "default": "",
-      "_note": "монорепо-фолбэк: у корневого composer.json psr-4 часто пуст — берём КОРОТЧАЙШИЙ psr-4 из packages/*/composer.json (короче = корневее: AzGuard\\ у core против AzGuard\\Context\\). Проба НАМЕРЕННО одним выражением без ';' и '||' (закрыта через ?>, дизъюнкция через or): _probe_allowed при shell_policy=safe наивно режет по ;/|/&& и отверг бы пробу (полевой фидбек azguard)"
+      "_note": "monorepo fallback: at root composer.json psr-4 is often empty - take the SHORTEST psr-4 from packages/*/composer.json (in short = root: AzGuard\\ y core vs AzGuard\\Context\\). Test INTENTIONALLY with one expression without ';' and '||' (closed via ?>, disjunction via or): _probe_allowed when shell_policy=safe naively cuts by ;/|/&& and would reject the sample (field feedback azguard)"
     },
     {
       "id": "TEST_FRAMEWORK",
-      "q": "Pest или PHPUnit-native?",
+      "q": "Pest or PHPUnit-native?",
       "detect": "composer.json:require-dev.pestphp/pest",
       "enum": [
         "pest",
@@ -79,46 +79,46 @@
     },
     {
       "id": "TEST_RUNNER_CMD",
-      "q": "Команда прогона тестов?",
+      "q": "Test run command?",
       "default": "composer test"
     },
     {
       "id": "TEST_DB",
-      "q": "Тестовая БД (Testbench)?",
+      "q": "Test database (Testbench)?",
       "default": ":memory:"
     },
     {
       "id": "BASE_BRANCH",
-      "q": "Базовая ветка прогонов?",
+      "q": "Basic run branch?",
       "detect": "git symbolic-ref --short refs/remotes/origin/HEAD",
       "default": "main"
     },
     {
       "id": "CHECK_CMD",
-      "q": "Быстрая команда review-gate (статика)?",
+      "q": "Shortcut review-gate (static)?",
       "default": "vendor/bin/phpstan analyse"
     },
     {
       "id": "HAS_MIGRATIONS",
-      "q": "Пакет раздаёт миграции?",
+      "q": "Does the package distribute migrations?",
       "kind": "bool",
       "detect": "ls -d database/migrations packages/*/database/migrations >/dev/null 2>&1 && echo true || echo false",
       "default": false
     },
     {
       "id": "BC_CHECK_CMD",
-      "q": "Команда BC-проверки (Roave), если установлена?",
+      "q": "Command BC-checks (Roave), if installed?",
       "detect": "test -x vendor/bin/roave-backward-compatibility-check && echo vendor/bin/roave-backward-compatibility-check",
       "default": ""
     },
     {
       "id": "DOCS_DIR",
-      "q": "Куда положить guideline (внутренний AI-гайд, не публичная docs/)?",
+      "q": "Where to put it guideline (internal AI-guide, not public docs/)?",
       "default": ".claude/guidelines"
     },
     {
       "id": "MODEL_REVIEWER",
-      "q": "Модель reviewer-агента (Lean-tiered: Opus — судит BC/риск)?",
+      "q": "Model reviewer-agent (Lean-tiered: Opus — judges BC/risk)?",
       "default": "opus",
       "enum": [
         "inherit",
@@ -129,7 +129,7 @@
     },
     {
       "id": "MODEL_SLICE_BUILDER",
-      "q": "Модель slice-builder (Lean-tiered: Sonnet — массовая имплементация)?",
+      "q": "Model slice-builder (Lean-tiered: Sonnet — mass implementation)?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -140,7 +140,7 @@
     },
     {
       "id": "MODEL_TEST_WRITER",
-      "q": "Модель test-writer (Lean-tiered: Sonnet)?",
+      "q": "Model test-writer (Lean-tiered: Sonnet)?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -151,7 +151,7 @@
     },
     {
       "id": "MODEL_SPEC_WRITER",
-      "q": "Модель spec-writer (Lean-tiered: Opus — проектирование/синтез)?",
+      "q": "Model spec-writer (Lean-tiered: Opus — design/synthesis)?",
       "default": "opus",
       "enum": [
         "inherit",
@@ -162,7 +162,7 @@
     },
     {
       "id": "MODEL_RECON",
-      "q": "Модель read-only recon-субагентов (api-surface/test-verifier/security-review — дешёвая разведка)?",
+      "q": "Model read-only recon-subagents (api-surface/test-verifier/security-review — cheap intelligence)?",
       "default": "haiku",
       "enum": [
         "inherit",
@@ -173,17 +173,17 @@
     },
     {
       "id": "GATE_COVERAGE_MIN",
-      "q": "Мин. покрытие изменённого поведения (%)?",
+      "q": "Min. behavior change coverage (%)?",
       "default": "80"
     },
     {
       "id": "GATE_MAX_CRITICAL",
-      "q": "Допустимо critical-находок?",
+      "q": "Acceptable critical-finds?",
       "default": "0"
     },
     {
       "id": "GATE_MAX_COMPLEXITY",
-      "q": "Порог цикломатической сложности метода?",
+      "q": "Cyclomatic complexity threshold for a method?",
       "default": "10"
     }
   ],
@@ -307,7 +307,7 @@
     "{PACKAGE_SRC_ROOT}/**/*ServiceProvider.php"
   ],
   "notes": {
-    "origin": "Форк backend-laravel под мир Laravel-пакетов (composer-пакет, а не приложение): reviewer/slice-builder/test-writer/spec-writer переписаны на публичный контракт (BC/SemVer, ServiceProvider register-vs-boot, publishables, Testbench вместо app-канона access-layer); recon-набор дополнен {{PACK_PREFIX}}-api-surface (BC-дифф публичной поверхности) вместо app-специфичных route-mapper/db-impact/blade-review. review-gate.sh/settings.fragment.json/review-gate.env.ini не дублируются — берутся из backend-laravel через src_pack (владелец файлов в проекте — laravel-package, см. header).",
-    "verify_workflow": "dev-loop.js использует top-level return/await (Workflow-рантайм) — node --check к нему НЕ применять; проверяй балансом скобок и непустотой (как у backend-laravel)."
+    "origin": "Fork backend-laravel under the world Laravel-packages (composer-is a package, not an application): reviewer/slice-builder/test-writer/spec-writer rewritten to public contract (BC/SemVer, ServiceProvider register-vs-boot, publishables, Testbench instead app-canon access-layer); recon-set added {{PACK_PREFIX}}-api-surface (BC-public surface diff) instead app-specific route-mapper/db-impact/blade-review. review-gate.sh/settings.fragment.json/review-gate.env.ini are not duplicated - taken from backend-laravel via src_pack (owner of files in the project - laravel-package, see header).",
+    "verify_workflow": "dev-loop.js uses top-level return/await (Workflow-runtime) — node --check DO NOT apply to it; check by balancing brackets and non-emptiness (like backend-laravel)."
   }
 }

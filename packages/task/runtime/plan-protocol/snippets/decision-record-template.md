@@ -15,11 +15,11 @@ superseded_by: null
 **Actor:** <role/model-class/effort>
 **Evidence:** RAG:✅ <date + query/source> | RAG:— <repo evidence> | [UNVERIFIED]
 
-## Решение
+## Solution
 
 <one precise decision>
 
-## Почему
+## Why
 
 <alternatives and reason>
 
@@ -29,7 +29,7 @@ superseded_by: null
 ```
 
 Use a filename such as `D1-short-decision.md`; `id` contains only `D1`. Keep the YAML keys
-and the literal headings `Решение` and `Почему`: they are parser anchors, independent of
+and the literal headings `Solution` and `Why`: they are parser anchors, independent of
 the prose language. List every affected item in `items`, including the primary `item`.
 For a replacement, set `supersedes: [D1]` on the new record and retain `## Consequences`;
 mark the old record `status: superseded` and `superseded_by: D2` reciprocally.

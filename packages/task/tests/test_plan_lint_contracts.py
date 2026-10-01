@@ -6,12 +6,12 @@ except ImportError:
 
 
 class TestContractsSection(TmpPlanTestCase):
-    """m7/D10 — опциональная секция `## 7. Contracts` + cross-plan сверка версий (§11)."""
+    """m7/D10 — optional section `## 7. Contracts` + cross-plan version reconciliation (§11)."""
 
     CONTRACT = "root/contracts/module-manifest.md"
 
     def _write_pair(self, donor_version, pinned):
-        """Донор DONOR (Exported) + потребитель CONSUMER (Consumed) в одном корне plans/."""
+        """Donor DONOR (Exported) + consumer CONSUMER (Consumed) in one root plans/."""
         donor = write_valid_plan(self.root, "DONOR")
         consumer = write_valid_plan(self.root, "CONSUMER")
         (donor / "plan.md").write_text(
@@ -34,15 +34,15 @@ class TestContractsSection(TmpPlanTestCase):
     def test_versions_in_sync_no_warning(self):
         models, diag = self._lint_root(self._write_pair("v2.0.2", "v2.0.2"))
         self.assertEqual(diag.errors, [])
-        self.assertEqual([w for w in diag.warnings if "уведомление не разнесено" in w], [])
-        self.assertEqual(models["DONOR"]["contracts"]["exported"][0]["Версия"], "v2.0.2")
+        self.assertEqual([w for w in diag.warnings if "notification not posted" in w], [])
+        self.assertEqual(models["DONOR"]["contracts"]["exported"][0]["Version"], "v2.0.2")
 
     def test_version_drift_warns_once(self):
         _, diag = self._lint_root(self._write_pair("v2.0.2", "v2.0.0"))
-        hits = [w for w in diag.warnings if "уведомление не разнесено" in w]
+        hits = [w for w in diag.warnings if "notification not posted" in w]
         self.assertEqual(len(hits), 1, diag.warnings)
-        self.assertIn("потребитель CONSUMER запинен на v2.0.0", hits[0])
-        self.assertEqual(diag.errors, []) # только WARNING — механизм молод
+        self.assertIn("consumer CONSUMER pinned to v2.0.0", hits[0])
+        self.assertEqual(diag.errors, []) # only WARNING — mechanism is young
 
     def test_no_section_silent(self):
         plan_dir = write_valid_plan(self.root, "DEMO-1")
@@ -52,7 +52,7 @@ class TestContractsSection(TmpPlanTestCase):
         self.assertEqual(model["contracts"], {"exported": [], "consumed": []})
 
     def test_donor_outside_root_silent(self):
-        # Донор в другом репо (в этом корне его нет) — линтер честно молчит (граница §11).
+        # Donor in another repo (it is not in this root) — linter is honestly silent (border §11).
         consumer = write_valid_plan(self.root, "CONSUMER")
         (consumer / "plan.md").write_text(
             plan_md("CONSUMER") + contracts_section(
@@ -61,21 +61,21 @@ class TestContractsSection(TmpPlanTestCase):
         (self.root / "plans" / "ACTIVE.md").write_text(active_md("CONSUMER"), encoding="utf-8")
         _, diag = self._lint_root(self.root / "plans")
         self.assertEqual(diag.errors, [])
-        self.assertEqual([w for w in diag.warnings if "уведомление не разнесено" in w], [])
+        self.assertEqual([w for w in diag.warnings if "notification not posted" in w], [])
 
     def test_wrong_columns_warn_not_error(self):
         plan_dir = write_valid_plan(self.root, "DEMO-1")
         broken = contracts_section(
-            exported=[(self.CONTRACT, "v1.0.0", "—")]).replace("| Статус |", "| State |")
+            exported=[(self.CONTRACT, "v1.0.0", "—")]).replace("| Status |", "| State |")
         (plan_dir / "plan.md").write_text(plan_md("DEMO-1") + broken, encoding="utf-8")
         model, diag = _lint(plan_dir)
         self.assertEqual(diag.errors, [])
-        self.assertTrue(any("колонки" in w for w in diag.warnings), diag.warnings)
-        self.assertEqual(model["contracts"]["exported"], [])  # кривая таблица не парсится
+        self.assertTrue(any("columns" in w for w in diag.warnings), diag.warnings)
+        self.assertEqual(model["contracts"]["exported"], [])  # crooked table is not parsed
 
 
 class TestBaselineGate(TmpPlanTestCase):
-    """P1.2/B1/D5/D6 — `--baseline`/`--gate`: детерминированный счёт новых ошибок K."""
+    """P1.2/B1/D5/D6 — `--baseline`/`--gate`: deterministic count of new errors K."""
 
     def _git(self, *args):
         subprocess.run(["git", *args], cwd=str(self.root), check=True, capture_output=True)
@@ -93,23 +93,23 @@ class TestBaselineGate(TmpPlanTestCase):
         before, after = Diagnostics(), Diagnostics()
         path = self.root / "plans" / "DEMO-1" / "plan.md"
         before.error(path, None,
-                     "read-budget-v1: пункт P1.1: вес 100001 > порога 100000 "
-                     "оценочных токенов (calibration)")
+                     "read-budget-v1: item P1.1: weight 100001 > threshold 100000 "
+                     "evaluation tokens (calibration)")
         after.error(path, None,
-                    "read-budget-v1: пункт P1.1: вес 100777 > порога 100000 "
-                    "оценочных токенов (calibration)")
+                    "read-budget-v1: item P1.1: weight 100777 > threshold 100000 "
+                    "evaluation tokens (calibration)")
         self.assertEqual(before.normalized_keys(self.root), after.normalized_keys(self.root))
 
-    @unittest.skipUnless(shutil.which("git"), "git недоступен")
+    @unittest.skipUnless(shutil.which("git"), "git not available")
     def test_baseline_no_new_errors_on_clean_tree(self):
         plan_dir = self._init_repo_with_valid_plan()
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = main([str(plan_dir), "--baseline"])
         self.assertEqual(code, 0, err.getvalue())
-        self.assertIn("новых от рабочего дерева: 0", out.getvalue())
+        self.assertIn("new from working tree: 0", out.getvalue())
 
-    @unittest.skipUnless(shutil.which("git"), "git недоступен")
+    @unittest.skipUnless(shutil.which("git"), "git not available")
     def test_baseline_counts_new_error_and_gate_new_fails(self):
         plan_dir = self._init_repo_with_valid_plan()
         text = (plan_dir / "plan.md").read_text(encoding="utf-8")
@@ -119,12 +119,12 @@ class TestBaselineGate(TmpPlanTestCase):
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = main([str(plan_dir), "--baseline", "HEAD", "--gate", "new"])
         self.assertEqual(code, 1)
-        self.assertIn("новых от рабочего дерева: 1", out.getvalue())
+        self.assertIn("new from working tree: 1", out.getvalue())
 
-    @unittest.skipUnless(shutil.which("git"), "git недоступен")
+    @unittest.skipUnless(shutil.which("git"), "git not available")
     def test_baseline_default_gate_stays_all_even_when_k_zero(self):
-        # --gate=all (дефолт, back-compat CI) — exit по N, даже если сам baseline-дифф
-        # чист (K==0), а план несёт остаточную ошибку вне диффа этого коммита.
+        # --gate=all (default, back-compat CI) — exit by N, even if baseline-diff
+        # clean (K==0), and the plan carries a residual error outside the diff of this commit.
         plan_dir = self._init_repo_with_valid_plan()
         text = (plan_dir / "plan.md").read_text(encoding="utf-8")
         text = text.replace("| Plan ID | DEMO-1 |\n", "")
@@ -135,24 +135,24 @@ class TestBaselineGate(TmpPlanTestCase):
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = main([str(plan_dir), "--baseline"])
         self.assertEqual(code, 1)
-        self.assertIn("новых от рабочего дерева: 0", out.getvalue())
+        self.assertIn("new from working tree: 0", out.getvalue())
 
     def test_baseline_unavailable_without_git_repo(self):
-        plan_dir = write_valid_plan(self.root, "DEMO-1")  # НЕТ git init
+        plan_dir = write_valid_plan(self.root, "DEMO-1")  # NO git init
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = main([str(plan_dir), "--baseline"])
-        self.assertEqual(code, 0, err.getvalue())  # exit по N (план валиден), не по K
+        self.assertEqual(code, 0, err.getvalue())  # exit by N (plan is valid), not by K
         self.assertIn("baseline", err.getvalue())
-        self.assertIn("недоступен", err.getvalue())
-        self.assertNotIn("новых от рабочего дерева", out.getvalue())
+        self.assertIn("not available", err.getvalue())
+        self.assertNotIn("new from working tree", out.getvalue())
 
 
 class TestAuditBlockOutsidePhaseGates(TmpPlanTestCase):
-    """P3.8/A4/D52 — append-only блок `## Audit Pn` ВНЕ региона грепов по фазе.
-    Аудитор обязан назвать маркер, о проверке которого отчитывается («маркеров X — 0»);
-    греп по всему файлу фазы ронял гейт на его собственной строке. Регион кончается на
-    первом `## Audit`; тот же маркер в ТЕЛЕ item'а по-прежнему даёт WARNING."""
+    """P3.8/A4/D52 — append-only block `## Audit Pn` OUTSIDE the phase grep region.
+    The auditor is required to name the marker on which he is reporting («markers X — 0»);
+    grep throughout the phase file was dropping a gate on its own line. Region ends with
+    first `## Audit`; same marker in BODY item'but still gives WARNING."""
 
     def _warnings_containing(self, diag, needle):
         return [w for w in diag.warnings if needle in w]
@@ -160,48 +160,48 @@ class TestAuditBlockOutsidePhaseGates(TmpPlanTestCase):
     def _append_audit_block(self, plan_dir, body, phase="P1"):
         p = phase_index_path(plan_dir, phase)
         p.write_text(p.read_text(encoding="utf-8")
-                     + f"\n## Audit {phase} — 2026-07-15\n\n**Вердикт:** 🟢 GREEN\n\n{body}\n",
+                     + f"\n## Audit {phase} — 2026-07-15\n\n**Verdict:** 🟢 GREEN\n\n{body}\n",
                      encoding="utf-8")
 
-    # --- A4: DoR-маркер ТОЛЬКО в блоке аудита → гейт молчит -----------------------
+    # --- A4: DoR-marker ONLY in the audit block → gate is silent -----------------------
     def test_clarification_marker_inside_audit_block_silent(self):
         plan_dir = write_valid_plan(self.root, "DEMO-1")
         self._append_audit_block(
-            plan_dir, "- Проверено: маркеров `[NEEDS CLARIFICATION: …]` в фазе — 0.")
+            plan_dir, "- Checked: markers `[NEEDS CLARIFICATION: …]` in phase - 0.")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(self._warnings_containing(diag, "NEEDS CLARIFICATION"), [], diag.warnings)
 
-    # --- контроль: тот же маркер в ТЕЛЕ item'а → WARNING (гейт не ослаблен) -------
+    # --- control: same marker in BODY item'a → WARNING (gate is not weakened) -------
     def test_clarification_marker_in_item_body_still_warns(self):
         plan_dir = write_valid_plan(self.root, "DEMO-1")
         p1 = item_spec_path(plan_dir)
         p1.write_text(p1.read_text(encoding="utf-8").replace(
-            "**Why:** Диагностика дорогая.",
-            "**Why:** Диагностика дорогая. [NEEDS CLARIFICATION: какой формат?]"),
+            "**Why:** Diagnostics are expensive.",
+            "**Why:** Diagnostics are expensive. [NEEDS CLARIFICATION: what format?]"),
             encoding="utf-8")
-        self._append_audit_block(plan_dir, "- Проверено: маркеров уточнения — 0.")
+        self._append_audit_block(plan_dir, "- Checked: 0 qualification markers.")
         _, diag = _lint(plan_dir)
         self.assertTrue(self._warnings_containing(diag, "NEEDS CLARIFICATION"), diag.warnings)
 
-    # --- тот же регион у второго грепа по фазе: признак оркестрации в блоке аудита -
+    # --- same region for the second grep in phase: orchestration sign in the audit block -
     def test_orchestration_marker_inside_audit_block_silent(self):
         plan_dir = write_valid_plan(self.root, "DEMO-1")
         self._append_audit_block(
-            plan_dir, "- Оркестрация фазой не заявлена: `scriptPath` в launch-block отсутствует.")
+            plan_dir, "- Orchestration by phase is not declared: `scriptPath` in launch-block is missing.")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
-        self.assertEqual(self._warnings_containing(diag, "заявляет оркестрацию"), [], diag.warnings)
+        self.assertEqual(self._warnings_containing(diag, "states orchestration"), [], diag.warnings)
 
 
 class TestCheckpointedGate83(TmpPlanTestCase):
-    """P8.3/D44: item со статусом `🔴 Blocked` обязан нести в Pending Work строку
-    `Возобновление: <команда>`; `⛔ Skipped by decision` — РОВНО `Возобновление: —` И
-    ссылку `D<номер>`. Активация — opt-in Meta `Closure Protocol | v1` (без даты-канона:
-    на дату детализации живых 🔴/⛔ items с включённым протоколом на флоте нет). Каждый
-    различающий кейс проверен КРАСНЫМ на коде до этого item'а: `git show
-    HEAD:packages/task/lib/task/plan_lint.py` не нёс ни `_lint_checkpointed_83`, ни
-    вызова из `lint_plan` — старый код молчал на ВСЕХ кейсах."""
+    """P8.3/D44: item with status `🔴 Blocked` is required to bear Pending Work line
+    `Resume: <command>`; `⛔ Skipped by decision` — EXACTLY `Resume: —` AND
+    link `D<number>`. Activation - opt-in Meta `Closure Protocol | v1` (without canon date:
+    on the date of details of living 🔴/⛔ items with protocol enabled not available in fleet). Everyone
+    distinguishing case checked RED on the code before item'a: `git show
+    HEAD:packages/task/lib/task/plan_lint.py` did not carry any `_lint_checkpointed_83`, neither
+    call from `lint_plan` — the old code was silent on ALL cases."""
 
     def _write(self, *, closure_protocol="v1", item_status="🔴 Blocked", pending_work="—"):
         plan_dir = write_valid_plan(self.root)
@@ -214,83 +214,83 @@ class TestCheckpointedGate83(TmpPlanTestCase):
         return plan_dir
 
     def test_a_blocked_with_resume_command_passes(self):
-        """(a) 🔴 + `Возобновление: <команда>` → диагностик гейта нет."""
-        plan_dir = self._write(pending_work="Возобновление: /task:plan-design DEMO-1 P1.1")
+        """(a) 🔴 + `Resume: <command>` → there are no gate diagnostics."""
+        plan_dir = self._write(pending_work="Resume: /task:plan-design DEMO-1 P1.1")
         _, diag = _lint(plan_dir)
-        self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+        self.assertEqual(_errors_containing(diag, "Resume"), [])
 
     def test_b_blocked_without_resume_line_is_error_with_id(self):
-        """(б) 🔴 без строки `Возобновление:` → ERROR, текст несёт id item'а."""
+        """(b) 🔴 without line `Resume:` → ERROR, text carries id item'a."""
         plan_dir = self._write(pending_work="—")
         _, diag = _lint(plan_dir)
-        hits = _errors_containing(diag, "Возобновление")
+        hits = _errors_containing(diag, "Resume")
         self.assertTrue(hits, diag.errors)
         self.assertTrue(any("P1.1" in e for e in hits), hits)
 
     def test_b2_blocked_with_bare_dash_resume_is_error(self):
-        """(б, вариант) 🔴 + `Возобновление: —` (голый прочерк, без внешнего блокера и
-        без команды) → ERROR: непустая команда обязательна, «—» ей не считается."""
-        plan_dir = self._write(pending_work="Возобновление: —")
+        """(b, option) 🔴 + `Resume: —` (bare dash, without external blocker and
+        without command) → ERROR: non-empty command is required, «—» doesn't count for her."""
+        plan_dir = self._write(pending_work="Resume: —")
         _, diag = _lint(plan_dir)
-        self.assertTrue(_errors_containing(diag, "Возобновление"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "Resume"), diag.errors)
 
     def test_b3_blocked_with_external_blocker_form_passes(self):
-        """(б, вариант) 🔴 + `Возобновление: — (внешний блокер: …)` — легальная форма
-        для блокера без локального шага (Code Guidance P8.3) → диагностик нет."""
+        """(b, option) 🔴 + `Resume: — (external blocker: …)` — legal form
+        for blocker without local step (Code Guidance P8.3) → no diagnostics."""
         plan_dir = self._write(
-            pending_work="Возобновление: — (внешний блокер: решение владельца по OQ-4)")
+            pending_work="Resume: — (external blocker: owner's decision on OQ-4)")
         _, diag = _lint(plan_dir)
-        self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+        self.assertEqual(_errors_containing(diag, "Resume"), [])
 
     def test_c_skipped_without_resume_and_d_ref_is_error(self):
-        """(в) ⛔ без `Возобновление: —`/без `D<номер>` → ERROR с id item'а."""
+        """(in) ⛔ without `Resume: —`/without `D<number>` → ERROR with id item'a."""
         plan_dir = self._write(item_status="⛔ Skipped by decision", pending_work="—")
         _, diag = _lint(plan_dir)
-        hits = _errors_containing(diag, "Возобновление")
+        hits = _errors_containing(diag, "Resume")
         self.assertTrue(hits, diag.errors)
         self.assertTrue(any("P1.1" in e for e in hits), hits)
 
     def test_c2_skipped_with_resume_dash_but_no_d_ref_is_error(self):
-        """(в, вариант) ⛔ + `Возобновление: —`, но БЕЗ ссылки `D<номер>` → ERROR:
-        решение о пропуске обязано быть предъявлено записью, не молчанием."""
+        """(in, option) ⛔ + `Resume: —`, but WITHOUT link `D<number>` → ERROR:
+        the decision to pass must be presented in writing, not in silence."""
         plan_dir = self._write(item_status="⛔ Skipped by decision",
-                               pending_work="Возобновление: —")
+                               pending_work="Resume: —")
         _, diag = _lint(plan_dir)
-        self.assertTrue(_errors_containing(diag, "Возобновление"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "Resume"), diag.errors)
 
     def test_c3_skipped_with_resume_dash_and_d_ref_passes(self):
-        """(в, обратный) ⛔ + РОВНО `Возобновление: —` И `D40` в том же поле (другой
-        строкой) → диагностик нет."""
+        """(in, reverse) ⛔ + EXACTLY `Resume: —` AND `D40` in the same field (other
+        line) → no diagnostics."""
         plan_dir = self._write(
             item_status="⛔ Skipped by decision",
-            pending_work="Возобновление: —\nМоот, решение — D40.")
+            pending_work="Resume: —\nMoot, decision — D40.")
         _, diag = _lint(plan_dir)
-        self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+        self.assertEqual(_errors_containing(diag, "Resume"), [])
 
     def test_d_done_status_has_no_new_requirement(self):
-        """(г) 🟢 Done без строки `Возобновление:` — гейт молчит (требование только у
+        """(g) 🟢 Done without line `Resume:` — gate is silent (requirement only for
         🔴/⛔)."""
         plan_dir = self._write(item_status="🟢 Done", pending_work="—")
         _, diag = _lint(plan_dir)
-        self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+        self.assertEqual(_errors_containing(diag, "Resume"), [])
 
     def test_e_additivity_plan_without_meta_field_gets_no_new_diagnostics(self):
-        """(д) АДДИТИВНОСТЬ: тот же 🔴-план БЕЗ Meta `Closure Protocol` не даёт ни
-        одной диагностики гейта, даже без строки `Возобновление:`."""
+        """(d) ADDITIVITY: same 🔴-plan WITHOUT Meta `Closure Protocol` does not give any
+        one gate diagnostic, even without a line `Resume:`."""
         plan_dir = self._write(closure_protocol=None, pending_work="—")
         _, diag = _lint(plan_dir)
-        self.assertEqual(_errors_containing(diag, "Возобновление"), [])
+        self.assertEqual(_errors_containing(diag, "Resume"), [])
 
 
 class TestHandoffBoardGate113(TmpPlanTestCase):
-    """P11.3/D129: каждое вхождение `Pn a/b` в handoff.md обязано совпадать со значением
-    колонки `Items 🟢/всего` строки `Pn` доски «## 4. Phase Index & Status Board»; фаза,
-    отсутствующая в доске, — «висячая ссылка». Forward-only по ДАТЕ ЗАГОЛОВКА handoff'а
-    (HANDOFF_BOARD_CANON_DATE); severity внутри скоупа — как у launch-block-гейта (датовый
-    `plan_id` от BRIEF_CANON_DATE → ERROR, легаси → WARNING). Каждый различающий кейс
-    проверен КРАСНЫМ на коде до этого item'а: `git show HEAD:packages/task/lib/task/
-    plan_lint.py` не нёс ни `_lint_handoff_board_113`, ни `HANDOFF_BOARD_REF_RE`, ни вызова
-    из `lint_plan` — старый код молчал на ВСЕХ кейсах ниже."""
+    """P11.3/D129: every occurrence `Pn a/b` in handoff.md must match the value
+    columns `Items 🟢/total` lines `Pn` boards «## 4. Phase Index & Status Board»; phase,
+    missing from the board, - «dangling link». Forward-only by TITLE DATE handoff'a
+    (HANDOFF_BOARD_CANON_DATE); severity inside the scope - like launch-block-gate (dated
+    `plan_id` from BRIEF_CANON_DATE → ERROR, legacy → WARNING). Each distinguishing case
+    checked RED on the code before item'a: `git show HEAD:packages/task/lib/task/
+    plan_lint.py` did not carry any `_lint_handoff_board_113`, neither `HANDOFF_BOARD_REF_RE`, no call
+    from `lint_plan` — the old code was silent in ALL cases below."""
 
     def _write(self, *, plan_id="DEMO-1", handoff_date="2026-07-28", handoff_extra="",
                items_cell="1/1"):
@@ -302,62 +302,62 @@ class TestHandoffBoardGate113(TmpPlanTestCase):
             "# HANDOFF — 2026-07-02 — after P1.1",
             f"# HANDOFF — {handoff_date} — after P1.1")
         if handoff_extra:
-            text = text.replace("**Done:** P1.1 закрыт.",
-                                 f"**Done:** P1.1 закрыт. {handoff_extra}")
+            text = text.replace("**Done:** P1.1 is closed.",
+                                 f"**Done:** P1.1 is closed. {handoff_extra}")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         return plan_dir
 
     def test_a_f8_mismatch_on_dated_plan_is_error_naming_both_sides(self):
-        """(a) фикстура F8: handoff говорит `P1 4/4`, доска несёт `1/1` (дефолт) на
-        датовом `plan_id` (≥ BRIEF_CANON_DATE) → ERROR, текст называет ОБЕ стороны."""
+        """(a) fixture F8: handoff says `P1 4/4`, board carries `1/1` (default) on
+        date `plan_id` (≥ BRIEF_CANON_DATE) → ERROR, text names BOTH sides."""
         plan_dir = self._write(plan_id="2026.07.28-DEMO",
-                               handoff_extra="Доска: P1 4/4 согласно прозе.")
+                               handoff_extra="Board: P1 4/4 according to the prose.")
         _, diag = _lint(plan_dir)
         hits = _errors_containing(diag, "P1 4/4")
         self.assertTrue(hits, diag.errors)
         self.assertTrue(any("1/1" in e for e in hits), hits)
 
     def test_b_matching_numbers_is_silent(self):
-        """(б) handoff `P1 1/1` совпадает с доской `1/1` → диагностик гейта нет."""
+        """(b) handoff `P1 1/1` matches the board `1/1` → there are no gate diagnostics."""
         plan_dir = self._write(plan_id="2026.07.28-DEMO",
-                               handoff_extra="Доска: P1 1/1 согласно прозе.")
+                               handoff_extra="Board: P1 1/1 according to the prose.")
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "P1 1/1") +
                          [w for w in diag.warnings if "P1 1/1" in w], [])
 
     def test_c_handoff_older_than_canon_date_is_silent(self):
-        """(в) forward-only: handoff датирован < HANDOFF_BOARD_CANON_DATE — даже
-        заведомое расхождение `P1 4/4` vs доска `1/1` НЕ диагностируется (И10)."""
+        """(in) forward-only: handoff dated < HANDOFF_BOARD_CANON_DATE — even
+        deliberate discrepancy `P1 4/4` vs board `1/1` is not diagnosed."""
         plan_dir = self._write(plan_id="2026.07.28-DEMO", handoff_date="2026-07-27",
-                               handoff_extra="Доска: P1 4/4 (заведомо неверно).")
+                               handoff_extra="Board: P1 4/4 (obviously incorrect).")
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "P1 4/4") +
                          [w for w in diag.warnings if "P1 4/4" in w], [])
 
     def test_d_phase_missing_from_board_is_dangling_reference(self):
-        """(г) `Pn`, отсутствующая в доске (план несёт только `P1`), → диагностика
-        «висячая ссылка»."""
+        """(g) `Pn`, missing from the board (plan carries only `P1`), → diagnostics
+        «dangling link»."""
         plan_dir = self._write(plan_id="2026.07.28-DEMO",
-                               handoff_extra="См. P9 3/5 — фаза не существует в этом плане.")
+                               handoff_extra="See The P9 3/5 — phase does not exist in this plane.")
         _, diag = _lint(plan_dir)
-        hits = _errors_containing(diag, "висячая ссылка")
+        hits = _errors_containing(diag, "dangling link")
         self.assertTrue(hits, diag.errors)
         self.assertTrue(any("P9" in e for e in hits), hits)
 
     def test_e_legacy_plan_id_mismatch_is_warning_not_error(self):
-        """(д) severity-развилка, как у brief/launch-block-гейта: легаси `plan_id`
-        (не датовый) с расхождением → WARNING, а не ERROR."""
+        """(d) severity-fork, like brief/launch-block-gate: legacy `plan_id`
+        (not dated) with discrepancy → WARNING, and not ERROR."""
         plan_dir = self._write(plan_id="DEMO-1",
-                               handoff_extra="Доска: P1 4/4 согласно прозе.")
+                               handoff_extra="Board: P1 4/4 according to the prose.")
         _, diag = _lint(plan_dir)
         self.assertEqual(_errors_containing(diag, "P1 4/4"), [])
         self.assertTrue([w for w in diag.warnings if "P1 4/4" in w], diag.warnings)
 
     def test_f_additivity_plan_without_pattern_gets_no_new_diagnostics(self):
-        """(е) АДДИТИВНОСТЬ: датовый план с ГЕЙТОМ АКТИВНЫМ (handoff ≥ канон-даты), но БЕЗ
-        шаблона `Pn a/b` в handoff'е, даёт РОВНО тот же набор диагностик, что тот же план с
-        гейтом молчащим (handoff < канон-даты) — сравнение МНОЖЕСТВ (D129, план без
-        handoff-числа не получает НИ ОДНОЙ новой диагностики)."""
+        """(e) ADDITIVITY: date plan with GATE ACTIVE (handoff ≥ canon-dates), but WITHOUT
+        template `Pn a/b` in handoff'e, gives EXACTLY the same set of diagnostics as the same plan with
+        silent gate (handoff < canon-dates) — SET comparison (D129, plan without
+        handoff-numbers does not receive ANY new diagnostics)."""
         baseline_dir = self._write(plan_id="2026.07.28-DEMO-PLAN", handoff_date="2026-07-27")
         _, baseline_diag = _lint(baseline_dir)
         baseline = set(baseline_diag.normalized_keys(baseline_dir))

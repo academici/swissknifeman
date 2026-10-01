@@ -1,7 +1,7 @@
-"""Тесты токенового бюджета (budget.py) против синтетического реестра.
+"""Token Budget Tests (budget.py) vs. synthetic registry.
 
-Проверяем: грубую оценку токенов, раздельный подсчёт ярусов, транзитивное
-раскрытие requires (метка transitive), генерацию карты docs/guide/budget.md."""
+Checking: rough estimation of tokens, separate counting of tiers, transitive
+disclosure requires (label transitive), map generation docs/guide/budget.md."""
 import contextlib
 import io
 import sys
@@ -27,11 +27,11 @@ class EstimateTokensCase(unittest.TestCase):
 
     def test_deterministic_and_monotonic(self):
         a, b = estimate_tokens("x" * 30), estimate_tokens("x" * 60)
-        self.assertEqual(a, estimate_tokens("x" * 30))  # детерминизм
-        self.assertLess(a, b)                            # монотонность
+        self.assertEqual(a, estimate_tokens("x" * 30))  # determinism
+        self.assertLess(a, b)                            # monotony
 
     def test_len_based(self):
-        # ceil(len/CHARS_PER_TOKEN), грубая, но > 0 для непустого
+        # ceil(len/CHARS_PER_TOKEN), rude, but > 0 for non-empty
         self.assertGreater(estimate_tokens("hello world"), 0)
 
 
@@ -50,7 +50,7 @@ class SkillBudgetCase(unittest.TestCase):
                        body="word " * 500)
         b = skill_budget(d)
         self.assertEqual(b["name"], "big-body")
-        # короткое описание (ярус-0) << длинное тело (ярус-1)
+        # short description (tier-0) << long body (tier-1)
         self.assertLess(b["tier0"], b["tier1"])
 
     def test_missing_skill_md(self):
@@ -63,12 +63,12 @@ class SkillBudgetCase(unittest.TestCase):
         (d / "snippets" / "ex.md").write_text("x" * 90, encoding="utf-8")
         (d / "snippets" / "index.json").write_text("{}", encoding="utf-8")
         b = skill_budget(d)
-        self.assertEqual(b["snippets"], 1)   # index.json не считаем
+        self.assertEqual(b["snippets"], 1)   # index.json we don't count
         self.assertGreater(b["tier2"], 0)
 
     def test_references_counted_on_demand(self):
-        # P2.1 SKM-MASTER-003 (T1): references/ — ярус-2 ⌥ on-demand, симметрично
-        # snippets/ (тела монолитов после thin-navigator-волны P7 SKM-MASTER-002).
+        # P2.1 SKM-MASTER-003 (T1): references/ — tier-2 ⌥ on-demand, symmetrical
+        # snippets/ (bodies of monoliths after thin-navigator-waves P7 SKM-MASTER-002).
         d = self.root / "skills" / "quality" / "with-refs"
         fx.write_skill(d, "with-refs", description="d")
         (d / "references").mkdir()
@@ -79,8 +79,8 @@ class SkillBudgetCase(unittest.TestCase):
         self.assertGreater(b["tier2"], 0)
 
     def test_references_do_not_leak_into_tier1(self):
-        # references — ⌥ on-demand (ярус-2), НЕ ↻ on-trigger (ярус-1): тело
-        # SKILL.md короткое, references/ рядом объёмные — tier1 не должен расти.
+        # references — ⌥ on-demand (tier-2), NOT ↻ on-trigger (tier-1): body
+        # SKILL.md short, references/ nearby volumetric ones - tier1 should not grow.
         d = self.root / "skills" / "quality" / "with-refs-tier1"
         fx.write_skill(d, "with-refs-tier1", description="d", body="short body\n")
         b_before = skill_budget(d)
@@ -110,7 +110,7 @@ class ResolveActiveSetCase(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.tmp = Path(self._tmp.name)
         self.root, self.env = fx.make_registry(self.tmp)
-        # кросс-бакетная зависимость: quality/needs-docker requires docker(devops)
+        # cross-bucket dependency: quality/needs-docker requires docker(devops)
         fx.write_skill(self.root / "skills" / "quality" / "needs-docker",
                        "needs-docker", requires=["docker"], description="needs docker")
 
@@ -122,8 +122,8 @@ class ResolveActiveSetCase(unittest.TestCase):
             self.env, self.tmp, {"buckets": ["quality"]})
         names = {fm for _, _, _, fm in skills}
         self.assertIn("needs-docker", names)
-        self.assertIn("docker", names)            # подтянут транзитивно из devops
-        self.assertIn("docker", meta["pulled"])   # помечен как pulled
+        self.assertIn("docker", names)            # is pulled up transitively from devops
+        self.assertIn("docker", meta["pulled"])   # is marked as pulled
         self.assertEqual(meta["pulled"]["docker"], "needs-docker")
 
     def test_budget_aggregates_by_bucket(self):
@@ -132,7 +132,7 @@ class ResolveActiveSetCase(unittest.TestCase):
         b = budget_for_set(skills, meta["pulled"])
         self.assertEqual(b["count"], len(skills))
         self.assertEqual(b["if_all_triggered"], b["tier0"] + b["tier1"])
-        # docker учтён в бакете devops (его родной), а не в quality
+        # docker included in the bucket devops (his native), and not in quality
         self.assertIn("devops", b["by_bucket"])
         self.assertEqual(b["transitive"], 1)
 
@@ -202,13 +202,13 @@ class WriteBudgetMapCase(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.tmp = Path(self._tmp.name)
         self.root, self.env = fx.make_registry(self.tmp)
-        # P2.1 SKM-MASTER-003: скилл с references/ — карта/агрегация должны
-        # видеть его тело в ⌥ on-demand (не только snippets/).
+        # P2.1 SKM-MASTER-003: skill with references/ — map/aggregation must
+        # see his body in ⌥ on-demand (not only snippets/).
         refs_skill = self.root / "skills" / "quality" / "with-refs-map"
         fx.write_skill(refs_skill, "with-refs-map", description="refs demo")
         (refs_skill / "references").mkdir()
         (refs_skill / "references" / "full.md").write_text(
-            "монолит " * 400, encoding="utf-8")
+            "monolith " * 400, encoding="utf-8")
         (self.root / "docs" / "guide").mkdir(parents=True)
         registry, _, _ = build_registry(self.env)
         atomic_write_text(self.root / "skills.json",
@@ -224,26 +224,26 @@ class WriteBudgetMapCase(unittest.TestCase):
         text = out.read_text(encoding="utf-8")
         self.assertIn("flowchart LR", text)
         self.assertIn("classDef hot", text)
-        self.assertIn("⊕", text)               # легенда яруса-0
-        self.assertIn("laravel-conventions", text)  # скилл из фикстуры на карте
+        self.assertIn("⊕", text)               # tier-0 legend
+        self.assertIn("laravel-conventions", text)  # skill from fixtures on the map
 
     def test_map_reflects_references_in_tier2(self):
-        # references/full.md скилла with-refs-map попадает в ⌥ on-demand карты
-        # (P2.1 T1) — итоговое tier2 больше, чем без учёта references/.
+        # references/full.md skill with-refs-map hits ⌥ on-demand cards
+        # (P2.1 T1) — final tier2 more than without references/.
         b = skill_budget(self.root / "skills" / "quality" / "with-refs-map")
         self.assertEqual(b["references"], 1)
         self.assertGreater(b["tier2"], 0)
         write_budget_map(self.env)
         out = self.root / "docs" / "guide" / "budget.md"
         text = out.read_text(encoding="utf-8")
-        self.assertIn("on-demand", text)  # переименованная колонка/итог
+        self.assertIn("on-demand", text)  # renamed column/summary
 
 
 class CheckCoreCase(unittest.TestCase):
-    """--check-core должен фейлить и на НЕДОБОРЕ CORE_SKILLS (переехавший/опечатанный
-    путь молча уменьшает резидент → гейт раньше «зеленел» вместо ошибки, аудит B-2).
-    Синтетический реестр (fx.make_registry) не содержит ни одного пути из дефолтных
-    CORE_SKILLS (context-economy/anti-drift/…) — гарантированный недобор для теста."""
+    """--check-core should fail on LACK CORE_SKILLS (moved/sealed
+    path silently reduces resident → gate before «turned green» instead of error, audit B-2).
+    Synthetic registry (fx.make_registry) does not contain any default paths
+    CORE_SKILLS (context-economy/anti-drift/…) — guaranteed shortage for the test."""
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.tmp = Path(self._tmp.name)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Тег vX.Y.Z обязан иметь верхний ВЫПУЩЕННЫЙ заголовок `## [X.Y.Z] - YYYY-MM-DD` в CHANGELOG.md.
+"""Tag vX.Y.Z must have a top RELEASED header `## [X.Y.Z] - YYYY-MM-DD` in CHANGELOG.md.
 
-Носитель версии зонтика — корневой CHANGELOG.md, не package.json (нет корневого); P8.6, перенос
+Umbrella version media - root CHANGELOG.md, not package.json (no root); P8.6, transfer
 raytsystem verify_tag.py.
 """
 import os
@@ -13,12 +13,12 @@ UNRELEASED_RE = re.compile(r"^## \[Unreleased\]$")
 ANY_HEADER_RE = re.compile(r"^## \[")
 
 MALFORMED_MSG = (
-    "не найден выпущенный заголовок вида `## [X.Y.Z] - YYYY-MM-DD` в CHANGELOG.md"
+    "released view header not found `## [X.Y.Z] - YYYY-MM-DD` in CHANGELOG.md"
 )
 
 
 def parse_changelog(text):
-    """Возвращает (released, malformed): released — [(ver, date)] в порядке файла."""
+    """Returns (released, malformed): released — [(ver, date)] in file order."""
     released = []
     malformed = False
     for line in text.splitlines():
@@ -47,17 +47,17 @@ def verify(tag, changelog_path):
     if malformed and not released:
         return 2, MALFORMED_MSG
     if not released:
-        return 1, f"тег {tag}: в CHANGELOG.md нет выпущенного заголовка (только [Unreleased])"
+        return 1, f"tag {tag}: in CHANGELOG.md no title released (only [Unreleased])"
     if released[0] == version:
-        return 0, f"тег {tag}: верхний выпущенный заголовок совпадает ({version})"
+        return 0, f"tag {tag}: top released header matches ({version})"
     if version in released:
-        return 1, f"тег {tag}: не верхний выпущенный заголовок (верхний — {released[0]})"
-    return 1, f"тег {tag}: выпущенный заголовок «{version}» не найден в CHANGELOG.md"
+        return 1, f"tag {tag}: not the top released header (top - {released[0]})"
+    return 1, f"tag {tag}: released header «{version}» not found in CHANGELOG.md"
 
 
 def main(argv):
     if len(argv) != 2:
-        print("использование: verify-tag.py <vX.Y.Z>", file=sys.stderr)
+        print("usage: verify-tag.py <vX.Y.Z>", file=sys.stderr)
         return 2
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     code, message = verify(argv[1], os.path.join(repo_root, "CHANGELOG.md"))

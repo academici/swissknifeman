@@ -12,7 +12,7 @@
       "fetched_at": "2026-06-12"
     }
   ],
-  "notes": "SKILL.md — рукописный RU-скилл по Filament v5; таблица namespaces, типы свойств и 'типичные ошибки' выверены по официальным Boost-гайдлайнам Filament (packages/panels/resources/boost/guidelines/core.blade.php, ветка 5.x). strategy=notify: при изменении гайдлайнов — ручная сверка SKILL.md и snippets/. В Boost-проектах vendor-гайдлайны приоритетны (SSOT). 2026-09-14: Local discovery metadata shortened for startup budget; canonical body/reference content unchanged by this metadata pass. Public skill identity and operational boundaries preserved.",
+  "notes": "SKILL.md — handwritten RU-skill by Filament v5; table namespaces, property types and 'typical errors' verified according to official Boost-guidelines Filament (packages/panels/resources/boost/guidelines/core.blade.php, branch 5.x). strategy=notify: when changing guidelines - manual reconciliation SKILL.md and snippets/. B Boost-projects vendor-guidelines are a priority (SSOT). 2026-09-14: Local discovery metadata shortened for startup budget; canonical body/reference content unchanged by this metadata pass. Public skill identity and operational boundaries preserved.",
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",

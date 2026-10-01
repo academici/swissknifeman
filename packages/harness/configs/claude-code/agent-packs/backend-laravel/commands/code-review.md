@@ -1,10 +1,10 @@
 ---
-description: "Ревью последнего diff по слоям проекта и правилам .claude/rules: только блокирующие замечания с файлами/строками"
+description: "Review of the latest diff by project layers and rules .claude/rules: only blocking notes with files/lines"
 ---
-Проведи ревью последнего diff по канону проекта: правила в `.claude/rules/*` и профильные скиллы.
-Укажи только блокирующие замечания с конкретными файлами/строками. Не предлагай рефакторинг вне
-области diff.
+Review the latest diff according to the project canon: rules in `.claude/rules/*` and profile skills.
+Specify only blocking comments with specific files/lines. Don't suggest refactoring outside
+areas diff.
 <!-- pack:if ACCESS_LAYER -->
-Отдельно проверь границы слоёв: бизнес-логика не в контроллере, мутация — через Action, доступ к
-данным — через Repository/Action, транзакция на границе use-case.
+Separately check the boundaries of the layers: the business logic is not in the controller, the mutation is through Action, access to
+data - via Repository/Action, border transaction use-case.
 <!-- pack:endif -->

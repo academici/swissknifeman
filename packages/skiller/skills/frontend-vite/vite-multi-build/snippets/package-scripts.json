@@ -1,5 +1,5 @@
 {
-  "_comment": "Source: anonymized production Laravel project. Скрипты двух независимых сборок: основная (дефолтный vite.config.js) и админская (--config vite.admin.config.js). CI выполняет build И build:admin.",
+  "_comment": "Source: anonymized production Laravel project. Scripts of two independent assemblies: main (default vite.config.js) and admin (--config vite.admin.config.js). CI executes build AND build:admin.",
   "scripts": {
     "dev": "vite",
     "dev:admin": "vite --config vite.admin.config.js",

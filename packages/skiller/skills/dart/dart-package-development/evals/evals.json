@@ -3,11 +3,11 @@
   "cases": [
     {
       "id": 1,
-      "prompt": "В Dart SDK хочу заменить публичный метод parse на async и сделать возвращаемый идентификатор nullable. Что проверить перед правкой?",
+      "prompt": "B Dart SDK I want to replace a public method parse on async and make the return ID nullable. What to check before editing?",
       "assertions": [
-        {"type": "regex", "value": "sync|async|асинхрон"},
-        {"type": "regex", "value": "null|nullable|совместим"},
-        {"type": "regex", "value": "тест|test|потребител"}
+        {"type": "regex", "value": "sync|async|asynchronous"},
+        {"type": "regex", "value": "null|nullable|compatible"},
+        {"type": "regex", "value": "test|test|consumer"}
       ]
     }
   ]

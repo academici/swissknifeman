@@ -3,17 +3,17 @@
   "snippets": [
     {
       "file": "app.css",
-      "description": "Tailwind v4 CSS-first конфиг: @import tailwindcss, @source, @custom-variant dark, @theme-токены (--color-*, --spacing-*, --radius-*), :root/.dark палитры, слой совместимости границ + блок отличий v4<->v3 для миграции",
+      "description": "Tailwind v4 CSS-first config: @import tailwindcss, @source, @custom-variant dark, @theme-tokens (--color-*, --spacing-*, --radius-*), :root/.dark palettes, border compatibility layer + difference block v4<->v3 for migration",
       "tags": ["tailwind-v4", "theme", "tokens", "dark-mode", "css-first"]
     },
     {
       "file": "cn.ts",
-      "description": "Утилита cn() = twMerge(clsx(...)) для условных и динамических классов; разрешение конфликтов утилит, слияние props.class, примеры применения",
+      "description": "Utility cn() = twMerge(clsx(...)) for conditional and dynamic classes; utility conflict resolution, merging props.class, application examples",
       "tags": ["cn", "clsx", "tailwind-merge", "conditional-classes"]
     },
     {
       "file": ".prettierrc",
-      "description": "Prettier с prettier-plugin-tailwindcss и tailwindFunctions [clsx, cn, cva, tv] + tailwindStylesheet для авто-сортировки классов в Tailwind v4",
+      "description": "Prettier with prettier-plugin-tailwindcss and tailwindFunctions [clsx, cn, cva, tv] + tailwindStylesheet for auto-sorting classes in Tailwind v4",
       "tags": ["prettier", "class-sorting", "tailwindFunctions", "config"]
     }
   ]

@@ -29,10 +29,10 @@ class TestPackDescCap(unittest.TestCase):
 
     def test_all_agent_descriptions_within_cap(self):
         files = _agent_files(self.env)
-        self.assertGreater(len(files), 0, "не нашлись agents/*.md паков — сломан путь?")
+        self.assertGreater(len(files), 0, "not found agents/*.md pack - path broken?")
         offenders = [(f, _description_len(f)) for f in files if _description_len(f) > CAP_BYTES]
         self.assertEqual(offenders, [],
-                          f"description превышает cap {CAP_BYTES}B: "
+                          f"description exceeds cap {CAP_BYTES}B: "
                           + ", ".join(f"{f.relative_to(self.env.agent_packs_dir)}={n}B"
                                       for f, n in offenders))
 

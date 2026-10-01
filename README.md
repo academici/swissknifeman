@@ -2,23 +2,23 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> Локальный набор инструментов для разработки с Claude Code, Codex и Cursor.
-> Монорепозиторий-зонтик экосистемы **academici**: скиллы, проекции под клиентов,
-> инструменты задач и общая память/граф — с явными границами поддержки провайдеров.
+> Local development toolset with Claude Code, Codex and Cursor.
+> Ecosystem umbrella monorepository **academici**: skills, projections for clients,
+> task tools and shared memory/graph - with explicit boundaries of provider support.
 
-**Что это даёт разработчику:** можно подключить к проекту нужные скиллы и проекции клиента;
-Task и длинные workflow вызываются только для задач, которым они полезны. Матрица ниже
-показывает, где возможности клиента нативны, адаптированы или недоступны.
+**What does this give to the developer:** you can connect the necessary skills and projections of the client to the project;
+Task and long workflow are called only for tasks that benefit from them. Matrix below
+shows where client capabilities are native, customized, or unavailable.
 
-👉 **[Начать работу](docs/getting-started.md)** — короткий путь к первой задаче и выбор масштаба
-процесса. Подробности Claude Code — в [раннбуке разработчика](docs/develop.md).
+👉 **[Get started](docs/getting-started.md)** — shortcut to the first task and scale selection
+process. Details Claude Code — in [developer's runbook](docs/develop.md).
 
-## Возможности
+## Features
 
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
-### Поддержка провайдеров (generated)
+### Provider support (generated)
 
-Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `cec032979b131fda6314a5e4ae0803ee75508f1c1f31dcf26c36a727c2206315`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Подробности и операции: [provider support](docs/provider-support.md).
+Single manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `cec032979b131fda6314a5e4ae0803ee75508f1c1f31dcf26c36a727c2206315`. Manifest (`configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Details and operations: [provider support](docs/provider-support.md).
 
 | Capability | Claude Code | Codex | Cursor |
 |:--|:--:|:--:|:--:|
@@ -63,72 +63,72 @@ Task и длинные workflow вызываются только для зад�
 Unsupported reasons legend: `not implemented` (adapter/binding not shipped), `API-capped` (provider has no suitable project-scoped API), `not applicable` (intent has no provider object to migrate/read).
 <!-- END GENERATED PROVIDER CAPABILITIES -->
 
-| Что | Коротко |
+| What | Briefly |
 |:--|:--|
-| **🔌 Плагины со скиллами** | Единый marketplace Claude Code (бакеты навыков). Кураторский **CORE** (8 скиллов ≈ 480 резидентных токенов) раздаётся в каждый проект; остальное — по типу проекта. Два канала: `connect` (marketplace, автообновление) и `vendor` (физ. копии для отдачи вовне) |
-| **🎭 Роли и workflow** | `agent-packs` — версионируемые бандлы субагентов + workflow + хуков: стек-паки (Laravel/Node/Python/Flutter) и роль-паки (tech-lead/CTO/founder/maintainer). **dev-loop** гонит вертикальные срезы через risk-адаптивный **review-gate** (Haiku→Sonnet→Opus по риску) |
-| **📋 Управление задачами** | Плагин `task` (default-on): `/task:design\|dev\|review\|research\|fix` — каждая **пинит модель + effort + профиль** под интент, без ручного переключения |
-| **🪙 Токен-рычаги** | Дисциплина расхода: лестница `context-economy` (трим CLAUDE.md до ~92%, роутинг моделей до ~75%, аудит MCP, selective-input 5–50×), лаконичный вывод (`compact-responses`, output-style `lean`), **PAO** для PHP (вывод тестов → ~20 токенов JSON) |
-| **🧠 Память и граф** | Хаб **mAInd**: общая память экосистемы (agentmemory-демон, изоляция по namespace) + код-граф (Serena, навигация по символам вместо чтения файлов) + топология между проектами. Наблюдаемость — `maind analyze`/`verify`/`health` |
-| **📈 Аналитика и обучение** | Захват прогона хуком `run-report` → пост-ран разбор `maind analyze` (вердикт GREEN/ATTENTION/RED + метрики использования памяти/графа). Пакет **`analyst`** (P1 MVP): `analyst digest` детерминированно извлекает кандидат-уроки из прогона → `review`/`promote` с **человеком в гейте** (авто-запись запрещена) → curated всплывает в память mAInd. Есть кросс-проектный агрегатор (`scan`) и confidence-жизненный цикл (`recompute`, Beta/decay + числовая state-machine) |
-| **⚙️ Окружение** | `harness` настраивает Claude Code: пресеты permissions по стекам, MCP-серверы, хуки (auto-approve/memory/notify/run-report) |
-| **🔎 RAG-дисциплина** | Верификация внешних фактов до фиксации: лестница context7 → perplexity-web → WebSearch (скиллы `verify-claims`, `query-craft`, `mcp-advisor`) |
+| **🔌 Plugins with skills** | Single marketplace Claude Code (skill buckets). Curated **CORE** (8 skills ≈ 480 resident tokens) is distributed to each project; the rest depends on the type of project. Two channels: `connect` (marketplace, auto update) and `vendor` (physical. copies for giving out) |
+| **🎭 Roles and workflow** | `agent-packs` — versionable subagent bundles + workflow + hooks: stack packs (Laravel/Node/Python/Flutter) and role-packs (tech-lead/CTO/founder/maintainer). **dev-loop** drives vertical slices through risk-adaptive **review-gate** (Haiku→Sonnet→Opus by risk) |
+| **📋 Task management** | Plugin `task` (default-on): `/task:design\|dev\|review\|research\|fix` — each **kicks the model + effort + profile** under intent, without manual switching |
+| **🪙 Token levers** | Flow discipline: ladder `context-economy` (trim CLAUDE.md to ~92%, routing models up to ~75%, audit MCP, selective-input 5–50×), concise conclusion (`compact-responses`, output-style `lean`), **PAO** for PHP (test output → ~20 tokens JSON) |
+| **🧠 Memory and graph** | Hub **mAInd**: shared ecosystem memory (agentmemory-daemon, isolation by namespace) + code graph (Serena, navigate by symbols instead of reading files) + topology between projects. Observability - `maind analyze`/`verify`/`health` |
+| **📈 Analytics and training** | Capturing a run with a hook `run-report` → post-run analysis `maind analyze` (verdict GREEN/ATTENTION/RED + memory usage metrics/column). Package **`analyst`** (P1 MVP): `analyst digest` deterministically extracts candidate lessons from a run → `review`/`promote` with **man in the gate** (auto-record disabled) → curated comes to mind mAInd. There is a cross-project aggregator (`scan`) and confidence-life cycle (`recompute`, Beta/decay + numeric state-machine) |
+| **⚙️ Environment** | `harness` configures Claude Code: presets permissions on stacks, MCP-servers, hooks (auto-approve/memory/notify/run-report) |
+| **🔎 RAG-discipline** | Verification of external facts before committing: staircase context7 → perplexity-web → WebSearch (skills `verify-claims`, `query-craft`, `mcp-advisor`) |
 
-## Пакеты
+## Packages
 
-| Пакет | Роль | CLI |
+| Package | Role | CLI |
 |:--|:--|:--|
-| [`packages/skiller`](packages/skiller/) | реестр AI-скиллов — раздаёт навыки в проекты (connect/vendor) | `skiller` (алиас `swissknifeman`) |
-| [`packages/harness`](packages/harness/) | настройка окружения Claude Code (permissions, MCP, хуки, agent-packs) | `harness` |
-| [`packages/maind`](packages/maind/) | хаб памяти, графа и координации экосистемы (MCP-шина) | `maind` |
-| [`packages/analyst`](packages/analyst/) | continuous learning: захват уроков из прогонов, человеко-гейт, провенанс | `analyst` |
-| [`packages/task`](packages/task/) | плагин интент-команд задач (`/task:*`, `$ task:*`) | плагины Claude Code и Codex |
+| [`packages/skiller`](packages/skiller/) | registry AI-skills - distributes skills to projects (connect/vendor) | `skiller` (alias `swissknifeman`) |
+| [`packages/harness`](packages/harness/) | environment settings Claude Code (permissions, MCP, hooks, agent-packs) | `harness` |
+| [`packages/maind`](packages/maind/) | hub of memory, graph and ecosystem coordination (MCP-bus) | `maind` |
+| [`packages/analyst`](packages/analyst/) | continuous learning: capturing lessons from runs, man-gate, provenance | `analyst` |
+| [`packages/task`](packages/task/) | task intent command plugin (`/task:*`, `$ task:*`) | plugins Claude Code and Codex |
 
-Общий фундамент — пакет [`core`](core/) (stdlib-only: `Env`, вывод, slug).
+General foundation - package [`core`](core/) (stdlib-only: `Env`, output, slug).
 
-## Установка
+## Installation
 
 ```bash
-./install.sh                  # CLI + роутер + базовые Codex-плагины core/task (если Codex установлен)
+./install.sh                  # CLI + router + basic Codex-plugins core/task (if Codex installed)
 ```
 
-`install.sh` делегирует пакетную пост-настройку их собственным установщикам,
-ставит симлинк `swissknifeman` → корневой роутер и подключает в Codex локальный
-marketplace с базовыми `core`/`task`. Opt-out: `--no-codex-plugins`.
+`install.sh` delegates batch post-configuration to their own installers,
+puts a symlink `swissknifeman` → root router and connects to Codex local
+marketplace with basic `core`/`task`. Opt-out: `--no-codex-plugins`.
 
-> `.mcp.json` этого репо машинно-специфичен (абсолютные пути к `maind`) и не коммитится —
-> шаблон [`.mcp.json.example`](.mcp.json.example), реальный файл генерит/обновляет `maind` (sync/deploy).
+> `.mcp.json` of this repo is machine specific (absolute paths to `maind`) and does not commit -
+> template [`.mcp.json.example`](.mcp.json.example), generates the real file/updates `maind` (sync/deploy).
 
 ## CLI
 
 ```bash
-swissknifeman <group> …       # корневой роутер: skills→skiller, env→harness, maind→maind, analyst→analyst; + setup, doctor
-swissknifeman setup <project> # кросс-пакетный онбординг (скиллы+окружение+память+граф) → maind onboard
-skiller <cmd>                 # реестр скиллов (connect, vendor, integrate, registry, …) — алиас swissknifeman
-harness <cmd>                 # окружение Claude Code (permissions, mcp, hooks, agent-packs, doctor)
-maind <cmd>                   # хаб (memory, graph, onboard, deploy, sync, health, analyze, verify, …)
+swissknifeman <group> …       # root router: skills→skiller, env→harness, maind→maind, analyst→analyst; + setup, doctor
+swissknifeman setup <project> # cross-batch onboarding (skills+environment+memory+graph) → maind onboard
+skiller <cmd>                 # skill registry (connect, vendor, integrate, registry, …) — alias swissknifeman
+harness <cmd>                 # environment Claude Code (permissions, mcp, hooks, agent-packs, doctor)
+maind <cmd>                   # hub (memory, graph, onboard, deploy, sync, health, analyze, verify, …)
 analyst <cmd>                 # continuous learning (digest, scan, review, promote, deprecate, doctor)
 ```
 
-## Плагины Claude Code
+## Plugins Claude Code
 
-Один marketplace (`.claude-plugin/marketplace.json`, имя `swissknifeman` = зонтик) объявляет все
-плагины репо: бакеты скиллов, кураторский `core`, `task`, `skm`, `generate-skill`, `maind` и `analyst`.
-Генерируется `skiller registry`. Плагин `maind` — только команды `/maind:*` (MCP-инструменты хаба
-приходят per-project сервером `maind` из `.mcp.json` проекта, не из плагина).
+One marketplace (`.claude-plugin/marketplace.json`, name `swissknifeman` = umbrella) declares everything
+repo plugins: skill buckets, curated `core`, `task`, `skm`, `generate-skill`, `maind` and `analyst`.
+Generated `skiller registry`. Plugin `maind` — commands only `/maind:*` (MCP-hub tools
+come per-project server `maind` from `.mcp.json` project, not from the plugin).
 
-## Документация
+## Documentation
 
-- **[Начать работу](docs/getting-started.md)** — установка, первая задача и выбор пути.
-- **[Раннбук разработчика](docs/develop.md)** — как вести процесс разработки с Claude Code.
-- [Обзор экосистемы](docs/index.md) · [control-surface проектов](docs/control-surface.md) ·
-  [роутинг источников/задач](docs/routing.md) · [референсы](docs/reference.md).
-- Пакеты: [скиллы](packages/skiller/docs/) · [окружение](packages/harness/docs/) ·
-  [память и граф](packages/maind/docs/) · [continuous learning](packages/analyst/README.md).
+- **[Get started](docs/getting-started.md)** — installation, first task and path selection.
+- **[Developer's runbook](docs/develop.md)** — how to conduct the development process with Claude Code.
+- [Ecosystem Overview](docs/index.md) · [control-surface projects](docs/control-surface.md) ·
+  [source routing/tasks](docs/routing.md) · [references](docs/reference.md).
+- Packages: [skills](packages/skiller/docs/) · [environment](packages/harness/docs/) ·
+  [memory and graph](packages/maind/docs/) · [continuous learning](packages/analyst/README.md).
 
-## Разработка
+## Development
 
-Тесты/валидация — по пакету:
+Tests/validation - by package:
 
 ```bash
 bash packages/skiller/scripts/validate.sh
@@ -136,4 +136,4 @@ bash packages/harness/scripts/validate.sh
 bash packages/maind/scripts/validate.sh
 ```
 
-Подробности — в `CLAUDE.md` корня и каждого пакета (+ `CONTRIBUTING.md`). Коммиты — Conventional Commits на русском.
+Details in `CLAUDE.md` root and each package (+ `CONTRIBUTING.md`). Commits - Conventional Commits in Russian.

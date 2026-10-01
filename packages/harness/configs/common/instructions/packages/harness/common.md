@@ -15,7 +15,7 @@ Keep the CLI surface `permissions`, `mcp`, `hooks`, `router`, `agent-packs`, `sa
 Agent packs render templates, upgrade only safe managed files, write conflicts as `*.pack-new`, and remove only unmodified managed files; their lock records preserve ownership. A pack file entry may declare `src_pack` to share content from another pack without copying it, and the review-role registry indexes roles without copying their rules, as an extension table alongside the canonical `roles.json`.
 <!-- instruction:harness.engineering-invariants -->
 ## harness.engineering-invariants
-Keep `lib/harness/` stdlib-only, pass frozen `Env` explicitly, use merge-only project writes with `*.bak` backups, and emit Russian diagnostics.
+Keep `lib/harness/` stdlib-only, pass frozen `Env` explicitly, use merge-only project writes with `*.bak` backups, and emit English diagnostics.
 <!-- instruction:harness.cross-package-boundaries -->
 ## harness.cross-package-boundaries
 Keep memory state ownership with `skiller`, retain `.swissknife.json:memory_brain`, and let `skiller` delegate environment operations to the worktree-local `harness` launcher. Also, never break paths already installed on consumers.

@@ -1,55 +1,55 @@
-# Создание скиллов
+# Creating skills
 
-Два пути пополнения реестра: написать свой скилл или выборочно импортировать
-внешний с отслеживанием обновлений.
+Two ways to replenish the registry: write your own skill or selectively import
+external with update tracking.
 
-## Свой скилл
+## Your own skill
 
-1. Скопируйте `SKILL_TEMPLATE.md` → `skills/{bucket}/{name}/SKILL.md`
-2. Заполните frontmatter и разделы (см. [Анатомию скилла](./skill-anatomy))
-3. Добавьте `snippets/` с манифестом `index.json`
-4. Проверьте: `./scripts/validate.sh`
-5. Пересоберите реестр: `skiller registry`
-6. Откройте PR — CI прогонит ту же валидацию
+1. Copy `SKILL_TEMPLATE.md` → `skills/{bucket}/{name}/SKILL.md`
+2. Fill in frontmatter and sections (see [Anatomy of a skill](./skill-anatomy))
+3. Add `snippets/` with manifest `index.json`
+4. Check: `./scripts/validate.sh`
+5. Rebuild the registry: `skiller registry`
+6. Open PR — CI will run the same validation
 
 ::: tip generate-skill
-В репозитории есть мета-скилл `generate-skill/` — агент может создавать новые
-скиллы по шаблону сам. Он ставится только с профилем `standalone`
+There is a meta-skill in the repository `generate-skill/` — agent can create new
+skills based on the template yourself. It is installed only with a profile `standalone`
 (`include_meta: true`).
 :::
 
-## Секция `## Conformance`
+## Section `## Conformance`
 
-Машинно-выжимаемый чек-лист правил скилла: маркированный список императивов,
-**≤10 строк**, грепаемый (`grep -A12 '^## Conformance' SKILL.md`). Потребитель —
-conformance-finder'ы ревью-оркестратора (`task:review`, Stage B): finder получает
-секцию как чек-лист и проверяет дифф против каждой строки. Новый скилл в реестре
-⇒ новое измерение ревью автоматически.
+Machine-squeezable checklist of skill rules: bulleted list of imperatives,
+**≤10 lines**, grappable (`grep -A12 '^## Conformance' SKILL.md`). Consumer -
+conformance-finder'review orchestrator's (`task:review`, Stage B): finder gets
+section as a checklist and checks the diff against each line. New skill in the registry
+⇒ new dimension review automatically.
 
-Правила авторинга:
+Authoring rules:
 
-- **Обязательна для новых скиллов-конвенций** (naming / writing-style / стек / laravel
-  и т.п.); существующим добавляется инкрементально, по мере касания.
-- Выжимка из текста самого скилла, не новые правила: каждая строка сводима к
-  секции/правилу тела SKILL.
-- Строка = один проверяемый императив («делай X» / «не делай Y»), без пояснений,
-  примеров и ссылок — детали живут в теле.
-- Пишется в единственном EN-only `SKILL.md`; provider projections регенерируются
+- **Mandatory for new skill conventions** (naming / writing-style / stack / laravel
+  etc.); existing ones are added incrementally as you touch them.
+- Extract from the text of the skill itself, not new rules: each line can be reduced to
+  sections/body rule SKILL.
+- String = one verifiable imperative («do X» / «don't Y»), without explanation,
+  examples and links - details live in the body.
+- Written in singular EN-only `SKILL.md`; provider projections are regenerated
   `skiller registry`.
-- Нет секции — finder возьмёт свод правил из тела SKILL (чеклист качества / жёсткие
-  запреты), но это дороже и шумнее; для конвенций секция предпочтительна.
+- No section - finder will take the rulebook from the body SKILL (quality checklist / hard
+  bans), but it is more expensive and noisier; For conventions, the section is preferred.
 
-Примеры: `general/naming-conventions`, `general/writing-style`,
+Examples: `general/naming-conventions`, `general/writing-style`,
 `general/git-commit-rules`, `quality/artifact-review`.
 
-## Внешний скилл
+## External skill
 
-Внешние скиллы берутся **выборочно** — только то, что реально подходит под
-рабочие сценарии, а не репозитории целиком. Кандидаты и анализ источников —
-в каталоге `references/`.
+External skills are taken **selectively** — only what really fits
+production scripts, not entire repositories. Candidates and Source Analysis -
+in the catalog `references/`.
 
-1. Создайте папку: `mkdir -p skills/{bucket}/{name}`
-2. Создайте `upstream.json` (sha256 и fetched_at оставьте пустыми):
+1. Create a folder: `mkdir -p skills/{bucket}/{name}`
+2. Create `upstream.json` (sha256 and fetched_at leave blank):
 
 ```json
 {
@@ -68,46 +68,46 @@ conformance-finder'ы ревью-оркестратора (`task:review`, Stage 
 }
 ```
 
-3. Скачайте файл и зафиксируйте sha:
+3. Download the file and commit sha:
 
 ```bash
 ./scripts/update-upstreams.sh --apply --skill {bucket}/{name}
 ```
 
-4. Выберите стратегию:
-   - `replace` — файл зеркалируется как есть; у апстрима должен быть пригодный
-     frontmatter (`name` + `description`), иначе валидатор не пропустит;
-   - `notify` — вы адаптируете локальную копию (свой frontmatter, правки);
-     об обновлениях апстрима только сообщается;
-   - `fork` — большой внешний скилл, который вы оборачиваете тонким навигатором.
-     Контент-зеркало кладётся в `references/source.md` (`files[].path` указывает
-     на него), правки живут в обёртке `SKILL.md`, на дрейфе апстрима
-     распространение блокируется до ручного переноса. Подробно — в
-     [upstream-sync.md](./upstream-sync.md#fork-форк-с-локальными-правками).
+4. Select strategy:
+   - `replace` — file is mirrored as is; upstream must have a suitable one
+     frontmatter (`name` + `description`), otherwise the validator will not pass;
+   - `notify` — you adapt the local copy (yours frontmatter, edits);
+     upstream updates are only reported;
+   - `fork` — a large external skill that you wrap with a thin navigator.
+     The content mirror is placed in `references/source.md` (`files[].path` indicates
+     on him), edits live in the wrapper `SKILL.md`, on upstream drift
+     distribution is blocked until manual transfer. More details in
+     [upstream-sync.md](./upstream-sync.md#fork-fork-with-local-edits).
 
 5. `skiller registry` → PR
-6. Обновите статус источника в `references/{source}.md` на `imported`
+6. Update source status in `references/{source}.md` on `imported`
 
-## Жизненный цикл references/
+## Life cycle references/
 
-`references/` — каталог внешних источников: один md-файл на источник с URL,
-описанием, решением «брать выборочно / не брать», целевыми bucket-ами и
-статусом:
+`references/` — directory of external sources: one md-file to source with URL,
+description, solution «take selectively / do not take», target bucket-ami and
+status:
 
 ```
 planned → imported | rejected
 ```
 
-При фактическом импорте скилла статус обновляется, а в папке скилла появляется
+When the skill is actually imported, the status is updated and appears in the skill folder
 `upstream.json`.
 
-## Валидация
+## Validation
 
-Перед каждым PR:
+Before each PR:
 
 ```bash
 ./scripts/validate.sh
 ```
 
-Проверяет frontmatter всех скиллов, корректность `upstream.json`, профили,
-реестр и snippet-манифесты. CI ([validate.yml](./ci)) запускает то же самое.
+Checks frontmatter of all skills, correctness `upstream.json`, profiles,
+registry and snippet-manifests. CI ([validate.yml](./ci)) runs the same thing.

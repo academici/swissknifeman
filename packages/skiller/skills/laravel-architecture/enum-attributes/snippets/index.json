@@ -3,27 +3,27 @@
   "snippets": [
     {
       "file": "attribute.php",
-      "description": "Классы атрибутов метаданных: final readonly + TARGET_CLASS_CONSTANT (Label, Color, Description, многопараметровый Dashboard)",
+      "description": "Metadata attribute classes: final readonly + TARGET_CLASS_CONSTANT (Label, Color, Description, multiparameter Dashboard)",
       "tags": ["enum", "attributes", "metadata"]
     },
     {
       "file": "concern-trait.php",
-      "description": "EnumCaseAttributeResolver (reflection + статический кеш) и Concern-трейты HasLabelAttribute/HasColorAttribute с дефолтами",
+      "description": "EnumCaseAttributeResolver (reflection + static cache) and Concern-traits HasLabelAttribute/HasColorAttribute with defaults",
       "tags": ["enum", "trait", "reflection", "resolver"]
     },
     {
       "file": "enum-example.php",
-      "description": "Обогащённый enum OrderStatus: атрибуты над кейсами, трейты, выборка allForStage() по доменному атрибуту",
+      "description": "Enriched enum OrderStatus: attributes over cases, traits, selection allForStage() by domain attribute",
       "tags": ["enum", "example", "filament"]
     },
     {
       "file": "composer-path-repo.json",
-      "description": "Подключение локального пакета через repositories path + symlink с фиксацией версии",
+      "description": "Connecting a local package via repositories path + symlink with version commit",
       "tags": ["composer", "path-repository", "local-package"]
     },
     {
       "file": "enum-typescript.php",
-      "description": "Стэк #[TypeScript] (экспорт enum в .d.ts) поверх кастомных #[Label]/#[Priority]: Label-атрибут, HasLabelAttribute concern, enum implements HasLabel и фрагмент config/typescript-transformer.php (App.Enums.* union)",
+      "description": "Stack #[TypeScript] (export enum in .d.ts) over custom #[Label]/#[Priority]: Label-attribute, HasLabelAttribute concern, enum implements HasLabel and fragment config/typescript-transformer.php (App.Enums.* union)",
       "tags": ["enum", "typescript", "spatie", "type-sync", "transformer"]
     }
   ]

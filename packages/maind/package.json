@@ -1,9 +1,9 @@
 {
   "name": "@academici/maind",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "private": true,
   "license": "MIT",
-  "description": "mAInd — центральный узел экосистемы academici: память агентов, граф связей, реестр агентов и проектов, MCP-сервер. Ядро — Python + bash; npm нужен только для демона памяти и документации.",
+  "description": "mAInd — central node of the ecosystem academici: agent memory, connection graph, agent and project registry, MCP-server. Core - Python + bash; npm is only needed for the memory daemon and documentation.",
   "type": "module",
   "scripts": {
     "docs:dev": "vitepress dev docs",

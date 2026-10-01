@@ -1,17 +1,17 @@
 // Source: anonymized production Vue 3 + TS project (eslint.config.js, flat config, ESLint 9+)
-// Каркас: defineConfigWithVueTs (обёртка над typescript-eslint) + eslint-plugin-vue,
-// @stylistic для структурных правил, eslint-plugin-import для порядка и границ импортов,
-// eslint-config-prettier ПОСЛЕДНИМ (гасит конфликты с Prettier).
+// Frame: defineConfigWithVueTs (wrapper over typescript-eslint) + eslint-plugin-vue,
+// @stylistic for structural rules, eslint-plugin-import for the order and boundaries of imports,
+// eslint-config-prettier LATEST (resolves conflicts with Prettier).
 //
-// ЧТО (значения стиля Spatie) — в скилле frontend/js-code-style; здесь ЧЕМ/КАК это включается.
+// WHAT (style values Spatie) — in skill frontend/js-code-style; here WHAT/HOW it is turned on.
 
 import stylistic from '@stylistic/eslint-plugin';
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
-import prettier from 'eslint-config-prettier/flat'; // /flat — вариант для flat config
+import prettier from 'eslint-config-prettier/flat'; // /flat — option for flat config
 import importPlugin from 'eslint-plugin-import';
 import vue from 'eslint-plugin-vue';
 
-// --- padding-line-between-statements: генерируем пары, а не выписываем руками ---
+// --- padding-line-between-statements: we generate pairs instead of writing them out by hand ---
 const controlStatements = ['if', 'return', 'for', 'while', 'do', 'switch', 'try', 'throw'];
 
 const paddingAroundControl = controlStatements.flatMap((stmt) => [
@@ -19,15 +19,15 @@ const paddingAroundControl = controlStatements.flatMap((stmt) => [
     { blankLine: 'always', prev: stmt, next: '*' },
 ]);
 
-// --- семантические границы импортов (связка с feature-слоями inertia-vue) ---
-// Доменные Vue-компоненты не импортируют сгенерированные wayfinder-роуты напрямую,
-// только через actions/composables-слой. Паттерн границы — в скилле frontend/wayfinder.
+// --- semantic boundaries of imports (link with feature-layers inertia-vue) ---
+// Domain Vue-components do not import generated wayfinder-routes directly,
+// only via actions/composables-layer. Border pattern - in skill frontend/wayfinder.
 const documentVueFiles = [
     'resources/js/components/document/**/*.vue',
     'resources/js/pages/Documents/**/*.vue',
 ];
 
-// Файлы, которым прямой wayfinder-импорт разрешён осознанно (таблицы, формы-агрегаторы):
+// Files that are directly wayfinder-import allowed deliberately (tables, aggregator forms):
 const documentWayfinderImportWhitelist = [
     'resources/js/components/document/DocumentForm.vue',
     'resources/js/components/document/DocumentTable.vue',
@@ -38,7 +38,7 @@ export default defineConfigWithVueTs(
     vue.configs['flat/essential'],
     vueTsConfigs.recommended,
 
-    // --- TypeScript + import: правила и резолвер алиасов ---
+    // --- TypeScript + import: rules and alias resolver ---
     {
         plugins: {
             import: importPlugin,
@@ -47,33 +47,33 @@ export default defineConfigWithVueTs(
             'import/resolver': {
                 typescript: {
                     alwaysTryTypes: true,
-                    project: './tsconfig.json', // чтобы @/... разрешались
+                    project: './tsconfig.json', // to @/... were allowed
                 },
                 node: true,
             },
         },
         rules: {
-            'vue/multi-word-component-names': 'off', // List.vue / Show.vue — норма
+            'vue/multi-word-component-names': 'off', // List.vue / Show.vue — normal
             '@typescript-eslint/no-explicit-any': 'off',
             '@typescript-eslint/consistent-type-imports': [
                 'error',
                 { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
             ],
             '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-            'no-unused-vars': 'off', // не дублировать нативное поверх TS-версии
+            'no-unused-vars': 'off', // do not duplicate native on top TS-versions
             'import/order': [
                 'error',
                 {
                     groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
                     alphabetize: { order: 'asc', caseInsensitive: true },
-                    // 'newlines-between': 'always', // включить при желании
+                    // 'newlines-between': 'always', // enable if desired
                 },
             ],
             'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
         },
     },
 
-    // --- @stylistic: только то, чего НЕ делает Prettier ---
+    // --- @stylistic: just what it does NOT do Prettier ---
     {
         plugins: {
             '@stylistic': stylistic,
@@ -84,7 +84,7 @@ export default defineConfigWithVueTs(
         },
     },
 
-    // --- границы импортов: ограничивающий блок ---
+    // --- import boundaries: bounding box ---
     {
         files: documentVueFiles,
         rules: {
@@ -95,14 +95,14 @@ export default defineConfigWithVueTs(
                         {
                             group: ['@/wayfinder/routes/*'],
                             message:
-                                'В доменных Vue-компонентах используйте actions/composables-слой вместо прямых wayfinder-импортов.',
+                                'In domain Vue-components use actions/composables-layer instead of straight lines wayfinder-imports.',
                         },
                     ],
                 },
             ],
         },
     },
-    // whitelist идёт ПОСЛЕ ограничивающего блока — flat config применяет правила по порядку:
+    // whitelist comes AFTER the bounding block - flat config applies the rules in order:
     {
         files: documentWayfinderImportWhitelist,
         rules: {
@@ -110,7 +110,7 @@ export default defineConfigWithVueTs(
         },
     },
 
-    // --- что не линтуем: автоген, UI-кит, конфиги сборки ---
+    // --- that we don’t lint: autogen, UI-kit, build configs ---
     {
         ignores: [
             'vendor',
@@ -126,9 +126,9 @@ export default defineConfigWithVueTs(
         ],
     },
 
-    prettier, // ПОСЛЕДНИМ: гасит все ESLint-правила, конфликтующие с Prettier
+    prettier, // LAST: extinguishes everything ESLint-rules that conflict with Prettier
 
-    // блок после prettier допустим только для правил, НЕ конфликтующих с форматтером:
+    // block after prettier is only valid for rules that do NOT conflict with the formatter:
     {
         rules: {
             curly: ['error', 'all'],

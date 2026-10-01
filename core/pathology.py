@@ -1,62 +1,62 @@
-"""pathology — детекторы workflow-патологий по run-report (SCHEMA=2).
+"""pathology — detectors workflow-pathologies by run-report (SCHEMA=2).
 
-Вход — dict отчёта прогона `<project>/.claude/runs/<sid>.json`, который пишет
-harness-хук run-report (см. packages/harness/configs/claude-code/hooks/run-report/_lib.py).
-Выход `detect()` — плоский список находок:
+Login - dict run report `<project>/.claude/runs/<sid>.json`, who writes
+harness-hook run-report (see packages/harness/configs/claude-code/hooks/run-report/_lib.py).
+Exit `detect()` — flat list of finds:
 
     {code, severity: 'info'|'attention', metric, threshold, evidence, data}
 
-'attention' — вероятная патология прогона (стоит разобрать), 'info' — слабый сигнал
-(посмотреть при плановом разборе). evidence — короткая русская строка с числами,
-data — сырые величины для машинной обработки.
+'attention' — probable run pathology (is worth disassembling), 'info' — weak signal
+(view during scheduled analysis). evidence — short Russian string with numbers,
+data — raw values for machine processing.
 
-Функция ЧИСТАЯ и ЗАЩИТНАЯ: без I/O и часов, те же входы → тот же выход; исключения
-наружу не выходят НИКОГДА — битый срез отчёта гасит только свой детектор, остальные
-отрабатывают. Отчёт SCHEMA=1 (без usage/reads/error_loops/retrieval/protected_writes)
-деградирует молча: детекторы на отсутствующих срезах просто не срабатывают.
+CLEAN and PROTECTIVE function: without I/O and clock, same inputs → same output; exceptions
+NEVER come out - a broken report section extinguishes only its detector, the rest
+are being processed. Report SCHEMA=1 (without usage/reads/error_loops/retrieval/protected_writes)
+degrades silently: detectors on missing slices simply do not work.
 
-Пороги ниже — ЭВРИСТИКИ, подобранные по здравому смыслу и форме сигналов,
-НЕ откалиброванные по полевому false-positive-rate (реальной калибровки не было;
-она возможна только после накопления полевых прогонов). Единый источник — меняются
-только здесь, не магией по месту (паттерн analyst/confidence.py).
+The thresholds below are HEURISTICS, selected according to common sense and the shape of the signals,
+NOT field calibrated false-positive-rate (there was no real calibration;
+it is only possible after accumulating field runs). Single source - change
+only here, not with magic locally (pattern analyst/confidence.py).
 """
 
-# ── пороги детекторов (эвристики, НЕ откалиброваны по полевому FP-rate) ─────────
-REREAD_MIN_TOTAL = 10          # file-reread: минимум чтений, чтобы доля была осмысленной
-REREAD_RATIO_MAX = 0.4         # file-reread: доля повторных чтений (total−unique)/total
-ERROR_LOOP_INFO_LEN = 3        # tool-error-loop: серия однотипных ошибок → info
-ERROR_LOOP_ATTENTION_LEN = 5   # tool-error-loop: длинная серия → attention (застрял)
-NOOP_MIN_TOOLS = 20            # no-op-run: столько тул-вызовов без следа — уже подозрительно
-CACHE_HIT_LOW = 0.4            # cache-miss: доля кэш-чтений во входе ниже — префикс нестабилен?
-CACHE_MISS_MIN_TOKENS = 200_000  # cache-miss: на малых объёмах низкий hit — шум, не сигнал
-OVERTHINKING_RATIO = 0.6       # overthinking: доля thinking в выводе haiku-агента
-RETRIEVAL_IN_SHARE = 0.25      # retrieval-stuffing: retrieval-токены (chars/4) как доля входа
-RETRIEVAL_REPEATED_MIN = 2     # retrieval-stuffing: повторные запросы → уже не info, attention
-STATIC_MIN_MSGS = 3            # static-context: минимум API-вызовов главного агента для среднего
-STATIC_WINDOW_SHARE = 0.7      # static-context: средний вход как доля контекст-окна
-STATIC_MAX_TOOLS = 15          # static-context: мало работы при тяжёлом входе → контекст «висит»
-CONTEXT_WINDOW_TOKENS = 200_000  # прокси максимума входа: стандартное окно Sonnet/Opus
-FANOUT_MIN_AGENTS = 8          # fanout: субагентов больше — а выхлоп по файлам мал
-FANOUT_MAX_FILES = 5           # fanout: столько изменённых файлов не оправдывают широкий fan-out
+# ── detector thresholds (heuristics, NOT field calibrated FP-rate) ─────────
+REREAD_MIN_TOTAL = 10          # file-reread: minimum readings so that the share is meaningful
+REREAD_RATIO_MAX = 0.4         # file-reread: share of repeated reads (total−unique)/total
+ERROR_LOOP_INFO_LEN = 3        # tool-error-loop: series of similar errors → info
+ERROR_LOOP_ATTENTION_LEN = 5   # tool-error-loop: long series → attention (stuck)
+NOOP_MIN_TOOLS = 20            # no-op-run: so many tool calls without a trace - already suspicious
+CACHE_HIT_LOW = 0.4            # cache-miss: the proportion of cache reads in the input is lower - is the prefix unstable?
+CACHE_MISS_MIN_TOKENS = 200_000  # cache-miss: for small volumes low hit — noise, not signal
+OVERTHINKING_RATIO = 0.6       # overthinking: share thinking in the output haiku-agent
+RETRIEVAL_IN_SHARE = 0.25      # retrieval-stuffing: retrieval-tokens (chars/4) as input share
+RETRIEVAL_REPEATED_MIN = 2     # retrieval-stuffing: repeated requests → is no longer info, attention
+STATIC_MIN_MSGS = 3            # static-context: minimum API-calls to the main agent for the middle
+STATIC_WINDOW_SHARE = 0.7      # static-context: middle input as a share of the context window
+STATIC_MAX_TOOLS = 15          # static-context: little work with heavy entry → context «hanging»
+CONTEXT_WINDOW_TOKENS = 200_000  # max input proxy: standard window Sonnet/Opus
+FANOUT_MIN_AGENTS = 8          # fanout: there are more subagents - but the output from the files is small
+FANOUT_MAX_FILES = 5           # fanout: so many modified files do not justify the wide fan-out
 
-# chars→tokens: грубая оценка ~4 символа на токен (для латиницы; хуже для кириллицы,
-# но retrieval-выдача почти всегда англоязычная — для порога-эвристики достаточно).
+# chars→tokens: rough estimate ~4 characters per token (for Latin; worse for Cyrillic,
+# but retrieval-output is almost always in English - it is enough for the threshold heuristic).
 CHARS_PER_TOKEN = 4
 
 
 def _num(v):
-    """Число из отчёта: только настоящие int/float (bool — не число), иначе 0 —
-    мусор в поле не должен ронять арифметику детектора."""
+    """Number from the report: only real ones int/float (bool — is not a number), otherwise 0 —
+    debris in the field should not drop the detector's arithmetic."""
     return v if isinstance(v, (int, float)) and not isinstance(v, bool) else 0
 
 
 def _list(v):
-    """Список из отчёта; всё остальное (строка/None/dict) → пустой список."""
+    """List from the report; everything else (string/None/dict) → empty list."""
     return v if isinstance(v, list) else []
 
 
 def _dget(d, *keys, default=None):
-    """Защитный доступ вглубь dict'а: любой не-dict/отсутствующий уровень → default."""
+    """Protective access in depth dict'a: any non-dict/missing level → default."""
     cur = d
     for k in keys:
         if not isinstance(cur, dict):
@@ -66,16 +66,16 @@ def _dget(d, *keys, default=None):
 
 
 def _finding(code, severity, metric, threshold, evidence, data=None):
-    """Единая форма находки — чтобы потребители (maind analyze / analyst digest)
-    не гадали по ключам."""
+    """Uniform discovery form - so that consumers (maind analyze / analyst digest)
+    didn't guess by the keys."""
     return {"code": code, "severity": severity, "metric": metric,
             "threshold": threshold, "evidence": evidence, "data": data or {}}
 
 
-# ── детекторы: каждый берёт весь отчёт, возвращает список находок ───────────────
+# ── detectors: each takes the entire report, returns a list of finds ───────────────
 
 def _file_reread(r):
-    """Файлы читаются по кругу — контекст теряется/не удерживается между шагами."""
+    """Files are read in a circle - the context is lost/is not held between steps."""
     total = _num(_dget(r, "reads", "total"))
     unique = _num(_dget(r, "reads", "unique"))
     if total < REREAD_MIN_TOTAL:
@@ -87,14 +87,14 @@ def _file_reread(r):
             for e in _list(_dget(r, "reads", "top_rereads"))[:3] if isinstance(e, dict)]
     return [_finding(
         "file-reread", "attention", ratio, REREAD_RATIO_MAX,
-        f"повторные чтения: {int(total - unique)} из {int(total)} ({ratio:.0%});"
-        f" топ: {', '.join(tops) or '—'}",
+        f"re-reads: {int(total - unique)} from {int(total)} ({ratio:.0%});"
+        f" top: {', '.join(tops) or '—'}",
         {"total": total, "unique": unique,
          "top_rereads": _list(_dget(r, "reads", "top_rereads"))[:5]})]
 
 
 def _tool_error_loop(r):
-    """Серии однотипных ошибок одного инструмента — retry без смены подхода."""
+    """Series of similar errors from one tool - retry without changing the approach."""
     out = []
     for loop in _list(r.get("error_loops")):
         if not isinstance(loop, dict):
@@ -106,15 +106,15 @@ def _tool_error_loop(r):
         out.append(_finding(
             "tool-error-loop", "attention" if attention else "info",
             n, ERROR_LOOP_ATTENTION_LEN if attention else ERROR_LOOP_INFO_LEN,
-            f"инструмент {loop.get('tool') or '?'}: {int(n)} однотипных ошибок подряд"
+            f"tool {loop.get('tool') or '?'}: {int(n)} errors of the same type in a row"
             f" — {str(loop.get('snippet') or '')[:80]}",
             {"tool": loop.get("tool"), "len": n, "snippet": loop.get("snippet")}))
     return out
 
 
 def _no_op_run(r):
-    """Много тул-вызовов, а следа нет: ни файлов, ни тестов, ни retrieval —
-    прогон крутился вхолостую (или чисто read-only разведка — потому лишь info)."""
+    """Many tool calls, but no trace: no files, no tests, no retrieval —
+    run was spinning idle (or purely read-only reconnaissance - because only info)."""
     tools = _num(_dget(r, "tools", "total"))
     if (tools >= NOOP_MIN_TOOLS
             and not _list(r.get("files_changed"))
@@ -122,36 +122,36 @@ def _no_op_run(r):
             and _num(_dget(r, "retrieval", "calls")) == 0):
         return [_finding(
             "no-op-run", "info", tools, NOOP_MIN_TOOLS,
-            f"{int(tools)} тул-вызовов без следа: ни файлов, ни тестов, ни retrieval",
+            f"{int(tools)} tool calls without a trace: no files, no tests, no retrieval",
             {"tools_total": tools})]
     return []
 
 
 def _no_verify(r):
-    """Правки без верификации: файлы изменены, а тест-прогонов нет; отдельно —
-    dev-loop отчитался, но без ключей verify/results (срез результата потерян)."""
+    """Edits without verification: files have been changed, but there are no test runs; separately -
+    dev-loop reported, but without keys verify/results (result slice lost)."""
     out = []
     changed = _list(r.get("files_changed"))
     tests = _list(_dget(r, "bash", "tests"))
     if changed and not tests:
         out.append(_finding(
             "no-verify", "attention", len(changed), 0,
-            f"изменено файлов: {len(changed)}, тест-прогонов: 0 — правки не проверены",
+            f"files modified: {len(changed)}, test runs: 0 - edits not checked",
             {"files_changed": len(changed)}))
     devloop = r.get("devloop")
-    # ключи проверяем защитно: devloop может быть None/не-dict (SCHEMA=1 и деградации)
+    # we check the keys protectively: devloop maybe None/not-dict (SCHEMA=1 and degradation)
     if isinstance(devloop, dict) and devloop \
             and not devloop.get("verify") and not devloop.get("results"):
         out.append(_finding(
             "no-verify-devloop", "info", 0, 0,
-            "dev-loop-сигнал есть, но без verify/results — итог среза не зафиксирован",
+            "dev-loop-there is a signal, but without verify/results — slice result not recorded",
             {"devloop_keys": sorted(devloop.keys())}))
     return out
 
 
 def _cache_miss(r):
-    """Низкая доля кэш-чтений при большом входе — похоже на нестабильный префикс
-    (скачущий системный промпт/контекст рвёт prompt-cache и раздувает счёт)."""
+    """Low cache read ratio with large input - looks like an unstable prefix
+    (jumping system prompt/context breaks prompt-cache and inflates the bill)."""
     hit = _dget(r, "usage", "cache_hit")
     if not isinstance(hit, (int, float)) or isinstance(hit, bool):
         return []
@@ -160,14 +160,14 @@ def _cache_miss(r):
     if hit < CACHE_HIT_LOW and volume > CACHE_MISS_MIN_TOKENS:
         return [_finding(
             "cache-miss", "info", hit, CACHE_HIT_LOW,
-            f"cache_hit {hit:.2f} при входе {int(volume)} ток — нестабильный префикс?",
+            f"cache_hit {hit:.2f} at login {int(volume)} current - unstable prefix?",
             {"cache_hit": hit, "input_volume": volume})]
     return []
 
 
 def _overthinking(r):
-    """haiku-агенты, у которых thinking доминирует над текстом: дешёвую модель
-    заставили «думать» — вероятно, задача не под её тир (роутинг моделей)."""
+    """haiku-agents who have thinking dominates the text: cheap model
+    forced «think» — probably the task is not for her range (routing models)."""
     hits = []
     for a in _list(_dget(r, "usage", "agents")):
         if not isinstance(a, dict):
@@ -187,13 +187,13 @@ def _overthinking(r):
     names = ", ".join(f"{h['label'] or '?'} {h['ratio']:.0%}" for h in hits[:3])
     return [_finding(
         "overthinking", "info", worst, OVERTHINKING_RATIO,
-        f"haiku-агентов с thinking>{OVERTHINKING_RATIO:.0%}: {len(hits)} ({names})",
+        f"haiku-agents with thinking>{OVERTHINKING_RATIO:.0%}: {len(hits)} ({names})",
         {"agents": hits})]
 
 
 def _retrieval_stuffing(r):
-    """Retrieval-выдача занимает заметную долю входа: сырьё льют в контекст вместо
-    синтеза; с повторными запросами — ещё и одно и то же гоняют по кругу."""
+    """Retrieval-output occupies a noticeable share of the input: raw materials are poured into the context instead
+    synthesis; with repeated requests - they keep repeating the same thing in circles."""
     tin = _num(_dget(r, "usage", "totals", "in"))
     if tin <= 0:
         return []
@@ -203,35 +203,35 @@ def _retrieval_stuffing(r):
         return []
     repeated = len(_list(_dget(r, "retrieval", "repeated_queries")))
     attention = repeated >= RETRIEVAL_REPEATED_MIN
-    tail = f", повторных запросов: {repeated}" if attention else ""
+    tail = f", repeated requests: {repeated}" if attention else ""
     return [_finding(
         "retrieval-stuffing", "attention" if attention else "info",
         share, RETRIEVAL_IN_SHARE,
-        f"retrieval ≈ {int(retr_tokens)} ток = {share:.0%} входа ({int(tin)}){tail}",
+        f"retrieval ≈ {int(retr_tokens)} current = {share:.0%} login ({int(tin)}){tail}",
         {"retrieval_tokens": retr_tokens, "in": tin, "repeated_queries": repeated})]
 
 
 def _protected_write(r):
-    """Правки в managed-путях (vendor-скиллы/agent-pack) — их перезатрёт следующий
-    sync; всегда attention, независимо от объёма."""
+    """Edits in managed-paths (vendor-skills/agent-pack) — they will be overwritten by the next one
+    sync; always attention, regardless of volume."""
     pw = _list(r.get("protected_writes"))
     if not pw:
         return []
     shown = ", ".join(str(p) for p in pw[:3])
     return [_finding(
         "protected-write", "attention", len(pw), 0,
-        f"правки managed-путей: {len(pw)} ({shown}) — перезатрёт следующий sync",
+        f"edits managed-paths: {len(pw)} ({shown}) — will overwrite the next one sync",
         {"protected_writes": pw})]
 
 
 def _static_context(r):
-    """Резидентный контекст доминирует: средний вход одного API-вызова главного агента
-    близок к контекст-окну, а полезной работы (тул-вызовов) мало — контекст «висит»
-    балластом (жирные бакеты скиллов/MCP-выдача).
+    """Resident context dominates: middle input of one API-calling the main agent
+    is close to the context window, and useful work (tool calls) little - context «hanging»
+    ballast (fat skill buckets/MCP-output).
 
-    Прокси, а не точная формула: в спеке фигурируют totals, но totals смешивают вход
-    субагентов с msgs главного агента — считаем честнее по (in+cache_read)/msgs САМОГО
-    главного агента, а «максимум» берём как стандартное окно CONTEXT_WINDOW_TOKENS."""
+    Proxy, not the exact formula: they appear in the spec totals, but totals mix input
+    subagents with msgs chief agent - we consider it more honest (in+cache_read)/msgs HIMSELF
+    main agent, and «maximum» take as a standard window CONTEXT_WINDOW_TOKENS."""
     agents = _list(_dget(r, "usage", "agents"))
     main = next((a for a in agents if isinstance(a, dict) and a.get("label") == "main"), None)
     if main is None:
@@ -247,22 +247,22 @@ def _static_context(r):
     if share > STATIC_WINDOW_SHARE and tools < STATIC_MAX_TOOLS:
         return [_finding(
             "static-context", "info", share, STATIC_WINDOW_SHARE,
-            f"средний вход {int(avg_in)} ток/вызов ≈ {share:.0%} окна при {int(tools)}"
-            f" тул-вызовах — резидентный контекст доминирует; ревизия бакетов/MCP: skiller budget",
+            f"middle input {int(avg_in)} current/call ≈ {share:.0%} windows when {int(tools)}"
+            f" tool calls - resident context dominates; audit of buckets/MCP: skiller budget",
             {"avg_in": avg_in, "msgs": msgs, "tools_total": tools,
              "window": CONTEXT_WINDOW_TOKENS})]
     return []
 
 
 def _fanout(r):
-    """Широкий fan-out субагентов при скромном выхлопе по файлам — оркестрация
-    дороже результата (каждый субагент оплачивает свой вход заново)."""
+    """Wide fan-out subagents with modest output from files - orchestration
+    more expensive than the result (each subagent pays for his entry again)."""
     n_agents = len(_list(_dget(r, "usage", "agents")))
     n_files = len(_list(r.get("files_changed")))
     if n_agents > FANOUT_MIN_AGENTS and n_files < FANOUT_MAX_FILES:
         return [_finding(
             "fanout", "info", n_agents, FANOUT_MIN_AGENTS,
-            f"агентов: {n_agents} при {n_files} изменённых файлах — fan-out дороже выхлопа",
+            f"agents: {n_agents} when {n_files} modified files - fan-out more expensive than exhaust",
             {"agents": n_agents, "files_changed": n_files})]
     return []
 
@@ -273,10 +273,10 @@ _DETECTORS = (_file_reread, _tool_error_loop, _no_op_run, _no_verify, _cache_mis
 
 
 def detect(run_report):
-    """Прогнать все детекторы по run-report → список находок (может быть пустым).
+    """Run all detectors by run-report → list of finds (may be empty).
 
-    Никогда не бросает: не-dict вход → []; исключение внутри детектора (битый срез)
-    гасится и роняет только ЕГО находки — остальные детекторы отрабатывают."""
+    Never throws: non-dict input → []; exception inside detector (broken slice)
+    is extinguished and only HIS finds are dropped - the rest of the detectors are processed."""
     if not isinstance(run_report, dict):
         return []
     findings = []
@@ -284,5 +284,5 @@ def detect(run_report):
         try:
             findings.extend(det(run_report))
         except Exception:
-            continue  # защитный контракт: см. docstring
+            continue  # protective contract: see docstring
     return findings

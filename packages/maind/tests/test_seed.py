@@ -1,5 +1,5 @@
-"""Тесты seed.py: базовый факт о связях в приватном бакете + cross-ref в бакет группы
-(ns:<имя>, wildcard → global), идемпотентность, изоляция между namespace'ами."""
+"""Tests seed.py: basic fact about communications in a private bucket + cross-ref to group bucket
+(ns:<name>, wildcard → global), idempotency, isolation between namespace'ami."""
 import json
 import tempfile
 import unittest
@@ -42,9 +42,9 @@ class TestSeed(unittest.TestCase):
             with FakeMemoryServer() as url:
                 env, config, flex = _setup(tmp, url)
                 text = seed.seed_text(env, config, flex)
-                self.assertIn("изолирована", text)
+                self.assertIn("isolated", text)
                 self.assertIn("project:flexcrm", text)
-                self.assertIn("azguard", text)  # связанный проект из графа
+                self.assertIn("azguard", text)  # linked project from graph
 
     def test_seed_writes_private_scope_only(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -54,7 +54,7 @@ class TestSeed(unittest.TestCase):
                 self.assertEqual(r["status"], "ok")
                 self.assertTrue(r["changed"])
                 priv = memory_mod.recall(url, "project:flexcrm", "ecosystem-link")
-                self.assertTrue(any("изолирована" in m["text"] for m in priv))
+                self.assertTrue(any("isolated" in m["text"] for m in priv))
                 grp = memory_mod.recall(url, "ns:default", "ecosystem-link")
                 self.assertEqual(grp, [])
                 self.assertEqual(memory_mod.recall(url, "global", "ecosystem-link"), [])
@@ -62,7 +62,7 @@ class TestSeed(unittest.TestCase):
     def test_namespace_isolation(self):
         with tempfile.TemporaryDirectory() as tmp:
             with FakeMemoryServer() as url:
-                # graph namespace не публикует память автоматически.
+                # graph namespace does not publish memory automatically.
                 env, config, flex = _setup(tmp, url, namespaces=["axioma"])
                 seed.seed_memory(env, config, flex)
                 shared = memory_mod.recall(url, "ns:axioma", "ecosystem-link")

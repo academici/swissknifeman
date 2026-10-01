@@ -38,7 +38,7 @@ def _schema() -> dict:
     try:
         return json.loads(_SCHEMA.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise ReturnError(f"схема return-fingerprint v1 не читается: {_SCHEMA}") from exc
+        raise ReturnError(f"diagram return-fingerprint v1 is not readable: {_SCHEMA}") from exc
 
 
 def _loop_spec() -> dict:
@@ -47,17 +47,17 @@ def _loop_spec() -> dict:
         value = json.loads(_LOOP_SPEC.read_text(encoding="utf-8"))
         cap = value["cap"]["default"]
         if not isinstance(cap, int) or isinstance(cap, bool) or cap < 1:
-            raise ValueError("cap.default должен быть положительным int")
+            raise ValueError("cap.default must be positive int")
         return value
     except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
-        raise ReturnError(f"спецификация return-loop v1 не читается: {_LOOP_SPEC}") from exc
+        raise ReturnError(f"specification return-loop v1 is not readable: {_LOOP_SPEC}") from exc
 
 
 def _judgement_schema() -> dict:
     try:
         return json.loads(_JUDGEMENT_SCHEMA.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise ReturnError(f"схема return-judgement v1 не читается: {_JUDGEMENT_SCHEMA}") from exc
+        raise ReturnError(f"diagram return-judgement v1 is not readable: {_JUDGEMENT_SCHEMA}") from exc
 
 
 def _judgement_calibration() -> dict:
@@ -65,20 +65,20 @@ def _judgement_calibration() -> dict:
     try:
         value = json.loads(_JUDGEMENT_CALIBRATION.read_text(encoding="utf-8"))
         if value.get("schema_version") != "return-judgement-calibration.v1":
-            raise ValueError("неподдерживаемая версия")
+            raise ValueError("unsupported version")
         calibrated = value.get("calibrated")
         if not isinstance(calibrated, list):
-            raise ValueError("calibrated должен быть списком")
+            raise ValueError("calibrated must be a list")
         for entry in calibrated:
             if (not isinstance(entry, dict)
                     or not isinstance(entry.get("model_id"), str)
                     or not _DIGEST.fullmatch(str(entry.get("rubric_sha256", "")))
                     or entry.get("status") != "verified"):
-                raise ValueError("некорректная verified-запись")
+                raise ValueError("incorrect verified-entry")
         return value
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         raise ReturnError(
-            f"реестр калибровки return-judgement не читается: {_JUDGEMENT_CALIBRATION}") from exc
+            f"calibration register return-judgement is not readable: {_JUDGEMENT_CALIBRATION}") from exc
 
 
 def _calibrated_judgement(record: dict) -> dict:
@@ -94,7 +94,7 @@ def conservative_swap_verdict(forward: str, reverse: str) -> str:
     """Collapse position-sensitive classifications to abstention, never to a winner."""
     enum = set(_judgement_schema()["properties"]["verdict"]["enum"])
     if forward not in enum or reverse not in enum:
-        raise ReturnError("swap verdict вне закрытого enum return-judgement v1")
+        raise ReturnError("swap verdict outside closed enum return-judgement v1")
     return forward if forward == reverse else "INSUFFICIENT_EVIDENCE"
 
 
@@ -107,7 +107,7 @@ def _validate(value, schema: dict, root: dict, path: str = "$") -> None:
     if "$ref" in schema:
         ref = schema["$ref"]
         if not ref.startswith("#/$defs/"):
-            raise ReturnError(f"{path}: неподдерживаемая schema ссылка {ref}")
+            raise ReturnError(f"{path}: unsupported schema link {ref}")
         return _validate(value, root["$defs"][ref.rsplit("/", 1)[-1]], root, path)
     if "allOf" in schema:
         for child in schema["allOf"]:
@@ -121,14 +121,14 @@ def _validate(value, schema: dict, root: dict, path: str = "$") -> None:
             except ReturnError as exc:
                 errors.append(str(exc))
         else:
-            raise ReturnError(f"{path}: не проходит ни один schema-вариант")
+            raise ReturnError(f"{path}: none of them pass schema-option")
     if "not" in schema:
         try:
             _validate(value, schema["not"], root, path)
         except ReturnError:
             pass
         else:
-            raise ReturnError(f"{path}: запрещён schema-вариантом")
+            raise ReturnError(f"{path}: prohibited schema-option")
     if "if" in schema:
         try:
             _validate(value, schema["if"], root, path)
@@ -139,9 +139,9 @@ def _validate(value, schema: dict, root: dict, path: str = "$") -> None:
             if "then" in schema:
                 _validate(value, schema["then"], root, path)
     if "const" in schema and value != schema["const"]:
-        raise ReturnError(f"{path}: ожидается {schema['const']!r}")
+        raise ReturnError(f"{path}: pending {schema['const']!r}")
     if "enum" in schema and value not in schema["enum"]:
-        raise ReturnError(f"{path}: значение вне enum")
+        raise ReturnError(f"{path}: value out enum")
     kinds = schema.get("type")
     if kinds is not None:
         kinds = (kinds,) if isinstance(kinds, str) else tuple(kinds)
@@ -153,34 +153,34 @@ def _validate(value, schema: dict, root: dict, path: str = "$") -> None:
                    or ("number" in kinds and isinstance(value, (int, float)) and not isinstance(value, bool))
                    or ("null" in kinds and value is None))
         if not matched:
-            raise ReturnError(f"{path}: тип не проходит schema")
+            raise ReturnError(f"{path}: type fails schema")
     if isinstance(value, dict):
         missing = [name for name in schema.get("required", ()) if name not in value]
         if missing:
-            raise ReturnError(f"{path}: нет обязательных полей {', '.join(missing)}")
+            raise ReturnError(f"{path}: no required fields {', '.join(missing)}")
         properties = schema.get("properties", {})
         if schema.get("additionalProperties") is False:
             extra = sorted(set(value) - set(properties))
             if extra:
-                raise ReturnError(f"{path}: лишние поля {', '.join(extra)}")
+                raise ReturnError(f"{path}: extra fields {', '.join(extra)}")
         for name, child in properties.items():
             if name in value:
                 _validate(value[name], child, root, f"{path}.{name}")
     if isinstance(value, list):
         if len(value) < schema.get("minItems", 0) or len(value) > schema.get("maxItems", len(value)):
-            raise ReturnError(f"{path}: число элементов вне schema границ")
+            raise ReturnError(f"{path}: number of elements out schema boundaries")
         if schema.get("uniqueItems") and len({canonical_json(item) for item in value}) != len(value):
-            raise ReturnError(f"{path}: элементы должны быть уникальны")
+            raise ReturnError(f"{path}: elements must be unique")
         for index, item in enumerate(value):
             _validate(item, schema.get("items", {}), root, f"{path}[{index}]")
     if isinstance(value, str):
         if len(value) < schema.get("minLength", 0):
-            raise ReturnError(f"{path}: строка короче minLength")
+            raise ReturnError(f"{path}: line is shorter minLength")
         if "pattern" in schema and re.search(schema["pattern"], value) is None:
-            raise ReturnError(f"{path}: строка не проходит pattern")
+            raise ReturnError(f"{path}: line does not pass pattern")
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         if value < schema.get("minimum", value) or value > schema.get("maximum", value):
-            raise ReturnError(f"{path}: число вне schema границ")
+            raise ReturnError(f"{path}: number out schema boundaries")
 
 
 def validate(record: dict) -> None:
@@ -205,14 +205,14 @@ def decide(*, verdict=None, occurrences=1, cap=None, namespace="provisional",
     spec = _loop_spec()
     cap = spec["cap"]["default"] if cap is None else cap
     if not isinstance(occurrences, int) or isinstance(occurrences, bool) or occurrences < 0:
-        raise ReturnError("occurrences должен быть неотрицательным int")
+        raise ReturnError("occurrences must be non-negative int")
     if not isinstance(cap, int) or isinstance(cap, bool) or cap < 1:
-        raise ReturnError("cap должен быть положительным int")
+        raise ReturnError("cap must be positive int")
     if namespace not in ("classified", "provisional", "ungroupable"):
-        raise ReturnError("namespace judgement policy неизвестен")
+        raise ReturnError("namespace judgement policy unknown")
     enum = _judgement_schema()["properties"]["verdict"]["enum"]
     if verdict is not None and verdict not in enum:
-        raise ReturnError("verdict вне закрытого enum return-judgement v1")
+        raise ReturnError("verdict outside closed enum return-judgement v1")
     over_cap = occurrences > cap
     strict_stop = verdict in _STRICTER_VERDICTS
     return {
@@ -279,7 +279,7 @@ def _frontmatter(path: Path) -> dict:
         fields, _body = plan_decisions.parse_frontmatter(text, path=path)
         return fields
     except (OSError, plan_decisions.DecisionError) as exc:
-        raise ReturnError(f"seam carrier не читается: {path}") from exc
+        raise ReturnError(f"seam carrier is not readable: {path}") from exc
 
 
 def _seams(plan_dir: Path) -> list[dict]:
@@ -299,7 +299,7 @@ def _seams(plan_dir: Path) -> list[dict]:
             if not _is_seam_candidate(path.read_text(encoding="utf-8")):
                 continue
         except (OSError, UnicodeDecodeError) as exc:
-            raise ReturnError(f"seam carrier не читается: {path}") from exc
+            raise ReturnError(f"seam carrier is not readable: {path}") from exc
         fields = _frontmatter(path)
         seam = {key: fields.get(key) for key in _SEAM_FIELDS}
         if (isinstance(fields.get("item"), str) and isinstance(fields.get("date"), str)
@@ -313,7 +313,7 @@ def _journal_entries(path: Path) -> list[dict]:
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeDecodeError) as exc:
-        raise ReturnError(f"journal не читается: {path}") from exc
+        raise ReturnError(f"journal is not readable: {path}") from exc
     entries = []
     for ordinal, raw in enumerate(lines, 1):
         if not raw.strip():
@@ -394,7 +394,7 @@ def _evidence_fields(plan_dir: Path) -> list[dict]:
         try:
             raw = path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError) as exc:
-            raise ReturnError(f"evidence carrier не читается: {path}") from exc
+            raise ReturnError(f"evidence carrier is not readable: {path}") from exc
         if f"gate: {RETURN_LOOP_GATE}" not in raw:
             continue
         fields = _frontmatter(path)
@@ -419,7 +419,7 @@ def _judgements_by_event(plan_dir: Path, subject_id: str, fingerprint_digest: st
         try:
             raw = path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError) as exc:
-            raise ReturnError(f"judgement carrier не читается: {path}") from exc
+            raise ReturnError(f"judgement carrier is not readable: {path}") from exc
         if "return_judgement:" not in raw:
             continue
         fields = _frontmatter(path)
@@ -450,24 +450,24 @@ def return_loop_evidence(plan_dir) -> list[dict]:
 
 def evidence_errors(fields: dict) -> list[str]:
     if not isinstance(fields.get("item"), str) or not _ITEM.fullmatch(fields["item"]):
-        return ["evidence требует item формы Pn.m"]
+        return ["evidence requires item forms Pn.m"]
     qualification = fields.get("qualification")
     if qualification not in ("new", "repeat", "unqualifiable"):
-        return ["qualification обязан быть new/repeat/unqualifiable"]
+        return ["qualification must be new/repeat/unqualifiable"]
     if qualification == "unqualifiable":
         if not isinstance(fields.get("missing_carrier_reason"), str) or not fields["missing_carrier_reason"].strip():
-            return ["unqualifiable требует missing_carrier_reason"]
+            return ["unqualifiable requires missing_carrier_reason"]
         if "fingerprint_digest" in fields or "occurrences" in fields:
-            return ["unqualifiable не принимает fingerprint_digest/occurrences"]
+            return ["unqualifiable does not accept fingerprint_digest/occurrences"]
         return []
     digest = fields.get("fingerprint_digest")
     if not isinstance(digest, str) or not _DIGEST.fullmatch(digest):
-        return ["new/repeat требует lowercase fingerprint_digest"]
+        return ["new/repeat requires lowercase fingerprint_digest"]
     try:
         occurrences = int(fields.get("occurrences"))
     except (TypeError, ValueError):
-        return ["new/repeat требует положительное occurrences"]
-    return [] if occurrences >= 1 else ["new/repeat требует положительное occurrences"]
+        return ["new/repeat requires positive occurrences"]
+    return [] if occurrences >= 1 else ["new/repeat requires positive occurrences"]
 
 
 def _owner_packet(record: dict, occurrences: int, cap: int, history: list[dict],
@@ -572,7 +572,7 @@ def dispatch_owner_gates(plan_dir, *, continuations: dict[str, dict], expires_at
         packet = gate.get("owner_packet") or {}
         subject_id = (packet.get("fingerprint_tuple") or {}).get("subject")
         if not isinstance(subject_id, str) or subject_id not in continuations:
-            raise ReturnError("owner-gate требует continuation для затронутого subject")
+            raise ReturnError("owner-gate requires continuation for affected subject")
         events.append(plan_requests.request_return_loop_gate(
             plan_dir, gate, continuation=continuations[subject_id], expires_at=expires_at, actor=actor))
     return events

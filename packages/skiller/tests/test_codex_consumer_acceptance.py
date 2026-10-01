@@ -117,8 +117,8 @@ class InventoryDriftDetectionCase(unittest.TestCase):
         assert_codex_inventory_matches(names, set(names))
 
 
-@unittest.skipUnless(CODEX_BIN, "codex CLI не найден в PATH — consumer-acceptance гейт пропущен "
-                                "(SKIP, не GREEN: гейт не прогонялся)")
+@unittest.skipUnless(CODEX_BIN, "codex CLI not found in PATH — consumer-acceptance gate skipped "
+                                "(SKIP, not GREEN: gate was not run)")
 class TestCodexConsumerAcceptance(unittest.TestCase):
     """Isolated `CODEX_HOME` → real `codex` CLI → clean temp-consumer discovery.
     Package-level GREEN elsewhere in this suite is not release GREEN until this
@@ -150,8 +150,8 @@ class TestCodexConsumerAcceptance(unittest.TestCase):
                                 codex_home=cls.codex_home, cwd=cls.consumer_dir)
         if add_result.returncode != 0:
             raise unittest.SkipTest(
-                f"codex plugin marketplace add провалился (живая версия {cls.codex_version} "
-                f"могла сменить контракт): {add_result.stderr.strip()}")
+                f"codex plugin marketplace add failed (live version {cls.codex_version} "
+                f"could change the contract): {add_result.stderr.strip()}")
         cls.marketplace_add = json.loads(add_result.stdout)
 
         list_result = _run_codex(

@@ -10,37 +10,37 @@ requires: []
 produces_for: []
 ---
 
-# AI Agent Builder — навигатор
+# AI Agent Builder — navigator
 
-Тонкая обёртка над импортированным super-skill **get-zeked/ai-agent-super-skill** (vendored,
-`strategy: fork`). Полный справочник (~2700 строк, 12 разделов + приложения) — в
-[`references/source.md`](references/source.md). **Читай нужный раздел по требованию, не целиком** —
-это сохраняет контекст (см. скилл `context-economy`).
+Thin wrapper over imported super-skill **get-zeked/ai-agent-super-skill** (vendored,
+`strategy: fork`). Complete reference (~2700 lines, 12 sections + applications) — in
+[`references/source.md`](references/source.md). **Read the required section as required, not in its entirety** —
+this saves context (see skill `context-economy`).
 
-> ⚠️ Идентификаторы моделей и pricing в справочнике — пример на 2026-06-11 (дата апстрима).
-> Сверяйся с актуальным прайсом: https://www.anthropic.com/pricing. Текущие ID моделей — в скилле `claude-api`.
+> ⚠️ Model IDs and pricing in the directory - example for 2026-06-11 (upstream date).
+> Check the current price list: https://www.anthropic.com/pricing. Current ID models - in skill `claude-api`.
 
-## Маршрутизация по [`references/source.md`](references/source.md)
+## Routing by [`references/source.md`](references/source.md)
 
-| Задача | Раздел |
+| Task | Section |
 |:--|:--|
-| Выбор паттерна, gap-анализ возможностей | §1 Gap Analysis |
-| Паттерны архитектуры (ReAct, Plan-Execute, Reflexion, multi-agent) | §2 Agent Architecture & Design Patterns |
-| Построить MCP-сервер | §3 MCP Server Development |
-| Собрать RAG-конвейер | §4 RAG System Construction |
-| Координация субагентов, worktree-изоляция | §5 Subagent Coordination |
-| Планирование выполнения и верификация | §6 Execution Planning & Verification |
-| Промпт-инжиниринг и оптимизация | §7 Prompt Engineering & Optimization |
-| ML-интеграция в агентов | §8 ML Integration for Agents |
-| Создание новых скиллов/возможностей | §9 Skill & Capability Creation |
-| Бэкенд-инфраструктура агентов | §10 Backend Infrastructure for Agents |
-| Деплой и мониторинг | §11 Agent Deployment & Monitoring |
-| Возможности Perplexity Computer | §12 Unique Perplexity Computer Capabilities |
-| Быстрый выбор паттерна · ADR · оценка MCP · типовые сбои | Приложения A–D |
+| Pattern selection, gap-opportunity analysis | §1 Gap Analysis |
+| Architecture Patterns (ReAct, Plan-Execute, Reflexion, multi-agent) | §2 Agent Architecture & Design Patterns |
+| Build MCP-server | §3 MCP Server Development |
+| Collect RAG-pipeline | §4 RAG System Construction |
+| Coordination of subagents, worktree-insulation | §5 Subagent Coordination |
+| Execution planning and verification | §6 Execution Planning & Verification |
+| Prompt engineering and optimization | §7 Prompt Engineering & Optimization |
+| ML-integration into agents | §8 ML Integration for Agents |
+| Creating new skills/capabilities | §9 Skill & Capability Creation |
+| Agent backend infrastructure | §10 Backend Infrastructure for Agents |
+| Deployment and monitoring | §11 Agent Deployment & Monitoring |
+| Features Perplexity Computer | §12 Unique Perplexity Computer Capabilities |
+| Quick pattern selection · ADR · rating MCP · typical failures | Applications A–D |
 
-## Сопровождение (для мейнтейнеров реестра)
+## Maintenance (for registry maintainers)
 
-Это форк: апстрим зеркалится в `references/source.md`, наши правки живут в этом SKILL.md.
-Обновление — `scripts/update-upstreams.sh` (`--check` → при дрейфе `--apply` кладёт
-`upstream/source.incoming.md` + ставит `review_pending`; перенеси нужное сюда и `--resolve`).
-Детали — `docs/guide/upstream-sync.md`.
+This is a fork: upstream is mirrored in `references/source.md`, our edits live in this SKILL.md.
+Update - `scripts/update-upstreams.sh` (`--check` → when drifting `--apply` puts
+`upstream/source.incoming.md` + puts `review_pending`; move what you need here and `--resolve`).
+Details - `docs/guide/upstream-sync.md`.

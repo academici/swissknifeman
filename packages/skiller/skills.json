@@ -65,7 +65,7 @@
       "status": "active"
     },
     "frontend": {
-      "description": "Frontend core: общие фронт-скиллы (web design guidelines, document writer, file upload)",
+      "description": "Frontend core: general front skills (web design guidelines, document writer, file upload)",
       "count": 3,
       "status": "active"
     },
@@ -257,8 +257,8 @@
       "path": "skills/ai/ai-agents/SKILL.md",
       "version": "0.2.0",
       "description": "Navigator for the AI-agent building reference (vendored super-skill): agent patterns, MCP servers, RAG, subagent coordination, prompt engineering, deployment. Activate when designing AI agents, building MCP servers/RAG pipelines, orchestrating multi-agent systems, or optimizing prompts.",
-      "sha256": "5ed823a00495c1c7bde8301b46a524f52c046d15b298ae4994b9f05fdb4836ab",
-      "content_sha256": "53db6484a92929f29dbf138074f5ae3375599265fe75ab5be17f844169f44268",
+      "sha256": "e449844f8e1e9b8e9996b2851f0572648b9ec5c9195e6836ad0d29f6fa5e8a4b",
+      "content_sha256": "269658515e5c4d8c06fad8f30f27ce95fbddc9688a412da670331176cea0fd44",
       "tags": [
         "ai",
         "agents",
@@ -363,8 +363,8 @@
       "path": "skills/architect/codebase-design/SKILL.md",
       "version": "0.1.0",
       "description": "Shared vocabulary and discipline for designing DEEP modules (Ousterhout/Feathers): Module/Interface/Depth/Seam/Adapter/Leverage/Locality; deletion-test; interface = test surface; 'one adapter is a hypothetical seam, two is a real one'. Activate when designing/improving a module interface, finding deepening opportunities, choosing a seam, or raising testability/AI-navigability.",
-      "sha256": "81766faecb0222400b7c09ea0384486643ba47b5f868344ffd18ceebb12fe701",
-      "content_sha256": "36e0b97c81a9537c29054833d34c0853b8ec577f8f9c5333566f591bd2861148",
+      "sha256": "3800a17d2891e5ca39df18e77e1538d71f5865cdee79a85aef58d1fcfba27e9a",
+      "content_sha256": "0504716b3aed76c5d0d3c77e37733c6f9d6a6f18986938e25f7fa0d5bb0500df",
       "tags": [
         "design",
         "deep-modules",
@@ -386,8 +386,8 @@
       "path": "skills/architect/data-schema/SKILL.md",
       "version": "0.1.0",
       "description": "Use when designing a data schema: entities, attributes, relations. DB-agnostic — markdown tables only.",
-      "sha256": "e0f362c0dbd2dafaf047f2d6472aae363a0b796e66019610650bc50de00bcb79",
-      "content_sha256": "0b1e01b3fe52157527608e9166b718b549fe5a1173657443403722343cc3c2de",
+      "sha256": "ded806f3171774e6998f4ad82ec4b78e3b5dcfb6af38f2c3986a9e4326a4eec7",
+      "content_sha256": "09c81bc82123554aa7a97de30cc1c3cc88f8c3aee564cd6706cee8c3251aaed8",
       "tags": [
         "data",
         "architecture",
@@ -410,7 +410,7 @@
       "version": "0.2.0",
       "description": "Active domain-model discipline: challenge terms, stress-test with scenarios, RECORD the glossary (CONTEXT.md) and ADRs INLINE as they crystallize (not in batches). Multi-context via CONTEXT-MAP.md; Rule of Two entry into the shared term-index; term steward model. Activate when clarifying terminology/ubiquitous language, recording an architectural decision, or when another skill builds a domain model (esp. fintech).",
       "sha256": "a2fcf326c7c81331a3c0e5a3a9ec4c46cdb87ce2282f368bdd9beb8fe0eb2d67",
-      "content_sha256": "7e57ac88004b81484b037aa5fd6e63a7d98958fa9130ee4f2ca8e16b4a5f813a",
+      "content_sha256": "6305e0b49702d3072c6bea59c74e1e7afc8db595ea3d7ba6a91493a2f53997f6",
       "tags": [
         "domain",
         "ddd",
@@ -466,8 +466,8 @@
       "path": "skills/architect/eval-design/SKILL.md",
       "version": "0.1.0",
       "description": "Use when evaluating LLM/AI output quality: eval-set, metrics, regression harness, automated + human review.",
-      "sha256": "c5e5bf37e88f55973489d0301cc353b1944d2c35441aa84d522190817df87411",
-      "content_sha256": "bf3f90b315ad695017a5bc20663b2505c30dbd9e9ea08afc837ceb8fb51ba228",
+      "sha256": "91dd8bf66752cc64a772ff7f09160668387a9c104b5692bcac54fc8998fe4ee1",
+      "content_sha256": "16285367c09d82524bcc8eefbd25ac1c0bf2bff73037113076f773919a5023d3",
       "tags": [
         "agentic",
         "validation",
@@ -490,7 +490,7 @@
       "version": "0.1.0",
       "description": "Figma Dev Mode MCP discipline: real tools (get_metadata, get_variable_defs, get_code, get_code_connect_map, get_screenshot, search_design_system), no reading values off screenshots, selection-driven algorithm, W3C tokens.json extraction, Code Connect reuse. Activate for any UI-from-Figma task via connected MCP, before mapping to a framework.",
       "sha256": "71437f5f831f47b87e115f64579ac511a34c93ab39989ecdc11fb0c1c88a77e3",
-      "content_sha256": "bb5ebacf662faf95f12f0dfac898215dc4bccc722833087ae5765ecc57ee870a",
+      "content_sha256": "5635f31992c9103f67fd321b18a5e034bb6351b530225af1d230eaffb03e30b9",
       "tags": [
         "figma",
         "mcp",
@@ -512,8 +512,8 @@
       "path": "skills/architect/legal-compliance/SKILL.md",
       "version": "0.1.0",
       "description": "Use when checking regulatory compliance before launch: GDPR, CCPA, AI Act, DMCA, COPPA, DSA.",
-      "sha256": "97d1fc0b92d46a21d9600ae13f1abcb99a3599ec9cd0805c38aea7a669755e42",
-      "content_sha256": "f8b99325cb603f05ceae5b81ec040f986ef635f9434f5771e9831231c2cf9cc4",
+      "sha256": "dac17010a8d06ebb97e9a2e8d2d9e9b392e949566182e08e92f7b1aa2438663c",
+      "content_sha256": "8aa3ebb5a1ccc393159a4f40da213c7feb2ef9732ec09d396499d7f06e0d62ec",
       "tags": [
         "compliance",
         "gdpr",
@@ -535,8 +535,8 @@
       "path": "skills/architect/observability-design/SKILL.md",
       "version": "0.1.0",
       "description": "Use when designing observability for prod-readiness: logging, metrics, tracing, alerting, SLO/SLI, error budget, runbooks.",
-      "sha256": "31d8cdbb39db368c659a4fc2733cfa7586e878825d5686436934b431bbf5b0c6",
-      "content_sha256": "3dcbbaa413b458a1bfae7058a5ad87694629e4884efbf69438d20de23c9b3424",
+      "sha256": "7727e1844e54948b7ac984a52be133430fa6b8af7213707034e1c8446cf0638a",
+      "content_sha256": "e21c90cdc58ed53d80081e855e6f1966fee8f9772388462733c5e80134d506f7",
       "tags": [
         "observability",
         "logging",
@@ -563,7 +563,7 @@
       "version": "0.2.0",
       "description": "Change a dependency at its owning source; distinguish authorized bugfixes from new public API scope.",
       "sha256": "56855ae90b939b70f4ff9226ddb4ccf4d35dc459a6942da0604a853048ba502b",
-      "content_sha256": "388e883eda2a30851f9634a4d0ec0d0988d780b5d33b586bae42aaf920b82356",
+      "content_sha256": "06d5fdb0a2e103e026ae0ad095a150890dbe1579684549a97aa5331627c30296",
       "tags": [
         "governance",
         "package",
@@ -582,7 +582,7 @@
       "version": "0.3.0",
       "description": "Design or review changed trust, auth, secrets, sensitive-data, or external exposure boundaries.",
       "sha256": "5af716e5deaa1b5e288aa37bff0327331766786302dc0bc901d9817ba8819010",
-      "content_sha256": "bc5d71bae52afc63be5b54d0858442eef016e99640ae038d57c1abf6c6dc383d",
+      "content_sha256": "999a93348a5da3fcff6951f199ef663842d4fa7a8b25b27a7054b92bfcfe7888",
       "tags": [
         "security",
         "compliance",
@@ -602,8 +602,8 @@
       "path": "skills/architect/tech-stack-selection/SKILL.md",
       "version": "0.1.0",
       "description": "Use when selecting a tech stack: trade-off matrix before architecture design, ADR-first step.",
-      "sha256": "5aec95e44a373e697bde7b0f629f261fdd286755fe251e6c63abc2d64c1d047a",
-      "content_sha256": "82bd99355c6c95eb14c16675dfef6c5be8dbb4b4d5766fe34c04685dc8322f60",
+      "sha256": "7a6af64900b8aff5c71021d4fc1ed77f61792d54adb0cdb5e478311f09fc3f49",
+      "content_sha256": "3f43946b783d183dea64b652a4e4c43f2571b191aad562bc227c3be55d1c2143",
       "tags": [
         "stack-choice",
         "architecture",
@@ -699,7 +699,7 @@
       "version": "0.1.0",
       "description": "Roles & access control via azguard package: code-first RBAC, panels, scoped roles, direct grants, frontend abilities",
       "sha256": "99a57ced402b78d48195f8d48c08a7b302387d4c169dc1b30e0b139d418264ec",
-      "content_sha256": "52c078ef1aa391f1baf403f6a6f4ceebba2c5368085abf89b86dc749032627ee",
+      "content_sha256": "292f428a3ce1e9c0b9d332e9c68e7cfa885cadbf82aa2cfffa167d22b60207af",
       "tags": [
         "php",
         "laravel",
@@ -719,7 +719,7 @@
       "version": "0.1.0",
       "description": "MCP Blender: tools (execute_blender_code, get_object_info, get_viewport_screenshot, get_scene_info), viewport display modes (tech/material/realism/xray), camera-via-helper principle, code-send & module-cache reset (del sys.modules), hiding obstructing objects for screenshot, parallel multi-agent work. Activate when working with Blender via MCP — building, viewport setup, screenshots.",
       "sha256": "aad963556c09f3fdb5db9fa3fbafbbe7e8325d0cfbb98d06eafee05c3b542e88",
-      "content_sha256": "75013a6fac4511cfd8a1da8261ca398285d7ac9a4e17f4e534adc7c6fa7173d6",
+      "content_sha256": "556025db53aea960ce414fffd7104bc27f8236f02b951fee76d43e46e95cad4b",
       "tags": [
         "blender",
         "mcp",
@@ -798,8 +798,8 @@
       "path": "skills/blender-modeling/config-conventions/SKILL.md",
       "version": "0.1.0",
       "description": "Parametric CAD config conventions: one entity = one dataclass; variable naming (r_outer/z0/wall/clearance); units mm; everything-from-formulas (no magic numbers in parts/); cross-config dependencies and end-to-end recompute; part-adding pattern. Activate on config.py edits, adding a param/part, cross-config questions, hardcoded sizes, reading another part's config.",
-      "sha256": "2011280d9452bc18c5c57bf29a62f7e3d507416ed0e7e7161061e029214dd97a",
-      "content_sha256": "e8d89a6b72e075985a451e245047556452ecb7b9b8e4238a5fe17ba79393847d",
+      "sha256": "d1ae793fc67dff1c6833e5da3bf78c56e0bee4229b6e1a4c2814aff41cb51653",
+      "content_sha256": "4d72fa6b774915ad14b82dbaa90694f9287180cc410b533343d0a52db5fd9695",
       "tags": [
         "blender",
         "cad",
@@ -872,8 +872,8 @@
       "path": "skills/blender-modeling/parametric-config/SKILL.md",
       "version": "0.1.0",
       "description": "Data-config-driven parametric 3D modeling in Blender (bpy): dataclass part params (dims/tolerances/material/units mm), profile + revolve/extrude, invariant validation without launching Blender. Activate when editing models/*/config.py, profile.py, parts/*, check.py; adding a part param; questions about tolerances/units/radius matching for FDM/SLA printing.",
-      "sha256": "9b387cfab89710666e466a5a2a9b1c2120e994ce0cb6df75b36b47d331a1d65b",
-      "content_sha256": "e6324f7606e21ed4b5dad58a3a77dbca4b5dd6b8edadd2e59bd21b27450571ff",
+      "sha256": "729e18540483566626739026e01fa08cd6e065cfafb43b2d112c2d5bcc3f105b",
+      "content_sha256": "a254064c02fc8a45fc1167603a8a9b6635beb2e4cde3dc1062cfa2fcc50e6513",
       "tags": [
         "blender",
         "bpy",
@@ -927,7 +927,7 @@
       "version": "0.1.1",
       "description": "Use when designing threads on FDM/SLA parts: material, print physics, radial clearance by fit type.",
       "sha256": "7b20f43f9331d006c1e516beea6d6870f1341a96ed2f9d775e9aa392df128485",
-      "content_sha256": "315155ce9823ffed6af91e4160b92ef75ece12027319efe37c514626aacd5bc3",
+      "content_sha256": "1f4f5813a97ed99312af198688883ee5dcaff2732a206e140a9ff875b57e25fe",
       "tags": [
         "blender",
         "3d",
@@ -969,7 +969,7 @@
       "version": "1.0.0",
       "description": "Creative studio: video production, speech synthesis, image generation, website building, canvas design, algorithmic art, brand guidelines, frontend design, artifacts, content frameworks/calendars. Use when creating visual content, designing interfaces, building brands, generating video/image/audio, writing content, or planning content calendars.",
       "sha256": "1c24a1611e9fdf95b7d3ec712eb757f84cdf8c9083b15ee030d33d757e7e2334",
-      "content_sha256": "e9b7ae571c051420af29aade953eb7dbec46ac6b196021a7e535d459b8de281f",
+      "content_sha256": "0a1531ac906df2455c2823c133dced5844fd20e56273999670c4a2fd85092d6b",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/content-creative-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -1001,7 +1001,7 @@
       "version": "0.4.0",
       "description": "GitHub Actions / GitLab CI pipelines for Laravel: lint, tests, build, release + security gates (SAST, dependency audit, image scan) + coverage-gate in CI (Clover threshold, jobs)",
       "sha256": "e1fcd0e87f7105488394738970791f7382a507c1647a5d8f9fd77a44bd9b15c3",
-      "content_sha256": "1b065b375c738f0ab75edff041bd7535408315dab6d76e03fc898d7dc681cbdc",
+      "content_sha256": "e53ac9d8542bdd52723cb21dcf243a5bb1846db9db65fc93c4cd4f798f94516f",
       "tags": [
         "ci",
         "github-actions",
@@ -1024,7 +1024,7 @@
       "version": "0.1.0",
       "description": "Pre-flight check of test DB (Postgres in Docker) BEFORE running tests: container up (docker compose ps / pg_isready), target DB exists and its name ends with _test (not dev/prod), migrations applied; distinguishes host vs docker connection. Activate when running Postgres tests, wiring hooks/CI, or when 'tests fail on DB connection'.",
       "sha256": "a8faa69b7d8f94d85c70dc31bb6f61902b0eabfe59aa3fd701427721b32a70b0",
-      "content_sha256": "e6e22d195f5219a8b688bbde0521ee4ceb20d0dc48b4da1cc55ddc7bb0c4ab7b",
+      "content_sha256": "830be16b0167572ba789e23b687253bf6abd365dd8abac5970b9cef441f79aba",
       "tags": [
         "postgres",
         "docker",
@@ -1067,7 +1067,7 @@
       "version": "0.3.0",
       "description": "Split docker-compose into dev (build + bind-mount) and prod (prebuilt image + named volumes), local override, &app_env anchor",
       "sha256": "f9aa3ed0dcd9e7859aaedfb961d93cbc16fc1304c6fd227fb825c0bea9ec29ef",
-      "content_sha256": "d3f4e28a113311a190bd0e26d9d2928233070429d2fbb15e4100945dfc0d8e20",
+      "content_sha256": "c75c859858e52bdd48a16ec1bc488714dc605f323dc4cad3914613b990b99bdf",
       "tags": [
         "docker",
         "devops",
@@ -1089,7 +1089,7 @@
       "version": "0.3.0",
       "description": "Production PHP Docker image: alpine-fpm or all-in-one serversideup/php (FPM+Nginx), entrypoint.d hooks, healthcheck on /up",
       "sha256": "fee22cfce110cf6e51af2564175b1480fda24958deae01e0606f9ddebce4ff26",
-      "content_sha256": "ebd18365f5d98918412f875660406b9bc3cd3fe7bbd684c5e5bf728e4942d656",
+      "content_sha256": "c6467475998198956b965063ab13d4242ab711d33ef9cc29950b050145508a5e",
       "tags": [
         "docker",
         "php",
@@ -1110,7 +1110,7 @@
       "version": "0.3.0",
       "description": "PostgreSQL in Docker: pg_isready healthcheck, named volume for data, init script creating test DB <app>_test for test isolation",
       "sha256": "274c0f7e25a9af8ab7e9869c97660d319c311c910ccaabfb9882c2da848751d9",
-      "content_sha256": "73c2723cea949e69c0ca98e4ec072deafed590ea91cb2c427de0b969603848e8",
+      "content_sha256": "b9adbab2c5147f3f01cdf17f88c0f23ee81e2c09b07685df611de036e81f6f7d",
       "tags": [
         "docker",
         "devops",
@@ -1130,8 +1130,8 @@
       "path": "skills/devops/docker-services/SKILL.md",
       "version": "0.1.0",
       "description": "Full Laravel service stack from one image: app (fpm-nginx), queue, scheduler, reverb, optional docs; healthcheck /up and depends_on service_healthy",
-      "sha256": "74f7f89ad44eda2b5962a6f6ec7c3bfdded0197ad42cf20441d1d8405cd07b3c",
-      "content_sha256": "f84e8f2a35f691a3eecf0ee54fa3bce9e847a0ca34e71ff18078cc0719d20441",
+      "sha256": "77ccf1dabaa572059ad4bc5112602ddbdef880314f24c4354505a621cd496f14",
+      "content_sha256": "222bd4198a046d03f9f10a2459294ff582b1f0325f4b78f4863b0b2e3bade145",
       "tags": [
         "docker",
         "devops",
@@ -1153,7 +1153,7 @@
       "version": "0.3.0",
       "description": "Vite dev server as separate compose service for Laravel: named volume for node_modules, HMR via localhost, host 0.0.0.0",
       "sha256": "c0d30959b047f8ea53bbc986811b485527a7a81954023f137b89af6caee474b8",
-      "content_sha256": "3ef8f38484509066159c6dba083d4f67eb839ebf88913176c879570410396e61",
+      "content_sha256": "529d5fa1a7e0b4abaee2a7316c4382f4ee356b33f7abb2bb58f7753771538f0e",
       "tags": [
         "docker",
         "devops",
@@ -1191,7 +1191,7 @@
       "version": "0.2.0",
       "description": "Makefile as single entrypoint: help, .PHONY, Docker command aliases; delegating root Makefile pattern with catch-all to docker/Makefile",
       "sha256": "c68f449bf453cb2b7de8e642b4a1fb2928b51e6e9a0176475ed09354215e6c33",
-      "content_sha256": "52a8d9af378ef8bb81312e4c11a78d025f06866474c8e71e1ca3703614026477",
+      "content_sha256": "4c05d5ddae2bdf8fea18c69d706253741d1101ce717bdb2333afc8911a76acfb",
       "tags": [
         "make",
         "devops",
@@ -1260,8 +1260,8 @@
       "path": "skills/founder/competitive-analysis/SKILL.md",
       "version": "0.1.0",
       "description": "Use when researching market, competitors, JTBD, open niche, attack vector. Uses Perplexity search_deep.",
-      "sha256": "c93911bba1dcb3f7644f712667243ef3aa17557d75817733470c772a0f119de9",
-      "content_sha256": "1e943426e4aa426bdb8dbf5482b230e3aab6764bc55490bc8cc63bb811b7b2a3",
+      "sha256": "9ddb5ee5d8dd31f851dcdc389e3313f7fa4da7775265e322e2f20ab286278ed8",
+      "content_sha256": "57ff866aba11fadd235870be1df0d17bedb13ad98f5258c8b8ec68db0805096e",
       "tags": [
         "discovery",
         "market",
@@ -1283,8 +1283,8 @@
       "path": "skills/founder/customer-discovery/SKILL.md",
       "version": "0.1.0",
       "description": "Systematic discovery — target profile, interview framework (past not future), post-interview 2-list analysis, asymmetry-check every 5 interviews, outreach automation",
-      "sha256": "017543a1a5d33c56899c63c87ebf20017556856dbe88a6b3902de3a0ea053384",
-      "content_sha256": "d041b3ca50c3cd7e7b9bd14aa27830a74d8830b728ba722d6ea36cf8545f2093",
+      "sha256": "3ae400ca568878702b027696303782dd8fd0c8385cfb80d58c20476f13edd21d",
+      "content_sha256": "2367155a147f47b62e2f341ff43c0a396e3f34bc739aed4f7a6f8859d2190034",
       "tags": [
         "discovery",
         "validation",
@@ -1349,8 +1349,8 @@
       "path": "skills/founder/idea-discovery/SKILL.md",
       "version": "0.1.0",
       "description": "Structured interview of a raw idea — JTBD, problem statement, hypothesis, before competitive-analysis",
-      "sha256": "906a04f044baf2344529ec66270025e3e35c0f87c59023a46251c057dad48319",
-      "content_sha256": "708817231cc9e3ac81f3f6f7984b649c8ee9cc6f86703610ac6f9ac4a5abba4a",
+      "sha256": "33dd3196219558452161177fa4c4616cdbdae873912c8e986e64b90b41f681fb",
+      "content_sha256": "6a02a5d7d9a9b9d4d12927eccbcce564a5993063fa252a2c39df32b38cb9ebfc",
       "tags": [
         "discovery",
         "requirements",
@@ -1369,8 +1369,8 @@
       "path": "skills/founder/new-project/SKILL.md",
       "version": "0.1.0",
       "description": "Use when launching a new startup project: concept, competitors, risks, full folder structure.",
-      "sha256": "5beb5941228e0fbcd91f54989c808e0ad103782a42c895b90a053abddf4a9bd3",
-      "content_sha256": "04a41d4f4d001dda962eb0d9353a09608e446b8abc3330f2c0a18720568d10ce",
+      "sha256": "66ad40145934c9ec4c12263d14ad95f47cc5b19c537ca685e153b382b22a3ac0",
+      "content_sha256": "74574cc34c1251cdfa33eed1b0ffe3cb58de4d1703ebac09ef5add720ab532fc",
       "tags": [
         "discovery",
         "requirements",
@@ -1391,8 +1391,8 @@
       "path": "skills/founder/pitch-deck/SKILL.md",
       "version": "0.1.0",
       "description": "Use when building a 10-slide investor deck per YC/Sequoia canon from existing project artifacts.",
-      "sha256": "77729ac37920c9c0555174dca5296f8655918fa4a60b4ef3249f8c6c70e78f00",
-      "content_sha256": "a11e82099808f20f5cfb7e64e5635a3e945de79cc6fe03b9768a85c1e8bbb836",
+      "sha256": "55af395515846134ebba8899ca17e7ffec5c1a5aea51e5618c3aec1d409fffb4",
+      "content_sha256": "1c9e41cc574449a993679ee5b3368e5191651e7ad5df86046b2dcb8cc3e26b3a",
       "tags": [
         "gtm",
         "market",
@@ -1465,7 +1465,7 @@
       "version": "0.1.0",
       "description": "File upload via FilePond in Vue + Laravel: register vue-filepond + plugins (validate-type/size, image-preview, file-poster), server via rahulhaque/laravel-filepond (process/revert on /filepond), bind serverId to form, previews/posters. Activate on file upload, drag-and-drop, FilePond field, image preview, filepond/vue-filepond/laravel-filepond/process/revert/serverId.",
       "sha256": "10dabd8baed9258eb0b2ff975c34e2c341a74bc99278b36d0739a8557f73369e",
-      "content_sha256": "2a534dddb5b6a409b22b81066e5f9d938542f1a3a3ff0d76e9c03a2817dc14fa",
+      "content_sha256": "b581c7152c7f6ad2bbf81a891a121aebe2ae43d14c48d24ec0021571560541ca",
       "tags": [
         "filepond",
         "vue",
@@ -1486,7 +1486,7 @@
       "version": "0.1.0",
       "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\".",
       "sha256": "41d130e3113c7bd5a2c3a55dfab4092b65483513b801402a2a2ce7df32a9f38b",
-      "content_sha256": "abe8a6e42e52a17d279cf2db15a3d9b416966a06b33867878cf8a6aae30aeac8",
+      "content_sha256": "ea02cc8d16d51e8dc68fb564d78c96f72c63d63ddf79ed2ca00e7a656f76470b",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/4e799d45c17aec1498c269287a83b9dba22b966b/command.md",
       "fetched_at": "2026-08-01"
@@ -1509,8 +1509,8 @@
       "path": "skills/frontend-backend/backend-type-sync/SKILL.md",
       "version": "0.1.1",
       "description": "Use for Laravel enum/DTO to TypeScript generation; route typing belongs to Wayfinder.",
-      "sha256": "af6446adb04574e565316eeba68953985e8c278bb93bb94b971410d17b3f8b18",
-      "content_sha256": "1081b9e27e2ecc03542acfe1983e38a6c56757199e4388da92b2bf2a443b9013",
+      "sha256": "0e5ece30176825a75a3f0b8fa543e5532c16ba5d158cd040dd4f9f8d683a1022",
+      "content_sha256": "72dfb34319ad80370607c91c2e8d35a147d365dcc274c91f4a314b5d8dfef6e8",
       "tags": [
         "typescript",
         "laravel",
@@ -1533,8 +1533,8 @@
       "path": "skills/frontend-backend/inertia-vue/SKILL.md",
       "version": "0.3.1",
       "description": "Use for Laravel/Inertia Vue pages, forms, navigation, and resources/js organization.",
-      "sha256": "d80d13d534ce98dee5c5adced736eee5e627f55f7af82883c7ebcf2886d84ab3",
-      "content_sha256": "4463f2e29b2af48b6fc6934239bcf9413246178aa4a27b6a96d0e93452fa7f70",
+      "sha256": "1855522c8884275a72051eea8c61a9b5ba66131ca651d59e000b22329ba21356",
+      "content_sha256": "0126465b2a60ce47acc8055b10d7246612da0159dd7eab4a740b278fce8f19f4",
       "tags": [
         "inertia",
         "vue",
@@ -1552,7 +1552,7 @@
       "version": "0.1.1",
       "description": "Use for Vue Laravel Echo subscriptions, private/presence channels, cleanup, and socket IDs.",
       "sha256": "e4b844d61c111e67429a4d79015ed5f08b8211797560ac7e918c327dad38e4b6",
-      "content_sha256": "450719337dc2c3f4e301fa5a42295c53e5f09d1e8e903af2edd7d642d7a2f3e1",
+      "content_sha256": "84692c138f025ea31276ef52f23f3952e279e9890240c598e0a0aff9e59e0e7a",
       "tags": [
         "laravel-echo",
         "reverb",
@@ -1572,7 +1572,7 @@
       "version": "0.1.0",
       "description": "Map Figma Dev Mode MCP design to Vue + Tailwind v4: Auto-layout → flexbox/grid, tokens.json → @theme tokens (CSS-first), Variants → class-variance-authority (cva), Variable Modes → dark theme (.dark), component reuse via Code Connect. Activate when building Vue screens/components from Figma; runs on top of figma-mcp-core.",
       "sha256": "4eac0ba8184abc66e92fb2eec7375994340e998a76c7eced625f094ca85956fb",
-      "content_sha256": "2bd855b692374852edba7a46a4c2a146267752da60660f382970fd9e07d9215b",
+      "content_sha256": "1343c03bd8a4e5b101cd7520eba7ecb5791cadec2f76a235f94f5fcb933cab55",
       "tags": [
         "figma",
         "vue",
@@ -1613,7 +1613,7 @@
       "version": "0.1.0",
       "description": "ESLint flat config (eslint.config.js) for Vue 3 + TypeScript: defineConfigWithVueTs/typescript-eslint + eslint-plugin-vue, @stylistic, import/order and import boundaries, padding-line-between-statements, Prettier chain (eslint-config-prettier + tailwindcss + organize-imports), lint/lint:fix scripts. Triggers: setup/edit eslint or prettier, new Vue/TS project.",
       "sha256": "b1e5575522bcb0527148c49bec3d52ee8e2ee680d9424123c99949e65716b737",
-      "content_sha256": "82b0753bc2a17abf78d5b487e2f2f37311b22fbb87f98549b646bb84282a32f0",
+      "content_sha256": "e5149c373309c535042d087234fcda1e9e99ed0ebeaae2cd851ff9846cd4d100",
       "tags": [
         "eslint",
         "prettier",
@@ -1633,8 +1633,8 @@
       "path": "skills/frontend-linting/js-code-style/SKILL.md",
       "version": "0.1.0",
       "description": "JS/TS style per Spatie: 4 spaces, width 120, single quotes, const-first, strict ===, function for named functions, destructuring, named imports.",
-      "sha256": "ee3e49ce8c2f434ddb930bbdce081385906b771cdebb2548e8e0f585e3319be0",
-      "content_sha256": "db5ecf24d1e85a2ac19adbc1c2853e3ed9c8dc1ea48278a2b696bfffde067772",
+      "sha256": "e3f83a69329bea60114974eb399679a5f7616ae0e1351ded8be96d6fe73c28b8",
+      "content_sha256": "91e5838131292528364d25c02107ad68ac4c751df0ed78d74107b7014b94fe41",
       "tags": [
         "javascript",
         "typescript",
@@ -1666,7 +1666,7 @@
       "version": "0.1.1",
       "description": "Use for Naive UI theme tokens, GlobalThemeOverrides, NConfigProvider, and dark mode.",
       "sha256": "fd9953c530175e4bc62ed533c10fa29e9832305155f4352932f6a91da9a6f55a",
-      "content_sha256": "9929828a40e50e4217e67f3a9af59ffe3f0df4ee76cf033d5b05c6ab4d0aea26",
+      "content_sha256": "7e41b0d1c48735241d95807ffc42fe4ae51d04f10c6e706f2f117d7379988c3b",
       "tags": [
         "naive-ui",
         "vue",
@@ -1726,7 +1726,7 @@
       "version": "0.1.0",
       "description": "UI component library on Reka UI headless primitives + class-variance-authority (cva) variants. Activate when adding/editing a component in components/ui/, defining cva variants, wrapping a reka-ui primitive in your own component, building composite Root/Trigger/Content (Dialog/Dropdown/Tooltip), merging classes via cn(), or wiring to Tailwind.",
       "sha256": "09100b3a26a98f9ea8289ece01a3aa47840c2934f61de3c3333da95d7ac09e0f",
-      "content_sha256": "e1e1e522e766a86898861e47bffdc5fca779b24e9884ede41759dfde006e0306",
+      "content_sha256": "1ebbe1cf6b2544f4776c774fe9389e3b98d8b399a21b88617b931356e6404354",
       "tags": [
         "reka-ui",
         "cva",
@@ -1751,7 +1751,7 @@
       "version": "0.1.1",
       "description": "Use for Vue light/dark/system switching, SSR theme restore, and preventing theme flash.",
       "sha256": "efb805798691829d3ceb0ca82def9483e6a5de8d25faaba29930f4ddd89e9995",
-      "content_sha256": "84cb56903948346cf2ebc411451e86a0e611ae6f03e9d01de9867aefddaa0e9d",
+      "content_sha256": "10742047fc5058e0650df432d140ca9e6e0f671800efe78c618b557798d0882d",
       "tags": [
         "dark-mode",
         "theme",
@@ -1774,7 +1774,7 @@
       "version": "0.1.1",
       "description": "Use for Tailwind v4 in Laravel/Vue: CSS-first config, theme tokens, classes, and formatting.",
       "sha256": "06644f070420f0bb934eda7be8e8701955ae0625f86569d87687639c7b8a9851",
-      "content_sha256": "271ea6c0d99bf4da36055905981fda9aabfed0dc6a840c59113a711a78b2f1b4",
+      "content_sha256": "7291c54111d0f397cea95c0295d8a3e5de7dc01cb26ad4619e1ddb3ec1b57a06",
       "tags": [
         "tailwind",
         "tailwindcss-v4",
@@ -1805,8 +1805,8 @@
       "path": "skills/frontend-vite/vite-module-loader/SKILL.md",
       "version": "0.1.0",
       "description": "Use when configuring Vite as the primary frontend bundler: base config, aliases, build practices.",
-      "sha256": "f167822ec75718fbc21991c54f187216cd6537ddbdcea9d6629ac1f001b9bdb0",
-      "content_sha256": "55395563a1937e33f3f3bd635364e0624d0226aff09b3229ad39454d655aafdc",
+      "sha256": "55c8dd8f2d536a1888bc66bf1dace43293cfa24399a6d3b653f202c436bafbfd",
+      "content_sha256": "bc24910ae84965342d86b2f5db19c19a1031d0fbb3a7496bc8c777eafd50c051",
       "tags": [
         "vite",
         "frontend",
@@ -1823,7 +1823,7 @@
       "version": "0.1.0",
       "description": "Two independent Vite builds in one Laravel project: main app + Filament admin, with separate Vite/Tailwind configs, hotfiles and build dirs.",
       "sha256": "632ae3a78d20f115d2cb715ef84210aef1e7c76d7652af1b52a039a2c2cbd15b",
-      "content_sha256": "f0dc3634a806e126b91a7dc472ab5305d1b56d2ae6ee60d572a3fb636cce9dac",
+      "content_sha256": "de19f62c4eb725f14df9956092af0d05f88e2b5fb907ef96a94963a97ada6f68",
       "tags": [
         "vite",
         "laravel",
@@ -1868,8 +1868,8 @@
       "path": "skills/frontend-vue/pinia-stores/SKILL.md",
       "version": "0.1.1",
       "description": "Use for project Pinia setup-store conventions, shared state, hydration, and persistence.",
-      "sha256": "54198150f2bc95df5d8d3829a9d78aa16dde9e4f0e9cb9503ded2f687a376bf0",
-      "content_sha256": "416d4170bfcc0ef41d7a1366363d64443f0776734aaac987fa040ce6461ee60e",
+      "sha256": "ddd344c5d2d37afeb3a4d1c01ef41e3b56f323e0e7df586717a5a080c88fe1d1",
+      "content_sha256": "9fe1839033f666748e4877144a249d70f3914d50c1344ecad88cff39b1f63c95",
       "tags": [
         "pinia",
         "vue",
@@ -1887,7 +1887,7 @@
       "version": "0.1.2",
       "description": "Use for Vue/Inertia-on-Laravel Vitest setup: jsdom, test layout, and generated-code exclusions.",
       "sha256": "196af873c1173b329d687d55a0101789ac15a5a6f87f2e333448e5f3b75f5d23",
-      "content_sha256": "55c3c5bf75ed9a92dee8329b10a2a7dc5d1b771e87bb75ea170df3c39f1ca19c",
+      "content_sha256": "c6ccdac3dc90489cb2e9125ce12de8714fcec21107d9ce367ea97f8cf9e7be4e",
       "tags": [
         "vitest",
         "testing",
@@ -1908,8 +1908,8 @@
       "path": "skills/frontend-vue/vitest-vue/SKILL.md",
       "version": "0.1.1",
       "description": "Use for Vitest APIs: tests, mocks, coverage, filtering, and fixtures in Vite projects.",
-      "sha256": "1aef3e1f6d495659233f40a60f7f93ad2f43c43bf46af2d2f764295062c4d2f9",
-      "content_sha256": "a1f71ae75c1cfba6814215dee76b9573d7bcf9a3d3596da0edea15591bd7abf4",
+      "sha256": "a4cdc2816c89402005dc683f978a48f006dc22ff2fe39cbc4b4e8e320dc981ed",
+      "content_sha256": "99341c2360295cf1c1b4330886b45fed938b5c47260fac7b265ccb331e655ed9",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vitest/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1920,8 +1920,8 @@
       "path": "skills/frontend-vue/vue/SKILL.md",
       "version": "0.1.1",
       "description": "Use for Vue 3 APIs: SFC macros, reactivity, watchers, and built-in components.",
-      "sha256": "8811b2afc9e3b7e5822f74577f43bf269d307487f505c2b9f6d09fb69f7969e6",
-      "content_sha256": "15c0e365efda7e5884a7b123d4690cbf54b193b38ccd20636369ffe916f8dcaf",
+      "sha256": "ba88fdcd30c689c61599c35b6ed0fc1151fd5d0ca1454d547257f1159d68fcdc",
+      "content_sha256": "014ac9b16b255ce26bbbbd42987575f5414badcfac6bbd2d90d6c0579baded3c",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1932,8 +1932,8 @@
       "path": "skills/frontend-vue/vue-best-practices/SKILL.md",
       "version": "0.1.1",
       "description": "Use for Vue workflow and component design; follow the project's Composition/Options choice.",
-      "sha256": "c45333ba3bafcd66a92a8440e490f5d8fa0663b016ad1d9ede9062c5616f4ecb",
-      "content_sha256": "7aa764e0a0e23c322cd298b7d2621af53074b37b04d6642180b2af33eea24a53",
+      "sha256": "af3b05ad1bc4a64b9e084a9052668e1745c4fb7cf742f238f0df78a744ce78a9",
+      "content_sha256": "446acaf420f8597ef960e5f281b4e69a4640a3babc25d7a5e549966ed0560b7a",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1944,8 +1944,8 @@
       "path": "skills/frontend-vue/vue-composition-api/SKILL.md",
       "version": "0.2.1",
       "description": "Use for project ref-first/composable conventions; Vue API syntax belongs to the vue skill.",
-      "sha256": "275c7d6a6fddbf3cafa6ac37a9f33a63c1380d272f34cd51dc8f0bc8225c796b",
-      "content_sha256": "36480c6a42ac412a13dd317b42ee4f59f6626c9addeb35ec8f3a257ec7c74d18",
+      "sha256": "da5dd359e74c5705a5374916fe7f60649fb4882ef9e8eb1901f277def5e9c8fd",
+      "content_sha256": "8e0eb941ca070897003187d57321b3dc5548157af91954c9ec70035992a3105f",
       "tags": [
         "vue",
         "frontend",
@@ -1961,7 +1961,7 @@
       "version": "0.1.1",
       "description": "Use for Vue SVG icons selected by string name: component :is, typed names, and icon props.",
       "sha256": "7b028ad031e1163d596bd0837e513f220de40e4b6821f4b0f117b582c53713d9",
-      "content_sha256": "5317066e17aad6624c61e0072f558bcf4be96de6c5f2d742c731405824323393",
+      "content_sha256": "8d8ec44384f8876527410fb767aa99630a411386bb1f6d100eed855441b290ee",
       "tags": [
         "vue",
         "icons",
@@ -1978,8 +1978,8 @@
       "path": "skills/frontend-vue/vue-router-best-practices/SKILL.md",
       "version": "0.2.1",
       "description": "Use for Vue Router 4 routes, navigation guards, redirects, lazy views, and scroll restoration.",
-      "sha256": "d5764f848dbe806a73e68ff0b713cc8aa69ab8cd170e9d3e697a8034b77b6d46",
-      "content_sha256": "762b19335f1d27926ca3e5f62b743abd38612ff66c44923e69f17d65418262d4",
+      "sha256": "45384f94bb0fb78abec899193a19380b47b267121c8c4ee6e20deef0a43cb129",
+      "content_sha256": "7b5acd4e5c7ea0abb6e14c9a0f84be65d70a5d4871df1bda4cfaef9f9b688f28",
       "tags": [
         "vue",
         "vue-router",
@@ -1999,8 +1999,8 @@
       "path": "skills/frontend-vue/vue-testing-best-practices/SKILL.md",
       "version": "1.1.1",
       "description": "Use for Vue Test Utils 2 component/composable tests, Pinia fakes, async DOM, and emits.",
-      "sha256": "9bb9345e57d501f1369a620901fbb94a47d214ec4e5f857e2e06db1f7d03105d",
-      "content_sha256": "d66dca3eb63bb1114be3a785cce0f706906f7983a02946c6f8d265d133a76427",
+      "sha256": "f8c19ace7ce1e197eb62d2846e565c14c56fdbb1e965e7f4a60429e80cfbd127",
+      "content_sha256": "7ea76d973485b82024928df781bd2afdfae02eb6850b42b4827105066761c8f4",
       "tags": [
         "vue",
         "testing",
@@ -2043,7 +2043,7 @@
       "version": "0.1.1",
       "description": "Use for Laravel Wayfinder route/action generation, typed imports, forms, and import boundaries.",
       "sha256": "1d429fbf647690a780a50033fc68875680b40900a9861df59194e62c0d0607c3",
-      "content_sha256": "43f2b561e0ccf82cfe08439162b0b46e19ed06b7dace4f46511bd1fe12b1116f",
+      "content_sha256": "592dddd7262e3e826449ee4583fa5f6e0d9399d94b85ff3540c3a4ecb3dddff8",
       "tags": [
         "wayfinder",
         "laravel",
@@ -2062,7 +2062,7 @@
       "version": "0.6.0",
       "description": "Recover from repeated failed approaches or growing scope; preserve authorized progress.",
       "sha256": "372f28ee10dab7fb7d5db713c355a2b39f020007604269e58bfc206295abe7b8",
-      "content_sha256": "2cb36cdbe02f674cdeccefd22b6384d69e9facd011a73336bd514b234d2c30ff",
+      "content_sha256": "6ac1031fc86c3c7eb6b1df83b0e26f3f6c1994684e01a6093c40a05c4ac988a5",
       "tags": [
         "workflow",
         "discipline",
@@ -2097,8 +2097,8 @@
       "path": "skills/general/complex-task-orchestrator/SKILL.md",
       "version": "0.2.0",
       "description": "Complex-task orchestration: decomposition, context routing, risk, Definition of Done.",
-      "sha256": "4eff1fac1da42b25be1e41cb47761c863fbac760cf10d1ca1f629c45fb03672a",
-      "content_sha256": "410f88e6d6cd37b8017f8fd654e71d398c9926fcc9c65c952f49633b9ea06f5e",
+      "sha256": "4531ccd12922ad061f1bc9ff8e9a1ed28c6cf7cdf3d48b832508cdaabad24bed",
+      "content_sha256": "bbb4cd61a2d63b507e1a7dfef839b2d9e8a74c2ab69b660bb04551425dda9367",
       "tags": [
         "workflow",
         "orchestration",
@@ -2117,7 +2117,7 @@
       "version": "1.3.0",
       "description": "Reduce measured context overhead with targeted reads, on-demand instructions, continuity and honest usage evidence.",
       "sha256": "fbc48ed3bfd41b5abb2724b4590e28edad2ae2a173df4bfbbf485b35bf41f0e6",
-      "content_sha256": "f45be3f486a95133ba2b4b6272f10fec05f59d7698d7f13c26e6d1e2042ec95d",
+      "content_sha256": "7df958ab136ad2e2849dc7bd208087da8576fa9b63ae07fb570975f547d09a7c",
       "tags": [
         "tokens",
         "context",
@@ -2136,8 +2136,8 @@
       "path": "skills/general/cross-layer-change-checklist/SKILL.md",
       "version": "0.1.0",
       "description": "Use when a change spans multiple layers: code, authorization, UI, docs, tests.",
-      "sha256": "1ff6ab4ddf99f2ea909d3154ff470fe9a08b910e78763147aa8574999833f08d",
-      "content_sha256": "ff0d6e31fdef8a27c0f08b2702155c487a9a3e5704a4776de6da78cda6d7ca3b",
+      "sha256": "47a9c4e169d08566fea473a72310e73acfaa7b10a8214e8e7fc5bc5611d4b14c",
+      "content_sha256": "2c3a4368d4ca3e7fa5eefed1b1866f9077e9e5f35f9ac06a5250ce18a4c61ed5",
       "tags": [
         "checklist",
         "workflow",
@@ -2151,8 +2151,8 @@
       "path": "skills/general/git-commit-rules/SKILL.md",
       "version": "0.2.0",
       "description": "Use when preparing a Git commit: husky/commitlint, message format, safe action order.",
-      "sha256": "16c02bd3a9e878bbc07f9440728b7a79032da68f4457b17e82a3b0e2fd292a2c",
-      "content_sha256": "d9c4df4b22d099b1a39127b0d2dbaa604c74201193f9a260cd1cb1c6e92b3009",
+      "sha256": "9e900c2c0237f018dc8d9fa509161da06f1cd54e2aed0692609752b2e28a5002",
+      "content_sha256": "2cdbc1f4c0cd2335c11f8b3b4f36cd624180a0216a38734e02ee9472cc7a58ae",
       "tags": [
         "git",
         "conventions",
@@ -2173,8 +2173,8 @@
       "path": "skills/general/git-safety/SKILL.md",
       "version": "0.1.0",
       "description": "Guard against destructive git commands via a Claude Code PreToolUse hook: blocks push/reset --hard/clean -f/branch -D/checkout ./rebase --onto BEFORE execution. Activate on project init (esp. production/embedded) or when asked to add git guardrails / forbid dangerous git.",
-      "sha256": "717ffa8569ff4ffb4212f360b6222c18373f557556189cb294d4b16c231a7edd",
-      "content_sha256": "3d41fe6aa964c23bb651da6ba767400fe498cc899f2bdee136ee6f85d4825213",
+      "sha256": "ef42871a927bd0f2f5f500a59175fa688f03f1061a10cc0faf64b34e448aed29",
+      "content_sha256": "d52524eb67426d42d4067c45d4fea2b90fdd7cc0a3541f1fbda223efe706f93c",
       "tags": [
         "git",
         "safety",
@@ -2192,8 +2192,8 @@
       "path": "skills/general/grill-with-docs/SKILL.md",
       "version": "0.1.0",
       "description": "Ruthless grilling session that SIMULTANEOUSLY builds a domain model: refines a plan/design one question at a time, cross-checking code AND external docs (API/RFC/banking specs), and writes the glossary (CONTEXT.md) and ADRs as it goes. Invoke EXPLICITLY to turn a vague idea into a strict spec with fixed terminology.",
-      "sha256": "aa44d21cd11a5909df4f169bf1025035ecc6508190d75cbc948c14353fadcb59",
-      "content_sha256": "7ac4aceaf7a0d8e84c6000c4f4e3df47885f52a6aee6d925c559d5da8c469de6",
+      "sha256": "7372fa511eeaafff3d99a5d9d1d57e0ce9d44f969307e9e154d9718f89d9edca",
+      "content_sha256": "4d83413b2aab3bb66612253786e9e8fb377eaf122291588e8ca3253ab0e8b3ca",
       "tags": [
         "grilling",
         "requirements",
@@ -2219,8 +2219,8 @@
       "path": "skills/general/implement/SKILL.md",
       "version": "0.1.0",
       "description": "Implement a chunk of work from a spec/PRD/issue via a minimal chain: tdd-discipline on agreed seams, risk-proportionate validation and review, commit to the current branch. Invoke EXPLICITLY (writes code) — the final step after spec-interview/grill-with-docs/to-issues.",
-      "sha256": "c867e64ba696109d1407a3639f7d68c425fc71ce318fcc9ce316282f9e6d8582",
-      "content_sha256": "9f6f9f6173cfc438fc4f40b45a4fbcfe3fa8052334f4b89ca04452f820e75eca",
+      "sha256": "467410aef3e7c21137149fea6dad7a8023df9e99a57d4034fa9417fd6dd79477",
+      "content_sha256": "31ea61fef71e33db1d980deb0c6ccbae8d1c0f41f5f3c7ca7b00a07a6cd7dd7e",
       "tags": [
         "workflow",
         "implementation",
@@ -2261,7 +2261,7 @@
       "version": "0.1.0",
       "description": "Naming discipline (language-agnostic): name reveals intent, not implementation; fight noise words (Manager/Helper/data/process) and combinatorial method explosion (findByXOrFail/getOrNull). Activate when naming or reviewing names of functions, classes, variables, methods.",
       "sha256": "e9a15f94d5830f8b02618e100ffcefb6201bc35d3ee692171d0665308c2e2681",
-      "content_sha256": "cf751d61543ff79fb40fad4176617b6ab66b185e0e8938c923523a5343986769",
+      "content_sha256": "7af1aede25ab8c6a428e99c42f97bb93de79f29c42955633ccbaf3c6816b3a8d",
       "tags": [
         "naming",
         "conventions",
@@ -2295,8 +2295,8 @@
       "path": "skills/general/plan-protocol/SKILL.md",
       "version": "2.38.0",
       "description": "Use when an explicitly invoked Task plan command needs a schema reference.",
-      "sha256": "c7bb7dce52c0f279294f912f2d8efa94186edee72bb7ddd46186d9603cfe8012",
-      "content_sha256": "548341ebc9f0d3257f96ac74863b0031b5b05f0f2c97521361adb286f205c0d7",
+      "sha256": "22ea7080dd48bda9e19f3dd156f1ea9c2725e0acfbb1dd344fa007f1bdab2443",
+      "content_sha256": "1461ebd3be9c0bc34fdae60b14d393b1839d5b37c7db430a84e711975fafbba7",
       "tags": [
         "workflow",
         "planning",
@@ -2337,7 +2337,7 @@
       "version": "0.3.0",
       "description": "Cross-session/agent handoff: compress a session into state, decisions, open items.",
       "sha256": "0ea2cbf5eb20fe32dfb39323b0185793df618264934388db11c4cf1d4307a270",
-      "content_sha256": "5622e36956766bc1325bd0aec44f175f99c60b21e1d7eecf4686cefd26f75549",
+      "content_sha256": "845d7ae06243d5544b7194237c0b5af6c8877866e4c290525cdc1f5d2b027622",
       "tags": [
         "workflow",
         "context",
@@ -2352,8 +2352,8 @@
       "path": "skills/general/shell/SKILL.md",
       "version": "0.2.0",
       "description": "Growing cookbook of shell constructs compatible with this environment's hooks (currently rm/rmdir vs the safe-dirs auto-approve hook; more patterns get added over time). Activate on a hard-deny-hook block and before writing rm/rmdir commands.",
-      "sha256": "110d9f7f9bb046a0f11e89bd6a175bbcdf754a87537251829cc12a5bb0378eeb",
-      "content_sha256": "d26266ffbbd743d20ea2053303d7a1addc26420fa41fafe4f2c10b973ee82a1c",
+      "sha256": "5469a09c81f52d6513fd2c830fee1a38a93cbdc54c5bd4536a433dfe062e011b",
+      "content_sha256": "8aadbe3a982f5b7f0dafb33a6539bf45ecdea7e1bdfbd235d3405663a89140a4",
       "tags": [
         "workflow",
         "bash",
@@ -2370,7 +2370,7 @@
       "version": "0.3.0",
       "description": "Resolve duplicate or drifting skill delivery by inspecting each source, generator, and provider owner.",
       "sha256": "95433062ba8881709027fba57a9b9b4e2bb46415aea680c8997660dc38bbaefd",
-      "content_sha256": "02b992bfada5cfcb03283f53867b5560dc1d4c71368a785a9dc48f0adb83d6c3",
+      "content_sha256": "d790cee80bf24822e7e6d2fe80b6334bcfedc327d4be881230e570016b18f25f",
       "tags": [
         "ai-context",
         "skills",
@@ -2405,8 +2405,8 @@
       "path": "skills/general/task-brief-template/SKILL.md",
       "version": "0.5.0",
       "description": "Brief template for complex tasks: goal, scope, invariants, assumptions, out of scope, acceptance criteria, definition of done, loop fields.",
-      "sha256": "39f99c9b84b80c1d3be365ad488d79e82f1569401c04b5502478b5d46a6a4813",
-      "content_sha256": "2c33abd10ef0cb83159b1b0630afb6fe31ec4c80f569d6dc3602b45c320d4a2b",
+      "sha256": "eb3646d6c9a15210706b46624a630717ae7eb73a18716e2663725b8a3f6724dd",
+      "content_sha256": "bd41ce9db12070c8fd293d45c6f598f735254550373c399a70db0ab81e380f86",
       "tags": [
         "workflow",
         "template",
@@ -2447,7 +2447,7 @@
       "version": "0.1.0",
       "description": "Activate on \\\"write a workflow\\\"/multi-agent orchestration: match 4 canonical templates first, then design-vs-dev stage matrix; slots per README.",
       "sha256": "47a88dbf5309c424b264ccbcacaf87ae734c6f7e2a241c3c4d5236c70c907c94",
-      "content_sha256": "6631e42bc13dd039a4cd7f46a0d83f12821725fca5428cb49af47c93d5fca6fa",
+      "content_sha256": "180b6c3b584777ecafaabaf8f1d6594766fa635a47fb16ab0a92787b3bda8685",
       "tags": [
         "workflow",
         "orchestration",
@@ -2463,8 +2463,8 @@
       "path": "skills/general/writing-style/SKILL.md",
       "version": "0.1.0",
       "description": "Tone & language of code artifacts: Russian by default for comments, commit bodies, test descriptions it()/test(), docstrings, internal docs; live language, no bureaucratese, explain WHY not WHAT. Activate when writing comments, commit bodies, test descriptions, internal docs (git format/mechanics → git-commit-rules).",
-      "sha256": "99034409660d1ba5642bed83215346f42cef6deaf59388c79d6c41c015e057c0",
-      "content_sha256": "fe49b7edfb978ac50393b82c80a91b84951d18843c9571930d89f34b0da23b14",
+      "sha256": "0d29c108f03024322f1c21f44f63611b214ba14aafce453f46869d79754f9912",
+      "content_sha256": "6add12c8462717e99408d9320c0c900f23287aa7039ccfa8b5a1c1c1ae1081d2",
       "tags": [
         "writing",
         "language",
@@ -2502,7 +2502,7 @@
       "version": "0.1.0",
       "description": "Activate when writing/refactoring Eloquent accessors and mutators: when you see legacy getXxxAttribute()/setXxxAttribute() and should move to modern Attribute::make() (get/set), or when deciding where to place and how to type a computed model property. Triggers: getFooAttribute, Attribute::make, accessor, mutator, computed attribute, Illuminate\\\\Database\\\\Eloquent\\\\Casts\\\\Attribute",
       "sha256": "761cbd52bb609f444cb3d668f75804de8fdb34be2c6d66b0c9778840fbb2da84",
-      "content_sha256": "ca668c800fec2eb039631033c2965996f610999c002fc12b746ef16758f08962",
+      "content_sha256": "d48003d5e0cafe698a9ebf0b815f7432db8be40f90675f3c0e1b60218c3581aa",
       "tags": [
         "php",
         "laravel",
@@ -2521,7 +2521,7 @@
       "version": "0.2.0",
       "description": "Use for enum metadata: replace label()/color()/description() match-ladders with PHP attributes #[Label]/#[Color]/#[Description] on cases + reflection resolver; or export enum as TS type via #[TypeScript]. Triggers: PHP enum, attributes on cases, getLabel()/getColor(), Filament HasLabel, laravel-typescript-transformer.",
       "sha256": "ffe86a205947e2507aa506018f62d1f1f932681966f249bc4cb75d0af1503b3f",
-      "content_sha256": "e6637e7fae28110b4a1435299260d1b4189757e2b93b1fb780cb3b6c66429049",
+      "content_sha256": "7246ab77572cd46e07cfab7b2dd5bdb0a04bd4a6939236cfe1df1b03a301f1c3",
       "tags": [
         "php",
         "enum",
@@ -2540,7 +2540,7 @@
       "version": "0.1.0",
       "description": "Activate when a domain status (Order/Document/Subscription) needs transition rules: edge graph via enum transitionDefinitions(), runtime registry (canTransition/allowedFrom), Action-executed transition under DB::transaction(). Triggers: PHP status enum, allowed transitions, StateMachine, canTransitionTo, illegal status transition.",
       "sha256": "3ed0b569fbb1a1261cd7cdc955395e4f88cc8c928f7a400bf41de57375634ba5",
-      "content_sha256": "b34a734f0037ee66d7553021d5deb9cc41e2cc91251517aecf2bb69caa03dd9a",
+      "content_sha256": "89cb2c41f14b62c4c275dea6541004c5e04e9997a224717fff77dd1209bad1e6",
       "tags": [
         "php",
         "enum",
@@ -2559,8 +2559,8 @@
       "path": "skills/laravel-architecture/laravel-subagents/SKILL.md",
       "version": "0.1.0",
       "description": "Subagent orchestration on large Laravel tasks: activation threshold, delegating research to Explore agents, review via laravel-reviewer, tests via laravel-test-writer, worktree isolation of parallel edits. Do not apply to small/medium tasks.",
-      "sha256": "15db9b47074078a6e3943b113f4fc5c1fd10e58343ad421129a60cdd9567abbd",
-      "content_sha256": "990315c9dfb3122c954725c931c3fa8e994a31bced63d5b337ee4c75dd5e3ded",
+      "sha256": "c556a426f3be014e99f343e2bd8d110bbb926153958f4cc75d3908ab1d2f5718",
+      "content_sha256": "58198360a3f38c5dc9b1d64e670f86074e559c32ac2bb7a357dd292776f6ab76",
       "tags": [
         "workflow",
         "orchestration",
@@ -2576,7 +2576,7 @@
       "version": "0.3.0",
       "description": "Scale Laravel code as it grows: organize by business domain, Modular Monolith and DDD patterns; implement with nwidart/laravel-modules (module:make*, module structure, namespace without Modules\\\\, Filament discovery); starting structure — php/laravel-structure",
       "sha256": "10314ff724ce939cde405debcee1a1850ba20c79a33c368d87d4253f2972d32f",
-      "content_sha256": "ecb150d07f95c8dde64496da4feeab519c0659d4c9f7e845dc49c455621d7ac3",
+      "content_sha256": "3892a8f94fa954110e212c11acf96219465a7712f55f7dcac50749ad1b836313",
       "tags": [
         "php",
         "laravel",
@@ -2597,7 +2597,7 @@
       "version": "0.1.1",
       "description": "Use for #[CheckPermission] action attributes and reflection middleware over Laravel Gate.",
       "sha256": "5dcf297dd8b096891fa6e93610b6e58010448705bd97ed56b975f488834f8509",
-      "content_sha256": "fe956df07e6f7737c9154c9f99f749595570022d6b1f205c6108ed93ad403c32",
+      "content_sha256": "679a1b5ba3c99f0788fdfb5519e7e33750cb208fdef22034b1969dcea081288d",
       "tags": [
         "php",
         "laravel",
@@ -2640,7 +2640,7 @@
       "version": "0.1.1",
       "description": "Use to audit Laravel auth, raw queries, mass assignment, XSS, CSRF, and unsafe input.",
       "sha256": "579382fc82d54641485b93e12b63dd02911899bc9edaf94b277af63242e8348e",
-      "content_sha256": "a0ffcf9289b5e46b28265b745fc6e6f4c0855fee1807c10736956388f9527a61",
+      "content_sha256": "140043131663a7af3461c6620cf0d6e51c044f670c71587ef61ddb285aeccd70",
       "tags": [
         "php",
         "laravel",
@@ -2660,8 +2660,8 @@
       "path": "skills/laravel-data-layer/laravel-broadcasting/SKILL.md",
       "version": "0.1.1",
       "description": "Use for Laravel broadcast events, channel auth, Echo/Reverb/Pusher/Ably integration.",
-      "sha256": "958f1d61919203f34f3e4e6024c3a572fd3158575f34e117e0de15206915ec4b",
-      "content_sha256": "54516e52eb0c6c63d3e10f1cf53aaf92f452d131044459f377e4fc1b21aefd4d",
+      "sha256": "fc3d6cfb6cdf3cc50a82fa34d76501678905c76e7704a3477384b48416159f88",
+      "content_sha256": "13e96842a85347423536d48fb5fb9b272c9872aab8213f9d763f4a40935531d4",
       "tags": [
         "php",
         "laravel",
@@ -2682,7 +2682,7 @@
       "version": "0.1.1",
       "description": "Use for spatie/laravel-data DTOs: validation, casts, nested data, and typed API output.",
       "sha256": "b55b631485b524b6bf09085fa3c7db0c65dcaa5516cddae78eb4fba772818bd4",
-      "content_sha256": "13661375fb8964fff3958ee4299fec64ffaa04696108752f8e5752cac6722608",
+      "content_sha256": "0428349008a8d07b40c24f7e6fbe6dff73b9bd8a0e32db2141c423d7492b765e",
       "tags": [
         "php",
         "laravel",
@@ -2707,7 +2707,7 @@
       "version": "0.1.0",
       "description": "Use when attaching files to Eloquent models: spatie/laravel-medialibrary collections, conversions, URLs.",
       "sha256": "c0f95eb928abe236752b70ae121aaadacab2bbadba78400cdabec0ad459aa05f",
-      "content_sha256": "7902db7dc3a94a3894c57a7ac808c11149c1b9e47b9c02c894f9ba0437b0da4e",
+      "content_sha256": "91a859f948b559a1c7ea07b3af105e251955b281c15263d74cedd45ede83201c",
       "tags": [
         "php",
         "laravel",
@@ -2724,8 +2724,8 @@
       "path": "skills/laravel-extras/pennant-development/SKILL.md",
       "version": "0.1.0",
       "description": "Laravel Pennant feature flags: define/active/for-scope, the @feature directive, activation/deactivation, A/B and gradual rollouts. Adapted from laravel/boost (strategy=notify).",
-      "sha256": "9dc038f768ba6bfebd01fb660ebdc16059f9bd146b3daf124d16a82d215a66d3",
-      "content_sha256": "d28e00fade03663678546fb861ca7a13a428391b7c327daa72bfc96c018aec03",
+      "sha256": "ea7967ab1226fce2612a0ccf41796adf4b83cbc13a929a59f3a890955ab12012",
+      "content_sha256": "26e2d764da1b041d27fb073440e6c58c823875448b510c4b69e82fe729bec322",
       "tags": [
         "php",
         "laravel",
@@ -2743,7 +2743,7 @@
       "version": "0.2.0",
       "description": "spatie/laravel-settings: typed settings classes (extends Settings, group()), migrations add/migrate/rename, cache, runtime vs config/ choice, Filament SettingsPage binding, infra-config (websocket/Reverb) admin→frontend via DTO. Activate creating/editing a settings class/property/migration, an edit screen, or moving infra setting to runtime override.",
       "sha256": "4aec05df7adbb5663e0fc28c310b711671a6899f83870442e6353a5a85d9d7a4",
-      "content_sha256": "ab2824ad49b575b8b500603a336b62994b766e5c382e9641c3ab7c33e23712e7",
+      "content_sha256": "44a53d327a5b662871e2bec0b0ba0036e124e2ef200668c3b0972e8f987f5965",
       "tags": [
         "php",
         "laravel",
@@ -2760,8 +2760,8 @@
       "path": "skills/laravel-filament/filament/SKILL.md",
       "version": "1.0.1",
       "description": "Use for Filament v5 panels, resources, schemas, tables, actions, auth, and Artisan scaffolding.",
-      "sha256": "fc05b27899e8de5fa3918bdbc34562150f61016ce8e6f716d545b6ad72b4f6bf",
-      "content_sha256": "bd9f1484af6267bb28b682410efb34fc7337a46e26385d72a349caf8f076704c",
+      "sha256": "a54bc988b516954b8b32b531a33ee28c0953b1b0d88b0de02d6e622aa1f87559",
+      "content_sha256": "0dda6f4ca9d1e9c1bab80ef43e35cf5e9cd8ed5988d9ee4eacb7162b05f87061",
       "tags": [
         "php",
         "laravel",
@@ -2786,7 +2786,7 @@
       "version": "0.1.0",
       "description": "Livewire 3 Blade-component attribute delta gotchas. Activate when a tag attribute must be conditional/dynamic: never put @if/@endif/@js() inside the attribute list (breaks parsing). Fix: pre-build via ComponentAttributeBag (->merge, ->class) in @php, spread as one expression. Triggers: parse/render error, conditional wire:model/wire:sortable/step/disabled, @js() in an attribute, unstable wire:key in a loop",
       "sha256": "057125e12bdf3a94d393cfe9dfe7b1dcce23eddf072e0d08d5c0422d800c4fac",
-      "content_sha256": "74ab569e8add28d7007eff6cb5e622cf109d5a86ad8c02ff61411ff26df0dddb",
+      "content_sha256": "0bb7aa2a95baab08ad117556fe8263f79ecd1c7e45f79e297fc9682025aab5cc",
       "tags": [
         "livewire",
         "blade",
@@ -2804,7 +2804,7 @@
       "version": "0.1.1",
       "description": "Use for spatie/laravel-health checks, readiness endpoints, heartbeat, and failure alerts.",
       "sha256": "7085634525570d311861564093c2a30ebe1059df6bcfd4f6aa200969107c9f87",
-      "content_sha256": "7e9f358873380d5473581377aa89a4e8f1e845ba0615339aebd92fb7f6cdbdfa",
+      "content_sha256": "e980b9a8c60c7d4305dc0668a040aca4a71c5b3fcfb288a60380c49bf828c64e",
       "tags": [
         "laravel",
         "health",
@@ -2823,7 +2823,7 @@
       "version": "0.1.1",
       "description": "Use for Laravel Dusk browser tests: isolated DB, Docker/ChromeDriver, and Page Objects.",
       "sha256": "4bebb851dbd6adabc7018ea549a98f27009b478bcb3c68169b1619a31cf20089",
-      "content_sha256": "6c0dc9e1db227ee8e4d75dfca6c4bdf7bf28942638be38fd3dc4ff0e8b1ac880",
+      "content_sha256": "d76f420bff4a690ff063c81a6d09c4da2a3f8ec46081dcf20437f95fba41f079",
       "tags": [
         "php",
         "laravel",
@@ -2841,8 +2841,8 @@
       "path": "skills/laravel-testing/laravel-testing/SKILL.md",
       "version": "0.4.2",
       "description": "Use for Laravel/Pest tests: isolated DB, environment preflight, fixtures, and test composition.",
-      "sha256": "72022dc469c1f82d7672a1f7f81bdd9f1ba230c2096290dee319535825fb1e77",
-      "content_sha256": "1a1b07eeb651865cb8ec177acf6b99bfdb27960fa0a708358575d803b67a03e6",
+      "sha256": "b829cfd2c3683e6fcae3e753726da850c2060c813241683b4ff2f35ef413231b",
+      "content_sha256": "48851a190e3c9d2a888113270cde5351c5e851b168f5059dea8fae19af48e0c7",
       "tags": [
         "php",
         "laravel",
@@ -2857,7 +2857,7 @@
       "version": "0.1.1",
       "description": "Use before Laravel tests that can mutate DB/files: prove isolated serial or parallel targets.",
       "sha256": "9eb27fb142b2040acdf5ca46cd0815169e708a20f488db334cdf5a7be662ebb6",
-      "content_sha256": "dc4d67c8bfc3ff28a6ae18d7c29bec8ff88b0036f98afca2e5f57d2cfd1e1802",
+      "content_sha256": "de2591841d53cfb86bf28110ffc00cb686d407d36b9a9ba12a6acce253be6819",
       "tags": [
         "php",
         "laravel",
@@ -2904,7 +2904,7 @@
       "version": "0.1.0",
       "description": "Map Figma Dev Mode MCP design to Flutter: Auto-layout → Row/Column/Expanded/Padding, tokens.json → ThemeData (ColorScheme/TextTheme), Variable Modes light/dark → ThemeData(brightness), absolute positioning → Stack/Positioned, image fills → DecorationImage. Activate when building Flutter screens/widgets from Figma; runs on top of figma-mcp-core.",
       "sha256": "d417f4ec7d321b730a5e54e5c1ed2608dac4959c6c559c1a829971e11c431433",
-      "content_sha256": "cb7ba71ee727b848d105a2db5ec7022a9416fe12f23521a635027fdfd7e061ea",
+      "content_sha256": "ef9bcebb0190033c5ba65c85f22dc307c802162803baf50793aca8e240501274",
       "tags": [
         "figma",
         "flutter",
@@ -2925,8 +2925,8 @@
       "path": "skills/operator/capacity-planning/SKILL.md",
       "version": "0.1.0",
       "description": "Capacity planning — load forecasting, headroom, autoscaling policy, cost budget, what to monitor, when to scale up/down",
-      "sha256": "9cdb0fb64411bebc2c6070fcbf6bf98f5d22a6d8784178f11dffe0945e0b82f5",
-      "content_sha256": "e06243c52976d55896aa4fe4aa1e642c4b0b85bfa70da06db71d5dc1da3293a8",
+      "sha256": "76bbef9818c9dda295c3170f9fd66a130b9b3e4a23f5ea64157a0a60fab967dc",
+      "content_sha256": "be1a42befda4bf77c5584f70c6353621203f50b0a68960079e5ec4a5073186b8",
       "tags": [
         "ops",
         "observability",
@@ -2963,8 +2963,8 @@
       "path": "skills/operator/oncall-rotation/SKILL.md",
       "version": "0.1.0",
       "description": "On-call rotation design — schedule, primary/secondary, handoff, compensation, burnout defusing, paging policy",
-      "sha256": "4930b54dfd0bf0e69f923ea9326f03e96fc2364823a50b1b26de73f7d8326d66",
-      "content_sha256": "49a59b777cd9b3fbdee90f3ead866ee91a807fb16254479ef6e320b4815cdb1a",
+      "sha256": "64330045a47b22c63b31ac2bb993195ab8e86450ca81acd4b07a3adabeb7e5ba",
+      "content_sha256": "56fd00322e524482af3463758665c2ab3974f43fc0875188f62d51fd3e948dff",
       "tags": [
         "ops",
         "incident",
@@ -2994,8 +2994,8 @@
       "path": "skills/operator/postmortem/SKILL.md",
       "version": "0.1.0",
       "description": "Blameless postmortem after SEV-1/2 incident — timeline, root cause (5 Whys), contributing factors, action items, knowledge distribution",
-      "sha256": "5b65d696b85099f71c96dc8a58a90599ab9e9d8ba75af428ca7c816af4dcf054",
-      "content_sha256": "77c79948f8266431ea7a74e61a0e23839c5205ea7a0b6f70f844657e1af7fe5b",
+      "sha256": "2eabf27aade9e20d774054823db7fe7d14e74ab79e7c8f9b8eb17a9f2f20177f",
+      "content_sha256": "7ec0456418d4121f2783d21eb8c10a24fb22447b5413f466f49aa6d22ab927fa",
       "tags": [
         "incident",
         "ops",
@@ -3036,8 +3036,8 @@
       "path": "skills/oss-dev/dependency-audit/SKILL.md",
       "version": "0.2.1",
       "description": "Use when auditing lockfiles, vulnerabilities, licenses, supply-chain risk, or SBOMs.",
-      "sha256": "5c8868f553ec7712bf77783ce8bd39b238f216707d4c79adc89155db6e2b3fff",
-      "content_sha256": "6d9a20f83a2abf4a89708f4dd6298c4d8401a8616402024f652febe58d5a443e",
+      "sha256": "9e381ca43b395e8a8f6520d3b1da6b9fa110c1c7eea2e2062eaeb35f1707c523",
+      "content_sha256": "cdf752723659ca309cf4fdb636e4194999fe4a692f06ebe74526c65d22573742",
       "tags": [
         "oss",
         "compliance",
@@ -3061,7 +3061,7 @@
       "version": "0.1.1",
       "description": "Use when designing developer UX: quick-start, README, API errors, types, and CLI behavior.",
       "sha256": "45069719e3a2782757fda359128ba9474821475671c152974ce4c97dfec3d185",
-      "content_sha256": "9a1a54555e427ad7530f4c5b919d38b270d077875b4c5b9e249bbb0b51a69751",
+      "content_sha256": "a17dfafdf6270a72309f4be03a0f3696e2a5fa65888c082dd6b82af7963b584b",
       "tags": [
         "oss",
         "documentation",
@@ -3080,7 +3080,7 @@
       "version": "0.1.1",
       "description": "Use for GitHub PR review or handoff via gh: targeted diffs, file reads, and review commands.",
       "sha256": "bc3b0df164bbc08e3dc1599e047267250a84cf58c997530e815ac8d9f1f200cb",
-      "content_sha256": "a1614b12e793758e2d715793e41fda967e793a9a17569261b0f3b317bf8c538b",
+      "content_sha256": "d8caeda46ddebe41c59ad0fdfb22a3161730be7f4eec442e64afc62e9728bd61",
       "tags": [
         "github",
         "gh",
@@ -3104,7 +3104,7 @@
       "version": "0.2.1",
       "description": "Use for GitHub Issue→Branch→PR→Merge→Tag→Release workflow, templates, and version routing.",
       "sha256": "49b903fd97158c5a6889ecba88ef0b5d981411738dc561a09f3d7eae0a8bf608",
-      "content_sha256": "6f2413c826e8231b63d434c9c9007e5eafe9602da9bb994f506b0adcaa75b244",
+      "content_sha256": "b6999201f17c43523f467ae7141364806dfe4259de9bf788af0147e213243aca",
       "tags": [
         "oss",
         "github",
@@ -3125,8 +3125,8 @@
       "path": "skills/oss-dev/issue-triage/SKILL.md",
       "version": "0.1.1",
       "description": "Explicit issue/PR triage only: classify, verify, and prepare tracker updates via gh.",
-      "sha256": "abae26f20a49aab5c92218d3aa35cd91176a126f95e0f73eecb2fd1fcc531b83",
-      "content_sha256": "69790557845d67da998a195103ded9c765777911c5ba963cd05fcdcdcea09c5f",
+      "sha256": "7a5c1ce4aa089c77ed18aa79582eb0d8342dca87f70d9777a164eb2324f15530",
+      "content_sha256": "179ce2f21fcea7d336d84725de248ea5af5e2dde2aa07371b9ece440dfa79ce4",
       "tags": [
         "triage",
         "issues",
@@ -3147,8 +3147,8 @@
       "path": "skills/oss-dev/oss-development/SKILL.md",
       "version": "0.1.1",
       "description": "Use for OSS repository structure, package docs, architecture decisions, versioning, and CI.",
-      "sha256": "188f584611e1ca869a9c68e21d5dba4818b74412deb552aa6cacbd36b4a29925",
-      "content_sha256": "53b0e0c1ed9585b91c3a58676c6ec3d4480a18b44e248b3a30e25e2d369fad0c",
+      "sha256": "c3ea4997bcab6410859551ce6bc5961c27a6f4c976f7bb329cabe86ca2cfa656",
+      "content_sha256": "59dd04c522abc4e13590c51655864c535c0529cf2bcf5eed278864b09d1eecbc",
       "tags": [
         "oss",
         "architecture",
@@ -3170,7 +3170,7 @@
       "version": "0.1.1",
       "description": "Use when defining OSS license, conduct, contribution, maintainer, RFC, or security policies.",
       "sha256": "fce9c5cc4907de149e1ae631f5a2d6ddbd23c0f26b54859c1c6704210314665f",
-      "content_sha256": "4c6a7932643a96dbe777302d071e57106e86c62692db877b032b44b123423495",
+      "content_sha256": "7963b957a7d156d2b931e3a6fb8630e69d2e8c96e9ce882f6ba36c1cce1c4832",
       "tags": [
         "oss",
         "compliance",
@@ -3193,7 +3193,7 @@
       "version": "0.1.1",
       "description": "Use for package release policy: SemVer, changelog, CI releases, prereleases, and deprecation.",
       "sha256": "1ac90a3e03ab322d9784d0103fadc98d66d24efb1713757085e1c4f36a3efa6b",
-      "content_sha256": "8c4b1238adb31ff77bef62dfdac9c424b26aa46909c2416d8dc6a4705932da20",
+      "content_sha256": "9734f7f7e7084a30a9e0cc9d683069cbcece0bcfd50e8cd58b6f34800e030cbd",
       "tags": [
         "oss",
         "semver",
@@ -3215,8 +3215,8 @@
       "path": "skills/oss-dev/resolving-merge-conflicts/SKILL.md",
       "version": "0.1.1",
       "description": "Use during an active merge/rebase conflict: preserve both intents and verify resolution.",
-      "sha256": "21971cefc0d79a7e628cd45fdb38b13a05a0d911dec7d5ffae9b8200d92c2e9b",
-      "content_sha256": "d1ae5ead9d38314eacad0962da6c832fedfbfefd55f2bc28b28ab49449edbbc5",
+      "sha256": "2388163f57dee53dfde94cafa08d64251a5728987307fbf677f01964dd04f936",
+      "content_sha256": "d809fb3c013839da9f2e366720026e34bbd216dfeacf157a7d459ccad05a29a6",
       "tags": [
         "git",
         "merge",
@@ -3236,8 +3236,8 @@
       "path": "skills/oss-dev/to-issues/SKILL.md",
       "version": "0.1.1",
       "description": "Explicit publishing request only: turn a plan/spec into vertical GitHub issues with dependencies.",
-      "sha256": "0c1c7478e17ffb30de58cd756e8935c5c97f34611e2ee69ceebb45de63fa0ab4",
-      "content_sha256": "e4035926c7d57cd95d0d1860b0963b2dada746bc3865646c6fe0304fac18011d",
+      "sha256": "ec7606aa36f1ce195570169ceddcf53d9a620e32f00461afce74abf2f0d76431",
+      "content_sha256": "114ac6e230874734f424dcc7feccb5a05d41e8bd9f67ee78193d4943d2ba082b",
       "tags": [
         "issues",
         "github",
@@ -3261,8 +3261,8 @@
       "path": "skills/php/code-style-spatie/SKILL.md",
       "version": "0.1.1",
       "description": "Use when applying adopted Spatie PHP style: types, early returns, Laravel conventions.",
-      "sha256": "a9af7a3513fa6461d30216b98dda4f7e01a64606179b6108d5a9fc03d6c6e91a",
-      "content_sha256": "5db0c583da6a47cd3d907db4309b2b265d1b48f0fbb58a7e612806de79169591",
+      "sha256": "07d8ab247d7bd7081941cd0a9311871d1944b2de76c8e5c8585bb7255f6dcb6e",
+      "content_sha256": "9ac91ad1c5492e9737ba7c6bde2a6cf4761c1cd4b4293d6f8ab6c6bcf2fe8ea2",
       "tags": [
         "php",
         "laravel",
@@ -3316,7 +3316,7 @@
       "version": "0.2.0",
       "description": "Wire dependencies in an adopted Laravel layer model; inspect the relevant DI example.",
       "sha256": "8fd0d8a1a910496d1ffa984bda0801449238e2752a0d293933483f806e505926",
-      "content_sha256": "23d7496fca223bff9f3ba70c1a896df8dbc078bb1e9d39ced8b4a926abbf08ed",
+      "content_sha256": "de9e4fc1714e1a5ebed601f1c7bd6ad0ed91e96829dc2c58d09d61ce19636187",
       "tags": [
         "php",
         "laravel",
@@ -3332,7 +3332,7 @@
       "version": "0.5.0",
       "description": "Navigate an adopted Laravel layered architecture; choose only the relevant class pattern.",
       "sha256": "447bfbc176a9596c76b262fc185864c9c41f656406cd94da8bdfa40009afbcc1",
-      "content_sha256": "c91adcba90edf1de2dd7a32dbcde4223f4ceee67147c817c969902176ea4ac33",
+      "content_sha256": "a0aed7a75a13d578c4f2778ba2dd55e63572704bd7e59c2e650cca111f8d597b",
       "tags": [
         "php",
         "laravel",
@@ -3373,7 +3373,7 @@
       "version": "0.3.0",
       "description": "Place new Laravel domain classes within the project's chosen structure.",
       "sha256": "25ed049ffd7db8fa6e85a0ec9c5e91e2b78341f956dff75feb1a347026544cd3",
-      "content_sha256": "0a8dd12440acbdb6d566ac62655e9e46747d7dbfef6fcbe78bc1d352da227510",
+      "content_sha256": "01d42e062fc29a61d35ebdd0b7cf8d501bf585418dfaafab1bd17883325e806d",
       "tags": [
         "php",
         "laravel",
@@ -3421,7 +3421,7 @@
       "version": "0.1.1",
       "description": "Use when naming PHP classes, repository methods, DTOs, events, tables, or routes.",
       "sha256": "f9d627ac0b79075a4a231b48365cbc1d92ecec603646745ccd0f572463724569",
-      "content_sha256": "25aae48bdc504b7d945e5c347db3efdc7f53e255873189aab218e93e61730b60",
+      "content_sha256": "5ae6f88316e6d2ce699cc82293030f405ee0a706deeaf8ad5b92b4d53d8864e4",
       "tags": [
         "php",
         "laravel",
@@ -3456,7 +3456,7 @@
       "version": "0.2.0",
       "description": "Use when choosing a PHP domain pattern: VO, DTO, pipeline, specification — selection guide.",
       "sha256": "7849f1b73f09a5c1e1448022a324ccfa5ae42b483ae535a905bb184a9455544c",
-      "content_sha256": "31e9a33b14b66f2aff99e11c9f0b381e92ba27d6093479460183709906b16e74",
+      "content_sha256": "9dee44a799643faf58de11fbf4c5b07bee395bdce67dc39151a0614e20cd232c",
       "tags": [
         "php",
         "laravel",
@@ -3509,7 +3509,7 @@
       "version": "0.2.0",
       "description": "Implement repositories when justified; Read/Store and visibility patterns apply if adopted.",
       "sha256": "ce22c57858a9d2c3816d71298f7895e5a6574ecc3e2cc19ad3b4d78414431b17",
-      "content_sha256": "8f143b2b09557adb2a8a9f78b9d4456c3544d7731ab91540170775c84c76a8d1",
+      "content_sha256": "180cf8f32b0d8d7ab55d26ade4794dbdcbd155706ce8403124104ea2ec80bebe",
       "tags": [
         "php",
         "laravel",
@@ -3525,7 +3525,7 @@
       "version": "0.2.1",
       "description": "Use when configuring or running Laravel Pint, PHPStan, or Rector locally and in CI.",
       "sha256": "a8a310f1228d33775238a0e741767e7a7a6d24d784a56c334fdc73cdb5a54584",
-      "content_sha256": "e5af6551f492c3c0518cfae6d32f8df2816244f278cfac38ca32174f0d86269a",
+      "content_sha256": "75b1c31982494d231182ac26e70cfedea6da97896e94b3a1ff8de656894eca26",
       "tags": [
         "php",
         "laravel",
@@ -3676,8 +3676,8 @@
       "path": "skills/php-packages/laravel-package-testing/SKILL.md",
       "version": "0.3.1",
       "description": "Use for Laravel package Pest 4/Testbench tests: HTTP, commands, config, migrations, and fixtures.",
-      "sha256": "a501452b111759eb8986d2b9061e2d1f5cb3f70a8c290351f6975b25e4cd702a",
-      "content_sha256": "866503ff1d48e1599e9be76753961e2e2c179875e5dad9304b7cf5661eb653cc",
+      "sha256": "7c1ef5b515061ab9dd0342229b0d74b41c7b32897908007ecf6f8f7641317699",
+      "content_sha256": "19e75ffe352d6a3ecafbe909d0bfd7c651fd31828b50060d6a6a6b000229fd9e",
       "tags": [
         "php",
         "laravel",
@@ -3694,7 +3694,7 @@
       "version": "0.3.1",
       "description": "Use when building a Laravel package: scaffold, tests, and publishing skills to consumers.",
       "sha256": "98faae22f12429d84e0cb8280369203d732dea4e20a8cbb8cfe827c8278ba0d6",
-      "content_sha256": "589c2a2f6ac74d0e5cec7706fd92918a57ceca85ea881f7a246573e86d5fe2cf",
+      "content_sha256": "eb67ebaa660dd2f6fe36f5d1b335d999cdf8af27bac0570001b977f08b01a6ec",
       "tags": [
         "php",
         "laravel",
@@ -3709,8 +3709,8 @@
       "path": "skills/pm/brd/SKILL.md",
       "version": "0.1.0",
       "description": "Use when writing a Business Requirements Document: functional requirements, user stories, acceptance criteria.",
-      "sha256": "bc819004b454e2201f266d3f40aa5dc5e9970d63ff2bab4126ecb444a50640b3",
-      "content_sha256": "999e14b69603f1206b35714d2883e449aa3bc01cf5d97e8620221acccec7449a",
+      "sha256": "dafb3a72fc74a0114d65f3af5b0030fa9c8b36349962065f985163acb9275add",
+      "content_sha256": "5a1e1fbbda457975feb3b33e049c8a9f23104cd7054233e1e195ebe997f11615",
       "tags": [
         "requirements",
         "template"
@@ -3734,8 +3734,8 @@
       "path": "skills/pm/business-process/SKILL.md",
       "version": "0.1.0",
       "description": "Use when modeling business processes: workflow, FSM, sequence/state diagrams, error handling.",
-      "sha256": "abb09a4d56105cbc3c7b6a7ab3563afb137db9eeb59dfd2799fab342169a9dde",
-      "content_sha256": "37ea541799ba4f3c8979a9ac4fc05748fa641254c5595a44212ed85577052039",
+      "sha256": "f29f8324fc1d0b19d2258ef1fa2ffcd12920167b1703799a3c6aa0c9142d578d",
+      "content_sha256": "73dd104d30111ee799980c637d4b580c0f2d5991cdfc87a953d753f8ac118ebb",
       "tags": [
         "requirements",
         "workflow"
@@ -3774,8 +3774,8 @@
       "path": "skills/pm/monetization-design/SKILL.md",
       "version": "0.1.0",
       "description": "Pick business model (SaaS / marketplace / ads / freemium / hybrid) with trade-off matrix and rationale",
-      "sha256": "c5373d4155fd5c653a1d80bcf3878ad4ad7574f13541f4a3232dc237bbda3c43",
-      "content_sha256": "479d2badc9b307b3f40f07e6ed4478ad58a9f3b06594443637941887e8e4f9a5",
+      "sha256": "2a8574a191272f6cea131507d0e6c897d28038b3fbb50e28a66cda3ddfc307ff",
+      "content_sha256": "fa82910edc1d4039b750162cc2e9c29a6446ad9c46a7f83b9d806a49cce32238",
       "tags": [
         "monetization",
         "market"
@@ -3814,7 +3814,7 @@
       "version": "0.1.0",
       "description": "Product Requirements Document — expands BRD into detailed user stories with acceptance criteria and prioritization",
       "sha256": "8e2b24270b2c593a35eeb6e4a76961bb4302aaa5d6fef8c4e918ac7f9a05165f",
-      "content_sha256": "0c29258ff45f0e1de89d012a357943dcb6d8fc463dcbec7d78b02715d5b1e1a5",
+      "content_sha256": "e2d5c7a3437256e2a3c4d6b81f16e7c57c3b209557a256dfc5d1766c7d6c46b0",
       "tags": [
         "requirements",
         "template"
@@ -3847,8 +3847,8 @@
       "path": "skills/pm/product-roadmap/SKILL.md",
       "version": "0.1.0",
       "description": "MVP definition, Impact/Effort prioritization, MVP → v1 → v2 → Backlog phases, phase-transition metrics",
-      "sha256": "be028a9ea867835eaa851c3ae3d44f5cbbdefcec6c2e4fabf6b24457ffd7600a",
-      "content_sha256": "9f896ec72d16000f30b22903bf1471d6ee6c449867a174b4041a8475cfbcc657",
+      "sha256": "05a55b1740f5d97b732c140865057b8598e08724e14bd74094633a29e216bbbb",
+      "content_sha256": "a7ec3b5b992c2744917ced7bc3d2e08f0d1d88271098dedaf9798973bde03ac2",
       "tags": [
         "requirements",
         "gtm",
@@ -3866,8 +3866,8 @@
       "path": "skills/pm/requirement-critic/SKILL.md",
       "version": "0.1.0",
       "description": "Audit of a written spec/BRD: completeness, conflicts, assumptions, gap analysis, MoSCoW + optimism-bias detector and [UNVERIFIED] tags. Chat-only, no file",
-      "sha256": "a402899889aaf2af201f429b51398cd63f92bb2306fbe3bb58cee064942475a5",
-      "content_sha256": "62c21e5b7ac38c49794bf2254b053a455eaad3e844d6a5ba72e2cb109c25c78d",
+      "sha256": "fae9c2078b0ef5fa3ebb34ac1cf1bcbdc9917a6741dc6cd75a1f222ddc72558d",
+      "content_sha256": "4e73b150a15179857e6e6fb52e24db81343b5b7a93bb183ab12dfe0c3fbebc99",
       "tags": [
         "requirements",
         "validation"
@@ -3924,8 +3924,8 @@
       "path": "skills/python/venv-dependencies/SKILL.md",
       "version": "0.1.0",
       "description": "Use when managing Python dependencies and virtual environments for project reproducibility.",
-      "sha256": "761e9f8c4d896d6f359f88239c278266924a1bc0245d2273a59359c6414b3391",
-      "content_sha256": "21097484ac33ff0c6018ab819cd706a2f6667171ca52259015339528a77ad606",
+      "sha256": "be37466c18e3f07865525ce7b63c3e7b360933d2ef0592c10dad6278d45aaaac",
+      "content_sha256": "47c3203744f7eb5950a504c7d9b09842b5dfa8fb7bad7ea3666e891a091dd8c5",
       "tags": [
         "python",
         "venv",
@@ -3966,7 +3966,7 @@
       "version": "0.2.0",
       "description": "Review a code diff or define team review policy; severity follows demonstrated impact.",
       "sha256": "39bb0e86c9e5ac9544e3a6b7e93482f5efab03564586b2185830d057cd4cbad0",
-      "content_sha256": "0ce85c5dc60fdd582390c574c15c1f29a88b0cf9eb17612846f75ad1a7cbad2f",
+      "content_sha256": "489c78253d3ae26b1cd9364ac6fb15da2ace6238f752c35ca114f3d9ce7a065e",
       "tags": [
         "quality",
         "validation",
@@ -3983,7 +3983,7 @@
       "version": "0.3.1",
       "description": "Use to simplify a fresh diff: remove duplication and needless layers while preserving behavior.",
       "sha256": "d09f96cb1a09639f78cc46332a64de30d031aaae3941bac78c70e128f9363395",
-      "content_sha256": "021f9a908f75e1c988faadd00545474d12a6d811f5e3aa008bf564a27fad5a02",
+      "content_sha256": "3d01079bcbe54b6e6855e344180404f5d58580c6d9a70290bdaf38670928840c",
       "tags": [
         "quality",
         "refactoring",
@@ -4003,7 +4003,7 @@
       "version": "0.2.0",
       "description": "Diagnose hard, flaky, or performance bugs after ordinary inspection cannot establish the cause.",
       "sha256": "4f8e0765f7ac4c8a826740c3435fdd28a2a9a46a87884c845486a8dcf3376884",
-      "content_sha256": "059c5fcec7b33b73493c3eb59b81021d3bdb21aadbea20c9f6f028b6d3a497b3",
+      "content_sha256": "ef2926aa2695757b5514de6416637b8aee230767a633205143e4ceb13e897cdb",
       "tags": [
         "debugging",
         "diagnostics",
@@ -4025,7 +4025,7 @@
       "version": "0.1.1",
       "description": "Use for PHP Infection setup, mutation CI checks, MSI reports, or surviving mutants.",
       "sha256": "681d980f38c3ecdb55eff4428ede46ffb58d872215d97fa68120aabb4bbfdcb7",
-      "content_sha256": "4d671f8bd75152c54e91fbe4917de88c02bc7c9a99a2c989acd6e1f2e54cba9c",
+      "content_sha256": "40586c89d40fb25ce9e4a6baa6d8f4bba50156c8e49ddb38164fc759496eff08",
       "tags": [
         "quality",
         "testing",
@@ -4050,7 +4050,7 @@
       "version": "0.1.1",
       "description": "Use for Playwright browser scenarios, auth state, config, or isolated test data.",
       "sha256": "ba6289e560681433b638b6e76fb1824dd49adb58910090badd0f4a1a2030ad26",
-      "content_sha256": "e85bb34cbd2b2bf06845877154f10468a5bd8afdb55deb84c7bd495421c5a681",
+      "content_sha256": "36f85eec8dc841665838076d93915debc2066874f3f2978773f330308971f2e8",
       "tags": [
         "playwright",
         "e2e",
@@ -4135,7 +4135,7 @@
       "version": "0.3.0",
       "description": "Design or revise a test suite strategy; choose checks by behavior and risk, not fixed percentages.",
       "sha256": "68d666f821532e78a75b3ae16dead2a689e616e9e5f4092a6d48a330da78e9c9",
-      "content_sha256": "8f5970dbaf6dcea0c53803c02c6ea184f77cf2b2152db7249123417c8c697666",
+      "content_sha256": "8cc96fb9bf5bc3baf81bf5cc813b3ba827adc30819b4a6200edda0d6155a7244",
       "tags": [
         "quality",
         "testing",
@@ -4158,8 +4158,8 @@
       "path": "skills/quality/testing-safety-report/SKILL.md",
       "version": "0.1.1",
       "description": "Use after a risky schema, layer, or dependency change to report checks and remaining risks.",
-      "sha256": "364e0c0daa5ee7fed967566f0af3e2029078975667dbeb88bb678b78a814b9f2",
-      "content_sha256": "bca8ea6ceab0a67f4d4c9e9fc6f451066fa8668027427b145d925e9c6bb15c4c",
+      "sha256": "1bf8e7a22ac3ff6da7c6ddf80da06bd180ee0ca6ba96055986f267c370a3237b",
+      "content_sha256": "dee5cee6c869000d8a1aa243754b6af6d8a0f011c6fb98637ff236bb017082f8",
       "tags": [
         "testing",
         "safety",
@@ -4354,8 +4354,8 @@
       "path": "skills/repository-bootstrap/release-discipline/SKILL.md",
       "version": "0.1.0",
       "description": "Closing out any substantive change in this repository: validate.sh → skiller registry → CHANGELOG [Unreleased] → PR; semver tag rules. Activate before every commit/PR and when preparing a release.",
-      "sha256": "07aa83ae31d0b5b7e7fbe10007dddf4f4ba1ca92c1dedc855ec80d0759fbaeed",
-      "content_sha256": "c6dd95e5289401d3e4a7ea16e5596e6e6a2a19ebb7b87c729fd8837685067637",
+      "sha256": "630ec074637e319a183c27855962e9cb0efe21079ffc541317247108c33c8e78",
+      "content_sha256": "7bc37caffa1d8247ca5a95fa28ca28473aaa0da9bd9f40a42f453ee34c930bf5",
       "tags": [
         "release",
         "changelog",
@@ -4386,8 +4386,8 @@
       "path": "skills/repository-bootstrap/task-development-philosophy/SKILL.md",
       "version": "0.3.0",
       "description": "Guardrails for keeping Task plans flexible, proportional, and loop-free. Activate before creating or revising a plan in this repository or changing packages/task planning, validation, audit, close, retry, or budget policy.",
-      "sha256": "e229b070d441022911384587a4751e8f07a3f3f57843aacc6630ed12674e58e7",
-      "content_sha256": "90081595fe798626945ee5c648ebae9607637fbbdc8032c3d0e652bcd7cf7956",
+      "sha256": "e41445fd72fb170fcbc0e9182dfb2b7ded08be5847bc924e09337ee3b74ef980",
+      "content_sha256": "c8d4e473ce8c02c85ad519bd5925daa4785aa6c8c2b9dec30bc665a79129ab92",
       "tags": [
         "task",
         "philosophy",
@@ -4522,7 +4522,7 @@
       "version": "0.1.0",
       "description": "AI agent security: prompt injection defense, skill/plugin validation, memory poisoning prevention, permission auditing, tool-use safety, exfiltration prevention, incident response. Use when installing skills, processing untrusted content, auditing permissions, validating memory, reviewing MCP configs, or hardening agents.",
       "sha256": "ba9f04adacb09f090aa5b6398bb9bd565dcf30b83ee426e8a5a806829f20ec5a",
-      "content_sha256": "94c5649ca0a183b9f1257f31a05968dba7c2f21ecf421431b3d3eb95788ebaba",
+      "content_sha256": "a5c0bc05d56ea16879aab90be09d10a56bb7a111cd38a3ed55a64d2e4d3e18cf",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/agent-security-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -4624,7 +4624,7 @@
       "version": "0.3.0",
       "description": "EXPERIMENTAL (enable per-project). Post-hoc Claude Code session analysis from JSONL logs — finds weak spots on 3 axes: agents (skill-skip, drift, loops), skills (gaps, dead weight, thin), settings (hooks, permissions). Findings → learnings via memory-hook, human promotes. Activate AFTER a work cycle / at session end / on request «analyze session» — only if enabled in project.",
       "sha256": "0275cd9b81077519757333a6355d378f6b97214a3838f404d11656d4287895b8",
-      "content_sha256": "af6a3ee006f742e9c2ed5fb9414f4551c21d3ba66f85e3ca12505730688b2e40",
+      "content_sha256": "d55fb6ba6c14a5d543bda0cb5366b37b033ca214df51d8e6ecc191ff8b02ec18",
       "tags": [
         "observer",
         "session-analysis",
@@ -4710,25 +4710,25 @@
       "name": "oss-dart",
       "path": "skills/oss-dev/references/oss-dart.md",
       "parent": "oss-development",
-      "sha256": "a647e633f0149d7ac32897e96f3694c7be6d378fa216077d4924947303bcbde5"
+      "sha256": "9aff11eab164e3d8eba2483b979bc40e3237a3119b7fbd31d3f2dc7f5d36a02f"
     },
     {
       "name": "oss-js",
       "path": "skills/oss-dev/references/oss-js.md",
       "parent": "oss-development",
-      "sha256": "8397a65039c0a67663c7ecdc2e7cfb5bf58496118678ebe6dc26ef8a22c6acde"
+      "sha256": "8277d391ffdfe2912a5a2d2f0497cb9d37bd526b7d7ab0a525660a13107562d2"
     },
     {
       "name": "oss-php",
       "path": "skills/oss-dev/references/oss-php.md",
       "parent": "oss-development",
-      "sha256": "28fa67fcc89adaec632d03094d5111772eaaa273c1ece886ce30ca4cccc6e1b0"
+      "sha256": "656959c2ac43a5d2b9907f689808e0792a06bb8aaf37b2a415e35505858bba29"
     },
     {
       "name": "oss-py",
       "path": "skills/oss-dev/references/oss-py.md",
       "parent": "oss-development",
-      "sha256": "f9735cb0305c76e4c920340fafedb90736de8492a1a104e2a5410928b0f0f429"
+      "sha256": "b52edc8d11c9cfdbd4633c2d5bf8e997705d1bbeded4ba3fb98d7fdfcf1bd1c9"
     }
   ]
 }

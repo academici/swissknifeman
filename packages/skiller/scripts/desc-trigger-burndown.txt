@@ -1,24 +1,24 @@
-# desc-trigger-burndown.txt — рэтчет качества frontmatter `description` как ТРИГГЕРА
+# desc-trigger-burndown.txt — quality ratchet frontmatter `description` as TRIGGER
 # (P3.5).
 #
-# Формат: одна запись на строку — `<bucket>/<name>` (совпадает с frontmatter bucket:name).
-# Строки, начинающиеся с `#`, и пустые — комментарии, игнорируются.
+# Format: one entry per line - `<bucket>/<name>` (matches frontmatter bucket:name).
+# Lines starting with `#`, and empty comments are ignored.
 #
-# Правила (see validate.sh, секция description-триггер-гейта):
-#   - description БЕЗ триггерной фразы (regex: use when|activate|use for|use to|when you|
-#     whenever|trigger|use this, case-insensitive) — легально, ТОЛЬКО пока скилл в этом
-#     списке (унаследованный долг). Скилла НЕТ в списке → error (новый долг запрещён).
-#   - Запись «протухла» (скилл удалён/переименован ИЛИ его description уже несёт триггер) →
-#     validate.sh печатает warn «протухшая запись, убери» — удали строку при починке.
+# Rules (see validate.sh, section description-trigger gate):
+#   - description WITHOUT trigger phrase (regex: use when|activate|use for|use to|when you|
+#     whenever|trigger|use this, case-insensitive) — legal, ONLY as long as you have the skill in this
+#     list (inherited debt). Skill is NOT on the list → error (new debt prohibited).
+#   - Record «rotten» (skill removed/renamed OR it description already carries a trigger) →
+#     validate.sh prints warn «rotten recording, remove it» — deleted the line when fixing.
 #
-# One-way: список ТОЛЬКО уменьшается. Добавление новых строк вне bootstrap этого item —
-# осознанное решение отдельного item'а с обоснованием в его Completion Notes, не тихая правка.
+# One-way: the list JUST gets smaller. Adding new rows outside bootstrap this item —
+# conscious decision of an individual item'and with justification in it Completion Notes, not a silent edit.
 #
-# Bootstrap (2026-07-30, P3.5): унаследованный остаток без триггера ПОСЛЕ починки
-# измеренного blocker-набора (39 записей < 100 симв, P3.5 Scope Included) — 69 записей на
-# 8e16a811 (findings/04 оценивал 86 на момент замера 2026-07-29; расхождение — часть
-# скиллов из набора «< 100 симв без триггера, upstream или ранее правленные» уже вышла из
-# выборки к моменту bootstrap, число фиксируется живым прогоном, не документом).
+# Bootstrap (2026-07-30, P3.5): inherited remainder without trigger AFTER repair
+# measured blocker-set (39 records < 100 char, P3.5 Scope Included) — 69 records on
+# 8e16a811 (findings/04 was rated 86 at the time of measurement on 2026-07-29; divergence - part
+# skills from the set «< 100 character without trigger, upstream or previously edited» has already left
+# samples by the time bootstrap, number is fixed by a live run, not by a document).
 
 architect/security-design
 axioma/axioma-doctrine

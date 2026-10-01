@@ -17,7 +17,7 @@ GLOBAL=0
 usage() { grep '^#' "$0" | sed 's/^# \{0,1\}//' | head -15; exit "${1:-0}"; }
 
 list_presets() {
-  echo "Доступные пресеты (configs/claude-code/):"
+  echo "Available presets (configs/claude-code/):"
   for f in "$PRESETS_DIR"/settings.*.json; do
     basename "$f" | sed -E 's/^settings\.(.+)\.json$/  \1/'
   done
@@ -33,7 +33,7 @@ while [[ $# -gt 0 ]]; do
     --global)  GLOBAL=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
     -h|--help) usage 0 ;;
-    *) echo "Неизвестный аргумент: $1" >&2; usage 1 ;;
+    *) echo "Unknown argument: $1" >&2; usage 1 ;;
   esac
 done
 
@@ -65,8 +65,8 @@ if [[ "$GLOBAL" -eq 1 ]]; then
       if [[ "$RG_DST_SHA256" == "$RG_OLD_STUB_SHA256" ]]; then
         cp "$RG_SRC/config.json" "$RG_DST/"
       else
-        echo "review-gate: $RG_DST/config.json — не старая заглушка (уважаю локальный выбор), не трогаю."
-        echo "  Обновить вручную: cp \"$RG_SRC/config.json\" \"$RG_DST/config.json\""
+        echo "review-gate: $RG_DST/config.json — not an old stub (respect local choice I don't touch), "
+        echo "  Update manually: cp \"$RG_SRC/config.json\" \"$RG_DST/config.json\""
       fi
     fi
     SL_SRC="$PRESETS_DIR/statusline"; SL_DST="$HOME/.claude/statusline"
@@ -122,26 +122,26 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     [[ -f "$CG_DST/env.ini" ]] || cp "$CG_SRC/env.ini" "$CG_DST/"
     OS_SRC="$PRESETS_DIR/output-styles"; OS_DST="$HOME/.claude/output-styles"
     if [[ -d "$OS_SRC" ]]; then mkdir -p "$OS_DST"; cp "$OS_SRC/"*.md "$OS_DST/"; fi
-    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ + memory/ + agent-router/ + run-report/ + pack-guard/ + changelog-gate/ + output-styles/ + statusline/ (НЕ активны)."
-    echo "auto-approve, memory, agent-router, run-report, pack-guard, changelog-gate, output-style и statusline включаются ПО ПРОЕКТУ / по вызову (см. README)."
+    echo "Installed globally: log-bash-command + notify (active) + files auto-approve/ + memory/ + agent-router/ + run-report/ + pack-guard/ + changelog-gate/ + output-styles/ + statusline/ (NOT active)."
+    echo "auto-approve, memory, agent-router, run-report, pack-guard, changelog-gate, output-style and statusline are included BY PROJECT / on call (see README)."
   else
-    echo "--- dry-run: --global (файлы хуков не пишутся) ---"
+    echo "--- dry-run: --global (hook files are not written) ---"
     RG_DST_CFG="$HOME/.claude/hooks/review-gate/config.json"
     if [[ ! -f "$RG_DST_CFG" ]]; then
-      echo "review-gate: config.json отсутствует — будет установлен новый шаблон (checks: generated-assets, plan-lint, tests-touched)"
+      echo "review-gate: config.json is missing - a new template will be installed (checks: generated-assets, plan-lint, tests-touched)"
     else
       RG_DST_SHA256="$(sha256sum "$RG_DST_CFG" | cut -d' ' -f1)"
       if [[ "$RG_DST_SHA256" == "$RG_OLD_STUB_SHA256" ]]; then
-        echo "review-gate: config.json — старая заглушка → будет мигрирован на новый шаблон"
+        echo "review-gate: config.json — old stub → will be migrated to the new template"
       else
-        echo "review-gate: config.json — не заглушка (локальный выбор) → НЕ будет тронут"
+        echo "review-gate: config.json — is not a stub (local selection) → will NOT be touched"
       fi
     fi
   fi
 fi
 
-[[ -n "$TARGET" ]] || { echo "Ошибка: --target обязателен" >&2; usage 1; }
-[[ -d "$TARGET" ]] || { echo "Ошибка: каталог не найден: $TARGET" >&2; exit 1; }
+[[ -n "$TARGET" ]] || { echo "Error: --target required" >&2; usage 1; }
+[[ -d "$TARGET" ]] || { echo "Error: directory not found: $TARGET" >&2; exit 1; }
 TARGET="$(cd "$TARGET" && pwd)"
 
 detect_presets() {
@@ -163,13 +163,13 @@ detect_presets() {
   echo "$detected"
 }
 
-[[ -n "$PRESETS" ]] || { PRESETS="$(detect_presets)"; echo "Автодетект: $PRESETS"; }
+[[ -n "$PRESETS" ]] || { PRESETS="$(detect_presets)"; echo "Autodetect: $PRESETS"; }
 
 PRESET_FILES=()
 IFS=',' read -ra NAMES <<< "$PRESETS"
 for name in "${NAMES[@]}"; do
   f="$PRESETS_DIR/settings.${name}.json"
-  [[ -f "$f" ]] || { echo "Ошибка: пресет не найден: $name ($f)" >&2; exit 1; }
+  [[ -f "$f" ]] || { echo "Error: preset not found: $name ($f)" >&2; exit 1; }
   PRESET_FILES+=("$f")
 done
 
@@ -188,7 +188,7 @@ def load(path):
         with open(path, encoding="utf-8") as fh:
             return json.load(fh)
     except (json.JSONDecodeError, OSError) as e:
-        sys.stderr.write(f"ОШИБКА: не удалось прочитать JSON {path}: {e}\n")
+        sys.stderr.write(f"ERROR: failed to read JSON {path}: {e}\n")
         sys.exit(1)
 
 result = load(dest_path)
@@ -225,5 +225,5 @@ fi
 mkdir -p "$DEST_DIR"
 [[ -f "$DEST" ]] && cp "$DEST" "$DEST.bak"
 printf '%s\n' "$MERGED" > "$DEST.tmp" && mv -f "$DEST.tmp" "$DEST"
-echo "Записано: $DEST (пресеты: $PRESETS)"
-if [[ -f "$DEST.bak" ]]; then echo "Бэкап:    $DEST.bak"; fi
+echo "Recorded: $DEST (presets: $PRESETS)"
+if [[ -f "$DEST.bak" ]]; then echo "Backup:    $DEST.bak"; fi

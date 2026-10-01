@@ -1,18 +1,18 @@
 ---
-description: Полный визард интеграции проекта через skiller (скиллы + хуки + permissions + память + hub).
+description: Full project integration wizard via skiller (skills + hooks + permissions + memory + hub).
 argument-hint: "[minimal|recommended|full|custom]"
 allowed-tools: Bash(skiller:*)
 ---
-Интеграция проекта через **skiller integrate**. Ввод: «$ARGUMENTS».
-Лаунчер — `skiller` (после `./install.sh`). В неинтерактивном режиме выбор уточняешь ты.
+Project integration via **skiller integrate**. Input: «$ARGUMENTS».
+Launcher - `skiller` (after `./install.sh`). In non-interactive mode, you specify the choice.
 
-## Шаги
-1. **Bundle**: `recommended` (дефолт) · `full` · `minimal` · `custom`. Если в «$ARGUMENTS» нет — спроси.
-2. **Канал скиллов** (СПРОСИ через AskUserQuestion — касается ТОЛЬКО скиллов):
-   - **connect** — плагины marketplace; файлы не в репо, нужен доступ к реестру swissknifeman;
-   - **vendor** — физ. копии в `.claude/skills/` (через `sync`), коммитятся в репо → работают у
-     внешних разработчиков без swissknifeman. → флаг `--skills-channel connect|vendor`.
-   Рекомендуй **vendor**, если проект отдают сторонним разработчикам.
-3. **Предпросмотр**: `skiller integrate --dry-run [--skills-channel <C>]` — покажи чеклист (скиллы / permissions / auto-approve / память / hub / docs-sync).
-4. **Применение** по подтверждению: `skiller integrate --yes --bundle <B> [--skills-channel <C>]`.
-5. **Отчёт**: что включено по каждому блоку.
+## Steps
+1. **Bundle**: `recommended` (default) · `full` · `minimal` · `custom`. If in «$ARGUMENTS» no - ask.
+2. **Skill channel** (ASK via AskUserQuestion — applies ONLY to skills):
+   - **connect** — plugins marketplace; files are not in the repo, you need access to the registry swissknifeman;
+   - **vendor** — physical. copies in `.claude/skills/` (via `sync`), are committed to the repo → work for
+     external developers without swissknifeman. → flag `--skills-channel connect|vendor`.
+   Recommend **vendor**, if the project is given to third-party developers.
+3. **Preview**: `skiller integrate --dry-run [--skills-channel <C>]` — show checklist (skills / permissions / auto-approve / memory / hub / docs-sync).
+4. **Application** by confirmation: `skiller integrate --yes --bundle <B> [--skills-channel <C>]`.
+5. **Report**: what is included for each block.

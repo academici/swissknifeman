@@ -3,10 +3,10 @@ paths:
   - "**/database/migrations/**"
 ---
 
-При работе с миграциями (глубина — скилл `php:database`). Risk-слой: **transactions**
-(схема/обратимость) — `down()` обязан быть корректным и обратимым.
+When working with migrations (depth - skill `php:database`). Risk-layer: **transactions**
+(diagram/reversibility) — `down()` must be correct and reversible.
 
-- Не менять уже применённые миграции — правка структуры идёт НОВОЙ миграцией.
-- Имена таблиц через `#[Table]`-атрибут модели; `down()` корректен и обратим.
-- Индексы под новые выборки; внешние ключи с явной `onDelete`.
-- Новые поля отрази в `$fillable`/`casts` соответствующей модели.
+- Do not change already applied migrations - the structure is edited with a NEW migration.
+- Table names via `#[Table]`-model attribute; `down()` is correct and reversible.
+- Indexes for new selections; foreign keys with explicit `onDelete`.
+- New fields reflected in `$fillable`/`casts` corresponding to the model.

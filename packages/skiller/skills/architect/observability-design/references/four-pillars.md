@@ -1,39 +1,39 @@
-# 4 столпа observability
+# 4 pillar observability
 
-Справочник к скиллу `observability-design`.
+Skill reference `observability-design`.
 
 
 ### 1. Logs
-**Что:** структурированные события с контекстом.
-**Решения:**
-- Уровни: ERROR / WARN / INFO / DEBUG — когда что писать
-- Формат: JSON со схемой (timestamp, level, service, trace_id, user_id, message, attrs)
-- Где: stdout → агрегатор (Loki / CloudWatch / Datadog / Better Stack)
-- Retention: hot (7d) / warm (30d) / cold (1y по compliance)
-- PII в логах: **запретить** или **обязательная маскировка** (см. `security-design`)
+**What:** structured events with context.
+**Solutions:**
+- Levels: ERROR / WARN / INFO / DEBUG — when to write what
+- Format: JSON with diagram (timestamp, level, service, trace_id, user_id, message, attrs)
+- Where: stdout → aggregator (Loki / CloudWatch / Datadog / Better Stack)
+- Retention: hot (7d) / warm (30d) / cold (1y by compliance)
+- PII in the logs: **deny** or **mandatory masking** (see `security-design`)
 
 ### 2. Metrics
-**Что:** агрегированные числа во времени.
-**Категории:**
-- **RED** (для request-driven): Rate, Errors, Duration — на каждый эндпоинт
-- **USE** (для resources): Utilization, Saturation, Errors — на CPU/RAM/disk/network/DB-pool
-- **Business KPI**: MRR, активные пользователи, конверсия — отдельный dashboard
-- **Custom domain**: для AI-проектов — token usage, latency per model, hallucination rate (см. `eval-design`)
+**What:** aggregated numbers over time.
+**Categories:**
+- **RED** (for request-driven): Rate, Errors, Duration — per endpoint
+- **USE** (for resources): Utilization, Saturation, Errors — on CPU/RAM/disk/network/DB-pool
+- **Business KPI**: MRR, active users, conversion - separate dashboard
+- **Custom domain**: for AI-projects - token usage, latency per model, hallucination rate (see `eval-design`)
 
 ### 3. Traces
-**Что:** путь одного запроса через все компоненты.
-**Решения:**
-- Стандарт: OpenTelemetry (по умолчанию)
-- Sampling: head-based (1–10%) или tail-based (100% ошибок, 1% успехов)
-- Что трейсить обязательно: входящие HTTP, исходящие HTTP, БД-запросы, queue messages, LLM-вызовы
-- Trace_id propagation: через все service-границы (включая background jobs)
+**What:** path of one request through all components.
+**Solutions:**
+- Standard: OpenTelemetry (default)
+- Sampling: head-based (1–10%) or tail-based (100% errors, 1% success)
+- What to trace: incoming HTTP, outgoing HTTP, DB queries, queue messages, LLM-calls
+- Trace_id propagation: through everything service-boundaries (including background jobs)
 
 ### 4. Alerts
-**Что:** автоматические сигналы о деградации.
-**Принципы:**
-- Алерт = action required. Если нет действия — не алерт, это дашборд.
-- Severity tiers: P1 (paging, 24/7) / P2 (рабочее время) / P3 (тикет)
-- Каждому алерту — runbook (см. ниже)
-- Запретить flaky alerts: после 3-го ложного срабатывания — переделать или удалить
+**What:** automatic degradation signals.
+**Principles:**
+- Alert = action required. If there is no action, it’s not an alert, it’s a dashboard.
+- Severity tiers: P1 (paging, 24/7) / P2 (working hours) / P3 (ticket)
+- To each alert - runbook (see below)
+- Deny flaky alerts: after the 3rd false positive - redo or delete
 
 ---

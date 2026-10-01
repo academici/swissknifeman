@@ -1,74 +1,74 @@
-# Жизненный цикл урока
+# Lesson life cycle
 
-Урок проходит детерминированный конвейер состояний, с человеком в гейте на входе в переиспользуемое
-знание. Всё — append-only и восстановимо из логов.
+The lesson goes through a deterministic pipeline of states, with a person in the gate at the input to the reusable
+knowledge. Everything - append-only and recoverable from logs.
 
-## Состояния
+## States
 
 ```
-ephemeral ──promote──▶ candidate ──promote(человек)──▶ curated
+ephemeral ──promote──▶ candidate ──promote(person)──▶ curated
     │                      │                               │
-    └──────── deprecate (soft, не удаляется — аудит) ◀──────┘
+    └──────── deprecate (soft, not deleted - audit) ◀──────┘
 ```
 
-| Состояние | Смысл | Как попадает |
+| Status | Meaning | How it gets there |
 |:--|:--|:--|
-| `ephemeral` | сырой кандидат из прогона | `digest` |
-| `candidate` | подтверждён (наблюдался/сработал) | `promote` или авто из `recompute` (P3) |
-| `curated` | доверенное знание, всплывает в память mAInd | **только человек** (`promote --to curated`) |
-| `deprecated` | демоутнут (soft) | `deprecate`, `--supersedes`, просадка confidence |
+| `ephemeral` | raw candidate from run | `digest` |
+| `candidate` | confirmed (observed/worked) | `promote` or auto from `recompute` (P3) |
+| `curated` | trusted knowledge, comes to memory mAInd | **human only** (`promote --to curated`) |
+| `deprecated` | demoted (soft) | `deprecate`, `--supersedes`, drawdown confidence |
 
-Раскладка данных (per-project, **LOCAL**):
+Data Layout (per-project, **LOCAL**):
 
 ```
 <project>/.claude/analyst/
   lessons/{ephemeral,candidate,curated,deprecated}/<id>.json
-  audit.ndjson     # append-only провенанс переходов
-  events.ndjson    # append-only поток сигналов confidence (P3)
+  audit.ndjson     # append-only provenance of transitions
+  events.ndjson    # append-only signal flow confidence (P3)
 ```
 
-## Провенанс и аудит
+## Provenance and audit
 
-Каждый урок несёт `source` / `session_id` / `scope` / `evidence`; каждый переход — запись в
-append-only `audit.ndjson` (кто, откуда-куда, согласие). Переход — через ре-райт + unlink (урок не
-двоится между каталогами).
+Each lesson brings `source` / `session_id` / `scope` / `evidence`; each transition is a record in
+append-only `audit.ndjson` (who, from where to where, agreement). Transition - via re-write + unlink (lesson not
+doubles between directories).
 
 ## Confidence (P3)
 
-`recompute` пересчитывает уверенность **чистой** арифметикой (stdlib, без I/O/часов):
+`recompute` recalculates confidence **clean** arithmetic (stdlib, without I/O/hours):
 
 ```
-p          = (S + α) / (N + α + β)      # Beta-среднее доли успеха
-volume     = 1 − e^(−N / k)             # штраф за малый объём
-decay      = λ ^ days                    # затухание по времени
+p          = (S + α) / (N + α + β)      # Beta-average success rate
+volume     = 1 − e^(−N / k)             # penalty for small volume
+decay      = λ ^ days                    # time decay
 confidence = p × volume × decay          # ∈ [0, 1)
 ```
 
-Тиры применения: `tentative` 0.3 · `moderate` 0.5 · `strong` 0.7 · `core` 0.9 (ниже 0.3 — `none`).
-Все пороги (и почему именно такие) — в [Тюнинг-параметрах](./tuning).
-Источник истины — `events.ndjson`; снапшот воспроизводим при фиксированном `--now`. Числовая
-state-machine: авто `ephemeral→candidate`, `curated` — только человек, просадка → soft-deprecate.
+Application ranges: `tentative` 0.3 · `moderate` 0.5 · `strong` 0.7 · `core` 0.9 (below 0.3 - `none`).
+All thresholds (and why exactly like this) — in [Tuning parameters](./tuning).
+Source of truth - `events.ndjson`; snapshot is reproduced at fixed `--now`. Numeric
+state-machine: auto `ephemeral→candidate`, `curated` — human only, drawdown → soft-deprecate.
 
-## Consolidation (mem0-таксономия)
+## Consolidation (mem0-taxonomy)
 
-При `promote`/`review` урок сверяется с активными (Jaccard) и классифицируется:
-`ADD` (новый) · `UPDATE` (уточняет) · `NOOP` (дубль) · `CONFLICT` (противоречит). **Конфликт →
-flag-and-ask**: авто-резолв запрещён, человек решает `--supersedes ID` (soft-деприкейт старого) или
+When `promote`/`review` lesson is checked against active (Jaccard) and is classified:
+`ADD` (new) · `UPDATE` (clarifies) · `NOOP` (take) · `CONFLICT` (contradicts). **Conflict →
+flag-and-ask**: auto-resolve is prohibited, a person decides `--supersedes ID` (soft-deprikate old) or
 `--force`.
 
 ## Cross-project scan (P2)
 
-`scan` поднимается над одним проектом: обходит реестр `config.json:projects[]`, собирает уроки из
-всех, кластеризует по Jaccard и детектит паттерны в **≥N проектах** — **namespace-изолированно**
-(наследуется от [mAInd](/maind/guide/namespaces): паттерн из `ns:axioma` не течёт в чужой namespace;
-проект без namespace изолирован). Результат — `index/by_pattern/<id>.json` (абстрагированная проекция:
-`representative{trigger,action,kind}`, `members`, `weight`, `projects`) + человекочитаемый
+`scan` rises over one project: bypasses the registry `config.json:projects[]`, collects lessons from
+all, clusters by Jaccard and detects patterns in **≥N projects** — **namespace-isolated**
+(inherits from [mAInd](/maind/guide/namespaces): pattern from `ns:axioma` does not flow into someone else's namespace;
+project without namespace isolated). Result - `index/by_pattern/<id>.json` (abstracted projection:
+`representative{trigger,action,kind}`, `members`, `weight`, `projects`) + human readable
 `suggestions/<id>.md`.
 
-**Реконсиляция** после записи: осиротевшие артефакты (паттерн исчез — проект disabled, урок
-deprecated, кластер упал ниже порога) снимаются **строго в scope прогона** (`scanned_namespaces` =
-`{--namespace}` если задан, иначе union namespace всех enabled-проектов). Чужой namespace не рескан →
-его файлы не трогаются. Битый индекс → SKIP (не удаляем неклассифицированное). Нестандартные
-`--min-projects/--threshold` пропускают авто-прун (защита от churn).
+**Reconciliation** post-record: orphaned artifacts (pattern disappeared - project disabled, lesson
+deprecated, cluster fell below threshold) are removed **strictly in scope run** (`scanned_namespaces` =
+`{--namespace}` if specified, otherwise union namespace all enabled-projects). Alien namespace not rescanned →
+its files are not touched. Broken index → SKIP (do not delete unclassified). Non-standard
+`--min-projects/--threshold` skip auto-prun (protection against churn).
 
-Дальше: индекс паттернов — вход для [suggest →](./suggest).
+Next: pattern index - input for [suggest →](./suggest).

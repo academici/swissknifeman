@@ -1,32 +1,32 @@
-"""analyst sessions — недельные медианы токен-оверхеда по ЖИВЫМ jsonl-транскриптам
-Claude Code (`~/.claude/projects/<encoded-cwd>/<sid>.jsonl`), НЕ по `usage-trend.ndjson`
-run-report (тот источник читает `token_report.py` — здесь другой: сырые транскрипты
-сессии, доступные даже без включённого хука run-report).
+"""analyst sessions — weekly median token overhead by LIVE jsonl-transcripts
+Claude Code (`~/.claude/projects/<encoded-cwd>/<sid>.jsonl`), NOT by `usage-trend.ndjson`
+run-report (that source reads `token_report.py` — another one here: raw transcripts
+sessions available even without the hook enabled run-report).
 
-Референс-логика — scratchpad-скрипт `analyze_sessions.py` (сессия 4af788f3, СКРИПТ ВНЕ
-РЕПО — сюда перенесена только выжимка алгоритма):
-  - `first_turn_overhead` = input + cache_creation ПЕРВОЙ assistant-записи сессии
-    (не сумма по всем — единый источник математики теперь `core.usage.feed_event`,
-    см. правку `core/usage.py`, дублировать её здесь не нужно);
-  - `fresh_per_turn` = (Σinput + Σcache_creation) / turns (`turns` = число
-    assistant-событий, `core.usage.finish(...)["msgs"]`);
-  - путь транскрипта: `~/.claude/projects/<encoded-cwd>/<session_id>.jsonl`.
+Reference logic - scratchpad-script `analyze_sessions.py` (session 4af788f3, SCRIPT OUT
+REPO - only the extract of the algorithm has been moved here):
+  - `first_turn_overhead` = input + cache_creation FIRST assistant-session records
+    (not the sum of all - a single source of mathematics now `core.usage.feed_event`,
+    see edit `core/usage.py`, no need to duplicate it here);
+  - `fresh_per_turn` = (Σinput + Σcache_creation) / turns (`turns` = number
+    assistant-events, `core.usage.finish(...)["msgs"]`);
+  - transcript path: `~/.claude/projects/<encoded-cwd>/<session_id>.jsonl`.
 
-Кодирование cwd (ПРОВЕРЕНО чтением живых каталогов `~/.claude/projects/*` этой
-машины, не угадано): Claude Code заменяет КАЖДЫЙ `/` абсолютного пути на `-`
-(ведущий `/` → ведущий `-` имени каталога) — подтверждено на ~20 живых проектах
-разной вложенности. Поведение для литеральных `.`/`_` внутри сегментов пути НЕ
-удалось перепроверить на живых каталогах (среди подключённых проектов таких путей
-нет) — если `analyst sessions` не находит каталог для проекта с точкой/подчёркиванием
-в пути, это ESCALATION-REQUIRED, а не повод менять кодировку наугад (см. Escalation
-Needed P5.3 в phases/P5.md).
+Coding cwd (TESTED by reading live directories `~/.claude/projects/*` this
+cars, not guessed): Claude Code replaces EVERY `/` absolute path to `-`
+(presenter `/` → presenter `-` directory name) — confirmed on ~20 live projects
+of different nesting. Behavior for literals `.`/`_` inside path segments NOT
+managed to double-check on live directories (among connected projects of such paths
+no) — if `analyst sessions` does not find directory for project with dot/underscore
+on the way, it's ESCALATION-REQUIRED, and not a reason to change the encoding at random (see Escalation
+Needed P5.3 in phases/P5.md).
 
-Недельный ключ — ISO-календарная неделя (`%G-W%V`) первой временной метки сессии
-(`ts_min` аккумулятора). `--weeks N` — последние N недель, для которых есть сессии.
-Trend-warn (ТЗ): медиана `first_turn_overhead` недели N выросла >20% к неделе N-1 —
-простое сравнение медиан, без экзотики (stdlib `statistics`, без pandas/numpy). Сравниваются
-только КАЛЕНДАРНО смежные недели (`_is_next_iso_week`) — при пропуске недель (нет сессий)
-warn не печатается, чтобы не путать разрыв с рецидивом."""
+Weekly key - ISO-calendar week (`%G-W%V`) first session timestamp
+(`ts_min` battery). `--weeks N` — latest N weeks for which there are sessions.
+Trend-warn (TK): median `first_turn_overhead` weeks N has grown >20% by week N-1 —
+simple comparison of medians, without exotics (stdlib `statistics`, without pandas/numpy). Compare
+only CALENDARLY adjacent weeks (`_is_next_iso_week`) — when skipping weeks (no sessions)
+warn is not printed so as not to confuse rupture with relapse."""
 import json
 import os
 import statistics
@@ -37,14 +37,14 @@ from core import usage as core_usage
 
 from .common import HOME, die, parse_args, warn
 
-TREND_WARN_MULT = 1.2   # >20% рост медианы week-over-week (ТЗ)
+TREND_WARN_MULT = 1.2   # >20% increase in median week-over-week (TK)
 TOP_ANOMALIES = 5
 
 
-# ── пути/кодирование cwd ──────────────────────────────────────────────────────────
+# ── paths/encoding cwd ──────────────────────────────────────────────────────────
 def encode_cwd(cwd):
-    """abs-путь → имя каталога транскриптов (см. докстринг модуля: '/' → '-',
-    подтверждено на живых `~/.claude/projects/*`)."""
+    """abs-path → transcript directory name (see module docstring: '/' → '-',
+    confirmed live `~/.claude/projects/*`)."""
     p = os.path.abspath(os.path.expanduser(str(cwd)))
     return p.replace(os.sep, "-")
 
@@ -61,10 +61,10 @@ def _session_files(cwd, home=None):
     return sorted(d.glob("*.jsonl"))
 
 
-# ── метрики одной сессии ──────────────────────────────────────────────────────────
+# ── metrics for one session ──────────────────────────────────────────────────────────
 def _week_key(ts):
-    """ISO-неделя ('2026-W28') из ISO-таймстемпа; None на мусоре/отсутствии —
-    сессия без определённой недели не бакетится (честная деградация)."""
+    """ISO-week ('2026-W28') from ISO-timestamp; None on garbage/absence -
+    session without a specific week is not bucketed (honest degradation)."""
     try:
         dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
     except (ValueError, TypeError):
@@ -102,8 +102,8 @@ def session_metrics(path):
 
 
 def load_sessions(cwd, home=None):
-    """Метрики всех сессий проекта, по возрастанию времени. [] — каталога/сессий нет
-    (не ошибка: проект мог не запускаться с этого cwd — честная пустота)."""
+    """Metrics of all sessions of the project, in ascending order of time. [] — directory/no sessions
+    (not an error: the project might not start from this cwd — honest emptiness)."""
     rows = []
     for f in _session_files(cwd, home=home):
         m = session_metrics(f)
@@ -113,14 +113,14 @@ def load_sessions(cwd, home=None):
     return rows
 
 
-# ── недельная агрегация ────────────────────────────────────────────────────────────
+# ── weekly aggregation ────────────────────────────────────────────────────────────
 def _median(values):
     return statistics.median(values) if values else None
 
 
 def _is_next_iso_week(prev_week, cur_week):
-    """True, если cur_week — КАЛЕНДАРНО следующая ISO-неделя за prev_week (без
-    пропусков между ними, не просто соседний индекс в списке присутствующих недель)."""
+    """True, if cur_week — CALENDAR next ISO-week for prev_week (without
+    gaps between them, not just a neighboring index in the list of present weeks)."""
     py, pw = (int(x) for x in prev_week.split("-W"))
     cy, cw = (int(x) for x in cur_week.split("-W"))
     prev_monday = date.fromisocalendar(py, pw, 1)
@@ -129,7 +129,7 @@ def _is_next_iso_week(prev_week, cur_week):
 
 
 def weekly_buckets(rows):
-    """{week: [session-metrics...]} — группировка по ISO-неделе."""
+    """{week: [session-metrics...]} — group by ISO-week."""
     buckets = {}
     for r in rows:
         buckets.setdefault(r["week"], []).append(r)
@@ -137,9 +137,9 @@ def weekly_buckets(rows):
 
 
 def build_report(cwd, weeks=None, home=None):
-    """Чистая сборка отчёта (без die/print). None — сессий вообще нет (нужно отличать
-    от «есть сессии, но окно weeks пустое» — тут такого не бывает: weeks режет уже
-    непустой список недель)."""
+    """Clean report build (without die/print). None — no sessions at all (need to be distinguished
+    from «there are sessions, but the window weeks empty» — this does not happen here: weeks is already cutting
+    non-empty list of weeks)."""
     rows = load_sessions(cwd, home=home)
     if not rows:
         return None
@@ -166,8 +166,8 @@ def build_report(cwd, weeks=None, home=None):
         if pm and cm and cm > TREND_WARN_MULT * pm and _is_next_iso_week(prev["week"], cur["week"]):
             growth_pct = (cm / pm - 1) * 100
             warnings.append(
-                f"{prev['week']}→{cur['week']}: медиана first_turn_overhead выросла "
-                f"на {growth_pct:.0f}% ({pm:.0f}→{cm:.0f}) — рецидив контекст-инцидента?")
+                f"{prev['week']}→{cur['week']}: median first_turn_overhead has grown "
+                f"on {growth_pct:.0f}% ({pm:.0f}→{cm:.0f}) — context-incident recurrence?")
 
     window_rows = [r for r in rows if r["week"] in weeks_sorted]
     top_anomalies = sorted(
@@ -182,7 +182,7 @@ def build_report(cwd, weeks=None, home=None):
     }
 
 
-# ── человекочитаемый вывод ────────────────────────────────────────────────────────
+# ── human readable output ────────────────────────────────────────────────────────
 def _fmt_k(n):
     if n is None:
         return "—"
@@ -195,19 +195,19 @@ def _fmt_k(n):
 
 def _print_human(rep):
     print(f"\nanalyst sessions — {rep['cwd']}")
-    print(f"  каталог транскриптов: {rep['sessions_dir']}")
-    print(f"  сессий всего: {rep['sessions_total']} · в окне: {rep['sessions_window']}\n")
+    print(f"  transcript directory: {rep['sessions_dir']}")
+    print(f"  sessions total: {rep['sessions_total']} · in the window: {rep['sessions_window']}\n")
     if not rep["weeks"]:
-        print("  Пусто — нет недель в окне.\n")
+        print("  Empty - no weeks in the window.\n")
         return
-    print(f"  {'неделя':<10} {'сессий':>7} {'медиана first_turn_overhead':>28} "
-          f"{'медиана fresh/turn':>19}")
+    print(f"  {'week':<10} {'sessions':>7} {'median first_turn_overhead':>28} "
+          f"{'median fresh/turn':>19}")
     for w in rep["weeks"]:
         print(f"  {w['week']:<10} {w['sessions']:>7} "
               f"{_fmt_k(w['median_first_turn_overhead']):>28} "
               f"{_fmt_k(w['median_fresh_per_turn']):>19}")
     if rep["top_anomalies"]:
-        print("\n  топ-аномалии (макс. first_turn_overhead в окне):")
+        print("\n  top anomalies (max. first_turn_overhead in the window):")
         for r in rep["top_anomalies"]:
             print(f"    · {r['session']} ({r['week']}): {_fmt_k(r['first_turn_overhead'])}")
     print()
@@ -215,9 +215,9 @@ def _print_human(rep):
 
 # ── CLI ────────────────────────────────────────────────────────────────────────────
 def _project_path(env, opts):
-    """--project ID → local_path из реестра config.json (тот же паттерн, что
-    `token_report._cmd_all_projects`/`scan.enabled_projects` — не дублируем резолв).
-    Без --project — текущий каталог (как весь остальной P1 analyst)."""
+    """--project ID → local_path from the registry config.json (same pattern as
+    `token_report._cmd_all_projects`/`scan.enabled_projects` — do not duplicate the resolve).
+    Without --project — current directory (like everyone else P1 analyst)."""
     pid = opts.get("project")
     if not pid:
         return os.getcwd()
@@ -225,29 +225,29 @@ def _project_path(env, opts):
 
     cfg = env.default_config
     if not Path(cfg).is_file():
-        die(f"реестр проектов не найден: {cfg} — --project нужен config.json "
-            "(корень монорепо экосистемы)")
+        die(f"project registry not found: {cfg} — --project needed config.json "
+            "(monorepo ecosystem root)")
     projects = enabled_projects(load_projects(cfg))
     match = next((p for p in projects if p["id"] == pid), None)
     if match is None:
-        die(f"проект '{pid}' не найден в enabled-реестре: {cfg}")
+        die(f"project '{pid}' not found in enabled-registry: {cfg}")
     return os.path.expanduser(match["local_path"])
 
 
 def cmd_sessions(env, argv):
-    """analyst sessions [--project P] [--weeks N] [--json] — недельные медианы
-    first_turn_overhead/fresh-per-turn из живых jsonl-транскриптов сессий
+    """analyst sessions [--project P] [--weeks N] [--json] — weekly medians
+    first_turn_overhead/fresh-per-turn from the living jsonl-session transcripts
     (`~/.claude/projects/<encoded-cwd>/*.jsonl`) + trend-warn week-over-week >20%
-    роста медианы first_turn_overhead."""
+    median growth first_turn_overhead."""
     opts, _ = parse_args(argv, {"--project": "str", "--weeks": "str", "--json": "bool"})
     if opts["help"]:
         print("analyst sessions [--project P] [--weeks N] [--json]\n"
-              "  Недельные медианы first_turn_overhead/fresh-per-turn из живых\n"
-              "  jsonl-транскриптов сессий (~/.claude/projects/<encoded-cwd>/*.jsonl).\n"
-              "  --project P — резолв local_path по id из config.json (реестр узла);\n"
-              "  без --project — текущий каталог.\n"
-              "  Warn в stderr, если медиана first_turn_overhead недели выросла >20%\n"
-              "  к предыдущей неделе (рецидив-сигнал контекст-инцидента).")
+              "  Weekly medians first_turn_overhead/fresh-per-turn from the living\n"
+              "  jsonl-session transcripts (~/.claude/projects/<encoded-cwd>/*.jsonl).\n"
+              "  --project P — resolve local_path by id from config.json (node registry);\n"
+              "  without --project — current directory.\n"
+              "  Warn in stderr, if median first_turn_overhead weeks rose >20%\n"
+              "  to previous week (relapse-signal context-incident).")
         return
 
     weeks = None
@@ -255,16 +255,16 @@ def cmd_sessions(env, argv):
         try:
             weeks = int(opts["weeks"])
         except ValueError:
-            die(f"--weeks ждёт целое число, получено: {opts['weeks']}")
+            die(f"--weeks expects an integer, received: {opts['weeks']}")
         if weeks <= 0:
-            die("--weeks должен быть положительным")
+            die("--weeks must be positive")
 
     cwd = _project_path(env, opts)
     rep = build_report(cwd, weeks=weeks)
     if rep is None:
-        die(f"нет сессий: {sessions_dir(cwd)} — нет jsonl-транскриптов для этого cwd "
-            "(проект не запускался отсюда, либо кодировка каталога отличается — см. "
-            "докстринг analyst/sessions.py)")
+        die(f"no sessions: {sessions_dir(cwd)} — no jsonl-transcripts for this cwd "
+            "(the project was not launched from here, or the directory encoding is different - see. "
+            "docstring analyst/sessions.py)")
 
     if opts["json"]:
         print(json.dumps(rep, ensure_ascii=False, indent=2))

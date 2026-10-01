@@ -39,7 +39,7 @@ case "$EVENT" in
     [ -f "$LOG" ] || exit 0
     lines=$(wc -l < "$LOG" 2>/dev/null || echo 0)
     alerts=$(grep -c '"alert"' "$LOG" 2>/dev/null || echo 0)
-    printf '# Observer summary\n- tool calls: %s\n- alerts: %s\n- разбор: скилл system/session-observer (/observe session)\n- %s\n' \
+    printf '# Observer summary\n- tool calls: %s\n- alerts: %s\n- parsing: skill system/session-observer (/observe session)\n- %s\n' \
       "$lines" "$alerts" "$TS" > "$OBS/last_report.md" 2>/dev/null
     mkdir -p "$OBS/archive" 2>/dev/null
     cp "$LOG" "$OBS/archive/$(date -u +%Y%m%dT%H%M%SZ).jsonl" 2>/dev/null

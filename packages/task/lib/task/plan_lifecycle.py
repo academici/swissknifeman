@@ -46,23 +46,23 @@ class LifecycleSelection:
 def select(data: LifecycleInput) -> LifecycleSelection:
     """Select the cheapest safe normal path from declared, typed impact facts."""
     if not isinstance(data, LifecycleInput):
-        raise ValueError("нужен LifecycleInput с явно оценённым воздействием")
+        raise ValueError("needed LifecycleInput with clearly assessed impact")
     if not isinstance(data.risks, frozenset) or not all(isinstance(risk, str) for risk in data.risks):
-        raise ValueError("risks: нужен frozenset имён рисков")
+        raise ValueError("risks: needed frozenset risk names")
     unknown = data.risks - HARD_RISKS
     if unknown:
-        raise ValueError(f"неизвестный hard risk: {sorted(unknown)}; используйте risk_tags для доменных меток")
+        raise ValueError(f"unknown hard risk: {sorted(unknown)}; use risk_tags for domain labels")
     if (not isinstance(data.risk_tags, frozenset)
             or not all(isinstance(tag, str) and re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", tag)
                        for tag in data.risk_tags)):
-        raise ValueError("risk_tags: нужен frozenset непустых kebab-case меток")
+        raise ValueError("risk_tags: needed frozenset non-empty kebab-case marks")
     for name in ("bounded_integration", "foreign_baseline_intersects", "route_changed",
                  "audit", "audit_product_finding", "ownership_boundary", "session_boundary",
                  "release_or_authority"):
         if not isinstance(getattr(data, name), bool):
-            raise ValueError(f"{name}: нужна явная boolean оценка")
+            raise ValueError(f"{name}: needs explicit boolean rating")
     if data.audit_product_finding and not data.audit:
-        raise ValueError("audit_product_finding требует audit=True")
+        raise ValueError("audit_product_finding requires audit=True")
     hard = bool(data.risks & HARD_RISKS) or data.release_or_authority
     if hard:
         validation = ("focused", "affected-package", "integration")

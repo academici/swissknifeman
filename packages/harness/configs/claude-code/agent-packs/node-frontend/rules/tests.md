@@ -5,11 +5,11 @@ paths:
   - "tests/**"
 ---
 
-Тесты (глубина — скиллы `frontend:vitest`, `frontend:vitest-vue`,
+Tests (depth - skills `frontend:vitest`, `frontend:vitest-vue`,
 `frontend:vue-testing-best-practices`):
 
-- Прогон только `{{TEST_RUNNER_CMD}}`.
-- Vitest + @vue/test-utils; тестируй поведение (рендер по props, эмиты, состояние store),
-  не приватные детали.
-- Сеть мокается (`vi.mock`/MSW), без реальных запросов.
-- На изменённое поведение — тест; существующие проверки не ослаблять.
+- Run only `{{TEST_RUNNER_CMD}}`.
+- Vitest + @vue/test-utils; test behavior (render by props, emitters, status store),
+  not private details.
+- The network is getting wet (`vi.mock`/MSW), without actual requests.
+- For changed behavior - test; existing checks should not be weakened.

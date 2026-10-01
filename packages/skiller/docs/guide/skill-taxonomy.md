@@ -1,200 +1,200 @@
-# Таксономия и гранулярность скиллов
+# Taxonomy and skill granularity
 
-Философия пакета: **как и по каким принципам формировать скиллы реестра**. Дополняет
-[анатомию скилла](./skill-anatomy.md) (структура файла) и [создание скиллов](./creating-skills.md)
-(процедура) — этот документ про **гранулярность** (насколько дробить) и **размещение** (куда класть).
+Package philosophy: **how and by what principles to form registry skills**. Complements
+[skill anatomy](./skill-anatomy.md) (file structure) and [creating skills](./creating-skills.md)
+(procedure) — this document is about **granularity** (how much to split) and **placement** (where to put).
 
-Реестр вырос до ~190 скиллов. Без дисциплины он деградирует двумя путями: скиллы становятся
-свалкой («один скилл про всё») и загрязняются чужим (стек/проект-специфика в общих бакетах,
-которая грузится у всех). Доктрина ниже это предотвращает.
+The registry has grown to ~190 skills. Without discipline, he degrades in two ways: his skills become
+dump («one skill about everything») and become polluted by someone else's (stack/project-specific in shared buckets,
+which loads for everyone). The doctrine below prevents this.
 
-## Единица и область
+## Unit and area
 
-- **Скилл = одна когезивная способность.** Если описание содержит «и … и …» про разные темы —
-  это два скилла. Если два скилла пересекаются по содержимому — это один (расширяй существующий,
-  см. skill-authoring «Шаг 0»).
-- **Бакет = крупная область роли** (engineering/infrastructure/business/…), не «папка на каждый
-  скилл». Дробить бакет имеет смысл, только когда внутри реально разные роли-потребители.
+- **Skill = one cohesive ability.** If the description contains «and … and …» about different topics -
+  are two skills. If two skills overlap in content, this is one (expand the existing one,
+  see skill-authoring «Step 0»).
+- **Bucket = large role area** (engineering/infrastructure/business/…), not «folder for each
+  skill». Splitting a bucket makes sense only when there are actually different consumer roles inside.
 
-## Где живёт скилл — три уровня размещения
+## Where the skill lives - three levels of placement
 
-| Уровень | Что туда | Канал |
+| Level | What's there | Channel |
 |:--|:--|:--|
-| **general** (кросс-стек) | Применимо к ЛЮБОМу стеку/проекту: дисциплина, токен-экономия, конвенции именования, handoff | Подключается по задаче; CORE — отдельный минимальный список |
-| **stack-бакет** (`php`/`frontend`/`devops`/…) | Специфика стека/фреймворка: Laravel, Vue, Docker, конкретные пакеты (`azguard/azguard`, `laravel-data-layer/laravel-broadcasting`) | по профилю типа проекта |
-| **project-local** (`<project>/.claude/skills/`) | Бизнес-логика конкретного проекта: доменные классы, enum'ы, `App\…`, проектные workflow | не в реестре вообще |
+| **general** (cross-stack) | Applies to ANY stack/project: discipline, token economy, naming conventions, handoff | Connected by task; CORE — separate minimal list |
+| **stack-bucket** (`php`/`frontend`/`devops`/…) | Stack Specifics/framework: Laravel, Vue, Docker, specific packages (`azguard/azguard`, `laravel-data-layer/laravel-broadcasting`) | by project type profile |
+| **project-local** (`<project>/.claude/skills/`) | Project-specific business logic: domain classes, enum's, `App\…`, design workflow | not in the registry at all |
 
-> **Правило general.** Бакет `general` не равен CORE. В CORE входят только четыре скилла из
+> **Rule general.** Bucket `general` is not equal CORE. B CORE includes only four skills from
 > `configs/core-policy.json`: `anti-drift`, `context-economy`, `session-handoff`, `verify-claims`.
-> Остальные подключаются по задаче; `plan-protocol` также доступен через Task runtime.
-> На старте Codex перечисляет метаданные активных скиллов, а тела читает при активации.
+> The rest are connected according to the task; `plan-protocol` is also available via Task runtime.
+> At the start Codex lists the metadata of active skills, and reads the bodies upon activation.
 
-> **Правило project-local.** Имя конкретного проекта/доменного класса в теле скилла — сигнал, что
-> ему не место в общем реестре. Универсальное ядро (если есть) обобщи и оставь в stack-бакете;
-> чисто проектное вынеси в `<project>/.claude/skills/` (vendor/local-канал).
+> **Rule project-local.** Specific project name/of the domain class in the body of the skill is a signal that
+> it has no place in the general registry. Universal core (if available) summarize and leave in stack-bucket;
+> purely design take into `<project>/.claude/skills/` (vendor/local-channel).
 
-## Жизненный цикл: init-only vs always-loaded
+## Life cycle: init-only vs always-loaded
 
-Не все скиллы нужны постоянно. Скилл, помогающий **один раз** (выбрать стек/пакеты при
-инициализации проекта, спланировать структуру), не должен висеть в постоянной раздаче — иначе он
-просто занимает контекст. Помечай такие `lifecycle: init` во frontmatter и **не клади в CORE/дефолт
-профиля**. Always-loaded — рабочие скиллы, релевантные по ходу задач.
+Not all skills are needed all the time. Skill that helps **once** (select stack/packets when
+initialize the project, plan the structure), should not hang in the constant distribution - otherwise it
+just takes up the context. Mark these `lifecycle: init` in frontmatter and **do not put in CORE/default
+profile**. Always-loaded — working skills relevant to the course of tasks.
 
 ## Lean SKILL.md (progressive disclosure)
 
-SKILL.md — **точка входа**, а не энциклопедия. Это совпадает с рекомендацией Anthropic по
-skill-authoring: лёгкий вход + подгрузка деталей по требованию.
+SKILL.md — **entry point**, and not an encyclopedia. This coincides with the recommendation Anthropic by
+skill-authoring: easy entry + loading of parts on demand.
 
-- **Тело** (ориентир **≤150 строк**): что это, когда активировать, ключевой алгоритм, чеклист.
-- **Детали** (длинные примеры, таблицы, шаблоны, справочники) → `references/`/`snippets/`.
-- `validate.sh` **мягко предупреждает** о телах сверх порога — это сигнал вынести детали, не запрет.
-- Зачем: когда в проекте много скиллов, раздутые тела суммарно съедают контекст. Тонкий вход +
-  references держит бюджет под контролем.
+- **Body** (landmark **≤150 lines**): what is it, when to activate, key algorithm, checklist.
+- **Details** (long examples, tables, templates, reference books) → `references/`/`snippets/`.
+- `validate.sh` **gently warns** about bodies above the threshold - this is a signal to take out the details, not a prohibition.
+- Why: when there are a lot of skills in a project, bloated bodies completely eat up the context. Thin entrance +
+  references keeps the budget under control.
 
-## Router-скилл (тонкий оркестратор «фонового» кластера)
+## Router-skill (thin orchestrator «background» cluster)
 
-Когда у темы есть **семейство специализированных под-скиллов** (пример: `docker` → `docker-php`,
-`docker-postgres`, `docker-dev-prod`, `docker-services`, `docker-vite`, `makefile`), верхний скилл
-делают **тонким router'ом**, а не «энциклопедией экспертизы»:
+When a topic has **family of specialized sub-skills** (example: `docker` → `docker-php`,
+`docker-postgres`, `docker-dev-prod`, `docker-services`, `docker-vite`, `makefile`), top skill
+do **thin router'ohm**, and not «encyclopedia of expertise»:
 
-- **`description` = триггер-маршрут**, а не «advanced expertise»: «Router for X: directs to the right
-  sub-skill (…). Use when the task involves X». Так он срабатывает на тему и сразу уводит в нужный под-скилл.
-- **Тело = маршрутная таблица** «потребность → под-скилл» + порядок сборки (DAG зашит в `requires`/
-  `produces_for` под-скиллов). Глубокая экспертиза — в `snippets/`/`references/`, грузится по требованию.
-- **`risk: read`** (router сам не пишет — направляет; пишут под-скиллы).
-- Эффект: «фоновый» кластер резидентен только описанием-router'ом; специалисты грузятся on-demand
-  (progressive disclosure на уровне семейства). Лезем в кластер только по необходимости.
+- **`description` = trigger-route**, and not «advanced expertise»: «Router for X: directs to the right
+  sub-skill (…). Use when the task involves X». So it works on the topic and immediately takes you to the desired sub-skill.
+- **Body = routing table** «need → sub-skill» + assembly order (DAG is hardwired into `requires`/
+  `produces_for` sub-skills). Deep expertise - in `snippets/`/`references/`, is loaded on demand.
+- **`risk: read`** (router does not write himself - he directs; write sub-skills).
+- Effect: «background» cluster is resident only by description -router'ohm; specialists are loading on-demand
+  (progressive disclosure at family level). We climb into the cluster only when necessary.
 
-## Гранулярность ↔ канал раздачи
+## Granularity ↔ distribution channel
 
-- **connect** (marketplace) = **bucket-granular**: подключается бакет целиком (плагин = бакет).
-  Под-выбрать отдельный скилл нельзя. Грубая, быстрая настройка.
-- **vendor** (физ. перенос) = **skill-granular**: `include: ["bucket/skill"]` — ровно нужные
-  позиции в репо + lock. Тонкая настройка.
+- **connect** (marketplace) = **bucket-granular**: the entire bucket is connected (plugin = bucket).
+  You cannot sub-select an individual skill. Rough, quick setup.
+- **vendor** (physical. transfer) = **skill-granular**: `include: ["bucket/skill"]` — exactly needed
+  positions in repo + lock. Fine tuning.
 
-Вывод: **тонкую настройку набора веди через vendor**; connect — когда устраивает «весь бакет».
-Дробить бакет на под-плагины только ради connect-выбора — крайняя мера (marketplace-churn,
-orphan `enabledPlugins` у потребителей).
+Output: **fine-tune the dialing via vendor**; connect — when satisfied «whole bucket».
+Split the bucket into sub-plugins just for the sake of connect-choice is a last resort (marketplace-churn,
+orphan `enabledPlugins` from consumers).
 
-### Миграция при перемещении/переименовании бакетов
+### Move migration/renaming buckets
 
-Перемещение скилла между бакетами или переименование бакета — **breaking** для уже подключённых
-проектов на канале connect: ключ `<bucket>@swissknifeman` в их `.claude/settings.local.json`
-становится «осиротевшим». `skiller connect` это **детектит и предупреждает** (drift), но
-не чинит автоматически — потребитель перезапускает `connect` с актуальным профилем/набором.
-Vendor-проекты устойчивее (скиллы адресуются по пути `bucket/skill`), но `.swissknifeman/config.json`
-с устаревшим именем бакета даст ошибку — обновить вручную. Любое такое изменение → пометка
-**breaking** в CHANGELOG + миграционная заметка.
+Moving a skill between buckets or renaming a bucket - **breaking** for already connected
+projects on the channel connect: key `<bucket>@swissknifeman` in their `.claude/settings.local.json`
+becomes «orphaned». `skiller connect` this **detects and warns** (drift), but
+does not fix automatically - consumer restarts `connect` with current profile/set.
+Vendor-projects are more sustainable (skills are addressed along the path `bucket/skill`), but `.swissknifeman/config.json`
+with an outdated bucket name will give an error - update manually. Any such change → mark
+**breaking** in CHANGELOG + migration note.
 
-### Граница git/github-скиллов
+### Border git/github-skills
 
-Универсальная commit-гигиена (`git status`/`diff`, формат сообщения, запрет `--no-verify`) живёт в
-`general/git-commit-rules` — нужна **всем** проектам, не только GitHub. GitHub/OSS-специфика (Issue→PR→
-Tag→Release, SemVer-oracle, шаблоны issue/PR, governance-документы) — в `oss-dev`
-(`github-flow`/`gh-review`/`oss-governance`/`release-engineering`). Не дублируем: интерпретация
-типа коммита → bump версии описана только в `oss-dev/github-flow`, `git-commit-rules` ссылается.
+Universal commit-hygiene (`git status`/`diff`, message format, prohibit `--no-verify`) lives in
+`general/git-commit-rules` — needed **everyone** projects, not only GitHub. GitHub/OSS-specifics (Issue→PR→
+Tag→Release, SemVer-oracle, templates issue/PR, governance-documents) — in `oss-dev`
+(`github-flow`/`gh-review`/`oss-governance`/`release-engineering`). Do not duplicate: interpretation
+commit type → bump version is described only in `oss-dev/github-flow`, `git-commit-rules` references.
 
-## `context: fork` — критерий отбора (ось B, длина сессии)
+## `context: fork` — selection criterion (axis B, session length)
 
-Тело `SKILL.md` входит в сессию одним сообщением и остаётся там до конца хода (first-party:
+Body `SKILL.md` enters the session with one message and remains there until the end of the turn (first-party:
 «stays there for the rest of the session», `code.claude.com/docs/en/skills` §Skill content
-lifecycle) — клиент не перечитывает файл повторно. `context: fork` уводит тело в форкнутый
-контекст субагента вместо основной сессии — но док прямо предупреждает: полю «имеет смысл
-только для скиллов с явной задачей»; скилл-справочник, отданный субагенту, возвращается
-**пустым** (нет задачи — нечего выполнять и не о чем содержательно ответить).
+lifecycle) — client does not reread the file. `context: fork` takes the body into a forked
+subagent context instead of the main session - but the doc directly warns: field «makes sense
+only for skills with an explicit task»; skill book given to the subagent is returned
+**empty** (no task - nothing to accomplish and nothing meaningful to answer).
 
-**Критерий — процедурный скилл с задачей, не справочник:**
+**Criterion - procedural skill with a task, not a reference book:**
 
-- [ ] Тело даёт **исполнимую процедуру** (пронумерованные шаги/алгоритм) с итоговым
-      **артефактом или проверяемым результатом** — не только конвенции/best practices для
-      справки по ходу работы.
-- [ ] Задача **самодостаточна**: не требует истории разговора текущей сессии и не читает
-      состояние самой сессии (её нельзя выполнить «в вакууме» с одним артефактом на входе —
-      искать такой артефакт форкнутый субагент умеет сам, файловыми инструментами).
-- [ ] Побочный эффект задачи — **локальный** (файлы репозитория, git-состояние worktree),
-      не запись во внешнюю систему без возможности безопасно проверить срабатывание (тикет-
-      трекер и т. п. — форк таких скиллов резко усложняет проверку на стенде и остаётся вне
-      этого прохода, не запрещён навсегда).
-- [ ] Скилл, несущий канон для ОСНОВНОЙ сессии (стоячие инструкции, читаемые многократно за
-      сессию — `plan-protocol` и весь контур `task:plan-*`, курируемый CORE), форку НЕ подлежит.
-- [ ] Сомневаешься в классе — **не форкать**: ложный форк даёт пустой ответ субагента в
-      проде; ложный отказ стоит только неполученной экономии (асимметрия cost).
+- [ ] The body gives **executable procedure** (numbered steps/algorithm) with final
+      **artifact or testable result** — not only conventions/best practices for
+      help along the way.
+- [ ] Task **is self-sufficient**: does not require conversation history of the current session and does not read
+      state of the session itself (it cannot be executed «in vacuum» with one artifact on the input -
+      the forked subagent can search for such an artifact himself, using file tools).
+- [ ] Task side effect - **local** (repository files, git-status worktree),
+      not writing to an external system without being able to safely check the response (ticket-
+      tracker, etc. - a fork of such skills greatly complicates the test on the stand and remains outside
+      of this passage is not prohibited forever).
+- [ ] Skill that carries the canon for the MAIN session (standing instructions read multiple times
+      session - `plan-protocol` and the entire circuit `task:plan-*`, supervised CORE), is NOT forkable.
+- [ ] Doubts about the class - **do not fork**: false fork gives empty subagent response in
+      prod; a false refusal is only worth lost savings (asymmetry cost).
 
-Проверка перед простановкой поля — ОБЯЗАТЕЛЬНА поштучно на живом клиенте (авто-активация И
-явный `/skill-name`), не батчем: реестр §P3.4,
+Checking before inserting a field is MANDATORY individually on a live client (auto-activation AND
+explicit `/skill-name`), not a batch: registry §P3.4,
 .
 
-## `when_to_use` + сжатие описания (ось A, запись листинга)
+## `when_to_use` + description compression (axis A, listing entry)
 
-`description` и `when_to_use` — ОДНА запись листинга (`name` + `description` + ` ` +
-`when_to_use`, кап first-party 1 536 симв; `when_to_use` — «Appended to `description` in the
-skill listing», code.claude.com/docs/en/skills §Frontmatter reference). Перенос
-триггер-фразы из `description` в `when_to_use` сам по себе экономии НЕ даёт — экономию даёт
-только сжатие СОВОКУПНОЙ записи (`packages/skiller/scripts/validate.sh` гейты длины/триггера
-считают именно эту сумму, P3.5).
+`description` and `when_to_use` — ONE listing entry (`name` + `description` + ` ` +
+`when_to_use`, cap first-party 1 536 char; `when_to_use` — «Appended to `description` in the
+skill listing», code.claude.com/docs/en/skills §Frontmatter reference). Transfer
+trigger phrases from `description` in `when_to_use` by itself does NOT provide savings - it does provide savings
+CUMULATIVE record compression only (`packages/skiller/scripts/validate.sh` length gates/trigger
+consider this exact amount, P3.5).
 
-**Формула** (верифицирована Perplexity + first-party
-доком): **«[что делает скилл]. Use when [явные триггер-фразы/синонимы]»** — третье лицо,
-самый различающий сигнал первым. При правке существующей записи с превышением бюджета —
-сжимай `description` (убирай перечисления реализации, оставляй домен+результат), перенеси
-условие срабатывания в компактный `when_to_use`; правь оба поля в ОДНОМ проходе, не «сначала
-перенос, потом когда-нибудь сожмём».
+**Formula** (verified Perplexity + first-party
+doc): **«[what does the skill do]. Use when [explicit trigger phrases/synonyms]»** — third party,
+the most discriminating signal first. When editing an existing record that is over budget -
+squeeze `description` (remove the implementation enumerations, leave the domain+result), move
+trigger condition in compact `when_to_use`; edit both fields in ONE pass, not «first
+transfer, then someday we will compress».
 
-Приоритизация бакета долга (`scripts/desc-trigger-burndown.txt`) — usage-сигнал
-`skiller bucket-audit --description-debt` (loaded_count) × доля записи в общем листинге
-(`tier0`/сумма `tier0`), НЕ алфавит и НЕ размер бакета. JSON-проекция
-`description-trigger-priority/v1` сохраняет знаменатель и различает
-`observed-skill-call`, `resident-only` и `unobserved`: отсутствие прямого вызова не является
-вердиктом о неиспользовании или поводом переписывать skill. Невалидный ratchet (отсутствующий,
-malformed, duplicate или stale ключ) fail-closed только для этой отфильтрованной проекции;
-обычный `bucket-audit` остаётся обратносуместимым.
+Debt bucket prioritization (`scripts/desc-trigger-burndown.txt`) — usage-signal
+`skiller bucket-audit --description-debt` (loaded_count) × share of record in the general listing
+(`tier0`/amount `tier0`), NOT alphabet and NOT bucket size. JSON-projection
+`description-trigger-priority/v1` preserves the denominator and distinguishes
+`observed-skill-call`, `resident-only` and `unobserved`: lack of direct call is not
+a verdict of non-use or a reason to rewrite skill. Invalid ratchet (missing,
+malformed, duplicate or stale key) fail-closed for this filtered projection only;
+normal `bucket-audit` remains inversely compatible.
 
-## Тиры `model:`/`effort:` (ось B, стоимость активного хода)
+## Shooting Ranges `model:`/`effort:` (axis B, active move cost)
 
-`model`/`effort` во frontmatter переопределяют модель/effort сессии **на остаток ТЕКУЩЕГО
-хода** (RAG:✅ first-party, «not saved to settings») — это НЕ настройка тела скилла, а
-команда клиенту сменить исполнителя, пока скилл активен.
+`model`/`effort` in frontmatter override model/effort sessions **for the remainder of the CURRENT
+progress** (RAG:✅ first-party, «not saved to settings») — this is NOT a skill body setting, but
+command for the client to change the performer while the skill is active.
 
-**Гейт применимости (обязателен ДО выбора тира — многие скиллы не должны нести override
-вовсе):**
+**Applicability gate (is required BEFORE choosing a shooting range - many skills should not carry override
+at all):**
 
-- [ ] Скилл — **дискретная ограниченная задача** (интервью, шаблон, разовый прогон), которую
-      естественно закончить и вернуться к прежней работе — НЕ advisory/meta-дисциплина,
-      применяемая ПАРАЛЛЕЛЬНО основной задаче сессии (`anti-drift`, `context-economy`,
-      `session-handoff`, `skills-ssot` — дисциплина/чеклист поверх текущей работы, не
-      отдельная задача). Override на advisory-скилле форсирует смену модели на остаток хода
-      ради стороннего чеклиста, ломая тир ОСНОВНОЙ задачи — сам скилл от этого не выигрывает,
-      а сессия теряет тир. **Не форсировать override на advisory-классе — не пробел, а
-      находка P3.5** (`findings/P3-desc-burndown.md` §Тиры).
-- [ ] `plan-protocol` и весь контур `task:plan-*` — исключение по конструкции: маршрут КАЖДОГО
-      item'а уже неймится §3 Routing плана (`plan-run` читает его же),
-      бланкетный override поверх этого — второй, конфликтующий источник правды. Скилл несёт
-      `Exec`-таблицу как канон, а не собственный `model:`/`effort:`.
+- [ ] Skill - **discrete constrained problem** (interview, template, one-time run), which
+      naturally finish and return to your previous job - NOT advisory/meta-discipline,
+      applied IN PARALLEL to the main task of the session (`anti-drift`, `context-economy`,
+      `session-handoff`, `skills-ssot` — discipline/checklist on top of current work, not
+      separate task). Override on advisory-skill forces a model change for the rest of the turn
+      for the sake of a third-party checklist, breaking the range of the MAIN task - the skill itself does not benefit from this,
+      and the session loses its shooting range. **Don't force override on advisory-class - not a space, but
+      find P3.5** (`findings/P3-desc-burndown.md` §Shooting Ranges).
+- [ ] `plan-protocol` and the entire circuit `task:plan-*` — exception by design: EVERYONE route
+      item'and is already itching §3 Routing plan (`plan-run` reads it),
+      blanket override on top of this is a second, conflicting source of truth. Skill carries
+      `Exec`-table as canon, not native `model:`/`effort:`.
 
-Тир — по классу РАБОТЫ скилла (не по `risk:` — тот про побочный эффект действия, не про
-глубину суждения), опора та же лестница, что Routing плана (`plan-protocol` §9):
+Shooting range - by skill class (not by `risk:` — the one about the side effect of the action, not about
+depth of judgment), support the same ladder as Routing plan (`plan-protocol` §9):
 
-| Класс работы | Пример | `model` | `effort` |
+| Job class | Example | `model` | `effort` |
 |:--|:--|:--|:--|
-| Дискретная задача с суждением без открытых решений (интервью, оценка, разбор) | `spec-interview` | `sonnet` | `medium` |
-| Дискретная механическая задача (шаблон/структура по готовой форме) | `task-brief-template` | `sonnet` | `low` |
-| Advisory/meta-дисциплина, активна ПАРАЛЛЕЛЬНО основной задаче | `anti-drift`, `context-economy` | — (без override) | — (без override) |
-| Канон с собственной таблицей маршрутизации (`§3 Routing`/`Exec`) | `plan-protocol` | — (без override, маршрут — по item'у) | — (без override) |
+| Discrete judgment problem without open solutions (interview, assessment, analysis) | `spec-interview` | `sonnet` | `medium` |
+| Discrete mechanical problem (template/structure according to the finished form) | `task-brief-template` | `sonnet` | `low` |
+| Advisory/meta-discipline, active PARALLEL to the main task | `anti-drift`, `context-economy` | — (without override) | — (without override) |
+| Canon with its own routing table (`§3 Routing`/`Exec`) | `plan-protocol` | — (without override, route - by item'y) | — (without override) |
 
-Прогон по реестру — механическое применение ТОЛЬКО после ручной классификации по гейту
-применимости выше (одна ошибка класса на CORE-скилле форсит тир на КАЖДЫЙ проект флота, где
-он резидентен) — раскатка на остаток реестра (`general` бакет закрыт целиком P3.5,
-) продолжается по той же usage-приоритизации, что и
-`when_to_use`-долг.
+Register run - mechanical application ONLY after manual gate classification
+applicability above (one class error per CORE-skill forcing shooting range for EVERY fleet project, where
+it is resident) — rollout to the rest of the registry (`general` the bucket is completely closed P3.5,
+) continues along the same lines usage-prioritization, as
+`when_to_use`-debt.
 
-## Чеклист размещения нового/правимого скилла
+## Checklist for posting a new/right skill
 
-- [ ] Это **одна** способность? Нет пересечения с существующим (иначе расширяй его).
-- [ ] Универсально → `general` (и реально кросс-стек, не «в основном PHP»)?
-- [ ] Стек-специфично → соответствующий stack-бакет?
-- [ ] Проект-специфично (имена `App\…`/доменные) → **project-local**, не в реестр?
-- [ ] Нужен один раз → `lifecycle: init`, вне CORE/дефолта?
-- [ ] Тело lean (≤~150 строк), детали в `references/`/`snippets/`?
+- [ ] This **one** ability? No intersection with existing (otherwise expand it).
+- [ ] Universal → `general` (and really cross-stack, not «basically PHP»)?
+- [ ] Stack-specific → corresponding stack-bucket?
+- [ ] Project-specific (names `App\…`/domain) → **project-local**, not in the registry?
+- [ ] Needed once → `lifecycle: init`, out CORE/default?
+- [ ] Body lean (≤~150 lines), details in `references/`/`snippets/`?
 
-Связанное: [создание скиллов](./creating-skills.md) (процедура+ревью), [профили](./profiles.md),
-[методология против раздувания](./methodology.md).
+Related: [creating skills](./creating-skills.md) (procedure+review), [profiles](./profiles.md),
+[anti-bloat methodology](./methodology.md).

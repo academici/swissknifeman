@@ -1,83 +1,83 @@
-# Decisions Ledger — что принято / отклонено
+# Decisions Ledger — which is accepted / rejected
 
-Реестр решений по каркасу агентов. **Вход для аудита**
-([framework-audit](../workflows/framework-audit)): подаёшь Perplexity, чтобы он НЕ
-перепредлагал уже отклонённое/принятое. Отклонять решение можно — но только с НОВЫМ
-доказательством.
+Registry of agent framework solutions. **Audit Login**
+([framework-audit](../workflows/framework-audit)): you submit Perplexity, so that he does NOT
+re-offered something that had already been rejected/accepted. You can reject a decision - but only with a NEW
+proof.
 
-Колонки: дата · решение · вердикт · обоснование · где приземлилось.
+Columns: date · solution · verdict · rationale · where it landed.
 
-## Архитектурные принципы
+## Architectural principles
 
-| Дата | Решение | Вердикт | Обоснование |
+| Date | Solution | Verdict | Rationale |
 |---|---|---|---|
-| 2026-06-23 | Дом базы шаблонов — **harness**; playbook — **skiller** | ✅ accept | harness уже владеет `.claude/`-окружением; skiller — скиллами |
-| 2026-06-23 | **Per-pack** версионность (1 пак = 1 semver + 1 CHANGELOG) | ✅ accept | проще, чем per-template; проект пинит одну версию |
-| 2026-06-23 | **Агент-driven**, не Python/Mustache движок | ✅ accept | требование владельца; шаблоны = реальные файлы + lock |
-| 2026-06-23 | Универсальность: **паки по концерну + общие роли** | ✅ accept | back/front/fullstack = композиция паков; роли едины |
-| 2026-06-23 | lock = `.claude/agent-pack.lock.json` (не `.swissknife.json`) | ✅ accept | разные владельцы; нужна вложенная per-file структура + sha |
+| 2026-06-23 | Template database home - **harness**; playbook — **skiller** | ✅ accept | harness already owns `.claude/`-environment; skiller — skills |
+| 2026-06-23 | **Per-pack** versioning (1 pack = 1 semver + 1 CHANGELOG) | ✅ accept | easier than per-template; project pins one version |
+| 2026-06-23 | **Agent-driven**, not Python/Mustache engine | ✅ accept | owner requirement; templates = real files + lock |
+| 2026-06-23 | Versatility: **packs for the concern + general roles** | ✅ accept | back/front/fullstack = pack composition; the roles are the same |
+| 2026-06-23 | lock = `.claude/agent-pack.lock.json` (not `.swissknife.json`) | ✅ accept | different owners; need a nested one per-file structure + sha |
 
-## Из аудита #1 (universal-framework)
+## From the audit #1 (universal-framework)
 
-| Дата | Идея | Вердикт | Обоснование / куда |
+| Date | Idea | Verdict | Rationale / where |
 |---|---|---|---|
-| 2026-06-23 | AI Skills Index в CLAUDE.md | ✅ absorb | уже hub; расширяем (Фаза 1), boost-aware (`.ai/guidelines`) |
-| 2026-06-23 | Движок генерации агентов (Mustache `.tpl`, `generate-agents`) | ❌ reject | против агент-driven; шаблоны = реальные `.md` в паке |
-| 2026-06-23 | Профили-наследование `laravel→php-backend→base` (рендер) | ⏸ defer | как данные (`extends`), не рендер-движок |
-| 2026-06-23 | `.swissknife.json` схема (`shape`/`stacks`/`skills_map`) | ✅ absorb | только данные (Фаза 3) |
-| 2026-06-23 | path-scoped rules `.claude/rules/` | ✅ absorb | **нативно** (офиц. docs/en/memory); Фаза 3 |
-| 2026-06-23 | spec-first гейт (spec-writer) | ✅ absorb (опц.) | как опц. role-agent на крупные фичи, не глоб. гейт; артефакт `tech-spec.md` |
-| 2026-06-23 | task-graph `tasks.json` (Task Master) | ⏸ defer | не плодить слой; если надо — на maind/agentmemory |
-| 2026-06-23 | `skiller init` | ⏸ defer | свернуть в существующий `integrate` |
-| 2026-06-23 | file-lock протокол (`touch {file}.lock`) | ❌ reject | хрупко; заменено one-branch/worktree |
-| 2026-06-23 | <500-char system prompts | ✅ absorb (гайдлайн) | конвенция, не жёсткий лимит |
-| 2026-06-23 | Нумерация файлов агентов `01_`,`02_` для приоритета | ❌ reject | **проверено**: на `/agents` НЕ влияет |
-| 2026-06-23 | `skiller validate-agents` | ✅ absorb | валидатор (данные, не движок): имена `skills:`, дубли, scope tools (Фаза 3) |
-| 2026-06-23 | explore-субагент | ✅ absorb | есть (`Explore`); добавим seed в роли |
-| 2026-06-23 | complexity scoring 1–10 | ❌ reject | церемония; порог делегирования качественный |
+| 2026-06-23 | AI Skills Index in CLAUDE.md | ✅ absorb | already hub; expandable (Phase 1), boost-aware (`.ai/guidelines`) |
+| 2026-06-23 | Agent generation engine (Mustache `.tpl`, `generate-agents`) | ❌ reject | against agent-driven; templates = real `.md` in the pack |
+| 2026-06-23 | Profiles-inheritance `laravel→php-backend→base` (render) | ⏸ defer | as data (`extends`), is not a render engine |
+| 2026-06-23 | `.swissknife.json` diagram (`shape`/`stacks`/`skills_map`) | ✅ absorb | data only (Phase 3) |
+| 2026-06-23 | path-scoped rules `.claude/rules/` | ✅ absorb | **native** (official. docs/en/memory); Phase 3 |
+| 2026-06-23 | spec-first gate (spec-writer) | ✅ absorb (opt.) | as opt. role-agent for large features, not global. gate; artifact `tech-spec.md` |
+| 2026-06-23 | task-graph `tasks.json` (Task Master) | ⏸ defer | do not spawn layer; if necessary - on maind/agentmemory |
+| 2026-06-23 | `skiller init` | ⏸ defer | collapse to existing `integrate` |
+| 2026-06-23 | file-lock protocol (`touch {file}.lock`) | ❌ reject | fragile; replaced one-branch/worktree |
+| 2026-06-23 | <500-char system prompts | ✅ absorb (guideline) | convention, not a hard limit |
+| 2026-06-23 | Agent file numbering `01_`,`02_` for priority | ❌ reject | **verified**: on `/agents` has no effect |
+| 2026-06-23 | `skiller validate-agents` | ✅ absorb | validator (data, not engine): names `skills:`, duplicates, scope tools (Phase 3) |
+| 2026-06-23 | explore-subagent | ✅ absorb | yes (`Explore`); add seed as |
+| 2026-06-23 | complexity scoring 1–10 | ❌ reject | ceremony; delegation threshold is qualitative |
 
-## Из аудита #2 (agent-teams + ponytail)
+## From the audit #2 (agent-teams + ponytail)
 
-| Дата | Идея | Вердикт | Обоснование / куда |
+| Date | Idea | Verdict | Rationale / where |
 |---|---|---|---|
-| 2026-06-23 | `extends:`/`@include` наследование агентов; frontmatter `triggers/role/version/project_type` | ❌ reject | **REFUTED** офиц. доками — не нативно/выдумано; наследование = build-time пака |
-| 2026-06-23 | `.claude/rules/` (path-scoped) нативно | ✅ confirmed | офиц. docs/en/memory → берём |
-| 2026-06-23 | skill-enforcement хук (TeammateIdle, exit 2, греп транскрипта) | ❌ reject (как хук) | хрупкая эвристика; «гейт на скиллы» закрывает детерминированная сверка имён `skills:` в hub |
-| 2026-06-23 | ponytail (YAGNI-лесенка + over-engineering ревью) | ✅ absorb (дисциплину) | без внешнего плагина; в reviewer-роль + опц. `quality/lean-code` |
-| 2026-06-23 | Agent Teams (Mesh, teammates) | ✅ accept v1 | эксперимент; CC ≥2.1.178; Фаза 6; роли = teammates |
+| 2026-06-23 | `extends:`/`@include` agent inheritance; frontmatter `triggers/role/version/project_type` | ❌ reject | **REFUTED** official. docks - not native/made up; inheritance = build-time pack |
+| 2026-06-23 | `.claude/rules/` (path-scoped) native | ✅ confirmed | official. docs/en/memory → take |
+| 2026-06-23 | skill-enforcement hook (TeammateIdle, exit 2, grep transcript) | ❌ reject (as a hook) | fragile heuristic; «skill gate» closes deterministic name matching `skills:` in hub |
+| 2026-06-23 | ponytail (YAGNI-ladder + over-engineering review) | ✅ absorb (discipline) | without external plugin; in reviewer-role + opt. `quality/lean-code` |
+| 2026-06-23 | Agent Teams (Mesh, teammates) | ✅ accept v1 | experiment; CC ≥2.1.178; Phase 6; roles = teammates |
 
-## Из аудита #3 (workflow resilience / rate-limit, 2026-07-01)
+## From the audit #3 (workflow resilience / rate-limit, 2026-07-01)
 
-| Дата | Идея | Вердикт | Обоснование / куда |
+| Date | Idea | Verdict | Rationale / where |
 |---|---|---|---|
-| 2026-07-01 | Честные статусы `green/deferred/infra-failed` (не маскировать инфра под дефект) | ✅ accept | dev-loop.js ×4 + доки; P4 — первый сплит CI-таксономии «infra-flake vs code-deterministic» |
-| 2026-07-01 | Fail-fast на терминальный `agent()===null` + меньший батч (дефолт 2) | ✅ accept | dev-loop.js; throttling сам не пройдёт от перехода к следующему срезу; большой батч множит retry-поверхность |
-| 2026-07-01 | Liveness через **внешний supervisor** (доклад оркестратора ~30 мин + `PushNotification`; опц. GHA cron-watchdog) | ✅ accept | orchestrator.md + background-agents.md; главный предохранитель, вне песочницы |
-| 2026-07-01 | In-script wall-clock / agent-timeout (`withDeadline`/`setTimeout`) | ❌ reject (костыль) | `Date.now()`/`setTimeout` в песочнице недоступны/ненадёжны, `agent()` не отменяем (нет `AbortController`) → не даёт гарантии; hang → эскалация человеку |
-| 2026-07-01 | Текст-маркер возврата вместо строгой схемы на длинных возвратах | ✅ accept | dev-loop.js; StructuredOutput retry-cap (5) рантайма обрывал прогон — обходим, не переживаем |
-| 2026-07-01 | `perplexity-web` — bounded concurrency (не «sequential only») | ✅ accept | background-agents.md таблица; репо-доки `query-craft` уже описывают daemon v1.3.0 pools; инцидентный 13-way fan-out просто превысил лимит |
+| 2026-07-01 | Honest statuses `green/deferred/infra-failed` (do not disguise infra as a defect) | ✅ accept | dev-loop.js ×4 + docks; P4 — first split CI-taxonomies «infra-flake vs code-deterministic» |
+| 2026-07-01 | Fail-fast to terminal `agent()===null` + smaller batch (default 2) | ✅ accept | dev-loop.js; throttling itself will not pass from the transition to the next slice; big butch multiplies retry-surface |
+| 2026-07-01 | Liveness via **external supervisor** (orchestrator report ~30 min + `PushNotification`; opt. GHA cron-watchdog) | ✅ accept | orchestrator.md + background-agents.md; main fuse, outside sandbox |
+| 2026-07-01 | In-script wall-clock / agent-timeout (`withDeadline`/`setTimeout`) | ❌ reject (crutch) | `Date.now()`/`setTimeout` not available in sandbox/are unreliable, `agent()` not cancelable (no `AbortController`) → does not provide a warranty; hang → escalation to person |
+| 2026-07-01 | Return marker text instead of strict outline on long returns | ✅ accept | dev-loop.js; StructuredOutput retry-cap (5) runtime interrupted the run - we go around, we don’t worry |
+| 2026-07-01 | `perplexity-web` — bounded concurrency (not «sequential only») | ✅ accept | background-agents.md table; repo-docs `query-craft` already describe daemon v1.3.0 pools; incident 13-way fan-out just exceeded the limit |
 
-## Из аудита #4 (harness-agnostic, 2026-07-29)
+## From the audit #4 (harness-agnostic, 2026-07-29)
 
-| Дата | Идея | Вердикт | Обоснование / куда |
+| Date | Idea | Verdict | Rationale / where |
 |---|---|---|---|
-| 2026-07-29 | Канонический установочный юнит — плагин/пак, бакет — человеческая рубрикация | ✅ accept | описание уже сложившегося (48 бакетов, 10 паков, marketplace ~50 плагинов), не изменение — /§13 |
-| 2026-07-29 | Корневой always-on контекст остаётся коротким индексом | ✅ accept | число для корневой цены: `CLAUDE.md` 88 строк / 7 520 байт (на `4647ad4b`, `wc -l -c CLAUDE.md`) против прежних 194/20 705 — ` Completion Notes |
-| 2026-07-29 | Шаблоны ролей тонкие по знанию, глубину дают скиллы по требованию | ✅ DONE | фиксируется каноном; `roles.md` (self-load fallback скиллов в теле промта роли) |
-| 2026-07-29 | Политика спавна/делегирования — от контекст-бюджета | ✅ accept | принято, содержание и носитель — ` (декларативная схема политики), здесь только ссылка |
-| 2026-07-29 | Каждый пак поставляет verification-контракты и eval-фикстуры | ⚠ частично DONE | SubagentStop review-gate (`hooks/review-gate.sh` + `REVIEW_GATE_CMD`) есть в 4/10 паков (`backend-laravel`, `dart-flutter`, `node-frontend`, `python-backend`); честностной агент `test-verifier` — только у `backend-laravel` (1/10); 6/10 паков (`laravel-package`, `_common`, `role-cto`, `role-founder`, `role-maintainer`, `role-tech-lead`) не несут ни того ни другого — разрыв реален, не закрывается этой записью |
+| 2026-07-29 | Canonical installation unit - plugin/pack, bucket - human category | ✅ accept | description of an already established (48 buckets, 10 packs, marketplace ~50 plugins), not a change - /§13 |
+| 2026-07-29 | Root always-on context remains a short index | ✅ accept | number for the root price: `CLAUDE.md` 88 lines / 7 520 bytes (on `4647ad4b`, `wc -l -c CLAUDE.md`) vs previous 194/20 705 — ` Completion Notes |
+| 2026-07-29 | Role templates are thin in knowledge, skills provide depth on demand | ✅ DONE | is fixed by canon; `roles.md` (self-load fallback skills in the body of the role) |
+| 2026-07-29 | Spawn Policy/delegation - from budget context | ✅ accept | accepted, content and media - ` (declarative policy schema), here is only a link |
+| 2026-07-29 | Each pack comes with verification-contracts and eval-fixtures | ⚠ partially DONE | SubagentStop review-gate (`hooks/review-gate.sh` + `REVIEW_GATE_CMD`) is in 4/10 packs (`backend-laravel`, `dart-flutter`, `node-frontend`, `python-backend`); honest agent `test-verifier` — only for `backend-laravel` (1/10); 6/10 packs (`laravel-package`, `_common`, `role-cto`, `role-founder`, `role-maintainer`, `role-tech-lead`) do not carry either one or the other - the gap is real, it is not closed by this entry |
 
-## Проверенные факты Claude Code (офиц. доки, версия факта — своя дата)
+## Verified facts Claude Code (official. documents, version of the fact - its own date)
 
-| Факт | Вердикт |
+| Fact | Verdict |
 |---|---|
-| `.claude/rules/` с `paths:` — авто-загрузка по путям | ✅ нативно (docs/en/memory, 2026-06-23) |
-| Субагент `extends:`/`@include` наследование | ❌ не существует (2026-06-23) |
-| Frontmatter `triggers/role/version/project_type` у агента | ❌ не существует (2026-06-23) |
-| Нумерация файлов агентов → приоритет `/agents` | ❌ не влияет (2026-06-23) |
-| `${CLAUDE_PROJECT_DIR}` / `${CLAUDE_PLUGIN_ROOT}` в командах хуков | ✅ нативно (2026-06-23) |
-| Agent Teams — экспериментально (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), `teammateMode` дефолт `in-process` с v2.1.179 (было `auto`), `iterm2`-режим с v2.1.186; хук-события команды: `TeammateIdle`/`TaskCreated`/`TaskCompleted`; teammates не наследуют `/model` лида, effort лида наследуют с v2.1.186 в split-pane | ✅ подтверждено `code.claude.com/docs/en/agent-teams` (2026-07-29) |
-| Поля `skills`/`mcpServers` определения субагента НЕ применяются, когда оно запущено как teammate (загружает скиллы/MCP из настроек проекта/пользователя как обычная сессия) | ⚠ ограничивает модель ролей каркаса — оговорка внесена в `roles.md`/`agent-teams.md`, `code.claude.com/docs/en/agent-teams` (2026-07-29) |
-| Лимиты Agent-тула: 200 субагентов за сессию (`CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION`, v2.1.212+), 20 одновременно (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`, v2.1.217+), глубина вложенности 3 (v2.1.219) | ✅ `code.claude.com/docs/en/sub-agents` (2026-07-29) — отдельный потолок от workflow-рантайма ниже, не смешивать |
-| Workflow-рантайм (`agent()` из `Workflow`): ~16 конкуррентно, до 1000 на прогон — в лимит Agent-тула НЕ засчитывается | ✅ repo-grounded (workflow tool description), проверено против Ф17 (2026-07-29) |
-| `skills:` преднагрузка субагента: полное тело скилла инжектится в контекст; неизвестное/выключенное имя — молчаливый пропуск + запись в debug-лог (видимой ошибки нет) | ✅ `code.claude.com/docs/en/sub-agents` (2026-07-29) |
+| `.claude/rules/` with `paths:` — auto-loading by paths | ✅ native (docs/en/memory, 2026-06-23) |
+| Subagent `extends:`/`@include` inheritance | ❌ does not exist (2026-06-23) |
+| Frontmatter `triggers/role/version/project_type` at the agent | ❌ does not exist (2026-06-23) |
+| Agent file numbering → priority `/agents` | ❌ has no effect (2026-06-23) |
+| `${CLAUDE_PROJECT_DIR}` / `${CLAUDE_PLUGIN_ROOT}` in hook commands | ✅ native (2026-06-23) |
+| Agent Teams — experimental (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), `teammateMode` default `in-process` with v2.1.179 (was `auto`), `iterm2`-mode with v2.1.186; command hook events: `TeammateIdle`/`TaskCreated`/`TaskCompleted`; teammates do not inherit `/model` Lida, effort leads are inherited from v2.1.186 in split-pane | ✅ confirmed `code.claude.com/docs/en/agent-teams` (2026-07-29) |
+| Fields `skills`/`mcpServers` subagent definitions are NOT applied when it is run as teammate (loads skills/MCP from project settings/user as a normal session) | ⚠ limits the framework role model - caveat included in `roles.md`/`agent-teams.md`, `code.claude.com/docs/en/agent-teams` (2026-07-29) |
+| Limits Agent-Tula: 200 subagents per session (`CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION`, v2.1.212+), 20 at the same time (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`, v2.1.217+), nesting depth 3 (v2.1.219) | ✅ `code.claude.com/docs/en/sub-agents` (2026-07-29) — separate ceiling from workflow-runtime below, do not mix |
+| Workflow-runtime (`agent()` from `Workflow`): ~16 competitive, up to 1000 per run - in the limit Agent-tula does NOT count | ✅ repo-grounded (workflow tool description), tested against F17 (2026-07-29) |
+| `skills:` subagent preload: the full body of the skill is injected into the context; unknown/disabled name - silent pass + entry in debug-log (no visible error) | ✅ `code.claude.com/docs/en/sub-agents` (2026-07-29) |

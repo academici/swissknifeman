@@ -1,10 +1,10 @@
 ---
-description: "Проверить изменение на утечки данных, обход авторизации, mass assignment, сырой SQL — только реальные риски"
+description: "Check the change for data leaks, authorization bypass, mass assignment, raw SQL — only real risks"
 ---
-Проверь изменение на: утечку данных через ответы/props, обход Policy/Gate, mass assignment, сырой
-SQL, утечку секретов/credentials. Перечисли только реальные риски с путём исправления — без общих
-списков OWASP.
+Check the change for: data leakage through responses/props, bypass Policy/Gate, mass assignment, raw
+SQL, secret leak/credentials. List only real risks with ways to correct them - without general ones
+lists OWASP.
 <!-- pack:if SCAFFOLDS_SCHEMA -->
-Особое внимание — `$fillable`/`$guarded` новых моделей и защита свежих миграций (индексы,
-внешние ключи, nullable по умолчанию).
+Special attention - `$fillable`/`$guarded` new models and protection of fresh migrations (indexes,
+foreign keys, nullable default).
 <!-- pack:endif -->

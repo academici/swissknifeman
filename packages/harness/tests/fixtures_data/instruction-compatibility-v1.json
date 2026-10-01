@@ -423,7 +423,7 @@
         "codex"
       ],
       "assertions": [
-        "Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use Russian diagnostics and merge-only project writes, and edit local skills in the canonical EN-only `SKILL.md` before regenerating registry/provider projections.",
+        "Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use English diagnostics and merge-only project writes, and edit local skills in the canonical EN-only `SKILL.md` before regenerating registry/provider projections.",
         "`lib/`",
         "`Env`",
         "`SKILL.md`",
@@ -556,7 +556,7 @@
         "codex"
       ],
       "assertions": [
-        "Keep `lib/harness/` stdlib-only, pass frozen `Env` explicitly, use merge-only project writes with `*.bak` backups, and emit Russian diagnostics.",
+        "Keep `lib/harness/` stdlib-only, pass frozen `Env` explicitly, use merge-only project writes with `*.bak` backups, and emit English diagnostics.",
         "`lib/harness/`",
         "`Env`",
         "`*.bak`"
@@ -704,7 +704,7 @@
         "codex"
       ],
       "assertions": [
-        "Keep `lib/maind/` stdlib-only, pass frozen `Env` explicitly, write JSON atomically, emit Russian diagnostics, and preserve `project:`, `ns:`, and `global` memory isolation.",
+        "Keep `lib/maind/` stdlib-only, pass frozen `Env` explicitly, write JSON atomically, emit English diagnostics, and preserve `project:`, `ns:`, and `global` memory isolation.",
         "`lib/maind/`",
         "`Env`",
         "`project:`",
@@ -825,7 +825,7 @@
         "codex"
       ],
       "assertions": [
-        "Keep runtime stdlib-only, pass frozen `Env` explicitly, write JSON atomically, require human confirmation for curated promotion, and emit Russian diagnostics.",
+        "Keep runtime stdlib-only, pass frozen `Env` explicitly, write JSON atomically, require human confirmation for curated promotion, and emit English diagnostics.",
         "`Env`"
       ]
     },
@@ -935,7 +935,7 @@
         "codex"
       ],
       "assertions": [
-        "Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use Russian diagnostics.",
+        "Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.",
         "`lib/task/`"
       ]
     },
@@ -1026,7 +1026,7 @@
         "codex"
       ],
       "assertions": [
-        "Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use Russian diagnostics, and preserve one implementation rather than a plan-local duplicate.",
+        "Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use English diagnostics, and preserve one implementation rather than a plan-local duplicate.",
         "`lib/artifex/`"
       ]
     },

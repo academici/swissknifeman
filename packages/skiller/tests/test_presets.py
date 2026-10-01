@@ -1,11 +1,11 @@
-"""Резолв presets в connect-канале (.swissknife.json) — задача #3.
+"""Resolve presets in connect-channel (.swissknife.json) — task #3.
 
-presets[] в .swissknife.json больше не no-op: resolve_selection разворачивает их в
-бакеты через skillset.resolve_presets (единый extends/cycle-detection, без дубля) по
-формуле buckets = (resolve_presets(presets) ∪ buckets) − exclude — симметрично vendor
-sync (resolve_skillset), но на уровне бакетов (каналы .swissknife.json bucket-granular).
+presets[] in .swissknife.json no longer no-op: resolve_selection expands them to
+buckets via skillset.resolve_presets (single extends/cycle-detection, without take) by
+formula buckets = (resolve_presets(presets) ∪ buckets) − exclude — symmetrical vendor
+sync (resolve_skillset), but at the bucket level (channels .swissknife.json bucket-granular).
 
-Синтетический реестр (fixtures.make_registry) несёт бакеты php/quality/devops."""
+Synthetic registry (fixtures.make_registry) carries buckets php/quality/devops."""
 import contextlib
 import io
 import json
@@ -19,7 +19,7 @@ import tests.fixtures as fx
 
 
 def _write_preset(root, name, **body):
-    """Положить presets/<name>.json в синтетический реестр."""
+    """Put presets/<name>.json to the synthetic registry."""
     d = root / "presets"
     d.mkdir(parents=True, exist_ok=True)
     obj = {"name": name, "description": f"test preset {name}", **body}
@@ -38,7 +38,7 @@ class TestConnectPresetResolution(unittest.TestCase):
         self._tmp.cleanup()
 
     def _resolve(self, config):
-        # presets могут warn'ить (skill-only preset) — глушим stderr в тестах.
+        # presets can warn' (skill-only preset) — muted stderr in tests.
         with contextlib.redirect_stderr(io.StringIO()):
             return resolve_selection(self.env, self.proj, config, "", [])
 
@@ -49,15 +49,15 @@ class TestConnectPresetResolution(unittest.TestCase):
         self.assertEqual(src, "config")
 
     def test_preset_union_with_explicit_buckets(self):
-        # (presets ∪ buckets): p-web даёт php, конфиг добавляет devops
+        # (presets ∪ buckets): p-web gives php, config adds devops
         _write_preset(self.root, "p-web", buckets=["php"])
         items, _n, _s, label, _m = self._resolve(
             {"presets": ["p-web"], "buckets": ["devops"]})
         self.assertEqual(set(items), {"php", "devops"})
-        self.assertIn("presets", label)  # источник помечает presets+buckets
+        self.assertIn("presets", label)  # source marks presets+buckets
 
     def test_exclude_subtracts_bucket(self):
-        # − exclude: preset даёт php+quality, exclude вычитает quality (по имени бакета)
+        # − exclude: preset gives php+quality, exclude subtracts quality (by bucket name)
         _write_preset(self.root, "p-web", buckets=["php", "quality"])
         items, *_ = self._resolve(
             {"presets": ["p-web"], "exclude": ["quality"]})
@@ -70,29 +70,29 @@ class TestConnectPresetResolution(unittest.TestCase):
         self.assertEqual(set(items), {"php", "quality"})
 
     def test_dedup_preserves_order_parents_first(self):
-        # родитель раньше ребёнка, дубли схлопнуты, порядок стабилен
+        # parent before child, duplicates collapsed, order stable
         _write_preset(self.root, "p-base", buckets=["php", "quality"])
         _write_preset(self.root, "p-ext", extends=["p-base"], buckets=["php", "devops"])
         items, *_ = self._resolve({"presets": ["p-ext"], "buckets": ["quality"]})
         self.assertEqual(items, ["php", "quality", "devops"])
 
     def test_unknown_preset_skipped_no_effect(self):
-        # неизвестный пресет → warn+skip в resolve_presets; при отсутствии buckets
-        # ветка presets пуста → падаем в autodetect (laravel-project), не в config.
+        # unknown preset → warn+skip in resolve_presets; in the absence buckets
+        # thread presets is empty → fall into autodetect (laravel-project), not in config.
         items, _n, src, *_ = self._resolve({"presets": ["ghost"]})
         self.assertEqual(src, "autodetect")
         self.assertEqual(set(items), {"php", "quality"})
 
     def test_skill_only_preset_warns_and_no_buckets(self):
-        # пресет только с include (skill-granular) — в bucket-granular connect эффекта
-        # нет: warn печатается, buckets пусты → ветка presets не активируется.
+        # preset only with include (skill-granular) — in bucket-granular connect effect
+        # no: warn is printed, buckets are empty → thread presets is not activated.
         _write_preset(self.root, "p-skills", include=["php/code-style"])
         err = io.StringIO()
         with contextlib.redirect_stderr(err):
             items, _n, src, *_ = resolve_selection(
                 self.env, self.proj, {"presets": ["p-skills"]}, "", [])
         self.assertIn("skill-granular", err.getvalue())
-        self.assertEqual(src, "autodetect")  # presets-ветка не сработала (нет buckets)
+        self.assertEqual(src, "autodetect")  # presets-thread didn't work (no buckets)
 
     def test_extends_cycle_dies(self):
         _write_preset(self.root, "p-a", extends=["p-b"], buckets=["php"])
@@ -101,7 +101,7 @@ class TestConnectPresetResolution(unittest.TestCase):
             self._resolve({"presets": ["p-a"]})
 
     def test_flags_still_win_over_presets(self):
-        # precedence: явные --plugins/items перебивают .swissknife.json presets
+        # precedence: explicit --plugins/items interrupt .swissknife.json presets
         _write_preset(self.root, "p-web", buckets=["php", "quality"])
         with contextlib.redirect_stderr(io.StringIO()):
             items, _n, src, *_ = resolve_selection(
@@ -114,12 +114,12 @@ class TestConnectPresetResolution(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()):
             items, _n, src, *_ = resolve_selection(
                 self.env, self.proj, {"presets": ["p-web"]}, "php-package", [])
-        self.assertEqual(set(items), {"php", "devops"})  # профиль php-package
+        self.assertEqual(set(items), {"php", "devops"})  # profile php-package
         self.assertEqual(src, "flag")
 
 
 class TestPresetsNoLongerReserved(unittest.TestCase):
-    """presets в .swissknife.json больше НЕ помечен _RESERVED — validate_config не warn'ит."""
+    """presets in .swissknife.json is no longer marked _RESERVED — validate_config not warn'etc."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()

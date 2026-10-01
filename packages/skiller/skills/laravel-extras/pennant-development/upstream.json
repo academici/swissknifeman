@@ -12,7 +12,7 @@
       "fetched_at": "2026-06-13"
     }
   ],
-  "notes": "Извлечено из laravel/boost (.ai/pennant/skill/pennant-development/SKILL.md). strategy=notify: локальная копия адаптирована под реестр (frontmatter бакета, перевод секций) — апстрим только репортится, не replace. Pennant версионно стабилен (нет version-веток в Boost), поэтому скилл переносим как самодостаточный для проектов без Boost.",
+  "notes": "Retrieved from laravel/boost (.ai/pennant/skill/pennant-development/SKILL.md). strategy=notify: local copy adapted to the registry (frontmatter bucket, section translation) — upstream only reports, not replace. Pennant version stable (no version-branches in Boost), therefore we transfer the skill as self-sufficient for projects without Boost.",
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",

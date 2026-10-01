@@ -3,7 +3,7 @@
 ```
 ProjectName/
 ├── ProjectName.md              # control tower: frontmatter contract + status + links
-├── Открытые вопросы.md         # open questions, created empty
+├── Open questions.md         # open questions, created empty
 │
 ├── docs/                       # ALL project documentation
 │   ├── 01_Business/            # concept, competitive analysis, risks, unit economics, GTM

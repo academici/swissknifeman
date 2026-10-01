@@ -1,7 +1,7 @@
-"""Тесты assert_safe_replace_target/atomic_write_text (P8.7) — 4 класса цели + tmp-cleanup.
+"""Tests assert_safe_replace_target/atomic_write_text (P8.7) — 4 target class + tmp-cleanup.
 
-core/tests/test_core.py уже покрывает создание родителей/индент/mode/tmp-cleanup при
-os.replace-падении; здесь — ТОЛЬКО новый инвариант цели (не дублировать)."""
+core/tests/test_core.py already covers creating parents/indent/mode/tmp-cleanup when
+os.replace-falling; here is ONLY a new goal invariant (do not duplicate)."""
 import os
 import tempfile
 import unittest
@@ -14,13 +14,13 @@ class TestAssertSafeReplaceTarget(unittest.TestCase):
     def test_missing_target_is_norm(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "nope.txt"
-            assert_safe_replace_target(p)  # не должно бросить
+            assert_safe_replace_target(p)  # should not throw
 
     def test_regular_file_is_norm(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "f.txt"
             p.write_text("x")
-            assert_safe_replace_target(p)  # не должно бросить
+            assert_safe_replace_target(p)  # should not throw
 
     def test_symlink_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -30,7 +30,7 @@ class TestAssertSafeReplaceTarget(unittest.TestCase):
             link.symlink_to(real)
             with self.assertRaises(OSError) as ctx:
                 assert_safe_replace_target(link)
-            self.assertIn("ссылка", str(ctx.exception))
+            self.assertIn("link", str(ctx.exception))
 
     def test_hardlink_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -53,7 +53,7 @@ class TestAtomicWriteTextTargetCheck(unittest.TestCase):
             with self.assertRaises(OSError):
                 atomic_write_text(link, "new")
             self.assertEqual(list(Path(tmp).rglob("*.tmp")), [])
-            # цель не подменена — тихого отвязывания симлинка не произошло
+            # the target was not replaced - the silent unbinding of the symlink did not occur
             self.assertEqual(real.read_text(), "original")
 
     def test_write_check_target_false_allows_symlink(self):
@@ -63,8 +63,8 @@ class TestAtomicWriteTextTargetCheck(unittest.TestCase):
             link = Path(tmp) / "link.txt"
             link.symlink_to(real)
             atomic_write_text(link, "new", check_target=False)
-            # os.replace(tmp, link) подменяет саму ссылку на regular-файл — ожидаемое
-            # поведение точечного выключателя, не регресс инварианта по умолчанию
+            # os.replace(tmp, link) replaces the link itself with regular-file - expected
+            # point switch behavior, no default invariant regress
             self.assertFalse(link.is_symlink())
             self.assertEqual(link.read_text(), "new")
 

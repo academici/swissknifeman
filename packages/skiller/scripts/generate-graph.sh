@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# DEPRECATED (2026-07, аудит R-2): логика перенесена в lib/skiller/registry.py
-# (render_graph/write_graph) — cmd_registry больше НЕ вызывает этот скрипт, а
-# registry.check_drift теперь видит graph.md (раньше не мог — heredoc не имел
-# python-функции для сравнения in-memory). Оставлен в дереве (rm заблокирован
-# политикой окружения) — безопасно удалить: git rm scripts/generate-graph.sh.
+# DEPRECATED (2026-07, audit R-2): logic moved to lib/skiller/registry.py
+# (render_graph/write_graph) — cmd_registry no longer calls this script, but
+# registry.check_drift now sees graph.md (couldn't do it before - heredoc did not have
+# python-functions to compare in-memory). Left in the tree (rm blocked
+# environment policy) — safe to remove: git rm scripts/generate-graph.sh.
 #
 # Generate packages/skiller/docs/guide/graph.md (Mermaid dependency graph) from
 # skills.json. Reads requires/produces_for fields (registry v5+); run after
@@ -16,12 +16,12 @@ python3 - "$REPO_ROOT" <<'PY'
 import json, sys
 from pathlib import Path
 
-root = Path(sys.argv[1])  # корень пакета (skills.json здесь)
+root = Path(sys.argv[1])  # package root (skills.json here)
 registry = json.loads((root / "skills.json").read_text(encoding="utf-8"))
 skills = registry["skills"]
 
-# Доки skiller живут в самом пакете (packages/skiller/docs/guide) — ищем вверх
-# ближайший каталог с docs/guide (это сам пакет; fallback — корень).
+# Docks skiller live in the package itself (packages/skiller/docs/guide) — looking up
+# closest directory with docs/guide (is the package itself; fallback — root).
 def _docs_root(p):
     for cand in (p, *p.parents):
         if (cand / "docs" / "guide").is_dir():
@@ -62,15 +62,15 @@ def node_id(name):
 
 
 lines = [
-    "# Граф зависимостей скиллов",
+    "# Skill dependency graph",
     "",
-    "> Сгенерировано `scripts/generate-graph.sh` из `skills.json` — не редактировать вручную.",
-    "> Пересборка: `skiller registry`.",
+    "> Generated `scripts/generate-graph.sh` from `skills.json` — cannot be edited manually.",
+    "> Reassembly: `skiller registry`.",
     "",
-    "Сплошная стрелка `A --> B` — `A` требует `B` (`requires`): `skiller vendor` дотянет `B`",
-    "при установке `A`. Пунктирная `A -.-> B` — результат `A` служит входом для `B`",
-    "(`produces_for`). Показаны только скиллы, участвующие в графе; изолированные —",
-    "в таблице ниже.",
+    "Solid arrow `A --> B` — `A` requires `B` (`requires`): `skiller vendor` will last `B`",
+    "during installation `A`. Dotted `A -.-> B` — result `A` serves as an input for `B`",
+    "(`produces_for`). Only skills participating in the graph are shown; isolated -",
+    "in the table below.",
     "",
     "```mermaid",
     "flowchart LR",
@@ -90,14 +90,14 @@ for src, dst in sorted(produces_edges):
 lines += [
     "```",
     "",
-    f"**В графе:** {len(connected)} скиллов, {len(requires_edges)} рёбер requires, "
-    f"{len(produces_edges)} рёбер produces_for.",
+    f"**In the column:** {len(connected)} skills, {len(requires_edges)} ribs requires, "
+    f"{len(produces_edges)} ribs produces_for.",
     "",
-    f"## Изолированные скиллы ({sum(len(v) for v in isolated.values())})",
+    f"## Isolated skills ({sum(len(v) for v in isolated.values())})",
     "",
-    "Скиллы без связей `requires`/`produces_for` — самодостаточны.",
+    "Skills without connections `requires`/`produces_for` — are self-sufficient.",
     "",
-    "| Бакет | Скиллы |",
+    "| Bucket | Skills |",
     "|---|---|",
 ]
 for bucket in sorted(isolated):

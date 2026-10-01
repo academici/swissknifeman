@@ -1,4 +1,4 @@
-"""Тесты start.py: cmd_start --only graph создаёт граф; cmd_status даёт сводку."""
+"""Tests start.py: cmd_start --only graph creates a graph; cmd_status gives a summary."""
 import json
 import tempfile
 import unittest
@@ -13,10 +13,10 @@ class TestStartStatus(unittest.TestCase):
             root, env = make_repo(tmp)
             write_maind_config(root)
             _, out = capture(cmd_start, env, ["--only", "graph"])
-            # федерация: стор проекта + индекс (а не единый legacy graph.db)
+            # federation: project store + index (and not a single one legacy graph.db)
             self.assertTrue((env.data_dir / "graphs" / "alpha.db").exists())
             self.assertTrue((env.data_dir / "graphs" / "_index.db").exists())
-            self.assertIn("граф готов", out)
+            self.assertIn("graph ready", out)
 
     def test_status_json_against_fake(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -27,7 +27,7 @@ class TestStartStatus(unittest.TestCase):
                 snap = json.loads(out)
                 self.assertEqual(snap["config_source"], "config.json")
                 self.assertTrue(snap["memory"]["running"])
-                self.assertEqual(snap["projects"]["total"], 1)  # alpha из фикстуры
+                self.assertEqual(snap["projects"]["total"], 1)  # alpha from fixture
 
     def test_start_bad_only_dies(self):
         with tempfile.TemporaryDirectory() as tmp:

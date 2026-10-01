@@ -21,8 +21,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Монорепо: тесты по пакету (каждый знает свой core через PYTHONPATH) + smoke
-      # пакета core. Скрипты переехали из корня в packages/*/scripts/ при реструктуризации.
+      # Monorepo: package tests (everyone knows their core through PYTHONPATH) + smoke
+      # package core. Scripts moved from root to packages/*/scripts/ during restructuring.
       - name: Test skiller
         run: bash packages/skiller/scripts/test.sh -v
 
@@ -32,7 +32,7 @@ jobs:
       - name: Test maind
         run: bash packages/maind/scripts/test.sh -v
 
-      - name: Test core (stdlib фундамент)
+      - name: Test core (stdlib foundation)
         run: PYTHONPATH=. python3 -m unittest discover -s core/tests -v
 
   task:
@@ -58,9 +58,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # Линтер эфемерно через pipx (предустановлен на runner'е) — ruff НЕ зависимость
-      # репо, версия пиннована (детерминизм). Набор F,B — конфиг в ruff.toml.
-      - name: Ruff (баги — pyflakes F + bugbear B)
-        # lib + tests: раньше линтовался только lib/, и в tests/ копился мусор (неиспользуемые
-        # импорты/переменные). Теперь оба — чтобы тестовый код держал ту же планку.
+      # Linter ephemerally through pipx (preinstalled on runner'e) — ruff NOT an addiction
+      # repo, pinnovana version (determinism). Kit F,B — config in ruff.toml.
+      - name: Ruff (bugs — pyflakes F + bugbear B)
+        # lib + tests: Previously it was only linted lib/, and in tests/ garbage was piling up (unused
+        # imports/variables). Now both — so that the test code maintains the same level.
         run: pipx run ruff==0.15.19 check core/ core/tests packages/skiller/lib packages/skiller/tests packages/harness/lib packages/harness/tests packages/maind/lib packages/maind/tests packages/task/lib packages/task/tests

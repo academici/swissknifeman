@@ -1,5 +1,5 @@
-"""Тесты ingest: ephemeral-only (enforced кодом), die-без-записи на невалидном файле,
-audit-провенанс, маркер PROMOTE-CANDIDATE, семантический дедуп (NOOP)."""
+"""Tests ingest: ephemeral-only (enforced code), die-without-entry on an invalid file,
+audit-provenance, marker PROMOTE-CANDIDATE, semantic dedup (NOOP)."""
 import json
 import os
 import tempfile
@@ -27,8 +27,8 @@ def payload(findings, **top):
 
 
 def finding(**over):
-    base = {"trigger": "handoff между фазами терял контекст задачи",
-            "action": "передавать бриф среза в промпте следующего агента",
+    base = {"trigger": "handoff lost task context between phases",
+            "action": "pass the cut brief in the next agent's prompt",
             "kind": "procedure"}
     base.update(over)
     return base
@@ -50,11 +50,11 @@ class TestIngest(unittest.TestCase):
         return str(p)
 
     def _store_files(self):
-        """Все файлы под .claude/analyst — для проверки «ни одной записи»."""
+        """All files under .claude/analyst — for verification «no entries»."""
         d = lessons.project_dir(self.proj)
         return sorted(str(p) for p in d.rglob("*") if p.is_file()) if d.is_dir() else []
 
-    # ── happy path: только ephemeral + audit ─────────────────────────────────
+    # ── happy path: only ephemeral + audit ─────────────────────────────────
     def test_ingest_writes_ephemeral_only_with_audit(self):
         f = self._write(payload([finding()]))
         with chdir(self.proj):
@@ -68,14 +68,14 @@ class TestIngest(unittest.TestCase):
         self.assertEqual(L["source"], "agent")
         self.assertEqual(L["provenance"]["session_id"], "s-deep")
         self.assertIn("session:s-deep", L["evidence"])
-        # ничего в других состояниях
+        # nothing in other states
         for other in ("candidate", "curated", "deprecated"):
             self.assertEqual(lessons.list_lessons(self.proj, other), [])
-        # audit-строка существующим механизмом провенанса
+        # audit-string by existing provenance mechanism
         audit = lessons.read_audit(self.proj)
         self.assertTrue(any(r["action"] == "ingest" and r["id"] == L["id"]
                             and r["detector"] == "agent-finding" for r in audit))
-        # events не пишем: finding — гипотеза, не верифицированный сигнал
+        # events do not write: finding — hypothesis, unverified signal
         self.assertEqual(lessons.read_events(self.proj), [])
 
     def test_promote_candidate_marker_in_evidence(self):
@@ -85,16 +85,16 @@ class TestIngest(unittest.TestCase):
         (L, _st), = lessons.list_lessons(self.proj, "ephemeral")
         self.assertIn(PROMOTE_MARK, L["evidence"])
 
-    # ── die БЕЗ записи: невалидный JSON / схема ──────────────────────────────
+    # ── die WITHOUT entry: invalid JSON / diagram ──────────────────────────────
     def test_broken_json_dies_without_any_write(self):
-        f = self._write("{не json")
+        f = self._write("{not json")
         with chdir(self.proj):
             with self.assertRaises(SystemExit):
                 cmd_ingest(self.env, ["--file", f])
         self.assertEqual(self._store_files(), [])
 
     def test_invalid_schema_dies_without_any_write(self):
-        # первый finding валиден, второй бит — валидация ЦЕЛИКОМ до побочных эффектов
+        # first finding is valid, the second bit is validation ENTIRELY before side effects
         f = self._write(payload([finding(), {"trigger": "", "action": "x"}]))
         with chdir(self.proj):
             with self.assertRaises(SystemExit):
@@ -107,7 +107,7 @@ class TestIngest(unittest.TestCase):
                 cmd_ingest(self.env, ["--file", os.path.join(self.proj, "nope.json")])
         self.assertEqual(self._store_files(), [])
 
-    # ── ephemeral-only / agent-finding-only — enforced кодом ─────────────────
+    # ── ephemeral-only / agent-finding-only — enforced code ─────────────────
     def test_non_ephemeral_state_dies_without_write(self):
         f = self._write(payload([finding(state="curated")]))
         with chdir(self.proj):
@@ -131,15 +131,15 @@ class TestIngest(unittest.TestCase):
                                                  detector="agent-finding")]))
         self.assertEqual(len(out), 1)
 
-    # ── дедуп ────────────────────────────────────────────────────────────────
+    # ── dedup ────────────────────────────────────────────────────────────────
     def test_noop_duplicate_skipped(self):
         f = self._write(payload([finding()]))
         with chdir(self.proj):
             cmd_ingest(self.env, ["--file", f])
-            cmd_ingest(self.env, ["--file", f])   # повтор — NOOP-дубль, не плодим
+            cmd_ingest(self.env, ["--file", f])   # repeat - NOOP-double, we don't produce
         self.assertEqual(len(lessons.list_lessons(self.proj, "ephemeral")), 1)
 
-    # ── dry-run: без записей ─────────────────────────────────────────────────
+    # ── dry-run: without entries ─────────────────────────────────────────────────
     def test_dry_run_writes_nothing(self):
         f = self._write(payload([finding()]))
         with chdir(self.proj):

@@ -1,60 +1,60 @@
-# Composer-специфика аудита зависимостей (PHP/Laravel)
+# Composer-specifics of dependency auditing (PHP/Laravel)
 
-Дополнение к `dependency-audit` для PHP-стека: конкретные команды и
-composer-грабли по каждому из 5 измерений.
+Addition to `dependency-audit` for PHP-stack: specific commands and
+composer-rake along each of the 5 dimensions.
 
-## Команды по измерениям
+## Measurement commands
 
-| Измерение | Команда | Примечание |
+| Measurement | Command | Note |
 |:---|:---|:---|
-| Vulnerability scan | `composer audit` | в CI: `composer audit --format=json --locked` |
-| Outdated (прямые) | `composer outdated --direct` | `--major-only` для оценки техдолга |
-| Лицензии | `composer licenses` | `--format=json` для отчёта |
-| Phantom deps | `composer-require-checker check` | импорты без зависимости в манифесте |
-| Неиспользуемые | `composer-unused` | зависимости без использования в коде |
-| Почему пакет тут | `composer why <pkg>` / `composer why-not <pkg> <ver>` | разбор конфликтов и транзитивности |
-| Платформа | `composer check-platform-reqs` | расширения PHP в prod vs lockfile |
+| Vulnerability scan | `composer audit` | in CI: `composer audit --format=json --locked` |
+| Outdated (straight) | `composer outdated --direct` | `--major-only` for technical debt assessment |
+| Licenses | `composer licenses` | `--format=json` for report |
+| Phantom deps | `composer-require-checker check` | imports without dependency in manifest |
+| Unused | `composer-unused` | dependencies without use in code |
+| Why is the package here | `composer why <pkg>` / `composer why-not <pkg> <ver>` | analysis of conflicts and transitivity |
+| Platform | `composer check-platform-reqs` | extensions PHP in prod vs lockfile |
 
-## roave/security-advisories — гейт на этапе require
+## roave/security-advisories — gate at stage require
 
 ```bash
 composer require --dev roave/security-advisories:dev-latest
 ```
 
-Метапакет с `conflict` на все уязвимые версии: установка уязвимого пакета
-падает сразу, а не ловится аудитом постфактум. Дополняет `composer audit`,
-не заменяет (не покрывает уже установленное до его добавления — прогнать
-`composer update --dry-run` после подключения).
+Metapackage with `conflict` on all vulnerable versions: installing the vulnerable package
+crashes immediately, rather than being caught by an audit after the fact. Complements `composer audit`,
+does not replace (does not cover what is already installed before adding it - banish
+`composer update --dry-run` after connection).
 
 ## Reproducible installs
 
 ```bash
-# CI/prod: строго по lockfile, без резолвинга
+# CI/prod: strictly according to lockfile, without resolution
 composer install --no-dev --prefer-dist --no-progress --no-interaction
-# проверка, что lockfile синхронен с composer.json
+# checking that lockfile is synchronous with composer.json
 composer validate --strict
 ```
 
-- `composer.lock` для приложений — коммитить всегда; для пакетов — см.
-  дискуссию в основном скилле + CI-матрица по версиям Laravel/PHP
+- `composer.lock` for applications - always commit; for packages - see
+  discussion in the main skill + CI-matrix by versions Laravel/PHP
   (`laravel-package-compatibility`).
-- `composer validate --strict` в CI ловит рассинхрон manifest/lock.
+- `composer validate --strict` in CI catches out of sync manifest/lock.
 
-## Composer-грабли (sharp edges)
+## Composer-rake (sharp edges)
 
-- **`minimum-stability: dev`** в приложении — затягивает dev-версии
-  транзитивно; использовать `prefer-stable: true` + точечные алиасы.
-- **`repositories` с VCS/path** — код мимо Packagist: проверять источник
-  и фиксировать commit-ref, не ветку.
-- **Скрипты `post-install-cmd`/`post-update-cmd`** — исполняемый код при
-  установке; в CI для недоверенных пакетов: `--no-scripts` + явный allowlist
-  (`allow-plugins` в `config`).
-- **`replace`/`provide` в форках** — пакет может тихо подменить другой;
-  `composer why` покажет.
-- **Wildcard-констрейнты (`*`, `>=`)** в require — нерепродуцируемые
-  обновления; для библиотек `^x.y`, для приложений lockfile-дисциплина.
+- **`minimum-stability: dev`** in the application - addictive dev-versions
+  transitive; use `prefer-stable: true` + dot aliases.
+- **`repositories` with VCS/path** — code bypassed Packagist: check source
+  and commit commit-ref, not a thread.
+- **Scripts `post-install-cmd`/`post-update-cmd`** — executable code when
+  installation; in CI for untrusted packages: `--no-scripts` + explicit allowlist
+  (`allow-plugins` in `config`).
+- **`replace`/`provide` in forks** — a package can silently replace another;
+  `composer why` will show.
+- **Wildcard-constraints (`*`, `>=`)** in require — non-reproducible
+  updates; for libraries `^x.y`, for applications lockfile-discipline.
 
-## SBOM для PHP
+## SBOM for PHP
 
 ```bash
 composer require --dev cyclonedx/cyclonedx-php-composer

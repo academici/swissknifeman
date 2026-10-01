@@ -67,9 +67,9 @@ def _cmd_doctor_settings(env, opts):
     target = opts["target"] or os.getcwd()
     provider = opts["provider"] or None
     if provider not in (None, "claude-code", "codex", "cursor"):
-        die(f"--provider неизвестен: {provider} (claude-code|codex|cursor)")
+        die(f"--provider unknown: {provider} (claude-code|codex|cursor)")
     if provider == "codex" and opts["profile"]:
-        die("--profile применим только к --provider claude-code")
+        die("--profile only applies to --provider claude-code")
 
     if provider == "codex":
         layers = load_codex_layers(env, target)
@@ -112,13 +112,13 @@ def cmd_doctor(env, argv):
     if opts["help"]:
         print("harness doctor [--settings [--provider claude-code|codex|cursor] [--target P] "
               "[--json] [--profile NAME] | --provider-audit]\n"
-              "  без флага:  диагностика окружения harness (пресеты/скрипт/хуки).\n"
-              "  --settings: аудит слоёв настроек выбранного провайдера\n"
-              "              (без --provider сохраняется legacy-отчёт Claude Code)\n"
-              "              (отчёт, --json, exit-code 0 чисто / 1 warn / 2 error).")
+              "  without flag: environment diagnostics harness (presets/script/hooks).\n"
+              "  --settings: audit of settings layers of the selected provider\n"
+              "              (without --provider is saved legacy-report Claude Code)\n"
+              "              (report, --json, exit-code 0 clean / 1 warn / 2 error).")
         return
     if opts["provider"] and not opts["settings"]:
-        die("--provider для doctor применим только вместе с --settings")
+        die("--provider for doctor is only applicable in conjunction with --settings")
     if opts["provider_audit"]:
         from .provider_audit import audit_package
         report = audit_package(env.root)
@@ -143,20 +143,20 @@ def cmd_doctor(env, argv):
     line(cfg.is_dir(), f"configs/claude-code/ — {cfg}")
     presets = sorted(p.stem.split(".", 1)[1] for p in cfg.glob("settings.*.json")) \
         if cfg.is_dir() else []
-    line(bool(presets), f"permissions-пресеты: {', '.join(presets) or 'нет'}")
+    line(bool(presets), f"permissions-presets: {', '.join(presets) or 'no'}")
     line(bool(available_mcp(env)),
-         f"MCP-пресеты: {', '.join(available_mcp(env)) or 'нет'}")
+         f"MCP-presets: {', '.join(available_mcp(env)) or 'no'}")
     line(env.apply_script.exists(), f"scripts/apply-permissions.sh — {env.apply_script}")
-    line(bool(list_packs(env)), f"agent-packs: {', '.join(list_packs(env)) or 'нет'}")
+    line(bool(list_packs(env)), f"agent-packs: {', '.join(list_packs(env)) or 'no'}")
 
     hooks = env.home / ".claude" / "hooks"
     have = {d: (hooks / d).exists() for d in ("notify", "auto-approve", "memory")}
     if all(have.values()):
-        print("  ✓ файлы хуков установлены глобально (~/.claude/hooks/)")
+        print("  ✓ hook files installed globally (~/.claude/hooks/)")
     else:
         missing = [d for d, v in have.items() if not v]
-        print(f"  · файлы хуков не установлены: {', '.join(missing)} "
-              f"(поставить: harness hooks --global)")
+        print(f"  · hook files not installed: {', '.join(missing)} "
+              f"(put: harness hooks --global)")
 
 
 
@@ -164,7 +164,7 @@ def cmd_doctor(env, argv):
     rr_dst = hooks / "run-report"
     stale = [f for f in _RUN_REPORT_FILES if _sha256(rr_src / f) != _sha256(rr_dst / f)]
     if stale:
-        print(f"  · хук run-report протух ({', '.join(stale)}) — повтори harness hooks --global")
+        print(f"  · hook run-report rotten ({', '.join(stale)}) — repeat harness hooks --global")
 
     print(f"  · review-gate: {_review_gate_state(hooks)}")
 
@@ -172,7 +172,7 @@ def cmd_doctor(env, argv):
 
 
 
-    print("  · route evidence: live model — из пейлоада хука/`codex doctor --json`; "
-          "effort остаётся self-attested (`task.route_evidence capture --source self-attested`)")
+    print("  · route evidence: live model — from payload hook/`codex doctor --json`; "
+          "effort remains self-attested (`task.route_evidence capture --source self-attested`)")
 
-    print("\nharness: OK" if ok else "\nharness: есть проблемы (см. ✗)")
+    print("\nharness: OK" if ok else "\nharness: there are problems (see ✗)")

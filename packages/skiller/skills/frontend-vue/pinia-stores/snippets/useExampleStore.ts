@@ -1,11 +1,11 @@
 // Source: anonymized production project
 //
-// Setup-стор Pinia (Vue 3). Демонстрирует три роли:
+// Setup-side Pinia (Vue 3). Demonstrates three roles:
 //   ref()      -> state
-//   computed() -> getters (кэшируются)
-//   function   -> actions (мутации state + async)
-// Приватное (объявлено в сетапе, но НЕ возвращено) снаружи недоступно.
-// Файл и фабрика: use<Domain>Store. Первый аргумент — стабильный строковый id.
+//   computed() -> getters (are cached)
+//   function   -> actions (mutations state + async)
+// Private (declared in setup but NOT returned) not accessible from outside.
+// File and factory: use<Domain>Store. First argument is a stable string id.
 
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
@@ -16,8 +16,8 @@ export const useExampleStore = defineStore('example', () => {
     const isLoading = ref(false);
     const selectedId = ref<number | null>(null);
 
-    // приватное состояние сетапа: НЕ возвращается => недоступно снаружи,
-    // не попадает в devtools / SSR-снапшот / persist
+    // private setup state: NOT returned => not accessible from outside,
+    // does not hit devtools / SSR-snapshot / persist
     let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
     // --- getters (computed) ---
@@ -26,8 +26,8 @@ export const useExampleStore = defineStore('example', () => {
 
     // --- actions (function) ---
 
-    // Инициализация от сервера (hydration): сеем state значением,
-    // которое backend уже отрендерил в props/initial-state.
+    // Initialization from server (hydration): sow state value,
+    // which backend has already rendered in props/initial-state.
     function init(initial: string[]): void {
         items.value = initial;
     }
@@ -40,7 +40,7 @@ export const useExampleStore = defineStore('example', () => {
         selectedId.value = id;
     }
 
-    // Асинхронный action: грузит данные, держит флаг загрузки.
+    // Asynchronous action: loads data, holds the loading flag.
     async function refresh(): Promise<void> {
         isLoading.value = true;
         try {
@@ -61,8 +61,8 @@ export const useExampleStore = defineStore('example', () => {
         }
     }
 
-    // Возвращаем ВСЁ публичное. State-ref, не попавший в return,
-    // не будет считаться состоянием стора — поэтому возвращаем и его.
+    // We return EVERYTHING public. State-ref, not included in return,
+    // will not be considered the state of the store - so we return it too.
     return {
         // state
         items,
@@ -80,10 +80,10 @@ export const useExampleStore = defineStore('example', () => {
     };
 });
 
-// --- persist (опционально) ---
-// Подключается плагином pinia-plugin-persistedstate. Персистить только то,
-// что реально должно пережить перезагрузку (UI-предпочтения, черновик).
-// Токены/чувствительное и серверный кэш — НЕ персистить.
+// --- persist (optional) ---
+// Connected by plugin pinia-plugin-persistedstate. Persist only that
+// that really should survive a reboot (UI-preferences, draft).
+// Tokens/sensitive and server cache - DO NOT persist.
 //
 // export const useUiPrefsStore = defineStore(
 //     'ui-prefs',
@@ -92,5 +92,5 @@ export const useExampleStore = defineStore('example', () => {
 //         function toggleSidebar() { sidebarCollapsed.value = !sidebarCollapsed.value; }
 //         return { sidebarCollapsed, toggleSidebar };
 //     },
-//     { persist: true }, // или { persist: { storage: sessionStorage, pick: ['sidebarCollapsed'] } }
+//     { persist: true }, // or { persist: { storage: sessionStorage, pick: ['sidebarCollapsed'] } }
 // );

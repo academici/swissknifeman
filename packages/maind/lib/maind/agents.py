@@ -75,7 +75,7 @@ def heartbeat(env, agent_id, now=None):
             a["last_heartbeat"] = now
             save(env, db)
             return a
-    die(f"агент не зарегистрирован: {agent_id} (сначала maind agents register)")
+    die(f"agent not registered: {agent_id} (first maind agents register)")
 
 
 def listing(env, config, now=None):
@@ -105,7 +105,7 @@ def kill(env, agent_id, *, force=False):
             db["agents"].pop(i)
             save(env, db)
             return True
-    die(f"агент не найден: {agent_id}")
+    die(f"agent not found: {agent_id}")
 
 
 def reap(env, config, now=None):
@@ -133,7 +133,7 @@ def cmd_agents(env, argv):
                 "heartbeat": _cmd_heartbeat, "register": _cmd_register}
     handler = handlers.get(sub)
     if handler is None:
-        die(f"неизвестная подкоманда agents: {sub} (list|kill|heartbeat|register)")
+        die(f"unknown subcommand agents: {sub} (list|kill|heartbeat|register)")
     handler(env, rest)
 
 
@@ -147,9 +147,9 @@ def _cmd_list(env, argv):
         print(json.dumps(agents, ensure_ascii=False, indent=2))
         return
     if not agents:
-        print("агентов нет (зарегистрируйте: maind agents register <id>)")
+        print("no agents (register: maind agents register <id>)")
         return
-    print(f"Агенты ({len(agents)}):")
+    print(f"Agents ({len(agents)}):")
     for a in agents:
         print(f"  {a['state']:<6} {a['id']:<24} {a.get('kind', '-'):<10} "
               f"proj={a.get('project') or '-':<14} last={a.get('last_heartbeat', '-')}")
@@ -158,15 +158,15 @@ def _cmd_list(env, argv):
 def _cmd_kill(env, argv):
     opts, pos = parse_args(argv, {"--force": "bool"}, max_pos=1)
     if not pos:
-        die("укажите id агента: maind agents kill <id> [--force]")
+        die("specify id agent: maind agents kill <id> [--force]")
     kill(env, pos[0], force=opts["force"])
-    print(f"агент остановлен и снят с реестра: {pos[0]}")
+    print(f"agent stopped and removed from the registry: {pos[0]}")
 
 
 def _cmd_heartbeat(env, argv):
     _opts, pos = parse_args(argv, {}, max_pos=1)
     if not pos:
-        die("укажите id агента: maind agents heartbeat <id>")
+        die("specify id agent: maind agents heartbeat <id>")
     heartbeat(env, pos[0])
     print(f"heartbeat: {pos[0]}")
 
@@ -175,9 +175,9 @@ def _cmd_register(env, argv):
     opts, pos = parse_args(argv, {"--pid": "str", "--project": "str", "--kind": "str"},
                            max_pos=1)
     if not pos:
-        die("укажите id агента: maind agents register <id> [--project P --pid N]")
+        die("specify id agent: maind agents register <id> [--project P --pid N]")
     rec = register(env, pos[0],
                    pid=int(opts["pid"]) if opts["pid"] else None,
                    project=opts["project"] or None,
                    kind=opts["kind"] or "generic")
-    print(f"зарегистрирован: {rec['id']} (scope: project:{rec.get('project') or '-'})")
+    print(f"registered: {rec['id']} (scope: project:{rec.get('project') or '-'})")

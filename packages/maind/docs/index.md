@@ -3,30 +3,30 @@ layout: home
 
 hero:
   name: mAInd
-  text: Центральный узел экосистемы
-  tagline: Память агентов · граф связей · реестр агентов и проектов · MCP-сервер
+  text: Central node of the ecosystem
+  tagline: Agent memory · connection graph · registry of agents and projects · MCP-server
   actions:
     - theme: brand
-      text: Что такое mAInd
+      text: What is mAInd
       link: /guide/
     - theme: alt
-      text: Установка
+      text: Installation
       link: /guide/installation
     - theme: alt
-      text: Архитектура
+      text: Architecture
       link: /architecture
 
 features:
-  - title: 🧠 Общая память
-    details: Один демон agent-memory на хаб, изоляция проектов по namespace (scope). Общие факты — в scope global.
-  - title: 🕸 Граф связей
-    details: Один граф на экосистему. Проекты, агенты, память, скиллы — узлы; depends_on / belongs_to / uses — рёбра. Это и есть «общая связь».
-  - title: 🤖 Реестр агентов
-    details: register / heartbeat / list / kill. Состояние alive·stale·dead выводится из heartbeat и живости pid.
-  - title: 📦 Реестр проектов
-    details: config.json (в корне монорепо) — надмножество brain .projects.json, с fallback на legacy и синком из brain.
-  - title: 🔌 MCP-сервер
-    details: maind mcp — stdio JSON-RPC. 11 tools поверх памяти, графа, ecosystem-связей, агентов и проектов для любого агента.
+  - title: 🧠 Shared memory
+    details: One demon agent-memory to the hub, isolation of projects by namespace (scope). General facts - in scope global.
+  - title: 🕸 Connection graph
+    details: One graph per ecosystem. Projects, agents, memory, skills - nodes; depends_on / belongs_to / uses — ribs. This is it «general communication».
+  - title: 🤖 Agent Registry
+    details: register / heartbeat / list / kill. Status alive·stale·dead is derived from heartbeat and liveliness pid.
+  - title: 📦 Project Registry
+    details: config.json (at the root of the monorepo) — superset brain .projects.json, with fallback on legacy and syncom from brain.
+  - title: 🔌 MCP-server
+    details: maind mcp — stdio JSON-RPC. 11 tools over memory, graph, ecosystem-connections, agents and projects for any agent.
   - title: 🐍 Python + bash
-    details: Ядро на stdlib (как swissknifeman / brain). npm — только для демона памяти и документации.
+    details: Core on stdlib (like swissknifeman / brain). npm — for memory daemon and documentation only.
 ---

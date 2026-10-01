@@ -1,8 +1,8 @@
-"""Тесты skillset — vendor-режим на .swissknifeman/config.json.
+"""Tests skillset — vendor-mode on .swissknifeman/config.json.
 
-Покрывают: резолв правил (include/buckets/exclude), sync (install/update/prune),
-безопасное удаление по managed (чужие скиллы не трогаются), обновление по sha256,
-dry-run без записи."""
+Cover: resolve rules (include/buckets/exclude), sync (install/update/prune),
+secure deletion by managed (other people's skills are not affected), update by sha256,
+dry-run without entry."""
 import contextlib
 import io
 import json
@@ -24,8 +24,8 @@ from tests.fixtures import make_laravel_project, make_registry, write_skill
 
 
 def _write_core_skills(root):
-    """Положить CORE_SKILLS + maind-дубли в синтетический реестр и
-    дописать их бакеты в buckets.json (требование 1:1 с каталогами)."""
+    """Put CORE_SKILLS + maind-duplicates to the synthetic registry and
+    add their buckets to buckets.json (1:1 requirement with catalogs)."""
     skills = root / "skills"
     for name in ("context-economy", "anti-drift", "compact-responses",
                  "session-handoff", "verify-claims"):
@@ -40,7 +40,7 @@ def _write_core_skills(root):
 
 
 def _materialize_registry(env):
-    """Записать skills.json из синтетического реестра (как делает cmd_registry)."""
+    """Write skills.json from synthetic registry (how does cmd_registry)."""
     reg, *_ = build_registry(env)
     (env.root / "skills.json").write_text(
         json.dumps(reg, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -54,7 +54,7 @@ def _write_config(target, cfg):
 
 
 def _write_preset(root, name, **body):
-    """Положить presets/<name>.json в синтетический реестр."""
+    """Put presets/<name>.json to the synthetic registry."""
     d = root / "presets"
     d.mkdir(parents=True, exist_ok=True)
     obj = {"name": name, "description": f"test preset {name}", **body}
@@ -84,8 +84,8 @@ class TestResolve(unittest.TestCase):
             self.assertEqual(names, {"code-style", "test-writer"})
 
     def test_include_drifted_path_resolves_by_basename(self):
-        # после раскола бакетов старый путь 'oldbucket/code-style' промахивается
-        # по полному ключу, но добивается по базовому имени (а не молча теряется).
+        # after splitting buckets the old way 'oldbucket/code-style' misses
+        # by full key, but gets by base name (and not silently lost).
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             root, env = make_registry(tmp)
@@ -190,8 +190,8 @@ class TestSync(unittest.TestCase):
             self.assertTrue(lock["code-style"]["sha256"])
 
     def test_skills_path_change_prunes_old_location(self):
-        """V-9: смена skills_path в конфиге не должна оставлять осиротевшую копию
-        по старому пути — переустановка на новом месте + удаление старого."""
+        """V-9: change skills_path in the config should not leave an orphaned copy
+        along the old path - reinstallation in a new location + deleting the old one."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             root, env = make_registry(tmp)
@@ -205,7 +205,7 @@ class TestSync(unittest.TestCase):
                     "skills_path": ".claude/skills2"}
             sync_skillset(env, target, cfg2)
 
-            # новое место — есть; старое — осиротевшая копия удалена, не задвоена
+            # new place - yes; old - orphaned copy deleted, not duplicated
             self.assertTrue((target / ".claude/skills2/code-style/SKILL.md").is_file())
             self.assertFalse((target / ".claude/skills/code-style").exists())
             lock = load_lock(target)["skills"]
@@ -213,9 +213,9 @@ class TestSync(unittest.TestCase):
                              ".claude/skills2/code-style")
 
     def test_copy_failure_not_reported_as_installed(self):
-        """safe_copy_skill может пропустить копию (containment-стоп/TOCTOU-гонка) —
-        такой скилл НЕ должен попасть ни в lock, ни в plan['installed'] (V-2:
-        раньше это тихо проглатывалось, sync рапортовал план как факт)."""
+        """safe_copy_skill may miss a copy (containment-stop/TOCTOU-race) —
+        such a skill should NOT fall into any lock, neither plan['installed'] (V-2:
+        used to be quietly swallowed, sync reported the plan as a fact)."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             root, env = make_registry(tmp)
@@ -230,8 +230,8 @@ class TestSync(unittest.TestCase):
             self.assertFalse((target / ".claude/skills/code-style").exists())
 
     def test_gitignore_managed_emits_ignore_for_managed_only(self):
-        # gitignore_managed: managed-скиллы попадают в <skills_path>/.gitignore
-        # (держим вне git, воспроизводимы sync); локальный/кастомный — НЕ попадает.
+        # gitignore_managed: managed-skills fall into <skills_path>/.gitignore
+        # (keep out git, reproducible sync); local/custom - does NOT hit.
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             root, env = make_registry(tmp)
@@ -246,24 +246,24 @@ class TestSync(unittest.TestCase):
             gi = target / ".claude/skills/.gitignore"
             self.assertTrue(gi.is_file())
             body = gi.read_text(encoding="utf-8")
-            self.assertIn("/code-style/", body)       # managed → игнорится
-            self.assertNotIn("/my-custom/", body)     # локальный → остаётся в репо
-            self.assertTrue((local / "SKILL.md").is_file())  # локальный не тронут
+            self.assertIn("/code-style/", body)       # managed → is ignored
+            self.assertNotIn("/my-custom/", body)     # local → remains in the repo
+            self.assertTrue((local / "SKILL.md").is_file())  # local is not touched
 
-            # выключение флага убирает НАШ .gitignore (managed снова коммитятся)
+            # turning off the flag removes OUR .gitignore (managed commit again)
             sync_skillset(env, target, {"mode": "vendor", "buckets": ["php"]})
             self.assertFalse(gi.exists())
 
     def test_sync_excludes_ru_source_and_evals(self):
-        # Регрессия: sync (канонический Claude-канал) НЕ копирует SKILL.ru.md (русский
-        # SSOT), evals/, upstream.json, .claude-plugin — иначе утечка RU-источника во
-        # все downstream-проекты. Едет только EN-канон SKILL.md (common.SKILL_IGNORE).
+        # Regression: sync (canonical Claude-channel) DOES NOT copy SKILL.ru.md (Russian
+        # SSOT), evals/, upstream.json, .claude-plugin — otherwise leak RU-source in
+        # all downstream-projects. Only goes EN-canon SKILL.md (common.SKILL_IGNORE).
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             root, env = make_registry(tmp)
             _materialize_registry(env)
             src = next((root / "skills").glob("**/code-style/SKILL.md")).parent
-            (src / "SKILL.ru.md").write_text("# РУССКИЙ ИСТОЧНИК\n", encoding="utf-8")
+            (src / "SKILL.ru.md").write_text("# RUSSIAN SOURCE\n", encoding="utf-8")
             (src / "upstream.json").write_text("{}", encoding="utf-8")
             (src / "evals").mkdir(exist_ok=True)
             (src / "evals" / "evals.json").write_text("[]", encoding="utf-8")
@@ -274,21 +274,21 @@ class TestSync(unittest.TestCase):
             sync_skillset(env, target, {"mode": "vendor", "include": ["code-style"]})
 
             dst = target / ".claude/skills/code-style"
-            self.assertTrue((dst / "SKILL.md").is_file())      # EN-канон едет
-            self.assertFalse((dst / "SKILL.ru.md").exists())   # RU-источник НЕ едет
+            self.assertTrue((dst / "SKILL.md").is_file())      # EN-canon rides
+            self.assertFalse((dst / "SKILL.ru.md").exists())   # RU-source is NOT coming
             self.assertFalse((dst / "evals").exists())
             self.assertFalse((dst / "upstream.json").exists())
             self.assertFalse((dst / ".claude-plugin").exists())
 
     def test_sync_pulls_transitive_requires(self):
-        # skill-granular include тянет зависимость по requires (паритет с vendor);
-        # без этого include скилла с requires молча терял зависимость.
+        # skill-granular include pulls the dependency along requires (parity with vendor);
+        # without it include skill with requires was silently losing his addiction.
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             root, env = make_registry(tmp)
             _materialize_registry(env)
             target = make_laravel_project(tmp)
-            # laravel-conventions requires code-style (см. make_registry)
+            # laravel-conventions requires code-style (see make_registry)
             sync_skillset(env, target,
                           {"mode": "vendor", "include": ["laravel-conventions"]})
             self.assertTrue((target / ".claude/skills/laravel-conventions/SKILL.md").is_file())
@@ -296,7 +296,7 @@ class TestSync(unittest.TestCase):
             self.assertIn("code-style", load_lock(target)["skills"])
 
     def test_sync_exclude_beats_requires(self):
-        # exclude побеждает зависимость: code-style не приедет, даже будучи requires.
+        # exclude defeats dependency: code-style will not come, even if requires.
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             root, env = make_registry(tmp)
@@ -317,8 +317,8 @@ class TestSync(unittest.TestCase):
             sync_skillset(env, target, {"mode": "vendor", "buckets": ["php"]})
             self.assertTrue((target / ".claude/skills/laravel-conventions").is_dir())
 
-            # сузили конфиг: только code-style (laravel-conventions им НЕ требуется →
-            # выбывает и прунится; code-style зависимостей не имеет).
+            # narrowed the config: only code-style (laravel-conventions they do NOT need →
+            # drops out and jumps; code-style has no dependencies).
             sync_skillset(env, target,
                           {"mode": "vendor", "include": ["code-style"]})
             self.assertTrue((target / ".claude/skills/code-style").is_dir())
@@ -331,17 +331,17 @@ class TestSync(unittest.TestCase):
             root, env = make_registry(tmp)
             _materialize_registry(env)
             target = make_laravel_project(tmp)
-            # чужой скилл, поставленный не нами (нет managed)
+            # someone else's skill, not delivered by us (no managed)
             foreign = target / ".claude/skills/ecosystem-mcp"
             foreign.mkdir(parents=True)
             (foreign / "SKILL.md").write_text("---\nname: ecosystem-mcp\n---\n")
 
             sync_skillset(env, target, {"mode": "vendor", "buckets": ["php"]})
-            # наш скилл встал, чужой жив, в lock его нет среди managed
+            # our skill is up, the alien is alive, in lock he is not among managed
             self.assertTrue((target / ".claude/skills/laravel-conventions").is_dir())
             self.assertTrue(foreign.is_dir())
 
-            # повторный sync с сужением — чужой по-прежнему цел
+            # repeated sync with narrowing - the alien is still intact
             sync_skillset(env, target, {"mode": "vendor", "include": []})
             self.assertTrue(foreign.is_dir())
 
@@ -354,7 +354,7 @@ class TestSync(unittest.TestCase):
             sync_skillset(env, target, {"mode": "vendor", "include": ["code-style"]})
             sha1 = load_lock(target)["skills"]["code-style"]["sha256"]
 
-            # меняем содержимое скилла в библиотеке + пересобираем реестр
+            # change the contents of the skill in the library + rebuild the registry
             write_skill(root / "skills" / "php" / "code-style", "code-style",
                         description="PHP code style v2", body="Changed.\n")
             _materialize_registry(env)
@@ -401,7 +401,7 @@ class TestConflicts(unittest.TestCase):
             root, env = make_registry(tmp)
             _materialize_registry(env)
             target = make_laravel_project(tmp)
-            # чужой скилл с тем же именем, что наш в конфиге
+            # someone else's skill with the same name as ours in the config
             foreign = target / ".claude/skills/code-style"
             foreign.mkdir(parents=True)
             (foreign / "SKILL.md").write_text("---\nname: code-style\n---\nMINE\n")
@@ -409,11 +409,11 @@ class TestConflicts(unittest.TestCase):
             plan = plan_sync(env, target, {"mode": "vendor", "include": ["code-style"]})
             self.assertIn("code-style", plan["conflicts"])
             self.assertNotIn("code-style", plan["add"])
-            # содержимое РАЗНОЕ (MINE vs реестр) — не похоже на прерванный sync (V-6)
+            # contents MISCELLANEOUS (MINE vs registry) — doesn't look like it was interrupted sync (V-6)
             self.assertNotIn("code-style", plan["conflicts_likely_ours"])
 
             sync_skillset(env, target, {"mode": "vendor", "include": ["code-style"]})
-            # чужой не тронут, в lock не попал
+            # the stranger is not touched, in lock missed
             self.assertIn("MINE", (foreign / "SKILL.md").read_text(encoding="utf-8"))
             self.assertNotIn("code-style", load_lock(target).get("skills", {}))
 
@@ -438,7 +438,7 @@ class TestConflicts(unittest.TestCase):
             root, env = make_registry(tmp)
             _materialize_registry(env)
             target = make_laravel_project(tmp)
-            # симлинк-«скилл» с конфликтным именем (как .ai/skills mount)
+            # symlink-«skill» with conflicting name (like .ai/skills mount)
             real = target / ".ai/skills/code-style"
             real.mkdir(parents=True)
             (real / "SKILL.md").write_text("---\nname: code-style\n---\nLINKED\n")
@@ -448,13 +448,13 @@ class TestConflicts(unittest.TestCase):
 
             plan = plan_sync(env, target, {"mode": "vendor", "include": ["code-style"]})
             self.assertIn("code-style", plan["conflicts"])
-            # с force — симлинк снят, на его месте реальная копия, target жив
+            # with force — the symlink has been removed, in its place is a real copy, target is alive
             sync_skillset(env, target, {"mode": "vendor", "include": ["code-style"]},
                           force=True)
             dst = link_dir / "code-style"
             self.assertFalse(dst.is_symlink())
             self.assertTrue(dst.is_dir())
-            self.assertTrue((real / "SKILL.md").is_file())  # цель симлинка цела
+            self.assertTrue((real / "SKILL.md").is_file())  # symlink target is intact
 
 
 class TestConfigLoad(unittest.TestCase):
@@ -500,7 +500,7 @@ class TestCoreAndManifest(unittest.TestCase):
             optional, _ = resolve_skillset(env, {"include": ["oss-dev/gh-review"]},
                                             include_core=True)
             self.assertIn("gh-review", {e["name"] for e in optional})
-            # без include_core CORE не добавляется
+            # without include_core CORE is not added
             base, _ = resolve_skillset(env, {"include": ["php/code-style"]})
             self.assertEqual({e["name"] for e in base}, {"code-style"})
 
@@ -527,11 +527,11 @@ class TestCoreAndManifest(unittest.TestCase):
             self.assertTrue(mf.is_file())
             data = json.loads(mf.read_text(encoding="utf-8"))
             self.assertEqual(data["layout"], "flat")
-            self.assertEqual(data["version"], 1)  # версия схемы манифеста
-            # installed_at — ISO с временем (now_iso), не голая дата
+            self.assertEqual(data["version"], 1)  # manifest schema version
+            # installed_at — ISO with time (now_iso), not a naked date
             self.assertIn("T", data["installed_at"])
             self.assertTrue(data["installed_at"].endswith("Z"))
-            # атомарная запись не оставляет .tmp-хвоста
+            # atomic record does not leave .tmp-tail
             self.assertFalse((mf.parent / (MANIFEST + ".tmp")).exists())
             names = {s["flat_name"] for s in data["skills"]}
             self.assertEqual(names, {"laravel-conventions", "code-style"})
@@ -549,8 +549,8 @@ class TestCoreAndManifest(unittest.TestCase):
 
 
 class TestLockHygiene(unittest.TestCase):
-    """Разделение managed (наше) vs чужого в skills-lock.json: sync трогает только
-    своё, чужие/ручные записи переживают синк, ручная чистка lock не оставляет хвостов."""
+    """Division managed (our) vs alien in skills-lock.json: sync touches only
+    own, others/manual entries experience sync, manual cleaning lock leaves no tails."""
 
     def _seed(self, tmp):
         root, env = make_registry(tmp)
@@ -559,12 +559,12 @@ class TestLockHygiene(unittest.TestCase):
         return root, env, target
 
     def test_foreign_lock_entry_survives_sync(self):
-        """Запись, добавленная в lock вручную (не managed — свой скилл / другой хаб),
-        переживает sync: мы синхронизируем ТОЛЬКО managed=true."""
+        """Entry added to lock manually (not managed — your skill / another hub),
+        is worried sync: we synchronize ONLY managed=true."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             root, env, target = self._seed(tmp)
-            # ставим наш набор и дописываем в lock чужую запись руками
+            # put our set and add it to lock someone else's hand recording
             sync_skillset(env, target, {"mode": "vendor", "include": ["code-style"]})
             lock = load_lock(target)
             lock["skills"]["my-own"] = {"source": "local", "managed": False,
@@ -572,7 +572,7 @@ class TestLockHygiene(unittest.TestCase):
             (target / "skills-lock.json").write_text(
                 json.dumps(lock, ensure_ascii=False, indent=2), encoding="utf-8")
 
-            # повторный sync с тем же конфигом — чужая запись на месте, наша managed жива
+            # repeated sync with the same config - someone else's entry is in place, ours managed is alive
             sync_skillset(env, target, {"mode": "vendor", "include": ["code-style"]})
             after = load_lock(target)["skills"]
             self.assertIn("my-own", after)
@@ -581,7 +581,7 @@ class TestLockHygiene(unittest.TestCase):
             self.assertTrue(after["code-style"]["managed"])
 
     def test_foreign_lock_entry_survives_even_when_config_empties(self):
-        """Сужение конфига до пустого удаляет НАШИ managed, но не чужую запись."""
+        """Narrowing the config to empty deletes OURS managed, but not someone else's post."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             root, env, target = self._seed(tmp)
@@ -593,36 +593,36 @@ class TestLockHygiene(unittest.TestCase):
 
             sync_skillset(env, target, {"mode": "vendor", "include": []})
             after = load_lock(target)["skills"]
-            self.assertIn("my-own", after)           # чужое цело
-            self.assertNotIn("code-style", after)    # наше managed выпало (prune)
+            self.assertIn("my-own", after)           # someone else's whole
+            self.assertNotIn("code-style", after)    # our managed dropped (prune)
             self.assertFalse((target / ".claude/skills/code-style").exists())
 
     def test_manual_lock_cleanup_readopts_with_force_no_dup(self):
-        """Ручная чистка managed-записи из lock при живой папке: без --force путь
-        считается чужим (пропуск), с --force скилл чисто пере-усыновляется —
-        в lock одна managed-запись, без хвостов/дублей."""
+        """Manual cleaning managed-records from lock with live folder: without --force path
+        is considered alien (pass), with --force skill is purely re-adopted -
+        in lock one managed-record, without tails/takes."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             root, env, target = self._seed(tmp)
             cfg = {"mode": "vendor", "include": ["code-style"]}
             sync_skillset(env, target, cfg)
-            # пользователь руками вычистил нашу запись (папка осталась)
+            # user manually cleared our post (folder remains)
             lock = load_lock(target)
             del lock["skills"]["code-style"]
             (target / "skills-lock.json").write_text(
                 json.dumps(lock, ensure_ascii=False), encoding="utf-8")
             self.assertTrue((target / ".claude/skills/code-style").is_dir())
 
-            # без force — путь занят «чужим» (lock пуст), конфликт-пропуск. Содержимое
-            # СОВПАДАЕТ с реестром (файлы не тронуты) — как при прерванном sync (V-6),
-            # НО это осознанная ручная чистка → остаётся conflict, не авто-update
-            # (см. plan_sync); сигнал доступен через conflicts_likely_ours для warn'а.
+            # without force — path is busy «strangers» (lock empty), skip conflict. Contents
+            # MATCHES registry (files not touched) — as if interrupted sync (V-6),
+            # BUT this is deliberate manual cleaning → remains conflict, not auto-update
+            # (see plan_sync); signal available via conflicts_likely_ours for warn'a.
             plan = plan_sync(env, target, cfg)
             self.assertIn("code-style", plan["conflicts"])
             self.assertNotIn("code-style", plan["add"])
             self.assertIn("code-style", plan["conflicts_likely_ours"])
 
-            # с force — чистое пере-усыновление: ровно одна managed-запись
+            # with force — pure re-adoption: exactly one managed-entry
             sync_skillset(env, target, cfg, force=True)
             after = load_lock(target)["skills"]
             self.assertEqual(
@@ -631,8 +631,8 @@ class TestLockHygiene(unittest.TestCase):
             self.assertTrue((target / ".claude/skills/code-style/SKILL.md").is_file())
 
     def test_broken_lock_json_fails_closed_without_reconstruction(self):
-        """Повреждённый provenance lock не восстанавливается из манифеста: обычный
-        sync обязан сохранить и lock, и managed bytes до явного восстановления."""
+        """Damaged provenance lock not restored from manifest: normal
+        sync is obliged to keep and lock, and managed bytes before explicit restoration."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             root, env, target = self._seed(tmp)
@@ -640,7 +640,7 @@ class TestLockHygiene(unittest.TestCase):
             sync_skillset(env, target, cfg)
             self.assertTrue((target / ".claude/skills/code-style").is_dir())
 
-            # lock физически битый (не валидный JSON) — манифест при этом цел
+            # lock physically broken (not valid JSON) — the manifest is intact
             (target / "skills-lock.json").write_text("{not valid json", encoding="utf-8")
             plan = plan_sync(env, target, cfg)
             self.assertEqual(plan["provenance_invalid"], "invalid-json")
@@ -654,7 +654,7 @@ class TestLockHygiene(unittest.TestCase):
 
 
 class TestDoSync(unittest.TestCase):
-    """do_sync — vendor-канал «опубликовать в репо», вызываемый integrate/onboard."""
+    """do_sync — vendor-channel «publish to repo», callable integrate/onboard."""
 
     def test_materializes_config_from_profile_and_syncs(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -663,11 +663,11 @@ class TestDoSync(unittest.TestCase):
             _materialize_registry(env)
             target = make_laravel_project(tmp)  # autodetect → laravel-project
             rec = do_sync(env, target, {})
-            # конфиг создан из профиля (laravel-project = php+quality)
+            # config created from profile (laravel-project = php+quality)
             cfg = load_skillset_config(target)
             self.assertEqual(cfg["mode"], "vendor")
             self.assertIn("php", cfg["buckets"])
-            # скиллы физически в .claude/skills, lock managed
+            # skills physically in .claude/skills, lock managed
             self.assertTrue(
                 (target / ".claude/skills/code-style/SKILL.md").is_file())
             self.assertTrue(load_lock(target)["skills"]["code-style"]["managed"])
@@ -679,7 +679,7 @@ class TestDoSync(unittest.TestCase):
             root, env = make_registry(tmp)
             _materialize_registry(env)
             target = make_laravel_project(tmp)
-            # курированный конфиг: только одна позиция — do_sync его НЕ перетирает
+            # curated config: only one position - do_sync does NOT grind it
             _write_config(target, {"mode": "vendor", "include": ["code-style"]})
             do_sync(env, target, {})
             self.assertTrue((target / ".claude/skills/code-style").is_dir())
@@ -698,8 +698,8 @@ class TestDoSync(unittest.TestCase):
 
 
 class TestRegistryIndexWarns(unittest.TestCase):
-    """_registry_index больше не теряет записи молча: warn при пропуске
-    (нет name/path) и при дубле имени между бакетами."""
+    """_registry_index no longer silently loses records: warn when skipping
+    (no name/path) and when the name is duplicated between buckets."""
 
     def _index(self, env, skills):
         (env.root / "skills.json").write_text(
@@ -716,12 +716,12 @@ class TestRegistryIndexWarns(unittest.TestCase):
             by_key, by_name, err = self._index(env, [
                 {"name": "good", "bucket": "php",
                  "path": "skills/php/good/SKILL.md"},
-                {"bucket": "php", "path": "skills/php/ghost/SKILL.md"},  # нет name
-                {"name": "no-path", "bucket": "php"},                   # нет path
+                {"bucket": "php", "path": "skills/php/ghost/SKILL.md"},  # no name
+                {"name": "no-path", "bucket": "php"},                   # no path
             ])
             self.assertIn("good", by_name)
             self.assertNotIn("no-path", by_name)
-            self.assertEqual(err.count("пропущена"), 2)
+            self.assertEqual(err.count("missing"), 2)
 
     def test_duplicate_name_warns_keeps_first(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -733,15 +733,15 @@ class TestRegistryIndexWarns(unittest.TestCase):
                 {"name": "dup", "bucket": "devops",
                  "path": "skills/devops/dup/SKILL.md"},
             ])
-            # по полному пути доступны оба, по короткому имени — первый (php)
+            # both are available by the full path, the first by the short name (php)
             self.assertIn("php/dup", by_key)
             self.assertIn("devops/dup", by_key)
             self.assertEqual(by_name["dup"]["bucket"], "php")
-            self.assertIn("дубль имени", err)
+            self.assertIn("double name", err)
 
 
 class TestInit(unittest.TestCase):
-    """materialize_skillset_config — единая материализация конфига для init/do_sync."""
+    """materialize_skillset_config — unified config materialization for init/do_sync."""
 
     def _materialize(self, env, target, **kw):
         with contextlib.redirect_stdout(io.StringIO()):
@@ -759,7 +759,7 @@ class TestInit(unittest.TestCase):
             self.assertEqual(cfg["mode"], "vendor")
             self.assertEqual(cfg["version"], 1)
             self.assertEqual(set(cfg["buckets"]), {"php", "quality"})
-            # файл реально записан и валиден как .swissknifeman/config.json
+            # the file is actually written and valid as .swissknifeman/config.json
             self.assertTrue(skillset_config_path(target).is_file())
             self.assertEqual(load_skillset_config(target)["mode"], "vendor")
 
@@ -771,7 +771,7 @@ class TestInit(unittest.TestCase):
             target = make_laravel_project(tmp)
             _write_config(target, {"mode": "vendor", "buckets": ["devops"]})
             cfg, _profile, created = self._materialize(env, target)
-            self.assertFalse(created)               # курированный не перетёрт
+            self.assertFalse(created)               # curated not rubbed
             self.assertEqual(cfg["buckets"], ["devops"])
 
     def test_materialize_force_overwrites_from_profile(self):
@@ -794,7 +794,7 @@ class TestInit(unittest.TestCase):
             self._materialize(env, target, dry=True, force=True)
             self.assertFalse(skillset_config_path(target).is_file())
 
-    # --- cmd_init: верхний слой (resolve_target + idempotency + guard) --------
+    # --- cmd_init: top layer (resolve_target + idempotency + guard) --------
     def test_cmd_init_idempotent_keeps_existing(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
@@ -805,8 +805,8 @@ class TestInit(unittest.TestCase):
             before = skillset_config_path(target).read_text(encoding="utf-8")
             with contextlib.redirect_stdout(io.StringIO()) as buf:
                 cmd_init(env, ["--target", str(target)])
-            self.assertIn("уже есть", buf.getvalue())
-            self.assertEqual(  # курированный конфиг не перетёрт
+            self.assertIn("already exists", buf.getvalue())
+            self.assertEqual(  # curated config is not erased
                 skillset_config_path(target).read_text(encoding="utf-8"), before)
 
     def test_cmd_init_force_overwrites_from_profile(self):
@@ -832,20 +832,20 @@ class TestInit(unittest.TestCase):
             self.assertFalse(skillset_config_path(target).is_file())
 
     def test_cmd_init_refuses_registry_root(self):
-        # guard resolve_target: init внутри самого реестра отвергается (как sync)
+        # guard resolve_target: init is rejected within the registry itself (like sync)
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             root, env0 = make_registry(tmp)
             _materialize_registry(env0)
-            env = Env(root, "init", home=env0.home)  # cmd=init для guard'а
+            env = Env(root, "init", home=env0.home)  # cmd=init for guard'a
             with self.assertRaises(SystemExit):
                 with contextlib.redirect_stdout(io.StringIO()):
                     cmd_init(env, ["--target", str(root)])
-            self.assertFalse(skillset_config_path(root).is_file())  # реестр чист
+            self.assertFalse(skillset_config_path(root).is_file())  # registry is clean
 
 
 class TestContentDrift(unittest.TestCase):
-    """content_sha256: sync ловит дрейф в snippets/references при неизменном SKILL.md."""
+    """content_sha256: sync catches drift in snippets/references with unchanged SKILL.md."""
 
     def test_snippet_only_change_triggers_update(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -857,13 +857,13 @@ class TestContentDrift(unittest.TestCase):
             sync_skillset(env, target, cfg)
             self.assertTrue(
                 load_lock(target)["skills"]["code-style"]["content_sha256"])
-            # правим ТОЛЬКО сниппет в источнике (SKILL.md не трогаем) + реестр
+            # edit ONLY the snippet in the source (SKILL.md do not touch) + registry
             snip = root / "skills" / "php" / "code-style" / "snippets"
             snip.mkdir(parents=True, exist_ok=True)
             (snip / "ex.md").write_text("v1", encoding="utf-8")
             _materialize_registry(env)
             plan = plan_sync(env, target, cfg)
-            self.assertIn("code-style", plan["update"])  # content drift пойман
+            self.assertIn("code-style", plan["update"])  # content drift caught
 
     def test_legacy_lock_without_content_hash_no_false_update(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -873,14 +873,14 @@ class TestContentDrift(unittest.TestCase):
             target = make_laravel_project(tmp)
             cfg = {"mode": "vendor", "include": ["code-style"]}
             sync_skillset(env, target, cfg)
-            # эмулируем СТАРЫЙ lock (без content_sha256)
+            # emulate OLD lock (without content_sha256)
             lock = load_lock(target)
             lock["skills"]["code-style"].pop("content_sha256", None)
             write_lock(target, lock)
             plan = plan_sync(env, target, cfg)
-            self.assertEqual(plan["update"], [])        # SKILL.md тот же → не update
+            self.assertEqual(plan["update"], [])        # SKILL.md same → not update
             self.assertIn("code-style", plan["keep"])
-            # очередной sync до-populates content_sha256 БЕЗ перекопирования
+            # next sync to-populates content_sha256 WITHOUT recopying
             sync_skillset(env, target, cfg)
             self.assertTrue(
                 load_lock(target)["skills"]["code-style"]["content_sha256"])

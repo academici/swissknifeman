@@ -36,7 +36,7 @@ BRD = WHAT the system does, not HOW. Audience: developers, in-repo AI agents, te
    - Edge cases (agent adds these)
 4. Non-functional requirements
 5. Integrations
-6. Open questions (link to [[Открытые вопросы]])
+6. Open questions (link to [[Open questions]])
 ```
 
 ## Agent adds itself

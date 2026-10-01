@@ -1,5 +1,5 @@
-// router-guards.ts — типовые навигационные гварды Vue Router 4
-// Возврат-API вместо устаревшего next(): return undefined | false | string | RouteLocationRaw | Error.
+// router-guards.ts — standard navigation guards Vue Router 4
+// Return-API instead of the deprecated one next(): return undefined | false | string | RouteLocationRaw | Error.
 import type {
   NavigationGuardWithThis,
   RouteLocationNormalized,
@@ -8,80 +8,80 @@ import type {
 import { createRouter, createWebHistory, isNavigationFailure, NavigationFailureType } from 'vue-router'
 
 // ---------------------------------------------------------------------------
-// 1. Возврат-API: что возвращает гвард (заменяет третий аргумент next)
+// 1. Return-API: what guard returns (replaces the third argument next)
 // ---------------------------------------------------------------------------
-// return undefined / true        → пропустить навигацию
-// return false                   → отменить, остаться на текущем маршруте
-// return '/login'                → редирект по path
-// return { name: 'login', ... }  → редирект объектом маршрута (типобезопасно)
-// return new Error('reason')     → отменить + триггернуть router.onError()
+// return undefined / true        → skip navigation
+// return false                   → cancel, stay on current route
+// return '/login'                → redirect by path
+// return { name: 'login', ... }  → redirect by route object (type safe)
+// return new Error('reason')     → cancel + trigger router.onError()
 
 // ---------------------------------------------------------------------------
-// 2. Миграция next() → return (показано рядом)
+// 2. Migration next() → return (shown next)
 // ---------------------------------------------------------------------------
 
-// БЫЛО (Vue Router 3 / deprecated в 4): третий аргумент next, легко забыть/вызвать дважды
+// WAS (Vue Router 3 / deprecated at 4): third argument next, easy to forget/call twice
 // router.beforeEach((to, from, next) => {
 //   if (!isAuthed()) {
-//     next('/login')        // забыл return — next() ниже вызовется повторно
+//     next('/login')        // forgot return — next() below will be called again
 //   }
-//   next()                  // BUG: висящая или двойная навигация
+//   next()                  // BUG: dangling or double navigation
 // })
 
-// СТАЛО (Vue Router 4): чистый возврат, две сигнатуры (to, from), без next
+// NOW (Vue Router 4): clean return, two signatures (to, from), without next
 const requireAuth: NavigationGuardWithThis<undefined> = (to) => {
   if (!isAuthed()) {
-    // сохраняем целевой путь, чтобы вернуть после логина
+    // save the target path to return after login
     return { name: 'login', query: { redirect: to.fullPath } }
   }
-  // ничего не возвращаем → навигация продолжается
+  // do not return anything → navigation continues
 }
 
 // ---------------------------------------------------------------------------
-// 3. Async-гвард: await вместо next() в колбэке
+// 3. Async-guard: await instead next() in the callback
 // ---------------------------------------------------------------------------
-// БЫЛО: next() внутри .then/.catch — порядок гонок, next() мог вызваться дважды
-// СТАЛО: гвард async, просто await + return
+// WAS: next() inside .then/.catch — order of races, next() could be called twice
+// NOW: guard async, just await + return
 const ensureUserLoaded: NavigationGuardWithThis<undefined> = async (to) => {
   try {
-    await loadCurrentUser() // идемпотентно: повторный вызов не дёргает сеть
+    await loadCurrentUser() // idempotent: repeated calls do not affect the network
   } catch (err) {
     const status = (err as { status?: number }).status
     if (status === 401) return { name: 'login', query: { redirect: to.fullPath } }
     if (status === 403) return { name: 'forbidden' }
-    return new Error('Не удалось проверить доступ') // → router.onError()
+    return new Error('Access check failed') // → router.onError()
   }
-  // успех → return undefined → продолжаем
+  // success → return undefined → continue
 }
 
 // ---------------------------------------------------------------------------
-// 4. Защита от бесконечного редиректа: пропускаем целевой маршрут
+// 4. Protection against endless redirect: skip the target route
 // ---------------------------------------------------------------------------
 const guardWithLoopBreak: NavigationGuardWithThis<undefined> = (to): RouteLocationRaw | void => {
-  // КРИТИЧНО: не редиректим на login, если уже идём на login (иначе цикл)
+  // CRITICAL: do not redirect to login, if we are already going to login (otherwise loop)
   if (to.name === 'login' || to.name === 'forbidden') return
   if (!isAuthed()) return { name: 'login', query: { redirect: to.fullPath } }
   if (to.meta.roles && !hasAnyRole(to.meta.roles as string[])) return { name: 'forbidden' }
 }
 
 // ---------------------------------------------------------------------------
-// 5. beforeEnter — per-route гвард (массив гвардов допустим)
+// 5. beforeEnter — per-route guard (array of guards is valid)
 // ---------------------------------------------------------------------------
 const onlyAdmin = (to: RouteLocationNormalized): RouteLocationRaw | boolean => {
   return hasAnyRole(['admin']) ? true : { name: 'forbidden' }
 }
 
 // ---------------------------------------------------------------------------
-// 6. beforeRouteLeave-логика: подтверждение ухода при несохранённых данных
-//    (в SFC ставится через onBeforeRouteLeave из 'vue-router', тут — суть)
+// 6. beforeRouteLeave-logic: confirm leaving if data is not saved
+//    (in SFC is placed via onBeforeRouteLeave from 'vue-router', here is the essence)
 // ---------------------------------------------------------------------------
 const confirmLeave = (hasUnsavedChanges: boolean): boolean => {
   if (!hasUnsavedChanges) return true
-  return window.confirm('Есть несохранённые изменения. Уйти?') // false → отмена
+  return window.confirm('There are unsaved changes. Leave?') // false → cancel
 }
 
 // ---------------------------------------------------------------------------
-// 7. Сборка роутера: глобальные гварды + onError + scrollBehavior
+// 7. Router assembly: global guards + onError + scrollBehavior
 // ---------------------------------------------------------------------------
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -92,11 +92,11 @@ export const router = createRouter({
       path: '/admin',
       name: 'admin',
       component: () => import('@/views/AdminView.vue'),
-      beforeEnter: onlyAdmin, // per-route гвард
+      beforeEnter: onlyAdmin, // per-route guard
       meta: { requiresAuth: true, roles: ['admin'] },
     },
   ],
-  // восстановление позиции скролла: savedPosition (Назад/Вперёд) → якорь → верх
+  // restore scroll position: savedPosition (Back/Forward) → anchor → top
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) return savedPosition
     if (to.hash) return { el: to.hash, behavior: 'smooth' }
@@ -104,25 +104,25 @@ export const router = createRouter({
   },
 })
 
-// порядок глобальных гвардов важен: проверка цикла/авторизации до загрузки данных
+// order of global guards is important: loop check/authorization before loading data
 router.beforeEach(guardWithLoopBreak)
 router.beforeEach(ensureUserLoaded)
 
-// обработка отменённых/прерванных навигаций — не путать с реальными ошибками
+// processing canceled/broken navigations - not to be confused with real errors
 router.afterEach((to, from, failure) => {
   if (isNavigationFailure(failure, NavigationFailureType.aborted)) {
-    // навигация отменена гвардом (return false) — это норма, не ошибка
+    // navigation canceled by guard (return false) — this is normal, not an error
     return
   }
-  if (failure) console.warn('Навигация не завершилась:', failure)
+  if (failure) console.warn('Navigation failed:', failure)
 })
 
-// ошибки из гвардов (return new Error(...)) и сбой загрузки lazy-чанка
+// errors from guards (return new Error(...)) and loading failed lazy-chunk
 router.onError((error) => {
-  console.error('Ошибка роутера:', error)
+  console.error('Router error:', error)
 })
 
-// заглушки доменной логики (в реальном коде — из store/composable)
+// domain logic stubs (in real code - from store/composable)
 declare function isAuthed(): boolean
 declare function hasAnyRole(roles: string[]): boolean
 declare function loadCurrentUser(): Promise<void>

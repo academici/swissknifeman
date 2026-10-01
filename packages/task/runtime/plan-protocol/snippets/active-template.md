@@ -1,7 +1,7 @@
-# Шаблон ACTIVE.md — указатель активного плана plans/ACTIVE.md
+# Template ACTIVE.md - active plan index plans/ACTIVE.md
 
-Канон — РОВНО 4 строки (парсится plan-lint). Ведут команды plan-design (new/from-draft)
-и plan-close; нет активного плана — значение `—`.
+Canon: exactly four lines parsed by `plan-lint`. `plan-design` (new/from-draft) and
+`plan-close` maintain it; use `—` when there is no active plan.
 
 ```markdown
 # ACTIVE

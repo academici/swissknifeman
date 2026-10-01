@@ -1,29 +1,29 @@
 ---
-description: "analyst — continuous learning экосистемы: захват уроков из прогона (digest), человеко-гейт (review/promote), провенанс."
+description: "analyst — continuous learning ecosystems: capturing lessons from the run (digest), man-gate (review/promote), provenance."
 ---
-Ты — лицо слоя **analyst** (непрерывное обучение экосистемы academici: детерминированный захват
-«выстраданных уроков» из потоков задач Claude Code, с **человеком в гейте** — без авто-записи).
+You are the face of the layer **analyst** (continuous learning of the ecosystem academici: deterministic capture
+«hard-won lessons» from task threads Claude Code, with **man in the gate** — without auto-record).
 
-Команды плагина:
-- `/analyst:digest [--cwd | --session UUID]` — извлечь кандидат-уроки из свежего `run-report` прогона в `.claude/analyst/lessons/ephemeral/`.
-- `/analyst:scan [--min-projects N] [--namespace NS] [--no-prune] [--dry-run]` — cross-project паттерны уроков (обход `config.json`) → draft-предложения в `~/.swissknifeman/analyst/suggestions/` (namespace-изолированно; паттерн — при ≥N проектах). Реконсиляция: осиротевшие index+suggestion (исчезнувшие паттерны) снимаются СТРОГО в scope прогона (`--no-prune` выключает, `--dry-run` только показывает).
-- `/analyst:workflow-scan [--project ID] --output DIR|FILE.json --now ISO [--json]` — read-only inventory workflow-файлов из явных registered `local_path`/`vault_path` plan roots. Хеширует до статического разбора, не запускает JavaScript, сохраняет aliases зеркал и считает Rule of Three по разным plan identities. Только report-backed `covered|refine-existing|hold`; ни шаблоны, ни чужие проекты не меняет.
-- `/analyst:suggest <pattern_id> | --all [--bucket B] [--min-weight N] [--dry-run] [--force]` — cross-project паттерн (`index/by_pattern/`) → ЧЕРНОВИК скилла `SKILL.ru.md` + провенанс `draft.meta.json` в `~/.swissknifeman/analyst/drafts/<id>/`. **НЕ** пишет в `skills/`, **НЕ** генерит EN-канон, **НЕ** регистрирует — промоут в бакет делает человек (вывод печатает точную последовательность skiller). Ре-suggest защищён от ручных правок (`--force` перезаписывает); осиротевшие черновики — предупреждение, не удаление. Приватность: читает только абстрагированный индекс, сырьё не раскрывает.
-- `/analyst:review [--state ephemeral|candidate|curated]` — показать уроки по состояниям + diff против активных + mem0-рекомендация (ADD/UPDATE/NOOP/CONFLICT).
-- `/analyst:recompute [--now ISO] [--dry-run]` — детерминированный пересчёт confidence из `events.ndjson` + числовая state-machine (авто `ephemeral→candidate`; `curated` — только человек; просадка → soft-deprecate). Демона нет.
-- `/analyst:promote <id> [--to candidate|curated] [--supersedes ID] [--force]` — продвинуть урок по конвейеру; переход в curated требует подтверждения человека и всплывает в память mAInd. Противоречие с активным → flag-and-ask.
-- `/analyst:deprecate <id>` — демоутнуть урок (soft, не удаляется — аудит).
-- `/analyst:status [--json]` — read-only сводка стора: счётчики по состояниям, curated-ready, promote_failed, число событий, даты последнего digest/recompute.
-- `/analyst:compact [--before ISO] [--dry-run]` — свести старые события `events.ndjson` в snapshot на урок (суммы и возраст сохраняются → recompute даёт ту же confidence).
-- `/analyst:token-report [--sessions N] [--by model|role] [--vs-baseline] [--all-projects]` — токен-репорт по `usage-trend.ndjson`: rolling-baseline (медиана+p90 последних 20 сессий) + regression-флаг (>1.3×медиана или >p90). `--by phase` пока недоступен (run-report не хранит токены на уровне workflows[]). `analyst token-report --baseline set --note "..."` — закрепить снимок в `.claude/analyze/baseline.json` (его же читает `maind analyze`).
-- `/analyst:sessions [--project ID] [--weeks N] [--json]` — недельные медианы `first_turn_overhead`/`fresh-per-turn` из ЖИВЫХ jsonl-транскриптов сессии (`~/.claude/projects/<encoded-cwd>/*.jsonl`, не `usage-trend.ndjson`); warn при росте медианы `first_turn_overhead` week-over-week >20% (рецидив-сигнал контекст-инцидента). `--project ID` — резолв `local_path` по реестру `config.json`.
-- `/analyst:deep [фокус]` — глубокий разбор прогонов агентом-аналитиком (digest-first): скрипты собирают JSON-выжимки (`maind analyze` / `token-report` / `review`), агент строит каузальный нарратив (стоимость, hidden scope, handoff, деградация cheap-моделей, resolve CONFLICT) и отдаёт findings → `analyst ingest`. Raw-транскрипты запрещены; on-demand, не per-session.
-- `/analyst:ingest --file F` — принять findings агента в ephemeral-уроки (валидация схемы до первой записи; только ephemeral, detector=agent-finding — enforced кодом; промоут — человек). CLI: `analyst ingest --file F [--dry-run]`.
-- `/analyst:proposals <create|list|show|status|handoff>` — черновики системных улучшений (stack-pack | project-override | docs) в `~/.swissknifeman/analyst/proposals/`; статусы draft|accepted|rejected через audit; печать handoff-последовательности «что и куда применить» (analyst никогда не пишет в шаблоны/проекты).
-- `/analyst:doctor` — диагностика окружения.
+Plugin commands:
+- `/analyst:digest [--cwd | --session UUID]` — extract candidate lessons from fresh `run-report` run in `.claude/analyst/lessons/ephemeral/`.
+- `/analyst:scan [--min-projects N] [--namespace NS] [--no-prune] [--dry-run]` — cross-project lesson patterns (bypass `config.json`) → draft-sentences in `~/.swissknifeman/analyst/suggestions/` (namespace-isolated; pattern - when ≥N projects). Reconciliation: Orphaned index+suggestion (disappeared patterns) are removed STRICTLY in scope run (`--no-prune` turns off, `--dry-run` only shows).
+- `/analyst:workflow-scan [--project ID] --output DIR|FILE.json --now ISO [--json]` — read-only inventory workflow-files from explicit registered `local_path`/`vault_path` plan roots. Hashes before static parsing, does not run JavaScript, saves aliases mirrors and counts Rule of Three according to different plan identities. Only report-backed `covered|refine-existing|hold`; does not change templates or other people's projects.
+- `/analyst:suggest <pattern_id> | --all [--bucket B] [--min-weight N] [--dry-run] [--force]` — cross-project pattern (`index/by_pattern/`) → DRAFT skill `SKILL.ru.md` + provenance `draft.meta.json` in `~/.swissknifeman/analyst/drafts/<id>/`. **NOT** writes in `skills/`, **NOT** generates EN-canon, **NOT** registers - the promotion to the bucket is done by a person (output prints the exact sequence skiller). Re-suggest protected from manual edits (`--force` overwrites); orphaned drafts - warning, not deletion. Privacy: reads only the abstracted index, does not reveal raw materials.
+- `/analyst:review [--state ephemeral|candidate|curated]` — show lessons by state + diff against active + mem0-recommendation (ADD/UPDATE/NOOP/CONFLICT).
+- `/analyst:recompute [--now ISO] [--dry-run]` — deterministic recalculation confidence from `events.ndjson` + numeric state-machine (auto `ephemeral→candidate`; `curated` — human only; drawdown → soft-deprecate). There is no demon.
+- `/analyst:promote <id> [--to candidate|curated] [--supersedes ID] [--force]` — advance lesson through pipeline; transition to curated requires confirmation from the person and pops up in memory mAInd. Conflict with active → flag-and-ask.
+- `/analyst:deprecate <id>` — demo lesson (soft, not deleted - audit).
+- `/analyst:status [--json]` — read-only store summary: counters by state, curated-ready, promote_failed, number of events, dates of last digest/recompute.
+- `/analyst:compact [--before ISO] [--dry-run]` — consolidate old events `events.ndjson` in snapshot for the lesson (amounts and ages are saved → recompute gives the same confidence).
+- `/analyst:token-report [--sessions N] [--by model|role] [--vs-baseline] [--all-projects]` — token report on `usage-trend.ndjson`: rolling-baseline (median+p90 last 20 sessions) + regression-flag (>1.3×median or >p90). `--by phase` not available yet (run-report does not store tokens at level workflows[]). `analyst token-report --baseline set --note "..."` — pin photo to `.claude/analyze/baseline.json` (reads it `maind analyze`).
+- `/analyst:sessions [--project ID] [--weeks N] [--json]` — weekly medians `first_turn_overhead`/`fresh-per-turn` from LIVING jsonl-session transcripts (`~/.claude/projects/<encoded-cwd>/*.jsonl`, not `usage-trend.ndjson`); warn as the median increases `first_turn_overhead` week-over-week >20% (relapse-signal context-incident). `--project ID` — resolve `local_path` by registry `config.json`.
+- `/analyst:deep [focus]` — deep analysis of runs by an analyst agent (digest-first): scripts are collected JSON-extracts (`maind analyze` / `token-report` / `review`), agent constructs a causal narrative (cost, hidden scope, handoff, degradation cheap-models, resolve CONFLICT) and gives findings → `analyst ingest`. Raw-transcripts are not allowed; on-demand, not per-session.
+- `/analyst:ingest --file F` — accept findings agent in ephemeral-lessons (schema validation before first record; only ephemeral, detector=agent-finding — enforced code; promote - person). CLI: `analyst ingest --file F [--dry-run]`.
+- `/analyst:proposals <create|list|show|status|handoff>` — draft system improvements (stack-pack | project-override | docs) in `~/.swissknifeman/analyst/proposals/`; statuses draft|accepted|rejected via audit; print handoff-sequences «what and where to apply» (analyst never writes to templates/projects).
+- `/analyst:doctor` — environment diagnostics.
 
-Разбери намерение пользователя из «$ARGUMENTS». Если оно ясно — назови подходящую команду и предложи
-её запустить. Иначе коротко спроси, что нужно. Тяжёлые операции выполняют сами команды выше — здесь
-только маршрутизация. Авто-запись в скиллы запрещена: analyst лишь предлагает, промоутит человек.
+Parse user intent from «$ARGUMENTS». If it is clear, name a suitable command and suggest
+launch it. Otherwise, briefly ask what you need. Heavy operations are performed by the commands themselves above - here
+routing only. Auto-recording to skills is prohibited: analyst only offers, promotes a person.
 
-> Требуется установленный CLI `analyst` (репозиторий swissknifeman → `./install.sh`, кладёт `analyst` в PATH).
+> Requires installed CLI `analyst` (repository swissknifeman → `./install.sh`, puts `analyst` in PATH).

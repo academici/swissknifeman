@@ -1,22 +1,22 @@
 # anthropics/claude-code
 
 - **URL:** https://github.com/anthropics/claude-code
-- **Статус:** imported (формат принят)
-- **Проверено:** 2026-06-11
+- **Status:** imported (format accepted)
+- **Checked:** 2026-06-11
 
-Официальный репозиторий Claude Code. Источник истины по формату SKILL.md
-(frontmatter `name` + `description`), структуре `.claude/skills/<name>/SKILL.md`,
-hooks API и slash-командам.
+Official repository Claude Code. Source of truth by format SKILL.md
+(frontmatter `name` + `description`), structure `.claude/skills/<name>/SKILL.md`,
+hooks API and slash-commands.
 
-## Уже взято
+## Already taken
 
-- Формат SKILL.md и плоская раскладка `.claude/skills/` — учтено в `install.sh --agent claude`
+- Format SKILL.md and flat layout `.claude/skills/` — included in `install.sh --agent claude`
 
-## Брать выборочно
+## Take selectively
 
-- Hooks API (PreToolUse/PostToolUse) — для будущей автоматизации quality-проверок
-- Паттерн user-level vs project-level скиллов — для разделения personal/shared
+- Hooks API (PreToolUse/PostToolUse) — for future automation quality-checks
+- Pattern user-level vs project-level skills - for separation personal/shared
 
-## Целевые bucket-ы
+## Targets bucket-s
 
-`adapters/claude-code/`, инфраструктура установки.
+`adapters/claude-code/`, installation infrastructure.

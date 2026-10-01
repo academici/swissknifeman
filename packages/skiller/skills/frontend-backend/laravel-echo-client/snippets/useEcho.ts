@@ -1,24 +1,24 @@
 // Source: anonymized production project
 //
-// Vue 3 composable: подписка на private-канал Laravel Echo с детерминированной
-// отпиской в onUnmounted. Внизу — вариант для presence-канала и ref-count-обёртка
-// для каналов, которые слушают несколько компонентов сразу.
+// Vue 3 composable: subscription to private-channel Laravel Echo with deterministic
+// unsubscribe to onUnmounted. Below is an option for presence-channel and ref-count-wrapper
+// for channels that listen to multiple components at once.
 //
-// Backend объявляет broadcastAs(), напр. 'order.updated' -> на фронте слушаем
-// '.order.updated' (с ведущей точкой). Имена каналов/событий — нейтральные.
+// Backend announces broadcastAs(), e.g. 'order.updated' -> at the front listening
+// '.order.updated' (with leading dot). Channel names/events are neutral.
 
 import { onUnmounted, ref, type Ref } from "vue";
 
 type OrderUpdatedPayload = { order_id: number };
 
 /**
- * Подписка на private-канал заказа. Возвращает реактивные данные realtime.
- * Если Echo выключен (guest / disabled) — деградирует в no-op, не падает.
+ * Subscribe to private-order channel. Returns reactive data realtime.
+ * If Echo disabled (guest / disabled) — degrades into no-op, does not crash.
  */
 export function useOrderRealtime(orderId: number): { lastUpdatedAt: Ref<number | null> } {
   const lastUpdatedAt = ref<number | null>(null);
 
-  // Гард: Echo может быть не инициализирован (guest, broadcasting disabled).
+  // Guard: Echo may not be initialized (guest, broadcasting disabled).
   if (!window.echo || !orderId) {
     return { lastUpdatedAt };
   }
@@ -26,14 +26,14 @@ export function useOrderRealtime(orderId: number): { lastUpdatedAt: Ref<number |
   const channelName = `order.${orderId}`;
   const channel = window.echo.private(channelName);
 
-  // Именованный handler — иначе его нельзя точечно снять через stopListening.
+  // Named handler — otherwise it cannot be removed pointwise through stopListening.
   const onUpdated = (payload: OrderUpdatedPayload): void => {
     if (payload.order_id === orderId) {
       lastUpdatedAt.value = Date.now();
     }
   };
 
-  // broadcastAs-имя слушаем с ведущей точкой.
+  // broadcastAs-name we listen with a leading dot.
   channel.listen(".order.updated", onUpdated);
 
   onUnmounted(() => {
@@ -44,7 +44,7 @@ export function useOrderRealtime(orderId: number): { lastUpdatedAt: Ref<number |
   return { lastUpdatedAt };
 }
 
-// --- Presence-канал: те же правила + список участников ---------------------
+// --- Presence-channel: same rules + list of participants ---------------------
 
 type PresenceUser = { id: number; name: string };
 
@@ -76,11 +76,11 @@ export function usePresenceRoom(roomId: number): { members: Ref<PresenceUser[]> 
   return { members };
 }
 
-// --- Ref-count для разделяемого канала -------------------------------------
+// --- Ref-count for shared channel -------------------------------------
 //
-// Если один канал слушают несколько компонентов одновременно, реальный leave()
-// делаем только когда последний подписчик ушёл — иначе размонтирование одного
-// компонента оборвёт realtime у остальных. acquire() возвращает dispose.
+// If several components listen to one channel at the same time, the real leave()
+// do only when the last subscriber has left - otherwise unmounting one
+// component will break realtime for the rest. acquire() returns dispose.
 
 const sharedRefs = new Map<string, number>();
 const sharedCleanups = new Map<string, () => void>();

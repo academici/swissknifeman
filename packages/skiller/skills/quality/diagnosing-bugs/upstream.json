@@ -18,7 +18,7 @@
       "fetched_at": "2026-06-26"
     }
   ],
-  "notes": "Из mattpocock/skills engineering/diagnosing-bugs. Тело сохранено (англ., faithful-first); добавлен RU description-роутер, ссылка scripts/ -> snippets/, /improve-codebase-architecture -> architect/codebase-design, embedded-HITL пункт (POS/libfptr10), секция «Связанные скиллы». strategy=notify — апстрим репортится, локальная копия не перетирается. 2026-09-14: Local adaptation (not a faithful upstream mirror). Reauthored a bounded diagnostic method; permit static proof and available verification without a live reproducer, scope hypotheses and instrumentation by evidence, preserve retry/isolation limits. HITL script is unchanged. Original upstream hashes remain historical fetched-source provenance.",
+  "notes": "From mattpocock/skills engineering/diagnosing-bugs. Body saved (English, faithful-first); added RU description-router, link scripts/ -> snippets/, /improve-codebase-architecture -> architect/codebase-design, embedded-HITL item (POS/libfptr10), section «Related skills». strategy=notify — upstream is reported, the local copy is not erased. 2026-09-14: Local adaptation (not a faithful upstream mirror). Reauthored a bounded diagnostic method; permit static proof and available verification without a live reproducer, scope hypotheses and instrumentation by evidence, preserve retry/isolation limits. HITL script is unchanged. Original upstream hashes remain historical fetched-source provenance.",
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",

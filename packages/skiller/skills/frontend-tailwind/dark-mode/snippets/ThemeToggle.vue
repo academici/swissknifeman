@@ -1,10 +1,10 @@
 <!-- Source: anonymized production project -->
 <!--
-  Мини-переключатель темы: три состояния light | dark | system.
-  Всё состояние и сохранение — в useDarkMode; компонент остаётся тонким.
-  Подсветка активной кнопки идёт через appearance (выбор), не resolvedAppearance:
-  пользователь должен видеть, что выбран именно 'system', а не во что он разрешился.
-  Цвета — через семантические токены/dark:* (см. frontend/tailwind-conventions).
+  Mini theme switch: three states light | dark | system.
+  All state and saving are in The useDarkMode; component remains thin.
+  The active button is illuminated via appearance (selection), not resolvedAppearance:
+  the user should see that exactly 'system', and not what it resolved into.
+  Colors - via semantic tokens/dark:* (see frontend/tailwind-conventions).
 -->
 <script setup lang="ts">
 import { useDarkMode, type Appearance } from '@/composables/useDarkMode';
@@ -12,9 +12,9 @@ import { useDarkMode, type Appearance } from '@/composables/useDarkMode';
 const { appearance, updateAppearance } = useDarkMode();
 
 const options: { value: Appearance; label: string }[] = [
-    { value: 'light', label: 'Светлая' },
-    { value: 'dark', label: 'Тёмная' },
-    { value: 'system', label: 'Системная' },
+    { value: 'light', label: 'Light' },
+    { value: 'dark', label: 'Dark' },
+    { value: 'system', label: 'System' },
 ];
 </script>
 

@@ -26,8 +26,8 @@ pattern.
 
 ### When to activate
 
-- You hit `Заблокировано: опасная операция (deny_hard). Выполните вручную при
-  необходимости. rm в доверенных папках можно разрешить: harness safe-dirs` —
+- You hit `Blocked: dangerous operation (deny_hard). Execute manually when
+  necessary. rm in trusted folders you can allow: harness safe-dirs` —
   BEFORE retrying the same command.
 - Before writing ANY `rm`/`rmdir` command inside a trusted tree (`~/projects`,
   `~/Vaults`, registered projects — see `safe-dirs.json`).

@@ -1,29 +1,29 @@
-# Claude: аудит всего реестра
+# Claude: audit of the entire registry
 
-Ты аудитор реестра swissknifeman. Прогони реестр целиком и найди системные проблемы,
-которые не ловит `scripts/validate.sh` (структуру он уже проверяет).
+You are a registry auditor swissknifeman. Run the entire registry and find system problems,
+which does not catch `scripts/validate.sh` (it already checks the structure).
 
-## Что искать
+## What to look for
 
-### Пересечения и дубли
-- Скиллы с пересекающимся назначением (кандидаты на слияние) — сверь по `description` и телам.
-- Бакеты с размытой границей (один скилл логично сидит в двух).
+### Intersections and duplicates
+- Skills with intersecting purposes (merge candidates) — check by `description` and bodies.
+- Buckets with blurred border (one skill logically sits in two).
 
-### Бюджет (раздувание)
-- Прогони `skiller budget --write-map` и открой `docs/guide/budget.md`.
-- Топ ⊕ always — описания, дорогие как постоянный налог: можно ли их ужать без потери смысла?
-- Скиллы-гиганты по ↻ on-trigger: не пора ли вынести часть в `snippets/`?
+### Budget (bloat)
+- Drive away `skiller budget --write-map` and open `docs/guide/budget.md`.
+- Top ⊕ always — descriptions as expensive as a permanent tax: is it possible to compress them without losing their meaning?
+- Giant skills ↻ on-trigger: isn't it time to take the part out? `snippets/`?
 
-### Связность графа
-- Изолированные скиллы: правда самодостаточны или забыли `requires`/`produces_for`?
-- Транзитивные цепочки `requires`: нет ли неожиданно тяжёлых подтягиваний.
+### Graph connectivity
+- Isolated skills: really self-sufficient or forgotten `requires`/`produces_for`?
+- Transitive chains `requires`: are there any unexpectedly heavy pull-ups.
 
-### Актуальность
-- Устаревшие факты/версии в телах (для внешней проверки — `perplexity-tech-radar.md`).
-- Захардкоженные имена моделей и конкретных проектов.
+### Relevance
+- Outdated facts/versions in bodies (for external validation - `perplexity-tech-radar.md`).
+- Hardcoded names of models and specific projects.
 
-## Формат ответа
+## Response format
 
-Сгруппируй находки по severity: `BLOCKER` / `MAJOR` / `MINOR` / `IDEA`. Для каждой —
-`<bucket>/<name>`, суть, предлагаемое действие (слить / ужать / вынести в snippets /
-добавить связь / обновить факт).
+Group finds by severity: `BLOCKER` / `MAJOR` / `MINOR` / `IDEA`. For each -
+`<bucket>/<name>`, essence, proposed action (merge / shrink / put in snippets /
+add connection / update fact).

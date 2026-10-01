@@ -69,12 +69,12 @@ def check_top_level_keys(data):
     """Internal documentation."""
     v = []
     if not isinstance(data, dict):
-        return [Violation("top-level", "корень execution-policy.json не dict")]
+        return [Violation("top-level", "root execution-policy.json not dict")]
     keys = set(data)
     for extra in sorted(keys - _TOP_LEVEL_KEYS):
-        v.append(Violation("top-level", f"неизвестный ключ верхнего уровня: {extra!r}"))
+        v.append(Violation("top-level", f"unknown top level key: {extra!r}"))
     for missing in sorted(_TOP_LEVEL_KEYS - keys):
-        v.append(Violation("top-level", f"отсутствует обязательный ключ верхнего уровня: {missing!r}"))
+        v.append(Violation("top-level", f"missing required top-level key: {missing!r}"))
     return v
 
 
@@ -82,23 +82,23 @@ def check_policy_version(data):
     """Internal documentation."""
     version = data.get("policy_version")
     if not isinstance(version, str) or not re.match(r"^\d+\.\d+$", version):
-        return [Violation("policy-version", f"policy_version={version!r} не строка формы 'major.minor'")]
+        return [Violation("policy-version", f"policy_version={version!r} is not a form string 'major.minor'")]
     major = int(version.split(".")[0])
     if major != SUPPORTED_MAJOR:
         return [Violation(
             "policy-version",
-            f"policy_version={version!r}: major={major} не поддерживается валидатором "
-            f"(поддерживается {SUPPORTED_MAJOR})")]
+            f"policy_version={version!r}: major={major} not supported by validator "
+            f"(supported {SUPPORTED_MAJOR})")]
     return []
 
 
 def _check_condition_rows(rows, section):
     v = []
     if not isinstance(rows, list) or not rows:
-        return [Violation("spawn-threshold", f"{section} отсутствует или пуст")]
+        return [Violation("spawn-threshold", f"{section} missing or empty")]
     for row in rows:
         if not isinstance(row, dict) or set(row) != _CONDITION_ROW_KEYS:
-            v.append(Violation("spawn-threshold", f"{section}: строка {row!r} несёт не ровно {sorted(_CONDITION_ROW_KEYS)}"))
+            v.append(Violation("spawn-threshold", f"{section}: string {row!r} does not carry smoothly {sorted(_CONDITION_ROW_KEYS)}"))
     return v
 
 
@@ -106,10 +106,10 @@ def check_spawn_threshold(data):
     """Internal documentation."""
     st = data.get("spawn_threshold")
     if not isinstance(st, dict):
-        return [Violation("spawn-threshold", "spawn_threshold отсутствует или не object")]
+        return [Violation("spawn-threshold", "spawn_threshold missing or not object")]
     v = []
     if not isinstance(st.get("decision_rule"), str) or not st.get("decision_rule"):
-        v.append(Violation("spawn-threshold", "decision_rule отсутствует или пуст"))
+        v.append(Violation("spawn-threshold", "decision_rule missing or empty"))
     positive = st.get("positive_conditions")
     negative = st.get("negative_conditions")
     v.extend(_check_condition_rows(positive, "positive_conditions"))
@@ -117,26 +117,26 @@ def check_spawn_threshold(data):
     if isinstance(negative, list):
         neg_ids = {row.get("id") for row in negative if isinstance(row, dict)}
         if "parent-reuses-raw-material" not in neg_ids:
-            v.append(Violation("spawn-threshold", "negative_conditions не несёт обязательную строку parent-reuses-raw-material"))
+            v.append(Violation("spawn-threshold", "negative_conditions does not carry the required line parent-reuses-raw-material"))
     if isinstance(positive, list) and isinstance(negative, list):
         ids = [row.get("id") for row in positive + negative if isinstance(row, dict)]
         seen = set()
         for cid in ids:
             if cid in seen:
-                v.append(Violation("spawn-threshold", f"дублирующийся id условия: {cid!r}"))
+                v.append(Violation("spawn-threshold", f"duplicate id conditions: {cid!r}"))
             seen.add(cid)
     scale = st.get("scale_by_task_class")
     if not isinstance(scale, list) or not scale:
-        v.append(Violation("spawn-threshold", "scale_by_task_class отсутствует или пуст"))
+        v.append(Violation("spawn-threshold", "scale_by_task_class missing or empty"))
     else:
         for row in scale:
             if not isinstance(row, dict) or set(row) != _SCALE_ROW_KEYS:
-                v.append(Violation("spawn-threshold", f"scale_by_task_class: строка {row!r} несёт не ровно {sorted(_SCALE_ROW_KEYS)}"))
+                v.append(Violation("spawn-threshold", f"scale_by_task_class: string {row!r} does not carry smoothly {sorted(_SCALE_ROW_KEYS)}"))
                 continue
             if row.get("task_class") not in _TASK_CLASSES:
-                v.append(Violation("spawn-threshold", f"task_class={row.get('task_class')!r} вне {sorted(_TASK_CLASSES)}"))
+                v.append(Violation("spawn-threshold", f"task_class={row.get('task_class')!r} out {sorted(_TASK_CLASSES)}"))
             if row.get("unverified") is True and "[UNVERIFIED]" not in str(row.get("provenance", "")):
-                v.append(Violation("spawn-threshold", f"scale_by_task_class[{row.get('task_class')!r}]: unverified=true, но provenance не несёт [UNVERIFIED]"))
+                v.append(Violation("spawn-threshold", f"scale_by_task_class[{row.get('task_class')!r}]: unverified=true, but provenance does not carry [UNVERIFIED]"))
     return v
 
 
@@ -144,40 +144,40 @@ def check_max_parallel_agents(data):
     """Internal documentation."""
     mpa = data.get("max_parallel_agents")
     if not isinstance(mpa, dict):
-        return [Violation("max-parallel-agents", "max_parallel_agents отсутствует или не object (не скаляр)")]
+        return [Violation("max-parallel-agents", "max_parallel_agents missing or not object (is not a scalar)")]
     v = []
     subjects = mpa.get("subjects")
     if not isinstance(subjects, list):
-        v.append(Violation("max-parallel-agents", "subjects отсутствует или не список"))
+        v.append(Violation("max-parallel-agents", "subjects missing or not listed"))
         subjects = []
     seen_subjects = []
     by_subject = {}
     for row in subjects:
         if not isinstance(row, dict) or set(row) != _SUBJECT_ROW_KEYS:
-            v.append(Violation("max-parallel-agents", f"subjects: строка {row!r} несёт не ровно {sorted(_SUBJECT_ROW_KEYS)}"))
+            v.append(Violation("max-parallel-agents", f"subjects: string {row!r} does not carry smoothly {sorted(_SUBJECT_ROW_KEYS)}"))
             continue
         seen_subjects.append(row.get("subject"))
         by_subject[row.get("subject")] = row
         if row.get("provider") not in _PROVIDERS:
-            v.append(Violation("max-parallel-agents", f"subjects[{row.get('subject')!r}]: provider={row.get('provider')!r} вне {sorted(_PROVIDERS)}"))
+            v.append(Violation("max-parallel-agents", f"subjects[{row.get('subject')!r}]: provider={row.get('provider')!r} out {sorted(_PROVIDERS)}"))
         if row.get("total_scope") not in _TOTAL_SCOPES:
-            v.append(Violation("max-parallel-agents", f"subjects[{row.get('subject')!r}]: total_scope={row.get('total_scope')!r} вне {sorted(_TOTAL_SCOPES)}"))
+            v.append(Violation("max-parallel-agents", f"subjects[{row.get('subject')!r}]: total_scope={row.get('total_scope')!r} out {sorted(_TOTAL_SCOPES)}"))
     for subject in sorted(_SUBJECTS):
         if seen_subjects.count(subject) != 1:
-            v.append(Violation("max-parallel-agents", f"субъект {subject!r} присутствует {seen_subjects.count(subject)} раз(а) вместо ровно одного"))
+            v.append(Violation("max-parallel-agents", f"subject {subject!r} present {seen_subjects.count(subject)} times(a) instead of exactly one"))
     fleet_cap = mpa.get("fleet_cap")
     if not isinstance(fleet_cap, dict) or set(fleet_cap) != _FLEET_CAP_KEYS:
-        v.append(Violation("max-parallel-agents", f"fleet_cap отсутствует или несёт не ровно {sorted(_FLEET_CAP_KEYS)}"))
+        v.append(Violation("max-parallel-agents", f"fleet_cap is missing or not straight {sorted(_FLEET_CAP_KEYS)}"))
         return v
     applies_to = fleet_cap.get("applies_to")
     subject_row = by_subject.get(applies_to)
     if subject_row is None:
-        v.append(Violation("max-parallel-agents", f"fleet_cap.applies_to={applies_to!r} не называет существующий субъект"))
+        v.append(Violation("max-parallel-agents", f"fleet_cap.applies_to={applies_to!r} does not name an existing subject"))
     else:
         concurrent = subject_row.get("concurrent")
         value = fleet_cap.get("value")
         if isinstance(concurrent, int) and isinstance(value, int) and value > concurrent:
-            v.append(Violation("max-parallel-agents", f"fleet_cap.value={value} превышает concurrent={concurrent} субъекта {applies_to!r}"))
+            v.append(Violation("max-parallel-agents", f"fleet_cap.value={value} exceeds concurrent={concurrent} subject {applies_to!r}"))
     return v
 
 
@@ -189,7 +189,7 @@ def _walk_provenance(node, path, violations):
             for key, val in node.items()
         )
         if has_numeric and not isinstance(node.get("provenance"), str):
-            violations.append(Violation("provenance", f"{path}: объект несёт числовое поле, но не несёт provenance"))
+            violations.append(Violation("provenance", f"{path}: object carries a numeric field, but does not carry provenance"))
         for key, val in node.items():
             _walk_provenance(val, f"{path}.{key}", violations)
     elif isinstance(node, list):
@@ -207,16 +207,16 @@ def check_allowed_agent_roles(data, roles_canon=None):
     """Internal documentation."""
     aar = data.get("allowed_agent_roles")
     if not isinstance(aar, dict):
-        return [Violation("allowed-agent-roles", "allowed_agent_roles отсутствует или не object")]
+        return [Violation("allowed-agent-roles", "allowed_agent_roles missing or not object")]
     v = []
     keys = set(aar)
     for extra in sorted(keys - _ALLOWED_ROLES_KEYS):
-        v.append(Violation("allowed-agent-roles", f"неизвестный ключ: {extra!r} (второй список ролей запрещён)"))
+        v.append(Violation("allowed-agent-roles", f"unknown key: {extra!r} (second list of roles is prohibited)"))
     for missing in sorted(_ALLOWED_ROLES_KEYS - keys):
-        v.append(Violation("allowed-agent-roles", f"отсутствует обязательный ключ: {missing!r}"))
+        v.append(Violation("allowed-agent-roles", f"missing required key: {missing!r}"))
     source = aar.get("source")
     if not isinstance(source, str) or not (_REPO_ROOT / source).is_file():
-        v.append(Violation("allowed-agent-roles", f"source={source!r} не найден на диске"))
+        v.append(Violation("allowed-agent-roles", f"source={source!r} not found on disk"))
     if roles_canon is None:
         roles_canon = safe_load_json(_ROLES_JSON, default={})
     known = {
@@ -225,10 +225,10 @@ def check_allowed_agent_roles(data, roles_canon=None):
     }
     for row in aar.get("exclusions") or []:
         if not isinstance(row, dict) or set(row) != _EXCLUSION_ROW_KEYS:
-            v.append(Violation("allowed-agent-roles", f"exclusions: строка {row!r} несёт не ровно {sorted(_EXCLUSION_ROW_KEYS)}"))
+            v.append(Violation("allowed-agent-roles", f"exclusions: string {row!r} does not carry smoothly {sorted(_EXCLUSION_ROW_KEYS)}"))
             continue
         if (row.get("pack_id"), row.get("role_id")) not in known:
-            v.append(Violation("allowed-agent-roles", f"exclusions: роль ({row.get('pack_id')!r}, {row.get('role_id')!r}) не найдена в каноне {source}"))
+            v.append(Violation("allowed-agent-roles", f"exclusions: role ({row.get('pack_id')!r}, {row.get('role_id')!r}) not found in canon {source}"))
     return v
 
 
@@ -251,29 +251,29 @@ def check_delegation_contract(data, roles_canon=None):
     """Internal documentation."""
     dc = data.get("delegation_contract")
     if not isinstance(dc, dict):
-        return [Violation("delegation-contract", "delegation_contract отсутствует или не object")]
+        return [Violation("delegation-contract", "delegation_contract missing or not object")]
     v = []
     keys = set(dc)
     for extra in sorted(keys - _DELEGATION_CONTRACT_KEYS):
-        v.append(Violation("delegation-contract", f"неизвестный ключ: {extra!r}"))
+        v.append(Violation("delegation-contract", f"unknown key: {extra!r}"))
     for missing in sorted(_DELEGATION_CONTRACT_KEYS - keys):
-        v.append(Violation("delegation-contract", f"отсутствует обязательный ключ: {missing!r}"))
+        v.append(Violation("delegation-contract", f"missing required key: {missing!r}"))
 
     required = dc.get("required_fields")
     ids = [row.get("id") for row in required if isinstance(row, dict)] if isinstance(required, list) else None
     if ids != list(_REQUIRED_FIELD_IDS):
-        v.append(Violation("delegation-contract", f"required_fields={ids!r}, ожидается ровно {list(_REQUIRED_FIELD_IDS)} по порядку"))
+        v.append(Violation("delegation-contract", f"required_fields={ids!r}, expected exactly {list(_REQUIRED_FIELD_IDS)} in order"))
     if isinstance(required, list):
         for row in required:
             if not isinstance(row, dict) or set(row) != _CONDITION_ROW_KEYS:
-                v.append(Violation("delegation-contract", f"required_fields: строка {row!r} несёт не ровно {sorted(_CONDITION_ROW_KEYS)}"))
+                v.append(Violation("delegation-contract", f"required_fields: string {row!r} does not carry smoothly {sorted(_CONDITION_ROW_KEYS)}"))
 
     if not isinstance(dc.get("refusal_rule"), str) or not dc.get("refusal_rule"):
-        v.append(Violation("delegation-contract", "refusal_rule отсутствует или пуст"))
+        v.append(Violation("delegation-contract", "refusal_rule missing or empty"))
 
     points = dc.get("enforcement_points")
     if not isinstance(points, list) or not points:
-        v.append(Violation("delegation-contract", "enforcement_points отсутствует или пуст"))
+        v.append(Violation("delegation-contract", "enforcement_points missing or empty"))
         return v
 
     if roles_canon is None:
@@ -281,11 +281,11 @@ def check_delegation_contract(data, roles_canon=None):
     seen_ids = set()
     for point in points:
         if not isinstance(point, dict):
-            v.append(Violation("delegation-contract", f"enforcement_points: строка {point!r} не object"))
+            v.append(Violation("delegation-contract", f"enforcement_points: string {point!r} not object"))
             continue
         pid = point.get("id")
         if pid in seen_ids:
-            v.append(Violation("delegation-contract", f"enforcement_points: дублирующийся id {pid!r}"))
+            v.append(Violation("delegation-contract", f"enforcement_points: duplicate id {pid!r}"))
         seen_ids.add(pid)
 
         carrier_kind = point.get("carrier_kind")
@@ -298,52 +298,52 @@ def check_delegation_contract(data, roles_canon=None):
 
 
         for extra in sorted(actual - _POINT_KEYS):
-            v.append(Violation("delegation-contract", f"{pid}: неизвестный ключ точки принуждения: {extra!r}"))
+            v.append(Violation("delegation-contract", f"{pid}: unknown enforcement point key: {extra!r}"))
 
         if not isinstance(point.get("carrier"), str) or not (_REPO_ROOT / point.get("carrier", "")).is_file():
-            v.append(Violation("delegation-contract", f"{pid}: carrier={point.get('carrier')!r} не найден на диске"))
+            v.append(Violation("delegation-contract", f"{pid}: carrier={point.get('carrier')!r} not found on disk"))
         if carrier_kind not in _CARRIER_KINDS:
-            v.append(Violation("delegation-contract", f"{pid}: carrier_kind={carrier_kind!r} вне {sorted(_CARRIER_KINDS)}"))
+            v.append(Violation("delegation-contract", f"{pid}: carrier_kind={carrier_kind!r} out {sorted(_CARRIER_KINDS)}"))
 
         has_selector = "selector" in point
         if carrier_kind == "role-canon-content" and not has_selector:
-            v.append(Violation("delegation-contract", f"{pid}: carrier_kind=role-canon-content требует selector"))
+            v.append(Violation("delegation-contract", f"{pid}: carrier_kind=role-canon-content requires selector"))
         elif carrier_kind != "role-canon-content" and has_selector:
-            v.append(Violation("delegation-contract", f"{pid}: selector запрещён при carrier_kind={carrier_kind!r}"))
+            v.append(Violation("delegation-contract", f"{pid}: selector is prohibited when carrier_kind={carrier_kind!r}"))
         elif has_selector and (not isinstance(point.get("selector"), dict) or set(point["selector"]) != _SELECTOR_KEYS):
-            v.append(Violation("delegation-contract", f"{pid}: selector несёт не ровно {sorted(_SELECTOR_KEYS)}"))
+            v.append(Violation("delegation-contract", f"{pid}: selector does not carry smoothly {sorted(_SELECTOR_KEYS)}"))
 
         field_markers = point.get("field_markers")
         if not isinstance(field_markers, dict) or set(field_markers) != set(_FIELD_MARKERS):
-            v.append(Violation("delegation-contract", f"{pid}: field_markers несёт не ровно {sorted(_FIELD_MARKERS)}"))
+            v.append(Violation("delegation-contract", f"{pid}: field_markers does not carry smoothly {sorted(_FIELD_MARKERS)}"))
         else:
             for fid, marker in _FIELD_MARKERS.items():
                 if field_markers.get(fid) != marker:
-                    v.append(Violation("delegation-contract", f"{pid}: field_markers[{fid!r}]={field_markers.get(fid)!r} ≠ канонический литерал {marker!r}"))
+                    v.append(Violation("delegation-contract", f"{pid}: field_markers[{fid!r}]={field_markers.get(fid)!r} ≠ canonical literal {marker!r}"))
         if point.get("grammar_marker") != _GRAMMAR_MARKER:
-            v.append(Violation("delegation-contract", f"{pid}: grammar_marker={point.get('grammar_marker')!r} ≠ канонический литерал {_GRAMMAR_MARKER!r}"))
+            v.append(Violation("delegation-contract", f"{pid}: grammar_marker={point.get('grammar_marker')!r} ≠ canonical literal {_GRAMMAR_MARKER!r}"))
 
         status = point.get("status")
         if status not in _STATUSES:
-            v.append(Violation("delegation-contract", f"{pid}: status={status!r} вне {sorted(_STATUSES)}"))
+            v.append(Violation("delegation-contract", f"{pid}: status={status!r} out {sorted(_STATUSES)}"))
             continue
         pending_until = point.get("pending_until")
         if status == "pending":
             if not isinstance(pending_until, str) or not _PENDING_UNTIL_RE.match(pending_until):
-                v.append(Violation("delegation-contract", f"{pid}: status=pending требует pending_until формы '<PLAN-ID> Pn.m', получено {pending_until!r}"))
+                v.append(Violation("delegation-contract", f"{pid}: status=pending requires pending_until forms '<PLAN-ID> Pn.m', received {pending_until!r}"))
         elif "pending_until" in point:
-            v.append(Violation("delegation-contract", f"{pid}: status=enforced запрещает pending_until, получено {pending_until!r}"))
+            v.append(Violation("delegation-contract", f"{pid}: status=enforced prohibits pending_until, received {pending_until!r}"))
 
         if status == "enforced":
             text = _resolve_carrier_text(point, roles_canon)
             if text is None:
-                v.append(Violation("delegation-contract", f"{pid}: status=enforced, но носитель/поле селектора не резолвится"))
+                v.append(Violation("delegation-contract", f"{pid}: status=enforced, but the carrier/selector field does not resolve"))
             else:
                 missing_markers = [fid for fid, marker in _FIELD_MARKERS.items() if marker not in text]
                 if missing_markers:
-                    v.append(Violation("delegation-contract", f"{pid}: status=enforced, но маркеры отсутствуют физически: {missing_markers}"))
+                    v.append(Violation("delegation-contract", f"{pid}: status=enforced, but the markers are physically missing: {missing_markers}"))
                 if _GRAMMAR_MARKER not in text:
-                    v.append(Violation("delegation-contract", f"{pid}: status=enforced, но grammar_marker отсутствует физически"))
+                    v.append(Violation("delegation-contract", f"{pid}: status=enforced, but grammar_marker is not physically present"))
     return v
 
 
@@ -359,7 +359,7 @@ def run_checks(execution_policy_path=None):
     path = execution_policy_path or _EXECUTION_POLICY
     data = safe_load_json(path)
     if data is None:
-        return [Violation("schema", f"{path} не читается или содержит битый JSON")], 2
+        return [Violation("schema", f"{path} is not readable or contains a broken JSON")], 2
     violations = []
     for check in CHECKS:
         violations.extend(check(data))
@@ -373,11 +373,11 @@ def main(argv=None):
         return 2
     violations, code = run_checks()
     if not violations:
-        print(f"execpolicy: OK — {len(CHECKS)} проверок, {_EXECUTION_POLICY.name} чист")
+        print(f"execpolicy: OK — {len(CHECKS)} checks, {_EXECUTION_POLICY.name} clean")
     else:
         for v in violations:
             print(f"  FAIL: {v}", file=sys.stderr)
-        print(f"execpolicy: {len(violations)} нарушени(е/й)", file=sys.stderr)
+        print(f"execpolicy: {len(violations)} violation(e/th)", file=sys.stderr)
     return code
 
 

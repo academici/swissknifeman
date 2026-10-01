@@ -1,4 +1,4 @@
-"""Тесты agents.py: upsert, heartbeat, деривация состояния, kill, reap."""
+"""Tests agents.py: upsert, heartbeat, state derivation, kill, reap."""
 import tempfile
 import unittest
 
@@ -6,7 +6,7 @@ import maind.agents as agents_mod
 from maind.agents import heartbeat, kill, listing, load, reap, register
 from tests.fixtures import make_repo
 
-CFG = {"agents": {"heartbeat_interval_ms": 1000}}  # 1s → порог stale = 3s
+CFG = {"agents": {"heartbeat_interval_ms": 1000}}  # 1s → threshold stale = 3s
 
 
 class TestAgents(unittest.TestCase):
@@ -39,7 +39,7 @@ class TestAgents(unittest.TestCase):
     def test_kill_removes_record(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
-            register(env, "a")               # без pid → kill просто снимает запись
+            register(env, "a")               # without pid → kill simply removes the entry
             self.assertTrue(kill(env, "a"))
             self.assertEqual(load(env)["agents"], [])
 

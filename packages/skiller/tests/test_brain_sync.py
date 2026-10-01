@@ -1,9 +1,9 @@
-"""Тесты BRAIN docs-sync (brain_sync.BrainSync).
+"""Tests BRAIN docs-sync (brain_sync.BrainSync).
 
-Покрывают: pull копирует файлы из BRAIN в проект по glob-паттернам (mkdir + copy2,
-сохраняя относительный путь); generate_sync_script пишет валидный bash (bash -n);
-строковый конфиг нормализуется (back-compat: строка = путь без правил синка).
-Всё во временных каталогах, без сети."""
+Covers: pull copies files from BRAIN to the project by glob-patterns (mkdir + copy2,
+keeping relative path); generate_sync_script writes valid bash (bash -n);
+string config is normalized (back-compat: string = path without synchronization rules).
+Everything is in temporary directories, without a network."""
 import shutil
 import subprocess
 import sys
@@ -18,14 +18,14 @@ from skiller.brain_sync import BrainSync, normalize_brain_config
 
 class NormalizeCase(unittest.TestCase):
     def test_string_config_becomes_path(self):
-        # back-compat: строка = путь к волту, без правил синка.
+        # back-compat: string = path to volt, without synch rules.
         cfg = normalize_brain_config("/vaults/Brain")
         self.assertEqual(cfg, {"path": "/vaults/Brain"})
 
     def test_object_config_passthrough(self):
         obj = {"path": "/vaults/Brain", "sync": {"direction": "pull"}}
         self.assertEqual(normalize_brain_config(obj), obj)
-        # НЕ мутируем вход (возвращаем копию).
+        # DO NOT mutate the input (return a copy).
         self.assertIsNot(normalize_brain_config(obj), obj)
 
     def test_empty_config(self):
@@ -33,8 +33,8 @@ class NormalizeCase(unittest.TestCase):
         self.assertEqual(normalize_brain_config(""), {})
 
     def test_string_config_defaults(self):
-        # Строковый конфиг → direction по умолчанию pull, on_integrate False,
-        # patterns — дефолтные.
+        # String config → direction default pull, on_integrate False,
+        # patterns — default.
         bs = BrainSync("/proj", "/vaults/Brain")
         self.assertEqual(bs.brain_path, Path("/vaults/Brain"))
         self.assertEqual(bs.direction, "pull")
@@ -61,7 +61,7 @@ class SyncPullCase(unittest.TestCase):
         return p
 
     def test_pull_copies_by_patterns(self):
-        # В BRAIN: docs/guide/a.md, README.md (матчатся) + secret.txt (не матчится).
+        # B BRAIN: docs/guide/a.md, README.md (matches) + secret.txt (doesn't match).
         self._write(self.brain, "docs/guide/a.md", "# A")
         self._write(self.brain, "README.md", "# readme")
         self._write(self.brain, "secret.txt", "nope")
@@ -69,14 +69,14 @@ class SyncPullCase(unittest.TestCase):
                "sync": {"direction": "pull", "patterns": ["docs/**/*.md", "README.md"]}}
         bs = BrainSync(self.proj, cfg)
         copied = bs.sync_pull()
-        # Скопированы только .md по паттернам, с сохранением относительного пути.
+        # Only .md by patterns, preserving the relative path.
         self.assertEqual((self.proj / "docs/guide/a.md").read_text(encoding="utf-8"), "# A")
         self.assertEqual((self.proj / "README.md").read_text(encoding="utf-8"), "# readme")
         self.assertFalse((self.proj / "secret.txt").exists())
         self.assertEqual(len(copied), 2)
 
     def test_pull_missing_brain_is_soft(self):
-        # Несуществующий BRAIN → [] без исключения.
+        # Non-existent BRAIN → [] without exception.
         bs = BrainSync(self.proj, {"path": str(self.tmp / "nope")})
         self.assertEqual(bs.sync_pull(), [])
 
@@ -110,7 +110,7 @@ class GenerateScriptCase(unittest.TestCase):
         text = script.read_text(encoding="utf-8")
         self.assertTrue(text.startswith("#!/usr/bin/env bash"))
         self.assertIn("/vaults/Brain", text)
-        # Синтаксис валиден (bash -n не исполняет, только парсит).
+        # Syntax is valid (bash -n does not execute, only parses).
         bash = shutil.which("bash")
         if bash:
             r = subprocess.run([bash, "-n", str(script)],
@@ -118,7 +118,7 @@ class GenerateScriptCase(unittest.TestCase):
             self.assertEqual(r.returncode, 0, r.stderr)
 
     def test_string_config_generates_script(self):
-        # Строковый конфиг тоже даёт скрипт (BRAIN зашит, паттерны дефолтные).
+        # The string config also gives the script (BRAIN is wired, default patterns).
         bs = BrainSync(self.proj, "/vaults/Brain")
         script = bs.generate_sync_script()
         text = script.read_text(encoding="utf-8")

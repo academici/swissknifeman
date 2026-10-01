@@ -1,5 +1,5 @@
-"""Тесты mem0-консолидации: таксономия ADD/UPDATE/NOOP/CONFLICT (чистая),
-flag-and-ask на противоречии в promote, supersedes как soft-invalidate."""
+"""Tests mem0-consolidation: taxonomy ADD/UPDATE/NOOP/CONFLICT (clean),
+flag-and-ask on the contradiction in promote, supersedes like soft-invalidate."""
 import os
 import tempfile
 import unittest
@@ -26,7 +26,7 @@ def _L(trigger, action, state="curated"):
 
 
 class TestClassify(unittest.TestCase):
-    """classify_consolidation — чистая функция над списком похожих."""
+    """classify_consolidation — pure function over a list of similar ones."""
 
     def _similar(self, *lessons_):
         return [(L, L["state"], 0.9) for L in lessons_]
@@ -65,12 +65,12 @@ class TestPromoteConsolidation(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.proj = self._tmp.name
         self.env = Env(self.proj, "promote")
-        # активный (curated) урок, с которым будет конфликт
+        # active (curated) lesson with which there will be a conflict
         self.active = lessons.new_lesson(
             trigger="deploy laravel migrations production database schema", action="force",
             scope="project:test", session_id="s0")
         lessons.save_lesson(self.proj, self.active, "curated")
-        # новый кандидат: та же ситуация, противоположное действие
+        # new candidate: same situation, opposite action
         self.cand = lessons.new_lesson(
             trigger="deploy laravel migrations production database schema", action="never",
             scope="project:test", session_id="s1")
@@ -81,9 +81,9 @@ class TestPromoteConsolidation(unittest.TestCase):
 
     def test_conflict_blocks_promote_flag_and_ask(self):
         with chdir(self.proj):
-            cmd_promote(self.env, [self.cand["id"]])   # без --force/--supersedes
+            cmd_promote(self.env, [self.cand["id"]])   # without --force/--supersedes
         _l, st = lessons.find_lesson(self.proj, self.cand["id"])
-        self.assertEqual(st, "ephemeral")              # НЕ продвинулся: flag-and-ask
+        self.assertEqual(st, "ephemeral")              # NOT progressed: flag-and-ask
 
     def test_force_overrides_conflict(self):
         with chdir(self.proj):
@@ -94,11 +94,11 @@ class TestPromoteConsolidation(unittest.TestCase):
     def test_supersedes_soft_invalidates(self):
         with chdir(self.proj):
             cmd_promote(self.env, [self.cand["id"], "--supersedes", self.active["id"]])
-        # новый продвинулся и несёт supersedes
+        # new has advanced and carries supersedes
         newl, st = lessons.find_lesson(self.proj, self.cand["id"])
         self.assertEqual(st, "candidate")
         self.assertEqual(newl["supersedes"], self.active["id"])
-        # старый — soft-деприкейтнут: в deprecated, файл сохранён (не удалён)
+        # old — soft-deprikate: in deprecated, file saved (not deleted)
         oldl, ost = lessons.find_lesson(self.proj, self.active["id"])
         self.assertEqual(ost, "deprecated")
         self.assertEqual(oldl["superseded_by"], self.cand["id"])

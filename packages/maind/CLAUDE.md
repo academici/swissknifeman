@@ -23,7 +23,7 @@ Read graph data through `federation.graph_reader`, derive graph facts from sourc
 Keep memory, graph, and code-graph modules decoupled; combine them only through onboarding, sync, and orchestration entry points.
 <!-- instruction:maind.engineering-invariants -->
 ## maind.engineering-invariants
-Keep `lib/maind/` stdlib-only, pass frozen `Env` explicitly, write JSON atomically, emit Russian diagnostics, and preserve `project:`, `ns:`, and `global` memory isolation.
+Keep `lib/maind/` stdlib-only, pass frozen `Env` explicitly, write JSON atomically, emit English diagnostics, and preserve `project:`, `ns:`, and `global` memory isolation.
 <!-- instruction:maind.validation-release -->
 ## maind.validation-release
 Before release run `bash scripts/test.sh` and `bash scripts/validate.sh`, then use Russian Conventional Commit messages.

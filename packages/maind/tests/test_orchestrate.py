@@ -1,4 +1,4 @@
-"""Тесты orchestrate — делегирование команд соседним пакетам (whitelist, argv, rc)."""
+"""Tests orchestrate — delegation of commands to neighboring packages (whitelist, argv, rc)."""
 import os
 import tempfile
 import unittest
@@ -56,7 +56,7 @@ class TestOrchestrate(unittest.TestCase):
                 cfg = merge_defaults({"projects": [{"id": "flexcrm", "name": "F",
                                                     "local_path": "/x"}]})
                 rc = orch.run_capability(env, cfg, "flexcrm", "brain:sync", ["--dry-run"])
-                self.assertEqual(rc, 2)             # rc проброшен
+                self.assertEqual(rc, 2)             # rc abandoned
                 self.assertIn("--dry-run", calls["argv"])  # passthrough
                 self.assertIn("flexcrm", calls["argv"])    # {project}
             finally:
@@ -64,8 +64,8 @@ class TestOrchestrate(unittest.TestCase):
                 orch.subprocess.run = orig
 
     def test_env_capabilities_route_to_harness(self):
-        # env:mcp / env:hooks — гранулярная раскатка окружения через harness
-        # (рядом с env:apply). Проверяем sibling, подкоманду и {path}-подстановку.
+        # env:mcp / env:hooks — granular rolling out of the environment through harness
+        # (next to env:apply). Checking sibling, subcommand and {path}-substitution.
         for cap, sub in (("env:mcp", "mcp"), ("env:hooks", "hooks"),
                          ("env:apply", "permissions")):
             calls = {}
@@ -97,8 +97,8 @@ class TestOrchestrate(unittest.TestCase):
     def test_missing_sibling_dies(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
-            # brain резолвится через integrations.brain.path; направляем в каталог
-            # без bin/brain → лаунчер не найден → SystemExit. (env-override отсутствует.)
+            # brain resolves via integrations.brain.path; sent to the catalog
+            # without bin/brain → launcher not found → SystemExit. (env-override is missing.)
             cfg = merge_defaults({
                 "projects": [{"id": "flexcrm", "name": "F", "local_path": "/x"}],
                 "integrations": {"brain": {"path": f"{tmp}/no-brain-vault"}},
@@ -107,10 +107,10 @@ class TestOrchestrate(unittest.TestCase):
                 orch.run_capability(env, cfg, "flexcrm", "brain:status")
 
     def test_skm_update_is_dry_capable(self):
-        # skm:update — в DRY_CAPABLE: честный --dry-run сквозь skiller (`skiller update`
-        # умеет свой --dry-run), а не fake print+rc0 — иначе `maind sync --dry-run` давал бы
-        # ложно-зелёный превью для нового провиженера skills-catalog (та же ловушка, что
-        # раньше была с agent-pack — см. комментарий DRY_CAPABLE в orchestrate.py).
+        # skm:update — in DRY_CAPABLE: honest --dry-run through skiller (`skiller update`
+        # can do its own --dry-run), and not fake print+rc0 — otherwise `maind sync --dry-run` would give
+        # false green preview for the new provider skills-catalog (same trap as
+        # used to be with agent-pack — see comment DRY_CAPABLE in orchestrate.py).
         calls = {}
         orig = orch.subprocess.run
         orch.subprocess.run = _fake_run(calls)

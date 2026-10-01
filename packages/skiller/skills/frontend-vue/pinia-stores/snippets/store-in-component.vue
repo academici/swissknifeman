@@ -1,31 +1,31 @@
 <!-- Source: anonymized production project -->
 <!--
-  Использование Pinia-стора в компоненте <script setup>:
+  Usage Pinia-store in the component <script setup>:
     - const store = useXxxStore()
-    - state/getters деструктурируем через storeToRefs (сохраняет реактивность);
-      обычная деструктуризация const { count } = store РВЁТ реактивность
-    - actions вызываем прямо со стора (store.add(...)) или деструктурируем как есть
-    - hydration: сеем начальное значение от сервера в onMounted (один владелец)
+    - state/getters destructured via storeToRefs (maintains reactivity);
+      normal destructuring const { count } = store ROOM reactivity
+    - actions call directly from the side (store.add(...)) or destructure it as is
+    - hydration: sow the initial value from the server into onMounted (one owner)
 -->
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useExampleStore } from '@/stores/useExampleStore';
 
-// Начальные данные приходят с сервера (например, через props страницы / initial-state).
+// Initial data comes from the server (for example, via props pages / initial-state).
 const props = defineProps<{ initialItems: string[] }>();
 
 const store = useExampleStore();
 
-// state + getters с сохранением реактивности
+// state + getters while maintaining reactivity
 const { items, isLoading, count, hasSelection } = storeToRefs(store);
 
-// actions можно брать напрямую — они не реактивны
+// actions can be taken directly - they are not reactive
 const { add, select, refresh } = store;
 
-// Hydration: владелец стора сеет серверное состояние при монтировании.
-// Не дублируем то, что backend уже отрендерил, и не фетчим повторно то,
-// что уже пришло в props.
+// Hydration: store owner resets server state when mounted.
+// We do not duplicate what backend has already rendered, and we don’t fetch it again
+// which has already arrived in props.
 onMounted(() => {
     store.init(props.initialItems);
 });
@@ -33,7 +33,7 @@ onMounted(() => {
 
 <template>
     <section>
-        <p>Всего: {{ count }} <span v-if="hasSelection">(есть выбор)</span></p>
+        <p>Total: {{ count }} <span v-if="hasSelection">(there is a choice)</span></p>
 
         <ul>
             <li
@@ -45,7 +45,7 @@ onMounted(() => {
             </li>
         </ul>
 
-        <button :disabled="isLoading" @click="add('new item')">Добавить</button>
-        <button :disabled="isLoading" @click="refresh()">Обновить</button>
+        <button :disabled="isLoading" @click="add('new item')">Add</button>
+        <button :disabled="isLoading" @click="refresh()">Update</button>
     </section>
 </template>

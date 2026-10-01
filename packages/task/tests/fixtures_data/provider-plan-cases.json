@@ -34,7 +34,7 @@
     "audit-phase": "audit-phase: task:plan-audit PLAN P4",
     "close": "close: task:plan-close PLAN P4.4",
     "archive": "archive: task:plan-close archive PLAN",
-    "terminal": "terminal: план закрыт",
+    "terminal": "terminal: plan closed",
     "manual": "manual: frontier/high P4.4",
     "waiting": "waiting: gate D79 → run-items: task:plan-run PLAN P4.4"
   },

@@ -24,58 +24,58 @@ Activate when the task is ambiguous or spans multiple subsystems.
 ## Brief template
 
 ```text
-Контекст:
-- Коротко: где проблема/инициатива и почему это важно.
+Context:
+- Briefly: where is the problem/initiative and why it matters.
 
-Цель:
-- Какой результат должен получить пользователь/бизнес.
+Target:
+- What result should the user get/business.
 
-Границы:
-- Что входит в задачу.
+Boundaries:
+- What is included in the task.
 
-Out of Scope (не трогаем без явного запроса):
-- Файлы/модули вне задачи, даже если «можно улучшить».
-- Новые зависимости (composer/npm) — только по явному запросу.
-- Рефакторинг соседнего кода.
+Out of Scope (do not touch without an explicit request):
+- Files/modules are out of task, even if «can be improved».
+- New dependencies (composer/npm) — by explicit request only.
+- Refactoring of adjacent code.
 
-Явные предположения:
-- Агент ОБЯЗАН верифицировать каждый пункт до старта;
-  при несоответствии — стоп, уточняющий вопрос.
-- [ ] Предположение 1: ...
-- [ ] Предположение 2: ...
+Explicit assumptions:
+- The agent MUST verify each item before the start;
+  if there is a discrepancy - stop, clarifying question.
+- [ ] Assumption 1: ...
+- [ ] Assumption 2: ...
 
-Инварианты:
-- Какие правила и контракты нельзя нарушать.
+Invariants:
+- What rules and contracts cannot be broken.
 
-Затронутые слои:
+Layers affected:
 - backend / frontend / policies / routes / docs / tests.
 
-Ожидаемое поведение:
-- До изменения:
-- После изменения:
+Expected behavior:
+- Before change:
+- After change:
 
-Критерии приемки:
+Acceptance criteria:
 - [ ] ...
 - [ ] ...
 
-Минимальная верификация:
-- Какие тесты/проверки обязательно запустить.
+Minimum verification:
+- What tests/checks must be run.
 
-Loop (заполнять, если задача предполагает >1 осмысленной итерации):
-- Loop verifier: команда/проверка между кругами (тест, линт, `git log`).
-- Exit condition: объективное состояние = задача завершена (по выводу проверки,
-  не по утверждению агента).
-- Hard stop trigger: сигнал, при котором агент останавливается и запрашивает
-  согласование (см. circuit breaker в `anti-drift`).
+Loop (fill in if the task involves >1 meaningful iteration):
+- Loop verifier: command/check between circles (test, lint, `git log`).
+- Exit condition: objective state = task completed (by check output,
+  not as stated by the agent).
+- Hard stop trigger: signal at which the agent stops and requests
+  approval (see circuit breaker in `anti-drift`).
 
 Definition of Done:
-- [ ] Все критерии приемки закрыты.
-- [ ] Тесты и линт зелёные.
-- [ ] git diff не содержит изменений вне Scope.
-- [ ] Документация/CHANGELOG обновлены (если задача меняет публичное поведение).
+- [ ] All acceptance criteria are closed.
+- [ ] Tests and lint are green.
+- [ ] git diff contains no changes outside Scope.
+- [ ] Documentation/CHANGELOG updated (if the task changes public behavior).
 
-Ограничения:
-- Срок, риски, legacy-ограничения, обратная совместимость.
+Limitations:
+- Duration, risks, legacy-restrictions, backward compatibility.
 ```
 
 ## Brief-quality checklist

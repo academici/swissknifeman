@@ -120,7 +120,7 @@ def resolve_model_class(provider: str, model: str, metadata: dict) -> str:
 
 def owner_followup_revokes(text: str) -> bool:
     """Conservative explicit stop/revoke markers for the local workflow guard."""
-    return bool(re.search(r"OWNER-REVOKE|\b(?:revoke|cancel|stop)\b|review only|отзыва|отмени|отменить|останови|стоп|только ревью|не выполняй", text, re.IGNORECASE))
+    return bool(re.search(r"OWNER-REVOKE|\b(?:revoke|cancel|stop)\b|review only|review|cancel|cancel|stop|stop|review only|do not execute", text, re.IGNORECASE))
 
 
 def build_owner_attestation(evidence: dict, *, provider: str, plan_id: str,
@@ -258,7 +258,7 @@ def authority_preflight(boundary: str, *, provider: str | None = None) -> tuple:
     if boundary == "owner-session":
         return None, None
     if boundary != "provider-proof":
-        raise RouteEvidenceError("AUTHORITY_BOUNDARY", "неизвестная граница authority")
+        raise RouteEvidenceError("AUTHORITY_BOUNDARY", "unknown boundary authority")
     if provider is None:
         from task.session_context import resolve, SessionContextError
         try:
@@ -269,8 +269,8 @@ def authority_preflight(boundary: str, *, provider: str | None = None) -> tuple:
     if not callable(verifier) or not callable(consumer):
         raise RouteEvidenceError(
             "AUTHORITY_PROVIDER_UNAVAILABLE",
-            "provider-proof требует внешнего verifier и nonce store; подключите approval channel "
-            "либо отдельно объявите local-source item с owner-session. Новая сессия capability не добавит")
+            "provider-proof requires external verifier and nonce store; connect approval channel "
+            "or declare separately local-source item with owner-session. New session capability will not add")
     return verifier, consumer
 
 

@@ -1,26 +1,26 @@
 // Source: anonymized production project
 //
-// Точка входа приложения (например app.ts). Ключевая строка для темы —
-// вызов initializeTheme() ДО маунта: класс `.dark` ставится до первого кадра,
-// поэтому чисто клиентский рендер не мигает светлой темой.
+// Application entry point (for example app.ts). The key line for the topic is
+// call initializeTheme() BEFORE mount: class `.dark` is placed before the first frame,
+// so the purely client render does not flash the light theme.
 //
-// Каркас createApp/mount показан для контекста — адаптируй под свой стек
-// (Inertia / Vue Router / голый createApp). Важно лишь, ЧТО и КОГДА вызывается.
+// Frame createApp/mount shown for context - adapt to your stack
+// (Inertia / Vue Router / naked createApp). All that matters is WHAT is called and WHEN.
 
 import { createApp, h } from 'vue';
 
 import { initializeTheme } from '@/composables/useDarkMode';
 // import App from '@/App.vue';
 
-// Применяем тему до создания/маунта приложения — нет вспышки на клиенте.
+// Applying a theme before creating/application mount - no flash on the client.
 initializeTheme();
 
 const app = createApp({ render: () => h(/* App */ 'div') });
 
-// ...тут регистрация плагинов: app.use(router), app.use(pinia) и т.п.
+// ...here is the registration of plugins: app.use(router), app.use(pinia) etc.
 
 app.mount('#app');
 
-// Для SSR-приложения одного initializeTheme() мало: между отдачей HTML и
-// стартом этого бандла браузер уже рисует кадр. Корректный класс должен
-// прийти из сервера — см. no-flash-init.html (cookie + inline-скрипт).
+// For SSR-applications of one initializeTheme() little: between recoil HTML and
+// by the start of this bundle, the browser is already drawing a frame. The correct class should
+// come from the server - see. no-flash-init.html (cookie + inline-script).

@@ -28,20 +28,20 @@ class TestV2ItemSplit(TmpPlanTestCase):
         spec = plan_dir / "phases" / "P1" / "P1.1.md"
         spec.write_text(spec.read_text(encoding="utf-8") + "**Status:** 🟢 Done\n", encoding="utf-8")
         _, diag = _lint(plan_dir)
-        self.assertTrue(_errors_containing(diag, "поле исхода «Status» запрещено"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "origin field «Status» is prohibited"), diag.errors)
 
     def test_v2_rejects_spec_field_in_item_state(self):
         plan_dir = self._v2_plan()
         state = plan_dir / "phases" / "P1" / "P1.1.state.md"
-        state.write_text(state.read_text(encoding="utf-8") + "**Intent:** лишний источник\n", encoding="utf-8")
+        state.write_text(state.read_text(encoding="utf-8") + "**Intent:** extra source\n", encoding="utf-8")
         _, diag = _lint(plan_dir)
-        self.assertTrue(_errors_containing(diag, "поле ТЗ «Intent» запрещено"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "TK field «Intent» not allowed"), diag.errors)
 
     def test_v2_requires_a_state_carrier_for_every_item(self):
         plan_dir = self._v2_plan()
         (plan_dir / "phases" / "P1" / "P1.1.state.md").unlink()
         _, diag = _lint(plan_dir)
-        self.assertTrue(_errors_containing(diag, "обязательный слепок состояния"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "required state snapshot"), diag.errors)
 
     def test_v2_requires_a_fresh_bundle_for_the_next_runnable_item(self):
         plan_dir = self._v2_plan()
@@ -57,7 +57,7 @@ class TestV2ItemSplit(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
 
         self.assertTrue(
-            _errors_containing(diag, "обязательный bundle следующего запускаемого item P1.1 отсутствует"),
+            _errors_containing(diag, "required bundle next run item P1.1 missing"),
             diag.errors,
         )
 
@@ -75,7 +75,7 @@ class TestV2ItemSplit(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
 
         self.assertTrue(
-            _errors_containing(diag, "обязательный bundle следующего запускаемого item P1.1 устарел"),
+            _errors_containing(diag, "required bundle next run item P1.1 is deprecated"),
             diag.errors,
         )
 
@@ -85,7 +85,7 @@ class TestV2ItemSplit(TmpPlanTestCase):
         foreign.write_text((plan_dir / "phases" / "P1" / "P1.1.md").read_text(encoding="utf-8"),
                            encoding="utf-8")
         _, diag = _lint(plan_dir)
-        self.assertTrue(_errors_containing(diag, "имеет префикс P2"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "has the prefix P2"), diag.errors)
 
 
 class TestNextRunnableBundle(unittest.TestCase):
@@ -120,7 +120,7 @@ class TestValidPlan(TmpPlanTestCase):
         self.assertIn("P1", model["phases"])
         self.assertIn("P1.1", model["phases"]["P1"]["items"])
         self.assertEqual(model["phases"]["P1"]["items"]["P1.1"]["fields"]["Status"], "🟢 Done")
-        # модель должна сериализоваться в JSON без потерь (--json дампит именно её)
+        # model should be serialized to JSON lossless (--json dumps exactly this)
         json.dumps(model, ensure_ascii=False)
 
 
@@ -149,12 +149,12 @@ class TestShortPlanIdentity(TmpPlanTestCase):
         current = self._short_plan()
         other = self._short_plan("OTHER-1")
         _, diag = _lint(current)
-        self.assertTrue(_errors_containing(diag, "Short ID PLAN1 дублирует"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "Short ID PLAN1 duplicate"), diag.errors)
         archive = self.root / "plans" / "archive"
         archive.mkdir()
         shutil.move(str(other), str(archive / other.name))
         _, diag = _lint(current)
-        self.assertTrue(_errors_containing(diag, "Short ID PLAN1 дублирует"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "Short ID PLAN1 duplicate"), diag.errors)
 
     def test_same_plan_live_archive_copy_is_not_a_collision(self):
         current = self._short_plan()
@@ -164,10 +164,10 @@ class TestShortPlanIdentity(TmpPlanTestCase):
 
 
 class TestNumberedPlanIdentity(TmpPlanTestCase):
-    def _numbered(self, plan_id="2026.08.12-№1-DEMO", title="План №1 — Демо"):
+    def _numbered(self, plan_id="2026.08.12-№1-DEMO", title="Plan №1 — Demo"):
         plan_dir = write_valid_plan(self.root, plan_id)
         plan = plan_dir / "plan.md"
-        text = plan.read_text(encoding="utf-8").replace("| Title | Демо-план |", f"| Title | {title} |")
+        text = plan.read_text(encoding="utf-8").replace("| Title | Demo plan |", f"| Title | {title} |")
         plan.write_text(text, encoding="utf-8")
         return plan_dir
 
@@ -180,33 +180,33 @@ class TestNumberedPlanIdentity(TmpPlanTestCase):
     def test_new_legacy_dated_id_requires_number(self):
         plan_dir = write_valid_plan(self.root, "2026.08.12-DEMO")
         _, diag = _lint(plan_dir)
-        self.assertTrue(_errors_containing(diag, "требует порядковый номер"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "requires a sequence number"), diag.errors)
 
     def test_numbered_plan_rejects_zero_ordinal(self):
-        plan_dir = self._numbered("2026.08.12-№0-DEMO", "План №0 — Демо")
+        plan_dir = self._numbered("2026.08.12-№0-DEMO", "Plan №0 — Demo")
         _, diag = _lint(plan_dir)
-        self.assertTrue(_errors_containing(diag, "положительным"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "positive"), diag.errors)
 
     def test_numbered_plan_title_must_match_ordinal(self):
-        plan_dir = self._numbered(title="План №2 — Демо")
+        plan_dir = self._numbered(title="Plan №2 — Demo")
         _, diag = _lint(plan_dir)
-        self.assertTrue(_errors_containing(diag, "Title должен начинаться"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "Title must start"), diag.errors)
 
     def test_same_day_ordinal_must_be_unique_across_active_and_archive(self):
         plan_dir = self._numbered()
         archived = self.root / "plans" / "archive" / "2026.08.12-№1-DEMO-OLD"
         shutil.copytree(plan_dir, archived)
         _, diag = _lint(plan_dir)
-        self.assertTrue(_errors_containing(diag, "дублирует порядковый номер"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "duplicates the sequence number"), diag.errors)
 
     def test_active_reactivation_and_archived_copy_share_one_plan_identity(self):
         plan_dir = self._numbered()
         archived = self.root / "plans" / "archive" / plan_dir.name
         shutil.copytree(plan_dir, archived)
         _, diag = _lint(plan_dir)
-        self.assertFalse(_errors_containing(diag, "дублирует порядковый номер"), diag.errors)
+        self.assertFalse(_errors_containing(diag, "duplicates the sequence number"), diag.errors)
         self.assertFalse(
-            [warning for warning in diag.warnings if "повторяет кодовое имя" in warning],
+            [warning for warning in diag.warnings if "repeats codename" in warning],
             diag.warnings,
         )
 
@@ -220,7 +220,7 @@ class TestNumberedPlanIdentity(TmpPlanTestCase):
         plan.write_text(plan.read_text(encoding="utf-8").replace(
             "## 3. Routing\n",
             "## 3. Routing\n\n"
-            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "| Batch | Items | Model class/effort | Exec | Review | Why |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
             "| solo | P1.1 | implementation/medium | run | full | fixture |\n",
         ), encoding="utf-8")
@@ -247,7 +247,7 @@ class TestPlanMdStructure(TmpPlanTestCase):
         (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "plan.md отсутствует"))
+        self.assertTrue(_errors_containing(diag, "plan.md missing"))
 
     def test_meta_missing_required_field(self):
         plan_dir = write_valid_plan(self.root)
@@ -256,38 +256,38 @@ class TestPlanMdStructure(TmpPlanTestCase):
         (plan_dir / "plan.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "нет обязательного поля «Plan ID»"))
+        self.assertTrue(_errors_containing(diag, "no required field «Plan ID»"))
 
     def test_status_board_section_missing(self):
         plan_dir = write_valid_plan(self.root)
         status = plan_dir / "status.md"
         text = status.read_text(encoding="utf-8")
-        text = text.replace("## 4. Phase Index & Status Board", "## 4. Что-то другое")
+        text = text.replace("## 4. Phase Index & Status Board", "## 4. Something else")
         status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "нет доски фаз"))
+        self.assertTrue(_errors_containing(diag, "no phase board"))
 
     def test_status_board_invalid_status(self):
         plan_dir = write_valid_plan(self.root)
         status = plan_dir / "status.md"
         text = status.read_text(encoding="utf-8")
-        text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |",
-                             "| P1 | Фаза раз | 1/1 | Готово |")
+        text = text.replace("| P1 | Phase times | 1/1 | 🟢 Done |",
+                             "| P1 | Phase times | 1/1 | Done |")
         status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "все items 🟢 Done, но статус фазы «Готово»"))
+        self.assertTrue(_errors_containing(diag, "all items 🟢 Done, but phase status «Done»"))
 
     def test_status_board_malformed_phase_token(self):
         plan_dir = write_valid_plan(self.root)
         status = plan_dir / "status.md"
         text = status.read_text(encoding="utf-8")
-        text = text.replace("| P1 | Фаза раз |", "| Phase1 | Фаза раз |")
+        text = text.replace("| P1 | Phase times |", "| Phase1 | Phase times |")
         status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "фаза P1 есть как"))
+        self.assertTrue(_errors_containing(diag, "phase P1 is like"))
 
 
 class TestPhaseBoardCorrespondence(TmpPlanTestCase):
@@ -296,7 +296,7 @@ class TestPhaseBoardCorrespondence(TmpPlanTestCase):
         shutil.rmtree(plan_dir / "phases" / "P1")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "дерево не состоит из phases/Pn/Pn.md"))
+        self.assertTrue(_errors_containing(diag, "tree does not consist of phases/Pn/Pn.md"))
 
     def test_phase_file_without_board_row(self):
         plan_dir = write_valid_plan(self.root)
@@ -304,7 +304,7 @@ class TestPhaseBoardCorrespondence(TmpPlanTestCase):
             plan_dir, phase_id="P2", item_id="P2.1", refresh_views=False)
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "фаза P2 есть как"))
+        self.assertTrue(_errors_containing(diag, "phase P2 is like"))
 
 
 class TestItemHeaderAndFields(TmpPlanTestCase):
@@ -312,42 +312,42 @@ class TestItemHeaderAndFields(TmpPlanTestCase):
         plan_dir = write_valid_plan(self.root)
         path = item_spec_path(plan_dir)
         text = path.read_text(encoding="utf-8")
-        text = text.replace("### P1.1 — Валидация конфига", "### P1.1 Валидация конфига")
+        text = text.replace("### P1.1 — Config validation", "### P1.1 Config validation")
         path.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "ожидается ровно один заголовок"))
+        self.assertTrue(_errors_containing(diag, "exactly one header expected"))
 
     def test_missing_required_item_field(self):
         plan_dir = write_valid_plan(self.root)
         path = item_spec_path(plan_dir)
         text = path.read_text(encoding="utf-8")
-        text = text.replace("**Code Guidance:** ручная проверка dict-ключей.\n", "")
+        text = text.replace("**Code Guidance:** manual check dict-keys.\n", "")
         path.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "нет поля ТЗ «Code Guidance»"))
+        self.assertTrue(_errors_containing(diag, "no TK field «Code Guidance»"))
 
     def test_missing_required_item_field_message_is_actionable(self):
-        # ERROR скелет-item'а обязана называть путь починки (D11: ERROR не ослабляется,
-        # меняется только текст) — /task:plan-design <ID> Pn.
+        # ERROR skeleton-item'and must name the repair path (D11: ERROR is not weakened,
+        # only the text changes) — /task:plan-design <ID> Pn.
         plan_dir = write_valid_plan(self.root)
         path = item_spec_path(plan_dir)
         text = path.read_text(encoding="utf-8")
-        text = text.replace("**Code Guidance:** ручная проверка dict-ключей.\n", "")
+        text = text.replace("**Code Guidance:** manual check dict-keys.\n", "")
         path.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "нет поля ТЗ «Code Guidance»"))
+        self.assertTrue(_errors_containing(diag, "no TK field «Code Guidance»"))
 
     def test_invalid_item_status(self):
         plan_dir = write_valid_plan(self.root)
         state = item_state_path(plan_dir)
         state.write_text(state.read_text(encoding="utf-8").replace(
-            "**Status:** 🟢 Done", "**Status:** Готово"), encoding="utf-8")
+            "**Status:** 🟢 Done", "**Status:** Done"), encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "item P1.1: недопустимый статус «Готово»"))
+        self.assertTrue(_errors_containing(diag, "item P1.1: invalid status «Done»"))
 
     def test_item_prefix_mismatch(self):
         plan_dir = write_valid_plan(self.root)
@@ -357,7 +357,7 @@ class TestItemHeaderAndFields(TmpPlanTestCase):
         path.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "ожидается ровно один заголовок"))
+        self.assertTrue(_errors_containing(diag, "exactly one header expected"))
 
 
 class TestCompletionAndDeviations(TmpPlanTestCase):
@@ -367,17 +367,17 @@ class TestCompletionAndDeviations(TmpPlanTestCase):
             plan_dir, item_state=item_state_md(item_status="🟢 Done", completion_notes="—"))
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "требует непустых Completion Notes"))
+        self.assertTrue(_errors_containing(diag, "requires non-empty Completion Notes"))
 
     def test_deviations_without_known_deviations(self):
         plan_dir = write_valid_plan(self.root)
         write_v2_carriers(
             plan_dir, item_state=item_state_md(
                 item_status="🟠 Done with deviations",
-                completion_notes="сделано с оговоркой", known_deviations="—"))
+                completion_notes="made with reservation", known_deviations="—"))
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "требует непустых Known Deviations"))
+        self.assertTrue(_errors_containing(diag, "requires non-empty Known Deviations"))
 
 
 class TestEscalationConsistency(TmpPlanTestCase):
@@ -398,28 +398,28 @@ class TestEscalationConsistency(TmpPlanTestCase):
         plan_dir = self._write("🔴 Blocked", "—")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "рассогласованы"))
+        self.assertTrue(_errors_containing(diag, "mismatched"))
 
     def test_escalation_flag_yes_without_blocked_status(self):
-        plan_dir = self._write("🟢 Done", "yes", completion_notes="сделано")
+        plan_dir = self._write("🟢 Done", "yes", completion_notes="done")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "рассогласованы"))
+        self.assertTrue(_errors_containing(diag, "mismatched"))
 
     def test_escalation_needed_invalid_value(self):
         plan_dir = self._write("⬜ Not started", "maybe")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "ожидается yes/no/—"))
+        self.assertTrue(_errors_containing(diag, "pending yes/no/—"))
 
     def test_blocked_with_full_escalation_triple_passes(self):
         plan_dir = self._write(
             "🔴 Blocked", "yes",
-            extra_blockquote="> 🔴 ESCALATION P1.1: неясная архитектура | trigger: неясная "
-                              "архитектура | нужен: plan-design",
+            extra_blockquote="> 🔴 ESCALATION P1.1: unclear architecture | trigger: unclear "
+                              "architecture | needed: plan-design",
         )
         _, diag = _lint(plan_dir)
-        self.assertFalse(_errors_containing(diag, "рассогласованы"))
+        self.assertFalse(_errors_containing(diag, "mismatched"))
 
     def test_escalation_in_generated_state_does_not_require_spec_mutation(self):
         plan_dir = self._write("🔴 Blocked", "yes")
@@ -430,7 +430,7 @@ class TestEscalationConsistency(TmpPlanTestCase):
         parsed = parsing._parse_v2_item_file(item_spec_path(plan_dir), "P1.1", Diagnostics())
         self.assertTrue(parsed["has_escalation"])
         _, diag = _lint(plan_dir)
-        self.assertFalse(_errors_containing(diag, "рассогласованы"))
+        self.assertFalse(_errors_containing(diag, "mismatched"))
 
 
 class TestPhaseStatusConsistency(TmpPlanTestCase):
@@ -439,8 +439,8 @@ class TestPhaseStatusConsistency(TmpPlanTestCase):
         status = plan_dir / "status.md"
         text = status.read_text(encoding="utf-8")
         text = text.replace(
-            "| P1.1 | Валидация конфига | 🟢 Done | 2026-07-02 |",
-            "| P1.1 | Валидация конфига | 🟡 In progress | 2026-07-02 |",
+            "| P1.1 | Config validation | 🟢 Done | 2026-07-02 |",
+            "| P1.1 | Config validation | 🟡 In progress | 2026-07-02 |",
         )
         status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
@@ -452,27 +452,27 @@ class TestStatusBoardConsistency(TmpPlanTestCase):
         plan_dir = write_valid_plan(self.root, )
         status = plan_dir / "status.md"
         text = status.read_text(encoding="utf-8")
-        text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |", "| P1 | Фаза раз | 0/1 | 🟢 Done |")
+        text = text.replace("| P1 | Phase times | 1/1 | 🟢 Done |", "| P1 | Phase times | 0/1 | 🟢 Done |")
         status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "≠ фактическому 1/1"))
+        self.assertTrue(_errors_containing(diag, "≠ actual 1/1"))
 
     def test_items_cell_bad_format(self):
         plan_dir = write_valid_plan(self.root)
         status = plan_dir / "status.md"
         text = status.read_text(encoding="utf-8")
-        text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |", "| P1 | Фаза раз | one | 🟢 Done |")
+        text = text.replace("| P1 | Phase times | 1/1 | 🟢 Done |", "| P1 | Phase times | one | 🟢 Done |")
         status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "ожидается формат N/M"))
+        self.assertTrue(_errors_containing(diag, "expected format N/M"))
 
     def test_all_done_may_remain_in_progress_as_pre_close_audit_candidate(self):
         plan_dir = write_valid_plan(self.root)
         status = plan_dir / "status.md"
         text = status.read_text(encoding="utf-8")
-        text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |", "| P1 | Фаза раз | 1/1 | 🟡 In progress |")
+        text = text.replace("| P1 | Phase times | 1/1 | 🟢 Done |", "| P1 | Phase times | 1/1 | 🟡 In progress |")
         status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
@@ -481,28 +481,28 @@ class TestStatusBoardConsistency(TmpPlanTestCase):
         plan_dir = write_valid_plan(self.root)
         status = plan_dir / "status.md"
         text = status.read_text(encoding="utf-8")
-        text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |", "| P1 | Фаза раз | 1/1 | ⬜ Not started |")
+        text = text.replace("| P1 | Phase times | 1/1 | 🟢 Done |", "| P1 | Phase times | 1/1 | ⬜ Not started |")
         status.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "все items 🟢 Done, но статус фазы"))
+        self.assertTrue(_errors_containing(diag, "all items 🟢 Done, but phase status"))
 
     def test_blocked_item_but_board_status_not_blocked(self):
         plan_dir = write_valid_plan(self.root)
         spec = item_spec_md().rstrip() + (
-            "\n\n> 🔴 ESCALATION P1.1: причина | trigger: неясная архитектура | "
-            "нужен: plan-design\n")
+            "\n\n> 🔴 ESCALATION P1.1: reason | trigger: unclear architecture | "
+            "needed: plan-design\n")
         write_v2_carriers(
             plan_dir, item_spec=spec,
             item_state=item_state_md(
                 item_status="🔴 Blocked", escalation_needed="yes", completion_notes="—"))
         status = plan_dir / "status.md"
         status.write_text(status.read_text(encoding="utf-8").replace(
-            "| P1 | Фаза раз | 0/1 | 🔴 Blocked |",
-            "| P1 | Фаза раз | 0/1 | 🟢 Done |"), encoding="utf-8")
+            "| P1 | Phase times | 0/1 | 🔴 Blocked |",
+            "| P1 | Phase times | 0/1 | 🟢 Done |"), encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "есть 🔴 Blocked item, но статус фазы"))
+        self.assertTrue(_errors_containing(diag, "yes 🔴 Blocked item, but phase status"))
 
 
 class TestPhaseHandoffGating(TmpPlanTestCase):
@@ -510,42 +510,42 @@ class TestPhaseHandoffGating(TmpPlanTestCase):
         from task import plan_closure
         plan_dir = write_valid_plan(self.root)
         text = phase_index_md(handoff_text="—").replace(
-            "Демо-фаза.", "> **Контракт фазы.** Демо-фаза.")
+            "Demo phase.", "> **Phase contract.** Demo phase.")
         write_v2_carriers(plan_dir, phase_index=text)
         target = plan_closure.build_closure(plan_dir, "P1")
         _, diag = _lint(plan_dir)
-        self.assertFalse(_errors_containing(diag, "Phase Handoff» пуст"))
+        self.assertFalse(_errors_containing(diag, "Phase Handoff» empty"))
         target.write_text(target.read_text(encoding="utf-8") + "stale\n", encoding="utf-8")
         _, diag = _lint(plan_dir)
-        self.assertTrue(_errors_containing(diag, "Phase Handoff» пуст"))
+        self.assertTrue(_errors_containing(diag, "Phase Handoff» empty"))
 
     def test_done_phase_with_empty_phase_handoff(self):
         plan_dir = write_valid_plan(self.root)
         write_v2_carriers(plan_dir, phase_index=phase_index_md(handoff_text="—"))
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "Phase Handoff» пуст"))
+        self.assertTrue(_errors_containing(diag, "Phase Handoff» empty"))
 
     def test_missing_phase_handoff_section(self):
         plan_dir = write_valid_plan(self.root)
         path = phase_index_path(plan_dir)
         text = path.read_text(encoding="utf-8")
-        text = text.replace("## Phase Handoff", "## Что-то другое")
+        text = text.replace("## Phase Handoff", "## Something else")
         path.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "нет секции «## Phase Handoff»"))
+        self.assertTrue(_errors_containing(diag, "no section «## Phase Handoff»"))
 
 
 class TestStalePhaseHandoff(TmpPlanTestCase):
-    """P2.15/D34 (H2): реопен инвалидирует `## Phase Handoff` маркером; блок, переживший
-    реопен и утверждающий закрытие фазы, — WARNING. Гейт УЗКИЙ: заготовка/скелет молчит."""
+    """P2.15/D34 (H2): reopen disables `## Phase Handoff` marker; block that survived
+    reopens and approves the closure of the phase, - WARNING. Gate NARROW: blank/the skeleton is silent."""
 
-    STALE_TEXT = ("Фаза P1 закрыта: **1/1 терминальны**.\n\n"
-                  "**Сдано:** валидация конфига.\n\n**Дальше:** `/task:plan-audit DEMO-1 P1`.")
+    STALE_TEXT = ("Phase P1 closed: **1/1 terminal**.\n\n"
+                  "**Submitted:** config validation.\n\n**Next:** `/task:plan-audit DEMO-1 P1`.")
 
     def _write_reopened_phase(self, handoff_text):
-        """Фаза 🟡 (реопенена: item снова в работе) с заданным `## Phase Handoff`."""
+        """Phase 🟡 (reopenene: item back in action) with the given `## Phase Handoff`."""
         plan_dir = write_valid_plan(self.root)
         write_v2_carriers(
             plan_dir, phase_index=phase_index_md(handoff_text=handoff_text),
@@ -553,63 +553,63 @@ class TestStalePhaseHandoff(TmpPlanTestCase):
         return plan_dir
 
     def _stale_warnings(self, diag):
-        return [w for w in diag.warnings if "Phase Handoff протух" in w]
+        return [w for w in diag.warnings if "Phase Handoff rotten" in w]
 
     def test_nonterminal_phase_with_closure_claim_warns(self):
         plan_dir = self._write_reopened_phase(self.STALE_TEXT)
         _, diag = _lint(plan_dir)
-        self.assertTrue(diag.ok, diag.errors) # именно WARNING, не ERROR
+        self.assertTrue(diag.ok, diag.errors) # exactly WARNING, not ERROR
         self.assertEqual(len(self._stale_warnings(diag)), 1, diag.warnings)
-        self.assertIn("> УСТАРЕЛ — фаза реопенена <D#>", self._stale_warnings(diag)[0])
+        self.assertIn("> DEPRECATED — phase reopened <D#>", self._stale_warnings(diag)[0])
 
     def test_stale_marker_silences_the_gate(self):
         plan_dir = self._write_reopened_phase(
-            "> **УСТАРЕЛ — фаза реопенена (D9, 2026-07-14).** Блок ниже записан plan-close\n"
-            "> до реопена; факт: 0/1, фаза 🟡.\n\n" + self.STALE_TEXT)
+            "> **DEPRECATED — phase reopened (D9, 2026-07-14).** The block below is written plan-close\n"
+            "> to rheopen; fact: 0/1, phase 🟡.\n\n" + self.STALE_TEXT)
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(self._stale_warnings(diag), [])
 
     def test_placeholder_handoff_of_unfinished_phase_is_silent(self):
-        # анти-регресс: скелеты/заготовки флота (наивная формулировка била 104 фазы)
-        for text in ("—", "Заполняется при закрытии фазы."):
+        # anti-regression: skeletons/fleet blanks (naive formulation of the 104 phase beat)
+        for text in ("—", "Filled in when a phase is closed."):
             with self.subTest(handoff=text):
                 plan_dir = self._write_reopened_phase(text)
                 _, diag = _lint(plan_dir)
                 self.assertEqual(self._stale_warnings(diag), [])
                 shutil.rmtree(plan_dir.parent)
 
-    # --- P3.7/D50 (J1): гейт судит по СУБЪЕКТУ утверждения, а не по встреченному слову.
-    # Обе фикстуры — ДОСЛОВНЫЕ формы флота,
-    # не «удобные» синтетические строки: ровно на них гейт разошёлся с истиной.
+    # --- P3.7/D50 (J1): gate judges by the SUBJECT of the statement, and not by the word it encounters.
+    # Both fixtures are LITERAL forms of the fleet,
+    # not «comfortable» synthetic lines: exactly on them the gate diverged from the truth.
 
     def test_honest_interim_handoff_is_silent(self):
-        """themeon//P5: первая строка ОТРИЦАЕТ закрытие фазы, а слово
-        «Терминальны» относится к ITEMS → ложно-положительный WARNING (J1, Blocker)."""
+        """themeon//P5: first line DENIES phase closure, and the word
+        «Terminal» refers to ITEMS → false positive WARNING (J1, Blocker)."""
         plan_dir = self._write_reopened_phase(
-            "**Фаза P5 НЕ закрыта.** Терминальны только P5.1 и P5.2 (2/10); P5.3–P5.10 (8/10) — "
-            "🟠⬜ `Not started`\n(dterema: breakpoints/runtime-switch; vintera: весь пилот).\n\n"
-            "**Что сдано (dterema, ветка `themeon-migration/P5`, НЕ смержена):** 3 коммита.")
+            "**Phase P5 is NOT closed.** Terminal only P5.1 and P5.2 (2/10); P5.3–P5.10 (8/10) — "
+            "🟠⬜ `Not started`\n(dterema: breakpoints/runtime-switch; vintera: all pilot).\n\n"
+            "**What's passed (dterema, thread `themeon-migration/P5`, NOT merged):** 3 commit.")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(self._stale_warnings(diag), [], diag.warnings)
 
     def test_delivery_claim_of_nonterminal_phase_still_warns(self):
-        """vaulter/VLT-REMED/P5: первая строка УТВЕРЖДАЕТ сдачу фазы при нетерминальном
-        статусе → истинно-положительный WARNING обязан сохраниться (анти-подгонка предиката)."""
+        """vaulter/VLT-REMED/P5: first line APPROVES the completion of the phase with a non-terminal
+        status → true positive WARNING must be preserved (anti-predicate fitting)."""
         plan_dir = self._write_reopened_phase(
-            "**Сдано:** Фаза P5 (сквозной adversarial code review всех изменений VLT-REMED) — "
-            "**терминальна (3/3)**:\nP5.1 (🔴 Blocked) → P5.2 (🟠 Done with deviations) → "
+            "**Submitted:** Phase P5 (end-to-end adversarial code review all changes VLT-REMED) — "
+            "**terminal (3/3)**:\nP5.1 (🔴 Blocked) → P5.2 (🟠 Done with deviations) → "
             "**P5.3 (🟢 Done)**.")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(len(self._stale_warnings(diag)), 1, diag.warnings)
 
     def test_negation_below_first_line_does_not_silence_the_gate(self):
-        """Отрицание судится по ТОЙ ЖЕ первой строке: «фаза закрыта … но P1.2 не закрыта»
-        ниже по тексту не гасит истинное срабатывание (Implementation Rules P3.7)."""
+        """Negation is judged by the SAME first line: «phase closed … but P1.2 is not closed»
+        below does not suppress true triggering (Implementation Rules P3.7)."""
         plan_dir = self._write_reopened_phase(
-            "**Сдано:** фаза закрыта, 1/1.\n\nОстаток: P1.2 не закрыта — переносится в P2.")
+            "**Submitted:** phase closed, 1/1.\n\nRemainder: P1.2 not closed - moved to P2.")
         _, diag = _lint(plan_dir)
         self.assertEqual(len(self._stale_warnings(diag)), 1, diag.warnings)
 
@@ -620,7 +620,7 @@ class TestHandoffMd(TmpPlanTestCase):
         (plan_dir / "handoff.md").unlink()
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "handoff.md отсутствует"))
+        self.assertTrue(_errors_containing(diag, "handoff.md missing"))
 
     def test_handoff_missing_title(self):
         plan_dir = write_valid_plan(self.root)
@@ -629,16 +629,16 @@ class TestHandoffMd(TmpPlanTestCase):
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "нет заголовка «# HANDOFF"))
+        self.assertTrue(_errors_containing(diag, "no header «# HANDOFF"))
 
     def test_handoff_title_after_item_valid(self):
-        # форма `after Pn.m` (закрыт item) — базовая, остаётся валидной
+        # form `after Pn.m` (closed item) — basic, remains valid
         plan_dir = write_valid_plan(self.root)
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
 
     def test_handoff_title_after_phase_valid(self):
-        # вторая форма `after Pn` (закрыта/проаудирована ФАЗА) — D30/G10
+        # second form `after Pn` (closed/audited PHASE) — D30/G10
         plan_dir = write_valid_plan(self.root)
         handoff = plan_dir / "handoff.md"
         text = handoff.read_text(encoding="utf-8")
@@ -648,7 +648,7 @@ class TestHandoffMd(TmpPlanTestCase):
         self.assertTrue(diag.ok, diag.errors)
 
     def test_handoff_title_after_nonexistent_phase(self):
-        # анти-подгонка: `after Pn` обязан РЕЗОЛВИТЬСЯ, а не просто матчиться regex'ом
+        # anti-fitting: `after Pn` must RESOLUTE, not just match regex'ohm
         plan_dir = write_valid_plan(self.root)
         handoff = plan_dir / "handoff.md"
         text = handoff.read_text(encoding="utf-8")
@@ -656,10 +656,10 @@ class TestHandoffMd(TmpPlanTestCase):
         handoff.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "заголовок: фаза «P9» не существует в плане"))
+        self.assertTrue(_errors_containing(diag, "title: phase «P9» does not exist in the plan"))
 
     def test_handoff_title_item_form_nonexistent_phase(self):
-        # D37/H10: item-форма `after Pn.m` больше не обходит гейт резолва — ФАЗА обязана быть
+        # D37/H10: item-form `after Pn.m` no longer bypasses the resolution gate - PHASE must be
         plan_dir = write_valid_plan(self.root)
         handoff = plan_dir / "handoff.md"
         text = handoff.read_text(encoding="utf-8")
@@ -667,10 +667,10 @@ class TestHandoffMd(TmpPlanTestCase):
         handoff.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "заголовок: фаза «P9» не существует в плане"))
+        self.assertTrue(_errors_containing(diag, "title: phase «P9» does not exist in the plan"))
 
     def test_handoff_title_bootstrap_item_form_allowed(self):
-        # D37: whitelist — РОВНО `P0.0` (стартовый handoff, фазы P0 в плане не бывает) → тихо
+        # D37: whitelist — EXACTLY `P0.0` (starting handoff, phases P0 does not happen in the plan) → quiet
         plan_dir = write_valid_plan(self.root)
         handoff = plan_dir / "handoff.md"
         text = handoff.read_text(encoding="utf-8")
@@ -680,7 +680,7 @@ class TestHandoffMd(TmpPlanTestCase):
         self.assertTrue(diag.ok, diag.errors)
 
     def test_handoff_title_prose_form_rejected(self):
-        # `after phase 2` — вне обеих форм enum'а
+        # `after phase 2` — outside both forms enum'a
         plan_dir = write_valid_plan(self.root)
         handoff = plan_dir / "handoff.md"
         text = handoff.read_text(encoding="utf-8")
@@ -688,25 +688,25 @@ class TestHandoffMd(TmpPlanTestCase):
         handoff.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "заголовок не соответствует ни одной из двух форм"))
+        self.assertTrue(_errors_containing(diag, "header does not match either of the two forms"))
 
     def test_handoff_missing_required_field(self):
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("**Remaining:** ничего.\n", "")
+        text = text.replace("**Remaining:** nothing.\n", "")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "нет обязательного поля «Remaining»"))
+        self.assertTrue(_errors_containing(diag, "no required field «Remaining»"))
 
     def test_handoff_next_missing_reference(self):
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("/task:plan-run DEMO-1 P1.1", "сделай что-нибудь")
+        text = text.replace("/task:plan-run DEMO-1 P1.1", "do something")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "не соответствует ни одной из допустимых форм"))
+        self.assertTrue(_errors_containing(diag, "does not match any of the valid forms"))
 
     def test_handoff_next_wrong_plan_id(self):
         plan_dir = write_valid_plan(self.root)
@@ -715,7 +715,7 @@ class TestHandoffMd(TmpPlanTestCase):
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "PLAN-ID «OTHER-ID» ≠ фактическому «DEMO-1»"))
+        self.assertTrue(_errors_containing(diag, "PLAN-ID «OTHER-ID» ≠ actual «DEMO-1»"))
 
     def test_handoff_next_nonexistent_item(self):
         plan_dir = write_valid_plan(self.root)
@@ -724,19 +724,19 @@ class TestHandoffMd(TmpPlanTestCase):
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "item «P9.9» не существует ни в одной фазе"))
+        self.assertTrue(_errors_containing(diag, "item «P9.9» does not exist in any phase"))
 
     def test_handoff_next_plan_closed_allowed(self):
-        # все items терминальны → Next «план закрыт» без ссылки plan-run — валиден
+        # all items terminal → Next «plan closed» without link plan-run — is valid
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("/task:plan-run DEMO-1 P1.1", "план закрыт — все фазы терминальны.")
+        text = text.replace("/task:plan-run DEMO-1 P1.1", "plan closed — all phases are terminal.")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok)
 
     def test_handoff_next_plan_design_phase_allowed(self):
-        # фаза-скелет впереди → Next «/task:plan-design <ID> Pn» (ссылка на фазу, не item) — валиден
+        # skeleton phase ahead → Next «/task:plan-design <ID> Pn» (phase reference, not item) — is valid
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
         text = text.replace("/task:plan-run DEMO-1 P1.1", "/task:plan-design DEMO-1 P1")
@@ -752,12 +752,12 @@ class TestHandoffMd(TmpPlanTestCase):
         backlog = plan_dir / "backlog"
         backlog.mkdir()
         target = backlog / "P2.md"
-        target.write_text("# P2\n\n> СКЕЛЕТ — не детализирован\n", encoding="utf-8")
+        target.write_text("# P2\n\n> SKELETON — not detailed\n", encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         target.write_text("# P2\n", encoding="utf-8")
         _, diag = _lint(plan_dir)
-        self.assertTrue(_errors_containing(diag, "фаза «P2» не существует в плане"))
+        self.assertTrue(_errors_containing(diag, "phase «P2» does not exist in the plan"))
 
     def test_handoff_next_plan_design_wrong_plan_id(self):
         plan_dir = write_valid_plan(self.root)
@@ -766,7 +766,7 @@ class TestHandoffMd(TmpPlanTestCase):
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "PLAN-ID «OTHER-ID» ≠ фактическому «DEMO-1»"))
+        self.assertTrue(_errors_containing(diag, "PLAN-ID «OTHER-ID» ≠ actual «DEMO-1»"))
 
     def test_handoff_next_plan_design_nonexistent_phase(self):
         plan_dir = write_valid_plan(self.root)
@@ -775,7 +775,7 @@ class TestHandoffMd(TmpPlanTestCase):
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "фаза «P9» не существует в плане"))
+        self.assertTrue(_errors_containing(diag, "phase «P9» does not exist in the plan"))
 
     def test_handoff_next_plan_design_rolling_backlog_phase(self):
         # D24-style rolling backlog: skeleton lives in backlog/<Pn>.md until plan-design moves it
@@ -786,17 +786,17 @@ class TestHandoffMd(TmpPlanTestCase):
         text = text.replace("/task:plan-run DEMO-1 P1.1", "/task:plan-design DEMO-1 P9")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
-        self.assertEqual(_errors_containing(diag, "фаза «P9» не существует в плане"), [])
+        self.assertEqual(_errors_containing(diag, "phase «P9» does not exist in the plan"), [])
 
     def test_handoff_next_plan_closed_rejected_when_items_active(self):
-        # «план закрыт» при живом 🟡 item — не оправдание, ERROR остаётся
+        # «plan closed» alive 🟡 item — is not an excuse, ERROR remains
         plan_dir = write_valid_plan(self.root)
         write_v2_carriers(
             plan_dir, item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"))
         ho = plan_dir / "handoff.md"
         text = ho.read_text(encoding="utf-8")
-        text = text.replace("/task:plan-run DEMO-1 P1.1", "план закрыт.")
+        text = text.replace("/task:plan-run DEMO-1 P1.1", "plan closed.")
         ho.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "«план закрыт», но не все items терминальны"))
+        self.assertTrue(_errors_containing(diag, "«plan closed», but not all items terminal"))

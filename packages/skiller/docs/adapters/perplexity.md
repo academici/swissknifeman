@@ -1,21 +1,21 @@
-# Адаптер: Perplexity
+# Adapter: Perplexity
 
-Скиллы из `skills/imported/` совместимы с Perplexity Computer out of the box —
-большинство из них и пришли из экосистемы Perplexity super-skills
-(см. `references/get-zeked-perplexity-super-skills.md`).
+Skills from `skills/imported/` are compatible with Perplexity Computer out of the box —
+most of them came from the ecosystem Perplexity super-skills
+(see `references/get-zeked-perplexity-super-skills.md`).
 
-## Загрузка
+## Loading
 
-В интерфейсе Perplexity:
+In the interface Perplexity:
 
 **Skills → Create skill → Upload `SKILL.md`**
 
-Файлы загружаются по одному; сниппеты при необходимости вставляются в тело
-скилла или загружаются как вложения.
+Files are downloaded one at a time; snippets are inserted into the body if necessary
+skill or downloaded as attachments.
 
-## Что учесть
+## What to consider
 
-- Perplexity не читает локальные каталоги — установка только через UI;
-- upstream-tracked скиллы (`skills/imported/`) обновляются через
-  [upstream-sync](../guide/upstream-sync): после обновления в реестре перезагрузите
-  файл в Perplexity вручную.
+- Perplexity does not read local directories - installation only via UI;
+- upstream-tracked skills (`skills/imported/`) are updated via
+  [upstream-sync](../guide/upstream-sync): after updating the registry, reboot
+  file in Perplexity manually.

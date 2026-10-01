@@ -1,6 +1,6 @@
 {
   "name": "vue-spa",
-  "description": "Vue SPA dev: ядро frontend + Vue + Vite + линтинг + Tailwind",
+  "description": "Vue SPA dev: core frontend + Vue + Vite + linting + Tailwind",
   "buckets": [
     "frontend",
     "frontend-vue",

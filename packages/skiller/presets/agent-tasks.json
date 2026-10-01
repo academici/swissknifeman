@@ -1,6 +1,6 @@
 {
   "name": "agent-tasks",
-  "description": "Постановка задач агенту: оркестрация, бриф-шаблон, спек-интервью, cross-layer чеклист",
+  "description": "Setting tasks for the agent: orchestration, brief template, spec interview, cross-layer checklist",
   "include": [
     "general/complex-task-orchestrator",
     "general/task-brief-template",

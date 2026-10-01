@@ -15,19 +15,19 @@ use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Broadcast-событие: уходит в очередь (ShouldBroadcast),
- * отправляется только после commit транзакции (ShouldDispatchAfterCommit).
+ * Broadcast-event: goes into queue (ShouldBroadcast),
+ * is sent only after commit transactions (ShouldDispatchAfterCommit).
  *
- * Для синхронной отправки без очереди — implements ShouldBroadcastNow.
+ * For synchronous sending without queue - implements ShouldBroadcastNow.
  */
 class OrderShipped implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
-    // InteractsWithSockets обязателен для broadcast(...)->toOthers()
+    // InteractsWithSockets is required for broadcast(...)->toOthers()
     use InteractsWithSockets, SerializesModels;
 
     public function __construct(public Order $order) {}
 
-    /** Каналы, на которые уходит событие. */
+    /** Channels to which the event goes. */
     public function broadcastOn(): array
     {
         return [
@@ -37,15 +37,15 @@ class OrderShipped implements ShouldBroadcast, ShouldDispatchAfterCommit
     }
 
     /**
-     * Своё имя события вместо FQCN.
-     * ВАЖНО: клиент должен слушать с точкой: .listen('.order.shipped').
+     * Your event name instead FQCN.
+     * IMPORTANT: The client must listen with a period: .listen('.order.shipped').
      */
     public function broadcastAs(): string
     {
         return 'order.shipped';
     }
 
-    /** Явный payload — не утекают лишние атрибуты модели. */
+    /** Explicit payload — does not leak unnecessary model attributes. */
     public function broadcastWith(): array
     {
         return [
@@ -55,35 +55,35 @@ class OrderShipped implements ShouldBroadcast, ShouldDispatchAfterCommit
         ];
     }
 
-    /** Условная отправка: пропускаем «незначимые» изменения. */
+    /** Conditional send: skip «insignificant» changes. */
     public function broadcastWhen(): bool
     {
         return $this->order->total > 0;
     }
 
-    /** Отдельная очередь для real-time, чтобы не ждать медленные джобы. */
+    /** Separate queue for real-time, so as not to wait for slow jobs. */
     public function broadcastQueue(): string
     {
         return 'broadcasts';
     }
 }
 
-// --- Использование ---
+// --- Usage ---
 //
-// Обычная отправка (через очередь):
+// Normal sending (via queue):
 //     OrderShipped::dispatch($order);
 //
-// Исключить отправителя (optimistic UI — клиент уже обновился из ответа API):
+// Exclude sender (optimistic UI — client has already updated from response API):
 //     broadcast(new OrderShipped($order))->toOthers();
 //
-// Анонимная отправка без класса события:
+// Anonymous dispatch without event class:
 //     Broadcast::private('orders.'.$order->id)
 //         ->as('order.shipped')
 //         ->with(['id' => $order->id])
 //         ->send();
 //
-// Model broadcasting — авто-события created/updated/deleted на канал
-// App.Models.Order.{id} без отдельных классов событий:
+// Model broadcasting — auto-events created/updated/deleted per channel
+// App.Models.Order.{id} without separate event classes:
 //
 //     use Illuminate\Database\Eloquent\BroadcastsEvents;
 //

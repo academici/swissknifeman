@@ -64,7 +64,7 @@ class SettingsAuditCoreCase(unittest.TestCase):
                {"permissions": {"allow": ["Bash(ls *)"]}})
         local = self.target / ".claude" / "settings.local.json"
         local.parent.mkdir(parents=True, exist_ok=True)
-        local.write_text("{не json", encoding="utf-8")
+        local.write_text("{not json", encoding="utf-8")
         layers = load_layers(self.env, self.target)
         local_layer = next(l for l in layers if l.name == "local")
         self.assertIsNone(local_layer.data)
@@ -147,7 +147,7 @@ class SettingsAuditChecksCase(unittest.TestCase):
     def test_check1_broken_layer_json_single_error_finding(self):
         local = self.target / ".claude" / "settings.local.json"
         local.parent.mkdir(parents=True, exist_ok=True)
-        local.write_text("{не json", encoding="utf-8")
+        local.write_text("{not json", encoding="utf-8")
         findings = self._run()
         errs = _findings_by_id(findings, 1)
         self.assertEqual(len(errs), 1)
@@ -201,7 +201,7 @@ class SettingsAuditChecksCase(unittest.TestCase):
             self.assertNotEqual(Path.home(), self.home)
             findings = self._run()
         errs = [f for f in _findings_by_id(findings, 5) if f.level == "error"]
-        self.assertEqual(errs, [], "тильда обязана раскрываться — ложный error недопустим")
+        self.assertEqual(errs, [], "tilde must be expanded - false error is invalid")
 
 
     def test_check5_interpreter_prefix_checks_script_not_interpreter(self):
@@ -213,7 +213,7 @@ class SettingsAuditChecksCase(unittest.TestCase):
              "hooks": [{"type": "command", "command": f"bash {script}"}]}]}})
         findings = self._run()
         errs = [f for f in _findings_by_id(findings, 5) if f.level == "error"]
-        self.assertEqual(errs, [], "`bash <script>` — проверяется скрипт, не интерпретатор")
+        self.assertEqual(errs, [], "`bash <script>` — the script is checked, not the interpreter")
 
     def test_check5_interpreter_prefix_does_not_require_script_executable(self):
         script = self.target / "hook.py"
@@ -223,7 +223,7 @@ class SettingsAuditChecksCase(unittest.TestCase):
              "hooks": [{"type": "command", "command": f"python3 {script}"}]}]}})
         findings = self._run()
         errs = [f for f in _findings_by_id(findings, 5) if f.level == "error"]
-        self.assertEqual(errs, [], "`python3 <script>` не требует X_OK у скрипта")
+        self.assertEqual(errs, [], "`python3 <script>` does not require X_OK for the script")
 
 
     def test_check5_unknown_hook_event_is_info_not_warn(self):
@@ -456,7 +456,7 @@ class SettingsDoctorCliCase(unittest.TestCase):
     def test_json_is_single_valid_document(self):
         local = self.target / ".claude" / "settings.local.json"
         local.parent.mkdir(parents=True, exist_ok=True)
-        local.write_text("{битый", encoding="utf-8")  # → error id=1
+        local.write_text("{broken", encoding="utf-8")  # → error id=1
         exc, out = self._run_cli(self._argv("--json"))
         stripped = out.strip()
 
@@ -488,7 +488,7 @@ class SettingsDoctorCliCase(unittest.TestCase):
     def test_exit_two_on_error(self):
         local = self.target / ".claude" / "settings.local.json"
         local.parent.mkdir(parents=True, exist_ok=True)
-        local.write_text("{битый", encoding="utf-8")
+        local.write_text("{broken", encoding="utf-8")
         exc, out = self._run_cli(self._argv())
         self.assertIsInstance(exc, SystemExit)
         self.assertEqual(exc.code, 2)
@@ -655,7 +655,7 @@ class SettingsAuditSecondSliceChecksCase(unittest.TestCase):
 
     def test_broken_vscode_json_is_info_not_error(self):
         (self.target / ".vscode").mkdir(parents=True, exist_ok=True)
-        (self.target / ".vscode" / "settings.json").write_text("{не json", encoding="utf-8")
+        (self.target / ".vscode" / "settings.json").write_text("{not json", encoding="utf-8")
         findings = self._run()
         by12 = _findings_by_id(findings, 12)
         self.assertTrue(any(f.level == "info" for f in by12))
@@ -668,7 +668,7 @@ class SettingsAuditSecondSliceChecksCase(unittest.TestCase):
         _write(self.target / ".claude" / "settings.json",
                {"permissions": {"defaultMode": "bypassPermissions"}})
         (self.target / ".vscode").mkdir(parents=True, exist_ok=True)
-        (self.target / ".vscode" / "settings.json").write_text("{не json", encoding="utf-8")
+        (self.target / ".vscode" / "settings.json").write_text("{not json", encoding="utf-8")
         findings = self._run()
         self.assertEqual(_findings_by_id(findings, 13), [])
         by12 = _findings_by_id(findings, 12)
@@ -696,7 +696,7 @@ class SettingsAuditSecondSliceChecksCase(unittest.TestCase):
 
     def test_load_vscode_layer_broken_json_sets_error_text(self):
         broken = self.target / "broken.json"
-        broken.write_text("{не json", encoding="utf-8")
+        broken.write_text("{not json", encoding="utf-8")
         layer = _load_vscode_layer("user", broken)
         self.assertIsNone(layer.data)
         self.assertIsNotNone(layer.error)

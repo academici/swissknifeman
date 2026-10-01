@@ -31,7 +31,7 @@ class TestLockDrift(unittest.TestCase):
 
     def test_locally_modified_template_reported(self):
         rendered = self.proj / ".claude/agents/acme-reviewer.md"
-        rendered.write_text(rendered.read_text() + "\nЛОКАЛЬНАЯ ПРАВКА\n")
+        rendered.write_text(rendered.read_text() + "\nLOCAL EDIT\n")
         drift = ap.lock_drift(self.proj)
         self.assertEqual(len(drift), 1)
         self.assertEqual(drift[0]["pack"], self.pack)
@@ -49,7 +49,7 @@ class TestLockDrift(unittest.TestCase):
     def test_user_owned_edit_not_reported(self):
 
         overrides = self.proj / ".claude/agents/acme-overrides.md"
-        overrides.write_text(overrides.read_text() + "\nмоя правка\n")
+        overrides.write_text(overrides.read_text() + "\nmy edit\n")
         self.assertEqual(ap.lock_drift(self.proj), [])
 
     def test_merge_kind_skipped_even_if_tampered(self):
@@ -93,27 +93,27 @@ class TestDoctorDriftCli(unittest.TestCase):
 
     def test_modified_drift_informative_rc0_without_strict(self):
         rendered = self.proj / ".claude/agents/acme-reviewer.md"
-        rendered.write_text(rendered.read_text() + "\nЛОКАЛЬНАЯ ПРАВКА\n")
+        rendered.write_text(rendered.read_text() + "\nLOCAL EDIT\n")
         rc, _out, err = self._run_cli(["doctor", "--target", str(self.proj), "--drift"])
         self.assertEqual(rc, 0)
-        self.assertIn("generated-файл правлен локально", err)
-        self.assertIn("перенеси правку в override и восстанови render", err)
+        self.assertIn("generated-file edited locally", err)
+        self.assertIn("move the edit to override and restore render", err)
         self.assertIn(".claude/agents/acme-reviewer.md", err)
 
     def test_modified_drift_strict_rc1(self):
         rendered = self.proj / ".claude/agents/acme-reviewer.md"
-        rendered.write_text(rendered.read_text() + "\nЛОКАЛЬНАЯ ПРАВКА\n")
+        rendered.write_text(rendered.read_text() + "\nLOCAL EDIT\n")
         rc, _out, err = self._run_cli(
             ["doctor", "--target", str(self.proj), "--drift", "--strict"])
         self.assertEqual(rc, 1)
-        self.assertIn("generated-файл правлен локально", err)
+        self.assertIn("generated-file edited locally", err)
 
     def test_missing_drift_message(self):
         (self.proj / ".claude/hooks/gate.sh").unlink()
         rc, _out, err = self._run_cli(
             ["doctor", "--target", str(self.proj), "--drift", "--strict"])
         self.assertEqual(rc, 1)
-        self.assertIn("generated-файл отсутствует", err)
+        self.assertIn("generated-file missing", err)
         self.assertIn(".claude/hooks/gate.sh", err)
 
     def test_drift_without_target_dies(self):

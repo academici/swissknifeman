@@ -1,48 +1,48 @@
-# Конфиги: швейцарский нож для агентов
+# Configs: Swiss army knife for agents
 
-Скиллы — половина дела. Чтобы агент в новом проекте работал сразу, нужны ещё
-и **конфиги**: разрешения, настройки, специфика IDE. Раздел `configs/` собирает
-готовые конфиги в одном месте — по тому же принципу, что и скиллы: один
-источник истины, установка одной командой.
+Skills are half the battle. For an agent to work immediately in a new project, we need more
+and **configs**: permissions, settings, specifics IDE. Section `configs/` collects
+ready-made configs in one place - according to the same principle as skills: one
+source of truth, installation with one command.
 
-## Что уже есть
+## What already exists
 
-| Конфиг | Где лежит | Что делает |
+| Config | Where is | What it does |
 |---|---|---|
-| [Пресеты permissions для Claude Code](./claude-permissions) | `configs/claude-code/` | готовые `settings.json` с максимально разрешённым доступом: git, composer, artisan, npm, docker — по стекам |
-| MCP-серверы | `configs/claude-code/mcp/` | пресеты `.mcp.json`; `context7` ставит `skiller integrate` по умолчанию, курированный сабсет (playwright, filesystem, fetch, …) — opt-in через `--mcp`. Каталог: [Интеграции](../integrations/) |
-| [Agent-packs](./agent-packs) | `configs/claude-code/agent-packs/` | версионируемые паки субагентов/правил под стек/роль — provenance-header, оверрайды, drift-детект |
-| [Statusline: контекст и уведомления](./statusline) | `configs/claude-code/statusline/` | строка статуса с фактическим процентом контекста + ОС-уведомление на пересечении порога (opt-in, `harness hooks --statusline context`) |
+| [Presets permissions for Claude Code](./claude-permissions) | `configs/claude-code/` | ready `settings.json` with maximum allowed access: git, composer, artisan, npm, docker — by stacks |
+| MCP-servers | `configs/claude-code/mcp/` | presets `.mcp.json`; `context7` puts `skiller integrate` default, curated subset (playwright, filesystem, fetch, …) — opt-in via `--mcp`. Catalog: [Integrations](../integrations/) |
+| [Agent-packs](./agent-packs) | `configs/claude-code/agent-packs/` | versioned subagent packs/rules under the stack/role - provenance-header, overrides, drift-detect |
+| [Statusline: context and notifications](./statusline) | `configs/claude-code/statusline/` | status line with actual context percentage + OS notification when threshold is crossed (opt-in, `harness hooks --statusline context`) |
 
-## Сценарий
+## Script
 
-Подняли новый проект — например, на Laravel. Две команды, и агент полностью
-готов к работе:
+We raised a new project - for example, on Laravel. Two teams, and the agent is completely
+ready for use:
 
 ```bash
-# 1. Скиллы: автодетект → architect, php, devops, quality, operator
+# 1. Skills: auto detect → architect, php, devops, quality, operator
 skiller connect
 
-# 2. Permissions: автодетект → base + laravel + node (+ docker, если есть Dockerfile)
+# 2. Permissions: autodetection → base + laravel + node (+ docker, if available Dockerfile)
 ~/projects/packages/swissknifeman/packages/skiller/scripts/apply-permissions.sh --target .
 ```
 
-После этого Claude Code может запускать `php artisan`, `composer`, тесты,
-линтеры и git-команды без permission-промптов, а секреты (`.env`, ключи,
-`~/.ssh`) остаются под запретом.
+After this Claude Code can run `php artisan`, `composer`, tests,
+linters and git-commands without permission-prompts, and secrets (`.env`, keys,
+`~/.ssh`) remain prohibited.
 
-## Что планируется
+## What's planned
 
-Раздел будет расти по мере накопления практики:
+The section will grow as practice accumulates:
 
-- **Агенты** — преднастроенные субагенты (`.claude/agents/`) под типовые роли;
-- **Хуки** — `settings.json`-хуки: автоформатирование после правок, валидация
-  перед коммитом;
-- **Больше MCP-серверов** — `context7` раздаётся по умолчанию, курированный сабсет
-  (playwright, filesystem, fetch, memory, sequential-thinking, github) — opt-in через
-  `--mcp`; каталог инструментов — раздел [Интеграции](../integrations/). Дальше — новые
-  проверенные конфигурации `.mcp.json`;
-- **Cursor** — [Настройка Cursor](../setup/cursor): `.cursor/cli.json`, `.cursor/permissions.json`, `.cursor/mcp.json`; профили observe / workspace-contained / trusted-full-access.
+- **Agents** — pre-configured subagents (`.claude/agents/`) for standard roles;
+- **Hooks** — `settings.json`-hooks: auto-formatting after edits, validation
+  before commit;
+- **More MCP-servers** — `context7` distributed by default, curated subset
+  (playwright, filesystem, fetch, memory, sequential-thinking, github) — opt-in via
+  `--mcp`; tools catalog - section [Integrations](../integrations/). Next - new ones
+  tested configurations `.mcp.json`;
+- **Cursor** — [Settings Cursor](../setup/cursor): `.cursor/cli.json`, `.cursor/permissions.json`, `.cursor/mcp.json`; profiles observe / workspace-contained / trusted-full-access.
 
-Принцип тот же, что у скиллов: всё проверено в бою, всё в одном месте,
-ставится одной командой.
+The principle is the same as for skills: everything is tested in battle, everything is in one place,
+is set with one command.

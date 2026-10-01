@@ -1,74 +1,74 @@
 <!-- Source: anonymized production project -->
 
-# Before / After: тон и язык
+# Before / After: tone and language
 
-Пары «плохо/хорошо» для комментария в коде и заголовка коммита. Принцип один:
-по-русски, про причину, без канцелярита, завершённым действием.
+Couples «bad/good» for the code comment and commit title. One principle:
+in Russian, about the reason, without bureaucracy, with a completed action.
 
-## Комментарий в коде
+## Comment in code
 
-### Плохо
+### Bad
 
 ```php
-// Данный метод осуществляет фильтрацию записей и производит возврат результата.
+// This method filters records and returns the result.
 public function publicList(): Collection
 {
     return Document::query()->where('status', Status::Active)->get();
 }
 ```
 
-Почему плохо: канцелярит («осуществляет», «производит»), пересказ того, что и так
-видно из кода, — но не сказано главное: *почему* фильтруем по статусу.
+Why it’s bad: clerical («carries out», «produces»), retelling of what is already
+can be seen from the code, but the main thing is not said: *why* filter by status.
 
-### Хорошо
+### Okay
 
 ```php
 public function publicList(): Collection
 {
-    // Ограничили выборку активными записями, чтобы не тянуть архив в публичный список.
+    // We limited the selection to active records so as not to drag the archive into the public list.
     return Document::query()->where('status', Status::Active)->get();
 }
 ```
 
-Почему хорошо: комментарий короткий, по-русски, объясняет намерение и последствие,
-а не дублирует код.
+Why it's good: the comment is short, in Russian, explains the intention and consequence,
+rather than duplicating code.
 
-## Описание теста
+## Test description
 
-### Плохо
+### Bad
 
 ```php
-// Транслитерация имени метода, английский, ничего не говорит о поведении:
+// Transliteration of the method name, English, says nothing about the behavior:
 it('test public list filter active', function () { /* ... */ });
 ```
 
-### Хорошо
+### Okay
 
 ```php
-// По-русски, про поведение и условие:
-it('публичный список отдаёт только активные документы и скрывает архив', function () {
+// In Russian, about behavior and condition:
+it('public list gives only active documents and hides the archive', function () {
     /* ... */
 });
 ```
 
-## Заголовок коммита
+## Commit header
 
-### Плохо
-
-```text
-fix(api): исправить фильтрацию документов в публичном списке
-```
-
-Почему плохо: голый инфинитив («исправить»), нет body с причиной.
-Формат при этом корректен — проблема именно в тоне.
-
-### Хорошо
+### Bad
 
 ```text
-fix(api): исправили фильтрацию документов в публичном списке
-
-Архивные записи попадали в публичную выдачу — добавили фильтр по статусу Active.
+fix(api): fix filtering of documents in the public list
 ```
 
-Почему хорошо: завершённое действие («исправили»), body объясняет, что было не так
-и что изменилось. Тип, scope и breaking-разметку берём из `git-commit-rules`.
+Why is it bad: bare infinitive («fix»), no body with the reason.
+The format is correct - the problem is the tone.
+
+### Okay
+
+```text
+fix(api): fixed filtering of documents in the public list
+
+Archived records were included in public output - added a filter by status Active.
+```
+
+Why it's good: completed action («fixed»), body explains what was wrong
+and what has changed. Type, scope and breaking-we take the markup from `git-commit-rules`.

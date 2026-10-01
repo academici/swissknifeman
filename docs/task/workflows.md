@@ -1,40 +1,40 @@
-# Конструктор Task workflow-шаблонов
+# Task workflow template constructor
 
-Оркестрация субагентов не пишется с нуля под каждую задачу: канон — **4 параметризуемых
-шаблон-скрипта** в `packages/task/workflows/` + правила заполнения слотов (README папки).
-Это библиотека портируемых шаблонов, НЕ кодогенератор и НЕ новый DSL — workflow-скрипт
-уже достаточно выразителен, конструктор лишь фиксирует проверенные топологии.
+Subagent orchestration is not written from scratch for each task: canon - **4 parameterizable
+script template** in `packages/task/workflows/` + rules for filling slots (README folder).
+This is a library of portable templates, NOT a code generator and NOT a new DSL - workflow script
+is already quite expressive; the constructor only captures proven topologies.
 
-## Когда какой шаблон
+## When which template
 
-| Шаблон | Оркестрация | Слоты | Брать когда |
+| Template | Orchestration | Slots | Take when |
 |:--|:--|:--|:--|
-| `wf-research-fanout.js` | N тем × research → adversarial verify (pipeline, без барьера) | `TOPICS[]`, схемы ответов, model/effort | многотемный research с верификацией: рынок, стек, RAG под план |
-| `wf-author-by-spec.js` | спека → N файловых заданий × author → self-check (pipeline) | `FILES[]` (файл + ТЗ + валидация), конвейер-команды | Stage-3-авторинг по готовой спеке: скиллы, доки, команды per-файл |
-| `wf-audit-adversarial.js` | M finders → dedup → adversarial verify → вердикты | `DIMENSIONS[]`, severity-enum, конституция профиля | аудит/ревью артефакта по измерениям: план, код, документация |
-| `wf-dev-slice.js` | срез → impl → tests-to-green → risk-адаптивное review | `SLICES[]`, гейты | разработка вертикальными срезами (профиль `/task:dev`) |
+| `wf-research-fanout.js` | N topics × research → adversarial verify (pipeline, no barrier) | `TOPICS[]`, answer schemes, model/effort | multi-topic research with verification: market, stack, RAG under plan |
+| `wf-author-by-spec.js` | spec → N file tasks × author → self-check (pipeline) | `FILES[]` (file + TK + validation), pipeline-commands | Stage-3 authoring using a ready-made spec: skills, docks, commands per-file |
+| `wf-audit-adversarial.js` | M finders → dedup → adversarial verify → verdicts | `DIMENSIONS[]`, severity-enum, profile constitution | audit/review of artifact by measurements: plan, code, documentation |
+| `wf-dev-slice.js` | slice → impl → tests-to-green → risk-adaptive review | `SLICES[]`, gates | development by vertical slices (profile `/task:dev`) |
 
-Прототип-образец: `wf-p5-research.js` плана ECOSYSTEM P5 — рабочий экземпляр шаблона 1.
+Sample prototype: `wf-p5-research.js` ECOSYSTEM P5 plan - working copy of template 1.
 
-## Правила слотов
+## Slot Rules
 
-- **Слоты — только константы в шапке скрипта.** Параметризация правкой шапки, не
-  args-строкой: embedded-конфиг вместо разбора аргументов (ловушка named-workflow —
-  строка аргументов ломается на первом же многострочном ТЗ).
-- **Супервизор держит контекст, агенты возвращают структурированные summary со схемой.**
-  Handoff между стадиями — артефакт-центричный: файл/структура, не пересказ чата.
-- **Judge-panel (3+ вердикта) — слот только для high-stakes стадий.** По умолчанию
-  single-agent: он закрывает большинство задач, панель судей — избирательно (фискалка,
-  платежи, публичные контракты).
-- **`max-iteration` обязателен у любых loop-until** — цикл без верхней границы запрещён.
-- В `wf-dev-slice.js` commit выполняется только после зелёных тестов, независимого review и
-  межсрезовых гейтов. Пропавший результат impl/fix/review/gate/commit останавливает workflow и
-  попадает в итоговый отчёт; успешный итог при таком пропуске невозможен.
+- **Slots are only constants in the script header.** Parameterization for editing the header, not
+  args-string: embedded-config instead of parsing arguments (named-workflow trap -
+  the line of arguments breaks on the very first multi-line TK).
+- **The supervisor holds the context, the agents return structured summaries with the schema.**
+  Handoff between stages - artifact-centric: file/structure, not chat retelling.
+- **Judge-panel (3+ verdicts) - slot only for high-stakes stages.** Default
+  single-agent: it closes most tasks, the panel of judges is selective (fiscal,
+  payments, public contracts).
+- **`max-iteration` is required for any loop-until** - a loop without an upper bound is prohibited.
+- In `wf-dev-slice.js` commit is performed only after green tests, independent review and
+  interslice gates. The missing result of impl/fix/review/gate/commit stops the workflow and
+  is included in the final report; a successful outcome with such an omission is impossible.
 
-## Связки
+## Bundles
 
-- Профили ревью для `wf-audit-adversarial.js` (конституция + измерения по типу
-  артефакта) — скилл `quality/artifact-review`; conformance-finder'ы по скиллам стека —
-  команда `/task:review`.
-- Полный цикл, в котором workflow-шаблоны занимают стадии research/exec/review —
-  [Методология](./methodology).
+- Review profiles for `wf-audit-adversarial.js` (constitution + measurements by type
+  artifact) - skill `quality/artifact-review`; conformance-finder's by stack skills -
+  command `/task:review`.
+- Full cycle in which workflow templates occupy the research/exec/review stages -
+  [Methodology](./methodology).

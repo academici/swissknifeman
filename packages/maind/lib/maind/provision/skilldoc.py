@@ -58,7 +58,7 @@ def _apply_managed_skill(env, config, project, mode, dry, *, label, template, sk
     local = project.get("local_path")
     path = Path(os.path.expanduser(local)) if local else None
     if not path or not path.is_dir():
-        return _result(pid, label, "absent", False, dry, "нет пути")
+        return _result(pid, label, "absent", False, dry, "no path")
     content = _render(env, template, _subst(env, config, project))
     targets = tuple((skill_path, path / skill_path) for skill_path in skill_paths)
     if any(_skiller_bootstrap_owned(target) for _skill_path, target in targets):

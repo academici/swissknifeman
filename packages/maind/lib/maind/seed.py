@@ -1,9 +1,9 @@
-"""Seed-память: базовый факт о связях проекта, чтобы память сразу была «не пустой» и
-делала видимым, что она ОБЩАЯ. Текст генерируется из derive-графа (роль, связанные
-проекты), пишется в приватный бакет project:<id> + короткий cross-ref в общие бакеты
-группы (ns:<имя>, wildcard → global) — паритет с графом по namespace'ам: факты группы
-видны внутри namespace и изолированы между. Идемпотентно: повтор с тем же текстом не
-плодит фактов (дедуп по маркеру/тексту)."""
+"""Seed-memory: a basic fact about project connections so that memory is immediately «is not empty» and
+made it visible that she was GENERAL. The text is generated from derive-column (role related
+projects), is written to a private bucket project:<id> + short cross-ref to shared buckets
+groups (ns:<name>, wildcard → global) — parity with graph by namespace'am: group facts
+visible inside namespace and isolated between. Idempotent: repeat with the same text is not
+produces facts (dedup by marker/text)."""
 from .common import content_hash
 from .memory import health, recall, resolve_ports, store
 from .namespaces import memory_namespaces_of, namespaces_of, private_scope, recall_scopes
@@ -12,7 +12,7 @@ MARKER = "maind:ecosystem-link"
 
 
 def linked_projects(env, config, project):
-    """Связанные проекты из графа проекта (соседи project:<id> → другие project:*)."""
+    """Related projects from the project graph (neighbors project:<id> → others project:*)."""
     from .federation import project_graph, store_path
     from pathlib import Path
     if not Path(store_path(env, config, project)).exists():
@@ -29,39 +29,39 @@ def linked_projects(env, config, project):
 
 
 def seed_text(env, config, project):
-    """Базовый факт о связях проекта (с маркером и хэшем для дедупа/детекта дрейфа)."""
+    """Basic fact about project relationships (with token and hash for dedupe/drift detection)."""
     pid = project["id"]
     name = project.get("name", pid)
     ptype = project.get("type", "unknown")
     http_port, _, _ = resolve_ports(env, config)
     linked = linked_projects(env, config, project)
-    parts = [f"[{MARKER}] {name} ({ptype}) — узел экосистемы academici."]
+    parts = [f"[{MARKER}] {name} ({ptype}) — ecosystem node academici."]
     ns = sorted(namespaces_of(project))
-    if ns != ["default"]:                    # связи ограничены этим(и) namespace
+    if ns != ["default"]:                    # connections are limited to this(and) namespace
         parts.append("Namespace: " + ", ".join(ns) + ".")
     if linked:
-        parts.append("Связан с: " + ", ".join(linked) + ".")
+        parts.append("Related: " + ", ".join(linked) + ".")
     parts.append(
-        f"Память проекта изолирована (демон mAInd :{http_port}); основной бакет — "
-        f"{', '.join(recall_scopes(project))}. Общие области доступны только явным scope"
+        f"Project memory isolated (demon mAInd :{http_port}); main bucket - "
+        f"{', '.join(recall_scopes(project))}. Shared areas are only accessible by explicit scope"
         + ((": " + ", ".join(sorted(memory_namespaces_of(project))))
            if memory_namespaces_of(project) else "")
-        + f". Связи: maind graph --project {pid}.")
+        + f". Contacts: maind graph --project {pid}.")
     body = " ".join(parts)
     return f"{body} #{content_hash(body)}"
 
 
 def seed_memory(env, config, project, *, dry=False):
-    """Записать seed-факт в приватный бакет project:<id> + cross-ref в общие бакеты группы
-    (ns:<имя>, wildcard → global) — идемпотентно. Демон лежит — skip с пометкой
-    (запишется на следующем sync)."""
+    """Write seed-fact in private bucket project:<id> + cross-ref to shared group buckets
+    (ns:<name>, wildcard → global) — is idempotent. The demon lies - skip marked
+    (will be recorded on the next sync)."""
     pid = project["id"]
     scope = private_scope(project)
     text = seed_text(env, config, project)
     _, _, url = resolve_ports(env, config)
     if not health(url):
         return {"provisioner": "memory", "id": pid, "status": "skip",
-                "changed": False, "detail": "демон памяти не запущен"}
+                "changed": False, "detail": "memory daemon not running"}
     existing = [item for item in recall(url, scope, MARKER)
                 if (item.get("text") or "").startswith(f"[{MARKER}]")]
     if len(existing) == 1 and existing[0].get("text") == text:

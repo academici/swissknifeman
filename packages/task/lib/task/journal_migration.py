@@ -79,32 +79,32 @@ def _require_exact_fields(value, expected, *, label: str) -> None:
     if not isinstance(value, dict) or set(value) != set(expected):
         actual = sorted(value) if isinstance(value, dict) else type(value).__name__
         raise JournalMigrationError(
-            f"{label}: ожидались поля {sorted(expected)}, получено {actual}")
+            f"{label}: fields expected {sorted(expected)}, received {actual}")
 
 
 def _require_sha(value, *, label: str) -> None:
     if not isinstance(value, str) or not _SHA256_RE.fullmatch(value):
-        raise JournalMigrationError(f"{label}: ожидается lowercase SHA-256")
+        raise JournalMigrationError(f"{label}: pending lowercase SHA-256")
 
 
 def _decision_is_accepted(plan_dir: Path, decision_id: str) -> bool:
     try:
         decisions = plan_decisions.load_decisions(plan_dir)
     except plan_decisions.DecisionError as exc:
-        raise JournalMigrationError(f"owner_decision: каталог решений невалиден: {exc}") from exc
+        raise JournalMigrationError(f"owner_decision: solution directory is invalid: {exc}") from exc
     return any(row.identifier == decision_id and row.status == "accepted" for row in decisions)
 
 
 def _decode_pointer(path: str) -> tuple[str, ...]:
     if not isinstance(path, str) or not path.startswith("/"):
-        raise JournalMigrationError(f"operation.path: невалидный JSON pointer {path!r}")
+        raise JournalMigrationError(f"operation.path: invalid JSON pointer {path!r}")
     return tuple(part.replace("~1", "/").replace("~0", "~") for part in path[1:].split("/"))
 
 
 def _parent_and_key(document: dict, path: str):
     parts = _decode_pointer(path)
     if not parts:
-        raise JournalMigrationError("operation.path: корень journal event изменять нельзя")
+        raise JournalMigrationError("operation.path: root journal event cannot be changed")
     current = document
     for part in parts[:-1]:
         if isinstance(current, dict) and part in current:
@@ -112,14 +112,14 @@ def _parent_and_key(document: dict, path: str):
         elif isinstance(current, list) and part.isdigit() and int(part) < len(current):
             current = current[int(part)]
         else:
-            raise JournalMigrationError(f"operation.path: parent отсутствует для {path}")
+            raise JournalMigrationError(f"operation.path: parent missing for {path}")
     key = parts[-1]
     if isinstance(current, list):
         if not key.isdigit() or int(key) >= len(current):
-            raise JournalMigrationError(f"operation.path: индекс вне списка для {path}")
+            raise JournalMigrationError(f"operation.path: index out of list for {path}")
         key = int(key)
     elif not isinstance(current, dict):
-        raise JournalMigrationError(f"operation.path: parent не container для {path}")
+        raise JournalMigrationError(f"operation.path: parent not container for {path}")
     return current, key
 
 
@@ -127,7 +127,7 @@ def _allowed_operation(operation: dict) -> None:
     op = operation.get("op")
     expected = _ADD_FIELDS if op == "add" else _REPLACE_FIELDS if op == "replace" else None
     if expected is None:
-        raise JournalMigrationError("operation.op: допустимы только add/replace")
+        raise JournalMigrationError("operation.op: are only valid add/replace")
     _require_exact_fields(operation, expected, label="operation")
     path = operation["path"]
 
@@ -139,18 +139,18 @@ def _allowed_operation(operation: dict) -> None:
                 or not isinstance(before, list) or not before
                 or any(not isinstance(item, str) or not item for item in before)):
             raise JournalMigrationError(
-                "/friction: допускается только replace непустого legacy string[] на ['deviation']")
+                "/friction: is only allowed replace non-empty legacy string[] on ['deviation']")
         return
     if path in _NEUTRAL_ROOT_VALUES:
         if op != "add" or operation["value"] != _NEUTRAL_ROOT_VALUES[path]:
             raise JournalMigrationError(
-                f"{path}: допускается только additive neutral backfill {_NEUTRAL_ROOT_VALUES[path]!r}")
+                f"{path}: is only allowed additive neutral backfill {_NEUTRAL_ROOT_VALUES[path]!r}")
         return
     if path == "/batch_receipt":
         if op != "replace" or not isinstance(operation.get("before"), dict) \
                 or not isinstance(operation["value"], dict):
             raise JournalMigrationError(
-                "/batch_receipt: допускается только replace невалидного historical receipt")
+                "/batch_receipt: is only allowed replace invalid historical receipt")
         from task.task_contract import validate_batch_receipt
 
         before = operation["before"]
@@ -160,36 +160,36 @@ def _allowed_operation(operation: dict) -> None:
         except ValueError:
             pass
         else:
-            raise JournalMigrationError("/batch_receipt: исходный receipt уже валиден")
+            raise JournalMigrationError("/batch_receipt: original receipt is already valid")
         try:
             validate_batch_receipt(after)
         except ValueError as exc:
-            raise JournalMigrationError(f"/batch_receipt: итоговый receipt невалиден: {exc}") from exc
+            raise JournalMigrationError(f"/batch_receipt: final receipt is invalid: {exc}") from exc
         for field in ("schema_version", "batch_id", "membership", "completed_prefix", "stop_disposition"):
             if before.get(field) != after[field]:
-                raise JournalMigrationError(f"/batch_receipt: {field} нельзя менять")
+                raise JournalMigrationError(f"/batch_receipt: {field} cannot be changed")
         # invocation_digest is fully derived from the unchanged membership, so an
         # invalid historical value can be corrected without changing batch
         # identity. The remaining digests bind external carriers and stay
         # immutable once present.
         for field in ("routing_digest", "spec_digest", "handoff_digest"):
             if before.get(field) is not None and before[field] != after[field]:
-                raise JournalMigrationError(f"/batch_receipt: {field} нельзя менять")
+                raise JournalMigrationError(f"/batch_receipt: {field} cannot be changed")
         return
     if path in _LEGACY_DECISION_ADDITIONS:
         if op != "add" or operation["value"] != _LEGACY_DECISION_ADDITIONS[path]:
             raise JournalMigrationError(
-                f"{path}: допускается только additive legacy decision backfill")
+                f"{path}: is only allowed additive legacy decision backfill")
         return
     if path in _LEGACY_ENUM_REPLACEMENTS:
         pair = (operation.get("before"), operation["value"])
         if op != "replace" or pair not in _LEGACY_ENUM_REPLACEMENTS[path]:
             raise JournalMigrationError(
-                f"{path}: legacy enum transition не входит в migration allow-list")
+                f"{path}: legacy enum transition is not included migration allow-list")
         return
     if path == "/decision":
         if op != "add" or not isinstance(operation["value"], dict):
-            raise JournalMigrationError("/decision: допускается только additive object recovery")
+            raise JournalMigrationError("/decision: is only allowed additive object recovery")
         return
     if _VALIDATION_ROW_RE.fullmatch(path):
         before = operation.get("before")
@@ -211,13 +211,13 @@ def _allowed_operation(operation: dict) -> None:
                 or any(not isinstance(item, str) or not item
                        for item in after["evidence_ids"])):
             raise JournalMigrationError(
-                f"{path}: допускается только exact skipped→green validation repair "
-                "с неизменным carrier и непустыми evidence_ids")
+                f"{path}: is only allowed exact skipped→green validation repair "
+                "with unchanged carrier and non-empty evidence_ids")
         return
     if path in _TERMINAL_SCALAR_PATHS:
         if path.endswith("/repair_exhausted") and (op != "add" or operation["value"] is not None):
             raise JournalMigrationError(
-                "/decision/terminal_evidence/repair_exhausted: допускается только add null")
+                "/decision/terminal_evidence/repair_exhausted: is only allowed add null")
         if path.endswith("/spec_sha256"):
             _require_sha(operation["value"], label=path)
         return
@@ -226,9 +226,9 @@ def _allowed_operation(operation: dict) -> None:
         if (op != "add" or not isinstance(value, list) or not value
                 or len(value) != len(set(value))
                 or any(not isinstance(item, str) or not item for item in value)):
-            raise JournalMigrationError(f"{path}: допускается только add непустого unique string[]")
+            raise JournalMigrationError(f"{path}: is only allowed add non-empty unique string[]")
         return
-    raise JournalMigrationError(f"operation.path: путь не входит в migration allow-list: {path}")
+    raise JournalMigrationError(f"operation.path: path is not included migration allow-list: {path}")
 
 
 def _duplicate_start(entry: dict, earlier_entries, later_entries) -> bool:
@@ -265,37 +265,37 @@ def _apply_operation(entry: dict, operation: dict, *, earlier_entries=(), later_
     exists = key < len(parent) if isinstance(parent, list) else key in parent
     if operation["op"] == "add":
         if exists:
-            raise JournalMigrationError(f"add target уже существует: {operation['path']}")
+            raise JournalMigrationError(f"add target already exists: {operation['path']}")
     else:
         if not exists:
-            raise JournalMigrationError(f"replace target отсутствует: {operation['path']}")
+            raise JournalMigrationError(f"replace target missing: {operation['path']}")
         current = parent[key]
         if current != operation["before"]:
             raise JournalMigrationError(
-                f"replace precondition не совпадает для {operation['path']}")
+                f"replace precondition does not match for {operation['path']}")
         if (operation["path"] == "/result"
                 and operation["before"] == "in-progress"
                 and (entry.get("session_id") is not None or entry.get("run_id") is not None)
                 and not _duplicate_start(entry, earlier_entries, later_entries)):
             raise JournalMigrationError(
-                "/result: сброс допустим только для orphan in-progress или доказанного duplicate start")
+                "/result: reset is only valid for orphan in-progress or proven duplicate start")
     parent[key] = operation["value"]
 
 
 def _validate_manifest(plan_dir: Path, manifest_path: Path, manifest: dict) -> None:
     _require_exact_fields(manifest, _ROOT_FIELDS, label="manifest")
     if manifest["schema_version"] != SCHEMA_VERSION:
-        raise JournalMigrationError(f"schema_version: ожидается {SCHEMA_VERSION}")
+        raise JournalMigrationError(f"schema_version: pending {SCHEMA_VERSION}")
     migration_id = manifest["migration_id"]
     if not isinstance(migration_id, str) or not _MIGRATION_ID_RE.fullmatch(migration_id):
-        raise JournalMigrationError("migration_id: допускаются lowercase a-z, 0-9, dot, dash, underscore")
+        raise JournalMigrationError("migration_id: are allowed lowercase a-z, 0-9, dot, dash, underscore")
     if manifest["plan_id"] != plan_dir.name:
-        raise JournalMigrationError("plan_id: не совпадает с canonical plan directory")
+        raise JournalMigrationError("plan_id: does not match canonical plan directory")
     for field in ("owner_decision", "actor", "reason"):
         if not isinstance(manifest[field], str) or not manifest[field]:
-            raise JournalMigrationError(f"{field}: ожидается непустая строка")
+            raise JournalMigrationError(f"{field}: expected non-empty string")
     if not _decision_is_accepted(plan_dir, manifest["owner_decision"]):
-        raise JournalMigrationError("owner_decision: нет accepted D# в decisions/")
+        raise JournalMigrationError("owner_decision: no accepted D# in decisions/")
     for field in ("source_sha256", "target_sha256"):
         _require_sha(manifest[field], label=field)
 
@@ -305,31 +305,31 @@ def _validate_manifest(plan_dir: Path, manifest_path: Path, manifest: dict) -> N
     try:
         actual_manifest = manifest_path.resolve(strict=True)
     except OSError as exc:
-        raise JournalMigrationError(f"manifest не читается: {exc}") from exc
+        raise JournalMigrationError(f"manifest is not readable: {exc}") from exc
     if actual_manifest != expected_manifest.resolve(strict=False):
-        raise JournalMigrationError(f"manifest обязан находиться в {expected_manifest}")
+        raise JournalMigrationError(f"manifest must be in {expected_manifest}")
     if manifest["preimage_path"] != expected_preimage.relative_to(plan_dir).as_posix():
-        raise JournalMigrationError("preimage_path: не совпадает с canonical migration path")
+        raise JournalMigrationError("preimage_path: does not match canonical migration path")
 
     changes = manifest["changes"]
     if not isinstance(changes, list) or not changes:
-        raise JournalMigrationError("changes: ожидается непустой список")
+        raise JournalMigrationError("changes: expected non-empty list")
     lines = []
     for index, change in enumerate(changes):
         _require_exact_fields(change, _CHANGE_FIELDS, label=f"changes[{index}]")
         line = change["line"]
         if isinstance(line, bool) or not isinstance(line, int) or line < 1:
-            raise JournalMigrationError(f"changes[{index}].line: ожидается int >= 1")
+            raise JournalMigrationError(f"changes[{index}].line: pending int >= 1")
         lines.append(line)
         _require_sha(change["before_sha256"], label=f"changes[{index}].before_sha256")
         _require_sha(change["after_sha256"], label=f"changes[{index}].after_sha256")
         operations = change["operations"]
         if not isinstance(operations, list) or not operations:
-            raise JournalMigrationError(f"changes[{index}].operations: ожидается непустой список")
+            raise JournalMigrationError(f"changes[{index}].operations: expected non-empty list")
         for operation in operations:
             _allowed_operation(operation)
     if lines != sorted(lines) or len(lines) != len(set(lines)):
-        raise JournalMigrationError("changes.line: строки должны быть unique и строго возрастающими")
+        raise JournalMigrationError("changes.line: lines should be unique and strictly increasing")
 
 
 def render_target(plan_dir, manifest_path) -> tuple[bytes, bytes, dict]:
@@ -339,58 +339,58 @@ def render_target(plan_dir, manifest_path) -> tuple[bytes, bytes, dict]:
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise JournalMigrationError(f"manifest не читается как UTF-8 JSON: {exc}") from exc
+        raise JournalMigrationError(f"manifest doesn't read like UTF-8 JSON: {exc}") from exc
     _validate_manifest(plan_dir, manifest_path, manifest)
 
     journal_path = plan_dir / journal.FILENAME
     try:
         source = journal_path.read_bytes()
     except OSError as exc:
-        raise JournalMigrationError(f"journal не читается: {exc}") from exc
+        raise JournalMigrationError(f"journal is not readable: {exc}") from exc
     if _sha256(source) == manifest["target_sha256"]:
         preimage = plan_dir / manifest["preimage_path"]
         if not preimage.is_file() or _sha256(preimage.read_bytes()) != manifest["source_sha256"]:
-            raise JournalMigrationError("already-applied journal не имеет валидного sealed preimage")
+            raise JournalMigrationError("already-applied journal does not have a valid sealed preimage")
         return preimage.read_bytes(), source, manifest
     if _sha256(source) != manifest["source_sha256"]:
-        raise JournalMigrationError("source_sha256: live journal не совпадает с manifest")
+        raise JournalMigrationError("source_sha256: live journal does not match manifest")
     if not source.endswith(b"\n") or b"\r\n" in source:
-        raise JournalMigrationError("journal: миграция требует LF и terminal newline")
+        raise JournalMigrationError("journal: migration requires LF and terminal newline")
 
     lines = source.splitlines(keepends=True)
     for change in manifest["changes"]:
         index = change["line"] - 1
         if index >= len(lines):
-            raise JournalMigrationError(f"line {change['line']}: отсутствует в journal")
+            raise JournalMigrationError(f"line {change['line']}: missing from journal")
         raw = lines[index][:-1]
         if _sha256(raw) != change["before_sha256"]:
-            raise JournalMigrationError(f"line {change['line']}: before_sha256 не совпадает")
+            raise JournalMigrationError(f"line {change['line']}: before_sha256 does not match")
         try:
             entry = json.loads(raw.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise JournalMigrationError(f"line {change['line']}: невалидный UTF-8 JSON") from exc
+            raise JournalMigrationError(f"line {change['line']}: invalid UTF-8 JSON") from exc
         if not isinstance(entry, dict):
-            raise JournalMigrationError(f"line {change['line']}: event обязан быть object")
+            raise JournalMigrationError(f"line {change['line']}: event must be object")
         earlier_entries = tuple(json.loads(line) for line in lines[:index])
         later_entries = tuple(json.loads(line) for line in lines[index + 1:])
         for operation in change["operations"]:
             _apply_operation(entry, operation, earlier_entries=earlier_entries,
                              later_entries=later_entries)
         if entry.get("plan_id") != plan_dir.name:
-            raise JournalMigrationError(f"line {change['line']}: plan_id изменён/невалиден")
+            raise JournalMigrationError(f"line {change['line']}: plan_id changed/is invalid")
         try:
             journal.validate_entry(entry)
             terminal_policy.validate_entry(entry, plan_dir=None)
         except (journal.JournalValidationError, terminal_policy.TerminalPolicyError) as exc:
-            raise JournalMigrationError(f"line {change['line']}: итоговая запись невалидна: {exc}") from exc
+            raise JournalMigrationError(f"line {change['line']}: final record is invalid: {exc}") from exc
         after = _canonical_line(entry)
         if _sha256(after[:-1]) != change["after_sha256"]:
-            raise JournalMigrationError(f"line {change['line']}: after_sha256 не совпадает")
+            raise JournalMigrationError(f"line {change['line']}: after_sha256 does not match")
         lines[index] = after
 
     target = b"".join(lines)
     if _sha256(target) != manifest["target_sha256"]:
-        raise JournalMigrationError("target_sha256: rendered journal не совпадает с manifest")
+        raise JournalMigrationError("target_sha256: rendered journal does not match manifest")
     return source, target, manifest
 
 
@@ -422,13 +422,13 @@ def apply(plan_dir, manifest_path) -> dict:
 
     if preimage_path.exists():
         if preimage_path.read_bytes() != source:
-            raise JournalMigrationError("preimage уже существует с другими bytes")
+            raise JournalMigrationError("preimage already exists with others bytes")
     else:
         _atomic_write(preimage_path, source)
 
     if journal_path.read_bytes() != target:
         if _sha256(journal_path.read_bytes()) != manifest["source_sha256"]:
-            raise JournalMigrationError("journal изменился после render; миграция отменена")
+            raise JournalMigrationError("journal changed after render; migration canceled")
         _atomic_write(journal_path, target)
 
     manifest_sha256 = _sha256(manifest_path.read_bytes())
@@ -448,7 +448,7 @@ def apply(plan_dir, manifest_path) -> dict:
     receipt_bytes = (json.dumps(
         receipt, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
     if receipt_path.exists() and receipt_path.read_bytes() != receipt_bytes:
-        raise JournalMigrationError("receipt уже существует с другим содержимым")
+        raise JournalMigrationError("receipt already exists with other content")
     if not receipt_path.exists():
         _atomic_write(receipt_path, receipt_bytes)
     return receipt
@@ -476,7 +476,7 @@ def main(argv=None) -> int:
         else:
             result = apply(args.plan_dir, args.manifest)
     except JournalMigrationError as exc:
-        print(f"ERROR: journal migration отклонена: {exc}", file=sys.stderr)
+        print(f"ERROR: journal migration rejected: {exc}", file=sys.stderr)
         return 1
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return 0

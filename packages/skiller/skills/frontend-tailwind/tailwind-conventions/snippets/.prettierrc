@@ -20,13 +20,13 @@
     ]
 }
 
-// Пояснение (в реальном .prettierrc комментарии не оставляют — JSON их не допускает):
+// Explanation (in real .prettierrc do not leave comments - JSON doesn't allow them):
 //
-//   plugins: prettier-plugin-tailwindcss   — авто-сортировка классов в каноническом
-//                                            порядке Tailwind при каждом форматировании.
-//   tailwindFunctions: [clsx, cn, cva, tv]  — функции, чьи строковые аргументы плагин тоже
-//                                            считает классами и сортирует. Без этого классы
-//                                            внутри cn(...) / cva(...) остаются неотсортированными.
-//   tailwindStylesheet: resources/css/app.css — для Tailwind v4 плагину нужен путь к CSS-входу
-//                                            (там живут @theme-токены), иначе он не знает кастомные
-//                                            утилиты. В v3 указывали tailwindConfig: tailwind.config.js.
+//   plugins: prettier-plugin-tailwindcss   — auto-sorting of classes in canonical
+//                                            ok Tailwind every time it is formatted.
+//   tailwindFunctions: [clsx, cn, cva, tv]  — functions whose string arguments are also plugin
+//                                            counts and sorts as classes. Without this classes
+//                                            inside cn(...) / cva(...) remain unsorted.
+//   tailwindStylesheet: resources/css/app.css — for Tailwind v4 plugin needs path to CSS-login
+//                                            (live there @theme-tokens), otherwise he doesn't know custom
+//                                            utilities. B v3 indicated tailwindConfig: tailwind.config.js.

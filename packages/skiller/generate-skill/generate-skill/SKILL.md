@@ -13,22 +13,22 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+## Context
 
-Используй когда нужно создать новый скилл в реестре academici/swissknifeman.
+Use when you need to create a new skill in the registry academici/swissknifeman.
 
-## Алгоритм
+## Algorithm
 
-1. Определи bucket и name
-2. Скопируй SKILL_TEMPLATE.md
-3. Заполни frontmatter и секции
-4. Добавь snippets/ с index.json
-5. **Заведи evals/** (eval-first): `skiller eval <bucket>/<name> --scaffold` →
-   заполни `evals.json` (кейсы + программные ассершены), `pressure.json`
-   (сценарии-соблазны «пропустить скилл») и `triggers.json` (точность срабатывания
-   описания). Прогон — `skiller eval <bucket>/<name>` (требует CLI `claude`).
-6. Запусти `skiller registry`
+1. Define bucket and name
+2. Copy SKILL_TEMPLATE.md
+3. Fill in frontmatter and sections
+4. Add snippets/ with index.json
+5. **Start it evals/** (eval-first): `skiller eval <bucket>/<name> --scaffold` →
+   fill in `evals.json` (cases + software assertions), `pressure.json`
+   (temptation scenarios «skip skill») and `triggers.json` (response accuracy
+   descriptions). Run - `skiller eval <bucket>/<name>` (requires CLI `claude`).
+6. Run `skiller registry`
 
-> **Eval-first.** Скилл без evals — непроверяемое утверждение. Заведи кейсы
-> вместе со скиллом: что он должен делать (evals) и от чего удерживать под
-> давлением (pressure). `validate.sh` показывает покрытие evals одной строкой.
+> **Eval-first.** Skill without evals — unverifiable assertion. Create cases
+> along with the skill: what it should do (evals) and what to keep under
+> pressure (pressure). `validate.sh` shows coverage evals in one line.

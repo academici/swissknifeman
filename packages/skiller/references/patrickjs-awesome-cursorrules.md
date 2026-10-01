@@ -1,23 +1,23 @@
 # PatrickJS/awesome-cursorrules
 
 - **URL:** https://github.com/PatrickJS/awesome-cursorrules
-- **Статус:** planned
-- **Проверено:** 2026-06-11
+- **Status:** planned
+- **Checked:** 2026-06-11
 
-500+ `.cursorrules` файлов по языкам и фреймворкам. Богатейший источник сырья
-для сниппетов, но требует конвертации.
+500+ `.cursorrules` files by languages ​​and frameworks. Richest source of raw materials
+for snippets, but requires conversion.
 
-## Брать выборочно
+## Take selectively
 
-- PHP/Laravel правила → конвертировать в `skills/php/laravel/snippets/`
-- Docker правила → `skills/devops/docker/*/snippets/`
-- Принцип "one rule = one file" — атомарность сниппетов
+- PHP/Laravel rules → convert to `skills/php/laravel/snippets/`
+- Docker rules → `skills/devops/docker/*/snippets/`
+- Principle "one rule = one file" — atomicity of snippets
 
-## Не брать
+## Do not take
 
-- Всё вне PHP/Laravel/Docker стека (490 из 500 файлов)
-- Формат .cursorrules как таковой — у нас SKILL.md + snippets
+- Everything is out PHP/Laravel/Docker stack (490 of 500 files)
+- Format .cursorrules as such - we have SKILL.md + snippets
 
-## Целевые bucket-ы
+## Targets bucket-s
 
 `php/laravel`, `devops/docker`.

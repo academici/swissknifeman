@@ -7,15 +7,15 @@ declare(strict_types=1);
 use Spatie\LaravelSettings\Migrations\SettingsMigration;
 
 /**
- * Settings-миграция: задаёт значения по умолчанию для класса настроек.
+ * Settings-migration: Sets default values for a settings class.
  *
- * Расположение: database/settings/ (путь из config/settings.php → migrations_paths).
- * Генерация: php artisan make:settings-migration CreateOrderSettings
- * Запуск:    php artisan migrate (settings-миграции прогоняются вместе с обычными).
+ * Location: database/settings/ (path from config/settings.php → migrations_paths).
+ * Generation: php artisan make:settings-migration CreateOrderSettings
+ * Launch:    php artisan migrate (settings-migrations are run along with regular ones).
  *
- * ВАЖНО: каждое public-свойство класса ДОЛЖНО иметь соответствующий add(),
- * иначе при первом чтении упадёт Spatie\LaravelSettings\Exceptions\MissingSettings.
- * Ключ = "group.property" (точно как group() + имя свойства).
+ * IMPORTANT: every public-class property MUST have a corresponding add(),
+ * otherwise it will crash on the first reading Spatie\LaravelSettings\Exceptions\MissingSettings.
+ * Key = "group.property" (exactly like group() + property name).
  */
 return new class extends SettingsMigration
 {
@@ -27,25 +27,25 @@ return new class extends SettingsMigration
         $this->migrator->add(property: 'order.support_email', value: null);
         $this->migrator->add(property: 'order.allowed_currencies', value: ['USD', 'EUR']);
 
-        // Чувствительные значения — шифрованным хранилищем, а не открытым add():
+        // Sensitive values - encrypted storage, not open add():
         // $this->migrator->addEncrypted(property: 'order.api_token', value: null);
     }
 };
 
 /*
- * ЭВОЛЮЦИЯ СХЕМЫ — отдельной миграцией (синхронно с правкой свойств класса):
+ * SCHEME EVOLUTION - separate migration (synchronously with editing class properties):
  *
  * return new class extends SettingsMigration
  * {
  *     public function up(): void
  *     {
- *         // новое свойство (после добавления его в класс):
+ *         // new property (after adding it to the class):
  *         $this->migrator->add(property: 'order.auto_archive_days', value: 30);
  *
- *         // переименование (и свойство в классе переименовать тем же коммитом):
+ *         // renaming (and rename the property in the class with the same commit):
  *         $this->migrator->rename(from: 'order.support_email', to: 'order.contact_email');
  *
- *         // удаление (свойство убрать из класса):
+ *         // deletion (remove property from class):
  *         $this->migrator->delete(property: 'order.legacy_flag');
  *     }
  * };

@@ -19,7 +19,7 @@ DANGEROUS_PATTERNS=(
 
 for pattern in "${DANGEROUS_PATTERNS[@]}"; do
   if echo "$COMMAND" | grep -qE "$pattern"; then
-    echo "BLOCKED: '$COMMAND' совпал с опасным паттерном '$pattern'. Пользователь запретил эту команду." >&2
+    echo "BLOCKED: '$COMMAND' coincided with a dangerous pattern '$pattern'. User has disabled this command." >&2
     exit 2
   fi
 done

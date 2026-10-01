@@ -1,41 +1,41 @@
-# Развёртывание: новая машина / команда
+# Deployment: new machine / command
 
-Один идемпотентный сценарий поднимает экосистему на **новом компьютере** (переустановка ОС,
-второй ноутбук) или у **новых участников команды** — дотфайлс-паттерн (см.
-[Roadmap](/roadmap)): версионируемый репо + один скрипт, повторный запуск безопасен.
+One idempotent script takes the ecosystem to **new computer** (OS reinstallation,
+second laptop) or **new team members** — dotfiles pattern (see
+[Roadmap](/roadmap)): versioned repo + one script, it is safe to run again.
 
-## Быстрый старт: одна машина
+## Quick start: one car
 
 ```bash
-git clone <адрес-репо-swissknifeman> ~/projects/swissknifeman
+git clone <repo-addressswissknifeman> ~/projects/swissknifeman
 cd ~/projects/swissknifeman
 scripts/bootstrap-machine.sh
 ```
 
-Скрипт (`scripts/bootstrap-machine.sh`, роут `swissknifeman setup --machine`) прогоняет
-7 ступеней по порядку, проверяя каждую отдельно:
+Script (`scripts/bootstrap-machine.sh`, route `swissknifeman setup --machine`) drives away
+7 steps in order, checking each separately:
 
-1. `install.sh` — CLI пакетов + симлинк `swissknifeman` + базовые Codex-плагины
-   `core`/`task` (если Codex установлен; opt-out `--no-codex-plugins`).
-2. `harness hooks --global` — глобальные хуки Claude Code (merge-only).
-3. `harness permissions --global` — глобальный пресет permissions (merge-only).
-4. MCP-пресеты — **soft-skip**: у harness/maind сейчас нет `--global`-механизма для MCP,
-   раскатка остаётся per-project (`harness mcp --target` / `maind deploy`).
-5. `maind service install` — демон памяти как `systemd --user` (мягкая деградация без systemd).
-   **Роль-осознанно** (`memory.role` в `config.json`, ADR-0001): на `role=client` ступень
-   печатает информативный `SKIP` и локальный демон НЕ поднимается (второй писатель) —
-   клиент дотягивается до хоста по `memory.url`; на `standalone`/`host` — поведение прежнее.
-6. `swissknifeman doctor` — финальная диагностика всех пакетов.
-7. Манифест проектов (`--projects <файл>`) — см. ниже.
+1. `install.sh` — CLI packages + symlink `swissknifeman` + basic Codex-plugins
+   `core`/`task` (if Codex installed; opt-out `--no-codex-plugins`).
+2. `harness hooks --global` — global hooks Claude Code (merge-only).
+3. `harness permissions --global` — global preset permissions (merge-only).
+4. MCP-presets - **soft-skip**: y harness/maind not available now `--global`-mechanism for MCP,
+   rolling remains per-project (`harness mcp --target` / `maind deploy`).
+5. `maind service install` — memory daemon as `systemd --user` (mild degradation without systemd).
+   **Role-conscious** (`memory.role` in `config.json`, ADR-0001): on `role=client` stage
+   prints informative `SKIP` and the local daemon does NOT rise (second writer) —
+   client reaches the host via `memory.url`; on `standalone`/`host` — same behavior.
+6. `swissknifeman doctor` — final diagnostics of all packages.
+7. Project Manifest (`--projects <file>`) — see below.
 
-Флаги: `--dry-run` (план без изменений на диске), `--skip-projects` (пропустить ступень 7
-целиком), `--bin-dir DIR` (куда класть симлинки CLI, по умолчанию `~/.local/bin`).
+Flags: `--dry-run` (plan without changes on disk), `--skip-projects` (skip step 7
+in full), `--bin-dir DIR` (where to put symlinks CLI, default `~/.local/bin`).
 
-## Манифест проектов (`--projects`)
+## Project Manifest (`--projects`)
 
-Baseline (сам swissknifeman) ставится всем одинаково; список **зависимых проектов** — у каждого
-пользователя свой (per-user overrides, канон dotfiles-паттерна). Манифест — JSON-файл, схема и
-плейсхолдеры — [`docs/machine-manifest.example.json`](https://github.com/academici/swissknifeman/blob/main/docs/machine-manifest.example.json):
+Baseline (himself swissknifeman) is set equally for everyone; list **dependent projects** — for everyone
+user's own (per-user overrides, canon dotfiles-pattern). Manifest - JSON-file, diagram and
+placeholders - [`docs/machine-manifest.example.json`](https://github.com/academici/swissknifeman/blob/main/docs/machine-manifest.example.json):
 
 ```json
 {
@@ -50,90 +50,90 @@ Baseline (сам swissknifeman) ставится всем одинаково; с
 }
 ```
 
-| Поле | Обязательное | Значение |
+| Field | Required | Meaning |
 |:--|:--|:--|
-| `repo` | да | git-адрес репозитория (ssh/https) |
-| `path` | да | локальный путь клонирования (`~` раскрывается) |
-| `profile` | нет | пометка профиля/типа проекта (информационно; автоопределение профиля при онбординге делает `skiller connect` само) |
+| `repo` | yes | git-repository address (ssh/https) |
+| `path` | yes | local cloning path (`~` expands) |
+| `profile` | no | profile flag/project type (informational; automatic profile detection during onboarding does `skiller connect` itself) |
 
-Запуск:
+Launch:
 
 ```bash
 scripts/bootstrap-machine.sh --projects ~/.swissknifeman/machine-manifest.json
 ```
 
-Поведение шага (идемпотентно — второй прогон не делает лишнего):
+Step Behavior (idempotent - the second pass does not do anything unnecessary):
 
-- Путь из манифеста **отсутствует** → `git clone <repo> <path>`, затем `swissknifeman setup <path>`
-  (полный онбординг: скиллы + окружение + память + граф, см. [ecosystem-integration](/maind/)).
-- Путь **уже существует** (клонирован ранее) → `git pull` **не делается** (не трогаем чужое
-  рабочее состояние — незакоммиченные изменения, локальные ветки); выполняется только повторный
-  `swissknifeman setup <path>` (onboard-проверка, дописывает недостающее, ничего не затирает).
-- `--dry-run` печатает план (что будет клонировано / что уже есть) без изменений на диске.
-- `--skip-projects` пропускает ступень целиком, даже если `--projects` указан.
+- Path from manifest **missing** → `git clone <repo> <path>`, then `swissknifeman setup <path>`
+  (full onboarding: skills + environment + memory + graph, see [ecosystem-integration](/maind/)).
+- Path **already exists** (cloned earlier) → `git pull` **not done** (don't touch someone else's
+  working state - uncommitted changes, local branches); only repeated
+  `swissknifeman setup <path>` (onboard-check, adds what is missing, does not overwrite anything).
+- `--dry-run` prints the plan (what will be cloned / which already exists) unchanged on disk.
+- `--skip-projects` skips the entire step, even if `--projects` is specified.
 
-Храни личный манифест вне репозитория (например `~/.swissknifeman/machine-manifest.json`) —
-в репо коммитится только `.example` с плейсхолдерами (гигиена `.env`↔`.env.example`).
+Store your personal manifest outside the repository (for example `~/.swissknifeman/machine-manifest.json`) —
+in the repo is committed only `.example` with placeholders (hygiene `.env`↔`.env.example`).
 
-## Вторая машина: cross-machine память (host/client)
+## Second car: cross-machine memory (host/client)
 
-Начиная с `, память (`agent-memory`) может жить **на одной машине-хосте**,
-а остальные постоянные машины владельца — сетевые **клиенты** (вариант 1 закрытого
-roadmap-стаба; решения и отвергнутые варианты —
-`packages/maind/docs/adr/ADR-0001-cross-machine-memory.md`). Роль узла — поле
-`memory.role` в локальном (гитигнорённом) `config.json`: `standalone` (дефолт, back-compat,
-свой демон) · `host` (держит демон, слушает LAN-адрес) · `client` (демона НЕ поднимает, ходит к
-хосту по `memory.url`).
+Starting from `, memory (`agent-memory`) can live **on one host machine**,
+and the rest of the owner's permanent machines are networked **clients** (option 1 closed
+roadmap-stub; decisions and rejected options -
+`packages/maind/docs/adr/ADR-0001-cross-machine-memory.md`). Node role - field
+`memory.role` in local (gitignified) `config.json`: `standalone` (default, back-compat,
+your daemon) · `host` (demon holds, listens LAN-address) · `client` (does NOT raise the demon, goes to
+host by `memory.url`).
 
-**На хосте** (ближайшая стадия — LAN, не Tailscale):
+**On host** (next stage - LAN, not Tailscale):
 
-1. `packages/maind/config/memory/iii-config.yaml` → `iii-http.host` = конкретный LAN-адрес хоста
-   (не `127.0.0.1`, не `0.0.0.0` — запрет D28); `AGENTMEMORY_SECRET` (или `memory.secret_file`)
-   ОБЯЗАТЕЛЕН на LAN-стадии — это единственный предохранитель (сегмент LAN шире tailnet).
-2. `config.json`: `memory.role = "host"` + **`memory.url` = `http://<LAN-адрес>:<http_port>`**
-   (не `127.0.0.1`!). Демон после правки (1) перестаёт слушать loopback — без `memory.url`,
-   указывающего на его же LAN-адрес, **локальные** проверки хоста (`maind health`/`doctor`,
-   MCP-хуки этой же машины) начнут падать `недоступен` при следующем перезапуске демона, хотя
-   он жив и отвечает по LAN (воспроизведено при исполнении P4.3: рестарт демона после того, как
-   `iii-config.yaml` уже нёс LAN-bind, а `config.json` — ещё нет, дал полный локальный простой
-   памяти до правки `memory.url`; см.).
-3. Автозапуск без логина — `loginctl enable-linger $USER` (см.
-   [systemd.md «Автостарт без логина»](/maind/guide/systemd)) — условие роли `host`, не опция.
-4. Firewall хоста — разрешить входящие на порт памяти ТОЛЬКО из подсети LAN.
+1. `packages/maind/config/memory/iii-config.yaml` → `iii-http.host` = specific LAN-host address
+   (not `127.0.0.1`, not `0.0.0.0` — ban D28); `AGENTMEMORY_SECRET` (or `memory.secret_file`)
+   REQUIRED LAN-stage is the only fuse (segment LAN wider tailnet).
+2. `config.json`: `memory.role = "host"` + **`memory.url` = `http://<LAN-address>:<http_port>`**
+   (not `127.0.0.1`!). Daemon after editing (1) stops listening loopback — without `memory.url`,
+   pointing to its own LAN-address, **local** host checks (`maind health`/`doctor`,
+   MCP-hooks of the same machine) will start to fall `not available` the next time the daemon is restarted, although
+   he is alive and responding LAN (played during performance P4.3: restart the daemon after
+   `iii-config.yaml` was already carrying LAN-bind, a `config.json` — not yet, gave full local downtime
+   memory before editing `memory.url`; see).
+3. Autostart without login - `loginctl enable-linger $USER` (see
+   [systemd.md «Autostart without login»](/maind/guide/systemd)) — role condition `host`, is not an option.
+4. Firewall host - allow incoming memory port ONLY from the subnet LAN.
 
-**На клиенте:**
+**On the client:**
 
-1. `config.json`: `memory.role = "client"` + `memory.url` = адрес хоста (не loopback — гейт
-   валидации конфига откажет). Токен — `memory.secret_file` (0600), не env.
-2. `scripts/bootstrap-machine.sh` — ступень 5 сама пропускает подъём локального демона (см. выше);
-   остальные ступени идентичны.
-3. Приёмка — `maind health --strict --json` (round-trip store→recall→forget через сеть) и
-   `maind doctor` (не считает отсутствие локального Node/agentmemory ошибкой на клиенте —
-   известный пробел на момент P4.3, см. Pending Work).
+1. `config.json`: `memory.role = "client"` + `memory.url` = host address (not loopback — gate
+   config validation will fail). Token - `memory.secret_file` (0600), not env.
+2. `scripts/bootstrap-machine.sh` — stage 5 itself skips the rise of the local daemon (see above);
+   other steps are identical.
+3. Acceptance - `maind health --strict --json` (round-trip store→recall→forget via network) and
+   `maind doctor` (does not consider the absence of local Node/agentmemory error on the client -
+   known space at the time P4.3, see Pending Work).
 
-Известные ограничения LAN-стадии (секрет — единственный предохранитель, ротация ручная,
-сегмент LAN шире tailnet) и путь роста к `tailscale serve` — см. ADR-0001 «Известные ограничения».
+Known limitations LAN-stage (secret - single fuse, manual rotation,
+segment LAN wider tailnet) and the growth path to `tailscale serve` — see ADR-0001 «Known limitations».
 
-## Сценарий «команда»
+## Script «command»
 
-1. Baseline — все ставят `bootstrap-machine.sh` без `--projects` (или с общим для команды
-   read-only манифестом «обязательных» проектов, если такой согласован).
-2. Каждый участник держит свой `~/.swissknifeman/machine-manifest.json` со списком проектов,
-   с которыми лично работает — список не автоопределяется (Scope: пишет человек).
-3. Секреты/API-ключи — **не в манифесте и не в скрипте**: заводятся отдельно (env/`.env`
-   в проекте), bootstrap их не касается.
+1. Baseline — everyone puts `bootstrap-machine.sh` without `--projects` (or with a common command
+   read-only manifest «required» projects, if agreed upon).
+2. Each participant holds his `~/.swissknifeman/machine-manifest.json` with a list of projects,
+   with whom he personally works - the list is not autodetected (Scope: written by a person).
+3. Secrets/API-keys - **not in the manifest or in the script**: are started separately (env/`.env`
+   in the project), bootstrap does not concern them.
 
-## Что не входит в этот сценарий
+## What's not included in this script
 
-- **Межкомпьютерная синхронизация памяти** — не часть bootstrap'а: режим host/client
-  раскатывается отдельно (см. раздел «Вторая машина» выше и
+- **Intercomputer memory synchronization** — not part bootstrap'a: mode host/client
+  rolls out separately (see section «Second car» above and
   `packages/maind/docs/adr/ADR-0001-cross-machine-memory.md`).
-- Автоматическое определение, какие проекты нужны пользователю — список в манифесте пишет
-  человек.
-- CI/автоматизация bootstrap — сценарий рассчитан на разового оператора машины.
+- Automatically determines which projects the user needs - the list in the manifest is written
+  person.
+- CI/automation bootstrap — script is designed for a one-time machine operator.
 
-## См. также
+## See also
 
-- [Разработка с Claude Code](/develop) — что делать после того, как машина поднята.
-- [Control-surface проектов](/control-surface) — точечная диагностика/починка слоёв
-  подключённого проекта.
+- [Development with Claude Code](/develop) — what to do after the machine is lifted.
+- [Control-surface projects](/control-surface) — spot diagnostics/repairing layers
+  of the connected project.

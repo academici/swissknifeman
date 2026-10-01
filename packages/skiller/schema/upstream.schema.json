@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schema/upstream.schema.json",
   "title": "skiller upstream provenance (upstream.json)",
-  "description": "Провенанс внешнего/производного скилла рядом со SKILL.md. Рантайм-валидация — scripts/validate.sh (схема — для DX). strategy=merge описывает скилл, собранный из ≥2 источников (origins[]: base + supplement); его синк РУЧНОЙ под управлением агента.",
+  "description": "External provenance/derived skill next to SKILL.md. Runtime validation - scripts/validate.sh (scheme - for DX). strategy=merge describes a skill assembled from ≥2 sources (origins[]: base + supplement); his sync is MANUAL under the control of an agent.",
   "type": "object",
   "required": ["schema_version", "source", "strategy", "files"],
   "properties": {
@@ -10,17 +10,17 @@
     "source": {
       "type": "string",
       "enum": ["github", "http", "file"],
-      "description": "file — только локальные фикстуры/тесты."
+      "description": "file — local fixtures only/tests."
     },
     "strategy": {
       "type": "string",
       "enum": ["replace", "notify", "fork", "merge"],
-      "description": "replace — зеркало (автонакат); notify — адаптированная копия (репортить); fork — форк с правками (review-гейт); merge — композит из ≥2 источников (ручной agent-merge)."
+      "description": "replace — mirror (autoroll); notify — adapted copy (report); fork — fork with changes (review-gate); merge — composite of ≥2 sources (manual agent-merge)."
     },
     "files": {
       "type": "array",
       "minItems": 1,
-      "description": "Отслеживаемые файлы-зеркала с целостностью.",
+      "description": "Monitored mirror files with integrity.",
       "items": {
         "type": "object",
         "required": ["path", "url", "sha256", "fetched_at"],
@@ -34,40 +34,40 @@
     },
     "fork": {
       "type": "object",
-      "description": "Гейт fork: review_pending=true блокирует распространение до ручного переноса диффа.",
+      "description": "Gate fork: review_pending=true blocks propagation until the diff is manually transferred.",
       "properties": {
         "review_pending": { "type": "boolean" },
         "last_review": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
       }
     },
-    "review_pending": { "type": "boolean", "description": "Совместимость: гейт fork может лежать и плоско." },
+    "review_pending": { "type": "boolean", "description": "Compatibility: gate fork can also lie flat." },
     "last_review": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
     "origins": {
       "type": "array",
       "minItems": 2,
-      "description": "Только для strategy=merge: источники композита с ролями. Ровно один base + ≥1 supplement.",
+      "description": "Only for strategy=merge: composite sources with roles. Exactly one base + ≥1 supplement.",
       "items": {
         "type": "object",
         "required": ["repo", "role", "url", "sha256", "fetched_at"],
         "properties": {
-          "repo": { "type": "string", "description": "Источник, напр. 'antfu/skills'." },
+          "repo": { "type": "string", "description": "Source, e.g. 'antfu/skills'." },
           "role": {
             "type": "string",
             "enum": ["base", "supplement"],
-            "description": "base — взят за основу; supplement — дополняющий источник-«suggest»."
+            "description": "base — is taken as a basis; supplement — complementary source-«suggest»."
           },
           "url": { "type": "string" },
-          "ref": { "type": "string", "description": "Ветка/тег/коммит (опционально)." },
+          "ref": { "type": "string", "description": "Thread/tag/commit (optional)." },
           "sha256": { "type": "string" },
           "fetched_at": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
-          "note": { "type": "string", "description": "Что взято из источника." },
-          "suggest": { "type": "string", "description": "Подсказка: чем supplement дополнил base." }
+          "note": { "type": "string", "description": "Which is taken from the source." },
+          "suggest": { "type": "string", "description": "Hint: than supplement added base." }
         }
       }
     },
     "merge": {
       "type": "object",
-      "description": "Гейт merge: на дрейфе любого origin review_pending=true блокирует validate/registry/релиз до ручного пере-merge агентом.",
+      "description": "Gate merge: on the drift of any origin review_pending=true blocks validate/registry/release before manual re-merge agent.",
       "properties": {
         "review_pending": { "type": "boolean" },
         "last_review": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
@@ -75,7 +75,7 @@
     },
     "body_path": {
       "type": "string",
-      "description": "P7.3 thin-navigator: путь (относительно каталога скилла, из files[].path) к файлу с реальным телом апстрима — когда SKILL.md стал локально написанным тонким навигатором, а НЕ зеркалом апстрима (напр. 'references/full.md'). scripts/update-upstreams.sh считает sha/дрейф по ЭТОМУ файлу (files[]-запись под этим path), а не по SKILL.md. Аддитивное поле; отсутствие = тело в SKILL.md (back-compat, прежнее поведение). Ортогонально strategy: чаще всего используется с notify/replace (у fork/merge та же роль уже играет files[].path на pristine-зеркало, задавать оба избыточно)."
+      "description": "P7.3 thin-navigator: path (regarding the skill catalog, from files[].path) to a file with a real upstream body - when SKILL.md became a locally written thin navigator, and NOT a mirror of the upstream (e.g. 'references/full.md'). scripts/update-upstreams.sh thinks sha/drift on THIS file (files[]-entry below this path), and not by SKILL.md. Additive field; absence = body in SKILL.md (back-compat, old behavior). Orthogonal strategy: is most often used with notify/replace (y fork/merge already plays the same role files[].path on pristine-mirror, specifying both is redundant)."
     },
     "notes": { "type": "string" }
   },

@@ -1,11 +1,11 @@
-"""Фасад `skiller doctor --settings` (P1.4): делегирование в `harness doctor
---settings` через subprocess, прокидывание кода возврата, graceful skip при
-отсутствующем harness. Логики проверок в skiller НЕТ (D10) — тестируем только
-поведение фасада, не таксономию (её тесты живут в harness).
+"""Facade `skiller doctor --settings` (P1.4): delegation to `harness doctor
+--settings` via subprocess, returning the return code, graceful skip when
+missing harness. Check logic in skiller NO (D10) — testing only
+facade behavior, not taxonomy (her tests live in harness).
 
-Плюс P4.2 `skiller doctor --effective-source`: composed read-only doctor —
-здесь же (Files item'а называет ровно этот тестовый файл), тестируем и фасад
-(`--settings`), и composed-diagnostics record-shape/fixtures отдельно."""
+Plus P4.2 `skiller doctor --effective-source`: composed read-only doctor —
+here (Files item'and names exactly this test file), testing the facade as well
+(`--settings`), and composed-diagnostics record-shape/fixtures separately."""
 import contextlib
 import io
 import json
@@ -43,8 +43,8 @@ class DoctorSettingsFacadeCase(unittest.TestCase):
         self.tmp = Path(self._tmp.name)
         self.home = self.tmp / "home"
         self.home.mkdir()
-        # root — tmpdir без маркеров монорепо: harness_bin не найдёт лаунчер в
-        # раскладке пакетов, останется только env-override SKM_HARNESS_BIN.
+        # root — tmpdir without monorepo tokens: harness_bin will not find the launcher in
+        # package layout, all that remains is env-override SKM_HARNESS_BIN.
         self.env = Env(self.tmp / "registry", home=self.home)
         (self.tmp / "registry").mkdir()
         self._saved_bin = os.environ.pop("SKM_HARNESS_BIN", None)
@@ -56,15 +56,15 @@ class DoctorSettingsFacadeCase(unittest.TestCase):
             os.environ.pop("SKM_HARNESS_BIN", None)
         self._tmp.cleanup()
 
-    # harness не установлен → warn и graceful skip (rc 0, без падения)
+    # harness not installed → warn and graceful skip (rc 0, without crashing)
     def test_missing_harness_warns_and_skips(self):
         exc, out = _run(cmd_doctor, self.env, ["--settings", "--target", str(self.tmp)])
-        self.assertIsNone(exc)  # не sys.exit — фасад мягко пропустил
-        self.assertIn("harness не установлен", out)
+        self.assertIsNone(exc)  # not sys.exit — facade missed softly
+        self.assertIn("harness not installed", out)
 
-    # harness присутствует → код возврата прокидывается (2 → sys.exit(2)).
-    # Заглушка не пишет в stdout: subprocess наследует реальный fd (redirect_stdout
-    # ловит только python-уровень sys.stdout) — проверяем контракт кода возврата.
+    # harness present → return code is thrown (2 → sys.exit(2)).
+    # The stub does not write to stdout: subprocess inherits real fd (redirect_stdout
+    # only catches python-level sys.stdout) — checking the return code contract.
     def test_proxies_harness_exit_code(self):
         stub = self.tmp / "harness-stub"
         stub.write_text("#!/usr/bin/env bash\nexit 2\n", encoding="utf-8")

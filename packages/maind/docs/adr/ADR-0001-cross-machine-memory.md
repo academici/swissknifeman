@@ -1,111 +1,111 @@
-# ADR-0001 — cross-machine память mAInd: хост, транспорт, доверие, офлайн-деградация
+# ADR-0001 — cross-machine memory mAInd: host, transport, trust, offline degradation
 
-**Status:** Accepted — Approval Owner D80 (уточняет D78)
+**Status:** Accepted — Approval Owner D80 (clarifies D78)
 **Date:** 2026-07-28
-**Scope:** P4.1 only. Фиксирует восемь принятых ответов пакета решения (`research/06-P4-target-design.md`
-§6); реализацию — `iii-config.yaml`, `core.http`, `memory.py`, `provision/*` — производят P4.2/P4.3.
+**Scope:** P4.1 only. Captures the eight accepted responses of the solution package (`research/06-P4-target-design.md`
+§6); implementation - `iii-config.yaml`, `core.http`, `memory.py`, `provision/*` — produce P4.2/P4.3.
 
 ## Context
 
-`bootstrap-machine.sh` поднимает на каждой новой машине **новый, пустой** локальный демон
-agent-memory — накопленная память с других машин не переносится (отложенная идея).
-Критерий активации сработал: у владельца есть вторая постоянная машина. Вариант 1 стаба — единственный живой
-демон на always-on хосте, остальные машины — сетевые клиенты — выбран для реализации; вариант 2
-(event-log export/import) не реализуется.
+`bootstrap-machine.sh` raises on every new machine **new, empty** local daemon
+agent-memory — accumulated memory from other machines is not transferred (shelved idea).
+The activation criterion worked: the owner has a second permanent car. Option 1 stub - the only one alive
+demon on always-on host, other machines - network clients - selected for implementation; option 2
+(event-log export/import) is not implemented.
 
-Разведка (слой 1; `research/06-P4-target-design.md`, слой 2)
-сузила восемь операционных развилок пакета решения до конкретных фактов: `tailscale serve`
-проксирует только loopback-бэкенд (§1); у движка `@agentmemory/agentmemory@0.9.27` есть
-bearer-аутентификация `AGENTMEMORY_SECRET`, но наш `core/http.py` не умеет передавать заголовки, а
-`ping` трактует `401` как «жив» (§2); стор — каталог из 9 JSON-блобов, не SQLite (§4); у движка
-существует встроенный mesh-sync — upstream-реализация «варианта 2» (§3). Владелец ответил на все
-восемь пунктов пакета в два захода: семь — `D78` (2026-07-25), восьмой (хост + транспорт
-ближайшей стадии) — `D80` (2026-07-25, `finish`). Открытых развилок в этом item'е больше нет —
-предмет работы: точная запись принятого, а не выбор.
+Intelligence (layer 1; `research/06-P4-target-design.md`, layer 2)
+narrowed down the eight operational forks of the solution package to specific facts: `tailscale serve`
+only proxies loopback-backend (§1); at the engine `@agentmemory/agentmemory@0.9.27` yes
+bearer-authentication `AGENTMEMORY_SECRET`, but ours `core/http.py` does not know how to send headers, and
+`ping` interprets `401` like «is alive» (§2); store - directory of 9 JSON-blobs, not SQLite (§4); at the engine
+there is a built-in mesh-sync — upstream-implementation «option 2» (§3). The owner answered all
+eight points of the package in two passes: seven - `D78` (2026-07-25), eighth (host + transport
+next stage) — `D80` (2026-07-25, `finish`). Open forks in this item'is no more -
+subject of work: an accurate record of what is accepted, not a choice.
 
 ## Decision
 
-Восемь пунктов пакета — конкретный выбор по каждому, откуда взят:
+Eight points of the package - a specific choice for each, where it was taken from:
 
-1. **Хост** → держит **ТЕКУЩАЯ машина** (не арендованный хостинг, не выделенный always-on узел:
-   критерий D78 отработан — домашнего always-on узла нет ⇒ ветка «машина с наибольшим аптаймом» —
-   это текущая машина) → **D80**.
-2. **Транспорт** → ближайшая стадия — **LAN**, bind на **конкретный LAN-адрес хоста** (не
-   `127.0.0.1`, не `0.0.0.0`); `tailscale serve` на loopback-бэкенд (вариант A из D78) не отменён,
-   а поставлен **на триггер**: третья постоянная машина ИЛИ работа вне LAN → **D80** (уточняет
+1. **Host** → holds **CURRENT car** (not rented hosting, not dedicated always-on node:
+   criterion D78 processed - home always-on no node ⇒ thread «machine with the highest uptime» —
+   this is the current machine) → **D80**.
+2. **Transport** → next stage - **LAN**, bind on **specific LAN-host address** (not
+   `127.0.0.1`, not `0.0.0.0`); `tailscale serve` on loopback-backend (option A from D78) not cancelled,
+   and delivered **to trigger**: third permanent machine OR work outside LAN → **D80** (clarifies
    `D78`/`D28`).
-3. **`AGENTMEMORY_SECRET`** → **включаем**. На LAN-стадии Tailscale ACL/grants не действуют — их
-   место занимает firewall-правило хоста «один порт из подсети LAN»; секрет становится
-   **единственным** предохранителем → **D29** + **D80**.
-4. **Носитель токена и HTTP-клиент** → **`secret_file` (0600), НЕ env**; аутентификация — аддитивное
-   расширение `core.http` (`headers=None` параметр), второй HTTP-клиент в `maind` запрещён →
+3. **`AGENTMEMORY_SECRET`** → **enable**. On LAN-stage Tailscale ACL/grants do not work - their
+   takes up space firewall-host rule «one port from the subnet LAN»; secret becomes
+   **the only one** fuse → **D29** + **D80**.
+4. **Token bearer and HTTP-client** → **`secret_file` (0600), NOT env**; authentication - additive
+   extension `core.http` (`headers=None` parameter), second HTTP-client in `maind` prohibited →
    **D29**.
-5. **Офлайн-деградация** → **fail-soft без локального кэша/outbox**: чтение и запись честно
-   сообщают о недоступности хоста памяти; при `memory.role = client` подъём локального демона
-   запрещён **кодом** (не документацией) → **D27**.
-6. **Миграция стора** → **обнулена**: хост совпадает с текущей машиной, переносить нечего (пункт не
-   «выполнен» — не имеет предмета на этой стадии) → **D80**.
-7. **Бэкап** → app-level export (`GET /agentmemory/export`) по расписанию + периодическая проверка
-   **восстановлением** (не наличием файла); ретеншн **7–30 дней + 1–3 месячных точки** → **D30**.
-8. **Upstream `mesh-sync`** → существование известно, **не используем** (два писателя + LWW-перетирание
-   против единственного писателя, ради которого выбран вариант 1) → **D31**.
+5. **Offline degradation** → **fail-soft without local cache/outbox**: read and write honestly
+   report memory host unavailable; at `memory.role = client` raise local daemon
+   prohibited **code** (not documentation) → **D27**.
+6. **Store migration** → **cleared**: host matches the current machine, there is nothing to transfer (item not
+   «done» — does not have an item at this stage) → **D80**.
+7. **Backup** → app-level export (`GET /agentmemory/export`) scheduled + periodic check
+   **recovery** (not having a file); retention **7–30 days + 1–3 monthly dots** → **D30**.
+8. **Upstream `mesh-sync`** → existence is known, **do not use** (two writers + LWW-grinding
+   against the only writer for whom option 1 was chosen) → **D31**.
 
-## Alternatives (отвергнутые варианты)
+## Alternatives (rejected options)
 
-1. **Bind `0.0.0.0` + firewall** — отклонён: при bind на все интерфейсы истечение ключа устройства
-   перестаёт быть предохранителем (сервис остаётся доступен по другим интерфейсам), а поверхность
-   атаки расширяется на LAN (**D28**).
-2. **Bind на tailnet-IP `100.x` (вариант B)** — снят **D78** в пользу `tailscale serve` на
-   loopback-бэкенде (транспорт A); адрес узла может смениться при переинициализации, управляемый
-   `iii-config.yaml` стал бы машинно-специфичным.
-3. **Upstream `mesh-sync`** — знаем, что существует, **не используем**: возвращает двух писателей и
-   LWW-перетирание, ради устранения которых вариант 1 стаба и выбран (**D31**).
-4. **Локальный кэш/outbox отложенной записи** — не вводится: цена (дубли, рассинхрон порядка,
-   LWW-перетирание, окно потери) требует версионирования и идемпотентности записи, которых у
-   контракта `store` нет (**D27**).
+1. **Bind `0.0.0.0` + firewall** — rejected: when bind on all interfaces device key expired
+   ceases to be a fuse (service remains available via other interfaces), and the surface
+   attack expands to LAN (**D28**).
+2. **Bind on tailnet-IP `100.x` (option B)** — removed **D78** in favor `tailscale serve` on
+   loopback-backend (transport A); node address may change during reinitialization, controlled
+   `iii-config.yaml` would become machine specific.
+3. **Upstream `mesh-sync`** — we know that there is, **do not use**: returns two writers and
+   LWW-grinding, for the sake of eliminating which option 1 of the stub was chosen (**D31**).
+4. **Local cache/outbox deferred write** — not entered: price (duplicates, order out of sync,
+   LWW-grinding, loss window) requires versioning and record idempotency, which
+   contract `store` no (**D27**).
 
 ## Consequences
 
-- P4.2 получает в Scope Included `packages/maind/config/memory/iii-config.yaml` (bind на конкретный
-  LAN-адрес — при варианте A транспорта этот файл не трогался бы вовсе) и реализует
-  `memory.role` (`standalone`|`host`|`client`), запрет второго писателя кодом, аддитивное
-  расширение `core.http` заголовками, честные ошибки недоступности/неавторизованности.
-- P4.3 переформулирует гейт приёмки 4: «недоступность извне tailnet» → «недоступность из-за
-  пределов подсети LAN» — на этой стадии проверяется предохранитель LAN, не tailnet.
-- Триггер `tailscale serve` («третья машина ИЛИ работа вне LAN») записан как проверяемое условие:
-  при срабатывании это правка конфигурации, а не переоткрытие дизайна — оба варианта транспорта
-  остаются описанными этим ADR.
-- Путь роста за пределы этой фазы здесь не пересказывается: возврат к тяжёлой части — по измеренной потребности.
-- Схема памяти, scope-маркеры и федерация графа не меняются — общей становится только память; граф
-  и реестр проектов остаются per-machine.
+- P4.2 gets in Scope Included `packages/maind/config/memory/iii-config.yaml` (bind to a specific
+  LAN-address - if option A transport this file would not be touched at all) and implements
+  `memory.role` (`standalone`|`host`|`client`), prohibition of the second writer by code, additive
+  extension `core.http` headers, honest unavailability errors/unauthorized.
+- P4.3 reformulates acceptance gate 4: «inaccessibility from outside tailnet» → «unavailability due to
+  subnet limits LAN» — at this stage the fuse is checked LAN, not tailnet.
+- Trigger `tailscale serve` («third machine OR work outside LAN») is written as the condition being tested:
+  when triggered, this is a configuration edit, not a design rediscovery - both transport options
+  remain described by this ADR.
+- The path of growth beyond this phase is not retold here: return to the difficult part - according to measured need.
+- Memory circuit, scope-markers and graph federation do not change - only memory becomes shared; count
+  and the project registry remain per-machine.
 
-## Известные ограничения
+## Known limitations
 
-Прежние (не меняются выбором хоста/транспорта):
-1. Офлайн-машина (нет сети до хоста) работает **без памяти** — локального кэша нет (см. Decision
-   п.5).
-2. Хост обязан оставаться живым (перезагрузка/сон/отпуск снимают память со всех машин сразу).
-3. Граф федерации (`data/graphs/*.db`) и реестр проектов (`~/.swissknifeman/projects.json`)
-   остаются **per-machine** — общей становится только память, не граф.
-4. Вьюер `agentmemory` доступен **только loopback-ом** на хосте — публикации не имеет ни при каком
-   транспорте (движок: «no auth is enforced on the console»).
+Previous (are not changed by host selection/transport):
+1. Offline machine (no network to host) works **without memory** — no local cache (see Decision
+   p.5).
+2. The host must remain alive (reboot/dream/vacation remove memory from all machines at once).
+3. Federation graph (`data/graphs/*.db`) and project registry (`~/.swissknifeman/projects.json`)
+   remain **per-machine** — only the memory becomes shared, not the graph.
+4. Viewer `agentmemory` available **only loopback-ohm** on the host - does not have publications under any circumstances
+   transport (engine: «no auth is enforced on the console»).
 
-Добавлено LAN-стадией — цена ближайшей стадии, названная до реализации:
-5. На LAN-стадии секрет (`AGENTMEMORY_SECRET`) — **единственный** предохранитель доступа.
-6. Автоматического отзыва по истечению ключа устройства (как у Tailscale) на LAN-стадии **нет**.
-7. Ротация секрета — **ручная** операция runbook'а, не автоматика.
-8. Сегмент LAN **шире** tailnet: кто получил секрет и находится в том же сегменте — читает и пишет
-   память ВСЕХ проектов.
-9. Триггер включения `tailscale serve` («третья машина ИЛИ работа вне LAN») — проверяемое условие,
-   а не «когда понадобится»; до срабатывания транспорт остаётся LAN-стадией с ограничениями выше.
+Added LAN-stage - the price of the nearest stage, named before implementation:
+5. On LAN-stage secret (`AGENTMEMORY_SECRET`) — **the only one** access fuse.
+6. Automatic revocation when device key expires (like Tailscale) on LAN-stage **no**.
+7. Secret rotation - **manual** operation runbook'ah, not automatic.
+8. Segment LAN **wider** tailnet: who received the secret and is in the same segment - reads and writes
+   memory of ALL projects.
+9. Power Trigger `tailscale serve` («third machine OR work outside LAN») — condition to be checked,
+   and not «when needed»; until triggered the transport remains LAN-stage with restrictions above.
 
-Путь роста за пределами этих ограничений не входит в эту фазу: возврат к тяжёлой части — по
-измеренной потребности.
+The path of growth beyond these limitations is not included in this phase: return to the heavy part - by
+measured demand.
 
 ## Approval condition
 
-`D80` (2026-07-25, `finish`) закрывает восьмой (последний) пункт пакета решения — хост и
-транспорт ближайшей стадии — и уточняет `D78`/`D28` в частях, названных выше; семь остальных
-пунктов зафиксированы `D78` (2026-07-25) и не переоткрываются при исполнении P4.2/P4.3: изменение
-любого из восьми пунктов после принятия этого ADR — реопен с новой D-записью владельца
-(`supersedes` в части соответствующего пункта), а не «уточнение по ходу».
+`D80` (2026-07-25, `finish`) closes the eighth (last) solution package item - host and
+transport of the next stage - and clarifies `D78`/`D28` in the parts named above; seven others
+points recorded `D78` (2026-07-25) and do not reopen during execution P4.2/P4.3: change
+any of the eight points after accepting this ADR — reopen with new D-owner record
+(`supersedes` regarding the relevant paragraph), and not «clarification as we go».

@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# install.sh — устанавливает CLI maind.
+# install.sh — sets CLI maind.
 #
-# Создаёт симлинк <bin-dir>/maind -> <repo>/bin/maind и каталог состояния ~/.maind
-# (projects.json/agents.json — реестры узла, пополняются командами CLI).
+# Creates a symlink <bin-dir>/maind -> <repo>/bin/maind and status directory ~/.maind
+# (projects.json/agents.json — node registries, replenished with commands CLI).
 #
-# Использование:
+# Usage:
 #   ./install.sh [--bin-dir DIR] [--force] [--with-memory] [--with-service]
 #
-#   --bin-dir DIR   куда класть симлинк (по умолчанию ~/.local/bin)
-#   --force         заменить чужой файл/симлинк без вопроса
-#   --with-memory   npm install в корне maind (демон памяти @agentmemory/agentmemory)
-#   --with-service  зарегистрировать демон памяти как systemd --user сервис
-#                   (maind service install — автозапуск + авто-рестарт)
+#   --bin-dir DIR   where to put the symlink (default ~/.local/bin)
+#   --force         replace someone else's file/symlink without question
+#   --with-memory   npm install at the root maind (memory daemon @agentmemory/agentmemory)
+#   --with-service  register memory daemon as systemd --user service
+#                   (maind service install — autorun + auto-restart)
 #
-# Полный bootstrap: ./install.sh --with-memory --with-service
-# Порты демона настраиваются через .env (см. .env.example), чтобы не конфликтовать
-# с другим узлом. Код-граф (Serena) — опционален, ставится отдельно (per-project).
+# Full bootstrap: ./install.sh --with-memory --with-service
+# Daemon ports are configured via .env (see .env.example), so as not to conflict
+# with another node. Code graph (Serena) — optional, installed separately (per-project).
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -34,13 +34,13 @@ while [[ $# -gt 0 ]]; do
     --with-memory) WITH_MEMORY=true; shift ;;
     --with-service) WITH_SERVICE=true; shift ;;
     -h|--help) usage; exit 0 ;;
-    *) echo "ERROR: неизвестный аргумент: $1" >&2; usage >&2; exit 1 ;;
+    *) echo "ERROR: unknown argument: $1" >&2; usage >&2; exit 1 ;;
   esac
 done
 
-[[ -x "$CLI" ]] || { echo "ERROR: $CLI не найден или не исполняем" >&2; exit 1; }
+[[ -x "$CLI" ]] || { echo "ERROR: $CLI not found or not executable" >&2; exit 1; }
 command -v python3 >/dev/null 2>&1 || \
-  echo "WARN: python3 не найден — CLI потребует его при запуске" >&2
+  echo "WARN: python3 not found - CLI will require it at startup" >&2
 
 mkdir -p "$BIN_DIR" "$HOME/.maind"
 [[ -f "$HOME/.maind/projects.json" ]] || \
@@ -52,24 +52,24 @@ LINK="$BIN_DIR/maind"
 if [[ -e "$LINK" || -L "$LINK" ]]; then
   current="$(readlink -f "$LINK" 2>/dev/null || true)"
   if [[ "$current" == */bin/maind ]]; then
-    : # наш симлинк (возможно, из старого клона) — молча заменяем
+    : # our symlink (possibly from an old clone) — silently replace
   elif [[ "$FORCE" == true ]]; then
-    : # явное разрешение
+    : # explicit permission
   elif [[ -t 0 ]]; then
-    read -r -p "$LINK уже существует и не похож на maind. Заменить? [y/N] " answer
-    [[ "$answer" =~ ^[yY] ]] || { echo "Отменено."; exit 1; }
+    read -r -p "$LINK already exists and is not similar to maind. Replace? [y/N] " answer
+    [[ "$answer" =~ ^[yY] ]] || { echo "Canceled."; exit 1; }
   else
-    echo "ERROR: $LINK уже существует — перезапустите с --force" >&2
+    echo "ERROR: $LINK already exists - restart with --force" >&2
     exit 1
   fi
 fi
 ln -sfn "$CLI" "$LINK"
-echo "Установлено: $LINK -> $CLI"
+echo "Installed: $LINK -> $CLI"
 
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
   *)
-    echo "WARN: $BIN_DIR не в PATH. Добавьте:"
+    echo "WARN: $BIN_DIR not in PATH. Add:"
     case "$(basename "${SHELL:-bash}")" in
       zsh)  echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc" ;;
       fish) echo "  fish_add_path $BIN_DIR" ;;
@@ -77,40 +77,40 @@ case ":$PATH:" in
     esac ;;
 esac
 
-# ── опциональный bootstrap демона памяти ─────────────────────────────────────
+# ── optional bootstrap memory daemon ─────────────────────────────────────
 if [[ "$WITH_MEMORY" == true ]]; then
   if command -v npm >/dev/null 2>&1; then
-    echo "Установка демона памяти (npm install в $REPO_ROOT)..."
-    ( cd "$REPO_ROOT" && npm install ) || echo "WARN: npm install завершилась с ошибкой"
+    echo "Installing the memory daemon (npm install in $REPO_ROOT)..."
+    ( cd "$REPO_ROOT" && npm install ) || echo "WARN: npm install failed"
   else
-    echo "WARN: npm не найден — пропускаю установку демона памяти (нужен Node.js)"
+    echo "WARN: npm not found - skipping memory daemon installation (needed Node.js)"
   fi
 fi
 
 if [[ "$WITH_SERVICE" == true ]]; then
-  echo "Регистрация systemd --user сервиса демона памяти..."
-  "$CLI" service install || echo "WARN: maind service install не удался (см. вывод выше)"
+  echo "Registration systemd --user memory daemon service..."
+  "$CLI" service install || echo "WARN: maind service install failed (see output above)"
 fi
 
-# ── живой конфиг узла из example (если ещё нет; config.json в .gitignore) ─────
-# config.json — общий конфиг узла в КОРНЕ монорепо (на два уровня выше пакета).
-# Fallback на standalone-раскладку: если корня монорепо нет — пакетный каталог.
+# ── live node config from example (if not yet; config.json in .gitignore) ─────
+# config.json — general node config in the ROOT monorepo (two levels above the package).
+# Fallback on standalone-layout: if there is no monorepo root - batch directory.
 CFG_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$CFG_ROOT/packages" ] || CFG_ROOT="$REPO_ROOT"
 if [[ ! -f "$CFG_ROOT/config.json" && -f "$CFG_ROOT/config.example.json" ]]; then
   cp "$CFG_ROOT/config.example.json" "$CFG_ROOT/config.json"
   chmod 600 "$CFG_ROOT/config.json"
-  echo "Создан $CFG_ROOT/config.json из example — отредактируй проекты/политику под себя"
-  echo "  (секция code_graph — игноры/движок код-графа; projects[] — узлы экосистемы)"
+  echo "Created $CFG_ROOT/config.json from example — edit projects/policy for yourself"
+  echo "  (section code_graph — ignores/code graph engine; projects[] — ecosystem nodes)"
 fi
 
-# ── граф кода (опционально, движок Serena через uvx) ─────────────────────────
+# ── code graph (optional, engine Serena via uvx) ─────────────────────────
 command -v uvx >/dev/null 2>&1 || \
-  echo "INFO: uvx не найден в PATH — для графа кода (Serena) поставьте uv: https://docs.astral.sh/uv/"
+  echo "INFO: uvx not found in PATH — for code graph (Serena) put uv: https://docs.astral.sh/uv/"
 
 echo ""
-echo "Готово. Дальше:"
-[[ "$WITH_SERVICE" == true ]] || echo "  maind start --only memory       # поднять память (или: maind service install)"
-echo "  maind onboard <path|id>         # подключить проект к экосистеме"
-echo "  maind health --cwd              # проверить связь из каталога проекта"
-echo "  maind doctor                    # диагностика окружения"
+echo "Done. Next:"
+[[ "$WITH_SERVICE" == true ]] || echo "  maind start --only memory       # increase memory (or: maind service install)"
+echo "  maind onboard <path|id>         # connect the project to the ecosystem"
+echo "  maind health --cwd              # check link from project directory"
+echo "  maind doctor                    # environment diagnostics"

@@ -1,67 +1,67 @@
-# Сканер сниппетов
+# Snippet scanner
 
-Сканер извлекает кандидатов в сниппеты из локальных проектов — реальный код
-из реальной практики, а не выдуманные примеры. Пути проектов перечисляются
-в `.skills-scanner.json`.
+Scanner extracts snippet candidates from local projects - real code
+from real practice, not fictitious examples. Project paths are listed
+in `.skills-scanner.json`.
 
-## Пайплайн
+## Pipeline
 
 ```bash
-# 1. Найти кандидатов в перечисленных проектах
+# 1. Find candidates in listed projects
 ./scripts/scan-skills.sh
 
-# 2. Извлечь и анонимизировать в .scanner-output/
+# 2. Extract and anonymize to .scanner-output/
 ./scripts/scan-skills.sh --extract
 
-# 3. Закоммитить и открыть PR
+# 3. Commit and open PR
 ./scripts/scan-and-pr.sh
 ```
 
-`.scanner-output/` в `.gitignore` — результаты извлечения попадают в репозиторий
-только через PR после ревью.
+`.scanner-output/` in `.gitignore` — extraction results are added to the repository
+only via PR after the review.
 
-## Алгоритм
+## Algorithm
 
 ```
-SCAN   → найти файлы по паттернам (*.php, Dockerfile*, *.yml)
-FILTER → убрать vendor/, сгенерированный код, тривиальные сниппеты
-SCORE  → оценить по критериям качества
-MATCH  → определить целевой скилл по пути/контексту
-DEDUPE → проверить, что такого сниппета ещё нет в реестре
-CREATE → создать файл в skills/{bucket}/{skill}/snippets/
-UPDATE → обновить snippets/index.json
+SCAN   → find files by patterns (*.php, Dockerfile*, *.yml)
+FILTER → remove vendor/, generated code, trivial snippets
+SCORE  → evaluate according to quality criteria
+MATCH  → determine the target skill along the path/context
+DEDUPE → check that such a snippet is not yet in the registry
+CREATE → create a file in skills/{bucket}/{skill}/snippets/
+UPDATE → update snippets/index.json
 COMMIT → git commit + PR
 ```
 
-## Критерии качества сниппета
+## Snippet quality criteria
 
-Порог отбора задаётся в `.skills-scanner.json` (`quality_threshold: 60`).
-Оценка из 100:
+The selection threshold is set in `.skills-scanner.json` (`quality_threshold: 60`).
+Rating out of 100:
 
-| Критерий | Вес |
+| Criteria | Weight |
 |---|---|
-| Решает реальную задачу (не hello world) | 30 |
-| Современные практики (PHP 8.2+, typed properties) | 20 |
-| Есть комментарии или docblock | 20 |
-| Длина 10–100 строк (оптимально) | 10 |
-| Нет hardcoded-значений | 10 |
-| Можно использовать без изменений | 10 |
+| Solve a real problem (not hello world) | 30 |
+| Current Practices (PHP 8.2+, typed properties) | 20 |
+| There are comments or docblock | 20 |
+| Length 10–100 lines (optimal) | 10 |
+| No hardcoded-values | 10 |
+| Can be used without modification | 10 |
 
-Те же критерии применяются на ревью PR от сканера: кандидат ниже порога —
-отклоняется или дорабатывается перед мержем.
+The same criteria apply to reviews PR from scanner: candidate below threshold -
+is rejected or modified before merging.
 
-## Автоматизация
+## Automation
 
-Workflow `scanner-pr.yml` запускает сканер еженедельно и открывает PR с новыми
-кандидатами. Решение, что из найденного станет сниппетом скилла, — за ревьюером.
+Workflow `scanner-pr.yml` runs the scanner weekly and opens PR with new
+candidates. The decision on what will become a skill snippet from what is found is up to the reviewer.
 
-## Зачем это нужно
+## Why is this needed
 
-Лучшие сниппеты — те, что уже сработали в бою. Сканер закрывает цикл:
+The best snippets are those that have already worked in battle. The scanner closes the loop:
 
 ```
-реальный проект → сканер → PR → ревью → snippets/ скилла → новый проект
+real project → scanner → PR → review → snippets/ skill → new project
 ```
 
-Так наработки из AzGuard, botkit и других проектов постепенно превращаются
-в переиспользуемые скиллы.
+So the developments from AzGuard, botkit and other projects are gradually becoming
+into reused skills.

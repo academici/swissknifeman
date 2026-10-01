@@ -439,7 +439,7 @@ def pre_final_open_runs(project_root: Path, provider_session: str) -> dict:
     from task import journal, plan_item_state, task_contract
 
     if not provider_session:
-        raise AdmissionError("TERMINAL_ADMISSION_CONTEXT_INVALID", "нет provider session")
+        raise AdmissionError("TERMINAL_ADMISSION_CONTEXT_INVALID", "no provider session")
     observed = []
     worksets = []
     for path in sorted((Path(project_root) / "plans").glob("*/journal.jsonl")):

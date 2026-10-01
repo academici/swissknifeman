@@ -1,25 +1,25 @@
-# Источники и заметки — memory
+# Sources and notes - memory
 
-Самодостаточная папка-хук «единой памяти». Структура и эргономика повторяют
-`hooks/auto-approve/` (переключатель + `env.ini` MODE + `config.json` + `modes/`
-+ `lib/`), чтобы режимы были взаимозаменяемы и переопределялись конфигом.
+Self-contained hook folder «unified memory». Structure and ergonomics repeat
+`hooks/auto-approve/` (switch + `env.ini` MODE + `config.json` + `modes/`
++ `lib/`), so that the modes are interchangeable and overridden by the config.
 
-## Режимы
+## Modes
 
-- **file / federation** — собственные, на markdown-файлах. Схема факта совместима
-  с нативной памятью Claude Code (`name` / `description` / `metadata.type`),
-  поэтому `federation` читает и свои `memory/` участников, и нативные
+- **file / federation** — own, on markdown-files. Fact schema compatible
+  with native memory Claude Code (`name` / `description` / `metadata.type`),
+  therefore `federation` reads his own `memory/` participants, and native
   `~/.claude/projects/<slug>/memory/`.
-- **agentmemory** — прокси к стороннему **AgentMemory**
-  (`@agentmemory/agentmemory`, npm), который крутится демоном на Brain
-  (`cd ~/Vaults/Brain && npm run memory:start`, HTTP по умолчанию `:4111`).
-  Точная форма HTTP-API зависит от версии пакета — пути (`/memories`, `/search`,
-  `/health`) и jq-выборка в `modes/agentmemory.sh` помечены как требующие сверки
-  с реальным инстансом при первом прогоне. Недоступность демона → честное
-  сообщение, без падения.
+- **agentmemory** — proxy to third party **AgentMemory**
+  (`@agentmemory/agentmemory`, npm), which is spinning like a demon on Brain
+  (`cd ~/Vaults/Brain && npm run memory:start`, HTTP default `:4111`).
+  Exact form HTTP-API depends on package version - path (`/memories`, `/search`,
+  `/health`) and jq-sample in `modes/agentmemory.sh` are marked as requiring reconciliation
+  with a real instance on the first run. Demon inaccessibility → honest
+  message, no crash.
 
-## Что НЕ делает
+## What it DOESN'T do
 
-Хук ничего не удаляет и не перезаписывает чужие факты; `remember` только
-дописывает. Установка через `apply-permissions.sh --global` обновляет код/lib/modes,
-но НЕ перезатирает `env.ini`/`config.json` (там твой выбор режима и состав групп).
+The hook does not delete anything or overwrite anyone else's facts; `remember` only
+adds. Installation via `apply-permissions.sh --global` updates the code/lib/modes,
+but does NOT overwrite `env.ini`/`config.json` (there is your choice of mode and group composition).

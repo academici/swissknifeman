@@ -1,68 +1,68 @@
 # mattpocock/skills
 
 - **URL:** https://github.com/mattpocock/skills
-- **Лицензия:** MIT (© 2026 Matt Pocock)
-- **Статус:** imported
-- **Проверено:** 2026-06-26 (HEAD `5d78bd09`)
+- **License:** MIT (© 2026 Matt Pocock)
+- **Status:** imported
+- **Checked:** 2026-06-26 (HEAD `5d78bd09`)
 
-Battle-tested инженерные скиллы Matt Pocock (TotalTypeScript). Сильная методология
+Battle-tested engineering skills Matt Pocock (TotalTypeScript). Strong methodology
 (Ousterhout «Philosophy of Software Design», Feathers «Working Effectively with Legacy Code»),
-а не шаблоны. Ориентация — Node/TS и один мейнтейнер; у нас мульти-стек (PHP/Laravel, Dart/Flutter,
-embedded, финтех). Прямая замена невозможна — берём методологию точечно, локализация примеров (PHP/Dart)
-отдельной волной (faithful-first).
+and not templates. Orientation - Node/TS and one maintainer; we have a multi-stack (PHP/Laravel, Dart/Flutter,
+embedded, fintech). Direct replacement is impossible - we take the methodology point by point, localization of examples (PHP/Dart)
+as a separate wave (faithful-first).
 
-Ключевая находка источника — явная **двухъярусная активация** (`skills/engineering/README.md`):
-скиллы делятся на **user-invoked** (`disable-model-invocation: true` — только явный вызов) и
-**model-invoked** (богатый `description` → авто-триггер). Эту классификацию переносим один-в-один
-в наши условия активации.
+The source's key finding is explicit **two-tier activation** (`skills/engineering/README.md`):
+skills are divided into **user-invoked** (`disable-model-invocation: true` — explicit call only) and
+**model-invoked** (rich `description` → auto-trigger). We transfer this classification one-to-one
+to our activation conditions.
 
-## Что взято (первая волна → upstream.json, strategy notify)
+## What's taken (first wave → upstream.json, strategy notify)
 
-| mattpocock | наш таргет | активация |
+| mattpocock | our target | activation |
 |---|---|---|
-| diagnosing-bugs | `quality/diagnosing-bugs` | model-invoked (авто) |
-| tdd | `quality/tdd-discipline` | model-invoked (авто) |
-| codebase-design | `architect/codebase-design` | model-invoked (авто) |
-| domain-modeling | `architect/domain-modeling` | model-invoked (авто) |
-| implement | `general/implement` | **user-invoked** (пишет код) |
-| to-issues | `oss-dev/to-issues` | **user-invoked** (постит в GitHub) |
-| triage | `oss-dev/issue-triage` | **user-invoked** (через агента) |
-| grill-with-docs | `general/grill-with-docs` | **user-invoked** (явная сессия) |
-| resolving-merge-conflicts | `oss-dev/resolving-merge-conflicts` | model-invoked (авто) |
+| diagnosing-bugs | `quality/diagnosing-bugs` | model-invoked (auto) |
+| tdd | `quality/tdd-discipline` | model-invoked (auto) |
+| codebase-design | `architect/codebase-design` | model-invoked (auto) |
+| domain-modeling | `architect/domain-modeling` | model-invoked (auto) |
+| implement | `general/implement` | **user-invoked** (writes code) |
+| to-issues | `oss-dev/to-issues` | **user-invoked** (posts to GitHub) |
+| triage | `oss-dev/issue-triage` | **user-invoked** (via agent) |
+| grill-with-docs | `general/grill-with-docs` | **user-invoked** (explicit session) |
+| resolving-merge-conflicts | `oss-dev/resolving-merge-conflicts` | model-invoked (auto) |
 
-Под-файлы источника (DEEPENING/DESIGN-IT-TWICE, CONTEXT-FORMAT/ADR-FORMAT, AGENT-BRIEF/OUT-OF-SCOPE,
-tests/mocking, HTML-REPORT) → наши `snippets/` (ярус-2 on-demand).
+Source sub-files (DEEPENING/DESIGN-IT-TWICE, CONTEXT-FORMAT/ADR-FORMAT, AGENT-BRIEF/OUT-OF-SCOPE,
+tests/mocking, HTML-REPORT) → ours `snippets/` (tier-2 on-demand).
 
-## Точечно (EXTEND, без отдельного скилла)
+## Spot (EXTEND, without a separate skill)
 
-- **to-prd** → усиливает `general/spec-interview` (грилинг-строгость) + форма PRD остаётся `pm/prd-from-brd`.
-- **improve-codebase-architecture** → HTML-REPORT.md как опциональный snippet в `architect/codebase-design`;
-  ссылка из `quality/refactoring-plan`. Отдельный скилл не делаем (дубль refactoring-plan + codebase-design).
-- **grill-with-docs** — у источника тонкий враппер «`/grilling` + `/domain-modeling`»; у нас =
-  `spec-interview` (наш грилинг) + `architect/domain-modeling`, строит CONTEXT.md/ADR инлайн.
+- **to-prd** → enhances `general/spec-interview` (grilling severity) + form PRD remains `pm/prd-from-brd`.
+- **improve-codebase-architecture** → HTML-REPORT.md as optional snippet in `architect/codebase-design`;
+  link from `quality/refactoring-plan`. We do not create a separate skill (take refactoring-plan + codebase-design).
+- **grill-with-docs** — at the source thin wrapper «`/grilling` + `/domain-modeling`»; with us =
+  `spec-interview` (our grilling) + `architect/domain-modeling`, builds CONTEXT.md/ADR inline.
 
-## В harness, не скилл
+## B harness, not a skill
 
-- **git-guardrails-claude-code** — у нас хуки/permissions принадлежат пакету `harness`.
-  Скрипт `block-dangerous-git.sh` + PreToolUse-пресет → `packages/harness/configs/claude-code/hooks/`,
-  раздаётся через `harness hooks` (+ опц. тонкий `general/git-safety`, `lifecycle:init`).
+- **git-guardrails-claude-code** — we have hooks/permissions belong to the package `harness`.
+  Script `block-dangerous-git.sh` + PreToolUse-preset → `packages/harness/configs/claude-code/hooks/`,
+  is distributed through `harness hooks` (+ opt. thin `general/git-safety`, `lifecycle:init`).
 
-## Не брать
+## Do not take
 
-- **setup-pre-commit** — Husky/lint-staged, JS-специфика (отложено; позже PHP-аналог в `devops`).
-- **prototype** — частично покрыто; отложено, заметка в `implement`/`spec-interview`.
-- **scaffold-exercises**, **migrate-to-shoehorn**, **ask-matt** — обучение/личные инструменты/персональный роутер.
-- **setup-matt-pocock-skills** — bootstrap его репо; изучить как образец будущего `setup-swissknifeman`.
+- **setup-pre-commit** — Husky/lint-staged, JS-specifics (deferred; later PHP-analogue in `devops`).
+- **prototype** — partially covered; postponed, note in `implement`/`spec-interview`.
+- **scaffold-exercises**, **migrate-to-shoehorn**, **ask-matt** — training/personal tools/personal router.
+- **setup-matt-pocock-skills** — bootstrap its repo; study as a model of the future `setup-swissknifeman`.
 
-## Целевые бакеты
+## Target Buckets
 
-`quality/`, `architect/`, `general/`, `oss-dev/` (методология, fold-in, без нового бакета).
-Раздача — opt-in через `presets/` (`agent-tasks`, `code-quality`, `system-design`, новый
-`engineering-workflow`), НЕ в CORE.
+`quality/`, `architect/`, `general/`, `oss-dev/` (methodology, fold-in, without a new bucket).
+Distribution - opt-in via `presets/` (`agent-tasks`, `code-quality`, `system-design`, new
+`engineering-workflow`), NOT in CORE.
 
-## Цепочка (встраивание, не папки)
+## Chain (embedding, not folders)
 
 `spec-interview → grill-with-docs(+domain-modeling) → to-issues → implement → tdd-discipline → code-review`;
-`diagnosing-bugs → code-review`; `codebase-design → refactoring-plan/architecture`. Рёбра — через
-`requires/produces_for`, агенты грузят через `skills:` (issue-triager←issue-triage, sprint-planner←to-issues,
+`diagnosing-bugs → code-review`; `codebase-design → refactoring-plan/architecture`. Ribs - through
+`requires/produces_for`, agents ship via `skills:` (issue-triager←issue-triage, sprint-planner←to-issues,
 review-gatekeeper←diagnosing-bugs/tdd-discipline).

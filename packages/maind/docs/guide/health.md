@@ -1,60 +1,60 @@
-# Healthcheck — связь проекта с хабом
+# Healthcheck — connection between the project and the hub
 
-Если в проекте не подняты память + maind MCP, разработка идёт «мимо» графа/памяти → пробелы.
-`maind health` это диагностирует. Проверка **не блокирует** работу — всегда печатает статус и
-подсказки.
+If memory is not raised in the project + maind MCP, development in progress «past» column/memory → spaces.
+`maind health` diagnoses this. Check **does not block** work - always prints the status and
+tips.
 
-## Диагностика
+## Diagnostics
 
 ```bash
-maind health --cwd                 # из каталога проекта (матч по local_path)
-maind health --project flexcrm     # по id
+maind health --cwd                 # from the project directory (match by local_path)
+maind health --project flexcrm     # by id
 maind health --project flexcrm --json
-maind health --cwd --fix           # поднять память + дописать MCP-серверы
-maind health --project flexcrm --strict   # exit 1, если не connected (для CI)
+maind health --cwd --fix           # increase memory + add MCP-servers
+maind health --project flexcrm --strict   # exit 1, if not connected (for CI)
 ```
 
-Проверяются три оси: демон памяти отвечает? agentmemory MCP в проекте? maind MCP в проекте?
+Three axes are checked: is the memory daemon responding? agentmemory MCP in the project? maind MCP in the project?
 
-| Статус | Смысл |
+| Status | Meaning |
 |:--|:--|
-| `connected` | память доступна И оба MCP-сервера настроены |
-| `partial` | что-то одно есть (например, MCP без демона) |
-| `standalone` | ни демона, ни MCP — проект работает автономно |
+| `connected` | memory available And both MCP-servers configured |
+| `partial` | there is one thing (for example, MCP without daemon) |
+| `standalone` | neither demon nor MCP — project works autonomously |
 
-Пример вывода:
+Example output:
 
 ```
 ⚠ mAInd health — project:flexcrm (scope project:flexcrm)
-  [ok  ] демон памяти (http://127.0.0.1:4111)
-  [FAIL] agentmemory MCP в проекте
-  [ok  ] maind MCP в проекте
-  статус: partial
-    → нет agentmemory MCP в проекте → maind sync --only mcp --project flexcrm
+  [ok  ] memory daemon (http://127.0.0.1:4111)
+  [FAIL] agentmemory MCP in the project
+  [ok  ] maind MCP in the project
+  status: partial
+    → no agentmemory MCP in the project → maind sync --only mcp --project flexcrm
 ```
 
-`--fix` поднимает память (если лежит) и выполняет `sync --only mcp` для проекта, затем повторяет отчёт.
+`--fix` increases memory (if lying) and executes `sync --only mcp` for the project, then repeats the report.
 
-## Доставка «приоритета №1» в проекты
+## Delivery «priority №1» to projects
 
-Чтобы проект сам напоминал про связь с хабом, два провиженера (вызываются из `maind sync`,
-источник истины — `templates/health/*`):
+So that the project itself reminds about the connection with the hub, two providers (are called from `maind sync`,
+source of truth - `templates/health/*`):
 
-- **health-doc** — управляемый блок (маркер `maind:healthcheck`) в `<project>/CLAUDE.md`;
-  идемпотентно по content-hash, чужой текст файла сохраняется.
-- **health-hook** — opt-in SessionStart-хук (`observability.session_start_health_hook=true`).
-  По умолчанию sync снимает регистрацию и `.claude/maind-health.sh`; полную проверку запускают
-  вручную через `maind health --deep` после установки, изменений окружения или при симптомах.
+- **health-doc** — managed block (marker `maind:healthcheck`) in `<project>/CLAUDE.md`;
+  idempotent by content-hash, someone else's file text is saved.
+- **health-hook** — opt-in SessionStart-hook (`observability.session_start_health_hook=true`).
+  Default sync unregisters and `.claude/maind-health.sh`; run full scan
+  manually via `maind health --deep` after installation, environmental changes, or symptoms.
 
 ```bash
 maind sync --project flexcrm --only health-doc,health-hook
-maind sync --all --only health-doc,health-hook --mode update   # обновить устаревшие блоки
+maind sync --all --only health-doc,health-hook --mode update   # update outdated blocks
 ```
 
-## Траблшутинг
+## Troubleshooting
 
-- `демон памяти не запущен` → `maind start --only memory`.
-- `нет … MCP в проекте` → `maind sync --only mcp --project <id>` (или `maind health --fix`).
-- `missing-path` → у проекта нет `local_path` или путь не существует — поправьте `config.json`.
+- `memory daemon not running The project does not have` → `maind start --only memory`.
+- `no … MCP in the project` → `maind sync --only mcp --project <id>` (or `maind health --fix`).
+- `missing-path` →  `local_path` or the path does not exist - correct `config.json`.
 
-Дальше: [Sync →](./sync)
+Next: [Sync →](./sync)

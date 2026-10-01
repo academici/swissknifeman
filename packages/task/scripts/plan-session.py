@@ -26,18 +26,18 @@ def migrated_command_skill(source, relative_path):
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="Показать provider-neutral session context")
+    parser = argparse.ArgumentParser(description="Show provider-neutral session context")
     subparsers = parser.add_subparsers(dest="command", required=True)
     current = subparsers.add_parser("current")
     output = current.add_mutually_exclusive_group(required=True)
     output.add_argument("--json", action="store_true")
     output.add_argument("--id", action="store_true")
-    prepare = subparsers.add_parser("prepare", help="Read-only snapshot, не разрешение на запись")
+    prepare = subparsers.add_parser("prepare", help="Read-only snapshot, not write permission")
     prepare.add_argument("--plan-dir", required=True, type=Path)
     prepare.add_argument("--item", required=True)
     prepare.add_argument("--risk", action="append", required=True,
-                         help="Имя риска; none только после оценки воздействия")
-    start = subparsers.add_parser("start", help="Durable старт или resume до product write")
+                         help="Risk name; none only after impact assessment")
+    start = subparsers.add_parser("start", help="Durable start or resume to product write")
     start.add_argument("--plan-dir", required=True, type=Path)
     start.add_argument("--item", required=True)
     start.add_argument("--command", dest="execution_command", required=True,
@@ -47,7 +47,7 @@ def main(argv=None) -> int:
     start.add_argument("--session-id")
     start.add_argument("--contract", required=True, type=Path)
     start.add_argument("--batch-receipt", type=Path)
-    installed = subparsers.add_parser("installed", help="Сверить выбранную установленную проекцию")
+    installed = subparsers.add_parser("installed", help="Check selected installed projection")
     installed.add_argument("--source", required=True, type=Path)
     installed.add_argument("--installed", required=True, type=Path)
     args = parser.parse_args(argv)
@@ -67,10 +67,10 @@ def main(argv=None) -> int:
                         result[relative.as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
                 return result
             if not args.source.is_dir() or not args.installed.is_dir():
-                raise ValueError("source/installed не содержит выбранный пакет")
+                raise ValueError("source/installed does not contain the selected package")
             sources, targets = inventory(args.source), inventory(args.installed)
             if not sources:
-                raise ValueError("пустой исходный пакет")
+                raise ValueError("empty source package")
             provider_generated = []
             for path in sorted(targets.keys() - sources.keys()):
                 expected = migrated_command_skill(args.source, path)
@@ -111,7 +111,7 @@ def main(argv=None) -> int:
             from task import plan_evidence, plan_lifecycle, validation_admission
             risks = set(args.risk)
             if "none" in risks and len(risks) != 1:
-                raise ValueError("none несовместим с другими рисками")
+                raise ValueError("none incompatible with other risks")
             selection = plan_lifecycle.select(plan_lifecycle.LifecycleInput(
                 risks=frozenset() if risks == {"none"} else frozenset(risks)))
             from task import plan_recovery

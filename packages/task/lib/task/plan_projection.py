@@ -32,7 +32,7 @@ def inputs_sha256(paths, *, root) -> str:
             relative = path.relative_to(root).as_posix()
             payload = path.read_bytes()
         except (OSError, ValueError) as exc:
-            raise ProjectionError(f"вход проекции недоступен: {path}") from exc
+            raise ProjectionError(f"projection input not available: {path}") from exc
         digest.update(relative.encode("utf-8"))
         digest.update(b"\0")
         digest.update(payload)
@@ -52,7 +52,7 @@ def metadata_block(*, projection, projection_version, source_scope, through,
         "generated_by": generated_by,
     }
     if set(values) != set(METADATA_FIELDS) or any(not str(value) for value in values.values()):
-        raise ProjectionError("метаданные проекции неполны")
+        raise ProjectionError("projection metadata is incomplete")
     lines = ["<!-- plan-projection"]
     lines.extend(f"{field}: {values[field]}" for field in METADATA_FIELDS)
     lines.append("-->")
@@ -62,8 +62,8 @@ def metadata_block(*, projection, projection_version, source_scope, through,
 def rendered_file(*, metadata: str, title: str, body: str) -> str:
     """Build one complete generated Markdown file without wall-clock state."""
     if not metadata.startswith("<!-- plan-projection\n"):
-        raise ProjectionError("метаданные проекции неканоничны")
-    return f"{metadata}\n\n# {title}\n\n> Не править руками: это генерируемый вид.\n\n{body.rstrip()}\n"
+        raise ProjectionError("projection metadata is non-canonical")
+    return f"{metadata}\n\n# {title}\n\n> Do not manipulate by hand: this is a generated view.\n\n{body.rstrip()}\n"
 
 
 def write_or_check(target, expected: str, *, check: bool) -> bool:
@@ -74,11 +74,11 @@ def write_or_check(target, expected: str, *, check: bool) -> bool:
         target.parent.mkdir(parents=True, exist_ok=True)
     if (not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_DIRECTORY")
             or target.parent.is_symlink()):
-        raise ProjectionError(f"вид не может гарантировать no-follow durability: {target}")
+        raise ProjectionError(f"view cannot guarantee no-follow durability: {target}")
     try:
         directory = os.open(target.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
     except OSError as exc:
-        raise ProjectionError(f"каталог вида недоступен: {target.parent}") from exc
+        raise ProjectionError(f"view directory not available: {target.parent}") from exc
     temporary = None
     try:
         fcntl.flock(directory, fcntl.LOCK_EX)
@@ -88,16 +88,16 @@ def write_or_check(target, expected: str, *, check: bool) -> bool:
         except FileNotFoundError:
             descriptor = None
         except OSError as exc:
-            raise ProjectionError(f"вид не является безопасным regular file: {target}") from exc
+            raise ProjectionError(f"view is not secure regular file: {target}") from exc
         if descriptor is not None:
             try:
                 if not stat.S_ISREG(os.fstat(descriptor).st_mode):
-                    raise ProjectionError(f"вид не regular file: {target}")
+                    raise ProjectionError(f"view not regular file: {target}")
                 with os.fdopen(descriptor, "rb", closefd=False) as stream:
                     current = stream.read()
                 if check:
                     if current != encoded:
-                        raise ProjectionError(f"вид устарел: {target}")
+                        raise ProjectionError(f"view is obsolete: {target}")
                     return False
                 if current == encoded:
                     os.fsync(descriptor)
@@ -106,7 +106,7 @@ def write_or_check(target, expected: str, *, check: bool) -> bool:
             finally:
                 os.close(descriptor)
         elif check:
-            raise ProjectionError(f"вид отсутствует или не читается: {target}")
+            raise ProjectionError(f"view is missing or unreadable: {target}")
 
         for _attempt in range(32):
             temporary = f".{target.name}.{os.getpid()}.{secrets.token_hex(8)}.tmp"
@@ -118,7 +118,7 @@ def write_or_check(target, expected: str, *, check: bool) -> bool:
             except FileExistsError:
                 continue
         else:
-            raise ProjectionError(f"не удалось создать temporary вид: {target}")
+            raise ProjectionError(f"could not be created temporary view: {target}")
         try:
             cursor = 0
             while cursor < len(encoded):
@@ -136,7 +136,7 @@ def write_or_check(target, expected: str, *, check: bool) -> bool:
     except ProjectionError:
         raise
     except OSError as exc:
-        raise ProjectionError(f"запись вида не дошла до durable boundary: {target}: {exc}") from exc
+        raise ProjectionError(f"record of the type did not reach durable boundary: {target}: {exc}") from exc
     finally:
         if temporary is not None:
             try:

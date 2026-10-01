@@ -1,16 +1,16 @@
 {
-  "_comment": "Скопируй в корень целевого проекта как .swissknife.json — install.sh прочтёт его автоматически. Все ключи опциональны. Приоритет: флаги CLI > этот файл > автодетект.",
-  "_comment_project_type": "obsidian-vault | laravel-project | php-package | standalone — маппится на profiles/<type>.json",
+  "_comment": "Copy to the root of the target project as .swissknife.json — install.sh will read it automatically. All keys are optional. Priority: flags CLI > this file > autodetection.",
+  "_comment_project_type": "obsidian-vault | laravel-project | php-package | standalone — is mapped to profiles/<type>.json",
   "project_type": "laravel-project",
-  "_comment_buckets": "явный список bucket-ов; если задан — project_type игнорируется",
+  "_comment_buckets": "explicit list bucket-ov; if specified - project_type ignored",
   "buckets": ["architect", "php", "quality"],
-  "_comment_exclude": "имена скиллов, папок или bucket-relative пути; объединяется с --exclude",
+  "_comment_exclude": "names of skills, folders or bucket-relative paths; merges with --exclude",
   "exclude": ["botkit", "devops/gitops"],
-  "_comment_skills_path": "куда ставить относительно корня проекта; по умолчанию зависит от agent",
+  "_comment_skills_path": "where to put relative to the project root; default depends on agent",
   "skills_path": ".claude/skills",
-  "_comment_agent": "claude | cursor | generic; claude = плоская раскладка",
+  "_comment_agent": "claude | cursor | generic; claude = flat layout",
   "agent": "claude",
-  "_comment_providers": "Опционально: отсутствие блока сохраняет legacy Claude Code-only behavior и ничего не мигрирует.",
+  "_comment_providers": "Optional: the absence of a block saves legacy Claude Code-only behavior and nothing migrates.",
   "providers": {
     "contract_version": "1.0.0",
     "selection": {

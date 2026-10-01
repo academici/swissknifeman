@@ -1,8 +1,8 @@
 // Source: anonymized production Laravel project
 
-// Presence-канал: список «кто онлайн» + whisper (клиент-клиент без сервера).
-// Серверная авторизация presence-канала ОБЯЗАНА вернуть массив данных
-// пользователя (см. channels.php), иначе here/joining не сработают.
+// Presence-channel: list «who is online» + whisper (client-client without server).
+// Server authorization presence-channel MUST return an array of data
+// user (see channels.php), otherwise here/joining will not work.
 
 interface Member {
     id: number;
@@ -10,15 +10,15 @@ interface Member {
 }
 
 const channel = window.Echo.join(`warehouse.${warehouseId}`)
-    // Полный список участников при подключении.
+    // Full list of participants when connecting.
     .here((members: Member[]) => {
         console.log('online:', members.map((m) => m.name));
     })
-    // Кто-то присоединился.
+    // Someone has joined.
     .joining((member: Member) => {
         console.log('joined:', member.name);
     })
-    // Кто-то вышел.
+    // Someone came out.
     .leaving((member: Member) => {
         console.log('left:', member.name);
     })
@@ -26,20 +26,20 @@ const channel = window.Echo.join(`warehouse.${warehouseId}`)
         console.error('presence auth failed', error);
     });
 
-// --- Whisper: эфемерные события между клиентами ---
-// Работает только на private/presence каналах, не проходит через Laravel —
-// идеально для typing-индикаторов и позиций курсора.
+// --- Whisper: ephemeral events between clients ---
+// Only works on private/presence channels, does not pass through Laravel —
+// ideal for typing-indicators and cursor positions.
 
-// Отправка (например, по input-событию, с debounce):
+// Dispatch (for example, by input-event, with debounce):
 channel.whisper('typing', {
     userId: currentUserId,
     name: currentUserName,
 });
 
-// Приём у остальных участников:
+// Reception with other participants:
 channel.listenForWhisper('typing', (e: { userId: number; name: string }) => {
     showTypingIndicator(e.name);
 });
 
-// Покинуть канал (например, при unmount компонента):
+// Leave channel (for example, when unmount component):
 // window.Echo.leave(`warehouse.${warehouseId}`);

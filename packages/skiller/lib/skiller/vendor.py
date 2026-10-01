@@ -1,4 +1,4 @@
-"""vendor — канал вендоринга (Cursor и другие агенты)."""
+"""vendor — vendor channel (Cursor and other agents)."""
 import json
 import os
 import shutil
@@ -16,9 +16,9 @@ from .state import upsert_project
 
 
 def collect_skills(env, buckets, exclude):
-    """Список (bucket, rel, dir, fm_name) скиллов выбранных бакетов минус
-    exclude, плюс карта all_skill_rels (bucket -> [rel-пути всех скиллов]).
-    Скилл — каталог, прямо содержащий SKILL.md."""
+    """List (bucket, rel, dir, fm_name) skills of the selected buckets minus
+    exclude, plus map all_skill_rels (bucket -> [rel-paths of all skills]).
+    Skill - a directory directly containing SKILL.md."""
     root = env.root
     skills = []
     all_skill_rels = {}
@@ -37,7 +37,7 @@ def collect_skills(env, buckets, exclude):
 
 
 def build_requires_index(env):
-    """fm_name (или имя каталога) -> (bucket, rel, dir, requires) по всем бакетам."""
+    """fm_name (or directory name) -> (bucket, rel, dir, requires) for all buckets."""
     root = env.root
     index = {}
     for bucket in all_buckets(env):
@@ -52,10 +52,10 @@ def build_requires_index(env):
 
 
 def resolve_requires(skills, index, exclude, *, diagnostics=None):
-    """Транзитивно дотянуть `requires`. Мутирует skills, возвращает pulled
-    (dep -> requester). --exclude побеждает зависимость (с warning). BFS — общий с
-    skillset._pull_requires через common.resolve_requires_bfs (V-1: раньше два
-    независимых, уже разошедшихся тела)."""
+    """Transitively hold out `requires`. Mutates skills, returns pulled
+    (dep -> requester). --exclude beats addiction (with warning). BFS — shared with
+    skillset._pull_requires via common.resolve_requires_bfs (V-1: before two
+    independent, already separated bodies)."""
     selected = {fm_name or d.name for _, _, d, fm_name in skills}
     seed = [(dep, fm_name or d.name) for _bucket, _rel, d, fm_name in skills
             for dep in index.get(fm_name or d.name, ("", "", None, []))[3]]
@@ -77,8 +77,8 @@ def resolve_requires(skills, index, exclude, *, diagnostics=None):
 
 
 def flat_names(skills):
-    """flat-имена для claude/Boost-раскладки: sanitize + два прохода
-    разрешения коллизий (префикс бакета, затем полный путь-слаг)."""
+    """flat-names for claude/Boost-layouts: sanitize + two passes
+    collision resolution (bucket prefix, then full slug path)."""
     names = {}
     for i, (_bucket, rel, d, fm_name) in enumerate(skills):
         names[i] = sanitize(fm_name) or sanitize(rel.replace("/", "-")) \
@@ -132,7 +132,7 @@ def do_vendor(env, target, opts, register=True):
     exclude = set(flag_exclude) | set(config.exclude)
     no_core = opts.get("no_core", False)
     if not no_core:
-        # CORE-политика: не раздаём дубль-хаба/ручные инструменты по умолчанию
+        # CORE-policy: we do not distribute double hubs/default hand tools
         exclude |= set(DEFAULT_EXCLUDE)
 
     agent = opts.get("agent", "") or config.agent or "generic"
@@ -144,16 +144,16 @@ def do_vendor(env, target, opts, register=True):
     dest_root = target / skills_path
 
     # Layout: flat (.ai/skills/<name>/SKILL.md) vs bucket
-    # (.ai/skills/<bucket>/<name>/SKILL.md). Laravel Boost обнаруживает
-    # user-скиллы через glob('.ai/skills/*') на ОДИН уровень (SkillComposer),
-    # поэтому в Boost-проектах нужен flat, иначе boost:update их не увидит.
+    # (.ai/skills/<bucket>/<name>/SKILL.md). Laravel Boost detects
+    # user-skills through glob('.ai/skills/*') to ONE level (SkillComposer),
+    # therefore in Boost-projects need flat, otherwise boost:update won't see them.
     flat_layout = (agent == "claude") or (target / "boost.json").is_file()
 
     # --- collect skills (dir directly containing SKILL.md) ---------------------
     skills, all_skill_rels = collect_skills(env, buckets, exclude)
 
-    # CORE: токен-скиллы раздаём всегда (если не --no-core), даже когда их бакет
-    # не входит в профиль проекта (general/oss-dev обычно вне код-профилей).
+    # CORE: token skills are always distributed (if not --no-core), even when their bucket
+    # is not included in the project profile (general/oss-dev usually outside of code profiles).
     core_added = []
     if not no_core:
         have = {f"{b}/{r}" for b, r, _, _ in skills}
@@ -179,10 +179,10 @@ def do_vendor(env, target, opts, register=True):
     print(f"Target:      {target}")
     print(f"Profile:     {profile_name or '-'} (via {source})")
     if source == "autodetect-fallback":
-        print("⚠ ВНИМАНИЕ: тип проекта не распознан — перенесён МИНИМАЛЬНЫЙ набор (ядро),\n"
-              "  а не «всё подряд». Для оптимального набора укажи профиль явно:\n"
+        print("⚠ ATTENTION: project type not recognized - MINIMUM set transferred (core),\n"
+              "  and not «everything». For optimal dialing, specify the profile explicitly:\n"
               "  skiller vendor --profile <node-frontend|laravel-project|php-package|…>\n"
-              "  или точные бакеты: skiller vendor --buckets a,b,c")
+              "  or exact buckets: skiller vendor --buckets a,b,c")
     print(f"Agent:       {agent}")
     print(f"Skills path: {skills_path}")
     print(f"Buckets:     {' '.join(buckets)}")
@@ -190,7 +190,7 @@ def do_vendor(env, target, opts, register=True):
         print(f"Exclude:     {' '.join(sorted(exclude))}")
     print(f"Skills:      {len(skills)}")
     if core_added:
-        print(f"CORE:        {' '.join(core_added)} (раздаются по умолчанию; --no-core отключает)")
+        print(f"CORE:        {' '.join(core_added)} (are distributed by default; --no-core disables)")
     if pulled:
         print(f"Dependencies: {len(pulled)} pulled via requires")
 
@@ -205,24 +205,24 @@ def do_vendor(env, target, opts, register=True):
 
     # --- install ---------------------------------------------------------------------
     def copy_skill(src, dst):
-        """True — скопирован (или dry-run: запланирован). False — пропущен
-        (containment-стоп/TOCTOU-гонка, уже warn'ится внутри safe_copy_skill) —
-        вызывающий НЕ должен заносить его в installed/манифест (V-2)."""
+        """True — copied (or dry-run: scheduled). False — missing
+        (containment-stop/TOCTOU-race, already warn'is located inside safe_copy_skill) —
+        the caller should NOT put it in installed/manifest (V-2)."""
         if dry_run:
             print(f"[dry-run] {src.relative_to(root)} -> {dst}")
             return True
-        # Единый безопасный copy (containment + снятие symlink/файла/каталога + TOCTOU-
-        # перепроверка + SKILL_IGNORE) — общий с skillset.sync, чтобы детали безопасности не
-        # разъезжались. Чужой SKILL.*.md/evals/upstream.json/.claude-plugin не едет в проект.
+        # Unified secure copy (containment + removal symlink/file/directory + TOCTOU-
+        # recheck + SKILL_IGNORE) — shared with skillset.sync, so that security details are not
+        # were leaving. Alien SKILL.*.md/evals/upstream.json/.claude-plugin does not go to the project.
         return safe_copy_skill(src, dst, dest_root)
 
     def copy_support_file(src, dst):
-        """Безопасно скопировать ОДИНОЧНЫЙ support-файл (напр. skills/oss-dev/references/*.md)
-        внутри dest_root: containment-проверка + атомарная запись (tmp+os.replace) — паритет
-        с safe_copy_skill (тот копирует каталоги скиллов через copytree). Раньше эти файлы
-        шли голым shutil.copy2 мимо и containment, и атомарности (V-7)."""
+        """Safe to copy SINGLE support-file (e.g. skills/oss-dev/references/*.md)
+        inside dest_root: containment-check + atomic record (tmp+os.replace) — parity
+        with safe_copy_skill (it copies skill catalogs via copytree). Previously these files
+        walked naked shutil.copy2 past and containment, and atomicity (V-7)."""
         if not is_within_lexical(dst, dest_root):
-            warn(f"пропуск support-файла: путь вне каталога назначения: {dst}")
+            warn(f"pass support-file: path outside the destination directory: {dst}")
             return False
         dst.parent.mkdir(parents=True, exist_ok=True)
         tmp = dst.with_name(f".{dst.name}.tmp-{os.getpid()}")
@@ -236,13 +236,13 @@ def do_vendor(env, target, opts, register=True):
         try:
             return json.loads(manifest_file.read_text(encoding="utf-8"))
         except json.JSONDecodeError as e:
-            # Битый манифест не должен ронять do_vendor необработанным исключением
-            # (нашлось при регрессии на U-1: update --all → do_vendor читает манифест
-            # ЕЩЁ РАЗ для reinstall/prune-учёта) — деградация: трактуем как «манифеста
-            # нет» (старые записи не найдены → без collision-детекта по old_paths,
-            # чистая переустановка).
-            warn(f"{manifest_file}: битый JSON манифеста — игнорирую, трактую как "
-                 f"отсутствующий: {e}")
+            # A broken manifest should not be dropped do_vendor unhandled exception
+            # (was found by regression on U-1: update --all → do_vendor reads the manifest
+            # AGAIN for reinstall/prune-accounting) — degradation: interpreted as «manifest
+            # no» (old entries not found → without collision-detection by old_paths,
+            # clean reinstall).
+            warn(f"{manifest_file}: broken JSON of the manifesto - I ignore it, interpret it as "
+                 f"missing: {e}")
             return {}
 
     def contained(path):
@@ -260,8 +260,8 @@ def do_vendor(env, target, opts, register=True):
                   "projects — prefer the plugin marketplace: skiller connect",
                   file=sys.stderr)
         elif (target / "boost.json").is_file():
-            print("NOTE: обнаружен Laravel Boost — использую flat-раскладку "
-                  "(.ai/skills/<name>/SKILL.md), чтобы boost:update нашёл скиллы",
+            print("NOTE: detected Laravel Boost — using flat-layout "
+                  "(.ai/skills/<name>/SKILL.md), to boost:update found skills",
                   file=sys.stderr)
         manifest_file = dest_root / MANIFEST
         if not dry_run:
@@ -292,7 +292,7 @@ def do_vendor(env, target, opts, register=True):
             for item in sorted(bucket_dir.rglob("*")):
                 if item.is_dir() or item.name in ("SKILL.md", "upstream.json"):
                     continue
-                # SKILL.*.md — неканонические localized/reference alternates, не вендорим
+                # SKILL.*.md — non-canonical localized/reference alternates, not a vendor
                 if item.name.startswith("SKILL.") and item.name.endswith(".md"):
                     continue
                 rel_item = item.relative_to(bucket_dir)
@@ -350,19 +350,19 @@ def do_vendor(env, target, opts, register=True):
             write_manifest(manifest_file, "bucket", installed, support_rels)
 
     if skip_copy:
-        warn(f"пропущено при копировании ({len(skip_copy)}): {', '.join(skip_copy)} "
-             f"— НЕ установлены, см. предупреждения выше")
+        warn(f"skipped when copying ({len(skip_copy)}): {', '.join(skip_copy)} "
+             f"— NOT installed, see warnings above")
     if skip_support:
-        warn(f"пропущено support-файлов ({len(skip_support)}): {', '.join(skip_support)}")
+        warn(f"missing support-files ({len(skip_support)}): {', '.join(skip_support)}")
     print(("[dry-run] " if dry_run else "")
           + f"Installed {len(installed)} skills -> {dest_root}"
-          + (f" ({len(skip_copy)} пропущено)" if skip_copy else ""))
+          + (f" ({len(skip_copy)} missing)" if skip_copy else ""))
 
-    # Laravel Boost: дозаписать вендоренные скиллы в boost.json::skills
+    # Laravel Boost: add vendor skills to boost.json::skills
     vendored_names = sorted({fm_name for _, _, _, fm_name in skills})
     sync_boost_json(target, vendored_names, dry_run=dry_run)
 
-    # permissions-пресеты (deny мусора + allow стека) в .claude/settings.local.json
+    # permissions-presets (deny garbage + allow stack) in .claude/settings.local.json
     if not opts.get("no_permissions"):
         apply_permissions(env, target, dry_run=dry_run)
 
@@ -370,8 +370,8 @@ def do_vendor(env, target, opts, register=True):
     if hub and not dry_run:
         generate_hub(env, target)
     elif not dry_run:
-        print("Hint: корневой хаб скиллов — skiller update или "
-              "перезапуск с --hub")
+        print("Hint: root hub of skills - skiller update or "
+              "restart from --hub")
 
     record = {
         "path": str(target),

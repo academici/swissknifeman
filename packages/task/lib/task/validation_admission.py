@@ -31,7 +31,7 @@ def _repository_root(plan_dir: Path) -> Path:
     for parent in (plan_dir, *plan_dir.parents):
         if (parent / ".git").exists():
             return parent
-    raise ValidationAdmissionError(f"repository root не найден для {plan_dir}")
+    raise ValidationAdmissionError(f"repository root not found for {plan_dir}")
 
 
 def _validation_text(plan_dir: Path, item_id: str) -> str:
@@ -45,7 +45,7 @@ def _validation_text(plan_dir: Path, item_id: str) -> str:
         plan_layout.phase_path(plan_dir, phase_id), phase_id, diagnostics, layout="v2")
     occurrences = phase["items"].get(item_id) if phase else None
     if diagnostics.errors or not occurrences:
-        detail = diagnostics.errors[0] if diagnostics.errors else f"item {item_id} не найден"
+        detail = diagnostics.errors[0] if diagnostics.errors else f"item {item_id} not found"
         raise ValidationAdmissionError(str(detail))
     return (occurrences[0]["fields"].get("Validation", ("", None))[0] or "").strip()
 
@@ -193,7 +193,7 @@ def inspect(plan_dir, item_id: str) -> dict:
 def local_repair_decision(report: dict) -> dict:
     missing = [row for row in report.get("checks", []) if row.get("status") == "missing"]
     if report.get("disposition") != "local-repair" or not missing:
-        raise ValidationAdmissionError("report не требует local repair")
+        raise ValidationAdmissionError("report does not require local repair")
     return {
         "signal_class": "acceptance",
         "scope_class": "item",

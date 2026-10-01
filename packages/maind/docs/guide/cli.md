@@ -1,31 +1,31 @@
 # CLI
 
-Лаунчер `bin/maind` — тонкий bash-обёртка: проверяет окружение и вызывает
-`python3 -m maind <repo_root> <cmd> [args]`. Корень узла — каталог установки maind.
+Launcher `bin/maind` — thin bash-wrapper: checks the environment and calls
+`python3 -m maind <repo_root> <cmd> [args]`. Node root - installation directory maind.
 
-## Команды
+## Commands
 
 ```bash
-maind start [--only memory|graph]      # поднять воркеры узла
-maind status [--json]                  # сводка: память, граф, агенты, проекты
+maind start [--only memory|graph]      # raise node workers
+maind status [--json]                  # summary: memory, graph, agents, projects
 
-maind memory start                     # запустить демон памяти (Node)
-maind memory run                       # foreground (exec node) — для systemd
-maind memory stop                      # остановить (только свой, чужой не трогает)
+maind memory start                     # start memory daemon (Node)
+maind memory run                       # foreground (exec node) — for systemd
+maind memory stop                      # stop (only his own, does not touch anyone else's)
 maind memory status [--json]
 
-maind service install                  # systemd --user: автозапуск демона памяти
-maind service {start|stop|restart|status|logs|uninstall}   # управление юнитом
+maind service install                  # systemd --user: memory daemon autostart
+maind service {start|stop|restart|status|logs|uninstall}   # unit control
 
 maind graph query --from project:brain --depth 2 [--edge-types depends_on,uses] [--json]
 maind graph neighbors --node project:maind --direction in
 maind graph stats [--json]
-maind graph --project flexcrm          # граф одного проекта (федерация)
-maind graph --cross [--namespace NS]   # межпроектный слой (_index.db), опц. одна группа
-maind graph derive [--project ID | --all]   # собрать графы из composer/Brain/override/skills
-maind graph rebuild                    # пересобрать _index.db
-maind graph export --project flexcrm   # граф проекта → Mermaid (копи-пейст в .md)
-maind graph export --cross [--raw]     # весь межпроектный слой → Mermaid (--raw: без ```-обёртки)
+maind graph --project flexcrm          # graph of one project (federation)
+maind graph --cross [--namespace NS]   # cross-project layer (_index.db), opt. one group
+maind graph derive [--project ID | --all]   # collect graphs from composer/Brain/override/skills
+maind graph rebuild                    # rebuild _index.db
+maind graph export --project flexcrm   # project graph → Mermaid (copy-paste in .md)
+maind graph export --cross [--raw]     # entire cross-project layer → Mermaid (--raw: without ```-wrappers)
 
 maind agents register <id> [--project P --pid N --kind K]
 maind agents heartbeat <id>
@@ -35,54 +35,54 @@ maind agents kill <id> [--force]
 maind projects list [--namespace NS] [--json]
 maind projects health [--project ID | --namespace NS | --all] --evidence-set FILE --json
 maind projects sync --from brain [--path DIR]
-maind namespaces [--json]              # namespace-группы экосистемы и их проекты-члены
+maind namespaces [--json]              # namespace-ecosystem groups and their member projects
 
-maind deploy [--project ID | --all] [--with-code] [--dry-run]   # MCP-серверы хаба (= sync --only mcp)
+maind deploy [--project ID | --all] [--with-code] [--dry-run]   # MCP-hub servers (= sync --only mcp)
 maind sync [--project ID | --namespace NS | --all] [--only mcp,graph,memory,memory-hook,health-hook,health-doc,ecosystem-skill] \
-           [--mode install|update|auto] [--dry-run] [--json]        # раскатать управляемые артефакты
-maind health [--cwd | --project ID] [--fix] [--strict] [--json]     # healthcheck связи проекта с хабом
-maind workspace sync [--dry-run] [--no-allow] [--no-mode]           # доверие Claude к проектам экосистемы
+           [--mode install|update|auto] [--dry-run] [--json]        # roll out controlled artifacts
+maind health [--cwd | --project ID] [--fix] [--strict] [--json]     # healthcheck project connection with the hub
+maind workspace sync [--dry-run] [--no-allow] [--no-mode]           # trust Claude to ecosystem projects
 maind workspace status [--json]
-maind run <project> <capability> [-- args]   # дёрнуть команду brain / swissknifeman
+maind run <project> <capability> [-- args]   # pull command brain / swissknifeman
 
-maind fleet manifest                                      # проекты + группы по общим пакетам (JSON)
-maind fleet duplicates [--group PKG | --projects a,b] [--min-tokens N] [--json]  # кросс-проектные дубли (jscpd)
-maind fleet similar [--group PKG | --projects a,b] [--threshold T] [--json]  # семантически похожий код (эмбеддинги)
-maind fleet log "<что сделал>" [--project ID]            # feature-факт в общую память
-maind fleet features [--namespace NS]                    # feature-факты группы
+maind fleet manifest                                      # projects + groups by common packages (JSON)
+maind fleet duplicates [--group PKG | --projects a,b] [--min-tokens N] [--json]  # cross-project duplicates (jscpd)
+maind fleet similar [--group PKG | --projects a,b] [--threshold T] [--json]  # semantically similar code (embeddings)
+maind fleet log "<what did>" [--project ID]            # feature-fact to shared memory
+maind fleet features [--namespace NS]                    # feature-group facts
 
-maind onboard <project> [--with-code] [--with-brain]            # единый онбординг
+maind onboard <project> [--with-code] [--with-brain]            # unified onboarding
 
 maind migrate from-brain <.projects.json> [--force]
 maind migrate from-agentmemory <dir> [--force]
 
-maind mcp                              # запустить как MCP-сервер (stdio)
-maind doctor [--quiet]                 # диагностика окружения
-maind doctor --audit mcp|claude|deny|core|pao|settings|all [--json]  # fleet-аудит по проектам
-maind doctor --context [--json]        # флот-агрегация always-on футпринта первого хода
-                                        #   (skiller budget --first-turn по каждому проекту)
-maind doctor --skill-drift             # дрейф ecosystem-mcp/ecosystem-setup от шаблона, по проектам
-maind doctor --channel-drift           # дубль-канал skiller (connect+vendor на один бакет)
+maind mcp                              # run as MCP-server (stdio)
+maind doctor [--quiet]                 # environment diagnostics
+maind doctor --audit mcp|claude|deny|core|pao|settings|all [--json]  # fleet-project audit
+maind doctor --context [--json]        # fleet-aggregation always-on footprint of the first move
+                                        #   (skiller budget --first-turn for each project)
+maind doctor --skill-drift             # drift ecosystem-mcp/ecosystem-setup from template, by project
+maind doctor --channel-drift           # duplicate channel skiller (connect+vendor for one bucket)
 maind doctor --gitignore-drift [--project ID] [--block] [--json]
-                                        # .gitignore/tracking каждого проекта vs карта служебных файлов
-                                        #   (configs/gitignore-policy.json); --block — готовые строки .gitignore
-maind verify [--json]                  # пруф работы 3 плоскостей: пишут реально или вхолостую
+                                        # .gitignore/tracking of each project vs service file map
+                                        #   (configs/gitignore-policy.json); --block — ready lines .gitignore
+maind verify [--json]                  # proof of work of 3 planes: write real or empty
 maind analyze [--cwd | --project ID] [--session ID] [--no-health] [--json]
-                                        # post-run verdict с проверкой provenance run-report
-maind version                          # git SHA + путь к узлу
+                                        # post-run verdict with check provenance run-report
+maind version                          # git SHA + path to node
 ```
 
-`analyze` доверяет legacy run-report только после сверки project/session/provider identity.
-Абсолютные `files_changed` вне выбранного проекта также считаются конфликтом provenance. Такой
-отчёт исключается из RED-причин и возвращается как `ATTENTION` с
-`RUN_REPORT_PROJECT_MISMATCH`; отсутствие доверенного report понижает confidence, но не доказывает
-ошибку продукта.
+`analyze` trusts legacy run-report only after verification project/session/provider identity.
+Absolute `files_changed` outside the selected project are also considered a conflict provenance. Like this
+report is excluded from RED-reasons and returns as `ATTENTION` with
+`RUN_REPORT_PROJECT_MISMATCH`; lack of trusted report lowers confidence, but does not prove
+product error.
 
-## Как это устроено
+## How it works
 
-- Разбор аргументов — `common.parse_args` (флаги `--x` + позиционные), не argparse.
-- Каждая команда — функция `cmd_X(env, argv)` из словаря `COMMANDS` в `cli.py`.
-- Контекст запуска — frozen-dataclass `Env` (корень узла, команда, HOME) — передаётся
-  явно, без модульных глобалей. Поэтому всё легко тестируется.
+- Parsing arguments - `common.parse_args` (flags `--x` + positional), not argparse.
+- Every command is a function `cmd_X(env, argv)` from the dictionary `COMMANDS` in `cli.py`.
+- Launch context - frozen-dataclass `Env` (node root, command, HOME) — is transmitted
+  explicitly, without modular globals. Therefore, everything is easy to test.
 
-Дальше: [MCP-сервер →](./mcp)
+Next: [MCP-server →](./mcp)

@@ -1,23 +1,23 @@
-# Роль агента — Blender 5.x
+# Agent Role - Blender 5.x
 
-Архитектор автоматизации **Blender 5.x** на Python.
+Automation Architect **Blender 5.x** on Python.
 
-## Профиль
+## Profile
 
-- Язык: Python 3.10+, Blender Python API (`bpy`, `bmesh`, `mathutils`)
-- Задача: параметрическое 3D-моделирование деталей для FDM/SLA-печати
-- Стиль работы: модульный код, правки только в активной модели
-- Целевое производство: FDM/SLA-принтеры, материал PG-пластик (фотополимер или PETG)
+- Language: Python 3.10+, Blender Python API (`bpy`, `bmesh`, `mathutils`)
+- Task: parametric 3D-modeling of parts for FDM/SLA-print
+- Working style: modular code, edits only in the active model
+- Target production: FDM/SLA-printers, material PG-plastic (photopolymer or PETG)
 
-## Что умеет
+## What it can do
 
-- Строить тела вращения через `revolve_profile` (SCREW-модификатор Blender)
-- Булевы операции UNION / DIFFERENCE через `apply_bool`
-- Параметрический профиль силуэта через сплайн Monotone Cubic Hermite
-- Резьба, пазы, посадки с учётом допусков под FDM
-- Проверка геометрии: bounding box, manifold, volume
+- Construct bodies of rotation using `revolve_profile` (SCREW-modifier Blender)
+- Boolean operations UNION / DIFFERENCE via `apply_bool`
+- Parametric silhouette profile via spline Monotone Cubic Hermite
+- Threads, grooves, fits taking into account tolerances FDM
+- Geometry check: bounding box, manifold, volume
 
-## Внешняя документация
+## External documentation
 
 - [Blender Python API](https://docs.blender.org/api/current/)
 - [bmesh](https://docs.blender.org/api/current/bmesh.html)

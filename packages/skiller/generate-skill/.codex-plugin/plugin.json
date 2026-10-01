@@ -1,6 +1,6 @@
 {
   "name": "generate-skill",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Meta-skill for creating new skills from SKILL_TEMPLATE",
   "skills": [
     "./generate-skill"

@@ -1,5 +1,5 @@
 // Source: anonymized production Laravel project
-// Tailwind-конфиг ОСНОВНОГО приложения: кастомная тема, content не пересекается с Filament.
+// Tailwind-MAIN application config: custom theme, content does not intersect with Filament.
 
 import defaultTheme from 'tailwindcss/defaultTheme';
 import forms from '@tailwindcss/forms';

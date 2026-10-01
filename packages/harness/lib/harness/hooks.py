@@ -2018,11 +2018,16 @@ def plan_codex_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path: 
     source = ArtifactSource("harness.codex.lifecycle-bindings",
                             "packages/harness/configs/codex/hooks/lifecycle-context-bindings.json",
                             sha256_digest(Path(bindings_path).read_bytes()))
+    router_path = Path(__file__).resolve().parents[4] / _CODEX_ROUTER_CATALOG_PATH
+    router_source = ArtifactSource("harness.codex.router-catalog",
+                                   _CODEX_ROUTER_CATALOG_PATH,
+                                   sha256_digest(router_path.read_bytes()))
     identity = ArtifactAdapterIdentity("harness.codex.lifecycle", _CODEX_HOOK_ADAPTER_VERSION,
                                        ProviderId.CODEX, "1.0.0", ())
     hooks = plan_artifact_render(ArtifactRenderRequest("harness.codex.lifecycle.hooks", (source,),
         ArtifactTarget(".codex/hooks.json", ("whole-file", ())), identity, (), {}, lambda _request: render_codex_hooks(plan)))
-    handler = plan_artifact_render(ArtifactRenderRequest("harness.codex.lifecycle.handler", (source,),
+    handler = plan_artifact_render(ArtifactRenderRequest("harness.codex.lifecycle.handler",
+        (source, router_source),
         ArtifactTarget(".codex/hooks/lifecycle.py", ("whole-file", ())), identity, (), {}, lambda _request: render_codex_hook_handler()))
     return hooks, handler
 
@@ -2084,7 +2089,7 @@ def block_cursor_lifecycle(env, target, *, surfaces, trusted, repair, dry):
     try:
         existing_document = _read_existing_cursor_hooks(Path(target))
     except ValueError:
-        die("HARNESS_CURSOR_HOOKS_INVALID: исправь .cursor/hooks.json или убери его перед deploy")
+        die("HARNESS_CURSOR_HOOKS_INVALID: fix .cursor/hooks.json or remove it before deploy")
     artifacts = plan_cursor_lifecycle_artifacts(
         lifecycle, bindings_path=bindings_path, existing_document=existing_document)
     lock_path = Path(target) / ".swissknifeman/provider-artifacts.lock.json"
@@ -2141,11 +2146,11 @@ def plan_codex_capture_artifact(*, bindings_path: Path):
 
 def block_autoapprove(target, mode, settings_file, dry):
     """Internal documentation."""
-    print(f"auto-approve: {mode or 'пропуск'}")
+    print(f"auto-approve: {mode or 'pass'}")
     if not mode:
         return
     if mode not in AA_MODES:
-        die(f"неизвестный режим auto-approve: {mode} ({'|'.join(AA_MODES)})")
+        die(f"unknown mode auto-approve: {mode} ({'|'.join(AA_MODES)})")
     write_text(target / ".claude" / "auto-approve.env.ini", f"MODE={mode}\n", dry)
     if mode == "off":
         return
@@ -2157,30 +2162,30 @@ def block_autoapprove(target, mode, settings_file, dry):
     if added:
         write_json(f, settings, dry)
     else:
-        print(f"  хук auto-approve уже зарегистрирован в {f}")
+        print(f"  hook auto-approve is already registered in {f}")
 
 
 def block_memory(target, brain, mode, dry):
     """Internal documentation."""
-    print(f"memory: {('brain=' + (brain or 'core') + ' mode=' + mode) if mode else 'пропуск'}")
+    print(f"memory: {('brain=' + (brain or 'core') + ' mode=' + mode) if mode else 'pass'}")
     if not mode:
         return
     if mode not in MEM_MODES:
-        die(f"неизвестный режим memory: {mode} ({'|'.join(MEM_MODES)})")
+        die(f"unknown mode memory: {mode} ({'|'.join(MEM_MODES)})")
     brain = brain or "core"
     set_swissknife(target, "memory_brain", brain, dry)
     write_text(target / ".claude" / "memory.env.ini", f"MODE={mode}\n", dry)
-    print(f"  проект присоединён к brain '{brain}' (режим {mode}). "
-          f"Состав участников — ~/.claude/hooks/memory/config.json")
+    print(f"  project attached to brain '{brain}' (mode {mode}). "
+          f"Participants - ~/.claude/hooks/memory/config.json")
 
 
 def block_router(target, mode, settings_file, dry):
     """Internal documentation."""
-    print(f"agent-router: {mode or 'пропуск'}")
+    print(f"agent-router: {mode or 'pass'}")
     if not mode:
         return
     if mode not in ROUTER_MODES:
-        die(f"неизвестный режим router: {mode} ({'|'.join(ROUTER_MODES)})")
+        die(f"unknown mode router: {mode} ({'|'.join(ROUTER_MODES)})")
     write_text(target / ".claude" / "agent-router.env.ini", f"POLICY={mode}\n", dry)
     if mode == "off":
         return
@@ -2193,16 +2198,16 @@ def block_router(target, mode, settings_file, dry):
     if added:
         write_json(f, settings, dry)
     else:
-        print(f"  хуки agent-router уже зарегистрированы в {f}")
+        print(f"  hooks agent-router are already registered in {f}")
 
 
 def block_run_report(target, mode, settings_file, dry):
     """Internal documentation."""
-    print(f"run-report: {mode or 'пропуск'}")
+    print(f"run-report: {mode or 'pass'}")
     if not mode:
         return
     if mode not in RUNREPORT_MODES:
-        die(f"неизвестный режим run-report: {mode} ({'|'.join(RUNREPORT_MODES)})")
+        die(f"unknown mode run-report: {mode} ({'|'.join(RUNREPORT_MODES)})")
     write_text(target / ".claude" / "run-report.env.ini",
                f"ENABLED={mode}\nRUNS_KEEP=30\n", dry)
     if mode == "off":
@@ -2212,26 +2217,26 @@ def block_run_report(target, mode, settings_file, dry):
     runs_gi = target / ".claude" / "runs" / ".gitignore"
     if not runs_gi.exists():
         if dry:
-            print(f"  [dry-run] создал бы {runs_gi} (*)")
+            print(f"  [dry-run] would create {runs_gi} (*)")
         else:
             runs_gi.parent.mkdir(parents=True, exist_ok=True)
             runs_gi.write_text("*\n", encoding="utf-8")
-            print(f"  записано: {runs_gi} (runs/ само-игнорируется в git)")
+            print(f"  written: {runs_gi} (runs/ is self-ignored in git)")
     settings, f = load_settings(target, settings_file)
     if add_hook(settings, "SessionEnd", None,
                 "python3 ~/.claude/hooks/run-report/run-report.py"):
         write_json(f, settings, dry)
     else:
-        print(f"  хук run-report уже зарегистрирован в {f}")
+        print(f"  hook run-report is already registered in {f}")
 
 
 def block_pack_guard(target, mode, settings_file, dry):
     """Internal documentation."""
-    print(f"pack-guard: {mode or 'пропуск'}")
+    print(f"pack-guard: {mode or 'pass'}")
     if not mode:
         return
     if mode not in PACKGUARD_MODES:
-        die(f"неизвестный режим pack-guard: {mode} ({'|'.join(PACKGUARD_MODES)})")
+        die(f"unknown mode pack-guard: {mode} ({'|'.join(PACKGUARD_MODES)})")
     write_text(target / ".claude" / "pack-guard.env.ini", f"MODE={mode}\n", dry)
     if mode == "off":
         return
@@ -2243,16 +2248,16 @@ def block_pack_guard(target, mode, settings_file, dry):
     if added:
         write_json(f, settings, dry)
     else:
-        print(f"  хук pack-guard уже зарегистрирован в {f}")
+        print(f"  hook pack-guard is already registered in {f}")
 
 
 def block_changelog_gate(target, mode, settings_file, dry):
     """Internal documentation."""
-    print(f"changelog-gate: {mode or 'пропуск'}")
+    print(f"changelog-gate: {mode or 'pass'}")
     if not mode:
         return
     if mode not in CHANGELOGGATE_MODES:
-        die(f"неизвестный режим changelog-gate: {mode} ({'|'.join(CHANGELOGGATE_MODES)})")
+        die(f"unknown mode changelog-gate: {mode} ({'|'.join(CHANGELOGGATE_MODES)})")
     write_text(target / ".claude" / "changelog-gate.env.ini", f"MODE={mode}\n", dry)
     if mode == "off":
         return
@@ -2261,74 +2266,74 @@ def block_changelog_gate(target, mode, settings_file, dry):
     if add_hook(settings, "PreToolUse", "Bash", cmd):
         write_json(f, settings, dry)
     else:
-        print(f"  хук changelog-gate уже зарегистрирован в {f}")
+        print(f"  hook changelog-gate is already registered in {f}")
 
 
 def block_plans_dir(target, value, settings_file, dry):
     """Internal documentation."""
-    print(f"plans-dir: {value or 'пропуск'}")
+    print(f"plans-dir: {value or 'pass'}")
     if not value:
         return
     if value == "off":
         settings, f = load_settings(target, settings_file)
         current = settings.get("plansDirectory")
         if current is None:
-            print(f"  {f}:plansDirectory не задан — нечего снимать")
+            print(f"  {f}:plansDirectory not set — nothing to shoot")
             return
         if current != PLANSDIR_DEFAULT:
-            warn(f"plansDirectory={current!r} — не наш дефолт, не снимаю "
-                 "(уважаю локальный выбор)")
+            warn(f"plansDirectory={current!r} — not our default, I’m not withdrawing "
+                 "(respect local choice)")
             return
         del settings["plansDirectory"]
         write_json(f, settings, dry)
         return
     if Path(value).is_absolute():
-        die(f"--plans-dir ожидает относительное имя каталога, получено абсолютное: {value}")
+        die(f"--plans-dir expects a relative directory name, received an absolute one: {value}")
     settings, _ = load_settings(target, settings_file)
     current = settings.get("plansDirectory")
     if current is not None and current != value:
-        warn(f"plansDirectory уже задан ({current!r}) — уважаю локальный выбор, не перезаписываю")
+        warn(f"plansDirectory is already set ({current!r}) — respect local choice, do not overwrite")
         return
     set_setting_key(target, settings_file, "plansDirectory", value, dry)
 
 
 def block_output_style(env, target, name, dry):
     """Internal documentation."""
-    print(f"output-style: {name or 'пропуск'}")
+    print(f"output-style: {name or 'pass'}")
     if not name:
         return
     if name == "off":
-        print("  outputStyle не ставится; снять существующий — вручную в .claude/settings.local.json")
+        print("  outputStyle is not set; remove the existing one - manually in .claude/settings.local.json")
         return
     src = env.configs_dir / "output-styles" / f"{name}.md"
     if not src.exists():
-        die(f"неизвестный output-style: {name} (нет {src})")
+        die(f"unknown output-style: {name} (no {src})")
     dst = target / ".claude" / "output-styles" / f"{name}.md"
     if dry:
-        print(f"  [dry-run] скопировал бы {src} → {dst}")
+        print(f"  [dry-run] would copy {src} → {dst}")
     else:
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dst)
-        print(f"  записано: {dst}")
+        print(f"  written: {dst}")
     set_setting_key(target, "settings.local.json", "outputStyle", name, dry)
-    print("  (outputStyle применится после /clear или новой сессии)")
+    print("  (outputStyle will be applied after /clear or new session)")
 
 
 def block_statusline(target, mode, dry):
     """Internal documentation."""
-    print(f"statusline: {mode or 'пропуск'}")
+    print(f"statusline: {mode or 'pass'}")
     if not mode:
         return
     if mode not in STATUSLINE_MODES:
-        die(f"неизвестный режим statusline: {mode} ({'|'.join(STATUSLINE_MODES)})")
+        die(f"unknown mode statusline: {mode} ({'|'.join(STATUSLINE_MODES)})")
     if mode == "off":
         settings, f = load_settings(target, "settings.local.json")
         current = settings.get("statusLine")
         if current is None:
-            print(f"  {f}:statusLine не задан — нечего снимать")
+            print(f"  {f}:statusLine not set - nothing to remove")
             return
         if current != STATUSLINE_VALUE:
-            warn(f"statusLine={current!r} — не наш, не снимаю (уважаю локальный выбор)")
+            warn(f"statusLine={current!r} — not ours, not filming (respect local choice)")
             return
         del settings["statusLine"]
         write_json(f, settings, dry)
@@ -2336,17 +2341,17 @@ def block_statusline(target, mode, dry):
     settings, _ = load_settings(target, "settings.local.json")
     current = settings.get("statusLine")
     if current is not None and current != STATUSLINE_VALUE:
-        warn(f"statusLine уже задан ({current!r}) — уважаю локальный выбор, не перезаписываю")
+        warn(f"statusLine is already set ({current!r}) — respect local choice, do not overwrite")
         return
     set_setting_key(target, "settings.local.json", "statusLine", STATUSLINE_VALUE, dry)
-    print("  (файлы ставит `harness hooks --global`; строка появится в следующей сессии)")
+    print("  (files puts `harness hooks --global`; line will appear in the next session)")
 
 
 def install_global(env, dry):
     """Internal documentation."""
     script = env.apply_script
     if not script.exists():
-        die(f"не найден {script} — пакет harness повреждён")
+        die(f"not found {script} — package harness damaged")
     cmd = ["bash", str(script), "--global"]
     if dry:
         cmd.append("--dry-run")
@@ -2399,7 +2404,7 @@ def _block_codex_gates(env, target, opts):
         if not mode:
             continue
         if mode not in PACKGUARD_MODES:
-            die(f"неизвестный режим {flag.replace('_', '-')}: {mode} ({'|'.join(PACKGUARD_MODES)})")
+            die(f"unknown mode {flag.replace('_', '-')}: {mode} ({'|'.join(PACKGUARD_MODES)})")
         surface_id = _CODEX_GATE_SURFACE[flag]
         write_text(target / ".codex" / _CODEX_GATE_ENV_FILE[surface_id], f"MODE={mode}\n",
                   opts["dry_run"])
@@ -2407,13 +2412,13 @@ def _block_codex_gates(env, target, opts):
             surfaces.append(surface_id)
     if opts["terminal_admission"]:
         if opts["terminal_admission"] not in ("on", "off"):
-            die("неизвестный режим terminal-admission: on|off")
+            die("unknown mode terminal-admission: on|off")
         write_text(target / ".codex" / "terminal-admission.env.ini",
                    f"MODE={opts['terminal_admission']}\n", opts["dry_run"])
         if opts["terminal_admission"] == "on":
             surfaces.append("lifecycle.terminal-admission")
     if not surfaces:
-        die("provider codex нужен хотя бы один из: --observer / --pack-guard off|warn|strict / "
+        die("provider codex needs at least one of: --observer / --pack-guard off|warn|strict / "
             "--changelog-gate off|warn|strict / --review-gate off|warn|strict / "
             "--git-guardrails off|warn|strict / --safe-dirs / --daemon-safety")
     for surface in _CODEX_OBSERVABILITY_SURFACES:
@@ -2429,10 +2434,10 @@ def _block_cursor_gates(env, target, opts):
     if opts["observer"]:
         unsupported.append("--observer")
     if unsupported:
-        die("для --provider cursor здесь не поддержаны запрошенные флаги: "
+        die("for --provider cursor The requested flags are not supported here: "
             + ", ".join(unsupported))
     if not opts["safe_dirs"]:
-        die("provider cursor требует --safe-dirs (P3/P4)")
+        die("provider cursor requires --safe-dirs (P3/P4)")
     surfaces = [
         "security.safe-dirs",
         "lifecycle.command-log",
@@ -2443,7 +2448,7 @@ def _block_cursor_gates(env, target, opts):
     if memory:
         brain, mode = _parse_memory_flag(memory)
         if mode not in MEM_MODES:
-            die(f"неизвестный режим --memory: {mode} ({'|'.join(MEM_MODES)})")
+            die(f"unknown mode --memory: {mode} ({'|'.join(MEM_MODES)})")
         write_text(target / ".cursor" / "memory.env.ini",
                    f"MODE={mode}\nBRAIN={brain}\n", opts["dry_run"])
         if mode != "off":
@@ -2453,7 +2458,7 @@ def _block_cursor_gates(env, target, opts):
     git_mode = opts["git_guardrails"]
     if git_mode:
         if git_mode not in PACKGUARD_MODES:
-            die("неизвестный режим --git-guardrails: "
+            die("unknown mode --git-guardrails: "
                 + f"{git_mode} ({'|'.join(PACKGUARD_MODES)})")
         write_text(target / ".cursor" / "git-guardrails.env.ini", f"MODE={git_mode}\n",
                    opts["dry_run"])
@@ -2462,7 +2467,7 @@ def _block_cursor_gates(env, target, opts):
     changelog_mode = opts["changelog_gate"]
     if changelog_mode:
         if changelog_mode not in PACKGUARD_MODES:
-            die("неизвестный режим --changelog-gate: "
+            die("unknown mode --changelog-gate: "
                 + f"{changelog_mode} ({'|'.join(PACKGUARD_MODES)})")
         write_text(target / ".cursor" / "changelog-gate.env.ini", f"MODE={changelog_mode}\n",
                    opts["dry_run"])
@@ -2471,7 +2476,7 @@ def _block_cursor_gates(env, target, opts):
     pack_mode = opts["pack_guard"]
     if pack_mode:
         if pack_mode not in PACKGUARD_MODES:
-            die("неизвестный режим --pack-guard: "
+            die("unknown mode --pack-guard: "
                 + f"{pack_mode} ({'|'.join(PACKGUARD_MODES)})")
         write_text(target / ".cursor" / "pack-guard.env.ini", f"MODE={pack_mode}\n",
                    opts["dry_run"])
@@ -2480,7 +2485,7 @@ def _block_cursor_gates(env, target, opts):
     review_mode = opts["review_gate"]
     if review_mode:
         if review_mode not in PACKGUARD_MODES:
-            die("неизвестный режим --review-gate: "
+            die("unknown mode --review-gate: "
                 + f"{review_mode} ({'|'.join(PACKGUARD_MODES)})")
         write_text(target / ".cursor" / "review-gate.env.ini", f"MODE={review_mode}\n",
                    opts["dry_run"])
@@ -2489,7 +2494,7 @@ def _block_cursor_gates(env, target, opts):
     terminal_mode = opts["terminal_admission"]
     if terminal_mode:
         if terminal_mode not in ("on", "off"):
-            die("неизвестный режим --terminal-admission: on|off")
+            die("unknown mode --terminal-admission: on|off")
         write_text(target / ".cursor" / "terminal-admission.env.ini",
                    f"MODE={terminal_mode}\n", opts["dry_run"])
         if terminal_mode == "on":
@@ -2502,7 +2507,7 @@ def _block_cursor_gates(env, target, opts):
 def block_terminal_admission(target, mode, settings_file, dry):
     """Register the opt-in Claude Stop adapter without making it a global policy."""
     if mode not in ("on", "off"):
-        die("неизвестный режим terminal-admission: on|off")
+        die("unknown mode terminal-admission: on|off")
     write_text(target / ".claude" / "terminal-admission.env.ini", f"MODE={mode}\n", dry)
     if mode == "off":
         return
@@ -2549,7 +2554,7 @@ def cmd_hooks(env, argv):
         install_global(env, opts["dry_run"])
         return
     if not opts["target"]:
-        die("нужен --target P (или --global)")
+        die("needed --target P (or --global)")
     # Public CLI accepts a convenient relative target, while the shared
     # artifact lock deliberately accepts only an explicit absolute root.
     target = Path(opts["target"]).expanduser().resolve()
@@ -2559,12 +2564,12 @@ def cmd_hooks(env, argv):
         elif opts["provider"] == "cursor":
             _block_cursor_gates(env, target, opts)
         else:
-            die("поддерживается только --provider codex|cursor")
+            die("is only supported --provider codex|cursor")
         return
     if not (opts["auto_approve"] or opts["memory"] or opts["router"]
             or opts["run_report"] or opts["pack_guard"] or opts["changelog_gate"]
             or opts["output_style"] or opts["plans_dir"] or opts["statusline"] or opts["terminal_admission"]):
-        die("нужен хотя бы один из: --auto-approve MODE / --memory BRAIN:MODE / "
+        die("needs at least one of: --auto-approve MODE / --memory BRAIN:MODE / "
             "--router MODE / --run-report on|off / --pack-guard off|warn|strict / "
             "--changelog-gate off|warn|strict / "
             "--output-style lean|off / --plans-dir plans|off / "

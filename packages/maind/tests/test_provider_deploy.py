@@ -1058,7 +1058,7 @@ class TestProviderDeploy(unittest.TestCase):
             self.assertTrue((target / ".mcp.json.example").is_file())
             example = json.loads((target / ".mcp.json.example").read_text())
             real = json.loads((target / ".mcp.json").read_text())
-            self.assertEqual(example, real)  # только серверы maind — плейсхолдеров нет
+            self.assertEqual(example, real)  # servers only maind — no placeholders
             gitignore = (target / ".gitignore").read_text().splitlines()
             self.assertIn(".mcp.json", gitignore)
             self.assertNotIn(".mcp.json.example", gitignore)
@@ -1133,7 +1133,7 @@ class TestProviderDeploy(unittest.TestCase):
                            provider_projections=(claude,))
             example_path = target / ".mcp.json.example"
             self.assertTrue(example_path.is_file())
-            example_path.chmod(0o444)          # переписать нельзя — второй прогон обязан не писать
+            example_path.chmod(0o444)          # cannot be rewritten - the second run must not be written
             try:
                 deploy_project(env, config, config["projects"][0], with_code=False,
                                provider_projections=(claude,))

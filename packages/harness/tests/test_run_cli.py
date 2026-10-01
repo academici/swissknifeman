@@ -24,14 +24,14 @@ MANUAL_ID = "P9.2"
 
 
 def _plan_md():
-    return f"""# {PLAN_ID} — Фикстурный план для cmd_run (P4.6)
+    return f"""# {PLAN_ID} — Fixture plan for cmd_run (P4.6)
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Plan ID | {PLAN_ID} |
-| Title | Фикстурный план для cmd_run |
+| Title | Fixture plan for cmd_run |
 | Version | 0.1.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
@@ -42,86 +42,86 @@ def _plan_md():
 
 ## 1. Context
 
-Синтетический план для юнит-тестов `harness/run/__init__.py` (P4.6). НЕ боевой план.
+Synthetic plan for unit tests `harness/run/__init__.py` (P4.6). NOT a battle plan.
 
 ## 2. Execution Rules
 
-- Один item за раз.
+- One item at a time.
 
 ## 3. Routing
 
-| Items | Model class/effort | Exec | Почему |
+| Items | Model class/effort | Exec | Why |
 |:--|:--|:--|:--|
-| {DRIVABLE_ID} | implementation/medium | run | фикстура cmd_run |
-| {MANUAL_ID} | frontier/high | plan-design | фикстура cmd_run — отказ |
+| {DRIVABLE_ID} | implementation/medium | run | fixture cmd_run |
+| {MANUAL_ID} | frontier/high | plan-design | fixture cmd_run — failure |
 
 ## 4. Phase Index & Status Board
 
-| Phase | Title | Items 🟢/всего | Status |
+| Phase | Title | Items 🟢/total | Status |
 |:--|:--|:--|:--|
-| {PHASE_ID} | Фаза раз | 0/2 | 🟡 In progress |
+| {PHASE_ID} | Phase times | 0/2 | 🟡 In progress |
 
 ## 5. Decision Log
 
-| D# | Дата | Решение | Почему |
+| D# | Date | Solution | Why |
 |:--|:--|:--|:--|
-| D1 | 2026-08-01 | Фикстура закрытым набором | покрыть cmd_run без второго парсера |
+| D1 | 2026-08-01 | Closed set fittings | cover cmd_run without a second parser |
 
 ## 6. Update Log
 
-| Дата | Кто (role/model) | Что |
+| Date | Who (role/model) | What |
 |:--|:--|:--|
-| 2026-08-01 | package-implementer/sonnet | Фикстура создана (P4.6) |
+| 2026-08-01 | package-implementer/sonnet | Fixture created (P4.6) |
 """
 
 
 def _phase_md():
-    return f"""# {PHASE_ID} — Фаза раз
+    return f"""# {PHASE_ID} — Phase times
 
 ## Phase Context
 
-Синтетическая фаза фикстуры `cmd_run` (P4.6).
+Synthetic phase of fixture `cmd_run` (P4.6).
 
 ## Phase Status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| {DRIVABLE_ID} | Ведомый item | ⬜ Not started | 2026-08-01 |
-| {MANUAL_ID} | Недрайвабельный item | ⬜ Not started | 2026-08-01 |
+| {DRIVABLE_ID} | Slave item | ⬜ Not started | 2026-08-01 |
+| {MANUAL_ID} | Not driverable item | ⬜ Not started | 2026-08-01 |
 
-### {DRIVABLE_ID} — Ведомый item
+### {DRIVABLE_ID} — Slave item
 
 **Status:** ⬜ Not started
-**Intent:** Демонстрирует вождение.
-**Why:** Базовый кейс.
-**Scope Included:** ничего — фикстура.
-**Scope Excluded:** реальная логика.
+**Intent:** Demonstrates driving.
+**Why:** Basic case.
+**Scope Included:** nothing - fixture.
+**Scope Excluded:** real logic.
 **Inputs:** —
 **Files:** —
-**Required Reads:** 1) не применимо (фикстура).
-**Implementation Rules:** нет — фикстура.
-**Code Guidance:** нет — фикстура.
-**Validation:** не применимо — фикстура читается тестами `cmd_run`.
-**Deliverables:** синтетические данные для `test_run_cli.py`.
+**Required Reads:** 1) not applicable (fixture).
+**Implementation Rules:** no - fixture.
+**Code Guidance:** no - fixture.
+**Validation:** not applicable - fixture is read by tests `cmd_run`.
+**Deliverables:** synthetic data for `test_run_cli.py`.
 **Completion Notes:** —
 **Pending Work:** —
 **Known Deviations:** —
 **Escalation Needed:** no
 
-### {MANUAL_ID} — Недрайвабельный item
+### {MANUAL_ID} — Not driverable item
 
 **Status:** ⬜ Not started
-**Intent:** Демонстрирует отказ вождения (Exec=plan-design).
-**Why:** Базовый кейс.
-**Scope Included:** ничего — фикстура.
-**Scope Excluded:** реальная логика.
+**Intent:** Demonstrates driving failure (Exec=plan-design).
+**Why:** Basic case.
+**Scope Included:** nothing - fixture.
+**Scope Excluded:** real logic.
 **Inputs:** —
 **Files:** —
-**Required Reads:** 1) не применимо (фикстура).
-**Implementation Rules:** нет — фикстура.
-**Code Guidance:** нет — фикстура.
-**Validation:** не применимо — фикстура читается тестами `cmd_run`.
-**Deliverables:** синтетические данные для `test_run_cli.py`.
+**Required Reads:** 1) not applicable (fixture).
+**Implementation Rules:** no - fixture.
+**Code Guidance:** no - fixture.
+**Validation:** not applicable - fixture is read by tests `cmd_run`.
+**Deliverables:** synthetic data for `test_run_cli.py`.
 **Completion Notes:** —
 **Pending Work:** —
 **Known Deviations:** —
@@ -129,7 +129,7 @@ def _phase_md():
 
 ## Phase Handoff
 
-Фикстура: фаза не сдаётся по-настоящему, используется тестами `cmd_run`.
+Fixture: the phase does not really give up, it is used by tests `cmd_run`.
 """
 
 
@@ -138,12 +138,12 @@ def _handoff_md():
 
 **Next:** run-items: task:plan-run {PLAN_ID} {DRIVABLE_ID}-{MANUAL_ID}
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |:--|:--|
 | Model class | implementation |
 | Effort | medium |
 | Context | continue (/clear) |
-| Суть | фикстура — читается тестами `cmd_run` |
+| The bottom line | fixture - read by tests `cmd_run` |
 
 ```
 /task:plan-run {PLAN_ID} {DRIVABLE_ID}-{MANUAL_ID}
@@ -222,7 +222,7 @@ class DryRunTest(unittest.TestCase):
         self._tmp.cleanup()
 
     def _refuse_if_called(self, *_a, **_kw):
-        raise AssertionError("--dry-run обязан НЕ вызывать это (Implementation Rule 2)")
+        raise AssertionError("--dry-run must NOT call this (Implementation Rule 2)")
 
     def _run(self, extra_flags):
         argv = [PLAN_ID, PHASE_ID, "--dry-run", "--plans-root", str(self.root / "plans"),
@@ -236,9 +236,9 @@ class DryRunTest(unittest.TestCase):
 
     def test_text_output_shows_argv_and_refusal(self):
         out = self._run([])
-        self.assertIn(f"[ВОЖДЕНИЕ] {DRIVABLE_ID}", out)
+        self.assertIn(f"[DRIVING] {DRIVABLE_ID}", out)
         self.assertIn("/task:plan-run CLI-FIXTURE P9.1", out)
-        self.assertIn(f"[ОТКАЗ] {MANUAL_ID}", out)
+        self.assertIn(f"[FAILURE] {MANUAL_ID}", out)
         self.assertIn("EXEC-NOT-RUN", out)
 
     def test_json_output_is_valid(self):

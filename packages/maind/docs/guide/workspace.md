@@ -1,51 +1,51 @@
-# Доверие Claude (workspace)
+# Trust Claude (workspace)
 
-Единое пространство правок: сессия Claude Code, запущенная из хаба maind, читает и
-правит **любой проект экосистемы без подтверждений**. Список доверенных путей maind
-берёт из реестра проектов (`config.json`) и кладёт в свой `.claude/settings.local.json`.
+Single edit space: session Claude Code, launched from the hub maind, reads and
+rules **any ecosystem project without confirmation**. List of trusted paths maind
+takes from the project registry (`config.json`) and puts it in his `.claude/settings.local.json`.
 
-## Проблема
+## Problem
 
-В Claude Code две **независимые** системы доступа:
+B Claude Code two **independent** access systems:
 
 ```mermaid
 flowchart LR
-  T["Read/Edit файла<br/>смежного проекта"]
-  B{"каталог в границе<br/>рабочего пространства?"}
-  P{"permission-правила<br/>allow / deny / ask"}
-  OK["выполнить"]
-  ASK1["запрос «доверять каталогу?»"]
-  ASK2["запрос разрешения"]
+  T["Read/Edit file<br/>related project"]
+  B{"directory in border<br/>workspace?"}
+  P{"permission-rules<br/>allow / deny / ask"}
+  OK["execute"]
+  ASK1["request «trust the directory?»"]
+  ASK2["permission request"]
   T --> B
-  B -- нет --> ASK1
-  B -- да --> P
-  P -- нет --> ASK2
-  P -- да --> OK
+  B -- no --> ASK1
+  B -- yes --> P
+  P -- no --> ASK2
+  P -- yes --> OK
 ```
 
-`bypassPermissions` отключает только **вторую** систему (allow/deny). Когда файл лежит
-**вне** cwd и вне доверенных каталогов, срабатывает **первая** — граница рабочего
-пространства, и приходит отдельный запрос «доверять каталогу?», который bypass **не
-глушит**. Поэтому при правке смежных проектов подтверждения приходят даже в auto-approve.
+`bypassPermissions` disables only **second** system (allow/deny). When the file is lying
+**out** cwd and outside of trusted directories, triggers **first** — worker boundary
+space, and a separate request arrives «trust the directory?», which bypass **not
+jams**. Therefore, when editing related projects, confirmations come even in auto-approve.
 
-Фикс границы — `permissions.additionalDirectories` (абсолютные пути). maind уже владеет
-авторитетным списком: `projects[].local_path` в `config.json`.
+Fix border - `permissions.additionalDirectories` (absolute paths). maind already owns
+authoritative list: `projects[].local_path` in `config.json`.
 
-## Решение: hub-scoped
+## Solution: hub-scoped
 
-maind генерирует и сопровождает **свой** `.claude/settings.local.json` (в корне maind).
-Доверие получает сессия, запущенная **из хаба** — минимальный радиус поражения, файл
-gitignored (абсолютные персональные пути). Реестр проектов — единственный источник правды.
+maind generates and maintains **yours** `.claude/settings.local.json` (at the root maind).
+The session started by **from the hub** — minimum damage radius, file
+gitignored (absolute personal paths). The Project Registry is the only source of truth.
 
 ```bash
-maind workspace sync                 # записать/обновить доверие из реестра
-maind workspace sync --dry-run       # показать план без записи
-maind workspace sync --no-allow      # только additionalDirectories (без Read/Edit-глоб)
-maind workspace sync --no-mode       # не ставить defaultMode
-maind workspace status [--json]      # что доверено / чего не хватает / drift
+maind workspace sync                 # write/update trust from registry
+maind workspace sync --dry-run       # show plan without entry
+maind workspace sync --no-allow      # only additionalDirectories (without Read/Edit-glob)
+maind workspace sync --no-mode       # do not set defaultMode
+maind workspace status [--json]      # that is entrusted / what's missing / drift
 ```
 
-## Что пишется
+## What is written
 
 ```json
 {
@@ -57,39 +57,39 @@ maind workspace status [--json]      # что доверено / чего не �
 }
 ```
 
-- `additionalDirectories` чинит **границу каталогов** (убирает запрос доверия).
-- `allow` (Read/Edit-глобы) и `defaultMode` дополнительно убирают трение **без** bypass.
-  Абсолютный путь в правиле — с двойным слешем: `Read(//abs/path/**)`.
+- `additionalDirectories` repairs **directory border** (removes the trust request).
+- `allow` (Read/Edit-globs) and `defaultMode` additionally remove friction **without** bypass.
+  The absolute path in the rule is with a double slash: `Read(//abs/path/**)`.
 
-Берутся только **включённые** (`enabled != false`) проекты с **существующим** каталогом
-на диске; отсутствующие и беспутёвые — пропускаются.
+Taken only **included** (`enabled != false`) projects with **existing** directory
+on disk; absent and pathless are skipped.
 
-## Слияние и безопасность
+## Merging and security
 
-Запись — зеркало `mcpconfig` (load → merge → write), **аддитивная и идемпотентная**:
+Entry - mirror `mcpconfig` (load → merge → write), **additive and idempotent**:
 
-- списки сливаются union с дедупом — **чужие записи сохраняются**;
-- пользовательский `defaultMode` **не перетирается** (ставим, только если не задан);
-- перед записью — `.bak`, сама запись атомарна (`tmp` + `os.replace`);
-- битый JSON настроек → останавливаемся, файл не трогаем;
-- повторный `sync` без изменений в реестре → «уже актуально», файл не переписывается.
+- lists are merged union with grandfather - **other people's entries are saved**;
+- custom `defaultMode` **does not fray** (is set only if not specified);
+- before recording - `.bak`, the record itself is atomic (`tmp` + `os.replace`);
+- broken JSON settings → stop, don't touch the file;
+- repeated `sync` without registry changes → «is already relevant», file is not overwritten.
 
-::: tip Радиус поражения
-Доверие живёт в `.claude/settings.local.json` **только хаба** — другие сессии Claude его
-не наследуют. Это осознанно: широкий `additionalDirectories` + `acceptEdits` — мощный
-инструмент, и он ограничен сессией, запущенной из maind.
+::: tip Damage radius
+Trust lives in `.claude/settings.local.json` **hub only** — other sessions Claude him
+are not inherited. This is deliberate: wide `additionalDirectories` + `acceptEdits` — powerful
+tool and it is limited to the session started from maind.
 :::
 
-## Видимость
+## Visibility
 
-Состояние доверия видно в трёх местах (поле `trusted` в probe-контракте):
+Trust status is visible in three places (field `trusted` in probe-contract):
 
 ```bash
-maind workspace status     # доверено N/M проектов реестра, missing, drift
-maind projects status      # колонка trust✓ / trust· у каждого проекта
-maind status               # строка «доверие: N/M проектов»
+maind workspace status     # trusted N/M registry projects, missing, drift
+maind projects status      # column trust✓ / trust· for each project
+maind status               # string «trust: N/M projects»
 ```
 
-GUI-панель (`gui/index.html`) показывает колонку **trust** над тем же `status --json`.
+GUI-panel (`gui/index.html`) shows the column **trust** above the same `status --json`.
 
-Дальше: [Агенты →](./agents)
+Next: [Agents →](./agents)

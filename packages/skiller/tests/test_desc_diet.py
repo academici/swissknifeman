@@ -1,11 +1,11 @@
-"""P3.1: гейт «description ≤450 симв» на РЕАЛЬНОМ реестре.
+"""P3.1: gate «description ≤450 char» on the REAL registry.
 
-Гейт batch-укорочения — не синтетический fixtures-реестр (тот не отражает факт
-живых SKILL.md), а прямой скан packages/skiller/skills/**/SKILL.md. Порог 450 —
-hard-цель item'а (validate.sh уже warn'ит на нём, error станет в P3.2); порог 300
-проверяется отдельно как non-regression для явно исправленных в P3.1 скиллов
-(не «все ≤300» — часть триггеро-плотных описаний легально остаётся в burn-down
-P3.2, см. Completion Notes P3.1)."""
+Gate batch-shortening - not synthetic fixtures-registry (that does not reflect the fact
+alive SKILL.md), and direct scan packages/skiller/skills/**/SKILL.md. Threshold 450 —
+hard-target item'a (validate.sh already warn'it on it, error will become in P3.2); threshold 300
+is checked separately as non-regression for those explicitly corrected in P3.1 skills
+(not «all ≤300» — part of the trigger-dense descriptions legally remains in burn-down
+P3.2, see Completion Notes P3.1)."""
 import unittest
 from pathlib import Path
 
@@ -15,8 +15,8 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[1]  # packages/skiller
 SKILLS_ROOT = PACKAGE_ROOT / "skills"
 DESC_HARD_MAX = 450
 
-# Скиллы, укороченные в P3.1 (были >450 симв description) — non-regression:
-# описание не должно снова раздуться выше зафиксированного здесь потолка.
+# Skills shortened in P3.1 (were >450 char description) — non-regression:
+# the description should not again inflate beyond the ceiling recorded here.
 FIXED_IN_P31 = {
     "research/research": 350,
     "security/security": 350,
@@ -40,7 +40,7 @@ def _description_len(skill_md):
 
 
 class DescriptionHardCapCase(unittest.TestCase):
-    """Deliverable P3.1: 0 описаний >450 симв на реестре целиком."""
+    """Deliverable P3.1: 0 descriptions >450 entire symbol on the registry."""
 
     def test_no_description_exceeds_450_chars(self):
         offenders = []
@@ -50,21 +50,21 @@ class DescriptionHardCapCase(unittest.TestCase):
                 offenders.append((str(skill_md.relative_to(PACKAGE_ROOT)), length))
         self.assertEqual(
             offenders, [],
-            f"description > {DESC_HARD_MAX} симв (должно быть 0 после P3.1): {offenders}",
+            f"description > {DESC_HARD_MAX} char (should be 0 after P3.1): {offenders}",
         )
 
 
 class DescriptionP31FixedSkillsCase(unittest.TestCase):
-    """Non-regression: 8 скиллов, укороченных в P3.1, не раздуваются обратно."""
+    """Non-regression: 8 skills shortened in P3.1, do not inflate back."""
 
     def test_fixed_skills_stay_under_recorded_ceiling(self):
         for rel, ceiling in FIXED_IN_P31.items():
             skill_md = SKILLS_ROOT / rel / "SKILL.md"
-            self.assertTrue(skill_md.exists(), f"{rel}: SKILL.md не найден")
+            self.assertTrue(skill_md.exists(), f"{rel}: SKILL.md not found")
             length = _description_len(skill_md)
             self.assertLessEqual(
                 length, ceiling,
-                f"{rel}: description {length} симв — регресс P3.1 (было ≤{ceiling})",
+                f"{rel}: description {length} char - regression P3.1 (was ≤{ceiling})",
             )
 
 

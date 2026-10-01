@@ -1,33 +1,33 @@
-# Шаблон plan.md — скопировать в plans/<PLAN-ID>/plan.md
+# Plan.md template - copy to plans/<PLAN-ID>/plan.md
 
-Скелет мастер-плана по протолу `plan-protocol`. PLAN-ID нового плана —
-`<ГГГГ>.<ММ>.<ДД>-№<N>-<КОДОВОЕ-ИМЯ>` (напр.),
-где `N` — положительный номер, уникальный внутри даты; Title начинается с
-`План №N — …`. Старые датовые и `[A-Z][A-Z0-9-]+` IDs сохраняются только для
-back-compat. Новый план получает Meta `Short ID | PLAN<N>`: постоянный номер по репозиторию,
-включая архив, независимо от дневного №N. Внешние ссылки: `PLAN<N>.D35`, `PLAN<N>.P2.3`;
-правило назначения и legacy fallback — `references/work-references.md`.
-Номера не выдумывать и не считать вручную: `python3 packages/task/scripts/plan-id.py --codename <КОДОВОЕ-ИМЯ>`
-(сканирует `plans/` и `plans/archive/`) отдаёт готовые `plan_id`, `title_prefix` и `short_id` — подставить как есть.
-Хранимый формат — только Markdown с жёсткими маркерами; JSON — производный
-артефакт парсера, не источник истины.
+Skeleton of the master plan according to the `plan-protocol` protocol. PLAN-ID of the new plan -
+`<YYYY>.<MM>.<DD>-№<N>-<CODE-NAME>` (e.g.),
+where `N` is a positive number, unique within the date; Title starts with
+`Plan No. N -...`. Old date and `[A-Z][A-Z0-9-]+` IDs are saved only for
+back-compat. New Plan Gets Meta`Short ID | PLAN<N>`: permanent number for the repository,
+including archive, regardless of day No. N. External links: `PLAN<N>.D35`, `PLAN<N>.P2.3`;
+assignment rule and legacy fallback - `references/work-references.md`.
+Do not invent numbers or count them manually: `python3 packages/task/scripts/plan-id.py --codename <CODE-NAME>`
+(scans `plans/` and `plans/archive/`) gives ready-made `plan_id`, `title_prefix` and `short_id` - substitute as is.
+Stored format - only Markdown with hard markers; JSON - derived
+parser artifact, not the source of truth.
 
-Развилка дизайна живёт в секции `## Обсуждение` (провенанс: варианты + обязательный
-статус — `Exploration` / `Decision pending` / `Resolved → D#`); всё, что НЕ `Resolved`,
-дополнительно ведётся в `plans/<PLAN-ID>/open-questions.md` (трекер незакрытого);
-протокол — SKILL раздел 3.
-Неоднозначность в тексте — маркер `[NEEDS CLARIFICATION: <вопрос>]` (раздел 7).
+The design fork lives in the `## Discussion` section (provenance: options + required
+status - `Exploration` / `Decision pending` / `Resolved → D#`); everything that is NOT `Resolved`,
+is additionally maintained in `plans/<PLAN-ID>/open-questions.md` (unclosed tracker);
+protocol - SKILL section 3.
+Ambiguity in the text - marker `[NEEDS CLARIFICATION: <question>]` (section 7).
 
 ```markdown
-# <PLAN-ID> — План №N — <Title>
+# <PLAN-ID> - Plan No. N - <Title>
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Plan ID | <PLAN-ID> |
-| Short ID | PLAN<следующий свободный номер по репозиторию> |
-| Title | План №N — <краткое имя плана> |
+| Short ID | PLAN<next available repository number> |
+| Title | Plan #N - <short name of plan> |
 | Layout | v2 |
 | Version | 0.1.0 |
 | Document Type | Executable Master Plan |
@@ -36,82 +36,82 @@ back-compat. Новый план получает Meta `Short ID | PLAN<N>`: п�
 | Related Packages | <pkg1, pkg2> |
 | Execution Mode | phase-first |
 | Target Operator Classes | implementation (exec) · economy (LOW) · frontier (design/audit) |
-| Approval Owner | <человек, утверждающий план> |
+| Approval Owner | <person approving the plan> |
 | Home | repo:<repository> |
-| visibility | <необязательное: private ИЛИ public, дефолт private; public → в git только публичная выжимка, SKILL раздел 4> |
-| supersedes | <необязательное: старый PLAN-ID, чью волну трека сменяет план; предшественник в plans/archive/> |
-| Paused By | <необязательное: PLAN-ID перехватившего ACTIVE + дата; заполняет plan-design new; нет — «—»> |
+| visibility | <optional: private OR public, default private; public → in git there is only public extraction, SKILL section 4> |
+| supersedes | <optional: old PLAN-ID whose track wave the plan is replacing; predecessor in plans/archive/> |
+| Paused By | <optional: PLAN-ID of interceptor ACTIVE + date; fills in plan-design new; no — “—”> |
 
 ## 1. Context
 
-<5–15 строк: что делаем и почему. Самодостаточно — исполнитель НЕ видит
-обсуждение, в котором план родился.>
+<5–15 lines: what we do and why. Self-sufficient - the performer does NOT see
+discussion in which the plan was born.>
 
 ## 2. Execution Rules
 
-<Выжимка ≤20 строк + план-специфичные отклонения. Полный протокол — скилл
-plan-protocol; не копировать его целиком. Минимум:>
-- Один item за раз; статус обновляется В ПЛАНЕ до завершения работы.
-- Статусы — 6 канонических строк байт-в-байт (см. plan-protocol §5).
-- План разошёлся с кодом → не импровизировать, эскалировать (§8).
-- После закрытия item/фазы — перезаписать plans/<PLAN-ID>/handoff.md.
+<Squeeze ≤20 lines + plan-specific deviations. Full protocol - skill
+plan-protocol; do not copy it entirely. Minimum:>
+- One item at a time; the status is updated IN PLAN until the work is completed.
+- Statuses - 6 canonical byte-to-byte lines (see plan-protocol §5).
+- Plan diverges from code → do not improvise, escalate (§8).
+- After closing the item/phase, overwrite plans/<PLAN-ID>/handoff.md.
 
 ## 3. Routing
 
-<ПОСТРОЧНОЕ покрытие всех items. Batch/Review обязательны: `solo` только с конкретной
-причиной; связные adjacent items одной фазы группировать, если общий контекст экономит
-повторное чтение/setup/validation. Группа не пересекает audit/close и не смешивает Exec.
+<LINE BY LINE coverage of all items. Batch/Review are required: `solo` only with a specific
+cause; connected adjacent items of the same phase should be grouped if the general context saves
+re-read/setup/validation. The group does not cross audit/close and does not mix Exec.
 Exec: `run` (execution under the session route) or `plan-design`; legacy `plan-exec`/`manual`/`plan-run` are read as `run`.
-Review выбирается по конкретному item risk или прямому требованию владельца: неизвестность
-сначала собирает evidence и не превращается автоматически в full. По умолчанию Review=`none`;
-независимое ревью — отдельный пункт `Ревью Pn` (read-only, verdict-файл) в конце фазы, у большой
-фазы — срезами. Не пиши `Independent review` в Validation пункта.
-Только semantic classes `economy|implementation|frontier`, не provider selectors.
-Design finish поднимает batch до максимума class/effort/review и фиксирует
-exact admission в `roadmap.md` execution sheet.>
+Review is selected according to a specific item risk or the direct request of the owner: unknown
+collects evidence first and does not automatically turn into full. By default Review=`none`;
+independent review - a separate item `Review Pn` (read-only, verdict file) at the end of the phase, at the big
+phases - in slices. Do not write `Independent review` in the Validation item.
+Only semantic classes `economy|implementation|frontier`, not provider selectors.
+Design finish raises the batch to maximum class/effort/review and fixes
+exact admission in `roadmap.md` execution sheet.>
 
-| Batch | Items | Model class/effort | Exec | Review | Почему |
+| Batch | Items | Model class/effort | Exec | Review | Why |
 |:--|:--|:--|:--|:--|:--|
-| B1 | <Pn.m> | <implementation/high> | run | none | recommended: <low-risk; self-check + affected tests; общие reads/setup> |
-| B1 | <Pn.(m+1)> | <implementation/high> | run | light | recommended: <bounded integration seam требует targeted review> |
-| solo | <Pn.k> | <frontier/high> | run | full | <названный security/public/irreversible risk или owner requirement> |
+| B1 | <Pn.m> | <implementation/high> | run | none | recommended: <low-risk; self-check + affected tests; general reads/setup> |
+| B1 | <Pn.(m+1)> | <implementation/high> | run | light | recommended: <bounded integration seam requires targeted review> |
+| solo | <Pn.k> | <frontier/high> | run | full | <named security/public/irreversible risk or owner requirement> |
 
 ## 5. Decision Log
 
-Каталог решений: `decisions/`; собрать:
+Solutions catalog: `decisions/`; collect:
 `python3 packages/task/scripts/plan-views.py decisions`.
 
 ## 6. Update Log
 
-| Дата | Кто (role/model) | Что |
+| Date | Who (role/model) | What |
 |:--|:--|:--|
-| <YYYY-MM-DD> | issue-planner/frontier/high | План создан |
+| <YYYY-MM-DD> | issue-planner/frontier/high | Plan created |
 
 ## 7. Contracts
 
-<ОПЦИОНАЛЬНАЯ: только у планов, экспортирующих/потребляющих замороженные контракты.
-Не экспортируешь и не потребляешь — секцию УДАЛИ (её отсутствие не дефект).>
+<OPTIONAL: Only for plans that export/consume frozen contracts.
+If you do not export or consume, the section is REMOVED (its absence is not a defect).>
 
 ### Exported
 
-| Контракт | Версия | Статус | Потребители | Уведомлены |
+| Contract | Version | Status | Consumers | Notified |
 |:--|:--|:--|:--|:--|
 | <root/contracts/<name>.md> | v1.0.0 | frozen | <PLAN-ID (Pn.m)> | <YYYY-MM-DD> |
 
 ### Consumed
 
-| Контракт | Донор-план | Pinned | Замечено | Реакция |
+| Contract | Donor plan | Pinned | Spotted | Reaction |
 |:--|:--|:--|:--|:--|
 | <DONOR/root/contracts/<name>.md> | <DONOR-ID> | v1.0.0 | — | — |
 
-## Обсуждение
+## Discussion
 
-<ОПЦИОНАЛЬНАЯ, БЕЗ номера, последней секцией. Развилок нет — секцию УДАЛИ.>
+<OPTIONAL, WITHOUT number, last section. There are no forks - DELETE section.>
 
-### 1 — <развилка одной строкой>
+### 1 — <fork in one line>
 
-- **(рекоменд.) Вариант A.** Плюсы … Минусы …
-- **Вариант B.** Плюсы … Минусы …
+- **(recommended) Option A.** Pros... Cons...
+- **Option B.** Pros... Cons...
 
-**Статус:** Resolved → D# | Decision pending (нужен владелец) | Exploration
+**Status:** Resolved → D# | Decision pending (owner needed) | Exploration
 ```

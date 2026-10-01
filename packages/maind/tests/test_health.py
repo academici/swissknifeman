@@ -1,4 +1,4 @@
-"""Тесты health.py: отчёт о связи, провиженеры health-doc/health-hook, CLI."""
+"""Tests health.py: communication report, providers health-doc/health-hook, CLI."""
 import copy
 import json
 import os
@@ -23,14 +23,14 @@ _MEMORY_DIGEST_HOOK = _TEMPLATES / "health" / "memory-digest-hook.sh"
 
 def _setup(tmp, *, with_mcp=False, memory_url=None, hook_maind=False):
     root, env = make_repo(tmp)
-    shutil.copytree(_TEMPLATES, root / "templates")  # шаблоны health доступны в env.root
+    shutil.copytree(_TEMPLATES, root / "templates")  # templates health available in env.root
     proj = Path(tmp) / "flexcrm"
     proj.mkdir(parents=True, exist_ok=True)
     if with_mcp:
         (proj / ".mcp.json").write_text(json.dumps({"mcpServers": {
             "agentmemory": {"command": "x"}, "maind": {"command": "y"}}}), encoding="utf-8")
-        (proj / ".mcp.json.example").write_text("{}", encoding="utf-8")  # гигиена: не FAIL
-    if hook_maind:                            # хук памяти в режиме демона
+        (proj / ".mcp.json.example").write_text("{}", encoding="utf-8")  # hygiene: not FAIL
+    if hook_maind:                            # memory hook in daemon mode
         (proj / ".claude").mkdir(parents=True, exist_ok=True)
         (proj / ".claude" / "memory.env.ini").write_text("MODE=maind\n", encoding="utf-8")
     projects = [{"id": "flexcrm", "name": "FlexCRM", "type": "php-package",
@@ -115,7 +115,7 @@ class TestReport(unittest.TestCase):
             self.assertTrue(any("start --only memory" in h for h in rep["hints"]))
 
     def test_connected_with_mcp_and_daemon(self):
-        # Полностью здоровый проект: MCP + демон + MODE=maind + native off + digest-инжект + round-trip.
+        # Completely healthy project: MCP + demon + MODE=maind + native off + digest-injection + round-trip.
         with tempfile.TemporaryDirectory() as tmp, FakeMemoryServer() as url:
             env, config, proj, _ = _setup(tmp, with_mcp=True, memory_url=url, hook_maind=True)
             health.apply_memory_hook(env, config, proj, "auto", dry=False)  # native off + digest hook
@@ -124,21 +124,21 @@ class TestReport(unittest.TestCase):
             self.assertTrue(rep["maind_mcp"])
             self.assertEqual(rep["hook_memory_mode"], "maind")
             self.assertTrue(rep["native_memory_off"] and rep["digest_hook"])
-            self.assertTrue(rep["memory_roundtrip"])      # write→recall→forget прошёл
+            self.assertTrue(rep["memory_roundtrip"])      # write→recall→forget passed
             self.assertEqual(rep["hints"], [])
 
     def test_roundtrip_fails_when_split(self):
-        # Демон есть, но хук не в режиме maind → подсказка про режим (ловит раскол).
+        # There is a daemon, but the hook is not in mode maind → hint about the mode (catches the split).
         with tempfile.TemporaryDirectory() as tmp, FakeMemoryServer() as url:
             env, config, proj, _ = _setup(tmp, with_mcp=True, memory_url=url, hook_maind=False)
             rep = health.health_report(env, config, proj, memory_reachable=True, deep=True)
-            self.assertTrue(rep["memory_roundtrip"])       # сам демон отвечает
+            self.assertTrue(rep["memory_roundtrip"])       # the daemon itself responds
             self.assertNotEqual(rep["hook_memory_mode"], "maind")
             self.assertTrue(any("--memory manual" in h for h in rep["hints"]))
 
     def test_roundtrip_reports_unauthorized_not_generic_failure(self):
-        # 401 на протектед-эндпоинте различается от «недоступен»/«раскол» (findings §2) —
-        # memory_roundtrip обязан вернуть детальную причину, а не общий RuntimeError-текст.
+        # 401 on the protected endpoint differs from «not available»/«split» (findings §2) —
+        # memory_roundtrip must return a detailed reason, not a general one RuntimeError-text.
         with tempfile.TemporaryDirectory() as tmp, FakeMemoryServer(secret="right-token") as url:
             env, config, proj, _ = _setup(tmp, with_mcp=True, memory_url=url, hook_maind=True)
             secret_path = env.root / "memory.secret"
@@ -146,7 +146,7 @@ class TestReport(unittest.TestCase):
             config["memory"]["secret_file"] = "memory.secret"
             roundtrip = health.memory_roundtrip(env, config, proj, memory_reachable=True)
             self.assertFalse(roundtrip["ok"])
-            self.assertIn("неавторизован", roundtrip["detail"])
+            self.assertIn("unauthorized", roundtrip["detail"])
 
     def test_roundtrip_succeeds_with_correct_secret(self):
         with tempfile.TemporaryDirectory() as tmp, FakeMemoryServer(secret="right-token") as url:
@@ -158,7 +158,7 @@ class TestReport(unittest.TestCase):
             self.assertTrue(roundtrip["ok"])
 
     def test_mcp_hygiene_missing_example_hinted(self):
-        # .mcp.json есть, .example нет → hint чинить через maind sync --only mcp.
+        # .mcp.json yes, .example no → hint repair via maind sync --only mcp.
         with tempfile.TemporaryDirectory() as tmp:
             env, config, proj, pdir = _setup(tmp)
             (pdir / ".mcp.json").write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
@@ -166,7 +166,7 @@ class TestReport(unittest.TestCase):
             self.assertEqual(len(rep["mcp_hygiene"]), 1)
             self.assertIn("missing-example", rep["mcp_hygiene"][0]["problems"])
             self.assertTrue(any("sync --only mcp" in h and ".example" in h for h in rep["hints"]))
-            # граница: подсказка называет условие, при котором чинить нечем (P2.4, D91-D93).
+            # border: tooltip names a condition under which there is nothing to repair (P2.4, D91-D93).
             self.assertTrue(any("unmanaged-target" in h for h in rep["hints"]))
 
 
@@ -178,7 +178,7 @@ class TestHealthDoc(unittest.TestCase):
             self.assertEqual(r1["state"], "absent")
             self.assertTrue(r1["changed"])
             claude = (pdir / "CLAUDE.md").read_text(encoding="utf-8")
-            self.assertIn("ПРИОРИТЕТ №1", claude)
+            self.assertIn("PRIORITY №1", claude)
             self.assertIn("project:flexcrm", claude)
             r2 = health.apply_health_doc(env, config, proj, "auto", dry=False)
             self.assertEqual(r2["state"], "fresh")
@@ -188,25 +188,25 @@ class TestHealthDoc(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, proj, pdir = _setup(tmp)
             health.apply_health_doc(env, config, proj, "auto", dry=False)
-            # подделать дрейф
+            # fake drift
             claude = pdir / "CLAUDE.md"
-            claude.write_text(claude.read_text().replace("ПРИОРИТЕТ №1", "СТАРОЕ"),
+            claude.write_text(claude.read_text().replace("PRIORITY №1", "OLD"),
                               encoding="utf-8")
             r = health.apply_health_doc(env, config, proj, "install", dry=False)
             self.assertEqual(r["state"], "stale")
-            self.assertFalse(r["changed"])  # install НЕ обновляет устаревшее
+            self.assertFalse(r["changed"])  # install does NOT update outdated
             r2 = health.apply_health_doc(env, config, proj, "update", dry=False)
-            self.assertTrue(r2["changed"])  # update — обновляет
-            self.assertIn("ПРИОРИТЕТ №1", claude.read_text())
+            self.assertTrue(r2["changed"])  # update — updates
+            self.assertIn("PRIORITY №1", claude.read_text())
 
     def test_preserves_foreign_content(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, proj, pdir = _setup(tmp)
-            (pdir / "CLAUDE.md").write_text("# FlexCRM\n\nМоя документация.\n", encoding="utf-8")
+            (pdir / "CLAUDE.md").write_text("# FlexCRM\n\nMy documentation.\n", encoding="utf-8")
             health.apply_health_doc(env, config, proj, "auto", dry=False)
             txt = (pdir / "CLAUDE.md").read_text(encoding="utf-8")
-            self.assertIn("Моя документация", txt)
-            self.assertIn("ПРИОРИТЕТ №1", txt)
+            self.assertIn("My documentation", txt)
+            self.assertIn("PRIORITY №1", txt)
 
 
 class TestHealthHook(unittest.TestCase):
@@ -239,7 +239,7 @@ class TestHealthHook(unittest.TestCase):
             cmds = [h["command"] for g in settings["hooks"]["SessionEnd"]
                     for h in g["hooks"]]
             self.assertTrue(any("maind-feature-log" in c for c in cmds))
-            # SessionEnd-хук не конфликтует с SessionStart (health) — оба сосуществуют
+            # SessionEnd-hook does not conflict with SessionStart (health) — both coexist
             health.apply_health_hook(env, config, proj, "auto", dry=False)
             s2 = json.loads((pdir / ".claude" / "settings.json").read_text())
             self.assertIn("SessionStart", s2["hooks"])
@@ -254,7 +254,7 @@ class TestMemoryHook(unittest.TestCase):
             self.assertTrue(r["changed"])
             self.assertTrue((pdir / ".claude" / "maind-memory.sh").is_file())
             settings = json.loads((pdir / ".claude" / "settings.json").read_text())
-            self.assertIs(settings["autoMemoryEnabled"], False)   # native выключена
+            self.assertIs(settings["autoMemoryEnabled"], False)   # native disabled
             cmds = [h["command"] for g in settings["hooks"]["SessionStart"] for h in g["hooks"]]
             self.assertTrue(any("maind-memory" in c for c in cmds))
 
@@ -272,23 +272,23 @@ class TestMemoryHook(unittest.TestCase):
             health.apply_memory_hook(env, config, proj, "auto", dry=False)
             health.revert_memory_hook(env, config, proj, dry=False)
             settings = json.loads((pdir / ".claude" / "settings.json").read_text())
-            self.assertNotIn("autoMemoryEnabled", settings)       # native возвращена
+            self.assertNotIn("autoMemoryEnabled", settings)       # native returned
             cmds = [h["command"] for g in settings.get("hooks", {}).get("SessionStart", [])
                     for h in g["hooks"]]
             self.assertFalse(any("maind-memory" in c for c in cmds))
 
 
 class TestHookPortability(unittest.TestCase):
-    """Сгенерированные хук-скрипты НЕ содержат машинно-специфичного пути к maind:
-    лаунчер резолвится в рантайме (env MAIND_BIN → PATH). Защита от утечки абс-пути."""
+    """The generated hook scripts do NOT contain a machine-specific path to maind:
+    launcher resolves in runtime (env MAIND_BIN → PATH). Ab-path leakage protection."""
 
     def _assert_portable(self, script_path, env):
         txt = script_path.read_text(encoding="utf-8")
-        self.assertNotIn(str(env.root), txt)        # нет baked абс-пути пакета maind
+        self.assertNotIn(str(env.root), txt)        # no baked abs-paths of the package maind
         self.assertNotIn("/bin/maind", txt)
-        self.assertNotIn("{{MAIND_BIN}}", txt)      # плейсхолдер не утёк
+        self.assertNotIn("{{MAIND_BIN}}", txt)      # placeholder did not leak
         self.assertIn("MAIND_BIN", txt)             # env-override
-        self.assertIn("command -v maind", txt)      # PATH-фолбэк
+        self.assertIn("command -v maind", txt)      # PATH-fallback
 
     def test_memory_hook_portable(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -308,16 +308,16 @@ class TestHookPortability(unittest.TestCase):
             health.apply_feature_log_hook(env, config, proj, "auto", dry=False)
             script = pdir / ".claude" / "maind-feature-log.sh"
             self._assert_portable(script, env)
-            # снятие MAIND_BIN не сломало подстановку {{PROJECT}}
+            # removal MAIND_BIN didn't break substitution {{PROJECT}}
             self.assertIn('--project "flexcrm"', script.read_text(encoding="utf-8"))
 
 
 class TestSessionStartHookTemplate(unittest.TestCase):
-    """P1.2: session-start-hook.sh — тихий при OK (--strict rc=0 → exit 0, ничего в stdout),
-    печатает статус только когда health нездоров."""
+    """P1.2: session-start-hook.sh — quiet when OK (--strict rc=0 → exit 0, nothing in stdout),
+    prints status only when health unwell."""
 
     def _fake_maind(self, tmp, *, rc, stdout=""):
-        """Скрипт-заглушка `maind`, отвечающая на `health --cwd --strict` заданным rc/stdout."""
+        """Stub script `maind`, responding to `health --cwd --strict` given rc/stdout."""
         fake = Path(tmp) / "maind"
         fake.write_text(
             "#!/usr/bin/env bash\n"
@@ -337,30 +337,30 @@ class TestSessionStartHookTemplate(unittest.TestCase):
         )
 
     def test_static_content_has_strict_and_rc_gate(self):
-        # Требование ТЗ P1.2: шаблон содержит --strict и rc-гейт `exit 0`.
+        # Technical specification requirement P1.2: template contains --strict and rc-gate `exit 0`.
         txt = _SESSION_START_HOOK.read_text(encoding="utf-8")
         self.assertIn("--strict", txt)
         self.assertIn('"$rc" -eq 0 ] && exit 0', txt)
 
     def test_quiet_when_healthy(self):
         with tempfile.TemporaryDirectory() as tmp:
-            fake = self._fake_maind(tmp, rc=0, stdout="статус: connected")
+            fake = self._fake_maind(tmp, rc=0, stdout="status: connected")
             r = self._run_hook(fake)
             self.assertEqual(r.returncode, 0)
-            self.assertEqual(r.stdout, "")            # тихий при OK — ничего не пишет в контекст
+            self.assertEqual(r.stdout, "")            # quiet when OK — does not write anything in the context
 
     def test_prints_status_when_unhealthy(self):
         with tempfile.TemporaryDirectory() as tmp:
-            fake = self._fake_maind(tmp, rc=1, stdout="статус: standalone")
+            fake = self._fake_maind(tmp, rc=1, stdout="status: standalone")
             r = self._run_hook(fake)
-            self.assertEqual(r.returncode, 0)          # хук-безопасность: сам хук не падает
-            self.assertIn("статус: standalone", r.stdout)
+            self.assertEqual(r.returncode, 0)          # safety hook: the hook itself does not crash
+            self.assertIn("status: standalone", r.stdout)
 
     def test_missing_maind_is_quiet_noop(self):
         with tempfile.TemporaryDirectory() as tmp:
             env = dict(os.environ)
             env["MAIND_BIN"] = str(Path(tmp) / "does-not-exist")
-            # PATH без maind (но с bash/coreutils, чтобы сам хук мог запуститься)
+            # PATH without maind (but with bash/coreutils, so that the hook itself can run)
             env["PATH"] = os.path.dirname(shutil.which("bash"))
             r = subprocess.run(["bash", str(_SESSION_START_HOOK)], env=env,
                                 capture_output=True, text=True, timeout=10)
@@ -369,13 +369,13 @@ class TestSessionStartHookTemplate(unittest.TestCase):
 
 
 class TestMemoryDigestHookTemplate(unittest.TestCase):
-    """P1.2: memory-digest-hook.sh — бамп-комментарий шапки (byte-change → stale для
-    `maind sync`), сам вызов остаётся argless (config-driven, single source of truth P1.1)."""
+    """P1.2: memory-digest-hook.sh — header bump comment (byte-change → stale for
+    `maind sync`), the call itself remains argless (config-driven, single source of truth P1.1)."""
 
     def test_header_bumped_for_sync_staleness(self):
         txt = _MEMORY_DIGEST_HOOK.read_text(encoding="utf-8")
-        self.assertIn("P1.2", txt)                      # маркер бампа шапки
-        self.assertIn('"$MAIND" memory digest', txt)     # вызов остаётся argless
+        self.assertIn("P1.2", txt)                      # header bump marker
+        self.assertIn('"$MAIND" memory digest', txt)     # call remains argless
 
 
 class TestCLI(unittest.TestCase):
@@ -432,7 +432,7 @@ class TestCLI(unittest.TestCase):
 
 
 class TestActPrimitive(unittest.TestCase):
-    """_act(mode, state): какое состояние артефакта чинится в каком режиме."""
+    """_act(mode, state): what state of the artifact is repaired in what mode."""
 
     def test_fresh_never_acts(self):
         for mode in ("install", "update", "auto"):
@@ -452,7 +452,7 @@ class TestActPrimitive(unittest.TestCase):
 
 
 class TestFileState(unittest.TestCase):
-    """_file_state(path, content): absent (нет файла) / fresh (совпадает) / stale (дрейф)."""
+    """_file_state(path, content): absent (no file) / fresh (matches) / stale (drift)."""
 
     def test_absent_when_missing(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -472,7 +472,7 @@ class TestFileState(unittest.TestCase):
 
 
 class TestMergeSessionHook(unittest.TestCase):
-    """_merge_session_hook: идемпотентная вставка/обновление хука по marker в событие."""
+    """_merge_session_hook: idempotent insertion/update hook by marker into the event."""
 
     def test_inserts_into_empty(self):
         settings, changed = health._merge_session_hook({}, "bash x maind-health")
@@ -486,14 +486,14 @@ class TestMergeSessionHook(unittest.TestCase):
         self.assertFalse(changed)
         groups = s["hooks"]["SessionStart"]
         cmds = [h["command"] for g in groups for h in g["hooks"]]
-        self.assertEqual(cmds.count("bash x maind-health"), 1)   # без дублей
+        self.assertEqual(cmds.count("bash x maind-health"), 1)   # without duplicates
 
     def test_updates_command_same_marker(self):
         s, _ = health._merge_session_hook({}, "bash OLD maind-health")
         _, changed = health._merge_session_hook(s, "bash NEW maind-health")
         self.assertTrue(changed)
         cmds = [h["command"] for g in s["hooks"]["SessionStart"] for h in g["hooks"]]
-        self.assertEqual(cmds, ["bash NEW maind-health"])        # обновлён на месте
+        self.assertEqual(cmds, ["bash NEW maind-health"])        # updated in place
 
     def test_custom_event_and_marker(self):
         s, changed = health._merge_session_hook({}, "bash y maind-feature-log",
@@ -502,8 +502,8 @@ class TestMergeSessionHook(unittest.TestCase):
         self.assertIn("SessionEnd", s["hooks"])
 
     def test_caller_copy_isolates_original(self):
-        # _merge_session_hook мутирует вход (потому провиженеры зовут его на copy.deepcopy):
-        # пробный merge по копии не должен трогать оригинал (контракт фикса json→deepcopy).
+        # _merge_session_hook mutates the input (because the providers call him to copy.deepcopy):
+        # trial merge on the copy should not touch the original (fix contract json→deepcopy).
         original = {"hooks": {"SessionStart": []}}
         health._merge_session_hook(copy.deepcopy(original), "bash x maind-health")
         self.assertEqual(original, {"hooks": {"SessionStart": []}})

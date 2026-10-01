@@ -1,22 +1,22 @@
 # filesystem MCP
 
-## Что это
+## What is this
 
-Официальный (Anthropic / Model Context Protocol) сервер доступа к файловой системе — даёт
-агенту чтение и запись в **явно разрешённых** каталогах.
+Official (Anthropic / Model Context Protocol) file system access server - gives
+agent reads and writes to **explicitly allowed** directories.
 
-- Репозиторий: `modelcontextprotocol/servers` (`src/filesystem`)
+- Repository: `modelcontextprotocol/servers` (`src/filesystem`)
 - npm: `@modelcontextprotocol/server-filesystem`
 
-## Установка
+## Installation
 
-Пресетом (opt-in):
+Preset (opt-in):
 
 ```bash
 skiller integrate --mcp filesystem
 ```
 
-Пресет — `configs/claude-code/mcp/filesystem.json` (по умолчанию — корень проекта):
+Preset - `configs/claude-code/mcp/filesystem.json` (default - project root):
 
 ```json
 {
@@ -25,15 +25,15 @@ skiller integrate --mcp filesystem
 }
 ```
 
-Разрешённые каталоги задаются аргументами — добавь нужные пути:
+Allowed directories are specified by arguments - add the necessary paths:
 
 ```json
 "args": ["-y", "@modelcontextprotocol/server-filesystem", "./src", "./docs"]
 ```
 
-## Ограничения
+## Limitations
 
-- Доступ строго в перечисленных каталогах — это граница безопасности; не расширяй её на
-  секреты (`.env`, ключи, `~/.ssh`).
-- В Claude Code уже есть нативные Read/Write/Edit; сервер полезен, когда нужен отдельный
-  изолированный скоуп ФС для агента/субагента или другого MCP-клиента.
+- Access strictly to listed directories is a security boundary; don't expand it to
+  secrets (`.env`, keys, `~/.ssh`).
+- B Claude Code already have native ones Read/Write/Edit; server is useful when a separate
+  isolated FS scope for agent/subagent or other MCP-client.

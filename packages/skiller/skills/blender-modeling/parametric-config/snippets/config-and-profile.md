@@ -1,71 +1,71 @@
-# Конфиги и силуэт
+# Configs and silhouette
 
-## Именование конфигов
+## Naming configs
 
 - Dataclass: `*Config` (`LensMountConfig`, `BottomShellConfig`, …).
-- Экземпляры в `config.py` внизу файла: `snake_case` + суффикс `_config`, например `bottom_shell_config`, `model_config`.
-- Тип точки профиля: `ProfileKnot = Tuple[float, float]` — по смыслу `(z_локальный, r_наружный)` в **мм**.
+- Instances in `config.py` at the bottom of the file: `snake_case` + suffix `_config`, for example `bottom_shell_config`, `model_config`.
+- Profile point type: `ProfileKnot = Tuple[float, float]` — in meaning `(z_local, r_external)` in **mm**.
 
-## `profile_knots`: локальный Z
+## `profile_knots`: local Z
 
-У **каждой** части узлы задаются в **локальном** z:
+U **each** parts nodes are specified in **local** z:
 
-- первый узел: **`z = 0`** (низ детали в её системе);
-- последний узел: **`z = высота сегмента`**.
+- first node: **`z = 0`** (bottom of the part in its system);
+- last node: **`z = segment height`**.
 
-Высота некоторых секций может не храниться отдельным полем, а вычисляться как разность высот из конфигов смежных деталей. После смены любой из этих величин **обновите последний z** в соответствующем `profile_knots` (иначе упадёт валидация в `derive_all`).
+The height of some sections may not be stored as a separate field, but rather calculated as the difference in heights from the configs of adjacent parts. After changing any of these values **update latest z** in the corresponding `profile_knots` (otherwise validation will fail `derive_all`).
 
-Поля **`radius_bottom` / `radius_top`** — подсказка по торцам; источник формы для сплайна — **узлы**. Держите подписи согласованными с первым/последним `r` в `profile_knots`.
+Fields **`radius_bottom` / `radius_top`** — end tip; shape source for spline - **nodes**. Keep signatures consistent with the first/last `r` in `profile_knots`.
 
-## Перевод в мировой Z
+## Worldwide translation Z
 
-- `model_part_z(part)` — нижняя граница части в мировых мм.
+- `model_part_z(part)` — lower limit of the part in world mm.
 - `profile_knots_world(local_knots, part)` → `[(z + z0, r), …]`.
-- `world_profile_knots(part)` — удобно в `main()` перед `build_spline`.
+- `world_profile_knots(part)` — convenient in `main()` before `build_spline`.
 
-Сплайны для `profile_r` в `parts/*` по-прежнему в **мировых** z (как строит каждая деталь).
+Splines for `profile_r` in `parts/*` is still in **world** z (how each part is built).
 
-## `derive_all` — что делает и как расширять
+## `derive_all` — what it does and how to expand
 
-`derive_all(model, ...)` вызывается в конце `config.py` **после** объявления всех экземпляров конфигов. Принимает все конфиги аргументами (не читает глобалы).
+`derive_all(model, ...)` is called at the end `config.py` **after** declarations of all config instances. Accepts all configs as arguments (doesn't read globals).
 
-**Что делает:**
-- Вычисляет поля, зависящие от нескольких конфигов одновременно (например `model.base_radius` — из посадки линзы и толщины стенки).
-- Запускает `_validate_local_profiles`: проверяет что `z[0]==0`, `z[-1]==height` в каждом сегменте, узлы не пустые.
-- Пересчитывает производные Z-позиции (например `nameplate.z_bottom`).
+**What it does:**
+- Calculates fields that depend on several configs simultaneously (for example `model.base_radius` — from lens fit and wall thickness).
+- Launches `_validate_local_profiles`: checks that `z[0]==0`, `z[-1]==height` in each segment, nodes are not empty.
+- Recalculates derivatives Z-positions (for example `nameplate.z_bottom`).
 
-**Как расширять при добавлении новой модели:**
+**How to expand when adding a new model:**
 ```python
-# profile.py новой модели
+# profile.py new model
 def derive_all(model, part_a, part_b, external_element, ...):
-    # 1. вычислить производные поля
+    # 1. calculate derived fields
     model.base_radius = external_element.outer_diameter * 0.5 + part_a.inner_wall
-    # 2. пересчитать Z-позиции
+    # 2. recalculate Z-positions
     part_b.z_bottom = part_a.height + part_b.z_local_offset
-    # 3. валидировать профили
+    # 3. validate profiles
     _validate_local_profiles(part_a, part_b, ...)
 ```
 
-Правило: `derive_all` — единственное место, где один конфиг устанавливает поле другого. Вне `derive_all` конфиги только читают друг друга, но не пишут.
+Rule: `derive_all` — is the only place where one config sets the field of another. Outside `derive_all` configs only read each other, but do not write.
 
-## Актуальность комментариев в коде
+## Relevance of comments in the code
 
-При изменении конструкции нужно обновлять не только формулы, но и текст рядом с ними:
+When you change the design, you need to update not only the formulas, but also the text next to them:
 
-- комментарии у полей в `config.py`;
-- docstring файла и `build_*()` / вспомогательных функций в `parts/*.py`;
-- inline-комментарии у ключевых блоков профиля, пазов, посадок, резьбы, камеры.
+- comments for fields in `config.py`;
+- docstring file and `build_*()` / auxiliary functions in `parts/*.py`;
+- inline-comments for key profile blocks, grooves, fits, threads, chamber.
 
-Правило простое: если после правки комментарий описывает **старую** форму, старый смысл параметра или старую последовательность точек, его нужно исправить в той же задаче.
+The rule is simple: if after editing the comment describes **old** form, old parameter meaning or old sequence of points, it needs to be corrected in the same task.
 
-## Импорт: порядок модулей
+## Import: module order
 
-Цикл **`config` ↔ `profile`**: при ручных тестах сначала `import {model}.config`, не импортируйте `{model}.profile` до полной загрузки `config`. Точка входа `{model}.py` тянет `common` → `config` — порядок безопасный.
+Loop **`config` ↔ `profile`**: for manual tests first `import {model}.config`, do not import `{model}.profile` until fully loaded `config`. Entry point `{model}.py` pulls `common` → `config` — order is safe.
 
-## Сплайн `spl` и профиль `pts` — детали
+## Spline `spl` and profile `pts` — details
 
-Подробное описание внутреннего устройства `spl`, правила обхода `pts`, диагностика non-manifold → сниппет `internals.md` этого скилла.
+Detailed description of the internal structure `spl`, bypass rules `pts`, diagnostics non-manifold → snippet `internals.md` of this skill.
 
-## Глобальный сплайн vs по частям
+## Global spline vs in parts
 
-Один общий сплайн удобен, когда нужна жёсткая согласованность всей кривой одним выражением. Отдельные сплайны по деталям + локальный z удобнее, когда **меняются высоты сегментов** и силуэт правят по частям: мировой z получается из стека, а не переписывается во всех узлах.
+One general spline is convenient when you need strict consistency of the entire curve with one expression. Individual splines by part + local z is more convenient when **segment heights change** and the silhouette rule in parts: world z is popped from the stack rather than rewritten across all nodes.

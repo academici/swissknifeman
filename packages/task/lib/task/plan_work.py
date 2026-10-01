@@ -34,7 +34,7 @@ class WorkError(ValueError):
 
 def _phase(root: Path, phase_id: str) -> dict:
     if not re.fullmatch(r"P\d+", phase_id):
-        raise WorkError("PLAN_WORK_INVALID_TARGET", "phase должна иметь форму Pn")
+        raise WorkError("PLAN_WORK_INVALID_TARGET", "phase should be of the form Pn")
     diagnostics = plan_lint.Diagnostics()
     value = plan_lint.parse_phase_md(plan_layout.phase_path(root, phase_id),
                                      phase_id, diagnostics, layout="v2")
@@ -48,7 +48,7 @@ def _foreign_baseline(key, phase_id: str) -> bool:
     _kind, path, message = key
     return (path.startswith("phases/")
             and not path.startswith(f"phases/{phase_id}/")
-            and not re.search(r"authority|routing|полномочи", message, re.IGNORECASE)
+            and not re.search(r"authority|routing|permissions", message, re.IGNORECASE)
             and not re.search(rf"\b{re.escape(phase_id)}(?:\.|\b)", message))
 
 
@@ -101,7 +101,7 @@ def _supporting_artifacts(root: Path, phase_ids, *, strict: bool) -> dict:
         for relative in normative:
             path = root / relative
             if not path.is_file() or not path.read_text(encoding="utf-8").strip():
-                errors.append(f"{phase_id}: отсутствует непустой {relative}")
+                errors.append(f"{phase_id}: missing non-empty {relative}")
             else:
                 present.append(relative)
         capture = next((relative for relative in capture_candidates
@@ -109,18 +109,18 @@ def _supporting_artifacts(root: Path, phase_ids, *, strict: bool) -> dict:
                         and (root / relative).read_text(encoding="utf-8").strip()), None)
         if capture is None:
             errors.append(
-                f"{phase_id}: нужен raw capture или explicit no-search record в "
+                f"{phase_id}: needed raw capture or explicit no-search record in "
                 f"artifacts/{phase_id}-design-rag/")
         else:
             present.append(capture)
         for relative in (*normative, capture) if capture else normative:
             if relative not in phase_text:
-                errors.append(f"{phase_id}: phase index не ссылается на {relative}")
+                errors.append(f"{phase_id}: phase index does not reference {relative}")
         for item, rows in phase["items"].items():
             inputs = rows[0]["fields"].get("Inputs", ("",))[0]
             for relative in normative:
                 if relative not in inputs:
-                    errors.append(f"{item}: Inputs не включает {relative}")
+                    errors.append(f"{item}: Inputs does not include {relative}")
         phases[phase_id] = {"normative": list(normative), "capture": capture,
                            "present": present}
     report = {"contract": "self-contained-design/v1", "phases": phases,
@@ -136,14 +136,14 @@ def _execution_sheet(root: Path, routing: dict, *, strict: bool) -> dict:
     errors = []
     text_value = path.read_text(encoding="utf-8") if path.is_file() else ""
     if "<!-- execution-sheet/v1 -->" not in text_value:
-        errors.append("roadmap.md: отсутствует marker <!-- execution-sheet/v1 -->")
+        errors.append("roadmap.md: missing marker <!-- execution-sheet/v1 -->")
     table = task_contract.executable_routing_table(root)
     for row, line in table["rows"]:
         declared = (row.get("Model class/effort") or "").partition("/")[0].strip()
         if declared not in task_contract.MODEL_CLASS_ORDER:
             errors.append(
-                f"plan.md:{line}: Routing должен хранить semantic model class, "
-                f"а не provider selector {declared!r}")
+                f"plan.md:{line}: Routing should store semantic model class, "
+                f"and not provider selector {declared!r}")
     rows = []
     for batch in routing["batches"].values():
         command = f"task:plan-run {root.name} " + " ".join(batch["items"])
@@ -151,7 +151,7 @@ def _execution_sheet(root: Path, routing: dict, *, strict: bool) -> dict:
         expected = f"| `{command}` | `{route}` | `{batch['review']}` |"
         if expected not in text_value:
             errors.append(
-                f"roadmap.md: нет exact execution-sheet row {expected}")
+                f"roadmap.md: no exact execution-sheet row {expected}")
         rows.append({"batch_id": batch["batch_id"], "items": list(batch["items"]),
                      "command": command, "route": batch["route"],
                      "review": batch["review"], "recommended": batch["recommended"]})
@@ -190,7 +190,7 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
     if admission["verdict"] != "ALLOW":
         raise WorkError(admission["verdict"], admission)
     if item_id not in admission["requested"]:
-        raise WorkError("BATCH_AMBIGUOUS", "item отсутствует в запросе")
+        raise WorkError("BATCH_AMBIGUOUS", "item is missing from the request")
     invocation = f"task:{command} {root.name} " + " ".join(admission["requested"])
     if actual_route is None:
         actual_route = route_evidence.capture_launch(
@@ -259,7 +259,7 @@ def design_context(plan_dir, phase_id: str | None = None, *, finish: bool = Fals
             "baseline_errors": diagnostics.errors,
         }
     if phase_id is None:
-        raise WorkError("PLAN_WORK_INVALID_TARGET", "укажите --phase или --finish")
+        raise WorkError("PLAN_WORK_INVALID_TARGET", "specify --phase or --finish")
     plan_readiness.validate_design_target(root, phase_id)
     phase = _phase(root, phase_id)
     routing = task_contract.compile_batch_routing(root)
@@ -292,7 +292,7 @@ def finalize_design(plan_dir, phase_id: str | None = None, *, finish: bool = Fal
     root = Path(plan_dir)
     phase_ids = list(plan_layout.phase_paths(root)) if finish else [phase_id]
     if not phase_ids or any(selected is None for selected in phase_ids):
-        raise WorkError("PLAN_WORK_INVALID_TARGET", "укажите --phase или --finish")
+        raise WorkError("PLAN_WORK_INVALID_TARGET", "specify --phase or --finish")
     if not finish:
         plan_readiness.validate_design_target(root, phase_ids[0])
     support = _supporting_artifacts(root, phase_ids, strict=True) if finish else None
@@ -384,7 +384,7 @@ def finalize(plan_dir, item_id: str) -> dict:
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="Компактный Task work context и завершение")
+    parser = argparse.ArgumentParser(description="Compact Task work context and completion")
     actions = parser.add_subparsers(dest="action", required=True)
     for name in ("prepare", "design-context", "finalize-design", "design-gate", "finalize"):
         action = actions.add_parser(name)
@@ -405,7 +405,7 @@ def main(argv=None) -> int:
             action.add_argument("--batch-receipt", type=Path)
             action.add_argument("--repeat-admission", type=Path)
             action.add_argument("--capability", action="append", default=[],
-                                help="JSON capability binding: id и support")
+                                help="JSON capability binding: id and support")
     args = parser.parse_args(argv)
     started_at = time.perf_counter()
     try:

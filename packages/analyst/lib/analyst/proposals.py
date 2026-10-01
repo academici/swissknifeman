@@ -1,26 +1,26 @@
-"""analyst proposals — черновики СИСТЕМНЫХ предложений улучшений.
+"""analyst proposals — draft SYSTEM improvement proposals.
 
-Мост между тем, что analyst НАБЛЮДАЕТ (digest/scan/ingest — данные о конкретном проекте/
-паттерне), и тем, что улучшить стоило бы НА УРОВНЕ ЭКОСИСТЕМЫ: стек-пак (`stack-pack`),
-override целевого проекта (`project-override`) или документацию (`docs`). Пишет ТОЛЬКО в
-свой каталог:
+The bridge between what analyst WATCHING (digest/scan/ingest — project-specific data/
+pattern), and what would be worth improving AT THE ECOSYSTEM LEVEL: stack pack (`stack-pack`),
+override target project (`project-override`) or documentation (`docs`). Writes ONLY to
+your directory:
 
     ~/.swissknifeman/analyst/proposals/<type>/<id>/
-      PROPOSAL.md            — человекочитаемое тело (детерминировано, БЕЗ timestamp)
-      proposal.meta.json     — провенанс-паспорт + ТЕКУЩИЙ статус (draft|accepted|rejected)
+      PROPOSAL.md            — human-readable body (deterministic, WITHOUT timestamp)
+      proposal.meta.json     — provenance passport + CURRENT status (draft|accepted|rejected)
     ~/.swissknifeman/analyst/proposals/audit.ndjson
-                              — append-only история смен статуса (НЕ тело — тело статус не несёт)
+                              — append-only status change history (NOT a body - the body does not carry status)
 
-ИНВАРИАНТ (analyst): авто-применение ЗАПРЕЩЕНО — analyst НИКОГДА не пишет в agent-packs/
-шаблоны/проекты. Промоут `accepted`-предложения в реальную правку — руками человека/
-plan-design; этот модуль лишь копит черновик и печатает handoff-последовательность
-«что и куда применить» (см. `handoff_lines`/`build_handoff_lines`).
+INVARIANT (analyst): auto-apply PROHIBITED - analyst NEVER writes to agent-packs/
+templates/projects. Promote `accepted`-proposals for real editing - by human hands/
+plan-design; this module only saves a draft and prints handoff-sequence
+«what and where to apply» (see `handoff_lines`/`build_handoff_lines`).
 
-Writer edit-safe как в `suggest.py`: тело — детерминированная функция входа (без
-timestamp — иначе seed_sha256-детект ручных правок ложно срабатывал бы на каждый ре-create).
-Статус живёт ТОЛЬКО в proposal.meta.json (текущий указатель) — смена статуса НЕ переписывает
-тело и не двигает файл между каталогами (в отличие от lessons.move_lesson: `<type>/<id>/`
-статичен), а лишь дописывает audit-строку (история переходов, никогда не перезаписывается)."""
+Writer edit-safe as in `suggest.py`: body - deterministic input function (without
+timestamp — otherwise seed_sha256-detection of manual edits would trigger falsely for every re-create).
+Status lives ONLY in proposal.meta.json (current pointer) — status change does NOT overwrite
+body and does not move the file between directories (unlike lessons.move_lesson: `<type>/<id>/`
+static), but only adds audit-line (transition history, never overwritten)."""
 import hashlib
 import json
 import os
@@ -34,80 +34,80 @@ PROPOSAL_TYPES = ("stack-pack", "project-override", "docs")
 STATUSES = ("draft", "accepted", "rejected")
 TITLE_SLUG_MAX = 40
 
-# Generic (repo-grounded) handoff-шаги по типу — куда именно (--target) решает автор
-# предложения, ЧТО и КАК применять — фиксировано здесь (analyst сюда не пишет НИКОГДА).
+# Generic (repo-grounded) handoff-steps by type - where exactly (--target) is decided by the author
+# suggestions on WHAT and HOW to apply - fixed here (analyst NEVER writes here).
 _HANDOFF_STEPS = {
     "stack-pack": (
-        "правки — ТОЛЬКО в паке harness: packages/harness/configs/claude-code/agent-packs/"
-        "<pack>/ (человек, по скиллу system/agent-packs); analyst НЕ пишет в agent-packs/",
-        "версия пака + запись в его CHANGELOG.md "
+        "edits - ONLY in the pack harness: packages/harness/configs/claude-code/agent-packs/"
+        "<pack>/ (person, by skill system/agent-packs); analyst does NOT write to agent-packs/",
+        "pack version + entry in it CHANGELOG.md "
         "(packages/harness/configs/claude-code/agent-packs/<pack>/CHANGELOG.md)",
-        "раскатка на проекты: `harness agent-packs upgrade --pack <pack> --target <project>` "
-        "(user_owned-файлы проектов пак не тронет — D11 base+overlay)",
+        "rollout for projects: `harness agent-packs upgrade --pack <pack> --target <project>` "
+        "(user_owned-the pack will not touch project files - D11 base+overlay)",
         "bash packages/harness/scripts/validate.sh",
     ),
     "project-override": (
-        "правки — ТОЛЬКО в override/extension-зоне ЦЕЛЕВОГО проекта: user_owned-файлы "
-        "агент-пака (base+overlay, D11); analyst НЕ пишет в проекты",
-        "generated/managed-файлы пака руками НЕ редактировать — их перезатрёт следующий "
+        "edits - ONLY in override/extension-zone of the TARGET project: user_owned-files "
+        "agent-pack (base+overlay, D11); analyst DOES NOT write to projects",
+        "generated/managed-do NOT edit the pack files manually - they will be overwritten by the next one "
         "`harness agent-packs render`/`upgrade`",
-        "сверка после правки: harness agent-packs doctor --target <project>",
-        "валидация — стандартный dev-loop целевого проекта",
+        "verification after editing: harness agent-packs doctor --target <project>",
+        "validation - standard dev-loop target project",
     ),
     "docs": (
-        "правки — в целевой документации: docs/reference.md · docs/roadmap.md (зонтик) или "
-        "packages/<pkg>/docs/ (per-package, standalone-сборка); analyst НЕ пишет в docs/",
-        "per-package правки — при необходимости прогнать scripts/docs-sync.sh (зонтичный агрегат)",
-        "если предложение про сам пакет analyst — отметить в packages/analyst/CLAUDE.md",
+        "edits - in target documentation: docs/reference.md · docs/roadmap.md (umbrella) or "
+        "packages/<pkg>/docs/ (per-package, standalone-assembly); analyst does NOT write to docs/",
+        "per-package edits - run if necessary scripts/docs-sync.sh (umbrella unit)",
+        "if the proposal is about the package itself analyst — note in packages/analyst/CLAUDE.md",
     ),
 }
 
 
 def handoff_steps(ptype):
-    """ЧИСТО: [шаг,...] для типа предложения. Неизвестный/битый type (напр. из повреждённого
-    meta.json) → fallback на 'docs' (самый нейтральный маршрут), не падаем."""
+    """CLEAR: [step,...] for the offer type. Unknown/broken type (e.g. from damaged
+    meta.json) → fallback on 'docs' (most neutral route), we don't fall."""
     return list(_HANDOFF_STEPS.get(ptype, _HANDOFF_STEPS["docs"]))
 
 
 def build_handoff_lines(ptype):
-    """ЧИСТО: пронумерованные строки handoff для теле PROPOSAL.md/печати CLI."""
+    """PURE: numbered lines handoff for tele PROPOSAL.md/print CLI."""
     return [f"{i}. {s}" for i, s in enumerate(handoff_steps(ptype), 1)]
 
 
-# ── id (детерминированный слаг от типа+содержимого) ──────────────────────────
+# ── id (deterministic slug from type+contents) ──────────────────────────
 def make_proposal_id(ptype, title):
-    """Детерминированный id: slug(title) + короткий хэш(type|title). Тот же (type, title)
-    → тот же id (идемпотентный create/update-цикл, как pattern_id в scan.py); смена title
-    заводит НОВОЕ предложение (это осознанно — title = identity, summary/body — содержимое,
-    эволюционирующее через edit-safe writer)."""
+    """Deterministic id: slug(title) + short hash(type|title). Same (type, title)
+    → same id (idempotent create/update-loop like pattern_id in scan.py); change title
+    starts a NEW offer (this is conscious - title = identity, summary/body — contents,
+    evolving through edit-safe writer)."""
     slug = sanitize(title)[:TITLE_SLUG_MAX] or ptype
     h = hashlib.sha1(f"{ptype}\x00{title}".encode("utf-8")).hexdigest()[:8]
     return f"{slug}-{h}"
 
 
-# ── чистые генераторы (без I/O/часов) ────────────────────────────────────────
+# ── pure generators (without I/O/hours) ────────────────────────────────────────
 def build_proposal_md(ptype, pid, title, summary, body, target):
-    """ЧИСТО: полный текст PROPOSAL.md. Детерминирован от входа — timestamp НЕ попадает
-    в тело (см. модульный docstring). Статус тоже НЕ в теле: SSOT статуса — meta.json,
-    смена статуса не должна триггерить перезапись/переиздание тела."""
+    """CLEAR: full text PROPOSAL.md. Deterministic from input - timestamp does NOT hit
+    to the body (see modular docstring). The status is also NOT in the body: SSOT status - meta.json,
+    status change should not trigger overwrite/body reissue."""
     lines = [
-        f"# Предложение (draft) — {title}",
+        f"# Offer (draft) — {title}",
         "",
-        "> **Не применяется автоматически.** analyst НИКОГДА не пишет в agent-packs/шаблоны/"
-        "проекты — черновик ждёт ревью человека/plan-design. Статус меняет "
+        "> **Not automatically applied.** analyst NEVER writes to agent-packs/templates/"
+        "projects - draft awaiting human review/plan-design. Status changes "
         "`analyst proposals status <id> accepted|rejected`.",
         "",
         f"- **type:** {ptype}",
         f"- **id:** {pid}",
         f"- **target:** {target or '—'}",
         "",
-        "## Резюме",
-        summary or "TODO — кратко, что предлагается.",
+        "## Summary",
+        summary or "TODO — briefly what is proposed.",
         "",
-        "## Обоснование / контекст",
-        body or "TODO — почему это нужно, что наблюдалось.",
+        "## Rationale / context",
+        body or "TODO — why this is needed, what was observed.",
         "",
-        "## Handoff — что и куда применить",
+        "## Handoff — what and where to apply",
     ]
     lines += build_handoff_lines(ptype)
     lines.append("")
@@ -115,12 +115,12 @@ def build_proposal_md(ptype, pid, title, summary, body, target):
 
 
 def _seed_hash(text):
-    """sha256-хэш тела — маркер «сгенерённого» состояния для детекта ручных правок."""
+    """sha256-body hash - token «generated» states for detecting manual edits."""
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def build_meta(ptype, pid, title, target, seed_sha256, status, created_at, updated_at):
-    """ЧИСТО: провенанс-паспорт proposal.meta.json (SSOT текущего статуса)."""
+    """CLEAR: provenance passport proposal.meta.json (SSOT current status)."""
     return {
         "schema_version": PROPOSAL_SCHEMA_VERSION,
         "generated_by": "analyst proposals",
@@ -135,7 +135,7 @@ def build_meta(ptype, pid, title, target, seed_sha256, status, created_at, updat
     }
 
 
-# ── пути (cross-project слой ~/.swissknifeman/analyst) ───────────────────────
+# ── paths (cross-project layer ~/.swissknifeman/analyst) ───────────────────────
 def _proposals_root(env):
     return env.state_dir / "proposals"
 
@@ -148,16 +148,16 @@ def _audit_path(env):
     return _proposals_root(env) / "audit.ndjson"
 
 
-# ── чтение ───────────────────────────────────────────────────────────────────
+# ── read ───────────────────────────────────────────────────────────────────
 def load_proposal(env, ptype, pid):
-    """meta dict одного предложения или None (нет/битый meta.json)."""
+    """meta dict one sentence or None (no/broken meta.json)."""
     meta = safe_load_json(_proposal_dir(env, ptype, pid) / "proposal.meta.json", None)
     return meta if isinstance(meta, dict) else None
 
 
 def find_proposal(env, pid, ptype=None):
-    """(meta, ptype) первого совпадения по id; ptype сужает поиск (иначе перебор
-    PROPOSAL_TYPES). (None, None), если не найдено."""
+    """(meta, ptype) first match by id; ptype narrows the search (otherwise overkill
+    PROPOSAL_TYPES). (None, None), if not found."""
     for t in (ptype,) if ptype else PROPOSAL_TYPES:
         meta = load_proposal(env, t, pid)
         if meta is not None:
@@ -166,7 +166,7 @@ def find_proposal(env, pid, ptype=None):
 
 
 def list_proposals(env, *, ptype=None, status=None):
-    """[(meta, ptype)] отсортировано по (type, id). Битый/бездиректорный вход — SKIP."""
+    """[(meta, ptype)] sorted by (type, id). Broken/directorless input - SKIP."""
     out = []
     for t in (ptype,) if ptype else PROPOSAL_TYPES:
         tdir = _proposals_root(env) / t
@@ -185,14 +185,14 @@ def list_proposals(env, *, ptype=None, status=None):
 
 
 def read_audit(env):
-    """Список записей proposals/audit.ndjson (пропускает битые строки). [] если нет файла."""
+    """List of entries proposals/audit.ndjson (skips broken lines). [] if there is no file."""
     return read_ndjson(_audit_path(env))
 
 
-# ── аудит (append-only, тот же идиом что lessons.audit_append/read_audit) ────
+# ── audit (append-only, same idiom as lessons.audit_append/read_audit) ────
 def audit_append(env, record):
-    """Дописать одну запись в proposals/audit.ndjson (append-only, никогда не перезаписываем).
-    Добавляет ts, если его нет. Создаёт каталог."""
+    """Add one entry to proposals/audit.ndjson (append-only, never overwrite).
+    Adds ts, if it is not there. Creates a directory."""
     rec = dict(record)
     rec.setdefault("ts", now_iso())
     path = _audit_path(env)
@@ -202,19 +202,19 @@ def audit_append(env, record):
     return rec
 
 
-# ── writer с edit-safety (I/O, как suggest.write_draft) ──────────────────────
+# ── writer with edit-safety (I/O, like suggest.write_draft) ──────────────────────
 def write_proposal(env, ptype, title, *, summary="", body="", target="", force=False):
-    """Записать/обновить черновик предложения в proposals/<type>/<id>/. Edit-safe:
-    - каталога/файла нет            → создать (status="created", meta.status="draft");
-    - тело совпадает с генерённым    → нечего менять (status="unchanged");
-    - тело == прошлый seed (не правили) либо --force → перегенерить (status="updated"/"forced");
-      ТЕКУЩИЙ статус (draft/accepted/rejected) и created_at СОХРАНЯЮТСЯ — content-update не
-      откатывает ревью-прогресс;
-    - тело != прошлый seed (правили руками) → тело НЕ трогаем, обновляем лишь провенанс meta
+    """Write/update draft proposal in proposals/<type>/<id>/. Edit-safe:
+    - directory/no file            → create (status="created", meta.status="draft");
+    - body matches the generated one    → nothing to change (status="unchanged");
+    - body == past seed (did not correct) or --force → regenerate (status="updated"/"forced");
+      CURRENT status (draft/accepted/rejected) and created_at SAVED - content-update not
+      rolls back review progress;
+    - body != past seed (ruled with their hands) → we DO NOT touch the body, we only update the provenance meta
       (status="skipped-edited").
-    Возвращает (status, pid, proposal_dir). Атомарно; каталоги создаются."""
+    Returns (status, pid, proposal_dir). Atomic; directories are created."""
     if ptype not in PROPOSAL_TYPES:
-        raise ValueError(f"неизвестный type предложения: {ptype}")
+        raise ValueError(f"unknown type suggestions: {ptype}")
     pid = make_proposal_id(ptype, title)
     prop_dir = _proposal_dir(env, ptype, pid)
     md_path = prop_dir / "PROPOSAL.md"
@@ -246,21 +246,21 @@ def write_proposal(env, ptype, title, *, summary="", body="", target="", force=F
         return ("forced" if force and _seed_hash(current) != prev_seed
                 else "updated"), pid, prop_dir
 
-    # правили руками → тело не перезаписываем; освежаем только провенанс-паспорт (seed = прошлый,
-    # чтобы детект правок продолжал работать против последнего СГЕНЕРЁННОГО состояния).
+    # ruled with their hands → the body is not overwritten; We update only the provenance passport (seed = past,
+    # so that the edit detection continues to work against the last GENERATED state).
     atomic_write_json(meta_path,
                       build_meta(ptype, pid, title, target, prev_seed, status,
                                  created_at, now_iso()))
     return "skipped-edited", pid, prop_dir
 
 
-# ── смена статуса (отдельная audit-строка, не перезапись истории) ────────────
+# ── status change (separate audit-string, not overwriting history) ────────────
 def set_status(env, pid, new_status, *, ptype=None, note=""):
-    """Перевести предложение в new_status: meta.json — ТЕКУЩИЙ указатель (перезаписывается),
-    audit.ndjson — ИСТОРИЯ (только дозапись). Тот же статус → no-op (без audit-дубля).
-    Возвращает (meta, old_status, new_status) либо (None, None, None), если не найдено."""
+    """Translate sentence to new_status: meta.json — CURRENT pointer (is overwritten),
+    audit.ndjson — HISTORY (add-on only). Same status → no-op (without audit-take).
+    Returns (meta, old_status, new_status) or (None, None, None), if not found."""
     if new_status not in STATUSES:
-        raise ValueError(f"неизвестный статус: {new_status}")
+        raise ValueError(f"unknown status: {new_status}")
     meta, t = find_proposal(env, pid, ptype)
     if meta is None:
         return None, None, None
@@ -275,12 +275,12 @@ def set_status(env, pid, new_status, *, ptype=None, note=""):
 
 
 def handoff_lines(meta):
-    """Человекочитаемая handoff-последовательность для CLI (заголовок предложения + шаги
-    по типу). analyst НИКОГДА сюда не пишет — печать/документирование маршрута человеку."""
-    target = meta.get("target") or "<укажи --target: пак/проект/файл-доку>"
-    header = [f"  Предложение: {meta.get('title')}  [{meta.get('status')}] · "
+    """Human readable handoff-sequence for CLI (sentence title + steps
+    by type). analyst NEVER writes here - seal/documenting the route to a person."""
+    target = meta.get("target") or "<specify --target: pack/project/doc file>"
+    header = [f"  Suggestion: {meta.get('title')}  [{meta.get('status')}] · "
              f"id={meta.get('id')} · type={meta.get('type')} · target={target}",
-             "  Промоут — ТОЛЬКО человек/plan-design (analyst НЕ пишет в agent-packs/шаблоны/проекты):"]
+             "  Promoter - human ONLY/plan-design (analyst does NOT write to agent-packs/templates/projects):"]
     return header + [f"    {s}" for s in build_handoff_lines(meta.get("type"))]
 
 
@@ -294,21 +294,21 @@ def _cmd_create(env, argv):
     if opts["help"]:
         print("analyst proposals create --type stack-pack|project-override|docs --title T\n"
               "  [--summary S] [--body-file F] [--target T] [--dry-run] [--json] [--force]\n"
-              "  Черновик предложения (edit-safe: seed_sha256, БЕЗ timestamp в теле).\n"
-              "  Пишет ТОЛЬКО в ~/.swissknifeman/analyst/proposals/<type>/<id>/.")
+              "  Draft proposal (edit-safe: seed_sha256, WITHOUT timestamp in the body).\n"
+              "  Writes ONLY to ~/.swissknifeman/analyst/proposals/<type>/<id>/.")
         return
     ptype = opts["type"]
     if ptype not in PROPOSAL_TYPES:
-        die(f"--type обязателен, один из: {', '.join(PROPOSAL_TYPES)} (получено: {ptype!r})")
+        die(f"--type is required, one of: {', '.join(PROPOSAL_TYPES)} (received: {ptype!r})")
     title = (opts["title"] or "").strip()
     if not title:
-        die("--title обязателен: analyst proposals create --type T --title 'заголовок'")
+        die("--title is required: analyst proposals create --type T --title 'header'")
 
     body = ""
     if opts["body_file"]:
         body_path = Path(os.path.expanduser(opts["body_file"]))
         if not body_path.is_file():
-            die(f"--body-file не найден: {body_path}")
+            die(f"--body-file not found: {body_path}")
         body = body_path.read_text(encoding="utf-8")
     summary = (opts["summary"] or "").strip()
     target = (opts["target"] or "").strip()
@@ -349,10 +349,10 @@ def _cmd_list(env, argv):
         return
     ptype = opts["type"] or None
     if ptype and ptype not in PROPOSAL_TYPES:
-        die(f"--type ждёт один из: {', '.join(PROPOSAL_TYPES)}")
+        die(f"--type is waiting for one of: {', '.join(PROPOSAL_TYPES)}")
     status = opts["status"] or None
     if status and status not in STATUSES:
-        die(f"--status ждёт один из: {', '.join(STATUSES)}")
+        die(f"--status is waiting for one of: {', '.join(STATUSES)}")
 
     items = list_proposals(env, ptype=ptype, status=status)
     if opts["json"]:
@@ -362,7 +362,7 @@ def _cmd_list(env, argv):
             for m, t in items]}, ensure_ascii=False, indent=2))
         return
     if not items:
-        print("\nanalyst proposals — пусто (см. analyst proposals create)\n")
+        print("\nanalyst proposals — empty (see analyst proposals create)\n")
         return
     print(f"\nanalyst proposals — {len(items)}\n")
     for m, t in items:
@@ -379,7 +379,7 @@ def _cmd_show(env, argv):
         return
     meta, t = find_proposal(env, pos[0], opts["type"] or None)
     if meta is None:
-        die(f"предложение не найдено: {pos[0]}")
+        die(f"offer not found: {pos[0]}")
     md_text = (_proposal_dir(env, t, pos[0]) / "PROPOSAL.md").read_text(encoding="utf-8")
     if opts["json"]:
         print(json.dumps({"meta": meta, "body": md_text}, ensure_ascii=False, indent=2))
@@ -392,24 +392,24 @@ def _cmd_status(env, argv):
     opts, pos = parse_args(argv, {"--type": "str", "--note": "str", "--json": "bool"}, max_pos=2)
     if opts["help"] or len(pos) < 2:
         print("analyst proposals status <id> draft|accepted|rejected [--type T] [--note N] [--json]\n"
-              "  Смена статуса — ОТДЕЛЬНАЯ audit-строка в proposals/audit.ndjson (история не\n"
-              "  перезаписывается). НЕ применяет предложение — только меняет метку.")
+              "  Change of status - SEPARATE audit-line in proposals/audit.ndjson (story not\n"
+              "  is overwritten). DOES NOT apply the clause - just changes the label.")
         return
     pid, new_status = pos[0], pos[1]
     if new_status not in STATUSES:
-        die(f"статус должен быть одним из: {', '.join(STATUSES)} (получено: {new_status!r})")
+        die(f"status must be one of: {', '.join(STATUSES)} (received: {new_status!r})")
     meta, old, new = set_status(env, pid, new_status, ptype=opts["type"] or None,
                                 note=opts["note"] or "")
     if meta is None:
-        die(f"предложение не найдено: {pid}")
+        die(f"offer not found: {pid}")
 
     if opts["json"]:
         print(json.dumps({"id": pid, "from": old, "to": new}, ensure_ascii=False, indent=2))
         return
     if old == new:
-        print(f"\nanalyst proposals status — {pid} уже в статусе {new} (без изменений)\n")
+        print(f"\nanalyst proposals status — {pid} is already in status {new} (no changes)\n")
         return
-    print(f"\nanalyst proposals status — {pid}: {old} → {new} (audit-запись добавлена)\n")
+    print(f"\nanalyst proposals status — {pid}: {old} → {new} (audit-entry added)\n")
     if new == "accepted":
         for line in handoff_lines(meta):
             print(line)
@@ -421,12 +421,12 @@ def _cmd_handoff(env, argv):
     opts, pos = parse_args(argv, {"--type": "str", "--json": "bool"}, max_pos=1)
     if opts["help"] or not pos:
         print("analyst proposals handoff <id> [--type T] [--json]\n"
-              "  Печать handoff-последовательности «что и куда применить» (человеку/plan-design).\n"
-              "  analyst НИКОГДА не пишет в agent-packs/шаблоны/проекты — только печатает маршрут.")
+              "  Print handoff-sequences «what and where to apply» (person/plan-design).\n"
+              "  analyst NEVER writes to agent-packs/templates/projects - only prints the route.")
         return
     meta, t = find_proposal(env, pos[0], opts["type"] or None)
     if meta is None:
-        die(f"предложение не найдено: {pos[0]}")
+        die(f"offer not found: {pos[0]}")
     lines = handoff_lines(meta)
     if opts["json"]:
         print(json.dumps({"id": pos[0], "type": t, "status": meta.get("status"),
@@ -449,9 +449,9 @@ _SUBCOMMANDS = {
 
 def cmd_proposals(env, argv):
     """analyst proposals <create|list|show|status|handoff> [...]
-    — черновики системных предложений (stack-pack/project-override/docs) в
-    ~/.swissknifeman/analyst/proposals/. analyst НИКОГДА не пишет в agent-packs/шаблоны/
-    проекты — только копит черновик и печатает handoff-последовательность человеку."""
+    — draft system proposals (stack-pack/project-override/docs) in
+    ~/.swissknifeman/analyst/proposals/. analyst NEVER writes to agent-packs/templates/
+    projects - only saves a draft and prints handoff-sequence to a person."""
     if not argv or argv[0] in ("-h", "--help"):
         print("analyst proposals <create|list|show|status|handoff> [...]\n"
               "  create --type stack-pack|project-override|docs --title T [--summary S]\n"
@@ -460,11 +460,11 @@ def cmd_proposals(env, argv):
               "  show   <id> [--type T] [--json]\n"
               "  status <id> draft|accepted|rejected [--type T] [--note N] [--json]\n"
               "  handoff <id> [--type T] [--json]\n"
-              "  Черновики НЕ применяются автоматически — промоут accepted делает человек/\n"
-              "  plan-design руками (см. handoff). Каталог: ~/.swissknifeman/analyst/proposals/.")
+              "  Drafts are NOT automatically applied - promote accepted does a person/\n"
+              "  plan-design hands (see handoff). Catalog: ~/.swissknifeman/analyst/proposals/.")
         return
     sub, rest = argv[0], argv[1:]
     handler = _SUBCOMMANDS.get(sub)
     if handler is None:
-        die(f"неизвестная подкоманда proposals: {sub} (см. analyst proposals --help)")
+        die(f"unknown subcommand proposals: {sub} (see analyst proposals --help)")
     handler(env, rest)

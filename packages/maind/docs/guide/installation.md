@@ -1,63 +1,63 @@
-# Установка
+# Installation
 
-## Полный bootstrap (рекомендуется)
+## Full bootstrap (recommended)
 
-Одной командой: CLI + демон памяти + автозапуск под systemd.
+With one command: CLI + memory daemon + autorun under systemd.
 
 ```bash
 git clone <repo> maind && cd maind
 ./install.sh --with-memory --with-service
 ```
 
-- `--with-memory` — `npm install` в корне (демон `@agentmemory/agentmemory`).
-- `--with-service` — регистрирует демон как systemd --user сервис (`maind service install`):
-  автозапуск при логине + авто-рестарт. См. [Демон памяти (systemd)](./systemd).
+- `--with-memory` — `npm install` at the root (demon `@agentmemory/agentmemory`).
+- `--with-service` — registers the daemon as systemd --user service (`maind service install`):
+  autostart upon login + auto-restart. See [Memory Daemon (systemd)](./systemd).
 
-Чтобы демон поднимался **при загрузке ОС** (а не только после логина) — включите linger (разово):
+For the demon to rise **when loading OS** (and not just after login) — enable linger (one-time):
 
 ```bash
-loginctl enable-linger $USER       # проверка: loginctl show-user $USER -p Linger → yes
+loginctl enable-linger $USER       # check: loginctl show-user $USER -p Linger → yes
 ```
 
-После — подключайте проекты: `maind onboard <path>` (см. навык `ecosystem-integration`).
+After - connect projects: `maind onboard <path>` (see skill `ecosystem-integration`).
 
-## Только CLI
+## Only CLI
 
 ```bash
 ./install.sh
 ```
 
-Создаёт симлинк `~/.local/bin/maind → bin/maind` и каталог состояния `~/.maind`
-(`projects.json`, `agents.json`). Опции: `--bin-dir DIR`, `--force`. Проверка: `maind doctor`.
+Creates a symlink `~/.local/bin/maind → bin/maind` and status directory `~/.maind`
+(`projects.json`, `agents.json`). Options: `--bin-dir DIR`, `--force`. Check: `maind doctor`.
 
-## Память вручную (без systemd)
+## Manual memory (without systemd)
 
-Демон памяти — Node-пакет `@agentmemory/agentmemory`:
+Memory Daemon - Node-package `@agentmemory/agentmemory`:
 
 ```bash
-npm install                  # ставит демон в node_modules
-cp .env.example .env         # порты узла (по умолчанию 4111/4112)
+npm install                  # puts the daemon in node_modules
+cp .env.example .env         # host ports (default 4111/4112)
 maind start --only memory
 maind memory status
 ```
 
-::: tip Конфликт портов
-Если на 4111/4112 уже крутится другой узел (например Brain), задайте в `.env` свои
-`AGENTMEMORY_PORT` / `AGENTMEMORY_STREAM_PORT` — maind возьмёт их вместо дефолтов.
+::: tip Port conflict
+If on 4111/4112 another node is already spinning (for example Brain), set in `.env` theirs
+`AGENTMEMORY_PORT` / `AGENTMEMORY_STREAM_PORT` — maind will take them instead of defaults.
 :::
 
-## Документация
+## Documentation
 
 ```bash
-npm run docs:dev        # локальный сервер VitePress
-npm run docs:build      # сборка статического сайта
+npm run docs:dev        # local server VitePress
+npm run docs:build      # building a static site
 ```
 
-## Требования
+## Requirements
 
-- **Python 3.8+** и **bash** — для ядра CLI (обязательно).
-- **Node.js** — только для демона памяти и сборки документации.
-- **uvx** (из [uv](https://docs.astral.sh/uv/)) — для графа кода в проекте (движок Serena, см.
-  [граф кода](./code-graph)); включается на проект полем `code:true`.
+- **Python 3.8+** and **bash** — for kernel CLI (required).
+- **Node.js** — for memory daemon and documentation build only.
+- **uvx** (from [uv](https://docs.astral.sh/uv/)) — for the code graph in the project (engine Serena, see
+  [code graph](./code-graph)); is included in the project by the field `code:true`.
 
-Дальше: [Конфиг config.json →](./config) (живёт в корне монорепо, не в пакете maind)
+Next: [Config config.json →](./config) (lives in the root of the monorepo, not in the package maind)

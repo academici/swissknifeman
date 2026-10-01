@@ -1,12 +1,12 @@
 {
   "skill": "anti-drift",
   "should_trigger": [
-    "я застрял, третья итерация подряд не помогает — что делать",
-    "с чего начать большую задачу, чтобы не утонуть",
-    "стоит ли заодно отрефакторить весь модуль, пока правлю баг"
+    "I'm stuck, the third iteration in a row doesn't help - what to do",
+    "where to start a big task so as not to drown",
+    "is it worth refactoring the entire module at the same time while I fix the bug?"
   ],
   "should_not": [
-    "какая версия Laravel сейчас актуальна",
-    "сгенерируй SQL-миграцию для таблицы users"
+    "what version Laravel is currently relevant",
+    "generate SQL-migration for table users"
   ]
 }

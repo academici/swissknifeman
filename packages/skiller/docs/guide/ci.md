@@ -1,36 +1,36 @@
 # CI/CD
 
-Пять GitHub Actions автоматизируют валидацию, синхронизацию и пополнение
-реестра.
+Five GitHub Actions automate validation, synchronization and replenishment
+registry.
 
-| Workflow | Триггер | Назначение |
+| Workflow | Trigger | Purpose |
 |---|---|---|
-| `validate.yml` | push / PR | `scripts/validate.sh`: frontmatter, upstream.json, профили, манифесты |
-| `upstream-sync.yml` | еженедельно | проверка апстримов → PR с диффом |
-| `sha256-update.yml` | push | пересчёт хешей реестра |
-| `scanner-pr.yml` | еженедельно | PR с кандидатами от сканера |
+| `validate.yml` | push / PR | `scripts/validate.sh`: frontmatter, upstream.json, profiles, manifests |
+| `upstream-sync.yml` | weekly | checking upstreams → PR with diff |
+| `sha256-update.yml` | push | recalculation of registry hashes |
+| `scanner-pr.yml` | weekly | PR with scanner candidates |
 
-## Принцип: всё через PR
+## Principle: everything through PR
 
-Ни один автоматический процесс не пишет в `main` напрямую содержательные
-изменения:
+No automatic process writes to `main` directly meaningful
+changes:
 
-- обновления внешних скиллов (`upstream-sync.yml`) — PR с диффом, мерж после ревью;
-- кандидаты сканера (`scanner-pr.yml`) — PR, отбор вручную;
-- валидация (`validate.yml`) — обязательный гейт для любого PR.
+- external skill updates (`upstream-sync.yml`) — PR with diff, merge after review;
+- scanner candidates (`scanner-pr.yml`) — PR, manual selection;
+- validation (`validate.yml`) — mandatory gate for any PR.
 
-## Локально = в CI
+## Local = in CI
 
-`./scripts/validate.sh` — один и тот же скрипт локально и в CI. Если он зелёный
-локально, `validate.yml` тоже пройдёт. Запускайте перед каждым PR.
+`./scripts/validate.sh` — the same script locally and in CI. If it's green
+locally, `validate.yml` will also pass. Run before each PR.
 
-## Exit-коды для автоматизации
+## Exit-codes for automation
 
-`update-upstreams.sh --check` возвращает `10`, если есть устаревшие апстримы, —
-на этом построен еженедельный workflow:
+`update-upstreams.sh --check` returns `10`, if there are outdated upstreams, -
+this is what the weekly workflow:
 
 ```bash
 ./scripts/update-upstreams.sh --check
-# exit 0  — всё актуально
-# exit 10 — есть изменения → CI открывает PR
+# exit 0  — everything is relevant
+# exit 10 — there are changes → CI opens PR
 ```

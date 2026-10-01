@@ -49,7 +49,7 @@
         {"order": 12, "id": "status", "carrier_id": "status-view", "required": true, "resolver": "resolve status.md for the selected plan"},
         {"order": 13, "id": "item-state", "carrier_id": "item-state", "required": true, "resolver": "resolve phases/<Pn>/<Pn.m>.state.md for the audit target"},
         {"order": 14, "id": "journal", "carrier_id": "journal", "required": true, "resolver": "resolve journal.jsonl and select subject-matching records without rewriting order"},
-        {"order": 15, "id": "history", "carrier_id": "history-view", "required": true, "resolver": "materialize the history-projection-v1 view for the exact audit target on demand"}
+        {"order": 15, "id": "history", "carrier_id": "history-view", "required": true, "resolver": "materialize the history view for the exact audit target on demand"}
       ]
     },
     "owner": {

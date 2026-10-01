@@ -1,15 +1,15 @@
-"""P7.3 (thin-navigator): scripts/update-upstreams.sh с body_path — end-to-end,
-без сети.
+"""P7.3 (thin-navigator): scripts/update-upstreams.sh with body_path — end-to-end,
+without network.
 
-scripts/update-upstreams.sh — bash-обёртка вокруг python-heredoc'а (не модуль
-lib/skiller/), поэтому единственный честный способ его протестировать — реально
-запустить (как уже делает test_registry_state.py::test_broken_upstream_json_dies_
-with_path для другого скрипта). REPO_ROOT скрипт резолвит от собственного
-расположения (dirname(BASH_SOURCE)/..), поэтому копируем сам скрипт рядом с
-синтетическим skills/ во tmp — реальный packages/skiller не трогается и не читается
-на запись. Сеть не нужна: source="file" + url=Path.as_uri() (file://) — ровно для
-этого в schema/upstream.schema.json "source" содержит file ("только локальные
-фикстуры/тесты"), и urllib.request поддерживает file:// из коробки."""
+scripts/update-upstreams.sh — bash-wrap around python-heredoc'a (not a module
+lib/skiller/), so the only fair way to test it is to actually
+run (as already doing test_registry_state.py::test_broken_upstream_json_dies_
+with_path for another script). REPO_ROOT script resolves from its own
+locations (dirname(BASH_SOURCE)/..), so we copy the script itself next to
+synthetic skills/ in tmp — real packages/skiller cannot be touched or read
+to write. No network needed: source="file" + url=Path.as_uri() (file://) — exactly for
+this in schema/upstream.schema.json "source" contains file ("local only
+fixtures/tests"), and urllib.request supports file:// out of the box."""
 import hashlib
 import json
 import shutil
@@ -27,9 +27,9 @@ def _sha256(text):
 
 
 class UpdateUpstreamsBodyPathCase(unittest.TestCase):
-    """Синтетический external-скилл: SKILL.md — тонкий навигатор (не отслеживается
-    как upstream-зеркало), тело апстрима — references/full.md, отслеживаемое ПО
-    body_path (files[]-запись с тем же path)."""
+    """Synthetic external-skill: SKILL.md — thin navigator (not tracked
+    like upstream-mirror), upstream body - references/full.md, monitored software
+    body_path (files[]-entry with the same path)."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -61,9 +61,9 @@ class UpdateUpstreamsBodyPathCase(unittest.TestCase):
                  "sha256": "unused", "fetched_at": "2026-07-01", **file_overrides}
         data = {"schema_version": 1, "source": "file", "strategy": "notify",
                 "body_path": "references/full.md", "files": [entry],
-                # P5.11: бандл с прочитанным вердиктом — иначе --check добавил бы к
-                # предмету этих кейсов (body_path) ещё и находку AUDIT_MISSING.
-                # Якорь при заданном body_path — sha ИМЕННО названного тела.
+                # P5.11: bundle with the verdict read - otherwise --check would add to
+                # subject of these cases (body_path) also a find AUDIT_MISSING.
+                # Anchor at a given body_path — sha EXACTLY named body.
                 "audit": {"verdict": "clean", "at": "2026-08-01",
                           "by": "test P0.0", "upstream_sha": entry["sha256"]}}
         (self.skill_dir / "upstream.json").write_text(
@@ -75,9 +75,9 @@ class UpdateUpstreamsBodyPathCase(unittest.TestCase):
             capture_output=True, text=True, timeout=30)
 
     def test_check_in_sync_tracks_body_path_not_skill_md(self):
-        # sha уже совпадает с апстримом → --check зелёный; сверка идёт по
-        # references/full.md — files[] не содержит записи SKILL.md вовсе (навигатор
-        # не отслеживается как upstream-зеркало).
+        # sha already matches upstream → --check green; reconciliation is in progress
+        # references/full.md — files[] does not contain an entry SKILL.md at all (navigator
+        # is not tracked as upstream-mirror).
         result = self._run("--check", "--json")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         data = json.loads(result.stdout)
@@ -87,8 +87,8 @@ class UpdateUpstreamsBodyPathCase(unittest.TestCase):
         self.assertEqual(data["updates"], [])
 
     def test_check_reports_drift_via_body_path_file(self):
-        # Апстрим ушёл вперёд (новый sha) → --check видит дрейф ИМЕННО у
-        # references/full.md (файл из body_path), не у SKILL.md.
+        # Upstream has gone ahead (new sha) → --check sees drift EXACTLY at
+        # references/full.md (file from body_path), not at SKILL.md.
         self.body_file.write_text(self.body_text + "New section.\n", encoding="utf-8")
         result = self._run("--check", "--json")
         self.assertEqual(result.returncode, 10, result.stdout + result.stderr)
@@ -97,8 +97,8 @@ class UpdateUpstreamsBodyPathCase(unittest.TestCase):
         self.assertEqual(data["notify"][0]["file"], "references/full.md")
 
     def test_check_rejects_body_path_not_tracked_in_files(self):
-        # Структурный гейт (P7.3): body_path, не отслеживаемый НИ ОДНОЙ files[]-
-        # записью, — malformed upstream.json, а не тихая дыра в отслеживании.
+        # Structure gate (P7.3): body_path, not tracked by ANY files[]-
+        # entry, - malformed upstream.json, and not a silent tracking hole.
         cfg = self.skill_dir / "upstream.json"
         data = json.loads(cfg.read_text(encoding="utf-8"))
         data["body_path"] = "references/missing.md"

@@ -1,9 +1,9 @@
-"""maind как MCP-сервер: stdio JSON-RPC 2.0, newline-delimited JSON (транспорт MCP).
+"""maind like MCP-server: stdio JSON-RPC 2.0, newline-delimited JSON (transport MCP).
 
-Экспонирует tools поверх memory/graph/agents/projects. Запуск: `maind mcp [--scope project:<id>]`.
-Подключение клиента (.mcp.json): {"command": "<repo>/bin/maind", "args": ["mcp"]}.
-Чистый stdlib — без MCP SDK. Протокол — в stdout (одна строка JSON + '\\n', без Content-Length),
-логи/ошибки — в stderr. Сервер крэш-устойчив: ошибка инструмента → isError, цикл не падает."""
+Exhibits tools on top memory/graph/agents/projects. Launch: `maind mcp [--scope project:<id>]`.
+Client connection (.mcp.json): {"command": "<repo>/bin/maind", "args": ["mcp"]}.
+Clean stdlib — without MCP SDK. Protocol - in stdout (one line JSON + '\\n', without Content-Length),
+logs/errors - in stderr. Server crash resistant: tool error → isError, the loop does not crash."""
 import json
 import os
 import sys
@@ -17,76 +17,76 @@ from .config import load_config
 PROTOCOL_VERSION = "2024-11-05"
 SERVER_INFO = {"name": "maind", "version": "0.2.0"}
 
-# Цель тримминга — НИЖЕ warning-порога Claude Code (10 000 токенов), а не под дефолтный
-# потолок клиента (25 000, после которого клиент сам выгружает ответ на диск и подставляет
-# file-reference — это аварийный выход клиента, не канал доставки сервера, см.
-#). Оценщик токенов — grep-эвристика (stdlib, без
-# токенайзера): символы/3.2 — консервативнее «символы/4» для кириллицы+JSON-пунктуации
+# Trimming target - BELOW warning-threshold Claude Code (10 000 tokens), and not under the default
+# client ceiling (25 000, after which the client itself uploads the response to disk and substitutes
+# file-reference — is a client emergency exit, not a server delivery channel, see
+#). Token Evaluator - grep-heuristic (stdlib, without
+# tokenizer): characters/3.2 — more conservative «characters/4» for Cyrillic+JSON-punctuation
 #.
 TRIM_TARGET_TOKENS = 10_000
 CHARS_PER_TOKEN_ESTIMATE = 3.2
 
 
 def _graph_reader(env, config):
-    """Единый read-фасад графа (федерация — единственная раскладка; disabled → die)."""
+    """Single read-graph facade (federation is the only layout; disabled → die)."""
     from .federation import graph_reader
     return graph_reader(env, config)
 
 TOOLS = [
     {"name": "maind_memory_store",
-     "description": "Сохранить факт в долгосрочную память (scope=namespace; по умолчанию — scope узла).",
+     "description": "Save fact to long-term memory (scope=namespace; default - scope node).",
      "inputSchema": {"type": "object", "properties": {
-         "scope": {"type": "string", "description": "напр. project:brain или global"},
-         "key": {"type": "string", "description": "категория факта (type)"},
+         "scope": {"type": "string", "description": "e.g. project:brain or global"},
+         "key": {"type": "string", "description": "fact category (type)"},
          "value": {"type": "string"}}, "required": ["value"]}},
     {"name": "maind_memory_recall",
-     "description": "Поиск по долгосрочной памяти в scope (по умолчанию — scope узла).",
+     "description": "Long-term memory search in scope (default - scope node).",
      "inputSchema": {"type": "object", "properties": {
          "scope": {"type": "string"}, "query": {"type": "string"}}, "required": ["query"]}},
     {"name": "maind_memory_forget",
-     "description": "Удалить факт из памяти по ключу/id (best-effort).",
+     "description": "Delete fact from memory by key/id (best-effort).",
      "inputSchema": {"type": "object", "properties": {
          "scope": {"type": "string"}, "key": {"type": "string"}}, "required": ["key"]}},
     {"name": "maind_graph_query",
-     "description": "Соседи узла графа в радиусе depth (напр. from=project:brain).",
+     "description": "Neighbors of a graph node in radius depth (e.g. from=project:brain).",
      "inputSchema": {"type": "object", "properties": {
          "from": {"type": "string"}, "depth": {"type": "integer"},
-         "edge_types": {"type": "string", "description": "через запятую"}},
+         "edge_types": {"type": "string", "description": "separated by commas"}},
          "required": ["from"]}},
     {"name": "maind_graph_neighbors",
-     "description": "Соседи узла с направлением обхода (out|in|both).",
+     "description": "Node neighbors with traversal direction (out|in|both).",
      "inputSchema": {"type": "object", "properties": {
          "node": {"type": "string"}, "depth": {"type": "integer"},
          "direction": {"type": "string"}}, "required": ["node"]}},
     {"name": "maind_graph_path",
-     "description": "Кратчайший путь между двумя узлами графа (или null, если недостижим).",
+     "description": "Shortest path between two graph nodes (or null, if unreachable).",
      "inputSchema": {"type": "object", "properties": {
          "from": {"type": "string"}, "to": {"type": "string"}},
          "required": ["from", "to"]}},
     {"name": "maind_graph_project",
-     "description": "Граф одного проекта (его узлы + исходящие межпроектные рёбра).",
+     "description": "Graph of one project (its nodes + outgoing cross-project edges).",
      "inputSchema": {"type": "object", "properties": {
-         "project": {"type": "string", "description": "id проекта, напр. flexcrm"}},
+         "project": {"type": "string", "description": "id project, e.g. flexcrm"}},
          "required": ["project"]}},
     {"name": "maind_memory_links",
-     "description": "С чем связан проект: межпроектные связи из графа + его ecosystem-link "
-                    "память из всех релевантных бакетов (project:<id> + ns:<группы> + "
-                    "global). Память следует namespace'ам: внутри группы общая, между — "
-                    "изолирована. Необязательный namespace сужает обход графа.",
+     "description": "What the project is connected to: inter-project connections from the graph + him ecosystem-link "
+                    "memory from all relevant buckets (project:<id> + ns:<groups> + "
+                    "global). Memory should namespace'am: common within the group, between - "
+                    "isolated. Optional namespace narrows down the graph traversal.",
      "inputSchema": {"type": "object", "properties": {
          "project": {"type": "string"}, "depth": {"type": "integer"},
-         "namespace": {"type": "string", "description": "ограничить обход одним namespace"}},
+         "namespace": {"type": "string", "description": "limit bypass to one namespace"}},
          "required": ["project"]}},
     {"name": "maind_agents_list",
-     "description": "Список зарегистрированных агентов узла с их состоянием.",
+     "description": "List of registered node agents with their status.",
      "inputSchema": {"type": "object", "properties": {}}},
     {"name": "maind_projects_list",
-     "description": "Список проектов экосистемы (из config.json или brain).",
+     "description": "List of ecosystem projects (from config.json or brain).",
      "inputSchema": {"type": "object", "properties": {}}},
     {"name": "maind_projects_status",
-     "description": "Состояние экосистемы: хаб (память/граф/демоны) + проекты (подключение, скиллы).",
+     "description": "Ecosystem State: Hub (memory/graph/demons) + projects (connection, skills).",
      "inputSchema": {"type": "object", "properties": {
-         "project": {"type": "string", "description": "необязательно — один проект"}}}},
+         "project": {"type": "string", "description": "optional - one project"}}}},
 ]
 _TOOLS_BY_NAME = {t["name"]: t for t in TOOLS}
 
@@ -108,10 +108,10 @@ def _estimate_tokens(text):
 
 
 def _list_candidates(payload):
-    """Топ-уровневые списки — кандидаты на урезание: сам payload (если это список) или его
-    непосредственные значения-списки (если payload — словарь). Только верхний уровень: одной
-    воронки `_content` достаточно для всех форм ответов 11 инструментов (списочные — бакет
-    целиком, ограниченные — списков нет вовсе, тримминг для них не срабатывает)."""
+    """Top-level lists - candidates for cuts: himself payload (if this is a list) or his
+    immediate list values (if payload — dictionary). Top level only: one
+    funnels `_content` sufficient for all response forms 11 tools (list - bucket
+    entire, limited - there are no lists at all, trimming does not work for them)."""
     if isinstance(payload, list):
         yield (), payload
     elif isinstance(payload, dict):
@@ -121,16 +121,16 @@ def _list_candidates(payload):
 
 
 def _with_truncation_receipt(payload, path, trimmed, total_count):
-    """Данные, а не только флаг: `truncated`/`returned_count`/`total_count` + человекочитаемая
-    подсказка дозапроса — голый `truncated: true` не снимает ни один из трёх отказов молчаливого
-    усечения. `isError` НЕ переиспользуется — он занят
-    классом «ошибка инструмента» (`_run_tool`/`_tools_call`)."""
+    """Data, not just a flag: `truncated`/`returned_count`/`total_count` + human readable
+    interrogation hint - naked `truncated: true` does not clear any of the three silent failures
+    truncation. `isError` NOT reused - it's busy
+    class «tool error» (`_run_tool`/`_tools_call`)."""
     receipt = {
         "truncated": True,
         "returned_count": len(trimmed),
         "total_count": total_count,
-        "hint": ("ответ урезан лимитом контекста; сузьте запрос (query/depth/project) "
-                 "или запросите остаток отдельным вызовом"),
+        "hint": ("response truncated by context limit; narrow your request (query/depth/project) "
+                 "or request the remainder with a separate call"),
     }
     if path == ():
         return {"items": trimmed, **receipt}
@@ -142,11 +142,11 @@ def _with_truncation_receipt(payload, path, trimmed, total_count):
 
 
 def _truncate_largest_list(payload, limit_tokens):
-    """Урезает крупнейший топ-уровневый список до размера, укладывающегося в лимит, бинарным
-    спуском по числу элементов (JSON пересобирается на каждой пробе — списков ≤ пары сотен
-    элементов на практике, цена приемлема). None-кандидатов (ни payload, ни его значения не
-    список) — возвращает исходный payload как есть: свободных байт для тримминга нет, это
-    хвостовой случай эскалации (Implementation Rules), не молчаливая потеря данных."""
+    """Trims the largest top-level list to a size that fits the limit, binary
+    descending by number of elements (JSON is rebuilt on each sample - lists ≤ a couple hundred
+    elements in practice, the price is acceptable). None-candidates (neither payload, nor its meaning
+    list) — returns the original payload as is: there are no free bytes for trimming, this
+    tail case escalation (Implementation Rules), is not silent data loss."""
     candidates = list(_list_candidates(payload))
     if not candidates:
         return payload
@@ -170,12 +170,12 @@ def _truncate_largest_list(payload, limit_tokens):
 
 def _content(payload, is_error=False):
     text = json.dumps(payload, ensure_ascii=False, indent=2)
-    # (1) первый рычаг — снять indent=2 (чистая экономия без потери данных); ошибки не трогаем
-    # (короткие, тримминг им не нужен, а форма важна для читаемости в логах).
+    # (1) first lever - remove indent=2 (pure savings without data loss); errors do not touch
+    # (are short, they do not need trimming, and the shape is important for readability in logs).
     if not is_error and _estimate_tokens(text) > TRIM_TARGET_TOKENS:
         text = json.dumps(payload, ensure_ascii=False)
-        # (3) потолок с receipt — хвостовой случай, срабатывает только если снятие indent
-        # не хватило (сузить на входе — уровень выбора стратегии инструментом, не воронки).
+        # (3) ceiling with receipt — tail case, only triggered if removal indent
+        # was not enough (narrow at the input - the level of strategy selection by the tool, not the funnel).
         if _estimate_tokens(text) > TRIM_TARGET_TOKENS:
             trimmed_payload = _truncate_largest_list(payload, TRIM_TARGET_TOKENS)
             text = json.dumps(trimmed_payload, ensure_ascii=False)
@@ -194,20 +194,20 @@ def _missing_required(tool, args):
 
 
 def _recall_union(config, url, scope, query, *, include_related_scopes=False, headers=None):
-    """Recall с изоляцией. Project scope остаётся приватным по умолчанию.
+    """Recall with insulation. Project scope remains private by default.
 
-    Shared scope читается только при явном ``scope=ns:<name>``. Параметр
-    include_related_scopes сохранён для внутренних диагностических вызовов. Явно
-    запрошенный scope не расширяется: публичный MCP-ответ
-    обязан содержать только записи этого scope. Сырой/непроектный scope → ровно он.
-    Дедуп по тексту.
+    Shared scope is only read when explicitly ``scope=ns:<name>``. Parameter
+    include_related_scopes is reserved for internal diagnostic calls. Obviously
+    requested scope not expanding: public MCP-response
+    must contain only records of this scope. Raw/non-design scope → exactly him.
+    Deedup by text.
 
-    Приоритет private vs shared:
-    при project:<id>-expansion приватный scope (recall_scopes()[0]) опрашивается без капа
-    (RECALL_LIMIT), а shared-scope'ы (ns:*/global) — с RECALL_SHARED_LIMIT ниже RECALL_LIMIT,
-    иначе крупный ns:<группа> (десятки записей) вытесняет малый приватный scope проекта
-    (измерено: 84-96% ответа из shared на 6 проектах). Явный scope (не project:) без
-    expansion — капа нет, как и раньше."""
+    Priority private vs shared:
+    when project:<id>-expansion private scope (recall_scopes()[0]) polled without cap
+    (RECALL_LIMIT), a shared-scope's (ns:*/global) — with RECALL_SHARED_LIMIT below RECALL_LIMIT,
+    otherwise large ns:<group> (dozens of entries) displaces small private scope project
+    (measured: 84-96% response from shared on 6 projects). Explicit scope (not project:) without
+    expansion — there is no mouth guard, as before."""
     from .namespaces import find, recall_scopes
     scopes = [scope]
     expanded = False
@@ -228,17 +228,17 @@ def _recall_union(config, url, scope, query, *, include_related_scopes=False, he
 
 
 def _cross_scope_allowed():
-    """Админ/хаб-режим: явный env-флаг снимает изоляцию (кросс-проектный доступ)."""
+    """Admin/hub mode: explicit env-flag removes isolation (cross-project access)."""
     return bool(os.environ.get("MAIND_MCP_ALLOW_CROSS_SCOPE"))
 
 
 def _allowed_scopes(config, default_scope):
-    """Scope'ы, разрешённые этому MCP-серверу. Сервер, запинненный к проекту
-    (`maind mcp --scope project:<id>` — так его раскатывает deploy), ограничен бакетами
-    СВОЕГО проекта: приватный + ns:<его группы> + global (recall_scopes). Не-project
-    default (global/хаб) или env MAIND_MCP_ALLOW_CROSS_SCOPE → None = без ограничений
-    (хаб/админ, back-compat). Это серверный энфорс изоляции namespace: клиент не может
-    подменить scope и прочитать/записать/удалить чужую приватную память."""
+    """Scope's allowed for this MCP-server. Server pinned to the project
+    (`maind mcp --scope project:<id>` — rolls it out like that deploy), limited to buckets
+    OWN project: private + ns:<his group> + global (recall_scopes). Non-project
+    default (global/hub) or env MAIND_MCP_ALLOW_CROSS_SCOPE → None = without restrictions
+    (hub/admin, back-compat). This is a server isolation enforcer namespace: client cannot
+    replace scope and read/write/delete someone else's private memory."""
     if _cross_scope_allowed():
         return None
     if not (isinstance(default_scope, str) and default_scope.startswith("project:")):
@@ -249,24 +249,24 @@ def _allowed_scopes(config, default_scope):
 
 
 def _scope_error(scope, allowed):
-    """isError-ответ, если scope вне разрешённых (allowed=None → без ограничений)."""
+    """isError-response if scope out of bounds (allowed=None → without restrictions)."""
     if allowed is not None and scope not in allowed:
-        return _content({"error": f"scope '{scope}' вне разрешённых для этого проекта "
-                                  f"(изоляция namespace); разрешено: {allowed}"}, is_error=True)
+        return _content({"error": f"scope '{scope}' is out of scope for this project "
+                                  f"(insulation namespace); allowed: {allowed}"}, is_error=True)
     return None
 
 
 def _node_pid(node):
-    """pid из узла графа вида 'project:<id>', иначе None."""
+    """pid from the view graph node 'project:<id>', otherwise None."""
     if isinstance(node, str) and node.startswith("project:"):
         return node.split(":", 1)[1]
     return None
 
 
 def _project_blocked(config, default_scope, target_pid):
-    """Запрещён ли запинненному к проекту серверу доступ к данным проекта target_pid:
-    True, если проекты не делят namespace. Незарегистрированный target → не режем
-    (внешний узел, namespace неизвестен). Хаб-режим (allowed=None) → не режем."""
+    """Is the server pinned to the project denied access to project data? target_pid:
+    True, if projects do not share namespace. Unregistered target → do not cut
+    (external node, namespace unknown). Hub mode (allowed=None) → do not cut."""
     if target_pid is None or _cross_scope_allowed():
         return False
     if not (isinstance(default_scope, str) and default_scope.startswith("project:")):
@@ -282,8 +282,8 @@ def _project_blocked(config, default_scope, target_pid):
 
 
 def _graph_error():
-    return _content({"error": "доступ к графу другого проекта запрещён "
-                              "(изоляция namespace)"}, is_error=True)
+    return _content({"error": "access to the graph of another project is denied "
+                              "(insulation namespace)"}, is_error=True)
 
 
 def _run_tool(env, config, name, args, default_scope):
@@ -305,21 +305,21 @@ def _run_tool(env, config, name, args, default_scope):
             return _content(_recall_union(config, url, scope, args["query"],
                                           include_related_scopes=False,
                                           headers=headers))
-        # forget: scope-арг разрешён, но memoryId глобален — подтверждаем владение по маркеру,
-        # иначе клиент удалил бы чужой факт по известному id, не выходя за свой scope.
+        # forget: scope-arg is allowed, but memoryId global - confirm ownership by token,
+        # otherwise the client would delete someone else's fact according to the known id, without going beyond your scope.
         if allowed is not None:
             owner = memory_mod.memory_owner_scope(url, args["key"], allowed, headers)
             if owner is None or owner not in allowed:
-                return _content({"error": "forget отклонён: факт не принадлежит разрешённым "
-                                          "scope этого проекта (изоляция namespace)"},
+                return _content({"error": "forget rejected: fact not allowed "
+                                          "scope of this project (insulation namespace)"},
                                 is_error=True)
         return _content(memory_mod.forget(url, scope, args["key"], headers=headers))
     if name == "maind_graph_query":
         if _project_blocked(config, default_scope, _node_pid(args["from"])):
             return _graph_error()
-        # namespace объявлен в схеме, но РАНЬШЕ молча игнорировался → обход федерировал ВСЕ
-        # проекты (узлы чужих namespace утекали на depth>1, хотя стартовый узел гейтился).
-        # Теперь сужаем union до запрошенного namespace (стартовый узел по-прежнему под _project_blocked).
+        # namespace is declared in the schema, but USED to be silently ignored → bypass federated ALL
+        # projects (alien nodes namespace leaked to depth>1, although the starting node was gated).
+        # Now let's narrow it down union to the requested namespace (starting node is still under _project_blocked).
         res = _graph_reader(env, config).query(args["from"], int(args.get("depth", 1)),
                                                _edge_types(args.get("edge_types")),
                                                namespace=args.get("namespace"))
@@ -371,26 +371,26 @@ def _run_tool(env, config, name, args, default_scope):
             projs = [p for p in projs if p.get("id") == args["project"]]
         reports = [probe_project(env, config, p, memory_reachable=reach) for p in projs]
         return _content({"hub": hub, "projects": reports})
-    return _content({"error": f"инструмент не реализован: {name}"}, is_error=True)
+    return _content({"error": f"tool not implemented: {name}"}, is_error=True)
 
 
 def _tools_call(env, config, name, args, default_scope):
     args = args or {}
     missing = _missing_required(_TOOLS_BY_NAME[name], args)
     if missing:
-        return _content({"error": f"не хватает аргументов: {', '.join(missing)}"}, is_error=True)
+        return _content({"error": f"required argument is missing: {', '.join(missing)}"}, is_error=True)
     try:
         return _run_tool(env, config, name, args, default_scope)
-    except SystemExit as e:               # die() внутри инструмента (напр. граф отключён)
-        return _content({"error": f"инструмент недоступен: {e}"}, is_error=True)
-    except Exception as e:                 # любая ошибка инструмента — не роняем сервер
-        # Логируем КЛЮЧИ аргументов (не значения — в них может быть содержимое памяти/секреты)
-        _log(f"ошибка инструмента {name} args={sorted(args)}: {e!r}")
-        return _content({"error": f"ошибка инструмента: {e}"}, is_error=True)
+    except SystemExit as e:               # die() inside the tool (e.g. graph is disabled)
+        return _content({"error": f"tool not available: {e}"}, is_error=True)
+    except Exception as e:                 # any tool error - do not crash the server
+        # Logging the KEYS of the arguments (are not values - they can contain memory contents/secrets)
+        _log(f"tool error {name} args={sorted(args)}: {e!r}")
+        return _content({"error": f"tool error: {e}"}, is_error=True)
 
 
 def dispatch(env, config, req, default_scope="global"):
-    """JSON-RPC роутинг. Возвращает ответ или None (для нотификаций)."""
+    """JSON-RPC routing. Returns the response or None (for notifications)."""
     method = req.get("method")
     req_id = req.get("id")
     if method == "initialize":
@@ -406,21 +406,21 @@ def dispatch(env, config, req, default_scope="global"):
         params = req.get("params") or {}
         name = params.get("name")
         if name not in _TOOLS_BY_NAME:
-            return _error(req_id, -32601, f"неизвестный инструмент: {name}")
+            return _error(req_id, -32601, f"unknown tool: {name}")
         return _result(req_id, _tools_call(env, config, name, params.get("arguments"),
                                            default_scope))
     if method == "ping":
         return _result(req_id, {})
     if req_id is None:
-        return None  # неизвестная нотификация — игнорируем
-    return _error(req_id, -32601, f"неизвестный метод: {method}")
+        return None  # unknown notification - ignore
+    return _error(req_id, -32601, f"unknown method: {method}")
 
 
-# ── framing: newline-delimited JSON (stdio-транспорт MCP) ───────────────────
-# MCP stdio: каждое JSON-RPC сообщение — одна строка, оканчивается '\n', без
-# embedded-переводов строки и БЕЗ Content-Length заголовков (это не LSP).
+# ── framing: newline-delimited JSON (stdio-transport MCP) ───────────────────
+# MCP stdio: each JSON-RPC message - one line, ends '\n', without
+# embedded-line breaks and WITHOUT Content-Length headers (this is not LSP).
 def read_message(stream):
-    """Читает одно NDJSON-сообщение. EOF → None. Пустые строки пропускаются."""
+    """Reads one NDJSON-message. EOF → None. Empty lines are skipped."""
     while True:
         line = stream.readline()
         if not line:
@@ -439,12 +439,12 @@ def serve(env, config, stdin=None, stdout=None, default_scope="global"):
     stdin = stdin if stdin is not None else sys.stdin.buffer
     stdout = stdout if stdout is not None else sys.stdout.buffer
     debug = bool(os.environ.get("MAIND_MCP_DEBUG"))
-    _log(f"старт: {len(TOOLS)} tools, scope по умолчанию {default_scope}")
+    _log(f"start: {len(TOOLS)} tools, scope default {default_scope}")
     while True:
         try:
             req = read_message(stdin)
         except (json.JSONDecodeError, ValueError) as e:
-            _log(f"битое сообщение пропущено: {e}")
+            _log(f"broken message skipped: {e}")
             continue
         if req is None:
             break
@@ -452,19 +452,19 @@ def serve(env, config, stdin=None, stdout=None, default_scope="global"):
             _log(f"→ {req.get('method')} (id={req.get('id')})")
         try:
             resp = dispatch(env, config, req, default_scope)
-        except (SystemExit, Exception) as e:   # последний рубеж — не роняем цикл
-            _log(f"исключение в dispatch: {e!r}")
-            resp = _error(req.get("id"), -32603, f"внутренняя ошибка: {e}") \
+        except (SystemExit, Exception) as e:   # the last milestone - don't drop the loop
+            _log(f"exception in dispatch: {e!r}")
+            resp = _error(req.get("id"), -32603, f"internal error: {e}") \
                 if req.get("id") is not None else None
         if resp is not None:
             write_message(stdout, resp)
-    _log("стоп (EOF)")
+    _log("stop (EOF)")
 
 
 def _default_scope_from_cwd(env, config):
-    """Дефолт-scope, когда нет явного --scope/MAIND_SCOPE: project:<id> по cwd, иначе global.
-    Безопаснее прежнего глухого 'global': argless-сервер пишет в бакет СВОЕГО проекта, а не в
-    общий global (футган — раньше промах cwd ⇒ память утекала в shared-слой)."""
+    """Defaultscope, when there is no explicit --scope/MAIND_SCOPE: project:<id> by cwd, otherwise global.
+    Safer than the former deaf 'global': argless-the server writes to the bucket of HIS project, and not to
+    general global (futgun - early miss cwd ⇒ memory leaked into shared-layer)."""
     from .namespaces import private_scope
     from .constants import GLOBAL_SCOPE
     proj = projects_mod.match_cwd(env, config)

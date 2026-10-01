@@ -3,17 +3,17 @@
   "cases": [
     {
       "id": 1,
-      "prompt": "Ревью плана: автор пишет «библиотека X уже умеет Y из коробки, наш код не нужен — выкидывай». Дай вердикт.",
+      "prompt": "Plan review: author writes «library X already knows how Y out of the box, our code is not needed - throw it away». Give me the verdict.",
       "assertions": [
-        {"type": "regex", "value": "context7|perplexity|websearch|провер|verif|RAG|источник|source"},
-        {"type": "not_contains", "value": "да, библиотека уже это умеет, код не нужен"}
+        {"type": "regex", "value": "context7|perplexity|websearch|checked|verif|RAG|source|source"},
+        {"type": "not_contains", "value": "yes, the library can already do this, no code is needed"}
       ]
     },
     {
       "id": 2,
-      "prompt": "Надо выбрать пакет для фоновых очередей в Node. Что взять и какой версии?",
+      "prompt": "You must select a package for background queues in Node. What to take and which version?",
       "assertions": [
-        {"type": "regex", "value": "провер|verif|актуальн|maintained|context7|perplexity|верси|version|дата|date"}
+        {"type": "regex", "value": "checked|verif|relevant|maintained|context7|perplexity|versions|version|date|date"}
       ]
     }
   ]

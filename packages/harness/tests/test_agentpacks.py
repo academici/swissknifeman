@@ -213,7 +213,7 @@ class TestAgentPacks(unittest.TestCase):
     def test_header_user_owned_policy(self):
         self._render(overrides={"PACK_PREFIX": "x"})
         text = (self.proj / ".claude/agents/x-overrides.md").read_text()
-        self.assertIn("Edit-policy: user-owned — файл ваш", text)
+        self.assertIn("Edit-policy: user-owned — file is yours", text)
 
         self.assertTrue(text.startswith("<!-- swissknifeman:generated"))
 

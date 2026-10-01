@@ -1,6 +1,6 @@
-# Острая грань: CSRF-обходы и open redirect
+# Sharp Edge: CSRF-walks and open redirect
 
-## Паттерны поиска
+## Search patterns
 
 ```bash
 grep -rnE '\$except' app/Http/Middleware/VerifyCsrfToken.php bootstrap/app.php
@@ -12,35 +12,35 @@ grep -rnE "->input\(['\"](redirect|return|next|url|back)" app/
 ## CSRF
 
 ```php
-// ПОДОЗРИТЕЛЬНО: исключения из CSRF-защиты
+// SUSPICIOUS: exceptions to CSRF-protection
 protected $except = ['payment/*', 'api-internal/*'];
 // Laravel 11+: bootstrap/app.php
 $middleware->validateCsrfTokens(except: ['webhooks/*']);
 ```
 
-Верификация каждого исключения:
-- Вебхук с проверкой подписи (Stripe-Signature и т.п.) — ok.
-- «Исключили, потому что не работало» — **high**: state-changing endpoint
-  без CSRF и без подписи.
-- Маска шире необходимого (`payment/*` вместо `payment/webhook`) — **medium**.
+Verification of each exception:
+- Webhook with signature verification (Stripe-Signature etc.) — ok.
+- «Excluded because it didn't work» — **high**: state-changing endpoint
+  without CSRF and without a signature.
+- The mask is wider than necessary (`payment/*` instead `payment/webhook`) — **medium**.
 
 ## Open redirect
 
 ```php
-// УЯЗВИМО: цель редиректа из ввода — фишинг через доверенный домен
+// VULNERABLE: the purpose of the redirect from input is phishing through a trusted domain
 return redirect($request->input('redirect'));
 return redirect()->to($request->query('return_url'));
 
-// БЕЗОПАСНО
-return redirect()->intended('/dashboard');          // встроенный механизм
+// SAFE
+return redirect()->intended('/dashboard');          // built-in mechanism
 return redirect()->route($allowedRoutes[$key]);      // allow-list
 ```
 
-Верификация: достижим ли параметр снаружи и валидируется ли против
-allow-list/относительного пути. `url()->previous()` с фоллбеком — ok.
+Verification: whether the parameter is reachable from the outside and validated against
+allow-list/relative path. `url()->previous()` with fallback - ok.
 
 ## Severity
 
-- CSRF-исключение на state-changing endpoint без подписи — **high**.
-- Open redirect на странице логина/OAuth-флоу — **high** (фишинг),
-  в остальных местах — **medium**.
+- CSRF-exception on state-changing endpoint without signature - **high**.
+- Open redirect on the login page/OAuth-flow — **high** (phishing),
+  in other places - **medium**.

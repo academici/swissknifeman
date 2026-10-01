@@ -1,14 +1,14 @@
-"""plugins — видимость marketplace-плагинов Claude Code в первом ходе.
+"""plugins — visibility marketplace-plugins Claude Code in the first turn.
 
-`skiller budget --first-turn` видит только проектную поверхность; плагин
-резидентен в КАЖДОЙ сессии (~449/~450 ток always-on,
- §3), но
-измерителем не учитывается. Этот модуль склеивает два вывода чужого CLI —
-`claude plugin list --json` (перечисление, CWD-зависимо, недокументированный
-флаг) и `claude plugin details <id>` (Always-on-цена, текстовый вывод, своего
-`--json` нет) — в одну сводку. Fail-loud: любой сбой даёт `tokens=None`, а не
-молчаливый 0 (0 читается как «плагинов нет» и делает измеритель лживым ровно
-там, где он должен предупреждать)."""
+`skiller budget --first-turn` sees only the design surface; plugin
+is resident in EVERY session (~449/~450 current always-on,
+ §3), but
+is not taken into account by the meter. This module glues two terminals of someone else's CLI —
+`claude plugin list --json` (enumeration, CWD-dependent, undocumented
+flag) and `claude plugin details <id>` (Always-on-price, text output, your
+`--json` no) — into one summary. Fail-loud: any failure gives `tokens=None`, and not
+silent 0 (0 reads as «no plugins» and makes the meter false exactly
+where it should warn)."""
 import json
 import re
 import subprocess
@@ -23,41 +23,41 @@ _details_cache = {}
 
 
 def _run_claude(argv, *, cwd=None, timeout=PLUGIN_CALL_TIMEOUT):
-    """Вызов `claude <argv>`. (ok, stdout|None, detail|None) — detail заполнен
-    только на неудаче и называет причину (fail-loud, не молчаливый провал)."""
+    """Call `claude <argv>`. (ok, stdout|None, detail|None) — detail is full
+    only on failure and gives the reason (fail-loud, not a silent failure)."""
     claude = claude_bin()
     if claude is None:
-        return False, None, f"claude не найден (см. {CLAUDE_BIN_ENV}/PATH)"
+        return False, None, f"claude not found (see {CLAUDE_BIN_ENV}/PATH)"
     try:
         r = subprocess.run([claude, *argv], cwd=cwd, capture_output=True,
                            text=True, timeout=timeout, check=False)
     except subprocess.TimeoutExpired:
-        return False, None, f"claude {' '.join(argv)} — таймаут {timeout}с"
+        return False, None, f"claude {' '.join(argv)} — timeout {timeout}with"
     except OSError as error:
         return False, None, f"claude {' '.join(argv)} — {type(error).__name__}"
     if r.returncode != 0:
-        return False, None, f"claude {' '.join(argv)} — код {r.returncode}"
+        return False, None, f"claude {' '.join(argv)} — code {r.returncode}"
     return True, r.stdout, None
 
 
 def list_enabled_plugins(target):
-    """Enabled-плагины проекта `target`, дедуплицированные по `id` (один `id`
-    приходит дважды при разных `scope` — `claude plugin list --json` резолвит
-    эффективный набор ПРОЕКТА через `cwd=target`, разбор `enabledPlugins` из
-    `settings.json` не делается — отвергнутая D142 конструкция). Возвращает
-    (entries, status, detail): status — 'ok'|'n/a'; на 'n/a' detail называет
-    причину. Записи несут поле `errors` листинга как есть — классификация
-    `broken` против `unparsed` требует ИСХОДА `details` и решается позже, в
-    `plugins_summary`, не здесь."""
+    """Enabled-project plugins `target`, deduplicated by `id` (one `id`
+    comes twice with different `scope` — `claude plugin list --json` resolve
+    efficient set of PROJECT via `cwd=target`, parsing `enabledPlugins` from
+    `settings.json` not done - rejected D142 construction). Returns
+    (entries, status, detail): status — 'ok'|'n/a'; on 'n/a' detail calls
+    reason. Records carry a field `errors` listing as is - classification
+    `broken` vs `unparsed` requires EXODUS `details` and is resolved later, in
+    `plugins_summary`, not here."""
     ok, stdout, detail = _run_claude(["plugin", "list", "--json"], cwd=str(target))
     if not ok:
         return [], "n/a", [detail]
     try:
         data = json.loads(stdout)
     except (json.JSONDecodeError, TypeError):
-        return [], "n/a", ["claude plugin list --json — невалидный JSON"]
+        return [], "n/a", ["claude plugin list --json — invalid JSON"]
     if not isinstance(data, list):
-        return [], "n/a", ["claude plugin list --json — ожидался список записей"]
+        return [], "n/a", ["claude plugin list --json — expected list of entries"]
     dedup = {}
     for entry in data:
         if not isinstance(entry, dict) or not entry.get("enabled") or not entry.get("id"):
@@ -67,18 +67,18 @@ def list_enabled_plugins(target):
 
 
 def plugin_always_on_tokens(plugin_id, cwd):
-    """Always-on цена ОДНОГО плагина — единственная строка `Always-on: ~N tok`
-    вывода `claude plugin details <id>`. `details` резолвит local-scope
-    плагин ТОЛЬКО под `cwd` его проекта (RAG:✅ 2026-07-31 живой `claude
-    2.1.220`: `architect@swissknifeman` — код 1 без `cwd`, код 0 под
-    `cwd=memster`) — `cwd` ОБЯЗАТЕЛЬНЫЙ параметр, догадываться о нём внутри
-    модуля запрещено. ЗНАЧЕНИЕ цены при этом не меняется между CWD (проверено
-    на четырёх плагинах из двух CWD) → успех кэшируется по `id` глобально,
-    экономя фан-аут по флоту; неудача (резолвинг ИЛИ разбор) НЕ кэшируется —
-    тот же `id` под другим `cwd` в следующем вызове резолвится заново, иначе
-    первый же чужой проект отравил бы кэш на весь прогон. Возвращает
-    (tokens|None, detail|None); суффикс (`~1.1k`) в замере не наблюдался — при
-    несовпадении регэкспа строка уходит в unparsed, множитель не угадывается."""
+    """Always-on price for ONE plugin - single line `Always-on: ~N tok`
+    output `claude plugin details <id>`. `details` resolve local-scope
+    plugin ONLY for `cwd` of his project (RAG:✅ 2026-07-31 alive `claude
+    2.1.220`: `architect@swissknifeman` — code 1 without `cwd`, code 0 under
+    `cwd=memster`) — `cwd` REQUIRED parameter, guess about it internally
+    module is disabled. The VALUE of the price does not change between CWD (checked
+    on four out of two plugins CWD) → success cached by `id` globally,
+    saving fan-out for the fleet; failure (resolution OR parsing) NOT cached -
+    same `id` under another `cwd` will resolve again in the next call, otherwise
+    the very first alien project would poison the cache for the entire run. Returns
+    (tokens|None, detail|None); suffix (`~1.1k`) was not observed in the measurement - when
+    regexp mismatch, the line goes to unparsed, multiplier is not guessed."""
     if plugin_id in _details_cache:
         return _details_cache[plugin_id]
     ok, stdout, detail = _run_claude(["plugin", "details", plugin_id], cwd=str(cwd))
@@ -86,7 +86,7 @@ def plugin_always_on_tokens(plugin_id, cwd):
         return None, detail
     m = _ALWAYS_ON_RE.search(stdout)
     if not m:
-        return None, f"{plugin_id}: строка Always-on не распознана"
+        return None, f"{plugin_id}: string Always-on not recognized"
     tokens = int(m.group(1).replace(",", ""))
     result = (tokens, None)
     _details_cache[plugin_id] = result
@@ -94,17 +94,17 @@ def plugin_always_on_tokens(plugin_id, cwd):
 
 
 def plugins_summary(target):
-    """Сводка always-on плагинов проекта `target`:
+    """Summary always-on project plugins `target`:
     `{status, entries[], total, partial, unparsed[], broken[], warnings[]}`.
-    `entries` — `{id, scope, tokens}` (tokens=None на невзятой цене). `total`
-    считает ТОЛЬКО распознанные записи; `partial=True`, если хоть одна не
-    распозналась (`unparsed`/`broken` непусты) ИЛИ листинг целиком дал n/a.
-    Неполнота — ДВЕ разные природы, не смешиваются в одном списке: `broken[]`
-    (`{id, reason}`) — сам листинг объявил плагин сломанным (`errors`) И
-    `details` цену не дал; `unparsed[]` — details не распознан БЕЗ объявленной
-    поломки (дрейф формата апстрима). Запись с `errors`, ВСЁ-ТАКИ отдавшая
-    цену, обычная: учитывается в `total`, `errors` — в `warnings[]`.
-    Молчаливого 0 нет ни в одной ветке."""
+    `entries` — `{id, scope, tokens}` (tokens=None at the price not taken). `total`
+    counts ONLY recognized records; `partial=True`, if at least one is not
+    recognized (`unparsed`/`broken` are not empty) OR the entire listing was given n/a.
+    Incompleteness - TWO different natures, do not mix in one list: `broken[]`
+    (`{id, reason}`) — the listing itself declared the plugin broken (`errors`) AND
+    `details` did not give a price; `unparsed[]` — details not recognized WITHOUT declared
+    breakdowns (upstream format drift). Recording with `errors`, STILL gave away
+    price, regular: included in `total`, `errors` — in `warnings[]`.
+    Silent 0 is not in any thread."""
     plugins, status, list_warnings = list_enabled_plugins(target)
     if status != "ok":
         return {"status": "n/a", "entries": [], "total": None, "partial": True,

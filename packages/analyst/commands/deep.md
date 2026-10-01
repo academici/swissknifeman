@@ -1,44 +1,44 @@
 ---
-description: Глубокий разбор прогонов агентом-аналитиком (digest-first) — скрипты собирают JSON-выжимки, агент строит каузальный нарратив; raw-транскрипты запрещены.
-argument-hint: "[фокус разбора: «почему дорого», «resolve CONFLICT», «деградация роли X», …]"
+description: Deep analysis of runs by an analyst agent (digest-first) — scripts are collected JSON-extracts, the agent constructs a causal narrative; raw-transcripts are not allowed.
+argument-hint: "[parsing focus: «why is it expensive», «resolve CONFLICT», «role degradation X», …]"
 allowed-tools: Bash(mkdir:*), Bash(maind:*), Bash(analyst:*), Read, Write, Task
 ---
-## Сбор выжимок (digest-first — агент получит ТОЛЬКО эти JSON)
+## Collecting marc (digest-first — agent will receive ONLY these JSON)
 !`mkdir -p .claude/analyst/deep`
 !`maind analyze --cwd --json > .claude/analyst/deep/analyze.json 2>&1 || true`
 !`analyst token-report --json > .claude/analyst/deep/token-report.json 2>&1 || true`
 !`analyst review --json > .claude/analyst/deep/review.json 2>&1 || true`
 
-Три команды выше уже отработали и записали выжимки в `.claude/analyst/deep/`
-(`analyze.json`, `token-report.json`, `review.json`). Дальше:
+The three commands above have already worked and recorded the extracts in `.claude/analyst/deep/`
+(`analyze.json`, `token-report.json`, `review.json`). Next:
 
-1. **Запусти субагента `analyst`** (Task, subagent_type `analyst`). В промпт передай:
-   - **пути** к трём JSON-файлам (`.claude/analyst/deep/analyze.json`,
+1. **Start subagent `analyst`** (Task, subagent_type `analyst`). In the prompt, pass:
+   - **paths** to three JSON-files (`.claude/analyst/deep/analyze.json`,
      `.claude/analyst/deep/token-report.json`, `.claude/analyst/deep/review.json`) —
-     именно пути, НЕ содержимое;
-   - фокус разбора от пользователя: «$ARGUMENTS» (пусто — полный плейбук:
-     стоимость/патологии, hidden scope expansion, качество handoff, деградация
-     cheap-моделей, resolve CONFLICT-уроков, тексты remediation).
-   **Запрещено** (и тебе, и субагенту): читать raw-транскрипты сессий
-   (`~/.claude/**/*.jsonl` и любые session-логи) и передавать их содержимое —
-   вход агента только выжимки; если какой-то из файлов содержит текст ошибки
-   вместо JSON (например, нет usage-trend) — так и передай, агент учтёт пробел данных.
+     exactly the paths, NOT the contents;
+   - parsing focus from user: «$ARGUMENTS» (empty - full playbook:
+     cost/pathologies, hidden scope expansion, quality handoff, degradation
+     cheap-models, resolve CONFLICT-lessons, texts remediation).
+   **Prohibited** (for both you and the subagent): read raw-session transcripts
+   (`~/.claude/**/*.jsonl` and any session-logs) and transfer their contents -
+   agent input only extracts; if any of the files contains error text
+   instead JSON (for example, no usage-trend) — say so, the agent will take into account the data gap.
 
-2. **Прими результат агента**: каузальный нарратив + блок findings JSON
-   (схема — контракт `analyst ingest`, см. описание агента).
+2. **Accept the agent's result**: causal narrative + block findings JSON
+   (schema - contract `analyst ingest`, see agent description).
 
-3. **Сохрани findings** в `.claude/analyst/deep/findings.json` (ровно тот JSON,
-   что вернул агент, без правок) и выполни:
+3. **Save findings** in `.claude/analyst/deep/findings.json` (exactly the same JSON,
+   what the agent returned, without edits) and do:
    `analyst ingest --file .claude/analyst/deep/findings.json`
-   Пустые findings (`"findings": []`) — ingest не запускай, так и скажи владельцу.
+   Empty findings (`"findings": []`) — ingest don't run it, tell the owner so.
 
-4. **Покажи владельцу**: нарратив агента, итог ingest (сколько уроков в ephemeral,
-   сколько пропущено как дубли), находки с маркером PROMOTE-CANDIDATE — отдельным
-   списком с напоминанием, что промоут делает только человек:
+4. **Show to owner**: agent narrative, summary ingest (how many lessons in ephemeral,
+   how many were missed as duplicates), finds with marker PROMOTE-CANDIDATE — separate
+   list with a reminder that the promotion is done only by a person:
    `analyst review` → `analyst promote <id>`.
 
-Инварианты: никакого авто-промоута (все уроки агента — только ephemeral, гейт — человек);
-сырьё остаётся LOCAL (наружу — числа и абстракции). Команда on-demand — после серии
-ATTENTION или еженедельно, не per-session.
+Invariants: no auto-promotion (all agent lessons - only ephemeral, gate - human);
+raw materials remain LOCAL (out - numbers and abstractions). Command on-demand — after episode
+ATTENTION or weekly, not per-session.
 
-> Требуются CLI `analyst` и `maind` в PATH (репозиторий swissknifeman → `./install.sh`).
+> Required CLI `analyst` and `maind` in PATH (repository swissknifeman → `./install.sh`).

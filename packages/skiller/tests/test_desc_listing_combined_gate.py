@@ -1,12 +1,12 @@
-"""P3.5: validate.sh description+when_to_use гейты (длина и
-триггер) читают СОВОКУПНУЮ запись листинга, не голый `description` — та же формула, что
+"""P3.5: validate.sh description+when_to_use gates (length and
+trigger) read CUMULATIVE listing entry, not naked `description` — same formula as
 `budget.py::_listing_entry_tokens`/`_listing_entry_chars`
-(`(description + " " + when_to_use).strip()`, upstream кап 1 536 симв). Дополняет
-test_desc_burndown_gate.py (длина, description-only фикстуры) и test_desc_trigger_gate.py
-(триггер, description-only фикстуры) сценариями, где `when_to_use` несёт часть записи.
+(`(description + " " + when_to_use).strip()`, upstream cap 1,536 characters). Complements
+test_desc_burndown_gate.py (length, description-only fixtures) and test_desc_trigger_gate.py
+(trigger, description-only fixtures) scenarios where `when_to_use` carries part of the record.
 
-Зеркалит те же две обёртки (реальный запуск validate.sh против синтетического skills/,
-проверяем КОНКРЕТНЫЕ строки stdout, не общий exit-код)."""
+Mirrors the same two wrappers (real launch validate.sh vs. synthetic skills/,
+check SPECIFIC lines stdout, not generic exit-code)."""
 import subprocess
 import tempfile
 import unittest
@@ -54,27 +54,27 @@ class DescListingCombinedGateCase(unittest.TestCase):
             capture_output=True, text=True, timeout=60)
 
     def test_trigger_in_when_to_use_satisfies_gate(self):
-        # description сама по себе триггера не несёт — он ТОЛЬКО в when_to_use.
+        # description itself does not carry a trigger - it is ONLY in when_to_use.
         self._write_skill("moved-trigger", "A short description with no phrase at all",
                           when_to_use="Use when validating that when_to_use counts too")
-        self._write_trigger_burndown(["# empty — новый долг не легализован"])
+        self._write_trigger_burndown(["# empty — new debt is not legalized"])
         result = self._run()
         self.assertNotIn(
-            "skills/testbucket/moved-trigger/SKILL.md: description+when_to_use без "
-            "триггерной", result.stdout)
+            "skills/testbucket/moved-trigger/SKILL.md: description+when_to_use without "
+            "trigger", result.stdout)
 
     def test_length_is_sum_of_both_fields_over_warn_not_in_burndown_errors(self):
-        # description сама по себе <= 300 (легальна одна), но сумма с when_to_use > 300.
-        desc = "Use when summing: " + "d" * 180  # 199 симв
-        when = "e" * 150  # сумма = 199 + 1 (пробел) + 150 = 349 > DESC_WARN_MAX(300)
+        # description by itself <= 300 (one is legal), but the amount with when_to_use > 300.
+        desc = "Use when summing: " + "d" * 180  # 199 char
+        when = "e" * 150  # amount = 199 + 1 (space) + 150 = 349 > DESC_WARN_MAX(300)
         self._write_skill("summed-over", desc, when_to_use=when)
         self._write_trigger_burndown(["# empty"])
-        self._write_desc_burndown(["# empty — новый долг не легализован"])
+        self._write_desc_burndown(["# empty — new debt is not legalized"])
         result = self._run()
         self.assertIn("ERROR: skills/testbucket/summed-over/SKILL.md", result.stdout)
-        self.assertIn("запись листинга (description+when_to_use)", result.stdout)
-        self.assertIn("349 симв", result.stdout)
-        self.assertIn("новый долг запрещён", result.stdout)
+        self.assertIn("listing entry (description+when_to_use)", result.stdout)
+        self.assertIn("349 char", result.stdout)
+        self.assertIn("new debt prohibited", result.stdout)
 
     def test_length_is_sum_of_both_fields_over_warn_in_burndown_warns_only(self):
         desc = "Use when summing: " + "d" * 180
@@ -84,20 +84,20 @@ class DescListingCombinedGateCase(unittest.TestCase):
         self._write_desc_burndown(["testbucket/summed-legal"])
         result = self._run()
         self.assertIn("WARN: skills/testbucket/summed-legal/SKILL.md", result.stdout)
-        self.assertIn("унаследованный долг", result.stdout)
+        self.assertIn("inherited debt", result.stdout)
         self.assertNotIn("ERROR: skills/testbucket/summed-legal/SKILL.md", result.stdout)
 
     def test_stale_trigger_burndown_entry_via_when_to_use_warns(self):
-        # description без триггера, но when_to_use его несёт — запись в trigger-burndown
-        # протухла (совокупная запись УЖЕ несёт триггер).
+        # description without trigger, but when_to_use carries it - entry in trigger-burndown
+        # rotten (aggregate record ALREADY carries a trigger).
         self._write_skill("already-fixed-via-wtu", "A plain description with no phrase",
                           when_to_use="Use when checking stale burndown entries")
         self._write_trigger_burndown(["testbucket/already-fixed-via-wtu"])
         result = self._run()
         self.assertIn(
             "scripts/desc-trigger-burndown.txt: 'testbucket/already-fixed-via-wtu' — "
-            "протухшая запись", result.stdout)
-        self.assertIn("уже несёт триггерную фразу", result.stdout)
+            "rotten recording", result.stdout)
+        self.assertIn("already carries a trigger phrase", result.stdout)
 
 
 if __name__ == "__main__":

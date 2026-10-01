@@ -12,7 +12,7 @@ violations=0
 while IFS= read -r pkg; do
   [ -n "$pkg" ] || continue
   if ! printf '%s\n' "$pkgs_tests" | grep -qx "$pkg"; then
-    echo "packages/$pkg/lib/: изменена без packages/$pkg/tests/ (возможно легально — рефактор без смены поведения)"
+    echo "packages/$pkg/lib/: changed without packages/$pkg/tests/ (possibly legal - refactor without changing behavior)"
     violations=1
   fi
 done <<< "$pkgs_lib"

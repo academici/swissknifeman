@@ -1,14 +1,14 @@
-"""release — сборка предложения релиза монорепо.
+"""release — build monorepo release proposal.
 
-Читает `[Unreleased]` корневого `CHANGELOG.md`, классифицирует semver-bump из
-conventional commits со времени последнего umbrella-тега (`vX.Y.Z`) и —
-БЕЗ `--dry-run` — переносит секцию в `[X.Y.Z] - <дата>` + печатает готовую
-команду тега. НИКОГДА не тегает/не пушит сам и НЕ выводит MAJOR: признак
-breaking-изменения — отказ, версия остаётся ручным решением владельца.
+Reading `[Unreleased]` root `CHANGELOG.md`, classifies semver-bump from
+conventional commits since last umbrella-tag (`vX.Y.Z`) and -
+WITHOUT `--dry-run` — moves the section to `[X.Y.Z] - <date>` + prints the finished
+tag command. NEVER tags/does not push itself and does NOT output MAJOR: sign
+breaking-changes - refusal, the version remains a manual decision of the owner.
 
-Semver-oracle (minor=capability/feat, patch=fix/perf) — из
+Semver-oracle (minor=capability/feat, patch=fix/perf) — from
 an earlier audit, NOT reinvented here.
-stdlib-only, `Env` передаётся явно (тестируемо в tmpdir)."""
+stdlib-only, `Env` is passed explicitly (tested in tmpdir)."""
 import re
 import sys
 from datetime import date
@@ -17,8 +17,8 @@ from core import atomic_write_text, backup_file, find_monorepo_root, run_cmd
 
 from .common import parse_flags
 
-# Типы conventional-commit, дающие semver-сигнал; `!` после типа/скоупа либо
-# `BREAKING CHANGE` в теле коммита — маркер breaking (см. classify_bump).
+# Types conventional-commit, givers semver-signal; `!` after type/scope or
+# `BREAKING CHANGE` in the commit body - marker breaking (see classify_bump).
 CONVENTIONAL_RE = re.compile(
     r"^(?P<type>feat|fix|perf|refactor|docs|chore|test|style|ci|build)"
     r"(?:\([^)]*\))?(?P<bang>!)?:\s*")
@@ -31,8 +31,8 @@ NEXT_HEADING_RE = re.compile(r"^##\s*\[")
 
 
 def _last_tag(root):
-    """Последний umbrella-тег `vX.Y.Z` (`git describe --tags --abbrev=0`).
-    None — тегов нет (первый релиз) либо `root` не git-репозиторий."""
+    """Last umbrella-tag `vX.Y.Z` (`git describe --tags --abbrev=0`).
+    None — no tags (first release) or `root` not git-repository."""
     result = run_cmd(["git", "describe", "--tags", "--match", "v[0-9]*", "--abbrev=0"],
                       cwd=root, capture=True, check=False)
     if result.returncode != 0:
@@ -42,9 +42,9 @@ def _last_tag(root):
 
 
 def _commits_since(root, tag):
-    """[(subject, body), ...] коммитов в диапазоне `tag..HEAD` (весь лог, если
-    tag=None). Разделители `\\x1e`/`\\x1f` — практически не встречаются в тексте
-    коммита, безопаснее построчного разбора `git log --oneline`."""
+    """[(subject, body), ...] commits in range `tag..HEAD` (entire log, if
+    tag=None). Separators `\\x1e`/`\\x1f` — are practically not found in the text
+    commit, safer than line-by-line parsing `git log --oneline`."""
     range_arg = f"{tag}..HEAD" if tag else "HEAD"
     result = run_cmd(["git", "log", range_arg, "--pretty=format:%s%x1f%b%x1e"],
                       cwd=root, capture=True, check=False)
@@ -61,12 +61,12 @@ def _commits_since(root, tag):
 
 
 def classify_bump(commits):
-    """(bump, reason) из `[(subject, body), ...]`.
+    """(bump, reason) from `[(subject, body), ...]`.
 
-    bump: 'breaking' (отказ — D34, MAJOR НЕ выводим, reason=подозрительный subject) ·
-    'minor' (есть feat:) · 'patch' (только fix:/perf:) · None (нечего релизить,
-    в диапазоне нет conventional-коммитов с сигналом). breaking проверяется ПЕРВЫМ
-    и коротким замыканием — не гадаем версию при малейшем подозрении на breaking."""
+    bump: 'breaking' (failure - D34, MAJOR DO NOT output, reason=suspicious subject) ·
+    'minor' (yes feat:) · 'patch' (only fix:/perf:) · None (nothing to release,
+    in range none conventional-commits with signal). breaking is checked FIRST
+    and short circuit - we don’t guess the version at the slightest suspicion breaking."""
     minor = patch = False
     for subject, body in commits:
         m = CONVENTIONAL_RE.match(subject)
@@ -87,9 +87,9 @@ def classify_bump(commits):
 
 
 def bump_version(tag, bump):
-    """Новый `vX.Y.Z` из предыдущего тега + bump ('minor'|'patch'). Без тега —
-    первый релиз (`v0.1.0`/`v0.0.1`). tag не матчит `vX.Y.Z` → None (вызывающий
-    отказывается вместо угадывания)."""
+    """New `vX.Y.Z` from the previous tag + bump ('minor'|'patch'). Without tag -
+    first release (`v0.1.0`/`v0.0.1`). tag does not match `vX.Y.Z` → None (caller
+    refuses instead of guessing)."""
     if tag is None:
         return "v0.1.0" if bump == "minor" else "v0.0.1"
     m = TAG_RE.match(tag)
@@ -102,9 +102,9 @@ def bump_version(tag, bump):
 
 
 def read_unreleased_section(text):
-    """(lines, start, end, body) секции `## [Unreleased]` текста CHANGELOG.
-    `body` — строки между заголовком и следующим `## [...]` (или концом файла),
-    БЕЗ самого заголовка. None — секции в файле нет."""
+    """(lines, start, end, body) sections `## [Unreleased]` text CHANGELOG.
+    `body` — lines between title and next `## [...]` (or end of file),
+    WITHOUT the title itself. None — section is not in the file."""
     lines = text.splitlines()
     start = None
     for i, ln in enumerate(lines):
@@ -122,15 +122,15 @@ def read_unreleased_section(text):
 
 
 def unreleased_is_empty(body_lines):
-    """Пусто = ни одной непустой строки, не считая `###`-подзаголовков групп
-    Keep a Changelog (`### Added` без записей — тоже «пусто»)."""
+    """Empty = not a single non-empty line, not counting `###`-group subheadings
+    Keep a Changelog (`### Added` without entries - also «empty»)."""
     return not any(ln.strip() and not ln.strip().startswith("###") for ln in body_lines)
 
 
 def _release_changelog(text, new_version):
-    """Текст CHANGELOG после переноса `[Unreleased]` → `[new_version] - <дата>`:
-    старая секция освобождается (пустая `## [Unreleased]`), её содержимое едет под
-    новый заголовок версии. Не трогает остальные секции файла."""
+    """Text CHANGELOG after transfer `[Unreleased]` → `[new_version] - <date>`:
+    old section is freed (empty `## [Unreleased]`), its contents go under
+    new version header. Does not affect other sections of the file."""
     lines, start, end, body = read_unreleased_section(text)
     new_heading = f"## [{new_version.removeprefix('v')}] - {date.today().isoformat()}"
     new_lines = (lines[:start] + ["## [Unreleased]", "", new_heading]
@@ -142,18 +142,18 @@ def cmd_release(env, argv):
     opts = parse_flags(argv, {"--dry-run": "bool"})
     if opts["help"]:
         print("skiller release [--dry-run]\n"
-              "  Собирает предложение релиза монорепо: semver-bump из conventional "
-              "commits со времени последнего тега (feat:->minor, fix:/perf:->patch) "
-              "+ перенос [Unreleased] -> [X.Y.Z] в CHANGELOG.md + печать команды тега.\n"
-              "  MAJOR никогда не выводится — breaking-маркер даёт отказ, версия "
-              "остаётся решением владельца. git tag/push НЕ исполняются.\n"
-              "  --dry-run: только печать плана, CHANGELOG.md не меняется.")
+              "  Collects a monorepo release proposal: semver-bump from conventional "
+              "commits since last tag (feat:->minor, fix:/perf:->patch) "
+              "+ transfer [Unreleased] -> [X.Y.Z] in CHANGELOG.md + print tag command.\n"
+              "  MAJOR is never output - breaking-marker fails, version "
+              "remains the owner's decision. git tag/push are NOT executed.\n"
+              "  --dry-run: plan printing only, CHANGELOG.md does not change.")
         return
 
     root = find_monorepo_root(env.root) or env.root
     changelog = root / "CHANGELOG.md"
     if not changelog.is_file():
-        print(f"skiller release: {changelog} не найден — нечего собирать.")
+        print(f"skiller release: {changelog} not found - nothing to collect.")
         return
 
     tag = _last_tag(root)
@@ -161,36 +161,36 @@ def cmd_release(env, argv):
     bump, reason = classify_bump(commits)
 
     if bump == "breaking":
-        print(f"skiller release: подозрение на breaking-изменение (коммит: {reason!r}) "
-              "— MAJOR-версия ВСЕГДА ручное решение владельца, автоматика её не "
-              "выводит. Оцените диапазон сами и проставьте версию вручную.")
+        print(f"skiller release: suspicion of breaking-change (commit: {reason!r}) "
+              "— MAJOR-version is ALWAYS a manual decision of the owner, its automation is not "
+              "outputs. Evaluate the range yourself and enter the version manually.")
         sys.exit(1)
 
     if bump is None:
-        print(f"skiller release: со времени {tag or '(первого коммита)'} нет "
-              "conventional-коммитов feat/fix/perf — нечего релизить.")
+        print(f"skiller release: since {tag or '(first commit)'} no "
+              "conventional-commits feat/fix/perf — nothing to release.")
         return
 
     new_version = bump_version(tag, bump)
     if new_version is None:
-        print(f"skiller release: последний тег {tag!r} не матчит vX.Y.Z — "
-              "проставьте версию вручную.")
+        print(f"skiller release: last tag {tag!r} does not match vX.Y.Z — "
+              "enter the version manually.")
         sys.exit(1)
 
     try:
         text = changelog.read_text(encoding="utf-8")
     except OSError as e:
-        print(f"skiller release: {changelog} недоступен для чтения ({e}) — пропуск.")
+        print(f"skiller release: {changelog} is not readable ({e}) — pass.")
         return
 
     parsed = read_unreleased_section(text)
     if parsed is None:
-        print(f"skiller release: секция `## [Unreleased]` не найдена в {changelog} "
-              "— переносить нечего.")
+        print(f"skiller release: section `## [Unreleased]` not found in {changelog} "
+              "— there is nothing to transfer.")
         return
     if unreleased_is_empty(parsed[3]):
-        print("skiller release: секция `[Unreleased]` пуста — переносить нечего "
-              "(заполните CHANGELOG перед релизом, см. `oss-dev/release-engineering`).")
+        print("skiller release: section `[Unreleased]` is empty - there is nothing to transfer "
+              "(fill in CHANGELOG before release, see `oss-dev/release-engineering`).")
         return
 
     if (root / ".agents/plugins/marketplace.json").is_file():
@@ -200,12 +200,12 @@ def cmd_release(env, argv):
             print("skiller release: " + "; ".join(errors), file=sys.stderr)
             sys.exit(1)
 
-    print(f"skiller release: предложение — {tag or '(нет тега)'} -> {new_version} "
-          f"({bump}, {len(commits)} коммит(ов) в диапазоне)")
+    print(f"skiller release: proposal - {tag or '(no tag)'} -> {new_version} "
+          f"({bump}, {len(commits)} commit(ov) in the range)")
     tag_cmd = f'git tag -a {new_version} -m "release: {new_version}"'
 
     if opts["dry_run"]:
-        print(f"[dry-run] CHANGELOG.md не изменён. После проверки: {tag_cmd}")
+        print(f"[dry-run] CHANGELOG.md not changed. After checking: {tag_cmd}")
         return
 
     backup_file(changelog)
@@ -216,5 +216,5 @@ def cmd_release(env, argv):
         if tag:
             args += ["--previous", tag]
         cmd_attest(env, args)
-    print(f"CHANGELOG.md обновлён: [Unreleased] -> [{new_version.removeprefix('v')}]. "
-          f"Тег и push — вручную:\n  {tag_cmd}\n  git push origin {new_version}")
+    print(f"CHANGELOG.md updated: [Unreleased] -> [{new_version.removeprefix('v')}]. "
+          f"Tag and push — manually:\n  {tag_cmd}\n  git push origin {new_version}")

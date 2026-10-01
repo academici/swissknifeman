@@ -2,7 +2,7 @@
   "schema": 1,
   "pack": "node-frontend",
   "version": "0.5.2",
-  "description": "Frontend dev-loop для Vue/Vite (SPA или Inertia): агенты component-builder/slice-builder/test-writer/reviewer (преднагружены frontend-скиллами), последовательный one-branch workflow, SubagentStop review-gate (tsc/eslint) + PostToolUse-валидатор (не блокирует). Роли универсальны, стек — Vue/Vite/Tailwind/Pinia.",
+  "description": "Frontend dev-loop for Vue/Vite (SPA or Inertia): agents component-builder/slice-builder/test-writer/reviewer (preloaded frontend-skills), serial one-branch workflow, SubagentStop review-gate (tsc/eslint) + PostToolUse-validator (does not block). Roles are universal, stack - Vue/Vite/Tailwind/Pinia.",
   "stack": {
     "shape": "frontend",
     "language": "typescript",
@@ -44,18 +44,18 @@
   "interview": [
     {
       "id": "PACK_PREFIX",
-      "q": "Префикс имён агентов/воркфлоу?",
+      "q": "Agent name prefix/work flow?",
       "default": "{project_dirname}",
       "kind": "slug"
     },
     {
       "id": "PROJECT_DIR",
-      "q": "Абсолютный путь к проекту?",
+      "q": "Absolute path to the project?",
       "detect": "pwd"
     },
     {
       "id": "PKG_MANAGER",
-      "q": "Пакетный менеджер?",
+      "q": "Package manager?",
       "detect": "test -f pnpm-lock.yaml && echo pnpm || (test -f yarn.lock && echo yarn || echo npm)",
       "enum": [
         "pnpm",
@@ -66,22 +66,22 @@
     },
     {
       "id": "TEST_RUNNER_CMD",
-      "q": "Команда тестов?",
+      "q": "Test team?",
       "default": "{PKG_MANAGER} run test"
     },
     {
       "id": "TYPECHECK_CMD",
-      "q": "Команда typecheck?",
+      "q": "Command typecheck?",
       "default": "{PKG_MANAGER} run typecheck"
     },
     {
       "id": "LINT_CMD",
-      "q": "Команда линта?",
+      "q": "Lint command?",
       "default": "{PKG_MANAGER} run lint"
     },
     {
       "id": "VUE_VARIANT",
-      "q": "Inertia, SPA(vue-router) или Nuxt?",
+      "q": "Inertia, SPA(vue-router) or Nuxt?",
       "detect": "package.json:dependencies.@inertiajs/vue3",
       "enum": [
         "inertia",
@@ -92,23 +92,23 @@
     },
     {
       "id": "BASE_BRANCH",
-      "q": "Базовая ветка?",
+      "q": "Basic branch?",
       "detect": "git symbolic-ref --short refs/remotes/origin/HEAD",
       "default": "main"
     },
     {
       "id": "CHECK_CMD",
-      "q": "Быстрая review-gate проверка?",
+      "q": "Fast review-gate check?",
       "default": "{PKG_MANAGER} run typecheck && {PKG_MANAGER} run lint"
     },
     {
       "id": "DOCS_DIR",
-      "q": "Куда положить guideline (внутренний AI-гайд, не публичная docs/)?",
+      "q": "Where to put it guideline (internal AI-guide, not public docs/)?",
       "default": ".claude/guidelines"
     },
     {
       "id": "MODEL_REVIEWER",
-      "q": "Модель reviewer?",
+      "q": "Model reviewer?",
       "default": "opus",
       "enum": [
         "inherit",
@@ -119,7 +119,7 @@
     },
     {
       "id": "MODEL_COMPONENT_BUILDER",
-      "q": "Модель component-builder?",
+      "q": "Model component-builder?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -130,7 +130,7 @@
     },
     {
       "id": "MODEL_SLICE_BUILDER",
-      "q": "Модель slice-builder?",
+      "q": "Model slice-builder?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -141,7 +141,7 @@
     },
     {
       "id": "MODEL_TEST_WRITER",
-      "q": "Модель test-writer?",
+      "q": "Model test-writer?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -152,7 +152,7 @@
     },
     {
       "id": "MODEL_SPEC_WRITER",
-      "q": "Модель spec-writer?",
+      "q": "Model spec-writer?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -163,12 +163,12 @@
     },
     {
       "id": "GATE_COVERAGE_MIN",
-      "q": "Мин. покрытие (%)?",
+      "q": "Min. coating (%)?",
       "default": "80"
     },
     {
       "id": "GATE_MAX_CRITICAL",
-      "q": "Допустимо critical-находок?",
+      "q": "Acceptable critical-finds?",
       "default": "0"
     }
   ],
@@ -271,8 +271,8 @@
     }
   ],
   "notes": {
-    "verify_workflow": "dev-loop.js использует top-level return/await — node --check НЕ применять; проверяй балансом скобок/непустотой.",
-    "validator_hook": "validate-frontend.sh — PostToolUse на Edit/Write *.ts|*.vue: tsc+eslint, инжектит ошибки через additionalContext, НЕ блокирует (exit 0).",
-    "orchestrator": "Общий оркестратор — в паке _common (установить с тем же PACK_PREFIX)."
+    "verify_workflow": "dev-loop.js uses top-level return/await — node --check DO NOT apply; check by balancing the brackets/non-void.",
+    "validator_hook": "validate-frontend.sh — PostToolUse on Edit/Write *.ts|*.vue: tsc+eslint, injects errors via additionalContext, DOES NOT block (exit 0).",
+    "orchestrator": "General orchestrator - in the package _common (install with the same PACK_PREFIX)."
   }
 }

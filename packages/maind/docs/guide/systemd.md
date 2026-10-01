@@ -1,51 +1,51 @@
-# Демон памяти как systemd-сервис
+# Memory daemon as systemd-service
 
-Демон общей памяти (`agent-memory`) — это Node-процесс на узле mAInd, через который идут
-`recall`/`store` всех проектов. Чтобы он поднимался автоматически (при логине / загрузке ОС) и
-сам перезапускался при краше, его регистрируют как **пользовательский** systemd-юнит
-(`systemctl --user`, без root). Управление — командой `maind service`.
+Shared Memory Daemon (`agent-memory`) — this Node-process on node mAInd, through which they go
+`recall`/`store` all projects. So that it rises automatically (upon login / loading OS) and
+restarted itself during a crash, it is registered as **custom** systemd-unit
+(`systemctl --user`, without root). Control - by command `maind service`.
 
-## Быстрый старт
-
-```bash
-maind service install     # создать юнит, daemon-reload, enable --now (сразу поднять)
-maind service status      # состояние юнита
-maind service logs        # journalctl -u maind-memory (последние 100 строк + follow)
-```
-
-После `install` память поднимается сразу и стартует при каждом логине. Проверка связи проекта:
+## Quick start
 
 ```bash
-maind health --cwd        # статус connected, демон отвечает на :4111
+maind service install     # create a unit, daemon-reload, enable --now (raise immediately)
+maind service status      # unit state
+maind service logs        # journalctl -u maind-memory (last 100 lines + follow)
 ```
 
-## Команды
+After `install` memory rises immediately and starts with each login. Checking project connectivity:
 
-| Команда | Что делает |
+```bash
+maind health --cwd        # status connected, demon responds to :4111
+```
+
+## Commands
+
+| Command | What it does |
 |:--|:--|
-| `maind service install` | записать `~/.config/systemd/user/maind-memory.service`, `daemon-reload`, `enable --now` |
-| `maind service uninstall` | `disable --now` + удалить юнит |
-| `maind service start` / `stop` / `restart` | управление запущенным юнитом |
+| `maind service install` | write `~/.config/systemd/user/maind-memory.service`, `daemon-reload`, `enable --now` |
+| `maind service uninstall` | `disable --now` + delete unit |
+| `maind service start` / `stop` / `restart` | running unit control |
 | `maind service status` | `systemctl --user status maind-memory` |
-| `maind service enable` / `disable` | автостарт при логине вкл/выкл |
-| `maind service logs [args]` | `journalctl --user -u maind-memory` (доп. аргументы прокидываются) |
+| `maind service enable` / `disable` | autostart at login on/off |
+| `maind service logs [args]` | `journalctl --user -u maind-memory` (add. arguments are thrown out) |
 
-## Как устроен юнит
+## How the unit works
 
-`ExecStart` запускает демон в **переднем плане** — `maind memory run` делает `exec node …`,
-заменяя процесс, поэтому systemd трекает сам Node-демон как `MAINPID` и корректно им рулит
-(рестарт, остановка). Юнит (генерируется из абсолютных путей установки):
+`ExecStart` starts the daemon in **foreground** — `maind memory run` does `exec node …`,
+replacing the process, so systemd tracks itself Node-demon like `MAINPID` and rules it correctly
+(restart, stop). Unit (generated from absolute installation paths):
 
 ```ini
 [Unit]
-Description=mAInd — демон общей памяти экосистемы (agent-memory)
+Description=mAInd — ecosystem shared memory daemon (agent-memory)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=<корень maind>
-ExecStart=<корень maind>/bin/maind memory run
+WorkingDirectory=<root maind>
+ExecStart=<root maind>/bin/maind memory run
 Restart=on-failure
 RestartSec=5
 
@@ -53,31 +53,31 @@ RestartSec=5
 WantedBy=default.target
 ```
 
-`maind memory run` — foreground-запуск для systemd; для ручного фонового запуска по-прежнему
-есть `maind start --only memory` / `maind memory start` (детач + pidfile).
+`maind memory run` — foreground-launch for systemd; for manual background start still
+yes `maind start --only memory` / `maind memory start` (detail + pidfile).
 
-## Автостарт без логина (сервер по SSH)
+## Autostart without login (server by SSH)
 
-Пользовательские юниты живут, пока есть сессия пользователя. Чтобы демон стартовал при загрузке
-ОС и держался без входа в систему — включите **linger** (разовый шаг). Для роли `memory.role =
-"host"` (cross-machine память, ADR-0001) linger — **условие роли, не опция**: без него демон не
-переживёт перезагрузку хоста без интерактивного логина, и все клиенты теряют память одновременно
-(см. [umbrella deploy.md «Вторая машина»](https://github.com/academici/swissknifeman/blob/main/docs/deploy.md)):
+User units live as long as there is a user session. So that the daemon starts at boot
+OS and kept without logging in - enable **linger** (one-time step). For role `memory.role =
+"host"` (cross-machine memory, ADR-0001) linger — **role condition, not an option**: without it the daemon cannot
+will survive a host reboot without interactive login, and all clients will lose memory at the same time
+(see [umbrella deploy.md «Second car»](https://github.com/academici/swissknifeman/blob/main/docs/deploy.md)):
 
 ```bash
 loginctl enable-linger $USER
-loginctl show-user $USER -p Linger    # проверка → Linger=yes
+loginctl show-user $USER -p Linger    # check → Linger=yes
 ```
 
-Без linger демон поднимется только после первого логина в сессию. С linger — сразу при загрузке.
+Without linger the daemon will rise only after the first login into the session. C linger — immediately upon loading.
 
-## Порты и конфиг
+## Ports and config
 
-Демон слушает `:4111` (HTTP) и `:4112` (stream) — переопределяются через `.env` в корне maind
-(`AGENTMEMORY_PORT` / `AGENTMEMORY_STREAM_PORT`); конфиг воркеров — `config/memory/iii-config.yaml`.
-См. [Память (agent-memory)](./memory).
+The demon listens `:4111` (HTTP) and `:4112` (stream) — are overridden via `.env` at the root maind
+(`AGENTMEMORY_PORT` / `AGENTMEMORY_STREAM_PORT`); worker config - `config/memory/iii-config.yaml`.
+See [Memory (agent-memory)](./memory).
 
-## Если нет systemd
+## If not systemd
 
-На системах без `systemctl` (или голый SSH без user-сессии) `maind service` подскажет
-альтернативу — поднимать память вручную: `maind start --only memory`.
+On systems without `systemctl` (or naked SSH without user-sessions) `maind service` will tell you
+alternative - raise memory manually: `maind start --only memory`.

@@ -1,4 +1,4 @@
-"""Smoke-тесты диспетчера analyst: сборка Env, роутинг команд, doctor."""
+"""Smoke-dispatcher tests analyst: assembly Env, command routing, doctor."""
 import io
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -25,7 +25,7 @@ class TestCli(unittest.TestCase):
     def test_doctor_registered_and_runs(self):
         self.assertIn("doctor", COMMANDS)
         out = io.StringIO()
-        # doctor может завершиться SystemExit(1), если нет core — но в монорепо core есть.
+        # doctor may terminate SystemExit(1), if not core — but in monorepo core is.
         with redirect_stdout(out), redirect_stderr(io.StringIO()):
             try:
                 main(["/tmp/root", "doctor"])

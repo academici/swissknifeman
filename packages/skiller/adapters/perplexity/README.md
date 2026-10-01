@@ -1,5 +1,5 @@
 # Perplexity Adapter
 
-Скиллы из `skills/imported/` совместимы с Perplexity Computer out of the box.
+Skills from `skills/imported/` compatible with Perplexity Computer out of the box.
 
-Загрузка: Skills → Create skill → Upload `SKILL.md`.
+Loading: Skills → Create skill → Upload `SKILL.md`.

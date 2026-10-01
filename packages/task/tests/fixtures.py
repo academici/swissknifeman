@@ -2,8 +2,8 @@
 import sys
 from pathlib import Path
 
-# На случай прямого запуска (`cd packages/task && python3 -m unittest discover -s tests`,
-# без предварительного PYTHONPATH) — гарантируем lib/ в пути, как в maind/tests/fixtures.py.
+# In case of direct launch (`cd packages/task && python3 -m unittest discover -s tests`,
+# without prior PYTHONPATH) — guarantee lib/ in the path, as in maind/tests/fixtures.py.
 _LIB = Path(__file__).resolve().parents[1] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
@@ -14,28 +14,28 @@ if (_REPO_ROOT / "core").is_dir() and str(_REPO_ROOT) not in sys.path:
 
 def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done",
             closure_protocol=None, decision_log_rows=None, layout="v2"):
-    # `closure_protocol` (P8.1/D42) — opt-in Meta-поле `Closure Protocol`; None = строки нет
-    # вовсе (аддитивность: план без поля обязан линтоваться байт-в-байт как до P8.1).
+    # `closure_protocol` (P8.1/D42) — opt-in Meta-field `Closure Protocol`; None = no line
+    # at all (additivity: a plan without a field must be linted byte-for-byte as before P8.1).
     closure_row = f"\n| Closure Protocol | {closure_protocol} |" if closure_protocol else ""
     layout_row = f"\n| Layout | {layout} |" if layout else ""
-    # `decision_log_rows` (P8.2/D103-D105, research/23 §4): D-лог параметризован, а не
-    # зашит одной строкой — гейт `Consequences` гоняет тесты на РАЗНОМ содержимом ячейки
-    # `Решение`/`Дата`; None = прежняя единственная строка (byte-compat с до-P8.2 фикстурой).
+    # `decision_log_rows` (P8.2/D103-D105, research/23 §4): D-log is parameterized, not
+    # is sewn in one line - gate `Consequences` runs tests on DIFFERENT cell contents
+    # `Solution`/`Date`; None = old single line (byte-compat with do-P8.2 fixture).
     if decision_log_rows is None:
-        decision_log_rows = "| D1 | 2026-07-02 | тест | тест |"
-    decision_log = ("Каталог решений: `decisions/`; собрать: "
+        decision_log_rows = "| D1 | 2026-07-02 | test | test |"
+    decision_log = ("Solutions catalog: `decisions/`; collect: "
                     "`python3 packages/task/scripts/plan-views.py decisions`."
                     if layout == "v2" else
-                    "| D# | Дата | Решение | Почему |\n|:--|:--|:--|:--|\n" + decision_log_rows)
+                    "| D# | Date | Solution | Why |\n|:--|:--|:--|:--|\n" + decision_log_rows)
     if layout == "v2":
-        return f"""# {plan_id} — Демо-план
+        return f"""# {plan_id} — Demo plan
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Plan ID | {plan_id} |
-| Title | Демо-план |
+| Title | Demo plan |
 | Layout | v2 |{closure_row}
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
@@ -50,11 +50,11 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
 
 ## 1. Context
 
-Демо для unittest plan_lint.
+Demo for unittest plan_lint.
 
 ## 2. Execution Rules
 
-- Один item за раз.
+- One item at a time.
 
 ## 3. Routing
 
@@ -62,14 +62,14 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
 
 {decision_log}
 """
-    return f"""# {plan_id} — Демо-план
+    return f"""# {plan_id} — Demo plan
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Plan ID | {plan_id} |
-| Title | Демо-план |
+| Title | Demo plan |
 | Version | 0.1.0 |
 | Status | {phase_status} |{closure_row}{layout_row}
 | Document Type | Executable Master Plan |
@@ -83,19 +83,19 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
 
 ## 1. Context
 
-Демо для unittest plan_lint.
+Demo for unittest plan_lint.
 
 ## 2. Execution Rules
 
-- Один item за раз.
+- One item at a time.
 
 ## 3. Routing
 
 ## 4. Phase Index & Status Board
 
-| Phase | Title | Items 🟢/всего | Status |
+| Phase | Title | Items 🟢/total | Status |
 |:--|:--|:--|:--|
-| {phase_id} | Фаза раз | {items_cell} | {phase_status} |
+| {phase_id} | Phase times | {items_cell} | {phase_status} |
 
 ## 5. Decision Log
 
@@ -103,58 +103,58 @@ def plan_md(plan_id, *, phase_id="P1", items_cell="1/1", phase_status="🟢 Done
 
 ## 6. Update Log
 
-| Дата | Кто (role/model) | Что |
+| Date | Who (role/model) | What |
 |:--|:--|:--|
-| 2026-07-02 | issue-planner/opus | План создан |
+| 2026-07-02 | issue-planner/opus | Plan created |
 """
 
 
 def legacy_phase_md(phase_id="P1", *, item_id="P1.1"):
     """Return the one explicit retired-layout fixture used by rejection tests."""
-    return f"""# {phase_id} — Фаза раз
+    return f"""# {phase_id} — Phase times
 
 ## Phase Context
 
-Демо-фаза.
+Demo phase.
 
 ## Phase Status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| {item_id} | Валидация конфига | 🟢 Done | 2026-07-02 |
+| {item_id} | Config validation | 🟢 Done | 2026-07-02 |
 
-### {item_id} — Валидация конфига
+### {item_id} — Config validation
 
 **Status:** 🟢 Done
-**Intent:** Добавить проверку.
-**Why:** Диагностика дорогая.
+**Intent:** Add check.
+**Why:** Diagnostics are expensive.
 **Scope Included:** load_config().
-**Scope Excluded:** формат конфига.
-**Inputs:** список ключей.
+**Scope Excluded:** config format.
+**Inputs:** list of keys.
 **Files:** lib/pkg/config.py
 **Required Reads:** 1) lib/pkg/config.py
 **Implementation Rules:** stdlib-only.
-**Code Guidance:** ручная проверка dict-ключей.
-**Validation:** bash scripts/test.sh — зелёный.
-**Deliverables:** валидация + тест.
-**Completion Notes:** сделано, тест зелёный
+**Code Guidance:** manual check dict-keys.
+**Validation:** bash scripts/test.sh — green.
+**Deliverables:** validation + test.
+**Completion Notes:** done, test green
 **Pending Work:** —
 **Known Deviations:** —
 **Escalation Needed:** —
 
 ## Phase Handoff
 
-Фаза сдана: всё зелёное.
+Phase completed: everything is green.
 """
 
 
-def phase_index_md(phase_id="P1", *, handoff_text="Фаза сдана: всё зелёное."):
-    """Тонкий индекс фазы v2: без статусов и без item-блоков."""
-    return f"""# {phase_id} — Фаза раз
+def phase_index_md(phase_id="P1", *, handoff_text="Phase completed: everything is green."):
+    """Thin phase index v2: without statuses and without item-blocks."""
+    return f"""# {phase_id} — Phase times
 
 ## Phase Context
 
-Демо-фаза.
+Demo phase.
 
 ## Phase Handoff
 
@@ -163,23 +163,23 @@ def phase_index_md(phase_id="P1", *, handoff_text="Фаза сдана: всё �
 
 
 def item_spec_md(item_id="P1.1"):
-    return f"""### {item_id} — Валидация конфига
+    return f"""### {item_id} — Config validation
 
-**Intent:** Добавить проверку.
-**Why:** Диагностика дорогая.
+**Intent:** Add check.
+**Why:** Diagnostics are expensive.
 **Scope Included:** load_config().
-**Scope Excluded:** формат конфига.
+**Scope Excluded:** config format.
 **Inputs:** `lib/pkg/config.py`.
 **Files:** lib/pkg/config.py
 **Required Reads:** 1) lib/pkg/config.py
 **Implementation Rules:** stdlib-only.
-**Code Guidance:** ручная проверка dict-ключей.
-**Validation:** bash scripts/test.sh — зелёный.
-**Deliverables:** валидация + тест.
+**Code Guidance:** manual check dict-keys.
+**Validation:** bash scripts/test.sh — green.
+**Deliverables:** validation + test.
 """
 
 
-def item_state_md(*, item_status="🟢 Done", completion_notes="сделано, тест зелёный",
+def item_state_md(*, item_status="🟢 Done", completion_notes="done, test green",
                   pending_work="—", known_deviations="—", escalation_needed="—"):
     return f"""**Status:** {item_status}
 **Completion Notes:** {completion_notes}
@@ -260,32 +260,32 @@ def write_decision_record(plan_dir, identifier, *, decision="test", reason="RAG:
         "supersedes: []\n"
         "superseded_by: null\n"
         "---\n"
-        f"## Решение\n\n{decision}\n\n"
-        f"## Почему\n\n{reason}\n",
+        f"## Solution\n\n{decision}\n\n"
+        f"## Why\n\n{reason}\n",
         encoding="utf-8")
     return path
 
 
 def handoff_md(plan_id, *, item_id="P1.1"):
-    # Next несёт launch-block (таблица `| Model |` + code-block) — канон 2.0;
-    # без него green-path ловил бы warning «Next без launch-block».
+    # Next carries launch-block (table `| Model |` + code-block) — canon 2.0;
+    # without it green-path would catch warning «Next without launch-block».
     return f"""# HANDOFF — 2026-07-02 — after {item_id}
 
 **Next:** /task:plan-run {plan_id} {item_id}
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |:--|:--|
 | Model | sonnet |
 | Thinking | medium |
 | Context | fresh session |
-| Суть | закрыть следующий item |
+| The bottom line | close next item |
 
 ````
 /task:plan-run {plan_id} {item_id}
 ````
 
-**Done:** {item_id} закрыт.
-**Remaining:** ничего.
+**Done:** {item_id} is closed.
+**Remaining:** nothing.
 **Sources of truth:** plans/{plan_id}/plan.md · plans/{plan_id}/phases/P1.md
 **Open risks:** —
 **Workarounds/Deferred/Open questions:**
@@ -296,27 +296,27 @@ def handoff_md(plan_id, *, item_id="P1.1"):
 
 
 def contracts_section(*, exported=(), consumed=()):
-    """Опциональная секция `## 7. Contracts` (m7/D10) — дописывается к plan_md().
-    `exported`: (контракт, версия, потребители); `consumed`: (контракт, донор, pinned)."""
+    """Optional section `## 7. Contracts` (m7/D10) — is appended to plan_md().
+    `exported`: (contract, version, consumers); `consumed`: (contract, donor, pinned)."""
     out = ["\n## 7. Contracts\n"]
     if exported:
         out.append("\n### Exported\n\n")
-        out.append("| Контракт | Версия | Статус | Потребители | Уведомлены |\n")
+        out.append("| Contract | Version | Status | Consumers | Notified |\n")
         out.append("|:--|:--|:--|:--|:--|\n")
         for contract, version, consumers in exported:
             out.append(f"| {contract} | {version} | frozen | {consumers} | 2026-07-13 |\n")
     if consumed:
         out.append("\n### Consumed\n\n")
-        out.append("| Контракт | Донор-план | Pinned | Замечено | Реакция |\n")
+        out.append("| Contract | Donor plan | Pinned | Spotted | Reaction |\n")
         out.append("|:--|:--|:--|:--|:--|\n")
         for contract, donor, pinned in consumed:
-            out.append(f"| {contract} | {donor} | {pinned} | — | P1.1 — поднять |\n")
+            out.append(f"| {contract} | {donor} | {pinned} | — | P1.1 — raise |\n")
     return "".join(out)
 
 
 def active_md(value="DEMO-1", *, updated="2026-07-02"):
-    """plans/ACTIVE.md — канонический формат (4 строки, Phase Context SKM-MASTER-003/P1):
-    `# ACTIVE`, пустая строка, `**Active:** <PLAN-ID>` (или «—»), `**Updated:** <дата>`."""
+    """plans/ACTIVE.md — canonical format (4 lines, Phase Context SKM-MASTER-003/P1):
+    `# ACTIVE`, empty string, `**Active:** <PLAN-ID>` (or «—»), `**Updated:** <date>`."""
     return f"""# ACTIVE
 
 **Active:** {value}
@@ -325,39 +325,39 @@ def active_md(value="DEMO-1", *, updated="2026-07-02"):
 
 
 def brief_md(plan_id):
-    return f"""# Бриф — {plan_id}
+    return f"""# Brief — {plan_id}
 
-Переформулированный вход владельца: демо-план для тестов линтера.
+Reworded owner input: demo plan for linter tests.
 """
 
 
 def roadmap_md(plan_id):
-    return f"""# Roadmap исполнения — {plan_id}
+    return f"""# Roadmap executions - {plan_id}
 
-| Item | Batch | Запуск | Model/Thinking | Гейт владельца | Примечание |
+| Item | Batch | Launch | Model/Thinking | Owner Gate | Note |
 |---|---|---|---|---|---|
-| P1.1 | solo | run | sonnet/medium | — | единственный item демо-плана |
+| P1.1 | solo | run | sonnet/medium | — | the only one item demo plan |
 """
 
 
 def journal_jsonl(plan_id, *, item_id="P1.1"):
-    """journal.jsonl (P1.1) — одна валидная финальная запись (схема §2 контракта)."""
+    """journal.jsonl (P1.1) — one valid final record (diagram §2 contract)."""
     import json as _json
     entry = {
         "ts": "2026-07-02T00:00:00Z", "plan_id": plan_id, "item_id": item_id,
         "command": "plan-run", "session_id": None, "run_id": None, "attempt": 1,
         "actor": "sonnet/medium", "friction": [], "result": "closed-green",
-        "cost_usd": None, "num_turns": None, "duration_ms": None, "note": "тест",
+        "cost_usd": None, "num_turns": None, "duration_ms": None, "note": "test",
     }
     return _json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n"
 
 
 def closure_json(plan_id, *, phase_id="P1", item_id="P1.1", item_status="🟢 Done",
                  phase_status="🟢 Done", evidence_class="real",
-                 evidence="bash packages/task/scripts/validate.sh — exit 0 (на abc1234)"):
-    """closure/<Pn>.json (P8.1/D42) — отчёт закрытия фазы, схема v1 (research/11 §1).
-    Все ключи обязательны: «нет числа» выражается ЗНАЧЕНИЕМ (`baseline_pending` + причина),
-    а не отсутствием ключа."""
+                 evidence="bash packages/task/scripts/validate.sh — exit 0 (on abc1234)"):
+    """closure/<Pn>.json (P8.1/D42) — phase closure report, diagram v1 (research/11 §1).
+    All keys are required: «no number» is expressed by VALUE (`baseline_pending` + reason),
+    and not the absence of a key."""
     import json as _json
     report = {
         "schema_version": 1,
@@ -371,16 +371,16 @@ def closure_json(plan_id, *, phase_id="P1", item_id="P1.1", item_status="🟢 Do
         "items": [{"id": item_id, "status": item_status,
                    "evidence_class": evidence_class, "evidence": evidence}],
         "gates": [{"id": "validate.sh:task", "status": "PASS", "evidence_class": "real",
-                   "evidence": "bash packages/task/scripts/validate.sh — exit 0 (на abc1234)"}],
+                   "evidence": "bash packages/task/scripts/validate.sh — exit 0 (on abc1234)"}],
         "metrics": [{"name": "lint_new_from_closure", "value": "0", "label": "real"}],
-        "limitations": ["демо-фикстура, не полевой прогон"],
+        "limitations": ["demo fixture, not field run"],
         "external_side_effects": [],
     }
     return _json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 
 def write_closure(plan_dir, **kwargs):
-    """Кладёт closure/<Pn>.json рядом с планом (каталог создаётся)."""
+    """Places closure/<Pn>.json next to the plan (directory is being created)."""
     plan_dir = Path(plan_dir)
     phase_id = kwargs.get("phase_id", "P1")
     (plan_dir / "closure").mkdir(parents=True, exist_ok=True)
@@ -390,24 +390,24 @@ def write_closure(plan_dir, **kwargs):
 
 
 def index_md(plan_id):
-    return f"""# Индекс — {plan_id}
+    return f"""# Index - {plan_id}
 
-## Карта директорий
+## Directory map
 
-| Путь | Назначение |
+| Path | Purpose |
 |:--|:--|
-| `plan.md` | мастер-план |
+| `plan.md` | master plan |
 
-## Провенанс
+## Provenance
 
-| Источник | Слой | Питает | Суть |
+| Source | Layer | Nourishes | The bottom line |
 |:--|:--|:--|:--|
 """
 
 
 def write_valid_plan(root, plan_id="DEMO-1", *, layout="v2"):
-    """Пишет полностью валидный план (plan-lint должен вернуть 0 ошибок/предупреждений).
-    Возвращает Path на plans/<plan_id>."""
+    """Writes a fully valid plan (plan-lint should return 0 errors/warnings).
+    Returns Path on plans/<plan_id>."""
     plan_dir = Path(root) / "plans" / plan_id
     (plan_dir / "phases").mkdir(parents=True, exist_ok=True)
     (plan_dir / "brief").mkdir(parents=True, exist_ok=True)

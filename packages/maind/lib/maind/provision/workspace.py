@@ -1,14 +1,14 @@
-"""Единое пространство доверия Claude Code, управляемое из хаба maind (hub-scoped).
+"""Single trust space Claude Code, controlled from the hub maind (hub-scoped).
 
-Проблема: при правке смежных проектов Claude Code задаёт запрос «доверять каталогу?»
-(граница рабочего пространства). Это ОТДЕЛЬНАЯ от allow/deny система — bypassPermissions
-её НЕ глушит. Фикс — внести пути всех проектов экосистемы в
-permissions.additionalDirectories настроек.
+Problem: when editing adjacent projects Claude Code specifies a request «trust the directory?»
+(workspace boundary). This is SEPARATE from allow/deny system - bypassPermissions
+does NOT jam it. Fix - add paths of all ecosystem projects to
+permissions.additionalDirectories settings.
 
-Модуль генерирует/сопровождает .claude/settings.local.json В КОРНЕ maind: доверие
-получает сессия Claude, запущенная из хаба. Реестр проектов (.maind.json) — единственный
-источник правды. Запись идемпотентна и АДДИТИВНА: чужие записи и заданный пользователем
-defaultMode не трогаем. Зеркало mcpconfig.py (load → merge → write) для настроек Claude."""
+The module generates/accompanies .claude/settings.local.json AT THE ROOT maind: trust
+gets session Claude, launched from the hub. Project register (.maind.json) — the only one
+source of truth. The record is idempotent and ADDITIVE: other people's records and user-specified
+defaultMode do not touch. Mirror mcpconfig.py (load → merge → write) for settings Claude."""
 import copy
 import json
 import os
@@ -21,36 +21,36 @@ DEFAULT_MODE = "acceptEdits"
 
 
 def hub_settings_path(env):
-    """Где живут hub-настройки доверия (gitignored, абсолютные персональные пути)."""
+    """Where do they live? hub-trust settings (gitignored, absolute personal paths)."""
     return env.root / ".claude" / "settings.local.json"
 
 
 def norm_path(p):
-    """Нормализация пути для сравнения/дедупа: expanduser + realpath (резолвит симлинки и
-    `.`/`..`-сегменты). N4: раньше был только normpath — повторный `maind onboard` через
-    симлинк/иной эквивалентный путь на тот же каталог штамповал дубль-запись проекта
-    (_ensure_project матчит по нормализованному local_path). realpath безопасен и для
-    несуществующих путей (резолвит существующий префикс, остаток оставляет как есть)."""
+    """Path normalization for comparison/grandfather: expanduser + realpath (resolves symlinks and
+    `.`/`..`-segments). N4: used to be only normpath — repeated `maind onboard` via
+    symlink/another equivalent path to the same directory stamped a duplicate project record
+    (_ensure_project match according to normalized local_path). realpath is also safe for
+    non-existent paths (resolves the existing prefix, leaves the rest as is)."""
     return os.path.realpath(os.path.expanduser(str(p)))
 
 
 def load_settings(path):
-    """(data, existed). Нет файла → ({}, False). Битый JSON → die (НЕ трогаем чужой файл)."""
+    """(data, existed). No file → ({}, False). Broken JSON → die (DO NOT touch someone else's file)."""
     path = Path(path)
     if not path.exists():
         return {}, False
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
-        die(f"{path}: битый JSON настроек Claude — не трогаю, исправьте вручную: {e}")
+        die(f"{path}: broken JSON settings Claude — I don't touch it, fix it manually: {e}")
     if not isinstance(data, dict):
-        die(f"{path}: ожидался объект настроек Claude")
+        die(f"{path}: settings object expected Claude")
     return data, True
 
 
 def eligible_paths(config):
-    """Отсортированный уникальный список абсолютных путей включённых проектов, чей
-    каталог существует на диске. Без local_path / disabled / отсутствующий путь — пропуск."""
+    """Sorted unique list of absolute paths of included projects whose
+    directory exists on disk. Without local_path / disabled / missing path - skipping."""
     seen = set()
     for p in config.get("projects") or []:
         if p.get("enabled") is False:
@@ -65,11 +65,11 @@ def eligible_paths(config):
 
 
 def build_fragment(paths, *, allow=True, mode=True):
-    """Фрагмент настроек Claude для доверенных каталогов.
+    """Settings fragment Claude for trusted directories.
 
-    additionalDirectories чинит границу рабочего пространства; allow (Read/Edit-глобы)
-    и defaultMode дополнительно убирают трение даже без bypass. Абсолютный путь в
-    permission-правиле — с двойным слешем: Read(//abs/path/**)."""
+    additionalDirectories repairs the workspace boundary; allow (Read/Edit-globs)
+    and defaultMode additionally remove friction even without bypass. Absolute path in
+    permission-rule - with double slash: Read(//abs/path/**)."""
     perms = {"additionalDirectories": list(paths)}
     if allow:
         rules = []
@@ -83,11 +83,11 @@ def build_fragment(paths, *, allow=True, mode=True):
 
 
 def merge_settings(existing, fragment):
-    """Сливает fragment в existing идемпотентно/аддитивно. Возвращает (merged, changed).
+    """Drains fragment in existing idempotent/additive. Returns (merged, changed).
 
-    Списки (additionalDirectories, allow) — union с дедупом, порядок существующих и
-    чужих записей сохраняется. defaultMode ставим, ТОЛЬКО если он ещё не задан (не
-    перетираем выбор пользователя). Любые посторонние ключи настроек сохраняются."""
+    Lists (additionalDirectories, allow) — union with dedup, order of existing and
+    other people's records are saved. defaultMode is set ONLY if it is not already set (not
+    override user selection). Any extraneous settings keys are retained."""
     merged = copy.deepcopy(existing) if existing else {}
     changed = False
     perms = merged.get("permissions")
@@ -118,8 +118,8 @@ def merge_settings(existing, fragment):
 
 
 def sync(env, config, *, allow=True, mode=True, dry=False, backup=True):
-    """Записать/обновить hub-настройки доверия из реестра проектов. Возвращает метаданные.
-    dry=True — ничего не пишет (вернёт предполагаемый merged в result['settings'])."""
+    """Write/update hub-trust settings from the project registry. Returns metadata.
+    dry=True — does not write anything (will return the intended merged in result['settings'])."""
     path = hub_settings_path(env)
     existing, _existed = load_settings(path)
     paths = eligible_paths(config)
@@ -150,7 +150,7 @@ def sync(env, config, *, allow=True, mode=True, dry=False, backup=True):
 
 
 def trusted_dirs(env):
-    """Множество доверенных каталогов из hub-настроек (нормализованных). Нет/битый → пустое."""
+    """Set of trusted directories from hub-settings (normalized). No/broken → is empty."""
     path = hub_settings_path(env)
     if not path.exists():
         return set()
@@ -185,7 +185,7 @@ def provider_trust(context, *, trusted, profile_id="workspace-contained",
 
 
 def audit(env, config):
-    """Read-only диф реестра и hub-настроек: covered / missing / drift."""
+    """Read-only registry diff and hub-settings: covered / missing / drift."""
     trusted = trusted_dirs(env)
     registry = {}  # norm_path → project id
     for p in config.get("projects") or []:
@@ -199,7 +199,7 @@ def audit(env, config):
         "registry_count": len(reg),
         "covered": [{"id": registry[p], "path": p} for p in sorted(reg & trusted)],
         "missing": [{"id": registry[p], "path": p} for p in sorted(reg - trusted)],
-        "drift": sorted(trusted - reg),  # доверено, но не из реестра
+        "drift": sorted(trusted - reg),  # trusted, but not from the registry
     }
 
 
@@ -215,7 +215,7 @@ def cmd_workspace(env, argv):
     elif sub == "status":
         _cmd_status(env, rest)
     else:
-        die(f"неизвестная подкоманда workspace: {sub} (sync|status)")
+        die(f"unknown subcommand workspace: {sub} (sync|status)")
 
 
 def _cmd_sync(env, argv):
@@ -231,11 +231,11 @@ def _cmd_sync(env, argv):
     if result["changed"]:
         extra = f", allow +{result['allow_added']}" if result["allow_added"] else ""
         extra += f", defaultMode={DEFAULT_MODE}" if result["mode_set"] else ""
-        print(f"{tag}Доверие → {result['path']}")
-        print(f"  каталогов: {result['total_paths']} "
-              f"(добавлено {len(result['dirs_added'])}){extra}")
+        print(f"{tag}Trust → {result['path']}")
+        print(f"  directories: {result['total_paths']} "
+              f"(added {len(result['dirs_added'])}){extra}")
     else:
-        print(f"{tag}Доверие уже актуально ({result['total_paths']} каталогов) "
+        print(f"{tag}Trust is already relevant ({result['total_paths']} directories) "
               f"→ {result['path']}")
     if result["dry"] and result["changed"]:
         print(json.dumps(result["settings"], ensure_ascii=False, indent=2))
@@ -248,9 +248,9 @@ def _cmd_status(env, argv):
     if opts["json"]:
         print(json.dumps(a, ensure_ascii=False, indent=2))
         return
-    print(f"Доверие Claude (hub): {a['settings']}")
-    print(f"  доверено {len(a['covered'])}/{a['registry_count']} проектов реестра")
+    print(f"Trust Claude (hub): {a['settings']}")
+    print(f"  trusted {len(a['covered'])}/{a['registry_count']} registry projects")
     for m in a["missing"]:
-        print(f"  ✗ не доверен: {m['id']} ({m['path']})")
+        print(f"  ✗ not trusted: {m['id']} ({m['path']})")
     for d in a["drift"]:
-        print(f"  ? лишний каталог (не из реестра): {d}")
+        print(f"  ? extra directory (not from the registry): {d}")

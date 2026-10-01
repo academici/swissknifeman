@@ -1,16 +1,16 @@
 // Source: anonymized production project
 //
-// Два паттерна вокруг сторов:
-//   1) Композиция (стор внутри стора): один стор использует другой,
-//      чтобы строить производное состояние без дублирования данных.
-//   2) Доступ к стору ВНЕ компонента (обычный .ts-модуль: шина событий,
-//      ws-адаптер, сервис). Ключевое правило — вызывать useXxxStore()
-//      ВНУТРИ функции/обработчика, а не на верхнем уровне модуля.
+// Two patterns around stores:
+//   1) Composition (store within a store): one store uses another,
+//      to build a derived state without duplicating data.
+//   2) Access to the store OUTSIDE the component (normal .ts-module: event bus,
+//      ws-adapter, service). The key rule is to call useXxxStore()
+//      INSIDE a function/handler, not at the top level of the module.
 
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
-// --- базовый стор ---
+// --- base store ---
 export const useCartStore = defineStore('cart', () => {
     const items = ref<Array<{ id: number; price: number; qty: number }>>([]);
 
@@ -34,12 +34,12 @@ export const useCartStore = defineStore('cart', () => {
     return { items, total, add, clear };
 });
 
-// === 1. КОМПОЗИЦИЯ: стор внутри стора ===
-// Стор скидок читает state/getters корзины и строит производное значение.
-// Не дублируем позиции/сумму — берём их у источника.
-// Избегаем взаимных циклов (cart НЕ должен зависеть от discount).
+// === 1. COMPOSITION: side inside side ===
+// Discount store reads state/getters basket and constructs the derived value.
+// We do not duplicate positions/amount - we take it from the source.
+// Avoiding reciprocal loops (cart should NOT depend on discount).
 export const useDiscountStore = defineStore('discount', () => {
-    const cart = useCartStore(); // вызов внутри сетапа — Pinia уже активна
+    const cart = useCartStore(); // call inside the setup - Pinia is already active
     const rate = ref(0);
 
     const discounted = computed(() => cart.total * (1 - rate.value));
@@ -51,22 +51,22 @@ export const useDiscountStore = defineStore('discount', () => {
     return { rate, discounted, applyRate };
 });
 
-// === 2. ДОСТУП К СТОРУ ВНЕ КОМПОНЕНТА ===
-// Обычный модуль (шина событий / ws-адаптер). Pinia на момент импорта
-// этого файла может быть ещё не установлена через app.use(pinia),
-// поэтому useCartStore() вызываем ВНУТРИ обработчика, а не на верхнем уровне.
+// === 2. ACCESS TO A STORY OUTSIDE A COMPONENT ===
+// Regular module (event bus / ws-adapter). Pinia at the time of import
+// of this file may not yet be installed via app.use(pinia),
+// therefore useCartStore() is called INSIDE the handler, and not at the top level.
 
 export function subscribeToPriceFeed(socket: { on(event: string, cb: (p: { id: number; price: number }) => void): void }): void {
     socket.on('item.added', (payload) => {
-        // ПРАВИЛЬНО: стор резолвится в момент события — Pinia уже активна
+        // CORRECT: the store resolves at the moment of the event - Pinia is already active
         const cart = useCartStore();
         cart.add(payload.id, payload.price);
     });
 }
 
-// АНТИПАТТЕРН (НЕ ДЕЛАТЬ):
-//   const cart = useCartStore(); // на верхнем уровне модуля
+// ANTIPATTERN (DON'T DO):
+//   const cart = useCartStore(); // at the top level of the module
 //   -> "getActivePinia() was called but there was no active Pinia"
 //
-// Передавать конкретный экземпляр — useCartStore(pinia) — нужно только в коде
-// ДО app.use(pinia) либо на сервере вне жизненного цикла запроса (SSR).
+// Pass specific instance - useCartStore(pinia) — is only needed in code
+// BEFORE app.use(pinia) or on the server outside the request lifecycle (SSR).

@@ -68,7 +68,7 @@ fi
 downgrade_line="$(printf '%s\n' "$out" | grep '^\[DOWNGRADE\]' | head -1 || true)"
 body="$(printf '%s\n' "$out" | grep -v '^\[DOWNGRADE\]' || true)"
 
-reason="review-gate: проверка архитектуры не пройдена после субагента (mode=$MODE).
+reason="review-gate: architecture check failed after subagent (mode=$MODE).
 ${body}"
 
 if [ "$strict" -eq 1 ]; then

@@ -1,42 +1,42 @@
-// Шаблон 1: research-fanout — N тем × research → adversarial verify (pipeline, без барьера).
-// Прототип: рабочий скрипт ECOSYSTEM P5 (wf-p5-research.js). Правила слотов — README.md рядом.
+// Template 1: research-fanout — N topics × research → adversarial verify (pipeline, without barrier).
+// Prototype: working script ECOSYSTEM P5 (wf-p5-research.js). Slot Rules - README.md nearby.
 export const meta = {
-  name: 'research-fanout', // SLOT: имя под конкретный запуск, напр. 'p5-research-sweep'
-  description: 'RAG-развед по N темам параллельно + адверсариальная проверка несущих утверждений',
-  whenToUse: 'Stage research любого пайплайна; запускать через scriptPath (НЕ named-workflow — args приходит строкой)',
+  name: 'research-fanout', // SLOT: name for a specific launch, for example. 'p5-research-sweep'
+  description: 'RAG-reconnaissance N topics in parallel + adversarial verification of carrier statements',
+  whenToUse: 'Stage research any pipeline; run through scriptPath (NOT named-workflow — args comes as a string)',
   phases: [
-    { title: 'Research', detail: 'темы параллельно — perplexity-web', model: 'sonnet' },
-    { title: 'Verify', detail: 'адверсариальная проверка load-bearing утверждений', model: 'sonnet' },
+    { title: 'Research', detail: 'topics in parallel - perplexity-web', model: 'sonnet' },
+    { title: 'Verify', detail: 'advertorial check load-bearing statements', model: 'sonnet' },
   ],
 }
 
-// ── Конфиг (embedded, НЕ через args-строку) ──────────────────────────────────
-// SLOT: TOPICS — темы разведки; key = slug для label/отчёта, brief = плотное ТЗ
-// с контекстом экосистемы, таймфреймом (год!), named tools и границами scope.
-// cache-bust: `agent()` кэширует по (prompt, opts) — на `resumeFromRunId` ОДНОЙ темы без
-// глобального инвалидатора добавь опц. поле `asOf` (дата/тег) в объект темы и подмешай в
-// `label`/промпт (см. README §Общие инварианты; паттерн — roadmap-заметка dterema-p4).
+// ── Config (embedded, NOT via args-line) ──────────────────────────────────
+// SLOT: TOPICS — intelligence topics; key = slug for label/report, brief = dense technical specification
+// with ecosystem context, timeframe (year!), named tools and boundaries scope.
+// cache-bust: `agent()` caches by (prompt, opts) — on `resumeFromRunId` ONE topic without
+// global invalidator add opt. field `asOf` (date/tag) into the topic object and mix into
+// `label`/prompt (see README §General invariants; pattern - roadmap-note dterema-p4).
 const TOPICS = [
-  { key: 'topic-a', brief: 'Тема A: конкретный вопрос со стеком/версиями/таймфреймом 2025-2026, "X vs Y", named tools.' },
-  { key: 'topic-b', brief: 'Тема B: …' },
+  { key: 'topic-a', brief: 'Topic A: specific stack issue/versions/timeframe 2025-2026, "X vs Y", named tools.' },
+  { key: 'topic-b', brief: 'Topic B: …' },
 ]
 
-// SLOT: контекст проекта — одна строка, подставляется в каждый промпт.
-const PROJECT_CONTEXT = 'экосистема Axioma (Laravel/CoreX + Dart/Flutter, RU-рынок, 54-ФЗ)'
+// SLOT: project context - one line, inserted into each prompt.
+const PROJECT_CONTEXT = 'ecosystem Axioma (Laravel/CoreX + Dart/Flutter, RU-market, 54-FZ)'
 
-// SLOT: model/effort — research обычно sonnet/medium; opus только если темы
-// требуют глубокого синтеза, а не сбора фактов.
+// SLOT: model/effort — research usually sonnet/medium; opus only if topics
+// require deep synthesis rather than fact-gathering.
 const RESEARCH_MODEL = { model: 'sonnet', effort: 'medium' }
 const VERIFY_MODEL = { model: 'sonnet', effort: 'medium' }
 
-// SLOT: сколько load-bearing утверждений проверять на тему (verify — не бесплатный).
-// guarded-optional-args: если load-bearing утверждений нет, фолбэк на первые 4 (см. `claims`
-// в verifyPrompt) — явный дефолт, не пустой список верификации; wf-agentools-drive cross-ref.
+// SLOT: how much load-bearing statements check for topic (verify — not free).
+// guarded-optional-args: if load-bearing no statements, fallback to the first 4 (see `claims`
+// in verifyPrompt) — explicit default, non-empty verification list; wf-agentools-drive cross-ref.
 const VERIFY_TOP_N = 6
 
-// ── Схемы structured-summary (агент возвращает данные, супервизор держит контекст) ──
-// SLOT: FINDINGS_SCHEMA — расширять под задачу (напр. vendor_candidates для vendor-scan),
-// но ядро claim/source_url/load_bearing не убирать: на нём стоит verify-стадия.
+// ── Schemes structured-summary (agent returns data, supervisor holds context) ──
+// SLOT: FINDINGS_SCHEMA — expand to suit the task (e.g. vendor_candidates for vendor-scan),
+// but the kernel claim/source_url/load_bearing do not remove: there is a verify-stage.
 const FINDINGS_SCHEMA = {
   type: 'object',
   properties: {
@@ -46,10 +46,10 @@ const FINDINGS_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          claim: { type: 'string', description: 'Факт/практика одним абзацем, конкретно' },
+          claim: { type: 'string', description: 'Fact/practice in one paragraph, specifically' },
           source_url: { type: 'string' },
           source_title: { type: 'string' },
-          load_bearing: { type: 'boolean', description: 'true если на этом стоит будущее решение' },
+          load_bearing: { type: 'boolean', description: 'true if this is the future solution' },
         },
         required: ['claim', 'source_url', 'source_title', 'load_bearing'],
       },
@@ -80,15 +80,15 @@ const VERIFY_SCHEMA = {
   required: ['verdicts'],
 }
 
-// ── Промпты ──────────────────────────────────────────────────────────────────
+// ── Prompts ──────────────────────────────────────────────────────────────────
 function researchPrompt(t) {
   return [
-    `RAG-research по теме «${t.key}». Контекст: ${PROJECT_CONTEXT}.`,
-    `Тема: ${t.brief}`,
-    `Инструменты: сначала ToolSearch с query "select:mcp__perplexity-web__search_deep,mcp__perplexity-web__search_advanced,mcp__perplexity-web__search" — загрузи схемы. Начни с ОДНОГО search_deep по теме целиком, затем 4–8 уточняющих search/search_advanced по дырам и спорным местам. Любое собственное сомнение — ещё один запрос, не догадка.`,
-    `Дисциплина запросов (query-craft): конкретика вместо общих слов — версии/стек/таймфрейм, формат "X vs Y", named tools. Не задавать голые вопросы типа "best practices".`,
-    `Каждое утверждение — с URL источника. Чего не нашёл в источниках — в open_questions, не выдумывать. load_bearing=true только для утверждений, на которых будет стоять проектное решение. Факт без источника = [UNVERIFIED] прямо в тексте claim.`,
-    `Верни строго по схеме. Твой финальный текст = данные, не сообщение человеку.`,
+    `RAG-research on topic «${t.key}». Context: ${PROJECT_CONTEXT}.`,
+    `Subject: ${t.brief}`,
+    `Tools: first ToolSearch with query "select:mcp__perplexity-web__search_deep,mcp__perplexity-web__search_advanced,mcp__perplexity-web__search" — download schematics. Start with ONE search_deep on the entire topic, then 4–8 clarifying ones search/search_advanced on holes and controversial places. Any self-doubt is another request, not a guess.`,
+    `Query discipline (query-craft): specifics instead of general words - versions/stack/timeframe, format "X vs Y", named tools. Don't ask naked questions like "best practices".`,
+    `Each statement is with URL source. What I didn’t find in the sources - in open_questions, don't make things up. load_bearing=true only for statements on which the design decision will be based. Fact without source = [UNVERIFIED] directly in the text claim.`,
+    `Return strictly according to the scheme. Your final text = data, not a message to a person.`,
   ].join('\n')
 }
 
@@ -96,17 +96,17 @@ function verifyPrompt(t, res) {
   const loadBearing = res.findings.filter(f => f.load_bearing).slice(0, VERIFY_TOP_N)
   const claims = loadBearing.length ? loadBearing : res.findings.slice(0, 4)
   return [
-    `Адверсариальная проверка research-находок по теме «${t.key}». Твоя задача — ОПРОВЕРГНУТЬ каждое утверждение свежим независимым поиском.`,
-    `Инструменты: ToolSearch "select:mcp__perplexity-web__search_advanced,mcp__perplexity-web__search", затем 1-2 контрольных запроса на утверждение (другие формулировки, чем исходные).`,
-    `Утверждения:`,
-    ...claims.map((f, i) => `${i + 1}. ${f.claim} [источник: ${f.source_url}]`),
-    `Вердикты: CONFIRMED только при независимом подтверждении; сомнение = UNVERIFIED; противоречие источникам = REFUTED с counter_source_url.`,
-    `Верни строго по схеме.`,
+    `Adversarial check research-finds on the topic «${t.key}». Your task is to REFUTE each statement with a fresh, independent search.`,
+    `Tools: ToolSearch "select:mcp__perplexity-web__search_advanced,mcp__perplexity-web__search", then 1-2 control requests for approval (different wording than original).`,
+    `Statements:`,
+    ...claims.map((f, i) => `${i + 1}. ${f.claim} [source: ${f.source_url}]`),
+    `Verdicts: CONFIRMED only with independent confirmation; doubt = UNVERIFIED; conflicting sources = REFUTED with counter_source_url.`,
+    `Return it strictly according to the scheme.`,
   ].join('\n')
 }
 
-// ── Оркестрация: pipeline без барьера — verify темы стартует сразу после её research ──
-log(`research-fanout: ${TOPICS.length} тем, verify без барьера (pipeline)`)
+// ── Orchestration: pipeline without barrier - verify topic starts immediately after it research ──
+log(`research-fanout: ${TOPICS.length} those verify without barrier (pipeline)`)
 
 const results = await pipeline(
   TOPICS,
@@ -125,6 +125,6 @@ const results = await pipeline(
 
 const ok = results.filter(Boolean)
 const dropped = TOPICS.filter(t => !ok.some(r => r.key === t.key)).map(t => t.key)
-if (dropped.length) log(`ВНИМАНИЕ: темы без результата (пересобрать в main loop): ${dropped.join(', ')}`)
+if (dropped.length) log(`WARNING: topics with no results (rebuild to main loop): ${dropped.join(', ')}`)
 
 return { topics: ok, dropped }

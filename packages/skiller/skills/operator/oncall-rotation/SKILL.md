@@ -68,19 +68,19 @@ Shift handoff = separate artifact. Without it rotation becomes "everyone's own h
 ## On-Call Handoff: [Date]
 **From:** @alice  **To:** @bob
 
-### Открытые инциденты
-- [SEV-X | id] статус, что сделано, что осталось
+### Open incidents
+- [SEV-X | id] status, what's done, what's left
 
-### Активные алерты (noise)
-- алерт X шумит, копаем; флапает, не реагировать пока ROOT.
+### Active alerts (noise)
+- alert X makes noise, we dig; flaps, don't react yet ROOT.
 
-### Изменения в проде за смену
-- Deploy abc123 → checkout (риск средний)
-- Feature flag X включён 50%
+### Changes in production during the shift
+- Deploy abc123 → checkout (risk medium)
+- Feature flag X enabled 50%
 
 ### Watchlist
-- [ ] Дашборд Y — следить за latency завтра в пик
-- [ ] Vendor Z объявил maintenance window 14:00 UTC
+- [ ] Dashboard Y — follow latency tomorrow at peak
+- [ ] Vendor Z announced maintenance window 14:00 UTC
 ```
 
 Post handoff in incident channel or shared doc, **not in DM**.
@@ -122,15 +122,15 @@ Review monthly / quarterly:
 ```markdown
 # On-Call Rotation: [ProjectName]
 
-## 1. Покрытие (окно реагирования + SLA)
-## 2. Размер ротации и обоснование
-## 3. Расписание (как генерируется, где живёт)
+## 1. Coating (response window + SLA)
+## 2. Rotation size and rationale
+## 3. Schedule (how it is generated, where it lives)
 ## 4. Primary / Secondary policy
-## 5. Paging policy по severity (см. incident-response)
-## 6. Handoff (когда, формат, где хранится)
+## 5. Paging policy by severity (see incident-response)
+## 6. Handoff (when, format, where stored)
 ## 7. Compensation
-## 8. Junior on-call policy (shadowing, требования)
-## 9. Метрики здоровья ротации (что измеряем, как часто смотрим)
+## 8. Junior on-call policy (shadowing, requirements)
+## 9. Rotation Health Metrics (what we measure, how often we look)
 ```
 
 ## Hard prohibitions — NEVER

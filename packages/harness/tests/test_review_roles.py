@@ -8,10 +8,10 @@ from harness import reviewroles as rr
 
 _CARRIER_TEXT = (
     "---\nname: demo-reviewer\n---\n\n"
-    "## Критерии\n\n- пример критерия\n\n"
-    "## Гейты вердикта\n\n- пример гейта\n\n"
-    "## Проектные оверрайды\n\nпример\n\n"
-    "## Выход\n\nпример\n"
+    "## Criteria\n\n- criterion example\n\n"
+    "## Verdict gates\n\n- gate example\n\n"
+    "## Project overrides\n\nexample\n\n"
+    "## Exit\n\nexample\n"
 )
 
 _REVIEW_ROLE = {
@@ -21,10 +21,10 @@ _REVIEW_ROLE = {
     "overrides": "demo-pack/rules/reviewer-overrides.md",
     "required_sections": ["criteria", "verdict_gates", "project_overrides", "output"],
     "sections": {
-        "criteria": "## Критерии",
-        "verdict_gates": "## Гейты вердикта",
-        "project_overrides": "## Проектные оверрайды",
-        "output": "## Выход",
+        "criteria": "## Criteria",
+        "verdict_gates": "## Verdict gates",
+        "project_overrides": "## Project overrides",
+        "output": "## Exit",
     },
     "dimensions": ["over-engineering", "generated-assets"],
 }
@@ -41,7 +41,7 @@ class ReviewRolesTestCase(unittest.TestCase):
         (pack / "agents").mkdir(parents=True)
         (pack / "rules").mkdir(parents=True)
         (pack / "agents" / "reviewer.md").write_text(_CARRIER_TEXT, encoding="utf-8")
-        (pack / "rules" / "reviewer-overrides.md").write_text("# оверрайды\n", encoding="utf-8")
+        (pack / "rules" / "reviewer-overrides.md").write_text("# overrides\n", encoding="utf-8")
 
         self.roles_json = self.root / "roles.json"
         self.roles_json.write_text(json.dumps({
@@ -102,8 +102,8 @@ class ReviewRolesTestCase(unittest.TestCase):
 
     def test_negative_heading_not_in_canon(self):
         violations, code = self._run(self._registry({"sections": {
-            "criteria": "## Критерии", "verdict_gates": "## Гейты вердикта",
-            "project_overrides": "## Проектные оверрайды", "output": "## Заведомо не существует",
+            "criteria": "## Criteria", "verdict_gates": "## Verdict gates",
+            "project_overrides": "## Project overrides", "output": "## Knownly does not exist",
         }}))
         self.assertEqual(code, 1)
         self.assertTrue(any(v.check == "sections-present" for v in violations))
@@ -167,7 +167,7 @@ class ReviewRolesTestCase(unittest.TestCase):
         self.assertEqual(code, 1)
         skills_violations = [v for v in violations if v.check == "skills"]
         self.assertEqual(len(skills_violations), 1)
-        self.assertIn("индекс скиллов недоступен", skills_violations[0].message)
+        self.assertIn("skill index not available", skills_violations[0].message)
 
 
 if __name__ == "__main__":

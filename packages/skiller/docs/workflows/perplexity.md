@@ -1,81 +1,81 @@
-# Perplexity — исследование и первичное ТЗ
+# Perplexity — research and initial technical specifications
 
-> Роль в воркфлоу: **аналитический движок** на начальном этапе. Задача — собрать
-> актуальные данные, найти референсы, выявить лучшие практики и сформировать
-> первичное ТЗ с источниками.
+> Role in work flow: **analytics engine** at the initial stage. The task is to collect
+> current data, find references, identify best practices and form
+> primary technical specification with sources.
 
-## Настройки перед работой
+## Settings before work
 
-- **Длина ответа**: `Detailed` (Длинный) — больше текста для анализа, меньше пропусков.
-- **Режим поиска**: Pro Search — подтягивает свежие источники.
-- **Фокус**: по умолчанию или `Academic` для узкоспециализированных тем.
+- **Response length**: `Detailed` (Long) — more text to parse, less gaps.
+- **Search mode**: Pro Search — pulls up fresh sources.
+- **Focus**: default or `Academic` for highly specialized topics.
 
-## Шаблон промта
+## Promt template
 
 ```
-Мне нужно разработать [описание задачи].
+I need to develop [task description].
 
-Выполни глубокий анализ:
-1. Существующие решения и пакеты для [технология/экосистема]
-2. Лучшие практики реализации на [год]
-3. Архитектурные паттерны, применимые к задаче
-4. Сравнение подходов (если применимо)
+Perform in-depth analysis:
+1. Existing solutions and packages for [technology/ecosystem]
+2. Best practices for implementation on [year]
+3. Architectural patterns applicable to the problem
+4. Comparison of approaches (if applicable)
 
-Требования к ответу:
-- Использовать самые свежие данные (последние релизы, актуальные версии)
-- Ответ должен быть развёрнутым и содержательным — без воды
-- Включить блок **Ресурсы и референсы** с прямыми ссылками на GitHub-репозитории
-- Если есть известные reference-реализации (например, Spatie Permission для
-  Laravel) — разобрать их архитектуру
-- Указать: какие паттерны используются, как организована структура файлов,
-  какие интерфейсы публикуются
+Response requirements:
+- Use the latest data (latest releases, current versions)
+- The answer must be detailed and meaningful - without any confusion
+- Enable block **Resources and references** with direct links to GitHub-repositories
+- If there are known reference-implementations (for example, Spatie Permission for
+  Laravel) — disassemble their architecture
+- Specify: what patterns are used, how the file structure is organized,
+  what interfaces are published
 
-Контекст проекта:
-- Технология: [Laravel / PHP / Python / etc.]
-- Тип пакета / приложения: [описание]
-- Ключевые требования: [перечислить]
+Project context:
+- Technology: [Laravel / PHP / Python / etc.]
+- Packet type / applications: [description]
+- Key requirements: [list]
 ```
 
-## Обязательный блок ресурсов
+## Required resource block
 
-Perplexity должен завершить ответ разделом вида:
+Perplexity should end the response with a section like:
 
 ```markdown
-## Ресурсы и референсы
+## Resources and references
 
-| Название | Ссылка | Почему важно |
+| Title | Link | Why is it important |
 |----------|--------|--------------|
-| Spatie Laravel Permission | https://github.com/spatie/laravel-permission | Эталонная реализация RBAC для Laravel |
+| Spatie Laravel Permission | https://github.com/spatie/laravel-permission | Reference implementation RBAC for Laravel |
 | ...      | ...    | ...          |
 ```
 
-> **Важно:** Этот блок становится базой знаний для следующего этапа. Чем больше
-> ссылок на реальный код — тем точнее Claude сможет проработать архитектуру.
+> **Important:** This block becomes the knowledge base for the next stage. The more
+> links to real code - the more accurate Claude will be able to work out the architecture.
 
-## Промт для ревью актуальности
+## Promt for review of relevance
 
-Используется после завершения разработки — проверить, не устарели ли подходы:
+Used after development is completed - check if the approaches are outdated:
 
 ```
-Проверь: существуют ли более актуальные подходы к реализации [задача]
-в экосистеме [Laravel/PHP] на [текущий год]?
-Ищи изменения в best practices за последние 6-12 месяцев.
-Блок Ресурсы обязателен.
+Check if there are more relevant approaches to implementation [task]
+in the ecosystem [Laravel/PHP] on [current year]?
+Look for changes in best practices over the past 6-12 months.
+The Resources block is required.
 ```
 
-## Правила формулировки
+## Wording rules
 
-- **Всегда запрашивать блок «Ресурсы»** — это не опциональная часть, а обязательная.
-- **Указывать год и экосистему** — иначе результаты могут быть устаревшими.
-- **Длинный ответ в настройках** — убирает «воду» лучше, чем короткий: нет нужды
-  сжимать нужное.
-- **Запрашивать сравнение** — «Сравни подходы A и B» даёт больше информации для решения.
+- **Always request block «Resources»** — is not an optional part, but a required one.
+- **Indicate year and ecosystem** — otherwise the results may be out of date.
+- **Long answer in settings** — removes «water» better than short: no need
+  compress as needed.
+- **Request comparison** — «Compare approaches A and B» gives more information for the solution.
 
-## Что получаем на выходе
+## What we get at the output
 
-- Краткое первичное ТЗ (постановка задачи + ключевые требования).
-- Список технологий и пакетов.
-- Референс-реализации с GitHub-ссылками.
-- Понимание архитектурных вариантов.
+- Brief primary technical specification (problem statement + key requirements).
+- List of technologies and packages.
+- Reference implementations with GitHub-links.
+- Understanding architectural options.
 
-Далее: весь ответ целиком передаётся в [Claude](./claude).
+Next: the entire response is transmitted to [Claude](./claude).

@@ -1,15 +1,15 @@
-"""analyst recompute — детерминированный пересчёт confidence + числовая state-machine.
+"""analyst recompute — deterministic recalculation confidence + numeric state-machine.
 
-Источник истины — events.ndjson (append-only поток сигналов). recompute читает лог,
-затухает по времени, агрегирует S/N и tests, считает confidence (confidence.py) и
-двигает состояние ПО ЧИСЛАМ — БЕЗ демона (on-demand), детерминированно и восстановимо
-из логов (при фиксированном `--now` снапшот воспроизводим).
+Source of truth - events.ndjson (append-only signal flow). recompute reads the log,
+decays over time, aggregates S/N and tests, thinks confidence (confidence.py) and
+moves state BY NUMBERS - WITHOUT daemon (on-demand), deterministic and recoverable
+from logs (at fixed `--now` snapshot is reproduced).
 
-Инвариант (P1): `candidate→curated` — ВСЕГДА человек. Здесь при выполненных числовых
-порогах curated лишь ПОМЕЧАЕТСЯ «готов» (флаг в audit), но НЕ двигается автоматически.
-Демоут — soft (`move_lesson` в deprecated: ре-райт+unlink, файл сохраняется, не удаление).
-Авто-переход `ephemeral→candidate` разрешён (машинный тир) при N≥порог & conf≥0.6 & tests≥1;
-пороги N адаптивны к активности проекта для малоактивных (adaptive_thresholds, см. tuning.md).
+Invariant (P1): `candidate→curated` — ALWAYS human. Here, with the numerical
+thresholds curated is only MARKED «ready» (flag in audit), but does NOT move automatically.
+Demout - soft (`move_lesson` in deprecated: re-write+unlink, file is saved, not deleted).
+Auto-transition `ephemeral→candidate` allowed (machine shooting range) when N≥threshold & conf≥0.6 & tests≥1;
+thresholds N adaptive to project activity for low-activity (adaptive_thresholds, see tuning.md).
 """
 import json
 import os
@@ -18,28 +18,28 @@ from . import confidence as C
 from . import lessons
 from .common import die, now_iso, parse_args, parse_iso
 
-# ── числовые гейты state-machine (§5) ────────────────────────────────────────
-CANDIDATE_MIN_N = 15        # объём наблюдений для авто ephemeral→candidate
+# ── numeric gates state-machine (§5) ────────────────────────────────────────
+CANDIDATE_MIN_N = 15        # volume of observations for cars ephemeral→candidate
 CANDIDATE_MIN_CONF = 0.6
-CURATED_MIN_N = 50         # числовой порог «готов к curated» (но переход — человек)
+CURATED_MIN_N = 50         # numeric threshold «ready for curated» (but the transition is human)
 CURATED_MIN_CONF = 0.8
 CURATED_MIN_PASSRATE = 0.95
-DEPRECATE_CONF = 0.6       # просадка ниже → soft-демоут (candidate) / флаг (curated)
-CANDIDATE_MIN_N_FLOOR = 3   # нижняя планка адаптивного порога candidate (D2)
+DEPRECATE_CONF = 0.6       # drawdown below → soft-demo (candidate) / flag (curated)
+CANDIDATE_MIN_N_FLOOR = 3   # lower adaptive threshold bar candidate (D2)
 
 
 def adaptive_thresholds(project_sessions):
-    """Пороги N перехода, адаптированные к суммарной активности проекта (D2, tuning.md).
+    """Thresholds N transitions adapted to the overall project activity (D2, tuning.md).
 
-    Малоактивный проект (Σ sessions_total всех событий < CURATED_MIN_N) физически не
-    наберёт N≥15/50 → уроки залипают в «вечном ephemeral». Понижаем планку
-    пропорционально активности, сохраняя статическую пропорцию candidate:curated:
+    Inactive project (Σ sessions_total all events < CURATED_MIN_N) physically not
+    will dial N≥15/50 → lessons are stuck in «eternal ephemeral». Lowering the bar
+    proportional to activity, maintaining static proportion candidate:curated:
 
-        candidate = max(FLOOR, project_sessions // 5)                # формула D2
-        curated   = max(candidate, round(candidate × CURATED/CANDIDATE))  # та же пропорция
+        candidate = max(FLOOR, project_sessions // 5)                # formula D2
+        curated   = max(candidate, round(candidate × CURATED/CANDIDATE))  # same proportion
 
-    При project_sessions ≥ CURATED_MIN_N данных достаточно → статические (15, 50).
-    Чистая: (int) → (int, int). Детерминирована. Порог никогда не выше статического."""
+    When project_sessions ≥ CURATED_MIN_N enough data → static (15, 50).
+    Net: (int) → (int, int). Deterministic. The threshold is never higher than the static one."""
     if project_sessions >= CURATED_MIN_N:
         return CANDIDATE_MIN_N, CURATED_MIN_N
     cand = max(CANDIDATE_MIN_N_FLOOR, int(project_sessions) // 5)
@@ -47,9 +47,9 @@ def adaptive_thresholds(project_sessions):
     return cand, cur
 
 
-# ── время (парс timestamp'ов — единый core.parse_iso, py39-safe) ─────────────
+# ── time (pars timestamp'ov - single core.parse_iso, py39-safe) ─────────────
 def day_bucket(ts_event, ts_now):
-    """Возраст события в днях (floor, bucket=BUCKET_DAYS), ≥0. Неразбор ts → 0 (защитно)."""
+    """Event age in days (floor, bucket=BUCKET_DAYS), ≥0. Unparsing ts → 0 (protective)."""
     a, b = parse_iso(ts_event), parse_iso(ts_now)
     if a is None or b is None:
         return 0
@@ -57,10 +57,10 @@ def day_bucket(ts_event, ts_now):
     return max(0, int(secs // (C.BUCKET_DAYS * 86400)))
 
 
-# ── агрегат событий (чистый при заданном now_ts) ─────────────────────────────
+# ── event aggregate (clean at a given now_ts) ─────────────────────────────
 def aggregate_events(events, now_ts):
-    """Свести события одного урока в скаляры + days_since последнего наблюдения.
-    Возвращает {S,N,tests_total,tests_passed,days_since,event_count,last_ts}."""
+    """Reduce the events of one lesson into scalars + days_since last observed.
+    Returns {S,N,tests_total,tests_passed,days_since,event_count,last_ts}."""
     S = N = tt = tp = 0
     last_ts = None
     last_dt = None
@@ -70,8 +70,8 @@ def aggregate_events(events, now_ts):
         tt += int(e.get("tests_total", 0) or 0)
         tp += int(e.get("tests_passed", 0) or 0)
         ts = e.get("ts")
-        # хронологический max по РАЗОБРАННОМУ времени (не лексикографически — терпит
-        # дробные секунды/оффсеты, где строковое сравнение врёт)
+        # chronological max by DISCONTINUED time (not lexicographically - tolerates
+        # fractional seconds/offsets, where string comparisons lie)
         dt = parse_iso(ts) if ts else None
         if dt is not None and (last_dt is None or dt > last_dt):
             last_dt, last_ts = dt, ts
@@ -85,7 +85,7 @@ def _passrate(tt, tp):
 
 
 def snapshot_fields(agg, conf, now_ts):
-    """Аддитивные поля-снапшот для урока (не ломают P1-схему). Детерминированы при now_ts."""
+    """Additive snapshot fields for the lesson (don't break P1-diagram). Determined when now_ts."""
     decay = C.time_decay(agg["days_since"])
     return {
         "sessions_total": agg["N"],
@@ -100,13 +100,13 @@ def snapshot_fields(agg, conf, now_ts):
     }
 
 
-# ── числовая state-machine (чистая: state+числа → решение) ────────────────────
+# ── numeric state-machine (clean: state+numbers → solution) ────────────────────
 def decide_transition(state, agg, conf,
                       candidate_min_n=CANDIDATE_MIN_N, curated_min_n=CURATED_MIN_N):
-    """(new_state, action, note) по числам. curated — НЕ авто (только флаг «готов»).
+    """(new_state, action, note) by numbers. curated — NOT auto (flag only «ready»).
 
-    candidate_min_n/curated_min_n — эффективные пороги N (по умолчанию статические;
-    recompute_project передаёт адаптивные от активности проекта, см. adaptive_thresholds).
+    candidate_min_n/curated_min_n — effective thresholds N (default static;
+    recompute_project transmits adaptive ones from the project activity, see adaptive_thresholds).
     action ∈ {promote, deprecate, curated-ready, curated-decay, unchanged}."""
     N = agg["N"]
     tt = agg["tests_total"]
@@ -119,21 +119,21 @@ def decide_transition(state, agg, conf,
             return "deprecated", "deprecate", f"conf {conf:.2f} < {DEPRECATE_CONF} (soft)"
         pr = _passrate(tt, agg["tests_passed"])
         if N >= curated_min_n and conf >= CURATED_MIN_CONF and pr >= CURATED_MIN_PASSRATE:
-            # инвариант P1: в curated двигает ТОЛЬКО человек — здесь лишь флаг
-            return "candidate", "curated-ready", f"числа для curated есть (N≥{curated_min_n}) — нужен человек"
+            # invariant P1: in curated is moved ONLY by a person - there is only a flag here
+            return "candidate", "curated-ready", f"numbers for curated yes (N≥{curated_min_n}) — need a person"
         return "candidate", "unchanged", ""
     if state == "curated":
         if conf < DEPRECATE_CONF:
-            # curated человек-благословлён: не авто-демоутим, помечаем на ревью
-            return "curated", "curated-decay", f"conf {conf:.2f} < {DEPRECATE_CONF} — на ревью человека"
+            # curated man-blessed: not auto-demoting, marking for review
+            return "curated", "curated-decay", f"conf {conf:.2f} < {DEPRECATE_CONF} — for human review"
         return "curated", "unchanged", ""
     return state, "unchanged", ""
 
 
-# ── применение (IO) ──────────────────────────────────────────────────────────
+# ── application (IO) ──────────────────────────────────────────────────────────
 def recompute_project(project_path, now_ts, *, dry_run=False):
-    """Пересчитать все активные (не deprecated) уроки из events.ndjson. Возвращает
-    список результатов. dry_run — только считает, ничего не пишет на диск."""
+    """Recalculate all active (not deprecated) lessons from events.ndjson. Returns
+    list of results. dry_run — only counts, does not write anything to disk."""
     events = lessons.read_events(project_path)
     by_id = {}
     project_sessions = 0
@@ -142,7 +142,7 @@ def recompute_project(project_path, now_ts, *, dry_run=False):
         lid = e.get("id")
         if lid:
             by_id.setdefault(lid, []).append(e)
-    # адаптивные пороги от суммарной активности проекта (малоактивный не залипает в ephemeral)
+    # adaptive thresholds based on total project activity (low-active does not stick to ephemeral)
     cand_min, cur_min = adaptive_thresholds(project_sessions)
 
     results = []
@@ -153,7 +153,7 @@ def recompute_project(project_path, now_ts, *, dry_run=False):
         evs = by_id.get(lid)
         if not evs:
             results.append({"id": lid, "state": st, "action": "no-events",
-                            "confidence": None, "tier": None, "note": "нет событий"})
+                            "confidence": None, "tier": None, "note": "no events"})
             continue
         agg = aggregate_events(evs, now_ts)
         conf = C.confidence(agg["S"], agg["N"], agg["days_since"])
@@ -165,9 +165,9 @@ def recompute_project(project_path, now_ts, *, dry_run=False):
         if dry_run:
             continue
 
-        # 1) атомарный снапшот в текущем состоянии
+        # 1) atomic snapshot in the current state
         lessons.save_lesson(project_path, dict(L, **snapshot_fields(agg, conf, now_ts)), st)
-        # 2) переходы по числам (curated — НЕ здесь)
+        # 2) jumps by numbers (curated — NOT here)
         if action == "promote":
             lessons.move_lesson(project_path, lid, "candidate")
             lessons.audit_append(project_path, {
@@ -188,18 +188,18 @@ def recompute_project(project_path, now_ts, *, dry_run=False):
 # ── CLI ──────────────────────────────────────────────────────────────────────
 def cmd_recompute(env, argv):
     """analyst recompute [--now ISO] [--dry-run] [--json]
-    — пересчитать confidence уроков из events.ndjson и применить числовую state-machine."""
+    — recalculate confidence lessons from events.ndjson and apply numeric state-machine."""
     opts, _ = parse_args(argv, {"--now": "str", "--project": "str",
                                 "--dry-run": "bool", "--json": "bool"})
     if opts["help"]:
         print("analyst recompute [--now ISO] [--dry-run] [--json]\n"
-              "  Детерминированный пересчёт confidence из events.ndjson + числовая\n"
-              "  state-machine: авто ephemeral→candidate; curated — только человек;\n"
-              "  просадка → soft-deprecate (файл не удаляется). Демона нет.")
+              "  Deterministic recalculation confidence from events.ndjson + numeric\n"
+              "  state-machine: auto ephemeral→candidate; curated — human only;\n"
+              "  drawdown → soft-deprecate (file is not deleted). There is no demon.")
         return
     now_ts = opts["now"] or now_iso()
     if opts["now"] and parse_iso(now_ts) is None:
-        die("--now: ожидается ISO UTC вида 2026-07-01T00:00:00Z")
+        die("--now: pending ISO UTC view 2026-07-01T00:00:00Z")
 
     ppath = os.getcwd()
     results = recompute_project(ppath, now_ts, dry_run=opts["dry_run"])
@@ -211,7 +211,7 @@ def cmd_recompute(env, argv):
 
     moved = [r for r in results if r["action"] in ("promote", "deprecate")]
     flags = [r for r in results if r["action"] in ("curated-ready", "curated-decay")]
-    print(f"\nanalyst recompute — {len(results)} урок(ов) @ {now_ts}"
+    print(f"\nanalyst recompute — {len(results)} lesson(ov) @ {now_ts}"
           f"{' (dry-run)' if opts['dry_run'] else ''}\n")
     for r in results:
         if r["action"] in ("no-events",):
@@ -222,8 +222,8 @@ def cmd_recompute(env, argv):
               f"{('  ⚑ ' + r['note']) if r['action'].startswith('curated') else ''}")
     print()
     if flags:
-        print(f"⚑ {len(flags)} готов(ы) к вниманию человека (curated — только человек): "
+        print(f"⚑ {len(flags)} ready(s) to human attention (curated — human only): "
               "analyst promote <id> --to curated")
     if moved and not opts["dry_run"]:
-        print(f"✓ применено переходов: {len(moved)} (см. audit.ndjson)")
+        print(f"✓ applied transitions: {len(moved)} (see audit.ndjson)")
     print()

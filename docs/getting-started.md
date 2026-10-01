@@ -1,52 +1,52 @@
-# Начать работу
+# Get started
 
-SwissKnifeMan не требует плана для каждой задачи. Выберите короткий путь по масштабу работы;
-`task` и полный онбординг подключаются явным решением.
+SwissKnifeMan does not require a plan for each task. Choose a shortcut based on the scale of work;
+`task` and full onboarding are enabled by an explicit solution.
 
-## Проверить установку
+## Check installation
 
-Из корня клонированного SwissKnifeMan:
+From a cloned root SwissKnifeMan:
 
 ```bash
 ./install.sh
 swissknifeman doctor
 ```
 
-`doctor` проверяет инструменты на машине. Состояние конкретного подключённого проекта смотрите
-через `swissknifeman status <project-id>`; это другая проверка.
+`doctor` checks the tools on the machine. See the status of a specific connected project
+via `swissknifeman status <project-id>`; is a different check.
 
-## Первая задача в проекте
+## First task in the project
 
-Откройте проект в выбранном агентном клиенте с его собственным режимом доступа только для
-чтения и попросите изучить один участок кода. Для Codex CLI это, например,
-`codex -a never -s read-only` из каталога проекта; доступность и смысл режимов других
-клиентов проверяйте в их настройках. Просьба «не записывать» сама по себе права не ограничивает.
-Для задачи с изменениями сначала посмотрите рабочее дерево (`git status --short`), затем дайте
-агенту цель, границы и способ проверки. Для локальной обратимой правки достаточно изменить код,
-выполнить затронутую проверку и показать diff. План и Task для этого не обязательны.
+Open the project in the selected agent client with its own access mode for only
+reading and ask to study one section of code. For Codex CLI is, for example,
+`codex -a never -s read-only` from the project directory; accessibility and meaning of the regimes of others
+clients check in their settings. Request «do not write» in itself does not limit rights.
+For a task with changes, first look at the work tree (`git status --short`), then give
+agent purpose, boundaries and verification method. For local reversible editing, it is enough to change the code,
+perform affected check and show diff. Plan and Task are not required for this.
 
-Если проекту нужны скиллы через канал `connect` для Claude Code, находясь в его каталоге,
-сначала посмотрите изменения:
+If the project needs skills through the channel `connect` for Claude Code, being in its directory,
+first look at the changes:
 
 ```bash
 skiller connect --dry-run
 ```
 
-`connect` — отдельное подключение скиллов, а не условие для обычной работы с кодом. Полный
-онбординг с окружением и сервисами описан в [руководстве по подключению](/maind/guide/onboarding-decision-tree).
+`connect` — separate connection of skills, and not a condition for normal work with code. Full
+onboarding with environments and services is described in [connection manual](/maind/guide/onboarding-decision-tree).
 
-## Выбрать путь работы
+## Select work path
 
-| Задача | Действие | Что сохранить |
+| Task | Action | What to save |
 |:--|:--|:--|
-| Локальная обратимая правка | Работать напрямую с агентом; выполнить проверку затронутого поведения | Diff и результат проверки |
-| Работа, которую трудно закончить за один надёжный проход | Явно вызвать `/task:design` или `/task:dev` в Claude Code, `$ task:design` или `$ task:dev` в Codex | План, решения и handoff в репозитории |
-| Изменение публичного контракта, данных или внешней среды | До применения назвать границы, проверить затронутые сценарии и отдельно решить вопрос необратимого действия | Решение, проверка и способ восстановления |
+| Local reversible edit | Work directly with the agent; perform a review of the affected behavior | Diff and check result |
+| A job that is difficult to complete in one reliable pass | Explicitly call `/task:design` or `/task:dev` in Claude Code, `$ task:design` or `$ task:dev` in Codex | Plan, decisions and handoff in the repository |
+| Change of public contract, data or external environment | Before application, name the boundaries, check the affected scenarios and separately resolve the issue of irreversible action | Solution, check and recovery method |
 
-Это выбор способа работы, а не новые машинные режимы доступа. Реальные права задаются
-настройками и sandbox выбранного клиента; текст задачи не создаёт изоляцию. Доступность
-возможностей по клиентам указана в [матрице провайдеров](/provider-support).
+This is a choice of how things work, not new machine access modes. Real rights are given
+settings and sandbox selected client; the task text does not create isolation. Availability
+client capabilities are listed in [provider matrix](/provider-support).
 
-Для ежедневной работы с Task используйте [обзор команд](/task/). Настройка нескольких слоёв и
-поиск дрейфа — в [control-surface](/control-surface). Подробный раннбук Claude Code —
-[разработка с Claude Code](/develop).
+For daily work with Task use [command overview](/task/). Setting up multiple layers and
+drift search - in [control-surface](/control-surface). Detailed runbook Claude Code —
+[development with Claude Code](/develop).

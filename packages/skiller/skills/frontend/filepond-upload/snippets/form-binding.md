@@ -1,13 +1,13 @@
 <!-- Source: anonymized production project (binding FilePond upload refs to an Inertia form + laravel-filepond server processing) -->
 
-# Привязка загруженных файлов к форме и серверная обработка
+# Linking uploaded files to the form and server processing
 
-Поле `FilePondField.vue` через `v-model` отдаёт наружу **список ссылок**
-`{ id?, serverId? }[]`. Этот список кладётся в форму как обычное поле и уходит
-в payload. Сервер по `serverId` забирает временный файл из стора laravel-filepond
-и привязывает к доменной модели.
+Field `FilePondField.vue` via `v-model` gives off **list of links**
+`{ id?, serverId? }[]`. This list is placed in the form like a regular field and left
+in payload. Server by `serverId` takes a temporary file from the store laravel-filepond
+and binds to the domain model.
 
-## 1. Frontend — кладём список в Inertia-форму
+## 1. Frontend — put the list in Inertia-form
 
 ```vue
 <script lang="ts" setup>
@@ -19,14 +19,14 @@ import FilePondField, {
 
 const props = defineProps<{ existingFiles: ExistingFile[] }>();
 
-// attachment_files — обычное поле формы; FilePond им управляет через v-model.
+// attachment_files — normal form field; FilePond it is controlled through v-model.
 const form = useForm<{ title: string; attachment_files: UploadedFileRef[] }>({
   title: "",
   attachment_files: props.existingFiles.map((file) => ({ id: file.id })),
 });
 
 function submit() {
-  // На submit улетают и сохранённые { id }, и новые { serverId }.
+  // On submit and saved ones fly away { id }, and new { serverId }.
   form.post("/orders");
 }
 </script>
@@ -45,19 +45,19 @@ function submit() {
     />
     <span v-if="form.errors.attachment_files">{{ form.errors.attachment_files }}</span>
 
-    <button :disabled="form.processing">Сохранить</button>
+    <button :disabled="form.processing">Save</button>
   </form>
 </template>
 ```
 
-Ключевое: компонент-поле не знает про форму, форма не знает про FilePond.
-Связь — только через сериализуемый `UploadedFileRef[]`. Это делает поле
-переносимым между формами и проектами.
+Key: the field component does not know about the form, the form does not know about FilePond.
+Communication - only via serializable `UploadedFileRef[]`. The field does this
+portable between forms and projects.
 
-## 2. (Опционально) composable: existing vs pending
+## 2. (Optional) composable: existing vs pending
 
-Если нужна логика поверх списка (счётчики, раздельные секции «сохранённые» /
-«ожидают загрузки»), вынесите её в composable, а не в компонент:
+If you need logic on top of the list (meters, separate sections «saved» /
+«waiting to load»), take it out to composable, and not into the component:
 
 ```ts
 // useFileUpload.ts
@@ -74,20 +74,20 @@ export function useFileUpload(initial: UploadedFileRef[]) {
 }
 ```
 
-## 3. Backend — laravel-filepond: process/revert и привязка по serverId
+## 3. Backend — laravel-filepond: process/revert and binding by serverId
 
-`rahulhaque/laravel-filepond` регистрирует один маршрут `/filepond`,
-обслуживающий все колбэки FilePond:
+`rahulhaque/laravel-filepond` registers one route `/filepond`,
+serving all callbacks FilePond:
 
-| FilePond callback | HTTP             | Что делает                                              |
+| FilePond callback | HTTP             | What it does                                              |
 |:------------------|:-----------------|:--------------------------------------------------------|
-| `process`         | `POST /filepond` | принимает временный файл, возвращает `serverId`         |
-| `revert`          | `DELETE /filepond` | удаляет временный файл по `serverId` (отмена загрузки) |
-| `patch`           | `PATCH /filepond`  | приём чанков при `chunk-uploads`                       |
-| `restore`/`load`  | `GET /filepond`    | отдаёт ранее сохранённый/временный файл для постера    |
+| `process`         | `POST /filepond` | accepts a temporary file, returns `serverId`         |
+| `revert`          | `DELETE /filepond` | deletes the temporary file by `serverId` (cancel download) |
+| `patch`           | `PATCH /filepond`  | receiving chunks when `chunk-uploads`                       |
+| `restore`/`load`  | `GET /filepond`    | returns the previously saved/temporary file for poster    |
 
-Контроллер пакета подключается его сервис-провайдером — руками роут писать не
-нужно. На стороне приложения по `serverId` забираем файл фасадом `Filepond`:
+The package controller is connected by its service provider - do not write the route manually
+needed. On the application side `serverId` take the file with the facade `Filepond`:
 
 ```php
 <?php
@@ -108,14 +108,14 @@ final readonly class SyncOrderAttachments
     {
         $items = collect($payload);
 
-        // 1. Сохранённые файлы (есть id) — оставляем как есть / синхронизируем.
+        // 1. Saved files (yes id) — leave as is / synchronized.
         $keepIds = $items
             ->filter(fn (array $item): bool => isset($item['id']))
             ->pluck('id');
-        // ... удалить из коллекции всё, чего нет в $keepIds (зависит от media-слоя)
+        // ... remove from the collection everything that is not in $keepIds (depends on media-layer)
 
-        // 2. Новые временные файлы (есть serverId) — забираем из стора FilePond
-        //    и привязываем к модели. После getFile() временный файл очищается.
+        // 2. New temporary files (yes serverId) — take from the store FilePond
+        //    and bind it to the model. After getFile() temporary file is cleared.
         $items
             ->filter(fn (array $item): bool => isset($item['serverId']))
             ->each(function (array $item) use ($order): void {
@@ -123,21 +123,21 @@ final readonly class SyncOrderAttachments
                 $file = $uploaded->getFile();           // UploadedFile
 
                 $order
-                    ->addMedia($file)                   // spatie/media-library и т.п.
+                    ->addMedia($file)                   // spatie/media-library etc.
                     ->toMediaCollection('attachments');
             });
     }
 }
 ```
 
-Полезные методы фасада (см. README пакета): `Filepond::field($serverId)`,
-затем `->getFile()` (получить `UploadedFile`), `->getDto()` (метаданные),
-`->validate([...])` (правила Laravel-валидатора), `->delete()` (отмена).
-Для множественного поля передавайте массив serverId — `getFile()` вернёт массив.
+Useful Facade Techniques (see README package): `Filepond::field($serverId)`,
+then `->getFile()` (get `UploadedFile`), `->getDto()` (metadata),
+`->validate([...])` (rules Laravel-validator), `->delete()` (cancel).
+For multiple fields, pass an array serverId — `getFile()` will return an array.
 
-## Чеклист привязки
+## Binding checklist
 
-- [ ] Поле управляется через `v-model` списком `{ id?, serverId? }[]`, форма про FilePond не знает.
-- [ ] В payload уходят и сохранённые `{ id }`, и новые `{ serverId }`.
-- [ ] На бэке `serverId` обработан через `Filepond::field()->getFile()`, временные файлы не утекают.
-- [ ] Тип/размер валидируются и на клиенте (плагины), и на сервере (`->validate()`).
+- [ ] The field is controlled via `v-model` list `{ id?, serverId? }[]`, form about FilePond doesn't know.
+- [ ] B payload go away and saved `{ id }`, and new `{ serverId }`.
+- [ ] On the back `serverId` processed via `Filepond::field()->getFile()`, temporary files do not leak.
+- [ ] Type/size is also validated on the client (plugins), and on the server (`->validate()`).

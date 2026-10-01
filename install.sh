@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# install.sh — зонтичный установщик монорепо.
-# Ставит CLI пакетов (skiller, harness, maind), делегируя установку каждого его
-# собственному install.sh (там пакетная пост-настройка), плюс корневой
-# управляющий слой `swissknifeman` (router + setup-фасад над тремя пакетами).
+# install.sh — umbrella monorepo installer.
+# Sets CLI packages (skiller, harness, maind), delegating the installation of each of its
+# own install.sh (there is a batch post-configuration), plus root
+# control layer `swissknifeman` (router + setup-facade above three packages).
 #
-# Использование:
+# Usage:
 #   ./install.sh [--bin-dir DIR] [--force] [--no-codex-plugins]
-#   --bin-dir DIR   куда ставить симлинки (по умолчанию ~/.local/bin)
-#   --force         перезаписывать чужие симлинки без вопроса
-#   --no-codex-plugins  не устанавливать базовые Codex-плагины core + task
+#   --bin-dir DIR   where to put symlinks (default ~/.local/bin)
+#   --force         overwrite other people's symlinks without asking
+#   --no-codex-plugins  do not install basic Codex-plugins core + task
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -22,19 +22,19 @@ while [[ $# -gt 0 ]]; do
     --force)   FORCE=true; shift ;;
     --no-codex-plugins) NO_CODEX_PLUGINS=true; shift ;;
     -h|--help) grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,11p'; exit 0 ;;
-    *) echo "ERROR: неизвестный аргумент: $1" >&2; exit 1 ;;
+    *) echo "ERROR: unknown argument: $1" >&2; exit 1 ;;
   esac
 done
 
 mkdir -p "$BIN_DIR"
 
-# Делегируем установку пакетных CLI их собственным install.sh (там пакетная
-# пост-настройка: maind — npm/service опции; skiller — topology; harness — stateless).
-# `task` в списке НЕТ сознательно: у него нет bin/CLI/install.sh — это plugin-only
-# пакет (только slash-команды), доставляется через marketplace/vendor skiller-канал.
+# Delegating the installation of batch CLI their own install.sh (there is a batch
+# post-configuration: maind — npm/service options; skiller — topology; harness — stateless).
+# `task` in the list NOT deliberately: it does not have bin/CLI/install.sh — this plugin-only
+# package (only slash-commands), is delivered via marketplace/vendor skiller-channel.
 fwd=(); $FORCE && fwd+=(--force); fwd+=(--bin-dir "$BIN_DIR")
-echo "Установка CLI пакетов (bin-dir: $BIN_DIR):"
-failed=()  # пакеты, чей install.sh упал — для итогового статуса (иначе «Готово» врёт)
+echo "Installation CLI packages (bin-dir: $BIN_DIR):"
+failed=()  # packages whose install.sh fell - for final status (otherwise «Done» lies)
 for pkg in skiller harness maind analyst; do
   inst="$REPO_ROOT/packages/$pkg/install.sh"
   [[ -x "$inst" ]] || continue
@@ -43,26 +43,26 @@ for pkg in skiller harness maind analyst; do
   if [[ "$pkg" == skiller && "$NO_CODEX_PLUGINS" == true ]]; then
     pkg_fwd+=(--no-codex-plugins)
   fi
-  "$inst" "${pkg_fwd[@]}" || { echo "  ($pkg install.sh завершился с ошибкой — проверьте вручную)" >&2; failed+=("$pkg"); }
+  "$inst" "${pkg_fwd[@]}" || { echo "  ($pkg install.sh failed - check manually)" >&2; failed+=("$pkg"); }
 done
 
-# Корневой управляющий слой: симлинк `swissknifeman` → bin/swissknifeman (router).
-# Ставится ПОСЛЕ пакетов — раньше алиас `swissknifeman` ставил skiller; теперь им
-# владеет зонтик. Молча заменяем наш прежний симлинк (на skiller/router); чужой —
-# только с --force/подтверждением.
+# Root control layer: symlink `swissknifeman` → bin/swissknifeman (router).
+# Placed AFTER the packages - before the alias `swissknifeman` set skiller; now they
+# owns an umbrella. Silently replacing our old symlink (on skiller/router); alien -
+# only with --force/confirmation.
 ROUTER="$REPO_ROOT/bin/swissknifeman"
 LINK="$BIN_DIR/swissknifeman"
 if [[ -x "$ROUTER" ]]; then
   if [[ -e "$LINK" || -L "$LINK" ]]; then
     current="$(readlink -f "$LINK" 2>/dev/null || true)"
     if [[ "$current" == */bin/swissknifeman || "$current" == */bin/skiller ]]; then
-      : # наш прежний симлинк (router или старый алиас→skiller) — молча заменяем
+      : # our previous symlink (router or old alias→skiller) — silently replace
     elif [[ "$FORCE" == true ]]; then :;
     elif [[ -t 0 ]]; then
-      read -r -p "$LINK уже существует и не похож на наш. Заменить? [y/N] " a
-      [[ "$a" =~ ^[yY] ]] || { echo "Пропуск swissknifeman."; ROUTER=""; }
+      read -r -p "$LINK already exists and is not similar to ours. Replace? [y/N] " a
+      [[ "$a" =~ ^[yY] ]] || { echo "Skip swissknifeman."; ROUTER=""; }
     else
-      echo "ВНИМАНИЕ: $LINK существует — пропуск (перезапустите с --force)" >&2; ROUTER=""
+      echo "ATTENTION: $LINK exists - skip (restart with --force)" >&2; ROUTER=""
     fi
   fi
   [[ -n "$ROUTER" ]] && { ln -sfn "$ROUTER" "$LINK"; echo "— swissknifeman: $LINK -> $ROUTER"; }
@@ -70,11 +70,11 @@ fi
 
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
-  *) echo "ВНИМАНИЕ: $BIN_DIR не в PATH — добавьте: export PATH=\"$BIN_DIR:\$PATH\"" >&2 ;;
+  *) echo "ATTENTION: $BIN_DIR not in PATH — add: export PATH=\"$BIN_DIR:\$PATH\"" >&2 ;;
 esac
 
 if (( ${#failed[@]} )); then
-  echo "ОШИБКА: не установлены пакеты: ${failed[*]} — установка неполна, см. лог выше." >&2
+  echo "ERROR: packages not installed: ${failed[*]} — installation is incomplete, see log above." >&2
   exit 1
 fi
-echo "Готово. CLI: swissknifeman (router) · skiller · harness · maind · analyst"
+echo "Done. CLI: swissknifeman (router) · skiller · harness · maind · analyst"

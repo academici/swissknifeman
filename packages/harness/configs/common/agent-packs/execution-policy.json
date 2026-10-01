@@ -6,24 +6,24 @@
       {
         "id": "bulk-raw-material",
         "text": "the side task would flood the parent conversation with search results, logs or file contents",
-        "provenance": "findings/05 Ф22 — first-party code.claude.com/docs/en/sub-agents (WebFetch 2026-07-29), quoted verbatim"
+        "provenance": "findings/05 F22 — first-party code.claude.com/docs/en/sub-agents (WebFetch 2026-07-29), quoted verbatim"
       },
       {
         "id": "summary-is-enough",
         "text": "the parent needs only the condensed result, not the raw material itself",
-        "provenance": "findings/05 Ф20 — first-party anthropic.com/engineering/multi-agent-research-system (WebFetch 2026-07-29): compression is the point, parallelism is the means"
+        "provenance": "findings/05 F20 — first-party anthropic.com/engineering/multi-agent-research-system (WebFetch 2026-07-29): compression is the point, parallelism is the means"
       },
       {
         "id": "separable-objective",
         "text": "the work has one objective statable in a single sentence with its own boundaries",
-        "provenance": "findings/05 Ф19 — first-party: an assignment without an objective and boundaries produces duplicated work and gaps"
+        "provenance": "findings/05 F19 — first-party: an assignment without an objective and boundaries produces duplicated work and gaps"
       }
     ],
     "negative_conditions": [
       {
         "id": "parent-reuses-raw-material",
         "text": "the raw material WILL be needed by the parent on the following steps → do not spawn (mandatory row: this is the condition nothing in the repo records today)",
-        "provenance": "findings/05 Ф22 — first-party «content you won't reference again»: the negation of the reuse clause is a direct contra-indication"
+        "provenance": "findings/05 F22 — first-party «content you won't reference again»: the negation of the reuse clause is a direct contra-indication"
       },
       {
         "id": "decide-or-integrate",
@@ -33,7 +33,7 @@
       {
         "id": "trivial-single-surface",
         "text": "one edit in one layer or one file — do it directly",
-        "provenance": "RAG:— repo-grounded: packages/harness/configs/common/agent-packs/roles.json _common.orchestrator § «Порог делегирования», the rule already canonical in the role body"
+        "provenance": "RAG:— repo-grounded: packages/harness/configs/common/agent-packs/roles.json _common.orchestrator § «Delegation threshold», the rule already canonical in the role body"
       }
     ],
     "scale_by_task_class": [
@@ -42,7 +42,7 @@
         "agents": "1",
         "tool_calls_hint": "3-10 per agent",
         "unverified": true,
-        "provenance": "findings/05 Ф21 — first-party quote; [UNVERIFIED] for us: the numbers come from Anthropic's deep-research domain, not from monorepo code work; starting values, calibration is out of plan scope"
+        "provenance": "findings/05 F21 — first-party quote; [UNVERIFIED] for us: the numbers come from Anthropic's deep-research domain, not from monorepo code work; starting values, calibration is out of plan scope"
       },
       {
         "task_class": "direct-comparison",
@@ -71,7 +71,7 @@
         "nesting_depth": 3,
         "settings": ["CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION", "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS"],
         "controlled_by_us": false,
-        "provenance": "findings/04 Ф17 · first-party code.claude.com/docs/en/sub-agents (WebFetch 2026-07-29): 200 per session (v2.1.212+), 20 concurrent (v2.1.217+), nesting depth 3 (v2.1.219). Platform ceiling, not our measurement; env-tunable by the operator."
+        "provenance": "findings/04 F17 · first-party code.claude.com/docs/en/sub-agents (WebFetch 2026-07-29): 200 per session (v2.1.212+), 20 concurrent (v2.1.217+), nesting depth 3 (v2.1.219). Platform ceiling, not our measurement; env-tunable by the operator."
       },
       {
         "subject": "workflow-runtime",
@@ -82,7 +82,7 @@
         "nesting_depth": null,
         "settings": [],
         "controlled_by_us": false,
-        "provenance": "findings/04 Ф17 · first-party, same page: agents spawned by a workflow script do not count against the session budget; the runtime caps ~16 concurrent (min(16, cores − 2), so 16 is an upper bound) and 1 000 per run. Outside our control."
+        "provenance": "findings/04 F17 · first-party, same page: agents spawned by a workflow script do not count against the session budget; the runtime caps ~16 concurrent (min(16, cores − 2), so 16 is an upper bound) and 1 000 per run. Outside our control."
       },
       {
         "subject": "codex-subagents",
@@ -98,14 +98,14 @@
           "agents.default_subagent_reasoning_effort"
         ],
         "controlled_by_us": false,
-        "provenance": "findings/03 Ф11 · first-party learn.chatgpt.com/docs/agent-configuration/subagents (WebFetch 2026-07-29): the ceiling is a native config.toml [agents] key, its value is the operator's, not ours. [UNVERIFIED] Codex behaviour on exceeding agents.max_concurrent_threads_per_session was never exercised live (findings/05, D3)."
+        "provenance": "findings/03 F11 · first-party learn.chatgpt.com/docs/agent-configuration/subagents (WebFetch 2026-07-29): the ceiling is a native config.toml [agents] key, its value is the operator's, not ours. [UNVERIFIED] Codex behaviour on exceeding agents.max_concurrent_threads_per_session was never exercised live (findings/05, D3)."
       }
     ],
     "fleet_cap": {
       "value": 2,
       "applies_to": "session-agent-tool",
       "condition": "file-independent tasks only; concurrent writers to one working tree are never authorised",
-      "provenance": "RAG:— repo-grounded: packages/harness/configs/common/agent-packs/roles.json _common.orchestrator § «Режимы исполнения» — the Parallel-max2 mode is already the canon rule; the policy records the existing fleet ceiling, it does not invent a new one"
+      "provenance": "RAG:— repo-grounded: packages/harness/configs/common/agent-packs/roles.json _common.orchestrator § «Execution modes» — the Parallel-max2 mode is already the canon rule; the policy records the existing fleet ceiling, it does not invent a new one"
     }
   },
   "allowed_agent_roles": {
@@ -125,27 +125,27 @@
       {
         "id": "objective",
         "text": "one sentence stating what the subagent must achieve",
-        "provenance": "findings/05 Ф19 — verbatim first-party enumeration: «Each subagent needs an objective, an output format, guidance on the tools and sources to use, and clear task boundaries.»; research/08 §4 (coverage measurement)"
+        "provenance": "findings/05 F19 — verbatim first-party enumeration: «Each subagent needs an objective, an output format, guidance on the tools and sources to use, and clear task boundaries.»; research/08 §4 (coverage measurement)"
       },
       {
         "id": "output_format",
         "text": "the shape the result is returned in",
-        "provenance": "findings/05 Ф19 — verbatim first-party enumeration; research/08 §4 marks this the single real gap in today's PLAN grammar"
+        "provenance": "findings/05 F19 — verbatim first-party enumeration; research/08 §4 marks this the single real gap in today's PLAN grammar"
       },
       {
         "id": "tool_guidance",
         "text": "which tools and skills the work is done with",
-        "provenance": "findings/05 Ф19 — verbatim first-party enumeration; research/08 §4 (coverage measurement)"
+        "provenance": "findings/05 F19 — verbatim first-party enumeration; research/08 §4 (coverage measurement)"
       },
       {
         "id": "source_guidance",
         "text": "which sources are authoritative and how facts are verified",
-        "provenance": "findings/05 Ф19 — verbatim first-party enumeration; research/08 §4 (coverage measurement)"
+        "provenance": "findings/05 F19 — verbatim first-party enumeration; research/08 §4 (coverage measurement)"
       },
       {
         "id": "boundaries",
         "text": "what the subagent must not touch, and where its work ends",
-        "provenance": "findings/05 Ф19 — verbatim first-party enumeration; research/08 §4 (coverage measurement)"
+        "provenance": "findings/05 F19 — verbatim first-party enumeration; research/08 §4 (coverage measurement)"
       }
     ],
     "refusal_rule": "an assignment without a declared return format is not issued: the parent would receive arbitrary prose and would have to re-read the raw material, losing the compression the subagent exists for",

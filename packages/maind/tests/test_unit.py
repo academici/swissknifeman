@@ -1,4 +1,4 @@
-"""Юнит-тесты common.py: Env, parse_args, now_iso, atomic JSON, sanitize."""
+"""Unit tests common.py: Env, parse_args, now_iso, atomic JSON, sanitize."""
 import os
 import tempfile
 import unittest
@@ -19,7 +19,7 @@ class TestEnvPaths(unittest.TestCase):
         self.assertEqual(env.memory_pidfile, Path("/srv/maind/data/agentmemory.pid"))
         self.assertEqual(env.memory_config,
                          Path("/srv/maind/config/memory/iii-config.yaml"))
-        # config.json в корне монорепо; standalone (нет packages/ рядом) → сам root
+        # config.json in root monorepo; standalone (no packages/ nearby) → himself root
         self.assertEqual(env.default_config, Path("/srv/maind/config.json"))
 
 

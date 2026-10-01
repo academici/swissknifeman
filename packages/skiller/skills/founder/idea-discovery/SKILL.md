@@ -40,9 +40,9 @@ First step of Founder chain: `idea-discovery → adversarial-check → customer-
 3. **Problem statement** — How solved now? (workarounds). What exactly hurts in current solution? (3 concrete points). Frequency? (daily / weekly / monthly / rare). Cost of not solving? (money / time / forgone benefit).
 4. **Hypothesis** — formulate as testable:
 ```
-Мы верим, что [сегмент] нуждается в [решение]
-потому что [инсайт о боли].
-Узнаем, что правы, когда [метрика валидации].
+We believe that [segment] needs [solution]
+because [insight about pain].
+We know we are right when [validation metric].
 ```
 5. **Kill-criteria** — at what market signal do we close the idea before dev starts? Min 2 criteria — usually "nobody pays" + "does not reproduce across other segments". **Falsification signal per criterion**: a concrete measurable metric and threshold at which it counts as triggered (not "low interest" but "<N of 20 interviews willing to pay $X"). Without a measurable threshold, kill-criteria don't work — they're easy to rationalize away.
 
@@ -76,37 +76,37 @@ created: YYYY-MM-DD
 
 # Idea Discovery — [ProjectName]
 
-## Триггер
-[откуда взялась идея]
+## Trigger
+[where did the idea come from]
 
 ## JTBD
 When [situation], [persona] wants to [job], so that [outcome].
 
 ## Problem statement
-- Текущее решение: ...
-- Боли: 1) ... 2) ... 3) ...
-- Частота: ...
-- Стоимость нерешения: ...
+- Current solution: ...
+- Pain: 1) ... 2) ... 3) ...
+- Frequency: ...
+- Cost of not deciding: ...
 
 ## Hypothesis
-Мы верим, что ...
-Потому что ...
-Узнаем, что правы, когда ...
+We believe that...
+Because...
+We know we are right when...
 
 ## Kill-criteria
 1. ...
 2. ...
 
-## Альтернативные сегменты (агент)
+## Alternative segments (agent)
 - ...
 
-## Синергии с vault (агент)
+## Synergies with vault (agent)
 - [[ProjectName]] — ...
 
-## Anti-patterns / red flags (агент)
+## Anti-patterns / red flags (agent)
 - ...
 
-## Следующий шаг
+## Next step
 → `.ai/skills/founder/competitive-analysis.md`
 ```
 

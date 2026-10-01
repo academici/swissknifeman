@@ -1,8 +1,8 @@
-"""Тесты status — read-only отчёт и гигиена каналов.
+"""Tests status — read-only report and canal hygiene.
 
-Ключевой кейс: один бакет не должен раздаваться ОДНОВРЕМЕННО плагином (connect) и
-вендором (vendor) — иначе скиллы дублируются. Проверка живёт в skiller (владелец
-скиллов) и доступна из зонтика через `swissknifeman skills status`."""
+Key case: one bucket should not be distributed AT THE SAME TIME by the plugin (connect) and
+vendor (vendor) — otherwise the skills are duplicated. Check lives in skiller (owner
+skills) and is accessible from the umbrella via `swissknifeman skills status`."""
 import contextlib
 import io
 import json
@@ -47,7 +47,7 @@ class TestStatusOverlapReport(unittest.TestCase):
         self._tmp.cleanup()
 
     def _enable_plugins(self, buckets):
-        """Записать connect-артефакт: marketplace + enabledPlugins для бакетов."""
+        """Write connect-artifact: marketplace + enabledPlugins for buckets."""
         d = self.proj / ".claude"
         d.mkdir(parents=True, exist_ok=True)
         (d / "settings.local.json").write_text(json.dumps({
@@ -58,7 +58,7 @@ class TestStatusOverlapReport(unittest.TestCase):
         }), encoding="utf-8")
 
     def _vendor_manifest(self, buckets):
-        """Записать vendor-манифест с по одному скиллу на бакет."""
+        """Write vendor-manifest with one skill per bucket."""
         d = self.proj / ".claude" / "skills"
         d.mkdir(parents=True, exist_ok=True)
         (d / MANIFEST).write_text(json.dumps({
@@ -70,21 +70,21 @@ class TestStatusOverlapReport(unittest.TestCase):
 
     def test_warns_when_bucket_in_both_channels(self):
         self._enable_plugins(["php", "quality"])
-        self._vendor_manifest(["php"])           # php в обоих каналах
+        self._vendor_manifest(["php"])           # php in both channels
         out = run(cmd_status, self.env, ["--target", str(self.proj)])
-        self.assertIn("ДУБЛЬ КАНАЛОВ", out)
-        self.assertIn("php", out.split("ДУБЛЬ КАНАЛОВ")[1].splitlines()[0])
+        self.assertIn("DOUBLE CHANNELS", out)
+        self.assertIn("php", out.split("DOUBLE CHANNELS")[1].splitlines()[0])
 
     def test_no_warning_when_channels_disjoint(self):
         self._enable_plugins(["quality"])
-        self._vendor_manifest(["php"])           # пересечения нет
+        self._vendor_manifest(["php"])           # no intersection
         out = run(cmd_status, self.env, ["--target", str(self.proj)])
-        self.assertNotIn("ДУБЛЬ КАНАЛОВ", out)
+        self.assertNotIn("DOUBLE CHANNELS", out)
 
     def test_no_warning_single_channel(self):
-        self._vendor_manifest(["php"])           # только vendor
+        self._vendor_manifest(["php"])           # only vendor
         out = run(cmd_status, self.env, ["--target", str(self.proj)])
-        self.assertNotIn("ДУБЛЬ КАНАЛОВ", out)
+        self.assertNotIn("DOUBLE CHANNELS", out)
 
     def test_json_exposes_dependency_closure_and_provider_measurements(self):
         data = json.loads(run(
@@ -105,8 +105,8 @@ class TestStatusOverlapReport(unittest.TestCase):
 
 
 class TestDetectRawVendorPath(unittest.TestCase):
-    """P3.5 дельта а: канал без манифеста (репо-факт flexcrm — симлинки из
-    стороннего .ai/skills, без skills-lock.json)."""
+    """P3.5 delta a: channel without manifest (repo fact flexcrm — symlinks from
+    third-party .ai/skills, without skills-lock.json)."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -136,7 +136,7 @@ class TestDetectRawVendorPath(unittest.TestCase):
 
 
 class TestLocalChannelEntries(unittest.TestCase):
-    """P3.5 дельта в: мёртвые записи — битые симлинки И каталоги без SKILL.md."""
+    """P3.5 delta in: dead records - broken symlinks And directories without SKILL.md."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -168,8 +168,8 @@ class TestLocalChannelEntries(unittest.TestCase):
 
 
 class TestNameDuplicatesAgainstRegistry(unittest.TestCase):
-    """P3.5 дельта б: дубль считается по frontmatter `name`, по ВСЕМУ реестру
-    (не только включённым бакетам) — вторая физическая копия скилла реестра."""
+    """P3.5 delta b: double is counted according to frontmatter `name`, across the ENTIRE registry
+    (not only included buckets) — second physical copy of the registry skill."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -225,9 +225,9 @@ class TestNameDuplicatesAgainstRegistry(unittest.TestCase):
 
 
 class TestStatusRawVendorReport(unittest.TestCase):
-    """Интеграционный прогон cmd_status на канале без манифеста — тот же класс,
-    что flexcrm (Code Guidance item'а требует прогона на живом дереве; здесь —
-    воспроизводимый эквивалент в tmpdir)."""
+    """Integration run cmd_status on a channel without a manifest - the same class,
+    what flexcrm (Code Guidance item'a requires running on a living tree; here -
+    reproducible equivalent in tmpdir)."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -240,17 +240,17 @@ class TestStatusRawVendorReport(unittest.TestCase):
 
     def test_reports_duplicates_and_dead_entries(self):
         skills_dir = self.proj / ".claude" / "skills"
-        # дубль имени с реестровым php/code-style
+        # double name with registry php/code-style
         fx.write_skill(skills_dir / "code-style", "code-style")
-        # уникальный локальный скилл — не дубль
+        # unique local skill - not a duplicate
         fx.write_skill(skills_dir / "my-own-thing", "my-own-thing")
-        # битый симлинк
+        # broken symlink
         (skills_dir / "broken").symlink_to(skills_dir / "nowhere")
         out = run(cmd_status, self.env, ["--target", str(self.proj)])
-        self.assertIn("БЕЗ манифеста", out)
-        self.assertIn("ДУБЛИ ИМЁН", out)
+        self.assertIn("WITHOUT manifest", out)
+        self.assertIn("DUPLICATE NAMES", out)
         self.assertIn("code-style", out)
-        self.assertIn("МЁРТВЫЕ ЗАПИСИ", out)
+        self.assertIn("DEAD POSTS", out)
         self.assertIn("broken", out)
         js = json.loads(run(cmd_status, self.env,
                             ["--target", str(self.proj), "--json"]))
@@ -266,9 +266,9 @@ class TestStatusRawVendorReport(unittest.TestCase):
 
     def test_silent_when_no_local_skills_dir(self):
         out = run(cmd_status, self.env, ["--target", str(self.proj)])
-        self.assertNotIn("ДУБЛИ ИМЁН", out)
-        self.assertNotIn("МЁРТВЫЕ ЗАПИСИ", out)
-        self.assertNotIn("Канал vendor", out)
+        self.assertNotIn("DUPLICATE NAMES", out)
+        self.assertNotIn("DEAD POSTS", out)
+        self.assertNotIn("Channel vendor", out)
 
 
 if __name__ == "__main__":

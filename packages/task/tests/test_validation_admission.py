@@ -20,7 +20,7 @@ class ValidationAdmissionTests(unittest.TestCase):
     def _validation(self, value):
         text = self.spec.read_text(encoding="utf-8")
         self.spec.write_text(
-            text.replace("**Validation:** bash scripts/test.sh — зелёный.",
+            text.replace("**Validation:** bash scripts/test.sh — green.",
                          f"**Validation:** {value}"),
             encoding="utf-8",
         )

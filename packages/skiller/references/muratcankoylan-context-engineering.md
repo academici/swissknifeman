@@ -1,17 +1,17 @@
 # muratcankoylan/Agent-Skills-for-Context-Engineering
 
 - **URL:** https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering
-- **Статус:** planned
-- **Проверено:** 2026-06-11
+- **Status:** planned
+- **Checked:** 2026-06-11
 
-Скиллы по context engineering — управление тем, что попадает в контекст агента.
+Skills by context engineering — control of what goes into the agent's context.
 
-## Брать выборочно
+## Take selectively
 
-- Принцип conditional loading (не всё в системный промпт, только релевантное) —
-  уже частично реализован профилями установки
-- Техники harness engineering для production-агентов → `architect/agent-design`
+- Principle conditional loading (not everything is in the system prompt, only the relevant ones) —
+  is already partially implemented by installation profiles
+- Techniques harness engineering for production-agents → `architect/agent-design`
 
-## Целевые bucket-ы
+## Targets bucket-s
 
 `architect/agent-design`.

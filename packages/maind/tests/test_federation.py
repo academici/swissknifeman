@@ -1,4 +1,4 @@
-"""Тесты federation.py: per-project сторы, индекс, union-запрос через границу, views."""
+"""Tests federation.py: per-project stores, index, union-cross-border request, views."""
 import tempfile
 import unittest
 
@@ -25,7 +25,7 @@ def _setup(tmp):
 
     fg = Graph(env, config, path=federation.store_path(env, config, flex)).load()
     fg.add_node("project:flexcrm", "project", project="flexcrm", name="FlexCRM")
-    fg.add_node(PKG, "package")  # заглушка-конечник: владелец — azguard
+    fg.add_node(PKG, "package")  # end-stub: owner - azguard
     fg.add_edge("project:flexcrm", PKG, "requires", via="code", plane="code")
     fg.add_edge("project:flexcrm", "project:azguard", "depends_on", via="code", plane="code")
     fg.save()
@@ -33,7 +33,7 @@ def _setup(tmp):
     ag = Graph(env, config, path=federation.store_path(env, config, az)).load()
     ag.add_node("project:azguard", "project", project="azguard", name="AzGuard")
     ag.add_node(PKG, "package", project="azguard", name="azguard-core")
-    ag.add_node("skill:rbac", "skill", project="azguard")  # внутренний узел azguard
+    ag.add_node("skill:rbac", "skill", project="azguard")  # internal node azguard
     ag.add_edge("project:azguard", "skill:rbac", "uses", via="skills", plane="code")
     ag.save()
     return env, config
@@ -54,7 +54,7 @@ class TestFederation(unittest.TestCase):
     def test_federated_query_crosses_boundary(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config = _setup(tmp)
-            # из flexcrm на глубину 1 виден azguard (cross-ребро) и пакет
+            # from flexcrm at depth 1 is visible azguard (cross-edge) and package
             res = federation.Federation(env, config).query("project:flexcrm", depth=1)
             ids = {n["id"] for n in res["neighbors"]}
             self.assertIn("project:azguard", ids)
@@ -65,7 +65,7 @@ class TestFederation(unittest.TestCase):
             env, config = _setup(tmp)
             stats = federation.rebuild_index(env, config)
             self.assertEqual(stats["projects"], 2)
-            # flexcrm→azguard и flexcrm→azguard-core — оба межпроектные
+            # flexcrm→azguard and flexcrm→azguard-core — both cross-project
             self.assertGreaterEqual(stats["cross_edges"], 2)
             cross = federation.Federation(env, config).cross()
             srcs = {e["src"] for e in cross["edges"]}
@@ -77,8 +77,8 @@ class TestFederation(unittest.TestCase):
             view = federation.Federation(env, config).project_view("flexcrm")
             ids = {n["id"] for n in view["nodes"]}
             self.assertIn("project:flexcrm", ids)
-            self.assertIn("project:azguard", ids)   # исходящая граница — видна
-            # но внутренний узел azguard в стор flexcrm не утекает
+            self.assertIn("project:azguard", ids)   # outgoing border - visible
+            # but internal node azguard in side flexcrm does not leak
             self.assertNotIn("skill:rbac", ids)
 
     def test_stats_has_per_project(self):

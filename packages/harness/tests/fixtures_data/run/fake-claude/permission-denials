@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Фейковый клиент (P4.3): успешный конверт с непустым `permission_denials` — исход
-остаётся `ok`, но поле пробрасывается наружу (Validation P4.3)."""
+"""Fake client (P4.3): successful envelope with non-empty `permission_denials` — outcome
+remains `ok`, but the field is forwarded out (Validation P4.3)."""
 import json
 import sys
 

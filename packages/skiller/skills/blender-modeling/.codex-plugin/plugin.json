@@ -1,6 +1,6 @@
 {
   "name": "blender-modeling",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop",
   "skills": [
     "./build-loop",

@@ -1,30 +1,30 @@
-# provider-skills — навыки для внешних агентов (paste-in)
+# provider-skills — skills for external agents (paste-in)
 
-SSOT портируемых **навыков-капабилити для внешних агентов** (Perplexity, и т.п.), которые
-доставляются **ручной вставкой** в UI провайдера, а не через connect/vendor реестра скиллов.
+SSOT portable **skills-capability for external agents** (Perplexity, etc.), which
+are delivered **manual insertion** in UI provider, and not through connect/vendor skill registry.
 
-> Отличие от `skills/`: те грузит сам Claude Code (прогрессивное раскрытие). `provider-skills/` —
-> текст, который **человек копирует** в провайдера (Perplexity → My Skills / Custom Instructions).
-> Канон живёт здесь (versioned, один источник); потребители (напр. Brain
-> `40-AI/Workflow/PERPLEXITY/idea-architect.md`) держат **provenance-linked копию** (в шапке —
-> ссылка на этот SSOT, ручной ресинк), не независимый форк.
+> Difference from `skills/`: those are loaded by themselves Claude Code (progressive disclosure). `provider-skills/` —
+> text that **person copies** in provider (Perplexity → My Skills / Custom Instructions).
+> Kanon lives here (versioned, one source); consumers (e.g. Brain
+> `40-AI/Workflow/PERPLEXITY/idea-architect.md`) hold **provenance-linked copy** (in the header -
+> link to this SSOT, manual resin), is not an independent fork.
 
-## Раскладка
+## Layout
 
 ```
 provider-skills/
 └── perplexity/
-    └── idea-architect.md   # Idea Architect & Startup Auditor (режимы Idea/Spec/Architecture)
+    └── idea-architect.md   # Idea Architect & Startup Auditor (modes Idea/Spec/Architecture)
 ```
 
-## Как деплоить
+## How to deploy
 
-1. Открыть нужный файл (напр. `perplexity/idea-architect.md`).
-2. Скопировать тело (без служебного заголовка про деплой) в провайдера:
-   - **Perplexity:** My Skills → Custom Instructions (или загрузка файла, если поддерживается).
-3. Навык активируется по типу запроса (см. «Режимы активации» внутри).
+1. Open the desired file (e.g. `perplexity/idea-architect.md`).
+2. Copy body (without service header about deployment) in provider:
+   - **Perplexity:** My Skills → Custom Instructions (or file upload if supported).
+3. The skill is activated by request type (see «Activation modes» inside).
 
-## Провенанс
+## Provenance
 
-Внешняя методология (Anthropic Founder's Playbook, CB Insights, Anthropic context-engineering) —
-выверена через RAG; карточка в `docs/reference.md`. Правки — здесь (SSOT), затем синк в потребителей.
+External methodology (Anthropic Founder's Playbook, CB Insights, Anthropic context-engineering) —
+verified via RAG; card in `docs/reference.md`. Edits - here (SSOT), then sync to consumers.

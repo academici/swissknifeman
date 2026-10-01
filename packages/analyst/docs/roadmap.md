@@ -1,122 +1,122 @@
 # Roadmap
 
-Реализованный контур: **P1 (MVP)** — `digest` + lessons-store + human `review`/`promote`;
-**P2** — cross-project `scan` + reconcile; **P3** — confidence-арифметика (Beta/decay) + числовая
-state-machine `recompute`; **P4** — [`suggest`](./guide/suggest) → черновик скилла.
+Implemented circuit: **P1 (MVP)** — `digest` + lessons-store + human `review`/`promote`;
+**P2** — cross-project `scan` + reconcile; **P3** — confidence-arithmetic (Beta/decay) + numeric
+state-machine `recompute`; **P4** — [`suggest`](./guide/suggest) → draft skill.
 
-## Отложено на P5 (по дизайну, не долг)
+## Postponed for P5 (by design, no debt)
 
-| Направление | Что | Почему отложено |
+| Direction | What | Why delayed |
 |:--|:--|:--|
-| Скилл `analyst-capture` | промпт-дисциплина слоя-2: как ловить уроки в проседи прогона | требует полевой калибровки сигналов; отдельно от слоя-1 |
-| `observe.sh` (PostToolUse-поток) | стриминговый захват наблюдений по ходу прогона (не только post-mortem по run-report) | текущий on-demand `digest` покрывает MVP; поток — только по факту трения |
+| Skill `analyst-capture` | prompt discipline layer-2: how to catch lessons in the gray run | requires field signal calibration; separate from layer-1 |
+| `observe.sh` (PostToolUse-thread) | streaming capture of observations during the run (not only post-mortem by run-report) | current on-demand `digest` covers MVP; flow - only based on friction |
 
-Принцип экосистемы: **не внедрять спекулятивно** — фича включается по факту измеренной проблемы,
-не «на вырост». Отклонения, пойманные в полевой работе, маршрутизирует скилл `field-feedback-loop`.
+Ecosystem principle: **do not implement speculatively** — feature is enabled based on a measured problem,
+not «for growth The». Deviations caught in field work are routed by the skill `field-feedback-loop`.
 
-## Смежное
+## Related
 
-- Числовые гейты `suggest` (`--min-tier`) станут дешёвыми, когда P3 начнёт штамповать
-  агрегат-confidence в индекс паттерна (сейчас confidence — per-lesson).
+- Numeric gates `suggest` (`--min-tier`) will become cheap when P3 will start stamping
+  unit-confidence to pattern index (now confidence — per-lesson).
 
-## Перенесено из корневого roadmap (2026-08-02)
+## Moved from root roadmap (2026-08-02)
 
-### `analyst digest` читает Known Deviations/Pending Work закрытых планов как источник уроков
+### `analyst digest` reads Known Deviations/Pending Work closed plans as a source of lessons
 
-**Статус:** ⬜ отложено (идея Owner 2026-07-12, post-релиз).
-**Критерий внедрения:** накопится ≥2-3 плана с содержательными Known Deviations/Escalation
-Needed после этого — конкретный сигнал, что ручной просмотр plan.md перестаёт масштабироваться.
+**Status:** ⬜ deferred (idea Owner 2026-07-12, post-release).
+**Implementation criterion:** will accumulate ≥2-3 plan with content Known Deviations/Escalation
+Needed after this is a specific signal that manual review plan.md stops scaling.
 
-#### Идея
+#### Idea
 
-`analyst digest` сейчас извлекает кандидат-уроки ТОЛЬКО из run-report (`--project|--cwd
---session`) — построчный разбор транскрипта сессии (тесты/линт/файлы/tool-провалы). План-протокол
-же уже ОБЯЗЫВАЕТ каждый item на закрытии зафиксировать структурированно: `Known Deviations`,
-`Pending Work`, `Escalation Needed` (`plan-run.md`), плюс дату закрытия плана (`Last
-Updated`/`Update Log` в `plan.md`). Это готовый, машинно-парсируемый источник проблем/находок,
-который **сейчас нигде не используется** analyst-циклом.
+`analyst digest` currently draws candidate lessons ONLY from run-report (`--project|--cwd
+--session`) — line-by-line parsing of the session transcript (tests/lint/files/tool-failures). Plan-protocol
+already OBLIGES everyone item on closing to fix in a structured way: `Known Deviations`,
+`Pending Work`, `Escalation Needed` (`plan-run.md`), plus plan end date (`Last
+Updated`/`Update Log` in `plan.md`). This is a ready-made, machine-parsable source of problems/finds,
+which **not currently used anywhere** analyst-loop.
 
-#### Почему не внедрять прямо сейчас
+#### Why not implement it right now
 
-- Второй свободный лог-файл «проблемы плана» ДУБЛИРОВАЛ бы то, что план-протокол и так
-  требует писать структурированно в `phases/Pn.md` — плодит два источника истины, которые
-  разойдутся со временем (анти-паттерн репо: «Единый источник истины > копий»).
-- Данных пока немного: за всю историю репо закрыто ~5 планов; ценность cross-plan сканирования
-  проявится, когда накопится больше материала для реального паттерн-майнинга (`analyst scan`
-  и так работает на cross-project паттернах, не единичных фактах).
-- Нет ещё чёткого критерия «что именно из Known Deviations достойно стать уроком» — без него
-  это будет либо шумный дамп, либо ещё один ручной фильтр поверх ручного фильтра.
+- Second free log file «plan problems» would DUPLICATE the fact that the plan-protocol is already
+  requires writing in a structured manner `phases/Pn.md` — produces two sources of truth that
+  will disperse over time (anti-pattern repo: «Single Source of Truth > copies»).
+- Not much data yet: the repo has been closed for the entire history ~5 plans; value cross-plan scanning
+  will appear when more material accumulates for real pattern mining (`analyst scan`
+  and so it works for cross-project patterns, not isolated facts).
+- No clear criterion yet «what exactly from Known Deviations deserves to be a lesson» — without it
+  this will either be a noisy dump, or another manual filter on top of a manual filter.
 
-#### Набросок реализации (при возврате к идее)
+#### Implementation Sketch (when returning to the idea)
 
-Не новый формат — новый ИСТОЧНИК для существующего конвейера `digest → review/promote →
+Not a new format - a new SOURCE for an existing pipeline `digest → review/promote →
 curated`:
 
-1. Функция (аналог `run_report.load`) — сканирует `plans/*/plan.md` + `phases/*.md`,
-   находит items с непустыми `Known Deviations`/`Escalation Needed`/`Pending Work`,
-   закрытые (`Status` терминален) ПОСЛЕ даты последнего `analyst digest`-прогона над планами
-   (курсор — как `events.ndjson`, не пересматривать уже обработанное).
-2. Каждая находка → кандидат-урок с провенансом `plan:<ID>#<item>` (аналог текущего
-   `session:<uuid>` провенанса run-report-уроков) — конвейер `review`/`promote` не меняется,
-   человек всё так же в гейте.
-3. Архивные планы (`plans/archive/`) — тоже источник (там уже закрытые находки, которые
-   могли не попасть в анализ при жизни плана).
+1. Function (analogue `run_report.load`) — scans `plans/*/plan.md` + `phases/*.md`,
+   finds items with non-empty `Known Deviations`/`Escalation Needed`/`Pending Work`,
+   closed (`Status` terminal) AFTER the last date `analyst digest`-run through plans
+   (cursor - how `events.ndjson`, do not revise what has already been processed).
+2. Every find → candidate lesson with provenance `plan:<ID>#<item>` (analogue of the current one
+   `session:<uuid>` provenance run-report-lessons) — pipeline `review`/`promote` does not change,
+   the person is still in the gate.
+3. Archived plans (`plans/archive/`) — also a source (there are already closed finds that
+   may not have been included in the analysis during the life of the plan).
 
-#### Альтернатива (если критерий так и не сработает)
+#### Alternative (if the criterion still fails)
 
-Ничего не делать — Update Log + Known Deviations и так читаемы человеком при
-`/task:plan-design`/ревью нового плана (Required Reads уже отсылают к Completion Notes
-предыдущих items). Автоматизация оправдана только при реальном объёме, не «на вырост».
+Do nothing - Update Log + Known Deviations and so human readable
+`/task:plan-design`/review of the new plan (Required Reads are already referred to Completion Notes
+previous items). Automation is justified only with real volume, not «for growth The».
 
-#### Источник
+#### Source
 
-Диалог Owner 2026-07-12 (после закрытия, релиз v0.9.0) ·
-`packages/analyst/lib/analyst/digest.py` (текущий единственный источник — run-report) ·
-`packages/skiller/skills/general/plan-protocol/SKILL.ru.md` (структура Known
-Deviations/Pending Work/Escalation Needed, обязательна на закрытии item'а).
+Dialogue Owner 2026-07-12 (after closing, release v0.9.0) ·
+`packages/analyst/lib/analyst/digest.py` (current single source - run-report) ·
+`packages/skiller/skills/general/plan-protocol/SKILL.ru.md` (structure Known
+Deviations/Pending Work/Escalation Needed, required at closing item'a).
 
 
-### Покрытие analyst-цикла по флоту онбордженных проектов
+### Coating analyst-cycle on a fleet of onboarded projects
 
-**Статус:** отложено (данные есть, решения нет). **Критерий внедрения:** осознанное решение
-по umbrella-политике хуков на чужих проектах — не одностороннее включение.
+**Status:** deferred (data available, no solution). **Implementation criterion:** conscious decision
+by umbrella-policy of hooks on other people's projects - not one-sided inclusion.
 
-#### Контекст
+#### Context
 
-`analyst` (run-report → digest → уроки → token-report) даёт ценность только там, где
-хук `run-report` реально включён и накапливает историю. Проверка флота (SKM-AUDIT-004,
-P3.1/P3.2) показала: из ~20 онбордженных проектов лишь малая часть пишет run-report
-вообще, и ещё меньше накопили analyst-state/token-trend. Отсутствие сигнала — не баг
-`digest` (перепроверено read-only на трёх проектах, см. R3 в
-: `--dry-run` корректно резолвит
-бинарь и легитимно возвращает `candidates: []`), а data-coverage gap: хук `run-report`
-per-project настройка (harness-хуки), не глобальный демон.
+`analyst` (run-report → digest → lessons → token-report) gives value only where
+hook `run-report` is actually turned on and is accumulating history. Fleet check (SKM-AUDIT-004,
+P3.1/P3.2) showed: from ~20 of onboarded projects, only a small part writes run-report
+in general, and accumulated even less analyst-state/token-trend. No signal is not a bug
+`digest` (rechecked read-only on three projects, see. R3 in
+: `--dry-run` resolves correctly
+binary and legitimately returns `candidates: []`), a data-coverage gap: hook `run-report`
+per-project setting (harness-hooks), is not a global daemon.
 
-#### Замер (SKM-AUDIT-004, 2026-07-07)
+#### Metering (SKM-AUDIT-004, 2026-07-07)
 
-- Run-report: **5/20** проектов накопили историю (agelto 30, azguard 10, vaulter 9,
+- Run-report: **5/20** projects have accumulated a history (agelto 30, azguard 10, vaulter 9,
   chatom 6, swissknifeman 4).
 - Analyst-state (`~/.swissknifeman/analyst` per-project): **2/20** (agelto, vaulter).
-- Token-trend (`analyst token-report`): **2/20** (agelto 42 записи, swissknifeman 4).
-- Там, где хук включён и накопил историю (agelto), сигнал полезен —
-  rolling-baseline уже считается штатно.
+- Token-trend (`analyst token-report`): **2/20** (agelto 42 records, swissknifeman 4).
+- Where the hook is enabled and has accumulated history (agelto), signal is useful -
+  rolling-baseline is already considered normal.
 
-#### Почему не внедряется сейчас (D6, SKM-AUDIT-004)
+#### Why is it not being implemented now? (D6, SKM-AUDIT-004)
 
-Массовое включение хука `run-report` на 15 чужих проектах разом — межпакетное изменение
-конфигурации множества репозиториев, шире «safe reversible на одном проекте». Требует
-решения по umbrella-политике, не «safe quick-win».
+Bulk enable hook `run-report` on 15 other people's projects at once - cross-package change
+configurations of multiple repositories, wider «safe reversible on one project». Requires
+solutions for umbrella-policy, not «safe quick-win».
 
-#### Варианты (без обязательств)
+#### Options (without obligation)
 
-1. Включить `run-report` хук по умолчанию для новых онбордингов (`maind onboard`/
-   `harness hooks`) — не трогает уже онбордженные проекты, закрывает gap на новых.
-2. Ничего не менять — данные появятся органически по мере использования проектов.
-3. Добавить `analyst`-срез в `maind projects status`/`maind fleet` для видимости
-   покрытия без отдельной команды на проект (наблюдаемость без изменения поведения).
+1. Enable `run-report` default hook for new onboardings (`maind onboard`/
+   `harness hooks`) — does not touch already onboarded projects, closes gap on new ones.
+2. Don't change anything - the data will appear organically as projects are used.
+3. Add `analyst`-slice in `maind projects status`/`maind fleet` for visibility
+   coverage without a separate team for the project (observability without behavior change).
 
-#### Источник
+#### Source
 
- (табл. 2) ·
+ (table. 2) ·
  (R6).
 

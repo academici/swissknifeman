@@ -91,45 +91,45 @@ based_on: docs/03_Dev/Agent_Design.md
 
 # Eval Design — [ProjectName]
 
-## AI-компонент
-- Модели: ...
+## AI-component
+- Models: ...
 - Use-cases: ...
-- Critical paths (где провал = harm): ...
+- Critical paths (where is the failure = harm): ...
 
-## Уровни eval
-- L1 Smoke (CI): [размер, время]
+## Levels eval
+- L1 Smoke (CI): [size, time]
 - L2 Reference (nightly): ...
 - L3 Behavioural (pre-release): ...
 - L4 Production (online): ...
 
-## Метрики
-| Категория задачи | Метрики | Пороги |
+## Metrics
+| Task Category | Metrics | Thresholds |
 |:---|:---|:---|
 
 ## Eval set v1
-- Файл: `docs/03_Dev/Evals/eval_set_v1.jsonl`
-- Покрытие: [happy/edge/adversarial/domain %]
-- Размер: [N примеров]
+- File: `docs/03_Dev/Evals/eval_set_v1.jsonl`
+- Coating: [happy/edge/adversarial/domain %]
+- Size: [N examples]
 
-## Regression-харнес
+## Regression-harnes
 - Pass criteria: ...
-- Baseline-хранение: ...
+- Baseline-storage: ...
 - Trigger: PR / nightly / release
 
-## LLM-as-judge (если используется)
+## LLM-as-judge (if used)
 - Judge model: ...
 - Rubric: ...
-- Калибровка: [N примеров, kappa с human]
+- Calibration: [N examples, kappa with human]
 
 ## Production monitoring
-- % live traffic под evals: ...
-- Связь с observability: alert при padении метрики X
+- % live traffic under evals: ...
+- Contact observability: alert when padchanging the metric X
 
-## Domain-specific failures (агент)
+## Domain-specific failures (agent)
 - ...
 
 ## Cost & reproducibility
-- Стоимость full eval-run: $...
+- Cost full eval-run: $...
 - Reproducibility: temperature=0, model pin: ...
 ```
 

@@ -44,9 +44,9 @@ RC=$?
 TRIM="$(printf '%s' "$OUT" | tail -n 40)"
 
 if [[ "$MODE" == "strict" ]]; then
-  printf 'review-gate (strict): проверка качества упала — почини перед завершением.\n$ %s\n%s\n' "$CMD" "$TRIM" >&2
+  printf 'review-gate (strict): quality check failed - fix before completion.\n$ %s\n%s\n' "$CMD" "$TRIM" >&2
   exit 2
 fi
 
-printf 'review-gate (warn): проверка качества упала (не блокирую).\n$ %s\n%s\n' "$CMD" "$TRIM" >&2
+printf 'review-gate (warn): quality control failed (not blocking).\n$ %s\n%s\n' "$CMD" "$TRIM" >&2
 exit 0

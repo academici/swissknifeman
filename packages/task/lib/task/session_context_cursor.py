@@ -17,5 +17,5 @@ def current() -> SessionContext | None:
     session_id = value.strip()
     if not session_id or any(char.isspace() for char in session_id):
         raise SessionContextError(
-            "Cursor session context невалиден: CURSOR_CONVERSATION_ID пуст или содержит пробел")
+            "Cursor session context is invalid: CURSOR_CONVERSATION_ID is empty or contains a space")
     return SessionContext(provider="cursor", session_id=session_id, source=_ENVIRONMENT_VARIABLE)

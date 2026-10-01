@@ -1,13 +1,13 @@
 ---
-description: Healthcheck связи ТЕКУЩЕГО проекта с хабом mAInd; по подтверждению (или --fix) — авто-починка.
+description: Healthcheck connection between the CURRENT project and the hub mAInd; upon confirmation (or --fix) — auto-repair.
 argument-hint: "[--fix]"
 allowed-tools: Bash(maind:*)
 ---
-## Здоровье связи (текущий каталог)
+## Communication health (current directory)
 !`maind health --cwd --json`
 
-Разбери результат: `status` (connected / partial / standalone), `memory_daemon`, наличие `agentmemory_mcp` / `maind_mcp` в проекте, список `hints`.
+Parse the result: `status` (connected / partial / standalone), `memory_daemon`, availability `agentmemory_mcp` / `maind_mcp` in the project, list `hints`.
 
-Если статус не `connected`:
-- при `--fix` в «$ARGUMENTS» ИЛИ явном подтверждении пользователя — запусти `maind health --cwd --fix` (поднимет демон памяти при необходимости и допишет MCP-серверы хаба в проект), затем покажи обновлённый статус;
-- иначе — просто перечисли подсказки `hints` и предложи запустить с `--fix`.
+If the status is not `connected`:
+- when `--fix` in «$ARGUMENTS» OR explicit user confirmation - run `maind health --cwd --fix` (will raise the memory daemon if necessary and add MCP-hub servers into the project), then show updated status;
+- otherwise - just list the tips `hints` and suggest running with `--fix`.

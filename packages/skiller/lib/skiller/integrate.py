@@ -1,14 +1,14 @@
-"""integrate — визард интеграции swissknifeman в проект.
+"""integrate — integration wizard swissknifeman to the project.
 
-Проходит чеклист «выбери, что хочешь из максимального функционала» и применяет
-выбранное, переиспользуя существующие команды: do_connect/do_vendor (скиллы),
-generate_hub (хаб). Окружение Claude Code (permissions/MCP/auto-approve/memory)
-вынесено в отдельный пакет `harness` — соответствующие блоки делегируются ему через
-subprocess (как maind делегирует skiller). Безопасно: --dry-run, merge-only, confirm.
+Checklist going through «choose what you want from the maximum functionality» and applies
+selected, reusing existing commands: do_connect/do_vendor (skills),
+generate_hub (hub). Environment Claude Code (permissions/MCP/auto-approve/memory)
+moved to a separate package `harness` — the corresponding blocks are delegated to it via
+subprocess (like maind delegates skiller). Safe: --dry-run, merge-only, confirm.
 
-Блоки: пререквизиты → скиллы → permissions → MCP → auto-approve → memory → output-style →
-plans-dir → hub → brain. Скилл-блоки (skills/hub) — здесь; окружение (permissions/MCP/
-auto-approve/memory/output-style/plans-dir) — в harness.
+Blocks: prerequisites → skills → permissions → MCP → auto-approve → memory → output-style →
+plans-dir → hub → brain. Skill blocks (skills/hub) — here; environment (permissions/MCP/
+auto-approve/memory/output-style/plans-dir) — in harness.
 """
 import subprocess
 import sys
@@ -23,11 +23,11 @@ from .skillset import do_sync
 from .hub import generate_hub
 from .topology import cmd_topology
 
-# Каналы публикации скиллов в проект (только скиллы; память/граф maind — отдельно).
+# Channels for publishing skills in the project (skills only; memory/graph maind — separately).
 SKILLS_CHANNELS = ("connect", "vendor", "skip")
 
-# Бандл = пред-ответы на чеклист. custom → спрашиваем интерактивно.
-# mcp=True → раздать dev-дефолтные MCP-серверы (резолв по autodetect в _gather).
+# Bundle = pre-answers to the checklist. custom → ask interactively.
+# mcp=True → distribute dev-default MCP-servers (resolve by autodetect in _gather).
 BUNDLES = {
     "minimal":     {"skills": "connect", "perms": False, "mcp": False,
                     "autoapprove": None, "memory": None, "hub": False, "brain": False,
@@ -41,7 +41,7 @@ BUNDLES = {
 }
 AA_MODES = ("strict", "permissive", "bypass", "off")
 MEM_MODES = ("file", "federation", "agentmemory", "off")
-# MCP-серверы, раздаваемые в среды разработки по умолчанию (пресеты — в пакете harness).
+# MCP-servers distributed to development environments by default (presets - in the package harness).
 DEV_MCP = ("context7",)
 
 
@@ -55,7 +55,7 @@ def _yn(prompt, default):
     ans = input(f"{prompt} {suffix} ").strip().lower()
     if not ans:
         return default
-    return ans in ("y", "yes", "д", "да")
+    return ans in ("y", "yes", "d", "yes")
 
 
 def _ask_yn(prompt, default, interactive):
@@ -72,7 +72,7 @@ def _ask_choice(prompt, options, default, interactive):
             return default
         if ans in options:
             return ans
-        print(f"  выбери из: {', '.join(options)}")
+        print(f"  select from: {', '.join(options)}")
 
 
 def _ask_text(prompt, default, interactive):
@@ -81,38 +81,38 @@ def _ask_text(prompt, default, interactive):
     return input(f"{prompt} [{default}]: ").strip() or default
 
 
-# --- harness delegation (окружение Claude Code вынесено в пакет harness) -------
+# --- harness delegation (environment Claude Code included in the package harness) -------
 def _run_harness(env, args):
-    """Выполнить команду пакета harness (настройка окружения). False — если harness
-    не установлен (тогда блок мягко пропускается, как раньше при отсутствии скрипта)."""
+    """Execute package command harness (environment settings). False — if harness
+    not installed (then the block is skipped softly, as before in the absence of a script)."""
     binp = harness_bin(env)
     if binp is None:
-        warn("  harness не установлен — пропуск (packages/harness/install.sh)")
+        warn("  harness not installed - skip (packages/harness/install.sh)")
         return False
     sys.stdout.flush()
     try:
         r = subprocess.run([str(binp)] + args, check=False, timeout=30,
                            stderr=subprocess.PIPE, text=True)
     except subprocess.TimeoutExpired:
-        warn(f"  harness: превышен таймаут 30s — блок мог не примениться "
+        warn(f"  harness: timeout exceeded 30s — block may not have been applied "
              f"({args[0] if args else ''})")
         return True
     if r.returncode != 0:
-        # graceful: визард не валим, но НЕ молчим — иначе «готово» при непримен. блоке
+        # graceful: we don’t disable the wizard, but we DO NOT remain silent - otherwise «ready» when not applicable. block
         detail = f": {r.stderr.strip()}" if r.stderr else ""
-        warn(f"  harness вернул код {r.returncode} — блок мог не примениться "
+        warn(f"  harness returned the code {r.returncode} — block may not have been applied "
              f"({args[0] if args else ''}){detail}")
     return True
 
 
-# --- choices helpers (политика выбора — на стороне визарда) --------------------
+# --- choices helpers (selection policy - on the wizard side) --------------------
 def _default_mcp(target):
-    """MCP-серверы по умолчанию для среды разработки (не для obsidian-vault)."""
+    """MCP-default servers for the development environment (not for obsidian-vault)."""
     return list(DEV_MCP) if autodetect(target) != "obsidian-vault" else []
 
 
 def _available_mcp(env):
-    """Имена доступных MCP-пресетов — через `harness mcp --list` (пусто, если harness нет)."""
+    """Names of available MCP-presets - via `harness mcp --list` (empty if harness no)."""
     binp = harness_bin(env)
     if binp is None:
         return []
@@ -125,13 +125,13 @@ def _available_mcp(env):
 
 
 def _parse_mcp_flag(opts):
-    """--mcp a,b,c → ['a','b','c'] (trim, без пустых)."""
+    """--mcp a,b,c → ['a','b','c'] (trim, without empty)."""
     raw = opts.get("mcp")
     return [s.strip() for s in raw.split(",") if s.strip()] if raw else []
 
 
 def _add_unique(lst, names):
-    """Дописать names в lst, сохраняя порядок и без дублей. Возвращает lst."""
+    """Add names in lst, keeping order and without duplicates. Returns lst."""
     for name in names:
         if name and name not in lst:
             lst.append(name)
@@ -140,38 +140,38 @@ def _add_unique(lst, names):
 
 # --- blocks -------------------------------------------------------------------
 def _block_prereqs(env, dry, interactive):
-    print("\n[0] Пререквизиты (machine-level, one-time)")
+    print("\n[0] Prerequisites (machine-level, one-time)")
     topo = env.home / ".swissknifeman" / "topology.json"
     if topo.exists():
-        print("  ✓ топология настроена")
+        print("  ✓ topology configured")
     else:
-        print("  ✗ нет ~/.swissknifeman/topology.json — координатор и память без "
-              "него резолвят узлы по слабым дефолтам")
-        if not dry and interactive and _yn("  Запустить topology init сейчас?", False):
+        print("  ✗ no ~/.swissknifeman/topology.json — coordinator and memory without "
+              "it is resolved by nodes based on weak defaults")
+        if not dry and interactive and _yn("  Run topology init now?", False):
             cmd_topology(env, ["init"])
     hooks = env.home / ".claude" / "hooks"
     have = all((hooks / d).exists() for d in ("notify", "auto-approve", "memory"))
     if have:
-        print("  ✓ файлы хуков установлены (~/.claude/hooks/)")
+        print("  ✓ hook files installed (~/.claude/hooks/)")
     else:
-        print("  ✗ файлы хуков не установлены — нужно: harness hooks --global")
+        print("  ✗ hook files are not installed - you need: harness hooks --global")
         if not dry and interactive and \
-                _yn("  Установить файлы хуков глобально сейчас?", False):
+                _yn("  Install hook files globally now?", False):
             _run_harness(env, ["hooks", "--global"])
 
 
 def _resolve_channel(opts, default, interactive):
-    """Канал публикации скиллов: --skills-channel > интерактивный вопрос > дефолт.
-    Возвращает 'connect'/'vendor' или None (skip)."""
+    """Skills publication channel: --skills-channel > interactive question > default.
+    Returns 'connect'/'vendor' or None (skip)."""
     flag = opts.get("skills_channel")
     if flag:
         if flag not in SKILLS_CHANNELS:
-            die(f"--skills-channel: {flag} (допустимо: connect|vendor|skip)")
+            die(f"--skills-channel: {flag} (valid: connect|vendor|skip)")
         return None if flag == "skip" else flag
     if interactive:
         ch = _ask_choice(
-            "Канал публикации скиллов "
-            "(connect=плагины, не в репо · vendor=физ.копии в репо)",
+            "Skills publication channel "
+            "(connect=plugins, not in repo · vendor=physical copy in repo)",
             SKILLS_CHANNELS, default or "connect", interactive)
         return None if ch == "skip" else ch
     return default
@@ -180,7 +180,7 @@ def _resolve_channel(opts, default, interactive):
 def _block_skills(env, target, choices, dry):
     ch = choices["skills"]
     agent = choices.get("skills_agent") or "claude"
-    print(f"\n[1] Скиллы: {ch or 'пропуск'}"
+    print(f"\n[1] Skills: {ch or 'pass'}"
           + (f" (agent={agent})" if ch == "vendor" else ""))
     if not ch:
         return
@@ -190,27 +190,27 @@ def _block_skills(env, target, choices, dry):
         do_connect(env, target, opts)
     elif ch == "vendor":
         if agent == "claude":
-            # современный канал: физ. копии в .claude/skills/ через sync (для
-            # внешних разработчиков без доступа к реестру swissknifeman)
+            # modern channel: physical. copies in .claude/skills/ via sync (for
+            # external developers without registry access swissknifeman)
             do_sync(env, target, opts)
         else:
-            # legacy vendor для Cursor/Gemini (.ai/.cursor)
+            # legacy vendor for Cursor/Gemini (.ai/.cursor)
             opts["agent"] = agent
             do_vendor(env, target, opts)
 
 
 def _block_perms(env, target, choices, dry):
     if not choices["perms"]:
-        print("\n[2] Permissions: пропуск")
+        print("\n[2] Permissions: pass")
         return
     print("\n[2] Permissions")
     apply_permissions(env, target, choices.get("perms_presets", ""), dry)
 
 
 def _block_mcp(env, target, choices, dry):
-    """Делегировать установку MCP-серверов пакету harness (merge-only в .mcp.json)."""
+    """Delegate installation MCP-servers to the package harness (merge-only in .mcp.json)."""
     servers = choices.get("mcp") or []
-    print(f"\n[3] MCP-серверы: {', '.join(servers) if servers else 'пропуск'}")
+    print(f"\n[3] MCP-servers: {', '.join(servers) if servers else 'pass'}")
     if not servers:
         return
     args = ["mcp", "--target", str(target), "--mcp", ",".join(servers)]
@@ -221,7 +221,7 @@ def _block_mcp(env, target, choices, dry):
 
 def _block_autoapprove(env, target, choices, dry):
     mode = choices["autoapprove"]
-    print(f"\n[4] auto-approve: {mode or 'пропуск'}")
+    print(f"\n[4] auto-approve: {mode or 'pass'}")
     if not mode:
         return
     args = ["hooks", "--target", str(target), "--auto-approve", mode,
@@ -233,7 +233,7 @@ def _block_autoapprove(env, target, choices, dry):
 
 def _block_memory(env, target, choices, dry):
     brain_mode = choices["memory"]
-    print(f"\n[5] memory: {('brain=' + choices.get('memory_brain', 'core') + ' mode=' + brain_mode) if brain_mode else 'пропуск'}")
+    print(f"\n[5] memory: {('brain=' + choices.get('memory_brain', 'core') + ' mode=' + brain_mode) if brain_mode else 'pass'}")
     if not brain_mode:
         return
     brain = choices.get("memory_brain") or "core"
@@ -244,9 +244,9 @@ def _block_memory(env, target, choices, dry):
 
 
 def _block_output_style(env, target, choices, dry):
-    """Терсе-голос агента (harness output-style lean) — токен-экономия вывода. off/None → пропуск."""
+    """Terse agent's voice (harness output-style lean) — token-save output. off/None → pass."""
     style = choices.get("output_style")
-    print(f"\n[6] output-style: {style or 'пропуск'}")
+    print(f"\n[6] output-style: {style or 'pass'}")
     if not style:
         return
     args = ["hooks", "--target", str(target), "--output-style", style]
@@ -256,12 +256,12 @@ def _block_output_style(env, target, choices, dry):
 
 
 def _block_plans_dir(env, target, choices, dry):
-    """Per-project plans/ (harness hooks --plans-dir plans) — plansDirectory в
-    .claude/settings.json (шаримый, коммитится), дефолт «да»: новые онбординги получают
-    plans/ сразу. Ответ «нет» = харнес вообще не звать — НЕ звать с off (у harness off
-    снимает только СВОЙ дефолт plans, это другая семантика, не «не устанавливать»)."""
+    """Per-project plans/ (harness hooks --plans-dir plans) — plansDirectory in
+    .claude/settings.json (shared, committed), default «yes»: new onboardings are received
+    plans/ immediately. Answer «no» = don't call harnes at all - DO NOT call with off (y harness off
+    removes only YOUR default plans, is a different semantics, not «do not install»)."""
     want = choices.get("plans_dir")
-    print(f"\n[7] plans-dir: {'plans' if want else 'пропуск'}")
+    print(f"\n[7] plans-dir: {'plans' if want else 'pass'}")
     if not want:
         return
     args = ["hooks", "--target", str(target), "--plans-dir", "plans"]
@@ -271,32 +271,32 @@ def _block_plans_dir(env, target, choices, dry):
 
 
 def _block_hub(env, target, choices, dry):
-    # Хаб уже сгенерён внутри connect/vendor, если skills+hub. Иначе — отдельно.
+    # The hub is already generated internally connect/vendor, if skills+hub. Otherwise - separately.
     if not choices["hub"] or choices["skills"]:
         return
     print("\n[8] Hub")
     if dry:
-        print("  [dry-run] сгенерировал бы хаб (CLAUDE.md / .ai)")
+        print("  [dry-run] would generate a hub (CLAUDE.md / .ai)")
         return
     try:
         generate_hub(env, target)
-    except Exception as e:  # noqa: BLE001 — хаб не должен валить визард
-        print(f"  пропуск хаба: {e}")
+    except Exception as e:  # noqa: BLE001 — the hub should not crash the wizard
+        print(f"  hub pass: {e}")
 
 
 def _block_brain(env, target, choices, dry):
     if not choices["brain"]:
         return
     print("\n[9] Brain docs-sync")
-    # Подсказка со стороны волта (как раньше) — синк заметок настраивается там.
-    print("  В заметке проекта в Brain-волте добавь во frontmatter:")
+    # Volt's hint (as before) — notes sync is configured there.
+    print("  In the project note in Brain-volte add to frontmatter:")
     print(f"      repo: {target}")
-    print("  Затем: brain status <project> / brain sync <project>")
+    print("  Then: brain status <project> / brain sync <project>")
 
-    # Doc-sync проекта: конфиг .swissknife.json::memory_brain. Строка = путь без
-    # правил синка (только memory-хук, back-compat) → doc-sync выключен. Объект
-    # {path, sync?} → генерим .claude/sync-brain.sh (всегда) и, если direction
-    # pull|bidirectional, тянем файлы из BRAIN в проект.
+    # Doc-sync project: config .swissknife.json::memory_brain. String = path without
+    # rules synka (only memory-hook, back-compat) → doc-sync is disabled. Object
+    # {path, sync?} → generate .claude/sync-brain.sh (always) and if direction
+    # pull|bidirectional, pull files from BRAIN to the project.
     from .config import load_config
     brain_config = (load_config(env, target) or {}).get("memory_brain")
     if not brain_config:
@@ -305,26 +305,26 @@ def _block_brain(env, target, choices, dry):
     if bs.brain_path is None:
         return
     if dry:
-        print(f"  [dry-run] сгенерировал бы .claude/sync-brain.sh (BRAIN={bs.brain_path},"
+        print(f"  [dry-run] would generate .claude/sync-brain.sh (BRAIN={bs.brain_path},"
               f" direction={bs.direction})")
         if isinstance(brain_config, dict) and bs.direction in ("pull", "bidirectional"):
-            print("  [dry-run] и подтянул бы файлы из BRAIN по patterns "
+            print("  [dry-run] and would pull files from BRAIN by patterns "
                   f"({', '.join(bs.patterns)})")
         return
-    # Doc-sync-объект → активный синк; строковый конфиг оставляем только для
-    # memory-хука (doc-sync не включаем, чтобы не менять поведение старых проектов).
+    # Doc-sync-object → active sync; we leave the string config only for
+    # memory-hook (doc-sync is not included so as not to change the behavior of old projects).
     if isinstance(brain_config, dict) and bs.direction in ("pull", "bidirectional"):
         copied = bs.sync_pull()
-        print(f"  pull: скопировано файлов из BRAIN → проект: {len(copied)}")
+        print(f"  pull: copied files from BRAIN → project: {len(copied)}")
     script = bs.generate_sync_script()
     script.chmod(0o755)
-    print(f"  сгенерирован {script} (ручной синк: bash {script.name} [pull|push])")
+    print(f"  generated {script} (manual sync: bash {script.name} [pull|push])")
 
 
 # --- choices assembly ---------------------------------------------------------
 def _profile_dict(env, target, opts):
-    """Полный профиль проекта (по иерархии flag>config>autodetect) или {} — если
-    выбор задан явными buckets/профиль не резолвится."""
+    """Full project profile (by hierarchy flag>config>autodetect) or {} — if
+    selection is made explicit buckets/profile does not resolve."""
     config = load_config(env, target)
     name = resolve_profile_name(target, config, opts.get("profile") or "")
     if not name:
@@ -336,8 +336,8 @@ def _profile_dict(env, target, opts):
 
 
 def _apply_profile_env(base, profile):
-    """Влить профильное СОДЕРЖИМОЕ окружения в choices: harness_presets/mcp/hooks.
-    Бандл задаёт тумблеры (вкл/выкл), профиль наполняет значениями для типа."""
+    """Infuse the profile CONTENT of the environment into choices: harness_presets/mcp/hooks.
+    Bundle sets toggle switches (on/off The), profile populates the values for the type."""
     presets = profile.get("harness_presets")
     if presets:
         base["perms_presets"] = ",".join(presets)
@@ -358,73 +358,73 @@ def _gather(env, target, opts, bundle, interactive):
     prof_name, profile = _profile_dict(env, target, opts)
     base["profile"] = prof_name
     if bundle != "custom":
-        # авто-пресеты permissions (autodetect внутри harness при пустом)
+        # auto-presets permissions (autodetect inside harness when empty)
         base["perms_presets"] = ""
-        # Канал публикации скиллов: --skills-channel > вопрос (TTY) > дефолт бандла.
+        # Skills publication channel: --skills-channel > question (TTY) > bundle default.
         base["skills"] = _resolve_channel(opts, base["skills"], interactive)
         base.setdefault("skills_agent", "claude")
-        # mcp=True в бандле → dev-дефолты (context7), но не для obsidian-vault;
-        # --mcp <a,b> добавляет opt-in пресеты поверх (явный выбор бьёт dev-гейт)
+        # mcp=True in the bundle → dev-defaults (context7), but not for obsidian-vault;
+        # --mcp <a,b> adds opt-in presets on top (explicit choice hits dev-gate)
         base["mcp"] = _add_unique(
             _default_mcp(target) if base.get("mcp") else [], _parse_mcp_flag(opts))
-        # профиль (если есть) наполняет presets/mcp/hooks содержимым под тип
+        # profile (if available) fills presets/mcp/hooks content under type
         _apply_profile_env(base, profile)
         return base
 
-    # custom — интерактивный чеклист
+    # custom — interactive checklist
     detected = autodetect(target)
-    print(f"Проект: {target}  (autodetect: {detected})")
-    # Тип не распознан → НЕ ставим «всё подряд» молча: предлагаем выбрать профиль явно.
-    # Пользователь может оставить standalone (= поставить всё) — но это осознанный выбор.
+    print(f"Project: {target}  (autodetect: {detected})")
+    # Type not recognized → DO NOT set «everything» silently: we suggest choosing a profile explicitly.
+    # The user can leave standalone (= put everything) — but this is a conscious choice.
     if detected == "standalone" and interactive and not opts.get("profile"):
         names = sorted(p.stem for p in (env.root / "profiles").glob("*.json"))
-        print("  Тип проекта не распознан. Выбери профиль для оптимального набора\n"
-              "  (или standalone = поставить всё):")
-        prof_name = _ask_choice("  профиль", tuple(names), "standalone", interactive)
+        print("  The project type is not recognized. Choose a profile for the optimal set\n"
+              "  (or standalone = put everything):")
+        prof_name = _ask_choice("  profile", tuple(names), "standalone", interactive)
     ch = {"settings_file": opts.get("file") or "settings.json",
           "memory_brain": "core", "profile": prof_name}
     ch["skills"] = _resolve_channel(opts, "connect", interactive)
     ch["skills_agent"] = "claude"
     if ch["skills"] == "vendor":
-        # claude → физ. копии в .claude/skills/ через sync (в репо);
-        # cursor/generic → legacy vendor в .ai/.cursor
+        # claude → physical. copies in .claude/skills/ via sync (in the repo);
+        # cursor/generic → legacy vendor in .ai/.cursor
         ch["skills_agent"] = _ask_choice(
-            "  куда (claude=.claude/skills через sync · cursor/generic=.ai/.cursor)",
+            "  where (claude=.claude/skills via sync · cursor/generic=.ai/.cursor)",
             ("claude", "cursor", "generic"), "claude", interactive)
-    ch["perms"] = _ask_yn("Применить permissions-пресеты (autodetect)?", True, interactive)
+    ch["perms"] = _ask_yn("Apply permissions-presets (autodetect)?", True, interactive)
     ch["perms_presets"] = ""
     if detected != "obsidian-vault":
         want_mcp = _ask_yn(
-            "Установить MCP context7 (up-to-date docs библиотек)?", True, interactive)
+            "Install MCP context7 (up-to-date docs libraries)?", True, interactive)
         ch["mcp"] = list(DEV_MCP) if want_mcp else []
     else:
         ch["mcp"] = []
-    # доп. opt-in пресеты: интерактивный ввод + флаг --mcp
+    # add. opt-in presets: interactive input + flag --mcp
     extra_avail = [m for m in _available_mcp(env) if m not in ch["mcp"]]
     if interactive and extra_avail:
         picked = _ask_text(
-            f"  доп. MCP-пресеты через запятую ({', '.join(extra_avail)}); Enter — пропуск",
+            f"  add. MCP-presets separated by commas ({', '.join(extra_avail)}); Enter — pass",
             "", interactive)
         _add_unique(ch["mcp"], (s.strip() for s in picked.split(",")))
     _add_unique(ch["mcp"], _parse_mcp_flag(opts))
-    ch["autoapprove"] = _ask_choice("auto-approve режим", AA_MODES + ("skip",),
+    ch["autoapprove"] = _ask_choice("auto-approve mode", AA_MODES + ("skip",),
                                     "bypass", interactive)
     if ch["autoapprove"] == "skip":
         ch["autoapprove"] = None
-    join_mem = _ask_yn("Присоединить проект к общему мозгу (memory)?", False, interactive)
+    join_mem = _ask_yn("Attach the project to the general brain (memory)?", False, interactive)
     if join_mem:
         ch["memory_brain"] = _ask_text("  brain", "core", interactive)
-        ch["memory"] = _ask_choice("  режим", MEM_MODES, "federation", interactive)
+        ch["memory"] = _ask_choice("  mode", MEM_MODES, "federation", interactive)
     else:
         ch["memory"] = None
     ch["output_style"] = "lean" if _ask_yn(
-        "Включить терсе-голос агента (output-style lean — экономия токенов)?",
+        "Enable terce agent voice (output-style lean — token saving)?",
         True, interactive) else None
     ch["plans_dir"] = _ask_yn(
-        "Включить per-project plans/ (plansDirectory — планы Claude Code в проекте)?",
+        "Enable per-project plans/ (plansDirectory — plans Claude Code in the project)?",
         True, interactive)
-    ch["hub"] = _ask_yn("Сгенерировать хаб скиллов (CLAUDE.md / .ai)?", True, interactive)
-    ch["brain"] = _ask_yn("Показать подсказку по brain docs-sync?", True, interactive)
+    ch["hub"] = _ask_yn("Generate skill hub (CLAUDE.md / .ai)?", True, interactive)
+    ch["brain"] = _ask_yn("Show tooltip brain docs-sync?", True, interactive)
     return ch
 
 
@@ -438,23 +438,23 @@ def cmd_integrate(env, argv):
         print("skiller integrate [--target P] [--bundle minimal|recommended|full|custom] "
               "[--profile name] [--skills-channel connect|vendor|skip] [--yes] [--dry-run] "
               "[--file settings.json|settings.local.json] [--mcp name1,name2]\n"
-              "  --skills-channel: connect=плагины (не в репо) · "
-              "vendor=физ.копии в .claude/skills (в репо, для внешних разработчиков)")
+              "  --skills-channel: connect=plugins (not in repo) · "
+              "vendor=physical copy in .claude/skills (in the repo, for external developers)")
         return
     target, _ = resolve_target(env, opts, allow_home_confirm=True)
     if target == env.root.resolve():
-        die("это сам реестр swissknifeman — запусти integrate из потребляющего проекта")
-    load_config(env, target)  # ранняя валидация .swissknife.json
+        die("is the registry itself swissknifeman — run integrate from the consuming project")
+    load_config(env, target)  # early validation .swissknife.json
 
     dry = opts["dry_run"]
     auto = opts["yes"] or not sys.stdin.isatty()
     bundle = opts["bundle"] or ("recommended" if auto else "custom")
     if bundle not in tuple(BUNDLES) + ("custom",):
-        die(f"неизвестный bundle: {bundle} (minimal|recommended|full|custom)")
+        die(f"unknown bundle: {bundle} (minimal|recommended|full|custom)")
     interactive = sys.stdin.isatty() and not opts["yes"]
 
     print(f"=== skiller integrate → {target} ===")
-    print(f"Бандл: {bundle}" + ("  (dry-run — ничего не пишу)" if dry else ""))
+    print(f"Bundle: {bundle}" + ("  (dry-run — I don't write anything)" if dry else ""))
     choices = _gather(env, target, opts, bundle, interactive)
 
     _block_prereqs(env, dry, interactive)
@@ -468,5 +468,5 @@ def cmd_integrate(env, argv):
     _block_hub(env, target, choices, dry)
     _block_brain(env, target, choices, dry)
 
-    print("\n=== Готово ===" + (" (dry-run)" if dry else ""))
-    print("Перезапусти сессию Claude Code в проекте, чтобы хуки/плагины подхватились.")
+    print("\n=== Done ===" + (" (dry-run)" if dry else ""))
+    print("Restart the session Claude Code in the project so that hooks/plugins picked up.")

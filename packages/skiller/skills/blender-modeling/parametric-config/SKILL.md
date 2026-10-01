@@ -52,19 +52,19 @@ Boundary: everything computed WITHOUT bpy is separated from everything requiring
 
 ## Algorithm
 
-1. **Units — single source.** All linear dims in config = millimeters. At Blender boundary (meters) pass each value through `units.mm()`. Never multiply by `0.001` by hand in geometry — only via the helper. Document unit in each field comment (`# мм`, `# градусы`, `# шт`).
+1. **Units — single source.** All linear dims in config = millimeters. At Blender boundary (meters) pass each value through `units.mm()`. Never multiply by `0.001` by hand in geometry — only via the helper. Document unit in each field comment (`# mm`, `# degrees`, `# pcs`).
 2. **Param — in dataclass.** Each dim/tolerance/material = `@dataclass` config field with default + unit comment. Group related params into own dataclass (`PartConfig`, `JointConfig`, `MaterialConfig`). Instances created AT BOTTOM OF FILE — user edits those.
 3. **Profile — knots, not coords in code.** Revolve silhouette = list of knots `(z, r)` (local z from 0 to segment height). Type alias `ProfileKnot = Tuple[float, float]` makes intent explicit. Intermediate points interpolated (linear or spline) in `profile.py`, not hand-written.
 4. **Dependent dims — in `derive_all()`.** Dims derived from others (segment height = `model.height − bottom − top`; last-knot-to-height match; joint PCD) computed once in `derive_all(...)`, called right after config instances created. Do not duplicate a formula in several places — compute in `derive_all`, read the result.
 5. **Build geometry from profile.** Revolve: assemble closed `bmesh` profile in XZ plane, apply `SCREW` modifier on Z axis (`steps = segments`, `use_merge_vertices`), apply. Extrude: build 2D section, apply `SOLIDIFY`/`Screw` with zero angle or `bmesh.ops.extrude_*`. Feed each bmesh point through `mm(...)`.
 6. **Validate invariants without Blender.** All geometric correctness conditions in `check.py`, run via plain Python (`python models/<part>/check.py`), no bpy, no render. Check: positive heights; adjacent-segment radius matching (`|r_a − r_b| ≤ tol`); nonzero wall thickness (`r_outer > r_inner`); clearance greater than thread profile depth (`thread_depth > thread_clearance`); geometry in valid range (angles 0..360 etc).
 7. **Two-level part tests.** `parts/<part>.test.py` has `test_config()` (math only, imported from `check.py`) and `test_mesh(obj)` (manifold, volume, bounding box — inside Blender). Level 1 runs in CI without Blender; level 2 on real rebuild. Mesh assertions compare world-space geometry: use `obj.matrix_world @ vertex.co` when rotation/parenting matters. For rotationally replicated parts, assert radial distance `hypot(x, y)`, never a fixed-world-axis bound such as `x_max`.
-8. **Printing (FDM/SLA) — budget tolerances.** Fit + thread clearances = separate params (`*_clearance`), not "tight". Min printable wall thickness = invariant in `check.py` (typically `≥ 0.8–1.5 мм`). Thread params + clearances come from `blender-modeling/threading`.
+8. **Printing (FDM/SLA) — budget tolerances.** Fit + thread clearances = separate params (`*_clearance`), not "tight". Min printable wall thickness = invariant in `check.py` (typically `≥ 0.8–1.5 mm`). Thread params + clearances come from `blender-modeling/threading`.
 
 ## Param conventions
 
-- **Unit in name/comment.** Field without explicit unit in comment = review error. Linear = mm, angle = degrees (convert to radians on use), counter = `# шт`.
-- **Clearances — per side.** Radial/axial clearance is per single side; diametral formula applies ×2. Document in field comment (`# зазор на сторону, мм`).
+- **Unit in name/comment.** Field without explicit unit in comment = review error. Linear = mm, angle = degrees (convert to radians on use), counter = `# pcs`.
+- **Clearances — per side.** Radial/axial clearance is per single side; diametral formula applies ×2. Document in field comment (`# clearance per side, mm`).
 - **Match tolerance — named constant.** In `check.py` `tol = 0.5` (mm) for comparing adjacent-segment radii; never compare float radii for exact equality.
 - **Color/material — also a param.** `Color = Tuple[float, float, float, float]` (RGBA 0..1) in part config, not hardcoded in material code.
 - **Derived functions — next to config.** Pure functions like `joint_outer_radius(joint)` live in `config.py` (no bpy), reused in both `check.py` and `parts/*.py`.
@@ -80,7 +80,7 @@ Boundary: everything computed WITHOUT bpy is separated from everything requiring
 ## Quality checklist
 
 - [ ] All linear dims in mm; at Blender boundary — only via `units.mm()`
-- [ ] Each config field has unit comment (мм / градусы / шт)
+- [ ] Each config field has unit comment (mm / degrees / pcs)
 - [ ] Numbers only in `config.py`; no magic constants in `parts/*.py`, `profile.py`
 - [ ] Dependent dims computed once in `derive_all()`, not duplicated
 - [ ] `import bpy`/`bmesh` lazy (inside functions) — module imports without Blender

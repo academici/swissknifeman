@@ -5,13 +5,13 @@ paths:
   - "**/routes/web.php"
 ---
 
-Канон access-layer (глубина — скилл `php:repositories`). Risk-слой: **data-integrity**
-(авторизация/access). На ревью этого слоя включай HTTP-чек-лист: авторизация в policy/gate
-(не в контроллере); на каждое доменное исключение — HTTP-маппинг (404/403/422/429);
-контрактный тест бросает исключение в сценарии.
+Canon access-layer (depth - skill `php:repositories`). Risk-layer: **data-integrity**
+(authorization/access). On the review of this layer, turn on HTTP-checklist: authorization in policy/gate
+(not in controller); per domain exception - HTTP-mapping (404/403/422/429);
+contract test throws exception in script.
 
-- Контроллер **тонкий**: чтение через `*Repository`, запись через Action; никаких
-  `Model::query()/::create()/::where()/::all()/::find()` в контроллере.
-- Валидация — FormRequest (не сырой `request()->input()`); авторизация — policy/gate
-  или атрибут, не инлайн.
-- Отдача — Resource/Data (spatie/laravel-data), не `toArray()` модели.
+- Controller **thin**: read via `*Repository`, entry via Action; none
+  `Model::query()/::create()/::where()/::all()/::find()` in the controller.
+- Validation - FormRequest (not raw `request()->input()`); authorization — policy/gate
+  or attribute, not inline.
+- Recoil - Resource/Data (spatie/laravel-data), not `toArray()` models.

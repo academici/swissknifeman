@@ -1,85 +1,85 @@
 # Bucket-audit — 2026-07 (P7.2, SKM-MASTER-002)
 
-Снимок «до»: прогон `skiller bucket-audit` на живом реестре (206 скиллов / 45 бакетов),
-зафиксированный как база для контентных шагов фазы G (P7.3 монолиты →
-thin-navigator, P7.4 dead-pass, P7.5 alias-механизм). Все числа ниже — дословно из
-вывода команды (не по памяти), см. [«Как воспроизвести»](#как-воспроизвести).
+Snapshot «to»: run `skiller bucket-audit` on the live registry (206 skills / 45 buckets),
+fixed as the basis for the content steps of the phase G (P7.3 monoliths →
+thin-navigator, P7.4 dead-pass, P7.5 alias-mechanism). All numbers below are verbatim from
+command output (not from memory), see [«How to reproduce»](#how-to-reproduce).
 
 ```
 skiller bucket-audit --json   # since=30 (default)
 ```
 
-Дата прогона: 2026-07-02. Скриптовое обеспечение (`audit.py`) — P7.1, уже в рабочей
-копии на момент этого прогона.
+Run date: 2026-07-02. Script software (`audit.py`) — P7.1, is already in working order
+copies at the time of this run.
 
-## Честность usage-окна (прочитать перед вердиктами)
+## Honesty usage-windows (read before verdicts)
 
-**Реальное окно: 30 дней, и это уже весь доступный горизонт.** `bucket-audit`
-считает usage фан-аутом по `~/.swissknifeman/projects.json` (23 зарегистрированных
-проекта) → JSONL-транскриптам сессий Claude Code. Проверено эмпирически: прогон с
-`--since 3650` (10 лет) даёт **тот же** результат, что и `--since 30` — 21
-просканированный проект, идентичные вердикты. Причина — не «телеметрия только
-включилась», а то, что более старых логов физически нет: среди 334 файлов сессий 21
-проекта самый старый датирован 2026-06-02, самый новый — 2026-07-02 (ровно 30 дней
-истории). Так что «окно 30 дней» здесь = «вся история, что есть», а не усечение
-искусственным `--since`.
+**Real window: 30 days, and this is the entire available horizon.** `bucket-audit`
+believes usage fan-out by `~/.swissknifeman/projects.json` (23 registered
+project) → JSONL-session transcripts Claude Code. Empirically tested: run with
+`--since 3650` (10 years) gives **the same** result as `--since 30` — 21
+scanned project, identical verdicts. The reason is not «telemetry only
+turned on», but the fact that there are physically no older logs: among the 334 session files there are 21
+of the project, the oldest is dated 2026-06-02, the newest is 2026-07-02 (exactly 30 days
+stories). So «30 day window» here = «the whole story that is», rather than truncation
+artificial `--since`.
 
-⚠ **[POSSIBLE-DEFECT] расхождение с постановкой задачи.** Задача этого пункта плана
-предполагала «телеметрия SCHEMA=2 включена 2026-07-02 — окно ~1 день». Проверено
-чтением кода (repo-grounded, не внешний факт): `SCHEMA=2` — это отдельный формат
-run-report хука пакета `harness` (`packages/harness/configs/claude-code/hooks/run-report/_lib.py`,
-`usage-trend.ndjson`), и его коммит (`070e529`) действительно датирован сегодня. Но
-`bucket-audit.collect_usage` **не читает** этот источник — он использует куда более
-старый механизм (`analyze.py::agent_stats`, явные вызовы Skill-tool в транскриптах),
-который был задолго до SCHEMA=2. Иными словами: посылка про «SCHEMA=2 → окно ~1 день»
-не относится к тому usage-сигналу, который реально стоит за вердиктами этого
-документа — реальное окно usage-сигнала bucket-audit шире (30 дней = весь горизонт
-проекта), но само число «30» ничем не отличается по сути от «1 дня»: оно всё ещё
-рано для выводов о смерти скилла (ниже почему). **ESCALATION-REQUIRED**: если у
-кого-то в мастер-плане была цель именно свести аудит к данным SCHEMA=2
-(`usage-trend.ndjson`) — это отдельная доработка `audit.py` (не входила в P7.1
-scope, там явно зафиксировано «usage — фан-аут по projects.json → транскрипты»), не
-сделанная здесь; на текущий прогон это не влияет, кроме формулировки причины
-короткого окна.
+⚠ **[POSSIBLE-DEFECT] discrepancy with the problem statement.** Objective of this plan item
+assumed «telemetry SCHEMA=2 enabled 2026-07-02 - window ~1 day». Verified
+reading the code (repo-grounded, not an external fact): `SCHEMA=2` — is a separate format
+run-report package hook `harness` (`packages/harness/configs/claude-code/hooks/run-report/_lib.py`,
+`usage-trend.ndjson`), and its commit (`070e529`) is actually dated today. But
+`bucket-audit.collect_usage` **does not read** this source - it uses much more
+old mechanism (`analyze.py::agent_stats`, explicit calls Skill-tool in transcripts),
+which was long before SCHEMA=2. In other words: the premise about «SCHEMA=2 → window ~1 day»
+is not relevant usage-signal that really stands behind the verdicts of this
+document - real window usage-signal bucket-audit wider (30 days = entire horizon
+project), but the number itself «30» is essentially no different from «1 day»: it's still
+too early to draw conclusions about the death of the skill (below why). **ESCALATION-REQUIRED**: if
+someone's master plan was aimed precisely at reducing the audit to data SCHEMA=2
+(`usage-trend.ndjson`) — this is a separate modification `audit.py` (was not included in P7.1
+scope, is clearly recorded there «usage — fan-out by projects.json → transcripts»), not
+made here; this does not affect the current run, except for the formulation of the reason
+short window.
 
-**Вторая, более важная причина не доверять `dead` буквально — структурная, не про
-длину окна.** `analyze.py` документирует это прямо: «загрузка скилла детектится
-ТОЛЬКО по явным Skill-tool-вызовам; нативный `skills:`-preload субагента и
-авто-триггер плагина по description как Skill-вызов НЕ видны → «DEAD» эвристичен».
-Эмпирическое подтверждение на этом самом прогоне: CORE-скиллы (`context-economy`,
-`anti-drift`, `compact-responses`, `mcp-advisor`, `verify-claims` — раздаются в
-**каждый** connect-проект по умолчанию, см. `configs/core-policy.json`) все пятеро
-показывают `loaded_count=0` и вердикт `dead`, при том что реально резидентны в
-каждом запросе тех проектов (иначе бы CORE-политика не работала). Значит высокая
-доля `dead` (180 из 206 = 87%) — это в основном слепая зона детектора
-(auto-trigger/preload не логируется как явный `Skill`-вызов), а не 180 реально
-неиспользуемых скиллов.
+**Second, more important reason not to trust `dead` literally - structural, not about
+window length.** `analyze.py` documents this directly: «skill loading is detected
+ONLY by explicit Skill-tool-calls; native `skills:`-preload subagent and
+auto-trigger plugin by description like Skill-call NOT visible → «DEAD» heuristic».
+Empirical confirmation on this very run: CORE-skills (`context-economy`,
+`anti-drift`, `compact-responses`, `mcp-advisor`, `verify-claims` — are distributed in
+**each** connect-default project, see `configs/core-policy.json`) all five
+show `loaded_count=0` and verdict `dead`, despite the fact that they are actually resident in
+every request of those projects (otherwise CORE-policy did not work). So high
+share `dead` (180 of 206 = 87%) — this is basically the blind spot of the detector
+(auto-trigger/preload is not logged as explicit `Skill`-call), and not 180 really
+unused skills.
 
-**Практический вывод**: вердикт `dead` в этом отчёте читать РОВНО как
-«не поймано явным Skill-tool-вызовом за 30 дней (весь доступный горизонт)» — не
-«доказанно мёртв». Действие по нему — **P7.4 (profile-excludes, обратимо)**, и то
-не раньше «≥2 недели прод-usage данных после появления телеметрии» по спеке фазы;
-твёрдых удалений эта волна не производит нигде.
+**Practical conclusion**: verdict `dead` in this report read EXACTLY as
+«not caught explicitly Skill-tool-call 30 days in advance (entire available horizon)» — not
+«is proven dead». Action on it - **P7.4 (profile-excludes, reversible)**, and then
+not before «≥2 weeks pro-usage data after telemetry appears» by phase spec;
+this wave does not produce hard deletions anywhere.
 
-## Итог одной строкой
+## Summary in one line
 
-Скиллов: **206**. Бакетов: **45**. Просканировано проектов: **21** из 23
-зарегистрированных (2 без каталога логов). Overlap-пар: **2** (3 скилла).
+Skills: **206**. Baketov: **45**. Projects scanned: **21** of 23
+registered (2 without log directory). Overlap-pars: **2** (3 skill).
 
-| Вердикт | N | Что это |
+| Verdict | N | What is this |
 |---|---|---|
-| `dead` | 180 | 0 явных загрузок за окно — см. честность выше, действие = P7.4 (exclude, не удаление) |
-| `keep` | 13 | реально пойманы Skill-tool в окне |
-| `thin` | 8 | тело-монолит (↻tier1 ≥ 6000 ток) — кандидат thin-navigator |
-| `merge` | 3 | overlap с другим скиллом (Jaccard/shingle) — ждёт alias-механизм, не исполняется |
-| `retrieval-only` | 2 | заметное тело + редкое использование |
+| `dead` | 180 | 0 explicit downloads outside the window - see honesty above, action = P7.4 (exclude, not deleting) |
+| `keep` | 13 | really caught Skill-tool in the window |
+| `thin` | 8 | monolith body (↻tier1 ≥ 6000 current) — candidate thin-navigator |
+| `merge` | 3 | overlap with another skill (Jaccard/shingle) — is waiting alias-mechanism, not executed |
+| `retrieval-only` | 2 | noticeable body + rare use |
 
-## Таблица по бакетам
+## Bucket table
 
-Сумма ⊕tier0/↻tier1 — совокупный резидентный/on-trigger налог бакета (токены,
-`skill_budget`, реюз `budget.py`).
+Amount ⊕tier0/↻tier1 — cumulative resident/on-trigger bucket tax (tokens,
+`skill_budget`, review `budget.py`).
 
-| Бакет | Скиллов | Σ⊕tier0 | Σ↻tier1 | keep | thin | retrieval-only | merge | dead |
+| Bucket | Skills | Σ⊕tier0 | Σ↻tier1 | keep | thin | retrieval-only | merge | dead |
 |---|---|---|---|---|---|---|---|---|
 | ai | 2 | 199 | 2018 | 0 | 0 | 0 | 0 | 2 |
 | architect | 14 | 880 | 44597 | 0 | 0 | 0 | 1 | 13 |
@@ -127,81 +127,81 @@ scope, там явно зафиксировано «usage — фан-аут по
 | security | 1 | 184 | 30199 | 0 | 1 | 0 | 0 | 0 |
 | system | 7 | 607 | 11012 | 0 | 0 | 0 | 0 | 7 |
 
-Все 45 бакетов покрыты (сумма N = 206).
+All 45 buckets are covered (amount N = 206).
 
-## Поимённые вердикты
+## Name verdicts
 
-### merge (3) — ждёт alias-механизм P7.5, НЕ исполняется
+### merge (3) — is waiting alias-mechanism P7.5, NOT executed
 
-| Скилл | ↻tier1 | Overlap с | desc Jaccard | body shingle |
+| Skill | ↻tier1 | Overlap with | desc Jaccard | body shingle |
 |---|---|---|---|---|
 | `architect/dev-engineering-super-skill` | 23962 | `operator/operations-cx-super-skill` | 0.412 | 0.001 |
 | `operator/operations-cx-super-skill` | 22355 | `architect/dev-engineering-super-skill`, `pm/pm-super-skill` | 0.412 / 0.404 | 0.001 / 0.001 |
 | `pm/pm-super-skill` | 23037 | `operator/operations-cx-super-skill` | 0.404 | 0.001 |
 
-См. [спорный случай №1](#1-merge-вердикт-по-3-super-skill-монолитам--вероятный-false-positive)
-ниже — overlap здесь почти наверняка ложный сигнал (шаблонная фраза в description,
-не содержание).
+See [controversial case №1](#1-merge-verdict-by-3-super-skill-monoliths--probable-false-positive)
+below - overlap this is almost certainly a false signal (pattern phrase in description,
+not content).
 
-### thin (8) — тело-монолит (↻tier1 ≥ 6000 ток), кандидат thin-navigator P7.3
+### thin (8) — monolith body (↻tier1 ≥ 6000 current), candidate thin-navigator P7.3
 
-| Скилл | ⊕tier0 | ↻tier1 | usage |
+| Skill | ⊕tier0 | ↻tier1 | usage |
 |---|---|---|---|
-| `security/agent-security-super-skill` | 184 | 30199 | не использовался в окне 30 дней |
-| `legal/legal-super-skill` | 145 | 29249 | не использовался в окне 30 дней |
-| `creative/content-creative-super-skill` | 155 | 26240 | не использовался в окне 30 дней |
-| `sales/sales-super-skill` | 143 | 25593 | не использовался в окне 30 дней |
-| `finance/finance-super-skill` | 179 | 21503 | не использовался в окне 30 дней |
-| `research/research-knowledge-super-skill` | 195 | 20472 | не использовался в окне 30 дней |
-| `marketing/marketing-super-skill` | 142 | 16617 | не использовался в окне 30 дней |
-| `frontend-vue/vueuse-functions` | 34 | 10838 | не использовался в окне 30 дней |
+| `security/agent-security-super-skill` | 184 | 30199 | was not used in the 30 day window |
+| `legal/legal-super-skill` | 145 | 29249 | was not used in the 30 day window |
+| `creative/content-creative-super-skill` | 155 | 26240 | was not used in the 30 day window |
+| `sales/sales-super-skill` | 143 | 25593 | was not used in the 30 day window |
+| `finance/finance-super-skill` | 179 | 21503 | was not used in the 30 day window |
+| `research/research-knowledge-super-skill` | 195 | 20472 | was not used in the 30 day window |
+| `marketing/marketing-super-skill` | 142 | 16617 | was not used in the 30 day window |
+| `frontend-vue/vueuse-functions` | 34 | 10838 | was not used in the 30 day window |
 
-Первые 7 — external `*-super-skill` монолиты (см. [раздел монолитов](#10-внешних-монолитов-≥50kb--список-для-p73)).
-`vueuse-functions` — тоже монолит по токенам (10838 ток), но тело 36.0KB —
-**ниже** порога 50KB из ТЗ P7.3, поэтому не входит в подтверждённый список «10»
-(см. карточку [спорный случай №4](#4-vueuse-functions--monolith-по-токенам-но-не-по-заявленному-порогу-p73)).
+First 7 - external `*-super-skill` monoliths (see [monoliths section](#10-external-monoliths-≥50kb--list-for-p73)).
+`vueuse-functions` — is also a token monolith (10838 current), but the body is 36.0KB —
+**below** threshold 50KB from TK P7.3, is therefore not on the confirmed list «10»
+(see card [controversial case №4](#4-vueuse-functions--monolith-by tokens-but-not-by-the-stated-threshold-p73)).
 
 ### retrieval-only (2)
 
-| Скилл | ↻tier1 | Использований |
+| Skill | ↻tier1 | Uses |
 |---|---|---|
-| `quality/playwright-e2e` | 2544 | 1× за 30 дней |
-| `laravel-filament/filament` | 2374 | 1× за 30 дней |
+| `quality/playwright-e2e` | 2544 | 1× in 30 days |
+| `laravel-filament/filament` | 2374 | 1× in 30 days |
 
-### keep (13) — реально пойманы Skill-tool в окне
+### keep (13) — really caught Skill-tool in the window
 
-| Скилл | ↻tier1 | Использований |
+| Skill | ↻tier1 | Uses |
 |---|---|---|
-| `general/git-commit-rules` | 934 | 25× за 30 дней |
-| `php/database` | 961 | 5× за 30 дней |
-| `php/repositories` | 1563 | 4× за 30 дней |
-| `general/complex-task-orchestrator` | 659 | 2× за 30 дней |
-| `php/laravel-structure` | 2020 | 2× за 30 дней |
-| `quality/code-review` | 1622 | 2× за 30 дней |
-| `devops/ci-cd` | 1150 | 1× за 30 дней |
-| `devops/db-test-preflight` | 1703 | 1× за 30 дней |
-| `general/task-brief-template` | 1253 | 1× за 30 дней |
-| `laravel-data-layer/laravel-broadcasting` | 1257 | 1× за 30 дней |
-| `oss-dev/resolving-merge-conflicts` | 335 | 1× за 30 дней |
-| `php/namespace-refactor-safety` | 365 | 1× за 30 дней |
-| `php-packages/laravel-package-compatibility` | 446 | 1× за 30 дней |
+| `general/git-commit-rules` | 934 | 25× in 30 days |
+| `php/database` | 961 | 5× in 30 days |
+| `php/repositories` | 1563 | 4× in 30 days |
+| `general/complex-task-orchestrator` | 659 | 2× in 30 days |
+| `php/laravel-structure` | 2020 | 2× in 30 days |
+| `quality/code-review` | 1622 | 2× in 30 days |
+| `devops/ci-cd` | 1150 | 1× in 30 days |
+| `devops/db-test-preflight` | 1703 | 1× in 30 days |
+| `general/task-brief-template` | 1253 | 1× in 30 days |
+| `laravel-data-layer/laravel-broadcasting` | 1257 | 1× in 30 days |
+| `oss-dev/resolving-merge-conflicts` | 335 | 1× in 30 days |
+| `php/namespace-refactor-safety` | 365 | 1× in 30 days |
+| `php-packages/laravel-package-compatibility` | 446 | 1× in 30 days |
 
 ### dead (180)
 
-Полный поимённый список — [Приложение A](#приложение-a-полный-вывод-аудита-206-строк)
-(таблица покрывает все 206 скиллов, включая все 180 `dead` с их ⊕tier0/↻tier1). По
-бакетам — колонка `dead` в [таблице выше](#таблица-по-бакетам). Читать вердикт по
-правилам раздела [«Честность usage-окна»](#честность-usage-окна-прочитать-перед-вердиктами):
-не «список на удаление», а «список без явного тригера в окне».
+Full list of names - [Appendix A](#application-a-full-output-audit-206-lines)
+(table covers all 206 skills, including all 180 `dead` from their ⊕tier0/↻tier1). By
+buckets - column `dead` in [table above](#table-by-buckets). Read the verdict on
+section rules [«Honesty usage-windows»](#honesty-usage-windows-read-before-verdicts):
+not «list to delete», a «list without explicit trigger in window».
 
-## 10 внешних монолитов ≥50KB — список для P7.3
+## 10 external monoliths ≥50KB — list for P7.3
 
-Подтверждено измерением (не по памяти из Phase Context): ровно **10** скиллов с
-телом SKILL.md ≥50KB, все external (`upstream.json`, репозитории `get-zeked/*-super-skill`,
-MIT, `strategy: notify`). Сумма их ↻tier1 = **239 227 ток** — это и есть «~240K
-токенов тел on-trigger» из Phase Context P7 (совпадает с точностью до округления).
+Confirmed by measurement (not from memory from Phase Context): exactly **10** skills with
+body SKILL.md ≥50KB, all external (`upstream.json`, repositories `get-zeked/*-super-skill`,
+MIT, `strategy: notify`). The sum of them ↻tier1 = **239 227 current** — this is it «~240K
+body tokens on-trigger» from Phase Context P7 (matches up to rounding).
 
-| Бакет | Скилл (name) | Каталог | Тело, KB | ↻tier1, ток | Вердикт аудита | Upstream repo |
+| Bucket | Skill (name) | Catalog | Body, KB | ↻tier1, current | Audit verdict | Upstream repo |
 |---|---|---|---|---|---|---|
 | security | agent-security-super-skill | `skills/security/security` | 101.7 | 30199 | thin | get-zeked/agent-security-super-skill |
 | legal | legal-super-skill | `skills/legal/legal` | 97.5 | 29249 | thin | get-zeked/legal-super-skill |
@@ -214,160 +214,160 @@ MIT, `strategy: notify`). Сумма их ↻tier1 = **239 227 ток** — эт
 | research | research-knowledge-super-skill | `skills/research/research` | 68.4 | 20472 | thin | get-zeked/research-knowledge-super-skill |
 | marketing | marketing-super-skill | `skills/marketing/marketing` | 55.9 | 16617 | thin | get-zeked/marketing-super-skill |
 
-`*` — 3 монолита несут ОДНОВРЕМЕННО вердикт `merge` (overlap между собой побеждает
-`thin` по приоритету сигнала в `verdict()`) и статус «монолит ≥50KB». Для P7.3 это
-не блокер: перевод в thin-navigator и решение по alias/merge —
-независимые оси; см. [спорный случай №1](#1-merge-вердикт-по-3-super-skill-монолитам--вероятный-false-positive).
-Пути — от корня пакета `packages/skiller/`.
+`*` — 3 monolith bear AT THE SAME TIME the verdict `merge` (overlap wins among themselves
+`thin` by signal priority in `verdict()`) and status «monolith ≥50KB». For P7.3 this
+not a blocker: translation to thin-navigator and solution for alias/merge —
+independent axes; see [controversial case №1](#1-merge-verdict-by-3-super-skill-monoliths--probable-false-positive).
+Paths - from package root `packages/skiller/`.
 
-## Спорные случаи
+## Controversial cases
 
-### 1. `merge`-вердикт по 3 super-skill монолитам — вероятный false-positive
+### 1. `merge`-verdict on 3 super-skill monoliths - probable false-positive
 
 `architect/dev-engineering-super-skill`, `operator/operations-cx-super-skill`,
-`pm/pm-super-skill` дают desc Jaccard 0.40–0.41 (порог 0.4), но body shingle всего
-**0.001** (порог 0.3, т.е. содержимого тел они не разделяют вообще). Причина
-overlap видна в самих description — они почти дословно шаблонны:
+`pm/pm-super-skill` give desc Jaccard 0.40–0.41 (threshold 0.4), but body shingle total
+**0.001** (threshold 0.3, i.e. They don’t share the contents of their bodies at all.). Reason
+overlap is visible in the description — they are almost verbatim template:
 
 > «Broad **{X}**-bucket navigator (composite of external {X} skills). For specific
 > work prefer the granular skill — … Use only for a cross-cutting overview when no
 > single skill fits.»
 
-Совпадает вендорский шаблон (`get-zeked/*-super-skill`), а не предметная область
-(engineering vs ops vs pm — три разных домена). Практический вывод: `merge` здесь,
-скорее всего, ложный сигнал самого Jaccard-порога на шаблонных описаниях, а не
-повод сливать три ролевых бакета. Даже когда alias-механизм появится, эти
-три пары стоит пересмотреть вручную перед реальным alias — сам факт «description
-похож» не значит «слить». Дополнительный нюанс: их собственные description уже
-называют их «navigator» — то есть это идеальные и низкорисковые кандидаты для
-P7.3 thin-navigator независимо от исхода merge-вопроса.
+Vendor template matches (`get-zeked/*-super-skill`), and not the subject area
+(engineering vs ops vs pm — three different domains). Practical conclusion: `merge` here,
+most likely a false signal from the Jaccard-threshold on template descriptions, not
+reason to drain three role-playing buckets. Even when alias-mechanism will appear, these
+three pairs should be reviewed manually before real alias — fact itself «description
+similar» doesn't mean «merge». Additional nuance: their own description already
+call them «navigator» — that is, these are ideal and low-risk candidates for
+P7.3 thin-navigator regardless of the outcome merge-question.
 
-### 2. CORE-скиллы показывают `dead` при заведомой активности — подтверждает слепую зону детектора
+### 2. CORE-skills show `dead` with known activity - confirms the detector's blind spot
 
 `general/anti-drift`, `general/compact-responses`, `general/context-economy`,
-`general/mcp-advisor`, `general/verify-claims` — все 5 из 8 `CORE_SKILLS`
-(`configs/core-policy.json`), раздаваемых в каждый connect-проект по умолчанию —
-вердикт `dead`, 0 загрузок. Остальные 3 CORE (`session-handoff`, `query-craft`,
-`gh-review`) для сверки: `session-handoff` тоже dead, `query-craft` (bucket
-`research`) тоже dead, `gh-review` (bucket `oss-dev`) тоже dead. Все 8/8 CORE_SKILLS
-— `dead` по этому аудиту. Это не «CORE не работает» (это раздельно проверяется
-`skiller budget --check-core`, см. ниже), а прямое эмпирическое подтверждение
-ограничения `analyze.py`: авто-триггер плагина по description в транскрипте не
-выглядит как явный `Skill`-tool-вызов. Референс: `skiller budget --check-core`
-(отдельный от usage-аудита канал) на момент этого прогона показал `CORE резидент
-(⊕ tier-0): 662 ток / target 750 — OK (8/8 скиллов)` — то есть все 8 CORE
-физически раздаются, просто usage-детектор их не видит. Вывод: `dead`-вердикт
-CORE-скиллов **однозначно ложный** — веский аргумент не трогать эти 8 в P7.4
-независимо от их usage-строки (в P7.4 они и так вне периметра — CORE явно не
-кандидат на exclude).
+`general/mcp-advisor`, `general/verify-claims` — all 5 out of 8 `CORE_SKILLS`
+(`configs/core-policy.json`), distributed in every connect-default project -
+verdict `dead`, 0 downloads. The remaining 3 CORE (`session-handoff`, `query-craft`,
+`gh-review`) for verification: `session-handoff` too dead, `query-craft` (bucket
+`research`) too dead, `gh-review` (bucket `oss-dev`) too dead. All 8/8 CORE_SKILLS
+— `dead` for this audit. This is not «CORE doesn't work» (this is checked separately
+`skiller budget --check-core`, see below), but direct empirical confirmation
+restrictions `analyze.py`: auto-trigger plugin by description is not in the transcript
+looks like explicit `Skill`-tool-call. Reference: `skiller budget --check-core`
+(separate from usage-audit channel) at the time of this run showed `CORE resident
+(⊕ tier-0): 662 current / target 750 — OK (8/8 skills)` — that is, all 8 CORE
+are physically distributed, just usage-the detector does not see them. Conclusion: `dead`-verdict
+CORE-skills **definitely false** — a compelling argument not to touch these 8 in P7.4
+regardless of their usage-lines (in P7.4 they are already outside the perimeter - CORE obviously not
+candidate for exclude).
 
-### 3. `general` — самый крупный dead-бакет (17/20), но 3 живых скилла держат высокий loaded_count
+### 3. `general` — the largest dead-bucket (17/20), but 3 living skills keep it high loaded_count
 
-`general` — 20 скиллов, 17 `dead`, но `git-commit-rules` (25× за 30 дней — самый
-высокий usage во всём реестре) и `complex-task-orchestrator`/`task-brief-template`
-(`keep`) реально используются. Бакет смешивает CORE (auto-trigger, слепая зона
-детектора, см. случай №2) и не-CORE general-скиллы, часть из которых (например
-`git-commit-rules`) явно вызываются как отдельный Skill. Смешение статистически
-«топит» бакет в dead-проценте, хотя внутри — рабочее ядро. Урок для P7.4:
-exclude-решения принимать **по скиллу**, не по бакету в целом.
+`general` — 20 skills, 17 `dead`, but `git-commit-rules` (25× in 30 days - the most
+high usage throughout the registry) and `complex-task-orchestrator`/`task-brief-template`
+(`keep`) are actually used. Bucket mixes CORE (auto-trigger, blind spot
+detector, see case №2) and non-CORE general-skills, some of which (for example
+`git-commit-rules`) are explicitly called as a separate Skill. Mixing statistically
+«drowns» bucket in dead-percent, although inside there is a working core. Lesson for P7.4:
+exclude-decisions to make **by skill**, not for the bucket as a whole.
 
-### 4. `vueuse-functions` — monolith по токенам, но не по заявленному порогу P7.3
+### 4. `vueuse-functions` — monolith by tokens, but not by the stated threshold P7.3
 
-`frontend-vue/vueuse-functions` — вердикт `thin` (↻tier1=10838 ≥ 6000), но тело
-36.0KB < 50KB порога, которым описан периметр P7.3 в Phase Context/этом документе.
-Формально это тоже «монолит», просто меньше остальных десяти на порядок ниже
-(они 55.9–101.7KB). Решение: **не включать** в подтверждённый список «10» этой
-волны (P7.3 привязан к конкретному числу и порогу из плана), оставить как отдельный
-`thin`-кандидат для отдельного будущего прохода — тем более он единственный
-non-`*-super-skill` (не из `get-zeked`) монолит в реестре, физическая раскладка
-навигатора может отличаться.
+`frontend-vue/vueuse-functions` — verdict `thin` (↻tier1=10838 ≥ 6000), but the body
+36.0KB < 50KB threshold that describes the perimeter P7.3 in Phase Context/this document.
+Formally this is also «monolith», is simply an order of magnitude smaller than the other ten
+(they are 55.9–101.7KB). Solution: **do not include** to the confirmed list «10» this
+waves (P7.3 is tied to a specific number and threshold from the plan), leave as separate
+`thin`-is a candidate for a separate future passage - especially since it is the only one
+non-`*-super-skill` (not from `get-zeked`) monolith in the registry, physical layout
+navigator may differ.
 
-## Эскиз целевой топологии 45 → ~34 (ТОЛЬКО эскиз, отдельный будущий релиз)
+## Target Topology Sketch 45 → ~34 (Sketch ONLY, separate future release)
 
-Ниже — иллюстрация, НЕ решение и НЕ план на исполнение в этой волне. Основана на
-структурном наблюдении (много одно-/малоскилльных тематически смежных бакетов),
-не на overlap-детекторе аудита (у мелких бакетов ниже overlap почти не всплывает —
-Jaccard считается по description, у разных инструментов Vue/Nuxt/Tailwind описания
-не похожи, хотя домен один). Ждёт alias-механизма для безопасного исполнения
+Below is an illustration, NOT a solution and NOT a plan for execution in this wave. Based on
+structural observation (many one-/low-skill thematically related buckets),
+not on overlap-audit detector (for small buckets below overlap hardly pops up -
+Jaccard is calculated according to description, for different tools Vue/Nuxt/Tailwind descriptions
+are not similar, although the domain is the same). Waiting alias-mechanism for safe execution
 (back-compat D14).
 
-| Группа кандидатов | Сейчас (бакетов / скиллов) | Эскиз-сокращение | Обоснование |
+| Candidate group | Now (buckets / skills) | Shorthand sketch | Rationale |
 |---|---|---|---|
-| `frontend-animations`, `frontend-backend`, `frontend-figma`, `frontend-linting`, `frontend-naive-ui`, `frontend-nuxt`, `frontend-reka`, `frontend-tailwind`, `frontend-vite`, `frontend-wayfinder` | 10 бакетов / 21 скилл | → ~3 (напр. `frontend-tooling`, `frontend-ui`, `frontend-nuxt`-группа) | каждый 1–4 скилла, все под одним доменом (Vue-фронтенд-экосистема), дробление явно избыточно гранулярное |
-| `blender` + `blender-modeling` | 2 бакета / 8 скиллов | → 1 (`blender`) | один инструмент, искусственное разделение mcp/modeling |
-| `azguard`, `botkit` | 2 бакета / 2 скилла | → 0 (вынос из реестра, не merge) | CLAUDE.md уже помечает их «под перенос внутрь пакетов» — это не bucket-merge, а другой процесс (out of P7 scope) |
-| `laravel-livewire` (1 скилл) → `laravel-extras` | 2 бакета / 4 скилла | → 1 | livewire-blade-attributes — единственный скилл бакета, тематически смежен с extras |
+| `frontend-animations`, `frontend-backend`, `frontend-figma`, `frontend-linting`, `frontend-naive-ui`, `frontend-nuxt`, `frontend-reka`, `frontend-tailwind`, `frontend-vite`, `frontend-wayfinder` | 10 buckets / 21 skill | → ~3 (e.g. `frontend-tooling`, `frontend-ui`, `frontend-nuxt`-group) | every 1–4 skills, all under one domain (Vue-frontend ecosystem), crushing is clearly excessively granular |
+| `blender` + `blender-modeling` | 2 bucket / 8 skills | → 1 (`blender`) | one tool, artificial separation mcp/modeling |
+| `azguard`, `botkit` | 2 bucket / 2 skill | → 0 (removal from the registry, not merge) | CLAUDE.md already marks them «for transferring inside packages» — this is not bucket-merge, and another process (out of P7 scope) |
+| `laravel-livewire` (1 skill) → `laravel-extras` | 2 bucket / 4 skill | → 1 | livewire-blade-attributes — the only skill of Bucket, thematically related to extras |
 
-Итог эскиза: 45 − 7 (frontend) − 1 (blender) − 2 (azguard/botkit вынос) − 1
-(livewire) ≈ **34 бакета**. Ни одна строка этой таблицы не исполняется в P7 —
-это вход для будущего отдельного релиза после P7.5.
+Sketch total: 45 − 7 (frontend) − 1 (blender) − 2 (azguard/botkit removal) − 1
+(livewire) ≈ **34 bucket**. No rows in this table are executed in P7 —
+is an input for a future separate release after P7.5.
 
-## Что НЕ делаем в этой волне и почему
+## What we are NOT doing in this wave and why
 
-- **Не переименовываем и не сливаем бакеты** (в т.ч. те 3 из «спорного случая
-  №1» и весь эскиз топологии выше) — решение D14 мастер-плана: 13 проектов сидят
-  на marketplace-канале (`enabledPlugins` в `.claude/settings.local.json`),
-  переименование/слияние бакета ломает их подключение без миграции. Подтверждено
-  прямым подсчётом `~/.swissknifeman/projects.json`: ровно **13** проектов с
-  `channel: marketplace` на момент этого прогона (совпадает с цифрой D14).
-- **Не режем 10 монолитов на подскиллы** — решение D13: резка растит резидентный
-  ⊕tier-0 (у каждого нового скилла своя описание-строка, налог на каждый запрос);
-  вместо этого — thin-navigator (SKILL.md-навигатор + `references/full.md`,
-  тело остаётся физически одним файлом, просто не грузится целиком on-trigger).
-  Это P7.3, отдельный item, не здесь.
-- **Не исполняем `merge`-вердикты** — ждут alias-механизма P7.5 (marketplace-запись
-  со `skills[]`-списком, прецедент — курируемый плагин `core`). До него слияние
-  физически ломает связь «имя бакета → плагин» для потребителей.
-- **Не исключаем ни один скилл из профилей (P7.4 здесь не делается)** — условие
-  фазы: «≥2 недели прод-usage данных после появления телеметрии»; на 2026-07-02
-  реальный горизонт usage-данных — 30 дней, и он и есть всё, что накопилось (см.
-  раздел честности окна). P7.4 — отдельный item, после накопления ещё окна.
-- **Не правим содержимое upstream-тел монолитов** — faithful-first (CLAUDE.md
-  корня): переносимые в P7.3 тела `references/full.md` переносятся дословно,
-  без редактирования.
+- **We do not rename or merge buckets** (incl. those 3 of «controversial case
+  №1» and the entire topology sketch above) — solution D14 master plan: 13 projects sitting
+  on marketplace-channel (`enabledPlugins` in `.claude/settings.local.json`),
+  renaming/merging a bucket breaks their connection without migration. Confirmed
+  by direct counting `~/.swissknifeman/projects.json`: exactly **13** projects with
+  `channel: marketplace` at the time of this run (matches the number D14).
+- **Don't cut 10 monoliths into subskills** — solution D13: cutting grows resident
+  ⊕tier-0 (each new skill has its own description line, tax for each request);
+  instead - thin-navigator (SKILL.md-navigator + `references/full.md`,
+  the body remains physically one file, it just doesn’t load entirely on-trigger).
+  This P7.3, separate item, not here.
+- **Not executable `merge`-verdicts** — are waiting alias-mechanism P7.5 (marketplace-entry
+  with `skills[]`-list, use case - curated plugin `core`). Before it merge
+  physically breaks the connection «bucket name → plugin» for consumers.
+- **We do not exclude any skill from profiles (P7.4 not done here)** — condition
+  phases: «≥2 weeks pro-usage data after telemetry appears»; on 2026-07-02
+  real horizon usage-data - 30 days, and this is all that has accumulated (see
+  window honesty section). P7.4 — separate item, after accumulating more windows.
+- **We do not edit the content upstream-monolith bodies** — faithful-first (CLAUDE.md
+  root): transferred to P7.3 bodies `references/full.md` are translated verbatim,
+  without editing.
 
-## Поправка канала (P2.2 SKM-MASTER-003) — 2026-07-02
+## Channel correction (P2.2 SKM-MASTER-003) — 2026-07-02
 
-Второй, независимый от транскриптов источник видимости usage закрывает слепую зону,
-описанную выше («Честность usage-окна» + Спорный случай №2). Это дополнение, не
-переписывание — исходные числа/таблицы этого документа выше остаются как снимок
-«до» (P7.2, только transcript-канал).
+Second, transcript-independent source of visibility usage closes the blind spot,
+described above («Honesty usage-windows» + Controversial case №2). This is an addition, not
+rewrite - original numbers/the tables of this document above remain as a snapshot
+«to» (P7.2, only transcript-channel).
 
-**Что изменилось (`audit.py`, P2.2):** скилл считается **резидентным**, если он
-(1) входит в `CORE_SKILLS` (`configs/core-policy.json`, грузится ярусом-0 в каждый
-connect-проект) **или** (2) входит в активный набор (`budget.resolve_active_set` —
-профиль/бакеты `.swissknife.json`, тот же путь, что уже использует
-`analyze._active_skill_names`) хотя бы одного из проектов, зарегистрированных в
-`~/.swissknifeman/projects.json`. Резидентный скилл без единого явного Skill-tool-
-вызова в транскрипте **больше не получает вердикт `dead`** — вместо этого `keep` с
-usage_note `«резидентный, прямых вызовов не видно (авто-триггер вне детекции)»`.
-В JSON/рендере у каждого скилла теперь есть поле `channel: skill-call | resident |
-none` — явно видно, КАКОЙ источник видел скилл (`skill-call` — сильнее, побеждает
-при совпадении с `resident`).
+**What has changed (`audit.py`, P2.2):** skill is considered **resident**, if he
+(1) is included in `CORE_SKILLS` (`configs/core-policy.json`, is loaded with tier-0 in each
+connect-project) **or** (2) is included in the active set (`budget.resolve_active_set` —
+profile/buckets `.swissknife.json`, the same path that is already used
+`analyze._active_skill_names`) of at least one of the projects registered in
+`~/.swissknifeman/projects.json`. Resident skill without a single explicit one Skill-tool-
+call in transcript **no longer receives a verdict `dead`** — instead `keep` with
+usage_note `«resident, no direct calls visible (auto-trigger out of detection)»`.
+B JSON/in the renderer, each skill now has a field `channel: skill-call | resident |
+none` — it is clearly visible WHAT source saw the skill (`skill-call` — stronger, wins
+when matching `resident`).
 
-**Отклонение от постановки item'а (зафиксировано честно).** Формулировка P2.2 в
-плане (`Inputs`) предполагала вторым источником SCHEMA=2-тренд/run-reports
-(`<проект>/.claude/analyze/usage-trend.ndjson`). Прочитано repo-grounded: формат
-строки тренда — `{ts, session, in, out, cache_read, cache_creation, by_model,
-tools_total, files_changed, agents, wall_s, retr_chars}` (пишет
+**Deviation from setting item'a (recorded honestly).** Wording P2.2 in
+plan (`Inputs`) assumed the second source SCHEMA=2-trend/run-reports
+(`<project>/.claude/analyze/usage-trend.ndjson`). Read repo-grounded: format
+trend lines - `{ts, session, in, out, cache_read, cache_creation, by_model,
+tools_total, files_changed, agents, wall_s, retr_chars}` (writes
 `packages/harness/configs/claude-code/hooks/run-report/run-report.py` +
-`_lib.py`, докстринг `analyst/token_report.py`) — он несёт токены/тайминги/tool-
-счётчики АГРЕГАТНО, но **не несёт per-skill call/load сигнала вообще** (хук не
-детектит `Skill`-tool вызовы, только `skills-lock.json`-managed пути для
-`protected_writes`). Это ровно тот факт, который уже зафиксирован выше как
-ESCALATION-REQUIRED (строки 27–43, прогон P7.2): «SCHEMA=2 → bucket-audit» из
-постановки не соответствует реальным данным этого источника. Поэтому вместо чтения
-`usage-trend.ndjson` реализован канал `resident` на CORE_SKILLS + активном наборе
-профиля/бакетов — он решает ту же задачу (P2.2 Why: «резидентные CORE-скиллы
-выглядят dead»), опираясь на уже существующий, протестированный путь `resolve_active_set`
-(вместо нового парсера несуществующего сигнала). Это НЕ импровизация мимо плана: пункт
-явно предусматривал усечённую слепую зону, а её реальная причина/починка была уже
-частично исследована в этом же документе на предыдущем проходе.
+`_lib.py`, docstring `analyst/token_report.py`) — it carries tokens/timings/tool-
+counters AGGREGATE, but **does not carry per-skill call/load signal in general** (hook not
+detect `Skill`-tool calls, only `skills-lock.json`-managed paths for
+`protected_writes`). This is exactly the fact that has already been recorded above as
+ESCALATION-REQUIRED (lines 27–43, run P7.2): «SCHEMA=2 → bucket-audit» from
+production does not correspond to the real data of this source. So instead of reading
+`usage-trend.ndjson` channel implemented `resident` on CORE_SKILLS + active set
+profile/buckets - it solves the same problem (P2.2 Why: «resident CORE-skills
+look dead»), building on an already existing, tested path `resolve_active_set`
+(instead of a new parser for a non-existent signal). This is NOT improvisation beyond the plan: point
+clearly provided for a truncated blind spot, and its real reason/repair has already been made
+was partially explored in the same document in a previous pass.
 
-**Новые числа dead/keep** (прогон 2026-07-02, `since_days=30`, 21 просканированный
-проект, 139 резидентных скиллов из 206):
+**New numbers dead/keep** (run 2026-07-02, `since_days=30`, 21 scanned
+project, 139 resident skills out of 206):
 
-| Вердикт | N (было*, transcript-only) | N (стало, + канал resident) |
+| Verdict | N (was*, transcript-only) | N (became, + channel resident) |
 |---|---|---|
 | `dead` | 187 | **65** |
 | `keep` | 13 | **135** |
@@ -375,34 +375,34 @@ ESCALATION-REQUIRED (строки 27–43, прогон P7.2): «SCHEMA=2 → bu
 | `thin` | 1 | 1 |
 | `retrieval-only` | 2 | 2 |
 
-\* «было» реконструировано из текущего прогона (те же 206 скиллов, тот же
-transcript-usage): строки с `channel=resident` и `verdict=keep` при `loaded_count=0`
-до поправки получали бы `dead` — 122 таких строки. Абсолютные числа этого столбца
-отличаются от таблицы «Итог одной строкой» выше (180/13/8/3/2, снимок P7.2) —
-разница объясняется естественным дрейфом реестра/контента между прогонами
-(P7.3 thin-navigator уже прошёл, `thin` упал 8→1), не поправкой канала; сравнение
-«было/стало» в этой таблице — **в рамках одного прогона**, честно изолирует именно
-эффект резидент-канала.
+\* «was» reconstructed from the current run (same 206 skills, same
+transcript-usage): lines with `channel=resident` and `verdict=keep` when `loaded_count=0`
+before the amendment would have received `dead` — 122 such lines. Absolute numbers of this column
+different from table «Summary in one line» above (180/13/8/3/2, snapshot P7.2) —
+the difference is due to natural registry drift/content between runs
+(P7.3 thin-navigator has already passed, `thin` fell 8→1), not a channel correction; comparison
+«was/became» in this table - **within one run**, honestly isolates exactly
+resident channel effect.
 
-Все **8/8 `CORE_SKILLS`** (`context-economy`, `anti-drift`, `compact-responses`,
-`session-handoff`, `mcp-advisor`, `verify-claims`, `query-craft`, `gh-review`) теперь
-`keep`/`resident` — Спорный случай №2 выше закрыт. Остальные 122 флипнутых скилла —
-не CORE, а скиллы бакетов, реально входящих в активный профиль хотя бы одного из 21
-зарегистрированного проекта (например `php/*`, `frontend-vue/*`, `devops/*`,
-`oss-dev/*`) — они физически раздаются этим проектам через connect/vendor, поэтому
-формально резидентны, даже если конкретный проект их триггер ни разу не поймал.
+All **8/8 `CORE_SKILLS`** (`context-economy`, `anti-drift`, `compact-responses`,
+`session-handoff`, `mcp-advisor`, `verify-claims`, `query-craft`, `gh-review`) now
+`keep`/`resident` — Controversial case №2 above is closed. The remaining 122 flipped skills are
+not CORE, and the skills of the buckets that are actually included in the active profile of at least one of the 21
+registered project (for example `php/*`, `frontend-vue/*`, `devops/*`,
+`oss-dev/*`) — they are physically distributed to these projects via connect/vendor, therefore
+are formally resident, even if a specific project has never caught their trigger.
 
-**Что это значит для P7.4 (dead-pass, следующий item, тот же план).** Резидент-канал
-снял ложные срабатывания на уровне «раздано, но не поймано транскриптом» — оставшиеся
-**65 `dead`** уже НЕ пересекаются ни с CORE, ни с активным набором ни одного из 21
-известных проектов: это более узкий, более достоверный кандидат-список для
-profile-excludes. Он всё ещё не «доказанная бесполезность» (проекты вне
-`~/.swissknifeman/projects.json` не видны обоим каналам; резидентность через
-`.swissknife.json` — best-effort снимок текущего состояния конфигов, не история) —
-P7.4 остаётся исполнять как обратимый exclude, не удаление, и не раньше «≥2 недели
-прод-usage» по своей собственной спеке.
+**What does this mean for P7.4 (dead-pass, next item, same plan).** Resident channel
+removed false positives at the level «distributed but not caught by transcript» — remaining
+**65 `dead`** no longer intersect with any CORE, neither with active dialing none of 21
+known projects: this is a narrower, more reliable candidate list for
+profile-excludes. He still hasn't «proven useless» (projects outside
+`~/.swissknifeman/projects.json` are not visible to both channels; residence through
+`.swissknife.json` — best-effort snapshot of the current state of the configs, not history) —
+P7.4 remains to be executed as reversible exclude, not deleting, and not before «≥2 weeks
+cont.usage» according to its own spec.
 
-**Как получить актуальные числа заново:**
+**How to get the current numbers again:**
 
 ```bash
 cd packages/skiller
@@ -412,48 +412,48 @@ PYTHONPATH="$(pwd)/lib:$(cd ../.. && pwd)" python3 -m skiller "$(pwd)" bucket-au
       print('resident_skills', d['resident_skills'])"
 ```
 
-## P3.5 приписка — 2026-07-28: эскиз обновлён под сегодняшние числа, консолидация НЕ исполняется
+## P3.5 postscript - 2026-07-28: sketch updated for today's dates, consolidation is NOT performed
 
-**Рамка (обязательна к прочтению перед числами ниже).** Мотив этой приписки —
-**СОПРОВОЖДЕНИЕ** (46→48 бакетов дорого вести), а НЕ листинговый бюджет: замер
-2026-07-25 опроверг премису раздела «Эскиз целевой топологии» выше —
-записи листинга добавляют **скиллы**, а не бакеты; мелкая гранулярность
-**экономит** узкому подписчику символы, консолидация их **отнимает бы**.
-Продавать обновление ниже как выигрыш бюджета листинга **запрещено** (та же
-рамка, что и у раздела выше). Исполнение по-прежнему не производится этим или
-любым последующим item'ом текущей волны — решение уходит владельцу как
-**OQ-10** (open-questions.md`), закрыт на `finish`
-вариантом **(b)**: консолидация не исполняется вовсе.
+**Frame (must be read before the numbers below).** The motive for this postscript is
+**SUPPORT** (46→48 buckets are expensive to run), and NOT listing budget: measurement
+2026-07-25 refuted the section premise «Sketch of target topology» above -
+listing entries add **skills**, not buckets; fine granularity
+**saves** narrow subscriber symbols, consolidating them **would take away**.
+Sell update below as listing budget win **prohibited** (same
+frame as the section above). Execution is still not done by this or
+any subsequent item'om of the current wave - the decision goes to the owner as
+**OQ-10** (open-questions.md`), closed for `finish`
+option **(b)**: consolidation is not performed at all.
 
-**Что изменилось со среза 2026-07-02:** реестр вырос **46 → 48 бакетов**
-(канонизация 13 bootstrap-скиллов в новый бакет `repository-bootstrap`,
-коммит `589c320e`, вне семейств `frontend*`/`laravel-*` — эскиз ниже их не
-касается). Блокер `alias_of` остаётся снятым (P7.5 🟢, архивный
-) — сегодня в реестре алиасов по-прежнему объявлено
-ноль, механизм доступен, но не задействован.
+**What has changed since the 2026-07-02 cut:** registry has grown **46 → 48 buckets**
+(canonization 13 bootstrap-skills to a new bucket `repository-bootstrap`,
+commit `589c320e`, outside families `frontend*`/`laravel-*` — the sketch below does not
+concerns). Blocker `alias_of` remains unchecked (P7.5 🟢, archived
+) — is still declared today in the registry of aliases
+zero, the mechanism is available but not enabled.
 
-**Обязательный расчёт: листинг ДО/ПОСЛЕ у ФАКТИЧЕСКИХ подписчиков по их
-`enabledPlugins`**, эталон — `flexcrm` (23 плагина, самый нагруженный
-подписчик флота, тот же проект, что и контрольная сверка D83):
+**Mandatory calculation: listing BEFORE/AFTER for ACTUAL subscribers according to their
+`enabledPlugins`**, standard - `flexcrm` (23 plugin, the most loaded
+fleet subscriber, same project as control reconciliation D83):
 
-| Семейство | Бакетов сейчас | ВКЛЮЧЕНО у `flexcrm` (символов) | НЕ включено (символов) | Листинг ПОСЛЕ гипотетического слияния |
+| Family | Baketov now | ENABLED `flexcrm` (characters) | NOT included (characters) | Listing AFTER hypothetical merger |
 |:--|--:|--:|--:|--:|
-| `frontend*` (12 бакетов, эскиз → ~3) | 12 | 7 060 (8 бакетов) | 1 683 (4 бакета: `-animations` 180, `-figma` 323, `-nuxt` 835, `-reka` 345) | **8 743** (слияние — all-or-nothing по мерджнутому бакету, `flexcrm` получил бы обратно исключённые 1 683 симв) |
-| `laravel-*` (7 бакетов, эскиз → 6: `-livewire`→`-extras`) | 7 | 4 772 (6 бакетов) | 409 (`laravel-livewire`) | **5 181** |
-| **ИТОГО** | 19 | **11 832** | **2 092** | **13 924** |
+| `frontend*` (12 buckets, sketch → ~3) | 12 | 7 060 (8 buckets) | 1 683 (4 bucket: `-animations` 180, `-figma` 323, `-nuxt` 835, `-reka` 345) | **8 743** (merge - all-or-nothing by merged bucket, `flexcrm` would get back the excluded 1,683 characters) |
+| `laravel-*` (7 buckets, sketch → 6: `-livewire`→`-extras`) | 7 | 4 772 (6 buckets) | 409 (`laravel-livewire`) | **5 181** |
+| **TOTAL** | 19 | **11 832** | **2 092** | **13 924** |
 
-Метод и числа воспроизводимы (та же команда, что контрольная сверка D83 ниже);
-**11 832 / 2 092 симв — байт-в-байт совпадают** с эталоном D83 (замер 2026-07-25),
-несмотря на рост реестра — семейства `frontend*`/`laravel-*` сам рост не задел.
+Method and numbers are reproducible (same command as control reconciliation D83 below);
+**11 832 / 2 092 char - byte-to-byte match** with reference D83 (measured 2026-07-25),
+despite the growth of the registry - families `frontend*`/`laravel-*` was not affected by the growth itself.
 
-Итог эскиза числом бакетов не изменился (46 → ~34 из раздела выше стало 48 → ~36
-после роста `repository-bootstrap`, направление то же): **консолидация вернула
-бы `flexcrm` 2 092 символа, которые он сегодня НЕ несёт** благодаря гранулярности
-— то есть по метрике листингового бюджета эскиз не выигрыш, а **проигрыш**.
-Единственный легальный мотив исполнения — сопровождение (48 бакетов дороже вести,
-чем ~36), и ТОЛЬКО он идёт в OQ-10.
+The result of the sketch with the number of buckets has not changed (46 → ~34 from the section above became 48 → ~36
+after growth `repository-bootstrap`, direction same): **consolidation returned
+would `flexcrm` 2 092 symbols that it does NOT carry today** thanks to granularity
+— that is, according to the listing budget metric, the sketch is not a win, but **loss**.
+The only legal motive for performance is accompaniment (48 it’s more expensive to carry buckets,
+than ~36), and ONLY he goes to OQ-10.
 
-**Контрольная сверка (воспроизвести):**
+**Control reconciliation (play):**
 
 ```bash
 cd <REPO_ROOT>
@@ -475,240 +475,240 @@ print('included', inc, 'excluded', exc)
 "
 ```
 
-Источники: §0/§3
-(корректировка бюджета 30 000/6 000) ·
-(полный расчёт этого захода) · D74–D77/D83
-(рамка мотива, запрет продавать как выигрыш бюджета) · `open-questions.md` OQ-10.
+Sources: §0/§3
+(budget adjustment 30,000/6 000) ·
+(full calculation of this approach) · D74–D77/D83
+(motive frame, prohibition on selling as a budget gain) · `open-questions.md` OQ-10.
 
-## Как воспроизвести
+## How to reproduce
 
 ```bash
 cd packages/skiller
 PYTHONPATH="$(pwd)/lib:$(cd ../.. && pwd)" python3 -m skiller "$(pwd)" bucket-audit --json
-# человеко-читаемый рендер:
+# human-readable render:
 PYTHONPATH="$(pwd)/lib:$(cd ../.. && pwd)" python3 -m skiller "$(pwd)" bucket-audit
-# другое окно:
+# another window:
 ... bucket-audit --since 14 --json
 ```
 
-> Наблюдение при подготовке этого документа: `bin/skiller` (bash-лаунчер) на момент
-> прогона **не знал** команду `bucket-audit` — whitelist команд в `case "$CMD" in
-> connect|vendor|…)` (строка ~58 `packages/skiller/bin/skiller`) не был расширен
-> вместе с добавлением команды в `lib/skiller/cli.py::COMMANDS`. Итог CLI
-> дошёл до `python3 -m skiller <repo_root> bucket-audit …` напрямую, обходя
-> лаунчер — команда полностью рабочая, но конечный пользователь через `skiller
-> bucket-audit` получит `Неизвестная команда: bucket-audit`, пока строка whitelist
-> не будет обновлена. Файл `bin/skiller` вне scope этого item (P7.2 Files:
-> только этот документ) — фиксирую как находку для P7.1/оркестратора, не правлю
-> здесь.
+> Observations during the preparation of this document: `bin/skiller` (bash-launcher) at the time
+> run **didn't know** command `bucket-audit` — whitelist commands in `case "$CMD" in
+> connect|vendor|…)` (string ~58 `packages/skiller/bin/skiller`) was not expanded
+> along with adding the command to `lib/skiller/cli.py::COMMANDS`. Summary CLI
+> reached `python3 -m skiller <repo_root> bucket-audit …` directly, bypassing
+> launcher - the command is fully working, but the end user through `skiller
+> bucket-audit` will receive `Unknown command: bucket-audit`, while line whitelist
+> will not be updated. File `bin/skiller` out scope this item (P7.2 Files:
+> this document only) — I record as a find for P7.1/orchestrator, I don't edit
+> here.
 
-## Приложение A: полный вывод аудита (206 строк)
+## Appendix A: full audit output (206 lines)
 
-| Скилл | ⊕tier0 | ↻tier1 | Вердикт | Usage |
+| Skill | ⊕tier0 | ↻tier1 | Verdict | Usage |
 |---|---|---|---|---|
-| `ai/ai-agents` | 88 | 613 | dead | не использовался в окне 30 дней |
-| `ai/token-efficient` | 111 | 1405 | dead | не использовался в окне 30 дней |
-| `architect/agent-design` | 25 | 1744 | dead | не использовался в окне 30 дней |
-| `architect/api-design` | 26 | 1129 | dead | не использовался в окне 30 дней |
-| `architect/architecture` | 27 | 1329 | dead | не использовался в окне 30 дней |
-| `architect/codebase-design` | 117 | 1996 | dead | не использовался в окне 30 дней |
-| `architect/data-schema` | 28 | 924 | dead | не использовался в окне 30 дней |
-| `architect/dev-engineering-super-skill` | 133 | 23962 | merge | не использовался в окне 30 дней |
-| `architect/domain-modeling` | 122 | 1261 | dead | не использовался в окне 30 дней |
-| `architect/eval-design` | 32 | 1570 | dead | не использовался в окне 30 дней |
-| `architect/figma-mcp-core` | 136 | 1629 | dead | не использовался в окне 30 дней |
-| `architect/legal-compliance` | 26 | 1841 | dead | не использовался в окне 30 дней |
-| `architect/observability-design` | 32 | 1315 | dead | не использовался в окне 30 дней |
-| `architect/package-contribution-protocol` | 106 | 1857 | dead | не использовался в окне 30 дней |
-| `architect/security-design` | 38 | 2151 | dead | не использовался в окне 30 дней |
-| `architect/tech-stack-selection` | 32 | 1889 | dead | не использовался в окне 30 дней |
-| `azguard/azguard` | 37 | 1679 | dead | не использовался в окне 30 дней |
-| `blender/mcp-blender` | 118 | 1503 | dead | не использовался в окне 30 дней |
-| `blender/version-gotchas` | 22 | 784 | dead | не использовался в окне 30 дней |
-| `blender-modeling/build-loop` | 128 | 2137 | dead | не использовался в окне 30 дней |
-| `blender-modeling/config-conventions` | 114 | 2219 | dead | не использовался в окне 30 дней |
-| `blender-modeling/model-rules` | 31 | 761 | dead | не использовался в окне 30 дней |
-| `blender-modeling/parametric-config` | 111 | 2196 | dead | не использовался в окне 30 дней |
-| `blender-modeling/scene-conventions` | 95 | 914 | dead | не использовался в окне 30 дней |
-| `blender-modeling/threading` | 27 | 660 | dead | не использовался в окне 30 дней |
-| `botkit/botkit` | 29 | 234 | dead | не использовался в окне 30 дней |
-| `creative/content-creative-super-skill` | 155 | 26240 | thin | не использовался в окне 30 дней |
-| `devops/ci-cd` | 55 | 1150 | keep | 1× за 30 дней |
-| `devops/db-test-preflight` | 104 | 1703 | keep | 1× за 30 дней |
-| `devops/docker` | 66 | 400 | dead | не использовался в окне 30 дней |
-| `devops/docker-dev-prod` | 42 | 952 | dead | не использовался в окне 30 дней |
-| `devops/docker-php` | 40 | 794 | dead | не использовался в окне 30 дней |
-| `devops/docker-postgres` | 43 | 834 | dead | не использовался в окне 30 дней |
-| `devops/docker-services` | 48 | 885 | dead | не использовался в окне 30 дней |
-| `devops/docker-vite` | 39 | 706 | dead | не использовался в окне 30 дней |
-| `devops/gitops` | 30 | 743 | dead | не использовался в окне 30 дней |
-| `devops/makefile` | 43 | 759 | dead | не использовался в окне 30 дней |
-| `devops/node-pnpm-preflight` | 38 | 255 | dead | не использовался в окне 30 дней |
-| `finance/finance-super-skill` | 179 | 21503 | thin | не использовался в окне 30 дней |
-| `founder/adversarial-check` | 55 | 1162 | dead | не использовался в окне 30 дней |
-| `founder/competitive-analysis` | 30 | 1343 | dead | не использовался в окне 30 дней |
-| `founder/customer-discovery` | 55 | 1315 | dead | не использовался в окне 30 дней |
-| `founder/defensibility` | 42 | 1151 | dead | не использовался в окне 30 дней |
-| `founder/idea-audit` | 61 | 2502 | dead | не использовался в окне 30 дней |
-| `founder/idea-discovery` | 35 | 1668 | dead | не использовался в окне 30 дней |
-| `founder/new-project` | 28 | 1387 | dead | не использовался в окне 30 дней |
-| `founder/pitch-deck` | 26 | 1583 | dead | не использовался в окне 30 дней |
-| `founder/risk-assessment` | 32 | 1302 | dead | не использовался в окне 30 дней |
-| `founder/startup-lifecycle` | 42 | 1775 | dead | не использовался в окне 30 дней |
-| `frontend/document-writer` | 88 | 1283 | dead | не использовался в окне 30 дней |
-| `frontend/filepond-upload` | 136 | 2242 | dead | не использовался в окне 30 дней |
-| `frontend/web-design-guidelines` | 61 | 270 | dead | не использовался в окне 30 дней |
-| `frontend-animations/motion` | 55 | 920 | dead | не использовался в окне 30 дней |
-| `frontend-backend/backend-type-sync` | 100 | 2075 | dead | не использовался в окне 30 дней |
-| `frontend-backend/inertia-vue` | 58 | 1485 | dead | не использовался в окне 30 дней |
-| `frontend-backend/laravel-echo-client` | 130 | 1928 | dead | не использовался в окне 30 дней |
-| `frontend-figma/figma-to-vue` | 99 | 813 | dead | не использовался в окне 30 дней |
-| `frontend-linting/antfu` | 74 | 1282 | dead | не использовался в окне 30 дней |
-| `frontend-linting/eslint-flat-config` | 112 | 2411 | dead | не использовался в окне 30 дней |
-| `frontend-linting/js-code-style` | 47 | 870 | dead | не использовался в окне 30 дней |
-| `frontend-linting/ts-library` | 90 | 1357 | dead | не использовался в окне 30 дней |
-| `frontend-naive-ui/naive-ui-theming` | 103 | 2041 | dead | не использовался в окне 30 дней |
-| `frontend-nuxt/nuxt` | 80 | 1095 | dead | не использовался в окне 30 дней |
-| `frontend-nuxt/nuxt-modules` | 125 | 644 | dead | не использовался в окне 30 дней |
-| `frontend-nuxt/nuxt-seo` | 50 | 825 | dead | не использовался в окне 30 дней |
-| `frontend-reka/reka-ui-cva` | 105 | 2007 | dead | не использовался в окне 30 дней |
-| `frontend-tailwind/dark-mode` | 113 | 2209 | dead | не использовался в окне 30 дней |
-| `frontend-tailwind/tailwind-conventions` | 127 | 2249 | dead | не использовался в окне 30 дней |
-| `frontend-vite/vite` | 57 | 615 | dead | не использовался в окне 30 дней |
-| `frontend-vite/vite-module-loader` | 27 | 692 | dead | не использовался в окне 30 дней |
-| `frontend-vite/vite-multi-build` | 47 | 1013 | dead | не использовался в окне 30 дней |
-| `frontend-vite/vitepress` | 49 | 830 | dead | не использовался в окне 30 дней |
-| `frontend-vue/pinia` | 54 | 691 | dead | не использовался в окне 30 дней |
-| `frontend-vue/pinia-stores` | 128 | 1920 | dead | не использовался в окне 30 дней |
-| `frontend-vue/vitest` | 47 | 817 | dead | не использовался в окне 30 дней |
-| `frontend-vue/vitest-vue` | 55 | 1049 | dead | не использовался в окне 30 дней |
-| `frontend-vue/vue` | 63 | 876 | dead | не использовался в окне 30 дней |
-| `frontend-vue/vue-best-practices` | 99 | 2560 | dead | не использовался в окне 30 дней |
-| `frontend-vue/vue-composition-api` | 80 | 531 | dead | не использовался в окне 30 дней |
-| `frontend-vue/vue-dynamic-icons` | 76 | 1303 | dead | не использовался в окне 30 дней |
-| `frontend-vue/vue-router-best-practices` | 141 | 2792 | dead | не использовался в окне 30 дней |
-| `frontend-vue/vue-testing-best-practices` | 77 | 2367 | dead | не использовался в окне 30 дней |
-| `frontend-vue/vueuse-functions` | 34 | 10838 | thin | не использовался в окне 30 дней |
-| `frontend-wayfinder/wayfinder` | 48 | 994 | dead | не использовался в окне 30 дней |
-| `general/anti-drift` | 43 | 1258 | dead | не использовался в окне 30 дней |
-| `general/compact-responses` | 60 | 570 | dead | не использовался в окне 30 дней |
-| `general/complex-task-orchestrator` | 44 | 659 | keep | 2× за 30 дней |
-| `general/context-economy` | 71 | 2133 | dead | не использовался в окне 30 дней |
-| `general/cross-layer-change-checklist` | 37 | 461 | dead | не использовался в окне 30 дней |
-| `general/git-commit-rules` | 29 | 934 | keep | 25× за 30 дней |
-| `general/git-safety` | 84 | 600 | dead | не использовался в окне 30 дней |
-| `general/grill-with-docs` | 98 | 911 | dead | не использовался в окне 30 дней |
-| `general/implement` | 88 | 479 | dead | не использовался в окне 30 дней |
-| `general/mcp-advisor` | 107 | 1893 | dead | не использовался в окне 30 дней |
-| `general/naming-conventions` | 86 | 1564 | dead | не использовался в окне 30 дней |
-| `general/packages-stack` | 85 | 530 | dead | не использовался в окне 30 дней |
-| `general/plan-protocol` | 43 | 1889 | dead | не использовался в окне 30 дней |
-| `general/project-map` | 83 | 645 | dead | не использовался в окне 30 дней |
-| `general/session-handoff` | 41 | 618 | dead | не использовался в окне 30 дней |
-| `general/skills-ssot` | 35 | 1771 | dead | не использовался в окне 30 дней |
-| `general/spec-interview` | 58 | 753 | dead | не использовался в окне 30 дней |
-| `general/task-brief-template` | 79 | 1253 | keep | 1× за 30 дней |
-| `general/verify-claims` | 133 | 2696 | dead | не использовался в окне 30 дней |
-| `general/writing-style` | 98 | 1702 | dead | не использовался в окне 30 дней |
-| `laravel-architecture/config-driven-abstraction` | 135 | 487 | dead | не использовался в окне 30 дней |
-| `laravel-architecture/eloquent-accessors` | 119 | 1255 | dead | не использовался в окне 30 дней |
-| `laravel-architecture/enum-attributes` | 131 | 1977 | dead | не использовался в окне 30 дней |
-| `laravel-architecture/enum-state-machine` | 132 | 1585 | dead | не использовался в окне 30 дней |
-| `laravel-architecture/laravel-subagents` | 77 | 1287 | dead | не использовался в окне 30 дней |
-| `laravel-architecture/modular-architecture` | 83 | 3139 | dead | не использовался в окне 30 дней |
-| `laravel-auth/attribute-authorization` | 83 | 2129 | dead | не использовался в окне 30 дней |
-| `laravel-auth/laravel-permissions` | 68 | 426 | dead | не использовался в окне 30 дней |
-| `laravel-auth/laravel-security-audit` | 51 | 803 | dead | не использовался в окне 30 дней |
-| `laravel-data-layer/laravel-broadcasting` | 40 | 1257 | keep | 1× за 30 дней |
-| `laravel-data-layer/laravel-data` | 120 | 2057 | dead | не использовался в окне 30 дней |
-| `laravel-extras/medialibrary` | 33 | 1048 | dead | не использовался в окне 30 дней |
-| `laravel-extras/pennant-development` | 58 | 505 | dead | не использовался в окне 30 дней |
-| `laravel-extras/spatie-settings` | 134 | 2704 | dead | не использовался в окне 30 дней |
-| `laravel-filament/filament` | 63 | 2374 | retrieval-only | 1× за 30 дней |
-| `laravel-livewire/livewire-blade-attributes` | 128 | 1283 | dead | не использовался в окне 30 дней |
-| `laravel-testing/health-checks` | 129 | 2325 | dead | не использовался в окне 30 дней |
-| `laravel-testing/laravel-dusk` | 34 | 1008 | dead | не использовался в окне 30 дней |
-| `laravel-testing/laravel-testing` | 56 | 3061 | dead | не использовался в окне 30 дней |
-| `laravel-testing/test-isolation-guard` | 104 | 1599 | dead | не использовался в окне 30 дней |
-| `legal/legal-super-skill` | 145 | 29249 | thin | не использовался в окне 30 дней |
-| `marketing/marketing-super-skill` | 142 | 16617 | thin | не использовался в окне 30 дней |
-| `mobile/figma-to-flutter` | 107 | 867 | dead | не использовался в окне 30 дней |
-| `operator/capacity-planning` | 41 | 2083 | dead | не использовался в окне 30 дней |
-| `operator/incident-response` | 41 | 1845 | dead | не использовался в окне 30 дней |
-| `operator/oncall-rotation` | 37 | 1708 | dead | не использовался в окне 30 дней |
-| `operator/operations-cx-super-skill` | 98 | 22355 | merge | не использовался в окне 30 дней |
-| `operator/postmortem` | 43 | 1929 | dead | не использовался в окне 30 дней |
-| `operator/runbook` | 36 | 1748 | dead | не использовался в окне 30 дней |
-| `oss-dev/dependency-audit` | 33 | 1160 | dead | не использовался в окне 30 дней |
-| `oss-dev/dx-design` | 31 | 1237 | dead | не использовался в окне 30 дней |
-| `oss-dev/gh-review` | 77 | 1162 | dead | не использовался в окне 30 дней |
-| `oss-dev/github-flow` | 71 | 2090 | dead | не использовался в окне 30 дней |
-| `oss-dev/issue-triage` | 114 | 2163 | dead | не использовался в окне 30 дней |
-| `oss-dev/oss-development` | 38 | 1392 | dead | не использовался в окне 30 дней |
-| `oss-dev/oss-governance` | 31 | 1595 | dead | не использовался в окне 30 дней |
-| `oss-dev/release-engineering` | 37 | 1660 | dead | не использовался в окне 30 дней |
-| `oss-dev/resolving-merge-conflicts` | 103 | 335 | keep | 1× за 30 дней |
-| `oss-dev/to-issues` | 92 | 1184 | dead | не использовался в окне 30 дней |
-| `php/code-style-spatie` | 47 | 1127 | dead | не использовался в окне 30 дней |
-| `php/cursor-pagination-design` | 136 | 412 | dead | не использовался в окне 30 дней |
-| `php/database` | 51 | 961 | keep | 5× за 30 дней |
-| `php/dependency-injection` | 39 | 1285 | dead | не использовался в окне 30 дней |
-| `php/laravel` | 21 | 1573 | dead | не использовался в окне 30 дней |
-| `php/laravel-best-practices` | 40 | 1727 | dead | не использовался в окне 30 дней |
-| `php/laravel-structure` | 44 | 2020 | keep | 2× за 30 дней |
-| `php/named-arguments` | 50 | 694 | dead | не использовался в окне 30 дней |
-| `php/namespace-refactor-safety` | 131 | 365 | keep | 1× за 30 дней |
-| `php/pao` | 59 | 654 | dead | не использовался в окне 30 дней |
-| `php/php-naming-conventions` | 80 | 1426 | dead | не использовался в окне 30 дней |
-| `php/php-patterns` | 25 | 2538 | dead | не использовался в окне 30 дней |
-| `php/php-upgrade-checklist` | 71 | 672 | dead | не использовался в окне 30 дней |
-| `php/production-readiness-checklist` | 128 | 575 | dead | не использовался в окне 30 дней |
-| `php/repositories` | 31 | 1563 | keep | 4× за 30 дней |
-| `php/static-analysis` | 35 | 1123 | dead | не использовался в окне 30 дней |
-| `php/transactional-outbox-relay` | 134 | 585 | dead | не использовался в окне 30 дней |
-| `php-packages/laravel-package-compatibility` | 76 | 446 | keep | 1× за 30 дней |
-| `php-packages/laravel-package-docs` | 75 | 713 | dead | не использовался в окне 30 дней |
-| `php-packages/laravel-package-expressive` | 114 | 578 | dead | не использовался в окне 30 дней |
-| `php-packages/laravel-package-generate-skill` | 84 | 804 | dead | не использовался в окне 30 дней |
-| `php-packages/laravel-package-release` | 68 | 382 | dead | не использовался в окне 30 дней |
-| `php-packages/laravel-package-scaffold` | 77 | 615 | dead | не использовался в окне 30 дней |
-| `php-packages/laravel-package-service-provider` | 73 | 551 | dead | не использовался в окне 30 дней |
-| `php-packages/laravel-package-testing` | 85 | 540 | dead | не использовался в окне 30 дней |
-| `php-packages/laravel-packages` | 33 | 788 | dead | не использовался в окне 30 дней |
-| `pm/brd` | 28 | 592 | dead | не использовался в окне 30 дней |
-| `pm/business-process` | 27 | 572 | dead | не использовался в окне 30 дней |
-| `pm/go-to-market` | 26 | 1325 | dead | не использовался в окне 30 дней |
-| `pm/monetization-design` | 36 | 1400 | dead | не использовался в окне 30 дней |
-| `pm/pm-super-skill` | 120 | 23037 | merge | не использовался в окне 30 дней |
-| `pm/pmf-diagnostics` | 53 | 1413 | dead | не использовался в окне 30 дней |
-| `pm/prd-from-brd` | 38 | 1441 | dead | не использовался в окне 30 дней |
-| `pm/product-roadmap` | 35 | 1266 | dead | не использовался в окне 30 дней |
-| `pm/requirement-critic` | 51 | 1606 | dead | не использовался в окне 30 дней |
-| `pm/unit-economics` | 24 | 839 | dead | не использовался в окне 30 дней |
-| `python/ml-project-structure` | 28 | 614 | dead | не использовался в окне 30 дней |
-| `python/venv-dependencies` | 30 | 549 | dead | не использовался в окне 30 дней |
-| `quality/code-review` | 36 | 1622 | keep | 2× за 30 дней |
-| `quality/code-simplifier` | 68 | 1260 | dead | не использовался в окне 30 дней |
-| `quality/diagnosing-bugs` | 106 | 2577 | dead | не использовался в окне 30 дней |
-| `quality/mutation-testing` | 106 | 2580 | dead | не использовался в окне 30 дней |
-| `quality/playwright-e2e` | 107 | 2544 | retrieval-only | 1× за 30 дней |
-| `quality/refactoring-plan` | 33 | 1878 | dead | не использовался в окне 30 дней |
-| `quality/tdd-discipline` | 100 | 1374 | dead | не использовался в окне 30 дней |
-| `quality/tech-debt-audit` | 44 | 2200 | dead | не использовался в окне 30 дней |
-| `quality/test-strategy` | 61 | 2274 | dead | не использовался в окне 30 дней |
-| `quality/testing-safety-report` | 77 | 756 | dead | не использовался в окне 30 дней |
-| `research/query-craft` | 130 | 3928 | dead | не использовался в окне 30 дней |
-| `research/research-knowledge-super-skill` | 195 | 20472 | thin | не использовался в окне 30 дней |
-| `roles/open-source-maintainer` | 19 | 1235 | dead | не использовался в окне 30 дней |
-| `roles/solo-founder` | 17 | 1188 | dead | не использовался в окне 30 дней |
-| `roles/startup-cto` | 23 | 1417 | dead | не использовался в окне 30 дней |
-| `roles/tech-lead` | 21 | 1413 | dead | не использовался в окне 30 дней |
-| `sales/sales-super-skill` | 143 | 25593 | thin | не использовался в окне 30 дней |
-| `security/agent-security-super-skill` | 184 | 30199 | thin | не использовался в окне 30 дней |
-| `system/agent-packs` | 120 | 2332 | dead | не использовался в окне 30 дней |
-| `system/brain-locator` | 47 | 1337 | dead | не использовался в окне 30 дней |
-| `system/cross-project-coordinator` | 83 | 1430 | dead | не использовался в окне 30 дней |
-| `system/local-topology` | 62 | 1389 | dead | не использовался в окне 30 дней |
-| `system/session-observer` | 117 | 1649 | dead | не использовался в окне 30 дней |
-| `system/shared-memory` | 124 | 1450 | dead | не использовался в окне 30 дней |
-| `system/swissknifeman-locator` | 54 | 1425 | dead | не использовался в окне 30 дней |
+| `ai/ai-agents` | 88 | 613 | dead | was not used in the 30 day window |
+| `ai/token-efficient` | 111 | 1405 | dead | was not used in the 30 day window |
+| `architect/agent-design` | 25 | 1744 | dead | was not used in the 30 day window |
+| `architect/api-design` | 26 | 1129 | dead | was not used in the 30 day window |
+| `architect/architecture` | 27 | 1329 | dead | was not used in the 30 day window |
+| `architect/codebase-design` | 117 | 1996 | dead | was not used in the 30 day window |
+| `architect/data-schema` | 28 | 924 | dead | was not used in the 30 day window |
+| `architect/dev-engineering-super-skill` | 133 | 23962 | merge | was not used in the 30 day window |
+| `architect/domain-modeling` | 122 | 1261 | dead | was not used in the 30 day window |
+| `architect/eval-design` | 32 | 1570 | dead | was not used in the 30 day window |
+| `architect/figma-mcp-core` | 136 | 1629 | dead | was not used in the 30 day window |
+| `architect/legal-compliance` | 26 | 1841 | dead | was not used in the 30 day window |
+| `architect/observability-design` | 32 | 1315 | dead | was not used in the 30 day window |
+| `architect/package-contribution-protocol` | 106 | 1857 | dead | was not used in the 30 day window |
+| `architect/security-design` | 38 | 2151 | dead | was not used in the 30 day window |
+| `architect/tech-stack-selection` | 32 | 1889 | dead | was not used in the 30 day window |
+| `azguard/azguard` | 37 | 1679 | dead | was not used in the 30 day window |
+| `blender/mcp-blender` | 118 | 1503 | dead | was not used in the 30 day window |
+| `blender/version-gotchas` | 22 | 784 | dead | was not used in the 30 day window |
+| `blender-modeling/build-loop` | 128 | 2137 | dead | was not used in the 30 day window |
+| `blender-modeling/config-conventions` | 114 | 2219 | dead | was not used in the 30 day window |
+| `blender-modeling/model-rules` | 31 | 761 | dead | was not used in the 30 day window |
+| `blender-modeling/parametric-config` | 111 | 2196 | dead | was not used in the 30 day window |
+| `blender-modeling/scene-conventions` | 95 | 914 | dead | was not used in the 30 day window |
+| `blender-modeling/threading` | 27 | 660 | dead | was not used in the 30 day window |
+| `botkit/botkit` | 29 | 234 | dead | was not used in the 30 day window |
+| `creative/content-creative-super-skill` | 155 | 26240 | thin | was not used in the 30 day window |
+| `devops/ci-cd` | 55 | 1150 | keep | 1× in 30 days |
+| `devops/db-test-preflight` | 104 | 1703 | keep | 1× in 30 days |
+| `devops/docker` | 66 | 400 | dead | was not used in the 30 day window |
+| `devops/docker-dev-prod` | 42 | 952 | dead | was not used in the 30 day window |
+| `devops/docker-php` | 40 | 794 | dead | was not used in the 30 day window |
+| `devops/docker-postgres` | 43 | 834 | dead | was not used in the 30 day window |
+| `devops/docker-services` | 48 | 885 | dead | was not used in the 30 day window |
+| `devops/docker-vite` | 39 | 706 | dead | was not used in the 30 day window |
+| `devops/gitops` | 30 | 743 | dead | was not used in the 30 day window |
+| `devops/makefile` | 43 | 759 | dead | was not used in the 30 day window |
+| `devops/node-pnpm-preflight` | 38 | 255 | dead | was not used in the 30 day window |
+| `finance/finance-super-skill` | 179 | 21503 | thin | was not used in the 30 day window |
+| `founder/adversarial-check` | 55 | 1162 | dead | was not used in the 30 day window |
+| `founder/competitive-analysis` | 30 | 1343 | dead | was not used in the 30 day window |
+| `founder/customer-discovery` | 55 | 1315 | dead | was not used in the 30 day window |
+| `founder/defensibility` | 42 | 1151 | dead | was not used in the 30 day window |
+| `founder/idea-audit` | 61 | 2502 | dead | was not used in the 30 day window |
+| `founder/idea-discovery` | 35 | 1668 | dead | was not used in the 30 day window |
+| `founder/new-project` | 28 | 1387 | dead | was not used in the 30 day window |
+| `founder/pitch-deck` | 26 | 1583 | dead | was not used in the 30 day window |
+| `founder/risk-assessment` | 32 | 1302 | dead | was not used in the 30 day window |
+| `founder/startup-lifecycle` | 42 | 1775 | dead | was not used in the 30 day window |
+| `frontend/document-writer` | 88 | 1283 | dead | was not used in the 30 day window |
+| `frontend/filepond-upload` | 136 | 2242 | dead | was not used in the 30 day window |
+| `frontend/web-design-guidelines` | 61 | 270 | dead | was not used in the 30 day window |
+| `frontend-animations/motion` | 55 | 920 | dead | was not used in the 30 day window |
+| `frontend-backend/backend-type-sync` | 100 | 2075 | dead | was not used in the 30 day window |
+| `frontend-backend/inertia-vue` | 58 | 1485 | dead | was not used in the 30 day window |
+| `frontend-backend/laravel-echo-client` | 130 | 1928 | dead | was not used in the 30 day window |
+| `frontend-figma/figma-to-vue` | 99 | 813 | dead | was not used in the 30 day window |
+| `frontend-linting/antfu` | 74 | 1282 | dead | was not used in the 30 day window |
+| `frontend-linting/eslint-flat-config` | 112 | 2411 | dead | was not used in the 30 day window |
+| `frontend-linting/js-code-style` | 47 | 870 | dead | was not used in the 30 day window |
+| `frontend-linting/ts-library` | 90 | 1357 | dead | was not used in the 30 day window |
+| `frontend-naive-ui/naive-ui-theming` | 103 | 2041 | dead | was not used in the 30 day window |
+| `frontend-nuxt/nuxt` | 80 | 1095 | dead | was not used in the 30 day window |
+| `frontend-nuxt/nuxt-modules` | 125 | 644 | dead | was not used in the 30 day window |
+| `frontend-nuxt/nuxt-seo` | 50 | 825 | dead | was not used in the 30 day window |
+| `frontend-reka/reka-ui-cva` | 105 | 2007 | dead | was not used in the 30 day window |
+| `frontend-tailwind/dark-mode` | 113 | 2209 | dead | was not used in the 30 day window |
+| `frontend-tailwind/tailwind-conventions` | 127 | 2249 | dead | was not used in the 30 day window |
+| `frontend-vite/vite` | 57 | 615 | dead | was not used in the 30 day window |
+| `frontend-vite/vite-module-loader` | 27 | 692 | dead | was not used in the 30 day window |
+| `frontend-vite/vite-multi-build` | 47 | 1013 | dead | was not used in the 30 day window |
+| `frontend-vite/vitepress` | 49 | 830 | dead | was not used in the 30 day window |
+| `frontend-vue/pinia` | 54 | 691 | dead | was not used in the 30 day window |
+| `frontend-vue/pinia-stores` | 128 | 1920 | dead | was not used in the 30 day window |
+| `frontend-vue/vitest` | 47 | 817 | dead | was not used in the 30 day window |
+| `frontend-vue/vitest-vue` | 55 | 1049 | dead | was not used in the 30 day window |
+| `frontend-vue/vue` | 63 | 876 | dead | was not used in the 30 day window |
+| `frontend-vue/vue-best-practices` | 99 | 2560 | dead | was not used in the 30 day window |
+| `frontend-vue/vue-composition-api` | 80 | 531 | dead | was not used in the 30 day window |
+| `frontend-vue/vue-dynamic-icons` | 76 | 1303 | dead | was not used in the 30 day window |
+| `frontend-vue/vue-router-best-practices` | 141 | 2792 | dead | was not used in the 30 day window |
+| `frontend-vue/vue-testing-best-practices` | 77 | 2367 | dead | was not used in the 30 day window |
+| `frontend-vue/vueuse-functions` | 34 | 10838 | thin | was not used in the 30 day window |
+| `frontend-wayfinder/wayfinder` | 48 | 994 | dead | was not used in the 30 day window |
+| `general/anti-drift` | 43 | 1258 | dead | was not used in the 30 day window |
+| `general/compact-responses` | 60 | 570 | dead | was not used in the 30 day window |
+| `general/complex-task-orchestrator` | 44 | 659 | keep | 2× in 30 days |
+| `general/context-economy` | 71 | 2133 | dead | was not used in the 30 day window |
+| `general/cross-layer-change-checklist` | 37 | 461 | dead | was not used in the 30 day window |
+| `general/git-commit-rules` | 29 | 934 | keep | 25× in 30 days |
+| `general/git-safety` | 84 | 600 | dead | was not used in the 30 day window |
+| `general/grill-with-docs` | 98 | 911 | dead | was not used in the 30 day window |
+| `general/implement` | 88 | 479 | dead | was not used in the 30 day window |
+| `general/mcp-advisor` | 107 | 1893 | dead | was not used in the 30 day window |
+| `general/naming-conventions` | 86 | 1564 | dead | was not used in the 30 day window |
+| `general/packages-stack` | 85 | 530 | dead | was not used in the 30 day window |
+| `general/plan-protocol` | 43 | 1889 | dead | was not used in the 30 day window |
+| `general/project-map` | 83 | 645 | dead | was not used in the 30 day window |
+| `general/session-handoff` | 41 | 618 | dead | was not used in the 30 day window |
+| `general/skills-ssot` | 35 | 1771 | dead | was not used in the 30 day window |
+| `general/spec-interview` | 58 | 753 | dead | was not used in the 30 day window |
+| `general/task-brief-template` | 79 | 1253 | keep | 1× in 30 days |
+| `general/verify-claims` | 133 | 2696 | dead | was not used in the 30 day window |
+| `general/writing-style` | 98 | 1702 | dead | was not used in the 30 day window |
+| `laravel-architecture/config-driven-abstraction` | 135 | 487 | dead | was not used in the 30 day window |
+| `laravel-architecture/eloquent-accessors` | 119 | 1255 | dead | was not used in the 30 day window |
+| `laravel-architecture/enum-attributes` | 131 | 1977 | dead | was not used in the 30 day window |
+| `laravel-architecture/enum-state-machine` | 132 | 1585 | dead | was not used in the 30 day window |
+| `laravel-architecture/laravel-subagents` | 77 | 1287 | dead | was not used in the 30 day window |
+| `laravel-architecture/modular-architecture` | 83 | 3139 | dead | was not used in the 30 day window |
+| `laravel-auth/attribute-authorization` | 83 | 2129 | dead | was not used in the 30 day window |
+| `laravel-auth/laravel-permissions` | 68 | 426 | dead | was not used in the 30 day window |
+| `laravel-auth/laravel-security-audit` | 51 | 803 | dead | was not used in the 30 day window |
+| `laravel-data-layer/laravel-broadcasting` | 40 | 1257 | keep | 1× in 30 days |
+| `laravel-data-layer/laravel-data` | 120 | 2057 | dead | was not used in the 30 day window |
+| `laravel-extras/medialibrary` | 33 | 1048 | dead | was not used in the 30 day window |
+| `laravel-extras/pennant-development` | 58 | 505 | dead | was not used in the 30 day window |
+| `laravel-extras/spatie-settings` | 134 | 2704 | dead | was not used in the 30 day window |
+| `laravel-filament/filament` | 63 | 2374 | retrieval-only | 1× in 30 days |
+| `laravel-livewire/livewire-blade-attributes` | 128 | 1283 | dead | was not used in the 30 day window |
+| `laravel-testing/health-checks` | 129 | 2325 | dead | was not used in the 30 day window |
+| `laravel-testing/laravel-dusk` | 34 | 1008 | dead | was not used in the 30 day window |
+| `laravel-testing/laravel-testing` | 56 | 3061 | dead | was not used in the 30 day window |
+| `laravel-testing/test-isolation-guard` | 104 | 1599 | dead | was not used in the 30 day window |
+| `legal/legal-super-skill` | 145 | 29249 | thin | was not used in the 30 day window |
+| `marketing/marketing-super-skill` | 142 | 16617 | thin | was not used in the 30 day window |
+| `mobile/figma-to-flutter` | 107 | 867 | dead | was not used in the 30 day window |
+| `operator/capacity-planning` | 41 | 2083 | dead | was not used in the 30 day window |
+| `operator/incident-response` | 41 | 1845 | dead | was not used in the 30 day window |
+| `operator/oncall-rotation` | 37 | 1708 | dead | was not used in the 30 day window |
+| `operator/operations-cx-super-skill` | 98 | 22355 | merge | was not used in the 30 day window |
+| `operator/postmortem` | 43 | 1929 | dead | was not used in the 30 day window |
+| `operator/runbook` | 36 | 1748 | dead | was not used in the 30 day window |
+| `oss-dev/dependency-audit` | 33 | 1160 | dead | was not used in the 30 day window |
+| `oss-dev/dx-design` | 31 | 1237 | dead | was not used in the 30 day window |
+| `oss-dev/gh-review` | 77 | 1162 | dead | was not used in the 30 day window |
+| `oss-dev/github-flow` | 71 | 2090 | dead | was not used in the 30 day window |
+| `oss-dev/issue-triage` | 114 | 2163 | dead | was not used in the 30 day window |
+| `oss-dev/oss-development` | 38 | 1392 | dead | was not used in the 30 day window |
+| `oss-dev/oss-governance` | 31 | 1595 | dead | was not used in the 30 day window |
+| `oss-dev/release-engineering` | 37 | 1660 | dead | was not used in the 30 day window |
+| `oss-dev/resolving-merge-conflicts` | 103 | 335 | keep | 1× in 30 days |
+| `oss-dev/to-issues` | 92 | 1184 | dead | was not used in the 30 day window |
+| `php/code-style-spatie` | 47 | 1127 | dead | was not used in the 30 day window |
+| `php/cursor-pagination-design` | 136 | 412 | dead | was not used in the 30 day window |
+| `php/database` | 51 | 961 | keep | 5× in 30 days |
+| `php/dependency-injection` | 39 | 1285 | dead | was not used in the 30 day window |
+| `php/laravel` | 21 | 1573 | dead | was not used in the 30 day window |
+| `php/laravel-best-practices` | 40 | 1727 | dead | was not used in the 30 day window |
+| `php/laravel-structure` | 44 | 2020 | keep | 2× in 30 days |
+| `php/named-arguments` | 50 | 694 | dead | was not used in the 30 day window |
+| `php/namespace-refactor-safety` | 131 | 365 | keep | 1× in 30 days |
+| `php/pao` | 59 | 654 | dead | was not used in the 30 day window |
+| `php/php-naming-conventions` | 80 | 1426 | dead | was not used in the 30 day window |
+| `php/php-patterns` | 25 | 2538 | dead | was not used in the 30 day window |
+| `php/php-upgrade-checklist` | 71 | 672 | dead | was not used in the 30 day window |
+| `php/production-readiness-checklist` | 128 | 575 | dead | was not used in the 30 day window |
+| `php/repositories` | 31 | 1563 | keep | 4× in 30 days |
+| `php/static-analysis` | 35 | 1123 | dead | was not used in the 30 day window |
+| `php/transactional-outbox-relay` | 134 | 585 | dead | was not used in the 30 day window |
+| `php-packages/laravel-package-compatibility` | 76 | 446 | keep | 1× in 30 days |
+| `php-packages/laravel-package-docs` | 75 | 713 | dead | was not used in the 30 day window |
+| `php-packages/laravel-package-expressive` | 114 | 578 | dead | was not used in the 30 day window |
+| `php-packages/laravel-package-generate-skill` | 84 | 804 | dead | was not used in the 30 day window |
+| `php-packages/laravel-package-release` | 68 | 382 | dead | was not used in the 30 day window |
+| `php-packages/laravel-package-scaffold` | 77 | 615 | dead | was not used in the 30 day window |
+| `php-packages/laravel-package-service-provider` | 73 | 551 | dead | was not used in the 30 day window |
+| `php-packages/laravel-package-testing` | 85 | 540 | dead | was not used in the 30 day window |
+| `php-packages/laravel-packages` | 33 | 788 | dead | was not used in the 30 day window |
+| `pm/brd` | 28 | 592 | dead | was not used in the 30 day window |
+| `pm/business-process` | 27 | 572 | dead | was not used in the 30 day window |
+| `pm/go-to-market` | 26 | 1325 | dead | was not used in the 30 day window |
+| `pm/monetization-design` | 36 | 1400 | dead | was not used in the 30 day window |
+| `pm/pm-super-skill` | 120 | 23037 | merge | was not used in the 30 day window |
+| `pm/pmf-diagnostics` | 53 | 1413 | dead | was not used in the 30 day window |
+| `pm/prd-from-brd` | 38 | 1441 | dead | was not used in the 30 day window |
+| `pm/product-roadmap` | 35 | 1266 | dead | was not used in the 30 day window |
+| `pm/requirement-critic` | 51 | 1606 | dead | was not used in the 30 day window |
+| `pm/unit-economics` | 24 | 839 | dead | was not used in the 30 day window |
+| `python/ml-project-structure` | 28 | 614 | dead | was not used in the 30 day window |
+| `python/venv-dependencies` | 30 | 549 | dead | was not used in the 30 day window |
+| `quality/code-review` | 36 | 1622 | keep | 2× in 30 days |
+| `quality/code-simplifier` | 68 | 1260 | dead | was not used in the 30 day window |
+| `quality/diagnosing-bugs` | 106 | 2577 | dead | was not used in the 30 day window |
+| `quality/mutation-testing` | 106 | 2580 | dead | was not used in the 30 day window |
+| `quality/playwright-e2e` | 107 | 2544 | retrieval-only | 1× in 30 days |
+| `quality/refactoring-plan` | 33 | 1878 | dead | was not used in the 30 day window |
+| `quality/tdd-discipline` | 100 | 1374 | dead | was not used in the 30 day window |
+| `quality/tech-debt-audit` | 44 | 2200 | dead | was not used in the 30 day window |
+| `quality/test-strategy` | 61 | 2274 | dead | was not used in the 30 day window |
+| `quality/testing-safety-report` | 77 | 756 | dead | was not used in the 30 day window |
+| `research/query-craft` | 130 | 3928 | dead | was not used in the 30 day window |
+| `research/research-knowledge-super-skill` | 195 | 20472 | thin | was not used in the 30 day window |
+| `roles/open-source-maintainer` | 19 | 1235 | dead | was not used in the 30 day window |
+| `roles/solo-founder` | 17 | 1188 | dead | was not used in the 30 day window |
+| `roles/startup-cto` | 23 | 1417 | dead | was not used in the 30 day window |
+| `roles/tech-lead` | 21 | 1413 | dead | was not used in the 30 day window |
+| `sales/sales-super-skill` | 143 | 25593 | thin | was not used in the 30 day window |
+| `security/agent-security-super-skill` | 184 | 30199 | thin | was not used in the 30 day window |
+| `system/agent-packs` | 120 | 2332 | dead | was not used in the 30 day window |
+| `system/brain-locator` | 47 | 1337 | dead | was not used in the 30 day window |
+| `system/cross-project-coordinator` | 83 | 1430 | dead | was not used in the 30 day window |
+| `system/local-topology` | 62 | 1389 | dead | was not used in the 30 day window |
+| `system/session-observer` | 117 | 1649 | dead | was not used in the 30 day window |
+| `system/shared-memory` | 124 | 1450 | dead | was not used in the 30 day window |
+| `system/swissknifeman-locator` | 54 | 1425 | dead | was not used in the 30 day window |

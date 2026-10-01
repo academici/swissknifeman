@@ -1,5 +1,5 @@
-"""Тесты doctor.py: диагностика окружения (--help, провал при отсутствии демона, успех
-при замоканном окружении). Без живых бинарей/демона — изолированно в tmpdir."""
+"""Tests doctor.py: environment diagnostics (--help, failure without demon, success
+in a locked environment). No live binaries/demon - isolated in tmpdir."""
 import contextlib
 import io
 import json
@@ -24,16 +24,16 @@ class TestDoctor(unittest.TestCase):
 
     def test_reports_issue_when_agentmemory_missing(self):
         with tempfile.TemporaryDirectory() as tmp:
-            _, env = make_repo(tmp)               # node_modules/.bin/agentmemory нет
+            _, env = make_repo(tmp)               # node_modules/.bin/agentmemory no
             buf = io.StringIO()
             with contextlib.redirect_stdout(buf), self.assertRaises(SystemExit) as cm:
-                cmd_doctor(env, ["--quiet"])      # quiet → печатает только провалы
+                cmd_doctor(env, ["--quiet"])      # quiet → only prints dips
             self.assertEqual(cm.exception.code, 1)
             self.assertIn("agentmemory", buf.getvalue())
 
     def test_passes_when_env_ok(self):
         with tempfile.TemporaryDirectory() as tmp:
-            _, env = make_repo(tmp)               # iii-config.yaml уже на месте
+            _, env = make_repo(tmp)               # iii-config.yaml is already in place
             bindir = env.root / "node_modules" / ".bin"
             bindir.mkdir(parents=True)
             (bindir / "agentmemory").write_text("", encoding="utf-8")
@@ -42,8 +42,8 @@ class TestDoctor(unittest.TestCase):
             try:
                 buf = io.StringIO()
                 with contextlib.redirect_stdout(buf):
-                    cmd_doctor(env, ["--quiet"])  # все проверки ок → без SystemExit
-                self.assertIn("Все проверки пройдены", buf.getvalue())
+                    cmd_doctor(env, ["--quiet"])  # all checks ok → without SystemExit
+                self.assertIn("All checks passed", buf.getvalue())
             finally:
                 doctor.shutil.which = orig
 
@@ -60,9 +60,9 @@ class TestDoctor(unittest.TestCase):
 
 def _write_ecosystem_templates(root, *, mcp_body="ecosystem-mcp {{PROJECT}} {{SCOPE}}\n",
                                setup_body="ecosystem-setup {{PROJECT}}\n"):
-    """Кладёт минимальные templates/skills/{ecosystem-mcp,ecosystem-setup}/SKILL.md —
-    _apply_managed_skill (skilldoc.py) читает их через env.root/templates/…, которых
-    нет в синтетическом tmp-корне теста."""
+    """Places minimum templates/skills/{ecosystem-mcp,ecosystem-setup}/SKILL.md —
+    _apply_managed_skill (skilldoc.py) reads them through env.root/templates/…, which
+    not in synthetic tmp-root of the test."""
     for name, body in (("ecosystem-mcp", mcp_body), ("ecosystem-setup", setup_body)):
         d = Path(root) / "templates" / "skills" / name
         d.mkdir(parents=True, exist_ok=True)
@@ -70,9 +70,9 @@ def _write_ecosystem_templates(root, *, mcp_body="ecosystem-mcp {{PROJECT}} {{SC
 
 
 class TestSkillDrift(unittest.TestCase):
-    """_skill_drift (doctor --skill-drift): сухой прогон ecosystem-mcp/ecosystem-setup
-    по enabled-проектам — 'absent' (не раскатан) / 'stale' (шаблон обновился) / нет
-    записи, если файл совпадает с текущим шаблоном."""
+    """_skill_drift (doctor --skill-drift): dry run ecosystem-mcp/ecosystem-setup
+    by enabled-projects - 'absent' (not rolled out) / 'stale' (template updated) / no
+    entries if the file matches the current template."""
     def test_reports_absent_when_skill_never_deployed(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, env = make_repo(tmp)
@@ -140,8 +140,8 @@ class TestSkillDrift(unittest.TestCase):
             from maind.provision.skilldoc import apply_ecosystem_skill, apply_setup_skill
             apply_ecosystem_skill(env, config, config["projects"][0], "auto", False)
             apply_setup_skill(env, config, config["projects"][0], "auto", False)
-            # maind обновил шаблон ecosystem-mcp (напр. добавил "graph-first" правило) —
-            # уже раскатанная копия должна всплыть как stale, setup остаётся fresh
+            # maind updated the template ecosystem-mcp (e.g. added "graph-first" rule) —
+            # the already rolled out copy should pop up as stale, setup remains fresh
             _write_ecosystem_templates(root, mcp_body="ecosystem-mcp v2 {{PROJECT}} {{SCOPE}}\n")
             self.assertEqual(_skill_drift(env, config),
                              [("proj", "ecosystem-mcp", "stale")])
@@ -161,8 +161,8 @@ class TestSkillDrift(unittest.TestCase):
 
 
 def _write_skiller_stub(root):
-    """Заглушка bin/skiller для _sibling_bin (нужен только exists(), не запускается —
-    subprocess.run замокан)."""
+    """Plug bin/skiller for _sibling_bin (is only needed exists(), does not start -
+    subprocess.run locked)."""
     binp = Path(root) / "packages" / "skiller" / "bin" / "skiller"
     binp.parent.mkdir(parents=True, exist_ok=True)
     binp.write_text("#!/bin/sh\n", encoding="utf-8")
@@ -170,10 +170,10 @@ def _write_skiller_stub(root):
 
 
 class TestChannelOverlap(unittest.TestCase):
-    """_channel_overlap (doctor --channel-drift): агрегирует по флоту сухой
-    `skiller status --json` каждого enabled-проекта, читая его 'channel_overlap'
-    (field-feedback: agelto/azguard/dterema раздавали бакеты и plugin'ом, и вендором
-    одновременно — найдено вручную, теперь на радаре doctor)."""
+    """_channel_overlap (doctor --channel-drift): aggregates by fleet dry
+    `skiller status --json` each enabled-project, reading it 'channel_overlap'
+    (field-feedback: agelto/azguard/dterema handed out buckets and plugin'om, and vendor
+    at the same time - found manually, now on radar doctor)."""
 
     def _config(self, tmp, root, env, projects):
         _write_skiller_stub(root)
@@ -227,9 +227,9 @@ class TestChannelOverlap(unittest.TestCase):
 
 
 class TestFleetContext(unittest.TestCase):
-    """_fleet_context (doctor --context): агрегирует по флоту сухой `skiller budget
-    --first-turn --target <path> --json` (P5.1) каждого проекта — без дубля токен-
-    математики в maind, только потребление JSON (subprocess mocked, паттерн doctor
+    """_fleet_context (doctor --context): aggregates by fleet dry `skiller budget
+    --first-turn --target <path> --json` (P5.1) of each project - without duplicate token-
+    mathematics in maind, consumption only JSON (subprocess mocked, pattern doctor
     --audit settings)."""
 
     def _config(self, tmp, root, env, projects):
@@ -279,7 +279,7 @@ class TestFleetContext(unittest.TestCase):
             root, env = make_repo(tmp)
             config = self._config(tmp, root, env, [
                 {"id": "proj", "name": "Proj", "type": "php-package",
-                 "status": "active"}])  # без local_path
+                 "status": "active"}])  # without local_path
             with mock.patch("subprocess.run") as run:
                 rows = _fleet_context(env, config)
             self.assertEqual(rows, [{"id": "proj", "context": "n/a"}])
@@ -303,9 +303,9 @@ class TestFleetContext(unittest.TestCase):
 
 
 class TestMemoryAuthDiagnostic(unittest.TestCase):
-    """doctor различает «недоступен» от «неавторизован» (401) — P4.2 Scope Included:
-    ping()/health() не могут (/agentmemory/health всегда публичен), нужен реальный
-    протектед-вызов (memory.check_auth), который doctor печатает в info-строке."""
+    """doctor distinguishes «not available» from «unauthorized» (401) — P4.2 Scope Included:
+    ping()/health() cannot (/agentmemory/health is always public), need a real one
+    protected-call (memory.check_auth), which doctor prints in info-line."""
 
     def _env_ok(self, env):
         bindir = env.root / "node_modules" / ".bin"
@@ -325,13 +325,13 @@ class TestMemoryAuthDiagnostic(unittest.TestCase):
                     buf = io.StringIO()
                     with contextlib.redirect_stdout(buf):
                         cmd_doctor(env, [])
-                    self.assertIn("неавторизован", buf.getvalue())
+                    self.assertIn("unauthorized", buf.getvalue())
             finally:
                 doctor.shutil.which = __import__("shutil").which
 
     def test_reports_reachable_when_no_secret_configured(self):
-        # без настроенного client-side секрета doctor НЕ утверждает про авторизацию —
-        # только «отвечает» (check_auth неприменим без headers).
+        # without configured client-side secret doctor does NOT state about authorization -
+        # only «replies» (check_auth not applicable without headers).
         with tempfile.TemporaryDirectory() as tmp:
             root, env = make_repo(tmp)
             self._env_ok(env)
@@ -341,8 +341,8 @@ class TestMemoryAuthDiagnostic(unittest.TestCase):
                     buf = io.StringIO()
                     with contextlib.redirect_stdout(buf):
                         cmd_doctor(env, [])
-                    self.assertIn("отвечает", buf.getvalue())
-                    self.assertNotIn("неавторизован", buf.getvalue())
+                    self.assertIn("replies", buf.getvalue())
+                    self.assertNotIn("unauthorized", buf.getvalue())
             finally:
                 doctor.shutil.which = __import__("shutil").which
 
@@ -352,7 +352,7 @@ if __name__ == "__main__":
 
 
 class TestGitignoreDrift(unittest.TestCase):
-    """doctor --gitignore-drift: сверка проектов с картой configs/gitignore-policy.json."""
+    """doctor --gitignore-drift: checking projects against the map configs/gitignore-policy.json."""
 
     def _project(self, tmp):
         import subprocess
@@ -384,6 +384,6 @@ class TestGitignoreDrift(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             config = self._project(tmp)
             _, out = capture(_gitignore_drift_report, config, False)
-            self.assertIn("расходятся", out)
+            self.assertIn("diverge", out)
             _, out = capture(_gitignore_drift_report, config, True, as_json=True)
             self.assertEqual(json.loads(out)["projects"][0]["id"], "proj")

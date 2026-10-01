@@ -1,53 +1,53 @@
-# Лимит одного чтения: два гейта среды и процедура зонда
+# Single read limit: two media gates and probe procedure
 
-Инструмент `Read` этой среды несёт **ДВА независимых гейта**, а не один. Оба записаны
-машинно-читаемым артефактом `packages/task/configs/read-limit.json`, потому что оба — свойство
-КОНКРЕТНОЙ среды на конкретную дату, а не константы протокола (D15 плана
-): зашитый литерал соврёт в первой же другой среде.
+The `Read` tool of this environment carries **TWO independent gates**, not one. Both recorded
+machine-readable artifact `packages/task/configs/read-limit.json` because both are properties
+A SPECIFIC environment on a specific date, not a protocol constant (D15 plan
+): a hardwired literal will lie in the first other environment.
 
-## Два гейта
+## Two gates
 
-| | Гейт A — размер файла | Гейт B — содержимое чтения |
+| | Gate A - file size | Gate B - Reading Contents |
 |:--|:--|:--|
-| Единица | байты файла на диске | токены счётчика харнеса по ОТРЕНДЕРЕННОМУ выводу |
-| Поведение | жёсткий отказ, ноль контента | три формы, см. ниже |
-| Область | только чтение файла ЦЕЛИКОМ | любой возвращаемый срез |
-| Обход | `offset`/`limit` снимает гейт | не снимается: срез тоже меряется |
-| Проверяется | первым | вторым |
+| Unit | bytes of file on disk | Harness counter tokens by RENDERED output |
+| Behavior | hard refusal, zero content | three shapes, see below |
+| Region | read-only ENTIRE file | any returned slice |
+| Bypass | `offset`/`limit` removes gate | cannot be removed: the cut is also measured |
+| Checked | first | second |
 
-Файл, превышающий оба порога, даёт **байтовое** сообщение — гейт A проверяется раньше гейта B.
-Величины не конвертируются друг в друга: на прозе планов гейт B срабатывает намного раньше
-гейта A, на плотном ASCII (hex/base64) соотношение обратное, но первым всё равно проверяется A.
-Фиксированного множителя между гейтами нет — вести оба гейта отдельными полями артефакта
-обязательно (`limits.size_bytes` / `limits.tokens`; скалярное `limit_tokens` не заводится).
+A file exceeding both thresholds gives a **byte** message - gate A is checked before gate B.
+Values are not converted into each other: on prose plans, gate B is triggered much earlier
+gate A, on dense ASCII (hex/base64) the ratio is the opposite, but A is still checked first.
+There is no fixed multiplier between the gates - manage both gates with separate artifact fields
+required (`limits.size_bytes` / `limits.tokens`; scalar `limit_tokens` does not start).
 
-## Три формы гейта B
+## Three shapes of Gate B
 
-1. **Постраничная обрезка** (многострочный файл, чтение целиком): префикс строк + маркер
-   `showing lines 1-N of M total (T tokens, cap 25000)`. Отказа нет — тихая частичная выдача.
-2. **Посимвольная обрезка** (файл с очень длинными строками): префикс символов + маркер
+1. **Page Trim** (multiline file, whole read): line prefix + marker
+   `showing lines 1-N of M total (T tokens, cap 25000)`. There is no refusal - quiet partial delivery.
+2. **Character-by-character trimming** (file with very long lines): character prefix + marker
    `showing the first N of M characters (T tokens, cap 25000); … cannot be paginated by line`.
-3. **Жёсткий отказ** (`offset`/`limit`, срез которого сам превышает кап):
+3. **Hard failure** (`offset`/`limit`, the cutoff of which itself exceeds the cap):
    `File content (T tokens) exceeds maximum allowed tokens (25000)`.
 
-Формы 1–2 — исполнитель молча получает подмножество файла с предложением «дочитай сам»: ровно
-дефект, ради которого лимит вообще измеряется как параметр среды. Условие приёмки `D2(б)` плана
- читается строго: обязательный файл читается ЦЕЛИКОМ ОДНИМ вызовом,
-постраничное дочитывание условие не удовлетворяет.
+Forms 1–2 - the performer silently receives a subset of the file with the sentence “read it yourself”: exactly
+defect for which the limit is generally measured as an environmental parameter. Acceptance condition `D2(b)` plan
+ is read strictly: the required file is read in ENTIRELY WITH ONE call,
+page-by-page reading does not satisfy the condition.
 
-## Процедура зонда — дешёвая и воспроизводимая
+## Probe procedure - cheap and reproducible
 
-Ключевое свойство: **счёт среды и кап получаются без оплаты за контент** — форма 3 гейта B
-возвращает ноль контента и называет оба числа сразу. Два обязательных шага, каждый стоит
-нисколько контекста:
+Key property: **environment score and cap are obtained without paying for content** - form 3 of gate B
+returns zero content and says both numbers at once. Two required steps, each worth it
+some context:
 
-1. **Гейт A.** Взять существующий файл больше текущего значения `limits.size_bytes` (годится
-   крупный `plan.md` флота) и прочитать его ЦЕЛИКОМ, без `offset`/`limit`. Записать дословный
-   отказ, размер файла в байтах и заявленный кап. Единица сообщения — KiB: `байты / 1024`
-   обязано совпасть с числом «KB» в тексте; не совпало — среда считает иначе, это фиксируется
-   отдельно и эскалируется.
-2. **Гейт B.** Сгенерировать однострочный плотный файл заведомо выше кап-значения `limits.tokens`
-   и прочитать его с `limit=1`:
+1. **Gate A.** Take an existing file larger than the current value `limits.size_bytes` (good
+   large `plan.md` fleet) and read it WHOLE, without `offset`/`limit`. Write down verbatim
+   refusal, file size in bytes and declared cap. Message unit - KiB: `bytes / 1024`
+   must match the number “KB” in the text; does not match - the environment thinks otherwise, this is recorded
+   separately and escalated.
+2. **Gate B.** Generate a one-line dense file obviously higher than the cap value `limits.tokens`
+   and read it with `limit=1`:
 
    ```python
    import hashlib, pathlib
@@ -55,28 +55,28 @@
        "".join(hashlib.sha256(str(i).encode()).hexdigest() for i in range(2000)) + "\n")
    ```
 
-   Отказ вернёт и счёт файла средой, и кап. Записать дословно; сюда же берётся пара
-   `cross_check` (символы файла → счёт среды → оценка `task.token_estimate` на том же тексте) —
-   она НЕ является калибровочной точкой (D15 плана): счётчик среды чтения и токенизатор
-   калибровки P0.1 — разные измерители, смешение их в одном артефакте запрещено.
+   Failure will return both the file account by the environment and cap. Write down verbatim; this is where the couple comes in
+   `cross_check` (file symbols → environment score → estimate `task.token_estimate` on the same text) -
+   it is NOT a calibration point (D15 plan): read environment counter and tokenizer
+   P0.1 calibrations are different meters, mixing them in one artifact is prohibited.
 
-Формы 1–2 гейта B (обрезка) при зонде **не воспроизводятся намеренно**: каждая стоит полной
-страницы контекста (до `limits.tokens` токенов), а нового числа не даёт — кап уже получен шагом 2.
+Gate B shapes 1-2 (trimming) when probed **not intentionally reproduced**: each costs full
+context page (up to `limits.tokens` tokens), but does not give a new number - the cap has already been received by step 2.
 
-Бисекция границы не нужна ни для одного гейта — среда называет оба числа сама.
+Border bisection is not needed for any gate - the environment names both numbers itself.
 
-## Признаки смены среды
+## Signs of a change in environment
 
-Любое расхождение с записанным артефактом — другое число капа, другая единица в сообщении,
-исчезновение одной из форм, появление третьего гейта — означает, что среда изменилась. Реакция —
-**перезамер и новая версия артефакта**, а не правка числа руками: `limits.*` живёт только через
-перегенерацию (канон `root.generated-artifacts`).
+Any discrepancy with the recorded artifact - different cap number, different unit in the message,
+the disappearance of one of the forms, the appearance of a third gate means that the environment has changed. Reaction -
+**re-measuring and new version of the artifact**, rather than manually editing the number: `limits.*` lives only through
+regeneration (canon `root.generated-artifacts`).
 
-## Артефакт
+## Artifact
 
-`packages/task/configs/read-limit.json` несёт оба гейта отдельными типизированными полями
-(`limits.size_bytes`, `limits.tokens`), окружение зонда (`environment`), дословные тексты обоих
-отказов (`probe.size_gate.refusal_message`, `probe.token_gate.refusal_message`) и пару
-`cross_check`. Он коммитится в репозиторий и читается инструментом замера веса обязательного
-чтения (`packages/task/lib/task/plan_weight.py`, P0.3) — отсутствие или неполнота любого из двух
-гейтов fail-closed, молчаливый дефолт запрещён.
+`packages/task/configs/read-limit.json` carries both gates as separate typed fields
+(`limits.size_bytes`, `limits.tokens`), probe environment (`environment`), verbatim texts of both
+bounces (`probe.size_gate.refusal_message`, `probe.token_gate.refusal_message`) and a couple
+`cross_check`. It is committed to the repository and read by the tool for measuring the weight of the mandatory
+read (`packages/task/lib/task/plan_weight.py`, P0.3) - absence or incompleteness of any of the two
+gates fail-closed, silent default is prohibited.

@@ -286,7 +286,7 @@ class PublicOperationTests(unittest.TestCase):
             diagnostic = next(item for item in refused.diagnostics
                               if item.code == "INSTRUCTION_WRITE_FORBIDDEN")
             self.assertIsNotNone(diagnostic.message)
-            self.assertIn("алфавитный по target_path", diagnostic.message)
+            self.assertIn("alphabetical order target_path", diagnostic.message)
             self.assertTrue(diagnostic.message.endswith(",".join(expected_order)))
             self.assertEqual(snapshot(root), ())
             copied = apply_instructions(request(

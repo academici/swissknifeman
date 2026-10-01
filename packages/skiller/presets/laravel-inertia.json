@@ -1,6 +1,6 @@
 {
   "name": "laravel-inertia",
-  "description": "Inertia-стек: Laravel ядро + DTO/realtime + frontend Inertia/Echo/Wayfinder/синк-типов",
+  "description": "Inertia-stack: Laravel core + DTO/realtime + frontend Inertia/Echo/Wayfinder/sync types",
   "buckets": [
     "php",
     "laravel-data-layer",

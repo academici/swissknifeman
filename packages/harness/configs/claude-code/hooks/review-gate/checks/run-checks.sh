@@ -3,7 +3,7 @@
 #
 set -uo pipefail
 
-DIR="${REVIEW_GATE_DIR:?REVIEW_GATE_DIR не экспортирован review-gate.sh}"
+DIR="${REVIEW_GATE_DIR:?REVIEW_GATE_DIR not exported review-gate.sh}"
 CHECKS_DIR="$DIR/checks"
 CONFIG="$DIR/config.json"
 MODE="${REVIEW_GATE_MODE:-warn}"
@@ -12,12 +12,12 @@ AGENT="${REVIEW_GATE_AGENT_ID:-noagent}"
 STATE_DIR="${REVIEW_GATE_STATE_DIR:-${XDG_RUNTIME_DIR:-/tmp}/review-gate}"
 
 if ! command -v jq >/dev/null 2>&1; then
-  echo "[WARN] dispatcher: jq недоступен на этой машине — набор проверок пропущен (деградация, не тихий exit 0)"
+  echo "[WARN] dispatcher: jq not available on this machine - test set skipped (degradation, not quiet exit 0)"
   exit 1
 fi
 
 if [ ! -f "$CONFIG" ]; then
-  echo "[WARN] dispatcher: $CONFIG не найден — набор проверок пропущен"
+  echo "[WARN] dispatcher: $CONFIG not found - test set skipped"
   exit 1
 fi
 
@@ -30,7 +30,7 @@ for name in "${NAMES[@]}"; do
   state_file="$STATE_DIR/${SESSION}.${AGENT}.${name}"
 
   if [ ! -x "$script" ]; then
-    echo "[WARN] dispatcher: неизвестная проверка в checks[]: '$name' (нет исполняемого $script)"
+    echo "[WARN] dispatcher: unknown check in checks[]: '$name' (no executable $script)"
     [ "$overall" -lt 1 ] && overall=1
     continue
   fi
@@ -58,7 +58,7 @@ for name in "${NAMES[@]}"; do
     mkdir -p "$STATE_DIR" 2>/dev/null || true
     tmp="$(mktemp "$STATE_DIR/.tmp.XXXXXX" 2>/dev/null || printf '%s.tmp' "$state_file")"
     if [ "$next" -ge 3 ]; then
-      echo "[DOWNGRADE] $name: гейт понижен: проверка $name не проходит 3-й раз, чиню вручную (счётчик: $state_file)"
+      echo "[DOWNGRADE] $name: gate lowered: check $name does not work for the 3rd time, I fix it manually (counter: $state_file)"
       printf '0\n' > "$tmp" && mv -f "$tmp" "$state_file"
       eff_mode=warn
     else

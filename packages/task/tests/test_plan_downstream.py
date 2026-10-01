@@ -61,7 +61,7 @@ class TestPlanDownstream(unittest.TestCase):
         self.assertFalse(result["blocks"])
 
     def test_markdown_validation_executes_only_inline_code(self):
-        self._commit_consumer('`python3 -c "print(\'green\')"` (печатает green)')
+        self._commit_consumer('`python3 -c "print(\'green\')"` (prints green)')
         result = plan_downstream.evaluate(self.plan, "P0.1")
         command = result["consumers"][0]["commands"][0]
         self.assertEqual(command["command"], 'python3 -c "print(\'green\')"')
@@ -69,14 +69,14 @@ class TestPlanDownstream(unittest.TestCase):
 
     def test_markdown_validation_ignores_backticks_in_explanation(self):
         self._commit_consumer(
-            '`python3 -c "print(\'green\')"` (статусы `ok|missing` попадают в отчёт)')
+            '`python3 -c "print(\'green\')"` (statuses `ok|missing` are included in the report)')
         result = plan_downstream.evaluate(self.plan, "P0.1")
         command = result["consumers"][0]["commands"][0]
         self.assertEqual(command["command"], 'python3 -c "print(\'green\')"')
         self.assertEqual(command["returncode"], 0)
 
     def test_markdown_validation_ignores_prose_without_inline_code(self):
-        self._commit_consumer("проверка остаётся описанием, а не shell-командой")
+        self._commit_consumer("check remains a description, not shell-command")
         result = plan_downstream.evaluate(self.plan, "P0.1")
         self.assertEqual(result["outcome"], "unknown")
         self.assertEqual(result["consumers"][0]["commands"], [])
@@ -206,7 +206,7 @@ class TestPlanDownstream(unittest.TestCase):
         with unittest.mock.patch.object(plan_downstream.plan_gate_activation, "active_items", return_value={"P0.1"}):
             diag = plan_lint.Diagnostics()
             plan_lint.lint_plan(self.plan, diag)
-        self.assertTrue(any("red блокирует" in row and plan_downstream.GATE_ID in row
+        self.assertTrue(any("red blocks" in row and plan_downstream.GATE_ID in row
                             for row in diag.errors), diag.errors)
 
     def test_nested_validation_does_not_consume_existing_downstream_records(self):
@@ -217,7 +217,7 @@ class TestPlanDownstream(unittest.TestCase):
                 plan_downstream.plan_gate_activation, "active_items", return_value={"P0.1"}):
             diag = plan_lint.Diagnostics()
             plan_lint.lint_plan(self.plan, diag)
-            self.assertTrue(any("red блокирует" in row for row in diag.errors), diag.errors)
+            self.assertTrue(any("red blocks" in row for row in diag.errors), diag.errors)
             with unittest.mock.patch.dict(
                     os.environ, {plan_downstream.NESTED_VALIDATION_ENV: "1"}), \
                     unittest.mock.patch.object(plan_downstream.sys, "argv", ["plan-lint.py"]):

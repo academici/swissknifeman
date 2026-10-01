@@ -21,14 +21,14 @@ items: [P2.2]
 supersedes: {supersedes}
 superseded_by: {superseded_by}
 ---
-## Решение
+## Solution
 
-{identifier} решение.
+{identifier} solution.
 
-## Почему
+## Why
 
-Проверка.
-""" + ("\n## Consequences\n\nЗамена.\n" if supersedes != "[]" else "")
+Verification.
+""" + ("\n## Consequences\n\nReplacement.\n" if supersedes != "[]" else "")
 
 
 class PlanDecisionsTest(unittest.TestCase):
@@ -39,7 +39,7 @@ class PlanDecisionsTest(unittest.TestCase):
             for invalid in ("2026-99-99", "2025-02-29"):
                 path.write_text(decision("D1", date_value=invalid), encoding="utf-8")
                 with self.subTest(invalid=invalid), self.assertRaisesRegex(
-                        plan_decisions.DecisionError, "календарно-валидной"):
+                        plan_decisions.DecisionError, "calendar-valid"):
                     plan_decisions.load_decisions(plan)
             path.write_text(decision("D1", date_value="2024-02-29"), encoding="utf-8")
             self.assertEqual(plan_decisions.load_decisions(plan)[0].date, "2024-02-29")
@@ -64,7 +64,7 @@ class PlanDecisionsTest(unittest.TestCase):
         plan = Path(root) / "plan"
         (plan / "decisions").mkdir(parents=True)
         (plan / "phases" / "P2").mkdir(parents=True)
-        (plan / "plan.md").write_text("## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n", encoding="utf-8")
+        (plan / "plan.md").write_text("## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n", encoding="utf-8")
         (plan / "phases" / "P2" / "P2.md").write_text("# P2\n", encoding="utf-8")
         return plan
 
@@ -94,7 +94,7 @@ class PlanDecisionsTest(unittest.TestCase):
             (plan / "decisions" / "D1-first.md").write_text(
                 decision("D1", status="superseded", superseded_by="D2"), encoding="utf-8")
             (plan / "decisions" / "D2-second.md").write_text(decision("D2"), encoding="utf-8")
-            with self.assertRaisesRegex(plan_decisions.DecisionError, "невзаимно"):
+            with self.assertRaisesRegex(plan_decisions.DecisionError, "non-reciprocal"):
                 plan_decisions.load_decisions(plan)
 
     def test_rejects_unknown_status_and_missing_history_field(self):

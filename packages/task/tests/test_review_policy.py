@@ -60,7 +60,7 @@ class EvidenceFirstSignalTests(unittest.TestCase):
         plan.mkdir()
         (plan / "plan.md").write_text(
             "## 3. Routing\n\n"
-            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "| Batch | Items | Model class/effort | Exec | Review | Why |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
             f"| solo | {items} | implementation/high | run | {review} | test |\n",
             encoding="utf-8",
@@ -118,7 +118,7 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             plan = self._plan_with_review(tmp, "full")
             route = plan / "plan.md"
             route.write_text(route.read_text(encoding="utf-8") + (
-                "\n| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+                "\n| Batch | Items | Model class/effort | Exec | Review | Why |\n"
                 "|:--|:--|:--|:--|:--|:--|\n"
                 "| solo | P1.1 | implementation/high | run | full | duplicate |\n"),
                 encoding="utf-8")
@@ -246,7 +246,7 @@ class EvidenceFirstSignalTests(unittest.TestCase):
 
     def test_phase_audit_red_requires_exact_terminal_continuation(self):
         entry = journal.new_entry(
-            plan_id="P", item_id="P1 — режим фазы", command="plan-audit",
+            plan_id="P", item_id="P1 — phase mode", command="plan-audit",
             actor="model/high", result="audit-red",
             decision={
                 "signal_class": "authority", "scope_class": "phase",
@@ -293,7 +293,7 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             plan.mkdir()
             fingerprint = "a" * 64
             journal.append(plan, journal.new_entry(
-                plan_id="P", item_id="P1 — режим фазы", command="plan-audit",
+                plan_id="P", item_id="P1 — phase mode", command="plan-audit",
                 actor="model/high", result="audit-green", fingerprint=fingerprint))
             gate = plan_gates.phase_close_gate(
                 plan, "P1", candidate_fingerprint=fingerprint)
@@ -328,9 +328,9 @@ class EvidenceFirstSignalTests(unittest.TestCase):
                 "supersedes: [D25]\n"
                 "superseded_by: null\n"
                 "---\n\n"
-                "## Решение\n\n"
+                "## Solution\n\n"
                 "`phase-close: direct-green-validation`\n\n"
-                "## Почему\n\n"
+                "## Why\n\n"
                 "test\n\n"
                 "## Consequences\n\n"
                 "test\n",
@@ -363,9 +363,9 @@ class EvidenceFirstSignalTests(unittest.TestCase):
                 "supersedes: []\n"
                 "superseded_by: null\n"
                 "---\n\n"
-                "## Решение\n\n"
-                "AUDIT-CAP: третьего Audit P5 нет; фаза закрывается штатным `task:plan-close`.\n\n"
-                "## Почему\n\n"
+                "## Solution\n\n"
+                "AUDIT-CAP: third Audit P5 no; phase closes with regular `task:plan-close`.\n\n"
+                "## Why\n\n"
                 "test\n",
                 encoding="utf-8",
             )
@@ -396,9 +396,9 @@ class EvidenceFirstSignalTests(unittest.TestCase):
                 "supersedes: []\n"
                 "superseded_by: null\n"
                 "---\n\n"
-                "## Решение\n\n"
-                "AUDIT-CAP: третьего Audit P5 нет; фаза закрывается штатным `task:plan-close`.\n\n"
-                "## Почему\n\n"
+                "## Solution\n\n"
+                "AUDIT-CAP: third Audit P5 no; phase closes with regular `task:plan-close`.\n\n"
+                "## Why\n\n"
                 "test\n",
                 encoding="utf-8",
             )
@@ -422,9 +422,9 @@ class EvidenceFirstSignalTests(unittest.TestCase):
                 "supersedes: [D25]\n"
                 "superseded_by: null\n"
                 "---\n\n"
-                "## Решение\n\n"
+                "## Solution\n\n"
                 "`phase-close: direct-green-validation`\n\n"
-                "## Почему\n\n"
+                "## Why\n\n"
                 "test\n\n"
                 "## Consequences\n\n"
                 "test\n",
@@ -458,9 +458,9 @@ class EvidenceFirstSignalTests(unittest.TestCase):
                 "supersedes: []\n"
                 "superseded_by: null\n"
                 "---\n\n"
-                "## Решение\n\n"
+                "## Solution\n\n"
                 "`phase-close: terminal-blocked-deviations`\n\n"
-                "## Почему\n\n"
+                "## Why\n\n"
                 "Owner accepts a non-releasable terminal record.\n",
                 encoding="utf-8",
             )
@@ -832,7 +832,7 @@ class LoopBudgetFromCommittedTests(unittest.TestCase):
 
     def test_v2_missing_phase_carrier_refuses_instead_of_unknown(self):
         (self.plan_dir / "plan.md").write_text(
-            "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+            "## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n",
             encoding="utf-8")
         with self.assertRaises(ReviewPolicyError) as ctx:
             LoopBudget.from_committed(self.plan_dir, "P9", self._finding())

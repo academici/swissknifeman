@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Тесты scripts/status-check.py — синтетические markdown-фикстуры в tmpdir (P8.5)."""
+"""Tests scripts/status-check.py — synthetic markdown-fixtures in tmpdir (P8.5)."""
 import os
 import sys
 import tempfile
@@ -16,13 +16,13 @@ _spec.loader.exec_module(status_check)
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-VALID = """# Статус
+VALID = """# Status
 
-## Матрица
+## Matrix
 
-| Пакет | Возможность | Зрелость | Evidence / boundary |
+| Package | Opportunity | Maturity | Evidence / boundary |
 |:--|:--|:--|:--|
-| skiller | budget | available | `skiller status` печатает бюджет |
+| skiller | budget | available | `skiller status` prints budget |
 | core | io | available | `unittest discover -s core/tests` |
 
 ## Known limitations
@@ -45,45 +45,45 @@ class TestStatusCheck(unittest.TestCase):
             self.assertEqual(len(rows), 2)
 
     def test_maturity_outside_dictionary(self):
-        bad = VALID.replace("available", "работает", 1)
+        bad = VALID.replace("available", "works", 1)
         with tempfile.TemporaryDirectory() as tmp:
             path = _write(tmp, bad)
             _, errors = status_check.check(path, REPO_ROOT)
             self.assertEqual(len(errors), 1)
-            self.assertIn("не из словаря", errors[0])
+            self.assertIn("not from the dictionary", errors[0])
 
     def test_empty_evidence(self):
-        bad = VALID.replace("`skiller status` печатает бюджет", "")
+        bad = VALID.replace("`skiller status` prints budget", "")
         with tempfile.TemporaryDirectory() as tmp:
             path = _write(tmp, bad)
             _, errors = status_check.check(path, REPO_ROOT)
             self.assertEqual(len(errors), 1)
-            self.assertIn("Evidence пуст", errors[0])
+            self.assertIn("Evidence empty", errors[0])
 
     def test_unknown_package(self):
-        bad = VALID.replace("| skiller |", "| несуществующий-пакет |")
+        bad = VALID.replace("| skiller |", "| non-existent-package |")
         with tempfile.TemporaryDirectory() as tmp:
             path = _write(tmp, bad)
             _, errors = status_check.check(path, REPO_ROOT)
             self.assertEqual(len(errors), 1)
-            self.assertIn("неизвестен", errors[0])
+            self.assertIn("unknown", errors[0])
 
     def test_duplicate_package_capability(self):
         dup = VALID.replace(
             "## Known limitations",
-            "| skiller | budget | experimental | ещё одна строка |\n\n## Known limitations",
+            "| skiller | budget | experimental | another line |\n\n## Known limitations",
         )
         with tempfile.TemporaryDirectory() as tmp:
             path = _write(tmp, dup)
             _, errors = status_check.check(path, REPO_ROOT)
             self.assertEqual(len(errors), 1)
-            self.assertIn("дубль", errors[0])
+            self.assertIn("take", errors[0])
 
     def test_main_exit_codes(self):
         with tempfile.TemporaryDirectory() as tmp:
             good = _write(tmp, VALID)
             self.assertEqual(status_check.main(["status-check.py", good]), 0)
-            bad = _write(tmp, VALID.replace("available", "работает", 1))
+            bad = _write(tmp, VALID.replace("available", "works", 1))
             self.assertEqual(status_check.main(["status-check.py", bad]), 1)
 
 

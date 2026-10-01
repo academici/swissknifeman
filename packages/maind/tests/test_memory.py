@@ -1,7 +1,7 @@
-"""Тесты memory.py: HTTP-обёртка (FakeMemoryServer), порты, статус, short-circuit start.
+"""Tests memory.py: HTTP-wrapper (FakeMemoryServer), ports, status, short-circuit start.
 
-Настоящий Node-демон не запускается: start short-circuit'ится живым FakeMemoryServer,
-а status/обёртка работают против него же."""
+Real Node-daemon does not start: start short-circuit'appears alive FakeMemoryServer,
+a status/wrapper work against it."""
 import contextlib
 import io
 import json
@@ -26,7 +26,7 @@ class TestWrapper(unittest.TestCase):
             texts = [r["text"] for r in memory.recall(url, "project:brain", "sky")]
             self.assertIn("the sky is blue", texts)
             self.assertNotIn("grass is green", texts)
-            # изоляция по scope
+            # insulation by scope
             self.assertEqual(memory.recall(url, "project:other", "sky"), [])
 
     def test_health_false_when_down(self):
@@ -54,17 +54,17 @@ class TestScopeMarker(unittest.TestCase):
         self.assertEqual(memory.split_scope("plain text"), (None, "plain text"))
 
     def test_strips_all_leading_markers(self):
-        # владелец = ПЕРВЫЙ маркер; остаточные вложенные/повторные снимаются (не утекают в выдачу)
+        # owner = FIRST marker; residual nested/repeated ones are removed (do not leak into the search results)
         scope, text = memory.split_scope("[[s:project:a]] [[s:project:b]] secret")
         self.assertEqual(scope, "project:a")
         self.assertNotIn("[[s:", text)
         self.assertEqual(text, "secret")
 
     def test_owner_is_unforgeable_first_marker(self):
-        # значение пользователя содержит фейковый маркер — store пишет владельца ПЕРВЫМ
+        # user value contains a fake token - store writes owner FIRST
         stored = memory.mark_scope("project:a", "[[s:project:victim]] x")
         scope, text = memory.split_scope(stored)
-        self.assertEqual(scope, "project:a")        # владелец — реальный scope, не фейк
+        self.assertEqual(scope, "project:a")        # owner - real scope, not fake
         self.assertEqual(text, "x")
 
 
@@ -75,7 +75,7 @@ class TestLifecycle(unittest.TestCase):
             cfg = {"memory": {"http_port": 5111, "stream_port": 5112}}
             hp, sp, url = memory.resolve_ports(env, cfg)
             self.assertEqual((hp, sp, url), (5111, 5112, "http://127.0.0.1:5111"))
-            os.environ["AGENTMEMORY_PORT"] = "6111"  # env приоритетнее конфига
+            os.environ["AGENTMEMORY_PORT"] = "6111"  # env takes precedence over the config
             try:
                 hp, _, url = memory.resolve_ports(env, cfg)
                 self.assertEqual(hp, 6111)
@@ -89,7 +89,7 @@ class TestLifecycle(unittest.TestCase):
             with FakeMemoryServer() as url:
                 rc = memory.start(env, {"memory": {"url": url}})
                 self.assertEqual(rc, 0)
-                self.assertFalse(env.memory_pidfile.exists())  # демон уже жив
+                self.assertFalse(env.memory_pidfile.exists())  # the demon is already alive
 
     def test_status_running_against_fake(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -103,7 +103,7 @@ class TestLifecycle(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             env.data_dir.mkdir(parents=True, exist_ok=True)
-            env.memory_pidfile.write_text("2147483646", encoding="utf-8")  # мёртвый pid
+            env.memory_pidfile.write_text("2147483646", encoding="utf-8")  # dead pid
             st = memory.status(env, {"memory": {"url": "http://127.0.0.1:1"}})
             self.assertFalse(st["running"])
             self.assertEqual(st["pid"], 2147483646)
@@ -112,12 +112,12 @@ class TestLifecycle(unittest.TestCase):
 
 class TestCount(unittest.TestCase):
     def test_count_by_scope_marker(self):
-        # count фильтрует пул по scope-МАРКЕРУ, а не считает весь глобальный пул демона
+        # count filters the pool by scope-TO MARKER, rather than counting the entire global daemon pool
         pool = [
             {"content": memory.mark_scope("project:brain", "sky is blue")},
             {"content": memory.mark_scope("project:brain", "grass is green")},
-            {"content": memory.mark_scope("project:other", "hidden")},   # чужой scope — не считать
-            {"content": "unmarked legacy"},                              # без маркера — не считать
+            {"content": memory.mark_scope("project:other", "hidden")},   # alien scope — do not count
+            {"content": "unmarked legacy"},                              # without marker - do not count
         ]
         with FakeMemoryServer() as url:
             with tempfile.TemporaryDirectory() as tmp:
@@ -144,31 +144,31 @@ class TestCount(unittest.TestCase):
 
 
 class TestDigestSelection(unittest.TestCase):
-    """select_digest_items — чистая функция (без I/O/Env), P1.1: байт-бюджет + shared-cap
-    project-only по умолчанию (D10). Тестируем на списках dict — форма export()."""
+    """select_digest_items — pure function (without I/O/Env), P1.1: byte-budget + shared-cap
+    project-only default (D10). Testing on lists dict — form export()."""
 
     def _row(self, scope, text, ts):
         return {"content": memory.mark_scope(scope, text), "timestamp": ts}
 
     def test_item_truncated_by_word_with_suffix(self):
-        raw = [self._row("project:p", "слово " * 200, "2026-01-01T00:00:00Z")]
+        raw = [self._row("project:p", "word " * 200, "2026-01-01T00:00:00Z")]
         items, dropped = memory.select_digest_items(
             raw, "project:p", {"project:p"}, limit=8, budget_chars=4000,
             item_max_chars=50, shared_max=0)
         self.assertEqual(len(items), 1)
         self.assertLessEqual(len(items[0]), 50)
         self.assertTrue(items[0].endswith("… (→ recall)"))
-        self.assertNotIn("  ", items[0])            # не режет посреди слова (нет двойного пробела)
+        self.assertNotIn("  ", items[0])            # does not cut in the middle of a word (no double space)
         self.assertEqual(dropped, 0)
 
     def test_budget_stop(self):
-        # три РАЗНЫХ факта по 200 симв каждый (иначе дедуп схлопнет), бюджет — на два целиком
+        # three DIFFERENT facts, 200 characters each (otherwise the dedup will collapse), budget - for two whole
         raw = [self._row("project:p", f"{c * 199}{i}", f"2026-01-0{i}T00:00:00Z")
                for i, c in ((3, "a"), (2, "b"), (1, "c"))]
         items, dropped = memory.select_digest_items(
             raw, "project:p", {"project:p"}, limit=8, budget_chars=450,
             item_max_chars=500, shared_max=0)
-        self.assertEqual(len(items), 2)             # третий не влезает целиком, остаток < 150 → drop
+        self.assertEqual(len(items), 2)             # the third does not fit entirely, the rest < 150 → drop
         self.assertEqual(dropped, 1)
 
     def test_default_shared_max_zero_keeps_only_private(self):
@@ -197,7 +197,7 @@ class TestDigestSelection(unittest.TestCase):
             raw, "project:p", want, limit=8, budget_chars=4000,
             item_max_chars=500, shared_max=2)
         self.assertEqual(items, ["private fact", "freshest shared", "middle shared"])
-        self.assertEqual(dropped, 1)                # oldest shared остался за cap'ом
+        self.assertEqual(dropped, 1)                # oldest shared remained behind cap'ohm
 
     def test_footer_dropped_positive_when_over_limit(self):
         raw = [self._row("project:p", f"fact {i}", f"2026-01-0{i}T00:00:00Z") for i in range(1, 4)]
@@ -227,12 +227,12 @@ class TestDigestSelection(unittest.TestCase):
 
 
 class TestRoleGate(unittest.TestCase):
-    """memory.role (ADR-0001): дефолт standalone не меняет поведение; client
-    ЗАПРЕЩАЕТ поднимать локальный демон КОДОМ (не документацией, D27)."""
+    """memory.role (ADR-0001): default standalone does not change behavior; client
+    PROHIBITS raising the local daemon with CODE (not documentation, D27)."""
 
     def test_standalone_default_unaffected_start_short_circuits(self):
-        # конфиг БЕЗ memory.role ведёт себя как сегодня (сравнение с уже существующим
-        # test_start_short_circuits_when_running — тут явный role='standalone' рядом).
+        # config WITHOUT memory.role behaves like today (comparison with existing
+        # test_start_short_circuits_when_running — is explicit here role='standalone' nearby).
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
@@ -246,7 +246,7 @@ class TestRoleGate(unittest.TestCase):
                 memory._daemon_argv(env, {"memory": {"role": "client", "url": "http://10.0.0.1:4111"}})
 
     def test_start_refuses_when_role_client_and_unreachable(self):
-        # health(url) даёт False (мёртвый порт) → start() доходит до _daemon_argv → отказ
+        # health(url) gives False (dead port) → start() reaches _daemon_argv → failure
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             cfg = {"memory": {"role": "client", "url": "http://127.0.0.1:1"}}
@@ -254,8 +254,8 @@ class TestRoleGate(unittest.TestCase):
                 memory.start(env, cfg)
 
     def test_start_client_short_circuits_when_host_already_up(self):
-        # client, чей url реально жив (хост уже поднят) — start() НЕ пытается поднять
-        # локальный демон и НЕ отказывает: нечего запрещать, память уже доступна.
+        # client, whose url is really alive (host is already up) — start() is NOT trying to raise
+        # is a local daemon and does NOT refuse: there is nothing to deny, the memory is already available.
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
@@ -270,8 +270,8 @@ class TestRoleGate(unittest.TestCase):
 
 
 class TestAuth(unittest.TestCase):
-    """Bearer-аутентификация (ADR-0001 п.3/п.4): secret_file → Authorization header;
-    401 различается от «недоступен» (findings §2: /health всегда публичен)."""
+    """Bearer-authentication (ADR-0001 p.3/p.4): secret_file → Authorization header;
+    401 differs from «not available» (findings §2: /health is always public)."""
 
     def test_resolve_secret_none_by_default(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -312,13 +312,13 @@ class TestAuth(unittest.TestCase):
 
     def test_check_auth_distinguishes_401_from_unauthenticated_call(self):
         with FakeMemoryServer(secret="good-token") as url:
-            self.assertIsNone(memory.check_auth(url, None))                     # секрет не настроен
+            self.assertIsNone(memory.check_auth(url, None))                     # secret not configured
             self.assertFalse(memory.check_auth(url, {"Authorization": "Bearer wrong"}))
             self.assertTrue(memory.check_auth(url, {"Authorization": "Bearer good-token"}))
 
     def test_health_stays_public_regardless_of_secret(self):
-        # /agentmemory/health ВСЕГДА публичен (findings §2) — health() не должен 401'ить
-        # даже без заголовков, при заданном секрете на сервере.
+        # /agentmemory/health ALWAYS public (findings §2) — health() should not 401'
+        # even without headers, with a given secret on the server.
         with FakeMemoryServer(secret="good-token") as url:
             self.assertTrue(memory.health(url))
 
@@ -330,7 +330,7 @@ class TestAuth(unittest.TestCase):
                                            memory.auth_headers("good-token")), [])
 
     def test_unavailable_message_is_role_aware(self):
-        # client: НЕ подсказывать поднять локальный демон (создало бы второго писателя)
+        # client: DO NOT prompt to raise local daemon (would create a second writer)
         msg_client = memory.unavailable_message({"memory": {"role": "client"}}, "http://10.0.0.1:4111")
         self.assertNotIn("maind start", msg_client)
         msg_standalone = memory.unavailable_message({"memory": {}}, "http://127.0.0.1:4111")
@@ -342,7 +342,7 @@ if __name__ == "__main__":
 
 
 class TestBindHost(unittest.TestCase):
-    """memory.bind_host: адрес машины — в узловом конфиге/env, не в tracked iii-config."""
+    """memory.bind_host: machine address - in the node config/env, not in tracked iii-config."""
 
     TEMPLATE = ("workers:\n  - name: iii-http\n    config:\n      port: 4111\n"
                 "      host: 127.0.0.1\n  - name: iii-stream\n    config:\n      port: 4112\n"

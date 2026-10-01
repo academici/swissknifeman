@@ -22,15 +22,15 @@ def cmd_migrate(env, argv):
     elif sub in ("from-agentmemory", "from-skm"):
         _from_agentmemory(env, rest)
     else:
-        die(f"неизвестная подкоманда migrate: {sub} (from-brain|from-agentmemory)")
+        die(f"unknown subcommand migrate: {sub} (from-brain|from-agentmemory)")
 
 
 def _from_brain(env, argv):
     opts, pos = parse_args(argv, {"--force": "bool"}, max_pos=1)
     if not pos:
-        die("укажите путь к brain .projects.json: maind migrate from-brain <path>")
+        die("specify the path to brain .projects.json: maind migrate from-brain <path>")
     if env.default_config.exists() and not opts["force"]:
-        die(f"{env.default_config.name} уже существует — перезапись только с --force")
+        die(f"{env.default_config.name} already exists - overwrite with -- onlyforce")
     projects = load_brain_projects(pos[0])
     config = merge_defaults({
         "_version": "1",
@@ -45,29 +45,29 @@ def _from_brain(env, argv):
     from ..derive import derive_all
     stats = derive_all(env, config)
     nodes = sum(s["nodes"] for s in stats)
-    print(f"импортировано из brain: {len(projects)} проектов → "
-          f"{env.default_config.name} + граф ({nodes} узлов в {len(stats)} сторах)")
+    print(f"imported from brain: {len(projects)} projects → "
+          f"{env.default_config.name} + graph ({nodes} nodes in {len(stats)} store)")
 
 
 def _from_agentmemory(env, argv):
     opts, pos = parse_args(argv, {"--force": "bool"}, max_pos=1)
     if not pos:
-        die("укажите путь к .agentmemory (или iii-config.yaml): "
+        die("specify the path to .agentmemory (or iii-config.yaml): "
             "maind migrate from-agentmemory <path>")
     src = Path(pos[0]).expanduser()
     if src.is_dir():
         src = src / "iii-config.yaml"
     if not src.is_file():
-        die(f"не найден iii-config.yaml: {src}")
+        die(f"not found iii-config.yaml: {src}")
     dst = env.memory_config
     if dst.exists() and not opts["force"]:
-        if not confirm(f"{dst} уже существует. Перезаписать?"):
-            die("отменено (используйте --force для перезаписи)")
+        if not confirm(f"{dst} already exists. Re-record?"):
+            die("canceled (use --force to overwrite)")
     dst.parent.mkdir(parents=True, exist_ok=True)
     text = _set_service_name(src.read_text(encoding="utf-8"), "maind")
     dst.write_text(text, encoding="utf-8")
-    print(f"перенесён iii-config: {src} → {dst} (service_name: maind). "
-          f"Источник не изменён.")
+    print(f"moved iii-config: {src} → {dst} (service_name: maind). "
+          f"The source has not been changed.")
 
 
 def _set_service_name(yaml_text, name):

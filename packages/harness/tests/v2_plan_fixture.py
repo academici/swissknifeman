@@ -25,7 +25,7 @@ def write_v2_plan(root, *, plan_id, items, routing_rows, next_line):
     (phase_dir / f"{phase_id}.md").write_text(phase_index_md(phase_id), encoding="utf-8")
     for item_id, _status in items:
         spec = item_spec_md(item_id).replace(
-            f"### {item_id} — Валидация конфига",
+            f"### {item_id} — Config validation",
             f"### {item_id} — Harness fixture",
         )
         (phase_dir / f"{item_id}.md").write_text(spec, encoding="utf-8")
@@ -39,7 +39,7 @@ def write_v2_plan(root, *, plan_id, items, routing_rows, next_line):
         plan_path.read_text(encoding="utf-8").replace(
             "## 3. Routing\n\n",
             "## 3. Routing\n\n"
-            "| Batch | Items | Model class/effort | Exec | Почему |\n"
+            "| Batch | Items | Model class/effort | Exec | Why |\n"
             "|:--|:--|:--|:--|:--|\n"
             f"{routing}\n\n",
         ),
@@ -51,15 +51,15 @@ def write_v2_plan(root, *, plan_id, items, routing_rows, next_line):
 
 **Next:** {next_line}
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |:--|:--|
 | Batch | solo |
 | Model class | implementation |
 | Effort | medium |
 | Capabilities | fixture |
 | Context | continue-root |
-| Суть | v2 Harness fixture |
-| Команда | `{next_line}` |
+| The bottom line | v2 Harness fixture |
+| Command | `{next_line}` |
 
 **Done:** —
 **Remaining:** fixture items.
@@ -73,8 +73,8 @@ def write_v2_plan(root, *, plan_id, items, routing_rows, next_line):
         encoding="utf-8",
     )
     (plan_dir / "roadmap.md").write_text(
-        "# Roadmap исполнения — fixture\n\n"
-        "| Item | Batch | Запуск | Model/Thinking | Гейт владельца | Примечание |\n"
+        "# Roadmap executions - fixture\n\n"
+        "| Item | Batch | Launch | Model/Thinking | Owner Gate | Note |\n"
         "|---|---|---|---|---|---|\n" + "".join(
             f"| {item_id} | solo | run | implementation/medium | — | fixture |\n"
             for item_id, _status in items

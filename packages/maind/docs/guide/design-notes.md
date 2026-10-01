@@ -1,87 +1,87 @@
-# Решения, трейд-оффы и ограничения
+# Decisions, trade-offs and restrictions
 
-Эта страница — честная карта того, **почему схема устроена именно так**, что в ней общее, что
-пер-проектное, где границы каждого слоя и чего система **не делает**. Если читаешь впервые —
-сначала [Как это всё работает](./how-it-works), здесь — нюансы и ограничения.
+This page is an honest map of **why the circuit is designed this way**, what is common in it, what
+per-design, where are the boundaries of each layer and what is the system **doesn't**. If you are reading for the first time -
+first [How it all works](./how-it-works), here are the nuances and limitations.
 
-## Граница «хаб ↔ проект»
+## Border «hub ↔ project»
 
-Главное, что снимает 80% путаницы: **что централизовано, а что живёт в проекте**.
+The main thing is that it removes 80% confusion: **what is centralized and what lives in the project**.
 
 ```mermaid
 graph TB
-  subgraph hub["ХАБ mAInd (одно место)"]
-    MEM["agent-memory daemon :4111<br/>ОБЩАЯ память"]
-    TOPO["maind-граф топологии<br/>data/graphs/*.db"]
-    ORCH["оркестрация: sync / onboard / health / service"]
+  subgraph hub["HUB mAInd (one place)"]
+    MEM["agent-memory daemon :4111<br/>SHARED memory"]
+    TOPO["maind-topology graph<br/>data/graphs/*.db"]
+    ORCH["orchestration: sync / onboard / health / service"]
   end
-  subgraph p1["проект flexcrm"]
+  subgraph p1["project flexcrm"]
     M1[".mcp.json"]
-    S1["serena (граф кода flexcrm)"]
+    S1["serena (code graph flexcrm)"]
   end
-  subgraph p2["проект azguard"]
+  subgraph p2["project azguard"]
     M2[".mcp.json"]
-    S2["serena (граф кода azguard)"]
+    S2["serena (code graph azguard)"]
   end
   M1 -- "scope project:flexcrm" --> MEM
   M2 -- "scope project:azguard" --> MEM
-  ORCH -. "раскатывает .mcp.json/скиллы" .-> M1
-  ORCH -. "раскатывает" .-> M2
+  ORCH -. "rolls out .mcp.json/skills" .-> M1
+  ORCH -. "rolls out" .-> M2
   M1 --> S1
   M2 --> S2
-  TOPO -. "кто от кого зависит" .-> ORCH
+  TOPO -. "who depends on whom" .-> ORCH
 ```
 
-- **Общее (на хабе):** память (один демон) + топология между проектами + оркестрация.
-- **Пер-проектное (в репозитории):** граф кода (Serena) — свой сервер и свой индекс у каждого.
+- **General (on the hub):** memory (one demon) + topology between projects + orchestration.
+- **Per-project (in the repository):** code graph (Serena) — each has its own server and its own index.
 
-Хаб **не** хостит граф кода. Он его только включает и раскатывает. Это и есть ответ на частый
-вопрос «не проще ли поднять код-граф отдельно в каждом проекте» — **так и сделано**.
+Hub **not** hosts the code graph. He just turns it on and rolls it out. This is the answer to the frequent
+question «isn't it easier to raise the code graph separately in each project» — **done so**.
 
-## Слой 1 — память (общая, централизованная)
+## Layer 1 - memory (general, centralized)
 
-### Почему общая, а не своя на проект
+### Why is it shared and not your own for the project?
 
-Смысл памяти — чтобы проекты видели решения друг друга внутри группы. Отдельная база на проект
-**убила бы** саму идею. А федерировать N отдельных демонов обратно — **сложнее**, чем один демон +
-namespace-скоупинг. Поэтому: один общий демон, видимость режется scope'ом.
+The purpose of memory is for projects to see each other's solutions within the group. Separate database for the project
+**would kill** the idea itself. And to federate N individual demons back - **more difficult**, than one demon +
+namespace-scooping. Therefore: one common demon, visibility is cut scope'ohm.
 
 ```mermaid
 flowchart LR
-  A["агент во flexcrm"] -->|recall/store| MCP["agentmemory MCP<br/>NAMESPACE=project:flexcrm"]
-  MCP --> D["демон :4111"]
-  D --> B1["project:flexcrm (приватно)"]
-  D --> B2["ns:axioma (группа)"]
-  D --> B3["global (вся экосистема)"]
+  A["agent in flexcrm"] -->|recall/store| MCP["agentmemory MCP<br/>NAMESPACE=project:flexcrm"]
+  MCP --> D["demon :4111"]
+  D --> B1["project:flexcrm (private)"]
+  D --> B2["ns:axioma (group)"]
+  D --> B3["global (entire ecosystem)"]
 ```
 
-### Ограничения памяти
+### Memory limits
 
-- **Pull, не авто-захват.** Код в память **не попадает сам**. Агент должен явно вызвать `store`.
-  Скилл `ecosystem-mcp` подсказывает когда, но гарантии нет — это свойство MCP, не баг.
-- **Один демон = единая точка.** Лежит демон — память недоступна всем проектам. Митигировано
-  systemd-сервисом (автозапуск + рестарт) и linger; см. [systemd](./systemd). Это
-  сознательный размен: простота общей памяти против распределённости.
-- **Изоляция — на уровне scope, не физическая.** Проект технически не может читать чужой
-  `project:<id>`, но это обеспечивается конфигом (`AGENTMEMORY_NAMESPACE` в `.mcp.json`), а не
-  отдельными БД. Не правь scope руками.
-- **Качество памяти = качество записей.** Мусор на входе → мусор на выходе. Не дублируй в память
-  то, что и так есть в коде/гите.
+- **Pull, not auto-capturing.** Code to memory **doesn't hit itself**. The agent must explicitly call `store`.
+  Skill `ecosystem-mcp` suggests when, but there is no guarantee - this is a property MCP, is not a bug.
+- **One demon = single point.** The demon is lying - memory is not available to all projects. Mitigated
+  systemd-service (autorun + restart) and linger; see [systemd](./systemd). This
+  conscious exchange: simplicity of shared memory versus distribution.
+- **Insulation - at the level scope, not physical.** The project technically cannot read someone else's
+  `project:<id>`, but this is provided by the config (`AGENTMEMORY_NAMESPACE` in `.mcp.json`), and not
+  separate databases. Don't correct scope hands.
+- **Memory quality = quality of recordings.** Garbage at the entrance → garbage output. Do not duplicate in memory
+  what is already in the code/git.
 
-## Слой 2 — граф кода (пер-проектный, движок Serena)
+## Layer 2 - code graph (per-project engine Serena)
 
-Граф кода (символы, ссылки, реализации) — **отдельный MCP-сервер в каждом проекте**. Движок по
-умолчанию — [Serena](./code-graph) (language-agnostic, LSP, через `uvx`). Команды доступны
-**внутри** проекта; `maind sync --all --only mcp` раскатывает/перегенерирует на всех из хаба.
+Code graph (symbols, links, implementations) — **separate MCP-server in each project**. Engine by
+default - [Serena](./code-graph) (language-agnostic, LSP, via `uvx`). Commands available
+**inside** project; `maind sync --all --only mcp` rolls out/will regenerate on everyone from the hub.
 
 ```mermaid
 graph TB
   subgraph fx["flexcrm"]
-    C1["src/ (свой код)"]
-    V1["vendor/ (зависимости, read-only)"]
+    C1["src/ (your code)"]
+    V1["vendor/ (dependencies, read-only)"]
     SER1["serena --project flexcrm"]
     SER1 --> C1
-    SER1 -. "заходит, но read-only" .-> V1
+    SER1 -. "comes in, but read-only" .-> V1
   end
   subgraph az["azguard"]
     C2["src/"]
@@ -90,66 +90,66 @@ graph TB
   end
 ```
 
-### Монорепо с симлинками: пакеты — свои графы
+### Monorepo with symlinks: packages - their own graphs
 
-В Composer path-repos один first-party пакет часто подсимлинкован в проект по 2–3 путям
-(`vendor/<vendor>/<pkg>` и `packages/<pkg>` → один исходник). Индексировать его внутри зависимого
-проекта = **дубли символов** + **рекурсивные симлинки** (testbench), на которых скан виснет.
-Поэтому **по умолчанию** maind при `code:true` кладёт `.serena/project.yml` с игнором
-`vendor`/`packages`, а каждый first-party пакет графится как свой проект.
+B Composer path-repos one first-party the package is often sub-linked into the project along 2-3 paths
+(`vendor/<vendor>/<pkg>` and `packages/<pkg>` → one source). Index it inside the dependent
+project = **duplicate characters** + **recursive symlinks** (testbench), on which the scan hangs.
+Therefore **default** maind when `code:true` puts `.serena/project.yml` with ignore
+`vendor`/`packages`, and each first-party the package is graphed as its own project.
 
-Но если ты **разрабатываешь пакеты вместе с проектом** (нужен единый граф app + пакеты) — есть
-**workspace-режим** (`code_workspace:true`): пакеты под `packages/*` индексируются как часть
-проекта (один корень, PHP-LSP резолвит ссылки), правки идут в их реальные репозитории через
-симлинк, а `vendor`/вложенные `vendor` режутся (дубли + рекурсия). Проверено на flexcrm+corex.
-Подробнее — [граф кода](./code-graph).
+But if you **develop packages along with the project** (need a single graph app + packages) — yes
+**workspace-mode** (`code_workspace:true`): packages under `packages/*` are indexed as part
+project (one root, PHP-LSP resolves links), edits go to their real repositories via
+symlink, and `vendor`/nested `vendor` are cut (duplicates + recursion). Tested for flexcrm+corex.
+More details - [code graph](./code-graph).
 
-### Что с графом МЕЖДУ проектами: что можно, а что нет
+### What about the graph BETWEEN projects: what is possible and what is not
 
-- **Локальные пакеты под деревом проекта** (симлинки `packages/*`) — **можно объединить** в один
-  граф: [workspace-режим](#монорепо-с-симлинками-пакеты-свои-графы) (`code_workspace:true`).
-  Их исходник физически под корнем проекта, LSP резолвит ссылки, правки идут в их репозитории.
-  Это закрывает кейс «разрабатываю ядро вместе с приложением».
-- **Независимые проекты** (не под одним деревом) — **в один граф символов не объединить**.
-  Serena-фича `additional_workspace_folders` (мультирут с кросс-ссылками) пока **только для
-  TypeScript**. Для PHP — каждый отдельный проект графится сам; «кто от кого зависит» между ними
-  даёт [maind-граф топологии](#слой-3-топология-между-проектами-самый-тяжёлый), а кросс-проектные
-  повторы — [`maind fleet duplicates`](./fleet). Полноценный единый LSP-граф всей экосистемы
-  не нужен и не строится.
+- **Local packages under the project tree** (symlinks `packages/*`) — **can be combined** into one
+  graph: [workspace-mode](#monorepo-with-symlinks-packages-own-graphs) (`code_workspace:true`).
+  Their source is physically under the project root, LSP resolves the links, edits go to their repository.
+  This closes the case «developing the kernel along with the application».
+- **Independent projects** (not under the same tree) — **cannot be combined into one character graph**.
+  Serena-feature `additional_workspace_folders` (multi-root with cross-links) for now **only for
+  TypeScript**. For PHP — each individual project is graphed itself; «who depends on whom» between them
+  gives [maind-topology graph](#layer-3-topology-between-projects-heaviest), and cross-project
+  repeats - [`maind fleet duplicates`](./fleet). Complete single LSP-graph of the entire ecosystem
+  is not needed and is not built.
 
-### Прочие ограничения кода-графа
+### Other code graph restrictions
 
-- **Требует `uvx`** (из [uv](https://docs.astral.sh/uv/)) в PATH. Нет — корректный пропуск
-  (`skipped-not-installed`), остальное работает.
-- **Первый запуск медленнее** — Serena поднимает LSP под язык проекта; дальше быстрее.
-- **Опционален и pull-based** — включается полем `code:true`; агент сам решает звать
-  `find_symbol`/`find_referencing_symbols`, ничего не «перехватывается».
-- **Движок сменный** — не нравится Serena или нужен стек-специфичный сервер: `code_command`
-  / `code_args` (`{root}`) / `code_server_name` (см. [граф кода](./code-graph)).
+- **Requires `uvx`** (from [uv](https://docs.astral.sh/uv/)) in PATH. No - correct omission
+  (`skipped-not-installed`), the rest works.
+- **First launch is slower** — Serena raises LSP for the project language; further faster.
+- **Optional and pull-based** — is included by the field `code:true`; agent decides to call
+  `find_symbol`/`find_referencing_symbols`, nothing «is intercepted».
+- **Replaceable engine** — don't like it Serena or you need a stack-specific server: `code_command`
+  / `code_args` (`{root}`) / `code_server_name` (see [code graph](./code-graph)).
 
-## Слой 3 — топология между проектами (самый «тяжёлый»)
+## Layer 3 - topology between projects (the most «heavy»)
 
-maind-граф строится `derive` из composer/доков/скиллов: узлы `project`/`package`/`skill`, рёбра
-`depends_on`/`requires`/`uses`. Живёт на хабе.
+maind-graph is being built `derive` from composer/docks/skills: nodes `project`/`package`/`skill`, edges
+`depends_on`/`requires`/`uses`. Lives at the hub.
 
 ```mermaid
 flowchart LR
-  SRC["composer.json · Brain-доки · skills-lock · .maind.graph.json"] -->|derive| G["граф проекта"]
-  G --> IDX["индекс владения (федерация)"]
-  IDX --> Q["запросы: соседи, зависимости, cross-namespace"]
+  SRC["composer.json · Brain-docks · skills-lock · .maind.graph.json"] -->|derive| G["project graph"]
+  G --> IDX["ownership index (federation)"]
+  IDX --> Q["queries: neighbors, dependencies, cross-namespace"]
 ```
 
-### Честный трейд-офф
+### Fair trade-off
 
-Это **самая сложная машинерия за наименьшую ежедневную пользу**. Она отвечает на «кто от кого
-зависит» — полезно, но дёргается редко. Память и граф кода оправданы целью напрямую; топологию
-стоит **развивать только если ты ей пользуешься**. Она не вредит (детерминированна, регенерится
-из источников, не ручная), но если запросов к ней нет — это кандидат «держать, но не растить»:
-`composer.json` + Serena покрывают навигацию и без неё.
+This **the most complex machinery for the least daily benefit**. She answers «who from whom
+depends» — useful, but rarely twitches. The memory and code graph are justified by the purpose directly; topology
+costs **develop only if you use it**. She does no harm (deterministic, regenerative
+from sources, not manual), but if there are no requests for it, this is a candidate «keep, but do not grow»:
+`composer.json` + Serena cover navigation without it.
 
-## Namespace-изоляция: правила и граничные случаи
+## Namespace-isolation: rules and edge cases
 
-Один механизм изоляции для **и графа, и памяти**.
+One isolation mechanism for **both graph and memory**.
 
 ```mermaid
 graph TB
@@ -159,52 +159,52 @@ graph TB
   subgraph D["namespace diabox"]
     DB["diabox"]
   end
-  INF["инфра (namespaces: ['*'])"]
+  INF["infra (namespaces: ['*'])"]
   FX --- AZ
-  FX -. "связь НЕ строится (разные ns)" .-x DB
+  FX -. "connection is NOT built (different ns)" .-x DB
   INF --- FX
   INF --- DB
 ```
 
-- **Внутри группы — общее, между группами — изолировано.** Ребро A↔B строится, только если делят
+- **Within a group - common, between groups - isolated.** Rib A↔B is built only if divide
   namespace.
-- **`["*"]` — инфраструктура**, связывается со всеми (azguard/vaulter/swissknifeman и т.п.).
-- **Граничный случай: незарегистрированный узел.** Если таргет связи не в `config.json` (внешний
-  алиас, напр. `getchat`) — связь **сохраняется** (namespace внешнего узла неизвестен, не режем).
-- **Свежий проект без namespace → `default`** и **не свяжется** с группой. Всегда задавай
-  `namespaces` явно. Подробнее — [Namespaces](./namespaces).
+- **`["*"]` — infrastructure**, contacts everyone (azguard/vaulter/swissknifeman etc.).
+- **Edge case: unregistered node.** If the communication target is not in `config.json` (external
+  alias, e.g. `getchat`) — connection **is saved** (namespace external node unknown, do not cut).
+- **Fresh project without namespace → `default`** and **will not contact** with the group. Always ask
+  `namespaces` explicitly. More details - [Namespaces](./namespaces).
 
-## Общие ограничения (свойства MCP, не баги)
+## General restrictions (properties MCP, not bugs)
 
-- **MCP пассивен (pull).** Серверы не следят за кодом и ничего не перехватывают — инструмент
-  вызывает **модель**. Максимум управления — сделать инструмент доступным (`.mcp.json`) и
-  объяснить когда звать (скилл `ecosystem-mcp`).
-- **`.mcp.json` читается при старте сессии.** Добавили сервер (напр. `serena`) → нужен
-  **перезапуск сессии** в проекте, чтобы клиент его поднял.
-- **Раскатка — по команде, не непрерывно.** `maind sync`/`onboard` — снимок в момент запуска;
-  авто только SessionStart-хук, и он лишь печатает статус (не синхронизирует).
+- **MCP passive (pull).** Servers do not monitor the code and do not intercept anything - tool
+  calls **model**. Maximum control - make the tool accessible (`.mcp.json`) and
+  explain when to call (skill `ecosystem-mcp`).
+- **`.mcp.json` is read when the session starts.** Added server (e.g. `serena`) → needed
+  **session restart** in the project so that the client picks it up.
+- **Rolling out - on command, not continuously.** `maind sync`/`onboard` — snapshot at startup;
+  auto only SessionStart-hook, and it only prints the status (does not sync).
 
-## Терминологический долг (осознанный)
+## Terminological debt (conscious)
 
-Слово «граф» исторически означало **три разные вещи** (память — вообще не граф). Сейчас в прозе и
-доках они разведены явно: **agent-memory** (память/контекст), **maind-граф** (топология между
-проектами), **код-граф** (символы внутри проекта, движок **Serena**). Старое имя `graphify` (по
-несуществующему инструменту) выпилено из прозы и осталось **только как legacy-alias** в
-back-compat-поверхностях: поля `graphify_*`/`graphify:true`, флаг `--with-graphify` и значение
-`graph.adapter=graphify`. Если читаешь старый конфиг — держи в голове карту из раздела
-[Граница «хаб ↔ проект»](#граница-хаб-проект).
+Word «graph» historically meant **three different things** (memory is not a graph at all). Now in prose and
+docks they are clearly separated: **agent-memory** (memory/context), **maind-graph** (topology between
+projects), **code graph** (symbols inside the project, engine **Serena**). Old name `graphify` (by
+to a non-existent tool) cut out of prose and left **just like legacy-alias** in
+back-compat-surfaces: fields `graphify_*`/`graphify:true`, flag `--with-graphify` and value
+`graph.adapter=graphify`. If you are reading the old config, keep in mind the map from the section
+[Border «hub ↔ project»](#border-hub-project).
 
-## Сводка: что есть, чего нет
+## Summary: What's there and what's not
 
-| Хочешь | Есть? | Чем |
+| Do you want | Yes? | Than |
 |:--|:--|:--|
-| Общая память внутри группы | ✅ | agent-memory + namespace scope |
-| Изоляция памяти между группами | ✅ | scope `project`/`ns`/`global` |
-| Навигация по коду внутри проекта | ✅ | Serena (пер-проектный) |
-| Единый граф символов МЕЖДУ проектами | ❌ | не нужен; топология решает «кто от кого зависит» |
-| «Кто от кого зависит» между проектами | ✅ | maind-граф (derive) |
-| Авто-запись кода/изменений в память | ❌ | pull: агент вызывает `store` сам |
-| Раскатка/перегенерация на все проекты | ✅ | `maind sync --all` |
-| Память «всегда поднята» | ✅ | systemd-сервис + linger |
+| Shared memory within a group | ✅ | agent-memory + namespace scope |
+| Memory isolation between groups | ✅ | scope `project`/`ns`/`global` |
+| Code navigation within the project | ✅ | Serena (per-project) |
+| Single symbol graph BETWEEN projects | ❌ | not needed; topology decides «who depends on whom» |
+| «Who depends on whom» between projects | ✅ | maind-graph (derive) |
+| Auto-write code/changes to memory | ❌ | pull: agent calls `store` himself |
+| Rolling out/regeneration for all projects | ✅ | `maind sync --all` |
+| Memory «always raised» | ✅ | systemd-service + linger |
 
-Дальше: [Память →](./memory) · [Граф кода →](./code-graph) · [Namespaces →](./namespaces)
+Next: [Memory →](./memory) · [Code graph →](./code-graph) · [Namespaces →](./namespaces)

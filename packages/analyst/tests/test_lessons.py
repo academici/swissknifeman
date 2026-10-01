@@ -1,4 +1,4 @@
-"""Тесты хранилища уроков: схема, atomic write, переходы, append-only аудит, Jaccard."""
+"""Lesson repository tests: diagram, atomic write, transitions, append-only audit, Jaccard."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -25,7 +25,7 @@ class TestLessons(unittest.TestCase):
         self.assertEqual(L["scope"], "project:test")
         self.assertEqual(L["provenance"]["session_id"], "s1")
         self.assertIn(L["kind"], lessons.KINDS)
-        # id детерминирован
+        # id deterministic
         self.assertEqual(L["id"], self._mk()["id"])
 
     def test_bad_kind_raises(self):
@@ -38,7 +38,7 @@ class TestLessons(unittest.TestCase):
         got, st = lessons.find_lesson(self.proj, L["id"])
         self.assertEqual(st, "ephemeral")
         self.assertEqual(got["trigger"], L["trigger"])
-        # файл реально на диске в каталоге состояния
+        # file is actually on disk in the state directory
         p = lessons.state_dir(self.proj, "ephemeral") / f"{L['id']}.json"
         self.assertTrue(p.is_file())
 
@@ -56,7 +56,7 @@ class TestLessons(unittest.TestCase):
         moved, old, new = lessons.move_lesson(self.proj, L["id"], "candidate")
         self.assertEqual((old, new), ("ephemeral", "candidate"))
         self.assertEqual(moved["state"], "candidate")
-        # старый файл исчез, новый есть — урок не двоится
+        # the old file has disappeared, the new one is there - the lesson is not double
         self.assertFalse((lessons.state_dir(self.proj, "ephemeral") / f"{L['id']}.json").is_file())
         self.assertTrue((lessons.state_dir(self.proj, "candidate") / f"{L['id']}.json").is_file())
         all_states = [st for _, st in lessons.list_lessons(self.proj)]
@@ -74,7 +74,7 @@ class TestLessons(unittest.TestCase):
         self.assertEqual(len(recs), 2)
         self.assertEqual(recs[0]["action"], "promote")
         self.assertIn("ts", recs[0])
-        # второй вызов не затирает первый — файл только растёт
+        # the second call does not overwrite the first - the file only grows
         raw = Path(lessons.audit_path(self.proj)).read_text(encoding="utf-8")
         self.assertEqual(raw.count("\n"), 2)
 
@@ -87,7 +87,7 @@ class TestLessons(unittest.TestCase):
                                       threshold=0.1)
         self.assertTrue(sim)
         self.assertEqual(sim[0][0]["id"], L["id"])
-        # не находит себя при exclude_id
+        # does not find itself when exclude_id
         sim2 = lessons.similar_lessons(self.proj, "Laravel DDD service", "put services",
                                        threshold=0.1, exclude_id=L["id"])
         self.assertEqual(sim2, [])

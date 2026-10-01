@@ -112,9 +112,9 @@ def _resolve_exec_cell(plan_lines, item_id):
     """Internal documentation."""
     headers, rows = _routing_table(plan_lines)
     if headers is None:
-        return None, "в `plan.md` нет секции «## 3. Routing» с таблицей"
+        return None, "in `plan.md` no section «## 3. Routing» with table"
     if _ROUTING_EXEC_HEADER not in headers:
-        return None, "таблица «## 3. Routing» без колонки «Exec» (легаси-форма §3 без колонки)"
+        return None, "table «## 3. Routing» without column «Exec» (legacy form §3 without column)"
 
     phase_token = item_id.split(".")[0]
     try:
@@ -135,11 +135,11 @@ def _resolve_exec_cell(plan_lines, item_id):
             for t in cell.split(",")
         ):
             return None, (
-                f"§3 Routing строка {cell!r} (строка {lineno}) — список через запятую, "
-                "нелегальная форма ячейки `Items` (canon §9): маршрут из совпавшего "
-                "токена не берётся, это остаётся отказом")
+                f"§3 Routing string {cell!r} (string {lineno}) — comma separated list, "
+                "illegal cell shape `Items` (canon §9): route from matched "
+                "token is not taken, it remains a refusal")
 
-    return None, f"нет строки §3 Routing, покрывающей {item_id}"
+    return None, f"no line §3 Routing, covering {item_id}"
 
 
 def _resolve_next_form(next_field_text):
@@ -159,15 +159,15 @@ def _call_plan_lint(plan_dir, monorepo_root, *, timeout=60):
             capture_output=True, text=True, timeout=timeout, check=False,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        return None, f"plan-lint.py не запустился: {exc}"
+        return None, f"plan-lint.py did not start: {exc}"
     if proc.returncode != 0:
         return None, (
-            f"plan-lint.py завершился кодом {proc.returncode} (fail-loud — источник "
-            f"S1 недоступен, не «нечего делать»): {proc.stderr.strip()[-800:]}")
+            f"plan-lint.py ended with the code {proc.returncode} (fail-loud — source "
+            f"S1 not available, not «nothing to do»): {proc.stderr.strip()[-800:]}")
     try:
         return json.loads(proc.stdout), None
     except json.JSONDecodeError as exc:
-        return None, f"plan-lint.py --json не распознан как JSON: {exc}"
+        return None, f"plan-lint.py --json not recognized as JSON: {exc}"
 
 
 def _call_task_contract_build(plan_dir, item_id, monorepo_root, *, timeout=60):
@@ -183,19 +183,19 @@ def _call_task_contract_build(plan_dir, item_id, monorepo_root, *, timeout=60):
             capture_output=True, text=True, timeout=timeout, check=False, env=env,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        return None, f"task.task_contract build не запустился: {exc}"
+        return None, f"task.task_contract build did not start: {exc}"
     if proc.returncode != 0:
-        return None, (f"task.task_contract build --item {item_id} завершился кодом "
+        return None, (f"task.task_contract build --item {item_id} ended with the code "
                       f"{proc.returncode}: {proc.stderr.strip()[-800:]}")
     try:
         payload = json.loads(proc.stdout)
     except json.JSONDecodeError as exc:
-        return None, f"task.task_contract build --item {item_id}: вывод не JSON: {exc}"
+        return None, f"task.task_contract build --item {item_id}: no output JSON: {exc}"
     required = (payload.get("route") or {}).get("required") or {}
     model_class, effort = required.get("model_class"), required.get("effort")
     if not model_class or not effort:
         return None, (f"task.task_contract build --item {item_id}: route.required "
-                      f"неполон: {required!r}")
+                      f"is incomplete: {required!r}")
     return {"model_class": model_class, "effort": effort}, None
 
 
@@ -215,13 +215,13 @@ def _call_plan_layout(plan_dir, monorepo_root, *, timeout=60):
         proc = subprocess.run(args, capture_output=True,
                               text=True, timeout=timeout, check=False, env=env)
     except (OSError, subprocess.TimeoutExpired) as exc:
-        return None, f"резолвер раскладки не запустился: {exc}"
+        return None, f"layout resolver did not start: {exc}"
     if proc.returncode:
-        return None, f"резолвер раскладки отказал: {proc.stderr.strip()[-400:]}"
+        return None, f"layout resolver failed: {proc.stderr.strip()[-400:]}"
     try:
         return json.loads(proc.stdout), None
     except json.JSONDecodeError as exc:
-        return None, f"резолвер раскладки вернул не JSON: {exc}"
+        return None, f"layout resolver did not return JSON: {exc}"
 
 
 def _classify_drivability(exec_value, exec_error, route, route_error):
@@ -248,8 +248,8 @@ def queue(plan_dir, phase_id, *, monorepo_root=None):
         monorepo_root = find_monorepo_root(plan_dir.resolve())
         if monorepo_root is None:
             return _degraded(plan_dir, phase_id, (
-                f"монорепо-корень не найден от {plan_dir} — пакет `task` недоступен "
-                "(standalone-раскладка): драйвер отказывает в вождении, а не молчит"))
+                f"monorepo root not found from {plan_dir} — package `task` not available "
+                "(standalone-layout): driver refuses to drive, not silent"))
     monorepo_root = Path(monorepo_root)
 
     layout, layout_error = _call_plan_layout(plan_dir, monorepo_root)
@@ -264,11 +264,11 @@ def queue(plan_dir, phase_id, *, monorepo_root=None):
     plan_model = (data.get("plans") or {}).get(plan_key)
     if plan_model is None:
         return _degraded(plan_dir, phase_id,
-                          f"plan-lint --json не содержит модель плана «{plan_key}»")
+                          f"plan-lint --json does not contain a plan model «{plan_key}»")
 
     phase_model = (plan_model.get("phases") or {}).get(phase_id)
     if phase_model is None:
-        return _degraded(plan_dir, phase_id, f"фаза «{phase_id}» не найдена в модели плана")
+        return _degraded(plan_dir, phase_id, f"phase «{phase_id}» not found in plan model")
 
     handoff = plan_model.get("handoff") or {}
     next_raw = (handoff.get("fields") or {}).get("Next", "") or ""
@@ -302,15 +302,15 @@ def queue(plan_dir, phase_id, *, monorepo_root=None):
                 "exec": None, "exec_error": None,
                 "drivable": False, "refusal": NEXT_FORM_UNSUPPORTED,
                 "refusal_detail": (
-                    f"форма owner `handoff.fields.Next` вне закрытого enum "
-                    f"(S5, строка: {next_declaring_line!r})"
-                    " — вождение фазы отказано целиком, не по item'у"),
+                    f"form owner `handoff.fields.Next` outside closed enum "
+                    f"(S5, line: {next_declaring_line!r})"
+                    " — driving phase denied entirely, not by item'y"),
             })
             continue
 
         item_next_kind, item_next_line = next_kind, next_declaring_line
         if plan_lines is None:
-            exec_value, exec_error = None, "`plan.md` недоступен для чтения §3 Routing"
+            exec_value, exec_error = None, "`plan.md` is not readable §3 Routing"
         else:
             exec_value, exec_error = _resolve_exec_cell(plan_lines, item_id)
         route, route_error = _call_task_contract_build(plan_dir, item_id, monorepo_root)

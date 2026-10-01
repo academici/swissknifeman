@@ -3,7 +3,7 @@
   "snippets": [
     {
       "file": "resource-stub.php",
-      "description": "Filament v5 Resource stub: ресурс + Schemas/ExampleForm + Tables/ExamplesTable (полный v5-layout)",
+      "description": "Filament v5 Resource stub: resource + Schemas/ExampleForm + Tables/ExamplesTable (full v5-layout)",
       "tags": ["filament", "resource", "v5"]
     },
     {
@@ -13,12 +13,12 @@
     },
     {
       "file": "forms-tables-reference.md",
-      "description": "Справочник компонентов v5: поля, layout, Get/Set, колонки, фильтры, actions, widgets, infolist, тесты",
+      "description": "Components Reference v5: fields, layout, Get/Set, columns, filters, actions, widgets, infolist, tests",
       "tags": ["filament", "forms", "tables", "reference"]
     },
     {
       "file": "filament-development.md",
-      "description": "Проектные ожидания при разработке Filament v5: artisan-scaffold, структура, namespaces",
+      "description": "Design Expectations for Development Filament v5: artisan-scaffold, structure, namespaces",
       "tags": ["filament"]
     }
   ]

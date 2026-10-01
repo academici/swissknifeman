@@ -1,108 +1,108 @@
-# Фоновые агенты
+# Background agents
 
-Фоновый агент — это агент в CI, работающий параллельно с разработкой:
-аналог CI/CD, но для качества кода, а не только тестов. Он не прерывает
-разработчика — работает в изолированном окружении и отдаёт результат как
-PR-комментарий или Issue.
+A background agent is an agent in CI, running in parallel with development:
+analogue CI/CD, but for code quality, not just tests. He doesn't interrupt
+developer - works in an isolated environment and gives the result as
+PR-comment or Issue.
 
-**Ключевое ограничение:** фоновый агент **предлагает** изменения, но никогда
-не применяет их без code review. Никаких авто-мержей.
+**Key limitation:** background agent **suggests** changes, but never
+does not apply them without code review. No auto-merges.
 
-Документ покрывает два вида фоновой работы: **CI-агенты** (GitHub Actions, ниже) и
-**Workflow-оркестрацию** (`dev-loop` из agent-packs — длинные автономные прогоны).
-Раздел [«Устойчивость»](#устойчивость-workflow-оркестрации) — про то, как не получить
-«многочасовой молчаливый грайндинг» под rate-limit (реальный инцидент 2026-07-01).
+The document covers two types of background work: **CI-agents** (GitHub Actions, below) and
+**Workflow-orchestration** (`dev-loop` from agent-packs — long offline runs).
+Section [«Resilience»](#stability-workflow-orchestration) — about how not to get
+«hours of silent grinding» under rate-limit (real incident 2026-07-01).
 
-## Готовые шаблоны
+## Ready-made templates
 
-Шаблоны GitHub Actions лежат как сниппеты соответствующих скиллов —
-скопируйте нужный в `.github/workflows/` целевого проекта:
+Templates GitHub Actions are located as snippets of the corresponding skills -
+copy the one you need to `.github/workflows/` target project:
 
-| Шаблон | Скилл-носитель | Триггер | Результат |
+| Template | Skill carrier | Trigger | Result |
 |---|---|---|---|
-| `simplify-on-push.yml` | `quality/code-simplifier` | pull_request (PHP-файлы) | Предложения по упрощению комментарием к PR |
-| `security-audit-scheduled.yml` | `laravel-auth/laravel-security-audit` | cron (еженедельно) + ручной | Issue с находками по severity |
+| `simplify-on-push.yml` | `quality/code-simplifier` | pull_request (PHP-files) | Suggestions for simplification by commentary on PR |
+| `security-audit-scheduled.yml` | `laravel-auth/laravel-security-audit` | cron (weekly) + manual | Issue with findings from severity |
 
-После установки скиллов через `skiller vendor` сниппеты лежат в
-`<skills-path>/<skill>/snippets/`; в самом реестре swissknifeman эти
-workflow не настраиваются.
+After installing skills via `skiller vendor` snippets are in
+`<skills-path>/<skill>/snippets/`; in the registry itself swissknifeman these
+workflow are not configurable.
 
-## Требования
+## Requirements
 
-1. **Secret `ANTHROPIC_API_KEY`** в настройках репозитория — фоновые агенты
-   расходуют платные токены.
-2. **Установленный скилл** в целевом проекте (`skiller vendor` или
-   plugin marketplace через `skiller connect`) — промпт workflow
-   ссылается на протокол скилла.
-3. **Permissions** заданы в шаблонах минимально необходимые:
-   `contents: read` + `pull-requests: write` или `issues: write`.
+1. **Secret `ANTHROPIC_API_KEY`** in the repository settings - background agents
+   are using up paid tokens.
+2. **Installed skill** in the target project (`skiller vendor` or
+   plugin marketplace via `skiller connect`) — prompt workflow
+   refers to the skill protocol.
+3. **Permissions** are specified in the templates as the minimum required:
+   `contents: read` + `pull-requests: write` or `issues: write`.
 
-## Ограничение стоимости
+## Cost Limit
 
-- `concurrency` с `cancel-in-progress` — не платить за устаревшие прогоны
-  при серии пушей (уже в шаблонах).
-- `paths`-фильтры — запускать только на релевантных файлах.
-- Расписание — не чаще, чем результаты реально читаются: еженедельный
-  аудит, который никто не смотрит, — это только расходы.
-- Для разовых проверок предпочитайте локальный запуск скилла в сессии —
-  он бесплатен в рамках подписки.
+- `concurrency` with `cancel-in-progress` — do not pay for outdated runs
+  with a series of pushes (already in templates).
+- `paths`-filters - run only on relevant files.
+- Schedule - no more often than the results are actually read: weekly
+  an audit that no one looks at is just an expense.
+- For one-time checks, prefer to launch the skill locally in the session -
+  it is free as part of a subscription.
 
-## Анти-дрифт правила для фоновых агентов
+## Anti-drift rules for background agents
 
-Разрешено: предложения по упрощению, отчёты об уязвимостях, обновление
-PHPDoc/комментариев в предложениях.
+Allowed: simplification suggestions, vulnerability reports, update
+PHPDoc/comments in sentences.
 
-Запрещено: менять бизнес-логику, добавлять зависимости, менять схему БД,
-мержить без ревью, править тесты. Эти ограничения зашиты в промпты
-шаблонов — при адаптации под свой проект сохраняйте их.
+Prohibited: changing business logic, adding dependencies, changing the database schema,
+merge without review, edit tests. These restrictions are hardwired into prompts
+templates - save them when adapting them to your project.
 
-## Устойчивость Workflow-оркестрации
+## Resilience Workflow-orchestration
 
-Инцидент 2026-07-01 (проект chatom): `dev-loop`-прогон под server-side rate-limit
-Anthropic авто-ретраил `agent()`-вызовы ~10 часов → 0 коммитов, без раннего сигнала.
-Причина: рантайм Workflow сам ретраит транзиентные ошибки (включая rate-limit) до
-высокого капа; при устойчивом throttling это часы wall-clock без durable-прогресса.
-Разбор — `packages/skiller/docs/audits/2026-07-01-workflow-resilience-ratelimit.md`.
+Incident 2026-07-01 (project chatom): `dev-loop`-run under server-side rate-limit
+Anthropic auto-retrail `agent()`-calls ~10 hours → 0 commits, without an early signal.
+Reason: runtime Workflow itself retracts transient errors (including rate-limit) to
+high burl; at a stable throttling this is a watch wall-clock without durable-progress.
+Parsing - `packages/skiller/docs/audits/2026-07-01-workflow-resilience-ratelimit.md`.
 
-Верифицировано индустрийными паттернами 2025–2026 (RAG): 429 — это сигнал
-backpressure, не глюк одного запроса; unbounded auto-retry = self-DoS; надёжный
-слой — модель **job / worker / supervisor**, где supervisor детектит зависших извне.
+Verified by industry patterns 2025–2026 (RAG): 429 — is a signal
+backpressure, is not a single request glitch; unbounded auto-retry = self-DoS; reliable
+layer - model **job / worker / supervisor**, where supervisor detects external hangers.
 
-### Что скрипт МОЖЕТ надёжно (в песочнице)
+### What a script CAN reliably (in the sandbox)
 
-- **Честные статусы `green | deferred | infra-failed`.** `deferred` — тест честно не
-  зелёный (реальный дефект); `infra-failed` — инфра-отказ (rate-limit/timeout/`agent()`
-  вернул `null`). **Не маскировать инфра-отказ под `deferred`** — это и была ложь
-  инцидента (срезы помечены `deferred`, хотя причина — throttling).
-- **Fail-fast на терминальный `agent()===null`.** Рантайм исчерпал ретраи → срез
-  `infra-failed`, СТОП всего прогона (не следующий срез: throttling сам не пройдёт).
-- **Меньший батч (дефолт 2, не 3+).** Батч N срезов × (impl+test+review) множит
-  retry-поверхность под throttling.
-- **Heartbeat `log()`** на каждом шаге — сигнал живости для supervisor и человека.
-- **Текст-маркер как запасной путь возврата.** Строгая StructuredOutput-схема на
-  длинном/сложном возврате хрупка (retry-cap рантайма = 5 → обрывала весь прогон).
-  Разрешаем последней строкой `===SLICE-RESULT=== status=green|deferred` — парсится
-  регуляркой, прогон не срывается.
+- **Honest statuses `green | deferred | infra-failed`.** `deferred` — test honestly not
+  green (real defect); `infra-failed` — infra failure (rate-limit/timeout/`agent()`
+  returned `null`). **Do not disguise infra-failure as `deferred`** — that was a lie
+  incident (slices are marked `deferred`, although the reason is throttling).
+- **Fail-fast to terminal `agent()===null`.** Runtime has exhausted retries → slice
+  `infra-failed`, STOP entire run (not the following slice: throttling won't go away on its own).
+- **Smaller batch (default 2, not 3+).** Batch N slices × (impl+test+review) multiplies
+  retry-surface under throttling.
+- **Heartbeat `log()`** at every step - a signal of liveliness for supervisor and human.
+- **Marker text as an alternate return path.** Strict StructuredOutput-diagram at
+  long/complex return is fragile (retry-cap runtime = 5 → interrupted the entire run).
+  Allow with the last line `===SLICE-RESULT=== status=green|deferred` — is parsed
+  regular, the run is not disrupted.
 
-### Чего скрипт НЕ может — и почему это НЕ костыль, а эскалация
+### What the script cannot do - and why it is NOT a crutch, but an escalation
 
-`Date.now()`/`Math.random()`/`setTimeout` в песочнице Workflow недоступны/ненадёжны, а
-`agent()` не отменяем (`AbortController` нет). Поэтому **затяжной hang** (agent ретраит
-часами, управление в цикл не вернулось) в скрипте не ловится. Не имитируем защиту —
-переносим её на **внешний supervisor**:
+`Date.now()`/`Math.random()`/`setTimeout` in the sandbox Workflow not available/are unreliable, and
+`agent()` not cancelable (`AbortController` no). Therefore **lingering hang** (agent retrait
+for hours, control did not return to the loop) is not caught in the script. We do not imitate protection -
+transfer it to **external supervisor**:
 
-- **Доклад оркестратора каждые ~30 мин (главный слой).** Основная сессия после запуска
-  фонового dev-loop ставит `Monitor`/`ScheduleWakeup` на `git log <base>..HEAD`; каждый
-  тик — короткий доклад статуса; нет коммита за тик ИЛИ виден `<failures>` →
-  `PushNotification` («dev-loop застрял: … срез Y — нужно вмешательство») + при нужде
-  `TaskStop`. Никогда не ждать completion «вслепую». Живёт вне песочницы → надёжно.
-- **Опционально — автономный GitHub Actions cron-watchdog** (для прогонов без живого
-  оркестратора, напр. ночных). Переживает завершение сессии:
+- **Orchestrator report every ~30 min (main layer).** Main session after launch
+  background dev-loop puts `Monitor`/`ScheduleWakeup` on `git log <base>..HEAD`; each
+  tick - short status report; no commit per tick OR visible `<failures>` →
+  `PushNotification` («dev-loop stuck: … slice Y — need intervention») + if necessary
+  `TaskStop`. Never wait completion «blindly». Lives outside the sandbox → reliable.
+- **Optional - standalone GitHub Actions cron-watchdog** (for runs without live
+  orchestrator, e.g. night). Survives session termination:
 
   ```yaml
   # .github/workflows/dev-loop-watchdog.yml
   on:
-    schedule: [{ cron: "*/20 * * * *" }]   # каждые 20 мин
+    schedule: [{ cron: "*/20 * * * *" }]   # every 20 minutes
     workflow_dispatch:
   jobs:
     liveness:
@@ -114,24 +114,24 @@ backpressure, не глюк одного запроса; unbounded auto-retry = 
           run: echo "recent=$(git rev-list --count --after='25 minutes ago' HEAD)" >> "$GITHUB_OUTPUT"
         - if: steps.check.outputs.recent == '0'
           env: { GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
-          run: gh issue create --title "🔴 dev-loop STALE: нет коммитов 25+ мин"
-               --body "Watchdog: git log base..HEAD пуст — возможен in-flight hang. Диагностировать/остановить." --label infra,watchdog
+          run: gh issue create --title "🔴 dev-loop STALE: no commits 25+ min"
+               --body "Watchdog: git log base..HEAD empty - possible in-flight hang. Diagnose/stop." --label infra,watchdog
   ```
 
-  Порог 25 мин ≈ 2× impl-бюджета (~12 мин) + буфер на опоздание GHA-cron под нагрузкой.
+  Threshold 25 min ≈ 2× impl-budget (~12 min) + late buffer GHA-cron under load.
 
-### Инструмент → parallel-safe?
+### Tool → parallel-safe?
 
-| Инструмент | Параллелить? |
+| Tool | Parallel? |
 |---|---|
-| `agent()` dev-loop | по срезам — **последовательно** (канон «parallel-in-layer, sequential-across-layer»); fan-out только на research-фазе |
-| `perplexity-web` | **bounded concurrency** — ≤ `maxConcurrency` в одном pool/daemon (v1.3.0), НИКОГДА не 13-way fan-out независимыми процессами (один профиль = один процесс → `SingletonLock`). Детали и recovery (`pkill` stale lock) — скилл `research/query-craft` |
-| `context7`, `WebSearch`/`WebFetch` | да (stateless) |
+| `agent()` dev-loop | by slices - **sequentially** (canon «parallel-in-layer, sequential-across-layer»); fan-out only on research-phase |
+| `perplexity-web` | **bounded concurrency** — ≤ `maxConcurrency` in one pool/daemon (v1.3.0), NEVER 13-way fan-out independent processes (one profile = one process → `SingletonLock`). Details and recovery (`pkill` stale lock) — skill `research/query-craft` |
+| `context7`, `WebSearch`/`WebFetch` | yes (stateless) |
 
-### Восстановление после застоя
+### Recovery after stagnation
 
-Владелец по сигналу (push или GHA-issue) просит Claude: читает `<failures>`/`git log`,
-`TaskStop`, чинит корень (throttling → подождать/solo-fallback; schema-cap → маркер;
-env → префлайт), перезапуск с resume. Остановка прогона важна и как обрыв
-**orphaned-agent** (зависший `agent()` продолжает жечь токены — извне это единственный
-способ его прекратить).
+Owner by signal (push or GHA-issue) requests Claude: reads `<failures>`/`git log`,
+`TaskStop`, repairs the root (throttling → wait/solo-fallback; schema-cap → token;
+env → preflight), restart with resume. Stopping a run is also important as a break
+**orphaned-agent** (frozen `agent()` continues to burn tokens - from the outside this is the only
+way to stop it).

@@ -13,7 +13,7 @@
       "fetched_at": "2026-06-11"
     }
   ],
-  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace. P7.3 thin-navigator: SKILL.md — локальный навигатор, апстримное тело — references/full.md (body_path).",
+  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace. P7.3 thin-navigator: SKILL.md — local navigator, upstream body - references/full.md (body_path).",
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",

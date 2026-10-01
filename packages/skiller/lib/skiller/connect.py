@@ -1,4 +1,4 @@
-"""connect — канал plugin marketplace Claude Code."""
+"""connect — channel plugin marketplace Claude Code."""
 import json
 import re
 import shutil
@@ -111,14 +111,14 @@ def prepare_connect_selection(env, target, opts, config):
             core_added = [CORE_PLUGIN]
             plugins = list(plugins) + core_added
         else:
-            warn(f"marketplace '{MARKETPLACE}' не объявляет плагин '{CORE_PLUGIN}' — "
-                 f"ядро (CORE_SKILLS) НЕ доставлено. Прогони `skiller registry` в "
-                 f"реестре, затем повтори connect (или --no-core, если это осознанно).")
+            warn(f"marketplace '{MARKETPLACE}' does not declare the plugin '{CORE_PLUGIN}' — "
+                 f"core (CORE_SKILLS) NOT delivered. Drive away `skiller registry` in "
+                 f"registry, then repeat connect (or --no-core, if this is conscious).")
 
     if CORE_PLUGIN in plugins and "general" in plugins:
         plugins = [plugin for plugin in plugins if plugin != "general"]
-        warn("plugin 'general' исключён: его CORE-скиллы уже поставляет 'core'; "
-             "для полного general используй --no-core")
+        warn("plugin 'general' excluded: him CORE-already supplies skills 'core'; "
+             "for complete general use --no-core")
 
     cmd_added = []
     for cp in DEFAULT_COMMAND_PLUGINS:
@@ -148,10 +148,10 @@ _prepare_connect_selection = prepare_connect_selection
 
 
 def _resident_tokens(env, plugins):
-    """Грубая оценка резидентного ⊕ tier-0 (name+description) выбранного набора плагинов —
-    для «умного подключения»: видно цену ДО записи. core → CORE_SKILLS; бакет → все его скиллы;
-    generate-skill → его скилл. Источник токен-математики ОДИН — budget.skill_budget (не дублируем).
-    Возврат (tokens, n_skills)."""
+    """Rough estimate of resident ⊕ tier-0 (name+description) of the selected set of plugins -
+    for «smart connection»: you can see the price BEFORE recording. core → CORE_SKILLS; bucket → all his skills;
+    generate-skill → his skill. Source of token mathematics ONE - budget.skill_budget (do not duplicate).
+    Return (tokens, n_skills)."""
     from .budget import skill_budget
     total = n = 0
     for p in plugins:
@@ -171,9 +171,9 @@ def _resident_tokens(env, plugins):
 
 
 def _marketplace_declares(env, plugin_name):
-    """True, если сгенерированный marketplace.json (в корне репо) объявляет plugin_name.
-    Защита: на старом marketplace или в синтетическом тест-реестре курируемого `core` может
-    не быть — тогда CORE-политика тихо его не пушит (как раньше для отсутствующих бакетов)."""
+    """True, if generated marketplace.json (in the root of the repo) announces plugin_name.
+    Protection: old marketplace or in a curated synthetic test registry `core` may
+    not to be - then CORE-politics doesn't push him quietly (as before for missing buckets)."""
     mp = (find_repo_root(env.root) or env.root) / ".claude-plugin" / "marketplace.json"
     data = safe_load_json(mp, default={}) or {}
     return any(p.get("name") == plugin_name for p in data.get("plugins", []))
@@ -188,18 +188,18 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
     profile_name = prepared["profile_name"]
     profile_source = prepared["profile_source"]
     source = prepared["source"]
-    # CORE-политика (умное подключение): вместо целых бакетов general(19)+oss-dev(10) ≈ 1956
-    # резидентных токенов пушим лёгкий курируемый плагин `core` (== CORE_SKILLS) — экономия
-    # даже с текущим составом (8 скиллов, ~696 ток по калиброванным константам budget.py —
-    # см. `skiller budget --check-core` для актуальной цифры, не хардкодь снапшот здесь,
-    # см. аудит Т-2: «7 ≈ 480» протухло, когда CORE_SKILLS вырос до 8). --no-core отключает.
-    # Плагин объявлен в marketplace (registry.py); на старом marketplace / в тест-реестре
-    # его может не быть — тогда пропускаем с явным warn (см. ниже, аудит C-1).
+    # CORE-policy (smart connection): instead of whole buckets general(19)+oss-dev(10) ≈ 1956
+    # push resident tokens lightweight curated plugin `core` (== CORE_SKILLS) — savings
+    # even with the current lineup (8 skills, ~696 current according to calibrated constants budget.py —
+    # see `skiller budget --check-core` for the actual figure, not a hardcode snapshot here,
+    # see T-2 audit: «7 ≈ 480» went bad when CORE_SKILLS increased to 8). --no-core disables.
+    # The plugin is declared in marketplace (registry.py); on the old one marketplace / in the test registry
+    # it may not exist - then we skip it with an explicit warn (see below, audit C-1).
     core_added = list(prepared["core_added"])
 
-    # Командные плагины по умолчанию (task): включаем в КАЖДЫЙ проект, как core. Marketplace-guarded
-    # (на старом marketplace / в тест-реестре тихо пропускаем). --no-core их НЕ трогает — это не
-    # CORE-скиллы; отключить точечно можно enabledPlugins[...]=false.
+    # Default command plugins (task): is included in EVERY project, as core. Marketplace-guarded
+    # (on the old one marketplace / in the test registry we silently skip). --no-core does NOT touch them - this is not
+    # CORE-skills; you can disable it point by point enabledPlugins[...]=false.
     cmd_added = list(prepared["cmd_added"])
 
     if config.exclude:
@@ -211,19 +211,19 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
     print(f"Source:   {root}")
     print(f"Plugins:  {' '.join(plugins)}")
     resident, n_res = _resident_tokens(env, plugins)
-    print(f"Резидент: ~{resident} ток ⊕ tier-0 ({n_res} скиллов, name+description в КАЖДОМ "
-          f"запросе; тела — по триггеру). Меньше = дешевле: уже профиль или --no-core.")
+    print(f"Resident: ~{resident} current ⊕ tier-0 ({n_res} skills, name+description in EACH "
+          f"request; body - by trigger). Less = cheaper: already a profile or --no-core.")
     if source == "autodetect-fallback":
-        print("⚠ ВНИМАНИЕ: тип проекта не распознан — поставлен МИНИМАЛЬНЫЙ набор (ядро),\n"
-              "  а не «всё подряд». Для оптимального набора укажи профиль явно:\n"
+        print("⚠ ATTENTION: project type not recognized - MINIMUM set supplied (core),\n"
+              "  and not «everything». For optimal dialing, specify the profile explicitly:\n"
               "  skiller connect --profile <node-frontend|laravel-project|php-package|…>\n"
-              "  или точный список: skiller connect --plugins a,b,c")
+              "  or the exact list: skiller connect --plugins a,b,c")
     if core_added:
-        print(f"CORE:     {CORE_PLUGIN} (лёгкое токен-экономное ядро, {len(CORE_SKILLS)} скиллов "
-              f"вместо бакетов general+oss-dev; --no-core отключает)")
+        print(f"CORE:     {CORE_PLUGIN} (lightweight token-saving core, {len(CORE_SKILLS)} skills "
+              f"instead of buckets general+oss-dev; --no-core disables)")
     if cmd_added:
-        print(f"COMMANDS: {' '.join(cmd_added)} (интент-команды /task:*, раздаются по умолчанию; "
-              f"отключить точечно — enabledPlugins[...]=false)")
+        print(f"COMMANDS: {' '.join(cmd_added)} (intent commands /task:*, are distributed by default; "
+              f"disable pointwise - enabledPlugins[...]=false)")
 
     list_only = opts.get("list", False)
     dry_run = opts.get("dry_run", False)
@@ -232,7 +232,7 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
 
     settings_file = opts.get("file") or "settings.local.json"
     if settings_file not in ("settings.json", "settings.local.json"):
-        die("--file должен быть settings.json или settings.local.json")
+        die("--file should be settings.json or settings.local.json")
     dest = target / ".claude" / settings_file
     settings = {}
     if dest.exists():
@@ -242,29 +242,29 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
             die(f"{dest}: invalid JSON: {e}")
 
     marketplaces = settings.setdefault("extraKnownMarketplaces", {})
-    # marketplace.json лежит в КОРНЕ монорепо (registry пишет туда же, source-пути
-    # относительны корня), а не в каталоге пакета env.root — иначе Claude Code ищет
-    # .claude-plugin/marketplace.json под packages/skiller и не находит плагины.
+    # marketplace.json is in the ROOT of the monorepo (registry writes there, source-paths
+    # are relative to the root), and not in the package directory env.root — otherwise Claude Code looking for
+    # .claude-plugin/marketplace.json under packages/skiller and does not find plugins.
     mp_root = find_repo_root(root) or root
     our_source = {"source": "directory", "path": str(mp_root)}
     if MARKETPLACE in marketplaces:
         existing = marketplaces[MARKETPLACE].get("source", {})
         if existing != our_source:
             if fix_path_drift and existing.get("source") == "directory":
-                print(f"NOTE: путь marketplace устарел ({existing.get('path')}) — "
-                      f"обновляю на {mp_root}")
+                print(f"NOTE: path marketplace is deprecated ({existing.get('path')}) — "
+                      f"updating to {mp_root}")
                 marketplaces[MARKETPLACE] = {"source": our_source}
             elif existing.get("source") == "directory":
-                # directory-источник с ДРУГИМ путём — вероятно репозиторий переехал: плагины
-                # не подхватятся. Подсказку делаем действенной (а не молча оставляем старый путь).
-                print(f"⚠ marketplace '{MARKETPLACE}' указывает на ДРУГОЙ каталог: "
-                      f"{existing.get('path')}\n  реестр сейчас здесь: {mp_root}. Если "
-                      f"репозиторий переехал — плагины не загрузятся. Исправить: "
-                      f"skiller connect --fix-path (или skiller update).")
+                # directory-source with a DIFFERENT path - probably the repository has moved: plugins
+                # will not be picked up. Making the hint effective (rather than silently leaving the old path).
+                print(f"⚠ marketplace '{MARKETPLACE}' points to ANOTHER directory: "
+                      f"{existing.get('path')}\n  registry is now here: {mp_root}. If "
+                      f"the repository has moved - the plugins will not load. Correct: "
+                      f"skiller connect --fix-path (or skiller update).")
             else:
-                # Иной тип источника (github/…) — осознанный выбор пользователя, не трогаем.
-                print(f"NOTE: marketplace '{MARKETPLACE}' объявлен с другим источником "
-                      f"({json.dumps(existing)}) — оставляю как есть.")
+                # Other source type (github/…) — conscious choice of the user, do not touch.
+                print(f"NOTE: marketplace '{MARKETPLACE}' declared with a different origin "
+                      f"({json.dumps(existing)}) — I leave it as is.")
     else:
         marketplaces[MARKETPLACE] = {"source": our_source}
 
@@ -287,30 +287,30 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
     else:
         if dest.exists():
             shutil.copy2(dest, f"{dest}.bak")
-            print(f"Бэкап:    {dest}.bak")
+            print(f"Backup:    {dest}.bak")
         atomic_write_text(dest,
                           json.dumps(settings, ensure_ascii=False, indent=2) + "\n")
-        print(f"Записано: {dest}")
+        print(f"Recorded: {dest}")
 
     if added:
-        print(f"Включены: {' '.join(added)}")
+        print(f"Included: {' '.join(added)}")
     if skipped_false:
-        print(f"Пропущены (явный false): {' '.join(skipped_false)}")
+        print(f"Skipped (explicit false): {' '.join(skipped_false)}")
     if drift:
-        print(f"NOTE: включены сверх профиля (не трогаю): {' '.join(drift)}")
+        print(f"NOTE: included in addition to the profile (I don't touch): {' '.join(drift)}")
 
-    # Миграция со старой CORE-политики (целые бакеты general+oss-dev) на лёгкий core-плагин:
-    # если они остались включёнными ВНЕ активного профиля — теперь это лишний резидентный вес
-    # (их 7 токен-скиллов уже даёт `core`). Подсказываем снять; merge-only — сами не трогаем.
+    # Migration from old CORE-policies (whole buckets general+oss-dev) to easy core-plugin:
+    # if they remain enabled OUTSIDE the active profile - now this is an extra resident weight
+    # (already gives them 7 token skills `core`). We suggest you remove it; merge-only — we don’t touch it ourselves.
     if core_added:
         legacy = [b for b in CORE_BUCKETS
                   if enabled.get(f"{b}@{MARKETPLACE}") and b not in plugins]
         if legacy:
-            print(f"NOTE: старые CORE-бакеты включены сверх профиля: {' '.join(legacy)} — теперь "
-                  f"их заменяет лёгкий '{CORE_PLUGIN}'. Для экономии токенов отключите их в "
-                  f"{settings_file}: \"{legacy[0]}@{MARKETPLACE}\": false (и т.д.)")
+            print(f"NOTE: old CORE-buckets are included in addition to the profile: {' '.join(legacy)} — now "
+                  f"replaces them with light '{CORE_PLUGIN}'. To save tokens, disable them in "
+                  f"{settings_file}: \"{legacy[0]}@{MARKETPLACE}\": false (etc.)")
 
-    # permissions-пресеты (deny мусора + allow стека) в тот же settings-файл
+    # permissions-presets (deny garbage + allow stack) at the same settings-file
     if not opts.get("no_permissions"):
         apply_permissions(env, target, settings_file=settings_file, dry_run=dry_run)
 
@@ -340,10 +340,10 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
             for d in stale:
                 shutil.rmtree(d)
             manifest_file.unlink()
-            print(f"Удалены вендоренные копии: {len(stale)} skill dir(s) + манифест")
+            print(f"Vendor copies removed: {len(stale)} skill dir(s) + manifest")
         else:
-            print(f"NOTE: найдены вендоренные копии ({len(stale)} dir(s) в "
-                  f"{dest_root}) — удалить: --cleanup-vendored")
+            print(f"NOTE: vendor copies found ({len(stale)} dir(s) in "
+                  f"{dest_root}) — delete: --cleanup-vendored")
 
     if opts.get("cleanup_vendored"):
         from .status import (detect_raw_vendor_path, local_channel_entries,
@@ -359,25 +359,25 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
                 local_entries, registry_skill_names(env), enabled_buckets)
             if overlap_dirs:
                 if dry_run:
-                    print(f"NOTE: raw vendor ({raw_path}) перекрывает marketplace: "
-                          f"{' '.join(overlap_dirs)} — удалить: --cleanup-vendored")
+                    print(f"NOTE: raw vendor ({raw_path}) overlaps marketplace: "
+                          f"{' '.join(overlap_dirs)} — delete: --cleanup-vendored")
                 else:
                     removed = remove_raw_vendor_entries(
                         skills_dir, overlap_dirs, dry_run=False)
-                    print(f"Удалены raw vendor-записи ({raw_path}): "
+                    print(f"Deleted raw vendor-records ({raw_path}): "
                           f"{len(removed)} ({', '.join(removed[:8])}"
                           f"{', …' if len(removed) > 8 else ''})")
             elif not legacy_manifest_found:
-                print(f"NOTE: raw vendor ({raw_path}) без пересечений с marketplace "
-                      f"— project-specific записи сохранены")
+                print(f"NOTE: raw vendor ({raw_path}) without intersections with marketplace "
+                      f"— project-specific entries saved")
         prune_orphan_managed_lock(target, dry_run=dry_run)
 
     hub = opts.get("hub", False)
     if hub and not dry_run and not opts.get("native_codex"):
         generate_hub(env, target)
     elif not hub and not dry_run:
-        print("Подсказка: корневой хаб скиллов — skiller update или "
-              "перезапуск с --hub")
+        print("Hint: root skill hub - skiller update or "
+              "restart from --hub")
 
     record = {
         "path": str(target),
@@ -392,15 +392,15 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
     if register and not dry_run:
         upsert_project(env, record)
 
-    print("Далее: перезапустите сессию Claude Code в проекте "
-          "(или /plugin marketplace update swissknifeman)")
+    print("Next: restart the session Claude Code in the project "
+          "(or /plugin marketplace update swissknifeman)")
     return record
 
 
 def _preflight_claude_connect_target(target, opts):
     settings_file = opts.get("file") or "settings.local.json"
     if settings_file not in ("settings.json", "settings.local.json"):
-        die("--file должен быть settings.json или settings.local.json")
+        die("--file should be settings.json or settings.local.json")
     dest = target / ".claude" / settings_file
     if dest.exists():
         try:
@@ -526,8 +526,8 @@ def cmd_connect(env, argv):
               "[--list] [--dry-run] [--hub] [--no-core] [--no-permissions] "
               "[--cleanup-codex-vendored] [--cleanup-codex-links] [--cleanup-codex-equivalent-links] [--cleanup-codex-physical] "
               "[--fix-path] [--native-codex|--native-codex-only]\n"
-              "  --native-codex-only: меняет только project .codex/config.toml по текущему "
-              "профилю; не пишет distribution, permissions или state.")
+              "  --native-codex-only: only changes project .codex/config.toml according to current "
+              "profile; doesn't write distribution, permissions or state.")
         return
     target, _ = resolve_target(env, opts, allow_home_confirm=True)
     do_connect(env, target, opts, fix_path_drift=opts.get("fix_path", False))

@@ -10,21 +10,21 @@ use AzGuard\Concerns\InteractsWithAzScopes;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Entity-scoped роли: роль на конкретный экземпляр модели —
- * пользователь editor в Project A, но без роли в Project B.
- * Накладывается ПОВЕРХ глобальных ролей, не заменяет их.
+ * Entity-scoped roles: role for a specific model instance -
+ * user editor in Project A, but without a role in Project B.
+ * Lays OVER global roles, does not replace them.
  *
- * Use cases: multi-tenant проекты, team-admin на Team,
- * reviewer на Document, owner на любую Eloquent-модель.
+ * Use cases: multi-tenant projects, team-admin on Team,
+ * reviewer on Document, owner to any Eloquent-model.
  *
- * Трейт вешается на сущность-скоуп; User уже использует HasAzGuard.
+ * The trait is attached to a scope entity; User is already using HasAzGuard.
  */
 class Project extends Model
 {
     use InteractsWithAzScopes;
 }
 
-// ── Назначение / снятие / проверка scoped-роли ──────────────────────────────
+// ── Purpose / removal / check scoped-roles ──────────────────────────────
 //
 // use App\AzGuard\App\Roles\EditorRole;
 //
@@ -32,12 +32,12 @@ class Project extends Model
 // $user->removeScopedRole(EditorRole::class, $project);
 // $user->hasScopedRole(EditorRole::class, $project);      // bool
 //
-// ── Проверка scoped-права ───────────────────────────────────────────────────
+// ── Verification scoped-rights ───────────────────────────────────────────────────
 //
-// Порядок резолва hasScopedPermission():
-//   1. Wildcard — глобальная роль с ['*'] → сразу true.
-//   2. Глобальные роли (assignRole) — проверяются первыми.
-//   3. Scoped-роли (assignScopedRole) — для переданной сущности.
+// Resolution order hasScopedPermission():
+//   1. Wildcard — global role with ['*'] → immediately true.
+//   2. Global roles (assignRole) — are checked first.
+//   3. Scoped-roles (assignScopedRole) — for the passed entity.
 //
 // use AzGuard\Facades\AzGuard;
 // use App\AzGuard\App\Permissions\DocumentsPermission;
@@ -46,17 +46,17 @@ class Project extends Model
 //     AzGuard::permission('app', DocumentsPermission::Edit),  // 'app.documents.edit'
 //     $project,
 // )) {
-//     // пользователь может редактировать именно этот проект
+//     // the user can edit this particular project
 // }
 //
-// Gate использует scoped-резолв автоматически, когда вторым аргументом
-// передана сущность:
+// Gate uses scoped-resolve automatically when the second argument
+// entity passed:
 //
 // Gate::allows('app.documents.edit', $project);
 //
-// ── Кеш ─────────────────────────────────────────────────────────────────────
+// ── Cache ─────────────────────────────────────────────────────────────────────
 //
-// Кеш scoped-прав сбрасывается автоматически при assignScopedRole() /
-// removeScopedRole(). Ручной сброс для пользователя:
+// Cache scoped-rights are reset automatically when assignScopedRole() /
+// removeScopedRole(). Manual reset for user:
 //
 // php artisan azguard:cache-reset --user=42

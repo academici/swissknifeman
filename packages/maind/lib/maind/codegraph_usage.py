@@ -99,11 +99,11 @@ def usage_note(snapshot):
     totals = snapshot.get("totals") or {}
     sessions = int(totals.get("sessions") or 0)
     if sessions <= 0:
-        return "нет run-report'ов"
+        return "no run-report'ov"
     code_sessions = int(totals.get("code_sessions") or 0)
     calls = int(totals.get("calls") or 0)
     pct = 100 * code_sessions / sessions if sessions else 0
-    return f"{code_sessions}/{sessions} сессий ({pct:.0f}%), calls={calls}"
+    return f"{code_sessions}/{sessions} sessions ({pct:.0f}%), calls={calls}"
 
 
 def format_project_line(row, code_enabled: bool):

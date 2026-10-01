@@ -1,6 +1,6 @@
 {
   "name": "polyglot-node-php",
-  "description": "Полиглот-стек Node + PHP: общая инженерия + PHP-бэкенд (пакеты) + фронтенд (Vue) + мост фронт↔бэк + DevOps. Node-фронт покрывают frontend-бакеты (отдельного бакета node нет).",
+  "description": "Polyglot stack Node + PHP: general engineering + PHP-backend (packages) + frontend (Vue) + bridge front↔back + DevOps. Node-front cover frontend-buckets (separate bucket node no).",
   "buckets": [
     "architect",
     "oss-dev",

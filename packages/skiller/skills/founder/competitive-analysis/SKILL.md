@@ -92,8 +92,8 @@ Place in `docs/01_Business/02_Competitive_Analysis.md` or `docs/01_Business/03_C
 
 Mandatory positioning table at the end:
 ```
-Наш продукт vs рынок:
-[ось X] vs [ось Y] — где мы стоим
+Our product vs market:
+[axis X] vs [axis Y] — where we stand
 ```
 
 ## Related skills

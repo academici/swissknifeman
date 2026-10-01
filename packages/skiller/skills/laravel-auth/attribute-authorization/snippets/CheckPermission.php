@@ -10,11 +10,11 @@ use Attribute;
 use UnitEnum;
 
 /**
- * Декларативная проверка прав на уровне метода контроллера.
+ * Declarative permission check at the controller method level.
  *
- * Повторяемый (IS_REPEATABLE) — на один экшен можно навесить несколько
- * проверок, все они должны пройти. Цель — TARGET_METHOD: атрибут читается
- * middleware через ReflectionMethod, а не самим контроллером.
+ * Repeatable (IS_REPEATABLE) — you can attach several to one action
+ * checks, they all must pass. Goal - TARGET_METHOD: attribute read
+ * middleware via ReflectionMethod, and not the controller itself.
  *
  * @example
  *   #[CheckPermission(Permission::ViewOrder, arguments: ['order'])]
@@ -25,13 +25,13 @@ use UnitEnum;
 final readonly class CheckPermission
 {
     /**
-     * @param  UnitEnum  $permission  enum-право; в Gate уходит $permission->value
-     * @param  list<string>  $arguments  имена параметров маршрута, которые
-     *                                    резолвятся и передаются в Gate::allows
-     *                                    как аргументы (обычно — Model из
+     * @param  UnitEnum  $permission  enum-right; in Gate leaves $permission->value
+     * @param  list<string>  $arguments  names of route parameters that
+     *                                    are resolved and sent to Gate::allows
+     *                                    as arguments (usually - Model from
      *                                    route-model binding)
-     * @param  int  $status  HTTP-статус для abort при отказе (403 / 404 / 401)
-     * @param  string|null  $message  сообщение для abort; null → пустая строка
+     * @param  int  $status  HTTP-status for abort on failure (403 / 404 / 401)
+     * @param  string|null  $message  message for abort; null → empty string
      */
     public function __construct(
         public UnitEnum $permission,

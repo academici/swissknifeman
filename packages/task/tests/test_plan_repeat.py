@@ -49,9 +49,9 @@ supersedes: []
 superseded_by: null
 ---
 # Repeat
-## Решение
+## Solution
 [REPEAT-ADMISSION:{plan_repeat.digest(self.record)}]
-## Почему
+## Why
 Explicit owner instruction.
 ''')
         self.before = (self.plan/'journal.jsonl').read_bytes()
@@ -109,13 +109,13 @@ Explicit owner instruction.
 
 **Next:** waiting: authorized repeat scope complete
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |:--|:--|
 | Batch | — |
 | Model | gpt-6-sol |
 | Thinking | medium |
 | Context | continue-root |
-| Суть | Repeat done |
+| The bottom line | Repeat done |
 
 **Done:** repeat complete
 **Remaining:** none

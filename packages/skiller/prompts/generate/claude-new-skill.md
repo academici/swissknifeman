@@ -1,24 +1,24 @@
-# Claude: генерация нового скилла
+# Claude: generation of a new skill
 
-Создай новый скилл для swissknifeman. **Сначала** проверь, что он не дублирует
-существующий (иначе расширяй существующий — анти-bloat).
+Create a new skill for swissknifeman. **First** check that it is not a duplicate
+existing (otherwise expand the existing one - anti-bloat).
 
-## Параметры (заполнить перед отправкой)
-- Bucket: [существующий бакет из `skills/`]
-- Name: [kebab-case, == имя каталога]
-- Задача: [1–2 предложения — что делает и когда применять]
+## Parameters (fill out before sending)
+- Bucket: [existing bucket from `skills/`]
+- Name: [kebab-case, == directory name]
+- Task: [1–2 suggestions - what it does and when to use it]
 - Risk: [read / draft / write / external]
-- Зависимости: [`requires` — список или «нет»]
+- Dependencies: [`requires` — list or «no»]
 
-## Требования
-1. Frontmatter строго по схеме: `name`, `bucket`, `version: 0.1.0`, `description`,
+## Requirements
+1. Frontmatter strictly according to the scheme: `name`, `bucket`, `version: 0.1.0`, `description`,
    `risk`, `persona`, `tags`, `requires`, `produces_for`, `outputs`, `snippets`,
-   `adapters: [claude, cursor, fable]`, `sha256: ""` (заполнит `skiller registry`).
-2. `description` — конкретное и компактное: оно резидентно в каждом запросе (ярус-0).
-3. Секции тела: «Контекст» (когда/зачем), «Алгоритм», «Выходные данные», «Чеклист».
-4. Тело лаконично (ориентир ≤150 строк); объёмные примеры — в `snippets/`.
-5. Без имён конкретных проектов/пакетов и без захардкоженных имён моделей в теле.
-6. Язык — русский (конвенция реестра).
+   `adapters: [claude, cursor, fable]`, `sha256: ""` (will fill in `skiller registry`).
+2. `description` — specific and compact: it is resident in every request (tier-0).
+3. Body sections: «Context» (when/why), «Algorithm», «Imprint», «Checklist».
+4. The body is laconic (landmark ≤150 lines); voluminous examples - in `snippets/`.
+5. Without specific project names/packages and without hardcoded model names in the body.
+6. Language - Russian (registry convention).
 
-Выведи: содержимое `SKILL.md` + строку с путём `skills/<bucket>/<name>/SKILL.md`.
-После вставки — `skiller registry` и `scripts/validate.sh`.
+Output: contents `SKILL.md` + string with path `skills/<bucket>/<name>/SKILL.md`.
+After insertion - `skiller registry` and `scripts/validate.sh`.

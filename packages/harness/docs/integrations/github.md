@@ -1,23 +1,23 @@
 # GitHub MCP
 
-## Что это
+## What is this
 
-Официальный GitHub MCP-сервер: управление Issues, Pull Requests, репозиториями и Actions
-прямо из агента, без переключения на `gh`.
+Official GitHub MCP-server: control Issues, Pull Requests, repositories and Actions
+directly from the agent, without switching to `gh`.
 
-- Репозиторий: <https://github.com/github/github-mcp-server>
-- Варианты: **remote** (хостит GitHub, `https://api.githubcopilot.com/mcp/`) или локальный
+- Repository: <https://github.com/github/github-mcp-server>
+- Options: **remote** (hosts GitHub, `https://api.githubcopilot.com/mcp/`) or local
   Docker (`ghcr.io/github/github-mcp-server`)
 
-## Установка
+## Installation
 
-Пресетом (opt-in) — поставляется remote-вариант (без Docker и токенов в файле):
+Preset (opt-in) — supplied remote-option (without Docker and tokens in the file):
 
 ```bash
 skiller integrate --mcp github
 ```
 
-Пресет — `configs/claude-code/mcp/github.json`:
+Preset - `configs/claude-code/mcp/github.json`:
 
 ```json
 {
@@ -26,12 +26,12 @@ skiller integrate --mcp github
 }
 ```
 
-Аутентификация — OAuth при первом обращении (или Bearer-PAT через заголовок
-`Authorization`). Локальный вариант — Docker с `GITHUB_PERSONAL_ACCESS_TOKEN`.
+Authentication - OAuth on first call (or Bearer-PAT via header
+`Authorization`). Local option - Docker with `GITHUB_PERSONAL_ACCESS_TOKEN`.
 
-## Ограничения и альтернатива
+## Limitations and alternative
 
-- Remote-сервер требует доступа к GitHub и аккаунта с нужными правами.
-- В проектах academici git-процесс уже закрыт скиллами `oss-dev/github-flow` +
-  `oss-dev/gh-review` поверх `gh` CLI. GitHub MCP полезен, когда нужно дать агенту прямые
-  инструменты GitHub без shell — взвесь против привычного `gh`.
+- Remote-server requires access to GitHub and an account with the necessary rights.
+- In projects academici git-process has already been closed by skills `oss-dev/github-flow` +
+  `oss-dev/gh-review` on top `gh` CLI. GitHub MCP is useful when you need to give the agent direct
+  tools GitHub without shell — suspension vs. usual `gh`.

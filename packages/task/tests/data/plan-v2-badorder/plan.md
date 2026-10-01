@@ -1,11 +1,11 @@
-# plan-v2 — Демо-план
+# plan-v2 - Demo plan
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Plan ID | plan-v2 |
-| Title | Демо-план |
+| Title | Demo plan |
 | Layout | v2 |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
@@ -20,18 +20,18 @@
 
 ## 1. Context
 
-Демо для unittest plan_lint.
+Demo for unittest plan_lint.
 
 ## 2. Execution Rules
 
-- Один item за раз.
+- One item at a time.
 
 ## 3. Routing
 
-| Items | Model class/effort | Exec | Почему |
+| Items | Model class/effort | Exec | Why |
 |:--|:--|:--|:--|
 | P1.1 | implementation/medium | run | fixture v2 |
 
 ## 5. Decision Log
 
-Каталог решений: `decisions/`; собрать: `python3 packages/task/scripts/plan-views.py decisions`.
+Solutions catalog: `decisions/`; build: `python3 packages/task/scripts/plan-views.py decisions`.

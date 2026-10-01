@@ -1,24 +1,24 @@
 #!/usr/bin/env bash
-# swissknifeman — корневой управляющий слой зонтика (router + setup-фасад).
-# Зонтик = единое управление; пакеты = возможности. Тонкий диспетчер: знает три
-# пакета и кросс-пакетный онбординг, сам логику не реализует (делегирует).
+# swissknifeman — umbrella root control layer (router + setup-facade).
+# Umbrella = unified control; packages = capabilities. Subtle dispatcher: knows three
+# package and cross-package onboarding, does not implement the logic itself (delegates).
 #
-# Группы (канонично):
-#   skills <args>   → skiller  (реестр скиллов: connect, vendor, registry, …)
-#   env <args>      → harness  (окружение: permissions, mcp, hooks — полный passthrough)
-#   maind <args>    → maind    (хаб: memory, graph, onboard, deploy, sync, health, …)
-#   analyst <args>  → analyst  (обучение: digest, review, promote, deprecate, doctor)
-#   setup <project> → maind onboard (полный онбординг: скиллы+окружение+память+граф)
-#   setup --machine → scripts/bootstrap-machine.sh (развёртывание машины одной командой)
-#   doctor          → диагностика всех пакетов (fan-out)
-#   status [<id>]   → единый 4-слойный инвентарь проекта/флота (maind projects status:
-#                     skills+packs+mcp+память + drift→fix); bare/--target → skiller status
-#   wf <args>       → harness   (детальный статус фонового workflow-прогона: wf status)
-#   release <args>  → skiller   (предложение релиза монорепо: [Unreleased]+conventional commits)
+# Groups (canonical):
+#   skills <args>   → skiller  (skill registry: connect, vendor, registry, …)
+#   env <args>      → harness  (environment: permissions, mcp, hooks — full passthrough)
+#   maind <args>    → maind    (hub: memory, graph, onboard, deploy, sync, health, …)
+#   analyst <args>  → analyst  (training: digest, review, promote, deprecate, doctor)
+#   setup <project> → maind onboard (full onboarding: skills+environment+memory+graph)
+#   setup --machine → scripts/bootstrap-machine.sh (deploying a machine with one command)
+#   doctor          → diagnostics of all packages (fan-out)
+#   status [<id>]   → single 4-layer project inventory/fleet (maind projects status:
+#                     skills+packs+mcp+memory + drift→fix); bare/--target → skiller status
+#   wf <args>       → harness   (detailed background status workflow-run: wf status)
+#   release <args>  → skiller   (monorepo release proposal: [Unreleased]+conventional commits)
 #   release-fleet   → validated local post-tag delivery + fleet sync (never pushes/publishes)
-#   -V, --version   → версия зонтика (git describe)
+#   -V, --version   → umbrella version (git describe)
 #
-# Back-compat: исторические команды swissknifeman = skiller (алиас сохранён):
+# Back-compat: historical commands swissknifeman = skiller (alias saved):
 #   connect vendor integrate update init sync lock status list registry topology
 set -euo pipefail
 
@@ -31,9 +31,9 @@ ANALYST="$ROOT/packages/analyst/bin/analyst"
 
 usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,20p'; }
 
-need() {  # $1 — путь к лаунчеру пакета
-  [[ -x "$1" ]] || { echo "ERROR: не найден лаунчер пакета: $1" >&2
-    echo "Репозиторий повреждён/неполон — перезапустите ./install.sh." >&2; exit 1; }
+need() {  # $1 — path to package launcher
+  [[ -x "$1" ]] || { echo "ERROR: package launcher not found: $1" >&2
+    echo "Repository is corrupted/is incomplete - restart ./install.sh." >&2; exit 1; }
 }
 
 CMD="${1:-help}"
@@ -55,29 +55,29 @@ case "$CMD" in
     fi
     need "$MAIND"; exec "$MAIND" onboard "$@" ;;
   doctor)
-    # fan-out на все пакеты. НЕ через need() — он бьёт exit 1 на первом же
-    # отсутствующем лаунчере и не даёт проверить остальные; здесь агрегируем rc.
+    # fan-out for all packages. NOT through need() — he hits exit 1 on the first
+    # missing launcher and does not allow you to check the others; here we aggregate rc.
     rc=0
     for entry in "skiller:$SKILLER" "harness:$HARNESS" "maind:$MAIND" "analyst:$ANALYST"; do
       name="${entry%%:*}"; pkg="${entry#*:}"
       echo "== $name =="
       if [[ -x "$pkg" ]]; then "$pkg" doctor || rc=$?
-      else echo "ERROR: не найден лаунчер пакета: $pkg" >&2; rc=1; fi
+      else echo "ERROR: package launcher not found: $pkg" >&2; rc=1; fi
       echo
     done
     exit "$rc" ;;
   status)
-    # Зонтичный status: <project-id> или --all/--namespace/--project → единый 4-слойный
-    # инвентарь (maind projects status: skills+packs+mcp+память + drift→fix). Без аргумента
-    # или со skiller-флагом (--target/--json) → skiller status (back-compat: скиллы проекта).
+    # Umbrella status: <project-id> or --all/--namespace/--project → single 4-layer
+    # inventory (maind projects status: skills+packs+mcp+memory + drift→fix). No argument
+    # or with skiller-flag (--target/--json) → skiller status (back-compat: project skills).
     shift; first="${1:-}"
     case "$first" in
       --all|--namespace|--project) need "$MAIND"; exec "$MAIND" projects status "$@" ;;
       ""|-*)                       need "$SKILLER"; exec "$SKILLER" status "$@" ;;
       *) need "$MAIND"; shift; exec "$MAIND" projects status --project "$first" "$@" ;;
     esac ;;
-  # back-compat: старый алиас swissknifeman → skiller (онбордженные проекты/привычка)
+  # back-compat: old alias swissknifeman → skiller (onboarded projects/habit)
   connect|vendor|integrate|update|init|sync|lock|list|registry|topology)
     need "$SKILLER"; exec "$SKILLER" "$@" ;;
-  *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
+  *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
 esac

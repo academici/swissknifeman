@@ -126,15 +126,15 @@ Link: capacity_plan → required spend → must fit founder/PM budget. If not �
 ```markdown
 # Capacity Plan: [ProjectName] — [Quarter/Year]
 
-## 1. Текущая нагрузка (snapshot по 8 measurement dimensions)
-## 2. Bottleneck analysis (где упрёмся первым)
+## 1. Current load (snapshot 8 each measurement dimensions)
+## 2. Bottleneck analysis (where we will rest first)
 ## 3. Headroom policy (per service)
 ## 4. Forecast (tactical / quarterly / annual)
 ## 5. Autoscaling policy (per service)
 ## 6. Cost budget (current spend + projected)
-## 7. Pre-event protocols (для известных событий — BF, launches)
-## 8. Review cadence (как часто пересматриваем — обычно quarterly)
-## 9. Open risks / known limits (что не сможем масштабировать — например, monolithic DB)
+## 7. Pre-event protocols (for known events - BF, launches)
+## 8. Review cadence (how often we review - usually quarterly)
+## 9. Open risks / known limits (that we will not be able to scale - for example, monolithic DB)
 ```
 
 ## Hard prohibitions

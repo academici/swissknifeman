@@ -31,7 +31,7 @@ TERMINAL_STATUSES = frozenset(
 _PRODUCER_RE = re.compile(r"(?:^|[\s(;,])producer\s*[:=]\s*(P\d+\.\d+)\b", re.IGNORECASE)
 _MIGRATION_RE = re.compile(r"(?:layout[\s-]*v2|v1\s*(?:→|->|to)\s*v2)", re.IGNORECASE)
 _VERSION_RE = re.compile(
-    r"^\*\*(?:Version|Версия):\*\*\s*`?([0-9]+\.[0-9]+\.[0-9]+)`?\s*$", re.MULTILINE)
+    r"^\*\*(?:Version|Version):\*\*\s*`?([0-9]+\.[0-9]+\.[0-9]+)`?\s*$", re.MULTILINE)
 _THRESHOLD_RE = re.compile(r"estimated_required_read_tokens\(i\)\s*<=\s*(\d+)")
 
 
@@ -74,16 +74,16 @@ def load_contract(plan_dir) -> dict:
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as exc:
-        raise AdmissionError(f"контракт read-budget не читается: {path}: {exc}") from exc
+        raise AdmissionError(f"contract read-budget is not readable: {path}: {exc}") from exc
     version = _VERSION_RE.search(text)
     thresholds = {int(value) for value in _THRESHOLD_RE.findall(text)}
     if version is None or len(thresholds) != 1:
         raise AdmissionError(
-            f"контракт read-budget не несёт однозначные Version/порог D2(a): {path}")
+            f"contract read-budget does not carry unambiguous Version/threshold D2(a): {path}")
     version_value = version.group(1)
     if tuple(int(part) for part in version_value.split(".")) < (1, 1, 0):
         raise AdmissionError(
-            f"контракт read-budget не несёт stage-aware admission >= 1.1.0: {path}")
+            f"contract read-budget does not carry stage-aware admission >= 1.1.0: {path}")
     return {"path": str(path), "version": version_value,
             "item_tokens": thresholds.pop()}
 
@@ -102,7 +102,7 @@ def _journal_facts(plan_dir: Path) -> tuple[int | None, dict[str, int]]:
         try:
             event = json.loads(raw)
         except json.JSONDecodeError as exc:
-            raise AdmissionError(f"журнал невалиден: {path}:{lineno}") from exc
+            raise AdmissionError(f"log is invalid: {path}:{lineno}") from exc
         note = str(event.get("note") or "")
         if (activation is None and event.get("item_id") == "layout-v2"
                 and _MIGRATION_RE.search(note)):

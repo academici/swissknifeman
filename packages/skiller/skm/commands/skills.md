@@ -1,18 +1,18 @@
 ---
-description: Выбрать и применить бакеты скиллов skiller в проект — канал connect (Claude marketplace) или vendor (физ.копии для Cursor/др).
+description: Select and apply skill buckets skiller to project - channel connect (Claude marketplace) or vendor (physical copies for Cursor/others).
 argument-hint: "[connect|vendor] [bucket1,bucket2 | --profile P]"
 allowed-tools: Bash(skiller:*)
 ---
-Подбор скиллов проекту через **skiller**. Ввод: «$ARGUMENTS».
-Лаунчер — `skiller` (после `./install.sh`).
+Selection of skills for the project through **skiller**. Input: «$ARGUMENTS».
+Launcher - `skiller` (after `./install.sh`).
 
-## Шаги
-1. **Канал** (ВСЕГДА уточни, если не задан в «$ARGUMENTS»):
-   - `connect` — для **Claude Code**: активация плагин-marketplace, скиллы не копируются (живут в реестре, авто-обновляются);
-   - `vendor` — для **Cursor / других агентов**: физический перенос SKILL.md в проект (`.cursor/skills` / `.ai/skills`).
-2. **Что доступно** — перечисли бакеты реестра (из `buckets.json` / `skills.json` репозитория skiller): architect, php, frontend, devops, quality, operator, pm, founder, python, oss-dev, roles, system, general, blender, imported, generate-skill.
-3. **Выбор** — уточни у пользователя нужные бакеты (или профиль). Это и есть «чекбоксы»: спрашиваешь — собираешь список.
-4. **Применение**:
-   - connect: `skiller connect --plugins <bucket1,bucket2>` (или `--profile <P>`);
-   - vendor: `skiller vendor --agent <claude|cursor|generic>` (набор — из `.swissknifeman/config.json`; для разовой выборки уточни состав).
-5. **Отчёт**: что подключено/скопировано. Для vendor обнови карту: `skiller lock`.
+## Steps
+1. **Channel** (ALWAYS specify if not specified in «$ARGUMENTS»):
+   - `connect` — for **Claude Code**: plugin activationmarketplace, skills are not copied (live in the registry, auto-updated);
+   - `vendor` — for **Cursor / other agents**: physical transfer SKILL.md to the project (`.cursor/skills` / `.ai/skills`).
+2. **What's available** — list registry buckets (from `buckets.json` / `skills.json` repository skiller): architect, php, frontend, devops, quality, operator, pm, founder, python, oss-dev, roles, system, general, blender, imported, generate-skill.
+3. **Select** — check with the user for the required buckets (or profile). This is it «checkboxes»: you ask, you collect a list.
+4. **Application**:
+   - connect: `skiller connect --plugins <bucket1,bucket2>` (or `--profile <P>`);
+   - vendor: `skiller vendor --agent <claude|cursor|generic>` (set - from `.swissknifeman/config.json`; for a one-time sample, specify the composition).
+5. **Report**: what's connected/copied. For vendor update the map: `skiller lock`.

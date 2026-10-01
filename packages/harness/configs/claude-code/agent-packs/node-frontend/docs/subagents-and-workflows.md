@@ -1,49 +1,49 @@
-# Субагенты и dev-loop — {{PACK_PREFIX}} (Vue/Vite frontend)
+# Subagents and dev-loop — {{PACK_PREFIX}} (Vue/Vite frontend)
 
-Этот пак раздал в проект роли-субагенты и последовательный workflow. Стек: Vue/Vite,
-вариант {{VUE_VARIANT}}, менеджер `{{PKG_MANAGER}}`.
+This pack distributed subagent roles and serial workflow. Stack: Vue/Vite,
+option {{VUE_VARIANT}}, manager `{{PKG_MANAGER}}`.
 
-## Роли (`.claude/agents/{{PACK_PREFIX}}-*.md`)
+## Roles (`.claude/agents/{{PACK_PREFIX}}-*.md`)
 
-| Роль | Когда | Инструменты |
+| Role | When | Tools |
 |:--|:--|:--|
-| `component-builder` | одна переиспользуемая UI-единица (SFC + composable) | Edit/Write |
-| `slice-builder` | вертикальный срез страницы/фичи (route→page→store→api) | Edit/Write |
-| `test-writer` | тесты Vitest+test-utils по готовому коду до зелёного | Edit/Write |
-| `reviewer` | read-only ревью: tsc/eslint, типы, структура, a11y | read-only |
-| `spec-writer` (опц.) | tech-spec перед крупной многоэкранной фичей | Write(docs) |
-| `orchestrator` (из `_common`) | разбивка крупной задачи на план Task→@role | read-only |
+| `component-builder` | one reusable UI-unit (SFC + composable) | Edit/Write |
+| `slice-builder` | vertical page slice/features (route→page→store→api) | Edit/Write |
+| `test-writer` | tests Vitest+test-utils according to the finished code until green | Edit/Write |
+| `reviewer` | read-only review: tsc/eslint, types, structure, a11y | read-only |
+| `spec-writer` (opt.) | tech-spec before a major multi-screen feature | Write(docs) |
+| `orchestrator` (from `_common`) | breaking down a large task into a plan Task→@role | read-only |
 
 ## dev-loop
 
-`.claude/workflows/{{PACK_PREFIX}}-dev-loop.js` — на ОДНОЙ ветке по каждому срезу:
-impl → tests-to-green → review-gate. Скоуп срезов задаёт человек:
+`.claude/workflows/{{PACK_PREFIX}}-dev-loop.js` — on ONE branch for each slice:
+impl → tests-to-green → review-gate. The slice scope is set by a person:
 
 ```
 args = { branch: 'feat/...', base: '{{BASE_BRANCH}}', max_slices: 3,
          slices: [ { id, title, goal, acceptance_criteria, skills?, risk? } ] }
 ```
 
-`risk` среза (`LOW|MED|HIGH`) — подсказка для Lean-tiering: impl `LOW→haiku` иначе `sonnet`,
-review `LOW→sonnet · MED→opus/high · HIGH→opus/xhigh`. Нет `risk` → дефолт `MED`. test-writer
-возвращает свою оценку `risk_level`, ею и определяется глубина/модель ревью.
+`risk` slice (`LOW|MED|HIGH`) — hint for Lean-tiering: impl `LOW→haiku` otherwise `sonnet`,
+review `LOW→sonnet · MED→opus/high · HIGH→opus/xhigh`. No `risk` → default `MED`. test-writer
+returns its score `risk_level`, it determines the depth/model review.
 
-## Гейты
+## Gates
 
-- **SubagentStop** → `review-gate.sh` (`REVIEW_GATE_MODE` в `.claude/review-gate.env.ini`):
-  быстрый `{{CHECK_CMD}}`.
-- **PostToolUse** (Edit/Write `*.ts|*.vue`) → `validate-frontend.sh`: advisory, инжектит
-  ошибки tsc/eslint в контекст, НЕ блокирует.
+- **SubagentStop** → `review-gate.sh` (`REVIEW_GATE_MODE` in `.claude/review-gate.env.ini`):
+  fast `{{CHECK_CMD}}`.
+- **PostToolUse** (Edit/Write `*.ts|*.vue`) → `validate-frontend.sh`: advisory, injectitis
+  errors tsc/eslint into context, does NOT block.
 
-## Уроки overnight-прогона (зашиты в workflow — соблюдай и вручную)
+## Lessons overnight-run (are hardwired into workflow — observe and manually)
 
-1. **Один branch на прогон**, хард-кап числа срезов литералом (`DEFAULT_MAX`) — переживает
-   resume; circuit-breaker: 2 не-зелёных подряд → стоп.
-2. **Модель/effort — по РИСКУ, не по умолчанию.** Дешёвые исполняют, дорогая проектирует/
-   арбитрирует (тиры выше). Наследование родительской модели — осознанное исключение, не дефолт.
-3. **Не поллить фоновые агенты** — уведомление о завершении приходит само; циклы опроса /
-   `ScheduleWakeup` жгут контекст-кэш впустую.
-4. **Промпты детерминированы — ради resume-кэша**: никаких timestamp/random; model/effort-
-   override — отдельным параметром вызова (opts завершённых стадий не менять). В большом
-   фан-ауте логируй `budget.remaining()` после волны.
-5. **Параллель — только по независимым файлам** (общая ветка = общее дерево).
+1. **One branch for run**, hard cap number of slices by literal (`DEFAULT_MAX`) — is worried
+   resume; circuit-breaker: 2 non-green in a row → stop.
+2. **Model/effort — by RISK, not by default.** Cheap ones execute, expensive ones design/
+   arbitrates (dashes above). Inheriting a parent model is a deliberate exception, not a default.
+3. **Don't pollute background agents** — completion notification comes automatically; polling cycles /
+   `ScheduleWakeup` burns the context cache in vain.
+4. **Prompts are deterministic - for the sake of resume-cache**: none timestamp/random; model/effort-
+   override — as a separate call parameter (opts do not change completed stages). In the big
+   fan-out log `budget.remaining()` after the wave.
+5. **Parallel - only for independent files** (public thread = general tree).

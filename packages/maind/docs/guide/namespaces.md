@@ -1,82 +1,82 @@
-# Namespaces — изоляция связей
+# Namespaces — connection isolation
 
-Namespace — это **группа проектов**. Внутри группы связи (граф) и память общие; между группами —
-изолированы. Один механизм для систем связывания хаба: **maind-граф** (топология между проектами)
-и **память** (`agent-memory`).
+Namespace — this **group of projects**. Within a communication group (graph) and memory are shared; between groups -
+isolated. One mechanism for hub binding systems: **maind-graph** (topology between projects)
+and **memory** (`agent-memory`).
 
-## Объявление
+## Announcement
 
-Проект объявляет членство полем `namespaces` в `config.json` (maind-only, как `tags`):
+The project declares membership as a field `namespaces` in `config.json` (maind-only, like `tags`):
 
 ```jsonc
 { "id": "flexcrm",  "namespaces": ["axioma"] }
-{ "id": "azguard",  "namespaces": ["axioma", "*"] }   // ещё и общая инфраструктура
+{ "id": "azguard",  "namespaces": ["axioma", "*"] }   // also general infrastructure
 { "id": "diabox",   "namespaces": ["diabox"] }
-{ "id": "legacyapp" }                                  // нет поля → группа default
+{ "id": "legacyapp" }                                  // no field → group default
 ```
 
-| Значение | Смысл |
+| Meaning | Meaning |
 |:--|:--|
-| нет поля / `[]` | неявный `default` → прежнее поведение (всё связано внутри default) |
-| `["axioma"]` | связь только с проектами, у которых тоже есть `axioma` |
-| `["*"]` (wildcard) | общая инфраструктура: связывается со ВСЕМИ группами |
+| no field / `[]` | implicit `default` → old behavior (everything is connected inside default) |
+| `["axioma"]` | connection only with projects that also have `axioma` |
+| `["*"]` (wildcard) | general infrastructure: contacts ALL groups |
 
-Необязательный реестр `namespaces: { axioma: { name, description } }` в `config.json` даёт
-метаданные и подсказки на опечатки; членство задаётся в самих проектах.
+Optional registry `namespaces: { axioma: { name, description } }` in `config.json` gives
+metadata and typo hints; membership is specified in the projects themselves.
 
-## Граф: изоляция в точке создания ребра
+## Graph: isolation at edge creation point
 
-Межпроектное ребро A↔B строится, **только если A и B делят хотя бы один namespace**
-(`namespaces.link_allowed`, применяется в `derive.*`). Поэтому сторы физически не содержат
-меж-namespace мостов, и всё ниже (union, индекс, query) изолируется само; `rebuild_index`
-дублирует гейт как defense-in-depth.
+Cross-project edge A↔B is under construction, **only if A and B share at least one namespace**
+(`namespaces.link_allowed`, applies to `derive.*`). Therefore, stores do not physically contain
+inter-namespace bridges, and lower and lower (union, index, query) isolates itself; `rebuild_index`
+duplicates the gate as defense-in-depth.
 
-## Память: бакеты по namespace
+## Memory: buckets by namespace
 
-Память следует той же модели через scope-бакеты:
+Memory follows the same model via scope-buckets:
 
-| бакет | кто видит |
+| bucket | who sees |
 |:--|:--|
-| `project:<id>` | сам проект (приватно) |
-| `ns:<имя>` | все проекты группы `<имя>` |
-| `global` | вся экосистема (wildcard-инфраструктура + ecosystem-wide) |
+| `project:<id>` | the project itself (private) |
+| `ns:<name>` | all projects of the group `<name>` |
+| `global` | entire ecosystem (wildcard-infrastructure + ecosystem-wide) |
 
-`namespaces` управляет связями графа. Память использует отдельный opt-in
-`memory_namespaces`; seed и обычный recall остаются в `project:<id>`. Общий `ns:<группа>`
-поднимается только явным recall со scope — подробнее → [Память](./memory).
+`namespaces` manages graph connections. Memory uses separate opt-in
+`memory_namespaces`; seed and normal recall remain in `project:<id>`. General `ns:<group>`
+is only raised explicitly recall with scope — more details → [Memory](./memory).
 
-## Команды и пример
+## Commands and example
 
 ```bash
-maind namespaces                          # группы и их проекты-члены
-maind projects list --namespace axioma    # проекты группы
-maind graph --cross --namespace axioma    # межпроектный слой одной группы
-maind sync --namespace axioma --only graph,memory   # фан-аут по группе
+maind namespaces                          # groups and their member projects
+maind projects list --namespace axioma    # group projects
+maind graph --cross --namespace axioma    # cross-project layer of one group
+maind sync --namespace axioma --only graph,memory   # group fan out
 ```
 
-Пример: `flexcrm` и `azguard` в `axioma` — связаны в графе и делят `ns:axioma` память; `diabox`
-в своей группе их не видит. `azguard` с `["axioma","*"]` — мост: виден и в `axioma`, и как общая
-инфраструктура всем.
+Example: `flexcrm` and `azguard` in `axioma` — are connected in a graph and divide `ns:axioma` memory; `diabox`
+doesn't see them in his group. `azguard` with `["axioma","*"]` — bridge: visible in `axioma`, and how general
+infrastructure to everyone.
 
-## Кэш BRAIN-доков в памяти
+## Cache BRAIN-docks in memory
 
-Документы проекта (BRD, архитектура, API-контракты и т.п.) можно закэшировать в память maind,
-чтобы агент поднимал их через `recall` вместо перечитывания файлов при каждом запросе — экономия
-контекста на повторных прогонах. **Команды `maind memory store`/флагов `--key`/`--file` не
-существует** — реальная запись в память идёт через `maind memory remember`, у которой только
-флаги `--project`|`--scope`, `--share`, `--type`, `--json` (см. `lib/maind/memory.py:_cmd_remember`).
-«Ключ» темы документа (`docs:brd`, `docs:architecture`, …) передаётся через `--type`:
+Project documents (BRD, architecture, API-contracts, etc.) can be cached in memory maind,
+so that the agent picks them up through `recall` instead of re-reading files with each request - savings
+context on repeated runs. **Commands `maind memory store`/flags `--key`/`--file` not
+exists** — real writing to memory goes through `maind memory remember`, which only has
+flags `--project`|`--scope`, `--share`, `--type`, `--json` (see `lib/maind/memory.py:_cmd_remember`).
+«Key» document topics (`docs:brd`, `docs:architecture`, …) is transmitted via `--type`:
 
 ```bash
-# записать документ как факт с типом-ключом docs:brd
+# write the document as a fact with a key type docs:brd
 content="$(cat docs-private/dev/BRD.md)"
 maind memory remember --scope project:loqum --type docs:brd "$content"
 
-# вспомнить позже (запрос — по смыслу текста, а не точное совпадение ключа)
+# remember later (query - based on the meaning of the text, not an exact match of the key)
 maind memory recall --scope project:loqum "docs:brd"
 ```
 
-Обёртка над несколькими документами разом — `packages/maind/scripts/cache-brain-docs.sh`:
+Wrapper over several documents at once - `packages/maind/scripts/cache-brain-docs.sh`:
 
 ```bash
 scripts/cache-brain-docs.sh --scope project:loqum \
@@ -84,16 +84,16 @@ scripts/cache-brain-docs.sh --scope project:loqum \
   docs:architecture=docs-private/dev/Architecture_Loqum.md
 ```
 
-Рекомендуемые ключи (`--type`) для проектов с BRAIN-документацией:
+Recommended keys (`--type`) for projects with BRAIN-documentation:
 
-| ключ (`--type`) | что кэшируется |
+| key (`--type`) | what is cached |
 |:--|:--|
-| `docs:brd` | требования и цели (BRD) |
-| `docs:architecture` | архитектура (C4, компоненты) |
-| `docs:api` | API-контракты |
-| `docs:glossary` | глоссарий терминов |
+| `docs:brd` | requirements and goals (BRD) |
+| `docs:architecture` | architecture (C4, components) |
+| `docs:api` | API-contracts |
+| `docs:glossary` | glossary of terms |
 
-Это ручной/скриптовый шаг (не часть `maind onboard`/`sync`) — если понадобится авто-кэширование
-на онбординге, это отдельная доработка `provision/onboard.py`, не описанная здесь.
+This is manual/script step (not part `maind onboard`/`sync`) — if you need auto-caching
+on onboarding, this is a separate modification `provision/onboard.py`, not described here.
 
-Дальше: [Граф кода (Serena) →](./code-graph)
+Next: [Code graph (Serena) →](./code-graph)

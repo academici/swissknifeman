@@ -1,4 +1,4 @@
-"""Тесты mcpconfig — безопасное слияние MCP-конфигов (не затирать чужие серверы)."""
+"""Tests mcpconfig — secure merge MCP-configs (do not overwrite other people's servers)."""
 import json
 import tempfile
 import unittest
@@ -33,7 +33,7 @@ class TestMcpConfig(unittest.TestCase):
             data, _ = merge_server(data, "agentmemory", {"command": "x"})
             write_mcp(p, data)
             servers = json.loads(p.read_text(encoding="utf-8"))["mcpServers"]
-            self.assertIn("laravel-boost", servers)  # чужой сохранён
+            self.assertIn("laravel-boost", servers)  # alien saved
             self.assertIn("agentmemory", servers)
 
     def test_idempotent(self):
@@ -45,7 +45,7 @@ class TestMcpConfig(unittest.TestCase):
         self.assertFalse(c2)
 
     def test_broken_json_raises(self):
-        # Битый JSON → MCPConfigError (вызывающий решает фатальность), файл не трогаем.
+        # Broken JSON → MCPConfigError (caller decides fatality), do not touch the file.
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / ".mcp.json"
             p.write_text("{ broken", encoding="utf-8")
@@ -65,9 +65,9 @@ class TestMcpConfig(unittest.TestCase):
             p.write_text(json.dumps({"mcpServers": {"old": {}}}), encoding="utf-8")
             data, _ = load_mcp(p)
             data, _ = merge_server(data, "new", {"command": "x"})
-            write_mcp(p, data, dry=True)  # ничего не пишет
+            write_mcp(p, data, dry=True)  # does not write anything
             self.assertNotIn("new", json.loads(p.read_text())["mcpServers"])
-            write_mcp(p, data)            # реальная запись + .bak
+            write_mcp(p, data)            # real entry + .bak
             self.assertTrue((Path(tmp) / ".mcp.json.bak").exists())
             self.assertIn("new", json.loads(p.read_text())["mcpServers"])
 
@@ -80,8 +80,8 @@ class TestMcpConfig(unittest.TestCase):
             self.assertFalse(has_server(p, "y"))
 
     def test_write_example_placeholders(self):
-        """write_example: путь проекта → <ABS_PATH_TO_PROJECT>, домашний префикс → <HOME>;
-        реальных абс. путей в .example не остаётся; индирекция ${MAIND_BIN:-maind} сохранена."""
+        """write_example: project path → <ABS_PATH_TO_PROJECT>, home prefix → <HOME>;
+        real abs. paths to .example does not remain; indirection ${MAIND_BIN:-maind} saved."""
         import os
         with tempfile.TemporaryDirectory() as tmp:
             proj = Path(tmp) / "proj"
@@ -99,9 +99,9 @@ class TestMcpConfig(unittest.TestCase):
             self.assertNotIn(str(proj), json.dumps(ex))
 
     def test_write_example_is_idempotent_and_reports_changed(self):
-        """write_example: первый прогон changed=True и пишет файл; повтор на идентичных
-        данных changed=False и НЕ переписывает файл (dry на совпадении ничего не печатает);
-        изменившиеся данные снова дают changed=True и переписывают файл."""
+        """write_example: first run changed=True and writes the file; repeat on identical
+        data changed=False and does NOT overwrite the file (dry does not print anything on the match);
+        the changed data again gives changed=True and overwrite the file."""
         with tempfile.TemporaryDirectory() as tmp:
             proj = Path(tmp) / "proj"
             proj.mkdir()
@@ -110,7 +110,7 @@ class TestMcpConfig(unittest.TestCase):
             ex_path = proj / (".mcp.json" + EXAMPLE_SUFFIX)
             before = ex_path.stat().st_mtime_ns
             self.assertFalse(write_example(proj / ".mcp.json", data, proj))
-            self.assertEqual(ex_path.stat().st_mtime_ns, before)   # не переписан
+            self.assertEqual(ex_path.stat().st_mtime_ns, before)   # not rewritten
             self.assertFalse(write_example(proj / ".mcp.json", data, proj, dry=True))
             other = {"mcpServers": {"maind": {"command": "maind", "args": ["mcp", "--x"]}}}
             self.assertTrue(write_example(proj / ".mcp.json", other, proj, dry=True))
@@ -119,8 +119,8 @@ class TestMcpConfig(unittest.TestCase):
                              ["mcp", "--x"])
 
     def test_reconcile_gitignore(self):
-        """real MCP-конфиг → В .gitignore; его .example → НЕ в .gitignore (даже если был);
-        чужие правила не тронуты; идемпотентно."""
+        """real MCP-config → V .gitignore; him .example → NOT in .gitignore (even if there was);
+        other people's rules are not touched; idempotent."""
         with tempfile.TemporaryDirectory() as tmp:
             proj = Path(tmp)
             (proj / ".gitignore").write_text(".env\n.mcp.json.example\n", encoding="utf-8")
@@ -129,16 +129,16 @@ class TestMcpConfig(unittest.TestCase):
             self.assertIn(".mcp.json", lines)
             self.assertNotIn(".mcp.json.example", lines)
             self.assertIn(".env", lines)
-            self.assertFalse(reconcile_gitignore(proj, ".mcp.json"))  # идемпотентно
+            self.assertFalse(reconcile_gitignore(proj, ".mcp.json"))  # idempotent
 
     def test_check_hygiene_clean(self):
-        """Нет реального файла → нет проблем; есть .example + не трекается → clean."""
+        """No real file → no problem; There is .example + not tracking → clean."""
         with tempfile.TemporaryDirectory() as tmp:
             proj = Path(tmp)
             self.assertEqual(check_hygiene(proj), [])
             (proj / ".mcp.json").write_text("{}", encoding="utf-8")
             (proj / ".mcp.json.example").write_text("{}", encoding="utf-8")
-            self.assertEqual(check_hygiene(proj), [])  # не git-репо → tracked=False, example есть
+            self.assertEqual(check_hygiene(proj), [])  # not git-repo → tracked=False, example yes
 
     def test_check_hygiene_missing_example(self):
         with tempfile.TemporaryDirectory() as tmp:

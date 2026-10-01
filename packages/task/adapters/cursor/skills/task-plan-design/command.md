@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:3fbad6a15d03d2a915b6966739f9124244cad178dd76dcf7f41ecfadfbc113a3
+Canonical SHA-256: sha256:935aada204a20d8c64fffcc115ce12903ff4146460e0096d0afd4ede3e00189b
 Adapter: task.cursor-command/1.0.17
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -60,11 +60,12 @@ does.
 
 For `new`/`from-draft` allocate the identity with
 `python3 scripts/plan-id.py --codename <NAME>` (it scans `plans/` and `plans/archive/`): use the returned
-`plan_id`, `title_prefix` (`План №N —`) and `short_id` (`PLAN<N>`) verbatim, never a guessed `№1`/`PLAN1`;
+`plan_id`, `title_prefix` (`Plan №N -`) and `short_id` (`PLAN<N>`) verbatim, never a guessed `№1`/`PLAN1`;
 re-run it right before writing the plan directory.
 
-Назначай Short ID и оформляй ссылки по `runtime/plan-protocol/references/work-references.md`
-из установленного пакета Task (`PLAN<N>.D35`, `PLAN<N>.P2.3`; legacy: `<PLAN-ID> <local-ID>`).
+Assign the Short ID and format references according to
+`runtime/plan-protocol/references/work-references.md` from the installed Task package
+(`PLAN<N>.D35`, `PLAN<N>.P2.3`; legacy: `<PLAN-ID> <local-ID>`).
 
 Design completion records exactly one semantic Next. A bounded remediation does not manufacture a
 fresh audit/root; only a concrete context-budget, capability, owner-pause, independent review,
@@ -73,7 +74,7 @@ an unauthorized successor. Completion alone does not require a fresh process: us
 and a same-root recommendation; the owner may invoke execution in this session.
 
 Plan the shape of review, not a ritual: item Review defaults to `none` (self-check plus affected
-tests). Independent review is a dedicated read-only item (`Ревью Pn`, numeric `Pn.m`, Deliverable =
+tests). Independent review is a dedicated read-only item (`Review Pn`, numeric `Pn.m`, Deliverable =
 verdict file) at the end of the phase; a large phase gets slice review items between slices. Never
 write `Independent review` into an item's Validation. Routing names a minimum semantic class; the
 Executor/Reviewer cells of the execution sheet are recommended defaults from the provider model
@@ -110,6 +111,6 @@ a persistent diagnostic is a specific reported conflict, not permission for an u
 An applicable terminal-admission lease is a provider adapter concern: design supplies only typed
 continuity and delivery carriers, never free-prose terminal authorization.
 
-For new ordinary Routing groups, start Почему with `recommended:`; ready subsets may execute.
+For new ordinary Routing groups, start with `recommended:`; ready subsets may execute.
 Use `required:` for an explicit atomic/owner-mandated group. Historical unmarked groups stay
 exact until changed through their existing decision carrier.

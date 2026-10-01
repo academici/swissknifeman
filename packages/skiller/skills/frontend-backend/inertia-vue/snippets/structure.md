@@ -1,60 +1,60 @@
 <!-- Source: anonymized production Laravel project -->
 
-# Карта слоёв resources/js (Laravel + Inertia + Vue)
+# Layer map resources/js (Laravel + Inertia + Vue)
 
 ```
 resources/js/
 ├── app.ts                  # entrypoint
-├── pages/                  # роутабельные Inertia-страницы
+├── pages/                  # routeable Inertia-pages
 │   ├── Auth/
-│   ├── Documents/          #   доменные подпапки: List.vue, Show.vue, Edit.vue
+│   ├── Documents/          #   domain subfolders: List.vue, Show.vue, Edit.vue
 │   └── Notifications/
-├── layouts/                # layout-компоненты (AppLayout.vue, GuestLayout.vue)
-├── components/             # Vue-компоненты
-│   ├── document/           #   доменные: DocumentTable.vue, DocumentForm.vue
+├── layouts/                # layout-components (AppLayout.vue, GuestLayout.vue)
+├── components/             # Vue-components
+│   ├── document/           #   domain: DocumentTable.vue, DocumentForm.vue
 │   ├── order/
-│   └── shared/             #   переиспользуемые: Button.vue, Modal.vue
-├── composables/            # use*-функции
+│   └── shared/             #   reusable: Button.vue, Modal.vue
+├── composables/            # use*-functions
 │   ├── document/           #   useDocumentFilters.ts, useDocumentNavigation.ts
 │   └── shared/             #   usePagination.ts, useDebounce.ts
-├── stores/                 # Pinia-сторы (useUserStore.ts)
-├── features/               # фичеспецифичная логика крупнее composable
-│   └── document/           #   экспорт, мастера, мульти-шаговые сценарии
-├── events/                 # шина событий
-│   ├── adapters/           #   подключение транспортов (websocket и т.п.)
-│   ├── sideEffects/        #   реакции на события (тосты, инвалидация)
+├── stores/                 # Pinia-stories (useUserStore.ts)
+├── features/               # feature-specific logic is larger composable
+│   └── document/           #   export, wizards, multi-step scripts
+├── events/                 # event bus
+│   ├── adapters/           #   connecting transports (websocket etc.)
+│   ├── sideEffects/        #   reactions to events (toasts, invalidation)
 │   └── plugins/
-├── types/                  # TS-типы, .d.ts
-├── actions/                # АВТОГЕН Wayfinder (controller actions) — не править
-├── routes/                 # АВТОГЕН Wayfinder (именованные роуты) — не править
-├── wayfinder/              # АВТОГЕН Wayfinder (внутренности) — не править
-├── shared/                 # кросс-доменные модули (не компоненты и не composables)
-├── utils/                  # чистые функции без состояния (formatDate.ts)
-├── config/                 # константы фронтенда
-└── tests/                  # Vitest, зеркало структуры:
+├── types/                  # TS-types, .d.ts
+├── actions/                # AUTOGENE Wayfinder (controller actions) — do not edit
+├── routes/                 # AUTOGENE Wayfinder (named routes) — do not edit
+├── wayfinder/              # AUTOGENE Wayfinder (internals) — do not edit
+├── shared/                 # cross-domain modules (are not components or composables)
+├── utils/                  # pure stateless functions (formatDate.ts)
+├── config/                 # frontend constants
+└── tests/                  # Vitest, structure mirror:
     ├── components/document/
     ├── composables/document/
     └── events/
 ```
 
-## Что куда кладём
+## What do we put where?
 
-| Хочу добавить | Слой | Пример пути |
+| I would like to add | Layer | Example path |
 |:---|:---|:---|
-| Новую страницу со своим URL | `pages/<Домен>/` | `pages/Documents/Show.vue` |
-| Обёртку страниц (шапка/сайдбар) | `layouts/` | `layouts/AppLayout.vue` |
-| Компонент одного домена | `components/<домен>/` | `components/document/DocumentTable.vue` |
-| Компонент для всех доменов | `components/shared/` | `components/shared/ConfirmModal.vue` |
-| Переиспользуемую реактивную логику | `composables/<домен или shared>/` | `composables/document/useDocumentFilters.ts` |
-| Глобальное состояние | `stores/` | `stores/useUserStore.ts` |
-| Многошаговый сценарий / крупную фичу | `features/<домен>/` | `features/document/export/` |
-| Реакцию на событие шины | `events/sideEffects/` | `events/sideEffects/showToastOnDocumentSaved.ts` |
-| Тип/интерфейс | `types/` | `types/document.ts` |
-| Функцию-хелпер без состояния | `utils/` | `utils/formatDate.ts` |
-| Тест | `tests/` (зеркало) | `tests/composables/document/useDocumentFilters.test.ts` |
+| New page with your URL | `pages/<Domain>/` | `pages/Documents/Show.vue` |
+| Page wrapper (hat/sidebar) | `layouts/` | `layouts/AppLayout.vue` |
+| Single Domain Component | `components/<domain>/` | `components/document/DocumentTable.vue` |
+| Component for all domains | `components/shared/` | `components/shared/ConfirmModal.vue` |
+| Reusable reactive logic | `composables/<domain or shared>/` | `composables/document/useDocumentFilters.ts` |
+| Global state | `stores/` | `stores/useUserStore.ts` |
+| Multi-step script / major feature | `features/<domain>/` | `features/document/export/` |
+| Reaction to bus event | `events/sideEffects/` | `events/sideEffects/showToastOnDocumentSaved.ts` |
+| Type/interface | `types/` | `types/document.ts` |
+| Stateless helper function | `utils/` | `utils/formatDate.ts` |
+| Test | `tests/` (mirror) | `tests/composables/document/useDocumentFilters.test.ts` |
 
-## Правила
+## Rules
 
-- Доменные подпапки внутри каждого слоя; общее — `shared/`.
-- `actions/`, `routes/`, `wayfinder/` генерируются `php artisan wayfinder:generate` / vite-плагином — любые ручные правки будут перезаписаны.
-- Доменные компоненты не импортируют `@/wayfinder/routes/*` напрямую — через composables/actions (см. скилл `frontend-wayfinder/wayfinder`).
+- Domain subfolders within each layer; general - `shared/`.
+- `actions/`, `routes/`, `wayfinder/` are generated `php artisan wayfinder:generate` / vite-plugin - any manual edits will be overwritten.
+- Domain components are not imported `@/wayfinder/routes/*` directly - via composables/actions (see skill `frontend-wayfinder/wayfinder`).

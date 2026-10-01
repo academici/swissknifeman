@@ -1,209 +1,209 @@
-# Внутренние соглашения: spl, pts, bounding box
+# Internal agreements: spl, pts, bounding box
 
-## Сплайн `spl` — что внутри
+## Spline `spl` — what's inside
 
-`build_spline(knots)` возвращает тройку `(zs, rs, ms)`:
+`build_spline(knots)` returns three `(zs, rs, ms)`:
 
-| Поле | Тип | Смысл |
+| Field | Type | Meaning |
 |---|---|---|
-| `zs` | `list[float]` | z-координаты узлов (мм, мировые) |
-| `rs` | `list[float]` | r-координаты узлов (мм) |
-| `ms` | `list[float]` | касательные Monotone Cubic Hermite в каждом узле |
+| `zs` | `list[float]` | z-node coordinates (mm, world) |
+| `rs` | `list[float]` | r-node coordinates (mm) |
+| `ms` | `list[float]` | tangents Monotone Cubic Hermite in each node |
 
-Переменная называется `spl` везде по коду. При отладке можно распаковать: `zs, rs, ms = spl`.
+The variable is called `spl` everywhere in the code. When debugging, you can unpack: `zs, rs, ms = spl`.
 
-`profile_r(spl, z)` → радиус профиля в миллиметрах на высоте z.  
-Поиск нужного сегмента — O(log n) через `bisect`.
+`profile_r(spl, z)` → profile radius in millimeters at height z.
+Search for the desired segment - O(log n) via `bisect`.
 
 ---
 
-## Профиль `pts` — порядок точек и замкнутость
+## Profile `pts` — point order and closure
 
-Профиль — контур в плоскости XZ (r, z), все значения в **мм**. Правила:
+Profile - contour in plane XZ (r, z), all values in **mm**. Rules:
 
-- Точки идут **по часовой стрелке** при взгляде с оси +Y (стандарт Blender SCREW)
-- Начало: обычно **наружный низ** `(r_outer, z_bottom)`
-- Ход: наружный контур вверх → верхний торец внутрь → внутренний контур вниз
-- `build_revolved_solid` замыкает последнюю точку с первой автоматически через `bm.edges.new((vs[-1], vs[0]))`
+- The dots are coming **clockwise** viewed from axis +Y (standard Blender SCREW)
+- Start: usually **outer bottom** `(r_outer, z_bottom)`
+- Stroke: outer contour up → top end inward → inner contour down
+- `build_revolved_solid` closes the last point with the first automatically through `bm.edges.new((vs[-1], vs[0]))`
 
-**Правило замыкания:** НЕ добавлять точку, **совпадающую с первой по координатам** — это создаёт дублирующее ребро. После `bisect use_fill=True` дублирующее ребро даёт артефакт: полупрозрачная перегородка на плоскости разреза.
+**Closure rule:** DO NOT add a period, **coinciding with the first one in coordinates** — this creates a duplicate edge. After `bisect use_fill=True` the duplicate edge produces an artifact: a translucent partition on the cut plane.
 
-**Нормали:** при обходе по часовой (взгляд с +Y) Screw автоматически создаёт нормали, направленные **наружу**. Дополнительная операция «пересчёт нормалей» не нужна — если профиль корректен, нормали правильные. Тёмные пятна в тех-виде (кадр A) после `revolve_profile` — признак неправильного обхода `pts`; исправление: перевернуть список точек (`pts[::-1]`, затем скорректировать стартовую точку под правило «наружный низ»).
+**Normals:** when walking clockwise (look from +Y) Screw automatically creates normals directed **out**. Additional operation «recalculation of normals» is not needed - if the profile is correct, the normals are correct. Dark spots in tech form (frame A) after `revolve_profile` — sign of incorrect bypass `pts`; fix: reverse list of points (`pts[::-1]`, then adjust the starting point to the rule «outer bottom»).
 
-Нижний торец **добавлять явно** только если он несёт самостоятельную геометрию (Г-паз, ступень, фаска). Если нижний торец — просто горизонтальная грань от последней точки к первой — Screw её создаст сам, добавлять не нужно.
+Bottom end **add explicitly** only if it carries independent geometry (G-groove, step, chamfer). If the bottom end is just a horizontal edge from the last point to the first - Screw will create it itself, no need to add it.
 
-**Два типичных случая:**
+**Two typical cases:**
 
 ```
-# Простая трубка — нижний торец Screw создаёт сам:
+# Simple tube - bottom end Screw creates itself:
 (r_outer, 0)  →  (r_outer, h)  →  (r_inner, h)  →  (r_inner, 0)
-                                              ↑ последняя точка ≠ первой — всё корректно
+                                              ↑ last dot ≠ first - everything is correct
 
-# Тело с Г-пазом внизу — нижний торец добавляется явно:
-(r_tube_outer, 0)  →  ... наружный контур вверх ...  →  ... внутренний контур вниз ...
+# Body with an L-slot at the bottom - the bottom end is added explicitly:
+(r_tube_outer, 0)  →  ... outer contour up...  →  ... inner contour down...
   →  (r_groove_out, mount_h)  →  (r_groove_out, z_bg_bot)  →  (r_tube_outer, z_bg_bot)
-  →  (r_tube_outer, 0)   ← явная последняя точка: другие координаты по R, чем у самого паза
+  →  (r_tube_outer, 0)   ← explicit last point: other coordinates by R, than the groove itself
 ```
 
 ---
 
-## Non-manifold: признаки плохого профиля и диагностика
+## Non-manifold: signs of a bad profile and diagnosis
 
-`revolve_profile` + boolean могут дать non-manifold геометрию. Большинство проблем возникает **до** boolean — в самом профиле `pts`.
+`revolve_profile` + boolean can give non-manifold geometry. Most problems arise **to** boolean — in the profile itself `pts`.
 
-### Запрещённые состояния профиля
+### Prohibited profile states
 
-| Ситуация | Последствие | Как избежать |
+| Situation | Consequence | How to avoid |
 |----------|-------------|--------------|
-| `r < 0` | вершины уходят за ось, меш вывернут | всегда `r = max(r, 0)` |
-| `r = 0` не на острие | вырожденное ребро на оси Z (все точки сходятся в линию) | `r = 0` только в последней точке носа |
-| два соседних `(r, z)` идентичны | коллапс ребра, loose vertex | убираются автоматически в `revolve_profile`, но говорят об ошибке логики |
-| точка `pts[-1]` совпадает с `pts[0]` | дублирующее ребро → артефакт после bisect | не добавлять последнюю точку если профиль уже геометрически замкнут |
-| профиль самопересекается (внутренний контур выходит за наружный) | перевёрнутые грани внутри меша | проверять `r_inner < r_outer` на всём диапазоне Z |
+| `r < 0` | vertices go beyond the axis, mesh is turned inside out | always `r = max(r, 0)` |
+| `r = 0` not on point | degenerate edge on the axis Z (all points converge into a line) | `r = 0` only at the last point of the nose |
+| two adjacent `(r, z)` identical | rib collapse, loose vertex | are removed automatically in `revolve_profile`, but they say there is a logic error |
+| dot `pts[-1]` matches `pts[0]` | duplicate edge → artifact after bisect | do not add the last point if the profile is already geometrically closed |
+| profile self-intersects (inner contour extends beyond the outer one) | flipped faces inside the mesh | check `r_inner < r_outer` throughout the entire range Z |
 
-### Самодиагностика перед отправкой кода в Blender
+### Self-diagnosis before sending code to Blender
 
-Перед `revolve_profile` — мысленно (или в комментарии) проверить:
+Before `revolve_profile` — mentally (or in the comment) check:
 
 ```
-1. Все r >= 0?
-2. r = 0 только на острие (если оно есть)?
-3. Нет двух подряд идентичных точек?
-4. Внутренний контур не выходит за наружный? (r_inner < r_outer везде)
-5. Профиль обходит по часовой при взгляде с +Y?
+1. All r >= 0?
+2. r = 0 only on the tip (if it exists)?
+3. There are no two identical points in a row?
+4. Does the inner contour extend beyond the outer? (r_inner < r_outer everywhere)
+5. The profile moves clockwise when viewed from +Y?
 ```
 
-### После `revolve_profile` — тех-вид (кадр A)
+### After `revolve_profile` — technical view (frame A)
 
-- **Тёмные пятна на поверхности** — инвертированные нормали → обход `pts` неправильный, перевернуть порядок точек
-- **Чёрная дыра на торце** — торец не закрыт: нижний или верхний контур не замкнулся → проверить первую/последнюю точку профиля
-- **Тонкая перегородка на плоскости X=0** — дублирующее ребро (точка `pts[-1]` == `pts[0]`) → убрать последнюю точку
+- **Dark spots on the surface** — inverted normals → bypass `pts` incorrect, reverse the order of points
+- **Black hole at the end** — end is not closed: the lower or upper contour is not closed → check first/last profile point
+- **Thin partition on a plane X=0** — duplicate edge (dot `pts[-1]` == `pts[0]`) → remove the last dot
 
-### После boolean — автоочистка
+### After boolean — auto cleanup
 
-`apply_bool` автоматически удаляет вырожденные грани (`area < 1e-9`), loose edges и loose vertices. Если после этого в тех-виде всё равно видны артефакты — проблема в исходном профиле, не в boolean.
+`apply_bool` automatically removes degenerate faces (`area < 1e-9`), loose edges and loose vertices. If after this you still see artifacts in the technical view, the problem is in the original profile, not in boolean.
 
 ---
 
-## `r_inner_floor` — ограничение внутреннего радиуса
+## `r_inner_floor` — inner radius limitation
 
-При построении внутреннего контура тела вращения с **переменным профилем** всегда ограничивать:
+When constructing the internal contour of a body of revolution with **variable profile** always limit:
 
 ```python
 r_inner = max(profile_r(spl, z) - wall, r_inner_floor)
 ```
 
-Без этого при сужении наружного профиля `r_inner` уйдёт за ось, профиль самопересечётся и тело вращения окажется вывернутым. `r_inner_floor` берётся из `model_config.base_radius`.
+Without this when narrowing the outer profile `r_inner` will go beyond the axis, the profile will intersect itself and the body of rotation will be inverted. `r_inner_floor` is taken from `model_config.base_radius`.
 
 ---
 
-## Геометрическая целостность: нет пустот на стыках
+## Geometric integrity: no voids at joints
 
-Когда составная деталь строится из нескольких `revolve_profile` + UNION, **стыки между ними должны быть без зазоров и перекрытий-артефактов**.
+When a composite part is built from several `revolve_profile` + UNION, **joints between them must be without gaps and overlap artifacts**.
 
-Правила:
+Rules:
 
-1. **Кольцо/фланец присоединяется к основному телу без зазора.** Наружный радиус кольца берётся ровно по профилю тела на той же высоте (`profile_r(spl, z_ring_top)`), а не произвольным числом.
+1. **Ring The/flange is connected to the main body without clearance.** The outer radius of the ring is taken exactly along the profile of the body at the same height (`profile_r(spl, z_ring_top)`), and not an arbitrary number.
 
-2. **Кольцо уходит до оси своего внутреннего радиуса** — весь материал от `ring_inner_r` до внешней стенки тела заполнен. Никаких «воздушных карманов» между кольцом и основным телом.
+2. **The ring extends to the axis of its inner radius** — all material from `ring_inner_r` is filled to the outer body wall. None «air pockets» between the ring and the main body.
 
-3. **UNION корректно сваривает тела** только если они пересекаются (перекрывают друг друга хотя бы на 1 полигон). Если тела только касаются гранями (zero-thickness contact) — boolean может дать артефакт. Всегда давать небольшое перекрытие (0.1–0.5 мм по Z или R).
+3. **UNION welds bodies correctly** only if they intersect (overlap each other by at least 1 polygon). If the bodies only touch their faces (zero-thickness contact) — boolean can give an artifact. Always give a slight overlap (0.1–0.5 mm Z or R).
 
-4. **Проверка после UNION** (визуальная): в режиме cut не должно быть тёмных провалов или полупрозрачных граней на месте стыка кольца и тела. Если есть — значит геометрия не сошлась.
+4. **Check after UNION** (visual): in mode cut there should be no dark gaps or translucent edges at the junction of the ring and the body. If there is, then the geometry does not converge.
 
-Пример для соединительного кольца body.py:
+Example for connecting ring body.py:
 ```python
 ring_pts = [
-    (ring_inner_r,               z_ring_bottom),   # внутренний низ
-    (ring_inner_r,               z_ring_top),       # внутренний верх
-    (profile_r(spl, z_ring_top), z_ring_top),       # внешний верх = профиль тела (нет зазора)
-    (profile_r(spl, z_ring_top), z_ring_bottom),    # внешний низ = профиль тела (нет зазора)
+    (ring_inner_r,               z_ring_bottom),   # inner bottom
+    (ring_inner_r,               z_ring_top),       # inner top
+    (profile_r(spl, z_ring_top), z_ring_top),       # outer top = body profile (no gap)
+    (profile_r(spl, z_ring_top), z_ring_bottom),    # outer bottom = body profile (no gap)
 ]
 ```
 
 ---
 
-## Паттерн составной детали: функции и порядок операций
+## Composite Part Pattern: Functions and Order of Operations
 
-### Структура кода
+### Code structure
 
-Каждая логическая подчасть составной детали строится в **отдельной приватной функции** `_build_*`. Функция `build_*` — только оркестратор: вызывает `_build_*` и склеивает результат.
+Each logical subpart of a composite part is built in **of a separate private function** `_build_*`. Function `build_*` — orchestrator only: calls `_build_*` and merges the result.
 
 ```python
 def build_part(spl, col):
-    """Оркестратор. Только вызовы _build_* и _cut_*. Возвращает все публичные объекты."""
-    shell = _build_shell(spl, col)        # 1. основная оболочка → MESH_Model_Part
-    _cut_joint(shell, spl, col)           # 2. DIFFERENCE: расточка/паз
-    ring  = _build_conn_ring(spl, col)    # 3. отдельный объект → MESH_Model_Part_ConnRing
-    _cut_holes(ring, spl, col)            # 4. DIFFERENCE: гнёзда/отверстия в кольце
-    set_parent(ring, shell)               # 5. parenting — после всех boolean
-    return shell, ring                    # оба объекта — в Outliner, один материал
+    """Orchestrator. Calls only _build_* and _cut_*. Returns all public objects."""
+    shell = _build_shell(spl, col)        # 1. main shell → MESH_Model_Part
+    _cut_joint(shell, spl, col)           # 2. DIFFERENCE: boring/groove
+    ring  = _build_conn_ring(spl, col)    # 3. separate object → MESH_Model_Part_ConnRing
+    _cut_holes(ring, spl, col)            # 4. DIFFERENCE: sockets/holes in the ring
+    set_parent(ring, shell)               # 5. parenting — after all boolean
+    return shell, ring                    # both objects are in Outliner, one material
 
 def _build_shell(spl, col):
-    """Основная оболочка → revolve_profile → MESH_Model_Part."""
+    """Main shell → revolve_profile → MESH_Model_Part."""
     ...
     return revolve_profile("MESH_Model_Part", pts, col, seg)
 
 def _build_conn_ring(spl, col):
-    """Отдельный объект-кольцо → MESH_Model_Part_ConnRing. Без UNION с оболочкой."""
+    """Separate ring object → MESH_Model_Part_ConnRing. Without UNION with shell."""
     ...
     return revolve_profile("MESH_Model_Part_ConnRing", pts, col, seg)
 
 def _cut_joint(shell, spl, col):
-    """Вырезает расточку / паз из оболочки."""
+    """Cuts a boring / groove from the shell."""
     tool = revolve_profile("_part_joint_tool", pts, col, seg)
     blender_bool_apply(shell, tool, 'DIFFERENCE', solver='FLOAT')
 
 def _cut_holes(ring, spl, col):
-    """Вырезает гнёзда / отверстия из кольца (не из оболочки)."""
+    """Cuts out nests / holes from the ring (not from shell)."""
     ...
     blender_bool_apply(ring, tool, 'DIFFERENCE', solver='FLOAT')
 ```
 
-Правила именования функций:
-- `_build_*` — строит геометрию, возвращает самостоятельный `MESH_*`-объект
-- `_cut_*` — вырезает через DIFFERENCE, модифицирует переданный объект, ничего не возвращает
+Function naming rules:
+- `_build_*` — builds geometry, returns self `MESH_*`-object
+- `_cut_*` — cuts through DIFFERENCE, modifies the passed object, returns nothing
 
-Примечание: `_attach_*` (UNION к основному объекту) используется когда подчасть **не** нужна как отдельный объект в Outliner. Если подчасть логически самостоятельна — `_build_*` + отдельный объект (как `ConnRing`).
+Note: `_attach_*` (UNION to the main object) is used when the subpart **not** is needed as a separate object in Outliner. If the subpart is logically independent - `_build_*` + separate object (like `ConnRing`).
 
-### Итоговые объекты в Blender
+### Resulting objects in Blender
 
-Каждая **логически самостоятельная подчасть** получает собственный `MESH_*`-объект и остаётся видимой в Outliner. Промежуточные boolean-инструменты (расточки, гнёзда) именуются с `_` и удаляются автоматически после применения.
+Each **logically independent subpart** gets its own `MESH_*`-object and remains visible in Outliner. Intermediate boolean-tools (borings, sockets) are named with `_` and are deleted automatically after application.
 
-| Тип | Имя | Видим в Outliner |
+| Type | Name | Seen in Outliner |
 |-----|-----|-----------------|
-| Основная оболочка | `MESH_Model_Part` | да |
-| Составная подчасть (кольцо, фланец) | `MESH_Model_Part_ConnRing` | да |
-| Boolean-инструмент (расточка, гнездо) | `_part_joint_tool`, `_part_hole_0` | нет (удаляется) |
+| Main shell | `MESH_Model_Part` | yes |
+| Composite subpart (ring, flange) | `MESH_Model_Part_ConnRing` | yes |
+| Boolean-tool (boring, socket) | `_part_joint_tool`, `_part_hole_0` | no (is removed) |
 
-Подчасть строится в `_build_*`-функции, добавляется в ту же коллекцию, **не** сливается через UNION с основным телом — остаётся отдельным объектом. Parenting (иерархия объектов) — скилл `blender-modeling/scene-conventions`. При финализации оба объекта получают одинаковый материал и обрабатываются как одна деталь.
+The subpart is built in `_build_*`-function is added to the same collection, **not** merges through UNION with the main body - remains a separate object. Parenting (object hierarchy) — skill `blender-modeling/scene-conventions`. When finalized, both objects receive the same material and are processed as one part.
 
-Это позволяет:
-- выбрать кольцо отдельно в Outliner и проверить его размеры через `get_object_info`
-- назначить другой материал при необходимости отладки
-- легко удалить/пересоздать только кольцо, не трогая оболочку
+This allows you to:
+- select the ring separately in Outliner and check its dimensions via `get_object_info`
+- assign different material if debugging is needed
+- easy to remove/recreate only the ring without touching the shell
 
-### Порядок операций — критически важен
+### Order of operations is critical
 
-Сначала все UNION, потом все DIFFERENCE. Если сделать DIFFERENCE раньше UNION — последующий UNION закроет вырезанную полость:
+First things first UNION, then that's it DIFFERENCE. If you do DIFFERENCE before UNION — subsequent UNION will close the cut cavity:
 
 ```python
-# Правильно
-bool_apply(body, ring,   'UNION')       # сначала нарастить
-bool_apply(body, pocket, 'DIFFERENCE')  # потом вырезать
+# Correct
+bool_apply(body, ring,   'UNION')       # build up first
+bool_apply(body, pocket, 'DIFFERENCE')  # then cut
 
-# Неправильно
-bool_apply(body, pocket, 'DIFFERENCE')  # вырезали карман...
-bool_apply(body, ring,   'UNION')       # ...UNION закрыл его обратно
+# Incorrect
+bool_apply(body, pocket, 'DIFFERENCE')  # cut out the pocket...
+bool_apply(body, ring,   'UNION')       # ...UNION closed it back
 ```
 
-Отдельный `revolve_profile` для фланца/кольца — единственный способ избежать самопересечения, когда `ring_inner_r < r_inner_top` (кольцо уходит глубже внутренней поверхности основного тела).
+Separate `revolve_profile` for flange/rings are the only way to avoid self-intersection when `ring_inner_r < r_inner_top` (the ring goes deeper than the inner surface of the main body).
 
 ---
 
-## Bounding box из `get_object_info`
+## Bounding box from `get_object_info`
 
-MCP-инструмент `get_object_info` возвращает `world_bounding_box` в **метрах**:
+MCP-tool `get_object_info` returns `world_bounding_box` in **meters**:
 
 ```json
 "world_bounding_box": [
@@ -212,91 +212,91 @@ MCP-инструмент `get_object_info` возвращает `world_bounding_
 ]
 ```
 
-Перевод в мм и размеры:
+Conversion to mm and dimensions:
 
 ```python
 bb = obj["world_bounding_box"]
 height_mm   = (bb[1][2] - bb[0][2]) * 1000
 diameter_mm = (bb[1][0] - bb[0][0]) * 1000
-# Для тел вращения diameter_mm = 2 * r_outer
+# For bodies of revolution diameter_mm = 2 * r_outer
 ```
 
-Объекты со смещением `location`: bounding box уже в мировых координатах, смещение учтено.
+Objects with offset `location`: bounding box is already in world coordinates, the offset is taken into account.
 
-### Обязательный print размеров после построения (антигаллюцинация)
+### Mandatory print dimensions after construction (antihallucination)
 
-**Правило:** сразу после `revolve_profile` и после каждого `blender_bool_apply` — добавить `print` с реальными значениями из `obj.bound_box`. Это делается прямо в execute-коде, до скриншота и до любых утверждений о размерах в тексте ответа.
+**Rule:** immediately after `revolve_profile` and after each `blender_bool_apply` — add `print` with real values from `obj.bound_box`. This is done directly in execute-code, before the screenshot, and before any sizing statements in the response body.
 
 ```python
 def _print_bb(obj, mode_cut=False):
-    bb = obj.bound_box  # локальные координаты, но location уже применён если z_offset=0
+    bb = obj.bound_box  # local coordinates, but location is already applied if z_offset=0
     xs = [v[0] for v in bb]; zs = [v[2] for v in bb]
     h_mm  = (max(zs) - min(zs)) * 1000
     if mode_cut:
-        d_mm = max(xs) * 2 * 1000   # x_min ≈ 0 в cut-режиме
+        d_mm = max(xs) * 2 * 1000   # x_min ≈ 0 in cut-mode
     else:
         d_mm = (max(xs) - min(xs)) * 1000
     print(f"[BB] {obj.name}: h={h_mm:.2f}mm  ⌀={d_mm:.2f}mm  "
           f"z=[{min(zs)*1000:.2f}, {max(zs)*1000:.2f}]mm")
 ```
 
-Вызывать немедленно после создания объекта:
+Call immediately after object creation:
 ```python
 obj = revolve_profile("MESH_Model_Part", pts, col, seg)
 _print_bb(obj)
 
 blender_bool_apply(obj, tool, 'DIFFERENCE', solver='FLOAT')
-_print_bb(obj)  # убедиться что объект не вырожден после boolean
+_print_bb(obj)  # make sure that the object is not degenerate after boolean
 ```
 
-**Почему это важно:** `get_object_info` вызывается отдельным MCP-запросом после построения — к тому моменту ИИ уже мог сформулировать утверждение о размерах на основе ожиданий, а не факта. Print в execute-коде выводится в тот же ответ, что и построение, и делает реальные значения явными до любых выводов.
+**Why this is important:** `get_object_info` is called separately MCP-request after construction - by that time the AI could already formulate a statement about the sizes based on expectations, not fact. Print in execute-code outputs the same response as the build, and makes the real values ​​explicit before any output.
 
 ---
 
-## Тест-файлы и структура тестирования
+## Test files and testing structure
 
-### Архитектура (три слоя)
+### Architecture (three layers)
 
 ```
-test/check.py                    ← ТОЧКА ВХОДА — запускать всегда перед Blender
-├── кросс-деталевые проверки     ← стыки, стеки Z, совместимость посадок, PCD соединений
-└── автодискавери parts/*.test.py → вызывает test_config() каждой детали
+test/check.py                    ← ENTRY POINT - always run before Blender
+├── cross-detail checks     ← joints, stacks Z, fit compatibility, PCD connections
+└── autodiscovery parts/*.test.py → calls test_config() every detail
 
-parts/{name}.test.py             ← локальные инварианты одной детали
-├── test_config()                ← уровень 1: только конфиг, без Blender
-└── test_mesh(obj)               ← уровень 2: реальный меш, только внутри Blender
+parts/{name}.test.py             ← local invariants of one part
+├── test_config()                ← level 1: config only, without Blender
+└── test_mesh(obj)               ← level 2: real mesh, only inside Blender
 
-test/geom_test.py                ← меш-утилиты для уровня 2
-└── реэкспортирует lib/geom_test + новые функции (assert_wall_solid и др.)
+test/geom_test.py                ← mesh utilities for level 2
+└── re-exports lib/geom_test + new features (assert_wall_solid etc.)
 ```
 
-**Запуск:**
+**Launch:**
 ```bash
-python models/{model}/test/check.py          # всё разом — перед каждым Blender
-python models/{model}/parts/{name}.test.py   # только одна деталь
+python models/{model}/test/check.py          # all at once - before each Blender
+python models/{model}/parts/{name}.test.py   # only one part
 ```
 
-**Автодискавери:** `test/check.py` находит все `parts/*.test.py` через `glob` — новые детали подхватываются автоматически, без правки `check.py`.
+**Autodiscovery:** `test/check.py` finds everything `parts/*.test.py` via `glob` — new parts are picked up automatically, without editing `check.py`.
 
-### Уровень 1 — конфиг (`test_config()`, без Blender)
+### Level 1 - config (`test_config()`, without Blender)
 
-Что проверять в `parts/{name}.test.py`:
-- Все размеры > 0 (высота, радиусы, толщины)
-- Толщины стенок ≥ минимально печатаемых (обычно 1.5–2 мм)
-- Пазы и посадки не выходят за пределы детали
-- Зазоры резьб: `depth > clearance`
-- Зависимые параметры из конфигов смежных деталей совпадают
+What to check in `parts/{name}.test.py`:
+- All sizes > 0 (height, radii, thickness)
+- Wall thicknesses ≥ minimum printable (usually 1.5–2 mm)
+- Grooves and fits do not extend beyond the part
+- Thread clearances: `depth > clearance`
+- Dependent parameters from the configs of adjacent parts are the same
 
-Что проверяет `test/check.py` дополнительно (кросс-деталевые):
-- Стыковые радиусы между секциями совпадают
-- Стек высот не отрицательный
-- PCD магнитов/штырей совпадает у обеих стыкующихся деталей
-- Размеры вставляемых элементов (вставка, труба) не выходят за пределы принимающей детали
+What it checks `test/check.py` additional (cross-detail):
+- Joint radii between sections coincide
+- Height stack is not negative
+- PCD magnets/pins match for both mating parts
+- Dimensions of inserted elements (insert, pipe) do not extend beyond the receiving part
 
-### Уровень 2 — меш (`test_mesh()`, внутри Blender)
+### Level 2 - mesh (`test_mesh()`, inside Blender)
 
-Вызывается после `build_*()` в инкрементальном режиме (Шаг 4А).
-Файлы называются `{name}.test.py` — прямой `import` не работает, только через `importlib`:
+Called after `build_*()` in incremental mode (Step 4A).
+The files are called `{name}.test.py` — direct `import` does not work, only through `importlib`:
 ```python
 import importlib.util, os
 _f = os.path.join(_root, 'models', _model, 'parts', '{name}.test.py')
@@ -306,67 +306,67 @@ obj, subpart = build_{name}(spl, col)
 _mod.test_mesh(obj, subpart)
 ```
 
-Функции из `lib/geom_test` (базовые, всегда доступны):
-- `assert_not_empty(obj)` — вершины есть
-- `assert_manifold(obj)` — меш герметичен
-- `assert_volume_gt(obj, min_mm3)` — объём не нулевой
-- `assert_height(obj, expected_mm)` — высота совпадает
-- `assert_z_position(obj, z_min, z_max)` — деталь на правильной позиции
-- `print_bb(obj)` — антигаллюцинация размеров (вызывать всегда)
+Functions from `lib/geom_test` (basic, always available):
+- `assert_not_empty(obj)` — vertices are
+- `assert_manifold(obj)` — mesh is sealed
+- `assert_volume_gt(obj, min_mm3)` — volume is not zero
+- `assert_height(obj, expected_mm)` — height matches
+- `assert_z_position(obj, z_min, z_max)` — part in the correct position
+- `print_bb(obj)` — anti-hallucination of dimensions (always call)
 
-Функции из `{model}/test/geom_test` (расширенные):
-- `assert_normals_outward(obj)` — нормали не вывернуты после boolean
-- `assert_rotational_symmetry(obj)` — диаметры X/Y совпадают (тело вращения)
-- `assert_wall_solid(obj, r_inner, r_outer, z_samples)` — стенка заполнена (ray cast)
-- `assert_objects_no_overlap(obj_a, obj_b)` — детали не коллидируют (интеграционный)
-- `assert_pin_alignment(pin_objs, ring_obj)` — штыри попадают в гнёзда по XY
+Functions from `{model}/test/geom_test` (extended):
+- `assert_normals_outward(obj)` — normals are not inverted after boolean
+- `assert_rotational_symmetry(obj)` — diameters X/Y match (body of rotation)
+- `assert_wall_solid(obj, r_inner, r_outer, z_samples)` — wall is full (ray cast)
+- `assert_objects_no_overlap(obj_a, obj_b)` — parts do not collide (integration)
+- `assert_pin_alignment(pin_objs, ring_obj)` — pins fit into sockets according to XY
 
 ```python
-# Импорт расширенных функций внутри Blender:
+# Importing advanced functions internally Blender:
 from {model}.test.geom_test import (
     assert_normals_outward, assert_rotational_symmetry, assert_wall_solid,
 )
 ```
 
-### Правило при создании новой детали
+### Rule when creating a new part
 
-При добавлении `parts/{name}.py` — обязательно создать `parts/{name}.test.py`.
-Минимум: `test_config()` с базовыми assert-ами + `test_mesh()` с `assert_manifold` и `assert_volume_gt`.
+When adding `parts/{name}.py` — must be created `parts/{name}.test.py`.
+Minimum: `test_config()` with basic assert-ami + `test_mesh()` with `assert_manifold` and `assert_volume_gt`.
 
-### Правило при изменении конструкции
+### Rule when design changes
 
-При любом изменении геометрии, конфига или логики детали — **проверить и при необходимости обновить** соответствующий `parts/{name}.test.py`:
+For any change in the geometry, config or logic of the part - **check and update if necessary** corresponding `parts/{name}.test.py`:
 
-- Изменились ожидаемые размеры → обновить `assert_height`, `assert_z_position`, `assert_diameter`
-- Появились новые намеренно открытые торцы (посадки, гнёзда) → ослабить `assert_manifold` с объяснением почему
-- Добавился новый параметр конфига → добавить assert в `test_config()`
-- Удалился или переименовался параметр → убрать или обновить старый assert
-- Изменилась логика стыковки с соседней деталью → обновить проверку зависимых параметров
+- Expected dimensions have changed → update `assert_height`, `assert_z_position`, `assert_diameter`
+- New intentionally open ends have appeared (plantings, nests) → loosen `assert_manifold` with an explanation why
+- Added a new config parameter → add assert in `test_config()`
+- Parameter removed or renamed → remove or update old assert
+- The logic of joining with an adjacent part has changed → update dependent parameter checking
 
-**Открытые торцы — не всегда баг.** Намеренно открытые торцы (посадочный стык, гнёзда под магниты) нужно документировать в тесте явно:
+**Open ends are not always a bug.** Intentionally open ends (landing joint, sockets for magnets) needs to be documented explicitly in the test:
 ```python
-# Body: нижний торец открыт намеренно — там сидит bottom (папа входит в маму)
-# ConnRing: торцы гнёзд открыты — магниты вставляются снизу при сборке
+# Body: the bottom end is open intentionally - it sits there bottom (dad enters mom)
+# ConnRing: the ends of the sockets are open - magnets are inserted from below during assembly
 ```
-И проверять что non-manifold рёбра только в допустимых местах, а не по всей поверхности.
+And check that non-manifold edges only in valid places, and not over the entire surface.
 
 ---
 
-## `bpy.data` vs `bpy.ops` — что использовать в скриптах
+## `bpy.data` vs `bpy.ops` — what to use in scripts
 
-**Правило:** предпочитать `bpy.data` и `bmesh`. `bpy.ops` — только когда нет альтернативы.
+**Rule:** prefer `bpy.data` and `bmesh`. `bpy.ops` — only when there is no alternative.
 
-| Подход | Когда использовать |
+| Approach | When to use |
 |--------|--------------------|
-| `bpy.data.*` + `bmesh` | создание мешей, объектов, материалов — всегда предпочтительно |
-| `bpy.ops.*` | операторы без data-API аналога (например `modifier_apply`, `convert`, `transform_apply`) |
+| `bpy.data.*` + `bmesh` | creating meshes, objects, materials is always preferable |
+| `bpy.ops.*` | operators without data-API analog (for example `modifier_apply`, `convert`, `transform_apply`) |
 
-**Почему избегать `bpy.ops`:**
-- Зависит от `bpy.context` (active object, правильный режим) — в скриптах контекст непредсказуем
-- Значительно медленнее data-API
-- Начиная с Blender 4.0 операторы требуют `context.temp_override()` или упадут с `RuntimeError`
+**Why avoid `bpy.ops`:**
+- Depends on `bpy.context` (active object, correct mode) — in scripts the context is unpredictable
+- Significantly slower data-API
+- Starting from Blender 4.0 operators require `context.temp_override()` or will fall from `RuntimeError`
 
-**Когда `bpy.ops` неизбежен** — передавать override явно:
+**When `bpy.ops` inevitable** — transmit override explicitly:
 ```python
 with bpy.context.temp_override(active_object=obj, selected_objects=[obj]):
     bpy.ops.object.modifier_apply(modifier="Bevel")
@@ -374,12 +374,12 @@ with bpy.context.temp_override(active_object=obj, selected_objects=[obj]):
 
 ---
 
-## Единицы измерения
+## Units of measurement
 
-| В коде (Python/config) | В Blender (bpy) |
+| In code (Python/config) | B Blender (bpy) |
 |---|---|
-| мм (`float`) | метры (`mm(x) = x * 0.001`) |
-| `profile_r` возвращает мм | `bm.verts.new((mm(r), 0, mm(z)))` |
-| `get_object_info` → метры | × 1000 → мм |
+| mm (`float`) | meters (`mm(x) = x * 0.001`) |
+| `profile_r` returns mm | `bm.verts.new((mm(r), 0, mm(z)))` |
+| `get_object_info` → meters | × 1000 → mm |
 
-Функция `mm()` живёт в `common.py` и импортируется во все `parts/`.
+Function `mm()` lives in `common.py` and is imported into all `parts/`.

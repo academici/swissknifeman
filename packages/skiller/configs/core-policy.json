@@ -1,12 +1,12 @@
 {
-  "_doc": "Декларативная CORE-политика skiller (источник истины). config.py грузит её самолокацией через __file__ на import-time, с фолбэком на встроенные дефолты (standalone-safe). Изменения ядра видны в git diff как данные, а не код.",
+  "_doc": "Declarative CORE-policy skiller (source of truth). config.py loads it with self-location through __file__ on import-time, with fallback to built-in defaults (standalone-safe). Kernel changes visible in git diff as data, not code.",
   "skills": [
     "general/context-economy",
     "general/anti-drift",
     "general/session-handoff",
     "general/verify-claims"
   ],
-  "_budget_note": "750 (было 600) — поднято 2026-07 после калибровки budget.CHARS_PER_TOKEN_* по RAG-данным (аудит B-1: старые константы занижали токены, реальный резидент 8 CORE_SKILLS оказался ~696, не ~592). Не занижай обратно ради 'зелёного' check-core — калибровка отражает реальный tokenizer точнее прежней.",
+  "_budget_note": "750 (was 600) — raised 2026-07 after calibration budget.CHARS_PER_TOKEN_* by RAG-data (audit B-1: old constants undervalued tokens, real resident 8 CORE_SKILLS turned out to be ~696, not ~592). Don't lower it back for the sake of 'green' check-core — calibration reflects real tokenizer more precisely than before.",
   "resident_budget_target": 750,
   "core_plugin": "core",
   "core_buckets": ["general", "oss-dev"],

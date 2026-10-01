@@ -1,16 +1,16 @@
-# Индекс плана — `plans/<PLAN-ID>/index.md`
+# Plan index - `plans/<PLAN-ID>/index.md`
 
-<!-- Карта ФАЙЛОВ плана + провенанс-связи (root/contracts/plan-index-schema.md, P1.2
-     sealed v1). НЕ носитель статуса (Status Board/phases/Pn.md) и НЕ носитель "куда
-     дальше" (handoff.md) — соблазн внести то или другое сюда = второй носитель факта,
-     стоп (§3 plan-protocol). Опционален: план без index.md валиден. Три секции строго
-     в этом порядке; отсутствующие в плане узлы карты директорий — опускаются. -->
+<!-- Map of plan FILES + provenance links (root/contracts/plan-index-schema.md, P1.2
+     sealed v1). NOT a bearer of status (Status Board/phases/Pn.md) and NOT a bearer of “where
+     further" (handoff.md) - the temptation to bring this or that here = the second bearer of the fact,
+     stop (§3 plan-protocol). Optional: plan without index.md is valid. Three sections strictly
+     in that order; directory map nodes that are missing from the plan are omitted. -->
 
-**Обновлён:** <YYYY-MM-DD>
+**Updated:** <YYYY-MM-DD>
 
-## Карта директорий
+## Directory map
 
-| Путь | Назначение |
+| Path | Destination |
 |:--|:--|
 | `plan.md` | stable core: Meta, Context, Rules, §3 Routing, §7 Contracts |
 | `status.md` | generated status projection |
@@ -20,33 +20,33 @@
 | `phases/<Pn>/<Pn>.closed.md` | generated terminal phase contract/result |
 | `bundles/<Pn.m>.json` | ordered digest-qualified executor inputs |
 | `decisions/` | append-only decisions + generated current/archive/index views |
-| `handoff.md` | rolling-указатель «где мы» (перезаписывается) |
-| `roadmap.md` | исполнительская карта: батчи/workflow/гейты |
-| `journal.jsonl` | append-only история запусков `task:plan-*` |
-| `brief/` | слой 0 «вход»: бриф владельца + уточнения |
-| `findings/` | слой 1 «сырьё»: RAG-выжимки, recon |
-| `research/` | слой 2 «синтез»: авторские design-документы |
-| `artifacts/` | worked examples и raw retrieval/no-search provenance для self-contained design |
-| `root/` | долгоживущий материал (контракты и т.п. — см. секцию ниже) |
-| `open-questions.md` | спорное/нерешённое |
+| `handoff.md` | rolling pointer "where we are" (overwritten) |
+| `roadmap.md` | executive map: batches/workflow/gates |
+| `journal.jsonl` | append-only run history `task:plan-*` |
+| `brief/` | layer 0 “input”: owner’s brief + clarifications |
+| `findings/` | layer 1 “raw materials”: ​​RAG-squeeze, recon |
+| `research/` | layer 2 “synthesis”: author’s design documents |
+| `artifacts/` | worked examples and raw retrieval/no-search provenance for self-contained design |
+| `root/` | long-lived material (contracts, etc. - see section below) |
+| `open-questions.md` | controversial/unresolved |
 
-## Провенанс
+## Provenance
 
-<!-- Единственная содержательная секция — связи "источник → фаза-потребитель".
-     If-then (анти-дубль, §3 контракта): если ПОЛНОСТЬЮ выводима из Inputs/Required
-     Reads items — сузить индекс до карты директорий + эскалировать ценность секции
-     владельцу, не плодить дубль. -->
+<!-- The only meaningful section is the “source → phase-consumer” connections.
+     If-then (anti-double, §3 contract): if COMPLETELY derived from Inputs/Required
+     Reads items - narrow the index to a directory map + escalate the value of the section
+     owner, do not create a double. -->
 
-| Источник | Слой | Питает | Суть |
+| Source | Layer | Nourishes | Essence |
 |:--|:--|:--|:--|
-| `findings/<slug>.md` | findings | `<Pn>` | 1 строка: что даёт |
-| `research/<NN>-<slug>.md` | research | `<Pn.m>` | 1 строка: что даёт |
+| `findings/<slug>.md` | findings | `<Pn>` | 1st line: what gives |
+| `research/<NN>-<slug>.md` | research | `<Pn.m>` | 1st line: what gives |
 
-## Ключевые артефакты `root/`
+## Key artifacts `root/`
 
-<!-- Опционально. Статус ЗДЕСЬ — про зрелость КОНТРАКТА-артефакта (sealed/draft), не
-     про item плана: это не второй носитель статуса item (§3 граница соблюдена). -->
+<!-- Optional. The status HERE is about the maturity of the CONTRACT-artifact (sealed/draft), not
+     about the item of the plan: this is not the second bearer of the item status (§3 the limit is met). -->
 
-| Артефакт | Суть | Статус |
+| Artifact | Essence | Status |
 |:--|:--|:--|
-| `root/contracts/<name>.md` | 1 строка | sealed vN (`<Pn.m>`) \| draft |
+| `root/contracts/<name>.md` | 1 line | sealed vN (`<Pn.m>`) \| draft |

@@ -35,7 +35,7 @@ class Decision:
 
     @property
     def decision_text(self) -> str:
-        match = re.search(r"^## Решение\s*\n(.*?)(?=^## |\Z)", self.body,
+        match = re.search(r"^## Solution\s*\n(.*?)(?=^## |\Z)", self.body,
                           flags=re.MULTILINE | re.DOTALL)
         return " ".join(match.group(1).split()) if match else "—"
 
@@ -54,24 +54,24 @@ def parse_frontmatter(text: str, *, path: Path) -> tuple[dict, str]:
     """Parse the deliberately small YAML subset used by decision records."""
     match = _FRONTMATTER_RE.match(text)
     if not match:
-        raise DecisionError(f"{path}: нет YAML-frontmatter")
+        raise DecisionError(f"{path}: no YAML-frontmatter")
     fields = {}
     for line in match.group(1).splitlines():
         if not line.strip() or line.lstrip().startswith("#"):
             continue
         if ":" not in line or line.startswith((" ", "\t")):
-            raise DecisionError(f"{path}: недопустимая строка frontmatter {line!r}")
+            raise DecisionError(f"{path}: invalid string frontmatter {line!r}")
         key, value = line.split(":", 1)
         key = key.strip()
         if not re.fullmatch(r"[a-z_]+", key) or key in fields:
-            raise DecisionError(f"{path}: недопустимый или повторный ключ {key!r}")
+            raise DecisionError(f"{path}: invalid or duplicate key {key!r}")
         fields[key] = _scalar(value)
     return fields, text[match.end():]
 
 
 def _string_list(value, *, field: str, path: Path) -> tuple[str, ...]:
     if not isinstance(value, list) or not all(isinstance(entry, str) and entry for entry in value):
-        raise DecisionError(f"{path}: {field} должен быть списком непустых строк")
+        raise DecisionError(f"{path}: {field} must be a list of non-empty strings")
     return tuple(value)
 
 
@@ -79,44 +79,44 @@ def parse_decision(path) -> Decision:
     path = Path(path)
     match = _DECISION_NAME_RE.match(path.name)
     if not match:
-        raise DecisionError(f"{path}: имя должно иметь форму D<NNN>-<slug>.md")
+        raise DecisionError(f"{path}: name must be of the form D<NNN>-<slug>.md")
     try:
         fields, body = parse_frontmatter(path.read_text(encoding="utf-8"), path=path)
     except OSError as exc:
-        raise DecisionError(f"{path}: запись не читается") from exc
+        raise DecisionError(f"{path}: entry not readable") from exc
     required = ("id", "date", "status", "item", "items", "supersedes", "superseded_by")
     missing = [field for field in required if field not in fields]
     if missing:
-        raise DecisionError(f"{path}: нет обязательных полей {', '.join(missing)}")
+        raise DecisionError(f"{path}: no required fields {', '.join(missing)}")
     identifier = fields["id"]
     if not isinstance(identifier, str) or identifier != match.group(1) or not _ID_RE.fullmatch(identifier):
-        raise DecisionError(f"{path}: id не совпадает с именем файла")
+        raise DecisionError(f"{path}: id does not match the file name")
     if not isinstance(fields["date"], str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", fields["date"]):
-        raise DecisionError(f"{path}: date должен быть ISO-датой")
+        raise DecisionError(f"{path}: date should be ISO-date")
     try:
         date.fromisoformat(fields["date"])
     except ValueError as exc:
-        raise DecisionError(f"{path}: date должен быть календарно-валидной ISO-датой") from exc
+        raise DecisionError(f"{path}: date must be a calendar-valid ISO date") from exc
     if fields["status"] not in STATUSES:
-        raise DecisionError(f"{path}: неизвестный status {fields['status']!r}")
+        raise DecisionError(f"{path}: unknown status {fields['status']!r}")
     if not isinstance(fields["item"], str):
-        raise DecisionError(f"{path}: item должен быть строкой")
+        raise DecisionError(f"{path}: item must be a string")
     items = _string_list(fields["items"], field="items", path=path)
     if fields["item"] and fields["item"] not in items:
-        raise DecisionError(f"{path}: item должен входить в items")
+        raise DecisionError(f"{path}: item must be included in items")
     supersedes = _string_list(fields["supersedes"], field="supersedes", path=path)
     successor = fields["superseded_by"]
     if successor is not None and (not isinstance(successor, str) or not _ID_RE.fullmatch(successor)):
-        raise DecisionError(f"{path}: superseded_by должен быть D<NNN> или null")
+        raise DecisionError(f"{path}: superseded_by should be D<NNN> or null")
     headings = {heading for heading in _HEADING_RE.findall(body)}
-    if not {"Решение", "Почему"}.issubset(headings):
-        raise DecisionError(f"{path}: тело обязано нести ## Решение и ## Почему")
+    if not {"Solution", "Why"}.issubset(headings):
+        raise DecisionError(f"{path}: the body must bear ## Solution and ## Why")
     if supersedes and "Consequences" not in headings:
-        raise DecisionError(f"{path}: supersedes требует ## Consequences")
+        raise DecisionError(f"{path}: supersedes requires ## Consequences")
     if fields["status"] == "superseded" and not successor:
-        raise DecisionError(f"{path}: superseded требует superseded_by")
+        raise DecisionError(f"{path}: superseded requires superseded_by")
     if successor and fields["status"] != "superseded":
-        raise DecisionError(f"{path}: superseded_by допустим только у status=superseded")
+        raise DecisionError(f"{path}: superseded_by is only valid for status=superseded")
     return Decision(identifier, fields["date"], fields["status"], fields["item"], items,
                     supersedes, successor, body, path)
 
@@ -126,39 +126,39 @@ def load_decisions(plan_dir) -> tuple[Decision, ...]:
     try:
         pattern = plan_layout.carrier_glob(plan_dir, "decision-record")
     except plan_layout.PlanLayoutError as exc:
-        raise DecisionError(f"не удалось разрешить носитель решений: {exc}") from exc
+        raise DecisionError(f"failed to resolve solution media: {exc}") from exc
     directory = pattern.parent
     if not directory.is_dir():
-        raise DecisionError(f"каталог решений отсутствует: {directory}")
+        raise DecisionError(f"solution directory missing: {directory}")
     paths = [path for path in directory.glob(pattern.name)
              if path.is_file() and _DECISION_NAME_RE.match(path.name)]
     decisions = tuple(sorted((parse_decision(path) for path in paths),
                              key=lambda item: int(item.identifier[1:])))
     by_id = {decision.identifier: decision for decision in decisions}
     if len(by_id) != len(decisions):
-        raise DecisionError("идентификаторы решений повторяются")
+        raise DecisionError("solution identifiers are repeated")
     for decision in decisions:
         for predecessor_id in decision.supersedes:
             predecessor = by_id.get(predecessor_id)
             if predecessor is None:
-                raise DecisionError(f"{decision.identifier}: supersedes ссылается на отсутствующий {predecessor_id}")
+                raise DecisionError(f"{decision.identifier}: supersedes refers to a missing {predecessor_id}")
             if predecessor.superseded_by != decision.identifier or predecessor.status != "superseded":
-                raise DecisionError(f"{decision.identifier} и {predecessor_id}: связь замещения невзаимна")
+                raise DecisionError(f"{decision.identifier} and {predecessor_id}: substitution relationship is not reciprocal")
         if decision.superseded_by:
             successor = by_id.get(decision.superseded_by)
             if successor is None or decision.identifier not in successor.supersedes:
-                raise DecisionError(f"{decision.identifier} и {decision.superseded_by}: "
-                                    "связь superseded_by задана невзаимно")
+                raise DecisionError(f"{decision.identifier} and {decision.superseded_by}: "
+                                    "connection superseded_by is specified non-reciprocally")
     return decisions
 
 
 def _table(decisions: tuple[Decision, ...]) -> str:
-    lines = ["| ID | Date | Status | Items | Решение |", "|:--|:--|:--|:--|:--|"]
+    lines = ["| ID | Date | Status | Items | Solution |", "|:--|:--|:--|:--|:--|"]
     for decision in decisions:
         lines.append("| " + " | ".join((decision.identifier, decision.date, decision.status,
                     ", ".join(decision.items) or "—", decision.decision_text)) + " |")
     if not decisions:
-        lines.append("| — | — | — | — | Нет записей |")
+        lines.append("| — | — | — | — | No entries |")
     return "\n".join(lines)
 
 
@@ -169,17 +169,17 @@ def rendered_views(plan_dir) -> dict[Path, str]:
         decisions_dir = plan_layout.carrier_glob(plan_dir, "decision-record").parent
         open_questions = plan_layout.carrier_path(plan_dir, "open-questions")
     except plan_layout.PlanLayoutError as exc:
-        raise DecisionError(f"не удалось разрешить путь вида решений: {exc}") from exc
+        raise DecisionError(f"failed to resolve solution view path: {exc}") from exc
     input_paths = [decision.path for decision in decisions]
     digest = plan_projection.inputs_sha256(input_paths, root=plan_dir)
     through = f"{decisions[-1].date}/{decisions[-1].identifier}" if decisions else "empty"
     groups = {
-        decisions_dir / "_current.md": ("Текущие решения", tuple(
+        decisions_dir / "_current.md": ("Current solutions", tuple(
             d for d in decisions if d.status == "accepted" and not d.superseded_by), "decision-current"),
-        decisions_dir / "_archive.md": ("Архив решений", tuple(
+        decisions_dir / "_archive.md": ("Solutions archive", tuple(
             d for d in decisions if d.status in {"superseded", "rejected"}), "decision-archive"),
-        decisions_dir / "_index.md": ("Индекс решений", decisions, "decision-index"),
-        open_questions: ("Открытые развилки", tuple(
+        decisions_dir / "_index.md": ("Solution Index", decisions, "decision-index"),
+        open_questions: ("Open forks", tuple(
             d for d in decisions if d.status == "proposed"), "decision-open-questions"),
     }
     rendered = {}

@@ -184,16 +184,16 @@
       "provider": "claude",
       "target": ".claude/skills/release-discipline/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/release-discipline/SKILL.md",
-      "canonical_sha256": "07aa83ae31d0b5b7e7fbe10007dddf4f4ba1ca92c1dedc855ec80d0759fbaeed",
-      "rendered_sha256": "d117b0f860a040274bc2ffe3534ecf864eda79a28502f537d3c4290e523781d0"
+      "canonical_sha256": "630ec074637e319a183c27855962e9cb0efe21079ffc541317247108c33c8e78",
+      "rendered_sha256": "1dcb9debe7ab1b7418c69940a7021342db5149380c3b67dd5c8f7b82b7645f6e"
     },
     {
       "identity": "release-discipline",
       "provider": "codex",
       "target": ".agents/skills/release-discipline/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/release-discipline/SKILL.md",
-      "canonical_sha256": "07aa83ae31d0b5b7e7fbe10007dddf4f4ba1ca92c1dedc855ec80d0759fbaeed",
-      "rendered_sha256": "d117b0f860a040274bc2ffe3534ecf864eda79a28502f537d3c4290e523781d0"
+      "canonical_sha256": "630ec074637e319a183c27855962e9cb0efe21079ffc541317247108c33c8e78",
+      "rendered_sha256": "1dcb9debe7ab1b7418c69940a7021342db5149380c3b67dd5c8f7b82b7645f6e"
     },
     {
       "identity": "skill-authoring",
@@ -216,16 +216,16 @@
       "provider": "claude",
       "target": ".claude/skills/task-development-philosophy/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/task-development-philosophy/SKILL.md",
-      "canonical_sha256": "e229b070d441022911384587a4751e8f07a3f3f57843aacc6630ed12674e58e7",
-      "rendered_sha256": "63ae4a40619dc45122a4dfc1fb1a94dd2f9135656029ad12ab8395068235e34a"
+      "canonical_sha256": "e41445fd72fb170fcbc0e9182dfb2b7ded08be5847bc924e09337ee3b74ef980",
+      "rendered_sha256": "6711beaa98d3b8d851d5d25d24221118de41fd2f7009a0428c4e94f4e880929c"
     },
     {
       "identity": "task-development-philosophy",
       "provider": "codex",
       "target": ".agents/skills/task-development-philosophy/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/task-development-philosophy/SKILL.md",
-      "canonical_sha256": "e229b070d441022911384587a4751e8f07a3f3f57843aacc6630ed12674e58e7",
-      "rendered_sha256": "63ae4a40619dc45122a4dfc1fb1a94dd2f9135656029ad12ab8395068235e34a"
+      "canonical_sha256": "e41445fd72fb170fcbc0e9182dfb2b7ded08be5847bc924e09337ee3b74ef980",
+      "rendered_sha256": "6711beaa98d3b8d851d5d25d24221118de41fd2f7009a0428c4e94f4e880929c"
     },
     {
       "identity": "workflow-craft",

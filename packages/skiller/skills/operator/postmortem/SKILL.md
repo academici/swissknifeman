@@ -52,40 +52,40 @@ Goal: a second identical incident must be impossible regardless of who is on shi
 ## Timeline (UTC)
 | Time | Event | Source |
 |:---|:---|:---|
-| HH:MM | Алерт сработал | PagerDuty |
-| HH:MM | IC объявлен | #incident-N |
-| HH:MM | Гипотеза X | log message |
+| HH:MM | Alert triggered | PagerDuty |
+| HH:MM | IC declared | #incident-N |
+| HH:MM | Hypothesis X | log message |
 | HH:MM | Rollback deploy abc123 | git log |
-| HH:MM | 5xx нормализовался | dashboard |
-| HH:MM | SEV закрыт | IC |
+| HH:MM | 5xx returned to normal | dashboard |
+| HH:MM | SEV closed | IC |
 
 ## Root Cause
 What **actually** broke. Technical + systemic level.
-**Технический:** запрос N+1 в новой версии checkout-service вызвал DB connection pool exhaustion.
-**Системный:** PR прошёл review без нагрузочного теста; staging не имел нагрузки приближённой к prod.
+**Technical:** request N+1 in the new version checkout-service called DB connection pool exhaustion.
+**System:** PR passed review without load test; staging did not have a load close to prod.
 
 ## Contributing Factors
-- Не было canary deployment
-- Алерт на connection pool сработал с задержкой 8 мин (порог слишком высокий)
-- Runbook DatabaseConnectionsExhausted указывал на старую процедуру
+- None canary deployment
+- Alert for connection pool triggered with a delay of 8 minutes (threshold too high)
+- Runbook DatabaseConnectionsExhausted pointed to an old procedure
 
 ## What went well
-- IC объявлен быстро
-- Rollback сработал чисто
-- Comms обновляли status page вовремя
+- IC announced quickly
+- Rollback worked fine
+- Comms updated status page on time
 
 ## What went poorly
-- Не было canary → весь трафик ушёл на сломанную версию
-- Runbook устарел → SME 5 мин искал актуальную команду
-- Юзеры узнали раньше из Twitter, чем мы со statuspage
+- None canary → all traffic went to the broken version
+- Runbook is deprecated → SME 5 min was looking for the current command
+- Users learned earlier from Twitter, than we statuspage
 
 ## Action Items
 | Action | Owner | Due | Priority |
 |:---|:---|:---|:---|
-| Включить canary deployment | @bob | 2 weeks | P1 |
-| Снизить порог alert N | @anna | 1 week | P1 |
+| Enable canary deployment | @bob | 2 weeks | P1 |
+| Lower threshold alert N | @anna | 1 week | P1 |
 | Update runbook DatabaseConnectionsExhausted | @carol | 3 days | P2 |
-| Add staging load test для checkout | @bob | 1 month | P2 |
+| Add staging load test for checkout | @bob | 1 month | P2 |
 
 ## Lessons
 1-3 lessons as "rules". Structural ones move to `tech-debt-audit`.
@@ -113,9 +113,9 @@ Every AI must have:
 - **Verifiable** — how we know it's done
 
 Anti-pattern AI:
-- "Будем внимательнее" (not verifiable)
-- "Документировать процесс" (no owner / due)
-- "Обсудить с командой" (not an action)
+- "Let's be more careful" (not verifiable)
+- "Document the process" (no owner / due)
+- "Discuss with the team" (not an action)
 
 Rule: AI without owner+due is not an AI, it's a wish. Return to draft.
 
@@ -152,7 +152,7 @@ See Step 2 (full structure). Folder:
 docs/03_Dev/Postmortems/
 ├── 2025-03-14_checkout-5xx.md
 ├── 2025-04-02_payment-webhook-down.md
-└── _index.md  ← перечень + статус action items
+└── _index.md  ← list + status action items
 ```
 
 ## Hard prohibitions

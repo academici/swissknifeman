@@ -1,6 +1,6 @@
-# Острая грань: небезопасная сериализация и дыры авторизации
+# Sharp Edge: Insecure Serialization and Authorization Holes
 
-## Сериализация
+## Serialization
 
 ```bash
 grep -rnE 'unserialize\(' app/ --include='*.php'
@@ -8,39 +8,39 @@ grep -rnE 'decrypt\(|Crypt::decrypt' app/ | grep -vE 'tests/'
 grep -rn 'signed' routes/
 ```
 
-- `unserialize()` на данных извне — **critical** (PHP object injection,
-  гаджет-цепочки через зависимости). Замена: `json_decode`, или
+- `unserialize()` on external data - **critical** (PHP object injection,
+  gadget chains via dependencies). Replacement: `json_decode`, or
   `unserialize($data, ['allowed_classes' => false])`.
-- Утечка `APP_KEY` = подделка любых encrypted/signed значений — проверить,
-  что `.env` в deny-листах и ключ не в репозитории.
-- Signed routes (`URL::signedRoute`): маршрут, меняющий состояние, должен
-  проверять `$request->hasValidSignature()` (middleware `signed`).
+- Leak `APP_KEY` = fake any encrypted/signed values - check if
+  what `.env` in deny-sheets and the key is not in the repository.
+- Signed routes (`URL::signedRoute`): route changing state must
+  check `$request->hasValidSignature()` (middleware `signed`).
 
-## Авторизация (privilege escalation / IDOR)
+## Authorization (privilege escalation / IDOR)
 
 ```bash
-# контроллеры, достающие модель по id из запроса без Policy
+# controllers reaching the model by id from request without Policy
 grep -rnE 'findOrFail\(\$request|find\(\$request|findOrFail\(\$id' app/Http/Controllers/
-grep -rln 'authorize' app/Http/Controllers/   # где authorize ЕСТЬ — инвертировать
+grep -rln 'authorize' app/Http/Controllers/   # where authorize IS - invert
 grep -rn 'Gate::|->can\(|->cannot\(' app/
 ```
 
-Чек-лист:
+Checklist:
 
-- **IDOR:** модель достаётся по id из запроса — есть ли проверка
-  принадлежности (`$ticket->user_id === $request->user()->id`, Policy,
-  scoped binding `Route::scopeBindings()`)? Нет — **high/critical**.
-- **FormRequest::authorize()** возвращает `true` без проверки — каждый
-  такой реквест на state-changing экшене проверить отдельно.
-- **Роли из ввода:** параметр `role`/`is_admin`/`permissions` в запросе,
-  достигающий create/update (см. mass-assignment), — **critical**.
-- **Route model binding** без Policy: `php artisan route:list` + сверка
-  с `AuthServiceProvider::$policies` — у каких моделей нет Policy вообще.
-- Админ-маршруты: middleware-группа admin покрывает ВСЕ admin-маршруты
-  (искать маршруты, добавленные мимо группы).
+- **IDOR:** model is obtained by id from the request - is there a check
+  accessories (`$ticket->user_id === $request->user()->id`, Policy,
+  scoped binding `Route::scopeBindings()`)? No - **high/critical**.
+- **FormRequest::authorize()** returns `true` without checking - every
+  such a request for Check state-changing action separately.
+- **Roles from input:** parameter `role`/`is_admin`/`permissions` in the request,
+  reaching create/update (see mass-assignment), — **critical**.
+- **Route model binding** without Policy: `php artisan route:list` + reconciliation
+  with `AuthServiceProvider::$policies` — which models do not have Policy in general.
+- Admin routes: middleware-group admin covers EVERYTHING admin-routes
+  (search for routes added past the group).
 
 ## Severity
 
-- `unserialize` на вводе, роли из ввода — **critical**.
-- IDOR на чужих данных — **high** (critical для платёжных/персональных).
-- `authorize() { return true; }` на write-экшене — **high** до верификации.
+- `unserialize` on the input, roles from the input - **critical**.
+- IDOR on other people's data - **high** (critical for payment/personal).
+- `authorize() { return true; }` on write-action - **high** before verification.

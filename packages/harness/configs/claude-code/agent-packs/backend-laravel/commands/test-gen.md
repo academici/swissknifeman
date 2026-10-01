@@ -1,7 +1,7 @@
 ---
-description: "Сгенерировать минимальные тесты на изменённое поведение (happy path + негативный), по правилам .claude/rules/tests.md"
+description: "Generate minimal tests for changed behavior (happy path + negative), according to the rules.claude/rules/tests.md"
 ---
-Добавь минимальные {{TEST_FRAMEWORK}}-тесты на изменённое поведение: один happy path и один
-негативный. Следуй `.claude/rules/tests.md` (изоляция БД, зеркалить стиль существующих тестов,
-честность — обходки помечать `[POSSIBLE-DEFECT]`).
-Прогоняй только затронутое: `{{TEST_RUNNER_CMD}} --filter=…`. Существующие проверки не ослаблять.
+Add minimum {{TEST_FRAMEWORK}}-tests for changed behavior: one happy path and one
+negative. Follow `.claude/rules/tests.md` (database isolation, mirror the style of existing tests,
+honesty - mark roundabouts `[POSSIBLE-DEFECT]`).
+Run only the affected ones: `{{TEST_RUNNER_CMD}} --filter=…`. Existing checks should not be weakened.

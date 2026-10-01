@@ -1,13 +1,13 @@
 # budget-configs
 
-Тестовые конфиги (формат `.swissknife.json`: `project_type` / `buckets` / `exclude`)
-для команды `skiller budget`. Нужны, чтобы сравнивать токеновый бюджет наборов без
-реального проекта на диске:
+Test configs (format `.swissknife.json`: `project_type` / `buckets` / `exclude`)
+for the command `skiller budget`. Needed to compare the token budget of sets without
+real project on disk:
 
 ```bash
 skiller budget --config budget-configs/laravel-full.json
 skiller budget --compare laravel-full,laravel-minimal
 ```
 
-Имя в `--compare` резолвится в `budget-configs/<name>.json`. Добавляй сюда профили
-типовых проектов, бюджет которых хочешь держать под контролем.
+Name in `--compare` resolves to `budget-configs/<name>.json`. Add profiles here
+typical projects whose budget you want to keep under control.

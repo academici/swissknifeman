@@ -13,8 +13,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
- * Модель с медиа: ОБЯЗАТЕЛЬНО implements HasMedia + use InteractsWithMedia.
- * Одного трейта без интерфейса недостаточно (type-hints пакета ждут HasMedia).
+ * Model with media: MANDATORY implements HasMedia + use InteractsWithMedia.
+ * One trait without an interface is not enough (type-hints package waiting HasMedia).
  */
 class Document extends Model implements HasMedia
 {
@@ -22,38 +22,38 @@ class Document extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        // Одиночный файл: новая загрузка заменяет предыдущую.
+        // Single file: A new download replaces the previous one.
         $this->addMediaCollection('cover')
             ->singleFile()
             ->useFallbackUrl('/images/default-cover.jpg');
 
-        // Галерея с ограничением по MIME.
+        // Restricted gallery MIME.
         $this->addMediaCollection('images')
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
 
-        // Вложения на отдельном диске.
-        // Диск — из config, НЕ env(): env() пуст при закешированном конфиге.
+        // Attachments on a separate disk.
+        // Disk - from config, NOT env(): env() is empty when the config is cached.
         $this->addMediaCollection('attachments')
             ->useDisk(config('media-library.disk_name', 'public'));
     }
 
     /**
-     * Сигнатура строго ?Media $media = null — пакет вызывает метод
-     * и с экземпляром, и без него.
+     * Signature strictly ?Media $media = null — package calls method
+     * both with and without an instance.
      */
     public function registerMediaConversions(?Media $media = null): void
     {
-        // nonQueued: превью нужно сразу после загрузки, без queue worker.
+        // nonQueued: preview is needed immediately after loading, without queue worker.
         $this->addMediaConversion('thumb')
             ->fit(Fit::Contain, 300, 300)
             ->nonQueued();
 
-        // Тяжёлая конверсия — в очередь (queued по умолчанию).
+        // Difficult conversion - queued (queued default).
         $this->addMediaConversion('preview')
             ->fit(Fit::Crop, 800, 600)
             ->performOnCollections('images', 'cover');
 
-        // Условная конверсия по свойствам конкретного файла.
+        // Conditional conversion based on the properties of a specific file.
         if ($media?->mime_type === 'application/pdf') {
             $this->addMediaConversion('pdf-preview')
                 ->pdfPageNumber(1)

@@ -1,8 +1,8 @@
-"""Общие утилиты: окружение, вывод, парсинг flag'ов и frontmatter.
+"""General utilities: environment, output, parsing flag'ov and frontmatter.
 
-Дословно общий с maind/brain код (die/warn/now_iso/confirm/sanitize + ядро Env)
-вынесен в общий core; здесь — только специфика swissknifeman (path-property,
-parse_flags, frontmatter, делегирование окружения в harness, константы реестра)."""
+Verbatim common with maind/brain code (die/warn/now_iso/confirm/sanitize + core Env)
+moved to general core; here - only specifics swissknifeman (path-property,
+parse_flags, frontmatter, delegation of the environment to harness, registry constants)."""
 import hashlib
 import shutil
 import subprocess
@@ -10,8 +10,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-# Общий core (подключается через PYTHONPATH лаунчером/test.sh). Реэкспорт для
-# модулей пакета, которые исторически берут эти имена из .common.
+# General core (connects via PYTHONPATH launcher/test.sh). Re-export for
+# package modules, which historically take these names from .common.
 from core import (  # noqa: F401
     HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm, die,
     find_monorepo_root, is_within, is_within_lexical, now_iso, parse_flags,
@@ -28,30 +28,30 @@ MANIFEST = ".swissknifeman-manifest.json"
 MANIFEST_VERSION = 1
 AGENT_DEFAULTS = {"claude": ".claude/skills", "cursor": ".cursor/skills",
                   "generic": ".ai/skills"}
-# Файлы каталога скилла, которые НЕ едут в потребляющий проект ни одним каналом
-# физ.переноса (vendor/sync): upstream.json и .claude-plugin — служебные реестра;
-# SKILL.*.md — неканонические localized/reference alternates ("SKILL.*.md" не
-# матчит сам EN-only "SKILL.md"); evals/ — поведенческие тесты
-# скилла; __pycache__/*.pyc — байткод-кэш, появляется локально при ручном запуске
-# .py-сниппетов (напр. snippets/check.py) — найдено при расследовании нестабильного
-# content_sha256 у скилла с .py-сниппетами (registry --check зеленел локально и
-# дрейфовал в чистом чекауте/CI). ЕДИНЫЙ источник истины: vendor.copy_skill и
-# skillset.sync копируют через него (раньше дублировали и skillset терял
-# SKILL.*.md/evals → утечка RU-источника).
+# Skill catalog files that are NOT sent to the consuming project by any channel
+# physical transfer (vendor/sync): upstream.json and .claude-plugin — service registry;
+# SKILL.*.md — non-canonical localized/reference alternates ("SKILL.*.md" not
+# matches itself EN-only "SKILL.md"); evals/ — behavioral tests
+# skill; __pycache__/*.pyc — bytecode cache, appears locally when launched manually
+# .py-snippets (e.g. snippets/check.py) — found while investigating unstable
+# content_sha256 for the skill with .py-snippets (registry --check turned green locally and
+# drifted in a clean checkout/CI). THE SINGLE source of truth: vendor.copy_skill and
+# skillset.sync copy through it (used to be duplicated and skillset lost
+# SKILL.*.md/evals → leak RU-source).
 SKILL_IGNORE = ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals",
                 "__pycache__", "*.pyc", "*.provider-artifact.bak")
-# CONFIG_KEYS живёт ЗДЕСЬ по имени (его берут оба гейта синхрона со схемой —
-# doctor.py и tests/test_schema.py — и документация), но значение с 2026-08-02
-# (P6.2) ВЫВОДИТСЯ из полей skiller.config.ProjectConfig: перечень ключей
-# .swissknife.json имеет ровно один носитель — объект конфига. Там же — комментарии
-# про мульти-тип memory_brain, зарезервированные shape/stacks/skills_map и
-# policy_profile (D11). Импорт ленивый (PEP 562 module __getattr__): config
-# импортирует common на module-level, поэтому обратная связь возможна только по
-# требованию — иначе цикл импорта.
+# CONFIG_KEYS lives HERE named (it is taken by both gates synchronous with the circuit -
+# doctor.py and tests/test_schema.py — and documentation), but the value is from 2026-08-02
+# (P6.2) OUTPUT from fields skiller.config.ProjectConfig: list of keys
+# .swissknife.json has exactly one medium - the config object. There are also comments
+# about multi-type memory_brain, reserved shape/stacks/skills_map and
+# policy_profile (D11). Import is lazy (PEP 562 module __getattr__): config
+# imports common on module-level, therefore feedback is only possible by
+# requirement - otherwise import loop.
 def __getattr__(name):
     if name == "CONFIG_KEYS":
         from .config import CONFIG_KEYS as derived
-        globals()["CONFIG_KEYS"] = derived  # мемоизация: __getattr__ больше не зовётся
+        globals()["CONFIG_KEYS"] = derived  # memoization: __getattr__ is no longer called
         return derived
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
@@ -61,19 +61,19 @@ SKILL_MANAGED_MARKER = "<!-- swissknifeman:managed -->"
 
 
 def _split_bom(raw):
-    """(bom, body) — срезать BOM-префикс (если есть) без нормализации остального."""
+    """(bom, body) — cut BOM-prefix (if available) without normalizing the rest."""
     if raw.startswith(b"\xef\xbb\xbf"):
         return raw[:3], raw[3:]
     return b"", raw
 
 
 def _mark_skill_managed(dst):
-    """Проставить SKILL_MANAGED_MARKER сразу после закрывающего `---` frontmatter'а
-    в `dst/SKILL.md`, БАЙТ-РЕЖИМ (без text-mode чтения/нормализации `\\r\\n`→`\\n`) —
-    старая версия читала файл через `.read_text()`, из-за чего у CRLF-скиллов
-    записанные байты расходились с исходными и `hashlib.sha256(read_bytes())`
-    реестра (registry.py) детектировал ложный дрейф на каждом sync. Идемпотентно
-    (второй вызов — no-op); нет файла/нет frontmatter → тихий no-op (не крэш)."""
+    """Enter SKILL_MANAGED_MARKER immediately after the closing `---` frontmatter'a
+    in `dst/SKILL.md`, BYTE MODE (without text-mode read/normalization `\\r\\n`→`\\n`) —
+    old version read the file via `.read_text()`, because of which CRLF-skills
+    written bytes diverged from the original ones and `hashlib.sha256(read_bytes())`
+    registry (registry.py) detected a false drift on each sync. Idempotent
+    (second call - no-op); no file/no frontmatter → quiet no-op (no crash)."""
     path = Path(dst) / "SKILL.md"
     if not path.is_file():
         return
@@ -84,23 +84,23 @@ def _mark_skill_managed(dst):
     elif body.startswith(b"---\n"):
         newline = b"\n"
     else:
-        return  # нет frontmatter — не наш файл, пропуск
+        return  # no frontmatter — not our file, skip
     delim = b"---" + newline
     close_idx = body.find(delim, len(delim))
     if close_idx == -1:
-        return  # frontmatter не закрыт — malformed, пропуск
+        return  # frontmatter not closed - malformed, pass
     insert_at = close_idx + len(delim)
     marker_bytes = SKILL_MANAGED_MARKER.encode("utf-8")
     if body[insert_at:insert_at + len(marker_bytes)] == marker_bytes:
-        return  # уже размечен — идемпотентный no-op
+        return  # already marked - idempotent no-op
     new_body = body[:insert_at] + marker_bytes + newline + body[insert_at:]
     path.write_bytes(bom + new_body)
 
 
 def strip_skill_managed_marker(data):
-    """Обратное к `_mark_skill_managed` — убрать строку-маркер из байтов `data`
-    (LF или CRLF), вернув исходное содержимое байт-в-байт. Отсутствие маркера —
-    identity (не находка, а обычный невставленный файл)."""
+    """Reverse to `_mark_skill_managed` — remove marker string from bytes `data`
+    (LF or CRLF), returning the original contents byte-for-byte. No marker -
+    identity (is not a find, but a regular uninserted file)."""
     marker_bytes = SKILL_MANAGED_MARKER.encode("utf-8")
     for newline in (b"\r\n", b"\n"):
         pattern = marker_bytes + newline
@@ -111,22 +111,22 @@ def strip_skill_managed_marker(data):
 
 
 def safe_copy_skill(src, dst, dest_root):
-    """Безопасно скопировать каталог скилла src→dst внутри dest_root. ЕДИНЫЙ путь копии
-    для vendor.do_vendor и skillset.sync_skillset (раньше дублировались, расходясь в
-    деталях безопасности). Шаги: лексич. containment (traversal через '../' в имени → стоп),
-    снять существующий dst (symlink/файл/dir, symlink НЕ разыменовываем), пере-проверка
-    против гонки (TOCTOU: чужой процесс мог пересоздать dst симлинком наружу), copytree с
-    SKILL_IGNORE. Возврат True при копировании, False при пропуске (с warn). is_within/
-    is_within_lexical — теперь из core (реэкспорт выше)."""
+    """Safely copy skill directory src→dst inside dest_root. SINGLE copy path
+    for vendor.do_vendor and skillset.sync_skillset (used to be duplicated, diverging into
+    security details). Steps: lex. containment (traversal via '../' in name → stop),
+    remove existing dst (symlink/file/dir, symlink DO NOT dereference), re-check
+    against race (TOCTOU: someone else's process could recreate dst symlink outwards), copytree with
+    SKILL_IGNORE. Return True when copying, False when skipping (with warn). is_within/
+    is_within_lexical — now from core (re-export above)."""
     if not is_within_lexical(dst, dest_root):
-        warn(f"пропуск: путь вне каталога назначения: {dst}")
+        warn(f"skip: path outside the destination directory: {dst}")
         return False
     if dst.is_symlink() or dst.is_file():
         dst.unlink()
     elif dst.is_dir():
         shutil.rmtree(dst)
     if dst.is_symlink() or dst.exists():
-        warn(f"пропуск '{dst.name}': путь пересоздан между удалением и копированием (гонка)")
+        warn(f"pass '{dst.name}': path recreated between deletion and copy (race)")
         return False
     shutil.copytree(src, dst, dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns(*SKILL_IGNORE))
@@ -135,12 +135,12 @@ def safe_copy_skill(src, dst, dest_root):
 
 def write_skill_manifest(manifest_file, *, profile, agent, layout, installed,
                          support_files=None):
-    """ЕДИНЫЙ writer `.swissknifeman-manifest.json` — общий для vendor.do_vendor и
-    skillset.sync_skillset (раньше два независимых писателя с разной схемой:
-    date-only timestamp без `version` у vendor, `now_iso`+`version` у skillset —
-    аудит V-4, update.detect_vendor_path читает оба и мог упереться в расхождение).
-    Неизменившийся манифест сохраняет исходный installed_at и байты файла.
-    Атомарно (tmp+os.replace), `version` первым ключом."""
+    """ONE writer `.swissknifeman-manifest.json` — common for vendor.do_vendor and
+    skillset.sync_skillset (used to be two independent writers with different designs:
+    date-only timestamp without `version` y vendor, `now_iso`+`version` y skillset —
+    audit V-4, update.detect_vendor_path reads both and could have encountered a discrepancy).
+    The unchanged manifest retains the original installed_at and file bytes.
+    Atomic (tmp+os.replace), `version` as the first key."""
     stable_data = {
         "profile": profile,
         "agent": agent,
@@ -163,8 +163,8 @@ def write_skill_manifest(manifest_file, *, profile, agent, layout, installed,
 
 @dataclass(frozen=True)
 class Env(BaseEnv):
-    """Контекст запуска swissknifeman: ядро (root/cmd/home) — из BaseEnv;
-    здесь только path-property реестра (state ~/.swissknifeman)."""
+    """Launch context swissknifeman: core (root/cmd/home) — from BaseEnv;
+    here only path-property registry (state ~/.swissknifeman)."""
 
     @property
     def state_dir(self):
@@ -180,23 +180,23 @@ class Env(BaseEnv):
 
 
 def harness_bin(env):
-    """Путь к лаунчеру пакета `harness` (настройка окружения вынесена туда).
-    Резолв — общий `core.sibling_bin`: env-override `SKM_HARNESS_BIN` → PATH →
-    `<монорепо>/packages/harness/bin/harness`. None, если не найден (standalone /
-    harness не установлен)."""
+    """Path to package launcher `harness` (environment settings moved there).
+    Resolve - general `core.sibling_bin`: env-override `SKM_HARNESS_BIN` → PATH →
+    `<monorepo>/packages/harness/bin/harness`. None, if not found (standalone /
+    harness not installed)."""
     return sibling_bin("harness", env_var="SKM_HARNESS_BIN", use_path=False,
                        monorepo_root=find_monorepo_root(env.root))
 
 
 def apply_permissions(env, target, presets="", dry_run=False, settings_file=None):
-    """Влить permissions-пресеты в .claude цели — делегируется пакету `harness`.
-    Окружение Claude Code (permissions/MCP/хуки) вынесено в отдельный пакет; skiller
-    зовёт `harness permissions` через subprocess. presets="" → автодетект стека.
-    Возвращает True, если harness запущен; False (с warn) — если harness не установлен."""
+    """Pour in permissions-presets in .claude targets - delegated to package `harness`.
+    Environment Claude Code (permissions/MCP/hooks) moved to a separate package; skiller
+    calling `harness permissions` via subprocess. presets="" → stack autodetect.
+    Returns True, if harness started; False (with warn) — if harness is not installed."""
     binp = harness_bin(env)
     if binp is None:
-        warn("harness не установлен — пропуск permissions "
-             "(установите: packages/harness/install.sh)")
+        warn("harness not installed - skip permissions "
+             "(set: packages/harness/install.sh)")
         return False
     cmd = [str(binp), "permissions", "--target", str(target)]
     if presets:
@@ -206,32 +206,32 @@ def apply_permissions(env, target, presets="", dry_run=False, settings_file=None
     if dry_run:
         cmd.append("--dry-run")
     sys.stdout.flush()
-    # timeout: завис harness (NFS/сеть) не должен морозить `skiller sync` молча.
-    # stderr ловим в warn; stdout оставляем живым (harness печатает прогресс сам).
+    # timeout: stuck harness (NFS/network) should not freeze `skiller sync` silently.
+    # stderr catch in warn; stdout we leave alive (harness prints progress itself).
     try:
         result = subprocess.run(cmd, check=False, timeout=30,
                                 stderr=subprocess.PIPE, text=True)
     except subprocess.TimeoutExpired:
-        warn("harness: превышен таймаут 30s — permissions могли не примениться")
+        warn("harness: timeout exceeded 30s — permissions might not apply")
         return True
     if result.returncode != 0:
-        # Раньше warn был только при непустом stderr → молчаливый ненулевой rc прятал, что
-        # permissions-пресеты (deny мусора/allow стека) НЕ легли. Сообщаем всегда.
+        # Previously warn was only when non-empty stderr → silent non-null rc hid that
+        # permissions-presets (deny garbage/allow stack) DID NOT lie down. We always inform you.
         detail = result.stderr.strip() if result.stderr else f"exit {result.returncode}"
-        warn(f"harness permissions не применились ({detail}) — пресеты deny/allow могли не лечь; "
-             f"перезапустите: harness permissions --target {target}")
+        warn(f"harness permissions did not apply ({detail}) — presets deny/allow might not have gone to bed; "
+             f"restart: harness permissions --target {target}")
     return True
 
 
-# parse_flags — из общего core (реэкспорт выше); раньше дублировался здесь.
+# parse_flags — from general core (re-export above); was previously duplicated here.
 
 
 # --- frontmatter --------------------------------------------------------------
-# Разбор перенесён в общий core.text (единый источник для skiller/harness/maind).
-# Здесь остаётся только чтение файла: utf-8-sig срезает BOM, если есть (иначе
-# `﻿---` != `---` и весь frontmatter молча игнорировался бы).
+# Analysis moved to general core.text (single source for skiller/harness/maind).
+# Here all that remains is to read the file: utf-8-sig cuts BOM, if available (otherwise
+# `﻿---` != `---` and all frontmatter would be silently ignored).
 def parse_frontmatter(path):
-    """Frontmatter скилла по пути (core.parse_frontmatter поверх utf-8-sig-чтения)."""
+    """Frontmatter skill along the way (core.parse_frontmatter on top utf-8-sig-read)."""
     return _core_parse_frontmatter(Path(path).read_text(encoding="utf-8-sig"))
 
 
@@ -279,29 +279,29 @@ def aggregate_dependency_diagnostics(diagnostics):
 
 
 def resolve_requires_bfs(seed, lookup, selected_keys, exclude, *, diagnostics=None):
-    """Транзитивный BFS резолва frontmatter `requires` — ЕДИНЫЙ источник для
-    vendor.resolve_requires (FS-кортежи) и skillset._pull_requires (registry-entry):
-    раньше это были два независимых, уже разошедшихся тела (RU/EN тексты warn,
-    аудит V-1). Вызывающий адаптирует свою модель данных к узлу-словарю через `lookup`.
+    """Transitive BFS resolve frontmatter `requires` — SINGLE source for
+    vendor.resolve_requires (FS-tuples) and skillset._pull_requires (registry-entry):
+    before these were two independent, already diverged bodies (RU/EN texts warn,
+    audit V-1). The caller adapts its data model to the dictionary node via `lookup`.
 
-    seed: [(dep_name, requester_key), ...] — стартовая очередь (requires уже
-        отобранных скиллов).
+    seed: [(dep_name, requester_key), ...] — start queue (requires already
+        selected skills).
     lookup(dep_name) -> {"key", "requires": [str], "exclude_tokens": set[str], ...} | None
-        — разрешить имя зависимости в узел; None — зависимость не найдена в реестре.
-        Узел может нести любые доп. поля (напр. "_payload") — вызывающий сам их читает
-        из возврата.
-    selected_keys: изменяемое множество уже выбранных ключей — МУТИРУЕТСЯ (сюда
-        добавляются ключи резолвнутых узлов), чтобы повторный вызов/рекурсия не
-        задваивала уже выбранное.
-    exclude: множество токенов, которые ПОБЕЖДАЮТ зависимость (safety-oriented) —
-        зависимость с пересечением exclude_tokens пропускается с warning, даже если
-        она нужна другому скиллу.
+        — resolve dependency name to node; None — dependency not found in the registry.
+        The node can carry any additional. fields (e.g. "_payload") — the caller reads them himself
+        from return.
+    selected_keys: mutable set of already selected keys - MUTATES (here
+        keys of resolved nodes are added), to call again/recursion not
+        doubled what was already selected.
+    exclude: many tokens that BEAT addiction (safety-oriented) —
+        dependency with intersection exclude_tokens is skipped with warning, even if
+        another skill needs it.
 
     diagnostics: optional mutable list populated with stable dependency records.
         It does not suppress or change the existing human warning text.
 
-    Возвращает [(node, requester_key), ...] в порядке резолва — вызывающий сам
-    решает, как класть узлы в свою структуру (список кортежей / dict по имени)."""
+    Returns [(node, requester_key), ...] in resolution order - caller himself
+    decides how to put nodes in its structure (list of tuples / dict by name)."""
     queue = list(seed)
     resolved = []
     observed_diagnostics = []
@@ -311,7 +311,7 @@ def resolve_requires_bfs(seed, lookup, selected_keys, exclude, *, diagnostics=No
             continue
         node = lookup(dep)
         if node is None:
-            warn(f"'{requester}' requires неизвестный скилл '{dep}' — пропуск")
+            warn(f"'{requester}' requires unknown skill '{dep}' — pass")
             observed_diagnostics.append({
                 "code": "SKILL_REQUIRED_UNKNOWN",
                 "required_skill": dep,
@@ -319,7 +319,7 @@ def resolve_requires_bfs(seed, lookup, selected_keys, exclude, *, diagnostics=No
             })
             continue
         if node["exclude_tokens"] & exclude:
-            warn(f"'{requester}' requires '{dep}', но он в exclude — зависимость пропущена")
+            warn(f"'{requester}' requires '{dep}', but he's in exclude — dependency missing")
             observed_diagnostics.append({
                 "code": "SKILL_REQUIRED_EXCLUDED",
                 "required_skill": dep,
@@ -345,15 +345,15 @@ def resolve_requires_bfs(seed, lookup, selected_keys, exclude, *, diagnostics=No
 
 
 def skill_content_hash(skill_dir):
-    """SHA-256 по содержимому ВСЕХ файлов каталога скилла — детект дрейфа sync шире,
-    чем по одному SKILL.md: ловит правки в snippets/ и references/ (которые SKILL.md
-    может не двигать). Игнорируем то же, что НЕ вендорится: upstream.json, языковые
-    альтернаты SKILL.*.md (кроме SKILL.md), .claude-plugin/, __pycache__/*.pyc.
-    Относительный путь файла входит в хеш (защита от переименований/перемещений).
-    Порядок стабилен (sorted).
+    """SHA-256 based on the contents of ALL files in the skill catalog - drift detection sync wider,
+    than one at a time SKILL.md: catches edits in snippets/ and references/ (which SKILL.md
+    may not move). We ignore the same thing that is NOT vendored: upstream.json, language
+    alternatives SKILL.*.md (except SKILL.md), .claude-plugin/, __pycache__/*.pyc.
+    The relative path of the file is included in the hash (rename protection/movements).
+    The order is stable (sorted).
 
-    Полный hexdigest, как у остальных sha256 в реестре/локе. Дополняет, а НЕ заменяет
-    поле sha256 (по SKILL.md) — старые локи без content_sha256 деградируют корректно."""
+    Full hexdigest, like the others sha256 in the registry/location. Complements, NOT replaces
+    field sha256 (by SKILL.md) — old locks without content_sha256 degrade correctly."""
     h = hashlib.sha256()
     skill_dir = Path(skill_dir)
     for f in sorted(skill_dir.rglob("*")):
@@ -366,14 +366,14 @@ def skill_content_hash(skill_dir):
             continue
         if ".claude-plugin" in f.parts:
             continue
-        # __pycache__/*.pyc — байткод-кэш при локальном запуске .py-сниппетов (напр.
-        # snippets/check.py); без исключения content_sha256 нестабилен между машинами
-        # (найдено при расследовании дрейфа skills.json — на диске разработчика был
-        # __pycache__, в чистом чекауте/CI его нет, хеши расходились).
+        # __pycache__/*.pyc — bytecode cache when running locally.py-snippets (e.g.
+        # snippets/check.py); without exception content_sha256 is unstable between machines
+        # (found during drift investigation skills.json — on the developer disk was
+        # __pycache__, in a clean checkout/CI it’s not there, the hashes were different).
         if "__pycache__" in f.parts or name.endswith(".pyc"):
             continue
-        # evals/ — поведенческие тесты (eval-first), НЕ вендорятся (см. vendor.copy_skill);
-        # исключаем из хеша, чтобы правка теста не считалась дрейфом вендоренного скилла.
+        # evals/ — behavioral tests (eval-first), NOT vendored (see vendor.copy_skill);
+        # is excluded from the hash so that editing the test is not considered a drift of the vendor skill.
         if "evals" in f.relative_to(skill_dir).parts:
             continue
         h.update(str(f.relative_to(skill_dir)).encode("utf-8"))

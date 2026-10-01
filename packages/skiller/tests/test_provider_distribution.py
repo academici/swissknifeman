@@ -622,12 +622,12 @@ class ProviderDistributionCase(unittest.TestCase):
         self.assertIn("code-style", codex_plan["keep"])
 
     def test_repair_restores_managed_skill_deleted_from_project(self):
-        """Удалённый managed-скилл — тоже managed-drift, но пре-образа у него нет.
+        """Deleted managed-skill - too managed-drift, but it does not have a pre-image.
 
-        Регрессия: `--repair` требовал SKILL.md для бэкапа и умирал
-        SPUB_OWNERSHIP_CONFLICT «no recoverable pre-image», из-за чего ЕДИНСТВЕННЫЙ
-        путь восстановления удалённого скилла был недостижим (наблюдено на живом
-        проекте: `plan-protocol` пропал из `.claude/skills`, sync не чинился).
+        Regression: `--repair` required SKILL.md for backup and died
+        SPUB_OWNERSHIP_CONFLICT «no recoverable pre-image», because of which the ONLY
+        the path to restore a deleted skill was unattainable (observed on living
+        project: `plan-protocol` missing from `.claude/skills`, sync was not repaired).
         """
         self.write_provider_config(providers())
         with contextlib.redirect_stdout(io.StringIO()):
@@ -639,7 +639,7 @@ class ProviderDistributionCase(unittest.TestCase):
             result = do_sync(self.env, self.project, {"no_core": True, "repair": True})
         source = (self.root / "skills/php/code-style/SKILL.md").read_bytes()
         self.assertEqual((codex_skill_dir / "SKILL.md").read_bytes(), source)
-        # бэкапа нет и быть не может — локальных байт не существовало
+        # there is no backup and there cannot be - there were no local bytes
         self.assertFalse((codex_skill_dir / "SKILL.md.provider-artifact.bak").exists())
         evidence = next(record for record in result["providers"]
                         if record["provider"] == "codex")["repair"][0]
@@ -719,7 +719,7 @@ class RepositoryBootstrapConsumerRejectionCase(unittest.TestCase):
         with contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit):
             do_sync(self.env, self.project, {})
         self.assertIn("repository-bootstrap", stderr.getvalue())
-        self.assertIn("приватный source-only", stderr.getvalue())
+        self.assertIn("private source-only", stderr.getvalue())
         self.assertFalse((self.project / ".claude" / "skills").exists())
 
     def test_vendor_include_by_name_is_never_resolved(self):

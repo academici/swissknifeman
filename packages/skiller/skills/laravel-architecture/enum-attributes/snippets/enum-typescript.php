@@ -4,11 +4,11 @@
 declare(strict_types=1);
 
 /*
- * Связка: кастомные #[Label]/#[Priority] (домен) + #[TypeScript] (экспорт на фронт).
- * Один enum несёт и человекочитаемые метаданные для бэка (через concern-резолвер),
- * и контракт типа для TS (через spatie/laravel-typescript-transformer).
+ * Bundle: custom #[Label]/#[Priority] (domain) + #[TypeScript] (export to front).
+ * One enum also carries human-readable metadata for the back (via concern-resolver),
+ * and the type contract for TS (via spatie/laravel-typescript-transformer).
  *
- * Три части в одном файле для наглядности — в проекте это три файла:
+ * Three parts in one file for clarity - in the project these are three files:
  *   app/Attributes/Common/Label.php
  *   app/Concerns/Enums/HasLabelAttribute.php
  *   app/Enums/User/UserRole.php
@@ -18,7 +18,7 @@ namespace App\Attributes\Common;
 
 use Attribute;
 
-// 1) Доменный атрибут метаданных. target = TARGET_CLASS_CONSTANT (покрывает enum-кейсы).
+// 1) Domain metadata attribute. target = TARGET_CLASS_CONSTANT (covers enum-cases).
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
 final readonly class Label
 {
@@ -32,9 +32,9 @@ namespace App\Concerns\Enums;
 use App\Attributes\Common\Label;
 use App\Support\Enums\EnumCaseAttributeResolver;
 
-// 2) Concern резолвит атрибут на каждый case через reflection-резолвер.
-//    Резолвер: ReflectionEnum->getCase($this->name)->getAttributes(Label::class)->newInstance().
-//    См. snippets/concern-trait.php — там сам EnumCaseAttributeResolver.
+// 2) Concern resolves the attribute for each case via reflection-resolver.
+//    Resolver: ReflectionEnum->getCase($this->name)->getAttributes(Label::class)->newInstance().
+//    See snippets/concern-trait.php — there himself EnumCaseAttributeResolver.
 /** @property-read string $name */
 trait HasLabelAttribute
 {
@@ -59,67 +59,67 @@ use EmreYarligan\EnumConcern\EnumConcern;
 use Filament\Support\Contracts\HasLabel;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-// 3) Enum со стэком атрибутов:
-//    #[TypeScript] на классе  -> DefaultCollector подхватит его и экспортирует тип в .d.ts;
-//    #[Label]/#[Priority] на кейсах -> доменные метаданные, читаемые concern-ами на бэке;
-//    implements HasLabel + getLabel() из трейта -> совместимость с Filament-селектами.
+// 3) Enum with attribute stack:
+//    #[TypeScript] on the class -> DefaultCollector will pick it up and export the type to .d.ts;
+//    #[Label]/#[Priority] on cases -> domain metadata, readable concern-ami on back;
+//    implements HasLabel + getLabel() from trait -> compatible with Filament-selects.
 //
-// Конфликта нет: #[TypeScript] и кастомные атрибуты живут на разных уровнях
-// (класс vs константа) и обрабатываются разными механизмами.
+// No conflict: #[TypeScript] and custom attributes live at different levels
+// (class vs constant) and are processed by different mechanisms.
 #[TypeScript]
 enum UserRole: string implements HasLabel
 {
-    use EnumConcern;          // коллекционные операции: ::values(), ::all()
-    use HasLabelAttribute;    // getLabel() из #[Label]
+    use EnumConcern;          // collection operations: ::values(), ::all()
+    use HasLabelAttribute;    // getLabel() from #[Label]
 
-    #[Label('Администратор')]
+    #[Label('Administrator')]
     case Admin = 'admin';
 
-    #[Label('Секретарь')]
+    #[Label('Secretary')]
     #[Priority(forOrder: 1)]
     case Secretary = 'secretary';
 
-    #[Label('Регистратор')]
+    #[Label('Recorder')]
     #[Priority(forOrder: 2)]
     case Registrar = 'registrar';
 
-    #[Label('Утверждающий')]
+    #[Label('Approver')]
     #[Priority(forOrder: 3)]
     case Approving = 'approving';
 
-    /** Системная роль, не рабочая роль приложения. Метку несёт, но в выборках не участвует. */
-    #[Label('Суперадминистратор')]
+    /** System role, not application worker role. Bears the mark, but does not participate in the samples. */
+    #[Label('Super Administrator')]
     case SuperAdmin = 'super_admin';
 }
 
 /*
- * Конфиг экспорта: config/typescript-transformer.php
+ * Export config: config/typescript-transformer.php
  * --------------------------------------------------
  * return [
  *     'auto_discover_types' => [app_path()],
  *     'collectors' => [
- *         // DefaultCollector ищет классы с #[TypeScript] (и @typescript) и отдаёт их трансформерам.
+ *         // DefaultCollector searches for classes with #[TypeScript] (and @typescript) and gives them to the Transformers.
  *         Spatie\TypeScriptTransformer\Collectors\DefaultCollector::class,
  *     ],
  *     'transformers' => [
  *         Spatie\TypeScriptTransformer\Transformers\EnumTransformer::class,
- *         // ...DtoTransformer и пр.
+ *         // ...DtoTransformer etc.
  *     ],
  *     'output_file' => resource_path('types/generated.d.ts'),
- *     'transform_to_native_enums' => false, // enum -> union-тип (а не native TS enum)
+ *     'transform_to_native_enums' => false, // enum -> union-type (and not native TS enum)
  * ];
  *
- * Команда генерации:  php artisan typescript:transform
+ * Generation command:  php artisan typescript:transform
  *
- * Результат в resources/types/generated.d.ts:
+ * Result in resources/types/generated.d.ts:
  *   declare namespace App.Enums.User {
  *       export type UserRole = 'admin' | 'secretary' | 'registrar' | 'approving' | 'super_admin';
  *   }
  *
- * Фронт потребляет App.Enums.* как union-типы — frontend-сторона синка
- * (см. связанный скилл frontend/backend-type-sync).
+ * Front consumes App.Enums.* like union-types - frontend-sync side
+ * (see related skill frontend/backend-type-sync).
  *
- * Важно: #[TypeScript] экспортирует ТОЛЬКО backing-значения кейсов.
- * Метки из #[Label] на фронт НЕ попадают — если нужны label'ы в UI,
- * отдавайте их отдельной мапой (DTO/ресурс) либо своим writer-ом.
+ * Important: #[TypeScript] exports ONLY backing-case values.
+ * Tags from #[Label] do NOT go to the front - if needed label's in UI,
+ * give them as a separate map (DTO/resource) or your writer-ohm.
  */

@@ -1,66 +1,66 @@
-# run-report — архивный захват исхода прогона (SessionEnd)
+# run-report — archived run outcome capture (SessionEnd)
 
-Один **Python-хук** Claude Code (`SessionEnd`), который в конце сессии читает транскрипт и
-пишет структурированный **run-report** в `<git-root>/.claude/runs/<session_id>.json`. Отсюда
-[`maind analyze`](../../../../../maind/) собирает пост-ран отчёт «всё ли сработало как надо».
+One **Python-hook** Claude Code (`SessionEnd`), who at the end of the session reads the transcript and
+writes structured **run-report** in `<git-root>/.claude/runs/<session_id>.json`. From here
+[`maind analyze`](../../../../../maind/) collects post-run report «did everything work as it should?».
 
-Захват **универсальный** (generic): исход снимается из транскрипта для ЛЮБОЙ задачи — не только
-dev-loop-воркфлоу. Поэтому `dev-loop.js`/паки трогать не нужно (verified perplexity-web по
-офиц. докам: SessionEnd получает `transcript_path`+`session_id`+`cwd` и может писать на диск).
+Capture **universal** (generic): the outcome is removed from the transcript for ANY task - not only
+dev-loop-work flow. Therefore `dev-loop.js`/no need to touch the packs (verified perplexity-web by
+official. docks: SessionEnd gets `transcript_path`+`session_id`+`cwd` and can write to disk).
 
-## Что извлекает (защитно, деградирует по наличию)
+## What it retrieves (protective, degraded by presence)
 
-| Срез | Источник в транскрипте |
+| Slice | Source in transcript |
 |:--|:--|
-| `tools.by_name` / `.total` | все `tool_use`-блоки (Bash/Edit/Write/Workflow/Task/…) |
-| `codegraph` | вызовы symbol-tools Serena/codegraph/laravel-boost (`find_symbol`, `get_symbols_overview`, …) |
-| `bash.tests` / `.lints` | Bash-команды по паттерну (pytest/phpunit/pest/ruff/pint/validate.sh…) + `ok` из `is_error` |
-| `bash.failed` | Bash-команды, чей `tool_result.is_error=true` |
-| `tool_failures` | любой `tool_result.is_error=true` (инструмент + срез вывода) |
-| `files_changed` | `file_path`/`notebook_path` из Edit/Write/MultiEdit/NotebookEdit + `toolUseResult.filePath` |
-| `workflows` | `toolUseResult` воркфлоу (`workflowName`/`status`/`summary`) |
-| `devloop` | best-effort: JSON с `tool_failures`/`workarounds`/`deferred`/`open_questions`/`results` в результате воркфлоу/агента |
+| `tools.by_name` / `.total` | all `tool_use`-blocks (Bash/Edit/Write/Workflow/Task/…) |
+| `codegraph` | calls symbol-tools Serena/codegraph/laravel-boost (`find_symbol`, `get_symbols_overview`, …) |
+| `bash.tests` / `.lints` | Bash-commands by pattern (pytest/phpunit/pest/ruff/pint/validate.sh…) + `ok` from `is_error` |
+| `bash.failed` | Bash-commands whose `tool_result.is_error=true` |
+| `tool_failures` | any `tool_result.is_error=true` (tool + output slice) |
+| `files_changed` | `file_path`/`notebook_path` from Edit/Write/MultiEdit/NotebookEdit + `toolUseResult.filePath` |
+| `workflows` | `toolUseResult` work flow (`workflowName`/`status`/`summary`) |
+| `devloop` | best-effort: JSON with `tool_failures`/`workarounds`/`deferred`/`open_questions`/`results` as a result of work flow/agent |
 
-## Файлы
+## Files
 
-| Файл | Роль |
+| File | Role |
 |:--|:--|
-| `run-report.py` | SessionEnd-хук: stdin → транскрипт → `<git-root>/.claude/runs/<sid>.json` (атомарно, ретеншн) |
-| `_lib.py` | защитный **строчный** парсер транскрипта (без слурпа) — тестируемо отдельно |
-| `env.ini` | `ENABLED` (kill-switch) + `RUNS_KEEP` (ретеншн). Per-project override в `.claude/run-report.env.ini` |
+| `run-report.py` | SessionEnd-hook: stdin → transcript → `<git-root>/.claude/runs/<sid>.json` (atomic, retention) |
+| `_lib.py` | protective **lowercase** transcript parser (without slurp) — tested separately |
+| `env.ini` | `ENABLED` (kill-switch) + `RUNS_KEEP` (retention). Per-project override in `.claude/run-report.env.ini` |
 
-## Установка / включение
+## Installation / enable
 
 ```bash
-harness hooks --global                      # копирует хук в ~/.claude/hooks/run-report/
-harness hooks --target . --run-report on     # включить в проекте (env.ini + регистрация SessionEnd)
-maind analyze --project <id>                 # разбор накопленных run-report'ов
+harness hooks --global                      # copies the hook to ~/.claude/hooks/run-report/
+harness hooks --target . --run-report on     # include in the project (env.ini + registration SessionEnd)
+maind analyze --project <id>                 # analysis of accumulated run-report'ov
 ```
 
-## I/O-контракт (для отладки)
+## I/O-contract (for debugging)
 
-Хук читает JSON payload на stdin (`transcript_path`/`session_id`/`cwd`/`reason`), пишет файл
-`<git-root>/.claude/runs/<session_id>.json` и ничего в stdout (SessionEnd stdout не виден модели).
-Корень определяется `git rev-parse --show-toplevel` от наблюдаемого `cwd`; вне Git хук
-сохраняет прежний путь `<cwd>/.claude/runs/`. Поле `cwd` в JSON всегда сохраняет фактический
-каталог запуска.
-Каталог `runs/` **само-игнорируется** (`.gitignore` = `*`): run-report'ы эфемерны/машинно-локальны,
-не засоряют `git status` (и не ломают проверку «чистое дерево» в `maind analyze`).
+Hook reads JSON payload on stdin (`transcript_path`/`session_id`/`cwd`/`reason`), writes a file
+`<git-root>/.claude/runs/<session_id>.json` and nothing in stdout (SessionEnd stdout is not visible to the model).
+The root is determined `git rev-parse --show-toplevel` from observable `cwd`; out Git hook
+keeps the same path `<cwd>/.claude/runs/`. Field `cwd` in JSON always saves the actual
+launch directory.
+Catalog `runs/` **self-ignored** (`.gitignore` = `*`): run-report'are ephemeral/machine-local,
+do not clog `git status` (and do not break the check «pure tree» in `maind analyze`).
 
 ```bash
 echo '{"transcript_path":"/path/to/session.jsonl","cwd":"/proj","session_id":"s1"}' \
   | python3 run-report.py          # → /proj/.claude/runs/s1.json
-echo 'not json{' | python3 run-report.py   # → exit 0, ничего не пишет
+echo 'not json{' | python3 run-report.py   # → exit 0, does not write anything
 ```
 
-## Честные лимиты (не переобещаем)
+## Fair limits (we will not overpromise)
 
-- **Схема транскрипта не заморожена** официально (verified perplexity-web: стабильна к
-  аддитивным изменениям, но не контракт) → парс **защитный**, на ошибке хук молчит (exit 0),
-  а `maind analyze` деградирует на форензику (bash-лог + git-diff).
-- **`SessionEnd` = одна запись на сессию** — несколько задач в одной сессии сольются в один
-  run-report. Нужен per-turn — потребуется `Stop`-вариант (follow-up).
-- **`bash.tests`/`.lints` — эвристика по паттернам команд**; `ok` берётся из `is_error`
-  tool_result (надёжно), но классификация «это тест/линт» может промахнуться на нетипичных командах.
-- **`devloop` — best-effort**: зависит от того, вынес ли воркфлоу структурный результат в
-  транскрипт; нет — довольствуемся `workflows[].summary`.
+- **Transcript schema not frozen** official (verified perplexity-web: is stable to
+  additive changes, but not a contract) → pars **protective**, the hook is silent on the error (exit 0),
+  a `maind analyze` degrades to forensics (bash-log + git-diff).
+- **`SessionEnd` = one entry per session** — several tasks in one session will merge into one
+  run-report. Needed per-turn — will be required `Stop`-option (follow-up).
+- **`bash.tests`/`.lints` — heuristics based on command patterns**; `ok` is taken from `is_error`
+  tool_result (reliable), but classification «this is a test/lint» may miss on atypical commands.
+- **`devloop` — best-effort**: depends on whether the workflow has produced a structural result in
+  transcript; no - let's be content `workflows[].summary`.

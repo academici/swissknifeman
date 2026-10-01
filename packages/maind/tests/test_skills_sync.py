@@ -1,8 +1,8 @@
-"""Тесты derive_skills — связать swissknifeman/boost в граф из skills-lock.json.
+"""Tests derive_skills — link swissknifeman/boost to the graph from skills-lock.json.
 
-Единый derive-движок (легаси seed_skills удалён): skills-lock.json проекта →
-project ─uses→ skill ─provided_by→ tool (via=skills, plane=meta). Без lock → 0 рёбер
-(грубого fallback'а по реестру swissknifeman больше нет — источник истины только lock)."""
+Single derive-engine (legacy seed_skills deleted): skills-lock.json project →
+project ─uses→ skill ─provided_by→ tool (via=skills, plane=meta). Without lock → 0 ribs
+(rude fallback'and according to the registry swissknifeman is no more - the source of truth is only lock)."""
 import json
 import tempfile
 import unittest

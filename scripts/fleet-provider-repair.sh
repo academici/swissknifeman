@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Однократный прогон: sync MCP/hooks + skiller hub + health для новых/отстающих проектов.
+# One-time run: sync MCP/hooks + skiller hub + health for new/lagging projects.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MAIN="$ROOT/packages/maind/bin/maind"
@@ -17,4 +17,4 @@ repair_project() {
 repair_project agentools "$ROOT/../agentools"
 repair_project themeon "$ROOT/../themeon"
 
-echo "Готово. Перезапустите MCP/демон на хабе, если themeon не появился в maind_projects_status."
+echo "Done. Restart MCP/daemon on the hub if themeon did not appear in maind_projects_status."

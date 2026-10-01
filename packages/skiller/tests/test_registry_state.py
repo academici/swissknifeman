@@ -1,9 +1,9 @@
-"""Тесты ядра CLI: registry-генерация, state (projects.json), doctor, status.
+"""Kernel tests CLI: registry-generation, state (projects.json), doctor, status.
 
-Гоняются против синтетического реестра (tests/fixtures) во временных каталогах,
-без сети и subprocess. registry тестируется через build_registry/
-write_plugin_manifests/render_graph напрямую (cmd_registry вызывает write_graph
-in-process, без subprocess — раньше это был отдельный shell-скрипт)."""
+Racing against a synthetic registry (tests/fixtures) in temporary directories,
+without network and subprocess. registry is tested via build_registry/
+write_plugin_manifests/render_graph directly (cmd_registry calls write_graph
+in-process, without subprocess — used to be separate shell-script)."""
 import contextlib
 import io
 import json
@@ -25,15 +25,15 @@ import tests.fixtures as fx
 
 
 def _schema_prop(pytype, json_type):
-    """Собрать schema-свойство под Python-тип из CONFIG_KEYS. Кортеж типов
-    (memory_brain = (str, dict)) → oneOf-члены; одиночный тип → {"type": ...}."""
+    """Collect schema-property under Python-type from CONFIG_KEYS. Tuple of types
+    (memory_brain = (str, dict)) → oneOf-members; single type → {"type": ...}."""
     if isinstance(pytype, tuple):
         return {"oneOf": [{"type": json_type[t]} for t in pytype]}
     return {"type": json_type[pytype]}
 
 
 def capture(fn, *a, **kw):
-    """Выполнить fn, вернуть (result, stdout-текст)."""
+    """Execute fn, return (result, stdout-text)."""
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
         result = fn(*a, **kw)
@@ -54,10 +54,10 @@ class RegistryBuildCase(unittest.TestCase):
         self.assertEqual(reg["version"], 5)
         self.assertEqual(reg["name"], "swissknifeman")
         names = {s["name"] for s in reg["skills"]}
-        # 4 скилла из фикстуры (generate-skill живёт вне skills/, в реестр не идёт)
+        # 4 skill from fixtures (generate-skill lives outside skills/, does not go to the registry)
         self.assertEqual(
             names, {"laravel-conventions", "code-style", "test-writer", "docker"})
-        # счётчики бакетов
+        # bucket counters
         self.assertEqual(reg["buckets"]["php"]["count"], 2)
         self.assertEqual(reg["buckets"]["devops"]["count"], 1)
         self.assertEqual(sorted(bucket_dirs), ["devops", "php", "quality"])
@@ -69,8 +69,8 @@ class RegistryBuildCase(unittest.TestCase):
         self.assertNotIn("upstream", docker)
 
     def test_marketplace_emits_curated_core_plugin(self):
-        # Умное подключение: registry эмитит курируемый плагин `core` (source:"./" + skills[]
-        # из существующих CORE_SKILLS), грузящий РОВНО эти скиллы вместо целых бакетов.
+        # Smart connection: registry issues a supervised plugin `core` (source:"./" + skills[]
+        # from existing CORE_SKILLS), loading EXACTLY these skills instead of whole buckets.
         from skiller.config import CORE_PLUGIN
         skills = self.root / "skills"
         fx.write_skill(skills / "general" / "context-economy", "context-economy")
@@ -84,13 +84,13 @@ class RegistryBuildCase(unittest.TestCase):
         mp = json.loads(
             (self.root / ".claude-plugin" / "marketplace.json").read_text())
         core = next((p for p in mp["plugins"] if p["name"] == CORE_PLUGIN), None)
-        self.assertIsNotNone(core, "marketplace должен содержать курируемый core-плагин")
+        self.assertIsNotNone(core, "marketplace must contain a curated core-plugin")
         self.assertEqual(core["source"], "./")
         self.assertIn("./skills/general/context-economy", core["skills"])
         self.assertEqual(core["skills"], ["./skills/general/context-economy"])
         self.assertNotIn("./skills/oss-dev/gh-review", core["skills"])
         self.assertTrue(any(plugin["name"] == "oss-dev" for plugin in mp["plugins"]))
-        # курируемый core не имеет каталога-плагина на диске (ссылки, не копии)
+        # supervised core does not have a plugin directory on disk (links, not copies)
         self.assertFalse((skills / CORE_PLUGIN).exists())
 
     def test_upstream_skill_carries_provenance(self):
@@ -105,8 +105,8 @@ class RegistryBuildCase(unittest.TestCase):
         self.assertEqual(docker["fetched_at"], "2026-02-02")
 
     def test_fork_skill_provenance_via_non_skill_path(self):
-        # fork: files[].path указывает на зеркало (references/source.md), а не на
-        # SKILL.md → registry должен взять provenance из files[0] (fallback).
+        # fork: files[].path points to the mirror (references/source.md), and not on
+        # SKILL.md → registry should take provenance from files[0] (fallback).
         fx.write_upstream(self.root / "skills" / "devops" / "docker",
                           source="github", strategy="fork",
                           path="references/source.md",
@@ -119,10 +119,10 @@ class RegistryBuildCase(unittest.TestCase):
         self.assertEqual(docker["fetched_at"], "2026-03-03")
 
     def test_body_path_provenance_preferred_over_skill_md_entry(self):
-        # P7.3 thin-navigator: body_path явно называет files[]-запись с реальным
-        # телом апстрима — registry должен брать provenance из НЕЁ, а не из первой
-        # найденной записи с path=="SKILL.md" (даже если такая по какой-то причине
-        # тоже трекается) и не из files[0] (порядок в files[] не должен решать).
+        # P7.3 thin-navigator: body_path explicitly calls files[]-recording with real
+        # upstream body - registry should take provenance from HER, not from the first one
+        # found entry with path=="SKILL.md" (even if this is for some reason
+        # is also tracked) and not from files[0] (order in files[] shouldn't solve).
         fx.write_upstream(
             self.root / "skills" / "devops" / "docker",
             source="github", strategy="notify",
@@ -139,8 +139,8 @@ class RegistryBuildCase(unittest.TestCase):
         self.assertEqual(docker["fetched_at"], "2026-07-01")
 
     def test_broken_upstream_json_dies_with_path(self):
-        # Битый upstream.json → внятная ошибка с путём, не голый traceback
-        # на полпути генерации и не тихий провал в source="local".
+        # Broken upstream.json → clear error with the path, not naked traceback
+        # halfway through generation and not a silent failure in source="local".
         skill_dir = self.root / "skills" / "devops" / "docker"
         (skill_dir / "upstream.json").write_text("{ this is not json",
                                                  encoding="utf-8")
@@ -152,11 +152,11 @@ class RegistryBuildCase(unittest.TestCase):
         conv = next(s for s in reg["skills"] if s["name"] == "laravel-conventions")
         style = next(s for s in reg["skills"] if s["name"] == "code-style")
         self.assertEqual(conv["requires"], ["code-style"])
-        # у скилла без requires поле отсутствует, а не пустой список
+        # for a skill without requires field is missing, not an empty list
         self.assertNotIn("requires", style)
 
     def test_level_only_when_present(self):
-        # опц. поле level: пишется в skills.json при наличии, иначе ключа нет
+        # opt. field level: is written in skills.json if available, otherwise there is no key
         (self.root / "skills" / "devops" / "docker" / "SKILL.md").write_text(
             "---\nname: docker\nversion: 0.1.0\ndescription: Docker\n"
             "level: foundation\n---\n\nBody.\n", encoding="utf-8")
@@ -167,26 +167,26 @@ class RegistryBuildCase(unittest.TestCase):
         self.assertNotIn("level", style)  # omit-when-empty
 
     def test_content_sha256_covers_whole_dir(self):
-        # content_sha256 шире sha256 (по SKILL.md): ловит правки snippets/references
+        # content_sha256 wider sha256 (by SKILL.md): catches edits snippets/references
         docker = self.root / "skills" / "devops" / "docker"
         reg1, *_ = build_registry(self.env)
         e1 = next(s for s in reg1["skills"] if s["name"] == "docker")
         self.assertTrue(e1["content_sha256"])
-        self.assertNotEqual(e1["content_sha256"], e1["sha256"])  # разный охват
-        # правим ТОЛЬКО сниппет (SKILL.md не трогаем)
+        self.assertNotEqual(e1["content_sha256"], e1["sha256"])  # different coverage
+        # edit ONLY snippet (SKILL.md do not touch)
         (docker / "snippets").mkdir(exist_ok=True)
         (docker / "snippets" / "ex.md").write_text("v1", encoding="utf-8")
         reg2, *_ = build_registry(self.env)
         e2 = next(s for s in reg2["skills"] if s["name"] == "docker")
-        self.assertEqual(e2["sha256"], e1["sha256"])  # SKILL.md не менялся
-        self.assertNotEqual(e2["content_sha256"], e1["content_sha256"])  # дир иная
+        self.assertEqual(e2["sha256"], e1["sha256"])  # SKILL.md did not change
+        self.assertNotEqual(e2["content_sha256"], e1["content_sha256"])  # dir other
 
     def test_content_sha256_ignores_ru_alternate(self):
-        # SKILL.ru.md (языковой альтернат) не входит в content_sha256
+        # SKILL.ru.md (language alternative) is not included content_sha256
         docker = self.root / "skills" / "devops" / "docker"
         e1 = next(s for s in build_registry(self.env)[0]["skills"]
                   if s["name"] == "docker")
-        (docker / "SKILL.ru.md").write_text("полный русский источник\n",
+        (docker / "SKILL.ru.md").write_text("full Russian source\n",
                                             encoding="utf-8")
         e2 = next(s for s in build_registry(self.env)[0]["skills"]
                   if s["name"] == "docker")
@@ -200,14 +200,14 @@ class RegistryBuildCase(unittest.TestCase):
     def test_write_plugin_manifests(self):
         _, bucket_meta, bucket_dirs = build_registry(self.env)
         n = write_plugin_manifests(self.env, bucket_meta, bucket_dirs)
-        # 3 бакета + generate-skill
+        # 3 bucket + generate-skill
         self.assertEqual(n, 4)
-        # per-bucket манифест
+        # per-bucket manifest
         php_plugin = json.loads(
             (self.root / "skills" / "php" / ".claude-plugin" / "plugin.json")
             .read_text())
         self.assertEqual(php_plugin["name"], "php")
-        # корневой marketplace
+        # root marketplace
         mk = json.loads(
             (self.root / ".claude-plugin" / "marketplace.json").read_text())
         self.assertEqual(mk["name"], MARKETPLACE)
@@ -237,7 +237,7 @@ class StateCase(unittest.TestCase):
         rec1 = load_db(self.env)["projects"][0]
         first = rec1["first_connected_at"]
         self.assertEqual(rec1["buckets"], ["php"])
-        # обновляем тот же (path, channel) — first_connected_at сохраняется
+        # update the same (path, channel) — first_connected_at is saved
         upsert_project(self.env, {"path": "/p", "channel": "vendor",
                                   "buckets": ["php", "devops"]})
         db = load_db(self.env)
@@ -253,20 +253,20 @@ class StateCase(unittest.TestCase):
         self.assertEqual({r["channel"] for r in recs}, {"vendor", "marketplace"})
 
     def test_upsert_normalizes_path_dedupes(self):
-        # разные repr одного пути (./, ..) → одна запись (нормализация resolve())
+        # different repr one way (./, ..) → one entry (normalization resolve())
         upsert_project(self.env, {"path": "/p", "channel": "vendor"})
         upsert_project(self.env, {"path": "/p/.", "channel": "vendor"})
         db = load_db(self.env)
         self.assertEqual(len(db["projects"]), 1)
         self.assertEqual(db["projects"][0]["path"], "/p")
-        # lookup тоже нормализует — находит запись по «грязному» repr
+        # lookup also normalizes - finds the record by «dirty» repr
         self.assertEqual(len(db_records(self.env, "/p/.")), 1)
 
     def test_save_load_round_trip_no_tmp_left(self):
         save_db(self.env, {"version": 1, "projects": [{"path": "/x",
                                                        "channel": "vendor"}]})
         self.assertEqual(load_db(self.env)["projects"][0]["path"], "/x")
-        # атомарная запись не оставляет временного файла
+        # atomic write leaves no temporary file
         leftovers = list(self.env.state_dir.glob("*.tmp"))
         self.assertEqual(leftovers, [])
 
@@ -281,12 +281,12 @@ class DoctorCase(unittest.TestCase):
         self._tmp.cleanup()
 
     def test_doctor_runs_and_reports(self):
-        # doctor может вернуть код 1 (нет симлинка/не git-репо в tmp) — это норма;
-        # важно, что он не падает с исключением и печатает диагностику.
+        # doctor may return code 1 (no symlink/not git-repo in tmp) — is normal;
+        # important that it does not crash with an exception and prints diagnostics.
         try:
             _, out = capture(cmd_doctor, self.env, [])
         except SystemExit:
-            # issues>0 -> sys.exit(1); перехватываем вывод повторно без exit-чувствительности
+            # issues>0 -> sys.exit(1); intercept the output again without exit-sensitivity
             buf = io.StringIO()
             with contextlib.redirect_stdout(buf):
                 with contextlib.suppress(SystemExit):
@@ -294,10 +294,10 @@ class DoctorCase(unittest.TestCase):
             out = buf.getvalue()
         self.assertIn("skiller doctor", out)
         self.assertIn("python3", out)
-        self.assertIn("профили загружаются", out)
-        # Doc-1: harness не найден в синтетическом tmp-реестре (нет monorepo вокруг)
-        # — это опциональная зависимость, НЕ должна считаться FAIL.
-        self.assertIn("harness не установлен", out)
+        self.assertIn("profiles are loading", out)
+        # Doc-1: harness not found in synthetic tmp-registry (no monorepo around)
+        # — is an optional dependency and should NOT be considered FAIL.
+        self.assertIn("harness not installed", out)
         self.assertNotIn("FAIL] harness", out)
 
     def test_doctor_help(self):
@@ -305,10 +305,10 @@ class DoctorCase(unittest.TestCase):
         self.assertIn("skiller doctor", out)
 
     def test_doctor_flags_broken_harness_not_missing(self):
-        """Doc-1: harness УСТАНОВЛЕН (SKM_HARNESS_BIN указывает на исполняемый файл),
-        но СЛОМАН (ненулевой exit) — doctor должен различать это от «не установлен»
-        и репортить FAIL, а не молчаливое 'ok'. Единственный тест файла, реально
-        зовущий subprocess (сути проверки не проверить иначе)."""
+        """Doc-1: harness INSTALLED (SKM_HARNESS_BIN points to an executable file),
+        but BROKEN (non-zero exit) — doctor should distinguish this from «not installed»
+        and report FAIL, and not silent 'ok'. The only file test, really
+        calling subprocess (the essence of the check cannot be verified otherwise)."""
         broken = self.tmp / "broken-harness.sh"
         broken.write_text("#!/bin/sh\nexit 3\n", encoding="utf-8")
         broken.chmod(0o755)
@@ -325,24 +325,24 @@ class DoctorCase(unittest.TestCase):
                 os.environ.pop("SKM_HARNESS_BIN", None)
             else:
                 os.environ["SKM_HARNESS_BIN"] = old
-        self.assertIn("FAIL] harness исполняется", out)
-        self.assertNotIn("не установлен", out)
+        self.assertIn("FAIL] harness is being executed", out)
+        self.assertNotIn("not installed", out)
 
     def test_doctor_flags_schema_type_mismatch_not_just_key_names(self):
-        """Doc-2: раньше doctor сверял ТОЛЬКО имена ключей схемы (⇄ ключи) — при
-        расхождении ТИПА свойства (напр. schema говорит array, CONFIG_KEYS — str)
-        печатал ложное "OK". Схема ниже: имена 1:1 с CONFIG_KEYS, но у
-        'project_type' тип 'array' вместо ожидаемого 'string'."""
+        """Doc-2: before doctor checked ONLY the schema key names (⇄ keys) — when
+        property TYPE discrepancy (e.g. schema says array, CONFIG_KEYS — str)
+        printed false "OK". Diagram below: names 1:1 with CONFIG_KEYS, but
+        'project_type' type 'array' instead of expected 'string'."""
         from skiller.common import CONFIG_KEYS
         json_type = {str: "string", list: "array", int: "integer",
                     dict: "object", bool: "boolean"}
         props = {k: _schema_prop(t, json_type) for k, t in CONFIG_KEYS.items()}
-        props["project_type"]["type"] = "array"  # намеренное расхождение
+        props["project_type"]["type"] = "array"  # intentional discrepancy
         schema_dir = self.root / "schema"
         schema_dir.mkdir(parents=True, exist_ok=True)
         (schema_dir / "swissknife.schema.json").write_text(
             json.dumps({"properties": props}), encoding="utf-8")
-        # вторая схема (SKILLSET_KEYS) — доктор её тоже читает, кладём валидной
+        # second diagram (SKILLSET_KEYS) — the doctor reads it too, put it as valid
         from skiller.skillset import SKILLSET_KEYS
         props2 = {k: _schema_prop(t, json_type) for k, t in SKILLSET_KEYS.items()}
         (schema_dir / "swissknifeman-config.schema.json").write_text(
@@ -353,14 +353,14 @@ class DoctorCase(unittest.TestCase):
             with contextlib.redirect_stdout(buf):
                 cmd_doctor(self.env, [])
         out = buf.getvalue()
-        self.assertIn("⇄ ключи .swissknife.json", out)   # имена совпали — OK
-        self.assertIn("FAIL] схема swissknife.schema.json ⇄ типы", out)
+        self.assertIn("⇄ keys .swissknife.json", out)   # names matched - OK
+        self.assertIn("FAIL] diagram swissknife.schema.json ⇄ types", out)
         self.assertIn("project_type", out)
 
 
 def _run_doctor(env, argv):
-    """doctor может sys.exit(1) на синтетическом tmp-реестре (нет симлинка/git) — это
-    норма (см. test_doctor_runs_and_reports); ловим, чтобы прочитать вывод."""
+    """doctor may sys.exit(1) on synthetic tmp-registry (no symlink/git) — this
+    normal (see test_doctor_runs_and_reports); catch to read the output."""
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
         with contextlib.suppress(SystemExit):
@@ -369,8 +369,8 @@ def _run_doctor(env, argv):
 
 
 class VendorDriftCase(unittest.TestCase):
-    """doctor --vendor-drift: дрейф managed-скиллов зарегистрированных vendor-проектов
-    от текущего реестра (сухой plan_sync — см. doctor._vendor_drift)."""
+    """doctor --vendor-drift: drift managed-skills registered vendor-projects
+    from the current registry (dry plan_sync — see doctor._vendor_drift)."""
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.tmp = Path(self._tmp.name)
@@ -394,7 +394,7 @@ class VendorDriftCase(unittest.TestCase):
 
     def test_summary_ok_when_no_vendor_projects(self):
         out = _run_doctor(self.env, [])
-        self.assertIn("vendor-скиллы: дрейфа от реестра нет", out)
+        self.assertIn("vendor-skills: no drift from the registry", out)
 
     def test_non_green_plan_states_are_never_ignored(self):
         from skiller.doctor import _vendor_plan_has_drift
@@ -409,12 +409,12 @@ class VendorDriftCase(unittest.TestCase):
     def test_summary_warns_when_project_behind(self):
         self._register_vendor_project(["quality"])
         out = _run_doctor(self.env, [])
-        self.assertIn("vendor-скиллы: 1 проект(ов) отстали от реестра", out)
+        self.assertIn("vendor-skills: 1 project(ov) behind the registry", out)
 
     def test_detail_flag_reports_missing_skill(self):
         self._register_vendor_project(["quality"])
         out = _run_doctor(self.env, ["--vendor-drift"])
-        self.assertIn("proj: +1 новых", out)
+        self.assertIn("proj: +1 new", out)
 
     def test_detail_flag_clean_after_sync(self):
         from skiller.skillset import load_skillset_config, sync_skillset
@@ -422,7 +422,7 @@ class VendorDriftCase(unittest.TestCase):
         cfg = load_skillset_config(proj)
         sync_skillset(self.env, proj, cfg)
         out = _run_doctor(self.env, ["--vendor-drift"])
-        self.assertIn("(все vendor-проекты синхронизированы с реестром)", out)
+        self.assertIn("(all vendor-projects are synchronized with the registry)", out)
 
     def test_detail_flag_reports_managed_drift(self):
         from skiller.skillset import load_skillset_config, sync_skillset
@@ -459,12 +459,12 @@ class VendorDriftCase(unittest.TestCase):
         self.assertIn("proj [codex]: !1 managed drift", out)
 
     def test_connect_only_project_ignored(self):
-        # проект без .swissknifeman/config.json (только connect) — не участвует в дрейфе
+        # project without .swissknifeman/config.json (only connect) — does not participate in drift
         proj = self.tmp / "connectonly"
         proj.mkdir(parents=True, exist_ok=True)
         upsert_project(self.env, {"path": str(proj), "channel": "connect"})
         out = _run_doctor(self.env, [])
-        self.assertIn("vendor-скиллы: дрейфа от реестра нет", out)
+        self.assertIn("vendor-skills: no drift from the registry", out)
 
 
 class StatusCase(unittest.TestCase):
@@ -482,16 +482,16 @@ class StatusCase(unittest.TestCase):
         _, out = capture(cmd_status, self.env, ["--target", str(proj)])
         self.assertIn(str(proj), out)
         self.assertIn("marketplace", out)
-        self.assertIn("Профиль", out)
+        self.assertIn("Profile", out)
 
     def test_status_on_unconnected_project(self):
         proj = fx.make_laravel_project(self.tmp)
         _, out = capture(cmd_status, self.env, ["--target", str(proj)])
-        self.assertIn("не подключён", out)
+        self.assertIn("not connected", out)
 
 
 class DownstreamAuditCase(unittest.TestCase):
-    """skiller doctor --downstream: гигиена publish-surface онбордженных проектов."""
+    """skiller doctor --downstream: hygiene publish-surface onboarded projects."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -535,7 +535,7 @@ class DownstreamAuditCase(unittest.TestCase):
         # over-budget project flagged on all three axes
         self.assertIn("CLAUDE.md 300>200", out)
         self.assertIn("2 unscoped-rules", out)
-        self.assertIn("нет deny", out)
+        self.assertIn("no deny", out)
         # lean project is clean
         self.assertRegex(out, r"\[ok \] leanproj:")
 

@@ -11,13 +11,13 @@ use AzGuard\Support\ResolvesGateAbilities;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Abilities DTO — вычисленные boolean-флаги из политик для фронтенда:
- * ответ на вопрос «что можно сделать с ЭТИМ ресурсом прямо сейчас?».
+ * Abilities DTO — calculated boolean-flags from frontend policies:
+ * answer to the question «what can you do with THIS resource right now?».
  *
- * Правила:
- *   - DTO не дублирует логику политик — все проверки через Gate::allows();
- *   - передаётся на уровне страницы, не в глобальных shared props;
- *   - поля readonly — вычислены один раз, не мутируются.
+ * Rules:
+ *   - DTO does not duplicate the policy logic - all checks are done through Gate::allows();
+ *   - is transmitted at the page level, not global shared props;
+ *   - fields readonly — are calculated once, do not mutate.
  */
 final class DocumentsAbilities
 {
@@ -49,7 +49,7 @@ final class DocumentsAbilities
     }
 }
 
-// ── Передача в Inertia (на уровне страницы) ─────────────────────────────────
+// ── Transfer to Inertia (at page level) ─────────────────────────────────
 //
 // // DocumentController@show
 // public function show(Document $document): Response
@@ -60,7 +60,7 @@ final class DocumentsAbilities
 //     ]);
 // }
 //
-// ── Потребление в Vue ───────────────────────────────────────────────────────
+// ── Consumption in Vue ───────────────────────────────────────────────────────
 //
 // <script setup lang="ts">
 // const props = defineProps<{
@@ -74,4 +74,4 @@ final class DocumentsAbilities
 //   <button v-if="abilities.canDelete" @click="destroy">Delete</button>
 // </template>
 //
-// Скаффолдинг: php artisan make:guard-abilities
+// Scaffolding: php artisan make:guard-abilities

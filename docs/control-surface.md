@@ -1,115 +1,115 @@
-# Control-surface проекта (4 слоя)
+# Control-surface project (4 layer)
 
-Инструменты проекта в экосистеме — это **четыре независимых слоя**. Их состояние и
-пере-синхронизацию контролирует **скриптовый control-surface**: одной командой посмотреть
-полный инвентарь, точечно пере-синкать любой слой. Всё машиночитаемо (`--json`) — пригодно
-и человеку, и агенту (Claude Code сам видит drift и чинит точечно).
+Project tools in the ecosystem are **four independent layers**. Their condition and
+controls re-synchronization **scripted control-surface**: view with one command
+full inventory, pointwise re-sync any layer. Everything is machine readable (`--json`) — suitable
+for both person and agent (Claude Code sees for himself drift and fixes it point by point).
 
-## Четыре слоя
+## Four layers
 
-| Слой | Что это | Источник истины / lock | Статус | Точечная починка / re-sync |
+| Layer | What is this | Source of Truth / lock | Status | Spot repair / re-sync |
 |:--|:--|:--|:--|:--|
-| **Скиллы** | знания (connect-плагины / vendor-копии) | `.claude/settings.local.json` (enabledPlugins) · `skills-lock.json` | `skiller status [--json]` | `skiller connect`/`sync` · `skiller update` |
-| **Роли/агенты** | субагенты + workflow + review-gate | `.claude/agent-pack.lock.json` | `harness agent-packs doctor --target . [--json]` | `harness agent-packs render/upgrade` · `maind sync --only agent-pack` |
-| **MCP** | инструменты (память/код-граф/…) | `.mcp.json` | `maind health --project <id>` | `maind sync --only mcp` · `maind deploy` |
-| **Память/граф** | общий контекст + федерация связей | демон `:4111` · графы хаба · `.claude/memory.env.ini` | `maind verify [--json]` · `maind status` | `maind sync --only memory,graph,code-graph` · `maind start --only memory` |
+| **Skills** | knowledge (connect-plugins / vendor-copies) | `.claude/settings.local.json` (enabledPlugins) · `skills-lock.json` | `skiller status [--json]` | `skiller connect`/`sync` · `skiller update` |
+| **Roles/agents** | subagents + workflow + review-gate | `.claude/agent-pack.lock.json` | `harness agent-packs doctor --target . [--json]` | `harness agent-packs render/upgrade` · `maind sync --only agent-pack` |
+| **MCP** | tools (memory/code graph/…) | `.mcp.json` | `maind health --project <id>` | `maind sync --only mcp` · `maind deploy` |
+| **Memory/graph** | general context + federation of connections | demon `:4111` · hub graphs · `.claude/memory.env.ini` | `maind verify [--json]` · `maind status` | `maind sync --only memory,graph,code-graph` · `maind start --only memory` |
 
-> Слои **независимы** (skiller / harness / maind не знают друг о друге); единая точка — зонтичный
-> CLI и оркестратор `maind`.
+> Layers **independent** (skiller / harness / maind don't know about each other); single point - umbrella
+> CLI and orchestrator `maind`.
 
-## Проверка проекта одной командой
+## Checking a project with one command
 
 ```bash
-swissknifeman status <project-id>        # единый 4-слойный инвентарь проекта
-swissknifeman status --all               # весь флот (по строке на проект)
-swissknifeman status --all --json        # машиночитаемо (для агента/панели)
+swissknifeman status <project-id>        # single 4-layer project inventory
+swissknifeman status --all               # entire fleet (per line per project)
+swissknifeman status --all --json        # machine readable (for agent/panels)
 ```
 
-Вывод (по строке на проект): `status · mcp[a/m/c] · trust · skills=N · packs=N · scope` —
-плюс **drift→fix подсказки** (`⚠ слой: проблема → команда починки`). `<project-id>` фасадит в
-`maind projects status --project <id>`; bare `swissknifeman status` (или `--target`) — back-compat
-в `skiller status` (скиллы текущего проекта).
+Output (per line per project): `status · mcp[a/m/c] · trust · skills=N · packs=N · scope` —
+plus **drift→fix tips** (`⚠ layer: problem → repair command`). `<project-id>` facades in
+`maind projects status --project <id>`; bare `swissknifeman status` (or `--target`) — back-compat
+in `skiller status` (skills of the current project).
 
 ```
-Проекты (1) — слои: mcp[a/m/c] · skills · packs(роли) · trust:
+Projects (1) — layers: mcp[a/m/c] · skills · packs(roles) · trust:
   connected   agelto   mcp[-mc] trust· skills=42  packs=1  project:agelto
-      ⚠ agent-pack: профиль ожидает паки backend-laravel — не установлены → maind sync --only agent-pack --project agelto
+      ⚠ agent-pack: profile is waiting for packs backend-laravel — not installed → maind sync --only agent-pack --project agelto
 ```
 
-В `--json` каждый проект несёт `skills`, `agent_packs`, `configured` (MCP), `status` и массив
-`fixes` (`{layer, issue, fix}`) — агент читает `fixes` и выполняет точную команду.
+B `--json` each project carries `skills`, `agent_packs`, `configured` (MCP), `status` and an array
+`fixes` (`{layer, issue, fix}`) — agent reads `fixes` and executes the exact command.
 
-## Операционный цикл: status → точечный re-sync
+## Operating cycle: status → spot re-sync
 
-1. **Status** — `swissknifeman status <id> --json` (или `--all`). Смотри `status` и `fixes`.
-2. **Drift** — каждый `fixes[]` даёт точную команду на слой (не «пере-настрой всё»).
-3. **Re-sync** — выполни её; почти всегда это `maind sync --only <cap> --project <id>`
-   (capability-granular, идемпотентно, `--dry-run` для предпросмотра, `--json` для разбора):
+1. **Status** — `swissknifeman status <id> --json` (or `--all`). Look `status` and `fixes`.
+2. **Drift** — each `fixes[]` gives the exact command to the layer (not «re-configure everything»).
+3. **Re-sync** — execute it; almost always this `maind sync --only <cap> --project <id>`
+   (capability-granular, idempotent, `--dry-run` for preview, `--json` for parsing):
 
 ```bash
-maind sync --project <id> --only mcp                 # только MCP
-maind sync --project <id> --only agent-pack          # только роли/агенты (render/upgrade)
-maind sync --project <id> --only memory,graph        # только память/граф
-maind sync --project <id> --only mcp,graph --dry-run --json   # план без записи
+maind sync --project <id> --only mcp                 # only MCP
+maind sync --project <id> --only agent-pack          # roles only/agents (render/upgrade)
+maind sync --project <id> --only memory,graph        # memory only/graph
+maind sync --project <id> --only mcp,graph --dry-run --json   # plan without recording
 ```
 
-Провиженеры `maind sync --only`: `mcp · code-graph · graph · memory · memory-hook ·
+Provisioners `maind sync --only`: `mcp · code-graph · graph · memory · memory-hook ·
 health-hook · health-doc · feature-log-hook · ecosystem-skill · agent-pack`.
 
-## Машиночитаемость (для агента)
+## Machine readability (for agent)
 
-| Команда | Что даёт |
+| Command | What gives |
 |:--|:--|
-| `swissknifeman status --all --json` | весь флот: per-project 4 слоя + `fixes` |
-| `maind projects status --project <id> --json` | один проект, то же |
-| `maind projects health --all --evidence-set <file> --json` | exact-set provider/axis health по sealed redacted evidence; без repair |
-| `skiller status --json --target .` | детальный слой скиллов (каналы, профиль, бюджет, overlap) |
+| `swissknifeman status --all --json` | entire fleet: per-project 4 layer + `fixes` |
+| `maind projects status --project <id> --json` | same project, same |
+| `maind projects health --all --evidence-set <file> --json` | exact-set provider/axis health by sealed redacted evidence; without repair |
+| `skiller status --json --target .` | detailed skill layer (channels, profile, budget, overlap) |
 | `harness doctor --settings --provider claude-code\|codex --target . --json` | provider-qualified settings audit |
-| `harness agent-packs doctor --target . --json` | слой ролей (каталог паков + установленные) |
-| `maind verify --json` | пруф-оф-лайф памяти/графа/код-графа (не «поднято», а «реально пишут») |
+| `harness agent-packs doctor --target . --json` | role layer (pack directory + installed) |
+| `maind verify --json` | proof-of-life memory/column/code-graph (not «raised», a «really write») |
 
-## Диагностика окружения (не проектный инвентарь)
+## Environment diagnostics (not project inventory)
 
-`swissknifeman doctor` — fan-out по трём пакетам (`skiller`/`harness`/`maind` doctor): здоровье
-**самих инструментов** (PATH, реестр, демон, пресеты). Это про машину/установку, а
-`swissknifeman status` — про **состояние конкретного проекта/флота**.
+`swissknifeman doctor` — fan-out for three packages (`skiller`/`harness`/`maind` doctor): health
+**of the tools themselves** (PATH, registry, daemon, presets). It's about the car/installation, and
+`swissknifeman status` — about **project-specific status/fleet**.
 
-## Исполнение плана волной
+## Execution of the plan in a wave
 
-`swissknifeman env run <PLAN-ID> <Pn>` ведёт готовые `plan-run` items одной фазы
-последовательно: сначала строит очередь, затем останавливается на первом RED. Начинай с
-`--dry-run`: он показывает, какие items водитель возьмёт или откажется вести, и ничего не
-пишет. Ручные и terminal items остаются за оператором; контракт, журнал и итоговый verdict
-сохраняют обычные владельцы.
+`swissknifeman env run <PLAN-ID> <Pn>` leads ready-made `plan-run` items single phase
+sequentially: first builds a queue, then stops at the first RED. Start with
+`--dry-run`: it shows which items the driver will take or refuse to drive, and nothing
+writes. Manual and terminal items remain with the operator; contract, journal and final verdict
+are saved by ordinary owners.
 
-## Три слоя источника: canonical → generated → effective
+## Three source layers: canonical → generated → effective
 
-Слои выше отвечают «что подключено». Отдельная ось — «откуда это взялось и что реально
-активно»; путать её со слоями нельзя, потому что чинятся они разными командами:
+The layers above respond «what's connected». Single axis - «where did this come from and what is real
+active»; it cannot be confused with layers, because they are repaired with different commands:
 
-| Слой | Что это | Кто владеет | Как проверить (read-only) |
+| Layer | What is this | Who owns | How to check (read-only) |
 |:--|:--|:--|:--|
-| **canonical** | рукописный источник истины: `packages/*/skills/**`, `packages/task/commands/*.md`, конфиги пакетов | человек/пакет | обычный `git diff`, ревью |
-| **generated** | проекции канона: `skills.json`, оба `marketplace.json`, `adapters/**`, `.claude/skills`+`.agents/skills`, publication-locks, часть страниц доков | генератор (`skiller registry`, `render-provider-commands.py`) — **руками не правится** | `skiller registry --check` · `python3 packages/task/scripts/render-provider-commands.py --check --root .` |
-| **effective** | что реально видит агент в сессии: активная семантическая идентичность, её провенанс, коллизии, владелец хука, качество трассы | рантайм провайдера | `skiller doctor --effective-source [--json]` |
+| **canonical** | handwritten source of truth: `packages/*/skills/**`, `packages/task/commands/*.md`, package configs | person/package | normal `git diff`, review |
+| **generated** | canon projections: `skills.json`, both `marketplace.json`, `adapters/**`, `.claude/skills`+`.agents/skills`, publication-locks, part of the doc pages | generator (`skiller registry`, `render-provider-commands.py`) — **cannot be adjusted by hand** | `skiller registry --check` · `python3 packages/task/scripts/render-provider-commands.py --check --root .` |
+| **effective** | what the agent actually sees in the session: active semantic identity, its provenance, collisions, hook owner, trace quality | provider runtime | `skiller doctor --effective-source [--json]` |
 
-**Правило:** дрейф `generated` чинится **перегенерацией владеющей командой**, а не правкой
-файла; ручная правка сгенерированного — дефект, который поймает `--check`. Диагноз слоя
-`effective` — только чтение: `skiller doctor --effective-source` ничего не пишет (доказано
-сравнением `git status --porcelain=v1` до и после) и печатает по каждому диагносту
-`owner/source/status/evidence/quality/next_command` со статусом `ok`/`degraded`/`unknown`/`n/a`.
+**Rule:** drift `generated` being repaired **regeneration of the owning command**, rather than editing
+file; manual editing of the generated - a defect that will catch `--check`. Layer diagnosis
+`effective` — read-only: `skiller doctor --effective-source` does not write anything (proven
+comparison `git status --porcelain=v1` before and after) and prints for each diagnostician
+`owner/source/status/evidence/quality/next_command` with status `ok`/`degraded`/`unknown`/`n/a`.
 
-**Quality is printed as measured, never rounded.** Where a source is incomplete, the diagnostic prints a named `unknown` gap instead of `ok` (for example `trace-quality` while no per-project trace store exists). Details and common cases: [диагностика skiller](/skiller/guide/troubleshooting).
+**Quality is printed as measured, never rounded.** Where a source is incomplete, the diagnostic prints a named `unknown` gap instead of `ok` (for example `trace-quality` while no per-project trace store exists). Details and common cases: [diagnostics skiller](/skiller/guide/troubleshooting).
 
-Один конкретный механизм, живущий целиком в слое `generated` (двенадцать проекций
-`CLAUDE.md`/`AGENTS.md` из общего канона, два наблюдения дрейфа, два машинных гейта) —
-[канон корневых инструкций](/harness/reference/instruction-canon). Соседний носитель того же
-рода (схема-контракт → данные → stdlib-гейт `[10/10]` в `validate.sh`) —
-[декларативная политика исполнения](/harness/reference/execution-policy).
+One specific mechanism living entirely in the layer `generated` (twelve projections
+`CLAUDE.md`/`AGENTS.md` from the general canon, two drift observations, two machine gates) —
+[canon of root instructions](/harness/reference/instruction-canon). Neighboring media of the same
+sort (contract diagram → data → stdlib-gate `[10/10]` in `validate.sh`) —
+[declarative execution policy](/harness/reference/execution-policy).
 
-## Полная настройка проекта
+## Full project setup
 
-Порядок «дать проекту всё» (все 4 слоя) — операционный раннбук `project-tooling-runbook`
-(скилл) и [дерево решений онбординга](/maind/guide/onboarding-decision-tree). Кратко:
-онбординг в хаб → скиллы (канал) → **agent-packs (роли)** → MCP/Boost → память/граф →
-auto-approve → `swissknifeman status <id>` на проверку.
+Order «give everything to the project» (all 4 layers) — operational runbook `project-tooling-runbook`
+(skill) and [onboarding decision tree](/maind/guide/onboarding-decision-tree). Briefly:
+onboarding to the hub → skills (channel) → **agent-packs (roles)** → MCP/Boost → memory/graph →
+auto-approve → `swissknifeman status <id>` for review.

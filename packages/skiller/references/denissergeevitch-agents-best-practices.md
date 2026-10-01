@@ -1,18 +1,18 @@
 # DenisSergeevitch/agents-best-practices
 
 - **URL:** https://github.com/DenisSergeevitch/agents-best-practices
-- **Статус:** planned
-- **Проверено:** 2026-06-11
+- **Status:** planned
+- **Checked:** 2026-06-11
 
-Best practices для агентных систем: chain-of-thought, reflection, tool-use,
-error handling, multi-agent координация.
+Best practices for agent systems: chain-of-thought, reflection, tool-use,
+error handling, multi-agent coordination.
 
-## Брать выборочно
+## Take selectively
 
-- Reflection loop паттерн → `quality/` скиллы
-- Error handling гайдлайны → кандидат на `quality/error-handling` (новый скилл)
-- Multi-agent паттерны → `architect/agent-design`
+- Reflection loop pattern → `quality/` skills
+- Error handling guidelines → candidate for `quality/error-handling` (new skill)
+- Multi-agent patterns → `architect/agent-design`
 
-## Целевые bucket-ы
+## Targets bucket-s
 
 `quality/`, `architect/agent-design`.

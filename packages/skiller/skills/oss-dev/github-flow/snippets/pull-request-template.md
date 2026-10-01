@@ -1,14 +1,14 @@
-<!-- Скопировать в .github/PULL_REQUEST_TEMPLATE.md -->
+<!-- Copy to .github/PULL_REQUEST_TEMPLATE.md -->
 
 ## Summary
-<!-- Что сделано и зачем, 1-3 предложения -->
+<!-- What was done and why, 1-3 sentences -->
 
 ## Changes
-<!-- Список конкретных изменений -->
+<!-- List of specific changes -->
 -
 
 ## Breaking Changes
-<!-- BREAKING CHANGE с миграцией или "None" -->
+<!-- BREAKING CHANGE with migration or "None" -->
 None
 
 ## Testing

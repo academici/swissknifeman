@@ -1,8 +1,8 @@
-"""Тесты bucket-audit (audit.py) против синтетического реестра (P7.1 SKM-MASTER-002).
+"""Tests bucket-audit (audit.py) vs. synthetic registry (P7.1 SKM-MASTER-002).
 
-Проверяем: чистые примитивы (триггеры/шинглы/Jaccard), сборку реестра, детект
-overlap-пар, фан-аут usage по projects.json (fail-safe транскрипты), чистую функцию
-вердикта (dead/merge/thin/retrieval-only/keep приоритетом сигналов) и CLI-обёртку."""
+Checking: pure primitives (triggers/shingles/Jaccard), registry assembly, detection
+overlap-steam, fan-out usage by projects.json (fail-safe transcripts), pure function
+verdict (dead/merge/thin/retrieval-only/keep signal priority) and CLI-wrapper."""
 import contextlib
 import io
 import json
@@ -27,7 +27,7 @@ except ImportError:
     import fixtures as fx
 
 
-# --- примитивы -------------------------------------------------------------------
+# --- primitives ------------------------------------------------------------------
 class TriggersShinglesCase(unittest.TestCase):
     def test_desc_triggers_normalizes_words(self):
         self.assertEqual(desc_triggers("Laravel Testing, Conventions!"),
@@ -37,8 +37,8 @@ class TriggersShinglesCase(unittest.TestCase):
         self.assertNotIn("a", desc_triggers("a of PHP style"))
 
     def test_body_shingles_short_body_is_empty(self):
-        # < 5 слов -> пусто, НЕ фолбэк-синглтон (иначе все короткие тела с
-        # одинаковым числом слов ложно "совпадают" на 100%).
+        # < 5 words -> empty, NOT a fallback singleton (otherwise all short bodies with
+        # same number of words false "match" by 100%).
         self.assertEqual(body_shingles("one two three"), set())
 
     def test_body_shingles_five_gram(self):
@@ -52,14 +52,14 @@ class TriggersShinglesCase(unittest.TestCase):
         self.assertAlmostEqual(jaccard({"a", "b"}, {"b", "c"}), 1 / 3)
 
 
-# --- вердикт: чистая функция -----------------------------------------------------
+# --- verdict: pure function --------------------------------------------------------------
 class VerdictCase(unittest.TestCase):
     def _item(self, tier1=100):
         return {"tier1": tier1}
 
     def test_merge_wins_over_dead(self):
-        # overlap — структурный сигнал (полная уверенность из контента), usage-based
-        # dead — неполный (частичный детект, одна машина/окно) -> merge приоритетнее.
+        # overlap — structure signal (full confidence from the content), usage-based
+        # dead — incomplete (partial detection, one machine/window) -> merge takes priority.
         v = verdict(self._item(), overlap_partners=["x/y"], loaded_count=0,
                     scanned_projects=3)
         self.assertEqual(v, "merge")
@@ -86,9 +86,9 @@ class VerdictCase(unittest.TestCase):
         self.assertEqual(v, "thin")
 
     def test_thin_wins_over_dead_for_monolith(self):
-        # Известный монолит, просто не пойманный usage-детектом в окне (единичное
-        # окно/машина, см. analyze.py про частичный Skill-tool детект) — не должен
-        # тонуть под "dead": размер тела виден из контента с полной уверенностью.
+        # Famous monolith, just not caught usage-detector in the window (single
+        # window/machine, see analyze.py about partial Skill-tool detect) — should not
+        # drowning under "dead": body size is visible from the content with complete confidence.
         from skiller.quality.audit import TIER1_MONOLITH_TOKENS
         v = verdict(self._item(tier1=TIER1_MONOLITH_TOKENS), overlap_partners=[],
                     loaded_count=0, scanned_projects=5)
@@ -106,21 +106,21 @@ class VerdictCase(unittest.TestCase):
         self.assertEqual(v, "keep")
 
     def test_usage_note_exact_wording_when_unused(self):
-        self.assertEqual(usage_note(0, 3, 30), "не использовался в окне 30 дней")
+        self.assertEqual(usage_note(0, 3, 30), "was not used in the 30 day window")
 
     def test_usage_note_no_data(self):
         note = usage_note(0, 0, 14)
-        self.assertIn("нет данных", note)
+        self.assertIn("no data", note)
         self.assertIn("14", note)
 
-    # --- P2.2 SKM-MASTER-003: резидентный скилл без skill-call ≠ dead -----------
+    # --- P2.2 SKM-MASTER-003: resident skill without skill-call ≠ dead -----------
     def test_resident_without_calls_is_keep_not_dead(self):
         v = verdict(self._item(), overlap_partners=[], loaded_count=0,
                     scanned_projects=3, resident=True)
         self.assertEqual(v, "keep")
 
     def test_non_resident_without_calls_still_dead(self):
-        # resident явно False (дефолт) -> старое поведение не тронуто.
+        # resident explicit False (default) -> old behavior intact.
         v = verdict(self._item(), overlap_partners=[], loaded_count=0,
                     scanned_projects=3, resident=False)
         self.assertEqual(v, "dead")
@@ -133,18 +133,18 @@ class VerdictCase(unittest.TestCase):
     def test_usage_note_resident_without_calls_exact_wording(self):
         self.assertEqual(
             usage_note(0, 3, 30, resident=True),
-            "резидентный, прямых вызовов не видно (авто-триггер вне детекции)")
+            "resident, no direct calls visible (auto-trigger out of detection)")
 
     def test_usage_note_resident_with_calls_unaffected(self):
-        self.assertEqual(usage_note(5, 3, 30, resident=True), "5× за 30 дней")
+        self.assertEqual(usage_note(5, 3, 30, resident=True), "5× in 30 days")
 
     def test_usage_note_resident_no_scan_data_unaffected(self):
-        # scanned_projects=0 -> "нет данных", резидентность здесь ни при чём.
+        # scanned_projects=0 -> "no data", residency has nothing to do with it.
         note = usage_note(0, 0, 14, resident=True)
-        self.assertIn("нет данных", note)
+        self.assertIn("no data", note)
 
 
-# --- сборка реестра + overlap на фикстуре -----------------------------------------
+# --- registry assembly + overlap on the fixture -----------------------------------------
 class RegistryAndOverlapCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -155,9 +155,9 @@ class RegistryAndOverlapCase(unittest.TestCase):
         self._tmp.cleanup()
 
     def test_default_fixture_has_no_false_overlap(self):
-        # Дефолтные скиллы фикстуры делят один и тот же короткий body="Body.\n" —
-        # регрессия на пустой body_shingles для коротких тел (см. TriggersShinglesCase):
-        # без неё все они ложно "перекрывались" бы shingle=1.0.
+        # The default skills of the fixture share the same short body="Body.\n" —
+        # regression to empty body_shingles for short bodies (see TriggersShinglesCase):
+        # without it they are all false "overlapped" would shingle=1.0.
         items = iter_registry_skills(self.env)
         pairs = find_overlaps(items)
         self.assertEqual(pairs, [])
@@ -277,10 +277,10 @@ class DescriptionDebtCase(unittest.TestCase):
         self.assertEqual(json.loads(first.getvalue())["contract_version"], "description-trigger-priority/v1")
 
 
-# --- usage: фан-аут по projects.json ---------------------------------------------
+# --- usage: fan-out by projects.json ---------------------------------------------
 def _write_session(env, project_path, skill_names):
-    """Мини-JSONL сессии с Skill-tool вызовами для skill_names (по одному разу
-    каждый) в каталоге логов проекта — как реальный транскрипт Claude Code."""
+    """MiniJSONL sessions with Skill-tool calls for skill_names (once each
+    each) in the project log directory - like a real transcript Claude Code."""
     from skiller.quality.analyze import logs_root
     root = logs_root(env, project_path)
     root.mkdir(parents=True, exist_ok=True)
@@ -312,7 +312,7 @@ class UsageFanOutCase(unittest.TestCase):
     def test_registered_project_without_logs_not_scanned(self):
         upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
         loaded, scanned = collect_usage(self.env, since_days=30)
-        self.assertEqual(scanned, 0)  # нет логов -> честно не просканирован
+        self.assertEqual(scanned, 0)  # no logs -> honestly not scanned
 
     def test_skill_loaded_is_counted(self):
         upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
@@ -322,13 +322,13 @@ class UsageFanOutCase(unittest.TestCase):
         self.assertEqual(loaded.get("code-style"), 1)
 
     def test_dead_skill_end_to_end(self):
-        # "docker" в реестре, но НИ РАЗУ не загружался -> dead с честной формулировкой.
+        # "docker" in the registry, but NEVER loaded -> dead with honest wording.
         upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
         _write_session(self.env, self.project, ["code-style"])
         report = build_audit(self.env, since_days=30)
         row = next(r for r in report["items"] if r["key"] == "devops/docker")
         self.assertEqual(row["verdict"], "dead")
-        self.assertEqual(row["usage_note"], "не использовался в окне 30 дней")
+        self.assertEqual(row["usage_note"], "was not used in the 30 day window")
         used = next(r for r in report["items"] if r["key"] == "php/code-style")
         self.assertEqual(used["loaded_count"], 1)
 
@@ -339,15 +339,15 @@ class UsageFanOutCase(unittest.TestCase):
         root.mkdir(parents=True, exist_ok=True)
         (root / "broken.jsonl").write_text("not-json\n{also broken\n", encoding="utf-8")
         loaded, scanned = collect_usage(self.env, since_days=30)
-        self.assertEqual(scanned, 1)     # сессия "просканирована" — просто пусто
+        self.assertEqual(scanned, 1)     # session "scanned" — just empty
         self.assertEqual(loaded, {})
 
 
-# --- резидент: второй источник видимости (P2.2 SKM-MASTER-003) -------------------
+# --- resident: second visibility source (P2.2 SKM-MASTER-003) -------------------
 class ResidentChannelCase(unittest.TestCase):
-    """collect_usage видит ТОЛЬКО явные Skill-tool-вызовы (слепая зона) — второй,
-    независимый источник резидентности (CORE_SKILLS / активный набор проекта)
-    закрывает её: резидентный скилл без единого вызова НЕ падает в dead."""
+    """collect_usage sees ONLY explicit Skill-tool-calls (blind spot) — second,
+    independent residence source (CORE_SKILLS / active project set)
+    closes it: the resident skill does NOT fall into the dead."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -360,10 +360,10 @@ class ResidentChannelCase(unittest.TestCase):
         self._tmp.cleanup()
 
     def test_core_skill_without_calls_is_not_dead(self):
-        # "docker" в реестре объявлен CORE (монки-патч CORE_SKILLS — реальный
-        # CORE_SKILLS живёт в другом бакете и в синтетический реестр не входит).
+        # "docker" declared in the registry CORE (monkey patch CORE_SKILLS — real
+        # CORE_SKILLS lives in another bucket and is not included in the synthetic registry).
         upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
-        _write_session(self.env, self.project, ["code-style"])  # др. скилл грузился
+        _write_session(self.env, self.project, ["code-style"])  # other skill was loading
         with mock.patch("skiller.quality.audit.CORE_SKILLS", ["devops/docker"]):
             report = build_audit(self.env, since_days=30)
         row = next(r for r in report["items"] if r["key"] == "devops/docker")
@@ -372,11 +372,11 @@ class ResidentChannelCase(unittest.TestCase):
         self.assertEqual(row["verdict"], "keep")
         self.assertEqual(row["channel"], "resident")
         self.assertEqual(row["usage_note"],
-                         "резидентный, прямых вызовов не видно (авто-триггер вне детекции)")
+                         "resident, no direct calls visible (auto-trigger out of detection)")
 
     def test_non_core_unresident_skill_stays_dead(self):
-        # Без резидентности (не CORE, не в активном наборе ни одного проекта) —
-        # поведение до P2.2 не тронуто: dead + канал none.
+        # Without residence (not CORE, not in the active set of any project) —
+        # behavior before P2.2 untouched: dead + channel none.
         upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
         _write_session(self.env, self.project, ["code-style"])
         with mock.patch("skiller.quality.audit.CORE_SKILLS", []):
@@ -386,7 +386,7 @@ class ResidentChannelCase(unittest.TestCase):
         self.assertEqual(row["channel"], "none")
 
     def test_skill_call_channel_wins_over_resident(self):
-        # Реальный вызов есть -> channel=skill-call, даже если скилл заодно CORE.
+        # There is a real challenge -> channel=skill-call, even if the skill is at the same time CORE.
         upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
         _write_session(self.env, self.project, ["code-style"])
         with mock.patch("skiller.quality.audit.CORE_SKILLS", ["php/code-style"]):
@@ -395,8 +395,8 @@ class ResidentChannelCase(unittest.TestCase):
         self.assertEqual(row["channel"], "skill-call")
 
     def test_active_profile_membership_makes_skill_resident(self):
-        # "входит в подключённый профиль/каталог проекта": .swissknife.json проекта
-        # выбирает бакет devops -> docker резидентен БЕЗ CORE_SKILLS.
+        # "is included in the connected profile/project directory": .swissknife.json project
+        # selects a bucket devops -> docker resident WITHOUT CORE_SKILLS.
         (self.project / ".swissknife.json").write_text(
             json.dumps({"buckets": ["devops"]}) + "\n", encoding="utf-8")
         upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
@@ -410,13 +410,13 @@ class ResidentChannelCase(unittest.TestCase):
         self.assertEqual(row["channel"], "resident")
 
     def test_resident_skill_names_graceful_on_unknown_bucket(self):
-        # Битый/неизвестный бакет в .swissknife.json проекта -> resolve_active_set
-        # die()-ит изнутри -> проект просто пропускается, аудит не падает.
+        # Broken/unknown bucket in .swissknife.json project -> resolve_active_set
+        # die()-it from the inside -> the project is simply skipped, the audit does not fail.
         (self.project / ".swissknife.json").write_text(
             json.dumps({"buckets": ["no-such-bucket"]}) + "\n", encoding="utf-8")
         upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
         with mock.patch("skiller.quality.audit.CORE_SKILLS", []):
-            names = resident_skill_names(self.env)  # не должно бросить исключение
+            names = resident_skill_names(self.env)  # should not throw an exception
         self.assertEqual(names, set())
 
     def test_resident_skills_count_in_report(self):
@@ -425,7 +425,7 @@ class ResidentChannelCase(unittest.TestCase):
         self.assertEqual(report["resident_skills"], 1)
 
 
-# --- рендер / CLI ------------------------------------------------------------------
+# --- render / CLI ------------------------------------------------------------------
 class RenderAndCliCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()

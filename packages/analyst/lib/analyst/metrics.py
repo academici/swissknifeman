@@ -89,8 +89,8 @@ def pair_metric(baseline, candidate):
     """Pair a baseline `MetricRecord` against a candidate one, or `None` when the
 
     live paired run has not produced it yet — never a silent zero (Execution Rules:
-    "Missing evidence/route/capability остаётся unknown/red... ноль и silent skip
-    запрещены"). Layer-2 absence is reported as `status: "deferred"`, exactly what
+    "Missing evidence/route/capability remains unknown/red... zero and silent skip
+    are prohibited"). Layer-2 absence is reported as `status: "deferred"`, exactly what
     `bank-manifest.json::baseline_layers.layer-2-live-paired.status` already says
     ("required before any relative floor is claimed")."""
     if candidate is not None and baseline["metric"] != candidate["metric"]:
@@ -135,7 +135,7 @@ def _slice_key(entry, axis):
 def find_anomalies(pairs, *, regression_tolerance=0.0):
     """Paired metrics whose candidate regressed past `regression_tolerance` below
     baseline — refs point at the exact contributing `trace_id`s, never a bare delta
-    number without an anchor (§ «Якорь дерева для чисел»: a number is reproducible from
+    number without an anchor (§ «Tree anchor for numbers»: a number is reproducible from
     its own cited source, here the trace ids that produced each side)."""
     anomalies = []
     for pair in pairs:

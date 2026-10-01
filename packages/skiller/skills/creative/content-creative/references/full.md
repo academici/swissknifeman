@@ -1390,7 +1390,6 @@ Here's what I learned:
 
 [Engagement prompt: "Drop a ❤️ if you've been here!" or a direct question]
 
-—
 [Hashtags in a block below the dash — 10–30, mix of popular and niche]
 #[hashtag1] #[hashtag2] #[hashtag3]
 ```

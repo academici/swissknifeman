@@ -1,4 +1,4 @@
-"""Тесты probe — мониторинг проектов/демонов (read-only, fail-soft)."""
+"""Tests probe — project monitoring/demons (read-only, fail-soft)."""
 import json
 import os
 import tempfile
@@ -35,11 +35,11 @@ class TestProbe(unittest.TestCase):
             ppath = _proj(tmp, "flexcrm")
             cfg = _cfg(ppath, "flexcrm")
             cfg["memory"]["url"] = url
-            deploy.deploy_project(env, cfg, cfg["projects"][0])  # пишет .mcp.json
+            deploy.deploy_project(env, cfg, cfg["projects"][0])  # writes .mcp.json
             r = probe.probe_project(env, cfg, cfg["projects"][0], memory_reachable=True)
             self.assertEqual(r["status"], "connected")
-            self.assertTrue(r["configured"]["maind_mcp"])         # сервер памяти = maind
-            self.assertFalse(r["configured"]["agentmemory_mcp"])  # raw-сервер выведен
+            self.assertTrue(r["configured"]["maind_mcp"])         # memory server = maind
+            self.assertFalse(r["configured"]["agentmemory_mcp"])  # raw-server down
 
     def test_code_probe_accepts_provider_neutral_role_name(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -63,7 +63,7 @@ class TestProbe(unittest.TestCase):
     def test_partial_drift(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
-            cfg = _cfg(_proj(tmp, "drift"), "drift", deployed=True)  # флаг без сервера
+            cfg = _cfg(_proj(tmp, "drift"), "drift", deployed=True)  # serverless flag
             r = probe.probe_project(env, cfg, cfg["projects"][0], memory_reachable=False)
             self.assertEqual(r["status"], "partial")
 
@@ -99,7 +99,7 @@ class TestProbe(unittest.TestCase):
             self.assertEqual(dw["via"], "pidfile")
 
     def test_docs_watcher_stale_pid(self):
-        # мёртвый pid + systemd замокан как inactive → не запущен (гермётично)
+        # dead pid + systemd locked as inactive → not running (hermetically sealed)
         orig = probe.subprocess.run
         probe.subprocess.run = lambda *a, **k: type("R", (), {"stdout": "inactive"})()
         try:

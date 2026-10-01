@@ -5,217 +5,217 @@
 [![Docs](https://github.com/academici/swissknifeman/actions/workflows/docs.yml/badge.svg)](https://academici.github.io/swissknifeman/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> Универсальный личный реестр AI-скиллов и сниппетов: один источник истины,
-> установка в любой проект и любую IDE, отслеживание внешних источников.
+> Universal personal registry AI-skills and snippets: one source of truth,
+> installation in any project and any IDE, tracking of external sources.
 
-**Документация:** [academici.github.io/swissknifeman](https://academici.github.io/swissknifeman/)
-(локально: `npm install && npm run docs:dev`)
+**Documentation:** [academici.github.io/swissknifeman](https://academici.github.io/swissknifeman/)
+(locally: `npm install && npm run docs:dev`)
 
-## Для чего этот пакет
+## What is this package for?
 
-Единая библиотека скиллов (provider-neutral `SKILL.md` + `snippets/`) под мои
-сценарии работы:
+Unified skill library (provider-neutral `SKILL.md` + `snippets/`) under mine
+work scenarios:
 
-1. **Документация** — написание и сопровождение технической документации
-2. **Obsidian vault** — управление знаниями, заметки, базы знаний
-3. **Технические задания** — составление ТЗ (BRD → PRD → архитектура)
-4. **PHP-пакеты** — разработка open-source пакетов, в первую очередь Laravel
-5. **Крупные Laravel-проекты** — архитектура, паттерны, DevOps, качество
+1. **Documentation** — writing and maintaining technical documentation
+2. **Obsidian vault** — knowledge management, notes, knowledge bases
+3. **Technical specifications** — preparation of technical specifications (BRD → PRD → architecture)
+4. **PHP-packages** — development open-source packages, first Laravel
+5. **Large Laravel-projects** — architecture, patterns, DevOps, quality
 
-Скиллы накапливаются постепенно: свои — из опыта реальных проектов (AzGuard,
-botkit и др.), внешние — выборочно из лучших открытых источников с отслеживанием
-обновлений. Каркас универсален: один реестр → установка в Claude Code, Cursor
-или любой другой агент.
+Skills accumulate gradually: your own - from the experience of real projects (AzGuard,
+botkit etc.), external - selectively from the best open sources with tracking
+updates. The frame is universal: one register → installation in Claude Code, Cursor
+or any other agent.
 
-**Совместимое ядро.** Реестр держит только взаимно-совместимые скиллы — что в
-нём лежит, не конфликтует между собой. Внешний источник (например Laravel Boost)
-проверяется попарно против ядра: нужное, дополняющее, версионно-стабильное и не
-требующее render-контекста источника — выносится в ядро с `upstream.json`
-(сначала в реестр, потом в проекты); версионно-специфичное или конфликтующее —
-остаётся за источником по политике доверия (приоритет: проект > источник >
-реестр). Подробнее — [docs/guide/index.md](docs/guide/index.md#6-совместимое-ядро-политика-конфликтов)
-и `references/laravel-boost.md`.
+**Compatible kernel.** The registry only holds mutually compatible skills - which
+lies there and does not conflict with each other. External source (for example Laravel Boost)
+is checked in pairs against the kernel: necessary, complementary, version-stable and not
+requiring render-source context - moved to the kernel with `upstream.json`
+(first to the registry, then to projects); version-specific or conflicting -
+remains with the source according to the trust policy (priority: project > source >
+registry). More details - [docs/guide/index.md](docs/guide/index.md#6-compatible-kernel-conflict-policy)
+and `references/laravel-boost.md`.
 
-## Скиллы vs. воркфлоу
+## Skills vs. work flow
 
-Два слоя, которые не надо смешивать:
+Two layers that do not need to be mixed:
 
-- **Скиллы** (`skills/`) — утилитарны. Один скилл = один навык, работающий
-  **внутри конкретной IDE/агента** (Claude Code, Cursor). Скилл содержит чисто
-  навык и не описывает совместное поведение разных систем.
-- **Воркфлоу** ([docs/workflows/](docs/workflows/index.md)) — **межсистемный
-  слой**: как Perplexity → Claude → Cursor → ревью передают работу друг другу.
-  Это методология, а не исполняемый навык; она не привязана к одной IDE.
+- **Skills** (`skills/`) — are utilitarian. One skill = one skill working
+  **inside a specific IDE/agent** (Claude Code, Cursor). The skill contains purely
+  skill and does not describe the joint behavior of different systems.
+- **Workflow** ([docs/workflows/](docs/workflows/index.md)) — **intersystem
+  layer**: like Perplexity → Claude → Cursor → reviews pass work to each other.
+  This is a methodology, not an executable skill; she is not tied to one IDE.
 
-ТЗ из воркфлоу описывает *что* строить; скиллы — *как* это делать в той IDE,
-где запущен агент.
+TK from the work flow describes *what* build; skills - *like* do this in that IDE,
+where the agent is running.
 
-## Структура
+## Structure
 
 ```
-skills/                    # скилл = папка + SKILL.md + snippets/ (+ upstream.json у внешних)
-├── architect/  (9)        # архитектура, API, данные, безопасность
+skills/                    # skill = folder + SKILL.md + snippets/ (+ upstream.json for external)
+├── architect/  (9)        # architecture, API, data, security
 ├── devops/     (6)        # Docker, CI/CD, GitOps
-├── founder/    (5)        # идеи, анализ конкурентов, питчи
-├── imported/   (12)       # внешние super-skills (отслеживаются через upstream.json)
-├── operator/   (5)        # инциденты, runbook, postmortem
-├── oss-dev/    (6+refs)   # open-source разработка + языковые references/
-├── php/        (7)        # Laravel, пакеты, тесты, паттерны
-├── pm/         (8)        # BRD, PRD, roadmap, монетизация
-├── quality/    (4)        # code review, тесты, техдолг
-└── roles/      (4)        # персоны: tech-lead, startup-cto, ...
+├── founder/    (5)        # ideas, competitor analysis, pitches
+├── imported/   (12)       # external super-skills (are tracked via upstream.json)
+├── operator/   (5)        # incidents, runbook, postmortem
+├── oss-dev/    (6+refs)   # open-source development + language references/
+├── php/        (7)        # Laravel, packages, tests, patterns
+├── pm/         (8)        # BRD, PRD, roadmap, monetization
+├── quality/    (4)        # code review, tests, technical debt
+└── roles/      (4)        # persons: tech-lead, startup-cto, ...
 
-profiles/                  # тип проекта → набор bucket-ов
-references/                # каталог внешних источников (что брать, статус)
-adapters/                  # доки по интеграции: claude-code, cursor, perplexity
-docs/workflows/            # межсистемные методологии (Perplexity→Claude→Cursor→ревью)
+profiles/                  # project type → set bucket-ov
+references/                # directory of external sources (what to take, status)
+adapters/                  # integration docs: claude-code, cursor, perplexity
+docs/workflows/            # cross-system methodologies (Perplexity→Claude→Cursor→review)
 bin/                       # CLI skiller (connect/vendor/update/status/list/registry/doctor)
 scripts/                   # validate, update-upstreams, scanner
-generate-skill/            # мета-скилл создания новых скиллов
-skills.json                # реестр (генерируется skiller registry, с provenance)
-buckets.json               # метаданные bucket-ов (description/category/tags)
-.claude-plugin/            # marketplace.json — нативный marketplace Claude Code (генерируется)
-docs/                      # документация (VitePress)
+generate-skill/            # meta-skill for creating new skills
+skills.json                # registry (is generated skiller registry, with provenance)
+buckets.json               # metadata bucket-ov (description/category/tags)
+.claude-plugin/            # marketplace.json — native marketplace Claude Code (is generated)
+docs/                      # documentation (VitePress)
 ```
 
-> `references/` в корне — каталог внешних источников для отбора;
-> `skills/oss-dev/references/` — языковые reference-файлы внутри bucket-а. Это разные вещи.
+> `references/` at the root - a directory of external sources for selection;
+> `skills/oss-dev/references/` — language reference-files inside bucket-a. These are different things.
 
-## Установка
+## Installation
 
-### Шаг 1: CLI (один раз на машину)
+### Step 1: CLI (once per machine)
 
 ```bash
 cd ~/projects/packages/swissknifeman
-./install.sh        # CLI + базовые Codex-плагины core/task (если Codex установлен)
+./install.sh        # CLI + basic Codex-plugins core/task (if Codex installed)
 skiller doctor
 ```
 
-Дальше всё делается **из каталога проекта** — корень ищется автоматически,
-реестру не нужно знать о ваших проектах (карта подключений копится в
-`~/.swissknifeman/projects.json`). Справочник команд: [docs/guide/cli.md](docs/guide/cli.md).
+Then everything is done **from the project directory** — the root is searched automatically,
+the registry doesn't need to know about your projects (connection map is accumulated in
+`~/.swissknifeman/projects.json`). Command reference: [docs/guide/cli.md](docs/guide/cli.md).
 
-### Claude Code: plugin marketplace (рекомендуется)
+### Claude Code: plugin marketplace (recommended)
 
-Репозиторий — нативный marketplace плагинов Claude Code: каждый bucket = плагин,
-скиллы получают неймспейс `<bucket>:<skill>` (например `php:laravel-packages`).
-Скиллы **не копируются** в проект — живут в кэше Claude Code и обновляются отсюда.
+Repository - native marketplace plugins Claude Code: each bucket = plugin,
+skills get namespace `<bucket>:<skill>` (for example `php:laravel-packages`).
+Skills **are not copied** to the project - live in the cache Claude Code and are updated from here.
 
 ```bash
 cd ~/projects/my-app
-skiller connect                      # автодетект профиля → settings.local.json
+skiller connect                      # auto profile detection → settings.local.json
 
-# Превью / явный набор / миграция со старого вендоринга
+# Preview / explicit set / migration from old vendor
 skiller connect --dry-run
 skiller connect --plugins php,quality
 skiller connect --cleanup-vendored
 ```
 
-Версия плагина = git SHA: правки скиллов подтягиваются в проекты после
-локального **коммита** (пуш не нужен) — `/plugin marketplace update swissknifeman`
-или перезапуск сессии. Манифесты плагинов (`.claude-plugin/`) генерируются
+Plugin version = git SHA: skill edits are added to projects after
+local **commit** (push is not needed) — `/plugin marketplace update swissknifeman`
+or session restart. Plugin manifests (`.claude-plugin/`) are generated
 `skiller registry`.
 
-### Cursor / другие агенты: вендоринг
+### Cursor / other agents: vendor
 
-`skiller vendor` сам определяет тип проекта и копирует подходящий набор скиллов:
+`skiller vendor` itself determines the type of project and copies the appropriate set of skills:
 
 ```bash
-# Laravel-проект (artisan+composer.json) → architect, php, devops, quality, operator
+# Laravel-project (artisan+composer.json) → architect, php, devops, quality, operator
 cd ~/projects/my-laravel-app
 skiller vendor --agent cursor
 
 # Obsidian vault (.obsidian/) → architect, pm, founder, operator, roles, imported
 cd ~/vaults/brain && skiller vendor
 
-# Превью без установки
+# Preview without installation
 skiller vendor --list
 
-# Явный профиль / bucket-ы / исключения
+# Explicit profile / bucket-s / exceptions
 skiller vendor --profile php-package
 skiller vendor --buckets php,quality --exclude botkit
 ```
 
-### Обновление подключённых проектов
+### Updating connected projects
 
 ```bash
-cd ~/projects/my-app && skiller update   # текущий проект (канал детектится сам)
-skiller update --all                     # все зарегистрированные
-skiller status                           # отчёт по текущему проекту
-skiller list                             # карта проектов
+cd ~/projects/my-app && skiller update   # current project (channel is detected by itself)
+skiller update --all                     # all registered
+skiller status                           # report on the current project
+skiller list                             # project map
 ```
 
-Переустановка чистит только то, что ставила сама (манифест
-`.swissknifeman-manifest.json` в обоих режимах раскладки); существующие чужие
-папки скиллов — ошибка-коллизия, перезапись только с `--force`.
-Режим `--agent claude` (плоский вендоринг) оставлен для совместимости,
-для Claude Code предпочтителен marketplace.
+Reinstallation only cleans what you installed yourself (manifest
+`.swissknifeman-manifest.json` in both layout modes); existing aliens
+skill folders - collision error, overwriting only with `--force`.
+Mode `--agent claude` (flat vendoring) is left for compatibility,
+for Claude Code preferred marketplace.
 
-Проект может зафиксировать свою конфигурацию в `.swissknife.json`
-(см. [.swissknife.example.json](.swissknife.example.json)) — приоритет:
-флаги → `.swissknife.json` → автодетект. Файл проходит схема-валидацию
-(опечатка в ключе → ошибка с подсказкой).
+A project can commit its configuration to `.swissknife.json`
+(see [.swissknife.example.json](.swissknife.example.json)) — priority:
+flags → `.swissknife.json` → autodetection. The file passes schema validation
+(typo in key → error with hint).
 
-### Корневой хаб скиллов (generate-hub.sh)
+### Root skill hub (generate-hub.sh)
 
-После подключения скиллов сгенерируйте в проекте «разветвитель» — приоритеты
-чтения источников + индекс установленных скиллов с правилами поиска:
+After connecting the skills, generate them in the project «splitter» — priorities
+reading sources + index of installed skills with search rules:
 
 ```bash
-skiller update          # регенерирует хаб, если он уже есть в проекте
-./scripts/generate-hub.sh --target ~/projects/my-app   # или флаг --hub у connect/vendor
+skiller update          # regenerates the hub if it is already in the project
+./scripts/generate-hub.sh --target ~/projects/my-app   # or flag --hub y connect/vendor
 ```
 
-- проект **с Laravel Boost** (есть `boost.json`) → пишется фрагмент
-  `.ai/guidelines/swissknifeman-hub.md`; в CLAUDE.md/AGENTS.md его вставит сам
-  Boost при `php artisan boost:update`;
-- проект **без Boost** → managed-блок в `CLAUDE.md` между маркерами
-  `<!-- swissknifeman:hub:start/end -->`; пользовательский контент вне маркеров
-  не затрагивается, повторный запуск идемпотентен.
+- project **with Laravel Boost** (yes `boost.json`) → fragment is written
+  `.ai/guidelines/swissknifeman-hub.md`; in CLAUDE.md/AGENTS.md will insert it himself
+  Boost when `php artisan boost:update`;
+- project **without Boost** → managed-block in `CLAUDE.md` between markers
+  `<!-- swissknifeman:hub:start/end -->`; custom content outside of markers
+  is not affected, restart is idempotent.
 
-Установленное определяется по `enabledPlugins` в `.claude/settings*.json`
-(канал marketplace) и/или манифестам `.swissknifeman-manifest.json`
-(канал вендоринга). Приоритеты и таблица роутинга «тип задачи → скилл» —
-[routing.md (зонтик)](../../docs/routing.md); политика совместимости с Laravel Boost —
-[docs/boost-compatibility.md](docs/boost-compatibility.md); устройство единого
-источника истины скиллов в проекте — скилл `general/skills-ssot`.
+Installed is determined by `enabledPlugins` in `.claude/settings*.json`
+(channel marketplace) and/or manifests `.swissknifeman-manifest.json`
+(vendor channel). Priorities and routing table «task type → skill» —
+[routing.md (umbrella)](../../docs/routing.md); compatibility policy Laravel Boost —
+[docs/boost-compatibility.md](docs/boost-compatibility.md); device of a single
+source of truth for skills in the project - skill `general/skills-ssot`.
 
-## Пресеты permissions для Claude Code
+## Presets permissions for Claude Code
 
-Настройка окружения Claude Code (пресеты permissions, MCP-серверы, хуки) **вынесена
-в отдельный пакет [`harness`](../harness/README.md)**. skiller делегирует туда:
-`connect`/`vendor`/`integrate` зовут `harness permissions` под капотом (`--no-permissions`
-отключает). Напрямую:
+Setting up the environment Claude Code (presets permissions, MCP-servers, hooks) **taken out
+into a separate package [`harness`](../harness/README.md)**. skiller delegates there:
+`connect`/`vendor`/`integrate` name `harness permissions` under the hood (`--no-permissions`
+disables). Directly:
 
 ```bash
-# base + автодетект стека (artisan → laravel, package.json → node, ...)
+# base + stack autodetect (artisan → laravel, package.json → node, ...)
 harness permissions --target ~/projects/my-laravel-app
 
-# Явный набор / превью
+# Explicit set / preview
 harness permissions --target . --preset base,laravel,docker
 harness permissions --target . --dry-run
 
-# Глобальный baseline (read-only) + hook-логгер всех Bash-команд в ~/.claude
+# Global baseline (read-only) + hook-logger of all Bash-commands in ~/.claude
 harness permissions --global
 ```
 
-Пресеты: `base`, `laravel`, `php-package`, `node`, `python`, `docker`, `yolo`, `global`.
-Merge в `.claude/settings.local.json` без затирания существующих правил, с бэкапом.
-Опасные операции (`git push`, `rm -rf`, `migrate:fresh`) — через ask, секреты
-(`.env`, ключи, `~/.ssh`) — deny.
+Presets: `base`, `laravel`, `php-package`, `node`, `python`, `docker`, `yolo`, `global`.
+Merge in `.claude/settings.local.json` without overwriting existing rules, with backup.
+Dangerous operations (`git push`, `rm -rf`, `migrate:fresh`) — via ask, secrets
+(`.env`, keys, `~/.ssh`) — deny.
 
-## Профили
+## Profiles
 
-| Профиль | Автодетект | Bucket-ы |
+| Profile | Autodetect | Bucket-s |
 |---|---|---|
 | `obsidian-vault` | `.obsidian/` | architect, pm, founder, operator, roles, imported |
 | `laravel-project` | `artisan` + `composer.json` | architect, php, devops, quality, operator |
-| `php-package` | `composer.json` без `artisan` | oss-dev, php, quality, devops |
-| `standalone` | нет маркеров | все + generate-skill |
+| `php-package` | `composer.json` without `artisan` | oss-dev, php, quality, devops |
+| `standalone` | no markers | all + generate-skill |
 
-## Upstream-sync: отслеживание внешних скиллов
+## Upstream-sync: tracking external skills
 
-Скилл, взятый из внешнего источника, содержит `upstream.json` рядом со `SKILL.md`:
+Skill taken from an external source contains `upstream.json` next to `SKILL.md`:
 
 ```json
 {
@@ -231,66 +231,66 @@ Merge в `.claude/settings.local.json` без затирания существ�
 }
 ```
 
-- **Нет `upstream.json`** → скилл самописный, sync-тулинг его не трогает
-- **`strategy: replace`** → файл зеркалируется как есть, обновления применяются автоматически
-- **`strategy: notify`** → локальная копия адаптирована; об обновлениях апстрима
-  только сообщается, файл не перезаписывается
+- **No `upstream.json`** → self-written skill, sync-tuning does not touch him
+- **`strategy: replace`** → file is mirrored as is, updates are applied automatically
+- **`strategy: notify`** → local copy adapted; about upstream updates
+  only reported, file not overwritten
 
 ```bash
-./scripts/update-upstreams.sh --check        # отчёт: что устарело (exit 10 = есть изменения)
-./scripts/update-upstreams.sh --apply        # применить replace-обновления, записать sha
-./scripts/update-upstreams.sh --apply --force --skill imported/research   # перезаписать конфликт
+./scripts/update-upstreams.sh --check        # report: what is outdated (exit 10 = there are changes)
+./scripts/update-upstreams.sh --apply        # apply replace-updates, write sha
+./scripts/update-upstreams.sh --apply --force --skill imported/research   # overwrite conflict
 ```
 
-GitHub Action `upstream-sync.yml` еженедельно проверяет все апстримы и открывает
-PR с диффом — изменения чужих репозиториев попадают в main только после ревью.
+GitHub Action `upstream-sync.yml` checks all upstreams weekly and opens
+PR with diff - changes from other people's repositories are included in main only after the review.
 
-## Реестр
+## Registry
 
-`skills.json` генерируется `skiller registry`: путь, версия, sha256
-и provenance каждого скилла (`source: local|github|http`, `upstream` URL,
+`skills.json` is generated `skiller registry`: path, version, sha256
+and provenance of each skill (`source: local|github|http`, `upstream` URL,
 `fetched_at`).
 
 ```bash
-skiller registry                         # пересобрать реестр + манифесты + граф
+skiller registry                         # rebuild the registry + manifests + graph
 ```
 
-Отдельного зеркалирования в brain больше нет: brain — обычный потребляющий
-проект (`cd <brain> && skiller vendor`, дальше `skiller update`).
+Separate mirroring in brain no longer exists: brain — normal consuming
+project (`cd <brain> && skiller vendor`, next `skiller update`).
 
-## Добавление скиллов
+## Adding skills
 
-- **Свой скилл:** папка + `SKILL.md` по `SKILL_TEMPLATE.md` (см. [CONTRIBUTING.md](CONTRIBUTING.md))
-- **Внешний скилл:** папка + `upstream.json` → `./scripts/update-upstreams.sh --apply --skill ...`
-- **Источники-кандидаты:** каталог [references/](references/README.md) — что брать выборочно и откуда
+- **Your skill:** folder + `SKILL.md` by `SKILL_TEMPLATE.md` (see [CONTRIBUTING.md](CONTRIBUTING.md))
+- **External skill:** folder + `upstream.json` → `./scripts/update-upstreams.sh --apply --skill ...`
+- **Candidate sources:** directory [references/](references/README.md) — what to take selectively and where from
 
 ## Scanner
 
-Извлечение сниппетов из локальных проектов (пути в `.skills-scanner.json`):
+Extracting snippets from local projects (paths in `.skills-scanner.json`):
 
 ```bash
-./scripts/scan-skills.sh              # найти кандидатов
-./scripts/scan-skills.sh --extract    # анонимизировать в .scanner-output/
+./scripts/scan-skills.sh              # find candidates
+./scripts/scan-skills.sh --extract    # anonymize in .scanner-output/
 ./scripts/scan-and-pr.sh              # commit + PR
 ```
 
 ## CI/CD
 
-| Workflow | Назначение |
+| Workflow | Purpose |
 |----------|------------|
-| `validate.yml` | `scripts/validate.sh`: frontmatter, upstream.json, profiles, манифесты |
-| `upstream-sync.yml` | Еженедельная проверка апстримов → PR с диффом |
-| `test.yml` | `scripts/test.sh` на матрице Python 3.9–3.12 |
-| `sha256-update.yml` | Пересчёт хешей реестра при пуше |
-| `scanner-pr.yml` | Еженедельный PR от сканера |
+| `validate.yml` | `scripts/validate.sh`: frontmatter, upstream.json, profiles, manifests |
+| `upstream-sync.yml` | Weekly check of upstreams → PR with diff |
+| `test.yml` | `scripts/test.sh` on the matrix Python 3.9–3.12 |
+| `sha256-update.yml` | Recalculation of registry hashes when pushing |
+| `scanner-pr.yml` | Weekly PR from scanner |
 
-## Безопасность
+## Security
 
-Политика и порядок раскрытия уязвимостей — в [SECURITY.md](SECURITY.md)
-(модель доверия импортируемых скиллов, sha256 в `upstream.json`, правило «нет
-секретов в snippets»).
+Vulnerability disclosure policy and procedures - in [SECURITY.md](SECURITY.md)
+(trust model of imported skills, sha256 in `upstream.json`, rule «no
+secrets in snippets»).
 
-## Лицензия
+## License
 
-[MIT](LICENSE) © Dmitry Vostrikov. Внешние (imported) скиллы сохраняют лицензии
-своих источников — см. `upstream.json` рядом с каждым.
+[MIT](LICENSE) © Dmitry Vostrikov. External (imported) skills retain licenses
+of their sources - see. `upstream.json` next to each one.

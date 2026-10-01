@@ -4,9 +4,9 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docs/**'                      # общее зонтика + .vitepress конфиг
-      - 'packages/*/docs/**'           # per-package доки (источник истины)
-      - 'packages/harness/configs/**'  # инлайны/пресеты, на которые ссылаются доки
+      - 'docs/**'                      # general umbrella + .vitepress config
+      - 'packages/*/docs/**'           # per-package docks (source of truth)
+      - 'packages/harness/configs/**'  # inlines/presets, which the docs refer to
       - 'packages/skiller/package.json'
       - 'scripts/docs-sync.sh'
       - '.github/workflows/docs.yml'
@@ -31,16 +31,16 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: packages/skiller/package-lock.json
-      # docs-тулинг (vitepress) живёт в packages/skiller (root package.json нет —
-      # монорепо). docs:build = docs:sync (агрегирует packages/<pkg>/docs → docs/<pkg>)
-      # + vitepress build ../../docs → артефакт в <repo>/docs/.vitepress/dist.
+      # docs-tuling (vitepress) lives in packages/skiller (root package.json no —
+      # monorepo). docs:build = docs:sync (aggregates packages/<pkg>/docs → docs/<pkg>)
+      # + vitepress build ../../docs → artifact in <repo>/docs/.vitepress/dist.
       - run: npm ci
         working-directory: packages/skiller
       - run: npm run docs:build
         working-directory: packages/skiller
       - uses: actions/configure-pages@v4
         with:
-          enablement: true   # авто-включить Pages, если не настроены (иначе «Get Pages site failed: Not Found»)
+          enablement: true   # auto-turn on Pages, if not configured (otherwise «Get Pages site failed: Not Found»)
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs/.vitepress/dist

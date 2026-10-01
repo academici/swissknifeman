@@ -1,38 +1,38 @@
-# PHP Package Gate — релиз PHP-пакета на Packagist
+# PHP Package Gate — release PHP-package to Packagist
 
-Дополнение к `github-flow` для PHP-стека: что проверить в `composer.json`
-и в каком порядке деплоить на Packagist. Laravel-специфика релиза —
-`php-packages/laravel-package-release`; audit-команды — `dependency-audit/references/composer.md`.
+Addition to `github-flow` for PHP-stack: what to check in `composer.json`
+and in what order to deploy to Packagist. Laravel-release specifics -
+`php-packages/laravel-package-release`; audit-commands - `dependency-audit/references/composer.md`.
 
 ## composer.json gate
 
-Перед тегом агент проверяет наличие и корректность полей:
+Before the tag, the agent checks the presence and correctness of the fields:
 
-| Поле | Требование |
+| Field | Requirement |
 |:---|:---|
-| `name` | `vendor/package-name`, совпадает с репозиторием на Packagist |
-| `description` | одна строка, 50–100 символов, на английском |
-| `type` | `library` (или `laravel-package` по конвенции инструментов) |
-| `keywords` | 5–7 штук, см. ниже |
-| `license` | SPDX-идентификатор (`MIT`, `Apache-2.0`) — совпадает с LICENSE |
+| `name` | `vendor/package-name`, matches the repository on Packagist |
+| `description` | one line, 50–100 characters, in English |
+| `type` | `library` (or `laravel-package` by tool convention) |
+| `keywords` | 5–7 pieces, see below |
+| `license` | SPDX-identifier (`MIT`, `Apache-2.0`) — matches LICENSE |
 | `authors` | name + email |
-| `require.php` | явный констрейнт (`^8.2`), не «любая версия» |
+| `require.php` | explicit constraint (`^8.2`), not «any version» |
 | `autoload.psr-4` | namespace → `src/` |
-| `minimum-stability` / `prefer-stable` | `stable` / `true` для публичного пакета |
+| `minimum-stability` / `prefer-stable` | `stable` / `true` for public package |
 
 ```bash
-composer validate --strict   # манифест валиден и синхронен с lock
+composer validate --strict   # manifest is valid and in sync with lock
 ```
 
-**Поле `version`** — для Packagist опционально (версия берётся из git-тега).
-Если поле присутствует, оно ОБЯЗАНО совпадать с тегом — агент синхронизирует
-его в релизном коммите (`chore(release): ...`). Лучше поле не вести вовсе.
+**Field `version`** — for Packagist optional (version taken from git-tag).
+If the field is present, it MUST match the tag - the agent synchronizes
+it in the release commit (`chore(release): ...`). It’s better not to maintain the field at all.
 
 ## Keywords
 
-Базовые: `php` + экосистема (`laravel`, `symfony`). По домену — 2–4 уточняющих:
+Basic: `php` + ecosystem (`laravel`, `symfony`). By domain - 2–4 clarifying:
 
-| Домен | Keywords |
+| Domain | Keywords |
 |:---|:---|
 | Permissions / ACL | `permissions`, `authorization`, `acl`, `rbac`, `roles` |
 | Security | `security`, `middleware`, `threat-detection` |
@@ -41,32 +41,32 @@ composer validate --strict   # манифест валиден и синхрон
 | Admin panel | `filament`, `admin`, `dashboard` |
 | API | `api`, `rest`, `resource` |
 
-Больше ~10 Packagist эффективно не индексирует — не раздувать.
+More ~10 Packagist does not index effectively - do not bloat.
 
-## Pre-deploy проверки (PHP)
+## Pre-deploy checks (PHP)
 
-- [ ] Нет `dd()`, `dump()`, `var_dump()`, `ray()` в `src/`:
+- [ ] No `dd()`, `dump()`, `var_dump()`, `ray()` in `src/`:
   `grep -rnE '\b(dd|dump|var_dump|ray)\(' src/`
-- [ ] Production-классы не используют dev-пакеты (`composer-require-checker`,
-  см. `dependency-audit/references/composer.md`)
-- [ ] `.gitignore` содержит `vendor/`, `.env`
-- [ ] Тесты зелёные: `composer test` / `vendor/bin/phpunit` / `vendor/bin/pest`
-- [ ] CI на default-ветке зелёный (`gh run list --branch main --limit 1`)
+- [ ] Production-classes are not used dev-packages (`composer-require-checker`,
+  see `dependency-audit/references/composer.md`)
+- [ ] `.gitignore` contains `vendor/`, `.env`
+- [ ] Tests are green: `composer test` / `vendor/bin/phpunit` / `vendor/bin/pest`
+- [ ] CI on default-branch green (`gh run list --branch main --limit 1`)
 
-## Последовательность Packagist-деплоя
+## Sequence Packagist-deployment
 
 ```
 1. git checkout main && git pull
 2. composer validate --strict
 3. CHANGELOG.md: [Unreleased] → [X.Y.Z] - YYYY-MM-DD
-4. (если поле version есть) composer.json → "version": "X.Y.Z"
+4. (if field version yes) composer.json → "version": "X.Y.Z"
 5. git commit -m "chore(release): ..."
 6. git tag vX.Y.Z -m "Release vX.Y.Z" && git push origin main --tags
-7. gh release create vX.Y.Z из CHANGELOG-секции
-8. Packagist подхватит тег по webhook
+7. gh release create vX.Y.Z from CHANGELOG-sections
+8. Packagist will pick up the tag by webhook
 ```
 
-Webhook: Packagist → профиль пакета → «GitHub Hook» (ставится автоматически
-при submit через GitHub-аккаунт). Проверка: после push тега новая версия
-появляется на странице пакета за 1–2 минуты; если нет — `Settings → Webhooks`
-в репо или кнопка «Update» на Packagist вручную.
+Webhook: Packagist → package profile → «GitHub Hook» (is set automatically
+when submit via GitHub-account). Check: after push tag new version
+appears on the package page in 1–2 minutes; if not - `Settings → Webhooks`
+in repo or button «Update» on Packagist manually.

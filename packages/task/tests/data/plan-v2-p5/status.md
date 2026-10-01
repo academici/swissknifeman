@@ -7,13 +7,13 @@ inputs_sha256: 2ad9f7b01b4bbdebb495dd412a09c646b85263339e92f3b5465c458bd9fe028b
 generated_by: task plan-views status
 -->
 
-# Статус плана
+# Plan status
 
-> Не править руками: это генерируемый вид.
+> Do not manipulate by hand: this is a generated view.
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Version | — |
 | Status | 🔴 Blocked |
@@ -21,7 +21,7 @@ generated_by: task plan-views status
 
 ## 4. Phase Index & Status Board
 
-| Phase | Title | Items 🟢/всего | Status |
+| Phase | Title | Items 🟢/total | Status |
 |:--|:--|:--|:--|
 | P1 | P5 acceptance phase | 0/2 | 🔴 Blocked |
 
@@ -34,7 +34,7 @@ generated_by: task plan-views status
 
 ## 6. Update Log
 
-| Дата | Кто (role/model) | Что |
+| Date | Who (role/model) | What |
 |:--|:--|:--|
 | 2026-08-09 | implementation/high | plan-run · closed-green · return fixture |
 | 2026-08-09 | implementation/high | plan-design · in-progress · return redesign |

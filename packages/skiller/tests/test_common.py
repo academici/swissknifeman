@@ -1,10 +1,10 @@
-"""Тесты common: маркер «управляется swissknifeman» в скопированном SKILL.md.
+"""Tests common: marker «controlled swissknifeman» in copied SKILL.md.
 
-Байт-точный round-trip (_mark_skill_managed → strip_skill_managed_marker) для LF,
-CRLF и BOM — регресс на найденный ревью баг: старая text-mode версия (`.read_text()`)
-нормализовала `\\r\\n`→`\\n`, из-за чего хеш CRLF-скилла после разметки/вычитки
-расходился с `hashlib.sha256(read_bytes())` реестра (registry.py) — ложный "update"
-на КАЖДОМ sync даже без реального дрейфа."""
+Byte-accurate round-trip (_mark_skill_managed → strip_skill_managed_marker) for LF,
+CRLF and BOM — regression on the bug found in the review: old text-mode version (`.read_text()`)
+normalized `\\r\\n`→`\\n`, because of what the hash CRLF-skill after marking/proofreading
+disagreed with `hashlib.sha256(read_bytes())` registry (registry.py) — false "update"
+on EVERY sync even without real drift."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -73,5 +73,5 @@ class SkillManagedMarkerCase(unittest.TestCase):
         self.assertEqual(self._read(), original)
 
     def test_missing_skill_md_is_noop(self):
-        _mark_skill_managed(self.dst)  # не должно бросать
+        _mark_skill_managed(self.dst)  # should not be thrown
         self.assertFalse((self.dst / "SKILL.md").exists())

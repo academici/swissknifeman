@@ -1,88 +1,88 @@
-# Claude — детальное ТЗ и архитектура
+# Claude — detailed technical specifications and architecture
 
-> Роль в воркфлоу: **архитектор**. Получает первичное ТЗ из Perplexity и
-> превращает его в детальный проектный документ — с паттернами, именами классов
-> и структурой. Это не реализация, а проектирование.
+> Role in work flow: **architect**. Receives the primary technical specification from Perplexity and
+> turns it into a detailed design document - with patterns, class names
+> and structure. This is not an implementation, but a design.
 
-> ⚠️ При использовании **Claude Fable 5** промты составлять по официальному
-> гайду: [Prompting Claude Fable 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5).
-> Подробности — на странице [Claude Fable 5](./fable-5).
+> ⚠️ When used **Claude Fable 5** promty draw up according to the official
+> guide: [Prompting Claude Fable 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5).
+> Details - on the page [Claude Fable 5](./fable-5).
 
-## Рекомендуемые модели
+## Recommended models
 
-| Задача | Модель |
+| Task | Model |
 |--------|--------|
-| Детальное ТЗ, архитектура | Claude Fable 5 / Sonnet |
-| Точечная помощь при реализации | Claude Sonnet |
-| Финальный код-ревью | Claude Fable 5 |
-| Python / 3D со скриншотами | Claude Fable 5 (лучше читает визуал) |
+| Detailed technical specifications, architecture | Claude Fable 5 / Sonnet |
+| Targeted implementation assistance | Claude Sonnet |
+| Final code review | Claude Fable 5 |
+| Python / 3D with screenshots | Claude Fable 5 (reads better visually) |
 
-## Шаблон промта — детальное ТЗ
+## Industrial template - detailed technical specification
 
 ```
-[Вставить весь ответ Perplexity целиком]
+[Paste entire answer Perplexity in full]
 
-[Список ссылок из блока Ресурсы]
+[List of links from the Resources block]
 
-На основе этого материала создай детальное техническое задание, включающее:
+Based on this material, create a detailed technical specification, including:
 
-1. **Архитектура проекта**
-   - Структура директорий
-   - Ключевые классы и интерфейсы (с именами)
-   - Паттерны проектирования (Repository, Strategy, Observer и т.д.)
+1. **Project architecture**
+   - Directory structure
+   - Key classes and interfaces (with names)
+   - Design Patterns (Repository, Strategy, Observer etc.)
 
-2. **Описание компонентов**
-   - Для каждого класса: назначение, публичные методы, зависимости
-   - Контракты (интерфейсы / абстрактные классы)
+2. **Description of components**
+   - For each class: purpose, public methods, dependencies
+   - Contracts (interfaces / abstract classes)
 
-3. **Структура базы данных** (если применимо)
-   - Таблицы, поля, связи
+3. **Database structure** (if applicable)
+   - Tables, fields, relationships
 
-4. **Технические тонкости**
+4. **Technical details**
    - Edge cases
-   - Конфигурация
-   - Совместимость версий
+   - Configuration
+   - Version compatibility
 
-5. **Короткое описание реализации** каждого модуля
+5. **Brief description of the implementation** of each module
 ```
 
-## Шаблон промта — код-ревью
+## Promt template - code review
 
 ```
-Выполни код-ревью пакета [название].
+Run a code review of the package [name].
 
-Обрати внимание на:
-1. Соответствие исходному ТЗ
-2. Архитектурные паттерны — правильно ли применены
-3. Потенциальные проблемы производительности
-4. Security-уязвимости
-5. Предложения по улучшению с конкретными примерами кода
+Pay attention to:
+1. Compliance with the original technical specifications
+2. Architectural patterns - are they applied correctly?
+3. Potential performance issues
+4. Security-vulnerabilities
+5. Suggestions for improvement with specific code examples
 
-Формат ответа: список Issues (критические / рекомендуемые / опциональные)
+Response format: list Issues (critical / recommended / optional)
 ```
 
-## Особенность работы с визуалом
+## Feature of working with visuals
 
-Claude хорошо читает скриншоты — можно передавать:
+Claude reads screenshots well - you can transfer:
 
-- Макеты UI
-- Диаграммы архитектуры
-- Схемы баз данных
-- Примеры кода из других проектов (фото с экрана)
+- Layouts UI
+- Architecture Diagrams
+- Database schemas
+- Code examples from other projects (screenshot)
 
-Особенно ценно при работе над 3D-моделями и визуальными компонентами.
+Especially valuable when working on 3D-models and visual components.
 
-## Правила передачи данных
+## Data transfer rules
 
-- ТЗ из Perplexity передавать **целиком**, не резюмируя — сжатие теряет контекст.
-- Ссылки из блока «Ресурсы» включать в промт.
-- Детальное ТЗ на выходе сохранять в репозиторий: `.cursorrules`, `AGENTS.md`
-  или `docs/spec.md`.
+- TK from Perplexity transmit **in full**, without summarizing - compression loses context.
+- Links from the block «Resources» include in promt.
+- Save detailed technical specifications at the output to the repository: `.cursorrules`, `AGENTS.md`
+  or `docs/spec.md`.
 
-## Что получаем на выходе
+## What we get at the output
 
-- Детальное ТЗ с названиями классов, паттернами, структурой директорий.
-- Готовый «чертёж» для реализации.
-- Документ, который однозначно понимает любой разработчик.
+- Detailed technical specifications with class names, patterns, directory structure.
+- Ready «drawing» for implementation.
+- A document that any developer can clearly understand.
 
-Далее: детальное ТЗ передаётся в [Cursor](./cursor).
+Next: detailed technical specifications are transferred to [Cursor](./cursor).

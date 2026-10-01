@@ -31,7 +31,7 @@ OBSERVATION_RESULTS = frozenset((
     "no-op", "routing-rejected", "decision-pending", "local-repair", "rag-pending", "block-candidate",
 ))
 OBSERVATION_NEXT_STEPS = {
-    "routing-rejected": "Retry the same command after route correction.",
+    "routing-rejected": "Retry the same command after correcting execution selection.",
     "decision-pending": "Continue after the recorded decision is available.",
     "local-repair": "Repeat the original validation after local repair.",
     "rag-pending": "Gather required RAG evidence; do not terminalize.",
@@ -42,7 +42,7 @@ def _read(path):
     try:
         return Path(path).read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
-        raise ItemStateError(f"вход слепка не читается: {path}") from exc
+        raise ItemStateError(f"nugget input not readable: {path}") from exc
 
 def _event_rows(plan_dir, item_id):
     path = plan_layout.carrier_path(plan_dir, "journal")
@@ -53,10 +53,10 @@ def _event_rows(plan_dir, item_id):
         try:
             event = json.loads(line)
         except json.JSONDecodeError as exc:
-            raise ItemStateError(f"{path}:{number}: журнал невалиден") from exc
+            raise ItemStateError(f"{path}:{number}: log is invalid") from exc
         if event.get("item_id") == item_id:
             if event.get("result") not in RESULT_STATUS:
-                raise ItemStateError(f"{path}:{number}: неизвестный result")
+                raise ItemStateError(f"{path}:{number}: unknown result")
             result.append((number, line, event))
     return result
 
@@ -68,7 +68,7 @@ def _inputs_sha256(plan_dir, spec_path, item_id, event_rows):
         relative = spec_path.relative_to(plan_dir).as_posix()
         spec = spec_path.read_bytes()
     except (OSError, ValueError) as exc:
-        raise ItemStateError(f"вход слепка не читается: {spec_path}") from exc
+        raise ItemStateError(f"nugget input not readable: {spec_path}") from exc
     digest.update(relative.encode("utf-8"))
     digest.update(b"\0")
     digest.update(spec)
@@ -132,7 +132,7 @@ def material_terminal_evidence(plan_dir, item_id):
     rows = _event_rows(plan_dir, item_id)
     execution = _execution_events([event for _number, _raw, event in rows])
     if not execution:
-        raise ItemStateError(f"{item_id}: нет execution evidence")
+        raise ItemStateError(f"{item_id}: no execution evidence")
     event = execution[-1]
     return {
         "result": event.get("result"),
@@ -147,25 +147,25 @@ def _validate(model):
     try:
         source = json.loads(_read(schema))
     except json.JSONDecodeError as exc:
-        raise ItemStateError(f"схема невалидна: {schema}") from exc
+        raise ItemStateError(f"scheme is invalid: {schema}") from exc
     if set(model) != set(source["required"]):
-        raise ItemStateError("слепок не соответствует закрытой корневой схеме")
+        raise ItemStateError("nugget does not match closed root schema")
     meta, state = model["projection_meta"], model["state"]
     if set(meta) != set(source["properties"]["projection_meta"]["required"]):
-        raise ItemStateError("слепок не соответствует схеме метаданных")
+        raise ItemStateError("nugget does not match the metadata schema")
     if set(state) != set(source["properties"]["state"]["required"]):
-        raise ItemStateError("слепок не соответствует схеме состояния")
+        raise ItemStateError("nugget does not match state schema")
     if meta["projection"] != "item-state" or meta["projection_version"] != "1.0.0":
-        raise ItemStateError("неподдерживаемая версия слепка")
-    if "routing" in json.dumps(model, ensure_ascii=False).lower() or "маршрут" in json.dumps(model, ensure_ascii=False).lower():
-        raise ItemStateError("слепок содержит запрещённый маршрут")
+        raise ItemStateError("unsupported nugget version")
+    if "routing" in json.dumps(model, ensure_ascii=False).lower() or "route" in json.dumps(model, ensure_ascii=False).lower():
+        raise ItemStateError("nugget contains an illegal route")
 
 def state_model(plan_dir, item_id):
     plan_dir = Path(plan_dir)
     if not _ITEM.fullmatch(item_id):
-        raise ItemStateError("item должен иметь форму Pn.m")
+        raise ItemStateError("item should be of the form Pn.m")
     if plan_layout.layout_version(plan_dir) != "v2":
-        raise ItemStateError("слепок состояния существует только для Layout v2")
+        raise ItemStateError("state snapshot exists only for Layout v2")
     spec_path = plan_layout.carrier_path(plan_dir, "item-spec", item_id=item_id)
     event_rows = _event_rows(plan_dir, item_id)
     events = [event for _number, _raw, event in event_rows]
@@ -221,7 +221,7 @@ def _render_state(plan_dir, item_id):
     if state["position"]["status"] == "🔴 Blocked":
         reason = " ".join(note.split()) if note != "—" else "See the terminal journal decision."
         body += f"\n\n> 🔴 ESCALATION {item_id}: {reason}"
-    return plan_projection.rendered_file(metadata=block, title=f"Состояние {item_id}", body=body)
+    return plan_projection.rendered_file(metadata=block, title=f"Status {item_id}", body=body)
 
 def render_state(plan_dir, item_id):
     return _render_state(plan_dir, item_id)

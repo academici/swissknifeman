@@ -20,23 +20,23 @@ SWISSKNIFEMAN_BIN = MONOREPO_ROOT / "bin" / "swissknifeman"
 
 class ClassifyBumpCase(unittest.TestCase):
     def test_feat_gives_minor(self):
-        bump, reason = classify_bump([("feat: новая команда", ""),
-                                      ("fix: мелкий баг", "")])
+        bump, reason = classify_bump([("feat: new command", ""),
+                                      ("fix: minor bug", "")])
         self.assertEqual(bump, "minor")
         self.assertIsNone(reason)
 
     def test_only_fix_gives_patch(self):
-        bump, reason = classify_bump([("fix: баг", ""), ("perf: ускорение", "")])
+        bump, reason = classify_bump([("fix: bug", ""), ("perf: acceleration", "")])
         self.assertEqual(bump, "patch")
         self.assertIsNone(reason)
 
     def test_bang_marker_is_breaking(self):
-        bump, reason = classify_bump([("feat!: смена контракта", "")])
+        bump, reason = classify_bump([("feat!: change of contract", "")])
         self.assertEqual(bump, "breaking")
-        self.assertEqual(reason, "feat!: смена контракта")
+        self.assertEqual(reason, "feat!: change of contract")
 
     def test_breaking_change_in_body_is_breaking(self):
-        commits = [("feat: X", "BREAKING CHANGE: контракт поменялся")]
+        commits = [("feat: X", "BREAKING CHANGE: contract has changed")]
         bump, reason = classify_bump(commits)
         self.assertEqual(bump, "breaking")
 
@@ -47,12 +47,12 @@ class ClassifyBumpCase(unittest.TestCase):
         self.assertEqual(bump, "breaking")
 
     def test_no_conventional_commits_gives_none(self):
-        bump, reason = classify_bump([("случайный коммит без типа", "")])
+        bump, reason = classify_bump([("random commit without type", "")])
         self.assertIsNone(bump)
         self.assertIsNone(reason)
 
     def test_docs_and_chore_do_not_trigger_bump(self):
-        commits = [("docs: правка", ""), ("chore: уборка", "")]
+        commits = [("docs: edit", ""), ("chore: cleaning", "")]
         bump, _ = classify_bump(commits)
         self.assertIsNone(bump)
 
@@ -81,11 +81,11 @@ class BumpVersionCase(unittest.TestCase):
 
 class UnreleasedSectionCase(unittest.TestCase):
     def test_reads_body_between_headings(self):
-        text = ("# Changelog\n\n## [Unreleased]\n### Added\n- новая штука\n\n"
-                "## [0.7.1] - 2026-06-28\n### Fixed\n- старое\n")
+        text = ("# Changelog\n\n## [Unreleased]\n### Added\n- new thing\n\n"
+                "## [0.7.1] - 2026-06-28\n### Fixed\n- old\n")
         lines, start, end, body = read_unreleased_section(text)
-        self.assertIn("- новая штука", body)
-        self.assertNotIn("- старое", body)
+        self.assertIn("- new thing", body)
+        self.assertNotIn("- old", body)
 
     def test_missing_section_returns_none(self):
         self.assertIsNone(read_unreleased_section("# Changelog\n\nnothing here\n"))
@@ -101,7 +101,7 @@ class UnreleasedSectionCase(unittest.TestCase):
         self.assertTrue(unreleased_is_empty(body))
 
     def test_section_with_entry_is_not_empty(self):
-        text = "# Changelog\n\n## [Unreleased]\n### Added\n- запись\n\n## [0.1.0]\n"
+        text = "# Changelog\n\n## [Unreleased]\n### Added\n- entry\n\n## [0.1.0]\n"
         _, _, _, body = read_unreleased_section(text)
         self.assertFalse(unreleased_is_empty(body))
 
@@ -113,8 +113,8 @@ def _init_repo(root):
                 ["git", "config", "user.name", "Test"]):
         subprocess.run(cmd, cwd=root, check=True, capture_output=True)
     (root / "CHANGELOG.md").write_text(
-        "# Changelog\n\n## [Unreleased]\n### Added\n- заглушка\n\n"
-        "## [0.7.1] - 2026-06-28\n### Fixed\n- старое\n", encoding="utf-8")
+        "# Changelog\n\n## [Unreleased]\n### Added\n- stub\n\n"
+        "## [0.7.1] - 2026-06-28\n### Fixed\n- old\n", encoding="utf-8")
     subprocess.run(["git", "add", "CHANGELOG.md"], cwd=root, check=True,
                    capture_output=True)
     subprocess.run(["git", "commit", "-q", "-m", "chore: init"], cwd=root,
@@ -159,47 +159,47 @@ class CmdReleaseCase(unittest.TestCase):
         self._tmp.cleanup()
 
     def test_feat_commit_proposes_minor_dry_run_does_not_write(self):
-        _commit(self.root, "feat: новая фича")
+        _commit(self.root, "feat: new feature")
         exc, out = _run_cli(cmd_release, self.env, ["--dry-run"])
         self.assertIsNone(exc)
         self.assertIn("v0.7.1 -> v0.8.0", out)
         self.assertIn("[dry-run]", out)
         # The CHANGELOG remains unchanged.
         text = (self.root / "CHANGELOG.md").read_text(encoding="utf-8")
-        self.assertIn("## [Unreleased]\n### Added\n- заглушка", text)
+        self.assertIn("## [Unreleased]\n### Added\n- stub", text)
 
     def test_only_fix_commits_propose_patch(self):
-        _commit(self.root, "fix: баг раз")
+        _commit(self.root, "fix: bug times")
         exc, out = _run_cli(cmd_release, self.env, ["--dry-run"])
         self.assertIsNone(exc)
         self.assertIn("v0.7.1 -> v0.7.2", out)
 
     def test_breaking_marker_refuses_with_nonzero_exit(self):
-        _commit(self.root, "feat!: смена контракта")
+        _commit(self.root, "feat!: change of contract")
         exc, out = _run_cli(cmd_release, self.env, [])
         self.assertIsNotNone(exc)
         self.assertNotEqual(exc.code, 0)
         self.assertIn("MAJOR", out)
 
     def test_empty_range_says_nothing_to_release(self):
-        _commit(self.root, "docs: правка")
+        _commit(self.root, "docs: edit")
         exc, out = _run_cli(cmd_release, self.env, [])
         self.assertIsNone(exc)
-        self.assertIn("нечего релизить", out)
+        self.assertIn("nothing to release", out)
 
     def test_without_dry_run_moves_unreleased_section(self):
-        _commit(self.root, "feat: новая фича")
+        _commit(self.root, "feat: new feature")
         exc, out = _run_cli(cmd_release, self.env, [])
         self.assertIsNone(exc)
         text = (self.root / "CHANGELOG.md").read_text(encoding="utf-8")
         self.assertIn("## [0.8.0] -", text)
-        self.assertIn("- заглушка", text)
+        self.assertIn("- stub", text)
         # The old Unreleased section is now empty.
         section = text.split("## [Unreleased]", 1)[1].split("## [0.8.0]", 1)[0]
-        self.assertNotIn("- заглушка", section)
+        self.assertNotIn("- stub", section)
 
     def test_git_tag_command_is_only_printed_never_executed(self):
-        _commit(self.root, "feat: новая фича")
+        _commit(self.root, "feat: new feature")
         exc, out = _run_cli(cmd_release, self.env, [])
         self.assertIsNone(exc)
         self.assertIn("git tag -a v0.8.0", out)

@@ -3,7 +3,7 @@
   "snippets": [
     {
       "file": "nwidart-module.md",
-      "description": "Модуль на nwidart/laravel-modules: дерево модуля, module.json, composer.json с namespace без префикса Modules\\, команды module:make*, vite.config.js и регистрация Filament discoverResources",
+      "description": "Module on nwidart/laravel-modules: module tree, module.json, composer.json with namespace without prefix Modules\\, commands module:make*, vite.config.js and registration Filament discoverResources",
       "tags": ["nwidart", "laravel-modules", "filament", "modular-monolith", "composer", "vite"]
     }
   ]

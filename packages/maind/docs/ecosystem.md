@@ -1,156 +1,156 @@
-# Экосистема: философия трёх пакетов
+# Ecosystem: three-pack philosophy
 
-Три пакета академической экосистемы — **swissknifeman**, **brain** и **maind** — устроены по
-одному принципу: каждый **самодостаточен** и работает в одиночку, а связываются они **опционально**,
-через пути в конфигах. Убери путь — пакеты снова автономны. Это держит систему предсказуемой:
-ничего не ломается, если соседа нет.
+Three academic ecosystem packages - **swissknifeman**, **brain** and **maind** — are arranged according to
+one principle: every **is self-sufficient** and works alone, but they communicate **optional**,
+through paths in configs. Remove the path and the packages are autonomous again. This keeps the system predictable:
+nothing breaks if there is no neighbor.
 
-## Роли
+## Roles
 
-| Пакет | Слой | Что делает |
+| Package | Layer | What it does |
 |:--|:--|:--|
-| **swissknifeman** | возможности | синхронизирует **скиллы + хуки** в проект — «прокачивает агента» под задачу |
-| **brain** | знания/доки | Obsidian-vault + демон `docs-watcher`, держит документацию в синхроне с репозиториями |
-| **maind** | хаб + командный пункт | владеет общей **памятью** и **графом**, раскатывает их на проекты, мониторит и оркеструет остальных |
+| **swissknifeman** | capabilities | synchronizes **skills + hooks** to the project - «pumps up the agent» for the task |
+| **brain** | knowledge/docks | Obsidian-vault + demon `docs-watcher`, keeps documentation in sync with repositories |
+| **maind** | hub + command post | owns the shared **memory** and **graph**, rolls them out to projects, monitors and orchestrates others |
 
-swissknifeman даёт проекту *навыки*, maind — *общую память и граф + координацию*, brain — *знания*.
-Они дополняют друг друга и каждый ценен сам по себе.
+swissknifeman gives the project *skills*, maind — *shared memory and graph + coordination*, brain — *knowledge*.
+They complement each other and each is valuable in its own right.
 
 ```mermaid
 graph TB
-  subgraph skm["swissknifeman — слой возможностей"]
-    SK["скиллы (registry)"]
-    HK["хуки: auto-approve, memory"]
+  subgraph skm["swissknifeman — capabilities layer"]
+    SK["skills (registry)"]
+    HK["hooks: auto-approve, memory"]
   end
-  subgraph br["brain — слой знаний/доков"]
+  subgraph br["brain — knowledge layer/docks"]
     VA["Obsidian vault"]
     DW["docs-watcher daemon"]
   end
-  subgraph md["maind — хаб + командный пункт"]
+  subgraph md["maind — hub + command post"]
     MEM["agent-memory daemon"]
-    GR["граф связей"]
+    GR["connection graph"]
     CC["provision · monitor · orchestrate"]
   end
-  proj["проект"]
+  proj["project"]
   skm -. "skills + hooks" .-> proj
   md -. "memory + graph" .-> proj
   br -. "docs-sync" .-> proj
-  md -. "оркеструет" .-> skm
-  md -. "оркеструет" .-> br
+  md -. "orchestrates" .-> skm
+  md -. "orchestrates" .-> br
 ```
 
-## Принцип: связаны, но работают по отдельности
+## Principle: connected, but work separately
 
-Интеграция — **opt-in через путь в конфиге**, с мягкой деградацией:
+Integration - **opt-in via the path in the config**, with mild degradation:
 
-- **maind** без демона памяти — граф и реестр проектов всё равно работают.
-- **brain** без maind — берёт проекты из своего discovery по control-файлам.
-- **swissknifeman** всегда автономен — у него свой реестр подключённых проектов.
+- **maind** without the memory daemon - the graph and project registry still work.
+- **brain** without maind — takes projects from his discovery by control-files.
+- **swissknifeman** is always autonomous - it has its own register of connected projects.
 
 ```mermaid
 flowchart LR
-  subgraph alone["каждый сам по себе"]
-    A1["maind: свой config.json"]
-    A2["brain: свой discovery"]
-    A3["swissknifeman: свой реестр"]
+  subgraph alone["everyone for themselves"]
+    A1["maind: yours config.json"]
+    A2["brain: yours discovery"]
+    A3["swissknifeman: your registry"]
   end
-  subgraph together["связаны через пути в конфиге (opt-in)"]
+  subgraph together["are linked through paths in the config (opt-in)"]
     T["config.json ↔ brain maind_config_path ↔ project skills-lock"]
   end
-  alone -. "добавить путь" .-> together
-  together -. "убрать путь" .-> alone
+  alone -. "add path" .-> together
+  together -. "remove path" .-> alone
 ```
 
-## Единый хаб + namespace'ы
+## Single hub + namespace's
 
-Память и граф — **одни на всю экосистему**, на хабе maind. Изоляция — логическая и по
-namespace'ам: граф — федерация (граф на проект + индекс), память — бакеты
-(`project:<id>`/`ns:<имя>`/`global`). Внутри группы общее, между группами изолировано. Это и
-есть «общий мозг» без отдельных демонов на проект.
+Memory and graph - **alone for the entire ecosystem**, on the hub maind. Isolation - logical and
+namespace'am: count - federation (graph per project + index), memory - buckets
+(`project:<id>`/`ns:<name>`/`global`). Common within a group, isolated between groups. This and
+yes «common brain» without separate daemons per project.
 
 ```mermaid
 graph TD
   subgraph hub["maind hub"]
     D["agent-memory daemon · 4111/4112"]
-    NS["бакеты памяти: project:&lt;id&gt; · ns:&lt;имя&gt; · global"]
-    G["data/graphs/*: граф на проект + _index.db (федерация)"]
+    NS["memory buckets: project:&lt;id&gt; · ns:&lt;name&gt; · global"]
+    G["data/graphs/*: graph per project + _index.db (federation)"]
   end
-  flexcrm -->|MCP, бакет project:flexcrm + ns:axioma| hub
-  brain -->|MCP, бакет project:brain| hub
-  others["… остальные проекты"] -->|MCP| hub
+  flexcrm -->|MCP, bucket project:flexcrm + ns:axioma| hub
+  brain -->|MCP, bucket project:brain| hub
+  others["… other projects"] -->|MCP| hub
 ```
 
-Подробнее о топологии и внутренних слоях — [Архитектура](./architecture).
+More about topology and internal layers - [Architecture](./architecture).
 
-## Онбординг нового проекта
+## Onboarding a new project
 
-Конечная цель — одна команда. Создаём проект → swissknifeman добавляет нужные скиллы и хуки
-(автоматически + можно выбрать конкретные) → maind подключает проект к общему мозгу (память + граф).
-Каждый шаг **standalone-safe**: нет соседа — шаг пропускается с предупреждением, онбординг идёт дальше.
+The ultimate goal is one team. Creating a project → swissknifeman adds the necessary skills and hooks
+(automatically + you can select specific) → maind connects the project to the general brain (memory + graph).
+Every step **standalone-safe**: there is no neighbor - the step is skipped with a warning, onboarding moves on.
 
 ```mermaid
 sequenceDiagram
   actor Dev
   participant maind
   participant skm as swissknifeman
-  participant proj as проект
+  participant proj as project
   participant brain
   Dev->>maind: maind onboard &lt;project&gt;
-  maind->>maind: зарегистрировать в config.json
+  maind->>maind: register in config.json
   maind->>skm: integrate (skills + hooks)
-  skm->>proj: .claude/skills + хуки + skills-lock.json
-  maind->>proj: deploy — agent-memory MCP (scope project:id) [+ код-граф/Serena]
-  maind->>maind: derive graph (composer/doc/override/skills → стор проекта + индекс)
+  skm->>proj: .claude/skills + hooks + skills-lock.json
+  maind->>proj: deploy — agent-memory MCP (scope project:id) [+ code graph/Serena]
+  maind->>maind: derive graph (composer/doc/override/skills → project store + index)
   opt --with-brain
-    maind->>brain: репозиторий для docs-sync
+    maind->>brain: repository for docs-sync
   end
-  maind-->>Dev: отчёт (steps · deployed · graph)
+  maind-->>Dev: report (steps · deployed · graph)
 ```
 
-## Поток конфигов и данных
+## Config and data flow
 
-maind — **читатель всех** ключевых файлов и **писатель** только `config.json`, MCP-конфигов
-проекта и **собственного** `.claude/settings.local.json` (доверие хаба к проектам экосистемы,
-см. [Workspace](./guide/workspace)). Скиллы проекта описывает `skills-lock.json` (composes
-swissknifeman + Laravel Boost, swissknifeman wins). brain держит свой `<vault>/.projects.json`
-для docs-watcher.
+maind — **reader everyone** key files and **writer** only `config.json`, MCP-configs
+project and **own** `.claude/settings.local.json` (hub trust in ecosystem projects,
+see [Workspace](./guide/workspace)). Project skills described `skills-lock.json` (composes
+swissknifeman + Laravel Boost, swissknifeman wins). brain holds his `<vault>/.projects.json`
+for docs-watcher.
 
 ```mermaid
 flowchart LR
-  MJ["config.json — реестр проектов (пишет maind)"]
+  MJ["config.json — project registry (writes maind)"]
   PJ["&lt;vault&gt;/.projects.json — docs-watcher (brain)"]
-  SL["skills-lock.json — карта скиллов (skiller lock)"]
+  SL["skills-lock.json — skill map (skiller lock)"]
   BJ["boost.json — Laravel Boost"]
-  MC[".mcp.json / .cursor/mcp.json — серверы (пишет maind deploy)"]
+  MC[".mcp.json / .cursor/mcp.json — servers (writes maind deploy)"]
   BJ -->|compose| SL
   SL -->|skills_sync| MJ
   MJ -->|import / export| PJ
   MJ -->|deploy| MC
 ```
 
-## maind как командный пункт — 4 слоя
+## maind as a command post - 4 layers
 
 ```mermaid
 flowchart TD
-  P["1. Provision — maind deploy<br/>раскатать память+граф на проекты"]
-  M["2. Monitor — maind projects status --json<br/>что настроено · что запущено · режимы"]
-  O["3. Orchestrate — maind run &lt;proj&gt; &lt;cap&gt;<br/>дёргать команды brain / swissknifeman"]
-  G["4. GUI — панель над status --json"]
+  P["1. Provision — maind deploy<br/>unroll memory+graph for projects"]
+  M["2. Monitor — maind projects status --json<br/>what is configured · that is running · modes"]
+  O["3. Orchestrate — maind run &lt;proj&gt; &lt;cap&gt;<br/>pull commands brain / swissknifeman"]
+  G["4. GUI — panel above status --json"]
   P --> M --> O --> G
 ```
 
-Если слой 2 (`status`) держать **JSON-first**, то GUI (слой 4) — тонкая надстройка над тем же
-контрактом, а не отдельная переписка. Каждый слой — отдельная команда maind; см. [CLI](./guide/cli).
+If layer 2 (`status`) hold **JSON-first**, then GUI (layer 4) — subtle add-on to the same
+contract, and not separate correspondence. Each layer is a separate command maind; see [CLI](./guide/cli).
 
-## Источник истины
+## Source of Truth
 
-| Что | Где живёт | Кто пишет |
+| What | Where does he live? | Who writes |
 |:--|:--|:--|
-| Реестр проектов | `config.json` (в корне монорепо) | maind (`projects.write_config` — единственный писатель) |
-| Доверие Claude к проектам | `<maind>/.claude/settings.local.json` | maind (`workspace sync` из реестра) |
-| Общая память | agent-memory demon (бакеты `project:<id>`/`ns:<имя>`/`global`) | проекты пишут в свой `project:<id>`, cross-ref — в `ns:<группа>` |
-| Граф связей | `data/graphs/<id>.db` + `_index.db` (федерация) | maind `derive` из composer/Brain/override/skills |
-| Карта скиллов проекта | `<project>/skills-lock.json` | `skiller lock` |
-| Документация проекта | vault ↔ repo | `brain sync` (docs-watcher) |
+| Project Registry | `config.json` (at the root of the monorepo) | maind (`projects.write_config` — sole writer) |
+| Trust Claude to projects | `<maind>/.claude/settings.local.json` | maind (`workspace sync` from the registry) |
+| Shared memory | agent-memory demon (buckets `project:<id>`/`ns:<name>`/`global`) | projects are written to their `project:<id>`, cross-ref — in `ns:<group>` |
+| Connection graph | `data/graphs/<id>.db` + `_index.db` (federation) | maind `derive` from composer/Brain/override/skills |
+| Project skill map | `<project>/skills-lock.json` | `skiller lock` |
+| Project documentation | vault ↔ repo | `brain sync` (docs-watcher) |
 
-Эта страница — канонический источник философии экосистемы. swissknifeman и brain ссылаются сюда.
+This page is the canonical source for ecosystem philosophy. swissknifeman and brain link here.

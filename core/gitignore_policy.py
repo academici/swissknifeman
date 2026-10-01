@@ -126,16 +126,16 @@ def check_project(project_root: str | Path, policy: dict | None = None) -> list[
             if kind == "ignore":
                 for path in tracked_hits:
                     add(entry, path, "error", "tracked-must-be-ignored",
-                        f"git rm --cached -- '{path}' и добавить `{pattern}` в .gitignore")
+                        f"git rm --cached -- '{path}' and add `{pattern}` in .gitignore")
                 if untracked_hits:
                     add(entry, untracked_hits[0], "error", "unignored",
-                        f"добавить `{pattern}` в .gitignore ({len(untracked_hits)} файл(ов) не игнорируются)")
+                        f"add `{pattern}` in .gitignore ({len(untracked_hits)} file(ov) are not ignored)")
             elif kind == "portable-or-ignore":
                 for path in tracked_hits + untracked_hits:
                     if _machine_specific(root / path):
                         state = "tracked" if path in tracked_hits else "unignored"
                         add(entry, path, "error", f"{state}-machine-specific",
-                            "убрать абсолютные пути (indirection `${VAR:-default}`) либо "
+                            "remove absolute paths (indirection `${VAR:-default}`) or "
                             f"`git rm --cached` + .gitignore `{pattern}` + `.example`")
             else:  # commit / project
                 for path in _existing(root, pattern):
@@ -156,17 +156,17 @@ def check_project(project_root: str | Path, policy: dict | None = None) -> list[
                             entry["id"], {})[relative] = state
                     elif state == "ignored":
                         add(entry, relative, "error", "ignored-must-be-committed",
-                            f"убрать `{pattern}` из .gitignore: файл общий для команды")
+                            f"remove `{pattern}` from .gitignore: file shared by the team")
                     elif state == "untracked":
                         add(entry, relative, "warn", "not-committed-yet",
-                            f"git add -- '{relative}' (общий артефакт ещё не в репозитории)")
+                            f"git add -- '{relative}' (shared artifact not yet in the repository)")
     for group, entries in groups.items():
         states = {state for paths in entries.values() for state in paths.values()}
         if len(states) > 1:
             detail = ", ".join(f"{path}={state}" for paths in entries.values() for path, state in sorted(paths.items()))
             findings.append({"entry": group, "policy": "project", "path": group, "level": "warn",
                              "code": "mixed-group-state",
-                             "fix": f"единообразить состояние группы: {detail}"})
+                             "fix": f"uniform group state: {detail}"})
     order = {"error": 0, "warn": 1, "info": 2}
     return sorted(findings, key=lambda f: (order[f["level"]], f["entry"], f["path"]))
 

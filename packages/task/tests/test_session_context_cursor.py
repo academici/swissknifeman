@@ -25,7 +25,7 @@ class CursorSessionContextTests(unittest.TestCase):
 
     def test_whitespace_conversation_id_fails_closed(self):
         with patch.dict(os.environ, {"CURSOR_CONVERSATION_ID": "bad id"}, clear=True):
-            with self.assertRaisesRegex(session_context.SessionContextError, "невалиден"):
+            with self.assertRaisesRegex(session_context.SessionContextError, "is invalid"):
                 session_context_cursor.current()
 
     def test_default_resolve_selects_cursor_when_it_is_the_only_session(self):

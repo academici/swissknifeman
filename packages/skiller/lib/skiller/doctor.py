@@ -1,4 +1,4 @@
-"""doctor — диагностика окружения."""
+"""doctor — environment diagnostics."""
 import dataclasses
 import hashlib
 import json
@@ -15,31 +15,31 @@ from .state import registry_git_state
 
 
 def _delegate_settings_doctor(env, opts):
-    """Фасад `skiller doctor --settings` → `harness doctor --settings` (subprocess).
-    Логики проверок здесь НЕТ (D10, единый источник истины в harness): только
-    прокидываем stdout (наследуемый) и код возврата. harness не найден → warn и
-    graceful skip (rc 0, как apply_permissions). Никакого разбора вывода harness."""
+    """Facade `skiller doctor --settings` → `harness doctor --settings` (subprocess).
+    NO check logic here (D10, single source of truth in harness): only
+    throw stdout (inherited) and return code. harness not found → warn and
+    graceful skip (rc 0, like apply_permissions). No output parsing harness."""
     binp = harness_bin(env)
     if binp is None:
-        warn("harness не установлен — settings-doctor недоступен "
-             "(установите: packages/harness/install.sh)")
+        warn("harness not installed - settings-doctor not available "
+             "(set: packages/harness/install.sh)")
         return
     cmd = [str(binp), "doctor", "--settings",
            "--target", opts.get("target") or os.getcwd()]
     try:
         result = subprocess.run(cmd, check=False, timeout=30)
     except (subprocess.SubprocessError, OSError) as e:
-        warn(f"harness doctor --settings не запустился: {e}")
+        warn(f"harness doctor --settings did not start: {e}")
         return
     if result.returncode:
         sys.exit(result.returncode)
 
 
 def _audit_downstream(env):
-    """Гигиена publish-surface онбордженных проектов: always-loaded слой, который Claude Code
-    читает в КАЖДОЙ сессии целевого проекта (CLAUDE.md ≤200, scoped/unscoped rules, deny-пресет).
-    Это и есть основной runtime-расход токенов — он в ЦЕЛЕВОМ проекте, не в реестре."""
-    print("\nDownstream publish-surface (always-loaded слой в проектах):")
+    """Hygiene publish-surface onboarded projects: always-loaded layer that Claude Code
+    reads in EVERY session of the target project (CLAUDE.md ≤200, scoped/unscoped rules, deny-preset).
+    This is the main runtime-token consumption - it is in the TARGET project, not in the registry."""
+    print("\nDownstream publish-surface (always-loaded layer in projects):")
     db_file = env.db_file
     projects = []
     if db_file.exists():
@@ -85,29 +85,29 @@ def _audit_downstream(env):
         if unscoped:
             flags.append(f"{unscoped} unscoped-rules (always-loaded)")
         if not deny:
-            flags.append("нет deny-пресета шума")
+            flags.append("no deny-noise preset")
         cursor_skills = pdir / ".cursor" / "skills"
         if cursor_skills.is_dir():
             broken = sorted(p.name for p in cursor_skills.iterdir()
                             if p.is_symlink() and not p.exists())
             if broken:
                 sample = ", ".join(broken[:5]) + (" …" if len(broken) > 5 else "")
-                flags.append(f"битые .cursor/skills ({len(broken)}): {sample}")
+                flags.append(f"broken .cursor/skills ({len(broken)}): {sample}")
         mark = "ok " if not flags else "warn"
         tail = (" — " + "; ".join(flags)) if flags else ""
-        print(f"  [{mark}] {name}: CLAUDE.md={lines} строк, "
+        print(f"  [{mark}] {name}: CLAUDE.md={lines} lines, "
               f"rules={scoped} scoped/{unscoped} unscoped, "
-              f"deny={'да' if deny else 'НЕТ'}{tail}")
+              f"deny={'yes' if deny else 'NO'}{tail}")
     if seen == 0:
-        print("  (нет онбордженных проектов на диске)")
+        print("  (no onboarded projects on disk)")
 
 
 def _vendor_drift(env):
-    """Дрейф vendor-скиллов по флоту: зарегистрированные mode=vendor проекты, чей набор
-    разошёлся с ТЕКУЩИМ реестром (add — новый скилл появился, update — sha256 сменился,
-    remove — выпал из конфига). Сухой plan_sync, ничего не пишет. Connect-only проекты
-    (без .swissknifeman/config.json) пропускаются — им обновление приходит из marketplace
-    само. Возвращает [(project_name, plan), ...] только для тех, у кого есть дрейф."""
+    """Drift vendor-skills by fleet: registered mode=vendor projects whose set
+    has parted ways with the CURRENT registry (add — new skill has appeared, update — sha256 has changed,
+    remove — fell out of the config). Dry plan_sync, does not write anything. Connect-only projects
+    (without .swissknifeman/config.json) are skipped - the update comes from marketplace
+    itself. Returns [(project_name, plan), ...] only for those who have drift."""
     from .config import load_config
     from .publication import build_vendor_distribution_plan
     from .skillset import DEFAULT_SKILLS_PATH, load_skillset_config, plan_sync
@@ -146,9 +146,9 @@ def _vendor_drift(env):
             try:
                 skills_path = descriptor.target.relative_to(pdir).as_posix()
                 provider_cfg = {**cfg, "skills_path": skills_path, "agent": provider}
-                # include_core=True — тот же дефолт, что и у `skiller sync` (cmd_sync:
-                # include_core=not opts["no_core"], по умолчанию no_core=False). Без
-                # этого сравнение с реестром ложно считает CORE_SKILLS «add»/«remove».
+                # include_core=True — same default as `skiller sync` (cmd_sync:
+                # include_core=not opts["no_core"], default no_core=False). Without
+                # this comparison with the registry is false CORE_SKILLS «add»/«remove».
                 plan = plan_sync(env, pdir, provider_cfg, include_core=True,
                                  provider=provider)
             except (Exception, SystemExit) as exc:
@@ -167,22 +167,22 @@ def _vendor_plan_has_drift(plan):
 
 
 def _audit_vendor_drift(env):
-    """Детальный по-проектный отчёт дрейфа vendor-скиллов (--vendor-drift)."""
-    print("\nДрейф vendor-скиллов от реестра (mode=vendor, сухой расчёт):")
+    """Detailed project-by-project drift report vendor-skills (--vendor-drift)."""
+    print("\nDrift vendor-skills from the registry (mode=vendor, dry calculation):")
     drifted = _vendor_drift(env)
     if not drifted:
-        print("  (все vendor-проекты синхронизированы с реестром)")
+        print("  (all vendor-projects are synchronized with the registry)")
         return
     for name, plan in drifted:
         parts = []
         if plan.get("add"):
-            parts.append(f"+{len(plan['add'])} новых")
+            parts.append(f"+{len(plan['add'])} new")
         if plan.get("update"):
-            parts.append(f"~{len(plan['update'])} с новой версией")
+            parts.append(f"~{len(plan['update'])} with new version")
         if plan.get("remove"):
-            parts.append(f"-{len(plan['remove'])} лишних")
+            parts.append(f"-{len(plan['remove'])} extra")
         if plan.get("conflicts"):
-            parts.append(f"!{len(plan['conflicts'])} конфликтов (прерванный sync?)")
+            parts.append(f"!{len(plan['conflicts'])} conflicts (interrupted sync?)")
         if plan.get("managed_drift"):
             parts.append(f"!{len(plan['managed_drift'])} managed drift")
         if plan.get("relocated"):
@@ -194,24 +194,24 @@ def _audit_vendor_drift(env):
             count = len(errors) if isinstance(errors, (list, tuple, dict, set)) else 1
             parts.append(f"!{count} errors")
         print(f"  [warn] {name}: " + ", ".join(parts)
-              + "  (применить: skiller sync — из каталога проекта)")
+              + "  (apply: skiller sync — from the project directory)")
 
 
 def _vendor_drift_summary(env):
-    """Компактная summary-строка для дефолтного doctor: сколько vendor-проектов отстало
-    от реестра (новые/изменившиеся managed-скиллы). Детали — --vendor-drift."""
+    """Compact summary-line for default doctor: how much vendor-projects backlog
+    from the registry (new/changed managed-skills). Details — --vendor-drift."""
     drifted = _vendor_drift(env)
     if drifted:
         projects = {name.partition(" [")[0] for name, _plan in drifted}
-        print(f"  [warn] vendor-скиллы: {len(projects)} проект(ов) отстали от реестра "
-              "(детали: skiller doctor --vendor-drift)")
+        print(f"  [warn] vendor-skills: {len(projects)} project(ov) behind the registry "
+              "(details: skiller doctor --vendor-drift)")
     else:
-        print("  [ok ] vendor-скиллы: дрейфа от реестра нет")
+        print("  [ok ] vendor-skills: no drift from the registry")
 
 
 def _downstream_claude_md_summary(env):
-    """Компактная summary-строка для дефолтного doctor: сколько онбордженных проектов имеют
-    CLAUDE.md > 200 строк (always-loaded → резидентный токен-расход). Детали — --downstream."""
+    """Compact summary-line for default doctor: how many onboarded projects have
+    CLAUDE.md > 200 lines (always-loaded → resident token-spend). Details — --downstream."""
     db_file = env.db_file
     if not db_file.exists():
         return
@@ -234,10 +234,10 @@ def _downstream_claude_md_summary(env):
     if not seen:
         return
     if over:
-        print(f"  [warn] downstream CLAUDE.md: {over}/{seen} проектов > 200 строк "
-              "(always-loaded; детали: skiller doctor --downstream)")
+        print(f"  [warn] downstream CLAUDE.md: {over}/{seen} projects > 200 lines "
+              "(always-loaded; details: skiller doctor --downstream)")
     else:
-        print(f"  [ok ] downstream CLAUDE.md: все {seen} ≤ 200 строк")
+        print(f"  [ok ] downstream CLAUDE.md: all {seen} ≤ 200 lines")
 
 
 _CORE_DONOR_BUCKETS = ("general", "research", "oss-dev")
@@ -854,22 +854,22 @@ def cmd_doctor(env, argv):
                               "--effective-source": "bool", "--json": "bool"})
     if opts["help"]:
         print("skiller doctor [--downstream] [--vendor-drift] [--settings [--target P]]\n"
-              "  --downstream:   гигиена publish-surface онбордженных проектов "
-              "(CLAUDE.md ≤200, scoped/unscoped rules, deny-пресет).\n"
-              "  --vendor-drift: по-проектный дрейф vendor-скиллов от реестра "
-              "(новые/изменившиеся managed-скиллы; сухой расчёт).\n"
+              "  --downstream:   hygiene publish-surface onboarded projects "
+              "(CLAUDE.md ≤200, scoped/unscoped rules, deny-preset).\n"
+              "  --vendor-drift: by design drift vendor-skills from the registry "
+              "(new/changed managed-skills; dry calculation).\n"
               "  --provider-distribution: read-only preflight Claude/Codex delivery; "
-              "не запускает native installer.\n"
+              "does not start native installer.\n"
               "  --context [--provider claude-code|codex|cursor] [--target P]: "
               "provider-aware first-turn footprint; Codex reads its effective native "
               "prompt inventory and reports duplicate skills / plugins outside policy.\n"
               "  --effective-runtime [--fixture-out F] [--carrier-out F]: P1.4 cold "
               "install/discover conformance gate (declared fixture, catalog-wide "
-              "uniqueness, D42 negative fixture); опц. запись declared-literal/carrier-set.\n"
+              "uniqueness, D42 negative fixture); opt. record declared-literal/carrier-set.\n"
               "  --effective-source [--json]: read-only composed effective-source doctor "
               "(active semantic owner/provenance/collisions, cache, capability/reference "
               "coverage, hook ownership, trace-quality — versioned JSON with --json).\n"
-              "  --settings:     аудит настроек Claude Code (фасад → harness "
+              "  --settings:     settings audit Claude Code (facade → harness "
               "doctor --settings).")
         return
     if opts.get("settings"):
@@ -880,7 +880,7 @@ def cmd_doctor(env, argv):
         from .config import resolve_target
         provider = opts.get("provider") or "claude-code"
         if provider not in {"claude-code", "codex", "cursor"}:
-            raise SystemExit("--provider: ожидался claude-code|codex|cursor")
+            raise SystemExit("--provider: expected claude-code|codex|cursor")
         target, _ = resolve_target(env, opts)
         report = first_turn_report(env, target, provider=provider)
         skills = report["sources"]["skills"]
@@ -963,43 +963,43 @@ def cmd_doctor(env, argv):
         if not ok:
             issues += 1
 
-    print(f"skiller doctor (реестр: {root})")
+    print(f"skiller doctor (registry: {root})")
     check(sys.version_info >= (3, 8), f"python3 {sys.version.split()[0]}")
 
     link = Path(os.path.expanduser("~/.local/bin/skiller"))
     resolved = Path(os.path.realpath(link)) if link.exists() else None
     check(resolved is not None and is_within(resolved, root),
-          f"симлинк {link}",
-          "перезапустите install.sh из репозитория реестра")
+          f"symlink {link}",
+          "restart install.sh from the registry repository")
     on_path = any(Path(p or ".").resolve() == link.parent.resolve()
                   for p in os.environ.get("PATH", "").split(os.pathsep))
-    check(on_path, f"{link.parent} в PATH",
-          'добавьте: export PATH="$HOME/.local/bin:$PATH"')
+    check(on_path, f"{link.parent} in PATH",
+          'add: export PATH="$HOME/.local/bin:$PATH"')
 
     db_file = env.db_file
     if db_file.exists():
         try:
             db = json.loads(db_file.read_text(encoding="utf-8"))
             check(db.get("version", 1) <= DB_VERSION,
-                  f"projects.json (записей: {len(db.get('projects', []))})",
-                  "версия новее поддерживаемой — git pull в реестре")
+                  f"projects.json (entries: {len(db.get('projects', []))})",
+                  "version newer than supported - git pull in the registry")
             stale = [p for p in db.get("projects", [])
                      if not Path(p["path"]).is_dir()]
             check(not stale,
-                  "записи projects.json указывают на существующие каталоги",
-                  f"{len(stale)} устаревших — skiller list --prune")
+                  "records projects.json point to existing directories",
+                  f"{len(stale)} obsolete - skiller list --prune")
         except json.JSONDecodeError:
-            check(False, "projects.json парсится",
-                  "битый JSON — следующая запись пересоздаст файл")
+            check(False, "projects.json is parsed",
+                  "broken JSON — the next entry will recreate the file")
     else:
-        check(True, "projects.json отсутствует (создастся при первом connect/vendor)")
+        check(True, "projects.json missing (will be created the first time connect/vendor)")
 
     sha, dirty = registry_git_state(env)
-    check(sha is not None, "реестр — git-репозиторий")
+    check(sha is not None, "registry - git-repository")
     if sha:
-        check(not dirty, f"реестр чистый (HEAD {sha})",
-              "есть незакоммиченные изменения скиллов — marketplace видит "
-              "только коммиты")
+        check(not dirty, f"registry is clean (HEAD {sha})",
+              "there are uncommitted skill changes - marketplace sees "
+              "commits only")
     profiles = sorted((root / "profiles").glob("*.json"))
     bad = []
     for p in profiles:
@@ -1007,35 +1007,35 @@ def cmd_doctor(env, argv):
             json.loads(p.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             bad.append(p.name)
-    check(profiles and not bad, f"профили загружаются ({len(profiles)})",
-          f"битые: {', '.join(bad)}")
+    check(profiles and not bad, f"profiles are loading ({len(profiles)})",
+          f"broken: {', '.join(bad)}")
 
-    # harness (окружение Claude Code — permissions/MCP/хуки) — ОПЦИОНАЛЬНАЯ
-    # зависимость: apply_permissions/_run_harness graceful-skip'ают, если её нет
-    # (standalone-раскладка / не установлен). Раньше doctor вообще не смотрел на
-    # harness — «не установлен» и «установлен, но сломан» (битый бинарь/венв/etc.)
-    # были неотличимы: connect/integrate тихо теряли permissions-пресеты, а doctor
-    # рапортовал «Все проверки пройдены» (аудит Doc-1). Отсутствие — НЕ FAIL (это
-    # опциональный пакет); сломанность при наличии — FAIL.
+    # harness (environment Claude Code — permissions/MCP/hooks) — OPTIONAL
+    # dependency: apply_permissions/_run_harness graceful-skip'if it's not there
+    # (standalone-layout / not installed). Previously doctor didn't look at all
+    # harness — «not installed» and «installed but broken» (broken binary/venv/etc.)
+    # were indistinguishable: connect/integrate quietly lost permissions-presets, and doctor
+    # reported «All checks passed» (audit Doc-1). Absence - NOT FAIL (this
+    # optional package); broken if present - FAIL.
     hbin = harness_bin(env)
     if hbin is None:
-        print("  [ok ] harness не установлен — опционально (permissions/MCP/хуки "
-              "не применяются; установка: packages/harness/install.sh)")
+        print("  [ok ] harness not installed - optional (permissions/MCP/hooks "
+              "do not apply; installation: packages/harness/install.sh)")
     else:
         try:
             r = subprocess.run([str(hbin), "--help"], capture_output=True,
                                text=True, timeout=10, check=False)
-            check(r.returncode == 0, f"harness исполняется ({hbin})",
+            check(r.returncode == 0, f"harness is being executed ({hbin})",
                   f"exit {r.returncode}: {(r.stderr or r.stdout).strip()[:200]}")
         except subprocess.TimeoutExpired:
-            check(False, f"harness исполняется ({hbin})", "превышен таймаут 10s")
+            check(False, f"harness is being executed ({hbin})", "timeout exceeded 10s")
         except OSError as e:
-            check(False, f"harness исполняется ({hbin})", str(e))
+            check(False, f"harness is being executed ({hbin})", str(e))
 
-    # JSON-схемы конфигов (schema/*.json) — DX-артефакт (IntelliSense). Рантайм-
-    # валидация ручная (CONFIG_KEYS/SKILLSET_KEYS); схема не должна расходиться с
-    # кодом, иначе редактор подсказывает не то, что принимает skiller. Тот же гейт
-    # держит tests/test_schema.py; doctor даёт его как интерактивную проверку.
+    # JSON-config schemes (schema/*.json) — DX-artifact (IntelliSense). Runtime-
+    # manual validation (CONFIG_KEYS/SKILLSET_KEYS); scheme should not diverge from
+    # code, otherwise the editor suggests something other than what it accepts skiller. Same gate
+    # holds tests/test_schema.py; doctor gives it as an interactive check.
     from .common import CONFIG_KEYS
     from .skillset import SKILLSET_KEYS
     for fname, keys, label in (
@@ -1044,24 +1044,24 @@ def cmd_doctor(env, argv):
              ".swissknifeman/config.json")):
         sf = root / "schema" / fname
         if not sf.is_file():
-            check(False, f"схема {fname}", "нет файла в schema/")
+            check(False, f"diagram {fname}", "no file in schema/")
             continue
         try:
             data = json.loads(sf.read_text(encoding="utf-8"))
             if not isinstance(data, dict):
-                raise ValueError("корень схемы должен быть объектом")
+                raise ValueError("schema root must be an object")
             props = set(data.get("properties", {}))
         except (json.JSONDecodeError, ValueError) as e:
-            check(False, f"схема {fname} парсится", str(e))
+            check(False, f"diagram {fname} is parsed", str(e))
             continue
-        check(props == set(keys), f"схема {fname} ⇄ ключи {label}",
-              f"разошлись: лишние в схеме {sorted(props - set(keys))}, "
-              f"нет в схеме {sorted(set(keys) - props)} — обнови schema/{fname}")
-        # Doc-2: имена ключей — не единственное, что может разойтись. ТИП свойства
-        # в схеме (string/array/…) — тоже контракт с CONFIG_KEYS/SKILLSET_KEYS; раньше
-        # doctor сверял только имена ("⇄ ключи OK"), молчаливо пропуская расхождение
-        # типа (тест test_schema.py::test_property_types_align_with_python это ловит,
-        # но doctor ложно успокаивал интерактивным "OK").
+        check(props == set(keys), f"diagram {fname} ⇄ keys {label}",
+              f"separated: extra ones in the scheme {sorted(props - set(keys))}, "
+              f"not in the schema {sorted(set(keys) - props)} — update schema/{fname}")
+        # Doc-2: key names aren't the only thing that can diverge. Property TYPE
+        # in the schema (string/array/…) — also a contract with CONFIG_KEYS/SKILLSET_KEYS; before
+        # doctor checked only names ("⇄ keys OK"), silently overlooking the discrepancy
+        # type (test test_schema.py::test_property_types_align_with_python catches it,
+        # but doctor falsely reassured interactive "OK").
         json_type = {str: "string", list: "array", int: "integer",
                     dict: "object", bool: "boolean"}
         props_data = data.get("properties", {})
@@ -1070,22 +1070,22 @@ def cmd_doctor(env, argv):
             if k not in props_data:
                 continue
             if isinstance(t, tuple):
-                # Мульти-тип (memory_brain = (str, dict)) → в схеме oneOf; сверяем,
-                # что члены покрывают ровно ожидаемые JSON-типы.
+                # Multi-type (memory_brain = (str, dict)) → in the schema oneOf; check,
+                # that the members cover exactly the expected JSON-types.
                 members = {b.get("type") for b in props_data[k].get("oneOf", [])}
                 want = {json_type.get(x) for x in t}
                 if members != want:
                     type_mismatches.append(
-                        f"{k}: схема oneOf={sorted(m for m in members if m)} код={sorted(want)}")
+                        f"{k}: diagram oneOf={sorted(m for m in members if m)} code={sorted(want)}")
             elif props_data[k].get("type") != json_type.get(t):
                 type_mismatches.append(
-                    f"{k}: схема={props_data[k].get('type')} код={json_type.get(t)}")
-        check(not type_mismatches, f"схема {fname} ⇄ типы {label}",
-              f"разошлись типы: {'; '.join(type_mismatches)} — обнови schema/{fname}")
+                    f"{k}: diagram={props_data[k].get('type')} code={json_type.get(t)}")
+        check(not type_mismatches, f"diagram {fname} ⇄ types {label}",
+              f"types diverged: {'; '.join(type_mismatches)} — update schema/{fname}")
 
-    # freshness хабов: штамп <!-- swissknifeman:registry sha=… --> в хабе проекта
-    # сверяем с текущим sha реестра (тот же расчёт, что в generate-hub.sh). Проекты
-    # без штампа (старый хаб) — пропускаем: получат штамп при следующей перегенерации.
+    # freshness hubs: stamp <!-- swissknifeman:registry sha=… --> in the project hub
+    # check with the current one sha registry (same calculation as in generate-hub.sh). Projects
+    # without stamp (old hub) — skip: they will receive a stamp during the next regeneration.
     reg_skills = root / "skills.json"
     if reg_skills.is_file():
         reg_sha = hashlib.sha256(reg_skills.read_bytes()).hexdigest()[:12]
@@ -1109,8 +1109,8 @@ def cmd_doctor(env, argv):
                     if m.group(1) != reg_sha:
                         stale_hubs.append(pdir.name)
                     break
-        check(not stale_hubs, f"хабы проектов свежие (реестр sha {reg_sha})",
-              f"{len(stale_hubs)} устарел(и): {', '.join(stale_hubs)} — перегенерируй "
+        check(not stale_hubs, f"project hubs are fresh (registry sha {reg_sha})",
+              f"{len(stale_hubs)} is deprecated(and): {', '.join(stale_hubs)} — regenerate "
               "(skiller update / generate-hub.sh)")
 
     if opts.get("downstream"):
@@ -1123,6 +1123,6 @@ def cmd_doctor(env, argv):
     else:
         _vendor_drift_summary(env)
 
-    print(f"\n{'Все проверки пройдены.' if issues == 0 else f'Проблем: {issues}'}")
+    print(f"\n{'All checks passed.' if issues == 0 else f'Problems: {issues}'}")
     if issues:
         sys.exit(1)

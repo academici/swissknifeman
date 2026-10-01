@@ -1,24 +1,24 @@
-# Резьба и винтовая геометрия
+# Thread and helical geometry
 
-> Материал, физика FDM, зазоры по типу посадки — в теле скилла `blender-modeling/threading` (`SKILL.md`).
+> Material, physics FDM, gaps according to the type of fit - in the body of the skill `blender-modeling/threading` (`SKILL.md`).
 
-## Как зазор применяется в коде
+## How clearance is used in code
 
-**Стандартный паттерн** — зазор применяется **только к наружной резьбе** («папа»):
-- База наружной резьбы смещается внутрь на `clearance`: `r_base = r_nominal - thread_depth - clearance`
-- Кончик зубца наружной резьбы: `r_tip = r_base + thread_depth - clearance`
-- Внутренняя резьба («мама») строится **без поправки** — она «принимающая»
+**Standard pattern** — clearance applied **to external thread only** («dad»):
+- The base of the external thread is shifted inward by `clearance`: `r_base = r_nominal - thread_depth - clearance`
+- Male thread tooth tip: `r_tip = r_base + thread_depth - clearance`
+- Internal thread («mom») under construction **without correction** — she «host»
 
-Это даёт равномерный зазор по всему профилю витка.
+This gives an even gap across the entire coil profile.
 
-**Общий принцип для других пар деталей:**
+**General principle for other pairs of parts:**
 
-Зазор можно распределить двумя способами:
-- **Только на папе** (наружной) — стандарт для FDM, где внешний контур точнее внутреннего. Именно так для наружной резьбы.
-- **Поровну между папой и мамой** — если обе детали из одного материала и технологии, и важен зазор без смещения центра резьбы.
+The gap can be distributed in two ways:
+- **Only on dad** (external) — standard for FDM, where the outer contour is more precise than the inner one. This is exactly the case for external threads.
+- **Equally between mom and dad** — if both parts are made of the same material and technology, and clearance without displacement of the center of the thread is important.
 
-Правило выбора: зазор отдать той детали, которая **легче деформируется при печати** (обычно наружная). При одинаковой технологии — поровну. При смене материала или принтера — пересчитать `thread_clearance` под реальный замер.
+Selection rule: give the gap to the part that **is easier to deform when printing** (usually external). With the same technology - equally. When changing material or printer, recalculate `thread_clearance` for real measurements.
 
 ---
 
-Конкретные параметры резьбы для пар деталей текущей модели — в `models/{name}/ai/rules.md`.
+Specific thread parameters for pairs of parts of the current model - in `models/{name}/ai/rules.md`.

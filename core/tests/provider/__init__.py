@@ -1,6 +1,6 @@
-"""Пакет тестов кластера `core.provider`.
+"""Cluster test package `core.provider`.
 
-Файл ОБЯЗАТЕЛЕН и удалению не подлежит: `unittest discover -s core/tests` не видит
-подкаталог без `__init__.py` и МОЛЧА теряет его тесты — ни ошибки, ни предупреждения
-(замерено на Python 3.12.3: `Ran 1` вместо `Ran 2`). Без него прогон остаётся
-«зелёным» на уменьшившемся наборе."""
+The file is REQUIRED and cannot be deleted: `unittest discover -s core/tests` doesn't see
+subdirectory without `__init__.py` and SILENTLY loses its tests - no errors, no warnings
+(measured at Python 3.12.3: `Ran 1` instead `Ran 2`). Without it, the run remains
+«green» on the reduced set."""

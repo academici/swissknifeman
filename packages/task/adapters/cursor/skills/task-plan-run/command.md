@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:4f80d5b70dea003557f17bfebdb247a31c5eedb2fe3219ecd1a6367280f21967
+Canonical SHA-256: sha256:29f62c38acf16cc8167730ba7fec4c70acbd1e7c8434c918084eeaf28c23a20f
 Adapter: task.cursor-command/1.0.17
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -82,7 +82,7 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
    concrete item risk (security/auth, destructive migration, irreversible external action,
    payment/accounting, concurrency/shared state, public API/schema, low-confidence impact, or release
    authority) or an explicit owner requirement, and then it is a separate read-only review item of the
-   plan (`Ревью Pn`), never a step run inside this item. Uncertainty gathers evidence; it does not
+   plan (`Review Pn`), never a step run inside this item. Uncertainty gathers evidence; it does not
    default to full review. Never fabricate evidence or bypass those boundaries; existing dirty changes
    belong to the owner.
 4. A foreign baseline stays visible but non-gating unless ownership/dependency closure intersects.

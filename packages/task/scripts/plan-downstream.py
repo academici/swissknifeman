@@ -13,12 +13,12 @@ from task.plan_downstream import DownstreamError, dumps, evaluate, record  # noq
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Прогнать Validation потребителей пункта-продюсера")
+    parser = argparse.ArgumentParser(description="Drive away Validation consumers of the producer point")
     parser.add_argument("--plan-dir", type=Path, required=True)
-    parser.add_argument("--item", required=True, help="пункт-продюсер Pn.m")
+    parser.add_argument("--item", required=True, help="item-producer Pn.m")
     parser.add_argument("--producer-commit", default="HEAD")
-    parser.add_argument("--record", action="store_true", help="записать item-scoped findings")
-    parser.add_argument("--json", action="store_true", help="напечатать машинный результат")
+    parser.add_argument("--record", action="store_true", help="write item-scoped findings")
+    parser.add_argument("--json", action="store_true", help="print machine result")
     args = parser.parse_args(argv)
     try:
         result = evaluate(args.plan_dir, args.item, producer_commit=args.producer_commit)

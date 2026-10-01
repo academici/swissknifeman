@@ -1,25 +1,25 @@
 # spatie/guidelines.spatie.be
 
-- **URL:** https://github.com/spatie/guidelines.spatie.be (сайт: https://spatie.be/guidelines)
-- **Статус:** imported
-- **Проверено:** 2026-06-12
+- **URL:** https://github.com/spatie/guidelines.spatie.be (website: https://spatie.be/guidelines)
+- **Status:** imported
+- **Checked:** 2026-06-12
 
-Официальные гайдлайны Spatie. В актуальном репозитории: code-style
+Official guidelines Spatie. In the current repository: code-style
 (laravel-php, javascript), workflow (version-control, new-project-setup,
-going-live), misc. Страницы security в текущей версии НЕТ — наш
-`architect/security-design/snippets/ops-security-checklist.md` основан на
-старой версии гайдлайнов и живого upstream не имеет.
+going-live), misc. Pages security in the current version NO - our
+`architect/security-design/snippets/ops-security-checklist.md` is based on
+old version of guidelines and live upstream does not have.
 
-## Взято
+## Taken
 
 - `content/code-style/laravel-php.md` → `skills/php/code-style-spatie/references/spatie-laravel-php-guidelines.md` (upstream.json, notify)
 - `content/code-style/javascript.md` → `skills/frontend/js-code-style/SKILL.md` (upstream.json, notify)
 
-## Не взято
+## Not taken
 
-- `workflow/version-control.md` — конфликтует с нашим каноном коммитов
-  (present-tense EN vs прошедшее время RU); наш `general/git-commit-rules` побеждает.
+- `workflow/version-control.md` — conflicts with our commit canon
+  (present-tense EN vs past tense RU); our `general/git-commit-rules` wins.
 
-## Целевые bucket-ы
+## Targets bucket-s
 
 `php/code-style-spatie`, `frontend/js-code-style`.

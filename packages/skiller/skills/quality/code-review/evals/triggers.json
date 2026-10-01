@@ -1,12 +1,12 @@
 {
   "skill": "code-review",
   "should_trigger": [
-    "сделай ревью этого PR",
-    "что блокирует мерж этих изменений",
-    "посмотри диффы и дай замечания по severity"
+    "review this PR",
+    "which blocks the merging of these changes",
+    "look at the diffs and give comments on severity"
   ],
   "should_not": [
-    "напиши новую функцию экспорта в CSV",
-    "какой пакет взять для фоновых очередей"
+    "write a new export function to CSV",
+    "which package to take for background queues"
   ]
 }

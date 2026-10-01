@@ -1,66 +1,66 @@
 # mAInd
 
-> Центральный узел экосистемы academici: **память агентов · граф связей · реестр агентов и проектов · MCP-сервер**.
+> Central node of the ecosystem academici: **agent memory · connection graph · registry of agents and projects · MCP-server**.
 
-**mAInd** — это «мозг» экосистемы. Один общий хаб хранит долгосрочную память агентов,
-строит граф связей между сущностями (проекты, агенты, память, скиллы) и координирует
-реестр запущенных агентов. Остальные проекты (`brain`, `swissknifeman`, …) подключаются
-к нему как клиенты.
+**mAInd** — this «brain» ecosystems. One common hub stores the agents' long-term memory,
+builds a graph of connections between entities (projects, agents, memory, skills) and coordinates
+registry of running agents. Other projects (`brain`, `swissknifeman`, …) are connected
+to it as clients.
 
-Ядро — **Python + bash** (как `swissknifeman` и `brain`): тонкий лаунчер `bin/maind`,
-вся логика в `lib/maind/*.py` на stdlib, тесты на `unittest`. npm нужен только для
-Node-демона памяти и сборки документации.
+Core - **Python + bash** (like `swissknifeman` and `brain`): slim launcher `bin/maind`,
+all logic in `lib/maind/*.py` on stdlib, tests for `unittest`. npm is only needed for
+Node-memory daemon and documentation build.
 
 ---
 
-## Топология: единый хаб + namespace'ы
+## Topology: single hub + namespace's
 
 ```
                  ┌──────────────────── maind hub ─────────────────────┐
                  │  agent-memory daemon (Node, 4111/4112)             │
-   maind start ─▶│   бакеты: project:<id> · ns:<имя> · global          │
-                 │  data/graphs/*  (граф на проект + _index.db, stdlib)│
+   maind start ─▶│   buckets: project:<id> · ns:<name> · global          │
+                 │  data/graphs/*  (graph per project + _index.db, stdlib)│
                  │  ~/.maind/  agents.json · projects.json             │
                  │  maind mcp  (stdio JSON-RPC: 11 tools)              │
                  └───────▲────────────▲────────────▲──────────────────┘
             MCP/HTTP     │            │            │
-                      brain     swissknifeman   erp-sdk …   (клиенты, изоляция по namespace)
+                      brain     swissknifeman   erp-sdk …   (clients, isolation by namespace)
 ```
 
-Через хаб идут **три независимых механизма связывания**, все работают по namespace'ам:
+Through the hub they go **three independent binding mechanisms**, all work according to namespace'am:
 
-- **agent-memory** (память/контекст) — один Node-демон; изоляция логическая, по бакетам:
-  `project:<id>` (приватно) · `ns:<имя>` (группа) · `global` (вся экосистема). Внутри группы
-  память общая, между группами изолирована.
-- **maind-граф** (топология между проектами) — федерация: граф на проект (`data/graphs/<id>.db`)
-  + тонкий `_index.db`. Строится из источников истины (`derive`: composer/Brain/override/skills),
-  не из ручного дубля. Межпроектное ребро — только внутри общего namespace.
-- **код-граф** (символы/файлы внутри проекта) — движок **Serena** (LSP, через `uvx`), per-project
-  MCP-сервер; раскатывается `deploy --with-code` (исторически «graphify»; `--with-graphify` — alias).
-- **Порты не хардкодятся** — из `.env` / `config.json` (дефолт 4111/4112), чтобы не
-  конфликтовать с другим узлом.
+- **agent-memory** (memory/context) — one Node-daemon; logical isolation, per bucket:
+  `project:<id>` (private) · `ns:<name>` (group) · `global` (entire ecosystem). Within the group
+  memory is shared, isolated between groups.
+- **maind-graph** (topology between projects) — federation: graph per project (`data/graphs/<id>.db`)
+  + thin `_index.db`. Built from the sources of truth (`derive`: composer/Brain/override/skills),
+  not from a manual take. Inter-project edge - only inside the common one namespace.
+- **code graph** (characters/files inside the project) — engine **Serena** (LSP, via `uvx`), per-project
+  MCP-server; rolls out `deploy --with-code` (historically «graphify»; `--with-graphify` — alias).
+- **Ports are not hardcoded** — from `.env` / `config.json` (default 4111/4112), so as not to
+  conflict with another node.
 
 ---
 
-## Установка
+## Installation
 
 ```bash
 git clone <repo> maind && cd maind
-./install.sh                       # симлинк ~/.local/bin/maind + каталог ~/.maind
-maind doctor                       # проверка окружения
+./install.sh                       # symlink ~/.local/bin/maind + directory ~/.maind
+maind doctor                       # environment check
 
-# Память (опционально, нужен Node):
-npm install                        # ставит @agentmemory/agentmemory
-cp .env.example .env               # порты узла
+# Memory (optional, needed Node):
+npm install                        # puts @agentmemory/agentmemory
+cp .env.example .env               # host ports
 maind start --only memory
 ```
 
-## Быстрый старт
+## Quick start
 
 ```bash
-maind migrate from-brain ~/Vaults/Brain/.projects.json   # импорт проектов + граф
-maind start                         # поднять память + граф
-maind status                        # сводка узла
+maind migrate from-brain ~/Vaults/Brain/.projects.json   # import projects + graph
+maind start                         # increase memory + graph
+maind status                        # node summary
 maind graph query --from project:brain --depth 2
 maind projects list
 ```
@@ -69,80 +69,80 @@ maind projects list
 
 ## CLI
 
-| Команда | Назначение |
+| Command | Purpose |
 |:--|:--|
-| `maind start [--only memory\|graph]` | поднять воркеры узла |
-| `maind status [--json]` | сводка: память, граф, агенты, проекты |
-| `maind memory <start\|stop\|status>` | жизненный цикл демона памяти |
-| `maind graph <query\|stats\|neighbors>` | обход графа связей |
-| `maind agents <list\|register\|heartbeat\|kill>` | реестр агентов |
-| `maind projects <list\|sync --from brain>` | реестр проектов |
-| `maind migrate <from-brain\|from-agentmemory>` | импорт из brain / agent-memory |
-| `maind mcp` | запустить maind как MCP-сервер (stdio) |
-| `maind doctor` | диагностика окружения |
+| `maind start [--only memory\|graph]` | raise node workers |
+| `maind status [--json]` | summary: memory, graph, agents, projects |
+| `maind memory <start\|stop\|status>` | memory daemon lifecycle |
+| `maind graph <query\|stats\|neighbors>` | traversal of the relationship graph |
+| `maind agents <list\|register\|heartbeat\|kill>` | agent registry |
+| `maind projects <list\|sync --from brain>` | project registry |
+| `maind migrate <from-brain\|from-agentmemory>` | import from brain / agent-memory |
+| `maind mcp` | run maind like MCP-server (stdio) |
+| `maind doctor` | environment diagnostics |
 
 ---
 
-## Конфиг `config.json`
+## Config `config.json`
 
-Главный конфиг узла — `config.json` **в корне монорепо** (не в пакете maind; резолвер
-поднимается до каталога с `packages/`). Legacy-имя `.maind.json` по-прежнему подхватывается.
-Надмножество `.projects.json` из `brain`. Если конфига нет, maind читает legacy `.projects.json`
-в режиме read-only (с предупреждением о миграции).
-Полная схема — в [config.example.json](config.example.json). Ключевые секции: `node`,
+Main node config - `config.json` **at the root of the monorepo** (not in package maind; resolver
+goes up to the directory with `packages/`). Legacy-name `.maind.json` is still being picked up.
+Superset `.projects.json` from `brain`. If there is no config, maind reads legacy `.projects.json`
+in mode read-only (with migration warning).
+Full diagram - in [config.example.json](config.example.json). Key sections: `node`,
 `memory`, `graph`, `agents`, `projects[]`, `integrations`, `mcp`, `observability`.
 
-## Память (scopes)
+## Memory (scopes)
 
-HTTP-контракт демона (agentmemory 0.9.x, сверено вживую): `GET /agentmemory/health` ·
+HTTP-demon contract (agentmemory 0.9.x, verified live): `GET /agentmemory/health` ·
 `POST /agentmemory/remember {namespace, content, type}` ·
-`POST /agentmemory/search {query, namespace}`. maind оркестрирует демон
-(`start/stop/status`) и говорит по HTTP, скоупя запросы по бакетам проекта
-(`project:<id>` · `ns:<имя>` · `global`).
+`POST /agentmemory/search {query, namespace}`. maind orchestrates the daemon
+(`start/stop/status`) and speaks HTTP, collecting requests for project buckets
+(`project:<id>` · `ns:<name>` · `global`).
 
-## Граф
+## Graph
 
-Движок — чистый stdlib (BFS-соседи, кратчайший путь, подграф, статистика), персист в
-node-link JSON. Раскладка — **федерация**: граф на проект (`data/graphs/<id>.db`) + тонкий
-регенерируемый `_index.db`; строится из источников истины (`derive`), читается через единый
-фасад `federation.graph_reader`. `graph.adapter`: `federation` (по умолчанию) | `disabled`.
+Engine is clean stdlib (BFS-neighbors, shortest path, subgraph, statistics), persistent in
+node-link JSON. Layout - **federation**: graph per project (`data/graphs/<id>.db`) + thin
+regenerable `_index.db`; is built from sources of truth (`derive`), is read through a single
+facade `federation.graph_reader`. `graph.adapter`: `federation` (default) | `disabled`.
 
 ## MCP
 
-`maind mcp` — stdio JSON-RPC сервер (11 tools): память (`store`/`recall`/`forget`), граф
+`maind mcp` — stdio JSON-RPC server (11 tools): memory (`store`/`recall`/`forget`), graph
 (`query`/`neighbors`/`path`/`project`), `memory_links`, `agents_list`, `projects_list`,
-`projects_status`. Подключение клиента (`.mcp.json`):
+`projects_status`. Client connection (`.mcp.json`):
 
 ```json
 { "mcpServers": { "maind": { "command": "<repo>/bin/maind", "args": ["mcp"] } } }
 ```
 
-## Плагин Claude Code
+## Plugin Claude Code
 
-maind ставится и как **плагин Claude Code** — тонкое лицо над CLI. После `./install.sh`:
+maind is placed and how **plugin Claude Code** — thin face above CLI. After `./install.sh`:
 
 ```
-/plugin marketplace add /путь/к/swissknifeman   # единый marketplace монорепо
+/plugin marketplace add /path/to/swissknifeman   # single marketplace monorepo
 /plugin install maind@swissknifeman
 ```
 
-Появляются slash-команды `/maind:*` (`onboard`, `sync`, `status`, `health`, `doctor`) — обёртки над
-тем же CLI. Плагин **MCP-сервера не несёт**: инструменты хаба даёт per-project сервер `maind` из
-`.mcp.json` проекта. Подробнее — [docs/guide/plugin.md](docs/guide/plugin.md).
+Appear slash-commands `/maind:*` (`onboard`, `sync`, `status`, `health`, `doctor`) — wrappers over
+the same CLI. Plugin **MCP-does not support the server**: hub tools gives per-project server `maind` from
+`.mcp.json` project. More details - [docs/guide/plugin.md](docs/guide/plugin.md).
 
 ---
 
-## Разработка
+## Development
 
 ```bash
-scripts/test.sh          # unittest (без сторонних зависимостей и без живого демона)
-scripts/validate.sh      # py_compile + bash -n + JSON + тесты
-npm run docs:dev         # документация (VitePress)
+scripts/test.sh          # unittest (no third party dependencies and no live daemon)
+scripts/validate.sh      # py_compile + bash -n + JSON + tests
+npm run docs:dev         # documentation (VitePress)
 ```
 
-Конвенции: stdlib-only Python, контекст через `Env` (без модульных глобалей), атомарная
-запись JSON, русскоязычные сообщения. Подробнее — [CONTRIBUTING.md](CONTRIBUTING.md).
+Conventions: stdlib-only Python, context via `Env` (without modular globals), atomic
+entry JSON, Russian-language messages. More details - [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Лицензия
+## License
 
 [MIT](LICENSE) © 2026 Dmitry Vostrikov

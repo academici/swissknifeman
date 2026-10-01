@@ -21,8 +21,8 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MAIND_BIN="$REPO_ROOT/bin/maind"
 
 usage() {
-  echo "Использование: $0 --scope <scope> <topic>=<path> [<topic>=<path> ...]" >&2
-  echo "  (или --project <id> вместо --scope)" >&2
+  echo "Usage: $0 --scope <scope> <topic>=<path> [<topic>=<path> ...]" >&2
+  echo "  (or --project <id> instead of --scope)" >&2
   exit 1
 }
 
@@ -41,11 +41,11 @@ for pair in "$@"; do
   topic="${pair%%=*}"
   path="${pair#*=}"
   if [ "$topic" = "$pair" ] || [ -z "$path" ]; then
-    echo "ERROR: ожидался формат <topic>=<path>, получено: $pair" >&2
+    echo "ERROR: format expected <topic>=<path>, received: $pair" >&2
     exit 1
   fi
   if [ ! -f "$path" ]; then
-    echo "WARN: файл не найден, пропуск: $path" >&2
+    echo "WARN: file not found, skip: $path" >&2
     continue
   fi
   content="$(cat -- "$path")"

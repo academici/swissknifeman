@@ -1,6 +1,6 @@
 {
   "name": "pm-discovery",
-  "description": "Discovery: BRD, диагностика PMF, критика требований",
+  "description": "Discovery: BRD, diagnostics PMF, criticism of requirements",
   "include": [
     "pm/brd",
     "pm/pmf-diagnostics",

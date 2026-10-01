@@ -2,7 +2,7 @@
 
 MEM_die() { echo "memory: $*" >&2; exit 1; }
 
-require() { local b; for b in "$@"; do command -v "$b" >/dev/null 2>&1 || MEM_die "нужен $b"; done; }
+require() { local b; for b in "$@"; do command -v "$b" >/dev/null 2>&1 || MEM_die "needed $b"; done; }
 
 expandtilde() {
   case "$1" in

@@ -105,7 +105,7 @@ class HooksCase(unittest.TestCase):
         out = run(block_plans_dir, self.proj, "plans", "settings.json", False)
         after = (self.proj / ".claude" / "settings.json").read_text()
         self.assertEqual(before, after)
-        self.assertIn("уже", out)
+        self.assertIn("already", out)
 
     def test_plans_dir_does_not_overwrite_foreign_value(self):
         cdir = self.proj / ".claude"; cdir.mkdir(parents=True)
@@ -114,7 +114,7 @@ class HooksCase(unittest.TestCase):
         out = run(block_plans_dir, self.proj, "plans", "settings.json", False)
         s = json.loads((cdir / "settings.json").read_text())
         self.assertEqual(s["plansDirectory"], "my-custom-plans")
-        self.assertIn("уважаю", out)
+        self.assertIn("respect", out)
 
     def test_plans_dir_off_removes_our_default(self):
         run(block_plans_dir, self.proj, "plans", "settings.json", False)
@@ -129,12 +129,12 @@ class HooksCase(unittest.TestCase):
         out = run(block_plans_dir, self.proj, "off", "settings.json", False)
         s = json.loads((cdir / "settings.json").read_text())
         self.assertEqual(s["plansDirectory"], "my-custom-plans")
-        self.assertIn("не наш дефолт", out)
+        self.assertIn("not our default", out)
 
     def test_plans_dir_off_noop_when_key_absent(self):
         out = run(block_plans_dir, self.proj, "off", "settings.json", False)
         self.assertFalse((self.proj / ".claude" / "settings.json").exists())
-        self.assertIn("нечего снимать", out)
+        self.assertIn("nothing to shoot", out)
 
     def test_plans_dir_absolute_path_dies(self):
         with self.assertRaises(SystemExit):

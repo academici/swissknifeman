@@ -1,15 +1,15 @@
-# Структура Task-плана — layout v2
+# Task plan structure - layout v2
 
 Normal execution does not add a lifecycle carrier: `task.plan_lifecycle` transiently selects
 focused or widened validation from declared impact, while existing route, projection, continuity and
 delivery owners retain their respective carriers.
 
-SSOT — компактный скилл `general/plan-protocol`; детальная таблица носителей — его
-`references/plan-layout-v2.md`. Поле Meta `Layout | v2` обязательно; отсутствие или `v1`
-отклоняется диагностикой `PLAN_LAYOUT_V1_RETIRED`.
-При root-wide проверке архивный dated v2-план до `2026.09.09` inert: новые требования к
-state/downstream/handoff не переписывают его исторические свидетельства. Явный lint такого
-архива остаётся строгой forensic-проверкой.
+SSOT - compact skill `general/plan-protocol`; detailed media table - its
+`references/plan-layout-v2.md`. Meta field `Layout | v2` required; absence or `v1`
+is rejected by diagnostic `PLAN_LAYOUT_V1_RETIRED`.
+When checking root-wide, the archived v2 plan is dated until `2026.09.09` inert: new requirements for
+state/downstream/handoff do not rewrite its historical evidence. Explicit lint of this
+of the archive remains under strict forensic verification.
 
 ```text
 plans/<PLAN-ID>/
@@ -27,39 +27,39 @@ plans/<PLAN-ID>/
 ├── journal-exceptions.jsonl # optional D51 exact historical-schema exception sidecar
 ├── journal-migrations/ # owner-gated preimage + exact manifest/receipt for sealed repair
 ├── brief/             # owner input/refinements
-├── findings/          # RAG-выжимки и recon-отчёты
+├──findings/ # RAG extracts and recon reports
 ├── research/          # authored synthesis
-├── artifacts/         # рабочий материал фаз — судьба: архив вместе с планом
-├── root/              # долгоживущий материал — судьба: документация проекта
-└── open-questions.md  # спорное/нерешённое со статусами (не блокирует план)
+├── artifacts/ # working material of the phases - fate: archive along with the plan
+├── root/ # long-lived material - fate: project documentation
+└── open-questions.md # controversial/unresolved with statuses (does not block the plan)
 ```
 
-Для v2 обязательный путь исполнителя — ровно `plan.md` → `phases/<Pn>/<Pn>.md` →
-`phases/<Pn>/<Pn.m>.md` → `bundles/<Pn.m>.json` → `<Pn.m>.state.md`. `handoff.md`, весь
-`status.md`, весь журнал и весь каталог решений в этот путь не входят.
+For v2 the required executor path is exactly `plan.md` → `phases/<Pn>/<Pn>.md` →
+`phases/<Pn>/<Pn.m>.md` → `bundles/<Pn.m>.json` → `<Pn.m>.state.md`. `handoff.md`, all
+`status.md`, the entire magazine and the entire catalog of solutions are not included in this path.
 
-У закрытия фазы два разных носителя: opt-in `closure/<Pn>.json` фиксирует класс
-свидетельства-суждения, а generated `phases/<Pn>/<Pn>.closed.md` — терминальный контракт и
-результат для дизайнера/владельца. Один не заменяет другой.
+The closure phase has two different media: opt-in `closure/<Pn>.json` captures the class
+evidence-judgments, and generated `phases/<Pn>/<Pn>.closed.md` is a terminal contract and
+result for designer/owner. One does not replace the other.
 
 ## Evidence anchors
 
-`evidence-graph/v1` — derived runtime carrier, не handwritten карта. Он связывает spec,
-bundle digest inputs, declared product paths и closure. До мутации `Files ∩ digest_inputs`
-при required fresh closure check отклоняется как `SELF_INVALIDATING_EVIDENCE_ANCHOR` и требует
-минимальный product/closure split. При отсутствии коллизии используется один collapsed anchor.
-Closure доказывает byte identity product paths; registry-owned volatile projections, journal и
-handoff считаются bookkeeping, пока item явно не выводит их в Deliverables.
+`evidence-graph/v1` - derived runtime carrier, not handwritten map. It binds spec,
+bundle digest inputs, declared product paths and closure. Before mutation `Files ∩ digest_inputs`
+with required fresh closure check is rejected as `SELF_INVALIDATING_EVIDENCE_ANCHOR` and requires
+minimum product/closure split. If there is no collision, one collapsed anchor is used.
+Closure proves byte identity product paths; registry-owned volatile projections, journal and
+handoffs are considered bookkeeping until item explicitly displays them in Deliverables.
 
 ## Public reason taxonomy
 
-`task.task_contract evaluate` и CLI `check` сохраняют точный внутренний diagnostic в
-`pre_mutation`/`pre_final` и дополнительно возвращают `reason_codes` для recovery-логики.
-Публичный закрытый набор: `schema-invalid`, `evidence-missing`, `evidence-stale`,
+`task.task_contract evaluate` and CLI `check` keep accurate internal diagnostic in
+`pre_mutation`/`pre_final` and additionally return `reason_codes` for recovery logic.
+Public closed set: `schema-invalid`, `evidence-missing`, `evidence-stale`,
 `evidence-forged`, `policy-denied`, `conflict`, `corrupt-state`, `durability-failed`.
-Каждая запись несёт исходный `internal_code` и короткое действие; неизвестный внутренний
-diagnostic безопасно нормализуется в `policy-denied`. Это additive JSON-изменение: старые
-потребители продолжают читать прежние поля, новые не должны разбирать текст сообщения.
+Each entry carries the original `internal_code` and a short action; unknown internal
+diagnostic is safely normalized in `policy-denied`. This is an additive JSON change: old
+consumers continue to read the old fields, the new ones do not have to parse the message text.
 
 ## Terminal admission lease
 
@@ -72,28 +72,28 @@ recommendation fragment are required for `final_allowed=true`. No lease leaves o
 untouched; invalid, stale or released applicable state returns a stable `re-arm` recovery verdict.
 Provider adapters may translate this reducer, but cannot replace its terminal policy.
 
-Перед `audit-green` audit-finalization regenerates owned projections once, rebuilds candidate and
+Before `audit-green` audit-finalization regenerates owned projections once, rebuilds candidate and
 records `audit-finalization/v1` with `close_admission=allow`. Phase close consumes that evidence.
 
 ## Phase Assurance | v1
 
-Отсутствующий блок означает isolated, seam-free, reversible и direct-close. Handwritten block с
-`Impact`, named `Integration Seams`, `Live or Irreversible`, `Audit Intent` и непустым `Rationale`
-нужен только для seam/hard-risk/live boundary, owner-requested audit или неоднозначного default.
-`plan_assurance.evaluate()` — единственный reducer для первого audit/direct close и для
-post-GREEN impact. Явный `direct-close-eligible` сохраняется для совместимости; material risk без
-fresh owner-bound admission остаётся recommendation, а не автоматически назначенным audit. Candidate
-строится runtime из plan-dir + phase-id. После GREEN runtime сохраняет snapshot и классифицирует
-расхождение по полям как `audit-impact/v1`, возвращая только `gate-rebind`, `delta`, justified
-`full`, `gather-evidence` или `owner-review`; bare stale/full запрещён.
+A missing block means isolated, seam-free, reversible and direct-close. Handwritten block with
+`Impact`, named `Integration Seams`, `Live or Irreversible`, `Audit Intent` and non-empty `Rationale`
+is only needed for seam/hard-risk/live boundary, owner-requested audit or ambiguous default.
+`plan_assurance.evaluate()` is the only reducer for the first audit/direct close and for
+post-GREEN impact. The explicit `direct-close-eligible` is retained for compatibility; material risk without
+fresh owner-bound admission remains a recommendation, not an automatically assigned audit. Candidate
+runtime is built from plan-dir + phase-id. After GREEN runtime saves the snapshot and classifies
+field variance as `audit-impact/v1`, returning only `gate-rebind`, `delta`, justified
+`full`, `gather-evidence` or `owner-review`; bare stale/full is prohibited.
 
-Исторический `Audit Intent: light` нормализуется в named `legacy-light`: прямое закрытие
-сохраняется только для одного green item без material risk; любой другой legacy-light candidate
-остаётся audit-required. Новые фазы не используют этот compatibility intent.
+Historical `Audit Intent: light` normalized in named `legacy-light`: direct close
+is saved only for one green item without material risk; any other legacy-light candidate
+remains audit-required. New phases do not use this compatibility intent.
 
-Рядом с каталогами планов живёт `plans/ACTIVE.md` — 4-строчный указатель активного плана
-(парсится `plan-lint`); плоские `.md` прямо в `plans/` — черновики plan mode,
-разворачиваются `/task:plan-design from-draft <файл>`.
+Next to the plan catalogs there is `plans/ACTIVE.md` - 4-line index of the active plan
+(parses `plan-lint`); flat `.md` directly into `plans/` - plan mode drafts,
+unfold `/task:plan-design from-draft <file>`.
 
 ## Historical journal exception
 
@@ -120,164 +120,164 @@ fields and the first start remain unchanged; the accepted decision and exact man
 unlisted semantic edits, or an absent accepted decision. This is the sole exception to physical
 append-only storage; the preserved preimage remains the historical source.
 
-## root/ против artifacts/ — смысловое различие
+## root/ vs artifacts/ - semantic difference
 
-Два каталога артефактов различаются судьбой, не форматом: `root/` — timeless-материал,
-который переживёт план и станет docs проекта; `artifacts/` — рабочий материал фаз,
-уезжающий в `plans/archive/<ID>` вместе с планом. Набор файлов `root/` — по потребности
-плана, не все обязательны.
+Two catalogs of artifacts differ in fate, not in format: `root/` - timeless material,
+which will survive the plan and become the docs of the project; `artifacts/` - working material of phases,
+leaving for `plans/archive/<ID>` along with the plan. Set of files `root/` - as needed
+plan, not all are required.
 
-## Таблица миграции root/ → docs
+## Migration table root/ → docs
 
-При архивации плана (`/task:plan-close archive <ID>`) содержимое `root/` мигрирует в
-документацию проекта по Diátaxis-типам:
+When archiving a plan (`/task:plan-close archive <ID>`), the contents of `root/` migrate to
+project documentation on Diátaxis types:
 
-| Файл в `root/` | Diátaxis-тип | Куда в docs проекта |
+| File in `root/` | Diátaxis-type | Where in the project docs |
 |:--|:--|:--|
-| `architecture.md` | explanation | архитектурный раздел docs |
-| `philosophy.md` | explanation | «почему так» — рядом с архитектурой |
-| `data-model.md` | reference | справочник модели данных |
-| `contracts/` | reference | справочник контрактов/API |
-| гайды фаз | how-to | практические руководства |
+| `architecture.md` | explanation | architectural section docs |
+| `philosophy.md` | explanation | “why is this so” - next to architecture |
+| `data-model.md` | reference | data model reference |
+| `contracts/` | reference | contracts/API directory |
+| phase guides | how-to | how-to guides |
 
-Чек-лист миграции (что перенесено в docs, что осталось в архиве) — обязательная часть
-финального `handoff.md` архивированного плана.
+Migration checklist (what was transferred to docs, what remained in the archive) - a mandatory part
+final `handoff.md` archived plan.
 
-## Routing (§3 плана) — Batch, route и review
+## Routing (§3 plans) – Batch, route and review
 
-Новый layout-v2 план использует ровно шесть колонок:
-`Batch | Items | Model class/effort | Exec | Review | Почему`. Routing покрывает каждый item
-ровно один раз. `Exec` — enum `run` | `plan-design` (legacy `plan-exec`/`manual`/`plan-run` read as `run`); `Review` —
+The new layout-v2 plan uses exactly six columns:
+`Batch | Items | Model class/effort | Exec | Review | Why`. Routing covers every item
+exactly once. `Exec` — enum `run` | `plan-design` (legacy `plan-exec`/`manual`/`plan-run` read as `run`); `Review` —
 `full` | `light` | `none`.
 
-Adjacent items одной фазы объединяются, когда общий producer/consumer, Required Reads, setup
-или Validation позволяют сэкономить повторный cold start. Отдельный commit/Deliverable не
-разрывает Batch: lifecycle каждого item выполняется внутри группы. `solo` требует конкретной
-причины — несовместимый Exec, owner/irreversible gate, отдельная capability или context budget.
-Batch не пересекает phase audit/close и не смешивает Exec; запуск использует максимальные
-model/effort/review группы и union capabilities.
+Adjacent items of one phase are combined when the common producer/consumer, Required Reads, setup
+or Validation allows you to save a repeated cold start. Separate commit/Deliverable is not
+breaks Batch: the lifecycle of each item is executed within the group. `solo` requires specific
+reasons - incompatible Exec, owner/irreversible gate, separate capability or context budget.
+Batch does not cross phase audit/close and does not mix Exec; startup uses maximum
+model/effort/review groups and union capabilities.
 
-## Contracts (§7/§11 плана) — cross-plan notification
+## Contracts (§7/§11 plan) — cross-plan notification
 
-Секция `## 7. Contracts` в `plan.md` фиксирует публичный контракт плана: `### Exported`
-(версия SemVer, что заморожено, дата уведомления потребителей) и `### Consumed` (какие
-контракты других планов использует, что замечено на их обновлении, реакция). Item, бампающий
-Exported-контракт, обязан в том же bookkeeping-коммите обновить строку `Exported` донора и
-строку `Consumed` каждого плана-потребителя **в том же корне `plans/`**; кросс-репо push —
-задача шины mAInd, не plan-протокола (в `open-questions.md` донора остаётся запись).
+Section `## 7. Contracts` in `plan.md` fixes the public contract of the plan: `### Exported`
+(SemVer version, what is frozen, date of notification to consumers) and `### Consumed` (which
+contracts of other plans are used, which is noticed on their update, reaction). Item, bumping
+Exported-contract is obliged to update the donor line `Exported` in the same bookkeeping commit and
+line `Consumed` of each consumer plan **in the same root `plans/`**; cross repo push -
+mAInd bus task, not plan protocol (an entry remains in `open-questions.md` of the donor).
 
-## Портируемость: два тира и требования к бандлу
+## Portability: two shooting ranges and bundle requirements
 
-План/задача несут **тир портируемости** — какой объём материала обязан ехать вместе с
-заданием, чтобы холодная сессия исполнила его без чата. Enum тиров, оба кода отказа
-(`PORTABILITY_INPUT_MISSING`, `PORTABILITY_EXTERNAL_INPUT`), блок `privacy` и пара
-`semantic_carrier`/`provider_renderers` принадлежат Task Contract v1; **правило
-классификации** — Plan Portability v1 (оба контракта — план,
+The plan/task carries **portability range** - how much material must travel with
+task so that the cold session can execute it without chat. Enum tiers, both failure codes
+(`PORTABILITY_INPUT_MISSING`, `PORTABILITY_EXTERNAL_INPUT`), block `privacy` and pair
+`semantic_carrier`/`provider_renderers` belong to Task Contract v1; **rule
+classification** - Plan Portability v1 (both contracts - plan,
 `root/contracts/`).
 
 ```text
-tier(work) := committed-bundle   если work.sessions == "multi"
-                                 ИЛИ work.risk == "high"
-                                 ИЛИ work.handoff
-                                 ИЛИ work.audit
-              brief-acceptance   иначе
+tier(work) := committed-bundle if work.sessions == "multi"
+                                 OR work.risk == "high"
+                                 OR work.handoff
+                                 OR work.audit
+              brief-acceptance otherwise
 ```
 
-Тир назначает **корневой супервизор**, компилирующий Task Contract, ДО диспатча — не
-исполнитель item'а и не субагент: субагент получает уже разрешённый тир, а не задачу
-классификации. Пере-назначение — только при смене одного из четырёх признаков, записью с
-прежним хешем в `supersedes`. Компилятор проверяется машинно: `plan_lint`
-(`_lint_tiered_portability_22`, порог `PORTABILITY_TIER_CANON_DATE`) отклоняет, в этом
-порядке: (1) тир, который правило не выдаёт для объявленной работы; (2) `committed-bundle`
-с пустым `execution_inputs`; (3) путь, присутствующий и в `execution_inputs`, и в
-`provenance_only`; (4) абсолютный / `~`-корневой / выходящий за корень / URL-образный вход;
-(5) `produced-by-predecessor`-вход без названного производителя.
+Tier assigns **root supervisor**, compiling Task Contract, BEFORE dispatch - not
+item'executor and not a subagent: the subagent receives an already resolved shooting range, not a task
+classification. Re-assignment - only when changing one of the four characteristics, recording with
+with the same hash in `supersedes`. The compiler is machine checked: `plan_lint`
+(`_lint_tiered_portability_22`, threshold `PORTABILITY_TIER_CANON_DATE`) rejects, in this
+order: (1) shooting range, which the rule does not issue for the advertised work; (2) `committed-bundle`
+with empty `execution_inputs`; (3) a path present in both `execution_inputs` and
+`provenance_only`; (4) absolute / `~`-root / beyond the root / URL-like input;
+(5) `produced-by-predecessor`-input without named manufacturer.
 
-**Провенанс против execution input — по РОЛИ, не по написанию.** Путь — execution input,
-если item его реально ЧИТАЕТ (он назван в `Inputs`/`Required Reads`/`Validation`); путь —
-провенанс, если он лишь объясняет происхождение и ни одно поле item'а его не читает.
-Подстрочный тест на `tmp/` неверен в обе стороны: закоммиченный читаемый путь с `tmp` в
-имени — вход, а черновик, который исполнитель посмотрел, но ни одно поле не назвало, —
-провенанс, где бы он ни лежал. Хост, чат, mAInd и чужие репозитории — провенанс по
-построению.
+**Provenance against execution input - by ROLE, not by spelling.** Path - execution input,
+if the item actually READS it (it is named in `Inputs`/`Required Reads`/`Validation`); path -
+provenance, if it only explains the origin and not a single item'field reads it.
+Interlinear test for `tmp/` is incorrect in both directions: committed readable path with `tmp` in
+name is the input, and the draft, which the performer looked at, but did not name a single field, is
+provenance, wherever it lies. Host, chat, mAInd and other people's repositories - provenance by
+construction.
 
-**Что обязан нести `committed-bundle`** (не «всё, что было под рукой»):
+**What is obliged to carry `committed-bundle`** (not “everything that was at hand”):
 
-| Требование | Смысл |
+| Requirement | Meaning |
 |:--|:--|
-| Минимизация | только то, ради чего вход реально читается; `privacy.minimized = true`, а `privacy.excluded_classes` называет исключённое — сырые тела, chain-of-thought, tool-payload'ы, секреты |
-| Детерминированный манифест **и** верификатор | целостность пересчитывается, а не заверяется: хеши считаются заново, не берутся на веру, верификатор коммитится вместе с бандлом |
-| Полное замыкание зависимостей | вход, ссылающийся на другой артефакт, тянет его с собой — иначе холодная сессия падает на втором файле |
-| Один нейтральный семантический carrier + provider-рендереры | отрендеренный Claude- или Codex-вызов — **проекция**, а не источник истины; `context` едет нейтральным литералом, русские строки командных файлов — его проекции |
-| Класс доказательства | ни один публичный приёмочный предикат не стоит на `pinned-not-recomputable`/`unknown`; такой материал едет только как размеченный контекст |
+| Minimization | only that for which the input is actually read; `privacy.minimized = true`, and `privacy.excluded_classes` names the excluded - raw bodies, chain-of-thought, tool-payload's, secrets |
+| Deterministic manifest **and** verifier | integrity is recalculated, not verified: hashes are calculated anew, they are not taken on faith, the verifier is committed along with the bundle |
+| Full dependency closure | an input referencing another artifact pulls it along with it - otherwise the cold session crashes on the second file |
+| One neutral semantic carrier + provider-renderers | the rendered Claude or Codex call is a **projection**, not the source of truth; `context` is a neutral literal, Russian lines of command files are its projections |
+| Proof class | no public acceptance predicate stands on `pinned-not-recomputable`/`unknown`; such material travels only as a marked context |
 
-**Классы доказательства** (закрытый enum, Source Evidence Verification v1): `recomputed`
-(выведено заново из закоммиченных байт своим алгоритмом) · `cross-checked` (два и более
-закоммиченных документа сверены друг с другом, ни один не считается истиной сам по себе) ·
-`pinned-not-recomputable` (закоммиченная константа как размеченный контекст) · `unknown`
-(база вывода ещё не установлена). Переход из двух последних классов в два первых —
-только правкой списка утверждений контракта и алгоритма верификатора, **никогда прозой**.
+**Evidence Classes** (private enum, Source Evidence Verification v1): `recomputed`
+(re-derived from the committed bytes by its own algorithm) · `cross-checked` (two or more
+committed documents are checked against each other, none is considered true in itself) ·
+`pinned-not-recomputable` (committed constant as marked context) `unknown`
+(the output base has not yet been installed). Transition from the last two classes to the first two -
+only by editing the list of contract statements and the verifier algorithm, **never in prose**.
 
-## Форма `Next` и порядок закрытия item'а
+## Form `Next` and order of closing item'a
 
-`handoff.md` несёт provider-neutral `Next` первой строкой. В enum входят execution/audit/
-close/archive/manual/waiting/terminal и design-формы, включая
-`design-finish: task:plan-design <ID> finish` и
-`design-roadmap: task:plan-design <ID> roadmap`. Исторические slash-формы читаются для
-совместимости. Каждый execution Next несёт строку `Batch` из Routing и команду всего оставшегося
-adjacent-суффикса; linter не позволяет handoff молча схлопнуть группу до одного item. Закрытый
-item обязан НАПЕЧАТАТЬ в `Completion Notes`
-коды обеих границ — `pre_mutation:` и `pre_final:`, оба со значением `allow` (`n/a` зелёным
-не считается). С 2026-07-27 это не только проза чеклиста аудита: `plan_lint`
-(`_lint_write_site_codes_44`, порог `WRITE_SITE_CODES_CANON_DATE`) даёт ERROR на `🟢`/`🟠`
-item'е, чья дата в колонке `Updated` таблицы `## Phase Status` не меньше порога, а кода нет
-или он отличен от `allow`. Скоуп forward-only по дате **item'а**: закрытое до порога не
-диагностируется вовсе — новый гейт не перекрашивает чужие живые планы задним числом.
-После первого non-GREEN phase audit `plan-run` может один раз вернуть явно названный
-terminal item в `🟡 In progress` без ре-дизайна, если стабильное ТЗ не менялось и Pre-mutation
-Task Contract остаётся `allow`. Второй audit финальный: его non-GREEN исчерпывает
-`audit_rounds_max`, поэтому следующий item execution получает `LOOP_BUDGET_EXCEEDED` и не создаёт
-третий цикл.
-Закрытие item'а — фиксированный порядок: дифф Scope →
-`validate.sh` пакета → bookkeeping плана (статусы, Completion Notes, Update Log) → перезапись
-`handoff.md` → `plan-lint --baseline HEAD` **после** handoff → счёт публикуется с атрибуцией
-(«новых от диффа item'а: K») → bookkeeping-коммит. Прогон `plan-lint` до перезаписи `handoff.md`
-запрещён — закрывающий item сам меняет handoff, и счёт «до» не описывает итоговое дерево.
+`handoff.md` carries provider-neutral `Next` as the first line. enum includes execution/audit/
+close/archive/manual/waiting/terminal and design forms, including
+`design-finish: task:plan-design <ID> finish` and
+`design-roadmap: task:plan-design <ID> roadmap`. Historical slash forms are read for
+compatibility. Each execution Next carries the `Batch` line from Routing and the command for everything else
+adjacent-suffix; linter does not allow handoff to silently collapse a group to one item. Closed
+item must be PRINTED in `Completion Notes`
+both boundary codes are `pre_mutation:` and `pre_final:`, both with the value `allow` (`n/a` in green
+does not count). From 2026-07-27 this is not only a prose of the audit checklist: `plan_lint`
+(`_lint_write_site_codes_44`, threshold `WRITE_SITE_CODES_CANON_DATE`) gives ERROR on `🟢`/`🟠`
+item'e, whose date in the `Updated` column of the `## Phase Status` column is not less than the threshold, but there is no code
+or it is other than `allow`. Scope forward-only by date **item'a**: closed to threshold not
+is diagnosed at all - the new gate does not retroactively recolor other people's living plans.
+After the first non-GREEN phase audit `plan-run` can once return an explicitly named
+terminal item in `🟡 In progress` without re-design, if the stable technical specification has not changed and Pre-mutation
+Task Contract remains `allow`. The second audit is final: its non-GREEN exhausts
+`audit_rounds_max`, so the next item execution gets `LOOP_BUDGET_EXCEEDED` and does not create
+third cycle.
+Closing item'a - fixed order: diff Scope →
+`validate.sh` package → bookkeeping plan (statuses, Completion Notes, Update Log) → rewrite
+`handoff.md` → `plan-lint --baseline HEAD` **after** handoff → the invoice is published with attribution
+(“new from diff item'a: K”) → bookkeeping-commit. Run `plan-lint` before rewriting `handoff.md`
+is prohibited - the closing item itself changes the handoff, and the “to” count does not describe the resulting tree.
 
-## Open Questions — протокол
+## Open Questions - protocol
 
-Спорный пункт НЕ блокирует план, если вынесен в `open-questions.md` с одним из статусов:
-`Exploration` · `Decision pending (нужен владелец)` · `Resolved → D#`. Вопрос, «висящий»
-в теле фазы без выноса, — находка аудита; закрытие плана с pending-вопросами — только
-`🟠 Done with deviations`. Re-design поверх закрытых фаз — новый D# со ссылкой «supersedes
-D#-старый», старый D# не редактируется.
+A controversial item does NOT block the plan if it is submitted to `open-questions.md` with one of the statuses:
+`Exploration` · `Decision pending (owner needed)` · `Resolved → D#`. Question hanging
+in the body of the phase without removal, - audit finding; closing a plan with pending issues - only
+`🟠 Done with deviations`. Re-design on top of closed phases - new D# with link "supersedes"
+D#-old", old D# cannot be edited.
 
-## Контекст v2
+## Context v2
 
-`Context` — ровно `continue-root`, `isolated-child-return` или `cold-start-root`.
-Cold start допустим только с причиной `context-budget`, `capability-missing`,
-`owner-pause-no-resume`, `whole-plan-independent-audit` или `design-root-terminal`; имя команды
-само по себе не является причиной. Перед записью handoff
-один `task.plan_continuity.reduce()` принимает versioned work estimate: attested route/capabilities,
-context health, digest оставшегося batch, loaded-input reuse, cold-start cost, lifecycle и durable
-checkpoint. Renderer, DecisionRequest, delivery receipt и live lint используют его typed decision,
-не выбирая Context повторно. Обычная последовательность items и недоступная context telemetry
-остаются в root, bounded reviewer возвращает evidence в root, а `waiting-owner` не выпускает
+`Context` - exactly `continue-root`, `isolated-child-return` or `cold-start-root`.
+Cold start is only allowed with the reason `context-budget`, `capability-missing`,
+`owner-pause-no-resume`, `whole-plan-independent-audit` or `design-root-terminal`; team name
+is not a cause in itself. Before recording handoff
+one `task.plan_continuity.reduce()` accepts versioned work estimate: attested route/capabilities,
+context health, digest remaining batch, loaded-input reuse, cold-start cost, lifecycle and durable
+checkpoint. Renderer, DecisionRequest, delivery receipt and live lint use its typed decision,
+without selecting Context again. Regular items sequence and inaccessible context telemetry
+remains in root, bounded reviewer returns evidence to root, and `waiting-owner` does not release
 runnable successor.
 
-## Два дома плана
+## Two house plan
 
-Где живёт SSOT — определяется стадией: на старте exec план переезжает в репо проекта
-(Meta `Home: repo:<путь>`). Архив работает только с repository carriers; опциональная
-синхронизация с Brain — отдельная операция документации и не является его предусловием.
-Полный цикл — [Методология](./methodology).
+Where SSOT lives is determined by the stage: at the start of exec the plan moves to the project repo
+(Meta `Home: repo:<path>`). The archive only works with repository carriers; optional
+synchronization with Brain is a separate documentation operation and is not a precondition for it.
+Full cycle - [Methodology](./methodology).
 
-## Короткие ссылки на работу
+## Short links to work
 
-Новый план хранит в Meta `Short ID | PLAN1`, отдельное файловое задание — `Short ID: TASK1`
-в заголовке документа. Номера постоянны и уникальны по репозиторию в своей серии,
-включая архив; дневной № в имени папки остаётся отдельным номером.
-Вне папки работы ссылки имеют вид `PLAN<N>.D35`, `PLAN<N>.P2.3`, `TASK<N>.D2`; между проектами —
-`swissknifeman:PLAN<N>.D35`. Старые планы без Short ID используют полный ID перед локальной
-ссылкой. Команды по-прежнему принимают полный PLAN-ID.
-Канон назначения и ссылок: `plan-protocol/references/work-references.md`.
+The new plan is stored in Meta `Short ID | PLAN1`, separate file task - `Short ID: TASK1`
+in the document title. The numbers are constant and unique in the repository in their series,
+including archive; The day number in the folder name remains a separate number.
+Outside the work folder, links look like `PLAN<N>.D35`, `PLAN<N>.P2.3`, `TASK<N>.D2`; between projects -
+`swissknifeman:PLAN<N>.D35`. Old plans without Short ID use the full ID before the local one
+link. Commands still accept the full PLAN-ID.
+Canon of assignment and references: `plan-protocol/references/work-references.md`.

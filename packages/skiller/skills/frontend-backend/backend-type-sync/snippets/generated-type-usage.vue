@@ -1,33 +1,33 @@
 <!-- Source: anonymized production Laravel project (resources/js/pages/Orders/Row.vue) -->
 <script setup lang="ts">
-// Использование сгенерированных типов на фронте.
-// App.* — ГЛОБАЛЬНЫЙ неймспейс из resources/js/types/generated.d.ts
-// (declare namespace App). Импортировать его НЕ нужно — достаточно, чтобы
-// generated.d.ts входил в "include" tsconfig.json.
+// Using generated types at the front.
+// App.* — GLOBAL namespace from resources/js/types/generated.d.ts
+// (declare namespace App). You do NOT need to import it - it's enough to
+// generated.d.ts was included in "include" tsconfig.json.
 //
-// Граница: данные (App.Data.* / App.Enums.*) — этот скилл (typescript-transformer).
-// Роуты/URL — скилл frontend/wayfinder (import { show } from '@/wayfinder/...').
+// Boundary: data (App.Data.* / App.Enums.*) — this skill (typescript-transformer).
+// Routes/URL — skill frontend/wayfinder (import { show } from '@/wayfinder/...').
 
 import { computed } from 'vue';
 
-// DTO как пропсы: ни одно поле не продублировано руками — источник правды на бэке.
+// DTO like props: not a single field is duplicated by hand - the source of truth is in the back.
 const props = defineProps<{
   order: App.Data.Order.OrderListItem;
 }>();
 
-// enum как тип: TS проверит принадлежность литерала множеству значений.
+// enum as type: TS will check whether a literal belongs to a value set.
 const isPayable = computed<boolean>(() => {
   const payable: App.Enums.Order.OrderStatus[] = ['draft', 'pending'];
   return payable.includes(props.order.status);
 });
 
-// Маппинг enum -> подпись для UI. Record по union даёт исчерпывающую проверку:
-// добавишь case на бэке, перегенерируешь типы — TS подсветит недостающий ключ.
+// Mapping enum -> signature for UI. Record by union gives a comprehensive check:
+// add case on the back, regenerate the types - TS will highlight the missing key.
 const statusLabels: Record<App.Enums.Order.OrderStatus, string> = {
-  draft: 'Черновик',
-  pending: 'Ожидает оплаты',
-  paid: 'Оплачен',
-  cancelled: 'Отменён',
+  draft: 'Draft',
+  pending: 'Awaiting payment',
+  paid: 'Paid',
+  cancelled: 'Canceled',
 };
 
 const statusLabel = computed<string>(() => statusLabels[props.order.status]);
@@ -38,6 +38,6 @@ const statusLabel = computed<string>(() => statusLabels[props.order.status]);
     <span class="order-row__number">{{ order.number ?? '—' }}</span>
     <span class="order-row__status">{{ statusLabel }}</span>
     <span v-if="order.customer">{{ order.customer.name }}</span>
-    <button :disabled="!isPayable">Оплатить</button>
+    <button :disabled="!isPayable">Pay</button>
   </article>
 </template>

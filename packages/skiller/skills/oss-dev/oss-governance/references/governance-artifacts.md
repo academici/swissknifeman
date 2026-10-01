@@ -1,36 +1,36 @@
-# 6 артефактов governance (по приоритету)
+# 6 artifacts governance (by priority)
 
-Справочник к скиллу `oss-governance`.
+Skill reference `oss-governance`.
 
 
-### 1. LICENSE (обязательно перед публикацией)
+### 1. LICENSE (required before publication)
 
-| Лицензия | Когда выбирать | Плюсы | Минусы |
+| License | When to choose | Pros | Cons |
 |:---|:---|:---|:---|
-| **MIT** | Дефолт для библиотек | Максимальная adopt-rate, простая | Нет copyleft, не защищает от форков-в-проприетарь |
-| **Apache-2.0** | Если важна patent-grant | Явный patent grant, защита от submarine patents | Чуть сложнее, требует NOTICE |
-| **BSD-3-Clause** | Аналог MIT с no-endorsement clause | Простая, BSD-семья | Аналогично MIT по adopt |
-| **MPL-2.0** | Если хочется file-level copyleft | Можно линковать в проприетарь, но изменения в файлах MPL остаются открытыми | Меньше известна |
-| **AGPL-3.0** | SaaS-сервис, который ты сам хостишь | Защищает от competitive hosting | Многие компании запрещают AGPL в продукте — резко снижает adopt |
-| **GPL-3.0** | Полностью copyleft library | Сильная защита открытости | Заразность — конец adoption в commercial |
-| **BUSL-1.1 / SSPL** | source-available, не OSS | Защита бизнес-модели | **Это не OSS** — нельзя называть OSI-compliant |
+| **MIT** | Default for libraries | Maximum adopt-rate, simple | No copyleft, does not protect against forks-to-proprietary |
+| **Apache-2.0** | If important patent-grant | Explicit patent grant, protection against submarine patents | A little more complicated, it requires NOTICE |
+| **BSD-3-Clause** | Analogue MIT with no-endorsement clause | Simple, BSD-family | Likewise MIT by adopt |
+| **MPL-2.0** | If you want file-level copyleft | You can link to a proprietary one, but changes in files MPL remain open | Less known |
+| **AGPL-3.0** | SaaS-service that you host yourself | Protects against competitive hosting | Many companies prohibit AGPL in the product - sharply reduces adopt |
+| **GPL-3.0** | Completely copyleft library | Strong protection of openness | Infectivity - the end adoption in commercial |
+| **BUSL-1.1 / SSPL** | source-available, not OSS | Protecting the business model | **This is not OSS** — cannot be called OSI-compliant |
 
-**Дефолт для vault-проектов:** MIT. **Исключения:**
-- Если есть патенты или сильный риск patent troll → Apache-2.0
-- Если SaaS-конкуренция (типа Elastic) → подумать про AGPL или BUSL, но это уже не OSS
+**Default for vault-projects:** MIT. **Exceptions:**
+- If there are patents or strong risk patent troll → Apache-2.0
+- If SaaS-competition (type Elastic) → think about AGPL or BUSL, but this is no longer OSS
 
-**Внутри файла LICENSE — текст лицензии полностью**, не ссылка. SPDX-идентификатор в `package.json`/`composer.json` обязателен.
+**Inside the file LICENSE — full license text**, is not a link. SPDX-identifier in `package.json`/`composer.json` is required.
 
 ### 2. CODE_OF_CONDUCT.md
-Стандарт — **Contributor Covenant v2.1** (https://www.contributor-covenant.org). Не сочинять свой.
+Standard - **Contributor Covenant v2.1** (https://www.contributor-covenant.org). Don't make up your own.
 
-Что добавить от себя:
-- Email для сообщений о нарушениях (отдельный, не личный)
-- Reporting flow (анонимность, конфиденциальность)
+What to add from myself:
+- Email for reporting violations (separate, not personal)
+- Reporting flow (anonymity, confidentiality)
 - Enforcement ladder (warning → temp ban → permanent ban)
 
 ### 3. CONTRIBUTING.md
-**Структура:**
+**Structure:**
 
 ```markdown
 # Contributing to [ProjectName]

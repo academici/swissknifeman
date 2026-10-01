@@ -1,7 +1,7 @@
 {
-  "$comment": "Конструкции для auto-approve хука (lib/analyze.sh). В коде только логика — все списки и паттерны здесь. Per-project override: <project>/.claude/auto-approve.config.json.",
+  "$comment": "Designs for auto-approve hook (lib/analyze.sh). The code contains only logic - all the lists and patterns are here. Per-project override: <project>/.claude/auto-approve.config.json.",
 
-  "$comment_security": "trust_inline_interpreters ВЫКЛ по умолчанию: _normalize вырезает тела в кавычках, поэтому 'python -c \"…\"' виден анализатору лишь головой 'python' — авто-одобрять интерпретаторы = одобрять произвольный код. awk/sed по той же причине НЕ в allow (awk system()/print>file, sed e/w/-i исполняют/пишут, тело скрыто). Включать inline-интерпретаторы — осознанный per-project выбор.",
+  "$comment_security": "trust_inline_interpreters OFF default: _normalize cuts out bodies in quotes, so 'python -c \"…\"' is visible to the analyzer only with the head 'python' — auto-approve interpreters = approve arbitrary code. awk/sed for the same reason NOT in allow (awk system()/print>file, sed e/w/-i perform/write, the body is hidden). Enable inline-interpreters - conscious per-project selection.",
 
   "trust_inline_interpreters": false,
   "use_shfmt_ast": true,
@@ -37,7 +37,7 @@
     "read_nouns_any": ["api", "search"]
   },
 
-  "$comment_deny": "deny_hard => активный DENY (катастрофично). deny_block_approve => fall-through на обычный промпт (мутация, но решаешь сам). rm/rmdir можно точечно разрешить в доверенных директориях — machine-owned safe-dirs.json в корне монорепо swissknifeman ($SKM_SAFE_DIRS_CONFIG → репо → legacy ~/.swissknifeman/; команда harness safe-dirs), НЕ через project-override этого конфига (lib/safedirs.py его не читает).",
+  "$comment_deny": "deny_hard => active DENY (catastrophic). deny_block_approve => fall-through to a regular prompt (mutation, but you decide for yourself). rm/rmdir can be specifically resolved in trusted directories - machine-owned safe-dirs.json at the root of the monorepo swissknifeman ($SKM_SAFE_DIRS_CONFIG → repo → legacy ~/.swissknifeman/; command harness safe-dirs), NOT via project-override of this config (lib/safedirs.py doesn't read it).",
 
   "deny_hard": [
     "(^|[^[:alnum:]_/.-])(sudo|doas|rm|rmdir|shred|mkfs|mkswap|reboot|shutdown|poweroff|halt|fdisk|parted)([[:space:]]|$)",

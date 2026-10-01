@@ -24,7 +24,7 @@
       "fetched_at": "2026-06-26"
     }
   ],
-  "notes": "Из mattpocock/skills engineering/domain-modeling. Тело сохранено (англ.) + RU description-роутер, под-файлы -> snippets/, добавлены мульти-репо блок (общий словарь экосистемы) и финтех-примеры (СБП/libfptr10), секция «Связанные скиллы» (ADR-глубину делегируем architect/architecture, чтобы не дублировать). strategy=notify.",
+  "notes": "From mattpocock/skills engineering/domain-modeling. Body saved (English) + RU description-router, sub-files -> snippets/, added multi-repo block (general ecosystem vocabulary) and fintech examples (SBP/libfptr10), section «Related skills» (ADR-delegate depth architect/architecture, so as not to duplicate). strategy=notify.",
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",

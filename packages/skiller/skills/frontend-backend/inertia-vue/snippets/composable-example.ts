@@ -1,6 +1,6 @@
 // Source: anonymized production Laravel project
-// Доменный composable: resources/js/composables/document/useDocumentForm.ts
-// Инкапсулирует форму и навигацию домена; компоненты не трогают wayfinder напрямую.
+// Domain composable: resources/js/composables/document/useDocumentForm.ts
+// Encapsulates domain form and navigation; the components are not touched wayfinder directly.
 
 import { computed } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';

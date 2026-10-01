@@ -1,21 +1,21 @@
-"""budget — токеновый бюджет набора скиллов (трёхъярусная модель раскрытия).
+"""budget — token budget for skill set (three-tier disclosure model).
 
-Зачем: набор скиллов раздувается молча. Видно это только если различать, ЧТО
-грузится всегда, а что условно:
+Why: the set of skills is inflated silently. This is visible only if you distinguish WHAT
+is always loaded, but what about conditionally:
 
-  ярус-0 ⊕ always     — name+description каждого активного скилла. Резидентны в
-                        КАЖДОМ запросе (по ним агент решает, применять ли скилл).
-                        Это и есть постоянный «налог» — главная метрика.
-  ярус-1 ↻ on-trigger — тело SKILL.md. Грузится, только когда скилл срабатывает.
-  ярус-2 ⌥ on-demand  — сниппеты и references. Грузятся по ссылке из тела,
-                        опционально (references — тела монолитов после
-                        thin-navigator-волны, см. P2.1 SKM-MASTER-003).
+  tier-0 ⊕ always     — name+description of each active skill. Resident in
+                        EVERY request (based on them the agent decides whether to use the skill).
+                        This is the permanent «tax» — main metric.
+  tier-1 ↻ on-trigger — body SKILL.md. Loads only when the skill is triggered.
+  tier-2 ⌥ on-demand  — snippets and references. Loaded via a link from the body,
+                        optional (references — bodies of monoliths after
+                        thin-navigator-waves, see P2.1 SKM-MASTER-003).
 
-Оценка токенов — ГРУБАЯ и языко-зависимая (кириллица плотнее латиницы у
-токенайзера Claude), stdlib-only, без сторонних токенайзеров. Именно поэтому
-EN-канон дешевле RU при равном объёме — это виден выигрыш перевода. Число
-пригодно для СРАВНЕНИЯ наборов и относительного веса, не для точного учёта. Источник математики ОДИН (этот модуль) — им пользуются CLI
-(`skiller budget`), генератор карты (docs/guide/budget.md) и строка в
+Token scoring is ROUGH and language dependent (Cyrillic is denser than Latin
+tokenizer Claude), stdlib-only, without third-party tokenizers. That's why
+EN-canon is cheaper RU with equal volume - this is a visible translation gain. Number
+is suitable for COMPARING sets and relative weights, not for accurate counting. Source of mathematics ONE (this module) — use it CLI
+(`skiller budget`), map generator (docs/guide/budget.md) and the line in
 `skiller status`."""
 import json
 import math
@@ -35,48 +35,48 @@ from .plugins import plugins_summary
 from .native_codex import native_inventory
 from .vendor import build_requires_index, collect_skills, resolve_requires
 
-# Символов на токен — РАЗНЫЕ для кириллицы и латиницы/кода: кириллица у токенайзера
-# Claude плотнее, латиница/код/пунктуация — реже. Поэтому EN-канон дешевле RU при
-# ТОМ ЖЕ объёме текста — это и есть выигрыш перевода. Грубо, для сравнения наборов,
-# не точный учёт (оракул — /v1/messages/count_tokens).
+# Characters per token - DIFFERENT for Cyrillic and Latin/code: Cyrillic for tokenizer
+# Claude denser, Latin/code/punctuation - less common. Therefore EN-canon is cheaper RU when
+# THE SAME volume of text - this is the gain of translation. Roughly, to compare sets,
+# not accurate accounting (oracle - /v1/messages/count_tokens).
 #
-# Калибровка (RAG, verified 2026-07-02, perplexity — 3 источника: codeusagecalc,
-# frontiersin 2025, basicfreetools; аудит B-1): кириллица-проза ~2.8–3.2 chars/tok,
-# латиница-проза ~3.5–4.0, код ~2.5–3.0. Прежние 2.2/4.0 занижали RU chars/tok
-# (=завышали RU-токены, искусственно раздувая «выигрыш перевода») и завышали LAT
-# chars/tok (=занижали токены code-heavy тел). CYR — середина диапазона (2.9). LAT —
-# компромисс EN-прозы и кода одной константой (модель не различает код-блоки внутри
-# тела): тела скиллов технические (команды/сниппеты/таблицы) → ближе к коду, чем к
-# чистой прозе (3.4).
+# Calibration (RAG, verified 2026-07-02, perplexity — 3 source: codeusagecalc,
+# frontiersin 2025, basicfreetools; audit B-1): Cyrillic prose ~2.8–3.2 chars/tok,
+# Latin prose ~3.5–4.0, code ~2.5–3.0. Legacy 2.2/4.0 underestimated RU chars/tok
+# (=overestimated RU-tokens, artificially inflating «transfer winnings») and overestimated LAT
+# chars/tok (=undervalued tokens code-heavy tel). CYR — mid range (2.9). LAT —
+# compromise EN-prose and code with one constant (model does not distinguish between code blocks inside
+# bodies): skill bodies technical (commands/snippets/tables) → is closer to code than to
+# pure prose (3.4).
 CHARS_PER_TOKEN_CYR = 2.9
 CHARS_PER_TOKEN_LAT = 3.4
 CONTEXT_LIMIT = 200_000
 TOP_N = 10
 
 
-# --- оценка токенов -----------------------------------------------------------
+# --- token valuation -----------------------------------------------------------
 def estimate_tokens(text):
-    """Языко-зависимая оценка токенов: кириллица ~2.9 chars/tok, остальное ~3.4
-    (см. калибровку выше). 0 для пустого. EN тем самым дешевле RU при равном
-    объёме (выигрыш перевода)."""
+    """Language-sensitive token evaluation: Cyrillic ~2.9 chars/tok, rest ~3.4
+    (see calibration above). 0 for empty. EN thus cheaper RU with equal
+    volume (transfer winnings)."""
     if not text:
         return 0
-    # U+0400–04FF (Cyrillic) — RU/UK и большинство славянских языков; U+0500–052F
-    # (Cyrillic Supplement) — доп. буквы (коми-пермяцкий и др.), B-3: раньше не
-    # учитывались (недо-подсчёт токенов для текста с этими буквами).
+    # U+0400–04FF (Cyrillic) — RU/UK and most Slavic languages; U+0500–052F
+    # (Cyrillic Supplement) — add. letters (Komi-Permyak and others.), B-3: not before
+    # taken into account (under-counting of tokens for text with these letters).
     cyr = sum(1 for c in text if "Ѐ" <= c <= "ӿ" or "Ԁ" <= c <= "ԯ")
     return math.ceil(cyr / CHARS_PER_TOKEN_CYR + (len(text) - cyr) / CHARS_PER_TOKEN_LAT)
 
 
 def _split_frontmatter(text):
-    """(frontmatter_text, body_text). Без frontmatter → ("", text).
+    """(frontmatter_text, body_text). Without frontmatter → ("", text).
 
-    B-4 (аудит): похоже на дубль common.parse_frontmatter/core.text.parse_frontmatter,
-    но решает ДРУГУЮ задачу — тем нужен разобранный YAML-словарь (без тела), этой
-    функции нужно ИМЕННО тело (frontmatter_text здесь не парсится как YAML, только
-    отрезается). Слить значило бы менять сигнатуру core.parse_frontmatter (общую для
-    skiller/harness/maind — риск шире одного пакета) ради 8-строчной находилки границы
-    `---`...`---`. Оставлено раздельно осознанно, не по недосмотру."""
+    B-4 (audit): looks like a double common.parse_frontmatter/core.text.parse_frontmatter,
+    but solves ANOTHER problem - so you need a disassembled YAML-dictionary (without body), this
+    function needs EXACTLY the body (frontmatter_text is not parsed here as YAML, only
+    is cut off). Merge would mean changing the signature core.parse_frontmatter (common for
+    skiller/harness/maind — risk is wider than one package) for 8-line border finder
+    `---`...`---`. Left separately deliberately, not out of oversight."""
     lines = text.replace("\r\n", "\n").split("\n")
     if not lines or lines[0].strip() != "---":
         return "", text
@@ -87,13 +87,13 @@ def _split_frontmatter(text):
 
 
 def skill_budget(skill_dir):
-    """Трёхъярусный бюджет одного скилла (каталог с SKILL.md).
-    → {name, tier0, tier1, tier2, snippets, references}; None, если SKILL.md
-    отсутствует. tier2 (⌥ on-demand) — сумма snippets/ И references/: оба
-    грузятся ПО ССЫЛКЕ из тела (навигатор), не резидентно — та же семантика,
-    один glob-паттерн (P2.1 SKM-MASTER-003, T1: после thin-navigator-волны
-    P7 SKM-MASTER-002 тела монолитов лежат в references/full.md — без учёта
-    здесь ярус-2 занижен, «единый источник токен-математики» врёт)."""
+    """Three-tier budget for one skill (directory with SKILL.md).
+    → {name, tier0, tier1, tier2, snippets, references}; None, if SKILL.md
+    is missing. tier2 (⌥ on-demand) — amount snippets/ AND references/: both
+    are loaded BY LINK from the body (navigator), non-resident - same semantics,
+    one glob-pattern (P2.1 SKM-MASTER-003, T1: after thin-navigator-waves
+    P7 SKM-MASTER-002 bodies of monoliths lie in references/full.md — excluding
+    here tier-2 is understated, «single source of token mathematics» lies)."""
     skill_dir = Path(skill_dir)
     md = skill_dir / "SKILL.md"
     if not md.is_file():
@@ -123,14 +123,14 @@ def skill_budget(skill_dir):
     }
 
 
-# --- активный набор (как собрал бы vendor, без установки) ----------------------
+# --- active set (how I would assemble vendor, without installation) ----------------------
 def resolve_active_set(env, target, config, *, profile="", flag_buckets=None,
                        flag_exclude=None, no_core=False):
-    """Активный набор скиллов проекта, без записи на диск. Переиспользует
+    """Active set of project skills, without writing to disk. Reuses
     resolve_selection / collect_skills / core_skill_tuples / resolve_requires —
-    та же выборка, что у `skiller vendor`. Возвращает (skills, meta), где
-    skills — [(bucket, rel, dir, fm_name)], meta['pulled'] — транзитивные deps."""
-    config = ProjectConfig.coerce(config)  # исторические вызовы передают dict
+    same selection as `skiller vendor`. Returns (skills, meta), where
+    skills — [(bucket, rel, dir, fm_name)], meta['pulled'] — transitive deps."""
+    config = ProjectConfig.coerce(config)  # historical calls are sent dict
     flag_buckets = flag_buckets or []
     flag_exclude = flag_exclude or []
     buckets, profile_name, _profile_source, source, _include_meta = \
@@ -162,8 +162,8 @@ def resolve_active_set(env, target, config, *, profile="", flag_buckets=None,
 
 
 def budget_for_set(skills, pulled=None):
-    """Агрегировать трёхъярусный бюджет по списку скиллов [(bucket, rel, dir,
-    fm_name)]. Возвращает dict с суммами, разбивкой по бакетам и items."""
+    """Aggregate a three-tier budget by a list of skills [(bucket, rel, dir,
+    fm_name)]. Returns dict with amounts, breakdown by bucket and items."""
     pulled = pulled or {}
     items, by_bucket = [], {}
     for bucket, _rel, d, fm_name in skills:
@@ -194,29 +194,29 @@ def budget_for_set(skills, pulled=None):
 
 
 # --- first-turn footprint --------------------
-# Невидимый always-on бюджет — первопричина инцидента (
-# RAG:✅ 2026-07-12). Пять источников always-on нагрузки первого хода проекта:
+# Invisible always-on budget - the root cause of the incident (
+# RAG:✅ 2026-07-12). Five sources always-on loads of the first move of the project:
 # skills meta (⊕ tier-0), .claude/agents description, CLAUDE.md + path-less rules,
-# живой прогон SessionStart-хуков, MCP tool-defs.
+# live run SessionStart-hooks, MCP tool-defs.
 #
-# Пороги пере-изданы 2026-07-31
-# против baseline флота —,
-# n=22, якорь 3003d352. Прежняя пара 7 000/10 000 калибровалась на величине, которая
-# НЕ считала marketplace-плагины (считать их было нечем до P1.1), и потому давала
-# WARN у 95 % флота: гейт, красный у всех, нормы от аварии не отличает. Медиана
-# плагинной суммы по флоту — 8 741 ток, поэтому тот же по смыслу порог на
-# плагин-инклюзивной величине равен 7 000 + 8 741 ≈ 16 000, а полоса сохраняет
-# прежнее отношение warn/target 1,43 → 23 000. Распределение флота на новой паре
+# Thresholds re-issued 2026-07-31
+# vs baseline fleet -,
+# n=22, anchor 3003d352. Previous pair 7,000/10 000 was calibrated at a value that
+# DID NOT count marketplace-plugins (there was nothing to count them before P1.1), and therefore gave
+# WARN at 95 % fleet: gate, red for everyone, does not distinguish normal from accident. Median
+# plug-in amount for the fleet is 8,741 current, so the threshold for
+# plugin-inclusive value is 7,000 + 8 741 ≈ 16 000, and the stripe saves
+# old attitude warn/target 1,43 → 23 000. Fleet distribution on the new pair
 # (session_total): OK 23 % · ELEVATED 32 % · WARN 45 %.
 FIRST_TURN_TARGET_MAX = 16_000
 FIRST_TURN_WARN = 23_000
 HOOK_TIMEOUT = 10
 
-# Известные MCP-серверы → число tool-схем, резидентных в system prompt (грубо;
-# maind точный — packages/maind/lib/maind/mcp.py::TOOLS). Неизвестный сервер из
-# .mcp.json — FALLBACK_MCP_TOOLS (flat-оценка, не 0 и не завышение). `boost` —
-# алиас `laravel-boost`, замечен у vintera/cms (одна раздача, два имени сервера
-# во флоте — P2.3 Scope Included).
+# Known MCP-servers → number tool-schemes resident in system prompt (rude;
+# maind exact - packages/maind/lib/maind/mcp.py::TOOLS). Unknown server from
+# .mcp.json — FALLBACK_MCP_TOOLS (flat-rating, not 0 and not overstated). `boost` —
+# alias `laravel-boost`, spotted at vintera/cms (one distribution, two server names
+# in the fleet - P2.3 Scope Included).
 KNOWN_MCP_TOOLS = {
     "maind": 11, "perplexity-web": 4, "context7": 2, "sequential-thinking": 1,
     "fetch": 1, "memory": 9, "filesystem": 11, "github": 20, "playwright": 21,
@@ -225,55 +225,55 @@ KNOWN_MCP_TOOLS = {
 FALLBACK_MCP_TOOLS = 5
 TOKENS_PER_MCP_TOOL = 150
 
-# --- режим-зависимая модель стоимости MCP ---------------------
+# --- mode-dependent cost model MCP ---------------------
 # RAG:✅ 2026-07-31 <https://code.claude.com/docs/en/mcp> §«Scale with MCP tool
 # search» + <https://code.claude.com/docs/en/context-window> §«MCP tools
 # (deferred)» + <https://code.claude.com/docs/en/features-overview> §«Context
-# cost by feature»: tool search включён ПО УМОЛЧАНИЮ (deferred) — на старте
-# сессии резидентны только ИМЕНА инструментов + инструкции сервера, полные
-# схемы подгружаются по запросу; `ENABLE_TOOL_SEARCH=auto` — пороговый режим
-# (грузит схемы вперёд, если укладываются в 10% контекстного окна модели);
-# `ENABLE_TOOL_SEARCH=false` — старая модель, все схемы вперёд (TOKENS_PER_MCP_TOOL
-# выше — эта ветка). Переменная НЕ выставляется нигде в репозитории —
-# измеритель её только ЧИТАЕТ.
+# cost by feature»: tool search enabled BY DEFAULT (deferred) — at the start
+# sessions are resident only tool NAMES + server instructions, complete
+# schemes are loaded upon request; `ENABLE_TOOL_SEARCH=auto` — threshold mode
+# (loads circuits forward if they fit within 10% model context window);
+# `ENABLE_TOOL_SEARCH=false` — old model, all schemes forward (TOKENS_PER_MCP_TOOL
+# above - this thread). The variable is NOT exposed anywhere in the repository -
+# the meter only READS it.
 ENABLE_TOOL_SEARCH_ENV = "ENABLE_TOOL_SEARCH"
 MCP_MODE_DEFERRED = "deferred"
 MCP_MODE_AUTO = "auto"
 MCP_MODE_OFF = "off"
 MCP_MODE_SOURCE_DEFAULT = "default"
 
-# Резидентное имя инструмента в deferred-режиме — НИЖНЯЯ граница, не измерение:
-# `context-economy/SKILL.md:89` уже несёт цифру «lazy tool-search cuts schemas
-# ~84%» (тот же факт, что прозой знает `mcp-advisor/SKILL.md:113-117`) —
-# 150 ток/схема × (1 − 0.84) ≈ 24 ток/имя. Точность — не наша (репозиторий не
-# видит `/context` изнутри агента, RAG:— repo-grounded `findings/…probe §9`).
+# Resident name of the tool in deferred-mode - LOWER limit, not measurement:
+# `context-economy/SKILL.md:89` already carries a number «lazy tool-search cuts schemas
+# ~84%» (the same fact that prose knows `mcp-advisor/SKILL.md:113-117`) —
+# 150 current/diagram × (1 − 0.84) ≈ 24 current/name. Accuracy is not ours (repository not
+# sees `/context` from within the agent, RAG:— repo-grounded `findings/…probe §9`).
 TOKENS_PER_MCP_TOOL_NAME = 24
-# Инструкции сервера, когда их текст НЕ доступен локально (внешний бинарник/
-# пакет, напр. perplexity-web/serena) — грубый фолбэк на короткий блок
-# инструкций одного сервера (симметрично FALLBACK_MCP_TOOLS у эйджер-модели):
-# не 0 и не завышение.
+# Server instructions when their text is NOT available locally (external binary/
+# package, e.g. perplexity-web/serena) — rough fallback on short block
+# instructions for one server (symmetrical FALLBACK_MCP_TOOLS for the age model):
+# is not 0 and not overestimated.
 FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS = 40
 
 
 def _maind_server_instructions_tokens():
-    """`maind` — единственный известный сервер, чей исходник лежит в этом
-    монорепо (`packages/maind/lib/maind/mcp.py`): ответ `initialize` не несёт
-    поля `instructions` (`mcp.py` — `_result(req_id, {"protocolVersion": …,
-    "capabilities": …, "serverInfo": …})`) — резидентный текст инструкций
-    равен 0 ФАКТИЧЕСКИ, это не фолбэк."""
+    """`maind` — is the only known server whose source is in this
+    monorepo (`packages/maind/lib/maind/mcp.py`): response `initialize` does not carry
+    fields `instructions` (`mcp.py` — `_result(req_id, {"protocolVersion": …,
+    "capabilities": …, "serverInfo": …})`) — resident instruction text
+    is 0 ACTUALLY, this is not a fallback."""
     return 0
 
 
-# Серверы, чей текст инструкций проверен по локальному исходнику (Implementation
-# Rules P2.3 §4) — ключ отсутствует ⇒ фолбэк FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS.
+# Servers whose instruction text has been checked against the local source (Implementation
+# Rules P2.3 §4) — key missing ⇒ fallback FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS.
 _LOCAL_MCP_SERVER_INSTRUCTIONS = {"maind": _maind_server_instructions_tokens}
 
 
 def _tool_search_mode(target):
-    """Эффективный режим tool search: окружение процесса → `env` в
-    `.claude/settings.local.json` → `env` в `.claude/settings.json` → дефолт
-    «включён» (D22, Implementation Rules P2.3 §2). Возвращает (mode, source);
-    source печатается в отчёте — число без происхождения не публикуется."""
+    """Effective mode tool search: process environment → `env` in
+    `.claude/settings.local.json` → `env` in `.claude/settings.json` → default
+    «enabled» (D22, Implementation Rules P2.3 §2). Returns (mode, source);
+    source is printed in the report - a number without an origin is not published."""
     val = os.environ.get(ENABLE_TOOL_SEARCH_ENV)
     source = "env" if val is not None else None
     if val is None:
@@ -299,34 +299,34 @@ def _tool_search_mode(target):
         return MCP_MODE_OFF, source
     return MCP_MODE_DEFERRED, source
 
-# --- модель листингового бюджета Claude Code (P3.4, RAG:✅ /docs/en/skills) ----
+# --- listing budget model Claude Code (P3.4, RAG:✅ /docs/en/skills) ----
 # «The listing always contains every skill name … Claude Code shortens
 # descriptions to fit the listing's character budget … drops descriptions
-# starting with the skills you invoke least.» Клиент режет каждую запись ДО
-# 1 536 симв (description+when_to_use; name — всегда полностью) и держит сумму
-# листинга под потолком budget = context_window * fraction (дефолт 1%,
-# настраивается `skillListingBudgetFraction`/`SLASH_COMMAND_TOOL_CHAR_BUDGET` —
-# оба параметризуемы здесь, а не зашиты, см. Implementation Rules P3.4).
-# Порядок «дропа» зависит от истории вызовов проекта, которой у нас нет —
-# `_measure_skills` МОДЕЛИРУЕТ потолок (после-бюджета = min(сумма, потолок)),
-# не порядок дропа конкретных записей; это Scope Included P3.4, не полная
-# симуляция клиента.
+# starting with the skills you invoke least.» The client cuts each record BEFORE
+# 1 536 char (description+when_to_use; name — always completely) and keeps the amount
+# listing under the ceiling budget = context_window * fraction (default 1%,
+# configured `skillListingBudgetFraction`/`SLASH_COMMAND_TOOL_CHAR_BUDGET` —
+# both are parameterizable here, not hardwired, see Implementation Rules P3.4).
+# Order «drop» depends on the project's call history, which we don't have -
+# `_measure_skills` SIMULATES a ceiling (post-budget = min(amount, ceiling)),
+# not the drop order of specific records; this is Scope Included P3.4, not complete
+# client simulation.
 SKILL_LISTING_MAX_ENTRY_CHARS = 1_536
 SKILL_LISTING_BUDGET_FRACTION = 0.01
 SKILL_LISTING_CONTEXT_WINDOW = 1_000_000
 
-# --- модель листингового бюджета Codex (P3.4, RAG:✅ learn.chatgpt.com/docs/build-skills,
+# --- listing budget model Codex (P3.4, RAG:✅ learn.chatgpt.com/docs/build-skills,
 # 2026-07-29) --------------------------------------------------------------------------
 # «The skills list uses at most 2% of the model's context window, or 8,000 characters when
 # the context window is unknown.» / «If many skills are installed, Codex shortens skill
 # descriptions first. For large skill sets, Codex may omit some skills from the initial list
-# and show a warning.» ЕДИНИЦА — СИМВОЛЫ напрямую (не токены, не переводится ×3, как у
-# Claude Code выше) — единицы двух моделей НЕ смешиваются. Реальное контекстное окно,
-# которое Codex CLI считает «известным» для текущей модели, не измерено (round-trip вне
-# скоупа, D3) — поэтому расчёт всегда ведётся по ХУДШЕМУ случаю: фолбэк-бюджету, а не по
-# `CODEX_LISTING_BUDGET_FRACTION * окно` (зависимость от реального окна — [UNVERIFIED],
-# см.). Per-entry cap на запись Codex первоисточник не
-# называет (в отличие от `SKILL_LISTING_MAX_ENTRY_CHARS` у Claude) — измеряется сырая сумма.
+# and show a warning.» UNIT - SYMBOLS directly (not tokens, not translated ×3, like
+# Claude Code above) — units of the two models DO NOT mix. Real context window,
+# which Codex CLI thinks «known» for current model, not measured (round-trip out
+# scope, D3) — therefore the calculation is always carried out according to the WORST case: the fallback budget, and not according to
+# `CODEX_LISTING_BUDGET_FRACTION * window` (dependency on real window - [UNVERIFIED],
+# see). Per-entry cap to write Codex original source not
+# calls (unlike `SKILL_LISTING_MAX_ENTRY_CHARS` y Claude) — measures the raw amount.
 CODEX_LISTING_FALLBACK_CHARS = 8_000
 CODEX_LISTING_BUDGET_FRACTION = 0.02
 
@@ -340,36 +340,36 @@ MEASUREMENT_CLASSES = frozenset({
 MEASUREMENT_STATUSES = frozenset({"pass", "over-budget", "stale", "unknown"})
 MEASUREMENT_TTL = timedelta(days=30)
 
-# --- какие записи в резидентный листинг НЕ входят --------------
-# Пере-издание модели по НАБЛЮДЕНИЮ стенда P3.1/P3.6 на живой 2.1.220, а не по
-# доку (`plan.md` §2 «Правило внешних фактов»). Оба поля сняли запись целиком,
-# дельта воспроизведена байт-в-байт в обоих прогонах:
-#   • `disable-model-invocation: true` — ось A −88
-# (§3.2), это же
-#     говорит first-party док: «Description **not** in context»
+# --- which records are NOT included in the resident listing --------------
+# Re-issue of the model based on stand OBSERVATION P3.1/P3.6 on live 2.1.220, not on
+# doc (`plan.md` §2 «External fact rule»). Both fields removed the entire entry,
+# delta rendered byte-for-byte in both runs:
+# • `disable-model-invocation: true` — axis A −88
+# (§3.2), same
+# says first-party doc: «Description **not** in context»
 #     (<https://code.claude.com/docs/en/skills> §«Control who invokes a skill»);
-#   • `paths:` — ось A −88, ТА ЖЕ величина (там же §3.1/§4). Доку это
-#     противоречит («The listing always contains every skill name»), поэтому
-#     основание — наблюдение. Дозамер P3.6 назвал механизм: (C) условная
-#     загрузка с условием «сессия ПРОЧЛА совпавший файл», а НЕ «файл лежит в
-#     дереве» (`findings/P3-paths-mechanism.md` §2). Условие по ДЕРЕВУ в модель
-#     не вносится: плечо A1 дозамера («совпавший файл лежит») дало
-#     «неразличимо» в обоих прогонах — запись не возвращается (там же §3), а
-#     недоказанное занижение хуже известного завышения (Implementation Rules
-#     P3.2 §2). На ПЕРВОМ ходу прочитанных файлов нет по построению, поэтому для
-#     first-turn-модели исключение безусловно.
-# Поля НЕ измерены для Codex (стенд гонял только Claude Code — версия клиента
-# первой строкой файла-вердикта), поэтому исключение применяется ТОЛЬКО к
-# provider `claude-code`; codex-ветка сознательно продолжает завышать.
+# • `paths:` — axis A −88, SAME value (ibid. §3.1/§4). Doku this
+# contradicts («The listing always contains every skill name»), therefore
+# basis - observation. Dosage metering P3.6 named the mechanism: (C) conditional
+# loading with condition «session READ matched file», and NOT «file is in
+# tree» (`findings/P3-paths-mechanism.md` §2). Condition for TREE in the model
+# not entered: shoulder A1 dosage measurement («the matched file is located») gave
+# «indistinguishable» in both runs - no record returned (ibid. §3), a
+# unproven underestimation is worse than known overestimation (Implementation Rules
+# P3.2 §2). On the FIRST move there are no read files by construction, so for
+# first-turn-models are definitely an exception.
+# Margins NOT measured for Codex (the stand only drove Claude Code — client version
+# as the first line of the verdict file), so the exception ONLY applies to
+# provider `claude-code`; codex-thread deliberately continues to overestimate.
 LISTING_EXCLUDED_BY_FIELDS = ("disable-model-invocation", "paths")
 LISTING_EXCLUSION_PROVIDERS = ("claude-code",)
 
 
 def _listing_exclusion(skill_dir):
-    """Поле frontmatter, по которому запись скилла НЕ входит в резидентный
-    листинг Claude Code, либо None. Порядок проверки = порядок
-    `LISTING_EXCLUDED_BY_FIELDS`; первое совпадение и есть причина (запись
-    снимается один раз, двух причин у одной записи не бывает)."""
+    """Field frontmatter, for which the skill record is NOT included in the resident one
+    listing Claude Code, or None. Check procedure = order
+    `LISTING_EXCLUDED_BY_FIELDS`; the first match is the reason (entry
+    is removed once, there are no two reasons for one entry)."""
     md = Path(skill_dir) / "SKILL.md"
     if not md.is_file():
         return None
@@ -385,9 +385,9 @@ def _listing_exclusion(skill_dir):
 
 
 def _split_listing_entries(dirs, provider=DEFAULT_LISTING_PROVIDER):
-    """(включённые в листинг каталоги, {поле-причина: [каталоги]}) для провайдера.
-    Провайдер вне `LISTING_EXCLUSION_PROVIDERS` — исключений нет вовсе (поля для
-    него не измерены)."""
+    """(listed directories, {reason field: [directories]}) for the provider.
+    Provider out `LISTING_EXCLUSION_PROVIDERS` — there are no exceptions at all (fields for
+    not measured)."""
     if provider not in LISTING_EXCLUSION_PROVIDERS:
         return list(dirs), {}
     included, excluded = [], {}
@@ -401,22 +401,22 @@ def _split_listing_entries(dirs, provider=DEFAULT_LISTING_PROVIDER):
 
 
 def format_listing_exclusions(excluded_by):
-    """Каноническая строка отчёта об исключённых записях (`{поле: N}`) —
-    ОДНА форма для first-turn и для `--provider`-отчёта, чтобы число исключений
-    не разошлось между двумя печатями."""
+    """Canonical line for reporting excluded records (`{field: N}`) —
+    ONE form for first-turn and for `--provider`-report so that the number of exceptions
+    did not differ between the two seals."""
     if not excluded_by:
-        return "исключено записей: 0"
+        return "excluded entries: 0"
     total = sum(excluded_by.values())
     by = ", ".join(f"{f}: {n}" for f, n in sorted(excluded_by.items()))
-    return f"исключено записей: {total} (по полю {by})"
+    return f"excluded records: {total} (by field {by})"
 
 
 def _listing_entry_tokens(skill_dir):
-    """⊕ tier-0 ОДНОЙ записи листинга, как считает клиент: `name` без обрезки +
-    `description`(+`when_to_use`, если фронтматтер несёт поле), капнутые до
-    SKILL_LISTING_MAX_ENTRY_CHARS символов. Отдельно от `skill_budget.tier0`
-    (используется `budget_for_set`/`--check-core`/картой бюджета — та математика
-    вне Scope P3.4, Files item'а её не трогает)."""
+    """⊕ tier-0 ONE listing entry, as the client believes: `name` without trimming +
+    `description`(+`when_to_use`, if the frontmatter carries the field), dripped to
+    SKILL_LISTING_MAX_ENTRY_CHARS characters. Separate from `skill_budget.tier0`
+    (is used `budget_for_set`/`--check-core`/budget map - that math
+    out Scope P3.4, Files item'but doesn't touch her)."""
     skill_dir = Path(skill_dir)
     md = skill_dir / "SKILL.md"
     if not md.is_file():
@@ -429,9 +429,9 @@ def _listing_entry_tokens(skill_dir):
 
 
 def _listing_entry_chars(skill_dir):
-    """Запись листинга Codex в СЫРЫХ СИМВОЛАХ: `name` + `description`(+`when_to_use`),
-    БЕЗ капа — первоисточник не называет числа для Codex (в отличие от 1 536 у Claude
-    Code), поэтому честный замер — сырая сумма, не угаданный потолок."""
+    """Listing entry Codex in RAW SYMBOLS: `name` + `description`(+`when_to_use`),
+    WITHOUT cap - the original source does not give numbers for Codex (in contrast to 1,536 Claude
+    Code), therefore, an honest measurement is a raw amount, an unguessed ceiling."""
     skill_dir = Path(skill_dir)
     md = skill_dir / "SKILL.md"
     if not md.is_file():
@@ -443,30 +443,30 @@ def _listing_entry_chars(skill_dir):
 
 
 def measure_listing_budget(skills, provider=DEFAULT_LISTING_PROVIDER):
-    """Provider-aware бюджет обнаружения (листинга) для активного набора скиллов
-    `[(bucket, rel, dir, fm_name)]`. Две модели, две единицы — НЕ смешиваются
-: Claude Code — 1% контекстного окна в ТОКЕНАХ (см. `_listing_entry_tokens`);
-    Codex — фолбэк 8 000 СИМВОЛОВ (худший случай — реальное окно [UNVERIFIED], D3).
-    Записи, снятые с листинга нативным полем (`LISTING_EXCLUDED_BY_FIELDS`,
-    P3.2/D95/D96), в `raw` не входят; их число и цена приезжают АДДИТИВНЫМИ
-    ключами `excluded`/`excluded_by`/`excluded_raw` (D16 — смысл прежних ключей
-    не меняется).
+    """Provider-aware detection budget (listing) for active skill set
+    `[(bucket, rel, dir, fm_name)]`. Two models, two units - DO NOT mix
+: Claude Code — 1% context window in TOKENS (see `_listing_entry_tokens`);
+    Codex — fallback 8,000 CHARACTERS (worst case - real window [UNVERIFIED], D3).
+    Records removed from listing by native field (`LISTING_EXCLUDED_BY_FIELDS`,
+    P3.2/D95/D96), in `raw` are not included; their number and price come ADDITIVE
+    keys `excluded`/`excluded_by`/`excluded_raw` (D16 — meaning of the previous keys
+    does not change).
     → {provider, unit, raw, budget, over, degradation, excluded, excluded_by,
        excluded_raw}."""
     if provider not in LISTING_PROVIDERS:
-        die(f"неизвестный --provider: {provider} (ожидается: "
+        die(f"unknown --provider: {provider} (expected: "
             f"{', '.join(LISTING_PROVIDERS)})")
     all_dirs = [d for _bucket, _rel, d, _fm in skills]
     dirs, excluded = _split_listing_entries(all_dirs, provider)
     entry = _listing_entry_chars if provider in ("codex", "cursor") else _listing_entry_tokens
     if provider in ("codex", "cursor"):
         budget = CODEX_LISTING_FALLBACK_CHARS
-        unit = "симв"
-        degradation = "скилл может быть выброшен из листинга целиком"
+        unit = "char"
+        degradation = "skill can be removed from the listing entirely"
     else:
         budget = int(SKILL_LISTING_CONTEXT_WINDOW * SKILL_LISTING_BUDGET_FRACTION)
-        unit = "ток"
-        degradation = "описание усекается, имя остаётся"
+        unit = "current"
+        degradation = "description is truncated, name remains"
     raw = sum(entry(d) for d in dirs)
     excluded_raw = sum(entry(d) for ds in excluded.values() for d in ds)
     return {"provider": provider, "unit": unit, "raw": raw, "budget": budget,
@@ -645,25 +645,25 @@ def listing_measurements(skills, *, observed_at=None, evaluated_at=None):
 
 
 def format_listing_report(report):
-    """Человекочитаемая строка `measure_listing_budget` для CLI (--profile + --provider)."""
-    status = "ПЕРЕБОР" if report["over"] else "ок"
+    """Human-readable string `measure_listing_budget` for CLI (--profile + --provider)."""
+    status = "BREAKTHROUGH" if report["over"] else "ok"
     ratio = (f" (×{report['raw'] / report['budget']:.1f})"
              if report["over"] and report["budget"] else "")
     lines = [
-        "", f"─── Бюджет обнаружения (листинг), provider: {report['provider']} ───",
-        f"Листинг: {report['raw']} {report['unit']}  vs  бюджет {report['budget']} "
+        "", f"─── Discovery budget (listing), provider: {report['provider']} ───",
+        f"Listing: {report['raw']} {report['unit']}  vs  budget {report['budget']} "
         f"{report['unit']}  — {status}{ratio}"]
     if report.get("excluded"):
         lines.append(f"{format_listing_exclusions(report['excluded_by'])} — "
-                     f"{report['excluded_raw']} {report['unit']} вне листинга")
-    lines += [f"Режим деградации: {report['degradation']}", ""]
+                     f"{report['excluded_raw']} {report['unit']} not listed")
+    lines += [f"Degradation mode: {report['degradation']}", ""]
     return "\n".join(lines)
 
 
 def profiles_listing_report(env):
-    """Бюджет обнаружения КАЖДОГО поставляемого профиля (`profiles/*.json`) против ОБОИХ
-    провайдеров — режим замера `--profiles` (P3.4 Scope Included). Тот же производственный
-    путь, что раздача connect-канала (`resolve_active_set` + курируемый `core@`)."""
+    """Detection budget for EACH profile delivered (`profiles/*.json`) against BOTH
+    providers - metering mode `--profiles` (P3.4 Scope Included). Same production
+    path that distribution connect-channel (`resolve_active_set` + supervised `core@`)."""
     rows = []
     for name in sorted(p.stem for p in (env.root / "profiles").glob("*.json")):
         skills, _meta = resolve_active_set(env, env.root, {}, profile=name)
@@ -676,14 +676,14 @@ def profiles_listing_report(env):
 
 
 def format_profiles_listing_report(rows):
-    out = ["", "━━━ БЮДЖЕТ ОБНАРУЖЕНИЯ ПО ПРОФИЛЯМ (provider-aware, P3.4) ━━━━━━━━━━━━━━━",
-          "", "| Профиль | Скиллов | Codex (симв) | vs фолбэк 8000 | Claude Code (ток) "
-          "| vs бюджет 1% @1M |", "|:--|--:|--:|:--|--:|:--|"]
+    out = ["", "━━━ DETECTION BUDGET BY PROFILE (provider-aware, P3.4) ━━━━━━━━━━━━━━━",
+          "", "| Profile | Skills | Codex (char) | vs fallback 8000 | Claude Code (current) "
+          "| vs budget 1% @1M |", "|:--|--:|--:|:--|--:|:--|"]
     for r in rows:
         c, k = r["codex"], r["claude-code"]
         out.append(f"| {r['profile']} | {r['count']} | {c['raw']} | "
-                   f"{'ПЕРЕБОР' if c['over'] else 'ок'} | {k['raw']} | "
-                   f"{'ПЕРЕБОР' if k['over'] else 'ок'} |")
+                   f"{'BREAKTHROUGH' if c['over'] else 'ok'} | {k['raw']} | "
+                   f"{'BREAKTHROUGH' if k['over'] else 'ok'} |")
     out.append("")
     return "\n".join(out)
 
@@ -691,11 +691,11 @@ def format_profiles_listing_report(rows):
 def _managed_skill_measurement(env, target, provider, *,
                                listing_fraction=SKILL_LISTING_BUDGET_FRACTION,
                                listing_context_window=SKILL_LISTING_CONTEXT_WINDOW):
-    """Резидент листинга активного набора скиллов проекта — модель бюджета
-    выше (cap на запись + потолок = context_window*fraction), не сумма всех
-    описаний (тот переучёт был причиной D22/[POSSIBLE-DEFECT] в разведке P3.4).
-    n/a на любой сбой (незнакомый бакет в чужом .swissknife.json и т.п.) — не
-    должно ронять весь отчёт."""
+    """Listing resident of the project's active skill set - budget model
+    above (cap to write + ceiling = context_window*fraction), not the sum of all
+    descriptions (that re-discount was the reason D22/[POSSIBLE-DEFECT] in intelligence P3.4).
+    n/a for any failure (unfamiliar bucket in someone else's .swissknife.json etc.) — not
+    should drop the entire report."""
     try:
         config = load_config(env, target)
         skills, meta = resolve_active_set(env, target, config)
@@ -704,12 +704,12 @@ def _managed_skill_measurement(env, target, provider, *,
         raw = sum(_listing_entry_tokens(d) for d in dirs)
         budget = int(listing_context_window * listing_fraction)
         resident = min(raw, budget)
-        detail = f"{len(skills)} скиллов"
+        detail = f"{len(skills)} skills"
         if excluded:
-            detail += f", в листинге {len(dirs)}"
+            detail += f", in the listing {len(dirs)}"
         if raw > budget:
-            detail += (f", листинг {raw} > бюджет {budget} ток → резидент "
-                      f"{resident} (клиент дропает редко вызываемые описания)")
+            detail += (f", listing {raw} > budget {budget} current → resident "
+                      f"{resident} (client drops rarely called descriptions)")
         return {"tokens": resident, "raw_tokens": raw, "listing_budget": budget,
                 "desired_plugins": list(config.plugins),
                 "excluded": sum(len(ds) for ds in excluded.values()),
@@ -791,14 +791,14 @@ def _measure_skills(env, target, *, provider=DEFAULT_LISTING_PROVIDER,
 
 
 def _measure_agents(target, provider=DEFAULT_LISTING_PROVIDER):
-    """name+description каждого .claude/agents/*.md (frontmatter) — тот же
-    always-on «налог», что у скиллов, но для субагентов проекта."""
+    """name+description each .claude/agents/*.md (frontmatter) — same
+    always-on «tax», the same as for skills, but for project subagents."""
     if provider == "codex":
         return {"tokens": 0,
                 "detail": "Codex repo agents are provider-managed, not .claude/agents"}
     d = Path(target) / ".claude" / "agents"
     if not d.is_dir():
-        return {"tokens": 0, "detail": "нет .claude/agents"}
+        return {"tokens": 0, "detail": "no .claude/agents"}
     total, count = 0, 0
     for p in sorted(d.glob("*.md")):
         try:
@@ -807,15 +807,15 @@ def _measure_agents(target, provider=DEFAULT_LISTING_PROVIDER):
             continue
         total += estimate_tokens(f"{fm.get('name', p.stem)} {fm.get('description', '')}")
         count += 1
-    return {"tokens": total, "detail": f"{count} агентов"}
+    return {"tokens": total, "detail": f"{count} agents"}
 
 
 def _measure_claude_md(target):
-    """CLAUDE.md проекта + .claude/rules/**/*.md БЕЗ `paths:` (path-scoped rules
-    не always-on — грузятся только на затронутый файл, см. skill-authoring/
-    context-economy канон). `**` — подкаталоги `.claude/rules/` тоже always-on
-    источник (апстрим: «subdirectories … are discovered automatically»,
-    RAG:✅ `findings/…probe §6`) — плоский `*.md` их пропускал (P2.3 находка)."""
+    """CLAUDE.md project + .claude/rules/**/*.md WITHOUT `paths:` (path-scoped rules
+    not always-on — are loaded only on the affected file, see skill-authoring/
+    context-economy canon). `**` — subdirectories `.claude/rules/` too always-on
+    source (upstream: «subdirectories … are discovered automatically»,
+    RAG:✅ `findings/…probe §6`) — flat `*.md` missed them (P2.3 find)."""
     target = Path(target)
     total, parts, n_rules = 0, [], 0
     claude_md = target / "CLAUDE.md"
@@ -837,9 +837,9 @@ def _measure_claude_md(target):
                 continue
             total += estimate_tokens(p.read_text(encoding="utf-8", errors="ignore"))
             n_rules += 1
-    detail = " + ".join(parts) if parts else "нет CLAUDE.md"
+    detail = " + ".join(parts) if parts else "no CLAUDE.md"
     if n_rules:
-        detail += f" + {n_rules} rules без paths"
+        detail += f" + {n_rules} rules without paths"
     return {"tokens": total, "detail": detail}
 
 
@@ -851,7 +851,7 @@ def _measure_instructions(target, provider=DEFAULT_LISTING_PROVIDER):
     target = Path(target)
     agents_md = target / "AGENTS.md"
     if not agents_md.is_file():
-        return {"tokens": 0, "detail": "нет AGENTS.md", "surface": "AGENTS.md"}
+        return {"tokens": 0, "detail": "no AGENTS.md", "surface": "AGENTS.md"}
     try:
         tokens = estimate_tokens(agents_md.read_text(encoding="utf-8", errors="ignore"))
     except OSError as error:
@@ -860,8 +860,8 @@ def _measure_instructions(target, provider=DEFAULT_LISTING_PROVIDER):
 
 
 def _settings_hook_commands(target, event="SessionStart"):
-    """Команды хука `event` из .claude/settings.json + settings.local.json
-    (merge, оба читаются — local может добавлять хуки поверх settings.json)."""
+    """Hook commands `event` from .claude/settings.json + settings.local.json
+    (merge, both read - local can add hooks on top settings.json)."""
     target = Path(target)
     cmds = []
     for fname in ("settings.json", "settings.local.json"):
@@ -881,11 +881,11 @@ def _settings_hook_commands(target, event="SessionStart"):
 
 
 def _run_hook(cmd, target, timeout=HOOK_TIMEOUT):
-    """Живой прогон одного SessionStart-хука: пустой stdin, timeout, fail-soft.
-    additionalContext из hookSpecificOutput JSON, иначе сырой stdout (тот же
-    контракт, что читает сам Claude Code). Возвращает (tokens, ok); ok=False на
-    любой сбой/таймаут/ненулевой exit — это ДАННЫЕ отчёта (хук чужого проекта
-    может быть сломан), не повод падать самой команде."""
+    """Live run of one SessionStart-hook: empty stdin, timeout, fail-soft.
+    additionalContext from hookSpecificOutput JSON, otherwise raw stdout (same
+    contract that he reads himself Claude Code). Returns (tokens, ok); ok=False on
+    any failure/timeout/non-zero exit — this is the report DATA (hook of someone else's project
+    may be broken), is not a reason for the team itself to fall."""
     run_env = dict(os.environ)
     run_env["CLAUDE_PROJECT_DIR"] = str(target)
     try:
@@ -911,10 +911,10 @@ def _run_hook(cmd, target, timeout=HOOK_TIMEOUT):
 def _measure_hooks(target, timeout=HOOK_TIMEOUT, provider=DEFAULT_LISTING_PROVIDER):
     if provider != "claude-code":
         return {"tokens": 0,
-                "detail": f"нет измеряемого SessionStart-контракта для {provider}"}
+                "detail": f"no measurable SessionStart-contract for {provider}"}
     cmds = _settings_hook_commands(target, "SessionStart")
     if not cmds:
-        return {"tokens": 0, "detail": "нет SessionStart-хуков"}
+        return {"tokens": 0, "detail": "no SessionStart-hooks"}
     total, ok_n, fail_n = 0, 0, 0
     for cmd in cmds:
         tokens, ok = _run_hook(cmd, target, timeout=timeout)
@@ -924,31 +924,31 @@ def _measure_hooks(target, timeout=HOOK_TIMEOUT, provider=DEFAULT_LISTING_PROVID
         else:
             fail_n += 1
     if ok_n == 0:
-        return {"tokens": None, "detail": f"n/a ({fail_n} хук(ов) сбоили)"}
-    detail = f"{ok_n} хук(ов)" + (f", {fail_n} n/a" if fail_n else "")
+        return {"tokens": None, "detail": f"n/a ({fail_n} hook(ov) failed)"}
+    detail = f"{ok_n} hook(ov)" + (f", {fail_n} n/a" if fail_n else "")
     return {"tokens": total, "detail": detail}
 
 
 def _measure_mcp(target):
-    """Режим-зависимая оценка резидентной цены MCP-серверов проекта (.mcp.json,
-    P2.3/D19/D22): `mode`/`mode_source` — НОВЫЕ ключи (аддитивность D16), не
-    меняют `tokens`/`detail` по форме. Три ветки:
-      off      — старая эйджер-модель (KNOWN_MCP_TOOLS × TOKENS_PER_MCP_TOOL),
-                 честна только при ENABLE_TOOL_SEARCH=false;
-      auto     — допущение «в пределах 10% контекстного окна» НЕ проверено
-                 живым /context (агенту недоступен) → берём тот же эйджер-
-                 потолок как явно названную верхнюю границу (Implementation
-                 Rules P2.3 §3, Scope Included «auto — с явно названным
-                 допущением»);
-      deferred — дефолт клиента: имена инструментов (TOKENS_PER_MCP_TOOL_NAME)
-                 + инструкции сервера (измерены фактически для серверов с
-                 локальным исходником, иначе FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS)
-                 — нижняя граница.
-    Не парсим реальные схемы (сервер может быть недоступен из этого окружения)
-    — это оценка, как и весь budget.py."""
+    """Mode-dependent resident price estimation MCP-project servers (.mcp.json,
+    P2.3/D19/D22): `mode`/`mode_source` — NEW keys (additivity D16), not
+    change `tokens`/`detail` in form. Three branches:
+      off      — old age model (KNOWN_MCP_TOOLS × TOKENS_PER_MCP_TOOL),
+                 is honest only when ENABLE_TOOL_SEARCH=false;
+      auto     — assumption «within 10% context window» NOT verified
+                 alive /context (not available to agent) → take the same ager-
+                 ceiling as an explicitly named upper bound (Implementation
+                 Rules P2.3 §3, Scope Included «auto — with explicitly named
+                 assumption»);
+      deferred — client default: tool names (TOKENS_PER_MCP_TOOL_NAME)
+                 + server instructions (actually measured for servers with
+                 local source, otherwise FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS)
+                 — lower bound.
+    We do not parse real schemas (server may not be accessible from this environment)
+    — this is an assessment, like the whole budget.py."""
     f = Path(target) / ".mcp.json"
     if not f.is_file():
-        return {"tokens": 0, "detail": "нет .mcp.json", "mode": None,
+        return {"tokens": 0, "detail": "no .mcp.json", "mode": None,
                 "mode_source": None, "estimate_class": None}
     try:
         data = json.loads(f.read_text(encoding="utf-8"))
@@ -958,17 +958,17 @@ def _measure_mcp(target):
     servers = sorted(data.get("mcpServers", {}))
     mode, source = _tool_search_mode(target)
     if not servers:
-        return {"tokens": 0, "detail": "нет серверов", "mode": mode,
+        return {"tokens": 0, "detail": "no servers", "mode": mode,
                 "mode_source": source, "estimate_class": None}
     if mode == MCP_MODE_OFF:
         total = sum(KNOWN_MCP_TOOLS.get(n, FALLBACK_MCP_TOOLS) * TOKENS_PER_MCP_TOOL
                    for n in servers)
-        est_class = "точная модель полных схем (ENABLE_TOOL_SEARCH=false)"
+        est_class = "accurate model of complete circuits (ENABLE_TOOL_SEARCH=false)"
     elif mode == MCP_MODE_AUTO:
         total = sum(KNOWN_MCP_TOOLS.get(n, FALLBACK_MCP_TOOLS) * TOKENS_PER_MCP_TOOL
                    for n in servers)
-        est_class = ("верхняя граница (auto: допущение «в пределах 10% окна» "
-                     "не проверено живым /context)")
+        est_class = ("upper limit (auto: assumption «within 10% windows» "
+                     "not verified live /context)")
     else:
         total = 0
         for n in servers:
@@ -978,8 +978,8 @@ def _measure_mcp(target):
                 total += _LOCAL_MCP_SERVER_INSTRUCTIONS[n]()
             else:
                 total += FALLBACK_MCP_SERVER_INSTRUCTIONS_TOKENS
-        est_class = "нижняя граница (deferred: имена инструментов + инструкции сервера)"
-    return {"tokens": total, "detail": f"{len(servers)} сервер(ов): " + ", ".join(servers),
+        est_class = "lower bound (deferred: tool names + server instructions)"
+    return {"tokens": total, "detail": f"{len(servers)} server(ov): " + ", ".join(servers),
            "mode": mode, "mode_source": source, "estimate_class": est_class}
 
 
@@ -987,15 +987,15 @@ _FIRST_TURN_SOURCE_LABELS = (
     ("skills", "skills meta (⊕ always)"),
     ("agents", ".claude/agents"),
     ("claude_md", "CLAUDE.md + rules"),
-    ("hooks", "SessionStart-хуки (живой прогон)"),
+    ("hooks", "SessionStart-hooks (live run)"),
     ("mcp", "MCP tool-defs"),
 )
 
 
 def _first_turn_verdict(total):
-    """Трёхветочный вердикт OK/ELEVATED/WARN по порогам FIRST_TURN_TARGET_MAX/
-    FIRST_TURN_WARN — единственный носитель лестницы (используется и для
-    проектного `total`, и для плагин-инклюзивного `session_total`, D16)."""
+    """Three-pronged verdict OK/ELEVATED/WARN by thresholds FIRST_TURN_TARGET_MAX/
+    FIRST_TURN_WARN — the only carrier of the ladder (is also used for
+    project `total`, and for plugin-inclusive `session_total`, D16)."""
     if total <= FIRST_TURN_TARGET_MAX:
         return "OK"
     elif total <= FIRST_TURN_WARN:
@@ -1020,15 +1020,15 @@ def first_turn_report(env, target, *, provider=DEFAULT_LISTING_PROVIDER,
                       timeout=HOOK_TIMEOUT,
                       listing_fraction=SKILL_LISTING_BUDGET_FRACTION,
                       listing_context_window=SKILL_LISTING_CONTEXT_WINDOW):
-    """Сумма always-on футпринта первого хода проекта по пяти источникам.
-    n/a-источники (fail-soft) не участвуют в сумме — total считает только то,
-    что реально измерено. Вердикт: OK ≤16K · ELEVATED ≤23K · WARN >23K
-    (пороги — FIRST_TURN_TARGET_MAX/FIRST_TURN_WARN, обоснование там же:
-    baseline флота,
+    """Amount always-on footprint of the first progress of the project based on five sources.
+    n/a-sources (fail-soft) are not included in the amount - total only counts what
+    what is actually measured. Verdict: OK ≤16K · ELEVATED ≤23K · WARN >23K
+    (thresholds - FIRST_TURN_TARGET_MAX/FIRST_TURN_WARN, justification there:
+    baseline fleet,
     D83). `listing_fraction`/
-    `listing_context_window` — доля бюджета листинга скиллов и контекстное окно
-    целевой модели; параметры, а не константы (P3.4 Implementation Rules —
-    захардкоженный дефолт протухнет при смене `skillListingBudgetFraction`)."""
+    `listing_context_window` — skill listing budget share and context window
+    target model; parameters, not constants (P3.4 Implementation Rules —
+    hard-coated default will go bad when changing `skillListingBudgetFraction`)."""
     target = Path(target).resolve()
     sources = {
         "skills": _measure_skills(env, target, provider=provider,
@@ -1054,18 +1054,18 @@ def first_turn_report(env, target, *, provider=DEFAULT_LISTING_PROVIDER,
 
 
 def _format_plugins_block(plugins):
-    """Блок сводки always-on marketplace-плагинов (--with-plugins, D16 —
-    вызывается ТОЛЬКО когда ключ `plugins` уже в отчёте, иначе вывод не
-    меняется вовсе)."""
-    out = ["  Marketplace-плагины (always-on)"]
+    """Summary block always-on marketplace-plugins (--with-plugins, D16 —
+    is called ONLY when the key `plugins` is already in the report, otherwise the output will not
+    changes completely)."""
+    out = ["  Marketplace-plugins (always-on)"]
     if plugins["status"] != "ok":
-        out.append(f"    n/a — {'; '.join(plugins['warnings']) or 'листинг недоступен'}")
+        out.append(f"    n/a — {'; '.join(plugins['warnings']) or 'listing not available'}")
         return out
     if not plugins["entries"]:
-        out.append("    нет enabled-плагинов")
+        out.append("    no enabled-plugins")
     for e in plugins["entries"]:
         tok_str = "   n/a" if e["tokens"] is None else f"{e['tokens']:>6}"
-        out.append(f"    {e['id']} ({e['scope']})".ljust(30) + f" {tok_str} ток")
+        out.append(f"    {e['id']} ({e['scope']})".ljust(30) + f" {tok_str} current")
     if plugins["broken"]:
         broken_str = "; ".join(f"{b['id']} ({b['reason']})" for b in plugins["broken"])
         out.append(f"    broken: {broken_str}")
@@ -1073,14 +1073,14 @@ def _format_plugins_block(plugins):
         out.append(f"    unparsed: {'; '.join(plugins['unparsed'])}")
     if plugins["warnings"]:
         out.append(f"    warnings: {'; '.join(plugins['warnings'])}")
-    out.append(f"    Итого плагины: {'n/a' if plugins['total'] is None else plugins['total']} ток"
+    out.append(f"    Total plugins: {'n/a' if plugins['total'] is None else plugins['total']} current"
                + ("  (partial)" if plugins["partial"] else ""))
     return out
 
 
 def format_first_turn_report(report):
-    out = ["", "━━━ FIRST-TURN БЮДЖЕТ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-          f"Проект: {report['target']}",
+    out = ["", "━━━ FIRST-TURN BUDGET ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+          f"Project: {report['target']}",
           f"Provider: {report.get('provider', 'claude-code')}", ""]
     for key, label in _FIRST_TURN_SOURCE_LABELS:
         s = report["sources"].get(key, {})
@@ -1090,17 +1090,17 @@ def format_first_turn_report(report):
             label = "provider agents"
         tok = s.get("tokens")
         tok_str = "   n/a" if tok is None else f"{tok:>6}"
-        out.append(f"  {label:<28} {tok_str} ток  ({s.get('detail', '')})")
+        out.append(f"  {label:<28} {tok_str} current  ({s.get('detail', '')})")
         raw = s.get("raw_tokens")
         if raw is not None and raw != tok:
-            out.append(f"  {'  (сумма описаний до бюджета)':<28} {raw:>6} ток")
+            out.append(f"  {'  (sum of descriptions to budget)':<28} {raw:>6} current")
         if key == "skills" and s.get("excluded"):
-            # P3.2: запись, снятая нативным полем, в резидент не входит — число
-            # публикуется отдельной строкой (эффект ПРИБОРА, не диеты реестра).
+            # P3.2: record captured by the native field is not included in the resident - number
+            # is published as a separate line (DEVICE effect, not registry diet).
             out.append(f"  {'  ' + format_listing_exclusions(s['excluded_by']):<28} "
-                       f"{-s['excluded_raw']:>6} ток вне листинга")
+                       f"{-s['excluded_raw']:>6} current out of listing")
         if key == "skills" and s.get("managed_tokens") is not None:
-            out.append(f"  {'  managed estimate':<28} {s['managed_tokens']:>6} ток")
+            out.append(f"  {'  managed estimate':<28} {s['managed_tokens']:>6} current")
         if key == "skills" and s.get("duplicates"):
             names = ", ".join(row["name"] for row in s["duplicates"])
             out.append(f"  {'  duplicate names':<28} {names}")
@@ -1112,46 +1112,46 @@ def format_first_turn_report(report):
             out.append(f"  {'  missing policy plugins':<28} {names}")
         if key == "mcp" and s.get("mode"):
             out.append(f"  {'  tool search':<28} {s['mode']} "
-                       f"(источник: {s['mode_source']}) — {s['estimate_class']}")
+                       f"(source: {s['mode_source']}) — {s['estimate_class']}")
     if "plugins" in report:
         out.append("")
         out.extend(_format_plugins_block(report["plugins"]))
     out.append("")
-    out.append(f"Итого: {report['total']:>6} ток — {report['verdict']}  "
+    out.append(f"Total: {report['total']:>6} current — {report['verdict']}  "
                f"(target ≤{FIRST_TURN_TARGET_MAX} · warn >{FIRST_TURN_WARN})")
     if "session_total" in report:
-        out.append(f"Итого с плагинами: {report['session_total']:>6} ток — "
+        out.append(f"Total with plugins: {report['session_total']:>6} current — "
                    f"{report['session_verdict']}")
     out.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     out.append("")
     return "\n".join(out)
 
 
-# --- текстовый отчёт ----------------------------------------------------------
+# --- text report ------------------------------------------------------------
 def _bar(value, scale):
     return "█" * min(40, round(value / scale)) if scale else ""
 
 
 def format_report(label, b):
-    """Человекочитаемый трёхъярусный отчёт по результату budget_for_set."""
+    """Human-readable three-tier report on the result budget_for_set."""
     out = []
     pct = b["if_all_triggered"] / CONTEXT_LIMIT * 100
     out.append("")
-    out.append("━━━ ТОКЕНОВЫЙ БЮДЖЕТ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    out.append(f"Набор:        {label}")
-    out.append(f"Скиллов:      {b['count']}  "
-               f"(транзитивных via requires: {b['transitive']})")
-    out.append(f"⊕ always:     {b['tier0']:>6} ток  — резидентно КАЖДЫЙ запрос "
+    out.append("━━━ TOKEN BUDGET ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    out.append(f"Set:        {label}")
+    out.append(f"Skills:      {b['count']}  "
+               f"(transitive via requires: {b['transitive']})")
+    out.append(f"⊕ always:     {b['tier0']:>6} current - resident EVERY request "
                f"(name+description)")
-    out.append(f"↻ on-trigger: {b['tier1']:>6} ток  — тела, если ВСЕ сработают")
-    out.append(f"⌥ on-demand:  {b['tier2']:>6} ток  — сниппеты/references, по требованию")
-    out.append(f"Σ если всё:   {b['if_all_triggered']:>6} ток  "
-               f"(~{pct:.1f}% от {CONTEXT_LIMIT // 1000}K)")
+    out.append(f"↻ on-trigger: {b['tier1']:>6} current - bodies, if ALL work")
+    out.append(f"⌥ on-demand:  {b['tier2']:>6} current - snippets/references, upon request")
+    out.append(f"Σ if everything:   {b['if_all_triggered']:>6} current  "
+               f"(~{pct:.1f}% from {CONTEXT_LIMIT // 1000}K)")
 
     by_b = b["by_bucket"]
     if by_b:
         out.append("")
-        out.append("─── По бакетам (⊕ always / ↻ bodies / скиллов) ─────────")
+        out.append("─── By buckets (⊕ always / ↻ bodies / skills) ─────────")
         for bucket in sorted(by_b, key=lambda k: by_b[k]["tier0"], reverse=True):
             a = by_b[bucket]
             out.append(f"  {bucket:<22} ⊕{a['tier0']:>5}  ↻{a['tier1']:>6}  "
@@ -1162,31 +1162,31 @@ def format_report(label, b):
         scale = max(i["tier0"] for i in top0) / 20 or 1
         width = max(len(f"{i['bucket']}/{i['name']}") for i in top0)
         out.append("")
-        out.append("─── Топ-описания (⊕ always — постоянный налог) ─────────")
+        out.append("─── Top descriptions (⊕ always — permanent tax) ─────────")
         for i in top0:
             tag = " [transitive]" if i["transitive"] else ""
             label = f"{i['bucket']}/{i['name']}".ljust(width)
-            out.append(f"  {label} {i['tier0']:>5} ток  "
+            out.append(f"  {label} {i['tier0']:>5} current  "
                        f"{_bar(i['tier0'], scale)}{tag}")
 
     top1 = sorted(b["items"], key=lambda i: i["tier1"], reverse=True)[:TOP_N]
     if top1:
         width = max(len(f"{i['bucket']}/{i['name']}") for i in top1)
         out.append("")
-        out.append("─── Топ-тела (↻ on-trigger — цена срабатывания) ────────")
+        out.append("─── Top Bodies (↻ on-trigger — trigger price) ────────")
         for i in top1:
             label = f"{i['bucket']}/{i['name']}".ljust(width)
-            out.append(f"  {label} {i['tier1']:>5} ток")
+            out.append(f"  {label} {i['tier1']:>5} current")
     out.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     out.append("")
     return "\n".join(out)
 
 
-# --- разрешение конфигов для CLI ----------------------------------------------
+# --- permission of configs for CLI ----------------------------------------------
 def _load_config_file(env, path):
     p = Path(os.path.expanduser(path))
     if not p.is_file():
-        die(f"конфиг не найден: {p}")
+        die(f"config not found: {p}")
     try:
         cfg = json.loads(p.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
@@ -1196,7 +1196,7 @@ def _load_config_file(env, path):
 
 
 def _config_by_name(env, name):
-    """Имя из --compare → budget-configs/<name>.json (или путь, если он есть)."""
+    """Name from --compare → budget-configs/<name>.json (or path if available)."""
     cand = Path(os.path.expanduser(name))
     if cand.suffix == ".json" and cand.is_file():
         return _load_config_file(env, str(cand))
@@ -1224,30 +1224,30 @@ def cmd_budget(env, argv):
               "               [--no-core] [--json] [--write-map] [--check-core [--strict]]\n"
               "               [--first-turn [--provider claude-code|codex|cursor] "
               "[--json] [--strict]]\n"
-              "  Трёхъярусный токеновый бюджет набора скиллов (⊕ always / ↻ on-trigger\n"
-              "  / ⌥ on-demand). --write-map перегенерит docs/guide/budget.md.\n"
-              "  --check-core: резидентный (⊕ tier-0) бюджет CORE_SKILLS vs target (гейт\n"
-              "  против тихого роста ядра И против тихого недобора — пропавший по пути\n"
-              "  CORE-скилл занижает резидент, а не улучшает его); --strict — ненулевой\n"
-              "  код при превышении ИЛИ недоборе (CI).\n"
-              "  --first-turn: provider-aware always-on футпринт первого хода проекта.\n"
-              "  Claude измеряет CLAUDE.md/rules, agents и SessionStart; Codex — AGENTS.md\n"
-              "  и фактический native prompt inventory с duplicate/policy diagnostics;\n"
-              "  target ≤16K / warn >23K ток; --strict — exit 1 при WARN/INCOMPLETE\n"
-              "  или Codex duplicate/policy drift (CI).\n"
-              "  --with-plugins (только вместе с --first-turn): добавляет always-on цену\n"
-              "  установленных marketplace-плагинов проекта (`claude plugin list/details`)\n"
-              "  аддитивными ключами `plugins`/`session_total`/`session_verdict` — без\n"
-              "  флага вывод не меняется.\n"
-              "  --provider claude-code|codex|cursor (с --profile/--config/--target): добавляет к\n"
-              "  отчёту provider-aware бюджет обнаружения (листинга) и режим деградации;\n"
-              "  без флага поведение не меняется (дефолт — claude-code).\n"
-              "  --profiles: бюджет обнаружения КАЖДОГО поставляемого профиля против ОБОИХ\n"
-              "  провайдеров (P3.4).")
+              "  Three-tier token budget for skill sets (⊕ always / ↻ on-trigger\n"
+              "  / ⌥ on-demand). --write-map will regenerate docs/guide/budget.md.\n"
+              "  --check-core: resident (⊕ tier-0) budget CORE_SKILLS vs target (gate\n"
+              "  against the quiet growth of the core And against the quiet shortage - missing along the way\n"
+              "  CORE-the skill is reduced by the resident, rather than improved); --strict — non-zero\n"
+              "  code when exceeding OR undershooting (CI).\n"
+              "  --first-turn: provider-aware always-on footprint of the first progress of the project.\n"
+              "  Claude measures CLAUDE.md/rules, agents and SessionStart; Codex — AGENTS.md\n"
+              "  and actual native prompt inventory with duplicate/policy diagnostics;\n"
+              "  target ≤16K / warn >23K current; --strict — exit 1 when WARN/INCOMPLETE\n"
+              "  or Codex duplicate/policy drift (CI).\n"
+              "  --with-plugins (only together with --first-turn): adds always-on price\n"
+              "  installed marketplace-project plugins (`claude plugin list/details`)\n"
+              "  additive keys `plugins`/`session_total`/`session_verdict` — without\n"
+              "  flag does not change the output.\n"
+              "  --provider claude-code|codex|cursor (with --profile/--config/--target): adds to\n"
+              "  report provider-aware detection budget (listing) and degradation mode;\n"
+              "  without the flag the behavior does not change (default — claude-code).\n"
+              "  --profiles: detection budget for EACH supplied profile versus BOTH\n"
+              "  providers (P3.4).")
         return
     no_core = opts.get("no_core", False)
     if opts.get("with_plugins") and not opts.get("first_turn"):
-        die("--with-plugins требует --first-turn")
+        die("--with-plugins requires --first-turn")
 
     if opts.get("write_map"):
         write_budget_map(env)
@@ -1267,15 +1267,15 @@ def cmd_budget(env, argv):
         else:
             target, _via = find_project_root(env)
             if target is None:
-                die("корень проекта не найден выше CWD — укажи --target")
+                die("project root not found above CWD — specify --target")
         provider = opts.get("provider") or DEFAULT_LISTING_PROVIDER
         if provider not in ("claude-code", "codex", "cursor"):
-            die("--provider: ожидался claude-code|codex|cursor")
+            die("--provider: expected claude-code|codex|cursor")
         report = first_turn_report(env, target, provider=provider)
         if opts.get("with_plugins"):
             if provider != "claude-code":
-                die("--with-plugins пока измеряет только Claude Code; для Codex используй "
-                    "provider-observed inventory без этого флага")
+                die("--with-plugins currently only measures Claude Code; for Codex use "
+                    "provider-observed inventory without this flag")
             plugins = plugins_summary(target)
             report["plugins"] = plugins
             session_total = (report["total"] if plugins["total"] is None
@@ -1290,18 +1290,18 @@ def cmd_budget(env, argv):
         if opts.get("strict") and (report["verdict"] in {"WARN", "INCOMPLETE"}
                                     or integrity.get("issues")):
             details = ", ".join(integrity.get("issues", ()))
-            die(f"first-turn бюджет {report['total']} ток > warn-порог "
-                f"{FIRST_TURN_WARN}, измерение неполно или native inventory drift"
-                f"{': ' + details if details else ''} ({target}) — см. таблицу выше")
+            die(f"first-turn budget {report['total']} current > warn-threshold "
+                f"{FIRST_TURN_WARN}, measurement incomplete or native inventory drift"
+                f"{': ' + details if details else ''} ({target}) — see table above")
         return
 
     if opts.get("check_core"):
         tuples = core_skill_tuples(env, set())
         cards = [skill_budget(d) for (_b, _rel, d, _n) in tuples]
         cards = [c for c in cards if c]
-        # core_skill_tuples/skill_budget молча пропускают CORE_SKILLS-путь без SKILL.md
-        # (переезд/опечатка) — раньше пропавший скилл просто уменьшал resident и делал
-        # гейт «зеленее» (аудит B-2). Недобор — отдельная ошибка, не «повезло с бюджетом».
+        # core_skill_tuples/skill_budget silently skip CORE_SKILLS-path without SKILL.md
+        # (moving/typo) — previously the missing skill was simply reduced resident and did
+        # gate «greener» (audit B-2). Shortfall is a separate error, not «lucky with the budget».
         missing = len(CORE_SKILLS) - len(cards)
         resident = sum(c["tier0"] for c in cards)
         over = resident > RESIDENT_BUDGET_TARGET
@@ -1313,22 +1313,22 @@ def cmd_budget(env, argv):
                               "missing": missing, "status": status},
                              ensure_ascii=False))
         else:
-            print(f"CORE резидент (⊕ tier-0): {resident} ток / target "
+            print(f"CORE resident (⊕ tier-0): {resident} current / target "
                   f"{RESIDENT_BUDGET_TARGET} — {status} "
-                  f"({len(cards)}/{len(CORE_SKILLS)} скиллов)")
+                  f"({len(cards)}/{len(CORE_SKILLS)} skills)")
         if missing and opts.get("strict"):
-            die(f"CORE недобор: {missing} из {len(CORE_SKILLS)} CORE_SKILLS не найдены "
-                f"на диске (переезд/опечатка пути в config.py/core-policy.json) — "
-                f"резидент занижен, а не улучшен")
+            die(f"CORE shortfall: {missing} from {len(CORE_SKILLS)} CORE_SKILLS not found "
+                f"on disk (moving/path typo in config.py/core-policy.json) — "
+                f"resident is understated, not improved")
         if over and opts.get("strict"):
-            die(f"CORE резидентный бюджет {resident} > target "
-                f"{RESIDENT_BUDGET_TARGET}: ужми description или пересмотри состав CORE")
+            die(f"CORE resident budget {resident} > target "
+                f"{RESIDENT_BUDGET_TARGET}: squeeze description or review the composition CORE")
         return
 
     if opts.get("compare"):
         names = [n for n in opts["compare"].split(",") if n]
         if len(names) < 2:
-            die("--compare ждёт ≥2 конфига через запятую: --compare a,b")
+            die("--compare is waiting ≥2 config separated by commas: --compare a,b")
         results = []
         for name in names:
             cfg, tdir = _config_by_name(env, name)
@@ -1337,17 +1337,17 @@ def cmd_budget(env, argv):
             print(json.dumps({n: b for n, b in results}, indent=2,
                              ensure_ascii=False))
             return
-        print("\n━━━ СРАВНЕНИЕ НАБОРОВ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("\n━━━ SET COMPARISON ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         for name, b in results:
             print(f"  {name:<26} ⊕{b['tier0']:>5}  ↻{b['tier1']:>6}  "
-                  f"Σ{b['if_all_triggered']:>6}  ({b['count']} скиллов)")
+                  f"Σ{b['if_all_triggered']:>6}  ({b['count']} skills)")
         worst = max(results, key=lambda r: r[1]["if_all_triggered"])
-        print(f"  Тяжелее всего: {worst[0]}\n")
+        print(f"  The hardest: {worst[0]}\n")
         for name, b in results:
             print(format_report(name, b))
         return
 
-    # одиночный набор: --config | .swissknife.json из --target/CWD
+    # single set: --config | .swissknife.json from --target/CWD
     flag_buckets = [b for b in opts.get("buckets", "").split(",") if b]
     flag_exclude = [e for e in opts.get("exclude", "").split(",") if e]
     if opts.get("config"):
@@ -1359,7 +1359,7 @@ def cmd_budget(env, argv):
         else:
             target, _via = find_project_root(env)
             if target is None:
-                die("корень проекта не найден выше CWD — укажи --config или --target")
+                die("project root not found above CWD — specify --config or --target")
         config = load_config(env, target)
         label = str(target)
     skills, meta = resolve_active_set(
@@ -1382,9 +1382,9 @@ def cmd_budget(env, argv):
         print(format_listing_report(listing))
 
 
-# --- генератор карты docs/guide/budget.md -------------------------------------
+# --- map generator docs/guide/budget.md -------------------------------------
 def _docs_root(p):
-    """Ближайший вверх каталог с docs/guide (сам пакет; fallback — p)."""
+    """Nearest up directory with docs/guide (package itself; fallback — p)."""
     for cand in (p, *p.parents):
         if (cand / "docs" / "guide").is_dir():
             return cand
@@ -1403,12 +1403,12 @@ def _quantile(values, frac):
 
 
 def render_budget_map(root, registry):
-    """Текст docs/guide/budget.md (без записи) из registry-dict — mermaid-карта
-    трёхъярусного бюджета + таблицы по бакетам/топам. Читает тела SKILL.md по
-    registry-путям относительно root. Вынесено из write_budget_map, чтобы
-    registry.check_drift мог сверить актуальность без побочной записи (R-2:
-    раньше только write-путь существовал, drift-гейт этот артефакт не видел).
-    Возвращает (text, n_skills, total0, total1)."""
+    """Text docs/guide/budget.md (without entry) from registry-dict — mermaid-map
+    three-tier budget + tables by buckets/tops. Reads bodies SKILL.md by
+    registry-paths relative to root. Removed from write_budget_map, to
+    registry.check_drift could check the relevance without a side entry (R-2:
+    earlier only write-path existed, drift-gate did not see this artifact).
+    Returns (text, n_skills, total0, total1)."""
     rows = []
     for e in registry["skills"]:
         b = skill_budget((root / e["path"]).parent)
@@ -1421,7 +1421,7 @@ def render_budget_map(root, registry):
                      "requires": e.get("requires", [])})
 
     by_name = {r["name"]: r for r in rows}
-    # heat по распределению ⊕ always (квантили — устойчиво к выбору CHARS_PER_TOKEN)
+    # heat by distribution ⊕ always (quantiles - robust to selection CHARS_PER_TOKEN)
     t0_vals = [r["tier0"] for r in rows]
     q_hot, q_warm, q_mild = (_quantile(t0_vals, 0.85), _quantile(t0_vals, 0.6),
                              _quantile(t0_vals, 0.3))
@@ -1444,25 +1444,25 @@ def render_budget_map(root, registry):
     total2 = sum(r["tier2"] for r in rows)
 
     lines = [
-        "# Карта токенового бюджета",
+        "# Token Budget Map",
         "",
-        "> Сгенерировано `lib/skiller/budget.py` (`skiller budget --write-map`) "
-        "из `skills.json` и тел `SKILL.md` — не редактировать вручную.",
-        "> Пересборка: `skiller registry`.",
+        "> Generated `lib/skiller/budget.py` (`skiller budget --write-map`) "
+        "from `skills.json` and tel. `SKILL.md` — cannot be edited manually.",
+        "> Reassembly: `skiller registry`.",
         "",
-        "Трёхъярусная модель раскрытия контекста — что грузит нейросеть и когда:",
+        "Three-tier context disclosure model - what loads the neural network and when:",
         "",
-        "- **⊕ always** — `name`+`description`: резидентны в КАЖДОМ запросе "
-        "(по ним агент решает, применять ли скилл). Постоянный «налог».",
-        "- **↻ on-trigger** — тело `SKILL.md`: грузится, только когда скилл сработал.",
-        "- **⌥ on-demand** — сниппеты и references: по ссылке из тела, опционально.",
+        "- **⊕ always** — `name`+`description`: are resident in EVERY request "
+        "(based on them the agent decides whether to use the skill). Permanent «tax».",
+        "- **↻ on-trigger** — body `SKILL.md`: is loaded only when the skill is triggered.",
+        "- **⌥ on-demand** — snippets and references: via link from the body, optional.",
         "",
-        "Цвет узла — heat по **⊕ always** (краснее = дороже постоянный налог "
-        "описания). Метка `name<br/>⊕always ↻body`. Сплошная стрелка `requires` "
-        "показывает транзитивный налог: ставишь скилл — тянешь always-цену "
-        "зависимости. Оценка токенов грубая и языко-зависимая (кириллица "
-        f"~{CHARS_PER_TOKEN_CYR:g} chars/tok, латиница/код ~{CHARS_PER_TOKEN_LAT:g}) "
-        "— для сравнения наборов, не точного учёта.",
+        "Node color - heat by **⊕ always** (redder = more expensive permanent tax "
+        "descriptions). Label `name<br/>⊕always ↻body`. Solid arrow `requires` "
+        "shows a transitive tax: you put a skill - you pull always-price "
+        "dependencies. Token valuation is rough and language dependent (Cyrillic "
+        f"~{CHARS_PER_TOKEN_CYR:g} chars/tok, Latin/code ~{CHARS_PER_TOKEN_LAT:g}) "
+        "— for comparison of sets, not exact accounting.",
         "",
         "```mermaid",
         "flowchart LR",
@@ -1473,7 +1473,7 @@ def render_budget_map(root, registry):
             label = f"{r['name']}<br/>⊕{r['tier0']} ↻{r['tier1']}"
             lines.append(f"    {_node_id(r['name'])}[\"{label}\"]:::{heat(r['tier0'])}")
         lines.append("  end")
-    # рёбра requires — только когда оба конца на карте
+    # ribs requires — only when both ends are on the card
     edges = sorted({(r["name"], dep) for r in rows for dep in r["requires"]
                     if dep in by_name})
     for src, dst in edges:
@@ -1485,13 +1485,13 @@ def render_budget_map(root, registry):
         "  classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;",
         "```",
         "",
-        f"**Итого:** {len(rows)} скиллов · ⊕ always **{total0}** ток "
-        f"(резидентно всегда, если включить весь реестр) · ↻ bodies {total1} ток "
-        f"· ⌥ on-demand {total2} ток (сниппеты + references).",
+        f"**Total:** {len(rows)} skills · ⊕ always **{total0}** current "
+        f"(is always resident if you include the entire registry) · ↻ bodies {total1} current "
+        f"· ⌥ on-demand {total2} current (snippets + references).",
         "",
-        "## По бакетам",
+        "## By buckets",
         "",
-        "| Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |",
+        "| Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |",
         "|---|--:|--:|--:|--:|",
     ]
     for bucket in sorted(by_bucket, key=lambda k: sum(
@@ -1503,28 +1503,28 @@ def render_budget_map(root, registry):
 
     def _top_table(title, key, note):
         out = ["", f"## {title}", "", note, "",
-               "| Скилл | Бакет | ток |", "|---|---|--:|"]
+               "| Skill | Bucket | current |", "|---|---|--:|"]
         for r in sorted(rows, key=lambda x: x[key], reverse=True)[:TOP_N]:
             out.append(f"| `{r['name']}` | {r['bucket']} | {r[key]} |")
         return out
 
-    lines += _top_table("Топ ⊕ always (постоянный налог)", "tier0",
-                        "Самые дорогие описания — резидентны в каждом запросе.")
-    lines += _top_table("Топ ↻ on-trigger (цена срабатывания)", "tier1",
-                        "Самые тяжёлые тела — грузятся при применении скилла.")
+    lines += _top_table("Top ⊕ always (permanent tax)", "tier0",
+                        "The most expensive descriptions are resident in each request.")
+    lines += _top_table("Top ↻ on-trigger (trigger price)", "tier1",
+                        "The heaviest bodies are loaded when using the skill.")
     lines.append("")
     return "\n".join(lines), len(rows), total0, total1
 
 
 def write_budget_map(env):
-    """Сгенерировать docs/guide/budget.md (атомарно) из skills.json на диске."""
+    """Generate docs/guide/budget.md (atomically) from skills.json on disk."""
     root = env.root
     reg_file = root / "skills.json"
     if not reg_file.is_file():
-        die("skills.json не найден — сначала прогони `skiller registry`")
+        die("skills.json not found - run first `skiller registry`")
     registry = json.loads(reg_file.read_text(encoding="utf-8"))
     text, n_skills, total0, total1 = render_budget_map(root, registry)
     out = _docs_root(root) / "docs" / "guide" / "budget.md"
     atomic_write_text(out, text)
     print(f"Updated {out.relative_to(_docs_root(root))}: {n_skills} skills, "
-          f"⊕{total0} ↻{total1} ток")
+          f"⊕{total0} ↻{total1} current")

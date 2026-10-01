@@ -1,42 +1,42 @@
-# Агенты
+# Agents
 
-Реестр запущенных агентов узла — в `~/.maind/agents.json` (атомарная запись). Состояние
-агента **не хранится**, а выводится при чтении из возраста последнего heartbeat и живости
-pid — файл хранит только факты.
+Register of running node agents - in `~/.maind/agents.json` (atomic record). Status
+agent **not stored**, and is derived when reading from the age of the last The heartbeat and liveliness
+pid — file stores only facts.
 
-## Жизненный цикл
+## Life cycle
 
 ```bash
 maind agents register vault-architect --project brain --pid 12345 --kind worker
-maind agents heartbeat vault-architect      # обновить last_heartbeat
-maind agents list [--all] [--json]          # без --all скрывает dead
-maind agents kill vault-architect [--force] # SIGTERM (или SIGKILL) + снять с реестра
+maind agents heartbeat vault-architect      # update last_heartbeat
+maind agents list [--all] [--json]          # without --all hides dead
+maind agents kill vault-architect [--force] # SIGTERM (or SIGKILL) + remove from the registry
 ```
 
-## Состояния
+## States
 
-| Состояние | Условие |
+| Status | Condition |
 |:--|:--|
-| `alive` | свежий heartbeat, pid жив (или не задан) |
-| `stale` | возраст heartbeat > `heartbeat_interval_ms × 3` |
-| `dead` | pid задан, но процесс не существует |
+| `alive` | fresh heartbeat, pid is alive (or not specified) |
+| `stale` | age heartbeat > `heartbeat_interval_ms × 3` |
+| `dead` | pid is specified, but the process does not exist |
 
-`heartbeat_interval_ms` берётся из `agents.heartbeat_interval_ms` конфига (дефолт 30000).
-`reap()` удаляет `dead`/`stale` агентов.
+`heartbeat_interval_ms` is taken from `agents.heartbeat_interval_ms` config (default 30000).
+`reap()` deletes `dead`/`stale` agents.
 
 ## API (`agents.py`)
 
 ```python
-register(env, "id", pid=..., project=..., kind=...)   # upsert, registered_at один раз
+register(env, "id", pid=..., project=..., kind=...)   # upsert, registered_at once
 heartbeat(env, "id")
-listing(env, config)                                  # каждый агент с полем state
+listing(env, config)                                  # each agent with a field state
 kill(env, "id", force=False)
-reap(env, config)                                     # вернёт число удалённых
+reap(env, config)                                     # will return the number of deleted
 ```
 
-## Связь с графом
+## Communication with the graph
 
-Агент из `projects[].agents` материализуется в графе как `agent:<id>` с ребром
-`belongs_to` к проекту — см. [Граф](./graph).
+Agent from `projects[].agents` materializes in the graph as `agent:<id>` with edge
+`belongs_to` to the project - see. [Graph](./graph).
 
-Дальше: [Проекты →](./projects)
+Next: [Projects →](./projects)

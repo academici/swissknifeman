@@ -1,15 +1,15 @@
 // Source: anonymized production project
 //
-// Единственная точка создания Echo-инстанса за сессию клиента.
-// Конфиг собирается по приоритету: runtime (с сервера) -> env (сборка) -> дефолт.
-// Runtime-конфиг прокидывается с backend в браузер (Inertia-проп / shared-данные /
-// встроенный <script>), что позволяет менять окружение БЕЗ пересборки фронта.
+// Single point of creation Echo-instance per client session.
+// The config is collected by priority: runtime (from the server) -> env (assembly) -> default.
+// Runtime-the config is updated from backend to the browser (Inertia-prop / shared-data /
+// built-in <script>), which allows you to change the environment WITHOUT rebuilding the front.
 
 import Echo from "laravel-echo";
 
 let isEchoInitialized = false;
 
-/** То, что приходит с сервера в браузер (например, page.props.broadcasting). */
+/** What comes from the server to the browser (for example, page.props.broadcasting). */
 type RuntimeWebsocketConfig = {
   enabled: boolean;
   app_key: string | null;
@@ -21,7 +21,7 @@ type RuntimeWebsocketConfig = {
 };
 
 function resolveEchoConfig(runtimeConfig?: RuntimeWebsocketConfig) {
-  // Слой env — дефолты на этапе сборки.
+  // Layer env — defaults at the build stage.
   const config = {
     key: import.meta.env.VITE_REVERB_APP_KEY ?? "app",
     wsHost: import.meta.env.VITE_REVERB_HOST ?? window.location.hostname,
@@ -35,7 +35,7 @@ function resolveEchoConfig(runtimeConfig?: RuntimeWebsocketConfig) {
     return config;
   }
 
-  // Слой runtime перекрывает env — но только непустыми полями.
+  // Layer runtime overlaps env — but only with non-empty fields.
   if (runtimeConfig.app_key) config.key = runtimeConfig.app_key;
   if (runtimeConfig.host) config.wsHost = runtimeConfig.host;
   if (runtimeConfig.port !== null) config.wsPort = runtimeConfig.port;
@@ -46,7 +46,7 @@ function resolveEchoConfig(runtimeConfig?: RuntimeWebsocketConfig) {
   return config;
 }
 
-/** Идемпотентно: создаёт Echo один раз за сессию, дальше — no-op. */
+/** Idempotent: creates Echo once per session, then - no-op. */
 export function ensureEchoConnection(runtimeConfig?: RuntimeWebsocketConfig): void {
   if (isEchoInitialized || !runtimeConfig?.enabled) {
     return;
@@ -55,7 +55,7 @@ export function ensureEchoConnection(runtimeConfig?: RuntimeWebsocketConfig): vo
   const config = resolveEchoConfig(runtimeConfig);
 
   window.echo = new Echo({
-    broadcaster: "reverb", // 'pusher' для Pusher/совместимого бэкенда
+    broadcaster: "reverb", // 'pusher' for Pusher/compatible backend
     key: config.key,
     wsHost: config.wsHost,
     wsPort: config.wsPort,
@@ -68,7 +68,7 @@ export function ensureEchoConnection(runtimeConfig?: RuntimeWebsocketConfig): vo
   isEchoInitialized = true;
 }
 
-/** Закрыть соединение при логауте / переходе в guest-контекст. */
+/** Close connection on logout / transition in guest-context. */
 export function disconnectEchoConnection(): void {
   if (!isEchoInitialized || !window.echo) {
     return;

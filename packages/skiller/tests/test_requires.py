@@ -41,7 +41,7 @@ class RequiresDiagnosticsCase(unittest.TestCase):
             "affected_identities": ["middle"],
         }])
         self.assertEqual(
-            warning.count("'middle' requires неизвестный скилл 'missing' — пропуск"), 2)
+            warning.count("'middle' requires unknown skill 'missing' — pass"), 2)
 
     def test_excluded_requirement_aggregates_requesters_deterministically(self):
         nodes = {
@@ -61,7 +61,7 @@ class RequiresDiagnosticsCase(unittest.TestCase):
             "affected_identities": ["alpha", "zeta"],
         }])
         self.assertEqual(
-            warning.count("requires 'blocked', но он в exclude — зависимость пропущена"), 2)
+            warning.count("requires 'blocked', but he's in exclude — dependency missing"), 2)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 {
-  "_generated_by": "packages/task/docs/reference/read-limit-probe.md — НЕ РЕДАКТИРОВАТЬ РУКАМИ, перезамерить и записать новую версию",
+  "_generated_by": "packages/task/docs/reference/read-limit-probe.md — DO NOT EDIT BY HAND, re-measure and record a new version",
   "version": "1.0.0",
   "measured_at": "2026-08-07T17:46:49Z",
   "environment": {
@@ -44,7 +44,7 @@
     }
   },
   "cross_check": {
-    "note": "счётчик среды чтения ≠ токенизатор калибровки P0.1 (D15); только перекрёстная проверка",
+    "note": "reading environment counter ≠ calibration tokenizer P0.1 (D15); cross-validation only",
     "pairs": [
       {
         "chars": 128001,

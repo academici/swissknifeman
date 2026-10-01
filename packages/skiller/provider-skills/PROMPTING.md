@@ -1,39 +1,39 @@
-# Provider-prompting — универсальные принципы (SSOT)
+# Provider-prompting — universal principles (SSOT)
 
-Провайдер-агностичное ядро методологии работы с AI-провайдерами в дев-цепочке. **Универсальное живёт
-здесь** (канон пакета); персональная оркестрация (конкретные модели/инструменты/флоу) — у потребителя
-(напр. Brain `40-AI/Workflow/`), который ссылается на этот файл.
+Provider-agnostic core methodology for working with AI-providers in the dev chain. **The universal lives
+here** (package canon); personal orchestration (specific models/tools/flow) — at the consumer
+(e.g. Brain `40-AI/Workflow/`), which references this file.
 
-> Отличие от `provider-skills/<provider>/`: те — готовые **навыки-роли** для вставки в провайдера;
-> этот файл — **принципы промтинга** (как формулировать запросы), общие для всех.
+> Difference from `provider-skills/<provider>/`: those are ready **skills-roles** to insert into the provider;
+> this file - **principles of promting** (how to formulate queries), common to everyone.
 
-## Роли провайдеров в цепочке (разделение ответственности)
+## Roles of providers in the chain (separation of responsibilities)
 
-| Этап | Тип провайдера | Задача |
+| Stage | Provider type | Task |
 |:--|:--|:--|
-| Исследование | research-движок (web+sources) | актуальные данные, референсы, лучшие практики, первичное ТЗ с источниками |
-| Проектирование | reasoning-движок | детальное ТЗ, архитектура, паттерны (на входе — research-вывод целиком) |
-| Реализация | дешёвая модель (IDE) | код по ТЗ |
-| Ревью | reasoning + research | качество + проверка актуальности |
+| Research | research-engine (web+sources) | current data, references, best practices, primary technical specifications with sources |
+| Design | reasoning-engine | detailed technical specifications, architecture, patterns (at the input - research-entire output) |
+| Implementation | cheap model (IDE) | code according to technical specifications |
+| Review | reasoning + research | quality + checking relevance |
 
-Ключ: **разные задачи — разным провайдерам**; не путать «исполнитель» и «мыслитель».
+Key: **different tasks - different providers**; not to be confused «performer» and «thinker».
 
-## Универсальные правила
+## Universal rules
 
-1. **Блок «Ресурсы/Sources» обязателен** у research-провайдера — источник рядом с каждым фактом; это
-   база знаний для следующего этапа.
-2. **Указывать год + экосистему** в запросе — иначе результат может быть устаревшим.
-3. **Передавать артефакты целиком** между этапами (ТЗ, ссылки) — не резюмировать, не терять контекст.
-4. **Периодический currency-review** для долгих проектов — раз в спринт перепроверять best practices
-   (что изменилось за 6–12 мес).
-5. **Роль vs разовый промт:** постоянная роль (My Skills / Custom Instructions / Claude skill) —
-   для устойчивого поведения; разовый промт — для конкретной задачи. Не смешивать.
-6. **Длинный/Detailed ответ** у research-провайдера убирает «воду» лучше короткого (нет нужды сжимать
-   нужное).
-7. **Внешние факты — через RAG, не из памяти** (версии/рынок/«ещё актуально») — канон `general/verify-claims`.
+1. **Block «Resources/Sources» required** y research-provider - source next to each fact; this is
+   knowledge base for the next step.
+2. **Indicate the year + ecosystem** in the request - otherwise the result may be out of date.
+3. **Transfer entire artifacts** between stages (Technical specifications, links) — don't summarize, don't lose context.
+4. **Periodic currency-review** for long projects - recheck once every sprint best practices
+   (what has changed in 6–12 months).
+5. **Role vs one-time promt:** permanent role (My Skills / Custom Instructions / Claude skill) —
+   for sustainable behavior; one-time industrial work - for a specific task. Do not mix.
+6. **Long/Detailed response** y research-removes the provider «water» is better than short (no need to compress
+   needed).
+7. **External facts - through RAG, out of memory** (versions/market/«still relevant») — canon `general/verify-claims`.
 
-## Провенанс
+## Provenance
 
-Дистиллировано из персональной методологии Brain (`40-AI/Workflow/00-overview.md`,
-`40-AI/Workflow/PERPLEXITY/prompting.md`). Персональная цепочка (конкретные модели/инструменты) остаётся
-там; здесь — переиспользуемое ядро. Pasteable провайдер-навыки — в `provider-skills/<provider>/`.
+Distilled from Personal Methodology Brain (`40-AI/Workflow/00-overview.md`,
+`40-AI/Workflow/PERPLEXITY/prompting.md`). Personal chain (specific models/tools) remains
+there; here is the reused kernel. Pasteable provider-skills - in `provider-skills/<provider>/`.

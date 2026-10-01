@@ -1,8 +1,8 @@
 ---
-description: Диагностика окружения узла mAInd — python, Node/agentmemory, конфиг памяти, config.json, демон.
+description: Node environment diagnostics mAInd — python, Node/agentmemory, memory config, config.json, demon.
 allowed-tools: Bash(maind:*)
 ---
-## Диагностика узла
+## Node diagnostics
 !`maind doctor`
 
-Объясни пользователю найденные проблемы (строки `FAIL`) и предложи починку по подсказкам из вывода. Если всё `ok` — подтверди, что узел здоров. Связанные команды: `/maind:status` (состояние хаба), `/maind:health` (связь текущего проекта).
+Explain to the user the problems found (lines `FAIL`) and suggest a fix based on the hints from the output. If everything `ok` — confirm that the node is healthy. Related commands: `/maind:status` (hub status), `/maind:health` (connection of the current project).

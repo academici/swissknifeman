@@ -1,23 +1,23 @@
 # alexeymezenin/laravel-best-practices
 
 - **URL:** https://github.com/alexeymezenin/laravel-best-practices
-- **Статус:** planned
-- **Проверено:** 2026-06-11
+- **Status:** planned
+- **Checked:** 2026-06-11
 
-40+ задокументированных Laravel best practices с примерами «до/после»
-(bad/good). Есть русский перевод.
+40+ documented Laravel best practices with examples «to/after»
+(bad/good). There is a Russian translation.
 
-## Брать выборочно
+## Take selectively
 
-- Каждый релевантный пункт → сниппет в `skills/php/laravel/snippets/` в формате
+- Each relevant item → snippet in `skills/php/laravel/snippets/` in the format
   `{topic}-bad.php` / `{topic}-good.php`
-- Пункты по Controllers, Models, Validation, Business Logic — приоритет
+- Items by Controllers, Models, Validation, Business Logic — priority
 
-## Не брать
+## Do not take
 
-- Пункты, противоречащие нашим паттернам (actions/repositories) — сверять
-  с `php/laravel/SKILL.md`
+- Points that contradict our patterns (actions/repositories) — check
+  with `php/laravel/SKILL.md`
 
-## Целевые bucket-ы
+## Targets bucket-s
 
-`php/laravel` (сниппеты).
+`php/laravel` (snippets).

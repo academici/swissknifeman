@@ -106,7 +106,7 @@ class ProviderSettingsDoctorCase(unittest.TestCase):
         findings = check_1_layer_json_valid(context)
         self.assertEqual(layer.error_kind, "unreadable")
         self.assertEqual(findings[0].level, "error")
-        self.assertIn("не читается", findings[0].title)
+        self.assertIn("not readable", findings[0].title)
 
 
 if __name__ == "__main__":

@@ -48,7 +48,7 @@ def _item_key(item_id: str) -> tuple[int, int]:
 def _repo_relative(token: str, *, plan_dir: Path, repo_root: Path, cwd: Path | None = None) -> str:
     token = token.strip().strip("'\"")
     if not token or "$" in token or "<" in token or ">" in token:
-        raise DownstreamError(f"динамический путь не является repository input: {token!r}")
+        raise DownstreamError(f"dynamic path is not repository input: {token!r}")
     raw = Path(token)
     if raw.is_absolute():
         candidate = raw
@@ -62,7 +62,7 @@ def _repo_relative(token: str, *, plan_dir: Path, repo_root: Path, cwd: Path | N
     try:
         return candidate.resolve().relative_to(repo_root.resolve()).as_posix()
     except ValueError as exc:
-        raise DownstreamError(f"путь вне repository root: {token}") from exc
+        raise DownstreamError(f"path out repository root: {token}") from exc
 
 
 def _field_paths(value: str, *, plan_dir: Path, repo_root: Path) -> set[str]:
@@ -98,20 +98,20 @@ def consumer_spec_sha256(plan_dir, item_id: str) -> str:
     try:
         return _sha(path.read_bytes())
     except OSError as exc:
-        raise DownstreamError(f"ТЗ потребителя не читается: {path}") from exc
+        raise DownstreamError(f"The consumer's technical specification is not readable: {path}") from exc
 
 
 def discover_consumers(plan_dir, producer_item: str) -> list[dict]:
     """Return consumers derived only from declared path equality."""
     plan_dir = Path(plan_dir)
     if not _ITEM.fullmatch(producer_item):
-        raise DownstreamError("item должен иметь форму Pn.m")
+        raise DownstreamError("item should be of the form Pn.m")
     if plan_layout.layout_version(plan_dir) != "v2":
-        raise DownstreamError("downstream-gate v1 существует только для Layout v2")
+        raise DownstreamError("downstream-gate v1 exists only for Layout v2")
     repo_root = plan_weight.repo_root_for(plan_dir)
     items = _all_items(plan_dir)
     if producer_item not in items:
-        raise DownstreamError(f"пункт-продюсер {producer_item} не найден")
+        raise DownstreamError(f"item-producer {producer_item} not found")
     producer = items[producer_item]
     outputs = set()
     for field in ("Files", "Deliverables"):
@@ -135,7 +135,7 @@ def discover_consumers(plan_dir, producer_item: str) -> list[dict]:
     if declared is not None:
         consumer_id = declared["consumer_item"]
         if consumer_id not in items:
-            raise DownstreamError(f"readiness consumer {consumer_id} не найден")
+            raise DownstreamError(f"readiness consumer {consumer_id} not found")
         existing = next((row for row in consumers if row["item"] == consumer_id), None)
         if existing is None:
             fields = items[consumer_id]
@@ -157,7 +157,7 @@ def _validation_commands(value: str) -> list[str]:
         if not part:
             continue
         # Validation is Markdown: execute the inline-code payload, never its
-        # explanatory suffix ``(печатает …)`` or surrounding bold markers.
+        # explanatory suffix ``(prints …)`` or surrounding bold markers.
         first = part.find("`")
         last = part.find("`", first + 1) if first >= 0 else -1
         if last > first:
@@ -347,21 +347,21 @@ def validate_result_record(fields: dict) -> None:
                 "consumer_spec_sha256", "outcome"}
     missing = sorted(required - set(fields))
     if missing:
-        raise DownstreamError(f"запись результата: нет полей {', '.join(missing)}")
+        raise DownstreamError(f"record result: no fields {', '.join(missing)}")
     if fields["gate"] != GATE_ID:
-        raise DownstreamError("запись результата: неверный gate")
+        raise DownstreamError("result entry: invalid gate")
     if not _ITEM.fullmatch(fields["item"]) or not _ITEM.fullmatch(fields["consumer_item"]):
-        raise DownstreamError("запись результата: item должен иметь форму Pn.m")
+        raise DownstreamError("record of the result: item should be of the form Pn.m")
     if not _COMMIT.fullmatch(fields["producer_commit"]):
-        raise DownstreamError("запись результата: producer_commit не является git hash")
+        raise DownstreamError("record of the result: producer_commit is not git hash")
     if not re.fullmatch(r"[0-9a-f]{64}", fields["consumer_spec_sha256"]):
-        raise DownstreamError("запись результата: consumer_spec_sha256 не является sha256")
+        raise DownstreamError("record of the result: consumer_spec_sha256 is not sha256")
     if fields["outcome"] not in OUTCOMES:
-        raise DownstreamError("запись результата: неизвестный outcome")
+        raise DownstreamError("record result: unknown outcome")
     try:
         datetime.strptime(fields["date"], "%Y-%m-%d")
     except ValueError as exc:
-        raise DownstreamError("запись результата: date не является ISO-датой") from exc
+        raise DownstreamError("record of the result: date is not ISO-date") from exc
 
 
 def parse_result_record(path) -> tuple[dict, str]:
@@ -369,20 +369,20 @@ def parse_result_record(path) -> tuple[dict, str]:
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as exc:
-        raise DownstreamError(f"запись результата не читается: {path}") from exc
+        raise DownstreamError(f"result entry not readable: {path}") from exc
     match = _FRONTMATTER.match(text)
     if not match:
-        raise DownstreamError(f"{path}: нет YAML-frontmatter")
+        raise DownstreamError(f"{path}: no YAML-frontmatter")
     fields = {}
     for line in match.group(1).splitlines():
         if not line.strip() or line.lstrip().startswith("#"):
             continue
         if ":" not in line or line.startswith((" ", "\t")):
-            raise DownstreamError(f"{path}: недопустимая строка frontmatter {line!r}")
+            raise DownstreamError(f"{path}: invalid string frontmatter {line!r}")
         key, value = line.split(":", 1)
         key = key.strip()
         if not re.fullmatch(r"[a-z][a-z0-9_]*", key) or key in fields:
-            raise DownstreamError(f"{path}: недопустимый или повторный ключ {key!r}")
+            raise DownstreamError(f"{path}: invalid or duplicate key {key!r}")
         fields[key] = value.strip().strip("'\"")
     return fields, text[match.end():]
 
@@ -413,11 +413,11 @@ def record(plan_dir, result: dict, *, date: str | None = None) -> list[Path]:
             escaped = command["command"].replace("|", "\\|")
             lines.append(f"| {'yes' if command['applicable'] else 'no'} | {code} | `{escaped}` |")
         if not consumer["commands"]:
-            lines.append("| no | — | Validation не объявлена |")
+            lines.append("| no | — | Validation not declared |")
         text = "\n".join(lines) + "\n"
         if target.exists():
             if target.read_text(encoding="utf-8") != text:
-                raise DownstreamError(f"append-only finding уже существует с другим содержимым: {target}")
+                raise DownstreamError(f"append-only finding already exists with different content: {target}")
         else:
             target.write_text(text, encoding="utf-8")
         written.append(target)
@@ -478,16 +478,16 @@ def lint_records(plan_dir, layout: str, diag) -> None:
                     commit = _git(repo_root, "rev-parse", "--verify",
                                   f"{record_fields['producer_commit']}^{{commit}}")
                     if not _is_ancestor(repo_root, commit, head):
-                        diag.error(path, None, f"{GATE_ID}: producer_commit не входит в ancestry HEAD")
+                        diag.error(path, None, f"{GATE_ID}: producer_commit is not included ancestry HEAD")
                         continue
                 except DownstreamError as exc:
-                    diag.error(path, None, f"{GATE_ID}: producer_commit не разрешается: {exc}")
+                    diag.error(path, None, f"{GATE_ID}: producer_commit is not allowed: {exc}")
                     continue
                 matches.append((path, record_fields, commit))
             if not matches:
                 diag.error(plan_dir / "plan.md", None,
-                           f"{GATE_ID}: пункт {item_id}: нет текущей записи результата "
-                           f"для потребителя {consumer['item']}")
+                           f"{GATE_ID}: item {item_id}: no current result record "
+                           f"for consumer {consumer['item']}")
                 continue
             commits = sorted({commit for _path, _record, commit in matches})
             newest = [candidate for candidate in commits
@@ -496,13 +496,13 @@ def lint_records(plan_dir, layout: str, diag) -> None:
                                  for other in commits)]
             if len(newest) != 1:
                 diag.error(plan_dir / "plan.md", None,
-                           f"{GATE_ID}: пункт {item_id}: записи producer_commit имеют "
-                           "несравнимые ветви")
+                           f"{GATE_ID}: item {item_id}: records producer_commit have "
+                           "incomparable branches")
                 continue
             latest = [(path, record) for path, record, commit in matches if commit == newest[0]]
             if any(record["outcome"] == "red" for _path, record in latest):
                 diag.error(latest[-1][0], None,
-                           f"{GATE_ID}: пункт {item_id}: red блокирует закрытие продюсера")
+                           f"{GATE_ID}: item {item_id}: red blocks producer from closing")
 
 
 def dumps(result: dict) -> str:

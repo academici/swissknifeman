@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "roles": {
+    ".codex/agents/swissknifeman-contribution-reviewer.toml": {
+      "pack_id": "role-maintainer",
+      "role_id": "contribution-reviewer",
+      "base_sha256": "b33426426e567dddfce30c18635d7ed13b561069f0030a71ea1974eb13594147"
+    },
+    ".codex/agents/swissknifeman-issue-triager.toml": {
+      "pack_id": "role-maintainer",
+      "role_id": "issue-triager",
+      "base_sha256": "9ef8176431faf0d6f03f11966b98f0b205af432f1fb0f183e47ca27796f31819"
+    },
+    ".codex/agents/swissknifeman-release-conductor.toml": {
+      "pack_id": "role-maintainer",
+      "role_id": "release-conductor",
+      "base_sha256": "949a582dc3ed44d67801dcd1ea867551a4af0c1c41373805d2616316139a1146"
+    },
+    ".codex/agents/swissknifeman-delegation-triage.toml": {
+      "pack_id": "role-tech-lead",
+      "role_id": "delegation-triage",
+      "base_sha256": "de7936da5a35a1cf0ae5e7e9cf021c8b3007c2251c450b7e3222cb58a3ad474b"
+    },
+    ".codex/agents/swissknifeman-review-gatekeeper.toml": {
+      "pack_id": "role-tech-lead",
+      "role_id": "review-gatekeeper",
+      "base_sha256": "85f71308ef33c86d2fd5ae2cb9665952148be57781006436eaf3bc67a36fdd2a"
+    },
+    ".codex/agents/swissknifeman-sprint-planner.toml": {
+      "pack_id": "role-tech-lead",
+      "role_id": "sprint-planner",
+      "base_sha256": "be60cc18f6c5571f55cd6ad4e898b3d7e59c2b570e2a3f0b79a9775836b20713"
+    }
+  }
+}

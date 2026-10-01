@@ -213,8 +213,8 @@ class TestProviderProvisionConformance(unittest.TestCase):
             self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
             self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
             output_text = first.stdout + first.stderr + second.stdout + second.stderr
-            self.assertNotIn("swissknifeman не найден", output_text)
-            self.assertNotIn("harness не найден", output_text)
+            self.assertNotIn("swissknifeman not found", output_text)
+            self.assertNotIn("harness not found", output_text)
             self.assertEqual(output.read_bytes(), repeated.read_bytes())
             generated = output.read_text(encoding="utf-8")
             self.assertIn("Dual-provider", generated)

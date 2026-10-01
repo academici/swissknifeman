@@ -1,7 +1,7 @@
 {
   "name": "frontend",
-  "version": "0.4.0",
-  "description": "Frontend core: общие фронт-скиллы (web design guidelines, document writer, file upload)",
+  "version": "0.4.1",
+  "description": "Frontend core: general front skills (web design guidelines, document writer, file upload)",
   "skills": [
     "./document-writer",
     "./filepond-upload",

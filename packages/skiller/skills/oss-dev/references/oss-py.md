@@ -1,23 +1,23 @@
 ---
 name: oss-py
-description: Python-специфика для OSS-проектов: pyproject.toml, uv/poetry, ruff, mypy, pytest, PyPI, tox/nox
+description: Python-specifics for OSS-projects: pyproject.toml, uv/poetry, ruff, mypy, pytest, PyPI, tox/nox
 type: reference
 parent: oss-development
 ---
 
 # Reference: OSS Python
 
-Загружается дополнительно к `.ai/skills/oss-dev/oss-development.md` когда язык проекта — Python (CLI-инструменты, библиотеки на PyPI, ML-пакеты).
+Loaded in addition to `.ai/skills/oss-dev/oss-development.md` when the project language is Python (CLI-tools, libraries on PyPI, ML-packages).
 
 ---
 
-### pyproject.toml минимум (PEP 621)
+### pyproject.toml minimum (PEP 621)
 
 ```toml
 [project]
 name = "package-name"
 version = "0.1.0"
-description = "Одна строка (для PyPI листинга)"
+description = "One line (for PyPI listing)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -50,22 +50,22 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 ```
 
-**Naming convention:** PyPI имя — `kebab-case` или `snake_case`, латиница, глобально уникально на pypi.org. Импортируемое имя пакета (`src/<name>/`) — строго `snake_case`.
+**Naming convention:** PyPI name - `kebab-case` or `snake_case`, Latin, globally unique on pypi.org. Imported package name (`src/<name>/`) — strictly `snake_case`.
 
 ### Package Manager / Build Backend
 
-| Инструмент | Когда | Lockfile |
+| Tool | When | Lockfile |
 |:---|:---|:---|
-| **uv** | По умолчанию для новых проектов (быстрее всех, Rust-based, унифицирует pip + venv + lock) | `uv.lock` |
-| poetry | Если уже на poetry или нужны фичи групп зависимостей | `poetry.lock` |
-| pip + pip-tools | Минимализм / CI-only сценарии | `requirements.txt` (compiled) |
-| hatch / pdm | Альтернативные modern build backends | свои |
+| **uv** | Default for new projects (fastest, Rust-based, unifies pip + venv + lock) | `uv.lock` |
+| poetry | If already on poetry or dependency group features are needed | `poetry.lock` |
+| pip + pip-tools | Minimalism / CI-only scripts | `requirements.txt` (compiled) |
+| hatch / pdm | Alternative modern build backends | theirs |
 
-**Build backend** в `[build-system]`: `hatchling` (по умолчанию для новых), `setuptools` (легаси/совместимость), `poetry-core` (если уже на poetry).
+**Build backend** in `[build-system]`: `hatchling` (default for new), `setuptools` (legacy/compatibility), `poetry-core` (if already on poetry).
 
-Один lockfile в репо. Коммитить **обязательно**.
+One lockfile in the repo. Commit **required**.
 
-### src/ layout (обязательно для библиотек)
+### src/ layout (required for libraries)
 
 ```
 package_name/
@@ -78,20 +78,20 @@ package_name/
 └── README.md
 ```
 
-`src/` layout предотвращает случайный импорт из cwd вместо установленного пакета — критично для тестов.
+`src/` layout prevents accidental import from cwd instead of the installed package - critical for tests.
 
 ### Static Analysis & Lint
 
 ```bash
-# Ruff — lint + format в одном tool (заменяет flake8 + isort + black)
+# Ruff — lint + format in one tool (replaces flake8 + isort + black)
 uvx ruff check src tests
 uvx ruff format src tests
 
-# mypy — strict обязательно для public API
+# mypy — strict required for public API
 uvx mypy --strict src
 ```
 
-`pyproject.toml` секция:
+`pyproject.toml` section:
 
 ```toml
 [tool.ruff]
@@ -111,21 +111,21 @@ warn_unreachable = true
 ### Python Version Support Matrix
 
 ```
-Python 3.10 — minimum (match statements, parametrized generics в stdlib)
+Python 3.10 — minimum (match statements, parametrized generics in stdlib)
 Python 3.11 — recommended (exception groups, faster)
 Python 3.12 — latest stable (type parameter syntax)
 Python 3.13 — latest
 
-Правило: поддерживать 3 активные минорные версии Python (Python sunset schedule — 5 лет, 1 версия в год).
+Rule: Maintain 3 active minor versions Python (Python sunset schedule — 5 years, 1 version per year).
 ```
 
-### pytest структура
+### pytest structure
 
 ```
 tests/
-├── unit/           # Чистая логика без IO
-├── integration/    # С реальными зависимостями
-└── conftest.py     # Общие fixtures
+├── unit/           # Pure logic without IO
+├── integration/    # With real dependencies
+└── conftest.py     # General fixtures
 ```
 
 ```toml
@@ -147,9 +147,9 @@ exclude_lines = ["pragma: no cover", "raise NotImplementedError"]
 uvx pytest --cov=src --cov-report=term-missing
 ```
 
-### tox / nox для multi-version testing
+### tox / nox for multi-version testing
 
-`nox` (рекомендуется — конфиг в Python) для прогона тестов на нескольких версиях Python:
+`nox` (recommended - config in Python) to run tests on multiple versions Python:
 
 ```python
 # noxfile.py
@@ -161,42 +161,42 @@ def tests(session):
     session.run("pytest", "--cov=src")
 ```
 
-`tox` (легаси, INI-конфиг) — только если уже используется.
+`tox` (legacy, INI-config) — only if already in use.
 
 ### PyPI Publishing
 
 ```bash
-# 1. Build (создаёт wheel + sdist в dist/)
-uv build  # или python -m build
+# 1. Build (creates wheel + sdist in dist/)
+uv build  # or python -m build
 
-# 2. Проверить пакет (metadata sanity)
+# 2. Check package (metadata sanity)
 uvx twine check dist/*
 
-# 3. Upload на TestPyPI (рекомендуется первый раз)
+# 3. Upload on TestPyPI (recommended first time)
 uvx twine upload --repository testpypi dist/*
 
-# 4. Реальная публикация на PyPI
+# 4. Real publication on PyPI
 uvx twine upload dist/*
 ```
 
-**Trusted Publishing (предпочтительно):** настроить OIDC в GitHub Actions → PyPI без хранения API токенов. См. PyPI docs «Trusted Publishers».
+**Trusted Publishing (preferred):** configure OIDC in GitHub Actions → PyPI without storage API tokens. See PyPI docs «Trusted Publishers».
 
-### .github/workflows/ci.yml для Python
+### .github/workflows/ci.yml for Python
 
 ```yaml
 - Python versions: ["3.10", "3.11", "3.12", "3.13"]
-- OS: [ubuntu-latest] (+ macos/windows если есть platform-specific код)
+- OS: [ubuntu-latest] (+ macos/windows if available platform-specific code)
 - uv sync --all-extras --dev
 - uvx ruff check src tests
 - uvx ruff format --check src tests
 - uvx mypy --strict src
 - uvx pytest --cov=src --cov-report=xml
-- uv build  # проверка что пакет собирается
+- uv build  # checking that the package is being built
 ```
 
 ### Type stubs / py.typed
 
-Для библиотеки с type hints — добавить пустой маркер `src/package_name/py.typed` и в `pyproject.toml`:
+For a library with type hints — add empty marker `src/package_name/py.typed` and in `pyproject.toml`:
 
 ```toml
 [tool.hatch.build.targets.wheel]
@@ -206,6 +206,6 @@ packages = ["src/package_name"]
 include = ["src/package_name/py.typed"]
 ```
 
-Без `py.typed` mypy в downstream-проектах **не увидит** твои аннотации.
+Without `py.typed` mypy in downstream-projects **will not see** your annotations.
 
 ---

@@ -1,19 +1,19 @@
 ---
-title: Скиллы (skiller)
+title: Skills (skiller)
 ---
 
-# Скиллы — пакет `skiller`
+# Skills - package `skiller`
 
-`skiller` — реестр AI-скиллов экосистемы: один источник истины портируемых навыков
-и их раздача в проекты (Claude Code / Cursor) двумя каналами (connect/vendor).
+`skiller` — registry AI-ecosystem skills: one source of truth for portable skills
+and their distribution to projects (Claude Code / Cursor) two channels (connect/vendor).
 
-- [Что такое SwissKnifeMan](./guide/) — обзор и принципы
-- [Установка скиллов](./guide/installation) · [Vendor-режим](./guide/vendor-mode)
-- [CLI swissknifeman](./guide/cli) · [Профили и автодетект](./guide/profiles)
-- [Создание скиллов](./guide/creating-skills) · [Реестр skills.json](./guide/registry)
-- [Bucket-аудит 2026-07](./guide/bucket-audit-2026-07) — метрики/вердикты по всему реестру (P7.2)
-- [Адаптеры IDE](./adapters/claude-code) · [Примеры](./examples/laravel)
-- [Совместимость с Laravel Boost](./boost-compatibility) · [Раздача локального `.ai/` на провайдеры (dev-план)](./multi-provider-distribution)
+- [What is SwissKnifeMan](./guide/) — overview and principles
+- [Installing skills](./guide/installation) · [Vendor-mode](./guide/vendor-mode)
+- [CLI swissknifeman](./guide/cli) · [Profiles and auto-detection](./guide/profiles)
+- [Creating skills](./guide/creating-skills) · [Registry skills.json](./guide/registry)
+- [Bucket-audit 2026-07](./guide/bucket-audit-2026-07) — metrics/verdicts across the entire registry (P7.2)
+- [Adapters IDE](./adapters/claude-code) · [Examples](./examples/laravel)
+- [Compatible with Laravel Boost](./boost-compatibility) · [Local distribution `.ai/` to providers (dev-plan)](./multi-provider-distribution)
 
-> Настройка окружения Claude Code (permissions/MCP/хуки) — в пакете
-> [harness](/harness/). Память и граф экосистемы — пакет maind.
+> Setting up the environment Claude Code (permissions/MCP/hooks) — in the package
+> [harness](/harness/). Memory and Ecosystem Graph - package maind.

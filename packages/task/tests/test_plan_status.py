@@ -89,9 +89,9 @@ class PlanStatusTests(unittest.TestCase):
             "supersedes: []\n"
             "superseded_by: null\n"
             "---\n\n"
-            "## Решение\n\n"
+            "## Solution\n\n"
             "`phase-close: terminal-blocked-deviations`\n\n"
-            "## Почему\n\n"
+            "## Why\n\n"
             "test\n",
             encoding="utf-8",
         )
@@ -157,6 +157,6 @@ class PlanStatusTests(unittest.TestCase):
 
         plan_status.build_status(self.plan_dir)
         view = (self.plan_dir / "status.md").read_text(encoding="utf-8")
-        self.assertIn("полный текст: journal.jsonl:1", view)
+        self.assertIn("full text: journal.jsonl:1", view)
         self.assertNotIn("x" * 301, view)
         self.assertEqual(journal.read_text(encoding="utf-8"), raw)

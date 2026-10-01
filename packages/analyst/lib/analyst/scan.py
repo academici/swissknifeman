@@ -1,14 +1,14 @@
-"""analyst scan — cross-project агрегатор (P2): паттерны уроков across проектов.
+"""analyst scan — cross-project aggregator (P2): lesson patterns across projects.
 
-Пакет САМ обнаруживает проекты через существующий реестр config.json (в корне монорепо):
-projects[].{local_path, namespaces, enabled}. Читает per-project уроки (.claude/analyst/lessons/),
-кластеризует по Jaccard (stdlib) и детектит паттерны, повторяющиеся в ≥N проектах → пишет
-draft-ПРЕДЛОЖЕНИЯ (не скиллы!) в ~/.swissknifeman/analyst/suggestions/ + индекс by_pattern/.
+The CAM package discovers projects through an existing registry config.json (at the root of the monorepo):
+projects[].{local_path, namespaces, enabled}. Reading per-project lessons (.claude/analyst/lessons/),
+clusters by Jaccard (stdlib) and detects patterns that repeat in ≥N projects → writes
+draft-OFFERS (not skills!) in ~/.swissknifeman/analyst/suggestions/ + index by_pattern/.
 
-Namespace-изоляция (наследуется от maind): уроки кластеризуются ТОЛЬКО среди проектов, делящих
-namespace — паттерн из ns:axioma не течёт в чужой namespace. Проект без namespace изолирован
-(кластер из него никогда не станет межпроектным). Кластеризация — greedy single-link (детерминизм:
-входные уроки сортируются по id перед проходом). Демона/сети нет; всё stdlib, read-only по проектам."""
+Namespace-insulation (inherits from maind): lessons are clustered ONLY among projects sharing
+namespace — pattern from ns:axioma does not flow into someone else's namespace. Project without namespace isolated
+(a cluster from it will never become cross-project). Clustering - greedy single-link (determinism:
+input lessons are sorted by id before the passage). Demona/no network; everything stdlib, read-only by project."""
 import json
 import os
 from pathlib import Path
@@ -16,16 +16,16 @@ from pathlib import Path
 from . import lessons
 from .common import atomic_write_json, atomic_write_text, now_iso, safe_load_json, sanitize
 
-# Уроки, участвующие в детекте паттернов (deprecated исключён — демоутнутое не тиражируем).
+# Lessons involved in pattern detection (deprecated is excluded - we do not replicate the demoted one).
 SCAN_STATES = ("curated", "candidate", "ephemeral")
-DEFAULT_MIN_PROJECTS = 3     # межпроектный паттерн — только при ≥N проектах (DoD P2)
-DEFAULT_THRESHOLD = 0.5      # Jaccard-порог «тот же паттерн»
+DEFAULT_MIN_PROJECTS = 3     # cross-project pattern - only when ≥N projects (DoD P2)
+DEFAULT_THRESHOLD = 0.5      # Jaccard-threshold «same pattern»
 
 
-# ── реестр проектов (config.json, читаем сами) ───────────────────────────────
+# ── project registry (config.json, read it ourselves) ───────────────────────────────
 def load_projects(config_path):
-    """[{id, local_path, namespaces, enabled}] из config.json. [] если файла/ключа нет.
-    Читаем реестр напрямую (stdlib) — analyst не зависит от lib maind."""
+    """[{id, local_path, namespaces, enabled}] from config.json. [] if the file/no key.
+    Reading the registry directly (stdlib) — analyst does not depend on lib maind."""
     data = safe_load_json(Path(config_path), None)
     if not isinstance(data, dict):
         return []
@@ -43,7 +43,7 @@ def load_projects(config_path):
 
 
 def enabled_projects(projects, namespace=None):
-    """enabled-проекты с непустым local_path; namespace фильтрует по членству."""
+    """enabled-projects with non-empty local_path; namespace filters by membership."""
     out = []
     for pr in projects:
         if not pr["enabled"] or not pr["local_path"]:
@@ -54,14 +54,14 @@ def enabled_projects(projects, namespace=None):
     return out
 
 
-# ── сбор уроков по namespace (изоляция) ──────────────────────────────────────
+# ── collection of lessons on namespace (insulation) ──────────────────────────────────────
 def _lesson_text(lesson):
     return f"{lesson.get('trigger', '')} {lesson.get('action', '')}"
 
 
 def gather_by_namespace(projects, *, states=SCAN_STATES):
-    """{namespace: [{project, lesson, text}]} — уроки проекта попадают в КАЖДЫЙ его namespace.
-    Проект без namespace не попадает никуда (изолирован — межпроектным стать не может)."""
+    """{namespace: [{project, lesson, text}]} — the lessons of the project fall into EVERY of it namespace.
+    Project without namespace doesn't hit anywhere (is isolated - cannot become cross-project)."""
     buckets = {}
     for pr in projects:
         ppath = os.path.expanduser(pr["local_path"])
@@ -76,10 +76,10 @@ def gather_by_namespace(projects, *, states=SCAN_STATES):
     return buckets
 
 
-# ── кластеризация (greedy single-link, детерминированная) ─────────────────────
+# ── clustering (greedy single-link, deterministic) ─────────────────────
 def cluster(items, threshold=DEFAULT_THRESHOLD):
-    """[[item,...], ...] greedy single-link по Jaccard(text). Вход сортируется по
-    (lesson.id) → детерминизм независимо от порядка чтения каталогов."""
+    """[[item,...], ...] greedy single-link by Jaccard(text). Input sorted by
+    (lesson.id) → determinism regardless of the order in which directories are read."""
     ordered = sorted(items, key=lambda it: it["lesson"].get("id", ""))
     clusters = []
     for it in ordered:
@@ -102,15 +102,15 @@ def _pattern_id(namespace, rep_text):
 
 
 def detect_patterns(buckets, *, min_projects=DEFAULT_MIN_PROJECTS, threshold=DEFAULT_THRESHOLD):
-    """Межпроектные паттерны по namespace. Паттерн — кластер, охватывающий ≥min_projects
-    РАЗНЫХ проектов. Возвращает [pattern] отсортированно по весу (число проектов) убыв."""
+    """Cross-project patterns by namespace. Pattern - cluster covering ≥min_projects
+    DIFFERENT projects. Returns [pattern] sorted by weight (number of projects) descending"""
     patterns = []
     for ns in sorted(buckets):
         for cl in cluster(buckets[ns], threshold):
             projs = sorted({it["project"] for it in cl})
             if len(projs) < min_projects:
                 continue
-            rep = min(cl, key=lambda it: it["lesson"].get("id", ""))   # детерминированный представитель
+            rep = min(cl, key=lambda it: it["lesson"].get("id", ""))   # deterministic representative
             patterns.append({
                 "pattern_id": _pattern_id(ns, rep["text"]),
                 "namespace": ns,
@@ -129,23 +129,23 @@ def detect_patterns(buckets, *, min_projects=DEFAULT_MIN_PROJECTS, threshold=DEF
     return patterns
 
 
-# ── запись артефактов (cross-project слой ~/.swissknifeman/analyst) ───────────
+# ── recording artifacts (cross-project layer ~/.swissknifeman/analyst) ───────────
 def _suggestion_md(pattern):
     rep = pattern["representative"]
     lines = [
-        f"# Предложение (draft) — паттерн `{pattern['pattern_id']}`",
+        f"# Offer (draft) — pattern `{pattern['pattern_id']}`",
         "",
-        f"> **Не скилл.** Черновик на промоушен: паттерн повторился в **{pattern['weight']} проектах** "
-        f"namespace `{pattern['namespace']}`. Черновик скилла — `analyst suggest {pattern['pattern_id']}`; "
-        f"промоут в бакет — человек.",
+        f"> **Not a skill.** Promotion draft: pattern repeated in **{pattern['weight']} projects** "
+        f"namespace `{pattern['namespace']}`. Skill draft - `analyst suggest {pattern['pattern_id']}`; "
+        f"promotion to the bucket - a person.",
         "",
         f"- **kind:** {rep.get('kind') or '—'}",
         f"- **trigger:** {rep.get('trigger') or '—'}",
         f"- **action:** {rep.get('action') or '—'}",
-        f"- **проекты ({pattern['weight']}):** {', '.join(pattern['projects'])}",
-        f"- **уроков в кластере:** {pattern['lessons']}",
+        f"- **projects ({pattern['weight']}):** {', '.join(pattern['projects'])}",
+        f"- **lessons in the cluster:** {pattern['lessons']}",
         "",
-        "## Экземпляры по проектам",
+        "## Instances by Project",
     ]
     for m in pattern["members"]:
         lines.append(f"- `{m['project']}` · {m['id']} — {m['trigger']}")
@@ -154,8 +154,8 @@ def _suggestion_md(pattern):
 
 
 def write_artifacts(env, patterns):
-    """Записать index/by_pattern/<id>.json + suggestions/<id>.md. Возвращает пути.
-    Атомарно; каталоги создаются. Только для найденных паттернов (пустой список — no-op)."""
+    """Write index/by_pattern/<id>.json + suggestions/<id>.md. Returns paths.
+    Atomic; directories are created. Only for found patterns (empty list - no-op)."""
     idx_dir = env.state_dir / "index" / "by_pattern"
     sug_dir = env.state_dir / "suggestions"
     written = []
@@ -167,12 +167,12 @@ def write_artifacts(env, patterns):
     return written
 
 
-# ── reconcile: прун осиротевших артефактов (строго в scope прогона) ───────────
+# ── reconcile: prun of orphaned artifacts (strictly in scope run) ───────────
 def list_existing_patterns(env):
-    """Существующие артефакты паттернов на диске: [{pattern_id, namespace, index_path,
-    suggestion_path}]. namespace берётся из ПОЛЯ 'namespace' индекса (имя файла не реверсим).
-    Битый/непрочитанный индекс либо без pattern_id/namespace → SKIP (не удаляем
-    неклассифицированное). Отсортировано по pattern_id — детерминизм."""
+    """Existing pattern artifacts on disk: [{pattern_id, namespace, index_path,
+    suggestion_path}]. namespace is taken from the FIELD 'namespace' index (file name is not reversible).
+    Broken/unread index or without pattern_id/namespace → SKIP (do not delete
+    unclassified). Sorted by pattern_id — determinism."""
     idx_dir = env.state_dir / "index" / "by_pattern"
     sug_dir = env.state_dir / "suggestions"
     out = []
@@ -181,11 +181,11 @@ def list_existing_patterns(env):
     for idx_path in sorted(idx_dir.glob("*.json")):
         data = safe_load_json(idx_path, None)
         if not isinstance(data, dict):
-            continue                       # битый JSON → SKIP
+            continue                       # broken JSON → SKIP
         pid = data.get("pattern_id")
         ns = data.get("namespace")
         if not pid or not ns:
-            continue                       # без классифицирующих полей → SKIP
+            continue                       # without classifying fields → SKIP
         out.append({
             "pattern_id": pid,
             "namespace": ns,
@@ -196,10 +196,10 @@ def list_existing_patterns(env):
 
 
 def stale_pattern_ids(existing, written_ids, scanned_namespaces):
-    """ЧИСТАЯ (без I/O): id артефактов-сирот к снятию. Сирота = существующий паттерн, чей
-    namespace ВХОДИТ в отсканированный этим прогоном scope, но которого НЕТ среди written
-    (регенерённых). namespace ВНЕ scope → НЕ трогаем: чужой ns не рескан → его отсутствие
-    в written ≠ 'устарело'. Так scoped-прогон (scan --namespace X) прунит только ns X."""
+    """NET (without I/O): id orphan artifacts for removal. Orphan = existing pattern whose
+    namespace IS included in the scanned by this run scope, but which is NOT among written
+    (regenerated). namespace OUT scope → DO NOT touch: alien ns not rescanned → its absence
+    in written ≠ 'deprecated'. Yes scoped-run (scan --namespace X) will only prunt ns X."""
     written = set(written_ids)
     scoped = set(scanned_namespaces)
     return {e["pattern_id"] for e in existing
@@ -207,8 +207,8 @@ def stale_pattern_ids(existing, written_ids, scanned_namespaces):
 
 
 def prune_artifacts(env, stale_ids):
-    """Снять index+suggestion файлы для stale_ids — ОБА вместе (missing_ok, синхронно).
-    Возвращает removed[] — отсортированный список снятых pattern_id. Детерминированно."""
+    """Remove index+suggestion files for stale_ids — BOTH together (missing_ok, synchronously).
+    Returns removed[] — sorted list of removed pattern_id. Deterministic."""
     idx_dir = env.state_dir / "index" / "by_pattern"
     sug_dir = env.state_dir / "suggestions"
     removed = []
@@ -222,61 +222,61 @@ def prune_artifacts(env, stale_ids):
 # ── CLI ──────────────────────────────────────────────────────────────────────
 def cmd_scan(env, argv):
     """analyst scan [--min-projects N] [--namespace NS] [--threshold T] [--no-prune] [--dry-run] [--json]
-    — межпроектные паттерны уроков (config.json) → suggestions/ (namespace-изолированно)."""
+    — cross-project lesson patterns (config.json) → suggestions/ (namespace-isolated)."""
     from .common import die, parse_args, warn
     opts, _ = parse_args(argv, {"--min-projects": "str", "--namespace": "str",
                                 "--threshold": "str", "--no-prune": "bool",
                                 "--dry-run": "bool", "--json": "bool"})
     if opts["help"]:
         print("analyst scan [--min-projects N] [--namespace NS] [--threshold T] [--no-prune] [--dry-run] [--json]\n"
-              "  Обход config.json:projects[] → per-project уроки → Jaccard-кластеры → паттерны в ≥N\n"
-              "  проектах (namespace-изолированно) → draft-предложения в ~/.swissknifeman/analyst/.\n"
-              "  Реконсиляция: осиротевшие index+suggestion файлы (исчезнувшие паттерны) снимаются\n"
-              "  СТРОГО в scope прогона (--no-prune выключает; --dry-run ничего не пишет и\n"
-              "  показывает would-prune ОТНОСИТЕЛЬНО would-be-written паттернов этого прогона).")
+              "  Bypass config.json:projects[] → per-project lessons → Jaccard-clusters → patterns in ≥N\n"
+              "  projects (namespace-isolated) → draft-sentences in ~/.swissknifeman/analyst/.\n"
+              "  Reconciliation: Orphaned index+suggestion files (disappeared patterns) are removed\n"
+              "  STRICTLY in scope run (--no-prune turns off; --dry-run does not write anything and\n"
+              "  shows would-prune RELATIVE would-be-written patterns of this run).")
         return
 
     try:
         min_projects = int(opts["min_projects"]) if opts["min_projects"] else DEFAULT_MIN_PROJECTS
     except ValueError:
-        die(f"--min-projects ждёт число, получено: {opts['min_projects']}")
+        die(f"--min-projects is waiting for a number, received: {opts['min_projects']}")
     try:
         threshold = float(opts["threshold"]) if opts["threshold"] else DEFAULT_THRESHOLD
     except ValueError:
-        die(f"--threshold ждёт число, получено: {opts['threshold']}")
+        die(f"--threshold is waiting for a number, received: {opts['threshold']}")
 
     cfg = env.default_config
     if not Path(cfg).is_file():
-        die(f"реестр проектов не найден: {cfg} — cross-project scan нужен config.json "
-            "(корень монорепо экосистемы)")
+        die(f"project registry not found: {cfg} — cross-project scan needed config.json "
+            "(monorepo ecosystem root)")
     projects = enabled_projects(load_projects(cfg), opts["namespace"] or None)
     if not projects:
-        warn("нет enabled-проектов в реестре"
-             + (f" для namespace {opts['namespace']}" if opts["namespace"] else ""))
+        warn("no enabled-projects in the registry"
+             + (f" for namespace {opts['namespace']}" if opts["namespace"] else ""))
 
     buckets = gather_by_namespace(projects)
     patterns = detect_patterns(buckets, min_projects=min_projects, threshold=threshold)
-    current_ids = {p["pattern_id"] for p in patterns}   # что ДОЛЖНО существовать в scope прогона
+    current_ids = {p["pattern_id"] for p in patterns}   # that MUST exist in scope run
 
     written = [] if opts["dry_run"] else write_artifacts(env, patterns)
 
-    # ── reconcile: снять осиротевшие артефакты СТРОГО в scope этого прогона ──
-    # scope: {namespace} при --namespace X (регенерён только он), ИНАЧЕ union ns всех
-    # enabled-проектов (полный обход). Чужой ns не рескан → его файлы не трогаем.
+    # ── reconcile: remove orphaned artifacts STRICTLY in scope of this run ──
+    # scope: {namespace} when --namespace X (only he is regenerated), ELSE union ns all
+    # enabled-projects (full bypass). Alien ns not rescanned → we do not touch its files.
     scanned_namespaces = ({opts["namespace"]} if opts["namespace"]
                           else {ns for pr in projects for ns in pr["namespaces"]})
     prune_enabled = not opts["no_prune"]
     params_default = (min_projects == DEFAULT_MIN_PROJECTS and threshold == DEFAULT_THRESHOLD)
     pruned = []
     if prune_enabled and not params_default:
-        # [POSSIBLE-DEFECT] нестандартные параметры делают written строже → авто-прун снял бы
-        # то, что дефолтный scan оставит (churn: удалил сейчас — пересоздал следующим дефолтом).
-        # Осознанно ограничиваем авто-прун дефолтными параметрами (данные важнее авточистки).
-        warn("[POSSIBLE-DEFECT] нестандартные --min-projects/--threshold — авто-прун сирот пропущен "
-             "(риск churn). Прогоните scan с дефолтными параметрами для чистки сирот.")
+        # [POSSIBLE-DEFECT] non-standard parameters do written stricter → auto-prun would remove
+        # what is default scan will leave (churn: deleted now - recreated with the following default).
+        # We deliberately limit auto-pruning to default parameters (data is more important than autocleaning).
+        warn("[POSSIBLE-DEFECT] non-standard --min-projects/--threshold — auto-pruning of orphans missed "
+             "(risk churn). Drive away scan with default parameters for cleaning orphans.")
     elif prune_enabled:
-        # list_existing_patterns — ПОСЛЕ write_artifacts: актуальные попадут в current_ids
-        # (не стухнут), сироты — нет. В dry-run write не было → показываем would-prune.
+        # list_existing_patterns — AFTER write_artifacts: current ones will be included in current_ids
+        # (will not go out), orphans do not. B dry-run write was not there → show would-prune.
         stale = stale_pattern_ids(list_existing_patterns(env), current_ids, scanned_namespaces)
         pruned = sorted(stale) if opts["dry_run"] else prune_artifacts(env, stale)
 
@@ -291,22 +291,22 @@ def cmd_scan(env, argv):
         return
 
     ns_count = len(buckets)
-    print(f"\nanalyst scan — проектов: {len(projects)} · namespace с уроками: {ns_count} · "
-          f"порог ≥{min_projects} проектов\n")
+    print(f"\nanalyst scan — projects: {len(projects)} · namespace with lessons: {ns_count} · "
+          f"threshold ≥{min_projects} projects\n")
     if not patterns:
-        print("  ✓ GREEN — межпроектных паттернов не найдено "
-              "(мало уроков / не повторяются в ≥N проектах). Собери больше: analyst digest по проектам.")
+        print("  ✓ GREEN — no cross-project patterns found "
+              "(few lessons / are not repeated in ≥N projects). Collect more: analyst digest by project.")
     else:
         for p in patterns:
-            print(f"  ⚑ [{p['namespace']}] {p['pattern_id']}  · {p['weight']} проект(ов), "
-                  f"{p['lessons']} урок(ов)")
+            print(f"  ⚑ [{p['namespace']}] {p['pattern_id']}  · {p['weight']} project(ov), "
+                  f"{p['lessons']} lesson(ov)")
             print(f"      {p['representative']['trigger']}")
-            print(f"      проекты: {', '.join(p['projects'])}")
+            print(f"      projects: {', '.join(p['projects'])}")
         dest = env.state_dir / "suggestions"
-        print(f"\n  {len(patterns)} паттерн(ов) → {'(dry-run, не записано)' if opts['dry_run'] else dest}")
-        print("  Черновик скилла: analyst suggest <pattern_id> (P4). Промоут в бакет — человек, не авто-запись.")
+        print(f"\n  {len(patterns)} pattern(ov) → {'(dry-run, not recorded)' if opts['dry_run'] else dest}")
+        print("  Skill draft: analyst suggest <pattern_id> (P4). The promotion to the bucket is a person, not an auto-record.")
     if pruned:
-        label = "сирот к снятию (dry-run)" if opts["dry_run"] else "снято сирот"
+        label = "orphans for withdrawal (dry-run)" if opts["dry_run"] else "filmed orphans"
         print(f"  {label}: {len(pruned)}")
     print()
 

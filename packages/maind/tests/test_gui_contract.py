@@ -1,6 +1,6 @@
-"""Контракт статуса (Phase 3) — фиксируем ключи, на которые опирается GUI-панель.
+"""Status Contract (Phase 3) — fix the keys on which it relies GUI-panel.
 
-Если схема probe изменится — этот тест упадёт, защищая gui/index.html от молчаливой поломки."""
+If the schema probe will change - this test will fail, protecting gui/index.html from silent failure."""
 import tempfile
 import unittest
 from pathlib import Path

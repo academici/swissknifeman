@@ -2,7 +2,7 @@
   "schema": 1,
   "pack": "dart-flutter",
   "version": "0.5.2",
-  "description": "Dev-loop для Flutter/Dart (mobile / POS / embedded): агенты slice-builder/test-writer/reviewer (POS/embedded-aware)/ffi-reviewer(опц.), последовательный one-branch workflow, SubagentStop review-gate (dart analyze/format) + PostToolUse-валидатор. Знания Flutter/state/FFI — в промптах агентов (бакет mobile тонкий).",
+  "description": "Dev-loop for Flutter/Dart (mobile / POS / embedded): agents slice-builder/test-writer/reviewer (POS/embedded-aware)/ffi-reviewer(opt.), serial one-branch workflow, SubagentStop review-gate (dart analyze/format) + PostToolUse-validator. Knowledge Flutter/state/FFI — in agent prompts (bucket mobile thin).",
   "stack": {
     "shape": "mobile",
     "language": "dart",
@@ -27,45 +27,45 @@
   "interview": [
     {
       "id": "PACK_PREFIX",
-      "q": "Префикс имён агентов/воркфлоу?",
+      "q": "Agent name prefix/work flow?",
       "default": "{project_dirname}",
       "kind": "slug"
     },
     {
       "id": "PROJECT_DIR",
-      "q": "Абсолютный путь к проекту?",
+      "q": "Absolute path to the project?",
       "detect": "pwd"
     },
     {
       "id": "FLUTTER_BIN",
-      "q": "Бинарь flutter?",
+      "q": "Binary flutter?",
       "detect": "command -v flutter",
       "default": "flutter"
     },
     {
       "id": "DART_BIN",
-      "q": "Бинарь dart?",
+      "q": "Binary dart?",
       "detect": "command -v dart",
       "default": "dart"
     },
     {
       "id": "TEST_RUNNER_CMD",
-      "q": "Команда тестов?",
+      "q": "Test team?",
       "default": "{FLUTTER_BIN} test"
     },
     {
       "id": "ANALYZE_CMD",
-      "q": "Статанализ?",
+      "q": "Statistical analysis?",
       "default": "{DART_BIN} analyze"
     },
     {
       "id": "FORMAT_CMD",
-      "q": "Формат-чек?",
+      "q": "Check format?",
       "default": "{DART_BIN} format --output=none --set-exit-if-changed ."
     },
     {
       "id": "STATE_MGMT",
-      "q": "Стейт-менеджмент?",
+      "q": "Government management?",
       "detect": "pubspec.yaml:dependencies.flutter_riverpod",
       "enum": [
         "riverpod",
@@ -78,14 +78,14 @@
     },
     {
       "id": "HAS_FFI",
-      "q": "Есть FFI/нативные плагины (POS-периферия)?",
+      "q": "Yes FFI/native plugins (POS-peripherals)?",
       "kind": "bool",
       "default": false,
       "detect": "grep -rql dart:ffi lib"
     },
     {
       "id": "TARGET_KIND",
-      "q": "Цель: mobile | pos-embedded | desktop?",
+      "q": "Target: mobile | pos-embedded | desktop?",
       "enum": [
         "mobile",
         "pos-embedded",
@@ -95,23 +95,23 @@
     },
     {
       "id": "BASE_BRANCH",
-      "q": "Базовая ветка?",
+      "q": "Basic branch?",
       "detect": "git symbolic-ref --short refs/remotes/origin/HEAD",
       "default": "main"
     },
     {
       "id": "CHECK_CMD",
-      "q": "Быстрая review-gate проверка?",
+      "q": "Fast review-gate check?",
       "default": "{DART_BIN} analyze"
     },
     {
       "id": "DOCS_DIR",
-      "q": "Куда положить guideline (внутренний AI-гайд, не публичная docs/)?",
+      "q": "Where to put it guideline (internal AI-guide, not public docs/)?",
       "default": ".claude/guidelines"
     },
     {
       "id": "MODEL_REVIEWER",
-      "q": "Модель reviewer?",
+      "q": "Model reviewer?",
       "default": "opus",
       "enum": [
         "inherit",
@@ -122,7 +122,7 @@
     },
     {
       "id": "MODEL_FFI_REVIEWER",
-      "q": "Модель ffi-reviewer?",
+      "q": "Model ffi-reviewer?",
       "default": "opus",
       "enum": [
         "inherit",
@@ -133,7 +133,7 @@
     },
     {
       "id": "MODEL_SLICE_BUILDER",
-      "q": "Модель slice-builder?",
+      "q": "Model slice-builder?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -144,7 +144,7 @@
     },
     {
       "id": "MODEL_TEST_WRITER",
-      "q": "Модель test-writer?",
+      "q": "Model test-writer?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -155,7 +155,7 @@
     },
     {
       "id": "MODEL_SPEC_WRITER",
-      "q": "Модель spec-writer?",
+      "q": "Model spec-writer?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -166,12 +166,12 @@
     },
     {
       "id": "GATE_COVERAGE_MIN",
-      "q": "Мин. покрытие (%)?",
+      "q": "Min. coating (%)?",
       "default": "70"
     },
     {
       "id": "GATE_MAX_CRITICAL",
-      "q": "Допустимо critical-находок?",
+      "q": "Acceptable critical-finds?",
       "default": "0"
     }
   ],
@@ -281,9 +281,9 @@
     }
   ],
   "notes": {
-    "verify_workflow": "dev-loop.js — top-level return/await, node --check НЕ применять.",
-    "skill_gap": "Бакет mobile = 1 скилл (figma-to-flutter). Архитектура/state/FFI/POS — в промптах агентов и rules/, НЕ новые портируемые скиллы (анти-bloat).",
-    "pos_ffi": "POS/embedded и FFI-специфика — в reviewer.md (prose по {{TARGET_KIND}}) + ffi-reviewer.md/rules/ffi.md под pack:if HAS_FFI.",
-    "orchestrator": "Общий оркестратор — пак _common (тот же PACK_PREFIX)."
+    "verify_workflow": "dev-loop.js — top-level return/await, node --check DO NOT apply.",
+    "skill_gap": "Bucket mobile = 1 skill (figma-to-flutter). Architecture/state/FFI/POS — in agent prompts and rules/, NOT new portable skills (anti-bloat).",
+    "pos_ffi": "POS/embedded and FFI-specifics - in reviewer.md (prose by {{TARGET_KIND}}) + ffi-reviewer.md/rules/ffi.md under pack:if HAS_FFI.",
+    "orchestrator": "General orchestrator - pack _common (same PACK_PREFIX)."
   }
 }

@@ -1,5 +1,5 @@
 {
-  "_generated_by": "packages/task/scripts/calibrate-token-estimate.py — НЕ РЕДАКТИРОВАТЬ РУКАМИ, перегенерировать",
+  "_generated_by": "packages/task/scripts/calibrate-token-estimate.py — DO NOT EDIT BY HAND, regenerate",
   "bound": {
     "max_true_over_estimate": 1.0846677212727815,
     "violations": 0

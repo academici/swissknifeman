@@ -12,7 +12,7 @@
       "fetched_at": "2026-06-26"
     }
   ],
-  "notes": "Из mattpocock/skills engineering/implement (disable-model-invocation сохранён). Тело адаптировано (RU) и конкретизировано под наш стек: /tdd -> tdd-discipline, /review -> code-review, typecheck -> php artisan test / dart analyze / vitest, проверка миграций перед схемой БД. strategy=notify.",
+  "notes": "From mattpocock/skills engineering/implement (disable-model-invocation saved). Body adapted (RU) and specified for our stack: /tdd -> tdd-discipline, /review -> code-review, typecheck -> php artisan test / dart analyze / vitest, checking migrations before the database schema. strategy=notify.",
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",

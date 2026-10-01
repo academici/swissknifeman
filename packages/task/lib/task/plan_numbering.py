@@ -74,10 +74,10 @@ def next_identity(plans_root: str | Path, *, date: str | None = None,
                   codename: str | None = None) -> dict:
     date = date or _date.today().strftime("%Y.%m.%d")
     if not _DATE.fullmatch(date):
-        raise NumberingError("PLAN_NUMBER_DATE_INVALID", f"ожидается ГГГГ.ММ.ДД, получено {date!r}")
+        raise NumberingError("PLAN_NUMBER_DATE_INVALID", f"expected YYYY.MM.DD, received {date!r}")
     if codename is not None and not _CODENAME.fullmatch(codename):
         raise NumberingError("PLAN_NUMBER_CODENAME_INVALID",
-                             f"кодовое имя вида [A-Z][A-Z0-9-]*, получено {codename!r}")
+                             f"view code name [A-Z][A-Z0-9-]*, received {codename!r}")
     rows = scan(plans_root)
     ordinals = [int(m["ordinal"]) for row in rows
                 if (m := _DIR_ID.match(row["id"])) and m["date"] == date]
@@ -86,13 +86,13 @@ def next_identity(plans_root: str | Path, *, date: str | None = None,
     short_number = max(shorts, default=0) + 1
     plan_id = f"{date}-№{ordinal}-{codename}" if codename else None
     if plan_id and any(row["id"] == plan_id for row in rows):
-        raise NumberingError("PLAN_NUMBER_COLLISION", f"план {plan_id} уже существует")
+        raise NumberingError("PLAN_NUMBER_COLLISION", f"plan {plan_id} already exists")
     return {
         "plan_id": plan_id,
         "date": date,
         "ordinal": ordinal,
         "short_id": f"PLAN{short_number}",
-        "title_prefix": f"План №{ordinal} —",
+        "title_prefix": f"Plan №{ordinal} —",
         "plans_root": str(Path(plans_root)),
         "scanned": {"plans": len(rows), "with_short_id": len(shorts),
                     "max_short_id": max(shorts, default=0),
@@ -102,11 +102,11 @@ def next_identity(plans_root: str | Path, *, date: str | None = None,
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
-        description="Следующий номер плана: дневной №N и репозиторный Short ID PLAN<N> "
-                    "по живым и архивным планам (read-only).")
-    parser.add_argument("--plans-root", type=Path, help="каталог plans/ (по умолчанию ближайший вверх от cwd)")
-    parser.add_argument("--date", help="ГГГГ.ММ.ДД (по умолчанию сегодня)")
-    parser.add_argument("--codename", help="КОДОВОЕ-ИМЯ [A-Z][A-Z0-9-]*; даёт готовый plan_id")
+        description="Next plan number: daily №N and repository Short ID PLAN<N> "
+                    "on live and archived plans (read-only).")
+    parser.add_argument("--plans-root", type=Path, help="directory plans/ (default nearest up from cwd)")
+    parser.add_argument("--date", help="YYYY.MM.DD (default today)")
+    parser.add_argument("--codename", help="CODE-NAME [A-Z][A-Z0-9-]*; gives ready plan_id")
     args = parser.parse_args(argv)
     try:
         result = next_identity(args.plans_root or find_plans_root(), date=args.date,

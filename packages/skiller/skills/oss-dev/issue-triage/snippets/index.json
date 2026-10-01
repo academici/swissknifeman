@@ -3,12 +3,12 @@
   "snippets": [
     {
       "file": "AGENT-BRIEF.md",
-      "description": "Как писать долговечные agent-brief для issue/PR, помеченных ready-for-agent (что должен знать AFK-агент, чтобы взять задачу)",
+      "description": "How to write durable agent-brief for issue/PR, marked ready-for-agent (what you should know AFK-agent to take on the task)",
       "tags": ["triage", "agent-brief", "ready-for-agent"]
     },
     {
       "file": "OUT-OF-SCOPE.md",
-      "description": "Как устроена база знаний .out-of-scope/ — журнал отклонённых enhancement-заявок с причинами, чтобы не разбирать повторно",
+      "description": "How the knowledge base is structured.out-of-scope/ — reject log enhancement-applications with reasons not to parse again",
       "tags": ["triage", "out-of-scope", "wontfix", "knowledge-base"]
     }
   ]

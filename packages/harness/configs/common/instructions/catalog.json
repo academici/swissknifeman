@@ -859,7 +859,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
+              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
             }
           ],
           "compatibility_assertions": [
@@ -888,7 +888,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
+              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
             }
           ],
           "compatibility_assertions": [
@@ -919,7 +919,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
+              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
             }
           ],
           "compatibility_assertions": [
@@ -949,7 +949,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
+              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
             }
           ],
           "compatibility_assertions": [
@@ -980,7 +980,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
+              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
             }
           ],
           "compatibility_assertions": [
@@ -1012,7 +1012,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
+              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
             }
           ],
           "compatibility_assertions": [
@@ -1029,7 +1029,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 7,
-          "intent": "Apply this source-derived instruction: Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use Russian diagnostics and merge-only project writes, and edit local skills in the canonical EN-only `SKILL.md` before regenerating registry/provider projections. Also, create a new skill only when it does not overlap an existing one — otherwise extend the existing skill.",
+          "intent": "Apply this source-derived instruction: Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use English diagnostics and merge-only project writes, and edit local skills in the canonical EN-only `SKILL.md` before regenerating registry/provider projections. Also, create a new skill only when it does not overlap an existing one — otherwise extend the existing skill.",
           "obligations": [
             {
               "modality": "must",
@@ -1043,11 +1043,11 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
+              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
             }
           ],
           "compatibility_assertions": [
-            "Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use Russian diagnostics and merge-only project writes, and edit local skills in the canonical EN-only `SKILL.md` before regenerating registry/provider projections.",
+            "Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use English diagnostics and merge-only project writes, and edit local skills in the canonical EN-only `SKILL.md` before regenerating registry/provider projections.",
             "`lib/`",
             "`Env`",
             "`SKILL.md`",
@@ -1074,7 +1074,7 @@
             {
               "source_id": "instruction.fragment.skiller.common",
               "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
-              "sha256": "5e781f14756418fe2dd190c7573337ab94bbb07bcfa74d8d65044f7149e6e2e2"
+              "sha256": "e98f61350c3c4bd2373310235e1a2c5da1a7238824e8f5ec53f85e8904fc2caf"
             }
           ],
           "compatibility_assertions": [
@@ -1202,7 +1202,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
+              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
             }
           ],
           "compatibility_assertions": [
@@ -1229,7 +1229,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
+              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
             }
           ],
           "compatibility_assertions": [
@@ -1257,7 +1257,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
+              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
             }
           ],
           "compatibility_assertions": [
@@ -1289,7 +1289,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
+              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
             }
           ],
           "compatibility_assertions": [
@@ -1325,7 +1325,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
+              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
             }
           ],
           "compatibility_assertions": [
@@ -1343,7 +1343,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 6,
-          "intent": "Apply this source-derived instruction: Keep `lib/harness/` stdlib-only, pass frozen `Env` explicitly, use merge-only project writes with `*.bak` backups, and emit Russian diagnostics.",
+          "intent": "Apply this source-derived instruction: Keep `lib/harness/` stdlib-only, pass frozen `Env` explicitly, use merge-only project writes with `*.bak` backups, and emit English diagnostics.",
           "obligations": [
             {
               "modality": "must",
@@ -1357,11 +1357,11 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
+              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
             }
           ],
           "compatibility_assertions": [
-            "Keep `lib/harness/` stdlib-only, pass frozen `Env` explicitly, use merge-only project writes with `*.bak` backups, and emit Russian diagnostics.",
+            "Keep `lib/harness/` stdlib-only, pass frozen `Env` explicitly, use merge-only project writes with `*.bak` backups, and emit English diagnostics.",
             "`lib/harness/`",
             "`Env`",
             "`*.bak`"
@@ -1387,7 +1387,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
+              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
             }
           ],
           "compatibility_assertions": [
@@ -1418,7 +1418,7 @@
             {
               "source_id": "instruction.fragment.harness.common",
               "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
-              "sha256": "57c707db58cd2e104e377254a6815f735e4214b817919d04ff7bea4dfc4efec7"
+              "sha256": "7eec98434d6c2faa899d6c3245dbd7d49d5605e44b9d7b1cdd2d94bfa9b79d54"
             }
           ],
           "compatibility_assertions": [
@@ -1574,7 +1574,7 @@
             {
               "source_id": "instruction.fragment.maind.common",
               "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
-              "sha256": "ec67f6e285ecb1165e60ebbd17975385465181a6ad51faa05f1b5b76e426e062"
+              "sha256": "d432100853374f56c6240cc65a364c081dbf6ece5fd397f92fdfe7b7e74cc424"
             }
           ],
           "compatibility_assertions": [
@@ -1602,7 +1602,7 @@
             {
               "source_id": "instruction.fragment.maind.common",
               "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
-              "sha256": "ec67f6e285ecb1165e60ebbd17975385465181a6ad51faa05f1b5b76e426e062"
+              "sha256": "d432100853374f56c6240cc65a364c081dbf6ece5fd397f92fdfe7b7e74cc424"
             }
           ],
           "compatibility_assertions": [
@@ -1630,7 +1630,7 @@
             {
               "source_id": "instruction.fragment.maind.common",
               "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
-              "sha256": "ec67f6e285ecb1165e60ebbd17975385465181a6ad51faa05f1b5b76e426e062"
+              "sha256": "d432100853374f56c6240cc65a364c081dbf6ece5fd397f92fdfe7b7e74cc424"
             }
           ],
           "compatibility_assertions": [
@@ -1661,7 +1661,7 @@
             {
               "source_id": "instruction.fragment.maind.common",
               "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
-              "sha256": "ec67f6e285ecb1165e60ebbd17975385465181a6ad51faa05f1b5b76e426e062"
+              "sha256": "d432100853374f56c6240cc65a364c081dbf6ece5fd397f92fdfe7b7e74cc424"
             }
           ],
           "compatibility_assertions": [
@@ -1693,7 +1693,7 @@
             {
               "source_id": "instruction.fragment.maind.common",
               "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
-              "sha256": "ec67f6e285ecb1165e60ebbd17975385465181a6ad51faa05f1b5b76e426e062"
+              "sha256": "d432100853374f56c6240cc65a364c081dbf6ece5fd397f92fdfe7b7e74cc424"
             }
           ],
           "compatibility_assertions": [
@@ -1707,7 +1707,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 6,
-          "intent": "Apply this source-derived instruction: Keep `lib/maind/` stdlib-only, pass frozen `Env` explicitly, write JSON atomically, emit Russian diagnostics, and preserve `project:`, `ns:`, and `global` memory isolation.",
+          "intent": "Apply this source-derived instruction: Keep `lib/maind/` stdlib-only, pass frozen `Env` explicitly, write JSON atomically, emit English diagnostics, and preserve `project:`, `ns:`, and `global` memory isolation.",
           "obligations": [
             {
               "modality": "must",
@@ -1721,11 +1721,11 @@
             {
               "source_id": "instruction.fragment.maind.common",
               "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
-              "sha256": "ec67f6e285ecb1165e60ebbd17975385465181a6ad51faa05f1b5b76e426e062"
+              "sha256": "d432100853374f56c6240cc65a364c081dbf6ece5fd397f92fdfe7b7e74cc424"
             }
           ],
           "compatibility_assertions": [
-            "Keep `lib/maind/` stdlib-only, pass frozen `Env` explicitly, write JSON atomically, emit Russian diagnostics, and preserve `project:`, `ns:`, and `global` memory isolation.",
+            "Keep `lib/maind/` stdlib-only, pass frozen `Env` explicitly, write JSON atomically, emit English diagnostics, and preserve `project:`, `ns:`, and `global` memory isolation.",
             "`lib/maind/`",
             "`Env`",
             "`project:`",
@@ -1753,7 +1753,7 @@
             {
               "source_id": "instruction.fragment.maind.common",
               "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
-              "sha256": "ec67f6e285ecb1165e60ebbd17975385465181a6ad51faa05f1b5b76e426e062"
+              "sha256": "d432100853374f56c6240cc65a364c081dbf6ece5fd397f92fdfe7b7e74cc424"
             }
           ],
           "compatibility_assertions": [
@@ -1850,7 +1850,7 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "125bfb0b0d25f86ee54a4e8b06e3f39268e2c008edd101416b354e50f8837a51"
+              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
             }
           ],
           "compatibility_assertions": [
@@ -1879,7 +1879,7 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "125bfb0b0d25f86ee54a4e8b06e3f39268e2c008edd101416b354e50f8837a51"
+              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
             }
           ],
           "compatibility_assertions": [
@@ -1907,7 +1907,7 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "125bfb0b0d25f86ee54a4e8b06e3f39268e2c008edd101416b354e50f8837a51"
+              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
             }
           ],
           "compatibility_assertions": [
@@ -1936,7 +1936,7 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "125bfb0b0d25f86ee54a4e8b06e3f39268e2c008edd101416b354e50f8837a51"
+              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
             }
           ],
           "compatibility_assertions": [
@@ -1965,7 +1965,7 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "125bfb0b0d25f86ee54a4e8b06e3f39268e2c008edd101416b354e50f8837a51"
+              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
             }
           ],
           "compatibility_assertions": [
@@ -1994,7 +1994,7 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "125bfb0b0d25f86ee54a4e8b06e3f39268e2c008edd101416b354e50f8837a51"
+              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
             }
           ],
           "compatibility_assertions": [
@@ -2008,7 +2008,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 7,
-          "intent": "Apply this source-derived instruction: Keep runtime stdlib-only, pass frozen `Env` explicitly, write JSON atomically, require human confirmation for curated promotion, and emit Russian diagnostics.",
+          "intent": "Apply this source-derived instruction: Keep runtime stdlib-only, pass frozen `Env` explicitly, write JSON atomically, require human confirmation for curated promotion, and emit English diagnostics.",
           "obligations": [
             {
               "modality": "must",
@@ -2022,11 +2022,11 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "125bfb0b0d25f86ee54a4e8b06e3f39268e2c008edd101416b354e50f8837a51"
+              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
             }
           ],
           "compatibility_assertions": [
-            "Keep runtime stdlib-only, pass frozen `Env` explicitly, write JSON atomically, require human confirmation for curated promotion, and emit Russian diagnostics.",
+            "Keep runtime stdlib-only, pass frozen `Env` explicitly, write JSON atomically, require human confirmation for curated promotion, and emit English diagnostics.",
             "`Env`"
           ]
         },
@@ -2050,7 +2050,7 @@
             {
               "source_id": "instruction.fragment.analyst.common",
               "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
-              "sha256": "125bfb0b0d25f86ee54a4e8b06e3f39268e2c008edd101416b354e50f8837a51"
+              "sha256": "561d3336f03a9ddaa1e655fee6b0949d5831994f3627d6f5e88f650fc09cd9d5"
             }
           ],
           "compatibility_assertions": [
@@ -2146,7 +2146,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "fdac9b8aa488bc8526ff092e5d190baab097084eb1250c461f87f7db932ef1fe"
+              "sha256": "281ec65253fbd882221671c2f3197a51773f5803d61176a0836415de9a59a82c"
             }
           ],
           "compatibility_assertions": [
@@ -2176,7 +2176,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "fdac9b8aa488bc8526ff092e5d190baab097084eb1250c461f87f7db932ef1fe"
+              "sha256": "281ec65253fbd882221671c2f3197a51773f5803d61176a0836415de9a59a82c"
             }
           ],
           "compatibility_assertions": [
@@ -2205,7 +2205,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "fdac9b8aa488bc8526ff092e5d190baab097084eb1250c461f87f7db932ef1fe"
+              "sha256": "281ec65253fbd882221671c2f3197a51773f5803d61176a0836415de9a59a82c"
             }
           ],
           "compatibility_assertions": [
@@ -2234,7 +2234,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "fdac9b8aa488bc8526ff092e5d190baab097084eb1250c461f87f7db932ef1fe"
+              "sha256": "281ec65253fbd882221671c2f3197a51773f5803d61176a0836415de9a59a82c"
             }
           ],
           "compatibility_assertions": [
@@ -2265,7 +2265,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "fdac9b8aa488bc8526ff092e5d190baab097084eb1250c461f87f7db932ef1fe"
+              "sha256": "281ec65253fbd882221671c2f3197a51773f5803d61176a0836415de9a59a82c"
             }
           ],
           "compatibility_assertions": [
@@ -2281,7 +2281,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 6,
-          "intent": "Apply this source-derived instruction: Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use Russian diagnostics.",
+          "intent": "Apply this source-derived instruction: Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.",
           "obligations": [
             {
               "modality": "must",
@@ -2295,11 +2295,11 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "fdac9b8aa488bc8526ff092e5d190baab097084eb1250c461f87f7db932ef1fe"
+              "sha256": "281ec65253fbd882221671c2f3197a51773f5803d61176a0836415de9a59a82c"
             }
           ],
           "compatibility_assertions": [
-            "Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use Russian diagnostics.",
+            "Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.",
             "`lib/task/`"
           ]
         },
@@ -2323,7 +2323,7 @@
             {
               "source_id": "instruction.fragment.task.common",
               "path": "packages/harness/configs/common/instructions/packages/task/common.md",
-              "sha256": "fdac9b8aa488bc8526ff092e5d190baab097084eb1250c461f87f7db932ef1fe"
+              "sha256": "281ec65253fbd882221671c2f3197a51773f5803d61176a0836415de9a59a82c"
             }
           ],
           "compatibility_assertions": [
@@ -2416,7 +2416,7 @@
             {
               "source_id": "instruction.fragment.artifex.common",
               "path": "packages/harness/configs/common/instructions/packages/artifex/common.md",
-              "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"
+              "sha256": "139b9253327073ccdd61afb152aef7cedadfbc3ca9324b35e578e0e79231eb0b"
             }
           ],
           "compatibility_assertions": [
@@ -2445,7 +2445,7 @@
             {
               "source_id": "instruction.fragment.artifex.common",
               "path": "packages/harness/configs/common/instructions/packages/artifex/common.md",
-              "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"
+              "sha256": "139b9253327073ccdd61afb152aef7cedadfbc3ca9324b35e578e0e79231eb0b"
             }
           ],
           "compatibility_assertions": [
@@ -2475,7 +2475,7 @@
             {
               "source_id": "instruction.fragment.artifex.common",
               "path": "packages/harness/configs/common/instructions/packages/artifex/common.md",
-              "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"
+              "sha256": "139b9253327073ccdd61afb152aef7cedadfbc3ca9324b35e578e0e79231eb0b"
             }
           ],
           "compatibility_assertions": [
@@ -2504,7 +2504,7 @@
             {
               "source_id": "instruction.fragment.artifex.common",
               "path": "packages/harness/configs/common/instructions/packages/artifex/common.md",
-              "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"
+              "sha256": "139b9253327073ccdd61afb152aef7cedadfbc3ca9324b35e578e0e79231eb0b"
             }
           ],
           "compatibility_assertions": [
@@ -2518,7 +2518,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 5,
-          "intent": "Apply this source-derived instruction: Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use Russian diagnostics, and preserve one implementation rather than a plan-local duplicate.",
+          "intent": "Apply this source-derived instruction: Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use English diagnostics, and preserve one implementation rather than a plan-local duplicate.",
           "obligations": [
             {
               "modality": "must",
@@ -2532,11 +2532,11 @@
             {
               "source_id": "instruction.fragment.artifex.common",
               "path": "packages/harness/configs/common/instructions/packages/artifex/common.md",
-              "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"
+              "sha256": "139b9253327073ccdd61afb152aef7cedadfbc3ca9324b35e578e0e79231eb0b"
             }
           ],
           "compatibility_assertions": [
-            "Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use Russian diagnostics, and preserve one implementation rather than a plan-local duplicate.",
+            "Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use English diagnostics, and preserve one implementation rather than a plan-local duplicate.",
             "`lib/artifex/`"
           ]
         },
@@ -2560,7 +2560,7 @@
             {
               "source_id": "instruction.fragment.artifex.common",
               "path": "packages/harness/configs/common/instructions/packages/artifex/common.md",
-              "sha256": "0ca967e468adb589d847996a580ead04078cadcf0a52f299e0ea5d3e3b5760e4"
+              "sha256": "139b9253327073ccdd61afb152aef7cedadfbc3ca9324b35e578e0e79231eb0b"
             }
           ],
           "compatibility_assertions": [

@@ -115,7 +115,7 @@
     {"kind": "audit-phase", "valid": "audit-phase: task:plan-audit PLAN P4", "invalid": "audit-phase: task:plan-close PLAN P4"},
     {"kind": "close", "valid": "close: task:plan-close PLAN P4", "invalid": "close: task:plan-audit PLAN P4"},
     {"kind": "archive", "valid": "archive: task:plan-close archive PLAN", "invalid": "archive: task:plan-run archive PLAN"},
-    {"kind": "terminal", "valid": "terminal: план закрыт", "invalid": "terminal: plan remains open"},
+    {"kind": "terminal", "valid": "terminal: plan closed", "invalid": "terminal: plan remains open"},
     {"kind": "manual", "valid": "manual: frontier/xhigh", "invalid": "manual: opus/max"},
     {"kind": "waiting", "valid": "waiting: gate P4 terminal → audit-phase: task:plan-audit PLAN P4", "invalid": "waiting: someday"}
   ]

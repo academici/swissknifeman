@@ -1,6 +1,6 @@
 {
   "name": "platform-service",
-  "description": "Externalized runtime platform, полиглот-монорепо: services/ + packages/js|php|flutter/ + apps/ + infra/",
+  "description": "Externalized runtime platform, polyglot monorepo: services/ + packages/js|php|flutter/ + apps/ + infra/",
   "buckets": ["architect", "ai", "oss-dev", "general", "php", "php-packages", "frontend", "frontend-vue", "frontend-backend", "devops"],
   "include_meta": false,
   "harness_presets": ["base"],

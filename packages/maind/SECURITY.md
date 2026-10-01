@@ -1,27 +1,27 @@
 # Security Policy
 
-## Сообщить об уязвимости
+## Report a vulnerability
 
-Нашли проблему безопасности — напишите на **dv.vostrikov@gmail.com** (тема: `maind security`).
-Пожалуйста, не открывайте публичный issue до согласования раскрытия.
+Found a security problem - write to **dv.vostrikov@gmail.com** (topic: `maind security`).
+Please do not open public issue until disclosure is agreed upon.
 
-## Модель доверия
+## Trust Model
 
-- **Демон памяти слушает только localhost** (`127.0.0.1:4111/4112` по умолчанию). Не
-  выставляйте порты наружу без отдельного reverse-proxy с аутентификацией — у демона нет
-  собственной авторизации.
-- **maind не убивает чужой процесс.** Если демон отвечает, но запущен не через maind (нет
-  pidfile в `data/`), `maind memory stop` его не трогает.
-- **Изоляция между проектами — логическая** (по `namespace`/scope), в рамках одного
-  доверенного демона. Это не граница безопасности между взаимно-недоверенными сторонами.
+- **The memory daemon listens only localhost** (`127.0.0.1:4111/4112` default). Not
+  expose the ports to the outside without a separate reverse-proxy with authentication - the daemon does not have
+  own authorization.
+- **maind does not kill someone else's process.** If the daemon responds but is not started via maind (no
+  pidfile in `data/`), `maind memory stop` doesn't touch him.
+- **Isolation between projects - logical** (by `namespace`/scope), within one
+  trusted daemon. This is not a security boundary between mutually untrusted parties.
 
-## Секреты
+## Secrets
 
-- Ключи и токены — только в `.env` (gitignored). Никогда не коммитьте `.env`, реальный
-  `config.json` или содержимое `data/`.
-- `ANTHROPIC_API_KEY` (опционально, для сжатия памяти) хранится в `.env`, не в конфиге.
+- Keys and tokens - only in `.env` (gitignored). Never commit `.env`, real
+  `config.json` or contents `data/`.
+- `ANTHROPIC_API_KEY` (optional, for memory compression) is stored in `.env`, is not in the config.
 
-## Зависимости
+## Dependencies
 
-- Python-рантайм — **только stdlib** (минимальная поверхность атаки). Сторонние пакеты
-  (`@agentmemory/agentmemory`, опциональные `networkx`/`graphify`) ставятся явно.
+- Python-runtime — **only stdlib** (minimum attack surface). Third Party Packages
+  (`@agentmemory/agentmemory`, optional `networkx`/`graphify`) are set explicitly.

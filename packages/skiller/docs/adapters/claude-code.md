@@ -1,32 +1,32 @@
-# Адаптер: Claude Code
+# Adapter: Claude Code
 
-Полный цикл интеграции с Claude Code: плагины (скиллы) + permissions.
+Full cycle of integration with Claude Code: plugins (skills) + permissions.
 
-Основной механизм — **нативный plugin marketplace**: swissknifeman является
-маркетплейсом плагинов (`.claude-plugin/marketplace.json`), каждый bucket —
-отдельный плагин. Скиллы не копируются в репозиторий проекта: они живут в кэше
-Claude Code и обновляются из этого репо.
+Main mechanism - **native plugin marketplace**: swissknifeman is
+plugin marketplace (`.claude-plugin/marketplace.json`), each bucket —
+separate plugin. Skills are not copied to the project repository: they live in the cache
+Claude Code and are updated from this repo.
 
-## Один раз на машину: добавить marketplace
+## Once per machine: add marketplace
 
 ```bash
 claude plugin marketplace add ~/projects/packages/swissknifeman
 ```
 
-Источник — локальная папка: пуш не нужен, но версия плагина привязана к git SHA,
-поэтому правки подтягиваются **после локального коммита** (затем
+Source - local folder: push is not needed, but the plugin version is tied to git SHA,
+so the edits are being updated **after local commit** (then
 `/plugin marketplace update swissknifeman` + `claude plugin update <p>@swissknifeman`
-или перезапуск сессии).
+or session restart).
 
-## На каждый проект: подключить плагины
+## For each project: connect plugins
 
 ```bash
 cd ~/projects/my-app && skiller connect
 ```
 
-Команда определяет тип проекта (те же маркеры, что и `skiller vendor`;
-корень проекта находится автоматически от текущей директории) и записывает
-в `.claude/settings.local.json` проекта:
+The command defines the project type (same markers as `skiller vendor`;
+the project root is located automatically from the current directory) and writes
+in `.claude/settings.local.json` project:
 
 ```json
 {
@@ -42,42 +42,42 @@ cd ~/projects/my-app && skiller connect
 }
 ```
 
-Файл `settings.local.json` не коммитится — локальный путь не попадает в
-репозиторий проекта. Merge идемпотентный: явный `false` не перетирается,
-лишние включённые плагины не отключаются (только репортятся).
+File `settings.local.json` is not committed - the local path is not included in
+project repository. Merge idempotent: explicit `false` does not fray,
+extra enabled plugins are not disabled (only reporting).
 
-Полезные флаги: `--profile`, `--plugins a,b,c`, `--list`, `--dry-run`,
+Useful flags: `--profile`, `--plugins a,b,c`, `--list`, `--dry-run`,
 `--cleanup-vendored`, `--file settings.json`.
 
-## Плагины и неймспейсы
+## Plugins and namespaces
 
-Плагин = bucket (+ мета-плагин `generate-skill`). Скиллы плагинов получают
-неймспейс `<плагин>:<скилл>`: `php:laravel-packages`, `quality:code-review`,
-`devops:docker-php`. У скиллов из `imported/` имя берётся из frontmatter, а не
-из папки: `imported:ai-agent-super-skill`.
+Plugin = bucket (+ meta plugin `generate-skill`). Plugin skills are received
+namespace `<plugin>:<skill>`: `php:laravel-packages`, `quality:code-review`,
+`devops:docker-php`. For skills from `imported/` name is taken from frontmatter, and not
+from the folder: `imported:ai-agent-super-skill`.
 
-Манифесты (`.claude-plugin/plugin.json` в каждом bucket-е и корневой
-`marketplace.json`) **генерируются** — после добавления/перемещения скилла
-запускайте `skiller registry`; `validate.sh` ловит устаревшие.
+Manifests (`.claude-plugin/plugin.json` in each bucket-e and root
+`marketplace.json`) **are generated** — after adding/skill moves
+run `skiller registry`; `validate.sh` catches obsolete ones.
 
-## Обновления
+## Updates
 
-- Версия плагина = git SHA репозитория (поле `version` не задаётся намеренно),
-  поэтому правка скилла видна в проектах **после локального коммита** в этом репо.
-- Подтянуть: `/plugin marketplace update swissknifeman`, затем
-  `claude plugin update <plugin>@swissknifeman` (или перезапуск сессии).
+- Plugin version = git SHA repository (field `version` is not set intentionally),
+  so skill edits are visible in projects **after local commit** in this repo.
+- Pull up: `/plugin marketplace update swissknifeman`, then
+  `claude plugin update <plugin>@swissknifeman` (or session restart).
 
-## Миграция со старого вендоринга
+## Migration from old vendor
 
-Раньше скиллы копировались в `.claude/skills/` проекта (вендоринг — теперь
-`skiller vendor --agent claude`, deprecated для Claude Code).
-`skiller connect` находит старый манифест
-`.swissknifeman-manifest.json` и по флагу `--cleanup-vendored` удаляет **только**
-вендоренные копии — собственные скиллы проекта не трогаются.
+Previously, skills were copied to `.claude/skills/` project (vendoring - now
+`skiller vendor --agent claude`, deprecated for Claude Code).
+`skiller connect` finds the old manifest
+`.swissknifeman-manifest.json` and by flag `--cleanup-vendored` deletes **only**
+vendor copies - the project's own skills are not affected.
 
-## Переключение на GitHub-источник (другая машина / CI)
+## Switch to GitHub-source (another car / CI)
 
-Локальный путь работает только на этой машине. Где репо доступен по git:
+The local path only works on this machine. Where is the repo available at git:
 
 ```json
 {
@@ -89,31 +89,31 @@ cd ~/projects/my-app && skiller connect
 }
 ```
 
-Такой источник можно класть и в коммитимый `.claude/settings.json`
-(`skiller connect --file settings.json` + ручная правка source). Для фоновых
-автообновлений приватного репо нужен `GITHUB_TOKEN` в окружении.
+Such a source can also be placed in a committed `.claude/settings.json`
+(`skiller connect --file settings.json` + manual editing source). For background
+private repo auto-updates needed `GITHUB_TOKEN` surrounded.
 
 ## Permissions
 
-После плагинов подтяните пресеты разрешений:
+After the plugins, tighten up the permission presets:
 
 ```bash
 ./scripts/apply-permissions.sh --target ~/projects/my-app
 ```
 
-Подробности — в [гайде по permissions](/harness/configs/claude-permissions).
+Details in [guide to permissions](/harness/configs/claude-permissions).
 
-## Delta-файлы
+## Delta-files
 
-Специфика Claude Code внутри скилла выносится в `adapters/claude.md` —
-overrides для CLAUDE.md-специфики. Формат — в
-[спецификации адаптерных дельт](../guide/adapter-deltas).
+Specifics Claude Code inside the skill is placed in `adapters/claude.md` —
+overrides for CLAUDE.md-specifics. Format - in
+[adapter delta specifications](../guide/adapter-deltas).
 
-## Вендоринг (deprecated для Claude Code)
+## Vendoring (deprecated for Claude Code)
 
-`skiller vendor --agent claude` (из каталога проекта) по-прежнему
-работает (плоская раскладка + манифест), но для Claude Code предпочтителен
-marketplace: единый
-источник, обновления без переустановки, ничего лишнего в репо проекта.
-Вендоринг остаётся основным путём для Cursor и других агентов — см.
-[Установку скиллов](../guide/installation).
+`skiller vendor --agent claude` (from the project directory) still
+works (flat layout + manifest), but for Claude Code preferred
+marketplace: single
+source, updates without reinstallation, nothing extra in the project repo.
+Vendoring remains the main route for Cursor and other agents - see.
+[Installing skills](../guide/installation).

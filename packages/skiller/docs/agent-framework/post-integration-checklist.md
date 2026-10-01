@@ -1,50 +1,50 @@
-# Post-Integration Checklist — проверка после внедрения
+# Post-Integration Checklist — post-implementation check
 
-Скилл `system/agent-packs` ПРОГОНЯЕТ этот чеклист после каждого install/upgrade пака;
-`skiller doctor` — по требованию. Цель — гарантировать целостность и **отсутствие
-конфликтов**. На любой находке install/upgrade считается НЕзавершённым.
+Skill `system/agent-packs` RUN this checklist after each install/upgrade pack;
+`skiller doctor` — upon request. The goal is to guarantee the integrity and **absence
+conflicts**. On any find install/upgrade is considered incomplete.
 
-## Целостность пака
+## Pack integrity
 
-- [ ] `.claude/agent-pack.lock.json` есть, валиден (JSON парсится), `version` совпадает с `pack.json`.
-- [ ] Все файлы из `lock.files[].target` существуют; нет осиротевших (в lock есть, на диске нет).
-- [ ] Нет коллизий путей между несколькими установленными паками.
+- [ ] `.claude/agent-pack.lock.json` yes, valid (JSON is parsed), `version` matches `pack.json`.
+- [ ] All files from `lock.files[].target` exist; no orphans (in lock yes, not on disk).
+- [ ] There are no path collisions between multiple installed packages.
 
-## Settings и хуки (главное по конфликтам)
+## Settings and hooks (main thing about conflicts)
 
-- [ ] `.claude/settings.json` парсится как JSON.
-- [ ] Хуки, что были ДО установки, на месте: `diff` против `.claude/settings.json.bak`
-      не показывает удалённых записей (только добавленные).
-- [ ] `review-gate.sh` исполняемый (`test -x`), `bash -n` без ошибок.
-- [ ] review-gate зарегистрирован на `SubagentStop` ровно ОДИН раз (нет дублей).
-- [ ] (Agent Teams) `TeammateIdle`/`TaskCompleted` зарегистрированы по разу; не конфликтуют
-      с `PreToolUse`(auto-approve)/`SubagentStop`(review-gate) — события разные.
+- [ ] `.claude/settings.json` is parsed as JSON.
+- [ ] The hooks that were BEFORE installation are in place: `diff` vs `.claude/settings.json.bak`
+      does not show deleted entries (added only).
+- [ ] `review-gate.sh` executable (`test -x`), `bash -n` without errors.
+- [ ] review-gate registered on `SubagentStop` exactly ONE time (no duplicates).
+- [ ] (Agent Teams) `TeammateIdle`/`TaskCompleted` registered once; don't conflict
+      with `PreToolUse`(auto-approve)/`SubagentStop`(review-gate) — events are different.
 
-## Агенты и скиллы (фикс «скиллы не видны»)
+## Agents and skills (fix «skills are not visible»)
 
-- [ ] Каждый агент `.claude/agents/*.md`: валидный frontmatter (`name`, `description`).
-- [ ] ВСЕ имена в `skills:` агентов существуют в `skills.json` — ноль silent no-op
-      (иначе `⚠` в hub + находка `skiller doctor`).
-- [ ] Нет дублей `name` среди `.claude/agents/*` и агентов включённых плагинов.
-- [ ] `tools:`-scope осмысленный (read-only роли без Edit/Write).
+- [ ] Each agent `.claude/agents/*.md`: valid frontmatter (`name`, `description`).
+- [ ] ALL names in `skills:` agents exist in `skills.json` — zero silent no-op
+      (otherwise `⚠` in hub + find `skiller doctor`).
+- [ ] No duplicates `name` among `.claude/agents/*` and agents of enabled plugins.
+- [ ] `tools:`-scope meaningful (read-only roles without Edit/Write).
 
-## Воркфлоу и правила
+## Workflow and rules
 
-- [ ] Каждый `.claude/workflows/*.js`: `node --check` без ошибок (на отрендеренном).
-- [ ] Каждый `.claude/rules/*.md` (если есть): валидный `paths:` frontmatter; правило
-      не дублирует текст скилла (ссылается на него) — нет «правила в трёх местах».
+- [ ] Everyone `.claude/workflows/*.js`: `node --check` no errors (on the rendered).
+- [ ] Everyone `.claude/rules/*.md` (if available): valid `paths:` frontmatter; rule
+      does not duplicate skill text (refers to it) — no «rules in three places».
 
-## Hub и Boost
+## Hub and Boost
 
-- [ ] Hub перегенерён (`generate-hub.sh`): есть agent-routing срез; `⚠`-несостыковок ноль; freshness свежий.
-- [ ] В Boost-проекте: блок в `.ai/guidelines/swissknifeman-hub.md` обновлён; НЕ трогали
-      сгенерённые CLAUDE.md/AGENTS.md; напоминание `php artisan boost:update` выдано.
+- [ ] Hub regenerated (`generate-hub.sh`): yes agent-routing slice; `⚠`-inconsistencies zero; freshness fresh.
+- [ ] B Boost-project: block in `.ai/guidelines/swissknifeman-hub.md` updated; NOT touched
+      generated CLAUDE.md/AGENTS.md; reminder `php artisan boost:update` issued.
 
-## Поведение проекта
+## Project behavior
 
-- [ ] Тесты проекта зелёные (для ретрофита/upgrade — behavior-preserving).
+- [ ] Project tests are green (for retrofit/upgrade — behavior-preserving).
 
-## Формат вывода
+## Output Format
 
-Компактный отчёт: `PASS` или список находок по разделам. При находках —
-конкретный шаг починки, install/upgrade не закрывается.
+Compact report: `PASS` or a list of finds by section. When found -
+specific repair step, install/upgrade does not close.

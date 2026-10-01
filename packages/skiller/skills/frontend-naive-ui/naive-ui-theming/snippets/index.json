@@ -3,12 +3,12 @@
   "snippets": [
     {
       "file": "naive-theme.ts",
-      "description": "Единый GlobalThemeOverrides: common (палитра через CSS-переменные, шрифт, радиус, высоты) + пер-компонент Button/Card/Form/Input/Tag/Tabs, плюс отдельные darkThemeOverrides",
+      "description": "Single GlobalThemeOverrides: common (palette via CSS-variables, font, radius, heights) + per-component Button/Card/Form/Input/Tag/Tabs, plus separate darkThemeOverrides",
       "tags": ["theme", "global-theme-overrides", "design-tokens", "css-variables", "dark-mode"]
     },
     {
       "file": "app.ts",
-      "description": "Точка входа: NConfigProvider с themeOverrides/locale/darkTheme, тёмный режим по классу .dark (общий флаг с Tailwind), вложенные provider'ы modal/dialog/message внутри config-provider",
+      "description": "Entry point: NConfigProvider with themeOverrides/locale/darkTheme, dark mode by class .dark (common flag with Tailwind), nested provider's modal/dialog/message inside config-provider",
       "tags": ["entry-point", "nconfigprovider", "dark-theme", "providers", "locale"]
     }
   ]

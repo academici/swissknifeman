@@ -1,7 +1,7 @@
-// Source: tokens.json spacing.* → типизированный доступ. Замена магическим числам отступов.
+// Source: tokens.json spacing.* → typed access. Replacement for magic indentation numbers.
 import 'package:flutter/widgets.dart';
 
-/// spacing.* из Figma Variables (4px grid). Использовать вместо литералов в Padding/SizedBox.
+/// spacing.* from Figma Variables (4px grid). Use instead of literals in Padding/SizedBox.
 @immutable
 class AppSpacing {
   const AppSpacing();
@@ -18,5 +18,5 @@ extension AppSpacingContext on BuildContext {
   AppSpacing get space => spacing;
 }
 
-// Пример: Padding(padding: EdgeInsets.all(context.space.md), child: ...)
-// itemSpacing из Figma → Column(spacing: context.space.sm, children: [...])  // Flutter 3.27+
+// Example: Padding(padding: EdgeInsets.all(context.space.md), child: ...)
+// itemSpacing from Figma → Column(spacing: context.space.sm, children: [...])  // Flutter 3.27+

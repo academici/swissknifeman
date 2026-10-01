@@ -1,8 +1,8 @@
-"""Тесты артефактов плагина Claude Code: манифест, marketplace, .mcp.json, slash-команды.
+"""Plugin artifact tests Claude Code: manifest, marketplace, .mcp.json, slash-commands.
 
-Плагин — тонкое лицо над CLI (commands/*.md зовут `maind`). Тест проверяет, что
-статические артефакты в репозитории валидны и консистентны между собой (имена,
-пути, ссылки), чтобы битый манифест ловился до установки плагина."""
+Plugin - thin face over CLI (commands/*.md name `maind`). The test verifies that
+static artifacts in the repository are valid and consistent with each other (names,
+paths, links), so that a broken manifest is caught before installing the plugin."""
 import json
 import unittest
 from pathlib import Path
@@ -17,7 +17,7 @@ def _load_json(path):
 
 
 def _frontmatter(text):
-    """Тело YAML-фронтматтера (между первыми двумя '---') или None."""
+    """Body YAML-frontmatter (between the first two '---') or None."""
     if not text.startswith("---"):
         return None
     parts = text.split("---", 2)
@@ -28,27 +28,27 @@ class TestPluginManifest(unittest.TestCase):
     def test_plugin_json_valid_and_links_exist(self):
         m = _load_json(PLUGIN_DIR / "plugin.json")
         self.assertEqual(m["name"], "maind")
-        # Claude Code plugin schema: commands — массив путей.
-        self.assertIsInstance(m.get("commands"), list, "commands должен быть массивом путей")
-        self.assertTrue((ROOT / "commands").is_dir(), "нет каталога commands/")
-        # Плагин — ТОЛЬКО скиллы/команды (slash → CLI). MCP-сервера в плагине нет:
-        # per-project `maind` приходит из .mcp.json проекта (project-линза), а ecosystem-факт
-        # пишется явным scope:"global". Иначе плагин дублировал бы тулсет `maind_*` в каждой
-        # сессии вторым `maind-hub`-сервером (--scope global) — устранённая путаница.
-        self.assertNotIn("mcpServers", m, "плагин maind = только команды, без MCP-сервера")
+        # Claude Code plugin schema: commands — array of paths.
+        self.assertIsInstance(m.get("commands"), list, "commands must be an array of paths")
+        self.assertTrue((ROOT / "commands").is_dir(), "no directory commands/")
+        # Plugin - ONLY skills/commands (slash → CLI). MCP-there is no server in the plugin:
+        # per-project `maind` comes from .mcp.json project (project-lens), a ecosystem-fact
+        # is written explicitly scope:"global". Otherwise the plugin would duplicate the toolset `maind_*` in each
+        # session second `maind-hub`-server (--scope global) — confusion cleared.
+        self.assertNotIn("mcpServers", m, "plugin maind = commands only, without MCP-server")
 
     def test_marketplace_valid_and_consistent(self):
-        # В монорепо marketplace.json — единый, в КОРНЕ репо (его генерит swissknifeman
-        # registry, добавляя maind как sibling-пакет). Собственного marketplace у maind нет.
+        # In monorepo marketplace.json — single, in the ROOT of the repo (generates it swissknifeman
+        # registry, adding maind like sibling-package). Own marketplace y maind no.
         repo_root = next((c for c in (ROOT, *ROOT.parents) if (c / ".git").exists()), None)
         mk_file = (repo_root / ".claude-plugin" / "marketplace.json") if repo_root else None
         if not mk_file or not mk_file.is_file():
-            self.skipTest("корневой marketplace.json не найден (standalone-раскладка)")
+            self.skipTest("root marketplace.json not found (standalone-layout)")
         mk = _load_json(mk_file)
         entry = next((p for p in mk["plugins"] if p["name"] == "maind"), None)
-        self.assertIsNotNone(entry, "maind отсутствует в корневом marketplace")
+        self.assertIsNotNone(entry, "maind is missing from root marketplace")
         self.assertEqual(entry["source"], "./packages/maind")
-        # имя плагина в marketplace совпадает с plugin.json (install: maind@<marketplace>)
+        # plugin name in marketplace matches plugin.json (install: maind@<marketplace>)
         self.assertEqual(entry["name"], _load_json(PLUGIN_DIR / "plugin.json")["name"])
 
 
@@ -56,21 +56,21 @@ class TestPluginCommands(unittest.TestCase):
     def test_all_commands_present_with_frontmatter(self):
         for name in COMMANDS:
             path = ROOT / "commands" / f"{name}.md"
-            self.assertTrue(path.is_file(), f"нет команды: {path}")
+            self.assertTrue(path.is_file(), f"no command: {path}")
             fm = _frontmatter(path.read_text(encoding="utf-8"))
-            self.assertIsNotNone(fm, f"{name}.md без YAML-фронтматтера")
-            self.assertIn("description:", fm, f"{name}.md без description")
-            # YAML-значение с незакавыченным двоеточием не парсится Claude Code
-            # (ловим до установки плагина — урок миграции монорепо).
+            self.assertIsNotNone(fm, f"{name}.md without YAML-frontmatter")
+            self.assertIn("description:", fm, f"{name}.md without description")
+            # YAML-value with unquoted colon is not parsed Claude Code
+            # (catch before installing the plugin - monorepo migration lesson).
             for line in fm.splitlines():
                 if line.startswith("description:"):
                     val = line[len("description:"):].strip()
                     if ":" in val and not (val.startswith('"') or val.startswith("'")):
-                        self.fail(f"{name}.md: description c двоеточием без кавычек — "
-                                  f"битый YAML-frontmatter")
+                        self.fail(f"{name}.md: description c with a colon without quotes - "
+                                  f"broken YAML-frontmatter")
 
     def test_action_commands_preview_then_apply(self):
-        # мутирующая команда обязана сперва dry-run, затем неинтерактивный --yes
+        # the mutating command must first dry-run, then non-interactive --yes
         onboard = (ROOT / "commands" / "onboard.md").read_text(encoding="utf-8")
         self.assertIn("--dry-run", onboard)
         self.assertIn("--yes", onboard)

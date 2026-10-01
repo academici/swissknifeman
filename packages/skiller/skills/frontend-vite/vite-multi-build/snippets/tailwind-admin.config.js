@@ -1,6 +1,6 @@
 // Source: anonymized production Laravel project
-// Tailwind-конфиг АДМИНКИ: жёсткий пресет Filament, content — только Filament-файлы.
-// Не добавлять сюда тему приложения: пресет Filament несовместим с произвольными overrides.
+// Tailwind-ADMIN config: hard preset Filament, content — only Filament-files.
+// Do not add application theme here: preset Filament is not compatible with arbitrary overrides.
 
 import preset from './vendor/filament/filament/tailwind.config.preset';
 

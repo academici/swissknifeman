@@ -34,7 +34,7 @@ selected plan and a separately requested design/review boundary.
 Rules common to layouts v1 and v2:
 
 - New plans use `YYYY.MM.DD-№N-CODENAME` with a positive ordinal unique within that date;
-  Meta `Title` starts with `План №N — …`. Never guess `№N` or `PLAN<N>`: run
+  Meta `Title` starts with `Plan №N - ...`. Never guess `№N` or `PLAN<N>`: run
   `python3 packages/task/scripts/plan-id.py --codename <NAME>` (scans `plans/` and `plans/archive/`)
   and use its `plan_id`, `title_prefix` and `short_id` verbatim. Historical plan IDs remain readable and are never renamed.
 - New persisted work has a stable repository-local `Short ID` (`PLAN1` plan, `TASK1` task).
@@ -55,12 +55,12 @@ Rules common to layouts v1 and v2:
 - Design finish requires each detailed phase's linked implementation dossier, verified research
   note, concrete examples and retrieval/no-search provenance; every item digest-binds the normative
   three through `Inputs`. Read the design-mode reference for exact paths and trust boundaries.
-- A phase skeleton starts with `> СКЕЛЕТ — не детализирован`; execution requires a detailed item.
+- A phase skeleton starts with `> SKELETON — not detailed`; execution requires a detailed item.
 - Plans are Markdown SSOT. JSON is a contract, bundle, append-only event stream, or derived view,
   never an alternate handwritten plan. A sealed journal may be rewritten only by an accepted
   Owner-D# `journal-migration/v1` whose complete preimage, per-line operations, source/target
   digests and receipt remain in `journal-migrations/`; ordinary repair stays append-only.
-- Re-opened phase handoff starts with `> УСТАРЕЛ — фаза реопенена`.
+- Re-opened phase handoff starts with `> DEPRECATED — phase reopened`.
 
 ## 2. Layout selection and read paths
 
@@ -120,7 +120,7 @@ There are EXACTLY 6 canonical strings:
 Terminal statuses are 🟢, 🟠, 🔴, and ⛔. Use 🟢 only when every acceptance condition is green
 and scope stayed within the contract. Use 🟠 for material delivered deviations. Use 🔴 only at a
 genuine authority/capability boundary, not for an ordinary repairable failure. `⛔` requires an
-explicit owner decision. When a stopped item can resume, record `Возобновление:` with the exact
+explicit owner decision. When a stopped item can resume, record `Resume:` with the exact
 condition.
 
 Before execution: the item has concrete intent/scope/inputs/files/validation/deliverables, all
@@ -212,7 +212,7 @@ Validation plus a closed `recoverable-validation-gap/v1` record proving why a
 material/outside-scope/unsafe residual cannot be repaired in this attempt.
 `blocked`/`escalated` requires an authority or block reducer terminal action. Completion Notes carry
 exact evidence; a cancelling/superseding decision adds `## Consequences`.
-Use the decision-record template's YAML metadata and literal `Решение` / `Почему` headings;
+Use the decision-record template's YAML metadata and literal `Decision` / `Rationale` headings;
 terminal preparation rejects invalid decision records before appending the journal event.
 Before journal/product mutation, derive `evidence-graph/v1` from the committed item spec, bundle,
 decisions, producer-readiness and declared Files. A real `Files ∩ digest_inputs` collision with a
@@ -261,8 +261,13 @@ rewrites the RED/blocked item history, audit evidence, or release authorization.
 Model order is `economy < implementation < frontier`; effort order is `low < medium < high < xhigh`.
 Compare both independently: undershoot, ambiguity, or unsupported capability blocks before mutation;
 overshoot is only recorded (`over`), never a stop. Fixed design uses frontier/high; xhigh is recorded. Frozen-spec implementation normally uses implementation/high; frontier is for
-open design or irreversible choices. Routing rows are
-`| Batch | Items | Model class/effort | Exec | Review | Почему |`; `Exec` is `run` or `plan-design`
+open design or irreversible choices. Routing rows use this exact shape:
+
+| Batch | Items | Model class/effort | Exec | Review | Why |
+|:--|:--|:--|:--|:--|:--|
+| solo | P1.1 | implementation/high | run | none | required: isolated ownership boundary |
+
+`Exec` is `run` or `plan-design`
 (legacy `plan-exec`, `manual` and `plan-run` are accepted as `run`). Model pool: Routing declares only a minimum semantic class/effort. Any model whose entry in
 `command-routing.json` `model_inventory` covers that class is admitted: roles overlap, the admitted
 class is the highest class among them, and an entry matches by id, `aliases` or regex `patterns`
@@ -271,7 +276,7 @@ class is the highest class among them, and an entry matches by id, `aliases` or 
 `status: retired` to leave the pool. Execution-sheet Executor/Reviewer cells are recommended
 defaults, not admission contracts. Only a lower class stops (`ROUTE_UNDERSHOOT`).
 Review shape is part of the plan, not an item ritual: item Review defaults to `none` (self-check and
-affected tests). Independent review is a dedicated read-only review item (`Ревью Pn`, numeric `Pn.m`,
+affected tests). Independent review is a dedicated read-only review item (`Review Pn`, numeric `Pn.m`,
 Exec `run`, Deliverable = verdict file) at the end of a phase; a large phase gets slice review
 items between slices. Never put `Independent review` into an item's Validation. Findings get one
 owning correction; the re-review checks only the findings. The reviewer is a fresh session; another
@@ -296,14 +301,14 @@ binds this record to a `route-run-receipt/v1`; pre-final reloads that receipt, r
 provider route, and rejects a changed, stale, or cross-session run.
 
 For every new layout-v2 plan, `Batch` and `Review` are mandatory and Routing covers every item.
-`Batch=solo` means one independently launched item and its `Почему` must name the concrete boundary
+`Batch=solo` means one independently launched item and its `Rationale` must name the concrete boundary
 that makes reuse uneconomic or unsafe. Otherwise group adjacent items of one phase when they share
 a producer/consumer chain, files, required reads, setup, or validation context and one session saves
 more rereading/setup than it adds coupling. Do not split merely because items have separate commits,
 deliverables, or per-item close gates: those gates still run inside the batch. A batch never crosses
 a phase audit/close boundary, mixes `Exec` modes, hides an owner/irreversible gate, or exceeds the
 remaining context budget. Its launch route and review are the maxima of its rows and capabilities are
-the union. New ordinary groups start their `Почему` with `recommended:`: grouping is a recommendation,
+the union. New ordinary groups start their `Rationale` with `recommended:`: grouping is a recommendation,
 and a ready subset or dependency-safe order is admitted with current input/readiness checks.
 Keep checkpoints in the existing journal. Explicit atomic/mandatory groups use `required:`;
 historical unmarked groups and their receipts keep exact membership/order or bound suffix
@@ -334,10 +339,10 @@ Semantic Next is one of `run-items`, `exec-items` (legacy alias), `audit-design`
 `waiting`; its command is the corresponding `task:plan-*` form. Manual carries a bare prompt;
 waiting carries its executable condition and target form.
 
-Historical `/task:…`, `ЗАПУСК ВРУЧНУЮ:`, and `ОЖИДАНИЕ:` inputs remain compatible. New handoffs
+Historical localized launch markers remain compatible. New handoffs
 store the provider-neutral semantic form and separately render Claude `/task:…` or Codex
-`$ task:…`. A waiting launch includes `# НЕ раньше:`. Audit findings include, in order,
-`РЕЖИМ:`, `ВХОД:`, `СКОУП:`, `НЕ ТРОГАТЬ:`; an audit block declares `Вердикт:`.
+`$ task:…`. A waiting launch includes `# NOT BEFORE:`. Audit findings include, in order,
+`MODE:`, `INPUT:`, `SCOPE:`, `DO NOT TOUCH:`; an audit block declares `Verdict:`.
 
 A GREEN item closes inside its `plan-run` invocation: persist terminal evidence and
 journal, regenerate changed views, and, when it is the final item of a directly closable phase,
@@ -366,12 +371,12 @@ fresh checkpoint and renders the post-close successor. A previous `continue-root
 that request. Separate design/review requests remain within their requested artifact boundary.
 
 At a fresh-session executable handoff, provide a metadata table with Batch, Model class, Effort,
-Capabilities, Context, and Суть; the table never carries the invocation. Immediately after it,
+Capabilities, Context, and Essence; the table never carries the invocation. Immediately after it,
 render exactly one copyable provider-native command block for the active provider adapter. Claude
 Code emits its native slash form; Codex emits a `bash` block that launches `codex` with pinned cwd,
 model, effort, approval, and sandbox. Never infer the provider from an example and never print both
-native providers. For `waiting`, preserve the exact gate before the block with `# НЕ раньше:`.
-Manual carries a fenced bare prompt instead. Legacy table rows named `Команда` remain readable for
+native providers. For `waiting`, preserve the exact gate before the block with `# NOT BEFORE:`.
+Manual carries a fenced bare prompt instead. Legacy localized command rows remain readable for
 old plans but are never emitted. Non-execution Next uses `Batch: n/a`.
 
 For layout v2 the Context field carries EXACTLY one of three values:
@@ -403,7 +408,7 @@ Before a terminal response, `plan-run` and `plan-close` build a
 and exact persisted handoff recommendation. A nonterminal or stale carrier returns
 `FINAL_BEFORE_TERMINAL_FORBIDDEN` and keeps the dispatch active. Design/audit delivery builds the
 non-product `handoff-recommendation-receipt/v1`. Every final response labels
-`Рекомендация следующего шага:` and copies the receipt's exact recommendation; a bare item ID
+`Next-step recommendation:` and copies the receipt's exact recommendation; a bare item ID
 is not a delivery receipt. Build it only after same-invocation item/eligible-phase closure, so its
 recommendation cannot point back to that closure or current item. Use the shared renderer via
 `plan-delivery.py --kind terminal --render-final` (with plan directory and subject, or a verified
@@ -479,30 +484,10 @@ provider files are additive adapters.
 
 ## Canon literals
 
-<!-- i18n-keep: Closure Protocol -->
-<!-- i18n-keep: Поле | Значение -->
-<!-- i18n-keep: Items 🟢/всего -->
-<!-- i18n-keep: D# | Дата | Решение | Почему -->
-<!-- i18n-keep: Дата | Кто (role/model) | Что -->
-<!-- i18n-keep: Контракт | Версия | Статус | Потребители | Уведомлены -->
-<!-- i18n-keep: Контракт | Донор-план | Pinned | Замечено | Реакция -->
-<!-- i18n-keep: Команда -->
-<!-- i18n-keep: > СКЕЛЕТ — не детализирован -->
-<!-- i18n-keep: ЗАПУСК ВРУЧНУЮ -->
-<!-- i18n-keep: [NEEDS CLARIFICATION -->
-<!-- i18n-keep: RAG:✅ -->
-<!-- i18n-keep: RAG:— -->
-<!-- i18n-keep: [UNVERIFIED] -->
-<!-- i18n-keep: план закрыт -->
-<!-- i18n-keep: > УСТАРЕЛ — фаза реопенена -->
-<!-- i18n-keep: ОЖИДАНИЕ: -->
-<!-- i18n-keep: Вердикт: -->
-<!-- i18n-keep: РЕЖИМ: -->
-<!-- i18n-keep: ВХОД: -->
-<!-- i18n-keep: СКОУП: -->
-<!-- i18n-keep: НЕ ТРОГАТЬ: -->
-<!-- i18n-keep: pre_mutation: -->
-<!-- i18n-keep: pre_final: -->
-<!-- i18n-keep: write-site: -->
-<!-- i18n-keep: **Consequences:** -->
-<!-- i18n-keep: Возобновление: -->
+<!-- i18n-keep: Field | Meaning --><!-- i18n-keep: Items 🟢/total --><!-- i18n-keep: D# | Date | Solution | Why --><!-- i18n-keep: Date | Who (role/model) | What -->
+<!-- i18n-keep: Contract | Version | Status | Consumers | Notified --><!-- i18n-keep: Contract | Donor plan | Pinned | Spotted | Reaction --><!-- i18n-keep: > SKELETON — not detailed --><!-- i18n-keep: MANUAL START -->
+<!-- i18n-keep: [NEEDS CLARIFICATION --><!-- i18n-keep: RAG:✅ --><!-- i18n-keep: RAG:— --><!-- i18n-keep: [UNVERIFIED] -->
+<!-- i18n-keep: plan closed --><!-- i18n-keep: > DEPRECATED — phase reopened --><!-- i18n-keep: WAITING: --><!-- i18n-keep: Verdict: -->
+<!-- i18n-keep: MODE: --><!-- i18n-keep: ENTRANCE: --><!-- i18n-keep: SCORE: --><!-- i18n-keep: DO NOT TOUCH: -->
+<!-- i18n-keep: pre_mutation: --><!-- i18n-keep: pre_final: --><!-- i18n-keep: write-site: --><!-- i18n-keep: Closure Protocol -->
+<!-- i18n-keep: **Consequences:** --><!-- i18n-keep: Resume: --><!-- i18n-keep: Command -->

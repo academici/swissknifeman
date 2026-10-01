@@ -57,7 +57,7 @@ class PlanContextSnapshot:
         for member in self.members:
             if member.role == role:
                 return member
-        raise PlanContextError("PLAN_CONTEXT_TRUNCATED", f"неизвестный носитель {role!r}")
+        raise PlanContextError("PLAN_CONTEXT_TRUNCATED", f"unknown media {role!r}")
 
     def assert_live_integrity(self) -> None:
         """Refuse continuation if the live source stopped matching the snapshot."""
@@ -67,21 +67,21 @@ class PlanContextSnapshot:
             except OSError as exc:
                 raise PlanContextError(
                     "PLAN_CONTEXT_DIGEST_MISMATCH",
-                    f"носитель изменился или не читается: {member.path}") from exc
+                    f"media has changed or is unreadable: {member.path}") from exc
             if sha256(current).hexdigest() != member.sha256:
                 raise PlanContextError(
                     "PLAN_CONTEXT_DIGEST_MISMATCH",
-                    f"носитель изменился после snapshot: {member.path}")
+                    f"media changed after snapshot: {member.path}")
 
     def chunk(self, role: str, *, offset: int, limit: int) -> dict:
         """Return a byte-addressed chunk plus a terminal proof when it is complete."""
         member = self._member(role)
         if isinstance(offset, bool) or not isinstance(offset, int) or offset < 0:
-            raise PlanContextError("PLAN_CONTEXT_TRUNCATED", "offset должен быть неотрицательным int")
+            raise PlanContextError("PLAN_CONTEXT_TRUNCATED", "offset must be non-negative int")
         if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
-            raise PlanContextError("PLAN_CONTEXT_TRUNCATED", "limit должен быть положительным int")
+            raise PlanContextError("PLAN_CONTEXT_TRUNCATED", "limit must be positive int")
         if offset > len(member.content):
-            raise PlanContextError("PLAN_CONTEXT_TRUNCATED", "offset выходит за пределы snapshot")
+            raise PlanContextError("PLAN_CONTEXT_TRUNCATED", "offset goes beyond snapshot")
         self.assert_live_integrity()
         next_offset = min(offset + limit, len(member.content))
         complete = next_offset == len(member.content)
@@ -115,9 +115,9 @@ def _snapshot_sha(members: tuple[SnapshotMember, ...], plan_dir: Path) -> str:
 
 def _paths(plan_dir: Path, item_id: str) -> tuple[tuple[str, Path], ...]:
     if plan_layout.layout_version(plan_dir) != "v2":
-        raise PlanContextError("PLAN_LAYOUT_V1_RETIRED", "исполняется только Layout v2")
+        raise PlanContextError("PLAN_LAYOUT_V1_RETIRED", "is executed only Layout v2")
     if not _ITEM.fullmatch(item_id):
-        raise PlanContextError("PLAN_CONTEXT_TRUNCATED", "item должен иметь форму Pn.m")
+        raise PlanContextError("PLAN_CONTEXT_TRUNCATED", "item should be of the form Pn.m")
     phase_id = item_id.split(".")[0]
     return (
         ("plan-core", plan_layout.plan_core_path(plan_dir)),
@@ -140,7 +140,7 @@ def capture(plan_dir, item_id: str) -> PlanContextSnapshot:
             content = path.read_bytes()
         except OSError as exc:
             raise PlanContextError(
-                "PLAN_CONTEXT_TRUNCATED", f"носитель не читается: {path}") from exc
+                "PLAN_CONTEXT_TRUNCATED", f"media is not readable: {path}") from exc
         members.append(SnapshotMember(role, path, content, sha256(content).hexdigest()))
     frozen = tuple(members)
     return PlanContextSnapshot(root, item_id, frozen, _snapshot_sha(frozen, root))
@@ -151,14 +151,14 @@ def validate_chunks(snapshot: PlanContextSnapshot, chunks: list[dict]) -> None:
     by_role = {role: [] for role in _ROLES}
     for chunk in chunks:
         if not isinstance(chunk, dict) or chunk.get("snapshot_sha256") != snapshot.snapshot_sha256:
-            raise PlanContextError("PLAN_CONTEXT_TRUNCATED", "chunk не связан с snapshot")
+            raise PlanContextError("PLAN_CONTEXT_TRUNCATED", "chunk is not associated with snapshot")
         role = chunk.get("role")
         if role not in by_role:
-            raise PlanContextError("PLAN_CONTEXT_TRUNCATED", "chunk содержит неизвестный носитель")
+            raise PlanContextError("PLAN_CONTEXT_TRUNCATED", "chunk contains unknown media")
         by_role[role].append(chunk)
     for role, expected in by_role.items():
         if not expected:
-            raise PlanContextError("PLAN_CONTEXT_TRUNCATED", f"нет chunk для {role}")
+            raise PlanContextError("PLAN_CONTEXT_TRUNCATED", f"no chunk for {role}")
         member = snapshot._member(role)
         member_path = member.path.relative_to(snapshot.plan_dir).as_posix()
         cursor = 0
@@ -173,31 +173,31 @@ def validate_chunks(snapshot: PlanContextSnapshot, chunks: list[dict]) -> None:
                     or chunk.get("member_sha256") != member.sha256):
                 raise PlanContextError(
                     "PLAN_CONTEXT_DIGEST_MISMATCH",
-                    f"path/member digest не совпадает со snapshot для {role}")
+                    f"path/member digest does not match snapshot for {role}")
             if (isinstance(offset, bool) or not isinstance(offset, int)
                     or isinstance(next_offset, bool) or not isinstance(next_offset, int)
                     or offset != cursor or not isinstance(content, bytes)):
-                raise PlanContextError("PLAN_CONTEXT_TRUNCATED", f"gap или transport truncation в {role}")
+                raise PlanContextError("PLAN_CONTEXT_TRUNCATED", f"gap or transport truncation in {role}")
             if terminal_seen or next_offset != offset + len(content) \
                     or next_offset > len(member.content):
                 raise PlanContextError(
-                    "PLAN_CONTEXT_TRUNCATED", f"overlap/repeat/неверный end в {role}")
+                    "PLAN_CONTEXT_TRUNCATED", f"overlap/repeat/is invalid end in {role}")
             complete = chunk.get("complete")
             if not isinstance(complete, bool) or complete != (next_offset == len(member.content)):
-                raise PlanContextError("PLAN_CONTEXT_TRUNCATED", f"неверный terminal state в {role}")
+                raise PlanContextError("PLAN_CONTEXT_TRUNCATED", f"is invalid terminal state in {role}")
             if complete:
                 if (index != len(expected) - 1
                         or chunk.get("terminal_marker") != TERMINAL_MARKER):
-                    raise PlanContextError("PLAN_CONTEXT_TRUNCATED", f"chunk после terminal в {role}")
+                    raise PlanContextError("PLAN_CONTEXT_TRUNCATED", f"chunk after terminal in {role}")
                 terminal_seen = True
             elif "terminal_marker" in chunk:
-                raise PlanContextError("PLAN_CONTEXT_TRUNCATED", f"ранний terminal marker в {role}")
+                raise PlanContextError("PLAN_CONTEXT_TRUNCATED", f"early terminal marker in {role}")
             reconstructed.extend(content)
             cursor = next_offset
         if cursor != len(member.content) or not terminal_seen:
-            raise PlanContextError("PLAN_CONTEXT_TRUNCATED", f"нет terminal marker для {role}")
+            raise PlanContextError("PLAN_CONTEXT_TRUNCATED", f"no terminal marker for {role}")
         rebuilt = bytes(reconstructed)
         if rebuilt != member.content or sha256(rebuilt).hexdigest() != member.sha256:
             raise PlanContextError(
-                "PLAN_CONTEXT_DIGEST_MISMATCH", f"восстановленные bytes не совпадают для {role}")
+                "PLAN_CONTEXT_DIGEST_MISMATCH", f"restored bytes do not match for {role}")
     snapshot.assert_live_integrity()

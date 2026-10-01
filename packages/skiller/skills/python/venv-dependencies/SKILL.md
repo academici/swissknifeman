@@ -45,7 +45,7 @@ sha256: ""
 
 ## .gitignore — must include venvs + compiled bytecode
 ```gitignore
-# Виртуальные окружения
+# Virtual Environments
 .env/
 .venv/
 env/
@@ -62,7 +62,7 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints
 
-# Локальные переменные среды
+# Local environment variables
 .env
 ```
 

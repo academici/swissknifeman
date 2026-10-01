@@ -38,13 +38,13 @@ class AssuranceError(ValueError):
 def parse(text: str) -> dict:
     """Parse exactly one handwritten Phase Assurance block from phase Markdown."""
     if not isinstance(text, str):
-        raise AssuranceError("PHASE_ASSURANCE_INVALID", "carrier должен быть текстом")
+        raise AssuranceError("PHASE_ASSURANCE_INVALID", "carrier must be text")
     lines = text.splitlines()
     starts = [index for index, line in enumerate(lines) if line.strip() == _HEADER]
     if not starts:
-        raise AssuranceError("PHASE_ASSURANCE_MISSING", "отсутствует `Phase Assurance | v1`")
+        raise AssuranceError("PHASE_ASSURANCE_MISSING", "missing `Phase Assurance | v1`")
     if len(starts) != 1:
-        raise AssuranceError("PHASE_ASSURANCE_DUPLICATE", "Phase Assurance | v1 объявлен более одного раза")
+        raise AssuranceError("PHASE_ASSURANCE_DUPLICATE", "Phase Assurance | v1 declared more than once")
     values: dict[str, str] = {}
     for line in lines[starts[0] + 1:]:
         if not line.startswith(">"):
@@ -54,31 +54,31 @@ def parse(text: str) -> dict:
             continue
         key, value = match.groups()
         if key in values:
-            raise AssuranceError("PHASE_ASSURANCE_DUPLICATE_FIELD", f"поле {key!r} повторено")
+            raise AssuranceError("PHASE_ASSURANCE_DUPLICATE_FIELD", f"field {key!r} repeated")
         values[key] = value.strip()
     required = ("Impact", "Integration Seams", "Live or Irreversible", "Audit Intent", "Rationale")
     missing = [field for field in required if field not in values]
     if missing:
-        raise AssuranceError("PHASE_ASSURANCE_FIELD_MISSING", f"отсутствуют поля: {', '.join(missing)}")
+        raise AssuranceError("PHASE_ASSURANCE_FIELD_MISSING", f"missing fields: {', '.join(missing)}")
     impact = values["Impact"]
     intent = _LEGACY_AUDIT_INTENT_NORMALIZATIONS.get(values["Audit Intent"], values["Audit Intent"])
     if impact not in IMPACTS:
-        raise AssuranceError("PHASE_ASSURANCE_IMPACT_INVALID", f"Impact {impact!r} вне закрытого enum")
+        raise AssuranceError("PHASE_ASSURANCE_IMPACT_INVALID", f"Impact {impact!r} outside closed enum")
     if intent not in AUDIT_INTENTS:
-        raise AssuranceError("PHASE_ASSURANCE_INTENT_INVALID", f"Audit Intent {intent!r} вне закрытого enum")
+        raise AssuranceError("PHASE_ASSURANCE_INTENT_INVALID", f"Audit Intent {intent!r} outside closed enum")
     live = _LEGACY_LIVE_NORMALIZATIONS.get(
         values["Live or Irreversible"], values["Live or Irreversible"])
     if live not in {"yes", "no"}:
-        raise AssuranceError("PHASE_ASSURANCE_LIVE_INVALID", "Live or Irreversible ожидает yes/no")
+        raise AssuranceError("PHASE_ASSURANCE_LIVE_INVALID", "Live or Irreversible awaits yes/no")
     raw_seams = values["Integration Seams"]
     seams = () if raw_seams == "—" else tuple(part.strip(" `") for part in raw_seams.split("·"))
     if any(not seam or not _SEAM_RE.fullmatch(seam) for seam in seams):
-        raise AssuranceError("PHASE_ASSURANCE_SEAMS_INVALID", "Integration Seams ожидает `—` или stable seam-id")
+        raise AssuranceError("PHASE_ASSURANCE_SEAMS_INVALID", "Integration Seams awaits `—` or stable seam-id")
     if len(set(seams)) != len(seams):
-        raise AssuranceError("PHASE_ASSURANCE_SEAMS_DUPLICATE", "Integration Seams не должен повторяться")
+        raise AssuranceError("PHASE_ASSURANCE_SEAMS_DUPLICATE", "Integration Seams should not be repeated")
     rationale = values["Rationale"]
     if not rationale or rationale == "—":
-        raise AssuranceError("PHASE_ASSURANCE_RATIONALE_REQUIRED", "Rationale обязателен")
+        raise AssuranceError("PHASE_ASSURANCE_RATIONALE_REQUIRED", "Rationale required")
     return {
         "schema_version": "phase-assurance/v1",
         "impact": impact,
@@ -197,9 +197,9 @@ def evaluate(plan_dir: Path | str, phase_id: str, *, candidate: dict | None,
             }
         else:
             assurance = None
-            diagnostics.append(f"{exc.code}: Phase Assurance advisory; исправьте явно объявленный блок")
+            diagnostics.append(f"{exc.code}: Phase Assurance advisory; fix explicitly declared block")
     if assurance and assurance["audit_intent"] in {"required", "legacy-light", "auto"}:
-        diagnostics.append("PHASE_AUDIT_INTENT_ADVISORY: legacy Audit Intent не назначает audit; default direct-close")
+        diagnostics.append("PHASE_AUDIT_INTENT_ADVISORY: legacy Audit Intent does not assign audit; default direct-close")
     heads = candidate.get("terminal_item_heads") if isinstance(candidate, dict) else None
     risks = candidate.get("material_risks") if isinstance(candidate, dict) else None
     if (not isinstance(candidate, dict) or candidate.get("phase_id") != phase_id
@@ -238,7 +238,7 @@ def evaluate(plan_dir: Path | str, phase_id: str, *, candidate: dict | None,
                          assurance=assurance, impact=impact, admission=admission,
                          audit_required=True, diagnostics=diagnostics)
     if risks:
-        diagnostics.append("AUDIT_RECOMMENDATION: уточните непокрытый вопрос и адресное согласие; material-risk сам не назначает audit")
+        diagnostics.append("AUDIT_RECOMMENDATION: clarify the open question and address consent; material-risk does not assign itself audit")
     action = "gate-rebind" if impact and impact["classification"] == "audit-bookkeeping" else "direct-close"
     return _decision(plan_dir=plan_dir, phase_id=phase_id, action=action,
                      code="PHASE_DIRECT_CLOSE_ASSURED", reasons=["green-acceptance-no-approved-audit"],

@@ -1,21 +1,21 @@
-# Claude: компактизация SKILL.md
+# Claude: compaction SKILL.md
 
-Перепиши приложенный `SKILL.md` компактнее без потери смысла. Цель — снизить
-ярус-0 ⊕ always (описание) и ярус-1 ↻ on-trigger (тело).
+Rewrite the attached `SKILL.md` is more compact without losing its meaning. The goal is to reduce
+tier-0 ⊕ always (description) and tier-1 ↻ on-trigger (body).
 
-## Правила
-1. Удали вводную воду («Этот скилл предназначен для…»).
-2. Абзацы-инструкции → bullet-points.
-3. Удали примеры, дублирующие уже сформулированное правило; крупные примеры —
-   вынеси в `snippets/` (со ссылкой из тела).
-4. `description` — оставь конкретику (когда применять), убери общие слова.
-5. Code-блоки не трогай по смыслу.
-6. Frontmatter: убери `_comment`-строки; поля схемы сохрани.
+## Rules
+1. Remove inlet water («This skill is intended for…»).
+2. Instructional paragraphs → bullet-points.
+3. Remove examples that duplicate an already formulated rule; large examples -
+   take it out to `snippets/` (with link from body).
+4. `description` — leave specifics (when to use), remove common words.
+5. Code-do not touch the blocks for the purpose.
+6. Frontmatter: remove `_comment`-strings; Save the schema fields.
 
-## Выведи
-1. Компактный `SKILL.md`.
-2. Статистику: было X строк / стало Y / экономия Z%.
-3. Что вынесено в `snippets/` и что удалено как дубль.
+## Output
+1. Compact `SKILL.md`.
+2. Statistics: was X lines / became Y / savings Z%.
+3. What is included in `snippets/` and what was removed as a duplicate.
 
-> Проверь до/после: `skiller budget --config <твой>.json` (или карту
-> `docs/guide/budget.md` после `skiller registry`).
+> Check before/after: `skiller budget --config <yours>.json` (or map
+> `docs/guide/budget.md` after `skiller registry`).

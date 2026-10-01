@@ -1,20 +1,20 @@
-"""analyst ingest — приём findings агента-аналитика (/analyst:deep) в ephemeral-уроки.
+"""analyst ingest — reception findings agent-analyst (/analyst:deep) in ephemeral-lessons.
 
-Агент — рассуждающий слой (каузальный нарратив, resolve CONFLICT, тексты remediation);
-этот модуль — его единственная дверь в стор уроков, и дверь узкая (инварианты пакета):
+Agent - reasoning layer (causal narrative, resolve CONFLICT, texts remediation);
+this module is its only door to the lesson store, and the door is narrow (package invariants):
 
-- **валидация ДО первого побочного эффекта**: весь файл findings разбирается и проверяется
-  целиком; невалидный JSON или схема → die БЕЗ единой записи (ни урока, ни audit-строки);
-- **только ephemeral** — enforced кодом, не соглашением: `state` ≠ ephemeral или
-  `detector` ≠ agent-finding в файле → die; запись идёт только через add_candidate
-  (ephemeral) + страховочный assert;
-- **человек в гейте**: `promote_candidate` агента — лишь маркер PROMOTE-CANDIDATE в
-  evidence (виден на `analyst review`), никакого продвижения здесь нет;
-- провенанс — существующим механизмом: audit_append на каждый принятый урок.
+- **validation BEFORE the first side effect**: entire file findings is disassembled and checked
+  whole; invalid JSON or schema → die WITHOUT a single entry (neither lesson nor audit-lines);
+- **only ephemeral** — enforced code, not convention: `state` ≠ ephemeral or
+  `detector` ≠ agent-finding in the file → die; recording occurs only through add_candidate
+  (ephemeral) + safety assert;
+- **man at the gate**: `promote_candidate` agent - just a marker PROMOTE-CANDIDATE in
+  evidence (visible on `analyst review`), no progress here;
+- provenance - using the existing mechanism: audit_append for each lesson accepted.
 
-events.ndjson здесь НЕ пишем осознанно: finding агента — гипотеза, а не верифицированный
-сигнал успеха (в отличие от digest, где тест реально прошёл); confidence урока начнёт
-копиться с последующих наблюдений digest/promote."""
+events.ndjson here we DO NOT write deliberately: finding agent - hypothesis, not verified
+success signal (unlike digest, where the test actually took place); confidence lesson will begin
+accumulate from subsequent observations digest/promote."""
 import json
 import os
 from pathlib import Path
@@ -23,77 +23,77 @@ from .common import die, parse_args
 from .lessons import (ACTIVE_STATES, KINDS, add_candidate, audit_append,
                       classify_consolidation, new_lesson, similar_lessons)
 
-DETECTOR = "agent-finding"   # единственный допустимый детектор уроков агента
+DETECTOR = "agent-finding"   # the only valid agent lesson detector
 PROMOTE_MARK = "PROMOTE-CANDIDATE"
 
-# Схема (строгая: неизвестный ключ = die — ловим дрейф контракта агента, а не глотаем)
+# Schema (strict: unknown key = die — catching the agent's contract drift rather than swallowing it)
 _TOP_KEYS = {"source", "session", "findings"}
 _FINDING_KEYS = {"trigger", "action", "kind", "scope", "evidence", "meta",
                  "review_hint", "session_id", "promote_candidate",
                  "detector", "state", "source"}
 
 
-# ── валидация (чистая: payload → нормализованные findings | ValueError) ──────
+# ── validation (clean: payload → normalized findings | ValueError) ──────
 def validate_findings(payload):
-    """Проверить схему findings-файла целиком и вернуть нормализованный список находок.
+    """Check schema findings-of the entire file and return a normalized list of findings.
 
-    Любое нарушение → ValueError (вызывающий превращает в die) — ДО каких-либо записей.
-    Ephemeral-only и detector=agent-finding защищены здесь кодом: попытка передать иное
-    состояние/детектор — ошибка схемы, а не молчаливая перезапись."""
+    Any violation → ValueError (the caller turns into die) — BEFORE any entries.
+    Ephemeral-only and detector=agent-finding are protected by code here: attempt to convey otherwise
+    status/detector - circuit error, not silent overwrite."""
     if not isinstance(payload, dict):
-        raise ValueError("корень файла — не объект")
+        raise ValueError("file root is not an object")
     unknown = set(payload) - _TOP_KEYS
     if unknown:
-        raise ValueError(f"неизвестные ключи верхнего уровня: {', '.join(sorted(unknown))}")
+        raise ValueError(f"unknown top level keys: {', '.join(sorted(unknown))}")
     if payload.get("source") not in (None, "agent"):
-        raise ValueError(f"source допускает только 'agent', получено: {payload.get('source')!r}")
+        raise ValueError(f"source only allows 'agent', received: {payload.get('source')!r}")
     session = payload.get("session", "")
     if not isinstance(session, str):
-        raise ValueError("session — не строка")
+        raise ValueError("session — is not a string")
     findings = payload.get("findings")
     if not isinstance(findings, list):
-        raise ValueError("findings — не список")
+        raise ValueError("findings — not a list")
 
     out = []
     for i, f in enumerate(findings):
         where = f"findings[{i}]"
         if not isinstance(f, dict):
-            raise ValueError(f"{where}: не объект")
+            raise ValueError(f"{where}: not an object")
         unknown = set(f) - _FINDING_KEYS
         if unknown:
-            raise ValueError(f"{where}: неизвестные ключи: {', '.join(sorted(unknown))}")
+            raise ValueError(f"{where}: unknown keys: {', '.join(sorted(unknown))}")
         trigger = f.get("trigger")
         action = f.get("action")
         if not isinstance(trigger, str) or not trigger.strip():
-            raise ValueError(f"{where}: trigger пуст или не строка")
+            raise ValueError(f"{where}: trigger is empty or not a string")
         if not isinstance(action, str) or not action.strip():
-            raise ValueError(f"{where}: action пуст или не строка")
+            raise ValueError(f"{where}: action is empty or not a string")
         kind = f.get("kind", "heuristic")
         if kind not in KINDS:
-            raise ValueError(f"{where}: kind '{kind}' (допустимо: {', '.join(KINDS)})")
-        # ephemeral-only / agent-finding-only — enforced схемой (die, не молчаливый фикс)
+            raise ValueError(f"{where}: kind '{kind}' (valid: {', '.join(KINDS)})")
+        # ephemeral-only / agent-finding-only — enforced scheme (die, not a silent fix)
         if "state" in f and f["state"] != "ephemeral":
-            raise ValueError(f"{where}: агент пишет ТОЛЬКО ephemeral, получено state={f['state']!r}")
+            raise ValueError(f"{where}: agent writes ONLY ephemeral, received state={f['state']!r}")
         if "detector" in f and f["detector"] != DETECTOR:
-            raise ValueError(f"{where}: detector допускает только '{DETECTOR}', "
-                             f"получено: {f['detector']!r}")
+            raise ValueError(f"{where}: detector only allows '{DETECTOR}', "
+                             f"received: {f['detector']!r}")
         if "source" in f and f["source"] != "agent":
-            raise ValueError(f"{where}: source допускает только 'agent', получено: {f['source']!r}")
+            raise ValueError(f"{where}: source only allows 'agent', received: {f['source']!r}")
         scope = f.get("scope", "")
         if not isinstance(scope, str):
-            raise ValueError(f"{where}: scope — не строка")
+            raise ValueError(f"{where}: scope — is not a string")
         evidence = f.get("evidence", [])
         if not (isinstance(evidence, list) and all(isinstance(e, str) for e in evidence)):
-            raise ValueError(f"{where}: evidence — не список строк")
+            raise ValueError(f"{where}: evidence — is not a list of strings")
         meta = f.get("meta", {})
         if not isinstance(meta, dict):
-            raise ValueError(f"{where}: meta — не объект")
+            raise ValueError(f"{where}: meta — not an object")
         review_hint = f.get("review_hint", "")
         if not isinstance(review_hint, str):
-            raise ValueError(f"{where}: review_hint — не строка")
+            raise ValueError(f"{where}: review_hint — is not a string")
         session_id = f.get("session_id", "")
         if not isinstance(session_id, str):
-            raise ValueError(f"{where}: session_id — не строка")
+            raise ValueError(f"{where}: session_id — is not a string")
         out.append({
             "trigger": trigger, "action": action, "kind": kind, "scope": scope,
             "evidence": list(evidence), "meta": dict(meta), "review_hint": review_hint,
@@ -104,8 +104,8 @@ def validate_findings(payload):
 
 
 def build_lessons(findings, *, scope_default, project):
-    """Нормализованные findings → словари уроков (чистая: без IO). detector/source
-    зашиты константами — агенту неоткуда подменить провенанс."""
+    """Normalized findings → dictionaries lessons (clean: without IO). detector/source
+    are protected by constants - the agent has nowhere to replace the provenance."""
     out = []
     for f in findings:
         evidence = list(f["evidence"])
@@ -113,7 +113,7 @@ def build_lessons(findings, *, scope_default, project):
         if sid and f"session:{sid}" not in evidence:
             evidence.append(f"session:{sid}")
         if f["promote_candidate"] and PROMOTE_MARK not in evidence:
-            evidence.append(PROMOTE_MARK)   # маркер человеку на review; промоут — не здесь
+            evidence.append(PROMOTE_MARK)   # marker to a person on review; promotion - not here
         out.append(new_lesson(
             trigger=f["trigger"], action=f["action"], kind=f["kind"],
             scope=f["scope"] or scope_default, session_id=sid, project=project,
@@ -125,30 +125,30 @@ def build_lessons(findings, *, scope_default, project):
 # ── CLI ──────────────────────────────────────────────────────────────────────
 def cmd_ingest(env, argv):
     """analyst ingest --file F [--dry-run] [--json]
-    — принять findings агента-аналитика в .claude/analyst/lessons/ephemeral/."""
+    — accept findings agent-analyst in .claude/analyst/lessons/ephemeral/."""
     opts, _ = parse_args(argv, {"--file": "str", "--dry-run": "bool",
                                 "--json": "bool", "--project": "str"})
     if opts["help"]:
         print("analyst ingest --file F [--dry-run] [--json]\n"
-              "  Принять findings агента (/analyst:deep) в ephemeral-уроки. Валидация схемы\n"
-              "  до первой записи (невалидный файл → ни одной записи); только ephemeral,\n"
-              "  detector=agent-finding — enforced кодом. Промоут — человек (analyst review).")
+              "  Accept findings agent (/analyst:deep) in ephemeral-lessons. Schema Validation\n"
+              "  before first entry (invalid file → no entries); only ephemeral,\n"
+              "  detector=agent-finding — enforced code. Promot is a person (analyst review).")
         return
     if not opts["file"]:
-        die("--file обязателен: analyst ingest --file findings.json")
+        die("--file is required: analyst ingest --file findings.json")
     path = Path(os.path.expanduser(opts["file"]))
     if not path.is_file():
-        die(f"файл findings не найден: {path}")
+        die(f"file findings not found: {path}")
 
-    # валидация ЦЕЛИКОМ до первого побочного эффекта: битый JSON/схема → die без записей
+    # validation ENTIRELY up to the first side effect: broken JSON/diagram → die without entries
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
-        die(f"невалидный JSON findings ({path}): {e} — ни одной записи не сделано")
+        die(f"invalid JSON findings ({path}): {e} — no entries made")
     try:
         findings = validate_findings(payload)
     except ValueError as e:
-        die(f"схема findings не прошла валидацию: {e} — ни одной записи не сделано")
+        die(f"diagram findings failed validation: {e} — no entries made")
 
     ppath = os.getcwd()
     project = Path(os.path.abspath(ppath)).name
@@ -163,7 +163,7 @@ def cmd_ingest(env, argv):
         if opts["json"]:
             print(json.dumps(payload_out, ensure_ascii=False, indent=2))
         else:
-            print(f"\nanalyst ingest (dry-run) — {len(cands)} finding(ов) из {path.name}\n")
+            print(f"\nanalyst ingest (dry-run) — {len(cands)} finding(ov) from {path.name}\n")
             for c in payload_out["findings"]:
                 mark = "  ★ PROMOTE-CANDIDATE" if c["promote_candidate"] else ""
                 print(f"  • [{c['kind']}] {c['trigger']}{mark}")
@@ -172,8 +172,8 @@ def cmd_ingest(env, argv):
 
     created = skipped = 0
     for L in cands:
-        assert L["state"] == "ephemeral", "инвариант ingest: только ephemeral"
-        # семантический дедуп как в digest: NOOP по mem0-классификации → не плодим
+        assert L["state"] == "ephemeral", "invariant ingest: only ephemeral"
+        # semantic dedupe as in digest: NOOP by mem0-classifications → not prolific
         sim = similar_lessons(ppath, L["trigger"], L["action"],
                               states=ACTIVE_STATES, threshold=0.4)
         cons = classify_consolidation(L["trigger"], L["action"], sim)
@@ -190,10 +190,10 @@ def cmd_ingest(env, argv):
                              "state": "ephemeral", "consolidation": cons["action"]})
 
     marks = sum(1 for L in cands if PROMOTE_MARK in L["evidence"])
-    print(f"\nanalyst ingest — {created} нов(ых) урок(ов) в ephemeral"
-          f"{f', {skipped} пропущено (дубль/похоже на существующий)' if skipped else ''}"
-          f"{f'; {marks} с маркером {PROMOTE_MARK}' if marks else ''}.")
+    print(f"\nanalyst ingest — {created} new(s) lesson(ov) in ephemeral"
+          f"{f', {skipped} missing (take/similar to existing)' if skipped else ''}"
+          f"{f'; {marks} with marker {PROMOTE_MARK}' if marks else ''}.")
     if created:
-        print("  Смотри: analyst review   ·   промоут (только человек): analyst promote <id>\n")
+        print("  See: analyst review   ·   promoter (human only): analyst promote <id>\n")
     else:
-        print("  Новых уроков из findings не принято.\n")
+        print("  New lessons from findings not accepted.\n")

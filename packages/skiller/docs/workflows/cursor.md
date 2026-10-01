@@ -1,78 +1,78 @@
-# Cursor / VS Code — реализация по ТЗ
+# Cursor / VS Code — implementation according to technical specifications
 
-> Роль в воркфлоу: **реализация**. Получает финальное детальное ТЗ и пишет код.
-> На этом этапе важна скорость и дешевизна — используются менее мощные модели.
+> Role in work flow: **implementation**. Receives the final detailed specification and writes the code.
+> At this stage, speed and cheapness are important - less powerful models are used.
 
-## Принцип работы
+## Operating principle
 
-- Финальное ТЗ передаётся целиком как системный контекст (`.cursorrules` /
-  `AGENTS.md` / системный промт).
-- Задачи дробятся на небольшие, атомарные шаги.
-- Модель не принимает архитектурных решений — только реализует то, что описано.
-- При сложных вопросах — возврат в Claude.
+- The final technical specification is transmitted entirely as a system context (`.cursorrules` /
+  `AGENTS.md` / system promt).
+- Tasks are broken down into small, atomic steps.
+- The model does not make architectural decisions - it only implements what is described.
+- For complex questions, return to Claude.
 
-## Рекомендуемые модели
+## Recommended models
 
-| Задача | Модель |
+| Task | Model |
 |--------|--------|
-| Рутинная реализация | Claude Haiku / GPT-4o mini / Gemini Flash |
-| Нетривиальные участки | Claude Sonnet (точечно) |
-| Рефакторинг сложного кода | Claude Fable 5 (точечно) |
+| Routine implementation | Claude Haiku / GPT-4o mini / Gemini Flash |
+| Non-trivial areas | Claude Sonnet (dotted) |
+| Refactoring complex code | Claude Fable 5 (dotted) |
 
-## Типичный рабочий цикл
+## Typical duty cycle
 
 ```
-1. Открыть репозиторий в Cursor
-2. Добавить финальное ТЗ в .cursorrules или AGENTS.md
-3. Задавать точечные задачи: "Реализуй класс PermissionRegistry согласно ТЗ"
-4. Проверять результат, коммитить по мере готовности
-5. При сложных вопросах — возвращаться в Claude за уточнением
+1. Open repository in Cursor
+2. Add final technical specification to .cursorrules or AGENTS.md
+3. Set point tasks: "Implement the class PermissionRegistry according to the technical specifications"
+4. Check the result, commit when ready
+5. For complex questions, return to Claude for clarification
 ```
 
-## Структура `.cursorrules`
+## Structure `.cursorrules`
 
-Рекомендуемый формат файла:
+Recommended file format:
 
 ```
 # Project Spec
 
-## Цель
-[Краткое описание задачи]
+## Purpose
+[Brief description of the task]
 
-## Архитектура
-[Вставить структуру директорий из детального ТЗ]
+## Architecture
+[Insert directory structure from detailed specification]
 
-## Классы и интерфейсы
-[Перечень с описанием]
+## Classes and interfaces
+[List with description]
 
-## Паттерны
-[Какие паттерны используются]
+## Patterns
+[What patterns are used]
 
-## Правила
-- Не вносить архитектурные изменения без согласования
-- Следовать именованию из ТЗ
-- Коммитить атомарно по компонентам
+## Rules
+- Do not make architectural changes without approval
+- Follow the naming from the technical specifications
+- Commit atomically across components
 ```
 
-> В этом проекте утилитарные навыки (как именно писать тесты, service provider,
-> миграции пакета) подключаются как **скиллы** — через
-> [`skiller vendor`](../guide/cli) для Cursor. ТЗ описывает *что* строить,
-> скиллы — *как* это делать в данной IDE.
+> In this project, utilitarian skills (how exactly to write tests, service provider,
+> package migration) are connected as **skills** — via
+> [`skiller vendor`](../guide/cli) for Cursor. TK describes *what* build,
+> skills - *like* do this in this IDE.
 
-## Точечное подключение Claude
+## Point connection Claude
 
-Claude подключается **точечно** при:
+Claude connects **dotted** when:
 
-- Решении нетривиальных архитектурных вопросов.
-- Рефакторинге сложных участков.
-- Разборе неочевидного поведения фреймворка.
+- Solving non-trivial architectural issues.
+- Refactoring complex areas.
+- Analysis of non-obvious behavior of the framework.
 
-Важно: Claude на этом этапе не переписывает ТЗ — только отвечает на конкретный вопрос.
+Important: Claude at this stage does not rewrite the technical specifications - only answers a specific question.
 
-## Что получаем на выходе
+## What we get at the output
 
-- Реализованный пакет / компонент.
-- Коммиты, организованные по компонентам.
-- Список вопросов для код-ревью.
+- Implemented package / component.
+- Commits organized by component.
+- List of questions for code review.
 
-Далее: код передаётся на ревью → [Claude](./claude) (раздел «Код-ревью»).
+Next: the code is sent for review → [Claude](./claude) (section «Code review»).

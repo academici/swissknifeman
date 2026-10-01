@@ -1,119 +1,119 @@
-# Именование переменных и cross-config (детали)
+# Variable naming and cross-config (details)
 
-Справочник к скиллу `config-conventions`: таблицы имён переменных деталей и подробные
-примеры межконфигурных зависимостей.
+Skill reference `config-conventions`: variable part name tables and details
+examples of inter-configuration dependencies.
 
 
-## 2. Именование переменных в коде деталей (`parts/*.py`)
+## 2. Naming variables in part code (`parts/*.py`)
 
-### Радиусы
+### Radii
 
-| Переменная | Смысл |
+| Variable | Meaning |
 |---|---|
-| `r_outer` | наружный радиус детали / цилиндра |
-| `r_inner` | внутренний радиус (полость, канал) |
-| `r_insert` | радиус вставляемого / покупного элемента |
-| `r_bore` | радиус сквозного отверстия (порт, посадка) |
-| `r_rim` | радиус бортика (уступ, перекрывающий элемент) |
-| `r_view` | радиус отверстия для обзора / светового канала |
-| `r_slot` | радиус цилиндрической ступени паза |
-| `r_groove_in` | внутренний радиус Г-паза |
-| `r_base` | базовый радиус профиля резьбы |
-| `r_tip` | радиус кончика зубца резьбы |
-| `r_inner_floor` | минимальный допустимый внутренний радиус (= `base_radius`) |
+| `r_outer` | outer radius of the part / cylinder |
+| `r_inner` | inner radius (cavity, channel) |
+| `r_insert` | radius of the inserted / purchased item |
+| `r_bore` | through hole radius (port, landing) |
+| `r_rim` | side radius (ledge, overlapping element) |
+| `r_view` | viewing hole radius / light channel |
+| `r_slot` | radius of the cylindrical step of the groove |
+| `r_groove_in` | internal radius of the L-slot |
+| `r_base` | base radius of thread profile |
+| `r_tip` | thread tip radius |
+| `r_inner_floor` | minimum permissible inner radius (= `base_radius`) |
 
-Диаметр в конфиге → радиус в коде: `r_insert = ic.outer_diameter * 0.5`
+Diameter in config → radius in code: `r_insert = ic.outer_diameter * 0.5`
 
-### Высоты и z-координаты
+### Heights and z-coordinates
 
-| Переменная | Смысл |
+| Variable | Meaning |
 |---|---|
-| `z0` | нижняя граница детали в мировых координатах |
-| `z1` | верхняя граница (= `z0 + height`) |
-| `z_floor` | дно внутреннего кармана / полости |
-| `z_groove_top` | верхняя граница паза по Z |
-| `z_groove_bot` | нижняя граница паза по Z |
-| `mount_h` | высота скоса / переходной зоны |
-| `h_cap` | высота крышки |
-| `h_half` | высота полудетали |
+| `z0` | bottom boundary of the part in world coordinates |
+| `z1` | upper limit (= `z0 + height`) |
+| `z_floor` | bottom of inner pocket / cavities |
+| `z_groove_top` | upper edge of the groove Z |
+| `z_groove_bot` | lower edge of the groove along Z |
+| `mount_h` | bevel height / transition zone |
+| `h_cap` | cover height |
+| `h_half` | half-part height |
 
-### Толщины и зазоры
+### Thicknesses and clearances
 
-| Переменная | Смысл |
+| Variable | Meaning |
 |---|---|
-| `wall` | толщина стенки (из `model_config.wall`) |
-| `gw` | groove_width — ширина паза по Z |
-| `gd` | groove_depth — глубина паза по R |
-| `slide_gap` | зазор под листовую/скользящую деталь |
-| `clearance` | радиальный зазор резьбы |
-| `tdepth` | глубина профиля резьбы |
+| `wall` | wall thickness (from `model_config.wall`) |
+| `gw` | groove_width — groove width according to Z |
+| `gd` | groove_depth — groove depth according to R |
+| `slide_gap` | gap under sheet/sliding part |
+| `clearance` | radial thread clearance |
+| `tdepth` | thread profile depth |
 
-### Локальные алиасы конфигов
+### Local config aliases
 
-В начале каждой функции-строителя — короткие алиасы (по 1–2 буквы от имени детали):
+At the beginning of each builder function there are short aliases (1–2 letters each from the part name):
 
 ```python
 def build_shell(spl, col):
-    m  = model_config       # общий конфиг модели
-    sh = shell_config       # текущая деталь
-    ins = insert_config     # вставляемый элемент
+    m  = model_config       # general model config
+    sh = shell_config       # current part
+    ins = insert_config     # inserted element
 ```
 
-Правило: алиас читаем (`sh` — shell, `ins` — insert, `mt` — mount), один и тот же по всему файлу; общий конфиг модели — всегда `m`.
+Rule: alias read (`sh` — shell, `ins` — insert, `mt` — mount), is the same throughout the file; general model config - always `m`.
 
 ---
 
 
-## 7. Межконфигурные зависимости (cross-config)
+## 7. Inter-configuration dependencies (cross-config)
 
-Детали **могут и должны** читать конфиги друг друга, если между ними есть физическая связь.
+Details **can and should** read each other's configs if there is a physical connection between them.
 
-**Правило:** источник истины — один конфиг. Все остальные детали, которые к нему примыкают, читают его параметры напрямую — не дублируют числа.
+**Rule:** source of truth - one config. All other parts that are adjacent to it read its parameters directly - they do not duplicate numbers.
 
 ```python
-# Деталь part_a.py читает конфиг part_b, чтобы точно попасть в посадку:
+# Part part_a.py reads the config part_b, to accurately land:
 from ..config import part_b_config, part_a_config
 
 def build_part_a(spl, col):
     pb = part_b_config
     pa = part_a_config
-    # Посадочный цилиндр («мама») — геометрия из конфига part_b:
-    r_joint_in = spl.r(pb.height) - pb.joint_wall   # радиус посадки
-    z_joint_bot = pb.height - pb.joint_depth          # нижняя граница паза
+    # Landing cylinder («mom») — geometry from the config part_b:
+    r_joint_in = spl.r(pb.height) - pb.joint_wall   # landing radius
+    z_joint_bot = pb.height - pb.joint_depth          # bottom edge of the groove
 ```
 
-**Типичные виды связей между деталями:**
+**Typical types of connections between parts:**
 
-| Ситуация | Деталь читает конфиг |
+| Situation | Detail reads config |
 |----------|----------------------|
-| Деталь A принимает в паз деталь B | A читает конфиг B: размеры, зазоры |
-| Деталь A садится на посадку детали B | A читает конфиг B: `joint_depth`, `joint_wall`, `joint_clearance` |
-| Деталь A формирует чашу под элемент C | A читает конфиг C: наружный диаметр, высота, зазор |
-| Соединительный элемент между A и B | читает конфиги обеих деталей |
+| Part A accepts the part into the groove B | A reads the config B: dimensions, clearances |
+| Part A fits the part B | A reads the config B: `joint_depth`, `joint_wall`, `joint_clearance` |
+| Part A forms a bowl under the element C | A reads the config C: outer diameter, height, clearance |
+| Connecting element between A and B | reads the configs of both parts |
 
-Конкретные связи для текущей модели — в `models/{name}/ai/rules.md` (см. скилл `blender-modeling/model-rules`).
+Specific connections for the current model - in `models/{name}/ai/rules.md` (see skill `blender-modeling/model-rules`).
 
-**Принцип сквозного пересчёта — обязателен при построении:**
+**The principle of end-to-end recalculation is mandatory when constructing:**
 
-При любом изменении конфига вся связанная цепочка деталей должна пересчитаться без ручной правки. Проверять мысленно:
+For any change in the config, the entire associated chain of parts must be recalculated without manual editing. Check mentally:
 
-- Изменился `wall` корпуса → внутренний радиус сдвинулся → паз ответной детали не должен «плавать»
-- Изменилась `height` нижней детали → верхняя поднялась → кольцо соединения должно остаться на своём месте относительно стыка
-- Изменился размер вставки → чаша под неё пересчиталась → деталь не выступает за пределы корпуса
+- Changed `wall` housings → inner radius has moved → the groove of the mating part must not «swim»
+- Changed `height` lower part → the top has risen → the connection ring must remain in place relative to the joint
+- Insert size changed → the bowl was counted for her → the part does not protrude beyond the body
 
-Если мысленная проверка показывает, что деталь «поплывёт» — значит в её коде есть хардкод, который нужно заменить формулой из конфига.
+If a mental check shows that the part «will float» — means there is a hard code in its code that needs to be replaced with the formula from the config.
 
-**Явный импорт конфига чужой детали — нормально:**
+**Explicit import of the config of someone else's part is normal:**
 
 ```python
-# holder.py — читает конфиг вставляемой детали, чтобы построить чашу точно под неё
+# holder.py — reads the config of the inserted part to build a bowl exactly for it
 from ..config import insert_config, holder_config
 
 def build_holder(spl, col):
-    ic = insert_config   # вставляемая деталь (плата, оптика, картридж...)
+    ic = insert_config   # insert part (board, optics, cartridge...)
     hc = holder_config
     r_cup_outer = ic.outer_diameter * 0.5 + ic.wall + hc.cup_clearance
-    # ^ если insert изменится — чаша перестроится автоматически
+    # ^ if insert will change - the bowl will rearrange itself automatically
 ```
 
 ---

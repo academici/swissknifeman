@@ -7,13 +7,13 @@ inputs_sha256: 57ef277707d45ff0ace1781e1b162fa35ba8cd5c1c4e1c1580bf75cdf3726f10
 generated_by: task plan-views status
 -->
 
-# Статус плана
+# Plan status
 
-> Не править руками: это генерируемый вид.
+> Do not manipulate by hand: this is a generated view.
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Version | — |
 | Status | 🟡 In progress |
@@ -21,26 +21,26 @@ generated_by: task plan-views status
 
 ## 4. Phase Index & Status Board
 
-| Phase | Title | Items 🟢/всего | Status |
+| Phase | Title | Items 🟢/total | Status |
 |:--|:--|:--|:--|
-| P0 | Закрытая фаза | 1/1 | 🟢 Done |
-| P1 | Фаза раз | 0/1 | 🟡 In progress |
+| P0 | Closed phase | 1/1 | 🟢 Done |
+| P1 | Phase times | 0/1 | 🟡 In progress |
 
 ## Phase P0
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P0.1 | Собрать fixture closure | 🟢 Done | 2026-07-03 |
+| P0.1 | Assemble fixture closure | 🟢 Done | 2026-07-03 |
 
 ## Phase P1
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| P1.1 | Валидация конфига | 🟡 In progress | 2026-07-03 |
+| P1.1 | Config validation | 🟡 In progress | 2026-07-03 |
 
 ## 6. Update Log
 
-| Дата | Кто (role/model) | Что |
+| Date | Who (role/model) | What |
 |:--|:--|:--|
 | 2026-07-02 | sonnet/medium | plan-run · closed-green · closure fixture |
 | 2026-07-03 | sonnet/medium | plan-run · in-progress · fixture remains live |

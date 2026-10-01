@@ -3,9 +3,9 @@
 
 input=$(cat)
 
-msg=$(printf '%s' "$input" | jq -r '.message // "Claude Code ждёт ввода"' 2>/dev/null)
+msg=$(printf '%s' "$input" | jq -r '.message // "Claude Code is waiting for input"' 2>/dev/null)
 cwd=$(printf '%s' "$input" | jq -r '.cwd // ""' 2>/dev/null)
-[[ -n "$msg" ]] || msg="Claude Code ждёт ввода"
+[[ -n "$msg" ]] || msg="Claude Code is waiting for input"
 
 project=""
 [[ -n "$cwd" ]] && project="$(basename "$cwd")"

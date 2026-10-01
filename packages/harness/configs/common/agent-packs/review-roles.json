@@ -1,5 +1,5 @@
 {
-  "review_version": "1.0.0",
+  "review_version": "1.0.1",
   "pack_root": "claude-code/agent-packs",
   "roles": [
     {
@@ -9,10 +9,10 @@
       "overrides": "backend-laravel/rules/reviewer-overrides.md",
       "required_sections": ["criteria", "verdict_gates", "project_overrides", "output"],
       "sections": {
-        "criteria": "## Прочие Laravel-критерии",
-        "verdict_gates": "## Гейты вердикта (по порогам, не «на глаз»)",
-        "project_overrides": "## Проектные оверрайды",
-        "output": "## Выход"
+        "criteria": "## Others Laravel-criteria",
+        "verdict_gates": "## Verdict gates (by thresholds, not «by eye»)",
+        "project_overrides": "## Project overrides",
+        "output": "## Exit"
       },
       "dimensions": [
         "access-layer", "layering", "n-plus-one", "validation", "authorization",
@@ -28,10 +28,10 @@
       "overrides": "laravel-package/rules/reviewer-overrides.md",
       "required_sections": ["criteria", "verdict_gates", "project_overrides", "output"],
       "sections": {
-        "criteria": "## Прочие критерии пакета",
-        "verdict_gates": "## Гейты вердикта (по порогам, не «на глаз»)",
-        "project_overrides": "## Проектные оверрайды",
-        "output": "## Выход"
+        "criteria": "## Other package criteria",
+        "verdict_gates": "## Verdict gates (by thresholds, not «by eye»)",
+        "project_overrides": "## Project overrides",
+        "output": "## Exit"
       },
       "dimensions": [
         "public-api-bc", "service-provider-lifecycle", "publishables",
@@ -47,10 +47,10 @@
       "overrides": "node-frontend/rules/reviewer-overrides.md",
       "required_sections": ["criteria", "verdict_gates", "project_overrides", "output"],
       "sections": {
-        "criteria": "## Критерии",
-        "verdict_gates": "## Гейты вердикта (по порогам)",
-        "project_overrides": "## Проектные оверрайды",
-        "output": "## Выход"
+        "criteria": "## Criteria",
+        "verdict_gates": "## Verdict gates (by thresholds)",
+        "project_overrides": "## Project overrides",
+        "output": "## Exit"
       },
       "dimensions": [
         "typing", "structure", "reactivity", "accessibility", "over-engineering",
@@ -64,10 +64,10 @@
       "overrides": "dart-flutter/rules/reviewer-overrides.md",
       "required_sections": ["criteria", "verdict_gates", "project_overrides", "output"],
       "sections": {
-        "criteria": "## Критерии",
-        "verdict_gates": "## Гейты вердикта",
-        "project_overrides": "## Проектные оверрайды",
-        "output": "## Выход"
+        "criteria": "## Criteria",
+        "verdict_gates": "## Verdict gates",
+        "project_overrides": "## Project overrides",
+        "output": "## Exit"
       },
       "dimensions": [
         "state-management", "resource-lifecycle", "null-safety", "pos-embedded",
@@ -81,10 +81,10 @@
       "overrides": "python-backend/rules/reviewer-overrides.md",
       "required_sections": ["criteria", "verdict_gates", "project_overrides", "output"],
       "sections": {
-        "criteria": "## Критерии",
-        "verdict_gates": "## Гейты вердикта",
-        "project_overrides": "## Проектные оверрайды",
-        "output": "## Выход"
+        "criteria": "## Criteria",
+        "verdict_gates": "## Verdict gates",
+        "project_overrides": "## Project overrides",
+        "output": "## Exit"
       },
       "dimensions": [
         "layering", "typing", "security", "over-engineering", "generated-assets",

@@ -535,7 +535,7 @@ def apply_instructions(request: InstructionRequest, *,
             or tuple(action.target_path for action in writable) != request.authorized_target_paths):
         return _write_refusal(
             request, fresh, "authorized missing/create or stale-source/update targets",
-            message="ожидался порядок целей (алфавитный по target_path): "
+            message="target order expected (alphabetical order target_path): "
                     + ",".join(action.target_path for action in writable))
     if not writable:
         return replace(fresh, request=request, green=True)
@@ -1717,7 +1717,7 @@ def _cli_request(operation_id: str, root: Path, **overrides) -> InstructionReque
 
 def _print_report(result: InstructionOperationResult) -> None:
     print(f"harness instructions {result.request.operation_id}: "
-          f"{'OK' if result.green else 'ERROR'} — {len(result.targets)} целей")
+          f"{'OK' if result.green else 'ERROR'} — {len(result.targets)} targets")
     for target in result.targets:
         mark = "✓" if target.observation == "clean" else "✗"
         print(f"  {mark} {target.target_path} [{target.provider_id}] "
@@ -1729,9 +1729,9 @@ def _print_report(result: InstructionOperationResult) -> None:
               file=sys.stderr)
     for finding in result.size_findings:
         print(f"  ! CANON_SIZE_EXCEEDED: {finding.target_path} — {finding.metric} "
-              f"{finding.observed} > {finding.limit} (класс "
-              f"{'root' if finding.scope_id == 'root' else 'package'}); уводи справочный "
-              f"материал в скилл или path-scoped правило", file=sys.stderr)
+              f"{finding.observed} > {finding.limit} (class "
+              f"{'root' if finding.scope_id == 'root' else 'package'}); take away the reference "
+              f"material in skill or path-scoped rule", file=sys.stderr)
 
 
 def cmd_instructions(env, argv):
@@ -1751,7 +1751,7 @@ def cmd_instructions(env, argv):
     operation = positional[0]
     handler = _OPERATIONS.get(operation)
     if handler is None:
-        print(f"harness instructions: неизвестная операция {operation}", file=sys.stderr)
+        print(f"harness instructions: unknown operation {operation}", file=sys.stderr)
         sys.exit(2)
     root = Path(opts["target"]).resolve() if opts["target"] else repository_root()
     request = _cli_request(

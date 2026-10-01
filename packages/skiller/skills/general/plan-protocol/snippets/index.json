@@ -3,7 +3,7 @@
   "snippets": [
     {
       "file": "plan-template.md",
-      "description": "Скелет plan.md мастер-плана: Meta (вкл. Home/Paused By), Context, Execution Rules, Routing, Status Board, Decision/Update Log; указатель на open-questions.md",
+      "description": "Skeleton plan.md of the master plan: Meta (incl. Home/Paused By), Context, Execution Rules, Routing, Status Board, Decision/Update Log; pointer to open-questions.md",
       "tags": [
         "workflow",
         "planning",
@@ -12,7 +12,7 @@
     },
     {
       "file": "phase-template.md",
-      "description": "Скелет phases/Pn.md: Phase Context/Status, DoR-чеклист, скелет-маркер фазы, item-образец с RAG-маркерами + пустой скелет, Phase Handoff",
+      "description": "Skeleton phases/Pn.md: Phase Context/Status, DoR checklist, skeleton phase marker, item sample with RAG markers + empty skeleton, Phase Handoff",
       "tags": [
         "workflow",
         "planning",
@@ -21,7 +21,7 @@
     },
     {
       "file": "handoff-template.md",
-      "description": "Скелет rolling handoff.md: Next с launch-block/Done/Remaining/Sources of truth/Open risks + ключи devloop-телеметрии",
+      "description": "Skeleton rolling handoff.md: Next with launch-block/Done/Remaining/Sources of truth/Open risks + devloop-telemetry keys",
       "tags": [
         "workflow",
         "handoff",
@@ -30,7 +30,7 @@
     },
     {
       "file": "active-template.md",
-      "description": "Скелет plans/ACTIVE.md — 4-строчный указатель активного плана (Active/Updated)",
+      "description": "Skeleton plans/ACTIVE.md - 4-line active plan index (Active/Updated)",
       "tags": [
         "workflow",
         "planning",
@@ -39,7 +39,7 @@
     },
     {
       "file": "launch-block-template.md",
-      "description": "Фиксированная форма launch-block «что запускать дальше»: таблица Model/Thinking/Context/Суть + голая команда code-block'ом, правила cold-start",
+      "description": "Fixed launch-block form “what to launch next”: Model/Thinking/Context/Essence table + bare code-block command, cold-start rules",
       "tags": [
         "workflow",
         "handoff",
@@ -48,7 +48,7 @@
     },
     {
       "file": "code-guidance-patterns.md",
-      "description": "3 паттерна Code Guidance для типовых классов item'ов: анти-подгонка (conformance/contract), анти-самообман (gate), if-then эскалация к D#",
+      "description": "3 Code Guidance patterns for typical item classes: anti-conformance/contract, anti-self-deception (gate), if-then escalation to D#",
       "tags": [
         "workflow",
         "planning",
@@ -57,7 +57,7 @@
     },
     {
       "file": "roadmap-template.md",
-      "description": "Скелет plans/<ID>/roadmap.md — исполнительская карта: таблица Item|Batch|Запуск|Model/Thinking|Гейт владельца, готовые launch-block'и батчей/workflow, сводка гейтов",
+      "description": "Skeleton plans/<ID>/roadmap.md - execution map: table Item|Batch|Launch|Model/Thinking|Owner gate, ready-made launch-blocks of batches/workflow, gate summary",
       "tags": [
         "workflow",
         "planning",
@@ -67,7 +67,7 @@
     },
     {
       "file": "journal-template.md",
-      "description": "Справочник plans/<ID>/journal.jsonl (append-only NDJSON, P1.1): канонический CLI-способ дописи через lib/task/journal.py, схема одной записи для ручного бэкфилла/backstop",
+      "description": "Directory plans/<ID>/journal.jsonl (append-only NDJSON, P1.1): canonical CLI appending method via lib/task/journal.py, single entry scheme for manual backfill/backstop",
       "tags": [
         "workflow",
         "planning",
@@ -77,7 +77,7 @@
     },
     {
       "file": "index-template.md",
-      "description": "Скелет plans/<ID>/index.md (P1.2, опционален): карта директорий + провенанс findings/research→фаза + ключевые артефакты root/ — НЕ носитель статуса/next",
+      "description": "Skeleton plans/<ID>/index.md (P1.2, optional): directory map + provenance findings/research→phase + key artifacts root/ - NOT status bearer/next",
       "tags": [
         "workflow",
         "planning",
@@ -86,7 +86,7 @@
     },
     {
       "file": "closure-template.md",
-      "description": "Скелет plans/<ID>/closure/<Pn>.json (P8.1, opt-in `Closure Protocol | v1`): схема v1 отчёта закрытия фазы, правила заполнения, enum классов свидетельства",
+      "description": "Skeleton plans/<ID>/closure/<Pn>.json (P8.1, opt-in `Closure Protocol | v1`): schema v1 of the phase closure report, filling rules, enum certificate classes",
       "tags": [
         "workflow",
         "planning",

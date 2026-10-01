@@ -1,16 +1,16 @@
-# MCP-сервер
+# MCP-server
 
-maind сам является **MCP-сервером** для внешних агентов (Claude Code, Cursor, …). Транспорт —
-**stdio JSON-RPC 2.0, newline-delimited JSON** (одно сообщение = одна строка + `\n`, без
-`Content-Length`). Чистый stdlib, без MCP SDK; протокол — в stdout, логи/ошибки — в stderr.
+maind itself is **MCP-server** for external agents (Claude Code, Cursor, …). Transport -
+**stdio JSON-RPC 2.0, newline-delimited JSON** (one message = one line + `\n`, without
+`Content-Length`). Clean stdlib, without MCP SDK; protocol - in stdout, logs/errors - in stderr.
 
-## Запуск и подключение
+## Startup and connection
 
 ```bash
-maind mcp [--scope project:<id>]   # stdio: NDJSON из stdin → ответы в stdout
+maind mcp [--scope project:<id>]   # stdio: NDJSON from stdin → answers in stdout
 ```
 
-`.mcp.json` потребляющего проекта `maind deploy` вписывает сам — со scope проекта:
+`.mcp.json` consuming project `maind deploy` enters it himself - with scope project:
 
 ```json
 {
@@ -20,52 +20,52 @@ maind mcp [--scope project:<id>]   # stdio: NDJSON из stdin → ответы �
 }
 ```
 
-`command` — **индирекция** `${MAIND_BIN:-maind}`: Claude Code раскрывает её из окружения процесса
-(дефолт `maind` по PATH — `~/.local/bin` от `install.sh`), без машинно-специфичного пути; явный
-бинарь — `export MAIND_BIN=/abs/maind` (CI / нестандартная установка).
+`command` — **direction** `${MAIND_BIN:-maind}`: Claude Code exposes it from the process environment
+(default `maind` by PATH — `~/.local/bin` from `install.sh`), without machine-specific path; obvious
+binary - `export MAIND_BIN=/abs/maind` (CI / non-standard installation).
 
-::: tip Авто-scope
-`--scope` (или env `MAIND_SCOPE`) задаёт scope **по умолчанию** для memory-инструментов: агент
-проекта пишет/читает память автоматически в своём `project:<id>`, не передавая scope и не
-промахиваясь мимо неймспейса. Без флага — `global`.
+::: tip Autoscope
+`--scope` (or env `MAIND_SCOPE`) sets scope **default** for memory-tools: agent
+project writes/reads memory automatically in its `project:<id>`, without transmitting scope and not
+missing the namespace. Without a flag - `global`.
 :::
 
 ## Tools
 
-| Tool | Аргументы | Делегирует |
+| Tool | Arguments | Delegates |
 |:--|:--|:--|
 | `maind_memory_store` | `scope?, key?, value` | `memory.store` |
 | `maind_memory_recall` | `scope?, query` | `memory.recall` |
 | `maind_memory_forget` | `scope?, key` | `memory.forget` (best-effort) |
 | `maind_graph_query` | `from, depth?, edge_types?` | `graph.query` |
 | `maind_graph_neighbors` | `node, depth?, direction?` | `graph.neighbors` |
-| `maind_graph_path` | `from, to` | `graph.path` (кратчайший путь) |
-| `maind_graph_project` | `project` | `Federation.project_view` (граф одного проекта) |
-| `maind_memory_links` | `project, depth?, namespace?` | граф-связи + ecosystem-link память |
+| `maind_graph_path` | `from, to` | `graph.path` (shortest path) |
+| `maind_graph_project` | `project` | `Federation.project_view` (graph of one project) |
+| `maind_memory_links` | `project, depth?, namespace?` | connection graph + ecosystem-link memory |
 | `maind_agents_list` | — | `agents.listing` |
 | `maind_projects_list` | — | `projects.listing` |
-| `maind_projects_status` | `project?` | `probe` (состояние хаба + проектов) |
+| `maind_projects_status` | `project?` | `probe` (hub status + projects) |
 
-Итого **11 инструментов** (memory · graph · ecosystem-links · реестры). `scope?` —
-необязательно (по умолчанию scope узла, см. авто-scope). `maind_memory_links` отдаёт память
-проекта из всех релевантных бакетов (`project:<id>` + `ns:<группы>` + `global`) — внутри
-namespace память общая, между группами изолирована (паритет с графом, см. [Память](./memory)).
-Память-инструменты требуют живого демона; нет обязательного аргумента, демон недоступен или
-ошибка инструмента → ответ помечается `isError: true`, **сервер при этом не падает**.
+Total **11 tools** (memory · graph · ecosystem-links · registries). `scope?` —
+optional (default scope node, see auto-scope). `maind_memory_links` gives up memory
+project from all relevant buckets (`project:<id>` + `ns:<groups>` + `global`) — inside
+namespace memory shared, isolated between groups (parity with graph, see [Memory](./memory)).
+Memory tools require a living demon; no required argument, daemon not available, or
+tool error → response is marked `isError: true`, **the server does not crash**.
 
-## Методы JSON-RPC
+## Methods JSON-RPC
 
-`initialize` (→ `serverInfo.name = maind`; **эхо-ит `protocolVersion` клиента**) ·
-`notifications/initialized` (без ответа) · `tools/list` · `tools/call` · `ping`. Неизвестный
-метод/инструмент → ошибка `-32601`; внутренняя ошибка → `-32603` (цикл продолжается).
+`initialize` (→ `serverInfo.name = maind`; **echo-it `protocolVersion` client**) ·
+`notifications/initialized` (no response) · `tools/list` · `tools/call` · `ping`. Unknown
+method/tool → error `-32601`; internal error → `-32603` (cycle continues).
 
-## Почему свой сервер, а не FastMCP
+## Why your own server and not FastMCP
 
-maind — **stdlib-only, Python 3.9+, переносимый** (как swissknifeman/brain). FastMCP тянет ~25
-pip-зависимостей (`pydantic`/`uvicorn`/`httpx`/`authlib`/…) и Python ≥3.10 — непропорционально для
-11 stdio-инструментов и ломает zero-dep идентичность пакета. Свой сервер закалён **conformance-тестом
-на реальный spawn** (полный NDJSON-хендшейк), так что класс багов вроде framing'а не повторится.
-Пересмотрим решение, если понадобится **HTTP-транспорт, авторизация или много инструментов** —
-тогда фреймворк оправдан.
+maind — **stdlib-only, Python 3.9+, portable** (like swissknifeman/brain). FastMCP pulls ~25
+pip-dependencies (`pydantic`/`uvicorn`/`httpx`/`authlib`/…) and Python ≥3.10 — disproportionate for
+11 stdio-tools and breaks zero-dep package identity. Your server is hardened **conformance-test
+to real spawn** (full NDJSON-handshake), so the bug class is like framing'and will not happen again.
+We'll reconsider the decision if necessary **HTTP-transport, authorization or many tools** —
+then the framework is justified.
 
-Дальше: [Healthcheck →](./health)
+Next: [Healthcheck →](./health)

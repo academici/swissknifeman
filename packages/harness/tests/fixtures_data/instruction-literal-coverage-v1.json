@@ -4,7 +4,7 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "f9c4532efcda627833204dcc9f1c37325ff6e22f23b9a5cc1540c142231cbf58",
+    "source_sha256": "65ac54298e997ebf2106df15ce89636cd7e0faaa6629374192f75b3602f0d2cf",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
     "literal_count": 298
   },
@@ -471,7 +471,7 @@
     },
     {
       "semantic_id": "skiller.engineering-invariants",
-      "literal": "Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use Russian diagnostics and merge-only project writes, and edit local skills in the canonical EN-only `SKILL.md` before regenerating registry/provider projections."
+      "literal": "Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use English diagnostics and merge-only project writes, and edit local skills in the canonical EN-only `SKILL.md` before regenerating registry/provider projections."
     },
     {
       "semantic_id": "skiller.engineering-invariants",
@@ -655,7 +655,7 @@
     },
     {
       "semantic_id": "harness.engineering-invariants",
-      "literal": "Keep `lib/harness/` stdlib-only, pass frozen `Env` explicitly, use merge-only project writes with `*.bak` backups, and emit Russian diagnostics."
+      "literal": "Keep `lib/harness/` stdlib-only, pass frozen `Env` explicitly, use merge-only project writes with `*.bak` backups, and emit English diagnostics."
     },
     {
       "semantic_id": "harness.engineering-invariants",
@@ -831,7 +831,7 @@
     },
     {
       "semantic_id": "maind.engineering-invariants",
-      "literal": "Keep `lib/maind/` stdlib-only, pass frozen `Env` explicitly, write JSON atomically, emit Russian diagnostics, and preserve `project:`, `ns:`, and `global` memory isolation."
+      "literal": "Keep `lib/maind/` stdlib-only, pass frozen `Env` explicitly, write JSON atomically, emit English diagnostics, and preserve `project:`, `ns:`, and `global` memory isolation."
     },
     {
       "semantic_id": "maind.engineering-invariants",
@@ -963,7 +963,7 @@
     },
     {
       "semantic_id": "analyst.engineering-invariants",
-      "literal": "Keep runtime stdlib-only, pass frozen `Env` explicitly, write JSON atomically, require human confirmation for curated promotion, and emit Russian diagnostics."
+      "literal": "Keep runtime stdlib-only, pass frozen `Env` explicitly, write JSON atomically, require human confirmation for curated promotion, and emit English diagnostics."
     },
     {
       "semantic_id": "analyst.engineering-invariants",
@@ -1087,7 +1087,7 @@
     },
     {
       "semantic_id": "task.engineering-invariants",
-      "literal": "Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use Russian diagnostics."
+      "literal": "Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics."
     },
     {
       "semantic_id": "task.engineering-invariants",
@@ -1171,7 +1171,7 @@
     },
     {
       "semantic_id": "artifex.engineering-invariants",
-      "literal": "Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use Russian diagnostics, and preserve one implementation rather than a plan-local duplicate."
+      "literal": "Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use English diagnostics, and preserve one implementation rather than a plan-local duplicate."
     },
     {
       "semantic_id": "artifex.engineering-invariants",

@@ -276,7 +276,7 @@ _INPUTS_SPLIT_RE = re.compile(r"\s*·\s*")
 _VALIDATION_SPLIT_RE = re.compile(r"\s*·\s*|\n(?=-[ \t]+)")
 _REQUIRED_READS_SPLIT_RE = re.compile(r"(?:^|\s)\d+\)\s+")
 _IMPL_RULE_SPLIT_RE = re.compile(r"\*\*\(\d+\)\*\*\s*")
-_ANTI_CLAUSE_SPLIT_RE = re.compile(r"\*{0,2}(?:Анти|Anti)[\w-]*\s*:\*{0,2}\s*")
+_ANTI_CLAUSE_SPLIT_RE = re.compile(r"\*{0,2}(?:Anti|Anti)[\w-]*\s*:\*{0,2}\s*")
 _BACKTICK_RE = re.compile(r"`([^`]+)`")
 _ROUTING_HEADER_RE = re.compile(r"^##\s+3\.\s+Routing\s*$")
 _ROUTING_RANGE_RE = re.compile(r"^(P\d+)\.(\d+)\s*[–-]\s*(P\d+)\.(\d+)$")
@@ -292,7 +292,7 @@ _AUTHORITY_DECLARATION_RE = re.compile(
 # Migration diagnostic only: machine authority is always the explicit declaration.
 _LEGACY_AUTHORITY_RE = re.compile(
     r"durable\s+owner\s+authori[sz]ation|only\s+after\s+owner\s+authori[sz]ation|"
-    r"только\s+после\s+(?:durable\s+)?owner\s+authorization", re.IGNORECASE)
+    r"only\s+after\s+(?:durable\s+)?owner\s+authorization", re.IGNORECASE)
 # Protected authority is deliberately a small, exact Decision Log record rather than
 # prose searched by substring.  Backticks make the three values unambiguous even when
 # a branch or scope contains ordinary punctuation.  The Decision Log must reference a
@@ -341,7 +341,7 @@ def _first_backtick_or_text(clause: str) -> str:
 
 def _marker_clauses(text: str, marker_re: "re.Pattern") -> list:
     """Splits `text` at each match of `marker_re` (a labelled/numbered marker —
-    `**(N)**`, `N) `, `**Анти-…:**`), discarding any text before the FIRST
+    `**(N)**`, `N) `, `**Anti-…:**`), discarding any text before the FIRST
     marker (ordinary prose, not a clause of the marked kind). No marker
     present → `[]`, never "the whole text as one accidental clause" (unlike
     `_split_nonempty`'s `; `/`·` semicolon-style split, where a single
@@ -357,7 +357,7 @@ def _marker_clauses(text: str, marker_re: "re.Pattern") -> list:
 
 
 def _anti_clauses(code_guidance_text: str) -> list:
-    """Code Guidance anti-clauses (`**Анти-подгонка:** …` / `Anti-…:` — bold or
+    """Code Guidance anti-clauses (`**Anti-fitting:** …` / `Anti-…:` — bold or
     plain, both observed in the fleet) feeding `never[]`. An item that spells
     no anti-clause at all yields `[]` — `never[]` still satisfies its
     minItems via `Scope Excluded` alone."""
@@ -422,18 +422,18 @@ def _has_audit_cap_remediation_grant(plan_dir: Path, item_id: str) -> bool:
         if (fields.get("status", "").strip() == "accepted"
                 and fields.get("item", "").strip() == item_id
                 and "AUDIT-CAP" in body
-                and "P5.6 обязан закрыть" in body
-                and "третьего Audit P5" in body):
+                and "P5.6 must close" in body
+                and "third Audit P5" in body):
             return True
         normalized_body = " ".join(body.split())
         recovery_clause = re.search(
-            r"повторить исходные Validation для (?P<items>.+?) только в fresh native roots",
+            r"repeat (?:the )?original Validation for (?P<items>.+?) only in fresh native roots",
             normalized_body,
         )
         if (fields.get("status", "").strip() == "accepted"
                 and "AUDIT-CAP" in normalized_body
                 and "provider-attested" in normalized_body
-                and "новых terminal attempts" in normalized_body
+                and "new terminal attempts" in normalized_body
                 and recovery_clause is not None
                 and item_id in set(re.findall(r"P\d+\.\d+", recovery_clause.group("items")))):
             return True
@@ -487,17 +487,17 @@ def declared_authority(item_id: str, fields: dict, *, for_execution: bool = Fals
     if declaration and declaration != "routine":
         match = _AUTHORITY_DECLARATION_RE.fullmatch(declaration)
         if match is None:
-            raise TaskContractBuildError(item_id, "authority", "AUTHORITY_CONTRACT_GAP: неверное объявление Authority")
+            raise TaskContractBuildError(item_id, "authority", "AUTHORITY_CONTRACT_GAP: invalid declaration Authority")
         request = {key: value for key, value in match.groupdict().items() if value is not None}
         if request.get("boundary") == "owner-session":
             if (request.get("effect") != "local-source"
                     or not re.fullmatch(r"checkout|[A-Za-z0-9_]+_test", request.get("environment", ""))):
-                raise TaskContractBuildError(item_id, "authority", "AUTHORITY_BOUNDARY: owner-session требует local-source и checkout либо *_test")
+                raise TaskContractBuildError(item_id, "authority", "AUTHORITY_BOUNDARY: owner-session requires local-source and checkout or *_test")
             validation = str(text("Validation"))
             if (re.search(r"\b(?:deploy|release|fleet|production|secret(?:s)?|rotate[- ]?key)\b", validation, re.IGNORECASE)
                     or re.search(r"\b(?:DB_DATABASE|PGDATABASE)=(?!" + re.escape(request["environment"]) + r"(?:\s|$))", validation)
                     or (request["environment"] == "checkout" and re.search(r"\b(?:migrate|psql)\b", validation))):
-                raise TaskContractBuildError(item_id, "authority", "AUTHORITY_BOUNDARY: внешние эффекты требуют provider-proof")
+                raise TaskContractBuildError(item_id, "authority", "AUTHORITY_BOUNDARY: externalities require provider-proof")
             # Bind executable scope, not progress/status prose. Changing a target,
             # validation command or declared file invalidates the local activation.
             bound = {name: text(name) for name in ("Authority", "Files", "Validation",
@@ -506,7 +506,7 @@ def declared_authority(item_id: str, fields: dict, *, for_execution: bool = Fals
                 bound, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         return _authority_request(item_id, request)
     if _LEGACY_AUTHORITY_RE.search("\n".join(str(text(name)) for name in fields)):
-        raise TaskContractBuildError(item_id, "authority", "AUTHORITY_CONTRACT_GAP: owner authorization требует finite Authority gate")
+        raise TaskContractBuildError(item_id, "authority", "AUTHORITY_CONTRACT_GAP: owner authorization requires finite Authority gate")
     return None
 
 
@@ -524,20 +524,20 @@ def _materialize_owner_invocation_locked(plan_dir, item_id: str, *, command="pla
     from task import plan_authority, plan_lint, plan_layout, plan_decisions, route_evidence
     plan_dir = Path(plan_dir).resolve()
     if command != "plan-run" or not re.fullmatch(r"P\d+\.\d+", item_id):
-        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: требуется exact plan-run item")
+        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: required exact plan-run item")
     phase_id = item_id.split(".")[0]
     phase_path = plan_layout.phase_path(plan_dir, phase_id)
     phase = plan_lint.parse_phase_md(phase_path, phase_id, plan_lint.Diagnostics(),
                                      layout=plan_layout.layout_version(plan_dir))
     occurrences = phase["items"].get(item_id, []) if phase else []
     if len(occurrences) != 1:
-        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: item неоднозначен")
+        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: item is ambiguous")
     request = declared_authority(item_id, occurrences[0]["fields"], for_execution=True)
     if request is None:
-        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: finite gate не объявлен")
+        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: finite gate not declared")
     boundary = request.get("boundary", "provider-proof")
     if boundary == "owner-session" and occurrences[0]["fields"].get("Status", ("", None))[0] in plan_lint.TERMINAL_STATUSES:
-        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: run уже завершён")
+        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: run is already completed")
     verifier, nonce_consumer = route_evidence.authority_preflight(boundary)
     checkout = plan_dir.parent.parent
     semantic = f"task:plan-run {plan_dir.name} {item_id}"
@@ -549,7 +549,7 @@ def _materialize_owner_invocation_locked(plan_dir, item_id: str, *, command="pla
             or evidence.get("invocation") not in ("$ " + semantic, "/" + semantic)
             or evidence.get("cwd") != str(checkout)
             or not evidence.get("thread_id") or not evidence.get("source_version")):
-        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_UNATTESTED: нужен current user-message adapter")
+        raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_UNATTESTED: needed current user-message adapter")
     action = {"plan_id": plan_dir.name, "item_id": item_id, "gate": request,
               "command": semantic, "cwd": str(checkout)}
     action_digest = hashlib.sha256(json.dumps(
@@ -561,7 +561,7 @@ def _materialize_owner_invocation_locked(plan_dir, item_id: str, *, command="pla
     if boundary == "owner-session" and existing is not None:
         authority = _resolve_authority(plan_lint, [], plan_dir, item_id, phase_path, "", None, request)
         if not authority[1]:
-            raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: grant отозван, завершён либо scope/session изменились")
+            raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: grant withdrawn, completed or scope/session changed")
         return {"granted": True, "granted_by": authority[2], "reused": True,
                 "boundary": "workflow-guard"}
     try:
@@ -601,7 +601,7 @@ def _materialize_owner_invocation_locked(plan_dir, item_id: str, *, command="pla
            for decision in decisions):
         authority = _resolve_authority(plan_lint, [], plan_dir, item_id, phase_path, "", None, request)
         if not authority[1]:
-            raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: существующий grant отозван или неоднозначен")
+            raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: existing grant withdrawn or ambiguous")
         return {"granted": True, "granted_by": authority[2], "reused": True}
     digest = hashlib.sha256(json.dumps({"plan": plan_dir.name, "item": item_id,
                                        "gate": request, "attestation": attestation},
@@ -624,9 +624,9 @@ def _materialize_owner_invocation_locked(plan_dir, item_id: str, *, command="pla
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date) or decision_path.parent.is_symlink():
         raise TaskContractBuildError(item_id, "authority", "OWNER_INVOCATION_INVALID: provenance date/path")
     decision = (f"---\nid: {identifier}\ndate: {date}\nstatus: accepted\nitem: {item_id}\n"
-                f"items: [{item_id}]\nsupersedes: []\nsuperseded_by: null\n---\n\n## Решение\n\n"
+                f"items: [{item_id}]\nsupersedes: []\nsuperseded_by: null\n---\n\n## Solution\n\n"
                 f"{marker} branch=`{request['branch']}`; scope=`{request['scope']}`; owner-message=`{reference}`\n\n"
-                "## Почему\n\nExact provider-attested owner invocation; declared finite scope only.\n")
+                "## Why\n\nExact provider-attested owner invocation; declared finite scope only.\n")
     from task import plan_bundle
     created = []
     try:
@@ -756,7 +756,7 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
         decisions = plan_decisions.load_decisions(plan_dir)
     except plan_decisions.DecisionError:
         return "owner-gate", False, item_carrier
-    rows = [({"D#": decision.identifier, "Решение": decision.decision_text}, 1)
+    rows = [({"D#": decision.identifier, "Solution": decision.decision_text}, 1)
             for decision in decisions]
     if not _has_contiguous_decision_identities(rows):
         return "owner-gate", False, item_carrier
@@ -765,7 +765,7 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
     revocations = []
     for row, lineno in rows:
         decision_id = _decision_number(row.get("D#", ""))
-        decision = (row.get("Решение", "") or "").strip()
+        decision = (row.get("Solution", "") or "").strip()
         if decision_id is None:
             continue
         if marker in decision:
@@ -848,7 +848,7 @@ def _resolve_authority(plan_lint, plan_lines, plan_dir: Path, item_id: str,
 _ROUTING_HEADER_CANON = "Model class/effort"
 _ROUTING_HEADER_CANDIDATES = (_ROUTING_HEADER_CANON,)
 _EXECUTABLE_ROUTING_COLUMNS = (
-    "Batch", "Items", "Model class/effort", "Exec", "Review", "Почему",
+    "Batch", "Items", "Model class/effort", "Exec", "Review", "Why",
 )
 # Canonical Exec spellings; the rest are legacy aliases of `run`.
 EXEC_MODE_RUN = "run"
@@ -889,8 +889,8 @@ def _model_class_name_map(routing_metadata: dict) -> dict:
     `command_catalog.load_routing_metadata` by the caller — this function never opens a
     file itself). A name bound to more than one class is ambiguous by construction of the
     fleet-wide carrier; `_resolve_model_class` below refuses it rather than picking
-    either winner (D78: "имя ... встречающееся в двух разных классах, даёт тот же
-    типизированный отказ")."""
+    either winner (D78: "name ... occurring in two different classes gives the same
+    typed failure")."""
     name_to_classes: dict = {}
     for provider in routing_metadata.get("mappings", {}).values():
         for model_class, names in provider.get("class_selectors", {}).items():
@@ -1000,7 +1000,7 @@ def executable_routing_table(plan_dir: Path | str) -> dict:
     if not matches:
         raise TaskContractBuildError(
             "routing", "Routing",
-            "no executable table with exact header `Batch | Items | Model class/effort | Exec | Review | Почему`")
+            "no executable table with exact header `Batch | Items | Model class/effort | Exec | Review | Why`")
     if len(matches) != 1:
         lines = ", ".join(str(line) for line, _rows in matches)
         raise TaskContractBuildError(
@@ -1074,7 +1074,7 @@ def compile_batch_routing(plan_dir, *, routing_config_path=None) -> dict:
             entry = {"item_id": item, "batch": item_batch, "batch_key": batch_key, "route": {
                 "model_class": model_class, "effort": effort},
                 "exec": exec_mode, "declared_exec": declared_exec, "review": review, "line": line,
-                "recommended": row.get("Почему", "").strip().startswith("recommended:")}
+                "recommended": row.get("Why", "").strip().startswith("recommended:")}
             item_rows[item] = entry
             groups.setdefault(batch_key, []).append(entry)
 
@@ -1398,7 +1398,7 @@ def _find_routing_row(plan_lint_mod, plan_lines, item_id: str, routing_metadata:
     def _token_covers(token: str) -> bool:
         """The same two matchers the loop above uses, applied to ONE token of a comma
         list — for DIAGNOSIS ONLY. A covering token never yields a route (the list stays
-        illegal, D124: «отказ остаётся отказом»); it only proves the refusal is about the
+        illegal, D124: «failure remains failure»); it only proves the refusal is about the
         cell's FORM, not about a missing row."""
         if token == item_id:
             return True
@@ -1484,7 +1484,7 @@ def build(plan_dir, item_id, *, actual_route=None, capabilities=(), bundle_priva
     # plan.md and accidentally restoring the legacy monolith as a source.
     for field in ("Version", "Status", "Last Updated"):
         if not plan_meta or field not in plan_meta:
-            raise TaskContractBuildError(item_id, "Meta", f"нет поля {field!r} в владельческом виде")
+            raise TaskContractBuildError(item_id, "Meta", f"no field {field!r} in owner view")
     phase_path = plan_layout.phase_path(plan_dir, phase_token)
     phase = plan_lint.parse_phase_md(phase_path, phase_token, diag, layout=layout)
     occurrences = phase["items"].get(item_id) if phase else None
@@ -1897,7 +1897,7 @@ def _rank_or_none(order: tuple, value) -> int | None:
 def classify_tier(work: dict) -> str:
     """plan-portability-v1.md §Classification rule — `tier(work)`.
 
-    `work` carries the four признаки: `sessions` (`"single"`/`"multi"`), `risk`
+    `work` carries the four symptoms: `sessions` (`"single"`/`"multi"`), `risk`
     (`"low"`/`"high"`), `handoff` (bool), `audit` (bool)."""
     if (work.get("sessions") == "multi" or work.get("risk") == "high"
             or work.get("handoff") or work.get("audit")):
@@ -1957,7 +1957,7 @@ def pre_mutation(contract: dict, *, work: dict | None = None,
     """task-contract-v1.md §Pre-mutation predicate — ordered, first failure wins.
     Returns `None` (allow) or a typed reason code.
 
-    `work` — optional признаки for the portability tier-classification sub-check (rank
+    `work` — optional signs for the portability tier-classification sub-check (rank
     5-6 of the frozen table); omitted when the contract's own declared tier is trusted
     as-is (e.g. re-checking an already-classified contract)."""
     if contract["version"]["content_hash"] != content_hash(contract):

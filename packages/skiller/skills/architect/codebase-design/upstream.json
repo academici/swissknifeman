@@ -30,12 +30,12 @@
       "fetched_at": "2026-06-26"
     }
   ],
-  "notes": "Из mattpocock/skills engineering/codebase-design + HTML-REPORT.md из engineering/improve-codebase-architecture (свёрнут сюда сниппетом — отдельный скилл не делаем, дубль refactoring-plan). Тело сохранено (англ.), RU description-роутер, под-файлы -> snippets/, добавлены PHP/Dart-эквиваленты в блоке testability, секция «Связанные скиллы». strategy=notify.",
+  "notes": "From mattpocock/skills engineering/codebase-design + HTML-REPORT.md from engineering/improve-codebase-architecture (is included here as a snippet - we don’t create a separate skill, a double refactoring-plan). Body saved (English), RU description-router, sub-files -> snippets/, added PHP/Dart-equivalents in block testability, section «Related skills». strategy=notify.",
   "audit": {
     "verdict": "attention",
     "at": "2026-08-01",
     "by": "vendor audit",
     "upstream_sha": "453162dea2a173fedf80180f0d400f6da83776b5987e3c547292a1e8029fb7f6",
-    "note": "snippets/HTML-REPORT.md:13,15 — генерируемый ОТЧЁТ тянет cdn.tailwindcss.com и cdn.jsdelivr.net в артефакт ПОЛЬЗОВАТЕЛЯ, вне контура доверия агента: принятый класс"
+    "note": "snippets/HTML-REPORT.md:13,15 — generated REPORT pulls cdn.tailwindcss.com and cdn.jsdelivr.net into USER artifact, outside agent trust loop: accepted class"
   }
 }

@@ -1,65 +1,65 @@
-# Федерация графа
+# Count Federation
 
-Граф связей хранится **по проекту**, а не одним файлом. Это раскладка по умолчанию и
-единственная первоклассная (`graph.adapter = "federation"`).
+The connection graph is stored **by project**, and not one file. This is the default layout and
+the only first-class (`graph.adapter = "federation"`).
 
-> **Не путать с памятью.** Здесь `federation` — про **граф** (сторы проектов + индекс).
-> В хуке памяти `MODE=federation` — это отдельный **файловый** бэкенд (`~/.swissknifeman/
-> memory/<brain>/*.md`), к графу отношения не имеющий. Память проектов — режим `MODE=maind`
-> (демон, изоляция по scope), см. [Память](./memory).
+> **Not to be confused with memory.** Here `federation` — about **graph** (project stores + index).
+> In memory hook `MODE=federation` — is separate **file** backend (`~/.swissknifeman/
+> memory/<brain>/*.md`), not related to the graph. Project memory - mode `MODE=maind`
+> (daemon, isolation by scope), see [Memory](./memory).
 
-## Зачем
+## Why
 
-Один монолитный `graph.db` плохо масштабируется: его нельзя отдать/удалить по проекту, а связи
-разных доменов смешиваются. Федерация даёт:
+One monolithic `graph.db` doesn't scale well: it can't be given away/delete by project, and connections
+different domains are mixed. The Federation gives:
 
-- **граф на проект** — `data/graphs/<id>.db` (или `<repo>/.maind/graph.db` при `graph_store: "local"`);
-- **тонкий индекс** — `data/graphs/_index.db`: только `project:*`-узлы + межпроектные рёбра, **регенерируемый** (не источник истины);
-- **federate-on-read** — запрос, пересекающий границу проекта, сшивает нужные сторы в один
-  in-memory union и гоняет по нему обычный BFS (`federation.Federation` поверх `graph.Graph`).
+- **graph per project** — `data/graphs/<id>.db` (or `<repo>/.maind/graph.db` when `graph_store: "local"`);
+- **thin index** — `data/graphs/_index.db`: only `project:*`-nodes + interproject edges, **regenerable** (not a source of truth);
+- **federate-on-read** — request crossing the project boundary merges the necessary stores into one
+  in-memory union and drives an ordinary BFS (`federation.Federation` on top `graph.Graph`).
 
 ```mermaid
 flowchart LR
-  subgraph stores["сторы проектов (источник истины)"]
+  subgraph stores["project stores (source of truth)"]
     A[("graphs/flexcrm.db")]
     B[("graphs/azguard.db")]
   end
-  A & B -->|union on read| U["in-memory граф"]
-  A & B -->|rebuild_index| I[("graphs/_index.db<br/>project:* + cross-рёбра")]
+  A & B -->|union on read| U["in-memory graph"]
+  A & B -->|rebuild_index| I[("graphs/_index.db<br/>project:* + cross-edges")]
   U --> Q["query / neighbors / path / stats"]
 ```
 
-## Владение узлами
+## Node Ownership
 
-Узел **принадлежит** проекту `pid`, если в его сторе у узла `attrs.project == pid` (так помечает
-`derive`). Ребро — **cross**, если владельцы src и dst разные. Индекс держит карту владения +
-cross-рёбра. Связь с **незарегистрированным** внешним узлом (нет записи в `projects[]`) сохраняется.
+Node **belongs to** project `pid`, if in its store the node `attrs.project == pid` (so marks
+`derive`). Edge - **cross**, if the owners src and dst different. Index holds the ownership card +
+cross-ribs. Contact with **unregistered** external node (no entry in `projects[]`) is saved.
 
-## Команды
+## Commands
 
 ```bash
-maind graph derive --all                 # пересобрать сторы всех проектов из источников
-maind graph derive --project flexcrm     # один проект
-maind graph rebuild                      # пересобрать только _index.db
-maind graph --project flexcrm            # граф одного проекта (его узлы + исходящие cross-рёбра)
-maind graph --cross [--namespace axioma] # весь межпроектный слой (опц. одной группы)
-maind graph query --from project:flexcrm --depth 2   # обход через границы (федерация)
-maind graph stats                        # per-project + cross-edge сводка
+maind graph derive --all                 # rebuild the stores of all projects from sources
+maind graph derive --project flexcrm     # one project
+maind graph rebuild                      # rebuild only _index.db
+maind graph --project flexcrm            # graph of one project (its nodes + outgoing cross-edges)
+maind graph --cross [--namespace axioma] # entire cross-project layer (opt. one group)
+maind graph query --from project:flexcrm --depth 2   # border traversal (federation)
+maind graph stats                        # per-project + cross-edge summary
 ```
 
-## Где живёт стор
+## Where does the stor live?
 
-`graph_store` у проекта: `hub` (по умолчанию — `data/graphs/<id>.db` в хабе) или `local`
-(`<repo>/.maind/graph.db` — граф живёт в самом репо проекта, удобно для переносимости).
+`graph_store` for the project: `hub` (default - `data/graphs/<id>.db` in the hub) or `local`
+(`<repo>/.maind/graph.db` — the graph lives in the project repo itself, convenient for portability).
 
-## Чтение из кода
+## Reading from code
 
-Через единый фасад — не открывайте стор напрямую:
+Through a single facade - do not open the store directly:
 
 ```python
-from .federation import graph_reader   # Federation (или die при adapter=disabled)
+from .federation import graph_reader   # Federation (or die when adapter=disabled)
 g = graph_reader(env, config)
 g.query("project:flexcrm", depth=2)
 ```
 
-Дальше: [Namespaces →](./namespaces)
+Next: [Namespaces →](./namespaces)

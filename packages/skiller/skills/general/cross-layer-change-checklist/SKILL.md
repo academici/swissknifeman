@@ -60,7 +60,7 @@ Use for changes spanning multiple system layers.
 [x] Data/Migrations
 [x] Docs
 [x] Tests
-Остаточные риски:
+Residual risks:
 ```
 
 ## Related skills

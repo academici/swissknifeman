@@ -1,24 +1,24 @@
-"""swissknifeman — CLI реестра скиллов.
+"""swissknifeman — CLI skill registry.
 
-Логика вынесена из bin/skiller (раньше — Python-heredoc внутри bash).
-Бинарник теперь тонкий лаунчер: проверяет окружение и вызывает
+Logic taken from bin/skiller (before - Python-heredoc inside bash).
+The binary is now a thin launcher: checks the environment and calls
 `python3 -m skiller <repo_root> <cmd> [args...]`.
 
-Модули:
-  common    — die/warn/now_iso/confirm, парсинг frontmatter и flag'ов
-  config    — .swissknife.json, профили, autodetect, resolve_selection
+Modules:
+  common    — die/warn/now_iso/confirm, parsing frontmatter and flag'ov
+  config    — .swissknife.json, profiles, autodetect, resolve_selection
   state     — ~/.swissknifeman/projects.json, registry_git_state
-  hub       — генерация корневого хаба, обнаружение артефактов
-  boost     — синк boost.json::skills для Laravel Boost
-  connect   — канал plugin marketplace
-  vendor    — канал вендоринга
-  update    — обновление подключения/вендоринга (диск — источник истины)
-  status    — read-only отчёт
-  projects  — list зарегистрированных проектов
-  registry  — регенерация skills.json + манифестов (мейнтейнер)
-  doctor    — диагностика окружения
-  cli       — диспетчер команд (точка входа __main__)
+  hub       — root hub generation, artifact detection
+  boost     — sync boost.json::skills for Laravel Boost
+  connect   — channel plugin marketplace
+  vendor    — vendor channel
+  update    — connection update/vendor (disk - the source of truth)
+  status    — read-only report
+  projects  — list registered projects
+  registry  — regeneration skills.json + manifests (maintainer)
+  doctor    — environment diagnostics
+  cli       — command manager (entry point __main__)
 
-Точка входа для тестов: импортируй нужные функции напрямую, окружение
-передаётся через объект Env (common.Env), без модульных глобалей.
+Entry point for tests: import the necessary functions directly, environment
+is passed through the object Env (common.Env), without modular globals.
 """

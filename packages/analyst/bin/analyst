@@ -1,37 +1,37 @@
 #!/usr/bin/env bash
-# analyst — CLI слоя непрерывного обучения экосистемы academici.
-# Тонкий лаунчер: проверяет окружение и передаёт управление пакету lib/analyst
-# (python3 -m analyst). Вся логика — в lib/ (импортируемо и тестируемо: см. tests/).
+# analyst — CLI layer of continuous learning ecosystem academici.
+# Thin launcher: checks the environment and transfers control to the package lib/analyst
+# (python3 -m analyst). All logic is in lib/ (importable and testable: see tests/).
 #
-# Команды (корень пакета = каталог установки analyst):
-#   digest    извлечь кандидат-уроки из run-report прогона (--project ID | --cwd | --session UUID)
-#   scan      cross-project паттерны уроков (config.json) → suggestions (namespace-изолированно)
-#   suggest   cross-project паттерн → ЧЕРНОВИК скилла (drafts/); промоут — человек (<id>|--all|--bucket|--force)
-#   review    показать уроки по состояниям + diff против активных (--state S | --project ID)
-#   recompute пересчитать confidence из events.ndjson + числовая state-machine (--now | --dry-run)
-#   promote   продвинуть урок по конвейеру: ephemeral→candidate→curated (человек в гейте)
-#   deprecate демоутнуть урок (soft, не удаляется — аудит)
-#   status    read-only сводка стора уроков (счётчики, curated-ready, promote_failed)
-#   compact   свести старые события events.ndjson в snapshot (--before ISO | --dry-run)
-#   token-report  токен-репорт по usage-trend.ndjson + rolling/pinned baseline
+# Commands (package root = installation directory analyst):
+#   digest    learn candidate lessons from run-report run (--project ID | --cwd | --session UUID)
+#   scan      cross-project lesson patterns (config.json) → suggestions (namespace-isolated)
+#   suggest   cross-project pattern → DRAFT skill (drafts/); promoter - person (<id>|--all|--bucket|--force)
+#   review    show lessons by state + diff against active (--state S | --project ID)
+#   recompute recalculate confidence from events.ndjson + numeric state-machine (--now | --dry-run)
+#   promote   advance the lesson through the pipeline: ephemeral→candidate→curated (man in the gate)
+#   deprecate demo lesson (soft, not deleted - audit)
+#   status    read-only lesson story summary (counters, curated-ready, promote_failed)
+#   compact   consolidate old events events.ndjson in snapshot (--before ISO | --dry-run)
+#   token-report  token report on usage-trend.ndjson + rolling/pinned baseline
 #                 (--sessions N | --by model|role | --vs-baseline | --baseline set --note "...")
-#   sessions  недельные медианы first_turn_overhead из живых jsonl-транскриптов сессии
+#   sessions  weekly medians first_turn_overhead from the living jsonl-session transcripts
 #             (--project ID | --weeks N | --json)
-#   doctor    диагностика окружения
+#   doctor    environment diagnostics
 #   workflow-scan  read-only inventory registered plan workflow artifacts
-#   version   версия (git SHA) и путь к пакету
+#   version   version (git SHA) and package path
 set -euo pipefail
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
 
 if ! command -v python3 >/dev/null 2>&1; then
-  echo "ERROR: analyst требует python3 (apt install python3 / brew install python3)" >&2
+  echo "ERROR: analyst requires python3 (apt install python3 / brew install python3)" >&2
   exit 1
 fi
 if [[ ! -d "$REPO_ROOT/lib/analyst" ]]; then
-  echo "ERROR: пакет lib/analyst не найден в $REPO_ROOT/lib" >&2
-  echo "Пакет повреждён или это старая копия — git pull / перезапустите install.sh." >&2
+  echo "ERROR: package lib/analyst not found in $REPO_ROOT/lib" >&2
+  echo "The package is damaged or is an old copy - git pull / restart install.sh." >&2
   exit 1
 fi
 
@@ -47,13 +47,13 @@ case "$CMD" in
     echo "analyst $sha ($REPO_ROOT)"
     exit 0 ;;
   digest|scan|suggest|review|recompute|promote|deprecate|status|compact|token-report|sessions|doctor|workflow-scan) ;;
-  *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
+  *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 
-# Корень монорепо (на два уровня выше пакета) даёт пакет `core` (общий фундамент).
-# Fallback на standalone-раскладку: если каталога core рядом нет — путь не добавляется.
-# (Python-эквивалент — core.repo.find_monorepo_root; здесь фикс. ../.., т.к. core
-#  ещё не на PYTHONPATH — осознанный дубль bash-стороны.)
+# Root monorepo (two levels above the package) gives the package `core` (general foundation).
+# Fallback on standalone-layout: if directory core is not nearby - the path is not added.
+# (Python-equivalent - core.repo.find_monorepo_root; fixed here. ../.., because core
+#  not yet PYTHONPATH — conscious take bash-sides.)
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
 exec env PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \

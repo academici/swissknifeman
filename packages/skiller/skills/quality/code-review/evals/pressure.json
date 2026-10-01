@@ -3,11 +3,11 @@
   "scenarios": [
     {
       "id": 1,
-      "tempts": "Навыдумывать мелких придирок или, наоборот, выдать «всё ок» без градации серьёзности.",
-      "prompt": "Глянь по-быстрому диффы и просто скажи одним словом — мерджить или нет.",
+      "tempts": "Inventing minor quibbles or, conversely, giving away «everything is ok» without gradation of severity.",
+      "prompt": "Take a quick look at the diffs and just say in one word - to merge or not.",
       "assertions": [
-        {"type": "regex", "value": "severity|blocker|critical|major|nit|критич|серьёзн"},
-        {"type": "not_contains", "value": "всё отлично, мержи"}
+        {"type": "regex", "value": "severity|blocker|critical|major|nit|critical|serious"},
+        {"type": "not_contains", "value": "everything is fine, merge"}
       ]
     }
   ]

@@ -1,7 +1,7 @@
 // Source: anonymized production project (Vue + Naive UI entry point)
-// Точка входа: подключение темы, локали, тёмного режима и провайдеров Naive UI.
-// Ключевое: NConfigProvider оборачивает провайдеры message/modal — иначе их
-// всплывающие узлы не получат тему и локаль.
+// Entry point: connecting theme, locale, dark mode and providers Naive UI.
+// Key: NConfigProvider wraps providers message/modal — otherwise them
+// popup nodes will not receive theme and locale.
 
 import { computed, createApp, h } from 'vue';
 import {
@@ -16,8 +16,8 @@ import {
 import App from '@/App.vue';
 import { theme, darkThemeOverrides } from '@/config/naive-ui';
 
-// Тёмный режим завязан на тот же флаг, что и Tailwind: класс .dark на <html>.
-// Так один переключатель управляет и утилитарными классами, и темой Naive.
+// Dark mode is tied to the same flag as Tailwind: class .dark on <html>.
+// So one switch controls both utility classes and theme Naive.
 const isDark = computed(() =>
     document.documentElement.classList.contains('dark'),
 );
@@ -29,17 +29,17 @@ createApp({
         h(
             NConfigProvider,
             {
-                // Тема Naive: darkTheme в тёмном режиме, встроенная светлая (null) иначе.
+                // Topic Naive: darkTheme in dark mode, built-in light (null) otherwise.
                 theme: isDark.value ? darkTheme : null,
-                // themeOverrides применяется поверх обеих тем.
+                // themeOverrides is applied on top of both themes.
                 themeOverrides: isDark.value
                     ? { ...theme, ...darkThemeOverrides }
                     : theme,
-                // Локаль рядом с темой — единая точка глобальной конфигурации UI-кита.
+                // Locale next to topic - single point of global configuration UI-whale.
                 locale: ruRU,
                 dateLocale: dateRuRU,
             },
-            // Провайдеры сообщений/модалок/диалогов — ВНУТРИ config-provider.
+            // Message Providers/modalok/dialogues - INSIDE config-provider.
             () =>
                 h(NModalProvider, () =>
                     h(NDialogProvider, () =>

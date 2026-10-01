@@ -3,7 +3,7 @@
   "snippets": [
     {
       "file": "naming-gallery.md",
-      "description": "Кросс-языковая таблица «плохо → хорошо»: функции, классы, переменные, булевы, коллекции, тесты, симметрия — для ревью или вставки в CLAUDE.md",
+      "description": "Cross-language table «bad → good»: functions, classes, variables, booleans, collections, tests, symmetry - for review or insertion into CLAUDE.md",
       "tags": ["naming", "readability", "review", "claude-md"]
     }
   ]

@@ -54,11 +54,11 @@ Vitest is a next-generation testing framework powered by Vite. It provides a Jes
 
 ## Related Skills
 
-- **`vue-testing-best-practices`** — паттерны тестирования Vue-компонентов через VTU: **загружать вместе для Vue-проектов**
-- **`ts-library`** — если проект является TypeScript-пакетом
+- **`vue-testing-best-practices`** — testing patterns Vue-components via VTU: **download together for Vue-projects**
+- **`ts-library`** — if the project is TypeScript-package
 
 ## Related Skills
 
-- **[vue-testing-best-practices](.agents/skills/vue-testing-best-practices/SKILL.md)** — тестирование Vue-компонентов с VTU, моки Nuxt/Pinia, специфика SSR. Загружать вместе с `vitest` для тестов в Vue-проекте
-- **[vite](.agents/skills/vite/SKILL.md)** — Vitest разделяет Vite-конфиг
-- **[ts-library](.agents/skills/ts-library/SKILL.md)** — bundling и тесты библиотечного кода
+- **[vue-testing-best-practices](.agents/skills/vue-testing-best-practices/SKILL.md)** — testing Vue-components with VTU, moki Nuxt/Pinia, specifics SSR. Load with `vitest` for tests in Vue-project
+- **[vite](.agents/skills/vite/SKILL.md)** — Vitest shares Vite-config
+- **[ts-library](.agents/skills/ts-library/SKILL.md)** — bundling and library code tests

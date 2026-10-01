@@ -1,12 +1,12 @@
-# Граф зависимостей скиллов
+# Skill dependency graph
 
-> Сгенерировано `skiller registry` (registry.render_graph) из `skills.json` — не редактировать вручную.
-> Пересборка: `skiller registry`.
+> Generated `skiller registry` (registry.render_graph) from `skills.json` — cannot be edited manually.
+> Reassembly: `skiller registry`.
 
-Сплошная стрелка `A --> B` — `A` требует `B` (`requires`): `skiller vendor` дотянет `B`
-при установке `A`. Пунктирная `A -.-> B` — результат `A` служит входом для `B`
-(`produces_for`). Показаны только скиллы, участвующие в графе; изолированные —
-в таблице ниже.
+Solid arrow `A --> B` — `A` requires `B` (`requires`): `skiller vendor` will last `B`
+during installation `A`. Dotted `A -.-> B` — result `A` serves as an input for `B`
+(`produces_for`). Only skills participating in the graph are shown; isolated -
+in the table below.
 
 ```mermaid
 flowchart LR
@@ -384,13 +384,13 @@ flowchart LR
   verify_claims -.->|feeds| tech_stack_selection
 ```
 
-**В графе:** 130 скиллов, 88 рёбер requires, 94 рёбер produces_for.
+**In the column:** 130 skills, 88 ribs requires, 94 ribs produces_for.
 
-## Изолированные скиллы (102)
+## Isolated skills (102)
 
-Скиллы без связей `requires`/`produces_for` — самодостаточны.
+Skills without connections `requires`/`produces_for` — are self-sufficient.
 
-| Бакет | Скиллы |
+| Bucket | Skills |
 |---|---|
 | ai | `ai-agents`, `mcp-builder`, `token-efficient` |
 | architect | `dev-engineering-super-skill`, `package-contribution-protocol` |

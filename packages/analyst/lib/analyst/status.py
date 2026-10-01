@@ -1,9 +1,9 @@
-"""analyst status / compact — видимость стора и детерминированная редукция events-лога.
+"""analyst status / compact — store visibility and deterministic reduction events-log.
 
-`status` — read-only сводка (счётчики по состояниям, даты последнего digest/recompute,
-curated-ready, promote_failed). `compact` — свести старые события `events.ndjson` в один
-snapshot-event на урок, сохранив суммы (S/N/tests) и МАКС ts группы, чтобы `recompute` до и
-после давал ТУ ЖЕ confidence (агрегат зависит только от сумм и возраста последнего события)."""
+`status` — read-only summary (counters by state, last date digest/recompute,
+curated-ready, promote_failed). `compact` — consolidate old events `events.ndjson` into one
+snapshot-event for the lesson, saving the amounts (S/N/tests) and MAX ts groups to `recompute` before and
+after gave the SAME confidence (aggregate depends only on the amounts and age of the last event)."""
 import json
 import os
 
@@ -14,8 +14,8 @@ from .common import atomic_write_text, die, parse_args, parse_iso
 
 # ── status ────────────────────────────────────────────────────────────────────
 def _is_curated_ready(lesson, curated_min_n=None):
-    """Кандидат набрал ЧИСЛА для curated (порог recompute)? Переход — всё равно человек.
-    curated_min_n — эффективный (адаптивный) порог; None → статический CURATED_MIN_N."""
+    """The candidate entered the NUMBERS for curated (threshold recompute)? Transition is still a person.
+    curated_min_n — effective (adaptive) threshold; None → static CURATED_MIN_N."""
     conf = lesson.get("confidence")
     if conf is None:
         return False
@@ -30,7 +30,7 @@ def _is_curated_ready(lesson, curated_min_n=None):
 
 
 def _last_ts(records, pred):
-    """Максимальный (по разобранному времени) ts среди записей, удовлетворяющих pred. None — нет."""
+    """Maximum (by parsed time) ts among records that satisfy pred. None — no."""
     best = None
     for r in records:
         if not pred(r):
@@ -43,12 +43,12 @@ def _last_ts(records, pred):
 
 
 def build_status(project_path):
-    """Сводка стора уроков (read-only, без мутаций). Даты — из append-only audit.ndjson."""
+    """Lesson Story Summary (read-only, without mutations). Dates - from append-only audit.ndjson."""
     counts = {st: 0 for st in lessons.STATES}
     promote_failed = 0
     curated_ready = 0
     events = lessons.read_events(project_path)
-    # адаптивный порог curated — тот же, что применил бы recompute (активность проекта)
+    # adaptive threshold curated — is the same as what I would use recompute (project activity)
     project_sessions = sum(int(e.get("sessions_total", 0) or 0) for e in events)
     _, cur_min = R.adaptive_thresholds(project_sessions)
     for L, st in lessons.list_lessons(project_path):
@@ -71,35 +71,35 @@ def build_status(project_path):
 
 
 def cmd_status(env, argv):
-    """analyst status [--json] — сводка стора уроков (read-only, без мутаций)."""
+    """analyst status [--json] — lesson story summary (read-only, without mutations)."""
     opts, _ = parse_args(argv, {"--project": "str", "--json": "bool"})
     if opts["help"]:
         print("analyst status [--json]\n"
-              "  Read-only сводка: счётчики по состояниям, curated-ready, promote_failed,\n"
-              "  число событий, даты последнего digest/recompute. Ничего не меняет.")
+              "  Read-only summary: counters by state, curated-ready, promote_failed,\n"
+              "  number of events, dates of last digest/recompute. Doesn't change anything.")
         return
     st = build_status(os.getcwd())
     if opts["json"]:
         print(json.dumps(st, ensure_ascii=False, indent=2))
         return
     c = st["counts"]
-    print(f"\nanalyst status — {st['total']} урок(ов)\n")
+    print(f"\nanalyst status — {st['total']} lesson(ov)\n")
     for state in lessons.STATES:
         print(f"  {state:<11} {c[state]}")
-    print(f"\n  curated-ready:  {st['curated_ready']}  (числа есть — нужен человек)")
+    print(f"\n  curated-ready:  {st['curated_ready']}  (there are numbers - we need a person)")
     print(f"  promote_failed: {st['promote_failed']}"
-          + ("  → досыл: analyst promote --retry-failed" if st["promote_failed"] else ""))
-    print(f"  события:        {st['events']}")
-    print(f"  последний digest:    {st['last_digest'] or '—'}")
-    print(f"  последний recompute: {st['last_recompute'] or '—'}\n")
+          + ("  → forwarded: analyst promote --retry-failed" if st["promote_failed"] else ""))
+    print(f"  events:        {st['events']}")
+    print(f"  last digest:    {st['last_digest'] or '—'}")
+    print(f"  last recompute: {st['last_recompute'] or '—'}\n")
 
 
 # ── compact ─────────────────────────────────────────────────────────────────
 def compact_events(events, before_dt):
-    """Свести события с `ts < before_dt` (или ВСЕ при before_dt=None) в один snapshot-event
-    на урок. Сохраняет суммы (S/N/tests) и МАКС ts группы → recompute даёт ту же confidence.
-    События без id / без разбираемого ts / с `ts >= before_dt` остаются как есть.
-    Возвращает (new_events, {compacted, snapshots, kept}). Чистая (без I/O)."""
+    """Reduce events with `ts < before_dt` (or ALL when before_dt=None) into one snapshot-event
+    for the lesson. Saves amounts (S/N/tests) and MAX ts groups → recompute gives the same confidence.
+    Events without id / without parsing ts / with `ts >= before_dt` remain as is.
+    Returns (new_events, {compacted, snapshots, kept}). Clean (without I/O)."""
     old_by_id = {}
     kept = []
     for e in events:
@@ -129,20 +129,20 @@ def compact_events(events, before_dt):
 
 
 def cmd_compact(env, argv):
-    """analyst compact [--before ISO] [--dry-run] [--json] — свести старые события в snapshot."""
+    """analyst compact [--before ISO] [--dry-run] [--json] — consolidate old events into snapshot."""
     opts, _ = parse_args(argv, {"--before": "str", "--project": "str",
                                 "--dry-run": "bool", "--json": "bool"})
     if opts["help"]:
         print("analyst compact [--before ISO] [--dry-run] [--json]\n"
-              "  Свести события events.ndjson (старше --before, или ВСЕ) в один snapshot\n"
-              "  на урок. Суммы и возраст последнего события сохраняются → recompute даёт\n"
-              "  ту же confidence. --dry-run — только показать, ничего не писать.")
+              "  Consolidate events events.ndjson (older --before, or ALL) into one snapshot\n"
+              "  for the lesson. Amounts and ages of the last event are stored → recompute gives\n"
+              "  the same confidence. --dry-run — just show, don't write anything.")
         return
     before_dt = None
     if opts["before"]:
         before_dt = parse_iso(opts["before"])
         if before_dt is None:
-            die("--before: ожидается ISO UTC вида 2026-07-01T00:00:00Z")
+            die("--before: pending ISO UTC view 2026-07-01T00:00:00Z")
     ppath = os.getcwd()
     events = lessons.read_events(ppath)
     new_events, stats = compact_events(events, before_dt)
@@ -153,12 +153,12 @@ def cmd_compact(env, argv):
                          ensure_ascii=False, indent=2))
     if stats["compacted"] == 0:
         if not opts["json"]:
-            print("Компактить нечего (нет подходящих событий).")
+            print("Nothing to compact (no matching events).")
         return
     if opts["dry_run"]:
         if not opts["json"]:
-            print(f"[dry-run] свернулось бы {stats['compacted']} событий → "
-                  f"{stats['snapshots']} snapshot; осталось бы всего {len(new_events)}.")
+            print(f"[dry-run] would collapse {stats['compacted']} events → "
+                  f"{stats['snapshots']} snapshot; would only be left {len(new_events)}.")
         return
 
     content = "".join(json.dumps(e, ensure_ascii=False) + "\n" for e in new_events)
@@ -166,5 +166,5 @@ def cmd_compact(env, argv):
     lessons.audit_append(ppath, {"action": "compact", "before": opts["before"] or None,
                                  **stats, "events_after": len(new_events)})
     if not opts["json"]:
-        print(f"Свёрнуто {stats['compacted']} событий → {stats['snapshots']} snapshot. "
-              f"events.ndjson: {len(new_events)} записей.")
+        print(f"Collapsed {stats['compacted']} events → {stats['snapshots']} snapshot. "
+              f"events.ndjson: {len(new_events)} records.")

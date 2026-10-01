@@ -81,26 +81,26 @@ interviews_done: 0
 
 # Customer Discovery — [ProjectName]
 
-## Гипотеза (из idea-discovery)
-[проверяемая форма]
+## Hypothesis (from idea-discovery)
+[form being validated]
 
 ## Target profile
-- Job title / company / team / seniority / где досягаемы / приоритет
+- Job title / company / team / seniority / where reachable / priority
 
 ## Interview framework
-[вопросы по секциям; разные наборы для разных ролей]
+[questions by section; different sets for different roles]
 
-## Лог интервью
-| # | Дата | Роль | Подтвердило | Опровергло | Сюрприз |
+## Interview log
+| # | Date | Role | Confirmed | Refuted | Surprise |
 |---|---|---|---|---|---|
 
-## Synthesis (каждые 5)
+## Synthesis (every 5)
 - FOR: …
 - AGAINST: …
-- Asymmetry check: реальный сигнал или wishful thinking?
+- Asymmetry check: real signal or wishful thinking?
 
-## Вывод
-→ problem-solution fit достигнут? (вход в startup-lifecycle idea-gate)
+## Output
+→ problem-solution fit reached? (login startup-lifecycle idea-gate)
 ```
 
 ## Agent adds

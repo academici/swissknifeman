@@ -47,7 +47,7 @@ tooling: npm@X, composer@Y, ...
 
 # Dependency Audit — [ProjectName]
 
-## Сводка
+## Summary
 - Direct deps: N
 - Transitive deps: M
 - Lockfile committed: yes/no
@@ -71,7 +71,7 @@ tooling: npm@X, composer@Y, ...
 | Apache-2.0 | 12 | ... |
 | ISC | 8 | ... |
 
-**Conflicts / red flags:** [список или «нет»]
+**Conflicts / red flags:** [list or «no»]
 
 ## Supply-chain risk
 - Bus-factor red flags: ...
@@ -86,7 +86,7 @@ tooling: npm@X, composer@Y, ...
 - [ ] ...
 
 ## Next audit
-- Триггер: следующий MAJOR / security advisory / 90 дней (что раньше)
+- Trigger: next MAJOR / security advisory / 90 days (what before)
 ```
 
 ### `ProjectName/SBOM.json`

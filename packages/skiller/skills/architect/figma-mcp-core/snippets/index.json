@@ -3,12 +3,12 @@
   "snippets": [
     {
       "file": "tokens.json",
-      "description": "Пример design tokens в W3C Design Token Format: color (вложенные surface), spacing, typography (composite), border-radius; multi-mode (light/dark) через отдельные значения; $description хранит исходное имя Figma-переменной",
+      "description": "Example design tokens in W3C Design Token Format: color (nested surface), spacing, typography (composite), border-radius; multi-mode (light/dark) through individual values; $description stores the original name Figma-variable",
       "tags": ["design-tokens", "w3c", "figma", "multi-mode"]
     },
     {
       "file": "design-system-checklist.md",
-      "description": "Чеклист готовности Figma design-system перед разработкой: цвета в Variables, типографика стилями, spacing по сетке, полные Variants интерактивных компонентов, dark mode как Variable Mode, семантика имён слоёв, публикация в Team Library",
+      "description": "Readiness checklist Figma design-system before development: colors in Variables, typography styles, spacing on grid, full Variants interactive components, dark mode like Variable Mode, semantics of layer names, publication in Team Library",
       "tags": ["design-system", "audit", "checklist", "figma"]
     }
   ]

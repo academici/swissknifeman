@@ -1,54 +1,54 @@
-# Stage-aware admission бюджета чтения
+# Stage-aware admission budget reading
 
-`task.plan_weight` для планов Layout v2 различает момент применения D2, не меняя единицу,
-порог `100000`, single-read limits или anti-displacement D74. Публичный контракт описан в
-[контракте read-budget v1](./read-budget-contract.md); числовых fallback в коде нет.
+`task.plan_weight` for Layout v2 plans distinguishes when D2 is applied without changing the unit,
+threshold `100000`, single-read limits or anti-displacement D74. The public contract is described in
+[read-budget v1 contract](./read-budget-contract.md); There are no numeric fallbacks in the code.
 
-## Состояния
+## States
 
-- `historical-pre-v2` — item был терминален не позже journal-события активации Layout v2.
-  Его измерение остаётся baseline evidence, закрытое ТЗ не переписывается ради зелёного исхода.
-- `pending-producer` — каждый отсутствующий обязательный вход связан с существующим
-  незавершённым predecessor item, а его `Deliverables` называет тот же путь. Это deferred,
-  не pass и не нулевой вес.
-- `ready` — до мутации обязательны D2(a) и D2(b). Generic missing, unresolved entry, невалидный
-  producer edge или отсутствующий output уже терминального producer дают fail-closed.
+- `historical-pre-v2` - the item was terminal no later than the Layout v2 activation journal event.
+  Its measurement remains baseline evidence, the closed technical specification is not rewritten for the sake of a green outcome.
+- `pending-producer` - each missing required input is associated with an existing one
+  is an unfinished predecessor item, and its `Deliverables` is called the same path. This is deferred,
+  not pass and not zero weight.
+- `ready` - D2(a) and D2(b) are required before mutation. Generic missing, unresolved entry, invalid
+  producer edge or missing output of an already terminal producer gives fail-closed.
 
-Producer объявляется на соответствующей позиции `Required Reads`:
+Producer is declared at the corresponding position `Required Reads`:
 
 ```text
 2) `root/contracts/bundle-v1.md` (producer: P3.1)
 ```
 
-Компактная форма `producer=P3.1` эквивалентна. Producer обязан существовать раньше consumer,
-а его `Deliverables` — адресовать отсутствующий путь. Ручного `admission_state`, warning-mode,
-allowlist или baseline-exception нет.
+Compact form `producer=P3.1` is equivalent. The producer must exist before the consumer,
+and its `Deliverables` - address the missing path. Manual `admission_state`, warning-mode,
+allowlist or baseline-exception no.
 
-## Вывод и API
+## Output and API
 
-### Обязательный путь по раскладке
+### Mandatory layout path
 
-`plan-weight item` выбирает путь только по объявленному `Layout`:
+`plan-weight item` selects a path only according to the declared `Layout`:
 
-- v1 сохраняет legacy-порядок `plan → handoff → phase → Required Reads`;
-- v2 измеряет ровно пять carrier-ролей `plan-core → phase-context → item-spec →
-  item-input-bundle → item-state`. `handoff.md` в executor path v2 не входит.
+- v1 preserves the legacy order `plan → handoff → phase → Required Reads`;
+- v2 measures exactly five carrier roles `plan-core → phase-context → item-spec →
+  item-input-bundle → item-state`. `handoff.md` is not included in executor path v2.
 
-Для v2 инструмент сначала проверяет byte-freshness generated bundle и state. Затем он читает
-только перечисленные bundle selections, сверяет digest исходника и выбранного фрагмента и считает
-их как `bundle-input`. Повтор одного источника с тем же selector не удваивает вес; разные selectors
-одного источника остаются разными единицами чтения. Stale carrier, digest mismatch или
-неразрешимый selection дают fail-closed gap, а не нулевой вес.
+For v2, the tool first checks the byte-freshness of the generated bundle and state. Then he reads
+only the listed bundle selections, compares the digest of the source and the selected fragment and calculates
+them as `bundle-input`. Repeating the same source with the same selector does not double the weight; different selectors
+of the same source remain different reading units. Stale carrier, digest mismatch or
+undecidable selection gives fail-closed gap, not zero weight.
 
 ```bash
 python3 packages/task/scripts/plan-weight.py item plans/<PLAN-ID> Pn.m --json
 ```
 
-Item-запись содержит `admission_state`, `producer_item`, `producer_edges`, раздельные
-`admission_gaps`, `d2a_pass`, `d2b_pass` и `admission_pass`. Последнее поле boolean только для
-`ready`; у historical/pending оно равно `null`. Сводка `totals.admission` несёт версию/путь
-контракта, числа состояний, gap codes и `ready_failed`.
+Item record contains `admission_state`, `producer_item`, `producer_edges`, separate
+`admission_gaps`, `d2a_pass`, `d2b_pass` and `admission_pass`. The last field is boolean only for
+`ready`; for historical/pending it is `null`. Summary `totals.admission` carries version/path
+contract, number of states, gap codes and `ready_failed`.
 
-Измерение остаётся в `task.plan_weight`; `task.plan_admission` только классифицирует stage и
-проверяет producer edges. Потребители pre-mutation обязаны вызывать этот API, не заводить второй
-счётчик веса или собственную трактовку missing inputs.
+The dimension remains in `task.plan_weight`; `task.plan_admission` only classifies stage and
+checks producer edges. Pre-mutation consumers are required to call this API, not create a second one
+weight counter or own interpretation of missing inputs.

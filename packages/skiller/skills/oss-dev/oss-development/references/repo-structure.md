@@ -1,27 +1,27 @@
-# Шаг 1. Repo Structure
+# Step 1. Repo Structure
 
-Справочник к скиллу `oss-development`.
+Skill reference `oss-development`.
 
 
-Стандартная структура OSS-репозитория:
+Standard structure OSS-repository:
 
 ```
 ProjectName/
-├── src/                    # Исходный код
-│   └── index.ts            # Точка входа
-├── tests/                  # Тесты
-├── docs/                   # Документация (если большая)
-├── examples/               # Примеры использования
+├── src/                    # Source code
+│   └── index.ts            # Entry point
+├── tests/                  # Tests
+├── docs/                   # Documentation (if large)
+├── examples/               # Examples of use
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.md
 │   │   └── feature_request.md
 │   ├── PULL_REQUEST_TEMPLATE.md
 │   └── workflows/          # CI/CD
-├── README.md               # Главный документ
-├── CONTRIBUTING.md         # Как контрибьютить
-├── CHANGELOG.md            # История изменений
-├── LICENSE                 # Обязательно
+├── README.md               # Main document
+├── CONTRIBUTING.md         # How to contribute
+├── CHANGELOG.md            # Revision history
+├── LICENSE                 # Required
 └── package.json / go.mod / Cargo.toml
 ```
 

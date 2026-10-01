@@ -1,10 +1,10 @@
 // Source: anonymized production project
 //
-// Проброс X-Socket-ID в каждый исходящий запрос. Backend через
-// broadcast(...)->toOthers() исключает текущий сокет из рассылки, поэтому
-// инициатор не получает собственное событие повторно (оптимистичный UI + echo).
+// Forwarding X-Socket-ID in every outgoing request. Backend via
+// broadcast(...)->toOthers() excludes the current socket from broadcasting, so
+// initiator does not receive its own event again (optimistic UI + echo).
 //
-// Кладётся в bootstrap фронта, рядом с настройкой axios (CSRF, withCredentials).
+// Placed in bootstrap front, next to the setting axios (CSRF, withCredentials).
 
 import axios from "axios";
 
@@ -17,7 +17,7 @@ if (csrf?.content) {
   window.axios.defaults.withCredentials = true;
 }
 
-// На каждый запрос — текущий socketId (если Echo подключён).
+// For each request - current socketId (if Echo connected).
 window.axios.interceptors.request.use((config) => {
   const socketId = window.echo?.socketId?.();
 
@@ -29,8 +29,8 @@ window.axios.interceptors.request.use((config) => {
   return config;
 });
 
-// Для Inertia-визитов (router.visit / useForm) тот же заголовок передаётся
-// через опцию headers, т.к. они идут мимо axios-интерсептора:
+// For Inertia-visits (router.visit / useForm) the same header is sent
+// via option headers, because they are passing by axios-interceptor:
 //
 //   const socketId = window.echo?.socketId?.();
 //   router.post(route, data, {

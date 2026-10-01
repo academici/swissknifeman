@@ -1,7 +1,7 @@
-"""Синтетические фикстуры для unittest: изолированный Env, конфиги, фейковый демон памяти.
+"""Synthetic fittings for unittest: isolated Env, configs, fake memory daemon.
 
-Тесты не трогают настоящий узел/демон: всё гоняется во временных каталогах, а
-HTTP-контракт agentmemory эмулирует FakeMemoryServer на свободном порту."""
+Tests do not touch the real node/daemon: everything runs in temporary directories, and
+HTTP-contract agentmemory emulates FakeMemoryServer on a free port."""
 import contextlib
 import io
 import json
@@ -11,7 +11,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-# На случай прямого запуска: гарантируем lib/ в пути (test.sh и так ставит PYTHONPATH).
+# In case of direct launch: we guarantee lib/ on the way (test.sh and so puts PYTHONPATH).
 _LIB = Path(__file__).resolve().parents[1] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
@@ -22,8 +22,8 @@ MINIMAL_III_CONFIG = "workers:\n  - name: iii-http\n    config:\n      port: 411
 
 
 def make_repo(tmp):
-    """Создаёт синтетический корень узла maind в tmp + изолированный HOME.
-    Возвращает (root: Path, env: Env)."""
+    """Creates a synthetic node root maind in tmp + isolated HOME.
+    Returns (root: Path, env: Env)."""
     tmp = Path(tmp)
     root = tmp / "maind"
     home = tmp / "home"
@@ -36,8 +36,8 @@ def make_repo(tmp):
 
 
 def write_maind_config(root, **overrides):
-    """Пишет валидный config.json в корень узла; overrides сливаются поверх дефолта.
-    (standalone-раскладка теста: нет packages/ рядом → резолвер ждёт config.json в root)."""
+    """Writes valid config.json to the root of the node; overrides are merged on top of the default.
+    (standalone-test layout: no packages/ nearby → resolver is waiting config.json in root)."""
     config = {
         "_version": "1",
         "node": {"id": "test", "name": "Test", "role": "primary"},
@@ -56,7 +56,7 @@ def write_maind_config(root, **overrides):
 
 
 def write_brain_projects(root, projects=None):
-    """Пишет brain-РЕАЛЬНУЮ .projects.json (схема {name,enabled,vault_path,repo,folders})."""
+    """Writes brain-REAL .projects.json (diagram {name,enabled,vault_path,repo,folders})."""
     if projects is None:
         projects = [
             {"name": "Brain", "enabled": True, "vault_path": "/v/Brain",
@@ -73,16 +73,16 @@ def write_brain_projects(root, projects=None):
 
 
 def capture(fn, *args, **kwargs):
-    """Выполняет fn с перехватом stdout. Возвращает (result, stdout_text)."""
+    """Performs fn with interception stdout. Returns (result, stdout_text)."""
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
         result = fn(*args, **kwargs)
     return result, buf.getvalue()
 
 
-# ── фейковый демон памяти (agentmemory HTTP-контракт) ───────────────────────
+# ── fake memory daemon (agentmemory HTTP-contract) ───────────────────────
 class _Handler(BaseHTTPRequestHandler):
-    def log_message(self, *a):  # тишина в тестах
+    def log_message(self, *a):  # silence in tests
         pass
 
     def _send(self, code, payload):
@@ -94,9 +94,9 @@ class _Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _authorized(self):
-        """True, если протектед-эндпоинт пропускает запрос: сервер БЕЗ секрета —
-        всегда (как живой демон без AGENTMEMORY_SECRET); с секретом — только
-        корректный `Authorization: Bearer <secret>` (как middleware::api-auth)."""
+        """True, if the protected endpoint passes the request: server WITHOUT secret -
+        always (like a living demon without AGENTMEMORY_SECRET); with secret - only
+        correct `Authorization: Bearer <secret>` (like middleware::api-auth)."""
         secret = getattr(self.server, "secret", None)
         if not secret:
             return True
@@ -105,7 +105,7 @@ class _Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urlparse(self.path)
         if parsed.path == "/agentmemory/health":
-            self._send(200, {"status": "ok"})   # ВСЕГДА публичен — даже с секретом
+            self._send(200, {"status": "ok"})   # ALWAYS public - even with a secret
         elif parsed.path == "/agentmemory/memories":
             if not self._authorized():
                 self._send(401, {"error": "unauthorized"})
@@ -144,7 +144,7 @@ class _Handler(BaseHTTPRequestHandler):
                 results = results[:limit]
             self._send(200, {"results": results})
         elif parsed.path == "/agentmemory/forget":
-            # agentmemory ждёт memoryId; без него — 400 (как живой демон).
+            # agentmemory is waiting memoryId; without it - 400 (like a living demon).
             mid = payload.get("memoryId")
             if not mid:
                 self._send(400, {"error": "memoryId required"})
@@ -160,10 +160,10 @@ class _Handler(BaseHTTPRequestHandler):
 
 
 class FakeMemoryServer:
-    """Контекст-менеджер: HTTP-сервер с agentmemory-контрактом на свободном порту.
-    `with FakeMemoryServer() as url:` → базовый URL. Память — в self.memories.
-    `secret` — опционально: протектед-эндпоинты (все, кроме /agentmemory/health —
-    он ВСЕГДА публичен, как у живого движка) 401'ят без корректного bearer'а."""
+    """Context manager: HTTP-server with agentmemory-contract on a free port.
+    `with FakeMemoryServer() as url:` → basic URL. Memory - in self.memories.
+    `secret` — optional: protected endpoints (all except /agentmemory/health —
+    it is ALWAYS public, like a live engine) 401'yat without the correct bearer'a."""
 
     def __init__(self, secret=None):
         self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Handler)

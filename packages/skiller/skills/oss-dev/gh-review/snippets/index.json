@@ -3,7 +3,7 @@
   "snippets": [
     {
       "file": "gh-review-commands.md",
-      "description": "Шпаргалка gh для ревью (pr view/diff/comment/review), точечного чтения чужого репо (gh api contents/commits/rate_limit) и границы с git",
+      "description": "Cheat Sheet gh for review (pr view/diff/comment/review), point reading of someone else's repo (gh api contents/commits/rate_limit) and boundaries with git",
       "tags": ["github", "gh", "review", "api"]
     }
   ]

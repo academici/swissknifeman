@@ -35,7 +35,7 @@ def _spec_digest(plan_dir: Path, item_id: str) -> str:
         return hashlib.sha256(path.read_bytes()).hexdigest()
     except OSError as exc:
         raise TerminalPolicyError(
-            "TERMINAL_SPEC_UNREADABLE", f"item spec не читается: {path}") from exc
+            "TERMINAL_SPEC_UNREADABLE", f"item spec is not readable: {path}") from exc
 
 
 def build_decision(plan_dir, item_id: str, *, result: str, validation: list[dict],
@@ -45,7 +45,7 @@ def build_decision(plan_dir, item_id: str, *, result: str, validation: list[dict
                    fix_branch: dict | None = None) -> dict:
     """Build the decision carrier required by a new item close."""
     if result not in _CLOSE_RESULTS:
-        raise TerminalPolicyError("TERMINAL_RESULT_INVALID", f"не close result: {result}")
+        raise TerminalPolicyError("TERMINAL_RESULT_INVALID", f"not close result: {result}")
     decision = {
         "signal_class": "acceptance",
         "scope_class": "item",
@@ -73,12 +73,12 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
              item_id: str | None = None) -> None:
     if not isinstance(decision, dict):
         raise TerminalPolicyError(
-            "TERMINAL_EVIDENCE_REQUIRED", "terminal item требует reducer decision")
+            "TERMINAL_EVIDENCE_REQUIRED", "terminal item requires reducer decision")
     if result in _BLOCK_RESULTS:
         if decision.get("terminal") is not True or decision.get("action") not in _TERMINAL_ACTIONS:
             raise TerminalPolicyError(
                 "TERMINAL_BLOCK_UNCONFIRMED",
-                "blocked/escalated допустим только после terminal reducer action",
+                "blocked/escalated is only valid after terminal reducer action",
             )
         return
     if result not in _CLOSE_RESULTS:
@@ -87,16 +87,16 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
     expected = {"schema_version", "spec_sha256", "validation", "repair_exhausted"}
     if not isinstance(evidence, dict) or set(evidence) != expected:
         raise TerminalPolicyError(
-            "TERMINAL_EVIDENCE_REQUIRED", "нет closed terminal-evidence/v1")
+            "TERMINAL_EVIDENCE_REQUIRED", "no closed terminal-evidence/v1")
     if evidence["schema_version"] != "terminal-evidence/v1":
         raise TerminalPolicyError(
-            "TERMINAL_EVIDENCE_REQUIRED", "неподдерживаемая terminal evidence schema")
+            "TERMINAL_EVIDENCE_REQUIRED", "unsupported terminal evidence schema")
     if not isinstance(evidence["spec_sha256"], str) or not _SHA256_RE.fullmatch(
             evidence["spec_sha256"]):
-        raise TerminalPolicyError("TERMINAL_SPEC_STALE", "spec_sha256 невалиден")
+        raise TerminalPolicyError("TERMINAL_SPEC_STALE", "spec_sha256 is invalid")
     if plan_dir is not None and item_id is not None:
         if evidence["spec_sha256"] != _spec_digest(plan_dir, item_id):
-            raise TerminalPolicyError("TERMINAL_SPEC_STALE", "terminal evidence привязано к старому ТЗ")
+            raise TerminalPolicyError("TERMINAL_SPEC_STALE", "terminal evidence is tied to the old technical specification")
         # A producer that declares a semantic readiness edge cannot silently
         # close with an empty or unqualified output.  The typed record remains
         # additive to terminal-evidence so historic terminal rows stay readable.
@@ -117,7 +117,7 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
             if (record["producer_item"] != item_id
                     or record["consumer_item"] != declared["consumer_item"]
                     or record["mode"] not in declared["modes"]):
-                raise TerminalPolicyError("PRODUCER_READINESS_REQUIRED", "readiness не совпадает с Deliverables")
+                raise TerminalPolicyError("PRODUCER_READINESS_REQUIRED", "readiness does not match Deliverables")
         if "phase_reentry" in decision:
             try:
                 plan_readiness.validate_reentry(decision["phase_reentry"])
@@ -140,7 +140,7 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
     rows = evidence["validation"]
     if not isinstance(rows, list) or not rows:
         raise TerminalPolicyError(
-            "TERMINAL_VALIDATION_MISSING", "нет recorded Validation carriers")
+            "TERMINAL_VALIDATION_MISSING", "no recorded Validation carriers")
     for index, row in enumerate(rows):
         if (not isinstance(row, dict)
                 or set(row) != {"carrier", "status", "evidence_ids"}
@@ -148,12 +148,12 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
                 or row.get("status") not in {"green", "red"}
                 or not _nonempty_strings(row.get("evidence_ids"))):
             raise TerminalPolicyError(
-                "TERMINAL_VALIDATION_INVALID", f"validation[{index}] невалидна")
+                "TERMINAL_VALIDATION_INVALID", f"validation[{index}] is invalid")
     red = [row["carrier"] for row in rows if row["status"] != "green"]
     if red:
         raise TerminalPolicyError(
             "TERMINAL_VALIDATION_RED",
-            f"обязательная Validation ещё красная: {', '.join(red)}",
+            f"mandatory Validation still red: {', '.join(red)}",
         )
 
     if plan_dir is not None and item_id is not None:
@@ -163,14 +163,14 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
             carriers = ", ".join(command for _subject, command, _digest in unresolved)
             raise TerminalPolicyError(
                 "REPAIR_POST_VALIDATION_REQUIRED",
-                f"qualified repair не завершил exact original carrier: {carriers}",
+                f"qualified repair did not complete exact original carrier: {carriers}",
             )
 
     exhausted = evidence["repair_exhausted"]
     if result == "closed-green":
         if exhausted is not None:
             raise TerminalPolicyError(
-                "TERMINAL_EVIDENCE_INVALID", "green close не принимает repair_exhausted")
+                "TERMINAL_EVIDENCE_INVALID", "green close does not accept repair_exhausted")
         return
     required = {"classifier", "failed_carrier", "verdict", "reason", "continuation",
                 "evidence_ids"}
@@ -185,7 +185,7 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
             or not _nonempty_strings(exhausted.get("evidence_ids"))):
         raise TerminalPolicyError(
             "REPAIR_EXHAUSTED_REQUIRED",
-            "closed-deviations требует closed repair_exhausted evidence",
+            "closed-deviations requires closed repair_exhausted evidence",
         )
 
 
@@ -213,11 +213,11 @@ def validate_entry(entry: dict, *, plan_dir: Path | None = None) -> None:
         if set(decision) != set(expected) or any(
                 decision.get(key) != value for key, value in expected.items()):
             raise TerminalPolicyError(
-                "READINESS_DECISION_INVALID", "decision не совпадает с reducer outcome")
+                "READINESS_DECISION_INVALID", "decision does not match reducer outcome")
         if entry.get("result") in (_CLOSE_RESULTS | _BLOCK_RESULTS):
             raise TerminalPolicyError(
                 "READINESS_DECISION_NONTERMINAL",
-                "producer/re-entry routing не может напрямую terminalize item",
+                "producer/re-entry routing cannot directly terminalize item",
             )
     if (entry.get("command") not in _EXECUTION_COMMANDS
             or not isinstance(item_id, str) or not _ITEM_RE.fullmatch(item_id)

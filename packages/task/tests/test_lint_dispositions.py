@@ -54,7 +54,7 @@ class TestLintCheckDispositions(unittest.TestCase):
                     f"id: D{index}\n"
                     "date: 2026-08-08\nstatus: accepted\nitem: ''\nitems: []\n"
                     "supersedes: []\nsuperseded_by: null\n---\n"
-                    "## Решение\n\nБез RAG-маркера.\n\n## Почему\n\nТест.\n",
+                    "## Solution\n\nWithout RAG-marker.\n\n## Why\n\nTest.\n",
                     encoding="utf-8")
             journal = plan_dir / "journal.jsonl"
             entry = json.loads(journal.read_text(encoding="utf-8"))
@@ -62,9 +62,9 @@ class TestLintCheckDispositions(unittest.TestCase):
             journal.write_text(json.dumps(entry, ensure_ascii=False) + "\n", encoding="utf-8")
             diag = plan_lint.Diagnostics()
             plan_lint.lint_plan(plan_dir, diag)
-            self.assertTrue(any("Decision Log: 3 решений" in warning for warning in diag.warnings),
+            self.assertTrue(any("Decision Log: 3 solutions" in warning for warning in diag.warnings),
                             diag.warnings)
-            self.assertFalse(any("Update Log: запись «Что»" in warning
+            self.assertFalse(any("Update Log: entry «What»" in warning
                                  for warning in diag.warnings), diag.warnings)
 
     def test_v2_consequences_uses_record_frontmatter_and_body(self):
@@ -77,7 +77,7 @@ class TestLintCheckDispositions(unittest.TestCase):
             (plan_dir / "decisions" / "D98-replacement.md").write_text(
                 "---\nid: D98\ndate: 2026-08-08\nstatus: accepted\nitem: ''\nitems: []\n"
                 "supersedes: []\nsuperseded_by: null\n---\n"
-                "## Решение\n\nsupersedes D30 в части объёма.\n\n## Почему\n\nТест.\n",
+                "## Solution\n\nsupersedes D30 in terms of volume.\n\n## Why\n\nTest.\n",
                 encoding="utf-8")
             diag = plan_lint.Diagnostics()
             plan_lint.lint_plan(plan_dir, diag)

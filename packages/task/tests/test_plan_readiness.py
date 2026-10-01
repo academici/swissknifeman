@@ -55,7 +55,7 @@ class PlanReadinessTest(unittest.TestCase):
             plan = Path(tmp)
             phase = plan / "phases" / "P2"
             phase.mkdir(parents=True)
-            (plan / "plan.md").write_text("## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n", encoding="utf-8")
+            (plan / "plan.md").write_text("## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n", encoding="utf-8")
             (phase / "P2.md").write_text("# P2\n\n### P2.2 — producer\n\n**Deliverables:** `producer-readiness/v1`: consumer=P2.3; modes=nonempty-candidates|empty-by-decision.\n", encoding="utf-8")
             (phase / "P2.2.md").write_text("# P2.2\n", encoding="utf-8")
             # Minimal fixture has no parseable full item; validate the builder's additive API.
@@ -115,7 +115,7 @@ class PlanReadinessTest(unittest.TestCase):
             phase = plan / "phases" / "P2"
             phase.mkdir(parents=True)
             (plan / "plan.md").write_text(
-                "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+                "## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n",
                 encoding="utf-8")
             (plan / "journal.jsonl").write_text("", encoding="utf-8")
             (phase / "P2.md").write_text("# P2\n", encoding="utf-8")
@@ -155,7 +155,7 @@ class PlanReadinessTest(unittest.TestCase):
                 "🟢 Done", "⬜ Not started"), encoding="utf-8")
             index = plan / "phases" / "P1" / "P1.md"
             index.write_text(index.read_text(encoding="utf-8")
-                             + "\n> СКЕЛЕТ — не детализирован\n", encoding="utf-8")
+                             + "\n> SKELETON — not detailed\n", encoding="utf-8")
             plan_readiness.validate_design_handoff_target(plan, "P1")
 
     def test_design_accepts_backlog_only_skeleton_but_rejects_missing_target(self):
@@ -166,7 +166,7 @@ class PlanReadinessTest(unittest.TestCase):
             backlog = plan / "backlog"
             backlog.mkdir()
             target = backlog / "P2.md"
-            target.write_text("# P2\n\n> СКЕЛЕТ — не детализирован\n", encoding="utf-8")
+            target.write_text("# P2\n\n> SKELETON — not detailed\n", encoding="utf-8")
             for validator in (plan_readiness.validate_design_target,
                               plan_readiness.validate_design_handoff_target):
                 with self.subTest(validator=validator.__name__):
@@ -176,7 +176,7 @@ class PlanReadinessTest(unittest.TestCase):
                     target.write_text("# P2\n", encoding="utf-8")
                     with self.assertRaises(plan_layout.PlanLayoutError):
                         validator(plan, "P2")
-                    target.write_text("# P2\n\n> СКЕЛЕТ — не детализирован\n", encoding="utf-8")
+                    target.write_text("# P2\n\n> SKELETON — not detailed\n", encoding="utf-8")
 
     def test_all_three_reentry_triggers_reduce_to_reopen(self):
         for trigger in ("owner-decision-change", "terminal-evidence-invalid",

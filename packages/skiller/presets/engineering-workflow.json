@@ -1,6 +1,6 @@
 {
   "name": "engineering-workflow",
-  "description": "Инженерный конвейер mattpocock: грилинг+домен → issue вертикальными срезами → реализация (TDD) → ревью → диагностика багов → разрешение конфликтов. Сквозная цепочка дисциплины для агентного workflow.",
+  "description": "Engineering conveyor mattpocock: grilling+domain → issue vertical slices → implementation (TDD) → review → bug diagnostics → conflict resolution. End-to-end discipline chain for agent workflow.",
   "include": [
     "general/spec-interview",
     "general/grill-with-docs",

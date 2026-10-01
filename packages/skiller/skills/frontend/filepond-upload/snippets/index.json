@@ -3,17 +3,17 @@
   "snippets": [
     {
       "file": "register-filepond.ts",
-      "description": "Регистрация FilePond один раз на приложение: фабрика vue-filepond + плагины (validate-type/size, image-preview, file-poster) + CSS ядра и плагинов; варианты published-пакет и локальная обёртка",
+      "description": "Registration FilePond once per application: factory vue-filepond + plugins (validate-type/size, image-preview, file-poster) + CSS core and plugins; options published-package and local wrapper",
       "tags": ["filepond", "vue-filepond", "plugins", "registration", "app-entry"]
     },
     {
       "file": "FilePondField.vue",
-      "description": "Переиспользуемое поле загрузки: server-конфиг laravel-filepond (process/revert/patch на /filepond, CSRF), v-model списком { id?, serverId? }, восстановление сохранённых файлов постерами, привязка serverId на processfile/removefile",
+      "description": "Reused loading field: server-config laravel-filepond (process/revert/patch on /filepond, CSRF), v-model list { id?, serverId? }, restoration of saved files by posters, linking serverId on processfile/removefile",
       "tags": ["field", "vue", "server-config", "v-model", "poster", "csrf"]
     },
     {
       "file": "form-binding.md",
-      "description": "Привязка списка загруженных файлов к Inertia-форме (useForm) и серверная обработка: маршрут /filepond, колбэки process/revert/patch/restore, Filepond::field($serverId)->getFile()->привязка к модели",
+      "description": "Linking the list of downloaded files to Inertia-form (useForm) and server processing: route /filepond, callbacks process/revert/patch/restore, Filepond::field($serverId)->getFile()->binding to model",
       "tags": ["form", "useform", "inertia", "laravel-filepond", "backend", "serverId"]
     }
   ]

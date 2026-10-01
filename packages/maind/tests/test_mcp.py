@@ -1,4 +1,4 @@
-"""Тесты mcp.py: JSON-RPC роутинг, вызовы инструментов, framing, conformance (реальный spawn)."""
+"""Tests mcp.py: JSON-RPC routing, tool calls, framing, conformance (real spawn)."""
 import io
 import json
 import os
@@ -23,8 +23,8 @@ def cfg(**over):
 
 
 def fed_edge(env, config, src_pid, edge_dst, etype="depends_on"):
-    """Записать ребро src_pid → edge_dst в стор проекта src_pid (федерация) + индекс.
-    Граф читается федерацией (per-project сторы), а не единым legacy graph.db."""
+    """Write edge src_pid → edge_dst in the project site src_pid (federation) + index.
+    The graph is read by the federation (per-project stories), and not a single legacy graph.db."""
     proj = {"id": src_pid}
     g = Graph(env, config, path=store_path(env, config, proj))
     g._loaded = True
@@ -61,10 +61,10 @@ class TestDispatch(unittest.TestCase):
                              "maind_memory_links"} <= names)
 
     def test_tool_descriptions_within_2kb_cap(self):
-        # client-side cap на description инструмента (research/04-P3-listing-budget-and-trim-math.md)
+        # client-side cap on description tool (research/04-P3-listing-budget-and-trim-math.md)
         for tool in mcp.TOOLS:
             self.assertLessEqual(len(tool["description"].encode("utf-8")), 2048,
-                                 f"{tool['name']}: description превышает 2048 байт")
+                                 f"{tool['name']}: description exceeds 2048 bytes")
 
     def test_protocol_version_echo(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -121,10 +121,10 @@ class TestToolCalls(unittest.TestCase):
                 self.assertEqual(data[0]["text"], "hello world")
 
     def test_recall_union_private_survives_large_shared_namespace(self):
-        # Без капа крупный ns:<группа>
-        # вытеснял малый приватный scope проекта из выдачи (измерено 84-96% ответа из shared
-        # на 6 проектах). project:<id>-expansion теперь опрашивает private без капа
-        # (RECALL_LIMIT), shared — с RECALL_SHARED_LIMIT.
+        # Large without mouth guard ns:<group>
+        # supplanted the small private scope project from the issue (measured 84-96% response from shared
+        # on 6 projects). project:<id>-expansion now polls private without cap
+        # (RECALL_LIMIT), shared — with RECALL_SHARED_LIMIT.
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
@@ -140,7 +140,7 @@ class TestToolCalls(unittest.TestCase):
                 for row in data:
                     by_scope.setdefault(row["scope"], 0)
                     by_scope[row["scope"]] += 1
-                self.assertEqual(by_scope.get("project:a"), 2)  # приватный — без капа, весь
+                self.assertEqual(by_scope.get("project:a"), 2)  # private - no cap, all
                 self.assertLessEqual(by_scope.get("ns:x", 0), memory_mod.RECALL_SHARED_LIMIT)
 
     def test_memory_down_is_error(self):
@@ -151,8 +151,8 @@ class TestToolCalls(unittest.TestCase):
             self.assertTrue(r["result"]["isError"])
 
     def test_memory_down_message_is_role_aware_for_client(self):
-        # role=client НЕ получает подсказку поднять локальный демон (создало бы
-        # второго писателя, ADR-0001/D27) — единственная точка врезки в _run_tool.
+        # role=client NOT getting prompted to raise local daemon (would create
+        # second writer, ADR-0001/D27) — the only insertion point in _run_tool.
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             c = cfg(memory={"url": "http://127.0.0.1:1", "role": "client"})
@@ -178,7 +178,7 @@ class TestToolCalls(unittest.TestCase):
             with FakeMemoryServer(secret="good-token") as url:
                 r = call(env, cfg(memory={"url": url}), "maind_memory_store",
                          {"scope": "project:x", "key": "fact", "value": "hi"})
-                self.assertTrue(r["result"]["isError"])   # сервер жив, не крашится сервер MCP
+                self.assertTrue(r["result"]["isError"])   # the server is alive, the server does not crash MCP
                 self.assertIn("401", r["result"]["content"][0]["text"])
 
     def test_graph_path(self):
@@ -200,7 +200,7 @@ class TestToolCalls(unittest.TestCase):
             self.assertIn("projects", data)
 
     def test_memory_forget_deletes_by_id(self):
-        # forget шлёт {memoryId} (не {namespace,id}) → удаляет факт; раньше был HTTP 400.
+        # forget sends {memoryId} (not {namespace,id}) → deletes fact; I used to be HTTP 400.
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
@@ -222,15 +222,15 @@ class TestToolCalls(unittest.TestCase):
     def test_missing_required_is_error(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
-            r = call(env, cfg(), "maind_graph_query", {})  # нет обязательного from
+            r = call(env, cfg(), "maind_graph_query", {})  # not required from
             self.assertTrue(r["result"]["isError"])
-            self.assertIn("не хватает", r["result"]["content"][0]["text"])
+            self.assertIn("is missing", r["result"]["content"][0]["text"])
 
     def test_auto_scope_default(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
-                # store без scope → уходит в default_scope
+                # store without scope → goes to default_scope
                 mcp.dispatch(env, cfg(memory={"url": url}),
                              {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
                               "params": {"name": "maind_memory_store",
@@ -242,8 +242,8 @@ class TestToolCalls(unittest.TestCase):
                 self.assertEqual(data[0]["text"], "scoped fact")
 
     def test_default_scope_from_cwd(self):
-        # без явного --scope/MAIND_SCOPE дефолт = project:<id> по cwd, иначе global
-        # (argless-сервер пишет в бакет своего проекта, а не в общий global).
+        # without explicit --scope/MAIND_SCOPE default = project:<id> by cwd, otherwise global
+        # (argless-the server writes to the bucket of its project, and not to the general one global).
         from maind import projects as projects_mod
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
@@ -265,36 +265,36 @@ class TestToolCalls(unittest.TestCase):
 
     def test_tool_error_does_not_crash(self):
         with tempfile.TemporaryDirectory() as tmp:
-            _, env = make_repo(tmp)  # граф disabled → die() → SystemExit → isError
+            _, env = make_repo(tmp)  # graph disabled → die() → SystemExit → isError
             r = call(env, cfg(graph={"adapter": "disabled"}), "maind_graph_query",
                      {"from": "x"})
             self.assertTrue(r["result"]["isError"])
 
 
 def scoped_call(env, config, name, arguments, default_scope, req_id=1):
-    """tools/call с явным default_scope (как у запинненного к проекту сервера)."""
+    """tools/call with explicit default_scope (like a server attached to the project)."""
     return mcp.dispatch(env, config, {
         "jsonrpc": "2.0", "id": req_id, "method": "tools/call",
         "params": {"name": name, "arguments": arguments or {}}}, default_scope=default_scope)
 
 
 class TestScopeIsolation(unittest.TestCase):
-    """Серверный энфорс namespace-изоляции: сервер, запинненный к project:a, не должен
-    читать/писать/удалять память и граф другого проекта (регрессия на 2 бреши blocker)."""
+    """Server Enforce namespace-isolation: server pinned to project:a, should not
+    read/write/delete memory and graph of another project (regression for 2 gaps blocker)."""
 
     NS = property(lambda self: [{"id": "a", "namespaces": ["x"]},
-                                {"id": "b", "namespaces": ["y"]}])  # a и b НЕ делят namespace
+                                {"id": "b", "namespaces": ["y"]}])  # a and b DO NOT divide namespace
 
     def test_recall_foreign_scope_denied(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
-                memory_mod.store(url, "project:b", "fact", "секрет проекта b")
+                memory_mod.store(url, "project:b", "fact", "project secret b")
                 config = cfg(projects=self.NS, memory={"url": url})
                 r = scoped_call(env, config, "maind_memory_recall",
-                                {"scope": "project:b", "query": "секрет"}, "project:a")
+                                {"scope": "project:b", "query": "secret"}, "project:a")
                 self.assertTrue(r["result"].get("isError"))
-                self.assertIn("изоляция namespace", r["result"]["content"][0]["text"])
+                self.assertIn("insulation namespace", r["result"]["content"][0]["text"])
 
     def test_store_foreign_scope_denied(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -302,22 +302,22 @@ class TestScopeIsolation(unittest.TestCase):
             with FakeMemoryServer() as url:
                 config = cfg(projects=self.NS, memory={"url": url})
                 r = scoped_call(env, config, "maind_memory_store",
-                                {"scope": "project:b", "value": "впрыск"}, "project:a")
+                                {"scope": "project:b", "value": "injection"}, "project:a")
                 self.assertTrue(r["result"].get("isError"))
-                self.assertEqual(len(memory_mod.export(url, "project:b")), 0)  # в чужой scope не записано
+                self.assertEqual(len(memory_mod.export(url, "project:b")), 0)  # in someone else's scope not recorded
 
     def test_forget_foreign_memory_denied(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
-                stored = memory_mod.store(url, "project:b", "fact", "удали меня")
+                stored = memory_mod.store(url, "project:b", "fact", "delete me")
                 mid = stored["memory"]["id"]
                 config = cfg(projects=self.NS, memory={"url": url})
-                # scope=project:a разрешён, но memoryId принадлежит project:b → отказ по владению
+                # scope=project:a is allowed, but memoryId belongs to project:b → possession denial
                 r = scoped_call(env, config, "maind_memory_forget",
                                 {"scope": "project:a", "key": mid}, "project:a")
                 self.assertTrue(r["result"].get("isError"))
-                self.assertEqual(len(memory_mod.export(url, "project:b")), 1)  # факт b цел
+                self.assertEqual(len(memory_mod.export(url, "project:b")), 1)  # fact b intact
 
     def test_graph_project_foreign_denied(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -326,7 +326,7 @@ class TestScopeIsolation(unittest.TestCase):
             fed_edge(env, config, "b", "project:c")
             r = scoped_call(env, config, "maind_graph_project", {"project": "b"}, "project:a")
             self.assertTrue(r["result"].get("isError"))
-            self.assertIn("изоляция namespace", r["result"]["content"][0]["text"])
+            self.assertIn("insulation namespace", r["result"]["content"][0]["text"])
 
     def test_graph_query_foreign_node_denied(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -340,13 +340,13 @@ class TestScopeIsolation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
-                memory_mod.store(url, "project:a", "fact", "своя память")
+                memory_mod.store(url, "project:a", "fact", "own memory")
                 config = cfg(projects=self.NS, memory={"url": url})
                 r = scoped_call(env, config, "maind_memory_recall",
-                                {"scope": "project:a", "query": "своя"}, "project:a")
+                                {"scope": "project:a", "query": "own"}, "project:a")
                 self.assertFalse(r["result"].get("isError"))
                 self.assertEqual(json.loads(r["result"]["content"][0]["text"])[0]["text"],
-                                 "своя память")
+                                 "own memory")
 
     def test_explicit_recall_scope_never_surfaces_related_namespace_records(self):
         """Explicit MCP scope is exact even though the backend payload offers all shapes."""
@@ -372,39 +372,39 @@ class TestScopeIsolation(unittest.TestCase):
             config = cfg(projects=shared)
             fed_edge(env, config, "b", "project:c")
             r = scoped_call(env, config, "maind_graph_project", {"project": "b"}, "project:a")
-            self.assertFalse(r["result"].get("isError"))  # делят namespace x → доступ разрешён
+            self.assertFalse(r["result"].get("isError"))  # divide namespace x → access allowed
 
     def test_cross_scope_env_flag_disables_enforcement(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
-                memory_mod.store(url, "project:b", "fact", "админ-доступ")
+                memory_mod.store(url, "project:b", "fact", "admin access")
                 config = cfg(projects=self.NS, memory={"url": url})
                 os.environ["MAIND_MCP_ALLOW_CROSS_SCOPE"] = "1"
                 try:
                     r = scoped_call(env, config, "maind_memory_recall",
-                                    {"scope": "project:b", "query": "админ"}, "project:a")
+                                    {"scope": "project:b", "query": "admin"}, "project:a")
                 finally:
                     del os.environ["MAIND_MCP_ALLOW_CROSS_SCOPE"]
-                self.assertFalse(r["result"].get("isError"))  # явный админ-режим снимает изоляцию
+                self.assertFalse(r["result"].get("isError"))  # explicit admin mode removes isolation
 
     def test_hub_global_default_unrestricted(self):
-        # default_scope=global (хаб-сервер без --scope) → энфорс выключен, back-compat
+        # default_scope=global (hub server without --scope) → enforce is disabled, back-compat
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
-                memory_mod.store(url, "project:b", "fact", "хаб видит всё")
+                memory_mod.store(url, "project:b", "fact", "hub sees everything")
                 config = cfg(projects=self.NS, memory={"url": url})
                 r = scoped_call(env, config, "maind_memory_recall",
-                                {"scope": "project:b", "query": "хаб"}, "global")
+                                {"scope": "project:b", "query": "hub"}, "global")
                 self.assertFalse(r["result"].get("isError"))
 
 
 class TestContentTrimming(unittest.TestCase):
-    """`_content` — единая воронка тримминга: ниже порога — байт-в-байт как раньше;
-    выше — снятие `indent=2`, а если и этого не хватило — receipt с `truncated`/
-    `returned_count`/`total_count` на крупнейшем топ-уровневом списке. `isError` не
-    пересекается с `truncated`-путём (разные классы — ошибка инструмента vs частичность)."""
+    """`_content` — single trimming funnel: below the threshold - byte-by-byte as before;
+    above - removal `indent=2`, and if this was not enough - receipt with `truncated`/
+    `returned_count`/`total_count` on the largest top-level list. `isError` not
+    intersects with `truncated`-by (different classes - tool error vs partial)."""
 
     def test_small_payload_unchanged_bytes(self):
         payload = {"a": 1, "b": [1, 2, 3]}
@@ -413,20 +413,20 @@ class TestContentTrimming(unittest.TestCase):
                           json.dumps(payload, ensure_ascii=False, indent=2))
 
     def test_over_threshold_drops_indent_first(self):
-        # список средней ширины: превышает порог с indent=2, но укладывается компактным —
-        # тримминг обязан остановиться на рычаге (1), не резать данные.
+        # medium-width list: exceeds threshold with indent=2, but fits compactly -
+        # trimming must stop at the lever (1), do not cut data.
         payload = {"items": [{"id": i, "note": "x" * 40} for i in range(400)]}
         indented_tokens = mcp._estimate_tokens(
             json.dumps(payload, ensure_ascii=False, indent=2))
         compact_tokens = mcp._estimate_tokens(json.dumps(payload, ensure_ascii=False))
-        self.assertGreater(indented_tokens, mcp.TRIM_TARGET_TOKENS)   # проверка фикстуры
-        self.assertLessEqual(compact_tokens, mcp.TRIM_TARGET_TOKENS)  # проверка фикстуры
+        self.assertGreater(indented_tokens, mcp.TRIM_TARGET_TOKENS)   # fixture check
+        self.assertLessEqual(compact_tokens, mcp.TRIM_TARGET_TOKENS)  # fixture check
         out = mcp._content(payload)
         text = out["content"][0]["text"]
         data = json.loads(text)
-        self.assertEqual(len(data["items"]), 400)           # ничего не потеряно
+        self.assertEqual(len(data["items"]), 400)           # nothing lost
         self.assertNotIn("truncated", data)
-        self.assertNotIn("\n  ", text)                       # indent=2 снят (компактный JSON)
+        self.assertNotIn("\n  ", text)                       # indent=2 removed (compact JSON)
 
     def test_far_over_threshold_truncates_with_receipt(self):
         payload = [{"id": i, "note": "x" * 200} for i in range(2000)]
@@ -444,14 +444,14 @@ class TestContentTrimming(unittest.TestCase):
         payload = {"hub": {"ok": True}, "projects": [{"id": i} for i in range(3000)]}
         out = mcp._content(payload)
         data = json.loads(out["content"][0]["text"])
-        self.assertEqual(data["hub"], {"ok": True})          # соседний ключ не тронут
+        self.assertEqual(data["hub"], {"ok": True})          # neighboring key is not touched
         self.assertTrue(data["projects_truncated"]["truncated"])
         self.assertEqual(data["projects_truncated"]["total_count"], 3000)
         self.assertEqual(len(data["projects"]), data["projects_truncated"]["returned_count"])
 
     def test_is_error_path_never_truncated(self):
-        # ошибочный payload короткий на практике, но воронка обязана НЕ трогать isError-путь
-        # тримминг-логикой (isError занят классом «ошибка инструмента», не «частичность»).
+        # erroneous payload is short in practice, but the funnel must NOT be touched isError-path
+        # trimming logic (isError busy with class «tool error», not «partial»).
         payload = {"error": "x" * 5000}
         out = mcp._content(payload, is_error=True)
         self.assertTrue(out["isError"])
@@ -460,8 +460,8 @@ class TestContentTrimming(unittest.TestCase):
                          json.dumps(payload, ensure_ascii=False, indent=2))
 
     def test_no_truncatable_list_leaves_payload_as_is(self):
-        # верхнеуровневых списков нет — тримминг молчаливо не срабатывает (хвостовой случай
-        # эскалации по Implementation Rules, не наблюдался на живом узле P3.2).
+        # there are no top-level lists - trimming silently does not work (tail case
+        # escalation by Implementation Rules, was not observed on a live node P3.2).
         payload = {"note": "x" * 50000}
         out = mcp._content(payload)
         data = json.loads(out["content"][0]["text"])
@@ -478,15 +478,15 @@ class TestFraming(unittest.TestCase):
         self.assertTrue(msg["result"]["ok"])
 
     def test_wire_is_newline_delimited(self):
-        # реальный MCP-клиент (Cursor/Claude) шлёт NDJSON, НЕ Content-Length
+        # real MCP-client (Cursor/Claude) sends NDJSON, NOT Content-Length
         raw = b'{"jsonrpc":"2.0","id":7,"method":"tools/list"}\n'
         self.assertEqual(mcp.read_message(io.BytesIO(raw))["method"], "tools/list")
         buf = io.BytesIO()
         mcp.write_message(buf, {"id": 1, "result": {}})
         out = buf.getvalue()
         self.assertTrue(out.endswith(b"\n"))
-        self.assertEqual(out.count(b"\n"), 1)          # одно сообщение = одна строка
-        self.assertNotIn(b"Content-Length", out)        # никаких LSP-заголовков
+        self.assertEqual(out.count(b"\n"), 1)          # one message = one line
+        self.assertNotIn(b"Content-Length", out)        # none LSP-headers
 
     def test_serve_processes_then_eof(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -501,14 +501,14 @@ class TestFraming(unittest.TestCase):
 
 
 class TestConformance(unittest.TestCase):
-    """Реальный spawn сервера + полный NDJSON-хендшейк — ловит framing/handshake-баги,
-    которые тесты в памяти не видят (там обе стороны используют один framing)."""
+    """Real spawn server + full NDJSON-handshake - catches framing/handshake-bugs,
+    which tests do not see in memory (there both sides use one framing)."""
 
     def test_real_spawn_handshake(self):
         repo = Path(__file__).resolve().parents[1]
-        # Пакет `core` лежит в <monorepo>/core (на два уровня выше пакета); чтобы
-        # `from core import ...` работал при реальном спавне, в PYTHONPATH нужен
-        # КОРЕНЬ монорепо. standalone-раскладка: каталога core нет — путь не добавляется.
+        # Package `core` lies in <monorepo>/core (two levels above the package); to
+        # `from core import ...` worked during real spawn, in PYTHONPATH needed
+        # ROOT monorepo. standalone-layout: directory core no - the path is not added.
         monorepo = repo.parents[1]
         pp = [str(repo / "lib")]
         if (monorepo / "core").is_dir():
@@ -536,18 +536,18 @@ class TestConformance(unittest.TestCase):
             out, _ = proc.communicate(payload, timeout=20)
             self.assertEqual(proc.returncode, 0)
             text = out.decode("utf-8")
-            self.assertNotIn("Content-Length", text)            # NDJSON, не LSP
+            self.assertNotIn("Content-Length", text)            # NDJSON, not LSP
             by_id = {}
             for line in text.splitlines():
                 if line.strip():
-                    m = json.loads(line)                         # каждая строка — валидный JSON
+                    m = json.loads(line)                         # each line is valid JSON
                     if "id" in m:
                         by_id[m["id"]] = m
             self.assertEqual(by_id[1]["result"]["serverInfo"]["name"], "maind")
             self.assertEqual(by_id[1]["result"]["protocolVersion"], "2025-03-26")
             self.assertEqual(len(by_id[2]["result"]["tools"]), 11)
             self.assertIsInstance(json.loads(by_id[3]["result"]["content"][0]["text"]), list)
-            self.assertIn(4, by_id)                              # ping ответил
+            self.assertIn(4, by_id)                              # ping replied
 
 
 if __name__ == "__main__":

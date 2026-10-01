@@ -1,11 +1,11 @@
 # Cursor Adapter
 
-Установка скиллов в Cursor:
+Installing skills in Cursor:
 
 ```bash
 ./install.sh ~/.cursor/skills
 ```
 
-Для project-level — скопируй нужный `SKILL.md` в `.cursor/skills/` проекта.
+For project-level — copy the one you need `SKILL.md` V `.cursor/skills/` project.
 
-Delta-файлы (`adapters/cursor.md` внутри скилла) содержат только overrides для `.cursor/rules`.
+Delta-files (`adapters/cursor.md` inside the skill) contain only overrides For `.cursor/rules`.

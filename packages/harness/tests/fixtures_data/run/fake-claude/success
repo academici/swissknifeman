@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Фейковый клиент (P4.3): успешный конверт — `type=result`/`is_error=false`/exit 0."""
+"""Fake client (P4.3): successful envelope - `type=result`/`is_error=false`/exit 0."""
 import json
 import sys
 

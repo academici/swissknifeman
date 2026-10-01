@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Фейковый клиент (P4.3): зависает — исход `timeout` (тест передаёт короткий таймаут,
-`subprocess.run` убивает процесс раньше, чем истекает сон ниже)."""
+"""Fake client (P4.3): hangs - outcome `timeout` (test sends a short timeout,
+`subprocess.run` kills the process before the sleep below expires)."""
 import sys
 import time
 

@@ -1,4 +1,4 @@
-"""Диспетчер команд. Точка входа: main(argv) -> вызывает cmd_*(env, args)."""
+"""Command manager. Entry point: main(argv) -> calls cmd_*(env, args)."""
 import sys
 
 from .budget import cmd_budget
@@ -46,9 +46,9 @@ COMMANDS = {
 
 
 def main(argv=None):
-    """argv: [repo_root, cmd, *args]. Раньше эти значения брались из sys.argv
-    в heredoc; теперь main принимает их явно — тесты гоняют команды без
-    подмены argv процесса."""
+    """argv: [repo_root, cmd, *args]. Previously, these values were taken from sys.argv
+    in heredoc; now main accepts them explicitly - tests are run by commands without
+    substitutions argv process."""
     argv = list(sys.argv[1:] if argv is None else argv)
     if len(argv) < 2:
         print("usage: python3 -m skiller <repo_root> <command> [args...]",
@@ -58,6 +58,6 @@ def main(argv=None):
     env = Env(root, cmd)
     handler = COMMANDS.get(cmd)
     if handler is None:
-        print(f"Неизвестная команда: {cmd}", file=sys.stderr)
+        print(f"Unknown command: {cmd}", file=sys.stderr)
         sys.exit(1)
     handler(env, args)

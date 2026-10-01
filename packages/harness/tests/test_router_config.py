@@ -16,7 +16,7 @@ class RouterConfigCase(unittest.TestCase):
     def test_policy_within_budget(self):
         """Internal documentation."""
         policy = self.cfg["policy"]
-        self.assertLessEqual(len(policy), 1700, f"policy раздулся: {len(policy)} симв")
+        self.assertLessEqual(len(policy), 1700, f"policy swelled: {len(policy)} char")
 
     def test_version_bumped(self):
         self.assertGreaterEqual(self.cfg["version"], 2)

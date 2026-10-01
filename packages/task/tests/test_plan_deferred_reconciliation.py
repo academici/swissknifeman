@@ -30,7 +30,7 @@ class DeferredReconciliationTests(unittest.TestCase):
         producer.write_text(item_spec_md("P1.2").replace("lib/pkg/config.py", "brief/00-brief.md").replace(
             "**Files:** brief/00-brief.md",
             "**Files:** `findings/repair.md`").replace(
-            "**Deliverables:** валидация + тест.",
+            "**Deliverables:** validation + test.",
             "**Deliverables:** `findings/repair.md`.") )
         consumer = self.plan / "phases/P1/P1.1.md"
         consumer.write_text(consumer.read_text().replace(
@@ -66,7 +66,7 @@ class DeferredReconciliationTests(unittest.TestCase):
 
     def test_actual_ready_producer_still_requires_fresh_bundle(self):
         (self.plan / "bundles/P1.2.json").write_text("{}")
-        self.assertTrue(any("P1.2 устарел" in row
+        self.assertTrue(any("P1.2 is deprecated" in row
                             for row in self.bundle_diagnostics().errors))
 
     def test_undeclared_missing_input_still_fails(self):

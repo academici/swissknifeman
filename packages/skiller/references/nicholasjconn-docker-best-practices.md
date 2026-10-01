@@ -1,20 +1,20 @@
 # nicholasjconn/docker-best-practices
 
 - **URL:** https://github.com/nicholasjconn/docker-best-practices
-- **Статус:** planned
-- **Проверено:** 2026-06-11
+- **Status:** planned
+- **Checked:** 2026-06-11
 
-Коллекция Docker-паттернов и best practices.
+Collection Docker-patterns and best practices.
 
-## Брать выборочно
+## Take selectively
 
-- Multi-stage build, non-root user, healthcheck паттерны →
-  `skills/devops/docker/php/snippets/` и `dev-prod/snippets/`
+- Multi-stage build, non-root user, healthcheck patterns →
+  `skills/devops/docker/php/snippets/` and `dev-prod/snippets/`
 
-## Не брать
+## Do not take
 
-- Kubernetes-специфика — вне текущего стека
+- Kubernetes-specifics - outside the current stack
 
-## Целевые bucket-ы
+## Targets bucket-s
 
 `devops/docker/*`.

@@ -29,7 +29,7 @@ _EXECUTABLE_ITEM_FIELDS = (
 )
 _DESIGN_SHEET_MARKER = "<!-- execution-sheet/v1 -->"
 _DESIGN_GATE_CUTOFF = "2026.09.24"
-_SKELETON = re.compile(r"^>\s*СКЕЛЕТ\s*—", re.MULTILINE)
+_SKELETON = re.compile(r"^>\s*SKELETON\s*[—-]\s*not detailed", re.MULTILINE)
 
 
 def design_gate_enabled(plan_dir) -> bool:
@@ -54,7 +54,7 @@ def design_snapshot(plan_dir) -> dict:
     try:
         plan_text = plan.read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
-        raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: plan.md не читается: {exc}") from exc
+        raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: plan.md is not readable: {exc}") from exc
     declared = set(re.findall(r"^\|\s*(P\d+)\s*\|", plan_text, re.MULTILINE))
     if declared and declared != set(phase_paths):
         raise ReadinessError(
@@ -65,25 +65,25 @@ def design_snapshot(plan_dir) -> dict:
         try:
             phase_text = phase_path.read_text(encoding="utf-8")
         except (OSError, UnicodeError) as exc:
-            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} не читается: {exc}") from exc
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} is not readable: {exc}") from exc
         if _SKELETON.search(phase_text) or "[NEEDS CLARIFICATION]" in phase_text:
-            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} остаётся skeleton/unclear")
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} remains skeleton/unclear")
         paths.append(phase_path)
         specs = plan_layout.item_spec_paths(root, phase_id)
         if not specs:
-            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} не содержит items")
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} does not contain items")
         for spec in specs:
             try:
                 spec_text = spec.read_text(encoding="utf-8")
             except (OSError, UnicodeError) as exc:
-                raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {spec.name} не читается: {exc}") from exc
+                raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {spec.name} is not readable: {exc}") from exc
             for field in _EXECUTABLE_ITEM_FIELDS:
                 match = re.search(rf"^\*\*{re.escape(field)}:\*\*\s*(.*)$", spec_text, re.MULTILINE)
                 if match is None or match[1].strip() in {"", "—"}:
                     raise ReadinessError(
-                        f"PLAN_DESIGN_INCOMPLETE: {spec.stem} требует {field}")
+                        f"PLAN_DESIGN_INCOMPLETE: {spec.stem} requires {field}")
             if "[NEEDS CLARIFICATION]" in spec_text:
-                raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {spec.stem} содержит open clarification")
+                raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {spec.stem} contains open clarification")
             paths.append(spec)
         for relative in (f"research/{phase_id}-design.md",
                          f"research/{phase_id}-design-rag.md",
@@ -98,7 +98,7 @@ def design_snapshot(plan_dir) -> dict:
         try:
             payload = path.read_bytes()
         except OSError as exc:
-            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {path} не читается: {exc}") from exc
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {path} is not readable: {exc}") from exc
         digest.update(path.relative_to(root).as_posix().encode("utf-8") + b"\0")
         digest.update(payload + b"\0")
     return {"fingerprint": digest.hexdigest(), "phases": sorted(phase_paths),
@@ -220,24 +220,24 @@ def phase_ready(plan_dir, item_ids) -> None:
     root = Path(plan_dir)
     for item_id in item_ids:
         if not _ITEM.fullmatch(item_id):
-            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: некорректный item {item_id!r}")
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: incorrect item {item_id!r}")
         phase_id = item_id.split(".")[0]
         phase_path = plan_layout.phase_paths(root).get(phase_id)
         if phase_path is None:
-            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} не детализирована")
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} not detailed")
         try:
             phase_text = phase_path.read_text(encoding="utf-8")
             spec_text = plan_layout.carrier_path(root, "item-spec", item_id=item_id).read_text(encoding="utf-8")
         except (OSError, UnicodeError, plan_layout.PlanLayoutError) as exc:
-            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {item_id} не читается: {exc}") from exc
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {item_id} is not readable: {exc}") from exc
         if _SKELETON.search(phase_text) or "[NEEDS CLARIFICATION]" in phase_text:
-            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} остаётся skeleton/unclear")
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {phase_id} remains skeleton/unclear")
         for field in _EXECUTABLE_ITEM_FIELDS:
             match = re.search(rf"^\*\*{re.escape(field)}:\*\*\s*(.*)$", spec_text, re.MULTILINE)
             if match is None or match[1].strip() in {"", "—"}:
-                raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {item_id} требует {field}")
+                raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {item_id} requires {field}")
         if "[NEEDS CLARIFICATION]" in spec_text:
-            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {item_id} содержит open clarification")
+            raise ReadinessError(f"PLAN_DESIGN_INCOMPLETE: {item_id} contains open clarification")
 
 
 def validate_execution_design(plan_dir, item_ids=None) -> None:
@@ -268,7 +268,7 @@ def directive(deliverables: str) -> dict | None:
     if not matches:
         return None
     if len(matches) != 1:
-        raise ReadinessError("Deliverables: требуется ровно одна producer-readiness/v1 directive")
+        raise ReadinessError("Deliverables: exactly one is required producer-readiness/v1 directive")
     consumer, modes = matches[0]
     return {"consumer_item": consumer, "modes": tuple(modes.split("|"))}
 
@@ -511,7 +511,7 @@ def validate_design_handoff_target(plan_dir, phase_id: str) -> None:
         return
     phase_path = plan_layout.phase_paths(plan_dir).get(phase_id)
     if phase_path is None:
-        raise plan_layout.PlanLayoutError(f"фаза {phase_id} не найдена в плане")
+        raise plan_layout.PlanLayoutError(f"phase {phase_id} not found in plan")
     try:
         if _SKELETON.search(phase_path.read_text(encoding="utf-8")):
             return

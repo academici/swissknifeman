@@ -16,118 +16,118 @@ license: MIT
 author: github.com/vuejs-ai
 ---
 
-# Skill: тестирование Vue-компонентов (Vitest + Vue Test Utils 2)
+# Skill: testing Vue-components (Vitest + Vue Test Utils 2)
 
-## Контекст
+## Context
 
-Скилл — про **что и как тестировать в Vue-компонентах**: чёрный ящик (вход = props/слоты/события
-пользователя, выход = DOM/эмиты/вызовы стора), а не внутренности. Стек: Vitest как раннер
-(`frontend-vue/vitest`, `frontend-vue/vitest-vue`), Vue Test Utils 2 (VTU) как монтировщик, опционально
-`@testing-library/vue` для user-centric стиля. Пишем на Composition API (`<script setup lang="ts">`),
-Pinia — через `@pinia/testing`, async — через `flushPromises`/`nextTick`.
+Skill - about **what and how to test in Vue-components**: black box (input = props/slots/events
+user, exit = DOM/emits/store calls), and not the insides. Stack: Vitest as runner
+(`frontend-vue/vitest`, `frontend-vue/vitest-vue`), Vue Test Utils 2 (VTU) as mounter, optional
+`@testing-library/vue` for user-centric style. We write to Composition API (`<script setup lang="ts">`),
+Pinia — via `@pinia/testing`, async — via `flushPromises`/`nextTick`.
 
-Конфиг Vitest (jsdom, алиасы, coverage) — НЕ здесь, он в `frontend-vue/vitest`. Общий API
-expect/mock/vi — в `frontend-vue/vitest-vue`. Этот скилл их не дублирует, а надстраивает Vue-специфику.
+Config Vitest (jsdom, aliases, coverage) — NOT here, he's in `frontend-vue/vitest`. General API
+expect/mock/vi — in `frontend-vue/vitest-vue`. This skill does not duplicate them, but builds on them Vue-specifics.
 
-## Когда активировать
+## When to activate
 
-- Пишешь/чинишь `*.spec.ts`/`*.test.ts` для `.vue`-компонента или композабла (`useX`).
-- Тесты ломаются при рефакторинге внутренностей, хотя поведение не менялось.
-- «injection Symbol(pinia) not found», падает async-setup, не находится Teleport/модалка.
-- Тест флакает на гонках (не дождались промиса/тика); снапшоты «зелёные» при сломанной фиче.
-- Надо решить mount vs shallowMount, замокать ребёнка/глобал, проверить эмит или слот.
+- You write/repairing `*.spec.ts`/`*.test.ts` for `.vue`-component or composable (`useX`).
+- Tests break when internals are refactored, although the behavior has not changed.
+- «injection Symbol(pinia) not found», falls async-setup, is not found Teleport/modal.
+- Test flies at races (did not wait for the promise/tick); snapshots «green» with a broken feature.
+- Need to decide mount vs shallowMount, soak the child/global, check emitter or slot.
 
-## Алгоритм
+## Algorithm
 
-1. **Реши: компонент или композабл.**
-   - Чистый `useX` без lifecycle/inject — тестируй как обычную функцию: вызови, дёрни методы,
-     проверь `.value` рефов. Никакого mount.
-   - `useX` с `onMounted`/`inject`/`provide` — оберни в компонент-носитель
-     (`defineComponent({ setup: () => useX(), template: '<div/>' })`) и `mount`. См.
+1. **Decide: component or composite.**
+   - Clean `useX` without lifecycle/inject — test like a regular function: call, pull methods,
+     check `.value` ref. None mount.
+   - `useX` with `onMounted`/`inject`/`provide` — wrap in a carrier component
+     (`defineComponent({ setup: () => useX(), template: '<div/>' })`) and `mount`. See
      `reference/testing-composables-helper-wrapper.md`.
 
-2. **Выбери mount vs shallowMount.**
-   - `mount` — по умолчанию: рендерит реальное дерево, проверяешь пользовательский сценарий.
-   - `shallowMount` — заглушает всех детей; бери только когда ребёнок тяжёлый/внешний и его
-     рендер мешает. Не используй shallowMount «на всякий случай» — он прячет интеграционные баги.
-   - Точечная заглушка вместо тотальной: `global.stubs: { HeavyChild: true }`.
+2. **Select mount vs shallowMount.**
+   - `mount` — default: renders a real tree, checks a custom script.
+   - `shallowMount` — mutes all children; take it only when the baby is heavy/external and its
+     rendering is interfering. Don't use shallowMount «just in case» — it hides integration bugs.
+   - Spot plug instead of total plug: `global.stubs: { HeavyChild: true }`.
 
-3. **Селекторы — устойчивые.** Ищи по `data-testid` (`wrapper.get('[data-testid="x"]')`), не по CSS-
-   классам, тексту или позиции в дереве — иначе рефакторинг разметки ломает тесты на ровном месте.
-   Стиль чёрного ящика — `reference/testing-component-blackbox-approach.md`.
+3. **Selectors are persistent.** Search by `data-testid` (`wrapper.get('[data-testid="x"]')`), not by CSS-
+   classes, text or position in the tree - otherwise refactoring the markup breaks the tests out of the blue.
+   Black box style - `reference/testing-component-blackbox-approach.md`.
 
-4. **Подключи зависимости через `global`.**
-   - Pinia: `global.plugins: [createTestingPinia({ createSpy: vi.fn })]`. По умолчанию действия
-     застаблены (`stubActions: true`) — проверяешь, что действие вызвано. Нужна реальная логика
-     действия — `stubActions: false`, а точечно подмени лишь действие на границе I/O (сетевой
-     вызов) через `vi.spyOn(store, 'action').mockResolvedValue(...)`. См.
+4. **Connect dependencies via `global`.**
+   - Pinia: `global.plugins: [createTestingPinia({ createSpy: vi.fn })]`. Default actions
+     stabilized (`stubActions: true`) — check that the action is called. Need real logic
+     actions - `stubActions: false`, and pointwise replace only the action on the border I/O (network
+     call) via `vi.spyOn(store, 'action').mockResolvedValue(...)`. See
      `reference/testing-pinia-store-setup.md`.
-   - Router/i18n/глобальные компоненты — `global.plugins`/`global.components`/`global.mocks`.
+   - Router/i18n/global components - `global.plugins`/`global.components`/`global.mocks`.
 
-5. **Async — дожидайся явно.** После `trigger`/смены props/резолва промиса вызывай
-   `await flushPromises()` (микротаски: промисы в действиях/watch) и/или `await nextTick()`
-   (DOM-обновление после синхронного изменения реактивности). `trigger`/`setProps` уже возвращают
-   промис — `await` их. См. `reference/testing-async-await-flushpromises.md`.
+5. **Async — wait explicitly.** After `trigger`/shifts props/resolve promise call
+   `await flushPromises()` (microtasks: promises in actions/watch) and/or `await nextTick()`
+   (DOM-update after synchronous reactivity change). `trigger`/`setProps` are already being returned
+   promise — `await` them. See `reference/testing-async-await-flushpromises.md`.
 
-6. **Проверяй контракт наружу.**
-   - Эмиты: `wrapper.emitted('eventName')` → массив вызовов; payload — `emitted('e')[0]`.
-   - Слоты: `mount(C, { slots: { default: 'text', named: ComponentStub } })`, затем ассертить
-     отрендеренное содержимое.
-   - DOM/текст/классы видимого результата — не внутренние data().
+6. **Check the contract outside.**
+   - Issuers: `wrapper.emitted('eventName')` → array of calls; payload — `emitted('e')[0]`.
+   - Slots: `mount(C, { slots: { default: 'text', named: ComponentStub } })`, then assert
+     rendered content.
+   - DOM/text/visible result classes are not internal data().
 
-7. **async setup / Suspense / Teleport / defineAsyncComponent** — особые случаи:
+7. **async setup / Suspense / Teleport / defineAsyncComponent** — special cases:
    `reference/testing-suspense-async-components.md`, `reference/async-component-testing.md`,
    `reference/teleport-testing-complexity.md`.
 
-8. **`@testing-library/vue` как альтернатива** VTU, когда хочешь user-centric API
-   (`render` + `screen.getByRole`/`getByText` + `@testing-library/user-event`): меньше доступа к
-   внутренностям, тесты ближе к поведению пользователя. Не смешивай оба стиля в одном файле; для
-   доступности/ролей `getByRole` нагляднее `data-testid`. Это альтернатива, а не замена — выбери одно.
+8. **`@testing-library/vue` as an alternative** VTU, whenever you want user-centric API
+   (`render` + `screen.getByRole`/`getByText` + `@testing-library/user-event`): less access to
+   internals, tests closer to user behavior. Don't mix both styles in one file; for
+   availability/roles `getByRole` more clearly `data-testid`. This is an alternative, not a replacement - pick one.
 
-## Что НЕ тестировать
+## What NOT to test
 
-- **Реактивность и сам Vue/Pinia/VTU** — что `ref` обновляется, `computed` пересчитывается,
-  `watch` срабатывает: это уже протестировано фреймворком. Тестируй СВОЮ логику поверх.
-- **Только снапшоты** как замена ассертам — большой снапшот «зелёный» при сломанной фиче и
-  скрывает регрессии за шумом. Снапшот — для маленького стабильного вывода, не вместо проверок.
-  См. `reference/testing-no-snapshot-only.md`.
-- **Приватные внутренности** (`wrapper.vm.someInternal`, имена методов) — завязка на реализацию.
-- **Вычисленные стили/реальные DOM-события браузера** в jsdom — для этого браузерный раннер
-  (`@vitest/browser`/Playwright CT), см. `reference/testing-browser-vs-node-runners.md`. E2E —
+- **Reactivity and itself Vue/Pinia/VTU** — what `ref` is being updated, `computed` is recalculated,
+  `watch` works: this has already been tested by the framework. Test YOUR logic on top.
+- **Snapshots only** as a replacement for assertions - a large snapshot «green» with a broken feature and
+  hides regressions behind noise. Snapshot - for a small stable output, not instead of checks.
+  See `reference/testing-no-snapshot-only.md`.
+- **Private internals** (`wrapper.vm.someInternal`, method names) — implementation details.
+- **Computed Styles/real DOM-browser events** in jsdom — for this browser runner
+  (`@vitest/browser`/Playwright CT), see `reference/testing-browser-vs-node-runners.md`. E2E —
   `reference/testing-e2e-playwright-recommended.md`.
 
-## Когда какой сниппет открывать
+## When to open which snippet
 
-| Ситуация | Файл |
+| Situation | File |
 |:---|:---|
-| Нужен эталон спека: mount + Pinia + async + проверка эмитов + data-testid | `snippets/component.spec.ts` |
-| Изолированный тест композабла (с lifecycle — через компонент-носитель) | `reference/testing-composables-helper-wrapper.md` |
-| Ошибки injection pinia / выбор stubActions | `reference/testing-pinia-store-setup.md` |
-| Флак на гонках, не дождался промиса/тика | `reference/testing-async-await-flushpromises.md` |
-| Тесты ломаются при рефакторинге внутренностей | `reference/testing-component-blackbox-approach.md` |
-| async setup / Suspense / defineAsyncComponent / Teleport не рендерятся | `reference/testing-suspense-async-components.md`, `reference/async-component-testing.md`, `reference/teleport-testing-complexity.md` |
-| Нужны реальные стили/DOM-события или E2E | `reference/testing-browser-vs-node-runners.md`, `reference/testing-e2e-playwright-recommended.md` |
+| We need a spec standard: mount + Pinia + async + checking emitters + data-testid | `snippets/component.spec.ts` |
+| Isolated composable test (with lifecycle — via carrier component) | `reference/testing-composables-helper-wrapper.md` |
+| Errors injection pinia / selection stubActions | `reference/testing-pinia-store-setup.md` |
+| Flak at the races, didn't wait for the promise/tick | `reference/testing-async-await-flushpromises.md` |
+| Tests break when refactoring internals | `reference/testing-component-blackbox-approach.md` |
+| async setup / Suspense / defineAsyncComponent / Teleport are not rendered | `reference/testing-suspense-async-components.md`, `reference/async-component-testing.md`, `reference/teleport-testing-complexity.md` |
+| Need real styles/DOM-events or E2E | `reference/testing-browser-vs-node-runners.md`, `reference/testing-e2e-playwright-recommended.md` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Тест проверяет поведение (DOM/эмиты/вызовы стора), а не внутренности (`vm.*`, имена методов)
-- [ ] Выбран `mount` по умолчанию; `shallowMount`/`stubs` — только для тяжёлых/внешних детей с обоснованием
-- [ ] Селекторы по `data-testid` (или ролям в testing-library), не по классам/тексту/позиции
-- [ ] Pinia подключена через `createTestingPinia`; решено `stubActions` true/false осознанно
-- [ ] Каждый async-переход дождан `await flushPromises()`/`await nextTick()`, нет «голых» промисов
-- [ ] Эмиты проверены через `emitted()` с payload; слоты — через `slots`
-- [ ] Нет тестов на реактивность Vue / только-снапшотов как единственной ассерты
-- [ ] Композабл без lifecycle тестируется как функция; с lifecycle — через компонент-носитель
-- [ ] Файл лежит зеркально исходнику; `vitest run` зелёный локально
+- [ ] Test verifies behavior (DOM/emits/store calls), not the insides (`vm.*`, method names)
+- [ ] Selected `mount` default; `shallowMount`/`stubs` — only for heavy/external children with justification
+- [ ] Selectors by `data-testid` (or roles in testing-library), not by class/text/positions
+- [ ] Pinia connected via `createTestingPinia`; solved `stubActions` true/false consciously
+- [ ] Everyone async-transition waited `await flushPromises()`/`await nextTick()`, no «naked» promises
+- [ ] Issues verified via `emitted()` with payload; slots - via `slots`
+- [ ] No reactivity tests Vue / snapshot-only as the only assertion
+- [ ] Composable without lifecycle is tested as a function; with lifecycle — via carrier component
+- [ ] The file is a mirror image of the source; `vitest run` green locally
 
-## Ссылки
+## Links
 
-- `frontend-vue/vitest` — конфиг Vitest именно для Laravel/Inertia/Vue (jsdom, алиасы, coverage exclude).
-  Настройку раннера бери там, здесь — практики тестов.
-- `frontend-vue/vitest-vue` — generic справочник API Vitest (test/describe/expect/mock/vi, coverage).
-  Общий API не дублируем — за ним туда.
-- `frontend-vue/vue` — Composition API / `<script setup>` / реактивность: что именно тестируем.
-- `frontend-vue/vue-best-practices` — архитектура (когда composable, когда store), влияет на тестируемость.
-- `frontend-vue/pinia` / `frontend-vue/pinia-stores` — устройство сторов, которые мокаем через `createTestingPinia`.
+- `frontend-vue/vitest` — config Vitest specifically for Laravel/Inertia/Vue (jsdom, aliases, coverage exclude).
+  Take the runner setup there, test practice here.
+- `frontend-vue/vitest-vue` — generic reference API Vitest (test/describe/expect/mock/vi, coverage).
+  General API do not duplicate - follow him there.
+- `frontend-vue/vue` — Composition API / `<script setup>` / reactivity: what exactly are we testing.
+- `frontend-vue/vue-best-practices` — architecture (when composable, when store), affects testability.
+- `frontend-vue/pinia` / `frontend-vue/pinia-stores` — arrangement of stores that we mop through `createTestingPinia`.
 - https://test-utils.vuejs.org/ · https://testing-library.com/docs/vue-testing-library/intro/ · https://pinia.vuejs.org/cookbook/testing.html
-- `reference/` — детальные заметки по частным случаям (импорт из antfu/skills, см. `upstream.json`).
+- `reference/` — detailed notes on special cases (import from antfu/skills, see `upstream.json`).

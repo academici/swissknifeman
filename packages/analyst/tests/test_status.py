@@ -1,5 +1,5 @@
-"""Тесты status/compact: сводка стора (счётчики, curated-ready, promote_failed, даты)
-и детерминированная редукция events.ndjson (агрегат — а значит confidence — сохраняется)."""
+"""Tests status/compact: store summary (counters, curated-ready, promote_failed, dates)
+and deterministic reduction events.ndjson (unit - which means confidence — is saved)."""
 import tempfile
 import unittest
 
@@ -43,10 +43,10 @@ class TestStatus(unittest.TestCase):
         self.assertEqual(status.build_status(self.proj)["promote_failed"], 1)
 
     def test_curated_ready_uses_recompute_thresholds(self):
-        # кандидат с числами выше порога curated → ready (но переход всё равно человек)
+        # candidate with numbers above the threshold curated → ready (but the transition is still human)
         _mk(self.proj, "candidate", confidence=recompute.CURATED_MIN_CONF,
             sessions_total=recompute.CURATED_MIN_N, tests_total=100, tests_passed=100)
-        # кандидат ниже порога по объёму → не ready
+        # candidate below volume threshold → not ready
         _mk(self.proj, "candidate", confidence=0.99, sessions_total=1,
             tests_total=1, tests_passed=1)
         self.assertEqual(status.build_status(self.proj)["curated_ready"], 1)
@@ -84,14 +84,14 @@ class TestCompact(unittest.TestCase):
             b = recompute.aggregate_events([e for e in after if e.get("id") == lid], now)
             self.assertEqual((a["S"], a["N"], a["tests_total"], a["tests_passed"], a["days_since"]),
                              (b["S"], b["N"], b["tests_total"], b["tests_passed"], b["days_since"]),
-                             f"агрегат {lid} разошёлся → confidence изменится")
+                             f"unit {lid} sold out → confidence will change")
 
     def test_compact_all_preserves_aggregate(self):
         ev = self._events()
         new, stats = status.compact_events(ev, None)
         self.assertEqual(stats, {"compacted": 3, "snapshots": 2, "kept": 0})
         self._assert_same_aggregate(ev, new, "2026-07-01T00:00:00Z")
-        # L1 свёрнут в один snapshot с суммами и МАКС ts группы
+        # L1 collapsed into one snapshot with amounts and MAX ts groups
         s1 = [e for e in new if e["id"] == "L1"][0]
         self.assertEqual((s1["sessions_total"], s1["sessions_success"]), (7, 6))
         self.assertEqual(s1["ts"], "2026-06-05T00:00:00Z")
@@ -100,14 +100,14 @@ class TestCompact(unittest.TestCase):
     def test_compact_before_keeps_recent(self):
         ev = self._events()
         new, stats = status.compact_events(ev, recompute.parse_iso("2026-06-06T00:00:00Z"))
-        # оба L1-события старше границы → свёрнуты; L2 позже → сохранён как есть
+        # both L1-events older than the boundary → collapsed; L2 later → saved as is
         self.assertEqual(stats, {"compacted": 2, "snapshots": 1, "kept": 1})
         self._assert_same_aggregate(ev, new, "2026-07-01T00:00:00Z")
 
     def test_compact_ignores_no_id_and_bad_ts(self):
         ev = [
-            {"source": "x", "ts": "2026-06-01T00:00:00Z", "sessions_total": 1},  # нет id
-            {"id": "L1", "ts": "мусор", "sessions_total": 1},                    # битый ts
+            {"source": "x", "ts": "2026-06-01T00:00:00Z", "sessions_total": 1},  # no id
+            {"id": "L1", "ts": "trash", "sessions_total": 1},                    # broken ts
             {"id": "L1", "ts": "2026-06-01T00:00:00Z", "sessions_total": 2, "sessions_success": 2},
         ]
         new, stats = status.compact_events(ev, None)

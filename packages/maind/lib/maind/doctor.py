@@ -1,4 +1,4 @@
-"""doctor — диагностика окружения узла maind."""
+"""doctor — node environment diagnostics maind."""
 import json
 import os
 import shutil
@@ -24,10 +24,10 @@ def provider_trust_report(env, config):
 
 
 def _skill_drift(env, config):
-    """Дрейф managed-скиллов maind (ecosystem-mcp/ecosystem-setup) по флоту enabled-
-    проектов: сухой прогон обоих провиженеров (mode=auto, dry=True) — state != 'fresh'
-    значит скилл отсутствует ИЛИ шаблон в maind с тех пор обновился (устарел). Ничего
-    не пишет; реальная раскатка — `maind sync --only ecosystem-skill,setup-skill`."""
+    """Drift managed-skills maind (ecosystem-mcp/ecosystem-setup) by fleet enabled-
+    projects: dry run of both providers (mode=auto, dry=True) — state != 'fresh'
+    means the skill is missing OR the template is in maind has since been updated (is deprecated). Nothing
+    does not write; real rolling out - `maind sync --only ecosystem-skill,setup-skill`."""
     from .federation import _enabled_projects
     from .provision.skilldoc import apply_ecosystem_skill, apply_setup_skill
     drifted = []
@@ -47,35 +47,35 @@ def _skill_drift(env, config):
 
 
 def _skill_drift_report(env, config, detail):
-    """detail=False: одна summary-строка для дефолтного doctor. detail=True: по-проектная
-    разбивка (--skill-drift)."""
+    """detail=False: one summary-line for default doctor. detail=True: by design
+    breakdown (--skill-drift)."""
     drifted = _skill_drift(env, config)
     if not detail:
         if drifted:
             projects = sorted({pid for pid, _, _ in drifted})
-            print(f"  [warn] managed-скиллы (ecosystem-mcp/setup): {len(projects)} "
-                  "проект(ов) отстали от шаблона (детали: maind doctor --skill-drift)")
+            print(f"  [warn] managed-skills (ecosystem-mcp/setup): {len(projects)} "
+                  "project(ov) behind the template (details: maind doctor --skill-drift)")
         else:
-            print("  [ok ] managed-скиллы (ecosystem-mcp/setup): дрейфа от шаблона нет")
+            print("  [ok ] managed-skills (ecosystem-mcp/setup): no drift from template")
         return
-    print("\nДрейф managed-скиллов maind (ecosystem-mcp/ecosystem-setup, сухой расчёт):")
+    print("\nDrift managed-skills maind (ecosystem-mcp/ecosystem-setup, dry calculation):")
     if not drifted:
-        print("  (все enabled-проекты синхронизированы с текущими шаблонами)")
+        print("  (all enabled-projects are synchronized with current templates)")
         return
     by_project = {}
     for pid, label, state in drifted:
         by_project.setdefault(pid, []).append(f"{label}:{state}")
     for pid, items in sorted(by_project.items()):
         print(f"  [warn] {pid}: " + ", ".join(items)
-              + "  (применить: maind sync --project " + pid + " --only ecosystem-skill,setup-skill)")
+              + "  (apply: maind sync --project " + pid + " --only ecosystem-skill,setup-skill)")
 
 
 def _channel_overlap(env, config):
-    """Дубль-канал skiller (бакет раздаётся ОДНОВРЕМЕННО plugin'ом (connect) и
-    вендором) по флоту enabled-проектов: сухой `skiller status --json` на каждый —
-    детект живёт в skiller (`channel_overlap`), doctor только агрегирует по флоту
-    (field-feedback: найдено вручную на agelto/azguard/dterema — теперь на радаре
-    само). Возвращает [(project_id, [bucket, …])]."""
+    """Duplicate channel skiller (the bucket is distributed AT THE SAME TIME plugin'ohm (connect) and
+    vendor) by fleet enabled-projects: dry `skiller status --json` for each -
+    detector lives in skiller (`channel_overlap`), doctor only aggregates by fleet
+    (field-feedback: found manually on agelto/azguard/dterema — is now on the radar
+    itself). Returns [(project_id, [bucket, …])]."""
     import json
     import subprocess
 
@@ -103,29 +103,29 @@ def _channel_overlap(env, config):
 
 
 def _channel_hygiene_report(env, config, detail):
-    """detail=False: одна summary-строка. detail=True (--channel-drift): по-проектная
-    разбивка дублей канала."""
+    """detail=False: one summary-string. detail=True (--channel-drift): by design
+    breakdown of channel takes."""
     overlaps = _channel_overlap(env, config)
     if not detail:
         if overlaps:
-            print(f"  [warn] дубль-канал skiller (connect+vendor): {len(overlaps)} "
-                  "проект(ов) раздают скиллы дважды (детали: maind doctor --channel-drift)")
+            print(f"  [warn] duplicate channel skiller (connect+vendor): {len(overlaps)} "
+                  "project(ov) give out skills twice (details: maind doctor --channel-drift)")
         else:
-            print("  [ok ] дубль-канал skiller (connect+vendor): не найден")
+            print("  [ok ] duplicate channel skiller (connect+vendor): not found")
         return
-    print("\nДубль-канал skiller (бакет ОДНОВРЕМЕННО plugin+vendor, сухой запрос):")
+    print("\nDuplicate channel skiller (bucket AT THE SAME TIME plugin+vendor, dry request):")
     if not overlaps:
-        print("  (не найден ни в одном enabled-проекте)")
+        print("  (not found in any enabled-project)")
         return
     for pid, buckets in overlaps:
-        print(f"  [warn] {pid}: {' '.join(buckets)}  (почистить: skiller connect "
-              "--target <path> --cleanup-vendored — плюс отдельно вручную, если "
-              "вендор через .swissknifeman/config.json, не legacy .swissknife.json)")
+        print(f"  [warn] {pid}: {' '.join(buckets)}  (clean: skiller connect "
+              "--target <path> --cleanup-vendored — plus separately manually if "
+              "vendor via .swissknifeman/config.json, not legacy .swissknife.json)")
 
 
 def _gitignore_drift(config, only=None):
-    """Сверка каждого enabled-проекта с картой `configs/gitignore-policy.json` (read-only):
-    что должно быть в .gitignore, а что коммититься. Возвращает [(project_id, findings)]."""
+    """Verification of each enabled-project with map `configs/gitignore-policy.json` (read-only):
+    what should be in the .gitignore, and what to commit. Returns [(project_id, findings)]."""
     from core.gitignore_policy import PolicyError, check_project, load_policy
 
     from .federation import _enabled_projects
@@ -146,13 +146,13 @@ def _gitignore_drift(config, only=None):
 
 
 def _gitignore_drift_report(config, detail, *, only=None, as_json=False, block=False):
-    """detail=False: одна summary-строка для дефолтного doctor. detail=True
-    (--gitignore-drift): по-проектная разбивка, --json, --block (готовые строки .gitignore)."""
+    """detail=False: one summary-line for default doctor. detail=True
+    (--gitignore-drift): by project breakdown, --json, --block (ready lines .gitignore)."""
     from core.gitignore_policy import PolicyError, recommended_block
     try:
         rows = _gitignore_drift(config, only)
     except PolicyError as exc:
-        print(f"  [warn] карта gitignore недоступна: {exc}")
+        print(f"  [warn] map gitignore not available: {exc}")
         return
     errors = {pid: [f for f in found if f["level"] == "error"] for pid, found, _ in rows}
     if as_json:
@@ -162,39 +162,39 @@ def _gitignore_drift_report(config, detail, *, only=None, as_json=False, block=F
     if not detail:
         bad = sorted(pid for pid, errs in errors.items() if errs)
         if bad:
-            print(f"  [warn] .gitignore ↔ карта служебных файлов: {len(bad)} проект(ов) расходятся "
-                  "(детали: maind doctor --gitignore-drift)")
+            print(f"  [warn] .gitignore ↔ service file map: {len(bad)} project(ov) diverge "
+                  "(details: maind doctor --gitignore-drift)")
         else:
-            print("  [ok ] .gitignore ↔ карта служебных файлов: расхождений нет")
+            print("  [ok ] .gitignore ↔ service file map: no discrepancies")
         return
-    print("\nРасхождения .gitignore с картой служебных файлов (configs/gitignore-policy.json):")
+    print("\nDiscrepancies .gitignore with service file map (configs/gitignore-policy.json):")
     clean = True
     for pid, found, policy in rows:
         problems = [f for f in found if f["level"] != "info"]
         if not problems:
             continue
         clean = False
-        print(f"  {pid}: {len([f for f in problems if f['level'] == 'error'])} ошибок, "
-              f"{len([f for f in problems if f['level'] == 'warn'])} предупреждений")
+        print(f"  {pid}: {len([f for f in problems if f['level'] == 'error'])} errors, "
+              f"{len([f for f in problems if f['level'] == 'warn'])} warnings")
         for f in problems:
             print(f"    [{f['level']:<5}] {f['code']}: {f['path']} — {f['fix']}")
         if block:
             lines = recommended_block(found, policy)
             if lines:
-                print("    # добавить в .gitignore:")
+                print("    # add to .gitignore:")
                 for line in lines:
                     print(f"    {line}")
     if clean:
-        print("  (расхождений нет ни в одном enabled-проекте)")
+        print("  (there are no discrepancies in any enabled-project)")
 
 
 def _fleet_context(env, config):
-    """Флот-агрегация футпринта первого хода: цикл по registered-проектам → subprocess
-    `skiller budget --first-turn --target <path> --json` — токен-математика
-    остаётся ЕДИНСТВЕННО в skiller, maind только потребляет готовый JSON (без дубля,
-    без кросс-импортов — паттерн doctor --audit settings, D10). Fail-soft: недоступный
-    skiller / сломанный вывод / отсутствующий local_path на проект → context='n/a',
-    скан флота продолжается."""
+    """First move footprint fleet aggregation: cycle by registered-projects → subprocess
+    `skiller budget --first-turn --target <path> --json` — token-math
+    remains ONLY in skiller, maind only consumes ready JSON (without a double,
+    without cross-imports - pattern doctor --audit settings, D10). Fail-soft: unavailable
+    skiller / broken pin / missing local_path for the project → context='n/a',
+    fleet scan continues."""
     import json
     import subprocess
 
@@ -230,9 +230,9 @@ def _context_report(env, config, as_json):
     if as_json:
         print(json.dumps({"projects": rows}, ensure_ascii=False, indent=2))
         return
-    print(f"maind doctor --context (футпринт первого хода) — проектов: {len(rows)}")
+    print(f"maind doctor --context (footprint of the first move) — projects: {len(rows)}")
     if not rows:
-        print("  проектов нет — config.json пуст или отсутствует")
+        print("  no projects - config.json is empty or missing")
         return
     for r in rows:
         ctx = r["context"]
@@ -248,21 +248,21 @@ def cmd_doctor(env, argv):
                                 "--context": "bool", "--provider-trust": "bool",
                                 "--gitignore-drift": "bool", "--project": "str", "--block": "bool"})
     if opts["help"]:
-        print("maind doctor [--quiet] — проверка окружения узла\n"
+        print("maind doctor [--quiet] — checking the host environment\n"
               "maind doctor --audit mcp|claude|deny|core|pao|settings|all [--json] — "
-              "fleet-аудит оптимизаций по проектам (read-only)\n"
-              "maind doctor --skill-drift — по-проектная разбивка дрейфа "
-              "ecosystem-mcp/ecosystem-setup от текущего шаблона\n"
-              "maind doctor --channel-drift — по-проектная разбивка дубль-канала "
-              "skiller (connect+vendor на один бакет)\n"
-              "maind doctor --gitignore-drift [--project ID] [--block] [--json] — сверка "
-              ".gitignore/tracking каждого проекта с картой служебных файлов "
-              "(configs/gitignore-policy.json; --block печатает строки для .gitignore)\n"
-              "maind doctor --context [--json] — флот-агрегация футпринта первого "
-              "хода (skiller budget --first-turn по каждому проекту)")
+              "fleet-audit of optimizations by project (read-only)\n"
+              "maind doctor --skill-drift — project-by-design drift breakdown "
+              "ecosystem-mcp/ecosystem-setup from the current template\n"
+              "maind doctor --channel-drift — project-by-project breakdown of the double channel "
+              "skiller (connect+vendor for one bucket)\n"
+              "maind doctor --gitignore-drift [--project ID] [--block] [--json] — reconciliation "
+              ".gitignore/tracking of each project with a map of service files "
+              "(configs/gitignore-policy.json; --block prints the lines for .gitignore)\n"
+              "maind doctor --context [--json] — fleet-aggregation of the first footprint "
+              "progress (skiller budget --first-turn for each project)")
         return
 
-    # --audit: read-only fleet-отчёт о полноте раздачи оптимизаций по проектам
+    # --audit: read-only fleet-report on the completeness of distribution of optimizations for projects
     if opts["audit"]:
         from .analysis.audit import run_audit
         config = {}
@@ -275,7 +275,7 @@ def cmd_doctor(env, argv):
         run_audit(env, config, opts["audit"], as_json=opts["json"])
         return
 
-    # --context: read-only fleet-агрегация футпринта первого хода (subprocess → skiller)
+    # --context: read-only fleet-first move footprint aggregation (subprocess → skiller)
     if opts["context"]:
         config = {}
         if env.default_config.exists():
@@ -322,16 +322,16 @@ def cmd_doctor(env, argv):
             mark = "ok " if ok else "FAIL"
             print(f"  [{mark}] {label}" + (f" — {hint}" if hint and not ok else ""))
 
-    print(f"maind doctor (узел: {env.root})")
+    print(f"maind doctor (node: {env.root})")
     check(sys.version_info >= (3, 8), f"python3 {sys.version.split()[0]}")
-    check(shutil.which("node") is not None, "node в PATH",
-          "agent-memory — Node-демон; установите Node.js")
+    check(shutil.which("node") is not None, "node in PATH",
+          "agent-memory — Node-daemon; install Node.js")
 
     am = env.root / "node_modules" / ".bin" / "agentmemory"
-    check(am.exists(), "agentmemory установлен",
-          "npm install в корне maind (демон памяти @agentmemory/agentmemory)")
-    check(env.memory_config.is_file(), "config/memory/iii-config.yaml на месте",
-          "maind migrate from-agentmemory <путь к .agentmemory>")
+    check(am.exists(), "agentmemory installed",
+          "npm install at the root maind (memory daemon @agentmemory/agentmemory)")
+    check(env.memory_config.is_file(), "config/memory/iii-config.yaml in place",
+          "maind migrate from-agentmemory <path to .agentmemory>")
 
     try:
         env.state_dir.mkdir(parents=True, exist_ok=True)
@@ -341,22 +341,22 @@ def cmd_doctor(env, argv):
         writable = True
     except OSError:
         writable = False
-    check(writable, f"{env.state_dir} доступен для записи")
+    check(writable, f"{env.state_dir} is writable")
 
-    # .maind.json: валидируем через load_config (die ловим, чтобы не прерывать doctor)
+    # .maind.json: validated via load_config (die catch so as not to interrupt doctor)
     config = None
     if env.default_config.exists():
         try:
             from .config import load_config
             config, source = load_config(env)
-            check(True, f"конфиг узла валиден (источник: {source})")
+            check(True, f"node config is valid (source: {source})")
         except SystemExit:
-            check(False, "конфиг узла валиден", "см. ошибку валидации выше")
+            check(False, "node config is valid", "see validation error above")
     else:
         legacy = env.root / ".projects.json"
-        suffix = (" (есть legacy .projects.json — maind migrate from-brain)"
-                  if legacy.exists() else " (создайте из config.example.json)")
-        check(True, "config.json отсутствует" + suffix)
+        suffix = (" (yes legacy .projects.json — maind migrate from-brain)"
+                  if legacy.exists() else " (create from config.example.json)")
+        check(True, "config.json missing" + suffix)
 
     if config:
         _skill_drift_report(env, config, detail=opts.get("skill_drift"))
@@ -364,26 +364,26 @@ def cmd_doctor(env, argv):
         _gitignore_drift_report(config, False)
         from .codegraph import check_schema_connectivity
         schema_issues = check_schema_connectivity(config)
-        check(not schema_issues, "пин Serena/схема .serena/project.yml связны",
+        check(not schema_issues, "pin Serena/schema .serena/project.yml connected",
               "; ".join(schema_issues))
 
-    # порты памяти — на разрешённых портах (env/конфиг), информативно
+    # memory ports - on allowed ports (env/config), informative
     if not quiet:
         http_port, stream_port, url = resolve_ports(env, config)
         up = health(url)
         if not up:
-            print(f"  [info] память {url} — не запущена (maind start --only memory)")
+            print(f"  [info] memory {url} — not running (maind start --only memory)")
         else:
-            # /agentmemory/health ВСЕГДА публичен (даже с секретом) — «отвечает» не значит
-            # «наши вызовы авторизованы»; различаем явным протектед-пробником (findings §2).
+            # /agentmemory/health ALWAYS public (even with a secret) — «replies» doesn't mean
+            # «our calls are authorized»; distinguished by an explicit protected probe (findings §2).
             headers = auth_headers(resolve_secret(env, config)) if config else None
             auth = check_auth(url, headers) if headers else None
-            detail = "отвечает, но неавторизован (401) — проверьте memory.secret_file/AGENTMEMORY_SECRET" \
-                if auth is False else "отвечает"
-            print(f"  [info] память {url} — {detail}")
-        print(f"  [info] порты: http :{http_port}, stream :{stream_port} "
-              "(override через .env AGENTMEMORY_PORT/STREAM_PORT)")
+            detail = "responds but is unauthorized (401) — check memory.secret_file/AGENTMEMORY_SECRET" \
+                if auth is False else "replies"
+            print(f"  [info] memory {url} — {detail}")
+        print(f"  [info] ports: http :{http_port}, stream :{stream_port} "
+              "(override via .env AGENTMEMORY_PORT/STREAM_PORT)")
 
-    print(f"\n{'Все проверки пройдены.' if issues == 0 else f'Проблем: {issues}'}")
+    print(f"\n{'All checks passed.' if issues == 0 else f'Problems: {issues}'}")
     if issues:
         sys.exit(1)

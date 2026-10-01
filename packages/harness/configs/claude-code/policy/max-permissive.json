@@ -1,6 +1,6 @@
 {
   "name": "max-permissive",
-  "description": "Максимально проходной режим для автономных прогонов: bypassPermissions + пустой ask (ничего не спрашивать), guardrail-deny неприкосновенны. Эталон field-case #2 (2026-07-10, vault Brain). Ключ skipDangerousModePermissionPrompt в expect НЕ включён — он не задокументирован (D3).",
+  "description": "Maximum pass mode for autonomous runs: bypassPermissions + empty ask (don't ask anything), guardrail-deny are inviolable. Standard field-case #2 (2026-07-10, vault Brain). Key skipDangerousModePermissionPrompt in expect NOT included - it is not documented (D3).",
   "expect": {
     "permissions.defaultMode": "bypassPermissions",
     "permissions.ask": [],

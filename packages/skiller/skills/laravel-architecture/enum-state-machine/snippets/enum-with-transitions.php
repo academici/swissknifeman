@@ -1,8 +1,8 @@
 <?php
 
 // Source: generalized from a domain status enum with a transition graph (anonymized)
-// Граф рёбер — единственный источник истины. from/to — кейсы enum; остальные ключи
-// (guard/action/label/...) — метаданные ребра для авторизации, исполнения и UI.
+// The edge graph is the only source of truth. from/to — cases enum; other keys
+// (guard/action/label/...) — edge metadata for authorization, execution and UI.
 
 declare(strict_types=1);
 
@@ -23,7 +23,7 @@ enum OrderStatus: string
     case Cancelled = 'cancelled';
 
     /**
-     * Единый граф допустимых переходов. Никаких параллельных копий в сервисах/политиках.
+     * A single graph of valid transitions. No parallel copies in services/policies.
      *
      * @return list<array{
      *     from: self, to: self,
@@ -33,15 +33,15 @@ enum OrderStatus: string
     public static function transitionDefinitions(): array
     {
         return [
-            ['from' => self::Draft,           'to' => self::AwaitingPayment, 'guard' => 'canSubmit',   'action' => PayOrderAction::class,      'label' => 'Оформить'],
-            ['from' => self::AwaitingPayment, 'to' => self::Paid,            'guard' => 'canPay',      'action' => PayOrderAction::class,      'label' => 'Оплатить'],
-            ['from' => self::Paid,            'to' => self::Shipped,         'guard' => 'canShip',     'action' => ShipOrderAction::class,     'label' => 'Отгрузить'],
-            ['from' => self::Shipped,         'to' => self::Completed,       'guard' => 'canComplete', 'action' => CompleteOrderAction::class, 'label' => 'Завершить'],
+            ['from' => self::Draft,           'to' => self::AwaitingPayment, 'guard' => 'canSubmit',   'action' => PayOrderAction::class,      'label' => 'Checkout'],
+            ['from' => self::AwaitingPayment, 'to' => self::Paid,            'guard' => 'canPay',      'action' => PayOrderAction::class,      'label' => 'Pay'],
+            ['from' => self::Paid,            'to' => self::Shipped,         'guard' => 'canShip',     'action' => ShipOrderAction::class,     'label' => 'Ship'],
+            ['from' => self::Shipped,         'to' => self::Completed,       'guard' => 'canComplete', 'action' => CompleteOrderAction::class, 'label' => 'Finish'],
 
-            // Отмена доступна из нескольких статусов — это просто несколько рёбер.
-            ['from' => self::Draft,           'to' => self::Cancelled,       'guard' => 'canCancel',   'action' => CancelOrderAction::class,   'label' => 'Отменить'],
-            ['from' => self::AwaitingPayment, 'to' => self::Cancelled,       'guard' => 'canCancel',   'action' => CancelOrderAction::class,   'label' => 'Отменить'],
-            ['from' => self::Paid,            'to' => self::Cancelled,       'guard' => 'canCancel',   'action' => CancelOrderAction::class,   'label' => 'Отменить'],
+            // Cancellation is available from several statuses - it's just a few edges.
+            ['from' => self::Draft,           'to' => self::Cancelled,       'guard' => 'canCancel',   'action' => CancelOrderAction::class,   'label' => 'Cancel'],
+            ['from' => self::AwaitingPayment, 'to' => self::Cancelled,       'guard' => 'canCancel',   'action' => CancelOrderAction::class,   'label' => 'Cancel'],
+            ['from' => self::Paid,            'to' => self::Cancelled,       'guard' => 'canCancel',   'action' => CancelOrderAction::class,   'label' => 'Cancel'],
         ];
     }
 }

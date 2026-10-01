@@ -92,7 +92,7 @@ Good interfaces make testing natural:
    }
    ```
 
-   > PHP-эквивалент: `class OrderProcessor { public function __construct(private PaymentGatewayInterface $gateway) {} }`.
+   > PHP-equivalent: `class OrderProcessor { public function __construct(private PaymentGatewayInterface $gateway) {} }`.
    > Dart: `class FiscalService { FiscalService(this._driver); final FiscalDriverInterface _driver; }`.
 
 2. **Return results, don't produce side effects.**
@@ -127,11 +127,11 @@ Good interfaces make testing natural:
 
 - **Deepening a cluster given its dependencies** — see [DEEPENING.md](snippets/DEEPENING.md): dependency categories, seam discipline, and replace-don't-layer testing.
 - **Exploring alternative interfaces** — see [DESIGN-IT-TWICE.md](snippets/DESIGN-IT-TWICE.md): spin up parallel sub-agents to design the interface several radically different ways, then compare on depth, locality, and seam placement.
-- **Visual deepening report** — see [HTML-REPORT.md](snippets/HTML-REPORT.md): сканирование кодовой базы на deepening-возможности и before/after-отчёт (из mattpocock `improve-codebase-architecture`). Опционально, зависит от `xdg-open`/браузера — не требование, а вспомогательный артефакт.
+- **Visual deepening report** — see [HTML-REPORT.md](snippets/HTML-REPORT.md): scanning the codebase for deepening-capabilities and before/after-report (from mattpocock `improve-codebase-architecture`). Optional, depends on `xdg-open`/browser is not a requirement, but a supporting artifact.
 
-## Связанные скиллы
+## Related skills
 
-- `quality/refactoring-plan` — превращает выбранную deepening-возможность в план рефактора (этот скилл `produces_for` его).
-- `quality/tech-debt-audit` — находит кандидатов; codebase-design даёт словарь для оценки глубины.
-- `quality/tdd-discipline` — использует «interface = test surface» при планировании тестов.
-- `architect/architecture` — системный уровень (этот скилл — про отдельный модуль/seam).
+- `quality/refactoring-plan` — turns the selected deepening-opportunity in refactor plan (this skill `produces_for` him).
+- `quality/tech-debt-audit` — finds candidates; codebase-design gives a dictionary for depth estimation.
+- `quality/tdd-discipline` — uses «interface = test surface» when planning tests.
+- `architect/architecture` — system level (this skill is about a separate module/seam).

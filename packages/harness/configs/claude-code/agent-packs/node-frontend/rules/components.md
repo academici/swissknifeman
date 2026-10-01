@@ -5,10 +5,10 @@ paths:
   - "resources/js/**"
 ---
 
-Компоненты Vue (глубина — скиллы `frontend:vue-best-practices`, `frontend:vue-composition-api`):
+Components Vue (depth - skills `frontend:vue-best-practices`, `frontend:vue-composition-api`):
 
-- `<script setup lang="ts">`, Composition API; props/emits типизированы, без `any`.
-- Компонент тонкий: без бизнес-логики и прямых API-вызовов в шаблоне — выноси в
+- `<script setup lang="ts">`, Composition API; props/emits typed, without `any`.
+- The component is thin: without business logic and direct API-calls in the template - place them in
   composable/store.
-- Не мутируй props; для `v-for` — стабильные `:key`.
-- Стили — Tailwind по конвенциям проекта; доступность (фокус/aria) на интерактиве.
+- Don't mutate props; for `v-for` — stable `:key`.
+- Styles - Tailwind according to project conventions; availability (focus/aria) on the interactive.

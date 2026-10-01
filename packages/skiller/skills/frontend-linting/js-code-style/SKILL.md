@@ -16,45 +16,45 @@ sha256: ""
 
 # Skill: JS/TS code style (Spatie)
 
-## Контекст
+## Context
 
-Единый стиль JavaScript/TypeScript по гайдлайнам Spatie. Отличается от Prettier-дефолтов: отступ **4 пробела** (не 2), ширина строки **120** (не 80), одинарные кавычки. Применять при создании, правке, ревью и рефакторинге `.js/.ts/.jsx/.tsx/.vue` файлов и при настройке Prettier/ESLint. Вне скоупа: PHP, CSS-only, серверные конфиги.
+Single style JavaScript/TypeScript according to guidelines Spatie. Different from Prettier-defaults: indentation **4 space** (not 2), line width **120** (not 80), single quotes. Apply when creating, editing, reviewing and refactoring `.js/.ts/.jsx/.tsx/.vue` files and when setting up Prettier/ESLint. Outside the scope: PHP, CSS-only, server configs.
 
-## Алгоритм
+## Algorithm
 
-1. **Форматирование**: 4 пробела, print width 120, одинарные кавычки. Закрепить в Prettier-конфиге и `.editorconfig`, не полагаться на дефолты.
-2. **Объявления**: `const` по умолчанию; `let` — только если переменная реально переприсваивается; `var` — никогда. Мутация свойств объекта под `const` допустима — ссылка не меняется.
-3. **Сравнения**: всегда `===`/`!==`. Если тип не гарантирован — привести явно (`parseInt`, `String()`, `Boolean()`) до сравнения, а не полагаться на `==`.
-4. **Функции**: `function` для именованных функций (явно читается как функция); стрелочные — для коллбеков, однострочников и higher-order; не использовать стрелочные там, где нужен собственный `this`. Методы объектов — shorthand-синтаксис.
-5. **Данные**: деструктуризация вместо обращения по индексам/свойствам; параметры-объекты с дефолтами через деструктуризацию в сигнатуре.
-6. **Имена**: без аббревиатур в многострочных функциях — полные описательные имена; короткие допустимы только в однострочных стрелках с очевидным контекстом.
-7. **Импорты**: именованные (tree-shaking), не default и не namespace-импорты целых модулей без необходимости.
+1. **Formatting**: 4 space, print width 120, single quotes. Pin to Prettier-config and `.editorconfig`, do not rely on defaults.
+2. **Announcements**: `const` default; `let` — only if the variable is actually reassigned; `var` — never. Mutation of object properties under `const` is valid - the link does not change.
+3. **Comparisons**: always `===`/`!==`. If the type is not guaranteed, cast explicitly (`parseInt`, `String()`, `Boolean()`) before comparison rather than relying on `==`.
+4. **Functions**: `function` for named functions (is clearly read as a function); arrows - for callbacks, one-liners and higher-order; do not use arrows where your own is needed `this`. Object methods - shorthand-syntax.
+5. **Data**: destructuring instead of accessing by indexes/properties; parameters-objects with defaults through destructuring in the signature.
+6. **Names**: without abbreviations in multiline functions - full descriptive names; short ones are only allowed in one-line arrows with obvious context.
+7. **Imports**: named (tree-shaking), not default and not namespace-imports entire modules unnecessarily.
 
-## Когда НЕ применять
+## When NOT to use
 
-- Проект с уже зафиксированным иным стилем (Airbnb, Standard) — не переформатировать чужой код «по пути».
-- Автогенерённые файлы (wayfinder, lock-файлы) — не трогать, исключить из Prettier/ESLint.
+- Project with a different style already fixed (Airbnb, Standard) — do not reformat someone else's code «along the way».
+- Auto-generated files (wayfinder, lock-files) — do not touch, exclude from Prettier/ESLint.
 
-## Когда какой сниппет открывать
+## When to open which snippet
 
-| Ситуация | Файл |
+| Situation | File |
 |:---|:---|
-| Настроить Prettier в проекте (отступ, ширина, кавычки) | `snippets/prettier-config.json` |
-| Спорный момент на ревью — показать «до/после» по конкретному правилу | `snippets/style-examples.ts` |
+| Configure Prettier in the project (indent, width, quotes) | `snippets/prettier-config.json` |
+| Controversial point in the review - show «to/after» by specific rule | `snippets/style-examples.ts` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Prettier-конфиг: tabWidth 4, printWidth 120, singleQuote true
-- [ ] Нет `var`; `let` только при реальном переприсваивании
-- [ ] Нет `==`/`!=`; неочевидные типы приводятся явно до сравнения
-- [ ] Именованные функции через `function`, коллбеки — стрелочные, методы объектов — shorthand
-- [ ] Деструктуризация вместо `parts[0]` / повторных обращений к свойствам
-- [ ] Полные имена переменных в многострочных функциях
-- [ ] Импорты именованные
+- [ ] Prettier-config: tabWidth 4, printWidth 120, singleQuote true
+- [ ] No `var`; `let` only for real reassignment
+- [ ] No `==`/`!=`; non-obvious types are cast explicitly before comparison
+- [ ] Named functions via `function`, callbacks are arrows, object methods are shorthand
+- [ ] Destructuring instead `parts[0]` / repeated calls to properties
+- [ ] Fully qualified variable names in multiline functions
+- [ ] Named imports
 
-## Ссылки
+## Links
 
 - https://spatie.be/guidelines/javascript
 - https://prettier.io/docs/options
 - https://eslint.org/docs/latest/rules/eqeqeq
-- Связанные скиллы: `frontend-vue/vue-composition-api`, `frontend-backend/inertia-vue`
+- Related skills: `frontend-vue/vue-composition-api`, `frontend-backend/inertia-vue`

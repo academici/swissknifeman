@@ -5,10 +5,10 @@ paths:
   - "**/*_test.py"
 ---
 
-Тесты (глубина — скилл `quality:test-strategy`):
+Tests (depth - skill `quality:test-strategy`):
 
-- Прогон только `{{TEST_RUNNER_CMD}}` (venv-aware, `{{PY_BIN}}`).
-- pytest; для {{WEB_FRAMEWORK}} — TestClient/httpx или django test client; тестируй
-  поведение эндпоинта (коды/валидация/ошибки/побочки в БД).
-- Фикстуры/`tmp_path`, изолированная БД; мок внешних сервисов; без реальной сети.
-- На изменённое поведение — тест; существующие проверки не ослаблять.
+- Run only `{{TEST_RUNNER_CMD}}` (venv-aware, `{{PY_BIN}}`).
+- pytest; for {{WEB_FRAMEWORK}} — TestClient/httpx or django test client; test
+  endpoint behavior (codes/validation/errors/side effects in the database).
+- Fittings/`tmp_path`, isolated DB; mock external services; without a real network.
+- For changed behavior - test; existing checks should not be weakened.

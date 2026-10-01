@@ -1,37 +1,37 @@
 // Source: anonymized production Laravel project
-// Паттерны использования Laravel Wayfinder на фронтенде (Vue/Inertia).
+// Usage patterns Laravel Wayfinder on the frontend (Vue/Inertia).
 
-// --- Импорты: ТОЛЬКО именованные (tree-shaking) -------------------------
+// --- Imports: named ONLY (tree-shaking) -------------------------
 
 // Controller actions:
 import { show, store, update, destroy } from '@/actions/App/Http/Controllers/DocumentController';
 
-// Именованные роуты (alias при коллизиях):
+// Named routes (alias for collisions):
 import { show as documentShow } from '@/routes/documents';
 
-// ПЛОХО: default-импорт тянет весь сгенерированный модуль в бандл
+// BAD: default-import pulls the entire generated module into a bundle
 // import DocumentController from '@/actions/App/Http/Controllers/DocumentController';
 
-// --- Базовые методы ------------------------------------------------------
+// --- Basic methods -------------------------------------------------------------
 
 show(1); // { url: '/documents/1', method: 'get' }
-show.url(1); // '/documents/1' — строка для axios/fetch
-show.get(1); // явный HTTP-метод
+show.url(1); // '/documents/1' — line for axios/fetch
+show.get(1); // explicit HTTP-method
 store.post(); // { url: '/documents', method: 'post' }
 update.patch(1); // { url: '/documents/1', method: 'patch' }
 destroy.delete(1); // { url: '/documents/1', method: 'delete' }
 
-// Атрибуты для HTML-формы (генерация с флагом --with-form):
+// Attributes for HTML-forms (generation with flag --with-form):
 store.form(); // { action: '/documents', method: 'post' }
 update.form(1); // { action: '/documents/1', method: 'post' } + spoofed _method
 
-// Query-параметры:
+// Query-parameters:
 show(1, { query: { page: 1, filter: 'active' } }); // '/documents/1?page=1&filter=active'
 
-// Route model binding — передавать объект с ключом, а не «голый» id, если роут ждёт модель:
+// Route model binding — pass an object with a key, rather than «naked» id, if the route is waiting for the model:
 show({ document: 1 });
 
-// --- Inertia: <Form> и router --------------------------------------------
+// --- Inertia: <Form> and router --------------------------------------------
 
 // <script setup lang="ts">
 // import { Form } from '@inertiajs/vue3';
@@ -41,14 +41,14 @@ show({ document: 1 });
 // <template>
 //     <Form v-bind="store.form()">
 //         <input name="title" />
-//         <button type="submit">Сохранить</button>
+//         <button type="submit">Save</button>
 //     </Form>
 // </template>
 
-// router.visit с wayfinder вместо строки:
+// router.visit with wayfinder instead of the line:
 // router.visit(show.url(documentId));
 
-// --- Слой composable: компоненты не трогают wayfinder напрямую -----------
+// --- Layer composable: components are not touched wayfinder directly -----------
 
 // resources/js/composables/document/useDocumentNavigation.ts
 import { router } from '@inertiajs/vue3';

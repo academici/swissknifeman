@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 // Source: {project}/app/Models/* (anonymized)
-// Эталоны современных Eloquent accessors/mutators через Attribute::make().
+// Standards of modern Eloquent accessors/mutators via Attribute::make().
 
 namespace App\Models;
 
@@ -21,9 +21,9 @@ final class User extends Model
         return $this->hasMany(related: Post::class);
     }
 
-    // ── Attributes (после relations, перед scopes) ────────────
+    // ── Attributes (after relations, before scopes) ────────────
 
-    /** Только getter, стрелочная функция — для простого вычисления. */
+    /** Only getter, arrow function - for simple calculations. */
     protected function fullName(): Attribute
     {
         return Attribute::make(
@@ -31,7 +31,7 @@ final class User extends Model
         );
     }
 
-    /** Getter + setter: нормализация email при записи и чтении. */
+    /** Getter + setter: normalization email when writing and reading. */
     protected function email(): Attribute
     {
         return Attribute::make(
@@ -40,7 +40,7 @@ final class User extends Model
         );
     }
 
-    /** Многострочный аксессор: сборка из нескольких атрибутов. */
+    /** Multi-line accessor: assembly of multiple attributes. */
     protected function fullAddress(): Attribute
     {
         return Attribute::make(
@@ -61,15 +61,15 @@ final class User extends Model
 }
 
 /*
- * ── Миграция legacy-аксессора ──────────────────────────────
+ * ── Migration legacy-accessor ──────────────────────────────
  *
- * ❌ Было (legacy):
+ * ❌ Was (legacy):
  *     public function getFullNameAttribute(): string
  *     {
  *         return $this->first_name . ' ' . $this->last_name;
  *     }
  *
- * ✅ Стало (modern):
+ * ✅ Became (modern):
  *     protected function fullName(): Attribute
  *     {
  *         return Attribute::make(
@@ -77,6 +77,6 @@ final class User extends Model
  *         );
  *     }
  *
- * Шаги: удалить getXxxAttribute(); добавить protected xxx(): Attribute;
- * добавить use ...Casts\Attribute; прогнать тест на эквивалентность.
+ * Steps: delete getXxxAttribute(); add protected xxx(): Attribute;
+ * add use ...Casts\Attribute; run an equivalence test.
  */

@@ -1,58 +1,58 @@
-# Конфиг `config.json`
+# Config `config.json`
 
-Главный конфиг узла — `config.json` **в корне монорепо** (не в пакете maind);
-резолвер поднимается вверх до каталога с `packages/`. Legacy-имя `.maind.json`
-по-прежнему подхватывается для обратной совместимости. Надмножество `.projects.json`
-из brain. Полный пример с комментариями —
+Main node config - `config.json` **at the root of the monorepo** (not in package maind);
+resolver climbs up to the directory with `packages/`. Legacy-name `.maind.json`
+is still picked up for backwards compatibility. Superset `.projects.json`
+from brain. Full example with comments -
 [`config.example.json`](https://github.com/academici/maind/blob/main/config.example.json).
-Валидация — на stdlib (без jsonschema): неизвестный топ-ключ фатален (с подсказкой через
-difflib), неизвестный вложенный — предупреждение.
+Validation - on stdlib (without jsonschema): unknown top key fatal (with hint via
+difflib), unknown nested - warning.
 
-## Секции
+## Sections
 
-| Секция | Назначение |
+| Section | Purpose |
 |:--|:--|
-| `node` | идентификация узла: `id`, `name`, `role` (`primary`/`secondary`/`mirror`) |
+| `node` | node identification: `id`, `name`, `role` (`primary`/`secondary`/`mirror`) |
 | `memory` | `http_port`, `stream_port`, `data_dir`, `url`, `config_path` |
-| `graph` | `adapter` (`federation` по умолчанию / `disabled`) — federation единственная раскладка |
-| `code_graph` | политика графа кода: `command`/`args`/`server_name`, `ignores`/`workspace_ignores`, `language_by_type`, `initial_prompt`/`workspace_prompt`, `pre_index`, `feature_log_hook` (см. ниже) |
+| `graph` | `adapter` (`federation` default / `disabled`) — federation single layout |
+| `code_graph` | code graph policy: `command`/`args`/`server_name`, `ignores`/`workspace_ignores`, `language_by_type`, `initial_prompt`/`workspace_prompt`, `pre_index`, `feature_log_hook` (see below) |
 | `agents` | `registry_enabled`, `heartbeat_interval_ms`, `max_idle_ms`, `definitions[]` |
-| `projects[]` | проекты (см. ниже) |
-| `providers` | необязательные fleet defaults provider selection; точный контракт ниже |
-| `namespaces` | необязательный реестр namespace-групп: `{ id: { name, description } }` |
-| `integrations` | `swissknifeman`, `brain` (синк) |
-| `mcp` | `servers[]` — внешние MCP-серверы узла; `emit_example` (default-on `.mcp.json.example`, opt-out `false`); `perplexity_web` — hub-managed раскатка keyless-моста perplexity-web (см. ниже) |
+| `projects[]` | projects (see below) |
+| `providers` | optional fleet defaults provider selection; exact contract below |
+| `namespaces` | optional registry namespace-groups: `{ id: { name, description } }` |
+| `integrations` | `swissknifeman`, `brain` (sync) |
+| `mcp` | `servers[]` — external MCP-node servers; `emit_example` (default-on `.mcp.json.example`, opt-out `false`); `perplexity_web` — hub-managed rolling keyless-bridge perplexity-web (see below) |
 | `observability` | `service_name`, `log_level`, `metrics_enabled`, `traces_enabled` |
 
-## Проект
+## Project
 
 ```jsonc
 {
-  // совместимо с brain (.projects.json)
+  // compatible with brain (.projects.json)
   "id": "brain", "name": "Brain", "repo": "academici/brain",
   "local_path": "~/Vaults/Brain", "type": "obsidian-vault",
-  // расширения maind
-  "memory_scope": "project:brain",     // приватный бакет памяти проекта
+  // extensions maind
+  "memory_scope": "project:brain",     // private project memory bucket
   "agents": ["vault-architect"], "skills": [], "tags": ["docs"],
-  "namespaces": ["axioma"],            // группы изоляции связей графа+памяти; ["*"] = общая инфраструктура
+  "namespaces": ["axioma"],            // graph link isolation groups+memory; ["*"] = general infrastructure
   "graph_store": "hub",                // hub (data/graphs/<id>.db) | local (<repo>/.maind/graph.db)
-  "code": false,                       // включить граф кода (legacy-alias graphify); движок из секции code_graph
-  "code_command": "uvx",               // опц. бинарь code-MCP (override дефолта из code_graph)
-  "code_args": ["..."],                // опц. аргументы; {root} → путь проекта
-  "code_server_name": "serena",        // опц. имя сервера в .mcp.json
-  "code_workspace": false,             // опц. override авто-режима «единый граф с packages/*» (авто, если есть packages/)
-  "code_ignores": ["vendor"],          // опц. per-project список игноров (иначе из code_graph)
+  "code": false,                       // enable code graph (legacy-alias graphify); engine from section code_graph
+  "code_command": "uvx",               // opt. binary code-MCP (override default from code_graph)
+  "code_args": ["..."],                // opt. arguments; {root} → project path
+  "code_server_name": "serena",        // opt. server name in .mcp.json
+  "code_workspace": false,             // opt. override auto mode «single graph with packages/*» (auto, if available packages/)
+  "code_ignores": ["vendor"],          // opt. per-project ignore list (otherwise from code_graph)
   "status": "active"                   // active | archived | planning
 }
 ```
 
-### Дополнительные provider-managed MCP-серверы
+### Additional provider-managed MCP-servers
 
-Проект может объявить дополнительные серверы, которыми владеет другой package, в
-`projects[].mcp.extra_servers`. `maind deploy` добавляет их в единый semantic inventory
-вместе со своими `maind`/memory/code серверами, проверяет дубликаты ID до записи и затем
-передаёт их provider-managed renderer. Значения — native MCP-объекты (`command`, `args`,
-`env` и т. п.); их owner отвечает за содержимое и lifecycle.
+A project may advertise additional servers owned by another package, in
+`projects[].mcp.extra_servers`. `maind deploy` adds them to a single semantic inventory
+along with their `maind`/memory/code servers, checks for duplicates ID before recording and then
+transmits them provider-managed renderer. Values - native MCP-objects (`command`, `args`,
+`env` etc.); them owner is responsible for the content and lifecycle.
 
 ```jsonc
 "mcp": {
@@ -65,124 +65,124 @@ difflib), неизвестный вложенный — предупрежден
 }
 ```
 
-`extra_servers` не может переопределять IDs, уже принадлежащие `maind`, memory, code graph
-или включённым интеграциям: такой конфликт останавливает deploy до изменения target-файлов.
+`extra_servers` cannot override IDs, already owned `maind`, memory, code graph
+or enabled integrations: such a conflict stops deploy before change target-files.
 
-Старые имена `graphify` / `graphify_command` / `graphify_args` / `graphify_server_name` /
-`graphify_workspace` принимаются как **legacy-alias** (обратная совместимость).
+Old names `graphify` / `graphify_command` / `graphify_args` / `graphify_server_name` /
+`graphify_workspace` are accepted as **legacy-alias** (backwards compatible).
 
 ## Provider selection
 
-Необязательный `providers.defaults` задаёт fleet-слой выбора провайдера, а
-`projects[].providers` — более сильный слой для точного project ID. Каждый слой следует
-одному provider-config v1 contract (`contract_version` и непустой `selection`), совместимому
-с project-owned `.swissknife.json#/providers`. При отсутствии всех provider-слоёв результат
-остается legacy Claude Code-only и ничего не записывается на диск.
+Optional `providers.defaults` sets fleet-provider selection layer, and
+`projects[].providers` — stronger layer for precise project ID. Each layer follows
+alone provider-config v1 contract (`contract_version` and non-empty `selection`), compatible
+with project-owned `.swissknife.json#/providers`. In the absence of all provider-layers result
+remains legacy Claude Code-only and nothing is written to disk.
 
-Точный порядок precedence: operation override → project `.swissknife.json` →
+Exact order precedence: operation override → project `.swissknife.json` →
 `projects[].providers` → `providers.defaults` → synthetic legacy. Provider selection
-валидируется и возвращает provenance/diagnostics; он не включает provider, не генерирует
-артефакты и не меняет существующий `config.json` сам по себе.
+is validated and returns provenance/diagnostics; it does not include provider, does not generate
+artifacts and does not change existing `config.json` on its own.
 
-Обязательные для совместимости с brain поля: `id`, `name`, `repo`, `local_path`, `type`.
-Остальное — расширения maind (brain их игнорирует при чтении fallback).
+Required for compatibility with brain fields: `id`, `name`, `repo`, `local_path`, `type`.
+The rest are extensions maind (brain ignores them when reading fallback).
 
-### Три слоя каталога и владелец факта
+### Three directory layers and fact owner
 
-Каталог проектов существует в **трёх представлениях** с одним направлением синка
+The project directory exists in **three views** with one sync direction
 (`integrations.brain.sync_direction:"import"`):
 
-| Слой | Файл | Владеет фактом |
+| Layer | File | Owns the fact |
 |:--|:--|:--|
-| **Источник** | frontmatter control-нот Brain (`<Name>.md`) | какие проекты есть, `repo:` (путь к коду), doc-папки, **`visibility`** (`docs_public`) |
-| **Кэш** | `<vault>/.projects.json` (генерируется brain, gitignored) | машинная проекция frontmatter — руками не править |
-| **Реестр тулинга** | этот `config.json` | импортирует каталог + добавляет maind-поля (`namespaces`/`type`/`graph`/`mcp`) |
+| **Source** | frontmatter control-notes Brain (`<Name>.md`) | what projects are there, `repo:` (path to code), doc-folders, **`visibility`** (`docs_public`) |
+| **Cache** | `<vault>/.projects.json` (is generated brain, gitignored) | machine projection frontmatter — do not edit with your hands |
+| **Tooling registry** | this `config.json` | imports directory + adds maind-fields (`namespaces`/`type`/`graph`/`mcp`) |
 
-Каталожные поля (`name`, `local_path`, `vault_path`, `type`, `enabled`, `docs_folders`) приходят
-в `config.json` **импортом** (`maind projects sync --from brain`) — меняй их во frontmatter Brain,
-не здесь (синк перетрёт; смена `visibility` существующего проекта сопровождается warn).
-maind-only проекты (которых нет в Brain) владеют этими полями сами.
+Catalog fields (`name`, `local_path`, `vault_path`, `type`, `enabled`, `docs_folders`) come
+in `config.json` **import** (`maind projects sync --from brain`) — change them at frontmatter Brain,
+not here (sync will be erased; shift `visibility` existing project is accompanied by warn).
+maind-only projects (which are not in Brain) own these fields themselves.
 
-**`repo` ≠ `local_path`** (намеренный мост между схемами, не путать): в `config.json` `repo` —
-GitHub-slug `owner/name`, путь к коду — `local_path`. В brain-схеме `.projects.json` `repo` = **путь
-к коду** (slug'а там нет); при импорте maind кладёт его в `local_path`, а `repo` оставляет под slug.
-`visibility` в `docs_folders` — **кэш** из frontmatter Brain (maind его для поведения не читает).
+**`repo` ≠ `local_path`** (intentional bridge between circuits, not to be confused): in `config.json` `repo` —
+GitHub-slug `owner/name`, path to code - `local_path`. B brain-diagram `.projects.json` `repo` = **path
+to code** (slug'but not there); on import maind puts it in `local_path`, a `repo` leaves under slug.
+`visibility` in `docs_folders` — **cache** from frontmatter Brain (maind doesn't read it for behavior).
 
-## Секция `code_graph` (политика графа кода)
+## Section `code_graph` (code graph policy)
 
-Вся политика графа кода — **в конфиге, не в коде** (правишь здесь, а не в исходниках maind).
-`merge_defaults` накладывает дефолты, так что блок необязателен; задавай только то, что меняешь.
+The entire code graph policy is **in the config, not in the code** (you edit here, not in the sources maind).
+`merge_defaults` imposes defaults, so the block is optional; only ask what you change.
 
 ```jsonc
 "code_graph": {
-  "command": "uvx",                    // движок (по умолчанию Serena через uvx)
-  "args": ["...","--project","{root}"],// {root} → путь проекта
-  "server_name": "serena",             // имя сервера в .mcp.json проекта
+  "command": "uvx",                    // engine (default Serena via uvx)
+  "args": ["...","--project","{root}"],// {root} → project path
+  "server_name": "serena",             // server name in .mcp.json project
   "language_by_type": { "php-package": "php", "node-package": "typescript" },
-  "ignores": ["vendor","node_modules","packages","..."],          // дефолтный режим
-  "workspace_ignores": ["vendor","**/vendor","..."],              // режим единого графа (packages не игнорим)
-  "pre_index": true,                   // фоновая прогрев-индексация при включении
-  "feature_log_hook": false            // opt-in SessionEnd-публикация коммитов
+  "ignores": ["vendor","node_modules","packages","..."],          // default mode
+  "workspace_ignores": ["vendor","**/vendor","..."],              // single graph mode (packages not ignored)
+  "pre_index": true,                   // background warm-up-indexing when turned on
+  "feature_log_hook": false            // opt-in SessionEnd-publishing commits
 }
 ```
 
-В проекте `code_providers: ["claude-code", "cursor"]` ограничивает codegraph указанными
-провайдерами. `namespaces` относится к графу, а `memory_namespaces` перечисляет общие memory
-scope, которые проект может запросить явно; они не входят в обычный recall.
+In the project `code_providers: ["claude-code", "cursor"]` limits codegraph specified
+providers. `namespaces` refers to the graph, and `memory_namespaces` lists common memory
+scope, that the project may request explicitly; they are not included in the regular recall.
 
-Игноры `vendor`/`packages` и пр. — **здесь**, а не захардкожены. См. [Граф кода](./code-graph).
+Ignores `vendor`/`packages` etc. - **here**, and not hard-skinned. See [Code graph](./code-graph).
 
-## Секция `mcp.perplexity_web` (раскатка keyless-моста)
+## Section `mcp.perplexity_web` (rolling keyless-bridge)
 
-Keyless-мост **perplexity-web** (отдельный Node-пакет, поиск Perplexity через браузерный профиль)
-раздаётся в проекты тем же `deploy`/`sync`, что `maind` и Serena — единым источником истины, а не
-ручной хардкод-записью в каждом `.mcp.json`. **opt-in, disabled-by-default**: без секции сервер не
-раскатывается.
+Keyless-bridge **perplexity-web** (separate Node-package, search Perplexity via browser profile)
+is distributed to projects by the same `deploy`/`sync`, what `maind` and Serena — a single source of truth, not
+manual hardcode entry in each `.mcp.json`. **opt-in, disabled-by-default**: without section the server does not
+rolls out.
 
 ```jsonc
 "mcp": {
   "perplexity_web": {
-    "enabled": true,                     // глобальный фан-аут на все проекты
-    "pool": "default",                   // модель пулов браузера (см. ниже)
-    "bin": "/abs/path/to/perplexity-web-mcp/start.sh"  // путь к исполняемому start.sh
+    "enabled": true,                     // global fan-out for all projects
+    "pool": "default",                   // browser pooling model (see below)
+    "bin": "/abs/path/to/perplexity-web-mcp/start.sh"  // path to executable start.sh
   }
 }
 ```
 
-**Пул** = демон + профиль + окно браузера. Только `default` переиспользует текущий логин; любой
-другой пул получает свой профиль и требует **отдельного логина** в Perplexity. Демон уже гонит до
-`maxConcurrency` поисков параллельно (вкладки), поэтому изоляция нужна лишь под раздельные аккаунты:
+**Pool** = demon + profile + browser window. Only `default` reuses the current login; any
+another pool receives its profile and requires **separate login** in Perplexity. The demon is already driving to
+`maxConcurrency` searches in parallel (tabs), therefore isolation is needed only for separate accounts:
 
-| `pool` | Пул проекта | Логины |
+| `pool` | Project pool | Logins |
 |:--|:--|:--|
-| `"default"` (или любой литерал) | общий пул для всех | один (текущий) |
-| `"per-namespace"` | `ns-<первый namespace>` | по логину на группу |
-| `"per-project"` | `<id проекта>` | по логину на проект |
+| `"default"` (or any literal) | common pool for everyone | one (current) |
+| `"per-namespace"` | `ns-<first namespace>` | by group login |
+| `"per-project"` | `<id project>` | by project login |
 
-Per-project override: `projects[].perplexity_web` (`true`/`false` — форс вкл/выкл) и
-`projects[].perplexity_web_pool` (литеральное имя пула). `bin` задаётся в локальном
-hub-конфиге и рендерится как непосредственная команда: MCP-клиенты запускают её без shell и
-не раскрывают `${…}`. Поэтому machine-specific путь не попадает в отслеживаемый исходный код —
-он остаётся в локальных сгенерированных MCP-конфигурациях.
+Per-project override: `projects[].perplexity_web` (`true`/`false` — force on/off) and
+`projects[].perplexity_web_pool` (literal pool name). `bin` is set in the local
+hub-config and rendered as a direct command: MCP-clients run it without shell and
+do not disclose `${…}`. Therefore machine-specific path is not in tracked source code -
+it remains in the locally generated MCP-configurations.
 
 ## Namespaces
 
-`namespaces` у проекта изолируют межпроектные связи **и графа, и памяти**: ребро A↔B строится,
-только если A и B делят хотя бы одну группу; факты памяти проекта видны внутри его namespace
-(`ns:<имя>`) и изолированы между группами. Нет поля / `[]` → неявный `default`; `["*"]` →
-общая инфраструктура, связывается со всеми группами. Подробнее — [Namespaces](./namespaces).
+`namespaces` the project isolates inter-project connections **both graph and memory**: edge A↔B is under construction,
+only if A and B share at least one group; the project's memory facts are visible within it namespace
+(`ns:<name>`) and isolated between groups. No field / `[]` → implicit `default`; `["*"]` →
+common infrastructure, communicates with all groups. More details - [Namespaces](./namespaces).
 
-## Дефолты
+## Defaults
 
-`merge_defaults` дописывает обязательные значения (`memory.http_port=4111`,
+`merge_defaults` adds required values (`memory.http_port=4111`,
 `graph.adapter=federation`, `agents.heartbeat_interval_ms=30000`,
-`observability.service_name=maind` …), чтобы код никогда не ловил `KeyError`. Устаревший
-`graph.adapter` (`memory`/`graphify`/`networkx`) принимается с предупреждением и нормализуется
-в `federation`.
+`observability.service_name=maind` …), so that the code never catches `KeyError`. Deprecated
+`graph.adapter` (`memory`/`graphify`/`networkx`) is accepted with a warning and normalized
+in `federation`.
 
-::: warning Порты
-`memory.http_port`/`stream_port` — лишь дефолт; `.env` (`AGENTMEMORY_PORT`/
-`AGENTMEMORY_STREAM_PORT`) их переопределяет. См. [Память](./memory).
+::: warning Ports
+`memory.http_port`/`stream_port` — only default; `.env` (`AGENTMEMORY_PORT`/
+`AGENTMEMORY_STREAM_PORT`) overrides them. See [Memory](./memory).
 :::
 
-Дальше: [Память →](./memory)
+Next: [Memory →](./memory)

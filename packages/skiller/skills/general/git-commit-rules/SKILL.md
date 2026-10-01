@@ -40,36 +40,36 @@ Use when task involves:
 - Message in Russian.
 - Type prefixes: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `style`, `build`, `ci`, `revert` (+ `security` if project uses it).
 - Scope from project commitlint config (if present), else derive from project structure/layers; don't invent.
-- Subject as "done", not "to do": past tense, usually plural — `добавили`, `исправили`, `убрали`, `обновили`; avoid infinitives `добавить`, `исправить`, `сделать`.
+- Subject as "done", not "to do": past tense, usually plural — `added`, `fixed`, `removed`, `updated`; avoid infinitives `add`, `fix`, `do`.
 - Style: short subject + 1-2 lines with reason if needed.
 - Read as human-written, not AI template: concrete result + why; no bureaucratese, no generic phrases.
 
 Example:
 
 ```text
-refactor(workflow): унифицировать кэш policy abilities
+refactor(workflow): unify cache policy abilities
 
-Убрал дубли в DTO и вынес общий helper для кэширования.
+Removed duplicates in DTO and issued a general helper for caching.
 ```
 
 More "human-style" examples:
 
 ```text
-ci(deps): добавили php-расширения для composer install
+ci(deps): added php-extensions for composer install
 
-Добавили ldap/gd/exif в GitLab CI, чтобы composer install не падал на platform req.
+Added ldap/gd/exif in GitLab CI, to composer install did not crash on platform req.
 ```
 
 ```text
-fix(api): исправили проверку роли в ответе тикета
+fix(api): fixed role checking in ticket response
 
-Убрали ложный 403 для участников без роли исполнителя.
+Removed false 403 for participants without the performer role.
 ```
 
 Anti-example:
 
 ```text
-ci(deps): добавить php-расширения для composer install
+ci(deps): add php-extensions for composer install
 ```
 
 ## Conventional Commits: scopes and breaking changes
@@ -91,7 +91,7 @@ ci(deps): добавить php-расширения для composer install
 - Don't bypass hooks: `--no-verify` forbidden without explicit user request.
 - Format — conventional: `type(scope): subject`; type from the project's list.
 - Take scope from commitlint config or project structure, don't invent.
-- Message in Russian; subject in past tense ("добавили"), not an infinitive.
+- Message in Russian; subject in past tense ("added"), not an infinitive.
 - Body — 1–2 lines: concrete result + why, no bureaucratese.
 - Mark breaking changes: `BREAKING CHANGE:` footer or `!` after type/scope.
 - Don't mix unrelated changes in one commit.

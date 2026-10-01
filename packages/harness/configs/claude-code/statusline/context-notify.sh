@@ -50,7 +50,7 @@ write_state() {
 
 notify_detached() {
   local msg="$1" cwd="$2" payload dj mj
-  [[ -x "$NOTIFY_CMD" ]] || { debug "notify: нет исполняемого $NOTIFY_CMD"; return 0; }
+  [[ -x "$NOTIFY_CMD" ]] || { debug "notify: no executable $NOTIFY_CMD"; return 0; }
   dj="${cwd//\\/\\\\}"; dj="${dj//\"/\\\"}"
   mj="${msg//\\/\\\\}"; mj="${mj//\"/\\\"}"
   payload="$(printf '{"message":"%s","cwd":"%s"}' "$mj" "$dj")"
@@ -59,7 +59,7 @@ notify_detached() {
   else
     ( printf '%s' "$payload" | "$NOTIFY_CMD" >/dev/null 2>&1 & ) 2>/dev/null
   fi
-  debug "notify: отправлено «$msg»"
+  debug "notify: sent «$msg»"
   return 0
 }
 
@@ -147,13 +147,13 @@ fi
 if (( band > prev_band )); then
   if (( COOLDOWN_MIN == 0 || now - last_notify >= COOLDOWN_MIN * 60 )); then
     write_state "$band" "$now"
-    notify_detached "Контекст ${pct_int}% — пройден порог ${crossed}%. Пора /compact или /clear." "$DIR"
+    notify_detached "Context ${pct_int}% — crossed threshold ${crossed}%. It's time /compact or /clear." "$DIR"
   else
-    debug "полоса $prev_band→$band при ${pct_int}% — кулдаун не истёк, отложено"
+    debug "strip $prev_band→$band when ${pct_int}% — cooldown not expired, delayed"
   fi
 elif (( band < prev_band )); then
   write_state "$band" "$last_notify"
-  debug "полоса $prev_band→$band при ${pct_int}% — сброс вниз"
+  debug "strip $prev_band→$band when ${pct_int}% — reset down"
 fi
 
 exit 0

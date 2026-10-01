@@ -87,14 +87,14 @@ Husky `.husky/pre-commit`:
 php artisan typescript:transform
 if ! git diff --quiet -- resources/js/types/generated.d.ts; then
   git add resources/js/types/generated.d.ts
-  echo "types/generated.d.ts перегенерирован и добавлен в коммит"
+  echo "types/generated.d.ts regenerated and added to commit"
 fi
 ```
 CI variant (strict, no auto-`add`, check only):
 ```sh
 php artisan typescript:transform
 git diff --exit-code -- resources/js/types/generated.d.ts \
-  || { echo "generated.d.ts устарел: запусти 'npm run types' и закоммить"; exit 1; }
+  || { echo "generated.d.ts deprecated: run 'npm run types' and commit"; exit 1; }
 ```
 
 ## Quality checklist

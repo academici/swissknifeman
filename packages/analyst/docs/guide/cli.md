@@ -1,8 +1,8 @@
-# CLI и команды
+# CLI and commands
 
-CLI — `analyst <command> [args]` (тонкий bash-лаунчер → `python3 -m analyst`). Также доступно как
-плагин Claude Code (`/analyst:*`) и через корневой роутер `swissknifeman analyst …`. Все команды —
-детерминированные, on-demand, без демона; сообщения на русском.
+CLI — `analyst <command> [args]` (thin bash-launcher → `python3 -m analyst`). Also available as
+plugin Claude Code (`/analyst:*`) and through the root router `swissknifeman analyst …`. All commands -
+deterministic, on-demand, without daemon; messages in Russian.
 
 ## `analyst digest`
 
@@ -10,9 +10,9 @@ CLI — `analyst <command> [args]` (тонкий bash-лаунчер → `python
 analyst digest [--cwd | --session UUID] [--project ID] [--dry-run] [--json]
 ```
 
-Детерминированно извлекает кандидат-уроки из свежего `run-report` прогона по высокоточным сигналам
-(**resolved-failure** «команда падала и затем прошла»; явные **dev-loop workarounds**) →
-`.claude/analyst/lessons/ephemeral/` (LOCAL). `--dry-run`/`--json` — предпросмотр без записи.
+Deterministically extracts candidate lessons from fresh `run-report` run on high-precision signals
+(**resolved-failure** «command crashed and then passed»; explicit **dev-loop workarounds**) →
+`.claude/analyst/lessons/ephemeral/` (LOCAL). `--dry-run`/`--json` — preview without recording.
 
 ## `analyst scan` (P2)
 
@@ -20,11 +20,11 @@ analyst digest [--cwd | --session UUID] [--project ID] [--dry-run] [--json]
 analyst scan [--min-projects N] [--namespace NS] [--threshold T] [--no-prune] [--dry-run] [--json]
 ```
 
-Cross-project агрегатор: обходит реестр `config.json:projects[]`, читает per-project уроки,
-greedy-Jaccard-кластеризует и детектит паттерны, повторяющиеся в **≥N проектах** (по умолчанию 3),
-→ draft-предложения в `~/.swissknifeman/analyst/suggestions/` + индекс `index/by_pattern/`.
-**Namespace-изолированно**. Реконсиляция: осиротевшие артефакты снимаются **строго в scope прогона**
-(`--no-prune` выключает, `--dry-run` показывает). Подробнее — [Жизненный цикл](./lifecycle).
+Cross-project aggregator: bypasses the registry `config.json:projects[]`, reads per-project lessons,
+greedy-Jaccard-clusters and detects patterns that repeat in **≥N projects** (default 3),
+→ draft-sentences in `~/.swissknifeman/analyst/suggestions/` + index `index/by_pattern/`.
+**Namespace-isolated**. Reconciliation: orphaned artifacts are removed **strictly in scope run**
+(`--no-prune` turns off, `--dry-run` shows). More details - [Life cycle](./lifecycle).
 
 ## `analyst workflow-scan`
 
@@ -32,12 +32,12 @@ greedy-Jaccard-кластеризует и детектит паттерны, п
 analyst workflow-scan [--project ID] --output DIR|FILE.json --now ISO [--json]
 ```
 
-Read-only инвентаризация workflow-скриптов только из явных `local_path`/`vault_path` plan-root
-enabled-проектов. Команда хеширует байты до разбора, сохраняет aliases зеркал, считает Rule of
-Three по разным планам и сопоставляет статические признаки с четырьмя Task templates. JavaScript
-не выполняется, абсолютные пути, prompts и тела скриптов в отчёт не попадают. Результат
-`workflow-fleet-report/v1` может предложить лишь доказанное уточнение существующего слота;
-пятая template-family и смена матрицы стадий остаются `report-only`.
+Read-only inventory workflow-scripts only from explicit ones `local_path`/`vault_path` plan-root
+enabled-projects. The command hashes the bytes before parsing, saves aliases mirrors, believes Rule of
+Three on different plans and compares static features with four Task templates. JavaScript
+not executed, absolute paths, prompts and script bodies are not included in the report. Result
+`workflow-fleet-report/v1` can only offer a proven refinement of an existing slot;
+fifth template-family and changing the stage matrix remain `report-only`.
 
 ## `analyst suggest` (P4)
 
@@ -45,10 +45,10 @@ Three по разным планам и сопоставляет статиче�
 analyst suggest <pattern_id> | --all [--bucket B] [--min-weight N] [--dry-run] [--json] [--force]
 ```
 
-Cross-project паттерн (`index/by_pattern/`) → **ЧЕРНОВИК** скилла `SKILL.ru.md` + `draft.meta.json`
-в `~/.swissknifeman/analyst/drafts/<pattern_id>/`. **НЕ** пишет в `skills/`, **НЕ** генерит EN-канон,
-**НЕ** регистрирует — промоут в бакет делает человек. Ре-suggest защищён от ручных правок
-(`--force` перезаписывает); осиротевшие черновики — предупреждение, не удаление. Подробно —
+Cross-project pattern (`index/by_pattern/`) → **DRAFT** skill `SKILL.ru.md` + `draft.meta.json`
+in `~/.swissknifeman/analyst/drafts/<pattern_id>/`. **NOT** writes in `skills/`, **NOT** generates EN-canon,
+**NOT** registers - the promotion to the bucket is made by a person. Re-suggest protected from manual edits
+(`--force` overwrites); orphaned drafts - warning, not deletion. Details -
 [suggest →](./suggest).
 
 ## `analyst review`
@@ -57,7 +57,7 @@ Cross-project паттерн (`index/by_pattern/`) → **ЧЕРНОВИК** ск
 analyst review [--state ephemeral|candidate|curated|deprecated] [--project ID]
 ```
 
-Показать уроки по состояниям + structured diff против активных (Jaccard) + mem0-рекомендация
+Show lessons by condition + structured diff against active (Jaccard) + mem0-recommendation
 (`ADD`/`UPDATE`/`NOOP`/`CONFLICT`). Read-only.
 
 ## `analyst recompute` (P3)
@@ -66,9 +66,9 @@ analyst review [--state ephemeral|candidate|curated|deprecated] [--project ID]
 analyst recompute [--now ISO] [--dry-run]
 ```
 
-Детерминированный пересчёт confidence из append-only `events.ndjson` (Beta-среднее × volume × decay)
-→ числовая state-machine (авто `ephemeral→candidate`; `curated` — только человек; просадка →
-soft-deprecate). Восстановим из логов при фиксированном `--now`. Демона нет.
+Deterministic recalculation confidence from append-only `events.ndjson` (Beta-average × volume × decay)
+→ numeric state-machine (auto `ephemeral→candidate`; `curated` — human only; drawdown →
+soft-deprecate). Restore from logs at fixed `--now`. There is no demon.
 
 ## `analyst promote` / `deprecate`
 
@@ -77,10 +77,10 @@ analyst promote <id> [--to candidate|curated] [--supersedes ID] [--force] [--yes
 analyst deprecate <id>
 ```
 
-Продвинуть урок по конвейеру `ephemeral→candidate→curated`. **Переход в `curated` требует согласия
-человека** (`confirm` на tty либо `--yes`) и всплывает в память [mAInd](/maind/guide/memory).
-Противоречие с активным уроком → **flag-and-ask** (авто-резолв запрещён: реши `--supersedes` или
-`--force`). `deprecate` — soft-демоут (не удаляется, доступен для аудита).
+Advance lesson through pipeline `ephemeral→candidate→curated`. **Go to `curated` requires consent
+person** (`confirm` on tty or `--yes`) and pops up in memory [mAInd](/maind/guide/memory).
+Conflict with active lesson → **flag-and-ask** (auto-resolve disabled: resolve `--supersedes` or
+`--force`). `deprecate` — soft-demo (not deleted, auditable).
 
 ## `analyst status`
 
@@ -88,9 +88,9 @@ analyst deprecate <id>
 analyst status [--json]
 ```
 
-Read-only сводка стора уроков: счётчики по состояниям, `curated-ready` (числа для curated есть —
-нужен человек), `promote_failed` (память была недоступна — досыл `promote --retry-failed`), число
-событий, даты последнего `digest`/`recompute`. Ничего не меняет.
+Read-only summary of a hundred lessons: counters by state, `curated-ready` (numbers for curated yes -
+need a person), `promote_failed` (memory was unavailable - sent `promote --retry-failed`), number
+events, dates of last `digest`/`recompute`. Doesn't change anything.
 
 ## `analyst compact`
 
@@ -98,10 +98,10 @@ Read-only сводка стора уроков: счётчики по состо
 analyst compact [--before ISO] [--dry-run] [--json]
 ```
 
-Свести старые события `events.ndjson` (старше `--before`, или ВСЕ) в один snapshot-event на урок.
-Суммы (S/N/tests) и возраст последнего события сохраняются, поэтому [`recompute`](#analyst-recompute-p3)
-до и после даёт **ту же** confidence. `--dry-run` — показать, ничего не писать. Провенанс операции —
-в `audit.ndjson`.
+Reduce old events `events.ndjson` (older `--before`, or ALL) into one snapshot-event for the lesson.
+Amounts (S/N/tests) and the age of the last event are preserved, so [`recompute`](#analyst-recompute-p3)
+before and after gives **the same** confidence. `--dry-run` — show, do not write anything. Provenance of the operation -
+in `audit.ndjson`.
 
 ## `analyst sessions`
 
@@ -109,11 +109,11 @@ analyst compact [--before ISO] [--dry-run] [--json]
 analyst sessions [--project P] [--weeks N] [--json]
 ```
 
-Недельные ISO-медианы `first_turn_overhead`/`fresh-per-turn` из ЖИВЫХ jsonl-транскриптов сессий
-(`~/.claude/projects/<encoded-cwd>/*.jsonl`, отдельный источник от `usage-trend.ndjson` —
-тот питает `analyst token-report`); `--project P` резолвит `local_path` по id из реестра узла,
-без флага — текущий каталог. Warn в stderr при росте медианы недели >20% к предыдущей (календарно
-смежной) неделе — сигнал context-economy-рецидива (постоянная альтернатива разовому замеру
+Weekly ISO-median `first_turn_overhead`/`fresh-per-turn` from LIVING jsonl-session transcripts
+(`~/.claude/projects/<encoded-cwd>/*.jsonl`, separate source from `usage-trend.ndjson` —
+he feeds `analyst token-report`); `--project P` resolve `local_path` by id from the node registry,
+without flag - current directory. Warn in stderr as the week's median increases >20% to previous (calendar
+adjacent) week - signal context-economy-relapse (permanent alternative to one-time measurement
 `skiller budget --first-turn` / `maind doctor --context`).
 
 ## `analyst doctor`
@@ -122,4 +122,4 @@ analyst sessions [--project P] [--weeks N] [--json]
 analyst doctor
 ```
 
-Диагностика окружения (python / core / maind).
+Environment diagnostics (python / core / maind).

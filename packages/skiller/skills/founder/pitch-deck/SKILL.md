@@ -72,64 +72,64 @@ Output = **markdown describing each slide**, NOT PPTX. Export to .pptx/.pdf is s
 project: [ProjectName]
 stage: pitch-deck
 round: [pre-seed | seed | series-a]
-ask_usd: [сумма]
-runway_months: [число]
+ask_usd: [amount]
+runway_months: [number]
 created: YYYY-MM-DD
 ---
 
 # Pitch Deck — [ProjectName]
 
 ## Slide 1 — Title
-- Заголовок: [ProjectName]
-- One-liner: [одна строка]
-- Контакт: ...
+- Title: [ProjectName]
+- One-liner: [one line]
+- Contact: ...
 
 ## Slide 2 — Problem
-**Тезис:** [главный hook]
-- Кому больно: ...
-- Цена нерешения: ...
-- Источник: [[00_Idea_Discovery]]
+**Abstract:** [main hook]
+- To whom it hurts: ...
+- The cost of not deciding: ...
+- Source: [[00_Idea_Discovery]]
 
 ## Slide 3 — Solution
-**Тезис:** ...
-- Что делаем: ...
-- Скриншот / wireframe: [ссылка]
-- Почему закрывает боль: ...
+**Abstract:** ...
+- What we do: ...
+- Screenshot / wireframe: [link]
+- Why the pain closes: ...
 
 ## Slide 4 — Why now
-**Тезис:** ...
-- Тренд / технология: ...
-- Окно возможностей: ...
+**Abstract:** ...
+- Trend / technology: ...
+- Window of opportunity: ...
 
 ## Slide 5 — Market size
-- TAM: $X (источник)
-- SAM: $Y (источник)
-- SOM: $Z (наш taking)
+- TAM: $X (source)
+- SAM: $Y (source)
+- SOM: $Z (our taking)
 
 ## Slide 6 — Competition
-- Карта: [таблица из 02_Competitive_Analysis]
-- Наш вектор атаки: [одно предложение]
+- Map: [table from 02_Competitive_Analysis]
+- Our attack vector: [one sentence]
 
 ## Slide 7 — Product
-- Фича 1: ...
-- Фича 2: ...
-- Фича 3: ...
+- Feature 1: ...
+- Feature 2: ...
+- Feature 3: ...
 
 ## Slide 8 — Business model
-- Модель: [из 03_Monetization_Model]
-- LTV: $X, CAC: $Y, payback: Z мес (из 04_Unit_Economics)
+- Model: [from 03_Monetization_Model]
+- LTV: $X, CAC: $Y, payback: Z months (from 04_Unit_Economics)
 
 ## Slide 9 — Traction / GTM
-- Текущее: [цифры]
-- План GTM: [из 06_Go_To_Market]
+- Current: [numbers]
+- Plan GTM: [from 06_Go_To_Market]
 
 ## Slide 10 — Team + Ask
-- Команда: [имена, роли]
-- Ask: $[сумма] на [runway] мес
-- На что: [breakdown]
+- Command: [names, roles]
+- Ask: $[amount] on [runway] months
+- To which: [breakdown]
 
 ## (Appendix) — Risk acknowledgement
-[если применимо]
+[if applicable]
 ```
 
 ## Hard prohibitions

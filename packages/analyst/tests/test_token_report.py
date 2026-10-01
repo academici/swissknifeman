@@ -1,7 +1,7 @@
-"""Тесты token-report: rolling-baseline (медиана/p90 stdlib), regression-флаг на синтетическом
-тренде, срезы model/role (role — best-effort по .claude/runs/, честная деградация), --json,
-die без тренда/без --note, pinned baseline → .claude/analyze/baseline.json (формат СОВМЕСТИМ
-с maind.analyze._read_baseline: totals.median_out обязателен)."""
+"""Tests token-report: rolling-baseline (median/p90 stdlib), regression-flag on synthetic
+trend, slices model/role (role — best-effort by .claude/runs/, honest degradation), --json,
+die without trend/without --note, pinned baseline → .claude/analyze/baseline.json (format COMPATIBLE
+with maind.analyze._read_baseline: totals.median_out required)."""
 import io
 import json
 import os
@@ -43,7 +43,7 @@ class TmpProjectCase(unittest.TestCase):
         self._tmp.cleanup()
 
     def _chdir_run(self, argv):
-        """main([proj, *argv]) с cwd=proj (cmd_token_report читает os.getcwd(), как весь P1)."""
+        """main([proj, *argv]) with cwd=proj (cmd_token_report reads os.getcwd(), like everyone else P1)."""
         cwd = os.getcwd()
         out, err = io.StringIO(), io.StringIO()
         code = None
@@ -65,17 +65,17 @@ class TestRollingStatsAndRegression(unittest.TestCase):
         self.assertIsNone(tr.rolling_stats(rows))
 
     def test_regression_flag_synthetic_trend(self):
-        # 17 сессий out=10000 + 2 чуть выше (11000) — реалистичный разброс: медиана=10000,
-        # p90=10200 (statistics.quantiles(n=10)). Регресс — только явный выброс.
+        # 17 sessions out=10000 + 2 slightly higher (11000) — realistic spread: median=10000,
+        # p90=10200 (statistics.quantiles(n=10)). Regression is only an obvious outlier.
         rows = ([_trend_row(f"h{i}", 10000) for i in range(17)]
                + [_trend_row(f"v{i}", 11000) for i in range(2)])
         stats = tr.rolling_stats(rows)
         self.assertEqual(stats["median_out"], 10000)
         self.assertEqual(stats["p90_out"], 10200)
-        self.assertFalse(tr.is_regression(10000, stats))          # норма — не регресс
-        self.assertFalse(tr.is_regression(10100, stats))          # < 1.3× и < p90 — не регресс
-        self.assertTrue(tr.is_regression(50000, stats))           # >> 1.3×медиана — регресс
-        self.assertTrue(tr.is_regression(10300, stats))           # < 1.3×, но > p90 — регресс
+        self.assertFalse(tr.is_regression(10000, stats))          # normal - not regression
+        self.assertFalse(tr.is_regression(10100, stats))          # < 1.3× and < p90 — no regression
+        self.assertTrue(tr.is_regression(50000, stats))           # >> 1.3×median - regression
+        self.assertTrue(tr.is_regression(10300, stats))           # < 1.3×, but > p90 — regression
 
     def test_regression_false_without_baseline(self):
         self.assertFalse(tr.is_regression(999999, None))
@@ -83,7 +83,7 @@ class TestRollingStatsAndRegression(unittest.TestCase):
     def test_regression_false_on_zero_median(self):
         rows = [_trend_row(f"z{i}", 0) for i in range(tr.MIN_BASELINE_N)]
         stats = tr.rolling_stats(rows)
-        self.assertFalse(tr.is_regression(5000, stats))           # медиана=0 — не делим на 0
+        self.assertFalse(tr.is_regression(5000, stats))           # median=0 — is not divisible by 0
 
 
 class TestComputeReport(unittest.TestCase):
@@ -113,7 +113,7 @@ class TestComputeReport(unittest.TestCase):
     def test_by_role_degrades_honestly_when_run_report_missing(self):
         rows = [_trend_row(f"s{i}", 10000) for i in range(5)]
         _write_trend(self.proj, rows)
-        # только 3 из 5 сессий имеют сохранившийся run-report (имитация ретеншна .claude/runs)
+        # only 3 out of 5 sessions have a preserved run-report (imitation of retention .claude/runs)
         for i in range(3):
             _write_run_report(self.proj, f"s{i}", [
                 {"label": "main", "model": "claude-sonnet-5", "in": 8000, "out": 8000},
@@ -136,7 +136,7 @@ class TestComputeReport(unittest.TestCase):
         _write_trend(self.proj, [_trend_row(f"s{i}", 10000) for i in range(4)])
         rep = tr.compute_report(self.proj, sessions=50, by="model")
         self.assertEqual(rep["sessions_requested"], 50)
-        self.assertEqual(rep["sessions_window"], 4)                # не 50 — честно меньше
+        self.assertEqual(rep["sessions_window"], 4)                # not 50 - honestly less
 
 
 class TestPinnedBaseline(unittest.TestCase):
@@ -152,7 +152,7 @@ class TestPinnedBaseline(unittest.TestCase):
         rows += [_trend_row(f"o{i}", 20000, model="claude-opus-5") for i in range(5)]
         _write_trend(self.proj, rows)
         doc = tr.pin_baseline(self.proj, None, "wave2 pin")
-        # контракт maind.analyze._read_baseline: totals.median_out — число, обязателен
+        # contract maind.analyze._read_baseline: totals.median_out — number, required
         self.assertIsInstance(doc["totals"]["median_out"], (int, float))
         self.assertEqual(doc["note"], "wave2 pin")
         self.assertIn("claude-sonnet-5", doc["by_model"])
@@ -184,7 +184,7 @@ class TestCli(TmpProjectCase):
     def test_die_without_trend(self):
         code, _out, err = self._chdir_run([])
         self.assertEqual(code, 1)
-        self.assertIn("нет тренда токенов", err)
+        self.assertIn("no token trend", err)
 
     def test_json_output_is_valid_and_shaped(self):
         _write_trend(self.proj, [_trend_row(f"h{i}", 10000) for i in range(tr.MIN_BASELINE_N)])
@@ -198,12 +198,12 @@ class TestCli(TmpProjectCase):
     def test_by_phase_dies_with_escalation_message(self):
         code, _out, err = self._chdir_run(["--by", "phase"])
         self.assertEqual(code, 1)
-        self.assertIn("--by phase недоступен", err)
+        self.assertIn("--by phase not available", err)
 
     def test_by_unknown_dies(self):
         code, _out, err = self._chdir_run(["--by", "nope"])
         self.assertEqual(code, 1)
-        self.assertIn("--by ждёт", err)
+        self.assertIn("--by is waiting", err)
 
     def test_baseline_set_requires_note(self):
         _write_trend(self.proj, [_trend_row(f"h{i}", 10000) for i in range(tr.MIN_BASELINE_N)])
@@ -216,7 +216,7 @@ class TestCli(TmpProjectCase):
         _write_trend(self.proj, [_trend_row(f"h{i}", 10000) for i in range(tr.MIN_BASELINE_N)])
         code, out, _err = self._chdir_run(["--baseline", "set", "--note", "release v1"])
         self.assertIsNone(code)
-        self.assertIn("baseline закреплён", out)
+        self.assertIn("baseline pinned", out)
         self.assertTrue(tr.baseline_path(self.proj).is_file())
         doc = json.loads(tr.baseline_path(self.proj).read_text(encoding="utf-8"))
         self.assertEqual(doc["note"], "release v1")
@@ -234,17 +234,17 @@ class TestCli(TmpProjectCase):
         _write_trend(self.proj, [_trend_row(f"h{i}", 10000) for i in range(tr.MIN_BASELINE_N)])
         code, out, _err = self._chdir_run(["--vs-baseline"])
         self.assertIsNone(code)
-        self.assertIn("не установлен", out)
+        self.assertIn("not installed", out)
 
     def test_vs_baseline_without_pin_warns_but_does_not_die(self):
-        # P2.6 (LOW-находка аудита P8): --vs-baseline без пина — мягкая деградация
-        # (warn в stderr), НЕ ошибка запроса (die/exit≠0). Отчёт всё равно строится.
+        # P2.6 (LOW-audit finding P8): --vs-baseline without pin - mild degradation
+        # (warn in stderr), NOT request error (die/exit≠0). The report is still being built.
         _write_trend(self.proj, [_trend_row(f"h{i}", 10000) for i in range(tr.MIN_BASELINE_N)])
         code, out, err = self._chdir_run(["--vs-baseline"])
-        self.assertIsNone(code)                       # никакого SystemExit — не die
+        self.assertIsNone(code)                       # none SystemExit — not die
         self.assertIn("WARN:", err)
-        self.assertIn("pinned baseline не установлен", err)
-        self.assertIn("не установлен", out)            # отчёт по-прежнему построен
+        self.assertIn("pinned baseline not installed", err)
+        self.assertIn("not installed", out)            # report still built
 
     def test_vs_baseline_with_pin_no_warn(self):
         _write_trend(self.proj, [_trend_row(f"h{i}", 10000) for i in range(tr.MIN_BASELINE_N)])
@@ -255,12 +255,12 @@ class TestCli(TmpProjectCase):
         self.assertNotIn("WARN:", err)
 
     def test_vs_baseline_without_pin_warns_in_json_mode_too(self):
-        # warn() — на уровне CLI (до ветвления json/human), не только в человекочитаемом выводе.
+        # warn() — at level CLI (before branching json/human), not only in human-readable output.
         _write_trend(self.proj, [_trend_row(f"h{i}", 10000) for i in range(tr.MIN_BASELINE_N)])
         code, out, err = self._chdir_run(["--vs-baseline", "--json"])
         self.assertIsNone(code)
         self.assertIn("WARN:", err)
-        data = json.loads(out)                          # stdout остаётся чистым JSON
+        data = json.loads(out)                          # stdout remains clean JSON
         self.assertIsNone(data["pinned_baseline"])
 
     def test_without_vs_baseline_no_warn_even_if_unpinned(self):

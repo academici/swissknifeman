@@ -1,23 +1,23 @@
 <!-- Source: anonymized production project -->
 <!--
-  Фрагмент <head> серверного шаблона страницы (Blade / Twig / Edge / любой SSR).
-  Закрывает вспышку темы при server-side рендере. Псевдо-плейсхолдеры в {{ }}
-  замени синтаксисом своего движка: {{ appearance }} — значение cookie 'appearance'
-  ('light' | 'dark' | 'system'), считанное на сервере; дефолт — 'system'.
+  Fragment <head> server page template (Blade / Twig / Edge / any SSR).
+  Closes the theme flash when server-side render. Pseudo-placeholders in Replace {{ }}
+  with the syntax of your engine: {{ appearance }} — value cookie 'appearance'
+  ('light' | 'dark' | 'system'), read on the server; default - 'system'.
 
-  Два приёма работают вместе:
-    1. class на <html> из cookie — закрывает явный выбор light/dark на сервере;
-    2. inline-скрипт — закрывает режим 'system' на клиенте до первого кадра
-       (систему знает только браузер, сервер её не видит).
+  Two techniques work together:
+    1. class on <html> from cookie — closes explicit selection light/dark on the server;
+    2. inline-script - closes the mode 'system' on the client until the first frame
+       (only the browser knows the system, the server does not see it).
 -->
 
-<!-- 1. Явный выбор приходит классом сразу в HTML (нужен helper "класс если dark"). -->
+<!-- 1. Explicit selection comes directly from the class to HTML (needed helper "class if dark"). -->
 <html lang="en" class="{{ appearance === 'dark' ? 'dark' : '' }}">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <!-- 2. Режим 'system': ставим .dark синхронно ДО бандла и до контента. -->
+        <!-- 2. Mode 'system': set .dark synchronously BEFORE the bundle and before the content. -->
         <script>
             (function () {
                 var appearance = '{{ appearance ?? "system" }}';
@@ -34,7 +34,7 @@
             })();
         </script>
 
-        <!-- Опционально: фон самой страницы не мигает до загрузки CSS/контента. -->
+        <!-- Optional: the background of the page itself does not blink until loading CSS/content. -->
         <style>
             html {
                 background-color: #ffffff;
@@ -44,7 +44,7 @@
             }
         </style>
 
-        <!-- ...тут <title>, бандл приложения (app.ts), стили... -->
+        <!-- ...here <title>, application bundle (app.ts), styles... -->
     </head>
     <body>
         <div id="app"></div>

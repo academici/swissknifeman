@@ -1,21 +1,21 @@
 ---
 name: oss-dart
-description: Dart/Flutter-специфика для OSS-проектов: pubspec.yaml, pub.dev, melos, flutter compat, dart test, CI matrix
+description: Dart/Flutter-specifics for OSS-projects: pubspec.yaml, pub.dev, melos, flutter compat, dart test, CI matrix
 type: reference
 parent: oss-development
 ---
 
 # Reference: OSS Dart/Flutter
 
-Загружается дополнительно к `.ai/skills/oss-dev/oss-development.md` когда язык проекта — Dart (pure Dart пакеты или Flutter-плагины).
+Loaded in addition to `.ai/skills/oss-dev/oss-development.md` when the project language is Dart (pure Dart packages or Flutter-plugins).
 
 ---
 
-### pubspec.yaml минимум
+### pubspec.yaml minimum
 
 ```yaml
 name: package_name
-description: Одна строка (60-180 символов — иначе pub.dev штрафует score)
+description: One line (60-180 characters - otherwise pub.dev fines score)
 version: 0.1.0
 homepage: https://github.com/vendor/repo
 repository: https://github.com/vendor/repo
@@ -23,7 +23,7 @@ issue_tracker: https://github.com/vendor/repo/issues
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
-  flutter: ">=3.19.0"   # только для Flutter-плагинов
+  flutter: ">=3.19.0"   # only for Flutter-plugins
 
 dependencies:
   meta: ^1.12.0
@@ -33,7 +33,7 @@ dev_dependencies:
   lints: ^3.0.0
   mocktail: ^1.0.0
 
-# Для Flutter-плагина дополнительно:
+# For Flutter-plugin additionally:
 flutter:
   plugin:
     platforms:
@@ -44,39 +44,39 @@ flutter:
         pluginClass: PackageNamePlugin
 ```
 
-**Naming convention:** имя пакета — строго `snake_case`, латиница, без цифр в начале. На pub.dev уникально глобально.
+**Naming convention:** package name - strictly `snake_case`, Latin, without numbers at the beginning. On pub.dev unique globally.
 
-### Pub.dev Score (важно для adoption)
+### Pub.dev Score (important for adoption)
 
-pub.dev оценивает пакет по 4 категориям (макс 160 баллов):
+pub.dev rates the package in 4 categories (max 160 points):
 
-| Категория | Что проверяется |
+| Category | What is being checked |
 |:---|:---|
-| **Follow Dart conventions** | `dart analyze` без warnings, `dart format` clean |
-| **Provide documentation** | README, dartdoc на public API ≥ 20%, CHANGELOG, example/ |
-| **Platform support** | Поддержка платформ заявлена корректно |
-| **Pass static analysis** | 0 issues по lints + null-safety |
+| **Follow Dart conventions** | `dart analyze` without warnings, `dart format` clean |
+| **Provide documentation** | README, dartdoc on public API ≥ 20%, CHANGELOG, example/ |
+| **Platform support** | Platform support is declared correctly |
+| **Pass static analysis** | 0 issues by lints + null-safety |
 
-Целевой score: **140+ из 160**.
+Target score: **140+ out of 160**.
 
 ### Static Analysis & Lint
 
 ```bash
-# Анализ (использует analysis_options.yaml)
+# Analysis (uses analysis_options.yaml)
 dart analyze
 
-# Форматирование (обязательно для score)
+# Formatting (required for score)
 dart format --set-exit-if-changed .
 
-# Для Flutter
+# For Flutter
 flutter analyze
 ```
 
-`analysis_options.yaml` минимум:
+`analysis_options.yaml` minimum:
 
 ```yaml
-include: package:lints/recommended.yaml  # для Dart
-# или: package:flutter_lints/flutter.yaml для Flutter
+include: package:lints/recommended.yaml  # for Dart
+# or: package:flutter_lints/flutter.yaml for Flutter
 
 analyzer:
   language:
@@ -103,65 +103,65 @@ Flutter 3.19 — minimum (Dart 3.3)
 Flutter 3.22 — recommended
 Flutter 3.24+ — latest
 
-Правило: поддерживать последний stable + предыдущий stable.
+Rule: support last stable + previous stable.
 ```
 
-### Тесты структура
+### Test structure
 
 ```
 test/
-├── unit/           # Чистая логика
-├── widget/         # Flutter widget tests (только Flutter)
-└── integration/    # Integration test (только Flutter, с устройством)
+├── unit/           # Pure logic
+├── widget/         # Flutter widget tests (only Flutter)
+└── integration/    # Integration test (only Flutter, with device)
 ```
 
 ```bash
-# Dart пакет
+# Dart package
 dart test --coverage=coverage
 dart pub global activate coverage
 format_coverage --lcov --in=coverage --out=coverage/lcov.info
 
-# Flutter пакет
+# Flutter package
 flutter test --coverage
 ```
 
-Coverage порог ≥ 80% (тот же стандарт, что и в `oss-development`).
+Coverage threshold ≥ 80% (same standard as in `oss-development`).
 
-### Melos для монорепо
+### Melos for monorepo
 
-Если в репозитории несколько Dart-пакетов (`packages/foo`, `packages/bar`):
+If there are several Dart-packages (`packages/foo`, `packages/bar`):
 
 ```bash
-# Установка
+# Installation
 dart pub global activate melos
 
-# Bootstrap (link локальных deps)
+# Bootstrap (link local deps)
 melos bootstrap
 
-# Запуск скрипта на всех пакетах
+# Run script on all packages
 melos run test
 melos run analyze
 ```
 
-`melos.yaml` хранит общие скрипты и версии. Один lockfile per пакет.
+`melos.yaml` stores common scripts and versions. One lockfile per package.
 
 ### pub.dev Publishing
 
 ```bash
-# 1. Dry-run — проверка перед публикацией
+# 1. Dry-run — check before publication
 dart pub publish --dry-run
 
-# 2. Реальная публикация (требует Google аккаунт)
+# 2. Actual publication (requires Google account)
 dart pub publish
 
-# 3. Для Flutter — через flutter:
+# 3. For Flutter — via flutter:
 flutter pub publish --dry-run
 flutter pub publish
 ```
 
-**Verified publisher:** настроить домен через DNS TXT-запись на pub.dev — повышает доверие к пакету.
+**Verified publisher:** configure the domain via DNS TXT-entry on pub.dev — increases confidence in the package.
 
-### .github/workflows/ci.yml для Dart/Flutter
+### .github/workflows/ci.yml for Dart/Flutter
 
 **Pure Dart:**
 ```yaml
@@ -179,12 +179,12 @@ flutter pub publish
 - flutter analyze
 - dart format --set-exit-if-changed .
 - flutter test --coverage
-- (для плагина) flutter build для каждой платформы
+- (for the plugin) flutter build for each platform
 ```
 
-### Платформ-специфика для Flutter-плагинов
+### Platform-specific for Flutter-plugins
 
-Плагин должен явно объявлять платформы в `pubspec.yaml`. Каждая платформа = отдельная директория:
+The plugin must explicitly declare platforms in `pubspec.yaml`. Each platform = separate directory:
 
 ```
 android/  # Kotlin/Java
@@ -195,6 +195,6 @@ windows/  # C++
 web/      # Dart only
 ```
 
-Не объявлять платформу, если она реально не реализована — pub.dev снизит score за false advertising.
+Do not declare a platform if it is not actually implemented - pub.dev will reduce score for false advertising.
 
 ---

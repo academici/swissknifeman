@@ -26,11 +26,11 @@ when_to_use: "Use when an active git merge or rebase has unresolved conflicts."
 
 3. **Resolve each hunk.** Preserve both intents where possible. Where incompatible, pick the one matching the merge's stated goal and note the trade-off. Do **not** invent new behaviour. Always resolve; never `--abort`.
 
-4. Discover the project's **automated checks** and run them — typically typecheck, then tests, then format. Fix anything the merge broke. (Наш стек: `php artisan test` / `phpstan`; `dart analyze` + `flutter test`; `vitest` / `vue-tsc`.)
+4. Discover the project's **automated checks** and run them — typically typecheck, then tests, then format. Fix anything the merge broke. (Our stack: `php artisan test` / `phpstan`; `dart analyze` + `flutter test`; `vitest` / `vue-tsc`.)
 
 5. **Finish the merge/rebase.** Stage everything and commit. If rebasing, continue the rebase process until all commits are rebased.
 
-## Связанные скиллы
+## Related skills
 
-- `general/git-commit-rules` — формат итогового merge/rebase-коммита (обязательная зависимость).
-- `oss-dev/github-flow` — общий поток веток/PR, в котором возникает конфликт.
+- `general/git-commit-rules` — final format merge/rebase-commit (required dependency).
+- `oss-dev/github-flow` — general thread thread/PR, in which a conflict occurs.

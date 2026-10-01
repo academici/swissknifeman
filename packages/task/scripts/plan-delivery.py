@@ -27,9 +27,9 @@ def main(argv=None) -> int:
     parser.add_argument("--verify")
     args = parser.parse_args(argv)
     if args.render_final and args.kind != "terminal":
-        parser.error("--render-final требует --kind terminal")
+        parser.error("--render-final requires --kind terminal")
     if args.output and args.verify:
-        parser.error("--output и --verify взаимоисключаются")
+        parser.error("--output and --verify are mutually exclusive")
     try:
         if args.verify:
             receipt = json.loads(Path(args.verify).read_text(encoding="utf-8"))

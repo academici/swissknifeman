@@ -1,8 +1,8 @@
-"""Тесты поведенческого харнеса скиллов (eval.py) — ТОЛЬКО офлайн-логика.
+"""Tests of behavioral skill acquisition (eval.py) — Offline logic ONLY.
 
-Раннер (`claude -p`) сетевой и здесь не дёргается: покрываем грейдер, валидацию
-схемы, агрегат benchmark, scoring/selection описания, скаффолд, резолв, viewer.
-Стиль — как test_budget.py (unittest, синтетический реестр, tmpdir, без сети)."""
+Runner (`claude -p`) network and does not twitch here: we cover the grader, validation
+diagrams, unit benchmark, scoring/selection descriptions, scaffold, resolve, viewer.
+Style - how test_budget.py (unittest, synthetic registry, tmpdir, without network)."""
 import json
 import os
 import sys
@@ -58,7 +58,7 @@ class GradeAssertionCase(unittest.TestCase):
     def test_unknown_type(self):
         ok, detail = ev.grade_assertion({"type": "bogus", "value": "x"}, "x", None)
         self.assertFalse(ok)
-        self.assertIn("неизвестн", detail)
+        self.assertIn("unknown", detail)
 
 
 class GradeCaseCase(unittest.TestCase):
@@ -91,7 +91,7 @@ class ValidateSchemaCase(unittest.TestCase):
             {"id": 1, "prompt": "p", "assertions": [{"type": "contains"}]},
             {"id": 1, "assertions": [{"value": 1}]}]}
         errs = ev.validate_evals(data)
-        self.assertTrue(any("дубликат id" in e for e in errs))
+        self.assertTrue(any("duplicate id" in e for e in errs))
         self.assertTrue(any("prompt" in e for e in errs))
         self.assertTrue(any("type" in e for e in errs))
         self.assertTrue(any("value" in e for e in errs))
@@ -126,7 +126,7 @@ class AggregateCase(unittest.TestCase):
         self.assertEqual(a["graded"], 2)
         self.assertEqual(a["passed"], 1)
         self.assertEqual(a["pass_rate"], 0.5)
-        self.assertEqual(a["tokens_mean"], 150.0)   # None отфильтрован
+        self.assertEqual(a["tokens_mean"], 150.0)   # None filtered
         self.assertGreater(a["duration_std"], 0)
 
     def test_no_graded_pass_rate_none(self):
@@ -146,7 +146,7 @@ class AggregateCase(unittest.TestCase):
 
 class DescriptionTuningCase(unittest.TestCase):
     def setUp(self):
-        # judge: «сработает», если в запросе есть слово 'trigger'
+        # judge: «will work», if the query contains the word 'trigger'
         self.judge = lambda desc, q: "trigger" in q.lower()
         self.ts = {"should_trigger": ["please trigger this", "trigger now"],
                    "should_not": ["unrelated ask", "another miss"]}
@@ -218,9 +218,9 @@ class ScaffoldResolveCase(unittest.TestCase):
     def test_coverage_excludes_upstream(self):
         d = self.root / "skills" / "devops" / "ext-skill"
         fx.write_skill(d, "ext-skill", description="x")
-        fx.write_upstream(d)                       # помечает как upstream
+        fx.write_upstream(d)                       # marks as upstream
         _, total_with_upstream = ev.evals_coverage(self.root)
-        # upstream-скилл не попадает в знаменатель локального покрытия
+        # upstream-skill does not fall into the denominator of local coverage
         names = {p.parent.name for p in (self.root / "skills").glob("*/*/SKILL.md")
                  if not (p.parent / "upstream.json").exists()}
         self.assertEqual(total_with_upstream, len(names))
@@ -245,7 +245,7 @@ class ViewerCmdBuildCase(unittest.TestCase):
         self.assertIn("--output-format", cmd)
         self.assertIn("--append-system-prompt", cmd)
         self.assertIn("SKILL BODY", cmd)
-        # baseline (без скилла) — без инъекции системного промта
+        # baseline (without skill) — without system injection
         self.assertNotIn("--append-system-prompt", ev.build_run_cmd("claude", "do it"))
 
 
@@ -462,7 +462,7 @@ class SystemBankAdapterCase(unittest.TestCase):
 
 
 class FractionRenderCase(unittest.TestCase):
-    """_fmt_frac/_stringify_fractions — рендер без float (P8.9)."""
+    """_fmt_frac/_stringify_fractions — render without float (P8.9)."""
 
     def test_fmt_frac_round_half_up_and_sign(self):
         self.assertEqual(ev._fmt_frac(None), None)
@@ -477,14 +477,14 @@ class FractionRenderCase(unittest.TestCase):
         self.assertEqual(out, {"a": "0.500", "b": ["3.000", None, "x"], "c": {"d": "0.000"}})
 
     def test_sqrt_fraction_integer_no_float(self):
-        # √4 == 2 точно; проверяем, что реализация не трогает float вообще
+        # √4 == 2 exactly; we check that the implementation does not touch float in general
         self.assertEqual(ev._sqrt_fraction(ev.Fraction(4)), ev.Fraction(2))
         self.assertGreater(ev._sqrt_fraction(ev.Fraction(2)), ev.Fraction(0))
 
 
 def _write_fake_claude(tmp_dir, *, output_tokens=5, input_tokens=10, result="ok output"):
-    """Скрипт-заглушка `claude -p ... --output-format json` — детерминированный
-    JSON без сети (P8.9 online-тесты: SKM_CLAUDE_BIN — штатная точка подмены)."""
+    """Stub script `claude -p ... --output-format json` — deterministic
+    JSON without network (P8.9 online-tests: SKM_CLAUDE_BIN — standard substitution point)."""
     script = tmp_dir / "fake_claude.py"
     script.write_text(
         "#!/usr/bin/env python3\n"
@@ -497,17 +497,17 @@ def _write_fake_claude(tmp_dir, *, output_tokens=5, input_tokens=10, result="ok 
 
 
 def _no_op_clock():
-    """clock_ns детерминированный счётчик, свежий на каждый вызов-фабрику
-    (независимые прогоны с одним и тем же счётчиком дают идентичные duration_s)."""
+    """clock_ns deterministic counter, fresh for each factory call
+    (independent runs with the same counter produce identical duration_s)."""
     import itertools
-    it = itertools.count(0, 1_000_000_000)  # шаг 1с в нс
+    it = itertools.count(0, 1_000_000_000)  # step 1s in ns
     return lambda: next(it)
 
 
 class OnlineDeterminismCase(unittest.TestCase):
-    """cmd_eval online-ветка через фейковый claude (SKM_CLAUDE_BIN) — P8.9
-    Validation: побайтная воспроизводимость, отсутствие float, честный
-    provenance, no-op офлайн, ровно один/два файла online."""
+    """cmd_eval online-thread via fake claude (SKM_CLAUDE_BIN) — P8.9
+    Validation: byte reproducibility, no float, honest
+    provenance, no-op offline, exactly one/two files online."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -552,7 +552,7 @@ class OnlineDeterminismCase(unittest.TestCase):
 
         def _walk(node):
             if isinstance(node, float):
-                self.fail(f"float найден в отчёте: {node!r}")
+                self.fail(f"float found in the report: {node!r}")
             if isinstance(node, dict):
                 for v in node.values():
                     _walk(v)

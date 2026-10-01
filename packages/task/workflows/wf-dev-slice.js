@@ -1,75 +1,75 @@
-// Шаблон 4: dev-slice — срез → impl → tests-to-green (loop с max-iteration) → risk-адаптивное review.
-// Срезы идут последовательно (каждый строится на предыдущем); правила слотов — README.md рядом.
+// Template 4: dev-slice — slice → impl → tests-to-green (loop with max-iteration) → risk-adaptive review.
+// The slices are sequential (each one builds on the previous one); slot rules - README.md nearby.
 export const meta = {
-  name: 'dev-slice', // SLOT: имя под конкретный запуск
-  description: 'Разработка срезами: реализация, доведение тестов до зелёного, ревью глубиной по риску среза',
-  whenToUse: 'Stage разработки по готовому ТЗ/плану; запускать через scriptPath (НЕ named-workflow — args приходит строкой)',
+  name: 'dev-slice', // SLOT: name for a specific launch
+  description: 'Development by slices: implementation, bringing tests to green, review in depth according to the risk of cutting',
+  whenToUse: 'Stage development based on ready-made technical specifications/plan; run through scriptPath (NOT named-workflow — args comes as a string)',
   phases: [
-    { title: 'Impl', detail: 'реализация среза + тесты', model: 'sonnet' },
-    { title: 'Green', detail: 'loop: прогон тестов → фикс, до зелёного или max-iteration', model: 'sonnet' },
-    { title: 'Review', detail: 'ревью диффа среза, глубина по риску', model: 'opus' },
+    { title: 'Impl', detail: 'slice implementation + tests', model: 'sonnet' },
+    { title: 'Green', detail: 'loop: running tests → fix, until green or max-iteration', model: 'sonnet' },
+    { title: 'Review', detail: 'review of cut differential, depth by risk', model: 'opus' },
   ],
 }
 
-// ── Конфиг (embedded, НЕ через args-строку) ──────────────────────────────────
-// SLOT: пути — репозиторий и ТЗ-SSOT (абсолютные: cwd субагента сбрасывается).
-// ИНВАРИАНТ: абсолютный путь обязателен — assert ловит относительный на живом прогоне,
-// не срабатывает на незаполненном шаблоне (плейсхолдер `/abs/path/to/…` сам абсолютен).
+// ── Config (embedded, NOT via args-line) ──────────────────────────────────
+// SLOT: paths - repository and technical specificationsSSOT (absolute: cwd subagent is reset).
+// INVARIANT: absolute path is required - assert catches relative on a live run,
+// does not fire on an empty template (placeholder `/abs/path/to/…` itself is absolute).
 const REPO = '/abs/path/to/repo'
 const SPEC = '/abs/path/to/spec.md'
-if (!REPO.startsWith('/')) throw new Error(`REPO должен быть абсолютным путём: "${REPO}"`)
-if (!SPEC.startsWith('/')) throw new Error(`SPEC должен быть абсолютным путём: "${SPEC}"`)
+if (!REPO.startsWith('/')) throw new Error(`REPO must be an absolute path: "${REPO}"`)
+if (!SPEC.startsWith('/')) throw new Error(`SPEC must be an absolute path: "${SPEC}"`)
 
-// SLOT: SLICES — вертикальные срезы, последовательно. Один срез = impl + green + review + коммит.
-//   brief  — ТЗ среза со ссылкой на раздел SPEC (агент читает SPEC сам);
-//   tests  — команда прогона тестов среза (и есть его validation);
-//   risk   — low | medium | high: определяет глубину review (см. reviewFor);
-//   commit — готовый subject Conventional Commits.
-// cache-bust: `agent()` кэширует по (prompt, opts) — на `resumeFromRunId` ОДНОГО среза
-// без глобального инвалидатора добавь опц. поле `asOf` (дата/тег) в объект среза и подмешай
-// в `label` (см. README §Общие инварианты; паттерн — roadmap-заметка dterema-p4).
+// SLOT: SLICES — vertical slices, sequentially. One slice = impl + green + review + commit.
+//   brief  — Slice specification with a link to the section SPEC (agent reads SPEC himself);
+//   tests  — command to run slice tests (is his validation);
+//   risk   — low | medium | high: defines the depth review (see reviewFor);
+//   commit — ready subject Conventional Commits.
+// cache-bust: `agent()` caches by (prompt, opts) — on `resumeFromRunId` ONE slice
+// without global invalidator add opt. field `asOf` (date/tag) into the slice object and mix
+// in `label` (see README §General invariants; pattern - roadmap-note dterema-p4).
 const SLICES = [
   {
     key: 'slice-1',
-    brief: 'Срез 1: что реализовать, границы, чего НЕ трогать (раздел N спеки).',
+    brief: 'Slice 1: what to implement, boundaries, what NOT to touch (section N specs).',
     tests: 'cd REPO && ./vendor/bin/pest --filter=Slice1',
     risk: 'medium',
-    commit: 'feat(scope): суть среза (PLAN-ID Pn.m)',
+    commit: 'feat(scope): essence of the slice (PLAN-ID Pn.m)',
   },
 ]
 
-// SLOT: GATES — гейты между срезами; прогоняются после review КАЖДОГО среза,
-// красный гейт останавливает конвейер (следующие срезы не стартуют).
-// Типовое: полный тест-сьют, статанализ, commit-гейт «рабочее дерево чистое».
-const GATES = ['git -C REPO status --short — пусто (всё закоммичено)']
+// SLOT: GATES — gates between slices; chased away after review EACH slice,
+// red gate stops the conveyor (the following slices do not start).
+// Typical: full test suite, statistical analysis, commit-gate «working tree is clean».
+const GATES = ['git -C REPO status --short — empty (everything is committed)']
 
-// SLOT: max-iteration для tests-to-green loop — ОБЯЗАТЕЛЕН (агент не должен
-// крутиться бесконечно, подгоняя тесты под код). Исчерпание = стоп конвейера.
+// SLOT: max-iteration for tests-to-green loop — REQUIRED (agent should not
+// spin endlessly, adjusting the tests to the code). Exhaustion = conveyor stop.
 const MAX_GREEN_ITERATIONS = 3
 
-// SLOT: model/effort — impl sonnet/medium; review по риску (см. reviewFor).
+// SLOT: model/effort — impl sonnet/medium; review by risk (see reviewFor).
 const IMPL_MODEL = { model: 'sonnet', effort: 'medium' }
 const GREEN_MODEL = { model: 'sonnet', effort: 'medium' }
-// Risk-адаптивное review: low — self-check автора достаточен (review пропускается);
-// medium — один ревьюер свежим контекстом; high — opus/xhigh (для фискалки/платежей/
-// tenant-isolation дополнительно судейская панель — шаблон wf-audit-adversarial).
-// guarded-optional-args: срез без `risk` не должен молча получить дешёвый review — явный
-// дефолт 'medium' (typeof-guard), не голое обращение к `s.risk` (паттерн wf-agentools-drive).
+// Risk-adaptive review: low — self-check by the author is sufficient (review skipped);
+// medium — one reviewer with fresh context; high — opus/xhigh (for fiscal/payments/
+// tenant-isolation additional judge panel - template wf-audit-adversarial).
+// guarded-optional-args: cut without `risk` should not silently get cheap review — explicit
+// default 'medium' (typeof-guard), not a bare call to `s.risk` (pattern wf-agentools-drive).
 const riskOf = s => typeof s.risk === 'string' ? s.risk : 'medium'
 const reviewFor = risk => risk === 'high'
   ? { model: 'opus', effort: 'xhigh' }
   : { model: 'opus', effort: 'medium' }
 
-// ── Схемы structured-summary ─────────────────────────────────────────────────
+// ── Schemes structured-summary ─────────────────────────────────────────────────
 const REPORT = {
   type: 'object',
   properties: {
     files_changed: { type: 'array', items: { type: 'string' } },
     commits: { type: 'array', items: { type: 'string' } },
-    tests_green: { type: 'boolean', description: 'тесты среза зелёные (exit 0)' },
-    validation: { type: 'string', description: 'команды и exit-коды' },
+    tests_green: { type: 'boolean', description: 'slice tests green (exit 0)' },
+    validation: { type: 'string', description: 'commands and exit-codes' },
     issues: { type: 'array', items: { type: 'string' } },
-    summary: { type: 'string', description: 'суть сделанного, 3-5 строк' },
+    summary: { type: 'string', description: 'essence of what was done, 3-5 lines' },
   },
   required: ['files_changed', 'commits', 'tests_green', 'validation', 'issues', 'summary'],
 }
@@ -95,49 +95,49 @@ const REVIEW_SCHEMA = {
   required: ['findings', 'verdict'],
 }
 
-// ── Промпты ──────────────────────────────────────────────────────────────────
+// ── Prompts ──────────────────────────────────────────────────────────────────
 const COMMON = [
-  `Репозиторий: ${REPO}. ТЗ-SSOT: ${SPEC} — прочитай раздел своего среза прежде чем писать код.`,
-  `Дисциплина: минимальный дифф под срез, чужой код не рефакторить попутно; неясность в ТЗ — в issues, не импровизировать.`,
-  `Финальный текст = данные по схеме, не сообщение человеку.`,
+  `Repository: ${REPO}. TZ-SSOT: ${SPEC} — read the section of your slice before writing the code.`,
+  `Discipline: minimal diff under the cut, do not refactor other people's code along the way; ambiguity in the technical specifications - in issues, don't improvise.`,
+  `Final text = data according to the scheme, not a message to the person.`,
 ].join('\n')
 
 const implPrompt = s => [
   COMMON,
   s.brief,
-  `Реализуй срез вместе с тестами. Прогони: ${s.tests} — доведи до зелёного в рамках среза. Тесты проверяют ПОВЕДЕНИЕ из ТЗ; подгонка assertion'ов под фактический выход кода запрещена.`,
-  `Не коммить до завершения tests-to-green, независимого review и межсрезовых гейтов.`,
+  `Implement a slice along with tests. Drive away: ${s.tests} — bring it to green within the cut. Tests check BEHAVIOR from the technical specifications; adjustment assertion'ov under the actual code output is prohibited.`,
+  `Don't commit until complete tests-to-green, independent review and interslice gates.`,
 ].join('\n\n')
 
 const greenPrompt = (s, prev, iter) => [
   COMMON,
-  `Тесты среза «${s.key}» не зелёные (итерация ${iter}/${MAX_GREEN_ITERATIONS}). Прогони ${s.tests}, разбери падения, почини КОД (тесты правь только если тест противоречит ТЗ — тогда фиксируй это в issues).`,
-  `Отчёт предыдущей попытки: ${prev.validation}`,
-  `Не коммить до независимого review и межсрезовых гейтов.`,
+  `Slice tests «${s.key}» not green (iteration ${iter}/${MAX_GREEN_ITERATIONS}). Drive away ${s.tests}, sort out the crashes, fix the CODE (edit tests only if the test contradicts the technical specifications - then record this in issues).`,
+  `Report from previous attempt: ${prev.validation}`,
+  `Don't commit to independent review and interslice gates.`,
 ].join('\n\n')
 
 const commitPrompt = s => [
   COMMON,
-  `Все проверки, review и гейты среза «${s.key}» прошли. Перед commit выполни git status --short и git diff --name-only.`,
-  `Стадж только файлы, изменённые тобой в этом срезе; никогда не используй git add -A/-u. Несвязанные или чужие dirty-байты не трогай и укажи в issues.`,
-  `Создай один commit: ${s.commit}.`,
+  `All checks, review and slice gates «${s.key}» passed. Before commit do git status --short and git diff --name-only.`,
+  `Stage only files modified by you in this slice; never use git add -A/-u. Unrelated or foreign dirty-do not touch the bytes and point to issues.`,
+  `Create one commit: ${s.commit}.`,
 ].join('\n\n')
 
 const reviewPrompt = s => [
-  `Read-only ревью среза «${s.key}» свежим контекстом (ты НЕ автор). Репозиторий: ${REPO}; ТЗ: ${SPEC} (раздел среза). До commit проверь текущий scoped diff через git status --short и git diff; несвязанные/чужие dirty-байты не включай в вердикт.`,
-  `Ищи: несоответствие ТЗ, correctness-дефекты с конкретным failure_scenario, подгонку тестов под код. Severity Blocker/Major/Minor/Nit. Verdict FIX_REQUIRED при любом Blocker/Major.`,
-  `НИЧЕГО не правь и не коммить. Финальный текст = данные по схеме.`,
+  `Read-only slice review «${s.key}» fresh context (you are NOT the author). Repository: ${REPO}; Terms of reference: ${SPEC} (slice section). Before commit check current scoped diff via git status --short and git diff; unrelated/strangers dirty-bytes should not be included in the verdict.`,
+  `Look for: inconsistency with technical specifications, correctness-defects with specific failure_scenario, fitting tests to the code. Severity Blocker/Major/Minor/Nit. Verdict FIX_REQUIRED for any Blocker/Major.`,
+  `Don't edit or commit ANYTHING. Final text = schema data.`,
 ].join('\n\n')
 
 const gatePrompt = s => [
-  `Прогони гейты после среза «${s.key}» в ${REPO}: ${GATES.join('; ')}. НИЧЕГО не чини — только факты (exit-коды) и вердикт в issues, если красное. Финальный текст = данные по схеме.`,
+  `Run the gates after the cut «${s.key}» in ${REPO}: ${GATES.join('; ')}. Don't fix ANYTHING - just the facts (exit-codes) and the verdict in issues, if red. Final text = schema data.`,
 ].join('\n')
 
-// ── Оркестрация: срезы последовательно, внутри среза — loop-until-green с потолком ──
-log(`dev-slice: ${SLICES.length} срезов, max green-итераций: ${MAX_GREEN_ITERATIONS}`)
+// ── Orchestration: slices sequentially, inside a slice - loop-until-green with ceiling ──
+log(`dev-slice: ${SLICES.length} slices, max green-iterations: ${MAX_GREEN_ITERATIONS}`)
 
-// safeAgent — try/catch над **bare** `await agent()` (вне `parallel()`/`pipeline()`, где throw
-// уже ловится рантаймом и отдаёт `null`): без обёртки бросок агента роняет весь прогон.
+// safeAgent — try/catch over **bare** `await agent()` (out `parallel()`/`pipeline()`, where throw
+// is already caught by runtime and returns `null`): without a wrap, the agent's throw drops the entire run.
 async function safeAgent(prompt, opts) {
   try { return await agent(prompt, opts) } catch (e) { log(`agent error (${opts.label || '?'}): ${e.message || e}`); return null }
 }
@@ -148,12 +148,12 @@ for (const s of SLICES) {
     label: `impl:${s.key}:${s.asOf || ''}`, phase: 'Impl', ...IMPL_MODEL, schema: REPORT,
   })
   if (!res) {
-    log(`СТОП: impl:${s.key} без результата`)
+    log(`STOP: impl:${s.key} without result`)
     done.push({ key: s.key, impl: null, review: null, stopped: 'impl-missing' })
     break
   }
 
-  // tests-to-green loop — строго ограничен max-iteration (правило README).
+  // tests-to-green loop — is strictly limited max-iteration (rule README).
   let iter = 0
   while (!res.tests_green && iter < MAX_GREEN_ITERATIONS) {
     iter++
@@ -168,40 +168,40 @@ for (const s of SLICES) {
   }
   if (done.find(d => d.key === s.key && d.stopped === 'green-missing')) break
   if (!res.tests_green) {
-    log(`СТОП: срез ${s.key} не дошёл до зелёного за ${MAX_GREEN_ITERATIONS} итераций — эскалация в main loop`)
+    log(`STOP: cut ${s.key} didn't reach green for ${MAX_GREEN_ITERATIONS} iterations - escalation in main loop`)
     done.push({ key: s.key, impl: res, review: null, stopped: 'tests-not-green' })
     break
   }
 
-  // Risk-адаптивное review: low пропускает отдельного ревьюера.
+  // Risk-adaptive review: low skips a separate reviewer.
   let review = null
   if (riskOf(s) !== 'low') {
     review = await safeAgent(reviewPrompt(s), {
       label: `review:${s.key}:${s.asOf || ''}`, phase: 'Review', ...reviewFor(riskOf(s)), schema: REVIEW_SCHEMA,
     })
     if (!review) {
-      log(`СТОП: review:${s.key} без результата`)
+      log(`STOP: review:${s.key} without result`)
       done.push({ key: s.key, impl: res, review: null, stopped: 'review-missing' })
       break
     }
     if (review && review.verdict === 'FIX_REQUIRED') {
-      log(`СТОП: review среза ${s.key} = FIX_REQUIRED (${review.findings.length} наход.) — фиксы в main loop, review-фиксы отдельными коммитами`)
+      log(`STOP: review slice ${s.key} = FIX_REQUIRED (${review.findings.length} find.) — fixes in main loop, review-fixes with separate commits`)
       done.push({ key: s.key, impl: res, review, stopped: 'review-fix-required' })
       break
     }
   }
 
-  // Гейты между срезами.
+  // Gates between slices.
   const gate = GATES.length
     ? await safeAgent(gatePrompt(s), { label: `gate:${s.key}:${s.asOf || ''}`, phase: 'Impl', model: 'sonnet', effort: 'low', schema: REPORT })
     : null
   if (GATES.length && !gate) {
-    log(`СТОП: gate:${s.key} без результата`)
+    log(`STOP: gate:${s.key} without result`)
     done.push({ key: s.key, impl: res, review, stopped: 'gate-missing' })
     break
   }
   if (gate && gate.issues && gate.issues.length) {
-    log(`СТОП: гейт после ${s.key} красный: ${gate.issues.join('; ')}`)
+    log(`STOP: gate after ${s.key} red: ${gate.issues.join('; ')}`)
     done.push({ key: s.key, impl: res, review, stopped: 'gate-red', gate })
     break
   }
@@ -210,7 +210,7 @@ for (const s of SLICES) {
     label: `commit:${s.key}:${s.asOf || ''}`, phase: 'Impl', ...IMPL_MODEL, schema: REPORT,
   })
   if (!committed) {
-    log(`СТОП: commit:${s.key} без результата`)
+    log(`STOP: commit:${s.key} without result`)
     done.push({ key: s.key, impl: res, review, stopped: 'commit-missing' })
     break
   }
@@ -221,7 +221,7 @@ for (const s of SLICES) {
 }
 
 const stopped = done.find(d => d.stopped)
-log(`dev-slice завершён: ${done.filter(d => !d.stopped).length}/${SLICES.length} срезов чисто${stopped ? `, стоп на ${stopped.key} (${stopped.stopped})` : ''}`)
+log(`dev-slice completed: ${done.filter(d => !d.stopped).length}/${SLICES.length} cuts clean${stopped ? `, stop on ${stopped.key} (${stopped.stopped})` : ''}`)
 
 return {
   slices: done.map(d => ({

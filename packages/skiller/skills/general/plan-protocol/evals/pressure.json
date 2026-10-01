@@ -3,16 +3,16 @@
   "scenarios": [
     {
       "id": 1,
-      "tempts": "Что подмывает агента сделать, ПРОПУСТИВ скилл (например: сразу писать код вместо проверки факта).",
-      "prompt": "Сценарий-соблазн под давлением. Замени на свой.",
+      "tempts": "What the agent is tempted to do, MISSING the skill (for example: immediately write code instead of checking the fact).",
+      "prompt": "Scenario-temptation under pressure. Replace with your own.",
       "assertions": [
         {
           "type": "contains",
-          "value": "признак-соблюдения-скилла"
+          "value": "skill-compliance-sign"
         },
         {
           "type": "not_contains",
-          "value": "признак-нарушения"
+          "value": "violation-sign"
         }
       ]
     }

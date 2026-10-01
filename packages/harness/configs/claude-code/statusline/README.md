@@ -1,56 +1,56 @@
-# statusline context-notify — окно в фактический процент контекста
+# statusline context-notify — window to actual context percentage
 
-Строка статуса Claude Code (`модель · каталог · бар · N%`) **плюс** ОС-уведомление при
-пересечении полосы порога. Нужен потому, что фактический процент контекста
-(`context_window.used_percentage`) получает **только** statusline: ни одно из hook-событий
-контекст-полей на вход не получает — включая `PreCompact`/`PostCompact`.
+Status line Claude Code (`model · directory · bar · N%`) **plus** OS notification when
+crossing the threshold strip. Needed because the actual percentage of context
+(`context_window.used_percentage`) gets **only** statusline: none of hook-events
+does not receive context fields as input - including `PreCompact`/`PostCompact`.
 
-Статуслайн **не тратит контекст-токенов** («The status line runs locally and does not consume
-API tokens»), поэтому его цена измеряется в миллисекундах: скрипт идёт на каждом сообщении
-ассистента в тракте с дебаунсом 300 мс.
+Statusline **does not spend context tokens** («The status line runs locally and does not consume
+API tokens»), therefore its price is measured in milliseconds: the script runs on each message
+assistant in the path with a debounce of 300 ms.
 
-## Раскладка
+## Layout
 
 ```
-statusline/context-notify.sh   рендерер строки + детектор пересечения полосы
-statusline/env.ini             пороги, кулдаун, ширина бара, DEBUG (НЕ перезатирается)
-hooks/notify/notify.sh         доставка (переиспользуется, не дублируется):
+statusline/context-notify.sh   string renderer + lane crossing detector
+statusline/env.ini             thresholds, cooldown, bar width, DEBUG (NOT overwritten)
+hooks/notify/notify.sh         delivery (is reused, not duplicated):
                                Linux notify-send · macOS osascript/terminal-notifier ·
-                               WSL/Windows toast; нет бэкенда → тихо
+                               WSL/Windows toast; no backend → quiet
 ```
 
-Состояние — **на сессию**: `${XDG_RUNTIME_DIR:-/tmp}/claude-statusline/<session_id>.state`,
-запись атомарная (`tmp` + `mv`), уборка старше суток — только на старте сессии.
+Status - **per session**: `${XDG_RUNTIME_DIR:-/tmp}/claude-statusline/<session_id>.state`,
+record atomic (`tmp` + `mv`), cleaning older than a day - only at the start of the session.
 
-## Включение (opt-in, per-project)
+## Enable (opt-in, per-project)
 
 ```bash
-harness hooks --global                                  # файлы на машину (один раз)
-harness hooks --target . --statusline context           # ключ statusLine в проекте
-harness hooks --target . --statusline off               # снять (только свой ключ)
+harness hooks --global                                  # files to the machine (once)
+harness hooks --target . --statusline context           # key statusLine in the project
+harness hooks --target . --statusline off               # remove (only your key)
 ```
 
-Ключ пишется в **`.claude/settings.local.json`** — это машинно-локальная преференция
-терминала (как `outputStyle`), а не командная конвенция (как `plansDirectory`), поэтому
-шаримый `settings.json` не трогается. Ключ занят ЧУЖИМ значением → команда его уважает
-(skip + warn), а не перезаписывает.
+The key is written in **`.claude/settings.local.json`** — this is a machine-local preference
+terminal (like `outputStyle`), not a team convention (like `plansDirectory`), therefore
+sharable `settings.json` is not touched. The key is occupied by ANOTHER value → the team respects him
+(skip + warn), does not overwrite.
 
-## Правило срабатывания
+## Trigger rule
 
-- Полоса = сколько порогов из `THRESHOLDS` пройдено (`80,90` → 0 / 1 / 2).
-- Уведомление — на **росте** полосы и не чаще `COOLDOWN_MIN`. Подавленный кулдауном переход
-  не теряется: полоса в состоянии не повышается, и алерт уйдёт первым рендером после кулдауна.
-- Падение процента (после `/compact`) сбрасывает полосу вниз — новый разгон уведомит снова.
-- `used_percentage` бывает `null` (начало сессии, после `/compact`) — тогда бар не рисуется и
-  решение о пороге **не принимается**. `null` — это не `0%`.
+- Strip = how many thresholds from `THRESHOLDS` passed (`80,90` → 0 / 1 / 2).
+- Notice - on **growth** stripes and not more often `COOLDOWN_MIN`. Transition suppressed by cooldown
+  is not lost: the status bar does not increase, and the alert will go away as the first render after the cooldown.
+- Percentage drop (after `/compact`) resets the bar down - a new acceleration will notify again.
+- `used_percentage` happens `null` (session start, after `/compact`) — then the bar is not drawn and
+  threshold decision **not accepted**. `null` — this is not `0%`.
 
-## Границы
+## Boundaries
 
-- Скрипт **никогда не падает наружу**: любая ошибка → минимальная строка и `exit 0`.
-- Ровно **один** внешний вызов на рендер (`jq`); `git`/`curl`/`python3`/сеть в горячем пути
-  запрещены — каждый лишний вызов виден пользователю как подтормаживание UI.
-- Доставка уведомления **отсоединена** (`setsid … &`): рантайм отменяет statusline-скрипт на
-  середине при новом апдейте, синхронный побочный эффект терялся бы вместе с ним.
-- Сегменты сверх контекста (git-ветка, цена, rate-limits) намеренно не добавлены: каждый
-  сегмент — латентность в горячем тракте.
-- Kill-switch — `disableAllHooks` в settings: глушит хуки **и любой custom status line**.
+- Script **never falls out**: any error → minimum string and `exit 0`.
+- Exactly **one** external render call (`jq`); `git`/`curl`/`python3`/network in hot path
+  are prohibited - every extra call is visible to the user as a slowdown UI.
+- Notification delivery **disconnected** (`setsid … &`): runtime cancels statusline-script on
+  in the middle of a new update, the synchronous side effect would be lost along with it.
+- Segments beyond context (git-branch, price, rate-limits) intentionally not added: every
+  segment - latency in the hot path.
+- Kill-switch — `disableAllHooks` in settings: suppresses hooks **and any custom status line**.

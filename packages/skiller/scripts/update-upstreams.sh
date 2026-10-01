@@ -12,16 +12,16 @@
 # it — the generic per-file loop below already does the right thing once the entry
 # points at body_path instead of SKILL.md.
 #
-# Exit codes (total order: 2 > 10 > 11 > 0 — код один, поэтому старший гасит
-# младший; машинный потребитель берёт ПОЛНУЮ картину из --json, где блоки
-# triage/stale_verdicts присутствуют всегда):
+# Exit codes (total order: 2 > 10 > 11 > 0 — code is one, so the older one extinguishes
+# junior; machine consumer takes the FULL picture from --json, where blocks
+# triage/stale_verdicts are always present):
 #   0  everything up to date (--check) / all eligible changes applied (--apply)
 #   1  usage error or malformed upstream.json
 #   2  one or more fetch failures (other results still printed/applied)
 #  10  --check only: at least one update/notify/conflict found
-#  11  --check only: triage findings in bundle CONTENT (см. блок triage ниже);
-#      намеренно НЕ 10 — «апстрим изменился» и «в бандле подозрительный паттерн»
-#      разные события, слияние лишило бы оператора возможности их различить
+#  11  --check only: triage findings in bundle CONTENT (see block triage below);
+#      intentionally NOT 10 — «upstream has changed» and «in the bundle there is a suspicious pattern»
+#      different events, merging would make it impossible for the operator to distinguish between them
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -38,13 +38,13 @@ Usage: scripts/update-upstreams.sh [--check|--apply] [options]
 
 Modes (default --check):
   --check            Fetch upstreams, compare, report. Never writes to the repo.
-                     Дополнительно гоняет ТРИАЖ содержимого бандла (локальный,
-                     без сети): грубые паттерны четырёх классов угрозы. Находки →
-                     код выхода 11 (не 10). Триаж НЕ является границей доверия —
-                     no findings != safe, единственная граница — человеческий
-                     аудит бандла (docs/guide/vendored-skills.md). Там же гейт
-                     вердикта: AUDIT_MISSING (блока audit нет) и AUDIT_STALE
-                     (вердикт вынесен против других байтов; --apply его не гасит).
+                     Additionally drives TRIAGE of the bundle contents (local,
+                     without network): rough patterns of four threat classes. Nakhodki →
+                     exit code 11 (not 10). Triage is NOT a trust boundary -
+                     no findings != safe, the only limit is human
+                     bundle audit (docs/guide/vendored-skills.md). Gate there
+                     verdict: AUDIT_MISSING (block audit no) and AUDIT_STALE
+                     (verdict against other bytes; --apply does not extinguish it).
   --apply            strategy=replace: overwrite local file, record sha256/fetched_at.
                      strategy=notify: record the seen upstream sha (file untouched).
                      strategy=fork: stage upstream as upstream/<name>.incoming and set
@@ -99,16 +99,16 @@ results = {"checked": 0, "updates": [], "drift": [], "conflicts": [],
            "notify": [], "applied": [], "noted": [], "failures": [],
            "triage": [], "stale_verdicts": [], "reference_only": []}
 
-# Дословная оговорка. Печатается в ОБА канала: человеческий и --json
-# (отдельным ключом, а не только прозой) — чтобы «скан зелёный» нельзя было
-# процитировать как «бандлы безопасны» ни человеку, ни машине.
+# Verbatim disclaimer. Printed in BOTH channels: human and --json
+# (in a separate key, not just in prose) — to «scan green» was impossible
+# quote as «bundles are safe» neither man nor machine.
 TRIAGE_DISCLAIMER = (
-    "no findings != safe: триаж — паттерновый скан, а НЕ граница доверия. "
-    "Пустой результат не означает, что бандл безопасен: RAG:v 2026-06 CSA/Trail of Bits "
-    "«AI Agent Skill Scanners: Bypassed Across the Board» — сканеры обходятся "
+    "no findings != safe: triage is a pattern scan, NOT a trust boundary. "
+    "An empty result does not mean that the bundle is safe: RAG:v 2026-06 CSA/Trail of Bits "
+    "«AI Agent Skill Scanners: Bypassed Across the Board» — scanners bypassed "
     "(whitespace inflation, precompiled bytecode, archive indirection, social engineering "
-    "LLM-ступени), вывод дословно «Don't outsource trust to a scanner». Единственная "
-    "граница — человеческий аудит ВСЕХ файлов бандла (docs/guide/vendored-skills.md)."
+    "LLM-steps), output verbatim «Don't outsource trust to a scanner». The only one "
+    "border - human audit of ALL bundle files (docs/guide/vendored-skills.md)."
 )
 
 
@@ -134,9 +134,9 @@ def _normalize(raw):
 
 
 def fetch_gh(owner, repo, ref, path):
-    """Точечный fetch одного файла через GitHub CLI: один файл, авто-аутентификация
-    (gh auth), уважает rate-limit — экономит контекст против полной загрузки.
-    Возвращает bytes или возбуждает исключение (caller откатится на urllib)."""
+    """Spot fetch one file via GitHub CLI: one file, auto-authentication
+    (gh auth), respects rate-limit — saves context vs. full loading.
+    Returns bytes or raises an exception (caller will roll back to urllib)."""
     out = subprocess.run(
         ["gh", "api", f"repos/{owner}/{repo}/contents/{path}",
          "-f", f"ref={ref}", "-q", ".content"],
@@ -148,14 +148,14 @@ def fetch_gh(owner, repo, ref, path):
 def fetch(url):
     """Return CRLF-normalized UTF-8 bytes. Raises on failure.
 
-    Для GitHub raw-URL и доступного `gh` тянет через `gh api .../contents`
-    (авто-аутентификация, rate-limit). Иначе/при сбое — urllib с GITHUB_TOKEN."""
+    For GitHub raw-URL and available `gh` pulls through `gh api .../contents`
+    (auto-authentication, rate-limit). Otherwise/on failure - urllib with GITHUB_TOKEN."""
     m = _RAW_RE.match(url)
     if m and _HAS_GH:
         try:
             return fetch_gh(*m.groups())
         except Exception:
-            pass  # gh недоступен/ошибка — тихий откат на urllib ниже
+            pass  # gh not available/error - silent rollback to urllib below
     headers = {"User-Agent": "swissknifeman-upstream-sync"}
     token = os.environ.get("GITHUB_TOKEN", "")
     if token and url.startswith("https://raw.githubusercontent.com/"):
@@ -207,10 +207,10 @@ for cfg in configs:
         print(f"ERROR: {cfg.relative_to(root)}: malformed (run scripts/validate.sh)",
               file=sys.stderr)
         sys.exit(1)
-    # body_path (P7.3 thin-navigator): если задан, ОБЯЗАН совпадать с path одной из
-    # files[]-записей — иначе заявленное «тело» на деле не отслеживается ни sha, ни
-    # дрейфом (тихая дыра). Не файловая проверка (существование/escape — validate.sh),
-    # только структурная: files[] реально трекает то, что body_path объявляет телом.
+    # body_path (P7.3 thin-navigator): if specified MUST match path one of
+    # files[]-records - otherwise declared «body» is not actually tracked either sha, neither
+    # drift (quiet hole). Not a file check (existence/escape — validate.sh),
+    # structural only: files[] really tracks what body_path declares as a body.
     bp = data.get("body_path")
     if bp is not None and bp not in {f.get("path") for f in data["files"]}:
         print(f"ERROR: {cfg.relative_to(root)}: body_path '{bp}' not in files[].path "
@@ -218,103 +218,103 @@ for cfg in configs:
         sys.exit(1)
     parsed.append((cfg, sid, data))
 
-# --- triage: содержательный скан бандла --------------------------------
-# ЧТО ЭТО. Ступень читает ЛОКАЛЬНОЕ содержимое бандла (все файлы рядом с
-# upstream.json, кроме него самого) и ищет грубые паттерны четырёх классов угрозы.
-# Сеть не нужна: дрейф ловит основной цикл, триаж — содержимое.
+# --- triage: informative scan of the bundle --------------------------------
+# WHAT IS THIS. The stage reads the LOCAL contents of the bundle (all files next to
+# upstream.json, except himself) and looks for crude patterns of four threat classes.
+# No network needed: drift catches the main loop, triage catches the content.
 #
-# ЧЕМ ЭТО НЕ ЯВЛЯЕТСЯ. Границей доверия. Первопартийного сканера скиллов у
-# Anthropic нет, её предписание — «thoroughly audit it before use», то есть
-# ЧЕЛОВЕЧЕСКОЕ чтение всех файлов бандла
+# WHAT IT IS NOT. The limit of trust. First-party skill scanner
+# Anthropic no, its instructions are «thoroughly audit it before use», that is
+# HUMAN reading of all bundle files
 # (https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills).
-# CSA/Trail of Bits (2026-06) показали обход ClawHub/Cisco/skills.sh простыми
-# приёмами; вывод дословно «Don't outsource trust to a scanner»
+# CSA/Trail of Bits (2026-06) showed a bypass ClawHub/Cisco/skills.sh simple
+# techniques; conclusion verbatim «Don't outsource trust to a scanner»
 # (https://labs.cloudsecurityalliance.org/research/csa-research-note-ai-agent-skill-scanner-bypass-20260610-csa/).
-# Поэтому: набор ПАТТЕРНОВЫЙ (не IOC — публичного IOC-листа именно по Agent Skills
-# нет), LLM-ступень и YARA не вводятся (первая названа CSA обходимой social
-# engineering'ом, вторая — внешняя зависимость, запрещена root.engineering-invariants).
+# Therefore: PATTERN set (not IOC — public IOC-sheet exactly according Agent Skills
+# no), LLM-stage and YARA are not entered (first named CSA required social
+# engineering'ohm, the second is an external dependency, prohibited root.engineering-invariants).
 #
-# ПРОВЕНАНС ПРАВИЛ. Набор выведен из разового человеческого аудита 56 вендоренных
-# бандлов (P5.1), а не
-# придуман до чтения: правило PRM_REMOTE_INSTRUCTIONS существует ровно потому, что
-# аудит нашёл живой носитель этого паттерна. Источники паттернов — docs/reference.md.
+# PROVENANCE OF RULES. The set was derived from a one-time human audit of 56 vendors
+# bundles (P5.1), and not
+# made up before reading: rule PRM_REMOTE_INSTRUCTIONS exists precisely because
+# audit found a living carrier of this pattern. Pattern Sources - docs/reference.md.
 #
-# Каждое правило несёт класс угрозы; правило без названного класса не добавляется.
+# Each rule carries a threat class; a rule without a named class is not added.
 TRIAGE_RULES = [
-    # --- Класс 1: prompt injection ------------------------------------------
-    # Скрытая инструкция внутри доверенного артефакта (проза, комментарий, фенс):
-    # «skill-based prompt injection». Источник класса: Anthropic engineering post +
+    # --- Class 1: prompt injection ------------------------------------------
+    # Hidden instruction inside a trusted artifact (prose, commentary, fan):
+    # «skill-based prompt injection». Class source: Anthropic engineering post +
     # heeler.com/resource/introducing-agent-skills-security-...
     ("INJ_IGNORE", "prompt-injection",
      r"(?i)ignore\s+(?:all\s+|the\s+)*(?:previous|prior|preceding|above)\s+"
      r"(?:instructions|prompts|rules)",
-     "инструкция «забудь предыдущие указания» — классический перехват"),
+     "instructions «forget previous instructions» — classic interception"),
     ("INJ_DISREGARD", "prompt-injection",
      r"(?i)disregard\s+(?:all\s+|the\s+)*(?:previous|prior|above|your)\s+"
      r"(?:instructions|rules|system|prompt)",
-     "инструкция «проигнорируй свои правила» — перехват через синоним"),
+     "instructions «ignore your rules» — interception via synonym"),
     ("INJ_HIDE_FROM_USER", "prompt-injection",
      r"(?i)(?:do not|don't|never)\s+(?:tell|inform|show|reveal|mention)\s+"
      r"(?:the\s+)?user",
-     "требование скрыть действие от пользователя — признак скрытого поведения"),
+     "requirement to hide an action from the user - a sign of hidden behavior"),
     ("INJ_ROLE_OVERRIDE", "prompt-injection",
      r"(?i)(?:you\s+are\s+now\s+\w|new\s+system\s+prompt\s*:|system\s+override\s*:)",
-     "подмена роли/системного промпта прямо в теле скилла"),
+     "role substitution/system prompt directly in the body of the skill"),
     ("INJ_INVISIBLE_CHAR", "prompt-injection",
      "[​-‏⁠-⁤‪-‮﻿]",
-     "невидимые/форматирующие символы — носитель текста, скрытого от читателя"),
+     "invisible/formatting symbols - a carrier of text hidden from the reader"),
 
-    # --- Класс 2: data exfiltration -----------------------------------------
-    # Правила конъюнктивные (доступ к секрету И сетевой выход в одной строке):
-    # одинокое упоминание `.env` — норма для доков и даёт шум, а не сигнал.
+    # --- Class 2: data exfiltration -----------------------------------------
+    # Conjunctive rules (access secret AND network output in one line):
+    # lone mention `.env` — is normal for docks and produces noise, not a signal.
     ("EXF_SUSPECT_HOST", "data-exfiltration",
      r"(?i)https?://[^\s\"'`)<>]*"
      r"(?:webhook\.site|\.ngrok\.|ngrok\.io|pastebin\.com|transfer\.sh|0x0\.st|"
      r"requestbin|burpcollaborator|oast\.|interact\.sh)",
-     "эфемерный/туннельный приёмник данных — типовой сток эксфильтрации"),
+     "ephemeral/tunnel data receiver - typical exfiltration drain"),
     ("EXF_CRED_TO_NET", "data-exfiltration",
      r"(?i)(?:~/\.ssh/id_|\.aws/credentials|\.netrc|/etc/(?:passwd|shadow)|"
      r"API_KEY|SECRET_KEY|PRIVATE_KEY)[^\n]{0,120}"
      r"(?:curl|wget|requests\.(?:post|put)|fetch\(|axios\.(?:post|put)|nc\s+-)",
-     "чтение секрета и сетевой вызов в одной строке — выгрузка учётных данных"),
+     "read secret and network call in one line - upload credentials"),
     ("EXF_ENV_DUMP", "data-exfiltration",
      r"(?i)(?:printenv|\benv\b)\s*\|\s*(?:curl|wget|nc\b|base64)",
-     "дамп окружения, уходящий в сеть или в кодировку — сбор env-переменных"),
+     "environment dump going to the network or encoding - collection env-variables"),
 
-    # --- Класс 3: malicious code execution ----------------------------------
+    # --- Class 3: malicious code execution ----------------------------------
     ("EXE_PIPE_TO_SHELL", "code-execution",
      r"(?i)(?:curl|wget)\s[^\n|]*\|\s*(?:sudo\s+)?(?:ba|z|k)?sh\b",
-     "remote code execution: удалённый payload сразу в интерпретатор"),
+     "remote code execution: deleted payload directly to the interpreter"),
     ("EXE_B64_EXEC", "code-execution",
      r"(?i)(?:eval|exec)\s*\(\s*(?:base64|b64decode|atob|codecs\.decode)|"
      r"base64\s+(?:-d|--decode)[^\n]{0,60}\|\s*(?:ba)?sh\b",
-     "исполнение base64-обфусцированного кода — сокрытие полезной нагрузки"),
+     "execution base64-obfuscated code - hiding payload"),
     ("EXE_OBFUSC_BLOB", "code-execution",
      r"[A-Za-z0-9+/]{240,}={0,2}",
-     "длинный base64-подобный блоб — носитель скрытого кода/данных"),
+     "long base64-such a blob is a carrier of hidden code/data"),
 
-    # --- Класс 4: over-permissive tool use ----------------------------------
+    # --- Class 4: over-permissive tool use ----------------------------------
     ("PRM_TOOL_WILDCARD", "over-permissive-tools",
      r"(?im)^\s*allowed[-_]tools\s*:.*(?:\*|Bash\s*\()",
-     "скилл требует прав шире назначения (wildcard/Bash в allowed-tools)"),
+     "skill requires rights wider than assignment (wildcard/Bash in allowed-tools)"),
     ("PRM_PERMISSION_BYPASS", "over-permissive-tools",
      r"(?i)--dangerously-skip-permissions|bypassPermissions",
-     "обход гейта разрешений агента"),
-    # Найдено аудитом P5.1 на живом бандле: скилл предписывает СХОДИТЬ В СЕТЬ и
-    # применить полученное КАК ПРАВИЛА. Канал инструкций тогда живёт вне бандла,
-    # sha256 его не покрывает, версия не пинована — ровно rug-pull-класс, который
-    # CSA рекомендует закрывать пиновкой версий.
+     "agent permission gate bypass"),
+    # Found by audit P5.1 on the live bundle: the skill instructs to GO ONLINE and
+    # apply what was received AS RULES. The instruction channel then lives outside the bundle,
+    # sha256 does not cover it, the version is not pinned - exactly rug-pull-class which
+    # CSA recommends closing with a version pin.
     ("PRM_REMOTE_INSTRUCTIONS", "over-permissive-tools",
-    # Кириллическая ветка остаётся defense-in-depth для upstream-контента на русском языке.
+    # Cyrillic branch remains defense-in-depth for upstream-content in Russian.
      r"(?i)(?:(?:fetch|load|download|retrieve)[^\n]{0,80}"
      r"(?:latest|fresh|current)[^\n]{0,60}(?:guidelines|rules|instructions)"
      r"|fetched\s+(?:content|guidelines|file)[^\n]{0,80}"
      r"(?:contains|are)\s+(?:all\s+)?the\s+(?:rules|instructions)"
-     r"|(?:получ|загруз|скача)\w*[^\n]{0,80}(?:актуальн|свеж)\w*[^\n]{0,60}"
-     r"(?:правил|инструкц|указан)\w*"
-     r"|(?:загруженн|полученн)\w*\s+(?:контент|содержимое|файл)[^\n]{0,80}"
-     r"(?:содержит|несёт)[^\n]{0,40}(?:правил|инструкц)\w*)",
-     "исполняемые инструкции подтягиваются из сети — вне покрытия sha256"),
+     r"|(?:received|loading|jumping)\w*[^\n]{0,80}(?:relevant|fresh)\w*[^\n]{0,60}"
+     r"(?:rules|instructions|specified)\w*"
+     r"|(?:loaded|received)\w*\s+(?:content|contents|file)[^\n]{0,80}"
+     r"(?:contains|carries)[^\n]{0,40}(?:rules|instructions)\w*)",
+     "executable instructions are pulled from the network - out of coverage sha256"),
 ]
 
 TRIAGE_COMPILED = [(code, cls, re.compile(rx), why)
@@ -322,10 +322,10 @@ TRIAGE_COMPILED = [(code, cls, re.compile(rx), why)
 
 
 def triage_bundle(skill_dir, sid):
-    """Прогнать правила по ВСЕМ локальным файлам бандла. Возвращает список находок.
+    """Run rules against ALL local bundle files. Returns a list of finds.
 
-    Бинарные/нечитаемые файлы не пропускаются молча: они попадают в находку
-    класса `unreadable` — «не смогли прочитать» и «чисто» не одно и то же."""
+    Binary/unreadable files are not silently skipped: they are found
+    class `unreadable` — «could not read» and «clean» are not the same thing."""
     found = []
     for path in sorted(p for p in skill_dir.rglob("*") if p.is_file()):
         if path.name == "upstream.json":
@@ -336,8 +336,8 @@ def triage_bundle(skill_dir, sid):
         except (UnicodeDecodeError, OSError) as e:
             found.append({"skill": sid, "file": rel, "rule": "BIN_UNREADABLE",
                           "class": "unreadable", "hits": 1,
-                          "why": f"файл не прочитан как UTF-8 ({e.__class__.__name__}) — "
-                                 f"содержимое НЕ проверено"})
+                          "why": f"file not read as UTF-8 ({e.__class__.__name__}) — "
+                                 f"content NOT verified"})
             continue
         for code, cls, rx, why in TRIAGE_COMPILED:
             hits = len(rx.findall(text))
@@ -347,40 +347,40 @@ def triage_bundle(skill_dir, sid):
     return found
 
 
-# --- вердикт человека: носитель и его гейт (P5.11, ветка (B) OQ-6) ------------
-# ЗАЧЕМ. Триаж выше — паттерновый скан, границей доверия остаётся ЧЕЛОВЕЧЕСКИЙ
-# аудит бандла (TRIAGE_DISCLAIMER). Разовый аудит без машинного носителя
-# обесценивается структурно: «не проверяли» и «чисто» машинно неотличимы, а
-# отметка «вердикт протух» была ПРОИЗВОДНОЙ от дрейфа и умирала от первого же
-# --apply (граница названа в блоке stale_verdicts ниже). Носитель — аддитивный
-# блок `audit` в upstream.json рядом с бандлом: он переживает план (плановый файл
-# смертен, скилл раздаётся дальше) и не заводит связи «skiller читает plans/**».
-# Провенанс правила и разбор веток — docs/guide/vendored-skills.md,
+# --- human verdict: the carrier and its gate (P5.11, thread (B) OQ-6) ------------
+# WHY. The triage above is a pattern scan, the limit of trust remains HUMAN
+# bundle audit (TRIAGE_DISCLAIMER). One-time audit without machine media
+# is depreciated structurally: «not checked» and «clean» are machine indistinguishable, and
+# mark «the verdict is rotten» was a DERIVATIVE from drift and died from the first
+# --apply (boundary named in block stale_verdicts below). Media - additive
+# block `audit` in upstream.json next to the bundle: he survives the plan (plan file
+# is mortal, the skill is heard further) and does not establish connections «skiller reads plans/**».
+# Provenance rules and branch parsing - docs/guide/vendored-skills.md,
 #.
 #
-# ТРИ РАЗНЫХ СОБЫТИЯ — три разных сигнала (тот же принцип, по которому код 11 не
-# слит с 10): «апстрим сдвинулся» (updates/notify) · «вердикта нет НИКОГДА не
-# было» (AUDIT_MISSING) · «вердикт вынесен против ДРУГИХ байтов» (AUDIT_STALE).
+# THREE DIFFERENT EVENTS - three different signals (the same principle that code 11 does not
+# merged with 10): «upstream has moved» (updates/notify) · «no verdict NEVER
+# was» (AUDIT_MISSING) · «verdict against OTHER bytes» (AUDIT_STALE).
 #
-# ЯКОРЬ. audit.upstream_sha хранится ОТДЕЛЬНО от files[].sha256 и не обновляется
-# ни --apply, ни --resolve — именно поэтому отметка переживает применение
-# апстрима. Описывает он те байты, против которых вынесен вердикт: sha256
-# НАЗВАННОГО тела (body_path), когда бандл его называет, иначе — свёртку всей
-# провенансной базы (пары path:sha256 из files[]/origins[]).
+# ANCHOR. audit.upstream_sha is stored SEPARATELY from files[].sha256 and is not updated
+# neither --apply, neither --resolve — this is why the mark survives application
+# upstream. It describes those bytes against which the verdict was made: sha256
+# NAMED body (body_path), when the bundle calls it, otherwise - convolution of the entire
+# provenance base (pairs path:sha256 from files[]/origins[]).
 AUDIT_VERDICTS = ("clean", "attention", "risk")
 
 
 def is_reference_only(data):
-    """Бандл, который не вендорит НИЧЕГО: все files[].path пусты — записи являются
-    провенанс-ССЫЛКАМИ на внешние спеки, локальных зеркал нет. Признак машинный
-    (не мнение); для такого бандла якорить вердикт не к чему, и гейт этого не
-    требует — иначе правило врало бы на классе, ради честности которого заведено."""
+    """Bundle that does not vendor ANYTHING: everything files[].path are empty - records are
+    provenance LINKS to external specs, there are no local mirrors. Machine sign
+    (not an opinion); for such a bundle there is no need to anchor the verdict, and the gate does not
+    requires - otherwise the rule would lie in the class, for the sake of whose honesty it was created."""
     files = data.get("files") or []
     return bool(files) and all(not e.get("path") for e in files)
 
 
 def audit_anchor(data):
-    """Байты, против которых вынесен вердикт. None — якорить нечего (reference-only)."""
+    """Bytes against which the verdict was given. None — nothing to anchor (reference-only)."""
     if is_reference_only(data):
         return None
     body_path = data.get("body_path")
@@ -395,14 +395,14 @@ def audit_anchor(data):
 
 
 def audit_findings(sid, data):
-    """Находки гейта вердикта. Форма — та же, что у триажа (код 11, --json)."""
+    """Findings of the verdict gate. The shape is the same as the triage (code 11, --json)."""
     audit = data.get("audit")
     if not isinstance(audit, dict):
         return [{"skill": sid, "file": "upstream.json", "rule": "AUDIT_MISSING",
                  "class": "unaudited", "hits": 1,
-                 "why": "человеческого вердикта по бандлу нет — «не проверяли» и "
-                        "«чисто» это не одно и то же; прочитай бандл целиком и "
-                        "запиши блок audit (docs/guide/vendored-skills.md)"}]
+                 "why": "there is no human verdict on the bundle - «not checked» and "
+                        "«clean» are not the same thing; read the entire bundle and "
+                        "write block audit (docs/guide/vendored-skills.md)"}]
     anchor = audit_anchor(data)
     if anchor is None:
         return []
@@ -411,12 +411,12 @@ def audit_findings(sid, data):
         return []
     verdict = audit.get("verdict", "?")
     at = audit.get("at", "?")
-    seen = f"{stored[:8]}.." if stored else "якорь не записан"
+    seen = f"{stored[:8]}.." if stored else "anchor not recorded"
     return [{"skill": sid, "file": "upstream.json", "rule": "AUDIT_STALE",
              "class": "stale-verdict", "hits": 1,
-             "why": f"вердикт '{verdict}' от {at} вынесен против других байтов "
-                    f"({seen} -> {anchor[:8]}..) — перечитай бандл и обнови блок "
-                    f"audit; отметка НЕ гаснет от --apply"}]
+             "why": f"verdict '{verdict}' from {at} moved against other bytes "
+                    f"({seen} -> {anchor[:8]}..) — re-read the bundle and update the block "
+                    f"audit; mark does NOT go out from --apply"}]
 
 
 # --- process -----------------------------------------------------------------
@@ -437,10 +437,10 @@ for cfg, sid, data in parsed:
     strategy = data["strategy"]
     changed = False
 
-    # --- merge: композит из origins[] (base + supplement). Дрейф ЛЮБОГО источника →
-    #     ручной agent-merge: --check сообщает, --apply поднимает merge.review_pending
-    #     (гейт в validate.sh), --resolve фиксирует свежие sha и снимает флаг. Зеркало
-    #     одним файлом не перезаписывается — композит склеивает агент вручную. ---
+    # --- merge: composite of origins[] (base + supplement). Drift of ANY source →
+    #     manual agent-merge: --check reports, --apply raises merge.review_pending
+    #     (gate in validate.sh), --resolve captures fresh sha and removes the flag. Mirror
+    #     is not overwritten by one file - the composite is glued together by the agent manually. ---
     if strategy == "merge":
         mp = data.setdefault("merge", {})
         for k, org in enumerate(data.get("origins", [])):
@@ -461,7 +461,7 @@ for cfg, sid, data in parsed:
                 org["sha256"] = remote_sha
                 org["fetched_at"] = today
                 changed = True
-                line("resolved", sid, label, f"origin sha обновлён ({role})")
+                line("resolved", sid, label, f"origin sha updated ({role})")
             elif remote_sha == stored:
                 line("ok", sid, label, f"up-to-date (merge/{role})")
             else:
@@ -471,13 +471,13 @@ for cfg, sid, data in parsed:
                     mp["review_pending"] = True
                     changed = True
                     line("staged", sid, label,
-                         f"{what}; merge.review_pending=true — пере-мерджи "
-                         f"источники в SKILL.md вручную, затем --resolve")
+                         f"{what}; merge.review_pending=true — re-merge "
+                         f"sources in SKILL.md manually, then --resolve")
                     results["noted"].append({"skill": sid, "file": label,
                                              "new_sha": remote_sha, "url": org["url"]})
                 else:  # check
                     line("notify", sid, label,
-                         f"{what}; strategy=merge — ручной agent-merge")
+                         f"{what}; strategy=merge — manual agent-merge")
                     results["notify"].append({"skill": sid, "file": label,
                                               "old_sha": stored, "new_sha": remote_sha})
         if mode == "resolve" and changed:
@@ -490,27 +490,27 @@ for cfg, sid, data in parsed:
         stored = entry.get("sha256", "")
         results["checked"] += 1
 
-        # Запись с пустым path — провенанс-ССЫЛКА (url ведёт на спеку/доку, чужой
-        # код не вендорится), а не локальное зеркало. Схема такую запись допускает
-        # (path без minLength), и она живёт в реестре (skills/voice-ai/voice-ai).
-        # Раньше `skill_dir / ""` резолвился в САМ КАТАЛОГ и `read_bytes()` ронял
-        # весь прогон IsADirectoryError'ом — тихая яма, гасившая --check целиком.
-        # Сверять по sha тут нечего: сообщаем явно и идём дальше (не «ok»).
+        # Entry with empty path — provenance-LINK (url leads to spec/doku, alien
+        # code is not vendored), and not a local mirror. The scheme allows such a notation
+        # (path without minLength), and she lives in the registry (skills/voice-ai/voice-ai).
+        # Previously `skill_dir / ""` resolved to the CATALOG ITSELF and `read_bytes()` dropped
+        # entire run IsADirectoryError'ohm - a quiet pit that extinguished --check in its entirety.
+        # Check by sha there is nothing here: we inform it explicitly and move on (not «ok»).
         if not fname:
             line("ref", sid, "(no mirror)",
-                 f"reference-only provenance, sha не сверяется: {entry['url']}")
+                 f"reference-only provenance, sha is not verified: {entry['url']}")
             continue
 
-        # --- fork --resolve: продвинуть заранее заготовленный incoming в зеркало и снять
-        #     флаг. Сеть не нужна (работаем с уже скачанным upstream/<name>.incoming). ---
+        # --- fork --resolve: advance pre-prepared incoming in the mirror and remove
+        #     flag. No network needed (work with already downloaded upstream/<name>.incoming). ---
         if mode == "resolve":
             if strategy != "fork":
-                line("skip", sid, fname, "--resolve применим только к strategy=fork")
+                line("skip", sid, fname, "--resolve only applies to strategy=fork")
                 continue
             incoming_path = skill_dir / "upstream" / \
                 f"{Path(fname).stem}.incoming{Path(fname).suffix}"
             if not incoming_path.exists():
-                line("skip", sid, fname, "нет staged incoming (сначала --apply)")
+                line("skip", sid, fname, "no staged incoming (first --apply)")
                 continue
             new_bytes = incoming_path.read_bytes()
             local_path.parent.mkdir(parents=True, exist_ok=True)
@@ -522,7 +522,7 @@ for cfg, sid, data in parsed:
             data["last_review"] = today
             incoming_path.unlink()
             changed = True
-            line("resolved", sid, fname, "зеркало обновлено, review_pending снят")
+            line("resolved", sid, fname, "mirror updated, review_pending removed")
             results["applied"].append({"skill": sid, "file": fname,
                                         "new_sha": entry["sha256"], "resolved": True})
             continue
@@ -549,9 +549,9 @@ for cfg, sid, data in parsed:
             os.replace(tmp, local_path)
 
         if strategy == "fork":
-            # Зеркало (= files[].path, pristine-копия апстрима) и обёртку SKILL.md НЕ трогаем.
-            # На дрейфе кладём свежий апстрим в upstream/<name>.incoming и поднимаем флаг —
-            # агент сверяет diff, переносит изменения в обёртку, затем --resolve.
+            # Mirror (= files[].path, pristine-copy of upstream) and wrapper SKILL.md DO NOT touch.
+            # On the drift we put a fresh upstream in upstream/<name>.incoming and raise the flag -
+            # agent verifies diff, transfers changes to the wrapper, then --resolve.
             incoming_path = skill_dir / "upstream" / \
                 f"{Path(fname).stem}.incoming{Path(fname).suffix}"
             if remote_sha == stored:
@@ -567,13 +567,13 @@ for cfg, sid, data in parsed:
                     changed = True
                     line("staged", sid, fname,
                          f"{what}; incoming staged + review_pending=true — "
-                         f"перенеси правки в SKILL.md, затем --resolve")
+                         f"move changes to SKILL.md, then --resolve")
                     results["noted"].append({"skill": sid, "file": fname, "new_sha": remote_sha,
                                              "incoming": str(incoming_path.relative_to(root)),
                                              "url": entry["url"]})
                 else:  # check
                     line("notify", sid, fname,
-                         f"{what}; strategy=fork — нужна ручная доработка")
+                         f"{what}; strategy=fork — needs manual modification")
                     results["notify"].append({"skill": sid, "file": fname,
                                               "old_sha": stored, "new_sha": remote_sha})
             continue
@@ -643,25 +643,25 @@ for cfg, sid, data in parsed:
                        encoding="utf-8")
         os.replace(tmp, cfg)
 
-# --- вердикт протух ----------------------------------------------
-# Разовый человеческий аудит бандла записан ПРОТИВ КОНКРЕТНЫХ БАЙТОВ: колонка
-# `audited_at` таблицы вердиктов несёт тот самый sha256, который в момент аудита
-# лежал в files[].sha256. Значит дрейф относительно записанного sha И ЕСТЬ дрейф
-# относительно audited_at: вердикт больше не описывает то, что лежит в дереве.
-# Без этой отметки разовый аудит перестаёт что-либо значить после первого же
-# обновления апстримов, а --check продолжает рапортовать одну лишь целостность.
+# --- the verdict is rotten ----------------------------------------------
+# One-time human audit of the bundle recorded AGAINST SPECIFIC BYTES: column
+# `audited_at` verdict table is carried by the same sha256, which at the time of the audit
+# lay in files[].sha256. This means that the drift is relative to the recorded sha AND THERE IS drift
+# regarding audited_at: verdict no longer describes what lies in the tree.
+# Without this mark, a one-time audit ceases to mean anything after the first
+# upstream updates, and --check continues to report only integrity.
 #
-# ГРАНИЦА (названа, а не сымитирована): после `--apply` свежий sha записывается в
-# upstream.json, дрейф исчезает — и отметка вместе с ним, хотя человеческий вердикт
-# остался протухшим. Скрипт не читает таблицу вердиктов (она живёт в плане/доках,
-# кросс-пакетной связи здесь быть не должно), поэтому «протух» detectable только до
-# --apply. Процедура: --check → перечитать помеченные бандлы → обновить таблицу.
+# BORDER (named, not imitated): after `--apply` fresh sha is written to
+# upstream.json, the drift disappears - and the mark along with it, although the human verdict
+# remained rancid. The script does not read the verdict table (she lives in the plane/docks,
+# there should be no cross-packet communication here), therefore «rotten» detectable only up to
+# --apply. Procedure: --check → reread marked bundles → update table.
 #
-# P5.11: механизм НЕ удалён, но сужен до бандлов БЕЗ блока `audit` — то есть ровно
-# до тех, кого ловит AUDIT_MISSING и у кого собственного якоря нет. У бандла с
-# блоком `audit` протухание считает AUDIT_STALE по своему якорю (переживает
-# --apply), и два источника одной отметки не смешиваются: причина печатается
-# различимо, а `reason` в --json называет механизм поимённо.
+# P5.11: mechanism NOT removed, but narrowed to bundles WITHOUT block `audit` — that is exactly
+# to those it catches AUDIT_MISSING and who does not have their own anchor. The bundle has
+# block `audit` decay counts AUDIT_STALE by its anchor (is worried
+# --apply), and two sources of the same mark do not mix: reason is printed
+# is distinguishable, and `reason` in --json calls the mechanism by name.
 if mode == "check":
     _audited = {sid for _cfg, sid, data in parsed if isinstance(data.get("audit"), dict)}
     _drifted = {e["skill"] for key in ("updates", "drift", "conflicts", "notify")
@@ -671,9 +671,9 @@ if mode == "check":
             {"skill": sid, "reason": "bytes drifted from audited_at (derived: "
                                      "no audit block — see AUDIT_MISSING)"})
         line("stale", sid, "(verdict)",
-             "байты разошлись с audited_at — человеческий вердикт бандла ПРОТУХ, "
-             "перечитай бандл перед тем, как считать его проверенным "
-             "(производная отметка: блока audit у бандла нет)")
+             "bytes diverged from audited_at — human verdict of the bundle is ROTTEN, "
+             "re-read the bundle before considering it verified "
+             "(derived mark: block audit there is no bundle)")
 
 # --- summary -----------------------------------------------------------------
 s = results
@@ -692,8 +692,8 @@ if (s["applied"] or s["noted"]) and not json_out:
     print("Run ./sync.sh --update-registry to refresh skills.json", file=report)
 
 if json_out:
-    # Оговорка — ОТДЕЛЬНЫМ ключом, а не только прозой в человеческом канале:
-    # машинный потребитель обязан видеть её так же, как оператор.
+    # Disclaimer - in a SEPARATE key, and not just in prose in a human channel:
+    # the machine consumer must see it in the same way as the operator.
     if mode == "check":
         results["triage_disclaimer"] = TRIAGE_DISCLAIMER
     print(json.dumps(results, indent=2, ensure_ascii=False))
@@ -704,9 +704,9 @@ if mode == "check" and (s["updates"] or s["notify"] or s["conflicts"]):
     sys.exit(10)
 if mode == "apply" and s["conflicts"] and not force:
     sys.exit(10)
-# Триаж — СВОЙ код (11), не 10: «апстрим изменился» и «в бандле подозрительный
-# паттерн» — разные события. 10 старше 11 только потому, что код один скаляр;
-# полная картина обоих всегда есть в --json.
+# Triage - OWN code (11), not 10: «upstream has changed» and «in the bundle is suspicious
+# pattern» — miscellaneous events. 10 is older than 11 only because the code is one scalar;
+# the full picture of both is always in --json.
 if mode == "check" and s["triage"]:
     sys.exit(11)
 sys.exit(0)

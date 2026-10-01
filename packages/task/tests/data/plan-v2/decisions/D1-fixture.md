@@ -7,10 +7,10 @@ items: [P0.1]
 supersedes: []
 superseded_by: null
 ---
-## Решение
+## Solution
 
-Фикстура v2.
+Fixture v2.
 
-## Почему
+## Why
 
-Проверка проектора.
+Checking the projector.

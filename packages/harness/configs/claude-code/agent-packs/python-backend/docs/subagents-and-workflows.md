@@ -1,43 +1,43 @@
-# Субагенты и dev-loop — {{PACK_PREFIX}} (Python backend)
+# Subagents and dev-loop — {{PACK_PREFIX}} (Python backend)
 
-Стек: Python {{WEB_FRAMEWORK}}, менеджер `{{PKG_MANAGER}}`, бинарь `{{PY_BIN}}`.
+Stack: Python {{WEB_FRAMEWORK}}, manager `{{PKG_MANAGER}}`, binary `{{PY_BIN}}`.
 
-## Роли (`.claude/agents/{{PACK_PREFIX}}-*.md`)
+## Roles (`.claude/agents/{{PACK_PREFIX}}-*.md`)
 
-| Роль | Когда | Инструменты |
+| Role | When | Tools |
 |:--|:--|:--|
-| `slice-builder` | срез эндпоинта (router→service→repo→схема) | Edit/Write |
-| `test-writer` | pytest по готовому коду до зелёного | Edit/Write |
-| `type-checker` | узкий mypy-проход по диффу + предложения аннотаций | read-only |
-| `reviewer` | read-only: ruff/mypy, слои, безопасность | read-only |
-| `spec-writer` (опц.) | tech-spec перед крупным модулем | Write(docs) |
-| `orchestrator` (из `_common`) | план Task→@role | read-only |
+| `slice-builder` | endpoint slice (router→service→repo→diagram) | Edit/Write |
+| `test-writer` | pytest according to the finished code until green | Edit/Write |
+| `type-checker` | narrow mypy-diff pass + annotation clauses | read-only |
+| `reviewer` | read-only: ruff/mypy, layers, security | read-only |
+| `spec-writer` (opt.) | tech-spec before the large module | Write(docs) |
+| `orchestrator` (from `_common`) | plan Task→@role | read-only |
 
 ## dev-loop
 
-`.claude/workflows/{{PACK_PREFIX}}-dev-loop.js` — impl→tests-to-green→type-check→review на
-одной ветке. Скоуп срезов задаёт человек через `args.slices` (`{id,title,goal,
+`.claude/workflows/{{PACK_PREFIX}}-dev-loop.js` — impl→tests-to-green→type-check→review on
+one thread. The scope of slices is specified by a person via `args.slices` (`{id,title,goal,
 acceptance_criteria,skills?,risk?}`). `risk` (`LOW|MED|HIGH`) → Lean-tiering: impl
-`LOW→haiku` иначе `sonnet`, review `LOW→sonnet · MED→opus/high · HIGH→opus/xhigh`,
-type-check `sonnet`. Нет `risk` → дефолт `MED`; ревью идёт по `risk_level`, который вернул
+`LOW→haiku` otherwise `sonnet`, review `LOW→sonnet · MED→opus/high · HIGH→opus/xhigh`,
+type-check `sonnet`. No `risk` → default `MED`; review goes on `risk_level`, which returned
 test-writer.
 
-## Гейты
+## Gates
 
 - **SubagentStop** → `review-gate.sh` (`{{CHECK_CMD}}`).
 - **PostToolUse** (Edit/Write `*.py`) → `validate-python.sh`: advisory ruff →
-  additionalContext, НЕ блокирует.
+  additionalContext, does NOT block.
 
-## Уроки overnight-прогона (зашиты в workflow — соблюдай и вручную)
+## Lessons overnight-run (are hardwired into workflow — observe and manually)
 
-1. **Один branch на прогон**, хард-кап срезов литералом (`DEFAULT_MAX`) — переживает resume;
-   circuit-breaker: 2 не-зелёных подряд → стоп.
-2. **Модель/effort — по РИСКУ, не по умолчанию.** Дешёвые исполняют, дорогая проектирует/
-   арбитрирует (тиры выше). Наследование родительской модели — осознанное исключение, не дефолт.
-3. **Не поллить фоновые агенты** — уведомление приходит само; циклы опроса / `ScheduleWakeup`
-   жгут контекст-кэш впустую.
-4. **Промпты детерминированы — ради resume-кэша**: никаких timestamp/random; model/effort-
-   override — отдельным параметром вызова. В большом фан-ауте логируй `budget.remaining()` после волны.
-5. **Параллель — только по независимым файлам** (общая ветка = общее дерево).
+1. **One branch for run**, hard-cap slices literal (`DEFAULT_MAX`) — is worried resume;
+   circuit-breaker: 2 non-green in a row → stop.
+2. **Model/effort — by RISK, not by default.** Cheap ones execute, expensive ones design/
+   arbitrates (dashes above). Inheriting a parent model is a deliberate exception, not a default.
+3. **Don't pollute background agents** — notification arrives automatically; polling cycles / `ScheduleWakeup`
+   burns the context cache in vain.
+4. **Prompts are deterministic - for the sake of resume-cache**: none timestamp/random; model/effort-
+   override — as a separate call parameter. In a big fan-out, log `budget.remaining()` after the wave.
+5. **Parallel - only for independent files** (public thread = general tree).
 
-Бакет `python` тонкий: канон фреймворков и pytest — в промптах агентов и `rules/`.
+Bucket `python` subtle: framework canon and pytest — in agent prompts and `rules/`.

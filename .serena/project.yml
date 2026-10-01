@@ -72,11 +72,11 @@ symbol_info_budget:
 
 # initial prompt for the project. It will always be given to the LLM upon activating the project
 # (contrary to the memories, which are loaded on demand).
-initial_prompt: "Этот репозиторий — монорепо: корневой Python-код и packages/* образуют
-  единый workspace. Навигацию веди symbol-инструментами Serena (get_symbols_overview,
-  find_symbol, find_referencing_symbols, find_implementations) перед широким чтением
-  файлов. Пакеты в packages/* — части этого же репозитория; соблюдай их локальные
-  инструкции."
+initial_prompt: "This repository — monorepo: root Python-code and packages/* form
+  single workspace. Lead the navigation symbol-tools Serena (get_symbols_overview,
+  find_symbol, find_referencing_symbols, find_implementations) before extensive reading
+  files. Packages in packages/* — parts of the same repository; comply with their local
+  instructions."
 
 # The language backend to use for this project.
 # If not set, the global setting from serena_config.yml is used.

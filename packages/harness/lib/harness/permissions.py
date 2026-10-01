@@ -9,7 +9,7 @@ def apply_permissions(env, target, presets="", dry_run=False, settings_file=None
     """Internal documentation."""
     script = env.apply_script
     if not script.exists():
-        warn("scripts/apply-permissions.sh не найден — пропуск permissions")
+        warn("scripts/apply-permissions.sh not found - skip permissions")
         return False
     cmd = ["bash", str(script), "--target", str(target)]
     if presets:
@@ -35,7 +35,7 @@ def cmd_permissions(env, argv):
         return
     script = env.apply_script
     if not script.exists():
-        die(f"не найден {script} — пакет harness повреждён")
+        die(f"not found {script} — package harness damaged")
     cmd = ["bash", str(script)]
     if opts["list"]:
         cmd.append("--list")
@@ -45,7 +45,7 @@ def cmd_permissions(env, argv):
             cmd.append("--dry-run")
     else:
         if not opts["target"]:
-            die("нужен --target P (или --list / --global)")
+            die("needed --target P (or --list / --global)")
         cmd += ["--target", opts["target"]]
         if opts["preset"]:
             cmd += ["--preset", opts["preset"]]

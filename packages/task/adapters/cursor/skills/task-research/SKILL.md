@@ -11,7 +11,7 @@ Generated Cursor adapter for semantic command `task:research`.
 - Invocation: `task:research <arguments>`
 - Routing: `frontier/high -> claude-opus-5-thinking-high/high`
 - Canonical source: `packages/task/commands/research.md`
-- Canonical SHA-256: `sha256:496ce8ae1b95b6df6c4f25578178abc103713742d8080edf91606597ba7d82c6`
+- Canonical SHA-256: `sha256:43772c5691365eca22094bba0b59a5dad35a208bb0af0c6df530d05fa5bba195`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as the user prompt.

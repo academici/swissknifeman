@@ -1,5 +1,5 @@
-"""Тесты namespaces: правила membership/shares + изоляция связей в derive/federation,
-валидация конфига, выборка по namespace, команда `maind namespaces`."""
+"""Tests namespaces: rules membership/shares + isolation of connections in derive/federation,
+config validation, sampling by namespace, command `maind namespaces`."""
 import json
 import tempfile
 import unittest
@@ -17,7 +17,7 @@ def _write(path, data):
 
 
 def _setup(tmp, flex_ns=None, az_ns=None):
-    """flexcrm требует azguard-core. namespaces задаются через flex_ns/az_ns."""
+    """flexcrm requires azguard-core. namespaces are specified via flex_ns/az_ns."""
     root, env = make_repo(tmp)
     base = Path(tmp)
     flex, az = base / "flexcrm", base / "azguard"
@@ -45,7 +45,7 @@ def _flex_neighbors(env, config):
     return {n["id"] for n in res["neighbors"]}
 
 
-# ── правила membership ───────────────────────────────────────────────────────
+# ── rules membership ───────────────────────────────────────────────────────
 class TestRules(unittest.TestCase):
     def test_default_when_absent(self):
         self.assertEqual(namespaces.namespaces_of({"id": "x"}), {"default"})
@@ -69,7 +69,7 @@ class TestRules(unittest.TestCase):
     def test_link_allowed_unregistered_target(self):
         config = {"projects": [{"id": "flexcrm", "namespaces": ["axioma"]}]}
         flex = config["projects"][0]
-        # незарегистрированный getchat → не режем
+        # unregistered getchat → do not cut
         self.assertTrue(namespaces.link_allowed(flex, "getchat", config))
 
     def test_in_namespace(self):
@@ -79,7 +79,7 @@ class TestRules(unittest.TestCase):
         self.assertTrue(namespaces.in_namespace({"id": "x"}, "default"))
 
 
-# ── память: отдельный opt-in поверх graph namespaces ─────────────────────────
+# ── memory: separate opt-in on top graph namespaces ─────────────────────────
 class TestMemoryScopes(unittest.TestCase):
     def test_private_scope(self):
         self.assertEqual(namespaces.private_scope({"id": "flexcrm"}), "project:flexcrm")
@@ -94,10 +94,10 @@ class TestMemoryScopes(unittest.TestCase):
                          ["ns:axioma"])
         self.assertEqual(
             namespaces.group_scopes({"id": "x", "memory_namespaces": ["b", "a"]}),
-            ["ns:a", "ns:b"])  # отсортировано
+            ["ns:a", "ns:b"])  # sorted
 
     def test_group_scopes_wildcard_is_global(self):
-        # инфраструктура (wildcard) → бакет global (видна всей экосистеме)
+        # infrastructure (wildcard) → bucket global (visible to the entire ecosystem)
         self.assertEqual(namespaces.group_scopes({"id": "x", "memory_namespaces": ["*"]}),
                          ["global"])
 
@@ -112,7 +112,7 @@ class TestMemoryScopes(unittest.TestCase):
                          ["project:z", "global"])
 
 
-# ── изоляция связей (derive + federation) ────────────────────────────────────
+# ── connection isolation (derive + federation) ────────────────────────────────────
 class TestIsolation(unittest.TestCase):
     def test_same_namespace_keeps_link(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -122,7 +122,7 @@ class TestIsolation(unittest.TestCase):
 
     def test_default_keeps_link_backward_compat(self):
         with tempfile.TemporaryDirectory() as tmp:
-            env, config = _setup(tmp)  # без namespaces → default ↔ default
+            env, config = _setup(tmp)  # without namespaces → default ↔ default
             derive.derive_all(env, config)
             self.assertIn("project:azguard", _flex_neighbors(env, config))
 
@@ -130,13 +130,13 @@ class TestIsolation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             env, config = _setup(tmp, flex_ns=["axioma"], az_ns=["other"])
             stats = {s["id"]: s for s in derive.derive_all(env, config)}
-            # cross depends_on не построен — only own provided package остаётся
+            # cross depends_on not built - only own provided package remains
             self.assertNotIn("project:azguard", _flex_neighbors(env, config))
             g = federation.project_graph(env, config, config["projects"][0])
             self.assertNotIn("package:axioma-studio/azguard-core", g.nodes)
-            # индекс cross-слоя пуст
+            # index cross-layer is empty
             self.assertEqual(federation.rebuild_index(env, config)["cross_edges"], 0)
-            # стор azguard всё ещё имеет свой пакет (внутри проекта, не cross)
+            # side azguard still has its package (inside the project, not cross)
             self.assertGreaterEqual(stats["azguard"]["nodes"], 1)
 
     def test_wildcard_bridges_across_namespaces(self):
@@ -154,7 +154,7 @@ class TestIsolation(unittest.TestCase):
             self.assertFalse(fed.cross("other")["nodes"])
 
 
-# ── валидация конфига ────────────────────────────────────────────────────────
+# ── config validation ────────────────────────────────────────────────────────
 class TestValidation(unittest.TestCase):
     def test_namespaces_must_be_list_of_strings(self):
         cfg = {"projects": [{"id": "x", "namespaces": "axioma"}]}
@@ -167,10 +167,10 @@ class TestValidation(unittest.TestCase):
     def test_valid_namespaces_pass(self):
         cfg = {"namespaces": {"axioma": {"name": "Axioma"}},
                "projects": [{"id": "x", "namespaces": ["axioma", "*"]}]}
-        validate_config(cfg, "x.json")  # не должно бросать
+        validate_config(cfg, "x.json")  # should not be thrown
 
 
-# ── выборка и команда ────────────────────────────────────────────────────────
+# ── fetch and command ────────────────────────────────────────────────────────
 class TestSelectionAndCommand(unittest.TestCase):
     def test_select_projects_by_namespace(self):
         from maind.provision.sync import select_projects

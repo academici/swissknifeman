@@ -1,47 +1,47 @@
 #!/usr/bin/env bash
-# skiller — CLI реестра скиллов (бывш. swissknifeman, алиас сохранён). Симлинк в ~/.local/bin
-# (./install.sh); путь к реестру выводится из readlink -f самого файла.
+# skiller — CLI skill registry (ex. swissknifeman, alias saved). Symlink in ~/.local/bin
+# (./install.sh); registry path is derived from readlink -f of the file itself.
 #
-# Тонкий лаунчер: проверяет окружение и передаёт управление пакету
-# lib/skiller (python3 -m skiller). Вся логика — в lib/, что
-# делает её импортируемой и тестируемой (см. tests/, scripts/test.sh).
+# Thin launcher: checks the environment and transfers control to the package
+# lib/skiller (python3 -m skiller). All logic is in lib/, what
+# makes it importable and testable (see tests/, scripts/test.sh).
 #
-# Команды (запускаются из потребляющего проекта, корень ищется вверх от CWD):
-#   connect   подключить проект через plugin marketplace Claude Code
-#   vendor    вендорить скиллы в проект (Cursor и другие агенты)
-#   integrate визард интеграции: чеклист по всему функционалу (скиллы/хуки/память/hub)
-#   update    обновить подключение/вендоринг текущего проекта (--all: все)
-#   init      создать .swissknifeman/config.json (mode=vendor) — без копирования скиллов
-#   sync      vendor-режим: применить .swissknifeman/config.json (физ. перенос + lock)
-#   lock      обновить skills-lock.json проекта (карта внешних скиллов: skm + boost)
-#   status    отчёт по текущему проекту (read-only)
-#   budget    токеновый бюджет набора скиллов (⊕ always/↻ on-trigger/⌥ on-demand)
-#   eval      поведенческий прогон скилла (evals/: with-skill vs baseline, pressure, триггеры)
-#   analyze-run   разбор транскриптов сессии: usage/cache по агентам, skill-маркеры
-#   bucket-audit  аудит бакетов: размер/overlap/usage → вердикты keep/thin/merge/dead
-#   list      зарегистрированные проекты (~/.swissknifeman/projects.json)
-#   topology  карта локальной среды (init|show) — ~/.swissknifeman/topology.json
-#   release   предложение релиза монорепо: [Unreleased]+conventional commits → vX.Y.Z
-#             (opt --dry-run; НЕ тегает/не пушит — печатает команду)
+# Commands (are run from the consuming project, the root is looked up from CWD):
+#   connect   connect the project via plugin marketplace Claude Code
+#   vendor    vendor skills to the project (Cursor and other agents)
+#   integrate integration wizard: checklist for all functionality (skills/hooks/memory/hub)
+#   update    update connection/vendoring of the current project (--all: all)
+#   init      create .swissknifeman/config.json (mode=vendor) — without copying skills
+#   sync      vendor-mode: apply .swissknifeman/config.json (physical. transfer + lock)
+#   lock      update skills-lock.json project (external skill map: skm + boost)
+#   status    report on the current project (read-only)
+#   budget    token budget for skill set (⊕ always/↻ on-trigger/⌥ on-demand)
+#   eval      behavioral skill run (evals/: with-skill vs baseline, pressure, triggers)
+#   analyze-run   analysis of session transcripts: usage/cache by agent, skill-markers
+#   bucket-audit  audit buckets: size/overlap/usage → verdicts keep/thin/merge/dead
+#   list      registered projects (~/.swissknifeman/projects.json)
+#   topology  local environment map (init|show) — ~/.swissknifeman/topology.json
+#   release   monorepo release proposal: [Unreleased]+conventional commits → vX.Y.Z
+#             (opt --dry-run; does NOT tag/does not push - prints the command)
 #
-# Команды мейнтейнера (работают с самим реестром):
-#   registry  регенерировать skills.json + плагин-манифесты + граф
+# Maintainer Commands (work with the registry itself):
+#   registry  regenerate skills.json + plugin manifests + graph
 #   validate  scripts/validate.sh
-#   doctor    диагностика окружения
-#   version   версия (git SHA) и путь к реестру
+#   doctor    environment diagnostics
+#   version   version (git SHA) and registry path
 set -euo pipefail
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
-# Корень ПАКЕТА (packages/skiller): здесь skills/, lib/, scripts/, buckets.json.
+# PACKAGE Root (packages/skiller): here skills/, lib/, scripts/, buckets.json.
 REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
 
 if ! command -v python3 >/dev/null 2>&1; then
-  echo "ERROR: skiller требует python3 (apt install python3 / brew install python3)" >&2
+  echo "ERROR: skiller requires python3 (apt install python3 / brew install python3)" >&2
   exit 1
 fi
 if [[ ! -d "$REPO_ROOT/skills" || ! -d "$REPO_ROOT/lib/skiller" ]]; then
-  echo "ERROR: реестр skiller не найден в $REPO_ROOT" >&2
-  echo "Если репозиторий переехал — перезапустите install.sh из нового расположения." >&2
+  echo "ERROR: registry skiller not found in $REPO_ROOT" >&2
+  echo "If the repository has moved, restart install.sh from the new location." >&2
   exit 1
 fi
 
@@ -56,13 +56,13 @@ case "$CMD" in
   -h|--help|help) usage; exit 0 ;;
   validate) exec "$REPO_ROOT/scripts/validate.sh" "$@" ;;
   connect|vendor|integrate|update|init|sync|lock|status|budget|eval|analyze-run|bucket-audit|list|registry|doctor|topology|release|attest|version|deliver) ;;
-  *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
+  *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 
-# Корень монорепо (на два уровня выше пакета) даёт пакет `core` (общий фундамент).
-# Fallback на standalone-раскладку: если каталога core рядом нет — путь не добавляется.
-# (Python-эквивалент — core.repo.find_monorepo_root; здесь фикс. ../.., т.к. core
-#  ещё не на PYTHONPATH — осознанный дубль bash-стороны.)
+# Root monorepo (two levels above the package) gives the package `core` (general foundation).
+# Fallback on standalone-layout: if directory core is not nearby - the path is not added.
+# (Python-equivalent - core.repo.find_monorepo_root; fixed here. ../.., because core
+#  not yet PYTHONPATH — conscious take bash-sides.)
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
 exec env PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \

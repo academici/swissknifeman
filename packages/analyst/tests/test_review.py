@@ -1,4 +1,4 @@
-"""Тесты review: группировка по state, structured diff (similar), фильтр --state, json."""
+"""Tests review: group by state, structured diff (similar), filter --state, json."""
 import io
 import tempfile
 import unittest
@@ -29,7 +29,7 @@ class TestReview(unittest.TestCase):
         groups = review.build_review(self.proj)
         self.assertEqual(len(groups["ephemeral"]), 1)
         self.assertEqual(len(groups["curated"]), 1)
-        # ephemeral 'a' должен видеть похожий curated 'b'
+        # ephemeral 'a' should see similar curated 'b'
         sim_ids = [s[0]["id"] for s in groups["ephemeral"][0]["similar"]]
         self.assertIn(b["id"], sim_ids)
 

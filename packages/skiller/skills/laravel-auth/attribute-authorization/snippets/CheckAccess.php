@@ -14,15 +14,15 @@ use ReflectionMethod;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Middleware-исполнитель атрибутов #[CheckPermission].
+ * Middleware-attribute executor #[CheckPermission].
  *
- * Алгоритм на запрос:
- *  1. По route action (Controller@method) находим метод контроллера.
- *  2. Через ReflectionMethod::getAttributes() читаем все #[CheckPermission].
- *  3. Для каждого: резолвим имена аргументов из параметров маршрута и
- *     дёргаем Gate::allows($permission->value, $arguments) с abort_if.
+ * Algorithm for the request:
+ *  1. By route action (Controller@method) find the controller method.
+ *  2. Via ReflectionMethod::getAttributes() read everything #[CheckPermission].
+ *  3. For each: resolve argument names from route parameters and
+ *     pull Gate::allows($permission->value, $arguments) with abort_if.
  *
- * Если на экшене нет атрибутов — middleware прозрачен (пропускает дальше).
+ * If the action has no attributes - middleware transparent (skips further).
  */
 final class CheckAccess
 {
@@ -63,7 +63,7 @@ final class CheckAccess
 
         $actionName = $route->getActionName();
 
-        // Closure-роуты и invokable без @ — пропускаем (нет метода для рефлексии).
+        // Closure-routes and invokable without @ — skip (no method for reflection).
         if (! is_string($actionName) || ! str_contains(haystack: $actionName, needle: '@')) {
             return [];
         }
@@ -83,9 +83,9 @@ final class CheckAccess
     }
 
     /**
-     * Имена параметров маршрута → их значения (обычно — Model из route-model
-     * binding). Возвращаем list в том же порядке, в каком они объявлены в
-     * атрибуте, чтобы Gate-ability получил их позиционно.
+     * Route parameter names → their meanings (usually - Model from route-model
+     * binding). Returning list in the same order in which they are declared in
+     * attribute to Gate-ability got them positionally.
      *
      * @param  list<string>  $parameterNames
      * @return list<mixed>

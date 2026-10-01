@@ -1,37 +1,37 @@
-# CLI harness — окружение агентов
+# CLI harness — agent environment
 
-`harness` — пакет настройки **окружения Claude Code, Codex и Cursor**: пресеты permissions,
-режимы auto-approve/bypass, MCP-серверы и хуки (memory/notify/log). Раньше этот
-функционал жил внутри `skiller`; вынесен в отдельный пакет, потому что к
-управлению скиллами он не относится. Источник истины пресетов Claude —
+`harness` — configuration package **environment Claude Code, Codex and Cursor**: presets permissions,
+modes auto-approve/bypass, MCP-servers and hooks (memory/notify/log). Previously this
+functionality lived inside `skiller`; is placed in a separate package because
+it does not apply to skill management. Source of Truth Presets Claude —
 `packages/harness/configs/claude-code/`; Cursor shapes —
 `packages/harness/configs/cursor/`.
 
-Устанавливается симлинком в `~/.local/bin` (зонтичный `./install.sh` ставит
-`skiller` · `harness` · `maind`). Пакет stateless — пишет в `.claude/` целевых
-проектов и `~/.claude/hooks/`.
+Installed by symlink in `~/.local/bin` (umbrella `./install.sh` puts
+`skiller` · `harness` · `maind`). Package stateless — writes in `.claude/` targets
+projects and `~/.claude/hooks/`.
 
-## Команды
+## Commands
 
 ### `harness permissions`
 
-Вливает пресеты permissions в `.claude/settings*.json` (merge-only, бэкап `*.bak`).
-Без `--preset` стек определяется автоматически (base + laravel/php-package/node/
-python/docker). Подробности и список пресетов — [Permissions](./configs/claude-permissions).
+Infuses presets permissions in `.claude/settings*.json` (merge-only, backup `*.bak`).
+Without `--preset` stack is detected automatically (base + laravel/php-package/node/
+python/docker). Details and list of presets - [Permissions](./configs/claude-permissions).
 
 ```
-harness permissions --target .                    # autodetect стека
+harness permissions --target .                    # autodetect stack
 harness permissions --target . --preset base,laravel,docker
 harness permissions --target . --dry-run
-harness permissions --list                        # доступные пресеты
-harness permissions --global                      # baseline + файлы хуков в ~/.claude
+harness permissions --list                        # available presets
+harness permissions --global                      # baseline + hook files in ~/.claude
 ```
 
 ### `harness mcp`
 
-Добавляет MCP-серверы в `.mcp.json` (Claude Code) из пресетов (merge-only, чужие серверы целы).
-Для **Cursor** MCP в `.cursor/mcp.json` пишет `maind sync` при включённом провайдере.
-Каталог пресетов и описания — [Интеграции](./integrations/).
+Adds MCP-servers in `.mcp.json` (Claude Code) from presets (merge-only, other people's servers are intact).
+For **Cursor** MCP in `.cursor/mcp.json` writes `maind sync` when the provider is enabled.
+Catalog of presets and descriptions - [Integrations](./integrations/).
 
 ```
 harness mcp --list
@@ -39,11 +39,11 @@ harness mcp --target . --mcp context7,playwright
 harness mcp --target . --mcp context7 --dry-run
 ```
 
-Cursor MCP и permissions — [Настройка Cursor](./setup/cursor).
+Cursor MCP and permissions — [Settings Cursor](./setup/cursor).
 
 ### `harness hooks`
 
-Глобальная установка файлов хуков (раз на машину) и включение режимов по проекту.
+Global installation of hook files (times per car) and enabling project modes.
 
 ```
 harness hooks --global                            # auto-approve/memory/notify/log/review-gate → ~/.claude/hooks
@@ -51,51 +51,51 @@ harness hooks --target . --auto-approve strict    # strict|permissive|bypass|off
 harness hooks --target . --memory core:federation # file|federation|agentmemory|off
 ```
 
-- `--auto-approve` пишет `.claude/auto-approve.env.ini` и регистрирует PreToolUse-хук
+- `--auto-approve` writes `.claude/auto-approve.env.ini` and registers PreToolUse-hook
   (Bash/ExitPlanMode), merge-only.
-- `--memory BRAIN:MODE` присоединяет проект к мозгу: `.swissknife.json:memory_brain`
+- `--memory BRAIN:MODE` attaches the project to the brain: `.swissknife.json:memory_brain`
   + `.claude/memory.env.ini`.
-- **review-gate** (`SubagentStop`) — детерминированный гейт архитектуры: прогоняет
-  проверку проекта после субагента, `warn` → подсказка, `strict` → блок. Режим в
-  `.claude/review-gate.env.ini` (`off|warn|strict`, дефолт `warn`), проверка в
-  `.claude/review-gate.config.json` (`check_command`; пусто → no-op). Подробно —
+- **review-gate** (`SubagentStop`) — deterministic architecture gate: drives away
+  project verification after the subagent, `warn` → hint, `strict` → block. Mode in
+  `.claude/review-gate.env.ini` (`off|warn|strict`, default `warn`), check in
+  `.claude/review-gate.config.json` (`check_command`; empty → no-op). Details -
   `hooks/review-gate/README.md`.
 
 ### `harness safe-dirs`
 
-Machine-owned allowlist доверенных директорий: внутри его корней auto-approve
-пропускает `rm`/`rmdir` мимо deny_hard (код под git — удаление обратимо), вне —
-блокирует как раньше. Конфиг живёт **в корне монорепо swissknifeman** —
-`safe-dirs.json` (gitignored, шаблон `safe-dirs.example.json` — тот же паттерн,
-что `config.json` узла maind); лестница поиска хуком: `$SKM_SAFE_DIRS_CONFIG`
-(эксклюзивный override) → корень монорепо (через realpath лаунчера из PATH) →
-legacy `~/.swissknifeman/safe-dirs.json` (`init` мигрирует его в репо
-автоматически). Вердикт считает `hooks/auto-approve/lib/safedirs.py` строго
-fail-closed: argv через shlex, realpath против symlink-escape/`..`, containment
-по компонентам, защита `.git` и самого корня, глобы по статическому префиксу;
-любая shell-магия (`$VAR`, `$( )`, backticks, `xargs rm`) → deny.
-Project-override конфига хука на allowlist **не влияет** (безопасность).
+Machine-owned allowlist trusted directories: inside its roots auto-approve
+skips `rm`/`rmdir` past deny_hard (code below git — deletion is reversible), out —
+blocks as before. The config lives **at the root of the monorepo swissknifeman** —
+`safe-dirs.json` (gitignored, template `safe-dirs.example.json` — same pattern,
+what `config.json` node maind); search ladder with hook: `$SKM_SAFE_DIRS_CONFIG`
+(exclusive override) → monorepo root (via realpath launcher from PATH) →
+legacy `~/.swissknifeman/safe-dirs.json` (`init` migrates it to the repo
+automatically). Verdict considers `hooks/auto-approve/lib/safedirs.py` strictly
+fail-closed: argv via shlex, realpath vs symlink-escape/`..`, containment
+by component, protection `.git` and the root itself, globs by static prefix;
+any shell-magic (`$VAR`, `$( )`, backticks, `xargs rm`) → deny.
+Project-override hook config on allowlist **has no effect** (security).
 
 ```
-harness safe-dirs init                                  # конфиг с дефолтами
-harness safe-dirs list                                  # эффективный allowlist глазами хука
-harness safe-dirs add ~/projects                        # добавить корень (--exclude — изъятие)
-harness safe-dirs prune-ask --global --all-projects     # снять старые ask-правила rm
+harness safe-dirs init                                  # config with defaults
+harness safe-dirs list                                  # effective allowlist through the eyes of a hook
+harness safe-dirs add ~/projects                        # add root (--exclude — withdrawal)
+harness safe-dirs prune-ask --global --all-projects     # remove old ones ask-rules rm
 ```
 
-Дефолт `include_registered_projects=true` — онбордженные проекты из
-`~/.swissknifeman/projects.json` попадают в allowlist автоматически.
+Default `include_registered_projects=true` — onboarded projects from
+`~/.swissknifeman/projects.json` fall into allowlist automatically.
 
-::: warning bypass снимает подтверждения
-Режим `bypass` авто-одобряет всё, кроме жёсткого denylist — только для
-контейнеров/VM, не на рабочей машине.
+::: warning bypass clears confirmations
+Mode `bypass` auto-approves everything except hard denylist — only for
+containers/VM, is not on the production machine.
 :::
 
 ### `harness agent-packs`
 
-Раскатывает версионируемые паки субагентов/правил под стек (`backend-laravel`,
-`node-frontend`, `python-backend`, `dart-flutter`) или роль (`role-cto` и др.)
-поверх скиллов. Подробности — [Agent-packs](./configs/agent-packs).
+Rolls out versioned subagent packs/rules under the stack (`backend-laravel`,
+`node-frontend`, `python-backend`, `dart-flutter`) or role (`role-cto` etc.)
+on top of skills. Details - [Agent-packs](./configs/agent-packs).
 
 ```
 harness agent-packs list
@@ -104,54 +104,54 @@ harness agent-packs upgrade        --pack <pack> --target .
 harness agent-packs doctor  --target . [--drift [--strict]]
 ```
 
-- Каждый сгенерированный файл получает **provenance-header**
-  (`swissknifeman:generated`) — пак/версия/edit-policy/точки расширения;
-  правится не generated-core, а override-файл (`.claude/rules/<prefix>-reviewer-overrides.md`).
-- `doctor --drift` (и `--strict` для CI) ловит generated-файлы, правленные
-  локально мимо override; тот же сигнал попадает в `pack_drift` вердикта
-  `maind analyze` (ATTENTION, не RED).
+- Each generated file receives **provenance-header**
+  (`swissknifeman:generated`) — pack/version/edit-policy/extension points;
+  cannot be corrected generated-core, a override-file (`.claude/rules/<prefix>-reviewer-overrides.md`).
+- `doctor --drift` (and `--strict` for CI) catches generated-files, edited
+  locally by override; the same signal hits `pack_drift` verdict
+  `maind analyze` (ATTENTION, not RED).
 
 ### `harness instructions`
 
-Управляет двенадцатью проекциями корневых/пакетных инструкций (`CLAUDE.md`/`AGENTS.md`
-в корне и по одному на пакет) из общего канона `configs/common/instructions/**` —
-механизм, три наблюдения (`stale-source`/`managed-drift`/`ownership-conflict`) и
-два машинных гейта подробно разобраны в [канон корневых инструкций](./reference/instruction-canon).
+Controls twelve root projections/batch instructions (`CLAUDE.md`/`AGENTS.md`
+in the root and one per package) from general canon `configs/common/instructions/**` —
+mechanism, three observations (`stale-source`/`managed-drift`/`ownership-conflict`) and
+two machine gates are discussed in detail in [canon of root instructions](./reference/instruction-canon).
 
 ```
-harness instructions plan                         # no-write снимок
-harness instructions check                        # + гейт покрытия литералов
-python3 -m harness.instructions --check            # модульная точка (тот же вердикт)
+harness instructions plan                         # no-write snapshot
+harness instructions check                        # + literal coverage gate
+python3 -m harness.instructions --check            # modular point (same verdict)
 harness instructions apply --authorize CLAUDE.md,packages/harness/AGENTS.md
-harness instructions repair --authorize <цели> --observed-hash <target=hash,...> \
+harness instructions repair --authorize <targets> --observed-hash <target=hash,...> \
   --preimage-dir adjacent-backup
-harness instructions adopt --authorize <цель> --owner-decision D# \
+harness instructions adopt --authorize <target> --owner-decision D# \
   --mapping mapping.json --preimage-dir preimages/
 ```
 
-- `plan`/`check` — no-write; `apply`/`repair`/`adopt` пишут только после явной
-  авторизации оператора (`--authorize`), список целей — АЛФАВИТНЫЙ по пути.
-- `apply`/`repair` создают/чинят цели, уже находящиеся под управлением;
-  `--preimage-dir` у `repair` — фиксированная строка `adjacent-backup`.
-- `adopt` принимает под управление СУЩЕСТВУЮЩИЙ неуправляемый файл: требует
-  `--owner-decision`, `--mapping` и `--preimage-dir` (каталог pre-image'ов) все три.
-- Ручная правка управляемых блоков (между HTML-маркерами) запрещена навсегда —
-  следующий `check`/`repair` увидит это как `managed-drift`.
+- `plan`/`check` — no-write; `apply`/`repair`/`adopt` are written only after an explicit
+  operator authorization (`--authorize`), list of targets - ALPHABETIC by path.
+- `apply`/`repair` create/repair targets already under control;
+  `--preimage-dir` y `repair` — fixed string `adjacent-backup`.
+- `adopt` takes control of an EXISTING unmanaged file: requires
+  `--owner-decision`, `--mapping` and `--preimage-dir` (directory pre-image'ov) all three.
+- Manual editing of managed blocks (between HTML-markers) banned forever -
+  next `check`/`repair` will see this as `managed-drift`.
 
 ### `harness doctor`
 
-Диагностика: наличие пресетов и `apply-permissions.sh`, установлены ли файлы
-хуков в `~/.claude/hooks/`. Provider audit:
+Diagnostics: presence of presets and `apply-permissions.sh`, whether the files are installed
+hooks in `~/.claude/hooks/`. Provider audit:
 
 ```
 harness doctor --settings --provider cursor --target .
 harness doctor --provider-audit
 ```
 
-## Связь со skiller и maind
+## Contact skiller and maind
 
-- `skiller connect`/`vendor`/`integrate` зовут `harness permissions` под капотом
-  (`--no-permissions` отключает) — отдельно ставить не нужно.
-- Память делит state со `skiller` (`~/.swissknifeman/`): установленные хуки
-  `~/.claude/hooks/memory/` читают `topology.json`/`projects.json` оттуда.
-- Плагин `harness@swissknifeman` даёт slash-команды `/harness:*`.
+- `skiller connect`/`vendor`/`integrate` name `harness permissions` under the hood
+  (`--no-permissions` disables) — does not need to be installed separately.
+- Memory shares state with `skiller` (`~/.swissknifeman/`): installed hooks
+  `~/.claude/hooks/memory/` read `topology.json`/`projects.json` from there.
+- Plugin `harness@swissknifeman` gives slash-commands `/harness:*`.

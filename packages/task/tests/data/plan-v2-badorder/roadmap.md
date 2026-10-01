@@ -1,5 +1,5 @@
-# Roadmap исполнения — PLAN-V2
+# Performance Roadmap - PLAN-V2
 
-| Item | Batch | Запуск | Model/Thinking | Гейт владельца | Примечание |
+| Item | Batch | Launch | Model/Thinking | Owner's Gate | Note |
 |---|---|---|---|---|---|
-| P1.1 | solo | plan-run | sonnet/medium | — | единственный item демо-плана |
+| P1.1 | solo | plan-run | sonnet/medium | — | the only item of the demo plan |

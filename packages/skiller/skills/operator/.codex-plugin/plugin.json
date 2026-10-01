@@ -1,6 +1,6 @@
 {
   "name": "operator",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Incident response, runbooks, postmortems, on-call and capacity planning",
   "skills": [
     "./capacity-planning",

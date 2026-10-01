@@ -1,13 +1,13 @@
-"""maind sync — единый провижининг: проанализировать config.json и раскатать управляемые
-артефакты на все подключённые проекты ОДНОЙ командой.
+"""maind sync — unified provisioning: analyze config.json and roll out the controlled
+artifacts for all connected projects with ONE command.
 
-Каждый артефакт — провиженер с `run(env, config, projects, mode, dry) → [result]`. Реестр
-PROVISIONERS + порядок ORDER; `--only` сужает набор. Режим (mode) задаёт «метод синка по
-области»: install — первичная установка (создать, если нет), update — обновить уже
-существующее (drift по хэшу), auto — и то, и другое (нет→install, устарело→update, свежо→skip).
+Each artifact is a provisioner with `run(env, config, projects, mode, dry) → [result]`. Registry
+PROVISIONERS + order ORDER; `--only` narrows the set. Mode (mode) sets «synchronization method
+areas»: install — initial installation (create if not), update — update already
+existing (drift by hash), auto — both (no→install, deprecated→update, fresh→skip).
 
-Фан-аут по проектам и резолв пути/scope вынесены сюда (DRY): deploy/derive/seed/health —
-провиженеры поверх одного контекста, а не дубль цикла в каждом модуле."""
+Fan-out on projects and resolution paths/scope moved here (DRY): deploy/derive/seed/health —
+providers on top of one context, rather than a duplicate loop in each module."""
 from __future__ import annotations
 
 import copy
@@ -43,7 +43,7 @@ PROVISIONER_INTENTS = {
 }
 
 
-# ── контекст проекта (единый резолв пути/scope) ──────────────────────────────
+# ── project context (single path resolution/scope) ──────────────────────────────
 @dataclass(frozen=True)
 class ProjectContext:
     env: object
@@ -87,22 +87,22 @@ class ProjectContext:
 
 
 def select_projects(env, config, opts):
-    """Фан-аут: --project <id> | --namespace <ns> | --all (enabled). Единственный
-    источник выборки проектов."""
+    """Fan-out: --project <id> | --namespace <ns> | --all (enabled). The only one
+    source of sample projects."""
     if opts.get("project"):
         proj = get_project(config, opts["project"])
         if proj is None:
-            die(f"проект не найден в config.json: {opts['project']}")
+            die(f"project not found in config.json: {opts['project']}")
         return [proj]
     if opts.get("namespace"):
         projs = [p for p in listing(env, config)
                  if p.get("enabled", True) and in_namespace(p, opts["namespace"])]
         if not projs:
-            die(f"в namespace '{opts['namespace']}' нет enabled-проектов")
+            die(f"in namespace '{opts['namespace']}' no enabled-projects")
         return projs
     if opts.get("all"):
         return [p for p in listing(env, config) if p.get("enabled", True)]
-    die("укажите --project <id>, --namespace <ns> или --all")
+    die("specify --project <id>, --namespace <ns> or --all")
 
 
 def contexts(env, config, projects):
@@ -147,8 +147,8 @@ def _ineligible_provider_aggregate(context, diagnostic):
 
 
 def _ineligible_result(provisioner, context, diagnostic):
-    detail = ("нет local_path" if diagnostic == "MAIND_PROJECT_LOCAL_PATH_MISSING"
-              else "путь проекта недоступен")
+    detail = ("no local_path" if diagnostic == "MAIND_PROJECT_LOCAL_PATH_MISSING"
+              else "project path is not available")
     return _result(provisioner, context.id, "skip", state="ineligible",
                    detail=f"{detail}: {diagnostic}",
                    provider_aggregate=_ineligible_provider_aggregate(context, diagnostic))
@@ -156,8 +156,8 @@ def _ineligible_result(provisioner, context, diagnostic):
 
 def _result(provisioner, project_id, status, *, changed=False, state="", detail="",
             provider_aggregate=None, bootstrap_transfer=None):
-    """Единая форма результата провиженера (та же, что у health._result): ВСЕ ключи всегда
-    присутствуют, поэтому CLI и тесты не зависят от .get()-умолчаний. status: ok|skip|dry."""
+    """Unified result form of the provider (same as health._result): ALL keys always
+    are present, therefore CLI and tests are independent of .get()-defaults. status: ok|skip|dry."""
     result = {"provisioner": provisioner, "id": project_id, "status": status,
               "changed": changed, "state": state, "detail": detail}
     if provider_aggregate is not None:
@@ -168,9 +168,9 @@ def _result(provisioner, project_id, status, *, changed=False, state="", detail=
     return result
 
 
-# ── провиженеры ──────────────────────────────────────────────────────────────
+# ── providers ──────────────────────────────────────────────────────────────
 def _mcp_run(env, config, projects, mode, dry):
-    """MCP-серверы хаба (agent-memory + maind [+ код-граф/Serena]) в конфиги проектов."""
+    """MCP-hub servers (agent-memory + maind [+ code graph/Serena]) in project configs."""
     from .deploy import deploy_project, mark_deployed, provider_operation_green
     from ..mcp_parity import repair_settings_duplicates
     from ..projects import write_config
@@ -191,7 +191,7 @@ def _mcp_run(env, config, projects, mode, dry):
                                                        if provider_context is not None else None),
                                  provider_repair=True)
         if res is None:
-            results.append(_result("mcp", p["id"], "skip", detail="нет/нет пути проекта"))
+            results.append(_result("mcp", p["id"], "skip", detail="no/no project path"))
             continue
         changed = (res["provider_changed"] if res.get("provider_plan") is not None
                    else any(w["changed"] for w in res["written"]))
@@ -201,7 +201,7 @@ def _mcp_run(env, config, projects, mode, dry):
             applied = True
         detail = ", ".join(res["targets"])
         if res.get("skipped"):
-            detail += f" (пропущено битых каналов: {', '.join(res['skipped'])})"
+            detail += f" (missed broken channels: {', '.join(res['skipped'])})"
         aggregate = _provider_aggregate(res["provider_plan"]) if res.get("provider_plan") else None
         results.append(_result("mcp", p["id"], "ok" if operation_green else "failed",
                                changed=changed, detail=detail, provider_aggregate=aggregate,
@@ -212,15 +212,15 @@ def _mcp_run(env, config, projects, mode, dry):
 
 
 def _codegraph_run(env, config, projects, mode, dry):
-    """Дефолтный .serena/project.yml в проекты с включённым код-графом (движок Serena)."""
+    """Default .serena/project.yml to projects with code graph enabled (engine Serena)."""
     from ..codegraph import apply_serena_config
     return [apply_serena_config(env, config, p, mode, dry) for p in projects]
 
 
 def _graph_run(env, config, projects, mode, dry):
-    """Derive графа проектов из источников (composer/Brain/override) + пересборка индекса.
-    changed — честно по содержимому стора (сериализация детерминирована), чтобы
-    --mode update не сообщал об изменении там, где граф фактически не поменялся."""
+    """Derive project graph from sources (composer/Brain/override) + index rebuild.
+    changed — honestly on the contents of the store (serialization is deterministic), to
+    --mode update did not report a change where the graph had not actually changed."""
     from ..derive import build_provider_index, derive_project_graph
     from ..federation import rebuild_index, store_path
     results = []
@@ -240,13 +240,13 @@ def _graph_run(env, config, projects, mode, dry):
 
 
 def _memory_run(env, config, projects, mode, dry):
-    """Seed-память: базовый факт о связях проекта в project:<id> + cross-ref в global."""
+    """Seed-memory: basic fact about project relationships project:<id> + cross-ref in global."""
     from ..seed import seed_memory
     return [seed_memory(env, config, p, dry=dry) for p in projects]
 
 
 def _health_hook_run(env, config, projects, mode, dry):
-    """SessionStart-хук связи с хабом (НЕ блокирует) в .claude/settings.json проектов."""
+    """SessionStart-connection hook with the hub (DOES NOT block) in .claude/settings.json projects."""
     from ..health import apply_health_hook, revert_health_hook
     enabled = bool((config.get("observability") or {}).get("session_start_health_hook", False))
     fn = apply_health_hook if enabled else revert_health_hook
@@ -254,10 +254,10 @@ def _health_hook_run(env, config, projects, mode, dry):
 
 
 def _memory_hook_run(env, config, projects, mode, dry):
-    """SessionStart-инжект ДАЙДЖЕСТА памяти + выключение нативной авто-памяти — по интенту
-    проекта из .claude/memory.env.ini: MODE=maind → ставим (apply_memory_hook), MODE=off →
-    откатываем на native (revert_memory_hook), нет конфига → не трогаем. Так `maind sync`
-    раскатывает авто-загрузку памяти на уже подключённые проекты, не гоняя полный onboard."""
+    """SessionStart-memory DIGEST injection + disabling native auto-memory - by intent
+    project from .claude/memory.env.ini: MODE=maind → set (apply_memory_hook), MODE=off →
+    roll back to native (revert_memory_hook), no config → do not touch. Yes `maind sync`
+    rolls out auto-loading of memory to already connected projects, without running the full onboard."""
     from ..health import (apply_memory_hook, configure_manual_memory, hook_memory_mode,
                           revert_memory_hook)
     results = []
@@ -267,16 +267,16 @@ def _memory_hook_run(env, config, projects, mode, dry):
             results.append(apply_memory_hook(env, config, p, mode, dry))
         elif hmode == "manual":
             results.append(configure_manual_memory(env, config, p, dry))
-        elif hmode is not None:                       # off/native — вернуть нативную память
+        elif hmode is not None:                       # off/native — return native memory
             results.append(revert_memory_hook(env, config, p, dry))
-        else:                                         # память проекта не сконфигурирована
+        else:                                         # project memory not configured
             results.append(_result("memory-hook", p["id"], "skip", state="absent",
-                                   detail="нет MODE в .claude/memory.env.ini — пропуск"))
+                                   detail="no MODE in .claude/memory.env.ini — pass"))
     return results
 
 
 def _health_doc_run(env, config, projects, mode, dry):
-    """Управляемый блок «ПРИОРИТЕТ №1 — связь с mAInd» в CLAUDE.md проектов."""
+    """Managed block «PRIORITY №1 — connection with mAInd» in CLAUDE.md projects."""
     from ..health import apply_health_doc
     return [apply_health_doc(env, config, p, mode, dry) for p in projects]
 
@@ -350,11 +350,11 @@ def _instruction_run(env, config, projects, mode, dry):
         if not isinstance(context, ProjectContext) or not context.exists:
             project = context.project if isinstance(context, ProjectContext) else context
             results.append(_result("instructions", project["id"], "skip", state="absent",
-                                   detail="нет пути проекта"))
+                                   detail="no project path"))
             continue
         if not _instructions_applicable(context):
             results.append(_result("instructions", context.id, "skip", state="n-a",
-                                   detail="только umbrella-монорепо swissknifeman"))
+                                   detail="only umbrella-monorepo swissknifeman"))
             continue
         planned = plan_instructions(_instruction_request(context, "plan"))
         paths = tuple(action.target_path for action in (planned.artifact_plan.actions
@@ -387,7 +387,7 @@ def _instruction_run(env, config, projects, mode, dry):
 
 
 def _feature_log_hook_run(env, config, projects, mode, dry):
-    """SessionEnd-хук фиксации коммитов в общую память (если code_graph.feature_log_hook)."""
+    """SessionEnd-hook for committing commits to shared memory (if code_graph.feature_log_hook)."""
     from ..codegraph import settings
     from ..health import apply_feature_log_hook, revert_feature_log_hook
     enabled = bool(settings(config).get("feature_log_hook", False))
@@ -396,20 +396,20 @@ def _feature_log_hook_run(env, config, projects, mode, dry):
 
 
 def _setup_skill_run(env, config, projects, mode, dry):
-    """Управляемый скилл ecosystem-setup (дерево решений тулинга) на проекты."""
+    """Controlled skill ecosystem-setup (tooling decision tree) for projects."""
     from .skilldoc import apply_setup_skill
     return [apply_setup_skill(env, config, p, mode, dry) for p in projects]
 
 
 def _ecosystem_skill_run(env, config, projects, mode, dry):
-    """Управляемый скилл ecosystem-mcp (инструкция про MCP-инструменты и связи) в проекты."""
+    """Controlled skill ecosystem-mcp (instructions about MCP-tools and connections) to projects."""
     from .skilldoc import apply_ecosystem_skill
     return [apply_ecosystem_skill(env, config, p, mode, dry) for p in projects]
 
 
 def _skiller_profiles_dir(config):
-    """Каталог профилей skiller (<repo>/packages/skiller/profiles) или None.
-    Резолв корня репо — как у orchestrate._sibling_bin (проект 'swissknifeman')."""
+    """Profile catalog skiller (<repo>/packages/skiller/profiles) or None.
+    Root repo resolution - same as orchestrate._sibling_bin (project 'swissknifeman')."""
     spec = SIBLINGS["swissknifeman"]
     proj = get_project(config, spec["project_id"])
     root = proj.get(spec["path_key"]) if proj else None
@@ -420,7 +420,7 @@ def _skiller_profiles_dir(config):
 
 
 def _profile_for(config, project):
-    """Профиль skiller по project.type (dict) или {}."""
+    """Profile skiller by project.type (dict) or {}."""
     pdir, ptype = _skiller_profiles_dir(config), project.get("type")
     if not pdir or not ptype:
         return {}
@@ -428,9 +428,9 @@ def _profile_for(config, project):
 
 
 def _resolve_agent_pack(config, project):
-    """Паки проекта: project.agent_pack (str|list) > profile.agent_pack по project.type,
-    ПЛЮС роль-паки (вариант C): project.roles → config.role_packs[role] — кросс-стек паки
-    персон поверх стекового пака профиля. [] — ничего не определилось (шаг пропустится)."""
+    """Project packs: project.agent_pack (str|list) > profile.agent_pack by project.type,
+    PLUS role packs (option C): project.roles → config.role_packs[role] — cross-stack packs
+    persons on top of the profile stack pack. [] — nothing defined (step will be skipped)."""
     explicit = project.get("agent_pack")
     if isinstance(explicit, str):
         packs = [explicit]
@@ -439,7 +439,7 @@ def _resolve_agent_pack(config, project):
     else:
         pack = _profile_for(config, project).get("agent_pack")
         packs = [pack] if isinstance(pack, str) else (list(pack) if isinstance(pack, list) else [])
-    # роль-паки: project.roles (выбранные роли) → пак из config.role_packs, аддитивно
+    # role-packs: project.roles (selected roles) → pack from config.role_packs, additive
     role_map = config.get("role_packs") or {}
     for role in (project.get("roles") or []):
         rp = role_map.get(role)
@@ -449,8 +449,8 @@ def _resolve_agent_pack(config, project):
 
 
 def _profile_answers(config, project):
-    """Доп. --answer для рендера из профиля: model_tiers (role → MODEL_<ROLE>=tier).
-    Так профиль типа проекта пре-заполняет модельные тиры агентов пака."""
+    """Add. --answer for rendering from profile: model_tiers (role → MODEL_<ROLE>=tier).
+    So the project type profile pre-fills the model ranges of the pack agents."""
     out = []
     for role, tier in (_profile_for(config, project).get("model_tiers") or {}).items():
         out += ["--answer", f"MODEL_{role.upper().replace('-', '_')}={tier}"]
@@ -458,35 +458,35 @@ def _profile_answers(config, project):
 
 
 def _installed_agent_packs(local_path):
-    """Имена паков, уже осевших в lock'е цели (.claude/agent-pack.lock.json). Нет
-    файла/битый JSON → пусто (трактуем как «ничего не установлено»)."""
+    """Names of packs already settled in lock'e goals (.claude/agent-pack.lock.json). No
+    file/broken JSON → empty (is interpreted as «nothing installed»)."""
     lock = safe_load_json(Path(local_path) / ".claude" / "agent-pack.lock.json", default={}) or {}
     return set((lock.get("packs") or {}).keys())
 
 
 def _capability_changed(rc, dry):
-    """Успешный delegated dry-run доказывает только успешное построение плана.
+    """Successful delegated dry-run only proves the successful construction of the plan.
 
-    Внешние CLI пока отдают ожидаемый diff только в human-output, без машиночитаемого
-    результата. ``changed`` в sync receipt описывает применённое состояние, поэтому
-    dry-run не должен утверждать мутацию только из-за ``rc=0``.
+    External CLI while they are giving the expected diff only in human-output, non-machine readable
+    result. ``changed`` in sync receipt describes the applied state, so
+    dry-run should not approve a mutation just because ``rc=0``.
     """
     return rc == 0 and not dry
 
 
 def _agent_pack_run(env, config, projects, mode, dry):
-    """Детерминированно раскатать agent-pack(и) профиля проекта в .claude/ через harness
-    (без агента в цикле). install — только если ещё не стоит; update — версионный апгрейд
-    уже установленных + install недостающих (harness upgrade падает на неустановленном
-    паке, см. field-feedback: профиль дорос новым паком → update один его не подхватит);
-    auto — render --auto (install + идемпотентный ре-ролл). Нет пака/пути/harness → skip."""
+    """Roll out deterministically agent-pack(and) project profile in .claude/ via harness
+    (without agent in loop). install — only if not yet; update — version upgrade
+    already installed + install missing (harness upgrade crashes on uninstalled
+    package, see field-feedback: profile has grown with a new pack → update alone won't catch it);
+    auto — render --auto (install + idempotent re-roll). No pack/paths/harness → skip."""
     from .orchestrate import run_capability
     results = []
     for p in projects:
         packs = _resolve_agent_pack(config, p)
         if not packs or not p.get("local_path"):
             results.append(_result("agent-pack", p["id"], "skip",
-                                   detail="нет профиля/agent_pack или пути"))
+                                   detail="no profile/agent_pack or paths"))
             continue
         installed = _installed_agent_packs(p["local_path"])
         answers = _profile_answers(config, p)
@@ -497,27 +497,27 @@ def _agent_pack_run(env, config, projects, mode, dry):
                      + (["--install-only"] if mode == "install" else []))
             try:
                 rc = run_capability(env, config, p["id"], cap, extra, dry=dry)
-                # rc!=0 — провал рендера пака (НЕ 'skip', иначе провал невидим); harness
-                # недоступен ловится отдельно ниже как graceful skip.
+                # rc!=0 — pack render failure (NOT 'skip', otherwise the failure is invisible); harness
+                # not available is caught separately below as graceful skip.
                 results.append(_result("agent-pack", p["id"], "ok" if rc == 0 else "failed",
                                        changed=_capability_changed(rc, dry),
                                        detail=f"pack={pack} rc={rc}"))
             except SystemExit:
                 results.append(_result("agent-pack", p["id"], "skip",
-                                       detail=f"pack={pack}: harness недоступен"))
+                                       detail=f"pack={pack}: harness not available"))
     return results
 
 
 def _skills_catalog_run(env, config, projects, mode, dry):
-    """Пере-резолв каталога скиллов (skiller update): buckets/exclude пере-читаются с диска
-    каждый раз, поэтому новый скилл в уже выбранном бакете (напр. `pao` в `php`) доезжает
-    до уже онбордженных проектов без ручного re-run skiller connect/vendor/update. Идемпотентно,
-    exclude уважается, foreign-файлы не трогает (skillset.sync_skillset/vendor.collect_skills)."""
+    """Re-resolve skill catalog (skiller update): buckets/exclude are re-read from disk
+    every time, so a new skill in an already selected bucket (e.g. `pao` in `php`) arrives
+    to already onboarded projects without manual re-run skiller connect/vendor/update. Idempotent,
+    exclude respected, foreign-does not touch files (skillset.sync_skillset/vendor.collect_skills)."""
     from .orchestrate import run_capability
     results = []
     for p in projects:
         if not p.get("local_path"):
-            results.append(_result("skills-catalog", p["id"], "skip", detail="нет пути проекта"))
+            results.append(_result("skills-catalog", p["id"], "skip", detail="no project path"))
             continue
         try:
             rc = run_capability(env, config, p["id"], "skm:update", dry=dry)
@@ -525,17 +525,17 @@ def _skills_catalog_run(env, config, projects, mode, dry):
                                    changed=_capability_changed(rc, dry), detail=f"rc={rc}"))
         except SystemExit:
             results.append(_result("skills-catalog", p["id"], "skip",
-                                   detail="skiller недоступен"))
+                                   detail="skiller not available"))
     return results
 
 
 def _output_style_run(env, config, projects, mode, dry):
-    """outputStyle=lean (терсе-голос агента, токен-экономия) во все .claude/settings.local.json
-    уже онбордженных проектов — догоняет `skiller integrate`, который ставит это только на
-    НОВЫХ онбордингах. Опт-аут per-project: project.output_style="off" — тогда пропуск (не
-    трогаем локально выбранный стиль): block_output_style в harness ПЕРЕЗАПИСЫВАЕТ ключ, если
-    он отличается от желаемого, поэтому без опт-аута регулярный `maind sync --all` затирал бы
-    чей-то осознанный выбор."""
+    """outputStyle=lean (terce-agent-voice, token-saving) in everything.claude/settings.local.json
+    of already onboarded projects - catching up `skiller integrate`, which only puts this on
+    NEW onboardings. Wholesale-out per-project: project.output_style="off" — then pass (not
+    touch the locally selected style): block_output_style in harness OVERWRITES the key if
+    it differs from the desired one, so without opt-out regular `maind sync --all` would overwrite
+    someone's conscious choice."""
     from .orchestrate import run_capability
     results = []
     for p in projects:
@@ -545,7 +545,7 @@ def _output_style_run(env, config, projects, mode, dry):
                                    detail="project.output_style=off"))
             continue
         if not p.get("local_path"):
-            results.append(_result("output-style", p["id"], "skip", detail="нет пути проекта"))
+            results.append(_result("output-style", p["id"], "skip", detail="no project path"))
             continue
         try:
             rc = run_capability(env, config, p["id"], "env:hooks",
@@ -555,21 +555,21 @@ def _output_style_run(env, config, projects, mode, dry):
                                    detail=f"style={style} rc={rc}"))
         except SystemExit:
             results.append(_result("output-style", p["id"], "skip",
-                                   detail="harness недоступен"))
+                                   detail="harness not available"))
     return results
 
 
 def _router_config_run(env, config, projects, mode, dry):
-    """Сгенерить/обновить каталог intent-router (.claude/agent-router.config.json) через
-    harness — ТОЛЬКО для проектов, где хук уже включён (opt-in: есть agent-router.env.ini с
-    POLICY!=off; включается `harness hooks --router` / `maind onboard`). Не включён/нет пути/
-    harness недоступен → graceful skip. Идёт после agent-pack (читает свежедоставленных агентов)."""
+    """Generate/update directory intent-router (.claude/agent-router.config.json) via
+    harness — ONLY for projects where the hook is already enabled (opt-in: yes agent-router.env.ini with
+    POLICY!=off; turns on `harness hooks --router` / `maind onboard`). Not enabled/no path/
+    harness not available → graceful skip. Comes after agent-pack (reads newly delivered agents)."""
     from .orchestrate import run_capability
     results = []
     for p in projects:
         lp = p.get("local_path")
         if not lp:
-            results.append(_result("router-config", p["id"], "skip", detail="нет пути"))
+            results.append(_result("router-config", p["id"], "skip", detail="no path"))
             continue
         envini = Path(os.path.expanduser(lp)) / ".claude" / "agent-router.env.ini"
         try:
@@ -578,7 +578,7 @@ def _router_config_run(env, config, projects, mode, dry):
             enabled = False
         if not enabled:
             results.append(_result("router-config", p["id"], "skip",
-                                   detail="intent-router не включён (opt-in)"))
+                                   detail="intent-router not enabled (opt-in)"))
             continue
         try:
             rc = run_capability(env, config, p["id"], "env:router", [], dry=dry)
@@ -586,13 +586,13 @@ def _router_config_run(env, config, projects, mode, dry):
                                    changed=_capability_changed(rc, dry), detail=f"rc={rc}"))
         except SystemExit:
             results.append(_result("router-config", p["id"], "skip",
-                                   detail="harness недоступен"))
+                                   detail="harness not available"))
     return results
 
 
-# Реестр провиженеров и порядок применения (ORDER задаёт последовательность).
-# Сигнатура каждого: run(env, config, projects, mode, dry) -> list[_result(...)]
-# (форма результата — _result выше: provisioner/id/status/changed/state/detail).
+# Register of providers and application procedure (ORDER specifies the sequence).
+# Signature of each: run(env, config, projects, mode, dry) -> list[_result(...)]
+# (result form - _result above: provisioner/id/status/changed/state/detail).
 PROVISIONERS = {
     "mcp": _mcp_run,
     "code-graph": _codegraph_run,
@@ -616,20 +616,20 @@ ORDER = ["mcp", "code-graph", "graph", "memory", "memory-hook", "health-hook",
 
 
 def provisioner_names(only=None):
-    """Имена провиженеров в порядке ORDER, ограниченные --only (csv) и реестром."""
+    """Provider names are ok ORDER, limited --only (csv) and the registry."""
     if only:
         want = [x.strip() for x in only.split(",") if x.strip()]
         for x in want:
             if x not in PROVISIONERS:
-                die(f"неизвестный провиженер: {x} (есть: {', '.join(sorted(PROVISIONERS))})")
+                die(f"unknown provider: {x} (is: {', '.join(sorted(PROVISIONERS))})")
         return [n for n in ORDER if n in want]
     return [n for n in ORDER if n in PROVISIONERS]
 
 
 def run_sync(env, config, projects, *, only=None, mode="auto", dry=False):
-    """Применить выбранные провиженеры к проектам. Возвращает плоский список результатов.
-    Fail-soft: падение одного провиженера НЕ валит весь фан-аут — остальные отрабатывают,
-    упавший помечается status=failed per-project (видно в выводе и коде возврата)."""
+    """Apply selected providers to projects. Returns a flat list of results.
+    Fail-soft: the fall of one provider does NOT bring down the entire fan-out - the rest are worked out,
+    fallen is marked status=failed per-project (visible in output and return code)."""
     return run_sync_contexts(env, config, contexts(env, config, projects), only=only,
                              mode=mode, dry=dry)
 
@@ -652,7 +652,7 @@ def run_sync_contexts(env, config, project_contexts, *, only=None, mode="auto", 
         try:
             results.extend(PROVISIONERS[name](env, config, eligible, mode, dry))
         except Exception as e:
-            warn(f"провиженер '{name}' упал: {e}")
+            warn(f"provider '{name}' fell: {e}")
             results.extend(_result(name, p.get("id", "?"), "failed", detail=str(e))
                            for p in eligible)
     return results
@@ -1006,13 +1006,13 @@ def cmd_sync(env, argv):
     if opts["conformance"]:
         if any((opts["project"], opts["namespace"], opts["all"], opts["only"],
                 opts["mode"], opts["dry_run"], opts["json"])):
-            die("--conformance не совмещается с project/only/mode/dry/json")
+            die("--conformance is not compatible with project/only/mode/dry/json")
         generate_instruction_conformance(env, opts["conformance"])
         print(f"provider provision conformance → {opts['conformance']}")
         return
     mode = opts["mode"] or "auto"
     if mode not in MODES:
-        die(f"--mode: {', '.join(MODES)} (получено: {mode})")
+        die(f"--mode: {', '.join(MODES)} (received: {mode})")
     config, _src = load_config(env)
     projects = select_projects(env, config, opts)
     # Provisioners use their public CLIs and may report normal diagnostics to stdout.
@@ -1027,17 +1027,17 @@ def cmd_sync(env, argv):
             sys.exit(1)
         return
     tag = "[dry-run] " if opts["dry_run"] else ""
-    print(f"{tag}sync (mode={mode}, проектов {len(projects)}, "
-          f"провиженеры: {', '.join(provisioner_names(opts['only']))})")
+    print(f"{tag}sync (mode={mode}, projects {len(projects)}, "
+          f"providers: {', '.join(provisioner_names(opts['only']))})")
     for r in results:
         mark = {"ok": "✓", "skip": "○", "dry": "·", "failed": "✗"}.get(r["status"], "·")
         if r["status"] == "dry":
-            note = f" (план: {r.get('state') or 'apply'})"
+            note = f" (plan: {r.get('state') or 'apply'})"
         elif r["status"] == "ok" and not r.get("changed", True):
-            note = " (без изменений)"
+            note = " (no changes)"
         else:
             note = ""
         print(f"  {mark} {r['provisioner']:<11} {r['id']:<18} {r.get('detail', '')}{note}")
     if failed:
-        warn(f"провиженеров упало: {len(failed)} (см. ✗ выше)")
+        warn(f"providers fell: {len(failed)} (see ✗ above)")
         sys.exit(1)

@@ -1,8 +1,8 @@
-# Машинно-специфичные артефакты Claude Code sessions — все эфемерные, ничего из
-# этого не коммитим (N1/P1-review: audit.ndjson/events.ndjson раньше были
-# исключением "коммитируются", но несут session-UUID/timestamp/home-путь
-# разработчика и растут на каждом SessionEnd авто-digest хуком — постоянный
-# diff-churn и утечка машинно-специфичных данных, не аудит-артефакт репо).
+# Machine-specific artifacts Claude Code sessions — all ephemeral, none of
+# we don't commit this (N1/P1-review: audit.ndjson/events.ndjson were there before
+# except "committed", but they carry session-UUID/timestamp/home-path
+# developers and grow on each SessionEnd auto-digest hook — constant
+# diff-churn and leakage machine-specific data, not an audit-repo artifact).
 
 runs/
 analyze/

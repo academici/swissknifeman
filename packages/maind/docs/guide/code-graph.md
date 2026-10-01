@@ -1,40 +1,40 @@
-# Граф кода (код-MCP в проекте)
+# Code graph (code-MCP in the project)
 
-Граф **кода внутри проекта** (символы, файлы, ссылки, реализации) — отдельный, **универсальный**
-слой: per-project MCP-сервер. По умолчанию это **[Serena](https://github.com/oraios/serena)** —
-language-agnostic (через LSP, работает для PHP/TS/Python/Go/Rust/… одинаково), запускается через
-`uvx`, без установки в каждый проект. Это даёт агенту точную навигацию по коду (найти определение,
-все вызовы, реализации интерфейса, обзор символов файла) — и экономит токены против чтения файлов
-целиком.
+Graph **code inside the project** (symbols, files, links, implementations) — separate, **universal**
+layer: per-project MCP-server. The default is **[Serena](https://github.com/oraios/serena)** —
+language-agnostic (via LSP, works for PHP/TS/Python/Go/Rust/… the same), is launched via
+`uvx`, without installation in each project. This gives the agent precise code navigation (find definition,
+all calls, interface implementations, file symbol overview) — and saves tokens against reading files
+in its entirety.
 
-::: tip Имя поля и движок
-Включается полем проекта `code: true` (старое `graphify: true` — **legacy-alias**, работает).
-Готового инструмента «graphify» не существует; **движок по умолчанию — Serena**. Вся политика
-(команда, игноры, промпты) — в секции `code_graph` конфига, не в коде (см. [Конфиг](./config)).
+::: tip Field name and engine
+Enabled by the project field `code: true` (old `graphify: true` — **legacy-alias**, works).
+Finished tool «graphify» does not exist; **default engine - Serena**. All policies
+(command, ignores, prompts) — in section `code_graph` config, not in code (see [Config](./config)).
 :::
 
-Три слоя экосистемы — разные задачи:
+Three layers of the ecosystem - different tasks:
 
-| Механизм | Что связывает | Как доставляется |
+| Mechanism | What connects | How it's delivered |
 |:--|:--|:--|
-| **agent-memory** | память/контекст (факты, решения) | демон на хабе + MCP-клиент в проекте |
-| **maind-граф** | топология **между** проектами (зависимости) | федерация на хабе ([Федерация](./federation)) |
-| **код-MCP (Serena)** | **код внутри** проекта (символы/ссылки/реализации) | MCP-сервер в проекте (uvx Serena) |
+| **agent-memory** | memory/context (facts, solutions) | daemon on the hub + MCP-client in project |
+| **maind-graph** | topology **between** projects (dependencies) | federation on the hub ([Federation](./federation)) |
+| **code-MCP (Serena)** | **code inside** project (characters/links/implementations) | MCP-server in the project (uvx Serena) |
 
-## Включение (config-driven)
+## Enable (config-driven)
 
-Поле проекта `code: true` в `.maind.json` — и `maind sync`/`onboard` раскатают код-MCP:
+Project field `code: true` in `.maind.json` — and `maind sync`/`onboard` roll out the code-MCP:
 
 ```json
 { "id": "flexcrm", "code": true }
 ```
 
 ```bash
-maind sync --project flexcrm --only mcp     # допишет код-MCP в .mcp.json (если команда есть в PATH)
-maind onboard flexcrm --with-code       # онбординг сразу с код-графом (флаг сохранится в конфиг)
+maind sync --project flexcrm --only mcp     # will add the code-MCP in .mcp.json (if the command is in PATH)
+maind onboard flexcrm --with-code       # onboarding directly with a code graph (flag will be saved in the config)
 ```
 
-Запись в `.mcp.json` проекта (дефолт — Serena):
+Write to `.mcp.json` project (default — Serena):
 
 ```json
 { "mcpServers": {
@@ -44,70 +44,70 @@ maind onboard flexcrm --with-code       # онбординг сразу с ко�
       "--enable-web-dashboard", "false" ] } } }
 ```
 
-Требуется `uvx` (из [uv](https://docs.astral.sh/uv/)) в PATH. Нет команды → корректный пропуск
-(`skipped-not-installed`), остальные серверы пишутся, sync не падает.
+Required `uvx` (from [uv](https://docs.astral.sh/uv/)) in PATH. No command → correct omission
+(`skipped-not-installed`), other servers are written, sync does not crash.
 
-## Дефолтный `.serena/project.yml` (provision)
+## Default `.serena/project.yml` (provision)
 
-При `code:true` (движок Serena) провиженер **`code-graph`** кладёт в проект стартовый
-`.serena/project.yml`: язык по типу проекта + стандартные игноры + `initial_prompt` (нативно
-нацеливает агента на symbol-инструменты). Пишется **только если файла ещё нет** — после первой
-активации файлом владеет Serena, maind её правки не клобберит.
+When `code:true` (engine Serena) provider **`code-graph`** puts the starting one into the project
+`.serena/project.yml`: language by project type + standard ignores + `initial_prompt` (native
+targets the agent at symbol-tools). It is written **only if the file does not exist yet** — after the first
+activation file owns Serena, maind her edits are not clobbered.
 
 ```bash
 maind sync --project flexcrm --only mcp,code-graph
 ```
 
-### Почему игнорируются `vendor` и `packages`
+### Why are they ignored? `vendor` and `packages`
 
-Игноры по умолчанию (`code_graph.ignores` в конфиге — правишь там, не в коде): `vendor`,
-`node_modules`, `packages`, `storage`, `bootstrap/cache`, `public/build`, `dist`, `.git`. Это
-**осознанно**, особенно в монорепо с симлинками:
+Default ignores (`code_graph.ignores` in the config - you edit there, not in the code): `vendor`,
+`node_modules`, `packages`, `storage`, `bootstrap/cache`, `public/build`, `dist`, `.git`. This
+**consciously**, especially in a monorepo with symlinks:
 
-- сторонние зависимости (`vendor/laravel/…`) — огромные и read-only, индексировать незачем;
-- **first-party пакеты, подсимлинкованные внутрь проекта** (Composer path-repos: `vendor/<vendor>/<pkg>`
-  и `packages/<pkg>` часто указывают на ОДИН и тот же исходник) — индексировать их здесь означало бы
-  **дубли символов** (один пакет 2–3 раза) и **рекурсивные симлинки** (например testbench зацикливает
-  `vendor → laravel/vendor → …`), на которых скан виснет.
+- third party dependencies (`vendor/laravel/…`) — huge and read-only, there is no need to index;
+- **first-party packages linked within the project** (Composer path-repos: `vendor/<vendor>/<pkg>`
+  and `packages/<pkg>` often point to the SAME source) — indexing them here would mean
+  **duplicate characters** (one packet 2–3 times) and **recursive symlinks** (for example testbench loops
+  `vendor → laravel/vendor → …`), on which the scan hangs.
 
-**Модель по умолчанию:** каждый first-party пакет — **свой проект со своим код-графом**
-(`code:true` на нём же); зависимый проект графит только свой код. Связь «кто кого использует» —
-в [maind-графе топологии](./federation). Линковку менять не нужно — она для Composer/рантайма.
+**Default model:** each first-party package - **your project with your own code graph**
+(`code:true` on it); dependent project graph only its code. Communication «who is using whom» —
+in [maind-topology graph](./federation). There is no need to change the link - it is for Composer/runtime.
 
-## Workspace-режим: единый граф с локальными пакетами
+## Workspace-mode: single graph with local packages
 
-Если ты **активно разрабатываешь пакеты-ядро вместе с проектом** (corex/azguard — сотни файлов,
-значимая часть кода), нужен **единый граф**: проект + его локальные пакеты как одна картина, с
-правками прямо в исходники пакетов.
+If you **actively developing core packages along with the project** (corex/azguard — hundreds of files,
+significant part of the code), needed **single graph**: project + its local packages are like one picture, with
+edits directly to the package sources.
 
-Включается **автоматически**, если у проекта есть каталог `packages/` (монорепо со своим
-исходником ИЛИ консьюмер с подсимлинкованными пакетами). Можно задать явно/выключить:
+Turns on **automatically**, if the project has a directory `packages/` (monorepo with its
+source OR consumer with sub-linked packages). Can be set explicitly/disable:
 
 ```json
-{ "id": "flexcrm", "code": true, "code_workspace": true }   // true | false (override авто)
+{ "id": "flexcrm", "code": true, "code_workspace": true }   // true | false (override auto)
 ```
 
-Тогда maind генерит `.serena/project.yml`, который **не игнорирует `packages`** (исходник
-подсимлинкованных пакетов физически под деревом проекта → один корень = единый граф; PHP-LSP
-резолвит ссылки `app ↔ пакеты`), но режет `vendor` и **вложенные** `**/vendor` (дубли симлинков +
-рекурсия testbench). Правки в `packages/<пакет>/…` идут в **реальный репозиторий пакета** через
-симлинк. `initial_prompt` нацеливает агента: найдя улучшение в пакете — предложить и, по
-подтверждению, править там же.
+Then maind generates `.serena/project.yml`, which **does not ignore `packages`** (source
+sub-linked packages physically under the project tree → one root = single graph; PHP-LSP
+resolves links `app ↔ packages`), but it cuts `vendor` and **nested** `**/vendor` (duplicate symlinks +
+recursion testbench). Edits in `packages/<package>/…` go to **real package repository** via
+symlink. `initial_prompt` targets the agent: having found an improvement in the package, suggest and, according
+confirmation, edit there.
 
-Проверено: из сессии flexcrm `get_symbols_overview` возвращает символы класса из corex
-(`CoreX\Auth\CoreAuthServiceProvider`) — пакет виден как часть графа.
+Checked: from session flexcrm `get_symbols_overview` returns class symbols from corex
+(`CoreX\Auth\CoreAuthServiceProvider`) — package is visible as part of the graph.
 
-::: tip Когда какой режим
-**Дефолт** (`code_workspace` не задан) — проект графит только свой код; пакеты графятся как
-свои проекты. **Workspace** — для «монорепо-style» разработки, где пакеты подсимлинкованы под
-проект и ты правишь их вместе. Ограничение остаётся для НЕзависимых проектов (не под одним
-деревом): объединить их в один граф нельзя — `additional_workspace_folders` Serena пока только
-для TypeScript.
+::: tip When what mode
+**Default** (`code_workspace` not specified) — project graphs only its code; packets are graphed as
+their projects. **Workspace** — for «monorepostyle» developments, where packages are sublinked under
+project and you edit them together. The restriction remains for independent projects (not under one
+tree): it is impossible to combine them into one graph - `additional_workspace_folders` Serena only for now
+for TypeScript.
 :::
 
-## Переопределение движка (любой code-intelligence MCP)
+## Engine override (any code-intelligence MCP)
 
-Движок задаётся на проект — например, стек-специфичный сервер вместо Serena:
+The engine is specified per project - for example, a stack-specific server instead Serena:
 
 ```json
 { "id": "flexcrm", "code": true,
@@ -116,46 +116,46 @@ maind sync --project flexcrm --only mcp,code-graph
   "code_args": ["artisan", "boost:mcp"] }
 ```
 
-Поля: `code_command` (бинарь, проверяется в PATH), `code_args` (аргументы; плейсхолдер
-`{root}` → путь проекта), `code_server_name` (имя сервера в `.mcp.json`). Дефолты — в секции
-`code_graph` конфига (см. [Конфиг](./config)), можно задать глобально или на проект.
+Fields: `code_command` (binary, checked in PATH), `code_args` (args; placeholder
+`{root}` → project path), `code_server_name` (server name in `.mcp.json`). Defaults - in section
+`code_graph` config (see [Config](./config)), can be set globally or per project.
 
-## Индексация: один раз при провижининге, дальше — на лету
+## Indexing: once during provisioning, then on the fly
 
-Смысл код-графа — **экономия токенов**: агент спрашивает конкретный символ (`find_symbol`,
-`get_symbols_overview`, `find_referencing_symbols`) вместо чтения файлов целиком. Индексация
-Serena — **не батч-джоб по расписанию**. `pre_index` (`code_graph.pre_index`, дефолт `true`)
-фонового прогревает `.serena/cache/` РОВНО ОДИН РАЗ — при первом создании `.serena/project.yml`
-(`codegraph.py:_maybe_pre_index`, вызывается из `apply_serena_config`, который сам не трогает
-файл, если он уже существует — Serena им дальше владеет). Повторно `pre_index` **никогда** не
-запускается автоматически, даже на регулярных `maind sync`.
+The meaning of the code graph is **token saving**: agent asks for a specific character (`find_symbol`,
+`get_symbols_overview`, `find_referencing_symbols`) instead of reading entire files. Indexing
+Serena — **not scheduled batch job**. `pre_index` (`code_graph.pre_index`, default `true`)
+background warms up `.serena/cache/` EXACTLY ONCE - when first created `.serena/project.yml`
+(`codegraph.py:_maybe_pre_index`, is called from `apply_serena_config`, which itself does not touch
+file if it already exists - Serena still owns it). Repeatedly `pre_index` **never** not
+starts automatically, even on regular `maind sync`.
 
-Дальше Serena обновляет индекс **инкрементально на лету** через LSP по мере вызовов в текущей
-сессии (официальная доктрина апстрима: «Run `serena project index` once; Serena automatically
+Next Serena updates the index **incrementally on the fly** via LSP as calls are made in the current
+sessions (official upstream doctrine: «Run `serena project index` once; Serena automatically
 updates the index as files change» — [oraios/serena, 040_workflow.md](https://github.com/oraios/serena/blob/main/docs/02-usage/040_workflow.md)).
-Отсюда два вывода:
+From here there are two conclusions:
 
-- **Старый mtime `.serena/cache/` — не баг.** Он показывает дату первого прогрева, а не
-  «протухший индекс»: символьные запросы всегда читают актуальный файл с диска через LSP.
-  Единственный эффект устаревшего кэша — на холодную (первый запрос в новой сессии после
-  большого объёма изменений) может быть чуть медленнее; корректность не страдает. Ручной
-  повторный прогрев (`serena project index <path>`) имеет смысл только (а) если это реально
-  ощутимо, или (б) после массового рефакторинга/переименований.
-- **Ноль вызовов Serena за флот сессий — реальная проблема,** но другая: значит агент вообще не
-  знает о графе и читает файлы напрямую (Read/Grep) — экономия токенов не работает, ХОТЯ
-  инфраструктура поднята. Причина почти всегда одна — раздающий эту дисциплину скилл
-  `ecosystem-mcp` (провиженер `ecosystem-skill`, см. [Sync](./sync)) либо не раскатан
-  (`absent`), либо раскатан ДО того, как в него добавили правило «сначала граф/символы, потом
-  широкий поиск» (`stale` — шаблон в maind с тех пор обновился). Диагностика: посчитать
-  `mcp__<code_server>__*` вызовы в `<project>/.claude/runs/*.json` (`tools.by_name`, пишет
-  run-report-хук пакета harness) — 0 при поднятом код-графе означает именно это, а не проблему
-  индексации. Fleet-проверка и фикс — раздел «Как узнать, что sync вообще нужен (drift-gate)»
-  на странице [Sync →](./sync) (`maind doctor --skill-drift`).
+- **Old mtime `.serena/cache/` — is not a bug.** It shows the date of first warm-up, not
+  «rotten index»: character queries always read the actual file from disk via LSP.
+  The only effect of an outdated cache is on cold (first request in a new session after
+  large volume of changes) might be a little slower; correctness does not suffer. Manual
+  reheating (`serena project index <path>`) only makes sense (a) if it's real
+  palpable, or (b) after massive refactoring/renames.
+- **Zero calls Serena for a fleet of sessions is a real problem,** but different: it means the agent is not
+  knows about the graph and reads files directly (Read/Grep) — token saving doesn't work, ALTHOUGH
+  infrastructure is up. The reason is almost always the same - the skill distributing this discipline
+  `ecosystem-mcp` (provider `ecosystem-skill`, see [Sync](./sync)) or not rolled out
+  (`absent`), or rolled out BEFORE the rule was added to it «first graph/characters, then
+  broad search» (`stale` — template in maind has since been updated). Diagnostics: count
+  `mcp__<code_server>__*` calls to `<project>/.claude/runs/*.json` (`tools.by_name`, writes
+  run-report-package hook harness) — 0 when the code graph is raised means exactly this, not a problem
+  indexing. Fleet-check and fix - section «How to find out what sync is generally needed (drift-gate)»
+  on page [Sync →](./sync) (`maind doctor --skill-drift`).
 
-## Когда использовать
+## When to use
 
-- **agent-memory** — «о чём помнить»: решения, договорённости, контекст изменений.
-- **код-MCP (Serena)** — «как устроен код»: навигация по символам/ссылкам/реализациям в репозитории.
-- **maind-граф** — «кто от кого зависит»: топология пакетов/доков между проектами.
+- **agent-memory** — «things to remember»: decisions, agreements, context of changes.
+- **code-MCP (Serena)** — «how the code works»: symbol navigation/links/implementations in the repository.
+- **maind-graph** — «who depends on whom»: packet topology/docks between projects.
 
-Дальше: [CLI →](./cli)
+Next: [CLI →](./cli)

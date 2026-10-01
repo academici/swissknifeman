@@ -538,7 +538,7 @@ HIGH — Encoded/obfuscated injection attempts:
 - Hex-encoded strings (\x41\x42...)
 - Unicode escape sequences (\u0069\u0067\u006e...)
 - ROT13 or other simple cipher text
-- Homoglyph substitution (Cyrillic а instead of Latin a, etc.)
+- Homoglyph substitution (Cyrillic a instead of Latin a, etc.)
 - Zero-width characters between letters (invisible to humans)
 - Multilingual obfuscation (instructions in unexpected language)
 - Emoji encoding of instructions
@@ -915,7 +915,7 @@ Common typosquatting patterns to check:
 | Character addition | `trailofbits` → `trailofbitss` |
 | Character omission | `security-review` → `security-revew` |
 | Character transposition | `ghost-scan` → `ghost-sacn` |
-| Homoglyph substitution | `security` → `sеcurity` (Cyrillic е) |
+| Homoglyph substitution | `security` → `security` (Cyrillic e) |
 | Hyphen/underscore swap | `mcp-scan` → `mcp_scan` |
 | Scope squatting | `@trailofbits/skill` → `@trail-of-bits/skill` |
 | Version suffix | `mcp-scan` → `mcp-scan2` |

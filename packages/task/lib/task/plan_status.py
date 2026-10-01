@@ -28,17 +28,17 @@ STATUS_SKIPPED = "⛔ Skipped by decision"
 _STATUSES = frozenset((STATUS_DONE, STATUS_DEVIATIONS, STATUS_BLOCKED,
                        STATUS_PROGRESS, STATUS_NOT_STARTED, STATUS_SKIPPED))
 _STATUS_META = ("Version", "Status", "Last Updated")
-_BOARD_COLUMNS = ("Phase", "Title", "Items 🟢/всего", "Status")
+_BOARD_COLUMNS = ("Phase", "Title", "Items 🟢/total", "Status")
 _ITEM_COLUMNS = ("ID", "Title", "Status", "Updated")
-_UPDATE_COLUMNS = ("Дата", "Кто (role/model)", "Что")
-_CORRECTION_COLUMNS = ("Тип", "Origin", "Outcome", "Target / resume")
+_UPDATE_COLUMNS = ("Date", "Who (role/model)", "What")
+_CORRECTION_COLUMNS = ("Type", "Origin", "Outcome", "Target / resume")
 
 
 def _read(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8")
     except OSError as exc:
-        raise StatusError(f"носитель статуса не читается: {path}") from exc
+        raise StatusError(f"status carrier is not readable: {path}") from exc
 
 
 def _table(headers, rows) -> str:
@@ -71,14 +71,14 @@ def _item(path: Path) -> tuple[str, str, dict[str, str]]:
     lines = _read(path).splitlines()
     header = next((match for line in lines if (match := _ITEM_HEADER.match(line))), None)
     if header is None:
-        raise StatusError(f"файл ТЗ не несёт канонический заголовок item: {path}")
+        raise StatusError(f"TK file does not carry a canonical header item: {path}")
     state_path = path.with_name(path.stem + ".state.md")
     fields = {match.group(1): match.group(2).strip()
               for line in _read(state_path).splitlines()
               if (match := _FIELD.match(line))}
     status = fields.get("Status")
     if status not in _STATUSES:
-        raise StatusError(f"{state_path}: недопустимый Status {status!r}")
+        raise StatusError(f"{state_path}: invalid Status {status!r}")
     return header.group(1), header.group(2), fields
 
 
@@ -119,10 +119,10 @@ def _journal_rows(path: Path) -> tuple[
         try:
             entry = json.loads(raw)
         except json.JSONDecodeError as exc:
-            raise StatusError(f"{path}:{number}: журнал невалиден") from exc
+            raise StatusError(f"{path}:{number}: log is invalid") from exc
         ts = str(entry.get("ts") or "")
         if not ts:
-            raise StatusError(f"{path}:{number}: у записи нет ts")
+            raise StatusError(f"{path}:{number}: entry does not have ts")
         day = ts[:10]
         last_updated = max(last_updated, day) if last_updated != "—" else day
         item_id = entry.get("item_id")
@@ -168,7 +168,7 @@ def status_model(plan_dir) -> dict:
     """Assemble the owner-facing facts from v2 sources, without writing files."""
     plan_dir = Path(plan_dir)
     if plan_layout.layout_version(plan_dir) != "v2":
-        raise StatusError("status.md существует только для Layout v2")
+        raise StatusError("status.md exists only for Layout v2")
     core = _core_meta(plan_dir)
     phases = []
     input_paths = [plan_dir / "plan.md"]
@@ -232,18 +232,18 @@ def render_status(plan_dir) -> str:
             if item["state"].get("Known Deviations", "—") not in ("", "—"):
                 gates.append(f"- {item['id']}: known deviation")
     sections = [
-        "## 0. Meta\n\n" + _table(("Поле", "Значение"),
+        "## 0. Meta\n\n" + _table(("Field", "Meaning"),
                                       [(field, model["meta"][field]) for field in _STATUS_META]),
         "## 4. Phase Index & Status Board\n\n" + _table(_BOARD_COLUMNS, board),
         "\n".join(phase_sections).rstrip(),
-        "## 6. Update Log\n\n" + _table(_UPDATE_COLUMNS, model["journal_rows"] or [("—", "—", "Нет записей")]),
+        "## 6. Update Log\n\n" + _table(_UPDATE_COLUMNS, model["journal_rows"] or [("—", "—", "No entries")]),
     ]
     if model["corrections"]:
         sections.append("## Correction Routing\n\n" + _table(
             _CORRECTION_COLUMNS, model["corrections"]))
     sections.append("## Owner Gates\n\n" + "\n".join(gates or ["- —"]))
     body = "\n\n".join(sections)
-    return plan_projection.rendered_file(metadata=metadata, title="Статус плана", body=body)
+    return plan_projection.rendered_file(metadata=metadata, title="Plan status", body=body)
 
 
 def build_status(plan_dir, *, check=False) -> Path:
@@ -251,7 +251,7 @@ def build_status(plan_dir, *, check=False) -> Path:
     try:
         target = plan_layout.carrier_path(plan_dir, "status-view")
     except plan_layout.PlanLayoutError as exc:
-        raise StatusError(f"не удалось разрешить status-view: {exc}") from exc
+        raise StatusError(f"could not be resolved status-view: {exc}") from exc
     try:
         plan_projection.write_or_check(target, render_status(plan_dir), check=check)
     except plan_projection.ProjectionError as exc:
@@ -283,13 +283,13 @@ def parse_status_view(plan_dir) -> tuple[dict[str, tuple[str, int]], list[tuple[
         if headers is None:
             headers = cells
             continue
-        if section == "0. Meta" and headers == ["Поле", "Значение"] and len(cells) == 2:
+        if section == "0. Meta" and headers == ["Field", "Meaning"] and len(cells) == 2:
             meta[cells[0]] = (cells[1], lineno)
         if section == "4. Phase Index & Status Board" and headers == list(_BOARD_COLUMNS) and len(cells) == 4:
             board.append((dict(zip(_BOARD_COLUMNS, cells)), lineno))
     missing = [field for field in _STATUS_META if field not in meta]
     if missing:
-        raise StatusError(f"{path}: нет полей владельческого вида: {', '.join(missing)}")
+        raise StatusError(f"{path}: no owner type fields: {', '.join(missing)}")
     if not board:
-        raise StatusError(f"{path}: нет доски фаз")
+        raise StatusError(f"{path}: no phase board")
     return meta, board

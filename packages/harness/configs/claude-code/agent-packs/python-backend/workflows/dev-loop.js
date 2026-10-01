@@ -1,26 +1,26 @@
 export const meta = {
   name: '{{PACK_PREFIX}}-dev-loop',
-  description: 'Реализует список backend-срезов {{PACK_PREFIX}} (Python {{WEB_FRAMEWORK}}) последовательно на ОДНОЙ ветке: impl ({{PACK_PREFIX}}-slice-builder) → tests-to-green ({{PACK_PREFIX}}-test-writer) → type-check ({{PACK_PREFIX}}-type-checker) → review-gate ({{PACK_PREFIX}}-reviewer). Один branch, хард-кап переживает resume, circuit-breaker.',
+  description: 'Implements a list backend-slices {{PACK_PREFIX}} (Python {{WEB_FRAMEWORK}}) sequentially on ONE branch: impl ({{PACK_PREFIX}}-slice-builder) → tests-to-green ({{PACK_PREFIX}}-test-writer) → type-check ({{PACK_PREFIX}}-type-checker) → review-gate ({{PACK_PREFIX}}-reviewer). One branch, hardcap is experiencing resume, circuit-breaker.',
   phases: [
-    { title: 'Setup', detail: 'чистое дерево + одна feature-ветка от base' },
-    { title: 'Build', detail: 'по срезу: impl → tests-to-green → type-check → review-gate' },
-    { title: 'Verify', detail: 'ruff + mypy + полный сюит + отчёт' },
+    { title: 'Setup', detail: 'pure tree + one feature-thread from base' },
+    { title: 'Build', detail: 'by slice: impl → tests-to-green → type-check → review-gate' },
+    { title: 'Verify', detail: 'ruff + mypy + full suite + report' },
   ],
 }
 
 const PROJECT_DIR = '{{PROJECT_DIR}}'
-// хард-кап литералом (переживает resume). Урок throttling: большой батч множит
-// retry-поверхность под rate-limit → дефолт 2, не 3+ (solo-fallback — дисциплина оркестратора).
+// hard cap literal (is worried resume). Lesson throttling: big batch multiplies
+// retry-surface under rate-limit → default 2, not 3+ (solo-fallback — orchestrator discipline).
 const DEFAULT_MAX = 2
 
-// Named-workflow (Workflow({name,args})) доставляет args СТРОКОЙ — SLICES резолвился бы в [],
-// давая ложный no-op «нет срезов». Guard парсит строку; битый JSON — явный log-STOP с
-// подсказкой (P3.4/findings §4/§1.3), не молчаливое падение в пустой массив.
+// Named-workflow (Workflow({name,args})) delivers args BY LINE — SLICES would resolve to [],
+// giving false no-op «no slices». Guard parses a string; broken JSON — explicit log-STOP with
+// hint (P3.4/findings §4/§1.3), does not silently fall into an empty array.
 if (typeof args === 'string' && args.trim()) {
   try {
     args = JSON.parse(args)
   } catch (e) {
-    log(`args пришёл строкой, но JSON.parse провалился (${String((e && e.message) || e).slice(0, 160)}) — запускай через scriptPath (embedded args), не named-workflow.`)
+    log(`args came as a string, but JSON.parse failed (${String((e && e.message) || e).slice(0, 160)}) — run via scriptPath (embedded args), not named-workflow.`)
     return { built: [], note: 'args parse failed' }
   }
 }
@@ -31,39 +31,39 @@ const MAX = (args && args.max_slices) || DEFAULT_MAX
 const ALL_SLICES = (args && Array.isArray(args.slices)) ? args.slices : []
 const SLICES = ALL_SLICES.slice(0, MAX)
 
-const HARD_GATES = `ЖЁСТКИЕ ГЕЙТЫ {{PACK_PREFIX}} (не нарушать):
-- Тесты/линт/типы ТОЛЬКО через '{{TEST_RUNNER_CMD}}' / '{{LINT_CMD}}' / '{{TYPECHECK_CMD}}' (venv-aware {{PY_BIN}}).
-- НЕ править lockfile вручную; НЕ ставить пакеты глобально; миграции — отдельным шагом.
-- НЕ git push, НЕ открывать/мержить PR, НЕ release.
-- .claude/agents|workflows|hooks с generated-header НЕ редактировать — оверрайды в .claude/rules/*-overrides.md.
-- Все срезы — на ОДНОЙ ветке ${BRANCH}; агенты НЕ создают/не переключают ветки, дерево чистое.
-- Работать строго внутри ${PROJECT_DIR}. Фреймворк: {{WEB_FRAMEWORK}}.`
+const HARD_GATES = `HARD GATES {{PACK_PREFIX}} (do not violate):
+- Tests/lint/types ONLY via '{{TEST_RUNNER_CMD}}' / '{{LINT_CMD}}' / '{{TYPECHECK_CMD}}' (venv-aware {{PY_BIN}}).
+- DO NOT edit lockfile manually; DO NOT install packages globally; migration is a separate step.
+- NOT git push, DO NOT open/flicker PR, NOT release.
+- .claude/agents|workflows|hooks with generated-header DO NOT edit - overrides in .claude/rules/*-overrides.md.
+- All cuts are on ONE branch ${BRANCH}; agents do NOT create/do not switch branches, the tree is clean.
+- Work strictly inside ${PROJECT_DIR}. Framework: {{WEB_FRAMEWORK}}.`
 
 if (SLICES.length === 0) {
-  log('Нет срезов на вход (args.slices пуст) — STOP. Передай { branch, base, max_slices, slices: [...] } через scriptPath (embedded args), не named-workflow.')
+  log('No input cuts (args.slices empty) — STOP. Pass on { branch, base, max_slices, slices: [...] } via scriptPath (embedded args), not named-workflow.')
   return { built: [], note: 'no slices provided' }
 }
 
-// Урок overnight-прогона (azguard, plan-remainder): agent({schema}) может не вернуть null,
-// а БРОСИТЬ исключение ('subagent completed without calling StructuredOutput'). Без обёртки
-// throw ронял ВЕСЬ workflow. safeAgent сводит throw к null — дальше штатная деградация
+// Lesson overnight-run (azguard, plan-remainder): agent({schema}) may not return null,
+// a THROW exception ('subagent completed without calling StructuredOutput'). Without wrapper
+// throw dropped EVERYTHING workflow. safeAgent reduces throw to null — further standard degradation
 // if(!result)/circuit-breaker.
 async function safeAgent(prompt, opts) {
   try {
     return await agent(prompt, opts)
   } catch (e) {
     const label = (opts && opts.label) || '?'
-    log(`agent ${label} бросил исключение (${String((e && e.message) || e).slice(0, 160)}) — infra-failed, продолжаю`)
+    log(`agent ${label} threw an exception (${String((e && e.message) || e).slice(0, 160)}) — infra-failed, continue`)
     return null
   }
 }
 
 phase('Setup')
 await safeAgent(
-  `В ${PROJECT_DIR} подготовь рабочую ветку.
-1. 'git status' — грязное дерево → стоп и отчёт.
-2. Ветка ${BRANCH} есть → checkout; иначе checkout ${BASE} + checkout -b ${BRANCH}.
-3. Подтверди ветку/чистоту/последний коммит.
+  `B ${PROJECT_DIR} prepare a working branch.
+1. 'git status' — dirty tree → stop and report.
+2. Thread ${BRANCH} yes → checkout; otherwise checkout ${BASE} + checkout -b ${BRANCH}.
+3. Upvote the thread/cleanliness/last commit.
 ${HARD_GATES}`,
   { label: 'setup-branch', phase: 'Setup', model: 'sonnet', effort: 'low' }
 )
@@ -74,23 +74,23 @@ const SLICE_RESULT_SCHEMA = {
   required: ['id', 'status', 'risk_level', 'summary', 'assumptions', 'open_questions'],
   properties: {
     id: { type: 'string' },
-    status: { type: 'string', enum: ['green', 'deferred', 'failed', 'infra-failed'], description: 'green=зелёные; deferred=честно не зелёный (дефект); failed=агент отчитался о сбое; infra-failed=инфра-отказ (rate-limit/timeout/null) — НЕ маскировать под deferred' },
-    risk_level: { type: 'string', enum: ['LOW', 'MED', 'HIGH'], description: 'blast-radius среза (см. risk_markers)' },
-    risk_markers: { type: 'array', items: { type: 'string', enum: ['concurrency', 'transactions', 'data-integrity', 'migrations', 'auth', 'external-io'] }, description: 'какие классы риска затронул срез' },
+    status: { type: 'string', enum: ['green', 'deferred', 'failed', 'infra-failed'], description: 'green=green; deferred=honestly not green (defect); failed=agent reported failure; infra-failed=infra failure (rate-limit/timeout/null) — DO NOT disguise as deferred' },
+    risk_level: { type: 'string', enum: ['LOW', 'MED', 'HIGH'], description: 'blast-radius slice (see risk_markers)' },
+    risk_markers: { type: 'array', items: { type: 'string', enum: ['concurrency', 'transactions', 'data-integrity', 'migrations', 'auth', 'external-io'] }, description: 'what risk classes are affected by the cut' },
     summary: { type: 'string' },
     files_changed: { type: 'array', items: { type: 'string' } },
     tests_added: { type: 'array', items: { type: 'string' } },
-    test_output: { type: 'string', description: 'финальная строка {{TEST_RUNNER_CMD}}' },
-    test_coverage_pct: { type: 'number', description: 'покрытие изменённого поведения, % (оценка)' },
-    workarounds: { type: 'array', items: { type: 'string' }, description: 'обходки/форс-конфиги ради зелёного — каждая = [POSSIBLE-DEFECT] для ревьюера' },
-    tool_failures: { type: 'array', items: { type: 'string' }, description: 'движок/инструмент был недоступен при проверке внешнего факта (perplexity-web залочен/TIMEOUT, context7 пусто, MCP лёг) → факт остался непроверенным, нужен ПОВТОРНЫЙ ПРОХОД. НЕ угадывать, НЕ маскировать' },
+    test_output: { type: 'string', description: 'final line {{TEST_RUNNER_CMD}}' },
+    test_coverage_pct: { type: 'number', description: 'coverage of changed behavior, % (rating)' },
+    workarounds: { type: 'array', items: { type: 'string' }, description: 'workarounds/force configs for the sake of green - each = [POSSIBLE-DEFECT] for reviewer' },
+    tool_failures: { type: 'array', items: { type: 'string' }, description: 'engine/tool was not available when checking an external fact (perplexity-web locked/TIMEOUT, context7 empty, MCP lay down) → the fact remains unverified, a REPEATE PASS is needed. DO NOT guess, DO NOT mask' },
     assumptions: { type: 'array', items: { type: 'string' } },
     open_questions: { type: 'array', items: { type: 'string' } },
   },
 }
 
-// Lean-tiered лейны: модель/effort под РИСК среза. slice.risk/slice.model/slice.effort — подсказки
-// человека/оркестратора в args; нет → дефолт MED. Per-call model/effort перебивают frontmatter агента.
+// Lean-tiered lanes: model/effort at RISK of shearing. slice.risk/slice.model/slice.effort — tips
+// person/orchestrator in args; no → default MED. Per-call model/effort interrupt frontmatter agent.
 const RISK = (s) => String((s && s.risk) || 'MED').toUpperCase()
 function implLane(slice) {
   const r = RISK(slice)
@@ -100,7 +100,7 @@ function implLane(slice) {
   }
 }
 function reviewLane(risk) {
-  if (risk === 'LOW') return { model: 'sonnet', effort: 'medium' }  // дешёвый spot-check
+  if (risk === 'LOW') return { model: 'sonnet', effort: 'medium' }  // cheap spot-check
   if (risk === 'HIGH') return { model: 'opus', effort: 'xhigh' }    // adversarial + fresh-context
   return { model: 'opus', effort: 'high' }
 }
@@ -110,102 +110,102 @@ let consecutiveFails = 0
 
 for (const slice of SLICES) {
   const sliceNo = results.length + 1
-  // Durable-прогресс = число green (в песочнице нет shell → не git rev-list). Затяжной hang
-  // одного agent() тут НЕ ловится — это забота внешнего supervisor (доклад ~30 мин + PushNotification).
+  // Durable-progress = number green (not in the sandbox shell → not git rev-list). Lingering hang
+  // one agent() is NOT caught here - this is a concern of the external supervisor (report ~30 min + PushNotification).
   if (consecutiveFails >= 2) {
-    log(`Circuit-breaker: ${consecutiveFails} среза подряд не дошли до зелёного — стоп.`)
+    log(`Circuit-breaker: ${consecutiveFails} cuts in a row did not reach the green - stop.`)
     break
   }
-  const extraSkills = (slice.skills || []).join(', ') || '(дополнительных нет)'
+  const extraSkills = (slice.skills || []).join(', ') || '(no additional)'
   const lane = implLane(slice)
-  // Durable-light handover: компактные сводки прошлых срезов (ТОЛЬКО поля схемы, не транскрипты).
+  // Durable-light handover: compact summaries of past slices (Schema fields ONLY, not transcripts).
   const priorSummary = results.length
-    ? 'Прошлые срезы (сводка): ' + results.map((r) => `${r.id}=${r.status}/${r.risk_level || '?'} — ${r.summary || ''}`).join(' | ')
-    : '(это первый срез)'
+    ? 'Past slices (summary): ' + results.map((r) => `${r.id}=${r.status}/${r.risk_level || '?'} — ${r.summary || ''}`).join(' | ')
+    : '(this is the first slice)'
 
   await safeAgent(
-    `Реализуй ОДИН backend-срез {{PACK_PREFIX}} на {{WEB_FRAMEWORK}} в ветке ${BRANCH}.
-СРЕЗ:
+    `Implement ONE backend-slice {{PACK_PREFIX}} on {{WEB_FRAMEWORK}} in thread ${BRANCH}.
+CUT:
 ${JSON.stringify(slice, null, 2)}
 
 ${priorSummary}
 
-Дополнительно подгрузи: ${extraSkills}.
-Построй тонкий путь (router/view → service → repository → схема). Тесты НЕ пиши. Коммить в текущую ветку, дерево чистое.
+Additionally load: ${extraSkills}.
+Build a subtle path (router/view → service → repository → diagram). DO NOT write tests. Commit to the current branch, the tree is clean.
 ${HARD_GATES}`,
     { label: `impl:${slice.id}`, phase: 'Build', agentType: '{{PACK_PREFIX}}-slice-builder', model: lane.model, effort: lane.effort }
   )
-  log(`срез ${sliceNo}/${SLICES.length}: ${slice.id} impl-ok`)  // heartbeat
+  log(`slice ${sliceNo}/${SLICES.length}: ${slice.id} impl-ok`)  // heartbeat
 
   const result = await safeAgent(
-    `Ты в ветке ${BRANCH} в ${PROJECT_DIR}; срез реализован:
+    `You're in the thread ${BRANCH} in ${PROJECT_DIR}; slice implemented:
 ${JSON.stringify(slice, null, 2)}
-Напиши pytest по acceptance_criteria и итерируй '{{TEST_RUNNER_CMD}}' до ЗЕЛЁНОГО.
-- Зелено → закоммить, status='green', test_output = финальная строка.
-- Честно не достиг → НЕ ослабляй: status='deferred', объясни; дерево чистое.
-ОБЯЗАТЕЛЬНО заполни risk_level (LOW|MED|HIGH) и risk_markers (concurrency/transactions/data-integrity/migrations/auth/external-io) — оцени blast-radius среза; test_coverage_pct — оценку покрытия изменённого поведения.
-ЧЕСТНОСТЬ (критично): любую обходку/форс-конфиг ради зелёного (monkeypatch в обход реального пути, фиктивная транзакция, отключённая валидация) занеси в workarounds как [POSSIBLE-DEFECT] — за обходкой почти всегда реальный баг. Если для проверки внешнего факта (версия/API пакета, поведение библиотеки) движок был недоступен (perplexity-web залочен/TIMEOUT, context7 пусто) — занеси в tool_failures, НЕ угадывай: факт непроверен, нужен ПОВТОРНЫЙ ПРОХОД.
-ЗАПАСНОЙ ПУТЬ (если строгую схему возврата 5× не удаётся заполнить — не срывай прогон): последней строкой выведи ровно '===SLICE-RESULT=== status=green' или '===SLICE-RESULT=== status=deferred'.
+Write pytest by acceptance_criteria and iterate '{{TEST_RUNNER_CMD}}' to GREEN.
+- Green → commit, status='green', test_output = final line.
+- Honestly didn't reach it → DO NOT weaken: status='deferred', explain; the tree is clean.
+MUST be completed risk_level (LOW|MED|HIGH) and risk_markers (concurrency/transactions/data-integrity/migrations/auth/external-io) — rate blast-radius slice; test_coverage_pct — behavior change coverage assessment.
+HONESTY (critical): any workaround/force config for green (monkeypatch bypassing the real path, dummy transaction, validation disabled) put in workarounds like [POSSIBLE-DEFECT] — behind the workaround is almost always a real bug. If to check an external fact (version/API package, library behavior) engine was unavailable (perplexity-web locked/TIMEOUT, context7 empty) — put in tool_failures, DO NOT guess: the fact is unverified, a REPEATE is required.
+EMERGENCY PATH (if strict return scheme 5× cannot be filled - do not disrupt the run): as the last line print exactly '===SLICE-RESULT=== status=green' or '===SLICE-RESULT=== status=deferred'.
 ${HARD_GATES}`,
     { label: `test:${slice.id}`, phase: 'Build', agentType: '{{PACK_PREFIX}}-test-writer', schema: SLICE_RESULT_SCHEMA, effort: 'medium' }
   )
-  log(`срез ${sliceNo}/${SLICES.length}: ${slice.id} test=${result ? result.status : 'infra-failed(null)'}`)  // heartbeat
+  log(`slice ${sliceNo}/${SLICES.length}: ${slice.id} test=${result ? result.status : 'infra-failed(null)'}`)  // heartbeat
 
   let review = null
   if (result && result.status === 'green') {
     consecutiveFails = 0
     await safeAgent(
-      `Тайп-чек диффа среза "${slice.title}" в ${PROJECT_DIR}, ветка ${BRANCH}: прогони '{{TYPECHECK_CMD}}', классифицируй ошибки, предложи минимальные аннотации. Кода НЕ меняй.
+      `Type check of cutoff diff "${slice.title}" in ${PROJECT_DIR}, thread ${BRANCH}: drive away '{{TYPECHECK_CMD}}', classify errors, suggest minimal annotations. DO NOT change the code.
 ${HARD_GATES}`,
       { label: `types:${slice.id}`, phase: 'Build', agentType: '{{PACK_PREFIX}}-type-checker', model: 'sonnet', effort: 'medium' }
     )
     const risk = String(result.risk_level || RISK(slice)).toUpperCase()
     const rl = reviewLane(risk)
-    const markers = (result.risk_markers || []).join(', ') || '(не указаны)'
+    const markers = (result.risk_markers || []).join(', ') || '(not specified)'
     const workarounds = (result.workarounds || []).length
-      ? 'ОБХОДКИ В ТЕСТАХ (каждая — индикатор реального дефекта, разбери источник): ' + result.workarounds.join(' | ')
-      : 'обходок в тестах не заявлено'
+      ? 'WORKBACKS IN TESTS (each is an indicator of a real defect, find out the source): ' + result.workarounds.join(' | ')
+      : 'no workarounds reported in tests'
     const depth = risk === 'HIGH'
-      ? 'РЕЖИМ ADVERSARIAL (HIGH): сначала перечисли failure-modes (гонки/потерянные транзакции/двойная обработка/нарушенные инварианты БД/неверный auth/битая миграция/утечка внешнего io), затем для КАЖДОГО построй конкретный сценарий (входы + конкуренция + состояние), где дифф ломается. Свежий контекст: суди по диффу, не «полируй».'
+      ? 'MODE ADVERSARIAL (HIGH): list first failure-modes (racing/lost transactions/double processing/broken database invariants/is invalid auth/broken migration/external leak io), then build a specific scenario for EVERYONE (inputs + competition + status), where the diff breaks. Fresh context: judge by diff, not «polish».'
       : risk === 'MED'
-      ? 'РЕЖИМ MED: контракты, авторизация, целостность данных, границы транзакций; conditional-чек-листы соответствующего слоя.'
-      : 'РЕЖИМ LOW: style + очевидная корректность + bare except (spot-check).'
+      ? 'MODE MED: contracts, authorization, data integrity, transaction boundaries; conditional-checklists of the corresponding layer.'
+      : 'MODE LOW: style + obvious correctness + bare except (spot-check).'
     review = await safeAgent(
-      `Read-only ревью среза "${slice.title}" в ${PROJECT_DIR}, ветка ${BRANCH}. Diff против ${BASE} ('git diff ${BASE}...${BRANCH}').
+      `Read-only slice review "${slice.title}" in ${PROJECT_DIR}, thread ${BRANCH}. Diff vs ${BASE} ('git diff ${BASE}...${BRANCH}').
 RISK=${risk}; risk_markers: ${markers}. ${depth}
 ${workarounds}
-Проверь слои (тонкий handler, валидация на границе, service/repository), безопасность (SQL/секреты/bare except) и acceptance_criteria: ${JSON.stringify(slice.acceptance_criteria)}.
-Репортить ВСЕ находки: severity ∈ {LOW,MED,HIGH,CRITICAL} + location(file:line) + failure_scenario; при сомнении — выше, сам не фильтруй. Прогони '{{LINT_CMD}}'. Файлы НЕ меняй, дерево чистое.
+Check layers (thin handler, boundary validation, service/repository), security (SQL/secrets/bare except) and acceptance_criteria: ${JSON.stringify(slice.acceptance_criteria)}.
+Report ALL findings: severity ∈ {LOW,MED,HIGH,CRITICAL} + location(file:line) + failure_scenario; when in doubt, go higher, don’t filter it yourself. Drive away '{{LINT_CMD}}'. DO NOT change the files, the tree is clean.
 ${HARD_GATES}`,
       { label: `review:${slice.id}`, phase: 'Build', agentType: '{{PACK_PREFIX}}-reviewer', model: rl.model, effort: rl.effort }
     )
-    log(`срез ${sliceNo}/${SLICES.length}: ${slice.id} review-ok (${results.filter((r) => r.status === 'green').length + 1}/${SLICES.length} зелёных)`)
+    log(`slice ${sliceNo}/${SLICES.length}: ${slice.id} review-ok (${results.filter((r) => r.status === 'green').length + 1}/${SLICES.length} green)`)
   } else {
     consecutiveFails++
   }
-  results.push({ ...(result || { id: slice.id, status: 'infra-failed', risk_level: RISK(slice), summary: 'agent вернул null (терминальный infra-сбой рантайма ИЛИ agent() бросил исключение — см. лог safeAgent)', assumptions: [], open_questions: [] }), review_findings: review })
+  results.push({ ...(result || { id: slice.id, status: 'infra-failed', risk_level: RISK(slice), summary: 'agent returned null (terminal infra-runtime failure OR agent() threw an exception - see log safeAgent)', assumptions: [], open_questions: [] }), review_findings: review })
 
-  // Fail-fast на инфра-отказ: agent() вернул null = терминальный сбой (rate-limit/timeout,
-  // ретраи исчерпаны). Дальше бессмысленно. НЕ маскируем под deferred (P4). Затяжной hang → supervisor.
+  // Fail-fast for infra failure: agent() returned null = terminal failure (rate-limit/timeout,
+  // retrays exhausted). Anything further is pointless. NOT disguised as deferred (P4). Lingering hang → supervisor.
   if (!result) {
-    log(`Fail-fast: срез ${slice.id} infra-failed (agent вернул null) — стоп прогона, иду в Verify/отчёт.`)
+    log(`Fail-fast: slice ${slice.id} infra-failed (agent returned null) — stop run, go to Verify/report.`)
     break
   }
 }
 
 phase('Verify')
 const verify = await safeAgent(
-  `Финальная проверка в ${PROJECT_DIR}, ветка ${BRANCH}:
-1. 'git status' — чисто, ветка ${BRANCH}.
-2. '{{LINT_CMD}}' — чисто.
-3. '{{TYPECHECK_CMD}}' — 0 ошибок.
-4. Полный '{{TEST_RUNNER_CMD}}' — число/статус.
-Краткий итог. Файлы не меняй, не push.
+  `Final check in ${PROJECT_DIR}, thread ${BRANCH}:
+1. 'git status' — clean, thread ${BRANCH}.
+2. '{{LINT_CMD}}' — clean.
+3. '{{TYPECHECK_CMD}}' — 0 errors.
+4. Full '{{TEST_RUNNER_CMD}}' — number/status.
+Brief summary. Don't change the files, don't push.
 ${HARD_GATES}`,
   { label: 'final-verify', phase: 'Verify', model: 'sonnet', effort: 'medium' }
 )
 
 const built = results.map((r) => ({ id: r.id, status: r.status }))
 const infraN = built.filter((b) => b.status === 'infra-failed').length
-log(`Готово: ${built.filter((b) => b.status === 'green').length}/${SLICES.length} зелёных${infraN ? `, ${infraN} infra-failed (инфра-отказ, НЕ дефект — см. <failures>)` : ''}. Ветка ${BRANCH}, ничего не запушено.`)
+log(`Done: ${built.filter((b) => b.status === 'green').length}/${SLICES.length} green${infraN ? `, ${infraN} infra-failed (infra-failure, NOT defect - see <failures>)` : ''}. Thread ${BRANCH}, nothing is running.`)
 return { branch: BRANCH, base: BASE, max: MAX, results, verify }

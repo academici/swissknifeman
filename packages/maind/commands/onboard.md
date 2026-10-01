@@ -1,25 +1,25 @@
 ---
-description: Онбординг проекта в экосистему mAInd — скиллы + память + граф + MCP. Уточняет набор диалогом, затем зовёт `maind onboard`.
-argument-hint: "[путь-или-id] [recommended|full|minimal]"
+description: Project onboarding into the ecosystem mAInd — skills + memory + graph + MCP. Specifies the dialing with dialogue, then calls `maind onboard`.
+argument-hint: "[path-or-id] [recommended|full|minimal]"
 allowed-tools: Bash(maind:*)
 ---
-Подключаем проект к хабу **mAInd**. Ввод пользователя: «$ARGUMENTS».
-Лаунчер — `maind` (если не в PATH — `${CLAUDE_PLUGIN_ROOT}/bin/maind`).
+Connecting the project to the hub **mAInd**. User input: «$ARGUMENTS».
+Launcher - `maind` (if not in PATH — `${CLAUDE_PLUGIN_ROOT}/bin/maind`).
 
-## Шаги
-1. **Цель.** Если в «$ARGUMENTS» нет пути/id — спроси у пользователя путь к репозиторию или id проекта. Новый путь maind зарегистрирует сам.
-2. **Набор** (CLI неинтерактивен — спрашиваешь ТЫ, через AskUserQuestion):
-   - **bundle**: `recommended` (дефолт) · `full` (память federation + brain core) · `minimal` · `custom`;
-   - **канал скиллов** (касается ТОЛЬКО скиллов; память/граф/MCP — как обычно): `connect` (плагины,
-     не в репо, нужен реестр swissknifeman) vs `vendor` (физ. копии в `.claude/skills/`, в репо —
-     работают у внешних разработчиков без swissknifeman) → флаг `--skills-channel connect|vendor`;
-   - **код-граф** (Serena, граф символов проекта) — да/нет → флаг `--with-code`;
-   - **brain doc-sync** — да/нет → флаг `--with-brain`.
-3. **Предпросмотр** (сначала ОБЯЗАТЕЛЬНО dry-run):
-   `maind onboard <проект> --bundle <B> [--skills-channel <C>] [--with-code] [--with-brain] --dry-run --json`
-   Покажи пользователю план шагов из вывода.
-4. **Применение** по подтверждению (без `--dry-run`, с `--yes`):
-   `maind onboard <проект> --bundle <B> [--skills-channel <C>] [--with-code] [--with-brain] --yes --json`
-5. **Отчёт.** Пройди по шагам вывода (register / skills / deploy / graph / memory / skill). Шаги `skipped` из-за отсутствия swissknifeman/brain — это нормально (каждый шаг standalone-safe).
+## Steps
+1. **Target.** If in «$ARGUMENTS» no path/id — ask the user for the path to the repository or id project. New way maind will register itself.
+2. **Set** (CLI is non-interactive - YOU ask, through AskUserQuestion):
+   - **bundle**: `recommended` (default) · `full` (memory federation + brain core) · `minimal` · `custom`;
+   - **skill channel** (applies to skills ONLY; memory/graph/MCP — as usual): `connect` (plugins,
+     not in repo, need registry swissknifeman) vs `vendor` (physical. copies in `.claude/skills/`, in the repo -
+     work for external developers without swissknifeman) → flag `--skills-channel connect|vendor`;
+   - **code graph** (Serena, project symbol graph) — yes/no → flag `--with-code`;
+   - **brain doc-sync** — yes/no → flag `--with-brain`.
+3. **Preview** (first MANDATORY dry-run):
+   `maind onboard <project> --bundle <B> [--skills-channel <C>] [--with-code] [--with-brain] --dry-run --json`
+   Show the user the outline of steps from the output.
+4. **Application** upon confirmation (without `--dry-run`, with `--yes`):
+   `maind onboard <project> --bundle <B> [--skills-channel <C>] [--with-code] [--with-brain] --yes --json`
+5. **Report.** Go through the output steps (register / skills / deploy / graph / memory / skill). Steps `skipped` due to lack of swissknifeman/brain — this is normal (every step standalone-safe).
 
-onboard транзитивно поднимает скиллы (swissknifeman `integrate`) и MCP-серверы хаба — отдельно их ставить не нужно.
+onboard transitively raises skills (swissknifeman `integrate`) and MCP-hub servers - no need to install them separately.

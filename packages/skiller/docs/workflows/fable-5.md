@@ -1,100 +1,100 @@
-# Claude Fable 5 — промтинг
+# Claude Fable 5 — promting
 
-> **Референс:** [Официальный гайд Anthropic по промптингу Fable 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5).
+> **Reference:** [Official Guide Anthropic by prompting Fable 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5).
 
-## Что такое Fable 5
+## What is Fable 5
 
-Fable 5 — модель из семейства **Mythos** (Anthropic). Не путать с Sonnet/Opus/Haiku.
-Оптимизирована под **long-horizon autonomous tasks**: способна работать без
-прерывания на сложных многошаговых задачах, самостоятельно делегировать
-подзадачи и верифицировать собственные выводы.
+Fable 5 — model from the family **Mythos** (Anthropic). Not to be confused with Sonnet/Opus/Haiku.
+Optimized for **long-horizon autonomous tasks**: is capable of working without
+interruptions on complex multi-step tasks, delegate independently
+subtasks and verify your own conclusions.
 
-## Структура промпта (XML-теги)
+## Prompt structure (XML-tags)
 
 ```xml
 <role>
-Описание роли эксперта. Одно предложение. Чётко и без воды.
+Expert role description. One sentence. Clearly and without water.
 </role>
 
 <context>
-Контекст задачи: что за проект, технологии, ограничения.
-Чем конкретнее — тем лучше.
+Problem context: what kind of project, technologies, limitations.
+The more specific the better.
 </context>
 
 <task>
-Суть задачи. Можно разбить на оси/секции через вложенные теги:
+The essence of the problem. Can be divided into axes/sections via nested tags:
 
-<axis id="1" name="Название оси">
-Что именно проверить/сделать по этой оси.
+<axis id="1" name="Axis name">
+What exactly to check/do along this axis.
 </axis>
 
-<axis id="2" name="Другая ось">
+<axis id="2" name="Other axis">
 ...
 </axis>
 </task>
 
 <output>
-Формат и структура ожидаемого результата.
-Заголовки, примеры кода, финальный summary — опишите явно.
+Format and structure of the expected result.
+Headings, code examples, final summary — describe explicitly.
 </output>
 
 <constraints>
-Что модель НЕ должна делать.
-Например: не изменять файлы, только отчёт, не придумывать проблемы без доказательств.
+What the model should NOT do.
+For example: do not change files, only the report, do not invent problems without evidence.
 </constraints>
 ```
 
-## Параметр `effort`
+## Parameter `effort`
 
-Выставляется **через UI** (селектор в интерфейсе), **не тегом в промпте**.
+Set **via UI** (selector in the interface), **not a tag in the prompt**.
 
-| Уровень | Когда использовать |
+| Level | When to use |
 |---|---|
-| `low` | Короткие вопросы, quick lookup |
-| `medium` | Стандартные задачи |
-| `high` | Аудит кода, архитектурный анализ, сложный рефакторинг |
-| `xhigh` | Только для исключительно объёмных autonomous workflows |
+| `low` | Short questions, quick lookup |
+| `medium` | Standard tasks |
+| `high` | Code audit, architectural analysis, complex refactoring |
+| `xhigh` | Only for extremely voluminous autonomous workflows |
 
-Для анализа кода и технических аудитов — **`high` достаточно**.
+For code reviews and technical audits - **`high` is enough**.
 
-## Режим Thinking (чекбокс в UI)
+## Mode Thinking (checkbox in UI)
 
-- Включать **не обязательно** для аудита кода.
-- Fable 5 при `effort=high` уже работает в режиме глубокого reasoning.
-- Чекбокс Thinking в некоторых клиентах управляет **отображением** внутренних
-  рассуждений — не самим качеством ответа.
-- **Не просить** модель «покажи свои рассуждения» / «show chain-of-thought» —
-  это попадает под ограничения reasoning-extraction.
+- Enable **optional** for code auditing.
+- Fable 5 when `effort=high` is already running in deep mode reasoning.
+- Checkbox Thinking in some clients controls **display** internal
+  reasoning - not the quality of the answer itself.
+- **Don't ask** model «show your reasoning» / «show chain-of-thought» —
+  this falls under restrictions reasoning-extraction.
 
-Вместо этого просить:
+Instead ask:
 
 ```
 Before reporting each finding, verify it against actual code.
 If you are not certain — state that explicitly.
 ```
 
-## Ключевые отличия от обычного промптинга
+## Key differences from regular prompting
 
-| Обычные модели | Fable 5 (Mythos) |
+| Regular models | Fable 5 (Mythos) |
 |---|---|
-| Нужны подсказки «думай пошагово» | Автономно планирует шаги сама |
-| Один длинный монолитный промпт | XML-секции с чёткими ролями |
-| Просить «show your thinking» | Нельзя — запрещено reasoning-extraction |
-| `temperature`, `top_p` в промпте | Только через API-параметры |
-| Effort не актуален | `effort` — ключевой параметр качества |
+| Need some hints «think step by step» | Autonomously plans steps itself |
+| One long monolithic prompt | XML-sections with clear roles |
+| Ask «show your thinking» | Not allowed - prohibited reasoning-extraction |
+| `temperature`, `top_p` in the prompt | Only via API-parameters |
+| Effort not relevant | `effort` — key quality parameter |
 
-## Практика: шаблон для аудита кода
+## Practice: Code Audit Template
 
 ```xml
 <role>
-You are a senior [язык/фреймворк] architect specializing in [тип задачи].
+You are a senior [language/framework] architect specializing in [task type].
 </role>
 
 <context>
-Project: [название]
-Repo: [ссылка]
-Stack: [список технологий]
-Goal: [что нужно улучшить]
+Project: [name]
+Repo: [link]
+Stack: [list of technologies]
+Goal: [what needs to be improved]
 </context>
 
 <task>
@@ -134,13 +134,13 @@ Ordered phases with effort estimates.
 </constraints>
 ```
 
-> `effort` выставляется в UI, а не тегом — см. выше.
+> `effort` is set to UI, and not a tag - see above.
 
-## Передача кода в модель
+## Passing code to the model
 
-Fable 5 не имеет прямого доступа к GitHub. Варианты:
+Fable 5 does not have direct access to GitHub. Options:
 
-**Собрать исходники скриптом:**
+**Collect sources using script:**
 
 ```bash
 find packages -name "*.php" | while read f; do
@@ -150,7 +150,7 @@ find packages -name "*.php" | while read f; do
 done > source_dump.txt
 ```
 
-Вставить содержимое между тегами:
+Insert content between tags:
 
 ```xml
 <codebase>
@@ -159,15 +159,15 @@ done > source_dump.txt
 </codebase>
 ```
 
-**Поэтапный анализ:** запускать промпт отдельно по каждому модулю — даёт более
-глубокий результат.
+**Step-by-step analysis:** run the prompt separately for each module - gives more
+deep result.
 
-## Настройки клиента
+## Client settings
 
-| Параметр | Рекомендация |
+| Parameter | Recommendation |
 |---|---|
 | Model | Fable 5 / Mythos |
 | Effort | `high` |
-| Timeout | 5–10 минут (модель может думать долго) |
-| Streaming | включить |
-| Thinking checkbox | на усмотрение, не критично |
+| Timeout | 5–10 minutes (model can think for a long time) |
+| Streaming | enable |
+| Thinking checkbox | at your discretion, not critical |

@@ -19,14 +19,14 @@ No live target write, activation, apply authority, MCP start, hook start or work
 | source:configs/codex/config/profile-bindings.json | `sha256:9de3078c203f0cebd1a66e0f243efd96cb78a829341ed8f1faa6bc6ed0b1542e` |
 | source:configs/codex/hooks/lifecycle-context-bindings.json | `sha256:e213b959bda8facff398f06413487be2afb8495d13e5a05e38623d85c5a2984c` |
 | source:configs/codex/mcp/bindings.json | `sha256:7cfaa92d8314f01a20d52f227a0bbda2495f11b4b508bd5376c22670a0de8772` |
-| source:configs/common/agent-packs/roles.json | `sha256:2ba25a3a8f4ef52655403b0d0655f10b1cae3a850594b16c443dc6053462ee75` |
+| source:configs/common/agent-packs/roles.json | `sha256:cab36fb368e089614ebba5a25359fd3ba6bd05b683dbe7a166e831aa8335ff1d` |
 | source:configs/common/mcp/catalog.json | `sha256:95be667cbd19a671f88d946739b7161a6ca33407429ca7d7cb0cd93f6f714419` |
 | source:configs/common/profile-catalog.json | `sha256:2de95c6dcc8ed888bf9f72f295bcee759e987157be81fec411f3991da46523a5` |
 | source:configs/cursor/agent-packs/consumer-mapping.json | `sha256:314f0935b254c8a7e814cfa1ae476b99e373d0fffeb4de91fabf8c756708d67e` |
 | source:configs/cursor/config/profile-bindings.json | `sha256:8772a33bbdf9d5082bc12457d135e2a29c3faf945a5f8f3c11a9954695bf1594` |
 | source:configs/cursor/hooks/lifecycle-context-bindings.json | `sha256:d7d7b241afd84add521435197c86b98904d63bd2ea8825d3b513a8bf9af19273` |
 | source:configs/cursor/mcp/bindings.json | `sha256:c4a5b15e4417cdf05da6cd6130b05890b3feca860c09cb19342754f776a218a6` |
-| render-manifest:all-provider-qualified-outputs | `sha256:4fb70755e68949afd6c0d0ddbb1461f1dc04aa61edf4d2a7dbe158b4d2354d9b` |
+| render-manifest:all-provider-qualified-outputs | `sha256:70ab992b47bb223bd61ff34ecfc8dbdd2034c8841effef45e7dcaca8cffd954d` |
 
 The read-only JSON report retains every individual provider-qualified render hash; this manifest hash covers all of them deterministically.
 

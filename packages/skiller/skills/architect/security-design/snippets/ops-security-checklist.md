@@ -1,41 +1,41 @@
-# Операционный чеклист безопасности (по гайдлайнам Spatie)
+# Operational Security Checklist (according to guidelines Spatie)
 
-<!-- Source: anonymized production Laravel project (адаптация https://spatie.be/guidelines/security) -->
+<!-- Source: anonymized production Laravel project (adaptation https://spatie.be/guidelines/security) -->
 
-Применять при настройке приложения, БД и серверов, а также при security-ревью кода и инфраструктуры. Дополняет архитектурные шаги основного скилла (OWASP, STRIDE) операционными правилами «здесь и сейчас».
+Apply when configuring the application, database and servers, as well as when security-code and infrastructure review. Complements the architectural steps of the main skill (OWASP, STRIDE) operating rules «here and now».
 
-## Приложение
+## Appendix
 
-- [ ] Весь HTTP-трафик — только по SSL/TLS (включая редирект с http и HSTS)
-- [ ] CSRF-токены на всех формах
-- [ ] Значимые действия (мутации) — только через POST/PUT/DELETE, никогда GET
-- [ ] Автотесты авторизации: проверяют, что закрытую функциональность видят только авторизованные роли
+- [ ] All HTTP-traffic - only by SSL/TLS (including redirect from http and HSTS)
+- [ ] CSRF-tokens on all forms
+- [ ] Significant Actions (mutations) — only via POST/PUT/DELETE, never GET
+- [ ] Authorization autotests: check that closed functionality is visible only to authorized roles
 
-## База данных
+## Database
 
-- [ ] Все хранимые пароли — только хеш (bcrypt/argon2)
-- [ ] API-ключи в БД — зашифрованы
-- [ ] Отдельный DB-пользователь на каждую базу с минимально нужными правами чтения/записи
-- [ ] Доступ к БД — только с whitelist-хостов (веб-сервер и машины разработчиков)
+- [ ] All stored passwords are hashes only (bcrypt/argon2)
+- [ ] API-keys in the database are encrypted
+- [ ] Separate DB-user for each database with the minimum required read rights/entries
+- [ ] Access to the database - only with whitelist-hosts (web server and development machines)
 
-## Сервер
+## Server
 
-- [ ] NGINX, PHP, ОС и сопутствующий софт регулярно обновляются
-- [ ] SSH — только по ключам; парольная аутентификация отключена
-- [ ] `unattended-upgrades` установлен и включён (автоматические security-обновления)
-- [ ] Firewall пропускает только необходимое (типично порты 22 и 443)
-- [ ] Управление серверами — через IaC (например, Ansible): быстрый патчинг и отзыв доступов
+- [ ] NGINX, PHP, OS and related software are updated regularly
+- [ ] SSH — by keys only; password authentication disabled
+- [ ] `unattended-upgrades` installed and enabled (automatic security-updates)
+- [ ] Firewall skips only what is necessary (typically ports 22 and 443)
+- [ ] Server management - via IaC (for example, Ansible): fast patching and revoking access
 
-## Креды
+## Credits
 
-- [ ] Все пароли — в менеджере паролей
-- [ ] Каждый пароль уникален, без переиспользования
-- [ ] 2FA включена везде, где доступна
-- [ ] Приватные ключи защищены паролем
+- [ ] All passwords are in the password manager
+- [ ] Each password is unique, no reuse
+- [ ] 2FA enabled wherever available
+- [ ] Private keys are password protected
 
-## Бэкапы и общее
+## Backups and general
 
-- [ ] Бэкапы настроены и **периодически проверяются восстановлением**
-- [ ] Полнодисковое шифрование на рабочих машинах
-- [ ] Никакого чувствительного кода/данных в публичных сервисах (Pastebin и т.п.)
-- [ ] Браузерные расширения — только из официальных сторов, по минимуму
+- [ ] Backups are configured and **are periodically checked by recovery**
+- [ ] Full disk encryption on production machines
+- [ ] No sensitive code/data in public services (Pastebin etc.)
+- [ ] Browser extensions - only from official stores, to a minimum

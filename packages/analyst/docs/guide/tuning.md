@@ -1,101 +1,101 @@
-# Тюнинг-параметры
+# Tuning parameters
 
-Все пороги analyst — **эвристики**, а не откалиброванные по полевым данным величины. Значения
-подобраны «на глаз» из соображений формы кривой (см. столбец «метод калибровки»); реальной
-калибровки по false-positive-rate ещё **не проводилось** (это отдельная research-задача — симуляция
-на профилях активности + полевые данные, см. `roadmap`). Эта страница — единый справочник: где
-параметр лежит, что он делает и в какую сторону крутить.
+All thresholds analyst — **heuristics**, and not values calibrated from field data. Values
+selected «by eye» for reasons of curve shape (see column «calibration method»); real
+calibration by false-positive-rate more **not carried out** (is a separate research-task - simulation
+on activity profiles + field data, see `roadmap`). This page is a single reference: where
+the parameter is what it does and in which direction to turn it.
 
-Правило: пороги меняются **только в модуле-источнике** (единый источник, не магия по месту).
-После правки — `bash scripts/validate.sh` (детерминизм пересчёта тестируется).
+Rule: thresholds change **only in the source module** (single source, not local magic).
+After editing - `bash scripts/validate.sh` (determinism of recalculation is tested).
 
-## Confidence-арифметика
+## Confidence-arithmetic
 
-Модуль: [`confidence.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/confidence.py).
-Формула: `confidence = beta_mean(S,N) × volume_factor(N) × time_decay(days) ∈ [0,1)`.
+Module: [`confidence.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/confidence.py).
+Formula: `confidence = beta_mean(S,N) × volume_factor(N) × time_decay(days) ∈ [0,1)`.
 
-| Параметр | Значение | Что делает | Крутить ↑ | Крутить ↓ | Метод калибровки |
+| Parameter | Meaning | What it does | Twist ↑ | Twist ↓ | Calibration method |
 |:--|:--|:--|:--|:--|:--|
-| `ALPHA` | 1.0 | Beta-приор успехов (Laplace) | сильнее тянет `p` к оптимизму при малом N | ближе к наблюдаемой доле | нейтральный приор `S=N=0 → p=0.5`; менять только с обоснованием |
-| `BETA` | 1.0 | Beta-приор неудач | сильнее тянет `p` вниз | оптимистичнее | симметрично `ALPHA` |
-| `VOLUME_K` | 20.0 | масштаб объёма в `1−e^(−N/k)` | медленнее набирает уверенность (нужно больше наблюдений) | быстрее доверяет малому N | форма кривой: `N≈k → volume≈0.63`, `N≫k → →1`. Поднять, если мало-наблюдаемые уроки ложно всплывают |
-| `DECAY_LAMBDA` | 0.95 | затухание `λ^days` за день | дольше «помнит» (медленнее гаснет) | быстрее забывает старое | `λ=0.95 → полураспад ≈14 дней (ln0.5/ln0.95)`. Поднять для стабильных доменов, опустить для быстро-меняющихся |
-| `BUCKET_DAYS` | 1 | гранулярность возраста | грубее (реже пересчёт возраста) | тоньше | обычно не трогать |
+| `ALPHA` | 1.0 | Beta-success priority (Laplace) | pulls harder `p` to optimism with little N | closer to the observed fraction | neutral prior `S=N=0 → p=0.5`; change only with justification |
+| `BETA` | 1.0 | Beta-failure priority | pulls harder `p` down | more optimistic | symmetrical `ALPHA` |
+| `VOLUME_K` | 20.0 | volume scale in `1−e^(−N/k)` | is slower to gain confidence (needs more observations) | trusts little ones faster N | curve shape: `N≈k → volume≈0.63`, `N≫k → →1`. Raise if low-observed lessons falsely pop up |
+| `DECAY_LAMBDA` | 0.95 | attenuation `λ^days` per day | longer «remembers» (fades out more slowly) | forgets old things faster | `λ=0.95 → half-life ≈14 days (ln0.5/ln0.95)`. Raise for stable domains, lower for rapidly changing ones |
+| `BUCKET_DAYS` | 1 | age granularity | rougher (less often age recalculation) | thinner | usually do not touch |
 
-### Тиры применения
+### Application ranges
 
-Пороги `confidence → семантика` ([`confidence.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/confidence.py), функция `tier`):
+Thresholds `confidence → semantics` ([`confidence.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/confidence.py), function `tier`):
 
-| Тир | Порог | Семантика |
+| Shooting Range | Threshold | Semantics |
 |:--|:--|:--|
-| `core` | `TIER_CORE` = 0.9 | ядро знания |
-| `strong` | `TIER_STRONG` = 0.7 | auto-surface в память |
-| `moderate` | `TIER_MODERATE` = 0.5 | применять при релевантности |
-| `tentative` | `TIER_TENTATIVE` = 0.3 | не enforce |
-| `none` | < 0.3 | не применять |
+| `core` | `TIER_CORE` = 0.9 | core knowledge |
+| `strong` | `TIER_STRONG` = 0.7 | auto-surface to memory |
+| `moderate` | `TIER_MODERATE` = 0.5 | apply when relevant |
+| `tentative` | `TIER_TENTATIVE` = 0.3 | not enforce |
+| `none` | < 0.3 | do not apply |
 
-Крутить порог ↑ — строже (меньше уроков в тире, меньше ложных срабатываний, больше пропусков);
-↓ — либеральнее (обратный размен).
+Rotate the threshold ↑ — stricter (fewer lessons in the shooting range, fewer false positives, more omissions);
+↓ — more liberal (reverse exchange).
 
 ## State-machine (recompute)
 
-Модуль: [`recompute.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/recompute.py).
-Числовые гейты авто-переходов состояний.
+Module: [`recompute.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/recompute.py).
+Numeric gates for auto-state transitions.
 
-| Параметр | Значение | Что делает | Крутить ↑ | Крутить ↓ | Метод калибровки |
+| Parameter | Meaning | What it does | Twist ↑ | Twist ↓ | Calibration method |
 |:--|:--|:--|:--|:--|:--|
-| `CANDIDATE_MIN_N` | 15 | объём наблюдений для авто `ephemeral→candidate` (**адаптивный** для малоактивных проектов, см. ниже) | строже — дольше в ephemeral | быстрее продвигает (риск шума) | статический потолок; для `Σ sessions < 50` понижается по активности |
-| `CANDIDATE_MIN_CONF` | 0.6 | минимум confidence для того же перехода | строже | либеральнее | связка с `VOLUME_K`/`DECAY_LAMBDA`; **со-гейт**: при `VOLUME_K=20` требует `N≈19` независимо от `CANDIDATE_MIN_N` (см. ниже) |
-| `CANDIDATE_MIN_N_FLOOR` | 3 | нижняя планка адаптивного `CANDIDATE_MIN_N` | реже продвигает в совсем малых проектах | быстрее (риск шума на 1-2 наблюдениях) | не опускаемся ниже 3 наблюдений |
-| `CURATED_MIN_N` | 50 | числовой порог «готов к curated» (переход — **человек**; **адаптивный**, см. ниже) | больше свидетельств до предложения | раньше предлагает | это лишь порог **готовности**; сам переход всегда человек |
-| `CURATED_MIN_CONF` | 0.8 | минимум confidence для «готов к curated» | строже | либеральнее | — |
-| `CURATED_MIN_PASSRATE` | 0.95 | минимальная доля прошедших тестов | строже | либеральнее | доля `tests_passed/tests_total` |
-| `DEPRECATE_CONF` | 0.6 | просадка ниже → soft-демоут (candidate) / флаг (curated) | агрессивнее демоутит | терпимее к просадке | не удаляет — soft-деприкейт/флаг на ревью человека |
+| `CANDIDATE_MIN_N` | 15 | volume of observations for cars `ephemeral→candidate` (**adaptive** for low-activity projects, see below) | stricter - longer in ephemeral | promotes faster (noise risk) | static ceiling; for `Σ sessions < 50` is decreasing in activity |
+| `CANDIDATE_MIN_CONF` | 0.6 | minimum confidence for the same transition | stricter | more liberal | link with `VOLUME_K`/`DECAY_LAMBDA`; **co-gate**: when `VOLUME_K=20` requires `N≈19` regardless `CANDIDATE_MIN_N` (see below) |
+| `CANDIDATE_MIN_N_FLOOR` | 3 | bottom adaptive bar `CANDIDATE_MIN_N` | promotes less often in very small projects | faster (risk of noise on 1-2 observations) | do not fall below 3 observations |
+| `CURATED_MIN_N` | 50 | numeric threshold «ready for curated» (transition - **person**; **adaptive**, see below) | more evidence before offer | used to suggest | is just a threshold **ready**; the transition itself is always human |
+| `CURATED_MIN_CONF` | 0.8 | minimum confidence for «ready for curated» | stricter | more liberal | — |
+| `CURATED_MIN_PASSRATE` | 0.95 | minimum test pass rate | stricter | more liberal | share `tests_passed/tests_total` |
+| `DEPRECATE_CONF` | 0.6 | drawdown below → soft-demo (candidate) / flag (curated) | more aggressive demoutitis | more tolerant of drawdown | does not delete - soft-deprikate/flag for human review |
 
-### Адаптивные пороги N для малоактивных проектов (D2)
+### Adaptive thresholds N for low-activity projects (D2)
 
-Функция `adaptive_thresholds(project_sessions)` в `recompute.py`. `project_sessions` — **суммарная
-активность проекта** = `Σ sessions_total` по всем событиям `events.ndjson` (стабильна к `compact`,
-он сохраняет суммы). Малоактивный проект физически не наберёт `N ≥ 15/50` → уроки залипают в
-«вечном ephemeral». Понижаем планку пропорционально активности, сохраняя пропорцию candidate:curated:
+Function `adaptive_thresholds(project_sessions)` in `recompute.py`. `project_sessions` — **total
+project activity** = `Σ sessions_total` for all events `events.ndjson` (is stable to `compact`,
+it saves the amounts). An inactive project will not physically recruit `N ≥ 15/50` → lessons are stuck in
+«eternal ephemeral». Lower the bar in proportion to activity, maintaining the proportion candidate:curated:
 
 ```
-если project_sessions ≥ CURATED_MIN_N (50):  → (15, 50)          # данных достаточно, статика
-иначе:
-    candidate = max(CANDIDATE_MIN_N_FLOOR, project_sessions // 5)          # формула D2
+if project_sessions ≥ CURATED_MIN_N (50):  → (15, 50)          # enough data, static
+otherwise:
+    candidate = max(CANDIDATE_MIN_N_FLOOR, project_sessions // 5)          # formula D2
     curated   = max(candidate, round(candidate × CURATED_MIN_N / CANDIDATE_MIN_N))
 ```
 
-Примеры: `Σ=40 → (8, 27)` · `Σ=10 → (3, 10)` · `Σ=0 → (3, 10)`. Инварианты: порог никогда не выше
-статического; `curated ≥ candidate`; чистая детерминированная функция (тот же лог + тот же `--now`
-→ тот же исход). Тот же порог применяет `analyst status` (`curated-ready`).
+Examples: `Σ=40 → (8, 27)` · `Σ=10 → (3, 10)` · `Σ=0 → (3, 10)`. Invariants: threshold is never higher
+static; `curated ≥ candidate`; pure deterministic function (same log + the same `--now`
+→ same outcome). The same threshold applies `analyst status` (`curated-ready`).
 
-> **Честный предел (не костыль под ковёр):** адаптивный **`CANDIDATE_MIN_N`** почти инертен —
-> его со-гейт `CANDIDATE_MIN_CONF=0.6` при `VOLUME_K=20` сам требует `N≈19` (`volume=1−e^(−N/20)≥0.6`),
-> что уже строже статического `N≥15`. То есть понижение `CANDIDATE_MIN_N` помогает лишь там, где он
-> действительно связывающий гейт. Реально работает адаптивный **`CURATED_MIN_N`**: его N-гейт (50)
-> связывает раньше conf-гейта (`CURATED_MIN_CONF=0.8` → `N≈32`), поэтому понижение до ~27–30 даёт
-> малоактивным проектам достигать `curated-ready`. Полное решение «вечного ephemeral» требует
-> адаптации и `VOLUME_K`/`CANDIDATE_MIN_CONF` — это калибровка (D5), вынесена в research-задачу.
+> **Fair limit (not a crutch under the rug):** adaptive **`CANDIDATE_MIN_N`** almost inert -
+> his co-gate `CANDIDATE_MIN_CONF=0.6` when `VOLUME_K=20` itself requires `N≈19` (`volume=1−e^(−N/20)≥0.6`),
+> which is already stricter than static `N≥15`. That is, a decrease `CANDIDATE_MIN_N` helps only where it
+> is indeed a binding gate. Adaptive actually works **`CURATED_MIN_N`**: him N-gate (50)
+> links earlier conf-gate (`CURATED_MIN_CONF=0.8` → `N≈32`), therefore downgraded to ~27–30 gives
+> low-activity projects achieve `curated-ready`. Complete solution «eternal ephemeral» requires
+> adaptations and `VOLUME_K`/`CANDIDATE_MIN_CONF` — this is calibration (D5), moved to research-task.
 
-## Дедуп и консолидация (Jaccard)
+## Dedup and consolidation (Jaccard)
 
-Пороги сходства по токенам (`[a-zа-я0-9]{3,}`).
+Token similarity thresholds (`[a-za-z0-9]{3,}`).
 
-| Параметр | Значение | Файл | Что делает | Метод калибровки |
+| Parameter | Meaning | File | What it does | Calibration method |
 |:--|:--|:--|:--|:--|
-| `_SIMILAR_CMD` | 0.6 | [`digest.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/digest.py) | порог «та же по сути команда» для пары fail→pass | ↑ — только близкие команды считаются попыткой; ↓ — больше ложных склеек |
-| `CONSOLIDATE_TRIGGER_HIGH` | 0.6 | [`lessons.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/lessons.py) | «та же ситуация» (сходство trigger) | ↑ — строже к дублям/конфликтам; ↓ — агрессивнее склеивает |
-| `CONSOLIDATE_ACTION_HIGH` | 0.6 | `lessons.py` | «то же действие» (для NOOP-дубля) | связка с `CONSOLIDATE_TRIGGER_HIGH` |
-| `CONSOLIDATE_ACTION_LOW` | 0.2 | `lessons.py` | ниже → действия расходятся (CONFLICT) | зазор `[LOW, HIGH]` — зона UPDATE |
+| `_SIMILAR_CMD` | 0.6 | [`digest.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/digest.py) | threshold «essentially the same command» for pair fail→pass | ↑ — only close commands count as a try; ↓ — more false splices |
+| `CONSOLIDATE_TRIGGER_HIGH` | 0.6 | [`lessons.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/lessons.py) | «same situation» (similarity trigger) | ↑ — stricter on duplicates/conflicts; ↓ — glues more aggressively |
+| `CONSOLIDATE_ACTION_HIGH` | 0.6 | `lessons.py` | «same action» (for NOOP-take) | link with `CONSOLIDATE_TRIGGER_HIGH` |
+| `CONSOLIDATE_ACTION_LOW` | 0.2 | `lessons.py` | below → actions diverge (CONFLICT) | gap `[LOW, HIGH]` — zone UPDATE |
 
-Классификация (mem0-таксономия, всегда в human-gate): та же ситуация + то же действие → `NOOP`;
-та же ситуация + расходящееся действие (`asim < LOW`) → `CONFLICT`; та же ситуация иначе → `UPDATE`;
-нет близких → `ADD`. Авто-резолва нет — только рекомендация человеку.
+Classification (mem0-taxonomy, always in human-gate): same situation + same action → `NOOP`;
+same situation + divergent action (`asim < LOW`) → `CONFLICT`; same situation differently → `UPDATE`;
+no relatives → `ADD`. There is no auto-resolution - only a recommendation to a person.
 
-## Калибровка — статус
+## Calibration - status
 
-Полноценная калибровка по реальному false-positive-rate **не выполнена** (нужны полевые данные +
-симуляция тиров по профилям активности). До неё все значения выше — обоснованные формой кривой
-эвристики, не измеренные оптимумы. Опциональный `scripts/calibrate_confidence.py` (симуляция) — в
-`roadmap`, не реализован.
+Full calibration based on real false-positive-rate **failed** (field data needed +
+simulation of shooting ranges based on activity profiles). Before it, all the values above are justified by the shape of the curve
+heuristics, unmeasured optima. Optional `scripts/calibrate_confidence.py` (simulation) — in
+`roadmap`, is not implemented.

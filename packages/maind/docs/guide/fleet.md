@@ -1,89 +1,89 @@
-# Fleet — межпроектный слой (оптимизатор)
+# Fleet — cross-project layer (optimizer)
 
-`maind fleet` — точка входа для агента **межпроектной оптимизации**: across ~N похожих проектов
-(общие пакеты-ядро) найти повторяющийся код/схемы и вынести общее в ядро. Сигнал собирается из
-**трёх источников** (единого «слитого» графа кода нет и не нужно):
+`maind fleet` — agent entry point **cross-project optimization**: across ~N similar projects
+(common core packages) find duplicate code/schemes and put the general into the kernel. The signal is collected from
+**three sources** (single «merged» there is no code graph and it is not necessary):
 
-1. **топология** (`manifest`) → *где искать* — кто делит какие пакеты;
-2. **дубли** (`duplicates`, движок jscpd) → *что именно* повторяется;
-3. **общая память** (`features`/`log`) → *что недавно менялось* — корреляция похожих фич.
+1. **topology** (`manifest`) → *where to look* — who shares which packets;
+2. **duplicates** (`duplicates`, engine jscpd) → *what exactly* repeats;
+3. **shared memory** (`features`/`log`) → *what has changed recently* — correlation of similar features.
 
-Точечную правку даёт [граф кода (Serena)](./code-graph) в нужном проекте. Готовый сценарий —
-скилл `cross-project-optimizer`.
+Gives spot editing [code graph (Serena)](./code-graph) in the desired project. Ready script -
+skill `cross-project-optimizer`.
 
-## manifest — карта флота
+## manifest — fleet map
 
 ```bash
-maind fleet manifest        # JSON: проекты (пути/scopes/code) + shared_packages
+maind fleet manifest        # JSON: projects (paths/scopes/code) + shared_packages
 ```
 
-`shared_packages` — first-party пакеты, которые требуют ≥2 проекта, с консьюмерами и провайдером:
+`shared_packages` — first-party packages that require ≥2 project, with consumers and provider:
 
 ```json
 { "package": "package:axioma-studio/azguard-core", "name": "azguard-core",
   "provider": "azguard", "consumers": ["azguard", "corex", "flexcrm"], "consumer_count": 3 }
 ```
 
-Это готовые **группы оптимизации**: улучшение в общем пакете влияет на всех его консьюмеров.
+These are ready **optimization groups**: improvement in the overall package affects all its consumers.
 
-## duplicates — кросс-проектные дубли (jscpd)
+## duplicates — cross-project duplicates (jscpd)
 
 ```bash
-maind fleet duplicates --group azguard-core --min-tokens 60 [--json]   # по консьюмерам пакета
-maind fleet duplicates --projects flexcrm,shop,crm [--json]            # по явному списку
+maind fleet duplicates --group azguard-core --min-tokens 60 [--json]   # by package consumers
+maind fleet duplicates --projects flexcrm,shop,crm [--json]            # by explicit list
 ```
 
-Обёртка над [jscpd](https://github.com/kucherenko/jscpd) (через `npx`, language-agnostic).
-Кросс-проектные клоны (`cross_project: true`) — первыми. Нужен Node.js/`npx` (первый запуск
-ставит пакет).
+Wrapper over [jscpd](https://github.com/kucherenko/jscpd) (via `npx`, language-agnostic).
+Cross-project clones (`cross_project: true`) — first. Needed Node.js/`npx` (first launch
+installs the package).
 
-**Игноры по умолчанию:** `**/vendor/**, **/node_modules/**, **/packages/**` — ориентированы на
-**проекты-приложения** (исходник в `app/`/`src/`, а `packages/` у консьюмера — это симлинки на
-другие проекты, их сканировать не надо). Для **пакета-монорепо** (исходник в `packages/*`)
-переопредели игнор: `--ignore "**/vendor/**,**/node_modules/**"`. Порог — `--min-tokens` (меньше →
-больше шума), паттерн — `--pattern` (дефолт `**/*.php`).
+**Default ignores:** `**/vendor/**, **/node_modules/**, **/packages/**` — are focused on
+**application projects** (source in `app/`/`src/`, a `packages/` for the consumer - these are symlinks to
+other projects, no need to scan them). For **monorepo package** (source in `packages/*`)
+override ignore: `--ignore "**/vendor/**,**/node_modules/**"`. Threshold — `--min-tokens` (less →
+more noise), pattern - `--pattern` (default `**/*.php`).
 
-::: tip Дубли — кандидаты, не приговор
-Похожий код бывает оправдан (разные предметные области). Решение о выносе — по смыслу (через
-Serena), а не только по jscpd.
+::: tip Doubles are candidates, not a verdict
+Similar code can be justified (different subject areas). The decision to remove it is within the meaning (via
+Serena), and not just by jscpd.
 :::
 
-## similar — семантически похожий код (эмбеддинги)
+## similar — semantically similar code (embeddings)
 
 ```bash
 maind fleet similar --group azguard-core --threshold 0.85 [--json]
 ```
 
-Поверх литеральных дублей jscpd: извлекает функции/классы по сгруппированным путям, эмбеддит их
-**внешним** бэкендом и ищет кросс-проектные пары «похоже по смыслу, не дословно». Бэкенд —
-pluggable через `code_graph.embed.command` в `.maind.json` (внешний инструмент `текст→вектор`,
-плейсхолдеры `{input}`/`{output}`):
+On top of literal duplicates jscpd: extracts functions/classes by grouped paths, embeds them
+**external** backend and looks for cross-project pairs «similar in meaning, not verbatim». Backend -
+pluggable via `code_graph.embed.command` in `.maind.json` (external tool `text→vector`,
+placeholders `{input}`/`{output}`):
 
 ```jsonc
 "code_graph": { "embed": { "command": ["my-embedder", "--in", "{input}", "--out", "{output}"] } }
 ```
 
-Не настроен бэкенд → внятный `die` (доступен только `duplicates`). Извлечение чанков и
-косинус-сравнение — на stdlib; эмбеддинг — внешний (как jscpd). MVP, развивается.
+Backend not configured → intelligible `die` (is only available `duplicates`). Retrieving chunks and
+cosine comparison - on stdlib; embedding - external (like jscpd). MVP, is developing.
 
-## features / log — корреляция фич через общую память
+## features / log — feature correlation via shared memory
 
 ```bash
-maind fleet log "добавил импорт CSV" --project flexcrm     # факт в ns:<группа> + global + приватный
-maind fleet features --namespace axioma                    # факты группы: что где меняли
+maind fleet log "added import CSV" --project flexcrm     # fact in ns:<group> + global + private
+maind fleet features --namespace axioma                    # group facts: what was changed where
 ```
 
-Маркер `maind:feature-log`. Агент-оптимизатор `recall`-ит их и замечает похожие изменения в разных
-проектах → кандидат на общий хелпер. Требует поднятой [памяти](./memory).
+Marker `maind:feature-log`. Optimizer agent `recall`-it and notices similar changes in different
+projects → candidate for general helper. Requires raised [memory](./memory).
 
-## Что уже есть, а что новое
+## What already exists and what is new
 
-| Кирпич | Откуда |
+| Brick | From |
 |:--|:--|
-| перечислить проекты + пути | реестр `.maind.json` |
-| доступ ко всем репозиториям | workspace-доверие хаба ([workspace](./workspace)) |
-| группы по общим пакетам | maind-граф топологии ([федерация](./federation)) |
-| корреляция фич | общая память + namespaces |
-| **детектор дублей (jscpd)** | **новое** — `maind fleet duplicates` |
+| list projects + paths | registry `.maind.json` |
+| access to all repositories | workspace-hub trust ([workspace](./workspace)) |
+| groups by common packages | maind-topology graph ([federation](./federation)) |
+| feature correlation | shared memory + namespaces |
+| **duplicate detector (jscpd)** | **new** — `maind fleet duplicates` |
 
-Дальше: [граф кода →](./code-graph) · [Память →](./memory)
+Next: [code graph →](./code-graph) · [Memory →](./memory)

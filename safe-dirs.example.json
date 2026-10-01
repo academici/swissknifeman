@@ -1,6 +1,6 @@
 {
-  "$comment": "Шаблон machine-owned allowlist'а safe-dirs: внутри корней dirs[] (рекурсивно) auto-approve пропускает rm/rmdir мимо deny_hard. Реальный файл — safe-dirs.json рядом (gitignored, создаёт `harness safe-dirs init`). Лестница поиска хуком: $SKM_SAFE_DIRS_CONFIG → <этот репо>/safe-dirs.json → legacy ~/.swissknifeman/safe-dirs.json.",
-  "$comment_fields": "include_registered_projects — авто-включать пути проектов из ~/.swissknifeman/projects.json; dirs — явные корни ('~/' поддерживается; '/', $HOME и предки $HOME игнорируются); exclude — изъятия внутри корней; protect_git — не давать удалять .git; allow_globs — разрешать глобы по containment статического префикса.",
+  "$comment": "Template machine-owned allowlist'a safe-dirs: inside the roots dirs[] (recursively) auto-approve skips rm/rmdir past deny_hard. Real file - safe-dirs.json nearby (gitignored, creates `harness safe-dirs init`). Search ladder with hook: $SKM_SAFE_DIRS_CONFIG → <this repo>/safe-dirs.json → legacy ~/.swissknifeman/safe-dirs.json.",
+  "$comment_fields": "include_registered_projects — auto-include project paths from ~/.swissknifeman/projects.json; dirs — explicit roots ('~/' supported; '/', $HOME and ancestors $HOME are ignored); exclude — seizures inside the roots; protect_git — do not allow deletion.git; allow_globs — resolve globs by containment static prefix.",
   "version": 1,
   "include_registered_projects": true,
   "dirs": [

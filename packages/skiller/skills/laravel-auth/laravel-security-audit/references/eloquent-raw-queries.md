@@ -1,38 +1,38 @@
-# Острая грань: raw-запросы Eloquent / Query Builder
+# Sharp Edge: raw-requests Eloquent / Query Builder
 
-## Паттерны поиска
+## Search patterns
 
 ```bash
 grep -rnE "DB::raw|whereRaw|selectRaw|orderByRaw|havingRaw|groupByRaw|DB::(statement|select|insert|update|delete)\(" app/
 ```
 
-## Что считается уязвимостью
+## What is considered a vulnerability
 
-Пользовательский ввод (request, route-параметр, заголовок, поле модели,
-заполненное пользователем) попадает в raw-строку через конкатенацию или
-интерполяцию:
+User input (request, route-parameter, title, model field,
+filled in by user) hits raw-string via concatenation or
+interpolation:
 
 ```php
-// УЯЗВИМО: ввод в строке запроса
+// VULNERABLE: Input in query string
 ->whereRaw("name like '%{$request->q}%'")
-->orderByRaw($request->input('sort'))   // сортировка из запроса — инъекция
+->orderByRaw($request->input('sort'))   // sorting from a request - injection
 
-// БЕЗОПАСНО: биндинги
+// SAFE: bindings
 ->whereRaw('name like ?', ["%{$request->q}%"])
 ```
 
-## Особые случаи
+## Special cases
 
-- `orderByRaw`/`groupByRaw` **не поддерживают биндинги для имён колонок** —
-  имя колонки из ввода валидировать allow-list'ом:
+- `orderByRaw`/`groupByRaw` **do not support bindings for column names** —
+  column name from input validate allow-list'ohm:
   `in_array($sort, ['name', 'created_at'], true)`.
-- `DB::statement` в миграциях с константной строкой — не находка.
-- Косвенный ввод: значение из БД, которое когда-то пришло от пользователя
-  (second-order injection) — тоже считается.
+- `DB::statement` in migrations with a constant string is not a godsend.
+- Indirect input: a value from the database that once came from the user
+  (second-order injection) — also counts.
 
 ## Severity
 
-- Ввод напрямую в raw без биндинга — **critical**.
-- Ввод через allow-list/каст к int — ok, отметить как проверенное.
-- Raw с константной строкой — не находка (но отметить для variant analysis:
-  похожие места могут быть с вводом).
+- Enter directly into raw without binding - **critical**.
+- Input via allow-list/cast to int — ok, mark as verified.
+- Raw with a constant string is not a godsend (but note for variant analysis:
+  similar places may be with input).

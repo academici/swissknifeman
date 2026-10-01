@@ -15,21 +15,21 @@ sha256: ""
 ---
 # Pennant Features
 
-> Источник: `laravel/boost` (`.ai/pennant/skill/pennant-development/SKILL.md`),
-> адаптировано для реестра swissknifeman (frontmatter бакета; strategy=notify).
-> Pennant — стабильный API без версионной развилки, поэтому скилл переносим как
-> самодостаточный для проектов без Boost.
+> Source: `laravel/boost` (`.ai/pennant/skill/pennant-development/SKILL.md`),
+> adapted for the registry swissknifeman (frontmatter bucket; strategy=notify).
+> Pennant — stable API without a version fork, so the skill is transferred as
+> self-contained for projects without Boost.
 
-## Когда активировать
+## When to activate
 
-- Создание, проверка или переключение feature-флагов.
-- Управление постепенными раскатками фич (rollouts).
-- Реализация A/B-тестирования.
-- Работа с директивой `@feature` в Blade.
+- Create, check or switch feature-flags.
+- Managing gradual feature rollouts (rollouts).
+- Implementation A/B-testing.
+- Working with the directive `@feature` in Blade.
 
-## Базовое использование
+## Basic Use
 
-### Определение фич
+### Feature definition
 
 ```php
 use Laravel\Pennant\Feature;
@@ -39,20 +39,20 @@ Feature::define('new-dashboard', function (User $user) {
 });
 ```
 
-### Проверка фич
+### Feature check
 
 ```php
 if (Feature::active('new-dashboard')) {
-    // Фича активна
+    // Feature active
 }
 
-// Со скоупом
+// With scope
 if (Feature::for($user)->active('new-dashboard')) {
-    // Фича активна для этого пользователя
+    // Feature is active for this user
 }
 ```
 
-### Blade-директива
+### Blade-directive
 
 ```blade
 @feature('new-dashboard')
@@ -62,25 +62,25 @@ if (Feature::for($user)->active('new-dashboard')) {
 @endfeature
 ```
 
-### Активация / деактивация
+### Activation / deactivation
 
 ```php
 Feature::activate('new-dashboard');
 Feature::for($user)->activate('new-dashboard');
 ```
 
-## Проверка
+## Verification
 
-1. Фича определена (`Feature::define`).
-2. Поведение протестировано на разных скоупах/пользователях.
+1. Feature defined (`Feature::define`).
+2. Behavior tested on different scopes/users.
 
-## Частые ошибки
+## Common errors
 
-- Забыли заскоупить фичу под конкретного пользователя/сущность (`Feature::for(...)`).
-- Не следуют существующим конвенциям именования флагов в проекте.
+- Forgot to save a feature for a specific user/entity (`Feature::for(...)`).
+- Does not follow existing flag naming conventions in the project.
 
-## Ссылки
+## Links
 
-- Документация: https://laravel.com/docs/pennant
-- В проектах с Laravel Boost версионно-специфичные темы отдаём Boost;
-  Pennant версионно стабилен — конфликта нет.
+- Documentation: https://laravel.com/docs/pennant
+- In projects with Laravel Boost version-specific themes are given away Boost;
+  Pennant is version stable - no conflict.

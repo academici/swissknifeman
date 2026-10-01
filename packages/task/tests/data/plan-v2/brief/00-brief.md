@@ -1,3 +1,3 @@
-# Бриф — PLAN-V2
+# Brief - PLAN-V2
 
-Переформулированный вход владельца: демо-план для тестов линтера.
+Reworded owner input: demo plan for linter tests.

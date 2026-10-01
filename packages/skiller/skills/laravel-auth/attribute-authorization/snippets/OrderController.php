@@ -13,34 +13,34 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 /**
- * Контроллер с декларативной авторизацией через #[CheckPermission].
+ * Controller with declarative authorization via #[CheckPermission].
  *
- * Атрибуты читает middleware CheckAccess (см. CheckAccess.php). Сам
- * контроллер про авторизацию ничего не знает — никаких $this->authorize()
- * и Gate-вызовов в теле экшена.
+ * Attributes reads middleware CheckAccess (see CheckAccess.php). Himself
+ * controller does not know anything about authorization - no $this->authorize()
+ * and Gate-calls in the action body.
  *
- * Чтобы это сработало, маршруты группы должны проходить через middleware
- * 'check-access' (см. регистрацию в SKILL.md).
+ * For this to work, the group's routes must go through middleware
+ * 'check-access' (see registration in SKILL.md).
  */
 final class OrderController
 {
-    // Без аргументов: право без привязки к модели (например, доступ к списку).
+    // No arguments: right without model binding (for example, access to a list).
     #[CheckPermission(Permission::ViewAnyOrder)]
     public function index(): View
     {
         return view('orders.index');
     }
 
-    // arguments: ['order'] — параметр маршрута {order} (Model через
-    // route-model binding) уйдёт в Gate::allows('order.view', [$order]).
+    // arguments: ['order'] — route parameter {order} (Model via
+    // route-model binding) will go to Gate::allows('order.view', [$order]).
     #[CheckPermission(Permission::ViewOrder, arguments: ['order'])]
     public function show(Order $order): View
     {
         return view('orders.show', ['order' => $order]);
     }
 
-    // Несколько повторяющихся атрибутов — все проверки должны пройти.
-    // Разный status: первая ветка → 403, вторая маскирует чужой ресурс под 404.
+    // Several duplicate attributes - all checks must pass.
+    // Various status: first thread → 403, the second disguises someone else's resource as 404.
     #[CheckPermission(Permission::UpdateOrder, arguments: ['order'])]
     #[CheckPermission(
         Permission::AccessCompany,
@@ -50,7 +50,7 @@ final class OrderController
     )]
     public function update(Order $order): RedirectResponse
     {
-        // ... обновление ...
+        // ... update...
 
         return redirect()->route('orders.show', ['order' => $order]);
     }

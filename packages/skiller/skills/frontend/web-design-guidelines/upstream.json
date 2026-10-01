@@ -21,12 +21,12 @@
     }
   ],
   "body_path": "references/web-interface-guidelines.md",
-  "notes": "Форк: canonical SKILL.md — навигатор, написанный нами и не пересказывающий payload. Зеркало апстримной обёртки antfu/skills НЕ вендорится (D111): её текст сам предписывает сетевой fetch правил, поэтому первая запись files[] несёт пустой path — это provenance-ссылка (url/sha256 f4647ca8…/fetched_at 2026-06-17), sha не сверяется. Тело бандла (body_path) — вендоренный payload references/web-interface-guidelines.md, pristine-копия пинованного коммита 4e799d45c17aec1498c269287a83b9dba22b966b репозитория vercel-labs/web-interface-guidelines, куда SKILL.md раньше ходил сетью на каждый вызов (PRM_REMOTE_INSTRUCTIONS). Пере-пиновка правил — явная процедура: скачать новый SHA-URL (никогда /main/), сверить sha256 полученных байт с ожидаемым ДО записи, только тогда обновить files[1].sha256/fetched_at и эту заметку; --apply реестра этот файл не трогает (fork).",
+  "notes": "Fork: canonical SKILL.md — navigator, written by us and not retelling payload. Upstream wrapper mirror antfu/skills NOT vendored (D111): its text itself prescribes the network fetch rules, so the first entry files[] carries empty path — this provenance-link (url/sha256 f4647ca8…/fetched_at 2026-06-17), sha is not verified. Bundle body (body_path) — vendor payload references/web-interface-guidelines.md, pristine-copy of pinned commit 4e799d45c17aec1498c269287a83b9dba22b966b repository vercel-labs/web-interface-guidelines, where SKILL.md used to use the network for every call (PRM_REMOTE_INSTRUCTIONS). Re-pinning rules - explicit procedure: download new SHA-URL (never /main/), check sha256 received bytes with expected BEFORE writing, only then update files[1].sha256/fetched_at and this note; --apply registry this file does not touch (fork).",
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",
     "by": "vendor audit",
     "upstream_sha": "eea73cb6dd46fee9faec9973e8e7fe198b5f07ec326f14d276a56e50287e1cab",
-    "note": "attention §3.1 (правила поведения приходили из сети) снят ремедиацией P5.10: payload vercel вендорен pristine-копией под sha256 на пинованном коммите 4e799d45, сетевых инструкций в canonical SKILL.md нет, триаж по бандлу — ноль находок"
+    "note": "attention §3.1 (rules of behavior came from the network) removed by remediation P5.10: payload vercel vendor pristine-copy under sha256 on pinned commit 4e799d45, network instructions in canonical SKILL.md no, bundle triage - zero finds"
   }
 }

@@ -19,6 +19,6 @@
     "at": "2026-08-01",
     "by": "vendor audit",
     "upstream_sha": "3baf94cbdf9269c41f3b3ffbf2df915123415489d78bc9d9f9fe1d3929bd4209",
-    "note": "справочник по защите: корпус атакующих строк по назначению (INJ_*/EXF_*/EXE_* срабатывают на нём всегда), содержимое — инертный markdown; правило под бандл не ослабляется — постоянная краснота есть СВОЙСТВО гейта"
+    "note": "defense reference: corps of attack lines by purpose (INJ_*/EXF_*/EXE_* always trigger on it), contents - inert markdown; the rule under the bundle is not weakened - constant redness is a PROPERTY of the gate"
   }
 }

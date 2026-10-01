@@ -41,17 +41,17 @@ class ProbeRecord:
         }
         bad = [name for name, value in strings.items() if not isinstance(value, str) or not value]
         if bad:
-            raise ProbeRecordError(f"token probe: пустые/невалидные поля {bad}")
+            raise ProbeRecordError(f"token probe: empty/invalid fields {bad}")
         if self.schema_version != RECORD_SCHEMA_VERSION:
             raise ProbeRecordError(
-                f"token probe: schema_version={self.schema_version!r}, ожидается {RECORD_SCHEMA_VERSION!r}")
+                f"token probe: schema_version={self.schema_version!r}, pending {RECORD_SCHEMA_VERSION!r}")
         if (not isinstance(self.input_tokens_total, int) or isinstance(self.input_tokens_total, bool)
                 or self.input_tokens_total < 0):
-            raise ProbeRecordError("token probe: input_tokens_total обязан быть целым числом >= 0")
+            raise ProbeRecordError("token probe: input_tokens_total must be an integer >= 0")
         if self.effective_model_id is not None and not isinstance(self.effective_model_id, str):
-            raise ProbeRecordError("token probe: model.effective_id обязан быть строкой или null")
+            raise ProbeRecordError("token probe: model.effective_id must be a string or null")
         if not isinstance(self.usage_breakdown, Mapping):
-            raise ProbeRecordError("token probe: usage_breakdown обязан быть объектом")
+            raise ProbeRecordError("token probe: usage_breakdown must be an object")
 
     @property
     def target_identity(self):
@@ -87,8 +87,8 @@ class ProbeAdapter(Protocol):
 def ensure_same_target(records):
     """Reject records from different providers/models/protocols/fingerprints."""
     if not records:
-        raise ProbeRecordError("token probe: нет records для проверки target")
+        raise ProbeRecordError("token probe: no records for verification target")
     identity = records[0].target_identity
     if any(record.target_identity != identity for record in records[1:]):
-        raise ProbeRecordError("token probe: смешаны provider/model/protocol/fingerprint targets")
+        raise ProbeRecordError("token probe: mixed provider/model/protocol/fingerprint targets")
     return identity

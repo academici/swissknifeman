@@ -1,4 +1,4 @@
-"""Тесты skilldoc.py: провиженер управляемого скилла ecosystem-mcp в проекты."""
+"""Tests skilldoc.py: managed skill provider ecosystem-mcp to projects."""
 import shutil
 import tempfile
 import unittest
@@ -15,7 +15,7 @@ _CODEX_SKILL = Path(".agents") / "skills" / "ecosystem-mcp" / "SKILL.md"
 
 def _setup(tmp):
     root, env = make_repo(tmp)
-    shutil.copytree(_TEMPLATES, root / "templates")  # шаблоны доступны в env.root
+    shutil.copytree(_TEMPLATES, root / "templates")  # templates available in env.root
     proj = Path(tmp) / "flexcrm"
     proj.mkdir(parents=True, exist_ok=True)
     projects = [{"id": "flexcrm", "name": "FlexCRM", "type": "php-package",
@@ -60,7 +60,7 @@ class TestEcosystemSkill(unittest.TestCase):
             self.assertIn("flexcrm", text)            # {{PROJECT}}
             self.assertIn("project:flexcrm", text)    # {{SCOPE}}
             self.assertIn("axioma", text)             # {{NAMESPACES}}
-            self.assertNotIn("{{", text)              # все плейсхолдеры подставлены
+            self.assertNotIn("{{", text)              # all placeholders are substituted
             self.assertEqual(text, (pdir / _CODEX_SKILL).read_text(encoding="utf-8"))
             r2 = skilldoc.apply_ecosystem_skill(env, config, proj, "auto", dry=False)
             self.assertEqual(r2["state"], "fresh")
@@ -71,13 +71,13 @@ class TestEcosystemSkill(unittest.TestCase):
             env, config, proj, pdir = _setup(tmp)
             skilldoc.apply_ecosystem_skill(env, config, proj, "auto", dry=False)
             target = pdir / _SKILL
-            target.write_text(target.read_text() + "\nдрейф\n", encoding="utf-8")
+            target.write_text(target.read_text() + "\ndrift\n", encoding="utf-8")
             r = skilldoc.apply_ecosystem_skill(env, config, proj, "install", dry=False)
             self.assertEqual(r["state"], "stale")
-            self.assertFalse(r["changed"])            # install не обновляет устаревшее
+            self.assertFalse(r["changed"])            # install does not update outdated
             r2 = skilldoc.apply_ecosystem_skill(env, config, proj, "update", dry=False)
-            self.assertTrue(r2["changed"])            # update — обновляет
-            self.assertNotIn("дрейф", target.read_text())
+            self.assertTrue(r2["changed"])            # update — updates
+            self.assertNotIn("drift", target.read_text())
 
     def test_dry_run_does_not_write(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -112,7 +112,7 @@ class TestSetupSkill(unittest.TestCase):
             self.assertIn("name: ecosystem-setup", text)
             self.assertIn("flexcrm", text)            # {{PROJECT}}
             self.assertIn("php-package", text)        # {{TYPE}}
-            self.assertNotIn("{{", text)              # все плейсхолдеры подставлены
+            self.assertNotIn("{{", text)              # all placeholders are substituted
             self.assertEqual(text, (pdir / _CODEX_SETUP_SKILL).read_text(encoding="utf-8"))
             r2 = skilldoc.apply_setup_skill(env, config, proj, "auto", dry=False)
             self.assertEqual(r2["state"], "fresh")

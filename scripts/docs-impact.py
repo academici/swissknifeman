@@ -32,14 +32,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# --- поверхности (карта ДАННЫМИ — research/24 §2-3, D119/D120) --------------------------
+# --- surfaces (DATA card - research/24 §2-3, D119/D120) --------------------------
 SURFACE_PKG = re.compile(r"^packages/([^/]+)/(bin|lib|commands|configs)/")
 SURFACE_CORE = re.compile(r"^core/.*\.py$")
 SURFACE_ROOT = re.compile(r"^(bin/|install\.sh$|scripts/[^/]+\.(sh|py)$)")
 
-# НЕ поверхности — проверяется ПЕРВЫМ. Исключение `.md` сужено до ДОК-md:
-# тела slash-команд packages/*/commands/**.md и agent-pack-конфиги packages/*/configs/**.md
-# — продукт, не документация, и под общее "**/*.md" не подпадают.
+# NOT surfaces - checked FIRST. Exception `.md` narrowed to DOC-md:
+# bodies slash-commands packages/*/commands/**.md and agent-pack-configs packages/*/configs/**.md
+# — product, not documentation, and under general "**/*.md" are not covered.
 NON_SURFACE = [
     re.compile(r"(^|/)tests?/"),
     re.compile(r"^scripts/test-"),
@@ -52,7 +52,7 @@ NON_SURFACE = [
     re.compile(r"^packages/skiller/skills/"),
 ]
 
-# Интерфейсные пути: статус M триггерит здесь и только здесь (D119 правило C).
+# Interface paths: status M triggers here and only here (D119 rule C).
 INTERFACE = re.compile(r"^(packages/[^/]+/(bin|commands|configs)/|bin/|install\.sh$)")
 
 DOCS_NOT_NEEDED_RE = re.compile(r"^Docs-Not-Needed:[ \t]*(.*)$", re.MULTILINE)
@@ -94,10 +94,10 @@ def docs_hint(klass: str) -> str:
     if klass.startswith("pkg:"):
         pkg = klass[len("pkg:"):]
         if pkg == "task":
-            return f"packages/{pkg}/docs/** или docs/task/**"
+            return f"packages/{pkg}/docs/** or docs/task/**"
         return f"packages/{pkg}/docs/**"
     if klass == "root":
-        return "docs/*.md (верхний уровень)"
+        return "docs/*.md (top level)"
     return klass
 
 
@@ -169,7 +169,7 @@ def report(needed: dict[str, list[tuple[str, str]]], credited: set[str]) -> list
         if klass in credited:
             continue
         for path, status in needed[klass]:
-            lines.append(f"{path} — {klass}, статус {status}, ждали правку {docs_hint(klass)}")
+            lines.append(f"{path} — {klass}, status {status}, were waiting for an edit {docs_hint(klass)}")
     return lines
 
 
@@ -182,9 +182,9 @@ def run(entries: list[tuple[str, str]], range_args: list[str] | None) -> int:
     reason = escape_reason(range_args)
     if reason:
         classes = sorted({klass for klass in needed if klass not in credited})
-        print(f"docs-impact: обход (Docs-Not-Needed: {reason}) — классы: {', '.join(classes)}")
+        print(f"docs-impact: bypass (Docs-Not-Needed: {reason}) — classes: {', '.join(classes)}")
         return 0
-    print("docs-impact: не хватает доков в этом же change-set'е:")
+    print("docs-impact: there are not enough docks in the same change-set'e:")
     for line in missing:
         print(f"  {line}")
     return 1
@@ -193,13 +193,13 @@ def run(entries: list[tuple[str, str]], range_args: list[str] | None) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     group = ap.add_mutually_exclusive_group(required=True)
-    group.add_argument("--base", help="базовая точка диапазона (с --head)")
-    group.add_argument("--staged", action="store_true", help="индекс (git diff --cached)")
-    ap.add_argument("--head", help="верхняя точка диапазона (обязателен с --base)")
+    group.add_argument("--base", help="range base point (with --head)")
+    group.add_argument("--staged", action="store_true", help="index (git diff --cached)")
+    ap.add_argument("--head", help="high point of range (required with --base)")
     args = ap.parse_args()
 
     if args.base and not args.head:
-        ap.error("--base требует --head")
+        ap.error("--base requires --head")
 
     try:
         if args.staged:
@@ -209,7 +209,7 @@ def main() -> int:
             diff_text = git("diff", "--name-status", "-M", f"{args.base}...{args.head}")
             range_args = [f"{args.base}..{args.head}"]
     except GitError as exc:
-        print(f"docs-impact: ошибка git — {exc}", file=sys.stderr)
+        print(f"docs-impact: error git — {exc}", file=sys.stderr)
         return 2
 
     entries = parse_name_status(diff_text)

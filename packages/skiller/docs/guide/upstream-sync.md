@@ -1,8 +1,8 @@
-# Upstream-sync: отслеживание внешних скиллов
+# Upstream-sync: tracking external skills
 
-Внешние скиллы не должны устаревать незаметно. Каждый импортированный скилл
-содержит `upstream.json` рядом со `SKILL.md` — паспорт источника и стратегию
-обновления.
+External skills should not become obsolete without notice. Each imported skill
+contains `upstream.json` next to `SKILL.md` — source passport and strategy
+updates.
 
 ## upstream.json
 
@@ -23,71 +23,71 @@
 }
 ```
 
-## Стратегии
+## Strategies
 
-| Состояние | Поведение sync-тулинга |
+| Status | Behavior sync-tuling |
 |---|---|
-| Нет `upstream.json` | скилл самописный — не трогается |
-| `strategy: replace` | файл зеркалируется как есть, обновления применяются автоматически |
-| `strategy: notify` | локальная копия адаптирована; об обновлениях только сообщается, файл не перезаписывается |
-| `strategy: fork` | форк с нашими правками: `files[].path` указывает на **pristine-зеркало** (напр. `references/source.md`), правки живут в обёртке `SKILL.md`. На дрейфе ставится `review_pending: true` (блокирует распространение) — ручной перенос, затем `--resolve` |
-| `strategy: merge` | **композит из ≥2 источников** (`origins[]`: один `base` + ≥1 `supplement`/«suggest»), слепленный в единый скилл. Синк **ручной под управлением агента**: на дрейфе любого origin `merge.review_pending: true` блокирует распространение — агент пере-мерджит вручную, затем `--resolve`. Авто-overwrite запрещён |
+| No `upstream.json` | self-written skill - does not touch |
+| `strategy: replace` | file is mirrored as is, updates are applied automatically |
+| `strategy: notify` | local copy adapted; updates are only reported, the file is not overwritten |
+| `strategy: fork` | fork with our changes: `files[].path` indicates **pristine-mirror** (e.g. `references/source.md`), edits live in the wrapper `SKILL.md`. Placed on drift `review_pending: true` (blocks distribution) — manual transfer, then `--resolve` |
+| `strategy: merge` | **composite of ≥2 sources** (`origins[]`: one `base` + ≥1 `supplement`/«suggest»), molded into a single skill. Sink **manual under agent control**: on the drift of any origin `merge.review_pending: true` blocks distribution - the agent re-merges manually, then `--resolve`. Autooverwrite prohibited |
 
-## Команды
+## Commands
 
 ```bash
-# Отчёт: что устарело (exit-код 10 = есть изменения — удобно для CI)
+# Report: what's outdated (exit-code 10 = there are changes - convenient for CI)
 ./scripts/update-upstreams.sh --check
 
-# Применить replace-обновления, записать новые sha; для fork — застейджить
-# incoming и поднять review_pending (зеркало/SKILL.md не трогаются)
+# Apply replace-updates, write new ones sha; for fork — stage
+# incoming and raise review_pending (mirror/SKILL.md do not touch)
 ./scripts/update-upstreams.sh --apply
 
-# Принудительно перезаписать конкретный скилл (разрешение конфликта, replace)
+# Force overwrite of a specific skill (conflict resolution, replace)
 ./scripts/update-upstreams.sh --apply --force --skill imported/research
 
-# fork: после ручного переноса правок — продвинуть incoming в зеркало и снять флаг
+# fork: after manually transferring edits - promote incoming in the mirror and remove the flag
 ./scripts/update-upstreams.sh --resolve --skill ai/ai-agents
 ```
 
-## `fork`: форк с локальными правками
+## `fork`: fork with local changes
 
-Для большого внешнего скилла, который мы **адаптируем и не хотим обновлять
-автоматом** (а context-economy требует не грузить весь файл в контекст). Раскладка:
+For the big external skill that we **we adapt and do not want to update
+automatically** (a context-economy requires not loading the entire file into the context). Layout:
 
 ```
 skills/<bucket>/<name>/
-├── SKILL.md            # тонкая обёртка-навигатор (наши правки живут здесь)
+├── SKILL.md            # thin navigator wrapper (our edits live here)
 ├── upstream.json       # strategy: fork; files[].path = references/source.md
 └── references/
-    └── source.md       # pristine-зеркало апстрима = базлайн (грузится по требованию)
+    └── source.md       # pristine-upstream mirror = baseline (loaded on demand)
 ```
 
-Зеркало (`references/source.md`) **байт-в-байт** равно тому, что отдаёт `url`, —
-поэтому `--check` сравнивает свежий апстрим с записанным `sha256` и видит дрейф.
-Наши правки изолированы в обёртке `SKILL.md`, значит зеркало остаётся pristine, а
-порт диффа — почти нулевой.
+Mirror (`references/source.md`) **byte-to-byte** is equal to what it gives `url`, —
+therefore `--check` compares the fresh upstream with the recorded one `sha256` and sees drift.
+Our edits are isolated in a wrapper `SKILL.md`, means the mirror remains pristine, a
+diff port - almost zero.
 
-Цикл сопровождения на дрейфе:
+Drift tracking cycle:
 
-1. `--check` → `[notify] … strategy=fork — нужна ручная доработка` (exit 10, CI падает).
-2. `--apply` → кладёт свежий апстрим в `upstream/<name>.incoming.md`, ставит
-   `review_pending: true`. Зеркало и `SKILL.md` **не трогаются**.
-3. **Гейт**: `validate.sh` падает, пока `review_pending: true` — релиз/`registry`
-   заблокированы.
-4. Агент сверяет `diff references/source.md upstream/<name>.incoming.md`, при
-   реструктуре апстрима правит маршрутизацию в обёртке `SKILL.md`.
-5. `--resolve` → зеркало := incoming, `sha256`/`fetched_at`/`last_review` обновлены,
-   `review_pending: false`, incoming удалён. `validate.sh` снова зелёный.
+1. `--check` → `[notify] … strategy=fork — needs manual modification` (exit 10, CI falls).
+2. `--apply` → puts a fresh upstream in `upstream/<name>.incoming.md`, puts
+   `review_pending: true`. Mirror and `SKILL.md` **do not touch**.
+3. **Gate**: `validate.sh` falls while `review_pending: true` — release/`registry`
+   are blocked.
+4. Agent checks `diff references/source.md upstream/<name>.incoming.md`, when
+   upstream restructuring rules routing in the wrapper `SKILL.md`.
+5. `--resolve` → mirror := incoming, `sha256`/`fetched_at`/`last_review` updated,
+   `review_pending: false`, incoming deleted. `validate.sh` is green again.
 
-Блокировка действует **только в реестре**: в проекты-потребители `upstream.json`
-не вендорится (как и для replace/notify) — туда уезжает уже выверенная копия
+Blocking in effect **only in the registry**: to consumer projects `upstream.json`
+not vendored (as for replace/notify) — the already verified copy goes there
 (`SKILL.md` + `references/source.md`).
 
-## `merge`: композит из нескольких источников
+## `merge`: composite from multiple sources
 
-Когда скилл фактически **слеплен из двух+ внешних скиллов** в единый целиковый
-формат, провенанс с ролями фиксируется в `origins[]`:
+When the skill is actually **is made from two+ external skills** into a single piece
+format, provenance with roles is fixed in `origins[]`:
 
 ```json
 {
@@ -96,47 +96,47 @@ skills/<bucket>/<name>/
   "strategy": "merge",
   "origins": [
     {"repo": "antfu/skills",      "role": "base",       "url": "…", "ref": "main",
-     "sha256": "…", "fetched_at": "2026-06-26", "note": "взята структура и ядро"},
+     "sha256": "…", "fetched_at": "2026-06-26", "note": "structure and core taken"},
     {"repo": "onmax/nuxt-skills", "role": "supplement", "url": "…",
-     "sha256": "…", "fetched_at": "2026-06-26", "suggest": "добавлены разделы SEO/модули"}
+     "sha256": "…", "fetched_at": "2026-06-26", "suggest": "sections added SEO/modules"}
   ],
   "merge": { "review_pending": false, "last_review": "2026-06-26" },
   "files": [ { "path": "references/base.md", "url": "…", "sha256": "…", "fetched_at": "2026-06-26" } ]
 }
 ```
 
-- **Роли.** Ровно один `base` (взят за основу) + ≥1 `supplement` — дополняющий
-  источник-«suggest» (чем именно дополнил — поле `note`/`suggest`). Так видно, кто
-  «фундамент», а кто пришёл в дополнение.
-- **Синк только ручной, под управлением агента.** Авто-overwrite для композита
-  бессмысленен (его собрал человек/агент из кусков). На дрейфе любого `origin`
-  ставится `merge.review_pending: true` — **гейт**: `validate.sh`/`registry`/релиз
-  заблокированы, пока агент не сверит свежие источники, не пере-мерджит их в
-  `SKILL.md` и не снимет флаг.
+- **Roles.** Exactly one `base` (is used as a basis) + ≥1 `supplement` — complementary
+  source-«suggest» (added what exactly - field `note`/`suggest`). So you can see who
+  «foundation», and who came in addition.
+- **Sync is manual only, under agent control.** Autooverwrite for composite
+  is meaningless (it was assembled by a person/agent from pieces). On the drift of any `origin`
+  is set `merge.review_pending: true` — **gate**: `validate.sh`/`registry`/release
+  are blocked until the agent verifies fresh sources and re-merges them into
+  `SKILL.md` and will not clear the flag.
 
-Цикл сопровождения:
+Maintenance cycle:
 
-1. `--check` → дрейф одного из `origins` (свежий sha ≠ записанному) → exit 10.
-2. `--apply` → кладёт свежие версии источников в `upstream/<name>.<repo>.incoming.md`,
-   ставит `merge.review_pending: true`. `SKILL.md` **не трогается**.
-3. **Гейт**: `validate.sh` падает (как у fork), пока `review_pending: true`.
-4. Агент сверяет инкаминги с текущим композитом и **пере-мерджит** руками: какие
-   изменения из `base`, какие из `supplement` перенести в единый `SKILL.md`.
-5. `--resolve` → обновляет `sha256`/`fetched_at` всех origin, `merge.last_review`,
-   снимает `review_pending`. `validate.sh` снова зелёный.
+1. `--check` → drift of one of `origins` (fresh sha ≠ recorded) → exit 10.
+2. `--apply` → puts the latest versions of sources in `upstream/<name>.<repo>.incoming.md`,
+   puts `merge.review_pending: true`. `SKILL.md` **does not touch**.
+3. **Gate**: `validate.sh` falls (like fork), for now `review_pending: true`.
+4. The agent checks the inkings against the current composite and **re-merge** hands: which
+   changes from `base`, which of `supplement` move to a single `SKILL.md`.
+5. `--resolve` → updates `sha256`/`fetched_at` all origin, `merge.last_review`,
+   removes `review_pending`. `validate.sh` is green again.
 
-Как и для остальных стратегий, `upstream.json` и `origins`-зеркала **не вендорятся**
-в проекты — туда уезжает выверенный `SKILL.md`.
+As for other strategies, `upstream.json` and `origins`-mirrors **are not vendored**
+to projects - a verified `SKILL.md`.
 
-## `body_path`: тело апстрима вне SKILL.md (thin-navigator, P7.3)
+## `body_path`: upstream body out SKILL.md (thin-navigator, P7.3)
 
-Аддитивное поле верхнего уровня `upstream.json` — для `replace`/`notify`-скиллов,
-которые переводятся на **thin-navigator**: компактный `SKILL.md` (триггеры + карта
-разделов, пишется локально агентом) вместо полного зеркала апстрима, тело которого
-физически лежит в `references/full.md` (обычно, имя не зафиксировано схемой).
-`body_path` называет, какая `files[].path`-запись теперь и есть «тело» — именно по
-ней (а не по `SKILL.md`, который тут больше не отслеживается) `update-upstreams.sh`
-считает sha/дрейф:
+Top level additive field `upstream.json` — for `replace`/`notify`-skills,
+which are translated into **thin-navigator**: compact `SKILL.md` (triggers + map
+sections, written locally by the agent) instead of a full upstream mirror whose body
+physically lies in `references/full.md` (usually, the name is not fixed by the schema).
+`body_path` names which `files[].path`-entry is now «body» — exactly by
+her (and not by `SKILL.md`, which is no longer tracked here) `update-upstreams.sh`
+believes sha/drift:
 
 ```json
 {
@@ -151,108 +151,108 @@ skills/<bucket>/<name>/
 }
 ```
 
-Отсутствие поля = тело в `SKILL.md`, как раньше (back-compat, ничего не меняется).
-Технически sha/дрейф уже давно считается **по любому `files[].path`**, не только по
-`"SKILL.md"` — этим и пользуется `strategy=fork` для своего pristine-зеркала (см.
-выше). `body_path` не добавляет новый механизм сверки, а лишь **явно документирует**
-и **гейтит** его: `validate.sh` проверяет, что путь реально существует, не убегает
-из каталога скилла и **отслеживается** какой-то `files[]`-записью (иначе заявленное
-«тело» на деле не проверяется — тихая дыра), а для `strategy=replace` дополнительно
-запрещает держать рядом `files[].path == "SKILL.md"` (иначе `--apply` тихо
-перезаписал бы навигатор). Провенанс в `skills.json` (`registry.py`) тоже смотрит на
-`body_path` в первую очередь — `entry.upstream`/`fetched_at` берутся из названной им
-записи, а не из первой попавшейся.
+Missing field = body in `SKILL.md`, as before (back-compat, nothing changes).
+Technically sha/drift has long been considered **anyway `files[].path`**, not only
+`"SKILL.md"` — uses this `strategy=fork` for your pristine-mirrors (see
+above). `body_path` does not add a new reconciliation mechanism, but only **explicitly documents**
+and **gateitis** him: `validate.sh` checks that the path really exists, does not escape
+from the skill catalog and **is being monitored** some `files[]`-entry (otherwise stated
+«body» is not actually checked - a quiet hole), and for `strategy=replace` additional
+prohibits keeping near `files[].path == "SKILL.md"` (otherwise `--apply` quiet
+would overwrite the navigator). Provenance in `skills.json` (`registry.py`) also looks at
+`body_path` first of all - `entry.upstream`/`fetched_at` are taken from the one named
+record, and not from the first one that came up.
 
-Для `fork`/`merge` отдельный `body_path`, как правило, избыточен — ту же роль там
-уже играет `files[].path`/`origins[].url`, указывающий на pristine-зеркало.
+For `fork`/`merge` separate `body_path`, is usually redundant - the same role there
+is already playing `files[].path`/`origins[].url`, indicating pristine-mirror.
 
-## Канал загрузки: gh api → urllib
+## Download channel: gh api → urllib
 
-Для GitHub raw-URL (`raw.githubusercontent.com/{owner}/{repo}/{ref}/{path}`)
-и при наличии **GitHub CLI** скрипт тянет файл точечно через
+For GitHub raw-URL (`raw.githubusercontent.com/{owner}/{repo}/{ref}/{path}`)
+and if available **GitHub CLI** script pulls the file point by point through
 `gh api repos/{owner}/{repo}/contents/{path}?ref={ref}`:
 
-- авто-аутентификация из `gh auth` — не нужно прокидывать `GITHUB_TOKEN`;
-- уважает rate-limit GitHub API;
-- один файл вместо полной загрузки — экономия трафика/контекста (тот же
-  принцип, что в скилле `oss-dev/gh-review`).
+- auto-authentication from `gh auth` — no need to pass `GITHUB_TOKEN`;
+- respects rate-limit GitHub API;
+- one file instead of a full download - saving traffic/context (the same
+  principle that in the skill `oss-dev/gh-review`).
 
-Если `gh` недоступен или вызов упал — **тихий откат** на `urllib`
-(с `GITHUB_TOKEN` из окружения, если задан). Принудительно отключить gh-путь:
-`UPSTREAM_NO_GH=1`. Поведение и формат `upstream.json` при этом не меняются.
+If `gh` is unavailable or the call has dropped — **silent rollback** on `urllib`
+(with `GITHUB_TOKEN` from the environment, if specified). Force disable gh-path:
+`UPSTREAM_NO_GH=1`. Behavior and format `upstream.json` do not change.
 
-## Еженедельный CI
+## Weekly CI
 
-GitHub Action `upstream-sync.yml` раз в неделю проверяет все апстримы и — если
-есть изменения — открывает PR с диффом. Изменения чужих репозиториев попадают
-в `main` **только после ревью**: ни один внешний коммит не вливается автоматически.
+GitHub Action `upstream-sync.yml` checks all upstreams once a week and - if
+there are changes - opens PR with diff. Changes from other people's repositories fall
+in `main` **only after review**: no external commits are merged automatically.
 
-## Как выбрать стратегию
+## How to choose a strategy
 
-- **`replace`** — когда апстрим качественный и его формат совместим напрямую:
-  валидный frontmatter (`name`, `description`), нет нужды адаптировать.
-  Вы получаете обновления бесплатно.
-- **`notify`** — когда вы переписали frontmatter, перевели, сократили или
-  иначе адаптировали скилл. Апстрим остаётся ориентиром: CI сообщит, что
-  источник изменился, а решение о портировании правок — за вами.
-- **`fork`** — когда внешний скилл большой и вы оборачиваете его тонким
-  навигатором (контент в `references/source.md`, правки в обёртке) и/или хотите
-  жёсткий гейт: дрейф апстрима **блокирует распространение** до ручного переноса.
-  Сильнее `notify` (которое лишь сообщает): добавляет pristine-зеркало для диффа,
-  флаг `review_pending` и шаг `--resolve`.
-- **`merge`** — когда скилл собран **из нескольких источников** (`base` +
-  `supplement`). Как fork по гейту (`review_pending` + `--resolve`), но с
-  мульти-источниковым провенансом `origins[]` и **обязательно ручным** пере-merge
-  агентом (авто-overwrite запрещён — композит нельзя зеркалировать одним файлом).
+- **`replace`** — when the upstream is of high quality and its format is directly compatible:
+  valid frontmatter (`name`, `description`), no need to adapt.
+  You receive updates for free.
+- **`notify`** — when you rewrote frontmatter, translated, shortened or
+  otherwise adapted the skill. Upstream remains the benchmark: CI will report that
+  the source has changed, and the decision to port the edits is yours.
+- **`fork`** — when the outer skill is large and you wrap it in thin
+  navigator (content in `references/source.md`, edits in the wrapper) and/or you want
+  hard gate: upstream drift **blocks distribution** before manual transfer.
+  Stronger `notify` (which only reports): adds pristine-mirror for diff,
+  flag `review_pending` and step `--resolve`.
+- **`merge`** — when the skill is completed **from several sources** (`base` +
+  `supplement`). How fork by gate (`review_pending` + `--resolve`), but with
+  multi-source provenance `origins[]` and **must be manual** re-merge
+  agent (auto-overwrite is prohibited - the composite cannot be mirrored in one file).
 
-## Когда переводить скилл в `fork`
+## When to transfer a skill to `fork`
 
-Выбор стратегии **при импорте** описан выше («Как выбрать стратегию»). Отдельный вопрос —
-когда переводить уже **живой** `notify`-скилл в `fork`. Практика (rOpenSci 2025, GitHub
-fork-management) прямо отказывается давать числовой порог («There are few universal numeric
-thresholds»); формулировка вида «≥N расхождений ⇒ `fork`» здесь запрещена. Вместо порога —
-**операционный критерий из двух обязательных осей**:
+Selecting a strategy **on import** described above («How to choose a strategy»). Separate question -
+when to translate already **alive** `notify`-skill in `fork`. Practice (rOpenSci 2025, GitHub
+fork-management) outright refuses to give a numerical threshold («There are few universal numeric
+thresholds»); formulation of the form «≥N discrepancies ⇒ `fork`» is not allowed here. Instead of a threshold -
+**operational criterion of two required axes**:
 
-- **Ось A — переприменяется ли правка механически.** «Can this change be re-applied
+- **Axis A — whether the edit is reapplied mechanically.** «Can this change be re-applied
   **mechanically** after an upstream update, or does it require human judgment every time?»
-  Регенерация из RU-источника или скриптовая замена frontmatter — это механически; перевод/
-  адаптация вручную при каждом дрейфе — нет.
-- **Ось B — сколько стоит следующий синк.** «Once the marginal cost of staying current is
+  Regeneration from RU-source or script replacement frontmatter — it's mechanical; translation/
+  manual adaptation on each drift - no.
+- **Axis B — how much does the next sync cost?** «Once the marginal cost of staying current is
   routinely higher than the value of upstream compatibility, the fork has become the correct
-  operational choice.» У нас это наблюдаемо: сколько раз подряд `update-upstreams.sh --check`
-  по этому скиллу реально приводил к ручной работе и сколько её было — **наблюдение по истории,
-  не прогноз**.
+  operational choice.» We observe this: how many times in a row `update-upstreams.sh --check`
+  for this skill actually led to manual work and how much of it there was - **observation on history,
+  not a forecast**.
 
-**Правило: перевод в `fork` легален только когда обе оси сошлись** — правка не переприменяется
-механически И синк уже стоил ручной работы. Одна ось сошлась, другая нет → остаёмся на `notify`,
-фиксируем наблюдение. Оси противоречат друг другу (правка механическая, но синк почему-то дорог) →
-разбирается причина, стратегия не меняется.
+**Rule: transfer to `fork` is only legal when both axes are aligned** — edit is not reapplied
+mechanically And the sync was already worth manual work. One axis converges, the other does not → stay on `notify`,
+recording the observation. Axes contradict each other (editing is mechanical, but for some reason the sync is expensive) →
+the reason is being investigated, the strategy is not changing.
 
-Третья, **отсекающая** ось — «дифф-поверхность» (minimize the diff surface): если наши правки
-размазаны по многим файлам/абстракциям, `fork` не спасёт проблему, а зафиксирует её — сначала
-  собрать правки в один шов. У нас шов для этого есть по построению: canonical
-`SKILL.md` + `references/` и отдельный `upstream.json`.
+Third, **cut-off** axis - «diff surface» (minimize the diff surface): if our edits
+spread across many files/abstractions, `fork` will not save the problem, but will fix it - first
+  assemble the edits into one seam. We have a seam for this according to construction: canonical
+`SKILL.md` + `references/` and separate `upstream.json`.
 
-## Цена `fork`
+## Price `fork`
 
-`fork` — это не «мы взяли контроль над скиллом», а **«мы подписались на ручной мерж на каждом
-дрейфе апстрима, навсегда»**. Три части цены (RAG, дословно):
+`fork` — this is not «we took control of the skill», a **«we signed up for manual merge on each
+upstream drift, forever»**. Three parts price (RAG, verbatim):
 
-- **permanent merge tax** — чем дольше не синкались, тем тяжелее мерж;
-- **drift** — чем дальше форк уезжает от апстрима, тем труднее контрибьютить изменения обратно;
-- **security backports** — патчи безопасности апстрима не прилетают автоматом, их нужно ловить и
-  переносить руками.
+- **permanent merge tax** — the longer you don't synchronize, the harder the merge;
+- **drift** — the further the fork moves from the upstream, the more difficult it is to contribute changes back;
+- **security backports** — upstream security patches do not arrive automatically, they need to be caught and
+  carry by hand.
 
-Наша специфика сверх практики: `fork`/`merge` поднимают `review_pending`
-(`merge.review_pending` для `merge`), а этот флаг **блокирует `validate.sh`/`registry`/релиз
-ВСЕГО репозитория**, не только конкретного скилла — то есть цену решения платит не только автор
-переведённого скилла, но и любой, кто в этот момент закрывает несвязанную работу. Формулировка
-«`fork` даёт нам контроль» без называния этой цены — дефект постановки, не просто неполнота.
+Our specificity beyond practice: `fork`/`merge` raise `review_pending`
+(`merge.review_pending` for `merge`), and this flag **blocks `validate.sh`/`registry`/release
+TOTAL repository**, not only a specific skill - that is, it is not only the author who pays the price of the solution
+of the translated skill, but also anyone who closes unrelated work at that moment. Formulation
+«`fork` gives us control» without mentioning this price is a defect in production, not just incompleteness.
 
-## Каталог источников (что взято, что отклонено)
+## Source directory (what is accepted, what is rejected)
 
-Решения «взять / адаптировать / отклонить / доверять апстриму» по каждому внешнему
-репозиторию-источнику ведутся в каталоге
+Solutions «take / adapt / reject / trust upstream» for each external
+to the source repository are maintained in the directory
 [`packages/skiller/references/README.md`](https://github.com/academici/swissknifeman/blob/main/packages/skiller/references/README.md)
-(таблица `Источник | Ценность | Статус`). Это источник истины по отбору; per-skill
-паспорта — в `upstream.json` рядом с каждым импортированным `SKILL.md`.
+(table `Source | Value | Status`). This is the source of truth by selection; per-skill
+passports - in `upstream.json` next to each imported `SKILL.md`.

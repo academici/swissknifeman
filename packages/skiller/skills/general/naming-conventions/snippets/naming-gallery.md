@@ -1,56 +1,56 @@
-# Галерея именования: плохо → хорошо (кросс-языково)
+# Naming gallery: bad → good (cross-lingual)
 
-Готовая таблица для ревью или вставки в `CLAUDE.md`/`AGENTS.md`. Принцип один:
-**имя раскрывает намерение, а не реализацию и не тип.**
+Ready table for review or insertion into `CLAUDE.md`/`AGENTS.md`. There is only one principle:
+**the name reveals the intent, not the implementation or the type.**
 
-## Функции и методы
+## Functions and methods
 
-| Плохо | Хорошо | Почему |
+| Bad | Okay | Why |
 |:--|:--|:--|
-| `handleData(d)` | `parseInvoice(raw)` | глагол + что именно |
-| `processX()` / `doStuff()` | `chargeCard()`, `rebuildIndex()` | конкретное действие |
-| `getDataFromDbAndCache()` | `loadUser(id)` | реализация (db+cache) не в имени |
-| `getUserById(id)` | `user(id)` / `findUser(id)` | аргумент уже говорит «by id» |
-| `getAllActiveUsersList()` | `activeUsers()` | без `getAll…List` шума |
-| `findByCodeOrFail`, `findByEmailOrFail`, … | `find(criteria)` / `activeBySlug(slug)` | не метод-на-поле |
-| `checkUser()` (а внутри мутация) | запрос `isEligible()` + команда `activate()` | CQS: имя не врёт про эффект |
+| `handleData(d)` | `parseInvoice(raw)` | verb + what exactly |
+| `processX()` / `doStuff()` | `chargeCard()`, `rebuildIndex()` | specific action |
+| `getDataFromDbAndCache()` | `loadUser(id)` | implementation (db+cache) not in name |
+| `getUserById(id)` | `user(id)` / `findUser(id)` | argument already says «by id» |
+| `getAllActiveUsersList()` | `activeUsers()` | without `getAll…List` noise |
+| `findByCodeOrFail`, `findByEmailOrFail`, … | `find(criteria)` / `activeBySlug(slug)` | is not a method-on-field |
+| `checkUser()` (and inside there is a mutation) | request `isEligible()` + command `activate()` | CQS: the name doesn't lie about the effect |
 
-## Классы и типы
+## Classes and types
 
-| Плохо | Хорошо | Почему |
+| Bad | Okay | Why |
 |:--|:--|:--|
-| `UserManager` | `UserRepository` / `UserRegistrar` | роль, а не «менеджер» |
-| `OrderHelper`, `StringUtils` | `OrderTotals`, `Slugifier` | свалка → конкретная ответственность |
-| `DataProcessor` | `CsvImporter`, `PaymentSettler` | что обрабатывает и зачем |
-| `OrderObject`, `OrderClass`, `OrderData2` | `Order` | суффикс типа — шум |
-| `IUserRepository` (венгерский) | `UserRepository` | без префикса-кодировки типа |
+| `UserManager` | `UserRepository` / `UserRegistrar` | role, not «manager» |
+| `OrderHelper`, `StringUtils` | `OrderTotals`, `Slugifier` | dump → specific responsibility |
+| `DataProcessor` | `CsvImporter`, `PaymentSettler` | what it processes and why |
+| `OrderObject`, `OrderClass`, `OrderData2` | `Order` | type suffix - noise |
+| `IUserRepository` (Hungarian) | `UserRepository` | without type encoding prefix |
 
-## Переменные и поля
+## Variables and fields
 
-| Плохо | Хорошо | Почему |
+| Bad | Okay | Why |
 |:--|:--|:--|
-| `data`, `info`, `obj`, `item` | `invoice`, `recipient`, `row` | по содержимому |
-| `tmp`, `temp`, `val`, `res`, `arr` | `parsed`, `dueDate`, `pendingIds` | искабельно, осмысленно |
-| `list`, `users2`, `arr3` | `recipients`, `incomingUser` | разведи по смыслу |
-| `flag`, `status` (для bool) | `isPublished`, `hasAccess` | булево — вопрос |
-| `strName`, `iCount`, `bOk` | `name`, `count`, `accepted` | без венгерской нотации |
+| `data`, `info`, `obj`, `item` | `invoice`, `recipient`, `row` | by content |
+| `tmp`, `temp`, `val`, `res`, `arr` | `parsed`, `dueDate`, `pendingIds` | intriguing, meaningful |
+| `list`, `users2`, `arr3` | `recipients`, `incomingUser` | make sense |
+| `flag`, `status` (for bool) | `isPublished`, `hasAccess` | boolean - question |
+| `strName`, `iCount`, `bOk` | `name`, `count`, `accepted` | without Hungarian notation |
 
-## Булевы
+## Boolean
 
 `is*` / `has*` / `can*` / `should*` / `needs*`:
 `isActive`, `hasInvoice`, `canEdit`, `shouldRetry`, `needsReview`.
 
-## Коллекции
+## Collections
 
-Множественное число для коллекций (`users`, `orderIds`); единственное — для элемента (`user`).
-Не `userList`/`userArray` — тип хранилища не в имени.
+Plural for collections (`users`, `orderIds`); single - for element (`user`).
+Not `userList`/`userArray` — storage type is not in the name.
 
-## Тесты
+## Tests
 
-Имя теста = условие + ожидание:
-`it_archives_paid_orders_after_30_days`, а не `test1`, `testOrders`, `itWorks`.
+Test name = condition + waiting:
+`it_archives_paid_orders_after_30_days`, and not `test1`, `testOrders`, `itWorks`.
 
-## Симметрия
+## Symmetry
 
 `open`/`close` · `begin`/`end` · `show`/`hide` · `create`/`delete` · `lock`/`unlock` ·
-`enable`/`disable`. Не смешивай (`open`/`terminate`, `add`/`destroy`).
+`enable`/`disable`. Don't mix (`open`/`terminate`, `add`/`destroy`).

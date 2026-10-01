@@ -1,30 +1,30 @@
-# Анатомия скилла
+# Anatomy of a skill
 
-Скилл — это папка внутри bucket-а. Минимум — один `SKILL.md`; обычно рядом
-лежат сниппеты и адаптерные delta-файлы.
+Skill is a folder inside bucket-a. Minimum - one `SKILL.md`; usually nearby
+there are snippets and adapters delta-files.
 
 ```
 skills/laravel-testing/laravel-testing/
-├── SKILL.md          # обязательный: frontmatter + инструкции для агента
-├── snippets/         # примеры кода, шаблоны, справочные файлы
-│   ├── index.json    # манифест сниппетов
+├── SKILL.md          # required: frontmatter + instructions for agent
+├── snippets/         # code examples, templates, help files
+│   ├── index.json    # snippets manifest
 │   └── pest-example.md
-├── adapters/         # опционально: overrides под конкретные IDE
+├── adapters/         # optional: overrides for specific IDE
 │   ├── claude.md
 │   └── cursor.md
-└── upstream.json     # только у внешних скиллов (см. Upstream-sync)
+└── upstream.json     # only for external skills (see Upstream-sync)
 ```
 
 ## SKILL.md
 
-Файл состоит из YAML-frontmatter и тела с инструкциями:
+The file consists of YAML-frontmatter and bodies with instructions:
 
 ```markdown
 ---
 name: skill-name
-bucket: <имя каталога-бакета>   # должно совпадать с skills/<bucket>/ и иметь запись в buckets.json
+bucket: <bucket-directory-name>   # must match skills/<bucket>/ and have an entry in buckets.json
 version: 0.1.0
-description: "Краткое описание скилла"
+description: "Brief description of the skill"
 risk: read|draft|write|external
 persona: founder
 tags: []
@@ -36,70 +36,70 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
-Когда использовать этот скилл и почему он нужен.
+## Context
+When to use this skill and why it is needed.
 
-## Входные данные
-Что агент должен знать перед выполнением.
+## Input data
+What the agent must know before executing.
 
-## Алгоритм
-Пошаговые инструкции для агента.
+## Algorithm
+Step-by-step instructions for the agent.
 
-## Выходные данные
-Конкретные файлы, которые будут созданы.
+## Imprint
+Specific files that will be created.
 
-## Чеклист качества
-- [ ] Критерий 1
+## Quality checklist
+- [ ] Criterion 1
 
-## Ссылки
+## Links
 - snippets/example.md
 ```
 
-## Ключевые поля frontmatter
+## Key fields frontmatter
 
-| Поле | Назначение |
+| Field | Purpose |
 |---|---|
-| `name` | уникальное имя; при плоской раскладке коллизии решаются префиксом bucket-а |
-| `description` | по нему агент решает, когда применить скилл — пишите конкретно |
-| `risk` | `read` — только чтение, `draft` — черновики, `write` — меняет файлы, `external` — внешние вызовы |
-| `requires` / `produces_for` | связи между скиллами (например, `prd-from-brd` требует выхода `brd`) |
-| `snippets` | список сниппетов, которые скилл использует |
-| `adapters` | в каких агентах скилл проверен |
-| `sha256` | заполняется автоматически `skiller registry` |
+| `name` | unique name; with a flat layout, collisions are resolved by a prefix bucket-a |
+| `description` | the agent decides when to use the skill - write specifically |
+| `risk` | `read` — read only, `draft` — drafts, `write` — changes files, `external` — external calls |
+| `requires` / `produces_for` | connections between skills (for example, `prd-from-brd` requires exit `brd`) |
+| `snippets` | list of snippets that the skill uses |
+| `adapters` | in which agents the skill is tested |
+| `sha256` | is filled in automatically `skiller registry` |
 
-## Сниппеты
+## Snippets
 
-`snippets/` — это рабочие материалы скилла: примеры кода, шаблоны документов,
-справочники. Манифест `index.json` перечисляет файлы и проверяется
-`validate.sh`. Сниппеты позволяют держать `SKILL.md` коротким: инструкции
-отдельно, объёмные примеры отдельно.
+`snippets/` — these are working materials of the skill: code examples, document templates,
+reference books. Manifesto `index.json` lists files and checks
+`validate.sh`. Snippets allow you to keep `SKILL.md` short: instructions
+separately, voluminous examples separately.
 
-## Delta-файлы адаптеров
+## Delta-adapter files
 
-Специфика конкретной IDE не смешивается с основным скиллом, а выносится в
-`adapters/<agent>.md` внутри папки скилла:
+Specific IDE does not mix with the main skill, but is placed in
+`adapters/<agent>.md` inside the skill folder:
 
-- `adapters/claude.md` — overrides для CLAUDE.md-специфики Claude Code;
-- `adapters/cursor.md` — overrides для `.cursor/rules`.
+- `adapters/claude.md` — overrides for CLAUDE.md-specifics Claude Code;
+- `adapters/cursor.md` — overrides for `.cursor/rules`.
 
-Так один скилл остаётся provider-neutral, а адаптеры накладывают тонкую
-настройку при установке. Формат дельт (`Override:` / `Additional:`, pre-flight
-хуки) — в [спецификации адаптерных дельт](./adapter-deltas).
+So one skill remains provider-neutral, and the adapters impose a thin
+setting during installation. Delta format (`Override:` / `Additional:`, pre-flight
+hooks) — in [adapter delta specifications](./adapter-deltas).
 
 ## upstream.json
 
-Присутствует только у внешних скиллов и описывает источник и стратегию
-обновления — подробно в [Upstream-sync](./upstream-sync). Главное правило:
-**нет `upstream.json` → скилл самописный, sync-тулинг его не трогает**.
+Present only for external skills and describes the source and strategy
+updates - details in [Upstream-sync](./upstream-sync). Main rule:
+**no `upstream.json` → self-written skill, sync-tuning does not touch him**.
 
-## Размер тела `SKILL.md` — платформенного капа нет (OQ-4)
+## Body size `SKILL.md` — no platform cap (OQ-4)
 
-Тело выбранного скилла читается провайдером **целиком** — ни у Claude Code, ни у
-Codex нет ограничения на размер файла `SKILL.md` (первоисточник Codex прямо
-говорит: бюджет обнаружения применяется «only to the initial skills list», а
-выбранный скилл грузится полностью). Реальное ограничение — **листинг
-обнаружения** (имя+description каждого скилла, резидентно в каждом запросе), не
-файл: см. [Токеновый бюджет](./budget.md). Кап тела `SKILL.md` этим не вводится
-(); единственный ограничитель — мягкий warn
-`validate.sh` по числу непустых строк тела (внутренний скилл `skill-authoring`,
-раздел «lean SKILL.md») — он про читаемость, не про платформенный лимит.
+The body of the selected skill is read by the provider **in full** — neither Claude Code, neither
+Codex no file size limit `SKILL.md` (original source Codex straight
+says: detection budget is applied «only to the initial skills list», a
+the selected skill is loaded completely). The real limitation is **listing
+detection** (name+description of each skill, resident in each request), not
+file: see [Token budget](./budget.md). Body cap `SKILL.md` is not entered by this
+(); the only limiter is soft warn
+`validate.sh` by number of non-empty body lines (internal skill `skill-authoring`,
+section «lean SKILL.md») — it's about readability, not about the platform limit.

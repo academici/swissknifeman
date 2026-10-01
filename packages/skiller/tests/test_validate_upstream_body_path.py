@@ -1,17 +1,17 @@
-"""P7.3 (thin-navigator): scripts/validate.sh body_path-гейты — изолированно, без
-задевания настоящего packages/skiller.
+"""P7.3 (thin-navigator): scripts/validate.sh body_path-gates - isolated, without
+touching the present packages/skiller.
 
-scripts/validate.sh — bash-обёртка вокруг python-heredoc'а (та же причина, что у
-test_update_upstreams.py: не lib/skiller-модуль, честно тестируется только реальным
-запуском). REPO_ROOT резолвится от расположения скрипта, поэтому копируем
-validate.sh рядом с МИНИМАЛЬНЫМ синтетическим skills/. Такой корень намеренно НЕ
-содержит buckets.json/skills.json/marketplace.json и т.п. — секции validate.sh,
-которым они нужны, при их отсутствии мягко копят ERROR (не падают исключением), а
-python-heredoc почти сразу делает sys.exit(1) из-за непустого errors[] — bash-секции
-11+ (registry --check, полный test.sh, budget --check-core) до реального
-packages/skiller НЕ достаются вовсе (и потому не могут рекурсивно перезапустить
-этот же тест-сьют). Проверяем не общий exit-код (он ожидаемо ненулевой из-за
-недостающего окружения реестра), а КОНКРЕТНЫЕ строки про body_path в stdout."""
+scripts/validate.sh — bash-wrap around python-heredoc'a (same reason as
+test_update_upstreams.py: not lib/skiller-module, honestly tested only by real
+launch). REPO_ROOT resolves from the location of the script, so copy
+validate.sh next to MINIMUM synthetic skills/. Such a root is intentionally NOT
+contains buckets.json/skills.json/marketplace.json etc. - sections validate.sh,
+who need them, in their absence they gently hoard ERROR (do not fall exception), a
+python-heredoc does almost immediately sys.exit(1) due to non-empty errors[] — bash-sections
+11+ (registry --check, full test.sh, budget --check-core) to real
+packages/skiller are NOT received at all (and therefore cannot recursively restart
+the same test suite). Checking for non-general exit-code (it is expectedly non-zero due to
+missing registry environment), and SPECIFIC lines about body_path in stdout."""
 import hashlib
 import json
 import shutil
@@ -87,7 +87,7 @@ class ValidateBodyPathCase(unittest.TestCase):
         self.assertIn("body_path escapes skill dir", result.stdout)
 
     def test_replace_strategy_with_skill_md_still_tracked_is_rejected(self):
-        # Иначе update-upstreams.sh --apply тихо перезаписал бы навигатор.
+        # Otherwise update-upstreams.sh --apply would silently overwrite the navigator.
         self._write_upstream(strategy="replace", files=[
             {"path": "references/full.md", "url": "file:///unused",
              "sha256": _sha256(self.body_text), "fetched_at": "2026-07-01"},

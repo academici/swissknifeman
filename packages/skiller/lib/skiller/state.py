@@ -71,5 +71,5 @@ def registry_git_state(env):
 def print_registry_state(env):
     sha, dirty = registry_git_state(env)
     if sha:
-        print(f"Реестр:   HEAD {sha}" + (" (есть незакоммиченные изменения "
-              "скиллов — marketplace видит только коммиты)" if dirty else ""))
+        print(f"Registry:   HEAD {sha}" + (" (there are uncommitted changes "
+              "skills - marketplace only sees commits)" if dirty else ""))

@@ -1,16 +1,16 @@
 # adr/madr
 
 - **URL:** https://github.com/adr/madr
-- **Статус:** planned
-- **Проверено:** 2026-06-11
+- **Status:** planned
+- **Checked:** 2026-06-11
 
-MADR — Markdown Architectural Decision Records, зрелый стандарт шаблонов ADR.
+MADR — Markdown Architectural Decision Records, mature template standard ADR.
 
-## Брать выборочно
+## Take selectively
 
-- Полный и короткий шаблоны ADR → `skills/architect/architecture/snippets/`
-  (сверить с существующим adr-template.md, взять недостающее)
+- Full and short templates ADR → `skills/architect/architecture/snippets/`
+  (check with existing adr-template.md, take the missing)
 
-## Целевые bucket-ы
+## Targets bucket-s
 
 `architect/architecture`.

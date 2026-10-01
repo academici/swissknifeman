@@ -18,55 +18,55 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+## Context
 
-Real-time события в Laravel: серверная часть (события `ShouldBroadcast`, авторизация каналов) + клиентская (Laravel Echo поверх Reverb/Pusher/Ably). Скилл активируется при настройке broadcasting, создании broadcast-событий, presence-каналах, whisper, model broadcasting.
+Real-time events in Laravel: server part (events `ShouldBroadcast`, channel authorization) + client (Laravel Echo on top Reverb/Pusher/Ably). The skill is activated when setting up broadcasting, creation broadcast-events, presence-channels, whisper, model broadcasting.
 
-## Алгоритм
+## Algorithm
 
-1. **Установка**: `php artisan install:broadcasting` (флаги `--reverb`/`--pusher`/`--ably`). Создаёт `config/broadcasting.php` и `routes/channels.php`.
-2. **Событие**: `php artisan make:event OrderShipped`, имплементировать интерфейс:
-   - `ShouldBroadcast` — через очередь (нужен `queue:work`);
-   - `ShouldBroadcastNow` — синхронно (dev, time-critical);
-   - `ShouldDispatchAfterCommit` — после commit транзакции (защита от race condition).
-3. **Настройка события**: `broadcastOn()` (Channel/PrivateChannel/PresenceChannel), опционально `broadcastAs()` (своё имя), `broadcastWith()` (контроль payload), `broadcastWhen()` (условие).
-4. **Авторизация**: closures в `routes/channels.php`; для public-каналов не нужна, private — bool, presence — массив данных пользователя. Сложная логика — `php artisan make:channel`. Проверка: `php artisan channel:list`.
-5. **Клиент**: `npm i -D laravel-echo pusher-js`, конфиг Echo из `VITE_REVERB_*` переменных; `Echo.private().listen()`, `Echo.join()` (presence), `whisper()/listenForWhisper()` (клиент-клиент без сервера).
-6. **Процессы**: `php artisan queue:work` (для ShouldBroadcast) + `php artisan reverb:start` (для Reverb).
-7. **Model broadcasting**: трейт `BroadcastsEvents` на модели — авто-события created/updated/deleted/trashed/restored на канал `App.Models.Order.{id}`.
+1. **Installation**: `php artisan install:broadcasting` (flags `--reverb`/`--pusher`/`--ably`). Creates `config/broadcasting.php` and `routes/channels.php`.
+2. **Event**: `php artisan make:event OrderShipped`, implement the interface:
+   - `ShouldBroadcast` — via queue (needed `queue:work`);
+   - `ShouldBroadcastNow` — synchronously (dev, time-critical);
+   - `ShouldDispatchAfterCommit` — after commit transactions (protection against race condition).
+3. **Event setup**: `broadcastOn()` (Channel/PrivateChannel/PresenceChannel), optional `broadcastAs()` (your name), `broadcastWith()` (control payload), `broadcastWhen()` (condition).
+4. **Authorization**: closures in `routes/channels.php`; for public-channels are not needed, private — bool, presence — array of user data. Complex logic - `php artisan make:channel`. Check: `php artisan channel:list`.
+5. **Client**: `npm i -D laravel-echo pusher-js`, config Echo from `VITE_REVERB_*` variables; `Echo.private().listen()`, `Echo.join()` (presence), `whisper()/listenForWhisper()` (client-client without server).
+6. **Processes**: `php artisan queue:work` (for ShouldBroadcast) + `php artisan reverb:start` (for Reverb).
+7. **Model broadcasting**: trait `BroadcastsEvents` on the model - auto-events created/updated/deleted/trashed/restored per channel `App.Models.Order.{id}`.
 
-## Когда какой сниппет открывать
+## When to open which snippet
 
-| Ситуация | Файл |
+| Situation | File |
 |---|---|
-| Создаю broadcast-событие (broadcastOn/As/With/When, toOthers) | `snippets/broadcast-event.php` |
-| Настраиваю авторизацию каналов (private, presence, model binding) | `snippets/channels.php` |
-| Конфигурирую Echo на клиенте, слушаю события и нотификации | `snippets/echo-client.ts` |
-| Presence-канал (кто онлайн) и whisper (typing-индикатор) | `snippets/presence-whisper.ts` |
+| I create broadcast-event (broadcastOn/As/With/When, toOthers) | `snippets/broadcast-event.php` |
+| Setting up channel authorization (private, presence, model binding) | `snippets/channels.php` |
+| Configuring Echo on the client, listening to events and notifications | `snippets/echo-client.ts` |
+| Presence-channel (who is online) and whisper (typing-indicator) | `snippets/presence-whisper.ts` |
 
-## Типичные грабли
+## Typical rake
 
-- **Queue worker должен работать** для `ShouldBroadcast` — иначе события «молча» копятся в очереди. В dev используйте `ShouldBroadcastNow`.
-- **`BROADCAST_CONNECTION`, не `BROADCAST_DRIVER`** — Laravel 11+ переименовал env-ключ.
-- **`toOthers()`** требует трейт `InteractsWithSockets` И заголовок `X-Socket-ID`. Echo сам добавляет его в глобальный Axios; для `fetch` шлите `Echo.socketId()` вручную.
-- **`VITE_`-префикс обязателен** для клиентских env-переменных — без него `import.meta.env.*` вернёт undefined.
-- **Reverb — long-running процесс**: изменения кода требуют `php artisan reverb:restart`.
-- **Presence-авторизация возвращает массив** данных пользователя (`['id' => ..., 'name' => ...]`), не `true` — иначе подписка молча падает.
-- **Точка-префикс при `broadcastAs()`**: клиент слушает `.listen('.custom.name')`. Без точки Echo ищет `App\Events\custom.name` и молча не находит.
-- **Три уровня Reverb-host**: `REVERB_SERVER_HOST/PORT` (на чём слушает процесс), `REVERB_HOST/PORT` (публичный адрес для backend), `VITE_REVERB_HOST/PORT` (адрес для браузера). В Docker/за прокси они различаются.
-- **Sanctum SPA**: `/broadcasting/auth` под `auth:sanctum`, CSRF + `withCredentials: true` в authorizer; при разных origin — добавить путь в `config/cors.php` и `supports_credentials: true`.
-- **`channels.php` не загружен**: проверьте `withRouting(channels: ...)` в `bootstrap/app.php`.
+- **Queue worker should work** for `ShouldBroadcast` — otherwise events «silently» are piling up in the queue. B dev use `ShouldBroadcastNow`.
+- **`BROADCAST_CONNECTION`, not `BROADCAST_DRIVER`** — Laravel 11+ renamed env-key.
+- **`toOthers()`** requires trait `InteractsWithSockets` And the title `X-Socket-ID`. Echo itself adds it to the global Axios; for `fetch` send `Echo.socketId()` manually.
+- **`VITE_`-prefix is required** for client env-variables - without it `import.meta.env.*` will return undefined.
+- **Reverb — long-running process**: code changes require `php artisan reverb:restart`.
+- **Presence-authorization returns an array** user data (`['id' => ..., 'name' => ...]`), not `true` — otherwise the subscription silently drops.
+- **Prefix dot when `broadcastAs()`**: client listening `.listen('.custom.name')`. Without dot Echo looking for `App\Events\custom.name` and silently does not find it.
+- **Three levels Reverb-host**: `REVERB_SERVER_HOST/PORT` (what the process is listening on), `REVERB_HOST/PORT` (public address for backend), `VITE_REVERB_HOST/PORT` (browser address). B Docker/behind the proxy they differ.
+- **Sanctum SPA**: `/broadcasting/auth` under `auth:sanctum`, CSRF + `withCredentials: true` in authorizer; for different origin — add path to `config/cors.php` and `supports_credentials: true`.
+- **`channels.php` not loaded**: check `withRouting(channels: ...)` in `bootstrap/app.php`.
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Выбран правильный интерфейс (Now для dev, AfterCommit при создании записей в транзакции)
-- [ ] `broadcastWith()` не утекает чувствительные атрибуты модели
-- [ ] Presence-авторизация возвращает массив, private — bool
-- [ ] Клиент использует точку-префикс, если задан `broadcastAs()`
-- [ ] Запущены оба процесса: queue worker и reverb (или настроен supervisor)
-- [ ] env разнесён: REVERB_SERVER_* / REVERB_* / VITE_REVERB_*
+- [ ] Correct interface selected (Now for dev, AfterCommit when creating records in a transaction)
+- [ ] `broadcastWith()` does not leak sensitive model attributes
+- [ ] Presence-authorization returns an array, private — bool
+- [ ] Client uses prefix dot if specified `broadcastAs()`
+- [ ] Both processes are running: queue worker and reverb (or configured supervisor)
+- [ ] env spaced: REVERB_SERVER_* / REVERB_* / VITE_REVERB_*
 
-## Ссылки
+## Links
 
 - https://laravel.com/docs/broadcasting
 - https://laravel.com/docs/reverb

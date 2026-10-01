@@ -2,7 +2,7 @@
   "schema": 1,
   "pack": "backend-laravel",
   "version": "0.12.2",
-  "description": "Backend dev-loop для Laravel: агенты slice-builder/test-writer/reviewer, последовательный одно-веточный workflow (срез→impl→test→review), SubagentStop review-gate. v0.5.0: risk-адаптивный review-gate (risk_level/risk_markers в схеме, adversarial-режим на HIGH, severity-enum детект≠гейтинг, config-honesty, честность тестов [POSSIBLE-DEFECT]), Lean-tiered model/effort-лейны под риск среза (Sonnet impl, Opus review/HIGH, Haiku тривиал), env-preflight в Setup, layout-agnostic globs правил. Обобщено из ретроспективы chatom + overnight-артефактов memster.",
+  "description": "Backend dev-loop for Laravel: agents slice-builder/test-writer/reviewer, sequential single-branch workflow (slice→impl→test→review), SubagentStop review-gate. v0.5.0: risk-adaptive review-gate (risk_level/risk_markers in the schema, adversarial-mode on HIGH, severity-enum detect≠gating, config-honesty, fairness of tests [POSSIBLE-DEFECT]), Lean-tiered model/effort-lanes at risk of cutting (Sonnet impl, Opus review/HIGH, Haiku trivial), env-preflight in Setup, layout-agnostic globs rules. Summarized from retrospective chatom + overnight-artifacts memster.",
   "stack": {
     "shape": "backend",
     "language": "php",
@@ -37,24 +37,24 @@
   "interview": [
     {
       "id": "PACK_PREFIX",
-      "q": "Префикс имён агентов/воркфлоу?",
+      "q": "Agent name prefix/work flow?",
       "default": "{project_dirname}",
       "kind": "slug"
     },
     {
       "id": "PROJECT_DIR",
-      "q": "Абсолютный путь к проекту?",
+      "q": "Absolute path to the project?",
       "detect": "pwd"
     },
     {
       "id": "PHP_RUNNER",
-      "q": "Бинарь PHP для artisan/тестов?",
+      "q": "Binary PHP for artisan/tests?",
       "detect": "command -v php8.4 || command -v php",
       "default": "php"
     },
     {
       "id": "TEST_FRAMEWORK",
-      "q": "PHPUnit-native или Pest?",
+      "q": "PHPUnit-native or Pest?",
       "detect": "composer.json:require-dev.pestphp/pest",
       "enum": [
         "phpunit",
@@ -64,52 +64,52 @@
     },
     {
       "id": "TEST_RUNNER_CMD",
-      "q": "Команда прогона тестов?",
+      "q": "Test run command?",
       "default": "{PHP_RUNNER} artisan test"
     },
     {
       "id": "TEST_DB",
-      "q": "Имя изолированной тестовой БД?",
+      "q": "Isolated test database name?",
       "default": "{PACK_PREFIX}_test"
     },
     {
       "id": "BASE_BRANCH",
-      "q": "Базовая ветка прогонов?",
+      "q": "Basic run branch?",
       "detect": "git symbolic-ref --short refs/remotes/origin/HEAD",
       "default": "main"
     },
     {
       "id": "CHECK_CMD",
-      "q": "Быстрая команда review-gate (статика)?",
+      "q": "Shortcut review-gate (static)?",
       "default": "vendor/bin/pint --parallel --test -q"
     },
     {
       "id": "ACCESS_LAYER",
-      "q": "Канон access-layer (тонкий контроллер, Action/Repository)?",
+      "q": "Canon access-layer (thin controller, Action/Repository)?",
       "kind": "bool",
       "default": true
     },
     {
       "id": "ACCESS_ROOT",
-      "q": "Корень кода access-layer (app / src / packages/*/src)?",
+      "q": "Code root access-layer (app / src / packages/*/src)?",
       "detect": "test -d app/Http && echo app ; test ! -d app/Http && test -d src/Http && echo src ; test ! -d app/Http && test ! -d src/Http && ls -d packages/*/src/Http >/dev/null 2>&1 && echo 'packages/*/src' ; echo ''",
       "default": "app"
     },
     {
       "id": "SCAFFOLDS_SCHEMA",
-      "q": "Агенты создают миграции/модели (greenfield/пакет), а не пишут поверх готовой схемы?",
+      "q": "Agents create migrations/models (greenfield/package), and not write on top of the finished diagram?",
       "kind": "bool",
       "detect": "test -d app/Models && echo false || echo true",
       "default": true
     },
     {
       "id": "DOCS_DIR",
-      "q": "Куда положить guideline (внутренний AI-гайд, не публичная docs/)?",
+      "q": "Where to put it guideline (internal AI-guide, not public docs/)?",
       "default": ".claude/guidelines"
     },
     {
       "id": "MODEL_REVIEWER",
-      "q": "Модель reviewer-агента (Lean-tiered: Opus — судит риск/архитектуру)?",
+      "q": "Model reviewer-agent (Lean-tiered: Opus — judges the risk/architecture)?",
       "default": "opus",
       "enum": [
         "inherit",
@@ -120,7 +120,7 @@
     },
     {
       "id": "MODEL_SLICE_BUILDER",
-      "q": "Модель slice-builder (Lean-tiered: Sonnet — массовая имплементация)?",
+      "q": "Model slice-builder (Lean-tiered: Sonnet — mass implementation)?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -131,7 +131,7 @@
     },
     {
       "id": "MODEL_TEST_WRITER",
-      "q": "Модель test-writer (Lean-tiered: Sonnet)?",
+      "q": "Model test-writer (Lean-tiered: Sonnet)?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -142,7 +142,7 @@
     },
     {
       "id": "MODEL_SPEC_WRITER",
-      "q": "Модель spec-writer (Lean-tiered: Opus — проектирование/синтез)?",
+      "q": "Model spec-writer (Lean-tiered: Opus — design/synthesis)?",
       "default": "opus",
       "enum": [
         "inherit",
@@ -153,7 +153,7 @@
     },
     {
       "id": "MODEL_RECON",
-      "q": "Модель read-only recon-субагентов (route-map/db-impact/blade/test-verify/security — дешёвая разведка)?",
+      "q": "Model read-only recon-subagents (route-map/db-impact/blade/test-verify/security — cheap intelligence)?",
       "default": "haiku",
       "enum": [
         "inherit",
@@ -164,17 +164,17 @@
     },
     {
       "id": "GATE_COVERAGE_MIN",
-      "q": "Мин. покрытие изменённого поведения (%)?",
+      "q": "Min. behavior change coverage (%)?",
       "default": "80"
     },
     {
       "id": "GATE_MAX_CRITICAL",
-      "q": "Допустимо critical-находок?",
+      "q": "Acceptable critical-finds?",
       "default": "0"
     },
     {
       "id": "GATE_MAX_COMPLEXITY",
-      "q": "Порог цикломатической сложности метода?",
+      "q": "Cyclomatic complexity threshold for a method?",
       "default": "10"
     }
   ],
@@ -302,8 +302,8 @@
     "{ACCESS_ROOT}/Http/Controllers"
   ],
   "notes": {
-    "project_specific_prose": "Агенты несут инфра-предположения memster-происхождения (защищённый .env, заранее созданная Postgres тестовая БД). Проекты с иной инфрой — отредактируй отрендеренные агенты после install.",
-    "verify_workflow": "dev-loop.js использует top-level return/await (Workflow-рантайм) — node --check к нему НЕ применять; проверяй балансом скобок и непустотой.",
-    "access_layer": "Для backend-laravel access-layer интринсивен (default true). Отключение (ACCESS_LAYER=false) — ручная правка отрендеренных агентов; placeholder-разводка придёт версией пака."
+    "project_specific_prose": "Agents carry infra-assumptions memster-origin (protected .env, pre-created Postgres test database). Projects with different infrastructure - edit the rendered agents after install.",
+    "verify_workflow": "dev-loop.js uses top-level return/await (Workflow-runtime) — node --check DO NOT apply to it; check the balance of brackets and non-emptiness.",
+    "access_layer": "For backend-laravel access-layer intense (default true). Disable (ACCESS_LAYER=false) — manual editing of rendered agents; placeholder-wiring will come with the pack version."
   }
 }

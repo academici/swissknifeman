@@ -1,6 +1,6 @@
 {
   "name": "github-ops",
-  "description": "GitHub-операции в одном наборе: поток Issue→PR→Merge→Release, gh-driven ревью, триаж issue, релиз-инженерия, OSS-governance, CI/CD-гейт и роль maintainer",
+  "description": "GitHub-operations in one set: stream Issue→PR→Merge→Release, gh-driven review, triage issue, release engineering, OSS-governance, CI/CD-gate and role maintainer",
   "include": [
     "roles/open-source-maintainer",
     "oss-dev/github-flow",

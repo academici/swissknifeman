@@ -35,7 +35,7 @@ def _canonical(value) -> bytes:
 def _queue_path(plan_dir) -> Path:
     plan_dir = Path(plan_dir)
     if plan_layout.layout_version(plan_dir) != "v2":
-        raise RequestError("очередь решений доступна только для Layout v2")
+        raise RequestError("decision queue is only available for Layout v2")
     return plan_dir / "decisions" / QUEUE_NAME
 
 
@@ -385,25 +385,25 @@ def return_loop_request(plan_dir, gate: dict, *, continuation: dict, expires_at:
     required_packet = {"fingerprint_tuple", "fingerprint_digest", "occurrences", "cap",
                        "history", "judgements", "resolutions_tried"}
     if gate.get("action") != "owner-gate" or gate.get("blocks") is not True:
-        raise RequestError("P5_DECISION_REJECTED: return-loop не является блокирующим owner-gate")
+        raise RequestError("P5_DECISION_REJECTED: return-loop is not blocking owner-gate")
     if not isinstance(packet, dict) or set(packet) != required_packet:
-        raise RequestError("P5_DECISION_REJECTED: owner packet return-loop невалиден")
+        raise RequestError("P5_DECISION_REJECTED: owner packet return-loop is invalid")
     subject_id = packet["fingerprint_tuple"].get("subject")
     if not isinstance(subject_id, str) or "." not in subject_id:
-        raise RequestError("P5_DECISION_REJECTED: owner packet не несёт subject Pn.m")
+        raise RequestError("P5_DECISION_REJECTED: owner packet does not carry subject Pn.m")
     phase_id = subject_id.split(".", 1)[0]
     if not isinstance(continuation, dict) or continuation.get("target", {}).get("item_id") != subject_id:
-        raise RequestError("P5_DECISION_REJECTED: continuation не соответствует subject owner-gate")
+        raise RequestError("P5_DECISION_REJECTED: continuation does not match subject owner-gate")
     packet_ref = _digest_reference(carrier="journal.jsonl",
                                    anchor=f"return-loop:{packet['fingerprint_digest']}", value=packet)
     evidence = [packet_ref]
     for row in packet["history"]:
         if not isinstance(row, dict) or not isinstance(row.get("return_event_id"), str):
-            raise RequestError("P5_DECISION_REJECTED: history owner packet невалидна")
+            raise RequestError("P5_DECISION_REJECTED: history owner packet is invalid")
         evidence.append(_digest_reference(carrier="journal.jsonl", anchor=row["return_event_id"], value=row))
     attempted = packet["resolutions_tried"]
     if not isinstance(attempted, list) or not all(isinstance(row, str) for row in attempted):
-        raise RequestError("P5_DECISION_REJECTED: resolutions_tried owner packet невалиден")
+        raise RequestError("P5_DECISION_REJECTED: resolutions_tried owner packet is invalid")
     raw = {
         "decision_id": f"return-loop-{packet['fingerprint_digest']}", "action_version": 1,
         "kind": "authorization", "decision_class": "authority_change",
@@ -680,7 +680,7 @@ def render_gates(plan_dir) -> str:
             subject = request_value["subject"]
             rows.append(f"| {state['decision_id']} | {subject['plan_id']} {subject['item_id']} | {request_value['expires_at']} |")
         rows.append("")
-    body = "\n".join(rows or ["Нет неразрешённых owner-gate запросов."])
+    body = "\n".join(rows or ["No unresolved owner-gate requests."])
     metadata = plan_projection.metadata_block(projection="owner-gate-view", projection_version="v1",
         source_scope="decisions/queue.jsonl", through=str(len(_read_events(plan_dir)),),
         inputs_sha256_value=plan_projection.inputs_sha256((queue,), root=plan_dir) if queue.exists() else hashlib.sha256(b"").hexdigest(),

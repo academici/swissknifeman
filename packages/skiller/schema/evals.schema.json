@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schema/evals.schema.json",
   "title": "skiller skill evals (evals.json / pressure.json / triggers.json)",
-  "description": "Поведенческие тесты скилла реестра (eval-first). Лежат в skills/<bucket>/<name>/evals/. Раннер/грейдер — lib/skiller/eval.py (skiller eval). Рантайм-валидация ручная (validate.sh + eval.validate_*); схема — для DX. evals/ НЕ вендорится и не входит в content-hash.",
+  "description": "Registry skill behavioral tests (eval-first). Lie in skills/<bucket>/<name>/evals/. Runner/grader — lib/skiller/eval.py (skiller eval). Manual runtime validation (validate.sh + eval.validate_*); scheme - for DX. evals/ is NOT a vendor or part of content-hash.",
   "oneOf": [
     { "$ref": "#/$defs/evals" },
     { "$ref": "#/$defs/pressure" },
@@ -11,7 +11,7 @@
   "$defs": {
     "assertion": {
       "type": "object",
-      "description": "Детерминированная проверка вывода прогона (без LLM-judge — воспроизводимо в CI).",
+      "description": "Deterministic run output check (without LLM-judge — reproducible in CI).",
       "required": ["type", "value"],
       "properties": {
         "type": {
@@ -20,14 +20,14 @@
                    "file_exists", "file_absent", "min_words"]
         },
         "value": {
-          "description": "Подстрока/паттерн/путь/число — в зависимости от type."
+          "description": "Substring/pattern/path/number - depending on type."
         },
         "flags": {
           "type": "object",
           "properties": {
             "case_sensitive": {
               "type": "boolean",
-              "description": "По умолчанию сравнение регистронезависимо (естественный язык робастнее)."
+              "description": "Comparison is case insensitive by default (natural language is more robust)."
             }
           }
         }
@@ -37,12 +37,12 @@
       "type": "object",
       "required": ["id", "prompt"],
       "properties": {
-        "id": { "description": "Уникальный в файле идентификатор кейса." },
-        "prompt": { "type": "string", "description": "Запрос на реальном языке пользователя (конкретика: пути, имена)." },
-        "tempts": { "type": "string", "description": "Только для pressure: что подмывает агента сделать, ПРОПУСТИВ скилл." },
+        "id": { "description": "Unique case identifier in the file." },
+        "prompt": { "type": "string", "description": "Request in the user's real language (specifics: paths, names)." },
+        "tempts": { "type": "string", "description": "Only for pressure: which is tempting the agent to do it, MISSING the skill." },
         "files": {
           "type": "array",
-          "description": "Файлы, записываемые в workspace до прогона.",
+          "description": "Files written to workspace before the run.",
           "items": {
             "type": "object",
             "properties": {
@@ -59,7 +59,7 @@
     },
     "evals": {
       "type": "object",
-      "description": "evals.json — позитивные кейсы (что скилл должен делать).",
+      "description": "evals.json — positive cases (what the skill should do).",
       "required": ["skill", "cases"],
       "properties": {
         "skill": { "type": "string" },
@@ -68,7 +68,7 @@
     },
     "pressure": {
       "type": "object",
-      "description": "pressure.json — сценарии-соблазны (TDD для документации): удержать поведение под давлением.",
+      "description": "pressure.json — temptation scenarios (TDD for documentation): withhold behavior under pressure.",
       "required": ["skill", "scenarios"],
       "properties": {
         "skill": { "type": "string" },
@@ -77,7 +77,7 @@
     },
     "triggers": {
       "type": "object",
-      "description": "triggers.json — точность срабатывания description (ярус-0): should_trigger vs should_not.",
+      "description": "triggers.json — response accuracy description (tier-0): should_trigger vs should_not.",
       "required": ["should_trigger", "should_not"],
       "properties": {
         "skill": { "type": "string" },

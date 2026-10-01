@@ -57,11 +57,11 @@ def _load_routing_config(monorepo_root):
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as exc:
-        return None, f"{path} не читается: {exc}"
+        return None, f"{path} is not readable: {exc}"
     try:
         return json.loads(text), None
     except json.JSONDecodeError as exc:
-        return None, f"{path} не JSON: {exc}"
+        return None, f"{path} not JSON: {exc}"
 
 
 def _first(selectors):
@@ -72,7 +72,7 @@ def build_argv(plan_id, item_id, *, model_class, effort, monorepo_root, claude_b
     """Internal documentation."""
     routing, reason = _load_routing_config(monorepo_root)
     if routing is None:
-        raise WorkerUnavailable(f"носитель маршрутизации недоступен: {reason}")
+        raise WorkerUnavailable(f"routing media not available: {reason}")
 
     mapping = ((routing.get("mappings") or {}).get(PROVIDER_ID)) or {}
     model_selector = _first((mapping.get("class_selectors") or {}).get(model_class))
@@ -81,13 +81,13 @@ def build_argv(plan_id, item_id, *, model_class, effort, monorepo_root, claude_b
 
     if model_selector is None:
         raise WorkerUnavailable(
-            f"command-routing.json: нет селектора класса {model_class!r} для {PROVIDER_ID!r}")
+            f"command-routing.json: no class selector {model_class!r} for {PROVIDER_ID!r}")
     if effort_selector is None:
         raise WorkerUnavailable(
-            f"command-routing.json: нет селектора effort {effort!r} для {PROVIDER_ID!r}")
+            f"command-routing.json: no selector effort {effort!r} for {PROVIDER_ID!r}")
     if not template:
         raise WorkerUnavailable(
-            f"command-routing.json: нет invocation_binding.template для {PROVIDER_ID!r}")
+            f"command-routing.json: no invocation_binding.template for {PROVIDER_ID!r}")
 
     invocation = template.format(command_id=WORKER_COMMAND_ID, arguments=f"{plan_id} {item_id}")
     return [claude_bin, "-p", invocation, "--output-format", "json",
@@ -142,7 +142,7 @@ def _classify_envelope(proc, argv, client_version):
 
     if not isinstance(envelope, dict) or envelope.get("type") != "result":
         return _outcome(OUTCOME_TRANSPORT, argv=argv, client_version=client_version,
-                        reason="конверт битый, пустой или не `result`",
+                        reason="envelope is broken, empty or not `result`",
                         raw_stdout=raw[:2000], exit_code=proc.returncode)
 
     is_error = envelope.get("is_error")
@@ -157,7 +157,7 @@ def _classify_envelope(proc, argv, client_version):
 
 
     return _outcome(OUTCOME_TRANSPORT, argv=argv, client_version=client_version,
-                    reason=f"неизвестное сочетание is_error={is_error!r} / exit={proc.returncode}",
+                    reason=f"unknown combination is_error={is_error!r} / exit={proc.returncode}",
                     raw_stdout=raw[:2000], exit_code=proc.returncode, envelope=envelope)
 
 
@@ -168,13 +168,13 @@ def run(plan_id, item_id, *, model_class, effort, monorepo_root=None, claude_bin
         monorepo_root = find_monorepo_root(Path.cwd())
         if monorepo_root is None:
             raise WorkerUnavailable(
-                "монорепо-корень не найден — носитель command-routing.json недоступен "
-                "(standalone-раскладка без пакета `task`)")
+                "monorepo root not found - media command-routing.json not available "
+                "(standalone-layout without package `task`)")
     monorepo_root = Path(monorepo_root)
 
     resolved_bin = claude_bin or resolve_claude_bin()
     if resolved_bin is None:
-        raise WorkerUnavailable(f"бинарь клиента не найден (env {CLAUDE_BIN_ENV} → PATH)")
+        raise WorkerUnavailable(f"client binary not found (env {CLAUDE_BIN_ENV} → PATH)")
 
     argv = build_argv(plan_id, item_id, model_class=model_class, effort=effort,
                       monorepo_root=monorepo_root, claude_bin=resolved_bin)
@@ -184,9 +184,9 @@ def run(plan_id, item_id, *, model_class, effort, monorepo_root=None, claude_bin
         proc = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, check=False)
     except subprocess.TimeoutExpired:
         return _outcome(OUTCOME_TIMEOUT, argv=argv, client_version=client_version,
-                        reason=f"процесс не завершился за {timeout}s")
+                        reason=f"process did not complete in {timeout}s")
     except OSError as exc:
         return _outcome(OUTCOME_TRANSPORT, argv=argv, client_version=client_version,
-                        reason=f"процесс не запустился: {exc}")
+                        reason=f"process did not start: {exc}")
 
     return _classify_envelope(proc, argv, client_version)

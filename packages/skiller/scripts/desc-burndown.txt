@@ -1,21 +1,21 @@
-# desc-burndown.txt — рэтчет frontmatter `description` (P3.2)
+# desc-burndown.txt — ratchet frontmatter `description` (P3.2)
 #
-# Формат: одна запись на строку — `<bucket>/<name>` (совпадает с frontmatter bucket:name).
-# Строки, начинающиеся с `#`, и пустые — комментарии, игнорируются.
+# Format: one entry per line - `<bucket>/<name>` (matches frontmatter bucket:name).
+# Lines starting with `#`, and empty comments are ignored.
 #
-# Правила (see validate.sh, секция description-гейтов):
-#   - description > DESC_ERROR_MAX (450 симв) — ВСЕГДА hard error, burn-down не спасает.
-#   - description > DESC_WARN_MAX (300 симв) и <= 450:
-#       * скилл ЕСТЬ в этом списке → warn (легально, унаследованный долг);
-#       * скилла НЕТ в списке → error (новый долг запрещён — рэтчет).
-#   - Запись «протухла» (скилл удалён/переименован ИЛИ его description уже <= 300 симв) →
-#     validate.sh печатает warn «протухшая запись, убери» — удали строку при сокращении.
+# Rules (see validate.sh, section description-gates):
+#   - description > DESC_ERROR_MAX (450 char) — ALWAYS hard error, burn-down doesn't help.
+#   - description > DESC_WARN_MAX (300 char) and <= 450:
+#       * skill IS in this list → warn (legal, inherited debt);
+#       * skill is NOT in the list → error (new debt prohibited - Ratchet).
+#   - Record «rotten» (skill removed/renamed OR it description already <= 300 char) →
+#     validate.sh prints warn «rotten recording, remove it» — remove line when truncating.
 #
-# One-way: список ТОЛЬКО уменьшается. Добавление новых строк вне bootstrap этого item —
-# осознанное решение отдельного item'а с обоснованием в его Completion Notes, не тихая правка.
+# One-way: the list JUST gets smaller. Adding new rows outside bootstrap this item —
+# conscious decision of an individual item'and with justification in it Completion Notes, not a silent edit.
 #
-# Bootstrap (2026-07-12, P3.2): весь остаток >300 симв после P3.1 (64 скилла,
-# см. Completion Notes P3.1).
+# Bootstrap (2026-07-12, P3.2): all remainder >300 character after P3.1 (64 skill,
+# see Completion Notes P3.1).
 
 architect/dev-engineering-super-skill
 architect/domain-modeling

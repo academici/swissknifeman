@@ -1,29 +1,29 @@
 # Playwright MCP
 
-## Что это
+## What is this
 
-Playwright MCP от Microsoft даёт Claude Code управление браузером: навигация, клики, ввод,
-скриншоты, ожидания. Нужен для E2E-тестов и веб-автоматизации.
+Playwright MCP from Microsoft gives Claude Code browser control: navigation, clicks, input,
+screenshots, expectations. Needed for E2E-tests and web automation.
 
-- Репозиторий: <https://github.com/microsoft/playwright-mcp>
-- npm-пакет: `@playwright/mcp`
+- Repository: <https://github.com/microsoft/playwright-mcp>
+- npm-package: `@playwright/mcp`
 
-## Режимы
+## Modes
 
-| Режим | Описание | Когда |
+| Mode | Description | When |
 |---|---|---|
-| Snapshot (по умолчанию) | работает с accessibility-деревом, без GUI | CI, функциональные тесты |
-| Vision (`--vision`) | скриншоты, агент «видит» страницу | визуальная верификация, дебаг |
+| Snapshot (default) | works with accessibility-tree, without GUI | CI, functional tests |
+| Vision (`--vision`) | screenshots, agent «sees» page | visual verification, debug |
 
-## Установка
+## Installation
 
-Пресетом (opt-in):
+Preset (opt-in):
 
 ```bash
 skiller integrate --mcp playwright
 ```
 
-Пресет — `configs/claude-code/mcp/playwright.json`:
+Preset - `configs/claude-code/mcp/playwright.json`:
 
 ```json
 {
@@ -32,37 +32,37 @@ skiller integrate --mcp playwright
 }
 ```
 
-**Версия пинована** (`0.0.78`, проверено `npm view @playwright/mcp version` 2026-08-01) — не
-`@latest`: незакреплённая версия дрейфует между сессиями и меняет поведение сервера незаметно
-(P5.3/P5.6). **`--output-dir .playwright-mcp`** чинит причину, по которой скриншоты с явным
-(не auto-generated) `filename` резолвились от CWD агента и оседали в корне проекта вопреки
-описанию инструмента («Prefer relative file names to stay within the output directory») —
-подтверждено фактом на `dterema` (27 файлов за одну фазу), не по документации. `.playwright-mcp/`
-уже в `.gitignore`. Носитель — три файла (паритет провайдеров): `configs/claude-code/mcp/
+**Pinned version** (`0.0.78`, verified `npm view @playwright/mcp version` 2026-08-01) — not
+`@latest`: unpinned version drifts between sessions and changes server behavior unnoticed
+(P5.3/P5.6). **`--output-dir .playwright-mcp`** fixes the reason why screenshots with explicit
+(not auto-generated) `filename` resolved from CWD agent and settled at the root of the project in spite of
+tool description («Prefer relative file names to stay within the output directory») —
+confirmed by fact on `dterema` (27 files in one phase), not according to the documentation. `.playwright-mcp/`
+is already in `.gitignore`. Media - three files (provider parity): `configs/claude-code/mcp/
 playwright.json`, `configs/claude-code/mcp/bindings.json`, `configs/codex/mcp/bindings.json`.
 
-**`.gitignore`:** harness не раздаёт консьюмерам управляемый `.gitignore`-шаблон — проверено
-на этом репозитории (`.playwright-mcp/` там не было ни разу, добавлено этим item'ом). Проект,
-подключивший пресет `playwright`, обязан сам добавить `.playwright-mcp/` в свой `.gitignore`.
+**`.gitignore`:** harness does not distribute managed `.gitignore`-template - checked
+on this repository (`.playwright-mcp/` was never there, added by this item'ohm). Project,
+connected preset `playwright`, must add it himself `.playwright-mcp/` to your `.gitignore`.
 
-Браузеры ставятся отдельно: `npx playwright install chromium`.
+Browsers are installed separately: `npx playwright install chromium`.
 
-## Инструменты (часть)
+## Tools (part)
 
 `browser_navigate`, `browser_click`, `browser_type`, `browser_snapshot`,
 `browser_take_screenshot`, `browser_wait_for`, `browser_select_option`, `browser_evaluate`.
 
-## Ограничения
+## Limitations
 
-::: warning Vision дорог по токенам
-Каждый скриншот — тысячи токенов. Для функциональных тестов используй snapshot, vision —
-только для визуальной верификации.
+::: warning Vision roads by tokens
+Each screenshot is worth thousands of tokens. For functional tests use snapshot, vision —
+for visual verification only.
 :::
 
-- Chromium стабилен в headless; Firefox/WebKit headless — экспериментально.
-- На ARM/embedded headless Chromium может не подняться — гоняй на dev/CI, не на устройстве.
-- Для авторизованных сайтов используй storageState или `browser_evaluate` для cookies.
+- Chromium is stable in headless; Firefox/WebKit headless — experimental.
+- On ARM/embedded headless Chromium may not rise - drive it dev/CI, is not on the device.
+- For authorized sites, use storageState or `browser_evaluate` for cookies.
 
-Тематически рядом — скилл `quality/playwright-e2e` (конфиг `playwright.config`, storageState,
-изоляция данных, CI): MCP-сервер даёт интерактивный контроль браузера агентом, скилл —
-дисциплину настройки самих тестов.
+Thematically close - skill `quality/playwright-e2e` (config `playwright.config`, storageState,
+data isolation, CI): MCP-server gives interactive control of the browser by the agent, skill -
+the discipline of setting up the tests themselves.

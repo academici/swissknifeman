@@ -46,13 +46,13 @@ Short description: what this entity stores and why.
 
 **2. Separate section** at end of file — full picture:
 ```markdown
-## Связи между сущностями
+## Relationships between entities
 
-| От | Тип | К | Описание |
+| From | Type | K | Description |
 |:---|:---|:---|:---|
-| `orders` | many-to-one | `users` | Заказ принадлежит одному пользователю |
-| `orders` | one-to-many | `order_items` | Заказ содержит несколько позиций |
-| `products` | many-to-many | `tags` | Через `product_tags` |
+| `orders` | many-to-one | `users` | Order belongs to one user |
+| `orders` | one-to-many | `order_items` | The order contains several items |
+| `products` | many-to-many | `tags` | Via `product_tags` |
 ```
 
 Relation types: `one-to-one`, `one-to-many`, `many-to-one`, `many-to-many`
@@ -75,21 +75,21 @@ Relation types: `one-to-one`, `one-to-many`, `many-to-one`, `many-to-many`
 ## Database_Schema.md file structure
 
 ```markdown
-# Схема данных: ProjectName
+# Data schema: ProjectName
 
-## Сущности
+## Entities
 
-### `entity_one` (Название)
+### `entity_one` (Title)
 ...
 
-### `entity_two` (Название)
+### `entity_two` (Title)
 ...
 
-## Связи между сущностями
+## Relationships between entities
 ...
 
-## Индексы и производительность
-(только логические, не SQL: "поле X должно быть проиндексировано для поиска по Y")
+## Indexes and performance
+(Boolean only, not SQL: "field X should be indexed for search by Y")
 ```
 
 ## Add proactively

@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
-"""Межплановая сверка Files: какие пути трогают items из РАЗНЫХ планов.
+"""Interplane reconciliation Files: which paths touch items from DIFFERENT plans.
 
-Программный гейт этапа B (см. plans/README.md § «Программа: этапы A–D»).
-Карта владения поверхностями, выведенная из заголовков фаз и строк Routing, —
-догадка; доказательство даёт только пересечение фактических полей `**Files:**`.
+Stage software gate B (see plans/README.md § «Program: stages A–D»).
+Surface ownership map derived from phase and row headers Routing, —
+guess; the proof gives only the intersection of actual fields `**Files:**`.
 
-Ограничение, которое инструмент называет сам: скелет-item несёт `Files: —`,
-поэтому недетализированная фаза в пересечения НЕ попадает и создаёт слепую
-зону. Отчёт всегда печатает, сколько items прошли мимо проверки по этой
-причине, чтобы «0 конфликтов» нельзя было прочитать как «конфликтов нет».
+A limitation that the tool calls itself: skeleton-item carries `Files: —`,
+therefore the non-detailed phase does NOT fall into the intersections and creates a blind
+zone. The report always prints how much items passed the check for this
+reason to «0 conflicts» could not be read as «no conflicts».
 
-stdlib-only. Использование:
-    python3 packages/task/scripts/cross-plan-files.py                # все живые планы
-    python3 packages/task/scripts/cross-plan-files.py <ID> <ID> ...  # только названные
-    python3 packages/task/scripts/cross-plan-files.py --strict       # baseline-режим (см. ниже)
+stdlib-only. Usage:
+    python3 packages/task/scripts/cross-plan-files.py                # all live plans
+    python3 packages/task/scripts/cross-plan-files.py <ID> <ID> ...  # named only
+    python3 packages/task/scripts/cross-plan-files.py --strict       # baseline-mode (see below)
 
-`--strict` — baseline/рэтчет-режим (payload D, аудит этапа C Ф9): полный отчёт печатается
-всегда; exit 1 только если среди живых пересечений нашлось хотя бы одно НЕ из
-`packages/task/configs/cross-plan-known-intersections.json` (новое или бесхозное). Пересечения, уже зафиксированные
-в этом перечне (владелец+порядок названы в ТЗ обоих концов — сверено аудитом этапа C), зелёный
-`--strict` не требует их закрытия. Обновление перечня при появлении/закрытии пересечения —
-ручное, тем же коммитом, что меняет `Files`.
+`--strict` — baseline/Ratchet mode (payload D, stage audit C F9): full report is printed
+always; exit 1 only if among the live intersections there was at least one NOT from
+`packages/task/configs/cross-plan-known-intersections.json` (new or unowned). Intersections already captured
+in this list (owner+the order is named in the technical specifications of both ends - verified by the audit of the stage C), green
+`--strict` does not require them to be closed. Update the list when available/closing the intersection -
+manual, with the same commit that changes `Files`.
 """
 from __future__ import annotations
 
@@ -34,10 +34,10 @@ import sys
 
 REPO_ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 PLANS_DIR = os.path.join(REPO_ROOT, "plans")
-SKELETON = "СКЕЛЕТ — не детализирован"
+SKELETON = "SKELETON — not detailed"
 ITEM_RE = re.compile(r"^### (P\d+\.\d+)\s+—", re.M)
 BACKTICK_RE = re.compile(r"`([^`]+)`")
-# голые пути (FOREMAN пишет Files без бэктиков, через `;`)
+# bare paths (FOREMAN writes Files without backticks, through `;`)
 BARE_RE = re.compile(r"(?<![`\w/])((?:[\w.-]+/)+[\w.-]+)")
 STATUS_RE = re.compile(r"^\|\s*Status\s*\|\s*(\S+)", re.M)
 ITEM_STATUS_RE = re.compile(r"^\*\*Status:\*\*\s*(\S+)", re.M)
@@ -66,14 +66,14 @@ def live_plans() -> list[str]:
     out = []
     for path in sorted(glob.glob(os.path.join(PLANS_DIR, "*", "plan.md"))):
         plan_id = os.path.basename(os.path.dirname(path))
-        if plan_id in ("archive", "tools"):  # tools/ — легаси-каталог, если остался
+        if plan_id in ("archive", "tools"):  # tools/ — legacy directory, if left
             continue
         out.append(plan_id)
     return out
 
 
 def normalize(token: str) -> str | None:
-    """Путь из ячейки Files → нормализованная форма, либо None если это не путь."""
+    """Path from cell Files → normalized form, or None if this is not the path."""
     t = token.strip()
     for cut in (" (", " —"):
         if cut in t:
@@ -83,8 +83,8 @@ def normalize(token: str) -> str | None:
         return t
     if "/" not in t or t.startswith("http") or t.endswith(":"):
         return None
-    # отсекаем обрывки (regex по голому тексту ловит хвосты вроде "code/hooks/..."):
-    # первый сегмент обязан существовать в корне репо
+    # cut off the scraps (regex based on the bare text catches tails like "code/hooks/..."):
+    # the first segment must exist in the root of the repo
     root = REPO_ROOT
     if not os.path.exists(os.path.join(root, t.split("/")[0])):
         return None
@@ -105,7 +105,7 @@ def collect(plan_id: str):
         text = open(phase, encoding="utf-8").read()
         is_skeleton = SKELETON in text
         blocks = ITEM_RE.split(text)
-        # blocks: [преамбула, id, тело, id, тело, ...]
+        # blocks: [preamble, id, body, id, body, ...]
         for i in range(1, len(blocks), 2):
             item, body = blocks[i], blocks[i + 1]
             files_line = ""
@@ -115,7 +115,7 @@ def collect(plan_id: str):
                     break
             raw = BACKTICK_RE.findall(files_line) + BARE_RE.findall(files_line)
             paths = {p for p in (normalize(x) for x in raw) if p}
-            # пути внутри собственного каталога плана конфликтом не являются
+            # paths within the plan's own directory are not a conflict
             paths = {p for p in paths if not p.startswith(f"plans/{plan_id}/")}
             if not paths and is_skeleton:
                 skeleton += 1
@@ -123,7 +123,7 @@ def collect(plan_id: str):
             sized += 1
             st = ITEM_STATUS_RE.search(body)
             closed = bool(st and st.group(1) in TERMINAL)
-            tag = f"{plan_id}:{item}" + (" [закрыт]" if closed else "")
+            tag = f"{plan_id}:{item}" + (" [closed]" if closed else "")
             for p in paths:
                 owners[p].add(tag)
     return owners, skeleton, sized
@@ -155,17 +155,17 @@ def main() -> int:
                 all_owners[path] |= items
         shared = {}
         for path, items in all_owners.items():
-            open_plans = {i.split(":")[0] for i in items if "[закрыт]" not in i}
+            open_plans = {i.split(":")[0] for i in items if "[closed]" not in i}
             if len(open_plans & live) > 1:
                 shared[path] = sorted(items)
         print(json.dumps({"plans": plans, "shared": shared, "blind_items": blind}, ensure_ascii=False))
         return 0
-    print(f"Сверка Files по {len(plans)} планам\n")
+    print(f"Reconciliation Files by {len(plans)} plans\n")
     for plan_id in plans:
         owners, skeleton, sized = collect(plan_id)
         blind += skeleton
-        mark = "живой" if plan_id in live else "ТЕРМИНАЛЬНЫЙ (историч.)"
-        print(f"  {plan_id} [{statuses[plan_id]} {mark}]: items с Files {sized} · скелетов без Files {skeleton} · путей {len(owners)}")
+        mark = "alive" if plan_id in live else "TERMINAL (historical)"
+        print(f"  {plan_id} [{statuses[plan_id]} {mark}]: items with Files {sized} · skeletons without Files {skeleton} · paths {len(owners)}")
         for path, items in owners.items():
             all_owners[path] |= items
 
@@ -174,20 +174,20 @@ def main() -> int:
         owners_p = {i.split(":")[0] for i in items}
         if len(owners_p) < 2:
             continue
-        # живой конфликт = ОТКРЫТЫЕ items из ≥2 незакрытых планов
-        open_plans = {i.split(":")[0] for i in items if "[закрыт]" not in i}
+        # live conflict = OPEN items from ≥2 open plans
+        open_plans = {i.split(":")[0] for i in items if "[closed]" not in i}
         if len(open_plans & live) > 1:
             shared[path] = items
         else:
             historical[path] = items
-    print(f"\nПутей всего: {len(all_owners)}")
-    print(f"ЖИВЫХ пересечений (≥2 незакрытых планов): {len(shared)}")
-    print(f"исторических (пересечение только с терминальным планом): {len(historical)}")
+    print(f"\nTotal paths: {len(all_owners)}")
+    print(f"LIVE intersections (≥2 open plans): {len(shared)}")
+    print(f"historical (intersection with terminal plan only): {len(historical)}")
     if blind:
         print(
-            f"СЛЕПАЯ ЗОНА: {blind} items — скелеты без Files. "
-            "Пустой список пересечений НЕ означает отсутствие конфликтов, "
-            "пока эти items не детализированы."
+            f"BLIND SPOT: {blind} items — skeletons without Files. "
+            "An empty intersection list does NOT mean there are no conflicts, "
+            "while these items not detailed."
         )
     print()
     for path in sorted(shared):
@@ -195,22 +195,22 @@ def main() -> int:
         for item in sorted(shared[path]):
             print(f"      {item}")
     if not shared:
-        print("  (живых пересечений не найдено)")
+        print("  (no live intersections found)")
 
     if not strict:
         return 0
 
     known = load_known_intersections()
     uncovered = {p: items for p, items in shared.items() if p not in known}
-    print(f"\n--strict (baseline-режим): известных пересечений в перечне {len(known)}")
+    print(f"\n--strict (baseline-mode): known intersections in the list {len(known)}")
     if uncovered:
-        print(f"НЕПОКРЫТЫЕ (новые/бесхозные) пересечения: {len(uncovered)}")
+        print(f"UNCOATED (new/ownerless) intersections: {len(uncovered)}")
         for path in sorted(uncovered):
             print(f"  {path}")
             for item in sorted(uncovered[path]):
                 print(f"      {item}")
         return 1
-    print("Все живые пересечения покрыты перечнем — новых/бесхозных нет.")
+    print("All live intersections are covered with a list of new ones/there are no ownerless ones.")
     return 0
 
 

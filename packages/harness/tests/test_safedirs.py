@@ -49,7 +49,7 @@ class TestVerdictCore(_Fixture):
 
     def safe(self, cmd, cwd=None):
         allow = self.load()
-        self.assertIsNotNone(allow, "конфиг должен грузиться")
+        self.assertIsNotNone(allow, "config should be loaded")
         return safedirs.command_is_safe(
             cmd, str(self.demo) if cwd is None else cwd, allow, str(self.home))
 
@@ -163,7 +163,7 @@ class TestAllowlistLoading(_Fixture):
         self.assertEqual(self.roots(), [str((self.home / "projects").resolve())])
 
     def test_missing_or_broken_config_disables(self):
-        self.cfg_path.write_text("{битый", encoding="utf-8")
+        self.cfg_path.write_text("{broken", encoding="utf-8")
         self.assertIsNone(self.load())
         self.cfg_path.unlink()
         self.assertIsNone(self.load())
@@ -216,7 +216,7 @@ class TestConfigPathLadder(_Fixture):
                              str(self.home / ".swissknifeman" / "safe-dirs.json"))
 
 
-@unittest.skipUnless(HAS_JQ, "нужен jq")
+@unittest.skipUnless(HAS_JQ, "needed jq")
 class TestHookEndToEnd(_Fixture):
     """Internal documentation."""
 

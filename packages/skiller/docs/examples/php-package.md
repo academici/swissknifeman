@@ -1,29 +1,29 @@
-# Open-source PHP-пакет
+# Open-source PHP-package
 
-Сценарий: разработка пакета для Packagist (в первую очередь — Laravel-пакеты).
+Scenario: developing a package for Packagist (first of all - Laravel-packages).
 
-## Установка
+## Installation
 
 ```bash
 cd ~/projects/packages/my-package
 
-# Скиллы: composer.json без artisan → профиль php-package
+# Skills: composer.json without artisan → profile php-package
 skiller vendor --agent claude
 
 # Permissions: base + php-package
 ~/projects/packages/swissknifeman/packages/skiller/scripts/apply-permissions.sh --target .
 ```
 
-Профиль `php-package` ставит bucket-ы **oss-dev, php, quality, devops**:
+Profile `php-package` puts bucket-s **oss-dev, php, quality, devops**:
 
-- `oss-dev` — README, версионирование, релизы, языковые references;
-- `php` — Laravel-пакеты, паттерны, тестирование;
-- `quality` — code review, тесты, техдолг;
-- `devops` — CI/CD под пакеты.
+- `oss-dev` — README, versioning, releases, languages references;
+- `php` — Laravel-packages, patterns, testing;
+- `quality` — code review, tests, technical debt;
+- `devops` — CI/CD for packages.
 
-## Что разрешает пресет php-package
+## What the preset allows php-package
 
-Полный цикл разработки пакета без промптов:
+Full package development cycle without prompts:
 
 ```bash
 composer install / update / require / validate
@@ -34,13 +34,13 @@ vendor/bin/rector process
 vendor/bin/infection
 ```
 
-Плюс всё из `base`: git (push — с подтверждением), gh для PR и issues,
-файловые операции.
+Plus everything from `base`: git (push — with confirmation), gh for PR and issues,
+file operations.
 
-## Роль для агента
+## Role for agent
 
-В bucket-е `roles` есть персона `open-source-maintainer` — если она нужна,
-доставьте её явно:
+B bucket-e `roles` has a person `open-source-maintainer` — if needed,
+deliver it explicitly:
 
 ```bash
 skiller vendor --buckets roles --agent claude

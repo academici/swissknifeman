@@ -19,10 +19,10 @@ use Filament\Support\Contracts\HasLabel;
 use ReflectionEnum;
 
 /**
- * Обогащённый enum: метаданные кейсов декларативно в атрибутах,
- * методы getLabel()/getColor()/getDescription() — из Concern-трейтов.
- * EnumConcern добавляет коллекционные операции (all/values/...).
- * HasLabel (Filament) удовлетворяется методом getLabel() из трейта.
+ * Enriched enum: case metadata declaratively in attributes,
+ * methods getLabel()/getColor()/getDescription() — from Concern-traits.
+ * EnumConcern adds collection operations (all/values/...).
+ * HasLabel (Filament) is satisfied by the method getLabel() from the trait.
  */
 enum OrderStatus: string implements HasLabel
 {
@@ -33,35 +33,35 @@ enum OrderStatus: string implements HasLabel
 
     #[Stage(OrderStage::Intake)]
     #[Color('#6c757d')]
-    #[Description('Черновик заказа, оформление не завершено.')]
-    #[Label('Черновик')]
+    #[Description('Draft order, registration is not completed.')]
+    #[Label('Draft')]
     case Draft = 'draft';
 
     #[Stage(OrderStage::Processing)]
     #[Color('#3786EB')]
-    #[Description('Заказ зарегистрирован и передан в обработку.')]
-    #[Label('Зарегистрирован')]
+    #[Description('The order has been registered and submitted for processing.')]
+    #[Label('Registered')]
     case Registered = 'registered';
 
     #[Stage(OrderStage::Processing)]
     #[Color('#F9AA4B')]
-    #[Description('Заказ обрабатывается ответственным менеджером.')]
-    #[Label('В работе')]
+    #[Description('The order is being processed by the responsible manager.')]
+    #[Label('In progress')]
     case InProgress = 'in_progress';
 
     #[Stage(OrderStage::Finalization)]
     #[Color('#18B797')]
-    #[Description('Заказ выполнен и закрыт.')]
-    #[Label('Завершён')]
+    #[Description('The order has been completed and closed.')]
+    #[Label('Completed')]
     case Finished = 'finished';
 
-    // Кейс без Color: трейт вернёт дефолт '#6c757d'.
-    #[Description('Служебный отменённый статус вне stage-графа.')]
-    #[Label('Отменён')]
+    // Case without Color: trait will return default '#6c757d'.
+    #[Description('Service canceled status out stage-column.')]
+    #[Label('Canceled')]
     case Canceled = 'canceled';
 
     /**
-     * Выборка кейсов по доменному атрибуту через reflection.
+     * Selection of cases by domain attribute via reflection.
      *
      * @return self[]
      */
@@ -82,9 +82,9 @@ enum OrderStatus: string implements HasLabel
     }
 }
 
-// --- Использование ---
+// --- Usage ---
 //
-// OrderStatus::InProgress->getLabel();        // 'В работе'
+// OrderStatus::InProgress->getLabel();        // 'In progress'
 // OrderStatus::InProgress->getColor();        // '#F9AA4B'
-// OrderStatus::Canceled->getColor();          // '#6c757d' (дефолт из трейта)
+// OrderStatus::Canceled->getColor();          // '#6c757d' (default from trait)
 // OrderStatus::allForStage(OrderStage::Processing); // [Registered, InProgress]

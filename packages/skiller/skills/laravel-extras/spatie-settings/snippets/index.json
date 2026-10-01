@@ -3,17 +3,17 @@
   "snippets": [
     {
       "file": "ExampleSettings.php",
-      "description": "Типизированный класс настроек: final extends Settings, public typed properties (скаляры/nullable/array), group(), заметка про casts; namespace App\\Settings",
+      "description": "Typed settings class: final extends Settings, public typed properties (scalars/nullable/array), group(), note about casts; namespace App\\Settings",
       "tags": ["settings", "class", "typed-properties", "group"]
     },
     {
       "file": "create_example_settings.php",
-      "description": "Settings-миграция: SettingsMigration с migrator->add() дефолтов (ключи group.property), addEncrypted для секретов, блок эволюции схемы add/rename/delete",
+      "description": "Settings-migration: SettingsMigration with migrator->add() defaults (keys group.property), addEncrypted for secrets, schema evolution block add/rename/delete",
       "tags": ["settings", "migration", "defaults", "schema-evolution"]
     },
     {
       "file": "filament-settings-page.php",
-      "description": "Привязка к Filament SettingsPage: $settings = ::class, поля form() с name == имена свойств, условные required(fn Get $get), мульти-select; авто-сохранение пакетом",
+      "description": "Link to Filament SettingsPage: $settings = ::class, fields form() with name == property names, conditional required(fn Get $get), multi-select; auto-save in batch",
       "tags": ["settings", "filament", "form", "settings-page"]
     }
   ]

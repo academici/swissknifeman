@@ -3,10 +3,10 @@ paths:
   - "**/*.py"
 ---
 
-Типизация:
+Typing:
 
-- Публичные функции/методы аннотированы (аргументы + возврат); без нетипизированной передачи
+- Public functions/methods are annotated (arguments + return); without untyped transfer
   `dict`.
-- `# type: ignore` — только с причиной в комментарии.
-- Не «протекай» `Any` через границы модулей; предпочитай точные типы/Protocol.
-- Глубокий разбор ошибок типов — субагент `type-checker`.
+- `# type: ignore` — only with the reason in the comment.
+- Not «leak» `Any` across module boundaries; prefer exact types/Protocol.
+- Deep analysis of type errors - subagent `type-checker`.

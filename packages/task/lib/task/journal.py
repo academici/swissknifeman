@@ -1,19 +1,19 @@
-"""journal — append-only писатель пер-планового журнала исполнения
-`plans/<PLAN-ID>/journal.jsonl` (схема sealed v1,
-) и optional append-only sidecar
-`journal-exceptions.jsonl` для owner-gated historical schema exceptions.
+"""journal — append-only writer of the per-plan execution log
+`plans/<PLAN-ID>/journal.jsonl` (diagram sealed v1,
+) and optional append-only sidecar
+`journal-exceptions.jsonl` for owner-gated historical schema exceptions.
 
-Одна запись = одна строка валидного JSON (NDJSON, D20). Запись только ДОПИСЫВАЕТСЯ —
-существующие строки никогда не переписываются/не удаляются (§1 контракта); поэтому
-`append()` открывает файл в режиме `"a"` и делает РОВНО один `write()` на запись —
-конкурентные сессии дописывают свою строку без чужого построчного разрыва (git-merge
-разрешается конкатенацией строк, контракт §1).
+One entry = one line of valid JSON (NDJSON, D20). The entry is only APPENDING -
+existing lines are never overwritten/are not deleted (§1 contract); therefore
+`append()` opens the file in `"a"` and does EXACTLY one `write()` to write -
+concurrent sessions add their own line without someone else's line break (git-merge
+resolved by string concatenation, contract §1).
 
-Вызывается close-протоколом команд `/task:plan-*` — старт-запись
-(`result="in-progress"`) в начале исполнения item'а, финал-запись (терминальный
-`result` + запечённые cost/turns/duration) при закрытии (контракт §2, «пара записей»).
+Called close-command protocol `/task:plan-*` — start-record
+(`result="in-progress"`) at the beginning of execution item'ah, final recording (terminal
+`result` + baked cost/turns/duration) when closing (contract §2, «pair of records»).
 
-stdlib-only (json/argparse/pathlib) — конвенция пакета task."""
+stdlib-only (json/argparse/pathlib) — package convention task."""
 import argparse
 from datetime import datetime, timezone
 import fcntl
@@ -28,11 +28,11 @@ from contextlib import contextmanager
 from pathlib import Path
 
 try:
-    # core.term.now_iso — тот же формат, что схема §2 (`2026-07-18T18:42:07Z`).
-    # core/ опционален (standalone-раскладка пакета без монорепо-родителя, как
-    # у task.plan_lint) — фолбэк ниже даёт байт-в-байт тот же формат.
+    # core.term.now_iso — same format as schema §2 (`2026-07-18T18:42:07Z`).
+    # core/ optional (standalone-package layout without monorepo parent, like
+    # y task.plan_lint) — the fallback below gives the same byte-for-byte format.
     from core.term import now_iso as _now_iso
-except ImportError:  # pragma: no cover - standalone-фолбэк
+except ImportError:  # pragma: no cover - standalone-fallback
     from datetime import datetime, timezone
 
     def _now_iso():
@@ -43,7 +43,7 @@ EXCEPTIONS_FILENAME = "journal-exceptions.jsonl"
 NOTE_MAX_CHARS = 300
 UPDATE_LOG_WHAT_MAX_CHARS = 300
 
-# --- канон схемы -----
+# --- schema canon -----
 COMMANDS = ("plan-run", "plan-exec", "plan-close", "plan-audit", "plan-design")
 # Readers accept the legacy spelling; writers emit only the canonical command.
 LEGACY_COMMAND_ALIASES = {"plan-exec": "plan-run"}
@@ -71,7 +71,7 @@ EXCEPTION_REQUIRED_FIELDS = (
     "ts", "plan_id", "target_line", "target_sha256", "invalid_fields",
     "owner_decision", "actor", "reason",
 )
-# v1 намеренно узок: exception не превращается в общий механизм отмены schema.
+# v1 is intentionally narrow: exception does not become a general cancellation mechanism schema.
 EXEMPTABLE_FIELDS = ("friction",)
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _DECISION_RE = re.compile(r"^D[1-9][0-9]*$")
@@ -85,18 +85,18 @@ _EXCEPTION_GRANT_RE = re.compile(
 
 
 class JournalValidationError(ValueError):
-    """Запись не прошла schema-валидацию — `append()` не пишет строку."""
+    """Recording failed schema-validation - `append()` does not write a line."""
 
 
 def entry_validation_errors(entry):
-    """Возвращает schema-нарушения как пары ``(поле, сообщение)``.
+    """Returns schema-violations as pairs ``(field, message)``.
 
-    Поле нужно linter'у для точного сопоставления с owner-gated historical exception;
-    обычный writer по-прежнему использует :func:`validate_entry` и fail-closed."""
+    Field required linter'y for exact matching with owner-gated historical exception;
+    normal writer still uses :func:`validate_entry` and fail-closed."""
     if not isinstance(entry, dict):
-        return [("$", "запись обязана быть dict")]
+        return [("$", "entry must be dict")]
 
-    errors = [(f, f"нет обязательного поля «{f}»")
+    errors = [(f, f"no required field «{f}»")
               for f in REQUIRED_FIELDS if f not in entry]
     if errors:
         return errors
@@ -108,18 +108,18 @@ def entry_validation_errors(entry):
         if not isinstance(v, str) or (not allow_empty and not v):
             errors.append((
                 name,
-                f"{name}: обязано быть {'str|null' if allow_none else 'непустой str'}",
+                f"{name}: must be {'str|null' if allow_none else 'non-empty str'}",
             ))
 
     def _check_number(name):
         v = entry[name]
         if (v is not None and (isinstance(v, bool) or not isinstance(v, (int, float))
                                or not math.isfinite(v) or v < 0)):
-            errors.append((name, f"{name}: обязано быть finite number ≥0|null"))
+            errors.append((name, f"{name}: must be finite number ≥0|null"))
 
     _check_str("ts")
     _check_str("plan_id")
-    _check_str("item_id") # всегда set (сужение str|null, §5)
+    _check_str("item_id") # always set (narrowing str|null, §5)
     _check_str("session_id", allow_none=True)
     _check_str("run_id", allow_none=True)
     _check_str("actor")
@@ -130,36 +130,36 @@ def entry_validation_errors(entry):
         errors.append(("ts", str(exc)))
 
     if entry["command"] not in COMMANDS:
-        errors.append(("command", f"command: «{entry['command']}» не входит в {COMMANDS}"))
+        errors.append(("command", f"command: «{entry['command']}» is not included {COMMANDS}"))
     if entry["result"] not in RESULT_VALUES:
-        errors.append(("result", f"result: «{entry['result']}» не входит в {RESULT_VALUES}"))
+        errors.append(("result", f"result: «{entry['result']}» is not included {RESULT_VALUES}"))
 
     attempt = entry["attempt"]
     if isinstance(attempt, bool) or not isinstance(attempt, int) or attempt < 1:
-        errors.append(("attempt", "attempt: обязано быть int ≥1"))
+        errors.append(("attempt", "attempt: must be int ≥1"))
 
     friction = entry["friction"]
     if not isinstance(friction, list) or any(v not in FRICTION_VALUES for v in friction):
         errors.append((
             "friction",
-            f"friction: обязан быть массивом значений из {FRICTION_VALUES}",
+            f"friction: must be an array of values from {FRICTION_VALUES}",
         ))
 
     for name in ("cost_usd", "duration_ms"):
         _check_number(name)
     turns = entry["num_turns"]
     if turns is not None and (isinstance(turns, bool) or not isinstance(turns, int) or turns < 0):
-        errors.append(("num_turns", "num_turns: обязано быть int ≥0|null"))
+        errors.append(("num_turns", "num_turns: must be int ≥0|null"))
 
     fingerprint = entry.get("fingerprint")
     if fingerprint is not None and (
             not isinstance(fingerprint, str) or not _SHA256_RE.fullmatch(fingerprint)):
-        errors.append(("fingerprint", "fingerprint: обязан быть lowercase SHA-256|null"))
+        errors.append(("fingerprint", "fingerprint: must be lowercase SHA-256|null"))
     decision = entry.get("decision")
     if decision is not None:
         required = {"signal_class", "scope_class", "action", "recovered", "terminal"}
         if not isinstance(decision, dict) or not required <= set(decision):
-            errors.append(("decision", "decision: отсутствуют обязательные поля evidence"))
+            errors.append(("decision", "decision: missing required fields evidence"))
     if "batch_receipt" in entry:
         try:
             from task.task_contract import validate_batch_receipt
@@ -171,16 +171,16 @@ def entry_validation_errors(entry):
             from task import plan_repair
             plan_repair.validate(entry["repair_decision"])
             if entry.get("repair_digest") != plan_repair.digest(entry["repair_decision"]):
-                raise ValueError("repair_digest не совпадает с record")
+                raise ValueError("repair_digest does not match record")
             action = entry.get("repair_action")
             if action not in plan_repair._ACTIONS:
-                raise ValueError("неизвестный repair_action")
+                raise ValueError("unknown repair_action")
             if (action == "repair-in-current-attempt"
                     and entry.get("result") in TERMINAL_CLOSE_RESULTS):
-                raise ValueError("qualified repair не может записать terminal result")
+                raise ValueError("qualified repair cannot write terminal result")
             if (entry.get("command") == "plan-design"
                     and action != "design-required"):
-                raise ValueError("plan-design требует repair action design-required")
+                raise ValueError("plan-design requires repair action design-required")
         except (ImportError, ValueError) as exc:
             errors.append(("repair_decision", f"repair_decision: {exc}"))
     if "candidate_snapshot" in entry:
@@ -188,25 +188,25 @@ def entry_validation_errors(entry):
         required_snapshot = {"phase_id", "terminal_item_heads", "declared_files", "product_tree_sha256"}
         if (entry.get("command") != "plan-audit" or not isinstance(snapshot, dict)
                 or not required_snapshot <= set(snapshot)):
-            errors.append(("candidate_snapshot", "candidate_snapshot допустим только как полный audit candidate"))
+            errors.append(("candidate_snapshot", "candidate_snapshot valid only as full audit candidate"))
 
     return errors
 
 
 def _parse_utc(value, *, field="ts"):
     if not isinstance(value, str) or not _UTC_TS_RE.fullmatch(value):
-        raise ValueError(f"{field}: обязано быть strict UTC timestamp с Z")
+        raise ValueError(f"{field}: must be strict UTC timestamp with Z")
     try:
         parsed = datetime.fromisoformat(value[:-1] + "+00:00")
     except ValueError as exc:
-        raise ValueError(f"{field}: календарно невалидно") from exc
+        raise ValueError(f"{field}: calendar invalid") from exc
     if parsed.tzinfo is None or parsed.utcoffset() != timezone.utc.utcoffset(parsed):
-        raise ValueError(f"{field}: обязано быть UTC")
+        raise ValueError(f"{field}: must be UTC")
     return parsed
 
 
 def validate_entry(entry):
-    """Сверяет event-запись со схемой (§2), копя все нарушения разом."""
+    """Verifies event-record with schema (§2), accumulating all the violations at once."""
     errors = entry_validation_errors(entry)
     if errors:
         raise JournalValidationError("; ".join(message for _, message in errors))
@@ -230,22 +230,22 @@ def validate_append_policy(entry, *, plan_dir=None):
                 raise JournalValidationError(f"PLAN_DESIGN_INCOMPLETE: {exc}") from exc
             if entry.get("fingerprint") != snapshot["fingerprint"]:
                 raise JournalValidationError(
-                    "PLAN_DESIGN_AUDIT_STALE: audit fingerprint не совпадает с design inputs")
+                    "PLAN_DESIGN_AUDIT_STALE: audit fingerprint does not match design inputs")
             events = [json.loads(line) for line in (Path(plan_dir) / FILENAME).read_text(
                 encoding="utf-8").splitlines() if line.strip()]
             if not any(event.get("command") == "plan-design"
                        and event.get("item_id") == "finish"
                        and event.get("fingerprint") == snapshot["fingerprint"]
                        for event in events):
-                raise JournalValidationError("PLAN_DESIGN_FINISH_MISSING: сначала finalize-design --finish")
+                raise JournalValidationError("PLAN_DESIGN_FINISH_MISSING: first finalize-design --finish")
     if isinstance(entry, dict) and "repair_decision" in entry:
         from task import plan_repair
         if entry.get("repair_action") != plan_repair.evaluate(entry["repair_decision"], plan_dir=plan_dir)["action"]:
-            raise JournalValidationError("repair_action не совпадает с текущим reducer result")
+            raise JournalValidationError("repair_action does not match current reducer result")
     if isinstance(note, str) and len(note) > NOTE_MAX_CHARS:
         raise JournalValidationError(
-            f"note: {len(note)} символов > {NOTE_MAX_CHARS}; "
-            "детали вынесите в Completion Notes/findings")
+            f"note: {len(note)} characters > {NOTE_MAX_CHARS}; "
+            "take the details to Completion Notes/findings")
     if (isinstance(entry, dict) and entry.get("command") == "plan-audit"
             and re.fullmatch(r"P\d+", str(entry.get("item_id", "")))
             and (entry.get("result") == "in-progress" or entry.get("run_id") is not None)):
@@ -253,20 +253,20 @@ def validate_append_policy(entry, *, plan_dir=None):
         # identity remain readable/importable; they never authorize a new run.
         from task import audit_admission, plan_gates
         if plan_dir is None or not entry.get("run_id"):
-            raise JournalValidationError("AUDIT_CONSENT_INVALID: phase audit требует plan_dir и run_id")
+            raise JournalValidationError("AUDIT_CONSENT_INVALID: phase audit requires plan_dir and run_id")
         try:
             candidate = plan_gates.phase_candidate_fingerprint(plan_dir, entry["item_id"])
         except (OSError, ValueError, KeyError) as exc:
             raise JournalValidationError(f"AUDIT_CANDIDATE_UNRESOLVED: {exc}") from exc
         if entry.get("fingerprint") != candidate["fingerprint"]:
-            raise JournalValidationError("AUDIT_CANDIDATE_MISMATCH: fingerprint не совпадает с текущим candidate")
+            raise JournalValidationError("AUDIT_CANDIDATE_MISMATCH: fingerprint does not match current candidate")
         admission = audit_admission.evaluate(
             Path(plan_dir), entry["item_id"], candidate["snapshot"], run_id=entry["run_id"])
         if not admission["allowed"]:
-            raise JournalValidationError(f"{admission['code']}: нет адресного согласия на phase audit")
+            raise JournalValidationError(f"{admission['code']}: no targeted consent for phase audit")
         if (entry.get("result") == "in-progress"
                 and audit_admission._journal_state(Path(plan_dir), admission["record"]) != "available"):
-            raise JournalValidationError("AUDIT_RUN_ALREADY_STARTED: продолжите текущий audit run")
+            raise JournalValidationError("AUDIT_RUN_ALREADY_STARTED: continue current audit run")
     if (isinstance(entry, dict) and entry.get("command") == "plan-audit"
             and entry.get("result") in {"audit-green", "audit-attention", "audit-red"}):
         from task import review_policy
@@ -285,7 +285,7 @@ def validate_append_policy(entry, *, plan_dir=None):
 
 
 def project_update_log_what(entry, line_number):
-    """Return the bounded owner-facing ``Что`` cell for one journal row.
+    """Return the bounded owner-facing ``What`` cell for one journal row.
 
     The immutable journal remains the full source.  A projection that would
     exceed the owner-view limit is replaced by a deterministic line pointer.
@@ -296,25 +296,25 @@ def project_update_log_what(entry, line_number):
     what = " · ".join((command, result, note))
     if len(what) <= UPDATE_LOG_WHAT_MAX_CHARS:
         return what
-    return f"{command} · {result} · note сокращена; полный текст: {FILENAME}:{line_number}"
+    return f"{command} · {result} · note abbreviated; full text: {FILENAME}:{line_number}"
 
 
 def validate_exception(exception):
-    """Валидирует одну запись sidecar-схемы historical schema exception v1."""
+    """Validates one record sidecar-schemas historical schema exception v1."""
     if not isinstance(exception, dict):
-        raise JournalValidationError("schema exception обязано быть dict")
-    errors = [f"нет обязательного поля «{f}»"
+        raise JournalValidationError("schema exception must be dict")
+    errors = [f"no required field «{f}»"
               for f in EXCEPTION_REQUIRED_FIELDS if f not in exception]
     unknown = sorted(set(exception) - set(EXCEPTION_REQUIRED_FIELDS))
     if unknown:
-        errors.append(f"неизвестные поля schema exception: {unknown}")
+        errors.append(f"unknown fields schema exception: {unknown}")
     if errors:
         raise JournalValidationError("; ".join(errors))
 
     for name in ("ts", "plan_id", "actor", "reason"):
         value = exception[name]
         if not isinstance(value, str) or not value:
-            errors.append(f"{name}: обязано быть непустой str")
+            errors.append(f"{name}: must be non-empty str")
     try:
         _parse_utc(exception["ts"])
     except ValueError as exc:
@@ -322,26 +322,26 @@ def validate_exception(exception):
 
     target_line = exception["target_line"]
     if isinstance(target_line, bool) or not isinstance(target_line, int) or target_line < 1:
-        errors.append("target_line: обязано быть int ≥1")
+        errors.append("target_line: must be int ≥1")
     target_sha256 = exception["target_sha256"]
     if not isinstance(target_sha256, str) or not _SHA256_RE.fullmatch(target_sha256):
-        errors.append("target_sha256: обязан быть lowercase SHA-256")
+        errors.append("target_sha256: must be lowercase SHA-256")
     invalid_fields = exception["invalid_fields"]
     if (not isinstance(invalid_fields, list) or not invalid_fields
             or len(invalid_fields) != len(set(invalid_fields))
             or any(v not in EXEMPTABLE_FIELDS for v in invalid_fields)):
         errors.append(
-            f"invalid_fields: непустой unique-массив значений из {EXEMPTABLE_FIELDS}")
+            f"invalid_fields: non-empty unique-array of values from {EXEMPTABLE_FIELDS}")
     owner_decision = exception["owner_decision"]
     if not isinstance(owner_decision, str) or not _DECISION_RE.fullmatch(owner_decision):
-        errors.append("owner_decision: обязан быть D#")
+        errors.append("owner_decision: must be D#")
 
     if errors:
         raise JournalValidationError("; ".join(errors))
 
 
 def line_sha256(raw_line):
-    """SHA-256 точных UTF-8 bytes строки journal без завершающего newline."""
+    """SHA-256 accurate UTF-8 bytes lines journal without trailing newline."""
     return hashlib.sha256(raw_line.encode("utf-8")).hexdigest()
 
 
@@ -350,14 +350,14 @@ def derive_run_id(*, plan_id, item_id, attempt, session_id):
     if (not all(isinstance(value, str) and value for value in (plan_id, item_id, session_id))
             or isinstance(attempt, bool) or not isinstance(attempt, int) or attempt < 1):
         raise JournalValidationError(
-            "run_id: plan_id/item_id/session_id и attempt ≥1 обязательны")
+            "run_id: plan_id/item_id/session_id and attempt ≥1 are required")
     value = "\0".join((plan_id, item_id, str(attempt), session_id))
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
 def new_exception(*, plan_id, target_line, target_sha256, invalid_fields,
                   owner_decision, actor, reason, ts=None):
-    """Собирает owner-gated sidecar-запись без изменения historical journal bytes."""
+    """Collects owner-gated sidecar-record without change historical journal bytes."""
     return {
         "ts": ts or _now_iso(),
         "plan_id": plan_id,
@@ -371,10 +371,10 @@ def new_exception(*, plan_id, target_line, target_sha256, invalid_fields,
 
 
 def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
-    """Проверяет provenance, owner gate и точное множество waived schema-полей.
+    """Checks provenance, owner gate and the exact set waived schema-fields.
 
-    Sidecar физически отделён от event-журнала, поэтому exception не может ссылаться
-    на другое exception и correction-цикл конструктивно невозможен.
+    Sidecar is physically separated from event-log, so exception cannot reference
+    to another exception and correction-loop is structurally impossible.
     """
     validate_exception(exception)
     plan_dir = Path(plan_dir)
@@ -387,23 +387,23 @@ def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
     try:
         journal_path = plan_layout.carrier_path(plan_dir, "journal")
     except plan_layout.PlanLayoutError as exc:
-        raise JournalValidationError(f"journal: носитель не резолвится: {exc}") from exc
+        raise JournalValidationError(f"journal: media does not resolve: {exc}") from exc
     try:
         lines = journal_path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeDecodeError) as exc:
-        raise JournalValidationError(f"target journal не читается: {exc}") from exc
+        raise JournalValidationError(f"target journal is not readable: {exc}") from exc
 
     target_line = exception["target_line"]
     if target_line > len(lines) or not lines[target_line - 1].strip():
-        raise JournalValidationError("target_line: нет такой непустой строки journal")
+        raise JournalValidationError("target_line: no such non-empty string journal")
     raw_line = lines[target_line - 1]
     if line_sha256(raw_line) != exception["target_sha256"]:
-        raise JournalValidationError("target_sha256: не совпадает с raw journal line")
+        raise JournalValidationError("target_sha256: does not match raw journal line")
     try:
         target = json.loads(raw_line)
     except json.JSONDecodeError as exc:
         raise JournalValidationError(
-            "target: malformed JSON не допускает schema exception") from exc
+            "target: malformed JSON does not allow schema exception") from exc
     target_plan_id = target.get("plan_id") if isinstance(target, dict) else None
     if target_plan_id != canonical_plan_id:
         raise JournalValidationError(
@@ -413,35 +413,35 @@ def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
     target_errors = entry_validation_errors(target)
     target_fields = {field for field, _ in target_errors}
     if not target_errors:
-        raise JournalValidationError("target: строка уже проходит event-схему")
+        raise JournalValidationError("target: line is already running")
     if target_fields != set(exception["invalid_fields"]):
         raise JournalValidationError(
-            f"invalid_fields: ожидалось точное множество {sorted(target_fields)}")
+            f"invalid_fields: expected exact set {sorted(target_fields)}")
 
     from task import plan_decisions
     try:
         decisions = plan_decisions.load_decisions(plan_dir)
     except (OSError, UnicodeDecodeError, plan_layout.PlanLayoutError,
             plan_decisions.DecisionError) as exc:
-        raise JournalValidationError(f"owner_decision: носитель решений невалиден: {exc}") from exc
+        raise JournalValidationError(f"owner_decision: decision media is invalid: {exc}") from exc
     matches = [decision for decision in decisions
                if decision.identifier == exception["owner_decision"]]
     if len(matches) != 1:
-        raise JournalValidationError("owner_decision: требуется ровно один разрешающий D#")
+        raise JournalValidationError("owner_decision: requires exactly one permit D#")
     decision = matches[0]
     target_item = target.get("item_id")
     if (decision.status != "accepted" or decision.superseded_by is not None
             or target_item not in decision.items):
         raise JournalValidationError(
-            "owner_decision: решение не accepted/current или не связано с target item")
+            "owner_decision: no solution accepted/current or not related target item")
     grants = list(_EXCEPTION_GRANT_RE.finditer(decision.body))
     expected_fields = ",".join(sorted(exception["invalid_fields"]))
     if len(grants) != 1:
-        raise JournalValidationError("owner_decision: требуется ровно один JOURNAL-EXCEPTION grant")
+        raise JournalValidationError("owner_decision: exactly one is required JOURNAL-EXCEPTION grant")
     grant = grants[0].groupdict()
     if grant != {"digest": exception["target_sha256"], "fields": expected_fields,
                   "plan": canonical_plan_id, "item": target_item}:
-        raise JournalValidationError("owner_decision: JOURNAL-EXCEPTION grant не связан с exact target/scope")
+        raise JournalValidationError("owner_decision: JOURNAL-EXCEPTION grant is not associated with exact target/scope")
 
     if check_duplicate:
         exceptions_path = plan_dir / EXCEPTIONS_FILENAME
@@ -450,7 +450,7 @@ def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
                 existing_lines = exceptions_path.read_text(encoding="utf-8").splitlines()
             except (OSError, UnicodeDecodeError) as exc:
                 raise JournalValidationError(
-                    f"existing exception sidecar не читается: {exc}") from exc
+                    f"existing exception sidecar is not readable: {exc}") from exc
             for raw in existing_lines:
                 if not raw.strip():
                     continue
@@ -461,15 +461,15 @@ def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
                 if (isinstance(existing, dict)
                         and existing.get("target_line") == target_line
                         and existing.get("target_sha256") == exception["target_sha256"]):
-                    raise JournalValidationError("target: exception уже существует")
+                    raise JournalValidationError("target: exception already exists")
 
 
 def new_entry(*, plan_id, item_id, command, actor, result, session_id=None, run_id=None,
               attempt=1, friction=(), cost_usd=None, num_turns=None, duration_ms=None,
               note=None, ts=None, trace_ref=None, fingerprint=None, decision=None,
               batch_receipt=None, candidate_snapshot=None, second_full_justification=None):
-    """Собирает запись по схеме с дефолтами контракта (§2) — единая точка сборки,
-    чтобы close-протокол команд не собирал dict вручную по месту россыпью полей.
+    """Collects a record according to the scheme with contract defaults (§2) — single assembly point,
+    to close-command log was not collected dict manually in scattered fields.
 
     `trace_ref`
     — ADDITIVE optional linkage to a Unified Agent Trace `trace_id`, outside
@@ -521,12 +521,12 @@ def _journal_lock(plan_dir):
     cache = plan_dir / ".plan-cache"
     cache.mkdir(parents=True, exist_ok=True)
     if cache.is_symlink() or not cache.is_dir() or not hasattr(os, "O_NOFOLLOW"):
-        raise JournalValidationError("JOURNAL_DURABILITY_FAILED: lock domain небезопасен")
+        raise JournalValidationError("JOURNAL_DURABILITY_FAILED: lock domain is insecure")
     path = cache / "journal.lock"
     try:
         descriptor = os.open(path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
     except OSError as exc:
-        raise JournalValidationError(f"JOURNAL_DURABILITY_FAILED: lock недоступен: {exc}") from exc
+        raise JournalValidationError(f"JOURNAL_DURABILITY_FAILED: lock not available: {exc}") from exc
     try:
         with os.fdopen(descriptor, "a+") as stream:
             fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
@@ -540,19 +540,19 @@ def _read_json_lines(path, *, validator, label):
     if not path.exists():
         return []
     if path.is_symlink():
-        raise JournalValidationError(f"JOURNAL_CORRUPT: {label} является symlink")
+        raise JournalValidationError(f"JOURNAL_CORRUPT: {label} is symlink")
     try:
         descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
         mode = os.fstat(descriptor).st_mode
         if not stat.S_ISREG(mode):
-            raise JournalValidationError(f"JOURNAL_CORRUPT: {label} не regular file")
+            raise JournalValidationError(f"JOURNAL_CORRUPT: {label} not regular file")
         with os.fdopen(descriptor, "rb") as stream:
             payload = stream.read()
         text = payload.decode("utf-8")
     except JournalValidationError:
         raise
     except (OSError, UnicodeDecodeError) as exc:
-        raise JournalValidationError(f"JOURNAL_CORRUPT: {label} не читается: {exc}") from exc
+        raise JournalValidationError(f"JOURNAL_CORRUPT: {label} is not readable: {exc}") from exc
     records = []
     for line_number, raw in enumerate(text.splitlines(), start=1):
         if not raw.strip():
@@ -580,7 +580,7 @@ def _historical_schema_errors(entry):
         (field, message)
         for field, message in entry_validation_errors(entry)
         if not (field in _HISTORICAL_ABSENT_NEUTRAL
-                and str(message).startswith("нет обязательного поля"))
+                and str(message).startswith("no required field"))
     ]
 
 
@@ -597,7 +597,7 @@ def _sidecar_waivers(plan_dir, journal_rows, sidecar_rows):
         decisions = plan_decisions.load_decisions(plan_dir)
     except (OSError, UnicodeDecodeError, plan_decisions.DecisionError) as exc:
         raise JournalValidationError(
-            f"owner_decision: носитель решений невалиден: {exc}") from exc
+            f"owner_decision: decision media is invalid: {exc}") from exc
     by_id = {}
     for decision in decisions:
         by_id.setdefault(decision.identifier, []).append(decision)
@@ -606,23 +606,23 @@ def _sidecar_waivers(plan_dir, journal_rows, sidecar_rows):
     for _sidecar_line, _raw_exception, exception in sidecar_rows:
         target_line = exception["target_line"]
         if target_line not in by_line:
-            raise JournalValidationError("target_line: нет такой непустой строки journal")
+            raise JournalValidationError("target_line: no such non-empty string journal")
         raw, record = by_line[target_line]
         if line_sha256(raw) != exception["target_sha256"]:
-            raise JournalValidationError("target_sha256: не совпадает с raw journal line")
+            raise JournalValidationError("target_sha256: does not match raw journal line")
         fields = {field for field, _message in _historical_schema_errors(record)}
         if fields != set(exception["invalid_fields"]):
             raise JournalValidationError(
-                f"invalid_fields: ожидалось точное множество {sorted(fields)}")
+                f"invalid_fields: expected exact set {sorted(fields)}")
         matches = by_id.get(exception["owner_decision"], [])
         if len(matches) != 1:
-            raise JournalValidationError("owner_decision: требуется ровно один разрешающий D#")
+            raise JournalValidationError("owner_decision: requires exactly one permit D#")
         decision = matches[0]
         target_item = record.get("item_id") if isinstance(record, dict) else None
         if (decision.status != "accepted" or decision.superseded_by is not None
                 or target_item not in decision.items):
             raise JournalValidationError(
-                "owner_decision: решение не accepted/current или не связано с target item")
+                "owner_decision: no solution accepted/current or not related target item")
         grants = list(_EXCEPTION_GRANT_RE.finditer(decision.body))
         if grants:
             expected_fields = ",".join(sorted(exception["invalid_fields"]))
@@ -630,7 +630,7 @@ def _sidecar_waivers(plan_dir, journal_rows, sidecar_rows):
                         "plan": Path(plan_dir).name, "item": target_item}
             if not any(grant.groupdict() == expected for grant in grants):
                 raise JournalValidationError(
-                    "owner_decision: JOURNAL-EXCEPTION grant не связан с exact target/scope")
+                    "owner_decision: JOURNAL-EXCEPTION grant is not associated with exact target/scope")
         waivers[(target_line, exception["target_sha256"])] = fields
     return waivers
 
@@ -670,14 +670,14 @@ def read_authoritative_entries(plan_dir):
 def _write_line_durable(path, line):
     path = Path(path)
     if path.exists() and (path.is_symlink() or not path.is_file()):
-        raise JournalValidationError("JOURNAL_DURABILITY_FAILED: append target не regular file")
+        raise JournalValidationError("JOURNAL_DURABILITY_FAILED: append target not regular file")
     flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND | os.O_NOFOLLOW
     payload = (line + "\n").encode("utf-8")
     try:
         descriptor = os.open(path, flags, 0o600)
         try:
             if not stat.S_ISREG(os.fstat(descriptor).st_mode):
-                raise JournalValidationError("JOURNAL_DURABILITY_FAILED: append target не regular file")
+                raise JournalValidationError("JOURNAL_DURABILITY_FAILED: append target not regular file")
             cursor = 0
             while cursor < len(payload):
                 written = os.write(descriptor, payload[cursor:])
@@ -706,11 +706,11 @@ def _validate_terminal_order(rows, entry):
               if (record.get("item_id"), record.get("attempt"), record.get("run_id")) == identity
               and record.get("result") == "in-progress"]
     if not starts:
-        raise JournalValidationError("JOURNAL_CONFLICT: terminal без start")
+        raise JournalValidationError("JOURNAL_CONFLICT: terminal without start")
     if len(starts) != 1:
-        raise JournalValidationError("JOURNAL_CONFLICT: terminal требует ровно один start")
+        raise JournalValidationError("JOURNAL_CONFLICT: terminal requires exactly one start")
     if _parse_utc(entry["ts"]) < _parse_utc(starts[0]["ts"]):
-        raise JournalValidationError("JOURNAL_CONFLICT: terminal timestamp раньше start")
+        raise JournalValidationError("JOURNAL_CONFLICT: terminal timestamp before start")
 
 
 def _append_locked(plan_dir, entry, rows, *, enforce_terminal_order=False):
@@ -726,9 +726,9 @@ def _append_locked(plan_dir, entry, rows, *, enforce_terminal_order=False):
 
 
 def append(plan_dir, entry):
-    """Дописывает ОДНУ запись в `plans/<ID>/journal.jsonl`. Валидирует ДО записи
-    (§2) — битая запись не попадает в durable-историю плана (§1). Возвращает путь
-    файла. Файла нет — создаётся (append-режим сам создаёт)."""
+    """Adds ONE entry to `plans/<ID>/journal.jsonl`. Validates BEFORE writing
+    (§2) — broken record is not included in durable-plan history (§1). Returns the path
+    file. No file - being created (append-mode creates itself)."""
     validate_entry(entry)
     plan_dir = Path(plan_dir)
     with _journal_lock(plan_dir):
@@ -756,13 +756,13 @@ def append_idempotent_terminal(plan_dir, entry):
             if all(current.get(field) == entry.get(field) for field in ("result", "fingerprint")):
                 return path, line_number, False
             raise JournalValidationError(
-                f"terminal conflict: run_id уже закрыт в {FILENAME}:{line_number}")
+                f"terminal conflict: run_id is already closed in {FILENAME}:{line_number}")
         return _append_locked(
             plan_dir, entry, rows, enforce_terminal_order=True), None, True
 
 
 def append_exception(plan_dir, exception):
-    """Append-only дописывает ровно одно owner-gated historical schema exception."""
+    """Append-only adds exactly one owner-gated historical schema exception."""
     validate_exception(exception)
     with _journal_lock(plan_dir):
         _authoritative_state_locked(
@@ -775,7 +775,7 @@ def append_exception(plan_dir, exception):
         return path
 
 
-# --- CLI: `python3 -m task.journal append --plan … --item … …` (вызов из команд) --
+# --- CLI: `python3 -m task.journal append --plan … --item … …` (call from commands) --
 
 def _parse_friction(value):
     return [v.strip() for v in (value or "").split(",") if v.strip()]
@@ -783,36 +783,36 @@ def _parse_friction(value):
 
 def _build_arg_parser():
     p = argparse.ArgumentParser(
-        prog="task.journal", description="Append-only журнал исполнения плана (P1.1)")
+        prog="task.journal", description="Append-only plan execution log (P1.1)")
     sub = p.add_subparsers(dest="cmd", required=True)
-    ap = sub.add_parser("append", help="дописать запись в plans/<ID>/journal.jsonl")
-    ap.add_argument("--plan-dir", required=True, help="каталог плана plans/<PLAN-ID>")
+    ap = sub.add_parser("append", help="add entry to plans/<ID>/journal.jsonl")
+    ap.add_argument("--plan-dir", required=True, help="plan directory plans/<PLAN-ID>")
     ap.add_argument("--plan", required=True, dest="plan_id")
     ap.add_argument("--item", required=True, dest="item_id")
     ap.add_argument("--command", required=True, choices=COMMANDS)
     ap.add_argument("--result", required=True, choices=RESULT_VALUES)
-    ap.add_argument("--actor", default=None, help="`<model>/<effort>` или `owner`")
+    ap.add_argument("--actor", default=None, help="`<model>/<effort>` or `owner`")
     ap.add_argument(
         "--route-evidence", default=None,
-        help="альтернатива --actor: путь к JSON `task.route_evidence.capture_actual()` "
-            "(P2.4/P2.6) — actor выводится канонической `<model>/<effort>`-спеллинг-формой "
-            "(`findings/02` — 34 наблюдённых написания), а не собирается руками по месту")
+        help="alternative --actor: path to JSON `task.route_evidence.capture_actual()` "
+            "(P2.4/P2.6) — actor is output canonical `<model>/<effort>`-spelling form "
+            "(`findings/02` — 34 observed spellings), and not assembled by hand in place")
     ap.add_argument("--session-id", default=None)
     ap.add_argument("--run-id", default=None)
     ap.add_argument("--attempt", type=int, default=1)
-    ap.add_argument("--friction", default="", help="через запятую, из закрытого списка")
+    ap.add_argument("--friction", default="", help="separated by commas, from a closed list")
     ap.add_argument("--cost-usd", type=float, default=None)
     ap.add_argument("--num-turns", type=int, default=None)
     ap.add_argument("--duration-ms", type=float, default=None)
     ap.add_argument("--note", default=None)
     ap.add_argument(
         "--trace-ref", default=None,
-        help="опционально: trace_id Unified Agent Trace (P3.1) — additive, не влияет на "
-            "REQUIRED_FIELDS; опущен по умолчанию")
+        help="optional: trace_id Unified Agent Trace (P3.1) — additive, has no effect "
+            "REQUIRED_FIELDS; omitted by default")
     ap.add_argument("--fingerprint", default=None,
-                    help="SHA-256 material scope/SHA/risk или terminal evidence")
+                    help="SHA-256 material scope/SHA/risk or terminal evidence")
     ap.add_argument("--decision-json", default=None,
-                    help="compact D12 decision evidence как JSON object")
+                    help="compact D12 decision evidence like JSON object")
     ap.add_argument("--batch-receipt-json", default=None,
                     help="optional digest-bound batch receipt as JSON object")
     ap.add_argument("--repair-decision-json", default=None,
@@ -821,15 +821,15 @@ def _build_arg_parser():
                     choices=("repair-in-current-attempt", "gather-evidence", "block-candidate", "design-required"),
                     help="action returned by task.plan_repair.evaluate()")
     ep = sub.add_parser(
-        "exception", help="дописать owner-gated exception для historical schema-invalid строки")
-    ep.add_argument("--plan-dir", required=True, help="каталог плана plans/<PLAN-ID>")
+        "exception", help="add owner-gated exception for historical schema-invalid lines")
+    ep.add_argument("--plan-dir", required=True, help="plan directory plans/<PLAN-ID>")
     ep.add_argument("--plan", required=True, dest="plan_id")
     ep.add_argument("--target-line", required=True, type=int)
     ep.add_argument("--invalid-fields", required=True,
-                    help="через запятую; v1 допускает только friction")
-    ep.add_argument("--owner-decision", required=True, help="существующая owner-approved D#")
-    ep.add_argument("--actor", required=True, help="`<model>/<effort>` или `owner`")
-    ep.add_argument("--reason", required=True, help="почему exception безопасен и необходим")
+                    help="separated by commas; v1 only allows friction")
+    ep.add_argument("--owner-decision", required=True, help="existing owner-approved D#")
+    ep.add_argument("--actor", required=True, help="`<model>/<effort>` or `owner`")
+    ep.add_argument("--reason", required=True, help="why exception is safe and necessary")
     return p
 
 
@@ -841,7 +841,7 @@ def main(argv=None):
             lines = journal_path.read_text(encoding="utf-8").splitlines()
             raw_line = lines[args.target_line - 1]
         except (OSError, UnicodeDecodeError, IndexError) as exc:
-            print(f"ERROR: target journal line не читается: {exc}", file=sys.stderr)
+            print(f"ERROR: target journal line is not readable: {exc}", file=sys.stderr)
             return 1
         exception = new_exception(
             plan_id=args.plan_id,
@@ -855,15 +855,15 @@ def main(argv=None):
         try:
             path = append_exception(args.plan_dir, exception)
         except JournalValidationError as exc:
-            print(f"ERROR: schema exception не прошёл валидацию: {exc}", file=sys.stderr)
+            print(f"ERROR: schema exception failed validation: {exc}", file=sys.stderr)
             return 1
         print(f"journal: exception append → {path}")
         return 0
 
-    if args.cmd != "append":  # pragma: no cover - argparse уже гейтит choices
+    if args.cmd != "append":  # pragma: no cover - argparse is already gating choices
         return 1
     if (args.actor is None) == (args.route_evidence is None):
-        print("ERROR: ровно один из --actor / --route-evidence обязателен", file=sys.stderr)
+        print("ERROR: exactly one of --actor / --route-evidence required", file=sys.stderr)
         return 1
     actor = args.actor
     if args.route_evidence is not None:
@@ -878,21 +878,21 @@ def main(argv=None):
             actor = canonical_actor(evidence.get("model"), evidence.get("effort"))
         except (OSError, UnicodeDecodeError, json.JSONDecodeError, KeyError,
                RouteEvidenceError) as exc:
-            print(f"ERROR: --route-evidence не читается: {exc}", file=sys.stderr)
+            print(f"ERROR: --route-evidence is not readable: {exc}", file=sys.stderr)
             return 1
     decision = None
     if args.decision_json is not None:
         try:
             decision = json.loads(args.decision_json)
         except json.JSONDecodeError as exc:
-            print(f"ERROR: --decision-json невалиден: {exc}", file=sys.stderr)
+            print(f"ERROR: --decision-json is invalid: {exc}", file=sys.stderr)
             return 1
     batch_receipt = None
     if args.batch_receipt_json is not None:
         try:
             batch_receipt = json.loads(args.batch_receipt_json)
         except json.JSONDecodeError as exc:
-            print(f"ERROR: --batch-receipt-json невалиден: {exc}", file=sys.stderr)
+            print(f"ERROR: --batch-receipt-json is invalid: {exc}", file=sys.stderr)
             return 1
     repair_decision = None
     if args.repair_decision_json is not None:
@@ -901,13 +901,13 @@ def main(argv=None):
             from task import plan_repair
             outcome = plan_repair.evaluate(repair_decision, plan_dir=args.plan_dir)
             if args.repair_action != outcome["action"]:
-                raise ValueError("--repair-action должен совпадать с reducer result")
+                raise ValueError("--repair-action must match reducer result")
             repair_digest = outcome["repair_digest"]
         except (json.JSONDecodeError, ImportError, ValueError) as exc:
-            print(f"ERROR: --repair-decision-json невалиден: {exc}", file=sys.stderr)
+            print(f"ERROR: --repair-decision-json is invalid: {exc}", file=sys.stderr)
             return 1
     elif args.repair_action is not None:
-        print("ERROR: --repair-action требует --repair-decision-json", file=sys.stderr)
+        print("ERROR: --repair-action requires --repair-decision-json", file=sys.stderr)
         return 1
     entry = new_entry(
         plan_id=args.plan_id, item_id=args.item_id, command=args.command,
@@ -924,7 +924,7 @@ def main(argv=None):
     try:
         path, line_number, appended = append_idempotent_terminal(args.plan_dir, entry)
     except JournalValidationError as e:
-        print(f"ERROR: запись журнала не прошла валидацию: {e}", file=sys.stderr)
+        print(f"ERROR: log entry failed validation: {e}", file=sys.stderr)
         return 1
     if appended:
         print(f"journal: append → {path}")

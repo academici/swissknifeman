@@ -3,12 +3,12 @@
   "snippets": [
     {
       "file": "Icon.vue",
-      "description": "Единый компонент-иконка: import * as icons, ленивый computed-резолв по имени через <component :is>, нормализация имени, проброс size/strokeWidth/color/class с мерджем классов и фолбэком",
+      "description": "Single icon component: import * as icons, lazy computed-resolve by name via <component :is>, name normalization, forwarding size/strokeWidth/color/class with class merge and fallback",
       "tags": ["vue", "dynamic-component", "lucide", "icon"]
     },
     {
       "file": "icon-name.type.ts",
-      "description": "Типобезопасное имя иконки: union из keyof typeof icons либо явный список с const-кортежем, плюс рантайм-гард isIconName для строк из API/конфига",
+      "description": "Type-safe icon name: union from keyof typeof icons or an explicit list with const-tuple, plus runtime guard isIconName for lines from API/config",
       "tags": ["typescript", "type-safety", "union", "guard"]
     }
   ]

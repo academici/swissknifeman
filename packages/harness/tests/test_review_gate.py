@@ -126,7 +126,7 @@ class TestPlanCitationsCheck(unittest.TestCase):
         plan_dir = self.repo / "plans" / "TESTPLAN"
         (plan_dir / "phases" / "P1").mkdir(parents=True)
         (plan_dir / "plan.md").write_text(
-            "# TESTPLAN\n\n## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n"
+            "# TESTPLAN\n\n## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n"
         )
         (plan_dir / "phases" / "P1" / "P1.md").write_text(
             "Cite `plans/TESTPLAN/plan.md:1` here.\n"
@@ -173,7 +173,7 @@ class TestPlanCitationsCheck(unittest.TestCase):
             cwd=self.repo, capture_output=True, text=True,
         )
         self.assertEqual(proc.returncode, 2)
-        self.assertIn("canonical resolver task.plan_layout недоступен", proc.stderr)
+        self.assertIn("canonical resolver task.plan_layout not available", proc.stderr)
 
 
 if __name__ == "__main__":

@@ -1,54 +1,54 @@
 <!-- Source: anonymized production project -->
 
-# Доменный срез `features/<домен>/`
+# Domain slice `features/<domain>/`
 
-Крупный домен (заявка, заказ, документ) не размазывается по глобальным
-`components/` / `composables/`, а собирается в один вертикальный срез
-`resources/js/features/<домен>/`. Внутри среза — слои с фиксированными ролями
-и **однонаправленным графом импортов**.
+Large domain (application, order, document) does not spread across global
+`components/` / `composables/`, and is assembled into one vertical slice
+`resources/js/features/<domain>/`. Inside the slice - layers with fixed roles
+and **unidirectional import graph**.
 
-## Дерево слоя
+## Layer tree
 
 ```
 resources/js/features/order/
-├── actions/                  # единственный слой, который импортирует @/wayfinder/routes/*
-│   ├── orderActions.ts       # тонкие функции-обёртки над wayfinder-роутами + execute()
-│   └── index.ts              # реэкспорт публичного API actions-слоя
-├── composables/              # use*-функции домена; импортируют ТОЛЬКО ../actions
-│   ├── useOrderActions.ts    # связывает actions с состоянием отправки/валидацией
-│   ├── useOrderForm.ts       # форма домена (useForm/precognition)
+├── actions/                  # is the only layer that imports @/wayfinder/routes/*
+│   ├── orderActions.ts       # thin wrapper functions over wayfinder-routes + execute()
+│   └── index.ts              # re-export public API actions-layer
+├── composables/              # use*-domain functions; import ONLY../actions
+│   ├── useOrderActions.ts    # links actions with sending status/validation
+│   ├── useOrderForm.ts       # domain form (useForm/precognition)
 │   ├── useOrderConfirmations.ts
 │   ├── useOrderRealtime.ts
-│   └── index.ts              # реэкспорт публичного API composables-слоя
-├── model/                    # оркестрация уровня страницы: собирает composables в один useShowPage
+│   └── index.ts              # re-export public API composables-layer
+├── model/                    # page level orchestration: collects composables into one useShowPage
 │   └── useOrderShowPage.ts
-└── config/                   # доменные константы, дефолты, карты статусов/вкладок
+└── config/                   # domain constants, defaults, status maps/tabs
     └── tabs.ts
 ```
 
-## Правило границ импортов
+## Import Boundary Rule
 
-Направление зависимостей — строго в одну сторону, снаружи внутрь:
+The direction of dependencies is strictly in one direction, from outside to inside:
 
 ```
-Vue-компонент / page  →  composables (или model)  →  actions  →  @/wayfinder/routes/*
+Vue-component / page  →  composables (or model)  →  actions  →  @/wayfinder/routes/*
 ```
 
-- **Только `actions/` знает про wayfinder.** Все импорты `@/wayfinder/routes/*`
-  живут в `features/<домен>/actions/` и нигде больше.
-- **Компоненты и страницы НЕ дёргают wayfinder-роуты напрямую** — они вызывают
-  `use*`-функции из `composables/` (или `model/`), а те идут в `actions/`.
-- **`composables/` → только `../actions`**, не `@/wayfinder/routes/*` напрямую:
-  бизнес-логика отвязана от того, как именно вызывается backend.
+- **Only `actions/` knows about wayfinder.** All imports `@/wayfinder/routes/*`
+  live in `features/<domain>/actions/` and nowhere else.
+- **Components and pages do NOT jerk wayfinder-routes directly** — they call
+  `use*`-functions from `composables/` (or `model/`), and they go to `actions/`.
+- **`composables/` → only `../actions`**, not `@/wayfinder/routes/*` directly:
+  business logic is decoupled from how exactly it is called backend.
 
-Граница не на доверии, а **enforced ESLint flat-config** через
-`no-restricted-imports`: паттерн `@/wayfinder/routes/*` запрещён в доменных
-Vue-файлах, точечный whitelist выводит из-под правила немногие легаси-файлы.
-Конфигурация ESLint flat-config и правило-граница — в скилле
+The limit is not on trust, but **enforced ESLint flat-config** via
+`no-restricted-imports`: pattern `@/wayfinder/routes/*` is prohibited in domain
+Vue-files, dot whitelist excludes a few legacy files from the rule.
+Configuration ESLint flat-config and the boundary rule - in the skill
 `frontend-linting/js-code-style`.
 
 ```js
-// eslint.config.cjs — граница импортов для домена order
+// eslint.config.cjs — import boundary for domain order
 const orderVueFiles = [
   'resources/js/components/order/**/*.vue',
   'resources/js/pages/Orders/**/*.vue',
@@ -63,24 +63,24 @@ module.exports = [
         patterns: [{
           group: ['@/wayfinder/routes/*'],
           message:
-            'В доменных Vue-компонентах используйте actions/composables-слой ' +
-            'вместо прямых wayfinder-импортов.',
+            'In domain Vue-components use actions/composables-layer ' +
+            'instead of straight ones wayfinder-imports.',
         }],
       }],
     },
   },
   {
-    // точечные исключения для немигрированных файлов
+    // point exceptions for unmigrated files
     files: ['resources/js/components/order/OrderForm.vue'],
     rules: { 'no-restricted-imports': 'off' },
   },
 ];
 ```
 
-## Слой actions: обёртка над wayfinder
+## Layer actions: wrapper over wayfinder
 
-`actions/` — единственное место с импортом `@/wayfinder/routes/*`. Каждая
-функция тонкая: строит роут и вызывает общий `execute()`.
+`actions/` — the only place with import `@/wayfinder/routes/*`. Each
+subtle function: builds a route and calls a common one `execute()`.
 
 ```ts
 // features/order/actions/orderActions.ts
@@ -103,14 +103,14 @@ export function finishOrder(orderId: number, result: boolean, comment: string | 
 ```
 
 ```ts
-// features/order/actions/index.ts — публичный API слоя
+// features/order/actions/index.ts — public API layer
 export { finishOrder, storeOrder } from '@/features/order/actions/orderActions';
 ```
 
-## Мини-composable: импортирует только actions
+## Minicomposable: imports only actions
 
-Composable связывает actions с состоянием отправки/валидацией. Он **не знает**
-ни про wayfinder-роуты, ни про URL — только про функции из `../actions`.
+Composable links actions with sending status/validation. He **doesn't know**
+neither about wayfinder-routes, neither about URL — only about functions from `../actions`.
 
 ```ts
 // features/order/composables/useOrderActions.ts
@@ -141,21 +141,21 @@ export function useOrderActions(options: {
 ```
 
 ```ts
-// features/order/composables/index.ts — публичный API слоя
+// features/order/composables/index.ts — public API layer
 export { useOrderActions } from '@/features/order/composables/useOrderActions';
 ```
 
-Страница/компонент берёт только публичный API среза:
+Page/component takes only public API slice:
 
 ```ts
-// pages/Orders/Show.vue (script setup) — никаких @/wayfinder/routes/* здесь
+// pages/Orders/Show.vue (script setup) — none @/wayfinder/routes/* here
 import { useOrderActions } from '@/features/order/composables';
 ```
 
-## Чеклист среза
+## Slice checklist
 
-- [ ] Импорты `@/wayfinder/routes/*` есть только в `features/<домен>/actions/`.
-- [ ] `composables/` импортируют backend-вызовы из `../actions`, не из wayfinder.
-- [ ] Компоненты/страницы домена берут только публичный API (`composables`/`model`).
-- [ ] Граница закреплена `no-restricted-imports` в ESLint flat-config, не «на словах».
-- [ ] Каждый слой реэкспортит публичное API через `index.ts`.
+- [ ] Imports `@/wayfinder/routes/*` is only available in `features/<domain>/actions/`.
+- [ ] `composables/` import backend-calls from `../actions`, not from wayfinder.
+- [ ] Components/domain pages take only public API (`composables`/`model`).
+- [ ] The border is fixed `no-restricted-imports` in ESLint flat-config, not «in words».
+- [ ] Each layer will re-export the public API via `index.ts`.

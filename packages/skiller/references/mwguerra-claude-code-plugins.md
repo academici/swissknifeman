@@ -1,22 +1,22 @@
 # mwguerra/claude-code-plugins
 
 - **URL:** https://github.com/mwguerra/claude-code-plugins
-- **Статус:** planned
-- **Проверено:** 2026-06-11
+- **Status:** planned
+- **Checked:** 2026-06-11
 
-Плагины Claude Code с отдельной obsidian-vault частью: готовые CLAUDE.md для
-разных контекстов, install-скрипты, разделение commands/hooks/skills/memory.
+Plugins Claude Code with a separate obsidian-vault part: ready CLAUDE.md for
+different contexts, install-scripts, separation commands/hooks/skills/memory.
 
-## Брать выборочно
+## Take selectively
 
-- Адаптер для Obsidian vault → улучшить профиль `obsidian-vault` и `adapters/`
-- Паттерн hooks/ (pre/post хуки для скиллов) — будущая автоматизация
-- Структура memory/ — персистентная память агента между сессиями
+- Adapter for Obsidian vault → improve profile `obsidian-vault` and `adapters/`
+- Pattern hooks/ (pre/post hooks for skills) — future automation
+- Structure memory/ — agent persistent memory between sessions
 
-## Не брать
+## Do not take
 
-- Сами плагины целиком — нужна только структура интеграции с Obsidian
+- The entire plugins themselves - you only need an integration structure with Obsidian
 
-## Целевые bucket-ы
+## Targets bucket-s
 
-`adapters/`, профиль `obsidian-vault`.
+`adapters/`, profile `obsidian-vault`.

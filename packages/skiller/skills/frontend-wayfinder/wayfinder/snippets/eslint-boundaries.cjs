@@ -1,14 +1,14 @@
 // Source: anonymized production Laravel project
-// Фрагмент eslint.config.cjs (flat config): семантические границы импортов.
-// Идея: доменные Vue-компоненты не ходят в @/wayfinder/routes/* напрямую —
-// только через слой actions/composables. Точечный whitelist для легитимных исключений.
+// Fragment eslint.config.cjs (flat config): semantic boundaries of imports.
+// Idea: domain Vue-components are not included in @/wayfinder/routes/* directly -
+// only through layer actions/composables. Spot whitelist for legitimate exceptions.
 
 const documentVueFiles = [
     'resources/js/components/document/**/*.vue',
     'resources/js/pages/Documents/**/*.vue',
 ];
 
-// Файлы, которым прямой wayfinder-импорт разрешён осознанно (таблицы, формы-агрегаторы):
+// Files that are directly wayfinder-import allowed deliberately (tables, aggregator forms):
 const documentWayfinderImportWhitelist = [
     'resources/js/components/document/DocumentForm.vue',
     'resources/js/components/document/DocumentTable.vue',
@@ -26,28 +26,28 @@ module.exports = [
                         {
                             group: ['@/wayfinder/routes/*'],
                             message:
-                                'В доменных Vue-компонентах используйте actions/composables-слой вместо прямых wayfinder-импортов.',
+                                'In domain Vue-components use actions/composables-layer instead of straight lines wayfinder-imports.',
                         },
                     ],
                 },
             ],
-            // Запрет строковых литералов вместо сгенерированных enum:
+            // Disallow string literals instead of generated ones enum:
             'no-restricted-syntax': [
                 'error',
                 {
                     selector:
                         "SwitchCase > Literal[value='approved'], Property[key.name='status'] > Literal[value='approved']",
-                    message: 'Используйте App.Enums.Document.Status.Approved вместо строкового литерала.',
+                    message: 'Use App.Enums.Document.Status.Approved instead of a string literal.',
                 },
                 {
                     selector:
                         "SwitchCase > Literal[value='rejected'], Property[key.name='status'] > Literal[value='rejected']",
-                    message: 'Используйте App.Enums.Document.Status.Rejected вместо строкового литерала.',
+                    message: 'Use App.Enums.Document.Status.Rejected instead of a string literal.',
                 },
             ],
         },
     },
-    // Whitelist идёт ПОСЛЕ ограничивающего блока — flat config применяет правила по порядку:
+    // Whitelist comes AFTER the bounding block - flat config applies the rules in order:
     {
         files: documentWayfinderImportWhitelist,
         rules: {

@@ -19,7 +19,7 @@ Keep provider adapters additive over one shared supervisor contract; use bounded
 Keep generation and source hashes explicit; plan-local runtime remains immutable non-importable evidence rather than a package dependency.
 <!-- instruction:artifex.engineering-invariants -->
 ## artifex.engineering-invariants
-Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use Russian diagnostics, and preserve one implementation rather than a plan-local duplicate.
+Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use English diagnostics, and preserve one implementation rather than a plan-local duplicate.
 <!-- instruction:artifex.validation-release -->
 ## artifex.validation-release
 Before release run `bash scripts/test.sh` and `bash scripts/validate.sh` and use Russian Conventional Commit messages.

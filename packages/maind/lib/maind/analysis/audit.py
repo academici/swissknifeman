@@ -1,21 +1,21 @@
-"""Fleet-аудит оптимизаций по зарегистрированным проектам (read-only, fail-soft).
+"""Fleet-audit of optimizations for registered projects (read-only, fail-soft).
 
-Контрольная поверхность хаба: показывает, ГДЕ раздача оптимизаций неполна —
-- mcp:    активные MCP-серверы проекта (+ кандидаты на ревизию: каждая схема
-          грузится в КАЖДЫЙ запрос, см. context-economy §MCP-аудит);
-- claude: размер CLAUDE.md (>200 строк — постоянный налог на контекст сессии);
-- deny:   есть ли permissions.deny (блок мусора _ide_helper/*.lock из контекста);
-- core:   доехали ли CORE-скиллы токен-экономии + командные плагины по умолчанию
-          (task → /task:*) — их раздаёт skiller connect в каждый проект;
-- pao:    php/laravel-проект (PHP≥8.3) без установленного `laravel/pao` (и без
-          зафиксированного opt-out) — токен-экономия вывода PHP-тестов/анализа
-          не работает (см. SKM-AUDIT-004 P6, `..pao`);
-- settings: конфликт-линтер настроек Claude Code по слоям (`harness doctor
-          --settings --json`, subprocess к соседу — D10 SKM-ROADMAP-005 P1) —
-          per-project doctor не смотрит на весь флот разом, здесь смотрит.
+Hub control surface: shows WHERE distribution of optimizations is incomplete -
+- mcp:    active MCP-project servers (+ revision candidates: each schema
+          is loaded into EVERY request, see context-economy §MCP-audit);
+- claude: size CLAUDE.md (>200 lines - constant tax on session context);
+- deny:   is there permissions.deny (garbage block _ide_helper/*.lock from context);
+- core:   have we arrived? CORE-token saving skills + default command plugins
+          (task → /task:*) — gives them away skiller connect into each project;
+- pao:    php/laravel-project (PHP≥8.3) without installed `laravel/pao` (and without
+          committed opt-out) — token-saving output PHP-tests/analysis
+          doesn't work (see SKM-AUDIT-004 P6, `..pao`);
+- settings: settings-linter conflict Claude Code by layers (`harness doctor
+          --settings --json`, subprocess to the neighbor - D10 SKM-ROADMAP-005 P1) —
+          per-project doctor doesn't look at the entire fleet at once, he looks here.
 
-Ничего не пишет на диск — только читает файлы проектов. Источник списка —
-projects.listing (та же модель, что projects/status)."""
+Doesn't write anything to disk - only reads project files. List source -
+projects.listing (same model as projects/status)."""
 import json
 import os
 from pathlib import Path
@@ -29,23 +29,23 @@ from ..mcp_runtime import runtime_summary, scan_runtime
 from ..projects import listing
 
 DIMS = ("mcp", "claude", "deny", "core", "pao", "settings")
-CLAUDE_MD_WARN = 200  # ориентир Anthropic (context-economy ось 1)
+CLAUDE_MD_WARN = 200  # landmark Anthropic (context-economy axis 1)
 CORE_SKILLS = ("context-economy", "anti-drift", "compact-responses",
                "session-handoff", "gh-review")
-# Курируемый connect-плагин, несущий ровно CORE_SKILLS (зеркало skiller CORE_PLUGIN).
+# Curated connect-plugin that carries smoothly CORE_SKILLS (mirror skiller CORE_PLUGIN).
 CORE_PLUGIN = "core"
-# CORE может доехать ТРЕМЯ каналами: vendor → физ. файлы; connect → core@ (текущий
-# дефолт) или legacy-бакеты general/oss-dev. Бакет каждого CORE-скилла (legacy):
+# CORE can be reached by THREE channels: vendor → physical. files; connect → core@ (current
+# default) or legacy-buckets general/oss-dev. Everyone's Bucket CORE-skill (legacy):
 CORE_SKILL_BUCKET = {
     "context-economy": "general", "anti-drift": "general",
     "compact-responses": "general", "session-handoff": "general",
     "gh-review": "oss-dev",
 }
-# Командные плагины, которые skiller connect раздаёт в КАЖДЫЙ проект по умолчанию
-# (зеркало skiller.config.DEFAULT_COMMAND_PLUGINS; дублируем локально — maind не импортит skiller).
-# Доезжают ТОЛЬКО connect-каналом (marketplace-плагин) → ключ enabledPlugins '<name>@<marketplace>'.
+# Command plugins that skiller connect distributes to EVERY project by default
+# (mirror skiller.config.DEFAULT_COMMAND_PLUGINS; duplicate locally - maind will not import skiller).
+# They arrive ONLY connect-channel (marketplace-plugin) → key enabledPlugins '<name>@<marketplace>'.
 DEFAULT_COMMAND_PLUGINS = ("task",)
-# Серверы, которые maind раскатывает штатно — не кандидаты на ревизию.
+# Servers that maind rolls out normally - not candidates for revision.
 HUB_MCP = {"agentmemory", "maind"}
 
 
@@ -80,7 +80,7 @@ def _mcp_parity_summary(parity):
 
 
 def _mcp_servers(path):
-    """Имена всех MCP-серверов проекта по всем конфигам (dedup, fail-soft)."""
+    """All names MCP-project servers for all configs (dedup, fail-soft)."""
     names = set()
     for rel in MCP_FILES.values():
         f = path / rel
@@ -106,7 +106,7 @@ def _claude_md_lines(path):
 
 
 def _deny_present(path):
-    """permissions.deny непуст в любом из .claude/settings(.local).json."""
+    """permissions.deny is non-empty in any of the .claude/settings(.local).json."""
     for name in ("settings.json", "settings.local.json"):
         f = path / ".claude" / name
         if not f.is_file():
@@ -121,7 +121,7 @@ def _deny_present(path):
 
 
 def _lock_skill_names(lock_skills):
-    """Имена из skills-lock.json::skills — dict {name: entry} или list [{name, ...}]."""
+    """Names from skills-lock.json::skills — dict {name: entry} or list [{name, ...}]."""
     if not lock_skills:
         return set()
     if isinstance(lock_skills, list):
@@ -132,7 +132,7 @@ def _lock_skill_names(lock_skills):
 
 
 def _present_skills(path):
-    """Имена установленных скиллов: skills-lock.json + каталоги .claude/.ai skills."""
+    """Names of installed skills: skills-lock.json + directories .claude/.ai skills."""
     names = set()
     lock = path / "skills-lock.json"
     if lock.is_file():
@@ -148,8 +148,8 @@ def _present_skills(path):
 
 
 def _enabled_buckets(path):
-    """Бакеты-плагины, включённые в .claude/settings(.local).json (connect-канал).
-    Ключи enabledPlugins вида '<bucket>@<marketplace>' → имя бакета."""
+    """Bucket plugins included in .claude/settings(.local).json (connect-channel).
+    Keys enabledPlugins of the form '<bucket>@<marketplace>' → bucket name."""
     buckets = set()
     for name in ("settings.json", "settings.local.json"):
         f = path / ".claude" / name
@@ -167,10 +167,10 @@ def _enabled_buckets(path):
 
 
 def _settings_status(config, path):
-    """Fail-soft вызов `harness doctor --settings --json` по проекту (subprocess к
-    соседу — maind harness НЕ импортирует, D10). Возвращает {"error", "warn", "info"}
-    или строку "unavailable" (harness не найден / упал / отдал не-JSON) — измерение
-    не имеет права уронить fleet-аудит."""
+    """Fail-soft call `harness doctor --settings --json` by project (subprocess to
+    neighbor - maind harness does NOT import, D10). Returns {"error", "warn", "info"}
+    or string "unavailable" (harness not found / fell / gave not-JSON) — measurement
+    has no right to drop fleet-audit."""
     import subprocess
 
     from ..provision.orchestrate import _sibling_bin
@@ -214,14 +214,14 @@ def audit_project(env, project, dims, code_st, config=None):
     if "deny" in dims:
         row["deny"] = _deny_present(path)
     if "core" in dims:
-        present = _present_skills(path)          # vendor: физ. файлы
-        enabled = _enabled_buckets(path)         # connect: бакет/командные плагины
+        present = _present_skills(path)          # vendor: physical. files
+        enabled = _enabled_buckets(path)         # connect: bucket/command plugins
         core_via_connect = CORE_PLUGIN in enabled
         row["core"] = {
             "missing": [s for s in CORE_SKILLS
                         if s not in present and not core_via_connect
                         and CORE_SKILL_BUCKET.get(s) not in enabled],
-            # Командные плагины (task) доезжают только connect-каналом → проверяем enabledPlugins.
+            # Command plugins (task) only reach connect-channel → checking enabledPlugins.
             "missing_cmds": [c for c in DEFAULT_COMMAND_PLUGINS if c not in enabled],
         }
     if "pao" in dims:
@@ -232,12 +232,12 @@ def audit_project(env, project, dims, code_st, config=None):
 
 
 def run_audit(env, config, dim, as_json=False):
-    """dim ∈ mcp|claude|deny|core|all (или пусто → all). Печатает отчёт."""
+    """dim ∈ mcp|claude|deny|core|all (or empty → all). Prints a report."""
     dims = DIMS if dim in (None, "", "all") else (dim,)
     bad = [d for d in dims if d not in DIMS]
     if bad:
         from ..common import die
-        die(f"--audit: {', '.join(bad)} (доступно: {', '.join(DIMS)}, all)")
+        die(f"--audit: {', '.join(bad)} (available: {', '.join(DIMS)}, all)")
     code_st = codegraph.settings(config)
     projs = listing(env, config)
     rows = [audit_project(env, p, dims, code_st, config) for p in projs]
@@ -251,9 +251,9 @@ def run_audit(env, config, dim, as_json=False):
             payload["codegraph_usage"] = code_usage
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return
-    print(f"maind audit ({', '.join(dims)}) — проектов: {len(rows)}")
+    print(f"maind audit ({', '.join(dims)}) — projects: {len(rows)}")
     if not rows:
-        print("  проектов нет — config.json пуст или отсутствует")
+        print("  no projects - config.json is empty or missing")
         return
     for r in rows:
         if r.get("status") == "missing-path":
@@ -267,7 +267,7 @@ def run_audit(env, config, dim, as_json=False):
             if parity_note:
                 seg += f"⚠(parity: {parity_note})"
             elif review:
-                seg += f"⚠(ревизия: {', '.join(review)})"
+                seg += f"⚠(revision: {', '.join(review)})"
             parts.append(seg)
         if "claude" in dims:
             n = r["claude_md_lines"]
@@ -279,10 +279,10 @@ def run_audit(env, config, dim, as_json=False):
             parts.append("deny" + ("✓" if r["deny"] else "✗"))
         if "core" in dims:
             miss = r["core"]["missing"]
-            seg = "core✓" if not miss else f"core⚠(нет: {', '.join(miss)})"
+            seg = "core✓" if not miss else f"core⚠(no: {', '.join(miss)})"
             miss_cmds = r["core"].get("missing_cmds") or []
             if miss_cmds:
-                seg += " cmd⚠(нет: " + ", ".join("/" + c + ":*" for c in miss_cmds) + ")"
+                seg += " cmd⚠(no: " + ", ".join("/" + c + ":*" for c in miss_cmds) + ")"
             parts.append(seg)
         if "pao" in dims:
             st = r["pao"]

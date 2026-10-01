@@ -3,30 +3,30 @@ layout: home
 
 hero:
   name: analyst
-  text: Непрерывное обучение экосистемы
-  tagline: Детерминированный захват «выстраданных уроков» из прогонов Claude Code — с человеком в гейте, без авто-записи
+  text: Continuous learning of the ecosystem
+  tagline: Deterministic capture «hard-won lessons» from runs Claude Code — with a person at the gate, without auto-recording
   actions:
     - theme: brand
-      text: Что такое analyst
+      text: What is analyst
       link: ./guide/
     - theme: alt
-      text: CLI и команды
+      text: CLI and commands
       link: ./guide/cli
     - theme: alt
-      text: Архитектура
+      text: Architecture
       link: ./architecture
 
 features:
-  - title: 🎯 Детерминированный захват
-    details: digest извлекает кандидат-уроки из run-report по высокоточным сигналам (resolved-failure, workaround). Не «угадывает инсайты» — stdlib, on-demand, без демона.
-  - title: 🧑‍⚖️ Человек в гейте
-    details: Переход урока в curated и промоут в скилл — только с явного согласия человека. Авто-запись в скиллы ЗАПРЕЩЕНА — инвариант пакета.
-  - title: 🔒 Приватность по дизайну
-    details: Сырьё (raw-транскрипт) — LOCAL-only. Наружу (в память mAInd, в cross-project индекс) идёт только абстрагированный trigger→action. Секреты — по ссылке.
-  - title: 🌐 Cross-project паттерны
-    details: scan обходит реестр проектов, кластеризует уроки по Jaccard и детектит паттерны в ≥N проектах — namespace-изолированно (паттерн из ns:axioma не течёт в чужой).
-  - title: 📈 Confidence-жизненный цикл
-    details: recompute пересчитывает уверенность (Beta-среднее × volume × decay) из append-only events.ndjson → числовая state-machine и тиры. Детерминизм — восстановим из логов.
-  - title: 🧩 Мост в скиллы (P4)
-    details: suggest превращает cross-project паттерн в ЧЕРНОВИК SKILL.ru.md в staging — человек дорабатывает и промоутит. Не пишет в skills/, не генерит EN, не регистрирует.
+  - title: 🎯 Deterministic capture
+    details: digest candidate learns from run-report by high-precision signals (resolved-failure, workaround). Not «guesses insights» — stdlib, on-demand, without a daemon.
+  - title: 🧑‍⚖️ Man at the gate
+    details: Lesson transition to curated and promotion to the skill - only with the explicit consent of the person. Auto-recording to skills is PROHIBITED - package invariant.
+  - title: 🔒 Privacy by design
+    details: Raw materials (raw-transcript) — LOCAL-only. Out (to memory mAInd, in cross-project index) goes only abstracted trigger→action. Secrets - follow the link.
+  - title: 🌐 Cross-project patterns
+    details: scan bypasses the project registry, clusters lessons by Jaccard and detects patterns in ≥N projects - namespace-isolated (pattern from ns:axioma does not flow into someone else's).
+  - title: 📈 Confidence-life cycle
+    details: recompute recalculates confidence (Beta-average × volume × decay) from append-only events.ndjson → numeric state-machine and shooting ranges. Determinism - we will restore it from the logs.
+  - title: 🧩 Bridge to skills (P4)
+    details: suggest turns cross-project pattern in DRAFT SKILL.ru.md in staging — person finalizes and promotes. Doesn't write to skills/, does not generate EN, does not register.
 ---

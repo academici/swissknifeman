@@ -1,9 +1,9 @@
-"""Интеграционный тест: фейковый Laravel-проект, кейсы connect/vendor.
+"""Integration test: fake Laravel-project, cases connect/vendor.
 
-Каждый кейс гоняет реальный do_connect/do_vendor против синтетического
-реестра (tests/fixtures) и проверяет артефакты на диске: .claude/settings,
-манифест вендоринга, flat-layout для Boost, boost.json::skills, projects.json,
-транзитивный requires. Сеть/composer/php не нужны — всё в tmpdir."""
+Each case drives a real one do_connect/do_vendor vs. synthetic
+registry (tests/fixtures) and checks artifacts on disk: .claude/settings,
+vendor manifest, flat-layout for Boost, boost.json::skills, projects.json,
+transitive requires. Network/composer/php are not needed - everything is in tmpdir."""
 import json
 import unittest
 from pathlib import Path
@@ -33,14 +33,14 @@ class LaravelCase(unittest.TestCase):
         rec = do_connect(self.env, proj, {})
         settings = json.loads(
             (proj / ".claude" / "settings.local.json").read_text())
-        # marketplace объявлен с путём на наш реестр
+        # marketplace is declared with a path to our registry
         mk = settings["extraKnownMarketplaces"][MARKETPLACE]
         self.assertEqual(mk["source"]["path"], str(self.root))
-        # профиль laravel-project -> php + quality плагины включены
+        # profile laravel-project -> php + quality plugins enabled
         enabled = {k.split("@")[0] for k, v in settings["enabledPlugins"].items() if v}
         self.assertEqual(enabled, {"php", "quality"})
         self.assertEqual(rec["profile"], "laravel-project")
-        # запись в projects.json
+        # entry in projects.json
         db = json.loads(self.env.db_file.read_text())
         self.assertEqual(len(db["projects"]), 1)
         self.assertEqual(db["projects"][0]["channel"], "marketplace")
@@ -61,9 +61,9 @@ class LaravelCase(unittest.TestCase):
             "enabledPlugins": {f"php@{MARKETPLACE}": False}}))
         do_connect(self.env, proj, {"profile": "laravel-project"})
         settings = json.loads((claude / "settings.local.json").read_text())
-        # явный false для php не перетёрт
+        # explicit false for php not rubbed
         self.assertIs(settings["enabledPlugins"][f"php@{MARKETPLACE}"], False)
-        # бэкап создан
+        # backup created
         self.assertTrue((claude / "settings.local.json.bak").exists())
 
     def test_connect_dry_run_writes_nothing(self):
@@ -89,7 +89,7 @@ class LaravelCase(unittest.TestCase):
 
     def test_vendor_pulls_requires(self):
         proj = fx.make_laravel_project(self.tmp)
-        # выбираем только php (laravel-conventions требует code-style — обе должны лечь)
+        # select only php (laravel-conventions requires code-style — both must lie down)
         do_vendor(self.env, proj, {"agent": "generic", "buckets": "php"})
         dest = proj / ".ai" / "skills"
         self.assertTrue((dest / "php" / "laravel-conventions" / "SKILL.md").exists())
@@ -104,7 +104,7 @@ class LaravelCase(unittest.TestCase):
         self.assertFalse((dest / "php" / "code-style").exists())
 
     def test_vendor_upstream_and_plugin_meta_not_copied(self):
-        # upstream.json/.claude-plugin не должны попадать в вендоренную копию
+        # upstream.json/.claude-plugin should not end up in the vendor copy
         proj = fx.make_laravel_project(self.tmp)
         sd = self.root / "skills" / "devops" / "docker"
         (sd / "upstream.json").write_text("{}")
@@ -121,25 +121,25 @@ class LaravelCase(unittest.TestCase):
         proj = fx.make_laravel_project(self.tmp, boost=True)
         do_vendor(self.env, proj, {"agent": "generic", "buckets": "php"})
         dest = proj / ".ai" / "skills"
-        # flat: .ai/skills/<name>/SKILL.md (без уровня бакета)
+        # flat: .ai/skills/<name>/SKILL.md (without bucket level)
         self.assertTrue((dest / "laravel-conventions" / "SKILL.md").exists())
         self.assertTrue((dest / "code-style" / "SKILL.md").exists())
         self.assertFalse((dest / "php").exists())
         manifest = json.loads((dest / MANIFEST).read_text())
         self.assertEqual(manifest["layout"], "flat")
-        # boost.json::skills дозаписан именами скиллов
+        # boost.json::skills added with skill names
         boost = json.loads((proj / "boost.json").read_text())
         self.assertIn("laravel-conventions", boost["skills"])
         self.assertIn("code-style", boost["skills"])
 
     def test_vendor_reinstall_is_clean(self):
-        # повторный vendor с меньшим набором не оставляет осиротевшие каталоги
+        # repeated vendor with a smaller set does not leave orphaned directories
         proj = fx.make_laravel_project(self.tmp)
         do_vendor(self.env, proj, {"agent": "generic", "buckets": "php,devops"})
         dest = proj / ".ai" / "skills"
         self.assertTrue((dest / "devops" / "docker").exists())
         do_vendor(self.env, proj, {"agent": "generic", "buckets": "php"})
-        # devops больше не выбран — должен быть вычищен по манифесту
+        # devops is no longer selected - should be cleared by manifest
         self.assertFalse((dest / "devops").exists())
         self.assertTrue((dest / "php" / "code-style").exists())
 

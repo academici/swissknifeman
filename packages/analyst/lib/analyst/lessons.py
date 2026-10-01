@@ -1,18 +1,18 @@
-"""Хранилище уроков analyst — файловый стор со скалярами, провенансом и аудитом.
+"""Lesson Repository analyst — file store with scalars, provenance and audit.
 
-Per-project раскладка (LOCAL, приватность-по-каталогам из ECC):
+Per-project layout (LOCAL, privacy-by-directories from ECC):
     <project>/.claude/analyst/
       lessons/{ephemeral,candidate,curated,deprecated}/<id>.json
-      audit.ndjson        # append-only: кто/когда/что промоутил (провенанс)
+      audit.ndjson        # append-only: who/when/that promoted (provenance)
 
-Инварианты (data-integrity):
-- запись урока — атомарна (core.atomic_write_json: tmp + os.replace);
-- переход состояния — атомарный ре-райт в новый каталог + unlink старого (урок не двоится);
-- аудит — append-only ndjson (не перезаписывается, только дописывается);
-- урок несёт только СКАЛЯРЫ (переносимо, детерминированно); сырьё/секреты внутрь не кладём.
+Invariants (data-integrity):
+- lesson recording - atomic (core.atomic_write_json: tmp + os.replace);
+- state transition - atomic re-write to a new directory + unlink old (lesson is not double);
+- audit - append-only ndjson (is not overwritten, only appended);
+- lesson carries only SCALARS (portable, deterministic); raw materials/we don't put secrets inside.
 
-Confidence-арифметика (Beta/decay) и state-machine-гейты по числам — фаза P3; здесь MVP
-хранит счётчики-сырьё (sessions_total/…), переходы делает человек через `analyst promote`."""
+Confidence-arithmetic (Beta/decay) and state-machine-gates by numbers - phase P3; here MVP
+stores raw material counters (sessions_total/…), transitions are made by a person through `analyst promote`."""
 import hashlib
 import json
 import os
@@ -25,11 +25,11 @@ from .common import (atomic_write_json, now_iso, read_ndjson, safe_load_json,
 STATES = ("ephemeral", "candidate", "curated", "deprecated")
 KINDS = ("heuristic", "procedure", "gotcha")
 
-# Порядок «активности»: активные уроки, против которых считаем diff/дубли (не deprecated).
+# Order «activity»: active lessons that we consider against diff/duplicates (not deprecated).
 ACTIVE_STATES = ("curated", "candidate", "ephemeral")
 
 
-# ── пути ─────────────────────────────────────────────────────────────────────
+# ── paths ─────────────────────────────────────────────────────────────────────
 def project_dir(project_path):
     """New human-curated analyst state; legacy Claude state remains read-only fallback."""
     return Path(os.path.expanduser(str(project_path))) / ".swissknife" / "analyst"
@@ -45,7 +45,7 @@ def lessons_dir(project_path):
 
 def state_dir(project_path, state):
     if state not in STATES:
-        raise ValueError(f"неизвестное состояние: {state}")
+        raise ValueError(f"unknown state: {state}")
     return lessons_dir(project_path) / state
 
 
@@ -54,16 +54,16 @@ def audit_path(project_path):
 
 
 def events_path(project_path):
-    """<project>/.claude/analyst/events.ndjson — append-only поток сигналов confidence.
-    Отдельно от audit.ndjson (тот — провенанс переходов); здесь — скаляры наблюдений
-    (sessions_total/success, tests_total/passed), из которых recompute восстановим."""
+    """<project>/.claude/analyst/events.ndjson — append-only signal flow confidence.
+    Separate from audit.ndjson (that - provenance of transitions); here are observation scalars
+    (sessions_total/success, tests_total/passed), of which recompute will be restored."""
     return project_dir(project_path) / "events.ndjson"
 
 
-# ── схема урока ──────────────────────────────────────────────────────────────
+# ── lesson outline ──────────────────────────────────────────────────────────────
 def make_lesson_id(trigger, action, session=""):
-    """Детерминированный id: slug(trigger) + короткий хэш(trigger|action|session).
-    Хэш даёт уникальность при совпадающих slug'ах; детерминизм — тестируемость."""
+    """Deterministic id: slug(trigger) + short hash(trigger|action|session).
+    The hash gives uniqueness when matching slug'ah; determinism - testability."""
     slug = sanitize(trigger)[:48] or "lesson"
     h = hashlib.sha1(f"{trigger}\x00{action}\x00{session}".encode("utf-8")).hexdigest()[:8]
     return f"{slug}-{h}"
@@ -72,14 +72,14 @@ def make_lesson_id(trigger, action, session=""):
 def new_lesson(*, trigger, action, kind="heuristic", scope, session_id="",
                project="", detector="", evidence=None, source="digest",
                tests_total=0, tests_passed=0, meta=None, review_hint=""):
-    """Собрать словарь урока (скаляры + провенанс). state всегда 'ephemeral' на входе.
+    """Collect lesson dictionary (scalars + provenance). state always 'ephemeral' at the input.
 
-    `action` — ЧИСТЫЙ семантический текст (по нему Jaccard-дедуп и surfacing в память).
-    Нетекстовое (счётчики попыток, затронутые файлы) → `meta`; инструкция ревьюеру →
-    `review_hint`. `meta`/`review_hint` НЕ попадают в память (surface читает только
-    trigger/action/evidence) — токен-экономия + чистый Jaccard."""
+    `action` — PURE semantic text (on it Jaccard-dedup and surfacing to memory).
+    Non-text (attempt counters, affected files) → `meta`; instructions for reviewer →
+    `review_hint`. `meta`/`review_hint` do NOT go into memory (surface reads only
+    trigger/action/evidence) — token-saving + clean Jaccard."""
     if kind not in KINDS:
-        raise ValueError(f"неизвестный kind: {kind}")
+        raise ValueError(f"unknown kind: {kind}")
     trigger = " ".join((trigger or "").split()).strip()
     action = " ".join((action or "").split()).strip()
     ts = now_iso()
@@ -105,7 +105,7 @@ def new_lesson(*, trigger, action, kind="heuristic", scope, session_id="",
     }
 
 
-# ── чтение ───────────────────────────────────────────────────────────────────
+# ── read ───────────────────────────────────────────────────────────────────
 def _iter_state(project_path, state):
     seen = set()
     for base in (project_dir(project_path), legacy_project_dir(project_path)):
@@ -120,7 +120,7 @@ def _iter_state(project_path, state):
 
 
 def list_lessons(project_path, state=None):
-    """[(lesson, state)] по одному состоянию или по всем (в порядке STATES)."""
+    """[(lesson, state)] for one condition or for all (ok STATES)."""
     states = (state,) if state else STATES
     out = []
     for st in states:
@@ -130,7 +130,7 @@ def list_lessons(project_path, state=None):
 
 
 def find_lesson(project_path, lesson_id):
-    """(lesson, state) первого совпадения по id (порядок STATES) или (None, None)."""
+    """(lesson, state) first match by id (order STATES) or (None, None)."""
     for st in STATES:
         for base in (project_dir(project_path), legacy_project_dir(project_path)):
             p = base / "lessons" / st / f"{lesson_id}.json"
@@ -141,10 +141,10 @@ def find_lesson(project_path, lesson_id):
     return None, None
 
 
-# ── запись / переходы ────────────────────────────────────────────────────────
+# ── entry / transitions ────────────────────────────────────────────────────────
 def save_lesson(project_path, lesson, state=None):
-    """Атомарно записать урок в каталог его состояния (или state-override).
-    Возвращает путь. Дубли по id внутри одного состояния перезаписываются (идемпотентно)."""
+    """Atomically write a lesson to its state directory (or state-override).
+    Returns the path. Duplicates by id within one state are overwritten (idempotent)."""
     st = state or lesson.get("state") or "ephemeral"
     lesson = dict(lesson, state=st)
     dst = state_dir(project_path, st) / f"{lesson['id']}.json"
@@ -153,8 +153,8 @@ def save_lesson(project_path, lesson, state=None):
 
 
 def add_candidate(project_path, lesson):
-    """Записать кандидат-урок из digest в ephemeral, если такого id там ещё нет.
-    Возвращает (lesson, created: bool). Уже существует в ЛЮБОМ состоянии → не трогаем."""
+    """Write a candidate lesson from digest in ephemeral, if so id isn't there yet.
+    Returns (lesson, created: bool). Already exists in ANY state → do not touch."""
     existing, _st = find_lesson(project_path, lesson["id"])
     if existing is not None:
         return existing, False
@@ -163,11 +163,11 @@ def add_candidate(project_path, lesson):
 
 
 def move_lesson(project_path, lesson_id, new_state):
-    """Атомарно перевести урок в new_state: ре-райт в новый каталог + unlink старого
-    (урок не двоится между состояниями). Возвращает (lesson, old_state, new_state).
-    die-семантики нет — вызывающий проверяет None."""
+    """Atomically translate the lesson into new_state: re-write to a new directory + unlink old
+    (lesson does not double between states). Returns (lesson, old_state, new_state).
+    die-no semantics - caller checks None."""
     if new_state not in STATES:
-        raise ValueError(f"неизвестное состояние: {new_state}")
+        raise ValueError(f"unknown state: {new_state}")
     lesson, old_state = find_lesson(project_path, lesson_id)
     if lesson is None:
         return None, None, None
@@ -183,10 +183,10 @@ def move_lesson(project_path, lesson_id, new_state):
     return lesson, old_state, new_state
 
 
-# ── аудит (append-only провенанс) ────────────────────────────────────────────
+# ── audit (append-only provenance) ────────────────────────────────────────────
 def audit_append(project_path, record):
-    """Дописать одну запись в audit.ndjson (append-only, никогда не перезаписываем).
-    Добавляет ts, если его нет. Создаёт каталог. Дозапись — открытие в 'a'."""
+    """Add one entry to audit.ndjson (append-only, never overwrite).
+    Adds ts, if it is not there. Creates a directory. Additional recording - opening in 'a'."""
     rec = dict(record)
     rec.setdefault("ts", now_iso())
     path = audit_path(project_path)
@@ -198,14 +198,14 @@ def audit_append(project_path, record):
 
 
 def read_audit(project_path):
-    """Список записей audit.ndjson (пропускает битые строки). [] если нет файла."""
+    """List of entries audit.ndjson (skips broken lines). [] if there is no file."""
     return read_ndjson(audit_path(project_path))
 
 
-# ── events (append-only поток сигналов confidence) ───────────────────────────
+# ── events (append-only signal flow confidence) ───────────────────────────
 def event_append(project_path, record):
-    """Дописать событие-сигнал в events.ndjson (append-only, только дозапись).
-    Добавляет ts, если его нет. Из этого лога recompute восстанавливает confidence."""
+    """Add a signal event to events.ndjson (append-only, add-on only).
+    Adds ts, if it is not there. From this log recompute restores confidence."""
     rec = dict(record)
     rec.setdefault("ts", now_iso())
     path = events_path(project_path)
@@ -217,23 +217,23 @@ def event_append(project_path, record):
 
 
 def read_events(project_path):
-    """Список событий events.ndjson (пропускает битые строки). [] если нет файла."""
+    """List of events events.ndjson (skips broken lines). [] if there is no file."""
     return read_ndjson(events_path(project_path))
 
 
-# ── похожесть (Jaccard, stdlib) ──────────────────────────────────────────────
-# compile на уровне модуля (re.compile идемпотентен, не падает на импорте): без
-# module-global-состояния и lazy-init — конвенция пакета + нет гонки в тестах с reload.
-_WORD_RE = re.compile(r"[a-zа-я0-9]{3,}")
+# ── similarity (Jaccard, stdlib) ──────────────────────────────────────────────
+# compile at module level (re.compile is idempotent, does not crash on import): without
+# module-global-states and lazy-init — package convention + no race in tests with reload.
+_WORD_RE = re.compile(r"[a-za-z0-9]{3,}")
 
 
 def _tokens(text):
-    """Множество токенов (lower, только буквенно-цифровые слова ≥3 символов)."""
+    """Many tokens (lower, alphanumeric words only ≥3 characters)."""
     return set(_WORD_RE.findall((text or "").lower()))
 
 
 def jaccard(a, b):
-    """Жаккар по токенам двух строк. 0.0 если оба пусты."""
+    """Jaccard on two string tokens. 0.0 if both are empty."""
     ta, tb = _tokens(a), _tokens(b)
     if not ta and not tb:
         return 0.0
@@ -244,8 +244,8 @@ def jaccard(a, b):
 
 def similar_lessons(project_path, trigger, action, *, states=ACTIVE_STATES,
                     threshold=0.4, exclude_id=None):
-    """[(lesson, state, score)] активных уроков, похожих на (trigger+action) по Jaccard
-    ≥ threshold, по убыванию score. Для diff в review и дедупа при промоуте."""
+    """[(lesson, state, score)] active lessons similar to (trigger+action) by Jaccard
+    ≥ threshold, descending score. For diff in review and dedupa during promotion."""
     query = f"{trigger} {action}"
     out = []
     for st in states:
@@ -259,38 +259,38 @@ def similar_lessons(project_path, trigger, action, *, states=ACTIVE_STATES,
     return out
 
 
-# ── консолидация (mem0-таксономия, в human-gate) ─────────────────────────────
-# Пороги по паре (сходство trigger, сходство action) — чистая эвристика (stdlib):
-CONSOLIDATE_TRIGGER_HIGH = 0.6   # «та же ситуация»
-CONSOLIDATE_ACTION_HIGH = 0.6    # «то же действие»
-CONSOLIDATE_ACTION_LOW = 0.2     # действия расходятся → противоречие
+# ── consolidation (mem0-taxonomy, in human-gate) ─────────────────────────────
+# Thresholds in pairs (similarity trigger, similarity action) — pure heuristics (stdlib):
+CONSOLIDATE_TRIGGER_HIGH = 0.6   # «same situation»
+CONSOLIDATE_ACTION_HIGH = 0.6    # «same action»
+CONSOLIDATE_ACTION_LOW = 0.2     # actions diverge → contradiction
 
 
 def classify_consolidation(trigger, action, similar):
-    """mem0-таксономия для кандидата против похожих активных уроков (авто-резолва НЕТ —
-    только рекомендация человеку). similar: [(lesson, state, score)] из similar_lessons.
+    """mem0-taxonomy for candidate vs similar active lessons (auto-resolve NO -
+    only a recommendation to a person). similar: [(lesson, state, score)] from similar_lessons.
 
-    Возвращает {"action": ADD|UPDATE|NOOP|CONFLICT, "target": id|None, "reason": str}:
-      NOOP     — дубликат (та же ситуация И то же действие);
-      CONFLICT — противоречие (та же ситуация, действие расходится) → flag-and-ask;
-      UPDATE   — уточняет существующий (та же ситуация, действие эволюционировало);
-      ADD      — новое знание (нет близких / только слабо связанные).
+    Returns {"action": ADD|UPDATE|NOOP|CONFLICT, "target": id|None, "reason": str}:
+      NOOP     — duplicate (same situation AND same action);
+      CONFLICT — contradiction (same situation, action diverges) → flag-and-ask;
+      UPDATE   — specifies an existing (same situation, the action has evolved);
+      ADD      — new knowledge (no relatives / loosely coupled only).
     """
-    best = None  # (trigger_sim, action_sim, lesson, state) с макс. trigger_sim
+    best = None  # (trigger_sim, action_sim, lesson, state) with max. trigger_sim
     for L, st, _score in similar:
         tsim = jaccard(trigger, L.get("trigger", ""))
         asim = jaccard(action, L.get("action", ""))
         if best is None or tsim > best[0]:
             best = (tsim, asim, L, st)
     if best is None:
-        return {"action": "ADD", "target": None, "reason": "похожих активных нет"}
+        return {"action": "ADD", "target": None, "reason": "no similar active"}
     tsim, asim, L, st = best
     tid = L.get("id")
     if tsim >= CONSOLIDATE_TRIGGER_HIGH and asim >= CONSOLIDATE_ACTION_HIGH:
-        return {"action": "NOOP", "target": tid, "reason": f"дубликат {tid} [{st}]"}
+        return {"action": "NOOP", "target": tid, "reason": f"duplicate {tid} [{st}]"}
     if tsim >= CONSOLIDATE_TRIGGER_HIGH and asim < CONSOLIDATE_ACTION_LOW:
         return {"action": "CONFLICT", "target": tid,
-                "reason": f"та же ситуация, иное действие → конфликт с {tid} [{st}]"}
+                "reason": f"same situation, different action → conflict with {tid} [{st}]"}
     if tsim >= CONSOLIDATE_TRIGGER_HIGH:
-        return {"action": "UPDATE", "target": tid, "reason": f"уточняет {tid} [{st}]"}
-    return {"action": "ADD", "target": tid, "reason": f"связан с {tid} [{st}], но новое"}
+        return {"action": "UPDATE", "target": tid, "reason": f"clarifies {tid} [{st}]"}
+    return {"action": "ADD", "target": tid, "reason": f"linked to {tid} [{st}], but new"}

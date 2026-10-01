@@ -53,13 +53,13 @@ class SafedirsCliCase(unittest.TestCase):
         self.assertTrue(self.cfg()["include_registered_projects"])
 
         out = run(self.env, ["init"])
-        self.assertIn("уже существует", out)
+        self.assertIn("already exists", out)
 
         run(self.env, ["add", str(self.home / "projects")])
         self.assertEqual(self.cfg()["dirs"], [str(self.home / "projects")])
 
         out = run(self.env, ["add", str(self.home / "projects")])
-        self.assertIn("уже в dirs", out)
+        self.assertIn("is already in dirs", out)
         self.assertEqual(len(self.cfg()["dirs"]), 1)
 
         out = run(self.env, ["list"])
@@ -75,7 +75,7 @@ class SafedirsCliCase(unittest.TestCase):
     def test_add_rejects_dangerous_roots(self):
         run(self.env, ["init"])
         for bad in ("/", str(self.home), str(self.home.parent), "relative/path"):
-            with self.assertRaises(SystemExit, msg=f"должен отказать: {bad}"):
+            with self.assertRaises(SystemExit, msg=f"should fail: {bad}"):
                 run(self.env, ["add", bad])
         self.assertEqual(self.cfg()["dirs"], [])
 
@@ -97,7 +97,7 @@ class SafedirsCliCase(unittest.TestCase):
             json.dumps({"permissions": {"ask": ["Bash(rm -rf *)"]}}), encoding="utf-8")
 
         out = run(self.env, ["prune-ask", "--global", "--target", str(proj)])
-        self.assertIn("итого снято правил: 3", out)
+        self.assertIn("total rules removed: 3", out)
         after = json.loads((proj / ".claude" / "settings.json").read_text())
         self.assertEqual(after["permissions"]["ask"], ["Bash(git push *)"])
         self.assertEqual(after["permissions"]["deny"], ["Bash(sudo *)"])
@@ -105,7 +105,7 @@ class SafedirsCliCase(unittest.TestCase):
         self.assertNotIn("ask", g["permissions"])
 
         out = run(self.env, ["prune-ask", "--global", "--target", str(proj)])
-        self.assertIn("не найдены", out)
+        self.assertIn("not found", out)
 
     def test_init_migrates_legacy_home_config(self):
 
@@ -121,7 +121,7 @@ class SafedirsCliCase(unittest.TestCase):
                                       "exclude": [], "protect_git": True,
                                       "allow_globs": True}), encoding="utf-8")
         out = run(env, ["init"])
-        self.assertIn("мигрировано из legacy", out)
+        self.assertIn("migrated from legacy", out)
         moved = json.loads((repo / "safe-dirs.json").read_text(encoding="utf-8"))
         self.assertEqual(moved["dirs"], ["~/projects"])
         self.assertFalse(legacy.exists())
@@ -137,7 +137,7 @@ class SafedirsCliCase(unittest.TestCase):
                                                    {"path": "/nonexistent"}]}),
             encoding="utf-8")
         out = run(self.env, ["prune-ask", "--all-projects"])
-        self.assertIn("итого снято правил: 1", out)
+        self.assertIn("total rules removed: 1", out)
         after = json.loads((proj / ".claude" / "settings.local.json").read_text())
         self.assertNotIn("ask", after["permissions"])
 
@@ -167,7 +167,7 @@ class SafedirsDeleteCase(unittest.TestCase):
         target = self.trusted / "leftover.txt"
         target.write_text("x", encoding="utf-8")
         out = run(self.env, ["delete", str(target)])
-        self.assertIn("удалено", out)
+        self.assertIn("deleted", out)
         self.assertFalse(target.exists())
 
     def test_delete_directory_inside_trusted_root(self):
@@ -183,7 +183,7 @@ class SafedirsDeleteCase(unittest.TestCase):
         a.write_text("x", encoding="utf-8")
         b.write_text("x", encoding="utf-8")
         out = run(self.env, ["delete", str(a), str(b)])
-        self.assertEqual(out.count("удалено"), 2)
+        self.assertEqual(out.count("deleted"), 2)
         self.assertFalse(a.exists())
         self.assertFalse(b.exists())
 
@@ -219,7 +219,7 @@ class SafedirsDeleteCase(unittest.TestCase):
     def test_delete_skips_absent_path(self):
         target = self.trusted / "gone.txt"
         out = run(self.env, ["delete", str(target)])
-        self.assertIn("уже отсутствует", out)
+        self.assertIn("is no longer available", out)
 
     def test_delete_no_args_dies(self):
         with self.assertRaises(SystemExit):

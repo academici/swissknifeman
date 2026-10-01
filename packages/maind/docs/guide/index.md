@@ -1,35 +1,35 @@
-# Что такое mAInd
+# What is mAInd
 
-**mAInd** — центральный узел («мозг») экосистемы academici. Это не вспомогательная
-утилита: один общий хаб хранит долгосрочную память агентов, строит граф связей между
-сущностями и держит реестр запущенных агентов и проектов. Остальные пакеты (`brain`,
-`swissknifeman`, …) подключаются к нему как клиенты, а не друг к другу.
+**mAInd** — central node («brain») ecosystems academici. This is not an auxiliary
+utility: one common hub stores long-term memory of agents, builds a graph of connections between
+entities and maintains a register of running agents and projects. Other packages (`brain`,
+`swissknifeman`, …) connect to it as clients, not to each other.
 
-## Что внутри
+## What's inside
 
-| Слой | Модуль | Роль |
+| Layer | Module | Role |
 |:--|:--|:--|
-| Память | `memory.py` | оркестрация Node-демона agent-memory + HTTP-обёртка со scope'ами |
-| Граф | `graph.py` | property-граф связей (stdlib), персист в node-link JSON |
-| Агенты | `agents.py` | реестр запущенных агентов с heartbeat |
-| Проекты | `projects.py` | реестр проектов (надмножество brain `.projects.json`) |
-| MCP | `mcp.py` | maind как MCP-сервер для внешних агентов |
+| Memory | `memory.py` | orchestration Node-demon agent-memory + HTTP-wrapper with scope'ami |
+| Graph | `graph.py` | property-connection graph (stdlib), persistent in node-link JSON |
+| Agents | `agents.py` | registry of running agents with heartbeat |
+| Projects | `projects.py` | project registry (superset brain `.projects.json`) |
+| MCP | `mcp.py` | maind like MCP-server for external agents |
 
-## Принципы
+## Principles
 
-- **Единый хаб + scopes.** Один демон памяти и один граф на хаб; изоляция проектов — по
-  `namespace`/scope, а не отдельными инстансами. См. [Архитектуру](../architecture).
-- **Python + bash.** Ядро на stdlib (как `swissknifeman` / `brain`); npm — только для
-  демона памяти и документации.
-- **Порты из env/конфига.** Никаких хардкодов — чтобы хаб не конфликтовал с другим узлом.
+- **Single hub + scopes.** One memory daemon and one graph per hub; isolation of projects - by
+  `namespace`/scope, rather than individual instances. See [Architecture](../architecture).
+- **Python + bash.** Core on stdlib (like `swissknifeman` / `brain`); npm — only for
+  memory and documentation daemon.
+- **Ports from env/config.** No hardcodes - so that the hub does not conflict with another node.
 
-## Откуда что взялось
+## Where did it come from?
 
-mAInd объединяет три источника и добавляет слой оркестрации:
+mAInd combines three sources and adds an orchestration layer:
 
-- **agent-memory** (`iii-*` воркеры) — из экосистемы; жил в Brain, теперь канонично в maind.
-- **идея графа связей** (исторически — внешний движок «graphify») — у нас реализована на stdlib
-  (федерация); граф **кода** внутри проекта — отдельный опциональный слой (Serena), см. [код-граф](./code-graph).
-- **`.projects.json`** из brain — становится `config.json` (расширенная версия, в корне монорепо).
+- **agent-memory** (`iii-*` workers) — from the ecosystem; lived in Brain, is now canonical in maind.
+- **connection graph idea** (historically - external engine «graphify») — we have implemented on stdlib
+  (federation); graph **code** inside the project - a separate optional layer (Serena), see [code graph](./code-graph).
+- **`.projects.json`** from brain — becomes `config.json` (extended version, at the root of the monorepo).
 
-Дальше: [Установка →](./installation)
+Next: [Installation →](./installation)

@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# install.sh — устанавливает CLI analyst (слой непрерывного обучения экосистемы).
+# install.sh — sets CLI analyst (layer of continuous learning ecosystem).
 #
-# Создаёт симлинк <bin-dir>/analyst -> <repo>/bin/analyst. Пакет stateless —
-# per-project уроки живут в .claude/analyst/ целевых проектов; cross-project слой
-# (P2+) — в ~/.swissknifeman/analyst/. Собственного каталога установки нет.
+# Creates a symlink <bin-dir>/analyst -> <repo>/bin/analyst. Package stateless —
+# per-project lessons live in .claude/analyst/ target projects; cross-project layer
+# (P2+) — in ~/.swissknifeman/analyst/. There is no own installation directory.
 #
-# Использование:
+# Usage:
 #   ./install.sh [--bin-dir DIR] [--force]
 #
-#   --bin-dir DIR   куда класть симлинк (по умолчанию ~/.local/bin)
-#   --force         заменить чужой файл/симлинк без вопроса
+#   --bin-dir DIR   where to put the symlink (default ~/.local/bin)
+#   --force         replace someone else's file/symlink without question
 #
-# Дальше — из любого потребляющего проекта:
-#   analyst digest        # кандидат-уроки из свежего run-report
-#   analyst review        # обзор + diff против активных
-#   analyst promote <id>  # человеко-гейт продвижения
+# Next - from any consuming project:
+#   analyst digest        # candidate-lessons from fresh run-report
+#   analyst review        # review + diff against active
+#   analyst promote <id>  # promotion man-gate
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -29,13 +29,13 @@ while [[ $# -gt 0 ]]; do
     --bin-dir) BIN_DIR="$2"; shift 2 ;;
     --force) FORCE=true; shift ;;
     -h|--help) usage; exit 0 ;;
-    *) echo "ERROR: неизвестный аргумент: $1" >&2; usage >&2; exit 1 ;;
+    *) echo "ERROR: unknown argument: $1" >&2; usage >&2; exit 1 ;;
   esac
 done
 
-[[ -x "$CLI" ]] || { echo "ERROR: $CLI не найден или не исполняем" >&2; exit 1; }
+[[ -x "$CLI" ]] || { echo "ERROR: $CLI not found or not executable" >&2; exit 1; }
 command -v python3 >/dev/null 2>&1 || \
-  echo "WARN: python3 не найден — CLI потребует его при запуске" >&2
+  echo "WARN: python3 not found - CLI will require it at startup" >&2
 
 mkdir -p "$BIN_DIR"
 
@@ -43,24 +43,24 @@ LINK="$BIN_DIR/analyst"
 if [[ -e "$LINK" || -L "$LINK" ]]; then
   current="$(readlink -f "$LINK" 2>/dev/null || true)"
   if [[ "$current" == */bin/analyst ]]; then
-    : # наш симлинк (возможно, из старого клона) — молча заменяем
+    : # our symlink (possibly from an old clone) — silently replace
   elif [[ "$FORCE" == true ]]; then
-    : # явное разрешение
+    : # explicit permission
   elif [[ -t 0 ]]; then
-    read -r -p "$LINK уже существует и не похож на analyst. Заменить? [y/N] " answer
-    [[ "$answer" =~ ^[yY] ]] || { echo "Отменено."; exit 1; }
+    read -r -p "$LINK already exists and is not similar to analyst. Replace? [y/N] " answer
+    [[ "$answer" =~ ^[yY] ]] || { echo "Canceled."; exit 1; }
   else
-    echo "ERROR: $LINK уже существует — перезапустите с --force" >&2
+    echo "ERROR: $LINK already exists - restart with --force" >&2
     exit 1
   fi
 fi
 ln -sfn "$CLI" "$LINK"
-echo "Установлено: $LINK -> $CLI"
+echo "Installed: $LINK -> $CLI"
 
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
   *)
-    echo "WARN: $BIN_DIR не в PATH. Добавьте:"
+    echo "WARN: $BIN_DIR not in PATH. Add:"
     case "$(basename "${SHELL:-bash}")" in
       zsh)  echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc" ;;
       fish) echo "  fish_add_path $BIN_DIR" ;;
@@ -68,4 +68,4 @@ case ":$PATH:" in
     esac ;;
 esac
 
-echo "Проверка: analyst doctor"
+echo "Check: analyst doctor"

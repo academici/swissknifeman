@@ -3,17 +3,17 @@
   "snippets": [
     {
       "file": "CheckPermission.php",
-      "description": "Атрибут #[CheckPermission]: повторяемый, TARGET_METHOD, принимает enum-право (UnitEnum), список имён параметров маршрута, abort-статус и сообщение",
+      "description": "Attribute #[CheckPermission]: repeatable, TARGET_METHOD, accepts enum-right (UnitEnum), list of route parameter names, abort-status and message",
       "tags": ["attribute", "enum", "authorization", "php"]
     },
     {
       "file": "CheckAccess.php",
-      "description": "Middleware-исполнитель: ReflectionMethod::getAttributes() читает атрибуты экшена, резолвит аргументы из route-параметров, вызывает Gate::allows(право->value, аргументы) с abort_if",
+      "description": "Middleware-artist: ReflectionMethod::getAttributes() reads action attributes, resolves arguments from route-parameters, calls Gate::allows(right->value, arguments) with abort_if",
       "tags": ["middleware", "reflection", "gate", "abort_if"]
     },
     {
       "file": "OrderController.php",
-      "description": "Пример контроллера: index без аргументов, show с одним правом, update с несколькими повторяющимися #[CheckPermission] и разными abort-статусами",
+      "description": "Example controller: index without arguments, show with one right, update with several duplicates #[CheckPermission] and various abort-statuses",
       "tags": ["controller", "example", "route-model-binding"]
     }
   ]

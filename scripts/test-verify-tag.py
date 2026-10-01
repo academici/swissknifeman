@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Тесты scripts/verify-tag.py — синтетический CHANGELOG в tmpdir."""
+"""Tests scripts/verify-tag.py — synthetic CHANGELOG in tmpdir."""
 import importlib.util
 import os
 import tempfile
@@ -17,13 +17,13 @@ WITH_RELEASE = """# Changelog
 
 ### Added
 
-- что-то
+- something
 
 ## [1.2.0] - 2026-07-01
 
 ### Added
 
-- предыдущее
+- previous
 
 ## [1.1.0] - 2026-06-01
 """
@@ -34,14 +34,14 @@ ONLY_UNRELEASED = """# Changelog
 
 ### Added
 
-- что-то
+- something
 """
 
 MALFORMED = """# Changelog
 
 ## [Unreleased]
 
-## [1.2.0 без даты]
+## [1.2.0 no date]
 """
 
 
@@ -82,7 +82,7 @@ class TestVerifyTag(unittest.TestCase):
             path = _changelog(tmp, MALFORMED)
             code, message = verify_tag.verify("v1.2.0", path)
             self.assertEqual(code, 2)
-            self.assertIn("не найден выпущенный заголовок", message)
+            self.assertIn("released header not found", message)
 
     def test_missing_changelog_file(self):
         with tempfile.TemporaryDirectory() as tmp:

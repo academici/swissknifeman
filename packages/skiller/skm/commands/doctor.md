@@ -1,8 +1,8 @@
 ---
-description: Диагностика окружения skiller (CLI, реестр, топология).
+description: Environment diagnostics skiller (CLI, registry, topology).
 allowed-tools: Bash(skiller:*)
 ---
-## Диагностика skiller
+## Diagnostics skiller
 !`skiller doctor`
 
-Объясни найденные проблемы (FAIL) и предложи починку. Связанные: `/skm:status`, `/skm:skills`.
+Explain the problems found (FAIL) and offer to fix it. Related: `/skm:status`, `/skm:skills`.

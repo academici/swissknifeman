@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Тесты scripts/public-hygiene.py — синтетический список путей, без реального git ls-files."""
+"""Tests scripts/public-hygiene.py — synthetic list of paths, without real git ls-files."""
 import importlib.util
 import os
 import sys
@@ -78,7 +78,7 @@ class TestPublicHygiene(unittest.TestCase):
 
     def test_reason_named_in_output(self):
         violations = public_hygiene.check(["secret.pem"])
-        self.assertEqual(violations, [("secret.pem", "приватный ключ/сертификат")])
+        self.assertEqual(violations, [("secret.pem", "private key/certificate")])
 
 
 if __name__ == "__main__":

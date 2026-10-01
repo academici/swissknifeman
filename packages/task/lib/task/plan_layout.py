@@ -34,14 +34,14 @@ def _meta_layout(plan_dir: Path) -> str:
     try:
         text = (plan_dir / "plan.md").read_text(encoding="utf-8")
     except OSError as exc:
-        raise PlanLayoutError(f"plan.md не читается: {exc}") from exc
+        raise PlanLayoutError(f"plan.md is not readable: {exc}") from exc
     for line in text.splitlines():
         match = _META_ROW.match(line)
         if match:
             return match.group(1).strip()
     raise PlanLayoutError(
-        "PLAN_LAYOUT_V1_RETIRED: Layout | v2 обязателен; исторический v1 "
-        "исполняется только прежним совместимым тегом")
+        "PLAN_LAYOUT_V1_RETIRED: Layout | v2 required; historical v1 "
+        "is executed only by the legacy compatible tag")
 
 
 def layout_version(plan_dir) -> str:
@@ -50,10 +50,10 @@ def layout_version(plan_dir) -> str:
     version = _meta_layout(plan_dir)
     if version == "v1":
         raise PlanLayoutError(
-            "PLAN_LAYOUT_V1_RETIRED: Layout | v1 больше не исполняется; "
-            "откройте исторический source archive или предыдущий совместимый тег")
+            "PLAN_LAYOUT_V1_RETIRED: Layout | v1 is no longer executed; "
+            "open historical source archive or previous compatible tag")
     if version != "v2":
-        raise PlanLayoutError(f"Layout: неизвестная раскладка {version!r}; допустим только v2")
+        raise PlanLayoutError(f"Layout: unknown layout {version!r}; is only valid v2")
     phase_dir = plan_dir / "phases"
     has_v1 = any(_PHASE_FILE.match(p.name) for p in phase_dir.glob("*.md")) if phase_dir.is_dir() else False
     v2_directories = [
@@ -62,20 +62,20 @@ def layout_version(plan_dir) -> str:
     ] if phase_dir.is_dir() else []
     has_v2 = bool(v2_directories)
     if has_v1 or not has_v2:
-        raise PlanLayoutError("Layout v2 объявлен, но дерево не состоит из phases/Pn/Pn.md")
+        raise PlanLayoutError("Layout v2 is declared, but the tree does not consist of phases/Pn/Pn.md")
     invalid_indexes = []
     for directory in sorted(v2_directories):
         index = directory / f"{directory.name}.md"
         try:
             if not stat.S_ISREG(index.lstat().st_mode):
-                raise OSError("не regular file")
+                raise OSError("not regular file")
             with index.open("rb"):
                 pass
         except OSError:
             invalid_indexes.append(index.relative_to(plan_dir).as_posix())
     if invalid_indexes:
         raise PlanLayoutError(
-            "Layout v2: phase index не читается или не regular file: "
+            "Layout v2: phase index is not readable or not regular file: "
             + ", ".join(invalid_indexes)
         )
     return version
@@ -86,7 +86,7 @@ def registry() -> dict:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise PlanLayoutError(f"контракт носителей не читается: {exc}") from exc
+        raise PlanLayoutError(f"media contract is not readable: {exc}") from exc
     return {row["id"]: row for row in data.get("carriers", [])}
 
 
@@ -96,7 +96,7 @@ def read_path_spec() -> dict:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise PlanLayoutError(f"спецификация пути чтения не читается: {exc}") from exc
+        raise PlanLayoutError(f"read path specification is not readable: {exc}") from exc
 
 
 def carrier_path(plan_dir, carrier_id, *, item_id=None, phase_id=None) -> Path:
@@ -106,19 +106,19 @@ def carrier_path(plan_dir, carrier_id, *, item_id=None, phase_id=None) -> Path:
     carriers = registry()
     row = carriers.get(carrier_id)
     if row is None or version not in row.get("layout_versions", []):
-        raise PlanLayoutError(f"носитель {carrier_id!r} не объявлен для Layout {version}")
+        raise PlanLayoutError(f"media {carrier_id!r} not declared for Layout {version}")
     template = row["path"]
     if "<Pn.m>" in template:
         if not item_id or not _ITEM.match(item_id):
-            raise PlanLayoutError(f"{carrier_id}: нужен точный item Pn.m")
+            raise PlanLayoutError(f"{carrier_id}: need exact item Pn.m")
         template = template.replace("<Pn.m>", item_id)
         phase_id = item_id.split(".")[0]
     if "<Pn>" in template:
         if not phase_id:
-            raise PlanLayoutError(f"{carrier_id}: нужен phase Pn")
+            raise PlanLayoutError(f"{carrier_id}: needed phase Pn")
         template = template.replace("<Pn>", phase_id)
     if any(token in template for token in ("*", "{", "<")):
-        raise PlanLayoutError(f"{carrier_id}: не является одиночным файловым носителем")
+        raise PlanLayoutError(f"{carrier_id}: is not a single file media")
     return plan_dir / template
 
 
@@ -128,10 +128,10 @@ def carrier_glob(plan_dir, carrier_id) -> Path:
     version = layout_version(plan_dir)
     row = registry().get(carrier_id)
     if row is None or version not in row.get("layout_versions", []):
-        raise PlanLayoutError(f"носитель {carrier_id!r} не объявлен для Layout {version}")
+        raise PlanLayoutError(f"media {carrier_id!r} not declared for Layout {version}")
     template = re.sub(r"<[^>]+>|\{[^}]+\}", "*", row["path"])
     if "*" not in template:
-        raise PlanLayoutError(f"{carrier_id}: не является множественным носителем")
+        raise PlanLayoutError(f"{carrier_id}: is not multiple media")
     return plan_dir / template
 
 
@@ -153,7 +153,7 @@ def phase_path(plan_dir, phase_id) -> Path:
     try:
         return paths[phase_id]
     except KeyError as exc:
-        raise PlanLayoutError(f"фаза {phase_id} не найдена в Layout {layout_version(plan_dir)}") from exc
+        raise PlanLayoutError(f"phase {phase_id} not found in Layout {layout_version(plan_dir)}") from exc
 
 
 def phase_statuses(plan_dir) -> dict[str, str]:
@@ -165,11 +165,11 @@ def phase_statuses(plan_dir) -> dict[str, str]:
     try:
         _meta, board = plan_status.parse_status_view(plan_dir)
     except plan_status.StatusError as exc:
-        raise PlanLayoutError(f"владельческий вид статуса не читается: {exc}") from exc
+        raise PlanLayoutError(f"owner type of status is not readable: {exc}") from exc
     statuses = {row["Phase"]: row["Status"] for row, _lineno in board}
     missing = sorted(set(phase_paths(plan_dir)) - set(statuses))
     if missing:
-        raise PlanLayoutError(f"нет объявленного статуса фаз: {', '.join(missing)}")
+        raise PlanLayoutError(f"no declared phase status: {', '.join(missing)}")
     return statuses
 
 
@@ -179,15 +179,15 @@ def is_terminal_phase(plan_dir, phase_id) -> bool:
     try:
         return statuses[phase_id] in _TERMINAL_STATUSES
     except KeyError as exc:
-        raise PlanLayoutError(f"фаза {phase_id} не имеет объявленного статуса") from exc
+        raise PlanLayoutError(f"phase {phase_id} has no declared status") from exc
 
 
 def phase_context_path(plan_dir, phase_id, *, reader: str) -> Path:
     """Resolve a phase carrier while keeping terminal phases off live reader paths."""
     if reader not in read_path_spec().get("paths", {}):
-        raise PlanLayoutError(f"неизвестный читатель пути: {reader!r}")
+        raise PlanLayoutError(f"unknown path reader: {reader!r}")
     if reader != "auditor" and is_terminal_phase(plan_dir, phase_id):
-        raise PlanLayoutError(f"{reader}: терминальная фаза {phase_id} не входит в живой путь")
+        raise PlanLayoutError(f"{reader}: terminal phase {phase_id} is not in the live path")
     return carrier_path(plan_dir, "phase-index", phase_id=phase_id)
 
 
@@ -201,7 +201,7 @@ def slots(plan_dir, reader: str) -> tuple[ResolvedSlot, ...]:
     """
     paths = read_path_spec().get("paths", {})
     if reader not in paths:
-        raise PlanLayoutError(f"неизвестный читатель пути: {reader!r}")
+        raise PlanLayoutError(f"unknown path reader: {reader!r}")
     result = []
     for slot in paths[reader].get("slots", []):
         carrier_id = slot["carrier_id"]
@@ -230,7 +230,7 @@ def item_spec_paths(plan_dir, phase_id) -> list[Path]:
     """
     plan_dir = Path(plan_dir)
     if layout_version(plan_dir) != "v2":
-        raise PlanLayoutError("item-spec files существуют только в Layout v2")
+        raise PlanLayoutError("item-spec files exist only in Layout v2")
     directory = phase_path(plan_dir, phase_id).parent
     result = []
     for path in directory.glob("*.md"):
@@ -239,7 +239,7 @@ def item_spec_paths(plan_dir, phase_id) -> list[Path]:
             continue
         if match.group(1) != phase_id:
             raise PlanLayoutError(
-                f"файл ТЗ {path.name} имеет префикс {match.group(1)}, а каталог фазы — {phase_id}")
+                f"technical specification file {path.name} has the prefix {match.group(1)}, and the phase directory is {phase_id}")
         result.append((int(match.group(2)), path))
     return [path for _number, path in sorted(result)]
 

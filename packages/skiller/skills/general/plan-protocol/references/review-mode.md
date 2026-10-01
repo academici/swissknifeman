@@ -5,7 +5,7 @@ delta, rank demonstrated findings by impact, and return one owning continuation 
 material defect.  Do not perform product repair, execute a successor, or turn uncertainty
 into a new audit cycle.
 
-A plan review item (`Ревью Pn`) is this same read-only mode scheduled as an ordinary item: it reuses
+A plan review item (`Review Pn`) is this same read-only mode scheduled as an ordinary item: it reuses
 the executed results of its phase, runs only the checks its Validation names (the one broad pass of
 the phase lives here), and writes a verdict file; product repair is the next owning item.
 

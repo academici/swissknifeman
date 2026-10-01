@@ -1,4 +1,4 @@
-"""Тест fleet-аудита (audit.py): per-project read-only проверки оптимизаций."""
+"""Test fleet-audit (audit.py): per-project read-only optimization checks."""
 import json
 import os
 import sys
@@ -16,7 +16,7 @@ import tests.fixtures as fx  # noqa: E402
 
 
 def _fake_harness_bin(tmp, body):
-    """Скрипт-заглушка harness (см. test_orchestrate._fake_bin): печатает body в stdout."""
+    """Stub script harness (see test_orchestrate._fake_bin): prints body in stdout."""
     p = Path(tmp) / "fake-harness"
     p.write_text(f"#!/bin/sh\n{body}\n", encoding="utf-8")
     p.chmod(0o755)
@@ -24,7 +24,7 @@ def _fake_harness_bin(tmp, body):
 
 
 class SettingsDimCase(unittest.TestCase):
-    """Измерение settings в audit_project/run_audit — fail-soft subprocess к harness (D10)."""
+    """Measurement settings in audit_project/run_audit — fail-soft subprocess to harness (D10)."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -52,7 +52,7 @@ class SettingsDimCase(unittest.TestCase):
     def test_settings_status_unavailable_when_harness_missing(self):
         os.environ.pop("MAIND_HARNESS_BIN", None)
         p = _make_project(self.tmp)
-        # config без записи проекта swissknifeman → _sibling_bin die() → SystemExit → unavailable
+        # config without project entry swissknifeman → _sibling_bin die() → SystemExit → unavailable
         row = audit.audit_project(self.env, {"id": "proj", "local_path": str(p)},
                                   ("settings",), self.code_st, config={})
         self.assertEqual(row["settings"], "unavailable")
@@ -89,7 +89,7 @@ def _make_project(tmp, *, claude_lines=0, deny=False, mcp=None, skills=None,
     if deny:
         (p / ".claude" / "settings.json").write_text(json.dumps(
             {"permissions": {"deny": ["Read(_ide_helper*.php)"]}}), encoding="utf-8")
-    if plugins:  # connect-канал: enabledPlugins бакеты в settings.local.json
+    if plugins:  # connect-channel: enabledPlugins buckets in settings.local.json
         (p / ".claude" / "settings.local.json").write_text(json.dumps(
             {"enabledPlugins": {f"{b}@swissknifeman": True for b in plugins}}),
             encoding="utf-8")
@@ -118,13 +118,13 @@ class AuditCase(unittest.TestCase):
         row = audit.audit_project(self.env, {"id": "proj", "local_path": str(p)},
                                   audit.DIMS, self.code_st)
         self.assertEqual(row["status"], "ok")
-        # hub-серверы не кандидаты на ревизию, сторонний — да
+        # hub-servers are not candidates for revision, third party - yes
         self.assertIn("laravel-boost", row["mcp"]["review"])
         self.assertNotIn("agentmemory", row["mcp"]["review"])
         self.assertNotIn("maind", row["mcp"]["review"])
         self.assertGreater(row["claude_md_lines"], audit.CLAUDE_MD_WARN)
         self.assertTrue(row["deny"])
-        # 2 CORE присутствуют → остальные в missing
+        # 2 CORE present → others in missing
         self.assertEqual(set(row["core"]["missing"]),
                          {"compact-responses", "session-handoff", "gh-review"})
 
@@ -154,28 +154,28 @@ class AuditCase(unittest.TestCase):
         self.assertTrue(any(d["only_left"] == ["figma"] for d in parity["drifts"]))
 
     def test_core_present_via_connect_buckets(self):
-        # connect-канал: CORE доезжает бакет-плагинами general+oss-dev (без физ. файлов)
+        # connect-channel: CORE comes with bucket plugins general+oss-dev (without physical. files)
         p = _make_project(self.tmp, plugins=["general", "oss-dev"])
         row = audit.audit_project(self.env, {"id": "c", "local_path": str(p)},
                                   audit.DIMS, self.code_st)
         self.assertEqual(row["core"]["missing"], [])
 
     def test_core_present_via_connect_core_plugin(self):
-        # connect-канал (текущий дефолт): курируемый core@ вместо general+oss-dev
+        # connect-channel (current default): supervised core@ instead general+oss-dev
         p = _make_project(self.tmp, plugins=["core"])
         row = audit.audit_project(self.env, {"id": "c", "local_path": str(p)},
                                   audit.DIMS, self.code_st)
         self.assertEqual(row["core"]["missing"], [])
 
     def test_core_partial_via_connect_buckets(self):
-        # включён только general → gh-review (oss-dev) остаётся missing
+        # enabled only general → gh-review (oss-dev) remains missing
         p = _make_project(self.tmp, plugins=["general"])
         row = audit.audit_project(self.env, {"id": "c", "local_path": str(p)},
                                   audit.DIMS, self.code_st)
         self.assertEqual(row["core"]["missing"], ["gh-review"])
 
     def test_present_skills_list_lock_format(self):
-        """Brain-валт и др.: skills-lock.json::skills как list, не dict."""
+        """Brain-valt and others: skills-lock.json::skills like list, not dict."""
         p = _make_project(self.tmp)
         (p / "skills-lock.json").write_text(json.dumps({
             "skills": [{"name": "context-economy", "source": "swissknifeman"}],

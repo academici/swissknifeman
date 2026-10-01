@@ -1,14 +1,14 @@
 import { defineConfig } from 'vitepress'
 
-// Standalone-сборка доков пакета harness (окружение Claude Code). В зонтичном
-// агрегате эта .vitepress отбрасывается (scripts/docs-sync.sh), а доки собираются
-// общим docs/.vitepress/config.mts под базой /swissknifeman/. Внутренние ссылки
-// доков относительные → один и тот же источник собирается и здесь, и в агрегате.
+// Standalone-building package docks harness (environment Claude Code). In the umbrella
+// this unit .vitepress discarded (scripts/docs-sync.sh), and the docks are gathering
+// general docs/.vitepress/config.mts under the base /swissknifeman/. Internal links
+// docks relative → the same source is collected here too, and in the unit.
 export default defineConfig({
-  lang: 'ru-RU',
+  lang: 'en-US',
   title: 'harness',
   description:
-    'Настройка окружения Claude Code: пресеты permissions, режимы auto-approve/bypass, MCP-серверы, хуки',
+    'Setting up the environment Claude Code: presets permissions, modes auto-approve/bypass, MCP-servers, hooks',
   base: '/harness/',
   lastUpdated: true,
 
@@ -16,34 +16,34 @@ export default defineConfig({
 
   themeConfig: {
     nav: [
-      { text: 'Обзор', link: '/' },
+      { text: 'Overview', link: '/' },
       { text: 'Permissions', link: '/configs/claude-permissions' },
       { text: 'Agent-packs', link: '/configs/agent-packs' },
-      { text: 'Интеграции', link: '/integrations/', activeMatch: '/integrations/' },
+      { text: 'Integrations', link: '/integrations/', activeMatch: '/integrations/' },
     ],
 
     sidebar: {
       '/': [
         {
-          text: 'Окружение (harness)',
+          text: 'Environment (harness)',
           items: [
-            { text: 'Обзор: CLI harness', link: '/' },
-            { text: 'Permissions для Claude Code', link: '/configs/claude-permissions' },
-            { text: 'Agent-packs: паки субагентов', link: '/configs/agent-packs' },
-            { text: 'Statusline: контекст и уведомления', link: '/configs/statusline' },
-            { text: 'Конфиги (обзор)', link: '/configs/' },
-            { text: 'Настройка Claude Code (машина)', link: '/setup/claude' },
-            { text: 'Настройка Cursor', link: '/setup/cursor' },
-            { text: 'Канон корневых инструкций', link: '/reference/instruction-canon' },
-            { text: '*.env.ini: хуковый интент', link: '/reference/hook-intent-files' },
-            { text: 'Политика исполнения', link: '/reference/execution-policy' },
-            { text: 'Драйвер exec-волны', link: '/reference/exec-wave' },
+            { text: 'Harness CLI overview', link: '/' },
+            { text: 'Permissions for Claude Code', link: '/configs/claude-permissions' },
+            { text: 'Agent-packs: packs of subagents', link: '/configs/agent-packs' },
+            { text: 'Statusline: context and notifications', link: '/configs/statusline' },
+            { text: 'Configuration overview', link: '/configs/' },
+            { text: 'Claude Code host setup', link: '/setup/claude' },
+            { text: 'Settings Cursor', link: '/setup/cursor' },
+            { text: 'Canon of root instructions', link: '/reference/instruction-canon' },
+            { text: '*.env.ini: hook intent', link: '/reference/hook-intent-files' },
+            { text: 'Execution Policy', link: '/reference/execution-policy' },
+            { text: 'Exec-wave driver', link: '/reference/exec-wave' },
           ],
         },
         {
-          text: 'Интеграции (MCP)',
+          text: 'Integrations (MCP)',
           items: [
-            { text: 'Обзор', link: '/integrations/' },
+            { text: 'Overview', link: '/integrations/' },
             { text: 'Context7 MCP', link: '/integrations/context7' },
             { text: 'Playwright MCP', link: '/integrations/playwright-mcp' },
             { text: 'filesystem MCP', link: '/integrations/filesystem' },
@@ -67,21 +67,21 @@ export default defineConfig({
       provider: 'local',
       options: {
         translations: {
-          button: { buttonText: 'Поиск', buttonAriaLabel: 'Поиск' },
+          button: { buttonText: 'Search', buttonAriaLabel: 'Search' },
           modal: {
-            noResultsText: 'Ничего не найдено',
-            resetButtonTitle: 'Сбросить',
-            footer: { selectText: 'выбрать', navigateText: 'навигация', closeText: 'закрыть' },
+            noResultsText: 'Nothing found',
+            resetButtonTitle: 'Reset',
+            footer: { selectText: 'choose', navigateText: 'navigation', closeText: 'close' },
           },
         },
       },
     },
 
-    outline: { label: 'На этой странице' },
-    docFooter: { prev: 'Назад', next: 'Вперёд' },
-    lastUpdated: { text: 'Обновлено' },
-    darkModeSwitchLabel: 'Тема',
-    sidebarMenuLabel: 'Меню',
-    returnToTopLabel: 'Наверх',
+    outline: { label: 'On this page' },
+    docFooter: { prev: 'Back', next: 'Forward' },
+    lastUpdated: { text: 'Updated' },
+    darkModeSwitchLabel: 'Subject',
+    sidebarMenuLabel: 'Menu',
+    returnToTopLabel: 'Top',
   },
 })

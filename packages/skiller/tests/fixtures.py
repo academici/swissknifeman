@@ -1,9 +1,9 @@
-"""Хелперы для тестов: фейковый реестр и фейковые проекты во временных каталогах.
+"""Test helpers: fake registry and fake projects in temporary directories.
 
-Тесты гоняют CLI против синтетического реестра (несколько бакетов, профили,
-buckets.json) — не против настоящих 125 скиллов, чтобы не ломаться при каждой
-правке контента. Это покрывает логику connect/vendor/registry/selection,
-а не конкретный набор скиллов."""
+Tests are running CLI vs. synthetic registry (several buckets, profiles,
+buckets.json) — don't mind real 125 skills, so as not to break down at each
+content editing. This covers logic connect/vendor/registry/selection,
+and not a specific set of skills."""
 import json
 
 from skiller.common import Env
@@ -11,7 +11,7 @@ from skiller.common import Env
 
 def write_skill(skill_dir, name, *, version="0.1.0", description="desc",
                 requires=None, body="Body.\n"):
-    """Создать каталог скилла с SKILL.md (frontmatter + тело)."""
+    """Create a skill directory with SKILL.md (frontmatter + body)."""
     skill_dir.mkdir(parents=True, exist_ok=True)
     fm = ["---", f"name: {name}", f"version: {version}",
           f"description: {description}"]
@@ -26,13 +26,13 @@ def write_upstream(skill_dir, *, source="github", url="https://example/SKILL.md"
                    sha256="deadbeef", fetched_at="2026-01-01",
                    strategy="notify", path="SKILL.md", review_pending=None,
                    body_path=None, extra_files=None):
-    """Положить upstream.json рядом с SKILL.md (метит скилл как внешний).
+    """Put upstream.json next to SKILL.md (marks the skill as external).
 
-    strategy/path/review_pending — для fork-скиллов (path указывает на зеркало,
-    напр. references/source.md, а не на SKILL.md). body_path (P7.3 thin-navigator) —
-    аддитивное поле, называет files[]-запись с реальным телом апстрима (см.
-    schema/upstream.schema.json); extra_files — доп. files[]-записи (dict-ы) поверх
-    основной, напр. чтобы держать одновременно SKILL.md И references/full.md."""
+    strategy/path/review_pending — for fork-skills (path points to the mirror,
+    e.g. references/source.md, and not on SKILL.md). body_path (P7.3 thin-navigator) —
+    additive field, names files[]-recording with real upstream body (see
+    schema/upstream.schema.json); extra_files — add. files[]-records (dict-s) on top
+    main, e.g. to hold at the same time SKILL.md AND references/full.md."""
     import json as _json
     data = {
         "schema_version": 1,
@@ -49,15 +49,15 @@ def write_upstream(skill_dir, *, source="github", url="https://example/SKILL.md"
 
 
 def make_registry(tmp_path):
-    """Собрать минимальный, но валидный реестр в tmp_path.
+    """Build a minimal but valid registry in tmp_path.
 
-    Бакеты:
+    Buckets:
       php/      laravel-conventions (requires: code-style)
                 code-style
       quality/  test-writer
       devops/   docker
-    Профиль laravel-project -> [php, quality]; standalone -> ["*"] include_meta.
-    Возвращает (root: Path, Env).
+    Profile laravel-project -> [php, quality]; standalone -> ["*"] include_meta.
+    Returns (root: Path, Env).
     """
     root = tmp_path / "registry"
     skills = root / "skills"
@@ -75,7 +75,7 @@ def make_registry(tmp_path):
                 description="Test writer")
     write_skill(skills / "devops" / "docker", "docker", description="Docker")
 
-    # generate-skill meta-skill (для include_meta профилей)
+    # generate-skill meta-skill (for include_meta profiles)
     write_skill(root / "generate-skill" / "generate-skill", "generate-skill",
                 description="Meta-skill")
 
@@ -95,7 +95,7 @@ def make_registry(tmp_path):
         "name": "standalone", "description": "All",
         "buckets": ["*"], "include_meta": True}) + "\n")
 
-    # buckets.json (1:1 с каталогами бакетов)
+    # buckets.json (1:1 with bucket catalogs)
     (root / "buckets.json").write_text(json.dumps({
         "php": {"description": "PHP", "category": "engineering", "tags": ["php"]},
         "quality": {"description": "Quality", "category": "engineering",
@@ -104,7 +104,7 @@ def make_registry(tmp_path):
                    "tags": ["docker"]},
     }) + "\n")
 
-    # marketplace.json placeholder (launcher проверяет наличие; тесты зовут main напрямую)
+    # marketplace.json placeholder (launcher checks for presence; tests are calling main directly)
     (root / ".claude-plugin").mkdir(parents=True, exist_ok=True)
     (root / ".claude-plugin" / "marketplace.json").write_text("{}\n")
 
@@ -115,8 +115,8 @@ def make_registry(tmp_path):
 
 
 def make_laravel_project(tmp_path, *, boost=False):
-    """Фейковый Laravel-проект: artisan + composer.json (+ boost.json).
-    autodetect должен распознать его как laravel-project."""
+    """Fake Laravel-project: artisan + composer.json (+ boost.json).
+    autodetect should recognize it as laravel-project."""
     proj = tmp_path / "myapp"
     proj.mkdir(parents=True, exist_ok=True)
     (proj / "artisan").write_text("#!/usr/bin/env php\n<?php\n")
@@ -128,7 +128,7 @@ def make_laravel_project(tmp_path, *, boost=False):
 
 
 def make_standalone_project(tmp_path):
-    """Каталог без маркеров стека — autodetect → standalone (тип не распознан)."""
+    """Directory without stack markers - autodetect → standalone (type not recognized)."""
     proj = tmp_path / "blank"
     proj.mkdir(parents=True, exist_ok=True)
     (proj / "README.md").write_text("# blank\n")

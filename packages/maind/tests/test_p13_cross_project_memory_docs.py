@@ -1,12 +1,12 @@
-"""P1.3: гайдлайн межпроектной памяти (D10 — digest project-only, shared по запросу).
+"""P1.3: cross-project memory guideline (D10 — digest project-only, shared upon request).
 
-Проверяет ДВЕ вещи из Validation фазы P1 (плана):
-1) обновлённые скиллы/доки не утверждают «digest несёт namespace/global» без оговорки
-   on-demand — грепом по канонической фразе, которая обязана присутствовать рядом;
-2) все команды, упомянутые в новом гайдлайне (`maind memory digest|recall|remember --help`,
-   `maind graph --help`) реально существуют на HEAD — прогоняются без исключений; плюс
-   MCP-имена инструментов (`maind_graph_path`, `maind_memory_recall`, `maind_memory_store`)
-   сверены со списком TOOLS в mcp.py, а не взяты по памяти.
+Checks TWO things from Validation phases P1 (plan):
+1) updated skills/docs don't approve «digest carries namespace/global» without reservation
+   on-demand — grep on a canonical phrase that must be present nearby;
+2) all commands mentioned in the new guideline (`maind memory digest|recall|remember --help`,
+   `maind graph --help`) actually exist on HEAD — are run without exceptions; plus
+   MCP-tool names (`maind_graph_path`, `maind_memory_recall`, `maind_memory_store`)
+   checked against the list TOOLS in mcp.py, and not taken from memory.
 """
 import contextlib
 import io
@@ -36,7 +36,7 @@ _MEMORY_DOC = _REPO_ROOT / "packages" / "maind" / "docs" / "guide" / "memory.md"
 
 
 def _run(fn, env, argv):
-    """Прогон CLI-функции в изолированном stdout; исключение — провал теста (команда не работает)."""
+    """Run CLI-functions in isolated stdout; exception - test failure (command does not work)."""
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
         fn(env, argv)
@@ -51,44 +51,44 @@ def _env():
 
 
 class TestGuidelineDocsExist(unittest.TestCase):
-    """Файлы из Scope Included P1.3 реально обновлены и на месте."""
+    """Files from Scope Included P1.3 really updated and in place."""
 
     def test_files_present(self):
         for path in [_ECOSYSTEM_MCP_TEMPLATE, *_LOCAL_SKILLS.values(), _MEMORY_DOC]:
-            self.assertTrue(path.is_file(), f"нет файла: {path}")
+            self.assertTrue(path.is_file(), f"no file: {path}")
 
 
 class TestDigestOnDemandCaveat(unittest.TestCase):
-    """Нет утверждения «digest общий/несёт shared» без оговорки project-only/on-demand."""
+    """No approval «digest general/carries shared» without reservation project-only/on-demand."""
 
     def test_ecosystem_mcp_template_has_project_only_caveat(self):
         text = _ECOSYSTEM_MCP_TEMPLATE.read_text(encoding="utf-8")
         self.assertIn("MODE=manual", text)
-        self.assertIn("Обычный recall остаётся в приватном scope проекта", text)
-        self.assertIn("Межпроектная задача", text)
-        idx_private = text.index("Обычный recall остаётся в приватном scope проекта")
+        self.assertIn("Normal recall remains private scope project", text)
+        self.assertIn("Cross-project task", text)
+        idx_private = text.index("Normal recall remains private scope project")
         idx_manual = text.index("MODE=manual")
         self.assertGreater(idx_manual, idx_private)
         self.assertLess(idx_manual - idx_private, 600,
-                        "оговорка про ручную память должна идти рядом с описанием scope")
+                        "disclaimer about manual memory should go next to the description scope")
 
     def test_memory_doc_states_project_only_default(self):
         text = _MEMORY_DOC.read_text(encoding="utf-8")
-        self.assertIn("project-only по умолчанию", text)
+        self.assertIn("project-only default", text)
         self.assertIn("shared_max=0", text)
-        self.assertIn("Межпроектная задача", text)
+        self.assertIn("Cross-project task", text)
 
     def test_local_skills_reference_on_demand_model(self):
         for name, path in _LOCAL_SKILLS.items():
             text = path.read_text(encoding="utf-8")
             has_caveat = ("shared_max=0" in text or "project-only" in text
-                          or "дайджест" in text.lower()
+                          or "digest" in text.lower()
                           or "does not carry it by default" in text.lower())
-            self.assertTrue(has_caveat, f"{name}: нет оговорки project-only/on-demand про digest")
+            self.assertTrue(has_caveat, f"{name}: no reservation project-only/on-demand about digest")
 
 
 class TestGuidelineCommandsExist(unittest.TestCase):
-    """Каждая команда, упомянутая в гайдлайне, реально прогоняется на HEAD (--help, без исключений)."""
+    """Each command mentioned in the guideline is actually run on HEAD (--help, no exceptions)."""
 
     def test_memory_digest_help(self):
         env = _env()
@@ -114,7 +114,7 @@ class TestGuidelineCommandsExist(unittest.TestCase):
 
 
 class TestMcpToolNamesMatchGuideline(unittest.TestCase):
-    """Имена MCP-инструментов из гайдлайна сверены с реальным списком TOOLS (mcp.py), не по памяти."""
+    """Names MCP-tools from the guideline are checked against the real list TOOLS (mcp.py), not from memory."""
 
     def test_referenced_tool_names_exist(self):
         names = {t["name"] for t in TOOLS}

@@ -2,81 +2,81 @@
 
 - **URL:** https://github.com/laravel/boost
 - **Packagist:** https://packagist.org/packages/laravel/boost
-- **Документация:** https://laravel.com/docs/boost
-- **Статус:** trusted (версионное — доверяем на месте; чистый generic — извлекаем точечно)
-- **Проверено:** 2026-06-13
+- **Documentation:** https://laravel.com/docs/boost
+- **Status:** trusted (versioned - trusted locally; clean generic — extract pointwise)
+- **Checked:** 2026-06-13
 
-**Upstream-отслеживание:**
-- `skills/php/laravel-best-practices/upstream.json` (strategy=notify, 21 файл:
-  SKILL.md + 20 правил `rules/*.md` ↔ наши `references/*.md`).
+**Upstream-tracking:**
+- `skills/php/laravel-best-practices/upstream.json` (strategy=notify, 21 file:
+  SKILL.md + 20 rules `rules/*.md` ↔ ours `references/*.md`).
 - `skills/php/pennant-development/upstream.json` (strategy=notify, SKILL.md) —
-  извлечён в реестр (см. «Что извлечено»).
+  extracted to the registry (see «What's retrieved»).
 
-CI/`./scripts/update-upstreams.sh --check` сообщит, когда Boost изменит
-отслеживаемые файлы; слияние — вручную.
+CI/`./scripts/update-upstreams.sh --check` will report when Boost will change
+monitored files; merge - manually.
 
-Официальный пакет Laravel для AI-агентов: поставляет версионно-специфичные
-скиллы/гайдлайны, MCP-сервер и генератор корневых CLAUDE.md/AGENTS.md.
+Official package Laravel for AI-agents: supplies version-specific
+skills/guidelines, MCP-server and root generator CLAUDE.md/AGENTS.md.
 
-## Где физически лежат скиллы Boost
+## Where are the skills physically located? Boost
 
-- **В репозитории пакета:** [`/.ai/`](https://github.com/laravel/boost/tree/main/.ai) —
-  гайдлайны (`*/core.blade.php` по пакетам и версиям) и скиллы (`*/skill/*/SKILL.blade.php`).
-- **В установленном проекте:** `vendor/laravel/boost/.ai/` (обновляются с composer-пакетом);
-  выбор — в `boost.json` проекта (массивы `skills`, `packages`); рендер в корневые
-  файлы — `php artisan boost:update`.
-- **Third-party гайдлайны** приходят из самих пакетов через `boost.json::packages`
-  (например `filament/filament`, `spatie/laravel-medialibrary`, `spatie/guidelines-skills`).
+- **In the package repository:** [`/.ai/`](https://github.com/laravel/boost/tree/main/.ai) —
+  guidelines (`*/core.blade.php` by package and version) and skills (`*/skill/*/SKILL.blade.php`).
+- **In the installed project:** `vendor/laravel/boost/.ai/` (are updated from composer-package);
+  selection - in `boost.json` project (arrays `skills`, `packages`); render to root
+  files - `php artisan boost:update`.
+- **Third-party guidelines** come from the packages themselves via `boost.json::packages`
+  (for example `filament/filament`, `spatie/laravel-medialibrary`, `spatie/guidelines-skills`).
 
-## Что извлекаем, а что нет (критерий)
+## What we extract and what we don’t (criterion)
 
-Извлечение скилла Boost в реестр допустимо, только если он одновременно:
+Skill extraction Boost to the registry is only valid if it simultaneously:
 
-1. **Static markdown без Blade** — `SKILL.md`, а не `SKILL.blade.php`; без
-   директив `@php`, `@if`, `@foreach`, `@boostsnippet`, `{{ $assist->… }}`.
-   Blade-скиллы рендерятся только через `boost:update` в контексте проекта —
-   как статику их брать нельзя (импортируешь сломанный шаблон с
-   неотрендеренными `{{ … }}`).
-2. **Версионно-стабильный** — без version-веток в `.ai/<pkg>/<N>/` (стабильный
-   API без развилки по версиям пакета).
-3. **Generic и дополняющий** — нет пересечения с существующим скиллом реестра
-   (Шаг 0 skill-authoring) и нет конфликта правил.
+1. **Static markdown without Blade** — `SKILL.md`, and not `SKILL.blade.php`; without
+   directives `@php`, `@if`, `@foreach`, `@boostsnippet`, `{{ $assist->… }}`.
+   Blade-skills are rendered only through `boost:update` in the context of the project -
+   they cannot be taken as statics (import a broken template from
+   unrendered `{{ … }}`).
+2. **Version-stable** — without version-branches in `.ai/<pkg>/<N>/` (stable
+   API without forking according to package versions).
+3. **Generic and complementary** — no intersection with an existing registry skill
+   (Step 0 skill-authoring) and there is no rule conflict.
 
-Если хотя бы один пункт не выполнен — **не извлекаем**, действует политика
-доверия (ниже).
+If at least one point is not completed - **not extractable**, policy in effect
+trust (below).
 
-### Что извлечено (2026-06-13)
+### What's retrieved (2026-06-13)
 
 - `pennant-development` → `skills/php/pennant-development/` (static `.md`,
-  stable API, аналога в реестре не было). upstream.json strategy=notify.
+  stable API, there was no analogue in the registry). upstream.json strategy=notify.
 
-### Что НЕ извлекаем
+### What we DO NOT extract
 
-- **Версионное** (`laravel/11|12`, `php/8.x`, `pest/3|4`, `inertia-*/1|2`,
-  `livewire/2|3|4`, `tailwindcss/3|4`) — рендерится под фактические версии
-  пакетов; импорт заморозил бы версию и создал третью копию истины
-  (vendor → реестр → проект).
-- **Blade-шаблоны** (`folio-routing`, `volt-development`, `mcp-development`,
-  гайдлайны `foundation`/`php-core`/`enforce-tests` `*.blade.php`) — требуют
-  render-контекста Boost. Ручная de-Blade-переработка возможна, но это уже
-  авторинг нового скилла, а не извлечение; делается отдельно по запросу.
-- **Вне наших стеков** (`fluxui-*` — платный UI Flux).
+- **Versional** (`laravel/11|12`, `php/8.x`, `pest/3|4`, `inertia-*/1|2`,
+  `livewire/2|3|4`, `tailwindcss/3|4`) — renders to actual versions
+  packages; import would freeze the version and create a third copy of the truth
+  (vendor → registry → project).
+- **Blade-templates** (`folio-routing`, `volt-development`, `mcp-development`,
+  guidelines `foundation`/`php-core`/`enforce-tests` `*.blade.php`) — require
+  render-context Boost. Manual de-Blade-recycling is possible, but this is already
+  authoring a new skill, not extracting it; made separately upon request.
+- **Outside our stacks** (`fluxui-*` — paid UI Flux).
 
-## Политика доверия (для невыносимого)
+## Trust Policy (for the unbearable)
 
-В Boost-проектах версионно-специфичные и Blade-связанные темы отдаём Boost,
-наш реестр **дополняет** его архитектурой, структурой и практиками. Конфликт
-правил решается приоритетом: проект > Boost > реестр.
+B Boost-projects are version-specific and Blade-related topics give away Boost,
+our registry **complements** its architecture, structure and practices. Conflict
+rules decided by priority: project > Boost > registry.
 
-## Связи с реестром
+## Registry Links
 
-- Матрица доверия и вердикты по нашим скиллам — [docs/boost-compatibility.md](../docs/boost-compatibility.md)
-- Приоритет источников (проект > Boost > реестр) — [docs/routing.md](../docs/routing.md)
-- Интеграция хаба с `boost:update` — `scripts/generate-hub.sh` (режим Boost пишет
+- Confidence matrix and verdicts on our skills - [docs/boost-compatibility.md](../docs/boost-compatibility.md)
+- Source priority (project > Boost > registry) — [docs/routing.md](../docs/routing.md)
+- Hub integration with `boost:update` — `scripts/generate-hub.sh` (mode Boost writes
   `.ai/guidelines/swissknifeman-hub.md`)
-- Устройство SSOT вокруг Boost — скилл `general/skills-ssot`
-- Удалённые дубли (2026-06-12): `php/livewire`, `frontend/tailwindcss`,
-  `general/mcp-development`; помеченные complementary: `php/laravel-best-practices`,
+- Device SSOT around Boost — skill `general/skills-ssot`
+- Deleted takes (2026-06-12): `php/livewire`, `frontend/tailwindcss`,
+  `general/mcp-development`; marked complementary: `php/laravel-best-practices`,
   `frontend/inertia-vue`, `frontend/wayfinder`, `php/filament`, `php/medialibrary`,
   `php/laravel-testing`
-- Извлечено в реестр (2026-06-13): `php/pennant-development` (static `.md`, notify)
+- Extracted to registry (2026-06-13): `php/pennant-development` (static `.md`, notify)

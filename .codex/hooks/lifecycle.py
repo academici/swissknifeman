@@ -50,7 +50,7 @@ def _read_mode(cwd, filename):
             allowed = ("on", "off") if filename == "terminal-admission.env.ini" else _GATE_MODES
             mode = value if value in allowed else "off"
     return mode
-_ROUTER_CATALOG = [{"name": "task:design", "weight": 1, "keywords": ["спроектир", "проектир", "дизайн", "архитектур", "design", "architecture", "adr", "распланируй", "продумай", "схему", "модель данных", "concept"]}, {"name": "task:dev", "weight": 1, "keywords": ["сделай", "добавь", "реализуй", "построй", "напиши", "внедри", "build", "implement", "feature", "фича", "эндпоинт", "endpoint", "команду", "миграци", "интеграци"]}, {"name": "task:research", "weight": 1, "keywords": ["исследуй", "research", "сравни", "compare", "разузнай", "investigate", "актуально", "best practice", "варианты", "какой лучше", "изучи"]}, {"name": "task:review", "weight": 1, "keywords": ["ревью", "отревьюй", "review", "audit", "аудит", "diff", "pr", "проверь код", "code review", "посмотри дифф"]}, {"name": "task:fix", "weight": 1, "keywords": ["почини", "fix", "баг", "bug", "опечатк", "typo", "поправь", "мелкая правка", "small fix", "сломал"]}]
+_ROUTER_CATALOG = []
 _ROUTER_HINT_TEMPLATE = '[intent-router] bias (non-authoritative): top={name} score={score}{runners}'
 _ROUTER_THRESHOLD = 2
 

@@ -1,278 +1,278 @@
-# Разработка с Claude Code + swissknifeman
+# Development with Claude Code + swissknifeman
 
-Для первой задачи и выбора между прямой работой и Task начните с [короткого маршрута](./getting-started).
-Ниже описан подробный сценарий Claude Code для работы, которой нужен план; он не обязателен для
-локальной обратимой правки. Команды `task` запускаются явным вызовом.
+For the first task and the choice between direct work and Task start with [short route](./getting-started).
+Below is a detailed scenario Claude Code for work that needs a plan; it is not required for
+local reversible edits. Teams `task` are triggered by an explicit call.
 
-Один операционный раннбук: **как реально вести процесс разработки** с Claude Code, когда проект
-подключён к экосистеме academici. Не «что установлено», а «как этим пользоваться день за днём» —
-фазы плана, сессии и `/compact`, задачи, память, граф, роли, токен-рычаги, верификация.
+One operational runbook: **how to actually conduct the development process** with Claude Code, when the project
+connected to the ecosystem academici. Not «what is installed», a «how to use it day after day» —
+plan phases, sessions and `/compact`, tasks, memory, graph, roles, token-levers, verification.
 
-Это **спина-коннектор**: она связывает подсистемы и даёт решения-по-ситуации, а за глубиной шлёт
-в профильные доки ([токен-бюджет](/skiller/guide/budget), [память](/maind/guide/memory),
-[граф](/maind/guide/graph), [цепочка инструментов](/skiller/workflows/)). Дублировать их она не
-пытается — правило репо «единый источник истины > копий».
+This **back-connector**: it connects subsystems and gives solutions-to-the-situation, and sends for depth
+to profile docks ([token-budget](/skiller/guide/budget), [memory](/maind/guide/memory),
+[graph](/maind/guide/graph), [toolchain](/skiller/workflows/)). She doesn't duplicate them
+tries - repo rule «single source of truth > copies».
 
-> Читается сверху вниз. Если нужен один ответ — см. раздел [Сценарии](#сценарии-faq) в конце.
+> Read from top to bottom. If you need one answer, see the section [Scripts](#scripts-faq) at the end.
 
-## 0. Карта процесса
+## 0. Process Map
 
 ```
-setup ──▶ ПЛАН ──▶ ИСПОЛНЕНИЕ ──▶ ПРОВЕРКА ──▶ РЕЛИЗ
+setup ──▶ PLAN ──▶ EXECUTION ──▶ CHECK ──▶ RELEASE
   │        │           │             │           │
-онбординг  /task:design /task:dev     verify-     release-
-скиллы+    task-brief-  dev-loop +    claims +    discipline
-MCP+память template     review-gate   analyze     (validate→PR)
-+граф
-  ▲ рычаг: CORE-скиллы   ▲ compact/    ▲ Haiku↔    ▲ RAG-       ▲ CHANGELOG
-    permissions            новая сессия   Opus       лестница      + semver
+onboarding  /task:design /task:dev     verify-     release-
+skills+    task-brief-  dev-loop +    claims +    discipline
+MCP+memory template     review-gate   analyze     (validate→PR)
++graph
+  ▲ lever: CORE-skills   ▲ compact/    ▲ Haiku↔    ▲ RAG-       ▲ CHANGELOG
+    permissions            new session   Opus       stairs      + semver
 ```
 
-На каждом шаге есть свой **токен-рычаг** (раздел 6). Главный принцип — ниже.
+Each step has its own **token-lever** (section 6). The main principle is below.
 
-## 1. Модель мышления: сессии одноразовы
+## 1. Thinking model: sessions are disposable
 
-Знание живёт **вне диалога** — в плане-файле, в доках, в памяти mAInd и в нативной памяти
-Claude Code. Сессия — это рабочая поверхность, а не хранилище. Отсюда весь процесс:
+Knowledge lives **outside the dialog** — in the plan-file, in the docks, in memory mAInd and in native memory
+Claude Code. A session is a working surface, not a storage. Here's the whole process:
 
-- Значимое решение — **записал** (память/план/док), не держи только в истории чата.
-- Разросся контекст — **сжал или начал заново** (раздел 3), не боясь потерять: долговечное уже вне сессии.
-- Большую задачу — **разложил на фазы**, каждую делаешь из письменного брифа.
+- Significant decision - **wrote down** (memory/plan/doc), do not keep it only in the chat history.
+- The context has grown - **compressed or started again** (section 3), without fear of losing: durable already outside the session.
+- Big task - **decomposed into phases**, you make each one from a written brief.
 
-Всё остальное в этом раннбуке — следствия этого принципа.
+Everything else in this runbook is a consequence of this principle.
 
-## 2. Жизненный цикл задачи
+## 2. Task life cycle
 
-| Шаг | Команда / инструмент | Что происходит |
+| Step | Command / tool | What's going on |
 |:--|:--|:--|
-| **Онбординг** | `swissknifeman setup <проект>` | скиллы (CORE) + permissions + MCP + память + граф одной командой (→ `maind onboard`). Детали: [ecosystem-integration](/maind/) |
-| **План** | `/task:design` · скилл `task-brief-template` · `complex-task-orchestrator` | разложить на **вертикальные срезы** с риском и DoD; план — в `.claude/plans/<task>.md` (durable, primary source) |
-| **Исполнение** | `/task:dev` · dev-loop (agent-pack) | срез → impl → тесты-до-зелёного → risk-адаптивный review-gate |
-| **Проверка** | `verify-claims` · `decision-verification` · `cross-layer-change-checklist` · `maind analyze` | факты — через RAG; затронутые слои — по чеклисту; пост-ран разбор прогона |
-| **Релиз** | скилл `release-discipline` | `validate.sh` → `skiller registry` → `CHANGELOG [Unreleased]` → PR |
+| **Onboarding** | `swissknifeman setup <project>` | skills (CORE) + permissions + MCP + memory + graph with one command (→ `maind onboard`). Details: [ecosystem-integration](/maind/) |
+| **Plan** | `/task:design` · skill `task-brief-template` · `complex-task-orchestrator` | decompose into **vertical slices** with risk and DoD; plan - in `.claude/plans/<task>.md` (durable, primary source) |
+| **Execution** | `/task:dev` · dev-loop (agent-pack) | slice → impl → tests-to-green → risk-adaptive review-gate |
+| **Verification** | `verify-claims` · `decision-verification` · `cross-layer-change-checklist` · `maind analyze` | facts - via RAG; affected layers - according to the checklist; post-run analysis of the run |
+| **Release** | skill `release-discipline` | `validate.sh` → `skiller registry` → `CHANGELOG [Unreleased]` → PR |
 
-Всё, кроме `swissknifeman setup`, — внутри Claude Code. `task-brief-template`,
-`complex-task-orchestrator`, `release-discipline` раздаются скиллами (on-trigger, не резидентно).
+Everything except `swissknifeman setup`, — inside Claude Code. `task-brief-template`,
+`complex-task-orchestrator`, `release-discipline` are distributed by skills (on-trigger, non-resident).
 
-## 3. Сессии, контекст и фазы ★
+## 3. Sessions, context and phases ★
 
-Самый частый практический вопрос: **фаза плана закончилась — `/compact` или новая сессия?**
-Канон (сверено с офиц. доками Claude Code — `memory`, `checkpointing`, `prompt-caching`):
+The most common practical question: **plan phase ended - `/compact` or a new session?**
+Canon (verified from official. docks Claude Code — `memory`, `checkpointing`, `prompt-caching`):
 
-### Паттерн Plan → Clear → Execute
+### Pattern Plan → Clear → Execute
 
-Крупную задачу дели на сессии: **план** пиши в файл (`.claude/plans/<task>.md`) → `/clear` →
-**исполнение** с загрузкой только плана. Промежуточные попытки планирования не тянутся в контекст
-исполнения. Шаблоны команд `/plan`/`/execute` — в скилле `context-economy` (snippets).
+A major task shared in the session: **plan** write to file (`.claude/plans/<task>.md`) → `/clear` →
+**execution** with only the plan loaded. Intermediate planning attempts do not fit into context
+execution. Command Templates `/plan`/`/execute` — in skill `context-economy` (snippets).
 
-### `/compact` vs новая сессия
+### `/compact` vs new session
 
-| Ситуация | Действие | Почему |
+| Situation | Action | Why |
 |:--|:--|:--|
-| **Граница фазы одного плана** (связанная работа) | **`/compact`** | Официальная рекомендация. Саммари ~20–30k вместо ~150k, ≤1 медленный ход, **без ре-брифинга**, поток сохраняется. `/compact Focus on <след. фаза>` направляет саммари. Выживают CLAUDE.md, MEMORY.md, вызванные скиллы |
-| **Середина фазы, упёрся в потолок** | **`/compact`** | Чистого handoff-артефакта ещё нет — вся ценность «в полёте». Не жди авто-compaction, жми сам на паузе |
-| **Следующая работа НЕ связана / нужен чистый лист** | **новая сессия** (+ бриф `/task`) | Сбросить накопленные тупики. Дороже (полный промах кэша на 1-м ходу + ручной ре-брифинг), но бриф + записанная память страхуют от потери |
-| **Многофазный план целиком** | **никогда** `/compact` как «протокол handoff» через весь план | Саммари лоссовы; но между соседними фазами compact — норма (см. первую строку) |
+| **Phase boundary of one plan** (related work) | **`/compact`** | Official recommendation. Summary ~20–30k instead ~150k, ≤1 slow speed, **without re-briefing**, stream is saved. `/compact Focus on <next phase>` directs the summary. Survive CLAUDE.md, MEMORY.md, summoned skills |
+| **Mid-phase, hit the ceiling** | **`/compact`** | Clean handoff-there is no artifact yet - all the value «in flight». Don't wait for auto-compaction, press pause yourself |
+| **The following work is NOT related / need a blank slate** | **new session** (+ brief `/task`) | Reset accumulated deadlocks. More expensive (complete cache miss on turn 1 + manual re-briefing), but the brief + recorded memory is insured against loss |
+| **Entire multi-phase plan** | **never** `/compact` like «protocol handoff» through the entire plan | Summary of losses; but between adjacent phases compact — normal (see first line) |
 
-**Ключ:** `/compact` дешевле, когда работа продолжается (связанные фазы). Новая сессия оправдана,
-когда хочешь именно **забыть** прошлое (несвязанная задача, накопленный шум). Долговечность знания
-(память/план/док) — это то, что позволяет **безопасно** стартовать с нуля, когда это нужно; но она
-**не** делает новую сессию дешевле compact'а для продолжения.
+**Key:** `/compact` cheaper when work continues (associated phases). A new session is justified,
+whenever you want **forget** past (unrelated task, accumulated noise). Durability of knowledge
+(memory/plan/doc) — is what allows **safe** start from scratch when necessary; but she
+**not** makes a new session cheaper compact'and to continue.
 
-`/compact` ≠ `/clear`: compact суммирует (сохраняет решения), clear — полный сброс (смена темы).
-Формат брифа для handoff — скилл `session-handoff` (`.claude/handoffs/…`). Полная дисциплина расхода —
+`/compact` ≠ `/clear`: compact summarizes (saves solutions), clear — full reset (change topic).
+Brief format for handoff — skill `session-handoff` (`.claude/handoffs/…`). Complete flow discipline -
 [context-economy](/skiller/guide/budget).
 
-## 4. Управление задачами — плагин `task`
+## 4. Task management - plugin `task`
 
-Плагин `task` — **default-on в каждом проекте** (connect-канал). Резидентного налога не несёт
-(описания команд не инжектятся в каждый запрос). Это тонкое лицо над agent-packs/workflow: каждая
-команда **пинит модель + reasoning effort + профиль workflow**, перебивая настройки сессии — чтобы
-не переключать вручную.
+Plugin `task` — **default-on in each project** (connect-channel). Does not incur resident tax
+(command descriptions are not injected into every request). That thin face above agent-packs/workflow: each
+command **kicks the model + reasoning effort + profile workflow**, interrupting the session settings - to
+do not switch manually.
 
-| Команда | Пинит | Для чего |
+| Command | Pinits | For what |
 |:--|:--|:--|
-| `/task:design` | Opus / high | проектирование → детальное ТЗ/архитектура |
-| `/task:dev` | Opus / high + dev-loop | разработка: вертикальные срезы, risk-адаптивный review-gate |
-| `/task:review` | высокий effort, risk-адаптивно | код-ревью |
-| `/task:research` | fan-out | исследование (breadth-first) |
-| `/task:fix` | — | точечное исправление бага |
+| `/task:design` | Opus / high | design → detailed technical specification/architecture |
+| `/task:dev` | Opus / high + dev-loop | development: vertical slices, risk-adaptive review-gate |
+| `/task:review` | high effort, risk-adaptive | code review |
+| `/task:research` | fan-out | research (breadth-first) |
+| `/task:fix` | — | spot bug fix |
 
-**Как фаза передаётся фазе.** `/task:dev` планирует на Opus, режет на срезы (`model→service→
-controller→test`, каждый с риском `LOW/MED/HIGH`), и если установлен agent-pack — гонит их через
-`*-dev-loop.js` (передаёт срезы как `args.slices`). Нет пака — последовательно, один срез за раз.
-Fan-out на кодинге **не** используется (≈15× токенов; оправдан только на research). Текст, который
-`/task:dev` предлагает при переходе к следующей фазе, — это и есть **бриф** из раздела 3: делай его
-самодостаточным (цель · DoD · файлы · решения · тупики · как проверить).
+**How phase is transferred to phase.** `/task:dev` is planning on Opus, cuts into slices (`model→service→
+controller→test`, everyone at risk `LOW/MED/HIGH`), and if installed agent-pack — drives them through
+`*-dev-loop.js` (passes slices as `args.slices`). No pack - sequentially, one slice at a time.
+Fan-out on coding **not** is used (≈15× tokens; justified only on research). Text that
+`/task:dev` suggests when moving to the next phase - this is **brief** from section 3: do it
+self-sufficient (target · DoD · files · solutions · dead ends · how to check).
 
-## 5. Роли и agent-packs
+## 5. Roles and agent-packs
 
-**Agent-pack** — версионируемый бандл артефактов Claude Code (субагенты + workflow + хуки + settings +
-доки), который ставится и обновляется в проекте (`harness agent-packs render|upgrade`). Раздаёт данные,
-не код. Два вида:
+**Agent-pack** — versionable artifact bundle Claude Code (subagents + workflow + hooks + settings +
+docks), which is installed and updated in the project (`harness agent-packs render|upgrade`). Distributes data,
+is not code. Two types:
 
-- **Стек-паки** (по форме проекта): `backend-laravel`, `node-frontend`, `python-backend`, `dart-flutter`.
-- **Роль-паки** (кросс-стек): `role-tech-lead`, `role-cto`, `role-founder`, `role-maintainer`.
+- **Stack packs** (according to the project form): `backend-laravel`, `node-frontend`, `python-backend`, `dart-flutter`.
+- **Role-packs** (cross-stack): `role-tech-lead`, `role-cto`, `role-founder`, `role-maintainer`.
 
-**dev-loop** (`.claude/workflows/{prefix}-dev-loop.js`) раскатывает вертикальные срезы через
-субагентов (`slice-builder → test-writer → reviewer`) с **risk-адаптивным review-gate**: тривиальное —
-Haiku, impl — Sonnet, HIGH-риск review — Opus+xhigh. Подробнее: [harness](/harness/),
-[роли](./skiller/agent-framework/roles.md).
+**dev-loop** (`.claude/workflows/{prefix}-dev-loop.js`) rolls out vertical slices through
+subagents (`slice-builder → test-writer → reviewer`) with **risk-adaptive review-gate**: trivial —
+Haiku, impl — Sonnet, HIGH-risk review — Opus+xhigh. More details: [harness](/harness/),
+[roles](./skiller/agent-framework/roles.md).
 
-## 6. Токен-рычаги (лестница по ROI)
+## 6. Token levers (staircase by ROI)
 
-Полная лестница с измеренными магнитудами — [budget.md](/skiller/guide/budget) и скилл
-`context-economy`. Здесь — операционная выжимка (что экономит сильнее):
+Full ladder with measured magnitudes - [budget.md](/skiller/guide/budget) and skill
+`context-economy`. Here is the operational summary (which saves more):
 
-| Рычаг | Магнитуда | Как |
+| Lever | Magnitude | How |
 |:--|:--|:--|
-| **Трим CLAUDE.md** | до ~92% инжектируемого | ≤200 строк, только то, что удивит опытного; path-scoped правила `.claude/rules/` |
-| **Форма записи скилла** | измеряется `skiller budget --first-turn` | короткие `description` + `when_to_use`; процедурные тела при необходимости уходят в `context: fork`, а `paths:` не считать автоматической экономией |
-| **Роутинг моделей** | до ~75% | Haiku (разведка/рутина) · Sonnet (дефолт) · Opus (архитектура/дебаг). Через `/model` или `/task:*` |
-| **Аудит MCP** | ~10–20k/сервер резидентно | держать 1–2 под задачу, остальное — CLI; неиспользуемое отключать |
-| **Разведка субагентами** | чтения не идут в main-контекст | тяжёлое чтение (карты, impact) — read-only субагенту, наверх только сводка |
-| **Selective-input** | 5–50× | срез функции/класса, `tail -n`/`grep`, `git diff` — «point, don't paste» |
-| **Prompt caching** | 0.1× на префикс | окупается от ≥1 попадания за TTL (5 мин API / 1 час подписка) |
-| **Лаконичность вывода** | output ~4–5× дороже input | скилл `compact-responses`; output-style `lean` (`harness hooks --output-style lean`) |
-| **EN-обвязка** | ~60–67% на переведённом | статичные rules/агенты — на английском, human-facing — по-русски |
+| **Trim CLAUDE.md** | to ~92% injectable | ≤200 lines, only what will surprise the experienced; path-scoped rules `.claude/rules/` |
+| **Skill entry form** | is measured `skiller budget --first-turn` | short `description` + `when_to_use`; procedural bodies go to `context: fork`, a `paths:` do not count as automatic savings |
+| **Model routing** | to ~75% | Haiku (reconnaissance/routine) · Sonnet (default) · Opus (architecture/debug). Via `/model` or `/task:*` |
+| **Audit MCP** | ~10–20k/server resident | keep 1–2 for the task, the rest - CLI; unused disable |
+| **Reconnaissance by subagents** | reads do not go to main-context | hard reading (cards, impact) — read-only to the subagent, summary only to top |
+| **Selective-input** | 5–50× | function slice/class, `tail -n`/`grep`, `git diff` — «point, don't paste» |
+| **Prompt caching** | 0.1× to prefix | pays for itself from ≥1 hits for TTL (5 min API / 1 hour subscription) |
+| **Conciseness of output** | output ~4–5× more expensive input | skill `compact-responses`; output-style `lean` (`harness hooks --output-style lean`) |
+| **EN-harness** | ~60–67% translated | static rules/agents - in English, human-facing — in Russian |
 
-**PAO** (скилл `php/pao`) — узкий, но полезный рычаг для **PHP-стека**: `composer require laravel/pao
---dev` заставляет PHPUnit/Pest/PHPStan/Rector отдавать агенту компактный JSON (~20 токенов вместо
-тысяч), когда тесты гонятся внутри агента (детект `CLAUDE_CODE`/`CURSOR_AGENT`). Человек в терминале
-видит обычный вывод. Требует PHP ≥ 8.3.
+**PAO** (skill `php/pao`) — narrow but useful lever for **PHP-stack**: `composer require laravel/pao
+--dev` forces PHPUnit/Pest/PHPStan/Rector give compact to agent JSON (~20 tokens instead
+thousand), when tests are run inside the agent (detect `CLAUDE_CODE`/`CURSOR_AGENT`). Man in terminal
+sees normal output. Requires PHP ≥ 8.3.
 
-Для первого хода измеряй обе оси: `skiller budget --first-turn --target .` показывает
-проектную поверхность, а `--with-plugins` добавляет always-on цену включённых marketplace
-плагинов. В текущей модели сигнал становится elevated выше 16K и warning выше 23K; неполный
-плагинный замер печатает причину (`broken` или `unparsed`), а не нулевую стоимость.
+For the first move, measure both axes: `skiller budget --first-turn --target .` shows
+design surface, and `--with-plugins` adds always-on price included marketplace
+plugins. In the current model the signal becomes elevated above 16K and warning above 23K; incomplete
+plugin metering prints reason (`broken` or `unparsed`), rather than zero cost.
 
-## 7. Память mAInd — демистификация ★
+## 7. Memory mAInd — demystification ★
 
-Частая путаница: «он пишет какой-то `.md`-файл — это agentmemory или базовая память Claude?».
-Ответ: **работают ДВА независимых слоя памяти**, они не синхронизированы и решают разные задачи.
+Common confusion: «he writes some `.md`-file is agentmemory or base memory Claude?».
+Answer: **TWO independent memory layers work**, they are not synchronized and solve different problems.
 
-| Слой | Где хранится | Кто пишет | Как читается |
+| Layer | Where is it stored? | Who writes | How to read |
 |:--|:--|:--|:--|
-| **agentmemory (mAInd)** | демон :4111, бинарный KV в `maind/data/` | агент через MCP `maind_memory_store` или хук памяти (`MODE=maind`) | **дайджест на старте** (`maind memory digest` печатает топ-8 фактов, **только приватная память этого проекта** — `shared_max=0` по умолчанию) + семантический `recall`/граф по `ns:<имя>` on-demand для межпроектной задачи |
-| **нативная память Claude Code** | `~/.claude/projects/<slug>/memory/*.md` + индекс `MEMORY.md` | **сам Claude Code** (базовая фича, не наш код) | грузит первые 200 строк/25KB `MEMORY.md` на старте; тематические `.md` — по требованию |
+| **agentmemory (mAInd)** | daemon :4111, binary KV in `maind/data/` | agent via MCP `maind_memory_store` or memory hook (`MODE=maind`) | **digest at the start** (`maind memory digest` prints the top 8 facts, **only private memory of this project** — `shared_max=0` default) + semantic `recall`/graph by `ns:<name>` on-demand for cross-project task |
+| **native memory Claude Code** | `~/.claude/projects/<slug>/memory/*.md` + index `MEMORY.md` | **himself Claude Code** (basic feature, not our code) | loads the first 200 lines/25KB `MEMORY.md` at start; thematic `.md` — upon request |
 
-**Почему два.** agentmemory — **общая** память экосистемы (изолирована по namespace, видна связанным
-проектам той же группы; факт живёт в едином пуле, изоляцию даёт scope-маркер `[[s:<scope>]]`). Нативная
-память Claude Code — **локальная** к твоей машине, про этот проект, управляется самим Claude
-(`autoMemoryEnabled`, дефолт-on с v2.1.59; переживает `/compact`; выкл. `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`).
-Оба слоя кросс-сессионно долговечны и **частично дублируют** друг друга.
+**Why two.** agentmemory — **general** ecosystem memory (isolated by namespace, is visible linked
+projects of the same group; fact lives in a single pool, provides isolation scope-marker `[[s:<scope>]]`). Native
+memory Claude Code — **local** to your car, about this project, controlled by yourself Claude
+(`autoMemoryEnabled`, defaulton with v2.1.59; is worried `/compact`; off `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`).
+Both layers are cross-session durable and **partially duplicate** each other.
 
-**Чем recall отличается от дайджеста.** Дайджест детерминирован (список свежих фактов scope при
-старте). `recall` — семантический поиск по запросу (`maind memory recall "<тема>"`), с фильтром по
-scope-маркеру и дедупом по приватному + `ns:<тег>` + `global`.
+**Than recall is different from digest.** Digest is deterministic (list of recent facts scope when
+start). `recall` — semantic search for a query (`maind memory recall "<topic>"`), with filter by
+scope-token and grandfather in private + `ns:<tag>` + `global`.
 
-**Рекомендация оператору (сверено RAG).** Держать **оба** слоя — это **не** негатив, если разделить
-роли: нативная память = локальный «рабочий набор» репо (решения/гочи/конвенции; авто, ≤200 строк),
-agentmemory = кросс-проектное/экосистемное/высокоценное (по scope, on-trigger). Реальная потеря
-токенов — не двойное хранение, а **двойная ре-инъекция**: один и тот же факт и в `MEMORY.md`, и в
-дайджесте mAInd. Значит — **не дублировать** один факт в обоих слоях (дайджест mAInd и так ограничен
-топ-8). Отключать нативную (`autoMemoryEnabled:false` / `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`) — только
-при полностью централизованной единой памяти или в регулируемой среде. Проверить каждый слой:
+**Recommendation for operator (verified RAG).** Hold **both** layer is **not** negative if divided
+roles: native memory = local «working set» repo (solutions/gochi/conventions; auto, ≤200 lines),
+agentmemory = cross-project/ecosystem/highly valuable (by scope, on-trigger). Real loss
+tokens - not double storage, but **double re-injection**: the same fact in `MEMORY.md`, and in
+digest mAInd. So - **do not duplicate** one fact in both layers (digest mAInd is already limited
+top 8). Disable native (`autoMemoryEnabled:false` / `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`) — only
+in a fully centralized single memory or regulated environment. Check each layer:
 
-- agentmemory: `maind health --cwd` (round-trip write→recall→forget), `maind memory count` (сколько
-  фактов по scope — см. раздел 9), вьюер `http://127.0.0.1:3113`.
-- нативная: `/memory` (браузер файлов памяти Claude Code), `ls ~/.claude/projects/<slug>/memory/`.
+- agentmemory: `maind health --cwd` (round-trip write→recall→forget), `maind memory count` (how much
+  facts on scope — see section 9), viewer `http://127.0.0.1:3113`.
+- native: `/memory` (memory file browser Claude Code), `ls ~/.claude/projects/<slug>/memory/`.
 
-Глубже: [память (agent-memory)](/maind/guide/memory), [namespaces](/maind/guide/namespaces).
+Deeper: [memory (agent-memory)](/maind/guide/memory), [namespaces](/maind/guide/namespaces).
 
-## 8. Граф mAInd — демистификация ★
+## 8. Graph mAInd — demystification ★
 
-Вторая путаница: «граф вроде должен помогать со связями и экономить токены, но агент всё равно лазит
-по сотне файлов». Разбор — два разных графа + две особенности.
+Second confusion: «the graph seems to be supposed to help with connections and save tokens, but the agent still climbs
+for hundreds of files». Parsing - two different graphs + two features.
 
-| Граф | Что связывает | Движок | Индексация |
+| Graph | What connects | Engine | Indexing |
 |:--|:--|:--|:--|
-| **maind-граф** | топология **между** проектами (composer/npm/Brain/skills) | федерация (граф на проект + индекс) | `maind graph derive` из источников |
-| **код-граф (Serena)** | символы/файлы **внутри** проекта | Serena (LSP, per-project MCP) | сам, на лету через LSP |
+| **maind-graph** | topology **between** projects (composer/npm/Brain/skills) | federation (graph per project + index) | `maind graph derive` from sources |
+| **code graph (Serena)** | characters/files **inside** project | Serena (LSP, per-project MCP) | itself, on the fly through LSP |
 
-Две особенности, объясняющие «сканирование сотни файлов»:
+Two features that explain «scanning hundreds of files»:
 
-1. **Скан — ручной.** Watcher'а/гит-хука/демона-сторожа **нет**. maind-граф пересобирается только по
-   `maind graph derive` / `maind sync --only graph` / `onboard`. Поменялись зависимости
-   (composer/npm), Brain-frontmatter или skills-lock → **сам** зови `maind sync --only graph`.
-   Иначе граф устаревает. (Лёгкий cron раз в день/неделю оправдан как страховка.)
-2. **Чтение — pull-модель.** В контекст граф **не инжектится**. Агент должен **сам** вызвать
-   `maind_graph_query`/`neighbors`/`path`. Правила «сначала спроси граф» по умолчанию нет — поэтому
-   агент и уходит в `grep`. Скилл `ecosystem-mcp` (раздаётся в каждый подключённый проект) теперь
-   подсказывает **graph-first**: перед широким `grep`/чтением многих файлов — сначала граф или
-   Serena `find_symbol`/`get_symbols_overview` (читает по символу, не файл целиком → экономит токены).
-   **Оговорка:** граф может быть устаревшим (скан ручной) → при подозрении `maind sync --only graph`
-   или фолбэк на файловый поиск.
+1. **Scan - manual.** Watcher'a/git hook/guard demon **no**. maind-the graph is reassembled only by
+   `maind graph derive` / `maind sync --only graph` / `onboard`. Dependencies have changed
+   (composer/npm), Brain-frontmatter or skills-lock → **himself** call `maind sync --only graph`.
+   Otherwise the graph becomes obsolete. (Lightweight cron once a day/week is justified as insurance.)
+2. **Reading - pull-model.** In context graph **is not injected**. The agent must **himself** call
+   `maind_graph_query`/`neighbors`/`path`. Rules «first ask the Count» no by default - so
+   agent and goes to `grep`. Skill `ecosystem-mcp` (is distributed to each connected project) now
+   prompts **graph-first**: before wide `grep`/reading many files - first a graph or
+   Serena `find_symbol`/`get_symbols_overview` (reads character by character, not the entire file → saves tokens).
+   **Disclaimer:** graph may be outdated (scan manual) → if suspected `maind sync --only graph`
+   or fallback to file search.
 
-**Где реальная экономия.** На **коде** — Serena через LSP: `find_symbol`/`get_symbols_overview`/
-`find_referencing_symbols` дают символ/обзор вместо чтения файла целиком (точнее `grep` при
-рефакторинге). Работает автоматически, **если** в `.mcp.json` проекта есть сервер `serena` (его
-провижинит `maind onboard`; нет сервера — навигация обычным поиском). На **топологии** — maind-граф:
-100 строк JSON про соседей вместо `grep` по многим манифестам, но только при сознательном вызове.
+**Where are the real savings.** On **code** — Serena via LSP: `find_symbol`/`get_symbols_overview`/
+`find_referencing_symbols` give the symbol/review instead of reading the entire file (more precisely `grep` when
+refactoring). Works automatically, **if** in `.mcp.json` project has a server `serena` (him
+provisioning `maind onboard`; no server - navigation by regular search). On **topologies** — maind-graph:
+100 lines JSON about neighbors instead `grep` on many manifestos, but only with conscious challenge.
 
-Глубже: [граф связей](/maind/guide/graph), [граф кода (Serena)](/maind/guide/code-graph),
-[как это всё работает](/maind/guide/how-it-works).
+Deeper: [connection graph](/maind/guide/graph), [code graph (Serena)](/maind/guide/code-graph),
+[how it all works](/maind/guide/how-it-works).
 
-## 9. Измерение эффективности ★
+## 9. Performance measurement ★
 
-«Пишет вроде, а читается ли и помогает ли — непонятно, померить нечем». Что даёт ответ сегодня:
+«It seems to write, but whether it’s readable and whether it helps is unclear, there’s nothing to measure it with». What the answer is today:
 
-| Вопрос | Инструмент |
+| Question | Tool |
 |:--|:--|
-| Реальная цена первого хода | `skiller budget --first-turn [--with-plugins] --target .`; сравнивай `total` и `session_total`, не приписывай диете эффект смены модели измерителя |
-| Реально ли память жива (не «вхолостую») | `maind health --cwd` — round-trip write→recall→forget; `maind verify` — пруф-оф-лайф 3 плоскостей (память/граф/Serena), отличает «поднято» от «реально пишут» |
-| Сколько фактов в памяти проекта | `maind memory count [--project <id>]` — по scope (приватный/ns/global) |
-| Размер и форма графа | `maind graph stats` — узлы/рёбра/типы/компоненты |
-| **Обращался ли агент к памяти/графу за прогон** | `maind analyze` — после сессии показывает `память: recall×N→M фактов, store×K; граф: query×J→S соседей` и подсвечивает **«код-граф не использовался при тяжёлом сканировании»**, если было много `Read`/`Grep`/`Glob` и 0 обращений к графу |
-| Память глазами | вьюер `http://127.0.0.1:3113` |
+| Real cost of the first move | `skiller budget --first-turn [--with-plugins] --target .`; compare `total` and `session_total`, do not attribute the effect of changing the meter model to diet |
+| Is memory really alive (not «idle») | `maind health --cwd` — round-trip write→recall→forget; `maind verify` — proof-of-life 3 planes (memory/graph/Serena), features «raised» from «really write» |
+| How many facts are in the project memory | `maind memory count [--project <id>]` — by scope (private/ns/global) |
+| Graph size and shape | `maind graph stats` — nodes/edges/types/components |
+| **Whether the agent accessed memory/column per run** | `maind analyze` — after the session shows `memory: recall×N→M facts, store×K; graph: query×J→S neighbors` and highlights **«code graph was not used for heavy scanning»**, if there were a lot `Read`/`Grep`/`Glob` and 0 calls to the graph |
+| Memory through the eyes | viewer `http://127.0.0.1:3113` |
 
-`maind analyze` собирает это из run-report (SessionEnd-хук пишет `.claude/runs/<sid>.json` из
-транскрипта) → вердикт GREEN/ATTENTION/RED. Разбор текущего прогона — команда `/maind:analyze`.
+`maind analyze` collects this from run-report (SessionEnd-hook writes `.claude/runs/<sid>.json` from
+transcript) → verdict GREEN/ATTENTION/RED. Parse current run - command `/maind:analyze`.
 
-**Честно о пределах.** Прямой корреляции «граф спас конкретный `grep`» нет — есть только косвенная
-эвристика (тяжёлое сканирование + 0 графа → сигнал). `recall` с 0 найденных много раз — сигнал
-«память пуста или не по адресу» (проверь scope/наполнение), а не доказательство бесполезности.
+**Honestly about limits.** Direct correlation «graph saved specific `grep`» no - there is only indirect
+heuristic (heavy scanning + 0 column → signal). `recall` with 0 found many times - signal
+«memory is empty or not at the address» (check scope/filling), and not proof of uselessness.
 
-**Самообучение — контур и статус.** Сейчас петля обучения **ручная, с человеком в гейте**: захват
-(`run-report`) → разбор (`maind analyze`, экспериментальный скилл `session-observer` — слабые места по
-осям агенты/скиллы/настройки) → урок → **человек** промоутит его в скилл/правило (`field-feedback-loop`
-+ гейты `skill-authoring`/`anti-drift`). Автоматический **кросс-проектный** контур (детекция паттернов
-по многим проектам → confidence-scoring → авто-черновики `SKILL.md`) — спроектирован
-(`research/analyst-package-design.md`) и реализован пакетом `analyst` (`digest`→`confidence`→`promote`):
-гейт — confidence + ручное промо, чтобы ложные «уроки» не попадали в скиллы автоматически.
+**Self-learning - outline and status.** Now learning loop **manual, with a person in the gate**: capture
+(`run-report`) → parsing (`maind analyze`, experimental skill `session-observer` — weaknesses in
+axes agents/skills/settings) → lesson → **person** will promote him in the skill/rule (`field-feedback-loop`
++ gates `skill-authoring`/`anti-drift`). Automatic **cross-project** outline (pattern detection
+on many projects → confidence-scoring → auto-drafts `SKILL.md`) — designed
+(`research/analyst-package-design.md`) and implemented by the package `analyst` (`digest`→`confidence`→`promote`):
+gate — confidence + manual promo to false «lessons» were not included in the skills automatically.
 
-## 10. RAG и верификация
+## 10. RAG and verification
 
-Внешние факты (версии/API библиотек, «ещё актуально», рынок, возможности чужого сервиса) — **не по
-памяти**, а через RAG до фиксации. Лестница (скиллы `verify-claims`, `query-craft`, `mcp-advisor` —
-все CORE):
+External facts (versions/API libraries, «still relevant», market, possibilities of someone else's service) — **not by
+memory**, and through RAG before committing. staircase (skills `verify-claims`, `query-craft`, `mcp-advisor` —
+all CORE):
 
 ```
 context7 ──▶ perplexity-web ──▶ WebSearch
-(точный API   (flat-rate,        (последний
- библиотек)    токен-дёшево;       фолбэк)
-               жать по максимуму)
+(accurate API   (flat-rate,        (last
+ libraries)    token-cheap; fallback)
+               push to the maximum)
 ```
 
-- **`query-craft`** — как спрашивать: никогда голый запрос по библиотеке без версии+контекста
-  («Laravel как X?» → «Laravel 11: X на 2025»).
-- **`verify-claims`** — когда/что верифицировать (repo-факты — чтением кода; внешние — RAG).
-- Формирование плана 100% стоит на свежих данных и завершается footer'ом «Проверка» (что проверено ·
-  непроверенное → **ПОВТОРНЫЙ ПРОХОД**, если движок был недоступен).
+- **`query-craft`** — how to ask: never a naked request for a library without a version+context
+  («Laravel like X?» → «Laravel 11: X for 2025»).
+- **`verify-claims`** — when/what to verify (repo-facts - reading the code; external - RAG).
+- Formation of plan 100% stands on fresh data and ends footer'ohm «Verification» (which is checked ·
+  unverified → **REPEAT PASS**, if the engine was unavailable).
 
-Надёжность `perplexity-web`: не параллелить (профиль один), тяжёлый запрос дробить на узкие search
-или эскалировать в `research`; lock/таймаут → WebSearch+WebFetch/context7.
+Reliability `perplexity-web`: do not parallel (profile one), split a heavy request into narrow ones search
+or escalate to `research`; lock/timeout → WebSearch+WebFetch/context7.
 
-## 11. Контроль и диагностика
+## 11. Monitoring and diagnostics
 
-| Что | Команда |
+| What | Command |
 |:--|:--|
-| 4-слойный инвентарь проекта (скиллы/MCP/агенты/память/граф за один запрос) | [control-surface](/control-surface) |
-| Связь проекта с хабом | `maind health --cwd` (+ `--fix`) |
-| Окружение хаба (демоны/конфиг) | `maind doctor`, `maind status` |
-| Окружение скиллов | `skiller doctor`, `skiller status` |
-| Окружение Claude Code (permissions/MCP/хуки) | `harness doctor` |
-| Всё сразу (fan-out) | `swissknifeman doctor` |
+| 4-project layer inventory (skills/MCP/agents/memory/graph in one request) | [control-surface](/control-surface) |
+| Project connection to the hub | `maind health --cwd` (+ `--fix`) |
+| Hub environment (demons/config) | `maind doctor`, `maind status` |
+| Skill environment | `skiller doctor`, `skiller status` |
+| Environment Claude Code (permissions/MCP/hooks) | `harness doctor` |
+| All at once (fan-out) | `swissknifeman doctor` |
 
 ### Provider operations and rollback
 
@@ -299,63 +299,63 @@ only declared owned preimages, then re-run the no-write check. Generated provide
 restored by their generator, not by editing the output. A release candidate is evidence only; it
 does not authorize a tag, push, publication, fleet rollout, or provider repair.
 
-**Гейт docs-impact (CI, `.github/workflows/hygiene.yml`).** `scripts/docs-impact.py` останавливает
-change-set, который вводит/убирает/переименовывает файл поверхности пакета (`packages/<pkg>/
-{bin,lib,commands,configs}/**`, `core/*.py`, корневые `bin/**`/`install.sh`/`scripts/*.{sh,py}`)
-или правит его интерфейсные пути (`bin`/`commands`/`configs`/`install.sh`), без правки доков
-**того же пакета** (`packages/<pkg>/docs/**`; у `task` — вторым легальным домом `docs/task/**`;
-корень — `docs/*.md`) в том же диапазоне. Обход — трейлер коммита `Docs-Not-Needed: <причина>`
-(причина печатается, пустое значение обходом не считается).
-Измеренная частота (research/24-P8.4-refine-2026-07-27.md` §1–§2,
-дерево `cd93dbc8`): **8 из 12** PR, **11 из 41** коммит. Граница покрытия: гейт **НЕ ловит**
-изменение поведения существующего модуля `lib/**`/`core/*.py`/`scripts/*.{sh,py}` без нового
-файла и без правки интерфейса — это осознанное сужение (форма «любая правка поверхности» красила
-100 % PR и снималась бы первым же спорным вечером), а не полное покрытие.
+**Gate docs-impact (CI, `.github/workflows/hygiene.yml`).** `scripts/docs-impact.py` stops
+change-set, which enters/removes/renames the package surface file (`packages/<pkg>/
+{bin,lib,commands,configs}/**`, `core/*.py`, root `bin/**`/`install.sh`/`scripts/*.{sh,py}`)
+or edits its interface paths (`bin`/`commands`/`configs`/`install.sh`), without editing docks
+**of the same package** (`packages/<pkg>/docs/**`; y `task` — second legal home `docs/task/**`;
+root - `docs/*.md`) in the same range. Bypass - commit trailer `Docs-Not-Needed: <reason>`
+(reason is printed, an empty value is not considered bypass).
+Measured frequency (research/24-P8.4-refine-2026-07-27.md` §1–§2,
+tree `cd93dbc8`): **8 of 12** PR, **11 of 41** commit. Coverage Boundary: Gate **does NOT catch**
+changing the behavior of an existing module `lib/**`/`core/*.py`/`scripts/*.{sh,py}` without new
+file and without editing the interface - this is a conscious narrowing (form «any surface editing» painted
+100 % PR and would have filmed on the very first controversial evening), rather than full coverage.
 
-**Гейты CI-гигиены дерева (`.github/workflows/hygiene.yml`, P8.6).** Два stdlib-скрипта,
-списки правил — данными:
+**Gates CI-wood hygiene (`.github/workflows/hygiene.yml`, P8.6).** Two stdlib-script,
+lists of rules - data:
 
-- `scripts/public-hygiene.py` — fail-closed по **отслеживаемому** дереву (`git ls-files`,
-  содержимое не читается) на запрещённые суффиксы/имена/каталоги: `.sqlite`/`.log`/`.pem`/
-  `.key`/архивы (`.zip`/`.tar`/`.tar.gz`/`.tgz`/`.rar`/`.7z`), `.env` (кроме `*.example`),
-  `__pycache__`/`.venv`/`node_modules`. Каждое нарушение — строка `<путь> — запрещено правилом
-  «<причина>»`; шаг `public-hygiene` в job `hygiene`. Красное на текущем дереве — гейт
-  **сообщает**, чинит человек (файлы не удаляются молча).
-- `scripts/verify-tag.py <tag>` — тег `vX.Y.Z` обязан быть **верхним выпущенным** заголовком
-  `## [X.Y.Z] - YYYY-MM-DD` в корневом `CHANGELOG.md` (носитель версии зонтика — CHANGELOG, не
-  `package.json`: корневого нет, теги пакетные версии не несут). Шаг `verify-tag` в отдельном job
-  `release-tag` (`on: push: tags: ['v*']`) — красное на релизном теге останавливает публикацию
-  раньше, чем версия разойдётся с заголовком.
+- `scripts/public-hygiene.py` — fail-closed by **monitored** tree (`git ls-files`,
+  content is not readable) for prohibited suffixes/names/directories: `.sqlite`/`.log`/`.pem`/
+  `.key`/archives (`.zip`/`.tar`/`.tar.gz`/`.tgz`/`.rar`/`.7z`), `.env` (except `*.example`),
+  `__pycache__`/`.venv`/`node_modules`. Each violation is a line `<path> — is prohibited by the rule
+  «<reason>»`; step `public-hygiene` in job `hygiene`. Red on the current tree is a gate
+  **reports**, repaired by a man (files are not deleted silently).
+- `scripts/verify-tag.py <tag>` — tag `vX.Y.Z` must be **top released** header
+  `## [X.Y.Z] - YYYY-MM-DD` in root `CHANGELOG.md` (umbrella version carrier - CHANGELOG, not
+  `package.json`: there is no root, package versions do not carry tags). Step `verify-tag` in a separate job
+  `release-tag` (`on: push: tags: ['v*']`) — red on the release tag stops publishing
+  before the version diverges from the title.
 
-Починка: перечень нарушений `public-hygiene` — в Completion Notes закрывающего item'а, удаление
-артефактов из дерева — отдельное решение владельца (не автоправка гейта).
+Repair: list of violations `public-hygiene` — in Completion Notes closing item'ah, deletion
+artifacts made of wood - a separate decision of the owner (not auto-editing the gate).
 
-## Сценарии-FAQ
+## Scripts-FAQ
 
-**«Фаза закончилась, он предлагает `/task` с текстом — compact или новая сессия?»**
-Связанная следующая фаза → `/compact` (дешевле, без ре-брифинга). Реально несвязанная работа / хочешь
-чистый лист → новая сессия, но сделай `/task`-текст самодостаточным брифом. См. раздел 3.
+**«Phase ended, he proposes `/task` with text - compact or a new session?»**
+Associated next phase → `/compact` (cheaper, no re-briefing). Really unrelated work / want
+blank slate → new session, but do `/task`-text as a self-contained brief. See section 3.
 
-**«Упёрся в контекст посреди фазы».** `/compact` (не жди авто-compaction). Если это была смена темы —
-`/clear` с планом-файлом.
+**«Ran into context in the middle of a phase».** `/compact` (don't wait for auto-compaction). If this was a change of topic -
+`/clear` with a plan file.
 
-**«Начинаю новую фичу».** `/task:design` → план в `.claude/plans/` → `/clear` → `/task:dev`.
+**«Starting a new feature».** `/task:design` → plan in `.claude/plans/` → `/clear` → `/task:dev`.
 
-**«Разбираю чужой аудит/план».** Внешние вердикты до-проверять через RAG (раздел 10), даже если
-«выглядит полным». Костыль называть костылём (`[POSSIBLE-DEFECT]`), не выдавать за решение.
+**«Analyzing someone else's audit/plan».** External verdicts to be checked via RAG (section 10), even if
+«looks full». Call a crutch a crutch (`[POSSIBLE-DEFECT]`), should not be presented as a solution.
 
-**«Агент лазит по сотне файлов, хотя есть граф».** Скан графа мог устареть — `maind sync --only graph`.
-Для навигации по коду — есть ли `serena` в `.mcp.json` (иначе Serena не работает). После прогона —
-`maind analyze` покажет, дёргал ли агент граф вообще. См. разделы 8–9.
+**«The agent crawls through hundreds of files, although there is a graph».** The graph scan may be out of date - `maind sync --only graph`.
+For code navigation - is there `serena` in `.mcp.json` (otherwise Serena doesn't work). After run -
+`maind analyze` will show whether the agent pulled the graph at all. See sections 8–9.
 
-**«Граф устарел».** `maind sync --only graph` (идемпотентно, пересобирает целиком).
+**«Graph is outdated».** `maind sync --only graph` (idempotent, rebuilds entirely).
 
-**«Память пустая на recall».** Проверь scope (`maind memory count`), жив ли демон (`maind health --cwd`),
-не насыщён ли пул (recall предупреждает). Возможно, писали в нативную память Claude, а не в agentmemory
-(раздел 7).
+**«Memory is empty on recall».** Check scope (`maind memory count`), is the demon alive (`maind health --cwd`),
+is the pool saturated? (recall warns). Possibly written to native memory Claude, and not in agentmemory
+(section 7).
 
 ---
 
-_Глубина по подсистемам: [токен-бюджет](/skiller/guide/budget) · [цепочка инструментов](/skiller/workflows/) ·
-[семантика loop'ов](/skiller/guide/loop-semantics) · [память](/maind/guide/memory) ·
-[граф](/maind/guide/graph) · [control-surface](/control-surface)._
+_Depth by subsystem: [token-budget](/skiller/guide/budget) · [toolchain](/skiller/workflows/) ·
+[semantics loop'ov](/skiller/guide/loop-semantics) · [memory](/maind/guide/memory) ·
+[graph](/maind/guide/graph) · [control-surface](/control-surface)._

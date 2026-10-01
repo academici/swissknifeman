@@ -1,20 +1,20 @@
-# agent-router — opt-in подсказки возможностей проекта
+# agent-router — opt-in project feature tips
 
-Task запускается только явным вызовом команды или скилла. Обычный запрос на
-реализацию, дизайн или ревью не активирует Task.
+Task is launched only by explicitly calling a command or skill. Regular request for
+does not activate implementation, design or review Task.
 
-`router.py` (UserPromptSubmit) по явному включению router оценивает локальные
-агенты и скиллы по ключевым словам. Task-команды и Task-скиллы исключены из
-генерации и скоринга, включая старые project catalogs. Подсказка остаётся
-необязательной; она не разрешает вызов команды или изменение цели.
+`router.py` (UserPromptSubmit) by explicit inclusion router evaluates local
+agents and skills by keywords. Task-commands and Task-skills are excluded from
+generation and scoring, including old ones project catalogs. The hint remains
+optional; it does not allow calling a command or changing a target.
 
-`session-policy.py` оставлен как пустой compatibility entrypoint для ранее
-установленных SessionStart registrations. Он не добавляет контекст при старте,
-в том числе при старых `POLICY=propose` и `POLICY=auto_dispatch`.
+`session-policy.py` left as empty compatibility entrypoint for previously
+installed SessionStart registrations. It does not add context at startup,
+including with old `POLICY=propose` and `POLICY=auto_dispatch`.
 
-По умолчанию `POLICY=off`. Старые значения `propose`/`auto_dispatch` сохраняют
-только необязательные non-Task подсказки; автоматического запуска Task больше нет.
-Per-project override: `.claude/agent-router.env.ini`; каталог:
+Default `POLICY=off`. Old values `propose`/`auto_dispatch` save
+optional only non-Task hints; automatic start Task is no more.
+Per-project override: `.claude/agent-router.env.ini`; directory:
 `.claude/agent-router.config.json`.
 
 ```bash
@@ -23,6 +23,6 @@ harness hooks --target . --router propose
 harness router --generate --target .
 ```
 
-`THRESHOLD` задаёт минимальную сумму весов, `ESCAPE_PREFIX` отключает подсказку
-для одного сообщения. Hook принимает JSON на stdin и выводит одну строку
-`additionalContext` либо ничего. Невалидный ввод не блокирует работу.
+`THRESHOLD` sets the minimum sum of weights, `ESCAPE_PREFIX` disables tooltip
+for one message. Hook accepts JSON on stdin and prints one line
+`additionalContext` or nothing. Invalid input does not block work.

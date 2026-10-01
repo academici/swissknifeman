@@ -1,9 +1,9 @@
-"""P3.5: validate.sh description-триггер-гейт — description
-обязано отвечать «когда звать» + burn-down-рэтчет (scripts/desc-trigger-burndown.txt).
+"""P3.5: validate.sh description-trigger gate - description
+must respond «when to call» + burn-down-ratchet (scripts/desc-trigger-burndown.txt).
 
-Зеркалит test_desc_burndown_gate.py (та же обёртка, тот же приём: реальный запуск
-validate.sh против синтетического skills/, проверяем КОНКРЕТНЫЕ строки в stdout, не
-общий exit-код — он ожидаемо ненулевой из-за недостающего окружения реестра)."""
+Mirrors test_desc_burndown_gate.py (same wrapper, same technique: real launch
+validate.sh vs. synthetic skills/, check SPECIFIC lines in stdout, not
+general exit-code - it is expectedly non-zero due to the missing registry environment)."""
 import subprocess
 import tempfile
 import unittest
@@ -12,8 +12,8 @@ from pathlib import Path
 PKG_ROOT = Path(__file__).resolve().parents[1]
 VALIDATE_SCRIPT = PKG_ROOT / "scripts" / "validate.sh"
 
-# Короткое описание без триггерной фразы — держим длину <= 300, чтобы не задевать
-# независимый гейт длины (DESC_WARN_MAX/DESC_ERROR_MAX, test_desc_burndown_gate.py).
+# Short description without a trigger phrase - keep the length <= 300, so as not to touch
+# independent length gate (DESC_WARN_MAX/DESC_ERROR_MAX, test_desc_burndown_gate.py).
 DESC_NO_TRIGGER = "A short description without the phrase this gate looks for at all"
 DESC_WITH_TRIGGER = "Use when testing this gate: a short trigger-bearing description"
 
@@ -55,25 +55,25 @@ class DescTriggerGateCase(unittest.TestCase):
 
     def test_no_trigger_not_in_burndown_is_error(self):
         self._write_skill("no-trigger", DESC_NO_TRIGGER)
-        self._write_trigger_burndown(["# empty — новый долг не легализован"])
+        self._write_trigger_burndown(["# empty — new debt is not legalized"])
         result = self._run()
         self.assertIn("ERROR: skills/testbucket/no-trigger/SKILL.md", result.stdout)
-        self.assertIn("без триггерной фразы", result.stdout)
-        self.assertIn("новый долг запрещён", result.stdout)
+        self.assertIn("without trigger phrase", result.stdout)
+        self.assertIn("new debt prohibited", result.stdout)
 
     def test_no_trigger_in_burndown_is_warn_only(self):
         self._write_skill("legal-debt", DESC_NO_TRIGGER)
         self._write_trigger_burndown(["testbucket/legal-debt"])
         result = self._run()
         self.assertIn("WARN: skills/testbucket/legal-debt/SKILL.md", result.stdout)
-        self.assertIn("унаследованный долг", result.stdout)
+        self.assertIn("inherited debt", result.stdout)
         self.assertNotIn("ERROR: skills/testbucket/legal-debt/SKILL.md", result.stdout)
 
     def test_has_trigger_no_gate_line(self):
         self._write_skill("clean", DESC_WITH_TRIGGER)
         self._write_trigger_burndown(["# empty"])
         result = self._run()
-        self.assertNotIn("skills/testbucket/clean/SKILL.md: description без триггерной",
+        self.assertNotIn("skills/testbucket/clean/SKILL.md: description without trigger",
                          result.stdout)
 
     def test_upstream_skill_exempt(self):
@@ -81,7 +81,7 @@ class DescTriggerGateCase(unittest.TestCase):
         self._write_trigger_burndown(["# empty"])
         result = self._run()
         self.assertNotIn(
-            "skills/testbucket/upstream-skill/SKILL.md: description без триггерной",
+            "skills/testbucket/upstream-skill/SKILL.md: description without trigger",
             result.stdout)
 
     def test_stale_entry_skill_missing_warns(self):
@@ -89,7 +89,7 @@ class DescTriggerGateCase(unittest.TestCase):
         self._write_trigger_burndown(["testbucket/ghost-skill"])
         result = self._run()
         self.assertIn(
-            "scripts/desc-trigger-burndown.txt: 'testbucket/ghost-skill' — протухшая запись",
+            "scripts/desc-trigger-burndown.txt: 'testbucket/ghost-skill' — rotten recording",
             result.stdout)
 
     def test_stale_entry_already_has_trigger_warns(self):
@@ -97,7 +97,7 @@ class DescTriggerGateCase(unittest.TestCase):
         self._write_trigger_burndown(["testbucket/already-fixed"])
         result = self._run()
         self.assertIn(
-            "scripts/desc-trigger-burndown.txt: 'testbucket/already-fixed' — протухшая запись",
+            "scripts/desc-trigger-burndown.txt: 'testbucket/already-fixed' — rotten recording",
             result.stdout)
 
 

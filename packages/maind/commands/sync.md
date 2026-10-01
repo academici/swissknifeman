@@ -1,13 +1,13 @@
 ---
-description: Перераскатать управляемые артефакты mAInd (MCP, граф, память, хуки, скилл) на подключённые проекты.
+description: Reroll managed artifacts mAInd (MCP, graph, memory, hooks, skill) for connected projects.
 argument-hint: "[<project-id> | --all | --namespace NS]"
 allowed-tools: Bash(maind:*)
 ---
-Синхронизация управляемых артефактов хаба **mAInd**. Ввод: «$ARGUMENTS».
-Лаунчер — `maind` (фолбэк: `${CLAUDE_PLUGIN_ROOT}/bin/maind`).
+Synchronizing hub managed artifacts **mAInd**. Input: «$ARGUMENTS».
+Launcher - `maind` (fallback: `${CLAUDE_PLUGIN_ROOT}/bin/maind`).
 
-## Шаги
-1. **Цель** из «$ARGUMENTS»: конкретный `<project-id>` · `--all` (все enabled) · `--namespace <NS>`. Если пусто — спроси (по умолчанию предложи `--all`).
-2. **Предпросмотр**: `maind sync <target> --dry-run --json` — покажи, что изменится.
-3. **Применение** по подтверждению: `maind sync <target> --json`.
-4. **Отчёт**: по каждому проекту/провиженеру — ok / skip / без изменений. Набор можно сузить флагом `--only`: `mcp,code-graph,graph,memory,memory-hook,health-hook,health-doc,feature-log-hook,ecosystem-skill`.
+## Steps
+1. **Purpose** from «$ARGUMENTS»: specific `<project-id>` · `--all` (all enabled) · `--namespace <NS>`. If empty, ask (default offer `--all`).
+2. **Preview**: `maind sync <target> --dry-run --json` — show what will change.
+3. **Application** by confirmation: `maind sync <target> --json`.
+4. **Report**: for each project/to the provider - ok / skip / unchanged. The set can be narrowed down by a flag `--only`: `mcp,code-graph,graph,memory,memory-hook,health-hook,health-doc,feature-log-hook,ecosystem-skill`.

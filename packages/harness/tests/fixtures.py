@@ -70,7 +70,7 @@ def make_pack(root, name="demo-pack"):
         "---\nname: {{PACK_PREFIX}}-reviewer\nrunner: {{RUNNER}}\n---\n"
         "<!-- pack:if USE_X -->X-on<!-- pack:endif -->\nbody\n")
     (pdir / "agents" / "overrides.md").write_text(
-        "# Overrides для {{PACK_PREFIX}}\n\n(файл пользователя)\n")
+        "# Overrides for {{PACK_PREFIX}}\n\n(user file)\n")
     (pdir / "hooks" / "gate.sh").write_text("#!/usr/bin/env bash\necho gate\n")
     (pdir / "settings" / "fragment.json").write_text(json.dumps(
         {"hooks": {"SubagentStop": [{"hooks": [

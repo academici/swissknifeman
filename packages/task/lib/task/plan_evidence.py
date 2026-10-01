@@ -63,8 +63,8 @@ def _declared_paths(value: str, *, allow_prose: bool = False) -> tuple[str, ...]
         if (not path or candidate.is_absolute() or ".." in candidate.parts
                 or "\\" in path or path.startswith("./")
                 or (not quoted and any(char.isspace() for char in path))):
-            raise EvidenceError("EVIDENCE_PATH_INVALID", f"некорректный declared path {path!r}; "
-                                "обрамите каждый путь backticks, пояснения вынесите за них")
+            raise EvidenceError("EVIDENCE_PATH_INVALID", f"incorrect declared path {path!r}; "
+                                "frame each path backticks, provide explanations for them")
         normalized.append(candidate.as_posix())
     return tuple(sorted(set(normalized)))
 
@@ -97,11 +97,11 @@ def _repository_path(path: str, *, plan_dir: Path, repo_root: Path) -> str:
 def _bundle_inputs(bundle: dict, *, plan_dir: Path, repo_root: Path) -> tuple[str, ...]:
     entries = bundle.get("entries")
     if not isinstance(entries, list):
-        raise EvidenceError("EVIDENCE_BUNDLE_INVALID", "bundle entries отсутствуют")
+        raise EvidenceError("EVIDENCE_BUNDLE_INVALID", "bundle entries missing")
     paths = []
     for entry in entries:
         if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
-            raise EvidenceError("EVIDENCE_BUNDLE_INVALID", "bundle entry не содержит path")
+            raise EvidenceError("EVIDENCE_BUNDLE_INVALID", "bundle entry does not contain path")
         paths.append(_repository_path(entry["path"], plan_dir=plan_dir, repo_root=repo_root))
     return tuple(sorted(set(paths)))
 
@@ -134,13 +134,13 @@ def verify_execution_inputs_ancestor(plan_dir, item_id: str, execution_ref: str)
                                 cwd=repo_root, text=True, capture_output=True, check=False)
         commit = source.stdout.strip()
         if source.returncode or not commit:
-            raise EvidenceError("EXECUTION_INPUTS_NOT_ANCESTOR", f"нет committed input {path}")
+            raise EvidenceError("EXECUTION_INPUTS_NOT_ANCESTOR", f"no committed input {path}")
         ancestor = subprocess.run(("git", "merge-base", "--is-ancestor", commit, execution_ref),
                                   cwd=repo_root, capture_output=True, check=False)
         if ancestor.returncode:
             raise EvidenceError(
                 "EXECUTION_INPUTS_NOT_ANCESTOR",
-                f"{path}@{commit[:12]} не предшествует execution anchor {execution_ref}",
+                f"{path}@{commit[:12]} is not preceded execution anchor {execution_ref}",
             )
         result.append({"path": path, "commit": commit})
     return tuple(result)
@@ -190,7 +190,7 @@ def compile_graph(plan_dir, item_id: str, *, execution_ref: str | None = None,
     """
     plan_dir = Path(plan_dir).resolve()
     if plan_layout.layout_version(plan_dir) != "v2":
-        raise EvidenceError("PLAN_LAYOUT_V1_RETIRED", "evidence graph требует Layout v2")
+        raise EvidenceError("PLAN_LAYOUT_V1_RETIRED", "evidence graph requires Layout v2")
     try:
         spec_path = plan_layout.carrier_path(plan_dir, "item-spec", item_id=item_id)
     except plan_layout.PlanLayoutError as exc:
@@ -236,15 +236,15 @@ def compile_graph(plan_dir, item_id: str, *, execution_ref: str | None = None,
 def admit_pre_mutation(graph: dict, *, requires_closure_freshness: bool) -> dict:
     """Refuse the real input/write collision before journal or product mutation."""
     if graph.get("schema_version") != SCHEMA_VERSION:
-        raise EvidenceError("EVIDENCE_GRAPH_INVALID", "неподдерживаемая версия graph")
+        raise EvidenceError("EVIDENCE_GRAPH_INVALID", "unsupported version graph")
     collisions = graph.get("collisions")
     if not isinstance(collisions, list):
-        raise EvidenceError("EVIDENCE_GRAPH_INVALID", "graph collisions отсутствуют")
+        raise EvidenceError("EVIDENCE_GRAPH_INVALID", "graph collisions missing")
     if collisions and requires_closure_freshness:
         raise EvidenceError(
             "SELF_INVALIDATING_EVIDENCE_ANCHOR",
-            "Files пересекается с digest inputs: " + ", ".join(collisions)
-            + "; выполните product/closure split",
+            "Files intersects with digest inputs: " + ", ".join(collisions)
+            + "; do product/closure split",
         )
     return {"admission": "allow", "anchor_mode": "split" if collisions else "collapsed",
             "graph_sha256": graph["sha256"]}
@@ -254,21 +254,21 @@ def verify_closure(product_anchor: dict, closure_anchor: dict) -> dict:
     """Prove that closure bookkeeping did not alter product bytes."""
     for anchor in (product_anchor, closure_anchor):
         if not isinstance(anchor, dict) or not isinstance(anchor.get("paths"), list):
-            raise EvidenceError("EVIDENCE_ANCHOR_INVALID", "anchor.paths обязателен")
+            raise EvidenceError("EVIDENCE_ANCHOR_INVALID", "anchor.paths required")
         rows = anchor["paths"]
         if not rows or not any(isinstance(row, dict) and row.get("state") == "file"
                                and re.fullmatch(r"[0-9a-f]{64}", str(row.get("sha256", "")))
                                for row in rows):
             raise EvidenceError("PRODUCT_COVERAGE_MISSING",
-                                "anchor не связывает байты ни одного реального product file")
+                                "anchor does not bind the bytes of any real product file")
         if (any(not isinstance(row, dict) or not isinstance(row.get("path"), str)
                 or not row["path"] for row in rows)
                 or len({row["path"] for row in rows}) != len(rows)):
-            raise EvidenceError("EVIDENCE_ANCHOR_INVALID", "anchor.paths содержит неверные/повторные пути")
+            raise EvidenceError("EVIDENCE_ANCHOR_INVALID", "anchor.paths contains incorrect/repeated paths")
     product = {row.get("path"): row for row in product_anchor["paths"]}
     closure = {row.get("path"): row for row in closure_anchor["paths"]}
     if product != closure:
-        raise EvidenceError("PRODUCT_ANCHOR_DRIFT", "product paths изменились между product и closure anchor")
+        raise EvidenceError("PRODUCT_ANCHOR_DRIFT", "product paths changed between product and closure anchor")
     return {"schema_version": "closure-byte-identity/v1", "status": "green",
             "product_anchor_sha256": product_anchor.get("sha256"),
             "closure_anchor_sha256": closure_anchor.get("sha256")}
@@ -289,7 +289,7 @@ def audit_finalization(*, before_candidate: dict, after_candidate: dict,
     if close_admission != "allow":
         raise EvidenceError("AUDIT_FINALIZATION_REFUSED", f"close admission is {close_admission}")
     if not isinstance(lifecycle_selection, dict):
-        raise EvidenceError("AUDIT_FINALIZATION_INVALID", "lifecycle selection обязателен")
+        raise EvidenceError("AUDIT_FINALIZATION_INVALID", "lifecycle selection required")
     return {
         "schema_version": AUDIT_FINALIZATION_VERSION,
         "before_fingerprint": before_candidate.get("fingerprint"),

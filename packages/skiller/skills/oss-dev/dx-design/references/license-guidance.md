@@ -1,41 +1,41 @@
 # License
 
-Справочник к скиллу `dx-design`.
+Skill reference `dx-design`.
 
-MIT (или другая, см. oss-governance)
+MIT (or other, see oss-governance)
 ```
 
-**Что НЕ должно быть в README:**
-- Длинная история «как мы пришли к идее»
-- Сравнения с конкурентами (это в отдельный `COMPARISON.md`)
-- Roadmap внутри README (это в `ROADMAP.md`)
-- Полный API reference (это в docs)
+**What should NOT be in README:**
+- Long story «how we came up with the idea»
+- Comparisons with competitors (this is in a separate `COMPARISON.md`)
+- Roadmap inside README (this is in `ROADMAP.md`)
+- Full API reference (this is in docs)
 
 ### 3. API ergonomics
-**Правила:**
+**Rules:**
 
-| Правило | Пример good | Пример bad |
+| Rule | Example good | Example bad |
 |:---|:---|:---|
-| Один основной entry-point | `import { Brain } from 'brainkit'` | `import { BrainCore, BrainConfig, brainSetup } from 'brainkit/internal/...'` |
-| Sensible defaults | `new Brain()` работает | `new Brain({ config: required })` |
-| Builder pattern для сложного | `Brain.builder().withCache().build()` | `new Brain(c, t, e, x, t)` |
-| Async-first, не sync обёртки | `await b.query()` | `b.queryAsync()` (имя выдаёт sync-наследие) |
-| Error throws, не return-null | `throw new BrainError(...)` | `return null /* проверь сам */` |
-| Type-safe (не `any`) | `Brain<TResponse>` | `query(): Promise<any>` |
+| One main entry-point | `import { Brain } from 'brainkit'` | `import { BrainCore, BrainConfig, brainSetup } from 'brainkit/internal/...'` |
+| Sensible defaults | `new Brain()` works | `new Brain({ config: required })` |
+| Builder pattern for complex | `Brain.builder().withCache().build()` | `new Brain(c, t, e, x, t)` |
+| Async-first, not sync wrappers | `await b.query()` | `b.queryAsync()` (name gives sync-legacy) |
+| Error throws, not return-null | `throw new BrainError(...)` | `return null /* check it yourself */` |
+| Type-safe (not `any`) | `Brain<TResponse>` | `query(): Promise<any>` |
 
-**Тест:** новый пользователь должен написать первую полезную интеграцию **без чтения API reference**. Только README + IntelliSense.
+**Test:** new user must write first useful integration **without reading API reference**. Only README + IntelliSense.
 
 ### 4. Error messages
-**Структура хорошего error:**
+**Structure of good error:**
 
 ```
-[ProjectName] {Что произошло.}
-  Why: {Почему — короткое объяснение причины.}
-  Fix: {Что сделать пользователю.}
-  Docs: {link на raison-d'être этой ошибки или troubleshooting.}
+[ProjectName] {What happened.}
+  Why: {Why - a short explanation of the reason.}
+  Fix: {What should the user do.}
+  Docs: {link on raison-d'être this error or troubleshooting.}
 ```
 
-Пример good:
+Example good:
 ```
 [Brain] Cannot connect to model endpoint.
   Why: BRAIN_API_KEY env var is missing.
@@ -43,41 +43,41 @@ MIT (или другая, см. oss-governance)
   Docs: https://brainkit.dev/docs/auth#api-key
 ```
 
-Пример bad: `Error: ECONNREFUSED 127.0.0.1:443`
+Example bad: `Error: ECONNREFUSED 127.0.0.1:443`
 
-**Правило:** каждое уникальное error должно иметь URL в документации (даже если это якорь в одном troubleshooting-документе).
+**Rule:** each unique error must have URL in the documentation (even if it's an anchor in one troubleshooting-document).
 
-### 5. CLI UX (если применимо)
+### 5. CLI UX (if applicable)
 
-| Правило | Пример |
+| Rule | Example |
 |:---|:---|
-| `<name> --help` показывает useful summary | не только список флагов |
-| `<name>` (без аргументов) НЕ падает | показывает hint или launches REPL |
-| Цвета только в TTY (NO_COLOR / not piped) | автодетект |
-| Прогресс-бар для > 2 сек операций | `███░░░ 42%` |
-| `--json` flag для машинного вывода | для скриптов |
-| Exit code 0 = ok, 1 = user error, 2 = bug | стандарт |
+| `<name> --help` shows useful summary | not just a list of flags |
+| `<name>` (without arguments) DOESN'T crash | shows hint or launches REPL |
+| Colors only in TTY (NO_COLOR / not piped) | autodetection |
+| Progress bar for > 2 sec operations | `███░░░ 42%` |
+| `--json` flag for machine output | for scripts |
+| Exit code 0 = ok, 1 = user error, 2 = bug | standard |
 
-### 6. Документация (структура)
+### 6. Documentation (structure)
 
-Минимум для `v1.0+`:
+Minimum for `v1.0+`:
 
 ```
 docs/
-├── README.md           # → ссылается на разделы ниже
-├── getting-started.md  # 5-минутный туториал
-├── core-concepts.md    # ментальная модель пакета
-├── api/                # сгенерированный API reference (TypeDoc / phpDocumentor / dartdoc)
-├── guides/             # рецепты под use cases
+├── README.md           # → links to sections below
+├── getting-started.md  # 5-minute tutorial
+├── core-concepts.md    # mental model of the package
+├── api/                # generated API reference (TypeDoc / phpDocumentor / dartdoc)
+├── guides/             # recipes under use cases
 │   ├── caching.md
 │   ├── streaming.md
 │   └── ...
-├── troubleshooting.md  # частые проблемы (синхронизируется с error messages)
-└── migration/          # для каждого MAJOR — migration guide
+├── troubleshooting.md  # common problems (is synced with error messages)
+└── migration/          # for each MAJOR — migration guide
     ├── 0-to-1.md
     └── 1-to-2.md
 ```
 
-Документация **рядом с кодом** (в репо), не на отдельном сайте, который умирает.
+Documentation **next to the code** (in the repo), not on a separate site that is dying.
 
 ---

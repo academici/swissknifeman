@@ -15,13 +15,13 @@
 #   --codex-plugin  install additional Codex plugin NAME (repeatable)
 #   --no-codex-plugins  skip the base core and task Codex plugins
 #
-# Дальше — из любого потребляющего проекта:
+# Next - from any consuming project:
 #   skiller connect    # Claude Code (plugin marketplace)
-#   skiller vendor     # Cursor и другие агенты (копирование скиллов)
-#   skiller update     # обновить подключение текущего проекта
-#   skiller topology   # карта локальной среды (init|show) — предлагается при установке
+#   skiller vendor     # Cursor and other agents (copying skills)
+#   skiller update     # update connection of the current project
+#   skiller topology   # local environment map (init|show) — is offered during installation
 #
-# Репозиторий переехал? Просто перезапустите ./install.sh из нового места.
+# Has the repository moved? Just restart./install.sh from a new location.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -46,57 +46,57 @@ while [[ $# -gt 0 ]]; do
     --no-codex-plugins) CODEX_PLUGINS_ENABLED=false; shift ;;
     -h|--help) usage; exit 0 ;;
     *)
-      echo "ERROR: install.sh теперь устанавливает CLI skiller." >&2
-      echo "Вендоринг скиллов в проект: cd <project> && skiller vendor [...]" >&2
-      echo "Подключение Claude Code:    cd <project> && skiller connect" >&2
+      echo "ERROR: install.sh now installs CLI skiller." >&2
+      echo "Vending skills to the project: cd <project> && skiller vendor [...]" >&2
+      echo "Connection Claude Code:    cd <project> && skiller connect" >&2
       exit 1 ;;
   esac
 done
 
-[[ -x "$CLI" ]] || { echo "ERROR: $CLI не найден или не исполняем" >&2; exit 1; }
+[[ -x "$CLI" ]] || { echo "ERROR: $CLI not found or not executable" >&2; exit 1; }
 command -v python3 >/dev/null 2>&1 || \
-  echo "WARN: python3 не найден — CLI потребует его при запуске" >&2
+  echo "WARN: python3 not found - CLI will require it at startup" >&2
 
 mkdir -p "$BIN_DIR" "$HOME/.swissknifeman"
 [[ -f "$HOME/.swissknifeman/projects.json" ]] || \
   printf '{\n  "version": 1,\n  "projects": []\n}\n' > "$HOME/.swissknifeman/projects.json"
 
-# Ставим симлинк, молча заменяя СВОЙ (старый клон или прежнее имя swissknifeman);
-# чужой файл не трогаем без --force/подтверждения.
-install_link() {  # $1 — имя в BIN_DIR
+# We install a symlink, silently replacing YOURS (old clone or former name swissknifeman);
+# we don't touch someone else's file without --force/confirmation.
+install_link() {  # $1 — name in BIN_DIR
   local link="$BIN_DIR/$1"
   if [[ -e "$link" || -L "$link" ]]; then
     local current; current="$(readlink -f "$link" 2>/dev/null || true)"
     if [[ "$current" == */bin/skiller || "$current" == */bin/swissknifeman ]]; then
-      : # наш симлинк (возможно, из старого клона/имени) — молча заменяем
+      : # our symlink (possibly from an old clone/name) — silently replace
     elif [[ "$FORCE" == true ]]; then
-      : # явное разрешение
+      : # explicit permission
     elif [[ -t 0 ]]; then
-      read -r -p "$link уже существует и не похож на skiller. Заменить? [y/N] " answer
-      [[ "$answer" =~ ^[yY] ]] || { echo "Отменено."; exit 1; }
+      read -r -p "$link already exists and is not similar to skiller. Replace? [y/N] " answer
+      [[ "$answer" =~ ^[yY] ]] || { echo "Canceled."; exit 1; }
     else
-      echo "ERROR: $link уже существует — перезапустите с --force" >&2
+      echo "ERROR: $link already exists - restart with --force" >&2
       exit 1
     fi
   fi
   ln -sfn "$CLI" "$link"
-  echo "Установлено: $link -> $CLI"
+  echo "Installed: $link -> $CLI"
 }
 
-install_link skiller          # основной CLI (алиас swissknifeman — зонтичный install.sh)
+install_link skiller          # main CLI (alias swissknifeman — umbrella install.sh)
 
-# Карта локальной среды (~/.swissknifeman/topology.json) — машинно-специфична
-# (пути к Brain-волту, swissknifeman и базе проектов), поэтому создаётся
-# интерактивно, а не сидится молча. Предлагаем настроить сразу при наличии TTY.
+# Local Environment Map (~/.swissknifeman/topology.json) — machine-specific
+# (path to Brain-volta, swissknifeman and project database), is therefore created
+# interactive, rather than sitting silently. We suggest setting it up immediately if available. TTY.
 if [[ ! -f "$HOME/.swissknifeman/topology.json" && -t 0 ]]; then
-  read -r -p "Настроить карту локальной среды (skiller topology init)? [y/N] " ans
+  read -r -p "Configure local environment map (skiller topology init)? [y/N] " ans
   [[ "$ans" =~ ^[yY] ]] && "$CLI" topology init || true
 fi
 
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
   *)
-    echo "WARN: $BIN_DIR не в PATH. Добавьте:"
+    echo "WARN: $BIN_DIR not in PATH. Add:"
     case "$(basename "${SHELL:-bash}")" in
       zsh)  echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc" ;;
       fish) echo "  fish_add_path $BIN_DIR" ;;
@@ -104,21 +104,21 @@ case ":$PATH:" in
     esac ;;
 esac
 
-echo "Проверка: skiller doctor"
+echo "Check: skiller doctor"
 
-# Базовые `core` + `task` — машинный bootstrap Codex: после установки зонтика
-# TASK-команды должны работать в любом проекте без ручного link/plugin add.
-# Список берём из декларативной CORE-политики, не дублируем его в shell.
-# Профильные плагины остаются явными: их глобальная установка здесь раздула бы
-# все Codex-сессии независимо от проекта.
+# Basic `core` + `task` — machine bootstrap Codex: after installing the umbrella
+# TASK-commands should work in any project without manual link/plugin add.
+# We take the list from the declarative CORE-policy, do not duplicate it in shell.
+# Profile plugins remain explicit: installing them globally here would bloat
+# all Codex-sessions regardless of the project.
 if [[ "$CODEX_PLUGINS_ENABLED" == false && "$CODEX_PLUGIN_EXPLICIT" == false ]]; then
-  echo "Codex plugins: пропуск (--no-codex-plugins)"
+  echo "Codex plugins: pass (--no-codex-plugins)"
 elif ! command -v codex >/dev/null 2>&1; then
   if [[ "$CODEX_PLUGIN_EXPLICIT" == true ]]; then
     echo "ERROR: codex CLI not found — native install was not attempted" >&2
     exit 1
   fi
-  echo "INFO: codex CLI не найден — базовые Codex-плагины не установлены"
+  echo "INFO: codex CLI not found - basic Codex-plugins not installed"
 else
   MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." && pwd)"
   [[ -f "$MONOREPO_ROOT/.agents/plugins/marketplace.json" ]] || {
@@ -137,7 +137,7 @@ for plugin in (CORE_PLUGIN, *DEFAULT_COMMAND_PLUGINS):
     print(plugin)
 PY
     )" || {
-      echo "ERROR: не удалось прочитать базовые плагины из skiller.config" >&2
+      echo "ERROR: could not read core plugins from skiller.config" >&2
       exit 1
     }
   fi

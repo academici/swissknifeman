@@ -3,7 +3,7 @@
   "snippets": [
     {
       "file": "loop-kickoff.md",
-      "description": "Стартовый шаблон итеративной задачи: Goal/between-check/max-iter/exit/hard-stop + anti-gaming. Копируется в .claude/commands/, запускается /loop",
+      "description": "Starting template for an iterative task: Goal/between-check/max-iter/exit/hard-stop + anti-gaming. Copied to .claude/commands/, starts /loop",
       "tags": ["claude-code", "commands", "workflow", "loop"]
     }
   ]

@@ -21,7 +21,7 @@ class TestJournalMigration(unittest.TestCase):
             Path(self._tmp.name), plan_id="2026.09.21-DEMO-MIGRATION")
         fixtures.write_decision_record(
             self.plan_dir, "D2", item_id="P1.1",
-            decision="Разрешить точную миграцию sealed journal с preimage и manifest.")
+            decision="Allow fine migration sealed journal with preimage and manifest.")
         self.source_entry = journal.new_entry(
             plan_id=self.plan_dir.name, item_id="P1.1", command="plan-run",
             actor="model/high", result="no-op", note="legacy")
@@ -283,7 +283,7 @@ class TestJournalMigration(unittest.TestCase):
             journal_migration._allowed_operation(changed_digest)
 
         already_valid = {**operation, "before": valid}
-        with self.assertRaisesRegex(journal_migration.JournalMigrationError, "уже валиден"):
+        with self.assertRaisesRegex(journal_migration.JournalMigrationError, "is already valid"):
             journal_migration._allowed_operation(already_valid)
 
         wrong_invocation = copy.deepcopy(valid)

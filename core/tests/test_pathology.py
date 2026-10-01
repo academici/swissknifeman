@@ -1,19 +1,19 @@
-"""Тесты core/pathology.py — детекторов workflow-патологий по run-report.
+"""Tests core/pathology.py — detectors workflow-pathologies by run-report.
 
-Фикстуры — инлайн-dict'ы в форме реального отчёта SCHEMA=2 хука run-report
-(см. packages/harness/configs/claude-code/hooks/run-report/_lib.py). Каждый
-детектор охраняем парой «срабатывает / не срабатывает»; отдельно — защитный
-контракт: SCHEMA=1-отчёт и откровенный мусор не роняют detect().
+Fixtures - inlinedict's in the form of a real report SCHEMA=2 hook run-report
+(see packages/harness/configs/claude-code/hooks/run-report/_lib.py). Everyone
+detector protected by a pair «fires / doesn't work»; separately - protective
+contract: SCHEMA=1-the report and outright garbage are not dropped detect().
 
-Запуск: PYTHONPATH=<корень монорепо> python3 -m unittest discover -s core/tests"""
+Launch: PYTHONPATH=<root monorepo> python3 -m unittest discover -s core/tests"""
 import unittest
 
 from core.pathology import detect
 
 
 def base_report(**over):
-    """Полный «здоровый» SCHEMA=2-отчёт: ни один детектор не срабатывает.
-    Кейсы точечно перекрывают нужные срезы через **over."""
+    """Full «healthy» SCHEMA=2-report: not a single detector is triggered.
+    Cases pointwise overlap the required sections through **over."""
     r = {
         "schema": 2,
         "tools": {"total": 10, "by_name": {"Read": 5, "Edit": 2, "Bash": 3}},
@@ -49,27 +49,27 @@ def codes(findings):
 
 
 def one(findings, code):
-    """Единственная находка с данным кодом (падает, если их не ровно одна)."""
+    """The only find with this code (crashes if there is not exactly one of them)."""
     hits = [f for f in findings if f["code"] == code]
-    assert len(hits) == 1, f"ожидалась 1 находка {code}, найдено {len(hits)}"
+    assert len(hits) == 1, f"1 find expected {code}, found {len(hits)}"
     return hits[0]
 
 
 class TestContract(unittest.TestCase):
-    """Защитный контракт: чистота, форма находки, деградация без исключений."""
+    """Protective contract: purity, form of discovery, degradation, no exceptions."""
 
     def test_healthy_report_is_clean(self):
         self.assertEqual(detect(base_report()), [])
 
     def test_non_dict_input(self):
-        # не-dict вход → пустой список, не исключение
+        # not-dict input → empty list, no exception
         self.assertEqual(detect(None), [])
         self.assertEqual(detect([]), [])
-        self.assertEqual(detect("мусор"), [])
+        self.assertEqual(detect("trash"), [])
 
     def test_schema1_report_no_new_fields(self):
-        # SCHEMA=1: нет usage/reads/error_loops/retrieval/protected_writes —
-        # detect не падает и на «спокойном» отчёте пуст
+        # SCHEMA=1: no usage/reads/error_loops/retrieval/protected_writes —
+        # detect does not crash on «calm» report is empty
         r = {"schema": 1,
              "tools": {"total": 5, "by_name": {"Read": 5}},
              "files_changed": [], "tool_failures": [],
@@ -78,13 +78,13 @@ class TestContract(unittest.TestCase):
         self.assertEqual(detect(r), [])
 
     def test_schema1_partial_findings_still_work(self):
-        # детекторы, живущие на SCHEMA=1-полях, работают и без SCHEMA=2-срезов
+        # detectors living on SCHEMA=1-fields, work without SCHEMA=2-slices
         r = {"schema": 1, "tools": {"total": 3, "by_name": {}},
              "files_changed": ["/x.py"], "bash": {"tests": [], "lints": [], "failed": []}}
         self.assertIn("no-verify", codes(detect(r)))
 
     def test_garbage_values_do_not_crash(self):
-        # мусор во всех срезах: детекторы гаснут по одному, detect выживает
+        # garbage in all slices: detectors go out one by one, detect survives
         r = {"tools": [], "files_changed": "x", "bash": "no", "devloop": 42,
              "usage": 5, "reads": "y", "error_loops": {"a": 1},
              "retrieval": None, "protected_writes": None,
@@ -119,7 +119,7 @@ class TestFileReread(unittest.TestCase):
         self.assertNotIn("file-reread", codes(detect(r)))
 
     def test_quiet_below_total(self):
-        # доля высокая, но чтений мало — статистики нет
+        # the share is high, but there are few readings - no statistics
         r = base_report(reads={"total": 8, "unique": 2, "top_rereads": []})
         self.assertNotIn("file-reread", codes(detect(r)))
 
@@ -132,7 +132,7 @@ class TestToolErrorLoop(unittest.TestCase):
         self.assertIn("Bash", f["evidence"])
 
     def test_attention_at_5(self):
-        r = base_report(error_loops=[{"tool": "Edit", "len": 5, "snippet": "нет строки"},
+        r = base_report(error_loops=[{"tool": "Edit", "len": 5, "snippet": "no line"},
                                      {"tool": "Bash", "len": 3, "snippet": "boom"}])
         found = [f for f in detect(r) if f["code"] == "tool-error-loop"]
         self.assertEqual([f["severity"] for f in found], ["attention", "info"])
@@ -150,7 +150,7 @@ class TestNoOpRun(unittest.TestCase):
         self.assertEqual(one(detect(r), "no-op-run")["severity"], "info")
 
     def test_quiet_with_retrieval(self):
-        r = base_report(tools={"total": 25, "by_name": {}})  # retrieval.calls=1 в базе
+        r = base_report(tools={"total": 25, "by_name": {}})  # retrieval.calls=1 in the database
         self.assertNotIn("no-op-run", codes(detect(r)))
 
     def test_quiet_few_tools(self):
@@ -191,7 +191,7 @@ class TestCacheMiss(unittest.TestCase):
             "by_model": {}, "cache_hit": 0.25, "agents": []})
         f = one(detect(r), "cache-miss")
         self.assertEqual(f["severity"], "info")
-        self.assertIn("нестабильный префикс", f["evidence"])
+        self.assertIn("unstable prefix", f["evidence"])
 
     def test_quiet_small_volume(self):
         r = base_report(usage={
@@ -201,7 +201,7 @@ class TestCacheMiss(unittest.TestCase):
         self.assertNotIn("cache-miss", codes(detect(r)))
 
     def test_quiet_cache_hit_none(self):
-        # cache_hit=None (входа не было) — не сигнал и не падение
+        # cache_hit=None (no login) — no signal and no crash
         u = base_report()["usage"]
         u["cache_hit"] = None
         self.assertNotIn("cache-miss", codes(detect(base_report(usage=u))))
@@ -238,7 +238,7 @@ class TestRetrievalStuffing(unittest.TestCase):
                 "by_model": {}, "cache_hit": 0.5, "agents": []}
 
     def test_attention_with_repeats(self):
-        # 20000 chars / 4 = 5000 ток = 50% входа 10000 + 2 повторных запроса
+        # 20000 chars / 4 = 5000 current = 50% input 10000 + 2 repeated requests
         r = base_report(usage=self._usage_in(10_000),
                         retrieval={"calls": 4, "by_tool": {}, "result_chars": 20_000,
                                    "queries": ["a", "a2"], "repeated_queries": ["a", "a2"]})
@@ -282,7 +282,7 @@ class TestStaticContext(unittest.TestCase):
                             "tool_errors": 0}]}
 
     def test_fires(self):
-        # (100k+700k)/5 = 160k ток/вызов = 80% окна > 70%, тулов мало
+        # (100k+700k)/5 = 160k current/call = 80% windows > 70%, not enough tools
         r = base_report(usage=self._usage(5, 100_000, 700_000),
                         tools={"total": 10, "by_name": {}})
         f = one(detect(r), "static-context")
@@ -290,7 +290,7 @@ class TestStaticContext(unittest.TestCase):
         self.assertIn("skiller budget", f["evidence"])
 
     def test_quiet_many_tools(self):
-        # тот же тяжёлый вход, но работы много — это не «висящий» контекст
+        # the same difficult entrance, but a lot of work - it's not «hanging» context
         r = base_report(usage=self._usage(5, 100_000, 700_000),
                         tools={"total": 30, "by_name": {}})
         self.assertNotIn("static-context", codes(detect(r)))
@@ -326,7 +326,7 @@ class TestFanout(unittest.TestCase):
 
     def test_quiet_few_agents(self):
         u = base_report()["usage"]
-        u["agents"] = self._agents(8)  # ровно 8 — порог строгий «>»
+        u["agents"] = self._agents(8)  # exactly 8 - strict threshold «>»
         self.assertNotIn("fanout", codes(detect(base_report(usage=u))))
 
 

@@ -3,22 +3,22 @@
   "snippets": [
     {
       "file": "structure.md",
-      "description": "Карта слоёв resources/js с деревом и таблицей «что куда кладём», правила доменной организации",
+      "description": "Layer map resources/js with tree and table «what do we put where», domain organization rules",
       "tags": ["architecture", "structure", "layers"]
     },
     {
       "file": "composable-example.ts",
-      "description": "Доменный composable useDocumentForm: useForm + wayfinder actions/routes, навигация через router.visit",
+      "description": "Domain composable useDocumentForm: useForm + wayfinder actions/routes, navigation via router.visit",
       "tags": ["composable", "useform", "wayfinder"]
     },
     {
       "file": "page-example.vue",
-      "description": "Тонкая Inertia-страница: layout, Link, доменный компонент, форма через composable",
+      "description": "Thin Inertia-page: layout, Link, domain component, form via composable",
       "tags": ["page", "inertia", "vue"]
     },
     {
       "file": "feature-structure.md",
-      "description": "Доменный срез features/<домен>/{actions,composables,model,config}: дерево, однонаправленный граф импортов, граница @/wayfinder/routes/* через ESLint no-restricted-imports, мини-composable",
+      "description": "Domain slice features/<domain>/{actions,composables,model,config}: tree, unidirectional import graph, boundary @/wayfinder/routes/* via ESLint no-restricted-imports, minicomposable",
       "tags": ["feature", "architecture", "import-boundary", "eslint", "wayfinder"]
     }
   ]

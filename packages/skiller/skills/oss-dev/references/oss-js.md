@@ -1,23 +1,23 @@
 ---
 name: oss-js
-description: JS/TS-специфика для OSS-проектов: package.json, pnpm, tsconfig, vitest, ESM/CJS, npm publish, CI matrix
+description: JS/TS-specifics for OSS-projects: package.json, pnpm, tsconfig, vitest, ESM/CJS, npm publish, CI matrix
 type: reference
 parent: oss-development
 ---
 
 # Reference: OSS JS/TS
 
-Загружается дополнительно к `.ai/skills/oss-dev/oss-development.md` когда язык проекта — JavaScript или TypeScript (ThemeOn, npm-пакеты и подобные).
+Loaded in addition to `.ai/skills/oss-dev/oss-development.md` when the project language is JavaScript or TypeScript (ThemeOn, npm-packages and similar).
 
 ---
 
-### package.json минимум
+### package.json minimum
 
 ```json
 {
   "name": "@scope/package-name",
   "version": "0.1.0",
-  "description": "Одна строка",
+  "description": "One line",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -52,15 +52,15 @@ parent: oss-development
 
 ### Package Manager
 
-| Менеджер | Когда | Lockfile |
+| Manager | When | Lockfile |
 |:---|:---|:---|
-| **pnpm** | По умолчанию для новых проектов (быстрее, эффективнее по диску) | `pnpm-lock.yaml` |
-| npm | Если нужна максимальная совместимость / нет CI на pnpm | `package-lock.json` |
-| yarn | Только если монорепа уже на yarn workspaces | `yarn.lock` |
+| **pnpm** | Default for new projects (faster, disk efficient) | `pnpm-lock.yaml` |
+| npm | If you need maximum compatibility / no CI on pnpm | `package-lock.json` |
+| yarn | Only if the monorep is already on yarn workspaces | `yarn.lock` |
 
-Один lockfile в репо. Коммитить **обязательно**.
+One lockfile in the repo. Commit **required**.
 
-### tsconfig.json минимум (TypeScript)
+### tsconfig.json minimum (TypeScript)
 
 ```json
 {
@@ -88,52 +88,52 @@ parent: oss-development
 
 ### ESM / CJS Dual Publishing
 
-Современный пакет публикует оба формата через `tsup` или `unbuild`:
+The modern package publishes both formats via `tsup` or `unbuild`:
 
 ```bash
-# tsup конфиг
+# tsup config
 tsup src/index.ts --format esm,cjs --dts --clean
 ```
 
-Поле `exports` в `package.json` критично — без него require/import может выбирать неправильный entry. `"type": "module"` означает что `.js` = ESM, `.cjs` = CommonJS.
+Field `exports` in `package.json` critical - without it require/import may choose the wrong one entry. `"type": "module"` means that `.js` = ESM, `.cjs` = CommonJS.
 
 ### Static Analysis & Lint
 
 ```bash
-# TypeScript — strict обязательно
+# TypeScript — strict required
 pnpm typecheck
 
-# ESLint 9 (flat config) или typescript-eslint
+# ESLint 9 (flat config) or typescript-eslint
 pnpm lint
 
-# Prettier — отдельный шаг, не часть lint
+# Prettier — separate step, not part lint
 pnpm prettier --check src
 ```
 
 ### Node Version Support Matrix
 
 ```
-Node 18 LTS — minimum (Active LTS до апреля 2025)
-Node 20 LTS — recommended (Active LTS до апреля 2026)
+Node 18 LTS — minimum (Active LTS until April 2025)
+Node 20 LTS — recommended (Active LTS until April 2026)
 Node 22 LTS — latest
 
-Правило: поддерживать только активные LTS-версии Node.
+Rule: support only active LTS-versions Node.
 ```
 
-### Vitest структура
+### Vitest structure
 
 ```
 tests/
-├── unit/           # Изолированные тесты
-├── integration/    # С реальными зависимостями
-└── e2e/            # Сквозные сценарии
+├── unit/           # Isolated tests
+├── integration/    # With real dependencies
+└── e2e/            # End-to-end scenarios
 ```
 
 ```bash
 pnpm vitest run --coverage
 ```
 
-Coverage порог в `vitest.config.ts`:
+Coverage threshold in `vitest.config.ts`:
 
 ```ts
 test: {
@@ -147,27 +147,27 @@ test: {
 ### npm Publishing
 
 ```bash
-# 1. Логин (один раз)
+# 1. Login (once)
 npm login
 
-# 2. Проверить что войдёт в пакет
+# 2. Check what is included in the package
 npm pack --dry-run
 
-# 3. Версия + тег
-pnpm version patch  # или minor / major
+# 3. Version + tag
+pnpm version patch  # or minor / major
 git push --follow-tags
 
-# 4. Публикация
-npm publish --access public  # для @scope пакетов
+# 4. Publication
+npm publish --access public  # for @scope packages
 ```
 
-Для автоматизации — GitHub Actions с `NPM_TOKEN` secret (см. `release-engineering` скилл).
+For automation - GitHub Actions with `NPM_TOKEN` secret (see `release-engineering` skill).
 
-### .github/workflows/ci.yml для JS/TS
+### .github/workflows/ci.yml for JS/TS
 
 ```yaml
 - Node versions: [18, 20, 22]
-- OS: [ubuntu-latest, macos-latest, windows-latest] (если есть file IO)
+- OS: [ubuntu-latest, macos-latest, windows-latest] (if available file IO)
 - pnpm install --frozen-lockfile
 - pnpm lint
 - pnpm typecheck

@@ -23,5 +23,5 @@ class CodexSessionContextTests(unittest.TestCase):
 
     def test_empty_or_whitespace_thread_id_fails_closed(self):
         with patch.dict(os.environ, {"CODEX_THREAD_ID": " invalid id "}, clear=True):
-            with self.assertRaisesRegex(session_context.SessionContextError, "невалиден"):
+            with self.assertRaisesRegex(session_context.SessionContextError, "is invalid"):
                 session_context_codex.current()

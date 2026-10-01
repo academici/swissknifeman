@@ -4,8 +4,8 @@
 
 declare(strict_types=1);
 
-// --- Часть 1. Резолвер (app/Support/Enums/EnumCaseAttributeResolver.php) ---
-// Единая точка чтения атрибутов enum-кейсов через reflection, с кешем.
+// --- Part 1. Resolver (app/Support/Enums/EnumCaseAttributeResolver.php) ---
+// Single point of attribute reading enum-cases via reflection, with cache.
 
 namespace App\Support\Enums;
 
@@ -27,8 +27,8 @@ final class EnumCaseAttributeResolver
     {
         $enumClass = $case::class;
 
-        // Reflection на каждый вызов дорог в горячих путях (таблицы, списки) —
-        // кешируем инстансы атрибутов статически.
+        // Reflection for every road call in hot roads (tables, lists) —
+        // cache attribute instances statically.
         if (array_key_exists($attributeClass, self::$cache[$enumClass][$case->name] ?? [])) {
             return self::$cache[$enumClass][$case->name][$attributeClass];
         }
@@ -45,9 +45,9 @@ final class EnumCaseAttributeResolver
     }
 }
 
-// --- Часть 2. Concern-трейты (app/Concerns/Enums/) ---
-// Каждый трейт = одна ось метаданных + осмысленный дефолт:
-// не каждый кейс обязан нести каждый атрибут.
+// --- Part 2. Concern-traits (app/Concerns/Enums/) ---
+// Each trait = one metadata axis + meaningful default:
+// not every case is required to carry every attribute.
 
 namespace App\Concerns\Enums;
 
@@ -81,6 +81,6 @@ trait HasColorAttribute
             return $attribute->value;
         }
 
-        return '#6c757d'; // нейтральный серый по умолчанию
+        return '#6c757d'; // neutral gray by default
     }
 }

@@ -88,7 +88,7 @@ def _warn_json(reason):
     print(json.dumps({"hookSpecificOutput": {
         "hookEventName": "PreToolUse",
         "permissionDecision": "allow",
-        "permissionDecisionReason": "changelog-gate: warn — не блокирую",
+        "permissionDecisionReason": "changelog-gate: warn — not blocking",
         "additionalContext": reason,
     }}))
 
@@ -131,9 +131,9 @@ def main():
         sys.exit(0)
 
     reason = (
-        f"changelog-gate: коммит `{commit_type}:` содержательный, но `[Unreleased]` не "
-        f"тронут. Добавь строку в CHANGELOG нужной группы Keep a Changelog (или пометь "
-        f"`[changelog-skip]`, если запись не нужна). Дисциплина — скилл "
+        f"changelog-gate: commit `{commit_type}:` informative, but `[Unreleased]` not "
+        f"touched. Add a line to CHANGELOG of the desired group Keep a Changelog (or mark "
+        f"`[changelog-skip]`, if the entry is not needed). Discipline - skill "
         f"`oss-dev/release-engineering`."
     )
     if mode == "strict":

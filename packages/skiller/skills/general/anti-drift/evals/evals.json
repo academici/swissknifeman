@@ -3,10 +3,10 @@
   "cases": [
     {
       "id": 1,
-      "prompt": "Задача — добавить одно поле в форму регистрации. Опиши, как подойдёшь к работе.",
+      "prompt": "The task is to add one field to the registration form. Describe how you approach the job.",
       "assertions": [
-        {"type": "regex", "value": "минимальн|simpl|surgical|точечн|не расширя|YAGNI|сначала пойм|план"},
-        {"type": "not_contains", "value": "заодно отрефакторю весь модуль"}
+        {"type": "regex", "value": "minimum|simpl|surgical|dot|does not expand|YAGNI|I'll understand first|plan"},
+        {"type": "not_contains", "value": "at the same time I will refactor the entire module"}
       ]
     }
   ]

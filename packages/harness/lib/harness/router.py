@@ -10,13 +10,13 @@ from .settings import write_json
 
 _STOPWORDS = {
     "the", "a", "an", "and", "or", "for", "with", "use", "this", "that", "when",
-    "и", "в", "во", "на", "по", "для", "с", "со", "от", "до", "из", "как", "что",
-    "это", "или", "при", "над", "под", "без", "если",
+    "and", "in", "in", "on", "by", "for", "with", "with", "from", "to", "from", "like", "what",
+    "this", "or", "when", "over", "under", "without", "if",
 }
 
 
 def _keywords_from_description(desc, limit=12):
-    toks = re.findall(r"[A-Za-zА-Яа-яЁё][A-Za-zА-Яа-яЁё0-9-]{2,}", (desc or "").lower())
+    toks = re.findall(r"[A-Za-z][A-Za-z0-9-]{2,}", (desc or "").lower())
     seen, out = set(), []
     for t in toks:
         if t in _STOPWORDS or t in seen:
@@ -86,5 +86,5 @@ def cmd_router(env, argv):
         "skills": skills,
     }
     write_json(claude / "agent-router.config.json", catalog, opts["dry_run"])
-    print(f"router: каталог — {len(commands)} команд, {len(agents)} агентов, "
-          f"{len(skills)} локальных скиллов")
+    print(f"router: directory - {len(commands)} commands, {len(agents)} agents, "
+          f"{len(skills)} local skills")

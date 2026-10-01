@@ -28,8 +28,8 @@ _PLACEHOLDER_RE = re.compile(r"^(\$\{?[A-Za-z_][A-Za-z0-9_]*\}?|<.*>|changeme)$"
 LAYER_ORDER = ("user", "project", "local", "managed")
 
 CLI_ARGS_NOTE = (
-    "CLI-аргументы (scope с наивысшим приоритетом в Claude Code) — не файл, "
-    "doctor'у не видны и в эффективную конфигурацию не входят."
+    "CLI-arguments (scope with the highest priority in Claude Code) — is not a file, "
+    "doctor'are not visible and are not included in the effective configuration."
 )
 
 
@@ -110,7 +110,7 @@ def _load_layer(name, path):
     except json.JSONDecodeError as error:
         return Layer(name, path, data=None, error=str(error), error_kind="malformed")
     if not isinstance(data, dict):
-        return Layer(name, path, data=None, error="верхний уровень JSON не объект",
+        return Layer(name, path, data=None, error="top level JSON not an object",
                      error_kind="malformed")
     return Layer(name, path, data=data, error=None)
 
@@ -328,7 +328,7 @@ def _load_vscode_layer(name, path):
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
         return Layer(name, path, data=None, error=str(e))
     if not isinstance(data, dict):
-        return Layer(name, path, data=None, error="верхний уровень JSON не объект")
+        return Layer(name, path, data=None, error="top level JSON not an object")
     return Layer(name, path, data=data, error=None)
 
 
@@ -446,15 +446,15 @@ def check_1_layer_json_valid(ctx):
             unreadable = layer.error_kind == "unreadable"
             findings.append(Finding(
                 id=1, level="error",
-                title=(f"Слой «{layer.name}» ({layer.path}) не читается"
+                title=(f"Layer «{layer.name}» ({layer.path}) not readable"
                        if unreadable else
-                       f"Слой «{layer.name}» ({layer.path}) — битый JSON"),
+                       f"Layer «{layer.name}» ({layer.path}) — broken JSON"),
                 detail=layer.error,
-                hint=("Проверь путь и права доступа — нечитаемый слой "
-                      "исключён из эффективной конфигурации."
+                hint=("Check the path and permissions - unreadable layer "
+                      "is excluded from the effective configuration."
                       if unreadable else
-                      "Почини JSON слоя (или удали файл, если он лишний) — весь слой "
-                      "сейчас исключён из эффективной конфигурации."),
+                      "Fix it JSON layer (or delete the file if it is redundant) — entire layer "
+                      "is now excluded from the effective configuration."),
             ))
     return findings
 
@@ -480,10 +480,10 @@ def check_2_noncanonical_keys(ctx):
             seen.add(marker)
             findings.append(Finding(
                 id=2, level="warn",
-                title=f"Неканонический ключ «{key}» (слой {layer.name})",
-                detail="Ключа нет в снапшоте канонических ключей settings-keys.json — "
-                       "Claude Code молча его игнорирует.",
-                hint="Сверь актуальное имя ключа в code.claude.com/docs/en/settings.md.",
+                title=f"Non-canonical key «{key}» (layer {layer.name})",
+                detail="The key is not in the snapshot of canonical keys settings-keys.json — "
+                       "Claude Code silently ignores him.",
+                hint="Check the current key name in code.claude.com/docs/en/settings.md.",
             ))
         perms = layer.data.get("permissions")
         if not isinstance(perms, dict):
@@ -497,10 +497,10 @@ def check_2_noncanonical_keys(ctx):
             seen.add(marker)
             findings.append(Finding(
                 id=2, level="warn",
-                title=f"Неканонический ключ permissions.{sub} (слой {layer.name})",
-                detail="Подключа нет в снапшоте permissions.* — Claude Code молча его "
-                       "игнорирует (эталон: permissions.autoApprove, D6).",
-                hint="Сверь актуальное имя ключа в code.claude.com/docs/en/permissions.md.",
+                title=f"Non-canonical key permissions.{sub} (layer {layer.name})",
+                detail="The connection is not in the snapshot permissions.* — Claude Code silently him "
+                       "ignores (standard: permissions.autoApprove, D6).",
+                hint="Check the current key name in code.claude.com/docs/en/permissions.md.",
             ))
     return findings
 
@@ -520,10 +520,10 @@ def check_3_default_mode_conflict(ctx):
     chain = ", ".join(f"{name}={mode!r}" for name, mode in declared)
     return [Finding(
         id=3, level="warn",
-        title="permissions.defaultMode объявлен в нескольких слоях",
-        detail=f"Цепочка по возрастанию приоритета: {chain}. Эффективный режим: {effective!r}.",
-        hint="Режим фиксируется на СТАРТЕ сессии — правка на лету не действует "
-             "(перезапусти сессию после смены).",
+        title="permissions.defaultMode declared in multiple layers",
+        detail=f"Chain in ascending order of priority: {chain}. Effective mode: {effective!r}.",
+        hint="The mode is fixed at the START of the session - on-the-fly editing does not work "
+             "(restart the session after the change).",
     )]
 
 
@@ -536,20 +536,20 @@ def check_4_policy_profile_conformance(ctx):
         avail = ", ".join(state.available) if state and state.available else "—"
         return [Finding(
             id=4, level="info",
-            title="policy-профиль проекта не объявлен",
-            detail="В .swissknife.json нет ключа policy_profile — сверка эффективной "
-                   "конфигурации с ожидаемой политикой не выполняется.",
-            hint=f"Объяви ожидаемую политику ключом policy_profile в .swissknife.json "
-                 f"(доступны: {avail}).",
+            title="policy-project profile not declared",
+            detail="V .swissknife.json no key policy_profile — effective reconciliation "
+                   "configuration with the expected policy is not running.",
+            hint=f"Declare the expected policy as a key policy_profile in .swissknife.json "
+                 f"(available: {avail}).",
         )]
     if state.profile is None:
         avail = ", ".join(state.available) if state.available else "—"
         return [Finding(
             id=4, level="error",
-            title=f"Неизвестный policy-профиль «{state.name}»",
-            detail=f"Профиля нет среди доступных: {avail}.",
-            hint="Проверь имя в .swissknife.json:policy_profile или заведи профиль "
-                 "в configs/claude-code/policy/.",
+            title=f"Unknown policy-profile «{state.name}»",
+            detail=f"Profile not available: {avail}.",
+            hint="Check the name in .swissknife.json:policy_profile or create a profile "
+                 "in configs/claude-code/policy/.",
         )]
 
     findings = []
@@ -563,9 +563,9 @@ def check_4_policy_profile_conformance(ctx):
         if act_mode != exp_mode:
             findings.append(Finding(
                 id=4, level="error",
-                title="Эффективный permissions.defaultMode ≠ профилю",
-                detail=f"Профиль «{state.name}» ждёт {exp_mode!r}, эффективно {act_mode!r}.",
-                hint="Приведи permissions.defaultMode к профилю (writer: harness permissions).",
+                title="Effective permissions.defaultMode ≠ profile",
+                detail=f"Profile «{state.name}» is waiting {exp_mode!r}, effective {act_mode!r}.",
+                hint="Bring permissions.defaultMode to profile (writer: harness permissions).",
             ))
 
 
@@ -576,10 +576,10 @@ def check_4_policy_profile_conformance(ctx):
         if missing:
             findings.append(Finding(
                 id=4, level="error",
-                title="В эффективном permissions.deny нет обязательных guardrail-правил",
-                detail=f"Профиль «{state.name}» требует (⊇), не хватает: {', '.join(missing)}.",
-                hint="Верни удалённые deny-правила — они работают guardrail'ом во ВСЕХ "
-                     "режимах, включая bypassPermissions.",
+                title="In effective permissions.deny no required guardrail-rules",
+                detail=f"Profile «{state.name}» requires (⊇), is missing: {', '.join(missing)}.",
+                hint="Return deleted items deny-rules - they work guardrail'ohm in ALL "
+                     "modes, including bypassPermissions.",
             ))
 
 
@@ -599,10 +599,10 @@ def check_4_policy_profile_conformance(ctx):
             if not present:
                 findings.append(Finding(
                     id=4, level="error",
-                    title=f"Ожидаемый профилем хук не прописан: {event}",
-                    detail=f"Профиль «{state.name}» требует хук {event}"
+                    title=f"The hook expected by the profile is not registered: {event}",
+                    detail=f"Profile «{state.name}» requires a hook {event}"
                            + (f" → {command}" if command else "") + ".",
-                    hint="Пропиши хук (writer: harness hooks) или сними требование из профиля.",
+                    hint="Write a hook (writer: harness hooks) or remove the requirement from the profile.",
                 ))
 
 
@@ -616,9 +616,9 @@ def check_4_policy_profile_conformance(ctx):
             if act_val != exp_val:
                 findings.append(Finding(
                     id=4, level="error",
-                    title=f"VSCode-настройка {key} ≠ профилю",
-                    detail=f"Профиль «{state.name}» ждёт {exp_val!r}, факт {act_val!r}.",
-                    hint="Приведи VSCode user/project settings.json к профилю.",
+                    title=f"VSCode-setting {key} ≠ profile",
+                    detail=f"Profile «{state.name}» is waiting {exp_val!r}, fact {act_val!r}.",
+                    hint="Bring VSCode user/project settings.json to profile.",
                 ))
 
     return findings
@@ -692,10 +692,10 @@ def check_5_hooks(ctx):
         if event not in known_events:
             findings.append(Finding(
                 id=5, level="info",
-                title=f"Хук-событие «{event}» не в снапшоте",
-                detail=f"События нет в снапшоте от {snapshot_date} — сверь доку, "
-                       "снапшот мог устареть.",
-                hint="Полнота списка hook-событий не подтверждена вторым источником "
+                title=f"Hook event «{event}» not in snapshot",
+                detail=f"The event is not in the snapshot from {snapshot_date} — check the doc, "
+                       "snapshot may be out of date.",
+                hint="List completeness hook-events not confirmed by a second source "
                      "(findings, [UNVERIFIED]).",
             ))
         for entry in entries or []:
@@ -706,20 +706,20 @@ def check_5_hooks(ctx):
             if resolved is None:
                 findings.append(Finding(
                     id=5, level="info",
-                    title=f"Хук {event}: команда с плейсхолдером не проверена",
+                    title=f"Hook {event}: command with placeholder not verified",
                     detail=command,
-                    hint="Путь содержит $VAR-плейсхолдер ($CLAUDE_PROJECT_DIR и "
-                         "т.п.) — doctor его не резолвит.",
+                    hint="Path contains $VAR-placeholder ($CLAUDE_PROJECT_DIR and "
+                         "etc.) — doctor will not resolve it.",
                 ))
                 continue
             path, requires_exec = resolved
             if not path.exists() or (requires_exec and not os.access(path, os.X_OK)):
                 findings.append(Finding(
                     id=5, level="error",
-                    title=f"Хук {event}: команда недоступна или неисполняема",
+                    title=f"Hook {event}: command not available or not executable",
                     detail=f"{command} → {path}",
-                    hint=("Проверь путь." if not requires_exec
-                          else "Проверь путь и права на исполнение (chmod +x)."),
+                    hint=("Check the path." if not requires_exec
+                          else "Check the path and execution rights (chmod +x)."),
                 ))
     return findings
 
@@ -751,24 +751,24 @@ def _load_cursor_hooks(target):
     except (OSError, UnicodeDecodeError, json.JSONDecodeError):
         return None, Finding(
             id=14, level="error",
-            title="Не удалось прочитать .cursor/hooks.json",
+            title="Failed to read .cursor/hooks.json",
             detail=str(path),
-            hint="Почини JSON и повтори doctor — без этого single-writer сверка недостоверна.",
+            hint="Fix it JSON and repeat doctor — without it single-writer reconciliation is unreliable.",
         )
     if not isinstance(value, dict):
         return None, Finding(
             id=14, level="error",
-            title=".cursor/hooks.json: верхний уровень не объект",
+            title=".cursor/hooks.json: top level not object",
             detail=str(path),
-            hint="Ожидается JSON object c ключом hooks.",
+            hint="Pending JSON object c key hooks.",
         )
     hooks = value.get("hooks")
     if not isinstance(hooks, dict):
         return None, Finding(
             id=14, level="error",
-            title=".cursor/hooks.json: отсутствует объект hooks",
+            title=".cursor/hooks.json: missing object hooks",
             detail=str(path),
-            hint="Ожидается структура {\"version\":1,\"hooks\":{...}}.",
+            hint="Structure expected {\"version\":1,\"hooks\":{...}}.",
         )
     return hooks, None
 
@@ -858,11 +858,11 @@ def check_14_cursor_single_writer_overlap(ctx):
         )
         findings.append(Finding(
             id=14, level="warn",
-            title=f"Single-writer нарушен: surface {surface_id} зарегистрирован дважды",
-            detail=("Cursor-native .cursor/hooks.json пересекается с Claude-compat hooks: "
+            title=f"Single-writer broken: surface {surface_id} registered twice",
+            detail=("Cursor-native .cursor/hooks.json intersects with Claude-compat hooks: "
                     + compat_summary),
-            hint=("Оставь один источник регистрации surface: сними Claude-compat запись "
-                  "или сделай обработчик идемпотентным по (conversation_id, tool_use_id)."),
+            hint=("Leave one registration source surface: remove Claude-compat entry "
+                  "or make the handler idempotent (conversation_id, tool_use_id)."),
         ))
     return findings
 
@@ -888,11 +888,11 @@ def check_15_duplicate_hook_registrations(ctx):
             continue
         findings.append(Finding(
             id=15, level="warn",
-            title=(f"Повторная идентичная регистрация хука x{times}: "
+            title=(f"Repeated identical hook registration x{times}: "
                    f"{Path(path).name} {event}:{matcher or '*'}"),
             detail=command,
-            hint=("Убери дубликаты: Cursor выполняет все совпавшие hooks из всех источников, "
-                  "поэтому идентичная команда сработает многократно."),
+            hint=("Remove duplicates: Cursor executes all matching hooks from all sources, "
+                  "so the identical command will work many times."),
         ))
     return findings
 
@@ -905,9 +905,9 @@ def check_16_cursor_compat_binding_notice(ctx):
     surfaces = ", ".join(sorted(compat_refs))
     return [Finding(
         id=16, level="info",
-        title="Claude-compat hooks в Cursor не являются управляемым binding",
-        detail="Найдены compat-surfaces: " + surfaces,
-        hint=("Доставка compat-пути зависит от пользовательского флага "
+        title="Claude-compat hooks in Cursor are not managed binding",
+        detail="Found compat-surfaces: " + surfaces,
+        hint=("Delivery compat-path depends on user flag "
               "\"Include Third-Party Plugins, Skills, and Other Configs\"."),
     )]
 
@@ -928,9 +928,9 @@ def check_9_secrets(ctx):
             continue
         findings.append(Finding(
             id=9, level="error",
-            title=f"Похоже на секрет плейнтекстом: env.{key}",
-            detail=f"Слой: {env_prov.get(key, '?')}.",
-            hint="Вынеси значение в переменную окружения/секрет-хранилище, не в settings.json.",
+            title=f"Looks like a plaintext secret: env.{key}",
+            detail=f"Layer: {env_prov.get(key, '?')}.",
+            hint="Place the value in an environment variable/secret storage, not in settings.json.",
         ))
 
     local_layer = next((l for l in ctx.layers if l.name == "local"), None)
@@ -951,25 +951,25 @@ def _check_local_gitignored(target, local_path):
     except (subprocess.SubprocessError, OSError):
         return Finding(
             id=9, level="info",
-            title="Не удалось проверить gitignore-статус settings.local.json",
-            detail="git недоступен.",
-            hint="Проверь вручную: git check-ignore -q .claude/settings.local.json",
+            title="Failed to verify gitignore-status settings.local.json",
+            detail="git is not available.",
+            hint="Check manually: git check-ignore -q .claude/settings.local.json",
         )
     if result.returncode == 0:
         return None
     if result.returncode == 1:
         return Finding(
             id=9, level="error",
-            title="settings.local.json НЕ в .gitignore",
+            title="settings.local.json NOT in .gitignore",
             detail=str(local_path),
-            hint="Добавь .claude/settings.local.json в .gitignore — файл может "
-                 "нести секреты/локальные пути.",
+            hint="Add .claude/settings.local.json in .gitignore — file can "
+                 "carry secrets/local paths.",
         )
     return Finding(
         id=9, level="info",
-        title="Не удалось проверить gitignore-статус settings.local.json",
-        detail=f"git check-ignore вернул код {result.returncode} (не git-репозиторий?).",
-        hint="Проверь вручную.",
+        title="Failed to verify gitignore-status settings.local.json",
+        detail=f"git check-ignore returned the code {result.returncode} (not git-repository?).",
+        hint="Check manually.",
     )
 
 
@@ -992,10 +992,10 @@ def check_11_ask_rules_when_expected_empty(ctx):
     listed = ", ".join(f"{r} ({ask_prov.get(r, '?')})" for r in ask_rules)
     return [Finding(
         id=11, level="error",
-        title="ask-правила форсируют промпт при политике «не спрашивать»",
-        detail=f"Профиль «{state.name}» требует пустой permissions.ask, эффективно: {listed}.",
-        hint="Убери ask-правила — они форсируют промпт В ЛЮБОМ режиме, включая "
-             "bypassPermissions (deny/ask применяются всегда).",
+        title="ask-rules force prompt under policy «don't ask»",
+        detail=f"Profile «{state.name}» requires empty permissions.ask, effectively: {listed}.",
+        hint="Remove ask-rules - they force the prompt IN ANY mode, including "
+             "bypassPermissions (deny/ask always apply).",
     )]
 
 
@@ -1015,10 +1015,10 @@ def check_6_dead_allow_rules(ctx):
         return []
     return [Finding(
         id=6, level="info",
-        title=f"Мусорные точные allow-правила Bash(...): {len(exact)} шт.",
-        detail=f"Порог {DEAD_ALLOW_THRESHOLD}. Топ-5 примеров: {', '.join(exact[:5])}.",
-        hint="Замени точные разовые правила на wildcard-паттерн или прогони чистку "
-             "(doctor read-only — авто-чистки нет).",
+        title=f"Garbage precision allow-rules Bash(...): {len(exact)} pcs.",
+        detail=f"Threshold {DEAD_ALLOW_THRESHOLD}. Top 5 examples: {', '.join(exact[:5])}.",
+        hint="Replace the exact one-time rules with wildcard-pattern or run cleaning "
+             "(doctor read-only — no auto-cleaning).",
     )]
 
 
@@ -1032,9 +1032,9 @@ def check_7_allow_deny_overlap(ctx):
     return [
         Finding(
             id=7, level="warn",
-            title=f"Правило и в allow, и в deny: {rule}",
-            detail="Deny побеждает молча (deny-first) — allow-запись сейчас мертва.",
-            hint="Убери правило из одного из списков — держать в обоих бессмысленно.",
+            title=f"Rule and in allow, and in deny: {rule}",
+            detail="Deny wins silently (deny-first) — allow-entry is now dead.",
+            hint="Remove a rule from one of the lists - keeping it in both is pointless.",
         )
         for rule in sorted(allow & deny)
     ]
@@ -1058,9 +1058,9 @@ def check_8_additional_directories_missing(ctx):
             if not path.exists():
                 findings.append(Finding(
                     id=8, level="warn",
-                    title=f"additionalDirectories: путь не существует (слой {layer_name})",
+                    title=f"additionalDirectories: path does not exist (layer {layer_name})",
                     detail=f"{d} → {path}",
-                    hint="Проверь путь или убери запись из additionalDirectories.",
+                    hint="Check the path or remove the entry from additionalDirectories.",
                 ))
     return findings
 
@@ -1076,11 +1076,11 @@ def check_10_bypass_without_skip_dialog(ctx):
         return []
     return [Finding(
         id=10, level="info",
-        title="bypassPermissions без skipDangerousModePermissionPrompt",
-        detail="Подтверждение входа в bypassPermissions не отключено. Это может быть "
-               "осознанным выбором оператора.",
-        hint="Информационно: при необходимости задай permissions.skipDangerousModePermissionPrompt=true "
-             "в user/local settings, не в project settings.",
+        title="bypassPermissions without skipDangerousModePermissionPrompt",
+        detail="Login confirmation bypassPermissions is not disabled. It could be "
+               "conscious choice of the operator.",
+        hint="Informational: specify if necessary permissions.skipDangerousModePermissionPrompt=true "
+             "in user/local settings, not in project settings.",
     )]
 
 
@@ -1094,10 +1094,10 @@ def _vscode_parse_errors(ctx):
     return [
         Finding(
             id=12, level="info",
-            title=f"VSCode-слой «{layer.name}» ({layer.path}) не распарсился",
+            title=f"VSCode-layer «{layer.name}» ({layer.path}) did not parse",
             detail=layer.error,
-            hint="JSONC-reader толерантен к комментариям/висячим запятым, но не "
-                 "ко всему — почини файл вручную.",
+            hint="JSONC-reader is tolerant of comments/with a trailing comma, but not "
+                 "to everything - fix the file manually.",
         )
         for layer in vscode.layers
         if layer.error
@@ -1120,10 +1120,10 @@ def check_12_vscode_initial_mode_mismatch(ctx):
         return []
     return [Finding(
         id=12, level="warn",
-        title="VSCode claudeCode.initialPermissionMode расходится с эффективным defaultMode",
-        detail=f"VSCode: {initial!r}, эффективно (слои Claude Code): {effective_mode!r}.",
-        hint="Расширение стартует сессию из СВОЕЙ настройки — приведи в соответствие "
-             "или прими расхождение осознанно.",
+        title="VSCode claudeCode.initialPermissionMode diverges from effective defaultMode",
+        detail=f"VSCode: {initial!r}, effective (layers Claude Code): {effective_mode!r}.",
+        hint="The extension starts the session from YOUR settings - make it consistent "
+             "or accept the discrepancy consciously.",
     )]
 
 
@@ -1142,11 +1142,11 @@ def check_13_vscode_bypass_toggle_missing(ctx):
         return []
     return [Finding(
         id=13, level="warn",
-        title="VSCode claudeCode.allowDangerouslySkipPermissions не включён",
-        detail="Эффективный permissions.defaultMode=bypassPermissions, но toggle "
-               "расширения не выставлен в true.",
-        hint="Включи claudeCode.allowDangerouslySkipPermissions:true в VSCode "
-             "settings.json — иначе режим недоступен в селекторе.",
+        title="VSCode claudeCode.allowDangerouslySkipPermissions not enabled",
+        detail="Effective permissions.defaultMode=bypassPermissions, but toggle "
+               "extension is not set in true.",
+        hint="Turn on claudeCode.allowDangerouslySkipPermissions:true in VSCode "
+             "settings.json — otherwise the mode is not available in the selector.",
     )]
 
 
@@ -1224,14 +1224,14 @@ def _load_codex_toml_layer(name, path):
         import tomllib
     except ModuleNotFoundError:
         return Layer(name, path, data=None,
-                     error="интерпретатор < 3.11: tomllib недоступен, слой не читается",
+                     error="interpreter < 3.11: tomllib is not available, the layer is not readable",
                      error_kind="unreadable")
     try:
         data = tomllib.loads(text)
     except tomllib.TOMLDecodeError as error:
         return Layer(name, path, data=None, error=str(error), error_kind="malformed")
     if not isinstance(data, dict):
-        return Layer(name, path, data=None, error="верхний уровень TOML не таблица",
+        return Layer(name, path, data=None, error="top level TOML not a table",
                      error_kind="malformed")
     return Layer(name, path, data=data, error=None)
 
@@ -1247,11 +1247,11 @@ def load_codex_layers(env, target):
 
 def codex_check_1_layers_readable(layers):
     """Internal documentation."""
-    return [Finding(1, "warn", f"слой '{layer.name}' "
-                    + ("не читается" if layer.error_kind == "unreadable"
-                       else "не распарсен"),
+    return [Finding(1, "warn", f"layer '{layer.name}' "
+                    + ("not readable" if layer.error_kind == "unreadable"
+                       else "not parsed"),
                     detail=f"{layer.path}: {layer.error}",
-                    hint="слой репортится нечитаемым, а не конформным")
+                    hint="layer is reported as unreadable, not conformal")
             for layer in layers if layer.error]
 
 
@@ -1263,10 +1263,10 @@ def codex_check_2_project_overrides_machine_local_key(layers):
     conflicts = sorted(key for key in CODEX_NON_OVERRIDABLE_PROJECT_KEYS if key in project.data)
     if not conflicts:
         return []
-    return [Finding(2, "error", "проектный слой переопределяет machine-local ключ",
-                    detail=f"{', '.join(conflicts)} в {project.path}",
-                    hint="Ф10: project-scoped config не может переопределять provider/auth/"
-                         "notification/profile-selection/telemetry — перенеси ключ(и) в "
+    return [Finding(2, "error", "project layer overrides machine-local key",
+                    detail=f"{', '.join(conflicts)} in {project.path}",
+                    hint="F10: project-scoped config cannot override provider/auth/"
+                         "notification/profile-selection/telemetry — transfer the key(and) in "
                          "~/.codex/config.toml")]
 
 
@@ -1278,10 +1278,10 @@ def codex_check_3_hooks_feature_disabled(layers):
             effective.update(layer.data)
     features = effective.get("features")
     if isinstance(features, dict) and features.get("hooks") is False:
-        return [Finding(3, "info", "features.hooks выключен",
-                        detail="эффективная конфигурация несёт features.hooks=false",
-                        hint="раскатанные harness hooks --provider codex поверхности "
-                             "не активируются, пока флаг не включён")]
+        return [Finding(3, "info", "features.hooks disabled",
+                        detail="effective configuration carries features.hooks=false",
+                        hint="rolled out harness hooks --provider codex surfaces "
+                             "are not activated until the flag is enabled")]
     return []
 
 
@@ -1304,7 +1304,7 @@ def render_codex_text(target, findings):
     """Internal documentation."""
     lines = [f"harness doctor --settings --provider codex (target: {target})"]
     if not findings:
-        lines.append("  находок нет — эффективная конфигурация чистая.")
+        lines.append("  no findings - the effective configuration is clean.")
     for level in _LEVEL_ORDER:
         for f in (x for x in findings if x.level == level):
             lines.append(f"[{level}] #{f.id} {f.title}")
@@ -1313,7 +1313,7 @@ def render_codex_text(target, findings):
             if f.hint:
                 lines.append(f"    → {f.hint}")
     c = counts(findings)
-    lines.append(f"ошибок: {c['error']}, предупреждений: {c['warn']}, заметок: {c['info']}")
+    lines.append(f"errors: {c['error']}, warnings: {c['warn']}, notes: {c['info']}")
     return "\n".join(lines)
 
 
@@ -1324,10 +1324,10 @@ def render_provider_text(provider_id, ctx, findings):
     name = _profile_name(ctx)
     lines = [
         f"harness doctor --settings --provider {provider_id} (target: {ctx.target})",
-        f"policy-профиль: {name if name else 'не объявлен'}",
+        f"policy-profile: {name if name else 'not declared'}",
     ]
     if not findings:
-        lines.append("  находок нет — эффективная конфигурация чистая.")
+        lines.append("  no findings - the effective configuration is clean.")
     for level in _LEVEL_ORDER:
         for finding in (item for item in findings if item.level == level):
             lines.append(f"[{level}] #{finding.id} {finding.title}")
@@ -1336,8 +1336,8 @@ def render_provider_text(provider_id, ctx, findings):
             if finding.hint:
                 lines.append(f"    → {finding.hint}")
     summary = counts(findings)
-    lines.append(f"ошибок: {summary['error']}, предупреждений: {summary['warn']}, "
-                 f"заметок: {summary['info']}")
+    lines.append(f"errors: {summary['error']}, warnings: {summary['warn']}, "
+                 f"notes: {summary['info']}")
     return "\n".join(lines)
 
 
@@ -1386,10 +1386,10 @@ def render_text(ctx, findings):
     name = _profile_name(ctx)
     lines = [
         f"harness doctor --settings (target: {ctx.target})",
-        f"policy-профиль: {name if name else 'не объявлен'}",
+        f"policy-profile: {name if name else 'not declared'}",
     ]
     if not findings:
-        lines.append("  находок нет — эффективная конфигурация чистая.")
+        lines.append("  no findings - the effective configuration is clean.")
     for level in _LEVEL_ORDER:
         for f in (x for x in findings if x.level == level):
             lines.append(f"[{level}] #{f.id} {f.title}")
@@ -1399,7 +1399,7 @@ def render_text(ctx, findings):
                 lines.append(f"    → {f.hint}")
     c = counts(findings)
     lines.append(
-        f"ошибок: {c['error']}, предупреждений: {c['warn']}, заметок: {c['info']}")
+        f"errors: {c['error']}, warnings: {c['warn']}, notes: {c['info']}")
     return "\n".join(lines)
 
 

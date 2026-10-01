@@ -1,4 +1,4 @@
-"""Тесты onboard — цепочка register → integrate → deploy → seed (standalone-safe)."""
+"""Tests onboard — chain register → integrate → deploy → seed (standalone-safe)."""
 import json
 import tempfile
 import unittest
@@ -90,9 +90,9 @@ class TestOnboard(unittest.TestCase):
         self.assertEqual(calls, ["context-project"])
 
     def test_repeat_onboard_by_path_does_not_duplicate_entry(self):
-        # Баг (инцидент loqum x3): _ensure_project матчил существующий проект ТОЛЬКО по
-        # id — повторный `maind onboard <тот же абсолютный путь>` (не по id) не находил
-        # уже зарегистрированную запись и штамповал дубль с тем же id при каждом вызове.
+        # Bug (incident loqum x3): _ensure_project matched an existing project ONLY by
+        # id — repeated `maind onboard <same absolute path>` (not by id) couldn't find it
+        # already registered entry and stamped a duplicate with the same id every time it is called.
         calls = []
         orig = onb.run_capability
         onb.run_capability = lambda e, c, pid, cap, extra=None, dry=False: \
@@ -118,10 +118,10 @@ class TestOnboard(unittest.TestCase):
                 onb.run_capability = orig
 
     def test_repeat_onboard_via_symlink_does_not_duplicate_entry(self):
-        # N4 (P1-review): остаточный edge того же инцидента loqum — norm_path раньше
-        # делал только expanduser+normpath, без резолва симлинков, поэтому онбординг
-        # ТОГО ЖЕ каталога через симлинк на него не матчился с уже зарегистрированным
-        # local_path и штамповал дубль-запись.
+        # N4 (P1-review): residual edge same incident loqum — norm_path before
+        # did only expanduser+normpath, without resolving symlinks, so onboarding
+        # THE SAME directory through a symlink did not match with the already registered one
+        # local_path and stamped a double entry.
         calls = []
         orig = onb.run_capability
         onb.run_capability = lambda e, c, pid, cap, extra=None, dry=False: \
@@ -151,7 +151,7 @@ class TestOnboard(unittest.TestCase):
     def test_skm_missing_skipped_but_deploys(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, env = make_repo(tmp)
-            _seed_config(root)  # нет проекта swissknifeman → integrate упадёт → skip
+            _seed_config(root)  # no project swissknifeman → integrate will fall → skip
             proj_dir = Path(tmp) / "p"
             proj_dir.mkdir()
             config, _ = load_config(env)
@@ -162,7 +162,7 @@ class TestOnboard(unittest.TestCase):
             self.assertTrue((proj_dir / ".mcp.json").exists())
 
     def test_cmd_onboard_escalates_on_unavailable_dep(self):
-        # S9: skiller недоступен → шаг skills skipped(недоступен) → rc≠0 (не «зелёный»)
+        # S9: skiller not available → step skills skipped(not available) → rc≠0 (not «green»)
         with tempfile.TemporaryDirectory() as tmp:
             root, env = make_repo(tmp)
             _seed_config(root)
@@ -173,17 +173,17 @@ class TestOnboard(unittest.TestCase):
             self.assertNotEqual(cm.exception.code, 0)
 
     def test_cmd_onboard_allow_partial_no_escalation(self):
-        # --allow-partial: осознанный частичный онбординг не эскалирует
+        # --allow-partial: conscious partial onboarding does not escalate
         with tempfile.TemporaryDirectory() as tmp:
             root, env = make_repo(tmp)
             _seed_config(root)
             proj_dir = Path(tmp) / "p3"
             proj_dir.mkdir()
             onb.cmd_onboard(env, [str(proj_dir), "--yes", "--allow-partial"])
-            self.assertTrue(get(load_config(env)[0], "p3"))  # дошли без SystemExit
+            self.assertTrue(get(load_config(env)[0], "p3"))  # arrived without SystemExit
 
     def test_onboard_registers_namespaces(self):
-        # реестр config["namespaces"] (dict) наполняется ns'ами проекта при онбординге.
+        # registry config["namespaces"] (dict) is filling ns'ami of the project during onboarding.
         orig = onb.run_capability
         onb.run_capability = lambda *a, **k: 0
         with tempfile.TemporaryDirectory() as tmp:
@@ -205,8 +205,8 @@ class TestOnboard(unittest.TestCase):
                 onb.run_capability = orig
 
     def test_onboard_namespace_registration_idempotent(self):
-        # повторный онбординг не должен перетирать уже заданные метаданные namespace'а —
-        # setdefault, не присвоение.
+        # re-onboarding should not overwrite already defined metadata namespace'a —
+        # setdefault, not an assignment.
         orig = onb.run_capability
         onb.run_capability = lambda *a, **k: 0
         with tempfile.TemporaryDirectory() as tmp:
@@ -216,19 +216,19 @@ class TestOnboard(unittest.TestCase):
             proj_dir.mkdir()
             try:
                 config, _ = load_config(env)
-                config["namespaces"] = {"axioma": {"name": "axioma", "note": "куратор задал вручную"}}
+                config["namespaces"] = {"axioma": {"name": "axioma", "note": "curator set manually"}}
                 onb.onboard(env, config, str(proj_dir),
                            {"namespaces": ["axioma", "idemproj"], "yes": True, "dry": False})
                 cfg2, _ = load_config(env)
                 self.assertEqual(cfg2["namespaces"]["axioma"],
-                                 {"name": "axioma", "note": "куратор задал вручную"})
+                                 {"name": "axioma", "note": "curator set manually"})
                 self.assertIn("idemproj", cfg2["namespaces"])
-                # повторный прогон тем же набором — реестр не меняется
+                # rerun with the same set - the registry does not change
                 onb.onboard(env, cfg2, str(proj_dir),
                            {"namespaces": ["axioma", "idemproj"], "yes": True, "dry": False})
                 cfg3, _ = load_config(env)
                 self.assertEqual(cfg3["namespaces"]["axioma"],
-                                 {"name": "axioma", "note": "куратор задал вручную"})
+                                 {"name": "axioma", "note": "curator set manually"})
             finally:
                 onb.run_capability = orig
 
@@ -243,9 +243,9 @@ class TestOnboard(unittest.TestCase):
             try:
                 config, _ = load_config(env)
                 onb.onboard(env, config, str(proj_dir), {"yes": True, "dry": True})
-                self.assertFalse((proj_dir / ".mcp.json").exists())  # ничего не записано
+                self.assertFalse((proj_dir / ".mcp.json").exists())  # nothing recorded
                 cfg2, _ = load_config(env)
-                self.assertIsNone(get(cfg2, "d"))                    # не зарегистрирован
+                self.assertIsNone(get(cfg2, "d"))                    # not registered
             finally:
                 onb.run_capability = orig
 

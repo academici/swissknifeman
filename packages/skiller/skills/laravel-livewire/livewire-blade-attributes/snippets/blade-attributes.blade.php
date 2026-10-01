@@ -1,40 +1,40 @@
 {{-- Source: anonymized production project --}}
 {{--
-    Дельта-гочизы Livewire 3: условные/динамические атрибуты Blade-компонентов.
-    Универсальный паттерн — домены нейтральные (Order/Article/Document),
-    компонент `<x-ui.input>` / `<x-ui.button>` — замените на свой UI-kit.
+    Delta gochizy Livewire 3: conditional/dynamic attributes Blade-components.
+    Universal pattern - neutral domains (Order/Article/Document),
+    component `<x-ui.input>` / `<x-ui.button>` — replace with yours UI-kit.
 --}}
 
 {{-- ============================================================= --}}
-{{-- ПЛОХО: директивы и @js() ВНУТРИ списка атрибутов тега           --}}
-{{-- Ломает парсер компонента: атрибут не разбирается, рендер падает --}}
+{{-- BAD: directives and @js() INSIDE the tag attribute list --}}
+{{-- The component parser breaks: the attribute is not parsed, rendering crashes --}}
 {{-- ============================================================= --}}
 
-{{-- ❌ @if/@endif между атрибутами --}}
+{{-- ❌ @if/@endif between attributes --}}
 <x-ui.input
     wire:model="form.quantity"
     @if ($step) step="{{ $step }}" @endif
     placeholder="Quantity"
 />
 
-{{-- ❌ Условный wire:-атрибут на обычном теге --}}
+{{-- ❌ Conditional wire:-attribute on a regular tag --}}
 <div class="flex flex-col gap-2" @if ($sortable) wire:sortable="reorderItems" @endif>
     {{-- ... --}}
 </div>
 
-{{-- ❌ @js() в значении атрибута --}}
+{{-- ❌ @js() in the attribute value --}}
 <x-ui.button :disabled="@js($disabled)">Save</x-ui.button>
 
-{{-- ❌ Условный модификатор внутри имени атрибута wire:model --}}
+{{-- ❌ Conditional modifier inside an attribute name wire:model --}}
 <input wire:model="@if ($live) live @endif='form.title'">
 
 
 {{-- ============================================================= --}}
-{{-- ХОРОШО: атрибуты собираются заранее в @php-блоке через         --}}
-{{-- ComponentAttributeBag, затем разворачиваются одним {{ $bag }}  --}}
+{{-- GOOD: attributes are collected in advance in @php-block via --}}
+{{-- ComponentAttributeBag, then unfold in one {{ $bag }}  --}}
 {{-- ============================================================= --}}
 
-{{-- ✅ Условный атрибут через ->merge([...]) --}}
+{{-- ✅ Conditional attribute via ->merge([...]) --}}
 @php
     $inputAttributes = new \Illuminate\View\ComponentAttributeBag([
         'wire:model' => 'form.quantity',
@@ -48,7 +48,7 @@
 
 <x-ui.input {{ $inputAttributes }} />
 
-{{-- ✅ Тот же результат через массив + один конструктор Bag --}}
+{{-- ✅ Same result via array + one constructor Bag --}}
 @php
     $row = ['class' => 'flex flex-col gap-2'];
 
@@ -61,7 +61,7 @@
     {{-- ... --}}
 </div>
 
-{{-- ✅ Классы — через ->class([...]) с условными ключами --}}
+{{-- ✅ Classes - via ->class([...]) with conditional keys --}}
 @php
     $cellAttributes = (new \Illuminate\View\ComponentAttributeBag([]))
         ->class([
@@ -73,30 +73,30 @@
 
 <td {{ $cellAttributes }}>{{ $order->title }}</td>
 
-{{-- ✅ Булев атрибут — обычное PHP-выражение, без @js() --}}
+{{-- ✅ Boolean attribute - normal PHP-expression, without @js() --}}
 <x-ui.button :disabled="$disabled">Save</x-ui.button>
 
-{{-- ✅ "Атрибут есть / атрибута нет" — тернарник с null --}}
-{{--    значение null => Blade вообще не выводит атрибут --}}
+{{-- ✅ "Attribute exists / no attribute" — ternary with null --}}
+{{--    value null => Blade does not output the attribute at all --}}
 <x-ui.button :disabled="$disabled ? true : null">Save</x-ui.button>
 
 
 {{-- ============================================================= --}}
-{{-- wire:model и wire:key — корректное использование               --}}
+{{-- wire:model and wire:key — correct use --}}
 {{-- ============================================================= --}}
 
-{{-- ✅ wire:key статичен в разметке и уникален в пределах цикла.    --}}
-{{--    Префикс по типу + стабильный id модели — переживает         --}}
-{{--    переупорядочивание/удаление строк без рассинхрона DOM.       --}}
+{{-- ✅ wire:key is static in the markup and unique within a loop. --}}
+{{--    Prefix by type + stable id models - experiencing --}}
+{{--    reordering/deleting lines without out of sync DOM.       --}}
 @foreach ($orders as $order)
     <div wire:key="order-{{ $order->id }}" class="border-b">
-        {{-- модификаторы wire:model пишутся прямо в имени атрибута,  --}}
-        {{-- не через условные директивы внутри строки               --}}
+        {{-- modifiers wire:model are written directly in the attribute name, --}}
+        {{-- not via conditional directives inside a line --}}
         <x-ui.input wire:model.live.debounce.300ms="form.titles.{{ $order->id }}" />
     </div>
 @endforeach
 
-{{-- ❌ wire:key из индекса цикла — рвёт привязку при reorder/delete --}}
+{{-- ❌ wire:key from the loop index - breaks the binding when reorder/delete --}}
 @foreach ($orders as $i => $order)
     <div wire:key="row-{{ $i }}">{{-- ... --}}</div>
 @endforeach

@@ -1,84 +1,84 @@
-"""Константы maind: порты памяти, типы узлов/рёбер графа, дефолты, тайминги."""
+"""Constants maind: memory ports, node types/graph edges, defaults, timings."""
 from core import LANGUAGE_BY_TYPE as _LANGUAGE_BY_TYPE
 
-# ── память (agent-memory daemon) ───────────────────────────────────────────
+# ── memory (agent-memory daemon) ───────────────────────────────────────────
 MEMORY_HTTP_PORT = 4111
 MEMORY_STREAM_PORT = 4112
 MEMORY_VIEWER_PORT = 4113
 MEMORY_DEFAULT_HOST = "127.0.0.1"
 MEMORY_DEFAULT_URL = f"http://{MEMORY_DEFAULT_HOST}:{MEMORY_HTTP_PORT}"
 
-# Воркеры iii-* в config/memory/iii-config.yaml (для status/doctor).
+# Workers iii-* in config/memory/iii-config.yaml (for status/doctor).
 MEMORY_WORKERS = (
     "iii-http", "iii-state", "iii-queue", "iii-pubsub",
     "iii-cron", "iii-stream", "iii-observability",
 )
 
-# Бакеты памяти (scope'ы). Паритет с графом по namespace'ам: факты группы видны внутри
-# namespace и изолированы между группами.
-#   project:<id>  — приватный бакет проекта;
-#   ns:<имя>      — общий бакет namespace-группы (аналог cross-рёбер графа внутри ns);
-#   global        — вся экосистема (wildcard-инфраструктура + ecosystem-wide факты).
+# Memory buckets (scope's). Parity with graph by namespace'am: group facts are visible inside
+# namespace and isolated between groups.
+# project:<id>  — private project bucket;
+# ns:<name>      — general bucket namespace-groups (analogue cross-edges of the graph inside ns);
+# global        — entire ecosystem (wildcard-infrastructure + ecosystem-wide facts).
 GLOBAL_SCOPE = "global"
 NS_SCOPE_PREFIX = "ns:"
 
-# Digest-бюджет SessionStart: дайджест — project-only по умолчанию, ограничен
-# байтами (не только count), с per-item обрезкой. Нормы — findings/P0-rag-context-economy.md
-# (additionalContext ≤500–1500 ток/сессию; ~4 симв/ток → 4000 симв ≈ 1000–1200 ток).
+# Digest-budget SessionStart: digest - project-only default, limited
+# bytes (not only count), with per-item cropping. Norms - findings/P0-rag-context-economy.md
+# (additionalContext ≤500–1500 current/session; ~4 char/current → 4000 char ≈ 1000–1200 current).
 DIGEST_BUDGET_CHARS = 4000
 DIGEST_ITEM_MAX_CHARS = 500
-DIGEST_SHARED_MAX = 0 # project-only дефолт; shared — явно, флагом/конфигом
+DIGEST_SHARED_MAX = 0 # project-only default; shared — explicitly, by flag/config
 DIGEST_TRUNCATE_SUFFIX = "… (→ recall)"
-DIGEST_MIN_TAIL_CHARS = 150    # переполняющий item обрезаем только если остаток бюджета ≥ это
+DIGEST_MIN_TAIL_CHARS = 150    # overflowing item cut only if the remaining budget ≥ this
 
-# Бюджет ожидания cross-machine вызовов памяти (ADR-0001 P4.2). ЛЁГКИЕ — health/auth-пробник
-# (маленький ответ); ТЯЖЁЛЫЕ — export/digest (весь пул, до нескольких МБ). Измерено по каналу
-# на LAN-адресе хоста (не loopback) —;
-# дефолты держат запас НАД измеренным числом (реальный LAN/Wi-Fi добавит джиттер, которого
-# однохостовый замер не видит) — ориентир практики findings §6 (1-2с лёгкие, 5-10с тяжёлые).
+# Waiting budget cross-machine memory calls (ADR-0001 P4.2). LUNGS — health/auth-probe
+# (small answer); HEAVY - export/digest (entire pool, up to several MB). Measured per channel
+# on LAN-host address (not loopback) —;
+# defaults keep margin ABOVE measured number (real LAN/Wi-Fi will add jitter, which
+# single-host measurement does not see) — practice guide findings §6 (1-2s light, 5-10 s heavy).
 MEMORY_LIGHT_TIMEOUT_S = 3
 MEMORY_HEAVY_TIMEOUT_S = 10
 MEMORY_RETRIES = 2
 MEMORY_RETRY_BACKOFF_S = 0.5
 
-# ── граф ────────────────────────────────────────────────────────────────────
+# ── graph ────────────────────────────────────────────────────────────────────
 NODE_TYPES = {"project", "agent", "memory", "skill", "entity", "tool", "package", "doc"}
 EDGE_TYPES = {"uses", "knows", "relates_to", "belongs_to", "depends_on", "provided_by",
               "requires"}
-# Раскладка графа: федерация (граф на проект + индекс) — единственная первоклассная;
-# disabled выключает граф-команды. Движок везде stdlib (код-граф — отдельный MCP-слой
-# над КОДОМ проекта, не адаптер этого графа; см. docs/guide/code-graph.md).
+# Graph Layout: Federation (graph per project + index) — the only first-class;
+# disabled disables graph commands. The engine is everywhere stdlib (code graph - separate MCP-layer
+# above the project CODE, not the adapter of this graph; see docs/guide/code-graph.md).
 GRAPH_ADAPTERS = {"federation", "disabled"}
-# Устаревшие значения adapter — принимаются с предупреждением и нормализуются в federation.
+# Outdated values adapter — are accepted with a warning and normalized to federation.
 LEGACY_GRAPH_ADAPTERS = {"memory", "graphify", "networkx"}
 GRAPH_VERSION = 1
 
-# Код-граф (граф КОДА внутри проекта) — ПОЛИТИКА В КОНФИГЕ, не в коде. Это лишь fallback-
-# дефолт для merge_defaults (секция code_graph в .maind.json); реальные значения берутся из
-# конфига (см. .maind.example.json) — игноры/команду/промпты редактируют там, не здесь.
-# Движок по умолчанию — Serena (github.com/oraios/serena) через uvx: language-agnostic (LSP).
-# Включается на проект полем `code: true` (legacy-alias `graphify: true`).
+# Code graph (CODE graph inside the project) — POLICY IS IN THE CONFIG, not in the code. It's just fallback-
+# default for merge_defaults (section code_graph in .maind.json); real values are taken from
+# config (see .maind.example.json) — ignores/command/prompts are edited there, not here.
+# Default engine - Serena (github.com/oraios/serena) via uvx: language-agnostic (LSP).
+# Included in the project by the field `code: true` (legacy-alias `graphify: true`).
 #
-# ignores: исключают сторонние и СИМЛИНКНУТЫЕ first-party пакеты (vendor/packages) — они
-#   графятся как СВОИ проекты (иначе дубли символов и рекурсивные симлинки testbench виснут).
-# workspace_ignores: для монорепо/консьюмера, где пакеты под packages/* — их НЕ игнорим
-#   (единый граф app↔пакеты), но режем vendor и ВЛОЖЕННЫЕ **/vendor.
-# initial_prompt/workspace_prompt: нативно даются модели при активации проекта Serena.
-# Serena пиннована на тег релиза (НЕ bare-main): breaking-изменение в main не сломает
-# код-граф у всех проектов внезапно. Бамп — здесь, в ОДНОМ месте; актуальный релиз сверять
-# на github.com/oraios/serena/releases. (verified 2026-07-27: пин на commit-SHA D110 —
-# @v1.5.3/@v1.6.1 оба старше схемы .serena/project.yml, которую пишет наш провиженер
-# с ccd4505b (language_servers); стабильного тега с этой схемой у апстрима нет)
+# ignores: exclude third-party and SIMLINKED first-party packages (vendor/packages) — they
+# are listed as OWN projects (otherwise duplicate symbols and recursive symlinks testbench hang).
+# workspace_ignores: for monorepo/consumer, where are the packages under packages/* — DO NOT ignore them
+# (single graph app↔packages), but we cut it vendor and NESTED **/vendor.
+# initial_prompt/workspace_prompt: models are given natively when the project is activated Serena.
+# Serena pinned to release tag (NOT bare-main): breaking-change to main won't break
+# code graph for all projects suddenly. Bump - here, in ONE place; Check current release
+# on github.com/oraios/serena/releases. (verified 2026-07-27: pin on commit-SHA D110 —
+# @v1.5.3/@v1.6.1 both are older than schema.serena/project.yml, written by our provider
+# with ccd4505b (language_servers); upstream does not have a stable tag with this scheme)
 SERENA_SRC = "git+https://github.com/oraios/serena@026b007bb889366283c925527e9a3bab317f66c1"
-# Обязательные ключи .serena/project.yml (Serena `_from_dict` FIELDS_WITHOUT_DEFAULTS), которых
-# ожидает пиннованная выше версия — офлайновая копия факта, а не запрос к апстриму.
-# Факт снят прямым чтением исходника пина (Serena 1.6.2.dev0, пин 026b007b…):
-# serena/config/serena_config.py:341 (путь внутри uv-архива, вне этого репозитория),
-# сверка 2026-07-27. Остальные ключи
-# .serena/project.yml имеют дефолты (data.setdefault) и сюда не входят.
-# Обновляется ТЕМ ЖЕ швом, что SERENA_SRC: бампнул пин — сверь этот набор с новым
-# serena/resources/project.template.yml (или релиз-нотами схемы), иначе гейт связности
-# (codegraph.check_schema_connectivity) начнёт красить ложное расхождение или пропустит настоящее.
+# Required keys .serena/project.yml (Serena `_from_dict` FIELDS_WITHOUT_DEFAULTS), which
+# expects the version pinned above - an offline copy of the fact, and not a request to the upstream.
+# The fact was removed by directly reading the source of the pin (Serena 1.6.2.dev0, pin 026b007b…):
+# serena/config/serena_config.py:341 (path inside uv-archive, outside this repository),
+# reconciliation 2026-07-27. Other keys
+# .serena/project.yml have defaults (data.setdefault) are not included here.
+# Updated with the SAME seam as SERENA_SRC: bumped the pin - check this set with the new one
+# serena/resources/project.template.yml (or schema release notes), otherwise connectivity gate
+# (codegraph.check_schema_connectivity) will begin to paint a false discrepancy or miss the real one.
 SERENA_SCHEMA_FIELDS = frozenset({"project_name", "language_servers"})
 CODE_GRAPH_DEFAULTS = {
     "enabled_default": False,
@@ -96,40 +96,40 @@ CODE_GRAPH_DEFAULTS = {
         "serena", "project", "index", "{root}",
     ],
     "server_name": "serena",
-    "language_by_type": dict(_LANGUAGE_BY_TYPE),  # единый источник — core.project
+    "language_by_type": dict(_LANGUAGE_BY_TYPE),  # single source - core.project
     "ignores": ["vendor", "node_modules", "packages", "storage",
                 "bootstrap/cache", "public/build", "dist", ".git"],
     "workspace_ignores": ["vendor", "node_modules", "**/vendor", "**/node_modules",
                           "storage", "bootstrap/cache", "public/build", "dist", ".git"],
     "initial_prompt": (
-        "Навигацию по коду этого проекта веди через symbol-инструменты Serena "
+        "Navigate through the code of this project via symbol-tools Serena "
         "(get_symbols_overview, find_symbol, find_referencing_symbols, find_implementations) "
-        "вместо чтения файлов целиком — это точнее и экономит токены. Код связанных пакетов "
-        "экосистемы живёт в их собственных проектах; межпроектные связи — в mAInd (maind graph)."
+        "instead of reading entire files - this is more accurate and saves tokens. Related package code "
+        "ecosystems live in their own projects; inter-project communications - in mAInd (maind graph)."
     ),
     "workspace_prompt": (
-        "Этот проект — workspace: его код + локально разрабатываемые пакеты экосистемы под "
-        "packages/* образуют ЕДИНЫЙ граф. Навигацию веди symbol-инструментами Serena "
+        "This project is workspace: his code + locally developed ecosystem packages for "
+        "packages/* form a SINGLE graph. Lead the navigation symbol-tools Serena "
         "(get_symbols_overview, find_symbol, find_referencing_symbols, find_implementations). "
-        "Папки packages/* — это РЕАЛЬНЫЕ репозитории пакетов (через симлинк): найдя улучшение в "
-        "пакете, предложи его и, ПО ПОДТВЕРЖДЕНИЮ пользователя, правь прямо в packages/<пакет>/… "
-        "— изменение затронет сам пакет и всех его консьюмеров."
+        "Folders packages/* — these are REAL package repositories (via symlink): having found an improvement in "
+        "package, offer it and, BY CONFIRMATION of the user, edit directly to packages/<package>/… "
+        "— the change will affect the package itself and all its consumers."
     ),
     "pre_index": False,
     "feature_log_hook": False,
 }
 
-# perplexity-web — keyless-мост (браузерный профиль) как hub-managed MCP-сервер.
-# Раскатывается в проекты как `maind`/Serena (deploy/sync), а не вписывается вручную
-# хардкод-путём в каждый .mcp.json. Политика — секция mcp.perplexity_web конфига:
-#   enabled  — глобальный фан-аут (per-project override `perplexity_web: true|false`);
-#   pool     — модель пулов (один пул = демон+профиль+окно браузера, README пакета):
-#              "default"|<литерал> → общий пул (переиспользует текущий логин);
-#              "per-project"       → пул = id проекта (свой логин на проект);
-#              "per-namespace"     → пул = "ns-<namespace>" (логин на группу);
-#              per-project override — `perplexity_web_pool: "<имя>"`;
-#   bin      — machine-local путь к start.sh пакета (живёт в хаб-конфиге, НЕ в коде).
-#              MCP-клиенты запускают команду напрямую и не раскрывают shell-подстановки.
+# perplexity-web — keyless-bridge (browser profile) like hub-managed MCP-server.
+# Rolled out into projects like `maind`/Serena (deploy/sync), and not entered manually
+# hardcode-path to each .mcp.json. Politics - section mcp.perplexity_web config:
+# enabled  — global fan-out (per-project override `perplexity_web: true|false`);
+# pool     — pool model (one pool = demon+profile+browser window, README package):
+# "default"|<literal> → shared pool (reuses the current login);
+# "per-project"       → pool = id project (your login for the project);
+# "per-namespace"     → pool = "ns-<namespace>" (group login);
+# per-project override — `perplexity_web_pool: "<name>"`;
+# bin      — machine-local path to start.sh package (lives in the hub config, NOT in the code).
+# MCP-clients run the command directly and do not expand shell-substitutions.
 PERPLEXITY_WEB_DEFAULTS = {
     "enabled": False,
     "pool": "default",
@@ -137,39 +137,39 @@ PERPLEXITY_WEB_DEFAULTS = {
     "server_name": "perplexity-web",
 }
 
-# mcp.emit_example — default-on: рядом с реальным.mcp.json эмитить портируемый
-# .mcp.json.example с плейсхолдерами вместо machine-specific путей и вести .gitignore.
-# Единственный носитель дефолта — merge_defaults читает отсюда; opt-out — явный `false`
-# в config.json (уважается, см. mcpconfig.write_example/reconcile_gitignore).
+# mcp.emit_example — default-on: next to the real one.mcp.json issue portable
+# .mcp.json.example with placeholders instead machine-specific paths and lead .gitignore.
+# The only carrier of default is merge_defaults reads from here; opt-out — explicit `false`
+# in config.json (respected, see mcpconfig.write_example/reconcile_gitignore).
 EMIT_EXAMPLE_DEFAULT = True
 
-# Планы графа (природа связи) и источник, из которого ребро/узел получены (derive).
+# Graph Plans (nature of connection) and the source from which the edge/node received (derive).
 GRAPH_PLANES = {"code", "doc", "meta", "runtime"}
 LINK_VIA = {"code", "doc", "override", "skills"}
 
-# ── агенты ──────────────────────────────────────────────────────────────────
+# ── agents ──────────────────────────────────────────────────────────────────
 HEARTBEAT_DEFAULT_MS = 30000
 MAX_IDLE_DEFAULT_MS = 300000
-AGENT_STALE_FACTOR = 3   # пропущенных heartbeat'ов до статуса "stale"
+AGENT_STALE_FACTOR = 3   # missing heartbeat'ov to status "stale"
 
-# ── наблюдаемость ───────────────────────────────────────────────────────────
+# ── observability ───────────────────────────────────────────────────────────
 SERVICE_NAME = "maind"
 
-# ── соседние пакеты экосистемы (siblings) ────────────────────────────────────
-# Как найти лаунчер соседа: env-override · проект в config.json · path_key · bin.
-# Живёт здесь (нейтральный data-модуль), а не в orchestrate — чтобы и orchestrate
-# (run_capability), и sync (_skiller_profiles_dir) брали один источник без lazy-импорта
-# друг друга. Чистые данные, никаких зависимостей.
+# ── neighboring ecosystem packages (siblings) ────────────────────────────────────
+# How to find your neighbor's launcher: env-override · project in config.json · path_key · bin.
+# Lives here (neutral data-module), and not in orchestrate — so that orchestrate
+# (run_capability), and sync (_skiller_profiles_dir) took one source without lazy-import
+# each other. Clean data, no dependencies.
 SIBLINGS = {
     "brain": {"env": "MAIND_BRAIN_BIN", "project_id": "brain",
               "path_key": "vault_path", "bin": "bin/brain"},
-    # монорепо academici: лаунчер skiller живёт в подпакете packages/skiller/, а
-    # local_path указывает на корень репо (где .git) — отсюда вложенный bin-путь.
-    # Ключ sibling и project_id — "swissknifeman" (id проекта-репо в config.json).
+    # monorepo academici: launcher skiller lives in a subpackage packages/skiller/, a
+    # local_path points to the root of the repo (where .git) — from here nested bin-path.
+    # Key sibling and project_id — "swissknifeman" (id project-repo in config.json).
     "swissknifeman": {"env": "MAIND_SKM_BIN", "project_id": "swissknifeman",
                       "path_key": "local_path",
                       "bin": "packages/skiller/bin/skiller"},
-    # harness живёт в том же монорепо (local_path проекта-репо swissknifeman).
+    # harness lives in the same monorepo (local_path project-repo swissknifeman).
     "harness": {"env": "MAIND_HARNESS_BIN", "project_id": "swissknifeman",
                 "path_key": "local_path",
                 "bin": "packages/harness/bin/harness"},

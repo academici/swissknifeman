@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# docs-sync — собрать зонтичный сайт из per-package доков.
-# Источник истины — packages/<pkg>/docs (каждый пакет владеет своими доками);
-# сюда копируются сборочные копии docs/<pkg>/ (gitignored). VitePress видит их как
-# реальные файлы в srcDir → корректный роутинг и относительные ссылки (симлинки
-# VitePress резолвит в реальные пути вне srcDir — ломает маршруты, поэтому копия).
-# Запускается перед `vitepress build|dev` (см. packages/skiller/package.json).
+# docs-sync — assemble an umbrella site from per-package docs.
+# Source of truth - packages/<pkg>/docs (each package owns its own docks);
+# assembly copies are copied here docs/<pkg>/ (gitignored). VitePress sees them as
+# real files in srcDir → correct routing and relative links (symlinks
+# VitePress resolves to real paths outside srcDir — breaks routes, so copy).
+# Runs before `vitepress build|dev` (see packages/skiller/package.json).
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MODE="write"
@@ -17,7 +17,7 @@ fi
 
 sync_pkg() {
   local src="$ROOT/packages/$1/docs" dst="$ROOT/docs/$1"
-  [ -d "$src" ] || { echo "  нет $src — пропуск"; return; }
+  [ -d "$src" ] || { echo "  no $src — pass"; return; }
   if [ "$MODE" = "check" ]; then
     local tmp
     tmp="$(mktemp -d)"
@@ -25,27 +25,27 @@ sync_pkg() {
     rm -rf "$tmp/.vitepress"
     if [ ! -e "$dst" ]; then
       rm -rf "$tmp"
-      echo "  docs/$1 не материализован; source tree воспроизводим"
+      echo "  docs/$1 not materialized; source tree playable"
       return
     fi
     if ! diff -qr "$tmp" "$dst" >/dev/null; then
-      echo "  docs/$1 устарел; запустите bash scripts/docs-sync.sh" >&2
+      echo "  docs/$1 is deprecated; run bash scripts/docs-sync.sh" >&2
       rm -rf "$tmp"
       return 1
     fi
     rm -rf "$tmp"
-    echo "  docs/$1 свеж"
+    echo "  docs/$1 fresh"
     return
   fi
   rm -rf "$dst"
   mkdir -p "$dst"
   cp -r "$src/." "$dst/"
-  rm -rf "$dst/.vitepress"   # вложенный per-package vitepress в агрегате не нужен
+  rm -rf "$dst/.vitepress"   # nested per-package vitepress is not needed in the unit
   echo "  docs/$1 ← packages/$1/docs"
 }
 echo "docs-sync:"
 sync_pkg skiller
 sync_pkg harness
-sync_pkg maind   # внутренние ссылки maind-доков относительные → работают и standalone, и в агрегате
-sync_pkg analyst # continuous learning; внутренние ссылки относительные (standalone + агрегат)
+sync_pkg maind   # internal links maind-docks relative → work and standalone, and in the unit
+sync_pkg analyst # continuous learning; internal links are relative (standalone + unit)
 sync_pkg task

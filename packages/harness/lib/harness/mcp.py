@@ -24,7 +24,7 @@ def parse_mcp_flag(raw):
 def block_mcp(env, target, servers, dry):
     """Internal documentation."""
     servers = servers or []
-    print(f"MCP-серверы: {', '.join(servers) if servers else 'пропуск'}")
+    print(f"MCP-servers: {', '.join(servers) if servers else 'pass'}")
     if not servers:
         return
     f = target / ".mcp.json"
@@ -33,22 +33,22 @@ def block_mcp(env, target, servers, dry):
         try:
             data = json.loads(f.read_text(encoding="utf-8"))
         except json.JSONDecodeError as e:
-            die(f"{f}: невалидный JSON: {e}")
+            die(f"{f}: invalid JSON: {e}")
     mcp = data.setdefault("mcpServers", {})
     added = []
     for name in servers:
         preset = env.mcp_dir / f"{name}.json"
         if not preset.exists():
-            warn(f"  нет пресета MCP '{name}' ({preset}) — пропуск")
+            warn(f"  no preset MCP '{name}' ({preset}) — pass")
             continue
         if name in mcp:
-            print(f"  MCP '{name}' уже в .mcp.json — пропуск")
+            print(f"  MCP '{name}' is already in .mcp.json — pass")
             continue
         mcp[name] = json.loads(preset.read_text(encoding="utf-8"))
         added.append(name)
     if added:
         write_json(f, data, dry)
-        print(f"  добавлены MCP: {', '.join(added)}")
+        print(f"  added MCP: {', '.join(added)}")
 
 
 def cmd_mcp(env, argv):
@@ -63,7 +63,7 @@ def cmd_mcp(env, argv):
             print(name)
         return
     if not opts["target"]:
-        die("нужен --target P (или --list)")
+        die("needed --target P (or --list)")
     from pathlib import Path
     block_mcp(env, Path(opts["target"]).expanduser(),
               parse_mcp_flag(opts["mcp"]), opts["dry_run"])

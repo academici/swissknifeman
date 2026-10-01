@@ -1,23 +1,23 @@
-"""analyst suggest (P4) — cross-project паттерн → ЧЕРНОВИК скилла (draft SKILL.ru.md).
+"""analyst suggest (P4) — cross-project pattern → DRAFT skill (draft SKILL.ru.md).
 
-Детерминированный (stdlib, on-demand — без демона) мост между `scan` и переиспользуемым
-скиллом. Читает ТОЛЬКО индекс паттернов (`~/.swissknifeman/analyst/index/by_pattern/<id>.json`,
-пишет его `scan`) и генерит staged-черновик в `~/.swissknifeman/analyst/drafts/<pattern_id>/`:
+Deterministic (stdlib, on-demand — without daemon) bridge between `scan` and reusable
+skill. Reads the pattern index ONLY (`~/.swissknifeman/analyst/index/by_pattern/<id>.json`,
+writes it `scan`) and generates staged-draft in `~/.swissknifeman/analyst/drafts/<pattern_id>/`:
 
     drafts/<pattern_id>/
-      SKILL.ru.md      — RU-источник-ЗАГОТОВКА (правит человек) с frontmatter-скелетом
-      draft.meta.json  — провенанс-паспорт черновика + seed_sha256 (детект ручных правок)
+      SKILL.ru.md      — RU-source-BLANK (ruled by man) with frontmatter-skeleton
+      draft.meta.json  — provenance passport of the draft + seed_sha256 (detection of manual edits)
 
-ИНВАРИАНТ (analyst): авто-запись в скиллы ЗАПРЕЩЕНА — suggest НЕ пишет в skills/, НЕ генерит
-EN-канон (это человек промтом skiller после доработки), НЕ регистрирует, НЕ раскрывает raw/секреты.
-Промоут черновика в бакет — руками человека (см. handoff в выводе). Приватность СТРУКТУРНА:
-индекс by_pattern/ — уже абстрагированная проекция (trigger/action/kind), сырья в нём нет.
+INVARIANT (analyst): auto-recording to skills is PROHIBITED — suggest does NOT write to skills/, DOES NOT generate
+EN-canon (this is a casual person skiller after modification), DOES NOT register, DOES NOT disclose raw/secrets.
+Promoting a draft into a bucket - by human hands (see handoff in the output). Privacy IS STRUCTURED:
+index by_pattern/ — already abstracted projection (trigger/action/kind), there are no raw materials in it.
 
-Модель кода (как digest/scan): ЧИСТЫЕ генераторы (pattern→текст) + writer с I/O в cmd_suggest.
+Code model (like digest/scan): PURE generators (pattern→text) + writer with I/O in cmd_suggest.
 
-Замечание по детерминизму: провенанс-штамп в SKILL.ru.md НЕ несёт timestamp (он живёт только в
-draft.meta.json) — иначе тело было бы недетерминированным и seed_sha256-детект ручных правок (D6)
-ложно срабатывал бы на каждый ре-suggest.
+A note on determinism: provenance stamp in SKILL.ru.md does NOT carry timestamp (he lives only in
+draft.meta.json) — otherwise the body would be non-deterministic and seed_sha256-detection of manual edits (D6)
+would trigger falsely for every re-suggest.
 """
 import hashlib
 import re
@@ -26,16 +26,16 @@ from .common import (atomic_write_json, atomic_write_text, die, now_iso,
                      parse_args, safe_load_json, warn)
 
 DRAFT_SCHEMA_VERSION = 1
-RESERVED_NAME_WORDS = ("claude", "anthropic")   # офиц. запрет в name скиллов Claude Code
-NAME_MAX = 64                                    # офиц. лимит name (lowercase/цифры/дефисы)
-DESC_SOFT_MAX = 150                              # мягкий таргет резидентного description
+RESERVED_NAME_WORDS = ("claude", "anthropic")   # official. ban in name skills Claude Code
+NAME_MAX = 64                                    # official. limit name (lowercase/numbers/hyphens)
+DESC_SOFT_MAX = 150                              # soft target resident description
 
 
-# ── чистые генераторы (без I/O/часов) ────────────────────────────────────────
+# ── pure generators (without I/O/hours) ────────────────────────────────────────
 def _slug_name(representative):
-    """kebab-name-кандидат из representative (trigger→action fallback): lowercase, только
-    [a-z0-9-], без ведущих/хвостовых дефисов, без reserved (claude/anthropic), ≤64. Человек
-    финализирует так, чтобы name == имя финального каталога скилла."""
+    """kebab-name-candidate from representative (trigger→action fallback): lowercase, only
+    [a-z0-9-], without leading/trailing hyphens, without reserved (claude/anthropic), ≤64. Man
+    finalizes so that name == name of the final skill directory."""
     base = (representative.get("trigger") or representative.get("action") or "skill").lower()
     parts = [p for p in re.sub(r"[^a-z0-9]+", "-", base).split("-")
              if p and p not in RESERVED_NAME_WORDS]
@@ -44,31 +44,31 @@ def _slug_name(representative):
 
 
 def _draft_description(representative):
-    """RU-заготовка description (≤~150 симв, мягкий таргет; правит человек). Экранируем `\\` и `"`
-    — description кладётся в YAML double-quoted скаляр (напр. `App\\Domain` иначе битый YAML)."""
+    """RU-blank description (≤~150 char, soft target; man rules). Screening `\\` and `"`
+    — description is placed in YAML double-quoted scalar (e.g. `App\\Domain` otherwise broken YAML)."""
     action = (representative.get("action") or "").strip()
     trigger = (representative.get("trigger") or "").strip()
-    body = " — ".join(x for x in (action, trigger) if x) or "переиспользуемый урок"
+    body = " — ".join(x for x in (action, trigger) if x) or "reused lesson"
     if len(body) > DESC_SOFT_MAX:
         body = body[:DESC_SOFT_MAX - 1].rstrip() + "…"
     return body.replace("\\", "\\\\").replace('"', '\\"')
 
 
 def _provenance_stamp(pattern):
-    """Инертный HTML-штамп провенанса в тело SKILL.ru.md (БЕЗ timestamp — детерминизм).
-    Переносится с файлом; человек снимает перед промоутом. SSOT провенанса — draft.meta.json."""
+    """Inert HTML-provenance stamp in the body SKILL.ru.md (WITHOUT timestamp — determinism).
+    Carried with the file; a man films before a promotion. SSOT provenance — draft.meta.json."""
     projs = ", ".join(pattern.get("projects") or [])
-    return (f"<!-- analyst-provenance: сгенерировано `analyst suggest` из pattern "
+    return (f"<!-- analyst-provenance: generated `analyst suggest` from pattern "
             f"{pattern['pattern_id']} · ns {pattern['namespace']} · "
-            f"{pattern.get('weight', 0)} проект(ов) ({projs}) · {pattern.get('lessons', 0)} урок(ов). "
-            f"Источник: index/by_pattern/{pattern['pattern_id']}.json. "
-            f"УДАЛИ этот блок перед промоутом. -->")
+            f"{pattern.get('weight', 0)} project(ov) ({projs}) · {pattern.get('lessons', 0)} lesson(ov). "
+            f"Source: index/by_pattern/{pattern['pattern_id']}.json. "
+            f"REMOVE this block before promotion. -->")
 
 
 def build_skill_ru(pattern, bucket):
-    """ЧИСТО: полный текст заготовки SKILL.ru.md (frontmatter-скелет + провенанс + тело).
-    Детерминирован от (pattern, bucket) — timestamp сюда НЕ попадает (см. модульный docstring).
-    Тело абстрагировано: только representative + members-триггеры из индекса (raw в индексе нет)."""
+    """CLEAR: full text of the blank SKILL.ru.md (frontmatter-skeleton + provenance + body).
+    Determined from (pattern, bucket) — timestamp does NOT go here (see modular docstring).
+    Body abstracted: only representative + members-triggers from index (raw not in the index)."""
     rep = pattern.get("representative") or {}
     name = _slug_name(rep)
     projs = pattern.get("projects") or []
@@ -77,8 +77,8 @@ def build_skill_ru(pattern, bucket):
         f"name: {name}",
         f"bucket: {bucket}",
         "version: 0.1.0",
-        f'description: "{_draft_description(rep)} (черновик; ≤150 симв, правит человек)"',
-        "risk: read                     # TODO: уточни (read|draft|write|external)",
+        f'description: "{_draft_description(rep)} (draft; ≤150 char, ruled by man)"',
+        "risk: read                     # TODO: specify (read|draft|write|external)",
         'persona: ""',
         "tags: []",
         "requires: []",
@@ -90,25 +90,25 @@ def build_skill_ru(pattern, bucket):
     body = [
         _provenance_stamp(pattern),
         "",
-        f"# {heading} (черновик)",
+        f"# {heading} (draft)",
         "",
-        "## Контекст (когда применять)",
-        f"Паттерн повторился в **{pattern.get('weight', len(projs))} проектах** "
+        "## Context (when to use)",
+        f"The pattern was repeated in **{pattern.get('weight', len(projs))} projects** "
         f"namespace `{pattern['namespace']}`: {', '.join(projs)}.",
         f"- **trigger:** {rep.get('trigger') or '—'}",
         f"- **action:**  {rep.get('action') or '—'}",
         f"- **kind:**    {rep.get('kind') or '—'}",
         "",
-        "## Наблюдённые экземпляры (абстрагировано)",
+        "## Observed instances (abstracted)",
     ]
     for m in pattern.get("members") or []:
         body.append(f"- `{m.get('project', '—')}` — {m.get('trigger') or '—'}")
     body += [
         "",
-        "## Алгоритм",
-        "TODO — оформи action в переиспользуемые шаги.",
+        "## Algorithm",
+        "TODO — issue action into reused steps.",
         "",
-        "## Чеклист",
+        "## Checklist",
         "TODO",
         "",
     ]
@@ -116,12 +116,12 @@ def build_skill_ru(pattern, bucket):
 
 
 def _seed_hash(text):
-    """sha256-хэш заготовки — маркер «сгенерённого» состояния для детекта ручных правок."""
+    """sha256-blank hash - marker «generated» states for detecting manual edits."""
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def build_meta(pattern, bucket, seed_sha256, generated_at):
-    """ЧИСТО: провенанс-паспорт draft.meta.json (SSOT провенанса черновика)."""
+    """CLEAR: provenance passport draft.meta.json (SSOT draft provenance)."""
     return {
         "schema_version": DRAFT_SCHEMA_VERSION,
         "generated_by": "analyst suggest",
@@ -138,20 +138,20 @@ def build_meta(pattern, bucket, seed_sha256, generated_at):
 
 
 def filter_by_weight(patterns, min_weight):
-    """ЧИСТО: паттерны с weight ≥ min_weight (None → без фильтра). Порядок сохраняется."""
+    """PURE: patterns with weight ≥ min_weight (None → without filter). The order is maintained."""
     if min_weight is None:
         return list(patterns)
     return [p for p in patterns if p.get("weight", 0) >= min_weight]
 
 
-# ── чтение индекса паттернов (I/O, read-only) ────────────────────────────────
+# ── reading pattern index (I/O, read-only) ────────────────────────────────
 def _index_dir(env):
     return env.state_dir / "index" / "by_pattern"
 
 
 def load_patterns(env):
-    """Полные dict'ы паттернов из index/by_pattern/*.json, отсортированы по pattern_id
-    (детерминизм). Битый JSON / без pattern_id|namespace → SKIP (как list_existing_patterns)."""
+    """Full dict's patterns from index/by_pattern/*.json, sorted by pattern_id
+    (determinism). Broken JSON / without pattern_id|namespace → SKIP (like list_existing_patterns)."""
     idx_dir = _index_dir(env)
     out = []
     if not idx_dir.is_dir():
@@ -164,7 +164,7 @@ def load_patterns(env):
 
 
 def load_pattern(env, pattern_id):
-    """Один паттерн по id или None."""
+    """One pattern per id or None."""
     data = safe_load_json(_index_dir(env) / f"{pattern_id}.json", None)
     if isinstance(data, dict) and data.get("pattern_id") and data.get("namespace"):
         return data
@@ -172,7 +172,7 @@ def load_pattern(env, pattern_id):
 
 
 def list_draft_ids(env):
-    """pattern_id существующих черновиков (drafts/<id>/ с draft.meta.json), отсортировано."""
+    """pattern_id existing drafts (drafts/<id>/ with draft.meta.json), sorted."""
     drafts = env.state_dir / "drafts"
     if not drafts.is_dir():
         return []
@@ -181,20 +181,20 @@ def list_draft_ids(env):
 
 
 def orphan_draft_ids(env, current_ids):
-    """Черновики, чей паттерн исчез из индекса (current_ids). Для WARN — НЕ удаляем (D6:
-    черновик человеко-редактируем, авто-delete = потеря труда; ≠ scan-prune)."""
+    """Drafts whose pattern has disappeared from the index (current_ids). For WARN — DO NOT delete (D6:
+    draft human-editable, auto-delete = loss of labor; ≠ scan-prune)."""
     return [d for d in list_draft_ids(env) if d not in set(current_ids)]
 
 
-# ── writer с edit-safety (I/O) ───────────────────────────────────────────────
+# ── writer with edit-safety (I/O) ───────────────────────────────────────────────
 def write_draft(env, pattern, bucket, *, force=False):
-    """Записать/обновить черновик паттерна в drafts/<id>/. Edit-safe (D6):
-    - каталога/файла нет           → создать (status="created");
-    - тело совпадает с генерённым   → нечего менять (status="unchanged");
-    - тело == прошлый seed (не правили) либо --force → перегенерить (status="updated"/"forced");
-    - тело != прошлый seed (правили руками) → тело НЕ трогаем, обновляем лишь провенанс meta
+    """Write/update draft pattern in drafts/<id>/. Edit-safe (D6):
+    - directory/no file           → create (status="created");
+    - body matches the generated one   → nothing to change (status="unchanged");
+    - body == past seed (did not correct) or --force → regenerate (status="updated"/"forced");
+    - body != past seed (ruled with their hands) → we DO NOT touch the body, we only update the provenance meta
       (status="skipped-edited").
-    Возвращает (status, ru_path). Атомарно; каталоги создаются."""
+    Returns (status, ru_path). Atomic; directories are created."""
     pid = pattern["pattern_id"]
     draft_dir = env.state_dir / "drafts" / pid
     ru_path = draft_dir / "SKILL.ru.md"
@@ -219,17 +219,17 @@ def write_draft(env, pattern, bucket, *, force=False):
         _persist(new_seed)
         return ("forced" if force and _seed_hash(current) != prev_seed else "updated"), ru_path
 
-    # правили руками → тело не перезаписываем; освежаем только провенанс-паспорт (seed = прошлый,
-    # чтобы детект правок продолжал работать против последнего СГЕНЕРЁННОГО состояния).
+    # ruled with their hands → the body is not overwritten; We update only the provenance passport (seed = past,
+    # so that the edit detection continues to work against the last GENERATED state).
     atomic_write_json(meta_path, build_meta(pattern, bucket, prev_seed, now_iso()))
     return "skipped-edited", ru_path
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
 def _resolve_bucket(env, opts):
-    """bucket из --bucket или плейсхолдер TODO. namespace→bucket авто-маппинга НЕТ
-    (namespace — изоляция, bucket — тема). Возвращает (bucket, hint[]): hint — доступные
-    бакеты из реестра skiller (best-effort, если достижим), для подсказки человеку."""
+    """bucket from --bucket or placeholder TODO. namespace→bucket NO auto-mapping
+    (namespace — insulation, bucket — topic). Returns (bucket, hint[]): hint — available
+    buckets from the registry skiller (best-effort, if reachable), to give a hint to a person."""
     if opts["bucket"]:
         return opts["bucket"], []
     hint = []
@@ -241,14 +241,14 @@ def _resolve_bucket(env, opts):
 
 
 def _handoff_lines(env, pid, bucket, name):
-    """Точная (repo-grounded) последовательность промоута черновика в скилл — печатается
-    человеку. НЕ `skiller integrate` (тот вшивает скиллы В проект, не регистрирует новый)."""
+    """Accurate (repo-grounded) sequence of draft promotion in skill - printed
+    person. NOT `skiller integrate` (he sews skills into the project, does not register a new one)."""
     b = bucket if bucket != "TODO" else "<bucket>"
     return [
-        f"  Черновик: {env.state_dir / 'drafts' / pid / 'SKILL.ru.md'}",
-        "  Промоут в скилл — человек (analyst НЕ пишет в skills/, НЕ генерит EN, НЕ регистрирует):",
-        f"    1. mkdir -p <skiller>/skills/{b}/{name}/  и перенеси туда SKILL.ru.md (name == каталог)",
-        "    2. сгенерируй EN-канон: промт packages/skiller/prompts/generate/claude-canon-from-ru.md → SKILL.md",
+        f"  Draft: {env.state_dir / 'drafts' / pid / 'SKILL.ru.md'}",
+        "  Promotion in skill - human (analyst does NOT write to skills/, DOES NOT generate EN, DOES NOT register):",
+        f"    1. mkdir -p <skiller>/skills/{b}/{name}/  and move it there SKILL.ru.md (name == directory)",
+        "    2. generate EN-canon: promt packages/skiller/prompts/generate/claude-canon-from-ru.md → SKILL.md",
         "    3. bash packages/skiller/scripts/check-translations.sh --stamp",
         "    4. bash packages/skiller/scripts/validate.sh",
         "    5. skiller registry",
@@ -257,7 +257,7 @@ def _handoff_lines(env, pid, bucket, name):
 
 def cmd_suggest(env, argv):
     """analyst suggest <pattern_id> | --all [--bucket B] [--min-weight N] [--dry-run] [--json] [--force]
-    — cross-project паттерн (index/by_pattern/) → ЧЕРНОВИК SKILL.ru.md в ~/.swissknifeman/analyst/drafts/."""
+    — cross-project pattern (index/by_pattern/) → DRAFT SKILL.ru.md in ~/.swissknifeman/analyst/drafts/."""
     import json
     opts, pos = parse_args(argv, {"--all": "bool", "--bucket": "str", "--min-weight": "str",
                                   "--dry-run": "bool", "--json": "bool", "--force": "bool"},
@@ -265,38 +265,38 @@ def cmd_suggest(env, argv):
     if opts["help"] or (not pos and not opts["all"]):
         print("analyst suggest <pattern_id> | --all [--bucket B] [--min-weight N] "
               "[--dry-run] [--json] [--force]\n"
-              "  Cross-project паттерн → ЧЕРНОВИК SKILL.ru.md в ~/.swissknifeman/analyst/drafts/.\n"
-              "  НЕ пишет в skills/, НЕ генерит EN, НЕ регистрирует. Промоут — человек.\n"
-              "  --all по всем паттернам; --min-weight N — только weight≥N; --force — перезаписать\n"
-              "  черновик, правленный вручную; --dry-run/--json — без записи.")
+              "  Cross-project pattern → DRAFT SKILL.ru.md in ~/.swissknifeman/analyst/drafts/.\n"
+              "  does NOT write to skills/, DOES NOT generate EN, DOES NOT register. Promot is a person.\n"
+              "  --all for all patterns; --min-weight N — only weight≥N; --force — overwrite\n"
+              "  draft, edited by hand; --dry-run/--json — without entry.")
         return
     if pos and opts["all"]:
-        die("укажи <pattern_id> ЛИБО --all, не оба")
+        die("indicate <pattern_id> OR --all, not both")
 
     min_weight = None
     if opts["min_weight"]:
         try:
             min_weight = int(opts["min_weight"])
         except ValueError:
-            die(f"--min-weight ждёт число, получено: {opts['min_weight']}")
+            die(f"--min-weight is waiting for a number, received: {opts['min_weight']}")
 
     if opts["all"]:
         patterns = filter_by_weight(load_patterns(env), min_weight)
     else:
         p = load_pattern(env, pos[0])
         if p is None:
-            die(f"паттерн не найден: {pos[0]} (см. analyst scan — index/by_pattern/)")
+            die(f"pattern not found: {pos[0]} (see analyst scan — index/by_pattern/)")
         patterns = filter_by_weight([p], min_weight)
 
     bucket, bucket_hint = _resolve_bucket(env, opts)
 
-    # сироты (черновик есть, паттерн исчез) — только при полном обзоре (--all); WARN, не delete.
+    # orphans (there is a draft, the pattern has disappeared) — full view only (--all); WARN, not delete.
     orphans = orphan_draft_ids(env, [p["pattern_id"] for p in load_patterns(env)]) if opts["all"] else []
 
     results = []
     for p in patterns:
         name = _slug_name(p.get("representative") or {})
-        if opts["dry_run"]:            # только dry-run подавляет запись; --json пишет (как scan)
+        if opts["dry_run"]:            # only dry-run suppresses writing; --json writes (like scan)
             status = "dry-run"
         else:
             status, _ = write_draft(env, p, bucket, force=opts["force"])
@@ -313,26 +313,26 @@ def cmd_suggest(env, argv):
         return
 
     if not patterns:
-        print("\nanalyst suggest — подходящих паттернов нет "
-              + (f"(weight≥{min_weight})" if min_weight is not None else "(index/by_pattern/ пуст — запусти analyst scan)")
+        print("\nanalyst suggest — there are no suitable patterns "
+              + (f"(weight≥{min_weight})" if min_weight is not None else "(index/by_pattern/ empty - run analyst scan)")
               + "\n")
         return
 
-    verb = "черновиков к записи (dry-run)" if opts["dry_run"] else "черновик(ов)"
+    verb = "drafts for entry (dry-run)" if opts["dry_run"] else "draft(ov)"
     print(f"\nanalyst suggest — {len(results)} {verb}"
           + (f" · bucket={bucket}" if bucket != "TODO" else "") + "\n")
     for r in results:
         print(f"  ⚑ [{r['namespace']}] {r['pattern_id']}  · weight {r['weight']} · "
-              f"name-кандидат: {r['name']}  ({r['status']})")
+              f"name-candidate: {r['name']}  ({r['status']})")
     if bucket == "TODO":
-        tip = (", ".join(bucket_hint[:12]) + ", …") if bucket_hint else "см. skiller buckets.json"
-        print(f"\n  bucket не задан — выбери человеком (--bucket B). Доступные: {tip}")
-    # handoff — по первому черновику как образец (для --all детали идентичны, каталоги свои).
+        tip = (", ".join(bucket_hint[:12]) + ", …") if bucket_hint else "see skiller buckets.json"
+        print(f"\n  bucket not specified - select by person (--bucket B). Available: {tip}")
+    # handoff — based on the first draft as a sample (for --all details are identical, catalogs are their own).
     print()
     for line in _handoff_lines(env, results[0]["pattern_id"], bucket, results[0]["name"]):
         print(line)
     if orphans:
-        warn(f"осиротевшие черновики (паттерн исчез, НЕ удалены — правь/чисти вручную): {', '.join(orphans)}")
+        warn(f"orphaned drafts (pattern disappeared, NOT deleted - correct/clean manually): {', '.join(orphans)}")
     if opts["dry_run"]:
-        print("\n  (dry-run — ничего не записано)")
+        print("\n  (dry-run — nothing recorded)")
     print()

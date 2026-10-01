@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schema/swissknife.schema.json",
   "title": "swissknifeman project config (.swissknife.json)",
-  "description": "Лёгкий конфиг проекта: выбор бакетов/исключений/профиля для каналов connect (bucket-granular) и legacy vendor. Vendor-режим `skiller sync` использует отдельный, расширенный .swissknifeman/config.json (см. swissknifeman-config.schema.json). Ключи держатся в синхроне с CONFIG_KEYS (lib/skiller/common.py) — гейт tests/test_schema.py и skiller doctor.",
+  "description": "Easy project config: selecting buckets/exceptions/profile for channels connect (bucket-granular) and legacy vendor. Vendor-mode `skiller sync` uses a separate, extended .swissknifeman/config.json (see swissknifeman-config.schema.json). Keys are kept in sync with CONFIG_KEYS (lib/skiller/common.py) — gate tests/test_schema.py and skiller doctor.",
   "type": "object",
   "additionalProperties": false,
   "patternProperties": {
@@ -11,43 +11,43 @@
   "properties": {
     "project_type": {
       "type": "string",
-      "description": "Профиль типа проекта (profiles/<id>.json): laravel-project, php-package, obsidian-vault, standalone и т.д. Валидируется по фактическому набору профилей."
+      "description": "Project Type Profile (profiles/<id>.json): laravel-project, php-package, obsidian-vault, standalone etc. Validated against an actual set of profiles."
     },
     "buckets": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Бакеты скиллов для раздачи."
+      "description": "Skill buckets for distribution."
     },
     "plugins": {
       "type": "array",
       "items": {"type": "string"},
-      "description": "Точный project-local набор marketplace-плагинов для connect; null/отсутствует — выбирать по buckets/profile/autodetect."
+      "description": "Accurate project-local set marketplace-plugins for connect; null/missing - select by buckets/profile/autodetect."
     },
     "exclude": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Исключить скиллы. Skill-granular в vendor; в connect (плагины) игнорируется."
+      "description": "Eliminate skills. Skill-granular in vendor; in connect (plugins) is ignored."
     },
     "presets": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Именованные кластеры скиллов (presets/<name>.json)."
+      "description": "Named skill clusters (presets/<name>.json)."
     },
     "skills_path": {
       "type": "string",
-      "description": "Override каталога скиллов (напр. .cursor/skills для Cursor)."
+      "description": "Override skills catalog (e.g. .cursor/skills for Cursor)."
     },
     "agent": {
       "type": "string",
       "enum": ["claude", "cursor", "generic"],
-      "description": "Целевой агент. Дефолтный skills_path: claude→.claude/skills, cursor→.cursor/skills, generic→.ai/skills."
+      "description": "Target agent. Default skills_path: claude→.claude/skills, cursor→.cursor/skills, generic→.ai/skills."
     },
     "providers": {
       "type": "object",
-      "description": "Опциональный provider-config v1.0.0; runtime resolution выполняет shared core resolver."
+      "description": "Optional provider-config v1.0.0; runtime resolution executes shared core resolver."
     },
     "memory_brain": {
-      "description": "Brain-валт (опционально). Строка = путь (обратная совместимость: скармливается memory-хуку). Объект = doc-sync: path + правила синхронизации BRAIN↔проект.",
+      "description": "Brain-valt (optional). String = path (backward compatibility: fed memory-hook). Object = doc-sync: path + synchronization rules BRAIN↔project.",
       "oneOf": [
         { "type": "string" },
         {
@@ -57,26 +57,26 @@
           "properties": {
             "path": {
               "type": "string",
-              "description": "Путь к Brain-валту."
+              "description": "Path to Brain-valtu."
             },
             "sync": {
               "type": "object",
               "additionalProperties": false,
-              "description": "Правила doc-sync между BRAIN и проектом.",
+              "description": "Rules doc-sync between BRAIN and the project.",
               "properties": {
                 "direction": {
                   "type": "string",
                   "enum": ["push", "pull", "bidirectional"],
-                  "description": "Направление синхронизации: push=проект→BRAIN, pull=BRAIN→проект, bidirectional=оба."
+                  "description": "Sync direction: push=project→BRAIN, pull=BRAIN→project, bidirectional=both."
                 },
                 "on_integrate": {
                   "type": "boolean",
-                  "description": "Выполнять pull при integrate (BRAIN→проект)."
+                  "description": "Execute pull when integrate (BRAIN→project)."
                 },
                 "patterns": {
                   "type": "array",
                   "items": { "type": "string" },
-                  "description": "glob-паттерны файлов для синхронизации (относительно корня BRAIN/проекта)."
+                  "description": "glob-file patterns for synchronization (relative to root BRAIN/project)."
                 }
               }
             }
@@ -87,25 +87,25 @@
     "coordinator_ignore": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Опционально."
+      "description": "Optional."
     },
     "shape": {
       "type": "string",
       "enum": ["backend", "frontend", "fullstack"],
-      "description": "Форма проекта (профиль каркаса агентов)."
+      "description": "Project Form (agent framework profile)."
     },
     "stacks": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Стеки проекта, напр. ['laravel', 'vue']."
+      "description": "Project stacks, e.g. ['laravel', 'vue']."
     },
     "skills_map": {
       "type": "object",
-      "description": "Зарезервировано: домен→скиллы для преднагрузки ролей под стек (ещё не реализовано)."
+      "description": "Reserved: domain→skills for preloading roles under the stack (not yet implemented)."
     },
     "policy_profile": {
       "type": "string",
-      "description": "Ожидаемый policy-профиль настроек Claude Code: harness doctor --settings сверяет эффективную конфигурацию слоёв с профилем configs/claude-code/policy/<name>.json (напр. max-permissive, base). Дрейф = находка. Дом декларации — здесь, а не в .claude/settings.json."
+      "description": "Expected policy-settings profile Claude Code: harness doctor --settings checks the effective configuration of layers against the profile configs/claude-code/policy/<name>.json (e.g. max-permissive, base). Drift = find. The home of the declaration is here, not in.claude/settings.json."
     }
   }
 }

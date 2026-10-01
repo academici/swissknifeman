@@ -32,7 +32,7 @@ def resolve_plan_dir(repo_root, plan_id):
     if archived.is_dir():
         return archived
     raise FileNotFoundError(
-        f"план {plan_id} не найден ни в {live}, ни в {archived}")
+        f"plan {plan_id} not found in any {live}, neither {archived}")
 
 
 def sibling_bin(pkg, *, env_var=None, monorepo_root=None, use_path=True):

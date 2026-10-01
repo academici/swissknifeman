@@ -3,12 +3,12 @@
   "snippets": [
     {
       "file": "prettier-config.json",
-      "description": "Prettier-конфиг Spatie-стиля: tabWidth 4, printWidth 120, singleQuote",
+      "description": "Prettier-config Spatie-style: tabWidth 4, printWidth 120, singleQuote",
       "tags": ["prettier", "config", "formatting"]
     },
     {
       "file": "style-examples.ts",
-      "description": "Примеры до/после: const/let, строгое ===, function vs стрелочные, shorthand, деструктуризация, имена, импорты",
+      "description": "Examples before/after: const/let, strict ===, function vs arrows, shorthand, destructuring, names, imports",
       "tags": ["typescript", "examples", "spatie"]
     }
   ]

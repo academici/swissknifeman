@@ -3,12 +3,12 @@
   "snippets": [
     {
       "file": "pull-request-template.md",
-      "description": "Шаблон тела PR для .github/PULL_REQUEST_TEMPLATE.md: Summary/Changes/Breaking/Testing/Checklist/Related Issues",
+      "description": "Body Template PR for .github/PULL_REQUEST_TEMPLATE.md: Summary/Changes/Breaking/Testing/Checklist/Related Issues",
       "tags": ["github", "pr", "template"]
     },
     {
       "file": "issue-templates.md",
-      "description": "Шаблоны bug_report/feature_request для .github/ISSUE_TEMPLATE/ + config.yml с запретом пустых Issues",
+      "description": "Templates bug_report/feature_request for .github/ISSUE_TEMPLATE/ + config.yml with ban on empty Issues",
       "tags": ["github", "issue", "template"]
     }
   ]

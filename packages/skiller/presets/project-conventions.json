@@ -1,6 +1,6 @@
 {
   "name": "project-conventions",
-  "description": "Конвенции проекта: git-коммиты, нейминг, стиль письма, карта проекта, реестр зависимостей, SSOT скиллов",
+  "description": "Project conventions: git-commits, naming, writing style, project map, dependency registry, SSOT skills",
   "include": [
     "general/git-commit-rules",
     "general/naming-conventions",

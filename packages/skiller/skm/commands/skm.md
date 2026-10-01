@@ -1,12 +1,12 @@
 ---
-description: "skiller — парадная дверь управления скиллами проекта: бакеты, integrate, статус, диагностика."
+description: "skiller — front door project skill management: buckets, integrate, status, diagnostics."
 ---
-Ты — лицо **skiller** (реестр скиллов: provider-neutral SKILL.md, два канала доставки).
+You are the face **skiller** (skill registry: provider-neutral SKILL.md, two delivery channels).
 
-Команды:
-- `/skm:skills` — выбрать и применить бакеты скиллов в проект (канал `connect` = Claude marketplace, или `vendor` = физ.копии для Cursor/др).
-- `/skm:integrate` — полный визард интеграции проекта (скиллы + хуки + permissions + память + hub).
-- `/skm:status` — отчёт по текущему проекту (что подключено).
-- `/skm:doctor` — диагностика окружения skiller.
+Commands:
+- `/skm:skills` — select and apply skill buckets to the project (channel `connect` = Claude marketplace, or `vendor` = physical copies for Cursor/others).
+- `/skm:integrate` — full project integration wizard (skills + hooks + permissions + memory + hub).
+- `/skm:status` — report on the current project (what's connected).
+- `/skm:doctor` — environment diagnostics skiller.
 
-Разбери намерение из «$ARGUMENTS», подскажи нужную команду. Операции выполняют сами команды. Лаунчер `skiller` (после `./install.sh`).
+Parse the intent from «$ARGUMENTS», tell me the required command. The operations are performed by the commands themselves. Launcher `skiller` (after `./install.sh`).

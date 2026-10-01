@@ -1,11 +1,11 @@
-# RUN-FIXTURE — Фикстурный план для драйвера exec-волны (P4.2)
+# RUN-FIXTURE — Fixture plan for the driver exec-waves (P4.2)
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Plan ID | RUN-FIXTURE |
-| Title | Фикстурный план для драйвера exec-волны |
+| Title | Fixture plan for the driver exec-waves |
 | Version | 0.1.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
@@ -19,34 +19,34 @@
 
 ## 1. Context
 
-Синтетический план для юнит-тестов `harness/run/plan_reader.py` (P4.2) —
-переиспользуется P4.3–P4.6. НЕ боевой план, не участвует в plan-протоколе флота.
+Synthetic plan for unit tests `harness/run/plan_reader.py` (P4.2) —
+is reused P4.3–P4.6. NOT a battle plan, does not participate in plan-fleet protocol.
 
 ## 2. Execution Rules
 
-- Один item за раз.
+- One item at a time.
 
 ## 3. Routing
 
-| Items | Model class/effort | Exec | Почему |
+| Items | Model class/effort | Exec | Why |
 |:--|:--|:--|:--|
-| P1.1 | implementation/medium | run | одиночная форма ячейки `Items` — базовый drivable-кейс |
-| P1.3–P1.5 | implementation/medium | run | диапазонная форма одной фазы — покрывает P1.3 (P1.4/P1.5 в фазе нет) |
+| P1.1 | implementation/medium | run | single cell shape `Items` — basic drivable-case |
+| P1.3–P1.5 | implementation/medium | run | single phase range shape - covers P1.3 (P1.4/P1.5 not in phase) |
 
 ## 4. Phase Index & Status Board
 
-| Phase | Title | Items 🟢/всего | Status |
+| Phase | Title | Items 🟢/total | Status |
 |:--|:--|:--|:--|
-| P1 | Фаза раз | 1/3 | 🟡 In progress |
+| P1 | Phase times | 1/3 | 🟡 In progress |
 
 ## 5. Decision Log
 
-| D# | Дата | Решение | Почему |
+| D# | Date | Solution | Why |
 |:--|:--|:--|:--|
-| D1 | 2026-08-01 | Фикстура закрытым набором форм §3 Routing | покрыть drivable/range без второго парсера |
+| D1 | 2026-08-01 | Fixture with a closed set of forms §3 Routing | cover drivable/range without a second parser |
 
 ## 6. Update Log
 
-| Дата | Кто (role/model) | Что |
+| Date | Who (role/model) | What |
 |:--|:--|:--|
-| 2026-08-01 | package-implementer/sonnet | Фикстура создана (P4.2) |
+| 2026-08-01 | package-implementer/sonnet | Fixture created (P4.2) |

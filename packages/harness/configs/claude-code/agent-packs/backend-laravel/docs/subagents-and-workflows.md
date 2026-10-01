@@ -1,103 +1,103 @@
-# Guideline: субагенты и workflow в {{PACK_PREFIX}}
+# Guideline: subagents and workflow in {{PACK_PREFIX}}
 
-Как {{PACK_PREFIX}} использует субагентов и Workflow-оркестрацию. Операционализирует
-скилл `php:laravel-subagents` + уроки overnight-прогона под канон проекта.
-Контекст и референсы — скилл `php:laravel-subagents`.
+How {{PACK_PREFIX}} uses subagents and Workflow-orchestration. Operationalizes
+skill `php:laravel-subagents` + lessons overnight-run under the project canon.
+Context and references - skill `php:laravel-subagents`.
 
-> [!info] Артефакты в репозитории
-> - Агенты (build): `.claude/agents/{{PACK_PREFIX}}-{slice-builder,test-writer,reviewer}.md` (+ опц. `spec-writer`)
-> - Агенты (recon, read-only): `.claude/agents/{{PACK_PREFIX}}-{route-mapper,db-impact,blade-review,test-verifier,security-review}.md`
+> [!info] Artifacts in the repository
+> - Agents (build): `.claude/agents/{{PACK_PREFIX}}-{slice-builder,test-writer,reviewer}.md` (+ opt. `spec-writer`)
+> - Agents (recon, read-only): `.claude/agents/{{PACK_PREFIX}}-{route-mapper,db-impact,blade-review,test-verifier,security-review}.md`
 > - Workflow: `.claude/workflows/{{PACK_PREFIX}}-dev-loop.js`
-> - Review-gate хук: `.claude/hooks/review-gate.sh` + `.claude/review-gate.env.ini`
+> - Review-gate hook: `.claude/hooks/review-gate.sh` + `.claude/review-gate.env.ini`
 
-## Как ставятся задачи
+## How tasks are set
 
-Два входа. **Через плагин `tasks`** (интент-команды — пинят модель+effort под задачу, чтобы не
-переключать вручную):
+Two inputs. **Via plugin `tasks`** (intent commands - kick the model+effort for the task, so as not to
+switch manually):
 
-| Команда | Профиль | Модель/effort (команды) |
+| Command | Profile | Model/effort (commands) |
 |:--|:--|:--|
-| `/task:dev` | адаптивный dev-loop (срез→impl→test→risk-review) | Opus/high (планирование); субагенты — по риску |
-| `/task:design` | проектирование: research-fanout + план/ADR, кода нет | Opus/high |
-| `/task:review` | read-only adversarial-ревью, severity-enum | Opus/xhigh |
-| `/task:research` | многоисточниковый research (RAG) | Opus/high |
-| `/task:fix` | мелкая правка: single-agent, без fan-out | Sonnet/medium |
+| `/task:dev` | adaptive dev-loop (slice→impl→test→risk-review) | Opus/high (planning); subagents - by risk |
+| `/task:design` | design: research-fanout + plan/ADR, no code | Opus/high |
+| `/task:review` | read-only adversarial-review, severity-enum | Opus/xhigh |
+| `/task:research` | multi-source research (RAG) | Opus/high |
+| `/task:fix` | minor edit: single-agent, without fan-out | Sonnet/medium |
 
-**Или напрямую:** оркестратор строит машиночитаемый PLAN (срезы + `risk` + `skills`) и запускает
-Workflow `{{PACK_PREFIX}}-dev-loop` с `args.slices` (см. ниже). Скоуп срезов решает человек.
+**Or directly:** orchestrator builds machine-readable PLAN (slices + `risk` + `skills`) and runs
+Workflow `{{PACK_PREFIX}}-dev-loop` with `args.slices` (see below). The scope of the slices is decided by a person.
 
-### Процесс workflow (dev-loop)
+### Process workflow (dev-loop)
 
 ```mermaid
 flowchart TD
-  U["/task:dev «что строим»"] --> O["Оркестратор → PLAN:<br/>срезы + risk + model/effort/skills"]
-  O -. "тяжёлое чтение по нужде" .-> REC["recon-субагенты (read-only, изолированы):<br/>route-mapper · db-impact · blade-review<br/>test-verifier · security-review<br/>→ наверх только сводка, main не пухнет"]
-  O --> SET["Setup: env-preflight<br/>(драйверы БД, версия PHP) + одна ветка"]
-  SET --> BUILD{"Build: следующий срез"}
-  BUILD -->|"есть срез"| IMPL["impl · slice-builder<br/>Lean-tiered: Haiku/Sonnet по risk"]
-  IMPL --> TEST["test · test-writer<br/>tests-to-green + risk_level<br/>обходка → POSSIBLE-DEFECT"]
-  TEST -->|"green"| REV["risk-adaptive review · reviewer<br/>LOW→spot · MED→контракты · HIGH→adversarial+fresh-context<br/>severity-enum, детект≠гейтинг"]
+  U["/task:dev «what we are building»"] --> O["Orchestrator → PLAN:<br/>slices + risk + model/effort/skills"]
+  O -. "heavy reading on demand" .-> REC["recon-subagents (read-only, isolated):<br/>route-mapper · db-impact · blade-review<br/>test-verifier · security-review<br/>→ to top summary only, main does not swell"]
+  O --> SET["Setup: env-preflight<br/>(database drivers, version PHP) + one thread"]
+  SET --> BUILD{"Build: next slice"}
+  BUILD -->|"there is a slice"| IMPL["impl · slice-builder<br/>Lean-tiered: Haiku/Sonnet by risk"]
+  IMPL --> TEST["test · test-writer<br/>tests-to-green + risk_level<br/>workaround → POSSIBLE-DEFECT"]
+  TEST -->|"green"| REV["risk-adaptive review · reviewer<br/>LOW→spot · MED→contracts · HIGH→adversarial+fresh-context<br/>severity-enum, detect≠gating"]
   TEST -->|"deferred/failed"| CB
-  REV --> CB{"circuit-breaker:<br/>2 фейла подряд?"}
-  CB -->|"нет"| BUILD
-  CB -->|"стоп"| VER
-  BUILD -->|"срезы кончились"| VER["Verify: полный сюит + {{CHECK_CMD}}"]
-  VER --> DONE["Отчёт · дерево чистое · без push/PR"]
+  REV --> CB{"circuit-breaker:<br/>2 fails in a row?"}
+  CB -->|"no"| BUILD
+  CB -->|"stop"| VER
+  BUILD -->|"the slices are over"| VER["Verify: full suite + {{CHECK_CMD}}"]
+  VER --> DONE["Report · tree clean · without push/PR"]
 ```
 
-Ключ: **модель/effort субагентов заданы по риску среза и перебивают сессию** (Sonnet impl / Opus+xhigh
-на HIGH-review / Haiku тривиал); **fan-out — только на research-фазе** (`/task:design|research`), не на
-coding. Тяжёлую разведку делегируй recon-субагентам — они читают в своём окне, наверх отдают сводку.
+Key: **model/effort subagents are set at cutoff risk and interrupt the session** (Sonnet impl / Opus+xhigh
+on HIGH-review / Haiku trivial); **fan-out — only on research-phase** (`/task:design|research`), not on
+coding. Delegate heavy reconnaissance recon-subagents - they read in their window and send a summary to the top.
 
-## Когда вообще звать субагентов
+## When to call subagents
 
-Ценность субагента — **изоляция контекста и свежий взгляд**, не параллелизм.
-Порог (из `php:laravel-subagents`):
+Subagent value - **context isolation and fresh perspective**, is not parallelism.
+Threshold (from `php:laravel-subagents`):
 
-- **Да:** задача ≥3 доменов/слоёв; целая фича (миграции→модели→логика→роуты→тесты);
-  широкое исследование десятков файлов; ревью рискованного (авторизация, деньги,
-  миграции с данными).
-- **Нет (важнее триггеров):** мелкая/средняя правка — один-два слоя, багфикс,
-  поле, рефактор одного слоя — делай напрямую. Принудительная декомпозиция мелочи
-  = налог: токены растут, контекст теряется, качество не выигрывает.
+- **Yes:** task ≥3 domains/layers; whole feature (migrations→models→logic→routes→tests);
+  extensive examination of dozens of files; review of risky (authorization, money,
+  migration with data).
+- **No (are more important than triggers):** small/average edit - one or two layers, bugfix,
+  field, single layer refactor - do it directly. Forced decomposition of small items
+  = tax: tokens grow, context is lost, quality does not improve.
 
-Архитектурный код (контракты, модели, ключевые Actions) пиши сам в основном
-контексте — там сосредоточено знание ТЗ. Не пинь дешёвые модели на фундамент.
+Architectural code (contracts, models, key Actions) write mostly yourself
+context - knowledge of technical specifications is concentrated there. Don't kick cheap models into the ground.
 
-## Проектные агенты
+## Project Agents
 
-Преднагружены архитектурными скиллами через нативное поле `skills:` (Claude Code
-≥2.0.43, детерминированный preload). Тюнингованы под {{PACK_PREFIX}}: {{PHP_RUNNER}},
-тест-фреймворк {{TEST_FRAMEWORK}}, канон access-layer.
+Preloaded with architectural skills through the native field `skills:` (Claude Code
+≥2.0.43, deterministic preload). Tuned for {{PACK_PREFIX}}: {{PHP_RUNNER}},
+test framework {{TEST_FRAMEWORK}}, canon access-layer.
 
-| Агент | Роль | Когда звать |
+| Agent | Role | When to call |
 |:--|:--|:--|
-| `{{PACK_PREFIX}}-slice-builder` | реализатор среза (route→Action/Repository→DTO→policy), коммитит в текущую ветку, тесты не пишет | на реализацию вертикального среза |
-| `{{PACK_PREFIX}}-test-writer` | тесты ({{TEST_FRAMEWORK}}) по готовому коду, итерирует до зелёного через {{PHP_RUNNER}} | после реализации среза |
-| `{{PACK_PREFIX}}-reviewer` | risk-адаптивное read-only ревью (LOW→spot / MED→контракты / HIGH→adversarial+fresh-context), severity-enum, детект≠гейтинг | после каждой зелёной единицы |
-| `{{PACK_PREFIX}}-{route-mapper,db-impact,blade-review,test-verifier,security-review}` | **read-only recon** (карта роутов / БД-импакт / вьюхи / прогон тестов→сводка / security) в ИЗОЛИРОВАННОМ контексте — наверх только сводка | тяжёлая разведка перед правкой (main-контекст не пухнет); модель `{{MODEL_RECON}}` (дешёвая) |
+| `{{PACK_PREFIX}}-slice-builder` | slice implementer (route→Action/Repository→DTO→policy), commits to the current branch, does not write tests | to implement a vertical slice |
+| `{{PACK_PREFIX}}-test-writer` | tests ({{TEST_FRAMEWORK}}) according to the finished code, iterates until green through {{PHP_RUNNER}} | after implementing the slice |
+| `{{PACK_PREFIX}}-reviewer` | risk-adaptive read-only review (LOW→spot / MED→contracts / HIGH→adversarial+fresh-context), severity-enum, detect≠gating | after each green one |
+| `{{PACK_PREFIX}}-{route-mapper,db-impact,blade-review,test-verifier,security-review}` | **read-only recon** (route map / DB-impact / views / running tests→summary / security) in ISOLATED context - summary only to top | heavy reconnaissance before editing (main-context does not swell); model `{{MODEL_RECON}}` (cheap) |
 
-> Модели build-агентов — Lean-tiered по умолчанию (slice-builder/test-writer `sonnet`, reviewer/spec-writer
-> `opus`), а per-slice ещё уточняются по `risk`. Фундамент (контракты/модели) пиши сам — не пинь дешёвые модели.
+> Models build-agents - Lean-tiered default (slice-builder/test-writer `sonnet`, reviewer/spec-writer
+> `opus`), a per-slice still to be confirmed `risk`. Foundation (contracts/models) write it yourself - don’t knock cheap models.
 
-Плагин swissknifeman даёт ещё `Explore` (read-only исследование), `Plan`
-(архитектурный план), `system:code-coordinator` (межпроектный анализ),
-`php:laravel-reviewer`/`php:laravel-test-writer` (общие, Pest-ориентированные —
-для {{PACK_PREFIX}} предпочитай проектные `{{PACK_PREFIX}}-*`).
+Plugin swissknifeman gives more `Explore` (read-only research), `Plan`
+(architectural plan), `system:code-coordinator` (cross-project analysis),
+`php:laravel-reviewer`/`php:laravel-test-writer` (general, Pest-oriented -
+for {{PACK_PREFIX}} prefer design ones `{{PACK_PREFIX}}-*`).
 
 ## Workflow `{{PACK_PREFIX}}-dev-loop`
 
-Исполняет список срезов последовательно на одной ветке: по срезу
-**impl → tests-to-green → review-gate**, circuit-breaker, финальный verify.
+Executes a list of slices sequentially on one branch: by slice
+**impl → tests-to-green → review-gate**, circuit-breaker, final verify.
 
-**Скоуп решает человек** и передаёт через `args` (workflow исполняет, а не
-придумывает продуктовый объём):
+**Scope is decided by man** and transmits via `args` (workflow executes, not
+comes up with product volume):
 
 ```js
 args = {
-  branch: 'feat/<имя-прогона>',   // одна ветка на весь прогон
-  base: 'main',                    // база для diff/review
-  max_slices: 3,                   // хард-кап (переживает resume)
+  branch: 'feat/<run-name>',   // one branch for the entire run
+  base: 'main',                    // base for diff/review
+  max_slices: 3,                   // hardcap (is worried resume)
   slices: [
     { id: 'catalog-read-api', title: '...', domain: 'Catalog',
       goal: '...', acceptance_criteria: '...', skills: ['php:...'] },
@@ -105,67 +105,67 @@ args = {
 }
 ```
 
-Запуск: оркестратор зовёт Workflow с `{ name: '{{PACK_PREFIX}}-dev-loop' }` и этим `args`,
-или скилл `/{{PACK_PREFIX}}-dev-loop`. Перед запуском обычно: инлайн собрать список срезов
-(можно отдельным проходом по docs), показать пользователю, и только потом гнать.
+Launch: orchestrator calling Workflow with `{ name: '{{PACK_PREFIX}}-dev-loop' }` and this `args`,
+or skill `/{{PACK_PREFIX}}-dev-loop`. Before starting usually: inline collect a list of slices
+(can be done using a separate pass docs), show to the user, and only then drive.
 
-## Уроки overnight-прогона (зашиты в workflow — соблюдай и вручную)
+## Lessons overnight-run (are hardwired into workflow — observe and manually)
 
-1. **Один branch на прогон, НЕ ветка-на-срез.** Агенты-реализаторы не делают
-   `checkout base` перед новой веткой → срезы складываются стопкой, поздний уходит
-   от древнего коммита. Все срезы — последовательно на ОДНОЙ ветке (или
-   worktree-изоляция с явной базой). Агенты ветки не создают/не переключают.
-2. **Хард-кап числа срезов держи литералом в скрипте.** `args` на resume может не
-   долететь → `slice(0, undefined)` = без лимита. В `{{PACK_PREFIX}}-dev-loop` дефолт
-   `DEFAULT_MAX` зашит константой.
-3. **Синтез бэклога — два шага.** Один агент с тяжёлой вложенной schema залипает в
-   retry-петле. Решение: free-text синтез (без schema) → крошечный `effort:low`
-   пасс структуризации.
-4. **Фиддли-setup делай инлайн сам** (Filament install, разовая обвязка). Workflow —
-   на повторяемую часть (срезы по доменам).
-5. **Circuit-breaker.** 2 не-зелёных среза подряд → стоп, в отчёт. Не закапывайся.
-6. **Параллель — только для независимого по файлам.** Срезы на одной ветке делят
-   рабочее дерево → строй последовательно. Пересечение по файлам без worktree =
-   конфликт.
-7. **Модель/effort — по РИСКУ, не по умолчанию.** Дешёвые модели исполняют хорошо
-   обусловленную работу, дорогая проектирует/арбитрирует: impl LOW→haiku иначе sonnet,
-   review LOW→sonnet · MED→opus/high · HIGH→opus/xhigh, setup/verify→sonnet. Наследование
-   родительской модели — осознанное исключение, не дефолт (иначе весь фан-аут идёт на топ-модели).
-8. **Не поллить фоновые агенты.** Уведомление о завершении субагента приходит само —
-   циклы опроса / `ScheduleWakeup` «проверить, готово ли» жгут контекст-кэш впустую.
-   Жди нотификацию; поллинг оправдан лишь для внешнего состояния, которое харнес не
-   отслеживает (CI/деплой/удалённая очередь).
-9. **Промпты детерминированы — ради resume-кэша.** Стоп на квоте → правка одного
-   параметра → `resumeFromRunId` отдаёт завершённые стадии бесплатно из кэша. Условие:
-   никаких timestamp/random в промптах; model/effort-override — отдельным параметром
-   вызова (opts завершённых стадий не менять); стадия = чистая функция от (prompt, opts).
-   В большом фан-ауте (research/design, не этот dev-loop) логируй `budget.remaining()`
-   после волны — иначе о перерасходе узнаёшь постфактум.
+1. **One branch per run, NOT branch-to-cut.** Implementing agents do not
+   `checkout base` before the new branch → slices are stacked, the last one goes away
+   from an ancient commit. All cuts are sequential on ONE branch (or
+   worktree-isolation with explicit base). Agents do not create branches/do not switch.
+2. **Keep the hard cap of the number of slices as a literal in the script.** `args` on resume may not
+   fly → `slice(0, undefined)` = no limit. B `{{PACK_PREFIX}}-dev-loop` default
+   `DEFAULT_MAX` is protected by a constant.
+3. **Backlog synthesis - two steps.** One agent with heavy nesting schema gets stuck in
+   retry-loop. Solution: free-text synthesis (without schema) → tiny `effort:low`
+   structuring pass.
+4. **Fiddly-setup do it inline yourself** (Filament install, one-time harness). Workflow —
+   to the repeatable part (slices by domain).
+5. **Circuit-breaker.** 2 non-green slices in a row → stop, report. Don't dig yourself in.
+6. **Parallel - only for file independent.** Slices on the same branch are divided
+   working tree → build sequentially. Crossing files without worktree =
+   conflict.
+7. **Model/effort — by RISK, not by default.** Cheap models perform well
+   conditional work, dear designs/arbitrates: impl LOW→haiku otherwise sonnet,
+   review LOW→sonnet · MED→opus/high · HIGH→opus/xhigh, setup/verify→sonnet. Inheritance
+   parent model - deliberate exception, not default (otherwise all the fan-out goes to the top model).
+8. **Don't flood background agents.** The notification about the completion of the subagent comes automatically -
+   polling cycles / `ScheduleWakeup` «check if it's ready» burns the context cache in vain.
+   Wait for notification; polling is justified only for the external state, which Harnes does not
+   tracks (CI/deployment/remote queue).
+9. **Prompts are deterministic - for the sake of resume-cache.** Stop at quota → editing one
+   parameter → `resumeFromRunId` gives away completed stages for free from the cache. Condition:
+   none timestamp/random in prompts; model/effort-override — as a separate parameter
+   call (opts do not change completed stages); stage = pure function from (prompt, opts).
+   In a big fan-out (research/design, not this one dev-loop) log `budget.remaining()`
+   after the wave - otherwise you will find out about the overspending after the fact.
 
 ## Review-gate (SubagentStop)
 
-`.claude/hooks/review-gate.sh` гоняет лёгкую проверку на завершении субагента.
-Режим в `.claude/review-gate.env.ini`: `off | warn | strict` (по умолчанию
-**warn** — advisory, не блокирует). Дефолтная проверка — `{{CHECK_CMD}}` (статика
-проекта). `strict` блокирует завершение (exit 2) до починки.
-Это deterministic-страховка поверх агента-ревьюера, не замена ему.
+`.claude/hooks/review-gate.sh` runs a light check on subagent completion.
+Mode in `.claude/review-gate.env.ini`: `off | warn | strict` (default
+**warn** — advisory, does not block). Default check - `{{CHECK_CMD}}` (static
+project). `strict` blocks completion (exit 2) until repaired.
+This deterministic-insurance on top of the reviewing agent, not a replacement for him.
 
-## Жёсткие гейты {{PACK_PREFIX}} (для агентов и workflow)
+## Hard gates {{PACK_PREFIX}} (for agents and workflow)
 
-- Тесты/PHP — только `{{PHP_RUNNER}}` ({{TEST_RUNNER_CMD}}), не bare `php`.
-- Если `.env` залочен хуком — не читать/не править; тестовая БД `{{TEST_DB}}`.
-- Тест-фреймворк проекта — {{TEST_FRAMEWORK}}. Схему/миграции меняй по необходимости среза. Статика (если есть) — {{CHECK_CMD}}.
-- Канон access-layer: тонкий контроллер → Action (запись) / Repository (чтение) →
-  DTO/Resource; мутации под `DB::transaction()`; авторизация через policy/gate.
-- НЕ push, НЕ PR-merge, НЕ release. Каждый прогон — на своей ветке.
+- Tests/PHP — only `{{PHP_RUNNER}}` ({{TEST_RUNNER_CMD}}), not bare `php`.
+- If `.env` locked with hook - do not read/do not edit; test database `{{TEST_DB}}`.
+- Project test framework - {{TEST_FRAMEWORK}}. Scheme/change migrations as needed for the cut. Statics (if available) — {{CHECK_CMD}}.
+- Canon access-layer: thin controller → Action (entry) / Repository (read) →
+  DTO/Resource; mutations under `DB::transaction()`; authorization via policy/gate.
+- NOT push, NOT PR-merge, NOT release. Each run is on its own branch.
 
-## Чеклист
+## Checklist
 
-- [ ] Порог субагентов проверен (крупная задача), иначе делал напрямую.
-- [ ] Исследование — Explore-агентам; архитектурный код — сам.
-- [ ] Прогон на ОДНОЙ ветке; хард-кап задан и переживает resume.
-- [ ] Модель/effort заданы по риску среза (не наследование по умолчанию).
-- [ ] Каждая единица прошла `{{PACK_PREFIX}}-reviewer`; тесты зелёные через {{PHP_RUNNER}}.
-- [ ] Параллель только по независимым файлам (иначе worktree/последовательно).
-- [ ] Фоновые агенты не поллятся — жду нотификацию; промпты детерминированы (resume-кэш).
-- [ ] Находки ревью исправлены точечно, без перегенерации с нуля.
+- [ ] Subagent threshold checked (major task), otherwise did it directly.
+- [ ] Research - Explore-agents; architectural code itself.
+- [ ] Run on ONE branch; hard cap is set and experiencing resume.
+- [ ] Model/effort are set by cut risk (not inheriting by default).
+- [ ] Each unit passed `{{PACK_PREFIX}}-reviewer`; tests green through {{PHP_RUNNER}}.
+- [ ] Parallel only on independent files (otherwise worktree/sequentially).
+- [ ] Background agents are not streaming - I'm waiting for notification; prompts are deterministic (resume-cache).
+- [ ] Review findings have been corrected point-by-point, without regeneration from scratch.

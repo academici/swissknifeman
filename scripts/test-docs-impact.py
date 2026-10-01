@@ -15,7 +15,7 @@ SPEC.loader.exec_module(docs_impact)
 
 
 def missing_count(entries):
-    """Число классов (пакетов), которым не хватило доков — не число строк отчёта."""
+    """Number of classes (packages), which did not have enough dockets - not the number of report lines."""
     needed, credited = docs_impact.classify(entries)
     return len([klass for klass in needed if klass not in credited])
 
@@ -60,7 +60,7 @@ class DocsImpactTests(unittest.TestCase):
 
     def test_g_escape_hatch_trailer_suppresses_failure_and_prints_reason(self):
         entries = [("A", "packages/maind/lib/maind/x.py")]
-        os.environ["DOCS_NOT_NEEDED"] = "рефакторинг без изменения поведения"
+        os.environ["DOCS_NOT_NEEDED"] = "refactoring without changing behavior"
         try:
             self.assertIsNotNone(docs_impact.escape_reason(None))
             code = docs_impact.run(entries, range_args=None)

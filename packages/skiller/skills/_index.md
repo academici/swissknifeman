@@ -1,16 +1,16 @@
-# Реестр скиллов swissknifeman
+# Skill Registry swissknifeman
 
-<!-- GENERATED `skiller registry` — не редактировать вручную -->
+<!-- GENERATED `skiller registry` — do not edit manually -->
 
-Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
+Source of truth for ported skills (machine registry - `skills.json`). Distribution to projects: `skiller connect` (plugin buckets) / `vendor` (physical. transfer). CORE-set of token skills (`general`/`oss-dev`) is heard by default - see `connect`/`vendor`.
 
-Всего: 232 скиллов в 49 бакетах.
+Total: 232 skills in 49 buckets.
 
-## Скиллы по бакетам
+## Skills for buckets
 
 ### ai — AI agent building: design, tools, evaluation (3)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `ai-agents` | Navigator for the AI-agent building reference (vendored super-skill): agent patterns, MCP… | `ai`, `agents`, `mcp`, `rag`, `orchestration`, `prompt-engineering`, `subagents` |
 | `mcp-builder` | Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to … |  |
@@ -18,7 +18,7 @@
 
 ### architect — Architecture, API and data design, security, observability, tech stack selection (15)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `agent-design` | Design or audit an agent loop, tool boundary, autonomy policy, or recovery behavior. | `agentic`, `architecture`, `security`, `validation` |
 | `api-design` | Design or evolve an API contract: compatibility, auth, errors, pagination, and retry sema… | `api`, `architecture`, `rest`, `contracts` |
@@ -38,7 +38,7 @@
 
 ### axioma — Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket) (4)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `axioma-doctrine` | Axioma ecosystem development doctrine: five imperative pillars (horizontal core → vertica… | `axioma`, `doctrine`, `architecture`, `ecosystem` |
 | `axioma-glossary` | Binds domain-modeling discipline to the live thin term-index of the Axioma ecosystem: can… | `axioma`, `ecosystem`, `glossary`, `term-index` |
@@ -47,20 +47,20 @@
 
 ### azguard — azguard package usage: code-first RBAC, panels, scoped roles, abilities (academici package — skill will relocate into the package repo) (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `azguard` | Roles & access control via azguard package: code-first RBAC, panels, scoped roles, direct… | `php`, `laravel`, `permissions`, `azguard`, `rbac`, `authorization`, `gate`, `enum` |
 
 ### blender — Universal Blender bpy+MCP tooling: MCP workflow primitives, viewport modes, camera helper, version gotchas (2)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `mcp-blender` | MCP Blender: tools (execute_blender_code, get_object_info, get_viewport_screenshot, get_s… | `blender`, `mcp`, `python`, `3d`, `bpy`, `viewport`, `camera`, `screenshot`, `orchestration` |
 | `version-gotchas` | Use when hitting Blender 5.0 API issues: known breaking changes and pitfalls. | `blender`, `api`, `bpy`, `3d`, `python`, `gotchas`, `advisory`, `version` |
 
 ### blender-modeling — Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop (7)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `build-loop` | Parametric-modeling build loop via MCP Blender: analyze task → check flexibility/recomput… | `blender`, `cad`, `parametric`, `workflow`, `bpy`, `mcp`, `3d`, `fdm`, `sla` |
 | `config-conventions` | Parametric CAD config conventions: one entity = one dataclass; variable naming (r_outer/z… | `blender`, `cad`, `parametric`, `dataclass`, `config`, `cross-config`, `conventions`, `bpy`, `fdm`, `sla` |
@@ -72,25 +72,25 @@
 
 ### botkit — botkit package usage: bot framework patterns — BotDefinition, service provider, webhooks (academici package — skill will relocate into the package repo) (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `botkit` | Use when building bot framework features: BotDefinition contract, package service provide… | `php`, `laravel`, `bots`, `botkit` |
 
 ### creative — Creative studio: video, design, content production (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `content-creative-super-skill` | Creative studio: video production, speech synthesis, image generation, website building, … |  |
 
 ### dart — Dart package and SDK development: public API, pubspec, null safety, testing and compatibility (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `dart-package-development` | Use when developing, maintaining, or releasing a Dart package/SDK: pubspec, public API, n… | `dart`, `pub`, `package`, `sdk`, `api`, `null-safety`, `testing`, `compatibility` |
 
 ### devops — Docker environments, CI/CD pipelines, GitOps (11)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `ci-cd` | GitHub Actions / GitLab CI pipelines for Laravel: lint, tests, build, release + security … | `ci`, `github-actions`, `gitlab-ci`, `laravel`, `devops`, `release`, `security`, `coverage` |
 | `db-test-preflight` | Pre-flight check of test DB (Postgres in Docker) BEFORE running tests: container up (dock… | `postgres`, `docker`, `testing`, `preflight`, `devops`, `ci`, `isolation` |
@@ -106,13 +106,13 @@
 
 ### finance — Finance and accounting: bookkeeping, reporting, FP&A (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `finance-super-skill` | Finance and accounting: financial statements, journal entries, reconciliation, close mana… |  |
 
 ### founder — Idea discovery, competitive analysis, risk assessment, pitch decks (10)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `adversarial-check` | Structured devil's advocate — 3 strongest counterarguments, failed competitors, negative … | `validation`, `market` |
 | `competitive-analysis` | Use when researching market, competitors, JTBD, open niche, attack vector. Uses Perplexit… | `discovery`, `market`, `gtm` |
@@ -125,9 +125,9 @@
 | `risk-assessment` | Use when assessing startup risk: 6 categories (incl. AI/Agentic), Risk Matrix, RAID log, … | `validation`, `compliance`, `security`, `agentic` |
 | `startup-lifecycle` | 4 AI-native startup stages (Idea→MVP→Launch→Scale) with exit-criteria, failure modes, ant… | `validation`, `requirements`, `market` |
 
-### frontend — Frontend core: общие фронт-скиллы (web design guidelines, document writer, file upload) (3)
+### frontend — Frontend core: general front skills (web design guidelines, document writer, file upload) (3)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `document-writer` | Use when writing blog posts or documentation markdown files - provides writing style guid… |  |
 | `filepond-upload` | File upload via FilePond in Vue + Laravel: register vue-filepond + plugins (validate-type… | `filepond`, `vue`, `laravel`, `file-upload`, `frontend`, `forms`, `image-preview`, `inertia`, `uploads` |
@@ -135,13 +135,13 @@
 
 ### frontend-animations — Animations with Motion Vue (motion-v) (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `motion` | Use when adding animations with Motion Vue (motion-v) - provides motion component API, ge… |  |
 
 ### frontend-backend — Backend integration layer: Inertia+Vue, Laravel Echo realtime client, backend→frontend type sync (3)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `backend-type-sync` | Use for Laravel enum/DTO to TypeScript generation; route typing belongs to Wayfinder. | `typescript`, `laravel`, `spatie`, `types`, `enum`, `dto`, `frontend`, `type-sync`, `ci` |
 | `inertia-vue` | Use for Laravel/Inertia Vue pages, forms, navigation, and resources/js organization. | `inertia`, `vue`, `laravel`, `frontend`, `architecture`, `structure` |
@@ -149,13 +149,13 @@
 
 ### frontend-figma — Figma Dev Mode MCP → Vue mapping (uses architect/figma-mcp-core) (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `figma-to-vue` | Map Figma Dev Mode MCP design to Vue + Tailwind v4: Auto-layout → flexbox/grid, tokens.js… | `figma`, `vue`, `tailwind`, `tailwindcss-v4`, `cva`, `design-tokens`, `dark-mode`, `auto-layout` |
 
 ### frontend-linting — JS/TS tooling and style: antfu config, ESLint flat config, Spatie JS style, TS library authoring (4)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `antfu` | Anthony Fu's opinionated tooling and conventions for JavaScript/TypeScript projects. Use … |  |
 | `eslint-flat-config` | ESLint flat config (eslint.config.js) for Vue 3 + TypeScript: defineConfigWithVueTs/types… | `eslint`, `prettier`, `flat-config`, `vue`, `typescript`, `stylistic`, `tooling`, `code-style`, `frontend` |
@@ -164,13 +164,13 @@
 
 ### frontend-naive-ui — Naive UI component library theming (GlobalThemeOverrides) (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `naive-ui-theming` | Use for Naive UI theme tokens, GlobalThemeOverrides, NConfigProvider, and dark mode. | `naive-ui`, `vue`, `theming`, `design-tokens`, `dark-mode`, `tailwind`, `frontend`, `components`, `ui` |
 
 ### frontend-nuxt — Nuxt 4+: server routes, modules, SEO meta-module (3)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `nuxt` | Use for Nuxt 4+ routes, middleware, composables, server handlers, and project configurati… |  |
 | `nuxt-modules` | Use for Nuxt modules: Kit hooks, runtime/server extensions, module tests, and release set… |  |
@@ -178,20 +178,20 @@
 
 ### frontend-reka — Reka UI headless primitives + CVA variants (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `reka-ui-cva` | UI component library on Reka UI headless primitives + class-variance-authority (cva) vari… | `reka-ui`, `cva`, `vue`, `tailwind`, `headless`, `components`, `variants`, `design-system`, `ui`, `frontend` |
 
 ### frontend-tailwind — Tailwind CSS v4 conventions and dark-mode theming (2)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `dark-mode` | Use for Vue light/dark/system switching, SSR theme restore, and preventing theme flash. | `dark-mode`, `theme`, `vue`, `composable`, `ssr`, `tailwind`, `matchmedia`, `localstorage` |
 | `tailwind-conventions` | Use for Tailwind v4 in Laravel/Vue: CSS-first config, theme tokens, classes, and formatti… | `tailwind`, `tailwindcss-v4`, `css`, `vue`, `laravel`, `dark-mode`, `design-tokens`, `prettier` |
 
 ### frontend-vite — Vite build tooling: config/plugins/SSR, project module loader, multi-build, VitePress (4)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `vite` | Vite build tool configuration, plugin API, SSR, and Vite 8 Rolldown migration. Use when w… |  |
 | `vite-module-loader` | Use when configuring Vite as the primary frontend bundler: base config, aliases, build pr… | `vite`, `frontend`, `build`, `laravel`, `vue` |
@@ -200,7 +200,7 @@
 
 ### frontend-vue — Vue 3 ecosystem: Composition API, best practices, router, VueUse, Pinia state, Vitest testing (11)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `pinia` | Use for Pinia APIs: defining stores, typed state/getters/actions, and store composition. |  |
 | `pinia-stores` | Use for project Pinia setup-store conventions, shared state, hydration, and persistence. | `pinia`, `vue`, `frontend`, `state-management`, `store`, `architecture` |
@@ -216,13 +216,13 @@
 
 ### frontend-wayfinder — Laravel Wayfinder: type-safe routes/controller actions in the frontend (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `wayfinder` | Use for Laravel Wayfinder route/action generation, typed imports, forms, and import bound… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
 
 ### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (22)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `anti-drift` | Recover from repeated failed approaches or growing scope; preserve authorized progress. | `workflow`, `discipline`, `orchestration`, `context` |
 | `compact-responses` | Use when the user explicitly requests terse output; preserve necessary explanations, prog… | `conventions`, `style`, `tokens`, `context`, `workflow` |
@@ -249,7 +249,7 @@
 
 ### laravel-architecture — Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration (6)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `config-driven-abstraction` | Config-driven cache-safe Registry+Builder for multi-panel/multi-tenant Laravel: immutable… | `php`, `laravel`, `architecture`, `config`, `registry`, `multi-tenant` |
 | `eloquent-accessors` | Activate when writing/refactoring Eloquent accessors and mutators: when you see legacy ge… | `php`, `laravel`, `eloquent`, `attributes`, `accessors`, `mutators`, `patterns` |
@@ -260,7 +260,7 @@
 
 ### laravel-auth — Authorization & security: permissions/RBAC, attribute-based gates, security audit (3)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `attribute-authorization` | Use for #[CheckPermission] action attributes and reflection middleware over Laravel Gate. | `php`, `laravel`, `authorization`, `attribute`, `reflection`, `middleware`, `gate`, `enum`, `permissions`, `rbac` |
 | `laravel-permissions` | Use for native Laravel policies/gates and entity RBAC; azguard has its own skill. | `php`, `laravel`, `permissions`, `azguard`, `rbac`, `authorization` |
@@ -268,14 +268,14 @@
 
 ### laravel-data-layer — Typed data + realtime: spatie/laravel-data DTOs (TS export), Echo/Reverb broadcasting (2)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `laravel-broadcasting` | Use for Laravel broadcast events, channel auth, Echo/Reverb/Pusher/Ably integration. | `php`, `laravel`, `broadcasting`, `echo`, `reverb`, `websockets`, `realtime` |
 | `laravel-data` | Use for spatie/laravel-data DTOs: validation, casts, nested data, and typed API output. | `php`, `laravel`, `spatie`, `laravel-data`, `dto`, `data-transfer-object`, `casts`, `validation`, `inertia`, `api` |
 
 ### laravel-extras — Optional Laravel runtime packages: media library, typed settings, Pennant feature flags (3)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `medialibrary` | Use when attaching files to Eloquent models: spatie/laravel-medialibrary collections, con… | `php`, `laravel`, `media`, `spatie`, `uploads`, `images` |
 | `pennant-development` | Laravel Pennant feature flags: define/active/for-scope, the @feature directive, activatio… | `php`, `laravel`, `pennant`, `feature-flags` |
@@ -283,19 +283,19 @@
 
 ### laravel-filament — Filament admin panels: resources, schemas, tables, widgets, actions, tenancy (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `filament` | Use for Filament v5 panels, resources, schemas, tables, actions, auth, and Artisan scaffo… | `php`, `laravel`, `filament`, `ui`, `admin-panel`, `crud`, `livewire` |
 
 ### laravel-livewire — Livewire 3 UI: dynamic Blade attributes (ComponentAttributeBag) (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `livewire-blade-attributes` | Livewire 3 Blade-component attribute delta gotchas. Activate when a tag attribute must be… | `livewire`, `blade`, `laravel`, `frontend`, `advisory`, `gotchas` |
 
 ### laravel-testing — Laravel testing: Pest feature/unit, DB isolation guard, Dusk browser tests, health checks (4)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `health-checks` | Use for spatie/laravel-health checks, readiness endpoints, heartbeat, and failure alerts. | `laravel`, `health`, `monitoring`, `spatie`, `liveness`, `readiness`, `observability` |
 | `laravel-dusk` | Use for Laravel Dusk browser tests: isolated DB, Docker/ChromeDriver, and Page Objects. | `php`, `laravel`, `dusk`, `e2e`, `browser-testing`, `chromedriver`, `docker` |
@@ -304,25 +304,25 @@
 
 ### legal — Legal operations: contracts, compliance, risk (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `legal-super-skill` | Legal operations: contract review, NDA triage, compliance (GDPR/CCPA), risk assessment, m… |  |
 
 ### marketing — Marketing: strategy, campaigns, content, growth (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `marketing-super-skill` | Marketing: campaign planning, brand voice, competitive analysis, SEO, content creation, p… |  |
 
 ### mobile — Mobile development: Flutter — design-to-code, theming, layout mapping from Figma (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `figma-to-flutter` | Map Figma Dev Mode MCP design to Flutter: Auto-layout → Row/Column/Expanded/Padding, toke… | `figma`, `flutter`, `dart`, `mobile`, `design-tokens`, `theming`, `auto-layout` |
 
 ### operator — Incident response, runbooks, postmortems, on-call and capacity planning (6)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `capacity-planning` | Capacity planning — load forecasting, headroom, autoscaling policy, cost budget, what to … | `ops`, `observability`, `monitoring`, `sla` |
 | `incident-response` | Prod incident response process — severity levels, roles (IC/Comms/SME), communication, ac… | `incident`, `ops`, `workflow`, `sla` |
@@ -333,7 +333,7 @@
 
 ### oss-dev — Open-source development: releases, governance, DX, dependency audits + language references (10)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `dependency-audit` | Use when auditing lockfiles, vulnerabilities, licenses, supply-chain risk, or SBOMs. | `oss`, `compliance`, `security`, `dependencies`, `php` |
 | `dx-design` | Use when designing developer UX: quick-start, README, API errors, types, and CLI behavior. | `oss`, `documentation`, `api`, `cli` |
@@ -348,7 +348,7 @@
 
 ### php — PHP and Laravel core: architecture, structure, conventions, DI, database, repositories, patterns, static analysis (17)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `code-style-spatie` | Use when applying adopted Spatie PHP style: types, early returns, Laravel conventions. | `php`, `laravel`, `code-style`, `spatie` |
 | `cursor-pagination-design` | Use for keyset pagination or duplicate/skipped feed rows under concurrent inserts. | `php`, `laravel`, `pagination`, `cursor`, `database` |
@@ -370,7 +370,7 @@
 
 ### php-packages — Laravel package development: scaffold, service provider, testing, compatibility, docs, releases (9)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `laravel-package-compatibility` | Use for Laravel package PHP/Laravel/Testbench constraints and CI compatibility matrices. | `php`, `laravel`, `package-dev` |
 | `laravel-package-docs` | Use for configured Laravel package README, VitePress, install/usage, and upgrade docs. | `php`, `laravel`, `package-dev` |
@@ -384,7 +384,7 @@
 
 ### pm — Product management: BRD, PRD, roadmap, monetization, unit economics (10)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `brd` | Use when writing a Business Requirements Document: functional requirements, user stories,… | `requirements`, `template` |
 | `business-process` | Use when modeling business processes: workflow, FSM, sequence/state diagrams, error handl… | `requirements`, `workflow` |
@@ -399,14 +399,14 @@
 
 ### python — Python: ML project structure, virtualenv and dependency management (2)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `ml-project-structure` | Use when structuring an ML/Data Science project per Cookiecutter Data Science. | `python`, `ml`, `structure`, `architecture`, `data`, `conventions` |
 | `venv-dependencies` | Use when managing Python dependencies and virtual environments for project reproducibilit… | `python`, `venv`, `dependencies`, `tooling`, `quality`, `conventions` |
 
 ### quality — Code review, refactoring plans, tech debt audits, test strategy (11)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `artifact-review` | Review plans, specifications, docs, or mixed artifacts against their adopted contracts. | `quality`, `review`, `taxonomy`, `plan`, `docs`, `code`, `severity`, `conventional-comments` |
 | `code-review` | Review a code diff or define team review policy; severity follows demonstrated impact. | `quality`, `validation`, `review`, `github`, `workflow` |
@@ -422,7 +422,7 @@
 
 ### repository-bootstrap — P1.2/D31/D38 + P6.5/D93: private/source-only EN-only canon for 14 root-bootstrap identities (class A), never published as an ordinary bucket/core/marketplace unit. registry.py -> publication.py emits thin .claude/.agents projections. (14)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `cross-project-optimizer` | Cross-project optimization across ~N similar ecosystem projects (shared core packages): f… | `ecosystem`, `fleet`, `dedup`, `shared-package`, `root-bootstrap` |
 | `decision-verification` | Use when a repository decision rests on a changing external premise; route to the shared … | `rag`, `verification`, `epistemics`, `root-bootstrap` |
@@ -441,14 +441,14 @@
 
 ### research — Research and knowledge management (2)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `query-craft` | Use when a search query needs precision: concrete question, version, environment and sour… | `research`, `perplexity`, `search`, `query`, `rag`, `context7`, `claude-code` |
 | `research-knowledge-super-skill` | Research and knowledge management: deep research, knowledge graphs, data exploration, sta… |  |
 
 ### roles — Personas: tech lead, startup CTO, solo founder, open-source maintainer (4)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `open-source-maintainer` | Use when acting as OSS Maintainer: triage, review, releases. | `role`, `persona`, `oss`, `github`, `review`, `release`, `triage` |
 | `solo-founder` | Use when acting as Solo Founder: weekly review, decision log. | `role`, `persona`, `discovery`, `market`, `validation` |
@@ -457,19 +457,19 @@
 
 ### sales — Sales: pipeline, outreach, CRM, negotiation (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `sales-super-skill` | End-to-end sales: account research, call prep, competitive intelligence, outreach draftin… |  |
 
 ### security — AI agent security: prompt injection defense, hardening (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `agent-security-super-skill` | AI agent security: prompt injection defense, skill/plugin validation, memory poisoning pr… |  |
 
 ### system — Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs (7)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `agent-packs` | Install and VERSIONED upgrade of agent-packs (Claude Code agents/workflows/hooks) from ha… | `agent-packs`, `templates`, `versioning`, `upgrade`, `install`, `claude-code`, `harness`, `lock` |
 | `brain-locator` | Reach the Brain vault (ecosystem Obsidian docs) from a project — non-hardcoded path resol… | `brain`, `vault`, `docs`, `navigation`, `locator`, `obsidian` |
@@ -481,15 +481,15 @@
 
 ### voice-ai — Realtime voice AI agents: WebRTC+WebSocket transport, VAD + semantic turn detection, sub-500ms barge-in, sub-800ms latency budget, STT→LLM→TTS orchestration, session state-machine, RU stack (Yandex SpeechKit / SaluteSpeech / GigaChat) + offline fallback (1)
 
-| Скилл | Описание | Теги |
+| Skill | Description | Tags |
 |:--|:--|:--|
 | `voice-ai` | Designing realtime voice AI agents: transport (WebRTC media + WebSocket control), turn de… | `voice`, `realtime`, `webrtc`, `stt`, `tts`, `vad`, `barge-in`, `latency`, `russian-stack` |
 
 ## Tag matrix
 
-Поиск скиллов по тегу (грузи точечно, не весь бакет).
+Search for skills by tag (load pointwise, not the whole bucket).
 
-| Тег | Скиллы |
+| Tag | Skills |
 |:--|:--|
 | `3d` | `build-loop`, `mcp-blender`, `model-rules`, `parametric-config`, `threading`, `version-gotchas` |
 | `accessors` | `eloquent-accessors` |

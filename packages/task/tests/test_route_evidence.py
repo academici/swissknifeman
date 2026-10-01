@@ -644,7 +644,7 @@ class CodexLaunchEvidenceTests(unittest.TestCase):
         from task import route_evidence_codex
 
         prompt = "$ task:plan-run PLAN P0.3"
-        prompt_with_payload = prompt + "\n\nРЕЖИМ: bounded audit repair-forward"
+        prompt_with_payload = prompt + "\n\nMODE: bounded audit repair-forward"
         with tempfile.TemporaryDirectory() as directory:
             state_root = Path(directory)
             self._write_thread_state(
@@ -725,7 +725,7 @@ class CodexLaunchEvidenceTests(unittest.TestCase):
             follow_up_message = {"type": "event_msg", "payload": {
                 "type": "item_completed", "turn_id": "turn-follow-up-2",
                 "item": {"type": "UserMessage", "content": [
-                    {"type": "text", "text": "Продолжай выполнение."},
+                    {"type": "text", "text": "Continue execution."},
                 ]},
             }}
             with path.open("a", encoding="utf-8") as handle:

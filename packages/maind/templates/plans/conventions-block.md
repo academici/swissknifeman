@@ -1,8 +1,8 @@
-## Планы проекта — конвенция plan-protocol
+## Project Plans - Convention plan-protocol
 
-Мастер-планы живут в `plans/<PLAN-ID>/` (`plan.md` + `phases/` + `handoff.md`) по протоколу
-plan-protocol; плоский `.md` в `plans/` (кроме `ACTIVE.md`/`README.md`) — черновик plan mode,
-разверни его: `/task:plan-design from-draft <файл>`. Активный план — `plans/ACTIVE.md`
-(нет файла — единственный план 🟡). Статусы обновляются В ФАЙЛАХ плана, не в чате — работа
-без обновления не завершена. Цикл: item/фаза закрыты → `handoff.md` перезаписан →
-рекомендован `/clear`. Команды: `/task:plan-{design,exec,close,audit}`.
+Master plans live in `plans/<PLAN-ID>/` (`plan.md` + `phases/` + `handoff.md`) by protocol
+plan-protocol; flat `.md` in `plans/` (except `ACTIVE.md`/`README.md`) — draft plan mode,
+expand it: `/task:plan-design from-draft <file>`. Active plan - `plans/ACTIVE.md`
+(no file - only plan 🟡). Statuses are updated IN plan FILES, not in chat - work
+is not completed without updating. Cycle: item/phase closed → `handoff.md` overwritten →
+recommended `/clear`. Commands: `/task:plan-{design,exec,close,audit}`.

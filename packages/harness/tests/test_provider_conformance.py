@@ -181,8 +181,8 @@ class ProviderConformanceTests(unittest.TestCase):
             self.assertEqual(relative.returncode, 0, relative.stderr)
             self.assertEqual(absolute.returncode, 0, absolute.stderr)
             self.assertEqual(relative.stdout, absolute.stdout)
-            self.assertIn("План: sha256:", relative.stdout)
-            self.assertIn("Статус: green", relative.stdout)
+            self.assertIn("Plan: sha256:", relative.stdout)
+            self.assertIn("Status: green", relative.stdout)
             self.assertEqual(before, {path: path.read_bytes() for path in repository.rglob("*")
                                       if path.is_file()})
 

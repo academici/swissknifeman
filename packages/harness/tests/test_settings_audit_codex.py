@@ -58,7 +58,7 @@ class CodexSettingsAuditCase(unittest.TestCase):
         self.assertEqual(findings[0].level, "warn")
         self.assertEqual(next(layer for layer in layers if layer.name == "project").error_kind,
                          "malformed")
-        self.assertIn("не распарсен", findings[0].title)
+        self.assertIn("not parsed", findings[0].title)
 
 
     def test_unreadable_toml_is_distinct_from_malformed(self):
@@ -70,7 +70,7 @@ class CodexSettingsAuditCase(unittest.TestCase):
         self.assertEqual(layer.error_kind, "unreadable")
         findings = codex_check_1_layers_readable([layer])
         self.assertEqual(len(findings), 1)
-        self.assertIn("не читается", findings[0].title)
+        self.assertIn("not readable", findings[0].title)
 
 
     def test_project_override_of_notify_is_error(self):

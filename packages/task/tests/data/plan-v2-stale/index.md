@@ -1,12 +1,12 @@
-# Индекс — PLAN-V2
+# Index - PLAN-V2
 
-## Карта директорий
+## Directory map
 
-| Путь | Назначение |
+| Path | Destination |
 |:--|:--|
-| `plan.md` | мастер-план |
+| `plan.md` | master plan |
 
-## Провенанс
+## Provenance
 
-| Источник | Слой | Питает | Суть |
+| Source | Layer | Nourishes | Essence |
 |:--|:--|:--|:--|

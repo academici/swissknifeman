@@ -1,60 +1,60 @@
-# Python / 3D — инструменты и рабочий цикл
+# Python / 3D — tools and work cycle
 
-> Разработка Python-компонентов (особенно 3D-моделирование, скрипты Blender,
-> генерация сцен) имеет свою специфику и требует особого подбора инструментов.
+> Development Python-components (especially 3D-modeling, scripts Blender,
+> scene generation) has its own specifics and requires a special selection of tools.
 
-## Специфика задач
+## Specifics of tasks
 
-- Сложные математические вычисления.
-- Работа с библиотеками: NumPy, Trimesh, Open3D, `bpy` (Blender Python API).
-- Визуальный контекст: скриншоты, рендеры, схемы.
-- Итеративная отладка алгоритмов.
+- Complex mathematical calculations.
+- Working with libraries: NumPy, Trimesh, Open3D, `bpy` (Blender Python API).
+- Visual context: screenshots, renderings, diagrams.
+- Iterative debugging of algorithms.
 
-## Рекомендуемые инструменты
+## Recommended Tools
 
-| Задача | Инструмент | Причина |
+| Task | Tool | Reason |
 |--------|-----------|--------|
-| Архитектура Python-пакета | Claude | Глубокий анализ структуры |
-| 3D-алгоритмы со скриншотами | Claude Fable 5 | Лучшее чтение визуального контекста |
-| Реализация скриптов | Cursor + Claude Haiku | Скорость и дешевизна |
-| Агрегация моделей | **Vilis** (или OpenRouter) | Агрегатор с доступом к Claude Code |
-| Финальный код-ревью | Claude Fable 5 | Глубокий анализ |
+| Architecture Python-package | Claude | Deep structure analysis |
+| 3D-algorithms with screenshots | Claude Fable 5 | Better reading of visual context |
+| Implementation of scripts | Cursor + Claude Haiku | Speed and low cost |
+| Model aggregation | **Vilis** (or OpenRouter) | Aggregator with access to Claude Code |
+| Final code review | Claude Fable 5 | Deep Analysis |
 
-## Vilis и агрегаторы моделей
+## Vilis and model aggregators
 
-Платформы-агрегаторы (Vilis, OpenRouter и т.д.) предоставляют:
+Aggregator platforms (Vilis, OpenRouter etc.) provide:
 
-- Единый интерфейс для разных моделей.
-- Доступ к Claude Code без отдельной подписки.
-- Гибкое переключение между моделями по типу задачи.
+- Unified interface for different models.
+- Access to Claude Code without a separate subscription.
+- Flexible switching between models based on task type.
 
-При наличии доступа — использовать как основную точку входа для Python-разработки.
+If access is available, use as the main entry point for Python-development.
 
-## Особенности работы с Fable 5 для 3D
+## Features of working with Fable 5 for 3D
 
-Claude Fable 5 хорошо подходит для 3D-задач, потому что:
+Claude Fable 5 good for 3D-tasks because:
 
-- Читает скриншоты и рендеры как визуальный контекст.
-- Понимает геометрические концепции и математику трёхмерных сцен.
-- Умеет генерировать и анализировать `bpy`-скрипты.
+- Reads screenshots and renders as visual context.
+- Understands geometric concepts and mathematics of 3D scenes.
+- Can generate and analyze `bpy`-scripts.
 
-> ⚠️ При подготовке промтов для Fable 5 — следовать гайду:
+> ⚠️ When preparing items for Fable 5 — follow the guide:
 > [Prompting Claude Fable 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5).
-> Подробности — на странице [Claude Fable 5](./fable-5).
+> Details - on the page [Claude Fable 5](./fable-5).
 
-## Типичный рабочий цикл
+## Typical duty cycle
 
 ```
-1. Perplexity — анализ библиотек и подходов для задачи
-2. Claude Fable 5 — архитектура модуля / алгоритма
-3. Cursor + Haiku — реализация
-4. Визуальная проверка (рендер / скриншот) → передать в Claude Fable 5 для анализа
-5. Итерация до получения нужного результата
-6. Финальный код-ревью: Claude Fable 5
+1. Perplexity — analysis of libraries and approaches for the task
+2. Claude Fable 5 — module architecture / algorithm
+3. Cursor + Haiku — implementation
+4. Visual inspection (render / screenshot) → transfer to Claude Fable 5 for analysis
+5. Iterate until the desired result is obtained
+6. Final code review: Claude Fable 5
 ```
 
-## Что получаем на выходе
+## What we get at the output
 
-- Python-скрипты или пакет с чистой архитектурой.
-- Алгоритмы, проверенные визуально через рендеры.
-- Код-ревью с учётом специфики 3D-математики.
+- Python-scripts or a package with a clean architecture.
+- Algorithms verified visually through renders.
+- Code review taking into account specifics 3D-mathematics.

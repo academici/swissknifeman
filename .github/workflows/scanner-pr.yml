@@ -40,12 +40,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Имя ветки берём из репозитория — scan-and-pr.sh уже сделал на неё
-          # `git checkout -b`. Раньше формула дублировалась ($(date +%Y%m%d)) и могла
-          # разойтись с веткой скрипта на границе суток → push не той ветки.
+          # We take the branch name from the repository — scan-and-pr.sh already done on her
+          # `git checkout -b`. Previously, the formula was duplicated ($(date +%Y%m%d)) and could
+          # diverge from a script branch at the end of the day → push wrong branch.
           BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-          # Без `|| true`: реальный сбой push должен валить job, а не маскироваться
-          # (иначе следом `gh pr create` бьёт по непушнутой ветке).
+          # Without `|| true`: real failure push gotta get out job, and not disguise
+          # (otherwise next `gh pr create` hits an unfurled branch).
           git push -u origin "$BRANCH"
           gh pr create \
             --title "feat(scanner): extracted snippets" \

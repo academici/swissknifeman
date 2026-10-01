@@ -154,7 +154,7 @@ class LegacyCliTests(unittest.TestCase):
             core = plan / "plan.md"
             core.write_text(core.read_text().replace("## 3. Routing", (
                 "## 3. Routing\n\n"
-                "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+                "| Batch | Items | Model class/effort | Exec | Review | Why |\n"
                 "|:--|:--|:--|:--|:--|:--|\n"
                 f"| solo | P1.1 | implementation/medium | {LEGACY} | light | recommended: legacy |\n")))
             actual = route_evidence.capture_actual(
@@ -235,7 +235,7 @@ class WritersNeverEmitLegacyTests(unittest.TestCase):
             core = plan / "plan.md"
             core.write_text(core.read_text().replace("## 3. Routing", (
                 "## 3. Routing\n\n"
-                "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+                "| Batch | Items | Model class/effort | Exec | Review | Why |\n"
                 "|:--|:--|:--|:--|:--|:--|\n"
                 "| solo | P1.1 | implementation/medium | run | light | recommended: demo |\n")))
             contract = task_contract.build(plan, "P1.1")
@@ -253,7 +253,7 @@ class WritersNeverEmitLegacyTests(unittest.TestCase):
             core = plan / "plan.md"
             core.write_text(core.read_text().replace("## 3. Routing", (
                 "## 3. Routing\n\n"
-                "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+                "| Batch | Items | Model class/effort | Exec | Review | Why |\n"
                 "|:--|:--|:--|:--|:--|:--|\n"
                 f"| solo | P1.1 | implementation/medium | {LEGACY} | light | legacy cell |\n")))
             routing = task_contract.compile_batch_routing(plan)

@@ -1,71 +1,71 @@
-# Архитектура пакета
+# Package architecture
 
-analyst — детерминированный (stdlib-only, on-demand) слой данных/пайплайна. Ниже — модули,
-инварианты и раскладка данных.
+analyst — deterministic (stdlib-only, on-demand) data layer/pipeline. Below are the modules,
+invariants and data layout.
 
-## Модули (`lib/analyst/`)
+## Modules (`lib/analyst/`)
 
-| Модуль | Ответственность |
+| Module | Responsibility |
 |:--|:--|
-| `cli.py` | диспетчер команд (`COMMANDS` → `cmd_*(env, argv)`) |
-| `common.py` | `Env(BaseEnv)` (path-property: `state_dir` = `~/.swissknifeman/analyst`, `monorepo_root`) + реэкспорт `core` |
-| `lessons.py` | файловый стор: схема урока, state-каталоги, atomic write, append-only `audit`/`events`, Jaccard/similar, mem0-таксономия |
-| `digest.py` | run-report → кандидаты по высокоточным сигналам; **чистые извлекатели** + IO в `cmd_` |
-| `scan.py` | cross-project агрегатор (P2): кластеры → паттерны в ≥N проектах (namespace-изолированно) + reconcile |
+| `cli.py` | command manager (`COMMANDS` → `cmd_*(env, argv)`) |
+| `common.py` | `Env(BaseEnv)` (path-property: `state_dir` = `~/.swissknifeman/analyst`, `monorepo_root`) + re-export `core` |
+| `lessons.py` | file store: lesson outline, state-directories, atomic write, append-only `audit`/`events`, Jaccard/similar, mem0-taxonomy |
+| `digest.py` | run-report → candidates for high-precision signals; **clean extractors** + IO in `cmd_` |
+| `scan.py` | cross-project aggregator (P2): clusters → patterns in ≥N projects (namespace-isolated) + reconcile |
 | `workflow_scan.py` | bounded read-only inventory plan workflow files: digest mirrors, static signatures and Rule-of-Three template coverage |
-| `suggest.py` | паттерн → **черновик** `SKILL.ru.md` (P4): чистые генераторы + edit-safe writer |
-| `confidence.py` | **чистая** арифметика (Beta × volume × decay) + тиры |
-| `recompute.py` | пересчёт confidence из `events.ndjson` → числовая state-machine (P3) |
-| `review.py` | уроки по state + structured diff (read-only) |
-| `promote.py` | конвейер + **человеко-гейт** curated + surfacing в память mAInd (subprocess, graceful) |
-| `trace.py` | **Unified Agent Trace v1** — единственный владелец схемы `TraceRecord`: сборка/валидация записи (провенанс + sha256), fail-closed на любом сыром ключе, потенциально несущем chain-of-thought/tool-payload/секрет, `quality.completeness` по шести группам полей с причиной на каждую недостающую, дедуп resume/fork по натуральному ключу |
-| `metrics.py` | парные метрики надёжности поверх закоммиченных `TraceRecord` и замороженного банка: `numerator/denominator/exclusions/completeness/source-trace-IDs/baseline-proof-class` в каждой записи; отсутствующий кандидат — `deferred`, а не тихий ноль; baseline класса `pinned-not-recomputable`/`unknown` не может обосновывать сравнение (fail closed) |
-| `doctor.py` | диагностика окружения |
+| `suggest.py` | pattern → **draft** `SKILL.ru.md` (P4): pure generators + edit-safe writer |
+| `confidence.py` | **clean** arithmetic (Beta × volume × decay) + shooting ranges |
+| `recompute.py` | recalculation confidence from `events.ndjson` → numeric state-machine (P3) |
+| `review.py` | lessons on state + structured diff (read-only) |
+| `promote.py` | pipeline + **man-gate** curated + surfacing to memory mAInd (subprocess, graceful) |
+| `trace.py` | **Unified Agent Trace v1** — sole owner of the schema `TraceRecord`: assembly/record validation (provenance + sha256), fail-closed on any raw key potentially carrying chain-of-thought/tool-payload/secret, `quality.completeness` for six groups of fields with a reason for each missing one, dedup resume/fork by natural key |
+| `metrics.py` | paired reliability metrics over committed ones `TraceRecord` and frozen bank: `numerator/denominator/exclusions/completeness/source-trace-IDs/baseline-proof-class` in each entry; absent candidate - `deferred`, and not a silent zero; baseline class `pinned-not-recomputable`/`unknown` cannot justify comparison (fail closed) |
+| `doctor.py` | environment diagnostics |
 
-Таблица называет несущие модули; полная карта пакета (включая `capture`/`events`/`readers`/
-`runs`/`ingest`/`proposals`/`sessions`/`status`/`token_report`) — в `packages/analyst/CLAUDE.md`.
-Публичный package-API пакета — `0.2.0`: минорный бамп оплачен по Contribution gate контракта
-Unified Agent Trace v1 ровно за два новых публичных модуля выше (`trace`, `metrics`).
-Версия `.claude-plugin/plugin.json` из `package.json` **не** выводится — это отдельная
-поверхность публикации.
+The table names the carrier modules; complete package map (including `capture`/`events`/`readers`/
+`runs`/`ingest`/`proposals`/`sessions`/`status`/`token_report`) — in `packages/analyst/CLAUDE.md`.
+Public package-API package - `0.2.0`: minor bump paid for Contribution gate contract
+Unified Agent Trace v1 for exactly two new public modules above (`trace`, `metrics`).
+Version `.claude-plugin/plugin.json` from `package.json` **not** is displayed - this is a separate
+publication surface.
 
-## Инварианты (за них не выходим)
+## Invariants (we don't marry them)
 
-- **Авто-запись в скиллы запрещена** — analyst предлагает, промоутит человек.
-- **Приватность:** raw — LOCAL-only; наружу — только абстрагированный `trigger→action`; секреты по ссылке.
-- **stdlib-only** — никаких pip-зависимостей в рантайме (без демона/сети).
-- **`Env` передаётся явно** (frozen dataclass), без модульных глобалей — тестируемо в tmpdir.
-- **Atomic JSON** (`core.atomic_write_json`); `audit`/`events` — только дозапись, никогда не перезапись.
-- **Извлекатели/генераторы — чистые функции** (вход → выход, без I/O/часов); IO — только в `cmd_*`/writers.
-- **Детерминизм + namespace-изоляция** наследуются во всём cross-project слое.
+- **Auto-recording to skills is prohibited** — analyst offers, promotes a person.
+- **Privacy:** raw — LOCAL-only; out - abstracted only `trigger→action`; secrets at the link.
+- **stdlib-only** — none pip-dependencies in runtime (without daemon/networks).
+- **`Env` is passed explicitly** (frozen dataclass), without modular globals - testable in tmpdir.
+- **Atomic JSON** (`core.atomic_write_json`); `audit`/`events` — overwrite only, never overwrite.
+- **Extractors/generators - pure functions** (input → exit, without I/O/hours); IO — only in `cmd_*`/writers.
+- **Determinism + namespace-insulation** are inherited throughout cross-project layer.
 
-## Раскладка данных
+## Data Layout
 
 ```
-<project>/.claude/analyst/                 # per-project, LOCAL (raw остаётся здесь)
+<project>/.claude/analyst/                 # per-project, LOCAL (raw remains here)
   lessons/{ephemeral,candidate,curated,deprecated}/<id>.json
   audit.ndjson · events.ndjson
 
-~/.swissknifeman/analyst/                   # cross-project слой (state_dir; общий state зонтика)
-  index/by_pattern/<id>.json               # scan: абстрагированные паттерны
-  suggestions/<id>.md                      # scan: человекочитаемый draft-МД
-  drafts/<pattern_id>/                      # suggest (P4): черновик скилла
+~/.swissknifeman/analyst/                   # cross-project layer (state_dir; general state umbrella)
+  index/by_pattern/<id>.json               # scan: abstracted patterns
+  suggestions/<id>.md                      # scan: human readable draft-MD
+  drafts/<pattern_id>/                      # suggest (P4): skill draft
     SKILL.ru.md · draft.meta.json
 ```
 
-## Связи в экосистеме
+## Ecosystem Connections
 
-- **[mAInd](/maind/)** — `curated`-уроки всплывают в общую память (`maind memory`, subprocess,
-  graceful: демон лёг → урок на диске, повторим позже). Namespace-изоляция scan наследуется отсюда.
-- **[skiller](/skiller/)** — конечная точка `suggest`: черновик → человек → зарегистрированный скилл.
-- **[harness](/harness/)** — хук `run-report` захватывает прогон (вход для `digest`).
-- **core** — общий stdlib-фундамент (`Env`/`io`/`text`/`term`), подключается через PYTHONPATH.
+- **[mAInd](/maind/)** — `curated`-lessons pop up in the shared memory (`maind memory`, subprocess,
+  graceful: the demon lay down → lesson on disk, will repeat later). Namespace-insulation scan is inherited from here.
+- **[skiller](/skiller/)** — endpoint `suggest`: draft → person → registered skill.
+- **[harness](/harness/)** — hook `run-report` captures the run (input for `digest`).
+- **core** — general stdlib-foundation (`Env`/`io`/`text`/`term`), connects via PYTHONPATH.
 
-## Разработка
+## Development
 
 ```bash
-bash scripts/test.sh          # unittest (без сети/демонов)
-bash scripts/validate.sh      # py_compile + bash -n + JSON + обязательные файлы + frontmatter + тесты
+bash scripts/test.sh          # unittest (without network/demons)
+bash scripts/validate.sh      # py_compile + bash -n + JSON + required files + frontmatter + tests
 ```
 
-Коммиты — Conventional Commits, на русском. Перед PR: `scripts/validate.sh` зелёный.
+Commits - Conventional Commits, in Russian. Before PR: `scripts/validate.sh` green.

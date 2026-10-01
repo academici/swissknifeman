@@ -1,5 +1,5 @@
-"""unittest для task.token_estimate — оценщик токенов СВЕРХУ (P0.1, D11/D14).
-Запуск: cd packages/task && python3 -m unittest tests.test_token_estimate -v"""
+"""unittest for task.token_estimate — token evaluator TOP (P0.1, D11/D14).
+Launch: cd packages/task && python3 -m unittest tests.test_token_estimate -v"""
 import json
 import math
 import tempfile
@@ -51,18 +51,18 @@ class TestClassifyAndCount(unittest.TestCase):
         self.assertEqual(classify_char("_"), "ascii_word")
         self.assertEqual(classify_char(" "), "ascii_other")
         self.assertEqual(classify_char("."), "ascii_other")
-        self.assertEqual(classify_char("б"), "cyrillic")
-        self.assertEqual(classify_char("Я"), "cyrillic")
+        self.assertEqual(classify_char(chr(0x431)), "cyrillic")
+        self.assertEqual(classify_char(chr(0x418)), "cyrillic")
         self.assertEqual(classify_char("🟢"), "other")
         self.assertEqual(classify_char("中"), "other")
 
     def test_count_classes_known_vector(self):
-        counts = count_classes("aA1_ .,б🟢")
+        counts = count_classes("aA1_ .," + chr(0x431) + "🟢")
         self.assertEqual(counts, {
             "dense_ascii": 0,
             "ascii_word": 4,   # a A 1 _
             "ascii_other": 3,  # space . ,
-            "cyrillic": 1,     # б
+            "cyrillic": 1,     # one Cyrillic character
             "other": 1,        # 🟢
         })
 
@@ -140,7 +140,7 @@ class TestEstimateText(unittest.TestCase):
                           FIXTURE_ARTIFACT["per_file_overhead_tokens"])
 
     def test_known_short_vector_gives_expected_number(self):
-        text = "aA1_ .,б🟢"  # ascii_word=4, ascii_other=3, cyrillic=1, other=1
+        text = "aA1_ .," + chr(0x431) + "🟢"  # ascii_word=4, ascii_other=3, cyrillic=1, other=1
         rates = FIXTURE_ARTIFACT["classes"]
         raw = 4 * rates["ascii_word"] + 3 * rates["ascii_other"] + 1 * rates["cyrillic"] + 1 * rates["other"]
         expected = math.ceil(raw * FIXTURE_ARTIFACT["safety_multiplier"]) + FIXTURE_ARTIFACT["per_file_overhead_tokens"]
@@ -149,7 +149,7 @@ class TestEstimateText(unittest.TestCase):
     def test_monotonic_on_text_growth(self):
         base = ""
         prev = estimate_text(base, artifact=FIXTURE_ARTIFACT)
-        for ch in "The план 🟢 continues по шагам with 123 и эмодзи 🔴🟡.":
+        for ch in "The plan 🟢 continues step by step with 123 and emoji 🔴🟡.":
             base += ch
             cur = estimate_text(base, artifact=FIXTURE_ARTIFACT)
             self.assertGreaterEqual(cur, prev, f"estimate decreased adding {ch!r}")

@@ -51,16 +51,16 @@ Large domain (request, order, document) goes in one vertical slice `resources/js
 
 ```
 features/order/
-├── actions/       # единственный слой с импортом @/wayfinder/routes/* (обёртки над роутами + execute())
-├── composables/   # use*-функции домена; импортируют ТОЛЬКО ../actions
-├── model/         # оркестрация уровня страницы: собирает composables в один useShowPage
-└── config/        # доменные константы, дефолты, карты статусов/вкладок
+├── actions/       # the only layer with import @/wayfinder/routes/* (wrappers over routes + execute())
+├── composables/   # use*-domain functions; import ONLY../actions
+├── model/         # page level orchestration: collects composables into one useShowPage
+└── config/        # domain constants, defaults, status maps/tabs
 ```
 
 Import boundary rule — dependencies strictly one-way, outside → inside:
 
 ```
-Vue-компонент / page  →  composables (или model)  →  actions  →  @/wayfinder/routes/*
+Vue-component / page  →  composables (or model)  →  actions  →  @/wayfinder/routes/*
 ```
 
 1. Only `actions/` knows wayfinder: all `@/wayfinder/routes/*` imports live in `features/<domain>/actions/` and nowhere else.

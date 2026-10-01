@@ -28,21 +28,21 @@ def _git(args, cwd, *, timeout=30):
         return subprocess.run(["git", *args], cwd=str(cwd), capture_output=True,
                               text=True, timeout=timeout, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
-        raise GateUnavailable(f"git {' '.join(args)} не выполнился: {exc}") from exc
+        raise GateUnavailable(f"git {' '.join(args)} failed: {exc}") from exc
 
 
 def _resolve_git_root(plan_dir, *, timeout=30):
     proc = _git(["rev-parse", "--show-toplevel"], cwd=plan_dir, timeout=timeout)
     if proc.returncode != 0:
         raise GateUnavailable(
-            f"«{plan_dir}» вне git-репозитория (или git не установлен): {proc.stderr.strip()}")
+            f"«{plan_dir}» out git-repository (or git not installed): {proc.stderr.strip()}")
     return Path(proc.stdout.strip())
 
 
 def _porcelain_lines(git_root, plan_rel, *, timeout=30):
     proc = _git(["status", "--porcelain", "--", plan_rel], cwd=git_root, timeout=timeout)
     if proc.returncode != 0:
-        raise GateUnavailable(f"git status --porcelain не выполнился: {proc.stderr.strip()}")
+        raise GateUnavailable(f"git status --porcelain failed: {proc.stderr.strip()}")
     return [ln for ln in proc.stdout.splitlines() if ln.strip()]
 
 
@@ -53,7 +53,7 @@ def snapshot_before(plan_dir, *, timeout=30):
     plan_rel = str(plan_dir.resolve().relative_to(git_root))
     head = _git(["rev-parse", "HEAD"], cwd=git_root, timeout=timeout)
     if head.returncode != 0:
-        raise GateUnavailable(f"git rev-parse HEAD не выполнился: {head.stderr.strip()}")
+        raise GateUnavailable(f"git rev-parse HEAD failed: {head.stderr.strip()}")
     return {
         "sha": head.stdout.strip(),
         "dirty": _porcelain_lines(git_root, plan_rel, timeout=timeout),
@@ -67,7 +67,7 @@ def _changed_paths(commit_hash, git_root, *, timeout=30):
                cwd=git_root, timeout=timeout)
     if proc.returncode != 0:
         raise GateUnavailable(
-            f"git show --name-only {commit_hash} не выполнился: {proc.stderr.strip()}")
+            f"git show --name-only {commit_hash} failed: {proc.stderr.strip()}")
     return [ln for ln in proc.stdout.splitlines() if ln.strip()]
 
 
@@ -119,13 +119,13 @@ def _call_plan_layout(plan_dir, phase_id, monorepo_root, *, timeout=30):
                               capture_output=True, text=True, timeout=timeout,
                               check=False, env=env)
     except (OSError, subprocess.TimeoutExpired) as exc:
-        raise GateUnavailable(f"резолвер раскладки не выполнился: {exc}") from exc
+        raise GateUnavailable(f"layout resolver failed: {exc}") from exc
     if proc.returncode:
-        raise GateUnavailable(f"резолвер раскладки отказал: {proc.stderr.strip()[-400:]}")
+        raise GateUnavailable(f"layout resolver failed: {proc.stderr.strip()[-400:]}")
     try:
         return json.loads(proc.stdout)
     except json.JSONDecodeError as exc:
-        raise GateUnavailable(f"резолвер раскладки вернул не JSON: {exc}") from exc
+        raise GateUnavailable(f"layout resolver did not return JSON: {exc}") from exc
 
 
 def _read_closure(before, phase_id, monorepo_root, *, timeout=30):
@@ -136,7 +136,7 @@ def _read_closure(before, phase_id, monorepo_root, *, timeout=30):
 
     log = _git(["log", "--format=%H", f"{before['sha']}..HEAD"], cwd=git_root, timeout=timeout)
     if log.returncode != 0:
-        raise GateUnavailable(f"git log не выполнился: {log.stderr.strip()}")
+        raise GateUnavailable(f"git log failed: {log.stderr.strip()}")
     commits = [ln for ln in log.stdout.splitlines() if ln.strip()]
 
     union_paths = set()
@@ -176,14 +176,14 @@ def _run_plan_lint(plan_dir, monorepo_root, extra_args, *, timeout=60):
         return subprocess.run(["python3", str(script), str(plan_dir), *extra_args],
                               capture_output=True, text=True, timeout=timeout, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
-        raise GateUnavailable(f"plan-lint.py не запустился: {exc}") from exc
+        raise GateUnavailable(f"plan-lint.py did not start: {exc}") from exc
 
 
 def _read_lint_signals(plan_dir, monorepo_root, baseline_sha, *, timeout=60):
     """Internal documentation."""
     baseline = _run_plan_lint(plan_dir, monorepo_root,
                               ["--baseline", baseline_sha, "--gate", "new"], timeout=timeout)
-    if "недоступен" in (baseline.stderr or ""):
+    if "not available" in (baseline.stderr or ""):
         return {"degraded": True, "clean": False, "new_error_suspected": False,
                 "new_warning_only": False, "lint_class": "degraded",
                 "reason": baseline.stderr.strip()[-400:]}
@@ -201,8 +201,8 @@ def _read_lint_signals(plan_dir, monorepo_root, baseline_sha, *, timeout=60):
     if current.returncode != 0:
         return {"degraded": False, "clean": False, "new_error_suspected": True,
                 "new_warning_only": False, "lint_class": "new-error-suspected",
-                "reason": ("новая диагностика есть, и в дереве присутствует ERROR — "
-                          "сомнение → строгий вердикт (IR6)")}
+                "reason": ("there is a new diagnostic, and it is present in the tree ERROR — "
+                          "doubt → strict verdict (IR6)")}
     return {"degraded": False, "clean": False, "new_error_suspected": False,
             "new_warning_only": True, "lint_class": "new-warning-only", "reason": None}
 
@@ -220,19 +220,19 @@ def _read_item_fields_after(plan_dir, phase_id, item_id, monorepo_root, *, timeo
         return {"available": False, "reason": str(exc)}
     if proc.returncode != 0:
         return {"available": False,
-                "reason": (f"plan-lint.py --json завершился кодом {proc.returncode} "
-                          f"(схема несёт ERROR — S1 недоступен для чтения полей): "
+                "reason": (f"plan-lint.py --json ended with the code {proc.returncode} "
+                          f"(circuit carries ERROR — S1 is not available for reading fields): "
                           f"{proc.stderr.strip()[-400:]}")}
     try:
         data = json.loads(proc.stdout)
     except json.JSONDecodeError as exc:
-        return {"available": False, "reason": f"plan-lint.py --json: вывод не JSON: {exc}"}
+        return {"available": False, "reason": f"plan-lint.py --json: no output JSON: {exc}"}
 
     plan_key = Path(plan_dir).name
     phase_model = (((data.get("plans") or {}).get(plan_key) or {}).get("phases") or {}).get(phase_id) or {}
     item_model = (phase_model.get("items") or {}).get(item_id)
     if item_model is None:
-        return {"available": False, "reason": f"item {item_id} не найден в модели S1 фазы {phase_id}"}
+        return {"available": False, "reason": f"item {item_id} not found in model S1 phases {phase_id}"}
 
     fields = item_model.get("fields") or {}
     return {
@@ -301,7 +301,7 @@ def _classify(signals):
 def pre_launch_verdict(queue_item):
     """Internal documentation."""
     if queue_item.get("drivable"):
-        raise ValueError("pre_launch_verdict вызывается только для НЕ-drivable item'а")
+        raise ValueError("pre_launch_verdict is called only for NOT-drivable item'a")
     return {
         "verdict": RED,
         "signals_matched": ["pre-launch-refusal"],
@@ -318,7 +318,7 @@ def verdict(plan_id, item_id, phase_id, plan_dir, before, outcome, *, monorepo_r
         monorepo_root = find_monorepo_root(plan_dir.resolve())
         if monorepo_root is None:
             raise GateUnavailable(
-                f"монорепо-корень не найден от {plan_dir} — пакет `task` недоступен")
+                f"monorepo root not found from {plan_dir} — package `task` not available")
 
     lint = _read_lint_signals(plan_dir, monorepo_root, before["sha"], timeout=timeout)
     closure = _read_closure(before, phase_id, monorepo_root, timeout=timeout)

@@ -18,7 +18,7 @@ Store lessons in explicit lifecycle directories, append audit and confidence eve
 Keep raw transcripts local; send only abstracted curated lessons to shared memory and reference secrets without storing their values.
 <!-- instruction:analyst.engineering-invariants -->
 ## analyst.engineering-invariants
-Keep runtime stdlib-only, pass frozen `Env` explicitly, write JSON atomically, require human confirmation for curated promotion, and emit Russian diagnostics.
+Keep runtime stdlib-only, pass frozen `Env` explicitly, write JSON atomically, require human confirmation for curated promotion, and emit English diagnostics.
 <!-- instruction:analyst.validation-release -->
 ## analyst.validation-release
 Before release run `bash scripts/test.sh` and `bash scripts/validate.sh`; regenerate the umbrella registry after changing analyst plugin commands.

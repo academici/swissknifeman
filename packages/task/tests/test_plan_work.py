@@ -25,7 +25,7 @@ class PlanWorkTests(unittest.TestCase):
         core = self.plan / "plan.md"
         core.write_text(core.read_text().replace("## 3. Routing", """## 3. Routing
 
-| Batch | Items | Model class/effort | Exec | Review | Почему |
+| Batch | Items | Model class/effort | Exec | Review | Why |
 |:--|:--|:--|:--|:--|:--|
 | solo | P1.1 | implementation/medium | run | light | recommended: bounded work |
 """))
@@ -251,7 +251,7 @@ class PlanWorkTests(unittest.TestCase):
         self.prepare()
         self.assertTrue(bundle.is_file())
         spec = self.plan / "phases/P1/P1.1.md"
-        spec.write_text(spec.read_text().replace("Добавить проверку.", "Добавить проверку ключа."))
+        spec.write_text(spec.read_text().replace("Add check.", "Add key verification."))
         self.assertEqual(plan_readiness.design_gate(self.plan)["code"],
                          "PLAN_DESIGN_FINISH_MISSING")
 
@@ -262,8 +262,8 @@ class PlanWorkTests(unittest.TestCase):
         phase_dir = self.plan / "phases/P2"
         phase_dir.mkdir()
         (phase_dir / "P2.md").write_text(
-            "# P2\n\n## Phase Context\n\n> СКЕЛЕТ — не детализирован\n\n"
-            "## Phase Handoff\n\nСначала уточнить.\n")
+            "# P2\n\n## Phase Context\n\n> SKELETON — not detailed\n\n"
+            "## Phase Handoff\n\nFirst, clarify.\n")
         # A skeleton later phase and no finish/audit do not block P1.1.
         self.assertEqual(plan_readiness.design_gate(self.plan)["code"], "PLAN_DESIGN_INCOMPLETE")
         plan_readiness.validate_execution_design(self.plan, ("P1.1",))
@@ -274,7 +274,7 @@ class PlanWorkTests(unittest.TestCase):
         # Editing a different phase never stales the target phase.
         spec = self.plan / "phases/P1/P1.1.md"
         before = spec.read_bytes()
-        (phase_dir / "P2.md").write_text((phase_dir / "P2.md").read_text() + "\nнабросок\n")
+        (phase_dir / "P2.md").write_text((phase_dir / "P2.md").read_text() + "\nsketch\n")
         self.assertEqual(spec.read_bytes(), before)
         plan_readiness.validate_execution_design(self.plan, ("P1.1",))
 
@@ -284,7 +284,7 @@ class PlanWorkTests(unittest.TestCase):
         self.add_supporting_artifacts()
         spec = self.plan / "phases/P1/P1.1.md"
         spec.write_text(spec.read_text().replace("**Validation:**", "**Validation:** —\n**Gone:**", 1))
-        with self.assertRaisesRegex(plan_readiness.ReadinessError, "требует Validation"):
+        with self.assertRaisesRegex(plan_readiness.ReadinessError, "requires Validation"):
             plan_readiness.validate_execution_design(self.plan, ("P1.1",))
 
     def test_early_execution_next_is_rejected_before_design_journal(self):
@@ -295,8 +295,8 @@ class PlanWorkTests(unittest.TestCase):
         phase_dir = self.plan / "phases/P2"
         phase_dir.mkdir()
         (phase_dir / "P2.md").write_text(
-            "# P2\n\n## Phase Context\n\n> СКЕЛЕТ — не детализирован\n\n"
-            "## Phase Handoff\n\nСначала уточнить.\n")
+            "# P2\n\n## Phase Context\n\n> SKELETON — not detailed\n\n"
+            "## Phase Handoff\n\nFirst, clarify.\n")
         self.assertEqual(plan_readiness.design_gate(self.plan)["code"],
                          "PLAN_DESIGN_INCOMPLETE")
         with self.assertRaisesRegex(plan_work.WorkError, "PLAN_DESIGN_GATE_BLOCKED"):

@@ -1,4 +1,4 @@
-"""Тесты sync.py (фан-аут + провиженеры mcp/graph/memory-hook) и common.managed_block."""
+"""Tests sync.py (fan-out + providers mcp/graph/memory-hook) and common.managed_block."""
 import json
 import os
 import shutil
@@ -43,25 +43,25 @@ class TestManagedBlock(unittest.TestCase):
     MARK = "maind:healthcheck"
 
     def test_insert_then_idempotent(self):
-        t0 = "# Project\n\nДокументация.\n"
-        t1, changed, state = upsert_block(t0, "ПРИОРИТЕТ №1", self.MARK)
+        t0 = "# Project\n\nDocumentation.\n"
+        t1, changed, state = upsert_block(t0, "PRIORITY №1", self.MARK)
         self.assertTrue(changed)
         self.assertEqual(state, "absent")
-        self.assertIn("ПРИОРИТЕТ №1", t1)
-        self.assertIn("# Project", t1)  # чужой текст сохранён
-        t2, changed2, state2 = upsert_block(t1, "ПРИОРИТЕТ №1", self.MARK)
+        self.assertIn("PRIORITY №1", t1)
+        self.assertIn("# Project", t1)  # someone else's text saved
+        t2, changed2, state2 = upsert_block(t1, "PRIORITY №1", self.MARK)
         self.assertFalse(changed2)
         self.assertEqual(state2, "fresh")
         self.assertEqual(t1, t2)
 
     def test_update_on_drift(self):
-        t0, _, _ = upsert_block("# P\n", "старый текст", self.MARK)
-        t1, changed, state = upsert_block(t0, "новый текст", self.MARK)
+        t0, _, _ = upsert_block("# P\n", "old text", self.MARK)
+        t1, changed, state = upsert_block(t0, "new text", self.MARK)
         self.assertTrue(changed)
         self.assertEqual(state, "stale")
-        self.assertIn("новый текст", t1)
-        self.assertNotIn("старый текст", t1)
-        self.assertEqual(t1.count(self.MARK), 2)  # один блок (begin+end), не два
+        self.assertIn("new text", t1)
+        self.assertNotIn("old text", t1)
+        self.assertEqual(t1.count(self.MARK), 2)  # one block (begin+end), not two
 
     def test_block_has_hash(self):
         self.assertIn("hash=", managed_block("x", self.MARK))
@@ -262,7 +262,7 @@ class TestProviderContexts(unittest.TestCase):
 
 
 class TestRoleAgentPacks(unittest.TestCase):
-    """Вариант C: project.roles → config.role_packs[role], аддитивно к профильному паку."""
+    """Option C: project.roles → config.role_packs[role], additive to the profile pack."""
     CFG = {"role_packs": {"tech-lead": "role-tech-lead", "solo-founder": "role-founder"}}
 
     def test_roles_only(self):
@@ -295,9 +295,9 @@ class TestRoleAgentPacks(unittest.TestCase):
 
 
 class TestAgentPackRun(unittest.TestCase):
-    """update не должен падать на паке, которого ещё нет в lock'е цели (field-feedback:
-    профиль дорос новым паком → sync --mode update душил его через upgrade, требующий
-    prior-install; чинить полагается install-путём, апгрейдить — уже стоящие)."""
+    """update should not crash on a pack that is not yet in lock'e goals (field-feedback:
+    profile has grown with a new pack → sync --mode update strangled him through upgrade, requiring
+    prior-install; supposed to be repaired install-way, upgrade - already standing)."""
 
     def test_installed_agent_packs_reads_lock(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -382,14 +382,14 @@ class TestSync(unittest.TestCase):
             projs = sync.select_projects(env, config, {"all": True})
             r1 = sync.run_sync(env, config, projs, only="mcp")
             self.assertTrue(has_server(proj / ".mcp.json", "maind"))
-            self.assertFalse(has_server(proj / ".mcp.json", "agentmemory"))  # raw выведен
+            self.assertFalse(has_server(proj / ".mcp.json", "agentmemory"))  # raw output
             self.assertTrue(r1[0]["changed"])
             r2 = sync.run_sync(env, config, projs, only="mcp")
-            self.assertFalse(r2[0]["changed"])  # повтор — без изменений
+            self.assertFalse(r2[0]["changed"])  # repeat - no change
 
     def test_mcp_provisioner_graphify_config_driven(self):
-        # graphify:true в записи проекта → провиженер mcp раскатывает graphify
-        # (когда бинарь есть); без флага — нет. Бинарь мокаем присутствующим.
+        # graphify:true in the project entry → provider mcp rolls out graphify
+        # (when the binary is available); without a flag - no. We mock up the binary for those present.
         from maind.provision import deploy
         orig = deploy.shutil.which
         deploy.shutil.which = lambda name: f"/usr/bin/{name}"
@@ -419,14 +419,14 @@ class TestSync(unittest.TestCase):
             self.assertTrue((env.data_dir / "graphs" / "_index.db").exists())
 
     def test_graph_provisioner_changed_is_honest(self):
-        # повторный derive без изменений источников → changed=False (детерминированный стор)
+        # repeated derive without source changes → changed=False (deterministic store)
         with tempfile.TemporaryDirectory() as tmp:
             env, config, _ = _setup(tmp)
             projs = sync.select_projects(env, config, {"all": True})
             r1 = sync.run_sync(env, config, projs, only="graph")
-            self.assertTrue(all(r["changed"] for r in r1))  # первый прогон — создание
+            self.assertTrue(all(r["changed"] for r in r1))  # first run - creation
             r2 = sync.run_sync(env, config, projs, only="graph")
-            self.assertTrue(all(not r["changed"] for r in r2))  # повтор — без изменений
+            self.assertTrue(all(not r["changed"] for r in r2))  # repeat - no change
 
     def test_dry_run_writes_nothing(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -442,17 +442,17 @@ class TestSync(unittest.TestCase):
                 sync.provisioner_names("bogus")
 
     def test_memory_hook_in_default_order(self):
-        # авто-загрузка памяти раскатывается и обычным `maind sync --all`
+        # auto-loading of memory is rolled out and normal `maind sync --all`
         self.assertIn("memory-hook", sync.provisioner_names())
 
 
 class TestMemoryHookProvisioner(unittest.TestCase):
-    """memory-hook читает интент из .claude/memory.env.ini: MODE=maind → инжект дайджеста +
-    native off; нет конфига → пропуск; off → revert. Так фича докатывается через sync."""
+    """memory-hook reads the intent from .claude/memory.env.ini: MODE=maind → digest injection +
+    native off; no config → pass; off → revert. So the feature is rolled out through sync."""
 
     def _with_templates(self, tmp):
         env, config, proj = _setup(tmp)
-        shutil.copytree(_TEMPLATES, env.root / "templates")  # шаблоны health в env.root
+        shutil.copytree(_TEMPLATES, env.root / "templates")  # templates health in env.root
         return env, config, proj
 
     def test_skip_when_no_memory_env(self):
@@ -478,7 +478,7 @@ class TestMemoryHookProvisioner(unittest.TestCase):
             cmds = [h["command"] for g in s["hooks"]["SessionStart"] for h in g["hooks"]]
             self.assertTrue(any("maind-memory" in c for c in cmds))
             r2 = sync.run_sync(env, config, projs, only="memory-hook")
-            self.assertFalse(r2[0]["changed"])  # повтор — без изменений
+            self.assertFalse(r2[0]["changed"])  # repeat - no change
 
     def test_revert_when_mode_off(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -486,9 +486,9 @@ class TestMemoryHookProvisioner(unittest.TestCase):
             (proj / ".claude").mkdir(parents=True, exist_ok=True)
             (proj / ".claude" / "memory.env.ini").write_text("MODE=maind\n", encoding="utf-8")
             projs = sync.select_projects(env, config, {"all": True})
-            sync.run_sync(env, config, projs, only="memory-hook")          # сперва ставим
+            sync.run_sync(env, config, projs, only="memory-hook")          # first set
             (proj / ".claude" / "memory.env.ini").write_text("MODE=off\n", encoding="utf-8")
-            sync.run_sync(env, config, projs, only="memory-hook")          # потом откатываем
+            sync.run_sync(env, config, projs, only="memory-hook")          # then rollback
             s = json.loads((proj / ".claude" / "settings.json").read_text())
             self.assertNotIn("autoMemoryEnabled", s)
             cmds = [h["command"] for g in s.get("hooks", {}).get("SessionStart", [])
@@ -512,8 +512,8 @@ class TestMemoryHookProvisioner(unittest.TestCase):
 
 
 class TestOutputStyleProvisioner(unittest.TestCase):
-    """output-style: outputStyle=lean во все .claude/settings.local.json (env:hooks), опт-аут
-    per-project через project.output_style="off". Идёт в ORDER."""
+    """output-style: outputStyle=lean in everything.claude/settings.local.json (env:hooks), opt-out
+    per-project via project.output_style="off". Goes to ORDER."""
     _HARNESS = Path(__file__).resolve().parents[2] / "harness" / "bin" / "harness"
 
     def test_in_default_order(self):
@@ -553,13 +553,13 @@ class TestOutputStyleProvisioner(unittest.TestCase):
                     os.environ["MAIND_HARNESS_BIN"] = old
             self.assertEqual(r[0]["status"], "ok")
             self.assertIn("style=lean", r[0]["detail"])
-            # честный dry-run harness — ничего не записано
+            # honest dry-run harness — nothing recorded
             self.assertFalse((proj / ".claude" / "settings.local.json").exists())
 
 
 class TestSkillsCatalogProvisioner(unittest.TestCase):
-    """skills-catalog: skm:update пере-резолвит каталог скиллов проекта (buckets/exclude с
-    диска) — новые скиллы уже выбранных бакетов доезжают без ручного re-run. Идёт в ORDER."""
+    """skills-catalog: skm:update will re-resolve the project skills catalog (buckets/exclude with
+    drive) — new skills of already selected buckets arrive without manual re-run. Goes to ORDER."""
     _SKM = Path(__file__).resolve().parents[2] / "skiller" / "bin" / "skiller"
 
     def test_in_default_order(self):
@@ -575,9 +575,9 @@ class TestSkillsCatalogProvisioner(unittest.TestCase):
             self.assertEqual(r[0]["status"], "skip")
 
     def test_delegates_to_skm_update(self):
-        # tmp-проект не подключён к реестру skiller — 'skiller update' честно завершается
-        # rc=1 ('не подключён'), провиженер отражает это как failed, БЕЗ побочных записей
-        # (не трогает домашний ~/.swissknifeman ни у теста, ни у реального пользователя).
+        # tmp-project is not connected to the registry skiller — 'skiller update' ends honestly
+        # rc=1 ('not connected'), the provider reflects this as failed, WITHOUT side entries
+        # (does not touch home ~/.swissknifeman neither the test nor the real user).
         import os
         with tempfile.TemporaryDirectory() as tmp:
             env, config, proj = _setup(tmp)
@@ -597,8 +597,8 @@ class TestSkillsCatalogProvisioner(unittest.TestCase):
 
 
 class TestRouterConfigProvisioner(unittest.TestCase):
-    """router-config: opt-in по .claude/agent-router.env.ini (POLICY!=off). Нет файла/off →
-    skip; включён → генерит каталог intent-router через harness (env:router). Идёт в ORDER."""
+    """router-config: opt-in by .claude/agent-router.env.ini (POLICY!=off). No file/off →
+    skip; enabled → generates a directory intent-router via harness (env:router). Goes to ORDER."""
     _HARNESS = Path(__file__).resolve().parents[2] / "harness" / "bin" / "harness"
 
     def test_in_default_order(self):
@@ -610,7 +610,7 @@ class TestRouterConfigProvisioner(unittest.TestCase):
             projs = sync.select_projects(env, config, {"all": True})
             r = sync.run_sync(env, config, projs, only="router-config")
             self.assertEqual(r[0]["status"], "skip")
-            self.assertIn("не включён", r[0]["detail"])
+            self.assertIn("not enabled", r[0]["detail"])
 
     def test_skip_when_policy_off(self):
         with tempfile.TemporaryDirectory() as tmp:

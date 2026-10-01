@@ -4,9 +4,9 @@ paths:
   - "lib/**/presentation/**"
 ---
 
-Виджеты Flutter:
+Widgets Flutter:
 
-- `const`-конструкторы где возможно; без бизнес-логики в `build()`.
-- Контроллеры/стримы/таймеры закрываются в `dispose()`.
-- Списки — ленивые (`ListView.builder`), не строй тяжёлые деревья целиком.
-- Null-safety: без `!` без обоснования.
+- `const`-constructors where possible; without business logic in `build()`.
+- Controllers/streams/timers close at `dispose()`.
+- Lists are lazy (`ListView.builder`), do not build heavy trees entirely.
+- Null-safety: without `!` without justification.

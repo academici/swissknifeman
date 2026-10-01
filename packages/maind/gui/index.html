@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>mAInd — командный пункт</title>
+<title>mAInd — command post</title>
 <style>
   :root { --ok:#3fb950; --bad:#f85149; --muted:#8b949e; --bg:#0d1117; --fg:#e6edf3;
           --card:#161b22; --line:#30363d; }
@@ -31,10 +31,10 @@
 </style>
 </head>
 <body>
-<header><h1>mAInd <small>— командный пункт экосистемы</small></h1></header>
-<div id="app"><div class="err">Загрузка <code>status.json</code>…</div></div>
+<header><h1>mAInd <small>— ecosystem command post</small></h1></header>
+<div id="app"><div class="err">Loading <code>status.json</code>…</div></div>
 <script>
-// Источник — вывод: maind projects status --json > gui/status.json
+// Source - output: maind projects status --json > gui/status.json
 const SRC = "status.json";
 const dot = up => `<span class="dot ${up ? "up" : "down"}"></span>`;
 function render(d) {
@@ -54,22 +54,22 @@ function render(d) {
   }).join("");
   document.getElementById("app").innerHTML = `
     <div class="hub">
-      <div>${dot(m.running)} <b>Память</b> ${m.running ? "up" : "down"} <code>${m.url || ""}</code></div>
-      <div>🕸 <b>Граф</b> ${g.nodes || 0} узлов / ${g.edges || 0} рёбер</div>
+      <div>${dot(m.running)} <b>Memory</b> ${m.running ? "up" : "down"} <code>${m.url || ""}</code></div>
+      <div>🕸 <b>Graph</b> ${g.nodes || 0} nodes / ${g.edges || 0} ribs</div>
       <div>${dot(w.running)} <b>docs-watcher</b> ${w.running ? "up" : "down"}</div>
     </div>
     <main><table>
-      <thead><tr><th>статус</th><th>проект</th><th>mcp[a/m/g]</th><th>trust</th><th>скиллы</th><th>boost</th><th>scope</th></tr></thead>
-      <tbody>${rows || '<tr><td colspan="7" class="err">нет проектов</td></tr>'}</tbody>
+      <thead><tr><th>status</th><th>project</th><th>mcp[a/m/g]</th><th>trust</th><th>skills</th><th>boost</th><th>scope</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="7" class="err">no projects</td></tr>'}</tbody>
     </table></main>`;
 }
 fetch(SRC).then(r => r.json()).then(render).catch(() => {
   document.getElementById("app").innerHTML = `<div class="err">
-    <p>Не удалось загрузить <code>status.json</code>. Сгенерируйте его:</p>
+    <p>Failed to load <code>status.json</code>. Generate it:</p>
     <pre><code>maind projects status --json > gui/status.json</code></pre>
-    <p>и обслужите папку (<code>python3 -m http.server</code>), либо вставьте JSON ниже:</p>
-    <textarea id="paste" placeholder="вывод maind projects status --json"></textarea>
-    <p><button onclick="try{render(JSON.parse(document.getElementById('paste').value))}catch(e){alert(e)}">Показать</button></p>
+    <p>and serve the folder (<code>python3 -m http.server</code>), or paste JSON below:</p>
+    <textarea id="paste" placeholder="output maind projects status --json"></textarea>
+    <p><button onclick="try{render(JSON.parse(document.getElementById('paste').value))}catch(e){alert(e)}">Show</button></p>
   </div>`;
 });
 </script>

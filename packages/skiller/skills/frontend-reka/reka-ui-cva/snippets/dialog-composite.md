@@ -1,12 +1,12 @@
 <!-- Source: anonymized production project -->
-# Составной компонент: Root / Trigger / Content на Reka UI
+# Composite component: Root / Trigger / Content on Reka UI
 
-Составной примитив (Dialog, Popover, Tooltip, DropdownMenu) собирается из
-частей: каждая часть — отдельный `.vue`-файл в `components/ui/dialog/`,
-реэкспортированный из `index.ts`. Поведение (фокус-ловушка, портал, ARIA,
-`data-[state]`) даёт Reka UI; ваша задача — форвардинг пропов и слияние классов.
+Composite primitive (Dialog, Popover, Tooltip, DropdownMenu) is collected from
+parts: each part is separate `.vue`-file in `components/ui/dialog/`,
+re-exported from `index.ts`. Behavior (focus trap, portal, ARIA,
+`data-[state]`) gives Reka UI; your task is to forward props and merge classes.
 
-## index.ts — публичное API папки
+## index.ts — public API folders
 
 ```ts
 export { default as Dialog } from "./Dialog.vue"
@@ -16,10 +16,10 @@ export { default as DialogHeader } from "./DialogHeader.vue"
 export { default as DialogTitle } from "./DialogTitle.vue"
 ```
 
-## Root — Dialog.vue (форвард пропов + эмитов без классов)
+## Root — Dialog.vue (forward propov + emitters without classes)
 
-`useForwardPropsEmits` прозрачно прокидывает все пропы/эмиты примитива; у Root
-нет своего `class`, поэтому ничего исключать не нужно.
+`useForwardPropsEmits` transparently passes all props/primitive emitters; at Root
+doesn't have one `class`, so there is no need to exclude anything.
 
 ```vue
 <script setup lang="ts">
@@ -38,7 +38,7 @@ const forwarded = useForwardPropsEmits(props, emits)
 </template>
 ```
 
-## Trigger — DialogTrigger.vue (тонкая обёртка под asChild-кнопку)
+## Trigger — DialogTrigger.vue (thin wrapper under asChild-button)
 
 ```vue
 <script setup lang="ts">
@@ -55,14 +55,14 @@ const props = defineProps<DialogTriggerProps>()
 </template>
 ```
 
-## Content — DialogContent.vue (портал + оверлей + слияние своего class)
+## Content — DialogContent.vue (portal + overlay + merging its class)
 
-Ключевой приём: у части есть собственный `class`, поэтому его **исключают**
-из форварда через `reactiveOmit(props, "class")`, а сливают отдельно в `cn()` —
-иначе `class` уйдёт в примитив дважды. Портал/оверлей требуют
-`inheritAttrs: false` и проброса `{ ...$attrs, ...forwarded }`. Классы
-`data-[state=open]:`/`data-[state=closed]:` читают состояние, выставляемое
-примитивом, и навешивают анимации.
+Key Technique: The piece has its own `class`, so its **exclude**
+from forward via `reactiveOmit(props, "class")`, and poured separately into `cn()` —
+otherwise `class` will go into the primitive twice. Portal/overlay require
+`inheritAttrs: false` and forwarding `{ ...$attrs, ...forwarded }`. Classes
+`data-[state=open]:`/`data-[state=closed]:` read the status set
+primitive, and attach animations.
 
 ```vue
 <script setup lang="ts">
@@ -79,7 +79,7 @@ defineOptions({ inheritAttrs: false })
 const props = defineProps<DialogContentProps & { class?: HTMLAttributes["class"] }>()
 const emits = defineEmits<DialogContentEmits>()
 
-// class исключён из форварда, чтобы не дублировался в примитиве
+// class is excluded from the forward so as not to be duplicated in the primitive
 const delegated = reactiveOmit(props, "class")
 const forwarded = useForwardPropsEmits(delegated, emits)
 </script>
@@ -105,10 +105,10 @@ const forwarded = useForwardPropsEmits(delegated, emits)
 </template>
 ```
 
-## Структурная часть — DialogHeader.vue (обычный div + cn)
+## Structural part - DialogHeader.vue (normal div + cn)
 
-Не каждой части нужен примитив: заголовок/футер — просто `div` со своим base
-и пользовательским `class`, слитыми через `cn()`.
+Not every part needs a primitive: header/footer - simple `div` with his base
+and custom `class`, merged via `cn()`.
 
 ```vue
 <script setup lang="ts">
@@ -125,18 +125,18 @@ const props = defineProps<{ class?: HTMLAttributes["class"] }>()
 </template>
 ```
 
-## Использование
+## Usage
 
 ```vue
 <Dialog>
   <DialogTrigger as-child>
-    <Button>Открыть</Button>
+    <Button>Open</Button>
   </DialogTrigger>
   <DialogContent>
     <DialogHeader>
-      <DialogTitle>Заголовок</DialogTitle>
+      <DialogTitle>Header</DialogTitle>
     </DialogHeader>
-    <!-- содержимое -->
+    <!-- contents -->
   </DialogContent>
 </Dialog>
 ```

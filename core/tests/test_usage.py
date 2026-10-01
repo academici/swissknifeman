@@ -1,11 +1,11 @@
-"""Тесты core/usage.py — единого транскрипт-парсера usage-метрик Claude Code.
+"""Tests core/usage.py — single transcript parser usage-metrics Claude Code.
 
-Фикстуры — инлайн-события в форме реальных JSONL-строк транскриптов
-(~/.claude/projects/<slug>/*.jsonl). Отдельно охраняем самодостаточность модуля:
-он копируется байт-в-байт в хук без PYTHONPATH, поэтому запрещены любые
-не-stdlib импорты (from core... / from .).
+Fixtures - inline events in the form of real JSONL-transcript lines
+(~/.claude/projects/<slug>/*.jsonl). We separately protect the self-sufficiency of the module:
+it is copied byte-for-byte into the hook without PYTHONPATH, therefore any
+not-stdlib imports (from core... / from .).
 
-Запуск: PYTHONPATH=<корень монорепо> python3 -m unittest discover -s core/tests"""
+Launch: PYTHONPATH=<root monorepo> python3 -m unittest discover -s core/tests"""
 import json
 import re
 import tempfile
@@ -40,7 +40,7 @@ class TestFeedFinish(unittest.TestCase):
     def test_sums_usage_and_chars(self):
         events = [
             {"type": "user", "timestamp": "2026-07-02T10:00:00Z",
-             "message": {"content": "  Проверь usage-парсер\nвторая строка"}},
+             "message": {"content": "  Check usage-parser\nsecond line"}},
             _assistant(ts="2026-07-02T10:00:05Z",
                        usage={"input_tokens": 100, "output_tokens": 20,
                               "cache_read_input_tokens": 300,
@@ -53,10 +53,10 @@ class TestFeedFinish(unittest.TestCase):
                               "cache_read_input_tokens": 0,
                               "cache_creation_input_tokens": 0},
                        content=[{"type": "text", "text": "done"}]),
-            # tool_result с ошибкой — приходит user-событием
+            # tool_result with an error - comes user-event
             {"type": "user", "message": {"content": [
                 {"type": "tool_result", "is_error": True, "content": "boom"}]}},
-            # tool_result без ошибки — НЕ считается
+            # tool_result without error - NOT considered
             {"type": "user", "message": {"content": [
                 {"type": "tool_result", "is_error": False, "content": "fine"}]}},
         ]
@@ -69,42 +69,42 @@ class TestFeedFinish(unittest.TestCase):
         self.assertEqual(agg["thinking_chars"], 4)
         self.assertEqual(agg["text_chars"], 3 + 4)
         self.assertEqual(agg["tool_errors"], 1)
-        self.assertEqual(agg["model"], "claude-sonnet-4")  # последняя модель
+        self.assertEqual(agg["model"], "claude-sonnet-4")  # latest model
         self.assertEqual(agg["models"], ["claude-opus-4", "claude-sonnet-4"])
-        self.assertEqual(agg["label"], "Проверь usage-парсер")
+        self.assertEqual(agg["label"], "Check usage-parser")
         self.assertAlmostEqual(agg["wall_seconds"], 65.0)
-        # first_turn_overhead = input+cache_creation ПЕРВОЙ assistant-записи (100+50),
-        # не суммарно по всем (P5.3)
+        # first_turn_overhead = input+cache_creation FIRST assistant-records (100+50),
+        # not total for all (P5.3)
         self.assertEqual(agg["first_turn_overhead"], 150)
 
     def test_label_from_blocks_and_truncation(self):
         long_line = "x" * 200
         events = [{"type": "user", "message": {"content": [
             {"type": "tool_result", "content": "noise"},
-            {"type": "text", "text": "\n\n" + long_line + "\nхвост"}]}}]
+            {"type": "text", "text": "\n\n" + long_line + "\ntail"}]}}]
         agg = finish(_feed_all(events))
-        self.assertEqual(agg["label"], "x" * 80)  # обрезка до 80 симв.
-        # явный label важнее автоматического
+        self.assertEqual(agg["label"], "x" * 80)  # trim to 80 characters.
+        # explicit label is more important than automatic
         self.assertEqual(finish(_feed_all(events), label="agent-1")["label"], "agent-1")
 
     def test_tolerant_to_garbage(self):
-        # мусорные события не должны бросать исключений и не влияют на суммы
+        # garbage events should not throw exceptions and do not affect amounts
         events = [
-            None, 42, "строка", [], {},
-            {"type": "assistant"},                          # без message
-            {"type": "assistant", "message": "не dict"},
-            {"type": "assistant", "message": {"usage": "не dict", "model": 7}},
-            _assistant(usage={"input_tokens": "мусор", "output_tokens": None,
+            None, 42, "string", [], {},
+            {"type": "assistant"},                          # without message
+            {"type": "assistant", "message": "not dict"},
+            {"type": "assistant", "message": {"usage": "not dict", "model": 7}},
+            _assistant(usage={"input_tokens": "trash", "output_tokens": None,
                               "cache_read_input_tokens": True},
-                       content=[None, "строка", {"type": "text", "text": 5},
+                       content=[None, "string", {"type": "text", "text": 5},
                                 {"type": "thinking"}]),
-            {"type": "user", "message": {"content": [{"is_error": True}]}},  # не tool_result
+            {"type": "user", "message": {"content": [{"is_error": True}]}},  # not tool_result
             {"timestamp": 123},
         ]
         agg = finish(_feed_all(events))
         self.assertEqual(agg["in"], 0)
         self.assertEqual(agg["out"], 0)
-        self.assertEqual(agg["cache_read"], 0)  # True — не токены
+        self.assertEqual(agg["cache_read"], 0)  # True — are not tokens
         self.assertEqual(agg["msgs"], 2)
         self.assertEqual(agg["tool_errors"], 0)
         self.assertEqual(agg["thinking_chars"], 0)
@@ -112,8 +112,8 @@ class TestFeedFinish(unittest.TestCase):
         self.assertEqual(agg["model"], "claude-opus-4")
 
     def test_first_turn_overhead_none_without_usage(self):
-        # первая assistant-запись без usage-блока → first_turn_overhead остаётся None,
-        # последующие тоже её не перезаписывают
+        # first assistant-entry without usage-block → first_turn_overhead remains None,
+        # subsequent ones also do not overwrite it
         agg = finish(_feed_all([
             _assistant(content=[{"type": "text", "text": "no usage here"}]),
             _assistant(usage={"input_tokens": 5, "output_tokens": 1,
@@ -123,10 +123,10 @@ class TestFeedFinish(unittest.TestCase):
         self.assertEqual(agg["msgs"], 2)
 
     def test_wall_seconds_none_on_bad_ts(self):
-        agg = finish(_feed_all([{"type": "user", "timestamp": "не дата",
+        agg = finish(_feed_all([{"type": "user", "timestamp": "not a date",
                                  "message": {"content": "hi"}}]))
         self.assertIsNone(agg["wall_seconds"])
-        # событий с timestamp не было вовсе
+        # events with timestamp was not there at all
         self.assertIsNone(finish(new_acc())["wall_seconds"])
 
 
@@ -160,21 +160,21 @@ class TestMerge(unittest.TestCase):
         self.assertIsNone(res["cache_hit"])
         self.assertEqual(res["totals"]["in"], 0)
         self.assertEqual(res["by_model"], {})
-        # мусор в списке агентов не роняет merge
-        self.assertIsNone(merge([None, "мусор"])["cache_hit"])
+        # does not drop garbage in the list of agents merge
+        self.assertIsNone(merge([None, "trash"])["cache_hit"])
 
 
 class TestSimilarRatio(unittest.TestCase):
     def test_jaccard(self):
         self.assertAlmostEqual(similar_ratio("fix the parser", "fix the tests"),
                                2 / 4)  # {fix,the} / {fix,the,parser,tests}
-        self.assertEqual(similar_ratio("одинаковый текст", "одинаковый текст"), 1.0)
+        self.assertEqual(similar_ratio("same text", "same text"), 1.0)
         self.assertEqual(similar_ratio("alpha beta", "gamma delta"), 0.0)
 
     def test_empty_and_short_tokens(self):
         self.assertEqual(similar_ratio("", ""), 0.0)
         self.assertEqual(similar_ratio(None, None), 0.0)
-        # односимвольные слова отбрасываются → множества пусты → 0.0
+        # single-character words are discarded → sets are empty → 0.0
         self.assertEqual(similar_ratio("a b c", "a b c"), 0.0)
 
 
@@ -184,9 +184,9 @@ class TestIterJsonl(unittest.TestCase):
             p = Path(td) / "t.jsonl"
             p.write_text('\n'.join([
                 json.dumps({"type": "assistant"}),
-                "{битая строка",
+                "{broken string",
                 "",
-                '"просто строка"',           # валидный JSON, но не dict — пропуск
+                '"is just a string"',           # valid JSON, but not dict — pass
                 json.dumps({"type": "user"}),
             ]), encoding="utf-8")
             recs = list(iter_jsonl(p))
@@ -197,16 +197,16 @@ class TestIterJsonl(unittest.TestCase):
             p = Path(td) / "empty.jsonl"
             p.write_text("", encoding="utf-8")
             self.assertEqual(list(iter_jsonl(p)), [])
-            self.assertEqual(list(iter_jsonl(Path(td) / "нет-файла.jsonl")), [])
+            self.assertEqual(list(iter_jsonl(Path(td) / "no-file.jsonl")), [])
 
     def test_stream_into_acc(self):
-        # сквозной сценарий: файл → iter_jsonl → feed_event → finish
+        # end-to-end script: file → iter_jsonl → feed_event → finish
         with tempfile.TemporaryDirectory() as td:
             p = Path(td) / "run.jsonl"
             lines = [
                 json.dumps({"type": "user", "timestamp": "2026-07-02T09:00:00Z",
-                            "message": {"content": "задача"}}),
-                "мусор не json",
+                            "message": {"content": "task"}}),
+                "garbage not json",
                 json.dumps(_assistant(usage={"input_tokens": 7, "output_tokens": 3,
                                              "cache_read_input_tokens": 0,
                                              "cache_creation_input_tokens": 0},
@@ -218,21 +218,21 @@ class TestIterJsonl(unittest.TestCase):
                 feed_event(acc, ev)
             agg = finish(acc)
             self.assertEqual(agg["in"], 7)
-            self.assertEqual(agg["label"], "задача")
+            self.assertEqual(agg["label"], "task")
             self.assertAlmostEqual(agg["wall_seconds"], 10.0)
 
 
 class TestSelfContained(unittest.TestCase):
     def test_no_forbidden_imports(self):
-        """Охрана самодостаточности: usage.py копируется в хук без PYTHONPATH,
-        поэтому relative/core-импорты его сломали бы молча."""
+        """Protecting self-sufficiency: usage.py is copied to the hook without PYTHONPATH,
+        therefore relative/core-imports would break it silently."""
         src = USAGE_PY.read_text(encoding="utf-8")
         self.assertIsNone(re.search(r"^\s*from\s+core\b", src, re.M),
-                          "usage.py не должен импортировать из core")
+                          "usage.py should not import from core")
         self.assertIsNone(re.search(r"^\s*from\s+\.", src, re.M),
-                          "usage.py не должен использовать относительные импорты")
+                          "usage.py should not use relative imports")
         self.assertIsNone(re.search(r"^\s*import\s+core\b", src, re.M),
-                          "usage.py не должен импортировать пакет core")
+                          "usage.py should not import the package core")
 
 
 if __name__ == "__main__":

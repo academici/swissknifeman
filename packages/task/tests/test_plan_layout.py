@@ -21,7 +21,7 @@ class PlanLayoutTest(unittest.TestCase):
         plan = Path(root) / "PLAN"
         (plan / "phases").mkdir(parents=True)
         row = f"| Layout | {layout} |\n" if layout else ""
-        (plan / "plan.md").write_text("## 0. Meta\n\n| Поле | Значение |\n" + row, encoding="utf-8")
+        (plan / "plan.md").write_text("## 0. Meta\n\n| Field | Meaning |\n" + row, encoding="utf-8")
         return plan
 
     def test_missing_layout_is_rejected_as_retired(self):
@@ -76,7 +76,7 @@ class PlanLayoutTest(unittest.TestCase):
             plan_md.write_text(plan_md.read_text(encoding="utf-8") + """
 ## 4. Phase Index & Status Board
 
-| Phase | Title | Items 🟢/всего | Status |
+| Phase | Title | Items 🟢/total | Status |
 |:--|:--|:--|:--|
 | P1 | Finished phase | 1/1 | 🟢 Done |
 """, encoding="utf-8")
@@ -97,22 +97,22 @@ class PlanLayoutTest(unittest.TestCase):
             plan = write_valid_plan(Path(tmp), layout="v2")
             plan_md = plan / "plan.md"
             text = plan_md.read_text(encoding="utf-8").replace(
-                "Каталог решений: `decisions/`; собрать: "
+                "Solutions catalog: `decisions/`; collect: "
                 "`python3 packages/task/scripts/plan-views.py decisions`.",
-                "| D# | Дата | Решение | Почему |\n|:--|:--|:--|:--|\n| D1 | 2026-01-01 | old | old |")
-            plan_md.write_text(text + "\n## Обсуждение\n\nСтарый носитель.\n", encoding="utf-8")
+                "| D# | Date | Solution | Why |\n|:--|:--|:--|:--|\n| D1 | 2026-01-01 | old | old |")
+            plan_md.write_text(text + "\n## Discussion\n\nOld media.\n", encoding="utf-8")
             diag = plan_lint.Diagnostics()
             plan_lint.lint_plan(plan, diag)
             joined = "\n".join(str(entry) for entry in diag.errors)
-            self.assertIn("Decision Log должен быть строкой-указателем", joined)
-            self.assertIn("«## Обсуждение» запрещён", joined)
+            self.assertIn("Decision Log must be a pointer string", joined)
+            self.assertIn("«## Discussion» prohibited", joined)
 
     def test_task_contract_resolves_v2_phase_address(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan = write_valid_plan(Path(tmp), layout="v2")
             path = plan / "plan.md"
             text = path.read_text(encoding="utf-8").replace(
-                "## 3. Routing\n\n", "## 3. Routing\n\n| Items | Model class/effort | Exec | Почему |\n|:--|:--|:--|:--|\n| P1.1 | implementation/medium | run | fixture |\n\n")
+                "## 3. Routing\n\n", "## 3. Routing\n\n| Items | Model class/effort | Exec | Why |\n|:--|:--|:--|:--|\n| P1.1 | implementation/medium | run | fixture |\n\n")
             path.write_text(text, encoding="utf-8")
             contract = task_contract.build(plan, "P1.1")
             self.assertIn("route", contract)

@@ -3,7 +3,7 @@
   "snippets": [
     {
       "file": "enum-with-transitions.php",
-      "description": "Граф переходов как метод enum transitionDefinitions(): рёбра from→to + guard/action/label, единый источник истины",
+      "description": "Transition graph as a method enum transitionDefinitions(): edges from→to + guard/action/label, single source of truth",
       "tags": [
         "php",
         "enum",
@@ -13,7 +13,7 @@
     },
     {
       "file": "transitions-registry.php",
-      "description": "Рантайм-реестр переходов: ленивое построение adjacency из transitionDefinitions(), allowedFrom() и canTransition()",
+      "description": "Runtime transition registry: lazy construction adjacency from transitionDefinitions(), allowedFrom() and canTransition()",
       "tags": [
         "php",
         "state-machine",
@@ -22,7 +22,7 @@
     },
     {
       "file": "transition-action.php",
-      "description": "Исполнение перехода в final readonly Action: guard + DB::transaction() + доменное событие с ShouldDispatchAfterCommit",
+      "description": "Executing transition to final readonly Action: guard + DB::transaction() + domain event with ShouldDispatchAfterCommit",
       "tags": [
         "php",
         "laravel",

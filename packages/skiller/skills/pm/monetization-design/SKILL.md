@@ -90,34 +90,34 @@ produces_input_for: [04_Unit_Economics.md, 06_Go_To_Market.md, BRD.md]
 
 # Monetization Model — [ProjectName]
 
-## Контекст
+## Context
 - JTBD: ...
-- Сегмент: ...
-- Частота job: ...
+- Segment: ...
+- Frequency job: ...
 
-## Рассмотренные модели
-[список после отсева — минимум 3]
+## Models reviewed
+[list after elimination - minimum 3]
 
-## Trade-off матрица
-[таблица по критериям]
+## Trade-off matrix
+[table by criteria]
 
-## Рекомендация
-**Стартовая модель:** [X]
-**Обоснование:** [3–5 пунктов]
+## Recommendation
+**Starting model:** [X]
+**Rationale:** [3–5 items]
 
-## Миграционный путь
-- T0: [модель]
-- T+6–12 мес: [модель] при триггере [метрика]
+## Migration route
+- T0: [model]
+- T+6–12 months: [model] on trigger [metric]
 
-## Анти-паттерны для этого домена (агент)
+## Anti-patterns for this domain (agent)
 - ...
 
-## Влияние на roadmap / BRD
-- Обязательные фичи: ...
-- Compliance-требования: ...
+## Impact on roadmap / BRD
+- Required features: ...
+- Compliance-requirements: ...
 
-## Следующий шаг
-→ `.ai/skills/pm/unit-economics.md` (расчёт LTV/CAC для выбранной модели)
+## Next step
+→ `.ai/skills/pm/unit-economics.md` (calculation LTV/CAC for the selected model)
 ```
 
 ## Hard prohibitions at this stage

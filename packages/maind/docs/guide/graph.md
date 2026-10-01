@@ -1,93 +1,93 @@
-# Граф связей
+# Connection graph
 
-Граф — это **топология между проектами**: кто от кого зависит, кто что предоставляет, какие
-скиллы используют. Движок — чистый **stdlib** (BFS/кратчайший путь, без сторонних зависимостей),
-персист в node-link JSON. Раскладка — **федерация**: граф на проект (`data/graphs/<id>.db`) плюс
-тонкий регенерируемый индекс `_index.db` (см. [Федерация](./federation)).
+A graph is **topology between projects**: who depends on whom, who provides what, what
+skills are used. Engine is clean **stdlib** (BFS/shortest path, no third-party dependencies),
+persistent in node-link JSON. Layout - **federation**: graph per project (`data/graphs/<id>.db`) plus
+thin regenerated index `_index.db` (see [Federation](./federation)).
 
-> Этот граф (maind-граф) связывает **топологию между проектами**; память (`agent-memory`) связывает
-> **контекст/факты**. Это независимые механизмы хаба, работают по [namespace'ам](./namespaces). Граф
-> *кода внутри проекта* (символы/файлы) — это отдельная плоскость, [код-граф (Serena)](./code-graph).
+> This graph (maind-graph) links **topology between projects**; memory (`agent-memory`) links
+> **context/facts**. These are independent hub mechanisms, they work according to [namespace'am](./namespaces). Graph
+> *code inside the project* (characters/files) — is a separate plane, [code graph (Serena)](./code-graph).
 
-## Типы узлов и рёбер
+## Types of nodes and edges
 
-| Узел (`<type>:<key>`) | | Ребро | |
+| Node (`<type>:<key>`) | | Rib | |
 |:--|:--|:--|:--|
-| `project` | проект экосистемы | `depends_on` | межпроектная зависимость (из composer) |
-| `package` | composer/npm-пакет | `requires` | проект требует пакет |
-| `skill` | скилл из swissknifeman | `provided_by` | пакет/скилл предоставлен проектом/тулом |
-| `tool` | swissknifeman / boost / brain | `uses` | проект использует скилл / doc-связь |
-| `doc` · `agent` · `memory` · `entity` | прочие домены | `relates_to` · `belongs_to` · `knows` | override / прочее |
+| `project` | ecosystem project | `depends_on` | cross-project dependency (from composer) |
+| `package` | composer/npm-package | `requires` | project requires package |
+| `skill` | skill from swissknifeman | `provided_by` | package/skill provided by the project/tool |
+| `tool` | swissknifeman / boost / brain | `uses` | project uses skill / doc-connection |
+| `doc` · `agent` · `memory` · `entity` | other domains | `relates_to` · `belongs_to` · `knows` | override / other |
 
-Узлы именуются `<type>:<key>` (например `project:brain`) — бесконфликтная склейка доменов,
-тип выводится из id.
+The nodes are named `<type>:<key>` (for example `project:brain`) — conflict-free domain merging,
+type is inferred from id.
 
-## Откуда берутся связи (derive, без ручного дубля)
+## Where do connections come from? (derive, without manual take)
 
-`maind graph derive` строит сторы проектов из **источников истины**, помечая рёбра планом
-(`code|doc|meta|runtime`) и источником (`via`) — `derive.py`:
+`maind graph derive` builds project stores from **sources of truth**, marking the edges with a plan
+(`code|doc|meta|runtime`) and source (`via`) — `derive.py`:
 
-| План (`via`) | Источник | Рёбра |
+| Plan (`via`) | Source | Ribs |
 |:--|:--|:--|
 | `code` | `composer.json`/`package.json` (+ path-repos) | `project ─requires→ package`, `package ─provided_by→ project`, cross `project ─depends_on→ project` |
-| `doc` | Brain frontmatter `uses:/used_by:` (**только чтение**) | `project ─uses→ project` |
-| `override` | `<repo>/.maind.graph.json` | объявленные `relates_to`/… (runtime/API) |
+| `doc` | Brain frontmatter `uses:/used_by:` (**read only**) | `project ─uses→ project` |
+| `override` | `<repo>/.maind.graph.json` | declared `relates_to`/… (runtime/API) |
 | `skills` | `skills-lock.json` | `project ─uses→ skill ─provided_by→ tool` |
 
-Истина остаётся в composer/Brain/lock — `_index.db` лишь регенерируемый кэш. Конфиг-поля проекта
-(`dependencies`/`agents`) графом **не материализуются**: чтобы объявить связь, которой нет в коде,
-используйте `.maind.graph.json` (план `override`).
+The truth remains in composer/Brain/lock — `_index.db` is just a regenerated cache. Project config fields
+(`dependencies`/`agents`) graph **do not materialize**: to declare a relationship that is not in the code,
+use `.maind.graph.json` (plan `override`).
 
-## API (`graph.py` — примитив)
+## API (`graph.py` — primitive)
 
 ```python
-g.neighbors("project:maind", depth=1, direction="in")   # кто зависит от maind
-g.path("project:flexcrm", "project:azguard")            # кратчайший путь (BFS)
-g.subgraph(["project:brain", "project:maind"])          # индуцированный подграф
-g.stats()                                               # узлы/рёбра/компоненты/степень
+g.neighbors("project:maind", depth=1, direction="in")   # who depends on maind
+g.path("project:flexcrm", "project:azguard")            # shortest path (BFS)
+g.subgraph(["project:brain", "project:maind"])          # induced subgraph
+g.stats()                                               # nodes/edges/components/degree
 ```
 
-Читать федерированный граф нужно через `federation.graph_reader(env, config)` (единый фасад),
-а не открывать стор напрямую.
+You need to read the federated graph via `federation.graph_reader(env, config)` (single facade),
+rather than opening the store directly.
 
 ## CLI
 
 ```bash
-maind graph derive --all                 # собрать графы всех проектов из источников
-maind graph rebuild                      # пересобрать только _index.db
-maind graph stats                        # сводка по федерации
+maind graph derive --all                 # collect graphs of all projects from sources
+maind graph rebuild                      # rebuild only _index.db
+maind graph stats                        # federation summary
 maind graph query --from project:flexcrm --depth 2 [--edge-types depends_on]
 maind graph neighbors --node project:maind --direction in
-maind graph --project flexcrm            # граф одного проекта
-maind graph --cross [--namespace axioma] # межпроектный слой (опц. одной группы)
-maind graph export --project flexcrm     # → Mermaid (один проект)
-maind graph export --cross               # → Mermaid (весь межпроектный слой)
+maind graph --project flexcrm            # graph of one project
+maind graph --cross [--namespace axioma] # cross-project layer (opt. one group)
+maind graph export --project flexcrm     # → Mermaid (one project)
+maind graph export --cross               # → Mermaid (entire cross-project layer)
 ```
 
-## Визуализация (Mermaid)
+## Visualization (Mermaid)
 
-У межпроектного maind-графа нет веб-UI (в отличие от памяти — там вьюер :3113). Самый надёжный
-способ увидеть его картинкой — экспорт в **Mermaid**: рендерится прямо в GitHub/VitePress/любом
-md-просмотрщике, без рантайма и демонов (нечему «сбиваться»).
+Inter-project maind-column no webUI (unlike memory - there is a viewer :3113). The most reliable
+way to see it with a picture - export to **Mermaid**: is rendered directly into GitHub/VitePress/any
+md-viewer, without runtime and daemons (nothing «get lost»).
 
 ```bash
-maind graph export --cross > docs/graph.md   # вставь в доку — отрисуется как диаграмма
-maind graph export --project corex            # один проект, копи-пейст (обёрнуто в ```mermaid)
+maind graph export --cross > docs/graph.md   # paste into the dock - it will be drawn as a diagram
+maind graph export --project corex            # one project, copy-paste (wrapped in ```mermaid)
 ```
 
-Вывод — готовый блок ` ```mermaid … ``` ` (форма узла: project — прямоугольник, package —
-скруглённый). `--raw` убирает обёртку (для вставки в свой layout).
+Output - finished block ` ```mermaid … ``` ` (node form: project — rectangle, package —
+rounded). `--raw` removes the wrapper (to insert into your layout).
 
-## Пример: что увидишь
+## Example: what will you see
 
-Собрать граф проекта и посмотреть его подграф (реальный вывод для `corex`):
+Collect the project graph and view its subgraph (real output for `corex`):
 
 ```console
 $ maind graph derive --project corex
-  corex              узлов 12, рёбер 14 (code 10, doc 5, override 0)
+  corex              nodes 12, edges 14 (code 10, doc 5, override 0)
 
 $ maind graph view --project corex
-граф проекта corex: 12 узлов, 14 рёбер
+project graph corex: 12 nodes, 14 edges
   package:corex/core               package    core
   package:corex/crm                package    crm
   project:flexcrm                  project
@@ -97,29 +97,29 @@ $ maind graph view --project corex
   project:corex                —requires→ package:axioma-studio/azguard-core  [code]
 
 $ maind graph stats
-Граф: 15 узлов, 22 рёбер, 1 компонент(ы), max степень 14
-  узлы:  package=9, project=6
-  рёбра: provided_by=9, requires=7, uses=6
+Graph: 15 nodes, 22 edges, 1 component(s), max degree 14
+  nodes:  package=9, project=6
+  edges: provided_by=9, requires=7, uses=6
 ```
 
-## Те же запросы из агента (MCP)
+## Same requests from the agent (MCP)
 
-В сессии проекта эти связи доступны как MCP-инструменты сервера `maind` — агент зовёт их сам:
+In a project session, these connections are available as MCP-server tools `maind` — the agent calls them himself:
 
-| Инструмент | Аргументы | Отвечает на |
+| Tool | Arguments | Replies to |
 |:--|:--|:--|
-| `maind_graph_project` | `{ "project": "corex" }` | подграф проекта + исходящие кросс-рёбра |
-| `maind_graph_neighbors` | `{ "node": "project:corex", "depth": 1, "direction": "in" }` | кто зависит от corex |
-| `maind_graph_query` | `{ "from": "project:flexcrm", "depth": 2, "edge_types": "depends_on" }` | обход от узла по типам рёбер |
-| `maind_graph_path` | `{ "from": "project:flexcrm", "to": "project:azguard" }` | кратчайший путь между проектами |
+| `maind_graph_project` | `{ "project": "corex" }` | project subgraph + outgoing cross-edges |
+| `maind_graph_neighbors` | `{ "node": "project:corex", "depth": 1, "direction": "in" }` | who depends on corex |
+| `maind_graph_query` | `{ "from": "project:flexcrm", "depth": 2, "edge_types": "depends_on" }` | traversal from node by edge type |
+| `maind_graph_path` | `{ "from": "project:flexcrm", "to": "project:azguard" }` | shortest path between projects |
 
-Это **pull**: инструменты пассивны, вызов инициирует модель (скилл `ecosystem-mcp` подсказывает когда).
-Память — отдельные инструменты той же сессии: `maind_memory_recall` / `maind_memory_store` / `maind_memory_links`.
+This **pull**: tools are passive, the call is initiated by the model (skill `ecosystem-mcp` tells you when).
+Memory - separate tools of the same session: `maind_memory_recall` / `maind_memory_store` / `maind_memory_links`.
 
-## Адаптер
+## Adapter
 
-`graph.adapter` в конфиге: `federation` (по умолчанию, единственная раскладка) либо `disabled`
-(граф-команды недоступны). Устаревшие `memory`/`graphify`/`networkx` принимаются с предупреждением
-и нормализуются в `federation`.
+`graph.adapter` in the config: `federation` (default, single layout) or `disabled`
+(graph commands not available). Obsolete `memory`/`graphify`/`networkx` are accepted with a warning
+and are normalized to `federation`.
 
-Дальше: [Федерация →](./federation)
+Next: [Federation →](./federation)

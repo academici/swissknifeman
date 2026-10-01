@@ -55,10 +55,10 @@ def build(plan_dir, item_id, *, decision_id, owner_message_path, session_id,
     members = list(plan_layout.item_spec_paths(root, phase))
     if prior.get('result') not in TERMINAL or any(
             heads.get(p.stem, {}).get('result') not in TERMINAL for p in members):
-        raise RepeatError('REPEAT_TARGET_NOT_TERMINAL: фаза и item должны быть terminal')
+        raise RepeatError('REPEAT_TARGET_NOT_TERMINAL: phase and item should be terminal')
     message = root / owner_message_path
     if message.resolve().is_relative_to(root.resolve()) is False or not message.is_file():
-        raise RepeatError('REPEAT_OWNER_MESSAGE_INVALID: нужен plan-local owner message')
+        raise RepeatError('REPEAT_OWNER_MESSAGE_INVALID: needed plan-local owner message')
     attempt = prior['attempt'] + 1
     return {'schema_version': 'repeat-admission/v1', 'plan_id': root.name,
             'item_id': item_id, 'command': command, 'decision_id': decision_id,
@@ -81,9 +81,9 @@ def validate(plan_dir, record, *, requested=None, session_id=None, allow_run=Non
         raise RepeatError('REPEAT_CONTRACT_INVALID: closed schema repeat-admission/v1')
     item = record['item_id']
     if record['plan_id'] != root.name or (requested is not None and tuple(requested) != (item,)):
-        raise RepeatError('REPEAT_SCOPE_MISMATCH: только один exact item')
+        raise RepeatError('REPEAT_SCOPE_MISMATCH: only one exact item')
     if session_id is not None and record['session_id'] != session_id:
-        raise RepeatError('REPEAT_SESSION_MISMATCH: новый grant для другой session')
+        raise RepeatError('REPEAT_SESSION_MISMATCH: new grant for another session')
     if (record['command'] not in {'plan-run', 'plan-exec'}
             or not isinstance(record['attempt'], int) or isinstance(record['attempt'], bool)
             or record['attempt'] < 2
@@ -98,7 +98,7 @@ def validate(plan_dir, record, *, requested=None, session_id=None, allow_run=Non
     message = root / record['owner_message_path']
     if (not message.resolve().is_relative_to(root.resolve()) or not message.is_file()
             or sha(message) != record['owner_message_sha256']):
-        raise RepeatError('REPEAT_OWNER_MESSAGE_STALE: owner provenance изменён')
+        raise RepeatError('REPEAT_OWNER_MESSAGE_STALE: owner provenance changed')
     rows = _rows(root)
     starts = [r for r in rows if (r.get('decision') or {}).get('repeat_admission') == record]
     if historical:
@@ -112,7 +112,7 @@ def validate(plan_dir, record, *, requested=None, session_id=None, allow_run=Non
                 or starts[0].get('result') != 'in-progress'
                 or starts[0].get('run_id') != allow_run
                 or terminal is None or terminal.get('result') not in TERMINAL):
-            raise RepeatError('REPEAT_HISTORY_UNQUALIFIED: нужен завершённый consumed run')
+            raise RepeatError('REPEAT_HISTORY_UNQUALIFIED: needs completed consumed run')
         preceding = rows[:rows.index(starts[0])]
         finishes = [i for i, r in enumerate(preceding)
                     if r.get('command') == 'plan-design' and r.get('item_id') == 'finish'
@@ -122,21 +122,21 @@ def validate(plan_dir, record, *, requested=None, session_id=None, allow_run=Non
                   and r.get('fingerprint') == record['design_fingerprint']]
         if (not finishes or not audits or audits[-1][0] <= finishes[-1]
                 or audits[-1][1].get('result') != 'audit-green'):
-            raise RepeatError('REPEAT_HISTORY_DESIGN_UNQUALIFIED: нет GREEN до start')
+            raise RepeatError('REPEAT_HISTORY_DESIGN_UNQUALIFIED: no GREEN to start')
     else:
         plan_readiness.validate_execution_design(root)
         if plan_readiness.design_snapshot(root)['fingerprint'] != record['design_fingerprint']:
-            raise RepeatError('REPEAT_DESIGN_STALE: design/spec изменён')
+            raise RepeatError('REPEAT_DESIGN_STALE: design/spec changed')
     if sha(plan_layout.carrier_path(root, 'item-spec', item_id=item)) != record['spec_sha256']:
-        raise RepeatError('REPEAT_DESIGN_STALE: design/spec изменён')
+        raise RepeatError('REPEAT_DESIGN_STALE: design/spec changed')
     phase = item.split('.')[0]
     members = list(plan_layout.item_spec_paths(root, phase))
     if (set(record['phase_terminal_heads']) != {p.stem for p in members}
             or record['sibling_spec_hashes'] != {p.stem: sha(p) for p in members if p.stem != item}
             or sha(plan_layout.phase_path(root, phase)) != record['phase_sha256']):
-        raise RepeatError('REPEAT_PHASE_STALE: историческая фаза изменена')
+        raise RepeatError('REPEAT_PHASE_STALE: historical phase changed')
     if starts and (allow_run != record['run_id'] or any(r.get('run_id') != allow_run for r in starts)):
-        raise RepeatError('REPEAT_ALREADY_CONSUMED: grant уже использован')
+        raise RepeatError('REPEAT_ALREADY_CONSUMED: grant already used')
     if starts:
         index = rows.index(starts[0])
         historical = _heads(root, rows[:index])
@@ -146,11 +146,11 @@ def validate(plan_dir, record, *, requested=None, session_id=None, allow_run=Non
             or any(historical.get(p.stem, {}).get('result') not in TERMINAL for p in members)
             or _event_sha(historical.get(item, {})) != record['historical_terminal_sha256']
             or historical[item]['attempt'] + 1 != record['attempt']):
-        raise RepeatError('REPEAT_HISTORY_STALE: terminal history изменена')
+        raise RepeatError('REPEAT_HISTORY_STALE: terminal history changed')
     current = _heads(root, rows)
     if any(_event_sha(current.get(p.stem, {})) != record['phase_terminal_heads'][p.stem]
            for p in members if p.stem != item):
-        raise RepeatError('REPEAT_SIBLING_STALE: sibling outcome изменён')
+        raise RepeatError('REPEAT_SIBLING_STALE: sibling outcome changed')
     return record
 
 
@@ -161,7 +161,7 @@ def for_run(plan_dir, item_id, run_id):
     if not starts:
         return None
     if len(starts) != 1:
-        raise RepeatError('REPEAT_START_AMBIGUOUS: нужен один durable start')
+        raise RepeatError('REPEAT_START_AMBIGUOUS: need one durable start')
     record = starts[0]['decision']['repeat_admission']
     event = plan_item_state.latest_execution_event(rows)
     validate(plan_dir, record, requested=[item_id], allow_run=run_id,

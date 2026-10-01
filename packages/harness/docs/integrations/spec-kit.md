@@ -1,49 +1,49 @@
 # GitHub Spec Kit
 
-## Что это
+## What is this
 
-GitHub Spec Kit — тулкит для **spec-driven development**: заставляет AI-агента написать
-спецификацию до кода. Это не MCP-сервер, а CLI `specify` + набор шаблонов и slash-команд,
-которые встраиваются в агента (поддерживает Claude Code, Copilot, Cursor, Gemini CLI и др.).
+GitHub Spec Kit — toolkit for **spec-driven development**: forces AI-agent write
+specification before code. This is not MCP-server, and CLI `specify` + set of templates and slash-commands,
+which are built into the agent (supports Claude Code, Copilot, Cursor, Gemini CLI etc.).
 
-- Репозиторий: <https://github.com/github/spec-kit>
-- Документация: <https://github.github.com/spec-kit/>
+- Repository: <https://github.com/github/spec-kit>
+- Documentation: <https://github.github.com/spec-kit/>
 
-## Рабочий цикл
+## Duty cycle
 
-Четыре фазы, каждая — markdown-файл, который читает следующая:
+Four phases, each - markdown-file that the following reads:
 
 ```
 Specify → Plan → Tasks → Implement
 ```
 
-После `specify init` агент получает slash-команды (`/specify`, `/plan`, `/tasks`,
-`/implement` и др.) — от описания требований до генерации задач и реализации.
+After `specify init` agent receives slash-commands (`/specify`, `/plan`, `/tasks`,
+`/implement` etc.) — from requirements description to task generation and implementation.
 
-## Установка
+## Installation
 
-Через `uvx` (Python/uv), интеграция под Claude Code:
+Via `uvx` (Python/uv), integration under Claude Code:
 
 ```bash
 uvx --from git+https://github.com/github/spec-kit.git specify init my-project \
   --integration claude
 ```
 
-## Связь с практиками хаба
+## Connection with hub practices
 
-::: tip Уже есть пересекающиеся практики
-В swissknifeman дисциплина «спека/решение до кода» закрыта скиллами:
-`general/spec-interview` (интервью и ТЗ перед кодом), `general/task-brief-template`
-(цель/границы/инварианты/DoD), `architect/architecture` и
-`architect/package-contribution-protocol` (ADR-шаблон, граница «проект ↔ пакет»).
-Spec Kit — это внешний *тулинг* того же подхода со своими slash-командами; бери его, если
-нужен готовый каркас spec→plan→tasks→implement, а не как замену этим скиллам.
+::: tip There are already overlapping practices
+B swissknifeman discipline «spec/solution before code» is closed by skills:
+`general/spec-interview` (interview and technical specifications before the code), `general/task-brief-template`
+(target/boundaries/invariants/DoD), `architect/architecture` and
+`architect/package-contribution-protocol` (ADR-template, border «project ↔ package»).
+Spec Kit — this is external *tuning* the same approach with their slash-commands; take it if
+need a ready-made frame spec→plan→tasks→implement, and not as a replacement for these skills.
 :::
 
-Спецификация Spec Kit хорошо ложится в PRD для [Task Master](./task-master).
+Specification Spec Kit fits well PRD for [Task Master](./task-master).
 
-## Ограничения
+## Limitations
 
-- Ценность — в соблюдении процесса, а не в технологии: без дисциплины шаблоны просто лежат.
-- Требует `uv` (Python).
-- Базовые материалы — на английском; для русскоязычной команды адаптируй формулировки.
+- Value is in adherence to process, not technology: without discipline, templates just lie there.
+- Requires `uv` (Python).
+- Basic materials - in English; for the Russian-speaking team, adapt the wording.

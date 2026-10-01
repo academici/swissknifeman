@@ -1,35 +1,35 @@
-# Настройка окружения Cursor
+# Setting up the environment Cursor
 
-Как подключить проект к swissknifeman как **третьему managed-провайдеру**: permissions
-(allowlist half), MCP хаба, autonomy и trusted self-host — без переписывания `AGENTS.md`.
+How to connect a project to swissknifeman like **to the third managed-to the provider**: permissions
+(allowlist half), MCP hub, autonomy and trusted self-host — without rewriting `AGENTS.md`.
 
-## Проблема
+## Problem
 
-У Cursor две независимые оси:
+U Cursor two independent axes:
 
 1. **Allowlist half** (project-scoped) — `.cursor/cli.json` + `.cursor/permissions.json`.
-2. **Approval mode / Run Mode** (не project-scoped) — глобальный CLI config или UI IDE.
+2. **Approval mode / Run Mode** (not project-scoped) — global CLI config or UI IDE.
 
-Harness публикует только (1). Autonomy в trusted-сессии требует launch flags **и** явной
-установки Run Mode в IDE (freeze D2).
+Harness publishes only (1). Autonomy in trusted-session requires launch flags **and** explicit
+installations Run Mode in IDE (freeze D2).
 
-## Профили (semantic)
+## Profiles (semantic)
 
-Источник: `packages/harness/configs/common/profile-catalog.json` +
+Source: `packages/harness/configs/common/profile-catalog.json` +
 `packages/harness/configs/cursor/config/profile-bindings.json`.
 
 | Profile | Fleet | `.cursor/cli.json` | `.cursor/permissions.json` | Launch-only mode |
 |:--|:--|:--|:--|:--|
-| `observe` | да | read-biased allow | пустые allowlists + block_instructions | plan / allowlist |
+| `observe` | yes | read-biased allow | empty allowlists + block_instructions | plan / allowlist |
 | `workspace-contained` | **everyday default** | scoped workspace allow | scoped MCP/terminal | auto-review |
-| `trusted-full-access` | **только self-host-apply** | broad allow + deny floor | `*:*` wildcards | unrestricted + Run Everything |
+| `trusted-full-access` | **only self-host-apply** | broad allow + deny floor | `*:*` wildcards | unrestricted + Run Everything |
 
-Shared **deny floor** (все три профиля, D4): секреты (`.env*`, `*.pem`, `*.key`) — отказ
-даже под `--force`.
+Shared **deny floor** (all three profiles, D4): secrets (`.env*`, `*.pem`, `*.key`) — failure
+even under `--force`.
 
-## Установка: everyday (fleet)
+## Installation: everyday (fleet)
 
-### 1. Включить провайдер в проекте
+### 1. Enable provider in project
 
 ```json
 // .swissknife.json
@@ -46,43 +46,43 @@ Shared **deny floor** (все три профиля, D4): секреты (`.env*
 
 ```bash
 cd ~/projects/my-app
-maind onboard --cwd              # память, health hooks, MCP-каналы
+maind onboard --cwd              # memory, health hooks, MCP-channels
 maind sync --project <id>        # .cursor/mcp.json ← hub servers (merge-only)
 maind health --cwd               # provider:cursor trust
 ```
 
-Скиллы: `skiller sync` → `.agents/skills/` (Cursor discovery, без `.cursor/skills` writer).
+Skills: `skiller sync` → `.agents/skills/` (Cursor discovery, without `.cursor/skills` writer).
 
 ### 3. Permissions (workspace-contained)
 
-Managed shapes рендерятся harness profile engine в:
+Managed shapes are rendered harness profile engine in:
 
 - `.cursor/cli.json` — `permissions.allow/deny` (CLI)
 - `.cursor/permissions.json` — `mcpAllowlist`, `terminalAllowlist`, `autoRun`
 
-Операторский аудит без записи:
+Operator audit without recording:
 
 ```bash
 harness doctor --settings --provider cursor --target .
 ```
 
 ::: warning Merge-only widening
-Per-user и per-repo массивы **конкатенируются** (E14.2). Repo-файл не сужает broad
-user-level allowlist — только расширяет. Observe/workspace-contained не гарантируют
-сужение, если на машине уже широкий user profile.
+Per-user and per-repo arrays **are concatenated** (E14.2). Repo-file does not narrow broad
+user-level allowlist — only expands. Observe/workspace-contained do not guarantee
+narrowing if the car is already wide user profile.
 :::
 
-## Trusted self-host (только umbrella)
+## Trusted self-host (only umbrella)
 
-`trusted-full-access` для `repo:swissknifeman` — явная операция, не fleet default:
+`trusted-full-access` for `repo:swissknifeman` — explicit operation, not fleet default:
 
 - `origin=operation`
 - `operation_id=self-host-apply`
 - `target_identity=repo:swissknifeman`
 
-Любой другой target → `HARNESS_CURSOR_TRUSTED_NON_SELF_HOST_REFUSED`.
+Any other target → `HARNESS_CURSOR_TRUSTED_NON_SELF_HOST_REFUSED`.
 
-Артефакты (когда применены): broad allowlists, `.cursor/rules/swissknifeman-{core,launch,packages}.mdc`.
+Artifacts (when applied): broad allowlists, `.cursor/rules/swissknifeman-{core,launch,packages}.mdc`.
 
 ### Launch (CLI)
 
@@ -94,37 +94,37 @@ agent --workspace "$(pwd)" \
       'task:plan-run <PLAN-ID> <Pn.m>'
 ```
 
-### IDE checklist (обязательно для trusted)
+### IDE checklist (required for trusted)
 
-1. Workspace = корень репозитория (не подпапка без намерения).
-2. **Run Mode → Run Everything** (Settings; не коммитится в репо).
+1. Workspace = repository root (is not a subfolder without intent).
+2. **Run Mode → Run Everything** (Settings; is not committed to the repo).
 3. `maind health --cwd` — connected, `provider:cursor trust` green.
-4. Модель = pin из Routing (не `auto` для fixed frontier/implementation).
-5. `.cursor/cli.json` deny floor на месте — отказ по секретам не transient error.
+4. Model = pin from Routing (not `auto` for fixed frontier/implementation).
+5. `.cursor/cli.json` deny floor on site - no secret refusal transient error.
 
 ## MCP
 
-| Команда | Куда пишет | Когда |
+| Command | Where does it write? | When |
 |:--|:--|:--|
 | `maind sync` / `maind deploy` | `.cursor/mcp.json` | `providers.selection.cursor.enabled` |
-| `harness mcp --target .` | `.mcp.json` | только Claude Code (legacy) |
+| `harness mcp --target .` | `.mcp.json` | only Claude Code (legacy) |
 
-Пресеты каталога: `packages/harness/configs/cursor/mcp/bindings.json` → secret refs only.
+Catalog presets: `packages/harness/configs/cursor/mcp/bindings.json` → secret refs only.
 
 ## Hooks
 
-First ship: `security.safe-dirs` (`beforeShellExecution`, `failClosed: true`) в
-`.cursor/hooks/`. Остальные lifecycle hooks — deferred (honest `unsupported` в matrix).
+First ship: `security.safe-dirs` (`beforeShellExecution`, `failClosed: true`) in
+`.cursor/hooks/`. Others lifecycle hooks — deferred (honest `unsupported` in matrix).
 
-## Связь с skiller и maind
+## Contact skiller and maind
 
-- `skiller integrate` / `maind onboard` — cross-package onboarding один раз.
-- `skiller sync` — managed skills в `.agents/skills`.
-- `maind sync` — MCP + memory hooks; cursor channel при enabled provider.
+- `skiller integrate` / `maind onboard` — cross-package onboarding once.
+- `skiller sync` — managed skills in `.agents/skills`.
+- `maind sync` — MCP + memory hooks; cursor channel when enabled provider.
 - Budget listing: `skiller budget --provider cursor`.
 
-## См. также
+## See also
 
-- [Адаптер Cursor](/skiller/adapters/cursor) — полный цикл интеграции
-- [Provider model roles](/task/reference/provider-model-roles) — pins и inventory
-- [Permissions Claude Code](./claude) — sibling-провайдер (другие surfaces)
+- [Adapter Cursor](/skiller/adapters/cursor) — full integration cycle
+- [Provider model roles](/task/reference/provider-model-roles) — pins and inventory
+- [Permissions Claude Code](./claude) — sibling-provider (others surfaces)

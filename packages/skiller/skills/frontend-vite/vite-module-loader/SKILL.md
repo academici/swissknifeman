@@ -50,7 +50,7 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            return 'vendor'; // Все зависимости из node_modules пойдут в vendor.js
+            return 'vendor'; // All dependencies from node_modules will go to vendor.js
           }
         }
       }
@@ -83,7 +83,7 @@ export default defineConfig({
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js'],
-            refresh: true, // Автоматическая перезагрузка при изменении blade файлов
+            refresh: true, // Automatic reboot when changed blade files
         }),
         vue(),
     ],

@@ -1,25 +1,25 @@
 # skills.laravel.cloud
 
 - **URL:** https://skills.laravel.cloud/
-- **Статус:** planned
-- **Проверено:** 2026-06-11
+- **Status:** planned
+- **Checked:** 2026-06-11
 
-Официальный Laravel-маркетплейс скиллов (175 шт., установка через
+Official Laravel-skill marketplace (175 pcs., installation via
 `php artisan boost:add-skill <owner/repo>`).
 
-## Брать выборочно (топ по установкам, кандидаты)
+## Take selectively (top by installations, candidates)
 
 - `jeffallan/laravel-specialist` (Eloquent, Sanctum, Horizon, Livewire, Pest) →
-  основа для усиления `php/laravel`
-- `affaan-m/laravel-security` → `architect/security-design` или `php/` (опыт AzGuard)
+  basis for strengthening `php/laravel`
+- `affaan-m/laravel-security` → `architect/security-design` or `php/` (experience AzGuard)
 - `affaan-m/laravel-tdd` → `php/laravel-testing`
 - `jeffallan/php-pro` (PHP 8.3+, PHPStan level 9, DTO) → `php/php-patterns`
 
-## Не брать
+## Do not take
 
-- Скиллы под неиспользуемые стеки (Livewire-only, Inertia-only — решить по факту)
-- `php-mcp-server-generator` — пока нет потребности
+- Skills for unused stacks (Livewire-only, Inertia-only — decide after the fact)
+- `php-mcp-server-generator` — not needed yet
 
-## Целевые bucket-ы
+## Targets bucket-s
 
 `php/laravel`, `php/laravel-testing`, `php/php-patterns`.

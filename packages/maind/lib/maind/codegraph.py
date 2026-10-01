@@ -1,14 +1,14 @@
-"""maind code-graph — провиженер дефолтного .serena/project.yml + резолвер политики код-графа.
+"""maind code-graph — default provider.serena/project.yml + code graph policy resolver.
 
-Когда у проекта включён код-граф (поле `code:true`, legacy-alias `graphify:true`), maind кладёт
-ему стартовый `.serena/project.yml`: язык по типу проекта + игноры + initial_prompt. ВСЯ политика
-(игноры vendor/packages, команда движка, промпты) берётся из секции `code_graph` конфига
-(.maind.example.json), а не хардкодится — здесь только резолвер с per-project override и
+When a project has a code graph enabled (field `code:true`, legacy-alias `graphify:true`), maind puts
+him starting `.serena/project.yml`: language by project type + ignores + initial_prompt. ALL policies
+(ignores vendor/packages, engine command, prompts) is taken from the section `code_graph` config
+(.maind.example.json), and not hardcoded - there is only a resolver with per-project override and
 legacy-alias `graphify_*` → `code_*`.
 
-Пишем .serena/project.yml ТОЛЬКО если файла ещё нет: после первой активации Serena сама им владеет
-(дописывает полный шаблон) — не клобберим. При включении опционально фоном прогреваем индекс
-(pre_index) — чтобы первый вызов в сессии не ждал. stdlib-only; внешняя Serena — через subprocess."""
+We write.serena/project.yml ONLY if the file does not exist yet: after the first activation Serena owns it herself
+(appends the full template) — do not clobber. When turned on, we optionally warm up the index in the background
+(pre_index) — so that the first call in the session does not wait. stdlib-only; external Serena — via subprocess."""
 import os
 import shutil
 import subprocess
@@ -20,14 +20,14 @@ from .constants import CODE_GRAPH_DEFAULTS, SERENA_SCHEMA_FIELDS, SERENA_SRC
 SERENA_CONFIG = Path(".serena") / "project.yml"
 
 
-# ── политика код-графа: конфиг + per-project override (alias graphify_* → code_*) ────
+# ── code-graph policy: config + per-project override (alias graphify_* → code_*) ────
 def settings(config):
-    """Слитая политика код-графа (merge_defaults уже наложил CODE_GRAPH_DEFAULTS)."""
+    """Merged code-graph policy (merge_defaults has already cast CODE_GRAPH_DEFAULTS)."""
     return config.get("code_graph") or dict(CODE_GRAPH_DEFAULTS)
 
 
 def _proj(project, *keys, default=None):
-    """Первое заданное из per-project ключей (новые code_*, затем legacy graphify_*)."""
+    """First specified from per-project keys (new code_*, then legacy graphify_*)."""
     for k in keys:
         if project.get(k) is not None:
             return project[k]
@@ -51,16 +51,16 @@ def server_name(project, st):
 
 
 def is_engine_serena(project, st):
-    """Движок — дефолтный Serena (а не переопределённый сторонний MCP)? Только для него
-    осмыслен .serena/project.yml."""
+    """The engine is default Serena (and not a third party override MCP)? Only for him
+    makes sense.serena/project.yml."""
     return (command(project, st) == st["command"]
             and server_name(project, st) == st["server_name"])
 
 
 def is_workspace(project, path):
-    """Workspace-режим (единый граф с локальными пакетами): явный флаг code_workspace/
-    graphify_workspace, иначе авто — есть каталог packages/ (монорепо или консьюмер с
-    подсимлинкованными first-party пакетами; дефолт иначе прячет их исходник)."""
+    """Workspace-mode (single graph with local packages): explicit flag code_workspace/
+    graphify_workspace, otherwise auto - there is a directory packages/ (monorepo or consumer with
+    sub-linked first-party packages; default otherwise hides their source)."""
     flag = _proj(project, "code_workspace", "graphify_workspace")
     if flag is not None:
         return bool(flag)
@@ -68,11 +68,11 @@ def is_workspace(project, path):
 
 
 def _infer_language(project, path, st):
-    """Язык(и) для Serena. Приоритет: per-project override (code_language(s), legacy
-    graphify_language) → по типу проекта (language_by_type) → по манифесту → None (Serena
-    автодетектит сама). Возвращает str | список str | None. Override нужен для смешанных
-    репо: type задаёт ОДИН язык (напр. node-package→typescript), а у python-монорепо с
-    docs на TS код в основном python — здесь это и чинится без правки общих констант."""
+    """Language(and) for Serena. Priority: per-project override (code_language(s), legacy
+    graphify_language) → by project type (language_by_type) → by manifest → None (Serena
+    autodetect itself). Returns str | list str | None. Override is needed for mixed
+    repo: type sets ONE language (e.g. node-package→typescript), and python-monorepo with
+    docs on TS code basically python — here it is fixed without editing the general constants."""
     override = _proj(project, "code_language", "code_languages", "graphify_language")
     if override:
         return override
@@ -87,30 +87,30 @@ def _infer_language(project, path, st):
 
 
 def render_project_yaml(name, language, ignores, initial_prompt, gitignore=True):
-    """Полный валидный .serena/project.yml под текущую схему Serena.
-    language: str | список str | None.
+    """Fully valid .serena/project.yml for the current scheme Serena.
+    language: str | list str | None.
 
-    Serena `_from_dict` требует без `.get()` только `project_name`/`language_servers`
-    (FIELDS_WITHOUT_DEFAULTS пиннованной версии, constants.SERENA_SCHEMA_FIELDS) — остальные
-    ключи (symbol_info_budget, ignored_paths, fixed_tools, excluded_tools,
+    Serena `_from_dict` requires without `.get()` only `project_name`/`language_servers`
+    (FIELDS_WITHOUT_DEFAULTS pinned version, constants.SERENA_SCHEMA_FIELDS) — others
+    keys (symbol_info_budget, ignored_paths, fixed_tools, excluded_tools,
     included_optional_tools, read_only, ignore_all_files_in_gitignore, initial_prompt,
-    encoding, added_modes, default_modes) имеют дефолты (`data.setdefault`) и их отсутствие
-    НЕ даёт KeyError. Полный набор печатаем сами — ради явности конфига, а не потому, что
-    апстрим этого требует. Дефолты сверены с serena/resources/project.template.yml.
-    `language_servers` всегда присутствует (пустой список при нераспознанном языке —
-    standalone-тип + пустой репо)."""
+    encoding, added_modes, default_modes) have defaults (`data.setdefault`) and their absence
+    does NOT give KeyError. We print the full set ourselves - for the sake of clarity of the config, and not because
+    upstream requires this. Defaults are reconciled with serena/resources/project.template.yml.
+    `language_servers` is always present (empty list for unrecognized language -
+    standalone-type + empty repo)."""
     langs = [language] if isinstance(language, str) else (language or [])
     lines = [f'project_name: "{name}"']
     if langs:
         lines += ["language_servers:"] + [f"  - {lang}" for lang in langs]
     else:
-        lines += ["language_servers: []"]  # Serena сама определит язык при активации (без KeyError)
+        lines += ["language_servers: []"]  # Serena will automatically detect the language upon activation (without KeyError)
     lines += ['encoding: "utf-8"',
               f"ignore_all_files_in_gitignore: {'true' if gitignore else 'false'}",
               "ignored_paths:"]
     lines += [f'  - "{p}"' for p in ignores]
     lines += ["read_only: false",
-              # обязательные у текущей Serena — дефолты из её project.template.yml:
+              # required for the current Serena — defaults from her project.template.yml:
               "excluded_tools: []",
               "included_optional_tools: []",
               "fixed_tools: []",
@@ -122,8 +122,8 @@ def render_project_yaml(name, language, ignores, initial_prompt, gitignore=True)
 
 
 def _extract_pin(src):
-    """Форма пина `git+URL@REF` → REF (тег или полный SHA, D110 — обе легальны); None, если
-    источник не пиннован (нет '@' или пустой хвост)."""
+    """Pin shape `git+URL@REF` → REF (tag or full SHA, D110 — both are legal); None, if
+    source not pinned (no '@' or empty tail)."""
     if not src or "@" not in src:
         return None
     ref = src.rsplit("@", 1)[1]
@@ -131,7 +131,7 @@ def _extract_pin(src):
 
 
 def _pin_from_args(args):
-    """REF из `--from <SRC>` в списке args serena-команды (args/index_args конфига)."""
+    """REF from `--from <SRC>` in the list args serena-commands (args/index_args config)."""
     for i, a in enumerate(args or []):
         if a == "--from" and i + 1 < len(args):
             return _extract_pin(args[i + 1])
@@ -139,13 +139,13 @@ def _pin_from_args(args):
 
 
 def check_schema_connectivity(config):
-    """Гейт связности (D111, P5.4): версия Serena, на которую пиннуется флот
-    (`constants.SERENA_SRC` + `code_graph.args`/`index_args` конфига), обязана требовать ту же
-    схему `.serena/project.yml`, которую реально печатает `render_project_yaml`. Офлайновый и
-    детерминированный: сравнивает факты дерева (никакой сети, никакого uvx). НЕ чинит
-    расхождение — только называет его; решение (бампнуть пин или откатить шаблон) — за
-    владельцем (D111). Возвращает список человекочитаемых расхождений; пустой список — гейт
-    зелёный."""
+    """Connectivity gate (D111, P5.4): version Serena, which the fleet kicks at
+    (`constants.SERENA_SRC` + `code_graph.args`/`index_args` config), is obliged to demand the same
+    diagram `.serena/project.yml`, which actually prints `render_project_yaml`. Offline and
+    deterministic: compares tree facts (no network, no uvx). does NOT fix
+    discrepancy - just names it; solution (bump pin or rollback template) — for
+    owner (D111). Returns a list of human-readable discrepancies; empty list - gate
+    green."""
     st = settings(config)
     issues = []
 
@@ -155,44 +155,44 @@ def check_schema_connectivity(config):
 
     if src_pin is None:
         issues.append(
-            f"пин отсутствует: constants.SERENA_SRC не содержит '@REF' ({SERENA_SRC!r})")
+            f"pin missing: constants.SERENA_SRC does not contain '@REF' ({SERENA_SRC!r})")
     if st.get("args") and args_pin is None:
         issues.append(
-            "пин отсутствует: code_graph.args конфига не содержит '@REF' в '--from'")
+            "pin missing: code_graph.args does not contain a config '@REF' in '--from'")
     if st.get("index_args") and index_pin is None:
         issues.append(
-            "пин отсутствует: code_graph.index_args конфига не содержит '@REF' в '--from'")
+            "pin missing: code_graph.index_args does not contain a config '@REF' in '--from'")
 
     pins = {p for p in (src_pin, args_pin, index_pin) if p is not None}
     if len(pins) > 1:
         issues.append(
-            "пины разошлись: constants.SERENA_SRC={!r}, code_graph.args={!r}, "
-            "code_graph.index_args={!r} — правь оба места (constants.py и config.json) "
-            "одним швом".format(src_pin, args_pin, index_pin))
+            "pins dispersed: constants.SERENA_SRC={!r}, code_graph.args={!r}, "
+            "code_graph.index_args={!r} — edit both places (constants.py and config.json) "
+            "with one seam".format(src_pin, args_pin, index_pin))
 
-    # Ключи берём из РЕАЛЬНОГО вывода рендерера (не из его копии здесь) — иначе гейт начал
-    # бы проверять свою копию правды, а не настоящую (Code Guidance «Анти-самообман», P5.4).
+    # We take the keys from the REAL renderer output (not from his copy here) — otherwise the gate started
+    # would check their copy of the truth, not the real one (Code Guidance «Anti-self-deception», P5.4).
     sample = render_project_yaml("_schema_probe", None, [], "", gitignore=True)
     rendered_keys = {line.split(":", 1)[0].strip()
                       for line in sample.splitlines()
                       if line and not line[0].isspace() and ":" in line}
-    # Только НЕДОСТАЮЩИЕ обязательные ключи — расхождение; необязательные лишние ключи
-    # рендерера (напр. project_name) вне FIELDS_WITHOUT_DEFAULTS не считаются (Scope Excluded).
+    # Only MISSING required keys - discrepancy; optional extra keys
+    # renderer (e.g. project_name) out FIELDS_WITHOUT_DEFAULTS do not count (Scope Excluded).
     missing = set(SERENA_SCHEMA_FIELDS) - rendered_keys
     if missing:
         issues.append(
-            "схема разошлась: constants.SERENA_SCHEMA_FIELDS (ожидание пина {!r}) требует "
-            "{}, которых codegraph.render_project_yaml НЕ печатает (реально печатает {}) — "
-            "правь constants.py SERENA_SCHEMA_FIELDS или codegraph.py render_project_yaml, "
-            "пока оба места не совпадут".format(
+            "scheme diverged: constants.SERENA_SCHEMA_FIELDS (waiting for pin {!r}) requires "
+            "{}, which codegraph.render_project_yaml DOES NOT print (actually prints {}) — "
+            "correct constants.py SERENA_SCHEMA_FIELDS or codegraph.py render_project_yaml, "
+            "until both places match".format(
                 SERENA_SRC, sorted(missing), sorted(rendered_keys)))
 
     return issues
 
 
 def _maybe_pre_index(st, project, path):
-    """Фоновая прогрев-индексация Serena (детач, не блокирует). Тихий skip, если выключено
-    в конфиге или движок недоступен."""
+    """Background warming-indexing Serena (detach, does not block). Quiet skip, if disabled
+    in the config or the engine is unavailable."""
     if not st.get("pre_index"):
         return
     cmd = command(project, st)
@@ -204,26 +204,26 @@ def _maybe_pre_index(st, project, path):
                          stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL,
                          start_new_session=True)
     except OSError as e:
-        warn(f"pre-index '{project['id']}' не запустился: {e}")
+        warn(f"pre-index '{project['id']}' did not start: {e}")
 
 
 def apply_serena_config(env, config, project, mode, dry):
-    """Положить стартовый .serena/project.yml, если код-граф включён (Serena) и файла нет."""
+    """Put start .serena/project.yml, if the code graph is enabled (Serena) and there is no file."""
     pid = project["id"]
     st = settings(config)
     if not enabled(project, st):
         return {"provisioner": "code-graph", "id": pid, "status": "skip",
-                "changed": False, "state": "disabled", "detail": "код-граф выключен"}
+                "changed": False, "state": "disabled", "detail": "code graph disabled"}
     if not is_engine_serena(project, st):
         return {"provisioner": "code-graph", "id": pid, "status": "skip",
-                "changed": False, "state": "custom", "detail": "движок не Serena"}
+                "changed": False, "state": "custom", "detail": "engine not Serena"}
     local = project.get("local_path")
     path = Path(os.path.expanduser(local)) if local else None
     if not path or not path.is_dir():
         return {"provisioner": "code-graph", "id": pid, "status": "skip",
-                "changed": False, "state": "absent", "detail": "нет пути"}
+                "changed": False, "state": "absent", "detail": "no path"}
     target = path / SERENA_CONFIG
-    if target.exists():  # после активации файлом владеет Serena — не перезаписываем
+    if target.exists():  # owns the file after activation Serena — not overwritten
         return {"provisioner": "code-graph", "id": pid, "status": "ok",
                 "changed": False, "state": "present", "detail": str(SERENA_CONFIG)}
     ws = is_workspace(project, path)

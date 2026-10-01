@@ -20,13 +20,13 @@ class SessionContextTests(unittest.TestCase):
         })
 
     def test_missing_adapter_fails_closed(self):
-        with self.assertRaisesRegex(session_context.SessionContextError, "не найден"):
+        with self.assertRaisesRegex(session_context.SessionContextError, "not found"):
             session_context.resolve(adapters=())
 
     def test_multiple_adapters_fail_closed(self):
         adapter = lambda: session_context.SessionContext(
             provider="fixture", session_id="root-123", source="fixture-env")
-        with self.assertRaisesRegex(session_context.SessionContextError, "ровно один"):
+        with self.assertRaisesRegex(session_context.SessionContextError, "exactly one"):
             session_context.resolve(adapters=(adapter, adapter))
 
     def test_cli_json_and_id(self):

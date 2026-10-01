@@ -1,3 +1,3 @@
-# Оверрайды ревью — {{PACK_PREFIX}}
+# Overrides review - {{PACK_PREFIX}}
 
-Сюда — проектные оси ревью; пак этот файл не перезаписывает.
+Here are the design review axes; the pack does not overwrite this file.

@@ -1,8 +1,8 @@
-"""Безопасное слияние MCP-конфигов проекта (.mcp.json / .cursor/mcp.json / .vscode/mcp.json).
+"""Safe merge MCP-project configs (.mcp.json / .cursor/mcp.json / .vscode/mcp.json).
 
-Провижининг maind дописывает свои MCP-серверы в проект, НЕ затирая чужие (например
-laravel-boost). Слияние идемпотентно (повторный запуск ничего не меняет), перед записью —
-.bak. Это самый чувствительный к безопасности примитив — выделен и покрыт тестами."""
+Provisioning maind adds his MCP-servers into the project, NOT overwriting others (for example
+laravel-boost). Merge is idempotent (restarting does not change anything), before recording -
+.bak. This is the most security-sensitive primitive - isolated and covered with tests."""
 import json
 import os
 import subprocess
@@ -12,7 +12,7 @@ from .common import atomic_write_json, backup_file, warn
 
 EXAMPLE_SUFFIX = ".example"
 
-# Куда какие агенты кладут MCP-серверы.
+# Where do they put which agents? MCP-servers.
 MCP_FILES = {
     "claude": ".mcp.json",
     "cursor": ".cursor/mcp.json",
@@ -21,9 +21,9 @@ MCP_FILES = {
 
 
 class MCPConfigError(Exception):
-    """Битый/некорректный MCP-конфиг канала. load_mcp поднимает его вместо die, чтобы
-    ВЫЗЫВАЮЩИЙ решал: уронить команду целиком или пропустить только этот канал (один
-    битый sibling-файл вроде .cursor/mcp.json не должен валить весь фан-аут sync)."""
+    """Broken/incorrect MCP-channel config. load_mcp picks it up instead die, to
+    The CALLER was deciding whether to drop the entire team or skip only this channel (one
+    broken sibling-file like .cursor/mcp.json shouldn't blame the whole fan-out sync)."""
 
 
 def mcp_path(project_path, channel):
@@ -31,8 +31,8 @@ def mcp_path(project_path, channel):
 
 
 def load_mcp(path):
-    """(data, existed). Отсутствует → ({"mcpServers":{}}, False). Битый JSON / не-объект →
-    MCPConfigError (файл НЕ трогаем; вызывающий решает фатальность)."""
+    """(data, existed). Missing → ({"mcpServers":{}}, False). Broken JSON / non-object →
+    MCPConfigError (DO NOT touch the file; the caller decides fatality)."""
     path = Path(path)
     if not path.exists():
         return {"mcpServers": {}}, False
@@ -40,15 +40,15 @@ def load_mcp(path):
         data = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
         raise MCPConfigError(
-            f"{path}: битый JSON MCP-конфига — не трогаю, исправьте вручную: {e}") from e
+            f"{path}: broken JSON MCP-config - I don’t touch it, fix it manually: {e}") from e
     if not isinstance(data, dict):
-        raise MCPConfigError(f"{path}: ожидался объект MCP-конфига")
+        raise MCPConfigError(f"{path}: object expected MCP-config")
     data.setdefault("mcpServers", {})
     return data, True
 
 
 def merge_server(data, name, entry):
-    """Upsert mcpServers[name]=entry. Возвращает (data, changed). changed=False если идентично."""
+    """Upsert mcpServers[name]=entry. Returns (data, changed). changed=False if identical."""
     servers = data.setdefault("mcpServers", {})
     if servers.get(name) == entry:
         return data, False
@@ -57,7 +57,7 @@ def merge_server(data, name, entry):
 
 
 def remove_server(data, name):
-    """Удалить mcpServers[name], если есть. Возвращает (data, changed)."""
+    """Delete mcpServers[name], if available. Returns (data, changed)."""
     servers = data.get("mcpServers")
     if isinstance(servers, dict) and name in servers:
         del servers[name]
@@ -77,10 +77,10 @@ def write_mcp(path, data, *, dry=False, backup=True):
 
 
 def _placeholderize(obj, project_root, home):
-    """Рекурсивно заменить machine-specific абсолютные пути на плейсхолдеры (для .example):
-    путь проекта → <ABS_PATH_TO_PROJECT> (специфичнее, заменяем первым), домашний префикс
-    → <HOME> (ловит остальные home-based пути чужих серверов). Индирекция вроде
-    ${MAIND_BIN:-maind} не трогается — она и так портируема."""
+    """Recursively replace machine-specific absolute paths to placeholders (for .example):
+    project path → <ABS_PATH_TO_PROJECT> (more specific, replace with the first), home prefix
+    → <HOME> (catches the others home-based paths of other servers). Direction like
+    ${MAIND_BIN:-maind} is not touched - it is already portable."""
     if isinstance(obj, str):
         s = obj
         if project_root:
@@ -96,11 +96,11 @@ def _placeholderize(obj, project_root, home):
 
 
 def write_example(real_path, data, project_root, *, dry=False):
-    """Эмитит <real_path>.example с плейсхолдерами вместо machine-specific абс. путей —
-    портируемая карта MCP-структуры (коммитится, в отличие от реального файла). Один
-    генератор → два выхода из одного `data`: расхождение real↔.example невозможно by design.
-    Идемпотентно: при совпадении с уже записанным содержимым файл не переписывается (в `dry`
-    ничего не печатается). Возвращает `changed` (bool)."""
+    """Issue <real_path>.example with placeholders instead machine-specific abs. ways -
+    portable map MCP-structures (is committed, unlike the real file). One
+    generator → two outputs from one `data`: discrepancy real↔.example not possible by design.
+    Idempotent: if there is a match with already written contents, the file is not overwritten (in `dry`
+    nothing is printed). Returns `changed` (bool)."""
     home = os.path.expanduser("~")
     example = _placeholderize(data, str(project_root), home)
     ex_path = Path(str(real_path) + EXAMPLE_SUFFIX)
@@ -112,14 +112,14 @@ def write_example(real_path, data, project_root, *, dry=False):
         if existing == example:
             return False
     if dry:
-        print(f"[dry-run] {ex_path} (плейсхолдеры machine-specific путей)")
+        print(f"[dry-run] {ex_path} (placeholders machine-specific paths)")
         return True
     atomic_write_json(ex_path, example)
     return True
 
 
 def _is_tracked(project_root, rel):
-    """True, если rel уже в индексе git проекта (best-effort — нет git/ошибка → False)."""
+    """True, if rel is already in the index git project (best-effort — no git/error → False)."""
     try:
         return subprocess.run(
             ["git", "-C", str(project_root), "ls-files", "--error-unmatch", rel],
@@ -129,20 +129,20 @@ def _is_tracked(project_root, rel):
 
 
 def reconcile_gitignore(project_root, rel_real, *, dry=False):
-    """Гигиена .gitignore для пары real↔.example: реальный MCP-конфиг — В .gitignore
-    (append-if-absent, у него machine-specific пути), его `.example` — НЕ в .gitignore
-    (remove-if-present, иначе портируемый шаблон не закоммитится). Идемпотентно. Если
-    реальный файл уже трекается git — warn (не делаем `git rm` молча). Возвращает changed."""
+    """Hygiene .gitignore for pair real↔.example: real MCP-config - B .gitignore
+    (append-if-absent, he has machine-specific paths), him `.example` — NOT in .gitignore
+    (remove-if-present, otherwise the template being ported will not be committed). Idempotent. If
+    real file is already being tracked git — warn (we don't `git rm` silently). Returns changed."""
     gi = Path(project_root) / ".gitignore"
     rel_example = rel_real + EXAMPLE_SUFFIX
     lines = gi.read_text(encoding="utf-8").splitlines() if gi.exists() else []
     out, changed = [], False
     for ln in lines:
-        if ln.strip() == rel_example:          # .example НЕ должен игнориться
+        if ln.strip() == rel_example:          # .example should NOT be ignored
             changed = True
             continue
         out.append(ln)
-    if rel_real not in [ln.strip() for ln in out]:   # реальный — должен
+    if rel_real not in [ln.strip() for ln in out]:   # real - should
         out.append(rel_real)
         changed = True
     if not changed:
@@ -151,22 +151,22 @@ def reconcile_gitignore(project_root, rel_real, *, dry=False):
         print(f"[dry-run] {gi}: + {rel_real}, − {rel_example}")
         return True
     if _is_tracked(project_root, rel_real):
-        warn(f"{rel_real} уже трекается git в {project_root} — добавил в .gitignore, "
-             f"но `git rm --cached {rel_real}` сделай сам")
+        warn(f"{rel_real} is already tracking git in {project_root} — added to .gitignore, "
+             f"but `git rm --cached {rel_real}` do it yourself")
     gi.write_text("\n".join(out) + "\n", encoding="utf-8")
     return True
 
 
 def check_hygiene(project_root):
-    """Read-only снимок real↔.example гигиены `.mcp.json` проекта (без сети/записи на диск):
-    трекается ли git и есть ли `.example`. Только claude-канал — `.cursor`/`.vscode` не maind-
-    таргеты по умолчанию (project.mcp.targets) и часто не содержат machine-specific путей вовсе
-    (напр. чистый `php artisan boost:mcp`), проверка их вслепую даёт шум без пользы.
-    Источник хинтов `maind health`: tracked-in-git чинится вручную (git rm --cached, гигиена
-    выше это не автоматизирует), missing-example чинит `maind sync --only mcp`
-    (default-on — config.mcp.emit_example=false выключает, см. provision/deploy.py) — но
-    только если провайдерский план проекта зелёный: отказавший `unmanaged-target` эмиссии
-    не получает."""
+    """Read-only snapshot real↔.example hygiene `.mcp.json` project (without network/writes to disk):
+    is it trackable? git and is there `.example`. Only claude-channel - `.cursor`/`.vscode` not maind-
+    default targets (project.mcp.targets) and often do not contain machine-specific paths at all
+    (e.g. clean `php artisan boost:mcp`), testing them blindly produces noise without benefit.
+    Source of hints `maind health`: tracked-in-git repaired manually (git rm --cached, hygiene
+    above does not automate this), missing-example repairs `maind sync --only mcp`
+    (default-on — config.mcp.emit_example=false turns off, see provision/deploy.py) — but
+    only if the provider project plan is green: failed `unmanaged-target` emissions
+    does not receive."""
     rel = MCP_FILES["claude"]
     path = Path(project_root) / rel
     if not path.is_file():
@@ -180,7 +180,7 @@ def check_hygiene(project_root):
 
 
 def has_server(path, name):
-    """True, если в MCP-конфиге по path есть сервер name (read-only; битый/нет файла → False)."""
+    """True, if in MCP-config by path there is a server name (read-only; broken/no file → False)."""
     path = Path(path)
     if not path.exists():
         return False

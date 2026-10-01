@@ -2,7 +2,7 @@
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Plan ID | plan-v2-p5 |
 | Layout | v2 |

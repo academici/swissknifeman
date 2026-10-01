@@ -1,9 +1,9 @@
-"""analyst doctor — диагностика окружения пакета (read-only, без внешних вызовов).
+"""analyst doctor — package environment diagnostics (read-only, without external calls).
 
-Проверяет: python3, наличие пакета `core` на PYTHONPATH (общий фундамент), доступность
-CLI `maind` (нужен для surfacing curated-уроков в память — необязателен, только warn) и
-`task.route_evidence` (route/budget evidence — опционально, analyst не зависит от
-`task` жёстко)."""
+Checks: python3, package availability `core` on PYTHONPATH (general foundation), availability
+CLI `maind` (is needed for surfacing curated-lessons in memory - optional, only warn) and
+`task.route_evidence` (route/budget evidence — optional, analyst does not depend on
+`task` hard)."""
 import shutil
 import sys
 
@@ -19,9 +19,9 @@ def _check_core():
 
 
 def _check_route_evidence():
-    """P2.4: опциональный маркер того, что
-    `task.route_evidence` (нормализованное route/budget evidence) виден с текущего
-    PYTHONPATH — analyst не зависит от `task` жёстко, как и от `maind`."""
+    """P2.4: optional marker that
+    `task.route_evidence` (normalized route/budget evidence) is visible from the current
+    PYTHONPATH — analyst does not depend on `task` hard, like from `maind`."""
     try:
         from task import route_evidence  # noqa: F401
         return True
@@ -30,10 +30,10 @@ def _check_route_evidence():
 
 
 def cmd_doctor(env, argv):
-    """analyst doctor — диагностика окружения (python/core/maind)."""
+    """analyst doctor — environment diagnostics (python/core/maind)."""
     opts, _ = parse_args(argv, {"--json": "bool"})
     if opts["help"]:
-        print("analyst doctor [--json] — диагностика окружения пакета.")
+        print("analyst doctor [--json] — diagnostics of the package environment.")
         return
 
     py_ok = sys.version_info >= (3, 8)
@@ -43,11 +43,11 @@ def cmd_doctor(env, argv):
 
     checks = {
         "python>=3.8": py_ok,
-        "core (общий фундамент на PYTHONPATH)": core_ok,
-        "maind (surfacing curated в память, опц.)": bool(maind_bin),
-        "task.route_evidence (route/budget evidence, опц.)": route_evidence_ok,
+        "core (common foundation on PYTHONPATH)": core_ok,
+        "maind (surfacing curated to memory, opt.)": bool(maind_bin),
+        "task.route_evidence (route/budget evidence, opt.)": route_evidence_ok,
     }
-    ok = py_ok and core_ok  # maind — опционально, не роняет вердикт
+    ok = py_ok and core_ok  # maind — optional, does not lower the verdict
 
     if opts["json"]:
         import json
@@ -57,10 +57,10 @@ def cmd_doctor(env, argv):
 
     print(f"\nanalyst doctor — {env.root}\n")
     for name, val in checks.items():
-        icon = "✓" if val else ("·" if "опц" in name else "✗")
+        icon = "✓" if val else ("·" if "opt" in name else "✗")
         print(f"  {icon} {name}")
     print()
     if not ok:
-        print("Не хватает обязательного окружения (python3.8+ и пакет core).", file=sys.stderr)
+        print("Required environment missing (python3.8+ and package core).", file=sys.stderr)
         raise SystemExit(1)
-    print("Окружение готово.")
+    print("The environment is ready.")

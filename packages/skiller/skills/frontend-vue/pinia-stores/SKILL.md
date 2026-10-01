@@ -53,12 +53,12 @@ export const useCounterStore = defineStore('counter', () => {
   const count = ref(0)
   // getter
   const doubleCount = computed(() => count.value * 2)
-  // приватное (НЕ в return) — недоступно снаружи
+  // private (NOT in return) — not accessible from outside
   let timer: ReturnType<typeof setTimeout> | null = null
   // action
   function increment() { count.value++ }
 
-  return { count, doubleCount, increment } // всё публичное
+  return { count, doubleCount, increment } // all public
 })
 ```
 

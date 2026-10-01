@@ -1,21 +1,21 @@
 # anthropics/knowledge-work-plugins
 
 - **URL:** https://github.com/anthropics/knowledge-work-plugins
-- **Статус:** planned
-- **Проверено:** 2026-06-11
+- **Status:** planned
+- **Checked:** 2026-06-11
 
-Официальные плагины Anthropic для knowledge work: manifest.json + skill.md +
-examples/, декларативные capabilities.
+Official plugins Anthropic for knowledge work: manifest.json + skill.md +
+examples/, declarative capabilities.
 
-## Брать выборочно
+## Take selectively
 
-- Скиллы для документации/знаний → профиль `obsidian-vault`, bucket `pm/`
-- Секция capabilities — кандидат на будущий v2 frontmatter (пока отложено)
+- Skills for documentation/knowledge → profile `obsidian-vault`, bucket `pm/`
+- Section capabilities — candidate for future v2 frontmatter (postponed for now)
 
-## Не брать
+## Do not take
 
-- manifest.json формат — у нас skills.json реестр + upstream.json provenance
+- manifest.json format - we have skills.json registry + upstream.json provenance
 
-## Целевые bucket-ы
+## Targets bucket-s
 
-`pm/`, `imported/`, формат — справочно.
+`pm/`, `imported/`, format - for reference.

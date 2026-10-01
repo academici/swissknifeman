@@ -2,9 +2,9 @@
   "version": "1.0.0",
   "canon_path": "packages/skiller/skills/general/plan-protocol/SKILL.md",
   "baseline": {
-    "git_anchor": "3138238bf1d828bbf9b6ef4de02c9a594a93580c",
-    "est_tokens": 36651,
-    "lines": 1391
+    "git_anchor": "ba841d9a4a3b629e950db5b4dcfacbd102872189",
+    "est_tokens": 9715,
+    "lines": 490
   },
   "warning_fraction": 0.8,
   "regression_percent": 10,

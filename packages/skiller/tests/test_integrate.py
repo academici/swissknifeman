@@ -1,13 +1,13 @@
-"""Тесты визарда integrate (после выноса окружения в пакет harness).
+"""Wizard tests integrate (after moving the environment into the package harness).
 
-Здесь остаётся ОРКЕСТРАЦИЯ и политика выбора: dry-run ничего не пишет,
-minimal-бандл подключает скиллы, `_gather`/`_default_mcp` резолвят набор MCP.
-Само ИСПОЛНЕНИЕ окружения (permissions/MCP/auto-approve/memory) делегируется
-пакету harness через subprocess — его блоки покрыты тестами в packages/harness/tests.
-В фикстуре harness не установлен → env-блоки мягко пропускаются (graceful skip).
+Here we are left with ORCHESTRATION and selection policy: dry-run does not write anything,
+minimal-bundle connects skills, `_gather`/`_default_mcp` resolve set MCP.
+The environment EXECUTION itself (permissions/MCP/auto-approve/memory) is delegated
+package harness via subprocess — its blocks are covered with tests in packages/harness/tests.
+In the fixture harness not installed → env-blocks are skipped softly (graceful skip).
 
-Гоняются против синтетического реестра (tests/fixtures) во временных каталогах;
-env.home указывает в tmp — реальные ~/.swissknifeman и ~/.claude не трогаются."""
+Racing against a synthetic registry (tests/fixtures) in temporary directories;
+env.home points to tmp — real ~/.swissknifeman and ~/.claude are not touched."""
 import contextlib
 import io
 import json
@@ -31,7 +31,7 @@ def run(fn, *a, **kw):
 
 
 def _materialize_registry(env):
-    """skills.json из синтетического реестра — нужен vendor-каналу (sync)."""
+    """skills.json from the synthetic registry - needed vendor-channel (sync)."""
     reg, *_ = build_registry(env)
     (env.root / "skills.json").write_text(
         json.dumps(reg, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -55,7 +55,7 @@ class IntegrateCase(unittest.TestCase):
         self.assertFalse((self.proj / ".swissknife.json").exists())
         self.assertFalse((self.proj / ".mcp.json").exists())
 
-    # --- minimal bundle = connect only (env-блоки выключены) ----------------
+    # --- minimal bundle = connect only (env-blocks disabled) ----------------
     def test_minimal_connects_skills(self):
         run(cmd_integrate, self.env,
             ["--target", str(self.proj), "--bundle", "minimal", "--yes"])
@@ -64,35 +64,35 @@ class IntegrateCase(unittest.TestCase):
         self.assertIn("swissknifeman", settings.get("extraKnownMarketplaces", {}))
         self.assertTrue(any(k.endswith("@swissknifeman")
                             for k in settings.get("enabledPlugins", {})))
-        # зарегистрирован в projects.json (в tmp home, не в реальном)
+        # registered in projects.json (in tmp home, not real)
         db = json.loads((self.env.home / ".swissknifeman" / "projects.json").read_text())
         self.assertTrue(any(p["path"] == str(self.proj) for p in db["projects"]))
 
     # --- skills channel (connect vs vendor) ---------------------------------
     def test_vendor_channel_syncs_into_claude_skills(self):
-        """--skills-channel vendor → физ. копии в .claude/skills/ через sync
-        (для внешних разработчиков без доступа к реестру), а не плагины."""
+        """--skills-channel vendor → physical. copies in .claude/skills/ via sync
+        (for external developers without registry access), and not plugins."""
         _materialize_registry(self.env)
         run(cmd_integrate, self.env,
             ["--target", str(self.proj), "--bundle", "minimal",
              "--skills-channel", "vendor", "--yes"])
-        # конфиг vendor-режима материализован из профиля проекта
+        # config vendor-mode materialized from project profile
         cfg = json.loads(
             (self.proj / ".swissknifeman" / "config.json").read_text())
         self.assertEqual(cfg["mode"], "vendor")
-        self.assertIn("php", cfg["buckets"])  # laravel-project профиль фикстуры
-        # скиллы физически в репо, в lock — managed:true, source swissknifeman
+        self.assertIn("php", cfg["buckets"])  # laravel-project fixture profile
+        # skills physically in the repo, in lock — managed:true, source swissknifeman
         self.assertTrue(
             (self.proj / ".claude/skills/code-style/SKILL.md").is_file())
         lock = json.loads((self.proj / "skills-lock.json").read_text())["skills"]
         self.assertTrue(lock["code-style"]["managed"])
         self.assertEqual(lock["code-style"]["source"], "swissknifeman")
-        # vendor НЕ пишет плагины marketplace
+        # vendor DOES NOT write plugins marketplace
         settings = self.proj / ".claude" / "settings.local.json"
         if settings.exists():
             self.assertNotIn("enabledPlugins",
                              json.loads(settings.read_text()))
-        # зарегистрирован как channel=vendor
+        # registered as channel=vendor
         db = json.loads(
             (self.env.home / ".swissknifeman" / "projects.json").read_text())
         rec = next(p for p in db["projects"] if p["path"] == str(self.proj))
@@ -111,43 +111,43 @@ class IntegrateCase(unittest.TestCase):
             run(cmd_integrate, self.env,
                 ["--target", str(self.proj), "--skills-channel", "bogus", "--yes"])
 
-    # --- MCP choice policy (остаётся в визарде; исполнение — в harness) ------
+    # --- MCP choice policy (remains in the wizard; execution - in harness) ------
     def test_default_mcp_dev_vs_vault(self):
         self.assertEqual(_default_mcp(self.proj), ["context7"])   # laravel = dev
         vault = self.tmp / "vault"; (vault / ".obsidian").mkdir(parents=True)
         self.assertEqual(_default_mcp(vault), [])                 # vault ≠ dev
 
     def test_bundle_resolves_dev_mcp(self):
-        # recommended/full на dev-проекте → context7; minimal → пусто
+        # recommended/full on dev-project → context7; minimal → empty
         rec = _gather(self.env, self.proj, {"file": None}, "recommended", False)
         self.assertEqual(rec["mcp"], ["context7"])
         mn = _gather(self.env, self.proj, {"file": None}, "minimal", False)
         self.assertEqual(mn["mcp"], [])
-        # тот же bundle на obsidian-vault → пусто (не dev-среда)
+        # same bundle on obsidian-vault → empty (not dev-environment)
         vault = self.tmp / "vault"; (vault / ".obsidian").mkdir(parents=True)
         rv = _gather(self.env, vault, {"file": None}, "recommended", False)
         self.assertEqual(rv["mcp"], [])
 
     def test_mcp_flag_unions_with_default(self):
-        # --mcp добавляет opt-in пресеты поверх dev-дефолта, без дублей
+        # --mcp adds opt-in presets on top dev-default, no duplicates
         rec = _gather(self.env, self.proj,
                       {"file": None, "mcp": "playwright"}, "recommended", False)
         self.assertEqual(rec["mcp"], ["context7", "playwright"])
-        # minimal: context7 нет, но явный --mcp ставится
+        # minimal: context7 no, but explicit --mcp is set
         mn = _gather(self.env, self.proj,
                      {"file": None, "mcp": "playwright"}, "minimal", False)
         self.assertEqual(mn["mcp"], ["playwright"])
-        # дубль context7 не плодится
+        # take context7 does not breed
         dup = _gather(self.env, self.proj,
                       {"file": None, "mcp": "context7,playwright"}, "recommended", False)
         self.assertEqual(dup["mcp"], ["context7", "playwright"])
-        # на obsidian-vault явный --mcp бьёт dev-гейт
+        # on obsidian-vault explicit --mcp hits dev-gate
         vault = self.tmp / "vault2"; (vault / ".obsidian").mkdir(parents=True)
         rv = _gather(self.env, vault,
                      {"file": None, "mcp": "playwright"}, "recommended", False)
         self.assertEqual(rv["mcp"], ["playwright"])
 
-    # --- output-style (терсе-голос агента, токен-экономия — для ВСЕХ бандлов) ---
+    # --- output-style (agent terse voice, token saving - for ALL bundles) ---
     def test_output_style_lean_in_every_bundle(self):
         for bundle in ("minimal", "recommended", "full"):
             g = _gather(self.env, self.proj, {"file": None}, bundle, False)
@@ -158,13 +158,13 @@ class IntegrateCase(unittest.TestCase):
         self.assertEqual(g["output_style"], "lean")
 
     def test_minimal_bundle_still_applies_output_style_block(self):
-        # minimal выключает perms/mcp/autoapprove/memory/hub/brain, но НЕ output-style —
-        # токен-экономия нужна «для всех проектов» независимо от объёма автоматизации.
+        # minimal turns off perms/mcp/autoapprove/memory/hub/brain, but NOT output-style —
+        # token-saving needed «for all projects» regardless of the amount of automation.
         out = run(cmd_integrate, self.env,
                   ["--target", str(self.proj), "--bundle", "minimal", "--yes"])
         self.assertIn("output-style: lean", out)
 
-    # --- plans-dir (per-project plans/, дефолт «да» — для ВСЕХ бандлов) ---
+    # --- plans-dir (per-project plans/, default «yes» — for ALL bundles) ---
     def test_plans_dir_enabled_in_every_bundle(self):
         for bundle in ("minimal", "recommended", "full"):
             g = _gather(self.env, self.proj, {"file": None}, bundle, False)
@@ -175,8 +175,8 @@ class IntegrateCase(unittest.TestCase):
         self.assertTrue(g["plans_dir"])
 
     def test_minimal_bundle_still_applies_plans_dir_block(self):
-        # minimal выключает perms/mcp/autoapprove/memory/hub/brain, но НЕ plans-dir —
-        # тот же принцип, что у output-style: применяется независимо от объёма автоматизации.
+        # minimal turns off perms/mcp/autoapprove/memory/hub/brain, but NOT plans-dir —
+        # same principle as output-style: applies regardless of the scope of automation.
         out = run(cmd_integrate, self.env,
                   ["--target", str(self.proj), "--bundle", "minimal", "--yes"])
         self.assertIn("plans-dir: plans", out)

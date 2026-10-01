@@ -25,5 +25,5 @@ class ClaudeSessionContextTests(unittest.TestCase):
 
     def test_whitespace_session_id_fails_closed(self):
         with patch.dict(os.environ, {"CLAUDE_CODE_SESSION_ID": "bad id"}, clear=True):
-            with self.assertRaisesRegex(session_context.SessionContextError, "невалиден"):
+            with self.assertRaisesRegex(session_context.SessionContextError, "is invalid"):
                 session_context_claude.current()

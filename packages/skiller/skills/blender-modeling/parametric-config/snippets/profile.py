@@ -1,36 +1,36 @@
 # Source: anonymized production project
 """
-Построение профиля из узлов и тело вращения (revolve) по оси Z.
+Constructing a profile from nodes and a body of rotation (revolve) axis Z.
 
-В config.py каждый сегмент хранит profile_knots — ЛОКАЛЬНЫЙ z от 0 до высоты сегмента.
-derive_all() пересчитывает зависимые размеры и синхронизирует последний узел с height.
+B config.py each segment stores profile_knots — LOCAL z from 0 to segment height.
+derive_all() recalculates dependent dimensions and synchronizes the last node with height.
 
-revolve_profile() требует Blender — bpy/bmesh импортируются ЛЕНИВО (внутри функции),
-чтобы этот модуль импортировался обычным Python (check.py, тесты уровня 1, CI).
+revolve_profile() requires Blender — bpy/bmesh are imported LAZY (inside a function),
+so that this module is imported normally Python (check.py, level 1 tests, CI).
 """
 
 from __future__ import annotations
 
 from typing import List, Tuple
 
-# Конвертация единиц: модель в мм, Blender — в метрах.
+# Unit conversion: model in mm, Blender — in meters.
 def mm(v: float) -> float:
-    """Миллиметры → метры (единицы Blender)."""
+    """Millimeters → meters (units Blender)."""
     return v * 0.001
 
 
-ProfileKnot = Tuple[float, float]  # (z, r) — оба в мм
+ProfileKnot = Tuple[float, float]  # (z, r) — both in mm
 
 
-# ── Пересчёт зависимых размеров (без bpy) ────────────────────────────────────
+# ── Recalculation of dependent dimensions (without bpy) ────────────────────────────────────
 
 
 def derive_all(model, shell, joint) -> None:
-    """Считает производные размеры из конструкции один раз после создания экземпляров.
+    """Counts derived dimensions from a design once after instantiation.
 
-    1. base_radius — наружный r на z=0 из посадки и стенки.
-    2. Последний узел profile_knots синхронизируется с актуальной height
-       (z последнего узла обязан совпадать с высотой сегмента).
+    1. base_radius — external r on z=0 from the landing and the wall.
+    2. Last node profile_knots is synchronized with the current height
+       (z of the last node must match the height of the segment).
     """
     model.base_radius = joint.seat_inner_diameter * 0.5 + joint.wall + model.wall
 
@@ -45,24 +45,24 @@ def derive_all(model, shell, joint) -> None:
 
 
 def _validate_local_profile(shell) -> None:
-    """Первый узел z должен быть 0, последний — равен высоте сегмента."""
+    """First node z must be 0, the last one equal to the height of the segment."""
     tol = 1e-3
     knots = shell.profile_knots
     if not knots:
-        raise ValueError("profile_knots пуст")
+        raise ValueError("profile_knots empty")
     if abs(knots[0][0]) > tol:
-        raise ValueError(f"первый узел z должен быть 0, сейчас {knots[0][0]}")
+        raise ValueError(f"first node z should be 0 for now {knots[0][0]}")
     if abs(knots[-1][0] - shell.height) > tol:
         raise ValueError(
-            f"последний узел z должен быть {shell.height} (высота сегмента), сейчас {knots[-1][0]}"
+            f"last node z should be {shell.height} (segment height), now {knots[-1][0]}"
         )
 
 
 def interpolate_profile(knots: List[ProfileKnot], n_points: int) -> List[ProfileKnot]:
-    """Линейная интерполяция силуэта в n_points равномерных точек по z (мм).
+    """Linear silhouette interpolation in n_points uniform points along z (mm).
 
-    Узлы в config.py — опорные; промежуточные точки считаются здесь, а не хардкодятся.
-    Для гладкого силуэта здесь можно подставить сплайн (Catmull-Rom) — интерфейс тот же.
+    Nodes in config.py — support; intermediate points are counted here and not hardcoded.
+    For a smooth silhouette, you can insert a spline here (Catmull-Rom) — interface is the same.
     """
     z0, z1 = knots[0][0], knots[-1][0]
     out: List[ProfileKnot] = []
@@ -73,7 +73,7 @@ def interpolate_profile(knots: List[ProfileKnot], n_points: int) -> List[Profile
 
 
 def _r_at_z(knots: List[ProfileKnot], z: float) -> float:
-    """Радиус (мм) на высоте z линейной интерполяцией между опорными узлами."""
+    """Radius (mm) on top z linear interpolation between reference nodes."""
     if z <= knots[0][0]:
         return knots[0][1]
     if z >= knots[-1][0]:
@@ -85,33 +85,33 @@ def _r_at_z(knots: List[ProfileKnot], z: float) -> float:
     return knots[-1][1]
 
 
-# ── Тело вращения (требует Blender; bpy/bmesh — ленивый импорт) ───────────────
+# ── Body of revolution (requires Blender; bpy/bmesh — lazy import) ───────────────
 
 
 def revolve_profile(name: str, knots_zr: List[ProfileKnot], col, segments: int):
-    """Тело вращения из 2D-профиля (список (z, r) в мм) вокруг оси Z.
+    """Body of revolution from 2D-profile (list (z, r) in mm) around axis Z.
 
-    1. Убирает соседние дубликаты узлов.
-    2. Строит замкнутый bmesh-профиль в плоскости XZ (каждая точка через mm()).
-    3. Навешивает SCREW-модификатор по Z и применяет.
+    1. Removes adjacent duplicate nodes.
+    2. Builds a closed bmesh-profile in plane XZ (each point through mm()).
+    3. Hangs SCREW-modifier by Z and applies.
 
-    Возвращает готовый bpy.Object.
+    Returns the finished bpy.Object.
     """
     import bpy
     import bmesh
 
-    # 1. Убрать соседние дубликаты.
+    # 1. Remove adjacent duplicates.
     clean: List[ProfileKnot] = [knots_zr[0]]
     for z, r in knots_zr[1:]:
         if abs(z - clean[-1][0]) > 1e-6 or abs(r - clean[-1][1]) > 1e-6:
             clean.append((z, r))
 
-    # 2. Замкнутый профиль в XZ (x = r, z = z), всё в метрах через mm().
+    # 2. Closed profile in XZ (x = r, z = z), all in meters across mm().
     bm = bmesh.new()
     verts = [bm.verts.new((mm(r), 0.0, mm(z))) for z, r in clean]
     for i in range(len(verts) - 1):
         bm.edges.new((verts[i], verts[i + 1]))
-    bm.edges.new((verts[-1], verts[0]))  # замыкаем контур
+    bm.edges.new((verts[-1], verts[0]))  # close the circuit
 
     mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)
@@ -120,7 +120,7 @@ def revolve_profile(name: str, knots_zr: List[ProfileKnot], col, segments: int):
     obj = bpy.data.objects.new(name, mesh)
     col.objects.link(obj)
 
-    # 3. SCREW по оси Z — полный оборот за segments шагов.
+    # 3. SCREW axis Z — full revolution per segments steps.
     scr = obj.modifiers.new("Screw", "SCREW")
     scr.axis = "Z"
     scr.steps = scr.render_steps = segments

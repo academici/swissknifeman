@@ -16,26 +16,26 @@ from . import journal
 RUN_USAGE = (
     "harness run <PLAN-ID> <Pn> [--dry-run] [--limit N] [--timeout S]\n"
     "                            [--plans-root PATH] [--json]\n"
-    "  <PLAN-ID>          план (каталог `<plans-root>/<PLAN-ID>`)\n"
-    "  <Pn>               фаза (например P4)\n"
-    "  --dry-run          только очередь/маршруты/argv/причины отказов, БЕЗ спавна и\n"
-    "                     БЕЗ единой записи (read-only, проверяется `git status --porcelain`)\n"
-    "  --limit N          максимум item'ов волны (дефолт — вся очередь)\n"
-    f"  --timeout S        таймаут ОДНОГО прогона воркера, секунды (дефолт {worker.DEFAULT_TIMEOUT})\n"
-    "  --plans-root PATH  каталог, где искать `<PLAN-ID>/plan.md` (дефолт — `<монорепо>/plans`)\n"
-    "  --json             та же сводка машинно (valid JSON, ensure_ascii=False)\n"
-    "Волна последовательная (D8) и останавливается на ПЕРВОМ RED; ATTENTION не\n"
-    "останавливает волну, но выносится в сводку поимённо. Ретрая нет ни одного тира (D9).\n"
-    "exit-code: 0 — волна отработала (RED в середине волны — вердикт, не ошибка\n"
-    "использования); ненулевой — ТОЛЬКО отказ разбора флагов / структурная недоступность\n"
-    "(монорепо-корень / очередь не резолвятся)."
+    "  <PLAN-ID>          plan (directory `<plans-root>/<PLAN-ID>`)\n"
+    "  <Pn>               phase (for example P4)\n"
+    "  --dry-run          queue only/routes/argv/reasons for failures, WITHOUT spawn and\n"
+    "                     WITHOUT a single entry (read-only, is being checked `git status --porcelain`)\n"
+    "  --limit N          maximum item'ov waves (default - entire queue)\n"
+    f"  --timeout S        timeout for ONE worker run, seconds (default {worker.DEFAULT_TIMEOUT})\n"
+    "  --plans-root PATH  directory where to look `<PLAN-ID>/plan.md` (default — `<monorepo>/plans`)\n"
+    "  --json             same summary machine (valid JSON, ensure_ascii=False)\n"
+    "Sequential wave (D8) and stops at the FIRST RED; ATTENTION not\n"
+    "stops the wave, but is included in the report by name. Retraya there is not a single shooting gallery (D9).\n"
+    "exit-code: 0 — wave completed (RED in the middle of the wave - verdict, not an error\n"
+    "usage); non-zero - ONLY flag parsing failure / structural inaccessibility\n"
+    "(monorepo-root / queue does not resolve)."
 )
 
 
 def _resolve_plan_dir(env, opts, plan_id):
     monorepo_root = find_monorepo_root(env.root)
     if monorepo_root is None:
-        die("монорепо-корень не найден — пакет `task` недоступен (standalone-раскладка)")
+        die("monorepo root not found - package `task` not available (standalone-layout)")
         return None, None
     plans_root = Path(opts["plans_root"]) if opts["plans_root"] else monorepo_root / "plans"
     return monorepo_root, plans_root / plan_id
@@ -46,7 +46,7 @@ def _dry_run_argv(plan_id, item, *, monorepo_root, claude_bin):
     if not item["drivable"]:
         return None, None
     if claude_bin is None:
-        return None, f"клиент claude не найден ({worker.CLAUDE_BIN_ENV} / PATH)"
+        return None, f"client claude not found ({worker.CLAUDE_BIN_ENV} / PATH)"
     route = item["route"]
     try:
         argv = worker.build_argv(plan_id, item["item_id"], model_class=route["model_class"],
@@ -74,25 +74,25 @@ def _print_dry_run(queue, plan_id, phase_id, *, monorepo_root, as_json):
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return
 
-    print(f"dry-run: {plan_id} {phase_id} (клиент: {claude_bin or 'НЕ НАЙДЕН'})")
+    print(f"dry-run: {plan_id} {phase_id} (client: {claude_bin or 'NOT FOUND'})")
     if queue["degraded"]:
-        print(f"  ОЧЕРЕДЬ НЕДОСТУПНА: {'; '.join(queue['degraded_reasons'])}")
+        print(f"  QUEUE NOT AVAILABLE: {'; '.join(queue['degraded_reasons'])}")
         return
     print(f"  next_form: {queue['next_form']['kind']!r} ({queue['next_form']['declaring_line']!r})")
-    print(f"  терминальных (исключены из очереди): {len(queue['excluded_terminal'])}")
+    print(f"  terminal (dequeued): {len(queue['excluded_terminal'])}")
     for item in items:
-        marker = "ВОЖДЕНИЕ" if item["drivable"] else "ОТКАЗ"
+        marker = "DRIVING" if item["drivable"] else "FAILURE"
         print(f"  [{marker}] {item['item_id']} — status={item['status']!r} exec={item['exec']!r}")
         if item["route"]:
             print(f"      route: {item['route']['model_class']}/{item['route']['effort']}")
         if not item["drivable"]:
-            print(f"      причина: {item['refusal']} — {item['refusal_detail']}")
+            print(f"      reason: {item['refusal']} — {item['refusal_detail']}")
         elif item["argv"]:
             print(f"      argv: {item['argv']}")
         elif item["argv_error"]:
-            print(f"      argv недоступен: {item['argv_error']}")
+            print(f"      argv not available: {item['argv_error']}")
     for excl in queue["excluded_terminal"]:
-        print(f"  [ТЕРМИНАЛЕН] {excl['item_id']} — status={excl['status']!r}")
+        print(f"  [TERMINAL] {excl['item_id']} — status={excl['status']!r}")
 
 
 def _item_actor(item):
@@ -103,7 +103,7 @@ def _item_actor(item):
 def _run_wave(env, opts, plan_id, phase_id, monorepo_root, plan_dir, *, limit, timeout):
     queue = plan_reader.queue(plan_dir, phase_id, monorepo_root=monorepo_root)
     if queue["degraded"]:
-        die(f"очередь недоступна: {'; '.join(queue['degraded_reasons'])}")
+        die(f"queue unavailable: {'; '.join(queue['degraded_reasons'])}")
         return None
 
     items = queue["items"]
@@ -154,10 +154,10 @@ def _print_wave(run_id, records, plan_id, phase_id, *, as_json):
                           "records": records}, ensure_ascii=False, indent=2, default=str))
         return
 
-    print(f"волна {run_id} — {plan_id} {phase_id}")
-    print(f"  ведено {summary['queued']} — GREEN {summary['green']} / "
+    print(f"wave {run_id} — {plan_id} {phase_id}")
+    print(f"  entered {summary['queued']} — GREEN {summary['green']} / "
          f"ATTENTION {summary['attention']} / RED {summary['red']}")
-    print(f"  вмешательств драйвера: {summary['interventions']}")
+    print(f"  driver interventions: {summary['interventions']}")
     if summary["cost_usd_total"] is not None:
         print(f"  cost_usd: {summary['cost_usd_total']:.4f}")
     if summary["duration_ms_total"] is not None:
@@ -178,7 +178,7 @@ def cmd_run(env, argv):
         print(RUN_USAGE)
         return
     if len(positionals) != 2:
-        die(f"ожидается ровно 2 позиционных аргумента: <PLAN-ID> <Pn>, получено: {positionals!r}")
+        die(f"exactly 2 positional arguments are expected: <PLAN-ID> <Pn>, received: {positionals!r}")
         return
     plan_id, phase_id = positionals
 
@@ -187,7 +187,7 @@ def cmd_run(env, argv):
         try:
             limit = int(opts["limit"])
         except ValueError:
-            die(f"--limit ожидает целое число, получено: {opts['limit']!r}")
+            die(f"--limit expects an integer, received: {opts['limit']!r}")
             return
 
     timeout = worker.DEFAULT_TIMEOUT
@@ -195,7 +195,7 @@ def cmd_run(env, argv):
         try:
             timeout = float(opts["timeout"])
         except ValueError:
-            die(f"--timeout ожидает число секунд, получено: {opts['timeout']!r}")
+            die(f"--timeout expects number of seconds, received: {opts['timeout']!r}")
             return
 
     monorepo_root, plan_dir = _resolve_plan_dir(env, opts, plan_id)

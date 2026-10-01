@@ -2,7 +2,7 @@
   "schema": 1,
   "pack": "role-founder",
   "version": "0.1.2",
-  "description": "Персона-пак соло-фаундера: три субагента-консультанта — idea-validator (валидация гипотезы до кода: JTBD/discovery/конкуренты/moat/pre-mortem), mvp-scoper (сужение до MVP, roadmap, brd→prd) и founder-cadence (еженедельный ритм + decision-log, монетизация/unit-экономика). Роль-пак: не привязан к стеку, не автодетектится — выбирается явно и ставится с любым стек-паком (PACK_PREFIX совпадает).",
+  "description": "Solo founder persona pack: three subagent consultants - idea-validator (hypothesis validation before code: JTBD/discovery/competitors/moat/pre-mortem), mvp-scoper (narrowing to MVP, roadmap, brd→prd) and founder-cadence (weekly rhythm + decision-log, monetization/unit-economics). Role pack: not tied to the stack, not auto-detected - selected explicitly and installed with any stack pack (PACK_PREFIX matches).",
   "stack": {
     "shape": "role"
   },
@@ -31,7 +31,7 @@
   "interview": [
     {
       "id": "PACK_PREFIX",
-      "q": "Префикс имён агентов проекта (как у стек-пака)?",
+      "q": "Project agent name prefix (like a stack pack)?",
       "default": "{project_dirname}",
       "kind": "slug"
     }
@@ -57,7 +57,7 @@
     }
   ],
   "notes": {
-    "prerequisite": "Персона-пак: ставится поверх любого стек-пака. {PACK_PREFIX} должен совпадать с префиксом стек-пака, чтобы @<prefix>-<role> резолвились в его роли (например, founder-cadence уводит технический стенс в @<prefix>-startup-cto / стек-роли).",
-    "verify_workflow": "Это субагенты (.md), не воркфлоу — node --check не применяется."
+    "prerequisite": "Persona pack: placed on top of any stack pack. {PACK_PREFIX} must match the stackpack prefix in order for @<prefix>-<role> resolved to play his role (for example, founder-cadence takes the technical stens into @<prefix>-startup-cto / stack roles).",
+    "verify_workflow": "These are subagents (.md), not a work flow - node --check does not apply."
   }
 }

@@ -1,16 +1,16 @@
-"""Общие утилиты maind: окружение (Env), atomic JSON, JSON-БД, backup.
+"""General utilities maind: environment (Env), atomic JSON, JSON-DB, backup.
 
-Дословно общий с swissknifeman/brain код (die/warn/now_iso/confirm/sanitize +
-ядро Env, parse_args, run_cmd, atomic/safe JSON) вынесен в общий core; HTTP-клиент
-вынесен в `maind.http`, управляемый markdown-блок — в `maind.blocks` (реэкспорт ниже
-для обратной совместимости импортов `from .common import ...`)."""
+Verbatim common with swissknifeman/brain code (die/warn/now_iso/confirm/sanitize +
+core Env, parse_args, run_cmd, atomic/safe JSON) moved to general core; HTTP-client
+moved to `maind.http`, managed markdown-block - in `maind.blocks` (re-export below
+for backward compatibility of imports `from .common import ...`)."""
 import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-# Общий core (подключается через PYTHONPATH лаунчером/test.sh). Реэкспорт для
-# модулей пакета, которые исторически берут эти имена из .common.
+# General core (connects via PYTHONPATH launcher/test.sh). Re-export for
+# package modules, which historically take these names from .common.
 from core import (  # noqa: F401
     HOME, BaseEnv, atomic_write_json, atomic_write_text, backup_file, confirm,
     detect_project_type, die, docs_visibility_for, find_monorepo_root,
@@ -18,7 +18,7 @@ from core import (  # noqa: F401
     read_ndjson_iter, run_cmd, safe_load_json, sanitize, warn,
 )
 from core import load_json_db as _core_load_json_db
-# Выделенные модули — реэкспорт ради `from .common import ...` (back-compat).
+# Dedicated modules - re-export for the sake of `from .common import ...` (back-compat).
 from .blocks import content_hash, managed_block, upsert_block  # noqa: F401
 from .http import http_get_json, http_post_json, ping  # noqa: F401
 
@@ -27,10 +27,10 @@ DB_VERSION = 1
 
 @dataclass(frozen=True)
 class Env(BaseEnv):
-    """Контекст запуска maind: ядро (root/cmd/home) — из BaseEnv; здесь только
-    path-property узла (~/.maind, root/data, config)."""
+    """Launch context maind: core (root/cmd/home) — from BaseEnv; here only
+    path-property node (~/.maind, root/data, config)."""
 
-    # ── состояние пользователя (~/.maind) ──────────────────────────────────
+    # ── user state (~/.maind) ──────────────────────────────────
     @property
     def state_dir(self):
         return self.home / ".maind"
@@ -43,7 +43,7 @@ class Env(BaseEnv):
     def agents_db(self):
         return self.state_dir / "agents.json"
 
-    # ── runtime-данные узла (root/data, gitignored) ────────────────────────
+    # ── runtime-node data (root/data, gitignored) ────────────────────────
     @property
     def data_dir(self):
         return self.root / "data"
@@ -60,12 +60,12 @@ class Env(BaseEnv):
     def memory_log(self):
         return self.data_dir / "agentmemory.log"
 
-    # ── конфигурация узла ──────────────────────────────────────────────────
+    # ── node configuration ──────────────────────────────────────────────────
     @property
     def memory_config(self):
-        """Конфиг agent-memory демона. Env `MAIND_III_CONFIG` переопределяет путь
-        (по образцу `MAIND_SKM_BIN`/`MAIND_BRAIN_BIN` в orchestrate); иначе —
-        `config/memory/iii-config.yaml` в пакете."""
+        """Config agent-memory demon. Env `MAIND_III_CONFIG` overrides path
+        (according to the example `MAIND_SKM_BIN`/`MAIND_BRAIN_BIN` in orchestrate); otherwise -
+        `config/memory/iii-config.yaml` in the package."""
         override = os.environ.get("MAIND_III_CONFIG")
         if override:
             return Path(os.path.expanduser(override))
@@ -73,22 +73,22 @@ class Env(BaseEnv):
 
     @property
     def monorepo_root(self):
-        """Корень монорепо — каталог с `packages/`/`core/` выше пакета. Конфиг узла
-        (`config.json`) общий и лежит здесь. Fallback: сам root (standalone)."""
+        """Monorepo root - directory with `packages/`/`core/` above package. Node config
+        (`config.json`) is generic and can be found here. Fallback: himself root (standalone)."""
         return find_monorepo_root(self.root) or self.root
 
     @property
     def default_config(self):
-        """Конфиг узла. Канонически — `config.json` в корне монорепо. Обратная
-        совместимость: если его нет, но есть старый `.maind.json` (в корне или в
-        пакете) — берём его (миграция без поломки существующих установок)."""
+        """Node config. Canonically - `config.json` at the root of the monorepo. Reverse
+        compatibility: if it is not there, but the old one is there `.maind.json` (in the root or
+        package) — take it (migration without breaking existing installations)."""
         root_cfg = self.monorepo_root / "config.json"
         if root_cfg.exists():
             return root_cfg
         for legacy in (self.monorepo_root / ".maind.json", self.root / ".maind.json"):
             if legacy.exists():
                 return legacy
-        return root_cfg  # путь по умолчанию для записи/подсказок — новый
+        return root_cfg  # default path for entry/hints - new
 
     @property
     def linked_worktree_config(self):
@@ -136,7 +136,7 @@ class Env(BaseEnv):
 
     @property
     def example_config(self):
-        """Шаблон конфига — `config.example.json` в корне монорепо (с legacy-fallback)."""
+        """Config template - `config.example.json` at the root of the monorepo (with legacy-fallback)."""
         root_ex = self.monorepo_root / "config.example.json"
         if root_ex.exists():
             return root_ex
@@ -148,20 +148,20 @@ class Env(BaseEnv):
         return self.root / ".env"
 
 
-# die/warn/now_iso/confirm/sanitize — из общего core (реэкспорт выше).
+# die/warn/now_iso/confirm/sanitize — from general core (re-export above).
 
 
-# parse_args — из общего core (реэкспорт выше); раньше дублировался здесь
-# (надмножество parse_flags с позиционными, стиль brain).
+# parse_args — from general core (re-export above); used to be duplicated here
+# (superset parse_flags with positional, style brain).
 
 
-# backup_file — из общего core (реэкспорт выше); раньше дублировался здесь.
-# managed_block/upsert_block/content_hash — в maind.blocks (реэкспорт выше).
-# http_get_json/http_post_json/ping — в maind.http (реэкспорт выше).
+# backup_file — from general core (re-export above); was previously duplicated here.
+# managed_block/upsert_block/content_hash — in maind.blocks (re-export above).
+# http_get_json/http_post_json/ping — in maind.http (re-export above).
 
 
-# ── JSON-хранилища (atomic write + устойчивое чтение — общий core) ───────────
+# ── JSON-storage (atomic write + persistent read - general core) ───────────
 def load_json_db(path, default):
-    """JSON-БД узла с восстановлением — общий core.load_json_db (битый → бэкап
+    """JSON-Node database with recovery - general core.load_json_db (broken → backup
     .corrupt.<date> + warn + deepcopy(default); version > DB_VERSION → die)."""
     return _core_load_json_db(path, default, max_version=DB_VERSION)

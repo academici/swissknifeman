@@ -1,8 +1,8 @@
-"""Реестр проектов узла (надмножество brain .projects.json).
+"""Node project registry (superset brain .projects.json).
 
-Чтение — из конфига (config.json или brain-fallback). Запись — только write_config
-(единственный писатель config.json). sync_from_brain идемпотентен и сохраняет
-maind-only поля (skills/tags/dependencies/agents/repo)."""
+Reading - from config (config.json or brain-fallback). Write - only write_config
+(sole writer config.json). sync_from_brain is idempotent and preserves
+maind-only fields (skills/tags/dependencies/agents/repo)."""
 import json
 import os
 import subprocess
@@ -12,12 +12,12 @@ from .common import atomic_write_json, die, parse_args, warn
 from .config import load_brain_projects, load_config, normalize_docs_folders
 from .namespaces import in_namespace, namespaces_of
 
-# Поля, которые обновляются из brain при синке (остальное — maind-only, сохраняем).
+# Fields that are updated from brain with sync (rest - maind-only, save).
 BRAIN_SOURCED = ("name", "local_path", "vault_path", "type", "enabled", "docs_folders")
 
 
 def listing(env, config):
-    """Список проектов из конфига (как есть)."""
+    """List of projects from the config (as is)."""
     return list(config.get("projects") or [])
 
 
@@ -29,8 +29,8 @@ def get(config, project_id):
 
 
 def match_cwd(env, config, cwd=None):
-    """Проект, в каталоге которого мы находимся: матч cwd по local_path. None если не найден
-    (в отличие от health._target, который die'ит). Используется для дефолт-scope MCP-сервера."""
+    """Project in whose directory we are: match cwd by local_path. None if not found
+    (unlike health._target, which die'etc). Used for defaultscope MCP-server."""
     from .provision.workspace import norm_path
     cwd = norm_path(cwd or os.getcwd())
     for p in listing(env, config):
@@ -71,24 +71,24 @@ def _same_git_worktree(left, right):
 
 
 def _warn_visibility_changes(pid, cur_folders, inc_folders):
-    """Предупредить, если синк меняет visibility doc-папки существующего проекта. Частый
-    признак — протухший brain `.projects.json` (его надо регенерировать из frontmatter
-    control-нот перед синком; источник истины visibility — именно frontmatter). brain при
-    этом всё равно «выигрывает» (поле затирается) — warn лишь делает изменение заметным."""
+    """Warn if sync changes visibility doc-folders of an existing project. Frequent
+    sign - rotten brain `.projects.json` (it must be regenerated from frontmatter
+    control-notes before sync; source of truth visibility — exactly frontmatter). brain when
+    it doesn't matter «wins» (field is overwritten) — warn only makes the change noticeable."""
     cur_vis = {f["id"]: f["visibility"] for f in normalize_docs_folders(cur_folders)}
     for f in normalize_docs_folders(inc_folders):
         old = cur_vis.get(f["id"])
         if old is not None and old != f["visibility"]:
-            warn(f"проект '{pid}': docs-папка '{f['id']}' visibility {old}→{f['visibility']} "
-                 f"— если неожиданно, регенерируйте brain .projects.json из frontmatter")
+            warn(f"project '{pid}': docs-folder '{f['id']}' visibility {old}→{f['visibility']} "
+                 f"— if unexpected, regenerate brain .projects.json from frontmatter")
 
 
 def sync_from_brain(env, config, brain_path):
-    """Импорт/обновление проектов из brain .projects.json. Идемпотентно, мерджит по
-    id. Возвращает (config, stats); config НЕ записывается (это делает write_config).
-    Источник истины каталога/visibility — frontmatter control-нот Brain → `.projects.json`;
-    maind лишь отражает их (brain-поля затираются). При смене visibility существующего
-    проекта — warn (защита от синка из протухшего кэша; см. `_warn_visibility_changes`)."""
+    """Import/updating projects from brain .projects.json. Idempotent, merges by
+    id. Returns (config, stats); config NOT recorded (does this write_config).
+    Directory Source of Truth/visibility — frontmatter control-notes Brain → `.projects.json`;
+    maind only reflects them (brain-fields are overwritten). When changing visibility existing
+    project - warn (protection against sync from a bad cache; see `_warn_visibility_changes`)."""
     incoming = load_brain_projects(brain_path)
     existing = {p.get("id"): p for p in (config.get("projects") or [])}
     order = [p.get("id") for p in (config.get("projects") or [])]
@@ -109,23 +109,23 @@ def sync_from_brain(env, config, brain_path):
             added += 1
         lp = inc.get("local_path")
         if lp and not Path(os.path.expanduser(lp)).exists():
-            warn(f"проект '{pid}': локальный путь не найден — {lp}")
+            warn(f"project '{pid}': local path not found - {lp}")
     config["projects"] = [existing[pid] for pid in order]
     return config, {"added": added, "updated": updated, "total": len(existing)}
 
 
 def write_config(env, config):
-    """Единственный писатель config.json (atomic). _version проставляется первым ключом.
-    mode=0o600: config.json держит секреты узла (токены интеграций) — не должен быть
-    world-readable даже на короткое окно записи."""
+    """Sole writer config.json (atomic). _version is entered as the first key.
+    mode=0o600: config.json holds node secrets (integration tokens) — should not be
+    world-readable even for a short recording window."""
     out = {"_version": str(config.get("_version", "1"))}
     out.update({k: v for k, v in config.items() if k != "_version"})
     atomic_write_json(env.default_config, out, mode=0o600)
 
 
 def brain_path(config):
-    """Где искать brain .projects.json: integrations.brain.path → vault проекта brain
-    → env `MAIND_BRAIN_VAULT` → дефолт ~/Vaults/Brain."""
+    """Where to look brain .projects.json: integrations.brain.path → vault project brain
+    → env `MAIND_BRAIN_VAULT` → default ~/Vaults/Brain."""
     integ = (config.get("integrations") or {}).get("brain") or {}
     p = integ.get("path") or integ.get("local_path")
     if p:
@@ -153,7 +153,7 @@ def cmd_projects(env, argv):
     elif sub == "sync":
         _cmd_sync(env, rest)
     else:
-        die(f"неизвестная подкоманда projects: {sub} (list|status|health|sync)")
+        die(f"unknown subcommand projects: {sub} (list|status|health|sync)")
 
 
 def _cmd_health(env, argv):
@@ -170,19 +170,19 @@ def _cmd_health(env, argv):
               "--evidence-set FILE --json")
         return
     if selectors != 1:
-        die("projects health: укажите ровно один scope: --project, --namespace или --all")
+        die("projects health: specify exactly one scope: --project, --namespace or --all")
     if not opts["evidence_set"]:
-        die("projects health: обязателен --evidence-set FILE")
+        die("projects health: required --evidence-set FILE")
     config, _src = load_config(env)
     selected = listing(env, config)
     if opts["project"]:
         selected = [item for item in selected if item.get("id") == opts["project"]]
         if not selected:
-            die(f"projects health: проект не найден: {opts['project']}")
+            die(f"projects health: project not found: {opts['project']}")
     elif opts["namespace"]:
         selected = [item for item in selected if in_namespace(item, opts["namespace"])]
         if not selected:
-            die(f"projects health: namespace пуст или не найден: {opts['namespace']}")
+            die(f"projects health: namespace is empty or not found: {opts['namespace']}")
     try:
         evidence_set = load_evidence_set(opts["evidence_set"])
         result = evaluate(env, config, selected, evidence_set)
@@ -212,16 +212,16 @@ def _cmd_status(env, argv):
         projs = [p for p in projs if in_namespace(p, opts["namespace"])]
     reports = [probe_project(env, config, p, memory_reachable=reach, trusted=trusted)
                for p in projs]
-    for r in reports:                       # B: drift-подсказки «слой X → команда починки»
+    for r in reports:                       # B: drift-tips «layer X → repair command»
         r["fixes"] = drift_hints(env, config, r)
     if opts["json"]:
         print(json.dumps({"hub": hub, "projects": reports}, ensure_ascii=False, indent=2))
         return
     m, g, dw = hub["memory"], hub["graph"], hub["docs_watcher"]
-    print(f"Хаб: память {'up' if m['running'] else 'down'} ({m['url']}) · "
-          f"граф {g['nodes']}n/{g['edges']}e · docs-watcher "
+    print(f"Hub: memory {'up' if m['running'] else 'down'} ({m['url']}) · "
+          f"graph {g['nodes']}n/{g['edges']}e · docs-watcher "
           f"{'up' if dw['running'] else 'down'}")
-    print(f"Проекты ({len(reports)}) — слои: mcp[a/m/c] · skills · packs(роли) · trust:")
+    print(f"Projects ({len(reports)}) — layers: mcp[a/m/c] · skills · packs(roles) · trust:")
     for r in reports:
         c = r.get("configured", {})
         mcp = ("a" if c.get("agentmemory_mcp") else "-") \
@@ -246,10 +246,10 @@ def _cmd_list(env, argv):
         print(json.dumps(projects, ensure_ascii=False, indent=2))
         return
     if not projects:
-        print("проектов нет — создайте config.json из config.example.json "
-              "или `maind projects sync --from brain`")
+        print("no projects - create config.json from config.example.json "
+              "or `maind projects sync --from brain`")
         return
-    print(f"Проекты ({len(projects)}, источник: {source}):")
+    print(f"Projects ({len(projects)}, source: {source}):")
     for p in projects:
         deps = p.get("dependencies") or []
         tail = f" → deps: {', '.join(deps)}" if deps else ""
@@ -262,17 +262,17 @@ def _cmd_list(env, argv):
 
 # ── namespaces ───────────────────────────────────────────────────────────────
 def cmd_namespaces(env, argv):
-    """Список namespace экосистемы: реестр (секция namespaces) + проекты-члены.
-    Источник членства — поле projects[].namespaces (нет/пусто → 'default')."""
+    """List namespace ecosystems: registry (section namespaces) + member projects.
+    Membership source - field projects[].namespaces (no/empty → 'default')."""
     opts, _ = parse_args(argv, {"--json": "bool"})
     if opts["help"]:
-        print("maind namespaces [--json]  — namespace-группы и их проекты-члены")
+        print("maind namespaces [--json]  — namespace-groups and their member projects")
         return
     config, _src = load_config(env)
     registry = config.get("namespaces") or {}
     projs = listing(env, config)
-    members = {}                              # ns → [project ids] (без wildcard)
-    wildcard = []                            # проекты '*' — во всех namespace
+    members = {}                              # ns → [project ids] (without wildcard)
+    wildcard = []                            # projects '*' — in all namespace
     for p in projs:
         ns = namespaces_of(p)
         if "*" in ns:
@@ -293,10 +293,10 @@ def cmd_namespaces(env, argv):
         title = f" — {meta['name']}" if meta.get("name") else ""
         mem = sorted(members.get(n, []))
         print(f"  {n:<16}{title}")
-        print(f"    члены: {', '.join(mem) if mem else '—'}")
+        print(f"    members: {', '.join(mem) if mem else '—'}")
     if wildcard:
-        print(f"  {'*':<16} — общая инфраструктура (во всех namespace)")
-        print(f"    члены: {', '.join(sorted(wildcard))}")
+        print(f"  {'*':<16} — general infrastructure (in all namespace)")
+        print(f"    members: {', '.join(sorted(wildcard))}")
 
 
 def _cmd_sync(env, argv):
@@ -307,14 +307,14 @@ def _cmd_sync(env, argv):
         path = opts["path"] or brain_path(config)
         config, stats = sync_from_brain(env, config, path)
         write_config(env, config)
-        print(f"Синк из brain ({path}): +{stats['added']} новых, "
-              f"~{stats['updated']} обновлено, всего {stats['total']}. "
-              f"Записано в {env.default_config.name}")
+        print(f"Sync from brain ({path}): +{stats['added']} new, "
+              f"~{stats['updated']} updated, total {stats['total']}. "
+              f"Recorded in {env.default_config.name}")
     elif src == "swissknifeman":
         from .derive import derive_all
         stats = derive_all(env, config)
         edges = sum(s["by_via"]["skills"] for s in stats)
-        print(f"Derive скиллов (федерация): {len(stats)} проектов, "
-              f"{edges} скилл-рёбер → графы проектов")
+        print(f"Derive skills (federation): {len(stats)} projects, "
+              f"{edges} skill edges → project graphs")
     else:
-        die(f"--from: brain | swissknifeman (получено: '{src}')")
+        die(f"--from: brain | swissknifeman (received: '{src}')")

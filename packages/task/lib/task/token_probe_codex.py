@@ -31,7 +31,7 @@ class CodexExecProbeAdapter:
 
     def __init__(self, requested_model_id, *, codex_bin="codex", timeout_s=180):
         if not requested_model_id:
-            raise ValueError("Codex probe: requested model обязателен")
+            raise ValueError("Codex probe: requested model required")
         self.requested_model_id = requested_model_id
         self.codex_bin = codex_bin
         self.timeout_s = timeout_s
@@ -51,10 +51,10 @@ class CodexExecProbeAdapter:
             result = subprocess.run([self.codex_bin, "--version"], capture_output=True, text=True,
                                     timeout=self.timeout_s)
             if result.returncode != 0:
-                raise CodexProbeError(f"codex --version завершился с кодом {result.returncode}")
+                raise CodexProbeError(f"codex --version failed with code {result.returncode}")
             version = result.stdout.strip() or result.stderr.strip()
             if not version:
-                raise CodexProbeError("codex --version не вернул версию")
+                raise CodexProbeError("codex --version did not return the version")
             self._cli_version = version
         return self._cli_version
 
@@ -66,10 +66,10 @@ class CodexExecProbeAdapter:
                 result = subprocess.run(argv, input=prompt, capture_output=True, text=True,
                                         timeout=self.timeout_s)
             except (OSError, subprocess.TimeoutExpired) as exc:
-                raise CodexProbeError(f"Codex probe не запустился: {exc}") from exc
+                raise CodexProbeError(f"Codex probe did not start: {exc}") from exc
         if result.returncode != 0:
             raise CodexProbeError(
-                f"Codex probe завершился с кодом {result.returncode}: {result.stderr[:500]}")
+                f"Codex probe failed with code {result.returncode}: {result.stderr[:500]}")
         events = []
         for line in result.stdout.splitlines():
             if not line.strip():
@@ -77,16 +77,16 @@ class CodexExecProbeAdapter:
             try:
                 events.append(json.loads(line))
             except json.JSONDecodeError as exc:
-                raise CodexProbeError(f"Codex probe вернул не-JSONL: {exc}") from exc
+                raise CodexProbeError(f"Codex probe returned non-JSONL: {exc}") from exc
         terminal = [event for event in events if event.get("type") == "turn.completed"]
         if len(terminal) != 1:
-            raise CodexProbeError(f"Codex probe обязан вернуть ровно один turn.completed, получено {len(terminal)}")
+            raise CodexProbeError(f"Codex probe must return exactly one turn.completed, received {len(terminal)}")
         usage = terminal[0].get("usage")
         if not isinstance(usage, dict):
-            raise CodexProbeError("Codex probe terminal event не содержит usage")
+            raise CodexProbeError("Codex probe terminal event does not contain usage")
         total = usage.get("input_tokens")
         if not isinstance(total, int) or isinstance(total, bool) or total < 0:
-            raise CodexProbeError("Codex probe usage.input_tokens обязан быть целым числом >= 0")
+            raise CodexProbeError("Codex probe usage.input_tokens must be an integer >= 0")
         breakdown = {
             name: value for name, value in usage.items()
             if name != "input_tokens"

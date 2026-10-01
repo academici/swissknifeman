@@ -1,4 +1,4 @@
-"""update — обновить подключение/вендоринг проекта (диск — источник истины)."""
+"""update — update connection/project vendoring (disk - the source of truth)."""
 import json
 import shutil
 import uuid
@@ -60,16 +60,16 @@ def adopt_codex_provider_config(target, dry_run=False, plugins=None):
         except json.JSONDecodeError as exc:
             die(f"{config_path}: invalid JSON: {exc}")
     if not isinstance(data, dict):
-        die(f"{config_path}: корень должен быть JSON-object")
+        die(f"{config_path}: root should be JSON-object")
     providers = data.get("providers")
     if providers is None:
         providers = {}
         data["providers"] = providers
     if not isinstance(providers, dict):
-        die(f"{config_path}: providers должен быть JSON-object")
+        die(f"{config_path}: providers should be JSON-object")
     selection = providers.setdefault("selection", {})
     if not isinstance(selection, dict):
-        die(f"{config_path}: providers.selection должен быть JSON-object")
+        die(f"{config_path}: providers.selection should be JSON-object")
     changed = False
     if providers.get("contract_version") != "1.0.0":
         providers["contract_version"] = "1.0.0"
@@ -80,7 +80,7 @@ def adopt_codex_provider_config(target, dry_run=False, plugins=None):
             selection[provider] = {"enabled": True}
             changed = True
         elif not isinstance(value, dict):
-            die(f"{config_path}: providers.selection.{provider} должен быть JSON-object")
+            die(f"{config_path}: providers.selection.{provider} should be JSON-object")
     if (plugins is not None and "plugins" not in data and not data.get("buckets")
             and not data.get("project_type")):
         data["plugins"] = list(plugins)
@@ -245,7 +245,7 @@ def retire_legacy_codex_vendor(env, target, *, dry_run=False):
 
 
 def detect_vendor_path(target, config):
-    config = ProjectConfig.coerce(config)  # исторические вызовы передают dict
+    config = ProjectConfig.coerce(config)  # historical calls are sent dict
     candidates = []
     if config.skills_path:
         candidates.append(config.skills_path)
@@ -416,9 +416,9 @@ def retire_equivalent_codex_skill_links(env, target, *, dry_run=False):
 
 
 def enabled_marketplace_plugins(target, mk_file):
-    """Активные (True) плагины marketplace-канала из settings-файла — имена без
-    '@<marketplace>'. Fail-safe: битый/пропавший файл → [] (гонка/порча между
-    detect_marketplace_file и этим чтением не должна ронять update)."""
+    """Active (True) plugins marketplace-channel from settings-file - names without
+    '@<marketplace>'. Fail-safe: broken/missing file → [] (race/damage between
+    detect_marketplace_file and this reading should not drop update)."""
     f = target / ".claude" / mk_file
     try:
         s = json.loads(f.read_text(encoding="utf-8"))
@@ -458,19 +458,19 @@ def update_one(env, target, dry_run=False, adopt_codex=False):
     mk_file = detect_marketplace_file(target)
     codex_marketplace = detect_codex_marketplace(target)
     codex_links = detect_codex_skill_links(target)
-    # sync-канал (.swissknifeman/config.json) владеет тем же .swissknifeman-manifest.json,
-    # что и legacy vendor — поэтому при наличии sync-конфига обновляем sync'ом (он
-    # уважает skill-granular include/exclude), а detect_vendor_path не трогаем.
+    # sync-channel (.swissknifeman/config.json) owns the same .swissknifeman-manifest.json,
+    # as legacy vendor — therefore if available sync-config updated sync'ohm (he
+    # respects skill-granular include/exclude), a detect_vendor_path do not touch.
     sync_cfg = load_skillset_config(target)
     vendor_path = None if sync_cfg else detect_vendor_path(target, config)
 
     if not mk_file and not codex_marketplace and not codex_links and not sync_cfg and not vendor_path:
         if records:
-            warn(f"{target}: записан в projects.json, но маркеры подключения "
-                 f"не найдены — забыть: skiller list --prune")
+            warn(f"{target}: written to projects.json, but connection tokens "
+                 f"not found - forget: skiller list --prune")
         else:
-            die(f"{target} не подключён — выполните 'skiller connect' "
-                f"(Claude Code) или 'skiller vendor' (другие агенты)")
+            die(f"{target} not connected - run 'skiller connect' "
+                f"(Claude Code) or 'skiller vendor' (other agents)")
         return False
 
     # Migration only after a genuine SKM marker proved ownership of the project.
@@ -482,19 +482,19 @@ def update_one(env, target, dry_run=False, adopt_codex=False):
     if mk_file or codex_marketplace or codex_links:
         rec = records.get("marketplace", {})
         if not rec:
-            print(f"NOTE: {target} не был в projects.json — регистрирую (adopt)")
+            print(f"NOTE: {target} was not in projects.json — registering (adopt)")
         opts = replay_opts(rec)
         if mk_file:
             opts["file"] = mk_file
         opts["dry_run"] = dry_run
         opts["hub"] = bool(rec.get("hub")) or hub_artifacts_exist(target)
         print(f"--- update (marketplace): {target} ---")
-        # бакет слит (alias) — старое имя ещё включено у проекта → одна строка,
-        # без нагнетания (сам update ничего не переключает, только подсказывает).
+        # bucket drained (alias) — old name is still enabled for the project → one line,
+        # without injection (himself update does not switch anything, it only prompts).
         if mk_file:
             for hint in alias_migration_hints(
                     load_bucket_aliases(env), enabled_marketplace_plugins(target, mk_file)):
-                print(f"Подсказка: {hint}")
+                print(f"Hint: {hint}")
         do_connect(env, target, opts, fix_path_drift=True)
         # A first dual-provider connect just created the contained Codex
         # marketplace. Re-detect it before the sync branch below: otherwise the
@@ -504,10 +504,10 @@ def update_one(env, target, dry_run=False, adopt_codex=False):
         codex_links = detect_codex_skill_links(target)
         print_registry_state(env)
     if sync_cfg:
-        # канонический Claude-канал: пере-sync из .swissknifeman/config.json (skill-granular)
+        # canonical Claude-channel: re-sync from .swissknifeman/config.json (skill-granular)
         rec = records.get("vendor", {})
         if not rec:
-            print(f"NOTE: {target} не был в projects.json — регистрирую (adopt)")
+            print(f"NOTE: {target} was not in projects.json — registering (adopt)")
         print(f"--- update (sync): {target} ---")
         sync_opts = {
             "dry_run": dry_run,
@@ -526,15 +526,15 @@ def update_one(env, target, dry_run=False, adopt_codex=False):
             try:
                 manifest = json.loads(mf.read_text(encoding="utf-8"))
             except json.JSONDecodeError as e:
-                # Битый манифест — деградация, не крах: раньше необёрнутый json.loads
-                # ронял необработанным исключением ВЕСЬ `update --all` (cmd_update ловит
-                # только SystemExit) на первом же проекте с битым манифестом (аудит U-1).
-                # manifest={} — agent/profile просто возьмутся из других источников
-                # precedence (config/projects.json record), как для проекта без манифеста.
-                warn(f"{mf}: битый JSON манифеста — игнорирую (agent/profile "
-                     f"возьмутся из .swissknife.json/projects.json, если заданы): {e}")
+                # Broken manifesto - degradation, not collapse: previously unwrapped json.loads
+                # was throwing an unhandled exception ENTIRELY `update --all` (cmd_update catches
+                # only SystemExit) on the very first project with a broken manifest (audit U-1).
+                # manifest={} — agent/profile will simply be taken from other sources
+                # precedence (config/projects.json record), as for a project without a manifest.
+                warn(f"{mf}: broken JSON manifest - I ignore (agent/profile "
+                     f"will be taken from .swissknife.json/projects.json, if specified): {e}")
         if not rec:
-            print(f"NOTE: {target} не был в projects.json — регистрирую (adopt)")
+            print(f"NOTE: {target} was not in projects.json — registering (adopt)")
         opts = replay_opts(rec)
         # precedence: .swissknife.json > projects.json record > manifest
         if not config.agent:
@@ -573,8 +573,8 @@ def cmd_update(env, argv):
             seen.add(path)
             target = Path(path)
             if not target.is_dir():
-                warn(f"{path}: каталог не найден — пропускаю "
-                     f"(забыть: skiller list --prune)")
+                warn(f"{path}: directory not found - skipping "
+                     f"(forget: skiller list --prune)")
                 results.append((path, "missing"))
                 continue
             if target.resolve() == env.root.resolve():
@@ -585,7 +585,7 @@ def cmd_update(env, argv):
                 results.append((path, "ok"))
             except SystemExit:
                 results.append((path, "failed"))
-        print("\n--- итог ---")
+        print("\n--- summary ---")
         for path, state in results:
             print(f"  {state:8} {path}")
         if any(s == "failed" for _, s in results):

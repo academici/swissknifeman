@@ -1,19 +1,19 @@
-# Архитектура
+# Architecture
 
-**mAInd** — вершина иерархии экосистемы. Один общий хаб композирует три слоя под одним
-конфигом `config.json` и одним CLI. Остальные проекты подключаются к нему как клиенты.
+**mAInd** — the top of the ecosystem hierarchy. One common hub composes three layers under one
+config `config.json` and one CLI. Other projects connect to it as clients.
 
-> Философию всей экосистемы (роли swissknifeman / brain / maind, принцип «связаны, но работают по
-> отдельности», онбординг, слои командного пункта) см. на странице [Экосистема](./ecosystem).
-> Здесь — внутренняя композиция самого узла maind.
+> Philosophy of the entire ecosystem (roles swissknifeman / brain / maind, principle «are related, but work according to
+> separately», onboarding, command post layers) see page [Ecosystem](./ecosystem).
+> Here is the internal composition of the node itself maind.
 
-## Топология: единый хаб + scopes
+## Topology: single hub + scopes
 
 ```mermaid
 graph TD
-  subgraph hub["maind hub (этот пакет)"]
-    M["agent-memory daemon<br/>Node · 4111/4112<br/>бакеты: project:&lt;id&gt; · ns:&lt;имя&gt; · global"]
-    G["data/graphs/*<br/>федерация: граф на проект + _index.db"]
+  subgraph hub["maind hub (this package)"]
+    M["agent-memory daemon<br/>Node · 4111/4112<br/>buckets: project:&lt;id&gt; · ns:&lt;name&gt; · global"]
+    G["data/graphs/*<br/>federation: graph per project + _index.db"]
     R["~/.maind<br/>agents.json · projects.json"]
     MCP["maind mcp<br/>stdio JSON-RPC · 11 tools"]
   end
@@ -22,11 +22,11 @@ graph TD
   erp["erp-sdk · …"] -->|MCP/HTTP| hub
 ```
 
-Изоляция между проектами — **логическая** (граф — по namespace; память — по бакетам
-`project:<id>`/`ns:<имя>`/`global`), а не отдельными демонами. Демон памяти **не**
-запускается на каждый проект — один на хаб; на проекты раскатывается лишь MCP-клиент к нему.
+Isolation between projects - **boolean** (graph - by namespace; memory - by bucket
+`project:<id>`/`ns:<name>`/`global`), and not individual daemons. Memory Demon **not**
+is launched for each project - one per hub; only rolled out for projects MCP-client to him.
 
-## Три слоя
+## Three layers
 
 ```mermaid
 flowchart LR
@@ -35,119 +35,119 @@ flowchart LR
   mem -->|HTTP| daemon["agent-memory (Node)"]
   gr -->|node-link JSON| db[("data/graphs/&lt;id&gt;.db + _index.db")]
   ag -->|atomic JSON| aj[("~/.maind/agents.json")]
-  pr -->|читает/пишет| cfg[("config.json")]
+  pr -->|reads/writes| cfg[("config.json")]
   mcp --> mem & gr & ag & pr
 ```
 
-- **Память** (`memory.py`) — оркестрирует внешний Node-демон `@agentmemory/agentmemory`
-  (start/stop/status, health-poll, pidfile) и говорит по HTTP со scope'ами. Демон —
-  зависимость, не переписывается на Python.
-- **Граф** (`graph.py` + `federation.py`) — stdlib property-граф (BFS-соседи, кратчайший
-  путь, подграф, статистика), персист в node-link JSON; раскладка — федерация (граф на
-  проект + `_index.db`). Строится из источников истины (`derive.py`), не из ручного дубля.
-- **Агенты** (`agents.py`) — реестр в `~/.maind/agents.json`; состояние выводится из
-  возраста heartbeat и живости pid.
-- **Проекты** (`projects.py`) — `config.json` (надмножество brain `.projects.json`;
-  legacy-имя `.maind.json` всё ещё подхватывается), синк из brain.
-- **MCP** (`mcp.py`) — публикует всё это как stdio JSON-RPC сервер для внешних агентов.
+- **Memory** (`memory.py`) — orchestrates external Node-demon `@agentmemory/agentmemory`
+  (start/stop/status, health-poll, pidfile) and speaks HTTP with scope'ami. Demon -
+  dependency, not rewritten to Python.
+- **Graph** (`graph.py` + `federation.py`) — stdlib property-graph (BFS-neighbors, shortest
+  path, subgraph, statistics), persistent in node-link JSON; layout - federation (graph on
+  project + `_index.db`). Built from the sources of truth (`derive.py`), not from a manual take.
+- **Agents** (`agents.py`) — registry in `~/.maind/agents.json`; state is derived from
+  age heartbeat and liveliness pid.
+- **Projects** (`projects.py`) — `config.json` (superset brain `.projects.json`;
+  legacy-name `.maind.json` is still being picked up), sync from brain.
+- **MCP** (`mcp.py`) — posts all this as stdio JSON-RPC server for external agents.
 
-## Три слоя графа
+## Three graph layers
 
-Связи бывают разной природы, и их нельзя смешивать (иначе топология выглядит «как единый код»):
+Connections come in different natures and cannot be mixed (otherwise the topology looks like «as a single code»):
 
-1. **Код внутри проекта** (символы/файлы/вызовы) — `serena` (через uvx) на проект, граф на проект,
-   уже физически отдельный. maind его не дублирует.
-2. **Топология между проектами** (кто от кого зависит, общие пакеты) — это слой maind, см. ниже.
-3. **Доки↔доки** — Brain vault (wikilinks, frontmatter `uses/used_by`). maind только **читает** их.
+1. **Code inside the project** (characters/files/calls) — `serena` (via uvx) per project, graph per project,
+   is already physically separate. maind does not duplicate it.
+2. **Topology between projects** (who depends on whom, common packages) — is a layer maind, see below.
+3. **Docks↔docks** — Brain vault (wikilinks, frontmatter `uses/used_by`). maind only **reads** them.
 
-## Слой 2: федерация графов
+## Layer 2: Graph Federation
 
-`graph.adapter = "federation"` — вместо одного `graph.db` граф **на проект**
-(`data/graphs/<id>.db`, или в репо проекта при `graph_store=local`) плюс тонкий регенерируемый
-`data/graphs/_index.db` (только `project:*`-узлы + межпроектные рёбра). Запрос, пересекающий
-границу проекта, **сшивает** нужные сторы в один in-memory union и гоняет обычный BFS
-(`federation.Federation` поверх `graph.Graph`). Это даёт изоляцию (граф проекта можно удалить/
-перенести без вреда остальным) при простом read-фасаде.
+`graph.adapter = "federation"` — instead of one `graph.db` graph **for the project**
+(`data/graphs/<id>.db`, or in the project repo when `graph_store=local`) plus thin regenerable
+`data/graphs/_index.db` (only `project:*`-nodes + cross-project edges). Request crossing
+project boundary, **stitches** necessary stores in one in-memory union and drives the normal one BFS
+(`federation.Federation` on top `graph.Graph`). This gives insulation (project graph can be deleted/
+transfer without harm to others) when idle read-facade.
 
-- `maind graph --project <id>` — граф одного проекта (его узлы + исходящие межпроектные рёбра).
-- `maind graph --cross` — весь межпроектный слой (`_index.db`).
-- `maind graph query --from project:flexcrm --depth 2` — обход через границы (федерация).
+- `maind graph --project <id>` — graph of one project (its nodes + outgoing cross-project edges).
+- `maind graph --cross` — entire cross-project layer (`_index.db`).
+- `maind graph query --from project:flexcrm --depth 2` — border traversal (federation).
 
-## Откуда берутся связи (derive, без дублей)
+## Where do connections come from? (derive, without duplicates)
 
-`maind graph derive` строит сторы проектов из **источников истины**, а не из ручного дубля
-(`derive.py`), помечая узлы/рёбра планом (`code|doc|meta|runtime`) и источником (`via`):
+`maind graph derive` builds project stores from **sources of truth**, and not from a manual take
+(`derive.py`), marking nodes/ribs plan (`code|doc|meta|runtime`) and source (`via`):
 
-| План | Источник | Рёбра |
+| Plan | Source | Ribs |
 |:--|:--|:--|
 | code | `composer.json` + path-repos, `package.json` | `project ─requires→ package`, `package ─provided_by→ project`, cross `project ─depends_on→ project` |
 | doc | Brain frontmatter `uses/used_by` (**read-only**) | `project ─uses→ project` |
-| override | `<repo>/.maind.graph.json` | объявленные `relates_to`/… (runtime/API) |
+| override | `<repo>/.maind.graph.json` | declared `relates_to`/… (runtime/API) |
 | skills | `skills-lock.json` | `project ─uses→ skill ─provided_by→ tool` |
 
-Истина связей остаётся в composer/Brain — `_index.db` лишь регенерируемый кэш. Конфиг-поля
-проекта (`dependencies`/`agents`) графом не материализуются; ручные связи объявляются через
-`<repo>/.maind.graph.json` (план `override`).
+The truth of the connections remains in composer/Brain — `_index.db` only a regenerated cache. Config fields
+project (`dependencies`/`agents`) are not materialized by the graph; manual connections are announced via
+`<repo>/.maind.graph.json` (plan `override`).
 
-## Namespaces: изоляция связей
+## Namespaces: connection isolation
 
-Проект объявляет принадлежность к группам полем `projects[].namespaces: ["axioma", ...]`
-(maind-only, как `tags`). Межпроектное ребро **A↔B строится, только если A и B делят хотя бы
-один namespace** — связи внутри группы работают как раньше, между группами изолированы.
+The project declares group membership as a field `projects[].namespaces: ["axioma", ...]`
+(maind-only, like `tags`). Cross-project edge **A↔B is built only if A and B divide at least
+one namespace** — connections within a group work as before, between groups are isolated.
 
-| Значение | Смысл |
+| Meaning | Meaning |
 |:--|:--|
-| нет поля / `[]` | неявный `default` → прежнее поведение (всё связано) |
-| `["axioma"]` | связь только с проектами, у которых тоже есть `axioma` |
-| `["*"]` | wildcard: общая инфраструктура — связывается со ВСЕМИ namespace |
+| no field / `[]` | implicit `default` → old behavior (everything is connected) |
+| `["axioma"]` | connection only with projects that also have `axioma` |
+| `["*"]` | wildcard: general infrastructure - communicates with ALL namespace |
 
-Изоляция применяется в **точке создания ребра** (`derive.py` → `namespaces.link_allowed`),
-поэтому сторы физически не содержат меж-namespace мостов и всё ниже (union, query, `_index.db`,
-seed) изолируется само; `rebuild_index` дублирует гейт как защиту устаревших/локальных сторов.
-Связь с **незарегистрированным** внешним узлом (нет записи в `projects[]`) сохраняется — его
-namespace неизвестен. Необязательный реестр `namespaces: { axioma: {...} }` в `config.json`
-даёт метаданные и подсказки на опечатки; членство задаётся в проектах.
+Insulation is used in **edge creation point** (`derive.py` → `namespaces.link_allowed`),
+therefore the stores do not physically contain inter-namespace bridges and everything below (union, query, `_index.db`,
+seed) isolates itself; `rebuild_index` duplicates the gate as protection for obsolete/local stores.
+Contact **unregistered** external node (no entry in `projects[]`) is saved - it
+namespace unknown. Optional registry `namespaces: { axioma: {...} }` in `config.json`
+provides metadata and hints for typos; membership is set in projects.
 
 ```bash
-maind namespaces                       # группы и их проекты-члены
-maind projects list --namespace axioma # проекты группы
-maind sync --namespace axioma --only graph,memory   # фан-аут по группе
-maind graph --cross --namespace axioma # межпроектный слой одной группы
+maind namespaces                       # groups and their member projects
+maind projects list --namespace axioma # group projects
+maind sync --namespace axioma --only graph,memory   # group fan out
+maind graph --cross --namespace axioma # cross-project layer of one group
 ```
 
-## Гарантия подключения: healthcheck
+## Connection guarantee: healthcheck
 
-Если в проекте не подняты память + maind MCP, разработка идёт «мимо» графа/памяти → пробелы.
-`maind health --cwd` (клиентский, из проекта) печатает `connected|partial|standalone` + подсказки;
-`--fix` поднимает память и дописывает MCP-серверы. «Приоритет №1» доставляется в проекты как
-управляемый блок в `CLAUDE.md`. SessionStart-хук доступен как явный opt-in через
-`observability.session_start_health_hook`; по умолчанию health запускается вручную.
+If memory is not raised in the project + maind MCP, development in progress «past» column/memory → spaces.
+`maind health --cwd` (client, from project) prints `connected|partial|standalone` + hints;
+`--fix` picks up memory and adds MCP-servers. «Priority №1» is delivered to projects as
+managed block in `CLAUDE.md`. SessionStart-hook available as explicit opt-in via
+`observability.session_start_health_hook`; default health is started manually.
 
-## Память: видимость «общая» + seed
+## Memory: visibility «general» + seed
 
-При онбординге/синке в приватный бакет `project:<id>` upsert-ится один базовый факт о связях.
-Graph namespaces не публикуют память автоматически. Общие области перечисляются отдельно в
-`memory_namespaces` и читаются только через явный `scope=ns:<имя>`.
+During onboarding/send to private bucket `project:<id>` upsert-There is one basic fact about connections.
+Graph namespaces do not publish memory automatically. Common areas are listed separately in
+`memory_namespaces` and are read only through explicit `scope=ns:<name>`.
 
-## Единый провижининг: `maind sync`
+## Unified provisioning: `maind sync`
 
-Одна команда анализирует `config.json` и раскатывает **управляемые артефакты** на все
-подключённые проекты через реестр провиженеров (`sync.py`): `mcp` · `graph` (derive) · `memory`
-(seed) · `memory-hook` (авто-загрузка дайджеста + native off) · `health-hook` · `health-doc` ·
-`feature-log-hook` · `ecosystem-skill` (скилл `ecosystem-mcp` в проект).
-`--only` сужает набор, `--mode install|update|auto` задаёт
-«метод синка по области» (создать, если нет / обновить устаревшее по content-hash / и то, и
-другое). Фан-аут по проектам и резолв пути/scope вынесены в `ProjectContext`/`select_projects`
-(DRY): `deploy` — это `sync --only mcp`.
+One command analyzes `config.json` and rolls out **managed artifacts** for everything
+connected projects through the registry of providers (`sync.py`): `mcp` · `graph` (derive) · `memory`
+(seed) · `memory-hook` (digest auto-loading + native off) · `health-hook` · `health-doc` ·
+`feature-log-hook` · `ecosystem-skill` (skill `ecosystem-mcp` to the project).
+`--only` narrows the set, `--mode install|update|auto` sets
+«syncing method by area» (create if not / update outdated software content-hash / both
+other). Fan-out on projects and resolution paths/scope moved to `ProjectContext`/`select_projects`
+(DRY): `deploy` — this `sync --only mcp`.
 
-## Cross-machine память
+## Cross-machine memory
 
-Восемь операционных развилок (хост, транспорт, аутентификация, офлайн-деградация, бэкап и др.)
-для варианта «единственный демон на текущей машине, остальные — сетевые клиенты» зафиксированы
-в [ADR-0001](./adr/ADR-0001-cross-machine-memory.md).
+Eight operational forks (host, transport, authentication, offline degradation, backup, etc.)
+for option «is the only daemon on the current machine, the rest are network clients» committed
+in [ADR-0001](./adr/ADR-0001-cross-machine-memory.md).
 
-## Почему Python + bash
+## Why Python + bash
 
-Ровно как `swissknifeman` и `brain`: тонкий лаунчер `bin/maind` проверяет окружение и
-вызывает `python3 -m maind <root> <cmd>`; логика — в `lib/maind/*.py` на stdlib (тестируемо,
-без сторонних зависимостей). Это держит узел переносимым и предсказуемым.
+Exactly like `swissknifeman` and `brain`: slim launcher `bin/maind` checks the environment and
+calls `python3 -m maind <root> <cmd>`; logic - in `lib/maind/*.py` on stdlib (testable,
+without third party dependencies). This keeps the node portable and predictable.

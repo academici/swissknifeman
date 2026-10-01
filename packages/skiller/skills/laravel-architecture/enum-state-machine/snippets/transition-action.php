@@ -1,8 +1,8 @@
 <?php
 
 // Source: generalized from a transition use-case Action + domain event (anonymized)
-// Переход — атомарный use-case: guard легальности + право субъекта, мутация под
-// транзакцией, доменное событие ПОСЛЕ коммита (ShouldDispatchAfterCommit).
+// Transition - atomic use-case: guard legality + subject right, mutation under
+// transaction, domain event AFTER commit (ShouldDispatchAfterCommit).
 
 declare(strict_types=1);
 
@@ -21,24 +21,24 @@ final readonly class ShipOrderAction
     {
         $from = $order->status;
 
-        // 1) Легальность ребра в графе (см. transitions-registry.php).
+        // 1) Legality of an edge in a graph (see transitions-registry.php).
         if (! OrderStatusTransitions::canTransition(from: $from, to: $to)) {
             throw ValidationException::withMessages([
-                'status' => "Переход {$from->value} → {$to->value} не разрешён.",
+                'status' => "Transition {$from->value} → {$to->value} not allowed.",
             ]);
         }
 
-        // 2) Право субъекта/контекста — отдельная проверка (guard/policy), не равно п.1.
-        //    Например: Gate::authorize('canShip', $order) — в контроллере/атрибуте.
+        // 2) Subject Right/context - separate check (guard/policy), is not equal to item 1.
+        //    For example: Gate::authorize('canShip', $order) — in the controller/attribute.
 
         return DB::transaction(function () use ($order, $from, $to): Order {
             $order->status = $to;
             $order->save();
 
-            // ...связанные мутации в той же транзакционной границе (история и т.п.)
+            // ...related mutations in the same transaction boundary (history, etc.)
 
-            // 3) Событие — после коммита (см. событие ниже), иначе слушатель увидит
-            //    несохранённое состояние или отработает на откаченной транзакции.
+            // 3) Event - after commit (see event below), otherwise the listener will see
+            //    unsaved state or will work on a rolled back transaction.
             OrderStatusChanged::dispatch($order, $from, $to);
 
             return $order;
@@ -46,7 +46,7 @@ final readonly class ShipOrderAction
     }
 }
 
-// --- Доменное событие (обычно в app/Events/Order/OrderStatusChanged.php) -------------
+// --- Domain event (usually in app/Events/Order/OrderStatusChanged.php) -------------
 //
 // declare(strict_types=1);
 //
@@ -67,4 +67,4 @@ final readonly class ShipOrderAction
 //         public OrderStatus $to,
 //     ) {}
 // }
-// broadcast/listeners — скилл php/laravel-broadcasting.
+// broadcast/listeners — skill php/laravel-broadcasting.

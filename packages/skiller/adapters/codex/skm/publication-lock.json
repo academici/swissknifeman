@@ -1,16 +1,16 @@
 {
   "contract_version": "1.0.0",
   "publication_unit": "skm",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "artifacts": [
     {
       "path": ".codex-plugin/plugin.json",
-      "source_hash": "sha256:8d8c8dce88f514b3f97dfea62029804b7276979b5054af4f0b89fa50ddf1a271",
-      "rendered_hash": "sha256:be44ee3981fc662cfaa501c012b678dc6982b04f7a5650bdeb1d4a5f013a8369"
+      "source_hash": "sha256:2203565268ee3f363c3dca614aa05c092a46cf63e135fc9f9e34a1f9fffa85e6",
+      "rendered_hash": "sha256:16de0995e03550ec57f799e1161c627615a270c2149f5622187efa04789c6cc1"
     },
     {
       "path": "skills/skm/SKILL.md",
-      "source_hash": "sha256:8d8c8dce88f514b3f97dfea62029804b7276979b5054af4f0b89fa50ddf1a271",
+      "source_hash": "sha256:2203565268ee3f363c3dca614aa05c092a46cf63e135fc9f9e34a1f9fffa85e6",
       "rendered_hash": "sha256:45ec03166fa2b9ed74c63ad398e3c86f4d428c855ee68ccd82ef8ff189704383"
     }
   ]

@@ -3,12 +3,12 @@
   "snippets": [
     {
       "file": "CONTEXT-FORMAT.md",
-      "description": "Формат CONTEXT.md — глоссарий предметной области (только язык, без деталей реализации): как описывать термин, связи, границы понятий",
+      "description": "Format CONTEXT.md — domain glossary (language only, no implementation details): how to describe a term, connections, boundaries of concepts",
       "tags": ["domain", "glossary", "context", "ubiquitous-language"]
     },
     {
       "file": "ADR-FORMAT.md",
-      "description": "Формат Architecture Decision Record: контекст, решение, последствия — для трудно-обратимых решений с реальным trade-off",
+      "description": "Format Architecture Decision Record: context, decision, consequences - for difficult-to-reversible decisions with real trade-off",
       "tags": ["adr", "architecture", "decisions"]
     }
   ]

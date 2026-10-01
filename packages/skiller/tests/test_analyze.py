@@ -1,8 +1,8 @@
-"""Тесты analyze-run (analyze.py) — офлайн, на синтетических JSONL-событиях.
+"""Tests analyze-run (analyze.py) — offline, on synthetic JSONL-events.
 
-Проверяем чистые функции разбора транскрипта: агрегат токенов/инструментов/скиллов,
-cache-hit, wall-clock, skill-usage (effective/dead), скан рантайм-маркеров,
-нормализацию имени скилла, метку задачи, толерантный парсер. Без сети/реестра."""
+Checking pure transcript parsing functions: token aggregate/tools/skills,
+cache-hit, wall-clock, skill-usage (effective/dead), scan of runtime markers,
+normalization of skill name, task label, tolerant parser. Without network/registry."""
 import json
 import sys
 import tempfile
@@ -104,23 +104,23 @@ class AgentStatsCase(unittest.TestCase):
         self.assertEqual(wall_seconds(st["ts_min"], st["ts_max"]), 300.0)
 
     def test_tool_errors_only_on_tool_result_blocks(self):
-        # Регрессия B-3: agent_stats делегирует tool_errors в core.usage.feed_event,
-        # который требует type=="tool_result" (не любой блок с is_error) — фиксируем,
-        # чтобы дубль-суммирование не заполз обратно с более широким/иным условием.
-        events = [_user([{"type": "text", "text": "не tool_result"}, {"is_error": True}])]
+        # Regression B-3: agent_stats delegates tool_errors in core.usage.feed_event,
+        # which requires type=="tool_result" (not any block with is_error) — fix,
+        # so that the double-summation does not creep back with a wider/other condition.
+        events = [_user([{"type": "text", "text": "not tool_result"}, {"is_error": True}])]
         st = agent_stats(events, "a")
         self.assertEqual(st["tool_errors"], 0)
 
 
 class AgentStatsJsonlFixtureCase(unittest.TestCase):
-    """Сквозная фикстура B-3: JSONL-файл → parse_transcript → agent_stats, суммы
-    зафиксированы явными числами — гарантия, что рефакторинг agent_stats на
-    core.usage (new_acc/feed_event/finish) не сдвинул ни один итог."""
+    """Through-hole fixture B-3: JSONL-file → parse_transcript → agent_stats, amounts
+    are captured by explicit numbers - ensuring that refactoring agent_stats on
+    core.usage (new_acc/feed_event/finish) did not move any totals."""
 
     def test_sums_locked_end_to_end(self):
         lines = [
             json.dumps({"type": "user", "timestamp": "2026-07-02T09:00:00.000Z",
-                       "message": {"content": "Почини баг в парсере"}}),
+                       "message": {"content": "Fix a bug in the parser"}}),
             json.dumps({"type": "assistant", "timestamp": "2026-07-02T09:00:05.000Z",
                        "message": {
                            "model": "claude-sonnet-4-5",
@@ -146,8 +146,8 @@ class AgentStatsJsonlFixtureCase(unittest.TestCase):
                                     "cache_read_input_tokens": 0,
                                     "cache_creation_input_tokens": 0},
                            "stop_reason": "end_turn",
-                           "content": [{"type": "text", "text": "готово"}]}}),
-            "мусорная строка не json",
+                           "content": [{"type": "text", "text": "ready"}]}}),
+            "garbage string not json",
             "",
         ]
         with tempfile.TemporaryDirectory() as d:
@@ -179,10 +179,10 @@ class SkillUsageCase(unittest.TestCase):
         a2 = agent_stats([_asst({}, tools=[("Skill", {"skill": "misc/other"})])], "a2")
         active = {"laravel", "anti-drift", "verify-claims"}
         u = skill_usage([a1, a2], active)
-        self.assertIn("laravel", u["effective"])       # активный + загружен
-        self.assertIn("anti-drift", u["dead"])          # активный, 0 загрузок
+        self.assertIn("laravel", u["effective"])       # active + loaded
+        self.assertIn("anti-drift", u["dead"])          # active, 0 downloads
         self.assertIn("verify-claims", u["dead"])
-        self.assertIn("other", u["loaded_outside"])     # загружен, но вне набора
+        self.assertIn("other", u["loaded_outside"])     # loaded but out of set
 
     def test_no_active_set_all_dead_empty(self):
         a = agent_stats([_asst({}, tools=[("Skill", {"skill": "laravel"})])], "a")
@@ -195,7 +195,7 @@ class MarkersCase(unittest.TestCase):
     def test_scan_and_context(self):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "m.jsonl"
-            # один маркер на строку (break после первого) — по строке на сигнал
+            # one marker per line (break after the first) — by line per signal
             p.write_text(
                 'xxx failed: Rate limited yyy\n'
                 'clean line\n'
@@ -236,7 +236,7 @@ class RenderCase(unittest.TestCase):
             "markers": {"counts": {"Rate limited": 1}, "sample": ["… Rate limited"]},
         }
         txt = render_report(report)
-        self.assertIn("ПОСТ-РАН РАЗБОР", txt)
+        self.assertIn("POST-RAN DISCOVERY", txt)
         self.assertIn("impl:forum-4", txt)
         self.assertIn("DEAD", txt)
         self.assertIn("opus", txt)
@@ -244,14 +244,14 @@ class RenderCase(unittest.TestCase):
 
 class BuildReportCase(unittest.TestCase):
     def test_missing_logs_returns_error(self):
-        # env-заглушка: .home указывает в пустой tmp → логов нет.
+        # env-stub: .home points to empty tmp → no logs.
         class _Env:
             def __init__(self, home):
                 self.home = Path(home)
         with tempfile.TemporaryDirectory() as d:
             rep, err = build_report(_Env(d), Path("/nonexistent/project"))
             self.assertIsNone(rep)
-            self.assertIn("не найдены", err)
+            self.assertIn("not found", err)
 
 
 if __name__ == "__main__":

@@ -1,13 +1,13 @@
-"""topology — глобальная карта локальной среды (~/.swissknifeman/topology.json).
+"""topology — global local environment map (~/.swissknifeman/topology.json).
 
-Три узла-хаба: brain (docs-hub), swissknifeman (skills-hub), projects_base
-(workspace). Конфиг живёт в $HOME, машинно-специфичен (как .projects.json у
-Brain) и НЕ коммитится в проекты. Команда читает/создаёт его; раздаваемый скилл
-skills/system/local-topology объясняет схему и резолвит узлы по этому файлу.
+Three hub nodes: brain (docs-hub), swissknifeman (skills-hub), projects_base
+(workspace). The config lives in $HOME, machine-specific (like .projects.json y
+Brain) and is NOT committed to projects. Team reads/creates it; distributed skill
+skills/system/local-topology explains the schema and resolves nodes using this file.
 
-Подкоманды:
-  init   интерактивно собрать конфиг (авто-детект дефолтов, промпт на каждый узел)
-  show   напечатать топологию (человекочитаемо или --json)
+Subcommands:
+  init   interactively collect the config (auto-detect defaults, prompt for each node)
+  show   print topology (human readable or --json)
 """
 import json
 import os
@@ -20,7 +20,7 @@ from .state import load_db
 
 TOPOLOGY_VERSION = 1
 
-# Роли узлов фиксированы — конфиг описывает ГДЕ они, а не ЧТО они.
+# The roles of the nodes are fixed - the config describes WHERE they are, not WHAT they are.
 ROLES = {
     "brain": "docs-hub",
     "swissknifeman": "skills-hub",
@@ -30,7 +30,7 @@ ROLES = {
 
 # --- I/O ----------------------------------------------------------------------
 def load_topology(env, quiet=False):
-    """Прочитать topology.json. None — если файла нет/он битый."""
+    """Read topology.json. None — if there is no file/it's broken."""
     f = env.topology_file
     if not f.exists():
         return None
@@ -38,27 +38,27 @@ def load_topology(env, quiet=False):
         data = json.loads(f.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
         if not quiet:
-            warn(f"{f} повреждён (невалидный JSON) — пересоздайте: "
+            warn(f"{f} damaged (invalid JSON) — recreate: "
                  "skiller topology init")
         return None
     if data.get("version", 1) > TOPOLOGY_VERSION:
-        die(f"{f} записан более новой версией swissknifeman — обновите реестр "
-            "(git pull) и перезапустите install.sh")
+        die(f"{f} is overwritten by a newer version swissknifeman — update the registry "
+            "(git pull) and restart install.sh")
     return data
 
 
 def save_topology(env, data):
-    """Атомарная запись с бэкапом существующего в *.json.bak."""
+    """Atomic record with backup of existing *.json.bak."""
     env.state_dir.mkdir(parents=True, exist_ok=True)
     f = env.topology_file
     if f.exists():
         shutil.copy2(f, f.with_suffix(".json.bak"))
-    atomic_write_json(f, data)   # tmp+os.replace с подчисткой .tmp (core.io)
+    atomic_write_json(f, data)   # tmp+os.replace with cleanup .tmp (core.io)
 
 
 # --- detection ----------------------------------------------------------------
 def detect_projects_base(env):
-    """Общий предок путей из projects.json; иначе дефолт ~/projects."""
+    """Common ancestor of paths from projects.json; otherwise default ~/projects."""
     try:
         paths = [p["path"] for p in load_db(env).get("projects", [])
                  if p.get("path")]
@@ -72,7 +72,7 @@ def detect_projects_base(env):
 
 
 def detect_brain(env):
-    """Конвенциональный путь ~/Vaults/Brain — предлагается как дефолт."""
+    """Conventional path ~/Vaults/Brain — is offered as default."""
     return str(env.home / "Vaults" / "Brain")
 
 
@@ -95,7 +95,7 @@ def _prompt(label, default, interactive):
 
 
 def _show_data(data):
-    print(f"Топология (версия {data.get('version', '?')}):")
+    print(f"Topology (version {data.get('version', '?')}):")
     for key, node in data.get("nodes", {}).items():
         print(f"  {key:14}{node.get('path', '')}  ({node.get('role', '')})")
 
@@ -103,7 +103,7 @@ def _show_data(data):
 def _cmd_show(env, as_json):
     data = load_topology(env)
     if data is None:
-        print("Топология не настроена. Создать: skiller topology init")
+        print("The topology is not configured. Create: skiller topology init")
         return
     if as_json:
         print(json.dumps(data, indent=2, ensure_ascii=False))
@@ -126,10 +126,10 @@ def _cmd_init(env, opts):
 
     interactive = sys.stdin.isatty() and not opts.get("yes")
     if interactive:
-        print("Настройка топологии (Enter — оставить значение по умолчанию):")
-    brain = _prompt("  Brain-волт (docs-hub)", brain, interactive)
+        print("Topology setup (Enter — leave default value):")
+    brain = _prompt("  Brain-volt (docs-hub)", brain, interactive)
     skman = _prompt("  swissknifeman (skills-hub)", skman, interactive)
-    base = _prompt("  база проектов (workspace)", base, interactive)
+    base = _prompt("  project database (workspace)", base, interactive)
 
     data = {
         "version": TOPOLOGY_VERSION,
@@ -139,7 +139,7 @@ def _cmd_init(env, opts):
         "updated_at": now_iso(),
     }
     save_topology(env, data)
-    print(f"Записано: {env.topology_file}")
+    print(f"Recorded: {env.topology_file}")
     _show_data(data)
 
 
@@ -159,4 +159,4 @@ def cmd_topology(env, argv):
     elif sub == "show":
         _cmd_show(env, as_json=opts["json"])
     else:
-        die(f"неизвестная подкоманда topology: {sub} (ожидается init|show)")
+        die(f"unknown subcommand topology: {sub} (pending init|show)")

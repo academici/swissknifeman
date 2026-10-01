@@ -2,19 +2,19 @@
 
 **Next:** exec-items: task:plan-run sample-plan P1.1
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |:--|:--|
 | Model | sonnet |
 | Thinking | medium |
 | Context | fresh session |
-| Суть | фикстура — драйвер `plan_reader` читает форму Next |
+| The bottom line | fixture - driver `plan_reader` reads the form Next |
 
 ````
 /task:plan-run sample-plan P1.1
 ````
 
-**Done:** фикстура создана (P4.2).
-**Remaining:** ничего — план не боевой.
+**Done:** fixture created (P4.2).
+**Remaining:** nothing - the plan is not a combat one.
 **Sources of truth:** plans/sample-plan/plan.md · plans/sample-plan/phases/P1.md
 **Open risks:** —
 **Workarounds/Deferred/Open questions:**

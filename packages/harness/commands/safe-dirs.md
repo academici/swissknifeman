@@ -1,19 +1,19 @@
 ---
-description: "Управлять allowlist'ом доверенных директорий (safe-dirs): где auto-approve разрешает rm/rmdir."
+description: "Manage allowlist'om trusted directories (safe-dirs): where auto-approve allows rm/rmdir."
 ---
-Управляй machine-owned allowlist'ом `safe-dirs.json` (живёт В КОРНЕ монорепо swissknifeman, gitignored; шаблон — `safe-dirs.example.json`; лестница поиска хуком: `$SKM_SAFE_DIRS_CONFIG` → корень монорепо → legacy `~/.swissknifeman/`) — внутри его корней (рекурсивно) auto-approve пропускает `rm`/`rmdir` мимо deny_hard (код под git — удаление обратимо). Вне корней rm блокируется как раньше.
+Manage machine-owned allowlist'ohm `safe-dirs.json` (lives AT THE ROOT of the monorepo swissknifeman, gitignored; template - `safe-dirs.example.json`; search ladder with hook: `$SKM_SAFE_DIRS_CONFIG` → monorepo root → legacy `~/.swissknifeman/`) — inside its roots (recursively) auto-approve skips `rm`/`rmdir` past deny_hard (code below git — deletion is reversible). Beyond the Roots rm is blocked as before.
 
 ```
-harness safe-dirs init                                    # создать конфиг с дефолтами
-harness safe-dirs list                                    # эффективный allowlist глазами хука
-harness safe-dirs add <path> [--exclude] [--dry-run]      # добавить корень (или изъятие)
-harness safe-dirs remove <path> [--exclude] [--dry-run]   # убрать корень (или изъятие)
+harness safe-dirs init                                    # create a config with defaults
+harness safe-dirs list                                    # effective allowlist through the eyes of a hook
+harness safe-dirs add <path> [--exclude] [--dry-run]      # add root (or withdrawal)
+harness safe-dirs remove <path> [--exclude] [--dry-run]   # remove root (or withdrawal)
 harness safe-dirs prune-ask [--global] [--target P] [--all-projects]
 ```
 
-- Дефолт `include_registered_projects=true` — пути онбордженных проектов из `~/.swissknifeman/projects.json` включаются автоматически.
-- `add` откажется от `/`, `$HOME` и предков `$HOME` (тот же гард в самом хуке).
-- `prune-ask` снимает статические ask-правила `Bash(rm -r *)`/`Bash(rm -rf *)` из settings — hook-allow их не пробивает, без чистки rm в safe-dirs продолжит промптить.
-- Защиты внутри safe-dirs: сам корень не удаляется, `.git` защищён (`protect_git`), глобы валидируются по статическому префиксу (`allow_globs`).
+- Default `include_registered_projects=true` — paths of onboarded projects from `~/.swissknifeman/projects.json` are turned on automatically.
+- `add` will refuse `/`, `$HOME` and ancestors `$HOME` (the same guard in the hook itself).
+- `prune-ask` removes static ask-rules `Bash(rm -r *)`/`Bash(rm -rf *)` from settings — hook-allow does not penetrate them, without cleaning rm in safe-dirs will continue to prompt.
+- Protection inside safe-dirs: the root itself is not deleted, `.git` protected (`protect_git`), globs are validated by static prefix (`allow_globs`).
 
-Разбери намерение из «$ARGUMENTS»; после первичной настройки подскажи: `harness hooks --global` (обновить файлы хука) и перезапуск сессии Claude Code.
+Parse the intent from «$ARGUMENTS»; after the initial setup, tell me: `harness hooks --global` (update hook files) and restarting the session Claude Code.

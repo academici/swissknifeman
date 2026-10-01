@@ -1,210 +1,210 @@
-# Приоритеты источников и роутинг задач
+# Source priorities and task routing
 
-## Порядок чтения источников
+## Source reading order
 
-1. **Корневой `CLAUDE.md` / `AGENTS.md` проекта** — хаб: что за проект, куда смотреть дальше.
-2. **Проектные `.ai/skills` + `.ai/guidelines`** — наивысший приоритет правил (специфика именно этого проекта).
-3. **Laravel Boost** — версионно-специфичные скиллы и гайдлайны (см. [boost-compatibility](/skiller/boost-compatibility)).
-4. **Скиллы swissknifeman** — архитектура, практики, процессы.
+1. **Root `CLAUDE.md` / `AGENTS.md` project** — hub: what kind of project is it, where to look next.
+2. **Design `.ai/skills` + `.ai/guidelines`** — highest rule priority (specifics of this particular project).
+3. **Laravel Boost** — version-specific skills and guidelines (see [boost-compatibility](/skiller/boost-compatibility)).
+4. **Skills swissknifeman** — architecture, practices, processes.
 
-**Конфликт правил → побеждает более специфичный источник: проект > Boost > реестр.**
+**Rules conflict → wins more specific source: project > Boost > registry.**
 
-## Архитектурные слои: что куда (правило-стоп против разрастания)
+## Architectural layers: what goes where (anti-sprawl stop rule)
 
-swissknifeman — **зонтик из четырёх пакетов**, а не одно «ядро». Прежде чем что-то добавлять, реши, в какой
-слой это попадает — это останавливает расползание (цель экосистемы — *лучший policy-driven
-оркестратор, а не самый большой набор скиллов*):
+swissknifeman — **four-pack umbrella**, and not one «core». Before you add something, decide in which
+layer this gets in - it stops spreading (ecosystem goal - *best policy-driven
+orchestrator, not the largest set of skills*):
 
-| Слой | Что это | Где живёт | Примеры |
+| Layer | What is this | Where does he live? | Examples |
 |:--|:--|:--|:--|
-| **Контент / методики** | скиллы, чеклисты, стандарты, stack-инструкции | пакет **skiller** (`skills/`, `presets/`, `profiles/`) | github-ops, tdd-discipline, mcp-advisor |
-| **Оркестрация / политика / память** | провижининг, граф, namespace-память, MCP-хаб | пакет **maind** (`lib/maind/`) | sync, health, fleet, MCP-сервер `maind_*` |
-| **Обучение / уроки** | захват уроков из прогонов, cross-project паттерны, человеко-гейт | пакет **analyst** (`lib/analyst/`) | digest, scan, suggest, promote |
-| **Окружение** | permissions, хуки, проводка MCP-серверов, канон корневых инструкций | пакет **harness** (`configs/claude-code/`) | пресеты permissions, каталог MCP, `harness instructions` |
-| **Внешний движок** | зрелый runtime, который не пишем сами | подключается извне | GitHub CLI, Serena (код-граф), agentmemory, browser |
+| **Content / techniques** | skills, checklists, standards, stack-instructions | package **skiller** (`skills/`, `presets/`, `profiles/`) | github-ops, tdd-discipline, mcp-advisor |
+| **Orchestration / policy / memory** | provisioning, graph, namespace-memory, MCP-hub | package **maind** (`lib/maind/`) | sync, health, fleet, MCP-server `maind_*` |
+| **Training / lessons** | capturing lessons from runs, cross-project patterns, man-gate | package **analyst** (`lib/analyst/`) | digest, scan, suggest, promote |
+| **Environment** | permissions, hooks, wiring MCP-servers, canon of root instructions | package **harness** (`configs/claude-code/`) | presets permissions, directory MCP, `harness instructions` |
+| **External engine** | mature runtime, which we don’t write ourselves | connects externally | GitHub CLI, Serena (code graph), agentmemory, browser |
 
-**Правило:** новая способность — это новая **запись в одном из слоёв**, а не код в maind «на всякий
-случай». Стек-инструкции, тест-доктрины, security-чеклисты, GitHub-воркфлоу → **скилл/пресет в skiller**,
-а не Python в maind. Выбор MCP-серверов под проект → пресеты `profiles/mcp[]` + скилл `general/mcp-advisor`,
-а не вторая секция в конфиге maind. Зрелый рыночный движок → подключаем как внешний MCP/CLI, не реализуем заново.
+**Rule:** new ability is new **record in one of the layers**, and not the code in maind «just in case
+case». Stack instructions, test doctrines, security-checklists, GitHub-work flow → **skill/preset in skiller**,
+and not Python in maind. Select MCP-servers for the project → presets `profiles/mcp[]` + skill `general/mcp-advisor`,
+and not the second section in the config maind. Mature market engine → connect as external MCP/CLI, is not re-implementable.
 
-Канон по слоям — в самих пакетах: [архитектура скиллов](/skiller/guide/skills-architecture) (skiller),
-[композиция узла](/maind/architecture) (maind), [continuous learning](/analyst/) (analyst),
-[конфиги и MCP](/harness/) (harness).
+Canon by layers - in the packages themselves: [skills architecture](/skiller/guide/skills-architecture) (skiller),
+[node composition](/maind/architecture) (maind), [continuous learning](/analyst/) (analyst),
+[configs and MCP](/harness/) (harness).
 
-## Алгоритм поиска скилла
+## Skill search algorithm
 
-1. **Профиль** — какая роль решает задачу (`profiles/`): разработчик, основатель, оператор, PM.
-2. **Бакет** — предметная область: `php`, `frontend`, `devops`, `quality`, `architect`, `pm`, `founder`, `operator`, `oss-dev`, `general`, `python`, `blender`, `roles`, `imported`.
-3. **Таблица задач** ниже — прямое сопоставление «делаю X → открой скилл Y».
-4. **Теги `skills.json`** — если таблица не покрыла, ищи по тегам.
+1. **Profile** — what role solves the problem (`profiles/`): developer, founder, operator, PM.
+2. **Bucket** — subject area: `php`, `frontend`, `devops`, `quality`, `architect`, `pm`, `founder`, `operator`, `oss-dev`, `general`, `python`, `blender`, `roles`, `imported`.
+3. **Task table** below - direct comparison «doing X → open skill Y».
+4. **Tags `skills.json`** — if the table does not cover it, search by tags.
 
-Нативный скоуп Claude Code не заменяет этот алгоритм: `when_to_use` уточняет момент выбора,
-а `context: fork` переносит тело отдельных процедурных скиллов в дочерний контекст. Поле
-`paths:` в реестре сознательно не раскатывается: оно не улучшило обнаружение в измеренном
-пилоте. Поэтому по-прежнему начинай с профиля и бакета, а не рассчитывай на путь файла как
-на единственный механизм поиска.
+Native scope Claude Code does not replace this algorithm: `when_to_use` specifies the moment of selection,
+a `context: fork` transfers the body of individual procedural skills to the child context. Field
+`paths:` in the registry is not deliberately rolled out: it did not improve detection in the measured
+pilot. So still start with the profile and bucket rather than counting on the file path like
+to a single search engine.
 
-## Тип задачи → скилл
+## Task type → skill
 
 ### PHP / Laravel
 
-| Задача | Скилл |
+| Task | Skill |
 |:---|:---|
-| Пишу миграцию, модель, схему БД | `php/database` |
-| Новый домен / новый Laravel-проект (структура папок) | `php/laravel-structure` |
-| Проект вырос: десятки доменов, несколько команд | `laravel-architecture/modular-architecture` |
-| Use-case / бизнес-операция | `php/laravel` (actions.md) + `php/dependency-injection` |
-| Выборки данных, query-слой | `php/repositories` |
-| Права, роли, RBAC | `azguard/azguard` (универсальный) / `laravel-auth/laravel-permissions` (policies, gates) |
-| Метаданные enum (label, color) | `laravel-architecture/enum-attributes` |
+| I am writing a migration, model, database schema | `php/database` |
+| New domain / new Laravel-project (folder structure) | `php/laravel-structure` |
+| The project has grown: dozens of domains, several teams | `laravel-architecture/modular-architecture` |
+| Use-case / business transaction | `php/laravel` (actions.md) + `php/dependency-injection` |
+| Data samples, query-layer | `php/repositories` |
+| Rights, roles, RBAC | `azguard/azguard` (universal) / `laravel-auth/laravel-permissions` (policies, gates) |
+| Metadata enum (label, color) | `laravel-architecture/enum-attributes` |
 | Value Object, DTO, pipeline | `php/php-patterns` |
-| Ревью/рефакторинг Laravel-кода (без Boost) | `php/laravel-best-practices` |
-| Код-стайл PHP | `php/code-style-spatie` |
-| Pint / PHPStan / Rector, конвейер качества | `php/static-analysis` |
-| Feature/Unit-тесты приложения, изоляция БД, coverage gate | `laravel-testing/laravel-testing` |
-| Браузерные E2E-тесты | `laravel-testing/laravel-dusk` |
+| Review/refactoring Laravel-code (without Boost) | `php/laravel-best-practices` |
+| Code-style PHP | `php/code-style-spatie` |
+| Pint / PHPStan / Rector, quality pipeline | `php/static-analysis` |
+| Feature/Unit-application tests, database isolation, coverage gate | `laravel-testing/laravel-testing` |
+| Browser E2E-tests | `laravel-testing/laravel-dusk` |
 | WebSocket / Echo / Reverb | `laravel-data-layer/laravel-broadcasting` |
-| Admin-панель Filament | `laravel-filament/filament` |
-| Загрузка файлов, медиа, конверсии | `laravel-extras/medialibrary` |
-| Telegram/чат-бот | `botkit/botkit` |
-| Новый Laravel-пакет (scaffold) | `php-packages/laravel-packages`, `php-packages/laravel-package-scaffold` |
-| Service provider пакета | `php-packages/laravel-package-service-provider` |
-| Тесты пакета (Pest + Testbench) | `php-packages/laravel-package-testing` |
-| Документация пакета | `php-packages/laravel-package-docs` |
-| Релиз пакета | `php-packages/laravel-package-release` |
-| Матрица совместимости пакета (PHP/Laravel/Testbench) | `php-packages/laravel-package-compatibility` |
-| Boost-скилл внутри пакета | `php-packages/laravel-package-generate-skill` |
-| Правки самого starter kit laravel-expressive | `php-packages/laravel-package-expressive` |
+| Admin-panel Filament | `laravel-filament/filament` |
+| File uploads, media, conversions | `laravel-extras/medialibrary` |
+| Telegram/chatbot | `botkit/botkit` |
+| New Laravel-package (scaffold) | `php-packages/laravel-packages`, `php-packages/laravel-package-scaffold` |
+| Service provider package | `php-packages/laravel-package-service-provider` |
+| Package tests (Pest + Testbench) | `php-packages/laravel-package-testing` |
+| Package documentation | `php-packages/laravel-package-docs` |
+| Package release | `php-packages/laravel-package-release` |
+| Package Compatibility Matrix (PHP/Laravel/Testbench) | `php-packages/laravel-package-compatibility` |
+| Boost-skill inside the package | `php-packages/laravel-package-generate-skill` |
+| Edits by myself starter kit laravel-expressive | `php-packages/laravel-package-expressive` |
 
 ### Frontend
 
-| Задача | Скилл |
+| Task | Skill |
 |:---|:---|
-| Страница/форма Inertia, куда положить файл в `resources/js/` | `frontend-backend/inertia-vue` |
-| Vue-компонент, Composition API | `frontend-vue/vue-composition-api` |
-| Типобезопасные роуты на фронте | `frontend-wayfinder/wayfinder` |
-| Базовая конфигурация Vite | `frontend-vite/vite-module-loader` |
-| Две Vite-сборки (приложение + Filament) | `frontend-vite/vite-multi-build` |
-| Тесты фронтенда | `frontend-vue/vitest` |
-| Код-стайл JS/TS | `frontend-linting/js-code-style` |
+| Page/form Inertia, where to put the file in `resources/js/` | `frontend-backend/inertia-vue` |
+| Vue-component, Composition API | `frontend-vue/vue-composition-api` |
+| Type-safe routes at the front | `frontend-wayfinder/wayfinder` |
+| Basic configuration Vite | `frontend-vite/vite-module-loader` |
+| Two Vite-builds (application + Filament) | `frontend-vite/vite-multi-build` |
+| Frontend tests | `frontend-vue/vitest` |
+| Code-style JS/TS | `frontend-linting/js-code-style` |
 
 ### DevOps
 
-| Задача | Скилл |
+| Task | Skill |
 |:---|:---|
-| Docker dev vs prod (compose-разнесение) | `devops/docker-dev-prod` |
-| PHP-образ для прода | `devops/docker-php` |
-| PostgreSQL в Docker (+ тестовая БД) | `devops/docker-postgres` |
-| Полный сервисный стек (queue, scheduler, reverb) | `devops/docker-services` |
-| Vite dev server в Docker | `devops/docker-vite` |
-| Общая контейнеризация, оптимизация образов | `devops/docker` |
+| Docker dev vs prod (compose-diversity) | `devops/docker-dev-prod` |
+| PHP-image for sale | `devops/docker-php` |
+| PostgreSQL in Docker (+ test database) | `devops/docker-postgres` |
+| Full service stack (queue, scheduler, reverb) | `devops/docker-services` |
+| Vite dev server in Docker | `devops/docker-vite` |
+| General containerization, image optimization | `devops/docker` |
 | CI/CD pipeline (GitHub Actions) | `devops/ci-cd` |
-| Стратегия веток, PR-workflow, защита веток | `devops/gitops` |
-| Makefile как точка входа | `devops/makefile` |
-| Node/pnpm на хосте перед hooks | `devops/node-pnpm-preflight` |
+| Branch strategy, PR-workflow, branch protection | `devops/gitops` |
+| Makefile as entry point | `devops/makefile` |
+| Node/pnpm on the host before hooks | `devops/node-pnpm-preflight` |
 
 ### Quality / Architect
 
-| Задача | Скилл |
+| Task | Skill |
 |:---|:---|
-| Стратегия тестирования, пирамида, coverage policy | `quality/test-strategy` |
-| Code review (процесс, чек-лист) | `quality/code-review` |
-| План рефакторинга | `quality/refactoring-plan` |
-| Аудит техдолга | `quality/tech-debt-audit` |
-| Архитектура системы, ADR, C4 | `architect/architecture` |
-| Выбор стека | `architect/tech-stack-selection` |
-| Проектирование API | `architect/api-design` |
-| Схема данных (агностично к СУБД) | `architect/data-schema` |
-| Безопасность: auth, OWASP, threat modeling | `architect/security-design` |
-| Observability: логи, метрики, SLO | `architect/observability-design` |
-| Проектирование AI-агента | `architect/agent-design` |
-| Eval LLM-выводов | `architect/eval-design` |
-| Регуляторика (GDPR, AI Act) до запуска | `architect/legal-compliance` |
+| Test strategy, pyramid, coverage policy | `quality/test-strategy` |
+| Code review (process, checklist) | `quality/code-review` |
+| Refactoring plan | `quality/refactoring-plan` |
+| Technical debt audit | `quality/tech-debt-audit` |
+| System architecture, ADR, C4 | `architect/architecture` |
+| Stack selection | `architect/tech-stack-selection` |
+| Design API | `architect/api-design` |
+| Data Schema (DBMS agnostic) | `architect/data-schema` |
+| Security: auth, OWASP, threat modeling | `architect/security-design` |
+| Observability: logs, metrics, SLO | `architect/observability-design` |
+| Design AI-agent | `architect/agent-design` |
+| Eval LLM-pins | `architect/eval-design` |
+| Regulatory (GDPR, AI Act) before launch | `architect/legal-compliance` |
 
 ### General / Roles
 
-| Задача | Скилл |
+| Task | Skill |
 |:---|:---|
-| Коммит, PR, формат сообщения | `general/git-commit-rules` |
-| Правка `.ai/guidelines`, `boost.json` | `general/ai-context-workflow` |
-| SSOT скиллов для нескольких агентов | `general/skills-ssot` |
-| Декомпозиция сложной задачи | `general/complex-task-orchestrator` |
-| Постановка задачи агенту | `general/task-brief-template` |
-| Сквозное изменение через несколько слоёв | `general/cross-layer-change-checklist` |
-| Карта проекта, зоны ответственности | `general/project-map` |
-| Реестр используемых пакетов | `general/packages-stack` |
-| Тикетная доменная логика (проектный) | `general/ticket-workflow` |
-| UserRole/Priority (проектный; новый RBAC → `azguard/azguard`) | `general/user-roles` |
-| Персона: CTO / tech lead / maintainer / solo founder | `roles/*` |
+| Commit, PR, message format | `general/git-commit-rules` |
+| Edit `.ai/guidelines`, `boost.json` | `general/ai-context-workflow` |
+| SSOT skills for several agents | `general/skills-ssot` |
+| Decomposition of a complex problem | `general/complex-task-orchestrator` |
+| Assigning a task to an agent | `general/task-brief-template` |
+| End-to-end modification across multiple layers | `general/cross-layer-change-checklist` |
+| Project map, areas of responsibility | `general/project-map` |
+| Register of used packages | `general/packages-stack` |
+| Ticket domain logic (design) | `general/ticket-workflow` |
+| UserRole/Priority (project; new RBAC → `azguard/azguard`) | `general/user-roles` |
+| Person: CTO / tech lead / maintainer / solo founder | `roles/*` |
 
 ### PM / Founder / Operator
 
-| Задача | Скилл |
+| Task | Skill |
 |:---|:---|
 | BRD | `pm/brd` |
-| PRD из BRD | `pm/prd-from-brd` |
-| Аудит требований | `pm/requirement-critic` |
-| Бизнес-процесс, FSM, диаграммы | `pm/business-process` |
-| Roadmap, MVP-фазы | `pm/product-roadmap` |
-| Монетизация | `pm/monetization-design` |
-| GTM-стратегия | `pm/go-to-market` |
+| PRD from BRD | `pm/prd-from-brd` |
+| Requirements audit | `pm/requirement-critic` |
+| Business process, FSM, diagrams | `pm/business-process` |
+| Roadmap, MVP-phases | `pm/product-roadmap` |
+| Monetization | `pm/monetization-design` |
+| GTM-strategy | `pm/go-to-market` |
 | Unit economics | `pm/unit-economics` |
-| Сырая идея → гипотеза | `founder/idea-discovery` |
-| Анализ конкурентов | `founder/competitive-analysis` |
-| Новый стартап-проект (полный цикл) | `founder/new-project` |
-| Риски (RAID, pre-mortem) | `founder/risk-assessment` |
+| Rough idea → hypothesis | `founder/idea-discovery` |
+| Competitor analysis | `founder/competitive-analysis` |
+| New startup project (full cycle) | `founder/new-project` |
+| Risks (RAID, pre-mortem) | `founder/risk-assessment` |
 | Pitch deck | `founder/pitch-deck` |
-| Инцидент в проде | `operator/incident-response` |
-| Postmortem после SEV-1/2 | `operator/postmortem` |
-| Runbook на алерт | `operator/runbook` |
-| On-call ротация | `operator/oncall-rotation` |
+| Product incident | `operator/incident-response` |
+| Postmortem after SEV-1/2 | `operator/postmortem` |
+| Runbook on alert | `operator/runbook` |
+| On-call rotation | `operator/oncall-rotation` |
 | Capacity planning | `operator/capacity-planning` |
 
 ### OSS / Python / Blender / Imported
 
-| Задача | Скилл |
+| Task | Skill |
 |:---|:---|
-| OSS-репозиторий: структура, README, ADR | `oss-dev/oss-development` |
+| OSS-repository: structure, README, ADR | `oss-dev/oss-development` |
 | LICENSE, CoC, CONTRIBUTING | `oss-dev/oss-governance` |
-| SemVer, CHANGELOG, релизный pipeline | `oss-dev/release-engineering` |
+| SemVer, CHANGELOG, release pipeline | `oss-dev/release-engineering` |
 | DX: quick-start, ergonomics, CLI UX | `oss-dev/dx-design` |
-| Аудит зависимостей, SBOM | `oss-dev/dependency-audit` |
-| Структура ML/DS-проекта | `python/ml-project-structure` |
-| venv и зависимости Python | `python/venv-dependencies` |
-| 3D-модель через MCP Blender | `blender/mcp-blender-workflow` |
-| Правила конкретной модели | `blender/model-rules` |
-| Резьба для 3D-печати | `blender/threading` |
-| Ловушки Blender 5.0 API | `blender/version-gotchas` |
-| Широкие доменные задачи (маркетинг, продажи, финансы, legal, research…) | `imported/*` (по названию бакета) |
+| Dependency audit, SBOM | `oss-dev/dependency-audit` |
+| Structure ML/DS-project | `python/ml-project-structure` |
+| venv and dependencies Python | `python/venv-dependencies` |
+| 3D-model via MCP Blender | `blender/mcp-blender-workflow` |
+| Model specific rules | `blender/model-rules` |
+| Thread for 3D-print | `blender/threading` |
+| Traps Blender 5.0 API | `blender/version-gotchas` |
+| Domain-wide tasks (marketing, sales, finance, legal, research…) | `imported/*` (by bucket name) |
 
-## Model-routing пинов task-команд
+## Model-routing pins task-commands
 
-Каждая `/task:*`-команда пинит `model`/`effort` во frontmatter `packages/task/commands/*.md`,
-перебивая настройки сессии (SSOT-матрица тиров — скилл `general/plan-protocol` §9, здесь **не
-дублируется**, а обосновывается per-command). Секция фиксирует **рационал каждого пина + вердикт
-аудита P3.1** — провенанс, чтобы
-не second-guess'ить пины повторно. Ось оптимизации — **токен-экономия** (Opus доминирует по out:
-8.1M vs Sonnet 5.4M — самый дорогой рычаг). Ось downgrade — **только Opus → Sonnet 5**: Fable 5
-дороже Opus (out $50 = 2× Opus, up-tier для frontier-сложности) → как цель-даунгрейда исключён.
+Each `/task:*`-command pins `model`/`effort` in frontmatter `packages/task/commands/*.md`,
+interrupting session settings (SSOT-tier matrix - skill `general/plan-protocol` §9, here **not
+duplicated**, and is justified per-command). Section captures **rationalized each pin + verdict
+audit P3.1** — provenance to
+not second-guess'resend pins. Optimization axis - **token-saving** (Opus dominates out:
+8.1M vs Sonnet 5.4M — the most expensive lever). Axis downgrade — **only Opus → Sonnet 5**: Fable 5
+more expensive Opus (out $50 = 2× Opus, up-tier for frontier-complexity) → has been excluded as a downgrade target.
 
-**Правило пина (при правке `model`/`effort`):** синхронно обнови строку «Пинит X/Y» в `description`
-того же файла (рассинхрон = дефект) и прогони `skiller registry` (description едет в
-`marketplace.json`, руками его не правь). Downgrade correctness-critical команды = ставка на
-качество во ВСЕХ проектах экосистемы → **только с Owner-одобрением**, не по цене.
+**Pin rule (when editing `model`/`effort`):** update the line synchronously «Pinits X/Y» in `description`
+of the same file (out of sync = defect) and run `skiller registry` (description goes to
+`marketplace.json`, don't straighten it with your hands). Downgrade correctness-critical commands = bet on
+quality in ALL ecosystem projects → **only with Owner-approval**, not for the price.
 
-| Команда | Пин (акт.) | Рационал | Вердикт P3.1 |
+| Command | Pin (act.) | Rational | Verdict P3.1 |
 |:--|:--|:--|:--|
-| **design** | `opus/high` | Синтез research-fanout → durable план/ADR; кросс-источниковое reasoning, SSOT архитектуры (propagates во все проекты). Плохой дизайн тиражируется ecosystem-wide. Fanout уже Sonnet. | **keep-Opus** — correctness-critical, downgrade-risk HIGH, quality-телеметрии нет; Sonnet 5 (~93% Opus) — лишь *плаузибельный* Owner-A/B, не слепой downgrade |
-| **dev** | `sonnet/high` | Opus-пин был тонким планировочным слоем (нарезка вертикальных срезов + risk/blast-radius); impl-субагенты уже Lean-tiered (Sonnet impl / Opus xhigh на HIGH-review / Haiku тривиал). Планирование = coding-agentic домен. | **downgrade-candidate → применён P3.2** (Owner-делегировано): Sonnet 5 par/обгоняет Opus на agentic (80.4 vs 74.6); плохая нарезка recoverable per-slice через review-gate → risk MODERATE |
-| **make-workflow** | `sonnet/high` | Процедурный контур: матчинг 1/4 шаблонов → slot-fill → статический выходной ревьюер (RED блокирует). Низкий open-ended синтез; гейт ловит выпиленные обязательные стадии. | **downgrade-candidate → применён P3.2** (Owner-делегировано): «копия шаблона + слоты + чеклист-гейт», статический ревьюер — safety-net → risk LOW-MODERATE |
-| **plan-design** | `opus/high` | Авторинг мастер-плана; тяжёлая схема/RAG-маркеры/DoR/pre-mortem; SSOT, дешёвая модель исполнит БЕЗ чата. Плохой план → cheap-исполнители падают без чата. | **keep-Opus** — наивысший рычаг, Owner-blessed; downgrade-risk HIGH. Не трогать |
-| **research** | `opus/high` | Многоисточниковый retrieval + верификация + синтез с цитатами; fanout Sonnet, Opus reduce/синтезирует. | **needs-Owner** — Sonnet 5 near-par, но fidelity цитат + кросс-источниковое reasoning — зона, где Opus чуть впереди. Возможный A/B `sonnet/high` → **OQ-4** (Decision pending), низкий приоритет |
-| **plan-audit** | `opus/xhigh` | Adversarial-аудит закрытой фазы; ~15 finding-типов, no-op-детект, scope-drift, re-run Validation. | **keep-Opus/xhigh** — bug-finding = сильнейшая зона Opus 4.8 («stronger real-bug finding»); недо-аудит пропускает дефекты тихо; xhigh оправдан. Не трогать |
-| **review** | `sonnet/high` | Risk-scaled read-only review: quick для docs/малого diff, standard обычно, adversarial только по наблюдаемой hard-risk boundary. | **downgrade applied** — default review больше не платит за registry-wide conformance и xhigh; отдельный независимый проход остаётся для security/data/concurrency/public-contract риска |
+| **design** | `opus/high` | Synthesis research-fanout → durable plan/ADR; cross-source reasoning, SSOT architecture (propagates to all projects). Bad design replicates ecosystem-wide. Fanout already Sonnet. | **keep-Opus** — correctness-critical, downgrade-risk HIGH, quality-no telemetry; Sonnet 5 (~93% Opus) — only *plausible* Owner-A/B, not blind downgrade |
+| **dev** | `sonnet/high` | Opus-pin was a thin planning layer (vertical slicing + risk/blast-radius); impl-subagents have already Lean-tiered (Sonnet impl / Opus xhigh on HIGH-review / Haiku trivial). Planning = coding-agentic domain. | **downgrade-candidate → applied P3.2** (Owner-delegated): Sonnet 5 par/overtakes Opus on agentic (80.4 vs 74.6); bad cutting recoverable per-slice via review-gate → risk MODERATE |
+| **make-workflow** | `sonnet/high` | Procedural circuit: matching 1/4 templates → slot-fill → static output reviewer (RED blocks). Low open-ended synthesis; The gate catches the cut mandatory stages. | **downgrade-candidate → applied P3.2** (Owner-delegated): «copy of the template + slots + checklist-gate», static reviewer - safety-net → risk LOW-MODERATE |
+| **plan-design** | `opus/high` | Master Plan Authoring; heavy circuit/RAG-markers/DoR/pre-mortem; SSOT, the cheap model will perform WITHOUT chat. Bad plan → cheap-performers crash without chat. | **keep-Opus** — highest lever, Owner-blessed; downgrade-risk HIGH. Do not touch |
+| **research** | `opus/high` | Multi-source retrieval + verification + synthesis with quotations; fanout Sonnet, Opus reduce/synthesizes. | **needs-Owner** — Sonnet 5 near-par, but fidelity quotes + cross-source reasoning — zone where Opus a little ahead. Possible A/B `sonnet/high` → **OQ-4** (Decision pending), low priority |
+| **plan-audit** | `opus/xhigh` | Adversarial-closed phase audit; ~15 finding-types, no-op-detector, scope-drift, re-run Validation. | **keep-Opus/xhigh** — bug-finding = strongest zone Opus 4.8 («stronger real-bug finding»); under-audit misses defects quietly; xhigh acquitted. Don't touch |
+| **review** | `sonnet/high` | Risk-scaled read-only review: quick for docs/small diff, standard usually, adversarial only by observed hard-risk boundary. | **downgrade applied** — default review no longer pays for registry-wide conformance and xhigh; a separate independent pass remains for security/data/concurrency/public-contract risk |
 
-Аудит-факты (RAG:✅ 2026-07, canonical `claude-api` reference + `perplexity-web`): Sonnet 5 ≈93%
-способностей Opus 4.8 при ~60% цены, обгоняет на autonomous-agentic (80.4/74.6); Opus 4.8 лидер
-SWE-bench Pro (69.2/63.2) + SOTA bug-finding. **Ограничение:** `analyst token-report --by phase`
-не реализован (`token_report.py:38-41`) → ROI конкретного downgrade не квантифицируется, приоритет
-trial'ов **качественный** (по downgrade-risk), не по измеренной экономии.
+Audit facts (RAG:✅ 2026-07, canonical `claude-api` reference + `perplexity-web`): Sonnet 5 ≈93%
+abilities Opus 4.8 when ~60% prices, outperforms by autonomous-agentic (80.4/74.6); Opus 4.8 leader
+SWE-bench Pro (69.2/63.2) + SOTA bug-finding. **Limitation:** `analyst token-report --by phase`
+not implemented (`token_report.py:38-41`) → ROI specific downgrade not quantified, priority
+trial'ov **quality** (by downgrade-risk), not based on measured savings.

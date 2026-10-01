@@ -3,14 +3,14 @@ layout: home
 
 hero:
   name: SwissKnifeMan
-  text: Швейцарский нож для работы с AI-агентами
-  tagline: Один реестр скиллов, конфигов и пермиссий — установка в любой проект и любую IDE за одну команду
+  text: Swiss knife for working with AI-agents
+  tagline: One registry of skills, configs and permissions - installation in any project and any IDE per command
   actions:
     - theme: brand
-      text: Начать
+      text: Start
       link: /getting-started
     - theme: alt
-      text: Установка
+      text: Installation
       link: /skiller/guide/installation
     - theme: alt
       text: GitHub
@@ -18,23 +18,23 @@ hero:
 
 features:
   - icon: 🧰
-    title: Всё в одном месте
-    # счётчики «195/45» — ориентир, поддерживаются вручную; сверять с `skiller registry`
-    # (источник истины — skills.json / .claude-plugin/marketplace.json), не считать каноном
-    details: 195 скиллов в 45 bucket-ах, пресеты permissions, профили проектов, адаптеры под IDE. Один источник истины вместо копипасты между проектами.
+    title: Everything in one place
+    # counters «195/45» — landmark, manually maintained; check with `skiller registry`
+    # (source of truth - skills.json / .claude-plugin/marketplace.json), should not be considered canon
+    details: 195 45 skills bucket-ah, presets permissions, project profiles, adapters for IDE. One source of truth instead of copy-paste between projects.
   - icon: 🎯
-    title: Контекстная установка
-    details: CLI swissknifeman сам определяет тип проекта — Laravel, PHP-пакет, Obsidian vault — и подключает подходящий набор скиллов. Одна команда — и проект готов к работе с AI.
+    title: Contextual installation
+    details: CLI swissknifeman itself determines the project type - Laravel, PHP-package, Obsidian vault — and connects a suitable set of skills. One team - and the project is ready to work with AI.
   - icon: 🔓
-    title: Пресеты permissions
-    details: Готовые .claude/settings.json с максимально разрешённым доступом — git, composer, artisan, npm, docker. Никаких бесконечных permission-промптов в новом проекте.
+    title: Presets permissions
+    details: Ready .claude/settings.json with maximum allowed access - git, composer, artisan, npm, docker. No endless permission-prompts in a new project.
   - icon: 🔄
     title: Upstream-sync
-    details: Внешние скиллы отслеживаются через upstream.json — еженедельный CI проверяет обновления источников и открывает PR с диффом.
+    details: External skills are tracked through upstream.json — weekly CI checks for source updates and opens PR with diff.
   - icon: 🧩
     title: Provider-neutral
-    details: Скилл — это папка с SKILL.md и snippets/. Один формат работает в Claude Code, Cursor и Perplexity через адаптеры.
+    details: Skill is a folder with SKILL.md and snippets/. One format works in Claude Code, Cursor and Perplexity via adapters.
   - icon: 📦
-    title: Provenance и валидация
-    details: skills.json хранит источник, версию и sha256 каждого скилла. validate.sh проверяет frontmatter, манифесты и профили локально и в CI.
+    title: Provenance and validation
+    details: skills.json stores the source, version and sha256 of each skill. validate.sh checks frontmatter, manifests and profiles locally and in CI.
 ---

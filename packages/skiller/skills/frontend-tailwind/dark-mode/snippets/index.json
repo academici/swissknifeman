@@ -3,22 +3,22 @@
   "snippets": [
     {
       "file": "useDarkMode.ts",
-      "description": "Composable темы light|dark|system: типы Appearance/ResolvedAppearance, updateTheme (classList.toggle .dark), persist в localStorage+cookie, initializeTheme с matchMedia change-слушателем, SSR-guards",
+      "description": "Composable topics light|dark|system: types Appearance/ResolvedAppearance, updateTheme (classList.toggle .dark), persist in localStorage+cookie, initializeTheme with matchMedia change-listener, SSR-guards",
       "tags": ["composable", "vue", "matchmedia", "localstorage", "cookie", "ssr"]
     },
     {
       "file": "bootstrap-init.ts",
-      "description": "Точка входа (app.ts): вызов initializeTheme() ДО маунта приложения — убирает клиентскую вспышку светлой темы",
+      "description": "Entry point (app.ts): call initializeTheme() BEFORE application mount - removes client light theme flash",
       "tags": ["bootstrap", "init", "no-flash", "vue"]
     },
     {
       "file": "no-flash-init.html",
-      "description": "Фрагмент <head> SSR-шаблона: класс .dark из cookie + синхронный inline-скрипт для режима system + inline-style фона — нет серверной вспышки FOUC",
+      "description": "Fragment <head> SSR-template: class .dark from cookie + synchronous inline-script for the mode system + inline-style background - no server flash FOUC",
       "tags": ["ssr", "no-flash", "fouc", "cookie", "blade"]
     },
     {
       "file": "ThemeToggle.vue",
-      "description": "Тонкий мини-переключатель light/dark/system через useDarkMode, подсветка по выбору appearance, токены/dark:* для цветов",
+      "description": "Slim Mini Switch light/dark/system via useDarkMode, backlight selectable appearance, tokens/dark:* for flowers",
       "tags": ["vue", "component", "toggle", "ui"]
     }
   ]

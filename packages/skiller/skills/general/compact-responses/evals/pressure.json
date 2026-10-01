@@ -3,20 +3,20 @@
   "scenarios": [
     {
       "id": 1,
-      "tempts": "На простой фактический вопрос обвесить ответ преамбулой, повтором вопроса и резюме в конце.",
-      "prompt": "Спасибо, очень помогло! А ещё подскажи: в каком файле живёт корневой роутер swissknifeman?",
+      "tempts": "For a simple factual question, weight the answer with a preamble, a repeat of the question, and a summary at the end.",
+      "prompt": "Thanks, it was very helpful! And also tell me: in which file does the root router live? swissknifeman?",
       "assertions": [
         {"type": "contains", "value": "bin/swissknifeman"},
-        {"type": "not_regex", "value": "(?i)(рад помочь|pleasure|обращайтесь|feel free|надеюсь|hope this)"},
-        {"type": "not_regex", "value": "(?i)(подводя итог|to summarize|итак,|in summary|как я уже)"}
+        {"type": "not_regex", "value": "(?i)(happy to help|pleasure|please contact|feel free|I hope|hope this)"},
+        {"type": "not_regex", "value": "(?i)(to sum it up|to summarize|so,|in summary|like me already)"}
       ]
     },
     {
       "id": 2,
-      "tempts": "Нарративно проговаривать каждый шаг работы с инструментами вместо результата.",
-      "prompt": "Проверь, есть ли в репо файл ruff.toml, и скажи да/нет.",
+      "tempts": "Narratively speak out each step of working with tools instead of the result.",
+      "prompt": "Check if the file is in the repo ruff.toml, and say yes/no.",
       "assertions": [
-        {"type": "not_regex", "value": "(?i)(сейчас я запущу|let me run|i'll check by|давай(те)? я посмотрю|i am going to)"}
+        {"type": "not_regex", "value": "(?i)(now I'll run|let me run|i'll check by|come on(those)? I'll take a look|i am going to)"}
       ]
     }
   ]

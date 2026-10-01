@@ -1,13 +1,13 @@
-"""plan_weight — вес обязательного чтения пункта плана.
+"""plan_weight — weight of required reading of the plan item.
 
-Инструмент воспроизводит ОБЯЗАТЕЛЬНЫЙ ПУТЬ ЧТЕНИЯ исполнителя из
-`packages/task/commands/plan-run.md` буквально и считает его вес в оценочных
-токенах поверх ЗАМОРОЖЕННОЙ калибровки P0.1 (`task.token_estimate`, артефакт
-`configs/token-estimate-calibration.json`), проверяя каждый обязательный файл против
-ИЗМЕРЕННОГО лимита одного чтения P0.2 (`configs/read-limit.json`).
+The instrument reproduces the REQUIRED READING PATH of the performer from
+`packages/task/commands/plan-run.md` literally and considers its weight in estimated
+tokens on top of FROZEN calibration P0.1 (`task.token_estimate`, artifact
+`configs/token-estimate-calibration.json`), checking each required file against
+MEASURED limit per reading P0.2 (`configs/read-limit.json`).
 
-Обязательный путь требует явный `Layout | v2` и совпадает с пятью executor
-slots замороженного `read-path` contract:
+Mandatory path requires explicit `Layout | v2` and matches five executor
+slots frozen `read-path` contract:
 
     1) plan.md                         → `plan-core`
     2) phases/<Pn>/<Pn>.md             → `phase-context`
@@ -15,92 +15,92 @@ slots замороженного `read-path` contract:
     4) bundles/<Pn.m>.json + selections → `item-input-bundle` + `bundle-input`
     5) phases/<Pn>/<Pn.m>.state.md     → `item-state`
 
-Generated bundle/state проходят owning freshness check до использования. `handoff.md`
-в layout-v2 executor path не входит.
+Generated bundle/state pass owning freshness check before use. `handoff.md`
+in layout-v2 executor path is not included.
 
-Две измерительные асимметрии фазы P0 (`research/02-p0-measurement-design.md` §5)
-воспроизводятся здесь буквально:
+Two measuring phase asymmetries P0 (`research/02-p0-measurement-design.md` §5)
+are reproduced literally here:
 
-* по ТОКЕНАМ замер идёт СВЕРХУ — оценка `token_estimate` никогда не занижает на корпусе
-  прозы планов (граница на плотном ASCII НЕ доказана, D109 — потому и считается
-  `dense_ascii_share`, см. ниже);
-* по СОСТАВУ файлов замер идёт СНИЗУ — `Required Reads` сегодня проза, часть позиций не
-  приводится к пути, и такие позиции в сумму не попадают. Поэтому отчёт НИКОГДА не
-  печатает сумму без перечня пробелов: сумма без пробелов — это нижняя оценка, выданная
-  за измеренную.
+* for TOKENS the measurement comes from the TOP - assessment `token_estimate` never understates on the body
+  prose plans (border on dense ASCII NOT proven, D109 — is therefore considered
+  `dense_ascii_share`, see below);
+* according to the COMPOSITION of files, the measurement comes from the BOTTOM - `Required Reads` today prose, some positions are not
+  is reduced to a path, and such positions are not included in the sum. Therefore, the report will NEVER
+  prints the sum without a list of spaces: the sum without spaces is the lower estimate given
+  per measured.
 
-Таксономия пробелов ЗАКРЫТАЯ (`GAP_KINDS`, `research/02-…` §5): `unreadable_root` ·
-`unresolved_entry` · `missing_file` · `oversized_file`. «Прочего» не заводится.
+Whitespace Taxonomy CLOSED (`GAP_KINDS`, `research/02-…` §5): `unreadable_root` ·
+`unresolved_entry` · `missing_file` · `oversized_file`. «Other» will not start.
 
-`oversized_file` — единственная категория, чей вес ИЗВЕСТЕН и потому ВХОДИТ в сумму:
-файл разрешён и прочитан, он лишь нарушает условие приёмки D2(б) (читаться ЦЕЛИКОМ
-ОДНИМ вызовом). Три остальные категории веса не имеют по построению — их нечего
-суммировать. Позиция `oversized_file` несёт поле `gate` (`size_bytes` | `tokens` |
-`both`): P0.4 обязана разделить перечень по гейтам, сведение их в одно число теряет
-класс отказа (D107/D108).
+`oversized_file` — is the only category whose weight is KNOWN and therefore INCLUDED in the amount:
+file is allowed and read, it only violates the acceptance condition D2(b) (read ENTIRELY
+IN ONE call). The other three categories have no weight by design - they have nothing
+summarize. Position `oversized_file` carries the field `gate` (`size_bytes` | `tokens` |
+`both`): P0.4 is obliged to divide the list by gates; reducing them to one number loses
+failure class (D107/D108).
 
-Проверка файла против лимита — КОНЪЮНКЦИЯ обоих гейтов (D108,
+File check against limit - CONJUNCTION of both gates (D108,
 `research/12-read-limit-design-2026-08-07.md` §5):
 
-    pass(f) = bytes(f) ≤ limits.size_bytes.value  И  est_tokens(f) ≤ limits.tokens.value
+    pass(f) = bytes(f) ≤ limits.size_bytes.value  AND  est_tokens(f) ≤ limits.tokens.value
 
-Токенная сторона — ОЦЕНКА СВЕРХУ: счётчик среды наблюдаем только в момент срабатывания
-капа (`findings/15-…` O6), в CI его нет. Постраничное дочитывание условие НЕ
-удовлетворяет и послаблением не является.
+Token side - ESTIMATE FROM TOP: the environment counter is visible only at the moment of activation
+mouth guard (`findings/15-…` O6), in CI it's not there. Page-by-page reading condition NOT
+satisfies and is not a relief.
 
-`dense_ascii_share` (D109) — доля символов файла, входящих в непрерывные прогоны длиной
-≥ `DENSE_ASCII_MIN_RUN` символов из `[0-9A-Za-z+/=]` без пробельных разделителей. Это
-ЗАМЕР, а не гейт: порога по нему здесь НЕТ, файл по нему не отбраковывается и
-«подозрительным» не помечается — пороги замораживает P0.5 на числах флота P0.4.
+`dense_ascii_share` (D109) — proportion of file characters included in contiguous runs of length
+≥ `DENSE_ASCII_MIN_RUN` characters from `[0-9A-Za-z+/=]` without whitespace delimiters. This
+GATE, not gate: there is NO threshold for it, the file for it is not rejected and
+«suspicious» is not marked - the thresholds freeze P0.5 on fleet numbers P0.4.
 
-**Эвристика резолвинга `Required Reads`** (будущий вход контракта bundle, P3) — «лучшее
-усилие», описанное здесь целиком, потому что от него зависит, что попадёт в сумму:
+**Resolving heuristic `Required Reads`** (future contract input bundle, P3) — «best
+force», described here in its entirety, because it determines what will be included in the amount:
 
-1. Значение поля режется на позиции по нумерации `N)` (`ENTRY_NUMBER_RE`); нумерации нет
-   — всё значение считается одной позицией.
-2. Кандидаты берутся из ДВУХ источников с РАЗНОЙ силой утверждения:
-   * спан в обратных кавычках (`` `…` ``) — ОБЪЯВЛЕННЫЙ путь;
-   * голый токен позиции — планы флота до 2026.07 пишут пути без бэктиков
-     (`1) packages/skiller/lib/skiller/analyze.py (…)`), терять их значило бы занижать
-     вес там, где исполнитель читает файл без раздумий. Голый токен формы
-     `каталог/файл.ext` (`_is_strong_path`) считается таким же ОБЪЯВЛЕНИЕМ, всё
-     остальное («P4 finding/research») — ДОГАДКОЙ.
-3. Токен раскрывается по фигурным скобкам (`core/provider/{registry,artifact,lock}.py` →
-   три пути); раскрытие шире `MAX_BRACE_EXPANSION` считается непутевым.
-4. Токен признаётся путеподобным (`_is_path_like`), если состоит из допустимых для пути
-   символов И несёт `/` либо расширение, начинающееся с БУКВЫ (иначе `P0.1` из прозы
-   «P0.1 Completion Notes» ложно выглядел бы файлом).
-5. Путеподобный токен разрешается по корням в порядке: абсолютный путь · каталог плана ·
-   корень репозитория (первый существующий файл выигрывает).
-6. Разница сил утверждения — в классификации промаха: ОБЪЯВЛЕННЫЙ путь, не нашедший
-   файла, — это `missing_file` (путь назван, файла нет); ДОГАДКА, не нашедшая файла,
-   пробелом отдельного класса не становится и `missing_file` не выдумывает — позиция
-   остаётся нерезолвленной. Позиция без единого разрешённого пути и без объявленного
-   промаха → `unresolved_entry`.
-7. Значение `—` (канонический пустой плейсхолдер протокола) означает, что `Required
-   Reads` нет вовсе: позиций ноль, пробела ноль.
+1. The field value is cut into positions according to numbering `N)` (`ENTRY_NUMBER_RE`); no numbering
+   — the entire value is considered one position.
+2. Candidates are taken from TWO sources with DIFFERENT claim strengths:
+   * span in backquotes (`` `…` ``) — DECLARED path;
+   * bare position token - fleet plans until 2026.07 write paths without backticks
+     (`1) packages/skiller/lib/skiller/analyze.py (…)`), to lose them would be to underestimate
+     weight where the performer reads the file without thinking. Naked form token
+     `directory/file.ext` (`_is_strong_path`) is considered the same ANNOUNCEMENT, that's all
+     rest («P4 finding/research») — GUESS.
+3. The token is expanded using curly braces (`core/provider/{registry,artifact,lock}.py` →
+   three ways); opening wider `MAX_BRACE_EXPANSION` is considered unlucky.
+4. The token is recognized as path-like (`_is_path_like`), if consists of valid pathnames
+   characters And carries `/` or extension starting with LETTER (otherwise `P0.1` from prose
+   «P0.1 Completion Notes» would falsely appear to be a file).
+5. Path-like token resolves to roots in order: absolute path · plan directory ·
+   repository root (first existing file wins).
+6. The difference in assertion strength is in the miss classification: ANNOUNCED path not found
+   file, is `missing_file` (path named, no file); GUESS, which did not find the file,
+   does not become a separate class space and `missing_file` is not making things up - position
+   remains unresolved. A position without a single allowed path and without a declared one
+   miss → `unresolved_entry`.
+7. Meaning `—` (canonical empty protocol placeholder) means that `Required
+   Reads` no at all: zero positions, zero spaces.
 
-Файлы дедуплицируются по разрешённому пути: исполнитель читает файл один раз, и
-повторное упоминание `phases/P1.md` в `Required Reads` веса не удваивает.
+Files are deduplicated along the allowed path: the executor reads the file once, and
+repeated mention `phases/P1.md` in `Required Reads` does not double the weight.
 
-Артефакты калибровки и лимита ОБЯЗАТЕЛЬНЫ: их отсутствие или невалидность — внятная
-ошибка и код возврата ≠ 0. Литеральных дефолтов нет ни для ставок, ни для лимитов.
-Инструмент открывает файлы ТОЛЬКО на чтение (D3: чужие планы читаются, но не
-изменяются), сети не открывает и учётных данных не читает ни в одном режиме.
+Calibration and limit artifacts are MANDATORY: their absence or invalidity is intelligible
+error and return code ≠ 0. There are no literal defaults for either rates or limits.
+Tool opens files read ONLY (D3: other people's plans are read, but not
+change), does not open the network and does not read credentials in any mode.
 
-Режим `--exact` (D92/D99) — ДИФФЕРЕНЦИАЛЬНЫЙ ХАРНЕСС, а НЕ вызов `count_tokens`:
-сверяет оценку сверху с истиной протокола тройного прогона P0.1
-(`packages/task/scripts/calibrate-token-estimate.py`, артефакт прогона
-`calibration-probe-log.json`) на ЯВНО УКАЗАННЫХ файлах. Существует только для разбора
-пограничного случая человеком: прогон ручной, режим печатает предупреждение и НИКОГДА
-не участвует в CI. `count_tokens` этим модулем не реализуется и не вызывается ни в
-одном режиме (ключа Console у владельца не будет — объявленное свойство среды,
+Mode `--exact` (D92/D99) — DIFFERENTIAL HARNESS, NOT a challenge `count_tokens`:
+checks the estimate from above against the truth of the triple pass protocol P0.1
+(`packages/task/scripts/calibrate-token-estimate.py`, run artifact
+`calibration-probe-log.json`) on EXPLICITLY SPECIFIED files. Exists for parsing only
+human edge case: manual run, mode prints warning and NEVER
+does not participate in CI. `count_tokens` is not implemented by this module and is not called in any
+one mode (key Console will not have an owner - declared environment property,
 R21/R22 `findings/14-…`).
 
-stdlib-only; `core` (через `task.plan_lint`) достаётся тем же фолбэком `sys.path`, что и
-в `plan-lint.py`. Разбор фазовых файлов делегирован `task.plan_lint.parse_phase_md` —
-тому же парсеру, которым план читает линтер: второй парсер означал бы второе
-определение схемы.
+stdlib-only; `core` (via `task.plan_lint`) goes to the same fallback `sys.path`, as
+in `plan-lint.py`. Parsing of phase files is delegated `task.plan_lint.parse_phase_md` —
+to the same parser with which the plan is read by the linter: the second parser would mean the second
+schema definition.
 """
 import hashlib
 import json
@@ -113,10 +113,10 @@ from pathlib import Path
 from task import (plan_admission, plan_bundle, plan_item_state, plan_lint, plan_layout,
                   token_estimate)
 
-# --- обязательный путь чтения (`plan-run.md`) ----------------------------------
+# --- required reading path (`plan-run.md`) ----------------------------------
 
-# Литералы §1 в порядке следования; тест сверяет их с актуальным текстом команды —
-# правка `plan-run.md` обязана ломать тест, а не расходиться с инструментом молча.
+# Literals §1 in order; the test checks them against the actual command text -
+# edit `plan-run.md` is obliged to break the test, and not to disagree with the tool silently.
 MANDATORY_PATH_LITERALS = (
     "plans/<PLAN-ID>/plan.md",
     "plans/<PLAN-ID>/handoff.md",
@@ -138,7 +138,7 @@ V2_INPUT_ROLE = "bundle-input"
 # Backward-compatible public alias used by existing consumers/tests.
 ROLES = V1_ROLES
 
-# --- таксономия пробелов (закрытая, research/02 §5) --------------------------------
+# --- whitespace taxonomy (closed, research/02 §5) --------------------------------
 
 GAP_UNREADABLE_ROOT = "unreadable_root"
 GAP_UNRESOLVED_ENTRY = "unresolved_entry"
@@ -157,13 +157,13 @@ GATES = (GATE_SIZE_BYTES, GATE_TOKENS, GATE_BOTH)
 DENSE_ASCII_MIN_RUN = token_estimate.DENSE_ASCII_MIN_RUN
 dense_ascii_share = token_estimate.dense_ascii_share
 
-# --- резолвинг Required Reads ------------------------------------------------------
+# --- resolution Required Reads ------------------------------------------------------
 
 ENTRY_NUMBER_RE = re.compile(r"(?:^|\s)(\d{1,2})\)\s")
 BACKTICK_SPAN_RE = re.compile(r"`([^`]+)`")
-# Пустое поле помечается ровно этим символом — реестр канона держит `plan_lint`.
+# An empty field is marked with exactly this symbol - the canon registry holds `plan_lint`.
 EMPTY_PLACEHOLDER = plan_lint.EMPTY_PLACEHOLDER
-# Обрамляющая пунктуация вокруг голого токена (кавычки-ёлочки, скобки, запятые).
+# Framing punctuation around bare token (herringbone quotes, parentheses, commas).
 BARE_TOKEN_STRIP = "«»\"'(),;:.…“”[]"
 BRACE_GROUP_RE = re.compile(r"\{([^{}]*)\}")
 MAX_BRACE_EXPANSION = 64
@@ -172,7 +172,7 @@ MAX_BRACE_EXPANSION = 64
 # the lexical form to one non-whitespace, non-backtick token so a declared
 # Unicode path keeps the same fail-closed missing-file semantics as ASCII.
 PATH_TOKEN_RE = re.compile(r"^[^\s`]+$")
-# Расширение обязано начинаться с БУКВЫ: `.md`/`.py`/`.json` — путь, `P0.1` — проза.
+# The extension must begin with a LETTER: `.md`/`.py`/`.json` — path, `P0.1` — prose.
 PATH_SUFFIX_RE = re.compile(r"\.[A-Za-z][A-Za-z0-9]{0,7}$")
 
 DEFAULT_READ_LIMIT_PATH = (
@@ -182,66 +182,66 @@ DEFAULT_CANON_BUDGET_PATH = (
     Path(__file__).resolve().parent.parent.parent / "configs" / "canon-weight-budget.json"
 )
 
-# Артефакт прогона дифференциального харнесса P0.1 — единственный источник «истины» для
-# `--exact` (тот же путь, что пишет `calibrate-token-estimate.py`); корень берётся от
-# раскладки самого модуля, а не от cwd.
+# Artifact of differential harvesting run P0.1 — single source «truth» for
+# `--exact` (the same path that writes `calibrate-token-estimate.py`); the root is taken from
+# layout of the module itself, and not from cwd.
 DEFAULT_PROBE_LOG_RELPATH = Path("packages/task/configs/calibration-probe-log-v2.json")
 _MONOREPO_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_PROBE_LOG_PATH = _MONOREPO_ROOT / DEFAULT_PROBE_LOG_RELPATH
 
 SCHEMA = "plan-weight-v1"
 
-# Переменные среды, из которых берётся модель текущего окружения для WARNING о
-# расхождении с `tokenizer.model_id` калибровки (митигация pre-mortem #1). Ни одна не
-# выставлена — предупреждения нет: отсутствие свидетельства не домысливается.
+# Environment variables from which the current environment model is taken for WARNING o
+# discrepancy with `tokenizer.model_id` calibration (mitigation pre-mortem #1). None
+# is set - no warning: absence of evidence is not conjectured.
 SESSION_MODEL_ENV = ("ANTHROPIC_MODEL", "CLAUDE_MODEL", "CLAUDE_CODE_MODEL")
 SESSION_PROVIDER_ENV = ("TOKEN_ESTIMATE_PROVIDER",)
 
 
 class PlanWeightError(Exception):
-    """Невалидный вход инструмента (артефакт, план, аргументы) — fail-closed, exit ≠ 0."""
+    """Invalid tool input (artifact, plan, arguments) — fail-closed, exit ≠ 0."""
 
 
-# --- артефакт лимита ---------------------------------------------------------------
+# --- limit artifact ---------------------------------------------------------------
 
 def load_read_limit(path=None):
-    """Читает и валидирует `configs/read-limit.json` (форма — `research/12-…` §3).
+    """Reads and validates `configs/read-limit.json` (form - `research/12-…` §3).
 
-    Читаются ОБА поля (`limits.size_bytes.value`, `limits.tokens.value`); отсутствие
-    любого из двух = невалидный артефакт (D107). Литеральных дефолтов нет."""
+    BOTH fields are read (`limits.size_bytes.value`, `limits.tokens.value`); absence
+    any of the two = invalid artifact (D107). There are no literal defaults."""
     path = Path(path) if path is not None else DEFAULT_READ_LIMIT_PATH
     try:
         raw = path.read_text(encoding="utf-8")
     except OSError as exc:
-        raise PlanWeightError(f"артефакт лимита чтения не читается: {path}: {exc}") from exc
+        raise PlanWeightError(f"read limit artifact not readable: {path}: {exc}") from exc
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise PlanWeightError(f"артефакт лимита чтения — невалидный JSON: {path}: {exc}") from exc
+        raise PlanWeightError(f"read limit artifact - invalid JSON: {path}: {exc}") from exc
 
     limits = data.get("limits")
     if not isinstance(limits, dict):
-        raise PlanWeightError(f"артефакт лимита чтения: нет секции «limits»: {path}")
+        raise PlanWeightError(f"read limit artifact: no section «limits»: {path}")
     values = {}
     for gate in (GATE_SIZE_BYTES, GATE_TOKENS):
         node = limits.get(gate)
         if not isinstance(node, dict) or "value" not in node:
             raise PlanWeightError(
-                f"артефакт лимита чтения: нет гейта «limits.{gate}.value» — среда несёт ДВА "
-                f"независимых гейта, один скалярный лимит обязан соврать (D107): {path}")
+                f"read limit artifact: no gate «limits.{gate}.value» — environment carries TWO "
+                f"independent gate, one scalar limit must lie (D107): {path}")
         value = node["value"]
         if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
             raise PlanWeightError(
-                f"артефакт лимита чтения: limits.{gate}.value обязано быть целым > 0, "
-                f"получено {value!r}: {path}")
+                f"read limit artifact: limits.{gate}.value must be integer > 0, "
+                f"received {value!r}: {path}")
         values[gate] = value
     return {"path": str(path), "artifact": data,
             "size_bytes": values[GATE_SIZE_BYTES], "tokens": values[GATE_TOKENS]}
 
 
 def session_model_id(explicit=None):
-    """Модель текущего окружения: явный аргумент, иначе первая выставленная переменная
-    из `SESSION_MODEL_ENV`. Ничего не выставлено — `None` (свидетельство отсутствия)."""
+    """Current environment model: explicit argument, otherwise first exposed variable
+    from `SESSION_MODEL_ENV`. Nothing set - `None` (evidence of absence)."""
     if explicit:
         return explicit
     for name in SESSION_MODEL_ENV:
@@ -261,15 +261,15 @@ def session_provider_id(explicit=None):
     return None
 
 
-# --- измерение файла ---------------------------------------------------------------
+# --- file measurement ---------------------------------------------------------------
 
 def measure_file(path, *, role, artifact, limits, model_id=None):
-    """Одна запись файла обязательного пути: байты, оценка токенов СВЕРХУ, доля плотного
-    ASCII и результат КОНЪЮНКЦИИ обоих гейтов (D108).
+    """One mandatory path file entry: bytes, token score TOP, dense share
+    ASCII and the result of CONJUNCTION of both gates (D108).
 
-    Файл читается байтами и декодируется utf-8 с заменой сбойных последовательностей:
-    обязательный путь бывает и не-текстовым (`.json`-артефакты, скрипты), а замер обязан
-    дать число, а не исключение — вес всё равно считается по декодированному тексту."""
+    The file is read in bytes and decoded utf-8 with replacement of faulty sequences:
+    mandatory path can also be non-text (`.json`-artifacts, scripts), and measurement is required
+    give a number, not an exception - the weight is still calculated based on the decoded text."""
     path = Path(path)
     raw = path.read_bytes()
     text = raw.decode("utf-8", errors="replace")
@@ -402,7 +402,7 @@ def evaluate_canon_budget(budget_path, measurer, *, today=None):
 
 
 def violated_gate(file_record):
-    """Какой из двух гейтов нарушен: `size_bytes` | `tokens` | `both`; `None` — оба ок."""
+    """Which of the two gates is broken: `size_bytes` | `tokens` | `both`; `None` — both ok."""
     gates = file_record["gates"]
     if gates[GATE_SIZE_BYTES] and gates[GATE_TOKENS]:
         return None
@@ -411,7 +411,7 @@ def violated_gate(file_record):
     return GATE_SIZE_BYTES if not gates[GATE_SIZE_BYTES] else GATE_TOKENS
 
 
-# --- резолвинг Required Reads ------------------------------------------------------
+# --- resolution Required Reads ------------------------------------------------------
 
 def split_semicolon_entries(value):
     """Split list separators, preserving quoted paths and parenthesized annotations."""
@@ -434,9 +434,9 @@ def split_semicolon_entries(value):
 
 
 def split_entries(value):
-    """Значение поля `Required Reads` → список позиций по нумерации `N)`. Нумерации нет
-    — позиции разделяются точкой с запятой вне путей и аннотаций. Канонический пустой
-    плейсхолдер `—` означает отсутствие Required Reads, а не нерезолвленную позицию."""
+    """Field value `Required Reads` → list of positions by numbering `N)`. No numbering
+    — positions are separated by semicolons outside of paths and annotations. Canonical empty
+    placeholder `—` means no Required Reads, rather than an unresolved position."""
     text = " ".join((value or "").split())
     if not text or text == EMPTY_PLACEHOLDER:
         return []
@@ -454,8 +454,8 @@ def split_entries(value):
 
 
 def expand_braces(token):
-    """`a/{x,y}.py` → `['a/x.py', 'a/y.py']`. Раскрытие шире `MAX_BRACE_EXPANSION`
-    возвращает исходный токен нетронутым (он тогда не путеподобен и уйдёт в пробел)."""
+    """`a/{x,y}.py` → `['a/x.py', 'a/y.py']`. Opening wider `MAX_BRACE_EXPANSION`
+    returns the original token intact (then it is not path-like and will go into space)."""
     m = BRACE_GROUP_RE.search(token)
     if not m:
         return [token]
@@ -478,16 +478,16 @@ def _is_path_like(token):
 
 
 def _is_strong_path(token):
-    """`каталог/файл.ext` — форма, которую прозой не спутать: и разделитель каталогов,
-    и расширение, начинающееся с буквы."""
+    """`directory/file.ext` — form that cannot be confused with prose: and a directory separator,
+    and an extension starting with a letter."""
     return _is_path_like(token) and "/" in token and bool(PATH_SUFFIX_RE.search(token))
 
 
 def path_candidates(entry):
-    """Путеподобные кандидаты позиции в порядке появления: `[(токен, объявлен)]`, где
-    `объявлен` — был ли токен в обратных кавычках. ОБЪЯВЛЕННЫЙ путь — утверждение автора
-    плана (промах = `missing_file`); голый токен — догадка резолвера (промах молчит,
-    позиция остаётся нерезолвленной)."""
+    """Path-like position candidates in order of appearance: `[(token, declared)]`, where
+    `declared` — whether the token was in backquotes. DECLARED path - author's statement
+    plan (miss = `missing_file`); bare token - resolver's guess (the miss is silent,
+    position remains unresolved)."""
     candidates, seen = [], set()
 
     def take(raw, declared):
@@ -500,15 +500,15 @@ def path_candidates(entry):
         take(span, True)
     for word in BACKTICK_SPAN_RE.sub(" ", entry).split():
         token = word.strip(BARE_TOKEN_STRIP)
-        # Голый токен вида `каталог/файл.ext` — такое же объявление пути, как в бэктиках
-        # (форма планов флота до 2026.07); голый токен без расширения («P4
-        # finding/research») остаётся догадкой, промах которой пробела не выдумывает.
+        # Naked view token `directory/file.ext` — same path declaration as in backticks
+        # (form of fleet plans until 2026.07); bare token without extension («P4
+        # finding/research») remains a guess, the miss of which does not invent a space.
         take(token, _is_strong_path(token))
     return candidates
 
 
 def resolve_candidate(token, roots):
-    """Первый существующий файл по корням в порядке `roots`; `None` — не найден."""
+    """First existing root file is ok `roots`; `None` — not found."""
     p = Path(token)
     if p.is_absolute():
         return p if p.is_file() else None
@@ -521,11 +521,11 @@ def resolve_candidate(token, roots):
     return None
 
 
-# --- измерение пункта / плана ------------------------------------------------------
+# --- item measurement / plan -------------------------------------------------------------
 
 def repo_root_for(plan_dir):
-    """Корень репозитория плана: ближайший предок каталога `plans/` (архивные планы
-    `plans/archive/<ID>` дают тот же корень). Каталог вне `plans/` — родитель плана."""
+    """Plan repository root: directory's closest ancestor `plans/` (archived plans
+    `plans/archive/<ID>` give the same root). Catalog outside `plans/` — plan parent."""
     plan_dir = Path(plan_dir).resolve()
     for anc in plan_dir.parents:
         if anc.name == "plans":
@@ -534,8 +534,8 @@ def repo_root_for(plan_dir):
 
 
 class Measurer:
-    """Общий контекст замера: артефакты, кэш измеренных файлов (plan.md меряется один раз
-    на весь план, а не на каждый пункт), модель окружения."""
+    """General measurement context: artifacts, cache of measured files (plan.md is measured once
+    for the entire plan, not for each item), environment model."""
 
     def __init__(self, *, calibration_path=None, read_limit_path=None, model_id=None, provider_id=None):
         try:
@@ -550,11 +550,11 @@ class Measurer:
         target = self.artifact["calibration_target"]
         if ((self.model_id and self.model_id != target["requested_model_id"])
                 or (self.provider_id and self.provider_id != target["provider"])):
-            # WARNING, не блокер (митигация pre-mortem #1): оценка остаётся годной,
-            # но её якорь снят под другой моделью — потребитель обязан это видеть.
-            print(f"WARNING: plan_weight: калибровка снята под "
-                  f"«{target['provider']}/{target['requested_model_id']}», окружение — "
-                  f"«{self.provider_id}/{self.model_id}»: оценка может быть неточной", file=sys.stderr)
+            # WARNING, is not a blocker (mitigation pre-mortem #1): assessment remains valid,
+            # but its anchor is removed under another model - the consumer must see this.
+            print(f"WARNING: plan_weight: calibration removed under "
+                  f"«{target['provider']}/{target['requested_model_id']}», environment - "
+                  f"«{self.provider_id}/{self.model_id}»: estimate may not be accurate", file=sys.stderr)
             self.warned_model = True
 
     def file(self, path, role):
@@ -563,7 +563,7 @@ class Measurer:
         if cached is None:
             cached = measure_file(path, role=role, artifact=self.artifact,
                                   limits=self.limits,
-                                  # WARNING печатает Measurer один раз, не каждый файл.
+                                  # WARNING prints Measurer once, not every file.
                                   model_id=None)
             self._cache[key] = cached
         record = dict(cached)
@@ -577,11 +577,11 @@ class Measurer:
 
 def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_root=None,
                  rel_to=None):
-    """Вес обязательного пути ОДНОГО пункта, dispatched by declared plan layout.
+    """Weight of the required path of ONE point, dispatched by declared plan layout.
 
-    Возвращает запись с `files` (разрешённое, с весами) и `gaps` (закрытая таксономия).
-    Сумма `weight_tokens` считается по разрешённому подмножеству — перечень пробелов
-    печатается ВСЕГДА рядом с ней (иначе это нижняя оценка, выданная за измеренную)."""
+    Returns the entry with `files` (permitted, with weights) and `gaps` (closed taxonomy).
+    Amount `weight_tokens` is calculated by the allowed subset - a list of spaces
+    is ALWAYS printed next to it (otherwise this is the lower estimate given for the measured)."""
     plan_dir = Path(plan_dir)
     repo_root = Path(repo_root) if repo_root is not None else repo_root_for(plan_dir)
     files, gaps, seen = [], [], set()
@@ -589,8 +589,8 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
     root_readable = repo_root.is_dir() and os.access(repo_root, os.R_OK)
     if not root_readable:
         gaps.append({"kind": GAP_UNREADABLE_ROOT, "path": str(repo_root),
-                     "detail": "корень репозитория плана недоступен на чтение — "
-                               "позиции Required Reads от корня не резолвятся"})
+                     "detail": "plan repository root is not readable - "
+                               "positions Required Reads do not resolve from the root"})
 
     def add(path, role, entry=None, *, raw=None, selector=None, display_suffix=""):
         resolved_path = Path(path).resolve()
@@ -604,7 +604,7 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
                       measurer.selected(raw, path=path, role=role))
         except OSError as exc:
             gaps.append({"kind": GAP_MISSING_FILE, "path": _rel(path, rel_to), "role": role,
-                         "entry": entry, "detail": f"файл не читается: {exc}"})
+                         "entry": entry, "detail": f"file cannot be read: {exc}"})
             return False
         record["path"] = f"{_rel(record['path'], rel_to)}{display_suffix}"
         files.append(record)
@@ -613,8 +613,8 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
             gaps.append({"kind": GAP_OVERSIZED_FILE, "path": record["path"], "role": role,
                          "entry": entry, "gate": gate,
                          "bytes": record["bytes"], "est_tokens": record["est_tokens"],
-                         "detail": f"файл не проходит гейт «{gate}» лимита одного чтения "
-                                   f"(D2б: обязательная единица должна читаться ОДНИМ вызовом)"})
+                         "detail": f"file does not pass the gate «{gate}» single reading limit "
+                                   f"(D2b: mandatory unit must be read in ONE call)"})
         return True
 
     def add_carrier(path, role):
@@ -624,7 +624,7 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
         else:
             gaps.append({"kind": GAP_MISSING_FILE, "path": _rel(path, rel_to), "role": role,
                          "entry": None,
-                         "detail": "обязательный файл раскладки плана отсутствует"})
+                         "detail": "required plan layout file is missing"})
 
     roots = [plan_dir] + ([repo_root] if root_readable else [])
 
@@ -651,12 +651,12 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
                     declared_misses += 1
                     gaps.append({"kind": GAP_MISSING_FILE, "path": token,
                                  "role": "required_read", "entry": _preview(entry),
-                                 "detail": "путь назван, но файла нет ни под каталогом плана, "
-                                           "ни под корнем репозитория"})
+                                 "detail": "the path is named, but the file is not under the plan directory, "
+                                           "not under the repository root"})
             if hits == 0 and declared_misses == 0:
                 gaps.append({"kind": GAP_UNRESOLVED_ENTRY, "entry": _preview(entry),
-                             "detail": "позиция не приводится к существующему пути — "
-                                       "прозой названный вход резолверу недоступен"})
+                             "detail": "position is not cast to an existing path - "
+                                       "in prose the named input is not available to the resolver"})
 
     try:
         plan_layout.layout_version(plan_dir)
@@ -683,7 +683,7 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
             gaps.append({"kind": GAP_UNRESOLVED_ENTRY,
                          "path": _rel(bundle_path, rel_to),
                          "role": "item-input-bundle", "entry": None,
-                         "detail": f"generated bundle не byte-fresh: {exc}"})
+                         "detail": f"generated bundle not byte-fresh: {exc}"})
         if bundle_fresh:
             try:
                 bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
@@ -692,13 +692,13 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
                 gaps.append({"kind": GAP_UNRESOLVED_ENTRY,
                              "path": _rel(bundle_path, rel_to),
                              "role": "item-input-bundle", "entry": None,
-                             "detail": f"generated bundle не читается: {exc}"})
+                             "detail": f"generated bundle is not readable: {exc}"})
             for unit in bundle.get("entries", ()) if bundle else ():
                 source = resolve_candidate(unit["path"], roots)
                 if source is None:
                     gaps.append({"kind": GAP_MISSING_FILE, "path": unit["path"],
                                  "role": V2_INPUT_ROLE, "entry": unit.get("declaration_ref"),
-                                 "detail": "digest-qualified bundle input отсутствует"})
+                                 "detail": "digest-qualified bundle input missing"})
                     continue
                 try:
                     source_raw = source.read_bytes()
@@ -707,7 +707,7 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
                     gaps.append({"kind": GAP_UNRESOLVED_ENTRY,
                                  "path": _rel(source, rel_to), "role": V2_INPUT_ROLE,
                                  "entry": unit.get("declaration_ref"),
-                                 "detail": f"bundle selection не читается: {exc}"})
+                                 "detail": f"bundle selection is not readable: {exc}"})
                     continue
                 if (hashlib.sha256(source_raw).hexdigest() != unit["sha256"]
                         or hashlib.sha256(selected).hexdigest() != unit["selected_sha256"]):
@@ -735,7 +735,7 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
             gaps.append({"kind": GAP_UNRESOLVED_ENTRY,
                          "path": _rel(state_path, rel_to), "role": "item-state",
                          "entry": None,
-                         "detail": f"generated item state не byte-fresh: {exc}"})
+                         "detail": f"generated item state not byte-fresh: {exc}"})
     add_carrier(state_path, "item-state")
 
     weight = sum(f["est_tokens"] for f in files)
@@ -756,8 +756,8 @@ def measure_item(plan_dir, item_id, fields, measurer, *, phase_file=None, repo_r
 
 
 def _field(fields, name):
-    """Значение item-поля. `plan_lint._parse_fields` отдаёт `(значение, строка)`; тесты и
-    прямые вызовы вправе передать голую строку — обе формы читаются одинаково."""
+    """Meaning item-fields. `plan_lint._parse_fields` gives `(value, string)`; tests and
+    direct calls are free to pass a bare string - both forms are read the same."""
     value = fields.get(name, "")
     if isinstance(value, tuple):
         value = value[0]
@@ -779,13 +779,13 @@ def _rel(path, rel_to):
 
 
 def measure_plan(plan_dir, measurer, *, only_item=None):
-    """Замер всех пунктов плана (или одного, `only_item`). Разбор фазовых файлов —
-    `task.plan_lint.parse_phase_md`: тот же парсер, которым план читает линтер."""
+    """Measurement of all points of the plan (or one, `only_item`). Parsing phase files -
+    `task.plan_lint.parse_phase_md`: is the same parser that the linter uses to read the plan."""
     plan_dir = Path(plan_dir)
     if not (plan_dir / "plan.md").is_file():
-        raise PlanWeightError(f"не каталог плана (нет plan.md): {plan_dir}")
+        raise PlanWeightError(f"not a plan directory (no plan.md): {plan_dir}")
     repo_root = repo_root_for(plan_dir)
-    diag = plan_lint.Diagnostics()  # диагностика линтера здесь не наша работа — гасится
+    diag = plan_lint.Diagnostics()  # linter diagnostics are not our job here - extinguished
     meta, _ = plan_lint.parse_plan_md(plan_dir / "plan.md", diag)
     plan_id = (meta or {}).get("Plan ID", (plan_dir.name, None))[0] or plan_dir.name
 
@@ -818,7 +818,7 @@ def measure_plan(plan_dir, measurer, *, only_item=None):
             items.append(record)
 
     if only_item is not None and not any(item["item_id"] == only_item for item in items):
-        raise PlanWeightError(f"пункт {only_item} не найден в {plan_dir}")
+        raise PlanWeightError(f"item {only_item} not found in {plan_dir}")
 
     admission = None
     if layout == "v2":
@@ -862,12 +862,12 @@ def measure_plan(plan_dir, measurer, *, only_item=None):
 
 
 def sweep(roots, measurer):
-    """Замер по нескольким корням (`plans/` либо конкретные `plans/<ID>`) — вход P0.4.
-    Корень — учётная единица верхнего уровня (`roots[]`, D110): каждый корень входа
-    получает закрытый статус `resolved`/`unreadable`/`missing`, недоступный корень НЕ
-    роняет прогон и не уносит остальные (`OSError` вокруг резолвинга перехватывается).
-    План, который не удалось разобрать, попадает в `errors` (носитель исхода ПЛАНА,
-    не корня) и НЕ роняет прогон: сводка обязана назвать и то, что не измерено."""
+    """Measurement using several roots (`plans/` or specific `plans/<ID>`) — input P0.4.
+    Root - top-level accounting unit (`roots[]`, D110): each entry root
+    gets closed status `resolved`/`unreadable`/`missing`, inaccessible root NOT
+    drops the run and does not carry the rest (`OSError` around the resolver is intercepted).
+    A plan that could not be parsed falls into `errors` (carrier of the outcome of the PLAN,
+    not root) and does NOT drop the run: the summary must also name what is not measured."""
     plans, errors, roots_out = [], [], []
     for root in roots:
         try:
@@ -879,7 +879,7 @@ def sweep(roots, measurer):
         if discovered is None:
             roots_out.append({"root": str(root), "status": "missing", "discovered": 0,
                                "measured": 0, "failed": 0,
-                               "detail": "корень не существует или не каталог"})
+                               "detail": "root does not exist or is not a directory"})
             continue
         measured = failed = 0
         for plan_dir in discovered:
@@ -912,7 +912,7 @@ def sweep(roots, measurer):
 
 
 def envelope(measurer, payload):
-    """Стабильная обёртка машинного вывода (`--json`) — ключи не зависят от содержимого."""
+    """Stable machine output wrapper (`--json`) — keys are content independent."""
     art = measurer.artifact
     out = {
         "schema": SCHEMA,
@@ -932,31 +932,31 @@ def envelope(measurer, payload):
     return out
 
 
-# --- режим --exact (дифференциальный харнесс P0.1, D92) ----------------------------
+# --- mode --exact (differential harness P0.1, D92) ----------------------------
 
 EXACT_WARNING = (
-    "WARNING: --exact — РУЧНОЙ режим разбора пограничного случая, вне CI: истина берётся "
-    "из артефакта прогона дифференциального харнесса P0.1 (протокол тройного прогона), "
-    "сети инструмент не открывает и `count_tokens` не вызывает")
+    "WARNING: --exact — MANUAL mode of edge case analysis, outside CI: truth is taken "
+    "from the artifact of the differential harvesting run P0.1 (triple pass protocol), "
+    "network tool does not open and `count_tokens` does not call")
 
 
 def load_probe_log(path):
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
     except OSError as exc:
-        raise PlanWeightError(f"артефакт прогона харнесса не читается: {path}: {exc}") from exc
+        raise PlanWeightError(f"Harness run artifact is not readable: {path}: {exc}") from exc
     except json.JSONDecodeError as exc:
-        raise PlanWeightError(f"артефакт прогона харнесса — невалидный JSON: {path}: {exc}") from exc
+        raise PlanWeightError(f"Harness run artifact - invalid JSON: {path}: {exc}") from exc
     probes = data.get("accepted_samples", data.get("probes"))
     if not isinstance(probes, list):
-        raise PlanWeightError(f"артефакт прогона харнесса: нет списка «probes»: {path}")
+        raise PlanWeightError(f"harness run artifact: no list «probes»: {path}")
     return data
 
 
 def exact_compare(paths, measurer, probe_log_path):
-    """Сверка оценки СВЕРХУ с истиной прогона харнесса на явно указанных файлах.
-    Файл без записи в артефакте прогона называется прямо («истины нет»), а не молча
-    пропускается: пробел в доказательстве — тоже результат замера."""
+    """Verification of the TOP estimate with the truth of the Harness run on explicitly specified files.
+    The file without an entry in the run artifact is called directly («there is no truth»), and not silently
+    is skipped: the gap in the proof is also the result of a measurement."""
     import hashlib
 
     log = load_probe_log(probe_log_path)
@@ -979,7 +979,7 @@ def exact_compare(paths, measurer, probe_log_path):
     for path in paths:
         p = Path(path)
         if not p.is_file():
-            rows.append({"path": str(p), "error": "файла нет"})
+            rows.append({"path": str(p), "error": "no file"})
             continue
         text = p.read_bytes().decode("utf-8", errors="replace")
         est = token_estimate.estimate_text(text, artifact=measurer.artifact)
@@ -990,8 +990,8 @@ def exact_compare(paths, measurer, probe_log_path):
         if rec is None:
             row["truth"] = None
             row["match"] = None
-            row["note"] = ("истины нет в артефакте прогона харнесса — файл не входил в "
-                           "корпус P0.1 либо изменился с момента прогона")
+            row["note"] = ("there is no truth in the Harness run artifact - the file was not included in "
+                           "body P0.1 or has changed since the run")
         else:
             truth = float(rec["true_tokens"])
             row["truth"] = truth
@@ -1003,28 +1003,28 @@ def exact_compare(paths, measurer, probe_log_path):
             "understated": sum(1 for r in rows if r.get("understated"))}
 
 
-# --- человекочитаемый вывод --------------------------------------------------------
+# --- human-readable output --------------------------------------------------------
 
 def _fmt_item(record, limits):
     lines = [f"  {record['item_id']} — {record.get('title', '')}".rstrip(),
-             f"    вес: {record['weight_tokens']} токенов оценкой сверху "
-             f"({record['weight_bytes']} байт, файлов {record['resolved_files']}); "
-             f"пол раскладки: {record['floor_tokens']}, Required Reads: "
+             f"    weight: {record['weight_tokens']} tokens with an upper estimate "
+             f"({record['weight_bytes']} bytes, files {record['resolved_files']}); "
+             f"layout floor: {record['floor_tokens']}, Required Reads: "
              f"{record['required_reads_tokens']}"]
     over = [g for g in record["gaps"] if g["kind"] == GAP_OVERSIZED_FILE]
     if over:
-        lines.append(f"    сверх лимита одного чтения "
-                     f"({limits['size_bytes']} байт / {limits['tokens']} токенов): {len(over)}")
-    # Перечень пробелов печатается ВСЕГДА — сумма без него была бы нижней оценкой,
-    # выданной за измеренную (research/02 §5).
+        lines.append(f"    over one read limit "
+                     f"({limits['size_bytes']} bytes / {limits['tokens']} tokens): {len(over)}")
+    # The list of spaces is ALWAYS printed - the sum without it would be a lower estimate,
+    # issued as measured (research/02 §5).
     if record["gaps"]:
-        lines.append(f"    пробелы ({len(record['gaps'])}):")
+        lines.append(f"    spaces ({len(record['gaps'])}):")
         for gap in record["gaps"]:
             gate = f" gate={gap['gate']}" if gap.get("gate") else ""
             target = gap.get("path") or gap.get("entry") or ""
             lines.append(f"      [{gap['kind']}{gate}] {target}")
     else:
-        lines.append("    пробелы: нет")
+        lines.append("    spaces: none")
     if "admission_state" in record:
         verdict = ("pass" if record["admission_pass"] is True else
                    "fail" if record["admission_pass"] is False else "deferred")
@@ -1038,36 +1038,36 @@ def _fmt_item(record, limits):
 
 
 def _print_plan(plan, limits):
-    print(f"план {plan['plan_id']} ({plan['plan_dir']}) — пунктов {plan['totals']['items']}, "
-          f"пробелов {plan['totals']['gaps']}")
+    print(f"plan {plan['plan_id']} ({plan['plan_dir']}) — items {plan['totals']['items']}, "
+          f"spaces {plan['totals']['gaps']}")
     for record in plan["items"]:
         for line in _fmt_item(record, limits):
             print(line)
     counts = plan["totals"]["gap_counts"]
-    print(f"  итого: макс. вес пункта {plan['totals']['max_item_weight_tokens']} токенов, "
-          f"мин. {plan['totals']['min_item_weight_tokens']}, макс. пол "
-          f"{plan['totals']['max_floor_tokens']}; пробелы по категориям: "
+    print(f"  total: max. item weight {plan['totals']['max_item_weight_tokens']} tokens, "
+          f"min. {plan['totals']['min_item_weight_tokens']}, max. floor "
+          f"{plan['totals']['max_floor_tokens']}; spaces by category: "
           + ", ".join(f"{k}={counts[k]}" for k in GAP_KINDS))
 
 
 # --- CLI ---------------------------------------------------------------------------
 
 def _add_common_options(parser, suppress):
-    """Общие опции — и до подкоманды, и после неё (`plan <dir> --json` — форма Validation
-    P0.3). У подкоманд дефолты подавлены: иначе argparse затирал бы ими значение,
-    заданное ДО подкоманды."""
+    """General options - both before and after the subcommand (`plan <dir> --json` — form Validation
+    P0.3). Subcommands have defaults suppressed: otherwise argparse would overwrite the value with them,
+    specified BEFORE the subcommand."""
     import argparse
 
     flag_default = argparse.SUPPRESS if suppress else False
     opt_default = argparse.SUPPRESS if suppress else None
     parser.add_argument("--json", action="store_true", default=flag_default,
-                        help="машинный вывод (стабильные ключи)")
+                        help="machine output (stable keys)")
     parser.add_argument("--calibration", default=opt_default,
-                        help="путь к артефакту калибровки P0.1 (по умолчанию — configs/)")
+                        help="path to calibration artifact P0.1 (default - configs/)")
     parser.add_argument("--read-limit", default=opt_default,
-                        help="путь к артефакту лимита чтения P0.2 (по умолчанию — configs/)")
+                        help="path to the read limit artifact P0.2 (default - configs/)")
     parser.add_argument("--session-model", default=opt_default,
-                        help="модель текущего окружения для WARNING о расхождении с калибровкой")
+                        help="model of the current environment for WARNING about discrepancies with calibration")
 
 
 def main(argv=None):
@@ -1075,36 +1075,36 @@ def main(argv=None):
 
     parser = argparse.ArgumentParser(
         prog="plan-weight",
-        description="Вес обязательного чтения пункта плана (plan-run.md) в оценочных "
-                    "токенах, с проверкой каждого файла против обоих гейтов лимита чтения "
-                    "и закрытой таксономией пробелов.")
+        description="Weight of required reading of the plan item (plan-run.md) in estimated "
+                    "tokens, with each file checked against both read limit gates "
+                    "and a closed whitespace taxonomy.")
     _add_common_options(parser, suppress=False)
     parser.add_argument("--exact", nargs="+", metavar="FILE", default=None,
-                        help="РУЧНОЙ режим (вне CI): сверить оценку с истиной прогона "
-                             "дифференциального харнесса P0.1 на указанных файлах")
+                        help="MANUAL mode (out CI): check the estimate against the truth of the run "
+                             "differential harness P0.1 on the specified files")
     parser.add_argument("--probe-log", default=None,
-                        help="артефакт прогона харнесса P0.1 для --exact")
+                        help="Harness run artifact P0.1 for --exact")
     parser.add_argument("--file", default=None,
-                        help="измерить один документ (токены и строки)")
+                        help="measure one document (tokens and strings)")
 
     common = argparse.ArgumentParser(add_help=False)
     _add_common_options(common, suppress=True)
 
     sub = parser.add_subparsers(dest="cmd")
-    p_item = sub.add_parser("item", help="вес одного пункта", parents=[common])
+    p_item = sub.add_parser("item", help="weight of one point", parents=[common])
     p_item.add_argument("plan_dir")
     p_item.add_argument("item_id")
-    p_plan = sub.add_parser("plan", help="вес каждого пункта плана", parents=[common])
+    p_plan = sub.add_parser("plan", help="weight of each plan item", parents=[common])
     p_plan.add_argument("plan_dir")
-    p_sweep = sub.add_parser("sweep", help="замер по корням планов (вход P0.4)", parents=[common])
+    p_sweep = sub.add_parser("sweep", help="measured at the roots of plans (input P0.4)", parents=[common])
     p_sweep.add_argument("roots", nargs="+")
-    p_canon = sub.add_parser("canon", help="D93: двухпороговый гейт веса канона",
+    p_canon = sub.add_parser("canon", help="D93: two-threshold canon weight gate",
                              parents=[common])
     p_canon.add_argument("--budget", default=str(DEFAULT_CANON_BUDGET_PATH))
 
     args = parser.parse_args(argv)
     if args.exact is None and args.file is None and args.cmd is None:
-        parser.error("нужна подкоманда item|plan|sweep|canon либо режим --file/--exact")
+        parser.error("subcommand needed item|plan|sweep|canon or mode --file/--exact")
 
     try:
         measurer = Measurer(calibration_path=args.calibration,
@@ -1118,17 +1118,17 @@ def main(argv=None):
                 print(json.dumps(envelope(measurer, {"exact": payload}),
                                  ensure_ascii=False, indent=2, sort_keys=True))
             else:
-                print(f"истина: {payload['probe_log']}")
+                print(f"true: {payload['probe_log']}")
                 for row in payload["files"]:
                     if row.get("error"):
                         print(f"  {row['path']}: {row['error']}")
                     elif row["truth"] is None:
-                        print(f"  {row['path']}: оценка {row['est_tokens']} — {row['note']}")
+                        print(f"  {row['path']}: rating {row['est_tokens']} — {row['note']}")
                     else:
-                        print(f"  {row['path']}: оценка {row['est_tokens']}, истина "
-                              f"{row['truth']:.0f}, истина/оценка "
+                        print(f"  {row['path']}: rating {row['est_tokens']}, true "
+                              f"{row['truth']:.0f}, true/rating "
                               f"{row['true_over_estimate']:.3f}"
-                              + ("  ← ЗАНИЖЕНИЕ" if row["understated"] else ""))
+                              + ("  ← UNDERSTANDING" if row["understated"] else ""))
             return 0
 
         if args.file is not None:
@@ -1174,18 +1174,18 @@ def main(argv=None):
             else:
                 for root in payload["roots"]:
                     if root["status"] in ("unreadable", "missing"):
-                        print(f"НЕ ИЗМЕРЕН: {root['root']}: {root['detail']}")
+                        print(f"NOT MEASURED: {root['root']}: {root['detail']}")
                     elif root["status"] == "resolved" and root["discovered"] == 0:
-                        print(f"БЕЗ ПЛАНОВ: {root['root']}")
+                        print(f"NO PLANS: {root['root']}")
                 for plan in payload["plans"]:
                     _print_plan(plan, measurer.limits)
                 for err in payload["errors"]:
-                    print(f"НЕ ИЗМЕРЕН: {err['plan_dir']}: {err['error']}")
+                    print(f"NOT MEASURED: {err['plan_dir']}: {err['error']}")
                 counts = payload["totals"]["gap_counts"]
                 root_counts = payload["totals"]["roots"]
-                print(f"итого: планов {payload['totals']['plans']}, пунктов "
-                      f"{payload['totals']['items']}, пробелов {payload['totals']['gaps']} ("
-                      + ", ".join(f"{k}={counts[k]}" for k in GAP_KINDS) + "), корней "
+                print(f"total: plans {payload['totals']['plans']}, items "
+                      f"{payload['totals']['items']}, spaces {payload['totals']['gaps']} ("
+                      + ", ".join(f"{k}={counts[k]}" for k in GAP_KINDS) + "), roots "
                       f"{root_counts['total']} (resolved={root_counts['resolved']}, "
                       f"unreadable={root_counts['unreadable']}, missing={root_counts['missing']})")
             return 0

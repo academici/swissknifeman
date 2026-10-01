@@ -1,114 +1,114 @@
-# Адаптерные дельты
+# Adapter deltas
 
-`SKILL.md` — единственный источник истины, provider-neutral. Всё специфичное
-для конкретного агента выносится в **дельта-файлы** `adapters/<agent>.md`
-внутри папки скилла:
+`SKILL.md` — the only source of truth, provider-neutral. Anything specific
+for a specific agent is entered in **delta files** `adapters/<agent>.md`
+inside the skill folder:
 
 ```
-SKILL.md  ←── единственный source of truth
+SKILL.md  ←── the only one source of truth
     │
-    ├── adapters/claude.md   (только delta: overrides, доп. инструкции)
-    ├── adapters/cursor.md   (только delta: .cursor/rules specific)
-    └── adapters/<agent>.md  (любой другой агент по тому же принципу)
+    ├── adapters/claude.md   (only delta: overrides, add. instructions)
+    ├── adapters/cursor.md   (only delta: .cursor/rules specific)
+    └── adapters/<agent>.md  (any other agent on the same principle)
 ```
 
-**Дельта НЕ дублирует SKILL.md** — она содержит только отличия.
+**Delta is NOT duplicate SKILL.md** — it contains only differences.
 
-## Когда дельта нужна
+## When delta is needed
 
-| Условие | Нужна дельта? |
+| Condition | Need a delta? |
 |---|---|
-| Агент использует другой формат вывода | ✅ да |
-| У агента специфические инструменты (MCP, tools) | ✅ да |
-| Агент требует особый синтаксис промпта / правил | ✅ да |
-| Скилл работает одинаково везде | ❌ нет — файл не создаётся |
+| Agent uses a different output format | ✅ yes |
+| Agent has specific tools (MCP, tools) | ✅ yes |
+| Agent requires special prompt syntax / rules | ✅ yes |
+| The skill works the same everywhere | ❌ no - the file is not created |
 
-Отсутствие дельты — норма: большинство скиллов provider-neutral целиком.
+Lack of delta is the norm: most skills provider-neutral in its entirety.
 
-## Формат дельты
+## Delta format
 
-Дельта — markdown из секций двух типов:
+Delta - markdown from sections of two types:
 
-- `## Override: <что>` — замещает соответствующую часть SKILL.md;
-- `## Additional: <что>` — добавляет инструкции, не отменяя основных.
+- `## Override: <what>` — replaces the corresponding part SKILL.md;
+- `## Additional: <what>` — adds instructions without canceling the main ones.
 
 ```markdown
 ## Override: output_format
-Вместо markdown используй JSON с полями: ...
+Instead markdown use JSON with fields: ...
 
 ## Additional: pre_flight
-Перед выполнением проверь наличие файла composer.json
+Before executing, check the presence of the file composer.json
 ```
 
-## Типовые секции
+## Typical sections
 
 ### Pre-flight hook
 
-Проверка предусловий перед стартом скилла:
+Checking preconditions before starting a skill:
 
 ````markdown
 ## Additional: pre_flight
 ```bash
-# выполнить перед стартом скилла
-ls composer.json || echo "WARNING: не Laravel-проект"
+# perform before starting the skill
+ls composer.json || echo "WARNING: not Laravel-project"
 ```
 ````
 
 ### Output override
 
-Перенаправление результатов под конвенции агента или проекта:
+Redirecting results under agent or project conventions:
 
 ```markdown
 ## Override: output_paths
-Записывай файлы в `infra/docker/` вместо `docker/`
+Write files to `infra/docker/` instead `docker/`
 ```
 
-### Пример: дельта для Cursor
+### Example: delta for Cursor
 
 ```markdown
 ## Cursor Delta: docker-php
 
 ### Additional: rules
-Добавь в .cursor/rules:
-"При создании Dockerfile всегда использовать non-root user и multi-stage build"
+Add to .cursor/rules:
+"When creating Dockerfile always use non-root user and multi-stage build"
 
 ### Override: file_creation
-Создавай файлы через Cursor Edit, не через terminal write
+Create files via Cursor Edit, not via terminal write
 ```
 
-### Пример: дельта для Claude Code
+### Example: delta for Claude Code
 
 ```markdown
 ## Claude Delta: docker-php
 
 ### Additional: pre_flight
-Проверь `docker compose version` — скилл рассчитан на Compose v2.
+Check `docker compose version` — skill is designed for Compose v2.
 
 ### Additional: permissions
-Скиллу нужны разрешения из пресета `docker` —
-см. configs/claude-code/settings.docker.json
+Skill needs permissions from preset `docker` —
+see configs/claude-code/settings.docker.json
 ```
 
-## Поле adapters во frontmatter
+## Field adapters in frontmatter
 
-Frontmatter скилла перечисляет агентов, в которых скилл проверен:
+Frontmatter skill lists the agents in which the skill is tested:
 
 ```yaml
 adapters: [claude, cursor, fable]
 ```
 
-Это **декларация совместимости**, а не список дельта-файлов: скилл может быть
-проверен в трёх агентах и не иметь ни одной дельты.
+This **compatibility declaration**, and not a list of delta files: the skill can be
+tested in three agents and does not have a single delta.
 
-## Как skiller vendor работает с дельтами
+## How skiller vendor works with deltas
 
-При установке с `--agent <name>` установщик кладёт рядом со `SKILL.md`
-только дельту этого агента (если она есть) — дельты чужих агентов в целевой
-проект не попадают.
+When installing with The installer places `--agent <name>` next to `SKILL.md`
+only the delta of this agent (if it exists) — deltas of foreign agents in the target
+project are not included.
 
-## Чеклист при создании дельты
+## Checklist when creating a delta
 
-- [ ] В дельте нет текста, дублирующего SKILL.md
-- [ ] Каждая секция — `Override:` или `Additional:` с понятным предметом
-- [ ] Pre-flight хуки идемпотентны и безопасны (только проверки, без записи)
-- [ ] Дельта упомянутого агента есть в `adapters:` frontmatter-а
+- [ ] There is no duplicate text in the delta SKILL.md
+- [ ] Each section - `Override:` or `Additional:` with a clear subject
+- [ ] Pre-flight hooks are idempotent and safe (checks only, no recording)
+- [ ] The delta of the mentioned agent is in `adapters:` frontmatter-a

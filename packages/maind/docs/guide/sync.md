@@ -1,105 +1,105 @@
-# Sync — единый провижининг
+# Sync — unified provisioning
 
-`maind sync` — одна команда, которая анализирует `config.json` и раскатывает **управляемые
-артефакты** на подключённые проекты. Фан-аут по проектам и резолв пути/scope вынесены в общий
-контекст (`sync.py`), чтобы не дублировать цикл в каждом модуле; `maind deploy` — это
+`maind sync` — one command that parses `config.json` and rolls out **managed
+artifacts** for connected projects. Fan-out for projects and resolution paths/scope are included in the general
+context (`sync.py`), to avoid duplicating the loop in each module; `maind deploy` — this
 `sync --only mcp`.
 
-## Команда
+## Command
 
 ```bash
-maind sync --all                                   # все enabled-проекты, все провиженеры
-maind sync --project flexcrm                       # один проект
-maind sync --namespace axioma                      # фан-аут по namespace-группе
-maind sync --all --only mcp,graph --mode update    # сузить набор и режим
-maind sync --all --dry-run --json                  # план без записи, машинно-читаемо
+maind sync --all                                   # all enabled-projects, all providers
+maind sync --project flexcrm                       # one project
+maind sync --namespace axioma                      # fan-out by namespace-group
+maind sync --all --only mcp,graph --mode update    # narrow set and mode
+maind sync --all --dry-run --json                  # plan without record, machine readable
 ```
 
-Выбор проектов (`select_projects`) — ровно один из `--project` / `--namespace` / `--all`.
+Selecting projects (`select_projects`) — exactly one of `--project` / `--namespace` / `--all`.
 
-## Провиженеры (в порядке применения)
+## Provisioners (in order of application)
 
-| Провиженер | Что делает | Модуль |
+| Provisioner | What it does | Module |
 |:--|:--|:--|
-| `mcp` | пишет MCP-серверы хаба (agent-memory + maind [+ код-граф]) в `.mcp.json` проекта | `deploy.py` |
-| `code-graph` | стартовый `.serena/project.yml` (при `code:true`, движок Serena) — язык + игноры + initial_prompt | `codegraph.py` |
-| `graph` | `derive` графа проекта из источников + пересборка `_index.db` | `derive.py` |
-| `memory` | upsert базового факта о связях только в `project:<id>` | `seed.py` |
-| `memory-hook` | `MODE=manual`: снять digest и оставить native off; `MODE=maind`: явно включить SessionStart digest | `health.py` |
-| `health-hook` | opt-in SessionStart-хук (`observability.session_start_health_hook`; по умолчанию снят) | `health.py` |
-| `health-doc` | управляемый блок «приоритет №1» в `CLAUDE.md` | `health.py` |
-| `feature-log-hook` | opt-in SessionEnd-публикация коммита (`code_graph.feature_log_hook`; по умолчанию снята) | `health.py` |
-| `ecosystem-skill` | управляемый скилл `ecosystem-mcp` (что за MCP-инструменты, связи, починка) в `.claude/skills/` | `skilldoc.py` |
-| `setup-skill` | управляемый скилл `ecosystem-setup` (дерево решений тулинга проекта) в `.claude/skills/` | `skilldoc.py` |
-| `skills-catalog` | `skiller update` — пере-резолв каталога скиллов (buckets/exclude с диска); новый скилл уже выбранного бакета (напр. `pao` в `php`) доезжает без ручного re-run | `orchestrate.py` → `skm:update` |
-| `agent-pack` | детерминированная раскатка/апгрейд agent-pack(ов) профиля проекта | `orchestrate.py` → `env:agent-pack` |
-| `output-style` | `outputStyle: lean` (терсе-голос агента, токен-экономия) во все `.claude/settings.local.json`; опт-аут — `project.output_style: "off"` | `orchestrate.py` → `env:hooks` |
-| `router-config` | каталог intent-router (`.claude/agent-router.config.json`), только для проектов с включённым хуком | `orchestrate.py` → `env:router` |
+| `mcp` | writes MCP-hub servers (agent-memory + maind [+ code graph]) in `.mcp.json` project | `deploy.py` |
+| `code-graph` | starting `.serena/project.yml` (when `code:true`, engine Serena) — language + ignores + initial_prompt | `codegraph.py` |
+| `graph` | `derive` project graph from sources + rebuild `_index.db` | `derive.py` |
+| `memory` | upsert basic fact about connections only in `project:<id>` | `seed.py` |
+| `memory-hook` | `MODE=manual`: remove digest and leave native off; `MODE=maind`: explicitly enable SessionStart digest | `health.py` |
+| `health-hook` | opt-in SessionStart-hook (`observability.session_start_health_hook`; disabled by default) | `health.py` |
+| `health-doc` | managed block «priority №1» in `CLAUDE.md` | `health.py` |
+| `feature-log-hook` | opt-in SessionEnd-publish commit (`code_graph.feature_log_hook`; disabled by default) | `health.py` |
+| `ecosystem-skill` | controlled skill `ecosystem-mcp` (what the MCP-tools, connections, repairs) in `.claude/skills/` | `skilldoc.py` |
+| `setup-skill` | controlled skill `ecosystem-setup` (project tooling decision tree) in `.claude/skills/` | `skilldoc.py` |
+| `skills-catalog` | `skiller update` — re-resolve skill catalog (buckets/exclude from disk); new skill for an already selected bucket (e.g. `pao` in `php`) arrives without manual re-run | `orchestrate.py` → `skm:update` |
+| `agent-pack` | deterministic rolling/upgrade agent-pack(ov) project profile | `orchestrate.py` → `env:agent-pack` |
+| `output-style` | `outputStyle: lean` (terce-agent-voice, token-saving) to all `.claude/settings.local.json`; opt-out — `project.output_style: "off"` | `orchestrate.py` → `env:hooks` |
+| `router-config` | directory intent-router (`.claude/agent-router.config.json`), only for projects with the hook enabled | `orchestrate.py` → `env:router` |
 
-> `memory-hook` читает «намерение» памяти из `<project>/.claude/memory.env.ini` (`MODE`),
-> который пишет `maind onboard --memory`. Так авто-загрузку можно докатить на уже подключённые
-> проекты без полного onboard: `maind sync --all --only memory-hook`.
+> `memory-hook` reads «intent» memory from `<project>/.claude/memory.env.ini` (`MODE`),
+> who writes `maind onboard --memory`. So auto-download can be extended to already connected
+> projects without full onboard: `maind sync --all --only memory-hook`.
 >
-> `skills-catalog`/`output-style` — тот же принцип для скиллов и терсе-голоса: `skiller
-> integrate` (и через него `maind onboard`) ставит их только на **новых** онбордингах;
-> `maind sync --all` регулярно докатывает то же самое на уже подключённые проекты.
+> `skills-catalog`/`output-style` — the same principle for skills and terse voice: `skiller
+> integrate` (and through it `maind onboard`) puts them only on **new** onboardings;
+> `maind sync --all` regularly rolls out the same thing to already connected projects.
 
-`--only mcp,graph,...` ограничивает набор (имена сверяются с реестром, опечатка → ошибка).
+`--only mcp,graph,...` limits the set (names are checked against the registry, typo → error).
 
-## Режимы (`--mode`)
+## Modes (`--mode`)
 
-«Метод синка по области»:
+«Sync method by area»:
 
-| mode | поведение |
+| mode | behavior |
 |:--|:--|
-| `install` | создать, только если артефакта нет |
-| `update` | обновить уже существующее (drift по content-hash) |
-| `auto` (по умолчанию) | и то, и другое: нет → install, устарело → update, свежо → skip |
+| `install` | create only if there is no artifact |
+| `update` | update an existing one (drift by content-hash) |
+| `auto` (default) | both: no → install, deprecated → update, fresh → skip |
 
-`changed` в отчёте означает применённую мутацию: graph-провиженер сравнивает содержимое
-стора (сериализация детерминирована), а doc/hook — content-hash блока. Успешный delegated
-`--dry-run` доказывает, что план выполним, но не помечается как изменение только по `rc=0`;
-после стабильного live sync это сохраняет JSON idempotence gate проверяемым. Dry-run ничего
-не пишет и показывает план.
+`changed` in the report means the applied mutation: graph-provider compares contents
+story (serialization is deterministic), a doc/hook — content-hash block. Successful delegated
+`--dry-run` proves that the plan is feasible, but is not flagged as a change only by `rc=0`;
+after stable live sync this saves JSON idempotence gate verifiable. Dry-run nothing
+does not write and shows the plan.
 
-В корневом репозитории SwissKnifeMan `ecosystem-mcp` и `ecosystem-setup` также существуют как
-тонкие проекции `repository-bootstrap`, принадлежащие `skiller registry`. Если файл явно
-указывает этот `canonical` и `generator`, `maind sync` возвращает `foreign-owner` и не
-перезаписывает ни одну из двух проекций скилла. `maind doctor --skill-drift` не считает их
-дрейфом шаблона maind; исправлять такие проекции нужно через `skiller registry`.
+In the root repository SwissKnifeMan `ecosystem-mcp` and `ecosystem-setup` also exist as
+thin projections `repository-bootstrap`, belonging to `skiller registry`. If the file is explicitly
+indicates this `canonical` and `generator`, `maind sync` returns `foreign-owner` and not
+overwrites neither of the two skill projections. `maind doctor --skill-drift` doesn't count them
+pattern drift maind; such projections need to be corrected through `skiller registry`.
 
-## Как узнать, что sync вообще нужен (drift-gate)
+## How to find out what sync is generally needed (drift-gate)
 
-`sync` детерминирован (content-hash), но **сам себя не вызывает**. Шаблоны провиженеров
-(`templates/skills/ecosystem-mcp/SKILL.md` и т.п.) и реестр скиллов (`skiller`) со временем
-улучшаются, но уже онбордженным проектам это не прилетает, пока кто-то вручную не перезапустит
-sync — «регулярно докатывает» из примечания выше требует триггера. Read-only проверка, что
-триггер назрел:
+`sync` deterministic (content-hash), but **does not call itself**. Provider templates
+(`templates/skills/ecosystem-mcp/SKILL.md` etc.) and skill registry (`skiller`) over time
+are being improved, but already onboarded projects do not receive this until someone manually restarts
+sync — «rolls out regularly» from the note above requires a trigger. Read-only checking that
+trigger is overdue:
 
 ```bash
-maind doctor --skill-drift        # ecosystem-mcp/ecosystem-setup: absent/stale по флоту enabled-проектов
-skiller doctor --vendor-drift     # vendor-скиллы (buckets/include CORE_SKILLS): add/update/remove по флоту
+maind doctor --skill-drift        # ecosystem-mcp/ecosystem-setup: absent/stale by fleet enabled-projects
+skiller doctor --vendor-drift     # vendor-skills (buckets/include CORE_SKILLS): add/update/remove by fleet
 ```
 
-Оба — сухой прогон (`plan_sync`/`_apply_managed_skill(..., dry=True)`), ничего не пишут; в
-обычном `doctor` (без флагов) — по одной summary-строке. Прогоняй после ЛЮБОГО точечного
-(`--only`) онбординга/интеграции — не только после `--all`: `--only` синки чаще всего и
-оставляют «половину проекта» несинхронизированной, потому что применяют не весь набор
-провиженеров. Реальный инцидент (2026-07): проект `agelto` две недели работал без графа кода
-Serena — `ecosystem-mcp` был раскатан ДО того, как в шаблон добавили правило «сначала граф,
-потом grep», и никто не перезапустил sync, чтобы это подхватить; агент тихо читал файлы
-целиком вместо `find_symbol`, drift был не виден без этой команды.
+Both - dry run (`plan_sync`/`_apply_managed_skill(..., dry=True)`), do not write anything; in
+normal `doctor` (without flags) — one at a time summary-line. Run after ANY point
+(`--only`) onboarding/integration - not only after `--all`: `--only` sinks most often and
+leave «half of the project» unsynchronized because not the entire set is applied
+providers. Real incident (2026-07): project `agelto` worked for two weeks without a code graph
+Serena — `ecosystem-mcp` was rolled out BEFORE the rule was added to the template «first graph,
+then grep», and no one restarted sync, to pick it up; the agent quietly read the files
+entirely instead `find_symbol`, drift was not visible without this command.
 
-## Пример вывода
+## Example output
 
 ```
-sync (mode=auto, проектов 1, провиженеры: mcp, graph, memory, memory-hook, health-hook, health-doc, ecosystem-skill)
+sync (mode=auto, projects 1, providers: mcp, graph, memory, memory-hook, health-hook, health-doc, ecosystem-skill)
   ✓ mcp             flexcrm            .mcp.json
   ✓ graph           flexcrm            12n/9e (code 7, doc 1)
-  ○ memory          flexcrm            демон памяти не запущен
-  ✓ health-hook     flexcrm            установлен
-  ✓ health-doc      flexcrm            обновлён
+  ○ memory          flexcrm            memory daemon not running The project does not have
+  ✓ health-hook     flexcrm            installed
+  ✓ health-doc      flexcrm            updated
   ✓ ecosystem-skill flexcrm            .claude/skills/ecosystem-mcp/SKILL.md
 ```
 
-Дальше: [Доверие (workspace) →](./workspace)
+Next: [Trust (workspace) →](./workspace)

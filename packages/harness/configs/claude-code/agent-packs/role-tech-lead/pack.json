@@ -2,7 +2,7 @@
   "schema": 1,
   "pack": "role-tech-lead",
   "version": "0.2.2",
-  "description": "Персона-пак tech-lead (роль, не стек): субагенты sprint-planner (kickoff/декомпозиция/распределение контекста), delegation-triage (делать-самому-vs-делегировать + бриф с DoD + учёт техдолга), review-gatekeeper (процесс ревью с severity-градацией, сверка с веточной моделью, эскалация архитектуры на CTO). Delegate-only/координация — кода роли не пишут. Тянется как companion к стек-паку с тем же PACK_PREFIX.",
+  "description": "Persona-pack tech-lead (role, not stack): subagents sprint-planner (kickoff/decomposition/context distribution), delegation-triage (do-it-yourselfvs-delegate + brief with DoD + technical debt accounting), review-gatekeeper (review process with severity-gradation, reconciliation with the branch model, escalation of architecture to CTO). Delegate-only/coordination - roles are not written in code. Stretches like companion to a stack pack with the same PACK_PREFIX.",
   "stack": {
     "shape": "role"
   },
@@ -32,7 +32,7 @@
   "interview": [
     {
       "id": "PACK_PREFIX",
-      "q": "Префикс имён агентов проекта (как у стек-пака)?",
+      "q": "Project agent name prefix (like a stack pack)?",
       "default": "{project_dirname}",
       "kind": "slug"
     }
@@ -58,9 +58,9 @@
     }
   ],
   "notes": {
-    "prerequisite": "Companion-пак к стек-паку. {PACK_PREFIX} должен совпадать с префиксом стек-пака/_common, чтобы @<prefix>-<role> в планах резолвились в реальные роли (slice-builder/test-writer/reviewer/component-builder).",
-    "persona": "Роль выбирается, не детектится — поэтому stack.shape=role, без project_type/detect.",
-    "verify_workflow": "Все файлы — агенты (не воркфлоу): node --check не применять.",
-    "model_selection": "Модель каждого агента резолвится из interview MODEL_<ROLE> (default inherit, enum inherit/opus/sonnet/haiku) — единственный источник истины, как у стек-паков/_common."
+    "prerequisite": "Companion-pack to stack pack. {PACK_PREFIX} must match the stackpack prefix/_common, to @<prefix>-<role> in plans resolved into real roles (slice-builder/test-writer/reviewer/component-builder).",
+    "persona": "The role is selected, not detected - therefore stack.shape=role, without project_type/detect.",
+    "verify_workflow": "All files are agents (not a work flow): node --check do not apply.",
+    "model_selection": "Each agent's model is resolved from interview MODEL_<ROLE> (default inherit, enum inherit/opus/sonnet/haiku) — the only source of truth, like stack packs/_common."
   }
 }

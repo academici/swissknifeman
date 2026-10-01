@@ -1,6 +1,6 @@
-"""Тесты proposals (P4.3): детерминированный id, edit-safe writer (как suggest.py),
-статус через отдельную audit-строку (история не перезаписывается), handoff-печать по типу,
-и инвариант «ноль записей вне ~/.swissknifeman/analyst/»."""
+"""Tests proposals (P4.3): deterministic id, edit-safe writer (like suggest.py),
+status via separate audit-line (history is not overwritten), handoff-print by type,
+and invariant «zero records out ~/.swissknifeman/analyst/»."""
 import io
 import json
 import re
@@ -34,16 +34,16 @@ class TestProposals(unittest.TestCase):
         d = self.env.state_dir / "proposals" / ptype / pid
         return d / "PROPOSAL.md", d / "proposal.meta.json"
 
-    # ── чистые генераторы ─────────────────────────────────────────────────────
+    # ── pure generators ─────────────────────────────────────────────────────
     def test_make_proposal_id_deterministic_and_type_scoped(self):
-        id1 = proposals.make_proposal_id("stack-pack", "Единый extension-point dev-loop")
-        id2 = proposals.make_proposal_id("stack-pack", "Единый extension-point dev-loop")
+        id1 = proposals.make_proposal_id("stack-pack", "Single extension-point dev-loop")
+        id2 = proposals.make_proposal_id("stack-pack", "Single extension-point dev-loop")
         self.assertEqual(id1, id2)
-        # смена title → другой id
-        id3 = proposals.make_proposal_id("stack-pack", "Другой заголовок")
+        # change title → other id
+        id3 = proposals.make_proposal_id("stack-pack", "Another header")
         self.assertNotEqual(id1, id3)
-        # тот же title, другой type → другой id (type входит в хэш)
-        id4 = proposals.make_proposal_id("docs", "Единый extension-point dev-loop")
+        # same title, other type → other id (type is included in the hash)
+        id4 = proposals.make_proposal_id("docs", "Single extension-point dev-loop")
         self.assertNotEqual(id1, id4)
 
     def test_build_proposal_md_deterministic_no_timestamp(self):
@@ -51,7 +51,7 @@ class TestProposals(unittest.TestCase):
         t1 = proposals.build_proposal_md("docs", pid, "T", "summary", "body", "docs/reference.md")
         t2 = proposals.build_proposal_md("docs", pid, "T", "summary", "body", "docs/reference.md")
         self.assertEqual(t1, t2)
-        # никаких ISO-дат/времени в теле (детерминизм seed_sha256)
+        # none ISO-dates/time in body (determinism seed_sha256)
         self.assertNotRegex(t1, r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}")
 
     def test_build_proposal_md_embeds_type_specific_handoff(self):
@@ -73,9 +73,9 @@ class TestProposals(unittest.TestCase):
     def test_handoff_steps_unknown_type_falls_back_to_docs(self):
         self.assertEqual(proposals.handoff_steps("bogus"), proposals.handoff_steps("docs"))
 
-    # ── create: запись + meta ────────────────────────────────────────────────
+    # ── create: entry + meta ────────────────────────────────────────────────
     def test_create_writes_md_and_meta_status_draft(self):
-        payload = self._run_json(["create", "--type", "docs", "--title", "Доба поправка",
+        payload = self._run_json(["create", "--type", "docs", "--title", "Additional amendment",
                                   "--summary", "summary", "--target", "docs/reference.md"])
         self.assertEqual(payload["write_status"], "created")
         self.assertEqual(payload["status"], "draft")
@@ -107,13 +107,13 @@ class TestProposals(unittest.TestCase):
         md, _ = self._proposal_paths("docs", payload["id"])
         self.assertFalse(md.exists())
 
-    # ── edit-safety (D6, как suggest.py) ────────────────────────────────────
+    # ── edit-safety (D6, like suggest.py) ────────────────────────────────────
     def test_recreate_unedited_updates_not_skips(self):
         p1 = self._run_json(["create", "--type", "docs", "--title", "T", "--summary", "s1"])
-        # тот же вход → unchanged
+        # same input → unchanged
         p2 = self._run_json(["create", "--type", "docs", "--title", "T", "--summary", "s1"])
         self.assertEqual(p2["write_status"], "unchanged")
-        # контент изменился, тело руками не правили → updated
+        # content has changed, the body was not controlled by hands → updated
         p3 = self._run_json(["create", "--type", "docs", "--title", "T", "--summary", "s2"])
         self.assertEqual(p3["write_status"], "updated")
         self.assertEqual(p1["id"], p3["id"])
@@ -124,27 +124,27 @@ class TestProposals(unittest.TestCase):
         p1 = self._run_json(["create", "--type", "docs", "--title", "T", "--summary", "s1"])
         self._run_json(["status", p1["id"], "accepted"])
         md, meta_p = self._proposal_paths("docs", p1["id"])
-        md.write_text(md.read_text(encoding="utf-8") + "\nРУЧНАЯ ПРАВКА\n", encoding="utf-8")
+        md.write_text(md.read_text(encoding="utf-8") + "\nMANUAL EDITING\n", encoding="utf-8")
 
         p2 = self._run_json(["create", "--type", "docs", "--title", "T", "--summary", "s2"])
         self.assertEqual(p2["write_status"], "skipped-edited")
-        self.assertIn("РУЧНАЯ ПРАВКА", md.read_text(encoding="utf-8"))
-        # статус, выставленный ДО ручной правки, не откатывается content-обновлением
+        self.assertIn("MANUAL EDITING", md.read_text(encoding="utf-8"))
+        # status set BEFORE manual editing is not rolled back content-update
         self.assertEqual(json.loads(meta_p.read_text(encoding="utf-8"))["status"], "accepted")
 
         p3 = self._run_json(["create", "--type", "docs", "--title", "T", "--summary", "s2",
                              "--force"])
         self.assertEqual(p3["write_status"], "forced")
-        self.assertNotIn("РУЧНАЯ ПРАВКА", md.read_text(encoding="utf-8"))
-        # --force тоже сохраняет статус (не откатывает review-прогресс на draft)
+        self.assertNotIn("MANUAL EDITING", md.read_text(encoding="utf-8"))
+        # --force also saves the status (does not rollback review-progress on draft)
         self.assertEqual(json.loads(meta_p.read_text(encoding="utf-8"))["status"], "accepted")
 
-    # ── статус: отдельная audit-строка, история не перезаписывается ──────────
+    # ── status: separate audit-line, history is not overwritten ──────────
     def test_status_transition_appends_audit_history(self):
         p1 = self._run_json(["create", "--type", "docs", "--title", "T"])
         pid = p1["id"]
-        self._run_json(["status", pid, "accepted", "--note", "ок, применяем"])
-        self._run_json(["status", pid, "rejected", "--note", "передумали"])
+        self._run_json(["status", pid, "accepted", "--note", "ok, apply"])
+        self._run_json(["status", pid, "rejected", "--note", "changed their mind"])
 
         audit = proposals.read_audit(self.env)
         transitions = [a for a in audit if a.get("id") == pid]
@@ -153,7 +153,7 @@ class TestProposals(unittest.TestCase):
         self.assertEqual(transitions[0]["to"], "accepted")
         self.assertEqual(transitions[1]["from"], "accepted")
         self.assertEqual(transitions[1]["to"], "rejected")
-        # финальный статус — в meta.json (текущий указатель)
+        # final status - in meta.json (current pointer)
         _, meta_p = self._proposal_paths("docs", pid)
         self.assertEqual(json.loads(meta_p.read_text(encoding="utf-8"))["status"], "rejected")
 
@@ -162,7 +162,7 @@ class TestProposals(unittest.TestCase):
         pid = p1["id"]
         self._run_json(["status", pid, "accepted"])
         before = len(proposals.read_audit(self.env))
-        self._run_json(["status", pid, "accepted"])   # тот же статус повторно
+        self._run_json(["status", pid, "accepted"])   # same status again
         after = len(proposals.read_audit(self.env))
         self.assertEqual(before, after)
 
@@ -220,36 +220,36 @@ class TestProposals(unittest.TestCase):
             proposals.cmd_proposals(self.env, [])
         self.assertIn("proposals", out.getvalue())
 
-    # ── инвариант: ноль записей вне ~/.swissknifeman/analyst/ ────────────────
+    # ── invariant: zero records out ~/.swissknifeman/analyst/ ────────────────
     def test_zero_writes_outside_swissknifeman_analyst(self):
         allowed_root = self.home / ".swissknifeman" / "analyst"
         before = {str(p) for p in self.base.rglob("*")}
 
-        p1 = self._run_json(["create", "--type", "stack-pack", "--title", "Общий extension-point",
+        p1 = self._run_json(["create", "--type", "stack-pack", "--title", "General extension-point",
                              "--summary", "s", "--target", "packages/harness/.../laravel-package"])
         self._run_json(["create", "--type", "docs", "--title", "Doc fix", "--summary", "s2"])
         self._run_json(["list"])
         self._run_json(["show", p1["id"]])
         self._run_json(["status", p1["id"], "accepted", "--note", "go"])
         self._run_json(["handoff", p1["id"]])
-        # edit-safety путь тоже пишет (skipped-edited meta refresh)
+        # edit-safety path also writes (skipped-edited meta refresh)
         md, _ = self._proposal_paths("stack-pack", p1["id"])
-        md.write_text(md.read_text(encoding="utf-8") + "\nручная правка\n", encoding="utf-8")
-        self._run_json(["create", "--type", "stack-pack", "--title", "Общий extension-point",
+        md.write_text(md.read_text(encoding="utf-8") + "\nmanual editing\n", encoding="utf-8")
+        self._run_json(["create", "--type", "stack-pack", "--title", "General extension-point",
                         "--summary", "s-changed", "--target", "x"])
-        # dry-run — тоже не должен ничего писать
+        # dry-run — shouldn't write anything either
         self._run_json(["create", "--type", "docs", "--title", "T2", "--dry-run"])
 
         after = {str(p) for p in self.base.rglob("*")}
         new_paths = after - before
-        self.assertTrue(new_paths, "тест не выполнил ни одной записи — не проверяет инвариант")
-        # единственный допустимый путь-маркер ВНЕ дерева analyst/ — сам родительский каталог
-        # `~/.swissknifeman` (его создаёт state_dir() при первом обращении); всё прочее — строго
-        # внутри allowed_root.
+        self.assertTrue(new_paths, "test did not execute any records - does not check the invariant")
+        # the only valid marker path OUTSIDE the tree analyst/ — the parent directory itself
+        # `~/.swissknifeman` (creates it state_dir() on first call); everything else - strictly
+        # inside allowed_root.
         allowed_marker = str(self.home / ".swissknifeman")
         offenders = [p for p in new_paths
                     if p != allowed_marker and not p.startswith(str(allowed_root))]
-        self.assertEqual(offenders, [], f"записи вне {allowed_root}: {offenders}")
+        self.assertEqual(offenders, [], f"records out {allowed_root}: {offenders}")
 
 
 if __name__ == "__main__":

@@ -59,19 +59,19 @@ class CanonSizeTokenEstimateTests(unittest.TestCase):
     def test_empty_and_language_dependent_estimate(self):
         self.assertEqual(estimate_tokens(""), 0)
         self.assertGreater(estimate_tokens("hello world"), 0)
-        self.assertGreater(estimate_tokens("привет мир" * 10),
+        self.assertGreater(estimate_tokens("hello world" * 10),
                            estimate_tokens("hello worl" * 10))
 
     def test_token_estimate_matches_skiller_formula(self):
         """Internal documentation."""
         budget = _skiller_budget()
         if budget is None:
-            self.skipTest("skiller.budget недоступен (standalone-раскладка)")
+            self.skipTest("skiller.budget not available (standalone-layout)")
         samples = [
             "",
             "plain latin instruction text",
-            "русский текст канона инструкций",
-            "смешанный mixed текст with `code` и ссылками",
+            "Russian text of the canon of instructions",
+            "mixed mixed text with `code` and links",
             (REPO_ROOT / "CLAUDE.md").read_text(encoding="utf-8"),
             (REPO_ROOT / "packages/harness/CLAUDE.md").read_text(encoding="utf-8"),
         ]

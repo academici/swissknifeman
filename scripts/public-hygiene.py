@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Гигиена публичного дерева: запрещённые суффиксы/имена/префиксы в ОТСЛЕЖИВАЕМОМ дереве.
+"""Public tree hygiene: prohibited suffixes/names/prefixes in the TRACKED tree.
 
-Ловит СЕКРЕТ/АРТЕФАКТ (имена путей), не сканирует содержимое файлов — не сканер секретов.
-Источник списка — `git ls-files` (индекс), не `os.walk` (P8.6, перенос raytsystem
+Catches SECRET/ARTIFACT (pathnames), does not scan the contents of files - it is not a secret scanner.
+List source - `git ls-files` (index), not `os.walk` (P8.6, transfer raytsystem
 public_hygiene.py).
 """
 import hashlib
@@ -10,51 +10,51 @@ import re
 import subprocess
 import sys
 
-# Правила — ДАННЫМИ, каждое с названной причиной; расширение "на всякий случай" запрещено
-# (Code Guidance P8.6): нерасшифрованная причина ⇒ гейт начнёт краснить на легальных файлах.
+# Rules - DATA, each with a named reason; expansion "just in case" prohibited
+# (Code Guidance P8.6): undecrypted reason The ⇒ gate will start turning red on legal files.
 SUFFIX_RULES = [
-    (".sqlite", "SQLite-база — приватный артефакт, не публикуется"),
-    (".log", "лог-файл — рантайм-артефакт, не публикуется"),
-    (".pem", "приватный ключ/сертификат"),
-    (".key", "приватный ключ"),
-    (".zip", "архив — бинарный артефакт вне дерева исходников"),
-    (".tar", "архив — бинарный артефакт вне дерева исходников"),
-    (".tar.gz", "архив — бинарный артефакт вне дерева исходников"),
-    (".tgz", "архив — бинарный артефакт вне дерева исходников"),
-    (".rar", "архив — бинарный артефакт вне дерева исходников"),
-    (".7z", "архив — бинарный артефакт вне дерева исходников"),
+    (".sqlite", "SQLite-database - private artifact, not published"),
+    (".log", "log file - runtime artifact, not published"),
+    (".pem", "private key/certificate"),
+    (".key", "private key"),
+    (".zip", "archive - a binary artifact outside the source tree"),
+    (".tar", "archive - a binary artifact outside the source tree"),
+    (".tar.gz", "archive - a binary artifact outside the source tree"),
+    (".tgz", "archive - a binary artifact outside the source tree"),
+    (".rar", "archive - a binary artifact outside the source tree"),
+    (".7z", "archive - a binary artifact outside the source tree"),
 ]
 
-# *.example — исключение из ЛЮБОГО суффиксного/имённого правила ниже (фикстуры/шаблоны обязаны
-# проходить: гигиена ловит секрет, а не расширение).
+# *.example — exception from ANY suffix/name rules below (fixtures/templates are required
+# pass: hygiene catches secret, not extension).
 EXAMPLE_SUFFIX = ".example"
 
 ENV_BASENAME = ".env"
-ENV_REASON = "секретный конфиг окружения (.env) — не публикуется, кроме *.example"
+ENV_REASON = "secret environment config (.env) — is not published except *.example"
 
 COMPONENT_RULES = [
-    ("__pycache__", "скомпилированный кэш Python — рантайм-артефакт"),
-    (".venv", "виртуальное окружение Python — не публикуется"),
-    ("node_modules", "зависимости npm — не публикуется"),
+    ("__pycache__", "compiled cache Python — runtime artifact"),
+    (".venv", "virtual environment Python — not published"),
+    ("node_modules", "dependencies npm — not published"),
 ]
 
 
-# Содержимое: абсолютный путь рабочего окружения конкретной машины (домашний каталог + типовая
-# раскладка проектов/конфигов). Синтетические примеры (`/home/user/…`, `/home/example/…`) не ловятся — только то, что
-# ломает установку на другом компьютере и светит имя пользователя.
+# Contents: absolute path of the working environment of a specific machine (home directory + typical
+# project layout/configs). Synthetic examples (`/home/user/…`, `/home/example/…`) are not caught - only that
+# breaks the installation on another computer and the username is displayed.
 CONTENT_RULES = [
     (re.compile(r"(?:/home|/Users)/(?!(?:user|users|example|alice|bob|dev|operator|u|someone|you|me|name"
                 r"|username|runner|ci|test)\b)[A-Za-z0-9_.-]+/(?:projects|Vaults|sibintek|Documents|Desktop"
                 r"|Downloads|\.config|\.claude|\.codex|\.cursor|\.maind|\.swissknifeman)\b"
                 r"|[A-Za-z]:\\+Users\\+(?!(?:user|users|example|alice|bob|dev|operator|u|someone|you|me|name"
                 r"|username|runner|ci|test)\b)[A-Za-z0-9_.-]+"),
-     "абсолютный путь рабочего окружения (используйте относительный путь, `<REPO_ROOT>` или `~`)"),
+     "absolute path of the working environment (use a relative path, `<REPO_ROOT>` or `~`)"),
 ]
 CONTENT_MAX_BYTES = 2_000_000
-# Файлы, чьи байты зафиксированы sha256 в коде: переписать путь = сломать цепочку. Только с причиной.
+# Files whose bytes are frozen sha256 in code: rewrite path = break the chain. Only with a reason.
 CONTENT_EXEMPT = {
     "packages/maind/tests/test_provider_deploy.py":
-        "точный исторический preimage D108/D115, sha256 которого закреплён в provider_deploy.py",
+        "accurate historical preimage D108/D115, sha256 which is pinned to provider_deploy.py",
 }
 # Sealed measurement evidence: its text is the measured input, so rewriting it would falsify the measurement.
 CONTENT_PLAN_EXEMPT = {
@@ -102,7 +102,7 @@ def plan_reference_violations(paths, read=None):
 
 
 def content_violations(paths, read=None):
-    """Нарушения по содержимому tracked-текстовых файлов; бинарные и крупные пропускаются."""
+    """Content violations tracked-text files; binary and large ones are skipped."""
     read = read or _read_text
     found = []
     for path in paths:
@@ -135,7 +135,7 @@ def list_tracked_files():
             ["git", "ls-files"], capture_output=True, text=True, check=True
         )
     except (OSError, subprocess.CalledProcessError) as exc:
-        print(f"git ls-files недоступен: {exc}", file=sys.stderr)
+        print(f"git ls-files not available: {exc}", file=sys.stderr)
         sys.exit(2)
     return [line for line in out.stdout.splitlines() if line]
 
@@ -170,9 +170,9 @@ def main(argv):
     violations = check(paths) + content_violations(paths) + plan_reference_violations(paths)
     if violations:
         for path, reason in violations:
-            print(f"{path} — запрещено правилом «{reason}»")
+            print(f"{path} — is prohibited by the rule «{reason}»")
         return 1
-    print("public-hygiene: 0 нарушений")
+    print("public-hygiene: 0 violations")
     return 0
 
 

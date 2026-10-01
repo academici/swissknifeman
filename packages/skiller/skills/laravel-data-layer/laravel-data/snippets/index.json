@@ -3,12 +3,12 @@
   "snippets": [
     {
       "file": "OrderData.php",
-      "description": "Data-класс: вложенная DataCollection с #[DataCollectionOf], каст/трансформер даты, #[Computed]-итог, классовый маппинг snake_case, валидация на свойствах и экспорт #[TypeScript]",
+      "description": "Data-class: nested DataCollection with #[DataCollectionOf], cast/date transformer, #[Computed]-summary, class mapping snake_case, validation on properties and export #[TypeScript]",
       "tags": ["data", "datacollection", "casts", "transformer", "computed", "mapname", "typescript"]
     },
     {
       "file": "from-request-usage.php",
-      "description": "Тонкий контроллер: OrderData::from($request) с валидацией, передача в сервис, отдача Data в API (toResponse) и Inertia (render), toArray() и взаимозаменяемые источники from()",
+      "description": "Slim controller: OrderData::from($request) with validation, transfer to service, return Data in API (toResponse) and Inertia (render), toArray() and interchangeable sources from()",
       "tags": ["from-request", "validation", "inertia", "api", "toarray", "controller"]
     }
   ]

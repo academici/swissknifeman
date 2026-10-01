@@ -98,7 +98,7 @@ class PhaseAssuranceTests(unittest.TestCase):
         plan = self.plan(impact="internal-integration", seams="policy", intent="auto")
         current = candidate(product="b")
         fingerprint = plan_gates._candidate_snapshot_fingerprint(current)
-        event = journal.new_entry(plan_id="P", item_id="P1 — режим фазы", command="plan-audit",
+        event = journal.new_entry(plan_id="P", item_id="P1 — phase mode", command="plan-audit",
                                   actor="model/high", result="audit-green", fingerprint="a" * 64)
         self.assertEqual(event["item_id"], "P1")
         journal.append(plan, event)

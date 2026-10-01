@@ -1,49 +1,49 @@
-# Универсальные роли-агенты
+# Universal role agents
 
-> Статус: ✅ реализовано (`configs/claude-code/agent-packs/role-bindings.json`,
-> `binding_version 1.0.0`). Здесь — модель; seed-агенты рендерятся из `_common` и
-> стек-паков (`backend-laravel`, `node-frontend`, `python-backend`, `dart-flutter`,
-> `laravel-package`) через связывание ролей.
+> Status: ✅ implemented (`configs/claude-code/agent-packs/role-bindings.json`,
+> `binding_version 1.0.0`). Here is the model; seed-agents are rendered from `_common` and
+> stack packs (`backend-laravel`, `node-frontend`, `python-backend`, `dart-flutter`,
+> `laravel-package`) via role binding.
 
-Ключевая идея универсальности: **роли одинаковы для любого проекта, меняется только
-стек — через профиль.** Reviewer на Laravel и на Nuxt — одна роль; различается набор
-преднагруженных скиллов и path-scoped правил, выбранный профилем.
+Key idea of versatility: **roles are the same for any project, only the
+stack - via profile.** Reviewer on Laravel and on Nuxt — one role; the set varies
+preloaded skills and path-scoped rules selected by the profile.
 
-## Набор ролей
+## Role set
 
-| Роль | Ответственность | tools |
+| Role | Responsibility | tools |
 |---|---|---|
-| `implementer` (slice-builder) | реализует один срез по канону, коммитит, тесты не пишет | Read/Grep/Glob/Edit/Write/Bash |
-| `test-writer` | тесты по готовому коду, до зелёного; код не меняет | Read/Grep/Glob/Edit/Write/Bash |
-| `reviewer` | read-only ревью + over-engineering-проход (ponytail) | Read/Grep/Glob/Bash |
-| `explore` | read-only исследование, собирает контекст | read-only |
-| `plan` | архитектурный план | read-only |
-| `spec-writer` (опц.) | `tech-spec.md` на крупные фичи (не глоб. гейт) | Read/Grep/Glob/Write |
+| `implementer` (slice-builder) | implements one slice according to the canon, commits, does not write tests | Read/Grep/Glob/Edit/Write/Bash |
+| `test-writer` | tests on the finished code, until green; the code doesn't change | Read/Grep/Glob/Edit/Write/Bash |
+| `reviewer` | read-only review + over-engineering-pass (ponytail) | Read/Grep/Glob/Bash |
+| `explore` | read-only research, collects context | read-only |
+| `plan` | architectural plan | read-only |
+| `spec-writer` (opt.) | `tech-spec.md` for major features (not global. gate) | Read/Grep/Glob/Write |
 
-## Как роль становится стек-специфичной
+## How a role becomes stack-specific
 
-- `skills:` preload из профиля (`skills_map`) + self-load fallback в промте — на
-  неизвестном/отключённом имени preload пропускается с записью в debug-лог, не тихим
-  no-op без следа (first-party `https://code.claude.com/docs/en/sub-agents`, проверено
-  2026-07-29). **Оговорка (teammate):** этот preload не применяется, когда роль запущена
-  как teammate агент-команды — там skills/mcpServers берутся из проектных/user settings
-  сессии, а не из определения агента (first-party `https://code.claude.com/docs/en/agent-teams`,
-  проверено 2026-07-29). На этом пути self-load fallback в промте — ЕДИНСТВЕННЫЙ носитель,
-  не подстраховка (см. [agent-teams](./agent-teams)).
-- Стек-гейты (php8.4 vs node, PHPUnit vs Pest, access-layer вкл/выкл) — из ответов
-  интервью пака, не хардкод в роли.
-- path-scoped rules по путям стека (`app/**` vs `resources/js/**`).
+- `skills:` preload from profile (`skills_map`) + self-load fallback in promt - on
+  unknown/disabled name preload is skipped with entry to debug-log, not quiet
+  no-op without a trace (first-party `https://code.claude.com/docs/en/sub-agents`, verified
+  2026-07-29). **Disclaimer (teammate):** this preload does not apply when role is running
+  like teammate agent-commands - there skills/mcpServers are taken from the design/user settings
+  session, not from the agent definition (first-party `https://code.claude.com/docs/en/agent-teams`,
+  verified 2026-07-29). Along this path self-load fallback in industrial media is the ONLY carrier,
+  not a safety net (see [agent-teams](./agent-teams)).
+- Stack gates (php8.4 vs node, PHPUnit vs Pest, access-layer on/off) — from answers
+  interview pack, not hardcode in the role.
+- path-scoped rules by stack paths (`app/**` vs `resources/js/**`).
 
-## Наследование — на build-time пака, НЕ рантайм
+## Inheritance - on build-time pack, NOT runtime
 
-Claude Code **не поддерживает** `extends:`/`@include` у агентов (проверено, офиц.
-доки). Поэтому «общая база ролей» реализуется так: пак хранит обобщённые шаблоны →
-при установке рендерит их в `.claude/agents/<prefix>-*.md` под профиль проекта.
-Никакого рантайм-инклюда, который молча не сработал бы.
+Claude Code **does not support** `extends:`/`@include` for agents (verified, official.
+docks). Therefore «common role database» is implemented like this: the pack stores generalized templates →
+when installed renders them in `.claude/agents/<prefix>-*.md` under the project profile.
+No runtime inclusion that would not silently work.
 
-## Анти-паттерны (из аудитов, отклонено)
+## Anti-patterns (from audits, rejected)
 
-- Нумерация файлов `01_`,`02_` для приоритета — на `/agents` не влияет.
-- Frontmatter `triggers/role/version/project_type` — не нативны, не использовать.
-- file-lock (`touch {file}.lock`) против параллельных правок — заменён one-branch/worktree
-  и module-boundaries.
+- File numbering `01_`,`02_` for priority - on `/agents` has no effect.
+- Frontmatter `triggers/role/version/project_type` — are not native, do not use.
+- file-lock (`touch {file}.lock`) against parallel edits - replaced one-branch/worktree
+  and module-boundaries.

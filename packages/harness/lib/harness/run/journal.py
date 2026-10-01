@@ -83,7 +83,7 @@ def classify(*, pre_launch, outcome=None, item_status=None):
     if kind in _WHO_WRITES:
         return kind, _WHO_WRITES[kind]
     raise JournalWriteRefused(
-        f"неизвестный исход прогона {kind!r} — строка НЕ пишется (Implementation Rule 3)")
+        f"unknown run outcome {kind!r} — line is NOT written (Implementation Rule 3)")
 
 
 
@@ -122,8 +122,8 @@ def _resolve_monorepo_root(monorepo_root, plan_dir):
     root = find_monorepo_root(Path(plan_dir).resolve())
     if root is None:
         raise JournalUnavailable(
-            "монорепо-корень не найден — процессный CLI журнала недоступен "
-            "(standalone-раскладка без пакета-владельца)")
+            "monorepo root not found - process CLI log not available "
+            "(standalone-layout without owner package)")
     return root
 
 
@@ -137,15 +137,15 @@ def _run_cli(argv, *, monorepo_root, plan_dir, timeout):
         return subprocess.run(argv, capture_output=True, text=True, timeout=timeout,
                               env=env, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
-        raise JournalUnavailable(f"процессный CLI журнала не выполнился: {exc}") from exc
+        raise JournalUnavailable(f"process CLI log failed: {exc}") from exc
 
 
 def _build_note(run_id, category, *, outcome=None, refusal_detail=None):
     prefix = f"[wave {run_id}]"
     if category == CATEGORY_ROUTING_BLOCKED:
-        return f"{prefix} routing-blocked: {refusal_detail or 'item не запускался'}"
+        return f"{prefix} routing-blocked: {refusal_detail or 'item did not start'}"
     if category == CATEGORY_NO_OP:
-        return f"{prefix} прогон завершился, но статус item'а не сдвинулся (no-op)"
+        return f"{prefix} run completed, but status item'and did not move (no-op)"
     reason = (outcome or {}).get("reason") or category
     return f"{prefix} {category}: {reason}"
 
@@ -157,7 +157,7 @@ def maybe_write(plan_dir, plan_id, item_id, *, run_id, attempt, actor, pre_launc
                 timeout=30):
     """Internal documentation."""
     if not run_id:
-        raise ValueError("run_id обязателен для драйверской строки (дискриминатор IR2)")
+        raise ValueError("run_id is required for the driver line (discriminator IR2)")
 
     category, who = classify(pre_launch=pre_launch, outcome=outcome, item_status=item_status)
     if who == WORKER:
@@ -176,7 +176,7 @@ def maybe_write(plan_dir, plan_id, item_id, *, run_id, attempt, actor, pre_launc
     proc = _run_cli(argv, monorepo_root=monorepo_root, plan_dir=plan_dir, timeout=timeout)
     if proc.returncode != 0:
         raise JournalCallFailed(
-            f"task.journal append вернул {proc.returncode}: {(proc.stderr or '').strip()[-400:]}")
+            f"task.journal append returned {proc.returncode}: {(proc.stderr or '').strip()[-400:]}")
     return {"category": category, "result": result, "friction": list(friction), "note": note,
            "argv": argv}
 

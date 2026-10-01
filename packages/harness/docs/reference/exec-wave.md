@@ -1,66 +1,66 @@
-# Драйвер exec-волны
+# Driver exec-waves
 
-Команда `harness run <PLAN-ID> <Pn>` снимает ручной ритуал запуска item'ов
-`plan-протокола`: читает очередь фазы, гоняет воркера **процессом** (не
-`Agent`/`Task` tool — подавление AgentTool в подпроцессной сессии не
-воспроизводится), выносит вердикт по каждому item'у и пишет журнал там, где
-воркер физически не мог. Решений драйвер не принимает — он производит.
+Command `harness run <PLAN-ID> <Pn>` removes manual startup ritual item'ov
+`plan-protocol`: reads the phase queue, drives the worker **process** (not
+`Agent`/`Task` tool — suppression AgentTool in a subprocess session is not
+is playing), gives a verdict on each item'y and writes a log where
+the worker physically could not. The driver does not make decisions - he produces.
 
-## Что делает
+## What it does
 
-- **`plan_reader`** читает очередь исполнения ОДНОЙ фазы: item'ы в порядке
-  `## Phase Status`, терминальные (`🟢`/`🟠`/`⛔`) исключены, по каждому
-  оставшемуся — маршрут (`task.task_contract build`), значение `Exec`, право
-  вождения. Drive right = `Exec` in `## 3. Routing` resolves to `run` (legacy
-  `plan-exec`/`manual`/`plan-run` spellings included) and the item route resolves. Semantic `Next` для v1 и v2 берётся только из
-  owner `handoff.md`; layout-v2 item-state содержит только result fields и не является
-  fallback-источником orchestration.
-- **`worker`** запускает ОДИН item процессом `claude -p "/task:plan-run
-  &lt;PLAN-ID&gt; &lt;Pn.m&gt;" --output-format json` под таймаутом (по умолчанию 1800s),
-  строго один воркер за раз (последовательная волна — параллельный fan-out на
-  общей кодовой базе не заводится). Селекторы модели/effort берутся из
+- **`plan_reader`** reads the execution queue of ONE phase: item'you're fine
+  `## Phase Status`, terminal (`🟢`/`🟠`/`⛔`) excluded, for each
+  remaining - route (`task.task_contract build`), value `Exec`, right
+  driving. Drive right = `Exec` in `## 3. Routing` resolves to `run` (legacy
+  `plan-exec`/`manual`/`plan-run` spellings included) and the item route resolves. Semantic `Next` for v1 and v2 is taken only from
+  owner `handoff.md`; layout-v2 item-state contains only result fields and is not
+  fallback-source orchestration.
+- **`worker`** starts ONE item process `claude -p "/task:plan-run
+  &lt;PLAN-ID&gt; &lt;Pn.m&gt;" --output-format json` under timeout (default 1800s),
+  strictly one worker at a time (serial wave - parallel fan-out on
+  common codebase does not start). Model selectors/effort are taken from
   `packages/task/configs/command-routing.json`.
-- **`gate`** выносит вердикт `GREEN`/`ATTENTION`/`RED` из четырёх источников:
-  класс исхода прогона, `plan-lint --baseline --gate new`, git-топология
-  закрытия (`<SHA до>..HEAD`), статус/поля item'а после прогона. Таблица
-  «признак → вердикт» тотальна: любой RED побеждает, несматчившийся набор
-  признаков сам по себе RED (fail-safe).
-- **`journal`** дозаписывает строку в `journal.jsonl` РОВНО когда сессия
-  воркера не дошла до close-протокола сама (timeout/transport/quota/error/
-  routing-blocked/no-op) — успешное самозакрытие `/task:plan-run` не
-  дублируется (D32).
+- **`gate`** gives a verdict `GREEN`/`ATTENTION`/`RED` from four sources:
+  run outcome class, `plan-lint --baseline --gate new`, git-topology
+  closing (`<SHA to>..HEAD`), status/fields item'and after the run. Table
+  «sign → verdict» total: any RED wins, unmatched set
+  signs by itself RED (fail-safe).
+- **`journal`** appends the line to `journal.jsonl` EXACTLY when the session
+  worker did not reach close-protocol itself (timeout/transport/quota/error/
+  routing-blocked/no-op) — successful self-close `/task:plan-run` not
+  duplicated (D32).
 
-## Использование
+## Usage
 
 ```
 harness run <PLAN-ID> <Pn> [--dry-run] [--limit N] [--timeout S]
                             [--plans-root PATH] [--json]
 ```
 
-| Флаг | Смысл |
+| Flag | Meaning |
 |:--|:--|
-| `--dry-run` | только очередь/маршруты/точный `argv`/причины отказов — БЕЗ спавна воркера и БЕЗ единой записи (read-only) |
-| `--limit N` | максимум item'ов волны (по умолчанию — вся очередь) |
-| `--timeout S` | таймаут ОДНОГО прогона воркера, секунды |
-| `--plans-root PATH` | каталог, где искать `<PLAN-ID>/plan.md` (по умолчанию `<монорепо>/plans`) |
-| `--json` | та же сводка машинно (`ensure_ascii=False`) |
+| `--dry-run` | queue only/routes/accurate `argv`/reasons for failures - WITHOUT worker spawn and WITHOUT a single record (read-only) |
+| `--limit N` | maximum item'ov waves (default - entire queue) |
+| `--timeout S` | timeout for ONE worker run, seconds |
+| `--plans-root PATH` | directory where to look `<PLAN-ID>/plan.md` (default `<monorepo>/plans`) |
+| `--json` | same summary machine (`ensure_ascii=False`) |
 
-Волна **последовательная** и останавливается на **первом RED**; `ATTENTION` её
-не останавливает, но выносится в сводку поимённо. Ретрая нет ни одного тира —
-упавший item ждёт следующего ручного запуска.
+Wave **serial** and stops at **first RED**; `ATTENTION` her
+does not stop, but is included in the report by name. There is not a single shooting gallery in retrospect -
+fallen item is waiting for the next manual start.
 
-## Что НЕ делает (закрытый список)
+## What it DOESN'T do (closed list)
 
-Машину решений `decide` · run-folder · retry-лестницу трёх тиров ·
-интеграцию с мессенджерами и remote-approve · пакет `packages/artifex` ·
-раскатку agent-pack'ом · второго водителя (`codex exec`) · unattended-профиль
-(`--permission-mode` — политика прогона остаётся окружением владельца) ·
-параллельный запуск воркеров.
+Decision machine `decide` · run-folder · retry-ladder of three shooting ranges ·
+integration with instant messengers and remote-approve · package `packages/artifex` ·
+rolling out agent-pack'ohm · second driver (`codex exec`) · unattended-profile
+(`--permission-mode` — run policy remains the owner's environment) ·
+parallel launch of workers.
 
-## Приёмка
+## Acceptance
 
-Живая приёмка принадлежит package tests и `bash packages/harness/scripts/validate.sh`:
-v1/v2 plan-reader fixtures проверяют route/Next boundaries, CLI dry-run — read-only,
-а wave tests — stop-on-RED/continue-on-ATTENTION. Исторические полевые прогоны остаются
-provenance, но не заменяют current validators. Доля вмешательств с fixture-wave —
-синтетическое число; боевая статистика по-прежнему накапливается durable журналом.
+Live reception belongs to package tests and `bash packages/harness/scripts/validate.sh`:
+v1/v2 plan-reader fixtures check route/Next boundaries, CLI dry-run — read-only,
+a wave tests — stop-on-RED/continue-on-ATTENTION. Historical field runs remain
+provenance, but do not replace current validators. Proportion of interventions with fixture-wave —
+synthetic number; combat statistics are still accumulating durable log.

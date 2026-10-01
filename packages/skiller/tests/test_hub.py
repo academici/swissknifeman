@@ -1,9 +1,9 @@
-"""Тесты генератора хаба (`lib/skiller/hub.py`, лаунчер `scripts/generate-hub.sh`).
+"""Hub generator tests (`lib/skiller/hub.py`, launcher `scripts/generate-hub.sh`).
 
-До P2.5 генератор жил в heredoc'е bash-скрипта и тестов не имел вовсе. Здесь
-проверяется контракт формы блока (D20): краткая форма каналу с нативным листингом,
-полная — каналу без него, флаг возврата, сверка перед сокращением, идемпотентность,
-сохранность содержимого ВНЕ маркеров и freshness-штамп.
+Before P2.5 generator lived in heredoc'e bash-had no script or tests at all. Here
+block form contract is checked (D20): short form for a channel with a native listing,
+full - to a channel without it, return flag, reconciliation before reduction, idempotency,
+safety of contents OUTSIDE markers and freshness-stamp.
 """
 import io
 import json
@@ -16,8 +16,8 @@ from tempfile import TemporaryDirectory
 from skiller import hub
 from skiller.common import Env
 
-INDEX_TITLE = "## Установленные скиллы"
-RESIDUAL_TITLE = "## Скиллы вне нативного листинга"
+INDEX_TITLE = "## Installed skills"
+RESIDUAL_TITLE = "## Skills outside the native listing"
 
 
 def _skill_md(name, description):
@@ -25,8 +25,8 @@ def _skill_md(name, description):
 
 
 def make_monorepo(tmp):
-    """Мини-монорепо: <mono>/core, <mono>/packages/skiller (реестр из 3 скиллов),
-    <mono>/.claude-plugin/marketplace.json с курируемым и бакетным плагином."""
+    """Mini monorepo: <mono>/core, <mono>/packages/skiller (roster of 3 skills),
+    <mono>/.claude-plugin/marketplace.json with curated and bucket plugin."""
     mono = Path(tmp) / "mono"
     (mono / "core").mkdir(parents=True)
     root = mono / "packages" / "skiller"
@@ -86,7 +86,7 @@ def run_hub(env, proj, **kw):
 
 
 class HubFormTests(unittest.TestCase):
-    """Форма блока определяется каналом-целью, а не проектом (D20)."""
+    """Block shape is determined by the target channel, not the project (D20)."""
 
     def setUp(self):
         self.tmp = TemporaryDirectory()
@@ -100,7 +100,7 @@ class HubFormTests(unittest.TestCase):
         self.assertEqual(result["forms"]["CLAUDE.md"], hub.FORM_STUB)
         self.assertNotIn(INDEX_TITLE, text)
         self.assertNotIn("- **code-style**", text)
-        self.assertNotIn("НАТИВНЫМ листингом", text)
+        self.assertNotIn("NATIVE listing", text)
         self.assertIn("hub: stub", text)
         self.assertIn("--full-index", text)
 
@@ -109,7 +109,7 @@ class HubFormTests(unittest.TestCase):
         result = run_hub(self.env, proj, legacy_short=True)
         text = (proj / "CLAUDE.md").read_text(encoding="utf-8")
         self.assertEqual(result["forms"]["CLAUDE.md"], hub.FORM_SHORT)
-        self.assertIn("НАТИВНЫМ листингом", text)
+        self.assertIn("NATIVE listing", text)
 
     def test_generator_wrapper_forwards_requested_root_files(self):
         proj = make_project(self.tmp.name)
@@ -194,7 +194,7 @@ class HubFormTests(unittest.TestCase):
         self.assertIn("- **test-writer** — Test writer", text)
 
     def test_boost_target_is_claude_channel(self):
-        """Boost вставляет фрагмент в CLAUDE.md — резидентность та же, форма краткая."""
+        """Boost inserts a fragment into CLAUDE.md — residency is the same, the form is short."""
         proj = make_project(self.tmp.name, boost=True,
                             config={"buckets": ["php", "quality"]})
         result = run_hub(self.env, proj)
@@ -204,7 +204,7 @@ class HubFormTests(unittest.TestCase):
         self.assertNotIn(INDEX_TITLE, out.read_text(encoding="utf-8"))
 
     def test_stamp_present_in_both_forms(self):
-        """freshness-штамп сверяет skiller doctor — он обязан быть в обеих формах."""
+        """freshness-stamp checks skiller doctor — it must be in both forms."""
         proj = make_project(self.tmp.name, config={"buckets": ["php", "quality"]})
         run_hub(self.env, proj, root_files=["AGENTS.md"])
         for name in ("CLAUDE.md", "AGENTS.md"):
@@ -214,7 +214,7 @@ class HubFormTests(unittest.TestCase):
 
 
 class HubNativeCheckTests(unittest.TestCase):
-    """Сверка перед сокращением: без подтверждения скилл остаётся перечисленным."""
+    """Reconciliation before reduction: without confirmation, the skill remains listed."""
 
     def setUp(self):
         self.tmp = TemporaryDirectory()
@@ -222,8 +222,8 @@ class HubNativeCheckTests(unittest.TestCase):
         self.env = make_monorepo(self.tmp.name)
 
     def test_unconfirmed_skill_stays_listed(self):
-        """Бакет quality не включён плагином, но приехал манифестом вендоринга в
-        .ai/skills — нативным листингом Claude Code он не покрыт, значит остаётся."""
+        """Bucket quality is not included by the plugin, but came with the vendor manifest in
+        .ai/skills — native listing Claude Code it is not covered, which means it remains."""
         proj = make_project(self.tmp.name, plugins=["php"],
                             config={"buckets": ["php", "quality"]})
         manifest_dir = proj / ".ai" / "skills"
@@ -236,11 +236,11 @@ class HubNativeCheckTests(unittest.TestCase):
         text = (proj / "CLAUDE.md").read_text(encoding="utf-8")
         self.assertIn(RESIDUAL_TITLE, text)
         self.assertIn("- **test-writer**", text)
-        self.assertNotIn("- **code-style**", text)  # подтверждён — ушёл из блока
+        self.assertNotIn("- **code-style**", text)  # confirmed - left the block
 
     def test_confirmed_set_is_intersection_with_measurer(self):
-        """Скилл, которого нет в наборе измерителя, не сокращается, даже если
-        доставлен плагином (конъюнкция двух источников)."""
+        """A skill that is not in the meter set is not reduced, even if
+        delivered by plugin (conjunction of two sources)."""
         proj = make_project(self.tmp.name, plugins=["php", "quality"],
                             config={"buckets": ["php"]})
         result = run_hub(self.env, proj, legacy_short=True)
@@ -256,7 +256,7 @@ class HubNativeCheckTests(unittest.TestCase):
 
 
 class HubWriteTests(unittest.TestCase):
-    """Запись: только между маркерами, идемпотентно, файл создаётся при отсутствии."""
+    """Write: only between markers, idempotent, file created if missing."""
 
     def setUp(self):
         self.tmp = TemporaryDirectory()
@@ -264,19 +264,19 @@ class HubWriteTests(unittest.TestCase):
         self.env = make_monorepo(self.tmp.name)
 
     def test_content_outside_markers_is_preserved(self):
-        head = "# Проект\n\nАвторский текст.\n\n"
-        tail = "\n## Ниже блока\n\nЕщё авторский текст.\n"
-        existing = (head + hub.HUB_START + "\nстарый блок\n" + hub.HUB_END + tail)
+        head = "# Project\n\nAuthor's text.\n\n"
+        tail = "\n## Below the block\n\nMore original text.\n"
+        existing = (head + hub.HUB_START + "\nold block\n" + hub.HUB_END + tail)
         proj = make_project(self.tmp.name, claude_md=existing,
                             config={"buckets": ["php", "quality"]})
         run_hub(self.env, proj)
         text = (proj / "CLAUDE.md").read_text(encoding="utf-8")
         self.assertTrue(text.startswith(head))
         self.assertTrue(text.endswith(tail))
-        self.assertNotIn("старый блок", text)
+        self.assertNotIn("old block", text)
 
     def test_repeat_run_is_idempotent(self):
-        proj = make_project(self.tmp.name, claude_md="# Проект\n\nТекст.\n",
+        proj = make_project(self.tmp.name, claude_md="# Project\n\nText.\n",
                             config={"buckets": ["php", "quality"]})
         run_hub(self.env, proj, root_files=["AGENTS.md"])
         first = {n: (proj / n).read_text(encoding="utf-8")

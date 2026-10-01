@@ -38,9 +38,9 @@ Structure of each file in `docs/02_Workflow/`:
 
 Example:
 ```
-[Заявка создана] → [Оператор принял] → [В обработке]
-[В обработке] → [Данные невалидны] → [Отклонена] + уведомление
-[В обработке] → [Успех] → [Завершена]
+[Request created] → [Operator accepted] → [Processing]
+[Processing] → [Data is invalid] → [Rejected] + notice
+[Processing] → [Success] → [Completed]
 ```
 
 ## Required for each state
@@ -58,10 +58,10 @@ sequenceDiagram
     participant System
     participant ExternalService
 
-    User->>System: Действие
-    System->>ExternalService: Запрос
-    ExternalService-->>System: Ответ
-    System-->>User: Результат
+    User->>System: Action
+    System->>ExternalService: Request
+    ExternalService-->>System: Reply
+    System-->>User: Result
 ```
 
 Or stateDiagram-v2 for FSM:

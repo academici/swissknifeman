@@ -1,75 +1,75 @@
-# Плагин Claude Code
+# Plugin Claude Code
 
-maind поставляется и как **плагин Claude Code** — тонкое лицо над CLI. Ставишь плагин в любом
-проекте → появляются slash-команды `/maind:*`, которыми хаб управляется прямо из чата, не выходя в
-терминал. Плагин ничего не дублирует: команды вызывают тот же `maind` (см. [CLI](./cli)).
+maind supplied and how **plugin Claude Code** — thin face above CLI. You install the plugin in any
+project → appear slash-commands `/maind:*`, which the hub is controlled directly from the chat, without leaving
+terminal. The plugin does not duplicate anything: the commands call the same `maind` (see [CLI](./cli)).
 
-Плагин — **только команды/скиллы, без собственного MCP-сервера**. MCP-инструменты хаба в проект
-приходят отдельным каналом — per-project сервером `maind` из `.mcp.json` проекта (его пишет
-`deploy`/`onboard`). Так в сессии ровно одна `maind`-строка (project-линза), а не две.
+Plugin - **commands only/skills, without their own MCP-server**. MCP-hub tools to project
+come in a separate channel - per-project server `maind` from `.mcp.json` project (writes it
+`deploy`/`onboard`). So there is exactly one `maind`-string (project-lens), and not two.
 
-## Что внутри
+## What's inside
 
-| Артефакт | Назначение |
+| Artifact | Purpose |
 |:--|:--|
-| `.claude-plugin/plugin.json` | манифест плагина (имя `maind`, путь к командам) |
-| `commands/*.md` | slash-команды — обёртки над CLI |
+| `.claude-plugin/plugin.json` | plugin manifest (name `maind`, path to commands) |
+| `commands/*.md` | slash-commands - wrappers over CLI |
 
-> Marketplace — единый `swissknifeman` в корне монорепо (генерит `skiller registry`,
-> добавляя maind sibling-пакетом). Собственного marketplace у maind нет.
+> Marketplace — single `swissknifeman` at the root of the monorepo (generates `skiller registry`,
+> adding maind sibling-package). Own marketplace y maind no.
 
-## Установка
+## Installation
 
-Сначала — обычная установка CLI (команды плагина зовут `maind` из PATH):
+First - normal installation CLI (plugin commands name `maind` from PATH):
 
 ```bash
-cd maind && ./install.sh          # симлинк ~/.local/bin/maind
+cd maind && ./install.sh          # symlink ~/.local/bin/maind
 ```
 
-Затем в Claude Code:
+Then in Claude Code:
 
 ```
-/plugin marketplace add /путь/к/swissknifeman   # единый marketplace монорепо
+/plugin marketplace add /path/to/swissknifeman   # single marketplace monorepo
 /plugin install maind@swissknifeman
 ```
 
-После перезагрузки появляются команды `/maind:*`. MCP-серверов плагин не поднимает —
-инструменты хаба даёт per-project сервер `maind` из `.mcp.json` проекта (проверь `/mcp`).
+After reboot, commands appear `/maind:*`. MCP-the plugin does not raise servers -
+hub tools gives per-project server `maind` from `.mcp.json` project (check `/mcp`).
 
-## Команды
+## Commands
 
-| Команда | Что делает | Обёртка над |
+| Command | What it does | Wrapper over |
 |:--|:--|:--|
-| `/maind` | парадная дверь: список команд + маршрутизация | — |
-| `/maind:onboard <проект>` | подключить проект: диалогом уточняет bundle/код-граф/brain → применяет | `maind onboard --yes` |
-| `/maind:sync [--all]` | перераскатать управляемые артефакты на проекты | `maind sync` |
-| `/maind:status` | статус хаба и проектов экосистемы | `maind status` · `projects list` |
-| `/maind:health [--fix]` | здоровье связи текущего проекта с хабом | `maind health --cwd` |
-| `/maind:doctor` | диагностика окружения узла | `maind doctor` |
+| `/maind` | front door: command list + routing | — |
+| `/maind:onboard <project>` | connect the project: clarifies with dialogue bundle/code graph/brain → applies | `maind onboard --yes` |
+| `/maind:sync [--all]` | roll out managed artifacts into projects | `maind sync` |
+| `/maind:status` | status of the hub and ecosystem projects | `maind status` · `projects list` |
+| `/maind:health [--fix]` | health of the connection between the current project and the hub | `maind health --cwd` |
+| `/maind:doctor` | node environment diagnostics | `maind doctor` |
 
-## Как работает интерактивность
+## How interactivity works
 
-slash-команда запускает bash **не в TTY**, поэтому интерактивный визард с `input()` тут не
-работает. «Выбор набора» (bundle, код-граф, brain) команда `/maind:onboard` ведёт **диалогом
-агента**: спрашивает в чате → собирает выбор → зовёт CLI неинтерактивно с флагами
-(`--bundle … --yes`). Мутирующие команды (`onboard`, `sync`) сперва показывают `--dry-run`, затем
-применяют по подтверждению.
+slash-command runs bash **not in TTY**, therefore an interactive wizard with `input()` not here
+works. «Set selection» (bundle, code-graph, brain) command `/maind:onboard` leads **dialogue
+agent**: asks in chat → collects selection → calling CLI non-interactive with flags
+(`--bundle … --yes`). Mutating commands (`onboard`, `sync`) show first `--dry-run`, then
+apply upon confirmation.
 
-## MCP-инструменты хаба (без отдельного сервера плагина)
+## MCP-hub tools (without a separate plugin server)
 
-Раньше плагин бандлил собственный сервер `maind-hub` (`--scope global`), и он заезжал в **каждую**
-сессию поверх per-project сервера `maind` — две одинаковые `maind`-строки в `/mcp`, разные scope,
-лёгкий промах «пишем в global вместо project». Теперь плагин **MCP-сервера не несёт**.
+Previously, the plugin bundled its own server `maind-hub` (`--scope global`), and he stopped by **every**
+session over per-project server `maind` — two identical `maind`-lines in `/mcp`, different scope,
+slight miss «write to global instead project». Now the plugin **MCP-does not support the server**.
 
-Инструменты хаба (`maind_projects_list`, `maind_projects_status`, `maind_agents_list`, обходы графа,
-память) даёт **per-project сервер `maind`** из `.mcp.json` проекта (`maind mcp --scope project:<id>`,
-пишет `deploy`/`onboard`). Граф, `projects_*`, `links` — **scope-независимы**: один project-сервер
-видит всю экосистему. `scope` влияет только на бакет памяти по умолчанию; ecosystem-факт при нужде
-пишется явным `scope:"global"` в `maind_memory_store`. См. [MCP-сервер](./mcp).
+Hub Tools (`maind_projects_list`, `maind_projects_status`, `maind_agents_list`, graph traversals,
+memory) gives **per-project server `maind`** from `.mcp.json` project (`maind mcp --scope project:<id>`,
+writes `deploy`/`onboard`). Count, `projects_*`, `links` — **scope-independent**: one project-server
+sees the entire ecosystem. `scope` affects only the default memory bucket; ecosystem-fact when necessary
+is written explicitly `scope:"global"` in `maind_memory_store`. See [MCP-server](./mcp).
 
-## Кросс-провайдерность
+## Cross-provider
 
-Богатый UX (slash-команды, hooks) — это формат Claude Code. Универсальный, кросс-провайдерный слой —
-**MCP**: `maind mcp` работает с любым клиентом (Cursor через `.cursor/mcp.json` и т.д.). Скиллы —
-провайдер-нейтральный `SKILL.md` (раскатываются swissknifeman). «Плагин» — это Claude-специфичная
-упаковка поверх универсального MCP-ядра, а не отдельная реализация.
+Rich UX (slash-commands, hooks) — is the format Claude Code. Universal, cross-provider layer -
+**MCP**: `maind mcp` works with any client (Cursor via `.cursor/mcp.json` etc.). Skills -
+provider-neutral `SKILL.md` (roll out swissknifeman). «Plugin» — this Claude-specific
+packaging over universal MCP-kernels, not a separate implementation.

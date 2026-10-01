@@ -1,4 +1,4 @@
-"""Тесты service.py (systemd-юнит демона памяти) и foreground-запуска memory.run."""
+"""Tests service.py (systemd-memory daemon unit) and foreground-launch memory.run."""
 import tempfile
 import unittest
 from unittest import mock
@@ -38,7 +38,7 @@ class TestUnitText(unittest.TestCase):
             env = _env(tmp)
             with mock.patch.object(service, "_ensure_systemd") as ens:
                 service.cmd_service(env, ["--help"])
-                ens.assert_not_called()  # help печатается до проверки systemd
+                ens.assert_not_called()  # help is printed before checking systemd
 
 
 class TestDaemonArgv(unittest.TestCase):
@@ -63,7 +63,7 @@ class TestDaemonArgv(unittest.TestCase):
             config, _ = load_config(env)
             with mock.patch.object(memory.shutil, "which", return_value="/usr/bin/node"):
                 with self.assertRaises(SystemExit):
-                    memory._daemon_argv(env, config)  # бинаря agentmemory нет
+                    memory._daemon_argv(env, config)  # binary agentmemory no
 
 
 if __name__ == "__main__":

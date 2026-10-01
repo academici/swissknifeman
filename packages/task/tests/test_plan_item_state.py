@@ -58,7 +58,7 @@ class PlanItemStateTests(unittest.TestCase):
         plan_item_state.build_states(self.plan)
         diagnostics = plan_lint.Diagnostics()
         plan_lint.lint_plan(self.plan, diagnostics)
-        self.assertFalse(any("рассогласованы" in error for error in diagnostics.errors),
+        self.assertFalse(any("mismatched" in error for error in diagnostics.errors),
                          diagnostics.errors)
 
     def test_design_event_is_history_but_not_execution_position(self):
@@ -112,7 +112,7 @@ class PlanItemStateTests(unittest.TestCase):
         })
         self.assertEqual(
             model["state"]["next_step"],
-            "Retry the same command after route correction.",
+            "Retry the same command after correcting execution selection.",
         )
 
     def test_observations_do_not_replace_live_execution_position_or_attempt(self):

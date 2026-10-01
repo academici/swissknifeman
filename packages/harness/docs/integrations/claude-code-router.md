@@ -1,41 +1,41 @@
 # Claude Code Router
 
-::: warning Инструмент под сомнением
-Эта страница — справка о том, что инструмент существует. Внедрение в рабочий процесс
-swissknifeman **не рекомендуется по умолчанию** — по причинам ниже. Пресет в
-`configs/claude-code/mcp/` для него не поставляется (это не MCP-сервер, а прокси).
+::: warning Tool in doubt
+This page is a confirmation that the tool exists. Implementation into the workflow
+swissknifeman **not recommended by default** — for the reasons below. Preset in
+`configs/claude-code/mcp/` is not supplied for it (this is not MCP-server, and proxy).
 :::
 
-## Что это
+## What is this
 
-Claude Code Router (musistudio) — локальный прокси, который перехватывает запросы Claude
-Code и **перенаправляет их на разные модели** (OpenRouter, DeepSeek, Gemini, Ollama, любой
-OpenAI-совместимый эндпоинт) по правилам. Идея — экономить: дорогие задачи на топовую
-модель, рутину на дешёвую.
+Claude Code Router (musistudio) — local proxy that intercepts requests Claude
+Code and **redirects them to different models** (OpenRouter, DeepSeek, Gemini, Ollama, any
+OpenAI-compatible endpoint) according to the rules. The idea is to save: expensive tasks for top
+model, routine for cheap.
 
-- Репозиторий: <https://github.com/musistudio/claude-code-router>
-- npm: `@musistudio/claude-code-router` (CLI `ccr`), лицензия MIT, community-проект
+- Repository: <https://github.com/musistudio/claude-code-router>
+- npm: `@musistudio/claude-code-router` (CLI `ccr`), license MIT, community-project
 
 ```bash
 npm install -g @musistudio/claude-code-router
-ccr code     # запустить Claude Code через роутер
-ccr ui       # веб-редактор конфига ~/.claude-code-router/config.json
+ccr code     # run Claude Code via router
+ccr ui       # web config editor ~/.claude-code-router/config.json
 ```
 
-## Почему под сомнением
+## Why in doubt
 
-- **Ломает часть возможностей.** Extended thinking, нативный tool-use и prompt-кэширование
-  заточены под Anthropic API; через сторонних провайдеров работают частично или никак.
-- **Сторонний прокси к трафику.** Все запросы идут через community-прокси — модель доверия
-  меняется; секреты-ключи провайдеров живут в его конфиге (не коммить).
-- **Нестабильность.** Активные изменения API; типовые примеры конфигов быстро устаревают —
-  в том числе зашитые в них имена моделей.
-- **Непрозрачность отладки.** Неочевидно, через какую модель прошёл конкретный запрос.
-- **+latency** на каждый запрос.
+- **Breaks some features.** Extended thinking, native tool-use and prompt-caching
+  are designed for Anthropic API; through third-party providers work partially or not at all.
+- **Third-party traffic proxy.** All requests go through community-proxy - trust model
+  changes; Provider secret keys live in its config (do not commit).
+- **Instability.** Active changes API; typical examples of configs quickly become outdated -
+  including model names embedded in them.
+- **Debug opacity.** It is not obvious which model a particular request went through.
+- **+latency** for each request.
 
-## Когда всё-таки осмысленно
+## When it still makes sense
 
-Очень большой объём однотипных дешёвых задач, где экономия перекрывает потерю качества и
-риски, и ты готов зафиксировать версию и тщательно тестировать. Для оптимизации выбора
-модели *внутри* Claude Code без прокси — скилл `general/context-economy` (маршрутизация
-моделей штатными средствами).
+A very large volume of similar cheap tasks, where the savings cover the loss of quality and
+risks, and you are ready to commit the version and test it thoroughly. To optimize your selection
+models *inside* Claude Code without proxy - skill `general/context-economy` (routing
+models using standard tools).

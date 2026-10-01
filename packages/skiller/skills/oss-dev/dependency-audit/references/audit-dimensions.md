@@ -1,95 +1,95 @@
-# 5 измерений аудита
+# 5 audit dimensions
 
-Справочник к скиллу `dependency-audit`.
+Skill reference `dependency-audit`.
 
 
 ### 1. Lockfile sanity
 
-| Измерение | Что проверять |
+| Measurement | What to check |
 |:---|:---|
-| **Lockfile committed** | `package-lock.json` / `composer.lock` / `pubspec.lock` в git (для приложений — да; для библиотек — спорно, см. ниже) |
-| **No phantom deps** | Все imports соответствуют зависимостям в манифесте, без транзитивных «случайно работает» |
-| **No duplicates** | Одна версия каждой зависимости где возможно (`npm dedupe`, `composer why-not`) |
-| **Pinned vs range** | `^1.2.3` для библиотек ОК, `=1.2.3` для приложений / lockfile-tracking |
-| **Resolutions / overrides** | Зафиксировать в манифесте, не «магически» |
+| **Lockfile committed** | `package-lock.json` / `composer.lock` / `pubspec.lock` in git (for applications - yes; for libraries - debatable, see below) |
+| **No phantom deps** | All imports match the dependencies in the manifest, no transitives «works randomly» |
+| **No duplicates** | One version of each dependency where possible (`npm dedupe`, `composer why-not`) |
+| **Pinned vs range** | `^1.2.3` for libraries OK, `=1.2.3` for applications / lockfile-tracking |
+| **Resolutions / overrides** | Commit to manifest, not «magically» |
 
-**Lockfile для библиотек:** есть две школы.
-- **Не коммитить** (классика): пакет тестируется с разными версиями зависимостей, ловит conflicts раньше.
-- **Коммитить** (современная практика, особенно для CI reproducibility): тесты деттерминированы, но dependabot обновляет.
+**Lockfile for libraries:** there are two schools.
+- **Don't commit** (classic): package is tested with different versions of dependencies, catches conflicts before.
+- **Commit** (current practice, especially for CI reproducibility): tests are deterministic, but dependabot updates.
 
-**Рекомендация:** коммитить + dependabot + CI matrix по `peerDependencies` major-версиям.
+**Recommendation:** commit + dependabot + CI matrix by `peerDependencies` major-versions.
 
 ### 2. Vulnerability scan
 
-| Tool | Стек |
+| Tool | Stack |
 |:---|:---|
 | `npm audit` / `pnpm audit` | JS |
 | `composer audit` | PHP |
 | `dart pub outdated --mode=security-fix` | Dart |
 | `pip-audit` | Python |
-| `osv-scanner` | универсальный, через CLI |
-| GitHub Dependabot Alerts | репо-уровень |
-| Snyk / Socket.dev | расширенный supply-chain |
+| `osv-scanner` | universal, via CLI |
+| GitHub Dependabot Alerts | repo level |
+| Snyk / Socket.dev | extended supply-chain |
 
-**Политика:**
-- `critical` / `high` уязвимости — **fix обязательно** до релиза
-- `moderate` — fix желателен; если нельзя — задокументировать в `Dependency_Audit.md`
-- `low` — журналировать, не блокировать релиз
+**Policy:**
+- `critical` / `high` vulnerabilities - **fix required** before release
+- `moderate` — fix desirable; if not possible, document it in `Dependency_Audit.md`
+- `low` — log, do not block release
 
-**Транзитивные уязвимости без публичного fix:**
-- Попытаться через `overrides` / `resolutions` форсировать safe-версию
-- Если impossible — задокументировать в SECURITY.md и оценить exposure
+**Transitive vulnerabilities without public fix:**
+- Try via `overrides` / `resolutions` force safe-version
+- If impossible — document in SECURITY.md and rate exposure
 
 ### 3. License compatibility
 
-Каждая зависимость должна иметь **известную совместимую лицензию**. Проверяется автоматически:
+Each dependency must have **known compatible license**. Checked automatically:
 
-| Tool | Стек |
+| Tool | Stack |
 |:---|:---|
 | `license-checker` | JS |
 | `composer licenses` | PHP |
-| `licensee` (gem) | универсальный по файлам |
+| `licensee` (gem) | universal for files |
 | `fossa-cli` / `licensed` | enterprise-grade |
 
-**Что искать:**
+**What to look for:**
 
-| Лицензия зависимости | Совместимость с MIT/Apache проектом |
+| Dependency License | Compatible with MIT/Apache project |
 |:---|:---|
-| MIT, BSD-2/3, ISC, 0BSD, Apache-2.0 | ✅ ОК |
-| MPL-2.0 | ✅ ОК (file-level copyleft, можно линковать) |
-| LGPL-2.1+/3.0+ | ⚠️ Требует dynamic linking — для библиотек обычно ОК, проверить |
-| GPL-2.0/3.0 | ❌ Заразит весь проект GPL |
-| AGPL | ❌ Заразит, плюс SaaS-обязательства |
-| BUSL, SSPL, Elastic | ❌ Не OSS — обычно блокирует commercial использование |
-| Unknown / no SPDX | ⚠️ Запрос мейнтейнеру или замена |
-| Custom proprietary | ❌ Обычно нельзя |
+| MIT, BSD-2/3, ISC, 0BSD, Apache-2.0 | ✅ OK |
+| MPL-2.0 | ✅ OK (file-level copyleft, can be linked) |
+| LGPL-2.1+/3.0+ | ⚠️ Requires dynamic linking — for libraries is usually OK, check |
+| GPL-2.0/3.0 | ❌ Will infect the entire project GPL |
+| AGPL | ❌ Will infect, plus SaaS-obligations |
+| BUSL, SSPL, Elastic | ❌ Not OSS — usually blocks commercial usage |
+| Unknown / no SPDX | ⚠️ Request to maintainer or replacement |
+| Custom proprietary | ❌ Usually not possible |
 
-**Запрещённые лицензии для vault-OSS:** GPL, AGPL, BUSL, SSPL, любые «source-available».
+**Prohibited licenses for vault-OSS:** GPL, AGPL, BUSL, SSPL, any «source-available».
 
 ### 4. Supply-chain risk
 
-Беззвучно опасное:
+Silently dangerous:
 
-| Риск | Как проверять |
+| Risk | How to check |
 |:---|:---|
-| **Typosquatting** | `npm-name-deputy`, ручная проверка имени против популярных |
-| **Maintainer turnover** | Сколько активных мейнтейнеров? Если 1 — bus factor проблема. |
-| **Recent ownership transfer** | Smell-test: смена ownership + новые версии за < 30 дней = красный флаг |
-| **Postinstall scripts** | `npm install --ignore-scripts` для CI; явный allowlist для prod |
-| **Binary blobs** | Бинарники в node_modules / vendor — проверить хэши |
-| **Unusual dependencies** | `colors` / `faker` / `event-stream`-class incidents — отслеживать `socket.dev` уровни |
-| **Pre-1.0 dependencies в production пути** | Подсчитать; > 30% — риск |
+| **Typosquatting** | `npm-name-deputy`, manual name checking against popular ones |
+| **Maintainer turnover** | How many active maintainers are there? If 1 - bus factor problem. |
+| **Recent ownership transfer** | Smell-test: change ownership + new versions for < 30 days = red flag |
+| **Postinstall scripts** | `npm install --ignore-scripts` for CI; explicit allowlist for prod |
+| **Binary blobs** | Binaries in node_modules / vendor — check hashes |
+| **Unusual dependencies** | `colors` / `faker` / `event-stream`-class incidents — track `socket.dev` levels |
+| **Pre-1.0 dependencies in production paths** | Count; > 30% — risk |
 
-**Защита:**
-- Pin отдельные критичные deps на конкретную версию
-- `npm install` с `--ignore-scripts` в CI, scripts явно разрешать
-- `npm:cache:max-age` для предотвращения surprise updates
+**Protection:**
+- Pin individual critical deps for a specific version
+- `npm install` with `--ignore-scripts` in CI, scripts explicitly allow
+- `npm:cache:max-age` to prevent surprise updates
 
 ### 5. SBOM (Software Bill of Materials)
 
-**Зачем:** требование для enterprise-потребителей (SOC2, FedRAMP), и просто хорошая практика для transparency.
+**Why:** requirement for enterprise-consumers (SOC2, FedRAMP), and just good practice for transparency.
 
-**Формат:** CycloneDX (JSON) или SPDX. CycloneDX чаще встречается в OSS.
+**Format:** CycloneDX (JSON) or SPDX. CycloneDX is more common in OSS.
 
 ```bash
 # JS
@@ -99,16 +99,16 @@ cyclonedx-npm --output-format JSON --output-file SBOM.json
 cyclonedx-php-composer --output-format=JSON --output-file=SBOM.json
 
 # Dart
-# нет официального — генерировать вручную из pubspec.lock либо использовать syft
+# no official - generate manually from pubspec.lock or use syft
 ```
 
-**Что в SBOM:**
-- Имя пакета, версия
-- Лицензия (SPDX)
-- Хэш
-- Прямые vs транзитивные зависимости
+**What's in SBOM:**
+- Package name, version
+- License (SPDX)
+- Hash
+- Direct vs transitive dependencies
 - Origin (registry / git URL)
 
-**Привязка к релизу:** SBOM публикуется как release artefact (рядом с tarball/zip). Обновляется при каждом релизе.
+**Release link:** SBOM is published as release artefact (next to tarball/zip). Updated with every release.
 
 ---

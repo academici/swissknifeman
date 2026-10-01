@@ -9,8 +9,8 @@ namespace App\Attributes\Common;
 use Attribute;
 
 /**
- * Атрибут метаданных enum-кейса. Одна ось = один класс.
- * TARGET_CLASS_CONSTANT — цель, покрывающая кейсы enum.
+ * Metadata attribute enum-case. One axis = one class.
+ * TARGET_CLASS_CONSTANT — target covering cases enum.
  */
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
 final readonly class Label
@@ -20,7 +20,7 @@ final readonly class Label
     ) {}
 }
 
-// По тому же шаблону — остальные оси метаданных:
+// Following the same pattern - the remaining metadata axes:
 
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
 final readonly class Color
@@ -38,7 +38,7 @@ final readonly class Description
     ) {}
 }
 
-// Атрибут может нести несколько параметров и доменные типы:
+// An attribute can carry several parameters and domain types:
 
 #[Attribute(Attribute::TARGET_CLASS_CONSTANT)]
 final readonly class Dashboard

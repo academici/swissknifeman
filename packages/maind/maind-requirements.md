@@ -1,86 +1,86 @@
 # mAInd — Requirements Document
 
-> **Статус:** Draft v0.1 · Июнь 2026 — **исторический документ исходного замысла.**
-> **Репозиторий:** `academici/maind`
-> **Слоган:** The central intelligence layer of the academici ecosystem
+> **Status:** Draft v0.1 · June 2026 — **historical document of the original design.**
+> **Repository:** `academici/maind`
+> **Slogan:** The central intelligence layer of the academici ecosystem
 
 > [!NOTE]
-> Это первоначальный спек-документ. Реализация местами разошлась с ним: граф-движок — чистый
-> **stdlib + федерация** (а не graphify как engine), graphify — отдельный MCP-слой над кодом
-> проекта. Актуальную архитектуру и API смотри в [`docs/architecture.md`](docs/architecture.md),
-> [`docs/ecosystem.md`](docs/ecosystem.md) и `docs/guide/*` (а также [`CLAUDE.md`](CLAUDE.md)).
+> This is the original spec document. The implementation diverged from it in some places: the graph engine is pure
+> **stdlib + federation** (and not graphify like engine), graphify — separate MCP-layer above the code
+> project. Current architecture and API see [`docs/architecture.md`](docs/architecture.md),
+> [`docs/ecosystem.md`](docs/ecosystem.md) and `docs/guide/*` (and [`CLAUDE.md`](CLAUDE.md)).
 
 ---
 
-## 1. Обзор
+## 1. Review
 
-**mAInd** — главный хаб всей экосистемы academici. Это не утилита и не вспомогательный пакет — это
-живой мозг: хранит долгосрочную память агентов, строит граф связей между сущностями, координирует
-рой агентов и является единым источником истины о топологии всех проектов.
+**mAInd** — the main hub of the entire ecosystem academici. This is not a utility or a help package - it is
+living brain: stores long-term memory of agents, builds a graph of connections between entities, coordinates
+is a swarm of agents and is a single source of truth about the topology of all projects.
 
-Пакет объединяет три компонента-донора и добавляет новый слой оркестрации поверх:
+The package combines three donor components and adds a new orchestration layer on top:
 
-| Источник | Что переходит в mAInd |
+| Source | What goes into mAInd |
 |:---|:---|
-| `academici/swissknifeman` | Модуль `agent-memory` (`.agentmemory/`) целиком |
-| `safishamsi/graphify` | Граф-движок: nodes, edges, traversal |
-| `academici/brain` | `.projects.json` → становится `config.json` (расширенная версия) |
+| `academici/swissknifeman` | Module `agent-memory` (`.agentmemory/`) in full |
+| `safishamsi/graphify` | Graph engine: nodes, edges, traversal |
+| `academici/brain` | `.projects.json` → becomes `config.json` (extended version) |
 
 ---
 
-## 2. Позиционирование в экосистеме
+## 2. Positioning in the ecosystem
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    mAInd (этот пакет)               │
+│                    mAInd (this package)               │
 │  ┌──────────────┐  ┌──────────────┐  ┌───────────┐ │
 │  │ agent-memory │  │   graphify   │  │  agents   │ │
-│  │  (из SKM)    │  │  (граф связей│  │  runtime  │ │
+│  │  (from SKM)    │  │  (connection graph│  │  runtime  │ │
 │  └──────────────┘  └──────────────┘  └───────────┘ │
 │               ↕ config.json ↕                       │
 └─────────────────────────────────────────────────────┘
          ↑                    ↑
   swissknifeman             brain
-  (навыки / скиллы)     (документация)
+  (skills / skills)     (documentation)
 ```
 
-**mAInd** — вершина иерархии. Остальные пакеты подключаются к нему, а не к друг другу напрямую.
+**mAInd** — top of the hierarchy. The remaining packages connect to it, and not to each other directly.
 
 ---
 
-## 3. Что переносится из swissknifeman
+## 3. What is transferred from swissknifeman
 
-### 3.1 Модуль agent-memory
+### 3.1 Module agent-memory
 
-Текущее расположение в swissknifeman: `.agentmemory/` — конфиг воркеров `iii-*`.
+Current location in swissknifeman: `.agentmemory/` — worker config `iii-*`.
 
-В mAInd этот модуль становится первым классом, а не вспомогательным каталогом.
+B mAInd this module becomes the first class rather than a subdirectory.
 
-**Переносится целиком:**
+**Moved in its entirety:**
 
-- `.agentmemory/iii-config.yaml` → `config/memory/iii-config.yaml` (новый путь)
-- Весь рантайм воркеров: `iii-http`, `iii-state`, `iii-queue`, `iii-pubsub`, `iii-cron`,
+- `.agentmemory/iii-config.yaml` → `config/memory/iii-config.yaml` (new path)
+- Entire worker runtime: `iii-http`, `iii-state`, `iii-queue`, `iii-pubsub`, `iii-cron`,
   `iii-stream`, `iii-observability`
-- `data/state_store.db` и `data/stream_store` — хранилища состояния
-- Все MCP-интеграции через `agentmemory` сервер (порты 4111/4112)
+- `data/state_store.db` and `data/stream_store` — state stores
+- All MCP-integration via `agentmemory` server (ports 4111/4112)
 
-**Что расширяется:**
+**What is expanded:**
 
-- `iii-state` получает второй адаптер: `graph` (через graphify) — для хранения связей как
-  first-class граждан рядом с KV-памятью
-- `iii-observability` переключается на `service_name: maind` и полный pipeline логов в stdout
-- Добавляется `iii-agents` воркер — реестр запущенных агентов с heartbeat
+- `iii-state` gets the second adapter: `graph` (via graphify) — to store relationships as
+  first-class citizens next to KV-memory
+- `iii-observability` switches to `service_name: maind` and full pipeline logs in stdout
+- Added `iii-agents` worker - register of running agents with heartbeat
 
-**Что остаётся в swissknifeman:**
+**What remains in swissknifeman:**
 
-- Всё что связано со скиллами: `skills.json`, `buckets.json`, профили, registry, vendor
-- Логика установки/синхронизации скиллов в IDE-адаптеры
+- Everything related to skills: `skills.json`, `buckets.json`, profiles, registry, vendor
+- Installation logic/synchronization of skills in IDE-adapters
 
-После переноса swissknifeman получает `agent-memory` как зависимость от mAInd, а не
-держит его у себя:
+After transfer swissknifeman gets `agent-memory` as a dependency on mAInd, and not
+keeps it in his possession:
 
 ```json
-// swissknifeman/package.json — после переноса
+// swissknifeman/package.json — after transfer
 {
   "dependencies": {
     "@academici/maind": "^1.0.0"
@@ -90,81 +90,81 @@
 
 ---
 
-## 4. Что добавляется: Graphify
+## 4. What is added: Graphify
 
-**Репозиторий:** [safishamsi/graphify](https://github.com/safishamsi/graphify)
+**Repository:** [safishamsi/graphify](https://github.com/safishamsi/graphify)
 
-Graphify встраивается как граф-движок для хранения и обхода связей между сущностями экосистемы:
-проектами, агентами, памятью, скиллами.
+Graphify is built in as a graph engine for storing and traversing connections between ecosystem entities:
+projects, agents, memory, skills.
 
-**Интеграция:**
+**Integration:**
 
-- Каждая сущность в `agent-memory` получает граф-идентификатор (node)
-- Отношения между сущностями (project → uses → skill, agent → wrote → memory) — edges
-- API mAInd предоставляет unified интерфейс: `memory.get()` + `graph.neighbors()` через один вызов
-- Graphify становится вторым бэкендом для `iii-state` наряду с KV-файлом
+- Each entity in `agent-memory` gets the graph identifier (node)
+- Relationships between entities (project → uses → skill, agent → wrote → memory) — edges
+- API mAInd provides unified interface: `memory.get()` + `graph.neighbors()` in one call
+- Graphify becomes the second backend for `iii-state` along with KV-file
 
-**Типы сущностей в графе:**
+**Types of entities in the graph:**
 
-| Node type | Описание |
+| Node type | Description |
 |:---|:---|
-| `project` | Проект экосистемы (из `config.json`) |
-| `agent` | Запущенный агент с идентификатором сессии |
-| `memory` | Единица долгосрочной памяти агента |
-| `skill` | Скилл из swissknifeman |
-| `entity` | Произвольная именованная сущность (пользователь, документ, факт) |
+| `project` | Ecosystem Project (from `config.json`) |
+| `agent` | Launched agent with session ID |
+| `memory` | Agent long-term memory unit |
+| `skill` | Skill from swissknifeman |
+| `entity` | Arbitrary named entity (user, document, fact) |
 
-**Типы рёбер:**
+**Edge types:**
 
-| Edge type | Описание |
+| Edge type | Description |
 |:---|:---|
-| `uses` | Проект/агент использует скилл |
-| `knows` | Агент имеет доступ к единице памяти |
-| `relates_to` | Связь между двумя памятями |
-| `belongs_to` | Память/агент принадлежит проекту |
-| `depends_on` | Межпроектная зависимость |
+| `uses` | Project/agent uses skill |
+| `knows` | Agent has access to a memory unit |
+| `relates_to` | Communication between two memories |
+| `belongs_to` | Memory/agent belongs to the project |
+| `depends_on` | Cross-project dependency |
 
 ---
 
-## 5. Конфигурация: `config.json`
+## 5. Configuration: `config.json`
 
-`config.json` (в корне монорепо, не в пакете maind) — главный конфиг узла. Является
-**надмножеством** `.projects.json` из `brain`. Legacy-имя `.maind.json` подхватывается для
-обратной совместимости.
+`config.json` (in the root of the monorepo, not in the package maind) — main node config. Is
+**superset** `.projects.json` from `brain`. Legacy-name `.maind.json` is picked up for
+backward compatible.
 
-### 5.1 Отношение к `.projects.json`
+### 5.1 Relation to `.projects.json`
 
-`.projects.json` из `brain` не исчезает — он остаётся **fallback-конфигом** для обратной
-совместимости. Логика приоритета:
+`.projects.json` from `brain` does not disappear - it remains **fallback-config** for reverse
+compatibility. Priority logic:
 
 ```
-config.json   (primary — в корне монорепо, если есть)
+config.json   (primary — at the root of the monorepo, if any)
     ↓ fallback
-.maind.json   (legacy-имя того же конфига — обратная совместимость)
+.maind.json   (legacy-name of the same config - backward compatibility)
     ↓ fallback
-.projects.json  (legacy — только чтение, только поля совместимые с brain)
+.projects.json  (legacy — read only, only fields compatible with brain)
 ```
 
-CLI mAInd при запуске читает сначала `config.json` (затем legacy `.maind.json`), и если его
-нет — подхватывает `.projects.json` с предупреждением о миграции.
+CLI mAInd reads first at startup `config.json` (then legacy `.maind.json`), and if it
+no - picks up `.projects.json` with migration warning.
 
-### 5.2 Схема `config.json`
+### 5.2 Schema `config.json`
 
 ```jsonc
 {
-  // ── Мета ──────────────────────────────────────────────────────────
+  // ── Meta ──────────────────────────────────────────────────────────
   "_version": "1",
-  "_comment": "Главный конфиг узла mAInd. Надмножество .projects.json",
+  "_comment": "Main node config mAInd. Superset .projects.json",
 
-  // ── Идентификация узла ────────────────────────────────────────────
+  // ── Node identification ────────────────────────────────────────────
   "node": {
-    "id": "brain",                      // уникальный slug узла
-    "name": "Academici Brain",          // человекочитаемое имя
+    "id": "brain",                      // unique slug node
+    "name": "Academici Brain",          // human readable name
     "role": "primary",                  // primary | secondary | mirror
     "description": "Central knowledge and agent hub"
   },
 
-  // ── Память ────────────────────────────────────────────────────────
+  // ── Memory ────────────────────────────────────────────────────────
   "memory": {
     "enabled": true,
     "config_path": "config/memory/iii-config.yaml",
@@ -173,7 +173,7 @@ CLI mAInd при запуске читает сначала `config.json` (за�
     "data_dir": "./data"
   },
 
-  // ── Граф ──────────────────────────────────────────────────────────
+  // ── Graph ──────────────────────────────────────────────────────────
   "graph": {
     "enabled": true,
     "adapter": "graphify",              // graphify | memory | disabled
@@ -181,13 +181,13 @@ CLI mAInd при запуске читает сначала `config.json` (за�
     "persist_path": "./data/graph.db"
   },
 
-  // ── Агенты ────────────────────────────────────────────────────────
+  // ── Agents ────────────────────────────────────────────────────────
   "agents": {
     "registry_enabled": true,
     "heartbeat_interval_ms": 30000,
     "max_idle_ms": 300000,
     "definitions": [
-      // Дескрипторы агентов, которые крутятся на этом узле
+      // Descriptors of agents running on this node
       {
         "id": "vault-architect",
         "description": "Senior architect for brain vault",
@@ -198,21 +198,21 @@ CLI mAInd при запуске читает сначала `config.json` (за�
     ]
   },
 
-  // ── Проекты (надмножество .projects.json) ─────────────────────────
+  // ── Projects (superset .projects.json) ─────────────────────────
   "projects": [
     {
-      // Поля совместимые с .projects.json (legacy)
+      // Fields compatible with .projects.json (legacy)
       "id": "brain",
       "name": "Brain",
       "repo": "academici/brain",
       "local_path": "~/projects/brain",
       "type": "obsidian-vault",
 
-      // Расширения mAInd
-      "memory_scope": "project:brain",  // приватный бакет памяти проекта
-      "agents": ["vault-architect"],    // связанные агенты
+      // Extensions mAInd
+      "memory_scope": "project:brain",  // private project memory bucket
+      "agents": ["vault-architect"],    // associated agents
       "tags": ["primary", "docs"],
-      "namespaces": ["axioma"],         // группы изоляции связей графа+памяти; ["*"] — общая инфраструктура
+      "namespaces": ["axioma"],         // graph link isolation groups+memory; ["*"] — general infrastructure
       "status": "active"                // active | archived | planning
     },
     {
@@ -230,20 +230,20 @@ CLI mAInd при запуске читает сначала `config.json` (за�
     }
   ],
 
-  // ── Интеграции ────────────────────────────────────────────────────
+  // ── Integrations ────────────────────────────────────────────────────
   "integrations": {
     "swissknifeman": {
       "enabled": true,
-      "skills_sync": true              // автоматически подтягивать новые скиллы
+      "skills_sync": true              // automatically improve new skills
     },
     "brain": {
       "enabled": true,
-      "projects_sync": true,           // синк из .projects.json при старте
+      "projects_sync": true,           // sync from .projects.json at startup
       "sync_direction": "import"       // import | export | bidirectional
     }
   },
 
-  // ── MCP-серверы ───────────────────────────────────────────────────
+  // ── MCP-servers ───────────────────────────────────────────────────
   "mcp": {
     "servers": [
       {
@@ -271,45 +271,45 @@ CLI mAInd при запуске читает сначала `config.json` (за�
 }
 ```
 
-### 5.3 Поля совместимые с `.projects.json`
+### 5.3 Fields compatible with `.projects.json`
 
-Следующие поля являются обязательными для совместимости с `brain` CLI (`brain sync`):
+The following fields are required for compatibility with `brain` CLI (`brain sync`):
 
-| Поле | Тип | Описание |
+| Field | Type | Description |
 |:---|:---|:---|
-| `projects[].id` | string | Уникальный slug проекта |
-| `projects[].name` | string | Человекочитаемое имя |
+| `projects[].id` | string | Unique slug project |
+| `projects[].name` | string | Human readable name |
 | `projects[].repo` | string | GitHub slug `owner/repo` |
-| `projects[].local_path` | string | Локальный путь |
-| `projects[].type` | string | Тип проекта |
+| `projects[].local_path` | string | Local path |
+| `projects[].type` | string | Project type |
 
-Все остальные поля являются расширениями mAInd и игнорируются `brain` при чтении fallback.
+All other fields are extensions mAInd and ignored `brain` when reading fallback.
 
 ---
 
-## 6. Архитектура пакета
+## 6. Package architecture
 
-### 6.1 Структура репозитория
+### 6.1 Repository structure
 
 ```
 academici/maind/
-├── config.example.json       ← пример конфига (как .swissknife.example.json в SKM)
+├── config.example.json       ← example config (as .swissknife.example.json in SKM)
 ├── config/
 │   └── memory/
-│       └── iii-config.yaml   ← перенесено из SKM/.agentmemory/
+│       └── iii-config.yaml   ← moved from SKM/.agentmemory/
 ├── lib/
 │   └── maind/
 │       ├── __init__.py
 │       ├── cli.py            ← CLI: maind start | status | agents | graph
-│       ├── config.py         ← парсинг config.json + fallback .projects.json
-│       ├── memory.py         ← интерфейс к agent-memory воркерам
-│       ├── graph.py          ← интерфейс к graphify
-│       ├── agents.py         ← реестр агентов, heartbeat, lifecycle
-│       ├── projects.py       ← реестр проектов, синк с brain
-│       └── mcp.py            ← MCP server для внешних агентов
+│       ├── config.py         ← parsing config.json + fallback .projects.json
+│       ├── memory.py         ← interface to agent-memory workers
+│       ├── graph.py          ← interface to graphify
+│       ├── agents.py         ← agent registry, heartbeat, lifecycle
+│       ├── projects.py       ← project registry, sync with brain
+│       └── mcp.py            ← MCP server for external agents
 ├── bin/
-│   └── maind                 ← точка входа CLI
-├── data/                     ← gitignored, runtime данные
+│   └── maind                 ← entry point CLI
+├── data/                     ← gitignored, runtime data
 │   ├── state_store.db
 │   ├── stream_store/
 │   └── graph.db
@@ -320,40 +320,40 @@ academici/maind/
 └── README.md
 ```
 
-### 6.2 Компоненты
+### 6.2 Components
 
 **Memory Layer** (`lib/maind/memory.py`)
-Обёртка над `iii-*` воркерами. Предоставляет API:
-- `memory.store(scope, key, value, ttl?)` — сохранить факт
-- `memory.recall(scope, query)` — семантический поиск по памяти
-- `memory.forget(scope, key)` — удалить факт
-- `memory.export(scope)` — дамп всей памяти скоупа
+Wrapper over `iii-*` workers. Provides API:
+- `memory.store(scope, key, value, ttl?)` — save fact
+- `memory.recall(scope, query)` — semantic memory search
+- `memory.forget(scope, key)` — delete fact
+- `memory.export(scope)` — dump of entire scope memory
 
 **Graph Layer** (`lib/maind/graph.py`)
-Обёртка над graphify. API:
-- `graph.node(type, id, meta?)` — создать/обновить узел
-- `graph.edge(from, type, to, meta?)` — создать/обновить ребро
-- `graph.neighbors(id, edge_type?, depth?)` — обход соседей
-- `graph.path(from, to)` — кратчайший путь между узлами
-- `graph.subgraph(ids[])` — подграф по набору узлов
+Wrapper over graphify. API:
+- `graph.node(type, id, meta?)` — create/update node
+- `graph.edge(from, type, to, meta?)` — create/update edge
+- `graph.neighbors(id, edge_type?, depth?)` — neighbor traversal
+- `graph.path(from, to)` — shortest path between nodes
+- `graph.subgraph(ids[])` — subgraph over a set of nodes
 
 **Agent Registry** (`lib/maind/agents.py`)
-- Регистрация агента при старте: `agents.register(id, meta)`
-- Heartbeat loop: обновление `last_seen` каждые N секунд
-- `agents.list(status?)` — активные/все агенты
-- `agents.kill(id)` — принудительная остановка
-- `agents.scope(id)` — изолированный memory + graph scope агента
+- Agent registration at startup: `agents.register(id, meta)`
+- Heartbeat loop: update `last_seen` every N seconds
+- `agents.list(status?)` — active/all agents
+- `agents.kill(id)` — forced stop
+- `agents.scope(id)` — isolated memory + graph scope agent
 
 **Projects Registry** (`lib/maind/projects.py`)
-- Загрузка `config.json` с fallback на `.projects.json`
-- `projects.list(status?)` — все проекты
-- `projects.get(id)` — проект по id
-- `projects.sync_from_brain(path)` — импорт из `.projects.json`
-- `projects.export_to_brain(path)` — экспорт совместимого подмножества
+- Loading `config.json` with fallback on `.projects.json`
+- `projects.list(status?)` — all projects
+- `projects.get(id)` — project by id
+- `projects.sync_from_brain(path)` — import from `.projects.json`
+- `projects.export_to_brain(path)` — export compatible subset
 
 **MCP Server** (`lib/maind/mcp.py`)
-mAInd сам является MCP-сервером для внешних агентов (Claude, Cursor, etc.).
-Экспонирует tools:
+mAInd itself is MCP-server for external agents (Claude, Cursor, etc.).
+Exhibits tools:
 - `maind_memory_store`, `maind_memory_recall`
 - `maind_graph_query`, `maind_graph_neighbors`
 - `maind_agents_list`, `maind_projects_list`
@@ -363,126 +363,126 @@ mAInd сам является MCP-сервером для внешних аге�
 ## 7. CLI
 
 ```bash
-# Старт всех воркеров
+# Start of all workers
 maind start
 
-# Запустить только memory воркеры
+# Run only memory workers
 maind start --only memory
 
-# Запустить только граф
+# Run graph only
 maind start --only graph
 
-# Статус воркеров
+# Worker status
 maind status
 
-# Список агентов
+# List of agents
 maind agents list
 maind agents kill <id>
 
-# Граф
+# Graph
 maind graph query --from project:brain --depth 2
 maind graph stats
 
-# Проекты
+# Projects
 maind projects list
 maind projects sync --from brain --path ~/projects/brain
 
-# Миграция
-maind migrate from-brain .projects.json    # импорт legacy конфига
-maind migrate from-skm .agentmemory/       # импорт модуля из SKM
+# Migration
+maind migrate from-brain .projects.json    # import legacy config
+maind migrate from-skm .agentmemory/       # import module from SKM
 ```
 
 ---
 
-## 8. Фазы реализации
+## 8. Implementation phases
 
 ### Phase 1 — Foundation (Memory + Config)
 
-- [ ] Создать репозиторий `academici/maind`
-- [ ] Перенести `.agentmemory/` → `config/memory/iii-config.yaml`
-- [ ] Реализовать `config.py` с поддержкой `config.json` + fallback `.projects.json`
-- [ ] Реализовать `memory.py` (обёртка над iii-*)
+- [ ] Create repository `academici/maind`
+- [ ] Move `.agentmemory/` → `config/memory/iii-config.yaml`
+- [ ] Implement `config.py` with support `config.json` + fallback `.projects.json`
+- [ ] Implement `memory.py` (wrapper over iii-*)
 - [ ] CLI: `maind start`, `maind status`
-- [ ] `config.example.json` с полной схемой
-- [ ] `install.sh` (аналог brain/swissknifeman)
-- [ ] Обновить swissknifeman: убрать `.agentmemory/`, добавить зависимость на maind
+- [ ] `config.example.json` with full schematic
+- [ ] `install.sh` (analogue brain/swissknifeman)
+- [ ] Update swissknifeman: remove `.agentmemory/`, add dependency on maind
 
 ### Phase 2 — Graph Layer
 
-- [ ] Интегрировать graphify как зависимость
-- [ ] Реализовать `graph.py` — все методы API
-- [ ] Расширить `iii-state` для dual-backend (KV + graph)
-- [ ] Автоматическая регистрация проектов из `config.json` как nodes
+- [ ] Integrate graphify as a dependency
+- [ ] Implement `graph.py` — all methods API
+- [ ] Expand `iii-state` for dual-backend (KV + graph)
+- [ ] Automatic registration of projects from `config.json` like nodes
 - [ ] CLI: `maind graph query`, `maind graph stats`
 
 ### Phase 3 — Agent Runtime
 
-- [ ] Реализовать `agents.py` — registry + heartbeat
-- [ ] Изолированные скоупы памяти и графа для каждого агента
-- [ ] Добавить `iii-agents` воркер в `iii-config.yaml`
+- [ ] Implement `agents.py` — registry + heartbeat
+- [ ] Isolated memory and graph scopes for each agent
+- [ ] Add `iii-agents` worker in `iii-config.yaml`
 - [ ] CLI: `maind agents list`, `maind agents kill`
-- [ ] Интеграция с `brain` агентами (AGENTS.md)
+- [ ] Integration with `brain` agents (AGENTS.md)
 
 ### Phase 4 — MCP + Integrations
 
-- [ ] MCP-сервер: tools для memory/graph/agents/projects
-- [ ] `.mcp.json` с записью `maind` сервера
-- [ ] Синк с `brain` через `projects.sync_from_brain()`
-- [ ] Синк скиллов через swissknifeman API
-- [ ] Обновить `brain/CLAUDE.md` — добавить mAInd в карту MCP-серверов
+- [ ] MCP-server: tools for memory/graph/agents/projects
+- [ ] `.mcp.json` with entry `maind` server
+- [ ] Sync with `brain` via `projects.sync_from_brain()`
+- [ ] Sync skills via swissknifeman API
+- [ ] Update `brain/CLAUDE.md` — add mAInd to card MCP-servers
 
 ---
 
-## 9. Зависимости
+## 9. Dependencies
 
-| Пакет | Версия | Роль |
+| Package | Version | Role |
 |:---|:---|:---|
-| `graphify` (safishamsi) | latest | Граф-движок |
-| `agent-memory` (iii-*) | из SKM | Memory воркеры |
+| `graphify` (safishamsi) | latest | Graph engine |
+| `agent-memory` (iii-*) | from SKM | Memory workers |
 | `@anthropic/sdk` | latest | MCP protocol |
-| `yaml` | ^2 | Парсинг iii-config.yaml |
-| `zod` / `jsonschema` | latest | Валидация config.json |
+| `yaml` | ^2 | Parsing iii-config.yaml |
+| `zod` / `jsonschema` | latest | Validation config.json |
 
 ---
 
-## 10. Альтернативные названия
+## 10. Alternative names
 
-Рассматривались следующие имена перед финальным выбором `mAInd`:
+The following names were considered before final selection `mAInd`:
 
 ### Synapse
-**Синапс** — точка передачи сигнала между нейронами. Идеально описывает роль пакета как
-посредника между агентами: именно через синапс один агент «знает» о другом. Минус — звучит
-как связующий слой, а не как центральный мозг. Больше подходит для middleware или event-bus.
+**Synapse** — point of signal transmission between neurons. Ideally describes the role of a package as
+intermediary between agents: it is through the synapse that one agent «knows» about something else. Minus - it sounds
+as a connecting layer rather than as a central brain. More suitable for middleware or event-bus.
 
 ### Loom
-**Ткацкий станок** — плетёт нити-связи между агентами и памятью в единое полотно.
-Сильная образная метафора для граф-движка. Короткое, звонкое, нестандартное для AI-пакетов.
-Минус — не очевиден AI-контекст: без пояснения звучит как weaving/crafts инструмент.
+**Loom** — weaves threads of connection between agents and memory into a single fabric.
+A strong figurative metaphor for a graph engine. Short, sonorous, non-standard for AI-packages.
+Disadvantage - not obvious AI-context: without explanation it sounds like weaving/crafts tool.
 
 ### Axon
-**Аксон** — длинный отросток нейрона, по которому проходит сигнал от одного нейрона к другому.
-Технически точно (пакет проводит информацию между агентами), коротко, запоминаемо.
-Минус — Axon уже занят: популярный Java-фреймворк для event-driven микросервисов.
+**Axon** — long process of a neuron through which a signal passes from one neuron to another.
+Technically accurate (packet passes information between agents), short, memorable.
+Minus - Axon already taken: popular Java-framework for event-driven microservices.
 
 ### Apex
-**Вершина, высшая точка** — прямая метафора «самого главного пакета» экосистемы.
-Универсально читается на любом языке, легко произносится. Маркетингово сильное.
-Минус — очень широко используется (APEX Oracle, Apex Legends и т.д.), трудно гуглить.
+**Summit, highest point** — direct metaphor «of the main package» ecosystems.
+Universally readable in any language, easy to pronounce. Marketing strong.
+Disadvantage - very widely used (APEX Oracle, Apex Legends etc.), hard to google.
 
 ### Aipex
-**AI + Apex** — гибридное слово. Мгновенно понятен AI-контекст + смысл «вершины иерархии».
-Звучит как продуктовое имя стартапа. Минус — написание неочевидно (aipex vs aipix vs AIpex),
-труднее воспринимается на слух.
+**AI + Apex** — hybrid word. Instantly understandable AI-context + meaning «top of hierarchy».
+Sounds like a startup product name. Minus - the writing is not obvious (aipex vs aipix vs AIpex),
+is more difficult to perceive by ear.
 
 ### Lumex
-**Lumen + Memory eXchange** — свет знаний и обмен памятью. Звучит как бренд медтеха или
-оптики. Необычно для AI-мира — выделяется. Минус — метафора косвенная, суть пакета не
-читается без пояснения. Хорош как название продукта/SaaS, слабее как имя пакета.
+**Lumen + Memory eXchange** — light of knowledge and exchange of memory. Sounds like a medtech brand or
+optics. Unusual for AI-world - stands out. Minus - the metaphor is indirect, the essence of the package is not
+reads without explanation. Good as a product name/SaaS, is weaker as a package name.
 
 ---
 
-> **Финальный выбор: `mAInd`** — единственное имя, которое одновременно: (1) мгновенно
-> читается как «разум/мозг», (2) содержит **AI** как визуальный маркер, (3) произносится как
-> обычное английское слово, (4) нет конфликтов с существующими пакетами в npm/PyPI,
-> (5) органично вписывается в экосистему рядом с `brain`, `swissknifeman`.
+> **Final choice: `mAInd`** — is the only name that simultaneously: (1) instantly
+> reads as «mind/brain», (2) contains **AI** as a visual marker, (3) is pronounced like
+> an ordinary English word, (4) no conflicts with existing packages in npm/PyPI,
+> (5) fits seamlessly into the ecosystem next to `brain`, `swissknifeman`.
 

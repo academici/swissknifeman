@@ -1,6 +1,6 @@
-# Острая грань: mass assignment
+# Sharp Edge: mass assignment
 
-## Паттерны поиска
+## Search patterns
 
 ```bash
 grep -rnE '\$guarded\s*=\s*\[\s*\]' app/Models/
@@ -8,33 +8,33 @@ grep -rnE 'request\(\)->all\(\)|\$request->all\(\)' app/ | grep -E 'create\(|upd
 grep -rnE 'forceFill\(' app/
 ```
 
-## Что считается уязвимостью
+## What is considered a vulnerability
 
 ```php
-// УЯЗВИМО: пустой $guarded + ->all() — пользователь задаёт любое поле,
-// включая is_admin, role_id, user_id
+// VULNERABLE: empty $guarded + ->all() — user sets any field,
+// including is_admin, role_id, user_id
 class User extends Model { protected $guarded = []; }
 User::create($request->all());
 
-// БЕЗОПАСНО: только провалидированные поля
+// SAFE: validated fields only
 User::create($request->validated());
 User::create($request->only(['name', 'email']));
 ```
 
-## На что смотреть при верификации
+## What to look for during verification
 
-- `$guarded = []` сам по себе — **high**, если хоть одна точка входа
-  использует `->all()`/`->input()` без `->validated()`.
-- `forceFill` обходит и `$fillable`, и `$guarded` — ввод туда попадать
-  не должен никогда.
-- FormRequest с `->validated()` безопасен только если в `rules()`
-  перечислены все ключи: правило `'meta' => 'array'` пропускает
-  произвольные вложенные ключи.
-- Nested-данные в `sync()`/`createMany()` — те же правила.
+- `$guarded = []` by itself - **high**, if at least one entry point
+  uses `->all()`/`->input()` without `->validated()`.
+- `forceFill` bypasses and `$fillable`, and `$guarded` — input get there
+  should never.
+- FormRequest with `->validated()` is only safe if `rules()`
+  lists all keys: rule `'meta' => 'array'` skips
+  arbitrary nested keys.
+- Nested-data in `sync()`/`createMany()` — same rules.
 
 ## Severity
 
-- Привилегированные поля (role, is_admin, *_id владения) достижимы — **critical**.
-- `->all()` в create/update без validated — **high**.
-- `$guarded = []` без текущих опасных точек входа — **medium** (грань
-  сработает при следующей правке).
+- Privileged fields (role, is_admin, *_id ownership) are reachable - **critical**.
+- `->all()` in create/update without validated — **high**.
+- `$guarded = []` without current dangerous entry points - **medium** (edge
+  will work on the next edit).

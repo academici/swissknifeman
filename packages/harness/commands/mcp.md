@@ -1,14 +1,14 @@
 ---
-description: "Добавить MCP-серверы (context7, playwright, …) в .mcp.json проекта из пресетов харнеса, merge-only."
+description: "Add MCP-servers (context7, playwright, …) in .mcp.json project from Harnes presets, merge-only."
 ---
-Добавь MCP-серверы в `.mcp.json` текущего проекта из пресетов харнеса.
+Add MCP-servers in `.mcp.json` of the current project from the Harness presets.
 
-1. Покажи доступные пресеты: `harness mcp --list`.
-2. Уточни набор (например `context7,playwright`) и цель (`--target .`).
-3. Предложи `--dry-run`, затем примени.
+1. Show available presets: `harness mcp --list`.
+2. Specify the set (for example `context7,playwright`) and target (`--target .`).
+3. Suggest `--dry-run`, then apply.
 
-Запуск (через Bash):
+Launch (via Bash):
 ```
 harness mcp --target . --mcp context7[,playwright,…] [--dry-run]
 ```
-Merge-only: чужие записи `mcpServers` не затираются, файл бэкапится в `*.bak`. Аргументы пользователя — «$ARGUMENTS».
+Merge-only: other people's posts `mcpServers` are not overwritten, the file is backed up to `*.bak`. User Arguments - «$ARGUMENTS».

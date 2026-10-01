@@ -2,7 +2,7 @@
   "schema": 1,
   "pack": "python-backend",
   "version": "0.5.2",
-  "description": "Dev-loop для Python web-бэкенда (FastAPI/Django/Flask): агенты slice-builder/test-writer/reviewer/type-checker(mypy)/spec-writer(опц.), последовательный one-branch workflow, SubagentStop review-gate (ruff) + PostToolUse-валидатор. Знания фреймворков — в промптах агентов (бакет python тонкий).",
+  "description": "Dev-loop for Python web-backend (FastAPI/Django/Flask): agents slice-builder/test-writer/reviewer/type-checker(mypy)/spec-writer(opt.), serial one-branch workflow, SubagentStop review-gate (ruff) + PostToolUse-validator. Knowledge of frameworks is in agent prompts (bucket python thin).",
   "stack": {
     "shape": "backend",
     "language": "python",
@@ -31,24 +31,24 @@
   "interview": [
     {
       "id": "PACK_PREFIX",
-      "q": "Префикс имён агентов/воркфлоу?",
+      "q": "Agent name prefix/work flow?",
       "default": "{project_dirname}",
       "kind": "slug"
     },
     {
       "id": "PROJECT_DIR",
-      "q": "Абсолютный путь к проекту?",
+      "q": "Absolute path to the project?",
       "detect": "pwd"
     },
     {
       "id": "PY_BIN",
-      "q": "Python-бинарь/venv?",
+      "q": "Python-binary/venv?",
       "detect": "test -x .venv/bin/python && echo .venv/bin/python || command -v python3",
       "default": "python3"
     },
     {
       "id": "PKG_MANAGER",
-      "q": "Менеджер зависимостей?",
+      "q": "Dependency manager?",
       "detect": "test -f uv.lock && echo uv || (test -f poetry.lock && echo poetry || echo pip)",
       "enum": [
         "uv",
@@ -59,7 +59,7 @@
     },
     {
       "id": "WEB_FRAMEWORK",
-      "q": "Веб-фреймворк?",
+      "q": "Web framework?",
       "detect": "pyproject.toml:project.dependencies",
       "enum": [
         "fastapi",
@@ -71,38 +71,38 @@
     },
     {
       "id": "TEST_RUNNER_CMD",
-      "q": "Команда тестов?",
+      "q": "Test team?",
       "default": "{PY_BIN} -m pytest -q"
     },
     {
       "id": "TYPECHECK_CMD",
-      "q": "Тайп-чек?",
+      "q": "Type check?",
       "default": "{PY_BIN} -m mypy ."
     },
     {
       "id": "LINT_CMD",
-      "q": "Линт?",
+      "q": "Lint?",
       "default": "{PY_BIN} -m ruff check ."
     },
     {
       "id": "BASE_BRANCH",
-      "q": "Базовая ветка?",
+      "q": "Basic branch?",
       "detect": "git symbolic-ref --short refs/remotes/origin/HEAD",
       "default": "main"
     },
     {
       "id": "CHECK_CMD",
-      "q": "Быстрая review-gate проверка?",
+      "q": "Fast review-gate check?",
       "default": "{PY_BIN} -m ruff check . && {PY_BIN} -m ruff format --check ."
     },
     {
       "id": "DOCS_DIR",
-      "q": "Куда положить guideline (внутренний AI-гайд, не публичная docs/)?",
+      "q": "Where to put it guideline (internal AI-guide, not public docs/)?",
       "default": ".claude/guidelines"
     },
     {
       "id": "MODEL_REVIEWER",
-      "q": "Модель reviewer?",
+      "q": "Model reviewer?",
       "default": "opus",
       "enum": [
         "inherit",
@@ -113,7 +113,7 @@
     },
     {
       "id": "MODEL_TYPE_CHECKER",
-      "q": "Модель type-checker?",
+      "q": "Model type-checker?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -124,7 +124,7 @@
     },
     {
       "id": "MODEL_SLICE_BUILDER",
-      "q": "Модель slice-builder?",
+      "q": "Model slice-builder?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -135,7 +135,7 @@
     },
     {
       "id": "MODEL_TEST_WRITER",
-      "q": "Модель test-writer?",
+      "q": "Model test-writer?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -146,7 +146,7 @@
     },
     {
       "id": "MODEL_SPEC_WRITER",
-      "q": "Модель spec-writer?",
+      "q": "Model spec-writer?",
       "default": "sonnet",
       "enum": [
         "inherit",
@@ -157,12 +157,12 @@
     },
     {
       "id": "GATE_COVERAGE_MIN",
-      "q": "Мин. покрытие (%)?",
+      "q": "Min. coating (%)?",
       "default": "80"
     },
     {
       "id": "GATE_MAX_CRITICAL",
-      "q": "Допустимо critical-находок?",
+      "q": "Acceptable critical-finds?",
       "default": "0"
     }
   ],
@@ -265,8 +265,8 @@
     }
   ],
   "notes": {
-    "verify_workflow": "dev-loop.js — top-level return/await, node --check НЕ применять.",
-    "skill_gap": "Бакет python = 2 скилла. Канон фреймворков (FastAPI/Django) и pytest — в промптах агентов и rules/, без новых скиллов (анти-bloat). Кандидат: python/pytest-conventions.",
-    "orchestrator": "Общий оркестратор — пак _common (тот же PACK_PREFIX)."
+    "verify_workflow": "dev-loop.js — top-level return/await, node --check DO NOT apply.",
+    "skill_gap": "Bucket python = 2 skill. Canon of frameworks (FastAPI/Django) and pytest — in agent prompts and rules/, without new skills (anti-bloat). Candidate: python/pytest-conventions.",
+    "orchestrator": "General orchestrator - pack _common (same PACK_PREFIX)."
   }
 }

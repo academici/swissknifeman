@@ -18,27 +18,27 @@ sha256: ""
 
 # Git Safety (guardrails)
 
-Ставит PreToolUse-хук, который блокирует опасные git-команды **до** исполнения. В нашей экосистеме
-сам хук-скрипт принадлежит пакету **harness** (источник истины хуков), а этот скилл — точка входа:
-объясняет и помогает включить.
+Sets PreToolUse-hook that blocks dangerous git-commands **to** execution. In our ecosystem
+the hook script itself belongs to the package **harness** (source of truth hooks), and this skill is the entry point:
+explains and helps enable.
 
-## Когда активировать
+## When to activate
 
-Один раз на проект (`lifecycle: init`) — на онбординге, особенно для production и embedded-проектов
-(POS, фискальные устройства), где `git reset --hard`/`git push` на ветке устройства = поход к железу.
-Или по явной просьбе «добавь git-guardrails / запрети опасный git».
+Once per project (`lifecycle: init`) — on onboarding, especially for production and embedded-projects
+(POS, fiscal devices), where `git reset --hard`/`git push` on the device branch = trip to the hardware.
+Or by explicit request «add git-guardrails / ban dangerous git».
 
-## Что блокируется
+## What is blocked
 
-`git push` (вкл. `--force`/`--force-with-lease`), `git reset --hard`, `git clean -f`/`-fd`,
+`git push` (on `--force`/`--force-with-lease`), `git reset --hard`, `git clean -f`/`-fd`,
 `git branch -D`, `git checkout .`/`git restore .`, `git rebase --onto`.
 
-## Как включить
+## How to enable
 
-1. Поставить файлы хуков глобально (один раз на машину): `harness hooks --global` — кладёт
+1. Install hook files globally (once per machine): `harness hooks --global` — puts
    `~/.claude/hooks/git-guardrails/block-dangerous-git.sh`.
-2. Зарегистрировать PreToolUse-хук (merge-only) в `.claude/settings.json` проекта
-   (или `~/.claude/settings.json` глобально):
+2. Register PreToolUse-hook (merge-only) in `.claude/settings.json` project
+   (or `~/.claude/settings.json` global):
 
    ```json
    {
@@ -52,13 +52,13 @@ sha256: ""
    }
    ```
 
-   Если settings уже есть — влить в существующий массив `hooks.PreToolUse`, не перетирая остальное.
-3. Проверка: `echo '{"tool_input":{"command":"git push origin main"}}' | ~/.claude/hooks/git-guardrails/block-dangerous-git.sh` → exit 2 + BLOCKED.
+   If settings already exists - merge into an existing array `hooks.PreToolUse`, without grinding the rest.
+3. Check: `echo '{"tool_input":{"command":"git push origin main"}}' | ~/.claude/hooks/git-guardrails/block-dangerous-git.sh` → exit 2 + BLOCKED.
 
-> Кастомизация списка паттернов — правкой скрипта (источник: `packages/harness/configs/claude-code/hooks/git-guardrails/`).
-> Follow-up: флаг `harness hooks --git-guardrails on` для авто-регистрации в settings.
+> Customization of the list of patterns - editing the script (source: `packages/harness/configs/claude-code/hooks/git-guardrails/`).
+> Follow-up: flag `harness hooks --git-guardrails on` for auto-registration in settings.
 
-## Связанные скиллы
+## Related skills
 
-- `general/git-commit-rules` — формат коммитов (что разрешено), git-safety — что запрещено.
-- `oss-dev/github-flow` — общий git-поток, поверх которого работают guardrails.
+- `general/git-commit-rules` — commit format (what is allowed), git-safety — which is prohibited.
+- `oss-dev/github-flow` — general git-thread on top of which they work guardrails.

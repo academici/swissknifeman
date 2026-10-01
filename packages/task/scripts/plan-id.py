@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Тонкий лаунчер: следующий номер плана (`№N` дня + Short ID `PLAN<N>`).
+"""Thin launcher: next plan number (`№N` day + Short ID `PLAN<N>`).
 
-Логика — в lib/task/plan_numbering.py (тот же шаблон, что у scripts/plan-weight.py).
+Logic - in lib/task/plan_numbering.py (same pattern as scripts/plan-weight.py).
 
-Вызов:
+Call:
     python3 packages/task/scripts/plan-id.py --codename TASK-RESILIENCE
     python3 packages/task/scripts/plan-id.py --date 2026.10.01 --plans-root plans
 """

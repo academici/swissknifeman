@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Фейковый клиент (P4.3): `is_error=true` + донорский текстовый маркер лимита (D18) —
-исход `quota`."""
+"""Fake client (P4.3): `is_error=true` + donor text limit marker (D18) —
+outcome `quota`."""
 import json
 import sys
 

@@ -1,278 +1,278 @@
 # Changelog
 
-Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
-версионирование — [SemVer](https://semver.org/lang/ru/).
+Format - [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
+versioning - [SemVer](https://semver.org/lang/ru/).
 
 ## [Unreleased]
 
 ### Fixed
-- **`validate_config` — секция `memory` не знала про `digest`.** Ключ `memory.digest` (P1.1: `budget_chars`/`item_max_chars`/`shared_max`) существовал в рантайме с 0.3.0, но схема-валидатор считал его неизвестным и предупреждал на каждом `maind health`/CLI-вызове. Добавлен в допустимые ключи секции.
+- **`validate_config` — section `memory` didn't know about `digest`.** Key `memory.digest` (P1.1: `budget_chars`/`item_max_chars`/`shared_max`) existed in runtime since 0.3.0, but the validator scheme considered it unknown and warned on every `maind health`/CLI-call. Added to valid section keys.
 
 ## [0.3.0] — 2026-07-12
 
 ### Added
 
-- **`select_digest_items` — digest-бюджет project-only + байт-кап.** Байт-бюджет на дайджест
-  памяти + `shared_max=0` по умолчанию (D10, supersede D5): межпроектные (`ns:*`) факты в дайджест не
-  попадают без явного запроса; конфиг/CLI-флаги `--shared-max` для точечного включения.
-- **`session-start-hook.sh`/`memory-digest-hook.sh` — тихий health + шаблон v2.** Хук здоровья
-  сессии больше не печатает ничего при OK (только `--strict` даёт rc-гейт); дайджест-хук — компактный
-  шаблон v2.
-- **`doctor --context` — footprint флота.** Флот-агрегация `_fleet_context`: subprocess `skiller
-  budget --first-turn --json` по каждому `_enabled_projects` (без кросс-импортов), fail-soft
-  `context: "n/a"` при недоступности.
+- **`select_digest_items` — digest-budget project-only + byte-cap.** Byte budget for digest
+  memory + `shared_max=0` default (D10, supersede D5): cross-project (`ns:*`) facts in the digest are not
+  are reached without an explicit request; config/CLI-flags `--shared-max` for point switching.
+- **`session-start-hook.sh`/`memory-digest-hook.sh` — quiet health + template v2.** Health hook
+  session no longer prints anything when OK (only `--strict` gives rc-gate); digest hook - compact
+  template v2.
+- **`doctor --context` — footprint fleet.** Fleet aggregation `_fleet_context`: subprocess `skiller
+  budget --first-turn --json` for each `_enabled_projects` (without cross-imports), fail-soft
+  `context: "n/a"` when unavailable.
 
 ### Added
-- **`maind sync` — провиженеры `plans-dir` и `plans-doc` (per-project plan-система).**
-  Ретроактивная раскатка plan-протокола на онбордженные проекты: `plans-dir` зовёт
-  `harness hooks --plans-dir plans` (пишет `plansDirectory` в `.claude/settings.json`
-  проекта; занятый другим значением ключ harness уважает — skip), `plans-doc` вставляет
-  hashed-блок `maind:plan-conventions` в CLAUDE.md проекта (`health.apply_plans_doc`
-  по образцу `apply_health_doc`, шаблон `templates/plans/conventions-block.md`,
-  идемпотентно: повтор → `fresh/skip`). Опт-аут один на оба: `project.plans_dir="off"`
-  (конвенция без раскатанного plansDirectory бессмысленна). Оба — в дефолтном наборе
-  `--all`. Пилот end-to-end на azguard — 7/7 шагов зелёный. Известный шов: JSON-результат
-  `plans-dir` на идемпотентном повторе даёт `changed=true` (провиженер видит только rc
-  subprocess'а harness) — честный `changed` требует прокидывания stdout из
-  `run_capability`, deferred. Контекст: SKM-MASTER-003 P1.2/P1.3 (дизайн A/C).
-- **`analyze` — секция «Эффективность» (патологии прогона, Detect ≠ Gate).** Новый источник
-  `pathology_slice(run_report)` поверх `core/pathology.py` (10 детекторов: file-reread,
+- **`maind sync` — providers `plans-dir` and `plans-doc` (per-project plan-system).**
+  Retroactive rolling plan-protocol for onboarded projects: `plans-dir` calling
+  `harness hooks --plans-dir plans` (writes `plansDirectory` in `.claude/settings.json`
+  project; key occupied by another value harness respects - skip), `plans-doc` inserts
+  hashed-block `maind:plan-conventions` in CLAUDE.md project (`health.apply_plans_doc`
+  according to the example `apply_health_doc`, template `templates/plans/conventions-block.md`,
+  idempotent: repeat → `fresh/skip`). Opt-out one for both: `project.plans_dir="off"`
+  (convention without rolled out plansDirectory is meaningless). Both are in the default set
+  `--all`. Pilot end-to-end on azguard — 7/7 steps green. Known seam: JSON-result
+  `plans-dir` on an idempotent repeat gives `changed=true` (the provider sees only rc
+  subprocess'a harness) — honest `changed` requires rolling stdout from
+  `run_capability`, deferred. Context: SKM-MASTER-003 P1.2/P1.3 (design A/C).
+- **`analyze` — section «Efficiency» (run pathologies, Detect ≠ Gate).** New source
+  `pathology_slice(run_report)` on top `core/pathology.py` (10 detectors: file-reread,
   tool-error-loop, no-op-run, no-verify, cache-miss, overthinking, retrieval-stuffing,
-  protected-write, static-context, fanout): attention-находки уходят в `reasons` → вердикт
-  ATTENTION (той же механикой, что `pack_drift`), info-находки — в machine-readable
-  `rep['efficiency']` и человеко-читаемую секцию «Эффективность» перед «ИТОГ». Инвариант
-  зафиксирован в докстрингах: RED от патологий не бывает никогда. SCHEMA=1-отчёты — блок
-  молча опускается. +8 тестов (`PathologyCase`). Контекст: SKM-MASTER-002 фаза C.
-- **`maind sync` — провиженеры `skills-catalog` и `output-style`.** Ретроактивная раздача на уже
-  онбордженные проекты: `skills-catalog` (`skm:update` — пере-резолв каталога скиллов с диска,
-  новый скилл уже выбранного бакета докатывается без ручного re-onboard) и `output-style`
-  (`env:hooks --output-style lean`, опт-аут `project.output_style: "off"`). Оба — в дефолтном
-  наборе `--all`, оба используют существующие capability `skm:update`/`env:hooks` из
-  `orchestrate.py` (ни одна не имела вызывающего в `PROVISIONERS` до этого). Заодно `skm:update`
-  добавлен в `DRY_CAPABLE` — честный `--dry-run` вместо fake print+rc0.
-- **Наблюдаемость памяти/графа в `analyze` + `maind memory count`.** Отвечает на полевой вопрос
-  «память/граф пишут — а читаются ли и помогают ли, или просто жрут токены». `analyze.py` читает новый
-  аддитивный ключ `run_report.maind` (метрики MCP-вызовов памяти/графа, их считает парный парсер
-  run-report в harness): строка «память: recall×N→M · граф: query×K» + эвристика ATTENTION **«код-граф
-  не использовался при тяжёлом сканировании»** (Read/Grep/Glob ≥30 при графе ×0) и «recall пуст/не по
-  адресу». Новая подкоманда `maind memory count [--project|--scope] [--json]` — число фактов по scope
-  (по scope-маркеру, не весь глобальный пул). Скилл `ecosystem-mcp` усилен graph-first-подсказкой
-  (граф/Serena перед широким `grep`, с оговоркой про ручной скан). Тесты: `test_analyze.py`/
-  `test_memory.py` (+3). Back-compat: старый `analyze` игнорит ключ `maind`, новый не падает без него.
-- **`perplexity-web` — hub-managed MCP-сервер (раскатка из конфига, не вручную).** Keyless-мост
-  `perplexity-web` (отдельный Node-пакет) раздаётся в проекты тем же `deploy`/`sync`, что `maind`
-  и Serena, — единым источником истины вместо ручных хардкод-записей в каждом `.mcp.json`
-  (как было у `swissknifeman`/`edufy`/`botkit`). Политика — секция `mcp.perplexity_web` конфига:
-  `enabled` (глобальный фан-аут; per-project override `perplexity_web: true|false`), `pool`
-  (модель пулов браузера: общий литерал вроде `default` — переиспользует текущий логин;
-  `per-project` — пул=id; `per-namespace` — пул=`ns-<namespace>`; per-project override
-  `perplexity_web_pool`), `bin` (fallback-путь к `start.sh`, оборачивается индирекцией
-  `${PERPLEXITY_WEB_MCP_BIN:-<bin>}` — переносимо, без захардкоженного `/home/...`). Новый резолвер
-  `pplxweb.py` (зеркало `codegraph.py`), `PERPLEXITY_WEB_DEFAULTS` (disabled-by-default), запись в
-  `deploy_project`/`mark_deployed` (`proj.mcp.perplexity_web`), фолбэк-дефолты в `merge_defaults`
-  (только если секция задана). Заодно чинит «битый» `--pool=swissknifeman` (пул без логина) →
-  каноничный `--pool=default` при ближайшем деплое. Тесты: `test_deploy.py` (+7, модели пулов и
-  override). Поймано на онбординге через `field-feedback-loop`.
+  protected-write, static-context, fanout): attention-finds go to `reasons` → verdict
+  ATTENTION (the same mechanics as `pack_drift`), info-finds - in machine-readable
+  `rep['efficiency']` and a human-readable section «Efficiency» before «RESULT». Invariant
+  is captured in docstrings: RED never comes from pathologies. SCHEMA=1-reports - block
+  silently lowers himself. +8 tests (`PathologyCase`). Context: SKM-MASTER-002 phase C.
+- **`maind sync` — providers `skills-catalog` and `output-style`.** Retroactive distribution for already
+  onboarded projects: `skills-catalog` (`skm:update` — re-resolving the skills catalog from disk,
+  the new skill of the already selected bucket is rolled out without manual re-onboard) and `output-style`
+  (`env:hooks --output-style lean`, opt-out `project.output_style: "off"`). Both are in default
+  set `--all`, both use existing capability `skm:update`/`env:hooks` from
+  `orchestrate.py` (none had a caller in `PROVISIONERS` before this). At the same time `skm:update`
+  added to `DRY_CAPABLE` — honest `--dry-run` instead fake print+rc0.
+- **Memory observability/graph in `analyze` + `maind memory count`.** Answers field question
+  «memory/the graph is written - are they readable and helpful, or are they just eating tokens?». `analyze.py` reads new
+  additive key `run_report.maind` (metrics MCP-memory calls/graph, they are counted by the paired parser
+  run-report in harness): string «memory: recall×N→M · graph: query×K» + heuristic ATTENTION **«code graph
+  was not used for heavy scanning»** (Read/Grep/Glob ≥30 with graph ×0) and «recall empty/not by
+  address». New subcommand `maind memory count [--project|--scope] [--json]` — number of facts by scope
+  (by scope-token, not the entire global pool). Skill `ecosystem-mcp` enhanced graph-first-hint
+  (graph/Serena before wide `grep`, with a caveat about manual scanning). Tests: `test_analyze.py`/
+  `test_memory.py` (+3). Back-compat: old `analyze` ignores the key `maind`, the new one does not crash without it.
+- **`perplexity-web` — hub-managed MCP-server (rolling out from the config, not manually).** Keyless-bridge
+  `perplexity-web` (separate Node-package) is distributed to projects by the same `deploy`/`sync`, what `maind`
+  and Serena, — a single source of truth instead of manual hardcode entries in each `.mcp.json`
+  (as it was with `swissknifeman`/`edufy`/`botkit`). Politics - section `mcp.perplexity_web` config:
+  `enabled` (global fan-out; per-project override `perplexity_web: true|false`), `pool`
+  (browser pooling model: generic literal like `default` — reuses the current login;
+  `per-project` — pool=id; `per-namespace` — pool=`ns-<namespace>`; per-project override
+  `perplexity_web_pool`), `bin` (fallback-path to `start.sh`, turns into an indirection
+  `${PERPLEXITY_WEB_MCP_BIN:-<bin>}` — portable, no hard-skin `/home/...`). New resolver
+  `pplxweb.py` (mirror `codegraph.py`), `PERPLEXITY_WEB_DEFAULTS` (disabled-by-default), entry in
+  `deploy_project`/`mark_deployed` (`proj.mcp.perplexity_web`), fallback defaults in `merge_defaults`
+  (only if section is specified). Repairs it at the same time «broken» `--pool=swissknifeman` (pool without login) →
+  canonical `--pool=default` at the next deployment. Tests: `test_deploy.py` (+7, pool models and
+  override). Caught onboarding via `field-feedback-loop`.
 
 ### Fixed
-- **MCP-провижининг устойчив к битому sibling-каналу.** Раньше `load_mcp` на битом JSON одного
-  канала (напр. `.cursor/mcp.json`) звал `die()` и валил **весь** `maind sync`/`deploy` (хотя
-  `.mcp.json` был валиден). Теперь `load_mcp` поднимает `MCPConfigError`, а `deploy_project` ловит
-  его **поканально**: битый файл не трогаем, печатаем warn и пропускаем только этот канал —
-  остальные каналы и проекты фан-аута отрабатывают (`result["skipped"]`, видно в выводе sync/deploy).
-  Недеструктивный мерж чужих серверов (`merge_server` сохраняет напр. `playwright`/`laravel-boost`)
-  как и был — добавлены регресс-тесты (`test_preserves_foreign_server_in_mcp_json`,
-  `test_broken_channel_skipped_others_continue`, `test_broken_json_raises`). Поймано на полевом
-  онбординге agelto через `field-feedback-loop`.
+- **MCP-provisioning is resistant to broken sibling-channel.** Previously `load_mcp` on bit JSON one
+  channel (e.g. `.cursor/mcp.json`) called `die()` and left **all** `maind sync`/`deploy` (although
+  `.mcp.json` was valid). Now `load_mcp` raises `MCPConfigError`, a `deploy_project` catches
+  him **per channel**: do not touch the broken file, print it warn and skip only this channel -
+  other channels and fan-out projects are being worked on (`result["skipped"]`, visible in the output sync/deploy).
+  Non-destructive merge of other people's servers (`merge_server` saves e.g. `playwright`/`laravel-boost`)
+  as it was - added regression tests (`test_preserves_foreign_server_in_mcp_json`,
+  `test_broken_channel_skipped_others_continue`, `test_broken_json_raises`). Caught in the field
+  onboarding agelto via `field-feedback-loop`.
 
 ### Changed
-- **Качество ядра по рецензии аудита (Perplexity)** — поведенчески-нейтральные правки `lib/maind/`
-  с проверкой каждого пункта по коду (часть замечаний аудита отклонена как фактически неверная или
-  противоречащая `stdlib-only`; см. `research/swissknifeman_audit.md`):
-  - `sync.py`: единый builder `_result(...)` — все провиженеры возвращают ОДНУ форму результата
-    (`provisioner/id/status/changed/state/detail`, все ключи всегда есть), 9 inline-словарей сведены
-    к нему; CLI больше не зависит от `.get()`-умолчаний. Над `PROVISIONERS` — сигнатура провиженера.
-  - `health.py`: 3 почти одинаковых hook-провиженера (`health`/`feature-log`/`memory`) сведены к
-    общему скелету `_apply_script_hook(...)`; `json.loads(json.dumps())` → `copy.deepcopy()` (намерение
-    явное, быстрее); `ok = lambda` → модульная `def _status(...)` (E731).
-  - `config.py`: `merge_defaults` — `copy.deepcopy` входа (не делит вложенные объекты ни со входом, ни
-    с `CODE_GRAPH_DEFAULTS`); `Config.save()` валидирует схему перед записью (не пишем испорченный
-    state); `import difflib` поднят на уровень модуля.
-  - `constants.py`/`orchestrate.py`/`sync.py`: `SIBLINGS` перенесён в нейтральный `constants.py` —
-    `sync._skiller_profiles_dir` больше не делает lazy-import `orchestrate` (устранён coupling-smell).
-  - `fleet.py`: `extract_chunks` читает/джойнит файл один раз (а не на каждое совпадение); добавлено
-    предупреждение при `>2000` чанках перед O(N²)-сравнением; уточнён комментарий `_DECL_RE` (языки).
+- **Kernel quality by audit review (Perplexity)** — behaviorally neutral edits `lib/maind/`
+  with checking each item by code (part of the audit observations was rejected as factually incorrect or
+  contradictory `stdlib-only`; see `research/swissknifeman_audit.md`):
+  - `sync.py`: single builder `_result(...)` — all providers return ONE result form
+    (`provisioner/id/status/changed/state/detail`, all keys are always there), 9 inline-dictionaries consolidated
+    to it; CLI no longer depends on `.get()`-defaults. Above `PROVISIONERS` — provider signature.
+  - `health.py`: 3 almost identical hook-provider (`health`/`feature-log`/`memory`) reduced to
+    to the general skeleton `_apply_script_hook(...)`; `json.loads(json.dumps())` → `copy.deepcopy()` (intent
+    explicit, faster); `ok = lambda` → modular `def _status(...)` (E731).
+  - `config.py`: `merge_defaults` — `copy.deepcopy` login (does not share nested objects with either input or
+    with `CODE_GRAPH_DEFAULTS`); `Config.save()` validates the schema before writing (do not write spoiled
+    state); `import difflib` raised to module level.
+  - `constants.py`/`orchestrate.py`/`sync.py`: `SIBLINGS` moved to neutral `constants.py` —
+    `sync._skiller_profiles_dir` doesn't do it anymore lazy-import `orchestrate` (fixed coupling-smell).
+  - `fleet.py`: `extract_chunks` reads/joins the file once (and not per match); added
+    warning when `>2000` chunks before O(N²)-comparison; comment clarified `_DECL_RE` (languages).
 
 ### Fixed
-- **`fleet duplicates`/`similar`**: `jscpd` и внешний эмбеддер проверяются по `returncode` — реальная
-  причина (нет `npx`/сети, ошибка бэкенда) попадает в сообщение вместо «нет файла отчёта».
-- **`load_json_db`**: при битом файле в `warn` теперь полный путь к бэкапу `.corrupt.<date>`, а не
-  только имя (видно, куда смотреть в `~/.maind/`).
+- **`fleet duplicates`/`similar`**: `jscpd` and external embedder are checked by `returncode` — real
+  reason (no `npx`/network, backend error) gets into the message instead «no report file».
+- **`load_json_db`**: when the file is broken in `warn` is now the full path to the backup `.corrupt.<date>`, and not
+  name only (you can see where to look in `~/.maind/`).
 
 ### Tests
-- Прямые юнит-тесты ранее косвенно покрытых чистых утилит (опровержение п. 5.1 аудита — тесты есть,
-  это добор пробелов): `fleet._cosine` (идентичные/ортогональные/нулевые векторы), `health._act`
-  (матрица mode×state), `health._file_state` (absent/fresh/stale), `health._merge_session_hook`
-  (идемпотентность, обновление по marker, изоляция входа через копию). +17 тестов (267 → 284).
+- Direct unit tests of previously indirectly covered pure utilities (refutation of clause 5.1 of the audit - there are tests,
+  is the addition of spaces): `fleet._cosine` (identical/orthogonal/null vectors), `health._act`
+  (matrix mode×state), `health._file_state` (absent/fresh/stale), `health._merge_session_hook`
+  (idempotency, update by marker, login isolation via copy). +17 tests (267 → 284).
 
 ### Added
-- **`onboard --skills-channel connect|vendor`** — выбор канала публикации скиллов на онбординге
-  (касается ТОЛЬКО скиллов; память/граф/MCP — как обычно). `onboard` спрашивает канал интерактивно
-  (как механизм памяти), флаг — для неинтерактива (дефолт `connect`); проброс в `skiller integrate
-  --skills-channel`. `vendor` → физ. копии скиллов в `.claude/skills/` (для проектов, отдаваемых
-  внешним разработчикам без доступа к реестру swissknifeman). `swissknifeman setup` форвардит флаг.
-- **Роль-паки субагентов (вариант A+C)**: 4 кросс-стек персона-пака в harness
-  (`role-tech-lead`/`role-cto`/`role-founder`/`role-maintainer`, `shape:role`, без
-  `stack.project_type`/`detect`). Доставка: `project.roles` в `config.json` → карта `role_packs`
-  (новый TOP_KEY) маппит роль → пак; `_resolve_agent_pack` (sync.py) добавляет роль-паки
-  аддитивно к стековому паку профиля. Роль-скиллы skiller получили `role_agent_pack` во
-  frontmatter; тонкий выбор одной роли — через vendor.
-- **Дерево решений настройки проекта** — канонический док `docs/guide/onboarding-decision-tree.md`
-  (10 слоёв с условными ветками: тип → память → namespaces → канал скиллов → бакеты → окружение →
-  граф → agent-packs → brain → эксплуатация). Принцип «оптимально, не максимально; неочевидно — спроси».
-- **Distributed-скилл `ecosystem-setup`** — раскатывается в проекты (как `ecosystem-mcp`) через новый
-  провиженер `setup-skill` (`skilldoc.apply_setup_skill`, в `sync` ORDER и в `onboard`). Доставляет
-  дерево решений тулинга в т.ч. во ВНЕШНИЕ репо, где governance-скиллы maind вне скоупа. Подстановка
-  `{{TYPE}}` добавлена.
-- `onboard` больше НЕ передаёт `--profile standalone/unknown` в skiller — нераспознанный тип уходит
-  в autodetect-fallback (минимум + warn), а не «ставит всё».
-- **Доставка субагентов по типу проекта (хаб → проект)**: профиль skiller называет
-  `agent_pack` (строка или список — композиция), а `maind onboard`/`maind sync` детерминированно
-  раскатывают пак(и) в `.claude/agents/` через `harness agent-packs render --auto` — БЕЗ агента в
-  цикле. Новый провиженер `agent-pack` (10-й в `sync` ORDER), capability `env:agent-pack`/
-  `env:agent-pack-upgrade` в orchestrate, шаг в onboard. `profile.model_tiers` пре-заполняют
-  модельные тиры агентов.
-- **Единый детектор типа проекта в `core.project`**: `maind._infer_type` (×2) и
-  `skiller.autodetect` сведены к одной таксономии (`core.detect_project_type`); `language_by_type`
-  тянется из `core.LANGUAGE_BY_TYPE`. Устранены 3 расходящиеся копии детекта.
-- `maind onboard` передаёт `--profile <type>` в `skiller integrate` — выбор скиллов/пресетов/MCP
-  идёт по профилю типа, а не только по дефолтам бандла.
-- **Авто-загрузка памяти на старте сессии** (`maind memory digest` + SessionStart-хук):
-  при `MODE=maind` онбординг ставит `.claude/maind-memory.sh`, который инжектит дайджест
-  памяти проекта в контекст Claude Code (`additionalContext`), и **выключает нативную
-  авто-память** (`autoMemoryEnabled:false`). Так демон становится единым источником
-  контекста — закрывает дыру «у демона нет авто-загрузки, агент должен помнить про recall».
-  Дайджест детерминирован (list+фильтр по scope-маркеру, приватный scope первым, свежее
-  сверху), хук-безопасен (демон лёг → тихий no-op). Откат на native — `revert_memory_hook`.
-- **Гибкий выбор механизма памяти**: `maind onboard --memory maind|native|off` (дефолт
-  `maind`; в интерактиве — вопрос чек-листа). `native` возвращает авто-память Claude Code.
-  `maind health` проверяет консистентность: `MODE=maind ⇒ native off + digest-инжект на месте`.
-- **Провиженер `memory-hook` в `maind sync`** — авто-загрузка памяти теперь докатывается на
-  уже подключённые проекты одной командой (`maind sync --all --only memory-hook`), не гоняя
-  полный `onboard`. Интент берётся из `.claude/memory.env.ini` (`MODE=maind` → ставит
-  digest-инжект + native off; `off` → revert на native; нет конфига → пропуск). Включён в
-  дефолтный набор `sync`, идемпотентен (drift по content-hash). Закрывает разрыв: шаблон
-  хука уже ссылался на эту команду, но провиженера в `sync` не было.
+- **`onboard --skills-channel connect|vendor`** — selecting a channel for publishing skills on onboarding
+  (applies to skills ONLY; memory/graph/MCP — as usual). `onboard` asks the channel interactively
+  (as a memory mechanism), flag - for non-interactive (default `connect`); forwarding to `skiller integrate
+  --skills-channel`. `vendor` → physical. copies of skills in `.claude/skills/` (for projects submitted
+  to external developers without registry access swissknifeman). `swissknifeman setup` forwards the flag.
+- **Subagent role packs (option A+C)**: 4 cross-stack person-pack in harness
+  (`role-tech-lead`/`role-cto`/`role-founder`/`role-maintainer`, `shape:role`, without
+  `stack.project_type`/`detect`). Delivery: `project.roles` in `config.json` → map `role_packs`
+  (new TOP_KEY) mappit role → pack; `_resolve_agent_pack` (sync.py) adds role packs
+  additive to the profile stack pack. Role-skills skiller received `role_agent_pack` in
+  frontmatter; subtle selection of one role - through vendor.
+- **Project setup decision tree** — canonical doc `docs/guide/onboarding-decision-tree.md`
+  (10 layers with conditional branches: type → memory → namespaces → skill channel → buckets → environment →
+  graph → agent-packs → brain → operation). Principle «optimal, not maximum; not obvious - ask».
+- **Distributed-skill `ecosystem-setup`** — is rolled out into projects (like `ecosystem-mcp`) via new
+  provider `setup-skill` (`skilldoc.apply_setup_skill`, in `sync` ORDER and in `onboard`). Delivers
+  tooling decision tree, incl. to EXTERNAL repos, where governance-skills maind outside the scope. Substitution
+  `{{TYPE}}` added.
+- `onboard` no longer transmits `--profile standalone/unknown` in skiller — unrecognized type goes away
+  in autodetect-fallback (minimum + warn), and not «puts everything».
+- **Delivery of subagents by project type (hub → project)**: profile skiller calls
+  `agent_pack` (string or list - composition), a `maind onboard`/`maind sync` deterministic
+  roll out the pack(and) in `.claude/agents/` via `harness agent-packs render --auto` — WITHOUT agent in
+  loop. New Provisioner `agent-pack` (10-th in `sync` ORDER), capability `env:agent-pack`/
+  `env:agent-pack-upgrade` in orchestrate, step in onboard. `profile.model_tiers` pre-fill
+  model agent shooting ranges.
+- **Single project type detector in `core.project`**: `maind._infer_type` (×2) and
+  `skiller.autodetect` reduced to one taxonomy (`core.detect_project_type`); `language_by_type`
+  reaches out from `core.LANGUAGE_BY_TYPE`. Eliminated 3 divergent copies of the detector.
+- `maind onboard` transmits `--profile <type>` in `skiller integrate` — selection of skills/presets/MCP
+  goes by the type profile, and not just by bundle defaults.
+- **Auto-load memory at the start of the session** (`maind memory digest` + SessionStart-hook):
+  when `MODE=maind` onboarding puts `.claude/maind-memory.sh`, which injects the digest
+  project memory into context Claude Code (`additionalContext`), and **disables native
+  auto-memory** (`autoMemoryEnabled:false`). So the demon becomes a single source
+  context - closes the hole «the daemon does not have auto-loading, the agent must remember about recall».
+  Digest is deterministic (list+filter by scope-token, private scope first, fresh
+  above), hook-safe (the demon lay down → quiet no-op). Rollback to native — `revert_memory_hook`.
+- **Flexible choice of memory mechanism**: `maind onboard --memory maind|native|off` (default
+  `maind`; online - checklist question). `native` returns auto-memory Claude Code.
+  `maind health` checks consistency: `MODE=maind ⇒ native off + digest-injection in place`.
+- **Provisioner `memory-hook` in `maind sync`** — memory auto-loading now rolls to
+  already connected projects with one command (`maind sync --all --only memory-hook`), without driving
+  full `onboard`. The intent is taken from `.claude/memory.env.ini` (`MODE=maind` → puts
+  digest-injection + native off; `off` → revert on native; no config → pass). Included in
+  default set `sync`, idempotent (drift by content-hash). Closes the gap: template
+  hook already referenced this command, but the provider in `sync` was not there.
 
 ### Changed
-- **Память проекта раскатывается только сервером `maind`** — raw MCP-сервер `agentmemory`
-  больше НЕ деплоится и активно УДАЛЯЕТСЯ из `.mcp.json` при `deploy`/`sync` (он писал мимо
-  scope-маркера → записи невидимы для scoped-recall, footgun изоляции). Legacy-возврат —
-  `maind deploy --with-agentmemory`. Статус проекта (`probe`/`health`) теперь определяется
-  наличием сервера `maind`, а не `agentmemory`. `mcpconfig.remove_server` — новый хелпер.
+- **Project memory is expanded only by the server `maind`** — raw MCP-server `agentmemory`
+  is no longer deployed and is actively REMOVED from `.mcp.json` when `deploy`/`sync` (he wrote by
+  scope-marker → entries are invisible to scoped-recall, footgun isolation). Legacy-return —
+  `maind deploy --with-agentmemory`. Project status (`probe`/`health`) is now defined
+  presence of a server `maind`, and not `agentmemory`. `mcpconfig.remove_server` — new helper.
 
 ### Docs
-- **`guide/memory.md` переписан под правду**: изоляция — на стороне maind (демон —
-  единый пул, `namespace`/`sessionId` игнорирует, `type` переопределяет; scope-маркер в
-  контенте), единый путь хук+MCP через `MODE=maind`, контракт `forget {memoryId}`, проверка
-  round-trip + troubleshooting, снята коллизия имён `federation` (память-файлы vs граф).
-  `guide/federation.md` получил врезку «не путать с памятью». Скилл `system/shared-memory`
-  → 0.2.0 (канон `MODE=maind`, мульти-namespace, membership по namespaces).
+- **`guide/memory.md` rewritten to match the truth**: insulation - on the side maind (demon -
+  single pool, `namespace`/`sessionId` ignores, `type` overrides; scope-marker in
+  content), single path hook+MCP via `MODE=maind`, contract `forget {memoryId}`, check
+  round-trip + troubleshooting, name collision removed `federation` (memory-files vs graph).
+  `guide/federation.md` received a sidebar «not to be confused with memory». Skill `system/shared-memory`
+  → 0.2.0 (canon `MODE=maind`, multi-namespace, membership by namespaces).
 
 ### Added
-- **Онбординг авто-проводит память**: `maind onboard` доводит проводку памяти и для уже
-  подключённого проекта — задаёт `namespaces` (дефолт «общий `axioma` + свой `<id>`»,
-  `--namespace a,b` для нескольких; клиентам — явный список без `axioma`) и пишет
-  `<project>/.claude/memory.env.ini` `MODE=maind`. Шаг `memwire` в отчёте.
-- **`maind health` — round-trip памяти**: проба write→recall→forget по temp-факту в
-  приватном scope + проверка, что хук в режиме `MODE=maind`. Ловит раскол (хук пишет не
-  в тот стор), сломанный forget и потерю изоляции. `--strict` падает при провале round-trip.
-- **`maind memory remember|recall|forget` (scope-aware CLI)**: единый путь записи/чтения
-  памяти для человека И хука. scope считается из конфига проекта через `namespaces.py`
-  (`--project`/cwd/`--scope`): `remember` пишет в приватный `project:<id>` (+ `--share`
-  в общие `ns:<тег>`); `recall` объединяет приватный + группы + `global` с дедупом.
-- **Изоляция памяти НА СТОРОНЕ maind**: agentmemory 0.9.x — единый глобальный пул, поле
-  `namespace` он игнорирует, `type` переопределяет (сверено живым `curl`). Поэтому maind
-  встраивает scope-маркер `[[s:<scope>]]` в контент при записи и фильтрует результаты по
-  нему при чтении (см. `store`/`recall`, `mark_scope`/`split_scope`). Приватность и
-  «общее-по-тегу» теперь реально работают; `maind_memory_recall` (MCP) разворачивает
-  `project:<id>` в полный набор recall-scope'ов.
+- **Onboarding auto-sweeps memory**: `maind onboard` brings up the memory wiring for already
+  of the connected project - sets `namespaces` (default «general `axioma` + yours `<id>`»,
+  `--namespace a,b` for several; clients - an explicit list without `axioma`) and writes
+  `<project>/.claude/memory.env.ini` `MODE=maind`. Step `memwire` in the report.
+- **`maind health` — round-trip memory**: sample write→recall→forget by temp-fact in
+  private scope + checking that the hook is in mode `MODE=maind`. Catches the split (hook does not write
+  in that side), broken forget and loss of insulation. `--strict` crashes on failure round-trip.
+- **`maind memory remember|recall|forget` (scope-aware CLI)**: single recording path/read
+  memory for man AND hook. scope is calculated from the project config via `namespaces.py`
+  (`--project`/cwd/`--scope`): `remember` writes in private `project:<id>` (+ `--share`
+  to general `ns:<tag>`); `recall` merges private + groups + `global` with grandfather.
+- **ON-SIDE Memory Isolation maind**: agentmemory 0.9.x — single global pool, field
+  `namespace` it ignores, `type` overrides (verified alive `curl`). Therefore maind
+  embeds scope-marker `[[s:<scope>]]` into the content when writing and filters the results by
+  him when reading (see `store`/`recall`, `mark_scope`/`split_scope`). Privacy and
+  «general-by-tag» now actually work; `maind_memory_recall` (MCP) expands
+  `project:<id>` to the full set recall-scope'ov.
 
 ### Fixed
-- **`maind memory forget`**: payload теперь `{memoryId}` вместо `{namespace, id}` —
-  прежний вариант давал `HTTP 400` от agentmemory 0.9.x (сверено живым `curl`), удаление
-  не работало. `FakeMemoryServer` в тестах получил `/agentmemory/forget` (по `memoryId`),
-  тест `test_memory_forget_deletes_by_id` доказывает round-trip store→recall→forget→gone.
+- **`maind memory forget`**: payload now `{memoryId}` instead `{namespace, id}` —
+  the previous version gave `HTTP 400` from agentmemory 0.9.x (verified alive `curl`), deletion
+  didn't work. `FakeMemoryServer` in tests received `/agentmemory/forget` (by `memoryId`),
+  test `test_memory_forget_deletes_by_id` proves round-trip store→recall→forget→gone.
 
 ## [0.2.0] — 2026-06-15
 
 ### Added
-- **Федерация графа**: граф **на проект** (`data/graphs/<id>.db`) + тонкий регенерируемый
-  `_index.db` вместо единого `graph.db`. Запрос через границу — federate-on-read (union сторов).
-  `graph_store: local` кладёт стор в сам репо проекта.
-- **Derive-движок**: граф строится из **источников истины** (`composer.json`/`package.json`,
-  Brain frontmatter, `<repo>/.maind.graph.json`, `skills-lock.json`) с пометкой плана (`via`),
-  а не из ручного дубля. Команды `graph derive` / `graph rebuild` / `graph --project` / `graph --cross`.
-- **Namespaces**: изоляция межпроектных связей по группам (`projects[].namespaces`) — внутри
-  группы общее, между группами изолировано; `["*"]` — общая инфраструктура. Применяется и к
-  графу (точка создания ребра), и к **памяти** (бакеты `ns:<имя>`).
-- **Namespace-паритет памяти**: scope-ярус `ns:<имя>` рядом с `project:<id>`/`global`; seed
-  пишет cross-ref о связях в бакеты группы; `maind_memory_links` отдаёт память из всех
-  релевантных бакетов (`project:<id>` + `ns:<группы>` + `global`).
-- **Healthcheck** (`maind health [--cwd|--project] [--fix] [--strict]`): статус
-  `connected|partial|standalone` + подсказки; провиженеры доставки «приоритета №1» в проекты
-  (SessionStart-хук + управляемый блок в `CLAUDE.md`).
-- **Единый провижининг** `maind sync`: фан-аут управляемых артефактов на проекты через реестр
-  провиженеров (`mcp` · `graph` · `memory` · `health-hook` · `health-doc`), режимы
-  `install|update|auto` с честным `changed` по content-hash; `deploy` = `sync --only mcp`.
-- **Workspace trust** (`maind workspace sync|status`): доверие Claude к проектам экосистемы
-  через `.claude/settings.local.json` (отдельно от allow/deny).
-- **MCP harden+extend**: крэш-устойчивый цикл (ошибка инструмента → `isError`, сервер жив),
-  эхо `protocolVersion`, stderr-логи, conformance-тест на реальный spawn. **11 tools**
+- **Count Federation**: graph **for the project** (`data/graphs/<id>.db`) + thin regenerable
+  `_index.db` instead of a single `graph.db`. Cross-border request - federate-on-read (union stores).
+  `graph_store: local` puts the store in the project repo itself.
+- **Derive-engine**: graph is constructed from **sources of truth** (`composer.json`/`package.json`,
+  Brain frontmatter, `<repo>/.maind.graph.json`, `skills-lock.json`) with plan mark (`via`),
+  and not from a manual take. Teams `graph derive` / `graph rebuild` / `graph --project` / `graph --cross`.
+- **Namespaces**: isolation of inter-project relationships by groups (`projects[].namespaces`) — inside
+  groups common, isolated between groups; `["*"]` — general infrastructure. Applies to
+  column (edge creation point), and to **memory** (buckets `ns:<name>`).
+- **Namespace-memory parity**: scope-tier `ns:<name>` next to `project:<id>`/`global`; seed
+  writes cross-ref about connections to group buckets; `maind_memory_links` gives away memory from all
+  relevant buckets (`project:<id>` + `ns:<groups>` + `global`).
+- **Healthcheck** (`maind health [--cwd|--project] [--fix] [--strict]`): status
+  `connected|partial|standalone` + hints; delivery providers «priority №1» to projects
+  (SessionStart-hook + managed block in `CLAUDE.md`).
+- **Unified provisioning** `maind sync`: fan-out of managed artifacts to projects via the registry
+  providers (`mcp` · `graph` · `memory` · `health-hook` · `health-doc`), modes
+  `install|update|auto` with honest `changed` by content-hash; `deploy` = `sync --only mcp`.
+- **Workspace trust** (`maind workspace sync|status`): trust Claude to ecosystem projects
+  via `.claude/settings.local.json` (separate from allow/deny).
+- **MCP harden+extend**: crash-resistant cycle (tool error → `isError`, server is alive),
+  echo `protocolVersion`, stderr-logs, conformance-test for real spawn. **11 tools**
   (+`graph_path`, `graph_project`, `memory_forget`, `memory_links`, `projects_status`).
-- **graphify** как со-равный agent-memory механизм связей (граф **кода** проекта),
-  раскатывается отдельным MCP-сервером (`deploy --with-graphify`).
-- Локальный скилл `.claude/skills/maind-overview` + корневой `CLAUDE.md` (карта кода/конвенции).
-- Гайды: federation, namespaces, graphify, health, sync (ru-RU, с примерами).
+- **graphify** as a peer agent-memory link mechanism (graph **code** project),
+  is rolled out separately MCP-server (`deploy --with-graphify`).
+- Local skill `.claude/skills/maind-overview` + root `CLAUDE.md` (code map/convention).
+- Guides: federation, namespaces, graphify, health, sync (ru-RU, with examples).
 
 ### Changed
-- **Единственная раскладка графа — федерация**: легаси-путь `seed_*` (единый `graph.db` из
-  конфига) удалён; всё строится через `derive`. `graph.adapter` канонически
-  `federation`/`disabled`; устаревшие `memory`/`graphify`/`networkx` принимаются с
-  предупреждением и нормализуются в `federation`.
-- Чтение графа — через единый фасад `federation.graph_reader`.
-- Документация и `.maind.example.json` приведены к текущей модели; удалено мёртвое поле
-  `graph_node`; команда `graph migrate-federation` убрана.
+- **The only graph layout is federation**: legacy-path `seed_*` (single `graph.db` from
+  config) deleted; everything is built through `derive`. `graph.adapter` canonical
+  `federation`/`disabled`; obsolete `memory`/`graphify`/`networkx` are accepted with
+  warning and normalized to `federation`.
+- Reading the graph - through a single façade `federation.graph_reader`.
+- Documentation and `.maind.example.json` are adjusted to the current model; dead field removed
+  `graph_node`; command `graph migrate-federation` has been removed.
 
 ### Performance
-- Federation кэширует in-memory union в пределах инстанса (read-only) — query/neighbors/path/
-  stats не пересобирают union на каждый вызов.
+- Federation caches in-memory union within instance (read-only) — query/neighbors/path/
+  stats are not rebuilt union for each call.
 
 ### Tests
-- Покрытие `cli`/`doctor`/`constants` (26/26 модулей), namespace-изоляция памяти,
-  graphify-деплой, честный `changed` в sync. 166 → 189 тестов.
+- Coating `cli`/`doctor`/`constants` (26/26 modules), namespace-memory isolation,
+  graphify-deployment, honest `changed` in sync. 166 → 189 tests.
 
 ## [0.1.0] — 2026-06-14
 
 ### Added
-- Ядро на Python + bash (тонкий лаунчер `bin/maind` → `python3 -m maind`), stdlib-only.
-- **Память**: оркестрация Node-демона `@agentmemory/agentmemory` (`memory start/stop/status`)
-  + HTTP-обёртка со scope'ами (`store/recall/forget/export`), сверенная с реальным API
+- Core on Python + bash (slim launcher `bin/maind` → `python3 -m maind`), stdlib-only.
+- **Memory**: orchestration Node-demon `@agentmemory/agentmemory` (`memory start/stop/status`)
+  + HTTP-wrapper with scope'ami (`store/recall/forget/export`), verified with real API
   agentmemory 0.9.x (`/agentmemory/remember` · `/agentmemory/search` · `/agentmemory/health`).
-  Порты — из env/конфига, без хардкода.
-- **Граф**: stdlib property-граф (`node/edge/neighbors/path/subgraph/stats`) с персистом
-  в node-link JSON; `networkx`/`graphify` как опциональные адаптеры через `graph.adapter`.
-  Автозасев проектов/связей из конфига (`depends_on`/`uses`/`belongs_to`).
-- **Реестр агентов**: `register/heartbeat/list/kill/reap` (`~/.maind/agents.json`),
-  деривация состояния `alive/stale/dead` из heartbeat + живости pid.
-- **Реестр проектов**: `.maind.json` (надмножество brain `.projects.json`) + fallback на
-  legacy с предупреждением; `projects sync --from brain` (маппинг реальной схемы brain).
-- **MCP-сервер**: `maind mcp` — stdio JSON-RPC, 6 tools (memory/graph/agents/projects).
-- **Миграция**: `migrate from-brain` (конфиг + граф), `migrate from-agentmemory` (iii-config).
-- **CLI**: `start`, `status`, `doctor`, сводный статус узла.
+  Ports - from env/config, without hardcode.
+- **Graph**: stdlib property-graph (`node/edge/neighbors/path/subgraph/stats`) with persistent
+  in node-link JSON; `networkx`/`graphify` as optional adapters via `graph.adapter`.
+  Auto-seeding of projects/connections from the config (`depends_on`/`uses`/`belongs_to`).
+- **Agent Registry**: `register/heartbeat/list/kill/reap` (`~/.maind/agents.json`),
+  state derivation `alive/stale/dead` from heartbeat + liveliness pid.
+- **Project Registry**: `.maind.json` (superset brain `.projects.json`) + fallback on
+  legacy with warning; `projects sync --from brain` (mapping of the real circuit brain).
+- **MCP-server**: `maind mcp` — stdio JSON-RPC, 6 tools (memory/graph/agents/projects).
+- **Migration**: `migrate from-brain` (config + graph), `migrate from-agentmemory` (iii-config).
+- **CLI**: `start`, `status`, `doctor`, summary node status.
 - `install.sh`, `.maind.example.json`, `.env.example`, `config/memory/iii-config.yaml`
   (service_name: maind), `scripts/test.sh`, `scripts/validate.sh`.
-- Документация (VitePress, ru-RU), 65 unit-тестов (без живого демона — `FakeMemoryServer`).
+- Documentation (VitePress, ru-RU), 65 unit-tests (without a living demon - `FakeMemoryServer`).
 
 [Unreleased]: https://github.com/academici/maind/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/academici/maind/compare/v0.1.0...v0.2.0

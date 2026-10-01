@@ -120,7 +120,7 @@ def latest_action(plan_dir, *, item_id: str | None = None,
 
 def _closed(value, expected, field):
     if not isinstance(value, dict):
-        raise RepairDecisionError(f"{field}: ожидается object")
+        raise RepairDecisionError(f"{field}: pending object")
     missing, unknown = sorted(expected - set(value)), sorted(set(value) - expected)
     if missing or unknown:
         raise RepairDecisionError(f"{field}: closed schema missing={missing} unknown={unknown}")
@@ -129,7 +129,7 @@ def _closed(value, expected, field):
 def _strings(value, field, *, nonempty=True):
     if (not isinstance(value, list) or (nonempty and not value) or len(value) != len(set(value))
             or any(not isinstance(row, str) or not row for row in value)):
-        raise RepairDecisionError(f"{field}: ожидается unique непустой string array")
+        raise RepairDecisionError(f"{field}: pending unique non-empty string array")
 
 
 def _carrier(value, field):
@@ -137,46 +137,46 @@ def _carrier(value, field):
     if (not isinstance(value["command"], str) or not value["command"]
             or not isinstance(value["digest"], str) or not _DIGEST.fullmatch(value["digest"])
             or value["result"] not in {"green", "red"}):
-        raise RepairDecisionError(f"{field}: невалидный carrier")
+        raise RepairDecisionError(f"{field}: invalid carrier")
 
 
 def validate(record: dict) -> None:
     """Validate without a JSON-schema runtime dependency (Task stays stdlib-only)."""
     _closed(record, _ROOT, "repair decision")
     if record["schema_version"] != "repair-decision/v1":
-        raise RepairDecisionError("schema_version: ожидается repair-decision/v1")
+        raise RepairDecisionError("schema_version: pending repair-decision/v1")
     if not isinstance(record["plan_id"], str) or not record["plan_id"]:
-        raise RepairDecisionError("plan_id: ожидается непустая строка")
+        raise RepairDecisionError("plan_id: expected non-empty string")
     if not isinstance(record["item_id"], str) or not _ITEM.fullmatch(record["item_id"]):
-        raise RepairDecisionError("item_id: ожидается Pn.m")
+        raise RepairDecisionError("item_id: pending Pn.m")
     if record["origin"] not in {"validation", "checkpoint", "producer-readiness"}:
-        raise RepairDecisionError("origin: значение вне закрытого enum")
+        raise RepairDecisionError("origin: value outside closed enum")
     _carrier(record["original_carrier"], "original_carrier")
     if record["original_carrier"]["result"] != "red":
-        raise RepairDecisionError("original_carrier: repair начинается только с red carrier")
+        raise RepairDecisionError("original_carrier: repair starts only with red carrier")
     baseline = record["baseline"]
     _closed(baseline, {"reproduced", "carrier"}, "baseline")
     if not isinstance(baseline["reproduced"], bool) or baseline["carrier"] is not None and not isinstance(baseline["carrier"], dict):
-        raise RepairDecisionError("baseline: невалидный record")
+        raise RepairDecisionError("baseline: invalid record")
     if baseline["reproduced"] != (baseline["carrier"] is not None):
-        raise RepairDecisionError("baseline: reproduced и carrier должны совпадать")
+        raise RepairDecisionError("baseline: reproduced and carrier must match")
     if baseline["carrier"] is not None:
         _carrier(baseline["carrier"], "baseline.carrier")
     candidate = record["candidate"]
     _closed(candidate, {"delta_proved", "evidence_ids"}, "candidate")
     if not isinstance(candidate["delta_proved"], bool):
-        raise RepairDecisionError("candidate.delta_proved: ожидается boolean")
+        raise RepairDecisionError("candidate.delta_proved: pending boolean")
     _strings(candidate["evidence_ids"], "candidate.evidence_ids", nonempty=candidate["delta_proved"])
     paths = record["affected_paths"]
     if not isinstance(paths, list) or not paths:
-        raise RepairDecisionError("affected_paths: нужен непустой список")
+        raise RepairDecisionError("affected_paths: needs a non-empty list")
     seen = set()
     for index, path in enumerate(paths):
         _closed(path, {"path", "owner_item", "declared_file"}, f"affected_paths[{index}]")
         if (not isinstance(path["path"], str) or not path["path"] or path["path"] in seen
                 or not isinstance(path["owner_item"], str) or not _ITEM.fullmatch(path["owner_item"])
                 or not isinstance(path["declared_file"], bool)):
-            raise RepairDecisionError(f"affected_paths[{index}]: невалидный path/owner")
+            raise RepairDecisionError(f"affected_paths[{index}]: invalid path/owner")
         seen.add(path["path"])
     diff = record["bounded_diff"]
     _closed(diff, {"files_changed", "max_files", "reversible"}, "bounded_diff")
@@ -184,25 +184,25 @@ def validate(record: dict) -> None:
             or isinstance(diff["max_files"], bool) or not isinstance(diff["max_files"], int)
             or diff["files_changed"] < 0 or diff["max_files"] < 1
             or not isinstance(diff["reversible"], bool)):
-        raise RepairDecisionError("bounded_diff: невалиден")
+        raise RepairDecisionError("bounded_diff: is invalid")
     surface = record["material_surface"]
     _closed(surface, _SURFACES, "material_surface")
     if any(not isinstance(value, bool) for value in surface.values()):
-        raise RepairDecisionError("material_surface: все оси должны быть boolean")
+        raise RepairDecisionError("material_surface: all axes must be boolean")
     for field in ("pre_validation", "post_validation"):
         if not isinstance(record[field], list) or (field == "pre_validation" and not record[field]):
-            raise RepairDecisionError(f"{field}: нужен список carrier")
+            raise RepairDecisionError(f"{field}: need a list carrier")
         for index, carrier in enumerate(record[field]):
             _carrier(carrier, f"{field}[{index}]")
     if not any(row == record["original_carrier"] for row in record["pre_validation"]):
-        raise RepairDecisionError("pre_validation: обязан включать exact original carrier")
+        raise RepairDecisionError("pre_validation: must include exact original carrier")
     _strings(record["evidence_ids"], "evidence_ids")
     design = record["design"]
     if design is not None:
         _closed(design, {"decision_question", "evidence_gap", "alternatives", "expected_artifact"}, "design")
         if (any(not isinstance(design[name], str) or not design[name]
                 for name in ("decision_question", "evidence_gap", "expected_artifact"))):
-            raise RepairDecisionError("design: R&D поля должны быть непустыми")
+            raise RepairDecisionError("design: R&D fields must be non-empty")
         _strings(design["alternatives"], "design.alternatives")
 
 

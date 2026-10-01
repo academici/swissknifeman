@@ -106,46 +106,46 @@ produces_input_for: [Architecture_[Name].md, ADR-001_tech_stack.md]
 
 # Tech Stack Selection — [ProjectName]
 
-## Constraints (из BRD и реальности)
-- Регуляторика: ...
-- Команда: ...
-- Бюджет infra: ...
-- Жёстко заданные элементы стека: ...
+## Constraints (from BRD and reality)
+- Regulatory: ...
+- Command: ...
+- Budget infra: ...
+- Hardcoded stack elements: ...
 
-## Trade-off матрица: backend язык
-[таблица]
+## Trade-off matrix: backend language
+[table]
 
-## Trade-off матрица: БД
-[таблица]
+## Trade-off matrix: DB
+[table]
 
-## Trade-off матрица: frontend
-[таблица]
+## Trade-off matrix: frontend
+[table]
 
-## Trade-off матрица: infra
-[таблица]
+## Trade-off matrix: infra
+[table]
 
-## Совместимость осей
-- Backend + БД: ...
+## Axle compatibility
+- Backend + DB: ...
 - Frontend + Backend: ...
-- Infra + язык: ...
+- Infra + language: ...
 
-## Стартовый стек MVP
+## Starting stack MVP
 - Backend: ...
-- БД: ...
+- DB: ...
 - Frontend: ...
 - Infra: ...
 - Queue: ...
 
-## Заменяемые компоненты
-- [список с указанием стоимости миграции]
+## Replacement Parts
+- [list indicating the cost of migration]
 
-## Жёсткое ядро (не меняем без переписывания)
+## Hard core (do not change without rewriting)
 - ...
 
-## Триггеры пересмотра
-- При [метрика] → пересмотреть [компонент]
+## Revision Triggers
+- When [metric] → review [component]
 
-## Антипаттерны для стадии (агент)
+## Anti-patterns for the stage (agent)
 - ...
 
 ## ADR
@@ -161,18 +161,18 @@ produces_input_for: [Architecture_[Name].md, ADR-001_tech_stack.md]
 Accepted — YYYY-MM-DD
 
 ## Context
-[краткая выжимка из BRD + Tech_Stack_Selection.md]
+[a short summary from BRD + Tech_Stack_Selection.md]
 
 ## Decision
-[стек одной таблицей]
+[stack with one table]
 
 ## Alternatives considered
-[главные альтернативы по каждой оси и почему отклонены]
+[main alternatives for each axis and why they are rejected]
 
 ## Consequences
-- Положительные: ...
-- Отрицательные / accepted риски: ...
-- Триггеры для следующего ADR: ...
+- Positives: ...
+- Negative / accepted risks: ...
+- Triggers for the following ADR: ...
 ```
 
 ## Hard prohibitions at this stage

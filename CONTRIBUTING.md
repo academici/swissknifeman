@@ -1,83 +1,87 @@
-# Contributing — swissknifeman (монорепо-зонтик)
+# Contributing — swissknifeman (monorepo-umbrella)
 
-Гид для контрибьюторов корня монорепо. Это **зонтик экосистемы academici**: один репозиторий —
-три независимых пакета (`skiller`, `harness`, `maind`) + общий `core` + корневой роутер
-`swissknifeman`. Подробная карта — в [`CLAUDE.md`](CLAUDE.md) (корень и каждый пакет).
+Guide for monorepo root contributors. This **ecosystem umbrella academici**: one repository -
+three independent packages (`skiller`, `harness`, `maind`) + general `core` + root router
+`swissknifeman`. Detailed map - in [`CLAUDE.md`](CLAUDE.md) (root and each package).
 
-## Раскладка
+## Layout
 
 ```
-core/                 # общий stdlib-only пакет (Env/io/cli/term/text/repo)
-packages/skiller/     # реестр скиллов            (CLI skiller)   — см. packages/skiller/CONTRIBUTING.md
-packages/harness/     # окружение Claude Code      (CLI harness)
-packages/maind/       # хаб памяти/графа/координации (CLI maind)   — см. packages/maind/CONTRIBUTING.md
-bin/swissknifeman     # корневой роутер (router + setup-фасад)
-install.sh            # зонтичный установщик (делегирует install.sh пакетов)
+core/                 # general stdlib-only package (Env/io/cli/term/text/repo)
+packages/skiller/     # skill registry            (CLI skiller)   — see packages/skiller/CONTRIBUTING.md
+packages/harness/     # environment Claude Code      (CLI harness)
+packages/maind/       # memory hub/column/coordination (CLI maind)   — see packages/maind/CONTRIBUTING.md
+bin/swissknifeman     # root router (router + setup-facade)
+install.sh            # umbrella installer (delegates install.sh packages)
 ```
 
-## Установка для разработки
+## Development Installation
 
 ```bash
-./install.sh                  # ставит CLI пакетов + симлинк swissknifeman в ~/.local/bin
+./install.sh                  # puts CLI packages + symlink swissknifeman in ~/.local/bin
 ```
 
-- **Без pip, stdlib-only.** Рантайм-зависимостей в Python нет; `core` подключается через
-  `PYTHONPATH` — лаунчеры (`packages/*/bin/*`) добавляют корень монорепо автоматически
-  (fallback на standalone-раскладку пакета). Отдельно ничего «устанавливать» для `core` не нужно.
-- **IDE-автодополнение `from core import ...`:** для Pylance/pyright в корне лежит
-  `pyrightconfig.json` (`extraPaths`: корень репо `.` + `packages/*/lib`) — резолв работает «из
-  коробки», без pip. PyCharm: отметь `.` и `packages/*/lib` как *Sources Root*.
-- **`.mcp.json` и `config.json` машинно-специфичны** (абсолютные пути) и не коммитятся
-  (`.gitignore`); шаблоны — `.mcp.json.example` / `config.example.json`. Реальный `.mcp.json` для
-  этого репо генерит `maind` (sync/deploy).
+- **Without pip, stdlib-only.** Runtime dependencies in Python no; `core` connects via
+  `PYTHONPATH` — launchers (`packages/*/bin/*`) add monorepo root automatically
+  (fallback on standalone-package layout). Nothing separately «install» for `core` is not needed.
+- **IDE-autocompletion `from core import ...`:** for Pylance/pyright lies at the root
+  `pyrightconfig.json` (`extraPaths`: repo root `.` + `packages/*/lib`) — resolve works «from
+  boxes», without pip. PyCharm: mark `.` and `packages/*/lib` like *Sources Root*.
+- **`.mcp.json` and `config.json` machine-specific** (absolute paths) and do not commit
+  (`.gitignore`); templates - `.mcp.json.example` / `config.example.json`. Real `.mcp.json` for
+  of this repo generates `maind` (sync/deploy).
 
-## Тесты и валидация
+## Tests and validation
 
-Перед каждым PR — зелёная валидация по затронутым пакетам + smoke `core`:
+Before each PR — green validation on affected packages + smoke `core`:
 
 ```bash
 bash packages/skiller/scripts/validate.sh
 bash packages/harness/scripts/validate.sh
 bash packages/maind/scripts/validate.sh
-PYTHONPATH=. python3 -m unittest discover -s core/tests -v   # фундамент core
+PYTHONPATH=. python3 -m unittest discover -s core/tests -v   # foundation core
 ```
 
-`validate.sh` каждого пакета прогоняет `py_compile`, `bash -n`, проверки JSON и юнит-тесты
-(`scripts/test.sh`). CI (`.github/workflows/test.yml`) гоняет то же на Python 3.9–3.13.
+`validate.sh` of each packet runs `py_compile`, `bash -n`, checks JSON and unit tests
+(`scripts/test.sh`). CI (`.github/workflows/test.yml`) runs the same on Python 3.9–3.13.
 
-## Конвенции
+## Conventions
 
-- **stdlib-only** в Python (`lib/`, `core/`) — никаких pip-зависимостей в рантайме.
-- **`Env` передаётся явно** (frozen dataclass, наследник `core.BaseEnv`) — без модульных глобалей,
-  всё тестируемо в tmpdir.
-- **Атомарная запись** файлов/JSON — через `core.atomic_write_text` / `atomic_write_json`.
-- **Сообщения — на русском** (`die`, `warn`).
-- **Коммиты — Conventional Commits на русском** (напр. `fix(core): ...`, `docs: ...`).
+- **stdlib-only** in Python (`lib/`, `core/`) — none pip-dependencies at runtime.
+- **`Env` is passed explicitly** (frozen dataclass, heir `core.BaseEnv`) — without modular globals,
+  everything is tested in tmpdir.
+- **Atomic write** files/JSON — via `core.atomic_write_text` / `atomic_write_json`.
+- **Messages - in Russian** (`die`, `warn`).
+- **Commits - Conventional Commits in Russian** (e.g. `fix(core): ...`, `docs: ...`).
 
-## Релизная дисциплина
+## Release discipline
 
-- Содержательное изменение → запись в `CHANGELOG.md` `[Unreleased]`.
-- Правки скиллов/бакетов/плагинов → `skiller registry` (регенерит `skills.json`, marketplace,
-  plugin-манифесты, граф) — генерёжку руками не правят.
-- Аннотированные semver-теги: `git tag -a vX.Y.Z`; при теге `[Unreleased]` → `[X.Y.Z]`.
-  Umbrella, package API и installable plugin units имеют собственные версии.
-- До тега: `skiller registry --check`, provider command generator `--check`,
-  `skiller attest --release vX.Y.Z --previous vA.B.C`, затем
-  `python3 scripts/verify-tag.py vX.Y.Z`. Изменившийся unit tree требует version bump.
-  Attestation содержит tag/date/digests; SHA определяется через тег, без самоссылки release commit.
-- После тега: `skiller deliver --release vX.Y.Z --all --dry-run`, затем та же команда
-  без `--dry-run`. Только receipt GREEN доказывает полную поставку; PARTIAL перечисляет
-  сохранённые конфликтующие targets. Provider sessions требуют перезапуска.
-- Git-тег и attestation фиксируют версию исходников; `release-fleet` проверяет локальную
-  поставку, но не создаёт GitHub Release. Страница GitHub Releases публикуется отдельно и
-  может отставать от тегов. Для выбора версии сверяйте теги и release attestation, а не
-  считайте метку Latest на GitHub Releases доказательством актуальной поставки.
-- API теги используют `packages/<name>/vX.Y.Z`; plugin теги — `<name>--vX.Y.Z`.
+- Content change → entry in `CHANGELOG.md` `[Unreleased]`.
+- Skill edits/buckets/plugins → `skiller registry` (regenerates `skills.json`, marketplace,
+  plugin-manifests, graph) — you don’t use your hands to straighten a genezhka.
+- Annotated semver-tags: `git tag -a vX.Y.Z`; with tag `[Unreleased]` → `[X.Y.Z]`.
+  Umbrella, package API and installable plugin units have their own versions.
+- Provider caches are keyed by plugin version: changed content under an unchanged version is never
+  re-fetched. Check with `python3 scripts/version-guard.py status --installed`, bump with
+  `version-guard.py bump <unit>` (`task` follows the umbrella — `skiller release`); details in the
+  `release-discipline` skill.
+- Before tag: `skiller registry --check`, provider command generator `--check`,
+  `skiller attest --release vX.Y.Z --previous vA.B.C`, then
+  `python3 scripts/verify-tag.py vX.Y.Z`. Changed unit tree requires version bump.
+  Attestation contains tag/date/digests; SHA is defined via a tag, without self-referencing release commit.
+- After the tag: `skiller deliver --release vX.Y.Z --all --dry-run`, then the same command
+  without `--dry-run`. Only receipt GREEN proves complete delivery; PARTIAL lists
+  saved conflicting targets. Provider sessions require a restart.
+- Git-tag and attestation fix the source version; `release-fleet` checks local
+  delivery, but does not create GitHub Release. Page GitHub Releases is published separately and
+  may lag tags. To select a version, check the tags and release attestation, and not
+  read the mark Latest on GitHub Releases proof of current delivery.
+- API tags are used `packages/<name>/vX.Y.Z`; plugin tags - `<name>--vX.Y.Z`.
 
 ## PR
 
-1. Ветка от `main` (на `main` напрямую не коммитим).
-2. Валидация затронутых пакетов зелёная; `core`-тесты проходят.
-3. PR на русском, описание — что и зачем. CI прогонит ту же валидацию.
+1. Thread from `main` (on `main` do not commit directly).
+2. Validation of affected packages is green; `core`-tests pass.
+3. PR in Russian, description - what and why. CI will run the same validation.
 
-Пакет-специфика (скиллы, апстримы, память/граф) — в `packages/<pkg>/CONTRIBUTING.md` и `CLAUDE.md`.
+Package-specific (skills, upstreams, memory/graph) — in `packages/<pkg>/CONTRIBUTING.md` and `CLAUDE.md`.

@@ -1,67 +1,67 @@
-// Шаблон 3: audit-adversarial — M finders (измерения) → dedup → adversarial verify → вердикты.
-// Read-only: ни один агент ничего не правит и не коммитит. Правила слотов — README.md рядом.
+// Template 3: audit-adversarial — M finders (measurements) → dedup → adversarial verify → verdicts.
+// Read-only: not a single agent edits or commits anything. Slot Rules - README.md nearby.
 export const meta = {
-  name: 'audit-adversarial', // SLOT: имя под конкретный запуск
-  description: 'Adversarial-аудит артефакта: параллельные finder-измерения, дедупликация, независимая верификация находок',
-  whenToUse: 'Аудит плана/доков/кода/диффа; запускать через scriptPath (НЕ named-workflow — args приходит строкой)',
+  name: 'audit-adversarial', // SLOT: name for a specific launch
+  description: 'Adversarial-artifact audit: parallel finder-measurements, deduplication, independent verification of findings',
+  whenToUse: 'Plan Audit/docks/code/diff; run through scriptPath (NOT named-workflow — args comes as a string)',
   phases: [
-    { title: 'Find', detail: 'по finder-агенту на измерение, параллельно', model: 'sonnet' },
-    { title: 'Dedup', detail: 'слияние дублей, нормализация severity', model: 'sonnet' },
-    { title: 'Verify', detail: 'адверсариальная проверка каждой находки свежим контекстом', model: 'opus' },
+    { title: 'Find', detail: 'by finder-agent for measurement, in parallel', model: 'sonnet' },
+    { title: 'Dedup', detail: 'merging duplicates, normalization severity', model: 'sonnet' },
+    { title: 'Verify', detail: 'adversarial verification of each find with fresh context', model: 'opus' },
   ],
 }
 
-// ── Конфиг (embedded, НЕ через args-строку) ──────────────────────────────────
-// SLOT: TARGET — что аудируем (абсолютные пути: репо/план/дифф) + как читать.
-// ИНВАРИАНТ: только абсолютные пути (cwd субагента сбрасывается между вызовами).
+// ── Config (embedded, NOT via args-line) ──────────────────────────────────
+// SLOT: TARGET — that we are auditing (absolute paths: repo/plan/diff) + how to read.
+// INVARIANT: absolute paths only (cwd subagent is reset between calls).
 const TARGET = {
   paths: ['/abs/path/to/target'],
-  readHint: 'прочитай план целиком; код — точечно по ссылкам из плана', // как экономно читать цель
+  readHint: 'read the entire plan; code - point by point according to the links from the plan', // how to read a target economically
 }
 for (const p of TARGET.paths) {
-  if (!p.startsWith('/')) throw new Error(`TARGET.paths должен быть абсолютным путём: "${p}"`)
+  if (!p.startsWith('/')) throw new Error(`TARGET.paths must be an absolute path: "${p}"`)
 }
 
-// SLOT: CONSTITUTION — конституция соответствия (профиль artifact-review, блок 12):
-// план → схема plan-protocol 2.0 + DoR; документация → канон структуры docs;
-// код → скиллы стека (## Conformance). Пути к файлам-эталонам, finder их читает.
+// SLOT: CONSTITUTION — conformity constitution (profile artifact-review, block 12):
+// plan → diagram plan-protocol 2.0 + DoR; documentation → structure canon docs;
+// code → stack skills (## Conformance). Paths to reference files, finder reads them.
 const CONSTITUTION = ['/abs/path/to/constitution.md']
 
-// SLOT: DIMENSIONS — измерения аудита; по finder'у на измерение. Классика для кода:
-// correctness/security/perf + conformance-finder на каждый применимый скилл.
-// Для плана: RAG-groundedness, структурная полнота, непротиворечивость D-лога, Open Questions.
-// cache-bust: `agent()` кэширует по (prompt, opts) — на `resumeFromRunId` конкретного
-// измерения без глобального инвалидатора добавь опц. поле `asOf` (дата/тег) в объект
-// измерения и подмешай в `label`/промпт (см. README §Общие инварианты), не трогая остальные.
+// SLOT: DIMENSIONS — audit dimensions; by finder'for measurement. Classic for code:
+// correctness/security/perf + conformance-finder for each applicable skill.
+// For the plan: RAG-groundedness, structural completeness, consistency D-log, Open Questions.
+// cache-bust: `agent()` caches by (prompt, opts) — on `resumeFromRunId` specific
+// measurements without global invalidator add opt. field `asOf` (date/tag) to object
+// measurements and mix into `label`/prompt (see README §General invariants), without touching the others.
 const DIMENSIONS = [
-  { key: 'dimension-a', brief: 'Что именно искать, какие паттерны дефектов, что НЕ является находкой.' },
+  { key: 'dimension-a', brief: 'What exactly to look for, what defect patterns, what is NOT a find.' },
 ]
 
-// SLOT: SEVERITY — enum severity; канон artifact-review: Blocker/Major/Minor/Nit.
+// SLOT: SEVERITY — enum severity; canon artifact-review: Blocker/Major/Minor/Nit.
 const SEVERITY = ['Blocker', 'Major', 'Minor', 'Nit']
 
-// SLOT: judge-panel — ТОЛЬКО для high-stakes стадий (фискалка/платежи/tenant-isolation/
-// ядро экосистемы). false = один verify-агент; true = 3 независимых вердикта + консенсус.
-// guarded-optional-args: флаг с явным дефолтом (false), не голое условие без значения по
-// умолчанию — паттерн из `wf-agentools-drive` (cross-ref абс.путём, не вендорить).
+// SLOT: judge-panel — ONLY for high-stakes stages (fiscal/payments/tenant-isolation/
+// core of the ecosystem). false = one verify-agent; true = 3 independent verdict + consensus.
+// guarded-optional-args: flag with explicit default (false), not a bare condition without a value by
+// by default - pattern from `wf-agentools-drive` (cross-ref absolutely, do not vendor).
 const JUDGE_PANEL = false
 
-// SLOT: model/effort — finders sonnet/medium; verify дороже (свежий контекст решает вердикт).
+// SLOT: model/effort — finders sonnet/medium; verify more expensive (fresh context decides the verdict).
 const FINDER_MODEL = { model: 'sonnet', effort: 'medium' }
 const DEDUP_MODEL = { model: 'sonnet', effort: 'low' }
 const VERIFY_MODEL = { model: 'opus', effort: 'high' }
 
-// ── Схемы structured-summary ─────────────────────────────────────────────────
+// ── Schemes structured-summary ─────────────────────────────────────────────────
 const FINDING = {
   type: 'object',
   properties: {
     dimension: { type: 'string' },
     file: { type: 'string' },
     line: { type: 'integer' },
-    summary: { type: 'string', description: 'Дефект одним предложением' },
-    failure_scenario: { type: 'string', description: 'Конкретный вход/состояние → неверный результат' },
+    summary: { type: 'string', description: 'Defect in one sentence' },
+    failure_scenario: { type: 'string', description: 'Specific input/status → incorrect result' },
     severity: { type: 'string', enum: SEVERITY },
-    rule_ref: { type: 'string', description: 'Ссылка конституция/скилл → правило (для conformance-находок)' },
+    rule_ref: { type: 'string', description: 'Link constitution/skill → rule (for conformance-finds)' },
   },
   required: ['dimension', 'file', 'summary', 'failure_scenario', 'severity'],
 }
@@ -80,10 +80,10 @@ const VERDICTS_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          summary: { type: 'string', description: 'summary находки — ключ соответствия' },
+          summary: { type: 'string', description: 'summary findings - matching key' },
           verdict: { type: 'string', enum: ['CONFIRMED', 'REJECTED', 'PLAUSIBLE'] },
           note: { type: 'string' },
-          severity: { type: 'string', enum: SEVERITY, description: 'скорректированная severity' },
+          severity: { type: 'string', enum: SEVERITY, description: 'adjusted severity' },
         },
         required: ['summary', 'verdict', 'note'],
       },
@@ -92,43 +92,43 @@ const VERDICTS_SCHEMA = {
   required: ['verdicts'],
 }
 
-// ── Промпты ──────────────────────────────────────────────────────────────────
+// ── Prompts ──────────────────────────────────────────────────────────────────
 function finderPrompt(d) {
   return [
-    `Finder-аудит по измерению «${d.key}». Цель: ${TARGET.paths.join(', ')} (${TARGET.readHint}).`,
-    `Конституция соответствия — прочитай прежде чем искать: ${CONSTITUTION.join(', ')}.`,
-    `Измерение: ${d.brief}`,
-    `READ-ONLY: ничего не правь и не коммить. Каждая находка — с file/line и конкретным failure_scenario; «может быть плохо» без сценария = не находка. Severity строго из ${JSON.stringify(SEVERITY)}. Пустой массив findings = чисто по измерению, это валидный результат.`,
-    `Верни строго по схеме. Финальный текст = данные, не сообщение человеку.`,
+    `Finder-measurement audit «${d.key}». Target: ${TARGET.paths.join(', ')} (${TARGET.readHint}).`,
+    `Compliance Constitution - Read Before Searching: ${CONSTITUTION.join(', ')}.`,
+    `Measurement: ${d.brief}`,
+    `READ-ONLY: do not edit or commit anything. Each find is with file/line and specific failure_scenario; «could be bad» without script = is not a find. Severity strictly from ${JSON.stringify(SEVERITY)}. Empty array findings = purely by measurement, this is a valid result.`,
+    `Return strictly according to the scheme. Final text = data, not a message to a person.`,
   ].join('\n')
 }
 
 function dedupPrompt(all) {
   return [
-    `Дедупликация находок аудита (${all.length} шт. от ${DIMENSIONS.length} finder'ов). НЕ ищи новые находки, НЕ читай цель — работай только со списком.`,
-    `Правила: одинаковый дефект из разных измерений = одна находка (сохрани все dimension через запятую, возьми максимальную severity); соседние симптомы одного корня = одна находка с общим failure_scenario.`,
-    `Находки:\n${JSON.stringify(all, null, 2)}`,
-    `Верни строго по схеме (тот же формат findings).`,
+    `Deduplication of audit findings (${all.length} pcs. from ${DIMENSIONS.length} finder'ov). DO NOT look for new finds, DO NOT read the goal - only work with the list.`,
+    `Rules: same defect from different measurements = one find (save all dimension separated by commas, take the maximum severity); adjacent symptoms of the same root = one find with common failure_scenario.`,
+    `Findings:\n${JSON.stringify(all, null, 2)}`,
+    `Return strictly according to the scheme (same format findings).`,
   ].join('\n')
 }
 
 function verifyPrompt(findings, judgeIdx) {
   return [
-    `Адверсариальная верификация находок аудита свежим контекстом${judgeIdx != null ? ` (независимый судья #${judgeIdx + 1} — не знаешь мнений других)` : ''}. Цель: ${TARGET.paths.join(', ')}.`,
-    `Твоя задача — ОТКЛОНИТЬ каждую находку: перечитай указанное место сам и попробуй доказать, что дефекта нет. CONFIRMED только когда сам воспроизвёл failure_scenario по коду/тексту; не смог ни подтвердить, ни отклонить = PLAUSIBLE; находка ошибочна = REJECTED с объяснением в note. Можно скорректировать severity.`,
-    `READ-ONLY: ничего не правь. Находки:\n${JSON.stringify(findings, null, 2)}`,
-    `Верни строго по схеме.`,
+    `Adversarial verification of audit findings with fresh context${judgeIdx != null ? ` (independent judge #${judgeIdx + 1} — don't know other people's opinions)` : ''}. Target: ${TARGET.paths.join(', ')}.`,
+    `Your task is to REJECT every finding: re-read the indicated passage yourself and try to prove that there is no defect. CONFIRMED only when I reproduced it myself failure_scenario by code/text; could neither confirm nor reject = PLAUSIBLE; finding is erroneous = REJECTED with explanation in note. Can be adjusted severity.`,
+    `READ-ONLY: don't edit anything. Finds:\n${JSON.stringify(findings, null, 2)}`,
+    `Return it strictly according to the scheme.`,
   ].join('\n')
 }
 
-// safeAgent — try/catch над **bare** `await agent()` (вне `parallel()`/`pipeline()`, где throw
-// уже ловится рантаймом и отдаёт `null`): без обёртки бросок агента роняет весь прогон.
+// safeAgent — try/catch over **bare** `await agent()` (out `parallel()`/`pipeline()`, where throw
+// is already caught by runtime and returns `null`): without a wrap, the agent's throw drops the entire run.
 async function safeAgent(prompt, opts) {
   try { return await agent(prompt, opts) } catch (e) { log(`agent error (${opts.label || '?'}): ${e.message || e}`); return null }
 }
 
-// ── Оркестрация ──────────────────────────────────────────────────────────────
-log(`audit-adversarial: ${DIMENSIONS.length} измерений, judge-panel=${JUDGE_PANEL}`)
+// ── Orchestration ──────────────────────────────────────────────────────────────
+log(`audit-adversarial: ${DIMENSIONS.length} measurements, judge-panel=${JUDGE_PANEL}`)
 
 const found = await parallel(DIMENSIONS.map(d =>
   () => agent(finderPrompt(d), {
@@ -138,16 +138,16 @@ const found = await parallel(DIMENSIONS.map(d =>
 ))
 
 const raw = found.filter(Boolean).flatMap(r => r.findings || [])
-if (!raw.length) { log('находок нет — аудит чист'); return { findings: [], verdicts: [] } }
+if (!raw.length) { log('no finds - audit is clean'); return { findings: [], verdicts: [] } }
 
-// Dedup нужен только когда finder'ов больше одного — иначе нечего сливать.
+// Dedup is only needed when finder'there is more than one - otherwise there is nothing to merge.
 const deduped = DIMENSIONS.length > 1 && raw.length > 1
   ? (await safeAgent(dedupPrompt(raw), { label: 'dedup', phase: 'Dedup', ...DEDUP_MODEL, schema: FINDINGS_SCHEMA }))?.findings || raw
   : raw
 
-log(`находок: ${raw.length} → после dedup: ${deduped.length}`)
+log(`finds: ${raw.length} → after dedup: ${deduped.length}`)
 
-// Verify: один агент, либо панель из 3 независимых судей (только high-stakes).
+// Verify: one agent, or a panel of 3 independent judges (only high-stakes).
 let verdicts
 if (JUDGE_PANEL) {
   const panel = await parallel([0, 1, 2].map(i =>
@@ -156,7 +156,7 @@ if (JUDGE_PANEL) {
       ...VERIFY_MODEL, schema: VERDICTS_SCHEMA,
     })
   ))
-  // Консенсус: CONFIRMED при ≥2 голосах CONFIRMED; ≥2 REJECTED = REJECTED; иначе PLAUSIBLE.
+  // Consensus: CONFIRMED when ≥2 votes CONFIRMED; ≥2 REJECTED = REJECTED; otherwise PLAUSIBLE.
   const votes = panel.filter(Boolean).map(p => p.verdicts)
   verdicts = deduped.map(f => {
     const v = votes.map(vs => vs.find(x => x.summary === f.summary)).filter(Boolean)
@@ -177,5 +177,5 @@ const confirmed = deduped
   .filter(f => f.verdict !== 'REJECTED')
   .sort((a, b) => SEVERITY.indexOf(a.severity) - SEVERITY.indexOf(b.severity))
 
-log(`итог: ${confirmed.length} находок пережили верификацию (из ${deduped.length})`)
+log(`summary: ${confirmed.length} finds survived verification (from ${deduped.length})`)
 return { findings: confirmed, rejected: deduped.length - confirmed.length }

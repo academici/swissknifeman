@@ -1,13 +1,13 @@
-## ⚠ ПРИОРИТЕТ №1 — связь с mAInd (общая память + граф)
+## ⚠ PRIORITY №1 — connection with mAInd (shared memory + graph)
 
-Перед началом работы убедись, что проект подключён к хабу **mAInd**. Это критично:
-без связи изменения этой сессии **не попадут** в общую память и граф — в истории
-разработки появятся невосстановимые пробелы, и дальнейшие связи будет не вывести.
+Before starting work, make sure that the project is connected to the hub **mAInd**. This is critical:
+without communication changes this session **will not hit** to shared memory and the graph to history
+development, irreparable gaps will appear, and further connections will not be drawn.
 
-1. Проверь связь: `maind health --cwd`
-2. Если статус `partial` / `standalone` — почини: `maind health --cwd --fix`
-   (поднимет демон памяти и допишет MCP-серверы хаба в этот проект).
-3. Приступай к задаче только при статусе `connected`.
+1. Check connection: `maind health --cwd`
+2. If the status `partial` / `standalone` — fix: `maind health --cwd --fix`
+   (will raise the memory daemon and add MCP-hub servers to this project).
+3. Proceed with the task only when the status `connected`.
 
-Память **общая** (демон mAInd), scope этого проекта — `{{SCOPE}}`; факты всей экосистемы — в
-scope `global`. Связи проекта с остальными: `maind graph --project {{PROJECT}}`.
+Memory **general** (demon mAInd), scope of this project - `{{SCOPE}}`; facts about the entire ecosystem - in
+scope `global`. Project connections with others: `maind graph --project {{PROJECT}}`.

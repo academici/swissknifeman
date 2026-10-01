@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# Прогон тестов пакета lib/analyst (stdlib unittest, без зависимостей и сети).
-# Запуск: scripts/test.sh [-v]   (-v — подробный вывод unittest)
-# Тесты гоняют логику против синтетических данных в tmpdir (без демонов/сети).
+# Running package tests lib/analyst (stdlib unittest, without dependencies and network).
+# Launch: scripts/test.sh [-v]   (-v — verbose output unittest)
+# Tests race logic against synthetic data in tmpdir (without demons/networks).
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 if ! command -v python3 >/dev/null 2>&1; then
-  echo "ERROR: тесты требуют python3" >&2
+  echo "ERROR: tests require python3" >&2
   exit 1
 fi
 
-# lib/ — пакет analyst; REPO_ROOT — чтобы импортировался tests.*.
-# MONOREPO_ROOT (на два уровня выше пакета) — чтобы импортировался пакет `core`;
-# опционально: в standalone-раскладке каталога core нет, путь не добавляется.
+# lib/ — package analyst; REPO_ROOT — to be imported tests.*.
+# MONOREPO_ROOT (two levels above the package) — to import the package `core`;
+# optional: in standalone-directory layout core no, the path is not added.
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
 export PYTHONPATH="$REPO_ROOT/lib:$REPO_ROOT${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}"
@@ -27,7 +27,7 @@ if [[ -n "$verbose" ]]; then
 else
   out="$(python3 -m unittest discover -s tests -p "test_*.py" 2>&1)" || {
     echo "$out" >&2
-    echo "ERROR: тесты упали" >&2
+    echo "ERROR: tests failed" >&2
     exit 1
   }
   echo "tests: OK ($(echo "$out" | grep -oE 'Ran [0-9]+ tests' | head -1))"

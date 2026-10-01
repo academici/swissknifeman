@@ -40,7 +40,7 @@ def _positions(plan_dir: Path) -> dict[str, dict]:
                 continue
             event = json.loads(raw)
             if not isinstance(event, dict):
-                raise ValueError("journal row должен быть object")
+                raise ValueError("journal row should be object")
             item_id = event.get("item_id", "")
             if isinstance(item_id, str) and _ITEM.fullmatch(item_id):
                 events.setdefault(item_id, []).append(event)
@@ -158,7 +158,7 @@ def inspect(plan_dir, item_id: str) -> dict:
     """Diagnose execution order before attempting the five-carrier snapshot."""
     root = Path(plan_dir)
     if not _ITEM.fullmatch(item_id):
-        raise ValueError("item должен иметь форму Pn.m")
+        raise ValueError("item should be of the form Pn.m")
     items = plan_downstream._all_items(root)
     positions = _positions(root)
     current = positions.get(item_id, {})
@@ -167,8 +167,8 @@ def inspect(plan_dir, item_id: str) -> dict:
                "requested_item": item_id, "active_item": item_id,
                "mode": "resume" if current.get("result") == "in-progress" else "start",
                "run_id": current.get("run_id"), "attempt": current.get("attempt", 1),
-               "reason": f"{item_id}: продолжить durable execution" if current.get("result") == "in-progress"
-               else f"{item_id}: закрепить старт до первой product write"}
+               "reason": f"{item_id}: continue durable execution" if current.get("result") == "in-progress"
+               else f"{item_id}: secure start to first product write"}
     if item_id not in items:
         return verdict  # Missing item carriers stay owned by the snapshot gate.
     pending = sorted((producer for producer in _dependencies(root, item_id, items)
@@ -187,8 +187,8 @@ def inspect(plan_dir, item_id: str) -> dict:
     mode = "resume" if position.get("result") == "in-progress" else "start"
     verdict.update(allowed=False, code="OUT_OF_ORDER_REQUEST", active_item=active,
                    mode=mode, run_id=position.get("run_id"), attempt=position.get("attempt", 1),
-                   reason=f"{item_id} зависит от незавершённого {active}; {mode} {active} "
-                          "в текущем invocation, затем продолжить successor после terminal event")
+                   reason=f"{item_id} depends on unfinished {active}; {mode} {active} "
+                          "in the current invocation, then continue successor after terminal event")
     return verdict
 
 
@@ -260,12 +260,12 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
 
     code = task_contract.pre_mutation(contract, evidence_graph=evidence_graph)
     if code:
-        raise RecoveryError({"code": code, "reason": "pre-mutation admission запрещает старт"})
+        raise RecoveryError({"code": code, "reason": "pre-mutation admission prohibits start"})
     root = Path(plan_dir)
     identity = contract.get("cold_start", {})
     if (identity.get("plan_id"), identity.get("item_id")) != (root.name, item_id):
         raise RecoveryError({"code": "RECOVERY_CONTRACT_IDENTITY_MISMATCH",
-                             "reason": "pre-mutation contract принадлежит другому plan/item"})
+                             "reason": "pre-mutation contract belongs to someone else plan/item"})
     # A process lock covers position inspection, durable append, and the state
     # projection. Interrupted processes release it automatically.
     lock_path = root / ".plan-cache" / "execution-start.lock"
@@ -279,7 +279,7 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
                                          layout=plan_layout.layout_version(root))
         occurrences = phase["items"].get(item_id, []) if phase else []
         if len(occurrences) != 1:
-            raise RecoveryError({"code": "RECOVERY_CONTRACT_IDENTITY_MISMATCH", "reason": "live item неоднозначен"})
+            raise RecoveryError({"code": "RECOVERY_CONTRACT_IDENTITY_MISMATCH", "reason": "live item is ambiguous"})
         fields = occurrences[0]["fields"]
         request = task_contract.declared_authority(item_id, fields, for_execution=True)
         rules = fields.get("Implementation Rules", "")
@@ -288,26 +288,26 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
                                                      phase_path, rules, None, request)
         if not authority[1] or (contract.get("authority", {}).get("class") == "owner-gate" and
                                 (authority[0] != "owner-gate" or contract["authority"].get("granted_by") != authority[2])):
-            raise RecoveryError({"code": "AUTHORITY_BOUNDARY", "reason": "live declared gate/grant изменён или отозван"})
+            raise RecoveryError({"code": "AUTHORITY_BOUNDARY", "reason": "live declared gate/grant modified or withdrawn"})
         prepared = _read_only_prepare(root, item_id)
         verdict = prepared["recovery"]
         if bundle_rendered is not None and prepared["bundle_rendered"] != bundle_rendered:
             raise RecoveryError({
                 "code": "RECOVERY_INPUT_CHANGED",
-                "reason": "bundle inputs изменились после admission; повторите prepare",
+                "reason": "bundle inputs changed after admission; repeat prepare",
             })
         if (producer_readiness is not None
                 and tuple(producer_readiness) != prepared["producer_readiness"]):
             raise RecoveryError({
                 "code": "RECOVERY_INPUT_CHANGED",
-                "reason": "producer readiness изменился после admission; повторите prepare",
+                "reason": "producer readiness changed after admission; repeat prepare",
             })
         from task import plan_repeat
         if verdict["mode"] == "resume":
             plan_repeat.for_run(root, item_id, verdict["run_id"])
             if not verdict["run_id"]:
                 raise RecoveryError({"code": "RECOVERY_RUN_ID_UNAVAILABLE",
-                                     "reason": f"{item_id}: durable start не содержит run_id"})
+                                     "reason": f"{item_id}: durable start does not contain run_id"})
         else:
             positions = _positions(root)
             attempt = int(positions.get(item_id, {}).get("attempt", 0)) + 1
@@ -326,7 +326,7 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
                 decision = route_owner.start_decision(receipt)
             if repeat_admission is not None:
                 if decision is None:
-                    raise RecoveryError({"code": "ROUTE_UNVERIFIABLE", "reason": "repeat требует route receipt"})
+                    raise RecoveryError({"code": "ROUTE_UNVERIFIABLE", "reason": "repeat requires route receipt"})
                 decision["repeat_admission"] = repeat_admission
             event = journal.new_entry(plan_id=root.name, item_id=item_id, command=command,
                                       actor=actor, result="in-progress", session_id=session_id,

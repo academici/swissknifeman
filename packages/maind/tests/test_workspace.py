@@ -1,7 +1,7 @@
-"""Тесты workspace — единое пространство доверия Claude Code (hub-scoped).
+"""Tests workspace — single trust space Claude Code (hub-scoped).
 
-Самый чувствительный к безопасности примитив рядом с mcpconfig: запись в
-.claude/settings.local.json должна быть аддитивной (не затирать чужое) и идемпотентной."""
+The most security-sensitive primitive next to mcpconfig: entry in
+.claude/settings.local.json must be additive (do not overwrite someone else's) and idempotent."""
 import json
 import tempfile
 import unittest
@@ -15,7 +15,7 @@ from tests.fixtures import make_repo
 
 
 def _cfg(paths):
-    """Конфиг с проектами по заданным (id, local_path[, enabled]) кортежам."""
+    """Config with projects according to given (id, local_path[, enabled]) tuples."""
     projects = []
     for item in paths:
         pid, lp = item[0], item[1]
@@ -33,9 +33,9 @@ class TestEligiblePaths(unittest.TestCase):
             b = Path(tmp) / "b"; b.mkdir()
             cfg = _cfg([
                 ("a", str(a)),
-                ("b", str(b), False),                 # disabled → пропуск
-                ("ghost", str(Path(tmp) / "nope")),   # нет каталога → пропуск
-                ("nopath", None),                     # нет local_path → пропуск
+                ("b", str(b), False),                 # disabled → pass
+                ("ghost", str(Path(tmp) / "nope")),   # no directory → pass
+                ("nopath", None),                     # no local_path → pass
             ])
             self.assertEqual(workspace.eligible_paths(cfg), [str(a)])
 
@@ -52,7 +52,7 @@ class TestBuildFragment(unittest.TestCase):
         frag = workspace.build_fragment(["/home/u/proj"], allow=True, mode=True)
         perms = frag["permissions"]
         self.assertEqual(perms["additionalDirectories"], ["/home/u/proj"])
-        self.assertIn("Read(//home/u/proj/**)", perms["allow"])  # абсолютный путь → //
+        self.assertIn("Read(//home/u/proj/**)", perms["allow"])  # absolute path → //
         self.assertIn("Edit(//home/u/proj/**)", perms["allow"])
         self.assertEqual(perms["defaultMode"], "acceptEdits")
 
@@ -67,10 +67,10 @@ class TestMergeSettings(unittest.TestCase):
         existing = {
             "permissions": {
                 "additionalDirectories": ["/keep/me"],
-                "deny": ["Bash(rm*)"],            # чужой ключ — не трогаем
+                "deny": ["Bash(rm*)"],            # someone else's key - don't touch it
                 "allow": ["Bash(git*)"],
             },
-            "hooks": {"x": 1},                    # посторонний верхний ключ — не трогаем
+            "hooks": {"x": 1},                    # extraneous upper key - do not touch
         }
         frag = workspace.build_fragment(["/new/dir"], allow=True, mode=True)
         merged, changed = workspace.merge_settings(existing, frag)
@@ -78,16 +78,16 @@ class TestMergeSettings(unittest.TestCase):
         perms = merged["permissions"]
         self.assertIn("/keep/me", perms["additionalDirectories"])
         self.assertIn("/new/dir", perms["additionalDirectories"])
-        self.assertIn("Bash(git*)", perms["allow"])      # чужой allow сохранён
+        self.assertIn("Bash(git*)", perms["allow"])      # alien allow saved
         self.assertIn("Read(//new/dir/**)", perms["allow"])
-        self.assertEqual(perms["deny"], ["Bash(rm*)"])   # deny нетронут
+        self.assertEqual(perms["deny"], ["Bash(rm*)"])   # deny untouched
         self.assertEqual(merged["hooks"], {"x": 1})
 
     def test_does_not_override_user_mode(self):
         existing = {"permissions": {"defaultMode": "plan"}}
         frag = workspace.build_fragment(["/x"], allow=False, mode=True)
         merged, _ = workspace.merge_settings(existing, frag)
-        self.assertEqual(merged["permissions"]["defaultMode"], "plan")  # выбор юзера
+        self.assertEqual(merged["permissions"]["defaultMode"], "plan")  # user selection
 
     def test_idempotent(self):
         frag = workspace.build_fragment(["/x"], allow=True, mode=True)
@@ -127,16 +127,16 @@ class TestSync(unittest.TestCase):
             data = json.loads(path.read_text(encoding="utf-8"))
             self.assertIn(str(a), data["permissions"]["additionalDirectories"])
             self.assertEqual(data["permissions"]["defaultMode"], "acceptEdits")
-            self.assertFalse(bak.exists())  # первая запись — файла не было, .bak нет
+            self.assertFalse(bak.exists())  # first entry - there was no file, .bak no
 
             r2 = workspace.sync(env, _cfg([("a", str(a))]))
-            self.assertFalse(r2["changed"])  # идемпотентно — ничего не пишем
+            self.assertFalse(r2["changed"])  # idempotent - we don’t write anything
             self.assertFalse(bak.exists())
 
             r3 = workspace.sync(env, _cfg([("a", str(a)), ("b", str(b))]))
             self.assertTrue(r3["changed"])
             self.assertEqual(r3["dirs_added"], [str(b)])
-            self.assertTrue(bak.exists())  # реальное изменение → .bak перед записью
+            self.assertTrue(bak.exists())  # real change → .bak before recording
 
     def test_broken_settings_dies(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -154,7 +154,7 @@ class TestAudit(unittest.TestCase):
             _root, env = make_repo(tmp)
             a = Path(tmp) / "a"; a.mkdir()
             b = Path(tmp) / "b"; b.mkdir()
-            # доверяем только a + один лишний путь (drift)
+            # trust only a + one extra path (drift)
             workspace.sync(env, _cfg([("a", str(a))]))
             cfg = _cfg([("a", str(a)), ("b", str(b))])
             au = workspace.audit(env, cfg)

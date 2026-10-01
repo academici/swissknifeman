@@ -18,10 +18,10 @@ from harness.wf_status import (
 _SCRIPT_META = """
 export const meta = {
   name: 'p2-1-demo',
-  description: 'демо-прогон для юнит-теста wf_status',
+  description: 'demo run for unit test wf_status',
   phases: [
-    { title: 'Review', detail: 'первая фаза' },
-    { title: 'Verify', detail: 'вторая фаза' },
+    { title: 'Review', detail: 'first phase' },
+    { title: 'Verify', detail: 'second phase' },
   ],
 }
 """
@@ -56,7 +56,7 @@ class ParseRunHappyPathCase(unittest.TestCase):
                 json.dumps({"type": "started", "key": "v2:aaa", "agentId": "a1"}),
                 json.dumps({"type": "started", "key": "v2:bbb", "agentId": "a2"}),
                 json.dumps({"type": "result", "key": "v2:aaa", "agentId": "a1",
-                            "result": {"summary": "готово"}}),
+                            "result": {"summary": "ready"}}),
             ]
             run_dir = _make_run(tmp, journal_lines=lines,
                                  agent_metas={"a1": {"agentType": "workflow-subagent"},
@@ -70,10 +70,10 @@ class ParseRunHappyPathCase(unittest.TestCase):
             self.assertEqual(status["done"], 1)
             self.assertEqual(status["inflight"], 1)
             self.assertEqual(len(status["results"]), 1)
-            self.assertEqual(status["results"][0]["summary"], "готово")
+            self.assertEqual(status["results"][0]["summary"], "ready")
             self.assertEqual(len(status["meta"]["phases"]), 2)
             self.assertEqual(status["meta"]["phases"][0]["title"], "Review")
-            self.assertEqual(status["meta"]["phases"][1]["detail"], "вторая фаза")
+            self.assertEqual(status["meta"]["phases"][1]["detail"], "second phase")
             self.assertTrue(status["meta"]["recognized"])
             self.assertEqual(status["run_id"], "wf_demo123")
 
@@ -94,7 +94,7 @@ class ParseRunDegradedCase(unittest.TestCase):
 
     def test_garbage_only_journal_is_degraded_not_raise(self):
         with tempfile.TemporaryDirectory() as tmp:
-            lines = ["не json вообще", "{ битый json без закрытия"]
+            lines = ["not json in general", "{ broken json without closing"]
             run_dir = _make_run(tmp, journal_lines=lines)
 
             status = parse_run(run_dir)
@@ -107,9 +107,9 @@ class ParseRunDegradedCase(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             lines = [
                 json.dumps({"type": "started", "key": "v2:aaa", "agentId": "a1"}),
-                "мусорная строка ломает JSON {",
+                "garbage line breaks JSON {",
                 json.dumps({"type": "result", "key": "v2:aaa", "agentId": "a1",
-                            "result": "готово"}),
+                            "result": "ready"}),
             ]
             run_dir = _make_run(tmp, journal_lines=lines, script_text=None)
 
@@ -136,7 +136,7 @@ class ParseScriptMetaCase(unittest.TestCase):
         self.assertEqual(len(meta["phases"]), 2)
 
     def test_unrecognized_text_returns_empty_phases(self):
-        meta = parse_script_meta("это не скрипт workflow вообще")
+        meta = parse_script_meta("this is not a script workflow in general")
         self.assertFalse(meta["recognized"])
         self.assertEqual(meta["phases"], [])
 
@@ -158,13 +158,13 @@ class SummarizeResultCase(unittest.TestCase):
         self.assertEqual(summarize_result({"findings": []}), "findings=[]")
 
     def test_plain_string(self):
-        self.assertEqual(summarize_result("готово"), "готово")
+        self.assertEqual(summarize_result("ready"), "ready")
 
     def test_never_raises_on_weird_input(self):
         class Weird(object):
             def __repr__(self):
                 raise RuntimeError("boom")
-        self.assertEqual(summarize_result(Weird()), "(результат не распознан)")
+        self.assertEqual(summarize_result(Weird()), "(result not recognized)")
 
 
 def _make_discoverable_run(config_dir, proj_slug, session, run_id, mtime=None):
@@ -257,13 +257,13 @@ class RenderTextCase(unittest.TestCase):
             "started": 2,
             "done": 1,
             "inflight": 1,
-            "results": [{"agent_id": "a1", "summary": "готово"}],
+            "results": [{"agent_id": "a1", "summary": "ready"}],
             "meta": {
                 "name": "p2-1-demo",
-                "description": "демо",
+                "description": "demo",
                 "phases": [
-                    {"title": "Review", "detail": "первая фаза"},
-                    {"title": "Verify", "detail": "вторая фаза"},
+                    {"title": "Review", "detail": "first phase"},
+                    {"title": "Verify", "detail": "second phase"},
                 ],
                 "recognized": True,
                 "script_path": "/tmp/script.js",
@@ -278,7 +278,7 @@ class RenderTextCase(unittest.TestCase):
         self.assertIn("Review", text)
         self.assertIn("Verify", text)
         self.assertIn("%", text)
-        self.assertIn("статус: running", text)
+        self.assertIn("status: running", text)
 
     def test_deterministic_rendering_is_byte_for_byte(self):
         status = self._status()
@@ -286,20 +286,20 @@ class RenderTextCase(unittest.TestCase):
 
     def test_done_state_when_no_inflight(self):
         text = render_text(self._status(inflight=0, done=2))
-        self.assertIn("статус: done", text)
+        self.assertIn("status: done", text)
 
     def test_degraded_status_has_honest_reason_no_traceback(self):
         status = self._status(
             degraded=True,
-            degraded_reasons=["journal.jsonl не найден: /tmp/wf_demo123/journal.jsonl"],
+            degraded_reasons=["journal.jsonl not found: /tmp/wf_demo123/journal.jsonl"],
             started=0, done=0, inflight=0, agents_total=0, results=[],
             meta={"name": None, "description": None, "phases": [], "recognized": False,
                   "script_path": None},
         )
         text = render_text(status)
-        self.assertIn("статус: degraded", text)
-        self.assertIn("формат не распознан", text)
-        self.assertIn("journal.jsonl не найден", text)
+        self.assertIn("status: degraded", text)
+        self.assertIn("format not recognized", text)
+        self.assertIn("journal.jsonl not found", text)
         self.assertNotIn("Traceback", text)
 
 
@@ -310,15 +310,15 @@ class RenderJsonCase(unittest.TestCase):
         status = parse_run(_make_run(tempfile.mkdtemp(), journal_lines=[
             json.dumps({"type": "started", "key": "v2:a", "agentId": "a1"}),
             json.dumps({"type": "result", "key": "v2:a", "agentId": "a1",
-                        "result": {"summary": "готово"}}),
+                        "result": {"summary": "ready"}}),
         ]))
         self.assertEqual(json.loads(render_json(status)), status)
 
     def test_json_is_valid_and_not_ascii_escaped(self):
-        status = {"run_id": "wf_x", "degraded": False, "meta": {"name": "имя"}}
+        status = {"run_id": "wf_x", "degraded": False, "meta": {"name": "name"}}
         dumped = render_json(status)
         self.assertEqual(json.loads(dumped), status)
-        self.assertIn("имя", dumped)
+        self.assertIn("name", dumped)
 
 
 class WatchLoopCase(unittest.TestCase):
@@ -329,7 +329,7 @@ class WatchLoopCase(unittest.TestCase):
             lines = [
                 json.dumps({"type": "started", "key": "v2:a", "agentId": "a1"}),
                 json.dumps({"type": "result", "key": "v2:a", "agentId": "a1",
-                            "result": "готово"}),
+                            "result": "ready"}),
             ]
             run_dir = _make_run(tmp, journal_lines=lines)
             sleeps = []

@@ -1,9 +1,9 @@
-"""CORE-политика раздачи: токен-скиллы по умолчанию + default-exclude дублей.
+"""CORE-distribution policy: default token skills + default-exclude takes.
 
-Реестр фикстуры по умолчанию НЕ содержит general/oss-dev/system (чтобы точные
-ассерты других тестов держались, а CORE там был no-op). Здесь дополняем реестр
-этими бакетами и проверяем инъекцию CORE (vendor=скиллы, connect=бакеты),
-default-exclude дублирующих maind/ручных скиллов и отключение через --no-core."""
+The default fixture registry does NOT contain general/oss-dev/system (for accurate
+the assertions of other tests held, and CORE was there no-op). Here we add to the registry
+with these buckets and check the injection CORE (vendor=skills, connect=buckets),
+default-exclude duplicates maind/manual skills and disabling via --no-core."""
 import contextlib
 import io
 import json
@@ -34,8 +34,8 @@ class CoreCase(unittest.TestCase):
         fx.write_skill(skills / "system" / "cross-project-coordinator",
                        "cross-project-coordinator")
         fx.write_skill(skills / "system" / "local-topology", "local-topology")
-        # marketplace должен ОБЪЯВЛЯТЬ курируемый core-плагин, иначе connect-CORE его не пушит
-        # (защита _marketplace_declares: на старом marketplace/в тестах плагина может не быть).
+        # marketplace must DECLARE supervised core-plugin, otherwise connect-CORE doesn't push him
+        # (protection _marketplace_declares: on the old one marketplace/may not be present in plugin tests).
         (self.root / ".claude-plugin" / "marketplace.json").write_text(json.dumps({
             "name": "swissknifeman",
             "plugins": [{"name": "core", "source": "./",
@@ -49,13 +49,13 @@ class CoreCase(unittest.TestCase):
         names = {t[3] for t in core_skill_tuples(self.env, set())}
         self.assertEqual(names, {"context-economy", "anti-drift",
                                  "session-handoff", "verify-claims"})
-        # exclude (в форме bucket/rel) побеждает CORE
+        # exclude (in the form bucket/rel) wins CORE
         excluded = {t[3] for t in core_skill_tuples(self.env, {"general/verify-claims"})}
         self.assertNotIn("verify-claims", excluded)
 
     def test_vendor_injects_core_even_outside_profile(self):
-        # profile laravel-project -> [php, quality]; CORE-скиллы из general/oss-dev
-        # должны лечь, хотя их бакеты не в профиле
+        # profile laravel-project -> [php, quality]; CORE-skills from general/oss-dev
+        # should lie down, although their buckets are not in the profile
         proj = fx.make_laravel_project(self.tmp)
         do_vendor(self.env, proj, {"agent": "generic"})
         dest = proj / ".ai" / "skills"
@@ -65,8 +65,8 @@ class CoreCase(unittest.TestCase):
         self.assertFalse((dest / "general" / "compact-responses" / "SKILL.md").exists())
 
     def test_vendor_default_excludes_maind_dupes(self):
-        # system выбран явно: shared-memory и cross-project-coordinator убираются
-        # по умолчанию, local-topology остаётся
+        # system is selected explicitly: shared-memory and cross-project-coordinator are removed
+        # by default, local-topology remains
         proj = fx.make_laravel_project(self.tmp)
         do_vendor(self.env, proj, {"agent": "generic", "buckets": "system"})
         dest = proj / ".ai" / "skills"
@@ -80,19 +80,19 @@ class CoreCase(unittest.TestCase):
                   {"agent": "generic", "buckets": "system", "no_core": True})
         dest = proj / ".ai" / "skills"
         self.assertFalse((dest / "general" / "context-economy").exists())
-        # default-exclude снят -> дубли на месте
+        # default-exclude removed -> duplicates in place
         self.assertTrue((dest / "system" / "shared-memory").exists())
 
     def test_connect_adds_core_plugin(self):
-        # Умное подключение: CORE-политика пушит ЛЁГКИЙ курируемый плагин `core`,
-        # а НЕ целые бакеты general+oss-dev (экономия резидентных токенов).
+        # Smart connection: CORE-policy push EASY curated plugin `core`,
+        # and NOT whole buckets general+oss-dev (saving of resident tokens).
         proj = fx.make_laravel_project(self.tmp)
         do_connect(self.env, proj, {})
         settings = json.loads(
             (proj / ".claude" / "settings.local.json").read_text())
         enabled = {k.split("@")[0] for k, v in settings["enabledPlugins"].items() if v}
         self.assertIn("core", enabled)
-        self.assertNotIn("general", enabled)   # целые бакеты больше не пушим
+        self.assertNotIn("general", enabled)   # we no longer push entire buckets
         self.assertNotIn("oss-dev", enabled)
 
     def test_connect_dry_run_redacts_existing_environment_secrets(self):
@@ -142,8 +142,8 @@ class CoreCase(unittest.TestCase):
         self.assertNotIn("core", enabled)
 
     def test_connect_core_skipped_when_marketplace_lacks_it(self):
-        # Защита: marketplace не объявляет core (старый/пустой) → CORE не пушится,
-        # но НЕ тихо (C-1) — явный warn на stderr, проверено отдельно ниже.
+        # Protection: marketplace does not declare core (old/empty) → CORE doesn't push,
+        # but NOT quiet (C-1) — explicit warn on stderr, tested separately below.
         (self.root / ".claude-plugin" / "marketplace.json").write_text("{}\n")
         proj = fx.make_laravel_project(self.tmp)
         do_connect(self.env, proj, {})
@@ -153,21 +153,21 @@ class CoreCase(unittest.TestCase):
         self.assertNotIn("core", enabled)
 
     def test_connect_core_skipped_warns_not_silent(self):
-        # C-1: раньше пропуск CORE (marketplace не объявляет плагин) был тихим —
-        # обещание токен-экономии аннулировалось без сигнала. Теперь явный warn.
+        # C-1: earlier skip CORE (marketplace does not declare the plugin) was quiet -
+        # token savings promise voided without signal. Now explicit warn.
         (self.root / ".claude-plugin" / "marketplace.json").write_text("{}\n")
         proj = fx.make_laravel_project(self.tmp)
         buf = io.StringIO()
         with contextlib.redirect_stderr(buf):
             do_connect(self.env, proj, {})
-        self.assertIn("не объявляет плагин", buf.getvalue())
+        self.assertIn("does not declare the plugin", buf.getvalue())
         self.assertIn("core", buf.getvalue())
 
     def test_connect_adds_default_command_plugins(self):
-        # C-3: DEFAULT_COMMAND_PLUGINS (напр. `task`) — marketplace-guarded, как core,
-        # но НЕ CORE-скилл: --no-core их не трогает (проверено ниже). Раньше эта ветка
-        # (connect.py cmd_added) не была покрыта тестом — регресс раздачи команд
-        # не поймали бы.
+        # C-3: DEFAULT_COMMAND_PLUGINS (e.g. `task`) — marketplace-guarded, like core,
+        # but NOT CORE-skill: --no-core doesn't touch them (checked below). Previously this thread
+        # (connect.py cmd_added) was not covered by the test - command distribution regression
+        # wouldn't have been caught.
         (self.root / ".claude-plugin" / "marketplace.json").write_text(json.dumps({
             "name": "swissknifeman",
             "plugins": [
@@ -181,7 +181,7 @@ class CoreCase(unittest.TestCase):
         settings = json.loads(
             (proj / ".claude" / "settings.local.json").read_text())
         enabled = {k.split("@")[0] for k, v in settings["enabledPlugins"].items() if v}
-        # --no-core отключает CORE-скиллы, но НЕ командные плагины (не CORE)
+        # --no-core disables CORE-skills, but NOT command plugins (not CORE)
         self.assertNotIn("core", enabled)
         self.assertIn("task", enabled)
 

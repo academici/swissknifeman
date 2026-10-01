@@ -2,7 +2,7 @@
   "schema": 1,
   "pack": "_common",
   "version": "0.5.0",
-  "description": "Стек-агностичный оркестратор-субагент: delegate-only tech-lead, читает доступные роли проекта и выдаёт машиночитаемый план (Task N -> @<prefix>-<role>) с режимами Sequential/Parallel-max2/Gated. Тянется как общий prerequisite стек-паками (backend-laravel/node-frontend/dart-flutter/python-backend).",
+  "description": "Stack-agnostic orchestrator-subagent: delegate-only tech-lead, reads the available project roles and produces a machine-readable plan (Task N -> @<prefix>-<role>) with modes Sequential/Parallel-max2/Gated. Stretches as general prerequisite stack packs (backend-laravel/node-frontend/dart-flutter/python-backend).",
   "stack": {
     "shape": "agnostic"
   },
@@ -11,15 +11,15 @@
     "harness_presets": ["base"]
   },
   "interview": [
-    { "id": "PACK_PREFIX", "q": "Префикс имён агентов проекта (как у стек-пака)?", "default": "{project_dirname}", "kind": "slug" },
-    { "id": "MODEL_ORCHESTRATOR", "q": "Модель оркестратора?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] }
+    { "id": "PACK_PREFIX", "q": "Project agent name prefix (like a stack pack)?", "default": "{project_dirname}", "kind": "slug" },
+    { "id": "MODEL_ORCHESTRATOR", "q": "Orchestrator model?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] }
   ],
   "files": [
     { "src": "agents/orchestrator.md", "target": ".claude/agents/{PACK_PREFIX}-orchestrator.md", "kind": "template", "role": "agent" },
     { "src": "rules/generated-assets.md", "target": ".claude/rules/generated-assets.md", "kind": "verbatim", "role": "rule" }
   ],
   "notes": {
-    "prerequisite": "Устанавливается вместе со стек-паком как общий оркестратор. {PACK_PREFIX} должен совпадать с префиксом стек-пака, чтобы @<prefix>-<role> резолвились в его роли.",
-    "verify_workflow": "Агент НЕ воркфлоу — node --check не применяется."
+    "prerequisite": "Installed together with the stackpack as a general orchestrator. {PACK_PREFIX} must match the stackpack prefix in order for @<prefix>-<role> resolved to play his role.",
+    "verify_workflow": "Agent NOT workflow - node --check does not apply."
   }
 }

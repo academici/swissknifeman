@@ -39,6 +39,6 @@ def main(argv=None):
     env = Env(root, cmd)
     handler = COMMANDS.get(cmd)
     if handler is None:
-        print(f"Неизвестная команда: {cmd}", file=sys.stderr)
+        print(f"Unknown command: {cmd}", file=sys.stderr)
         sys.exit(1)
     handler(env, args)

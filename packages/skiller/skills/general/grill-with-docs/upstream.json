@@ -12,7 +12,7 @@
       "fetched_at": "2026-06-26"
     }
   ],
-  "notes": "Производное от mattpocock/skills engineering/grill-with-docs (у источника тонкий враппер «/grilling + /domain-modeling»). У нас тело адаптировано (RU) и расширено: spec-interview (наш грилинг) + architect/domain-modeling + сверка с внешней документацией, CONTEXT.md/ADR инлайн. strategy=notify — апстрим только репортится, не перетирает локальную копию.",
+  "notes": "Derived from mattpocock/skills engineering/grill-with-docs (at the source thin wrapper «/grilling + /domain-modeling»). Our body is adapted (RU) and expanded: spec-interview (our grilling) + architect/domain-modeling + reconciliation with external documentation, CONTEXT.md/ADR inline. strategy=notify — upstream only reports, does not overwrite the local copy.",
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",

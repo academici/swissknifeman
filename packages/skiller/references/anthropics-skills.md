@@ -1,26 +1,26 @@
 # anthropics/skills
 
 - **URL:** https://github.com/anthropics/skills
-- **Лицензия:** Apache-2.0 (© 2026 Anthropic, PBC)
-- **Статус:** imported
-- **Проверено:** 2026-07-11 (HEAD `9d2f1ae`)
+- **License:** Apache-2.0 (© 2026 Anthropic, PBC)
+- **Status:** imported
+- **Checked:** 2026-07-11 (HEAD `9d2f1ae`)
 
-Официальная коллекция скиллов от Anthropic (Claude/Claude Code team). Отличается от
-`anthropics/claude-code` (спецификация формата SKILL.md) — это готовые прикладные скиллы.
-Берём выборочно, точечно под наши сценарии — не форкаем весь репозиторий.
+Official collection of skills from Anthropic (Claude/Claude Code team). Different from
+`anthropics/claude-code` (format specification SKILL.md) — are ready-made applied skills.
+We take it selectively, specifically for our scenarios - we do not fork the entire repository.
 
-## Взято
+## Taken
 
-| anthropics/skills | наш таргет | strategy |
+| anthropics/skills | our target | strategy |
 |---|---|---|
-| mcp-builder | `ai/mcp-builder` | replace (зеркало as-is, `reference/` → `references/`) |
+| mcp-builder | `ai/mcp-builder` | replace (mirror as-is, `reference/` → `references/`) |
 
-## Брать выборочно (кандидаты)
+## Take selectively (candidates)
 
-Остальные скиллы репозитория (`skills/*`) — по мере необходимости, отдельным импортом
-каждый, с собственной оценкой пересечения с существующими нашими скиллами (анти-bloat,
-см. `CONTRIBUTING.md`).
+Other skills of the repository (`skills/*`) — as needed, by separate import
+each, with their own assessment of the intersection with our existing skills (anti-bloat,
+see `CONTRIBUTING.md`).
 
-## Целевые bucket-ы
+## Targets bucket-s
 
-`ai/` (агентные тулы/MCP), точечно другие — по конкретному скиллу.
+`ai/` (agent tools/MCP), pointwise others - for a specific skill.

@@ -17,21 +17,21 @@ _maind_dir() { printf '%s' "${CLAUDE_PROJECT_DIR:-$PWD}"; }
 
 mode_remember() { # brain type text
   local bin; bin="$(_maind_bin)" \
-    || { echo "memory(maind): bin maind не найден (задай MAIND_BIN / PATH / топологию)"; return 1; }
+    || { echo "memory(maind): bin maind not found (set MAIND_BIN / PATH / topology)"; return 1; }
   ( cd "$(_maind_dir)" && "$bin" memory remember --type "$2" "$3" )
 }
 
 mode_recall() { # brain query
-  local bin; bin="$(_maind_bin)" || { echo "memory(maind): bin maind не найден"; return 1; }
+  local bin; bin="$(_maind_bin)" || { echo "memory(maind): bin maind not found"; return 1; }
   ( cd "$(_maind_dir)" && "$bin" memory recall "$2" )
 }
 
 mode_members() { # Shared-memory members are project peers by namespace.
-  echo "режим maind: общее — по namespace'ам проекта (см. maind projects status / graph --project)"
+  echo "mode maind: general - by namespace'project am (see maind projects status / graph --project)"
 }
 
 mode_status() { # brain
-  local bin; bin="$(_maind_bin)" || { echo "memory(maind): bin maind не найден"; return 1; }
+  local bin; bin="$(_maind_bin)" || { echo "memory(maind): bin maind not found"; return 1; }
   ( cd "$(_maind_dir)" && "$bin" memory status )
 }
 

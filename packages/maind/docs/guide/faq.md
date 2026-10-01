@@ -1,95 +1,95 @@
-# FAQ — частые вопросы
+# FAQ — frequently asked questions
 
-Короткие честные ответы на вопросы, которые реально возникают. Детали — по ссылкам.
+Short, honest answers to questions that actually arise. Details - follow the links.
 
-## Память и MCP
+## Memory and MCP
 
-**Весь код проходит через общие MCP-серверы? Как часто синхронизируется?**
-Нет. MCP **пассивны (pull)**: они не следят за кодом и ничего не синхронизируют сами — инструмент
-вызывает агент, когда решит. В память попадает только то, что агент **явно** записал (`store`).
-«Синхронизация» (`maind sync`) — это раскатка конфигов/артефактов **по команде**, не непрерывный
-процесс. Подробнее: [Как это работает](./how-it-works), [Память](./memory).
+**All code goes through common MCP-servers? How often does it sync?**
+No. MCP **passive (pull)**: they do not monitor the code and do not synchronize anything themselves - tool
+is called by the agent when it decides. The only thing that gets into memory is that the agent **explicit** wrote down (`store`).
+«Synchronization» (`maind sync`) — this is rolling out configs/artifacts **by command**, not continuous
+process. More details: [How it works](./how-it-works), [Memory](./memory).
 
-**Нужны ли проекту доп. инструкции, чтобы агент знал про инструменты?**
-Да, и они раскатываются автоматически: скилл `ecosystem-mcp` в `.claude/skills/` (что за
-инструменты и когда звать) + `initial_prompt` в `.serena/project.yml` (нацеливает на symbol-навигацию).
-См. [sync](./sync).
+**Does the project need additional. instructions so that the agent knows about the tools?**
+Yes, and they roll out automatically: skill `ecosystem-mcp` in `.claude/skills/` (what the
+tools and when to call) + `initial_prompt` in `.serena/project.yml` (targets symbol-navigation).
+See [sync](./sync).
 
-**Память можно сделать свою на каждый проект?**
-Технически да, но это убьёт смысл (проекты не увидят друг друга) и будет сложнее. Поэтому память
-**общая**, а видимость режется scope: `project:<id>` (приватно) · `ns:<группа>` · `global`.
-См. [Namespaces](./namespaces).
+**Can I make my own memory for each project?**
+Technically yes, but it would kill the point (projects will not see each other) and it will be more difficult. Therefore memory
+**general**, and visibility is reduced scope: `project:<id>` (private) · `ns:<group>` · `global`.
+See [Namespaces](./namespaces).
 
-**Демон памяти всегда поднят?**
-Да, если поставить systemd-сервис: `maind service install` + `loginctl enable-linger $USER`
-(старт при загрузке ОС). См. [systemd](./systemd).
+**Is the memory daemon always up?**
+Yes, if you put systemd-service: `maind service install` + `loginctl enable-linger $USER`
+(start at OS boot). See [systemd](./systemd).
 
-**Вьюер памяти (`http://127.0.0.1:3113`) на вкладке `#graph` пишет «Graph query failed» — это сломалось?**
-Нет, это **норма**. Вкладка `#graph` — это **knowledge-graph самого agentmemory**: сущности
-(люди/проекты/понятия), которые **LLM извлекает из текста памяти**. Это **четвёртый** смысл слова
-«граф» — НЕ межпроектный maind-граф и НЕ код-граф Serena (см. [«четыре графа»](./how-it-works#визуализация-где-что-смотреть-глазами)).
-Фича выключена по умолчанию. Под капотом: вьюер проксирует запрос на демон, тот отвечает **503**:
+**Memory viewer (`http://127.0.0.1:3113`) on the tab `#graph` writes «Graph query failed» — is it broken?**
+No, it's **normal**. Tab `#graph` — this **knowledge-graph himself agentmemory**: entities
+(people/projects/concepts), which **LLM retrieves from memory text**. This **fourth** meaning of the word
+«graph» — NOT cross-project maind-graph and NOT code-graph Serena (see [«four graphs»](./how-it-works#visualization-where-to-see-with-the-eyes)).
+The feature is disabled by default. Under the hood: the viewer proxies the request to the daemon, it responds **503**:
 
 ```json
 // POST :4111/agentmemory/graph/query → 503
 { "enableHow": "Set GRAPH_EXTRACTION_ENABLED=true and restart. Requires an LLM provider key." }
 ```
 
-вьюер заворачивает 503 в «502 upstream error» → на экране «Graph query failed».
+viewer wraps 503 in «502 upstream error» → on the screen «Graph query failed».
 
-- **Чтобы межпроектные связи увидеть картинкой** — это не сюда: `maind graph export --cross` (Mermaid).
-- **Записи/поиск памяти** — остальные вкладки `:3113` работают и без этой фичи.
-- **Включить `#graph`** (опционально) — нужен LLM-ключ провайдера + `GRAPH_EXTRACTION_ENABLED=true`
-  + рестарт демона. Смысл появляется только когда память реально наполнена (на seed-фактах граф пустой).
+- **To see inter-project connections with a picture** — this is not here: `maind graph export --cross` (Mermaid).
+- **Entries/memory search** — other tabs `:3113` work without this feature.
+- **Enable `#graph`** (optional) — needed LLM-provider key + `GRAPH_EXTRACTION_ENABLED=true`
+  + daemon restart. Meaning appears only when the memory is really full (on seed-facts column is empty).
 
-## Граф кода (Serena)
+## Code graph (Serena)
 
-**Код-граф лежит в хабе? Как агент его видит?**
-Нет. Граф кода — **отдельный MCP-сервер в самом проекте** (движок [Serena](./code-graph), через
-`uvx`). Он прописан в `.mcp.json`; клиент поднимает его **при старте сессии**, и его инструменты
-появляются у агента. Хаб только записал эту строку — в рантайме maind не участвует.
+**Is the code graph in the hub? How does the agent see him?**
+No. Code graph - **separate MCP-server in the project itself** (engine [Serena](./code-graph), via
+`uvx`). It is registered in `.mcp.json`; client picks it up **at session start**, and its tools
+appear on the agent. The hub just recorded this line - in runtime maind is not involved.
 
-**Надо ли ставить код-граф нативно в проект?**
-Serena и есть нативная установка: при активации создаёт папку `.serena/` (конфиг + кэш символов).
-Бинарь не вендорится — запускается через `uvx` (кэшируется). Имя `graphify` историческое; движок —
+**Is it necessary to install the code graph natively in the project?**
+Serena is the native installation: when activated, it creates a folder `.serena/` (config + symbol cache).
+The binary is not vendored - it is launched via `uvx` (is cached). Name `graphify` historical; engine -
 Serena.
 
-**Как агент свяжется с графом, когда я дам задачу («посмотри авторизацию»)?**
-Он сам вызовет symbol-инструменты Serena (`find_symbol`, `find_referencing_symbols`,
-`get_symbols_overview`) — найдёт определения и вызовы, вместо чтения файлов целиком. Это **pull**:
-доступность инструментов и `initial_prompt` — автоматические, но решение звать принимает модель.
+**How will the agent contact the graph when I give the task («see authorization»)?**
+He will call symbol-tools Serena (`find_symbol`, `find_referencing_symbols`,
+`get_symbols_overview`) — will find definitions and calls instead of reading entire files. This **pull**:
+availability of tools and `initial_prompt` — are automatic, but the decision to call is made by the model.
 
-**Я добавил сервер — почему агент его не видит?**
-`.mcp.json` читается при **старте сессии**. Перезапусти сессию в проекте (первый запуск Serena
-дольше — поднимает LSP).
+**I added a server - why doesn't the agent see it?**
+`.mcp.json` is read when **session start**. Restart the session in the project (first launch Serena
+longer - raises LSP).
 
-## Межпроектная разработка (CRM + ядро)
+## Cross-project development (CRM + core)
 
-**Открываю IDE в CRM, пакеты пролинкованы — будет ли единый граф с ядром?**
-Да — **workspace-режим** (включается автоматически, если у проекта есть каталог `packages/`).
-Тогда `.serena/project.yml` индексирует `packages/*` как часть проекта: один корень → PHP-LSP
-резолвит ссылки `app ↔ ядро`, агент видит, что файл идёт в core, и берёт это из графа. Правки в
-`packages/<пакет>` идут в **реальный репозиторий пакета** (через симлинк). Проверено: из сессии
-flexcrm видны символы corex. См. [Граф кода → workspace](./code-graph#workspace-режим-единый-граф-с-локальными-пакетами).
+**Opening IDE in CRM, packages are linked - will there be a single graph with the core?**
+Yes - **workspace-mode** (is included automatically if the project has a directory `packages/`).
+Then `.serena/project.yml` indexes `packages/*` as part of the project: one root → PHP-LSP
+resolves links `app ↔ core`, agent sees that the file is going to core, and takes it from the graph. Edits in
+`packages/<package>` go to **real package repository** (via symlink). Checked: from session
+flexcrm symbols visible corex. See [Code graph → workspace](./code-graph#workspace-single-graph-with-local-packages mode).
 
-**Дубли/рекурсия из-за симлинков vendor?**
-Workspace-конфиг режет `vendor` и вложенные `**/vendor` (там рекурсия testbench и дубли симлинков),
-а `packages/*` оставляет. Для проектов-приложений без локальных пакетов — дефолтный конфиг игнорит
-и `packages`.
+**Takes/recursion due to symlinks vendor?**
+Workspace-config cuts `vendor` and nested `**/vendor` (there is recursion testbench and duplicate symlinks),
+a `packages/*` leaves. For application projects without local packages, the default config is ignored
+and `packages`.
 
-**Можно объединить в один граф НЕзависимые проекты (не под одним деревом)?**
-Нет. Serena-мультирут с кросс-ссылками (`additional_workspace_folders`) пока только для TypeScript.
-Для PHP: связь «кто от кого зависит» даёт [maind-граф топологии](./federation), повторы кода —
-[`maind fleet duplicates`](./fleet). См. [ограничения](./design-notes).
+**Independent projects can be combined into one graph (not under the same tree)?**
+No. Serena-multi-root with cross-links (`additional_workspace_folders`) for now only for TypeScript.
+For PHP: connection «who depends on whom» gives [maind-topology graph](./federation), code repetitions -
+[`maind fleet duplicates`](./fleet). See [restrictions](./design-notes).
 
-## Межпроектная оптимизация
+## Cross-project optimization
 
-**У меня N похожих проектов с общими пакетами — как находить общее и выносить в ядро?**
-`maind fleet`: `manifest` (группы по общим пакетам — где искать) → `duplicates` (jscpd — что
-повторяется) → `features` (память — что меняли) → Serena (точечная правка) → вынос в ядро. Готовый
-сценарий — скилл `cross-project-optimizer`. См. [Fleet](./fleet).
+**I have N similar projects with common packages - how to find common ones and bring them into the kernel?**
+`maind fleet`: `manifest` (groups by common packages - where to look) → `duplicates` (jscpd — what
+repeats) → `features` (memory - what was changed) → Serena (spot edit) → removal to the kernel. Ready
+script - skill `cross-project-optimizer`. See [Fleet](./fleet).
 
-**Схема не переусложнена?**
-Память (общая) и граф кода (пер-проектный) — оба оправданы целью и уже такие. Сложность — в том, что
-три разные вещи зовутся «граф», и в историческом имени `graphify`. См.
-[Решения и ограничения](./design-notes).
+**Is the scheme overcomplicated?**
+Memory (general) and code graph (per-project) — both are justified by the purpose and are already like that. The difficulty is that
+three different things are called «graph», and in the historical name `graphify`. See
+[Solutions and limitations](./design-notes).

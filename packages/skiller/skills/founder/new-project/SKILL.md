@@ -8,7 +8,7 @@ persona: founder
 tags: [discovery, requirements, market, gtm]
 requires: [idea-discovery, competitive-analysis, risk-assessment, ecosystem-reuse-gate]
 produces_for: []
-outputs: [ProjectName.md, "docs/01_Business/01_Concept_and_Monetization.md", "docs/01_Business/02_Competitive_Analysis.md", "docs/01_Business/Risk_Register.md", "Открытые вопросы.md"]
+outputs: [ProjectName.md, "docs/01_Business/01_Concept_and_Monetization.md", "docs/01_Business/02_Competitive_Analysis.md", "docs/01_Business/Risk_Register.md", "Open questions.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -69,7 +69,7 @@ Stages strictly sequential. Each requires explicit "Approved" before the next.
 | 2 | `docs/01_Business/02_Competitive_Analysis.md` | `competitive-analysis.md` | — |
 | 3 | `docs/01_Business/Risk_Register.md` | `risk-assessment.md` | — |
 | 4 | `docs/01_Business/04_Unit_Economics.md` | `unit-economics.md` | SQL, classes |
-| 5 | `Открытые вопросы.md` — blocking only | — | Answer for the user |
+| 5 | `Open questions.md` — blocking only | — | Answer for the user |
 | 6 | `docs/02_Workflow/` — FSM processes | `business-process.md` | Architecture decisions |
 | 7 | `docs/01_Business/06_Go_To_Market.md` | `go-to-market.md` | — |
 | 8 | `docs/01_Business/07_Product_Roadmap.md` | `product-roadmap.md` | — |

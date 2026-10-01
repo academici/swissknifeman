@@ -1,4 +1,4 @@
-"""Тесты migrate.py: from-brain (конфиг+граф, защита от перезаписи), from-agentmemory."""
+"""Tests migrate.py: from-brain (config+graph, overwrite protection), from-agentmemory."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -18,7 +18,7 @@ class TestMigrate(unittest.TestCase):
             cfg, source = load_config(env)
             self.assertEqual(source, "config.json")
             self.assertIn("brain", [p["id"] for p in cfg["projects"]])
-            # derive → федерация: индекс собран (а не единый legacy graph.db)
+            # derive → federation: index collected (and not a single one legacy graph.db)
             self.assertTrue((env.data_dir / "graphs" / "_index.db").exists())
 
     def test_from_brain_refuses_overwrite(self):
@@ -27,7 +27,7 @@ class TestMigrate(unittest.TestCase):
             bpath = write_brain_projects(root)
             capture(cmd_migrate, env, ["from-brain", str(bpath)])
             with self.assertRaises(SystemExit):
-                cmd_migrate(env, ["from-brain", str(bpath)])  # без --force
+                cmd_migrate(env, ["from-brain", str(bpath)])  # without --force
 
     def test_from_agentmemory_copies_and_renames_service(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -37,7 +37,7 @@ class TestMigrate(unittest.TestCase):
             (src / "iii-config.yaml").write_text(
                 "workers:\n  - name: iii-observability\n    config:\n"
                 "      service_name: agentmemory\n", encoding="utf-8")
-            env.memory_config.unlink()  # убираем пред-засеянный конфиг
+            env.memory_config.unlink()  # remove the pre-seeded config
             capture(cmd_migrate, env, ["from-agentmemory", str(src)])
             text = env.memory_config.read_text(encoding="utf-8")
             self.assertIn("service_name: maind", text)

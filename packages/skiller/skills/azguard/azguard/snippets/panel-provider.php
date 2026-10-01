@@ -14,15 +14,15 @@ use AzGuard\PanelProvider;
 use AzGuard\Support\Panel;
 
 /**
- * Панель — изолированный namespace прав внутри одного приложения
- * (app — конечные пользователи, admin — персонал, api — клиенты API).
+ * Panel - isolated namespace rights within one application
+ * (app — end users, admin — staff, api — clients API).
  *
- * Permission 'documents.view', зарегистрированный в панели 'app',
- * хранится и проверяется как 'app.documents.view' — префикс автоматический.
+ * Permission 'documents.view', registered in the panel 'app',
+ * is stored and checked as 'app.documents.view' — prefix is automatic.
  *
- * При boot провайдер также рекурсивно сканирует каталоги Policies/
- * рядом с собой (файлы *Policy.php) и авторегистрирует политики
- * по атрибутам (см. policy-gateability.php).
+ * When boot provider also scans directories recursively Policies/
+ * next to you (files *Policy.php) and autoregisters policies
+ * by attributes (see policy-gateability.php).
  */
 class AppPanelProvider extends PanelProvider
 {
@@ -42,21 +42,21 @@ class AppPanelProvider extends PanelProvider
     }
 }
 
-// ── Регистрация в config/az-guard.php ──────────────────────────────────────
+// ── Registration in config/az-guard.php ──────────────────────────────────────
 //
 // 'panels' => [
 //     \App\AzGuard\Panels\AppPanelProvider::class,
 //     \App\AzGuard\Panels\AdminPanelProvider::class,
 // ],
 //
-// ── Один пользователь — разные роли в разных панелях ───────────────────────
+// ── One user - different roles in different panels ───────────────────────
 //
 // $user->assignRole('editor', panel: 'app');
 // $user->assignRole('viewer', panel: 'admin');
 // $user->hasPermission('app.documents.edit');   // true
 // $user->hasPermission('admin.users.delete');   // false
 //
-// ── Типовая структура проекта ──────────────────────────────────────────────
+// ── Typical project structure ──────────────────────────────────────────────
 //
 // app/AzGuard/
 //   Panels/AppPanelProvider.php
@@ -70,4 +70,4 @@ class AppPanelProvider extends PanelProvider
 // ── Artisan ────────────────────────────────────────────────────────────────
 //
 // php artisan azguard:make-panel App
-// php artisan azguard:doctor          // показывает все панели и их статус
+// php artisan azguard:doctor          // shows all panels and their status

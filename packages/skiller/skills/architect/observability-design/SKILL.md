@@ -90,14 +90,14 @@ tier: 0 | 1 | 2
 
 # Observability Design — [ProjectName]
 
-## Tier и бюджет
+## Tier and budget
 **Tier:** [0/1/2]
-**Месячный бюджет:** $[X]
+**Monthly budget:** $[X]
 
 ## Logs
-- Формат: JSON, поля: ...
-- Уровни и правила использования
-- Агрегатор: ...
+- Format: JSON, fields: ...
+- Levels and rules of use
+- Aggregator: ...
 - Retention: ...
 - PII policy: ...
 
@@ -115,27 +115,27 @@ tier: 0 | 1 | 2
 - ...
 
 ## Traces
-- Стандарт: OpenTelemetry
+- Standard: OpenTelemetry
 - Sampling: ...
-- Обязательные span'ы: ...
+- Required span's: ...
 - Propagation: ...
 
 ## Alerts
-| Имя | Severity | Условие | Runbook |
+| Name | Severity | Condition | Runbook |
 |:---|:---|:---|:---|
 | ... | P1 | ... | `docs/03_Dev/Runbooks/...md` |
 
 ## SLO / SLI
-| Сервис | SLI | Target | Error budget |
+| Service | SLI | Target | Error budget |
 |:---|:---|:---|:---|
 
 ## Error budget policy
 - ...
 
 ## Runbooks
-[список созданных файлов в docs/03_Dev/Runbooks/]
+[list of created files in docs/03_Dev/Runbooks/]
 
-## Domain-specific дополнения (агент)
+## Domain-specific additions (agent)
 - ...
 ```
 

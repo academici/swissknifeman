@@ -1,21 +1,21 @@
-# Шаблон launch-block — фиксированная форма «что запускать дальше»
+# Launch-block template - fixed form of “what to launch next”
 
-Каждая выдача реального следующего шага — handoff.Next и финалы отчётов
-plan-run/plan-close/plan-audit — обязана иметь эту форму (SKILL раздел 6):
-semantic carrier + таблица требований БЕЗ команды + отдельный копируемый блок команды
-активного provider adapter.
+Each output of the real next step is handoff.Next and report finals
+plan-run/plan-close/plan-audit - must have this form (SKILL section 6):
+semantic carrier + requirements table WITHOUT command + separate copyable command block
+active provider adapter.
 
 `````markdown
 **Next:** <kind>: task:<plan-command> <PLAN-ID> <arguments>
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |:--|:--|
-| Batch | <Routing Batch ID / solo; n/a только для design/audit/close/archive> |
+| Batch | <Routing Batch ID / solo; n/a only for design/audit/close/archive> |
 | Model class | <economy / implementation / frontier> |
 | Effort | <low / medium / high / xhigh> |
-| Capabilities | <минимальный набор semantic capability IDs; `—` если дополнительных нет> |
+| Capabilities | <minimum set of semantic capability IDs; `—` if there are no additional ones> |
 | Context | <enum: continue-root · isolated-child-return · cold-start-root (+ one reason)> |
-| Суть | <1 строка: что делает запуск> |
+| Essence | <1 line: what startup does> |
 
 **Provider-native command:**
 
@@ -24,39 +24,39 @@ semantic carrier + таблица требований БЕЗ команды + �
 ```
 `````
 
-**Команда всегда вне таблицы.** Активный provider adapter определяет форму: Claude Code
-печатает native slash-команду в `text`-блоке, Codex — полный запуск `codex ...` в `bash`-блоке,
-Cursor — `agent --workspace … --model … --force …` в `bash`-блоке (см. provider-model-roles).
-Не печатай несколько native-форм. Предпочтительна одна физическая строка; если shell-команда намеренно
-разбита, каждая продолжаемая строка, кроме последней, заканчивается `\`. Визуальный перенос
-Markdown не считается продолжением shell-команды. Исполнимый Next без fenced command block
-неполон; финал нельзя заканчивать на «готово», если следующий запуск существует.
-GREEN item и eligible final-item phase закрываются до вычисления Next: нельзя печатать launch для
-`plan-close` текущего результата или повторного `plan-run` текущего item.
+**Command is always out of table.** Active provider adapter defines the form: Claude Code
+prints a native slash command in a `text` block, Codex - full run of `codex ...` in a `bash` block,
+Cursor - `agent --workspace ... --model ... --force ...` in the `bash` block (see provider-model-roles).
+Don't print multiple native forms. One physical line is preferred; if the shell command is intentional
+is broken, each continued line except the last ends with `\`. Visual transfer
+Markdown is not considered a continuation of a shell command. Executable Next without fenced command block
+incomplete; the final cannot end with "done" if the next run exists.
+GREEN item and eligible final-item phase are closed before Next is evaluated: launch cannot be printed for
+`plan-close` the current result or repeat `plan-run` the current item.
 
-Отдельный блок может нести provider invocation ИЛИ голый промпт:
+A separate block can carry a provider invocation OR a bare prompt:
 
 - **owner-run step** (`manual:` Next) — no single command expresses it: the fenced block carries
   a BARE item prompt (or a `/model`+`/effort`+`/task:plan-run` sequence);
-- **scope-payload** (находки/реопен, см. ниже) — code-block несёт invocation ПЛЮС
-  четыре строки `РЕЖИМ:`/`ВХОД:`/`СКОУП:`/`НЕ ТРОГАТЬ:`, в одну строку таблицы не
-  умещается;
-- **форма `ОЖИДАНИЕ:`** (ниже) — code-block несёт guard-строку `# НЕ раньше: …`.
+- **scope-payload** (finds/reopen, see below) - code-block carries invocation PLUS
+  four lines `MODE:`/`INPUT:`/`SCORE:`/`DO NOT TOUCH:`, not in one row of the table
+  fits;
+- **form `WAITING:`** (below) - code-block carries the guard line `# NOT before: ...`.
 
-Legacy-строка таблицы `Команда` остаётся читаемой для старых планов, но новые handoff'ы её
-не выводят. Канонический носитель команды — только fenced block.
+Legacy row of the `Team` table remains readable for old plans, but new handoffs
+is not output. The canonical command carrier is fenced block only.
 
 `````markdown
 <!-- example: an ordinary run item whose next step is fully expressed by one command -->
 **Next:** run-items: task:plan-run <PLAN-ID> Pn.k
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |:--|:--|
 | Model class | implementation |
 | Effort | medium |
 | Capabilities | — |
 | Context | continue-root |
-| Суть | закрыть Pn.k |
+| Essence | close Pn.k |
 
 **Provider-native command:**
 
@@ -65,54 +65,54 @@ Legacy-строка таблицы `Команда` остаётся читае�
 ```
 `````
 
-Правила:
+Rules:
 
-- **Самодостаточность (cold-start).** Команда обязана работать из холодной сессии:
-  plan-ID + пути входных доков (cold-start reads) + встроенное утверждение гейта,
-  если исполнение гейтится. Ссылки вида «эта сессия» — только как дополнение.
-- **Scope-payload — launch-block, несущий НАХОДКИ** (§8, D-канон 2026-07-17): вердикт
-  `plan-audit` `RED`/`ATTENTION` и фикс-предложение C3/D6 голыми быть не могут. Правило
-  целиком в SKILL разделе 8 (единственный SSOT), здесь форма — четыре строки под командой
-  в том же code-block'е, порядок фиксирован:
+- **Self-sufficiency (cold-start).** The team is required to work from a cold session:
+  plan-ID + input dock paths (cold-start reads) + built-in gate assertion,
+  if the execution is gated. Links like “this session” are only as an addition.
+- **Scope-payload - launch-block carrying FINDS** (§8, D-canon 2026-07-17): verdict
+  `plan-audit` `RED`/`ATTENTION` and the C3/D6 fix clause cannot be naked. Rule
+  entirely in SKILL section 8 (the only SSOT), here the form is four lines under the command
+  in the same code-block, the order is fixed:
 
   `````
   <provider-rendered invocation>
 
-  РЕЖИМ: <реопен по §3 (4 шага) | детализация | ремедиация>
-  ВХОД: <файл → блок с находками; cold-start read>
-  СКОУП: <нумерованный список: что сделать>
-  НЕ ТРОГАТЬ: <анти-скоуп: что оставить как есть>
+  MODE: <reopen by §3 (4 steps) | detailing | remediation>
+  INPUT: <file → block with finds; cold-start read>
+  SCORE: <numbered list: what to do>
+  DO NOT TOUCH: <anti-scope: what to leave as is>
   `````
 
-  `plan-audit` кладёт этот launch-block подсекцией `### Что запускать` в конец своего блока
-  `## Audit Pn` — чат машиной не проверяется, диск проверяется. `plan-lint` гейтит присутствие
-  всех четырёх строк (датовые планы от 2026.07.16 — ERROR, старее — WARNING). `GREEN` находок
-  не несёт — payload'а не требует.
-- **Model class/Effort** — из Routing плана (SSOT-матрица — SKILL раздел 9); отклонение
-  от матрицы обосновывается там же, не в launch-block.
-- **Batch** — из Routing плана. Для execution Next указывается ID группы или `solo`, а команда
-  адресует весь ещё не закрытый adjacent-суффикс группы. Поле не исчезает при новом handoff;
-  `n/a` допустимо только для design/audit/close/archive шага без исполнения item'ов.
-- **Capabilities** проверяются до invocation/work/write. Оркестрация обязана перечислить
-  `command.subagents` и `command.workflow-carrier`; missing/unknown/unsupported блокирует запуск.
-- **Context** — закрытый enum ТРЁХ значений SKILL §6; выбирается границей, а не командой:
-  - `continue-root` — обычная последовательная работа и local repair;
-  - `isolated-child-return` — один ограниченный reviewer/worker возвращает evidence root'у;
-  - `cold-start-root` — только с одной причиной: `context-budget`, `capability-missing`,
-    `owner-pause-no-resume`, `whole-plan-independent-audit` или `design-root-terminal`.
-    `design-root-terminal` сохранён для старых handoff. После design используй
-    `scope-complete` / `continue-root`, если нет настоящей границы новой сессии;
-    рекомендация сама по себе не разрешает исполнение successor.
+  `plan-audit` puts this launch-block with the `###What to launch` subsection at the end of its block
+  `## Audit Pn` - the chat is not checked by the machine, the disk is checked. `plan-lint` gates presence
+  of all four lines (date plans from 07.2026.16 - ERROR, older ones - WARNING). `GREEN` finds
+  does not carry - it does not require payload.
+- **Model class/Effort** - from the Routing plan (SSOT matrix - SKILL section 9); deviation
+  from the matrix is located there, not in the launch-block.
+- **Batch** - from the Routing plan. For execution Next, the group ID or `solo` is specified, and the command
+  addresses the entire adjacent-suffix of the group that has not yet been closed. The field does not disappear with a new handoff;
+  `n/a` is only valid for the design/audit/close/archive step without item execution.
+- **Capabilities** are checked before invocation/work/write. The orchestra is obliged to list
+  `command.subagents` and `command.workflow-carrier`; missing/unknown/unsupported blocks launch.
+- **Context** - private enum of THREE values ​​SKILL §6; is selected by the boundary, not the command:
+  - `continue-root` - normal sequential work and local repair;
+  - `isolated-child-return` - one limited reviewer/worker returns evidence to root;
+  - `cold-start-root` - with only one reason: `context-budget`, `capability-missing`,
+    `owner-pause-no-resume`, `whole-plan-independent-audit` or `design-root-terminal`.
+    `design-root-terminal` saved for old handoffs. After design use
+    `scope-complete` / `continue-root` if there is no real new session boundary;
+    the recommendation itself does not allow execution of successor.
     Terminal `task:plan-audit` does not select Context by command name; use its persisted
     `plan_continuity` decision.
-- **owner-run step** → «ЗАПУСК ВРУЧНУЮ» form — the rule lives in SKILL section 8 (single SSOT).
+- **owner-run step** → “MANUAL START” form — the rule lives in SKILL section 8 (single SSOT).
   Reminder: `Model class` = the Routing class, the fenced block is REQUIRED and carries a
   **BARE item prompt** (or a `/model`+`/effort`+`/task:plan-run` sequence)
-  instead of an invocation, `Context` = `continue-root`, если нет фактической hard boundary.
-- **Форма «ОЖИДАНИЕ: `<условие>` → `<целевая форма>`» (§8, D8)** — шаг реален, но неисполним
-  сейчас (time-gate/накопление данных/кросс-план-гейт не терминален; НЕ дефект `🔴`, НЕ терминал
-  «план закрыт»). Правило целиком в SKILL разделе 8; здесь напоминание: условие СТРУКТУРНО
-  (дата/гейт), первая строка code-block'а — **guard `# НЕ раньше: <условие>`**, `Model class`/`Effort`/
-  `Context` — **целевого шага**. Прозаическую оговорку в объявлении не писать (`plan-lint` метит C2).
-- `plan-lint` проверяет semantic `Next`, таблицу с `| Model class |` и fenced block ниже;
-  legacy-строка `| Команда |` принимается только для обратной совместимости старых планов.
+  instead of an invocation, `Context` = `continue-root` if there is no actual hard boundary.
+- **Form “EXPECTATION: `<condition>` → `<target form>`” (§8, D8)** - step is real, but impossible
+  now (time-gate/data accumulation/cross-plane-gate is not terminal; NOT defect `🔴`, NOT terminal
+  “plan closed”). The entire rule is in SKILL section 8; here is a reminder: the condition is STRUCTURAL
+  (date/gate), first line of code-block - **guard `# NOT before: <condition>`**, `Model class`/`Effort`/
+  `Context` - **target step**. Do not write a prosaic disclaimer in the ad (`plan-lint` marks C2).
+- `plan-lint` checks semantic `Next`, table with `| Model class |` and fenced block below;
+  legacy string `| The |` command is accepted only for backward compatibility of old plans.

@@ -1,83 +1,83 @@
-# Laravel-проект с нуля
+# Laravel-project from scratch
 
-Сквозной сценарий: новый Laravel-проект → полностью готовое AI-окружение
-за две команды.
+End-to-end scenario: new Laravel-project → completely ready AI-environment
+for two teams.
 
-## Исходная точка
+## Starting point
 
 ```bash
 laravel new shop && cd shop
-# или: git clone git@github.com:me/shop.git && cd shop
+# or: git clone git@github.com:me/shop.git && cd shop
 ```
 
-## Шаг 1. Скиллы
+## Step 1. Skills
 
 ```bash
 skiller vendor --agent claude
 ```
 
-Автодетект видит `artisan` + `composer.json` → профиль `laravel-project` →
-в `.claude/skills/` плоско раскладываются bucket-ы **architect, php, devops,
-quality, operator**: скиллы по архитектуре, Laravel-паттернам, тестированию,
-Docker, code review и инцидентам.
+Autodetect sees `artisan` + `composer.json` → profile `laravel-project` →
+in `.claude/skills/` lay flat bucket-s **architect, php, devops,
+quality, operator**: skills in architecture, Laravel-patterns, testing,
+Docker, code review and incidents.
 
-Проверить, что поставится, можно заранее:
+You can check what will be installed in advance:
 
 ```bash
 skiller vendor --list
 ```
 
-## Шаг 2. Permissions
+## Step 2. Permissions
 
 ```bash
 ~/projects/packages/swissknifeman/packages/skiller/scripts/apply-permissions.sh --target .
 ```
 
-Автодетект по маркерам: `artisan` → `laravel`, `package.json` → `node`,
-`Dockerfile`/`compose.yaml` → `docker`. В `.claude/settings.local.json`
-вливаются `base + laravel + node (+ docker)`:
+Auto detect by markers: `artisan` → `laravel`, `package.json` → `node`,
+`Dockerfile`/`compose.yaml` → `docker`. B `.claude/settings.local.json`
+pour in `base + laravel + node (+ docker)`:
 
-- ✅ без промптов: `php artisan`, `composer`, `vendor/bin/pest`, `pint`,
-  `phpstan`, `npm run`, `git` (кроме push), файловые операции;
-- ❓ с подтверждением: `git push`, `migrate:fresh`, `db:wipe`, `rm -rf`;
-- 🚫 запрещено: чтение `.env`, `*.pem`, `~/.ssh`, `sudo`.
+- ✅ without prompts: `php artisan`, `composer`, `vendor/bin/pest`, `pint`,
+  `phpstan`, `npm run`, `git` (except push), file operations;
+- ❓ with confirmation: `git push`, `migrate:fresh`, `db:wipe`, `rm -rf`;
+- 🚫 disabled: read `.env`, `*.pem`, `~/.ssh`, `sudo`.
 
-## Шаг 3. Зафиксировать конфигурацию (опционально)
+## Step 3. Commit the configuration (optional)
 
-Чтобы любой клон проекта восстанавливал то же окружение:
+So that any clone of the project restores the same environment:
 
 ```bash
 cp ~/projects/packages/swissknifeman/packages/skiller/.swissknife.example.json .swissknife.json
-# отредактировать под проект и закоммитить
+# edit for the project and commit
 ```
 
-Опциональный блок `providers` в примере задаёт provider selection v1: отсутствие блока
-сохраняет прежний Claude Code-only результат и не меняет файл автоматически. На текущем
-этапе этот блок только валидируется и разрешается с provenance; он сам по себе не
-устанавливает Codex и не генерирует provider-артефакты.
+Optional block `providers` in the example specifies provider selection v1: missing block
+remains the same Claude Code-only result and does not change the file automatically. On the current
+stage this block is only validated and resolved with provenance; he himself is not
+sets Codex and does not generate provider-artifacts.
 
-## Результат
+## Result
 
 ```
 shop/
 ├── .claude/
-│   ├── skills/                  # 31 скилл под Laravel-разработку
+│   ├── skills/                  # 31 skill under Laravel-development
 │   ├── settings.local.json      # permissions: base+laravel+node
-│   └── settings.local.json.bak  # бэкап, если файл существовал
-├── .swissknife.json             # зафиксированная конфигурация (опц.)
+│   └── settings.local.json.bak  # backup if the file existed
+├── .swissknife.json             # committed configuration (opt.)
 └── ...
 ```
 
-Открываете Claude Code — и агент сразу умеет: проектировать структуру по
-скиллам architect, писать тесты по `laravel-testing`, запускать `artisan`,
-`composer` и линтеры без единого промпта.
+Open Claude Code — and the agent immediately knows how to: design a structure according to
+skills architect, write tests according to `laravel-testing`, run `artisan`,
+`composer` and linters without a single prompt.
 
-## Типичные доработки
+## Typical improvements
 
 ```bash
-# Исключить неактуальные скиллы
+# Eliminate irrelevant skills
 skiller vendor --profile laravel-project --exclude botkit
 
-# Добавить docker-пресет, если автодетект его не увидел
+# Add docker-preset, if the auto detector did not see it
 ~/projects/packages/swissknifeman/packages/skiller/scripts/apply-permissions.sh --target . --preset docker
 ```

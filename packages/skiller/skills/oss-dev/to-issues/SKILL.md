@@ -20,9 +20,9 @@ when_to_use: "Use when the owner explicitly requests publishing a plan as GitHub
 
 Break a plan into independently-grabbable issues using vertical slices (tracer bullets).
 
-> **Конфиг трекера.** Перед публикацией нужны: репозиторий-трекер и словарь triage-лейблов. У нас
-> это `gh` + лейблы конкретного репо (а не `/setup-matt-pocock-skills`). Если набор лейблов неясен —
-> уточни у мейнтейнера или возьми из `oss-dev/github-flow`.
+> **Tracker config.** Before publishing you need: a repository tracker and a dictionary triage-labels. We have
+> this `gh` + repo specific labels (and not `/setup-matt-pocock-skills`). If the set of labels is unclear -
+> check with the maintainer or get it from `oss-dev/github-flow`.
 
 ## Process
 
@@ -89,11 +89,11 @@ Avoid specific file paths or code snippets — they go stale fast. Exception: if
 
 ## Affected projects
 
-Список затронутых репозиториев, если срез касается нескольких проектов экосистемы (иначе опусти секцию).
+List of affected repositories if the slice affects multiple ecosystem projects (otherwise omit the section).
 
 ## Environment
 
-Где проявляется/проверяется: production / staging / конкретное устройство (POS, фискальник). Опусти, если неприменимо.
+Where it appears/is checked: production / staging / specific device (POS, fiscal officer). Omit if not applicable.
 
 ## Blocked by
 
@@ -105,9 +105,9 @@ Or "None - can start immediately" if no blockers.
 
 Do NOT close or modify any parent issue.
 
-## Связанные скиллы
+## Related skills
 
-- `oss-dev/github-flow` — общий поток Issue→PR→Release (обязательная зависимость).
-- `general/spec-interview` / `general/grill-with-docs` — откуда берётся план/ТЗ для разбиения.
-- `general/implement` — следующий шаг: реализация по опубликованным issue (этот скилл `produces_for` его).
-- `oss-dev/issue-triage` — стейт-машина обработки уже существующих issue/PR.
+- `oss-dev/github-flow` — general thread Issue→PR→Release (required dependency).
+- `general/spec-interview` / `general/grill-with-docs` — where does the plan come from/Terms of reference for partitioning.
+- `general/implement` — next step: implementation according to published issue (this skill `produces_for` him).
+- `oss-dev/issue-triage` — state machine for processing existing issue/PR.

@@ -218,7 +218,7 @@ class TestReadBudgetGate(unittest.TestCase):
         diag = lint(self.copied_fixture("plan-v2-overweight"))
         rows = [row for row in diag.errors if plan_gates.GATE_ID in row]
         self.assertTrue(rows, diag.errors)
-        self.assertTrue(any("P1.1" in row and "порога 100" in row
+        self.assertTrue(any("P1.1" in row and "threshold 100" in row
                             and "gpt-5.6-terra" in row for row in rows), rows)
 
     def test_rebuilt_item_passes_with_frozen_production_threshold(self):
@@ -247,14 +247,14 @@ class TestReadBudgetGate(unittest.TestCase):
         plan_bundle.build(plan_dir, "P1.1")
         diag = lint(plan_dir)
         rows = [row for row in diag.errors if plan_gates.GATE_ID in row]
-        self.assertTrue(any("brief/00-brief.md" in row and "262144 байт" in row
-                            and "25000 токенов" in row for row in rows), rows)
+        self.assertTrue(any("brief/00-brief.md" in row and "262144 bytes" in row
+                            and "25000 tokens" in row for row in rows), rows)
 
     def test_missing_contract_fails_closed(self):
         plan_dir = self.copied_fixture("plan-v2")
         (plan_dir / "root" / "contracts" / "read-budget-v1.md").unlink()
         diag = lint(plan_dir)
-        self.assertTrue(any("контракт порога" in row for row in diag.errors), diag.errors)
+        self.assertTrue(any("threshold contract" in row for row in diag.errors), diag.errors)
 
     def test_archived_plan_skips_execution_only_read_budget_gate(self):
         tmp = tempfile.TemporaryDirectory()
@@ -283,7 +283,7 @@ class TestReadBudgetGate(unittest.TestCase):
 
     def test_missing_calibration_and_limit_are_errors(self):
         plan_dir = self.copied_fixture("plan-v2")
-        for message in ("артефакт калибровки не читается", "артефакт лимита чтения не читается"):
+        for message in ("calibration artifact not readable", "read limit artifact not readable"):
             with self.subTest(message=message), unittest.mock.patch.object(
                     plan_gates.plan_weight, "Measurer",
                     side_effect=plan_weight.PlanWeightError(message)):
@@ -305,8 +305,8 @@ class TestReadBudgetGate(unittest.TestCase):
         diag = lint(plan_dir)
 
         message = next(row for row in diag.errors if "unresolvable_entry" in row)
-        self.assertIn("локальный обратимый носитель", message)
-        self.assertNotIn("исправь ТЗ через task:plan-design", message)
+        self.assertIn("local reversible media", message)
+        self.assertNotIn("correct technical specifications via task:plan-design", message)
 
     def test_terminal_bundle_keeps_schema_checks_without_live_source_resolution(self):
         plan_dir = self.copied_fixture("plan-v2")
@@ -329,21 +329,21 @@ class TestReadBudgetGate(unittest.TestCase):
         plan_dir = self.copied_fixture("plan-v2")
         producer = plan_dir / "phases" / "P1" / "P1.1.md"
         producer.write_text(producer.read_text(encoding="utf-8").replace(
-            "**Deliverables:** валидация + тест.",
+            "**Deliverables:** validation + test.",
             "**Deliverables:** `artifacts/future.json`."), encoding="utf-8")
         (plan_dir / "phases" / "P1" / "P1.2.md").write_text(
-            "### P1.2 — Потребить будущий артефакт\n\n"
-            "**Intent:** Проверить admission до материализации bundle.\n"
-            "**Why:** Будущий producer output ещё не существует.\n"
+            "### P1.2 — Consume future artifact\n\n"
+            "**Intent:** Check admission before materialization bundle.\n"
+            "**Why:** Future producer output does not exist yet.\n"
             "**Scope Included:** stage-aware admission.\n"
-            "**Scope Excluded:** создание артефакта.\n"
+            "**Scope Excluded:** artifact creation.\n"
             "**Inputs:** `brief/00-brief.md`\n"
             "**Files:** packages/task/lib/task/plan_weight.py\n"
             "**Required Reads:** 1) `artifacts/future.json` (producer: P1.1)\n"
-            "**Implementation Rules:** Не ослаблять ready-гейт.\n"
-            "**Code Guidance:** Использовать declared producer edge.\n"
+            "**Implementation Rules:** Do not loosen ready-gate.\n"
+            "**Code Guidance:** Use declared producer edge.\n"
             "**Validation:** admission_state == pending-producer.\n"
-            "**Deliverables:** проверенный consumer.\n",
+            "**Deliverables:** verified consumer.\n",
             encoding="utf-8",
         )
         plan_item_state.build_states(plan_dir)
@@ -361,18 +361,18 @@ class TestReadBudgetGate(unittest.TestCase):
     def test_missing_bundle_with_unannotated_missing_read_stays_fail_closed(self):
         plan_dir = self.copied_fixture("plan-v2")
         (plan_dir / "phases" / "P1" / "P1.2.md").write_text(
-            "### P1.2 — Потребить отсутствующий вход\n\n"
-            "**Intent:** Проверить fail-closed admission.\n"
-            "**Why:** Неаннотированный вход не является producer edge.\n"
+            "### P1.2 — Consume missing input\n\n"
+            "**Intent:** Check fail-closed admission.\n"
+            "**Why:** Unannotated input is not producer edge.\n"
             "**Scope Included:** stage-aware admission.\n"
-            "**Scope Excluded:** создание входа.\n"
+            "**Scope Excluded:** creating an input.\n"
             "**Inputs:** `brief/00-brief.md`\n"
             "**Files:** packages/task/lib/task/plan_weight.py\n"
             "**Required Reads:** 1) `artifacts/missing.json`\n"
-            "**Implementation Rules:** Не выводить pending без producer.\n"
-            "**Code Guidance:** Сохранить fail-closed поведение.\n"
+            "**Implementation Rules:** Do not output pending without producer.\n"
+            "**Code Guidance:** Save fail-closed behavior.\n"
             "**Validation:** admission_state == ready, admission_pass == false.\n"
-            "**Deliverables:** проверенный consumer.\n",
+            "**Deliverables:** verified consumer.\n",
             encoding="utf-8",
         )
         plan_item_state.build_states(plan_dir)
@@ -392,8 +392,8 @@ class TestReadBudgetGate(unittest.TestCase):
         (plan_dir / "bundles" / "P1.1.json").unlink()
         status = plan_dir / "status.md"
         status.write_text(status.read_text(encoding="utf-8").replace(
-            "| P1 | Фаза раз | 0/1 | 🟡 In progress |",
-            "| P1 | Фаза раз | 0/1 | ⬜ Not started |"), encoding="utf-8")
+            "| P1 | Phase times | 0/1 | 🟡 In progress |",
+            "| P1 | Phase times | 0/1 | ⬜ Not started |"), encoding="utf-8")
         diag = lint(plan_dir)
         self.assertFalse(any("P1.1: missing_entry" in row for row in diag.errors), diag.errors)
 
@@ -401,8 +401,8 @@ class TestReadBudgetGate(unittest.TestCase):
         plan_dir = self.copied_fixture("plan-v2")
         status = plan_dir / "status.md"
         status.write_text(status.read_text(encoding="utf-8").replace(
-            "| P1 | Фаза раз | 0/1 | 🟡 In progress |",
-            "| P1 | Фаза раз | 0/1 | ⬜ Not started |"), encoding="utf-8")
+            "| P1 | Phase times | 0/1 | 🟡 In progress |",
+            "| P1 | Phase times | 0/1 | ⬜ Not started |"), encoding="utf-8")
         spec = plan_dir / "phases" / "P1" / "P1.1.md"
         spec.write_text(re.sub(
             r"^\*\*Inputs:\*\*.*$",
@@ -417,7 +417,7 @@ class TestReadBudgetGate(unittest.TestCase):
     def test_stale_fixture_checks_only_the_next_runnable_bundle(self):
         diag = lint(self.copied_fixture("plan-v2-stale"))
         messages = "\n".join((*diag.errors, *diag.warnings))
-        self.assertIn("следующего запускаемого item P1.1 устарел", messages)
+        self.assertIn("next run item P1.1 is deprecated", messages)
         self.assertNotIn("P1.5: extraneous_entry", messages)
 
     def test_unilateral_decision_link_does_not_reopen_future_bundle_scope(self):
@@ -429,7 +429,7 @@ class TestReadBudgetGate(unittest.TestCase):
         (plan_dir / "decisions" / "D2-fixture.md").write_text(
             "---\nid: D2\ndate: 2026-07-03\nstatus: accepted\nitem: P1.1\n"
             "items: [P1.1]\nsupersedes: []\nsuperseded_by: null\n---\n"
-            "## Решение\n\nFixture.\n\n## Почему\n\nFixture.\n", encoding="utf-8")
+            "## Solution\n\nFixture.\n\n## Why\n\nFixture.\n", encoding="utf-8")
         diag = lint(plan_dir)
         rows = [row for row in diag.errors if plan_gates.BUNDLE_GATE_ID in row]
         self.assertFalse(any("D1" in row and "D2" in row for row in rows), rows)
@@ -446,7 +446,7 @@ class TestReadBudgetGate(unittest.TestCase):
                 unittest.mock.patch.object(plan_gates.plan_layout, "registry", return_value=registry):
             diag = lint(plan_dir)
         rows = [row for row in diag.errors if plan_gates.PATH_GATE_ID in row]
-        self.assertTrue(any("монотонный предикат порядка" in row for row in rows), rows)
+        self.assertTrue(any("monotonic order predicate" in row for row in rows), rows)
         self.assertTrue(any("history" in row and "executor" in row for row in rows), rows)
 
     def test_terminal_item_input_is_rejected_but_sibling_is_not_a_rule(self):
@@ -456,7 +456,7 @@ class TestReadBudgetGate(unittest.TestCase):
             "`brief/00-brief.md`", "`phases/P0/P0.1.md`", 1), encoding="utf-8")
         diag = lint(plan_dir)
         rows = [row for row in diag.errors if plan_gates.PATH_GATE_ID in row]
-        self.assertTrue(any("терминальной фазы" in row and "P1.1" in row for row in rows), rows)
+        self.assertTrue(any("terminal phase" in row and "P1.1" in row for row in rows), rows)
 
     def test_terminal_consumer_is_outside_the_live_read_path(self):
         plan_dir = self.copied_fixture("plan-v2")
@@ -470,7 +470,7 @@ class TestReadBudgetGate(unittest.TestCase):
         diag = lint(plan_dir)
 
         rows = [row for row in diag.errors if plan_gates.PATH_GATE_ID in row]
-        self.assertFalse(any("терминальной фазы" in row and "P1.1" in row for row in rows), rows)
+        self.assertFalse(any("terminal phase" in row and "P1.1" in row for row in rows), rows)
 
 
 if __name__ == "__main__":

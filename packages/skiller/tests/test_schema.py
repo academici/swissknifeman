@@ -1,10 +1,10 @@
-"""Гейт от расхождения JSON-схем конфигов с рантайм-валидаторами.
+"""Divergence gate JSON-config schemes with runtime validators.
 
-Схемы (schema/*.json) — DX/документация (IntelliSense редактора, $schema). Рантайм-
-валидация остаётся ручной и stdlib-only (CONFIG_KEYS в common.py, SKILLSET_KEYS в
-skillset.py — без pip-зависимости jsonschema). Этот тест держит published schema в
-синхроне с кодом: если ключ добавили в Python, но не в схему (или наоборот) — падаем.
-Тест гоняется в scripts/test.sh, который зовёт scripts/validate.sh (== CI)."""
+Schemes (schema/*.json) — DX/documentation (IntelliSense editor, $schema). Runtime-
+validation remains manual and stdlib-only (CONFIG_KEYS in common.py, SKILLSET_KEYS in
+skillset.py — without pip-dependencies jsonschema). This test holds published schema in
+in sync with the code: if the key is added to Python, but not in the schema (or vice versa) — we fall.
+Test runs in scripts/test.sh, who calls scripts/validate.sh (== CI)."""
 import json
 import unittest
 from pathlib import Path
@@ -24,12 +24,12 @@ class TestConfigSchemas(unittest.TestCase):
     def test_swissknife_props_match_config_keys(self):
         props = set(_load("swissknife.schema.json")["properties"])
         self.assertEqual(props, set(CONFIG_KEYS),
-                         "schema/swissknife.schema.json разошлась с CONFIG_KEYS")
+                         "schema/swissknife.schema.json separated from CONFIG_KEYS")
 
     def test_swissknifeman_props_match_skillset_keys(self):
         props = set(_load("swissknifeman-config.schema.json")["properties"])
         self.assertEqual(props, set(SKILLSET_KEYS),
-                         "schema/swissknifeman-config.schema.json разошлась с SKILLSET_KEYS")
+                         "schema/swissknifeman-config.schema.json separated from SKILLSET_KEYS")
 
     def test_agent_enum_matches_agent_defaults(self):
         agent = _load("swissknife.schema.json")["properties"]["agent"]
@@ -46,20 +46,20 @@ class TestConfigSchemas(unittest.TestCase):
             for key, pytype in keys.items():
                 prop = schema["properties"][key]
                 if isinstance(pytype, tuple):
-                    # Мульти-тип (напр. memory_brain = (str, dict)) → в схеме oneOf,
-                    # где члены покрывают ровно множество JSON-типов Python-кортежа.
+                    # Multi-type (e.g. memory_brain = (str, dict)) → in the schema oneOf,
+                    # where the terms cover exactly the set JSON-types Python-tuple.
                     self.assertNotIn("type", prop,
-                                     f"{fname}: '{key}' — мульти-тип, ожидался oneOf")
+                                     f"{fname}: '{key}' — multi-type, expected oneOf")
                     member_types = {b.get("type") for b in prop.get("oneOf", [])}
                     self.assertEqual(member_types, {JSON_TYPE[t] for t in pytype},
-                                     f"{fname}: oneOf-члены '{key}'")
+                                     f"{fname}: oneOf-members '{key}'")
                 else:
                     self.assertEqual(prop["type"], JSON_TYPE[pytype],
-                                     f"{fname}: тип '{key}'")
+                                     f"{fname}: type '{key}'")
 
     def test_schemas_reject_unknown_keys(self):
-        # Контракт DX: additionalProperties:false + escape для _/$ — как рантайм
-        # (валидаторы пропускают ключи на '_'/'$', остальное — die).
+        # Contract DX: additionalProperties:false + escape for _/$ — as runtime
+        # (validators pass keys to '_'/'$', rest - die).
         for fname in ("swissknife.schema.json", "swissknifeman-config.schema.json"):
             schema = _load(fname)
             self.assertIs(schema["additionalProperties"], False, fname)

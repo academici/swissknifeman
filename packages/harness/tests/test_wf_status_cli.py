@@ -59,7 +59,7 @@ class HarnessWfStatusCliCase(unittest.TestCase):
                     {"CLAUDE_CONFIG_DIR": str(self.config_dir)})
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIn(f"run: {RUN_ID}", proc.stdout)
-        self.assertIn("имя: p1-4-auth-security-review", proc.stdout)
+        self.assertIn("name: p1-4-auth-security-review", proc.stdout)
         self.assertIn("Review", proc.stdout)
         self.assertIn("Verify", proc.stdout)
         self.assertIn("started=2 done=1 inflight=1", proc.stdout)
@@ -87,7 +87,7 @@ class HarnessWfStatusCliCase(unittest.TestCase):
         empty_cfg = self.tmp / "empty-cc-config"
         proc = _run([str(HARNESS_BIN), "wf", "status"], {"CLAUDE_CONFIG_DIR": str(empty_cfg)})
         self.assertEqual(proc.returncode, 0, proc.stderr)
-        self.assertIn("прогонов не найдено", proc.stdout)
+        self.assertIn("runs not found", proc.stdout)
         self.assertNotIn("Traceback", proc.stdout)
 
     def test_swissknifeman_wf_facade_reaches_harness(self):

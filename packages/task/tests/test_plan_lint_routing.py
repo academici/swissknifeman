@@ -6,8 +6,8 @@ except ImportError:
 
 
 class TestNextFormsEnum(TmpPlanTestCase):
-    """m8/B1/N1/N2 — enum 8 форм handoff.Next (SKILL §8): по кейсу на форму
-    (принимается) + мусорная форма (ERROR) + plan-audit нетерминальной фазы (WARNING)."""
+    """m8/B1/N1/N2 — enum 8 forms handoff.Next (SKILL §8): per case per form
+    (accepted) + junk form (ERROR) + plan-audit non-terminal phase (WARNING)."""
 
     def _next(self, plan_dir, new_next):
         ho = plan_dir / "handoff.md"
@@ -16,7 +16,7 @@ class TestNextFormsEnum(TmpPlanTestCase):
         ho.write_text(text, encoding="utf-8")
 
     def test_plan_design_item_form_accepted(self):
-        # item эскалирован/требует ре-дизайна — ссылка на существующий item Pn.m
+        # item escalated/requires re-design - link to existing item Pn.m
         plan_dir = write_valid_plan(self.root)
         self._next(plan_dir, "/task:plan-design DEMO-1 P1.1")
         _, diag = _lint(plan_dir)
@@ -27,15 +27,15 @@ class TestNextFormsEnum(TmpPlanTestCase):
         self._next(plan_dir, "/task:plan-design DEMO-1 P9.9")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "item «P9.9» не существует ни в одной фазе"))
+        self.assertTrue(_errors_containing(diag, "item «P9.9» does not exist in any phase"))
 
     def test_plan_audit_terminal_phase_accepted(self):
-        # фаза P1 терминальна (🟢 Done в фикстуре) — plan-audit допустим без warning
+        # phase P1 terminal (🟢 Done in fixture) — plan-audit acceptable without warning
         plan_dir = write_valid_plan(self.root)
         self._next(plan_dir, "/task:plan-audit DEMO-1 P1")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
-        self.assertEqual([w for w in diag.warnings if "не терминальна" in w], [])
+        self.assertEqual([w for w in diag.warnings if "is not terminal" in w], [])
 
     def test_plan_audit_nonterminal_phase_warns(self):
         plan_dir = write_valid_plan(self.root)
@@ -44,7 +44,7 @@ class TestNextFormsEnum(TmpPlanTestCase):
             item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"))
         self._next(plan_dir, "/task:plan-audit DEMO-1 P1")
         _, diag = _lint(plan_dir)
-        self.assertTrue(any("не терминальна" in w for w in diag.warnings), diag.warnings)
+        self.assertTrue(any("is not terminal" in w for w in diag.warnings), diag.warnings)
 
     def test_plan_close_phase_form_accepted(self):
         plan_dir = write_valid_plan(self.root)
@@ -63,10 +63,10 @@ class TestNextFormsEnum(TmpPlanTestCase):
         self._next(plan_dir, "/task:plan-close DEMO-1 P9.9")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "item «P9.9» не существует ни в одной фазе"))
+        self.assertTrue(_errors_containing(diag, "item «P9.9» does not exist in any phase"))
 
     def test_plan_close_archive_form_accepted_when_closed(self):
-        # план целиком терминален (единственный item 🟢 Done) — форма допустима
+        # plan is entirely terminal (the only one item 🟢 Done) — form is valid
         plan_dir = write_valid_plan(self.root)
         self._next(plan_dir, "/task:plan-close archive DEMO-1")
         _, diag = _lint(plan_dir)
@@ -79,20 +79,20 @@ class TestNextFormsEnum(TmpPlanTestCase):
             item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"))
         self._next(plan_dir, "/task:plan-close archive DEMO-1")
         _, diag = _lint(plan_dir)
-        self.assertTrue(any("план ещё не терминален целиком" in w for w in diag.warnings), diag.warnings)
+        self.assertTrue(any("the plan is not yet completely terminal" in w for w in diag.warnings), diag.warnings)
 
     def test_manual_run_form_accepted(self):
         plan_dir = write_valid_plan(self.root)
-        self._next(plan_dir, "ЗАПУСК ВРУЧНУЮ: fable/high — item требует public-контракт решения")
+        self._next(plan_dir, "MANUAL START: fable/high — item requires public-solution contract")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
 
     def test_garbage_next_form_is_error(self):
         plan_dir = write_valid_plan(self.root)
-        self._next(plan_dir, "сделай что-нибудь по вдохновению")
+        self._next(plan_dir, "do something inspired")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "не соответствует ни одной из допустимых форм"))
+        self.assertTrue(_errors_containing(diag, "does not match any of the valid forms"))
 
     def test_typed_waiting_owner_handoff_passes_continuity_gate(self):
         import json
@@ -105,7 +105,7 @@ class TestNextFormsEnum(TmpPlanTestCase):
         handoff.write_text(
             "# HANDOFF — 2026-09-27 — after P1.1\n\n"
             "**Next:** manual: owner decision required before continuing\n\n"
-            "| Параметр | Значение |\n|:--|:--|\n| Context | waiting-owner |\n\n"
+            "| Parameter | Meaning |\n|:--|:--|\n| Context | waiting-owner |\n\n"
             "```session-continuity-decision/v1\n"
             + json.dumps(decision.as_dict()) + "\n```\n\n**Done:** checkpoint\n",
             encoding="utf-8")
@@ -122,7 +122,7 @@ class TestRoutingItemsGrammar(TmpPlanTestCase):
         plan_id = "DEMO-" + cell.replace(".", "").replace("–", "TO")
         plan_dir = write_valid_plan(self.root, plan_id=plan_id, layout="v2")
         path = plan_dir / "plan.md"
-        table = ("## 3. Routing\n\n| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+        table = ("## 3. Routing\n\n| Batch | Items | Model class/effort | Exec | Review | Why |\n"
                  "|:--|:--|:--|:--|:--|:--|\n"
                  f"| B1 | {cell} | implementation/high | run | full | test |")
         path.write_text(path.read_text(encoding="utf-8").replace(
@@ -137,17 +137,17 @@ class TestRoutingItemsGrammar(TmpPlanTestCase):
         for cell in ("P1.1, P1.2", "P1.3–P1.1"):
             with self.subTest(cell=cell):
                 _model, diag = _lint(self._with_items(cell))
-                self.assertTrue(_errors_containing(diag, "закрытой грамматики"), diag.errors)
+                self.assertTrue(_errors_containing(diag, "closed grammar"), diag.errors)
 
     def test_single_item_and_same_phase_range_are_accepted(self):
         for cell in ("P1.1", "P1.1–P1.3"):
             with self.subTest(cell=cell):
                 _model, diag = _lint(self._with_items(cell))
-                self.assertEqual(_errors_containing(diag, "закрытой грамматики"), [])
+                self.assertEqual(_errors_containing(diag, "closed grammar"), [])
 
 
 class TestRoutingBatchSchema(TmpPlanTestCase):
-    """Новые layout-v2 планы не могут потерять batch/solo между design и handoff."""
+    """New layout-v2 plans cannot lose batch/solo between design and handoff."""
 
     PLAN_ID = "2026.08.12-№1-DEMO"
 
@@ -157,7 +157,7 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
         plan_dir = write_valid_plan(self.root, self.PLAN_ID, layout="v2")
         plan_path = plan_dir / "plan.md"
         text = plan_path.read_text(encoding="utf-8").replace(
-            "| Title | Демо-план |", "| Title | План №1 — Демо-план |")
+            "| Title | Demo plan |", "| Title | Plan №1 — Demo plan |")
         if routing is not None:
             text = text.replace("## 3. Routing", "## 3. Routing\n\n" + routing)
         plan_path.write_text(text, encoding="utf-8")
@@ -178,7 +178,7 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
 
     def test_legacy_four_column_routing_is_error(self):
         routing = (
-            "| Items | Model class/effort | Exec | Почему |\n"
+            "| Items | Model class/effort | Exec | Why |\n"
             "|:--|:--|:--|:--|\n"
             "| P1.1 | implementation/medium | run | test |"
         )
@@ -187,7 +187,7 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
 
     def test_canonical_solo_row_is_accepted(self):
         routing = (
-            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "| Batch | Items | Model class/effort | Exec | Review | Why |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
             "| solo | P1.1 | implementation/medium | run | full | test |"
         )
@@ -197,17 +197,17 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
 
     def test_executable_handoff_requires_batch_row(self):
         routing = (
-            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "| Batch | Items | Model class/effort | Exec | Review | Why |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
             "| solo | P1.1 | implementation/medium | run | full | test |"
         )
         _, diag = _lint(self._plan(routing, batch_in_handoff=False))
-        self.assertTrue(_errors_containing(diag, "handoff.Next: нет строки `| Batch |"),
+        self.assertTrue(_errors_containing(diag, "handoff.Next: no line `| Batch |"),
                         diag.errors)
 
     def test_handoff_batch_must_match_routing(self):
         routing = (
-            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "| Batch | Items | Model class/effort | Exec | Review | Why |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
             "| solo | P1.1 | implementation/medium | run | full | test |"
         )
@@ -221,7 +221,7 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
     def test_legacy_exec_spellings_share_one_lint_execution_mode(self):
         from task import task_contract
         routing = (
-            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "| Batch | Items | Model class/effort | Exec | Review | Why |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
             "| B1 | P1.1 | implementation/high | plan-exec | full | shared reads |\n"
             "| B1 | P1.2 | implementation/high | manual | light | same lifecycle |"
@@ -231,14 +231,14 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
         write_v2_carriers(plan_dir, item_id="P1.2", refresh_views=False)
         _, diag = _lint(plan_dir)
         self.assertFalse(_errors_containing(diag, "invalid Exec"), diag.errors)
-        self.assertFalse(_errors_containing(diag, "несовместимые Exec"), diag.errors)
+        self.assertFalse(_errors_containing(diag, "incompatible Exec"), diag.errors)
         self.assertEqual(task_contract.compile_batch_routing(plan_dir)["batches"]["B1"]["exec"], "run")
 
     def test_handoff_cannot_collapse_batch_to_one_item(self):
         from task import plan_bundle, plan_item_state, plan_status
 
         routing = (
-            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "| Batch | Items | Model class/effort | Exec | Review | Why |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
             "| B1 | P1.1 | implementation/high | run | full | shared reads |\n"
             "| B1 | P1.2 | implementation/high | run | light | producer chain |"
@@ -246,7 +246,7 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
         plan_dir = self._plan(routing)
         phase = plan_dir / "phases" / "P1"
         second = (phase / "P1.1.md").read_text(encoding="utf-8").replace(
-            "P1.1", "P1.2").replace("Валидация конфига", "Вторая валидация")
+            "P1.1", "P1.2").replace("Config validation", "Second validation")
         (phase / "P1.2.md").write_text(second, encoding="utf-8")
         (plan_dir / "journal.jsonl").write_text("", encoding="utf-8")
         plan_item_state.build_states(plan_dir, item_id="P1.1")
@@ -258,19 +258,19 @@ class TestRoutingBatchSchema(TmpPlanTestCase):
             "| Batch | solo |", "| Batch | B1 |"), encoding="utf-8")
 
         _, diag = _lint(plan_dir)
-        self.assertTrue(_errors_containing(diag, "весь оставшийся adjacent-суффикс"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "all remaining adjacent-suffix"), diag.errors)
 
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
             f"/task:plan-run {self.PLAN_ID} P1.1",
             f"/task:plan-run {self.PLAN_ID} P1.1-P1.2"), encoding="utf-8")
         _, diag = _lint(plan_dir)
-        self.assertEqual(_errors_containing(diag, "весь оставшийся adjacent-суффикс"), [],
+        self.assertEqual(_errors_containing(diag, "all remaining adjacent-suffix"), [],
                          diag.errors)
 
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
             "P1.1-P1.2", "P1.1 P1.2"), encoding="utf-8")
         _, diag = _lint(plan_dir)
-        self.assertEqual(_errors_containing(diag, "весь оставшийся adjacent-суффикс"), [],
+        self.assertEqual(_errors_containing(diag, "all remaining adjacent-suffix"), [],
                          diag.errors)
 
 
@@ -278,7 +278,7 @@ class TestExecutableRoutingTableBoundary(TmpPlanTestCase):
     def _plan(self, suffix):
         plan_dir = write_valid_plan(self.root, "2026.09.10-№1-DEMO-ROUTING", layout="v2")
         routing = (
-            "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "| Batch | Items | Model class/effort | Exec | Review | Why |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
             "| solo | P1.1 | implementation/medium | run | full | test |\n")
         plan = plan_dir / "plan.md"
@@ -296,7 +296,7 @@ class TestExecutableRoutingTableBoundary(TmpPlanTestCase):
 
     def test_second_executable_header_is_a_named_routing_error(self):
         duplicate = (
-            "\n| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+            "\n| Batch | Items | Model class/effort | Exec | Review | Why |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
             "| solo | P1.1 | implementation/medium | run | full | duplicate |\n")
         _model, diag = _lint(self._plan(duplicate))
@@ -315,11 +315,11 @@ class TestContinuityHandoffGate(TmpPlanTestCase):
         plan_path = plan_dir / "plan.md"
         plan_path.write_text(
             plan_path.read_text(encoding="utf-8")
-            .replace("| Title | Демо-план |", "| Title | План №1 — Continuity |")
+            .replace("| Title | Demo plan |", "| Title | Plan №1 — Continuity |")
             .replace(
                 "## 3. Routing",
                 "## 3. Routing\n\n"
-                "| Batch | Items | Model class/effort | Exec | Review | Почему |\n"
+                "| Batch | Items | Model class/effort | Exec | Review | Why |\n"
                 "|:--|:--|:--|:--|:--|:--|\n"
                 "| solo | P1.1 | implementation/medium | run | full | test |",
             ),
@@ -355,80 +355,80 @@ class TestContinuityHandoffGate(TmpPlanTestCase):
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
             "| Context | continue-root |", ""), encoding="utf-8")
         _, diag = _lint(plan_dir)
-        self.assertTrue(_errors_containing(diag, "ровно одну строку `| Context |"),
+        self.assertTrue(_errors_containing(diag, "exactly one line `| Context |"),
                         diag.errors)
 
 
 class TestNextDeclarationLine(TmpPlanTestCase):
-    """D40 — форма `Next` объявляется ПЕРВОЙ строкой поля; проза launch-block'а (в т.ч.
-    ячейка «Суть») законно ЦИТИРУЕТ другие формы enum'а и резолвер не перехватывает."""
+    """D40 — form `Next` is declared as the FIRST line of the field; prose launch-block'a (incl.
+    cell «The bottom line») legitimately QUOTES other forms enum'and the resolver does not intercept."""
 
     def _activate_item(self, plan_dir):
-        """Делает единственный item 🟡 (план перестаёт быть терминальным целиком)."""
+        """Makes the only one item 🟡 (the plan ceases to be entirely terminal)."""
         write_v2_carriers(
             plan_dir, item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"))
 
     def _sut(self, plan_dir, next_decl, sut_cell):
-        """Переписывает handoff: объявление формы + ячейка «Суть» launch-block'а."""
+        """Rewrites handoff: form declaration + cell «The bottom line» launch-block'a."""
         ho = plan_dir / "handoff.md"
         text = ho.read_text(encoding="utf-8")
         text = text.replace("**Next:** /task:plan-run DEMO-1 P1.1", f"**Next:** {next_decl}")
-        text = text.replace("| Суть | закрыть следующий item |", f"| Суть | {sut_cell} |")
+        text = text.replace("| The bottom line | close next item |", f"| The bottom line | {sut_cell} |")
         ho.write_text(text, encoding="utf-8")
 
     def test_manual_declaration_beats_closed_literal_in_prose(self):
-        # Дефект: греп «план закрыт» по ВСЕМУ полю ловил упоминание формы в «Сути»
-        # и давал ложный ERROR «не все items терминальны», перебивая маркер manual.
+        # Defect: grep «plan closed» across the ENTIRE field I caught a mention of the form in «Essences»
+        # and gave false ERROR «not all items terminal», interrupting the marker manual.
         plan_dir = write_valid_plan(self.root)
         self._activate_item(plan_dir)
-        self._sut(plan_dir, "«ЗАПУСК ВРУЧНУЮ: opus/high»",
-                  "свести формы enum'а: «план закрыт» vs slash-команды")
+        self._sut(plan_dir, "«MANUAL START: opus/high»",
+                  "flatten forms enum'a: «plan closed» vs slash-commands")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
 
     def test_manual_declaration_beats_slash_form_in_prose(self):
-        # Та же природа: slash-команда, ПРОЦИТИРОВАННАЯ в «Сути» manual-формы, не объявление —
-        # резолв её ссылок дал бы ERROR по несуществующему item'у P9.9.
+        # Same nature: slash-command QUOTED in «Essences» manual-forms, not declaration -
+        # resolving her links would give ERROR for non-existent item'y P9.9.
         plan_dir = write_valid_plan(self.root)
-        self._sut(plan_dir, "«ЗАПУСК ВРУЧНУЮ: opus/high»",
-                  "команды `/task:plan-design DEMO-1 P9.9` для этого item'а не существует")
+        self._sut(plan_dir, "«MANUAL START: opus/high»",
+                  "commands `/task:plan-design DEMO-1 P9.9` for this item'does not exist")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
 
     def test_closed_literal_on_declaration_line_still_gated(self):
-        # Анти-ослабление: объявленная первой строкой форма «план закрыт» гейтится как прежде.
+        # Anti-weakening: form declared by first line «plan closed» is gated as before.
         plan_dir = write_valid_plan(self.root)
         self._activate_item(plan_dir)
-        self._sut(plan_dir, "«план закрыт»", "следующий шаг вне протокола")
+        self._sut(plan_dir, "«plan closed»", "next step outside the protocol")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "«план закрыт», но не все items терминальны"))
+        self.assertTrue(_errors_containing(diag, "«plan closed», but not all items terminal"))
 
 
 class TestWaitingForm(TmpPlanTestCase):
-    """P2.1/D8 — 9-я форма Next «ОЖИДАНИЕ» (waiting): резолв ДО exec, требует
-    launch-block; C2-WARNING на прозаическую gate-оговорку в runnable-форме."""
+    """P2.1/D8 — 9-I form Next «WAITING» (waiting): resolve BEFORE exec, requires
+    launch-block; C2-WARNING to prosaic gate-disclaimer in runnable-form."""
 
     def _waiting_handoff(self, plan_id="DEMO-1", *, cond="≥2026-07-16",
                          target="/task:plan-run DEMO-1 P1.1", guard=True):
-        guard_line = f"# НЕ раньше: {cond}\n" if guard else ""
+        guard_line = f"# NOT before: {cond}\n" if guard else ""
         return f"""# HANDOFF — 2026-07-02 — after P1.1
 
-**Next:** ОЖИДАНИЕ: {cond} → {target}
+**Next:** WAITING: {cond} → {target}
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |:--|:--|
 | Model | sonnet |
 | Thinking | medium |
-| Context | continue (/clear) — ручной item |
-| Суть | закрыть целевой item по снятии гейта |
+| Context | continue (/clear) — manual item |
+| The bottom line | close target item upon removing the gate |
 
 ````
 {guard_line}{target}
 ````
 
-**Done:** P1.1 закрыт.
-**Remaining:** целевой шаг ждёт гейта.
+**Done:** P1.1 is closed.
+**Remaining:** target step is waiting for a gate.
 **Sources of truth:** plans/{plan_id}/plan.md · plans/{plan_id}/phases/P1.md
 **Open risks:** —
 **Workarounds/Deferred/Open questions:**
@@ -444,8 +444,8 @@ class TestWaitingForm(TmpPlanTestCase):
         self.assertTrue(diag.ok, diag.errors)
 
     def test_waiting_resolves_before_exec_no_item_ref_error(self):
-        # целевой /task:plan-run … P9.9 в ОБЪЯВЛЕНИИ не должен резолвиться как run и ловить
-        # ERROR по несуществующему item'у — форма waiting перехватывает резолвер раньше.
+        # target /task:plan-run … P9.9 in ANNOUNCEMENT should not resolve as run and catch
+        # ERROR for non-existent item'y - form waiting intercepts the resolver early.
         plan_dir = write_valid_plan(self.root)
         ho = self._waiting_handoff(target="/task:plan-run DEMO-1 P9.9")
         (plan_dir / "handoff.md").write_text(ho, encoding="utf-8")
@@ -454,46 +454,46 @@ class TestWaitingForm(TmpPlanTestCase):
         self.assertEqual([e for e in diag.errors if "P9.9" in e], [], diag.errors)
 
     def test_waiting_guard_line_no_c2_warning(self):
-        # guard-строка `# НЕ раньше:` в code-block'е НЕ триггерит C2: сканируется только
-        # строка-объявление, а она резолвится в waiting (не в runnable-форму).
+        # guard-string `# NOT before:` in code-block'does NOT trigger C2: is scanned only
+        # declaration line, and it resolves to waiting (not in runnable-form).
         plan_dir = write_valid_plan(self.root)
         (plan_dir / "handoff.md").write_text(self._waiting_handoff(guard=True), encoding="utf-8")
         _, diag = _lint(plan_dir)
-        self.assertEqual([w for w in diag.warnings if "прозу-оговорку" in w], [], diag.warnings)
+        self.assertEqual([w for w in diag.warnings if "prose clause" in w], [], diag.warnings)
 
     def test_waiting_without_launch_block_warns(self):
-        # waiting несёт launch-block как прочие runnable-формы — не exempt (в отличие от «план закрыт»)
+        # waiting carries launch-block like others runnable-forms - not exempt (unlike «plan closed»)
         plan_dir = write_valid_plan(self.root)
         text = self._waiting_handoff()
-        head, _, tail = text.partition("\n| Параметр | Значение |")
+        head, _, tail = text.partition("\n| Parameter | Meaning |")
         _, _, after = tail.partition("````\n\n")
         (plan_dir / "handoff.md").write_text(head + "\n" + after, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(any("launch-block" in w for w in diag.warnings), diag.warnings)
 
-    def test_c2_prose_oговорка_in_runnable_form_warns(self):
-        # runnable-форма (exec) + прозаический стем в объявлении = C2-WARNING (не ERROR)
+    def test_c2_prose_osaying_in_runnable_form_warns(self):
+        # runnable-form (exec) + prose theme in the ad = C2-WARNING (not ERROR)
         plan_dir = write_valid_plan(self.root)
         ho = plan_dir / "handoff.md"
         text = ho.read_text(encoding="utf-8")
         text = text.replace(
             "**Next:** /task:plan-run DEMO-1 P1.1",
-            "**Next:** /task:plan-run DEMO-1 P1.1 — НО не раньше ~2026-07-16 (тайм-гейт)")
+            "**Next:** /task:plan-run DEMO-1 P1.1 — BUT not before ~2026-07-16 (time gate)")
         ho.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
-        self.assertTrue(any("прозу-оговорку" in w for w in diag.warnings), diag.warnings)
+        self.assertTrue(any("prose clause" in w for w in diag.warnings), diag.warnings)
 
     def test_clean_runnable_form_no_c2_warning(self):
-        # чистый exec без стемов — C2 молчит
+        # clean exec without stems - C2 is silent
         plan_dir = write_valid_plan(self.root)
         _, diag = _lint(plan_dir)
-        self.assertEqual([w for w in diag.warnings if "прозу-оговорку" in w], [], diag.warnings)
+        self.assertEqual([w for w in diag.warnings if "prose clause" in w], [], diag.warnings)
 
 
 class TestArchivePlansNotPhantomPlan(TmpPlanTestCase):
-    """N3/D14 — `plans/archive/` сама планом не является (не должна требовать
-    plan.md/handoff.md), а `plans/archive/<ID>` линтуется как обычный план."""
+    """N3/D14 — `plans/archive/` is not a plan itself (should not require
+    plan.md/handoff.md), a `plans/archive/<ID>` is linted like a regular plan."""
 
     def _write_archived_plan(self, plan_id="DEMO-OLD"):
         source = write_valid_plan(self.root, plan_id)
@@ -523,7 +523,7 @@ class TestArchivePlansNotPhantomPlan(TmpPlanTestCase):
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = main([str(self.root / "plans")])
         self.assertEqual(code, 1)
-        self.assertIn("нет обязательного поля «Plan ID»", err.getvalue())
+        self.assertIn("no required field «Plan ID»", err.getvalue())
 
     def test_discover_plan_dirs_excludes_archive_container_includes_children(self):
         write_valid_plan(self.root, "DEMO-1")
@@ -563,7 +563,7 @@ class TestGlobalUniqueness(TmpPlanTestCase):
         foreign.write_text(item_spec_path(plan_dir).read_text(encoding="utf-8"), encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "имеет префикс P2"))
+        self.assertTrue(_errors_containing(diag, "has the prefix P2"))
 
     def test_duplicate_item_id_within_one_file(self):
         plan_dir = write_valid_plan(self.root)
@@ -574,7 +574,7 @@ class TestGlobalUniqueness(TmpPlanTestCase):
         path.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "ожидается ровно один заголовок"))
+        self.assertTrue(_errors_containing(diag, "exactly one header expected"))
 
 
 class TestWarnings(TmpPlanTestCase):
@@ -597,7 +597,7 @@ class TestWarnings(TmpPlanTestCase):
         plan_bundle.build(plan_dir, "P1.2")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
-        self.assertTrue(any("дубль Title" in w for w in diag.warnings))
+        self.assertTrue(any("take Title" in w for w in diag.warnings))
 
     def test_phase_first_warning(self):
         from task import plan_bundle, plan_decisions, plan_item_state, plan_status
@@ -632,7 +632,7 @@ class TestWarnings(TmpPlanTestCase):
             item_state=item_state_md(item_status="🟡 In progress", completion_notes="—"))
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
-        self.assertTrue(any("пустые Required Reads" in w for w in diag.warnings))
+        self.assertTrue(any("empty Required Reads" in w for w in diag.warnings))
 
 
 class TestSemanticNextCarrier(TmpPlanTestCase):
@@ -647,14 +647,14 @@ class TestSemanticNextCarrier(TmpPlanTestCase):
         handoff.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
-        self.assertFalse(any("Next не соответствует" in item for item in diag.errors))
+        self.assertFalse(any("Next does not match" in item for item in diag.errors))
 
     def test_audit_phase_accepts_terminal_items_before_formal_phase_close(self):
         plan_dir = write_valid_plan(self.root)
         plan = plan_dir / "plan.md"
         plan.write_text(plan.read_text(encoding="utf-8").replace(
-            "| P1 | Фаза раз | 1/1 | 🟢 Done |",
-            "| P1 | Фаза раз | 1/1 | 🟡 In progress |",
+            "| P1 | Phase times | 1/1 | 🟢 Done |",
+            "| P1 | Phase times | 1/1 | 🟡 In progress |",
         ), encoding="utf-8")
         handoff = plan_dir / "handoff.md"
         handoff.write_text(handoff.read_text(encoding="utf-8").replace(
@@ -672,7 +672,7 @@ class TestSemanticNextCarrier(TmpPlanTestCase):
         plan_dir = write_valid_plan(self.root)
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
-        self.assertFalse(any("Next не соответствует" in item for item in diag.errors))
+        self.assertFalse(any("Next does not match" in item for item in diag.errors))
 
     def test_semantic_kind_command_mismatch_is_rejected(self):
         plan_dir = write_valid_plan(self.root)
@@ -682,7 +682,7 @@ class TestSemanticNextCarrier(TmpPlanTestCase):
             "audit-phase: task:plan-run DEMO-1 P1.1")
         handoff.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
-        self.assertTrue(any("Next не соответствует" in item for item in diag.errors),
+        self.assertTrue(any("Next does not match" in item for item in diag.errors),
                         diag.errors)
 
     def test_design_finish_and_roadmap_forms_are_accepted(self):
@@ -715,7 +715,7 @@ class TestSemanticNextCarrier(TmpPlanTestCase):
 
 
 class TestPlansRoot(TmpPlanTestCase):
-    """Root-level проверки (path = plans/ целиком): ACTIVE.md + черновики."""
+    """Root-level checks (path = plans/ in full): ACTIVE.md + drafts."""
 
     def _plans_root(self):
         return self.root / "plans"
@@ -744,22 +744,22 @@ class TestPlansRoot(TmpPlanTestCase):
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = main([str(self._plans_root())])
         self.assertEqual(code, 1)
-        self.assertIn("не указывает на существующий план", err.getvalue())
+        self.assertIn("does not point to an existing plan", err.getvalue())
 
     def test_active_md_without_active_field_is_error(self):
         write_valid_plan(self.root, "DEMO-1")
-        (self._plans_root() / "ACTIVE.md").write_text("# ACTIVE\n\nничего полезного\n", encoding="utf-8")
+        (self._plans_root() / "ACTIVE.md").write_text("# ACTIVE\n\nnothing useful\n", encoding="utf-8")
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = main([str(self._plans_root())])
         self.assertEqual(code, 1)
-        self.assertIn("нет поля «**Active:**»", err.getvalue())
+        self.assertIn("no field «**Active:**»", err.getvalue())
 
     def test_two_in_progress_plans_without_active_warns(self):
         write_valid_plan(self.root, "DEMO-1")
         write_valid_plan(self.root, "DEMO-2")
-        # дефолт фикстуры — Meta Status «🟢 Done»; переводим оба плана в «🟡 In progress»
-        # (только Meta-строку — консистентность items/board эта проверка не трогает).
+        # fixture default - Meta Status «🟢 Done»; convert both plans to «🟡 In progress»
+        # (only Meta-line - consistency items/board this check does not affect).
         for pid in ("DEMO-1", "DEMO-2"):
             write_v2_carriers(
                 self._plans_root() / pid,
@@ -767,11 +767,11 @@ class TestPlansRoot(TmpPlanTestCase):
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = main([str(self._plans_root())])
-        self.assertEqual(code, 0, err.getvalue())  # WARNING, не ERROR
-        self.assertIn("активный план неоднозначен", err.getvalue())
+        self.assertEqual(code, 0, err.getvalue())  # WARNING, not ERROR
+        self.assertIn("active plan is ambiguous", err.getvalue())
 
     def test_single_in_progress_plan_without_active_is_clean(self):
-        write_valid_plan(self.root, "DEMO-1")  # дефолт Meta Status «🟢 Done» — не 🟡
+        write_valid_plan(self.root, "DEMO-1")  # default Meta Status «🟢 Done» — not 🟡
         diag = Diagnostics()
         model = lint_plan(self._plans_root() / "DEMO-1", diag)
         lint_plans_root(self._plans_root(), {"DEMO-1": model}, diag)
@@ -780,13 +780,13 @@ class TestPlansRoot(TmpPlanTestCase):
 
     def test_draft_flat_md_warns_with_from_draft_hint(self):
         write_valid_plan(self.root, "DEMO-1")
-        (self._plans_root() / "sketch.md").write_text("# черновик\n", encoding="utf-8")
+        (self._plans_root() / "sketch.md").write_text("# draft\n", encoding="utf-8")
         (self._plans_root() / "ACTIVE.md").write_text(active_md("DEMO-1"), encoding="utf-8")
         out, err = io.StringIO(), io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = main([str(self._plans_root())])
         self.assertEqual(code, 0, err.getvalue())
-        self.assertIn("черновики plan mode", err.getvalue())
+        self.assertIn("drafts plan mode", err.getvalue())
         self.assertIn("sketch.md", err.getvalue())
         self.assertIn("/task:plan-design from-draft", err.getvalue())
 
@@ -801,8 +801,8 @@ class TestPlansRoot(TmpPlanTestCase):
         self.assertEqual(err.getvalue(), "")
 
     def test_single_plan_mode_ignores_sibling_active_md(self):
-        # plan-lint.py plans/<ID> (одиночный режим) не видит ACTIVE.md вовсе — даже
-        # битый (указывающий на несуществующий план) не должен на него влиять.
+        # plan-lint.py plans/<ID> (single mode) doesn't see ACTIVE.md at all - even
+        # broken (pointing to a non-existent plan) should not affect it.
         plan_dir = write_valid_plan(self.root, "DEMO-1")
         (self._plans_root() / "ACTIVE.md").write_text(active_md("NO-SUCH-PLAN"), encoding="utf-8")
         out, err = io.StringIO(), io.StringIO()
@@ -854,7 +854,7 @@ class TestDiscoveryAndCli(TmpPlanTestCase):
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = main([str(plan_dir)])
         self.assertEqual(code, 1)
-        self.assertIn("ПРОВАЛ", out.getvalue())
+        self.assertIn("FAILURE", out.getvalue())
         self.assertIn("ERROR:", err.getvalue())
 
     def test_main_json_flag_emits_parseable_json(self):
@@ -875,9 +875,9 @@ class TestDiscoveryAndCli(TmpPlanTestCase):
 
 
 class TestDuplicateItemFieldGate(unittest.TestCase):
-    """D90 — `**Поле:**`-строка внутри свободной прозы другого
-    поля (напр. Completion Notes) молча подменяла приёмочное значение: и `plan_lint`, и
-    `task_contract` берут ПОСЛЕДНЕЕ вхождение ключа. Воспроизведено на P2.2 2026-07-31
+    """D90 — `**Field:**`-line inside the free prose of another
+    fields (e.g. Completion Notes) silently replaced the acceptance value: and `plan_lint`, and
+    `task_contract` take the LAST occurrence of the key. Reproduced on P2.2 2026-07-31
     (`research/10-validation-acceptance-form-2026-07-31.md`)."""
 
     def setUp(self):
@@ -891,14 +891,14 @@ class TestDuplicateItemFieldGate(unittest.TestCase):
         plan_dir = write_valid_plan(self.root)
         p1 = item_state_path(plan_dir)
         text = p1.read_text(encoding="utf-8")
-        needle = "**Completion Notes:** тест"
+        needle = "**Completion Notes:** test"
         self.assertIn(needle, text)
-        injected = (needle + "\n**Validation:** переприёмка на item-коммите abc123 — зелёная "
-                   "(инлайн-заметка, НЕ настоящее поле)")
+        injected = (needle + "\n**Validation:** re-acceptance to item-commit abc123 — green "
+                   "(inline note, NOT real field)")
         p1.write_text(text.replace(needle, injected, 1), encoding="utf-8")
         diag = Diagnostics()
         lint_plan(plan_dir, diag)
-        hits = _errors_containing(diag, "поле ТЗ «Validation» запрещено")
+        hits = _errors_containing(diag, "TK field «Validation» not allowed")
         self.assertTrue(hits, diag.errors)
         self.assertTrue(any("P1.1" in h for h in hits), hits)
 
@@ -906,4 +906,4 @@ class TestDuplicateItemFieldGate(unittest.TestCase):
         plan_dir = write_valid_plan(self.root)
         diag = Diagnostics()
         lint_plan(plan_dir, diag)
-        self.assertEqual(_errors_containing(diag, "встречается повторно"), [])
+        self.assertEqual(_errors_containing(diag, "occurs repeatedly"), [])

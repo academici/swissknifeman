@@ -1,6 +1,6 @@
 {
   "name": "architect",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Architecture, API and data design, security, observability, tech stack selection",
   "skills": [
     "./agent-design",

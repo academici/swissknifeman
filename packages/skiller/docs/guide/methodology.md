@@ -1,183 +1,183 @@
-# Методология: против раздувания кода
+# Methodology: against code bloat
 
-Как одновременно развивать продукт и общие пакеты, от которых он зависит, **не
-раздувая** пакеты спекулятивными абстракциями и техническим долгом. Документ
-формулирует принципы и показывает, какими скиллами и конфигами реестра они
-поддержаны.
+How to simultaneously develop a product and the common packages on which it depends, **not
+inflating** packages with speculative abstractions and technical debt. Document
+formulates the principles and shows what skills and registry configs they
+supported.
 
-Терминология обобщённая: **зависимый пакет** — любой общий пакет
-(composer/npm/…), **проект-потребитель** — любой проект, который от него зависит.
-Принципы применимы к любой экосистеме «продукт ↔ пакет».
+Generalized terminology: **dependent package** — any generic package
+(composer/npm/…), **consumer project** — any project that depends on it.
+The principles apply to any ecosystem «product ↔ package».
 
-## Диагноз: почему раздувается общий код
+## Diagnosis: Why shared code is bloated
 
-**Speculative Generality.** Получив задачу «вынести общее», агент (или человек)
-проектирует «на вырост»: интерфейс там, где одна реализация; абстрактный
-`BaseService`; параметр «на случай если понадобится». YAGNI требует
-противоположного — реализовывать только то, что нужно сейчас.
+**Speculative Generality.** Having received the task «render general», agent (or person)
+designs «for growth The»: interface where there is one implementation; abstract
+`BaseService`; parameter «in case you need it». YAGNI requires
+the opposite - implement only what is needed now.
 
-**Преждевременное обобщение.** Перенос логики в пакет до того, как паттерн
-повторился в двух **независимых** местах. Rule of Three (Fowler): обобщаем на
-третьем повторении, а не на втором и тем более не на воображаемом будущем.
+**Premature generalization.** Transfer logic to package before pattern
+repeated in two **independent** places. Rule of Three (Fowler): generalize to
+third repetition, and not on the second, and especially not on the imaginary future.
 
-**Тихая модификация пакета.** Агент, работая над продуктом, без согласования
-добавляет метод/расширяет контракт в зависимом пакете, «потому что удобно».
-Каждая продуктовая задача незаметно расширяет пакет — это и есть источник
-раздувания.
+**Silent package modification.** Agent working on a product without approval
+adds a method/extends a contract in a dependent package, «because it's convenient».
+Each product task quietly expands the package - this is the source
+bloat.
 
-**Специфика ИИ-агента.** Агент склонен к эскалации сложности: при каждой задаче
-строить «правильную архитектуру» с нуля, не зная границ того, что уже есть.
-Без явных сдержек это даёт дубли абстракций и рост интерфейсов.
+**Specifics of the AI ​​agent.** The agent is prone to escalation of complexity: for each task
+build «correct architecture» from scratch, without knowing the boundaries of what already exists.
+Without explicit checks, this results in duplicate abstractions and growth of interfaces.
 
-## Двухрежимная модель
+## Dual-mode model
 
-**Режим 1 — задача в продукте.** Зависимый пакет = **read-only зависимость**, как
-любой внешний. Нехватка функциональности → **issue в пакет** + временная
-реализация на стороне потребителя. Ни строки в пакете без явного тикета.
+**Mode 1 - task in the product.** Dependent package = **read-only dependency**, like
+any external. Lack of functionality → **issue to the package** + temporary
+implementation on the consumer side. Not a line in the package without an explicit ticket.
 
-**Режим 2 — разработка пакета.** Пакет **не знает** о потребителях: никаких
-обратных зависимостей на продукты (Dependency Inversion). Расширение — через
-контракты/события, не monkey-patching; публичные контракты — под ADR.
+**Mode 2 - package development.** Package **doesn't know** about consumers: none
+inverse product dependencies (Dependency Inversion). Expansion - via
+contracts/events, not monkey-patching; public contracts - under ADR.
 
-## Центральный принцип: остановись и спроси
+## Central Principle: Stop and Ask
 
-По умолчанию — **спрашивать, а не расширять**. Прежде чем ввести в пакет новый
-класс/провайдер/интерфейс/абстракцию:
+Default - **ask rather than expand**. Before introducing a new
+class/provider/interface/abstraction:
 
-1. **Обзор структуры** — нет ли уже точки расширения (контракт, событие, конфиг,
-   trait). Часто новое не нужно.
-2. **При сомнении — маленькая таска или субагент go/no-go**: survey (что уже
-   решает задачу) → суд по YAGNI/Rule of Three → вердикт с одной строкой
-   обоснования. Разведка отделена от реализации — это и есть контроль через
-   малые шаги.
-3. `no-go` → реализуй у потребителя; `go` → двухступенчатый gate.
+1. **Structure Overview** — is there no extension point already? (contract, event, config,
+   trait). Often new is not needed.
+2. **When in doubt, a small task or subagent go/no-go**: survey (that already
+   solves the problem) → court by YAGNI/Rule of Three → one-line verdict
+   justification. Intelligence is separated from implementation - this is control through
+   small steps.
+3. `no-go` → sell to the consumer; `go` → two-stage gate.
 
-## Governance-гейт
+## Governance-gate
 
-**Шаг 1 — Proposal issue** в репозитории пакета: какой потребитель инициирует,
-задача-источник, почему нельзя решить локально, набросок контракта, ≥2
-рассмотренные альтернативы (событие vs метод, trait vs базовый класс, конфиг vs
-параметр).
+**Step 1 - Proposal issue** in the package repository: which consumer initiates,
+source problem, why it cannot be solved locally, draft contract, ≥2
+alternatives considered (event vs method, trait vs base class, config vs
+parameter).
 
-**Шаг 2 — Review + ADR** (после одобрения proposal): ветка → ADR → минимальный
-контракт → PR с обязательным ручным ревью мейнтейнера пакета.
+**Step 2 - Review + ADR** (after approval proposal): thread → ADR → minimum
+contract → PR with mandatory manual review by the package maintainer.
 
-### Что НЕ идёт в пакет
+### What is NOT included in the package
 
-| Антипаттерн | Симптом | Правильное место |
+| Antipattern | Symptom | Right place |
 |---|---|---|
-| «Общий BaseService» | класс без инварианта, только convenience | trait/helper в потребителе |
-| Конфигурация потребителя | параметры специфичны для одного проекта | config потребителя |
-| Прокси-метод | оборачивает один метод пакета без логики | вызов напрямую |
-| Временное хранилище | код «пока не придумаем где» | issue + refactor backlog |
-| God-interface | >5–7 методов без cohesion | разбить на контракты |
+| «General BaseService» | class without invariant, only convenience | trait/helper in consumer |
+| Consumer configuration | parameters are specific to one project | config consumer |
+| Proxy method | wraps one package method without logic | call directly |
+| Temporary storage | code «until we figure out where» | issue + refactor backlog |
+| God-interface | >5–7 methods without cohesion | split into contracts |
 
-### SemVer контрактов
+### SemVer contracts
 
-`patch` — багфикс; `minor` — новое API без breaking; `major` — breaking,
-потребители адаптируют код. Любое удаление/переименование/смена сигнатуры
-публичного API, формата данных или конфиг-ключа → major + ADR + запись
-«Breaking:» в CHANGELOG + migration guide.
+`patch` — bugfix; `minor` — new API without breaking; `major` — breaking,
+consumers adapt the code. Any deletion/renaming/change signature
+public API, data format or config key → major + ADR + entry
+«Breaking:» in CHANGELOG + migration guide.
 
-## Чем это поддержано в реестре
+## How this is supported in the registry
 
-Методология не плодит новые сущности ради сущностей — она опирается на
-существующие скиллы и добавляет ровно один новый гейт.
+The methodology does not produce new entities for the sake of entities - it relies on
+existing skills and adds exactly one new gate.
 
-| Принцип | Скилл / конфиг | Раздача |
+| Principle | Skill / config | Distribution |
 |---|---|---|
-| Рефлекс «спроси перед расширением», YAGNI, хирургические правки | [`general/anti-drift`](https://github.com/academici/swissknifeman/blob/main/skills/general/anti-drift/SKILL.md) | CORE — во все проекты |
-| Глубокий гейт: proposal → ADR → SemVer, границы, направление зависимостей | [`architect/package-contribution-protocol`](https://github.com/academici/swissknifeman/blob/main/skills/architect/package-contribution-protocol/SKILL.md) | opt-in |
-| Чеклист speculative-generality по свежему диффу | [`quality/code-simplifier`](https://github.com/academici/swissknifeman/blob/main/skills/quality/code-simplifier/SKILL.md) | CORE-бакет |
-| ADR и сравнение ≥2 вариантов | [`architect/architecture`](https://github.com/academici/swissknifeman/blob/main/skills/architect/architecture/SKILL.md) | opt-in |
-| Эволюция публичного контракта (SemVer, breaking, migration) | [`architect/api-design`](https://github.com/academici/swissknifeman/blob/main/skills/architect/api-design/SKILL.md) | opt-in |
-| Аппаратная граница записи в пакет | пресет `product-boundary` ([permissions](/harness/configs/claude-permissions)) | opt-in |
-| Scope/out-of-scope/DoD до старта | [`general/task-brief-template`](https://github.com/academici/swissknifeman/blob/main/skills/general/task-brief-template/SKILL.md) | CORE-бакет |
-| Поиск дублей-кандидатов в общий пакет | [`system/cross-project-coordinator`](https://github.com/academici/swissknifeman/blob/main/skills/system/cross-project-coordinator/SKILL.md) | opt-in |
+| Reflex «ask before expanding», YAGNI, surgical edits | [`general/anti-drift`](https://github.com/academici/swissknifeman/blob/main/skills/general/anti-drift/SKILL.md) | CORE — to all projects |
+| Deep Gate: proposal → ADR → SemVer, boundaries, direction of dependencies | [`architect/package-contribution-protocol`](https://github.com/academici/swissknifeman/blob/main/skills/architect/package-contribution-protocol/SKILL.md) | opt-in |
+| Checklist speculative-generality on fresh diff | [`quality/code-simplifier`](https://github.com/academici/swissknifeman/blob/main/skills/quality/code-simplifier/SKILL.md) | CORE-bucket |
+| ADR and comparison ≥2 options | [`architect/architecture`](https://github.com/academici/swissknifeman/blob/main/skills/architect/architecture/SKILL.md) | opt-in |
+| Evolution of the public contract (SemVer, breaking, migration) | [`architect/api-design`](https://github.com/academici/swissknifeman/blob/main/skills/architect/api-design/SKILL.md) | opt-in |
+| Hardware packet write boundary | preset `product-boundary` ([permissions](/harness/configs/claude-permissions)) | opt-in |
+| Scope/out-of-scope/DoD before start | [`general/task-brief-template`](https://github.com/academici/swissknifeman/blob/main/skills/general/task-brief-template/SKILL.md) | CORE-bucket |
+| Search for candidate duplicates in a common package | [`system/cross-project-coordinator`](https://github.com/academici/swissknifeman/blob/main/skills/system/cross-project-coordinator/SKILL.md) | opt-in |
 
-## Гибридная раздача
+## Hybrid distribution
 
-Два слоя, чтобы дисциплина была и универсальной, и точечной:
+Two layers, so that the discipline is both universal and targeted:
 
-1. **Базовый рефлекс — во всех проектах.** «Спроси перед расширением» и read-only
-   граница пакета зашиты в `anti-drift` — CORE-скилл, который едет в каждый
-   проект через `connect`. Отдельной установки не требует.
-2. **Глубокий протокол — выборочно.** `package-contribution-protocol`
-   подключается через marketplace только в проекты, которые дорабатывают свои
-   пакеты. Там же — два ручных усиления:
-   - **Первый приоритет в корневом `CLAUDE.md`** потребителя — готовый
-     generic-блок в сниппете `claude-md-priority.md` скилла (вставляется руками).
-   - **Пресет `product-boundary`** — `bash scripts/apply-permissions.sh --target <project> --preset product-boundary`
-     блокирует запись в `vendor/**`; вариант
-     для path-репо (`packages/**`) — в сниппете `permissions-deny.md`.
+1. **Basic reflex - in all projects.** «Ask before expanding» and read-only
+   packet boundary is hardened into `anti-drift` — CORE-skill that goes to every
+   project via `connect`. Does not require separate installation.
+2. **Deep protocol - selective.** `package-contribution-protocol`
+   connects via marketplace only to projects that are finalizing their
+   packages. There are also two manual boosts:
+   - **First priority in root `CLAUDE.md`** consumer - ready
+     generic-block in snippet `claude-md-priority.md` skill (inserted by hand).
+   - **Preset `product-boundary`** — `bash scripts/apply-permissions.sh --target <project> --preset product-boundary`
+     blocks writing to `vendor/**`; option
+     for path-repo (`packages/**`) — in the snippet `permissions-deny.md`.
 
-## Plan → Clear → Execute для cross-repo задач
+## Plan → Clear → Execute for cross-repo tasks
 
-Задачу, затрагивающую и пакет, и потребителя, дели на отдельные сессии (см.
+The task affecting both the package and the consumer is divided into separate sessions (see
 [`general/context-economy`](https://github.com/academici/swissknifeman/blob/main/skills/general/context-economy/SKILL.md)):
-планирование и proposal в контексте потребителя → `/clear` → реализация
-минимального контракта в пакете → `/clear` → использование нового API в продукте.
+planning and proposal in a consumer context → `/clear` → implementation
+minimum contract in the package → `/clear` → use of new API in the product.
 
-## Дисциплина самого реестра
+## The discipline of the registry itself
 
-Тот же анти-bloat применяется к скиллам: новый скилл создаётся только если нет
-пересечения с существующим (иначе расширяется существующий), без имён конкретных
-проектов/пакетов в теле. Стандарт приёмки — внутренний скилл `skill-authoring`
-и [`CONTRIBUTING.md`](https://github.com/academici/swissknifeman/blob/main/CONTRIBUTING.md).
+Same anti-bloat applies to skills: a new skill is created only if there is no
+intersections with existing (otherwise the existing one is expanded), without specific names
+projects/packets in the body. Acceptance standard - internal skill `skill-authoring`
+and [`CONTRIBUTING.md`](https://github.com/academici/swissknifeman/blob/main/CONTRIBUTING.md).
 
-## Критерий: always-on vs retrieval-only (скиллы реестра)
+## Criteria: always-on vs retrieval-only (registry skills)
 
-Тот же анти-bloat принцип относится и к раздаче самих скиллов: не каждый скилл
-реестра обязан резидентно грузиться в проект (⊕ always) или срабатывать
-целиком on-trigger (↻ on-trigger) — часть контента честнее держать
-**retrieval-only** (⌥ on-demand, тело открывается по конкретному вопросу, а не
-по описанию). Три яруса — `budget.py` (`skiller budget`).
+Same anti-bloat principle also applies to the distribution of the skills themselves: not every skill
+registry must be loaded resident into the project (⊕ always) or trigger
+in full on-trigger (↻ on-trigger) — keep some of the content honest
+**retrieval-only** (⌥ on-demand, body opens on a specific issue, not
+according to description). Three tiers - `budget.py` (`skiller budget`).
 
-Скилл — **always-on** (кандидат на CORE/`keep`-раздачу), если верно хотя бы
-одно из:
+Skill - **always-on** (candidate for CORE/`keep`-distribution), if at least true
+one of:
 
-- **процедурно-гейтовый** — часть обязательного гейта процесса (пример — CORE
-  `anti-drift`/`context-economy`: раздаются каждому проекту политикой, а не по
-  usage-сигналу);
-- **загружался в окне** — зафиксирован явным Skill-tool вызовом за usage-окно
-  аудита (вердикт `keep`);
-- **`level: core|foundation`** — явная само-декларация базового слоя во
-  фронтматтере ([skills-architecture.md §2](./skills-architecture.md)).
+- **procedural gate** — part of the required process gate (example - CORE
+  `anti-drift`/`context-economy`: are distributed to each project by policy, not by
+  usage-signal);
+- **was loading in the window** — is fixed explicitly Skill-tool call after usage-window
+  audit (verdict `keep`);
+- **`level: core|foundation`** — explicit self-declaration of the base layer in
+  frontmatter ([skills-architecture.md §2](./skills-architecture.md)).
 
-Скилл — **retrieval-only**, если по сути справочник: заметное тело при
-редком/нулевом прямом использовании — экономнее грузить его по конкретному
-вопросу, чем целиком on-trigger.
+Skill - **retrieval-only**, if in fact a reference book: a noticeable body with
+rare/zero direct use - it is more economical to load it for a specific
+question than the whole on-trigger.
 
-**Исключение из профилей** — только по вердикту `dead` (0 загрузок) **два
-usage-окна подряд**; первый шаг всегда `exclude` в профиле (обратимо), не
-удаление скилла из реестра.
+**Exclusion from profiles** — only by verdict `dead` (0 downloads) **two
+usage-windows in a row**; the first step is always `exclude` in profile (reversible), not
+removing a skill from the registry.
 
-**Инструмент проверки критерия** — `skiller bucket-audit` (размер · overlap ·
-usage → вердикты `keep`/`thin`/`retrieval-only`/`merge`/`dead`,
-`lib/skiller/audit.py`). Обкатка на живом реестре с полными числами и разбором
-спорных случаев (в т.ч. слепая зона детектора на auto-trigger/CORE-скиллах —
-важно прочитать перед буквальным чтением `dead`) — решение-документ
+**Criteria Validation Tool** — `skiller bucket-audit` (size · overlap ·
+usage → verdicts `keep`/`thin`/`retrieval-only`/`merge`/`dead`,
+`lib/skiller/audit.py`). Testing on a live registry with full numbers and analysis
+controversial cases (incl. blind spot of the detector on auto-trigger/CORE-skills —
+important to read before literally reading `dead`) — solution document
 [bucket-audit-2026-07.md](./bucket-audit-2026-07.md).
 
-## Сводка: вопрос перед добавлением кода в пакет
+## Summary: Question before adding code to package
 
-> Используется ли это в **двух и более независимых потребителях прямо сейчас**, и
-> **не может ли каждый** сделать это самостоятельно?
+> Is this used in **two or more independent consumers right now**, and
+> **can't everyone** do it yourself?
 
-«Нет» хотя бы на одну часть → код остаётся в потребителе с `TODO` и ссылкой на
+«No» for at least one part → code remains in the consumer with `TODO` and a link to
 issue.
 
-### Пять маркеров здорового пакета
+### Five healthy packet markers
 
-1. Каждый публичный метод используется в 2+ потребителях.
-2. Каждый breaking change имеет ADR и major-bump.
-3. Пакет не импортирует ничего из потребителей.
-4. Все расширения — через контракты/события, не monkey-patching.
-5. `git log` пакета — только явно согласованные PR.
+1. Each public method is used in 2+ consumers.
+2. Everyone breaking change has ADR and major-bump.
+3. The package does not import anything from consumers.
+4. All extensions are via contracts/events, not monkey-patching.
+5. `git log` package - only explicitly matched PR.
 
-## Источники
+## Sources
 
 - Martin Fowler, «Refactoring» (2nd ed.) — Rule of Three, Speculative Generality.
 - Robert C. Martin, «Clean Architecture» — SOLID/YAGNI, Dependency Inversion.
-- [GNOME API Stability](https://developer.gnome.org/documentation/guidelines/maintainer/api-stability.html) — SemVer и гарантии стабильности API.
-- [KDAB: API Stability](https://www.kdab.com/api-stability-to-change-or-not-to-change/) — когда и как менять API.
+- [GNOME API Stability](https://developer.gnome.org/documentation/guidelines/maintainer/api-stability.html) — SemVer and stability guarantees API.
+- [KDAB: API Stability](https://www.kdab.com/api-stability-to-change-or-not-to-change/) — when and how to change API.

@@ -1,23 +1,23 @@
 # LaravelDaily/laravel-tips
 
 - **URL:** https://github.com/LaravelDaily/laravel-tips
-- **Статус:** planned
-- **Проверено:** 2026-06-11
+- **Status:** planned
+- **Checked:** 2026-06-11
 
-1000+ Laravel tips с кодовыми примерами, по категориям (Eloquent, Blade,
-Collections, ...). Активно обновляется.
+1000+ Laravel tips with code examples, by category (Eloquent, Blade,
+Collections, ...). Actively updated.
 
-## Брать выборочно
+## Take selectively
 
-- Eloquent tips → `skills/php/laravel/snippets/eloquent-*.md` (лучшие, не все)
+- Eloquent tips → `skills/php/laravel/snippets/eloquent-*.md` (the best, not all)
 - Collections tips → `skills/php/laravel/snippets/collections-*.md`
-- Gates/Policies tips → `skills/php/laravel-permissions/snippets/` (опыт AzGuard)
+- Gates/Policies tips → `skills/php/laravel-permissions/snippets/` (experience AzGuard)
 
-## Не брать
+## Do not take
 
-- Blade/фронтенд tips — вне фокуса
-- Tips под устаревшие версии Laravel
+- Blade/frontend tips — out of focus
+- Tips for outdated versions Laravel
 
-## Целевые bucket-ы
+## Targets bucket-s
 
 `php/laravel`, `php/laravel-permissions`.

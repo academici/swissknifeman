@@ -1,98 +1,98 @@
-# Диагностика и обновление
+# Diagnostics and update
 
-Первый шаг при любой проблеме — `skiller doctor`: он проверяет версию
-Python, симлинк, `PATH`, целостность `~/.swissknifeman/projects.json`, что реестр
-— git-репозиторий и без незакоммиченных скиллов, что профили читаются.
+The first step for any problem is `skiller doctor`: it checks the version
+Python, symlink, `PATH`, integrity `~/.swissknifeman/projects.json`, that registry
+— git-repository and without uncommitted skills that profiles are read.
 
 ## Composed effective-source doctor (`--effective-source`)
 
-`skiller doctor --effective-source [--json]` — read-only композиция из уже
-существующих источников (никакой новой логики владения не заводит): активный
-семантический владелец/провенанс/коллизии переиспользуют P1.4-гейт
-(`--effective-runtime`), плюс cache/reference/capability/hook/trace-quality статус.
-Каждый диагностик несёт owner/source/status/evidence/quality/next_command; статус —
-`ok`/`degraded`/`unknown`/`n/a` (n/a только для структурных фактов, напр. cache —
-детекция репо-derived и холодная по контракту D44, живой профиль/кэш провайдера не
-читается вовсе). `--json` печатает ровно один версионированный документ
-(`schema_version: effective-source-doctor/v1`). Качество печатается измеренным: там,
-где источник неполон (напр. `trace-quality`, пока нет хранилища трейсов проекта),
-диагностика печатает именованный пробел `unknown`, а не «ok». Ничего
-не пишет — доказано `git status --porcelain=v1` до/после в Validation item'а P4.2.
+`skiller doctor --effective-source [--json]` — read-only composition from already
+existing sources (does not start any new ownership logic): active
+semantic owner/provenance/collisions are reused P1.4-gate
+(`--effective-runtime`), plus cache/reference/capability/hook/trace-quality status.
+Each diagnostician carries owner/source/status/evidence/quality/next_command; status -
+`ok`/`degraded`/`unknown`/`n/a` (n/a only for structural facts, e.g. cache —
+repo detectionderived and cold under contract D44, live profile/provider cache not
+is readable). `--json` prints exactly one versioned document
+(`schema_version: effective-source-doctor/v1`). Printed quality measured: there,
+where the source is incomplete (e.g. `trace-quality`, there is no project trace storage yet),
+diagnostic prints named space `unknown`, and not «ok». Nothing
+does not write - proven `git status --porcelain=v1` to/after in Validation item'a P4.2.
 
-## Частые проблемы
+## Common problems
 
 ### `swissknifeman: command not found`
 
-Симлинк не создан или его каталог не в `PATH`.
+The symlink has not been created or its directory is not in `PATH`.
 
 ```bash
 cd ~/projects/packages/swissknifeman && ./install.sh
 ```
 
-Если установщик предупредил, что `~/.local/bin` не в `PATH` — добавьте (пример
-для bash):
+If the installer warned that `~/.local/bin` not in `PATH` — add (example
+for bash):
 
 ```bash
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && exec bash
 ```
 
-Перенесли репозиторий реестра? Просто перезапустите `./install.sh` из нового
-места — симлинк и путь обновятся сами.
+Have you migrated the registry repository? Just restart `./install.sh` from new
+places - the symlink and path will update themselves.
 
-### Claude Code не видит скиллы
+### Claude Code doesn't see skills
 
-Маркетплейс подхватывает только **закоммиченные** изменения. Проверьте:
+Marketplace only picks up **committed** changes. Check:
 
-1. `skiller status` в проекте — раздел «Канал marketplace» показывает
-   включённые плагины и не помечен ли источник как `[ПЕРЕЕХАЛ]`.
-2. В реестре нет незакоммиченных правок (`doctor` это покажет): `git add … &&
-   git commit` в репозитории реестра.
-3. Перезапустите сессию Claude Code или выполните в нём
+1. `skiller status` in the project - section «Channel marketplace» shows
+   plugins enabled and whether the source is marked as `[MOVED]`.
+2. There are no uncommitted edits in the registry (`doctor` this will show): `git add … &&
+   git commit` in the registry repository.
+3. Restart the session Claude Code or execute in it
    `/plugin marketplace update swissknifeman`.
 
-Если источник помечен `[ПЕРЕЕХАЛ]` (репозиторий реестра сменил путь) — почините
-ссылку: `skiller update`.
+If the source is marked `[MOVED]` (registry repository changed path) — fix it
+link: `skiller update`.
 
-### Конфликт `settings.json`
+### Conflict `settings.json`
 
-`connect` пишет в `.claude/settings.local.json` (или `settings.json` с `--file`)
-и перед изменением кладёт рядом бэкап `*.bak`. Явно выключенные плагины
-(`"<bucket>@swissknifeman": false`) сохраняются — `connect` их не перетирает.
-Если что-то пошло не так, восстановите из `.bak`.
+`connect` writes in `.claude/settings.local.json` (or `settings.json` with `--file`)
+and before changing it puts a backup next to it `*.bak`. Explicitly disabled plugins
+(`"<bucket>@swissknifeman": false`) are saved - `connect` does not grind them.
+If something went wrong, restore from `.bak`.
 
-### Коллизии имён при вендоринге
+### Name collisions during vendoring
 
-`vendor` копирует скиллы и расплющивает имена. При совпадении имён из разных
-бакетов CLI печатает `WARN: collision: 'deploy' -> 'devops-deploy'` и добавляет
-префикс бакета. Это ожидаемо; имена в манифесте (`.swissknifeman-manifest.json`)
-— источник истины для последующих обновлений и чистки.
+`vendor` copies skills and flattens names. If names from different
+buckets CLI prints `WARN: collision: 'deploy' -> 'devops-deploy'` and adds
+bucket prefix. This is expected; names in manifest (`.swissknifeman-manifest.json`)
+— source of truth for future updates and cleaning.
 
-### `projects.json` повреждён
+### `projects.json` damaged
 
-При битом JSON CLI переименует файл в `projects.json.corrupt.<дата>` и начнёт с
-чистого состояния — записи восстановятся при `skiller update` в проектах.
-Устаревшие записи (каталог удалён) убираются: `skiller list --prune`.
+When broken JSON CLI will rename the file to `projects.json.corrupt.<date>` and will start with
+clean state - records will be restored when `skiller update` in projects.
+Outdated entries (directory deleted) are removed: `skiller list --prune`.
 
-## Обновление
+## Update
 
-### Обновить реестр
+### Update registry
 
 ```bash
 cd ~/projects/packages/swissknifeman && git pull
 ```
 
-- **Claude Code (marketplace):** изменения видны сразу после коммита в реестре —
-  копирования нет. Перезапустите сессию Claude Code, если плагины не подхватились.
-- **Cursor / generic (vendor):** скиллы скопированы в проект, поэтому обновите
-  явно: `skiller update` (текущий проект) или `skiller update --all`
-  (все зарегистрированные). `update` сам определяет канал по маркерам на диске и
-  проигрывает сохранённый выбор плагинов/бакетов.
+- **Claude Code (marketplace):** changes are visible immediately after the commit in the registry -
+  no copying. Restart your session Claude Code, if the plugins are not picked up.
+- **Cursor / generic (vendor):** skills have been copied to the project, so please update
+  explicitly: `skiller update` (current project) or `skiller update --all`
+  (all registered). `update` itself determines the channel based on markers on the disk and
+  plays the saved selection of plugins/buckets.
 
-Проверить, что именно поедет, не трогая диск: `skiller update --dry-run`.
+Check what exactly will work without touching the disk: `skiller update --dry-run`.
 
-### Смена схемы реестра
+### Changing the registry schema
 
-Если `projects.json` записан более новой версией CLI, чем установленная, `doctor`
-и команды попросят обновить репозиторий реестра (`git pull`) и перезапустить
-`./install.sh`. Откат на конкретную версию: `git checkout <tag>` в реестре +
-повторный `./install.sh`.
+If `projects.json` is overwritten by a newer version CLI, than installed, `doctor`
+and the commands will ask you to update the registry repository (`git pull`) and restart
+`./install.sh`. Rollback to a specific version: `git checkout <tag>` in the registry +
+repeated `./install.sh`.

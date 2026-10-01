@@ -37,14 +37,14 @@ def _schema() -> dict:
     try:
         return json.loads(_SCHEMA.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise BundleError(f"schema Bundle v1 не читается: {_SCHEMA}") from exc
+        raise BundleError(f"schema Bundle v1 is not readable: {_SCHEMA}") from exc
 
 
 def _check(value, schema: dict, root: dict, path: str = "$"):
     if "$ref" in schema:
         ref = schema["$ref"]
         if not ref.startswith("#/$defs/"):
-            raise BundleError(f"schema Bundle v1: неподдерживаемая ссылка {ref}")
+            raise BundleError(f"schema Bundle v1: unsupported link {ref}")
         return _check(value, root["$defs"][ref.rsplit("/", 1)[-1]], root, path)
     if "oneOf" in schema:
         valid = []
@@ -55,44 +55,44 @@ def _check(value, schema: dict, root: dict, path: str = "$"):
             except BundleError:
                 pass
         if len(valid) != 1:
-            raise BundleError(f"{path}: не проходит ровно один вариант schema")
+            raise BundleError(f"{path}: does not pass exactly one option schema")
         return
     if "const" in schema and value != schema["const"]:
-        raise BundleError(f"{path}: ожидается {schema['const']!r}")
+        raise BundleError(f"{path}: pending {schema['const']!r}")
     if "enum" in schema and value not in schema["enum"]:
-        raise BundleError(f"{path}: значение вне enum")
+        raise BundleError(f"{path}: value out enum")
     kind = schema.get("type")
     if kind == "object":
         if not isinstance(value, dict):
-            raise BundleError(f"{path}: ожидается object")
+            raise BundleError(f"{path}: pending object")
         missing = [name for name in schema.get("required", ()) if name not in value]
         if missing:
-            raise BundleError(f"{path}: нет обязательных полей {', '.join(missing)}")
+            raise BundleError(f"{path}: no required fields {', '.join(missing)}")
         properties = schema.get("properties", {})
         if schema.get("additionalProperties") is False:
             extra = sorted(set(value) - set(properties))
             if extra:
-                raise BundleError(f"{path}: лишние поля {', '.join(extra)}")
+                raise BundleError(f"{path}: extra fields {', '.join(extra)}")
         for name, child in properties.items():
             if name in value:
                 _check(value[name], child, root, f"{path}.{name}")
     elif kind == "array":
         if not isinstance(value, list):
-            raise BundleError(f"{path}: ожидается array")
+            raise BundleError(f"{path}: pending array")
         for index, child in enumerate(value):
             _check(child, schema.get("items", {}), root, f"{path}[{index}]")
     elif kind == "string":
         if not isinstance(value, str):
-            raise BundleError(f"{path}: ожидается string")
+            raise BundleError(f"{path}: pending string")
         if len(value) < schema.get("minLength", 0):
-            raise BundleError(f"{path}: строка короче minLength")
+            raise BundleError(f"{path}: line is shorter minLength")
         if "pattern" in schema and re.search(schema["pattern"], value) is None:
-            raise BundleError(f"{path}: не проходит pattern")
+            raise BundleError(f"{path}: does not work pattern")
     elif kind == "integer":
         if not isinstance(value, int) or isinstance(value, bool):
-            raise BundleError(f"{path}: ожидается integer")
+            raise BundleError(f"{path}: pending integer")
         if value < schema.get("minimum", value):
-            raise BundleError(f"{path}: меньше minimum")
+            raise BundleError(f"{path}: less minimum")
 
 
 def validate(model: dict) -> None:
@@ -110,7 +110,7 @@ def _fields(plan_dir: Path, item_id: str) -> dict:
     parsed = plan_lint.parse_phase_md(phase_path, phase_id, diagnostics,
                                       layout=plan_layout.layout_version(plan_dir))
     if parsed is None or item_id not in parsed["items"]:
-        raise BundleError(f"{item_id}: ТЗ не найдено")
+        raise BundleError(f"{item_id}: TK not found")
     return {name: value for name, (value, _line) in parsed["items"][item_id][0]["fields"].items()}
 
 
@@ -133,7 +133,7 @@ def _relative(path: Path, plan_dir: Path, repo_root: Path) -> str:
         except ValueError as exc:
             raise BundleError(f"unsafe_input: {path}: {exc}") from exc
         return relative
-    raise BundleError(f"вход вне plan/repo root: {path}")
+    raise BundleError(f"login outside plan/repo root: {path}")
 
 
 def _selectors(raw: str) -> list[dict]:
@@ -174,12 +174,12 @@ def _selected_bytes(raw: bytes, selector: dict, path: Path) -> bytes:
         lines = raw.splitlines(keepends=True)
         text = [line.decode("utf-8") for line in lines]
     except UnicodeDecodeError as exc:
-        raise BundleError(f"{path}: section selector требует UTF-8") from exc
+        raise BundleError(f"{path}: section selector requires UTF-8") from exc
     anchor = selector["anchor"]
     start = next((index for index, line in enumerate(text)
                   if re.match(rf"^#+\s+{re.escape(anchor)}(?:[.\s]|$)", line)), None)
     if start is None:
-        raise BundleError(f"{path}: section {anchor!r} не найдена")
+        raise BundleError(f"{path}: section {anchor!r} not found")
     level = len(text[start]) - len(text[start].lstrip("#"))
     end = next((index for index in range(start + 1, len(text))
                 if re.match(r"^#+\s", text[index])
@@ -234,9 +234,9 @@ def producer_readiness(plan_dir, consumer_item: str) -> tuple[dict, ...]:
 def model(plan_dir, item_id: str) -> dict:
     plan_dir = Path(plan_dir)
     if not _ITEM.fullmatch(item_id):
-        raise BundleError("item должен иметь форму Pn.m")
+        raise BundleError("item should be of the form Pn.m")
     if plan_layout.layout_version(plan_dir) != "v2":
-        raise BundleError("Bundle v1 существует только для Layout v2")
+        raise BundleError("Bundle v1 exists only for Layout v2")
     fields = _fields(plan_dir, item_id)
     from task import task_contract
     try:

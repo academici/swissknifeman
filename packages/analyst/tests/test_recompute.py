@@ -1,5 +1,5 @@
-"""Тесты recompute: агрегат событий, детерминизм/восстановимость из events.ndjson,
-числовая state-machine (авто ephemeral→candidate, human-gate curated, soft-деприкейт)."""
+"""Tests recompute: event aggregate, determinism/recoverability from events.ndjson,
+numeric state-machine (auto ephemeral→candidate, human-gate curated, soft-deprikate)."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -27,7 +27,7 @@ class TestRecompute(unittest.TestCase):
     def tearDown(self):
         self._tmp.cleanup()
 
-    # ── S2: агрегат / детерминизм / восстановимость ──────────────────────────
+    # ── S2: unit / determinism / recoverability ──────────────────────────
     def test_aggregate_sums_and_days(self):
         agg = recompute.aggregate_events(
             [{"ts": "2026-06-01T00:00:00Z", "sessions_total": 10, "sessions_success": 8,
@@ -37,16 +37,16 @@ class TestRecompute(unittest.TestCase):
             "2026-06-15T00:00:00Z")
         self.assertEqual((agg["N"], agg["S"]), (15, 13))
         self.assertEqual((agg["tests_total"], agg["tests_passed"]), (6, 5))
-        # days_since считается от ПОСЛЕДНЕГО события (2026-06-05 → 10 дней)
+        # days_since is counted from the LAST event (2026-06-05 → 10 days)
         self.assertEqual(agg["days_since"], 10)
 
     def test_day_bucket_floor_and_clip(self):
         self.assertEqual(recompute.day_bucket("2026-06-01T00:00:00Z", "2026-06-01T23:59:59Z"), 0)
         self.assertEqual(recompute.day_bucket("2026-06-01T00:00:00Z", "2026-06-03T12:00:00Z"), 2)
-        # событие в будущем относительно now → клип к 0 (не отрицательный возраст)
+        # event in the future relative now → clip to 0 (not negative age)
         self.assertEqual(recompute.day_bucket("2026-06-05T00:00:00Z", "2026-06-01T00:00:00Z"), 0)
-        # неразбор ts → 0 (защитно)
-        self.assertEqual(recompute.day_bucket("мусор", "2026-06-01T00:00:00Z"), 0)
+        # unparsed ts → 0 (protective)
+        self.assertEqual(recompute.day_bucket("trash", "2026-06-01T00:00:00Z"), 0)
 
     def test_recompute_deterministic_and_recoverable(self):
         lid = _mk(self.proj, "ephemeral")
@@ -54,12 +54,12 @@ class TestRecompute(unittest.TestCase):
         now = "2026-06-01T00:00:00Z"
         recompute.recompute_project(self.proj, now)
         snap1, _ = lessons.find_lesson(self.proj, lid)
-        # повторный прогон с тем же now → идентичный снапшот (восстановимо из логов)
+        # rerun with the same now → identical snapshot (recoverable from logs)
         recompute.recompute_project(self.proj, now)
         snap2, _ = lessons.find_lesson(self.proj, lid)
         for f in ("confidence", "S_decayed", "N_decayed", "confidence_tier"):
             self.assertEqual(snap1[f], snap2[f], f)
-        # снапшот — из events, а не из стартового счётчика new_lesson (был sessions_total=1)
+        # snapshot - from events, and not from the start counter new_lesson (was sessions_total=1)
         self.assertEqual(snap2["sessions_total"], 40)
         self.assertEqual(snap2["sessions_success"], 38)
 
@@ -84,10 +84,10 @@ class TestRecompute(unittest.TestCase):
         _ev(self.proj, lid, ts="2026-06-01T00:00:00Z", n=40, s=38, tt=10, tp=10)
         recompute.recompute_project(self.proj, "2026-06-01T00:00:00Z", dry_run=True)
         _l, st = lessons.find_lesson(self.proj, lid)
-        self.assertEqual(st, "ephemeral")           # не двинулся
-        self.assertNotIn("confidence", _l)           # снапшот не записан
+        self.assertEqual(st, "ephemeral")           # didn't move
+        self.assertNotIn("confidence", _l)           # snapshot not recorded
 
-    # ── S3: числовая state-machine ───────────────────────────────────────────
+    # ── S3: numeric state-machine ───────────────────────────────────────────
     def test_auto_ephemeral_to_candidate(self):
         lid = _mk(self.proj, "ephemeral")
         _ev(self.proj, lid, ts="2026-06-01T00:00:00Z", n=40, s=38, tt=10, tp=10)
@@ -99,12 +99,12 @@ class TestRecompute(unittest.TestCase):
                             for r in audit))
 
     def test_curated_never_auto(self):
-        # числа перекрывают порог curated (N≥50, conf≥0.8, passrate≥0.95) — но авто НЕЛЬЗЯ
+        # numbers exceed the threshold curated (N≥50, conf≥0.8, passrate≥0.95) — but auto CANNOT
         lid = _mk(self.proj, "candidate")
         _ev(self.proj, lid, ts="2026-06-01T00:00:00Z", n=60, s=58, tt=20, tp=20)
         res = recompute.recompute_project(self.proj, "2026-06-01T00:00:00Z")
         _l, st = lessons.find_lesson(self.proj, lid)
-        self.assertEqual(st, "candidate")            # ИНВАРИАНТ: остался кандидатом
+        self.assertEqual(st, "candidate")            # INVARIANT: remained a candidate
         r = next(x for x in res if x["id"] == lid)
         self.assertEqual(r["action"], "curated-ready")
         audit = lessons.read_audit(self.proj)
@@ -112,19 +112,19 @@ class TestRecompute(unittest.TestCase):
                             for r in audit))
 
     def test_soft_deprecate_keeps_file(self):
-        # кандидат с объёмом, но устаревший (decay сильный) → conf<0.6 → soft-деприкейт
+        # candidate with volume, but outdated (decay strong) → conf<0.6 → soft-deprikate
         lid = _mk(self.proj, "candidate")
         _ev(self.proj, lid, ts="2026-06-01T00:00:00Z", n=40, s=38, tt=10, tp=10)
-        recompute.recompute_project(self.proj, "2026-08-01T00:00:00Z")   # ~61 день
+        recompute.recompute_project(self.proj, "2026-08-01T00:00:00Z")   # ~61 day
         _l, st = lessons.find_lesson(self.proj, lid)
         self.assertEqual(st, "deprecated")
-        # soft: файл существует в deprecated, НЕ удалён
+        # soft: file exists in deprecated, NOT deleted
         p = lessons.state_dir(self.proj, "deprecated") / f"{lid}.json"
         self.assertTrue(p.is_file())
 
     def test_candidate_stable_stays(self):
-        # conf≥0.6 (не просадка), но passrate 0.8<0.95 → curated-ready не триггерится
-        # НИ при статическом, НИ при адаптивном пороге N → остаётся кандидатом.
+        # conf≥0.6 (no drawdown), but passrate 0.8<0.95 → curated-ready is not triggered
+        # Neither at static nor at adaptive threshold N → remains a candidate.
         lid = _mk(self.proj, "candidate")
         _ev(self.proj, lid, ts="2026-06-01T00:00:00Z", n=40, s=38, tt=10, tp=8)
         res = recompute.recompute_project(self.proj, "2026-06-01T00:00:00Z")
@@ -132,17 +132,17 @@ class TestRecompute(unittest.TestCase):
         self.assertEqual(st, "candidate")
         self.assertEqual(next(x for x in res if x["id"] == lid)["action"], "unchanged")
 
-    # ── S14: адаптивные пороги N от суммарной активности проекта ──────────────
+    # ── S14: adaptive thresholds N from the total project activity ──────────────
     def test_adaptive_thresholds_scaling(self):
         R = recompute
-        # активный проект (Σ≥CURATED_MIN_N) → статические пороги
+        # active project (Σ≥CURATED_MIN_N) → static thresholds
         self.assertEqual(R.adaptive_thresholds(50), (R.CANDIDATE_MIN_N, R.CURATED_MIN_N))
         self.assertEqual(R.adaptive_thresholds(200), (15, 50))
-        # малоактивный: candidate = max(3, s//5) (формула D2), curated — та же пропорция
+        # inactive: candidate = max(3, s//5) (formula D2), curated — same proportion
         self.assertEqual(R.adaptive_thresholds(40), (8, round(8 * 50 / 15)))  # (8, 27)
         self.assertEqual(R.adaptive_thresholds(10), (3, 10))                  # floor 3 → cur 10
         self.assertEqual(R.adaptive_thresholds(0), (3, 10))
-        # инварианты: не выше статического; curated ≥ candidate на всём диапазоне
+        # invariants: not higher than static; curated ≥ candidate throughout the entire range
         for s in range(0, 60):
             c, u = R.adaptive_thresholds(s)
             self.assertLessEqual(c, R.CANDIDATE_MIN_N)
@@ -150,18 +150,18 @@ class TestRecompute(unittest.TestCase):
             self.assertGreaterEqual(u, c)
 
     def test_adaptive_curated_ready_for_low_activity(self):
-        # малоактивный проект (Σ=40): кандидат с N=40 набирает curated-ready под
-        # адаптивным порогом (27), хотя статический 50 не был бы достигнут.
+        # inactive project (Σ=40): candidate with N=40 dials curated-ready under
+        # adaptive threshold (27), although static 50 would not be achieved.
         lid = _mk(self.proj, "candidate")
         _ev(self.proj, lid, ts="2026-06-01T00:00:00Z", n=40, s=40, tt=20, tp=20)
         res = recompute.recompute_project(self.proj, "2026-06-01T00:00:00Z")
         r = next(x for x in res if x["id"] == lid)
-        self.assertEqual(r["action"], "curated-ready")   # адаптивный порог сработал
+        self.assertEqual(r["action"], "curated-ready")   # adaptive threshold triggered
         _l, st = lessons.find_lesson(self.proj, lid)
-        self.assertEqual(st, "candidate")                # инвариант: авто в curated нельзя
+        self.assertEqual(st, "candidate")                # invariant: auto in curated not possible
 
     def test_adaptive_deterministic(self):
-        # тот же events-лог + тот же now → тот же исход (адаптивный порог детерминирован)
+        # same events-log + same now → same outcome (adaptive threshold is deterministic)
         lid = _mk(self.proj, "candidate")
         _ev(self.proj, lid, ts="2026-06-01T00:00:00Z", n=40, s=40, tt=20, tp=20)
         r1 = recompute.recompute_project(self.proj, "2026-06-01T00:00:00Z", dry_run=True)

@@ -3,19 +3,19 @@
   "cases": [
     {
       "id": 1,
-      "prompt": "Какой командой запустить тесты пакета skiller?",
+      "prompt": "What command to run package tests skiller?",
       "assertions": [
         {"type": "contains", "value": "scripts/test.sh"},
-        {"type": "not_regex", "value": "(?i)^(great|отличный вопрос|конечно|sure|of course|happy to|с радостью)"},
-        {"type": "not_regex", "value": "(?i)(надеюсь, это помогло|hope this helps|let me know if|дайте знать, если)"}
+        {"type": "not_regex", "value": "(?i)^(great|great question|sure|sure|of course|happy to|with joy)"},
+        {"type": "not_regex", "value": "(?i)(hope this helped|hope this helps|let me know if|let me know if)"}
       ]
     },
     {
       "id": 2,
-      "prompt": "Где лежит источник истины пресетов permissions?",
+      "prompt": "Where lies the source of the truth of presets permissions?",
       "assertions": [
         {"type": "contains", "value": "configs/claude-code"},
-        {"type": "not_regex", "value": "(?i)(как вы можете видеть|as you can see|в этом ответе я|in this response i)"}
+        {"type": "not_regex", "value": "(?i)(as you can see|as you can see|in this answer I|in this response i)"}
       ]
     }
   ]

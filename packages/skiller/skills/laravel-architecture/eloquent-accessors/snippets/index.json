@@ -3,7 +3,7 @@
   "snippets": [
     {
       "file": "accessor.php",
-      "description": "Эталоны Attribute::make(): getter (стрелочная), getter+setter с нормализацией email, многострочный аксессор из нескольких атрибутов, размещение в классе и миграция legacy getXxxAttribute()",
+      "description": "Standards Attribute::make(): getter (arrow), getter+setter with normalization email, multi-line multi-attribute accessor, class placement and migration legacy getXxxAttribute()",
       "tags": ["laravel", "eloquent", "accessor", "mutator", "attribute"]
     }
   ]

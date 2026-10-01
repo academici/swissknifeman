@@ -1,6 +1,6 @@
-"""Тесты core.text.parse_frontmatter — единый superset-парсер frontmatter.
+"""Tests core.text.parse_frontmatter — single superset-parser frontmatter.
 
-Запуск: PYTHONPATH=<корень монорепо> python3 -m unittest discover -s core/tests"""
+Launch: PYTHONPATH=<root monorepo> python3 -m unittest discover -s core/tests"""
 import unittest
 
 from core import parse_frontmatter, parse_inline_list
@@ -28,7 +28,7 @@ class TestParseFrontmatter(unittest.TestCase):
     def test_block_scalar_folded_joins_with_space(self):
         fm = parse_frontmatter("---\ndescription: >\n  a\n  b\nrisk: low\n---\n")
         self.assertEqual(fm["description"], "a b")
-        self.assertEqual(fm["risk"], "low")  # ключ после блок-скаляра не потерян
+        self.assertEqual(fm["risk"], "low")  # key after block scalar is not lost
 
     def test_block_scalar_with_chomp_indicators(self):
         for header in ("|-", ">+", "|2", ">-"):
@@ -56,11 +56,11 @@ class TestParseFrontmatter(unittest.TestCase):
     def test_multiline_dash_list(self):
         fm = parse_frontmatter("---\nuses:\n  - proj-a\n  - proj-b\ntitle: t\n---\n")
         self.assertEqual(fm["uses"], ["proj-a", "proj-b"])
-        self.assertEqual(fm["title"], "t")  # ключ после списка не съеден
+        self.assertEqual(fm["title"], "t")  # the key after the list is not eaten
 
     def test_empty_value_without_items_stays_string(self):
-        # совместимость со skiller: пустой скаляр — "", НЕ [] (иначе description
-        # без значения стал бы списком и попал бы списком в skills.json)
+        # compatible with skiller: empty scalar — "", NOT [] (otherwise description
+        # without a value would become a list and would end up as a list in skills.json)
         fm = parse_frontmatter("---\ndescription:\nname: foo\n---\n")
         self.assertEqual(fm["description"], "")
         self.assertEqual(fm["name"], "foo")
@@ -74,7 +74,7 @@ class TestParseInlineList(unittest.TestCase):
         self.assertEqual(parse_inline_list('["x", "y"]'), ["x", "y"])
 
     def test_already_list_passthrough(self):
-        # parse_frontmatter теперь может вернуть list — нормализатор его терпит
+        # parse_frontmatter can now return list — the normalizer tolerates it
         self.assertEqual(parse_inline_list(["a", "b"]), ["a", "b"])
         self.assertEqual(parse_inline_list([]), [])
         self.assertEqual(parse_inline_list(['"q"', "  x  "]), ["q", "x"])

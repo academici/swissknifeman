@@ -1,26 +1,26 @@
-"""eval — поведенческое тестирование скиллов реестра (eval-first авторинг).
+"""eval — behavioral testing of registry skills (eval-first authoring).
 
-Зачем: до сих пор скиллы проверялись ТОЛЬКО структурно (`validate.sh`: frontmatter,
-схемы, ссылки, графы и provider projections). Не
-было ответа на главный вопрос — *а скилл вообще работает и срабатывает к месту?*
-Этот модуль закрывает пробел: формат eval-кейсов, программная (детерминированная)
-оценка вывода, прогон with-skill vs baseline, pressure-тесты «соблазн пропустить
-скилл», агрегат метрик и оптимизация триггер-точности `description`.
+Why: until now, skills were checked ONLY structurally (`validate.sh`: frontmatter,
+diagrams, links, graphs and provider projections). Not
+was the answer to the main question - *does the skill even work and work properly?*
+This module closes the gap: format eval-cases, software (deterministic)
+output evaluation, run with-skill vs baseline, pressure-tests «temptation to miss
+skill», metrics aggregate and trigger accuracy optimization `description`.
 
-Адаптировано (методология, не код) из anthropic `skill-creator` (evals.json /
-benchmark / iteration-loop / description-optimization) и obra/superpowers
-`writing-skills` (pressure-тесты — TDD для документации). Лицензии тех скиллов —
-демонстрационные/MIT; здесь — собственная реализация под конвенции реестра.
+Adapted (methodology, not code) from anthropic `skill-creator` (evals.json /
+benchmark / iteration-loop / description-optimization) and obra/superpowers
+`writing-skills` (pressure-tests - TDD for documentation). Licenses of those skills -
+demo/MIT; here is our own implementation under the registry conventions.
 
-Слой разнесён намеренно:
-  • ЧИСТАЯ логика (грейдер, агрегат, scoring/selection описания, валидация схемы,
-    скаффолд, viewer, резолв) — офлайн и детерминированна → покрыта unit-тестами,
-    гоняется в CI без сети.
-  • РАННЕР (`run_case` через `claude -p`) — online, opt-in. Нет `claude` в PATH →
-    команда мягко деградирует (скаффолд + офлайн-валидация), CI не падает.
+The layer is spaced intentionally:
+  • PURE logic (grader, unit, scoring/selection descriptions, schema validation,
+    scaffold, viewer, resolve) — offline and deterministic → covered unit-tests,
+    is chasing in CI without network.
+  • RUNNER (`run_case` via `claude -p`) — online, opt-in. No `claude` in PATH →
+    command softly degrades (scaffold + offline validation), CI does not crash.
 
-Конвенции пакета: stdlib-only, `Env` явно, атомарная запись (`core.io`), сообщения
-по-русски. Токен-математика — НЕ здесь (единый источник `budget.py`)."""
+Package conventions: stdlib-only, `Env` explicit, atomic record (`core.io`), messages
+in Russian. Token math is NOT here (single source `budget.py`)."""
 import hashlib
 import json
 import math
@@ -39,30 +39,30 @@ from core import (atomic_write_json, atomic_write_text, die, parse_args,
 
 from ..common import is_within
 
-# --- константы ----------------------------------------------------------------
-# Типы ассершенов — ТОЛЬКО детерминированные (без LLM-judge), чтобы grade был
-# воспроизводим в CI. LLM-judge — отдельный online-режим, не для гейта.
+# --- constants ----------------------------------------------------------------
+# Assertion types - deterministic ONLY (without LLM-judge), to grade was
+# reproduced in CI. LLM-judge — separate online-mode, not for gate.
 ASSERTION_TYPES = {"contains", "not_contains", "regex", "not_regex",
                    "file_exists", "file_absent", "min_words"}
-# Триггер-описание (ярус-0) держим ≤150 симв. — то же правило, что в lean-каноне.
+# Trigger description (tier-0) hold ≤150 char. - the same rule as in lean-canon.
 DESC_MAX = 150
-DEFAULT_TIMEOUT = 180          # сек на один прогон `claude -p`
+DEFAULT_TIMEOUT = 180          # sec per run `claude -p`
 EVALS_SUBDIR = "evals"
-# Переопределяемый билдер команды claude — флаг инъекции скилла верифицирован по
-# `claude --help` локальной установки (см. build_run_cmd / docs/guide/evals.md).
+# Overridden command builder claude — skill injection flag verified by
+# `claude --help` local installation (see build_run_cmd / docs/guide/evals.md).
 CLAUDE_BIN_ENV = "SKM_CLAUDE_BIN"
 
 
 # ============================================================================ #
-#  ГРЕЙДЕР (офлайн, детерминированный)                                          #
+# GRADER (offline, deterministic)                                          #
 # ============================================================================ #
 def grade_assertion(assertion, output, workspace):
-    """Оценить один ассершен против вывода прогона. → (ok: bool, detail: str).
+    """Evaluate one assertion against run output. → (ok: bool, detail: str).
 
     assertion = {"type": <ASSERTION_TYPES>, "value": <str|int>, "flags"?: {...}}.
-    Текстовые сравнения по умолчанию регистронезависимы (flags.case_sensitive=true
-    отключает) — естественный язык робастнее так. file_*-ассершены резолвят value
-    относительно workspace (каталог прогона)."""
+    Text comparisons are case insensitive by default (flags.case_sensitive=true
+    disables) — natural language is more robust this way. file_*-assertions resolve value
+    regarding workspace (run directory)."""
     atype = assertion.get("type", "")
     value = assertion.get("value", "")
     flags = assertion.get("flags", {}) or {}
@@ -74,42 +74,42 @@ def grade_assertion(assertion, output, workspace):
 
     if atype == "contains":
         ok = needle in hay
-        return ok, f"contains {value!r}: {'найдено' if ok else 'НЕ найдено'}"
+        return ok, f"contains {value!r}: {'found' if ok else 'NOT found'}"
     if atype == "not_contains":
         ok = needle not in hay
-        return ok, f"not_contains {value!r}: {'отсутствует' if ok else 'НАЙДЕНО (плохо)'}"
+        return ok, f"not_contains {value!r}: {'missing' if ok else 'FOUND (bad)'}"
     if atype == "regex":
         ok = re.search(str(value), text, reflags) is not None
-        return ok, f"regex {value!r}: {'совпало' if ok else 'НЕ совпало'}"
+        return ok, f"regex {value!r}: {'matched' if ok else 'did NOT match'}"
     if atype == "not_regex":
         ok = re.search(str(value), text, reflags) is None
-        return ok, f"not_regex {value!r}: {'нет совпадений' if ok else 'СОВПАЛО (плохо)'}"
+        return ok, f"not_regex {value!r}: {'no matches' if ok else 'MATCHED (bad)'}"
     if atype in ("file_exists", "file_absent"):
         if not workspace:
-            return False, f"{atype} {value!r}: нет workspace"
+            return False, f"{atype} {value!r}: no workspace"
         cand = Path(workspace) / str(value)
-        # value берётся из evals.json (могут быть и внешние/upstream скиллы) — '../'
-        # не должен вырваться за каталог прогона. fail-closed: путь вне workspace → нарушено.
+        # value is taken from evals.json (may also be external/upstream skills) — '../'
+        # should not escape the run directory. fail-closed: path out workspace → broken.
         if not is_within(cand, workspace):
-            return False, f"{atype} {value!r}: путь вне workspace (traversal запрещён)"
+            return False, f"{atype} {value!r}: path out workspace (traversal prohibited)"
         exists = cand.exists()
         ok = exists if atype == "file_exists" else not exists
-        return ok, f"{atype} {value!r}: {'ок' if ok else 'нарушено'}"
+        return ok, f"{atype} {value!r}: {'ok' if ok else 'broken'}"
     if atype == "min_words":
         try:
             need = int(value)
         except (TypeError, ValueError):
-            return False, f"min_words: value не число ({value!r})"
+            return False, f"min_words: value is not a number ({value!r})"
         got = len(text.split())
-        return got >= need, f"min_words {need}: получено {got}"
-    return False, f"неизвестный тип ассершена: {atype!r}"
+        return got >= need, f"min_words {need}: received {got}"
+    return False, f"unknown assertion type: {atype!r}"
 
 
 def grade_case(case, output, workspace=None):
-    """Оценить кейс (набор ассершенов) против вывода. → dict.
+    """Rate case (set of assertions) vs output. → dict.
 
-    {id, passed: bool|None, checks: [{type, ok, detail}]}. Кейс без ассершенов →
-    passed=None (не оценён) — такие не идут в pass_rate (нечего проверять)."""
+    {id, passed: bool|None, checks: [{type, ok, detail}]}. Case without assertions →
+    passed=None (not rated) — these don't go to pass_rate (nothing to check)."""
     asserts = case.get("assertions", []) or []
     checks = []
     for a in asserts:
@@ -120,68 +120,68 @@ def grade_case(case, output, workspace=None):
 
 
 # ============================================================================ #
-#  ВАЛИДАЦИЯ СХЕМЫ (офлайн)                                                     #
+# SCHEME VALIDATION (offline)                                                     #
 # ============================================================================ #
 def _validate_cases(cases, label, *, kind):
     errors = []
     if not isinstance(cases, list) or not cases:
-        return [f"{label}: '{kind}' должен быть непустым массивом"]
+        return [f"{label}: '{kind}' must be a non-empty array"]
     seen = set()
     for i, c in enumerate(cases):
         where = f"{label}[{i}]"
         if not isinstance(c, dict):
-            errors.append(f"{where}: кейс должен быть объектом")
+            errors.append(f"{where}: case must be an object")
             continue
         cid = c.get("id")
         if cid is None:
-            errors.append(f"{where}: нет поля id")
+            errors.append(f"{where}: no field id")
         elif cid in seen:
-            errors.append(f"{where}: дубликат id {cid!r}")
+            errors.append(f"{where}: duplicate id {cid!r}")
         else:
             seen.add(cid)
         if not c.get("prompt"):
-            errors.append(f"{where}: нет непустого prompt")
+            errors.append(f"{where}: no non-empty prompt")
         asserts = c.get("assertions", [])
         if not isinstance(asserts, list):
-            errors.append(f"{where}: assertions должен быть массивом")
+            errors.append(f"{where}: assertions must be an array")
             asserts = []
         for j, a in enumerate(asserts):
             if not isinstance(a, dict):
-                errors.append(f"{where}.assertions[{j}]: должен быть объектом")
+                errors.append(f"{where}.assertions[{j}]: must be an object")
                 continue
             at = a.get("type", "")
             if at not in ASSERTION_TYPES:
-                errors.append(f"{where}.assertions[{j}]: type {at!r} не из "
+                errors.append(f"{where}.assertions[{j}]: type {at!r} not from "
                               f"{sorted(ASSERTION_TYPES)}")
             if "value" not in a:
-                errors.append(f"{where}.assertions[{j}]: нет поля value")
+                errors.append(f"{where}.assertions[{j}]: no field value")
     return errors
 
 
 def validate_evals(data, label="evals.json"):
-    """Структурная валидация evals.json. → список ошибок (пуст = валидно)."""
+    """Structural validation evals.json. → list of errors (empty = valid)."""
     if not isinstance(data, dict):
-        return [f"{label}: корень должен быть объектом"]
+        return [f"{label}: root must be an object"]
     errors = []
     if not data.get("skill"):
-        errors.append(f"{label}: нет поля skill")
+        errors.append(f"{label}: no field skill")
     errors += _validate_cases(data.get("cases"), label, kind="cases")
     return errors
 
 
 def validate_pressure(data, label="pressure.json"):
-    """Структурная валидация pressure.json (сценарии-соблазны). → список ошибок.
+    """Structural validation pressure.json (temptation scenarios). → list of errors.
 
-    Сценарий — тот же грейд-контракт (assertions), плюс поле `tempts` (что агента
-    подмывает сделать, пропустив скилл) для читаемости. Опциональное поле
-    `triggers` — список строк `should_trigger` из triggers.json, которые
-    сценарий покрывает; форма проверяется здесь, полнота покрытия — в validate.sh
-    (кросс-файловая сверка со скиллом же triggers.json)."""
+    Scenario - the same grade contract (assertions), plus field `tempts` (that agent
+    is tempting to do it, skipping the skill) for readability. Optional field
+    `triggers` — list of strings `should_trigger` from triggers.json, which
+    script covers; the form is checked here, the completeness of coverage is checked in validate.sh
+    (cross-file verification with the same skill triggers.json)."""
     if not isinstance(data, dict):
-        return [f"{label}: корень должен быть объектом"]
+        return [f"{label}: root must be an object"]
     errors = []
     if not data.get("skill"):
-        errors.append(f"{label}: нет поля skill")
+        errors.append(f"{label}: no field skill")
     scenarios = data.get("scenarios")
     errors += _validate_cases(scenarios, label, kind="scenarios")
     if isinstance(scenarios, list):
@@ -190,38 +190,38 @@ def validate_pressure(data, label="pressure.json"):
                 continue
             t = sc["triggers"]
             if not isinstance(t, list) or any(not isinstance(x, str) or not x.strip() for x in t):
-                errors.append(f"{label}.scenarios[{i}].triggers: должен быть массивом "
-                              f"непустых строк")
+                errors.append(f"{label}.scenarios[{i}].triggers: must be an array "
+                              f"non-empty lines")
     return errors
 
 
 def validate_triggers(data, label="triggers.json"):
-    """Валидация triggers.json для оптимизации описания. → список ошибок."""
+    """Validation triggers.json to optimize the description. → list of errors."""
     if not isinstance(data, dict):
-        return [f"{label}: корень должен быть объектом"]
+        return [f"{label}: root must be an object"]
     errors = []
     for key in ("should_trigger", "should_not"):
         v = data.get(key)
         if not isinstance(v, list) or not v:
-            errors.append(f"{label}: '{key}' должен быть непустым массивом запросов")
+            errors.append(f"{label}: '{key}' must be a non-empty query array")
         elif any(not isinstance(q, str) or not q.strip() for q in v):
-            errors.append(f"{label}: '{key}' содержит пустой/нестроковый запрос")
+            errors.append(f"{label}: '{key}' contains empty/non-string query")
     return errors
 
 
 # ============================================================================ #
-#  АГРЕГАТ BENCHMARK (офлайн)                                                   #
+# UNIT BENCHMARK (offline)                                                   #
 # ============================================================================ #
-# P8.9: метрики держатся `fractions.Fraction` до самой границы записи — точная
-# арифметика (никаких промежуточных `round()`-искажений), ни одного float даже
-# транзитно (√ — через `math.isqrt`, не `math.sqrt`). Рендер строкой — одна
-# функция `_fmt_frac`, применяемая рекурсивно `_stringify_fractions` ровно один
-# раз, перед `atomic_write_json` (см. cmd_eval). Downstream-потребители (viewer)
-# читают через `float(x)` — работает и с Fraction (тесты дергают build_benchmark
-# напрямую), и со строкой (реальный `cmd_eval`-путь).
+# P8.9: metrics hold `fractions.Fraction` up to the very edge of the record - exact
+# arithmetic (no intermediate `round()`-distortion), none float even
+# transitive (√ — via `math.isqrt`, not `math.sqrt`). Render by line - one
+# function `_fmt_frac`, applied recursively `_stringify_fractions` exactly one
+# times, before `atomic_write_json` (see cmd_eval). Downstream-consumers (viewer)
+# read via `float(x)` — works with Fraction (tests pull build_benchmark
+# directly), and with the line (real `cmd_eval`-path).
 def _sqrt_fraction(value, ndigits=9):
-    """√(Fraction ≥ 0) → Fraction-приближение с `ndigits` дробных цифр, целочисленно
-    (`math.isqrt`) — без float даже транзитно. value<=0 → Fraction(0)."""
+    """√(Fraction ≥ 0) → Fraction-approaching with `ndigits` fractional digits, integer
+    (`math.isqrt`) — without float even transitively. value<=0 → Fraction(0)."""
     fr = value if isinstance(value, Fraction) else Fraction(value)
     if fr <= 0:
         return Fraction(0)
@@ -232,8 +232,8 @@ def _sqrt_fraction(value, ndigits=9):
 
 
 def _fmt_frac(value, ndigits=3):
-    """Fraction|int|None → строка фиксированной точности (round-half-up на точной
-    дроби, без float). None → None (нечего измерять)."""
+    """Fraction|int|None → fixed precision string (round-half-up on the exact
+    fractions, without float). None → None (nothing to measure)."""
     if value is None:
         return None
     fr = value if isinstance(value, Fraction) else Fraction(value)
@@ -249,9 +249,9 @@ def _fmt_frac(value, ndigits=3):
 
 
 def _stringify_fractions(obj, ndigits=3):
-    """Рекурсивно заменить Fraction-листья строками (`_fmt_frac`) — инвариант «ни
-    одного float/Fraction в JSON-отчёте» на границе записи (не раньше: внутренние
-    вычисления остаются точными до этого шага)."""
+    """Recursively replace Fraction-leaves in rows (`_fmt_frac`) — invariant «neither
+    one float/Fraction in JSON-report» at record boundary (not before: internal
+    calculations remain accurate until this step)."""
     if isinstance(obj, Fraction):
         return _fmt_frac(obj, ndigits)
     if isinstance(obj, dict):
@@ -262,9 +262,9 @@ def _stringify_fractions(obj, ndigits=3):
 
 
 def _stat(values):
-    """(mean, stddev) как Fraction|None по списку чисел; None/bool отфильтрованы.
-    mean — точное среднее; stddev — √(популяционной дисперсии) через
-    `_sqrt_fraction` (целочисленно). stddev=Fraction(0) при <2 значениях."""
+    """(mean, stddev) like Fraction|None by list of numbers; None/bool filtered.
+    mean — exact mean; stddev — √(population variance) via
+    `_sqrt_fraction` (integer). stddev=Fraction(0) when <2 values."""
     nums = [Fraction(v) for v in values
            if isinstance(v, (int, float, Fraction)) and not isinstance(v, bool)]
     if not nums:
@@ -280,13 +280,13 @@ def _stat(values):
 
 
 def aggregate_runs(case_results):
-    """Свести список прогонов кейсов в метрики набора.
+    """Reduce the list of case runs into set metrics.
 
     case_results: [{passed: bool|None, duration_s?, tokens?}]. →
     {total, graded, passed, pass_rate, duration_mean, duration_std,
-     tokens_mean, tokens_std} — числовые метрики Fraction|None (точная арифметика,
-     см. _stat); строковый рендер — на границе записи (cmd_eval). pass_rate=None,
-     если нечего оценивать."""
+     tokens_mean, tokens_std} — numeric metrics Fraction|None (exact arithmetic,
+     see _stat); string rendering - at the record boundary (cmd_eval). pass_rate=None,
+     if there is nothing to evaluate."""
     total = len(case_results)
     graded = [r for r in case_results if r.get("passed") is not None]
     passed = sum(1 for r in graded if r["passed"])
@@ -303,9 +303,9 @@ def aggregate_runs(case_results):
 
 
 def build_benchmark(skill, with_skill_runs, baseline_runs=None):
-    """Собрать benchmark из прогонов with-skill (и опц. baseline). Чистая функция:
-    без времени/IO (детерминированна для тестов; generated_at/provenance/
-    schema_version ставит cmd_eval). Числовые метрики — Fraction|None."""
+    """Collect benchmark from runs with-skill (and opt. baseline). Pure function:
+    without time/IO (is deterministic for tests; generated_at/provenance/
+    schema_version puts cmd_eval). Numeric metrics - Fraction|None."""
     bench = {"skill": skill, "with_skill": aggregate_runs(with_skill_runs)}
     if baseline_runs is not None:
         base = aggregate_runs(baseline_runs)
@@ -321,14 +321,14 @@ def build_benchmark(skill, with_skill_runs, baseline_runs=None):
 
 
 # ============================================================================ #
-#  ТРИГГЕР-ТОЧНОСТЬ ОПИСАНИЯ (логика офлайн; judge инъектируется)               #
+# TRIGGER - DESCRIPTION PRECISION (logic offline; judge is injected)               #
 # ============================================================================ #
 def score_description(description, trigger_set, judge):
-    """Оценить, насколько `description` срабатывает к месту и не ложно.
+    """Assess how `description` works appropriately and not falsely.
 
     trigger_set = {"should_trigger": [q...], "should_not": [q...]}.
-    judge(description, query) -> bool — предсказание «сработает ли скилл». Online
-    judge = вызов модели; в тестах инъектируется детерминированный фейк.
+    judge(description, query) -> bool — prediction «will the skill work?». Online
+    judge = model call; a deterministic fake is injected into tests.
     → {tp, fp, fn, tn, precision, recall, f1, accuracy, len, over_limit}."""
     st = trigger_set.get("should_trigger", []) or []
     sn = trigger_set.get("should_not", []) or []
@@ -337,8 +337,8 @@ def score_description(description, trigger_set, judge):
     fp = sum(1 for q in sn if judge(description, q))
     tn = len(sn) - fp
     total = tp + fn + fp + tn
-    # Fraction — точные отношения, не round()-искажение; Fraction полностью
-    # упорядочен, select_best_description сортирует по нему без изменений.
+    # Fraction — exact relationships, not round()-distortion; Fraction completely
+    # is ordered, select_best_description sorts by it without changes.
     precision = Fraction(tp, tp + fp) if (tp + fp) else Fraction(0)
     recall = Fraction(tp, tp + fn) if (tp + fn) else Fraction(0)
     f1 = (2 * precision * recall / (precision + recall)
@@ -352,11 +352,11 @@ def score_description(description, trigger_set, judge):
 
 
 def select_best_description(candidates, trigger_set, judge, *, max_len=DESC_MAX):
-    """Выбрать лучшего кандидата описания по триггер-набору.
+    """Select the best description candidate based on the trigger set.
 
-    Кандидаты длиннее max_len или пустые отбраковываются (правило ≤150 симв.
-    яруса-0 нерушимо). Ранжирование: f1 → accuracy → короче. →
-    {best, score, ranked: [...], rejected: [...]}; best=None, если все отброшены."""
+    Candidates are longer max_len or empty ones are rejected (rule ≤150 char.
+    tier-0 indestructible). Ranking: f1 → accuracy → in short. →
+    {best, score, ranked: [...], rejected: [...]}; best=None, if all are discarded."""
     rejected = [c for c in candidates if not c.strip() or len(c) > max_len]
     pool = [c for c in candidates if c.strip() and len(c) <= max_len]
     scored = [(c, score_description(c, trigger_set, judge)) for c in pool]
@@ -372,10 +372,10 @@ def select_best_description(candidates, trigger_set, judge, *, max_len=DESC_MAX)
 
 
 # ============================================================================ #
-#  РАННЕР (online, opt-in)                                                      #
+# RUNNER (online, opt-in)                                                      #
 # ============================================================================ #
 def claude_bin():
-    """Путь к CLI `claude`: env-override SKM_CLAUDE_BIN → PATH. None, если нет."""
+    """Path to CLI `claude`: env-override SKM_CLAUDE_BIN → PATH. None, if not."""
     override = os.environ.get(CLAUDE_BIN_ENV)
     if override:
         p = Path(os.path.expanduser(override))
@@ -385,9 +385,9 @@ def claude_bin():
 
 
 def build_run_cmd(claude, prompt, skill_text=None):
-    """Собрать argv для `claude -p`. Скилл инъектируется через
-    --append-system-prompt (флаг сверен по `claude --help` установки). Вывод —
-    JSON (--output-format json) для извлечения result+usage."""
+    """Collect argv for `claude -p`. The skill is injected via
+    --append-system-prompt (flag checked by `claude --help` installations). Output -
+    JSON (--output-format json) to extract result+usage."""
     cmd = [claude, "-p", prompt, "--output-format", "json"]
     if skill_text:
         cmd += ["--append-system-prompt", skill_text]
@@ -395,7 +395,7 @@ def build_run_cmd(claude, prompt, skill_text=None):
 
 
 def _parse_claude_json(stdout):
-    """(text, tokens) из JSON-вывода `claude -p`. На неразборе → (stdout, None)."""
+    """(text, tokens) from JSON-output `claude -p`. Not parsed → (stdout, None)."""
     try:
         data = json.loads(stdout)
     except (json.JSONDecodeError, TypeError):
@@ -411,17 +411,17 @@ def _parse_claude_json(stdout):
 
 def run_case(skill_dir, case, *, with_skill, workspace, timeout=DEFAULT_TIMEOUT,
              claude=None, clock_ns=time.monotonic_ns):
-    """Один прогон кейса через `claude -p` в каталоге workspace.
+    """One run of the case through `claude -p` in the catalog workspace.
 
-    with_skill=True → тело SKILL.md подмешивается в системный промт (baseline без
-    него — изоляция эффекта скилла). case.files[] (если есть) пишутся в workspace
-    до прогона. `clock_ns` — инжектируемые часы (дефолт `time.monotonic_ns`);
-    тесты подставляют детерминированный счётчик ⇒ отчёт побайтно воспроизводим.
-    duration_s — точный `Fraction(ns, 10**9)`, не float. →
+    with_skill=True → body SKILL.md is mixed into the system promt (baseline without
+    him - skill effect isolation). case.files[] (if available) are written in workspace
+    before the run. `clock_ns` — injected clock (default `time.monotonic_ns`);
+    tests substitute a deterministic counter ⇒ the report is reproduced byte by byte.
+    duration_s — accurate `Fraction(ns, 10**9)`, not float. →
     {id, output, returncode, duration_s, tokens, error?}."""
     claude = claude or claude_bin()
     if not claude:
-        raise RuntimeError("CLI `claude` не найден — раннер недоступен (офлайн)")
+        raise RuntimeError("CLI `claude` not found - runner unavailable (offline)")
     ws = Path(workspace)
     ws.mkdir(parents=True, exist_ok=True)
     for f in case.get("files", []) or []:
@@ -448,8 +448,8 @@ def run_case(skill_dir, case, *, with_skill, workspace, timeout=DEFAULT_TIMEOUT,
 
 def run_suite(skill_dir, cases, *, with_skill, timeout=DEFAULT_TIMEOUT,
               claude=None, clock_ns=time.monotonic_ns):
-    """Прогнать набор кейсов (каждый в своём временном workspace) и оценить.
-    → [{...run_case, **grade_case}]. Online. `clock_ns` — см. run_case."""
+    """Run a set of cases (each in its own temporary workspace) and evaluate.
+    → [{...run_case, **grade_case}]. Online. `clock_ns` — see run_case."""
     results = []
     for case in cases:
         with tempfile.TemporaryDirectory(prefix="skiller-eval-") as ws:
@@ -799,8 +799,8 @@ def build_system_benchmark(cases_doc, graders_doc, *, generated_at, sample_size=
     (`case['baseline']['transcript'/'outcome']`) and, if `candidate_runs`
     (`{case_id: {transcript, outcome}}`) is supplied, pair the resulting
     `first_pass_success` metric against it; omitted → the pair is `deferred`
-    (no live paired run yet exists — never fabricated, Execution Rules: "ноль
-    и silent skip запрещены"). → the benchmark artifact shape."""
+    (no live paired run yet exists — never fabricated, Execution Rules: "zero
+    and silent skip are prohibited"). → the benchmark artifact shape."""
     graders_by_id = {g["id"]: g for g in graders_doc.get("graders", [])}
     cases = cases_doc.get("cases", [])
     baseline_records = {c["case_id"]: c["baseline"] for c in cases}
@@ -849,19 +849,19 @@ def build_system_benchmark(cases_doc, graders_doc, *, generated_at, sample_size=
 #  VIEWER (markdown / standalone HTML)                                          #
 # ============================================================================ #
 def _fmt_rate(r):
-    """Строковая дробь (или Fraction — при прямом вызове build_benchmark в тестах;
-    или None) → '50%' для дисплея (P8.9: чтение строкового рендера метрик)."""
+    """String fraction (or Fraction — when called directly build_benchmark in tests;
+    or None) → '50%' for display (P8.9: reading string rendering metrics)."""
     return "—" if r is None else f"{float(r) * 100:.0f}%"
 
 
 def render_markdown(benchmark):
-    """Человекочитаемый markdown-отчёт по benchmark. Метрики — Fraction (прямой
-    вызов build_benchmark) или строка (реальный benchmark.json с диска, P8.9) —
-    оба читаются через float()."""
+    """Human readable markdown-report on benchmark. Metrics - Fraction (direct
+    call build_benchmark) or string (real benchmark.json from disk, P8.9) —
+    both are read via float()."""
     b = benchmark
     ws = b.get("with_skill", {})
     out = [f"# Eval: {b.get('skill', '?')}", "",
-           "| Набор | pass@ | кейсов | ток (μ±σ) | сек (μ±σ) |",
+           "| Set | pass@ | cases | current (μ±σ) | sec (μ±σ) |",
            "|---|--:|--:|--:|--:|"]
 
     def row(label, a):
@@ -879,15 +879,15 @@ def render_markdown(benchmark):
         d = b["delta"]
         parts = []
         if "pass_rate" in d:
-            parts.append(f"pass@ {float(d['pass_rate']) * 100:+.0f}пп")
+            parts.append(f"pass@ {float(d['pass_rate']) * 100:+.0f}pp")
         if "tokens_mean" in d:
-            parts.append(f"ток {float(d['tokens_mean']):+.0f}")
+            parts.append(f"current {float(d['tokens_mean']):+.0f}")
         out += ["", f"**Δ skill vs baseline:** {', '.join(parts) or '—'}"]
     return "\n".join(out) + "\n"
 
 
 def render_html(benchmark):
-    """Автономный HTML-отчёт (--static) — markdown в <pre>, без зависимостей."""
+    """Standalone HTML-report (--static) — markdown in <pre>, without dependencies."""
     md = render_markdown(benchmark).replace("&", "&amp;").replace("<", "&lt;")
     skill = benchmark.get("skill", "eval")
     return (f"<!doctype html><html lang=ru><meta charset=utf-8>"
@@ -897,16 +897,16 @@ def render_html(benchmark):
 
 
 # ============================================================================ #
-#  СКАФФОЛД + РЕЗОЛВ                                                            #
+# SCAFFOLD + RESOLUTION                                                            #
 # ============================================================================ #
 def _stub_evals(skill_name):
     return {"skill": skill_name, "cases": [{
         "id": 1,
-        "prompt": "Реальный пользовательский запрос на языке экосистемы "
-                  "(конкретика: пути, имена). Замени на свой.",
+        "prompt": "Real user request in the language of the ecosystem "
+                  "(specifics: paths, names). Replace with yours.",
         "assertions": [
-            {"type": "contains", "value": "ожидаемая-подстрока"},
-            {"type": "not_contains", "value": "запрещённая-подстрока"},
+            {"type": "contains", "value": "expected-substring"},
+            {"type": "not_contains", "value": "forbidden-substring"},
         ],
     }]}
 
@@ -914,27 +914,27 @@ def _stub_evals(skill_name):
 def _stub_pressure(skill_name):
     return {"skill": skill_name, "scenarios": [{
         "id": 1,
-        "tempts": "Что подмывает агента сделать, ПРОПУСТИВ скилл "
-                  "(например: сразу писать код вместо проверки факта).",
-        "prompt": "Сценарий-соблазн под давлением. Замени на свой.",
+        "tempts": "What an agent is tempted to do, MISSING a skill "
+                  "(for example: write code immediately instead of checking the fact).",
+        "prompt": "Temptation scenario under pressure. Replace with yours.",
         "assertions": [
-            {"type": "contains", "value": "признак-соблюдения-скилла"},
-            {"type": "not_contains", "value": "признак-нарушения"},
+            {"type": "contains", "value": "skill-compliance-sign"},
+            {"type": "not_contains", "value": "violation-sign"},
         ],
     }]}
 
 
 def _stub_triggers(skill_name):
     return {"skill": skill_name,
-            "should_trigger": ["запрос, на котором скилл ОБЯЗАН сработать (1)",
-                               "та же тема другими словами (2)"],
-            "should_not": ["близкий, но НЕ про этот скилл запрос (1)",
-                           "ещё один near-miss (2)"]}
+            "should_trigger": ["request on which the skill MUST work (1)",
+                               "same topic in other words (2)"],
+            "should_not": ["close, but NOT about this skill request (1)",
+                           "one more near-miss (2)"]}
 
 
 def scaffold_evals(skill_dir, skill_name=None):
-    """Создать стабы evals/{evals,pressure,triggers}.json (не перезаписывая
-    существующие). → список созданных путей. Атомарно (core.io)."""
+    """Create stubs evals/{evals,pressure,triggers}.json (without overwriting
+    existing). → list of created paths. Atomically (core.io)."""
     skill_dir = Path(skill_dir)
     skill_name = skill_name or skill_dir.name
     evals_dir = skill_dir / EVALS_SUBDIR
@@ -951,26 +951,26 @@ def scaffold_evals(skill_dir, skill_name=None):
 
 
 def resolve_skill(env, ref):
-    """Каталог скилла по ref ('bucket/name' или 'name'). die, если не найден/неоднозначен."""
+    """Skill catalog by ref ('bucket/name' or 'name'). die, if not found/is ambiguous."""
     skills_root = env.root / "skills"
     ref = ref.strip().strip("/")
     if "/" in ref:
         cand = skills_root / ref
         if (cand / "SKILL.md").is_file():
             return cand
-        die(f"скилл не найден: skills/{ref}/SKILL.md")
+        die(f"skill not found: skills/{ref}/SKILL.md")
     matches = [p.parent for p in skills_root.glob(f"*/{ref}/SKILL.md")]
     if not matches:
-        die(f"скилл '{ref}' не найден в реестре (укажи bucket/name)")
+        die(f"skill '{ref}' not found in the registry (indicate bucket/name)")
     if len(matches) > 1:
         rels = ", ".join(str(m.relative_to(skills_root)) for m in matches)
-        die(f"неоднозначно '{ref}' — есть в нескольких бакетах: {rels}")
+        die(f"ambiguous '{ref}' — is in several buckets: {rels}")
     return matches[0]
 
 
 def evals_coverage(root):
-    """(skills_with_evals, local_skills) по реестру — для сводки в validate/status.
-    Локальные = без upstream.json (eval-стандарт на авторские скиллы)."""
+    """(skills_with_evals, local_skills) by registry - for summary in validate/status.
+    Local = without upstream.json (eval-standard for author's skills)."""
     skills_root = Path(root) / "skills"
     local, with_evals = 0, 0
     for skill_md in sorted(skills_root.glob("*/*/SKILL.md")):
@@ -989,14 +989,14 @@ def evals_coverage(root):
 _USAGE = (
     "skiller eval <bucket/skill | skill> [--baseline] [--triggers]\n"
     "             [--scaffold] [--static] [--json] [--timeout N]\n"
-    "  Поведенческий прогон скилла: with-skill vs baseline, программные ассершены,\n"
-    "  pressure-тесты, benchmark.json. --triggers — оптимизация триггер-точности\n"
-    "  описания. --scaffold — создать стабы evals/. Раннер требует CLI `claude`\n"
-    "  (нет в PATH → офлайн-валидация + скаффолд, без падения).")
+    "  Behavioral skill run: with-skill vs baseline, software assertions,\n"
+    "  pressure-tests, benchmark.json. --triggers — trigger accuracy optimization\n"
+    "  descriptions. --scaffold — create stubs evals/. Runner requires CLI `claude`\n"
+    "  (not in PATH → offline validation + scaffold, no fall).")
 
 
 def _offline_report(skill_dir):
-    """Офлайн-ветка (нет `claude`): провалидировать имеющиеся evals и подсказать."""
+    """Offline branch (no `claude`): validate existing evals and give me a hint."""
     evals_dir = skill_dir / EVALS_SUBDIR
     problems = []
     for fname, validator in (("evals.json", validate_evals),
@@ -1007,18 +1007,18 @@ def _offline_report(skill_dir):
             problems += validator(data, fname)
     if problems:
         for p in problems:
-            print(f"  ОШИБКА СХЕМЫ: {p}")
+            print(f"  SCHEMA ERROR: {p}")
     else:
-        print("  схема evals/ валидна")
-    warn("CLI `claude` не найден — прогон пропущен (офлайн). Поставь claude "
-         "или задай SKM_CLAUDE_BIN, чтобы запускать with-skill vs baseline.")
+        print("  diagram evals/ is valid")
+    warn("CLI `claude` not found - run skipped (offline). Put claude "
+         "or ask SKM_CLAUDE_BIN, to run with-skill vs baseline.")
 
 
 def cmd_eval(env, argv, *, clock_ns=None, now_iso=None):
-    """CLI-обвязка `skiller eval`. `clock_ns`/`now_iso` — точка внедрения
-    инжектируемых часов для детерминированных тестов (побайтная воспроизводимость
-    benchmark.json); дефолт `None` → реальное время, `provenance.clock: "wall"`.
-    Поведение CLI без флагов не меняется (обратная совместимость)."""
+    """CLI-harness `skiller eval`. `clock_ns`/`now_iso` — injection point
+    injected clock for deterministic tests (byte reproducibility
+    benchmark.json); default `None` → real time, `provenance.clock: "wall"`.
+    Behavior CLI without flags does not change (backwards compatible)."""
     opts, pos = parse_args(argv, {
         "--baseline": "bool", "--triggers": "bool", "--scaffold": "bool",
         "--static": "bool", "--json": "bool", "--timeout": "str",
@@ -1033,47 +1033,47 @@ def cmd_eval(env, argv, *, clock_ns=None, now_iso=None):
     if opts["scaffold"]:
         created = scaffold_evals(skill_dir, skill_name)
         if created:
-            print(f"Созданы стабы: {', '.join(p.name for p in created)} "
-                  f"в {evals_dir.relative_to(env.root)}")
+            print(f"Stubs created: {', '.join(p.name for p in created)} "
+                  f"in {evals_dir.relative_to(env.root)}")
         else:
-            print("Стабы evals/ уже есть — ничего не создано")
+            print("Stubs evals/ already exists - nothing created")
         return
 
     if not (evals_dir / "evals.json").exists():
         created = scaffold_evals(skill_dir, skill_name)
-        print(f"Нет evals.json — создал стабы ({', '.join(p.name for p in created)}). "
-              f"Заполни кейсы и перезапусти `skiller eval {pos[0]}`.")
+        print(f"No evals.json — created stubs ({', '.join(p.name for p in created)}). "
+              f"Fill out the cases and restart `skiller eval {pos[0]}`.")
         return
 
     claude = claude_bin()
     timeout = int(opts["timeout"]) if opts.get("timeout") else DEFAULT_TIMEOUT
 
-    # --- оптимизация триггер-точности описания --------------------------------
+    # --- optimization of trigger precision description --------------------------------
     if opts["triggers"]:
         triggers = safe_load_json(evals_dir / "triggers.json")
         if triggers is None:
             scaffold_evals(skill_dir, skill_name)
-            print("Нет triggers.json — создал стаб. Заполни should_trigger / "
-                  "should_not и перезапусти с --triggers.")
+            print("No triggers.json — created stab. Fill in should_trigger / "
+                  "should_not and restart with --triggers.")
             return
         errs = validate_triggers(triggers, "triggers.json")
         if errs:
-            die("triggers.json невалиден:\n  " + "\n  ".join(errs))
+            die("triggers.json is invalid:\n  " + "\n  ".join(errs))
         if not claude:
-            warn("CLI `claude` не найден — оптимизация описания требует модель "
-                 "(генерация кандидатов + judge). Офлайн недоступно.")
+            warn("CLI `claude` not found - description optimization requires model "
+                 "(candidate generation + judge). Offline not available.")
             return
-        # Online-ветка генерации кандидатов/judge вынесена за гейт CI; реализация
-        # дергает `claude -p`. Здесь — каркас: scoring/selection ниже чисты и
-        # покрыты тестами, online-обвязка подключается в окружении с моделью.
-        warn("Online-оптимизация описания (--triggers) запускается в окружении с "
-             "моделью; scoring/selection доступны как API (score_description / "
-             "select_best_description). См. docs/guide/evals.md.")
+        # Online-candidate generation thread/judge moved out of the gate CI; implementation
+        # pulls `claude -p`. Here is the framework: scoring/selection below are clean and
+        # are covered with tests, online-the harness is connected in the environment with the model.
+        warn("Online-description optimization (--triggers) runs in an environment with "
+             "model; scoring/selection available as API (score_description / "
+             "select_best_description). See The docs/guide/evals.md.")
         return
 
-    # --- прогон eval + pressure -----------------------------------------------
+    # --- run eval + pressure -----------------------------------------------
     if not claude:
-        print(f"━━━ EVAL {skill_name} (офлайн) ━━━")
+        print(f"━━━ EVAL {skill_name} (offline) ━━━")
         _offline_report(skill_dir)
         return
 
@@ -1083,7 +1083,7 @@ def cmd_eval(env, argv, *, clock_ns=None, now_iso=None):
     if pressure is not None:
         errs += validate_pressure(pressure, "pressure.json")
     if errs:
-        die("evals невалидны:\n  " + "\n  ".join(errs))
+        die("evals are invalid:\n  " + "\n  ".join(errs))
 
     cases = list(evals.get("cases", []))
     if pressure:
@@ -1097,18 +1097,18 @@ def cmd_eval(env, argv, *, clock_ns=None, now_iso=None):
         base_runs = run_suite(skill_dir, cases, with_skill=False, timeout=timeout,
                               claude=claude, clock_ns=_clock_ns)
     bench = build_benchmark(skill_name, with_runs, base_runs)
-    # schema_version — намеспейсовано (не голое "2"): та же benchmark.json-семья
-    # держит и P3.3-артефакт build_system_benchmark со своим "system-bank-
-    # benchmark/v1" — два несопоставимых словаря версий под одинаковым коротким
-    # именем были бы дефектом (реконсайл 2026-07-26, D52/`plan.md` §1).
+    # schema_version — spaced (not naked "2"): same benchmark.json-family
+    # holds and P3.3-artifact build_system_benchmark with his "system-bank-
+    # benchmark/v1" — two incomparable version dictionaries under the same short
+    # name would be a defect (reconsult 2026-07-26, D52/`plan.md` §1).
     bench["schema_version"] = "skill-benchmark/v2"
     bench["generated_at"] = now_iso if now_iso is not None else \
         time.strftime("%Y-%m-%dT%H:%M:%S")
-    # provenance — ФАКТИЧЕСКОЕ, не константа: эта ветка достижима только когда
-    # `claude` реально резолвлен и `run_suite` его реально вызвал (гейт `if not
-    # claude` выше) — реальный ИЛИ фейковый (SKM_CLAUDE_BIN) бинарь одинаково
-    # "невраньё" для llm/network (сам факт, что подпроцесс claude был запущен;
-    # различить «настоящую» модель от локального фейка на этом уровне нечем).
+    # provenance — ACTUAL, not constant: this branch is only reachable when
+    # `claude` is really resolved and `run_suite` really called him (gate `if not
+    # claude` above) — real OR fake (SKM_CLAUDE_BIN) binary is the same
+    # "lies" for llm/network (the very fact that the subprocess claude was started;
+    # distinguish «real» model from a local fake at this level there is nothing).
     bench["provenance"] = {
         "llm": True,
         "network": True,
@@ -1123,7 +1123,7 @@ def cmd_eval(env, argv, *, clock_ns=None, now_iso=None):
     if opts["static"]:
         out = evals_dir / "benchmark.html"
         atomic_write_text(out, render_html(bench))
-        print(f"HTML-отчёт: {out.relative_to(env.root)}")
+        print(f"HTML-report: {out.relative_to(env.root)}")
     if opts["json"]:
         print(json.dumps(bench, indent=2, ensure_ascii=False))
     else:

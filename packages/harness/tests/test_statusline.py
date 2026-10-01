@@ -76,7 +76,7 @@ class StatuslineSettingCase(unittest.TestCase):
         self.local.write_text(json.dumps({"statusLine": foreign}))
         out = run(block_statusline, self.proj, "context", False)
         self.assertEqual(json.loads(self.local.read_text())["statusLine"], foreign)
-        self.assertIn("уважаю локальный выбор", out)
+        self.assertIn("respect local choice", out)
 
     def test_off_removes_only_our_key(self):
         run(block_statusline, self.proj, "context", False)
@@ -90,7 +90,7 @@ class StatuslineSettingCase(unittest.TestCase):
         self.local.write_text(json.dumps({"statusLine": foreign}))
         out = run(block_statusline, self.proj, "off", False)
         self.assertEqual(json.loads(self.local.read_text())["statusLine"], foreign)
-        self.assertIn("не снимаю", out)
+        self.assertIn("not filming", out)
 
     def test_unknown_mode_dies(self):
         with self.assertRaises(SystemExit):
@@ -135,7 +135,7 @@ class StatuslineScriptCase(unittest.TestCase):
             env["COLUMNS"] = str(columns)
         p = subprocess.run(["bash", str(SCRIPT)], input=sample(pct, session=session),
                            text=True, capture_output=True, env=env, timeout=30)
-        self.assertEqual(p.returncode, 0, f"скрипт обязан всегда выходить 0: {p.stderr}")
+        self.assertEqual(p.returncode, 0, f"the script must always exit 0: {p.stderr}")
         return p.stdout
 
     def notifications(self, expected, timeout=5.0):
@@ -185,7 +185,7 @@ class StatuslineScriptCase(unittest.TestCase):
         env = dict(os.environ)
         env["XDG_RUNTIME_DIR"] = str(self.runtime)
         env["STATUSLINE_ENV_FILE"] = str(self.env_file)
-        p = subprocess.run(["bash", str(SCRIPT)], input="не json вовсе",
+        p = subprocess.run(["bash", str(SCRIPT)], input="not json at all",
                            text=True, capture_output=True, env=env, timeout=30)
         self.assertEqual(p.returncode, 0)
         self.assertTrue(p.stdout.strip())
@@ -199,10 +199,10 @@ class StatuslineScriptCase(unittest.TestCase):
         for pct in (None, 5, 79, 81, 85, 91, 30, 95):
             self.render(pct)
         lines = self.notifications(3)
-        self.assertEqual(len(lines), 3, f"ожидались ровно 3 уведомления, получено: {lines}")
+        self.assertEqual(len(lines), 3, f"exactly 3 notifications were expected, received: {lines}")
         # Notification commands run in the background: dispatch order is not
         # completion order. Each crossing must still have exactly one alert.
-        for percent, threshold in (("81%", "порог 80%"), ("91%", "порог 90%"), ("95%", "порог 90%")):
+        for percent, threshold in (("81%", "threshold 80%"), ("91%", "threshold 90%"), ("95%", "threshold 90%")):
             matching = [line for line in lines if percent in line and threshold in line]
             self.assertEqual(len(matching), 1, lines)
 
@@ -212,7 +212,7 @@ class StatuslineScriptCase(unittest.TestCase):
         for pct in (81, 85, 91, 95):
             self.render(pct)
         lines = self.notifications(1)
-        self.assertEqual(len(lines), 1, f"кулдаун обязан подавить остальные: {lines}")
+        self.assertEqual(len(lines), 1, f"cooldown must suppress the rest: {lines}")
         self.assertIn("81%", lines[0])
         self.assertEqual(self.read_state()["BAND"], "1")
         self.write_env(cooldown=0)
@@ -234,7 +234,7 @@ class StatuslineScriptCase(unittest.TestCase):
         self.assertEqual(len(lines), 2)
 
         leftovers = list((self.runtime / "claude-statusline").glob("*.tmp"))
-        self.assertEqual(leftovers, [], f"частично записанное состояние: {leftovers}")
+        self.assertEqual(leftovers, [], f"partially written state: {leftovers}")
 
     def test_fresh_session_cleans_old_state_and_tmp_files(self):
         """Internal documentation."""
@@ -268,7 +268,7 @@ class StatuslineScriptCase(unittest.TestCase):
         self.notifications(3)
         p = subprocess.run(["pgrep", "-P", "1", "-f", "fake-notify.sh"],
                            capture_output=True, text=True)
-        self.assertEqual(p.stdout.strip(), "", "остались подпроцессы-сироты доставки")
+        self.assertEqual(p.stdout.strip(), "", "orphan delivery subprocesses left")
 
 
 if __name__ == "__main__":

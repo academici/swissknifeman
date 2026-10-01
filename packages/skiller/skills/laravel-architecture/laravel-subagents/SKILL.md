@@ -31,10 +31,10 @@ Orchestrator (main Claude Code session) protocol with subagents on large Laravel
 1. **Decompose.** Split spec into subtasks by layer/domain; fix expected artifact for each. If skill `complex-task-orchestrator` is available, use its template; else minimum:
 
    ```text
-   Цель:
-   Инварианты (что нельзя сломать):
-   Подзадачи: 1) ... → артефакт
-   Зависимости между подзадачами:
+   Target:
+   Invariants (that cannot be broken):
+   Subtasks: 1) ... → artifact
+   Dependencies between subtasks:
    ```
 
 2. **Research → subagents.** Understanding existing structure, finding integration points, inventorying affected files — delegate to Explore agents (read-only). Return conclusions to main context, not contents of dozens of files.

@@ -20,9 +20,9 @@ RM_PATTERNS=(
 )
 
 block() {
-  echo "BLOCKED (daemon-safety): '$COMMAND' совпал с '$1'." >&2
-  echo "Это рушит общий демон, обслуживающий других агентов. Сначала убедись, что демон простаивает," >&2
-  echo "переиспользуй живой браузер или дождись очереди. Разовый обход: PERPLEXITY_DAEMON_GUARD=off." >&2
+  echo "BLOCKED (daemon-safety): '$COMMAND' matched '$1'." >&2
+  echo "This breaks the shared daemon serving other agents. First make sure the daemon is idle," >&2
+  echo "reuse the live browser or wait in line. One-time bypass: PERPLEXITY_DAEMON_GUARD=off." >&2
   exit 2
 }
 

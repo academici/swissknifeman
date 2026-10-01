@@ -175,7 +175,7 @@
     {
       "name": "frontend",
       "source": "./packages/skiller/skills/frontend",
-      "description": "Frontend core: общие фронт-скиллы (web design guidelines, document writer, file upload)",
+      "description": "Frontend core: general front skills (web design guidelines, document writer, file upload)",
       "category": "engineering",
       "tags": [
         "frontend",

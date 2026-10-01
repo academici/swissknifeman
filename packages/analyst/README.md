@@ -1,55 +1,55 @@
-# analyst — continuous learning экосистемы academici
+# analyst — continuous learning ecosystems academici
 
-Детерминированный (stdlib-only, **on-demand — без демона**) слой, который накапливает
-«выстраданные уроки» из потоков задач Claude Code сразу по всем проектам экосистемы и —
-**с человеком в гейте** — превращает их в переиспользуемое знание (память mAInd → скиллы).
-Не отдельный анализатор в каждом проекте, а ОДИН слой поверх многих пакетов и проектов.
+Deterministic (stdlib-only, **on-demand — without daemon**) layer that accumulates
+«hard-won lessons» from task threads Claude Code for all ecosystem projects at once and -
+**with a man at the gate** — turns them into reusable knowledge (memory mAInd → skills).
+Not a separate analyzer in each project, but ONE layer on top of many packages and projects.
 
-> Реализованный контур: **P1 (MVP)** — `digest` + lessons-store + human `review`/`promote`;
-> **P2** — cross-project агрегатор `scan`; **P3** — confidence-арифметика (Beta/decay) +
-> числовая state-machine `recompute` + mem0-таксономия; **P4** — `suggest` → ЧЕРНОВИК скилла
-> (`SKILL.ru.md` в staging, промоут — человек). Дальше по roadmap: `analyst-capture` + `observe.sh` (P5).
+> Implemented circuit: **P1 (MVP)** — `digest` + lessons-store + human `review`/`promote`;
+> **P2** — cross-project aggregator `scan`; **P3** — confidence-arithmetic (Beta/decay) +
+> numeric state-machine `recompute` + mem0-taxonomy; **P4** — `suggest` → DRAFT skill
+> (`SKILL.ru.md` in staging, promoter - person). Further on roadmap: `analyst-capture` + `observe.sh` (P5).
 >
-> 📖 Документация: [`docs/`](docs/) (VitePress — standalone + зонтичный агрегат).
+> 📖 Documentation: [`docs/`](docs/) (VitePress — standalone + umbrella unit).
 
-## Почему так (анти-collapse)
+## Why is this so (anti-collapse)
 
-Наивное «обучение-на-себе» вызывает *model collapse*. Доказанный антидот — **self-verification**
-+ **никогда не выбрасывать ground-truth** (человеко-подтверждённые якоря). Поэтому human-gate +
-провенанс + validate-before-promote — не осторожность, а достаточное условие против деградации.
+Naive «self-learning» calls *model collapse*. Proven antidote - **self-verification**
++ **never throw away ground-truth** (human-verified anchors). Therefore human-gate +
+provenance + validate-before-promote — is not caution, but a sufficient condition against degradation.
 
-## Поток данных (MVP)
+## Data flow (MVP)
 
 ```
-<project>/.claude/runs/<sid>.json          (run-report — пишет SessionEnd-хук harness)
-   │  analyst digest → детерминированное извлечение кандидатов (высокоточные сигналы)
+<project>/.claude/runs/<sid>.json          (run-report — writes SessionEnd-hook harness)
+   │  analyst digest → deterministic candidate extraction (high-precision signals)
    ▼
 <project>/.claude/analyst/lessons/{ephemeral,candidate,curated,deprecated}/<id>.json  (LOCAL)
-<project>/.claude/analyst/audit.ndjson     (append-only провенанс)
-   │  analyst review  → список + diff против активных (Jaccard, stdlib)
-   │  analyst promote <id>  → ЧЕЛОВЕК подтверждает → state++ → audit
-   ▼  (curated) → maind memory → всплывает на SessionStart (memory-digest-hook)
+<project>/.claude/analyst/audit.ndjson     (append-only provenance)
+   │  analyst review  → list + diff against active (Jaccard, stdlib)
+   │  analyst promote <id>  → MAN confirms → state++ → audit
+   ▼  (curated) → maind memory → pops up on SessionStart (memory-digest-hook)
 ```
 
-**Инвариант приватности:** сырьё (raw-транскрипт) — LOCAL-only; наружу идёт только
-абстрагированный урок (trigger+action+evidence). Секреты — только по ссылке, никогда значение.
+**Privacy invariant:** raw materials (raw-transcript) — LOCAL-only; goes out only
+abstract lesson (trigger+action+evidence). Secrets are by reference only, never by value.
 
-## Команды
+## Commands
 
 ```bash
-analyst digest    [--cwd | --session UUID]      # run-report → кандидаты в ephemeral/
+analyst digest    [--cwd | --session UUID]      # run-report → candidates for ephemeral/
 analyst review    [--state ephemeral|candidate|curated] [--json]
-analyst promote   <id> [--to candidate|curated] [--yes]   # human-gate; curated → память mAInd
-analyst deprecate <id>                          # soft-демоут (не удаляется — аудит)
-analyst doctor                                  # диагностика окружения
+analyst promote   <id> [--to candidate|curated] [--yes]   # human-gate; curated → memory mAInd
+analyst deprecate <id>                          # soft-demo (not deleted - audit)
+analyst doctor                                  # environment diagnostics
 analyst workflow-scan --output DIR --now ISO    # read-only workflow fleet evidence
 ```
 
-## Разработка
+## Development
 
 ```bash
-bash scripts/test.sh          # unittest (без сети и демонов)
-bash scripts/validate.sh      # py_compile + bash -n + JSON + обязательные файлы + тесты
+bash scripts/test.sh          # unittest (without network and daemons)
+bash scripts/validate.sh      # py_compile + bash -n + JSON + required files + tests
 ```
 
-stdlib-only; `Env(BaseEnv)` явно; atomic JSON; сообщения на русском. Конвенции — в `CLAUDE.md`.
+stdlib-only; `Env(BaseEnv)` explicit; atomic JSON; messages in Russian. Convention - in `CLAUDE.md`.

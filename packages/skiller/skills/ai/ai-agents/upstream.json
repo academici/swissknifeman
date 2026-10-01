@@ -14,7 +14,7 @@
       "fetched_at": "2026-06-25"
     }
   ],
-  "notes": "Форк get-zeked/ai-agent-super-skill: SKILL.md — тонкая обёртка-навигатор, полный апстрим зеркалится в references/source.md (pristine). Апстрим не накатывать автоматом — на дрейфе ручной перенос (см. docs/guide/upstream-sync.md).",
+  "notes": "Fork get-zeked/ai-agent-super-skill: SKILL.md — thin navigator wrapper, full upstream is mirrored in references/source.md (pristine). Do not roll upstream automatically - manual transfer during drift (see docs/guide/upstream-sync.md).",
   "audit": {
     "verdict": "clean",
     "at": "2026-08-01",

@@ -1,12 +1,12 @@
-"""P3.2: validate.sh description-гейт — error>450/warn>300 +
-burn-down-рэтчет (scripts/desc-burndown.txt).
+"""P3.2: validate.sh description-gate — error>450/warn>300 +
+burn-down-ratchet (scripts/desc-burndown.txt).
 
-scripts/validate.sh — bash-обёртка вокруг python-heredoc'а (см. test_validate_upstream_body_path.py
-для обоснования: не lib/skiller-модуль, честно тестируется только реальным запуском).
-REPO_ROOT резолвится от расположения скрипта → копируем validate.sh + desc-burndown.txt рядом с
-МИНИМАЛЬНЫМ синтетическим skills/. Проверяем не общий exit-код (он ожидаемо ненулевой из-за
-недостающего окружения реестра — buckets.json/skills.json и т.п.), а КОНКРЕТНЫЕ строки про
-description-гейт в stdout."""
+scripts/validate.sh — bash-wrap around python-heredoc'a (see test_validate_upstream_body_path.py
+for justification: not lib/skiller-module, honestly tested only by real launch).
+REPO_ROOT resolves from the script location → copy validate.sh + desc-burndown.txt next to
+MINIMUM synthetic skills/. Checking for non-general exit-code (it is expectedly non-zero due to
+missing registry environment - buckets.json/skills.json etc.), and SPECIFIC lines about
+description-gate in stdout."""
 import subprocess
 import tempfile
 import unittest
@@ -15,15 +15,15 @@ from pathlib import Path
 PKG_ROOT = Path(__file__).resolve().parents[1]
 VALIDATE_SCRIPT = PKG_ROOT / "scripts" / "validate.sh"
 
-# Триггерная фраза-префикс (P3.5 description-триггер-гейт) — держит эти фикстуры вне
-# scope нового гейта, чтобы длина оставалась единственной проверяемой осью здесь
-# (см. test_desc_trigger_gate.py — гейт триггера тестируется отдельно).
+# Trigger prefix phrase (P3.5 description-trigger gate) — keeps these fixtures out
+# scope new gate so that length remains the only axis checked here
+# (see test_desc_trigger_gate.py — trigger gate is tested separately).
 _TRIGGER_PREFIX = "Use when testing: "
-# 451 симв — единственный симв сверх DESC_ERROR_MAX.
+# 451 character - the only character above DESC_ERROR_MAX.
 DESC_451 = _TRIGGER_PREFIX + "x" * (451 - len(_TRIGGER_PREFIX))
-# 320 симв — между DESC_WARN_MAX(300) и DESC_ERROR_MAX(450).
+# 320 char - between DESC_WARN_MAX(300) and DESC_ERROR_MAX(450).
 DESC_320 = _TRIGGER_PREFIX + "y" * (320 - len(_TRIGGER_PREFIX))
-# 250 симв — легальная норма (<= DESC_WARN_MAX).
+# 250 symbol - legal norm (<= DESC_WARN_MAX).
 DESC_250 = _TRIGGER_PREFIX + "z" * (250 - len(_TRIGGER_PREFIX))
 
 
@@ -62,7 +62,7 @@ class DescBurndownGateCase(unittest.TestCase):
         self._write_skill("over-450", DESC_451)
         self._write_burndown(["testbucket/over-450"])
         result = self._run()
-        self.assertIn("hard-потолок", result.stdout)
+        self.assertIn("hard-ceiling", result.stdout)
         self.assertNotEqual(result.returncode, 0)
 
     def test_between_300_and_450_in_burndown_is_warn_only(self):
@@ -70,22 +70,22 @@ class DescBurndownGateCase(unittest.TestCase):
         self._write_burndown(["testbucket/legal-debt"])
         result = self._run()
         self.assertIn("WARN: skills/testbucket/legal-debt/SKILL.md", result.stdout)
-        self.assertIn("унаследованный долг", result.stdout)
+        self.assertIn("inherited debt", result.stdout)
         self.assertNotIn("ERROR: skills/testbucket/legal-debt/SKILL.md", result.stdout)
 
     def test_between_300_and_450_not_in_burndown_is_error(self):
         self._write_skill("new-debt", DESC_320)
-        self._write_burndown(["# empty — новый долг не легализован"])
+        self._write_burndown(["# empty — new debt is not legalized"])
         result = self._run()
         self.assertIn("ERROR: skills/testbucket/new-debt/SKILL.md", result.stdout)
-        self.assertIn("новый долг запрещён", result.stdout)
+        self.assertIn("new debt prohibited", result.stdout)
 
     def test_stale_entry_skill_missing_warns(self):
         self._write_skill("still-here", DESC_250)
         self._write_burndown(["testbucket/ghost-skill"])
         result = self._run()
         self.assertIn(
-            "scripts/desc-burndown.txt: 'testbucket/ghost-skill' — протухшая запись",
+            "scripts/desc-burndown.txt: 'testbucket/ghost-skill' — rotten recording",
             result.stdout)
 
     def test_stale_entry_already_short_warns(self):
@@ -93,7 +93,7 @@ class DescBurndownGateCase(unittest.TestCase):
         self._write_burndown(["testbucket/already-short"])
         result = self._run()
         self.assertIn(
-            "scripts/desc-burndown.txt: 'testbucket/already-short' — протухшая запись",
+            "scripts/desc-burndown.txt: 'testbucket/already-short' — rotten recording",
             result.stdout)
 
     def test_at_or_under_300_no_desc_warning(self):

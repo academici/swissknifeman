@@ -46,13 +46,13 @@ def resolve(*, adapters: Iterable[Adapter] = (
     """Return exactly one applicable provider adapter, or reject the write."""
     resolved = [context for adapter in adapters if (context := adapter()) is not None]
     if not resolved:
-        raise SessionContextError("session context не найден: нет применимого provider adapter")
+        raise SessionContextError("session context not found: no applicable provider adapter")
     if len(resolved) != 1:
-        raise SessionContextError("session context неоднозначен: требуется ровно один provider adapter")
+        raise SessionContextError("session context is ambiguous: exactly one is required provider adapter")
     context = resolved[0]
     if not all(isinstance(value, str) and value.strip()
                for value in (context.provider, context.session_id, context.source)):
-        raise SessionContextError("session context невалиден: provider/session_id/source обязательны")
+        raise SessionContextError("session context is invalid: provider/session_id/source are required")
     return context
 
 

@@ -1,8 +1,8 @@
 ---
-description: Отчёт skiller по текущему проекту — какие скиллы/каналы подключены (read-only).
+description: Report skiller for the current project - what skills/channels connected (read-only).
 allowed-tools: Bash(skiller:*)
 ---
-## Статус проекта (skiller)
+## Project status (skiller)
 !`skiller status`
 
-Резюмируй: канал (connect / vendor), подключённые бакеты/скиллы, карта `skills-lock.json`. Изменить набор — `/skm:skills`. Лаунчер `skiller` (нет в PATH → `./install.sh`).
+Summarize: channel (connect / vendor), connected buckets/skills, map `skills-lock.json`. Change set - `/skm:skills`. Launcher `skiller` (not in PATH → `./install.sh`).

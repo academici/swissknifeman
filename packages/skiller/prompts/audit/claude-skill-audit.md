@@ -1,34 +1,34 @@
-# Claude: аудит одного скилла
+# Claude: audit of one skill
 
-Ты аудитор реестра AI-скиллов swissknifeman. Проверь приложенный `SKILL.md`.
+You are a registry auditor AI-skills swissknifeman. Check the attached `SKILL.md`.
 
-## Чеклист
+## Checklist
 
-### Frontmatter (схема реестра)
-- [ ] `name` совпадает с именем каталога
-- [ ] `bucket` существует в `skills/` и совпадает с путём
+### Frontmatter (registry schema)
+- [ ] `name` matches the directory name
+- [ ] `bucket` exists in `skills/` and matches the path
 - [ ] `version` — semver (`X.Y.Z`)
 - [ ] `risk` ∈ {read, draft, write, external}
-- [ ] `description` — конкретное, по нему агент решает, когда применять (не «общие слова»)
-- [ ] `tags` не пустой
-- [ ] `requires` / `produces_for` — все скиллы существуют физически
-- [ ] `snippets` — все перечисленные файлы есть на диске
+- [ ] `description` — specific, the agent uses it to decide when to apply (not «common words»)
+- [ ] `tags` is not empty
+- [ ] `requires` / `produces_for` — all skills exist physically
+- [ ] `snippets` — all listed files are on disk
 - [ ] `adapters` ⊆ {claude, cursor, fable}
-- [ ] для внешнего скилла — есть `upstream.json`
+- [ ] for external skill - yes `upstream.json`
 
-### Контент
-- [ ] Есть секция «Контекст» (когда и зачем применять)
-- [ ] Нет захардкоженных имён моделей и имён конкретных проектов/пакетов в теле
-- [ ] Нет нерабочих ссылок (snippets/внешние URL)
-- [ ] Тело лаконично (ориентир — ≤150 строк; объёмные примеры → в `snippets/`)
-- [ ] Нет дублирования других скиллов (если пересекается — расширять существующий, не плодить)
+### Content
+- [ ] There is a section «Context» (when and why to use)
+- [ ] No hardcoded model names or specific project names/packets in the body
+- [ ] No broken links (snippets/external URL)
+- [ ] The body is laconic (landmark - ≤150 lines; voluminous examples → in `snippets/`)
+- [ ] No duplication of other skills (if it intersects, expand the existing one, do not create more)
 
-### Связи и бюджет
-- [ ] `requires` отражают реальные зависимости (нет скрытых, упомянутых только в тексте)
-- [ ] Нет циклов в `requires`
-- [ ] `description` не раздут: помни — он резидентен в КАЖДОМ запросе (ярус-0 ⊕ always)
+### Communications and budget
+- [ ] `requires` reflect real dependencies (no hidden, mentioned in text only)
+- [ ] No loops in `requires`
+- [ ] `description` is not bloated: remember - it is resident in EVERY request (tier-0 ⊕ always)
 
-## Формат ответа
+## Response format
 
 ```
 SKILL: <bucket>/<name>

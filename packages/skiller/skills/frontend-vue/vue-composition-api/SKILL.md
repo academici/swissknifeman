@@ -36,7 +36,7 @@ export function useFetch(url) {
     isPending.value = true; data.value = null; error.value = null
     try {
       const res = await fetch(unref(url))
-      if (!res.ok) throw new Error('Ошибка загрузки')
+      if (!res.ok) throw new Error('Loading error')
       data.value = await res.json()
     } catch (e) { error.value = e.message } finally { isPending.value = false }
   }

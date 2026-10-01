@@ -1,18 +1,16 @@
-# Шаблон отчёта закрытия фазы — `plans/<PLAN-ID>/closure/<Pn>.json` (схема v1)
+# Phase closure report template — `plans/<PLAN-ID>/closure/<Pn>.json` (schema v1)
 
-Машиночитаемая judgement-evidence сдача ФАЗЫ рядом с generated layout-v2
-`phases/<Pn>/<Pn>.closed.md` (не вместо него). Включается
-opt-in полем `## 0. Meta` плана: `Closure Protocol | v1` — единственное легальное значение.
-Плана без поля правило не касается ни одной диагностикой; уже закрытые записи не
-переписываются (SKILL §8, «Отчёт закрытия фазы»).
+Machine-readable phase evidence stored beside, not instead of, the generated layout-v2
+`phases/<Pn>/<Pn>.closed.md`. Enable it with `Closure Protocol | v1` in `## 0. Meta`.
+Plans without this field are unaffected, and existing closed records are never rewritten.
 
-Пишет phase-closing lifecycle текущего `plan-run` либо явно вызванный standalone
-`plan-close <ID> Pn` из полей items/state (пересказ запрещён).
-Читают: `plan_lint` (схема + сверка с `## Phase Status` и Status Board) и `plan-audit <ID> Pn`
-(проверка актуальности evidence bindings; повтор только invalid/changed delta и live boundary,
-детект правки ТЗ фазы после закрытия по `inputs_sha256`).
+Writes phase-closing lifecycle of the current `plan-run` or explicitly called standalone
+`plan-close <ID> Pn` from the items/state fields (retelling is prohibited).
+Read: `plan_lint` (scheme + reconciliation with `## Phase Status` and Status Board) and `plan-audit <ID> Pn`
+(checking the relevance of evidence bindings; repeating only invalid/changed delta and live boundary,
+detection of editing phase specifications after closing by `inputs_sha256`).
 
-## Файл целиком
+## Entire file
 
 ```json
 {
@@ -22,58 +20,58 @@ opt-in полем `## 0. Meta` плана: `Closure Protocol | v1` — един�
   "closed_at": "2026-07-30",
   "closed_by": {"command": "plan-run", "actor": "implementation/medium"},
   "phase_status": "🟢 Done",
-  "git": {"head_sha": "<40 hex>", "branch": "<ветка>", "dirty": false},
+  "git": {"head_sha": "<40 hex>", "branch": "<branch>", "dirty": false},
   "inputs_sha256": {"plan.md": "<64 hex>", "phases/P8.md": "<64 hex>"},
   "items": [
     {"id": "P8.7", "status": "🟢 Done", "evidence_class": "real",
-     "evidence": "PYTHONPATH=. python3 -m unittest core.tests.test_io -v — 9 passed (на <sha>)"},
+     "evidence": "PYTHONPATH=. python3 -m unittest core.tests.test_io -v - 9 passed (on <sha>)"},
     {"id": "P8.9", "status": "🟠 Done with deviations", "evidence_class": "synthetic",
-     "evidence": "прогон на одной фикстуре tests/fixtures/eval-one-case.json — 1 кейс, не корпус"}
+     "evidence": "one fixture run: tests/fixtures/eval-one-case.json — 1 case, not a corpus"}
   ],
   "gates": [
     {"id": "validate.sh:task", "status": "PASS", "evidence_class": "real",
-     "evidence": "bash packages/task/scripts/validate.sh — exit 0 (на <sha>)"},
+     "evidence": "bash packages/task/scripts/validate.sh - exit 0 (on <sha>)"},
     {"id": "fleet-adoption", "status": "PENDING", "evidence_class": "baseline_pending",
-     "evidence": "ни один живой план кроме ECO-OPT не включил Closure Protocol v1"}
+     "evidence": "no live plan except ECO-OPT enabled Closure Protocol v1"}
   ],
   "metrics": [
     {"name": "lint_new_from_closure", "value": "0", "label": "real"},
     {"name": "docs_impact_blocked_changes", "value": "—", "label": "baseline_pending"}
   ],
-  "limitations": ["матрица возможностей проверена на 2 из 9 поверхностей"],
+  "limitations": ["capability matrix tested on 2 of 9 surfaces"],
   "external_side_effects": []
 }
 ```
 
-## Правила заполнения
+## Filling rules
 
-| Поле | Правило |
+| Field | Rule |
 |:--|:--|
-| `schema_version` | ровно `1` (число). Иных версий схемы не существует |
-| `plan` / `phase` | совпадают с фактическим PLAN-ID и `Pn` — иначе ERROR линтера |
-| `closed_at` | ISO-дата закрытия фазы (та же, что `Last Updated` в Meta) |
-| `closed_by` | `command` — фактический phase-closing lifecycle (`plan-run` или standalone `plan-close`; legacy `plan-exec` stays readable); `actor` — её neutral route `<model class>/<effort>` |
-| `phase_status` | БАЙТ-В-БАЙТ строка статуса фазы из `## 4. Phase Index & Status Board` |
-| `git` | `head_sha` (40 hex, якорь чисел §8), `branch`, `dirty` (bool — было ли дерево грязным) |
-| `inputs_sha256` | sha256 `plan.md` и `phases/<Pn>.md` на момент закрытия; потребитель — `plan-audit` |
-| `items[]` | ПО СТРОКЕ на каждый item фазы: `id`/`status` — из `## Phase Status` без расхождений |
-| `gates[]` | гейты сдачи (`validate.sh:<пакет>`, CI-джоба, полевой прогон): `id`/`status`/класс/доказательство |
-| `metrics[]` | числа сдачи: `name`/`value` (СТРОКА — не float)/`label` (тот же enum классов) |
-| `limitations[]` | честные ограничения сдачи; нечего сказать — пустой список, а не отсутствие ключа |
-| `external_side_effects[]` | что тронуто ВНЕ репозитория (чужие деревья, машинное состояние, флот) |
+| `schema_version` | exactly `1` (number). There are no other versions of the scheme |
+| `plan` / `phase` | match the actual PLAN-ID and `Pn` - otherwise ERROR linter |
+| `closed_at` | Phase closing ISO date (same as `Last Updated` in Meta) |
+| `closed_by` | `command` - actual phase-closing lifecycle (`plan-run` or standalone `plan-close`; legacy `plan-exec` stays readable); `actor` — its neutral route `<model class>/<effort>` |
+| `phase_status` | Exact phase status from `## 4. Phase Index & Status Board` |
+| `git` | `head_sha` (40 hex, number anchor §8), `branch`, `dirty` (bool - whether the tree was dirty) |
+| `inputs_sha256` | sha256 `plan.md` and `phases/<Pn>.md` at the time of closing; consumer - `plan-audit` |
+| `items[]` | One entry per phase item; `id` and `status` must match `## Phase Status` |
+| `gates[]` | submission gates (`validate.sh:<package>`, CI-job, field run): `id`/`status`/class/proof |
+| `metrics[]` | change numbers: `name`/`value` (STRING - not float)/`label` (same enum classes) |
+| `limitations[]` | fair surrender limits; nothing to say - an empty list, not the absence of a key |
+| `external_side_effects[]` | what is touched OUTSIDE the repository (foreign trees, machine state, fleet) |
 
-**Отсутствие ключа = ошибка схемы, а не «нет данных».** «Нет числа» выражается ЗНАЧЕНИЕМ:
-запись с `baseline_pending` и причиной — ради этого приём и взят.
+**Missing key = schema error, not "no data".** "No number" is expressed by VALUE:
+record with `baseline_pending` and a reason - this is why the technique was taken.
 
-## Класс свидетельства (`evidence_class`, у метрик — `label`)
+## Evidence class (`evidence_class`, for metrics - `label`)
 
-| Значение | Когда |
+| Meaning | When |
 |:--|:--|
-| `real` | прогон на ЗАКОММИЧЕННОМ дереве; `evidence` несёт команду и её вывод/число (пустое доказательство при `real` = ERROR) |
-| `synthetic` | фикстура / один кейс / симуляция — `evidence` ОБЯЗАН это называть словами |
-| `baseline_pending` | числа нет; `evidence` называет ПРИЧИНУ (нет baseline, гейт не на чем прогнать, ждём полевого прогона) |
+| `real` | run on a COMMITTED tree; `evidence` carries the command and its output/number (empty evidence when `real` = ERROR) |
+| `synthetic` | fixture / one case / simulation - `evidence` MUST call it words |
+| `baseline_pending` | no number; `evidence` names the REASON (no baseline, nothing to run the gate on, we are waiting for a field run) |
 
-Это ось «на каких ДАННЫХ получен результат». Она НЕ заменяет закрытый перечень классов
-ДОКАЗАТЕЛЬСТВА `recomputed` / `cross-checked` / `pinned-not-recomputable` / `unknown`
-(`source-evidence-verification-v1.md`, SKILL §13 — «выводимо ли утверждение из коммиченного
-bundle'а»): оба словаря действуют одновременно, ни один не переопределяет другой.
+This is the axis “on what DATA the result was obtained.” It does NOT replace a closed list of classes
+EVIDENCE `recomputed` / `cross-checked` / `pinned-not-recomputable` / `unknown`
+(`source-evidence-verification-v1.md`, SKILL §13 - “is the statement deducible from the commercial
+bundle"): both dictionaries act simultaneously, neither one overrides the other.

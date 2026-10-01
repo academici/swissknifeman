@@ -1,6 +1,6 @@
 {
   "name": "polyglot-node-php-flutter",
-  "description": "Полиглот-стек Node + PHP + Flutter/мобайл: общая инженерия + PHP-бэкенд + фронтенд (Vue) + мост фронт↔бэк + мобайл. Бакетов node/flutter в реестре нет — берём существующие (frontend для Node-фронта, mobile для Flutter).",
+  "description": "Polyglot stack Node + PHP + Flutter/mobile: general engineering + PHP-backend + frontend (Vue) + bridge front↔back + mobile. Baketov node/flutter is not in the registry - take the existing ones (frontend for Node-front, mobile for Flutter).",
   "buckets": [
     "architect",
     "ai",

@@ -1,120 +1,120 @@
-# Чеклист интеграции в проект
+# Project integration checklist
 
-При интеграции swissknifeman в проект ты выбираешь, **что хочешь из максимального
-функционала**. Есть два пути: интерактивный **визард** (`skiller integrate`),
-который проходит чеклист и применяет выбранное, и **ручной** — те же действия
-отдельными командами.
+During integration swissknifeman you choose for the project, **whatever you want from the maximum
+functionality**. There are two ways: interactive **wizard** (`skiller integrate`),
+which goes through the checklist and applies the selection, and **manual** — same actions
+with separate commands.
 
 ```bash
 cd ~/projects/my-app
-skiller integrate            # интерактивно (меню по каждому блоку)
-skiller integrate --dry-run  # показать план, ничего не записывая
-skiller integrate --yes --bundle recommended   # без вопросов, готовый набор
+skiller integrate            # interactive (menu for each block)
+skiller integrate --dry-run  # show the plan without writing anything down
+skiller integrate --yes --bundle recommended   # no questions asked, ready set
 ```
 
-## Уровни (бандлы)
+## Levels (bundles)
 
-Быстрый старт без перебора каждого пункта — `--bundle`:
+Quick start without going through each item - `--bundle`:
 
-| Бандл | Скиллы | Permissions | MCP | auto-approve | Память | output-style | Hub |
+| Bundle | Skills | Permissions | MCP | auto-approve | Memory | output-style | Hub |
 |---|---|---|---|---|---|---|---|
 | `minimal` | connect | — | — | — | — | lean | — |
-| `recommended` (дефолт для `--yes`) | connect | autodetect | context7¹ | strict | — | lean | да |
-| `full` | connect | autodetect | context7¹ | strict | brain `core`, federation | lean | да |
-| `custom` (дефолт интерактивно) | спрашивает каждый блок | | | | | | |
+| `recommended` (default for `--yes`) | connect | autodetect | context7¹ | strict | — | lean | yes |
+| `full` | connect | autodetect | context7¹ | strict | brain `core`, federation | lean | yes |
+| `custom` (default interactive) | asks each block | | | | | | |
 
-`output-style` — единственный пункт, включённый **во всех** бандлах (даже `minimal`):
-токен-экономия терсе-вывода нужна проекту независимо от объёма остальной автоматизации.
+`output-style` — the only item included **in all** bundles (even `minimal`):
+token-saving terse-output is needed by the project regardless of the amount of other automation.
 
-¹ В средах разработки (всё, кроме obsidian-vault).
+¹ In development environments (everything except obsidian-vault).
 
-## Чеклист (что можно включить)
+## Checklist (what can be included)
 
-Каждый пункт — что даёт, как включает визард, ручной эквивалент.
+Each item gives, as the wizard turns on, a manual equivalent.
 
-### 1. Скиллы (обязательный минимум)
-Раздача скиллов реестра в проект.
-- **connect** — Claude Code через plugin marketplace (правит `.claude/settings.local.json`:
-  `extraKnownMarketplaces` + `enabledPlugins`). Версия = git SHA реестра.
-- **vendor** — Cursor и другие агенты (копирует скиллы в `.cursor/skills` / `.ai/skills`).
-- Профиль/бакеты — autodetect (`.obsidian/` → vault, `artisan`+`composer.json` → laravel,
-  `composer.json` → php-package, иначе standalone), переопределяется флагами.
-- **По умолчанию в КАЖДЫЙ проект** (connect) добавляются, помимо профиля:
-  - курируемый плагин `core` (лёгкое токен-экономное ядро CORE-скиллов; `--no-core` отключает);
-  - командный плагин **`task`** — интент-команды `/task:design|dev|review|research|fix` (пинят
-    модель/effort под задачу; их предлагает intent-router). Отключить точечно —
-    `enabledPlugins["task@swissknifeman"]=false`. Наличие проверяет `maind audit` (дименсия `core`).
-- Ручками: `skiller connect` / `skiller vendor --agent cursor`.
+### 1. Skills (mandatory minimum)
+Distributing registry skills to the project.
+- **connect** — Claude Code via plugin marketplace (rules `.claude/settings.local.json`:
+  `extraKnownMarketplaces` + `enabledPlugins`). Version = git SHA registry.
+- **vendor** — Cursor and other agents (copies skills to `.cursor/skills` / `.ai/skills`).
+- Profile/buckets - autodetect (`.obsidian/` → vault, `artisan`+`composer.json` → laravel,
+  `composer.json` → php-package, otherwise standalone), is overridden by flags.
+- **By default in EVERY project** (connect) are added, in addition to the profile:
+  - curated plugin `core` (lightweight token-saving core CORE-skills; `--no-core` disables);
+  - command plugin **`task`** — intent commands `/task:design|dev|review|research|fix` (kick
+    model/effort for the task; offers them intent-router). Disable point by point -
+    `enabledPlugins["task@swissknifeman"]=false`. Availability checks `maind audit` (dimension `core`).
+- Handles: `skiller connect` / `skiller vendor --agent cursor`.
 
-### 2. Permissions-пресеты
-Готовые `allow/ask/deny` под стек — меньше permission-промптов.
-- Autodetect по маркерам (base + laravel/php-package/node/python/docker).
-- Ручками: `./scripts/apply-permissions.sh --target <проект>`.
-- Подробнее: [Permissions](/harness/configs/claude-permissions).
+### 2. Permissions-presets
+Ready `allow/ask/deny` under the stack - less permission-prompts.
+- Autodetect by markers (base + laravel/php-package/node/python/docker).
+- Handles: `./scripts/apply-permissions.sh --target <project>`.
+- More details: [Permissions](/harness/configs/claude-permissions).
 
-### 3. MCP-серверы (среды разработки)
-Пресеты `.mcp.json` под рабочие сценарии — вливаются merge-only в
-`<проект>/.mcp.json` (`mcpServers`, чужие серверы целы, бэкап `*.bak`).
-- Сейчас один: **context7** (remote HTTP `mcp.context7.com/mcp`) — up-to-date
-  документация библиотек прямо в контексте агента.
-- Гейт «среда разработки»: ставится во всё, **кроме** obsidian-vault. `recommended`/
-  `full` включают по умолчанию, `minimal` — нет, `custom` — спрашивает.
-- Пресеты серверов — `configs/claude-code/mcp/<имя>.json`.
+### 3. MCP-servers (development environment)
+Presets `.mcp.json` for working scenarios - poured in merge-only in
+`<project>/.mcp.json` (`mcpServers`, other people's servers are intact, backup `*.bak`).
+- Now there is one: **context7** (remote HTTP `mcp.context7.com/mcp`) — up-to-date
+  documentation of libraries directly in the agent context.
+- Gate «development environment»: is placed in everything **except** obsidian-vault. `recommended`/
+  `full` are enabled by default, `minimal` — no, `custom` — asks.
+- Server presets - `configs/claude-code/mcp/<name>.json`.
 
 ### 4. auto-approve (per-project)
-PreToolUse-хук, разбирающий **всю** командную строку (компаунд-команды), режимы
+PreToolUse-hook that parses **all** command line (compound commands), modes
 `strict|permissive|bypass|off`.
-- Визард пишет `.claude/auto-approve.env.ini` (MODE) + регистрирует хук на
-  `PreToolUse` (Bash + ExitPlanMode) в `.claude/settings.json`.
-- Файлы хука ставятся один раз на машину: `apply-permissions.sh --global`.
-- Подробнее: [конфиги Claude Code](https://github.com/academici/swissknifeman/tree/main/configs/claude-code#авто-апрув-команд-hooks).
+- Wizard writes `.claude/auto-approve.env.ini` (MODE) + registers a hook on
+  `PreToolUse` (Bash + ExitPlanMode) in `.claude/settings.json`.
+- Hook files are installed once per machine: `apply-permissions.sh --global`.
+- More details: [configs Claude Code](https://github.com/academici/swissknifeman/tree/main/configs/claude-code#auto-approve-command-hooks).
 
-### 5. Память (членство в общем «мозге»)
-Проект делит факты с другими участниками своей группы (brain); режимы
+### 5. Memory (general membership «brain»)
+The project shares facts with other members of its group (brain); modes
 `file|federation|agentmemory|off`.
-- Визард пишет `.swissknife.json:memory_brain` + `.claude/memory.env.ini` (MODE).
-- Состав участников группы — `~/.claude/hooks/memory/config.json` (`brains.<имя>.members`).
-- Файлы хука — `apply-permissions.sh --global`. Скилл-обвязка: `system/shared-memory`.
+- Wizard writes `.swissknife.json:memory_brain` + `.claude/memory.env.ini` (MODE).
+- Group members - `~/.claude/hooks/memory/config.json` (`brains.<name>.members`).
+- Hook files - `apply-permissions.sh --global`. Skill harness: `system/shared-memory`.
 
-### 6. output-style (терсе-голос агента)
-Токен-экономия: сжимает вывод агента до выжимки+кода (`lean`), инженерные правила не режет.
-- Визард зовёт `harness hooks --output-style lean` — копирует пресет в
-  `.claude/output-styles/lean.md` + ставит `outputStyle` в `.claude/settings.local.json`.
-- Включён по умолчанию **во всех** бандлах (в т.ч. `minimal`); `custom` — спрашивает.
-- Уже подключённые проекты (созданные до этого пункта) докатывает `maind sync --all --only
-  output-style`; опт-аут — `project.output_style: "off"` в `config.json` (maind).
-- Активируется после `/clear` или новой сессии Claude Code.
+### 6. output-style (agent's terse voice)
+Token saving: compresses agent output to a squeeze+code (`lean`), engineering rules do not cut it.
+- The Wizard is calling `harness hooks --output-style lean` — copies the preset to
+  `.claude/output-styles/lean.md` + puts `outputStyle` in `.claude/settings.local.json`.
+- Enabled by default **in all** bundles (incl. `minimal`); `custom` — asks.
+- Already connected projects (created before this point) rolls in `maind sync --all --only
+  output-style`; opt-out — `project.output_style: "off"` in `config.json` (maind).
+- Activates after `/clear` or new session Claude Code.
 
-### 7. Hub (индекс скиллов)
-Managed-блок в `CLAUDE.md` (или `.ai/guidelines/swissknifeman-hub.md` при Boost) —
-агент видит, какие скиллы подключены.
-- Визард включает `--hub` у connect/vendor.
-- Ручками: `./scripts/generate-hub.sh --target <проект>`.
+### 7. Hub (skill index)
+Managed-block in `CLAUDE.md` (or `.ai/guidelines/swissknifeman-hub.md` when Boost) —
+agent sees which skills are connected.
+- Wizard includes `--hub` y connect/vendor.
+- Handles: `./scripts/generate-hub.sh --target <project>`.
 
-### 8. Brain docs-sync (со стороны волта)
-Двусторонний синк `docs/`/`docs-public` между проектом и Obsidian-волтом Brain.
-- **Не автоматизируется из проекта** — настраивается во волте: во frontmatter
-  заметки проекта добавь `repo: <путь к проекту>`, затем `brain status/sync`.
-- Визард печатает нужный сниппет.
+### 8. Brain docs-sync (from the volt side)
+Two-way sync `docs/`/`docs-public` between the project and Obsidian-volt Brain.
+- **Not automated from the project** — is configured in Volt: in frontmatter
+  project notes add `repo: <project path>`, then `brain status/sync`.
+- The wizard prints the required snippet.
 
-## Пререквизиты (один раз на машину)
+## Prerequisites (once per machine)
 
-Визард их проверяет и предлагает выполнить:
-- **Топология** — `skiller topology init` (`~/.swissknifeman/topology.json`);
-  от неё зависят память и координатор (резолв узлов/участников).
-- **Файлы хуков** — `./scripts/apply-permissions.sh --global` ставит
-  `~/.claude/hooks/{notify,auto-approve,memory}` (notify/лог активны сразу,
-  auto-approve/memory включаются по проекту).
+The wizard checks them and suggests executing:
+- **Topology** — `skiller topology init` (`~/.swissknifeman/topology.json`);
+  memory and coordinator depend on it (resolve nodes/members).
+- **Hook files** — `./scripts/apply-permissions.sh --global` puts
+  `~/.claude/hooks/{notify,auto-approve,memory}` (notify/logs are active immediately,
+  auto-approve/memory are included by design).
 
-## Безопасность визарда
+## Wizard Security
 
-- `--dry-run` — показывает весь план, **ничего не пишет**.
-- Все правки **merge-only**: чужие ключи в `.claude/settings*.json` и `.swissknife.json`
-  не затираются, перед записью — бэкап `*.bak`.
-- Машинные пререквизиты (`--global`, `topology init`) — только с подтверждением.
-- Идемпотентно: повторный прогон не плодит дубли хуков/правил.
+- `--dry-run` — shows the entire plan, **does not write anything**.
+- All edits **merge-only**: foreign keys in `.claude/settings*.json` and `.swissknife.json`
+  are not overwritten, backup before recording `*.bak`.
+- Machine prerequisites (`--global`, `topology init`) — with confirmation only.
+- Idempotent: repeated execution does not produce duplicate hooks/rules.
 
-## См. также
-- [Установка скиллов](./installation) — детали connect/vendor.
-- [CLI swissknifeman](./cli) — все команды.
-- [Профили и автодетект](./profiles).
+## See also
+- [Installing skills](./installation) — details connect/vendor.
+- [CLI swissknifeman](./cli) — all commands.
+- [Profiles and auto-detection](./profiles).

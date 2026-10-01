@@ -1,8 +1,8 @@
 // Source: anonymized production Laravel project
-// Админская сборка (Filament-тема). Полностью изолирована от основной:
-// свой вход, свой buildDirectory (public/filament), свой hotfile (public/filament.hot),
-// свой tailwind-конфиг с пресетом Filament.
-// Запуск: vite --config vite.admin.config.js
+// Admin build (Filament-topic). Completely isolated from the main one:
+// your entrance, your buildDirectory (public/filament), yours hotfile (public/filament.hot),
+// yours tailwind-config with preset Filament.
+// Launch: vite --config vite.admin.config.js
 
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
@@ -19,13 +19,13 @@ export default defineConfig({
     },
     plugins: [
         laravel({
-            // Критично: без отдельного hotFile сборки перетирают public/hot друг друга.
+            // Critical: without separate hotFile assemblies are frayed public/hot each other.
             hotFile: 'public/filament.hot',
             buildDirectory: 'filament',
             input: laravelAdminInput,
         }),
         tailwindcss({
-            // Явный конфиг с пресетом Filament — не смешивать с темой приложения.
+            // Explicit config with preset Filament — should not be mixed with the application theme.
             config: './tailwind-admin.config.js',
         }),
     ],

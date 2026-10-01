@@ -21,10 +21,10 @@ def _request(url, *, method, data=None, headers=None, timeout):
             return resp.read().decode("utf-8")
     except urllib.error.HTTPError as e:
         if e.code == 401:
-            raise HTTPUnauthorizedError(f"HTTP 401 от {url}") from e
-        raise RuntimeError(f"HTTP {e.code} от {url}") from e
+            raise HTTPUnauthorizedError(f"HTTP 401 from {url}") from e
+        raise RuntimeError(f"HTTP {e.code} from {url}") from e
     except (urllib.error.URLError, OSError) as e:
-        raise RuntimeError(f"нет связи с {url}: {getattr(e, 'reason', e)}") from e
+        raise RuntimeError(f"no connection with {url}: {getattr(e, 'reason', e)}") from e
 
 
 def http_get_json(url: str, *, timeout: float = 5, headers=None):

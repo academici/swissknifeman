@@ -1,13 +1,13 @@
 {
   "skill": "verify-claims",
   "should_trigger": [
-    "ещё актуальна библиотека X или устарела?",
-    "какой сейчас стандартный способ делать Y?",
-    "этот пакет ещё поддерживается и какой версии ставить?"
+    "the library is still relevant X or outdated?",
+    "what is the standard way to do now Y?",
+    "is this package still supported and which version should I install?"
   ],
   "should_not": [
-    "поправь проверку на null в функции foo()",
-    "переименуй переменную data в payload",
-    "какой у нас класс отвечает за биллинг (по коду репозитория)?"
+    "correct the check for null in function foo()",
+    "rename the variable data in payload",
+    "what class is responsible for billing? (by repository code)?"
   ]
 }

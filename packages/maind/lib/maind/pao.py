@@ -47,8 +47,8 @@ def status(project, path):
     return "installed" if _installed(path) else "missing"
 
 
-_SKIP_DETAIL = {"n-a": "не PHP-проект", "opt-out": "opt-out зафиксирован (pao_opt_out)",
-                "php-too-old": "PHP < 8.3 — PAO не поддерживается"}
+_SKIP_DETAIL = {"n-a": "not PHP-project", "opt-out": "opt-out fixed (pao_opt_out)",
+                "php-too-old": "PHP < 8.3 — PAO not supported"}
 
 
 def apply_pao(project, path, *, interactive, dry):
@@ -58,27 +58,27 @@ def apply_pao(project, path, *, interactive, dry):
     if st in _SKIP_DETAIL:
         return {"name": "pao", "status": "skipped", "detail": _SKIP_DETAIL[st]}
     if st == "installed":
-        return {"name": "pao", "status": "ok", "detail": "laravel/pao уже установлен"}
+        return {"name": "pao", "status": "ok", "detail": "laravel/pao is already installed"}
     # st == "missing"
     if dry:
         return {"name": "pao", "status": "skipped", "detail": "--dry-run"}
     if not interactive:
-        warn(f"[{pid}] laravel/pao не установлен — вывод PHP-тестов/анализа агенту "
-            "останется многословным (тысячи токенов вместо ~20). Поставь вручную: "
-            "composer require laravel/pao --dev (либо зафиксируй осознанный opt-out — "
-            "поле проекта pao_opt_out=true в config.json)")
-        return {"name": "pao", "status": "skipped", "detail": "не в интерактиве — см. warn"}
-    ans = input(f"[{pid}] Установить laravel/pao --dev (токен-экономия вывода PHP-тестов/"
-               "анализа для агента)? [Y]/n: ").strip().lower()
-    if ans in ("n", "no", "нет"):
-        warn(f"[{pid}] laravel/pao пропущен по выбору — поставь вручную позже: "
+        warn(f"[{pid}] laravel/pao not installed - output PHP-tests/analysis to agent "
+            "will remain verbose (thousands of tokens instead ~20). Install manually: "
+            "composer require laravel/pao --dev (or record a conscious opt-out — "
+            "project field pao_opt_out=true in config.json)")
+        return {"name": "pao", "status": "skipped", "detail": "not interactive - see warn"}
+    ans = input(f"[{pid}] Install laravel/pao --dev (token-saving output PHP-tests/"
+               "analysis for agent)? [Y]/n: ").strip().lower()
+    if ans in ("n", "no", "no"):
+        warn(f"[{pid}] laravel/pao omitted by choice - add it manually later: "
             "composer require laravel/pao --dev")
-        return {"name": "pao", "status": "skipped", "detail": "отклонено пользователем"}
+        return {"name": "pao", "status": "skipped", "detail": "rejected by user"}
     try:
         r = subprocess.run(["composer", "require", "laravel/pao", "--dev"],
                            cwd=str(path), capture_output=True, text=True, timeout=180)
     except (OSError, subprocess.SubprocessError) as e:
-        warn(f"[{pid}] composer require laravel/pao упал: {e}")
+        warn(f"[{pid}] composer require laravel/pao fell: {e}")
         return {"name": "pao", "status": "failed", "detail": str(e)}
     if r.returncode != 0:
         warn(f"[{pid}] composer require laravel/pao --dev rc={r.returncode}: "

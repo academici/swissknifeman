@@ -1,13 +1,13 @@
 {
   "skill": "compact-responses",
   "should_trigger": [
-    "ответь кратко, без воды",
-    "дай прямой ответ без преамбулы и резюме",
-    "не нужно расшаркиваний — сразу по делу"
+    "answer briefly, without water",
+    "give a straight answer without preamble or summary",
+    "no need for shuffling around - straight to the point"
   ],
   "should_not": [
-    "приведи код к единому стилю именования",
-    "сократи объём контекста, который грузится в сессию",
-    "напиши подробную документацию с примерами"
+    "bring the code to a unified naming style",
+    "reduce the amount of context that is loaded into the session",
+    "write detailed documentation with examples"
   ]
 }

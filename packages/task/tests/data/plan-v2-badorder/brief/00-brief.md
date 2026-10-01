@@ -1,3 +1,3 @@
-# Бриф — PLAN-V2, изменённый после materialization
+# Brief - PLAN-V2, changed after materialization
 
-Переформулированный вход владельца: демо-план для тестов линтера.
+Reworded owner input: demo plan for linter tests.

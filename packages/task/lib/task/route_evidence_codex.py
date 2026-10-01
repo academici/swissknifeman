@@ -121,7 +121,7 @@ def _thread_state_root() -> Path:
 def _thread_rollout(thread_id: str, state_root: Path) -> Path | None:
     if not all(char.isalnum() or char in "-_" for char in thread_id):
         raise RouteEvidenceError(
-            "ROUTE_LAUNCH_UNAVAILABLE", "CODEX_THREAD_ID содержит небезопасные символы")
+            "ROUTE_LAUNCH_UNAVAILABLE", "CODEX_THREAD_ID contains unsafe characters")
     candidates = tuple(
         path for path in state_root.rglob(f"*{thread_id}.jsonl")
         if path.is_file() and path.name.endswith(f"{thread_id}.jsonl")
@@ -131,7 +131,7 @@ def _thread_rollout(thread_id: str, state_root: Path) -> Path | None:
     if len(candidates) != 1:
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_UNAVAILABLE",
-            f"для CODEX_THREAD_ID найдено файлов состояния: {len(candidates)}, ожидался один",
+            f"for CODEX_THREAD_ID status files found: {len(candidates)}, expected one",
         )
     return candidates[0]
 
@@ -196,7 +196,7 @@ def _read_thread_state(path: Path, thread_id: str, *, require_current_owner_invo
                 except json.JSONDecodeError as error:
                     raise RouteEvidenceError(
                         "ROUTE_LAUNCH_UNAVAILABLE",
-                        f"Codex thread state JSONL повреждён на строке {line_number}",
+                        f"Codex thread state JSONL is corrupted on line {line_number}",
                     ) from error
                 if not isinstance(event, dict) or not isinstance(event.get("payload"), dict):
                     continue
@@ -224,16 +224,16 @@ def _read_thread_state(path: Path, thread_id: str, *, require_current_owner_invo
                             owner_turn_id = context.get("turn_id")
     except OSError as error:
         raise RouteEvidenceError(
-            "ROUTE_LAUNCH_UNAVAILABLE", f"Codex thread state не читается: {error}") from error
+            "ROUTE_LAUNCH_UNAVAILABLE", f"Codex thread state is not readable: {error}") from error
 
     if session_ids != [thread_id]:
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_UNAVAILABLE",
-            f"Codex thread state несёт session ids {session_ids!r}, ожидался {thread_id!r}",
+            f"Codex thread state carries session ids {session_ids!r}, expected {thread_id!r}",
         )
     if not isinstance(context, dict):
         raise RouteEvidenceError(
-            "ROUTE_LAUNCH_UNAVAILABLE", "Codex thread state не содержит turn_context")
+            "ROUTE_LAUNCH_UNAVAILABLE", "Codex thread state does not contain turn_context")
     return {**context, "owner_turn_id": owner_turn_id}, tuple(task_prompts)
 
 
@@ -253,11 +253,11 @@ def _capture_thread_state(*, thread_id: str, expected_invocation: str,
     sandbox = context.get("sandbox_policy")
     if not all(isinstance(value, str) and value for value in (model, effort, cwd)):
         raise RouteEvidenceError(
-            "ROUTE_LAUNCH_UNAVAILABLE", "Codex turn_context не содержит model/effort/cwd")
+            "ROUTE_LAUNCH_UNAVAILABLE", "Codex turn_context does not contain model/effort/cwd")
     if not any(_contains_invocation(prompt, expected_invocation) for prompt in prompts):
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_MISMATCH",
-            "текущий Codex turn не содержит exact Task invocation line",
+            "current Codex turn does not contain exact Task invocation line",
         )
     if Path(cwd).resolve() != Path(expected_cwd).resolve():
         raise RouteEvidenceError(

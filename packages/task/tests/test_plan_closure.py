@@ -23,7 +23,7 @@ class PlanClosureTest(unittest.TestCase):
             plan = self._fixture(tmp)
             target = plan_closure.build_closure(plan, "P0")
             expected = target.read_bytes()
-            self.assertIn(b"# \xd0\x97\xd0\xb0\xd0\xba\xd1\x80\xd1\x8b\xd1\x82\xd0\xb8\xd0\xb5 \xd1\x84\xd0\xb0\xd0\xb7\xd1\x8b P0", expected)
+            self.assertIn(b"# Closing phase P0", expected)
             self.assertIn(b"[D1](../../decisions/D1-fixture.md)", expected)
             self.assertEqual(plan_closure.build_closure(plan, "P0", check=True), target)
             self.assertEqual(expected, target.read_bytes())
@@ -31,7 +31,7 @@ class PlanClosureTest(unittest.TestCase):
     def test_live_phase_refuses_closure(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan = self._fixture(tmp)
-            with self.assertRaisesRegex(plan_closure.ClosureError, "терминальной"):
+            with self.assertRaisesRegex(plan_closure.ClosureError, "terminal"):
                 plan_closure.build_closure(plan, "P1")
 
     def test_live_reader_slots_exclude_terminal_phase_but_auditor_keeps_it(self):

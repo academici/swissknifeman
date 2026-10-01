@@ -1,9 +1,9 @@
 {
   "name": "@academici/swissknifeman",
-  "version": "0.17.14",
+  "version": "0.17.15",
   "private": true,
   "license": "MIT",
-  "description": "Универсальный личный реестр AI-скиллов и сниппетов: один источник истины, установка в любой проект и любую IDE",
+  "description": "Universal personal registry AI-skills and snippets: one source of truth, installation in any project and any IDE",
   "type": "module",
   "scripts": {
     "docs:sync": "bash ../../scripts/docs-sync.sh",

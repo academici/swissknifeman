@@ -125,23 +125,23 @@ run_bash_analysis() {
   fi
 
   _match_any "$scan_dh" "${DENY_HARD[@]}" \
-    && emit_deny "Заблокировано: опасная операция (deny_hard). Выполните вручную при необходимости. rm в доверенных папках можно разрешить: harness safe-dirs (safe-dirs.json в корне репо swissknifeman)."
+    && emit_deny "Blocked: dangerous operation (deny_hard). Perform manually if necessary. rm in trusted folders you can allow: harness safe-dirs (safe-dirs.json in the root of the repo swissknifeman)."
 
   if [ "$mode" = "bypass" ]; then
-    emit_allow "bypass: одобрено всё, кроме deny_hard"
+    emit_allow "bypass: everything is approved except deny_hard"
   fi
 
   _match_any "$scan" "${DENY_BLOCK[@]}" \
-    && fallthrough_logged "мутация (deny_block_approve) — обычный промпт"
+    && fallthrough_logged "mutation (deny_block_approve) — regular prompt"
 
   if [ "$mode" = "permissive" ]; then
-    emit_allow "permissive: не совпало ни одно правило денилиста"
+    emit_allow "permissive: did not match any denilista rules"
   fi
 
   set -f
   local seg
   while IFS= read -r seg || [ -n "$seg" ]; do
-    _segment_ok "$seg" || fallthrough_logged "strict: неизвестная голова команды"
+    _segment_ok "$seg" || fallthrough_logged "strict: unknown team head"
   done < <(_segments "$scan")
 
   if [ "$USE_SHFMT" = "true" ]; then
@@ -151,10 +151,10 @@ run_bash_analysis() {
       case "$h" in git|gh|docker) continue;; esac
       case "$h" in rm|rmdir) [ "$SAFEDIRS_OK" = 1 ] && continue;; esac
       case "$ALLOW_SET" in *" $h "*) continue;; esac
-      fallthrough_logged "strict/shfmt: неизвестная голова '$h'"
+      fallthrough_logged "strict/shfmt: unknown head '$h'"
     done < <(_shfmt_heads "$HOOK_CMD")
   fi
   set +f
 
-  emit_allow "strict: все сегменты из безопасного набора (read-only)"
+  emit_allow "strict: all segments from the safe set (read-only)"
 }

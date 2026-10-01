@@ -7,7 +7,7 @@ from task import plan_assurance, plan_gates, plan_readiness, plan_repair
 
 _ROUTING_ITEM_RE = re.compile(r"^P\d+\.\d+$")
 _ROUTING_RANGE_RE = re.compile(r"^(P\d+)\.(\d+)\s*[–-]\s*(P\d+)\.(\d+)$")
-_ROUTING_COLUMNS = ("Batch", "Items", "Model class/effort", "Exec", "Review", "Почему")
+_ROUTING_COLUMNS = ("Batch", "Items", "Model class/effort", "Exec", "Review", "Why")
 _ROUTING_BATCH_RE = re.compile(r"^[A-Z][A-Z0-9._-]*$", re.IGNORECASE)
 _ROUTING_REVIEW_VALUES = frozenset(("full", "light", "none"))
 _CONTINUE_FIRST_GATE_DATE = "2026.09.09"
@@ -109,24 +109,24 @@ def _lint_routing(plan_lines, plan_path, plan_id, layout, diag):
         if items is None:
             diag.error(
                 plan_path, line_number,
-                f"Routing Items «{cell}» вне закрытой грамматики: допустим один item Pn.m "
-                "или возрастающий single-phase range Pn.a–Pn.b; batch задаётся отдельной колонкой")
+                f"Routing Items «{cell}» outside closed grammar: one allowed item Pn.m "
+                "or increasing single-phase range Pn.a–Pn.b; batch is specified in a separate column")
             continue
         if strict:
             batch = row.get("Batch", "").strip()
             if not batch or not _ROUTING_BATCH_RE.fullmatch(batch):
                 diag.error(plan_path, line_number,
-                           f"Routing Batch «{batch}» недопустим: ожидается `solo` или стабильный ID группы")
+                           f"Routing Batch «{batch}» invalid: expected `solo` or stable ID groups")
             elif batch.lower() == "solo" and len(items) != 1:
                 diag.error(plan_path, line_number,
-                           "Routing Batch `solo` может адресовать ровно один item")
+                           "Routing Batch `solo` can address exactly one item")
             try:
                 task_contract.resolve_exec(row.get("Exec", ""))
             except task_contract.TaskContractBuildError as exc:
                 diag.error(plan_path, line_number, str(exc))
             if row.get("Review", "").strip() not in _ROUTING_REVIEW_VALUES:
                 diag.error(plan_path, line_number,
-                           "Routing Review должен быть full, light или none")
+                           "Routing Review should be full, light or none")
         expanded_rows.append({**row, "_items": items, "_line": line_number})
     return expanded_rows
 
@@ -146,12 +146,12 @@ def _lint_routing_coverage(plan_path, plan_id, layout, routing_rows, all_items, 
     for item_id in sorted(all_items):
         lines = owners.get(item_id, [])
         if not lines:
-            diag.error(plan_path, None, f"Routing schema: item {item_id} не назначен ни в Batch, ни в solo")
+            diag.error(plan_path, None, f"Routing schema: item {item_id} is not assigned to any Batch, neither solo")
         elif len(lines) > 1:
-            diag.error(plan_path, lines[-1], f"Routing schema: item {item_id} назначен более одного раза")
+            diag.error(plan_path, lines[-1], f"Routing schema: item {item_id} assigned more than once")
     for item_id, lines in owners.items():
         if item_id not in all_items:
-            diag.error(plan_path, lines[0], f"Routing schema: неизвестный item {item_id}")
+            diag.error(plan_path, lines[0], f"Routing schema: unknown item {item_id}")
     for batch, members in batches.items():
         item_ids = [item_id for item_id, _row in members]
         phases = {item_id.split(".", 1)[0] for item_id in item_ids}
@@ -164,16 +164,16 @@ def _lint_routing_coverage(plan_path, plan_id, layout, routing_rows, all_items, 
         numbers = sorted(int(item_id.split(".", 1)[1]) for item_id in item_ids)
         if len(item_ids) < 2:
             diag.error(plan_path, members[0][1]["_line"],
-                       f"Routing Batch {batch} содержит один item: используй `solo`")
+                       f"Routing Batch {batch} contains one item: use `solo`")
         if len(phases) != 1:
             diag.error(plan_path, members[0][1]["_line"],
-                       f"Routing Batch {batch} пересекает фазовый audit/close boundary")
+                       f"Routing Batch {batch} crosses the phase audit/close boundary")
         if len(exec_modes) != 1:
             diag.error(plan_path, members[0][1]["_line"],
-                       f"Routing Batch {batch} смешивает несовместимые Exec-режимы {sorted(exec_modes)}")
+                       f"Routing Batch {batch} mixes incompatible Exec-modes {sorted(exec_modes)}")
         if numbers and numbers != list(range(numbers[0], numbers[-1] + 1)):
             diag.error(plan_path, members[0][1]["_line"],
-                       f"Routing Batch {batch} не является adjacent-цепочкой")
+                       f"Routing Batch {batch} is not adjacent-chain")
 
 
 def _next_runnable_item(phases, all_items, *, ready_items=None):
@@ -230,10 +230,10 @@ def _lint_next_runnable_bundle(plan_dir, layout, phases, all_items, diag):
     except (plan_layout.PlanLayoutError, plan_bundle.BundleError) as exc:
         diag.error(
             item_path, None,
-            f"item {item_id}: bundle следующего запускаемого item не собирается: {exc}; "
-            "сначала классифицируй и исправь локальный обратимый носитель в текущем "
-            "execution attempt, затем запусти plan-views.py bundle --item "
-            f"{item_id}; task:plan-design допустим только при доказанном новом material "
+            f"item {item_id}: bundle next run item is not collected: {exc}; "
+            "first classify and correct the local reversible media in the current "
+            "execution attempt, then run plan-views.py bundle --item "
+            f"{item_id}; task:plan-design is valid only with proven new material "
             "decision surface",
         )
         return
@@ -244,42 +244,42 @@ def _lint_next_runnable_bundle(plan_dir, layout, phases, all_items, diag):
     except OSError:
         diag.error(
             item_path, None,
-            f"обязательный bundle следующего запускаемого item {item_id} отсутствует: {target}; "
-            f"запусти plan-views.py bundle --item {item_id}",
+            f"required bundle next run item {item_id} missing: {target}; "
+            f"run plan-views.py bundle --item {item_id}",
         )
         return
     if actual != expected:
         diag.error(
             target, None,
-            f"обязательный bundle следующего запускаемого item {item_id} устарел; "
-            f"запусти plan-views.py bundle --item {item_id}",
+            f"required bundle next run item {item_id} is deprecated; "
+            f"run plan-views.py bundle --item {item_id}",
         )
 
 
 def lint_plan(plan_dir, diag):
-    """Проверяет один план (plans/<PLAN-ID>/…). Возвращает распарсенную модель (dict)."""
+    """Tests one plan (plans/<PLAN-ID>/…). Returns the parsed model (dict)."""
     plan_dir = Path(plan_dir)
     plan_id = plan_dir.name
     plan_md = plan_dir / "plan.md"
     _lint_terminal_admission_contract(plan_md, diag)
     meta, status_board = parse_plan_md(plan_md, diag)
 
-    # warning-проверки идентичности (ID / workflow-скрипты / supersedes) — D24/D27/D28.
-    # meta здесь — сырой dict[name]=(value,lineno) до маппинга в модель ниже.
+    # warning-identity checks (ID / workflow-scripts / supersedes) — D24/D27/D28.
+    # meta here - raw dict[name]=(value,lineno) before mapping to the model below.
     _meta_raw = meta if isinstance(meta, dict) else {}
     _lint_plan_identity_20(plan_dir, plan_id, _meta_raw, plan_md, diag)
 
-    # Слой 0 «бриф» обязателен (SKILL §16): новые датовые планы — ERROR, старые — WARNING.
+    # Layer 0 «brief» required (SKILL §16): new date plans - ERROR, old - WARNING.
     _lint_plan_brief_20(plan_dir, plan_id, diag)
 
-    # m7/D10: опциональная секция `## 7. Contracts` (нет секции — пустая модель, молча).
+    # m7/D10: optional section `## 7. Contracts` (no section - empty model, silent).
     plan_lines = _read_lines(plan_md)
     if plan_lines is not None:
         _lint_v2_decision_pointer(plan_dir, plan_lines, plan_md, diag)
     contracts = (parse_contracts(plan_lines, plan_md, diag) if plan_lines is not None
                  else {"exported": [], "consumed": []})
 
-    # -D105: `Consequences` в D-записи (opt-in `Closure Protocol | v1` + forward-only).
+    # -D105: `Consequences` in D-records (opt-in `Closure Protocol | v1` + forward-only).
     if plan_lines is not None:
         _lint_consequences_82(plan_dir, plan_id, _meta_raw, plan_lines, plan_md, diag)
 
@@ -298,17 +298,17 @@ def lint_plan(plan_dir, diag):
     if status_board:
         board_phase_ids = {row.get("Phase") for row, _ in status_board if row.get("Phase")}
 
-    # Roadmap-гейт (SKILL §8): полностью детализированный план обязан нести roadmap.md.
+    # Roadmap-gate (SKILL §8): a fully detailed plan is required to bear roadmap.md.
     _lint_plan_roadmap_20(plan_dir, plan_id, phase_files, diag)
 
-    # Журнал/индекс: journal.jsonl soft/hard по дате-cutoff, index.md WARNING-only.
+    # Log/index: journal.jsonl soft/hard by date-cutoff, index.md WARNING-only.
     _lint_plan_journal_20(plan_dir, plan_id, diag)
     _lint_plan_index_20(plan_dir, plan_id, diag)
 
     for pid in board_phase_ids - set(phase_files):
-        diag.error(plan_md, None, f"фаза {pid} есть в Status Board, но нет phases/{pid}.md")
+        diag.error(plan_md, None, f"phase {pid} is in Status Board, but no phases/{pid}.md")
     for pid in set(phase_files) - board_phase_ids:
-        diag.error(phase_files[pid], None, f"фаза {pid} есть как phases/{pid}.md, но нет в Status Board")
+        diag.error(phase_files[pid], None, f"phase {pid} is like phases/{pid}.md, but not in Status Board")
 
     phases = {}
     all_items = {}  # item_id -> {"phase": pid, "title":..., "status":..., "fields":...}
@@ -317,7 +317,7 @@ def lint_plan(plan_dir, diag):
         phases[pid] = {"path": str(path), **(parsed or {})}
         if not parsed:
             continue
-        # Блоки `## Audit Pn` исключены из грепов фазы (_lines_before_audit) — свой гейт.
+        # Blocks `## Audit Pn` excluded from phase greps (_lines_before_audit) — your gate.
         phase_lines = _read_lines(path)
         if phase_lines:
             # Legacy intent is advisory; malformed handwritten structure still
@@ -327,17 +327,17 @@ def lint_plan(plan_dir, diag):
                     assurance = plan_assurance.parse("\n".join(phase_lines))
                     if assurance["audit_intent"] == "required":
                         diag.warning(path, None,
-                                     "PHASE_AUDIT_INTENT_ADVISORY: Audit Intent: required не назначает audit; "
-                                     "при следующей правке используйте direct-close-eligible")
+                                     "PHASE_AUDIT_INTENT_ADVISORY: Audit Intent: required does not assign audit; "
+                                     "next time you edit, use direct-close-eligible")
                 except plan_assurance.AssuranceError as exc:
                     diag.error(path, None, str(exc))
             _lint_audit_scope_payload(phase_lines, path, plan_id, diag)
             _lint_audit_terminal_policy(
                 phase_lines, path, plan_dir, plan_id, pid, diag)
-        # --- консистентность Phase Status(таблица) vs item.Status -----------
+        # --- consistency Phase Status(table) vs item.Status -----------
         table_by_id = {row.get("ID"): (row, lineno) for row, lineno in parsed["status_table"]}
         for item_id, occurrences in parsed["items"].items():
-            item = occurrences[0]  # диагностика дублей уже выдана выше; для сверки берём первый
+            item = occurrences[0]  # duplicate diagnostics have already been issued above; to check we take the first one
             from task import task_contract
             try:
                 task_contract.declared_authority(item_id, item["fields"])
@@ -351,16 +351,16 @@ def lint_plan(plan_dir, diag):
             row = table_by_id.pop(item_id, None)
             if row is None:
                 diag.error(path, item["header_lineno"],
-                           f"item {item_id}: нет строки в «## Phase Status»")
+                           f"item {item_id}: no line in «## Phase Status»")
             else:
                 row_dict, row_lineno = row
                 if row_dict.get("Status") != status_val:
                     diag.error(path, row_lineno,
-                               f"item {item_id}: статус в Phase Status «{row_dict.get('Status')}» "
-                               f"≠ статусу item «{status_val}»")
+                               f"item {item_id}: status in Phase Status «{row_dict.get('Status')}» "
+                               f"≠ status item «{status_val}»")
         for orphan_id, (row_dict, row_lineno) in table_by_id.items():
             diag.error(path, row_lineno,
-                       f"Phase Status: строка «{orphan_id}» без соответствующего item")
+                       f"Phase Status: string «{orphan_id}» without corresponding item")
 
         # --- item 🟢/🟠 ⇒ Completion Notes; 🟠 ⇒ Known Deviations -----------
         for item_id, occurrences in parsed["items"].items():
@@ -370,69 +370,69 @@ def lint_plan(plan_dir, diag):
             kd_val, kd_lineno = item["fields"].get("Known Deviations", ("", item["header_lineno"]))
             if status_val in (STATUS_DONE, STATUS_DEVIATIONS) and _is_empty(cn_val):
                 diag.error(path, cn_lineno,
-                           f"item {item_id}: статус «{status_val}» требует непустых Completion Notes")
+                           f"item {item_id}: status «{status_val}» requires non-empty Completion Notes")
             if status_val == STATUS_DEVIATIONS and _is_empty(kd_val):
                 diag.error(path, kd_lineno,
-                           f"item {item_id}: статус «{status_val}» требует непустых Known Deviations")
+                           f"item {item_id}: status «{status_val}» requires non-empty Known Deviations")
 
-            # --- 🔴 ⇔ ESCALATION-блок ⇔ Escalation Needed: yes ---------------
+            # --- 🔴 ⇔ ESCALATION-block ⇔ Escalation Needed: yes ---------------
             en_val, en_lineno = item["fields"].get("Escalation Needed", ("", item["header_lineno"]))
             en_norm = (en_val or "").strip().lower()
-            # 2.0 канонизировал (P0.3 рек#4, SKILL §5): у Escalation Needed — и ТОЛЬКО
-            # у него — маркер `no` равноправен «—»; оба принимаются без диагностики.
+            # 2.0 canonized (P0.3 rivers#4, SKILL §5): y Escalation Needed — and ONLY
+            # he has a marker `no` is equal «—»; both are accepted without diagnostics.
             if en_norm in ("", EMPTY_PLACEHOLDER, "no"):
                 en_yes = False
             elif en_norm == "yes":
                 en_yes = True
             else:
                 diag.error(path, en_lineno,
-                           f"item {item_id}: Escalation Needed «{en_val}» — ожидается yes/no/—")
+                           f"item {item_id}: Escalation Needed «{en_val}» — pending yes/no/—")
                 en_yes = None
             is_blocked = status_val == STATUS_BLOCKED
             has_escalation = item["has_escalation"]
             if en_yes is not None and not (is_blocked == en_yes == has_escalation):
                 parts = (f"Status={'🔴' if is_blocked else '≠🔴'}",
                          f"Escalation Needed={'yes' if en_yes else 'no/—'}",
-                         f"ESCALATION-блок={'есть' if has_escalation else 'нет'}")
+                         f"ESCALATION-block={'yes' if has_escalation else 'no'}")
                 diag.error(path, item["header_lineno"],
-                           f"item {item_id}: рассогласованы {', '.join(parts)} (должны совпадать)")
+                           f"item {item_id}: mismatched {', '.join(parts)} (must match)")
 
-            # --- WARNING: пустые Required Reads/Validation у не-⬜ item -------
+            # --- WARNING: empty Required Reads/Validation for non-⬜ item -------
             if status_val and status_val != "⬜ Not started":
                 rr_val, rr_lineno = item["fields"].get("Required Reads", ("", item["header_lineno"]))
                 va_val, va_lineno = item["fields"].get("Validation", ("", item["header_lineno"]))
                 if _is_empty(rr_val):
-                    diag.warning(path, rr_lineno, f"item {item_id}: пустые Required Reads при статусе «{status_val}»")
+                    diag.warning(path, rr_lineno, f"item {item_id}: empty Required Reads at status «{status_val}»")
                 if _is_empty(va_val):
-                    diag.warning(path, va_lineno, f"item {item_id}: пустая Validation при статусе «{status_val}»")
+                    diag.warning(path, va_lineno, f"item {item_id}: empty Validation at status «{status_val}»")
 
-        # --- гейт напечатанных кодов границ pre_mutation/pre_final --
+        # --- gate printed boundary codes pre_mutation/pre_final --
         _lint_write_site_codes_44(parsed["status_table"], parsed["items"], path, diag)
 
-        # --- 🔴/⛔ обязаны нести `Возобновление:` (opt-in Closure Protocol) --
+        # --- 🔴/⛔ are required to bear `Resume:` (opt-in Closure Protocol) --
         _lint_checkpointed_83(_meta_raw, parsed["items"], path, diag)
 
-    # --- tiered-portability (committed-bundle плана без committed
-    # execution input, либо внешний путь в роли execution input) ----------------
+    # --- tiered-portability (committed-bundle plan without committed
+    # execution input, or external path in the role execution input) ----------------
     _lint_tiered_portability_22(plan_dir, plan_id, all_items, phases, diag)
     _lint_next_runnable_bundle(plan_dir, layout, phases, all_items, diag)
 
-    # --- глобальная уникальность ID item ---------------------------------
+    # --- global uniqueness ID item ---------------------------------
     seen = {}
     for pid, phase in phases.items():
         for item_id in phase.get("items", {}):
             seen.setdefault(item_id, []).append(pid)
     for item_id, pids in seen.items():
         if len(pids) > 1:
-            diag.error(plan_dir, None, f"item {item_id}: ID переиспользован в фазах {sorted(set(pids))}")
+            diag.error(plan_dir, None, f"item {item_id}: ID reused in phases {sorted(set(pids))}")
 
-    # --- дубли Title среди items (WARNING) --------------------------------
+    # --- duplicates Title among items (WARNING) --------------------------------
     titles = {}
     for item_id, info in all_items.items():
         titles.setdefault(info["title"], []).append(item_id)
     for title, ids in titles.items():
         if len(ids) > 1:
-            diag.warning(plan_dir, None, f"дубль Title «{title}» среди items: {sorted(ids)}")
+            diag.warning(plan_dir, None, f"take Title «{title}» among items: {sorted(ids)}")
 
     _lint_routing_coverage(plan_md, plan_id, layout, routing_rows, all_items, diag)
     if layout == "v2" and PLAN_ID_NUMBERED_RE.match(plan_id) and routing_rows:
@@ -444,7 +444,7 @@ def lint_plan(plan_dir, diag):
         except task_contract.TaskContractBuildError as exc:
             diag.error(plan_md, None, f"Routing compiler: {exc}")
 
-    # --- Status Board согласован с фазами: счётчик 🟢/всего и статус фазы --
+    # --- Status Board phase matched: counter 🟢/total and phase status --
     from task import plan_repeat
     try:
         aggregate_statuses = plan_repeat.aggregate_statuses(
@@ -456,7 +456,7 @@ def lint_plan(plan_dir, diag):
     for pid in phases:
         row = board_by_phase.get(pid)
         if row is None:
-            continue  # уже отражено как отдельная ошибка выше (phase without Status Board row)
+            continue  # is already reported as a separate error above (phase without Status Board row)
         row_dict, row_lineno = row
         phase_item_ids = list(phases[pid].get("items", {}).keys())
         total = len(phase_item_ids)
@@ -466,12 +466,12 @@ def lint_plan(plan_dir, diag):
         m = DONE_TOTAL_RE.match(items_cell)
         if not m:
             diag.error(plan_md, row_lineno,
-                       f"Status Board {pid}: колонка «{STATUS_BOARD_ITEMS_COL}» = «{items_cell}» "
-                       f"— ожидается формат N/M")
+                       f"Status Board {pid}: column «{STATUS_BOARD_ITEMS_COL}» = «{items_cell}» "
+                       f"— expected format N/M")
         elif (int(m.group(1)), int(m.group(2))) != (done, total):
             diag.error(plan_md, row_lineno,
                        f"Status Board {pid}: «{STATUS_BOARD_ITEMS_COL}» = «{items_cell}» "
-                       f"≠ фактическому {done}/{total}")
+                       f"≠ actual {done}/{total}")
 
         phase_status = row_dict.get("Status", "")
         item_statuses = [aggregate_statuses[iid] for iid in phase_item_ids if iid in all_items]
@@ -480,38 +480,38 @@ def lint_plan(plan_dir, diag):
                 and phase_status != STATUS_BLOCKED
                 and not (terminal_block_override and phase_status == STATUS_DEVIATIONS)):
             diag.error(plan_md, row_lineno,
-                       f"Status Board {pid}: есть 🔴 Blocked item, но статус фазы «{phase_status}» ≠ 🔴 Blocked")
+                       f"Status Board {pid}: yes 🔴 Blocked item, but phase status «{phase_status}» ≠ 🔴 Blocked")
         if (item_statuses and all(s == STATUS_DONE for s in item_statuses)
                 and phase_status not in (STATUS_DONE, STATUS_IN_PROGRESS)):
             diag.error(plan_md, row_lineno,
-                       f"Status Board {pid}: все items 🟢 Done, но статус фазы «{phase_status}» "
-                       f"не является audit candidate 🟡 In progress или closed 🟢 Done")
+                       f"Status Board {pid}: all items 🟢 Done, but phase status «{phase_status}» "
+                       f"is not audit candidate 🟡 In progress or closed 🟢 Done")
 
-        # --- 2.0 WARNING: [NEEDS CLARIFICATION] в фазе 🟡+ = DoR-гейт не пройден --
+        # --- 2.0 WARNING: [NEEDS CLARIFICATION] in phase 🟡+ = DoR-gate failed --
         if phase_status and phase_status != "⬜ Not started":
             nc = phases[pid].get("needs_clarification") or []
             if nc:
                 diag.warning(phases[pid]["path"], nc[0],
-                             f"фаза {pid} в статусе «{phase_status}», но несёт "
-                             f"{len(nc)} маркер(ов) [NEEDS CLARIFICATION] "
-                             f"(строки {nc}) — DoR-гейт не пройден (SKILL §7)")
+                             f"phase {pid} in status «{phase_status}», but carries "
+                             f"{len(nc)} marker(ov) [NEEDS CLARIFICATION] "
+                             f"(lines {nc}) — DoR-gate failed (SKILL §7)")
 
-        # --- WARNING: workflow-как-DoR — фаза со статусом 🟡+, ЗАЯВЛЯЮЩАЯ
-        # оркестрацию (грепаемый признак), но у плана нет workflow-скрипта в
-        # `plans/<ID>/workflows/`. Условность: без признака оркестрации — молчит
-        # (ручное item-by-item исполнение workflow не требует). warning-only.
+        # --- WARNING: workflow-like-DoR — phase with status 🟡+, APPLICANT
+        # orchestration (grabable sign), but there is no plan workflow-script in
+        # `plans/<ID>/workflows/`. Convention: without a sign of orchestration - silent
+        # (manual item-by-item execution workflow does not require). warning-only.
         if (phase_status and phase_status != "⬜ Not started"
                 and phases[pid].get("declares_orchestration")
                 and not _plan_has_workflow_script(plan_dir)):
             diag.warning(phases[pid]["path"], None,
-                         f"фаза {pid} заявляет оркестрацию (multi-agent/fan-out), но нет "
-                         f"workflow-скрипта в `plans/{plan_id}/workflows/` — DoR §7 (D29)")
+                         f"phase {pid} states orchestration (multi-agent/fan-out), but no "
+                         f"workflow-script in `plans/{plan_id}/workflows/` — DoR §7 (D29)")
 
-        # --- фаза 🟢/🟠 ⇒ Phase Handoff непуст --------------------------
+        # --- phase 🟢/🟠 ⇒ Phase Handoff is not empty --------------------------
         if phase_status in (STATUS_DONE, STATUS_DEVIATIONS):
             handoff_text = phases[pid].get("phase_handoff")
             if handoff_text is None:
-                pass  # отсутствие секции уже отражено отдельной ошибкой
+                pass  # the absence of a section is already reflected in a separate error
             elif _is_empty(handoff_text):
                 closure_fresh = False
                 if layout == "v2":
@@ -525,14 +525,14 @@ def lint_plan(plan_dir, diag):
                         pass
                 if not closure_fresh:
                     diag.error(phases[pid]["path"], None,
-                               f"фаза {pid} статус «{phase_status}», но «## Phase Handoff» пуст")
+                               f"phase {pid} status «{phase_status}», but «## Phase Handoff» empty")
 
-        # --- WARNING: зеркальный гейт — фаза НЕтерминальна, а Phase Handoff
-        # УТВЕРЖДАЕТ закрытие и не помечен маркером инвалидации (H2, SKILL §3, 4-й шаг).
-        # WARNING, не ERROR: три плана флота (истинно-положительные, carve-out D34) иначе
-        # получили бы недостижимый commit-гейт в ЧУЖИХ репозиториях.
-        # утверждение о закрытии ФАЗЫ читается по ПЕРВОЙ НЕПУСТОЙ СТРОКЕ блока и
-        # снимается ОТРИЦАНИЕМ на ней же — иначе гейт ловит слово, а не субъект (J1).
+        # --- WARNING: mirror gate - phase is NOT terminal, but Phase Handoff
+        # APPROVES closure and is not marked with invalidation marker (H2, SKILL §3, 4-th step).
+        # WARNING, not ERROR: three fleet plans (true positive, carve-out D34) otherwise
+        # would get unreachable commit-gate in OTHER repositories.
+        # the PHASE closing statement is read from the FIRST NON-EMPTY LINE of the block and
+        # is removed by NEGATING it - otherwise the gate catches the word, not the subject (J1).
         elif phase_status and phase_status not in TERMINAL_STATUSES:
             handoff_text = phases[pid].get("phase_handoff")
             claim_line = phases[pid].get("phase_handoff_first_line") or ""
@@ -541,13 +541,13 @@ def lint_plan(plan_dir, diag):
                     and not PHASE_HANDOFF_NEGATION_RE.search(claim_line)
                     and not phases[pid].get("phase_handoff_stale")):
                 diag.warning(phases[pid]["path"], phases[pid].get("phase_handoff_lineno"),
-                             f"Phase Handoff протух: фаза {pid} НЕ закрыта (статус "
-                             f"«{phase_status}»), а блок утверждает закрытие фазы — поставь "
-                             f"его первой строкой маркер «> УСТАРЕЛ — фаза реопенена <D#>» "
-                             f"(SKILL §3, 4-й шаг реопена: блок не удаляется, его перезапишет "
-                             f"plan-close при следующем закрытии фазы)")
+                             f"Phase Handoff rotten: phase {pid} NOT closed (status "
+                             f"«{phase_status}»), and the block approves the closing of the phase - put "
+                             f"its first line marker «> DEPRECATED — phase reopened <D#>» "
+                             f"(SKILL §3, 4-th step of reopen: the block is not deleted, it will be overwritten "
+                             f"plan-close at the next phase close)")
 
-    # --- отчёт закрытия фазы (opt-in `Closure Protocol | v1`) ----------
+    # --- phase closing report (opt-in `Closure Protocol | v1`) ----------
     _lint_closure_reports_81(plan_dir, plan_id, _meta_raw, phases, board_by_phase, diag)
 
     # D2 is a layout-v2 hard gate.  Its implementation stays outside this
@@ -561,7 +561,7 @@ def lint_plan(plan_dir, diag):
     plan_gates.lint_read_path_boundaries(plan_dir, layout, diag)
     plan_gates.lint_return_loop(plan_dir, layout, diag)
 
-    # --- phase-first (WARNING): активные 🟡 items в фазе N+1 при не-терминальной N
+    # --- phase-first (WARNING): active 🟡 items in phase N+1 for non-terminal N
     numbered = sorted(
         ((int(PHASE_TOKEN_RE.match(pid).group(1)), pid) for pid in board_by_phase if PHASE_TOKEN_RE.match(pid)),
     )
@@ -577,49 +577,49 @@ def lint_plan(plan_dir, diag):
         active = [iid for iid in nxt_items if all_items.get(iid, {}).get("status") == STATUS_IN_PROGRESS]
         if active:
             diag.warning(plan_dir, None,
-                         f"phase-first: {nxt_pid} содержит активные 🟡 items {sorted(active)}, "
-                         f"хотя {pid} ещё не терминальна (статус «{cur_status}»)")
+                         f"phase-first: {nxt_pid} contains active 🟡 items {sorted(active)}, "
+                         f"although {pid} is not terminal yet (status «{cur_status}»)")
 
     # --- handoff.md ---------------------------------------------------------
     handoff_path = plan_dir / "handoff.md"
     handoff = parse_handoff_md(handoff_path, diag)
 
-    # handoff.md ↔ Status Board «Pn a/b» — вне `if handoff:`
-    # блока Next-резолвера ниже (независимая проверка, форма-нейтральна к Next).
+    # handoff.md ↔ Status Board «Pn a/b» — out `if handoff:`
+    # block Next-resolver below (independent verification, form-neutral Next).
     _lint_handoff_board_113(handoff, handoff_path, plan_id, board_by_phase, diag)
 
     if handoff:
         next_val, next_lineno = handoff["fields"].get("Next", ("", None))
 
-        # Заголовок — ссылка обязана резолвиться, иначе расширение regex'а просто
-        # «разрешило всё»: у ОБЕИХ форм (`after Pn` — фаза, `after Pn.m` — item) гейтится
-        # существование ФАЗЫ `Pn`. Исключение — bootstrap `P0.0` (замер флота: единственное
-        # попадание item-формы — стартовый handoff, не дефект). Существование самого ITEM'а
-        # `Pn.m` НЕ гейтится: 12 планов флота несут `after P0.0` (плана ещё не касались,
-        # item'а P0.0 не бывает) — гейт на неё = новые ERROR флоту, back-compat запрещает.
-        # Оракул «фаза существует» — ОБЪЕДИНЕНИЕ Status Board и файлов фаз: это гейт
-        # висячей ССЫЛКИ, а рассинхрон board↔файлы — отдельный дефект со своей диагностикой
-        # («фаза Pn есть в Status Board, но нет phases/Pn.md»), дублировать её здесь нечем.
+        # Title - the link must resolve, otherwise the extension regex'but simply
+        # «resolved everything»: for BOTH forms (`after Pn` — phase, `after Pn.m` — item) gated
+        # existence of PHASE `Pn`. Exception - bootstrap `P0.0` (fleet measurement: single
+        # hit item-forms - start handoff, not a defect). The existence of the ITEM'a
+        # `Pn.m` NOT gated: 12 fleet plans are carried `after P0.0` (the plan has not yet been touched upon,
+        # item'a P0.0 does not happen) — gate on her = new ERROR fleet, back-compat prohibits.
+        # Oracle «phase exists» — COMBINATION Status Board and phase files: this is a gate
+        # dangling LINK, and out of sync board↔files - a separate defect with its own diagnostics
+        # («phase Pn is in Status Board, but no phases/Pn.md»), there is nothing to duplicate it here.
         known_phases = set(phases) | set(board_by_phase)
         title_ref = handoff.get("title_ref")
         if title_ref and title_ref != HANDOFF_TITLE_BOOTSTRAP:
             title_phase = title_ref.split(".", 1)[0]
             if title_phase not in known_phases:
                 diag.error(handoff_path, handoff.get("title_lineno"),
-                           f"заголовок: фаза «{title_phase}» не существует в плане")
+                           f"title: phase «{title_phase}» does not exist in the plan")
 
-        # ФОРМА `Next` ОБЪЯВЛЯЕТСЯ ПЕРВОЙ НЕПУСТОЙ СТРОКОЙ поля. Само поле
-        # МНОГОСТРОЧНОЕ: ниже идёт launch-block (таблица Model/Thinking/Context/Суть +
-        # code-block), и его проза законно ЦИТИРУЕТ другие формы enum'а — голый промпт
-        # item'а, чинящего сам протокол, называет и slash-команды, и «план закрыт».
-        # Резолв по ВСЕМУ полю принимал такую цитату за объявление: handoff с «ЗАПУСК
-        # ВРУЧНУЮ» в первой строке ловил ложный ERROR «не все items терминальны».
+        # FORM `Next` IS DECLARED AS THE FIRST NON-EMPTY LINE OF THE FIELD. The field itself
+        # MULTILINE: goes below launch-block (table Model/Thinking/Context/The bottom line +
+        # code-block), and his prose legitimately QUOTES other forms enum'a - bare prompt
+        # item'and, fixing the protocol itself, calls and slash-commands, and «plan closed».
+        # The ENTIRE field resolver took this quote as an ad: handoff with «STARTING
+        # MANUALLY» in the first line was catching false ERROR «not all items terminal».
         next_decl = next((ln for ln in next_val.splitlines() if ln.strip()), "")
         kind, m = _resolve_next_form(next_decl)
         if kind is None:
-            # Строка-объявление не назвала формы — back-compat: планы флота, у которых
-            # первая строка прозаическая, а команда живёт в launch-block'е, читаются как
-            # прежде (резолв по всему полю).
+            # The declaration line did not name the form - back-compat: fleet plans that have
+            # the first line is prosaic, and the command lives in launch-block'e, read as
+            # before (resolve over the entire field).
             kind, m = _resolve_next_form(next_val)
 
         # New numbered layout-v2 plans keep the chosen batch visible at every
@@ -637,8 +637,8 @@ def lint_plan(plan_dir, diag):
                 batch_values = [match.group(1).strip() for match in batch_rows if match]
                 if not batch_values:
                     diag.error(handoff_path, next_lineno,
-                               "handoff.Next: нет строки `| Batch | <id|solo> |`; "
-                               "граница нового исполнения теряет batch/solo")
+                               "handoff.Next: no line `| Batch | <id|solo> |`; "
+                               "new execution boundary loses batch/solo")
                 elif execution_match:
                     first_item = (execution_match.group(2) if kind == "run"
                                   else execution_match.group(1))
@@ -647,7 +647,7 @@ def lint_plan(plan_dir, diag):
                     if expected and batch_values[0] != expected:
                         diag.error(handoff_path, next_lineno,
                                    f"handoff.Next: Batch «{batch_values[0]}» ≠ Routing «{expected}» "
-                                   f"для {first_item}")
+                                   f"for {first_item}")
                     if expected and batch_values[0] == expected:
                         if kind == "run":
                             command_items = _handoff_run_items(next_decl)
@@ -666,8 +666,8 @@ def lint_plan(plan_dir, diag):
                         if command_items != members:
                             diag.error(
                                 handoff_path, next_lineno,
-                                f"handoff.Next: Batch {expected} должен адресовать весь оставшийся "
-                                f"adjacent-суффикс {members}, получено {command_items}")
+                                f"handoff.Next: Batch {expected} should address all remaining "
+                                f"adjacent-suffix {members}, received {command_items}")
 
         # The continuity controller became a live write-site gate for plans
         # authored on/after its activation date.  Older layout-v2 carriers keep
@@ -683,7 +683,7 @@ def lint_plan(plan_dir, diag):
             if len(contexts) != 1:
                 diag.error(
                     handoff_path, next_lineno,
-                    "handoff.Next: continuity gate требует ровно одну строку `| Context | … |`",
+                    "handoff.Next: continuity gate requires exactly one line `| Context | … |`",
                 )
             else:
                 try:
@@ -696,38 +696,38 @@ def lint_plan(plan_dir, diag):
                         f"handoff.Next: CONTINUITY_CONTEXT_INVALID ({exc})",
                     )
 
-        # --- C2: прозаическая gate-оговорка при runnable-форме → WARNING ------
-        # Автор вписал в объявление runnable slash-форму «команда есть, но не сейчас»
-        # (стем «не раньше»/«делать нечего»/time-gate) вместо структурной формы «ОЖИДАНИЕ».
-        # Скан — только СТРОКА-ОБЪЯВЛЕНИЕ (`next_decl`): guard-строка `# НЕ раньше:` формы
-        # «ОЖИДАНИЕ» законно живёт в code-block'е и не должна триггерить C2 (форма waiting
-        # к тому же не входит в C2_RUNNABLE_KINDS). Уровень — WARNING (механизм молод, D20).
+        # --- C2: prosaic gate-disclaimer when runnable-form → WARNING ------
+        # The author wrote in the ad runnable slash-form «there is a command, but not now»
+        # (stem «not before»/«nothing to do»/time-gate) instead of structural form «WAITING».
+        # Scan - AD LINE only (`next_decl`): guard-string `# NOT before:` forms
+        # «WAITING» legally lives in code-block'should not trigger C2 (form waiting
+        # is also not included in C2_RUNNABLE_KINDS). Level - WARNING (the mechanism is young, D20).
         if kind in C2_RUNNABLE_KINDS and C2_WAITING_STEMS_RE.search(next_decl):
             diag.warning(handoff_path, next_lineno,
-                         "Next: runnable-форма несёт прозу-оговорку о неисполнимости сейчас "
-                         "(«не раньше»/«делать нечего»/time-gate) — если шаг реален, но "
-                         "заблокирован временем/гейтом, объяви форму «ОЖИДАНИЕ: <условие> → "
-                         "<целевая форма>» (SKILL §8): она копипастится с guard-строкой "
-                         "`# НЕ раньше:`, прозаическая оговорка — нет")
+                         "Next: runnable-form carries a prose clause about the unenforceability now "
+                         "(«not before»/«nothing to do»/time-gate) — if the step is real, but "
+                         "blocked by time/gate, declare the form «WAITING: <condition> → "
+                         "<target form>» (SKILL §8): she copy-pasted from guard-line "
+                         "`# NOT before:`, prosaic disclaimer - no")
 
-        # --- 2.0: launch-block в handoff.Next (SKILL §8) --------------------------
-        # Severity как у brief-гейта: датовые планы от BRIEF_CANON_DATE — ERROR
-        # (владелец не должен переспрашивать модель/настройки), старее/legacy — WARNING.
-        # Таблица `| Model | …`, legacy-строка `| Команда |` и code-block грепаются по всему
-        # файлу: шаблон кладёт launch-block продолжением Next, но точное место не гейтим
-        # (warning-уровень).
-        # Для целиком закрытого плана («план закрыт») запускать нечего — не требуем.
-        # `continue-root` тоже не является user-facing launch: executor продолжает тот же
-        # admitted batch. Waiting остаётся boundary даже если его исторический Context
-        # ошибочно/совместимо записан как continue-root.
-        # Условие СОЗНАТЕЛЬНО мягче резолвера (`kind`): любое утверждение о закрытии в
-        # ЛЮБОМ месте поля снимает требование launch-block'а. Ужесточение до `kind` дало бы
-        # новый WARNING живому плану флота (PILOT-AZG: первая строка несёт и «план закрыт
-        # целиком», и lint-ссылку `/task:plan-exec` → резолвится как run) — back-compat §2.
+        # --- 2.0: launch-block in handoff.Next (SKILL §8) --------------------------
+        # Severity like brief-gate: date plans from BRIEF_CANON_DATE — ERROR
+        # (the owner should not ask the model again/settings), older/legacy — WARNING.
+        # Table `| Model | …`, legacy-string `| Command |` and code-block crawling all over
+        # file: the template puts launch-block continued Next, but we don’t gate the exact location
+        # (warning-level).
+        # For a fully closed plan («plan closed») there is nothing to run - we don’t require it.
+        # `continue-root` is not either user-facing launch: executor continues the same
+        # admitted batch. Waiting remains boundary even if its historical Context
+        # wrong/is compatible written as continue-root.
+        # The condition is CONSCIOUSLY softer than the resolver (`kind`): any closure statement in
+        # ANY place in the field removes the requirement launch-block'a. Tightening up `kind` would give
+        # new WARNING live fleet plan (PILOT-AZG: the first line carries and «plan closed
+        # in full», and lint-link `/task:plan-exec` → resolves as run) — back-compat §2.
         #
-        # Новая canonical форма всегда использует fenced command block вне таблицы. Старую
-        # строку `| Команда |` продолжаем принимать reader-side, чтобы правка формата не
-        # инвалидировала уже закрытые handoff'ы флота.
+        # New canonical form always uses fenced command block is out of table. old
+        # line `| Command |` continue to accept reader-side, so that format editing is not
+        # invalidated already closed handoff's fleet.
         handoff_contexts = [match.group(1).strip().strip("`")
                             for match in (LAUNCH_CONTEXT_ROW_RE.match(line)
                                           for line in next_val.splitlines()) if match]
@@ -740,11 +740,11 @@ def lint_plan(plan_dir, diag):
             if not (has_table and (has_command_row or has_fence)):
                 missing = []
                 if not has_table:
-                    missing.append("таблицы `| Model | …`")
+                    missing.append("tables `| Model | …`")
                 if not (has_command_row or has_fence):
-                    missing.append("fenced command block (legacy: строки `| Команда |`)")
-                _lb_msg = ("Next без launch-block: нет " + " и ".join(missing) +
-                           " (форма — snippets/launch-block-template.md)")
+                    missing.append("fenced command block (legacy: lines `| Command |`)")
+                _lb_msg = ("Next without launch-block: no " + " and ".join(missing) +
+                           " (form - snippets/launch-block-template.md)")
                 if PLAN_ID_DATED_RE.match(plan_id) and plan_id[:10] >= BRIEF_CANON_DATE:
                     diag.error(handoff_path, next_lineno, _lb_msg)
                 else:
@@ -755,25 +755,25 @@ def lint_plan(plan_dir, diag):
         def _check_plan_id(ref_plan_id):
             if ref_plan_id != plan_id:
                 diag.error(handoff_path, next_lineno,
-                           f"Next: PLAN-ID «{ref_plan_id}» ≠ фактическому «{plan_id}»")
+                           f"Next: PLAN-ID «{ref_plan_id}» ≠ actual «{plan_id}»")
 
         def _check_phase(ref_phase):
             if ref_phase not in phases:
                 diag.error(handoff_path, next_lineno,
-                           f"Next: фаза «{ref_phase}» не существует в плане")
+                           f"Next: phase «{ref_phase}» does not exist in the plan")
 
         def _check_item(ref_item):
             if ref_item not in all_items:
                 diag.error(handoff_path, next_lineno,
-                           f"Next: item «{ref_item}» не существует ни в одной фазе")
+                           f"Next: item «{ref_item}» does not exist in any phase")
 
         if kind == "manual":
-            pass  # «ЗАПУСК ВРУЧНУЮ: <model/effort>» — форма без slash-команды, ссылок нет
+            pass  # «MANUAL START: <model/effort>» — form without slash-commands, no links
         elif kind == "waiting":
-            pass # «ОЖИДАНИЕ: <условие> → <целевая форма>»: целевая команда guarded в
-                  # launch-block'е; ссылки объявления не резолвим (целевая форма проверится
-                  # при реальном запуске по снятии гейта). launch-block требуется — как у
-                  # прочих runnable-форм (не exempt): гейт launch-block выше не смотрит kind.
+            pass # «WAITING: <condition> → <target form>»: target command guarded in
+                  # launch-block'e; ad links are not resolved (target form will be validated
+                  # during real launch after removing the gate). launch-block required - same as
+                  # others runnable-forms (not exempt): gate launch-block doesn't look above kind.
         elif kind == "run":
             ref_plan_id, ref_from, ref_to = m.group(1), m.group(2), m.group(3)
             _check_plan_id(ref_plan_id)
@@ -790,7 +790,7 @@ def lint_plan(plan_dir, diag):
         elif kind == "closed":
             if not plan_closed:
                 diag.error(handoff_path, next_lineno,
-                           "Next: «план закрыт», но не все items терминальны")
+                           "Next: «plan closed», but not all items terminal")
         elif kind == "design-item":
             ref_plan_id, ref_item = m.group(1), m.group(2)
             _check_plan_id(ref_plan_id)
@@ -823,14 +823,14 @@ def lint_plan(plan_dir, diag):
                 )
                 if phase_status not in TERMINAL_STATUSES and not terminal_candidate:
                     diag.warning(handoff_path, next_lineno,
-                                 f"Next: /task:plan-audit {ref_phase} — фаза не терминальна: "
-                                 f"статус «{phase_status}», не все её items терминальны "
-                                 f"(audit требует terminal phase candidate, SKILL §13)")
+                                 f"Next: /task:plan-audit {ref_phase} — phase is not terminal: "
+                                 f"status «{phase_status}», not all of her items terminal "
+                                 f"(audit requires terminal phase candidate, SKILL §13)")
         elif kind == "close-archive":
             _check_plan_id(m.group(1))
             if not plan_closed:
                 diag.warning(handoff_path, next_lineno,
-                             "Next: /task:plan-close archive — план ещё не терминален целиком")
+                             "Next: /task:plan-close archive — the plan is not yet completely terminal")
         elif kind == "close":
             ref_plan_id, ref_phase, ref_suffix = m.group(1), m.group(2), m.group(3)
             _check_plan_id(ref_plan_id)
@@ -866,22 +866,22 @@ def lint_plan(plan_dir, diag):
     }
 
 
-# --- root-level проверки (path = plans/ целиком, не одиночный plans/<ID>) -----
+# --- root-level checks (path = plans/ whole, not single plans/<ID>) -----
 
 def lint_plans_root(root, models, diag):
-    """Проверки, применимые только к каталогу `plans/` целиком (см. discover_plan_dirs:
-    отличается от одиночного `plans/<ID>` тем, что там нет `plan.md` рядом с собой).
-    `models` — {plan_id: model|None} уже пролинтованных подкаталогов (для сверки, что
-    Active указывает на реально существующий каталог-план, и для подсчёта 🟡 In progress).
+    """Checks that apply only to the directory `plans/` in full (see discover_plan_dirs:
+    is different from single `plans/<ID>` because it's not there `plan.md` next to you).
+    `models` — {plan_id: model|None} already linked subdirectories (to verify that
+    Active points to a real-life directory plan, and to calculate 🟡 In progress).
 
-    (а) есть plans/ACTIVE.md → поле «**Active:**» обязано быть «—» либо именем
-        существующего каталога-плана, иначе ERROR;
-    (б) нет ACTIVE.md и ≥2 планов со статусом «🟡 In progress» (Meta plan.md) →
-        WARNING «активный план неоднозначен»;
-    (в) плоские *.md в корне plans/ (кроме ACTIVE.md/README.md) — черновики plan mode,
-        оставшиеся без протокола, → одно WARNING со списком и подсказкой from-draft;
-    (г) cross-plan сверка `## 7. Contracts`: Pinned потребителя ≠ Версии донора того же
-        корня → WARNING «уведомление не разнесено» (m7/D10, §11).
+    (a) yes plans/ACTIVE.md → field «**Active:**» must be «—» or name
+        existing directory-plan, otherwise ERROR;
+    (b) no ACTIVE.md and ≥2 plans with status «🟡 In progress» (Meta plan.md) →
+        WARNING «active plan is ambiguous»;
+    (in) flat *.md at the root plans/ (except ACTIVE.md/README.md) — drafts plan mode,
+        remaining without protocol, → one WARNING with list and tooltip from-draft;
+    (g) cross-plan reconciliation `## 7. Contracts`: Pinned consumer ≠ Donor versions of the same
+        root → WARNING «notification not posted» (m7/D10, §11).
     """
     root = Path(root)
     _lint_contracts_cross_plan(models, diag)
@@ -896,11 +896,11 @@ def lint_plans_root(root, models, diag):
                 value, value_lineno = m.group(1).strip(), i + 1
                 break
         if value is None:
-            diag.error(active_path, None, "нет поля «**Active:**» в ACTIVE.md")
+            diag.error(active_path, None, "no field «**Active:**» in ACTIVE.md")
         elif value != EMPTY_PLACEHOLDER and value not in models:
             diag.error(active_path, value_lineno,
-                       f"Active «{value}» не указывает на существующий план "
-                       f"(нет каталога plans/{value}/)")
+                       f"Active «{value}» does not point to an existing plan "
+                       f"(no directory plans/{value}/)")
     else:
         in_progress = sorted(
             pid for pid, model in models.items()
@@ -908,8 +908,8 @@ def lint_plans_root(root, models, diag):
         )
         if len(in_progress) >= 2:
             diag.warning(root, None,
-                         "активный план неоднозначен: нет plans/ACTIVE.md, а планов со "
-                         f"статусом «{STATUS_IN_PROGRESS}» {len(in_progress)}: {in_progress}")
+                         "active plan is ambiguous: no plans/ACTIVE.md, and plans with "
+                         f"status «{STATUS_IN_PROGRESS}» {len(in_progress)}: {in_progress}")
 
     drafts = sorted(
         p.name for p in root.glob("*.md")
@@ -917,13 +917,13 @@ def lint_plans_root(root, models, diag):
     )
     if drafts:
         diag.warning(root, None,
-                     "черновики plan mode: " + ", ".join(drafts) +
-                     " — разверни /task:plan-design from-draft")
+                     "drafts plan mode: " + ", ".join(drafts) +
+                     " — expand /task:plan-design from-draft")
 
 
-# --- дискавери множества планов ----------------------------------------------
+# --- discovery of many plans ----------------------------------------------
 
-ARCHIVE_DIR_NAME = "archive"  # N3/D14: контейнер архивных планов, сам планом не является
+ARCHIVE_DIR_NAME = "archive"  # N3/D14: container of archived plans, not a plan itself
 ARCHIVED_V2_STRICT_CUTOFF = "2026.09.09"
 
 
@@ -939,11 +939,11 @@ def _is_historical_archive(plan_id: str) -> bool:
 
 
 def discover_plan_dirs(root):
-    """path — либо сам plans/<ID> (есть plan.md), либо plans/ (перебор подкаталогов).
-    `plans/archive/` в переборе НЕ участвует как план (N3/D14). Из его
-    подкаталогов исполняемым текущим линтером остаётся только Layout v2;
-    исторические v1/missing-layout bytes являются inert source archive и
-    проверяются прежним совместимым тегом."""
+    """path — or himself plans/<ID> (yes plan.md), or plans/ (searching through subdirectories).
+    `plans/archive/` does NOT participate in the search as a plan (N3/D14). From his
+    subdirectories, only the current linter remains executable Layout v2;
+    historical v1/missing-layout bytes are inert source archive and
+    are checked by the old compatible tag."""
     root = Path(root)
     if (root / "plan.md").is_file():
         return [root]
@@ -975,18 +975,18 @@ def discover_plan_dirs(root):
     return dirs
 
 
-# --- --conflicts: канон ↔ реализация -----
-# Конфликт-скан сверяет EN-only `SKILL.md` с реестрами-константами реализации.
-# Точные литералы переиспользуют общий `CANON_LITERALS`, а не второй реестр.
+# --- --conflicts: canon ↔ implementation -----
+# Conflict scan checks EN-only `SKILL.md` with implementation constant registries.
+# Exact literals reuse the common `CANON_LITERALS`, and not the second registry.
 #
-# Работает БЕЗ аргумента-плана (Implementation Rule 5): сверяет АРТЕФАКТЫ канона, не
-# конкретный `plans/<ID>`. Каждая сверка — структурная (код-фенс/бэктик-спан/маркированный
-# список — устойчивый якорь), не эвристический парс свободной прозы (Implementation Rule 3).
-# Находка несёт ОБЕ стороны с `файл:строка` (Implementation Rule 4). `--conflicts` ничего не
-# ОБЪЯВЛЯЕТ заново — сравнивает канон и уже существующие реестры `plan_lint.py`; единственное
-# исключение — `CONTEXT_VALUES` (см. её комментарий выше), которую этот item вводит именно
-# затем, чтобы для класса «значения Context» было ЧТО сравнивать (без неё сверка этого
-# класса структурно невозможна — Scope Included этого item'а прямо требует её как одну из
-# шести граней).
+# Works WITHOUT plan argument (Implementation Rule 5): checks canon ARTIFACTS, not
+# specific `plans/<ID>`. Each reconciliation is structural (code-fence/backtick span/marked
+# list - stable anchor), not a heuristic parser of free prose (Implementation Rule 3).
+# The find carries BOTH sides `file:string` (Implementation Rule 4). `--conflicts` nothing
+# ANNOUNCES - compares canon and existing registries `plan_lint.py`; singular
+# exception - `CONTEXT_VALUES` (see her comment above), which this item enters exactly
+# then for the class «values Context» there was WHAT to compare (without it, checking this
+# class is structurally impossible - Scope Included this item'but directly demands it as one of
+# six edges).
 
 __all__ = tuple(name for name in globals() if not name.startswith("__"))

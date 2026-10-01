@@ -19,14 +19,14 @@ ITEM_ID = "P1.1"
 
 
 def _plan_md(*, done, phase_status):
-    return f"""# {PLAN_ID} — Фикстурный план для gate (P4.4)
+    return f"""# {PLAN_ID} — Fixture plan for gate (P4.4)
 
 ## 0. Meta
 
-| Поле | Значение |
+| Field | Meaning |
 |:--|:--|
 | Plan ID | {PLAN_ID} |
-| Title | Фикстурный план для gate |
+| Title | Fixture plan for gate |
 | Version | 0.1.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
@@ -36,72 +36,72 @@ def _plan_md(*, done, phase_status):
 
 ## 1. Context
 
-Синтетический план для юнит-тестов `harness/run/gate.py` (P4.4). НЕ боевой план.
+Synthetic plan for unit tests `harness/run/gate.py` (P4.4). NOT a battle plan.
 
 ## 2. Execution Rules
 
-- Один item за раз.
+- One item at a time.
 
 ## 3. Routing
 
-| Items | Model class/effort | Exec | Почему |
+| Items | Model class/effort | Exec | Why |
 |:--|:--|:--|:--|
-| {ITEM_ID} | implementation/medium | run | фикстура гейта |
+| {ITEM_ID} | implementation/medium | run | gate fixture |
 
 ## 4. Phase Index & Status Board
 
-| Phase | Title | Items 🟢/всего | Status |
+| Phase | Title | Items 🟢/total | Status |
 |:--|:--|:--|:--|
-| {PHASE_ID} | Фаза раз | {done}/1 | {phase_status} |
+| {PHASE_ID} | Phase times | {done}/1 | {phase_status} |
 
 ## 5. Decision Log
 
-| D# | Дата | Решение | Почему |
+| D# | Date | Solution | Why |
 |:--|:--|:--|:--|
-| D1 | 2026-08-01 | Фикстура закрытым набором | покрыть gate без второго парсера |
+| D1 | 2026-08-01 | Closed set fittings | cover gate without a second parser |
 
 ## 6. Update Log
 
-| Дата | Кто (role/model) | Что |
+| Date | Who (role/model) | What |
 |:--|:--|:--|
-| 2026-08-01 | package-implementer/sonnet | Фикстура создана (P4.4) |
+| 2026-08-01 | package-implementer/sonnet | Fixture created (P4.4) |
 """
 
 
 def _phase_md(*, status, completion_notes="—", pending_work="—", known_deviations="—",
              escalation_needed="no", escalation_blockquote=False):
-    blockquote = (f"> 🔴 ESCALATION {ITEM_ID}: тестовый блок | trigger: contradictory evidence "
-                 f"| нужен: plan-design\n\n") if escalation_blockquote else ""
+    blockquote = (f"> 🔴 ESCALATION {ITEM_ID}: test block | trigger: contradictory evidence "
+                 f"| needed: plan-design\n\n") if escalation_blockquote else ""
 
 
     if status in ("🟢 Done", "🟠 Done with deviations"):
         completion_notes = f"{completion_notes}\n\nwrite-site: pre_mutation: allow · pre_final: allow"
-    return f"""# {PHASE_ID} — Фаза раз
+    return f"""# {PHASE_ID} — Phase times
 
 ## Phase Context
 
-Синтетическая фаза фикстуры `gate` (P4.4).
+Synthetic phase of fixture `gate` (P4.4).
 
 ## Phase Status
 
 | ID | Title | Status | Updated |
 |:--|:--|:--|:--|
-| {ITEM_ID} | Базовый item | {status} | 2026-08-01 |
+| {ITEM_ID} | Basic item | {status} | 2026-08-01 |
 
-### {ITEM_ID} — Базовый item
+### {ITEM_ID} — Basic item
 
 {blockquote}**Status:** {status}
-**Intent:** Демонстрирует gate.
-**Why:** Базовый кейс.
-**Scope Included:** ничего — фикстура.
-**Scope Excluded:** реальная логика.
+**Intent:** Demonstrates gate.
+**Why:** Basic case.
+**Scope Included:** nothing - fixture.
+**Scope Excluded:** real logic.
 **Inputs:** —
 **Files:** —
-**Required Reads:** 1) не применимо (фикстура).
-**Implementation Rules:** нет — фикстура.
-**Code Guidance:** нет — фикстура.
-**Validation:** не применимо — фикстура читается тестами `gate`.
-**Deliverables:** синтетические данные для `test_run_gate.py`.
+**Required Reads:** 1) not applicable (fixture).
+**Implementation Rules:** no - fixture.
+**Code Guidance:** no - fixture.
+**Validation:** not applicable - fixture is read by tests `gate`.
+**Deliverables:** synthetic data for `test_run_gate.py`.
 **Completion Notes:** {completion_notes}
 **Pending Work:** {pending_work}
 **Known Deviations:** {known_deviations}
@@ -109,7 +109,7 @@ def _phase_md(*, status, completion_notes="—", pending_work="—", known_devia
 
 ## Phase Handoff
 
-Фикстура: фаза не сдаётся по-настоящему, используется тестами `gate`.
+Fixture: the phase does not really give up, it is used by tests `gate`.
 """
 
 
@@ -119,12 +119,12 @@ def _bootstrap_handoff_md():
 
 **Next:** exec-items: task:plan-run {PLAN_ID} {ITEM_ID}
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |:--|:--|
 | Model class | implementation |
 | Effort | medium |
 | Context | continue (/clear) |
-| Суть | фикстура — план ещё не тронут |
+| The bottom line | fixture - the plan has not yet been touched |
 
 ```
 /task:plan-run {PLAN_ID} {ITEM_ID}
@@ -146,19 +146,19 @@ def _handoff_md():
 
 **Next:** run-items: task:plan-run {PLAN_ID} {ITEM_ID}
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |:--|:--|
 | Model class | implementation |
 | Effort | medium |
 | Context | continue (/clear) |
-| Суть | фикстура — читается тестами `gate` |
+| The bottom line | fixture - read by tests `gate` |
 
 ```
 /task:plan-run {PLAN_ID} {ITEM_ID}
 ```
 
-**Done:** фикстура создана (P4.4).
-**Remaining:** ничего — план не боевой.
+**Done:** fixture created (P4.4).
+**Remaining:** nothing - the plan is not a combat one.
 **Sources of truth:** plans/{PLAN_ID}/plan.md · plans/{PLAN_ID}/phases/{PHASE_ID}.md
 **Open risks:** —
 **Workarounds/Deferred/Open questions:**
@@ -190,7 +190,7 @@ class _Repo:
 
         (self.root / ".gitkeep").write_text("")
         self._run(["add", ".gitkeep"])
-        self.pre_plan_sha = self.commit("до появления каталога плана")
+        self.pre_plan_sha = self.commit("until the plan directory appears")
         (self.plan_dir / "phases").mkdir(parents=True)
 
     def _run(self, args, check=True):
@@ -251,7 +251,7 @@ class _Repo:
             item_spec = self.plan_dir / "phases" / PHASE_ID / f"{ITEM_ID}.md"
             item_spec.write_text(item_spec.read_text() + (
                 f"> 🔴 ESCALATION {ITEM_ID}: fixture block | trigger: contradictory evidence "
-                "| нужен: plan-design\n"
+                "| needed: plan-design\n"
             ))
         phase.write_text(phase_text)
 
@@ -325,7 +325,7 @@ class LayoutBookkeepingTest(unittest.TestCase):
             phase = plan / "phases" / "P1"
             phase.mkdir(parents=True)
             (plan / "plan.md").write_text(
-                "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n")
+                "## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n")
             (phase / "P1.md").write_text("# P1\n")
             resolved = gate._call_plan_layout(plan, "P1", REPO_ROOT)
             self.assertEqual(resolved["layout"], "v2")
@@ -352,7 +352,7 @@ class GateVerdictTest(unittest.TestCase):
 
     def test_clean_close_is_green(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
         result = self._verdict()
@@ -365,8 +365,8 @@ class GateVerdictTest(unittest.TestCase):
     def test_status_deviations_is_attention(self):
         self.repo.write_plan(done=0, phase_status="🟡 In progress")
         self.repo.write_phase(status="🟠 Done with deviations",
-                              completion_notes="Сделано с оговоркой.",
-                              known_deviations="Перебор effort.")
+                              completion_notes="Submitted with a caveat.",
+                              known_deviations="Overkill effort.")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
         result = self._verdict()
@@ -375,7 +375,7 @@ class GateVerdictTest(unittest.TestCase):
 
     def test_permission_denials_is_attention(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
         result = self._verdict(_ok_outcome(permission_denials=["Bash(rm)"]))
@@ -384,8 +384,8 @@ class GateVerdictTest(unittest.TestCase):
 
     def test_pending_work_nonempty_is_attention(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.",
-                              pending_work="Один WARN линтера вне Scope.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.",
+                              pending_work="One WARN linter out Scope.")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
         result = self._verdict()
@@ -394,8 +394,8 @@ class GateVerdictTest(unittest.TestCase):
 
     def test_known_deviations_nonempty_is_attention(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.",
-                              known_deviations="Перебор effort (implementation/high вместо medium).")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.",
+                              known_deviations="Overkill effort (implementation/high instead medium).")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
         result = self._verdict()
@@ -405,18 +405,18 @@ class GateVerdictTest(unittest.TestCase):
     def test_bundle_is_attention_not_red(self):
         """Internal documentation."""
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.")
         self.repo.write_handoff()
         scope = self.repo.write_scope_file()
         self.repo.add(scope, self.repo.plan_dir)
-        self.repo.commit("бандл: scope + bookkeeping одним коммитом")
+        self.repo.commit("bundle: scope + bookkeeping in one commit")
         result = self._verdict()
         self.assertEqual(result["verdict"], gate.ATTENTION)
         self.assertIn("bundle", result["signals_matched"])
 
     def test_only_new_warning_is_attention(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.")
         self.repo.write_handoff()
         # Reordering canonical item fields is a warning-only v2 fixture defect.
         spec = self.repo.plan_dir / "phases" / PHASE_ID / f"{ITEM_ID}.md"
@@ -435,7 +435,7 @@ class GateVerdictTest(unittest.TestCase):
 
     def test_worker_timeout_is_red(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
         result = self._verdict(_ok_outcome(outcome="timeout", result_text=None))
@@ -444,7 +444,7 @@ class GateVerdictTest(unittest.TestCase):
 
     def test_worker_transport_is_red(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
         result = self._verdict(_ok_outcome(outcome="transport", result_text=None))
@@ -453,7 +453,7 @@ class GateVerdictTest(unittest.TestCase):
 
     def test_worker_quota_is_red(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
         result = self._verdict(_ok_outcome(outcome="quota", result_text=None))
@@ -462,7 +462,7 @@ class GateVerdictTest(unittest.TestCase):
     def test_new_error_is_red(self):
         self.repo.write_plan(done=0, phase_status="🟡 In progress")
 
-        self.repo.write_phase(status="🟢 СЛОМАНО")
+        self.repo.write_phase(status="🟢 BROKEN")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
         result = self._verdict()
@@ -491,10 +491,10 @@ class GateVerdictTest(unittest.TestCase):
 
     def test_escalation_in_report_is_red(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
-        result = self._verdict(_ok_outcome(result_text="... ESCALATION-REQUIRED: P1.1 — конфликт"))
+        result = self._verdict(_ok_outcome(result_text="... ESCALATION-REQUIRED: P1.1 — conflict"))
         self.assertEqual(result["verdict"], gate.RED)
         self.assertIn("escalation-in-report", result["signals_matched"])
 
@@ -508,20 +508,20 @@ class GateVerdictTest(unittest.TestCase):
         """Internal documentation."""
         scope = self.repo.write_scope_file()
         self.repo.add(scope)
-        self.repo.commit("item-коммит: только Scope")
+        self.repo.commit("item-commit: only Scope")
 
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.")
         result = self._verdict()
         self.assertEqual(result["verdict"], gate.RED)
         self.assertIn("closure-signature-incomplete", result["signals_matched"])
 
     def test_closure_partial_handoff_missing_is_red(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.")
 
         self.repo.add(self.repo.plan_dir / "plan.md", self.repo.plan_dir / "phases" / PHASE_ID / f"{PHASE_ID}.md")
-        self.repo.commit("bookkeeping без handoff.md")
+        self.repo.commit("bookkeeping without handoff.md")
         result = self._verdict()
         self.assertEqual(result["verdict"], gate.RED)
         self.assertIn("closure-signature-incomplete", result["signals_matched"])
@@ -530,12 +530,12 @@ class GateVerdictTest(unittest.TestCase):
     def test_dirty_remainder_after_clean_close_is_red(self):
         """Internal documentation."""
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
 
         plan_path = self.repo.plan_dir / "plan.md"
-        plan_path.write_text(plan_path.read_text() + "\n<!-- незакоммиченный хвост -->\n")
+        plan_path.write_text(plan_path.read_text() + "\n<!-- uncommitted tail -->\n")
         result = self._verdict()
         self.assertEqual(result["verdict"], gate.RED)
         self.assertIn("dirty-remainder", result["signals_matched"])
@@ -543,10 +543,10 @@ class GateVerdictTest(unittest.TestCase):
     def test_preexisting_foreign_diff_does_not_cause_false_red(self):
         """Internal documentation."""
         foreign = self.repo.plan_dir / "foreign-owner-edit.md"
-        foreign.write_text("владелец правит параллельно\n")
+        foreign.write_text("owner rules in parallel\n")
         before = self.repo.snapshot()
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
         result = gate.verdict(PLAN_ID, ITEM_ID, PHASE_ID, self.repo.plan_dir, before,
@@ -558,7 +558,7 @@ class GateVerdictTest(unittest.TestCase):
         self.repo.write_plan(done=0, phase_status="🟡 In progress")
         self.repo.write_phase(status="🟡 In progress")
         self.repo.write_handoff()
-        self.repo.commit_bookkeeping("no-op: коммит есть, статус не сдвинулся")
+        self.repo.commit_bookkeeping("no-op: there is a commit, the status has not changed")
         result = self._verdict()
         self.assertEqual(result["verdict"], gate.RED)
         self.assertIn("no-op", result["signals_matched"])
@@ -582,20 +582,20 @@ class GateVerdictTest(unittest.TestCase):
 
     def test_commit_count_and_order_are_not_judged(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.")
         self.repo.write_handoff()
 
         scope1 = self.repo.write_scope_file("x = 1\n")
         self.repo.add(scope1)
-        self.repo.commit("scope-коммит 1/2")
+        self.repo.commit("scope-commit 1/2")
         scope1.write_text("x = 2\n")
         self.repo.add(scope1)
-        self.repo.commit("scope-коммит 2/2 (item-коммит)")
-        self.repo.commit_bookkeeping("bookkeeping-коммит")
+        self.repo.commit("scope-commit 2/2 (item-commit)")
+        self.repo.commit_bookkeeping("bookkeeping-commit")
 
         scope1.write_text("x = 3\n")
         self.repo.add(scope1)
-        self.repo.commit("review-fix поверх топологии")
+        self.repo.commit("review-fix over topology")
         result = self._verdict()
         self.assertEqual(result["verdict"], gate.GREEN)
         self.assertEqual(result["raw"]["closure"]["commit_count"], 5)
@@ -604,7 +604,7 @@ class GateVerdictTest(unittest.TestCase):
 
     def test_degraded_baseline_is_not_green(self):
         self.repo.write_plan(done=1, phase_status="🟢 Done")
-        self.repo.write_phase(status="🟢 Done", completion_notes="Сделано.")
+        self.repo.write_phase(status="🟢 Done", completion_notes="Done.")
         self.repo.write_handoff()
         self.repo.commit_bookkeeping()
         broken_before = dict(self.before, sha=self.repo.pre_plan_sha)

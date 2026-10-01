@@ -25,8 +25,8 @@ Split vs `git-commit-rules` (general): that = git FORMAT & MECHANICS (Convention
 1. Determine artifact language. Default Russian for anything team members read: comments, commit bodies, test descriptions, docstrings, internal docs. Exceptions → "When English fits".
 2. Decide if a comment is needed at all. Justified only when WHY is non-obvious without it. If text restates what the code shows — delete it, don't rewrite.
 3. State reason, not action. Write intent and consequence ("so the archive isn't pulled into the public list"), not mechanics ("performs a selection"). If a phrase starts with "this code / method performs / produces" — rewrite.
-4. Tense: present or past — "проверяем", "ограничили", "оставили". No infinitives, no verbal nouns ("осуществление проверки").
-5. Commit subject — completed action, past tense, usually plural: "добавили", "исправили", "убрали", "обновили". Not a bare infinitive ("добавить", "исправить"). Body — reason + effect in 1–2 lines. Structure (type, scope, breaking) from `git-commit-rules`.
+4. Tense: present or past — "checking", "limited", "left". No infinitives, no verbal nouns ("performing verification").
+5. Commit subject — completed action, past tense, usually plural: "added", "fixed", "removed", "updated". Not a bare infinitive ("add", "fix"). Body — reason + effect in 1–2 lines. Structure (type, scope, breaking) from `git-commit-rules`.
 6. Test descriptions — human-readable Russian phrase describing checked behavior: what the system does and under what conditions. Not a restatement of the method name, not transliteration. See "Test descriptions".
 7. Docstrings & internal docs — Russian, concrete: why the class/method exists, non-obvious constraints and side effects. Don't restate the signature in words.
 8. Run the quality checklist before leaving the text.
@@ -42,29 +42,29 @@ Split vs `git-commit-rules` (general): that = git FORMAT & MECHANICS (Convention
 ## Live language, no bureaucratese
 
 - Explain WHY, not WHAT: code already shows what it does; the comment adds missing intent/context.
-- Present/past tense: "ограничили", "проверяем", "оставили как есть".
-- Forbidden — bureaucratese and AI templates: "данный код", "осуществляет", "производит выборку", "выполняет операцию", "в рамках", "является".
+- Present/past tense: "limited", "checking", "left as is".
+- Forbidden — bureaucratese and AI templates: "this code", "carries out", "is sampling", "performs the operation", "within", "is".
 - No jargon or "universal" phrases that fit any code.
 - Short: one or two lines of reason beat a paragraph of restatement.
 
 ```php
-// Хорошо — причина:
-// Ограничили выборку активными записями, чтобы не тянуть архив в публичный список.
+// Okay - the reason:
+// We limited the selection to active records so as not to drag the archive into the public list.
 
-// Плохо — пересказ канцеляритом:
-// Данный код осуществляет выборку записей из таблицы.
+// Bad - retelling by the clerk:
+// This code retrieves records from the table.
 ```
 
 ## Commit bodies: tone & language
 
-- Subject — completed action in Russian: "добавили", "исправили", "убрали".
+- Subject — completed action in Russian: "added", "fixed", "removed".
 - Body — concrete result and why it's needed, no template phrases.
 - Format (type, scope, breaking, hooks) — entirely from `git-commit-rules`.
 
 ```text
-fix(api): исправили ложный 403 для участников без роли исполнителя
+fix(api): fixed false 403 for members without performer role
 
-Добавили guard по статусу, чтобы не отклонять запросы тех, у кого доступ есть.
+Added guard by status, so as not to reject requests from those who have access.
 ```
 
 ## Test descriptions
@@ -73,16 +73,16 @@ fix(api): исправили ложный 403 для участников без
 - Don't transliterate the method name or restate the signature.
 
 ```php
-// Хорошо:
-it('возвращает 403, когда у пользователя нет роли исполнителя', function () { /* ... */ });
+// Okay:
+it('returns 403 when user does not have an executor role', function () { /* ... */ });
 
-// Плохо — транслитерация имени метода:
+// Bad - method name transliteration:
 it('test user role check returns forbidden', function () { /* ... */ });
 ```
 
 ```php
-// PHPUnit-стиль — имя метода латиницей, описание по-русски:
-/** @test Архивный документ не попадает в публичный список */
+// PHPUnit-style - method name in Latin, description in Russian:
+/** @test The archived document is not included in the public list */
 public function archived_document_is_hidden_from_public_list(): void { /* ... */ }
 ```
 
@@ -101,7 +101,7 @@ Stays inside the team → Russian. Unsure who the reader is → default Russian.
 - [ ] Comments/commit bodies/test descriptions/internal-code docstrings — Russian.
 - [ ] English kept only for public API, docs-public, external audience.
 - [ ] Comment explains WHY, not WHAT; no redundant comments.
-- [ ] No bureaucratese / AI templates ("данный код", "осуществляет", "производит", "является").
+- [ ] No bureaucratese / AI templates ("this code", "carries out", "produces", "is").
 - [ ] Present/past tense, no infinitives or verbal nouns.
 - [ ] Commit subject — completed action, not bare infinitive; body has reason + effect.
 - [ ] Test description — about behavior and conditions, no method-name transliteration.
@@ -112,9 +112,9 @@ Stays inside the team → Russian. Unsure who the reader is → default Russian.
 - Write comments, commit bodies, test descriptions, internal-code docstrings in Russian.
 - Keep English only for public API, docs-public, external audience.
 - Comment explains WHY, not restates WHAT; delete code-restating comments.
-- No bureaucratese / AI templates: "данный код", "осуществляет", "производит", "является".
+- No bureaucratese / AI templates: "this code", "carries out", "produces", "is".
 - Present/past tense; no infinitives or verbal nouns.
-- Commit subject — completed action ("добавили"), not a bare infinitive.
+- Commit subject — completed action ("added"), not a bare infinitive.
 - Commit body — reason + effect in 1–2 lines, no generic phrases.
 - Test description — behavior and conditions in Russian, no method-name transliteration.
 - Don't translate identifiers, keys, contracts — prose only.

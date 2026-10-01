@@ -43,9 +43,9 @@ class DoctorCase(unittest.TestCase):
         env = fx.real_env(self.tmp)
         _out, text = run(cmd_doctor, env, [])
         self.assertIn("harness doctor:", text)
-        self.assertIn("MCP-пресеты", text)
+        self.assertIn("MCP-presets", text)
 
-        self.assertIn("permissions-пресеты", text)
+        self.assertIn("permissions-presets", text)
 
     def test_runs_when_script_missing_no_crash(self):
 
@@ -60,7 +60,7 @@ class DoctorCase(unittest.TestCase):
         env = fx.real_env(self.tmp)
         out, text = run(cmd_doctor, env, [])
         self.assertNotIsInstance(out, SystemExit)
-        self.assertIn("хук run-report протух", text)
+        self.assertIn("hook run-report rotten", text)
         self.assertIn("harness hooks --global", text)
 
     def test_route_evidence_guidance_line_present(self):
@@ -80,7 +80,7 @@ class DoctorCase(unittest.TestCase):
         for name in ("run-report.py", "_lib.py", "_usage.py"):
             (dst / name).write_text((src / name).read_text(encoding="utf-8"), encoding="utf-8")
         _out, text = run(cmd_doctor, env, [])
-        self.assertNotIn("протух", text)
+        self.assertNotIn("rotten", text)
 
 
 class SettingsCase(unittest.TestCase):
@@ -135,7 +135,7 @@ class SettingsCase(unittest.TestCase):
         f = self.tmp / ".swissknife.json"
         self.assertEqual(json.loads(f.read_text())["memory_brain"], "core:file")
         _out, text = run(set_swissknife, self.tmp, "memory_brain", "core:file", False)
-        self.assertIn("уже", text)
+        self.assertIn("already", text)
 
 
 class CliDispatchCase(unittest.TestCase):
@@ -155,7 +155,7 @@ class CliDispatchCase(unittest.TestCase):
         out, text = run(cli.main, [str(self.tmp), "bogus"])
         self.assertIsInstance(out, SystemExit)
         self.assertEqual(out.code, 1)
-        self.assertIn("Неизвестная команда", text)
+        self.assertIn("Unknown command", text)
 
     def test_doctor_dispatch_runs(self):
         out, text = run(cli.main, [str(fx.PACKAGE_ROOT), "doctor"])

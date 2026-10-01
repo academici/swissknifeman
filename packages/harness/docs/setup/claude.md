@@ -1,114 +1,114 @@
-# Настройка окружения Claude Code
+# Setting up the environment Claude Code
 
-Как один раз настроить машину и проекты так, чтобы Claude Code работал
-автономно: без бесконечных permission-промптов, но с полным аудитом того,
-что агент реально выполняет.
+How to set up the machine and projects once so that Claude Code worked
+offline: no endless permission-prompts, but with a full audit of
+what the agent actually does.
 
-## Проблема
+## Problem
 
-При активной разработке Claude Code запрашивает подтверждение почти на каждую
-терминальную команду. На практике это выглядит так:
+During active development Claude Code asks for confirmation for almost every
+terminal command. In practice it looks like this:
 
-- в 100% случаев нажимается «подтвердить», а результат проверяется постфактум —
-  промпты не защищают, а только прерывают работу;
-- приходится сидеть у компьютера и ждать очередного вопроса вместо того,
-  чтобы дать агенту задачу и вернуться к готовому результату;
-- точечные разрешения «на конкретную команду» не переиспользуются: та же
-  команда с другим файлом или флагом снова требует подтверждения.
+- in 100% cases is pressed «confirm», and the result is checked after the fact -
+  prompts do not protect, but only interrupt the work;
+- have to sit at the computer and wait for the next question instead of
+  to give the agent a task and return to the finished result;
+- point permissions «to a specific command» are not reused: same
+  command with a different file or flag requires confirmation again.
 
-Анализ ~5000 Bash-команд из реальных транскриптов показал масштаб проблемы:
+Analysis ~5000 Bash-commands from real transcripts showed the scale of the problem:
 
-| Тип команд | Доля | Примеры |
+| Command type | Share | Examples |
 |---|---|---|
-| Чистый read-only | **72.7%** | grep, find, ls, cat, git diff/log/status |
-| Повторяемые dev-операции | ~21% | pest, composer, docker compose exec, git add/commit |
-| Остальное | ~6% | curl, rm, разовые команды |
+| Clean read-only | **72.7%** | grep, find, ls, cat, git diff/log/status |
+| Repeatable dev-operations | ~21% | pest, composer, docker compose exec, git add/commit |
+| Rest | ~6% | curl, rm, one-time commands |
 
-То есть почти три четверти промптов приходится на команды, которые ничего
-не меняют, — их можно безопасно разрешить раз и навсегда.
+That is, almost three quarters of prompts come from commands that do nothing
+do not change - they can be safely resolved once and for all.
 
-## Решение: три слоя
+## Solution: three layers
 
-### 1. Глобальный baseline (`~/.claude/settings.json`)
+### 1. Global baseline (`~/.claude/settings.json`)
 
-Пресет [`settings.global.json`](https://github.com/academici/swissknifeman/tree/main/configs/claude-code)
-ставится один раз на машину и действует во всех проектах:
+Preset [`settings.global.json`](https://github.com/academici/swissknifeman/tree/main/configs/claude-code)
+is installed once per machine and is valid in all projects:
 
-- **allow** — весь read-only (grep/find/ls/cat/head/tail/jq/awk…),
-  read-only git (diff/log/status/show/branch), безопасный git
-  (add/commit/checkout/stash), файловые операции (mkdir/cp/mv/touch),
-  оркестрация (`Workflow`/`Agent`/`TodoWrite` — чтобы многофазный воркфлоу не
-  просил подтверждение после каждой стадии; разбор — в
-  [пресетах permissions](../configs/claude-permissions));
-- **ask** — необратимое: `git push`, `git reset --hard`; (`rm` управляется не
-  ask-правилом, а auto-approve-хуком: deny вне доверенных директорий, allow
-  внутри — см. `harness safe-dirs`);
-- **deny** — заблокировано всегда: `sudo`, force-push, `git config --global`,
-  `chmod 777`, чтение секретов (`.env`, `*.pem`, `*.key`, `~/.ssh`, `~/.aws`).
+- **allow** — all read-only (grep/find/ls/cat/head/tail/jq/awk…),
+  read-only git (diff/log/status/show/branch), safe git
+  (add/commit/checkout/stash), file operations (mkdir/cp/mv/touch),
+  orchestration (`Workflow`/`Agent`/`TodoWrite` — so that multiphase workflow does not
+  asked for confirmation after each stage; parsing - in
+  [presets permissions](../configs/claude-permissions));
+- **ask** — irreversible: `git push`, `git reset --hard`; (`rm` not controlled
+  ask-rule, and auto-approve-hook: deny outside of trusted directories, allow
+  inside - see `harness safe-dirs`);
+- **deny** — always blocked: `sudo`, force-push, `git config --global`,
+  `chmod 777`, reading secrets (`.env`, `*.pem`, `*.key`, `~/.ssh`, `~/.aws`).
 
-### 2. Профиль проекта (`.claude/settings.local.json`)
+### 2. Project Profile (`.claude/settings.local.json`)
 
-Поверх baseline в каждый проект накатывается пресет стека —
-[см. подробный разбор](../configs/claude-permissions). Автодетект по маркерам:
+Top baseline a stack preset is rolled into each project -
+[see detailed analysis](../configs/claude-permissions). Auto detect by markers:
 `artisan` → laravel, `composer.json` → php-package, `package.json` → node,
-`Dockerfile` → docker. После этого тесты, линтеры, composer и artisan
-работают без промптов, а деструктивное (`migrate:fresh`,
-`docker system prune`) остаётся под подтверждением.
+`Dockerfile` → docker. After this, tests, linters, composer and artisan
+work without prompts, and destructive (`migrate:fresh`,
+`docker system prune`) remains under confirmation.
 
-### 3. Лог команд — «прокси» для аудита
+### 3. Command log - «proxy» for audit
 
-Раз агент работает автономно, нужен способ постфактум проверить, что он
-делал. Вместо внешнего прокси-демона используется нативный механизм hooks:
-PreToolUse-hook `log-bash-command.sh` пишет **каждую** Bash-команду в
-`~/.claude/logs/bash-commands.jsonl` — время, проект, команда, описание.
-Hook только логирует и никогда не блокирует выполнение.
+Since the agent is autonomous, we need a way to verify after the fact that it
+did. Instead of an external proxy daemon, a native mechanism is used hooks:
+PreToolUse-hook `log-bash-command.sh` writes **every** Bash-command in
+`~/.claude/logs/bash-commands.jsonl` — time, project, team, description.
+Hook only logs and never blocks execution.
 
 ```bash
-# Последние 20 команд
+# Last 20 commands
 tail -20 ~/.claude/logs/bash-commands.jsonl | jq -r '"\(.ts) [\(.cwd)] \(.command)"'
 
-# Все команды конкретного проекта
+# All commands for a specific project
 jq -r 'select(.cwd | test("myproject")) | .command' ~/.claude/logs/bash-commands.jsonl
 
-# Частотный анализ: какие команды агент выполняет чаще всего
+# Frequency analysis: which commands the agent executes most often
 jq -r '.command' ~/.claude/logs/bash-commands.jsonl | awk '{print $1}' | sort | uniq -c | sort -rn | head
 ```
 
-Ключевой принцип: **deny сильнее allow** — даже широкие префиксы не пропустят
-`sudo`, force-push или чтение секретов. Контроль смещается с «подтверждать
-каждый шаг» на «запретить опасное + проверять лог».
+Key Principle: **deny stronger allow** — even wide prefixes will not be missed
+`sudo`, force-push or reading secrets. Control shifts from «confirm
+every step» on «prohibit dangerous + check log».
 
-## Установка
+## Installation
 
 ```bash
 cd ~/projects/packages/swissknifeman
 
-# 1. Один раз на машину: глобальный baseline + hook-логгер
+# 1. Once per machine: global baseline + hook-logger
 ./scripts/apply-permissions.sh --global
 
-# 2. В каждый проект: пресет стека (автодетект)
+# 2. In each project: stack preset (autodetection)
 ./scripts/apply-permissions.sh --target ~/projects/my-app
 
-# Превью без записи / явный набор
+# Preview without recording / explicit set
 ./scripts/apply-permissions.sh --target . --dry-run
 ./scripts/apply-permissions.sh --target . --preset base,laravel,docker
 ```
 
-Скрипт идемпотентен: правила мержатся с существующими без дублей, ничего
-не затирается, перед записью создаётся бэкап `*.bak`. Ваши `model`,
-`mcpServers` и прочие настройки в `~/.claude/settings.json` не трогаются.
+The script is idempotent: the rules are merged with existing ones without duplicates, nothing
+is not overwritten, a backup is created before recording `*.bak`. Yours `model`,
+`mcpServers` and other settings in `~/.claude/settings.json` are not touched.
 
-::: warning Перезапуск обязателен
-Hooks и permissions подхватываются при старте сессии — после `--global`
-перезапустите открытые сессии Claude Code (и окно VSCode с расширением).
+::: warning Restart required
+Hooks and permissions are picked up at the start of the session - after `--global`
+restart open sessions Claude Code (and window VSCode with extension).
 :::
 
-## Если промпты всё ещё появляются
+## If prompts still appear
 
-1. **Повторяющаяся команда** — добавьте её префикс в пресет
-   (`Bash(vendor/bin/pest *)` покрывает любые аргументы) и переустановите.
-2. **Автоматический подбор** — скилл `/fewer-permission-prompts` в Claude Code
-   сам анализирует транскрипты и предлагает allowlist.
-3. **Вариативные команды** — оберните их в стабильные скрипты
-   (`composer ai:test`, `npm run ai:lint`): одно правило на скрипт вместо
-   десятков уникальных команд.
+1. **Repeated command** — add its prefix to the preset
+   (`Bash(vendor/bin/pest *)` covers any arguments) and reinstall.
+2. **Automatic selection** — skill `/fewer-permission-prompts` in Claude Code
+   itself analyzes transcripts and offers allowlist.
+3. **Variable commands** — wrap them in stable scripts
+   (`composer ai:test`, `npm run ai:lint`): one rule per script instead
+   dozens of unique commands.

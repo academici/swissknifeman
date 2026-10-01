@@ -25,7 +25,7 @@ def _approved(out):
     return '"permissionDecision":"allow"' in out.replace(" ", "")
 
 
-@unittest.skipUnless(HAS_JQ, "нужен jq")
+@unittest.skipUnless(HAS_JQ, "needed jq")
 class TestAutoApproveInterpreters(unittest.TestCase):
     """Internal documentation."""
 
@@ -42,7 +42,7 @@ class TestAutoApproveInterpreters(unittest.TestCase):
     def test_inline_interpreters_not_auto_approved(self):
         for cmd in ('python -c "print(1)"', 'python3 -c "import os"',
                     'node -e "1"', 'ruby -e "1"', 'perl -e "1"', 'php -r "1"'):
-            self.assertFalse(self._decide(cmd), f"интерпретатор не должен авто-одобряться: {cmd}")
+            self.assertFalse(self._decide(cmd), f"interpreter should not be auto-approved: {cmd}")
 
     def test_awk_sed_not_auto_approved(self):
 
@@ -50,7 +50,7 @@ class TestAutoApproveInterpreters(unittest.TestCase):
         self.assertFalse(self._decide("sed 's/a/b/' file"))
 
 
-@unittest.skipUnless(HAS_JQ, "нужен jq")
+@unittest.skipUnless(HAS_JQ, "needed jq")
 class TestReviewGateRCE(unittest.TestCase):
     """Internal documentation."""
 
@@ -75,13 +75,13 @@ class TestReviewGateRCE(unittest.TestCase):
         hookdir, proj, sentinel = self._setup(allow_project=False)
         _run(hookdir / "review-gate.sh", {"cwd": str(proj)})
         self.assertFalse(sentinel.exists(),
-                         "RCE: project-local check_command исполнился без opt-in")
+                         "RCE: project-local check_command executed without opt-in")
 
     def test_project_config_runs_only_on_machine_optin(self):
         hookdir, proj, sentinel = self._setup(allow_project=True)
         _run(hookdir / "review-gate.sh", {"cwd": str(proj)})
         self.assertTrue(sentinel.exists(),
-                        "при ALLOW_PROJECT_CONFIG=1 project-проверка должна исполняться")
+                        "when ALLOW_PROJECT_CONFIG=1 project-check must be executed")
 
 
 if __name__ == "__main__":

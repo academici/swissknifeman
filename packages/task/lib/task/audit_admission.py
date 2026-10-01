@@ -48,32 +48,32 @@ def _scope_sha256(record: dict) -> str:
 
 def _validate_record(value) -> dict:
     if not isinstance(value, dict) or set(value) != _RECORD_KEYS:
-        raise ValueError("audit admission: недопустимый набор полей")
+        raise ValueError("audit admission: invalid field set")
     if value["schema_version"] != SCHEMA_VERSION:
-        raise ValueError("audit admission: неверный schema_version")
+        raise ValueError("audit admission: is invalid schema_version")
     target = value["target"]
     if (not isinstance(target, dict) or set(target) != _TARGET_KEYS
             or not _PHASE_RE.fullmatch(target.get("phase_id", ""))
             or not _SHA256_RE.fullmatch(target.get("candidate_fingerprint", ""))):
-        raise ValueError("audit admission: неверный target")
+        raise ValueError("audit admission: is invalid target")
     if not _nonempty(value["run_id"]):
-        raise ValueError("audit admission: неверный run_id")
+        raise ValueError("audit admission: is invalid run_id")
     risks = value["residual_risks"]
     if not isinstance(risks, list) or not risks:
-        raise ValueError("audit admission: нужны остаточные риски")
+        raise ValueError("audit admission: need residual risks")
     risk_ids = []
     for risk in risks:
         if (not isinstance(risk, dict) or set(risk) != _RISK_KEYS
                 or any(not _nonempty(risk.get(field)) for field in _RISK_KEYS)):
-            raise ValueError("audit admission: неверная строка остаточного риска")
+            raise ValueError("audit admission: invalid residual risk line")
         risk_ids.append(risk["id"])
     if len(risk_ids) != len(set(risk_ids)):
-        raise ValueError("audit admission: идентификаторы рисков повторяются")
+        raise ValueError("audit admission: risk identifiers are repeated")
     if (not _SHA256_RE.fullmatch(value.get("scope_sha256", ""))
             or value["scope_sha256"] != _scope_sha256(value)):
-        raise ValueError("audit admission: scope не совпадает со связанными входами")
+        raise ValueError("audit admission: scope does not match associated inputs")
     if not _nonempty(value["owner_message"]):
-        raise ValueError("audit admission: неверный owner_message")
+        raise ValueError("audit admission: is invalid owner_message")
     return value
 
 
@@ -94,14 +94,14 @@ def _decision_records(plan_dir: Path):
     pattern = plan_layout.carrier_glob(plan_dir, "decision-record")
     directory = pattern.parent
     if directory.is_symlink():
-        raise ValueError("audit admission: каталог решений не может быть символьной ссылкой")
+        raise ValueError("audit admission: solution directory cannot be a symbolic link")
     if not directory.exists():
         return (), "AUDIT_CONSENT_MISSING"
     if not directory.is_dir():
-        raise ValueError("audit admission: каталог решений не является обычным каталогом")
+        raise ValueError("audit admission: solutions directory is not a normal directory")
     decisions = plan_decisions.load_decisions(plan_dir)
     if any(decision.path.is_symlink() for decision in decisions):
-        raise ValueError("audit admission: решение не может быть символьной ссылкой")
+        raise ValueError("audit admission: solution cannot be a symbolic link")
 
     records = []
     for decision in decisions:
@@ -109,12 +109,12 @@ def _decision_records(plan_dir: Path):
             continue
         blocks = list(_BLOCK_RE.finditer(decision.body))
         if decision.body.count("```audit-admission/v2") != len(blocks):
-            raise ValueError("audit admission: повреждён fenced-блок")
+            raise ValueError("audit admission: damaged fenced-block")
         for block in blocks:
             try:
                 value = json.loads(block.group("payload"))
             except json.JSONDecodeError as exc:
-                raise ValueError("audit admission: повреждён JSON") from exc
+                raise ValueError("audit admission: damaged JSON") from exc
             records.append((decision, _validate_record(value)))
     return tuple(records), None
 
@@ -162,7 +162,7 @@ def evaluate(plan_dir, phase_id, candidate, *, run_id=None) -> dict:
         from task.plan_gates import _candidate_snapshot_fingerprint
 
         if candidate.get("phase_id") != phase_id:
-            raise ValueError("candidate указывает на другую фазу")
+            raise ValueError("candidate indicates another phase")
         fingerprint = _candidate_snapshot_fingerprint(candidate)
         records, missing_code = _decision_records(plan_dir)
     except (KeyError, TypeError, ValueError, OSError, UnicodeDecodeError):

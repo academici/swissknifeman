@@ -1,13 +1,13 @@
-# Режимы отображения вьюпорта
+# Viewport display modes
 
-Справочник к скиллу `mcp-blender`.
+Skill reference `mcp-blender`.
 
 
-Именованные пресеты. Применять по команде пользователя или самостоятельно выбирать оптимальный для задачи.
+Named presets. Apply at the user’s command or independently select the optimal one for the task.
 
-### `tech` — технический вид (дефолтный для проверки геометрии)
+### `tech` — technical view (default for checking geometry)
 
-**Когда:** проверка формы, размеров, стыков, пазов, резьбы. Максимальная читаемость рёбер и полостей.
+**When:** checking the shape, dimensions, joints, grooves, threads. Maximum readability of ribs and cavities.
 
 ```python
 import bpy
@@ -37,9 +37,9 @@ for area in bpy.context.screen.areas:
         break
 ```
 
-### `material` — цветовая идентификация деталей
+### `material` — color identification of parts
 
-**Когда:** проверка принадлежности детали, цветовая дифференциация после сборки, крупные планы стыков.
+**When:** checking part ownership, color differentiation after assembly, close-ups of joints.
 
 ```python
 import bpy
@@ -67,14 +67,14 @@ for area in bpy.context.screen.areas:
         break
 ```
 
-### `realism` — максимальный реализм (презентация)
+### `realism` — maximum realism (presentation)
 
-**Когда:** итоговый скриншот для оценки внешнего вида, демонстрация пользователю. Перед применением — пересчитать нормали (см. `blender/version-gotchas`).
+**When:** final screenshot for evaluation of appearance, demonstration to the user. Before use, recalculate the normals (see `blender/version-gotchas`).
 
 ```python
 import bpy, bmesh
 
-# Пересчёт нормалей (если были инвертированы после boolean)
+# Recalculation of normals (if they were inverted after boolean)
 for obj in bpy.data.objects:
     if obj.type != 'MESH':
         continue
@@ -99,9 +99,9 @@ for area in bpy.context.screen.areas:
         break
 ```
 
-### `xray` — просмотр внутренней геометрии
+### `xray` — view internal geometry
 
-**Когда:** отладка полостей, проверка заливки, просмотр скрытых деталей (труба внутри корпуса, гнёзда магнитов).
+**When:** debugging cavities, checking fills, viewing hidden parts (pipe inside the housing, magnet sockets).
 
 ```python
 import bpy
@@ -112,7 +112,7 @@ for area in bpy.context.screen.areas:
                 sh = space.shading; ov = space.overlay
                 sh.type = 'SOLID'
                 sh.show_xray = True
-                sh.xray_alpha = 0.25          # прозрачность: 0.1 (почти невидимо) … 0.5 (полупрозрачно)
+                sh.xray_alpha = 0.25          # transparency: 0.1 (almost invisible) … 0.5 (translucent)
                 sh.color_type = 'MATERIAL'
                 sh.show_backface_culling = False
                 sh.background_type = 'VIEWPORT'
@@ -125,17 +125,17 @@ for area in bpy.context.screen.areas:
         break
 ```
 
-| Режим | Команда пользователя | Лучший для |
+| Mode | User command | Best for |
 |-------|---------------------|------------|
-| `tech` | «включи tech» | геометрия, размеры, стыки, резьба |
-| `material` | «включи material» | цвета деталей, крупные планы |
-| `realism` | «включи realism» | презентация, итоговый вид |
-| `xray` | «включи xray» | полости, заливка, скрытые детали |
+| `tech` | «turn on tech» | geometry, dimensions, joints, threads |
+| `material` | «turn on material» | detail colors, close-ups |
+| `realism` | «turn on realism» | presentation, final view |
+| `xray` | «turn on xray» | cavities, filling, hidden parts |
 
-**Автовыбор режима агентом:**
-- Построение и проверка геометрии → `tech`
-- Цветовая дифференциация деталей → `material`
-- Итоговая демонстрация / презентация пользователю → `realism`
-- Отладка полостей, нормалей, внутренних деталей → `xray`
+**Automatic mode selection by agent:**
+- Constructing and checking geometry → `tech`
+- Color differentiation of parts → `material`
+- Final demo / presentation to the user → `realism`
+- Debugging cavities, normals, internal parts → `xray`
 
 ---

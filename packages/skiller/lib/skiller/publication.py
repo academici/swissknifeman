@@ -291,7 +291,7 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
                 "source": "./",
                 "skills": paths,
                 "description": meta.get("description")
-                    or f"Alias: бакет перенесён в '{meta['alias_of']}'",
+                    or f"Alias: bucket moved to '{meta['alias_of']}'",
                 "category": meta.get("category", ""),
                 "tags": meta.get("tags", []),
                 "package": "skiller",
@@ -324,8 +324,8 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
         elif unit.kind == "management":
             marketplace_plugins.append({
                 "name": "skm", "source": source_path("skm"),
-                "description": "skiller CLI — управление скиллами проекта: бакеты "
-                               "(connect/vendor), integrate, статус",
+                "description": "skiller CLI — managing project skills: buckets "
+                               "(connect/vendor), integrate, status",
                 "category": "meta", "tags": ["cli", "skills", "management"],
                 "package": "skiller",
             })

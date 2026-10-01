@@ -14,19 +14,19 @@ class DocumentMediaController extends Controller
 {
     public function store(Request $request, Document $document): RedirectResponse
     {
-        // ВАЖНО: цепочка обязана заканчиваться toMediaCollection(),
-        // иначе файл НЕ будет сохранён.
+        // IMPORTANT: the chain must end toMediaCollection(),
+        // otherwise the file will NOT be saved.
         $document->addMediaFromRequest('cover')
             ->toMediaCollection('cover');
 
-        // С опциями FileAdder (всё чейнится до toMediaCollection):
+        // With options FileAdder (everything is chained until toMediaCollection):
         $document->addMedia($request->file('image'))
             ->usingFileName('cover-'.$document->id.'.jpg')
             ->withCustomProperties(['alt' => $request->string('alt')->toString()])
-            ->preservingOriginal() // копировать, а не перемещать исходник
+            ->preservingOriginal() // copy, not move the source
             ->toMediaCollection('images');
 
-        // Несколько файлов из одного поля запроса:
+        // Multiple files from one request field:
         $document->addMultipleMediaFromRequest(['images'])
             ->each(fn ($fileAdder) => $fileAdder->toMediaCollection('images'));
 
@@ -36,8 +36,8 @@ class DocumentMediaController extends Controller
     public function show(Document $document): array
     {
         return [
-            // Оригинал и конверсия. Имя конверсии должно быть
-            // зарегистрировано в registerMediaConversions(), иначе пустой URL.
+            // Original and conversion. The conversion name should be
+            // registered in registerMediaConversions(), otherwise empty URL.
             'cover' => $document->getFirstMediaUrl('cover'),
             'cover_thumb' => $document->getFirstMediaUrl('cover', 'thumb'),
 
@@ -57,7 +57,7 @@ class DocumentMediaController extends Controller
     {
         $document->deleteMedia($mediaId);
 
-        // Или очистить коллекцию целиком:
+        // Or clear the entire collection:
         // $document->clearMediaCollection('images');
 
         return back();

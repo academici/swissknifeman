@@ -25,7 +25,7 @@ def _unit_text(env):
     exec_start = env.root / "bin" / "maind"
     doc = env.root / "docs" / "guide" / "systemd.md"
     return f"""[Unit]
-Description=mAInd — демон общей памяти экосистемы (agent-memory)
+Description=mAInd — ecosystem shared memory daemon (agent-memory)
 Documentation=file://{doc}
 After=network-online.target
 Wants=network-online.target
@@ -46,14 +46,14 @@ WantedBy=default.target
 
 def _ensure_systemd():
     if shutil.which("systemctl") is None:
-        die("systemctl не найден — это не systemd-система; "
-            "поднимайте память вручную: maind start --only memory")
+        die("systemctl not found - this is not systemd-system; "
+            "raise memory manually: maind start --only memory")
     r = subprocess.run(["systemctl", "--user", "is-system-running"],
                        text=True, capture_output=True)
     # Empty nonzero output means no user instance (for example bare SSH without linger).
     if r.returncode != 0 and not (r.stdout or "").strip():
-        die("нет user-сессии systemd. По SSH: войдите в графическую сессию "
-            "или выполните `loginctl enable-linger " + getpass.getuser() + "`")
+        die("no user-sessions systemd. By SSH: log into the graphics session "
+            "or run `loginctl enable-linger " + getpass.getuser() + "`")
 
 
 def _sc(*args):
@@ -77,12 +77,12 @@ def cmd_service(env, argv):
         _sc("daemon-reload")
         r = _sc("enable", "--now", UNIT)
         if r.returncode != 0:
-            die("не удалось enable --now (см. вывод выше)")
-        print(f"\nУстановлен и запущен: {path}")
-        print("Автостарт при логине включён.")
-        print("Старт без логина (при загрузке ОС, опц.):")
+            die("failed enable --now (see output above)")
+        print(f"\nInstalled and running: {path}")
+        print("Autostart upon login is enabled.")
+        print("Start without login (when loading OS, opt.):")
         print(f"  loginctl enable-linger {getpass.getuser()}")
-        print("Управление: maind service {start|stop|restart|status|logs}")
+        print("Control: maind service {start|stop|restart|status|logs}")
         return
 
     if sub == "uninstall":
@@ -90,7 +90,7 @@ def cmd_service(env, argv):
         if path.exists():
             path.unlink()
         _sc("daemon-reload")
-        print(f"maind-memory удалён из systemd --user ({path} снят)")
+        print(f"maind-memory removed from systemd --user ({path} removed)")
         return
 
     if sub == "logs":
@@ -100,11 +100,11 @@ def cmd_service(env, argv):
 
     if sub in ("start", "stop", "restart", "status", "enable", "disable"):
         if not path.exists():
-            die("юнит не установлен — сначала: maind service install")
+            die("unit not installed - first: maind service install")
         r = _sc(sub, UNIT)
         # A stopped unit returns 3 for status; that is not an error.
         if r.returncode != 0 and sub != "status":
-            die(f"systemctl --user {sub} вернул {r.returncode}")
+            die(f"systemctl --user {sub} returned {r.returncode}")
         return
 
-    die(f"неизвестная сервис-команда: {sub} ({'|'.join(sorted(SERVICE_SUBCMDS))})")
+    die(f"unknown service command: {sub} ({'|'.join(sorted(SERVICE_SUBCMDS))})")

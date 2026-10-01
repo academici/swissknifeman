@@ -1,19 +1,19 @@
 # laravel/docs
 
-- **URL:** https://github.com/laravel/docs (ветки по версиям: 11.x, 12.x, …)
-- **Статус:** imported
-- **Проверено:** 2026-06-12
+- **URL:** https://github.com/laravel/docs (branches by version: 11.x, 12.x, …)
+- **Status:** imported
+- **Checked:** 2026-06-12
 
-Официальная документация Laravel. Используется как upstream для скиллов,
-дистиллирующих конкретные главы. При выходе нового мажора Laravel —
-обновить ветку в url соответствующих upstream.json.
+Official documentation Laravel. Used as upstream for skills,
+distilling specific chapters. When a new major comes out Laravel —
+update branch to url corresponding upstream.json.
 
-## Взято
+## Taken
 
 - `broadcasting.md` (12.x) → `skills/php/laravel-broadcasting/SKILL.md` (upstream.json, notify)
 
-## Целевые bucket-ы
+## Targets bucket-s
 
-`php`. Версионные основы остальных глав покрывает Laravel Boost
-(см. [laravel-boost.md](laravel-boost.md)) — новые дистилляты заводить
-только для тем, которых нет в Boost.
+`php`. Covers the version bases of the remaining chapters Laravel Boost
+(see [laravel-boost.md](laravel-boost.md)) — start new distillates
+only for topics that are not in Boost.

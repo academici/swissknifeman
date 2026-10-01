@@ -1,170 +1,170 @@
-# Polyglot-монорепо: как устроен platform-service
+# Polyglot-monorepo: how it works platform-service
 
-Гид по монорепо с несколькими языками/рантаймами под одной крышей — `services/` (ядро),
-`packages/js|php|flutter/` (SDK), `apps/` (демо/потребители), `infra/` (Docker/K8s). Паттерн
-встречается у externalized-платформ (например Loqum) — когда один продукт отдаёт SDK на
-нескольких языках вокруг общего runtime-ядра (референс — `research/AUDIT-loqum-findings.md`
-в корне репозитория).
+Multilingual monorepo guide/runtimes under one roof - `services/` (core),
+`packages/js|php|flutter/` (SDK), `apps/` (demo/consumers), `infra/` (Docker/K8s). Pattern
+occurs in externalized-platforms (for example Loqum) — when one product gives away SDK on
+several languages around a common runtime-kernels (reference - `research/AUDIT-loqum-findings.md`
+at the root of the repository).
 
-## Когда монорепо, а когда — отдельные репозитории
+## When are monorepos and when are separate repositories
 
-**Монорепо оправдан**, если:
-- SDK на разных языках **обязаны** синхронно следовать за одним protocol/contract (breaking
-  change в контракте — заведомо breaking для всех SDK разом);
-- есть общий CI, который должен провалиться, если PHP-SDK и Flutter-SDK разошлись по контракту;
-- одна команда (или тесно связанные команды) владеет и ядром, и SDK.
+**Monorepo justified**, if:
+- SDK in different languages **are required** synchronously follow one protocol/contract (breaking
+  change in the contract - obviously breaking for everyone SDK at once);
+- is common CI, which should fail if PHP-SDK and Flutter-SDK went their separate ways;
+- one command (or closely related commands) owns both the kernel and SDK.
 
-**Отдельные репозитории лучше**, если:
-- SDK развиваются разными командами с разным темпом релизов и не обязаны быть синхронны;
-- языковые экосистемы тянут несовместимый тулинг (свои раннеры CI, свои релиз-циклы) и монорепо
-  добавляет только оверхед синхронизации, не давая гарантий согласованности;
-- потребители SDK не нуждаются в атомарных кросс-языковых коммитах.
+**Separate repositories are better**, if:
+- SDK are developed by different teams with different release rates and do not have to be synchronous;
+- language ecosystems pull incompatible tuling (their runners CI, their release cycles) and monorepo
+  adds only a synchronization overhead, without providing consistency guarantees;
+- consumers SDK do not need atomic cross-language commits.
 
-Правило по умолчанию: **если контракт/protocol — общий и меняется одним PR** → монорепо.
-Если каждый SDK — независимый продукт со своим roadmap → отдельные репозитории + version pinning
-на контракт (semver-зависимость, не git submodule).
+Default rule: **if contract/protocol — is general and changes in one PR** → monorepo.
+If everyone SDK — independent product with its own roadmap → separate repositories + version pinning
+for the contract (semver-dependency, not git submodule).
 
-## Структура
+## Structure
 
 ```
 <repo>/
 ├── services/
-│   └── core/            # runtime-ядро (один язык, source of truth поведения)
-├── contracts/            # protocol/schema — SSOT для codegen (см. ниже)
+│   └── core/            # runtime-core (one language, source of truth behavior)
+├── contracts/            # protocol/schema — SSOT for codegen (see below)
 ├── packages/
-│   ├── js/               # SDK для Node/browser — codegen из contracts/
-│   ├── php/              # SDK для PHP-потребителей — codegen из contracts/
-│   └── flutter/          # SDK для Dart/Flutter — codegen из contracts/
-├── apps/                 # демо-приложения / эталонные потребители SDK
-└── infra/                # Docker, K8s-манифесты, CI-инфраструктура
+│   ├── js/               # SDK for Node/browser — codegen from contracts/
+│   ├── php/              # SDK for PHP-consumers - codegen from contracts/
+│   └── flutter/          # SDK for Dart/Flutter — codegen from contracts/
+├── apps/                 # demo applications / reference consumers SDK
+└── infra/                # Docker, K8s-manifests, CI-infrastructure
 ```
 
-Ядро (`services/core`) не обязано быть единственным — но если ядер несколько, у каждого свой
-подкаталог в `services/`, а не смешение с SDK-пакетами в `packages/`.
+Core (`services/core`) does not have to be the only one - but if there are several cores, each has its own
+subdirectory in `services/`, rather than mixing with SDK-in batches `packages/`.
 
-## Dependency direction: строго вниз
+## Dependency direction: straight down
 
 ```
 contracts/  →  services/  →  packages/*  →  apps/
 ```
 
-- **Contracts не зависят ни от чего** — это листовой узел графа зависимостей, чистое описание
-  протокола (schema/IDL), без импорта рантайм-кода.
-- **services/** зависят только от `contracts/`.
-- **packages/*** (SDK) зависят от `contracts/` (через codegen) и, при необходимости, от `services/`
-  как reference-реализации — но не наоборот.
-- **apps/** зависят от `packages/*`, никогда не наоборот.
-- **Upward-импорт запрещён**: `contracts/` не импортирует из `services/`; `services/` не
-  импортирует из `packages/`.
-- **App→app импорт запрещён**: приложения в `apps/` не импортируют друг друга напрямую — общий
-  код между ними либо уже в `packages/`, либо не общий.
+- **Contracts do not depend on anything** — is a leaf node of the dependency graph, pure description
+  protocol (schema/IDL), without importing runtime code.
+- **services/** depend only on `contracts/`.
+- **packages/*** (SDK) depend on `contracts/` (via codegen) and, if necessary, from `services/`
+  like reference-implementation - but not vice versa.
+- **apps/** depend on `packages/*`, never the other way around.
+- **Upward-import prohibited**: `contracts/` does not import from `services/`; `services/` not
+  imports from `packages/`.
+- **App→app import prohibited**: applications in `apps/` do not import each other directly - general
+  code between them or already in `packages/`, or not general.
 
-Нарушение направления — самый частый источник циклических зависимостей в polyglot-монорепо
-(см. gotchas ниже); держите его видимым в CI (lint правил импорта/зависимостей per-package), а не
-только в документации.
+Directional violation is the most common source of cyclic dependencies in polyglot-monorepo
+(see gotchas below); keep it visible in CI (lint import rules/dependencies per-package), and not
+in documentation only.
 
-## Protocol/contracts как SSOT + codegen
+## Protocol/contracts like SSOT + codegen
 
-Один источник истины формы данных и вызовов — `contracts/` (schema, IDL, OpenAPI/protobuf/аналог
-в зависимости от протокола). Из него **генерируется** код для каждого языка-SDK, а не пишется
-руками параллельно в трёх местах:
+One source of truth for the shape of data and calls - `contracts/` (schema, IDL, OpenAPI/protobuf/analogue
+depending on protocol). From it **is generated** code for each language-SDK, but not written
+hands in parallel in three places:
 
-- contracts меняются одним PR → codegen перегенерирует клиентские типы для JS/PHP/Dart;
-- ручной дрейф (кто-то поправил только PHP-SDK) невозможен структурно — сгенерированный код не
-  редактируется вручную (гейт: генерируемые файлы — read-only в ревью, дифф релевантен только в
-  `contracts/` и в codegen-конфиге);
-- CI обязан проверять актуальность codegen (regenerate + diff --exit-code), а не доверять, что
-  разработчик запустил генератор перед коммитом.
+- contracts change one PR → codegen regenerates client types for JS/PHP/Dart;
+- manual drift (someone just corrected PHP-SDK) is not possible structurally - the generated code is not
+  is edited manually (gate: generated files - read-only in the review, the diff is relevant only in
+  `contracts/` and in codegen-config);
+- CI is obliged to check the relevance codegen (regenerate + diff --exit-code), rather than trust that
+  the developer started the generator before committing.
 
-Без этого правила SDK неизбежно расходятся: PHP-SDK получит новое поле раньше Flutter-SDK, и
-баг-репорты будут «поле есть в одном SDK и нет в другом» — а не «протокол изменился».
+Without this rule SDK inevitably diverge: PHP-SDK will receive the new field first Flutter-SDK, and
+bug reports will be «field is in one SDK and not in the other» — and not «protocol changed».
 
-## Версионирование: per-package (дефолт), unified — только для узких lockstep-случаев
+## Versioning: per-package (default), unified — only for narrow lockstep-cases
 
-**Per-package semver — дефолт** для polyglot-монорепо: каждый SDK (`packages/js`, `packages/php`,
-`packages/flutter`) версионируется независимо, публикуется в свой реестр (npm/Packagist/pub.dev) со
-своим номером версии. Причины:
-- SDK на разных языках редко релизятся синхронно (у Flutter-релиза может не быть breaking change,
-  когда PHP получает major);
-- потребители одного SDK не должны апгрейдиться из-за изменения в другом;
-- это стандарт для polyglot monorepo tooling (см. Nx/Nrwl — независимые пакеты со своим
-  версионированием как базовый режим, lockstep — опциональный режим поверх).
+**Per-package semver — default** for polyglot-monorepo: each SDK (`packages/js`, `packages/php`,
+`packages/flutter`) is independently versioned and published to its own registry (npm/Packagist/pub.dev) with
+with its version number. Reasons:
+- SDK in different languages are rarely released synchronously (y Flutter-there may not be a release breaking change,
+  when PHP gets major);
+- consumers of one SDK should not be upgraded due to a change in something else;
+- is a standard for polyglot monorepo tooling (see Nx/Nrwl — independent packages with their own
+  versioning as base mode, lockstep — optional over mode).
 
-**Unified/lockstep-версионирование** (все пакеты одной версии одним релизом) оправдано только для
-**узких, одноязычных** случаев — когда пакеты монорепо тесно связаны, релизятся всегда вместе и
-предназначены одному кругу потребителей (типичный пример — набор пакетов одного фреймворка на
-одном языке). Для polyglot-платформы с разными языками-потребителями lockstep создаёт ложную
-синхронность: PHP-потребитель вынужден воспринимать "version bump", вызванный изменением только в
+**Unified/lockstep-versioning** (all packages of the same version in one release) is only justified for
+**narrow, monolingual** cases - when monorepo packages are closely related, always released together and
+are intended for one circle of consumers (a typical example is a set of packages of one framework on
+same language). For polyglot-platforms with different consumer languages lockstep creates a false
+synchronicity: PHP-the consumer is forced to perceive "version bump", caused by a change only in
 Flutter-SDK.
 
-## Lockfiles: отдельные на менеджер, не общий
+## Lockfiles: separate per manager, not shared
 
-Каждый языковой пакет держит свой lockfile своего менеджера — не пытайтесь свести их в общий:
+Each language pack has its own lockfile of your manager - do not try to combine them into a common one:
 
 ```
-packages/js/package-lock.json     # npm/pnpm/yarn — свой lockfile
-packages/php/composer.lock        # Composer — свой lockfile
-packages/flutter/pubspec.lock     # pub — свой lockfile
+packages/js/package-lock.json     # npm/pnpm/yarn — yours lockfile
+packages/php/composer.lock        # Composer — yours lockfile
+packages/flutter/pubspec.lock     # pub — yours lockfile
 ```
 
-Не смешивайте резолвинг зависимостей между экосистемами и не выносите один lockfile на корень
-монорепо, покрывающий все языки — менеджеры разных экосистем не умеют читать чужие lockfiles, и
-попытка унификации даёт либо нерабочий файл, либо ложное ощущение синхронизации версий, которого
-на самом деле нет.
+Don't mix dependency resolution between ecosystems and don't take out one lockfile to root
+monorepo covering all languages - managers of different ecosystems do not know how to read others lockfiles, and
+attempt at unification gives either a non-working file or a false sense of version synchronization, which
+actually no.
 
 ## CI: multi-lang
 
-Матрица CI должна отражать реальные границы зависимостей, а не гонять всё на каждый PR:
+Matrix CI should reflect the real boundaries of dependencies, and not drive everything to each PR:
 
-- **Path-based триггеры**: изменение только в `packages/php/` не обязано гонять Flutter-тесты
-  (и наоборот) — если только это не PR, трогающий `contracts/` (тогда гоняются **все** SDK, потому
-  что контракт общий).
-- **Отдельные job'ы на язык**: PHP job (composer install + PHPUnit), Node job (npm ci + vitest/jest),
-  Flutter job (pub get + flutter test) — не один универсальный контейнер со всеми тулчейнами разом.
-- **Codegen-проверка** — отдельный обязательный job: `regenerate contracts → git diff --exit-code`
-  (ловит забытый ре-генерейт).
-- **Build order** соответствует dependency direction: `contracts` codegen → `services` build/test →
-  `packages/*` build/test (параллельно между языками, раз они не зависят друг от друга) → `apps`
+- **Path-based triggers**: change only in `packages/php/` is not required to drive Flutter-tests
+  (and vice versa) — unless it's PR, touching `contracts/` (then they chase **all** SDK, because
+  that the contract is general).
+- **Individual job'language**: PHP job (composer install + PHPUnit), Node job (npm ci + vitest/jest),
+  Flutter job (pub get + flutter test) — is not one universal container with all toolchains at once.
+- **Codegen-check** — separate mandatory job: `regenerate contracts → git diff --exit-code`
+  (catches the forgotten re-generate).
+- **Build order** matches dependency direction: `contracts` codegen → `services` build/test →
+  `packages/*` build/test (parallel between languages, since they do not depend on each other) → `apps`
   build/test.
 
 ## Gotchas
 
-- **Циклические импорты** обычно означают нарушение dependency direction (см. выше) — SDK,
-  импортирующий что-то из `apps/`, или `services/`, тянущий тип из конкретного SDK вместо
-  `contracts/`. Чинится возвратом обязанности в `contracts/`, а не хаком в билд-графе.
-- **Build order** — забытая сборка `contracts/` перед SDK даёт устаревший сгенерированный код,
-  который молча компилируется (типы валидны, но не те). Явный шаг codegen перед сборкой каждого
-  SDK, не полагаться на кэш.
-- **Ложное ощущение синхронности** от unified-версионирования (см. выше) — тянет ненужные релизы.
-- **Общий lockfile-соблазн** — не поддавайтесь: у каждого языка свой резолвер, свой lockfile.
-- **Один CI-job на всё** — течёт время сборки линейно с числом языков; путайте параллельность
-  языковых job'ов с параллельностью зависимостей (SDK можно билдить параллельно между собой, но
-  не раньше `contracts`/`services`).
-- **PR, трогающий только один SDK**, не должен требовать ревью от людей, незнакомых с этим языком —
-  path-based CODEOWNERS снижает шум, но не отменяет обязательный codegen-check при правках
+- **Cyclic imports** usually means a violation dependency direction (see above) — SDK,
+  importing something from `apps/`, or `services/`, pull type from concrete SDK instead
+  `contracts/`. Repaired by returning the duty to `contracts/`, and not a hack in the build graph.
+- **Build order** — forgotten assembly `contracts/` before SDK gives outdated generated code,
+  which compiles silently (types are valid, but not the same). Explicit step codegen before assembling each
+  SDK, do not rely on cache.
+- **False sense of synchronicity** from unified-versioning (see above) — delays unnecessary releases.
+- **General lockfile-temptation** — don't give in: each language has its own resolver, its own lockfile.
+- **One CI-job for everything** — build time flows linearly with the number of languages; confuse parallelism
+  language job's with dependency parallelism (SDK can be built in parallel with each other, but
+  not before `contracts`/`services`).
+- **PR, touching only one SDK**, should not require review from people unfamiliar with this language -
+  path-based CODEOWNERS reduces noise, but does not cancel the mandatory codegen-check on edits
   `contracts/`.
 
-## Skiller-интеграция
+## Skiller-integration
 
-Для проекта такой формы (`services/` + `packages/js|php|flutter/` + `apps/` + `infra/`) в skiller
-уже есть **project_type `platform-service`** ([профиль](https://github.com/academici/swissknifeman/blob/main/packages/skiller/profiles/platform-service.json)) —
-включает бакеты `architect, ai, oss-dev, general, php, php-packages, frontend, frontend-vue,
-frontend-backend, devops` + MCP `context7`. Использование:
+For a project of this form (`services/` + `packages/js|php|flutter/` + `apps/` + `infra/`) in skiller
+already exists **project_type `platform-service`** ([profile](https://github.com/academici/swissknifeman/blob/main/packages/skiller/profiles/platform-service.json)) —
+includes buckets `architect, ai, oss-dev, general, php, php-packages, frontend, frontend-vue,
+frontend-backend, devops` + MCP `context7`. Usage:
 
 ```bash
 skiller connect --profile platform-service
 skiller vendor --profile platform-service
 ```
 
-Кластерный **preset `polyglot-node-php-flutter`** (сквозной набор скиллов под эту связку языков
-поверх профиля, по находке [#3 аудита интеграции Loqum](https://github.com/academici/swissknifeman/blob/main/research/AUDIT-loqum-findings.md))
-на момент написания этого гайда **ещё не создан** — числится в бэклоге вместе с находкой
-[#1](https://github.com/academici/swissknifeman/blob/main/research/AUDIT-loqum-findings.md), которая уже закрыта профилем `platform-service` выше. До появления пресета
-переопределяйте бакеты профиля точечно через `buckets`/`exclude` в `.swissknife.json` /
-`.swissknifeman/config.json` (см. [Профили и автодетект](./profiles) и [Чеклист
-интеграции](./integration-checklist)).
+Clustered **preset `polyglot-node-php-flutter`** (end-to-end set of skills for this combination of languages
+over the profile, by find [#3 integration audit Loqum](https://github.com/academici/swissknifeman/blob/main/research/AUDIT-loqum-findings.md))
+at the time of writing this guide **not created yet** — is listed in the backlog along with the find
+[#1](https://github.com/academici/swissknifeman/blob/main/research/AUDIT-loqum-findings.md), which is already closed by the profile `platform-service` above. Before the preset appears
+override profile buckets point by point `buckets`/`exclude` in `.swissknife.json` /
+`.swissknifeman/config.json` (see [Profiles and auto-detection](./profiles) and [Checklist
+integration](./integration-checklist)).
 
-## См. также
-- [Профили и автодетект](./profiles) — как работает `project_type` → `buckets`.
-- [Чеклист интеграции](./integration-checklist) — визард `skiller integrate` и ручные шаги.
-- [Архитектура скиллов](./skills-architecture) — CORE-политика, два канала, два конфига.
+## See also
+- [Profiles and auto-detection](./profiles) — how it works `project_type` → `buckets`.
+- [Integration checklist](./integration-checklist) — wizard `skiller integrate` and manual steps.
+- [Skills architecture](./skills-architecture) — CORE-policy, two channels, two configs.

@@ -63,7 +63,7 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
    concrete item risk (security/auth, destructive migration, irreversible external action,
    payment/accounting, concurrency/shared state, public API/schema, low-confidence impact, or release
    authority) or an explicit owner requirement, and then it is a separate read-only review item of the
-   plan (`Ревью Pn`), never a step run inside this item. Uncertainty gathers evidence; it does not
+   plan (`Review Pn`), never a step run inside this item. Uncertainty gathers evidence; it does not
    default to full review. Never fabricate evidence or bypass those boundaries; existing dirty changes
    belong to the owner.
 4. A foreign baseline stays visible but non-gating unless ownership/dependency closure intersects.

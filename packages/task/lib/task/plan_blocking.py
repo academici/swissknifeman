@@ -59,7 +59,7 @@ def _schema() -> dict:
     try:
         return json.loads(_SCHEMA_PATH.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise BlockCandidateError(f"схема block-candidate/v1 не читается: {exc}") from exc
+        raise BlockCandidateError(f"diagram block-candidate/v1 is not readable: {exc}") from exc
 
 
 def _string_list(value, *, field: str, allow_empty: bool) -> bool:
@@ -76,13 +76,13 @@ def _boundary_evidence(value) -> bool:
 
 def _closed_fields(value, expected, *, field, optional=frozenset()):
     if not isinstance(value, dict):
-        raise BlockCandidateError(f"{field}: ожидается object")
+        raise BlockCandidateError(f"{field}: pending object")
     missing = sorted(expected - set(value))
     unknown = sorted(set(value) - expected - optional)
     if missing:
-        raise BlockCandidateError(f"{field}: нет полей {missing}")
+        raise BlockCandidateError(f"{field}: no fields {missing}")
     if unknown:
-        raise BlockCandidateError(f"{field}: неизвестные поля {unknown}")
+        raise BlockCandidateError(f"{field}: unknown fields {unknown}")
 
 
 def _has_external_class(candidate: dict) -> bool:
@@ -95,52 +95,52 @@ def validate(candidate: dict) -> None:
     _closed_fields(candidate, _ROOT_FIELDS, field="candidate", optional=_OPTIONAL_ROOT_FIELDS)
     source = _schema()["properties"]
     if candidate["schema_version"] != "block-candidate/v1":
-        raise BlockCandidateError("schema_version: ожидается block-candidate/v1")
+        raise BlockCandidateError("schema_version: pending block-candidate/v1")
     for field in ("plan_id", "executor_actor"):
         if not isinstance(candidate[field], str) or not candidate[field]:
-            raise BlockCandidateError(f"{field}: ожидается непустая строка")
+            raise BlockCandidateError(f"{field}: expected non-empty string")
     if not isinstance(candidate["item_id"], str) or not _ITEM_RE.fullmatch(candidate["item_id"]):
-        raise BlockCandidateError("item_id: ожидается Pn.m")
+        raise BlockCandidateError("item_id: pending Pn.m")
     for field in ("signal_class", "scope_class"):
         if candidate[field] not in source[field]["enum"]:
-            raise BlockCandidateError(f"{field}: значение вне закрытого enum")
+            raise BlockCandidateError(f"{field}: value outside closed enum")
     if candidate["scope_coverage"] not in source["scope_coverage"]["enum"]:
-        raise BlockCandidateError("scope_coverage: значение вне закрытого enum")
+        raise BlockCandidateError("scope_coverage: value outside closed enum")
     if not _boundary_evidence(candidate["boundary_evidence"]):
         raise BlockCandidateError(
-            "boundary_evidence: ожидаются конкретные unique evidence IDs")
+            "boundary_evidence: expected specific unique evidence IDs")
     if not isinstance(candidate["external"], bool):
-        raise BlockCandidateError("external: ожидается boolean")
+        raise BlockCandidateError("external: pending boolean")
     if _has_external_class(candidate) and not candidate["external"]:
-        raise RagEvidenceError("external enum требует external=true и mandatory RAG")
+        raise RagEvidenceError("external enum requires external=true and mandatory RAG")
     if not _string_list(candidate["evidence_ids"], field="evidence_ids", allow_empty=False):
-        raise BlockCandidateError("evidence_ids: ожидается non-empty unique string array")
+        raise BlockCandidateError("evidence_ids: pending non-empty unique string array")
     if not _string_list(candidate["resolutions_tried"], field="resolutions_tried", allow_empty=True):
-        raise BlockCandidateError("resolutions_tried: ожидается unique string array")
+        raise BlockCandidateError("resolutions_tried: pending unique string array")
 
     rag = candidate["rag"]
     _closed_fields(rag, _RAG_FIELDS, field="rag")
     if not isinstance(rag["required"], bool) or rag["status"] not in source["rag"]["properties"]["status"]["enum"]:
-        raise BlockCandidateError("rag: невалидные required/status")
+        raise BlockCandidateError("rag: invalid required/status")
     if not _string_list(rag["evidence_ids"], field="rag.evidence_ids", allow_empty=True):
-        raise BlockCandidateError("rag.evidence_ids: ожидается unique string array")
+        raise BlockCandidateError("rag.evidence_ids: pending unique string array")
     if candidate["external"] != rag["required"]:
-        raise BlockCandidateError("rag.required должен совпадать с external")
+        raise BlockCandidateError("rag.required must match external")
     if not rag["required"] and (rag["status"] != "not-required" or rag["evidence_ids"]):
-        raise BlockCandidateError("rag без external должен быть not-required без evidence")
+        raise BlockCandidateError("rag without external should be not-required without evidence")
     if rag["required"] and rag["status"] == "not-required":
-        raise RagEvidenceError("external RAG не может быть not-required")
+        raise RagEvidenceError("external RAG cannot be not-required")
     if rag["status"] in ("missing", "pending", "unavailable") and rag["evidence_ids"]:
-        raise BlockCandidateError(f"{rag['status']} RAG не принимает evidence_ids")
+        raise BlockCandidateError(f"{rag['status']} RAG does not accept evidence_ids")
     if rag["status"] == "fallback-only" and not rag["evidence_ids"]:
-        raise BlockCandidateError("fallback-only RAG требует provisional evidence_ids")
+        raise BlockCandidateError("fallback-only RAG requires provisional evidence_ids")
     if rag["status"] == "verified" and not rag["evidence_ids"]:
-        raise RagEvidenceError("verified RAG требует evidence_ids")
+        raise RagEvidenceError("verified RAG requires evidence_ids")
     if rag["status"] == "verified" and not all(
             _PERPLEXITY_EVIDENCE_RE.fullmatch(evidence_id)
             for evidence_id in rag["evidence_ids"]):
         raise RagEvidenceError(
-            "verified RAG требует digest-qualified Perplexity evidence_ids")
+            "verified RAG requires digest-qualified Perplexity evidence_ids")
 
     review = candidate["review"]
     if review is None:
@@ -150,9 +150,9 @@ def validate(candidate: dict) -> None:
             or review["context"] != "isolated-child-return"
             or review["verdict"] not in source["review"]["oneOf"][1]["properties"]["verdict"]["enum"]
             or not _string_list(review["evidence_ids"], field="review.evidence_ids", allow_empty=False)):
-        raise BlockCandidateError("review: не проходит закрытую схему")
+        raise BlockCandidateError("review: does not pass closed circuit")
     if ("repair_decision" in candidate) != ("repair_digest" in candidate):
-        raise BlockCandidateError("repair evidence требует record и digest вместе")
+        raise BlockCandidateError("repair evidence requires record and digest together")
     if "repair_decision" in candidate:
         from task import plan_repair
         try:
@@ -160,7 +160,7 @@ def validate(candidate: dict) -> None:
         except plan_repair.RepairDecisionError as exc:
             raise BlockCandidateError(f"repair_decision: {exc}") from exc
         if candidate["repair_digest"] != plan_repair.digest(candidate["repair_decision"]):
-            raise BlockCandidateError("repair_digest: не совпадает с repair_decision")
+            raise BlockCandidateError("repair_digest: does not match repair_decision")
 
 
 def _decision(action: str) -> dict:

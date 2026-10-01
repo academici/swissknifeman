@@ -88,9 +88,9 @@ class ProviderPlanRoutingTests(unittest.TestCase):
                     ).read_text(encoding="utf-8")
         template = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/snippets/plan-template.md"
                     ).read_text(encoding="utf-8")
-        self.assertIn("| Batch | Items | Model class/effort | Exec | Review | Почему |", protocol)
+        self.assertIn("| Batch | Items | Model class/effort | Exec | Review | Why |", protocol)
         self.assertIn("For every new layout-v2 plan, `Batch` and `Review` are mandatory", protocol)
-        self.assertIn("| Batch | Items | Model class/effort | Exec | Review | Почему |", template)
+        self.assertIn("| Batch | Items | Model class/effort | Exec | Review | Why |", template)
         for command in ("plan-design", "plan-run"):
             with self.subTest(command=command):
                 body = (COMMAND_ROOT / f"{command}.md").read_text(encoding="utf-8")
@@ -105,7 +105,7 @@ class ProviderPlanRoutingTests(unittest.TestCase):
             with self.subTest(carrier=carrier[:40]):
                 self.assertIn("phase_audit_policy", carrier)
         self.assertNotIn(
-            "Фаза терминальна → `/task:plan-close <PLAN-ID> Pn`", execution)
+            "Phase is terminal → `/task:plan-close <PLAN-ID> Pn`", execution)
         self.assertIn("GREEN evidence direct-closes by default", execution)
         self.assertIn("fresh owner consent", execution)
         self.assertIn("create its phase closure before deriving Next", execution)

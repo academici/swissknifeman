@@ -1,14 +1,14 @@
 import { defineConfig } from 'vitepress'
 
-// Standalone-конфиг доков analyst. В зонтичном агрегате этот .vitepress удаляется
-// (scripts/docs-sync.sh), сайт собирается общим docs/.vitepress. Внутренние ссылки
-// доков — относительные (работают и standalone, и в агрегате); кросс-пакетные
-// (/maind/, /skiller/, /harness/, /routing, /roadmap) в standalone мёртвые → ignoreDeadLinks.
+// Standalone-dock config analyst. In the umbrella unit this .vitepress deleted
+// (scripts/docs-sync.sh), the site is going to be shared docs/.vitepress. Internal links
+// docks — relative (work and standalone, and in the unit); cross-batch
+// (/maind/, /skiller/, /harness/, /routing, /roadmap) V standalone dead → ignoreDeadLinks.
 export default defineConfig({
-  lang: 'ru-RU',
+  lang: 'en-US',
   title: 'analyst',
   description:
-    'Continuous learning экосистемы academici: детерминированный захват уроков из прогонов с человеком в гейте',
+    'Continuous learning ecosystems academici: deterministic capture of lessons from runs with a human in the gate',
   base: '/analyst/',
   lastUpdated: true,
 
@@ -17,33 +17,33 @@ export default defineConfig({
 
   themeConfig: {
     nav: [
-      { text: 'Гайд', link: '/guide/', activeMatch: '/guide/' },
-      { text: 'Архитектура', link: '/architecture', activeMatch: '/architecture' },
+      { text: 'Hyde', link: '/guide/', activeMatch: '/guide/' },
+      { text: 'Architecture', link: '/architecture', activeMatch: '/architecture' },
       { text: 'Roadmap', link: '/roadmap', activeMatch: '/roadmap' },
     ],
 
     sidebar: {
       '/': [
         {
-          text: 'Знакомство',
+          text: 'Getting started',
           items: [
-            { text: 'Что такое analyst', link: '/guide/' },
-            { text: 'Архитектура пакета', link: '/architecture' },
+            { text: 'About analyst', link: '/guide/' },
+            { text: 'Package architecture', link: '/architecture' },
           ],
         },
         {
-          text: 'Как это работает',
+          text: 'How does this work',
           items: [
-            { text: 'CLI и команды', link: '/guide/cli' },
-            { text: 'Жизненный цикл урока', link: '/guide/lifecycle' },
-            { text: 'Каталог патологий', link: '/guide/pathologies' },
-            { text: 'Тюнинг-параметры', link: '/guide/tuning' },
-            { text: 'suggest — черновик скилла (P4)', link: '/guide/suggest' },
+            { text: 'CLI and commands', link: '/guide/cli' },
+            { text: 'Lesson life cycle', link: '/guide/lifecycle' },
+            { text: 'Pathology catalog', link: '/guide/pathologies' },
+            { text: 'Tuning-parameters', link: '/guide/tuning' },
+            { text: 'suggest — skill draft (P4)', link: '/guide/suggest' },
           ],
         },
         {
           text: 'Roadmap',
-          items: [{ text: 'Отложенное (P5)', link: '/roadmap' }],
+          items: [{ text: 'Deferred (P5)', link: '/roadmap' }],
         },
       ],
     },
@@ -56,21 +56,21 @@ export default defineConfig({
       provider: 'local',
       options: {
         translations: {
-          button: { buttonText: 'Поиск', buttonAriaLabel: 'Поиск' },
+          button: { buttonText: 'Search', buttonAriaLabel: 'Search' },
           modal: {
-            noResultsText: 'Ничего не найдено',
-            resetButtonTitle: 'Сбросить',
-            footer: { selectText: 'выбрать', navigateText: 'навигация', closeText: 'закрыть' },
+            noResultsText: 'Nothing found',
+            resetButtonTitle: 'Reset',
+            footer: { selectText: 'choose', navigateText: 'navigation', closeText: 'close' },
           },
         },
       },
     },
 
-    outline: { label: 'На этой странице' },
-    docFooter: { prev: 'Назад', next: 'Вперёд' },
-    lastUpdated: { text: 'Обновлено' },
-    darkModeSwitchLabel: 'Тема',
-    sidebarMenuLabel: 'Меню',
-    returnToTopLabel: 'Наверх',
+    outline: { label: 'On this page' },
+    docFooter: { prev: 'Back', next: 'Forward' },
+    lastUpdated: { text: 'Updated' },
+    darkModeSwitchLabel: 'Subject',
+    sidebarMenuLabel: 'Menu',
+    returnToTopLabel: 'Top',
   },
 })

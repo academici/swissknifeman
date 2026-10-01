@@ -1,4 +1,4 @@
-"""Тесты fleet.py — манифест (группы по общим пакетам), парсинг дублей, feature-log."""
+"""Tests fleet.py — manifest (groups by common packages), parsing duplicates, feature-log."""
 import json
 import tempfile
 import unittest
@@ -12,7 +12,7 @@ from tests.fixtures import FakeMemoryServer, make_repo, write_maind_config
 
 
 def _setup(tmp, url, namespaces=None, memory_namespaces=None):
-    """flexcrm + azguard, оба требуют axioma-studio/azguard-core (общий пакет)."""
+    """flexcrm + azguard, both require axioma-studio/azguard-core (general package)."""
     root, env = make_repo(tmp)
     flex, az = Path(tmp) / "flexcrm", Path(tmp) / "azguard"
     for p, data in ((flex, {"name": "axioma-studio/flexcrm",
@@ -67,9 +67,9 @@ class TestDuplicatesParsing(unittest.TestCase):
              "secondFile": {"name": "/p/flexcrm/app/C.php"}},
         ]}
         clones = fleet._parse_report(report, pmap)
-        self.assertTrue(clones[0]["cross_project"])          # кросс-проектный первым
+        self.assertTrue(clones[0]["cross_project"])          # cross-project first
         self.assertEqual(clones[0]["projects"], ["azguard", "flexcrm"])
-        self.assertFalse(clones[1]["cross_project"])         # внутри одного проекта
+        self.assertFalse(clones[1]["cross_project"])         # within one project
 
     def test_jscpd_cmd_shape(self):
         cmd = fleet._jscpd_cmd(["/a", "/b"], "/out", min_tokens=50,
@@ -93,10 +93,10 @@ class TestFeatureLog(unittest.TestCase):
             env, config = _setup(tmp, url, namespaces=["axioma"],
                                  memory_namespaces=["axioma"])
             flex = config["projects"][0]
-            r = fleet.log_feature(env, config, flex, "добавил импорт CSV")
+            r = fleet.log_feature(env, config, flex, "added import CSV")
             self.assertEqual(r["status"], "ok")
             self.assertIn("ns:axioma", r["scopes"])
-            # видно в групповом бакете
+            # visible in the group bucket
             got = memory_mod.recall(url, "ns:axioma", fleet.FEATURE_MARKER)
             self.assertTrue(any("CSV" in m["text"] for m in got))
             feats = fleet.features(env, config, namespace="axioma")
@@ -107,7 +107,7 @@ class TestSimilar(unittest.TestCase):
     def test_extract_chunks_finds_declarations(self):
         with tempfile.TemporaryDirectory() as tmp:
             a = Path(tmp) / "pa"
-            (a / "vendor").mkdir(parents=True)         # vendor игнорится
+            (a / "vendor").mkdir(parents=True)         # vendor is ignored
             (a / "src").mkdir(parents=True)
             (a / "src" / "X.php").write_text(
                 "<?php\nclass Importer {\n  public function importCsv($f) {\n"
@@ -116,13 +116,13 @@ class TestSimilar(unittest.TestCase):
             chunks = fleet.extract_chunks({str(a): "pa"}, min_chars=10)
             names = {c["name"] for c in chunks}
             self.assertIn("Importer", names)
-            self.assertNotIn("ignored", names)         # из vendor не берём
+            self.assertNotIn("ignored", names)         # from vendor we don’t take
 
     def test_cross_project_pairs_above_threshold(self):
         chunks = [{"project": "a", "name": "F", "file": "/a/F.php"},
                   {"project": "b", "name": "G", "file": "/b/G.php"},
                   {"project": "a", "name": "H", "file": "/a/H.php"}]
-        vecs = [[1.0, 0.0], [0.99, 0.01], [0.0, 1.0]]   # F~G (разные проекты), H ортогонален
+        vecs = [[1.0, 0.0], [0.99, 0.01], [0.0, 1.0]]   # F~G (various projects), H orthogonal
         pairs = fleet.cross_project_pairs(chunks, vecs, 0.9)
         self.assertEqual(len(pairs), 1)
         self.assertEqual({pairs[0]["a"]["project"], pairs[0]["b"]["project"]}, {"a", "b"})
@@ -146,7 +146,7 @@ class TestCosine(unittest.TestCase):
         self.assertAlmostEqual(fleet._cosine([1.0, 1.0], [3.0, 3.0]), 1.0)
 
     def test_zero_vector_no_div_by_zero(self):
-        # нулевая норма заменяется на 1.0 — деления на ноль нет, результат 0.0
+        # zero norm is replaced by 1.0 - there is no division by zero, the result is 0.0
         self.assertEqual(fleet._cosine([0.0, 0.0], [1.0, 1.0]), 0.0)
 
 

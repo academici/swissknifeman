@@ -1,8 +1,8 @@
-"""Диспетчер команд analyst. Точка входа: main(argv) → cmd_*(env, args).
+"""Command Manager analyst. Entry point: main(argv) → cmd_*(env, args).
 
-COMMANDS отображает имя команды на обработчик cmd_*(env, argv). Обработчики живут
-в модулях по доменам (digest/review/promote/...). Окружение строится из argv
-([repo_root, cmd, *args], которые передаёт bin/analyst) и пробрасывается явно."""
+COMMANDS maps the command name to the handler cmd_*(env, argv). Handlers live
+in modules by domain (digest/review/promote/...). The environment is built from argv
+([repo_root, cmd, *args], which transmits bin/analyst) and is forwarded explicitly."""
 import sys
 
 from .common import Env
@@ -43,8 +43,8 @@ COMMANDS = {
 
 
 def main(argv=None):
-    """argv: [repo_root, cmd, *args]. bin/analyst передаёт root и команду явно —
-    тесты вызывают main([...]) без подмены argv процесса."""
+    """argv: [repo_root, cmd, *args]. bin/analyst transmits root and the command explicitly -
+    tests call main([...]) without substitution argv process."""
     argv = list(sys.argv[1:] if argv is None else argv)
     if len(argv) < 2:
         print("usage: python3 -m analyst <repo_root> <command> [args...]",
@@ -54,6 +54,6 @@ def main(argv=None):
     env = Env(root, cmd)
     handler = COMMANDS.get(cmd)
     if handler is None:
-        print(f"Неизвестная команда: {cmd}", file=sys.stderr)
+        print(f"Unknown command: {cmd}", file=sys.stderr)
         sys.exit(1)
     handler(env, args)

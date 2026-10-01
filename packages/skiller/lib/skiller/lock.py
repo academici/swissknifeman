@@ -1,33 +1,33 @@
-"""lock — карта внешних скиллов проекта (skills-lock.json).
+"""lock — map of external skills of the project (skills-lock.json).
 
-Композиция источников: **swissknifeman** (курируемый реестр) + **Laravel Boost**
-(`boost.json::skills[]`). Скилл считается swissknifeman'овским, если его имя есть в
-`skills.json` реестра — тогда swissknifeman wins; скилл из `boost.json::skills[]` —
-`laravel-boost`; всё прочее установленное — `local` (собственный скилл проекта, напр.
-раскатанный из другого хаба). Конфликты (имя в нескольких) не теряются: победитель в
-`source`, второй в `also_in`. Источники работают порознь и вместе, складываясь в набор.
+Composition of sources: **swissknifeman** (curated registry) + **Laravel Boost**
+(`boost.json::skills[]`). Skill is considered swissknifeman'ovsky if his name is in
+`skills.json` registry - then swissknifeman wins; skill from `boost.json::skills[]` —
+`laravel-boost`; everything else installed - `local` (own skill of the project, for example.
+rolled out from another hub). Conflicts (name in several) are not lost: the winner in
+`source`, second in `also_in`. Sources work separately and together, forming a set.
 
-Universe = реально установленные скиллы (агентские раскладки) ∪ `boost.json::skills`.
-Файл коммитится в проект — это lock-карта внешних скиллов (как composer.lock)."""
+Universe = actually installed skills (agent layouts) ∪ `boost.json::skills`.
+The file is committed to the project - this is lock-external skill map (like composer.lock)."""
 import json
 
 from .common import atomic_write_json, die, parse_flags, warn
 from .config import resolve_target
 
-# Раскладки, куда агенты ставят скиллы (claude — плоско, прочие — по своим путям).
+# Layouts where agents place skills (claude — flat, others - on their own paths).
 AGENT_SKILL_DIRS = (".claude/skills", ".cursor/skills", ".ai/skills")
 LOCK_VERSION = 1
 
 
 def _registry_map(env):
-    """skills.json реестра → {skill_name: bucket}. Private/source-only записи
-    (`buckets.json` `private_source_only`, — сейчас: `repository-bootstrap`)
-    исключены: они никогда не являются legit swissknifeman-источником установленной
-    копии в проекте-потребителе (единственный производитель — root-bootstrap
-    рендерер `publication.py`, не этот композитор)."""
+    """skills.json registry → {skill_name: bucket}. Private/source-only records
+    (`buckets.json` `private_source_only`, — now: `repository-bootstrap`)
+    excluded: they are never legit swissknifeman-source installed
+    copies in the consumer project (the only manufacturer - root-bootstrap
+    renderer `publication.py`, not this composer)."""
     f = env.root / "skills.json"
     if not f.is_file():
-        die("skills.json не найден — сначала skiller registry")
+        die("skills.json not found - first skiller registry")
     data = json.loads(f.read_text(encoding="utf-8"))
     skills = data["skills"] if isinstance(data, dict) else data
     from .skillset import private_source_buckets
@@ -42,7 +42,7 @@ def _registry_map(env):
 
 
 def _installed_skills(target):
-    """Имена физически установленных скиллов (по агентским раскладкам)."""
+    """Names of physically installed skills (by agent layouts)."""
     names = set()
     for rel in AGENT_SKILL_DIRS:
         d = target / rel
@@ -52,23 +52,23 @@ def _installed_skills(target):
 
 
 def _boost_skills(target):
-    """boost.json::skills[] или None, если Laravel Boost не подключён."""
+    """boost.json::skills[] or None, if Laravel Boost is not connected."""
     f = target / "boost.json"
     if not f.is_file():
         return None
     try:
         return list(json.loads(f.read_text(encoding="utf-8")).get("skills", []))
     except json.JSONDecodeError as e:
-        # Раньше тихий []: конфликты also_in терялись без сигнала (аудит V-8) —
-        # skiller-скиллы, также перечисленные в битом boost.json, выглядели бы как
-        # «только swissknifeman», хотя реальный overlap не проверен.
-        warn(f"{f}: битый JSON — boost-скиллы не учтены в lock (also_in может "
-             f"недосчитаться): {e}")
+        # Previously quiet []: conflicts also_in were lost without a signal (audit V-8) —
+        # skiller-skills, also listed in the bit boost.json, would look like
+        # «only swissknifeman», although real overlap not verified.
+        warn(f"{f}: broken JSON — boost-skills are not included in lock (also_in may "
+             f"missing): {e}")
         return []
 
 
 def compose_lock(env, target):
-    """Собрать skills-lock: swissknifeman wins, boost дополняет, конфликты в also_in."""
+    """Collect skills-lock: swissknifeman wins, boost complements, conflicts in also_in."""
     reg = _registry_map(env)
     boost = _boost_skills(target)
     universe = _installed_skills(target) | set(boost or [])
@@ -79,12 +79,12 @@ def compose_lock(env, target):
             if boost and name in boost:
                 entry["also_in"] = ["laravel-boost"]
         elif boost and name in boost:
-            # Скилл явно объявлен в boost.json::skills — это скилл Laravel Boost.
+            # The skill is explicitly declared in boost.json::skills — is a skill Laravel Boost.
             entry = {"source": "laravel-boost"}
         else:
-            # Установлен, но ни в реестре, ни в boost.json — собственный скилл
-            # проекта (например, раскатанный из другого хаба). Не приписываем Boost'у
-            # только потому, что он подключён.
+            # Installed, but neither in the registry nor in boost.json — own skill
+            # project (for example, rolled out from another hub). Not attributed Boost'y
+            # just because it's connected.
             entry = {"source": "local"}
         skills[name] = entry
     sources = {"swissknifeman": {"ref": "registry"}}
@@ -97,8 +97,8 @@ def cmd_lock(env, argv):
     opts = parse_flags(argv, {"--target": "str", "--dry-run": "bool"})
     if opts["help"]:
         print("skiller lock [--target DIR] [--dry-run]\n"
-              "  Пишет <target>/skills-lock.json — карту внешних скиллов проекта "
-              "(swissknifeman wins, Laravel Boost дополняет).")
+              "  Writes <target>/skills-lock.json — map of external skills of the project "
+              "(swissknifeman wins, Laravel Boost complements).")
         return
     target, via = resolve_target(env, opts)
     lock = compose_lock(env, target)
@@ -110,11 +110,11 @@ def cmd_lock(env, argv):
 
     if opts["dry_run"]:
         print(json.dumps(lock, ensure_ascii=False, indent=2))
-        print(f"\n[dry-run] {lock_file}: {len(skills)} скиллов "
-              f"(swissknifeman {n_skm}, laravel-boost {n_boost}, конфликтов {overlap})")
+        print(f"\n[dry-run] {lock_file}: {len(skills)} skills "
+              f"(swissknifeman {n_skm}, laravel-boost {n_boost}, conflicts {overlap})")
         return
 
     atomic_write_json(lock_file, lock)
-    print(f"skills-lock.json ({via}): {len(skills)} скиллов — "
-          f"swissknifeman {n_skm}, laravel-boost {n_boost}, конфликтов {overlap} "
-          f"(swissknifeman wins, см. also_in)")
+    print(f"skills-lock.json ({via}): {len(skills)} skills - "
+          f"swissknifeman {n_skm}, laravel-boost {n_boost}, conflicts {overlap} "
+          f"(swissknifeman wins, see also_in)")

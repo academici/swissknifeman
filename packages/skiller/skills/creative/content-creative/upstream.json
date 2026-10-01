@@ -19,6 +19,6 @@
     "at": "2026-08-01",
     "by": "vendor audit",
     "upstream_sha": "cf44f0977bb229f1a6ac1b1a31a81ba97aa123158c9fba33237a4e0bb48bb79b",
-    "note": "references/full.md:2465 — шаблон web-артефакта тянет cdnjs.cloudflare.com (p5.js), :545 — ссылка на shadcn CDN; сторонний код исполняется в браузере ПОЛЬЗОВАТЕЛЯ: принятый класс"
+    "note": "references/full.md:2465 — template web-artifact pulls cdnjs.cloudflare.com (p5.js), :545 — link to shadcn CDN; third-party code is executed in the USER's browser: accepted class"
   }
 }

@@ -1,38 +1,38 @@
-"""usage — единый транскрипт-парсер usage-метрик Claude Code (JSONL-транскрипты).
+"""usage — single transcript parser usage-metrics Claude Code (JSONL-transcripts).
 
-САМОДОСТАТОЧНЫЙ модуль: импортирует ТОЛЬКО stdlib, ни одного «from core...»/«from .».
-Причина — файл копируется байт-в-байт в хук (~/.claude/hooks/run-report/_usage.py),
-где PYTHONPATH монорепо недоступен; любой относительный импорт сломает хук молча.
-Поэтому здесь осознанный дубль потоковой JSONL-дисциплины из core.io.read_ndjson_iter.
+SELF-SUFFICIENT module: imports ONLY stdlib, none «from core...»/«from .».
+Reason - the file is copied byte-for-byte into the hook (~/.claude/hooks/run-report/_usage.py),
+where PYTHONPATH monorepo unavailable; any relative import will break the hook silently.
+Therefore, there is a conscious double of streaming JSONL-disciplines from core.io.read_ndjson_iter.
 
-СЕМАНТИКА СУММ: суммы input-токенов — это BILLABLE-объём (каждый API-вызов оплачивает
-свой вход заново, включая повтор истории), а НЕ размер контекста. Сумма по длинному
-диалогу многократно превышает контекст-окно — это нормально и ожидаемо.
+SEMANTICS OF SUM: amounts input-tokens is BILLABLE-volume (each API-call is paid
+your login again, including repeating history), and NOT the context size. Amount by long
+dialog is many times larger than the context window - this is normal and expected.
 
-Все функции — чистые, потоковые и толерантные к битым/неожиданным событиям:
-исключений наружу не бросают (мусор в транскрипте не должен ронять отчёт)."""
+All functions are clean, streaming and broken-tolerant/unexpected events:
+exceptions are not thrown outside (garbage in the transcript should not drop the report)."""
 from datetime import datetime
 from pathlib import Path
 import json
 
-# Обрезка label — первая строка user-текста бывает целым промптом на экраны.
+# Trimming label — first line user-text can be a whole prompt onto the screens.
 LABEL_MAX = 80
 
 
 def _int(v):
-    """Токен-счётчик из события: только настоящие числа, иначе 0 — в транскриптах
-    попадаются null/строки, а += с ними уронил бы весь разбор."""
+    """Token counter from the event: only real numbers, otherwise 0 - in transcripts
+    come across null/lines, and += with them would have ruined the whole analysis."""
     return v if isinstance(v, (int, float)) and not isinstance(v, bool) else 0
 
 
 def _iter_content(msg):
-    """content бывает списком блоков, строкой или отсутствует — наружу только список."""
+    """content can be a list of blocks, a string, or absent - only the list appears outside."""
     c = msg.get("content") if isinstance(msg, dict) else None
     return c if isinstance(c, list) else []
 
 
 def _first_line(txt):
-    """Первая непустая строка текста, обрезанная до LABEL_MAX (человекочитаемая метка)."""
+    """First non-empty line of text, truncated to LABEL_MAX (human-readable label)."""
     if not isinstance(txt, str):
         return None
     for ln in txt.strip().splitlines():
@@ -43,7 +43,7 @@ def _first_line(txt):
 
 
 def new_acc():
-    """Пустой аккумулятор одного агента/транскрипта (мутируется feed_event)."""
+    """One agent battery empty/transcript (mutates feed_event)."""
     return {
         "model": None, "models": set(),
         "in": 0, "out": 0, "cache_read": 0, "cache_creation": 0,
@@ -54,13 +54,13 @@ def new_acc():
 
 
 def feed_event(acc, ev):
-    """Скормить одно распарсенное JSONL-событие в аккумулятор. Толерантна к любой
-    структуре: не-dict/битое событие молча пропускается (мусор не роняет отчёт)."""
+    """Feed one parsed JSONL-event to the accumulator. Tolerant of any
+    structure: non-dict/broken event is silently skipped (garbage does not drop the report)."""
     if not isinstance(ev, dict):
         return
     ts = ev.get("timestamp")
-    # ISO-таймстемпы Claude Code монотонны по алфавиту — сравниваем лексикографически,
-    # без парсинга дат на каждом событии (парсим один раз в finish).
+    # ISO-timestamps Claude Code are monotonic alphabetically - we compare lexicographically,
+    # without parsing dates on each event (parse once every finish).
     if isinstance(ts, str) and ts:
         if acc["ts_min"] is None or ts < acc["ts_min"]:
             acc["ts_min"] = ts
@@ -71,11 +71,11 @@ def feed_event(acc, ev):
         return
     etype = ev.get("type")
     if etype == "assistant":
-        is_first_turn = acc["msgs"] == 0    # до инкремента — этот assistant-event первый
+        is_first_turn = acc["msgs"] == 0    # before increment - this assistant-event first
         acc["msgs"] += 1
         model = m.get("model")
         if isinstance(model, str) and model:
-            acc["model"] = model          # последняя модель — «текущая» агента
+            acc["model"] = model          # latest model - «current» agent
             acc["models"].add(model)
         u = m.get("usage")
         if isinstance(u, dict):
@@ -86,8 +86,8 @@ def feed_event(acc, ev):
             acc["cache_read"] += _int(u.get("cache_read_input_tokens"))
             acc["cache_creation"] += cache_creation
             if is_first_turn:
-                # first_turn_overhead = input + cache_creation первой assistant-записи
-                # (выжимка scratchpad-разведки 4af788f3, RAG:✅ 2026-07-12 findings/P0)
+                # first_turn_overhead = input + cache_creation first assistant-records
+                # (squeeze scratchpad-intelligence 4af788f3, RAG:✅ 2026-07-12 findings/P0)
                 acc["first_turn_overhead"] = in_ + cache_creation
         for b in _iter_content(m):
             if not isinstance(b, dict):
@@ -100,7 +100,7 @@ def feed_event(acc, ev):
                 t = b.get("text")
                 acc["text_chars"] += len(t) if isinstance(t, str) else 0
     elif etype == "user":
-        # tool_result с is_error приходят user-событиями — считаем отказы инструментов
+        # tool_result with is_error come user-events - we consider tool failures
         for b in _iter_content(m):
             if isinstance(b, dict) and b.get("type") == "tool_result" and b.get("is_error"):
                 acc["tool_errors"] += 1
@@ -118,7 +118,7 @@ def feed_event(acc, ev):
 
 
 def _parse_iso(s):
-    """datetime из ISO-строки; None при любом мусоре (защита — не роняем агрегат)."""
+    """datetime from ISO-strings; None for any garbage (protection - do not drop the unit)."""
     try:
         return datetime.fromisoformat(str(s).replace("Z", "+00:00"))
     except (ValueError, TypeError):
@@ -126,20 +126,20 @@ def _parse_iso(s):
 
 
 def _wall_seconds(ts_min, ts_max):
-    """Длительность агента по крайним таймстемпам; None, когда посчитать нельзя."""
+    """Agent duration based on extreme timestamps; None, when it is impossible to count."""
     a, b = _parse_iso(ts_min), _parse_iso(ts_max)
     if a is None or b is None:
         return None
     try:
         return max(0.0, (b - a).total_seconds())
     except TypeError:
-        # naive и aware datetime не вычитаются — смешанные форматы в одном файле
+        # naive and aware datetime are not subtracted - mixed formats in one file
         return None
 
 
 def finish(acc, label=None):
-    """Финализировать аккумулятор в агрегат агента. label: явный аргумент важнее
-    автоматической метки (первая строка первого user-текста)."""
+    """Finalize the accumulator into the agent unit. label: explicit argument is more important
+    automatic label (first line of the first user-text)."""
     lbl = label if label is not None else acc.get("first_user_text")
     return {
         "label": lbl,
@@ -159,9 +159,9 @@ def finish(acc, label=None):
 
 
 def merge(agents):
-    """Слить агрегаты агентов (результаты finish) в сводку прогона:
-    totals + разбивка by_model + cache_hit (доля кэш-чтений во «свежем» входе;
-    None, когда входа не было — деление на ноль не маскируем нулём)."""
+    """Merge agent aggregates (results finish) to the run summary:
+    totals + breakdown by_model + cache_hit (share of cache reads in «fresh» input;
+    None, when there was no input - division by zero is not masked by zero)."""
     totals = {"in": 0, "out": 0, "cache_read": 0, "cache_creation": 0}
     by_model = {}
     for a in agents:
@@ -180,8 +180,8 @@ def merge(agents):
 
 
 def similar_ratio(a, b):
-    """Похожесть двух текстов по множествам токенов (Жаккар): слова lower длиной >=2,
-    |A∩B|/|A∪B|. Пустые множества → 0.0 (а не 1.0 — «оба пустые» не значит «похожи»)."""
+    """Similarity of two texts based on sets of tokens (Jacquard): words lower length >=2,
+    |A∩B|/|A∪B|. Empty sets → 0.0 (and not 1.0 - «both empty» doesn't mean «similar»)."""
     def toks(s):
         return {w for w in str(s or "").lower().split() if len(w) >= 2}
     ta, tb = toks(a), toks(b)
@@ -192,9 +192,9 @@ def similar_ratio(a, b):
 
 
 def iter_jsonl(path):
-    """Потоковый JSONL-итератор: пустые/битые строки и не-dict записи пропускаются,
-    errors='replace' — битый байт не роняет чтение; нет файла → пустой генератор.
-    Осознанный дубль core.io.read_ndjson_iter (см. docstring модуля: без PYTHONPATH)."""
+    """Streaming JSONL-iterator: empty/broken lines and non-dict records are skipped,
+    errors='replace' — a broken byte does not stop reading; no file → empty generator.
+    Conscious take core.io.read_ndjson_iter (see docstring module: without PYTHONPATH)."""
     p = Path(path)
     if not p.is_file():
         return

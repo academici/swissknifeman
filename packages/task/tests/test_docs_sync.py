@@ -40,7 +40,7 @@ class DocsSyncTests(unittest.TestCase):
         (destination / "index.md").write_text("# Stale\n", encoding="utf-8")
         result = self._run("--check")
         self.assertEqual(result.returncode, 1)
-        self.assertIn("docs/task устарел", result.stderr)
+        self.assertIn("docs/task is deprecated", result.stderr)
 
     def test_write_then_check_is_green_and_excludes_vitepress_config(self) -> None:
         written = self._run()

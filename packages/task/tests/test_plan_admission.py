@@ -56,7 +56,7 @@ class TestProducerAdmission(unittest.TestCase):
     def test_terminal_producer_without_deliverable_fails_closed(self):
         items = [_record("P1.1", status="🟢 Done"),
                  _record("P1.2", gaps=[_missing()])]
-        specs = {"P1.1": {"deliverables": "другой файл"},
+        specs = {"P1.1": {"deliverables": "another file"},
                  "P1.2": {"required_read_entries":
                            ["`out/result.json` (producer: P1.1)"]}}
         self.classify(items, specs)

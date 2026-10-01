@@ -90,7 +90,7 @@ class RepairDecisionTests(unittest.TestCase):
             phase = plan / "phases" / "P2"
             phase.mkdir(parents=True)
             (plan / "plan.md").write_text(
-                "## 0. Meta\n\n| Поле | Значение |\n|:--|:--|\n| Layout | v2 |\n",
+                "## 0. Meta\n\n| Field | Meaning |\n|:--|:--|\n| Layout | v2 |\n",
                 encoding="utf-8")
             (phase / "P2.md").write_text("# P2\n", encoding="utf-8")
             (phase / "P2.1.md").write_text("### P2.1 — repair\n", encoding="utf-8")

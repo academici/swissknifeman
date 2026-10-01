@@ -1,36 +1,36 @@
-# observer — capture-слой (PreToolUse / PostToolUse / Stop)
+# observer — capture-layer (PreToolUse / PostToolUse / Stop)
 
-ЭКСПЕРИМЕНТАЛЬНО, per-project. Лёгкий project-local захват сессии для post-hoc
-разбора скиллом `system/session-observer`. Дополняет сырой session-JSONL
-(`~/.claude/projects/…`) вычисленными алертами (LOOP) и компактной записью.
+EXPERIMENTAL, per-project. Lightweight project-local session capture for post-hoc
+skill parsing `system/session-observer`. Complements raw session-JSONL
+(`~/.claude/projects/…`) calculated alerts (LOOP) and compact notation.
 
-**Никогда не блокирует** — это наблюдатель, не гейт (гейт архитектуры —
-`review-gate`). Все события → `exit 0`.
+**Never blocks** — is an observer, not a gate (gate architecture -
+`review-gate`). All events → `exit 0`.
 
-## Включение (per-project, два шага)
+## Enable (per-project, two steps)
 
-1. **Флаг:** `.claude/observer.env.ini` → `ENABLED=true` (дефолт `false` = no-op).
-   Через Claude — `/observe on` (скилл `system/session-observer`).
-2. **Проводка** (opt-in, не глобально — иначе хук на КАЖДЫЙ tool-call у всех):
+1. **Flag:** `.claude/observer.env.ini` → `ENABLED=true` (default `false` = no-op).
+   Via Claude — `/observe on` (skill `system/session-observer`).
+2. **Wiring** (opt-in, is not global - otherwise there is a hook for EVERY tool-call for everyone):
    ```
-   harness hooks --target . --preset observer   # или apply-permissions --preset observer
+   harness hooks --target . --preset observer   # or apply-permissions --preset observer
    ```
-   добавляет в `.claude/settings.local.json` хуки PreToolUse/PostToolUse/Stop →
+   adds to `.claude/settings.local.json` hooks PreToolUse/PostToolUse/Stop →
    `~/.claude/hooks/observer/observer.sh`.
 
-## Что пишет → `.claude/observer/`
+## What it says → `.claude/observer/`
 
-| Файл | Содержание |
+| File | Contents |
 |---|---|
-| `runtime.jsonl` | поток PRE/POST по tool-call + алерты (`LOOP` при 3+ ошибках подряд) |
-| `last_report.md` | краткий итог на Stop (число вызовов, алертов) |
-| `archive/<ts>.jsonl` | архив лога по завершении сессии |
-| `error_count` | служебный счётчик (сбрасывается на успех/Stop) |
+| `runtime.jsonl` | thread PRE/POST by tool-call + alerts (`LOOP` at 3+ errors in a row) |
+| `last_report.md` | summary on Stop (number of calls, alerts) |
+| `archive/<ts>.jsonl` | log archive at the end of the session |
+| `error_count` | service counter (resets to success/Stop) |
 
-Каталог `.claude/observer/` — добавь в `.gitignore` проекта.
+Catalog `.claude/observer/` — add to `.gitignore` project.
 
-## Разбор
+## Parsing
 
-`/observe session` (скилл `system/session-observer`) читает `runtime.jsonl` +
-архив + session-JSONL + `git diff` → 3-осевая аналитика слабых мест
-(агенты/скиллы/настройки) → learnings через memory-хук.
+`/observe session` (skill `system/session-observer`) reads `runtime.jsonl` +
+archive + session-JSONL + `git diff` → 3-axial weakness analytics
+(agents/skills/settings) → learnings via memory-hook.

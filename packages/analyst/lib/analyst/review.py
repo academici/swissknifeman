@@ -1,8 +1,8 @@
-"""analyst review — показать уроки по состояниям + structured diff против активных.
+"""analyst review — show lessons by state + structured diff against active ones.
 
-Read-only человеко-обзор перед промоутом: группирует уроки по state, а для каждого
-показывает похожие активные уроки (Jaccard, stdlib) — чтобы человек видел дубли/конфликты
-до продвижения (mem0-таксономия ADD/UPDATE/NOOP считается на глаз в MVP; авто-резолв — P3)."""
+Read-only human review before promotion: groups lessons by state, and for each
+shows similar active lessons (Jaccard, stdlib) — so that a person can see duplicates/conflicts
+before promotion (mem0-taxonomy ADD/UPDATE/NOOP is calculated by eye in MVP; auto-resolve — P3)."""
 import json
 import os
 
@@ -11,8 +11,8 @@ from .common import die, parse_args
 
 
 def build_review(project_path, state=None):
-    """{state: [{lesson, similar, consolidation}]} по одному состоянию или по всем.
-    consolidation — mem0-рекомендация ADD/UPDATE/NOOP/CONFLICT (человеку, не авто-резолв)."""
+    """{state: [{lesson, similar, consolidation}]} for one condition or for all.
+    consolidation — mem0-recommendation ADD/UPDATE/NOOP/CONFLICT (human, not auto-resolve)."""
     groups = {st: [] for st in lessons.STATES}
     for L, st in lessons.list_lessons(project_path, state):
         sim = lessons.similar_lessons(
@@ -26,10 +26,10 @@ def build_review(project_path, state=None):
 def _print_human(groups, only_state=None):
     states = (only_state,) if only_state else lessons.STATES
     total = sum(len(groups[st]) for st in states)
-    print(f"\nanalyst review — {total} урок(ов)"
-          f"{f' в состоянии {only_state}' if only_state else ''}\n")
+    print(f"\nanalyst review — {total} lesson(ov)"
+          f"{f' in state {only_state}' if only_state else ''}\n")
     if not total:
-        print("  Пусто. Собери кандидатов: analyst digest\n")
+        print("  Empty. Collect candidates: analyst digest\n")
         return
     for st in states:
         entries = groups.get(st) or []
@@ -52,11 +52,11 @@ def _print_human(groups, only_state=None):
                 mark = "⚠ CONFLICT (flag-and-ask)" if cons["action"] == "CONFLICT" else cons["action"]
                 print(f"    → {mark}: {cons.get('reason', '')}")
             for sl, sst, score in e["similar"][:3]:
-                print(f"    ≈ похоже ({score}) на {sl.get('id')} [{sst}]")
+                print(f"    ≈ looks like ({score}) on {sl.get('id')} [{sst}]")
         print()
     if not only_state:
-        print("Промоут (человек): analyst promote <id> [--to candidate|curated]   ·   "
-              "демоут: analyst deprecate <id>\n")
+        print("Promote (person): analyst promote <id> [--to candidate|curated]   ·   "
+              "demo: analyst deprecate <id>\n")
 
 
 def _json_ready(groups, only_state=None):
@@ -74,15 +74,15 @@ def _json_ready(groups, only_state=None):
 
 def cmd_review(env, argv):
     """analyst review [--state ephemeral|candidate|curated|deprecated] [--json]
-    — уроки по состояниям + diff против активных (read-only)."""
+    — lessons on states + diff against active (read-only)."""
     opts, _ = parse_args(argv, {"--state": "str", "--project": "str", "--json": "bool"})
     if opts["help"]:
         print("analyst review [--state STATE] [--json]\n"
-              "  Показать уроки по состояниям + похожие активные (Jaccard). Read-only.")
+              "  Show lessons by condition + similar active (Jaccard). Read-only.")
         return
     state = opts["state"] or None
     if state and state not in lessons.STATES:
-        die(f"неизвестное состояние: {state} (допустимо: {', '.join(lessons.STATES)})")
+        die(f"unknown state: {state} (valid: {', '.join(lessons.STATES)})")
     ppath = os.getcwd()
     groups = build_review(ppath, state)
     if opts["json"]:

@@ -132,7 +132,7 @@ class AuthorityEvaluationTests(unittest.TestCase):
         self.assertEqual(evaluate(_request(kind="clarification")).verdict, "approval_required")
 
     def test_missing_frame_fails_closed_with_clear_error(self):
-        with self.assertRaisesRegex(AuthorityFrameError, "authority-frame.*не найден"):
+        with self.assertRaisesRegex(AuthorityFrameError, "authority-frame.*not found"):
             load_frame("/nonexistent.json")
 
     def test_invalid_frame_fails_closed(self):

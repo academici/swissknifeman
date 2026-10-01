@@ -162,14 +162,14 @@ def _matrix(manifest) -> str:
 def render_readme_block(manifest, report) -> str:
     return "\n".join([
         BEGIN,
-        "### Поддержка провайдеров (generated)",
+        "### Provider support (generated)",
         "",
-        (f"Единый manifest: contract `{manifest.contract_version}`, catalog "
+        (f"Single manifest: contract `{manifest.contract_version}`, catalog "
          f"`{manifest.catalog_version}`, canonical SHA-256 "
          f"`{report['canonical_sha256']}`. Manifest ("
          "`configs/provider-capabilities.json`) — source of truth, hand-edited, no "
-         "generator: `root.generated-artifacts` does not apply to it. Подробности и "
-         "операции: [provider support](docs/provider-support.md)."),
+         "generator: `root.generated-artifacts` does not apply to it. Details and "
+         "operations: [provider support](docs/provider-support.md)."),
         "",
         _matrix(manifest),
         "",
@@ -314,7 +314,7 @@ def expected_outputs(root: Path = ROOT) -> dict[Path, bytes]:
         start, finish = current.index(BEGIN), current.index(END) + len(END)
         readme = current[:start] + block + current[finish:]
     else:
-        anchor = "## Возможности\n\n"
+        anchor = "## Features\n\n"
         if anchor not in current:
             raise ValueError("PROVIDER_DOCS_README_ANCHOR_MISSING")
         readme = current.replace(anchor, anchor + block + "\n\n", 1)

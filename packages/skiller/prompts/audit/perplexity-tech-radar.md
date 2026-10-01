@@ -1,18 +1,18 @@
-# Perplexity: Tech Radar — актуальность технологий
+# Perplexity: Tech Radar — relevance of technology
 
-Проверь актуальность на текущую дату. Для каждого пункта:
-✅ актуально / ⚠️ изменилось / ❌ устарело + источник со ссылкой и датой.
+Check relevance for the current date. For each item:
+✅ relevant / ⚠️ changed / ❌ deprecated + source with link and date.
 
-1. **Claude API** — актуальные идентификаторы моделей (Opus / Sonnet / Haiku) и их
-   even-более-новые версии? Какие id рекомендованы сейчас, какие deprecated?
-2. **Laravel** — текущий стабильный мажор; что изменилось в Pennant / Folio / Volt.
-3. **Spatie Media Library** — текущая мажорная версия и breaking changes.
-4. **Filament** — текущий мажор, миграционные заметки.
-5. **Model Context Protocol** — `modelcontextprotocol.io`: актуальная версия спецификации.
-6. **Vue / Nuxt / Vite** — текущие мажоры экосистемы фронтенда.
+1. **Claude API** — current model identifiers (Opus / Sonnet / Haiku) and their
+   even-newer versions? What id are recommended now, which deprecated?
+2. **Laravel** — current stable major; what has changed in Pennant / Folio / Volt.
+3. **Spatie Media Library** — current major version and breaking changes.
+4. **Filament** — current major, migration notes.
+5. **Model Context Protocol** — `modelcontextprotocol.io`: current version of the specification.
+6. **Vue / Nuxt / Vite** — current majors of the frontend ecosystem.
 7. **Flutter Embedded Linux** — `github.com/sony/flutter-embedded-linux`: maintained?
-8. Доменно-специфичные интеграции проекта (платёжные/фискальные SDK) — живы ли ссылки,
-   есть ли новые версии API.
+8. Domain-specific project integrations (payment/fiscal SDK) — are the links alive,
+   are there new versions API.
 
-> Идентификаторы моделей и версии быстро устаревают — НЕ полагайся на свою память,
-> проверяй по первоисточникам с датами.
+> Model IDs and versions become outdated quickly - DO NOT rely on your memory,
+> check the original sources with dates.

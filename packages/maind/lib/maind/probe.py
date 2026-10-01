@@ -127,13 +127,13 @@ def drift_hints(env, config, report):
     if report.get("status") == "partial":
         if c.get("maind_mcp") and not report.get("daemons", {}).get("memory_reachable"):
             hints.append({"layer": "memory",
-                          "issue": "MCP памяти настроен, но демон не отвечает",
+                          "issue": "MCP memory configured but daemon not responding",
                           "fix": "maind start --only memory"})
         elif c.get("deployed_flag") and not c.get("maind_mcp"):
             hints.append({"layer": "mcp",
-                          "issue": "deployed-флаг есть, но maind-сервер не в .mcp.json "
-                                   "(починка не сработает, если провайдерский план проекта "
-                                   "отказал unmanaged-target)",
+                          "issue": "deployed-flag is there, but maind-server not in .mcp.json "
+                                   "(repair will not work if the provider's project plan "
+                                   "refused unmanaged-target)",
                           "fix": f"maind sync --only mcp --project {pid}"})
     # Roles/agents: project profile expects packs absent from the lock.
     try:
@@ -146,7 +146,7 @@ def drift_hints(env, config, report):
     missing = [p for p in expected if p not in installed]
     if missing:
         hints.append({"layer": "agent-pack",
-                      "issue": f"профиль ожидает паки {', '.join(missing)} — не установлены",
+                      "issue": f"profile is waiting for packs {', '.join(missing)} — not installed",
                       "fix": f"maind sync --only agent-pack --project {pid}"})
     return hints
 

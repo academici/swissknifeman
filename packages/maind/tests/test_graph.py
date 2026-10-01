@@ -1,4 +1,4 @@
-"""Тесты graph.py: узлы/рёбра, BFS-соседи, путь, подграф, статистика, персист."""
+"""Tests graph.py: nodes/ribs, BFS-neighbors, path, subgraph, statistics, persistent."""
 import tempfile
 import unittest
 
@@ -30,7 +30,7 @@ class TestGraph(unittest.TestCase):
             self.assertEqual(
                 {n["id"] for n in g.neighbors("project:brain", 1, edge_types=["uses"])},
                 {"skill:arch"})
-            # direction=in: кто depends_on maind
+            # direction=in: who depends_on maind
             self.assertEqual(
                 {n["id"] for n in g.neighbors("project:maind", 1, direction="in")},
                 {"project:skm", "project:brain"})
@@ -64,7 +64,7 @@ class TestGraph(unittest.TestCase):
             g = build(env)
             self.assertEqual(g.path("project:skm", "project:maind"),
                              ["project:skm", "project:maind"])
-            self.assertIsNone(g.path("project:maind", "project:skm"))  # нет out-пути
+            self.assertIsNone(g.path("project:maind", "project:skm"))  # no out-paths
             self.assertEqual(g.path("project:brain", "project:brain"), ["project:brain"])
 
     def test_subgraph_induced(self):
@@ -74,7 +74,7 @@ class TestGraph(unittest.TestCase):
             sg = g.subgraph(["project:brain", "project:maind"])
             self.assertEqual({n["id"] for n in sg["nodes"]},
                              {"project:brain", "project:maind"})
-            self.assertEqual(len(sg["edges"]), 1)  # только brain→maind между ними
+            self.assertEqual(len(sg["edges"]), 1)  # only brain→maind between them
 
     def test_stats(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -117,9 +117,9 @@ class TestGraph(unittest.TestCase):
                           "type": "requires", "attrs": {}}]}
         out = _mermaid(sub, "t")
         self.assertIn("graph LR", out)
-        self.assertIn('["A"]', out)                  # project — прямоугольник с именем
-        self.assertIn("-->|requires|", out)          # ребро с типом
-        self.assertNotIn("project:a", out)           # id санитизированы (без двоеточий)
+        self.assertIn('["A"]', out)                  # project — rectangle with name
+        self.assertIn("-->|requires|", out)          # edge with type
+        self.assertNotIn("project:a", out)           # id sanitized (without colons)
 
 
 if __name__ == "__main__":

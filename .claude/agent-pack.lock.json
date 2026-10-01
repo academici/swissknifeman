@@ -12,7 +12,7 @@
           "src": "agents/issue-triager.md",
           "target": ".claude/agents/swissknifeman-issue-triager.md",
           "kind": "template",
-          "base_sha256": "ae82c5f69f8683be317eb981a21697fd112a370f7d10868e7cc417696d5af40c",
+          "base_sha256": "34bf65d9c714ce4b1c92abda2e1cf6998054a3cd677c4aadacdcbe7a0da0a7d7",
           "local_modified": false,
           "user_owned": false
         },
@@ -20,7 +20,7 @@
           "src": "agents/contribution-reviewer.md",
           "target": ".claude/agents/swissknifeman-contribution-reviewer.md",
           "kind": "template",
-          "base_sha256": "151729c51a6a820b83a87d1b4a2d94508b5012f7479b9789676cf2f3e009d9d5",
+          "base_sha256": "cf96f2a2b6bb5a14567e80afbfdbf7d389a1e1dad154279cf3a6724b1353459f",
           "local_modified": false,
           "user_owned": false
         },
@@ -28,7 +28,7 @@
           "src": "agents/release-conductor.md",
           "target": ".claude/agents/swissknifeman-release-conductor.md",
           "kind": "template",
-          "base_sha256": "c54347751f968762feed1ce83ad184d71cb5ececc6656cee79324c13f2a277d0",
+          "base_sha256": "2c4d29b0a9c43209352a6a077697dc7ab278492311be903aac243818d40bbd75",
           "local_modified": false,
           "user_owned": false
         }
@@ -46,7 +46,7 @@
           "src": "agents/sprint-planner.md",
           "target": ".claude/agents/swissknifeman-sprint-planner.md",
           "kind": "template",
-          "base_sha256": "9166703e4ea21e401cad4e629aea9133b64e65c843f50798788629845c9e1cf9",
+          "base_sha256": "4c3e72148cb9fc727bc40758c5512502e2884b8e96a5e720448c2e25a7455196",
           "local_modified": false,
           "user_owned": false
         },
@@ -54,7 +54,7 @@
           "src": "agents/delegation-triage.md",
           "target": ".claude/agents/swissknifeman-delegation-triage.md",
           "kind": "template",
-          "base_sha256": "40f5555e9b7dab2403ebecfa69382aad01f9fffa9c6c721e96166c9a4e261962",
+          "base_sha256": "aa2ef9f10a6312e788831cc847432115cf571c83c5123495e3a8086844bffac0",
           "local_modified": false,
           "user_owned": false
         },
@@ -62,7 +62,7 @@
           "src": "agents/review-gatekeeper.md",
           "target": ".claude/agents/swissknifeman-review-gatekeeper.md",
           "kind": "template",
-          "base_sha256": "7feeae69c3ebf19c4b14ad8732849e7817791111bcc95900e66c89fa09287e69",
+          "base_sha256": "e2aa3d2240e5e23e0fa8a3258e21f32a3b62f969e3b7f2ab416db6c51a81ac12",
           "local_modified": false,
           "user_owned": false
         }

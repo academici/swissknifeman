@@ -1,82 +1,82 @@
-# Конструктор workflow-шаблонов
+# Workflow template builder
 
-4 канонических параметризуемых шаблон-скрипта мультиагентной оркестрации. Конструктор —
-это **библиотека портируемых шаблонов, не кодогенератор** (RAG:✅ P5.1 §4: DSL-конструкторы
-не консолидировались; Workflow-скрипт — уже DSL). Использование: скопировать шаблон в
-`plans/<ID>/workflows/` плана, заполнить слоты (`// SLOT:`), запускать через `scriptPath`.
-Прототипы — рабочие скрипты ECOSYSTEM P5 (`wf-p5-research.js` соответствует шаблону 1,
-`wf-p5-author.js` — шаблону 2).
+4 canonical parameterizable template scripts for multi-agent orchestration. Constructor -
+is a **portable template library, not a code generator** (RAG:✅ P5.1 §4: DSL builders
+were not consolidated; The workflow script is already a DSL). Usage: copy template to
+`plans/<ID>/workflows/` plan, fill slots (`// SLOT:`), run via `scriptPath`.
+Prototypes - working scripts ECOSYSTEM P5 (`wf-p5-research.js` corresponds to template 1,
+`wf-p5-author.js` - template 2).
 
-## Когда какой шаблон
+## When which template
 
-| Шаблон | Оркестрация | Слоты |
+| Template | Orchestration | Slots |
 |:--|:--|:--|
-| `wf-research-fanout.js` | N тем × research → adversarial verify (pipeline, без барьера) | `TOPICS[]`, схемы, model/effort |
-| `wf-author-by-spec.js` | спека → N файловых заданий × author → self-check (pipeline) | `FILES[]` (файл+ТЗ+валидация), конвейер-команды |
-| `wf-audit-adversarial.js` | M finders → dedup → adversarial verify → вердикты | `DIMENSIONS[]`, severity-enum, конституция (artifact-review) |
-| `wf-dev-slice.js` | срез → impl → tests-to-green → risk-адаптивное review | `SLICES[]`, гейты |
+| `wf-research-fanout.js` | N topics × research → adversarial verify (pipeline, no barrier) | `TOPICS[]`, diagrams, model/effort |
+| `wf-author-by-spec.js` | spec → N file tasks × author → self-check (pipeline) | `FILES[]` (file+TK+validation), pipeline-commands |
+| `wf-audit-adversarial.js` | M finders → dedup → adversarial verify → verdicts | `DIMENSIONS[]`, severity-enum, constitution (artifact-review) |
+| `wf-dev-slice.js` | slice → impl → tests-to-green → risk-adaptive review | `SLICES[]`, gates |
 
-Комбинируются: пайплайн плана = research-fanout → (design в main loop) → author-by-spec
-или dev-slice → audit-adversarial. Дизайн-стадию шаблоном не покрываем намеренно — она
-живёт в main loop дорогой модели (model routing: дорогая на дизайн, дешёвая на механику).
+Combined: plan pipeline = research-fanout → (design in main loop) → author-by-spec
+or dev-slice → audit-adversarial. We do not intentionally cover the design stage with a template - it
+lives in the main loop of an expensive model (model routing: expensive for design, cheap for mechanics).
 
-## Правила заполнения слотов
+## Rules for filling slots
 
-1. **Слоты — только константы в шапке скрипта.** Всё параметризуемое (`TOPICS`, `FILES`,
-   `DIMENSIONS`, `SLICES`, пути, model/effort, схемы) объявлено constant'ами до оркестрации.
-   `// SLOT:`-маркеры **рекомендуются** (читаемость), их отсутствие само по себе — не дефект.
-   Логику оркестрации при заполнении не трогать — если шаблон не ложится, это другой шаблон
-   или main loop, а не форк логики (форк логики — единственный реальный дефект здесь,
-   независимо от маркеров).
-2. **Embedded-конфиг вместо args-строки.** Named-workflow передаёт `args` строкой — ловушка:
-   структурный конфиг через неё не протащить. Конфиг встраивается в скрипт, запуск — через
-   `scriptPath`. Пути — только абсолютные (cwd субагента сбрасывается между вызовами).
-3. **Structured-summary по схеме — обязателен у control-flow-агентов.** Агент, чей результат
-   правит ветвлением/loop/verify-стадией, возвращает данные по JSON-схеме, не прозу
-   (RAG:✅ P5.1 §4 artifact-centric handoff, CONFIRMED); завершающая строка промпта —
-   «Финальный текст = данные по схеме, не сообщение человеку»; ядро схем
-   (`load_bearing`/`failure_scenario`/`tests_green`) не урезать. Action/механические агенты
-   (open/state/commit/fix/gate) МОГУТ возвращать прозу — легитимная экономия (D6), не дефект;
-   проза у control-flow-агента остаётся дефектом.
-4. **Judge-panel — слот только для high-stakes стадий.** 3+ независимых вердикта + консенсус
-   (`JUDGE_PANEL` в шаблоне 3) включать только для фискалки/платежей/tenant-isolation/ядра
-   экосистемы — single-agent матчит 60%+ задач, панель по умолчанию = сжигание токенов
-   (RAG:✅ P5.1 §4: judge panel избирательно, CONFIRMED).
-5. **Max-iteration у любых loop-until — обязателен.** Каждый цикл «повторяй до зелёного/
-   до чистого» имеет числовой потолок (`MAX_GREEN_ITERATIONS` в шаблоне 4); исчерпание =
-   стоп конвейера + эскалация в main loop, а не ещё одна итерация. Бесконечный loop —
-   это агент, подгоняющий тесты под код.
+1. **Slots are only constants in the script header.** Everything is parameterizable (`TOPICS`, `FILES`,
+   `DIMENSIONS`, `SLICES`, paths, model/effort, schemes) are declared constant's before orchestration.
+   `// SLOT:`-markers **recommended** (readability), their absence in itself is not a defect.
+   Do not touch the orchestration logic when filling - if the template does not fit, it is a different template
+   or main loop, not a logic fork (the logic fork is the only real defect here,
+   regardless of markers).
+2. **Embedded-config instead of args-string.** Named-workflow passes `args` as a string - trap:
+   the structural config cannot be pulled through it. The config is built into the script and launched via
+   `scriptPath`. Paths are absolute only (the subagent's cwd is reset between calls).
+3. **Structured-summary according to the scheme - required for control-flow agents.** Agent whose result
+   rules the branch/loop/verify stage, returns data according to the JSON schema, not prose
+   (RAG:✅ P5.1 §4 artifact-centric handoff, CONFIRMED); the final line of the prompt -
+   “Final text = schema data, not a message to the person”; circuit core
+   (`load_bearing`/`failure_scenario`/`tests_green`) do not trim. Action/mechanical agents
+   (open/state/commit/fix/gate) CAN return prose - legitimate economy (D6), not defect;
+   the prose of the control-flow agent remains a defect.
+4. **Judge-panel - slot only for high-stakes stages.** 3+ independent verdicts + consensus
+   (`JUDGE_PANEL` in template 3) enable only for fiscal/payments/tenant-isolation/core
+   ecosystems - single-agent matches 60%+ tasks, default panel = token burning
+   (RAG:✅ P5.1 §4: judge panel selective, CONFIRMED).
+5. **Max-iteration is required for any loop-until.** Each loop “repeat until green/
+   to clean" has a numerical ceiling (`MAX_GREEN_ITERATIONS` in pattern 4); exhaustion =
+   pipeline stop + escalation in the main loop, not another iteration. Infinite loop -
+   is an agent that fits tests to code.
 
-Общие инварианты шаблонов: fan-out — через `pipeline()` без барьера (verify/self-check
-стартует сразу после своего элемента, не ждёт всю волну); аудит/ревью-агенты — строго
-read-only; авторы коммитят только файлы своего задания (git status перед add); выпавшие
-элементы (`null` от `agent()`) не валят прогон — собираются в `dropped`/`failed` для
-пересборки в main loop; top-level `return report` в конце скрипта — санкционированная идиома
-рантайма (тело workflow-скрипта исполняется как async-обёртка Workflow-тула), не дефект.
+General template invariants: fan-out - via `pipeline()` without barrier (verify/self-check
+starts immediately after its element, does not wait for the entire wave); audit/review agents - strictly
+read-only; authors commit only the files of their task (git status before add); dropped out
+elements (`null` from `agent()`) do not fail the run - they are collected in `dropped`/`failed` for
+reassembly in main loop; top-level `return report` at the end of the script is an authorized idiom
+runtime (the body of the workflow script is executed as an async wrapper of the Workflow tool), not a defect.
 
-Боевой хардненинг (канон, зафиксирован в 4 шаблонах — findings P1-recon §1.3):
+Combat hardening (canon, recorded in 4 templates - findings P1-recon §1.3):
 
-- **`safeAgent(prompt, opts)`** — try/catch-обёртка над **bare** `await agent()` (вне
-  `parallel()`/`pipeline()`, где throw уже ловится рантаймом и отдаёт `null` — обёртка там
-  избыточна, не добавлять): без неё бросок агента роняет весь прогон вместо контролируемого
-  `null`, который дальше ловит существующий `if (!res)`.
-- **REPO/путь-инвариант.** Любая SLOT-константа абсолютного пути (`REPO`, `SPEC`,
-  `TARGET.paths`, …) — обязательный абсолютный путь (cwd субагента сбрасывается между
-  вызовами); опц. runtime-assert `X.startsWith('/')` ловит относительный путь на живом
-  прогоне, не срабатывает на незаполненном шаблоне (плейсхолдер `/abs/path/to/…` сам абсолютен).
-- **guarded-optional-args.** Опциональное поле слота — typeof/length-guard с явным дефолтом
-  (напр. `CONVEYOR.length ? … : null`, `typeof s.risk === 'string' ? s.risk : 'medium'`), не
-  голое обращение без проверки; паттерн из `wf-agentools-drive` L195 (cross-ref, не вендорить).
-- **Per-item cache-bust.** `agent()` кэширует по `(prompt, opts)` — на `resumeFromRunId`
-  ОДНОГО элемента конвейера/среза без глобального инвалидатора добавь опц. поле `asOf`
-  (дата/тег) в объект элемента и подмешай его в промпт/`label` — инвалидирует кэш только его,
-  не всей волны (паттерн — roadmap-заметка dterema-p4, канонизирован здесь).
+- **`safeAgent(prompt, opts)`** — try/catch wrapper over **bare** `await agent()` (outside
+  `parallel()`/`pipeline()`, where throw is already caught by runtime and returns `null` - the wrapper there
+  is redundant, do not add): without it, the agent's roll drops the entire run instead of the controlled one
+  `null`, which then catches the existing `if (!res)`.
+- **REPO/path-invariant.** Any absolute path SLOT constant (`REPO`, `SPEC`,
+  `TARGET.paths`, ...) - mandatory absolute path (subagent cwd is reset between
+  calls); opt. runtime-assert `X.startsWith('/')` catches relative path live
+  run, does not work on an empty template (the placeholder `/abs/path/to/…` itself is absolute).
+- **guarded-optional-args.** Optional slot field - typeof/length-guard with explicit default
+  (e.g. `CONVEYOR.length ? … : null`, `typeof s.risk === 'string' ? s.risk : 'medium'`), not
+  bare appeal without verification; pattern from `wf-agentools-drive` L195 (cross-ref, do not vendor).
+- **Per-item cache-bust.** `agent()` caches by `(prompt, opts)` - to `resumeFromRunId`
+  ONE conveyor/slice element without global invalidator, add opt. field `asOf`
+  (date/tag) into the element object and mix it into the prompt/`label` - only it is invalidated by the cache,
+  not the entire wave (pattern - roadmap note dterema-p4, canonized here).
 
-## Статус фонового прогона
+## Background run status
 
-Детальный статус фонового workflow-прогона — `swissknifeman wf status`, НЕ советовать
-`/workflows` (такой команды в окружении нет). Команда парсит transcript-директорию
-прогона детерминированно (journal.jsonl + meta скрипта) и печатает фиксированный отчёт
-(`--json` — машинно, `--watch` — перепечатка); ретранслируй её вывод, не парси заново.
+Background workflow run detail status - `swissknifeman wf status`, DO NOT advise
+`/workflows` (there is no such command in the environment). The command parses the transcript directory
+runs deterministically (journal.jsonl + script meta) and prints a fixed report
+(`--json` - machine, `--watch` - reprint); retransmit its output, don't parse it again.
 
-Методология и примеры: `docs/task/workflows.md`.
+Methodology and examples: `docs/task/workflows.md`.

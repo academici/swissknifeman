@@ -17,7 +17,7 @@ while IFS= read -r pid; do
   out="$(python3 "$lint_py" "$repo_root/plans/$pid" 2>&1)"; rc=$?
   if [ "$rc" -ne 0 ]; then
     first_error="$(printf '%s\n' "$out" | grep '^ERROR:' | head -1)"
-    echo "plans/$pid: plan-lint ERROR — ${first_error:-см. полный вывод plan-lint.py}"
+    echo "plans/$pid: plan-lint ERROR — ${first_error:-see full output plan-lint.py}"
     violations=1
   fi
 done <<< "$plan_ids"

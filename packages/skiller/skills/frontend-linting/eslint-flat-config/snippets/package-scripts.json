@@ -1,6 +1,6 @@
 // Source: anonymized production Vue 3 + TS project (package.json excerpt)
-// Скрипты lint/format/types + devDependencies всей цепочки. "type": "module" обязателен,
-// иначе eslint.config.js (ESM) не загрузится. Версии — ориентир (ESLint 9+, Vue 3.5+, Tailwind v4).
+// Scripts lint/format/types + devDependencies of the entire chain. "type": "module" is required,
+// otherwise eslint.config.js (ESM) will not load. Versions - a guide (ESLint 9+, Vue 3.5+, Tailwind v4).
 {
     "private": true,
     "type": "module",

@@ -1,6 +1,6 @@
-"""unittest для task.plan_lint — по классу ошибок отдельный кейс (см. fixtures.py
-для шаблонов plan.md/phases/Pn.md/handoff.md, байт-в-байт по snippets/*-template.md).
-Запуск: cd packages/task && python3 -m unittest discover -s tests"""
+"""unittest for task.plan_lint — separate case by error class (see fixtures.py
+for templates plan.md/phases/Pn.md/handoff.md, byte-by-byte snippets/*-template.md).
+Launch: cd packages/task && python3 -m unittest discover -s tests"""
 import contextlib
 import io
 import json
@@ -25,7 +25,7 @@ except ImportError:  # direct discovery from packages/task remains supported
         phase_index_path, plan_md, write_closure, write_decision_record, write_valid_plan,
         write_v2_carriers,
     )
-import task.plan_lint as plan_lint_module  # noqa: E402 — --conflicts: monkeypatch реестров
+import task.plan_lint as plan_lint_module  # noqa: E402 — --conflicts: monkeypatch registries
 from task.plan_lint import (  # noqa: E402
     CANON_LITERALS, CONTEXT_VALUES, REQUIRED_ITEM_FIELDS, SEMANTIC_NEXT_RE, STATUSES,
     Diagnostics, _conflicts_context_values, _conflicts_i18n_literals, _conflicts_item_fields,
@@ -38,7 +38,7 @@ from task.journal import append_exception, line_sha256, new_exception  # noqa: E
 
 
 def _lint(plan_dir):
-    """lint_plan напрямую (без CLI/subprocess) — возвращает (model, diag)."""
+    """lint_plan directly (without CLI/subprocess) — returns (model, diag)."""
     diag = Diagnostics()
     model = lint_plan(plan_dir, diag)
     return model, diag

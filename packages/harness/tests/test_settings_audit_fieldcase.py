@@ -69,7 +69,7 @@ class SettingsDoctorFieldCase(unittest.TestCase):
 
         for expected_id in (2, 3, 5, 6, 9):
             self.assertIn(expected_id, by_id,
-                           f"ожидалась находка id={expected_id}, получены id: "
+                           f"expected find id={expected_id}, received id: "
                            f"{sorted(by_id.keys())}")
 
 

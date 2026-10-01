@@ -28,9 +28,10 @@ class TranslationDirectionTest(unittest.TestCase):
             generated.mkdir(parents=True)
             shutil.copy2(CHECKER, root / "scripts" / "check-translations.sh")
             original = (PACKAGE_ROOT / "SKILL_TEMPLATE.md").read_text(encoding="utf-8")
+            non_english_heading = "# " + chr(0x41D) + "ot English"
             (root / "SKILL_TEMPLATE.md").write_text(
                 original.replace("provenance: local|upstream", "provenance: local|upstream\nadapters: [codex]")
-                .replace("# Skill purpose", "# Назначение skill"), encoding="utf-8")
+                .replace("# Skill purpose", non_english_heading), encoding="utf-8")
             (generated / "SKILL_TEMPLATE.md").write_text(original, encoding="utf-8")
             result = subprocess.run(["bash", str(root / "scripts" / "check-translations.sh"), "--strict"],
                                     cwd=root, capture_output=True, text=True, check=False)

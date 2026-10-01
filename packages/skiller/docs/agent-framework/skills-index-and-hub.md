@@ -1,44 +1,44 @@
-# Hub как AI Skills Index + фикс «скиллы не видны»
+# Hub like AI Skills Index + fix «skills are not visible»
 
-> Статус: ✅ реализовано (`scripts/generate-hub.sh`) — все три добавки Фазы 1 (agent-routing
-> срез, сверка имён `skills:`, freshness-штамп) на дереве.
+> Status: ✅ implemented (`scripts/generate-hub.sh`) — all three Phase 1 supplements (agent-routing
+> slice, name matching `skills:`, freshness-stamp) on the tree.
 
-## Что такое hub
+## What is hub
 
-`skiller` генерирует **hub** — индекс скиллов проекта (бакеты + описания + правила
-приоритета источников). Это и есть «AI Skills Index» из аудитов — **уже существует**,
-строить с нуля не нужно.
+`skiller` generates **hub** — project skill index (buckets + descriptions + rules
+source priority). This is it «AI Skills Index» from audits - **already exists**,
+no need to build from scratch.
 
-- Boost-проект → hub пишется в `.ai/guidelines/swissknifeman-hub.md` (маркеры
-  `<!-- swissknifeman:hub:start/end -->`); в CLAUDE.md/AGENTS.md переносит
-  `php artisan boost:update`. **Сгенерённые CLAUDE.md/AGENTS.md руками не трогаем.**
-- Не-Boost → управляемый блок в `CLAUDE.md`.
+- Boost-project → hub is written in `.ai/guidelines/swissknifeman-hub.md` (markers
+  `<!-- swissknifeman:hub:start/end -->`); in CLAUDE.md/AGENTS.md transfers
+  `php artisan boost:update`. **Generated CLAUDE.md/AGENTS.md do not touch with hands.**
+- Non-Boost → managed block in `CLAUDE.md`.
 
-## Регрессия «скиллы не видны»
+## Regression «skills are not visible»
 
-Источники невидимости:
-1. Нативное поле `skills:` у агента на неизвестном/отключённом имени **пропускается с
-   записью в debug-лог** (first-party `https://code.claude.com/docs/en/sub-agents`,
-   проверено 2026-07-29) — видимой ошибки нет → агент думает, что скилл загружен, а его нет.
-2. Hub устарел (реестр изменился, hub не перегенерён) → новые скиллы не в индексе.
-3. Агенты вообще не индексируются в hub → роль и её скиллы не видны оркестратору.
+Sources of invisibility:
+1. Native field `skills:` from an agent on unknown/disabled name **is skipped with
+   entry in debug-log** (first-party `https://code.claude.com/docs/en/sub-agents`,
+   verified 2026-07-29) — no visible error → agent thinks that the skill is loaded, but it is not.
+2. Hub is deprecated (registry has changed, hub not regenerated) → new skills are not in the index.
+3. Agents are not indexed at all in hub → the role and its skills are not visible to the orchestrator.
 
-## Фикс (реализовано) — три добавки в `generate-hub.sh`
+## Fix (implemented) — three additives in `generate-hub.sh`
 
-1. **agent-routing срез** — таблица из `.claude/agents/*.md` (`name`/`description`/`skills:`):
-   «роль → когда звать → преднагруженные скиллы». Источник истины — файлы агентов; hub индексирует.
-2. **Сверка имён `skills:`** — каждое имя из `skills:` агентов проверяется по `skills.json`;
-   неизвестное → `⚠ unknown skill` в hub + находка в `skiller doctor`. Убивает silent no-op.
-3. **freshness-штамп** — в шапке hub хэш/счётчик реестра + дата; `skiller doctor` флагит
-   дрейф «реестр изменился, hub не перегенерён».
+1. **agent-routing slice** — table from `.claude/agents/*.md` (`name`/`description`/`skills:`):
+   «role → when to call → preloaded skills». Source of truth - agent files; hub indexes.
+2. **Name matching `skills:`** — each name from `skills:` agents are checked against `skills.json`;
+   unknown → `⚠ unknown skill` in hub + find in `skiller doctor`. Kills silent no-op.
+3. **freshness-stamp** — in the header hub hash/registry counter + date; `skiller doctor` flagit
+   drift «registry has changed, hub not regenerated».
 
-List-aware парс `skills:` (инлайн `[..]` или блок-список) реализован локально в
+List-aware pars `skills:` (inline `[..]` or block list) implemented locally in
 `generate-hub.sh:parse_agent_frontmatter` — `lib/skiller/common.py:parse_frontmatter`
-по-прежнему читает только скаляры первого блока, но hub его для этой цели не использует.
+still only reads the scalars of the first block, but hub does not use it for this purpose.
 
-## Связь со скиллами и rules
+## Connection with skills and rules
 
-Три уровня, без дублирования:
-- **hub** — индекс (что есть, когда грузить).
-- **path-scoped rule** (`.claude/rules/`) — тонкий триггер по путям «здесь грузи скилл X».
-- **скилл** — глубина. Rule ССЫЛАЕТСЯ на скилл, не переписывает его текст.
+Three levels, no duplication:
+- **hub** — index (what is there, when to ship).
+- **path-scoped rule** (`.claude/rules/`) — thin trigger on paths «load skill here X».
+- **skill** — depth. Rule REFERENCES to a skill, does not rewrite its text.

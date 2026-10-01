@@ -36,7 +36,7 @@ _STATUS_BY_RESULT = {
     "blocked": "🔴 Blocked",
     "escalated": "🔴 Blocked",
 }
-_AUDIT_VERDICT_RE = re.compile(r"\*\*Вердикт:\s*(GREEN|ATTENTION|RED)\*\*")
+_AUDIT_VERDICT_RE = re.compile(r"\*\*Verdict:\s*(GREEN|ATTENTION|RED)\*\*")
 _SEMANTIC_NEXT_LINE_RE = re.compile(r"^(?:Semantic Next:\s*)?`?([^`]+?)`?\.?$")
 _DESIGN_TARGET_RE = re.compile(
     r"(?:^|\s|/)(?:task:)?plan-design\s+(\S+)\s+(P[0-9]+(?:\.[0-9]+)?)\b")
@@ -108,7 +108,7 @@ def _validate_priority_continuation(plan_dir: Path, next_exact: str) -> None:
             plan_bundle.producer_readiness(plan_dir, item_id)
     except (plan_bundle.BundleError, plan_layout.PlanLayoutError) as exc:
         raise DeliveryError(
-            "NEXT_ITEM_NOT_READY", f"execution Next не готов: {exc}") from exc
+            "NEXT_ITEM_NOT_READY", f"execution Next not ready: {exc}") from exc
 
 
 def _phase_candidate(plan_dir: Path, phase_id: str) -> dict:
@@ -118,7 +118,7 @@ def _phase_candidate(plan_dir: Path, phase_id: str) -> dict:
     except (OSError, ValueError) as exc:
         raise DeliveryError(
             "PHASE_ASSURANCE_CANDIDATE_UNRESOLVED",
-            f"{phase_id}: material candidate не собирается: {exc}",
+            f"{phase_id}: material candidate is not collected: {exc}",
         ) from exc
 
 
@@ -135,7 +135,7 @@ def _validate_phase_audit_continuation(plan_dir: Path, next_exact: str) -> None:
             or policy.get("next_exact") != next_exact):
         raise DeliveryError(
             "PHASE_AUDIT_NOT_ADMITTED",
-            f"{phase_id}: policy {policy.get('code')} не допускает Next {next_exact!r}",
+            f"{phase_id}: policy {policy.get('code')} does not allow Next {next_exact!r}",
         )
 
 
@@ -150,7 +150,7 @@ def _continuity(route: dict, *, allow_legacy: bool) -> dict:
                 route.get("context"), allow_legacy=allow_legacy)
     except plan_continuity.ContinuityError as exc:
         raise DeliveryError(
-            "CONTINUITY_CONTEXT_INVALID", "handoff Context не прошёл continuity gate") from exc
+            "CONTINUITY_CONTEXT_INVALID", "handoff Context failed continuity gate") from exc
     return decision.as_dict()
 
 
@@ -158,7 +158,7 @@ def file_digest(path) -> str:
     try:
         value = Path(path).read_bytes()
     except OSError as exc:
-        raise DeliveryError("DELIVERY_CARRIER_MISSING", f"носитель не читается: {path}") from exc
+        raise DeliveryError("DELIVERY_CARRIER_MISSING", f"media is not readable: {path}") from exc
     return "sha256:" + hashlib.sha256(value).hexdigest()
 
 
@@ -168,12 +168,12 @@ def _route_from_lines(lines: list[str]) -> dict:
     blocks = re.findall(r"^```session-continuity-decision/v1\s*\n(.*?)\n```", text,
                         flags=re.MULTILINE | re.DOTALL)
     if len(blocks) != text.count("```session-continuity-decision/v1") or len(blocks) > 1:
-        raise DeliveryError("CONTINUITY_CONTEXT_INVALID", "typed continuity block неоднозначен")
+        raise DeliveryError("CONTINUITY_CONTEXT_INVALID", "typed continuity block is ambiguous")
     if blocks:
         try:
             route["continuity"] = plan_continuity.decision_from_dict(json.loads(blocks[0])).as_dict()
         except (json.JSONDecodeError, plan_continuity.ContinuityError) as exc:
-            raise DeliveryError("CONTINUITY_CONTEXT_INVALID", "typed continuity block повреждён") from exc
+            raise DeliveryError("CONTINUITY_CONTEXT_INVALID", "typed continuity block damaged") from exc
     rows = []
     for line in lines:
         if not line.strip().startswith("|"):
@@ -187,10 +187,10 @@ def _route_from_lines(lines: list[str]) -> dict:
         "model": keyed.get("Model"),
         "thinking": keyed.get("Thinking"),
         "context": keyed.get("Context"),
-        "command": keyed.get("Команда"),
+        "command": keyed.get("Command"),
     })
     for index, header in enumerate(rows[:-1]):
-        if not {"Model", "Thinking", "Context", "Суть", "Команда"}.issubset(header):
+        if not {"Model", "Thinking", "Context", "The bottom line", "Command"}.issubset(header):
             continue
         values = rows[index + 1]
         if len(values) != len(header):
@@ -201,8 +201,8 @@ def _route_from_lines(lines: list[str]) -> dict:
             "model": row.get("Model"),
             "thinking": row.get("Thinking"),
             "context": row.get("Context"),
-            "rationale": row.get("Суть"),
-            "command": row.get("Команда"),
+            "rationale": row.get("The bottom line"),
+            "command": row.get("Command"),
         })
         break
     return route
@@ -246,7 +246,7 @@ def _latest_phase_audit_event(plan_dir: Path, subject: str) -> dict | None:
                 and review_policy.phase_audit_subject(event.get("item_id")) == subject
                 and event.get("result") in {"audit-green", "audit-attention", "audit-red"}):
             # Consumers receive one canonical phase identity even when the
-            # immutable historical journal still spells `Pn — режим фазы`.
+            # immutable historical journal still spells `Pn — phase mode`.
             latest = {**event, "item_id": subject}
     return latest
 
@@ -270,21 +270,21 @@ def _audit_handoff(plan_dir: Path, subject: str) -> dict | None:
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeDecodeError) as exc:
-        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", f"audit carrier не читается: {exc}") from exc
+        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", f"audit carrier is not readable: {exc}") from exc
     starts = [index for index, line in enumerate(lines) if line.startswith(f"## Audit {subject} ")]
     if not starts:
         return None
     event = _latest_phase_audit_event(plan_dir, subject)
     if event is None:
         raise DeliveryError(
-            "AUDIT_TERMINAL_EVENT_MISSING", f"для latest Audit {subject} нет journal event")
+            "AUDIT_TERMINAL_EVENT_MISSING", f"for latest Audit {subject} no journal event")
     start = starts[-1]
     end = next((index for index in range(start + 1, len(lines))
                 if lines[index].startswith("## Audit ")), len(lines))
     launch = next((index for index in range(start, end)
-                   if lines[index].strip() == "### Что запускать"), None)
+                   if lines[index].strip() == "### What to run"), None)
     if launch is None:
-        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "в latest audit block нет «Что запускать»")
+        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "in latest audit block no «What to run»")
     body = lines[launch + 1:end]
     block_text = "\n".join(lines[start:end])
     verdict_match = _AUDIT_VERDICT_RE.search(block_text)
@@ -309,7 +309,7 @@ def _audit_handoff(plan_dir: Path, subject: str) -> dict | None:
                 next_exact = line.strip()
                 break
     if not next_exact or next_exact == "—":
-        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "latest audit launch block не несёт команду")
+        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "latest audit launch block does not carry the command")
     try:
         review_policy.validate_phase_audit_continuation(
             event, plan_id=plan_dir.name, next_exact=next_exact, plan_dir=plan_dir)
@@ -339,12 +339,12 @@ def _validate_terminal_next(plan_dir: Path, next_exact: str, continuity: dict) -
         phase, status = min(unfinished, key=lambda row: int(row[0][1:]))
         raise DeliveryError(
             "TERMINAL_NEXT_FORBIDDEN",
-            f"batch завершён, но план не terminal: {phase} — {status}; "
-            "Next должен сохранять фактическое продолжение плана",
+            f"batch completed, but the plan is not terminal: {phase} — {status}; "
+            "Next must preserve the actual continuation of the plan",
         )
     if next_exact.startswith("none:"):
         raise DeliveryError(
-            "HANDOFF_NEXT_INVALID", "форма none не объявлена; используйте terminal для завершённого плана")
+            "HANDOFF_NEXT_INVALID", "form none not declared; use terminal for completed plan")
 
 
 def _handoff(plan_dir: Path, *, closed_subject: str | None = None) -> dict:
@@ -352,22 +352,22 @@ def _handoff(plan_dir: Path, *, closed_subject: str | None = None) -> dict:
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeDecodeError) as exc:
-        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", f"handoff.md не читается: {exc}") from exc
+        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", f"handoff.md is not readable: {exc}") from exc
     if closed_subject is not None:
         expected = re.compile(
             rf"^# HANDOFF\s+—\s+.+\s+—\s+after\s+{re.escape(closed_subject)}\s*$")
         if not lines or not expected.fullmatch(lines[0].strip()):
             raise DeliveryError(
                 "FINAL_BEFORE_TERMINAL_FORBIDDEN",
-                f"handoff title не коррелирует с terminal subject {closed_subject}",
+                f"handoff title does not correlate with terminal subject {closed_subject}",
             )
     start = next((index for index, line in enumerate(lines)
                   if line.strip().startswith("**Next:**")), None)
     if start is None:
-        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "в handoff.md нет **Next:**")
+        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "in handoff.md no **Next:**")
     next_exact = lines[start].split("**Next:**", 1)[1].strip()
     if not next_exact:
-        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "Next пуст")
+        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "Next empty")
     _validate_design_continuation(plan_dir, next_exact)
     _validate_priority_continuation(plan_dir, next_exact)
     _validate_phase_audit_continuation(plan_dir, next_exact)
@@ -381,13 +381,13 @@ def _handoff(plan_dir: Path, *, closed_subject: str | None = None) -> dict:
                      in {"blocked", "escalated"})):
         raise DeliveryError(
             "FINAL_BEFORE_TERMINAL_FORBIDDEN",
-            f"Next повторно запускает terminal subject {closed_subject}",
+            f"Next re-runs terminal subject {closed_subject}",
         )
     end = next((index for index in range(start + 1, len(lines))
                 if lines[index].strip().startswith("**Done:**")), len(lines))
     recommendation = "\n".join(lines[start:end]).strip()
     if not recommendation:
-        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "recommendation пуста")
+        raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "recommendation is empty")
 
     route = _route_from_lines(lines[start:end])
     continuity = _continuity(route, allow_legacy=True)
@@ -413,7 +413,7 @@ def _item_status(plan_dir: Path, item_id: str) -> tuple[str, Path]:
     plan_layout.layout_version(plan_dir)
     state_path = plan_layout.carrier_path(plan_dir, "item-state", item_id=item_id)
     if not state_path.is_file():
-        raise DeliveryError("DELIVERY_CARRIER_MISSING", f"state carrier не читается: {state_path}")
+        raise DeliveryError("DELIVERY_CARRIER_MISSING", f"state carrier is not readable: {state_path}")
     from task import plan_item_state
     try:
         plan_item_state.build_states(plan_dir, item_id=item_id, check=True)
@@ -424,7 +424,7 @@ def _item_status(plan_dir: Path, item_id: str) -> tuple[str, Path]:
     phase = plan_lint.parse_phase_md(phase_path, phase_id, diagnostics, layout="v2")
     occurrences = phase["items"].get(item_id) if phase else None
     if not occurrences:
-        raise DeliveryError("DELIVERY_STATE_INVALID", f"item {item_id} не найден")
+        raise DeliveryError("DELIVERY_STATE_INVALID", f"item {item_id} not found")
     if diagnostics.errors:
         raise DeliveryError("DELIVERY_STATE_INVALID", diagnostics.errors[0])
     status = occurrences[0]["fields"].get("Status", (None, None))[0]
@@ -436,7 +436,7 @@ def _terminal_journal(plan_dir: Path, subject: str) -> dict:
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeDecodeError) as exc:
-        raise DeliveryError("TERMINAL_JOURNAL_MISSING", f"journal не читается: {exc}") from exc
+        raise DeliveryError("TERMINAL_JOURNAL_MISSING", f"journal is not readable: {exc}") from exc
     candidates = []
     missing_run_id_lines = []
     invalid_terminal_errors = []
@@ -472,15 +472,15 @@ def _terminal_journal(plan_dir: Path, subject: str) -> dict:
         if missing_run_id_lines:
             raise DeliveryError(
                 "TERMINAL_RUN_ID_MISSING",
-                f"journal.jsonl:{missing_run_id_lines[-1]} не несёт run_id",
+                f"journal.jsonl:{missing_run_id_lines[-1]} does not carry run_id",
             )
         if invalid_terminal_errors:
             error = invalid_terminal_errors[-1]
             raise DeliveryError(error.code, str(error)) from error
-        raise DeliveryError("TERMINAL_JOURNAL_MISSING", f"для {subject} нет terminal journal event")
+        raise DeliveryError("TERMINAL_JOURNAL_MISSING", f"for {subject} no terminal journal event")
     line_number, raw, event = candidates[-1]
     if not event.get("run_id"):
-        raise DeliveryError("TERMINAL_RUN_ID_MISSING", f"journal.jsonl:{line_number} не несёт run_id")
+        raise DeliveryError("TERMINAL_RUN_ID_MISSING", f"journal.jsonl:{line_number} does not carry run_id")
     receipt = {
         "line": line_number,
         "sha256": "sha256:" + hashlib.sha256(raw.encode("utf-8")).hexdigest(),
@@ -505,7 +505,7 @@ def _adapter_attestation(terminal: dict | None) -> dict | None:
             command_catalog.package_root() / "configs" / "command-routing.json")
     except (OSError, ValueError, command_catalog.CommandCatalogError) as exc:
         raise DeliveryError(
-            "ADAPTER_ATTESTATION_MISSING", f"Task adapter identity не читается: {exc}") from exc
+            "ADAPTER_ATTESTATION_MISSING", f"Task adapter identity is not readable: {exc}") from exc
     return {
         "package": "task",
         "version": metadata["plugin_version"],
@@ -571,7 +571,7 @@ def _require_completed_phase_before_item_handoff(plan_dir: Path, item_id: str) -
     if not close_allowed or not gate.get("allow"):
         raise DeliveryError(
             gate.get("code") or policy.get("code") or "PHASE_CLOSE_NOT_ALLOWED",
-            f"{phase_id}: GREEN item completion не допускает phase close",
+            f"{phase_id}: GREEN item completion does not allow phase close",
         )
 
     try:
@@ -581,26 +581,26 @@ def _require_completed_phase_before_item_handoff(plan_dir: Path, item_id: str) -
     if phase_status != plan_status.STATUS_DONE:
         raise DeliveryError(
             "PHASE_CLOSURE_REQUIRED",
-            f"{phase_id}: terminal phase state не спроецирован ({phase_status})",
+            f"{phase_id}: terminal phase state not projected ({phase_status})",
         )
     if _closure_digest(plan_dir, phase_id) is None:
         raise DeliveryError(
             "PHASE_CLOSURE_REQUIRED",
-            f"{phase_id}: закрой фазу в текущем item invocation до external handoff",
+            f"{phase_id}: close the phase in the current item invocation to external handoff",
         )
     try:
         plan_closure.build_closure(plan_dir, phase_id, check=True)
     except plan_closure.ClosureError as exc:
         raise DeliveryError(
             "PHASE_CLOSURE_REQUIRED",
-            f"{phase_id}: phase closure carrier устарел: {exc}",
+            f"{phase_id}: phase closure carrier is deprecated: {exc}",
         ) from exc
     try:
         _terminal_journal(plan_dir, phase_id)
     except DeliveryError as exc:
         raise DeliveryError(
             "PHASE_CLOSURE_REQUIRED",
-            f"{phase_id}: terminal phase journal не записан в текущем item invocation",
+            f"{phase_id}: terminal phase journal is not recorded in the current item invocation",
         ) from exc
     return None
 
@@ -617,7 +617,7 @@ def _base_receipt(plan_dir: Path, subject: str, *, schema_version: str, status: 
     if required_next_exact is not None and handoff["next_exact"] != required_next_exact:
         raise DeliveryError(
             "PHASE_AUDIT_CONTINUATION_REQUIRED",
-            f"Next должен точно совпадать с policy: {required_next_exact}",
+            f"Next must match exactly policy: {required_next_exact}",
         )
     return {
         "schema_version": schema_version,
@@ -659,7 +659,7 @@ def build_terminal_receipt(plan_dir, subject: str) -> dict:
             raise DeliveryError("FINAL_BEFORE_TERMINAL_FORBIDDEN", f"{subject}: {status}")
         terminal = _terminal_journal(plan_dir, subject)
         if _STATUS_BY_RESULT.get(terminal["result"]) != status:
-            raise DeliveryError("STALE_TERMINAL_RECEIPT", "journal result не совпадает с item state")
+            raise DeliveryError("STALE_TERMINAL_RECEIPT", "journal result does not match item state")
         from task import plan_repeat
         repeat = plan_repeat.for_run(plan_dir, subject, terminal.get("run_id"))
         required_next_exact = (
@@ -678,7 +678,7 @@ def build_terminal_receipt(plan_dir, subject: str) -> dict:
             raise DeliveryError("FINAL_BEFORE_TERMINAL_FORBIDDEN", f"{subject}: {status}")
         terminal = _terminal_journal(plan_dir, subject)
         if _STATUS_BY_RESULT.get(terminal["result"]) != status:
-            raise DeliveryError("STALE_TERMINAL_RECEIPT", "journal result не совпадает с phase state")
+            raise DeliveryError("STALE_TERMINAL_RECEIPT", "journal result does not match phase state")
         phase_path = plan_layout.phase_path(plan_dir, subject)
         return _base_receipt(
             plan_dir, subject, schema_version="terminal-delivery-receipt/v1", status=status,
@@ -687,18 +687,18 @@ def build_terminal_receipt(plan_dir, subject: str) -> dict:
         )
     if subject == "archive":
         if plan_dir.parent.name != "archive":
-            raise DeliveryError("FINAL_BEFORE_TERMINAL_FORBIDDEN", "план ещё не в archive")
+            raise DeliveryError("FINAL_BEFORE_TERMINAL_FORBIDDEN", "plan not yet in place archive")
         terminal = _terminal_journal(plan_dir, subject)
         return _base_receipt(
             plan_dir, subject, schema_version="terminal-delivery-receipt/v1", status="archived",
             state_digest=None, closure_digest=None, terminal=terminal,
         )
-    raise DeliveryError("DELIVERY_SUBJECT_INVALID", "subject должен быть Pn.m, Pn или archive")
+    raise DeliveryError("DELIVERY_SUBJECT_INVALID", "subject should be Pn.m, Pn or archive")
 
 
 def verify_receipt(plan_dir, receipt: dict) -> bool:
     if not isinstance(receipt, dict):
-        raise DeliveryError("STALE_TERMINAL_RECEIPT", "receipt не object")
+        raise DeliveryError("STALE_TERMINAL_RECEIPT", "receipt not object")
     schema = receipt.get("schema_version")
     subject = receipt.get("subject")
     if schema == "terminal-delivery-receipt/v1":
@@ -706,10 +706,10 @@ def verify_receipt(plan_dir, receipt: dict) -> bool:
     elif schema == "handoff-recommendation-receipt/v1":
         current = build_handoff_receipt(plan_dir, subject)
     else:
-        raise DeliveryError("STALE_TERMINAL_RECEIPT", "неизвестная схема receipt")
+        raise DeliveryError("STALE_TERMINAL_RECEIPT", "unknown schema receipt")
     for field in ("next_exact", "recommendation"):
         if receipt.get(field) != current[field]:
-            raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", f"{field} не совпадает с handoff.md")
+            raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", f"{field} does not match handoff.md")
     # The product commit is provenance for the delivery moment.  A separate
     # bookkeeping commit necessarily advances HEAD after the receipt is written;
     # treating that unrelated movement as stale would turn every clean close into
@@ -717,7 +717,7 @@ def verify_receipt(plan_dir, receipt: dict) -> bool:
     if schema == "terminal-delivery-receipt/v1":
         current["commit_sha"] = receipt.get("commit_sha")
     if receipt != current:
-        raise DeliveryError("STALE_TERMINAL_RECEIPT", "receipt digests/state устарели")
+        raise DeliveryError("STALE_TERMINAL_RECEIPT", "receipt digests/state are deprecated")
     return True
 
 
@@ -732,7 +732,7 @@ def required_final_message(receipt: dict) -> str:
     recommendation = receipt.get("recommendation")
     if not isinstance(recommendation, str) or not recommendation:
         raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "receipt recommendation is absent")
-    return f"Рекомендация следующего шага:\n{recommendation}"
+    return f"Next step recommendation:\n{recommendation}"
 
 
 def write_receipt(path, receipt: dict) -> Path:

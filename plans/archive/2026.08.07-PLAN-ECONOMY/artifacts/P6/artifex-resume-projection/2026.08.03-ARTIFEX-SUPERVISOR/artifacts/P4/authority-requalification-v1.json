@@ -1,8 +1,0 @@
-{
-  "schema_version": "artifex-p4-authority-requalification-v1",
-  "owner_gate": "G-OWNER-P4.8-G2-REQUALIFICATION",
-  "grant": "plan.md:D104",
-  "historical_diff": {"before": "17a57adc", "item": "23f71d34", "file_count": 18},
-  "semantic_keys": ["blast_radius", "rollback", "affected_slices", "no_decision_consequence", "blocking_dependencies", "authority_attention", "resolved", "withdrawn"],
-  "predecessors": {"p4_7_item": "138b2424", "g1_item": "367e477a"}
-}

@@ -1,6 +1,0 @@
-{
-  "schema_version": "artifex-business-successor-cases-v1",
-  "case_version": "1.0.0",
-  "positive": {"indexed_admissions": 14, "expected_usage": 0, "g2_predecessor_required": true, "g2b_successor_required": true},
-  "negative_mutations": ["schema", "version", "hash", "owner", "expiry", "revocation", "provider", "root", "item", "files", "capabilities", "replay", "reuse", "g2-substitution"]
-}

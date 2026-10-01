@@ -1,8 +1,0 @@
-P6.4 would-fail evidence — downstream-gate-v1
-Temporary detached worktree: /tmp/p64-downstream.sx9An7 (HEAD 00e8bcfb).
-Command: python3 packages/task/scripts/plan-lint.py packages/task/tests/data/plan-v2-nodownstream
-Expected production-path failure (exit 1):
-ERROR: .../plan.md: downstream-gate-v1: пункт P0.1: нет текущей записи результата для потребителя P1.1
-
-The same output also contains deliberately stale/copy-isolated fixture diagnostics;
-the named downstream-gate-v1 diagnostic above is the assertion for this gate.

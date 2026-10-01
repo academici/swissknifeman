@@ -1,8 +1,0 @@
-{
-  "schema_version": "artifex-provider-business-projection-v1",
-  "projection_version": "1.0.0",
-  "providers": {
-    "codex": {"version": "codex-cli 0.146.0", "controls": ["ephemeral", "ignore-user-config", "workspace-write", "approval-never", "network-disabled", "child-disabled", "output-schema"]},
-    "claude-code": {"version": "2.1.222 (Claude Code)", "controls": ["no-session-persistence", "dontAsk", "empty-setting-sources", "strict-empty-mcp", "child-disabled", "web-disabled", "disposable-file-tools", "output-schema"]}
-  }
-}

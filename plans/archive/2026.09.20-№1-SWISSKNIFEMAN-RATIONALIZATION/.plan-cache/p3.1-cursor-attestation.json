@@ -1,8 +1,0 @@
-{
-  "model": "cursor-grok-4.6-high",
-  "model_class": "frontier",
-  "effort": "high",
-  "cwd": "/home/vostrikov/projects/packages/swissknifeman",
-  "invocation": "task:plan-run 2026.09.20-\u21161-SWISSKNIFEMAN-RATIONALIZATION P3.1",
-  "thread_id": "9c5317fe-29c7-4d9c-aa34-0e80a0d1c877"
-}

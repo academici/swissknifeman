@@ -1,1 +1,0 @@
-{"bundle_id":"P7.1-provider-acceptance","files":["project-set.json","capability-expectations.json","skill-replay-results.json","skill-ablation-results.json","acceptance-results.json","release-blockers.json"],"privacy":{"excluded_classes":["raw-transcript-bodies","chain-of-thought","tool-payloads","secrets"],"minimized":true},"producer":"p7-provider-acceptance.py write"}

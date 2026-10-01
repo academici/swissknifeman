@@ -48,6 +48,9 @@ safe-dirs.json
 .mcp.json.bak
 .cursor/mcp.json
 .cursor/mcp.json.bak
+# Codex project config: `maind sync` adds MCP launchers with absolute machine paths (perplexity),
+# so the real file stays local; the portable sample is .codex/config.toml.example.
+.codex/config.toml
 # Cursor lifecycle: surface modes (How .claude/*.env.ini) — writes `harness hooks --provider cursor`.
 .cursor/*.env.ini
 # Cursor/Codex hook runtime: tool-telemetry sidecars (harness.hooks), we don't commit.

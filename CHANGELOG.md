@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.26.1] - 2026-10-01
+
+### Changed
+
+- **Local Codex config:** `.codex/config.toml` is no longer tracked. `maind sync` writes MCP launchers with
+  absolute machine paths into it, which the gitignore policy forbids in tracked files. It is ignored; the
+  portable sample is `.codex/config.toml.example`. The release umbrella and `task` move to 0.26.1.
+
 ### Fixed
 
 - **maind memory digest:** the SessionStart digest sorted by a `timestamp` field that agentmemory 0.9.x

@@ -738,6 +738,17 @@ class TestHandoffMd(TmpPlanTestCase):
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "фаза «P9» не существует в плане"))
 
+    def test_handoff_next_plan_design_rolling_backlog_phase(self):
+        # D24-style rolling backlog: skeleton lives in backlog/<Pn>.md until plan-design moves it
+        plan_dir = write_valid_plan(self.root)
+        (plan_dir / "backlog").mkdir()
+        (plan_dir / "backlog" / "P9.md").write_text("# P9 — skeleton\n", encoding="utf-8")
+        text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
+        text = text.replace("/task:plan-exec DEMO-1 P1.1", "/task:plan-design DEMO-1 P9")
+        (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "фаза «P9» не существует в плане"), [])
+
     def test_handoff_next_plan_closed_rejected_when_items_active(self):
         # «план закрыт» при живом 🟡 item — не оправдание, ERROR остаётся
         plan_dir = write_valid_plan(self.root)

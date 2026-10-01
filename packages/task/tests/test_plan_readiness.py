@@ -158,6 +158,14 @@ class PlanReadinessTest(unittest.TestCase):
                              + "\n> СКЕЛЕТ — не детализирован\n", encoding="utf-8")
             plan_readiness.validate_design_handoff_target(plan, "P1")
 
+    def test_design_targets_accept_a_rolling_backlog_phase(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = write_valid_plan(Path(tmp), "BACKLOG-PHASE", layout="v2")
+            (plan / "backlog").mkdir()
+            (plan / "backlog" / "P2.md").write_text("# P2 — skeleton\n", encoding="utf-8")
+            plan_readiness.validate_design_target(plan, "P2")
+            plan_readiness.validate_design_handoff_target(plan, "P2")
+
     def test_all_three_reentry_triggers_reduce_to_reopen(self):
         for trigger in ("owner-decision-change", "terminal-evidence-invalid",
                         "safety-or-authority-boundary"):

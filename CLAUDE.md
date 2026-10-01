@@ -31,3 +31,9 @@ For Claude Code research, use the established `perplexity-web` route before `Web
 Память **общая** (демон mAInd), scope этого проекта — `project:swissknifeman`; факты всей экосистемы — в
 scope `global`. Связи проекта с остальными: `maind graph --project swissknifeman`.
 <!-- /maind:healthcheck -->
+
+<!-- swissknifeman:hub:start -->
+<!-- swissknifeman hub: stub — скиллы и task-команды подключаются нативно; индекс и правила приоритета здесь не дублируются. -->
+<!-- swissknifeman:registry sha=5b8274432dfe skills=232 -->
+<!-- Полный индекс: `skiller status` или generate-hub.sh --target <dir> --full-index. -->
+<!-- swissknifeman:hub:end -->

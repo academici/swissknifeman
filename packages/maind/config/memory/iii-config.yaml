@@ -19,7 +19,7 @@ workers:
   - name: iii-http
     config:
       port: 4111
-      host: 192.168.31.93
+      host: 127.0.0.1
       default_timeout: 180000
       cors:
         allowed_origins:

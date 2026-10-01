@@ -353,6 +353,9 @@ def validate_design_target(plan_dir, phase_id: str) -> None:
     from task import plan_layout
 
     plan_dir = Path(plan_dir)
+    if phase_id not in plan_layout.phase_paths(plan_dir):
+        # A rolling-backlog phase is not yet in the layout, so it cannot be terminal.
+        return
     statuses = []
     for spec in plan_layout.item_spec_paths(plan_dir, phase_id):
         state_path = spec.with_name(spec.stem + ".state.md")
@@ -386,8 +389,11 @@ def validate_design_handoff_target(plan_dir, phase_id: str) -> None:
 
     plan_dir = Path(plan_dir)
     phase_path = plan_layout.phase_paths(plan_dir).get(phase_id)
+    if phase_path is None:
+        # A rolling-backlog phase has no detailed items yet; designing it is the continuation.
+        return
     try:
-        if phase_path is not None and _SKELETON.search(phase_path.read_text(encoding="utf-8")):
+        if _SKELETON.search(phase_path.read_text(encoding="utf-8")):
             return
     except (OSError, UnicodeDecodeError):
         return

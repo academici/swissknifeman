@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.26.2] - 2026-10-01
+
 ### Fixed
 
 - **skiller cache cleanup:** release delivery now safely retires an unreferenced provider-cache

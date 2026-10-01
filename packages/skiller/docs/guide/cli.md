@@ -226,8 +226,10 @@ The command does not create or move tags, does not push and does not publish Git
 
 Delivery builds a story from release snapshot, committed under real-life tags.
 After provider update it removes from Claude/Codex cache only unlinked legacy directories
-versions whose managed bytes exactly coincided with this attestation. Current and more referenced directories
-are saved; unknown/modified cache and unavailable provider state give blocked/PARTIAL. Solution,
+whose managed bytes exactly coincide with a tagged snapshot or the current attestation. This also
+retires an untagged intermediate-SHA directory when its bytes exactly match the current release.
+Current and referenced directories are saved; unknown/modified cache and unavailable provider state
+give blocked/PARTIAL. Solution,
 digest and readback deletions are recorded in delivery receipt; dry-run shows the same plan without
 removal.
 

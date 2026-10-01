@@ -59,9 +59,10 @@ generated and by what — [package-architecture]; the canonical Releases & Taggi
 - On tagging: `[Unreleased]` → `[X.Y.Z]` in CHANGELOG; pushing the tag — manual.
 - Tags are human markers: Claude Code plugin versions resolve to a git SHA and don't depend on
   tags.
-- A release is incomplete until `release-fleet` succeeds. Cache deletion is fail-closed: a cache
-  is preserved and reported as blocked when its version is absent from committed tagged release
-  snapshots, its attested bytes changed, or a provider still references it.
+- A release is incomplete until `release-fleet` succeeds. Cache deletion is fail-closed: an
+  unreferenced cache is pruned only when its bytes exactly match the current attestation or a
+  committed tagged release snapshot. A changed/unknown cache, unavailable provider state, or a
+  provider reference keeps it blocked.
 
 ## Versioning and provider caches
 

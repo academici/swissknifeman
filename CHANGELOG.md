@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **skiller cache cleanup:** release delivery now safely retires an unreferenced provider-cache
+  directory created at an untagged intermediate SHA when its bytes exactly match the current
+  attestation. Changed, unknown, referenced, and uninspectable caches remain fail-closed; they
+  still produce `PARTIAL` rather than being deleted.
+
 ## [0.26.1] - 2026-10-01
 
 ### Changed

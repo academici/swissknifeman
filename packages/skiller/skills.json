@@ -4354,8 +4354,8 @@
       "path": "skills/repository-bootstrap/release-discipline/SKILL.md",
       "version": "0.1.0",
       "description": "Closing out any substantive change in this repository: validate.sh → skiller registry → CHANGELOG [Unreleased] → PR; semver tag rules. Activate before every commit/PR and when preparing a release.",
-      "sha256": "630ec074637e319a183c27855962e9cb0efe21079ffc541317247108c33c8e78",
-      "content_sha256": "7bc37caffa1d8247ca5a95fa28ca28473aaa0da9bd9f40a42f453ee34c930bf5",
+      "sha256": "feb198d183be888c07f47998173db89d72c10ec2c24d704d4849fedd30760a1c",
+      "content_sha256": "077f476c846db67e8c2f4e322f8846d043d42b33f696a3e2272f5c50dc8368e0",
       "tags": [
         "release",
         "changelog",

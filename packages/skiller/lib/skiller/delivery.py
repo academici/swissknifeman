@@ -135,6 +135,18 @@ def prune_provider_caches(env, attestation, history, *, dry_run=False):
                     row.update({"classification": "reference-state-unavailable",
                                 "status": "blocked", "errors": ["provider-state-unavailable"]})
                 else:
+                    current_projection = (now.get("providers", {}).get(projection_name)
+                                          or (now.get("providers", {}).get("codex")
+                                              if now and provider == "codex" else None)) if now else None
+                    if current_projection and not verify_surface(candidate, current_projection):
+                        row.update({"classification": "exact-current-superseded",
+                                    "status": "planned" if dry_run else "pruned",
+                                    "action": "prune", "digest": current_projection["tree_digest"]})
+                        if not dry_run:
+                            shutil.rmtree(candidate)
+                            row["readback"] = {"exists": candidate.exists()}
+                        rows.append(row)
+                        continue
                     matches = known.get((unit_root.name, candidate.name), [])
                     projections = [unit["providers"].get(projection_name)
                                    or (unit["providers"].get("codex")

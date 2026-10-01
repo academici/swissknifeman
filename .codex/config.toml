@@ -83,7 +83,7 @@ enabled = false
 enabled = false
 
 [plugins."general@swissknifeman"]
-enabled = true
+enabled = false
 
 [plugins."generate-skill@swissknifeman"]
 enabled = false

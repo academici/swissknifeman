@@ -27,7 +27,7 @@ from pathlib import Path
 from core import atomic_write_text
 
 from .common import die, parse_flags, parse_frontmatter
-from .config import (CORE_SKILLS, DEFAULT_EXCLUDE, RESIDENT_BUDGET_TARGET,
+from .config import (CORE_SKILLS, DEFAULT_COMMAND_PLUGINS, DEFAULT_EXCLUDE, RESIDENT_BUDGET_TARGET,
                      ProjectConfig, all_buckets, core_skill_tuples,
                      find_project_root, load_config, resolve_selection,
                      validate_config)
@@ -769,7 +769,7 @@ def _measure_skills(env, target, *, provider=DEFAULT_LISTING_PROVIDER,
         for name, paths in sorted(observed["paths"].items()) if len(paths) > 1
     ]
     total = None if missing else sum(entry["tokens"] for entry in entries)
-    desired = set(managed.get("desired_plugins", []))
+    desired = set(managed.get("desired_plugins", [])) - set(DEFAULT_COMMAND_PLUGINS)
     outside_policy = sorted(set(observed["enabled"]) - desired) if desired else []
     not_effective = sorted(desired - set(observed["enabled"]))
     return {
@@ -1003,6 +1003,19 @@ def _first_turn_verdict(total):
     return "WARN"
 
 
+def _codex_integrity(report):
+    """Return native-discovery drift that invalidates a strict Codex receipt."""
+    skills = report["sources"]["skills"]
+    issues = []
+    if skills.get("duplicates"):
+        issues.append("SKILL_DUPLICATE_NAME")
+    if skills.get("enabled_outside_project_policy"):
+        issues.append("CODEX_PLUGIN_ENABLED_OUTSIDE_PROJECT_POLICY")
+    if skills.get("desired_plugins_not_effective"):
+        issues.append("CODEX_DESIRED_PLUGIN_NOT_EFFECTIVE")
+    return {"status": "clean" if not issues else "degraded", "issues": issues}
+
+
 def first_turn_report(env, target, *, provider=DEFAULT_LISTING_PROVIDER,
                       timeout=HOOK_TIMEOUT,
                       listing_fraction=SKILL_LISTING_BUDGET_FRACTION,
@@ -1035,6 +1048,8 @@ def first_turn_report(env, target, *, provider=DEFAULT_LISTING_PROVIDER,
         report["measurement_status"] = "complete" if complete else "incomplete"
         report["scope"] = "managed-first-turn"
         report["platform_overhead"] = "excluded"
+        if provider == "codex":
+            report["integrity"] = _codex_integrity(report)
     return report
 
 
@@ -1092,6 +1107,9 @@ def format_first_turn_report(report):
         if key == "skills" and s.get("enabled_outside_project_policy"):
             names = ", ".join(s["enabled_outside_project_policy"])
             out.append(f"  {'  plugins outside policy':<28} {names}")
+        if key == "skills" and s.get("desired_plugins_not_effective"):
+            names = ", ".join(s["desired_plugins_not_effective"])
+            out.append(f"  {'  missing policy plugins':<28} {names}")
         if key == "mcp" and s.get("mode"):
             out.append(f"  {'  tool search':<28} {s['mode']} "
                        f"(источник: {s['mode_source']}) — {s['estimate_class']}")
@@ -1215,7 +1233,8 @@ def cmd_budget(env, argv):
               "  --first-turn: provider-aware always-on футпринт первого хода проекта.\n"
               "  Claude измеряет CLAUDE.md/rules, agents и SessionStart; Codex — AGENTS.md\n"
               "  и фактический native prompt inventory с duplicate/policy diagnostics;\n"
-              "  target ≤16K / warn >23K ток; --strict — exit 1 при WARN (CI).\n"
+              "  target ≤16K / warn >23K ток; --strict — exit 1 при WARN/INCOMPLETE\n"
+              "  или Codex duplicate/policy drift (CI).\n"
               "  --with-plugins (только вместе с --first-turn): добавляет always-on цену\n"
               "  установленных marketplace-плагинов проекта (`claude plugin list/details`)\n"
               "  аддитивными ключами `plugins`/`session_total`/`session_verdict` — без\n"
@@ -1267,9 +1286,13 @@ def cmd_budget(env, argv):
             print(json.dumps(report, ensure_ascii=False, indent=2))
         else:
             print(format_first_turn_report(report))
-        if opts.get("strict") and report["verdict"] in {"WARN", "INCOMPLETE"}:
+        integrity = report.get("integrity", {})
+        if opts.get("strict") and (report["verdict"] in {"WARN", "INCOMPLETE"}
+                                    or integrity.get("issues")):
+            details = ", ".join(integrity.get("issues", ()))
             die(f"first-turn бюджет {report['total']} ток > warn-порог "
-                f"{FIRST_TURN_WARN} либо измерение неполно ({target}) — см. таблицу выше")
+                f"{FIRST_TURN_WARN}, измерение неполно или native inventory drift"
+                f"{': ' + details if details else ''} ({target}) — см. таблицу выше")
         return
 
     if opts.get("check_core"):

@@ -346,6 +346,35 @@ class FirstTurnReportCase(unittest.TestCase):
             "SKILL_DUPLICATE_NAME", "CODEX_PLUGIN_ENABLED_OUTSIDE_PROJECT_POLICY",
             "CODEX_DESIRED_PLUGIN_NOT_EFFECTIVE"})
 
+    def test_codex_policy_drift_is_strict_failure(self):
+        (self.proj / ".swissknife.json").write_text(
+            json.dumps({"plugins": ["quality", "php"]}), encoding="utf-8")
+        observed_skill = self.registry_root / "skills" / "quality" / "observed"
+        fx.write_skill(observed_skill, "observed", description="Observed by Codex")
+        inventory = {
+            "ok": True,
+            "names": {"observed"},
+            "native_names": {"observed"},
+            "paths": {"observed": [str(observed_skill / "SKILL.md"),
+                                    str(observed_skill / "SKILL.md")]},
+            "enabled": ["quality", "devops"],
+            "notes": [],
+        }
+        with mock.patch("skiller.budget.native_inventory", return_value=inventory):
+            report = first_turn_report(self.env, self.proj, provider="codex")
+            self.assertEqual(report["integrity"], {
+                "status": "degraded",
+                "issues": [
+                    "SKILL_DUPLICATE_NAME",
+                    "CODEX_PLUGIN_ENABLED_OUTSIDE_PROJECT_POLICY",
+                    "CODEX_DESIRED_PLUGIN_NOT_EFFECTIVE",
+                ],
+            })
+            with contextlib.redirect_stdout(io.StringIO()):
+                with self.assertRaises(SystemExit):
+                    cmd_budget(self.env, ["--first-turn", "--provider", "codex",
+                                          "--target", str(self.proj), "--strict"])
+
     # --- модель листинга: нативные поля, снимающие запись (P3.2, D95/D96) ------
     def _write_skill_fm(self, name, extra_fm=""):
         """Скилл в бакете `quality` синтетического реестра с ДОПОЛНИТЕЛЬНЫМИ

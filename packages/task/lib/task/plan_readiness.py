@@ -105,8 +105,57 @@ def design_snapshot(plan_dir) -> dict:
             "items": sum(len(plan_layout.item_spec_paths(root, phase)) for phase in phase_paths)}
 
 
+def _design_audit_owner_waiver(root: Path, fingerprint: str) -> dict | None:
+    """Honor only a selected accepted owner decision for this exact finished design."""
+    import json
+
+    text = (root / "plan.md").read_text(encoding="utf-8")
+    declarations = re.findall(r"^\*\*Design Audit Waiver:\*\*\s*(\S+)\s*$", text, re.MULTILINE)
+    if not declarations:
+        return None
+    try:
+        if len(declarations) != 1 or not _DECISION.fullmatch(declarations[0]):
+            raise ValueError("expected one exact D# decision")
+        identifier = declarations[0]
+        if not _accepted_decision(root, identifier):
+            raise ValueError("waiver requires one accepted owner decision")
+        decision = next((root / "decisions").glob(f"{identifier}-*.md"))
+        blocks = re.findall(r"^```design-audit-waiver/v1\s*\n(.*?)\n```", decision.read_text(encoding="utf-8"), re.MULTILINE | re.DOTALL)
+        if len(blocks) != 1:
+            raise ValueError("expected one design-audit-waiver/v1 record")
+        value = json.loads(blocks[0])
+        _closed(value, ("schema_version", "plan_id", "decision_id", "scope", "design_fingerprint", "owner_provenance", "reason"), "design-audit-waiver/v1")
+        if (value["schema_version"] != "design-audit-waiver/v1"
+                or value["plan_id"] != root.name or value["decision_id"] != identifier
+                or value["scope"] != "whole-plan-design-audit"):
+            raise ValueError("waiver identity or scope mismatch")
+        if not isinstance(value["design_fingerprint"], str) or not _SHA.fullmatch(value["design_fingerprint"]):
+            raise ValueError("expected exact design fingerprint")
+        if not isinstance(value["reason"], str) or not value["reason"].strip():
+            raise ValueError("owner reason is required")
+        source = value["owner_provenance"]
+        _closed(source, ("path", "sha256", "message"), "owner_provenance")
+        if not all(isinstance(source[key], str) and source[key].strip() for key in source):
+            raise ValueError("owner provenance requires nonempty strings")
+        source_path = Path(source["path"])
+        if source_path.is_absolute() or ".." in source_path.parts:
+            raise ValueError("owner provenance must be a plan-local path")
+        path = (root / source_path).resolve()
+        path.relative_to(root.resolve())
+        payload = path.read_bytes()
+        if (not _SHA.fullmatch(source["sha256"])
+                or hashlib.sha256(payload).hexdigest() != source["sha256"]
+                or source["message"] not in payload.decode("utf-8")):
+            raise ValueError("owner provenance hash or message mismatch")
+        if value["design_fingerprint"] != fingerprint:
+            return {"allowed": False, "code": "PLAN_DESIGN_AUDIT_WAIVER_STALE", "owner_decision": identifier}
+        return {"allowed": True, "code": "PLAN_DESIGN_AUDIT_WAIVED_BY_OWNER", "owner_decision": identifier}
+    except (OSError, ValueError, TypeError, KeyError, StopIteration) as exc:
+        return {"allowed": False, "code": "PLAN_DESIGN_AUDIT_WAIVER_INVALID", "reason": str(exc)}
+
+
 def design_gate(plan_dir) -> dict:
-    """Only a GREEN audit of the current finished design admits new plan execution."""
+    """Admit finished design with GREEN audit or its explicit fingerprint-bound owner waiver."""
     from task import journal, plan_layout
 
     root = Path(plan_dir)
@@ -130,13 +179,17 @@ def design_gate(plan_dir) -> dict:
     audits = [(index, event) for index, event in enumerate(events)
               if event.get("command") == "plan-audit" and event.get("item_id") == "design"]
     if not audits or audits[-1][0] <= finished[-1]:
-        return {"allowed": False, "code": "PLAN_DESIGN_AUDIT_MISSING", **snapshot}
-    audit = audits[-1][1]
-    if audit.get("fingerprint") != snapshot["fingerprint"]:
-        return {"allowed": False, "code": "PLAN_DESIGN_AUDIT_STALE", **snapshot}
-    if audit.get("result") != "audit-green":
+        code = "PLAN_DESIGN_AUDIT_MISSING"
+    elif audits[-1][1].get("fingerprint") != snapshot["fingerprint"]:
+        code = "PLAN_DESIGN_AUDIT_STALE"
+    elif audits[-1][1].get("result") != "audit-green":
         return {"allowed": False, "code": "PLAN_DESIGN_AUDIT_NOT_GREEN", **snapshot}
-    return {"allowed": True, "code": "PLAN_DESIGN_AUDIT_GREEN", **snapshot}
+    else:
+        return {"allowed": True, "code": "PLAN_DESIGN_AUDIT_GREEN", **snapshot}
+    waiver = _design_audit_owner_waiver(root, snapshot["fingerprint"])
+    if waiver is not None:
+        return {**waiver, **snapshot}
+    return {"allowed": False, "code": code, **snapshot}
 
 
 def validate_execution_design(plan_dir) -> None:
@@ -348,13 +401,25 @@ def validate_execution_target(plan_dir, item_ids) -> None:
             f"PRIORITY_FIX_TARGET_MISMATCH: expected {expected[0]}, got {list(requested)}")
 
 
+def backlog_design_skeleton(plan_dir: Path, phase_id: str) -> bool:
+    """Recognize an undetailed design target without materializing an executable phase."""
+    from task import plan_layout
+
+    if not _PHASE.fullmatch(phase_id) or phase_id in plan_layout.phase_paths(plan_dir):
+        return False
+    try:
+        text = (plan_dir / "backlog" / f"{phase_id}.md").read_text(encoding="utf-8")
+        return bool(_SKELETON.search(text) or re.search(r"\bskeleton\b", text, re.IGNORECASE))
+    except (OSError, UnicodeDecodeError):
+        return False
+
+
 def validate_design_target(plan_dir, phase_id: str) -> None:
     """Require an exact re-entry decision before design targets a terminal phase."""
     from task import plan_layout
 
     plan_dir = Path(plan_dir)
-    if phase_id not in plan_layout.phase_paths(plan_dir):
-        # A rolling-backlog phase is not yet in the layout, so it cannot be terminal.
+    if backlog_design_skeleton(plan_dir, phase_id):
         return
     statuses = []
     for spec in plan_layout.item_spec_paths(plan_dir, phase_id):
@@ -388,10 +453,11 @@ def validate_design_handoff_target(plan_dir, phase_id: str) -> None:
     from task import plan_layout
 
     plan_dir = Path(plan_dir)
+    if backlog_design_skeleton(plan_dir, phase_id):
+        return
     phase_path = plan_layout.phase_paths(plan_dir).get(phase_id)
     if phase_path is None:
-        # A rolling-backlog phase has no detailed items yet; designing it is the continuation.
-        return
+        raise plan_layout.PlanLayoutError(f"фаза {phase_id} не найдена в плане")
     try:
         if _SKELETON.search(phase_path.read_text(encoding="utf-8")):
             return

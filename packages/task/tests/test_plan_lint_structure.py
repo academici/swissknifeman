@@ -744,6 +744,21 @@ class TestHandoffMd(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok)
 
+    def test_handoff_next_plan_design_backlog_only_skeleton_allowed(self):
+        plan_dir = write_valid_plan(self.root)
+        handoff = plan_dir / "handoff.md"
+        handoff.write_text(handoff.read_text(encoding="utf-8").replace(
+            "/task:plan-exec DEMO-1 P1.1", "/task:plan-design DEMO-1 P2"), encoding="utf-8")
+        backlog = plan_dir / "backlog"
+        backlog.mkdir()
+        target = backlog / "P2.md"
+        target.write_text("# P2\n\n> СКЕЛЕТ — не детализирован\n", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        target.write_text("# P2\n", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "фаза «P2» не существует в плане"))
+
     def test_handoff_next_plan_design_wrong_plan_id(self):
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")

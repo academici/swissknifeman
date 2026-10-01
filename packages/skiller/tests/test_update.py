@@ -19,7 +19,9 @@ from skiller.connect import do_connect
 from skiller.registry import build_registry
 from skiller.skillset import do_sync, skillset_config_path
 from skiller.vendor import do_vendor
-from skiller.update import cmd_update, replay_opts, update_one, retire_orphaned_codex_vendor_manifest, retire_legacy_codex_vendor, retire_legacy_codex_links
+from skiller.update import (cmd_update, replay_opts, retire_equivalent_codex_skill_links,
+                            retire_legacy_codex_links, retire_legacy_codex_vendor,
+                            retire_orphaned_codex_vendor_manifest, update_one)
 try:
     from . import fixtures as fx
 except ImportError:  # unittest discover loads this module without a package.
@@ -44,6 +46,34 @@ def _write_sync_config(target, cfg):
 
 
 class UpdateCase(unittest.TestCase):
+    def test_equivalent_link_cleanup_archives_only_identical_runtime_content(self):
+        project = self.tmp / "equivalent-links"
+        directory = project / ".agents/skills"
+        directory.mkdir(parents=True)
+        inventory_paths = {}
+        for name in ("same", "different"):
+            source = self.tmp / "local" / name
+            source.mkdir(parents=True)
+            (source / "SKILL.md").write_text(f"---\nname: {name}\n---\n", encoding="utf-8")
+            (source / "upstream.json").write_text("provenance", encoding="utf-8")
+            (directory / name).symlink_to(source)
+            native = self.tmp / "plugins/cache/swissknifeman/quality/1" / name
+            native.mkdir(parents=True)
+            (native / "SKILL.md").write_text(f"---\nname: {name}\n---\n", encoding="utf-8")
+            inventory_paths[name] = [str(native / "SKILL.md")]
+            if name == "different":
+                (source / "guide.md").write_text("local-only", encoding="utf-8")
+        inventory = {"ok": True, "paths": inventory_paths}
+        with mock.patch("skiller.native_codex.native_inventory", return_value=inventory):
+            self.assertTrue(silently(retire_equivalent_codex_skill_links, self.env, project,
+                                     dry_run=True))
+            self.assertTrue((directory / "same").is_symlink())
+            self.assertTrue(silently(retire_equivalent_codex_skill_links, self.env, project))
+        self.assertFalse((directory / "same").is_symlink())
+        self.assertTrue((directory / "different").is_symlink())
+        backup = next((project / ".swissknifeman/backups").iterdir())
+        self.assertTrue((backup / "same").is_symlink())
+
     def test_link_cleanup_requires_native_replacement_and_preserves_unique_capability(self):
         project = self.tmp / "linked-project"
         directory = project / ".agents/skills"

@@ -43,6 +43,13 @@ terminal output gap: `handoff.md` и delivery receipt содержали native 
 
 ## Ближайшая фаза
 
+**Аудит эффективности сессий (2026-09-28).** Трёхдневный fleet-аудит Codeburn
+показал, что главный источник раздувания Codex-сессий — накопленные результаты
+инструментов, а не resident-набор скиллов; также выявлены дубли skill names в
+самом Swiss Knife Man и Vaulter. Доказательства, ограничения телеметрии и
+очередь безопасных пилотов собраны в
+[`session efficiency fleet audit`](../roadmap/2026.09.28-session-efficiency-fleet-audit.md).
+
 **Контекст сессий — release v0.24.7 (2026-09-25).** Выпущены skiller `0.17.14` и task
 `0.24.3` (commit `e4fa1fbf`, tag `v0.24.7`): provider-aware `budget`/`doctor` для Codex,
 исправленный first-turn receipt (`AGENTS.md`, без Claude-only surfaces, `INCOMPLETE` при

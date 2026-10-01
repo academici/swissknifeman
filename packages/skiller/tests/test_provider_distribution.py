@@ -15,7 +15,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from skiller.connect import do_connect
+from skiller.config import load_config
+from skiller.connect import do_connect, prepare_connect_selection
 from skiller.publication import run_codex_native_install
 from skiller.registry import build_registry
 from skiller.skillset import do_sync, plan_sync
@@ -108,6 +109,41 @@ class ProviderDistributionCase(unittest.TestCase):
         plugins = tomllib.loads(config.read_text())["plugins"]
         self.assertTrue(plugins["php@swissknifeman"]["enabled"])
         self.assertFalse(plugins["quality@swissknifeman"]["enabled"])
+
+    @unittest.skipUnless(tomllib, "native activation requires stdlib tomllib (Python 3.11+)")
+    def test_native_selection_only_skips_distribution_and_state(self):
+        self.write_provider_config(providers())
+        materialize_codex_marketplace(self.root)
+        config = self.project / ".codex/config.toml"
+        with mock.patch.dict(os.environ, {"CODEX_HOME": str(self.tmp / "codex-home")}), \
+                contextlib.redirect_stdout(io.StringIO()):
+            result = do_connect(self.env, self.project, {
+                "plugins": "php", "no_core": True, "native_codex_only": True,
+            }, register=False)
+        self.assertEqual(result["provider"], "codex")
+        self.assertEqual(result["plugins"], ["php"])
+        plugins = tomllib.loads(config.read_text())["plugins"]
+        self.assertTrue(plugins["php@swissknifeman"]["enabled"])
+        self.assertFalse((self.project / ".agents/plugins").exists())
+        self.assertFalse((self.project / ".claude/settings.local.json").exists())
+        self.assertFalse(self.env.db_file.exists())
+
+    def test_core_excludes_overlapping_general_plugin(self):
+        self.write_provider_config(providers())
+        materialize_codex_marketplace(self.root)
+        marketplace_path = self.root / ".claude-plugin/marketplace.json"
+        marketplace_path.parent.mkdir(parents=True, exist_ok=True)
+        marketplace = {"plugins": [{
+            "name": name,
+            "source": f"./skills/{name}",
+            "description": name,
+            "category": "engineering",
+        } for name in ("core", "general", "task")]}
+        marketplace_path.write_text(json.dumps(marketplace), encoding="utf-8")
+        with contextlib.redirect_stderr(io.StringIO()):
+            prepared = prepare_connect_selection(
+                self.env, self.project, {"plugins": "general"}, load_config(self.env, self.project))
+        self.assertEqual(prepared["plugins"], ("core", "task"))
 
     def test_native_selection_parse_failure_precedes_connect_mutations(self):
         self.write_provider_config(providers())

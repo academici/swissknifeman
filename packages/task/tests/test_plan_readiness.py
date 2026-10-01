@@ -158,13 +158,25 @@ class PlanReadinessTest(unittest.TestCase):
                              + "\n> СКЕЛЕТ — не детализирован\n", encoding="utf-8")
             plan_readiness.validate_design_handoff_target(plan, "P1")
 
-    def test_design_targets_accept_a_rolling_backlog_phase(self):
+    def test_design_accepts_backlog_only_skeleton_but_rejects_missing_target(self):
+        from task import plan_layout
+
         with tempfile.TemporaryDirectory() as tmp:
             plan = write_valid_plan(Path(tmp), "BACKLOG-PHASE", layout="v2")
-            (plan / "backlog").mkdir()
-            (plan / "backlog" / "P2.md").write_text("# P2 — skeleton\n", encoding="utf-8")
-            plan_readiness.validate_design_target(plan, "P2")
-            plan_readiness.validate_design_handoff_target(plan, "P2")
+            backlog = plan / "backlog"
+            backlog.mkdir()
+            target = backlog / "P2.md"
+            target.write_text("# P2\n\n> СКЕЛЕТ — не детализирован\n", encoding="utf-8")
+            for validator in (plan_readiness.validate_design_target,
+                              plan_readiness.validate_design_handoff_target):
+                with self.subTest(validator=validator.__name__):
+                    validator(plan, "P2")
+                    with self.assertRaises(plan_layout.PlanLayoutError):
+                        validator(plan, "P3")
+                    target.write_text("# P2\n", encoding="utf-8")
+                    with self.assertRaises(plan_layout.PlanLayoutError):
+                        validator(plan, "P2")
+                    target.write_text("# P2\n\n> СКЕЛЕТ — не детализирован\n", encoding="utf-8")
 
     def test_all_three_reentry_triggers_reduce_to_reopen(self):
         for trigger in ("owner-decision-change", "terminal-evidence-invalid",

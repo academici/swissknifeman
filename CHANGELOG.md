@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Task owner design-audit waiver:** a selected accepted owner decision can
+  admit its exact finished design fingerprint without a repeated whole-plan
+  audit. Provenance, scope and stale-design checks remain strict; item acceptance
+  and recorded current non-GREEN audit gates are preserved. No audit GREEN is
+  fabricated.
+
 ### Fixed
 
 - **Task phase fingerprints:** nested brace alternatives in declared `Files`

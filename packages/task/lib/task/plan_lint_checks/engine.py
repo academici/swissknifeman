@@ -809,8 +809,7 @@ def lint_plan(plan_dir, diag):
         elif kind == "design-phase":
             ref_plan_id, ref_phase = m.group(1), m.group(2)
             _check_plan_id(ref_plan_id)
-            # A rolling-backlog skeleton (`backlog/<Pn>.md`) is a valid design target.
-            if not (Path(plan_dir) / "backlog" / f"{ref_phase}.md").is_file():
+            if not plan_readiness.backlog_design_skeleton(plan_dir, ref_phase):
                 _check_phase(ref_phase)
             _lint_design_continuation(
                 plan_dir, handoff_path, plan_id, ref_phase, None, next_lineno, diag)

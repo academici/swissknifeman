@@ -16,7 +16,6 @@
   },
   "plugins": [
     "core",
-    "general",
     "oss-dev",
     "task"
   ]

@@ -115,6 +115,11 @@ def prepare_connect_selection(env, target, opts, config):
                  f"ядро (CORE_SKILLS) НЕ доставлено. Прогони `skiller registry` в "
                  f"реестре, затем повтори connect (или --no-core, если это осознанно).")
 
+    if CORE_PLUGIN in plugins and "general" in plugins:
+        plugins = [plugin for plugin in plugins if plugin != "general"]
+        warn("plugin 'general' исключён: его CORE-скиллы уже поставляет 'core'; "
+             "для полного general используй --no-core")
+
     cmd_added = []
     for cp in DEFAULT_COMMAND_PLUGINS:
         if cp not in plugins and _marketplace_declares(env, cp):
@@ -440,9 +445,9 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
     is intentionally a verified generated marketplace, not a second settings
     format or an implicit global install.
     """
-    if opts.get("native_codex"):
+    if opts.get("native_codex") or opts.get("native_codex_only"):
         # Activation selection never changes the project's permission policy.
-        opts = {**opts, "no_permissions": True}
+        opts = {**opts, "native_codex": True, "no_permissions": True}
     config = load_config(env, target)
     repo_root = find_repo_root(env.root) or env.root
     prepared = prepare_connect_selection(env, target, opts, config)
@@ -455,6 +460,11 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
                                          [p["name"] for p in marketplace["plugins"]])
         except (OSError, ValueError) as exc:
             die(f"CODEX_SELECTION_PREFLIGHT: {exc}")
+    if opts.get("native_codex_only"):
+        from .native_codex import apply_selection
+        apply_selection(target, native_plan, dry_run=opts.get("dry_run", False))
+        return {"provider": "codex", "target": str(native_plan["path"]),
+                "plugins": native_plan["selected"]}
     if "codex" in selected_distribution_providers(config, project_id=target.name):
         _prune_codex_connect_artifacts(target, dry_run=opts.get("dry_run", False))
     if (opts.get("dry_run", False) and target.resolve() != repo_root.resolve()
@@ -507,13 +517,17 @@ def cmd_connect(env, argv):
         "--dry-run": "bool", "--hub": "bool", "--no-core": "bool",
         "--no-permissions": "bool", "--fix-path": "bool",
         "--native-codex": "bool", "--cleanup-codex-links": "bool",
+        "--cleanup-codex-equivalent-links": "bool",
+        "--native-codex-only": "bool",
     })
     if opts["help"]:
         print("skiller connect [--profile P|--plugins a,b] "
               "[--file settings.json|settings.local.json] [--cleanup-vendored] "
               "[--list] [--dry-run] [--hub] [--no-core] [--no-permissions] "
-              "[--cleanup-codex-vendored] [--cleanup-codex-links] [--cleanup-codex-physical] "
-              "[--fix-path] [--native-codex]")
+              "[--cleanup-codex-vendored] [--cleanup-codex-links] [--cleanup-codex-equivalent-links] [--cleanup-codex-physical] "
+              "[--fix-path] [--native-codex|--native-codex-only]\n"
+              "  --native-codex-only: меняет только project .codex/config.toml по текущему "
+              "профилю; не пишет distribution, permissions или state.")
         return
     target, _ = resolve_target(env, opts, allow_home_confirm=True)
     do_connect(env, target, opts, fix_path_drift=opts.get("fix_path", False))
@@ -523,6 +537,9 @@ def cmd_connect(env, argv):
     if opts.get("cleanup_codex_links"):
         from .update import retire_legacy_codex_links
         retire_legacy_codex_links(env, target, dry_run=opts.get("dry_run", False))
+    if opts.get("cleanup_codex_equivalent_links"):
+        from .update import retire_equivalent_codex_skill_links
+        retire_equivalent_codex_skill_links(env, target, dry_run=opts.get("dry_run", False))
     if opts.get("cleanup_codex_physical"):
         from .update import retire_orphan_codex_physical_skills
         retire_orphan_codex_physical_skills(env, target, dry_run=opts.get("dry_run", False))

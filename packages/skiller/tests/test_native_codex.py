@@ -130,9 +130,7 @@ class NativeCodexTests(unittest.TestCase):
                 '- php:code-style: Style (file: r0/code-style/SKILL.md)\n'
                 '- local-rule: Local (file: ' + str(self.project / '.agents/skills/local-rule/SKILL.md') + ')\n'
                 '</skills_instructions>')
-        responses = [subprocess.CompletedProcess([], 0, json.dumps({"installed": [
-            {"name": "php", "enabled": True, "marketplaceName": "swissknifeman"}]}), ""),
-            subprocess.CompletedProcess([], 0, json.dumps([{"content": [{"text": text}]}]), "")]
+        responses = [subprocess.CompletedProcess([], 0, json.dumps([{"content": [{"text": text}]}]), "")]
         runner = mock.Mock(side_effect=responses)
         result = native_inventory(self.env, self.project, runner=runner)
         self.assertTrue(result["ok"])

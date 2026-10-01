@@ -162,11 +162,6 @@ def native_inventory(env, target, *, runner=subprocess.run):
     """Ask the installed CLI what this cwd discovers; bundles alone prove nothing."""
     process_env = dict(os.environ, CODEX_HOME=str(codex_home(env)))
     try:
-        listing = runner(["codex", "plugin", "list", "--json"], cwd=str(target),
-                         env=process_env, capture_output=True, text=True, timeout=30, check=False)
-        if listing.returncode:
-            raise ValueError("plugin list: " + listing.stderr.strip()[:300])
-        plugins = json.loads(listing.stdout)["installed"]
         prompt = runner(["codex", "debug", "prompt-input"], cwd=str(target),
                         env=process_env, capture_output=True, text=True, timeout=30, check=False)
         if prompt.returncode:
@@ -177,7 +172,7 @@ def native_inventory(env, target, *, runner=subprocess.run):
                  if "<skills_instructions>" in block.get("text", "")]
         if not texts:
             raise ValueError("prompt-input has no skills_instructions")
-        names, native_names, paths = set(), set(), {}
+        names, native_names, paths, enabled = set(), set(), {}, set()
         cache = (codex_home(env) / "plugins/cache/swissknifeman").resolve()
         for text in texts:
             roots = dict(re.findall(r"^- `(r\d+)` = `([^`]+)`$", text, re.MULTILINE))
@@ -193,9 +188,9 @@ def native_inventory(env, target, *, runner=subprocess.run):
                 paths.setdefault(name, []).append(str(path))
                 if path.resolve().is_relative_to(cache) and ":" in identity:
                     native_names.add(name)
+                    enabled.add(path.resolve().relative_to(cache).parts[0])
         return {"ok": True, "names": names, "native_names": native_names, "paths": paths,
-                "enabled": sorted(p["name"] for p in plugins if p.get("enabled")
-                                  and p.get("marketplaceName") == "swissknifeman"),
+                "enabled": sorted(enabled),
                 "notes": []}
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
         return {"ok": False, "names": set(), "native_names": set(), "paths": {}, "enabled": [],

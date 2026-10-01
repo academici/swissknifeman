@@ -343,6 +343,78 @@ def retire_legacy_codex_links(env, target, *, dry_run=False):
         return True
 
 
+def _equivalent_skill_tree(source, candidate):
+    """Compare skill content while ignoring non-runtime import provenance."""
+    def files(root):
+        return {
+            path.relative_to(root): path
+            for path in root.rglob("*")
+            if path.is_file() and path.name != "upstream.json"
+        }
+
+    source_files = files(source)
+    candidate_files = files(candidate)
+    return (source_files.keys() == candidate_files.keys()
+            and all(path.read_bytes() == candidate_files[relative].read_bytes()
+                    for relative, path in source_files.items()))
+
+
+def retire_equivalent_codex_skill_links(env, target, *, dry_run=False):
+    """Archive unowned local skill links only when a native SKM copy is identical.
+
+    Some pre-native projects linked their own ``.ai/skills`` trees into
+    ``.agents/skills`` without the generated ownership marker.  The link is a
+    redundant Codex discovery carrier when every runtime skill file is already
+    supplied by an active SKM plugin.  The source tree remains untouched and
+    the link is recoverable from the backup.
+    """
+    from .common import parse_frontmatter
+    from .native_codex import native_inventory
+    from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock
+
+    target = Path(target)
+    inventory = native_inventory(env, target)
+    if not inventory["ok"]:
+        raise ValueError("CODEX_DISCOVERY_UNKNOWN: cannot retire equivalent links without native inventory")
+    skills_dir = target / ".agents" / "skills"
+    if not skills_dir.is_dir():
+        return False
+    with _writer_guard(target):
+        lock_path = _contained_target(target, LOCK_RELATIVE_PATH)
+        owned = parse_lock(lock_path.read_bytes()).records if lock_path.is_file() else ()
+        pending = []
+        for link in sorted(skills_dir.iterdir()):
+            if not link.is_symlink() or not re.fullmatch(r"[a-z0-9][a-z0-9-]*", link.name):
+                continue
+            try:
+                source = link.resolve(strict=True)
+            except OSError:
+                continue
+            md = source / "SKILL.md"
+            if not source.is_dir() or not md.is_file():
+                continue
+            identity = parse_frontmatter(md).get("name", link.name)
+            replacements = [Path(path).parent for path in inventory.get("paths", {}).get(identity, [])
+                            if "/plugins/cache/swissknifeman/" in str(path)]
+            if not any(_equivalent_skill_tree(source, candidate) for candidate in replacements):
+                continue
+            relative = ".agents/skills/" + link.name
+            if any(record.target_path == relative or record.target_path.startswith(relative + "/")
+                   for record in owned):
+                continue
+            pending.append(link)
+        if not pending:
+            return False
+        backup = _contained_target(target,
+                                   ".swissknifeman/backups/legacy-codex-equivalent-links-" + uuid.uuid4().hex)
+        if not dry_run:
+            backup.mkdir(parents=True)
+            for link in pending:
+                link.rename(backup / link.name)
+        print(f"{'[dry-run] ' if dry_run else ''}retire {len(pending)} equivalent Codex skill links; backup={backup}")
+        return True
+
+
 def enabled_marketplace_plugins(target, mk_file):
     """Активные (True) плагины marketplace-канала из settings-файла — имена без
     '@<marketplace>'. Fail-safe: битый/пропавший файл → [] (гонка/порча между

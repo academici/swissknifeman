@@ -43,11 +43,29 @@ def _event_sha(event):
     return digest(event)
 
 
+def design_witness(plan_dir, record):
+    """Authenticate the current execution gate, retaining legacy whole-plan grants."""
+    root = Path(plan_dir)
+    item = record['item_id']
+    plan_readiness.validate_execution_design(root, (item,))
+    try:
+        whole = plan_readiness.design_snapshot(root)['fingerprint']
+    except plan_readiness.ReadinessError:
+        whole = None
+    if whole == record['design_fingerprint']:
+        return {'mode': 'whole-plan', 'fingerprint': whole}
+    if not plan_readiness.design_audit_required(root):
+        scoped = plan_readiness.design_snapshot(root, phase_ids=(item.split('.')[0],))['fingerprint']
+        if scoped == record['design_fingerprint']:
+            return {'mode': 'phase-scoped', 'fingerprint': scoped}
+    raise RepeatError('REPEAT_DESIGN_STALE: design/spec changed')
+
+
 def build(plan_dir, item_id, *, decision_id, owner_message_path, session_id,
           command='plan-run'):
     """Draft exact grant bytes; acceptance still requires the owner's decision marker."""
     root = Path(plan_dir)
-    plan_readiness.validate_execution_design(root)
+    plan_readiness.validate_execution_design(root, (item_id,))
     rows = _rows(root)
     heads = _heads(root, rows)
     prior = heads.get(item_id, {})
@@ -62,7 +80,8 @@ def build(plan_dir, item_id, *, decision_id, owner_message_path, session_id,
     attempt = prior['attempt'] + 1
     return {'schema_version': 'repeat-admission/v1', 'plan_id': root.name,
             'item_id': item_id, 'command': command, 'decision_id': decision_id,
-            'design_fingerprint': plan_readiness.design_snapshot(root)['fingerprint'],
+            'design_fingerprint': plan_readiness.design_snapshot(root, phase_ids=(
+                None if plan_readiness.design_audit_required(root) else (phase,)))['fingerprint'],
             'spec_sha256': sha(plan_layout.carrier_path(root, 'item-spec', item_id=item_id)),
             'historical_terminal_sha256': _event_sha(prior),
             'phase_sha256': sha(plan_layout.phase_path(root, phase)),
@@ -113,6 +132,7 @@ def validate(plan_dir, record, *, requested=None, session_id=None, allow_run=Non
                 or starts[0].get('run_id') != allow_run
                 or terminal is None or terminal.get('result') not in TERMINAL):
             raise RepeatError('REPEAT_HISTORY_UNQUALIFIED: needs completed consumed run')
+        witness = (starts[0].get('decision') or {}).get('repeat_design_gate')
         preceding = rows[:rows.index(starts[0])]
         finishes = [i for i, r in enumerate(preceding)
                     if r.get('command') == 'plan-design' and r.get('item_id') == 'finish'
@@ -120,13 +140,12 @@ def validate(plan_dir, record, *, requested=None, session_id=None, allow_run=Non
         audits = [(i, r) for i, r in enumerate(preceding)
                   if r.get('command') == 'plan-audit' and r.get('item_id') == 'design'
                   and r.get('fingerprint') == record['design_fingerprint']]
-        if (not finishes or not audits or audits[-1][0] <= finishes[-1]
-                or audits[-1][1].get('result') != 'audit-green'):
+        scoped = witness == {'mode': 'phase-scoped', 'fingerprint': record['design_fingerprint']}
+        if not scoped and (not finishes or not audits or audits[-1][0] <= finishes[-1]
+                           or audits[-1][1].get('result') != 'audit-green'):
             raise RepeatError('REPEAT_HISTORY_DESIGN_UNQUALIFIED: no GREEN to start')
     else:
-        plan_readiness.validate_execution_design(root)
-        if plan_readiness.design_snapshot(root)['fingerprint'] != record['design_fingerprint']:
-            raise RepeatError('REPEAT_DESIGN_STALE: design/spec changed')
+        design_witness(root, record)
     if sha(plan_layout.carrier_path(root, 'item-spec', item_id=item)) != record['spec_sha256']:
         raise RepeatError('REPEAT_DESIGN_STALE: design/spec changed')
     phase = item.split('.')[0]
@@ -137,6 +156,7 @@ def validate(plan_dir, record, *, requested=None, session_id=None, allow_run=Non
         raise RepeatError('REPEAT_PHASE_STALE: historical phase changed')
     if starts and (allow_run != record['run_id'] or any(r.get('run_id') != allow_run for r in starts)):
         raise RepeatError('REPEAT_ALREADY_CONSUMED: grant already used')
+    completed_history = historical
     if starts:
         index = rows.index(starts[0])
         historical = _heads(root, rows[:index])
@@ -148,7 +168,7 @@ def validate(plan_dir, record, *, requested=None, session_id=None, allow_run=Non
             or historical[item]['attempt'] + 1 != record['attempt']):
         raise RepeatError('REPEAT_HISTORY_STALE: terminal history changed')
     current = _heads(root, rows)
-    if any(_event_sha(current.get(p.stem, {})) != record['phase_terminal_heads'][p.stem]
+    if not completed_history and any(_event_sha(current.get(p.stem, {})) != record['phase_terminal_heads'][p.stem]
            for p in members if p.stem != item):
         raise RepeatError('REPEAT_SIBLING_STALE: sibling outcome changed')
     return record

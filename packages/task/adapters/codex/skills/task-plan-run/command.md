@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:29f62c38acf16cc8167730ba7fec4c70acbd1e7c8434c918084eeaf28c23a20f
+Canonical SHA-256: sha256:21a20c3b12eb6966dcb6139dc24fa9ab321f52e80cb51ca2820f46618954dd1f
 Adapter: task.codex-command/1.0.17
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -130,7 +130,7 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
    For an explicitly granted separate repeat of a terminal solo item, pass
    `--repeat-admission <plan-owned JSON>`: the owner decision carries the exact marker
    `[REPEAT-ADMISSION:<digest>]` and `task.plan_repeat.build()` builds the contract (history, current
-   GREEN design, new run identity; standard route/authority/input gates stay). Without the grant a
+   admitted design scope, new run identity; standard route/authority/input gates stay). Without the grant a
    terminal item is not re-executed.
 2. Retain the returned run identity and route-run receipt. A retry reuses the durable start;
    a changed route or scope needs fresh admission. Open full carriers only for a named ambiguity

@@ -52,7 +52,7 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
    For an explicitly granted separate repeat of a terminal solo item, pass
    `--repeat-admission <plan-owned JSON>`: the owner decision carries the exact marker
    `[REPEAT-ADMISSION:<digest>]` and `task.plan_repeat.build()` builds the contract (history, current
-   GREEN design, new run identity; standard route/authority/input gates stay). Without the grant a
+   admitted design scope, new run identity; standard route/authority/input gates stay). Without the grant a
    terminal item is not re-executed.
 2. Retain the returned run identity and route-run receipt. A retry reuses the durable start;
    a changed route or scope needs fresh admission. Open full carriers only for a named ambiguity

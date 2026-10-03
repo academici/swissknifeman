@@ -43,7 +43,7 @@ def design_gate_enabled(plan_dir) -> bool:
         return False
 
 
-def design_snapshot(plan_dir) -> dict:
+def design_snapshot(plan_dir, *, phase_ids=None) -> dict:
     """Fingerprint authored design inputs, without generated state or handoff prose."""
     from task import plan_layout
 
@@ -60,6 +60,11 @@ def design_snapshot(plan_dir) -> dict:
         raise ReadinessError(
             f"PLAN_DESIGN_INCOMPLETE: declared phases {sorted(declared)} != "
             f"phase carriers {sorted(phase_paths)}")
+    if phase_ids is not None:
+        selected = set(phase_ids)
+        if not selected or not selected <= set(phase_paths):
+            raise ReadinessError('PLAN_DESIGN_INCOMPLETE: unknown or empty phase scope')
+        phase_paths = {key: value for key, value in phase_paths.items() if key in selected}
     paths = [plan, roadmap]
     for phase_id, phase_path in phase_paths.items():
         try:
@@ -94,6 +99,8 @@ def design_snapshot(plan_dir) -> dict:
             if optional.is_file():
                 paths.append(optional)
     digest = hashlib.sha256()
+    if phase_ids is not None:
+        digest.update(b'phase-scoped-design/v1\0')
     for path in sorted(paths, key=lambda value: value.relative_to(root).as_posix()):
         try:
             payload = path.read_bytes()

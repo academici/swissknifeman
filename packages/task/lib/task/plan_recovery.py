@@ -328,6 +328,7 @@ def start(plan_dir, item_id: str, *, command: str, actor: str, session_id: str,
                 if decision is None:
                     raise RecoveryError({"code": "ROUTE_UNVERIFIABLE", "reason": "repeat requires route receipt"})
                 decision["repeat_admission"] = repeat_admission
+                decision["repeat_design_gate"] = plan_repeat.design_witness(root, repeat_admission)
             event = journal.new_entry(plan_id=root.name, item_id=item_id, command=command,
                                       actor=actor, result="in-progress", session_id=session_id,
                                       run_id=run_id, attempt=attempt, batch_receipt=batch_receipt,

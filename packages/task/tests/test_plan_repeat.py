@@ -20,6 +20,8 @@ class RepeatTests(unittest.TestCase):
         self.addCleanup(fixture.doCleanups)
         fixture.add_supporting_artifacts()
         self.plan, self.actual = fixture.plan, fixture.actual
+        core = self.plan/'plan.md'
+        core.write_text(core.read_text()+'\n**Design Audit:** required\n')
         self.actual['invocation'] = 'task:plan-run WORK P1.1'
         snapshot = plan_readiness.design_snapshot(self.plan)
         for command, subject, result in [('plan-design', 'finish', 'no-op'),
@@ -195,3 +197,71 @@ Explicit owner instruction.
         journal_file.write_text(''.join(json.dumps(r)+'\n' for r in rows))
         with self.assertRaisesRegex(ValueError, 'REPEAT_HISTORY_DESIGN_UNQUALIFIED'):
             plan_repeat.for_run(self.plan, 'P1.1', run_id)
+
+    def phase_scoped(self):
+        core = self.plan/'plan.md'
+        core.write_text(core.read_text().replace('**Design Audit:** required',
+                                                 '**Design Audit:** not-required'))
+        future = self.plan/'phases/P2/P2.md'
+        future.parent.mkdir(parents=True)
+        future.write_text('# P2\n\n> SKELETON — not detailed\n')
+        self.record = plan_repeat.build(self.plan, 'P1.1', decision_id='D1',
+            owner_message_path='owner.md', session_id='test-session')
+        import re
+        self.decision.write_text(re.sub(r'\[REPEAT-ADMISSION:[0-9a-f]+\]',
+            f'[REPEAT-ADMISSION:{plan_repeat.digest(self.record)}]', self.decision.read_text()))
+
+    def test_phase_scoped_repeat_admits_with_future_skeleton_and_no_design_audit(self):
+        self.phase_scoped()
+        journal_file = self.plan/'journal.jsonl'
+        rows = [json.loads(line) for line in journal_file.read_text().splitlines()]
+        journal_file.write_text(''.join(json.dumps(r)+'\n' for r in rows
+                                        if r.get('command') != 'plan-audit'))
+        run_id = self.close_repeat()
+        self.assertEqual(plan_repeat.for_run(self.plan, 'P1.1', run_id), self.record)
+
+    def test_phase_scoped_repeat_rejects_changed_target_design(self):
+        self.phase_scoped()
+        phase = self.plan/'phases/P1/P1.md'
+        phase.write_text(phase.read_text()+'\nChanged contract.\n')
+        with self.assertRaisesRegex(ValueError, 'REPEAT_DESIGN_STALE'):
+            self.prepare(repeat_admission=self.record)
+
+    def test_phase_scoped_repeat_cannot_bypass_required_audit(self):
+        self.phase_scoped()
+        core = self.plan/'plan.md'
+        core.write_text(core.read_text().replace('**Design Audit:** not-required',
+                                                 '**Design Audit:** required'))
+        with self.assertRaisesRegex(ValueError, 'PLAN_DESIGN_INCOMPLETE'):
+            plan_repeat.build(self.plan, 'P1.1', decision_id='D1',
+                owner_message_path='owner.md', session_id='test-session')
+
+    def test_phase_scoped_history_requires_durable_gate_witness(self):
+        self.phase_scoped()
+        run_id = self.close_repeat()
+        journal_file = self.plan/'journal.jsonl'
+        rows = [json.loads(line) for line in journal_file.read_text().splitlines()]
+        for row in rows:
+            (row.get('decision') or {}).pop('repeat_design_gate', None)
+        journal_file.write_text(''.join(json.dumps(r)+'\n' for r in rows))
+        with self.assertRaisesRegex(ValueError, 'REPEAT_HISTORY_DESIGN_UNQUALIFIED'):
+            plan_repeat.for_run(self.plan, 'P1.1', run_id)
+
+    def test_completed_repeat_keeps_history_after_a_later_sibling_run(self):
+        sibling = self.plan/'phases/P1/P1.2.md'
+        sibling.write_text((self.plan/'phases/P1/P1.1.md').read_text().replace('P1.1', 'P1.2'))
+        sibling.with_name('P1.2.state.md').write_text(
+            (self.plan/'phases/P1/P1.1.state.md').read_text())
+        event = journal.new_entry(plan_id='WORK', item_id='P1.2', command='plan-run',
+                                  actor='migration', result='closed-green')
+        with (self.plan/'journal.jsonl').open('a') as stream:
+            stream.write(json.dumps(event)+'\n')
+        self.phase_scoped()
+        run_id = self.close_repeat()
+        later = journal.new_entry(plan_id='WORK', item_id='P1.2', command='plan-run',
+            actor='migration', result='closed-green', attempt=2, session_id='later-session')
+        with (self.plan/'journal.jsonl').open('a') as stream:
+            stream.write(json.dumps(later)+'\n')
+        self.assertEqual(plan_repeat.for_run(self.plan, 'P1.1', run_id), self.record)
+        with self.assertRaisesRegex(ValueError, 'REPEAT_SIBLING_STALE'):
+            plan_repeat.validate(self.plan, self.record, allow_run=run_id)

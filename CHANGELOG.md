@@ -4,6 +4,12 @@
 
 ### Fixed
 
+- **Task repeat-admission:** повтор одного закрытого пункта соблюдает phase-scoped
+  execution gate и не требует детализации будущих фаз при необязательном design audit.
+  Завершённый repeat сохраняет исторические sibling heads при последующем owning repeat;
+  незавершённый запуск по-прежнему отклоняет изменившиеся sibling heads. Точный owner marker,
+  одноразовый допуск и обязательный whole-plan GREEN сохраняются.
+
 - **Grok project config:** `.grok/config.toml` остаётся локальным: `maind sync` пишет
   абсолютные пути MCP-лаунчеров. Образец — `.grok/config.toml.example`. В
   `provider-artifacts.lock.json` добавлена запись `maind.provider-deploy.grok`.

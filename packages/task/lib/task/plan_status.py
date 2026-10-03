@@ -84,6 +84,15 @@ def _item(path: Path) -> tuple[str, str, dict[str, str]]:
 
 def _phase_status(statuses: list[str], *, plan_dir: Path | None = None,
                   phase_id: str | None = None) -> str:
+    if (plan_dir is not None and phase_id is not None
+            and STATUS_DEVIATIONS in statuses):
+        from task import phase_findings
+        try:
+            resolution_path = phase_findings.receipt_path(plan_dir, phase_id)
+        except plan_layout.PlanLayoutError:
+            resolution_path = None
+        if resolution_path is not None and resolution_path.is_file() and phase_findings.closed_green(plan_dir, phase_id):
+            return STATUS_DONE
     if any(status == STATUS_BLOCKED for status in statuses):
         if plan_dir is not None and phase_id is not None:
             from task import plan_gates
@@ -186,6 +195,11 @@ def status_model(plan_dir) -> dict:
                        "status": _phase_status([item["status"] for item in items],
                                                plan_dir=plan_dir, phase_id=phase_id)})
     journal = plan_dir / "journal.jsonl"
+    from task import phase_findings
+    for phase in phases:
+        resolution_path = phase_findings.receipt_path(plan_dir, phase["id"])
+        if resolution_path.is_file():
+            input_paths.append(resolution_path)
     from task import plan_repeat
     aggregate = plan_repeat.aggregate_statuses(
         plan_dir, {item['id']: item['status'] for phase in phases for item in phase['items']})

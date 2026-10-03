@@ -75,6 +75,21 @@ def render_closure(plan_dir, phase_id: str) -> str:
     input_paths.extend(decision.path for decision in decisions)
     digest = plan_projection.inputs_sha256(input_paths, root=plan_dir)
     status = plan_layout.phase_statuses(plan_dir)[phase_id]
+    from task import phase_findings, plan_gates
+    resolution_path = phase_findings.receipt_path(plan_dir, phase_id)
+    resolution_section = None
+    if resolution_path.is_file():
+        candidate = plan_gates.phase_candidate_fingerprint(plan_dir, phase_id)
+        proof = phase_findings.acceptance(plan_dir, phase_id, candidate["snapshot"])
+        if not proof["allow"] or not phase_findings.closed_green(plan_dir, phase_id):
+            raise ClosureError(f"PHASE_FINDINGS_UNRESOLVED: {proof}")
+        input_paths.append(resolution_path)
+        digest = plan_projection.inputs_sha256(input_paths, root=plan_dir)
+        resolution_section = ("## Resolved Review Findings\n\n"
+            f"Current phase acceptance: GREEN. Historical RED review/item outcomes remain unchanged.\n\n"
+            f"Checked resolution: [evidence](../../closure/{resolution_path.name}), SHA-256 `{proof['sha256']}`.\n"
+            f"Resolved review items: {', '.join(proof['review_items'])}.\n"
+            "The Known Deviations below quote historical item results; their findings are resolved by this evidence.")
     metadata = plan_projection.metadata_block(
         projection="phase-closure", projection_version="v1", source_scope=f"phase {phase_id} + item states + decisions",
         through=f"{phase_id}: {status}", inputs_sha256_value=digest,
@@ -89,6 +104,8 @@ def render_closure(plan_dir, phase_id: str) -> str:
                            "## Produced\n\n" + produced,
                            "## Known Deviations\n\n" + deviations,
                            "## Solutions\n\n" + links))
+    if resolution_section:
+        body += "\n\n" + resolution_section
     return plan_projection.rendered_file(metadata=metadata, title=f"Closing phase {phase_id}", body=body)
 
 

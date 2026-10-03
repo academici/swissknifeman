@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from task import plan_status
+from task import plan_layout, plan_status
 
 
 IMPACTS = frozenset(("isolated", "internal-integration", "public-contract", "security-external"))
@@ -216,6 +216,25 @@ def evaluate(plan_dir: Path | str, phase_id: str, *, candidate: dict | None,
                          reasons=["runtime-candidate-unresolved"], assurance=assurance,
                          diagnostics=diagnostics)
     statuses = [row.get("status") for row in heads if isinstance(row, dict)]
+    findings_resolution = None
+    if any(status != plan_status.STATUS_DONE for status in statuses):
+        from task import phase_findings
+        try:
+            resolution_path = phase_findings.receipt_path(plan_dir, phase_id)
+        except plan_layout.PlanLayoutError:
+            resolution_path = None
+        if resolution_path is not None and resolution_path.exists():
+            findings_resolution = phase_findings.acceptance(plan_dir, phase_id, candidate)
+            if findings_resolution["allow"]:
+                statuses = [plan_status.STATUS_DONE if row["item_id"] in
+                            findings_resolution["review_items"] else row.get("status") for row in heads]
+            else:
+                result = _decision(plan_dir=plan_dir, phase_id=phase_id, action="gather-evidence",
+                                   code=findings_resolution["code"],
+                                   reasons=[findings_resolution["reason"]], assurance=assurance,
+                                   diagnostics=diagnostics)
+                result["findings_resolution"] = findings_resolution
+                return result
     if len(statuses) != len(heads) or any(status != plan_status.STATUS_DONE for status in statuses):
         result = _decision(plan_dir=plan_dir, phase_id=phase_id, action="owning-repair",
                            code="PHASE_ACCEPTANCE_NON_GREEN", reasons=["non-green-terminal-item"],
@@ -240,7 +259,10 @@ def evaluate(plan_dir: Path | str, phase_id: str, *, candidate: dict | None,
     if risks:
         diagnostics.append("AUDIT_RECOMMENDATION: clarify the open question and address consent; material-risk does not assign itself audit")
     action = "gate-rebind" if impact and impact["classification"] == "audit-bookkeeping" else "direct-close"
-    return _decision(plan_dir=plan_dir, phase_id=phase_id, action=action,
+    result = _decision(plan_dir=plan_dir, phase_id=phase_id, action=action,
                      code="PHASE_DIRECT_CLOSE_ASSURED", reasons=["green-acceptance-no-approved-audit"],
                      assurance=assurance, impact=impact, admission=admission,
                      close_allowed=True, diagnostics=diagnostics)
+    if findings_resolution is not None:
+        result["findings_resolution"] = findings_resolution
+    return result

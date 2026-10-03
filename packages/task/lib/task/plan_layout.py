@@ -211,7 +211,7 @@ def slots(plan_dir, reader: str) -> tuple[ResolvedSlot, ...]:
                     result.append(ResolvedSlot(reader, slot["id"], carrier_id,
                                                phase_context_path(plan_dir, phase_id, reader=reader)))
             continue
-        if carrier_id in {"item-spec", "item-state", "bundle", "history-view", "phase-closure"}:
+        if carrier_id in {"item-spec", "item-state", "bundle", "history-view", "phase-closure", "phase-findings-resolution"}:
             continue
         try:
             path = carrier_path(plan_dir, carrier_id)

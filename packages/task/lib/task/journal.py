@@ -276,6 +276,20 @@ def validate_append_policy(entry, *, plan_dir=None):
             except review_policy.ReviewPolicyError as exc:
                 raise JournalValidationError(str(exc)) from exc
     if isinstance(entry, dict):
+        if (plan_dir is not None and entry.get("command") == "plan-close"
+                and entry.get("result") == "closed-green"
+                and re.fullmatch(r"P\d+", str(entry.get("item_id", "")))):
+            from task import phase_findings, plan_gates
+            phase_id = entry["item_id"]
+            if (phase_findings.receipt_path(plan_dir, phase_id).exists()
+                    or "findings_resolution_sha256" in (entry.get("decision") or {})):
+                candidate = plan_gates.phase_candidate_fingerprint(plan_dir, phase_id)
+                gate = plan_gates.phase_close_gate(plan_dir, phase_id,
+                    candidate_fingerprint=candidate["fingerprint"], candidate_snapshot=candidate["snapshot"])
+                proof = (gate.get("audit_policy") or {}).get("findings_resolution") or {}
+                if (not gate["allow"] or not proof.get("allow") or entry.get("fingerprint") != candidate["fingerprint"]
+                        or (entry.get("decision") or {}).get("findings_resolution_sha256") != proof.get("sha256")):
+                    raise JournalValidationError("PHASE_FINDINGS_UNRESOLVED: close admission missing or stale")
         from task import terminal_policy
         try:
             terminal_policy.validate_entry(

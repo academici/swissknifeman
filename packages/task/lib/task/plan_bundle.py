@@ -107,11 +107,15 @@ def _fields(plan_dir: Path, item_id: str) -> dict:
     except plan_layout.PlanLayoutError as exc:
         raise BundleError(str(exc)) from exc
     diagnostics = plan_lint.Diagnostics()
-    parsed = plan_lint.parse_phase_md(phase_path, phase_id, diagnostics,
-                                      layout=plan_layout.layout_version(plan_dir))
-    if parsed is None or item_id not in parsed["items"]:
+    # Field readers must not rebuild owner status: phase assurance itself reads
+    # these fields while computing the status projection. Reuse the canonical
+    # item parser directly rather than entering the phase/status reader cycle.
+    from task.plan_lint_checks.parsing import _parse_v2_item_file
+    spec_path = plan_layout.carrier_path(plan_dir, "item-spec", item_id=item_id)
+    parsed = _parse_v2_item_file(spec_path, item_id, diagnostics)
+    if parsed is None:
         raise BundleError(f"{item_id}: TK not found")
-    return {name: value for name, (value, _line) in parsed["items"][item_id][0]["fields"].items()}
+    return {name: value for name, (value, _line) in parsed["fields"].items()}
 
 
 def _raw_entries(value: str, field: str) -> list[str]:

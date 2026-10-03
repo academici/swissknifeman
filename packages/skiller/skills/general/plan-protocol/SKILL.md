@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.38.0
+version: 2.38.1
 description: "Use when an explicitly invoked Task plan command needs a schema reference."
 when_to_use: "Only after explicit Task invocation, when a named plan schema detail is needed."
 disable-model-invocation: true
@@ -250,6 +250,10 @@ direct-closes. After an admitted GREEN audit, `audit-impact/v1` classifies the m
 bookkeeping rebind, affected validation repair, evidence gathering, or owner review. `delta`/`full`
 describe impact only and never authorize another audit; every new audit requires a fresh residual-risk
 question and candidate/run-bound owner consent. RED or unresolved ATTENTION is repaired in its owning item.
+Historical read-only RED review findings may be resolved through exhaustive, committed
+`phase-findings-resolution/v1` evidence checked by `phase_findings.acceptance()`. The
+phase may close GREEN while the review remains RED/closed-deviations; unresolved
+findings, invalid links and stale evidence fail closed. See the layout reference.
 A terminal blocked item remains fail-closed, except for an explicit accepted, non-superseded
 phase-scoped owner D#: its `item` is `Pn`, `items` is exactly `Pn` plus every `Pn.*`, and it
 carries `` `phase-close: terminal-blocked-deviations` ``. That D# permits only a

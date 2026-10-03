@@ -289,3 +289,46 @@ Resume revalidates it; another run requires another owner grant. New outcomes
 append to history. Terminal delivery authenticates the original consumed grant
 and unchanged sibling contracts; the repeat does not reclose the historical phase.
 No historical outcome is upgraded to contemporary acceptance by this contract.
+
+## Historical RED review resolved by owning repairs
+
+Decision: use additive `phase-findings-resolution/v1` evidence at
+`closure/<Pn>-findings.json`, owned by `plan-close` and read on demand by the
+owner/assurance and auditor. This closes the acceptance gap between admitted
+owning repeats and immutable RED review history; it never changes a verdict or
+exempts ordinary `closed-deviations`. Executor inputs and future phase design
+are unaffected. The registry carrier is `phase-findings-resolution`.
+
+The closed JSON has `schema_version`, `phase_id`, `validation_anchor` (full Git
+commit), `repairs` (map of owning item IDs), and `reviews` (nonempty array).
+Each repair has `event_sha256` (canonical JSON digest of the current GREEN
+terminal event), `commit`, and ordered `validation`. Every terminal validation
+row must have an exact `carrier`, `log`, and `exit`; file references have exactly
+`path` (plan-relative) and `sha256`. Logs must be named by terminal evidence,
+exist unchanged in the repair commit, and have a paired `.exit` file containing
+`0`. A repeat additionally requires its authentic consumed repeat-admission.
+The final validation anchor is one of these repair commits and must still match
+all declared tracked phase product bytes, including glob members and the report.
+
+Each review has `item_id`, `event_sha256`, `report` (file reference), and
+`findings`. It must be a current read-only `closed-deviations` item whose
+outside-scope gap points to its declared RED report. The report bytes must equal
+the first commit containing the historical review terminal event. The report must have one
+`ID | Severity | ... | Owning item` table with blocker/major/minor and matching
+`### <ID> — ...` headings. Findings must resolve this entire inventory exactly.
+An owning-repair row has exactly `id`, `status: resolved`, `kind: owning-repair`,
+and `owner_item` from that finding's owner column. Its GREEN repair must follow
+the RED review in immutable history. A bookkeeping-only contract-sync row adds
+`decision_id`, `commit`, and nonempty `files` (references). The accepted,
+unsuperseded decision must cover the declared owner; the synchronization commit
+must contain that decision, the unchanged RED report and the changed finding
+files. Current file bytes must equal that committed synchronization.
+
+`phase_findings.acceptance()` checks the chain; missing, stale, incomplete or
+foreign evidence returns `PHASE_FINDINGS_UNRESOLVED`. Without this contract,
+non-GREEN items retain `PHASE_ACCEPTANCE_NON_GREEN`. No review repeat is needed.
+`plan-phase-close.py` calls the regular `phase_close_gate`, appends one phase
+GREEN event bound to the checked resolution SHA-256 and candidate fingerprint,
+then regenerates/checks status and closure. Item states/history remain unchanged.
+Only a persisted still-valid admission projects the phase GREEN. The generated
+closure distinguishes current resolved findings from quoted historical deviations.

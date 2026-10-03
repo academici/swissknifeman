@@ -166,7 +166,7 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻503"]:::warm
-    plan_protocol["plan-protocol<br/>⊕26 ↻10685"]:::cool
+    plan_protocol["plan-protocol<br/>⊕26 ↻10784"]:::cool
     project_map["project-map<br/>⊕83 ↻618"]:::warm
     session_handoff["session-handoff<br/>⊕29 ↻590"]:::cool
     shell["shell<br/>⊕73 ↻1989"]:::warm
@@ -310,7 +310,7 @@ flowchart LR
     harness_operations["harness-operations<br/>⊕87 ↻2093"]:::warm
     maind_overview["maind-overview<br/>⊕80 ↻1615"]:::warm
     package_architecture["package-architecture<br/>⊕85 ↻3698"]:::warm
-    project_tooling_runbook["project-tooling-runbook<br/>⊕42 ↻7411"]:::mild
+    project_tooling_runbook["project-tooling-runbook<br/>⊕42 ↻7466"]:::mild
     release_discipline["release-discipline<br/>⊕64 ↻1488"]:::warm
     skill_authoring["skill-authoring<br/>⊕44 ↻1846"]:::warm
     task_development_philosophy["task-development-philosophy<br/>⊕74 ↻3531"]:::warm
@@ -437,14 +437,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 232 skills · ⊕ always **12586** current (is always resident if you include the entire registry) · ↻ bodies 310925 current · ⌥ on-demand 846572 current (snippets + references).
+**Total:** 232 skills · ⊕ always **12586** current (is always resident if you include the entire registry) · ↻ bodies 311079 current · ⌥ on-demand 847440 current (snippets + references).
 
 ## By buckets
 
 | Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1260 | 33471 | 29619 |
-| `repository-bootstrap` | 14 | 1047 | 29985 | 0 |
+| `general` | 22 | 1260 | 33570 | 30487 |
+| `repository-bootstrap` | 14 | 1047 | 30040 | 0 |
 | `architect` | 15 | 937 | 19786 | 33082 |
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |
 | `blender-modeling` | 7 | 582 | 11542 | 13519 |
@@ -516,8 +516,8 @@ The heaviest bodies are loaded when using the skill.
 
 | Skill | Bucket | current |
 |---|---|--:|
-| `plan-protocol` | general | 10685 |
-| `project-tooling-runbook` | repository-bootstrap | 7411 |
+| `plan-protocol` | general | 10784 |
+| `project-tooling-runbook` | repository-bootstrap | 7466 |
 | `package-architecture` | repository-bootstrap | 3698 |
 | `task-development-philosophy` | repository-bootstrap | 3531 |
 | `workflow-craft` | general | 3304 |

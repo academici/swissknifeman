@@ -110,6 +110,18 @@
       "layout_versions": ["v2"]
     },
     {
+      "id": "phase-findings-resolution",
+      "path": "closure/<Pn>-findings.json",
+      "owner_reader": "owner",
+      "also_read_by": ["auditor"],
+      "mutability": "handwritten",
+      "volatility": "slow",
+      "volatility_basis": "plan-close binds the full historical finding inventory to committed owning repair evidence; history and review verdict remain immutable",
+      "on_path_of": ["owner", "auditor"],
+      "class": "evidence",
+      "layout_versions": ["v2"]
+    },
+    {
       "id": "history-view",
       "path": ".plan-cache/history/<Pn.m>.md",
       "owner_reader": "auditor",

@@ -3,191 +3,191 @@
     {
       "artifact_id": "task.codex.plugin",
       "path": "packages/task/.codex-plugin/plugin.json",
-      "rendered_hash": "sha256:7eb4324687b0c5f6feed22aa3647d2cd92393eb6bec79ccce2d329f7d9c2e6de",
-      "source_hash": "sha256:05c5e24e6a35d1e047f6082f01fb1599329b835f844b09e0f71e5f60c9d8f6ee"
+      "rendered_hash": "sha256:2bdd46b628805fc5c6afac4c06e3ba761e4f8618ba16f1aa7600b920c8f22508",
+      "source_hash": "sha256:2ca6929e0110ce1cf21ac32f1f500fdcaf5efe16e9fc70774bf09e9f8763056f"
     },
     {
       "artifact_id": "task.codex.design.skill",
       "path": "packages/task/adapters/codex/skills/task-design/SKILL.md",
       "rendered_hash": "sha256:afd0805424f957888ee46fb0552d0473afc9d19306d0c481a0862012da606c91",
-      "source_hash": "sha256:48f67fb603447b94d29e0ca056772c99e50de691825f2c49714b9ac6bef10739"
+      "source_hash": "sha256:cbbed20835e4dc02a9a7a265e05b21d898a04c8272cdc66ac85d9c3ca394565a"
     },
     {
       "artifact_id": "task.codex.design.invocation-policy",
       "path": "packages/task/adapters/codex/skills/task-design/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:524bcdcbd1c6af6fb0f9dff67fee1389dea4d35fce481468e0025c0cb37e0e33"
+      "source_hash": "sha256:56ad836db2e2864b906f927b80b724384de55f65bd8cf8e32d8b77055e93f303"
     },
     {
       "artifact_id": "task.codex.design.runtime",
       "path": "packages/task/adapters/codex/skills/task-design/command.md",
       "rendered_hash": "sha256:9da3660ee577fec4d5d403256015afba82e6da195e76986c2da84ffdf8ce6194",
-      "source_hash": "sha256:98f96e6d03cd74ca850f14340d0ccc14fa90670079ef41330316704b7f42d730"
+      "source_hash": "sha256:e12aaf9e9fa85919d22eac9fe26114298723f94b5ccfc55733aa4e873692f4ce"
     },
     {
       "artifact_id": "task.codex.dev.skill",
       "path": "packages/task/adapters/codex/skills/task-dev/SKILL.md",
       "rendered_hash": "sha256:b6d3d107dcc67e1e7e3d35a536ddc5de61fbaae57863c4b7377c1dc5221cc24b",
-      "source_hash": "sha256:6fb7a09b91f446e3e6a504a3193d4da00e9daa1911b706bae34b5f493bbbf32e"
+      "source_hash": "sha256:bf669dda07184ae830b0b78be048aabd0d166c9f4fa2171de5e1952cd9f7dfee"
     },
     {
       "artifact_id": "task.codex.dev.invocation-policy",
       "path": "packages/task/adapters/codex/skills/task-dev/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:6a54817d06f5e8c5faa8add779f3ca8ac5e0d7ff03474a6804272e2c7e50a7e7"
+      "source_hash": "sha256:cec41e3b6e8009919718b4a52ebd239c57705181a37dc1aa1ef455bb37a10b59"
     },
     {
       "artifact_id": "task.codex.dev.runtime",
       "path": "packages/task/adapters/codex/skills/task-dev/command.md",
       "rendered_hash": "sha256:8abdf015d33e800655a5f105c9b286d210af4095cfdd1214774ab08cc72ff086",
-      "source_hash": "sha256:a069f3ed2dafbf7b44796a96473325d13c14924af28ca4b2f340f0bbf2e7fc86"
+      "source_hash": "sha256:250fc903c35d5ce7146973fb1cb9a307a543889739baed1768968e1a5d8456f7"
     },
     {
       "artifact_id": "task.codex.fix.skill",
       "path": "packages/task/adapters/codex/skills/task-fix/SKILL.md",
       "rendered_hash": "sha256:9630a5f376dd7396bf628c9f626600bad5ebb3af3981a3ed083bba0c9e4a6b9d",
-      "source_hash": "sha256:0c02c54973b430333aef821bad5fb4f7bfcba4dbd89a0c9d202e2647f4e5e29e"
+      "source_hash": "sha256:5919f6cc02cacaeb771dd0194841645180a479aebddb379828fc6fda88204118"
     },
     {
       "artifact_id": "task.codex.fix.invocation-policy",
       "path": "packages/task/adapters/codex/skills/task-fix/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:220f3a6bfe1aa65330152265329374b253334f1b24a3deb5d9a648d6a7386da6"
+      "source_hash": "sha256:cecdc0be8001776db873592eb73bf194f2cd6112040bf93f3a028edf61edaa33"
     },
     {
       "artifact_id": "task.codex.fix.runtime",
       "path": "packages/task/adapters/codex/skills/task-fix/command.md",
       "rendered_hash": "sha256:0f5a185a725d1b09e755fe7cff461ef3fcee68ec70bdc98c66fcfaaf0abb2766",
-      "source_hash": "sha256:fd6cbcf13504ea99d9654523100a65b9ab47abe7d2e58f398ba46f7c583c976e"
+      "source_hash": "sha256:cb5e83fb7d037fab06e681d9cc4d58fb3c817c44efb506445d7ad811e85a6e34"
     },
     {
       "artifact_id": "task.codex.make.workflow.skill",
       "path": "packages/task/adapters/codex/skills/task-make-workflow/SKILL.md",
       "rendered_hash": "sha256:ce76721d25cdd90fd755b0de1727a8d64890be71392f348c3c526e8576d5519d",
-      "source_hash": "sha256:f710a67c2c0f6d288ac36ba2c63895a53ab65fdebdee2c6a9d9383a79242b141"
+      "source_hash": "sha256:88f5ee6808594f2fc5e3377ca67c544d8f7ddf5a6f51d45fe1ab0d6e9e570af7"
     },
     {
       "artifact_id": "task.codex.make.workflow.invocation-policy",
       "path": "packages/task/adapters/codex/skills/task-make-workflow/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:30ce4e5b5fdb4313f082c340c39affbed4b3754d192418342f2908fe9367f21d"
+      "source_hash": "sha256:e8d87b1ff147b3d5cb00b38d5bdb33d661f13d113588da5053c87c9fba1c8720"
     },
     {
       "artifact_id": "task.codex.make.workflow.runtime",
       "path": "packages/task/adapters/codex/skills/task-make-workflow/command.md",
       "rendered_hash": "sha256:7f45878307bdae90a834b9f77b0d8f52c85503f6d85e0859e09d5154c18fbd29",
-      "source_hash": "sha256:ae2fe52e0bf20b432add3e45e7eb115d461010163e3b4c6fdaccd68bfbf219b8"
+      "source_hash": "sha256:04b4c7ff0d9a6c54a1394abf5d2fac77dc6539fd9f6e6c17475305ef1456e4d0"
     },
     {
       "artifact_id": "task.codex.plan.audit.skill",
       "path": "packages/task/adapters/codex/skills/task-plan-audit/SKILL.md",
       "rendered_hash": "sha256:4b1d4956e1d82334b8de333cfd9706f98a863cf863f0f0d2973e699e0e8deff0",
-      "source_hash": "sha256:19a76811de1859d58988ca39e7a2f86f0ac7e751ee60f2dee2289b97f17b2029"
+      "source_hash": "sha256:8ad4ae8a480f89eaa61dce3b80ad6f6f9cf3f0e750c17e23af524cdd0fa8b62b"
     },
     {
       "artifact_id": "task.codex.plan.audit.invocation-policy",
       "path": "packages/task/adapters/codex/skills/task-plan-audit/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:8d55ba532b7e02b14d904edb8f6ffeca7499eff15570c787cc37d6bbcd102403"
+      "source_hash": "sha256:376955417d942aeb8b35a3ad64fd46abf88a6b7a44e8e509a3f57bef9c62ce4d"
     },
     {
       "artifact_id": "task.codex.plan.audit.runtime",
       "path": "packages/task/adapters/codex/skills/task-plan-audit/command.md",
       "rendered_hash": "sha256:5f947a391ecffccd8c54cac29a500fd4f0e9587917b95d1c6d3d49fd53f009a8",
-      "source_hash": "sha256:cf5df463613b95010770eb6909490858cb1c12b4606e8867de9f32dd513fde33"
+      "source_hash": "sha256:51c88bf0fe6bd3e5e5b886c39aaa58340361b73bc1618d325a2009da3caacb2a"
     },
     {
       "artifact_id": "task.codex.plan.close.skill",
       "path": "packages/task/adapters/codex/skills/task-plan-close/SKILL.md",
       "rendered_hash": "sha256:93cea314425b84b1df1ed02e1acd977cfa14ac5973753ed63df4e123ae2f0000",
-      "source_hash": "sha256:62754ba138aab084c54b4595d961c9c63d531f48460adab7eb6a885ca9d7b299"
+      "source_hash": "sha256:6a2dc63fbf9ec2aa8d76b77253b4314b34a9ba93ddb82c2d50f574da08e8a5e1"
     },
     {
       "artifact_id": "task.codex.plan.close.invocation-policy",
       "path": "packages/task/adapters/codex/skills/task-plan-close/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:4e2ee1e83304f77a9baf60918085d57a3a41fa5eae537f1addc0c79bcab9bd2d"
+      "source_hash": "sha256:1686ea41de3bb98ae14097fab3dd9161b7dd9c9aed6abef17e9a6e696c13cd4b"
     },
     {
       "artifact_id": "task.codex.plan.close.runtime",
       "path": "packages/task/adapters/codex/skills/task-plan-close/command.md",
       "rendered_hash": "sha256:c85dd6f994d6b952d2ee0f5ffa4e896ecd0e5ccbba53f9a2b9aec87103e408d8",
-      "source_hash": "sha256:2d71901ef729929c75383ada75b8cbbf6e916e4dfccfaac8bdc4055eb0ab1e09"
+      "source_hash": "sha256:6e08a90683f3015af93e76194b549924ccb1add5657edd7d881a256986cc97fc"
     },
     {
       "artifact_id": "task.codex.plan.design.skill",
       "path": "packages/task/adapters/codex/skills/task-plan-design/SKILL.md",
       "rendered_hash": "sha256:eb26ffe876ffda417e185533caa3101ac13db6337d88f20f06858c6da28cb84c",
-      "source_hash": "sha256:2b835042b9039a4ee6fa9c704793e65cc52925b9205223e348fc0b69e273f6bd"
+      "source_hash": "sha256:5827a88c3384c608d33dd228a9003e5a8050b91971804dcbee2a11130f69cd29"
     },
     {
       "artifact_id": "task.codex.plan.design.invocation-policy",
       "path": "packages/task/adapters/codex/skills/task-plan-design/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:f24de4adfa4153c90f368cfa8fa2aeab6e8dc99593f83fde27c288ff7bf680bf"
+      "source_hash": "sha256:32b15a231f8a607643132956f080024e1b74e7ad78416e675e8b7d5b36feeec6"
     },
     {
       "artifact_id": "task.codex.plan.design.runtime",
       "path": "packages/task/adapters/codex/skills/task-plan-design/command.md",
       "rendered_hash": "sha256:44000dbddd6d55cc3bd9285c14bee5d1bd8c6e65d9ab46ad146d7c67b84e5de6",
-      "source_hash": "sha256:3332989e39d73e47c1f5f53ae7b11af95e07bfe5b896fcfe11d1e6de9b6255e1"
+      "source_hash": "sha256:9ee38a8b13fe753e6515565788b0fb9814fe00b13bde039db00a351f13768506"
     },
     {
       "artifact_id": "task.codex.plan.run.skill",
       "path": "packages/task/adapters/codex/skills/task-plan-run/SKILL.md",
       "rendered_hash": "sha256:447de9a2b747a72998666da3d37b8a77e9e8c4772e10254bb57a0b703d1de8d1",
-      "source_hash": "sha256:4d4201a49c3598a280c28b43daf97096572af8eb1c7a564b0c076df4c11a1229"
+      "source_hash": "sha256:5088d709f7b61f1605168d9574febf75ee1f6b9645e436f9d1643791cc8d2637"
     },
     {
       "artifact_id": "task.codex.plan.run.invocation-policy",
       "path": "packages/task/adapters/codex/skills/task-plan-run/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:9d92cbc98ec0e0ad3658392692e08b18b9270430e4cf931ec2b902d5dd582d11"
+      "source_hash": "sha256:427f78f95dccb710edb560cc5f537cdb983eed587f6ced0b2405000d6f501ba2"
     },
     {
       "artifact_id": "task.codex.plan.run.runtime",
       "path": "packages/task/adapters/codex/skills/task-plan-run/command.md",
       "rendered_hash": "sha256:61617fa632b66b3c3a8aaf705d2cd01c3ba365619f40333f4f77921f6a8a3951",
-      "source_hash": "sha256:5a23986795746edf623a6c8ac0e770d618ab8f57fc69831a5fae5c22f33b8173"
+      "source_hash": "sha256:5c262058a04c643ed71c20ae02b922d344c331da1d66c0b3d6d111243a849379"
     },
     {
       "artifact_id": "task.codex.research.skill",
       "path": "packages/task/adapters/codex/skills/task-research/SKILL.md",
       "rendered_hash": "sha256:bec9eecb0eeb52a088dab952a263d3df4d2758076e3c2791f37706f9db5dae0b",
-      "source_hash": "sha256:5e35f4b520a85a2d4df42642ae87e79ddd95afbe73ea26b66ad035e4b7f56777"
+      "source_hash": "sha256:334ea69df193263b7e71525cfa6d2bc1182e5aa6946d408ad6374060190a36cb"
     },
     {
       "artifact_id": "task.codex.research.invocation-policy",
       "path": "packages/task/adapters/codex/skills/task-research/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:90ceefd3493c4fdc719bf0463b7c390171af854791392e7a5a8572a8484b606c"
+      "source_hash": "sha256:46ea6a5ff004dc6df3ac387d5b194b47ea7f621dba11150115696bf75e59978c"
     },
     {
       "artifact_id": "task.codex.research.runtime",
       "path": "packages/task/adapters/codex/skills/task-research/command.md",
       "rendered_hash": "sha256:4b262dffaa006cdbf9833fa6cb09d752f9c2e9d6f66d1f75bacf7096c417d01f",
-      "source_hash": "sha256:6e299f3872ceaa1d47b3f491923cab13667fad6807e9c93cbd720e7427794e09"
+      "source_hash": "sha256:8f8299a269fab28e7a43f1fc6acc6cc554130d6ca3a93cd0204a54aa764b637e"
     },
     {
       "artifact_id": "task.codex.review.skill",
       "path": "packages/task/adapters/codex/skills/task-review/SKILL.md",
       "rendered_hash": "sha256:2a4809834b6eae19ffc2627399e24f8835e7217192bb52676bbd7def0adb8af2",
-      "source_hash": "sha256:4dbf924c44d3e029b66c2db9b1668e00036d8a5cac8107e0980dd18e481b18ec"
+      "source_hash": "sha256:c98bd4fb4805d243a70a5a4f665365485de330eacc32ec596e547f248b0c73d7"
     },
     {
       "artifact_id": "task.codex.review.invocation-policy",
       "path": "packages/task/adapters/codex/skills/task-review/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:a6750d2c64595e451d019715f6b2e61973e5c02f74ca68156fa5988e1adb4a78"
+      "source_hash": "sha256:3d6589dca6274dc21cb77eee613907b978c684ca03f2924d06a9ae084e0bfb76"
     },
     {
       "artifact_id": "task.codex.review.runtime",
       "path": "packages/task/adapters/codex/skills/task-review/command.md",
       "rendered_hash": "sha256:3a17b7bb80e57b690fda25233552219800c4318e342c2ebdebbc4a28d2bfb043",
-      "source_hash": "sha256:f3f61125b5bbe24c725b75b2845c64a04c9b235db0707284fe6336d0393d49a9"
+      "source_hash": "sha256:39cf534d083c34a35f4198a2b4a251150958a1cad4e52048de3e26749ad83ab1"
     }
   ],
   "contract_version": "1.0.0",
   "publication_unit": "task",
-  "version": "0.26.1"
+  "version": "0.27.0"
 }

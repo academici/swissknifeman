@@ -14,6 +14,7 @@ class ProjectionCatalogTests(unittest.TestCase):
         catalog = load_projection_catalog()
         self.assertFalse(project_common_instructions(catalog, ProviderId.CURSOR))
         self.assertFalse(project_common_instructions(catalog, ProviderId.CODEX))
+        self.assertFalse(project_common_instructions(catalog, ProviderId.GROK))
 
     def test_route_and_command_policies(self):
         catalog = load_projection_catalog()
@@ -23,6 +24,9 @@ class ProjectionCatalogTests(unittest.TestCase):
         codex = projection_spec(catalog, ProviderId.CODEX)
         self.assertEqual(codex.route_evidence.semantic_prefix, "$ ")
         self.assertEqual(codex.command_invocation.style, "dollar")
+        grok = projection_spec(catalog, ProviderId.GROK)
+        self.assertEqual(grok.route_evidence.adapter, "route_evidence_grok")
+        self.assertEqual(grok.command_invocation.style, "slash")
 
     def test_invalid_catalog_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -130,7 +130,7 @@ format and restrictions - [analyze-run](./analyze-run.md).
 | `swissknifeman validate` | `scripts/validate.sh` (same as CI) |
 | `skiller doctor` | python3, symlink, PATH, projects.json, registry cleanliness, profiles |
 | `skiller doctor --context --provider codex [--target DIR] [--json]` | reads the actual Codex prompt inventory via native CLI and displays typed diagnostics `SKILL_DUPLICATE_NAME`, `CODEX_PLUGIN_ENABLED_OUTSIDE_PROJECT_POLICY` and `CODEX_DESIRED_PLUGIN_NOT_EFFECTIVE`; command read-only, separates observed inventory from managed project estimate and explicitly excludes platform overhead from the total |
-| `skiller budget --first-turn [--provider claude-code\|codex\|cursor] [--target DIR] [--json] [--strict]` | provider-aware always-on footprint of the first move. Claude Code believes skills+agents+CLAUDE.md/rules+alive SessionStart+MCP; Codex believes `AGENTS.md`, excludes Claude agents/hooks and replaces managed skill estimate actual native prompt inventory. Unavailable native inventory gives `INCOMPLETE`, a `--strict` terminates with a non-zero code. Threshold managed footprint: OK ≤16K / ELEVATED ≤23K / WARN >23K. Fleet - `maind doctor --context`. MCP remains a mode-dependent evaluation `deferred|auto|off` |
+| `skiller budget --first-turn [--provider claude-code\|codex\|cursor\|grok] [--target DIR] [--json] [--strict]` | provider-aware always-on footprint of the first move. Claude Code believes skills+agents+CLAUDE.md/rules+alive SessionStart+MCP; Codex believes `AGENTS.md`, excludes Claude agents/hooks and replaces managed skill estimate actual native prompt inventory. Unavailable native inventory gives `INCOMPLETE`, a `--strict` terminates with a non-zero code. Threshold managed footprint: OK ≤16K / ELEVATED ≤23K / WARN >23K. Fleet - `maind doctor --context`. MCP remains a mode-dependent evaluation `deferred|auto|off` |
 | `skiller budget --first-turn --with-plugins [--target DIR] [--json]` | adds always-on price installed marketplace-project plugins (`claude plugin list/details`, call `details` — under `cwd` project, local-scope alien plugins CWD do not resolve) additive keys `plugins`/`session_total`/`session_verdict`; without the flag, the output does not change. Requires `--first-turn`; listing failure → `n/a`; unclaimed plugin price - `broken` (the listing itself declared the plugin a broken field `errors`) separate from `unparsed` (unrecognized upstream format), never silent 0. **The verdict thresholds are calibrated precisely at this plugin-inclusive value** (`session_total`): baseline fleet n=22, median plugin sum 8,741 current → `16K`/`23K` instead of the previous ones `7K`/`10K`, counted before plugins were even counted |
 | `skiller budget --provider claude-code\|codex [--profile P\|--config F\|--target DIR]` | adds to normal skill-budget listing model without the rest first-turn surfaces. For complete provider receipt use the combination `--first-turn --provider ...`. `--profiles` compares each supplied profile with both providers |
 
@@ -226,8 +226,10 @@ The command does not create or move tags, does not push and does not publish Git
 
 Delivery builds a story from release snapshot, committed under real-life tags.
 After provider update it removes from Claude/Codex cache only unlinked legacy directories
-versions whose managed bytes exactly coincided with this attestation. Current and more referenced directories
-are saved; unknown/modified cache and unavailable provider state give blocked/PARTIAL. Solution,
+whose managed bytes exactly coincide with a tagged snapshot or the current attestation. This also
+retires an untagged intermediate-SHA directory when its bytes exactly match the current release.
+Current and referenced directories are saved; unknown/modified cache and unavailable provider state
+give blocked/PARTIAL. Solution,
 digest and readback deletions are recorded in delivery receipt; dry-run shows the same plan without
 removal.
 

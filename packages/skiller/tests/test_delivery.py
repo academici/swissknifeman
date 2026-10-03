@@ -128,6 +128,7 @@ class DeliveryTests(unittest.TestCase):
         self.write(cache / "1.0.0/SKILL.md", b"old")
         self.write(cache / "0123456789ab/SKILL.md", b"old")
         self.write(cache / "2.0.0/SKILL.md", b"current")
+        self.write(cache / "intermediate-sha/SKILL.md", b"current")
         self.write(cache / "mystery/SKILL.md", b"unknown")
         with patch("skiller.delivery.shutil.which", return_value=None):
             planned = prune_provider_caches(env, current, [old], dry_run=True)
@@ -135,6 +136,9 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(next(row for row in planned if row["version"] == "1.0.0")["status"], "planned")
         self.assertEqual(next(row for row in planned if row["version"] == "0123456789ab")["status"], "planned")
         self.assertEqual(next(row for row in planned if row["version"] == "2.0.0")["classification"], "current")
+        intermediate = next(row for row in planned if row["version"] == "intermediate-sha")
+        self.assertEqual(intermediate["classification"], "exact-current-superseded")
+        self.assertEqual(intermediate["status"], "planned")
         self.assertEqual(next(row for row in planned if row["version"] == "mystery")["status"], "blocked")
         with patch("skiller.delivery.shutil.which", return_value=None):
             applied = prune_provider_caches(env, current, [old])
@@ -143,6 +147,7 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(pruned["readback"], {"exists": False})
         self.assertFalse((cache / "1.0.0").exists())
         self.assertFalse((cache / "0123456789ab").exists())
+        self.assertFalse((cache / "intermediate-sha").exists())
         self.assertTrue((cache / "mystery").exists())
 
     def test_cache_gc_preserves_declared_reference_even_when_superseded(self):

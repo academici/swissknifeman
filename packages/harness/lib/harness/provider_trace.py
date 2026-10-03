@@ -8,7 +8,7 @@ boundary: "no normalization logic lives here"). stdlib-only, no import of `analy
 (harness stays independently testable, mirroring the rest of the package)."""
 import hashlib
 
-PROVIDER_IDS = ("claude-code", "codex", "cursor")
+PROVIDER_IDS = ("claude-code", "codex", "cursor", "grok")
 READER_VERSION = "1.0.0"
 
 # Same six nullable fields `analyst.trace` scores completeness over — kept here as a
@@ -64,16 +64,11 @@ def build_claude_raw(run_report, *, raw_ref, occurred_at, source_bytes=None, pla
     return _degrade_missing(raw, reason_fn=lambda name: f"{name}: not captured by this run-report dispatch")
 
 
-def build_codex_raw(*, raw_ref, occurred_at, source_bytes=None, plan_ref=None, contract_ref=None,
-                    route=None, dispatch=None, finding_refs=None, public_outcome=None):
-    """Build a RAW Codex payload. No Codex hook in this repository captures a
-    structure comparable to the Claude run-report yet (contract § Boundaries) — every
-    field the caller does not explicitly pass degrades to null +
-    `codex-hook-not-integrated` rather than a guessed value. A caller that DOES supply
-    a field (e.g. route captured from `-c model_reasoning_effort=...`) fills it exactly
-    like the Claude reader — the degradation only covers what neither side captured."""
+def _build_unintegrated_raw(provider_id, *, raw_ref, occurred_at, source_bytes=None,
+                            plan_ref=None, contract_ref=None, route=None, dispatch=None,
+                            finding_refs=None, public_outcome=None, reason):
     raw = {
-        "provenance": _provenance("codex", raw_ref, source_bytes or b""),
+        "provenance": _provenance(provider_id, raw_ref, source_bytes or b""),
         "occurred_at": occurred_at,
         "plan_ref": plan_ref,
         "contract_ref": contract_ref,
@@ -82,4 +77,30 @@ def build_codex_raw(*, raw_ref, occurred_at, source_bytes=None, plan_ref=None, c
         "finding_refs": list(finding_refs) if finding_refs else [],
         "public_outcome": public_outcome,
     }
-    return _degrade_missing(raw, reason_fn=lambda _name: "codex-hook-not-integrated")
+    return _degrade_missing(raw, reason_fn=lambda _name: reason)
+
+
+def build_codex_raw(*, raw_ref, occurred_at, source_bytes=None, plan_ref=None, contract_ref=None,
+                    route=None, dispatch=None, finding_refs=None, public_outcome=None):
+    """Build a RAW Codex payload. No Codex hook in this repository captures a
+    structure comparable to the Claude run-report yet (contract § Boundaries) — every
+    field the caller does not explicitly pass degrades to null +
+    `codex-hook-not-integrated` rather than a guessed value. A caller that DOES supply
+    a field (e.g. route captured from `-c model_reasoning_effort=...`) fills it exactly
+    like the Claude reader — the degradation only covers what neither side captured."""
+    return _build_unintegrated_raw(
+        "codex", raw_ref=raw_ref, occurred_at=occurred_at, source_bytes=source_bytes,
+        plan_ref=plan_ref, contract_ref=contract_ref, route=route, dispatch=dispatch,
+        finding_refs=finding_refs, public_outcome=public_outcome,
+        reason="codex-hook-not-integrated")
+
+
+def build_grok_raw(*, raw_ref, occurred_at, source_bytes=None, plan_ref=None, contract_ref=None,
+                   route=None, dispatch=None, finding_refs=None, public_outcome=None):
+    """Grok lifecycle hooks are Codex-shaped; capture completeness follows the same
+    unintegrated envelope until a dedicated run-report lands."""
+    return _build_unintegrated_raw(
+        "grok", raw_ref=raw_ref, occurred_at=occurred_at, source_bytes=source_bytes,
+        plan_ref=plan_ref, contract_ref=contract_ref, route=route, dispatch=dispatch,
+        finding_refs=finding_refs, public_outcome=public_outcome,
+        reason="grok-hook-not-integrated")

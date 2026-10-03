@@ -51,7 +51,8 @@
         ".codex/hooks.json",
         ".cursor/hooks.json",
         ".cursor/cli.json",
-        ".cursor/permissions.json"
+        ".cursor/permissions.json",
+        ".grok/config.toml"
       ],
       "owner": "harness / maind provider deploy",
       "why": "Generated provider-configs: general, no machine paths yet; with absolute paths - only locally."
@@ -83,7 +84,8 @@
         ".claude/terminal-admission.env.ini",
         ".codex/terminal-admission.env.ini",
         ".claude/agent-router.env.ini",
-        ".claude/observer.env.ini"
+        ".claude/observer.env.ini",
+        ".grok/*.env.ini"
       ],
       "owner": "harness hooks / maind sync",
       "why": "Hook modes (`*.env.ini`, `*.config.json`: autonomy, memory, telemetry, gates): are committed until they contain paths on the computer (/home/…, /Users/…) or secrets; with such paths - only in .gitignore."
@@ -98,7 +100,8 @@
         ".codex/**/*.bak",
         ".agents/**/*.bak",
         ".swissknifeman/backups/",
-        ".codex/hooks.pre-telemetry-*"
+        ".codex/hooks.pre-telemetry-*",
+        ".grok/**/*.bak"
       ],
       "owner": "maind / harness / skiller (merge-only writers)",
       "why": "Backups before merge-entry: garbage in history, accumulating (tens `.codex/config.toml.*.bak`)."
@@ -126,7 +129,10 @@
         ".playwright-mcp/",
         ".serena/cache/",
         ".serena/logs/",
-        ".serena/project.local.yml"
+        ".serena/project.local.yml",
+        ".grok/state/",
+        ".grok/logs/",
+        ".grok/runs/"
       ],
       "owner": "harness hooks / maind sync / task / Serena",
       "why": "Agent runtime traces: telemetry, launches, lease terminal-admission, caches and memory Serena, generated maind-hooks (are being recreated `maind sync`)."
@@ -162,7 +168,8 @@
         ".claude/guidelines/",
         ".claude/output-styles/",
         ".codex/agents/",
-        ".cursor/rules/"
+        ".cursor/rules/",
+        ".grok/rules/"
       ],
       "owner": "harness agent-packs",
       "why": "Roles, rules, commands and agent guides - a common team artifact (`.claude/guidelines/` is explicitly committed, runbook)."
@@ -173,7 +180,8 @@
       "paths": [
         ".claude/hooks/",
         ".codex/hooks/",
-        ".cursor/hooks/"
+        ".cursor/hooks/",
+        ".grok/hooks/"
       ],
       "owner": "harness hooks",
       "why": "Hook scripts without native paths (launcher resolves from env/PATH): common to the command; must keep up with tracking settings/hooks.json, that refer to them."
@@ -185,7 +193,8 @@
         ".claude/skills/",
         ".agents/skills/",
         ".cursor/skills/",
-        ".codex/skills/"
+        ".codex/skills/",
+        ".grok/skills/"
       ],
       "owner": "skiller (connect/vendor)",
       "why": "Skills are always in the repository: needed by disconnected consumers, CI and a fresh clone without `skiller sync` (skiller CLAUDE.md: vendor-targets committed)."

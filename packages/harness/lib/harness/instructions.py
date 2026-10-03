@@ -30,36 +30,49 @@ from core.provider.lock import (
 
 CONTRACT_VERSION = "1.0.0"
 CATALOG_VERSION = "1.3.0"
-PROVIDERS = ("claude-code", "codex", "cursor")
+PROVIDERS = tuple(item.value for item in ProviderId)
 SCOPES = ("root", "skiller", "harness", "maind", "analyst", "task", "artifex")
+_SCOPE_TARGET_KEYS = {
+    "claude-code": "claude_target",
+    "codex": "codex_target",
+    "cursor": "cursor_target",
+    "grok": "grok_target",
+}
 TARGETS = {
     "root": {
         "claude-code": "CLAUDE.md", "codex": "AGENTS.md",
         "cursor": ".cursor/rules/swissknifeman-instructions.mdc",
+        "grok": ".grok/rules/swissknifeman-instructions.md",
     },
     "skiller": {
         "claude-code": "packages/skiller/CLAUDE.md", "codex": "packages/skiller/AGENTS.md",
         "cursor": "packages/skiller/.cursor-instructions.mdc",
+        "grok": "packages/skiller/.grok-instructions.md",
     },
     "harness": {
         "claude-code": "packages/harness/CLAUDE.md", "codex": "packages/harness/AGENTS.md",
         "cursor": "packages/harness/.cursor-instructions.mdc",
+        "grok": "packages/harness/.grok-instructions.md",
     },
     "maind": {
         "claude-code": "packages/maind/CLAUDE.md", "codex": "packages/maind/AGENTS.md",
         "cursor": "packages/maind/.cursor-instructions.mdc",
+        "grok": "packages/maind/.grok-instructions.md",
     },
     "analyst": {
         "claude-code": "packages/analyst/CLAUDE.md", "codex": "packages/analyst/AGENTS.md",
         "cursor": "packages/analyst/.cursor-instructions.mdc",
+        "grok": "packages/analyst/.grok-instructions.md",
     },
     "task": {
         "claude-code": "packages/task/CLAUDE.md", "codex": "packages/task/AGENTS.md",
         "cursor": "packages/task/.cursor-instructions.mdc",
+        "grok": "packages/task/.grok-instructions.md",
     },
     "artifex": {
         "claude-code": "packages/artifex/CLAUDE.md", "codex": "packages/artifex/AGENTS.md",
         "cursor": "packages/artifex/.cursor-instructions.mdc",
+        "grok": "packages/artifex/.grok-instructions.md",
     },
 }
 COMMON_IDS = {
@@ -101,6 +114,9 @@ EXTENSION_IDS = {
     ("root", "cursor"): ("root.cursor.instruction-precedence",
                          "root.cursor.launch-and-autonomy",
                          "root.cursor.package-scope-routing"),
+    ("root", "grok"): ("root.grok.instruction-precedence",
+                       "root.grok.launch-and-autonomy",
+                       "root.grok.package-scope-routing"),
     ("skiller", "claude-code"): ("skiller.claude-code.marketplace-connect",
                                  "skiller.claude-code.vendor-targets",
                                  "skiller.claude-code.agent-hub"),
@@ -403,13 +419,13 @@ def validate_catalog(value: object) -> tuple[InstructionDiagnostic, ...]:
         scope = scopes[scope_index]
         if scope.get("id") != scope_id:
             continue
-        if set(scope) != {"id", "claude_target", "codex_target", "cursor_target", "sections"}:
+        expected_fields = {"id", "sections", *(_SCOPE_TARGET_KEYS[p] for p in PROVIDERS)}
+        if set(scope) != expected_fields:
             diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID", scope_id=scope_id,
                                      expected="scope record fields", observed=_shape(scope)))
             continue
-        observed_targets = (scope["claude_target"], scope["codex_target"], scope["cursor_target"])
-        expected_targets = (TARGETS[scope_id]["claude-code"], TARGETS[scope_id]["codex"],
-                            TARGETS[scope_id]["cursor"])
+        observed_targets = tuple(scope[_SCOPE_TARGET_KEYS[p]] for p in PROVIDERS)
+        expected_targets = tuple(TARGETS[scope_id][p] for p in PROVIDERS)
         if observed_targets != expected_targets:
             diagnostics.append(_diag("INSTRUCTION_TARGET_SET_MISMATCH", scope_id=scope_id,
                                      expected=_display(expected_targets),
@@ -806,19 +822,24 @@ def operator_reference(catalog: dict[str, object] | None = None) -> str:
     diagnostics = validate_catalog(value)
     if diagnostics:
         raise InstructionValidationError(diagnostics)
+    header = (["Scope"] + [f"{p} target" for p in PROVIDERS] + ["Common IDs"]
+              + [f"{p} extensions" for p in PROVIDERS])
+    align = "|" + "|".join([":--"] * (1 + len(PROVIDERS)) + ["--:"] * (1 + len(PROVIDERS))) + "|"
     lines = ["# Provider instructions", "", "Generated from the validated D86 catalog.", "",
-             "| Scope | Claude target | Codex target | Cursor target | Common IDs | Claude extensions | Codex extensions | Cursor extensions |",
-             "|:--|:--|:--|:--|--:|--:|--:|--:|"]
+             "| " + " | ".join(header) + " |",
+             align]
     for scope_id in SCOPES:
-        lines.append(
-            f"| `{scope_id}` | `{TARGETS[scope_id]['claude-code']}` | "
-            f"`{TARGETS[scope_id]['codex']}` | `{TARGETS[scope_id]['cursor']}` | "
-            f"{len(COMMON_IDS[scope_id])} | "
-            f"{len(EXTENSION_IDS[(scope_id, 'claude-code')])} | "
-            f"{len(EXTENSION_IDS[(scope_id, 'codex')])} | "
-            f"{len(EXTENSION_IDS[(scope_id, 'cursor')])} |")
-    lines += ["", "The frozen inventory contains 56 common and 23 provider-extension IDs "
-              "(79 total) across exactly 18 targets.", "",
+        cells = [f"`{scope_id}`"]
+        cells.extend(f"`{TARGETS[scope_id][p]}`" for p in PROVIDERS)
+        cells.append(str(len(COMMON_IDS[scope_id])))
+        cells.extend(str(len(EXTENSION_IDS[(scope_id, p)])) for p in PROVIDERS)
+        lines.append("| " + " | ".join(cells) + " |")
+    extension_count = sum(len(EXTENSION_IDS[(scope_id, p)]) for scope_id in SCOPES for p in PROVIDERS)
+    common_count = sum(len(COMMON_IDS[scope_id]) for scope_id in SCOPES)
+    target_count = len(SCOPES) * len(PROVIDERS)
+    lines += ["", f"The frozen inventory contains {common_count} common and {extension_count} "
+              f"provider-extension IDs ({common_count + extension_count} total) across exactly "
+              f"{target_count} targets.", "",
               "## Public API", "",
               "`InstructionRequest` carries contract/catalog versions, operation ID, explicit "
               "ordered scope/provider IDs, an absolute target root, and config/authorization "
@@ -1232,8 +1253,8 @@ def _validate_compatibility_fixture(records: dict[str, dict],
     fixture_records = fixture["records"]
     fixture_ids = tuple(item.get("id") for item in fixture_records if isinstance(item, dict))
     expected_ids = tuple(item for scope_id in SCOPES for item in (
-        COMMON_IDS[scope_id] + EXTENSION_IDS[(scope_id, "claude-code")]
-        + EXTENSION_IDS[(scope_id, "codex")] + EXTENSION_IDS[(scope_id, "cursor")]))
+        COMMON_IDS[scope_id] + tuple(sid for p in PROVIDERS
+                                     for sid in EXTENSION_IDS[(scope_id, p)])))
     if fixture_ids != expected_ids:
         diagnostics.append(_diag("INSTRUCTION_COMPATIBILITY_MISMATCH",
                                  observation="semantic-invalid",

@@ -72,8 +72,9 @@ class ProviderReaderTests(unittest.TestCase):
             "metrics": {},
             "cursor": {"end_reason": "window_close"},
         }, project_id="p", raw_ref="local:u")
-        self.assertEqual((claude["provider_id"], codex["provider_id"], cursor["provider_id"]),
-                         ("claude-code", "codex", "cursor"))
+        grok = normalize("grok", 1, {"schema": 1, "session_id": "s", "occurred_at": "2026-10-03T00:00:00Z", "metrics": {"usage": 1}}, project_id="p", raw_ref="local:g")
+        self.assertEqual((claude["provider_id"], codex["provider_id"], cursor["provider_id"], grok["provider_id"]),
+                         ("claude-code", "codex", "cursor", "grok"))
         with self.assertRaisesRegex(ValueError, "ANALYTICS_UNKNOWN_PROVIDER"):
             normalize("other", 1, {}, project_id="p", raw_ref="local:z")
 

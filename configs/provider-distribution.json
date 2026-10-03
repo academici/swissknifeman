@@ -27,6 +27,13 @@
         "decision": "D8",
         "note": "Native Cursor discovery; skiller does not connect/vendor-write a second skill tree."
       }
+    },
+    "grok": {
+      "discovery": {
+        "surface": ".agents/skills",
+        "decision": "D8",
+        "note": "Grok scans .agents/skills natively (and .grok/skills); skiller does not vendor-write a second Grok skill tree."
+      }
     }
   }
 }

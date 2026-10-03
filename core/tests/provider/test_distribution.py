@@ -16,6 +16,10 @@ class DistributionCatalogTests(unittest.TestCase):
         self.assertIsNone(cursor.connect)
         self.assertIsNone(cursor.vendor)
         self.assertEqual(cursor.discovery.surface, ".agents/skills")
+        grok = catalog.providers["grok"]
+        self.assertIsNone(grok.connect)
+        self.assertIsNone(grok.vendor)
+        self.assertEqual(grok.discovery.surface, ".agents/skills")
 
     def test_connect_and_vendor_specs(self):
         catalog = load_distribution_catalog()
@@ -23,8 +27,10 @@ class DistributionCatalogTests(unittest.TestCase):
                          "claude-marketplace")
         self.assertEqual(connect_channel(catalog, ProviderId.CODEX).mode, "codex-marketplace")
         self.assertIsNone(connect_channel(catalog, ProviderId.CURSOR))
+        self.assertIsNone(connect_channel(catalog, ProviderId.GROK))
         self.assertEqual(vendor_channel(catalog, ProviderId.CODEX).path_param, "codex_path")
         self.assertIsNone(vendor_channel(catalog, ProviderId.CURSOR))
+        self.assertIsNone(vendor_channel(catalog, ProviderId.GROK))
 
     def test_invalid_catalog_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:

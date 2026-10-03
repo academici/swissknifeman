@@ -311,7 +311,7 @@ flowchart LR
     maind_overview["maind-overview<br/>⊕80 ↻1615"]:::warm
     package_architecture["package-architecture<br/>⊕85 ↻3698"]:::warm
     project_tooling_runbook["project-tooling-runbook<br/>⊕42 ↻7411"]:::mild
-    release_discipline["release-discipline<br/>⊕64 ↻1473"]:::warm
+    release_discipline["release-discipline<br/>⊕64 ↻1488"]:::warm
     skill_authoring["skill-authoring<br/>⊕44 ↻1846"]:::warm
     task_development_philosophy["task-development-philosophy<br/>⊕74 ↻3531"]:::warm
   end
@@ -437,14 +437,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 232 skills · ⊕ always **12586** current (is always resident if you include the entire registry) · ↻ bodies 310910 current · ⌥ on-demand 846572 current (snippets + references).
+**Total:** 232 skills · ⊕ always **12586** current (is always resident if you include the entire registry) · ↻ bodies 310925 current · ⌥ on-demand 846572 current (snippets + references).
 
 ## By buckets
 
 | Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
 | `general` | 22 | 1260 | 33471 | 29619 |
-| `repository-bootstrap` | 14 | 1047 | 29970 | 0 |
+| `repository-bootstrap` | 14 | 1047 | 29985 | 0 |
 | `architect` | 15 | 937 | 19786 | 33082 |
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |
 | `blender-modeling` | 7 | 582 | 11542 | 13519 |

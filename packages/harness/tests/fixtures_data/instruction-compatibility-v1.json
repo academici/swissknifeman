@@ -335,6 +335,41 @@
       ]
     },
     {
+      "id": "root.grok.instruction-precedence",
+      "provider_ids": [
+        "grok"
+      ],
+      "assertions": [
+        "The common repository contract reaches this session through the `AGENTS.md` Grok already reads",
+        "root.codex.*",
+        "root.cursor.*",
+        "are **not** authoritative in a Grok session"
+      ]
+    },
+    {
+      "id": "root.grok.launch-and-autonomy",
+      "provider_ids": [
+        "grok"
+      ],
+      "assertions": [
+        "`-m`/`--model`",
+        "Project `.grok/config.toml` carries `[permission] deny`",
+        "`[ui] permission_mode` is user-level",
+        "`--always-approve` on a trusted self-host",
+        "`[permission] deny` floor in `.grok/config.toml` still applies under `--always-approve`"
+      ]
+    },
+    {
+      "id": "root.grok.package-scope-routing",
+      "provider_ids": [
+        "grok"
+      ],
+      "assertions": [
+        "reads root→cwd",
+        "explicitly read each applicable package guide"
+      ]
+    },
+    {
       "id": "skiller.identity",
       "provider_ids": [
         "claude-code",

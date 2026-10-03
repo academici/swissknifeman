@@ -12,6 +12,7 @@ from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource
                   ArtifactTarget, ProviderId, plan_artifact_render, sha256_digest)
 
 from .cursor_render import render_cursor_cli_json
+from .grok_render import grok_profile_target, render_grok_config_toml
 from .profiles import ProfileResolution
 
 
@@ -36,10 +37,8 @@ def render_profile(resolution: ProfileResolution, *, codex_bindings_path: Path,
         adapter = _ADAPTERS[resolution.provider_id]
     except KeyError as error:
         raise ValueError("HARNESS_MAPPING_MISSING") from error
-    if resolution.provider_id is ProviderId.CURSOR:
-        path = cursor_bindings_path or codex_bindings_path
-        return adapter.renderer(resolution, path)
-    return adapter.renderer(resolution, codex_bindings_path)
+    path = cursor_bindings_path or codex_bindings_path
+    return adapter.renderer(resolution, path)
 
 
 def plan_profile_artifact(resolution: ProfileResolution, *, catalog_path: Path,
@@ -56,15 +55,12 @@ def plan_profile_artifact(resolution: ProfileResolution, *, catalog_path: Path,
     except KeyError as error:
         raise ValueError("HARNESS_MAPPING_MISSING") from error
     if adapter.needs_binding_source:
-        if resolution.provider_id is ProviderId.CURSOR:
-            bindings = Path(cursor_bindings_path or codex_bindings_path)
-            binding_source = ArtifactSource("harness.cursor.profile-bindings",
-                                            "packages/harness/configs/cursor/config/profile-bindings.json",
-                                            sha256_digest(bindings.read_bytes()))
-        else:
-            binding_source = ArtifactSource("harness.codex.profile-bindings",
-                                            "packages/harness/configs/codex/config/profile-bindings.json",
-                                            sha256_digest(codex_bindings_path.read_bytes()))
+        bindings = Path(cursor_bindings_path or codex_bindings_path)
+        provider_name = resolution.provider_id.value
+        binding_source = ArtifactSource(
+            f"harness.{provider_name}.profile-bindings",
+            f"packages/harness/configs/{provider_name}/config/profile-bindings.json",
+            sha256_digest(bindings.read_bytes()))
         sources = (source, binding_source)
     else:
         sources = (source,)
@@ -96,6 +92,10 @@ def _render_cursor(resolution: ProfileResolution, path: Path) -> bytes:
     return render_cursor_cli_json(resolution, path)
 
 
+def _render_grok(resolution: ProfileResolution, path: Path) -> bytes:
+    return render_grok_config_toml(resolution, path)
+
+
 def _render_codex(resolution: ProfileResolution, path: Path) -> bytes:
     value = json.loads(Path(path).read_text(encoding="utf-8"))
     try:
@@ -112,4 +112,5 @@ _ADAPTERS = {
     ProviderId.CLAUDE_CODE: ProviderAdapter(".claude/settings.local.json", _render_claude, False),
     ProviderId.CODEX: ProviderAdapter(".codex/config.toml", _render_codex, True),
     ProviderId.CURSOR: ProviderAdapter(".cursor/cli.json", _render_cursor, True),
+    ProviderId.GROK: ProviderAdapter(grok_profile_target(), _render_grok, True),
 }

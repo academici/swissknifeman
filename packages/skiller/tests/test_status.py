@@ -94,7 +94,7 @@ class TestStatusOverlapReport(unittest.TestCase):
         })
         rows = data["measurements"]["rows"]
         self.assertEqual({row["provider"] for row in rows},
-                         {"claude-code", "codex", "cursor"})
+                         {"claude-code", "codex", "cursor", "grok"})
         for row in rows:
             self.assertEqual(row["surface"], "listing")
             self.assertEqual(len({"model", "model_family"} & set(row)), 1)

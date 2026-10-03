@@ -166,13 +166,11 @@ def _validate_secret_references(server, record):
 
 def plan_mcp_artifact(plan: McpProjection, *, catalog_path: Path, bindings_path: Path):
     """Codex/Cursor MCP is a P2 whole-file artifact; Claude keeps its merge-only writer."""
-    if plan.provider_id not in (ProviderId.CODEX, ProviderId.CURSOR):
+    if plan.provider_id not in (ProviderId.CODEX, ProviderId.CURSOR, ProviderId.GROK):
         raise ValueError("HARNESS_MAPPING_MISSING")
-    binding_label = ("harness.codex.mcp-bindings" if plan.provider_id is ProviderId.CODEX
-                     else "harness.cursor.mcp-bindings")
-    binding_relpath = ("packages/harness/configs/codex/mcp/bindings.json"
-                       if plan.provider_id is ProviderId.CODEX
-                       else "packages/harness/configs/cursor/mcp/bindings.json")
+    name = plan.provider_id.value
+    binding_label = f"harness.{name}.mcp-bindings"
+    binding_relpath = f"packages/harness/configs/{name}/mcp/bindings.json"
     sources = (
         ArtifactSource("harness.mcp.catalog", "packages/harness/configs/common/mcp/catalog.json",
                        sha256_digest(Path(catalog_path).read_bytes())),
@@ -194,6 +192,7 @@ def render_mcp_projection(plan: McpProjection) -> bytes:
     """Serialize only the named projection.  Claude retains its merge-only writer."""
     if plan.provider_id in (ProviderId.CLAUDE_CODE, ProviderId.CURSOR):
         return (json.dumps({"mcpServers": dict(plan.servers)}, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    # Codex and Grok share [mcp_servers.<id>] TOML.
     lines = []
     for server_id, binding in plan.servers:
         lines.append(f"[mcp_servers.{server_id}]")

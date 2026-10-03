@@ -88,10 +88,14 @@ class ModelPoolResolverTests(unittest.TestCase):
         self.assertEqual(self.resolve("codex", "gpt-6-sol"), "implementation")
         self.assertEqual(self.resolve("cursor", "grok-4.7"), "frontier")
         self.assertEqual(self.resolve("cursor", "grok-4.8"), "frontier")
+        self.assertEqual(self.resolve("grok", "grok-4.5"), "economy")
+        self.assertEqual(self.resolve("grok", "grok-4.6"), "implementation")
+        self.assertEqual(self.resolve("grok", "grok-4.7"), "frontier")
 
     def test_unknown_model_is_nonterminal_evidence_missing(self):
         for provider, model in (("codex", "unlisted-model"), ("cursor", "auto"),
-                                ("claude-code", "claude-mystery-1")):
+                                ("claude-code", "claude-mystery-1"),
+                                ("grok", "unlisted-model")):
             with self.assertRaises(re.RouteEvidenceError) as caught:
                 self.resolve(provider, model)
             self.assertEqual(caught.exception.code, "ROUTE_MODEL_UNKNOWN")

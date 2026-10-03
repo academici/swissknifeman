@@ -118,6 +118,86 @@ def resolve_model_class(provider: str, model: str, metadata: dict) -> str:
     return max(classes, key=MODEL_CLASS_ORDER.index)
 
 
+def proc_parent_argv(pid: int, *, label: str) -> tuple[int, tuple[str, ...]]:
+    """Read one ``/proc`` parent and argv. Adapters share this; the label names the provider."""
+    root = Path("/proc") / str(pid)
+    try:
+        status = (root / "status").read_text(encoding="utf-8")
+        raw_argv = (root / "cmdline").read_bytes()
+    except OSError as error:
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_UNAVAILABLE", f"{label} process ancestry is unreadable: {error}") from error
+    parent = None
+    for line in status.splitlines():
+        if line.startswith("PPid:"):
+            _, value = line.split(":", 1)
+            parent = int(value.strip())
+            break
+    argv = tuple(
+        value.decode("utf-8", errors="surrogateescape")
+        for value in raw_argv.split(b"\0") if value
+    )
+    if parent is None or not argv:
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_UNAVAILABLE", f"process {pid} has no readable parent/argv")
+    return parent, argv
+
+
+def launch_option_values(argv: tuple[str, ...], short: str, long: str) -> tuple[str, ...]:
+    """Collect ``-m`` / ``--model`` style values, including ``--model=value``."""
+    values = []
+    index = 1
+    while index < len(argv):
+        token = argv[index]
+        if token in (short, long):
+            if index + 1 >= len(argv):
+                raise RouteEvidenceError(
+                    "ROUTE_LAUNCH_MISMATCH", f"launch option {token} has no value")
+            values.append(argv[index + 1])
+            index += 2
+            continue
+        if long and token.startswith(long + "="):
+            values.append(token.split("=", 1)[1])
+        index += 1
+    return tuple(values)
+
+
+def exactly_one(values: tuple[str, ...], label: str) -> str:
+    if len(values) != 1:
+        raise RouteEvidenceError(
+            "ROUTE_LAUNCH_MISMATCH", f"expected exactly one {label}, observed {len(values)}")
+    return values[0]
+
+
+def mapped_model_class(provider: str, model: str, routing_path: Path) -> str:
+    from task.command_catalog import load_routing_metadata
+
+    return resolve_model_class(provider, model, load_routing_metadata(routing_path))
+
+
+def mapped_effort(provider: str, selector: str, routing_path: Path, *, label: str) -> str:
+    from task.command_catalog import load_routing_metadata
+
+    metadata = load_routing_metadata(routing_path)
+    mapping = metadata.get("mappings", {}).get(provider, {})
+    matches = [
+        effort
+        for effort, selectors in mapping.get("effort_selectors", {}).items()
+        if selector in selectors
+    ]
+    return exactly_one(tuple(matches), f"{label} effort mapping for {selector!r}")
+
+
+def invocation_extends(actual: str, expected: str) -> bool:
+    """True when ``actual`` is ``expected`` or ``expected`` plus a whitespace continuation."""
+    if actual == expected:
+        return True
+    if not actual.startswith(expected):
+        return False
+    rest = actual[len(expected):]
+    return bool(rest) and rest[0].isspace()
+
+
 def owner_followup_revokes(text: str) -> bool:
     """Conservative explicit stop/revoke markers for the local workflow guard."""
     return bool(re.search(r"OWNER-REVOKE|\b(?:revoke|cancel|stop)\b|review only|review|cancel|cancel|stop|stop|review only|do not execute", text, re.IGNORECASE))

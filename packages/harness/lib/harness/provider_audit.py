@@ -18,7 +18,8 @@ from core import (ArtifactActionKind, EffectiveProvider, ProviderId, SupportLeve
 from .agentpacks import (cursor_consumer_targets, load_claude_role_bindings,
                          load_cursor_agent_consumer_mapping, plan_agent_artifact,
                          semantic_agent_roles)
-from .hooks import LifecycleRequest, plan_codex_lifecycle_artifacts, plan_lifecycle
+from .hooks import (LifecycleRequest, claude_shaped_hook_paths, plan_codex_lifecycle_artifacts,
+                    plan_lifecycle)
 from .mcp import (load_mcp_catalog, plan_mcp_artifact, plan_mcp_projection,
                   render_mcp_projection)
 from .profiles import load_catalog, resolve_profile
@@ -109,29 +110,33 @@ def audited_paths(package_root: Path) -> tuple[Path, ...]:
         root / "configs/cursor/agent-packs/consumer-mapping.json",
         root / "configs/cursor/hooks/lifecycle-context-bindings.json",
         root / "configs/cursor/mcp/bindings.json",
+        root / "configs/grok/config/profile-bindings.json",
+        root / "configs/grok/agent-packs/consumer-mapping.json",
+        root / "configs/grok/hooks/lifecycle-context-bindings.json",
+        root / "configs/grok/mcp/bindings.json",
         root / "configs/claude-code/agent-packs/role-bindings.json",
     )
     return tuple(sorted(paths))
 
 
+def _provider_config_dir(root: Path, provider: ProviderId) -> Path:
+    return root / "configs" / provider.value
+
+
 def _profile_bindings_path(root: Path, provider: ProviderId) -> Path:
-    if provider is ProviderId.CURSOR:
-        return root / "configs/cursor/config/profile-bindings.json"
-    return root / "configs/codex/config/profile-bindings.json"
+    if provider is ProviderId.CLAUDE_CODE:
+        return root / "configs/codex/config/profile-bindings.json"
+    return _provider_config_dir(root, provider) / "config/profile-bindings.json"
 
 
 def _lifecycle_bindings_path(root: Path, provider: ProviderId) -> Path:
-    if provider is ProviderId.CURSOR:
-        return root / "configs/cursor/hooks/lifecycle-context-bindings.json"
-    return root / "configs/codex/hooks/lifecycle-context-bindings.json"
+    if provider is ProviderId.CLAUDE_CODE:
+        return root / "configs/codex/hooks/lifecycle-context-bindings.json"
+    return _provider_config_dir(root, provider) / "hooks/lifecycle-context-bindings.json"
 
 
 def _mcp_bindings_path(root: Path, provider: ProviderId) -> Path:
-    if provider is ProviderId.CLAUDE_CODE:
-        return root / "configs/claude-code/mcp/bindings.json"
-    if provider is ProviderId.CURSOR:
-        return root / "configs/cursor/mcp/bindings.json"
-    return root / "configs/codex/mcp/bindings.json"
+    return _provider_config_dir(root, provider) / "mcp/bindings.json"
 
 
 def _fixture(path):
@@ -173,7 +178,6 @@ def audit_package(package_root: Path, fixture_path: Path | None = None, *,
     # Independent provider projections: profile, lifecycle, MCP and every role.
     for provider in ProviderId:
         profile_bindings = _profile_bindings_path(root, provider)
-        cursor_bindings = profile_bindings if provider is ProviderId.CURSOR else None
         for profile in catalog.profiles:
             resolution = resolve_profile(catalog, provider_id=provider, profile_id=profile.id,
                 target_scope="project", trusted=True,
@@ -181,11 +185,10 @@ def audit_package(package_root: Path, fixture_path: Path | None = None, *,
                 target_identity="repo:fixture" if profile.id == "trusted-full-access" else None,
                 origin="operation", effective_provider=EffectiveProvider(provider, True))
             try:
-                rendered = (render_profile(resolution, codex_bindings_path=profile_bindings,
-                                           cursor_bindings_path=cursor_bindings)
+                rendered = (render_profile(resolution, codex_bindings_path=profile_bindings)
                             if resolution.green else b"")
             except ValueError as error:
-                if provider is ProviderId.CURSOR and "HARNESS_CURSOR" in str(error):
+                if "HARNESS_CURSOR" in str(error) or "HARNESS_GROK" in str(error):
                     evidence.append(("security", provider.value, f"profile:{profile.id}", "negative",
                                      "refused", str(error)))
                     continue
@@ -206,8 +209,7 @@ def audit_package(package_root: Path, fixture_path: Path | None = None, *,
         lifecycle_path = _lifecycle_bindings_path(root, provider)
         lifecycle = plan_lifecycle(
             catalog, provider_id=provider, trusted=True, requests=requests,
-            codex_bindings_path=lifecycle_path if provider is ProviderId.CODEX else None,
-            cursor_bindings_path=lifecycle_path if provider is ProviderId.CURSOR else None)
+            codex_bindings_path=None if provider is ProviderId.CLAUDE_CODE else lifecycle_path)
         unsupported = {item.surface_id: item.code for item in lifecycle.diagnostics}
         for binding in lifecycle.bindings:
             code = unsupported.get(binding.surface_id, "")
@@ -245,12 +247,12 @@ def audit_package(package_root: Path, fixture_path: Path | None = None, *,
             root / "configs/claude-code/agent-packs/role-bindings.json", roles)
             if provider is ProviderId.CLAUDE_CODE else None)
         verified_count = 0
-        if provider is ProviderId.CURSOR:
+        if provider in (ProviderId.CURSOR, ProviderId.GROK):
             mapping = load_cursor_agent_consumer_mapping(
-                root / "configs/cursor/agent-packs/consumer-mapping.json")
-            consumer_targets = _verify_cursor_agent_consumer_mapping(roles, mapping)
+                root / "configs" / provider.value / "agent-packs/consumer-mapping.json")
+            consumer_targets = _verify_cursor_agent_consumer_mapping(roles, mapping, provider=provider)
             verified_count = len(consumer_targets)
-            render_hashes.append(("agent:cursor:consumer-mapping",
+            render_hashes.append((f"agent:{provider.value}:consumer-mapping",
                                   _canonical_hash(consumer_targets)))
             evidence.append(("activation", provider.value, "agents.catalog", "positive", "supported",
                              f"HARNESS_CURSOR_AGENT_CONSUMER_MAPPING:{verified_count}"))
@@ -368,16 +370,18 @@ def _verify_agent_artifact_plans(provider, expected):
     return len(expected)
 
 
-def _verify_cursor_agent_consumer_mapping(roles, mapping):
-    """Cursor consumer mapping must resolve every semantic role to .claude/agents/*.md."""
+def _verify_cursor_agent_consumer_mapping(roles, mapping, *, provider=ProviderId.CURSOR):
+    """Consumer mapping must resolve every semantic role to .claude/agents/*.md."""
+    name = provider.value
     targets = cursor_consumer_targets(roles, mapping)
     if len(targets) != len(roles):
-        raise ValueError("HARNESS_CATALOG_MISMATCH:cursor:agents:missing")
+        raise ValueError(f"HARNESS_CATALOG_MISMATCH:{name}:agents:missing")
+    forbidden = (".cursor/agents", ".grok/agents")
     for _pack_id, _role_id, target in targets:
         if not target.startswith(".claude/agents/") or not target.endswith(".md"):
-            raise ValueError("HARNESS_CATALOG_MISMATCH:cursor:agents:target")
-        if ".cursor/agents" in target:
-            raise ValueError("HARNESS_CATALOG_MISMATCH:cursor:agents:forbidden-target")
+            raise ValueError(f"HARNESS_CATALOG_MISMATCH:{name}:agents:target")
+        if any(part in target for part in forbidden):
+            raise ValueError(f"HARNESS_CATALOG_MISMATCH:{name}:agents:forbidden-target")
     return targets
 
 
@@ -393,6 +397,9 @@ def _provider_surface_rows(provider, catalog, lifecycle, mcp_plan, verified_agen
         profile_target = ".claude/settings.local.json"
     elif provider is ProviderId.CURSOR:
         profile_target = cursor_profile_target()
+    elif provider is ProviderId.GROK:
+        from .grok_render import grok_profile_target
+        profile_target = grok_profile_target()
     else:
         profile_target = ".codex/config.toml"
     rows = []
@@ -419,6 +426,8 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
             return "non-artifact:named-settings-audit", "supported", "HARNESS_SETTINGS_AUDIT_NAMED"
         if provider is ProviderId.CURSOR:
             return "non-artifact:named-cursor-settings-audit", "supported", "HARNESS_SETTINGS_AUDIT_NAMED"
+        if provider is ProviderId.GROK:
+            return "non-artifact:named-grok-settings-audit", "supported", "HARNESS_SETTINGS_AUDIT_NAMED"
         # bounded closure (codex-parity-verdicts-v1.md §3.11, P2.4): Codex gets its own
         # smaller named check set (settings_audit.run_codex_checks) over the documented
         # Codex layers — not a generalization of the 13 Claude checks.
@@ -428,8 +437,9 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
         code = lifecycle_codes.get(surface_id, "")
         if code:
             return "non-artifact:unsupported-native-binding", "unsupported", code
-        if provider is ProviderId.CODEX and binding.support_level == "hook-native":
-            return "artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py", "supported", "HARNESS_ACTIVATION_NATIVE"
+        if provider in (ProviderId.CODEX, ProviderId.GROK) and binding.support_level == "hook-native":
+            document, handler = claude_shaped_hook_paths(provider)
+            return f"artifact:project:{document}+{handler}", "supported", "HARNESS_ACTIVATION_NATIVE"
         if provider is ProviderId.CURSOR and binding.support_level == "hook-native":
             return "artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py", "supported", "HARNESS_ACTIVATION_NATIVE"
         if provider is ProviderId.CURSOR and binding.support_level == "config-native":
@@ -444,16 +454,16 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
     if surface_id == "mcp.catalog":
         return f"artifact:{mcp_plan.target_scope}:{mcp_plan.target_path}", "supported", "HARNESS_MCP_PROJECTION_RENDERED"
     if surface_id == "agents.catalog":
-        if provider is ProviderId.CURSOR:
-            return (f"non-artifact:cursor-consumer-mapping:{verified_agent_count}-targets:.claude/agents/*.md",
+        if provider in (ProviderId.CURSOR, ProviderId.GROK):
+            return (f"non-artifact:{provider.value}-consumer-mapping:{verified_agent_count}-targets:.claude/agents/*.md",
                     "supported", "HARNESS_CURSOR_AGENT_CONSUMER_MAPPING")
         return (f"artifact:project:{verified_agent_count}-named-agent-targets", "supported",
                 "HARNESS_AGENT_ACTIVATION_NATIVE")
     if surface_id == "agent-packs.lifecycle":
         if provider is ProviderId.CLAUDE_CODE:
             return "non-artifact:named-agent-pack-engine", "supported", "HARNESS_AGENTPACK_LIFECYCLE_NAMED"
-        if provider is ProviderId.CURSOR:
-            return ("non-artifact:cursor-consumer-lifecycle-shared-projection",
+        if provider in (ProviderId.CURSOR, ProviderId.GROK):
+            return (f"non-artifact:{provider.value}-consumer-lifecycle-shared-projection",
                     "supported", "HARNESS_CURSOR_AGENTPACK_CONSUMER_LIFECYCLE")
         # bounded closure (codex-parity-verdicts-v1.md §3.12, P2.4): role-projection
         # lifecycle only (render/check/remove/diagnose over .codex/agents/*.toml,
@@ -463,13 +473,9 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
     if surface_id == "workflows.status":
         if provider is ProviderId.CLAUDE_CODE:
             return "non-artifact:named-workflow-status", "supported", "HARNESS_WORKFLOW_STATUS_NAMED"
-        if provider is ProviderId.CURSOR:
-            return ("non-artifact:missing-native-cursor-workflow-status-consumer", "unsupported",
-                    "HARNESS_ACTIVATION_UNSUPPORTED:cursor:workflows.status:"
-                    "missing-native-cursor-workflow-status-consumer")
-        return ("non-artifact:missing-native-codex-workflow-status-consumer", "unsupported",
-                "HARNESS_ACTIVATION_UNSUPPORTED:codex:workflows.status:"
-                "missing-native-codex-workflow-status-consumer")
+        return (f"non-artifact:missing-native-{provider.value}-workflow-status-consumer", "unsupported",
+                f"HARNESS_ACTIVATION_UNSUPPORTED:{provider.value}:workflows.status:"
+                f"missing-native-{provider.value}-workflow-status-consumer")
     if surface_id == "doctor.environment":
         return "non-artifact:named-harness-doctor", "supported", "HARNESS_DOCTOR_ENVIRONMENT_NAMED"
     if surface_id == "doctor.provider":

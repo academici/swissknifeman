@@ -7,10 +7,11 @@ from pathlib import Path
 from types import MappingProxyType
 
 from .io import safe_load_json
+from .provider.values import ProviderId
 
 
 ANALYTICS_CONTRACT_VERSION = "1.0.0"
-ANALYTICS_PROVIDER_IDS = frozenset(("claude-code", "codex", "cursor"))
+ANALYTICS_PROVIDER_IDS = frozenset(item.value for item in ProviderId)
 ANALYTICS_METRICS = frozenset((
     "tools", "files", "workflows", "retrieval", "devloop", "maind", "usage", "reads", "errors",
 ))

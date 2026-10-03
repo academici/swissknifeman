@@ -74,7 +74,7 @@ class TestBuildCodexRaw(unittest.TestCase):
 
 class TestProviderIds(unittest.TestCase):
     def test_provider_ids_match_analyst_trace_vocabulary(self):
-        self.assertEqual(set(PROVIDER_IDS), {"claude-code", "codex", "cursor"})
+        self.assertEqual(set(PROVIDER_IDS), {"claude-code", "codex", "cursor", "grok"})
 
 
 if __name__ == "__main__":

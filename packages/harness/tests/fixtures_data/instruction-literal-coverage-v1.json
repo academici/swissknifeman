@@ -4,9 +4,9 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "65ac54298e997ebf2106df15ce89636cd7e0faaa6629374192f75b3602f0d2cf",
+    "source_sha256": "243e720fc74087ef0d5c45fbd86a9f4c57a0e58c673c5cde1f84db8cfc8f2f98",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
-    "literal_count": 298
+    "literal_count": 309
   },
   "literals": [
     {
@@ -355,6 +355,50 @@
     },
     {
       "semantic_id": "root.cursor.package-scope-routing",
+      "literal": "explicitly read each applicable package guide"
+    },
+    {
+      "semantic_id": "root.grok.instruction-precedence",
+      "literal": "The common repository contract reaches this session through the `AGENTS.md` Grok already reads"
+    },
+    {
+      "semantic_id": "root.grok.instruction-precedence",
+      "literal": "root.codex.*"
+    },
+    {
+      "semantic_id": "root.grok.instruction-precedence",
+      "literal": "root.cursor.*"
+    },
+    {
+      "semantic_id": "root.grok.instruction-precedence",
+      "literal": "are **not** authoritative in a Grok session"
+    },
+    {
+      "semantic_id": "root.grok.launch-and-autonomy",
+      "literal": "`-m`/`--model`"
+    },
+    {
+      "semantic_id": "root.grok.launch-and-autonomy",
+      "literal": "Project `.grok/config.toml` carries `[permission] deny`"
+    },
+    {
+      "semantic_id": "root.grok.launch-and-autonomy",
+      "literal": "`[ui] permission_mode` is user-level"
+    },
+    {
+      "semantic_id": "root.grok.launch-and-autonomy",
+      "literal": "`--always-approve` on a trusted self-host"
+    },
+    {
+      "semantic_id": "root.grok.launch-and-autonomy",
+      "literal": "`[permission] deny` floor in `.grok/config.toml` still applies under `--always-approve`"
+    },
+    {
+      "semantic_id": "root.grok.package-scope-routing",
+      "literal": "reads root→cwd"
+    },
+    {
+      "semantic_id": "root.grok.package-scope-routing",
       "literal": "explicitly read each applicable package guide"
     },
     {

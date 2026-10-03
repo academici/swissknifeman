@@ -1,0 +1,51 @@
+{
+  "binding_version": "1.0.0",
+  "provider_id": "grok",
+  "target_scope": "project",
+  "target_path": ".grok/config.toml",
+  "servers": {
+    "context7": {
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "."
+      ]
+    },
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@0.0.78",
+        "--headless",
+        "--output-dir",
+        ".playwright-mcp"
+      ]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    }
+  }
+}

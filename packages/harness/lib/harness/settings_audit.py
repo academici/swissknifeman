@@ -1236,12 +1236,12 @@ def _load_codex_toml_layer(name, path):
     return Layer(name, path, data=data, error=None)
 
 
-def load_codex_layers(env, target):
-    """Internal documentation."""
+def load_codex_layers(env, target, *, state_dir=".codex"):
+    """Load user+project TOML layers for Codex or Grok (same schema, different dir)."""
     target = Path(target)
     return [
-        _load_codex_toml_layer("user", Path(env.home) / ".codex" / "config.toml"),
-        _load_codex_toml_layer("project", target / ".codex" / "config.toml"),
+        _load_codex_toml_layer("user", Path(env.home) / state_dir / "config.toml"),
+        _load_codex_toml_layer("project", target / state_dir / "config.toml"),
     ]
 
 

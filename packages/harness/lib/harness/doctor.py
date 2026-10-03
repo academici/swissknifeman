@@ -66,13 +66,13 @@ def _cmd_doctor_settings(env, opts):
     )
     target = opts["target"] or os.getcwd()
     provider = opts["provider"] or None
-    if provider not in (None, "claude-code", "codex", "cursor"):
-        die(f"--provider unknown: {provider} (claude-code|codex|cursor)")
+    if provider not in (None, "claude-code", "codex", "cursor", "grok"):
+        die(f"--provider unknown: {provider} (claude-code|codex|cursor|grok)")
     if provider == "codex" and opts["profile"]:
         die("--profile only applies to --provider claude-code")
 
-    if provider == "codex":
-        layers = load_codex_layers(env, target)
+    if provider in ("codex", "grok"):
+        layers = load_codex_layers(env, target, state_dir=".codex" if provider == "codex" else ".grok")
         ctx = Context(layers=layers, values={}, provenance={}, target=Path(target), env=env)
         findings = run_codex_checks(layers)
         if opts["json"]:
@@ -110,7 +110,7 @@ def cmd_doctor(env, argv):
         "--profile": "str", "--provider": "str", "--provider-audit": "bool",
     })
     if opts["help"]:
-        print("harness doctor [--settings [--provider claude-code|codex|cursor] [--target P] "
+        print("harness doctor [--settings [--provider claude-code|codex|cursor|grok] [--target P] "
               "[--json] [--profile NAME] | --provider-audit]\n"
               "  without flag: environment diagnostics harness (presets/script/hooks).\n"
               "  --settings: audit of settings layers of the selected provider\n"

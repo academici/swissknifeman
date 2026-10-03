@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Grok project config:** `.grok/config.toml` остаётся локальным: `maind sync` пишет
+  абсолютные пути MCP-лаунчеров. Образец — `.grok/config.toml.example`. В
+  `provider-artifacts.lock.json` добавлена запись `maind.provider-deploy.grok`.
+
 ## [0.27.0] - 2026-10-03
 
 ### Added

@@ -51,6 +51,9 @@ safe-dirs.json
 # Codex project config: `maind sync` adds MCP launchers with absolute machine paths (perplexity),
 # so the real file stays local; the portable sample is .codex/config.toml.example.
 .codex/config.toml
+# Grok project config: same MCP-launcher paths in `.grok/config.toml`; sample is
+# .grok/config.toml.example. `[ui] permission_mode` stays user-level in ~/.grok/config.toml.
+.grok/config.toml
 # Cursor lifecycle: surface modes (How .claude/*.env.ini) — writes `harness hooks --provider cursor`.
 .cursor/*.env.ini
 # Cursor/Codex hook runtime: tool-telemetry sidecars (harness.hooks), we don't commit.

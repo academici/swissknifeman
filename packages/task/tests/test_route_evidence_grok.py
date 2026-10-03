@@ -1,5 +1,4 @@
 """Grok argv/config capture: grok and Grok ``agent``; never Cursor ``agent --workspace``."""
-import json
 import os
 import tempfile
 import unittest

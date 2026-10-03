@@ -24,6 +24,11 @@ invariants and data layout.
 
 The table names the carrier modules; complete package map (including `capture`/`events`/`readers`/
 `runs`/`ingest`/`proposals`/`sessions`/`status`/`token_report`) — in `packages/analyst/CLAUDE.md`.
+
+Provider capture readers live in `lib/analyst/readers/`. The registry keys `(provider_id, schema)`:
+Claude Code run-report schema 2, Codex/Cursor/Grok hook-context schema 1. Grok reuses the Codex
+envelope (`GrokCaptureReader`) and stamps `provider_id=grok`.
+
 Public package-API package - `0.2.0`: minor bump paid for Contribution gate contract
 Unified Agent Trace v1 for exactly two new public modules above (`trace`, `metrics`).
 Version `.claude-plugin/plugin.json` from `package.json` **not** is displayed - this is a separate

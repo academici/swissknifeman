@@ -29,7 +29,30 @@ Source: `packages/harness/configs/common/profile-catalog.json` +
 
 Any non-self-host trusted profile → `HARNESS_GROK_TRUSTED_NON_SELF_HOST_REFUSED`.
 
-## Installation: everyday (fleet)
+## Installation
+
+Two layers. Plugins are once per machine. Each project still opts in on its own.
+
+### Machine (once)
+
+From the swissknifeman checkout, when `grok` is on `PATH`:
+
+```bash
+./install.sh
+```
+
+The script adds this checkout as a Grok marketplace, then installs
+`packages/task` and `packages/task/adapters/grok/prefix-hold` with `--trust`.
+Task commands in a new Grok session are `/task:*`. A repeat that prints
+`already configured` or `already installed` is success. Opt out with
+`--no-grok-plugins`. Marketplace `core` is not installed for Grok: its source
+is the repository root.
+
+`./install.sh` does not register a project, does not enable Grok in
+`.swissknife.json`, and does not write project files. An already open Grok
+session keeps its old command list until a new session starts.
+
+### Project
 
 ```json
 // .swissknife.json
@@ -42,17 +65,31 @@ Any non-self-host trusted profile → `HARNESS_GROK_TRUSTED_NON_SELF_HOST_REFUSE
 }
 ```
 
+The project is already in the hub (`maind onboard <path|id>`). Then:
+
 ```bash
-cd ~/projects/my-app
-maind onboard --cwd
 maind sync --project <id>
-maind health --cwd
-skiller sync                         # .agents/skills
+harness hooks --provider grok --observer --safe-dirs --daemon-safety --trusted --target .
+maind health --project <id>
 harness doctor --settings --provider grok --target .
 ```
 
-Grok is optional for fleet health. Do not add it to `REQUIRED_PROVIDERS`.
-`skiller update` does not auto-enable grok fleet-wide.
+`maind sync` writes MCP into `.grok/config.toml`, refreshes the connect-channel
+skill catalog (`skills-catalog` → `skiller update`), and appends `.gitignore`
+lines for service files that already exist (`gitignore`). `--trusted` on
+`harness hooks` is only the hook-write gate. The everyday launch profile stays
+`workspace-contained` (`--permission-mode acceptEdits`).
+
+`skiller sync` is the vendor channel and needs `.swissknifeman/config.json`.
+This fleet uses connect, so skills arrive through `maind sync`. Hub defaults
+and `REQUIRED_PROVIDERS` stay claude-code, codex, and cursor: a new project
+does not get Grok until `providers.selection.grok.enabled` is set.
+
+`.grok/config.toml` from sync contains absolute launcher paths, so the same
+sync adds that path to `.gitignore` when the file matches
+`configs/gitignore-policy.json`. `.grok/hooks/` and `.grok/rules/` stay
+committed. Sync does not run `git rm --cached`. A file that is already tracked
+stays tracked until that command is run by hand.
 
 ## Trusted self-host (only umbrella)
 

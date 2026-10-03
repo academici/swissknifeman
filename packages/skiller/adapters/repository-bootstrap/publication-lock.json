@@ -168,16 +168,16 @@
       "provider": "claude",
       "target": ".claude/skills/project-tooling-runbook/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/project-tooling-runbook/SKILL.md",
-      "canonical_sha256": "5b48f29931e1b6667eae2b9976eafe07e9fffa8eb1319f05d342c9f07aae7ca7",
-      "rendered_sha256": "797c89649d4b912d5b296df99744186b50c2d458b4ba00616a45d48b162aa271"
+      "canonical_sha256": "143c37d15c8f1ae444a1c1a817e42e22459f520a597e9e488c2c8b45df0069b8",
+      "rendered_sha256": "12e0f01052fd5e73def53ffbd17153d980fddcd59b4f3a3c9f7b9442197916e2"
     },
     {
       "identity": "project-tooling-runbook",
       "provider": "codex",
       "target": ".agents/skills/project-tooling-runbook/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/project-tooling-runbook/SKILL.md",
-      "canonical_sha256": "5b48f29931e1b6667eae2b9976eafe07e9fffa8eb1319f05d342c9f07aae7ca7",
-      "rendered_sha256": "797c89649d4b912d5b296df99744186b50c2d458b4ba00616a45d48b162aa271"
+      "canonical_sha256": "143c37d15c8f1ae444a1c1a817e42e22459f520a597e9e488c2c8b45df0069b8",
+      "rendered_sha256": "12e0f01052fd5e73def53ffbd17153d980fddcd59b4f3a3c9f7b9442197916e2"
     },
     {
       "identity": "release-discipline",

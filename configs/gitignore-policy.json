@@ -1,6 +1,6 @@
 {
   "schema_version": "gitignore-policy/v1",
-  "_doc": "Map of service files that are distributed swissknifeman/maind/harness/skiller/task into fleet projects: what should be in .gitignore, and what to commit. Source - single recommendation; `maind doctor --gitignore-drift` checks every project against it (read-only). Paths - from the project root, gitignore-syntax, bound to root (`**` — any depth, final `/` — entire directory). policy: `ignore` — is always in .gitignore, never commits (machine/runtime/personal settings); `commit` — always in the repository (portable common artifacts and templates); `portable-or-ignore` — commits until it contains machine paths (/home/…, /Users/…) and secrets, otherwise in .gitignore (+ `.example`); `project` — project selection, doctor only checks internal consistency `group`. Reasons: skill project-tooling-runbook «Machine-specific config hygiene», skiller CLAUDE.md (vendor-targets committed), own .gitignore swissknifeman; map removed from 24 fleet projects 2026-10-01.",
+  "_doc": "Map of service files that are distributed swissknifeman/maind/harness/skiller/task into fleet projects: what should be in .gitignore, and what to commit. Source - single recommendation. `maind doctor --gitignore-drift` checks every project against it (read-only). `maind sync` provisioner `gitignore` appends the recommended ignore lines for files that already exist; it does not run git rm --cached and does not delete lines. Paths - from the project root, gitignore-syntax, bound to root (`**` — any depth, final `/` — entire directory). policy: `ignore` — is always in .gitignore, never commits (machine/runtime/personal settings); `commit` — always in the repository (portable common artifacts and templates); `portable-or-ignore` — commits until it contains machine paths (/home/…, /Users/…) and secrets, otherwise in .gitignore (+ `.example`); `project` — project selection, doctor only checks internal consistency `group`. Reasons: skill project-tooling-runbook «Machine-specific config hygiene», skiller CLAUDE.md (vendor-targets committed), own .gitignore swissknifeman; map removed from 24 fleet projects 2026-10-01.",
   "entries": [
     {
       "id": "machine-mcp",
@@ -20,7 +20,8 @@
         ".mcp.json.example",
         ".cursor/mcp.json.example",
         ".claude/settings.json.example",
-        ".claude/settings.local.json.example"
+        ".claude/settings.local.json.example",
+        ".grok/config.toml.example"
       ],
       "owner": "maind sync (mcpconfig.write_example)",
       "why": "Portable template with placeholders next to the ignored real file; is updated synchronously with it."
@@ -52,10 +53,11 @@
         ".cursor/hooks.json",
         ".cursor/cli.json",
         ".cursor/permissions.json",
-        ".grok/config.toml"
+        ".grok/config.toml",
+        ".grok/lsp.json"
       ],
       "owner": "harness / maind provider deploy",
-      "why": "Generated provider-configs: general, no machine paths yet; with absolute paths - only locally."
+      "why": "Generated provider-configs: general, no machine paths yet; with absolute paths - only locally. `.grok/lsp.json` is the same file-level rule."
     },
     {
       "id": "provider-locks",
@@ -132,7 +134,10 @@
         ".serena/project.local.yml",
         ".grok/state/",
         ".grok/logs/",
-        ".grok/runs/"
+        ".grok/runs/",
+        ".grok/review-gate.state.json",
+        ".codex/review-gate.state.json",
+        ".cursor/review-gate.state.json"
       ],
       "owner": "harness hooks / maind sync / task / Serena",
       "why": "Agent runtime traces: telemetry, launches, lease terminal-admission, caches and memory Serena, generated maind-hooks (are being recreated `maind sync`)."
@@ -169,10 +174,14 @@
         ".claude/output-styles/",
         ".codex/agents/",
         ".cursor/rules/",
-        ".grok/rules/"
+        ".grok/rules/",
+        ".grok/agents/",
+        ".grok/commands/",
+        ".grok/plugins/",
+        ".grok/workflows/"
       ],
       "owner": "harness agent-packs",
-      "why": "Roles, rules, commands and agent guides - a common team artifact (`.claude/guidelines/` is explicitly committed, runbook)."
+      "why": "Roles, rules, commands and agent guides - a common team artifact (`.claude/guidelines/` is explicitly committed, runbook). Grok project agents, commands, plugins and workflows are the same class; user copies stay in ~/.grok."
     },
     {
       "id": "hook-scripts",

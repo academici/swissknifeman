@@ -257,7 +257,8 @@ def cmd_doctor(env, argv):
               "skiller (connect+vendor for one bucket)\n"
               "maind doctor --gitignore-drift [--project ID] [--block] [--json] — reconciliation "
               ".gitignore/tracking of each project with a map of service files "
-              "(configs/gitignore-policy.json; --block prints the lines for .gitignore)\n"
+              "(configs/gitignore-policy.json; --block prints the lines for .gitignore; "
+              "maind sync provisioner gitignore appends them)\n"
               "maind doctor --context [--json] — fleet-aggregation of the first footprint "
               "progress (skiller budget --first-turn for each project)")
         return

@@ -36,6 +36,7 @@ EXPECTED_MATRIX_CLASSES = (
     ("output-style", "delegated", "not-observed", "MAIND_DELEGATED:memory-context"),
     ("router-config", "delegated", "not-observed", "MAIND_DELEGATED:router"),
     ("instructions", "adapter-projected", "planned", "none"),
+    ("gitignore", "provider-neutral", "not-applicable", "MAIND_PROVIDER_NEUTRAL"),
 )
 
 

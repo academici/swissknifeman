@@ -16,7 +16,10 @@ Script (`scripts/bootstrap-machine.sh`, route `swissknifeman setup --machine`) d
 7 steps in order, checking each separately:
 
 1. `install.sh` — CLI packages + symlink `swissknifeman` + basic Codex-plugins
-   `core`/`task` (if Codex installed; opt-out `--no-codex-plugins`).
+   `core`/`task` (if Codex installed; opt-out `--no-codex-plugins`) + the Grok
+   plugins `task` and `prefix-hold` (if `grok` is installed; opt-out
+   `--no-grok-plugins`). This step is the machine. A project still opts in
+   and is rolled out with `maind sync` plus `harness hooks --provider grok`.
 2. `harness hooks --global` — global hooks Claude Code (merge-only).
 3. `harness permissions --global` — global preset permissions (merge-only).
 4. MCP-presets - **soft-skip**: y harness/maind not available now `--global`-mechanism for MCP,

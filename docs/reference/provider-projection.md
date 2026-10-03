@@ -20,9 +20,25 @@ route evidence, command invocation). Packages read this catalog through
 | `claude-code` | yes | `/` | `slash` |
 | `codex` | no (on-demand via packages/skills/commands) | `$ ` | `dollar` |
 | `cursor` | no (Codex-sibling) | *(empty)* | `semantic` |
+| `grok` | no | `/` | `slash` |
 
-Adding a fourth provider means extending the JSON catalog and registering the
-invocation renderer — not scattering conditionals across packages.
+Grok is already in [`configs/provider-projection.json`](../../configs/provider-projection.json).
+A further provider still means extending that catalog and registering its
+invocation renderer, not scattering conditionals across packages.
+
+Grok skills stay on `.agents/skills`. Task does not write a fourth skill tree:
+`plan_grok_command_render` publishes only
+`packages/task/adapters/grok/publication-lock.json` (`writer: none`). The live
+slash menu comes from the installed `task` plugin `commands/` directory.
+Grok advertises a plugin command as `/<plugin>:<name>` when that bare name also
+exists on another skill. `packages/task/adapters/grok/prefix-hold` reserves the
+ten Task names, so `grok inspect` reports every Task command as
+`/task:design`, `/task:dev`, `/task:fix`, `/task:research`, `/task:review`,
+`/task:make-workflow`, `/task:plan-design`, `/task:plan-run`, `/task:plan-close`,
+and `/task:plan-audit`. The hold skills are `/prefix-hold:<name>` and are not
+the workflow. Cursor stays on semantic invocation (`task:plan-design`) with
+Cursor model pins; copying those skill wrappers into Grok would pin the wrong
+models and forbid slash syntax.
 
 ## Related root configs
 

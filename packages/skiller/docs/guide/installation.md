@@ -16,20 +16,26 @@ cd ~/projects/packages/swissknifeman
 ```
 
 `install.sh` creates a symlink `~/.local/bin/skiller → <repo>/bin/skiller`,
-status directory `~/.swissknifeman/` and if Codex CLI available, automatically
-adds local marketplace `swissknifeman` and installs basic plugins
-`core` + `task`. Therefore `$ task:*` available in new Codex-sessions without manual
-`codex plugin add` or a symlink within the project. Symlink means: after `git pull`
-CLI is always fresh, and it determines the path to the registry itself (via `readlink`).
-The repository has moved - restart `./install.sh` from the new location to update
-also source Codex marketplace.
+status directory `~/.swissknifeman/` and, when the CLIs are present, machine
+plugins. Codex gets the local marketplace `swissknifeman` and basic plugins
+`core` + `task`, so `$ task:*` is available in a new Codex session. Grok gets
+the same marketplace plus `grok plugin install packages/task --trust` and the
+`prefix-hold` plugin, so a new Grok session loads `/task:design`, `/task:dev`,
+`/task:plan-design` and the other Task commands. Marketplace `core`
+is not installed for Grok: its source is the monorepo root, and a path install
+would copy the whole repository. Symlink means: after `git pull` the CLI is
+always fresh, and it determines the path to the registry itself (via `readlink`).
+The repository has moved — restart `./install.sh` from the new location to update
+the Codex marketplace source and the Grok plugin path.
 
 Flags: `--bin-dir DIR` (default `~/.local/bin`), `--force` (replace
-someone else's file without question), `--no-codex-plugins` (consciously skip the machine
-installation `core` + `task`). An additional plugin can be made repeatable
-`./packages/skiller/install.sh --codex-plugin NAME`; basic plugins in this case
-are saved. If `~/.local/bin` not in `PATH`, the installer will prompt you with the command to
-of your shell. Installation check: `skiller doctor`.
+someone else's file without question), `--no-codex-plugins` (skip Codex
+`core` + `task`), `--no-grok-plugins` (skip the Grok `task` and `prefix-hold`
+plugins). An additional
+Codex plugin can be made repeatable `./packages/skiller/install.sh --codex-plugin NAME`;
+basic plugins in this case are saved. A second Grok install that reports
+`already configured` or `already installed` is success. If `~/.local/bin` is not
+in `PATH`, the installer prints the shell command. Installation check: `skiller doctor`.
 
 ## Step 2. Connecting the project
 
@@ -45,7 +51,7 @@ skiller connect
 cd ~/projects/my-app
 # providers.selection.cursor.enabled=true in .swissknife.json, then:
 skiller sync
-maind onboard --cwd && maind sync --project <id>
+maind onboard <path|id> && maind sync --project <id>
 ```
 
 | Channel | Command | What goes into the project |
@@ -54,6 +60,15 @@ maind onboard --cwd && maind sync --project <id>
 | **Cursor** | `skiller sync` + `maind onboard/sync` | skills in `.agents/skills` (native discovery); MCP in `.cursor/mcp.json`; permissions — [adapter Cursor](../adapters/cursor) |
 | **Cursor (legacy)** | `skiller vendor --agent cursor` | copies to `.cursor/skills` — avoid dual-write with `.agents` |
 | **Codex (vendor)** | `skiller sync` with `providers.codex.enabled=true` | managed copies in `.agents/skills` + provider-qualified lock |
+| **Grok** | `./install.sh` once, then per project `providers.selection.grok.enabled` + `maind sync --project <id>` + `harness hooks --provider grok … --target .` | machine plugins `task` and `prefix-hold` (`/task:*`); project MCP in `.grok/config.toml`; hooks in `.grok/hooks/`; skills through the connect catalog |
+
+Grok plugins from step 1 are available in every project. They do not register
+the project or turn Grok on. A project opts in with
+`providers.selection.grok.enabled` in `.swissknife.json` after
+`maind onboard <path|id>`. `maind sync --project <id>` then writes MCP, refreshes
+skills, and appends `.gitignore` lines for service files that already exist.
+Hook files are a separate `harness hooks --provider grok` step. See
+[adapter Grok](../adapters/grok).
 
 Basic Codex-plugins are installed once per machine in steps of 1 and are available in
 all projects. Profile Codex skills are still delivered to the specific project

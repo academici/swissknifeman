@@ -66,6 +66,7 @@ maind doctor --channel-drift           # duplicate channel skiller (connect+vend
 maind doctor --gitignore-drift [--project ID] [--block] [--json]
                                         # .gitignore/tracking of each project vs service file map
                                         #   (configs/gitignore-policy.json); --block — ready lines .gitignore
+                                        #   maind sync provisioner gitignore appends those lines
 maind verify [--json]                  # proof of work of 3 planes: write real or empty
 maind analyze [--cwd | --project ID] [--session ID] [--no-health] [--json]
                                         # post-run verdict with check provenance run-report

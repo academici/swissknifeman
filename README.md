@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> Local development toolset with Claude Code, Codex and Cursor.
+> Local development toolset with Claude Code, Codex, Cursor and Grok.
 > Ecosystem umbrella monorepository **academici**: skills, projections for clients,
 > task tools and shared memory/graph - with explicit boundaries of provider support.
 
@@ -67,11 +67,11 @@ Unsupported reasons legend: `not implemented` (adapter/binding not shipped), `AP
 |:--|:--|
 | **🔌 Plugins with skills** | Single marketplace Claude Code (skill buckets). Curated **CORE** (8 skills ≈ 480 resident tokens) is distributed to each project; the rest depends on the type of project. Two channels: `connect` (marketplace, auto update) and `vendor` (physical. copies for giving out) |
 | **🎭 Roles and workflow** | `agent-packs` — versionable subagent bundles + workflow + hooks: stack packs (Laravel/Node/Python/Flutter) and role-packs (tech-lead/CTO/founder/maintainer). **dev-loop** drives vertical slices through risk-adaptive **review-gate** (Haiku→Sonnet→Opus by risk) |
-| **📋 Task management** | Plugin `task` (default-on): `/task:design\|dev\|review\|research\|fix` — each **kicks the model + effort + profile** under intent, without manual switching |
+| **📋 Task management** | Plugin `task`: Claude and Grok `/task:design\|dev\|review\|research\|fix` plus `/task:plan-design\|plan-run\|plan-close\|plan-audit`, Codex `$ task:*`, Cursor `task:*`. Grok qualifies every Task command with the `task:` prefix |
 | **🪙 Token levers** | Flow discipline: ladder `context-economy` (trim CLAUDE.md to ~92%, routing models up to ~75%, audit MCP, selective-input 5–50×), concise conclusion (`compact-responses`, output-style `lean`), **PAO** for PHP (test output → ~20 tokens JSON) |
 | **🧠 Memory and graph** | Hub **mAInd**: shared ecosystem memory (agentmemory-daemon, isolation by namespace) + code graph (Serena, navigate by symbols instead of reading files) + topology between projects. Observability - `maind analyze`/`verify`/`health` |
 | **📈 Analytics and training** | Capturing a run with a hook `run-report` → post-run analysis `maind analyze` (verdict GREEN/ATTENTION/RED + memory usage metrics/column). Package **`analyst`** (P1 MVP): `analyst digest` deterministically extracts candidate lessons from a run → `review`/`promote` with **man in the gate** (auto-record disabled) → curated comes to mind mAInd. There is a cross-project aggregator (`scan`) and confidence-life cycle (`recompute`, Beta/decay + numeric state-machine) |
-| **⚙️ Environment** | `harness` configures Claude Code: presets permissions on stacks, MCP-servers, hooks (auto-approve/memory/notify/run-report) |
+| **⚙️ Environment** | `harness` configures Claude Code, Codex, Cursor and Grok: permissions, MCP and hooks. Grok everyday profile is `workspace-contained` (`--permission-mode acceptEdits`); `trusted-full-access` is only the swissknifeman self-host |
 | **🔎 RAG-discipline** | Verification of external facts before committing: staircase context7 → perplexity-web → WebSearch (skills `verify-claims`, `query-craft`, `mcp-advisor`) |
 
 ## Packages
@@ -79,22 +79,28 @@ Unsupported reasons legend: `not implemented` (adapter/binding not shipped), `AP
 | Package | Role | CLI |
 |:--|:--|:--|
 | [`packages/skiller`](packages/skiller/) | registry AI-skills - distributes skills to projects (connect/vendor) | `skiller` (alias `swissknifeman`) |
-| [`packages/harness`](packages/harness/) | environment settings Claude Code (permissions, MCP, hooks, agent-packs) | `harness` |
+| [`packages/harness`](packages/harness/) | environment for Claude Code, Codex, Cursor and Grok (permissions, MCP, hooks, agent-packs) | `harness` |
 | [`packages/maind`](packages/maind/) | hub of memory, graph and ecosystem coordination (MCP-bus) | `maind` |
 | [`packages/analyst`](packages/analyst/) | continuous learning: capturing lessons from runs, man-gate, provenance | `analyst` |
-| [`packages/task`](packages/task/) | task intent command plugin (`/task:*`, `$ task:*`) | plugins Claude Code and Codex |
+| [`packages/task`](packages/task/) | task intent commands (`/task:*`, `$ task:*`, Cursor `task:*`) | plugins Claude Code, Codex and Grok |
 
 General foundation - package [`core`](core/) (stdlib-only: `Env`, output, slug).
 
 ## Installation
 
 ```bash
-./install.sh                  # CLI + router + basic Codex-plugins core/task (if Codex installed)
+./install.sh                  # CLI + router + Codex core/task + Grok task plugin
 ```
 
 `install.sh` delegates batch post-configuration to their own installers,
-puts a symlink `swissknifeman` → root router and connects to Codex local
-marketplace with basic `core`/`task`. Opt-out: `--no-codex-plugins`.
+puts a symlink `swissknifeman` → root router, connects the Codex marketplace
+with `core`/`task`, and installs the Grok plugins `packages/task` and
+`prefix-hold` (`grok plugin install … --trust`). Task commands are `/task:*`.
+Grok does not install marketplace `core`: that entry's source is the
+repository root. Opt-out: `--no-codex-plugins`, `--no-grok-plugins`. A new Grok
+session picks up the commands. The script is once per machine: a project still
+opts in with `providers.selection.grok.enabled`, then `maind sync --project <id>`
+and `harness hooks --provider grok`.
 
 > `.mcp.json` of this repo is machine specific (absolute paths to `maind`) and does not commit -
 > template [`.mcp.json.example`](.mcp.json.example), generates the real file/updates `maind` (sync/deploy).
@@ -105,7 +111,7 @@ marketplace with basic `core`/`task`. Opt-out: `--no-codex-plugins`.
 swissknifeman <group> …       # root router: skills→skiller, env→harness, maind→maind, analyst→analyst; + setup, doctor
 swissknifeman setup <project> # cross-batch onboarding (skills+environment+memory+graph) → maind onboard
 skiller <cmd>                 # skill registry (connect, vendor, integrate, registry, …) — alias swissknifeman
-harness <cmd>                 # environment Claude Code (permissions, mcp, hooks, agent-packs, doctor)
+harness <cmd>                 # environment (permissions, mcp, hooks, agent-packs, doctor), including Grok
 maind <cmd>                   # hub (memory, graph, onboard, deploy, sync, health, analyze, verify, …)
 analyst <cmd>                 # continuous learning (digest, scan, review, promote, deprecate, doctor)
 ```

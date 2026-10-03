@@ -282,6 +282,8 @@ The old flat `["docs","docs-public"]` form is migrated on the fly. Details — B
 > one table: `configs/gitignore-policy.json` (policies `ignore` / `commit` / `portable-or-ignore` /
 > `project`, owner and reason per file). Check a project with
 > `maind doctor --gitignore-drift --project <id>` (read-only; `--block` prints the lines to add).
+> `maind sync` provisioner `gitignore` appends those ignore lines for files that already exist.
+> It does not run `git rm --cached` and does not delete a line that hides a `commit` path.
 > Only the repository's own `.gitignore` counts — a user-global excludes file does not protect teammates.
 
 A config that "bakes in" an **absolute local path** (`/home/<user>/…/bin/maind`, a Serena

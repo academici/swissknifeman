@@ -2,6 +2,7 @@
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -636,6 +637,46 @@ class TestRouterConfigProvisioner(unittest.TestCase):
                 else:
                     os.environ["MAIND_HARNESS_BIN"] = old
             self.assertEqual(r[0]["status"], "ok")
+
+
+class TestGitignoreProvisioner(unittest.TestCase):
+    """gitignore runs last and appends policy lines for files that already exist."""
+
+    def test_is_last_in_the_default_order(self):
+        self.assertEqual(sync.ORDER[-1], "gitignore")
+        self.assertEqual(sync.PROVISIONER_INTENTS["gitignore"], ())
+        self.assertIn("gitignore", sync.provisioner_names())
+
+    def test_skip_when_the_project_is_not_a_worktree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = _setup(tmp)
+            projs = sync.select_projects(env, config, {"all": True})
+            row = sync.run_sync(env, config, projs, only="gitignore")[0]
+            self.assertEqual(row["status"], "skip")
+            self.assertIn("not a git worktree", row["detail"])
+            self.assertFalse((proj / ".gitignore").exists())
+
+    def test_appends_a_machine_grok_config_and_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = _setup(tmp)
+            subprocess.run(("git", "-C", str(proj), "init", "-q"), check=True)
+            grok = proj / ".grok"
+            grok.mkdir()
+            (grok / "config.toml").write_text('command = "/home/dev/bin/maind"\n', encoding="utf-8")
+            (grok / "hooks").mkdir()
+            (grok / "hooks" / "lifecycle.py").write_text("print('hook')\n", encoding="utf-8")
+            projs = sync.select_projects(env, config, {"all": True})
+            dry = sync.run_sync(env, config, projs, only="gitignore", dry=True)[0]
+            self.assertEqual(dry["status"], "ok")
+            self.assertFalse(dry["changed"])
+            self.assertFalse((proj / ".gitignore").exists())
+            first = sync.run_sync(env, config, projs, only="gitignore")[0]
+            self.assertTrue(first["changed"])
+            lines = (proj / ".gitignore").read_text(encoding="utf-8").splitlines()
+            self.assertEqual(lines, [".grok/config.toml"])
+            second = sync.run_sync(env, config, projs, only="gitignore")[0]
+            self.assertFalse(second["changed"])
+            self.assertEqual((proj / ".gitignore").read_text(encoding="utf-8").splitlines(), lines)
 
 
 class TestSyncCliExitStatus(unittest.TestCase):

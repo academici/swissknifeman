@@ -20,7 +20,9 @@ class PolicyFileTests(unittest.TestCase):
         policy = gp.load_policy()
         paths = {p for entry in policy["entries"] for p in entry["paths"]}
         for expected in (".mcp.json", ".mcp.json.example", ".claude/settings.local.json", "CLAUDE.md",
-                         "skills-lock.json", ".claude/skills/", ".swissknifeman/backups/"):
+                         "skills-lock.json", ".claude/skills/", ".swissknifeman/backups/",
+                         ".grok/config.toml", ".grok/config.toml.example", ".grok/hooks/",
+                         ".grok/review-gate.state.json", ".grok/lsp.json", ".grok/plugins/"):
             self.assertIn(expected, paths)
 
     def test_glob_translation(self):
@@ -129,6 +131,48 @@ class CheckProjectTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             findings = gp.check_project(tmp, self.policy)
         self.assertEqual([f["code"] for f in findings], ["not-a-git-worktree"])
+
+    def test_apply_appends_machine_grok_config_and_leaves_shared_files(self):
+        self.write(".grok/config.toml", 'command = "/home/dev/bin/maind"\n')
+        self.write(".grok/hooks/lifecycle.py", "print('hook')\n")
+        self.write(".grok/config.toml.example", "command = \"${MAIND_BIN:-maind}\"\n")
+        self.write(".gitignore", ".grok/config.toml.example\n")
+        first = gp.apply_recommendations(self.root, self.policy)
+        self.assertEqual(first["added"], [".grok/config.toml"])
+        lines = (self.root / ".gitignore").read_text(encoding="utf-8").splitlines()
+        self.assertEqual(lines, [".grok/config.toml.example", ".grok/config.toml"])
+        second = gp.apply_recommendations(self.root, self.policy)
+        self.assertEqual(second["added"], [])
+        self.assertEqual((self.root / ".gitignore").read_text(encoding="utf-8").splitlines(), lines)
+
+    def test_apply_ignores_runtime_state_and_keeps_a_portable_config(self):
+        self.write(".grok/review-gate.state.json", "{}\n")
+        self.write(".grok/config.toml", 'command = "${MAIND_BIN:-maind}"\n')
+        outcome = gp.apply_recommendations(self.root, self.policy)
+        self.assertEqual(outcome["added"], [".grok/review-gate.state.json"])
+        self.assertNotIn(".grok/config.toml", (self.root / ".gitignore").read_text(encoding="utf-8"))
+
+    def test_apply_dry_run_and_non_worktree_write_nothing(self):
+        self.write(".grok/state/session.json", "{}\n")
+        dry = gp.apply_recommendations(self.root, self.policy, dry=True)
+        self.assertEqual(dry["added"], [".grok/state/"])
+        self.assertFalse((self.root / ".gitignore").exists())
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / ".grok").mkdir()
+            (Path(tmp) / ".grok" / "config.toml").write_text('command = "/home/dev/bin/maind"\n')
+            skipped = gp.apply_recommendations(tmp, self.policy)
+            self.assertEqual(skipped["status"], "skip")
+            self.assertFalse((Path(tmp) / ".gitignore").exists())
+
+    def test_apply_keeps_a_tracked_machine_file_in_the_index(self):
+        self.write(".grok/config.toml", 'command = "/home/dev/bin/maind"\n')
+        git(self.root, "add", ".grok/config.toml")
+        outcome = gp.apply_recommendations(self.root, self.policy)
+        self.assertEqual(outcome["added"], [".grok/config.toml"])
+        self.assertEqual(outcome["tracked"], [".grok/config.toml"])
+        tracked = subprocess.run(("git", "-C", str(self.root), "ls-files", "--", ".grok/config.toml"),
+                                 check=True, capture_output=True, text=True).stdout
+        self.assertIn(".grok/config.toml", tracked)
 
 
 if __name__ == "__main__":

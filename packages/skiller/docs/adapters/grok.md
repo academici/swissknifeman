@@ -39,19 +39,33 @@ Fleet health still requires only Claude/Codex/Cursor. Grok is optional per proje
 Everyday path is `workspace-contained`. `trusted-full-access` only for self-host
 under `self-host-apply` / `repo:swissknifeman`.
 
-### 2. Skills
+### 2. Machine plugins (once)
 
 ```bash
-skiller sync    # managed copies into .agents/skills (Grok discovery)
+# from the swissknifeman checkout, when grok is on PATH
+./install.sh
 ```
 
-### 3. MCP and memory
+This installs the Grok marketplace, `packages/task`, and `prefix-hold`
+(`--trust`), so a new session lists `/task:*`. Opt out with
+`--no-grok-plugins`. The script does not enable Grok on a project.
+
+### 3. Project rollout
+
+The project is already registered (`maind onboard <path|id>`). Skills on the
+connect channel refresh through `maind sync` (`skills-catalog` →
+`skiller update`) into `.agents/skills`. `skiller sync` is the vendor channel
+and needs `.swissknifeman/config.json`.
 
 ```bash
-maind onboard --cwd ~/projects/my-app
 maind sync --project my-app
-maind health --cwd               # provider:grok trust when enabled
+harness hooks --provider grok --observer --safe-dirs --daemon-safety --trusted --target .
+maind health --project my-app   # provider:grok trust when enabled
 ```
+
+The same sync appends `.gitignore` lines for service files that already exist,
+including a machine-specific `.grok/config.toml`. Hooks and rules stay
+committed. Sync does not run `git rm --cached`.
 
 ### 4. Permissions
 

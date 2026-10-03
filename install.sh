@@ -5,23 +5,26 @@
 # control layer `swissknifeman` (router + setup-facade above three packages).
 #
 # Usage:
-#   ./install.sh [--bin-dir DIR] [--force] [--no-codex-plugins]
+#   ./install.sh [--bin-dir DIR] [--force] [--no-codex-plugins] [--no-grok-plugins]
 #   --bin-dir DIR   where to put symlinks (default ~/.local/bin)
 #   --force         overwrite other people's symlinks without asking
 #   --no-codex-plugins  do not install basic Codex-plugins core + task
+#   --no-grok-plugins   do not install the Grok task plugin
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BIN_DIR="$HOME/.local/bin"
 FORCE=false
 NO_CODEX_PLUGINS=false
+NO_GROK_PLUGINS=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --bin-dir) BIN_DIR="$2"; shift 2 ;;
     --force)   FORCE=true; shift ;;
     --no-codex-plugins) NO_CODEX_PLUGINS=true; shift ;;
-    -h|--help) grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,11p'; exit 0 ;;
+    --no-grok-plugins) NO_GROK_PLUGINS=true; shift ;;
+    -h|--help) grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,12p'; exit 0 ;;
     *) echo "ERROR: unknown argument: $1" >&2; exit 1 ;;
   esac
 done
@@ -42,6 +45,9 @@ for pkg in skiller harness maind analyst; do
   pkg_fwd=("${fwd[@]}")
   if [[ "$pkg" == skiller && "$NO_CODEX_PLUGINS" == true ]]; then
     pkg_fwd+=(--no-codex-plugins)
+  fi
+  if [[ "$pkg" == skiller && "$NO_GROK_PLUGINS" == true ]]; then
+    pkg_fwd+=(--no-grok-plugins)
   fi
   "$inst" "${pkg_fwd[@]}" || { echo "  ($pkg install.sh failed - check manually)" >&2; failed+=("$pkg"); }
 done

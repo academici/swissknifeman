@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Grok task plugin:** `install.sh` добавляет локальный marketplace и ставит
+  плагин `packages/task` и `packages/task/adapters/grok/prefix-hold` командой
+  `grok plugin install … --trust`, если CLI `grok` есть. Повтор с
+  `already configured` / `already installed` считается успехом.
+  Marketplace-плагин `core` для Grok не ставится: его source — корень
+  монорепозитория. Opt-out: `--no-grok-plugins`. Grok даёт префикс `task:`
+  только при совпадении голого имени, поэтому `prefix-hold` резервирует имена
+  десяти команд. Меню новой сессии: `/task:design`, `/task:dev`, `/task:fix`,
+  `/task:research`, `/task:review`, `/task:make-workflow`, `/task:plan-design`,
+  `/task:plan-run`, `/task:plan-close`, `/task:plan-audit`.
+
+- **Gitignore при sync:** провиженер `gitignore` в конце `maind sync` смотрит файлы
+  проекта по `configs/gitignore-policy.json` и дописывает в `.gitignore` строки
+  для `ignore` и для `portable-or-ignore`, если в файле есть машинный путь.
+  `.grok/config.toml` с абсолютным путём попадает в ignore. На коммит остаются
+  `.grok/hooks/`, `.grok/rules/`, `.grok/skills/`, агенты, команды, плагины,
+  workflows и `.grok/config.toml.example`. Рантайм `.grok/review-gate.state.json`
+  игнорируется. `git rm --cached` sync не запускает. Повтор ничего не дописывает.
+
+### Changed
+
+- **Claude permissions:** пресет `base` больше не запрещает чтение `CHANGELOG.md`.
+  Правило `Read(**/CHANGELOG.md)` убрано из `settings.base.json`, который
+  `harness permissions` мержит в `.claude/settings.local.json`.
+
 ### Fixed
 
 - **Task repeat-admission:** повтор одного закрытого пункта соблюдает phase-scoped

@@ -183,3 +183,37 @@ def recommended_block(findings: list[dict], policy: dict | None = None) -> list[
                 if _regex(pattern).match(finding["path"]) and pattern not in lines:
                     lines.append(pattern)
     return lines
+
+
+def apply_recommendations(project_root: str | Path, policy: dict | None = None, *, dry: bool = False) -> dict:
+    """Append ignore patterns for service files that already exist in one worktree.
+
+    Uses `recommended_block`, so only `ignore` and machine-specific `portable-or-ignore`
+    hits become lines. `commit` paths are left alone, including a line that already
+    ignores them. Idempotent. Does not `git rm --cached`. A directory that is not a
+    git worktree is a skip and is not given a `.gitignore`.
+    """
+    root = Path(project_root)
+    policy = policy or load_policy()
+    findings = check_project(root, policy)
+    if any(item["code"] == "not-a-git-worktree" for item in findings):
+        return {"status": "skip", "added": [], "tracked": [], "detail": "not a git worktree"}
+    wanted = recommended_block(findings, policy)
+    gitignore = root / ".gitignore"
+    try:
+        existing = gitignore.read_text(encoding="utf-8").splitlines() if gitignore.exists() else []
+    except OSError as exc:
+        raise PolicyError(f".gitignore unreadable: {gitignore}: {exc}") from exc
+    present = {line.strip() for line in existing}
+    added = [pattern for pattern in wanted if pattern not in present]
+    tracked = sorted({
+        item["path"] for item in findings
+        if item["code"] in {"tracked-must-be-ignored", "tracked-machine-specific"}
+        and any(_regex(pattern).match(item["path"]) for pattern in added)
+    })
+    if not added:
+        return {"status": "ok", "added": [], "tracked": [], "detail": "already covered"}
+    detail = "would add " + ", ".join(added) if dry else "added " + ", ".join(added)
+    if not dry:
+        gitignore.write_text("\n".join([*existing, *added]) + "\n", encoding="utf-8")
+    return {"status": "ok", "added": added, "tracked": tracked, "detail": detail}

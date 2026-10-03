@@ -40,6 +40,7 @@ PROVISIONER_INTENTS = {
     "skills-catalog": ("skills",), "agent-pack": ("agent-pack",),
     "output-style": ("memory-context",), "router-config": ("router",),
     "instructions": ("instruction-root", "instruction-package"),
+    "gitignore": (),
 }
 
 
@@ -590,6 +591,43 @@ def _router_config_run(env, config, projects, mode, dry):
     return results
 
 
+def _gitignore_run(env, config, projects, mode, dry):
+    """Append `.gitignore` lines for service files that already exist.
+
+    Runs last so files written earlier in the same sync are visible. Every mode
+    appends missing patterns; nothing is removed and `git rm --cached` is not run.
+    """
+    from core.gitignore_policy import PolicyError, apply_recommendations
+    results = []
+    for context in projects:
+        project = context.project if isinstance(context, ProjectContext) else context
+        project_id = project.get("id", "?")
+        local = project.get("local_path")
+        if not local:
+            results.append(_result("gitignore", project_id, "skip", detail="no project path"))
+            continue
+        root = Path(os.path.expanduser(local))
+        if not root.is_dir():
+            results.append(_result("gitignore", project_id, "skip",
+                                   detail="project path is not available"))
+            continue
+        try:
+            outcome = apply_recommendations(root, dry=dry)
+        except PolicyError as exc:
+            results.append(_result("gitignore", project_id, "failed", detail=str(exc)))
+            continue
+        if outcome["status"] == "skip":
+            results.append(_result("gitignore", project_id, "skip", detail=outcome["detail"]))
+            continue
+        if not dry and outcome["tracked"]:
+            warn(f"{project_id}: .gitignore now lists the pattern, but these files stay tracked "
+                 f"until git rm --cached: {', '.join(outcome['tracked'])}")
+        results.append(_result("gitignore", project_id, "ok",
+                               changed=bool(outcome["added"]) and not dry,
+                               detail=outcome["detail"]))
+    return results
+
+
 # Register of providers and application procedure (ORDER specifies the sequence).
 # Signature of each: run(env, config, projects, mode, dry) -> list[_result(...)]
 # (result form - _result above: provisioner/id/status/changed/state/detail).
@@ -609,10 +647,12 @@ PROVISIONERS = {
     "output-style": _output_style_run,
     "router-config": _router_config_run,
     "instructions": _instruction_run,
+    "gitignore": _gitignore_run,
 }
 ORDER = ["mcp", "code-graph", "graph", "memory", "memory-hook", "health-hook",
          "health-doc", "feature-log-hook", "ecosystem-skill", "setup-skill",
-         "skills-catalog", "agent-pack", "output-style", "router-config", "instructions"]
+         "skills-catalog", "agent-pack", "output-style", "router-config",
+         "instructions", "gitignore"]
 
 
 def provisioner_names(only=None):

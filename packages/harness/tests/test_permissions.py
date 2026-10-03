@@ -53,8 +53,8 @@ class PermissionsCase(unittest.TestCase):
         self.assertTrue(f.exists())
         data = json.loads(f.read_text())
         self.assertIn("permissions", data)
-
         self.assertTrue(data["permissions"])
+        self.assertNotIn("Read(**/CHANGELOG.md)", data["permissions"].get("deny", []))
 
     def test_global_preset_merges_enabled_mcpjson_servers(self):
 

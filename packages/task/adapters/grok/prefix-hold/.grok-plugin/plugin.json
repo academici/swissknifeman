@@ -1,0 +1,17 @@
+{
+  "name": "prefix-hold",
+  "version": "0.27.0",
+  "description": "Reserves bare Task command names so Grok advertises the task plugin commands as /task:<name>. This is not a workflow.",
+  "skills": [
+    "./skills/design",
+    "./skills/dev",
+    "./skills/fix",
+    "./skills/make-workflow",
+    "./skills/plan-audit",
+    "./skills/plan-close",
+    "./skills/plan-design",
+    "./skills/plan-run",
+    "./skills/research",
+    "./skills/review"
+  ]
+}

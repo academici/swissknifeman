@@ -8,12 +8,13 @@
 # installer never replaces the root router. Standalone installs expose `skiller` only.
 #
 # Usage:
-#   ./install.sh [--bin-dir DIR] [--force] [--codex-plugin NAME] [--no-codex-plugins]
+#   ./install.sh [--bin-dir DIR] [--force] [--codex-plugin NAME] [--no-codex-plugins] [--no-grok-plugins]
 #
 #   --bin-dir DIR   link destination (default: ~/.local/bin)
 #   --force         replace a foreign file or link without prompting
 #   --codex-plugin  install additional Codex plugin NAME (repeatable)
 #   --no-codex-plugins  skip the base core and task Codex plugins
+#   --no-grok-plugins   skip the Grok task plugin
 #
 # Next - from any consuming project:
 #   skiller connect    # Claude Code (plugin marketplace)
@@ -31,9 +32,10 @@ FORCE=false
 CODEX_PLUGIN_EXTRAS=()
 CODEX_PLUGINS_ENABLED=true
 CODEX_PLUGIN_EXPLICIT=false
+GROK_PLUGINS_ENABLED=true
 MARKETPLACE="swissknifeman"
 
-usage() { grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,18p'; }
+usage() { grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,19p'; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -44,6 +46,7 @@ while [[ $# -gt 0 ]]; do
       CODEX_PLUGIN_EXPLICIT=true
       shift 2 ;;
     --no-codex-plugins) CODEX_PLUGINS_ENABLED=false; shift ;;
+    --no-grok-plugins) GROK_PLUGINS_ENABLED=false; shift ;;
     -h|--help) usage; exit 0 ;;
     *)
       echo "ERROR: install.sh now installs CLI skiller." >&2
@@ -160,4 +163,57 @@ PY
     codex plugin add "$plugin@$MARKETPLACE"
   done
   echo "Codex plugins installed: ${CODEX_PLUGINS[*]}"
+fi
+
+# Grok loads Task slash commands from the installed plugin's commands/ directory.
+# Install that plugin by path. Do not install marketplace `core`: its source is
+# the monorepo root, and `grok plugin install` copies the whole directory.
+# Profile plugins stay explicit so they do not bloat every Grok session.
+# A second run exits 1 with "already configured" / "already installed"; that is success.
+if [[ "$GROK_PLUGINS_ENABLED" == false ]]; then
+  echo "Grok plugins: pass (--no-grok-plugins)"
+elif ! command -v grok >/dev/null 2>&1; then
+  echo "INFO: grok CLI not found - task plugin not installed"
+else
+  MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." && pwd)"
+  TASK_PLUGIN="$MONOREPO_ROOT/packages/task"
+  [[ -f "$TASK_PLUGIN/.claude-plugin/plugin.json" ]] || {
+    echo "ERROR: Grok task plugin not found: $TASK_PLUGIN" >&2
+    exit 1
+  }
+
+  grok_tolerate() {
+    local label="$1"
+    shift
+    local out rc
+    set +e
+    out="$("$@" 2>&1)"
+    rc=$?
+    set -e
+    if [[ "$rc" -eq 0 ]]; then
+      return 0
+    fi
+    case "$out" in
+      *"already configured"*|*"already installed"*)
+        return 0
+        ;;
+    esac
+    echo "ERROR: grok ${label} failed" >&2
+    printf '%s\n' "$out" >&2
+    exit 1
+  }
+
+  HOLD_PLUGIN="$MONOREPO_ROOT/packages/task/adapters/grok/prefix-hold"
+  [[ -f "$HOLD_PLUGIN/.grok-plugin/plugin.json" ]] || {
+    echo "ERROR: Grok task prefix hold not found: $HOLD_PLUGIN" >&2
+    exit 1
+  }
+
+  grok_tolerate "marketplace add" grok plugin marketplace add "$MONOREPO_ROOT"
+  grok_tolerate "plugin install" grok plugin install "$TASK_PLUGIN" --trust
+  # Grok qualifies a plugin command as /task:<name> only when that bare name
+  # also exists elsewhere. prefix-hold reserves those names. design/review
+  # already collide with bundled skills; the hold covers every Task command.
+  grok_tolerate "prefix-hold install" grok plugin install "$HOLD_PLUGIN" --trust
+  echo "Grok plugins installed: task prefix-hold"
 fi

@@ -3,6 +3,6 @@
   "contract_version": "1.0.0",
   "discovery_surface": ".agents/skills",
   "publication_unit": "task",
-  "version": "0.26.2",
+  "version": "0.27.0",
   "writer": "none"
 }

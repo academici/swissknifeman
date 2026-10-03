@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-10-03
+
 ### Added
 
 - **Grok — четвёртый managed-провайдер:** Grok Build CLI (`grok`/`agent` в PATH) входит в

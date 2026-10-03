@@ -197,6 +197,8 @@ class WritersNeverEmitLegacyTests(unittest.TestCase):
                 catalog, command_render.mapping_from_catalog(catalog, "codex")),
             command_render.plan_cursor_command_render(
                 catalog, command_render.mapping_from_catalog(catalog, "cursor")),
+            command_render.plan_grok_command_render(
+                catalog, command_render.mapping_from_catalog(catalog, "grok")),
         )
         for plan in plans:
             self.assertTrue(plan.ok, plan.diagnostics)
@@ -206,7 +208,7 @@ class WritersNeverEmitLegacyTests(unittest.TestCase):
                     self.assertNotIn(LEGACY.encode(), artifact.managed_bytes)
 
     def test_committed_adapters_and_runtime_copies_have_no_legacy_command_dirs(self):
-        for provider in ("codex", "cursor"):
+        for provider in ("codex", "cursor", "grok"):
             legacy_dir = PACKAGE / "adapters" / provider / "skills" / f"task-{LEGACY}"
             self.assertFalse((legacy_dir / "SKILL.md").exists())
             self.assertFalse((legacy_dir / "command.md").exists())

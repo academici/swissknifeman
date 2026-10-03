@@ -37,6 +37,8 @@ export default withMermaid(defineConfig({
             { text: 'Permissions for Claude Code', link: '/harness/configs/claude-permissions' },
             { text: 'Configuration overview', link: '/harness/configs/' },
             { text: 'Claude Code host setup', link: '/harness/setup/claude' },
+            { text: 'Cursor host setup', link: '/harness/setup/cursor' },
+            { text: 'Grok host setup', link: '/harness/setup/grok' },
             { text: 'Canon of root instructions', link: '/harness/reference/instruction-canon' },
             { text: '*.env.ini: hook intent', link: '/harness/reference/hook-intent-files' },
             { text: 'Execution Policy', link: '/harness/reference/execution-policy' },
@@ -93,6 +95,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Claude Code', link: '/skiller/adapters/claude-code' },
             { text: 'Cursor', link: '/skiller/adapters/cursor' },
+            { text: 'Grok', link: '/skiller/adapters/grok' },
             { text: 'Perplexity', link: '/skiller/adapters/perplexity' },
           ],
         },

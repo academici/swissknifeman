@@ -7,6 +7,7 @@ from . import reject_sensitive, source_provenance
 class CodexCaptureReader:
     reader_id = "codex-hook-context"
     reader_version = "1.0.0"
+    provider_id = "codex"
 
     def normalize(self, raw, *, project_id, raw_ref, source_bytes=None, declared_sha256=None):
         if not isinstance(raw, dict) or raw.get("schema") != 1:
@@ -23,7 +24,7 @@ class CodexCaptureReader:
         source_hash, provenance = source_provenance(
             raw, supplied_bytes=source_bytes, declared_sha256=declared_sha256, raw_ref=raw_ref,
             reader_id=self.reader_id, reader_version=self.reader_version)
-        return {"contract_version": "1.0.0", "provider_id": "codex",
+        return {"contract_version": "1.0.0", "provider_id": self.provider_id,
                 "session_id": session_id, "project_id": project_id,
                 "event_id": "sha256:" + source_hash,
                 "occurred_at": raw.get("occurred_at") or "1970-01-01T00:00:00Z",

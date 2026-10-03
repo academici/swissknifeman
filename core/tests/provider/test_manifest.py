@@ -13,10 +13,10 @@ from core import (ProviderId, ProviderManifestError, SupportLevel,
 
 ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_PATH = ROOT / "configs" / "provider-capabilities.json"
-# Reviewed against b51b1a2d: Cursor adaptations and lifecycle.tool-telemetry are
-# committed capabilities, not a generator rewrite of the hand-authored manifest.
-APPROVED_CANONICAL_SHA256 = "cec032979b131fda6314a5e4ae0803ee75508f1c1f31dcf26c36a727c2206315"
-APPROVED_CARRIER_SHA256 = "e1ffeba33b752eb4942b04e98193c0e5caf829ff62c593095f7a7aea23b220b1"
+# Reviewed against the Grok managed-provider addition: four providers × 37
+# capabilities, not a generator rewrite of the hand-authored manifest.
+APPROVED_CANONICAL_SHA256 = "3c2bf3a8b2658034e415cf1d64a46718517d841506c8088572230b93cebf1370"
+APPROVED_CARRIER_SHA256 = "53daa8188e4dbcaffda3af210b84ccc0391ee4ce54f8f32381f31a29cb2720eb"
 
 REGENERATION_DIAGNOSTIC = (
     "manifest hash mismatch — configs/provider-capabilities.json was likely "
@@ -62,7 +62,7 @@ class TestProviderManifest(unittest.TestCase):
         self.assertEqual(parse_provider_manifest(raw),
                          parse_provider_manifest(provider_manifest_canonical_bytes(manifest)))
         self.assertEqual((len(manifest.providers), len(manifest.capabilities),
-                          len(manifest.native_extensions)), (3, 37, 0))
+                          len(manifest.native_extensions)), (4, 37, 0))
 
     def test_contract_compatibility_accepts_v1_minor_and_rejects_next_major(self):
         compatible = manifest_value()
@@ -95,7 +95,7 @@ class TestProviderManifest(unittest.TestCase):
         manifest = load_provider_manifest(MANIFEST_PATH)
         catalog = provider_config_catalog(manifest)
         self.assertEqual(catalog.catalog_version, "1.0.0")
-        self.assertEqual(len(catalog.capability_support), 111)
+        self.assertEqual(len(catalog.capability_support), 148)
         for provider in ProviderId:
             projection = provider_support_projection(manifest, provider)
             self.assertEqual(len(projection), 37)

@@ -18,6 +18,7 @@ from task.command_render import (build_provider_command_parity_report,
                                  plan_claude_command_render,
                                  plan_codex_command_render,
                                  plan_cursor_command_render,
+                                 plan_grok_command_render,
                                  render_provider_commands_reference,
                                  render_provider_model_roles_reference,
                                  validate_route)
@@ -106,7 +107,7 @@ class ProviderCommandParityTests(unittest.TestCase):
         cls.catalog = build_command_catalog(COMMAND_ROOT, ROUTING_PATH)
         cls.mappings = {
             provider_id: mapping_from_catalog(cls.catalog, provider_id)
-            for provider_id in ("claude-code", "codex", "cursor")
+            for provider_id in ("claude-code", "codex", "cursor", "grok")
         }
         cls.support = {
             provider_id: dict(mapping.capability_bindings)
@@ -119,6 +120,8 @@ class ProviderCommandParityTests(unittest.TestCase):
             cls.catalog, cls.mappings["codex"], cls.support["codex"])
         cls.cursor_plan = plan_cursor_command_render(
             cls.catalog, cls.mappings["cursor"], cls.support["cursor"])
+        cls.grok_plan = plan_grok_command_render(
+            cls.catalog, cls.mappings["grok"], cls.support["grok"])
         cls.next_carriers = tuple(
             parse_next_carrier(case["valid"])
             for case in cls.expected["next_forms"])
@@ -126,7 +129,8 @@ class ProviderCommandParityTests(unittest.TestCase):
     @classmethod
     def report(cls):
         return build_provider_command_parity_report(
-            cls.catalog, cls.claude_plan, cls.codex_plan, cls.cursor_plan, cls.mappings,
+            cls.catalog, cls.claude_plan, cls.codex_plan, cls.cursor_plan, cls.grok_plan,
+            cls.mappings,
             expected_command_ids=tuple(
                 command["command_id"] for command in cls.expected["commands"]),
             next_carriers=cls.next_carriers)
@@ -162,7 +166,7 @@ class ProviderCommandParityTests(unittest.TestCase):
             json.dumps(second, ensure_ascii=False, sort_keys=True))
         self.assertEqual(first["inventory"],
                          {"missing": [], "extra": [], "duplicates": []})
-        for provider_id in ("claude-code", "codex", "cursor"):
+        for provider_id in ("claude-code", "codex", "cursor", "grok"):
             self.assertEqual(first["projections"][provider_id],
                              {"missing": [], "extra": [], "duplicates": []})
         self.assertEqual(
@@ -239,6 +243,7 @@ class ProviderCommandParityTests(unittest.TestCase):
         self.assertIn("`PLAN<N>.D35`, `PLAN<N>.P2.3`; legacy: `<PLAN-ID> <local-ID>`", source)
         for provider_id, plan in (("claude-code", self.claude_plan), ("codex", self.codex_plan),
                                   ("cursor", self.cursor_plan)):
+            # Grok is lock-only (discovers `.agents/skills`); it has no command body.
             with self.subTest(provider=provider_id):
                 rendered = "\n".join(
                     artifact.managed_bytes.decode("utf-8")

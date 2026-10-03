@@ -330,7 +330,8 @@ SKILL_LISTING_CONTEXT_WINDOW = 1_000_000
 CODEX_LISTING_FALLBACK_CHARS = 8_000
 CODEX_LISTING_BUDGET_FRACTION = 0.02
 
-LISTING_PROVIDERS = ("claude-code", "codex", "cursor")
+LISTING_PROVIDERS = ("claude-code", "codex", "cursor", "grok")
+_CHAR_LISTING_PROVIDERS = frozenset({"codex", "cursor", "grok"})
 DEFAULT_LISTING_PROVIDER = "claude-code"
 
 MEASUREMENT_SURFACES = frozenset({"listing", "loaded-body", "runtime"})
@@ -458,8 +459,8 @@ def measure_listing_budget(skills, provider=DEFAULT_LISTING_PROVIDER):
             f"{', '.join(LISTING_PROVIDERS)})")
     all_dirs = [d for _bucket, _rel, d, _fm in skills]
     dirs, excluded = _split_listing_entries(all_dirs, provider)
-    entry = _listing_entry_chars if provider in ("codex", "cursor") else _listing_entry_tokens
-    if provider in ("codex", "cursor"):
+    entry = _listing_entry_chars if provider in _CHAR_LISTING_PROVIDERS else _listing_entry_tokens
+    if provider in _CHAR_LISTING_PROVIDERS:
         budget = CODEX_LISTING_FALLBACK_CHARS
         unit = "char"
         degradation = "skill can be removed from the listing entirely"
@@ -629,11 +630,11 @@ def listing_measurements(skills, *, observed_at=None, evaluated_at=None):
             model_family="unknown",
             surface="listing",
             value=legacy["raw"],
-            unit="characters" if provider in ("codex", "cursor") else "estimated_tokens",
-            method=("skiller:listing-characters-v1" if provider in ("codex", "cursor")
+            unit="characters" if provider in _CHAR_LISTING_PROVIDERS else "estimated_tokens",
+            method=("skiller:listing-characters-v1" if provider in _CHAR_LISTING_PROVIDERS
                     else "skiller:listing-token-estimate-v1"),
             uncertainty=("exact source characters; provider loading is estimated"
-                         if provider in ("codex", "cursor") else "heuristic token estimate"),
+                         if provider in _CHAR_LISTING_PROVIDERS else "heuristic token estimate"),
             measurement_class="estimate",
             observed_at=observed,
             expires_at=expires,
@@ -1220,9 +1221,9 @@ def cmd_budget(env, argv):
     if opts["help"]:
         print("skiller budget [--config F.json | --compare a,b | --target DIR]\n"
               "               [--profile P | --buckets a,b] [--exclude x,y]\n"
-              "               [--provider claude-code|codex|cursor] [--profiles]\n"
+              "               [--provider claude-code|codex|cursor|grok] [--profiles]\n"
               "               [--no-core] [--json] [--write-map] [--check-core [--strict]]\n"
-              "               [--first-turn [--provider claude-code|codex|cursor] "
+              "               [--first-turn [--provider claude-code|codex|cursor|grok] "
               "[--json] [--strict]]\n"
               "  Three-tier token budget for skill sets (⊕ always / ↻ on-trigger\n"
               "  / ⌥ on-demand). --write-map will regenerate docs/guide/budget.md.\n"
@@ -1239,7 +1240,7 @@ def cmd_budget(env, argv):
               "  installed marketplace-project plugins (`claude plugin list/details`)\n"
               "  additive keys `plugins`/`session_total`/`session_verdict` — without\n"
               "  flag does not change the output.\n"
-              "  --provider claude-code|codex|cursor (with --profile/--config/--target): adds to\n"
+              "  --provider claude-code|codex|cursor|grok (with --profile/--config/--target): adds to\n"
               "  report provider-aware detection budget (listing) and degradation mode;\n"
               "  without the flag the behavior does not change (default — claude-code).\n"
               "  --profiles: detection budget for EACH supplied profile versus BOTH\n"
@@ -1269,8 +1270,8 @@ def cmd_budget(env, argv):
             if target is None:
                 die("project root not found above CWD — specify --target")
         provider = opts.get("provider") or DEFAULT_LISTING_PROVIDER
-        if provider not in ("claude-code", "codex", "cursor"):
-            die("--provider: expected claude-code|codex|cursor")
+        if provider not in LISTING_PROVIDERS:
+            die("--provider: expected " + "|".join(LISTING_PROVIDERS))
         report = first_turn_report(env, target, provider=provider)
         if opts.get("with_plugins"):
             if provider != "claude-code":

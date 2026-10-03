@@ -1,0 +1,19 @@
+{
+  "grok": {
+    "observe": {
+      "permission_mode": "ask"
+    },
+    "workspace-contained": {
+      "permission_mode": "acceptEdits"
+    },
+    "trusted-full-access": {
+      "permission_mode": "always-approve",
+      "gate": {
+        "origin": "operation",
+        "operation_id": "self-host-apply",
+        "target_identity_prefix": "repo:",
+        "inheritable": false
+      }
+    }
+  }
+}

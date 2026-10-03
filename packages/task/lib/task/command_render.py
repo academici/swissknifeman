@@ -31,8 +31,8 @@ _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
     "capability_bindings", "invocation_binding", "model_inventory", "evidence",
 })
-_PROVIDER_IDS = frozenset({"claude-code", "codex", "cursor"})
-_PROVIDER_ORDER = ("claude-code", "codex", "cursor")
+_PROVIDER_ORDER = tuple(item.value for item in ProviderId)
+_PROVIDER_IDS = frozenset(_PROVIDER_ORDER)
 _PLAN_NEXT_COMMANDS = {
     "exec-items": "task:plan-run",  # legacy kind spelling, same command
     "run-items": "task:plan-run",
@@ -321,6 +321,20 @@ def render_cursor_invocation(record: CommandRecord, arguments: str,
     return invocation
 
 
+def render_grok_launch(invocation: str, model_selector: str, cwd: str | Path) -> str:
+    """Render a shell-safe Grok launch. ``agent`` on PATH is the same binary as ``grok``."""
+    if (not isinstance(invocation, str) or not invocation.startswith("/task:")
+            or not isinstance(model_selector, str) or not model_selector
+            or not isinstance(cwd, (str, Path)) or not str(cwd)):
+        raise ValueError("CMD_INVOCATION_INVALID")
+    return (
+        f"grok --cwd {shlex.quote(str(cwd))} "
+        f"--model {shlex.quote(model_selector)} "
+        f"--always-approve "
+        f"{shlex.quote(invocation)}"
+    )
+
+
 def render_cursor_launch(invocation: str, model_selector: str, cwd: str | Path) -> str:
     """Render a shell-safe, fully routed native Cursor launch command."""
     if (not isinstance(invocation, str) or not invocation.startswith("task:")
@@ -360,7 +374,7 @@ def render_codex_launch(invocation: str, model_selector: str, effort_selector: s
 def render_claude_invocation(record: CommandRecord, arguments: str,
                              mapping: ProviderCommandMapping) -> str:
     """Render the frozen Claude slash invocation from explicit validated values."""
-    if mapping.provider_id != "claude-code" or not isinstance(arguments, str):
+    if mapping.provider_id not in {"claude-code", "grok"} or not isinstance(arguments, str):
         raise ValueError("CMD_INVOCATION_INVALID")
     if "{command_id}" not in mapping.invocation_template or "{arguments}" not in mapping.invocation_template:
         raise ValueError("CMD_INVOCATION_INVALID")
@@ -797,22 +811,17 @@ def apply_codex_command_plan(root: Path, artifact_plan: ArtifactPlan) -> Artifac
     return apply_plan(Path(root), artifact_plan)
 
 
-def plan_cursor_command_render(
-        catalog: CommandCatalog, mapping: ProviderCommandMapping,
-        capability_support: Mapping[str, str] | None = None) -> CursorCommandRenderPlan:
-    """Return a complete no-write Cursor render plan or only pre-write diagnostics."""
+def _projection_gate(catalog: CommandCatalog, mapping: ProviderCommandMapping,
+                     capability_support: Mapping[str, str] | None):
+    """Shared pre-write diagnostics for providers that publish a render plan."""
     diagnostics: list[CommandDiagnostic] = []
-    if mapping.provider_id != "cursor":
-        return CursorCommandRenderPlan((), (_diag_raw(
-            "CMD_PROVIDER_DISABLED", "task:catalog", "/provider_id", {"provider_id": "cursor"},
-            {"provider_id": mapping.provider_id}, mapping, "Cursor projection is not selected"),))
-    capability_support = (dict(mapping.capability_bindings) if capability_support is None
-                          else capability_support)
+    support = (dict(mapping.capability_bindings) if capability_support is None
+               else capability_support)
     blocked: set[str] = set()
     for record in catalog.records:
         diagnostics.extend(_mapping_diagnostics(record, mapping))
         for requirement in record.capability_requirements:
-            level = capability_support.get(requirement.capability_id)
+            level = support.get(requirement.capability_id)
             if level not in requirement.accepted_levels:
                 diagnostics.append(_diag(
                     "CMD_CAPABILITY_UNSUPPORTED", record,
@@ -821,7 +830,18 @@ def plan_cursor_command_render(
                     mapping, "required command capability is missing or unsupported",
                     severity="info"))
                 blocked.add(record.command_id)
-    diagnostics = _dedupe_diagnostics(diagnostics)
+    return _dedupe_diagnostics(diagnostics), blocked
+
+
+def plan_cursor_command_render(
+        catalog: CommandCatalog, mapping: ProviderCommandMapping,
+        capability_support: Mapping[str, str] | None = None) -> CursorCommandRenderPlan:
+    """Return a complete no-write Cursor render plan or only pre-write diagnostics."""
+    if mapping.provider_id != "cursor":
+        return CursorCommandRenderPlan((), (_diag_raw(
+            "CMD_PROVIDER_DISABLED", "task:catalog", "/provider_id", {"provider_id": "cursor"},
+            {"provider_id": mapping.provider_id}, mapping, "Cursor projection is not selected"),))
+    diagnostics, blocked = _projection_gate(catalog, mapping, capability_support)
     if any(item.severity == "error" for item in diagnostics):
         return CursorCommandRenderPlan((), tuple(diagnostics))
 
@@ -864,10 +884,42 @@ def plan_cursor_command_render(
                                    tuple(diagnostics))
 
 
+def plan_grok_command_render(
+        catalog: CommandCatalog, mapping: ProviderCommandMapping,
+        capability_support: Mapping[str, str] | None = None) -> CursorCommandRenderPlan:
+    """Lock-only Grok plan: discover `.agents/skills`, never write a fourth skill tree."""
+    if mapping.provider_id != "grok":
+        return CursorCommandRenderPlan((), (_diag_raw(
+            "CMD_PROVIDER_DISABLED", "task:catalog", "/provider_id", {"provider_id": "grok"},
+            {"provider_id": mapping.provider_id}, mapping, "Grok projection is not selected"),))
+    diagnostics, blocked = _projection_gate(catalog, mapping, capability_support)
+    if any(item.severity == "error" for item in diagnostics):
+        return CursorCommandRenderPlan((), tuple(diagnostics))
+    all_sources = tuple(_source(record) for record in catalog.records
+                        if record.command_id not in blocked)
+    publication_lock = {
+        "contract_version": "1.0.0", "publication_unit": "task",
+        "version": catalog.plugin_version,
+        "discovery_surface": ".agents/skills",
+        "writer": "none",
+        "artifacts": [],
+    }
+    results = [_artifact(
+        "task.grok.publication-lock",
+        "packages/task/adapters/grok/publication-lock.json",
+        _json_bytes(publication_lock), all_sources, ("skills.repository",),
+        catalog, mapping.capability_catalog_version,
+        {"publication_unit": "task", "kind": "publication-lock",
+         "discovery_surface": ".agents/skills"},
+        provider_id=ProviderId.GROK, adapter_id="task.grok-command")]
+    return CursorCommandRenderPlan(tuple(results), tuple(diagnostics))
+
+
 def build_provider_command_parity_report(
         catalog: CommandCatalog, claude_plan: ClaudeCommandRenderPlan,
         codex_plan: CodexCommandRenderPlan,
         cursor_plan: CursorCommandRenderPlan,
+        grok_plan: CursorCommandRenderPlan,
         mappings: Mapping[str, ProviderCommandMapping], *,
         expected_command_ids: tuple[str, ...],
         next_carriers: tuple[PlanNextCarrier, ...] = ()) -> dict[str, object]:
@@ -878,7 +930,7 @@ def build_provider_command_parity_report(
     """
     if set(mappings) != _PROVIDER_IDS:
         raise ValueError("CMD_PROVIDER_DISABLED: all provider mappings are required")
-    if not claude_plan.ok or not codex_plan.ok or not cursor_plan.ok:
+    if not claude_plan.ok or not codex_plan.ok or not cursor_plan.ok or not grok_plan.ok:
         raise ValueError("CMD_SOURCE_DRIFT: provider render plans must be clean")
 
     catalog_ids = tuple(record.command_id for record in catalog.records)
@@ -897,6 +949,9 @@ def build_provider_command_parity_report(
     }
     expected_cursor = {
         "packages/task/adapters/cursor/publication-lock.json",
+    }
+    expected_grok = {
+        "packages/task/adapters/grok/publication-lock.json",
     }
     cursor_mapping = mappings["cursor"]
     cursor_support = dict(cursor_mapping.capability_bindings)
@@ -922,10 +977,12 @@ def build_provider_command_parity_report(
     claude_paths = tuple(artifact.path for artifact in claude_plan.artifacts)
     codex_paths = tuple(artifact.path for artifact in codex_plan.artifacts)
     cursor_paths = tuple(artifact.path for artifact in cursor_plan.artifacts)
+    grok_paths = tuple(artifact.path for artifact in grok_plan.artifacts)
     projections = {
         "claude-code": _projection_delta(expected_claude, claude_paths),
         "codex": _projection_delta(expected_codex, codex_paths),
         "cursor": _projection_delta(expected_cursor, cursor_paths),
+        "grok": _projection_delta(expected_grok, grok_paths),
     }
     if (any(semantic_delta.values())
             or any(any(delta.values()) for delta in projections.values())):
@@ -958,6 +1015,9 @@ def build_provider_command_parity_report(
                 artifacts = [codex_artifacts[path] for path in paths]
                 artifact_paths = paths
                 rendered_hashes = [artifact.rendered_hash for artifact in artifacts]
+            elif provider_id == "grok":
+                artifact_paths = []
+                rendered_hashes = []
             else:
                 cursor_supported = all(
                     dict(mapping.capability_bindings).get(requirement.capability_id)
@@ -1046,8 +1106,8 @@ def render_provider_commands_reference(report: Mapping[str, object]) -> bytes:
         "",
         "## Command matrix",
         "",
-        "| Semantic ID | Canonical source / SHA-256 | Neutral route | Capabilities | Claude Code | Codex | Cursor |",
-        "|:--|:--|:--|:--|:--|:--|:--|",
+        "| Semantic ID | Canonical source / SHA-256 | Neutral route | Capabilities | Claude Code | Codex | Cursor | Grok |",
+        "|:--|:--|:--|:--|:--|:--|:--|:--|",
     ]
     for command in report["commands"]:
         route = command["routing"]
@@ -1068,20 +1128,21 @@ def render_provider_commands_reference(report: Mapping[str, object]) -> bytes:
         "",
         "## Semantic Next forms",
         "",
-        "| Kind | Semantic carrier | Claude Code | Codex | Cursor | Diagnostics |",
-        "|:--|:--|:--|:--|:--|:--|",
+        "| Kind | Semantic carrier | Claude Code | Codex | Cursor | Grok | Diagnostics |",
+        "|:--|:--|:--|:--|:--|:--|:--|",
     ])
     for row in report["next_forms"]:
         carrier = row["carrier"]
         claude = row["providers"]["claude-code"]
         codex = row["providers"]["codex"]
         cursor = row["providers"]["cursor"]
+        grok = row["providers"]["grok"]
         diagnostics = sorted(set(claude["diagnostics"] + codex["diagnostics"]
-                                 + cursor["diagnostics"]))
+                                 + cursor["diagnostics"] + grok["diagnostics"]))
         lines.append(
             f"| `{carrier['kind']}` | `{json.dumps(carrier, ensure_ascii=False, sort_keys=True)}` "
             f"| `{claude['invocation'] or '—'}` | `{codex['invocation'] or '—'}` "
-            f"| `{cursor['invocation'] or '—'}` "
+            f"| `{cursor['invocation'] or '—'}` | `{grok['invocation'] or '—'}` "
             f"| `{', '.join(diagnostics) or '—'}` |")
 
     lines.extend([
@@ -1092,6 +1153,7 @@ def render_provider_commands_reference(report: Mapping[str, object]) -> bytes:
         "- Claude Code projection: `missing=[]`, `extra=[]`, `duplicates=[]`.",
         "- Codex projection: `missing=[]`, `extra=[]`, `duplicates=[]`.",
         "- Cursor projection: `missing=[]`, `extra=[]`, `duplicates=[]`.",
+        "- Grok projection: `missing=[]`, `extra=[]`, `duplicates=[]`.",
         "- Unknown, ambiguous, unsupported, undershoot, invalid invocation and source drift are fail-closed before write.",
         "",
     ])
@@ -1107,7 +1169,7 @@ def render_provider_model_roles_reference(catalog: CommandCatalog) -> bytes:
     lines = [
         "# Provider model roles",
         "",
-        "Hand-verified model inventories and fixed class pins for the three managed providers.",
+        "Hand-verified model inventories and fixed class pins for the managed providers.",
         "Neutral routing in `packages/task/configs/command-routing.json` uses "
         "`model_class` (`economy` < `implementation` < `frontier`) plus `effort`; "
         "each provider block below maps those classes to native selectors.",
@@ -1212,6 +1274,35 @@ def render_provider_model_roles_reference(catalog: CommandCatalog) -> bytes:
         "Full install and profile shapes: [Cursor adapter](/skiller/adapters/cursor) and "
         "[Harness setup: Cursor](/harness/setup/cursor).",
         "",
+        "## Grok launch contract (trusted self-host)",
+        "",
+        "Grok Build CLI (`grok`, PATH alias `agent`) is a managed provider. Skills are "
+        "discovered from `.agents/skills` (no `.grok/skills` writer). Project "
+        "`.grok/config.toml` carries `[permission] deny` and MCP only; `[ui] permission_mode` "
+        "is user-level in `~/.grok/config.toml` and is not read from the project file. "
+        "`--always-approve` is a trusted-session launch flag. The deny floor still applies. "
+        "Cursor's `agent --workspace` is a different binary (`cursor-agent`); identity is "
+        "`GROK_SESSION_ID`.",
+        "",
+        "| Parameter | Value |",
+        "|:--|:--|",
+        "| Workspace (`cwd`) | repository root — `grok --cwd <repo-cwd>` |",
+        "| Model | class pin from table above (`grok-4.5` / `grok-4.6` / `grok-4.7`) |",
+        "| Effort | from plan Routing / command frontmatter; fallback `[models].default_reasoning_effort` |",
+        "| CLI autonomy | `--permission-mode default|acceptEdits`, or `--always-approve` on trusted self-host |",
+        "| Binary | `grok` or Grok `agent`; never Cursor `cursor-agent` |",
+        "",
+        "**Native Grok command** (copy after the metadata table in a launch-block):",
+        "",
+        "```bash",
+        "grok --cwd <repo-cwd> --model <model-selector> --always-approve '/task:<command> <arguments>'",
+        "```",
+        "",
+        "1. Open the intended repository root (`--cwd`).",
+        "2. Confirm `.grok/config.toml` and hub MCP (`maind health --cwd`).",
+        "3. Pin the routed model; do not substitute Cursor-inventory grok-4.x ids for provider grok.",
+        "4. Pass `--always-approve` only on a trusted self-host; the deny floor remains.",
+        "",
     ])
     return "\n".join(lines).encode("utf-8")
 
@@ -1233,7 +1324,7 @@ def _extra_selectors_are_ambiguous(mapping: ProviderCommandMapping, values: tupl
     """The launch pin is selectors[0]. Cursor may recognize later live model names."""
     if len(values) <= 1:
         return False
-    return mapping.provider_id != "cursor"
+    return mapping.provider_id not in {"cursor", "grok"}
 
 
 def _mapping_diagnostics(record: CommandRecord,
@@ -1293,7 +1384,9 @@ def _route_mapping_diagnostics(
 def _artifact(artifact_id: str, target: str, rendered: bytes,
               sources: tuple[ArtifactSource, ...], capabilities: tuple[str, ...],
               catalog: CommandCatalog, capability_catalog_version: str,
-              semantic_parameters: Mapping[str, object]) -> ArtifactRenderResult:
+              semantic_parameters: Mapping[str, object], *,
+              provider_id: ProviderId = ProviderId.CODEX,
+              adapter_id: str = "task.codex-command") -> ArtifactRenderResult:
     requirements = tuple(CapabilityRequirement(CapabilityId(item),
                                                 (SupportLevel.ADAPTED, SupportLevel.NATIVE))
                          for item in sorted(set(capabilities)))
@@ -1301,7 +1394,7 @@ def _artifact(artifact_id: str, target: str, rendered: bytes,
     parameters["plugin_version"] = catalog.plugin_version
     request = ArtifactRenderRequest(
         artifact_id, sources, ArtifactTarget(target, ("whole-file", ())),
-        ArtifactAdapterIdentity("task.codex-command", ADAPTER_VERSION, ProviderId.CODEX,
+        ArtifactAdapterIdentity(adapter_id, ADAPTER_VERSION, provider_id,
                                 capability_catalog_version, requirements),
         (), parameters, lambda _request: rendered,
     )

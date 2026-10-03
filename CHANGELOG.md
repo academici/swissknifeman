@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Grok — четвёртый managed-провайдер:** Grok Build CLI (`grok`/`agent` в PATH) входит в
+  каталог `ProviderId` наряду с Claude Code, Codex и Cursor. Навыки читаются из
+  `.agents/skills`; хуки и MCP — Codex-форма TOML с `state_dir=.grok`; инструкции —
+  общий блок `AGENTS.md` плюс расширение `.grok/rules/*.md`. Идентичность сессии —
+  `GROK_SESSION_ID`. Подключение opt-in через `.swissknife.json`; флот
+  `REQUIRED_PROVIDERS` остаётся claude-code/codex/cursor, `skiller update` сам Grok
+  не включает. Task-команды, harness, analyst-ридер, gitignore-политика и манифест
+  `provider-capabilities` покрывают Grok. Зонт и `task` — 0.27.0; `harness` 0.6.0,
+  `skiller` 0.18.0, `analyst` 0.3.0, `core` 0.20.0.
+
+
 ## [0.26.2] - 2026-10-01
 
 ### Fixed

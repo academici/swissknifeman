@@ -72,7 +72,7 @@ class ProviderDocsTests(unittest.TestCase):
                 target = root / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes((ROOT / relative).read_bytes())
-            prefix = b"# Fixture\n\n## \xd0\x92\xd0\xbe\xd0\xb7\xd0\xbc\xd0\xbe\xd0\xb6\xd0\xbd\xd0\xbe\xd1\x81\xd1\x82\xd0\xb8\n\nforeign before\n\n"
+            prefix = b"# Fixture\n\n## Features\n\nforeign before\n\n"
             suffix = b"\nforeign after\n"
             (root / "README.md").write_bytes(prefix + suffix)
             self.assertEqual(provider_docs.run("write", root), 0)

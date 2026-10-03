@@ -30,7 +30,7 @@ from task.command_render import (  # noqa: E402
     PROVIDER_LOCK_PATH, apply_claude_command_plan, apply_codex_command_plan,
     build_provider_command_parity_report, mapping_from_catalog, parse_next_carrier,
     plan_claude_command_render, plan_codex_command_apply, plan_codex_command_render,
-    plan_cursor_command_render, render_provider_commands_reference,
+    plan_cursor_command_render, plan_grok_command_render, render_provider_commands_reference,
     render_provider_model_roles_reference,
 )
 
@@ -49,7 +49,7 @@ def _build_plans(root: Path, *, allow_managed_drift: bool = False):
     routing_path = root / "packages/task/configs/command-routing.json"
     catalog = build_command_catalog(command_root, routing_path)
     mappings = {provider_id: mapping_from_catalog(catalog, provider_id)
-                for provider_id in ("claude-code", "codex", "cursor")}
+                for provider_id in ("claude-code", "codex", "cursor", "grok")}
     support = {provider_id: dict(mapping.capability_bindings)
                for provider_id, mapping in mappings.items()}
     plugin_bytes = (root / "packages/task/.claude-plugin/plugin.json").read_bytes()
@@ -67,16 +67,19 @@ def _build_plans(root: Path, *, allow_managed_drift: bool = False):
         catalog, mappings["claude-code"], support["claude-code"], plugin_bytes=plugin_bytes)
     codex_plan = plan_codex_command_render(catalog, mappings["codex"], support["codex"])
     cursor_plan = plan_cursor_command_render(catalog, mappings["cursor"], support["cursor"])
-    if allow_managed_drift and not (claude_plan.ok and codex_plan.ok and cursor_plan.ok):
-        return claude_plan, codex_plan, cursor_plan, None, None
+    grok_plan = plan_grok_command_render(catalog, mappings["grok"], support["grok"])
+    if allow_managed_drift and not (claude_plan.ok and codex_plan.ok and cursor_plan.ok
+                                    and grok_plan.ok):
+        return claude_plan, codex_plan, cursor_plan, grok_plan, None, None
     fixture = json.loads((root / _PARITY_FIXTURE).read_text(encoding="utf-8"))
     report = build_provider_command_parity_report(
-        catalog, claude_plan, codex_plan, cursor_plan, mappings,
+        catalog, claude_plan, codex_plan, cursor_plan, grok_plan, mappings,
         expected_command_ids=tuple(row["command_id"] for row in fixture["commands"]),
         next_carriers=tuple(parse_next_carrier(row["valid"])
                             for row in fixture["next_forms"]))
     model_roles_bytes = render_provider_model_roles_reference(catalog)
-    return claude_plan, codex_plan, cursor_plan, render_provider_commands_reference(report), model_roles_bytes
+    return (claude_plan, codex_plan, cursor_plan, grok_plan,
+            render_provider_commands_reference(report), model_roles_bytes)
 
 
 def _plan_protocol_projection(root: Path) -> dict[Path, bytes]:
@@ -130,9 +133,9 @@ def _print_diagnostics(label: str, plan) -> None:
               file=sys.stderr)
 
 
-def _cursor_drift(root: Path, cursor_plan) -> tuple[str, ...]:
+def _adapter_drift(root: Path, plan) -> tuple[str, ...]:
     drift = []
-    for artifact in cursor_plan.artifacts:
+    for artifact in plan.artifacts:
         target = root / artifact.path
         try:
             current = target.read_bytes()
@@ -143,9 +146,9 @@ def _cursor_drift(root: Path, cursor_plan) -> tuple[str, ...]:
     return tuple(drift)
 
 
-def _write_cursor(root: Path, cursor_plan) -> int:
+def _write_adapter(root: Path, plan) -> int:
     written = 0
-    for artifact in cursor_plan.artifacts:
+    for artifact in plan.artifacts:
         target = root / artifact.path
         target.parent.mkdir(parents=True, exist_ok=True)
         if not target.is_file() or target.read_bytes() != artifact.managed_bytes:
@@ -154,9 +157,10 @@ def _write_cursor(root: Path, cursor_plan) -> int:
     return written
 
 
-def _repair_version_transition(root: Path, claude_plan, codex_plan, cursor_plan) -> int:
+def _repair_version_transition(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan) -> int:
     """Repair only generator-owned targets before rebuilding a clean parity report."""
-    diagnostics = (*claude_plan.diagnostics, *codex_plan.diagnostics, *cursor_plan.diagnostics)
+    diagnostics = (*claude_plan.diagnostics, *codex_plan.diagnostics,
+                   *cursor_plan.diagnostics, *grok_plan.diagnostics)
     if any(item.code != "CMD_SOURCE_DRIFT" for item in diagnostics):
         return 1
     for artifact in claude_plan.artifacts:
@@ -173,11 +177,12 @@ def _repair_version_transition(root: Path, claude_plan, codex_plan, cursor_plan)
     if any(action.action.value == "refuse" for action in artifact_plan.actions):
         return 1
     apply_codex_command_plan(root, artifact_plan)
-    _write_cursor(root, cursor_plan)
+    _write_adapter(root, cursor_plan)
+    _write_adapter(root, grok_plan)
     return 0
 
 
-def cmd_check(root: Path, claude_plan, codex_plan, cursor_plan, reference_bytes: bytes,
+def cmd_check(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan, reference_bytes: bytes,
               model_roles_bytes: bytes) -> int:
     claude_drift = apply_claude_command_plan(root, claude_plan, check=True)
     lock_path = root / PROVIDER_LOCK_PATH
@@ -196,8 +201,10 @@ def cmd_check(root: Path, claude_plan, codex_plan, cursor_plan, reference_bytes:
         if not (root / path).is_file() or (root / path).read_bytes() != expected
     )
     runtime_drift = _plan_protocol_runtime_drift(root, _plan_protocol_projection(root))
-    cursor_drift = _cursor_drift(root, cursor_plan)
-    if (not claude_drift and not codex_drift and not cursor_drift and not reference_drift
+    cursor_drift = _adapter_drift(root, cursor_plan)
+    grok_drift = _adapter_drift(root, grok_plan)
+    if (not claude_drift and not codex_drift and not cursor_drift and not grok_drift
+            and not reference_drift
             and not model_roles_drift and not golden_drift and not runtime_drift):
         print("render-provider-commands: check OK (no-op)")
         return 0
@@ -215,10 +222,12 @@ def cmd_check(root: Path, claude_plan, codex_plan, cursor_plan, reference_bytes:
         print(f"drift: plan-protocol-runtime {path.relative_to(root)}", file=sys.stderr)
     for path in cursor_drift:
         print(f"drift: cursor {path}", file=sys.stderr)
+    for path in grok_drift:
+        print(f"drift: grok {path}", file=sys.stderr)
     return 1
 
 
-def cmd_write(root: Path, claude_plan, codex_plan, cursor_plan, reference_bytes: bytes,
+def cmd_write(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan, reference_bytes: bytes,
               model_roles_bytes: bytes, *, repair_owned: bool) -> int:
     apply_claude_command_plan(root, claude_plan, check=False)
     lock_path = root / PROVIDER_LOCK_PATH
@@ -253,9 +262,11 @@ def cmd_write(root: Path, claude_plan, codex_plan, cursor_plan, reference_bytes:
         target.write_bytes(contents)
     written = len([action for action in codex_artifact_plan.actions
                   if action.action.value != "noop"])
-    cursor_written = _write_cursor(root, cursor_plan)
+    cursor_written = _write_adapter(root, cursor_plan)
+    grok_written = _write_adapter(root, grok_plan)
     print(f"render-provider-commands: wrote {len(claude_plan.artifacts)} Claude artifact(s), "
-          f"{written} Codex artifact(s) changed, {cursor_written} Cursor artifact(s) changed")
+          f"{written} Codex artifact(s) changed, {cursor_written} Cursor artifact(s) changed, "
+          f"{grok_written} Grok artifact(s) changed")
     return 0
 
 
@@ -273,7 +284,8 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(args.root).resolve()
 
     try:
-        claude_plan, codex_plan, cursor_plan, reference_bytes, model_roles_bytes = _build_plans(root)
+        (claude_plan, codex_plan, cursor_plan, grok_plan,
+         reference_bytes, model_roles_bytes) = _build_plans(root)
     except ValueError as exc:
         if not (args.write and args.repair_owned and "CMD_SOURCE_DRIFT" in str(exc)):
             raise
@@ -281,21 +293,23 @@ def main(argv: list[str] | None = None) -> int:
         # once. Repair those generated targets first, then rebuild the parity
         # report from a clean projection. Source/catalog validation has already
         # succeeded; only managed output drift reaches this branch.
-        claude_plan, codex_plan, cursor_plan, _reference, _roles = _build_plans(
+        claude_plan, codex_plan, cursor_plan, grok_plan, _reference, _roles = _build_plans(
             root, allow_managed_drift=True)
-        if _repair_version_transition(root, claude_plan, codex_plan, cursor_plan):
+        if _repair_version_transition(root, claude_plan, codex_plan, cursor_plan, grok_plan):
             return 1
-        claude_plan, codex_plan, cursor_plan, reference_bytes, model_roles_bytes = _build_plans(root)
-    if not claude_plan.ok or not codex_plan.ok or not cursor_plan.ok:
+        (claude_plan, codex_plan, cursor_plan, grok_plan,
+         reference_bytes, model_roles_bytes) = _build_plans(root)
+    if not claude_plan.ok or not codex_plan.ok or not cursor_plan.ok or not grok_plan.ok:
         _print_diagnostics("claude-code", claude_plan)
         _print_diagnostics("codex", codex_plan)
         _print_diagnostics("cursor", cursor_plan)
+        _print_diagnostics("grok", grok_plan)
         return 1
 
     if args.check:
-        return cmd_check(root, claude_plan, codex_plan, cursor_plan, reference_bytes,
+        return cmd_check(root, claude_plan, codex_plan, cursor_plan, grok_plan, reference_bytes,
                           model_roles_bytes)
-    return cmd_write(root, claude_plan, codex_plan, cursor_plan, reference_bytes,
+    return cmd_write(root, claude_plan, codex_plan, cursor_plan, grok_plan, reference_bytes,
                      model_roles_bytes, repair_owned=args.repair_owned)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@academici/swissknifeman",
-  "version": "0.17.16",
+  "version": "0.18.0",
   "private": true,
   "license": "MIT",
   "description": "Universal personal registry AI-skills and snippets: one source of truth, installation in any project and any IDE",

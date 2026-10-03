@@ -149,13 +149,23 @@ def conformance(root: Path = ROOT) -> dict[str, object]:
     return report
 
 
+_PROVIDER_LABELS = {
+    ProviderId.CLAUDE_CODE: "Claude Code",
+    ProviderId.CODEX: "Codex",
+    ProviderId.CURSOR: "Cursor",
+    ProviderId.GROK: "Grok",
+}
+
+
 def _matrix(manifest) -> str:
-    lines = ["| Capability | Claude Code | Codex | Cursor |", "|:--|:--:|:--:|:--:|"]
+    providers = tuple(manifest.providers)
+    header = "| Capability | " + " | ".join(_PROVIDER_LABELS[item] for item in providers) + " |"
+    align = "|:--|" + "|".join(":--:" for _ in providers) + "|"
+    lines = [header, align]
     for capability in manifest.capabilities:
         levels = {row.provider_id: row.level.value for row in capability.support}
-        lines.append(
-            f"| `{capability.capability_id.value}` | {levels[ProviderId.CLAUDE_CODE]} | "
-            f"{levels[ProviderId.CODEX]} | {levels[ProviderId.CURSOR]} |")
+        cells = " | ".join(levels[item] for item in providers)
+        lines.append(f"| `{capability.capability_id.value}` | {cells} |")
     return "\n".join(lines)
 
 

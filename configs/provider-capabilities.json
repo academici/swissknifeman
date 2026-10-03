@@ -55,6 +55,24 @@
             "Cursor disconnect/remove preserves .claude/agents; shared projection lifecycle stays owned by claude-code",
             "no .cursor/agents directory is created"
           ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.agent-packs.lifecycle",
+          "diagnostic": "Grok consumer mapping resolves role lifecycle over the shared .claude/agents projection",
+          "evidence": [
+            {
+              "claim": "provider audit verifies every semantic role resolves through grok consumer mapping to .claude/agents/*.md without creating a grok-owned agents tree",
+              "scope": "grok agent-packs.lifecycle consumer mapping over shared Claude projection",
+              "source": "packages/harness/lib/harness/provider_audit.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "Grok acts as a consumer mapping over .claude/agents/*.md with projection_owner=claude-code",
+            "Grok disconnect/remove preserves .claude/agents; shared projection lifecycle stays owned by claude-code",
+            "no .grok/agents directory is created"
+          ]
         }
       }
     },
@@ -109,6 +127,23 @@
           "limitations": [
             "uses Cursor compatibility loading of the existing Claude-format role projection",
             "does not introduce a Cursor-owned agents directory"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.agents.catalog",
+          "diagnostic": "Grok resolves semantic agent roles through the shared .claude/agents catalog projection",
+          "evidence": [
+            {
+              "claim": "provider audit verifies every semantic role maps to a grok-consumable .claude/agents target while preserving claude-code ownership",
+              "scope": "grok agents.catalog consumer mapping over shared Claude projection",
+              "source": "packages/harness/lib/harness/provider_audit.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "uses Grok compatibility loading of the existing Claude-format role projection",
+            "does not introduce a Grok-owned agents directory"
           ]
         }
       }
@@ -165,6 +200,22 @@
             "new Cursor analytics evidence writes directly to the neutral store"
           ],
           "diagnostic": "unsupported for Cursor: no committed legacy Cursor analytics carrier exists; migration intent does not apply"
+        },
+        "grok": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok analytics.legacy-migration applicability",
+              "claim": "no committed legacy Grok analytics carrier exists to migrate; new Grok evidence is written directly to the neutral store"
+            }
+          ],
+          "limitations": [
+            "reason: not applicable — no legacy Grok analytics carrier exists to migrate",
+            "new Grok analytics evidence writes directly to the neutral store"
+          ],
+          "diagnostic": "unsupported for Grok: no committed legacy Grok analytics carrier exists; migration intent does not apply"
         }
       }
     },
@@ -219,6 +270,24 @@
           "limitations": [
             "normalizes only allowlisted Cursor schema=1 hook envelope fields",
             "correlation key is conversation_id, persisted as normalized session_id",
+            "raw command output, prompts and transcript keys are refused fail-closed"
+          ]
+        },
+        "grok": {
+          "adapter_id": "analyst.grok-capture-reader",
+          "diagnostic": "Grok schema=1 hook envelopes are normalized only through the named fail-closed reader",
+          "evidence": [
+            {
+              "claim": "Grok schema=1 run-summary envelopes are normalized through the Codex-shaped reader and rejected when raw output/reason markers violate the allowlist",
+              "scope": "grok reader normalization, redaction and schema checks",
+              "source": "packages/analyst/tests/test_provider_readers.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "normalizes only allowlisted schema=1 fields; session_id is required",
+            "reuses the Codex capture reader with provider_id grok",
             "raw command output, prompts and transcript keys are refused fail-closed"
           ]
         }
@@ -276,6 +345,23 @@
             "requires Cursor events normalized through analyst.cursor-capture-reader",
             "missing semantic metrics remain omitted and are never inferred as zero"
           ]
+        },
+        "grok": {
+          "adapter_id": "analyst.neutral-run-report",
+          "diagnostic": "provider-neutral run-report projection is available for Grok-origin normalized events",
+          "evidence": [
+            {
+              "claim": "the grok schema=1 envelope path reaches neutral run-report through normalize -> append_event -> neutral_run_report without provider-specific fallback",
+              "scope": "grok envelope to neutral run-report end-to-end chain",
+              "source": "packages/analyst/tests/test_provider_readers.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires Grok events normalized through analyst.grok-capture-reader",
+            "missing semantic metrics remain omitted and are never inferred as zero"
+          ]
         }
       }
     },
@@ -330,6 +416,22 @@
           ],
           "diagnostic": "deterministic cursor adapter satisfies command.external-research",
           "adapter_id": "task.cursor.external-research"
+        },
+        "grok": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "availability depends on an explicitly configured research surface and WebFetch permission token"
+          ],
+          "diagnostic": "deterministic grok adapter satisfies command.external-research",
+          "adapter_id": "task.grok.external-research"
         }
       }
     },
@@ -384,6 +486,22 @@
           "binding": {
             "surface": "provider-native filesystem read"
           }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies command.filesystem-read",
+          "binding": {
+            "surface": "provider-native filesystem read"
+          },
+          "limitations": []
         }
       }
     },
@@ -438,6 +556,22 @@
           "binding": {
             "surface": "provider-native filesystem write"
           }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies command.filesystem-write",
+          "binding": {
+            "surface": "provider-native filesystem write"
+          },
+          "limitations": []
         }
       }
     },
@@ -492,6 +626,22 @@
           "binding": {
             "surface": "provider-native Git read"
           }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies command.git-read",
+          "binding": {
+            "surface": "provider-native Git read"
+          },
+          "limitations": []
         }
       }
     },
@@ -546,6 +696,22 @@
           "binding": {
             "surface": "provider-native Git write"
           }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies command.git-write",
+          "binding": {
+            "surface": "provider-native Git write"
+          },
+          "limitations": []
         }
       }
     },
@@ -600,6 +766,22 @@
           "binding": {
             "surface": "provider-native subagents"
           }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies command.subagents",
+          "binding": {
+            "surface": "provider-native subagents"
+          },
+          "limitations": []
         }
       }
     },
@@ -654,6 +836,23 @@
           "limitations": [
             "implemented as a generated instruction carrier over native Cursor subagents",
             "does not create a provider-native workflow run store"
+          ]
+        },
+        "grok": {
+          "adapter_id": "task.grok.workflow-carrier",
+          "diagnostic": "Grok workflow-carrier is a generated instruction carrier; Grok also has native Rhai workflows that remain provider-owned",
+          "evidence": [
+            {
+              "claim": "the Grok command renderer generates provider-qualified instruction carriers and command projections from the frozen semantic command catalog",
+              "scope": "grok command.workflow-carrier generated instruction projection",
+              "source": "packages/task/lib/task/command_render.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "managed Task carrier is an instruction projection over native subagents",
+            "Grok-native Rhai workflow runs are not a swissknifeman workflows.status store"
           ]
         }
       }
@@ -718,6 +917,28 @@
             "mechanical read-only enforcement remains launch-mode dependent",
             "sessionStart.additional_context is intentionally not required"
           ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.context.observer",
+          "binding": {
+            "surface": "SessionStart",
+            "target": ".grok/hooks/swissknifeman.json"
+          },
+          "diagnostic": "Grok context.observer uses the shared Codex-shaped hook dispatcher over .grok/hooks/swissknifeman.json (Claude event names)",
+          "evidence": [
+            {
+              "claim": "Grok context.observer uses the shared Codex-shaped hook dispatcher over .grok/hooks/swissknifeman.json (Claude event names)",
+              "scope": "grok context.observer Claude-shaped hook projection",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "hook events are Claude-compatible (PreToolUse/SessionStart/UserPromptSubmit/Stop)",
+            "handler is the parameterized Codex lifecycle dispatcher with state_dir=.grok",
+            "inactive by default unless registered via harness hooks --provider grok"
+          ]
         }
       }
     },
@@ -775,6 +996,22 @@
             "repository rules can suggest formatting, but they are not provider-native output-style configuration"
           ],
           "diagnostic": "unsupported for Cursor: no project-scoped output-style binding exists"
+        },
+        "grok": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok context.output-style capability cap",
+              "claim": "Grok exposes no project-scoped output-style binding in managed project configuration surfaces"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — Grok exposes no project-scoped output-style binding",
+            "repository rules can suggest formatting, but they are not provider-native output-style configuration"
+          ],
+          "diagnostic": "unsupported for Grok: no project-scoped output-style binding exists"
         }
       }
     },
@@ -832,6 +1069,22 @@
             ".cursor/plans is a repository convention, not a provider configuration surface"
           ],
           "diagnostic": "unsupported for Cursor: no project-scoped plans-directory binding exists"
+        },
+        "grok": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok context.plans-directory capability cap",
+              "claim": "Grok exposes no project-scoped plan-directory binding; plan paths remain repository convention only"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — Grok exposes no project-scoped plan-directory binding",
+            ".grok/plans is a repository convention, not a provider configuration surface"
+          ],
+          "diagnostic": "unsupported for Grok: no project-scoped plans-directory binding exists"
         }
       }
     },
@@ -886,6 +1139,22 @@
           ],
           "diagnostic": "deterministic cursor adapter satisfies doctor.environment",
           "adapter_id": "harness.cursor.doctor.environment"
+        },
+        "grok": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "requires the committed harness grok adapter and managed-boundary checks"
+          ],
+          "diagnostic": "deterministic grok adapter satisfies doctor.environment",
+          "adapter_id": "harness.grok.doctor.environment"
         }
       }
     },
@@ -941,6 +1210,23 @@
           ],
           "diagnostic": "deterministic cursor adapter satisfies doctor.provider",
           "adapter_id": "harness.cursor.doctor.provider"
+        },
+        "grok": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "reports the unmanaged approval-mode axis per D2",
+            "Claude-compat delivery depends on the user toggle \"Include Third-Party Plugins, Skills, and Other Configs\", so compat is not treated as a managed provider binding"
+          ],
+          "diagnostic": "deterministic grok adapter satisfies doctor.provider",
+          "adapter_id": "harness.grok.doctor.provider"
         }
       }
     },
@@ -995,6 +1281,22 @@
           "binding": {
             "surface": ".cursor/rules/*.mdc"
           }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies instructions.project",
+          "binding": {
+            "surface": "AGENTS.md+.grok/rules/*.md"
+          },
+          "limitations": []
         }
       }
     },
@@ -1052,6 +1354,27 @@
           ],
           "diagnostic": "deterministic cursor adapter satisfies lifecycle.auto-approval",
           "adapter_id": "harness.cursor.lifecycle.auto-approval"
+        },
+        "grok": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "project file carries [permission] deny only; [ui] permission_mode is user-level and is not written",
+            "launch mode is --permission-mode or --always-approve; deny rules still apply under always-approve"
+          ],
+          "diagnostic": "deterministic grok adapter satisfies lifecycle.auto-approval",
+          "adapter_id": "harness.grok.lifecycle.auto-approval",
+          "binding": {
+            "approval_surface": "launch-flag",
+            "project_surface": "[permission] deny"
+          }
         }
       }
     },
@@ -1102,6 +1425,24 @@
               "scope": "cursor lifecycle.changelog-gate shared-core routing and mode behavior",
               "source": "packages/harness/tests/test_cursor_lifecycle_gates.py",
               "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "reads release-sensitive commit type only from git commit -m messages",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.changelog-gate",
+          "diagnostic": "deterministic grok adapter satisfies lifecycle.changelog-gate through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Grok and Codex changelog-gate adapters consume one shared release-sensitive commit-type core and apply off/warn/strict via provider mode files",
+              "scope": "grok lifecycle.changelog-gate shared-core routing and mode behavior",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
             }
           ],
           "level": "adapted",
@@ -1167,6 +1508,23 @@
             "correlates records by conversation_id (stored as session_id)",
             "does not persist payload.output"
           ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.command-log",
+          "diagnostic": "deterministic grok adapter captures PreToolUse Bash commands through the shared lifecycle handler",
+          "evidence": [
+            {
+              "claim": "Grok command-log reads PreToolUse tool_input.command for tool_name Bash and writes ~/.grok/logs/bash-commands.jsonl; it does not use Cursor afterShellExecution",
+              "scope": "grok lifecycle.command-log shared handler",
+              "source": "packages/harness/tests/test_grok_provider_surface.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "records only tool calls Grok exposes as Bash on PreToolUse",
+            "writes the grok state log, not ~/.claude/logs/bash-commands.jsonl"
+          ]
         }
       }
     },
@@ -1221,6 +1579,23 @@
           "limitations": [
             "records only tool calls exposed on the Cursor preToolUse boundary",
             "merges into run-report at sessionEnd; uses conversation_id as the correlation key"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.tool-telemetry",
+          "diagnostic": "deterministic grok adapter records PreToolUse tool_name into .grok/state/<session>.tools.jsonl",
+          "evidence": [
+            {
+              "claim": "Grok tool-telemetry appends tool_name under .grok/state/<session_id>.tools.jsonl; SessionEnd run-report merges that sidecar",
+              "scope": "grok lifecycle.tool-telemetry shared handler",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "correlates records by session_id, not Cursor conversation_id",
+            "sidecar path is .grok/state, not .cursor/state"
           ]
         }
       }
@@ -1283,6 +1658,24 @@
             "fail closed when the shared policy core is unreachable",
             "uses the documented environment kill switch PERPLEXITY_DAEMON_GUARD=off"
           ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.daemon-safety",
+          "diagnostic": "deterministic grok adapter satisfies lifecycle.daemon-safety through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Grok and Codex daemon-safety adapters consume one shared declarative policy core and fail closed with exit 2 in strict mode",
+              "scope": "grok lifecycle.daemon-safety policy-core routing and enforcement behavior",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive unless explicitly registered via harness hooks --provider grok --daemon-safety",
+            "fail closed when the shared policy core is unreachable",
+            "uses the documented environment kill switch PERPLEXITY_DAEMON_GUARD=off"
+          ]
         }
       }
     },
@@ -1333,6 +1726,24 @@
               "scope": "cursor lifecycle.git-guardrails shared-core enforcement and warning behavior",
               "source": "packages/harness/tests/test_cursor_lifecycle_gates.py",
               "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "pattern-based refusal remains intentionally unchanged on this pass",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.git-guardrails",
+          "diagnostic": "deterministic grok adapter satisfies lifecycle.git-guardrails through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Grok and Codex git-guardrails adapters consume one shared declarative policy core with off/warn/strict mode handling",
+              "scope": "grok lifecycle.git-guardrails shared-core enforcement and warning behavior",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
             }
           ],
           "level": "adapted",
@@ -1398,6 +1809,24 @@
             "sessionStart additional_context is intentionally not used for this surface",
             "memory backend state remains owned by skiller/maind; this adapter only exports non-secret env hints"
           ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.memory",
+          "diagnostic": "deterministic grok adapter activates lifecycle.memory through sessionStart env",
+          "evidence": [
+            {
+              "claim": "Grok memory adapter reads .grok/memory.env.ini on SessionStart and emits systemMessage from maind memory status; it does not inject additional_context",
+              "scope": "grok lifecycle.memory sessionStart environment activation",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "activation is explicit and mode-driven via .grok/memory.env.ini",
+            "sessionStart additional_context is intentionally not used for this surface",
+            "memory backend state remains owned by skiller/maind; this adapter only exports non-secret env hints"
+          ]
         }
       }
     },
@@ -1453,6 +1882,22 @@
             "no repository-scoped binding can satisfy provider-native notification semantics"
           ],
           "diagnostic": "unsupported for Cursor: notifications are global-only and outside project-scoped control"
+        },
+        "grok": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok lifecycle.notification capability cap",
+              "claim": "Grok notification control is global CLI configuration and cannot be managed through repository-scoped bindings"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — notification settings are machine-global and not project-overridable",
+            "no repository-scoped binding can satisfy provider-native notification semantics"
+          ],
+          "diagnostic": "unsupported for Grok: notifications are global-only and outside project-scoped control"
         }
       }
     },
@@ -1503,6 +1948,24 @@
               "scope": "cursor lifecycle.pack-guard managed-target guard behavior",
               "source": "packages/harness/tests/test_cursor_lifecycle_gates.py",
               "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "matches managed targets through serialized preToolUse payload inspection",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.pack-guard",
+          "diagnostic": "deterministic grok adapter satisfies lifecycle.pack-guard through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Grok and Codex pack-guard adapters consume one shared declarative policy core that evaluates managed-target rules under off/warn/strict",
+              "scope": "grok lifecycle.pack-guard managed-target guard behavior",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
             }
           ],
           "level": "adapted",
@@ -1569,6 +2032,24 @@
             "continuation followups are emitted only when subagentStop status is completed",
             "if a Claude-compat review-gate registration is already present, Cursor-native continuation is skipped to avoid double triggering"
           ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.review-gate",
+          "diagnostic": "deterministic grok adapter satisfies lifecycle.review-gate via subagentStop continuation",
+          "evidence": [
+            {
+              "claim": "Grok review-gate runs on SubagentStop, stores attempt counts in .grok/review-gate.state.json, exits 2 in strict mode, and otherwise emits systemMessage",
+              "scope": "grok lifecycle.review-gate continuation behavior and dedup safeguards",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "continuation followups are emitted only when subagentStop status is completed",
+            "if a Claude-compat review-gate registration is already present, Grok-native continuation is skipped to avoid double triggering"
+          ]
         }
       }
     },
@@ -1631,6 +2112,24 @@
             "Cursor provides no per-prompt project hook field for routing context injection",
             "sessionStart.additional_context is intentionally not required"
           ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.router",
+          "diagnostic": "Grok lifecycle.router uses the shared Codex-shaped hook dispatcher over .grok/hooks/swissknifeman.json (Claude event names)",
+          "evidence": [
+            {
+              "claim": "Grok lifecycle.router uses the shared Codex-shaped hook dispatcher over .grok/hooks/swissknifeman.json (Claude event names)",
+              "scope": "grok lifecycle.router Claude-shaped hook projection",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "hook events are Claude-compatible (PreToolUse/SessionStart/UserPromptSubmit/Stop)",
+            "handler is the parameterized Codex lifecycle dispatcher with state_dir=.grok",
+            "inactive by default unless registered via harness hooks --provider grok"
+          ]
         }
       }
     },
@@ -1689,6 +2188,23 @@
             "maps reason to a neutral outcome (ok|failed|unknown) while preserving the original reason",
             "uses conversation_id as the cross-event correlation key"
           ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.run-report",
+          "diagnostic": "deterministic grok adapter writes a SessionEnd run record with provider_id grok",
+          "evidence": [
+            {
+              "claim": "Grok run-report writes .grok/runs/<session>.json on SessionEnd and stamps provider_id grok",
+              "scope": "grok lifecycle.run-report schema=1 envelope checks",
+              "source": "packages/harness/tests/test_grok_provider_surface.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "provider_id is grok when the shared handler is rendered with state_dir=.grok",
+            "tool counts come from the .grok/state sidecar"
+          ]
         }
       }
     },
@@ -1743,6 +2259,22 @@
           "binding": {
             "surface": ".cursor/mcp.json"
           }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "claim": "Grok project .grok/config.toml [mcp_servers] is the native MCP catalog; Grok also merges .mcp.json and .cursor/mcp.json via compat",
+              "scope": "grok mcp.catalog",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies mcp.catalog",
+          "binding": {
+            "surface": ".grok/config.toml"
+          },
+          "limitations": []
         }
       }
     },
@@ -1805,6 +2337,23 @@
           ],
           "diagnostic": "deterministic cursor adapter satisfies security.safe-dirs",
           "adapter_id": "harness.cursor.security.safe-dirs"
+        },
+        "grok": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "claim": "Grok safe-dirs is a PreToolUse Bash hook in .grok/hooks/swissknifeman.json that calls the shared safedirs verdict and fails closed when the harness checkout is unreachable",
+              "scope": "grok security.safe-dirs hook document and handler",
+              "source": "packages/harness/tests/test_grok_provider_surface.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "limitations": [
+            "matcher is ^Bash$ on PreToolUse, not Cursor beforeShellExecution",
+            "unreachable harness checkout is a refusal, not a pass"
+          ],
+          "diagnostic": "deterministic grok adapter denies rm/rmdir on PreToolUse Bash through the shared allowlist core",
+          "adapter_id": "harness.grok.security.safe-dirs"
         }
       }
     },
@@ -1861,6 +2410,22 @@
           ],
           "diagnostic": "deterministic cursor adapter satisfies settings.audit",
           "adapter_id": "harness.cursor.settings.audit"
+        },
+        "grok": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "read-only audit of documented layers; unreadable layer is a finding"
+          ],
+          "diagnostic": "deterministic grok adapter satisfies settings.audit",
+          "adapter_id": "harness.grok.settings.audit"
         }
       }
     },
@@ -1915,6 +2480,22 @@
           ],
           "diagnostic": "deterministic cursor adapter satisfies settings.permissions",
           "adapter_id": "harness.cursor.settings.permissions"
+        },
+        "grok": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "merge-only .grok/config.toml [ui]/[permission]; deny floor survives --always-approve"
+          ],
+          "diagnostic": "deterministic grok adapter satisfies settings.permissions",
+          "adapter_id": "harness.grok.settings.permissions"
         }
       }
     },
@@ -1969,6 +2550,22 @@
           "binding": {
             "surface": ".agents/skills"
           }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies skills.repository",
+          "binding": {
+            "surface": ".agents/skills"
+          },
+          "limitations": []
         }
       }
     },
@@ -2024,6 +2621,22 @@
             "generated workflow carriers orchestrate native subagents but do not create a queryable run directory"
           ],
           "diagnostic": "unsupported for Cursor: no provider-native workflow status store exists"
+        },
+        "grok": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok workflows.status capability cap",
+              "claim": "Grok exposes no provider-native workflow run store; generated workflow carriers are instruction-only"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — Grok exposes no provider-native workflow run store to query",
+            "generated workflow carriers orchestrate native subagents but do not create a queryable run directory"
+          ],
+          "diagnostic": "unsupported for Grok: no provider-native workflow status store exists"
         }
       }
     },
@@ -2084,6 +2697,24 @@
             "continuation depends on documented stop payload fields (status and loop_count)",
             "without lease/session evidence, the adapter refuses final completion with a deterministic diagnostic"
           ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.terminal-admission",
+          "diagnostic": "deterministic grok adapter satisfies lifecycle.terminal-admission via stop continuation",
+          "evidence": [
+            {
+              "claim": "Grok terminal-admission is a Stop hook that calls plan-terminal-admission.py with --provider grok and blocks with decision JSON",
+              "scope": "grok lifecycle.terminal-admission stop-boundary decision and continuation behavior",
+              "source": "packages/harness/tests/test_grok_provider_surface.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=on must be set explicitly via harness hooks",
+            "continuation depends on documented stop payload fields (status and loop_count)",
+            "without lease/session evidence, the adapter refuses final completion with a deterministic diagnostic"
+          ]
         }
       }
     }
@@ -2103,6 +2734,10 @@
     {
       "display_name": "Cursor",
       "id": "cursor"
+    },
+    {
+      "display_name": "Grok",
+      "id": "grok"
     }
   ]
 }

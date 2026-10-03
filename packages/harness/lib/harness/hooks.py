@@ -142,14 +142,10 @@ def plan_lifecycle(catalog: ProfileCatalog, *, provider_id: ProviderId,
         raise ValueError("HARNESS_CATALOG_MISMATCH")
     if provider_id is ProviderId.CLAUDE_CODE:
         bindings = _claude_lifecycle_bindings()
-    elif provider_id is ProviderId.CODEX:
-        bindings = (_load_codex_lifecycle_bindings(codex_bindings_path)
-                    if codex_bindings_path else None)
-    elif provider_id is ProviderId.CURSOR:
-        path = cursor_bindings_path or codex_bindings_path
-        bindings = _load_cursor_lifecycle_bindings(path) if path else None
     else:
-        bindings = None
+        path = cursor_bindings_path or codex_bindings_path
+        bindings = (_load_provider_lifecycle_bindings(path, provider_id=provider_id.value)
+                    if path else None)
     if bindings is None:
         raise ValueError("HARNESS_MAPPING_MISSING")
     valid = {surface.id for surface in catalog.surfaces if surface.kind in _LIFECYCLE_KINDS}
@@ -209,16 +205,38 @@ def adapt_codex_hook_payload(binding: LifecycleBinding, payload: dict) -> dict:
     return envelope
 
 
+_CLAUDE_SHAPED_HOOK_DIRS = {
+    ProviderId.CODEX: ".codex",
+    ProviderId.GROK: ".grok",
+}
+
+
+def claude_shaped_hook_paths(provider_id: ProviderId) -> tuple[str, str]:
+    """Return ``(document, handler)`` for a Claude-shaped hook bundle.
+
+    Codex loads one ``.codex/hooks.json``. Grok loads every ``.grok/hooks/*.json``
+    and ignores a sibling ``.grok/hooks.json``.
+    """
+    state_dir = _CLAUDE_SHAPED_HOOK_DIRS.get(provider_id)
+    if state_dir is None:
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    handler = f"{state_dir}/hooks/lifecycle.py"
+    if provider_id is ProviderId.GROK:
+        return f"{state_dir}/hooks/swissknifeman.json", handler
+    return f"{state_dir}/hooks.json", handler
+
+
 def render_codex_hooks(plan: LifecycleRenderPlan) -> bytes:
-    """Render only Codex-native hooks.json registration; handlers stay a separate artifact."""
-    if plan.provider_id is not ProviderId.CODEX or not plan.green:
+    """Render Claude-shaped hooks.json; Codex and Grok share this wire format."""
+    state_dir = _CLAUDE_SHAPED_HOOK_DIRS.get(plan.provider_id)
+    if state_dir is None or not plan.green:
         raise ValueError("cannot render refused lifecycle plan")
     hooks = {}
     for binding in plan.bindings:
         if binding.support_level != "hook-native":
             continue
         group = {"hooks": [{"type": "command", "command":
-                 f'python3 "$(git rev-parse --show-toplevel)/.codex/hooks/lifecycle.py" --surface {binding.surface_id}'}]}
+                 f'python3 "$(git rev-parse --show-toplevel)/{state_dir}/hooks/lifecycle.py" --surface {binding.surface_id}'}]}
         if binding.matcher:
             group["matcher"] = binding.matcher
         hooks.setdefault(binding.event, []).append(group)
@@ -1233,20 +1251,26 @@ def _codex_router_catalog():
     return commands, hint_template
 
 
-def render_codex_hook_handler() -> bytes:
+def render_codex_hook_handler(*, state_dir: str = ".codex") -> bytes:
     """Generate the multi-surface dispatcher: one generator, one per-surface handler table.
 
     Fail-closed on every path: unknown `--surface`, malformed JSON, or a payload missing a
     field required for the resolved event all exit 2 with no side effect. Each handler is a
     thin, best-effort adapter (never raises past its own try/except) so a runtime failure
     inside one handler degrades to silence, exactly like the Claude-side hooks it mirrors.
+    Codex and Grok share this dispatcher; ``state_dir`` is the only provider-owned path.
     """
+    if state_dir not in {".codex", ".grok"}:
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    provider_id = "grok" if state_dir == ".grok" else "codex"
     router_commands, hint_template = _codex_router_catalog()
     router_catalog_literal = json.dumps(router_commands, ensure_ascii=False)
     return f'''#!/usr/bin/env python3
 import argparse, datetime, importlib.util, json, os, re, shlex, shutil, subprocess, sys
 from pathlib import Path
 
+_STATE_DIR = {state_dir!r}
+_PROVIDER_ID = {provider_id!r}
 _SURFACE_EVENTS = {{
     "context.observer": "SessionStart",
     "lifecycle.command-log": "PreToolUse",
@@ -1274,12 +1298,12 @@ _GATE_MODES = ("off", "warn", "strict")
 
 
 def _read_mode(cwd, filename):
-    """MODE from <cwd>/.codex/<filename> (harness hooks --provider codex writes it).
+    """MODE from <cwd>/<_STATE_DIR>/<filename> (harness hooks writes it).
     Missing/unreadable/unknown value -> off (safe default, matches the Claude-side
     gates and the phase's explicit "inactive by default" requirement)."""
     if not cwd:
         return "off"
-    f = Path(cwd) / ".codex" / filename
+    f = Path(cwd) / _STATE_DIR / filename
     try:
         text = f.read_text(encoding="utf-8")
     except OSError:
@@ -1355,7 +1379,7 @@ def _append_jsonl(path, payload):
 
 
 def _tool_sidecar_path(cwd, session_id):
-    return Path(cwd) / ".codex" / "state" / (str(session_id) + ".tools.jsonl")
+    return Path(cwd) / _STATE_DIR / "state" / (str(session_id) + ".tools.jsonl")
 
 
 def _aggregate_tool_sidecar(path):
@@ -1437,7 +1461,7 @@ def _tool_telemetry(payload):
 
 
 def _command_log(payload):
-    log_dir = Path.home() / ".codex" / "logs"
+    log_dir = Path.home() / _STATE_DIR / "logs"
     try:
         log_dir.mkdir(parents=True, exist_ok=True)
         tool_input = payload.get("tool_input") or {{}}
@@ -1470,7 +1494,7 @@ def _run_report(payload):
                    "transcript_path": tpath if isinstance(tpath, str) else None}}
     else:
         record["schema"] = 2
-        record["provider_id"] = "codex"
+        record["provider_id"] = _PROVIDER_ID
         record["session_id"] = sid
         record["cwd"] = cwd
         record["reason"] = payload.get("reason") or ""
@@ -1488,7 +1512,7 @@ def _run_report(payload):
             cur = existing.setdefault(op, {{"calls": 0}})
             cur["calls"] += rec.get("calls", 0)
         record["codegraph"] = existing
-    runs_dir = Path(cwd) / ".codex" / "runs"
+    runs_dir = Path(cwd) / _STATE_DIR / "runs"
     try:
         runs_dir.mkdir(parents=True, exist_ok=True)
         gitignore = runs_dir / ".gitignore"
@@ -1533,7 +1557,7 @@ def _memory(payload):
     cwd = payload.get("cwd")
     mode, brain = "maind", "core"
     if cwd:
-        ini = Path(cwd) / ".codex" / "memory.env.ini"
+        ini = Path(cwd) / _STATE_DIR / "memory.env.ini"
         try:
             for line in ini.read_text(encoding="utf-8").splitlines():
                 line = line.strip()
@@ -1709,7 +1733,7 @@ def _review_gate(payload):
     if not check:
         return
     key = (payload.get("session_id") or "nosession") + ":" + (payload.get("agent_id") or "noagent")
-    state_path = Path(cwd) / ".codex" / "review-gate.state.json"
+    state_path = Path(cwd) / _STATE_DIR / "review-gate.state.json"
     try:
         state = json.loads(state_path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -1895,7 +1919,7 @@ def _terminal_admission(payload):
         print(json.dumps({{"decision": "block", "reason": "TERMINAL_MESSAGE_UNAVAILABLE"}})); return
     command = [sys.executable, str(cli), "check", "--state-dir", str(Path(cwd) / ".swissknifeman/terminal-admission"),
                "--plan", request["plan"], "--subject", request["subject"], "--command", request["command"],
-               "--run-id", request["run_id"], "--task-session", request["task_session"], "--provider", "codex",
+               "--run-id", request["run_id"], "--task-session", request["task_session"], "--provider", _PROVIDER_ID,
                "--provider-session", payload.get("session_id", ""), "--turn-id", payload.get("turn_id", ""),
                "--continuity-json", request["continuity_json"], "--message", message,
                "--plan-dir", str(Path(cwd) / "plans" / request["plan"])]
@@ -2013,34 +2037,43 @@ def validate_d104_codex_lifecycle_composition(document: bytes, *, memory_command
 
 def plan_codex_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path: Path):
     """Use the P2 artifact seam for registration and its generated consumer handler."""
-    if plan.provider_id is not ProviderId.CODEX or not plan.green:
+    return plan_claude_shaped_lifecycle_artifacts(plan, bindings_path=bindings_path)
+
+
+def plan_claude_shaped_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path: Path):
+    """Codex/Grok share one Claude-shaped hook document plus generated lifecycle.py."""
+    state_dir = _CLAUDE_SHAPED_HOOK_DIRS.get(plan.provider_id)
+    if state_dir is None or not plan.green:
         raise ValueError("cannot plan refused lifecycle artifact")
-    source = ArtifactSource("harness.codex.lifecycle-bindings",
-                            "packages/harness/configs/codex/hooks/lifecycle-context-bindings.json",
+    name = plan.provider_id.value
+    source = ArtifactSource(f"harness.{name}.lifecycle-bindings",
+                            f"packages/harness/configs/{name}/hooks/lifecycle-context-bindings.json",
                             sha256_digest(Path(bindings_path).read_bytes()))
     router_path = Path(__file__).resolve().parents[4] / _CODEX_ROUTER_CATALOG_PATH
     router_source = ArtifactSource("harness.codex.router-catalog",
                                    _CODEX_ROUTER_CATALOG_PATH,
                                    sha256_digest(router_path.read_bytes()))
-    identity = ArtifactAdapterIdentity("harness.codex.lifecycle", _CODEX_HOOK_ADAPTER_VERSION,
-                                       ProviderId.CODEX, "1.0.0", ())
-    hooks = plan_artifact_render(ArtifactRenderRequest("harness.codex.lifecycle.hooks", (source,),
-        ArtifactTarget(".codex/hooks.json", ("whole-file", ())), identity, (), {}, lambda _request: render_codex_hooks(plan)))
-    handler = plan_artifact_render(ArtifactRenderRequest("harness.codex.lifecycle.handler",
+    identity = ArtifactAdapterIdentity(f"harness.{name}.lifecycle", _CODEX_HOOK_ADAPTER_VERSION,
+                                       plan.provider_id, "1.0.0", ())
+    document_path, handler_path = claude_shaped_hook_paths(plan.provider_id)
+    hooks = plan_artifact_render(ArtifactRenderRequest(f"harness.{name}.lifecycle.hooks", (source,),
+        ArtifactTarget(document_path, ("whole-file", ())), identity, (), {},
+        lambda _request: render_codex_hooks(plan)))
+    handler = plan_artifact_render(ArtifactRenderRequest(f"harness.{name}.lifecycle.handler",
         (source, router_source),
-        ArtifactTarget(".codex/hooks/lifecycle.py", ("whole-file", ())), identity, (), {}, lambda _request: render_codex_hook_handler()))
+        ArtifactTarget(handler_path, ("whole-file", ())), identity, (), {},
+        lambda _request: render_codex_hook_handler(state_dir=state_dir)))
     return hooks, handler
 
 
-def block_codex_lifecycle(env, target, *, surfaces, trusted, repair, dry):
-    """Deploy the given Codex lifecycle surfaces as ONE managed `.codex/hooks.json` +
-    handler bundle. Declarative, not incremental: the artifact content reflects exactly
-    `surfaces` for THIS call — a surface omitted from a later call drops out of the
-    rendered document, so the operator re-lists every surface it wants active."""
-    bindings_path = Path(env.root) / "configs/codex/hooks/lifecycle-context-bindings.json"
+def block_codex_lifecycle(env, target, *, surfaces, trusted, repair, dry,
+                          provider_id=ProviderId.CODEX):
+    """Deploy Claude-shaped lifecycle as ONE managed hooks.json + handler bundle."""
+    name = provider_id.value
+    bindings_path = Path(env.root) / "configs" / name / "hooks/lifecycle-context-bindings.json"
     requests = tuple(LifecycleRequest(surface_id, True) for surface_id in surfaces)
     lifecycle = plan_lifecycle(
-        load_catalog(default_catalog_path(env)), provider_id=ProviderId.CODEX,
+        load_catalog(default_catalog_path(env)), provider_id=provider_id,
         requests=requests, trusted=trusted, codex_bindings_path=bindings_path)
     if not lifecycle.green:
         diagnostic = lifecycle.diagnostics[0]
@@ -2053,10 +2086,10 @@ def block_codex_lifecycle(env, target, *, surfaces, trusted, repair, dry):
         Path(target), artifacts, lock_bytes=lock_bytes,
         repair_artifact_ids=repair_ids, retain_unexpected_records=True)
     projection = artifact_dry_run(plan)
-    print(f"codex hooks: {len(surfaces)} surface(s) — {', '.join(sorted(surfaces))}")
+    print(f"{name} hooks: {len(surfaces)} surface(s) — {', '.join(sorted(surfaces))}")
     print(render_artifact_projection(projection), end="")
     if projection["exit_severity"] == "error":
-        die("Codex lifecycle deploy refused; resolve ownership/drift or use --repair")
+        die(f"{name} lifecycle deploy refused; resolve ownership/drift or use --repair")
     if not dry:
         apply_plan(Path(target), plan)
 
@@ -2385,13 +2418,13 @@ _CODEX_GATE_ENV_FILE = {
 }
 
 
-def _block_codex_gates(env, target, opts):
-    """Compose one declarative `.codex/hooks.json` deploy from every surface flag set
-    THIS call: --observer / --pack-guard|--changelog-gate|--review-gate|--git-guardrails
-    off|warn|strict / --safe-dirs / --daemon-safety. Mode gates also get their own
-    `.codex/<gate>.env.ini` (harness hooks --pack-guard etc. writes it, the generated
-    dispatcher reads it) — off is written but NOT requested as a surface (matches the
-    Claude-side off semantics: no registration, no effect)."""
+def _block_codex_gates(env, target, opts, *, provider="codex"):
+    """Compose one declarative Claude-shaped hooks.json deploy from every surface flag.
+
+    Codex and Grok share the dispatcher; only the state dir (`.codex` / `.grok`) changes.
+    """
+    state_dir = ".codex" if provider == "codex" else ".grok"
+    provider_id = ProviderId.CODEX if provider == "codex" else ProviderId.GROK
     surfaces = []
     if opts["observer"]:
         surfaces.append("context.observer")
@@ -2406,26 +2439,27 @@ def _block_codex_gates(env, target, opts):
         if mode not in PACKGUARD_MODES:
             die(f"unknown mode {flag.replace('_', '-')}: {mode} ({'|'.join(PACKGUARD_MODES)})")
         surface_id = _CODEX_GATE_SURFACE[flag]
-        write_text(target / ".codex" / _CODEX_GATE_ENV_FILE[surface_id], f"MODE={mode}\n",
+        write_text(target / state_dir / _CODEX_GATE_ENV_FILE[surface_id], f"MODE={mode}\n",
                   opts["dry_run"])
         if mode != "off":
             surfaces.append(surface_id)
     if opts["terminal_admission"]:
         if opts["terminal_admission"] not in ("on", "off"):
             die("unknown mode terminal-admission: on|off")
-        write_text(target / ".codex" / "terminal-admission.env.ini",
+        write_text(target / state_dir / "terminal-admission.env.ini",
                    f"MODE={opts['terminal_admission']}\n", opts["dry_run"])
         if opts["terminal_admission"] == "on":
             surfaces.append("lifecycle.terminal-admission")
     if not surfaces:
-        die("provider codex needs at least one of: --observer / --pack-guard off|warn|strict / "
+        die(f"provider {provider} needs at least one of: --observer / --pack-guard off|warn|strict / "
             "--changelog-gate off|warn|strict / --review-gate off|warn|strict / "
             "--git-guardrails off|warn|strict / --safe-dirs / --daemon-safety")
     for surface in _CODEX_OBSERVABILITY_SURFACES:
         if surface not in surfaces:
             surfaces.append(surface)
     block_codex_lifecycle(env, target, surfaces=tuple(surfaces), trusted=bool(opts["trusted"]),
-                          repair=bool(opts["repair"]), dry=bool(opts["dry_run"]))
+                          repair=bool(opts["repair"]), dry=bool(opts["dry_run"]),
+                          provider_id=provider_id)
 
 
 def _block_cursor_gates(env, target, opts):
@@ -2538,7 +2572,7 @@ def cmd_hooks(env, argv):
               "[--output-style lean|off] "
               "[--plans-dir plans|off] "
               f"[--statusline {'|'.join(STATUSLINE_MODES)}] "
-              "[--provider codex [--observer] [--pack-guard off|warn|strict] "
+              "[--provider codex|grok [--observer] [--pack-guard off|warn|strict] "
               "[--changelog-gate off|warn|strict] [--review-gate off|warn|strict] "
               "[--git-guardrails off|warn|strict] [--safe-dirs] [--daemon-safety] "
               "[--terminal-admission on|off] | --provider cursor [--safe-dirs] "
@@ -2559,12 +2593,12 @@ def cmd_hooks(env, argv):
     # artifact lock deliberately accepts only an explicit absolute root.
     target = Path(opts["target"]).expanduser().resolve()
     if opts["provider"]:
-        if opts["provider"] == "codex":
-            _block_codex_gates(env, target, opts)
+        if opts["provider"] in ("codex", "grok"):
+            _block_codex_gates(env, target, opts, provider=opts["provider"])
         elif opts["provider"] == "cursor":
             _block_cursor_gates(env, target, opts)
         else:
-            die("is only supported --provider codex|cursor")
+            die("is only supported --provider codex|cursor|grok")
         return
     if not (opts["auto_approve"] or opts["memory"] or opts["router"]
             or opts["run_report"] or opts["pack_guard"] or opts["changelog_gate"]

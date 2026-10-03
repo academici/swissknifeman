@@ -1,6 +1,6 @@
 # Provider model roles
 
-Hand-verified model inventories and fixed class pins for the three managed providers.
+Hand-verified model inventories and fixed class pins for the managed providers.
 Neutral routing in `packages/task/configs/command-routing.json` uses `model_class` (`economy` < `implementation` < `frontier`) plus `effort`; each provider block below maps those classes to native selectors.
 
 Generated from the validated command-routing mappings. Do not edit the tables manually.
@@ -22,6 +22,7 @@ Fixed commands and launch-blocks pin **one** default selector per class. The mod
 | `claude-code` | `haiku` | `sonnet` | `opus` |
 | `codex` | `gpt-5.6-luna` | `gpt-6-sol` | `gpt-6-astra` |
 | `cursor` | `composer-2.5-fast` | `composer-2.5` | `claude-opus-5-thinking-high` |
+| `grok` | `grok-4.5` | `grok-4.6` | `grok-4.7` |
 
 ## Model inventory
 
@@ -76,6 +77,18 @@ Fixed commands and launch-blocks pin **one** default selector per class. The mod
 
 `auto` never substitutes a fixed `frontier` or `implementation` pin in a launch-block or fixed command.
 
+### `grok`
+
+- `verified_at`: `2026-10-03`
+- `source`: grok --help / grok models and ~/.grok/config.toml [models].default
+- `verification`: CLI --model plus config.toml default; live session GROK_SESSION_ID; agent is the same grok binary
+
+| Model id | Roles | Notes |
+|:--|:--|:--|
+| `grok-4.5` | economy, explore | patterns=`grok-4\.5.*` |
+| `grok-4.6` | implementation, review | patterns=`grok-4\.6.*` |
+| `grok-4.7` | frontier, implementation, review, design, audit | patterns=`grok-4\.7.*` |
+
 ## Cursor launch contract (trusted self-host)
 
 Approval mode and IDE Run Mode are **not** project-configurable (see freeze E14.1). Autonomy comes from launch flags plus a documented IDE checklist; the `deny` floor in `.cursor/cli.json` survives `--force`.
@@ -103,3 +116,26 @@ IDE checklist before an autonomous session:
 5. For CLI launches, pass the full flag set above; partial flags are not a trusted launch.
 
 Full install and profile shapes: [Cursor adapter](/skiller/adapters/cursor) and [Harness setup: Cursor](/harness/setup/cursor).
+
+## Grok launch contract (trusted self-host)
+
+Grok Build CLI (`grok`, PATH alias `agent`) is a managed provider. Skills are discovered from `.agents/skills` (no `.grok/skills` writer). Project `.grok/config.toml` carries `[permission] deny` and MCP only; `[ui] permission_mode` is user-level in `~/.grok/config.toml` and is not read from the project file. `--always-approve` is a trusted-session launch flag. The deny floor still applies. Cursor's `agent --workspace` is a different binary (`cursor-agent`); identity is `GROK_SESSION_ID`.
+
+| Parameter | Value |
+|:--|:--|
+| Workspace (`cwd`) | repository root — `grok --cwd <repo-cwd>` |
+| Model | class pin from table above (`grok-4.5` / `grok-4.6` / `grok-4.7`) |
+| Effort | from plan Routing / command frontmatter; fallback `[models].default_reasoning_effort` |
+| CLI autonomy | `--permission-mode default|acceptEdits`, or `--always-approve` on trusted self-host |
+| Binary | `grok` or Grok `agent`; never Cursor `cursor-agent` |
+
+**Native Grok command** (copy after the metadata table in a launch-block):
+
+```bash
+grok --cwd <repo-cwd> --model <model-selector> --always-approve '/task:<command> <arguments>'
+```
+
+1. Open the intended repository root (`--cwd`).
+2. Confirm `.grok/config.toml` and hub MCP (`maind health --cwd`).
+3. Pin the routed model; do not substitute Cursor-inventory grok-4.x ids for provider grok.
+4. Pass `--always-approve` only on a trusted self-host; the deny floor remains.

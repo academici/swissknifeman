@@ -860,7 +860,7 @@ def cmd_doctor(env, argv):
               "(new/changed managed-skills; dry calculation).\n"
               "  --provider-distribution: read-only preflight Claude/Codex delivery; "
               "does not start native installer.\n"
-              "  --context [--provider claude-code|codex|cursor] [--target P]: "
+              "  --context [--provider claude-code|codex|cursor|grok] [--target P]: "
               "provider-aware first-turn footprint; Codex reads its effective native "
               "prompt inventory and reports duplicate skills / plugins outside policy.\n"
               "  --effective-runtime [--fixture-out F] [--carrier-out F]: P1.4 cold "
@@ -879,8 +879,8 @@ def cmd_doctor(env, argv):
         from .budget import first_turn_report, format_first_turn_report
         from .config import resolve_target
         provider = opts.get("provider") or "claude-code"
-        if provider not in {"claude-code", "codex", "cursor"}:
-            raise SystemExit("--provider: expected claude-code|codex|cursor")
+        if provider not in {"claude-code", "codex", "cursor", "grok"}:
+            raise SystemExit("--provider: expected claude-code|codex|cursor|grok")
         target, _ = resolve_target(env, opts)
         report = first_turn_report(env, target, provider=provider)
         skills = report["sources"]["skills"]

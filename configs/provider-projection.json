@@ -16,6 +16,11 @@
       "instructions": {"project_common": false},
       "route_evidence": {"adapter": "route_evidence_cursor", "semantic_prefix": ""},
       "command_invocation": {"style": "semantic"}
+    },
+    "grok": {
+      "instructions": {"project_common": false},
+      "route_evidence": {"adapter": "route_evidence_grok", "semantic_prefix": "/"},
+      "command_invocation": {"style": "slash"}
     }
   }
 }

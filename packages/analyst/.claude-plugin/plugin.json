@@ -1,6 +1,6 @@
 {
   "name": "analyst",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "analyst — continuous learning ecosystems: deterministic capture of candidate lessons from runs (digest), man-gate (review/promote), provenance; agent-analyst (/analyst:deep, digest-first). Commands + agent.",
   "author": { "name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com" },
   "homepage": "https://github.com/academici/swissknifeman",

@@ -20,6 +20,7 @@ class ProviderId(str, Enum):
     CLAUDE_CODE = "claude-code"
     CODEX = "codex"
     CURSOR = "cursor"
+    GROK = "grok"
 
 
 class SupportLevel(str, Enum):

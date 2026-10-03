@@ -19,9 +19,9 @@ import hashlib
 import os
 from pathlib import Path
 
-from task.command_catalog import load_routing_metadata
 from task.route_evidence import (
-    RouteEvidenceError, capture_actual, owner_followup_revokes, resolve_model_class)
+    RouteEvidenceError, capture_actual, exactly_one, launch_option_values, mapped_effort,
+    mapped_model_class, owner_followup_revokes, proc_parent_argv)
 
 
 CLI_SOURCE_VERSION = "codex-ancestor-argv-v1"
@@ -30,28 +30,7 @@ _ROUTING_PATH = Path(__file__).resolve().parents[2] / "configs" / "command-routi
 
 
 def _proc_entry(pid: int) -> tuple[int, tuple[str, ...]]:
-    root = Path("/proc") / str(pid)
-    try:
-        status = (root / "status").read_text(encoding="utf-8")
-        raw_argv = (root / "cmdline").read_bytes()
-    except OSError as error:
-        raise RouteEvidenceError(
-            "ROUTE_LAUNCH_UNAVAILABLE", f"Codex process ancestry is unreadable: {error}") from error
-
-    parent = None
-    for line in status.splitlines():
-        if line.startswith("PPid:"):
-            _, value = line.split(":", 1)
-            parent = int(value.strip())
-            break
-    argv = tuple(
-        value.decode("utf-8", errors="surrogateescape")
-        for value in raw_argv.split(b"\0") if value
-    )
-    if parent is None or not argv:
-        raise RouteEvidenceError(
-            "ROUTE_LAUNCH_UNAVAILABLE", f"process {pid} has no readable parent/argv")
-    return parent, argv
+    return proc_parent_argv(pid, label="Codex")
 
 
 def _codex_ancestor(start_pid: int, process_table=None) -> tuple[str, ...]:
@@ -74,43 +53,19 @@ def _codex_ancestor(start_pid: int, process_table=None) -> tuple[str, ...]:
 
 
 def _option_values(argv: tuple[str, ...], short: str, long: str) -> tuple[str, ...]:
-    values = []
-    index = 1
-    while index < len(argv):
-        token = argv[index]
-        if token in (short, long):
-            if index + 1 >= len(argv):
-                raise RouteEvidenceError(
-                    "ROUTE_LAUNCH_MISMATCH", f"launch option {token} has no value")
-            values.append(argv[index + 1])
-            index += 2
-            continue
-        if token.startswith(long + "="):
-            values.append(token.split("=", 1)[1])
-        index += 1
-    return tuple(values)
+    return launch_option_values(argv, short, long)
 
 
 def _one(values: tuple[str, ...], label: str) -> str:
-    if len(values) != 1:
-        raise RouteEvidenceError(
-            "ROUTE_LAUNCH_MISMATCH", f"expected exactly one {label}, observed {len(values)}")
-    return values[0]
+    return exactly_one(values, label)
 
 
 def _selector_class(model: str, routing_path: Path) -> str:
-    return resolve_model_class("codex", model, load_routing_metadata(routing_path))
+    return mapped_model_class("codex", model, routing_path)
 
 
 def _selector_effort(selector: str, routing_path: Path) -> str:
-    metadata = load_routing_metadata(routing_path)
-    mapping = metadata.get("mappings", {}).get("codex", {})
-    matches = [
-        effort
-        for effort, selectors in mapping.get("effort_selectors", {}).items()
-        if selector in selectors
-    ]
-    return _one(tuple(matches), f"Codex effort mapping for {selector!r}")
+    return mapped_effort("codex", selector, routing_path, label="Codex")
 
 
 def _thread_state_root() -> Path:

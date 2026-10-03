@@ -95,7 +95,7 @@ echo "[9/12] role registry review"
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -m harness.reviewroles --check \
   || err "role registry review (role-bindings.json)"
 
-echo "[10/12] instruction drift (18 projections)"
+echo "[10/12] instruction drift (28 projections)"
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -m harness.instructions --check \
   || err "instruction drift (harness instructions check)"
 

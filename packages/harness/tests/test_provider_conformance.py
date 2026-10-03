@@ -82,7 +82,7 @@ class ProviderConformanceTests(unittest.TestCase):
         self.assertEqual(len(hashes), len(set(hashes)))
         self.assertTrue(all(value.startswith("sha256:") and len(value) == 71 for value in hashes.values()))
         fixture = json.loads((PACKAGE / "tests/fixtures_data/provider-harness-cases.json").read_text())
-        for provider in ("claude-code", "codex", "cursor"):
+        for provider in ("claude-code", "codex", "cursor", "grok"):
             self.assertTrue(all(f"profile:{provider}:{profile}" in hashes
                                 for profile in ("observe", "workspace-contained", "trusted-full-access")))
             self.assertIn(f"mcp:{provider}:catalog", hashes)
@@ -94,12 +94,13 @@ class ProviderConformanceTests(unittest.TestCase):
                             if role != "_common.orchestrator"))
         self.assertNotIn("agent:codex:_common.orchestrator", hashes)
         self.assertIn("agent:cursor:consumer-mapping", hashes)
-        self.assertGreaterEqual(len(hashes), 153)
-        expected = {(provider, surface) for provider in ("claude-code", "codex", "cursor")
+        self.assertIn("agent:grok:consumer-mapping", hashes)
+        self.assertGreaterEqual(len(hashes), 174)
+        expected = {(provider, surface) for provider in ("claude-code", "codex", "cursor", "grok")
                     for surface in fixture["surfaces"]}
         observed = {(row["provider"], row["surface_id"]) for row in report["surface_map"]}
         self.assertEqual(observed, expected)
-        self.assertEqual(len(report["surface_map"]), 75)
+        self.assertEqual(len(report["surface_map"]), 100)
         self.assertIn({"category": "activation", "provider": "claude-code",
                        "identity": "agents.catalog", "polarity": "positive",
                        "state": "supported", "diagnostic": "HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:44"},
@@ -109,6 +110,11 @@ class ProviderConformanceTests(unittest.TestCase):
                        "state": "supported", "diagnostic": "HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:43"},
                       report["evidence"])
         self.assertIn({"category": "activation", "provider": "cursor",
+                       "identity": "agents.catalog", "polarity": "positive",
+                       "state": "supported",
+                       "diagnostic": "HARNESS_CURSOR_AGENT_CONSUMER_MAPPING:44"},
+                      report["evidence"])
+        self.assertIn({"category": "activation", "provider": "grok",
                        "identity": "agents.catalog", "polarity": "positive",
                        "state": "supported",
                        "diagnostic": "HARNESS_CURSOR_AGENT_CONSUMER_MAPPING:44"},

@@ -22,7 +22,7 @@ class InstructionCompatibilityTests(unittest.TestCase):
     def test_fixture_is_independent_pre_renderer_p5_6_inventory(self):
         expected = json.loads(DATA.read_text(encoding="utf-8"))
         self.assertEqual(expected["provenance"], {"captured_before_renderer": True})
-        self.assertEqual(len(expected["records"]), 87)
+        self.assertEqual(len(expected["records"]), 90)
         self.assertTrue(all(item["assertions"] for item in expected["records"]))
 
     def test_every_record_anchor_exists_in_actual_installed_consumers(self):
@@ -68,6 +68,8 @@ class InstructionCompatibilityTests(unittest.TestCase):
                                  EXTENSION_IDS[(scope, "codex")])
                 self.assertEqual(by_provider["cursor"].ordered_semantic_ids,
                                  EXTENSION_IDS[(scope, "cursor")])
+                self.assertEqual(by_provider["grok"].ordered_semantic_ids,
+                                 EXTENSION_IDS[(scope, "grok")])
 
     def test_p4_forbidden_claude_runtime_tokens_absent_from_codex_consumers(self):
         with tempfile.TemporaryDirectory() as temp:

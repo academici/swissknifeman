@@ -73,6 +73,24 @@ def _at_commit(repo, commit, target):
              "evidence differs from committed repair")
 
 
+def _products_at_commit(repo, commit, products):
+    """Prove the full anchor in one Git tree read, rather than one process/file."""
+    tree = {}
+    for raw in _git(repo, "ls-tree", "-rz", commit).split(b"\0"):
+        if raw:
+            metadata, path = raw.split(b"\t", 1)
+            mode, kind, oid = metadata.split()
+            tree[path.decode()] = (mode, kind, oid.decode())
+    algorithm = _git(repo, "rev-parse", "--show-object-format").decode().strip()
+    for row in products:
+        path = _path(repo, row["path"])
+        data = path.read_bytes()
+        oid = hashlib.new(algorithm, f"blob {len(data)}\0".encode() + data).hexdigest()
+        actual = tree.get(row["path"])
+        _require(actual is not None and actual[1] == b"blob" and actual[0] in {b"100644", b"100755"}
+                 and actual[2] == oid, "product bytes differ from committed repair")
+
+
 def _head(events, item):
     rows = [e for e in events if e.get("item_id") == item]
     event = plan_item_state.latest_execution_event(rows)
@@ -141,8 +159,7 @@ def validate(plan_dir, phase_id, candidate):
     for row in rebuilt["product_files"]:
         products.extend(row.get("members", [row]))
     _require(products and all(row.get("state") == "file" for row in products), "product coverage incomplete")
-    for row in products:
-        _at_commit(repo, anchor, _path(repo, row["path"]))
+    _products_at_commit(repo, anchor, products)
     _require(isinstance(record["repairs"], dict) and record["repairs"], "repair evidence missing")
     repairs = {}
     for item, proof in record["repairs"].items():
@@ -242,7 +259,7 @@ def closed_green(plan_dir, phase_id):
     """A phase GREEN projection needs a persisted, still-valid close admission."""
     events = journal.read_authoritative_entries(plan_dir)
     closes = [e for e in events if e.get("item_id") == phase_id and e.get("command") == "plan-close"]
-    if not closes or closes[-1].get("result") != "closed-green":
+    if not closes or closes[-1].get("result") != "closed-green" or not closes[-1].get("run_id"):
         return False
     event = closes[-1]
     if "findings_resolution_sha256" not in (event.get("decision") or {}):

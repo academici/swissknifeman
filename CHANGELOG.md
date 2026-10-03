@@ -33,7 +33,8 @@
 
 - **Task phase acceptance:** GREEN-закрытие после owning repairs проверяет полный
   inventory исторического RED review, admitted repeats, terminal evidence,
-  committed logs/exit codes и текущие product bytes. Исторический review
+  committed logs/exit codes и текущие product bytes. Phase-close сохраняет
+  native session/run identity для terminal delivery. Исторический review
   сохраняется; неполная или невалидная связь findings/evidence запрещает закрытие.
 
 - **Task repeat-admission:** повтор одного закрытого пункта соблюдает phase-scoped

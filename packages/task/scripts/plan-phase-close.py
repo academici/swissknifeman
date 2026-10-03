@@ -14,7 +14,7 @@ sys.path.insert(0, str(_PKG.parent.parent))
 from task import journal, phase_findings, plan_closure, plan_decisions, plan_gates, plan_status  # noqa: E402
 
 
-def close(plan_dir, phase_id, *, actor, note, check=False):
+def close(plan_dir, phase_id, *, actor, note, check=False, session_id=None):
     root = Path(plan_dir)
     candidate = plan_gates.phase_candidate_fingerprint(root, phase_id)
     gate = plan_gates.phase_close_gate(root, phase_id,
@@ -28,17 +28,31 @@ def close(plan_dir, phase_id, *, actor, note, check=False):
     else:
         prior = [e for e in journal.read_authoritative_entries(root)
                  if e.get("item_id") == phase_id and e.get("command") == "plan-close"]
-        matched = bool(prior and prior[-1].get("result") == "closed-green"
+        matched = bool(prior and prior[-1].get("result") == "closed-green" and prior[-1].get("run_id")
                        and prior[-1].get("fingerprint") == candidate["fingerprint"])
         if proof:
             matched = matched and (prior[-1].get("decision") or {}).get("findings_resolution_sha256") == proof["sha256"]
         if not matched:
+            if not isinstance(session_id, str) or not session_id:
+                raise ValueError("PHASE_CLOSE_SESSION_REQUIRED: provide the actual invoking session ID")
             decision = {"signal_class": "acceptance", "scope_class": "phase", "action": "close-green",
                         "recovered": True, "terminal": True}
             if proof:
                 decision["findings_resolution_sha256"] = proof["sha256"]
-            journal.append(root, journal.new_entry(plan_id=root.name, item_id=phase_id,
+            pending = [e for e in prior if e.get("result") == "in-progress" and e.get("session_id") == session_id
+                       and not any(t.get("run_id") == e.get("run_id") and t.get("result") in journal.TERMINAL_CLOSE_RESULTS
+                                   for t in prior)]
+            if len(pending) > 1:
+                raise ValueError("PHASE_CLOSE_RUN_AMBIGUOUS: reconcile existing phase-close starts")
+            attempt = pending[0]["attempt"] if pending else max((e.get("attempt", 1) for e in prior), default=0) + 1
+            run_id = journal.derive_run_id(plan_id=root.name, item_id=phase_id, attempt=attempt, session_id=session_id)
+            if not pending:
+                journal.append(root, journal.new_entry(plan_id=root.name, item_id=phase_id,
+                    command="plan-close", actor=actor, result="in-progress", session_id=session_id,
+                    run_id=run_id, attempt=attempt, fingerprint=candidate["fingerprint"], note="Checking phase-close admission."))
+            journal.append_idempotent_terminal(root, journal.new_entry(plan_id=root.name, item_id=phase_id,
                 command="plan-close", actor=actor, result="closed-green", note=note,
+                session_id=session_id, run_id=run_id, attempt=attempt,
                 fingerprint=candidate["fingerprint"], decision=decision))
     plan_decisions.build_views(root, check=check)
     plan_status.build_status(root, check=check)
@@ -55,12 +69,13 @@ def main(argv=None):
     parser.add_argument("--plan-dir", required=True, type=Path)
     parser.add_argument("--phase", required=True)
     parser.add_argument("--actor", default="task:plan-close")
+    parser.add_argument("--session-id", help="actual invoking provider session ID; required for a new close")
     parser.add_argument("--note", default="Phase GREEN; current acceptance verified.\nwrite-site: pre_mutation: allow · pre_final: allow")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
     try:
         print(json.dumps(close(args.plan_dir, args.phase, actor=args.actor, note=args.note,
-                               check=args.check), ensure_ascii=False, sort_keys=True))
+                               check=args.check, session_id=args.session_id), ensure_ascii=False, sort_keys=True))
         return 0
     except (OSError, ValueError, KeyError, TypeError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

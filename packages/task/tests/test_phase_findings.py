@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 import fixtures
-from task import journal, phase_findings, plan_assurance, plan_gates, plan_item_state, plan_status, terminal_policy
+from task import journal, phase_findings, plan_delivery, plan_gates, plan_item_state, plan_status, terminal_policy
 
 
 class PhaseFindingsTests(unittest.TestCase):
@@ -114,6 +114,8 @@ class PhaseFindingsTests(unittest.TestCase):
         candidate = plan_gates.phase_candidate_fingerprint(self.plan, "P1")
         proof = self.gate()["audit_policy"]["findings_resolution"]
         event = journal.new_entry(plan_id=self.plan.name, item_id="P1", command="plan-close", actor="test/high",
+            session_id="fixture-phase-session", run_id=journal.derive_run_id(
+                plan_id=self.plan.name, item_id="P1", attempt=1, session_id="fixture-phase-session"),
             result="closed-green", fingerprint=candidate["fingerprint"], decision={"signal_class": "acceptance",
             "scope_class": "phase", "action": "close-green", "terminal": True, "recovered": True,
             "findings_resolution_sha256": proof["sha256"]})
@@ -211,13 +213,20 @@ class PhaseFindingsTests(unittest.TestCase):
 
     def test_phase_close_launcher_is_idempotent_and_checks_projection(self):
         close = runpy.run_path(str(Path(__file__).parents[1] / "scripts/plan-phase-close.py"))["close"]
-        close(self.plan, "P1", actor="test/high", note="Checked repair evidence.")
+        close(self.plan, "P1", actor="test/high", note="Checked repair evidence.", session_id="fixture-phase-session")
         history = (self.plan / "journal.jsonl").read_bytes()
         closure = self.plan / "phases/P1/P1.closed.md"
         self.assertIn("Resolved Review Findings", closure.read_text())
-        close(self.plan, "P1", actor="test/high", note="Checked repair evidence.")
+        close(self.plan, "P1", actor="test/high", note="Checked repair evidence.", session_id="fixture-phase-session")
         close(self.plan, "P1", actor="test/high", note="Checked repair evidence.", check=True)
         self.assertEqual(history, (self.plan / "journal.jsonl").read_bytes())
+        (self.plan / "handoff.md").write_text("# HANDOFF — 2026-10-03 — after P1\n\n"
+            "**Next:** manual: frontier/high\n\n| Parameter | Meaning |\n|:--|:--|\n"
+            "| Model class | frontier |\n| Effort | high |\n| Context | continue-root |\n"
+            "\n**Done:** Phase closed.\n**Remaining:** Owner follow-up.\n**Open risks:** —\n")
+        receipt = plan_delivery.build_terminal_receipt(self.plan, "P1")
+        self.assertTrue(receipt["journal"]["run_id"])
+        self.assertTrue(plan_delivery.verify_receipt(self.plan, receipt))
         self.log.write_text("tampered\n")
         with self.assertRaisesRegex(ValueError, "PHASE_FINDINGS_UNRESOLVED"):
             close(self.plan, "P1", actor="test/high", note="Tampered.", check=True)

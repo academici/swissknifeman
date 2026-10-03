@@ -2296,7 +2296,7 @@
       "version": "2.38.1",
       "description": "Use when an explicitly invoked Task plan command needs a schema reference.",
       "sha256": "9f5491d2c8c64b99e563bf59d4af11eae5435e22a4dbb5dfce75ca0134834726",
-      "content_sha256": "91e94d68ef8e6475ab833824d52eb9d3f9454684cb45be254e1e3155dd7ba7a8",
+      "content_sha256": "4ed7c312f630732ee375b506fe3d93b7d629583b038ccb2ca1315de9a20ba04f",
       "tags": [
         "workflow",
         "planning",

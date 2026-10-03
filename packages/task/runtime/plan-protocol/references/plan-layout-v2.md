@@ -329,6 +329,10 @@ foreign evidence returns `PHASE_FINDINGS_UNRESOLVED`. Without this contract,
 non-GREEN items retain `PHASE_ACCEPTANCE_NON_GREEN`. No review repeat is needed.
 `plan-phase-close.py` calls the regular `phase_close_gate`, appends one phase
 GREEN event bound to the checked resolution SHA-256 and candidate fingerprint,
-then regenerates/checks status and closure. Item states/history remain unchanged.
+then regenerates/checks status and closure. A new close requires the actual
+invoking provider `--session-id`; the launcher derives run identity and writes
+a durable start/terminal pair so native delivery can build a terminal receipt.
+A partially recorded earlier close is recovered append-only, never rewritten.
+Item states/history remain unchanged.
 Only a persisted still-valid admission projects the phase GREEN. The generated
 closure distinguishes current resolved findings from quoted historical deviations.

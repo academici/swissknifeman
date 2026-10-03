@@ -437,13 +437,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 232 skills · ⊕ always **12586** current (is always resident if you include the entire registry) · ↻ bodies 311079 current · ⌥ on-demand 847440 current (snippets + references).
+**Total:** 232 skills · ⊕ always **12586** current (is always resident if you include the entire registry) · ↻ bodies 311079 current · ⌥ on-demand 847518 current (snippets + references).
 
 ## By buckets
 
 | Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1260 | 33570 | 30487 |
+| `general` | 22 | 1260 | 33570 | 30565 |
 | `repository-bootstrap` | 14 | 1047 | 30040 | 0 |
 | `architect` | 15 | 937 | 19786 | 33082 |
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |

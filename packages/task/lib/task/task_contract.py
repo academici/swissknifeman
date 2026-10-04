@@ -1183,7 +1183,7 @@ def _derived_completed_prefix(plan_dir, membership) -> tuple[str, ...]:
         if evidence.get("result") not in {"closed-green", "closed-deviations"}:
             break
         try:
-            terminal_policy.validate(
+            terminal_policy.validate_predecessor(
                 evidence.get("decision"), result=evidence["result"],
                 plan_dir=Path(plan_dir), item_id=item,
             )
@@ -1281,7 +1281,7 @@ def admit_batch(plan_dir, request, *, receipt=None, routing_config_path=None, re
                 evidence = plan_item_state.material_terminal_evidence(plan_dir, item)
                 if evidence["result"] not in {"closed-green", "closed-deviations"}:
                     raise plan_bundle.BundleError(f"completed-prefix-not-terminal: {item}")
-                terminal_policy.validate(evidence["decision"], result=evidence["result"],
+                terminal_policy.validate_predecessor(evidence["decision"], result=evidence["result"],
                                          plan_dir=Path(plan_dir), item_id=item)
             frontier = requested[0] if requested else None
             if frontier is None:
@@ -1302,7 +1302,7 @@ def admit_batch(plan_dir, request, *, receipt=None, routing_config_path=None, re
                         evidence = plan_item_state.material_terminal_evidence(plan_dir, producer)
                         if evidence["result"] not in {"closed-green", "closed-deviations"}:
                             raise plan_bundle.BundleError(f"dependency-not-ready: {producer}")
-                        terminal_policy.validate(evidence["decision"], result=evidence["result"],
+                        terminal_policy.validate_predecessor(evidence["decision"], result=evidence["result"],
                                                  plan_dir=Path(plan_dir), item_id=producer)
         except (plan_bundle.BundleError, plan_item_state.ItemStateError,
                 terminal_policy.TerminalPolicyError, review_policy.ReviewPolicyError) as exc:

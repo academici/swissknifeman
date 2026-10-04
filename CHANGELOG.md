@@ -4,6 +4,18 @@
 
 ### Fixed
 
+- **Task committed predecessors:** batch/dependency admission проверяет закрытый
+  reviewed producer по первому commit с точной terminal journal row и исходными
+  receipt, packet, output и native evidence. Проверяется полный reviewed inventory
+  в дереве closure commit, включая symlinks и совместимый executable bit; работа
+  следующего пункта над общими файлами не отменяет исторический GREEN.
+  Новые closes сохраняют обязательную проверку текущих product/evidence bytes.
+
+- **Task review freshness:** коммит уже проверенных untracked файлов больше не
+  делает настоящий GREEN устаревшим. Проверка сохраняет исходный authenticated
+  snapshot и сверяет полный inventory product/input bytes, modes и symlink
+  targets; изменение представления Git diff не подменяет изменение результата.
+
 - **Task Grok reviewer:** явный размер контекста запускает свежую read-only ACP
   сессию и проверяет эффективные модель, effort и окно по native provider summary
   до отправки packet. Терминальное ACP evidence подтверждает завершение и usage;

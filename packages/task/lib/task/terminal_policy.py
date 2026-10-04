@@ -70,7 +70,7 @@ def build_decision(plan_dir, item_id: str, *, result: str, validation: list[dict
 
 
 def validate(decision, *, result: str, plan_dir: Path | None = None,
-             item_id: str | None = None) -> None:
+             item_id: str | None = None, _historical: bool = False) -> None:
     if not isinstance(decision, dict):
         raise TerminalPolicyError(
             "TERMINAL_EVIDENCE_REQUIRED", "terminal item requires reducer decision")
@@ -167,8 +167,12 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
                 review_packet.check_request(plan_dir, item_id, selector=requested["reviewer"], effort=requested["effort"])
             selected = requested["reviewer"] if requested else declared.get("owner-review")
             if selected:
-                review_packet.require_green(plan_dir, item_id, selected,
-                                            effort=requested["effort"] if requested else None)
+                if _historical:
+                    review_packet.require_committed_green(plan_dir, item_id, selected,
+                        effort=requested["effort"] if requested else None, decision=decision, result=result)
+                else:
+                    review_packet.require_green(plan_dir, item_id, selected,
+                                                effort=requested["effort"] if requested else None)
         except plan_bundle.BundleError:
             # Historical minimal fixtures have no independently declared carrier.
             pass
@@ -203,6 +207,15 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
             "REPAIR_EXHAUSTED_REQUIRED",
             "closed-deviations requires closed repair_exhausted evidence",
         )
+
+
+def validate_predecessor(decision, *, result: str, plan_dir: Path, item_id: str) -> None:
+    """Consume committed predecessor acceptance without re-closing live bytes.
+
+    Review-required predecessors prove the exact close and reviewed inventory at
+    their closure commit. New item close and journal append keep live validation.
+    """
+    validate(decision, result=result, plan_dir=plan_dir, item_id=item_id, _historical=True)
 
 
 def validate_entry(entry: dict, *, plan_dir: Path | None = None) -> None:

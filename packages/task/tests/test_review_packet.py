@@ -12,7 +12,7 @@ try:
     from .fixtures import write_valid_plan
 except ImportError:
     from fixtures import write_valid_plan
-from task import review_packet as review, terminal_policy, plan_bundle, plan_lint
+from task import review_packet as review, terminal_policy, plan_bundle, plan_lint, journal, task_contract
 
 
 class ReviewPacketTests(unittest.TestCase):
@@ -103,6 +103,214 @@ class ReviewPacketTests(unittest.TestCase):
         (self.root / "foreign.py").write_text("foreign = 1\n")
         (self.plan / "journal.jsonl").write_text("bookkeeping-only")
         review.require_green(self.plan, "P1.1", "grok/grok-4.7")
+
+    def test_reviewed_untracked_file_commit_keeps_original_green_and_receipt(self):
+        new = self.root / "new.py"
+        new.write_text("reviewed = True\n")
+        packet = self.packet(paths=["new.py"])
+        self.receive(packet)
+        manifest = self.manifest(packet)
+        receipt = review._location(self.plan, "P1.1") / "attempt-0001/receipt.json"
+        original_manifest, original_receipt = Path(packet["manifest"]).read_bytes(), receipt.read_bytes()
+        subprocess.run(["git", "-C", str(self.root), "add", "new.py"], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(self.root), "-c", "user.name=Test", "-c", "user.email=test@example.test",
+                        "commit", "-qm", "track reviewed file"], check=True, capture_output=True)
+        fresh = review._snapshot(self.plan, "P1.1", manifest["paths"], manifest["supporting"], manifest["base"])
+        self.assertEqual(fresh["product"], manifest["snapshot"]["product"])
+        self.assertEqual(fresh["inputs"], manifest["snapshot"]["inputs"])
+        self.assertNotEqual(fresh["diff_sha256"], manifest["snapshot"]["diff_sha256"])
+        green = review.require_green(self.plan, "P1.1", "grok/grok-4.7")
+        self.assertEqual(green["candidate_sha256"], manifest["candidate_sha256"])
+        self.assertEqual(Path(packet["manifest"]).read_bytes(), original_manifest)
+        self.assertEqual(receipt.read_bytes(), original_receipt)
+        new.write_text("reviewed = False\n")
+        with self.assertRaisesRegex(review.ReviewError, "REVIEW_CANDIDATE_STALE"):
+            review.require_green(self.plan, "P1.1", "grok/grok-4.7")
+
+    def test_freshness_refuses_changed_modes_missing_files_and_directory_inventory(self):
+        directory = self.root / "owned"
+        directory.mkdir()
+        member = directory / "member.py"
+        member.write_text("bound = True\n")
+        original_mode = member.stat().st_mode & 0o777
+        self.receive(self.packet(paths=["owned"]))
+        member.chmod(original_mode ^ 0o100)
+        with self.assertRaisesRegex(review.ReviewError, "REVIEW_CANDIDATE_STALE"):
+            review.require_green(self.plan, "P1.1", "grok/grok-4.7")
+        member.chmod(original_mode)
+        review.require_green(self.plan, "P1.1", "grok/grok-4.7")
+        member.unlink()
+        with self.assertRaisesRegex(review.ReviewError, "REVIEW_CANDIDATE_STALE"):
+            review.require_green(self.plan, "P1.1", "grok/grok-4.7")
+        member.write_text("bound = True\n")
+        (directory / "unreviewed.py").write_text("added = True\n")
+        with self.assertRaisesRegex(review.ReviewError, "REVIEW_CANDIDATE_STALE"):
+            review.require_green(self.plan, "P1.1", "grok/grok-4.7")
+
+    def test_freshness_binds_symlink_text_and_target_bytes(self):
+        target = self.root / "target.py"
+        other = self.root / "other.py"
+        target.write_text("value = 1\n")
+        other.write_text(target.read_text())
+        link = self.root / "alias.py"
+        link.symlink_to("target.py")
+        self.receive(self.packet(paths=["alias.py"]))
+        link.unlink()
+        link.symlink_to("other.py")
+        with self.assertRaisesRegex(review.ReviewError, "REVIEW_CANDIDATE_STALE"):
+            review.require_green(self.plan, "P1.1", "grok/grok-4.7")
+        link.unlink()
+        link.symlink_to("target.py")
+        review.require_green(self.plan, "P1.1", "grok/grok-4.7")
+        target.write_text("value = 2\n")
+        with self.assertRaisesRegex(review.ReviewError, "REVIEW_CANDIDATE_STALE"):
+            review.require_green(self.plan, "P1.1", "grok/grok-4.7")
+
+    def test_original_snapshot_must_still_match_original_candidate_digest(self):
+        packet = self.packet()
+        manifest = self.manifest(packet)
+        manifest["snapshot"]["diff_sha256"] = "0" * 64
+        with self.assertRaisesRegex(review.ReviewError, "original candidate snapshot"):
+            review.current(manifest, self.plan)
+
+    def closed_native_review(self, *, paths=(), evidence=()):
+        packet = review.packet(self.plan, "P1.1", selector="grok/grok-4.7/500k",
+                               executor_session="executor", paths=paths, evidence=evidence)
+        manifest = self.manifest(packet)
+        output = json.dumps(self.verdict(manifest)).encode()
+        directory = review._location(self.plan, "P1.1")
+        with review._lock(directory):
+            review._record(self.plan, directory, manifest, output=output, session="independent-native",
+                           observed_selector=manifest["reviewer"], complete=True, detail="ACP end_turn",
+                           observed_context=500000)
+        attempt = directory / "attempt-0001"
+        route = {"session_id": "independent-native", "model": "grok-4.7", "effort": "high", "context_tokens": 500000}
+        (attempt / "provider-route.json").write_text(json.dumps(route))
+        usage = {"inputTokens": 10, "outputTokens": 5, "cachedReadTokens": 0,
+                 "cacheCreationTokens": 0, "numTurns": 1}
+        events = [{"method": "session/update", "params": {"sessionId": "independent-native",
+                      "update": {"sessionUpdate": "agent_message_chunk", "content": {"type": "text", "text": output.decode()}}}},
+                  {"method": "_x.ai/session_notification", "params": {"sessionId": "independent-native",
+                      "update": {"sessionUpdate": "response_completed"}}},
+                  {"id": 4, "result": {"stopReason": "end_turn", "_meta": {
+                      "sessionId": "independent-native", "modelId": "grok-4.7", "usage": usage}}}]
+        (attempt / "provider-output.jsonl").write_text("\n".join(json.dumps(event) for event in events) + "\n")
+        from task import review_grok_acp
+        (attempt / "transport.json").write_text(json.dumps({"argv": review_grok_acp.argv(manifest, max_turns=20)}))
+        decision = terminal_policy.build_decision(self.plan, "P1.1", result="closed-green",
+            validation=[{"carrier": "tests", "status": "green", "evidence_ids": ["affected-tests"]}])
+        journal.append(self.plan, journal.new_entry(plan_id=self.plan.name, item_id="P1.1", command="plan-run",
+            actor="implementation/high", result="closed-green", session_id="executor", run_id="close-run", decision=decision))
+        return packet, attempt, decision
+
+    def commit_tree(self):
+        for args in (("add", "."), ("-c", "user.name=Test", "-c", "user.email=test@example.test", "commit", "-qm", "closure proof")):
+            subprocess.run(["git", "-C", str(self.root), *args], check=True, capture_output=True)
+
+    def test_committed_predecessor_survives_consumer_edits_but_new_close_stays_live(self):
+        support = self.root / "validation.log"
+        support.write_text("reviewed supporting evidence\n")
+        target = self.root / "target.py"
+        target.write_text("target = True\n")
+        link = self.root / "alias.py"
+        link.symlink_to("target.py")
+        _packet, _attempt, decision = self.closed_native_review(paths=["alias.py", "phantom{a,b}.py"], evidence=["validation.log"])
+        self.commit_tree()
+        self.product.write_text("authorized_consumer_change = True\n")
+        support.write_text("consumer supporting evidence\n")
+        link.unlink()
+        link.symlink_to("validation.log")
+        self.assertEqual(task_contract._derived_completed_prefix(self.plan, ["P1.1"]), ("P1.1",))
+        with self.assertRaisesRegex(terminal_policy.TerminalPolicyError, "REVIEW_CANDIDATE_STALE"):
+            terminal_policy.validate(decision, result="closed-green", plan_dir=self.plan, item_id="P1.1")
+        with self.assertRaisesRegex(terminal_policy.TerminalPolicyError, "REVIEW_CANDIDATE_STALE"):
+            terminal_policy.build_decision(self.plan, "P1.1", result="closed-green",
+                validation=[{"carrier": "tests", "status": "green", "evidence_ids": ["new-tests"]}])
+        with self.assertRaisesRegex(ValueError, "REVIEW_CANDIDATE_STALE"):
+            journal.append(self.plan, journal.new_entry(plan_id=self.plan.name, item_id="P1.1", command="plan-run",
+                actor="implementation/high", result="closed-green", decision=decision))
+
+    def test_uncommitted_close_cannot_supply_historical_predecessor(self):
+        self.closed_native_review()
+        with self.assertRaisesRegex(ValueError, "REVIEW_CLOSURE_UNCOMMITTED"):
+            task_contract._derived_completed_prefix(self.plan, ["P1.1"])
+
+    def test_closure_tree_must_contain_exact_reviewed_product_and_inputs(self):
+        self.closed_native_review()
+        self.product.write_text("changed_before_closure_commit = True\n")
+        self.commit_tree()
+        with self.assertRaisesRegex(ValueError, "closure commit changed reviewed product"):
+            task_contract._derived_completed_prefix(self.plan, ["P1.1"])
+
+    def test_malformed_committed_receipt_manifest_output_route_and_stream_are_refused(self):
+        cases = ("self-review", "snapshot", "schema", "packet-manifest", "output", "route", "stream")
+        for case in cases:
+            with self.subTest(case=case):
+                other = ReviewPacketTests("test_pending_close_green_close_and_stale_product")
+                other.setUp()
+                try:
+                    packet, attempt, _decision = other.closed_native_review()
+                    if case in {"self-review", "snapshot", "schema"}:
+                        path = attempt / "receipt.json"
+                        receipt = json.loads(path.read_text())
+                        if case == "self-review":
+                            receipt["reviewer_session"] = "executor"
+                        elif case == "schema":
+                            receipt["schema_version"] = "unverified/v1"
+                        else:
+                            receipt["manifest"]["snapshot"]["diff_sha256"] = "0" * 64
+                        path.write_text(json.dumps(receipt))
+                    elif case == "packet-manifest":
+                        path = Path(packet["manifest"])
+                        manifest = json.loads(path.read_text()); manifest["effort"] = "low"
+                        path.write_text(json.dumps(manifest))
+                    elif case == "output":
+                        (attempt / "output.json").write_text('{"forged":"GREEN"}')
+                    elif case == "route":
+                        path = attempt / "provider-route.json"
+                        route = json.loads(path.read_text()); route["effort"] = "low"
+                        path.write_text(json.dumps(route))
+                    else:
+                        path = attempt / "provider-output.jsonl"
+                        events = [json.loads(row) for row in path.read_text().splitlines()]
+                        events[0]["params"]["update"]["content"]["text"] = '{"actual":"FINDINGS"}'
+                        path.write_text("\n".join(json.dumps(row) for row in events) + "\n")
+                    other.commit_tree()
+                    with self.assertRaises(ValueError):
+                        task_contract._derived_completed_prefix(other.plan, ["P1.1"])
+                finally:
+                    other.doCleanups()
+
+    def test_historical_proof_uses_frozen_artifacts_after_later_receipt_mutation(self):
+        _packet, attempt, _decision = self.closed_native_review()
+        self.commit_tree()
+        path = attempt / "receipt.json"
+        receipt = json.loads(path.read_text()); receipt["reviewer_session"] = "executor"
+        path.write_text(json.dumps(receipt))
+        self.commit_tree()
+        self.assertEqual(task_contract._derived_completed_prefix(self.plan, ["P1.1"]), ("P1.1",))
+        with self.assertRaisesRegex(review.ReviewError, "REVIEW_NOT_INDEPENDENT"):
+            review.require_green(self.plan, "P1.1", "grok/grok-4.7")
+
+    def test_later_commits_cannot_retroactively_supply_missing_closure_proof(self):
+        _packet, attempt, _decision = self.closed_native_review()
+        output = (attempt / "output.json").read_bytes()
+        (attempt / "output.json").unlink()
+        self.commit_tree()
+        (attempt / "output.json").write_bytes(output)
+        self.commit_tree()
+        with self.assertRaisesRegex(ValueError, "missing immutable review artifact"):
+            task_contract._derived_completed_prefix(self.plan, ["P1.1"])
+
+    def test_uncommitted_terminal_run_identity_mutation_is_refused(self):
+        self.closed_native_review()
+        self.commit_tree()
+        path = self.plan / "journal.jsonl"
+        events = [json.loads(row) for row in path.read_text().splitlines() if row.strip()]
+        events[-1]["run_id"] = "forged-run"
+        path.write_text("\n".join(json.dumps(row) for row in events) + "\n")
+        with self.assertRaisesRegex(ValueError, "REVIEW_CLOSURE_UNCOMMITTED"):
+            task_contract._derived_completed_prefix(self.plan, ["P1.1"])
 
     def test_evidence_and_new_files_are_digest_bound(self):
         evidence = self.root / "affected.log"

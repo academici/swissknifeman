@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import posixpath
 import re
 import shlex
 import signal
@@ -427,9 +428,203 @@ def packet(plan_dir, item: str, *, selector: str, base: str = "HEAD", paths=(),
 def current(manifest: dict, plan_dir: Path) -> None:
     if manifest["plan_id"] != plan_dir.name:
         raise ReviewError("REVIEW_TARGET_MISMATCH", "manifest belongs to another plan")
+    original = manifest.get("snapshot")
+    if (not isinstance(original, dict) or set(original) != {"product", "inputs", "diff_sha256"}
+            or _sha(_json(original)) != manifest["candidate_sha256"]):
+        raise ReviewError("REVIEW_CANDIDATE_STALE", "original candidate snapshot does not match its digest")
     snapshot = _snapshot(plan_dir, manifest["item_id"], manifest["paths"], manifest["supporting"], manifest["base"])
-    if _sha(_json(snapshot)) != manifest["candidate_sha256"]:
+    # The reviewed member inventory binds bytes, modes, symlink targets and
+    # supporting evidence. Git diff is presentation evidence: adding a reviewed
+    # untracked file to the index changes the diff without changing that file.
+    if any(snapshot[key] != original[key] for key in ("product", "inputs")):
         raise ReviewError("REVIEW_CANDIDATE_STALE", "relevant product or evidence changed")
+
+
+def _committed_closure(plan_dir: Path, item: str, *, decision: dict, result: str) -> tuple[Path, str, dict]:
+    """Locate the commit that first persisted the exact authoritative close row."""
+    from task import plan_item_state
+    root = plan_weight.repo_root_for(plan_dir).resolve()
+    rows = plan_item_state._event_rows(plan_dir, item)
+    event = plan_item_state.latest_execution_event([value for _number, _raw, value in rows])
+    if not event or event.get("result") != result or event.get("decision") != decision:
+        raise ReviewError("REVIEW_CLOSURE_UNCOMMITTED", "historical proof must match the authoritative item close")
+    raw = next(line for _number, line, value in reversed(rows) if value == event)
+    relative = plan_layout.carrier_path(plan_dir, "journal").relative_to(root).as_posix()
+    commits = _git(root, "log", "--reverse", "--format=%H", "--", relative).decode().splitlines()
+    commit = None
+    for candidate in commits:
+        source = subprocess.run(["git", "-C", str(root), "show", f"{candidate}:{relative}"],
+                                capture_output=True, timeout=30)
+        if source.returncode == 0 and raw in source.stdout.decode().splitlines():
+            committed_events = [json.loads(line) for line in source.stdout.decode().splitlines() if line.strip()]
+            if plan_item_state.latest_execution_event(
+                    [value for value in committed_events if value.get("item_id") == item]) != event:
+                raise ReviewError("REVIEW_CLOSURE_INVALID", "the first committed close is not authoritative")
+            commit = candidate
+            break
+    if commit is None:
+        raise ReviewError("REVIEW_CLOSURE_UNCOMMITTED", "the exact item/run/decision close row is not committed")
+    tree = {}
+    for entry in _git(root, "ls-tree", "-r", "-z", commit).split(b"\0"):
+        if not entry:
+            continue
+        metadata, path = entry.split(b"\t", 1)
+        mode, kind, oid = metadata.decode().split()
+        tree[path.decode()] = (mode, kind, oid)
+    return root, commit, tree
+
+
+def _committed_members(root: Path, commit: str, tree: dict, paths) -> list[dict]:
+    """Rebuild reviewed member semantics from a Git tree, never the live tree."""
+    blobs, rows = {}, {}
+    def blob(path):
+        mode, kind, oid = tree[path]
+        if kind != "blob":
+            raise ReviewError("REVIEW_CLOSURE_INVALID", "unsupported reviewed Git member: " + path)
+        if oid not in blobs:
+            blobs[oid] = _git(root, "cat-file", "blob", oid)
+        return blobs[oid]
+    def target(path, seen=()):
+        if path not in tree:
+            if any(name.startswith(path + "/") for name in tree):
+                raise ReviewError("REVIEW_CLOSURE_INVALID", "reviewed symlink has a directory target")
+            return None
+        if path in seen:
+            raise ReviewError("REVIEW_CLOSURE_INVALID", "reviewed symlink loop")
+        if tree[path][0] != "120000":
+            return _sha(blob(path))
+        destination = blob(path).decode()
+        resolved = posixpath.normpath(posixpath.join(posixpath.dirname(path), destination))
+        if destination.startswith("/") or resolved in {"..", "."} or resolved.startswith("../"):
+            raise ReviewError("REVIEW_CLOSURE_INVALID", "reviewed symlink escapes the repository")
+        return target(resolved, (*seen, path))
+    for relative in paths:
+        raw = Path(relative)
+        if raw.is_absolute() or ".." in raw.parts or relative in {"", "."}:
+            raise ReviewError("REVIEW_PATH_INVALID", relative)
+        children = sorted(name for name in tree if name.startswith(relative.rstrip("/") + "/"))
+        candidates = children if relative not in tree and children else [relative]
+        for path in candidates:
+            if path not in tree:
+                rows[path] = {"path": path, "sha256": None, "mode": None}
+            elif tree[path][0] == "120000":
+                rows[path] = {"path": path, "sha256": _sha(Path(blob(path).decode()).as_posix().encode()),
+                              "target_sha256": target(path)}
+            else:
+                rows[path] = {"path": path, "sha256": _sha(blob(path)),
+                              "mode": int(tree[path][0], 8) & 0o100}
+        if candidates == children and children:
+            rows[relative.rstrip("/") + "/"] = {"path": relative.rstrip("/") + "/", "sha256": "directory"}
+    return sorted(rows.values(), key=lambda row: row["path"])
+
+
+def _git_modes(rows: list[dict]) -> list[dict]:
+    # Git preserves the owner executable bit, not the full POSIX permission mask.
+    return [{**row, "mode": row["mode"] & 0o100} if type(row.get("mode")) is int else row for row in rows]
+
+
+def _require_committed_green(plan_dir, item: str, selector: str, *, effort: str | None,
+                             decision: dict, result: str) -> dict:
+    """Authenticate a closed predecessor at its immutable closure commit.
+
+    This is only for historical batch/dependency consumption. It never grants
+    live close authority or changes the original review candidate/history.
+    """
+    plan_dir = Path(plan_dir).resolve()
+    root, commit, tree = _committed_closure(plan_dir, item, decision=decision, result=result)
+    prefix = _location(plan_dir, item).relative_to(root).as_posix() + "/"
+    def read(path):
+        entry = tree.get(path)
+        if not entry or entry[0] not in {"100644", "100755"} or entry[1] != "blob":
+            raise ReviewError("REVIEW_CLOSURE_INVALID", "missing immutable review artifact: " + path)
+        return _git(root, "cat-file", "blob", entry[2])
+    paths = sorted(path for path in tree if path.startswith(prefix + "attempt-") and path.endswith("/receipt.json"))
+    receipts = [(path, json.loads(read(path))) for path in paths]
+    completed = [(path, value) for path, value in receipts if value.get("status") == "complete"]
+    if not completed:
+        raise ReviewError("OWNER_REVIEW_PENDING", "closure commit has no completed independent verdict")
+    path, receipt = completed[-1]
+    manifest = receipt.get("manifest", {})
+    if (receipt.get("schema_version") != "review-receipt/v1"
+            or manifest.get("schema_version") != "review-route/v1"
+            or not isinstance(receipt.get("reviewer_session"), str) or not receipt["reviewer_session"]
+            or any(not isinstance(manifest.get(key), list)
+                   or any(not isinstance(value, str) for value in manifest[key]) for key in ("paths", "supporting"))):
+        raise ReviewError("REVIEW_CLOSURE_INVALID", "malformed committed review receipt/manifest")
+    _green_receipt(receipt, selector, effort=effort)
+    if manifest.get("plan_id") != plan_dir.name or manifest.get("item_id") != item:
+        raise ReviewError("REVIEW_CLOSURE_INVALID", "committed review belongs to another item")
+    if (receipt["reviewer"] != manifest["reviewer"]
+            or canonical_selector(manifest["route"]["provider"] + "/" + manifest["route"]["model"]
+                                  + ("/" + str(manifest["route"]["context_tokens"])
+                                     if "context_tokens" in manifest["route"] else "")) != manifest["reviewer"]):
+        raise ReviewError("REVIEW_CLOSURE_INVALID", "committed reviewer route is inconsistent")
+    original = manifest.get("snapshot")
+    if (not isinstance(original, dict) or set(original) != {"product", "inputs", "diff_sha256"}
+            or _sha(_json(original)) != manifest["candidate_sha256"]
+            or receipt["candidate_sha256"] != manifest["candidate_sha256"]):
+        raise ReviewError("REVIEW_CLOSURE_INVALID", "committed original snapshot does not match its digest")
+    spec = plan_layout.carrier_path(plan_dir, "item-spec", item_id=item).relative_to(root).as_posix()
+    for kind, members in (("product", manifest["paths"]), ("inputs", [spec, *manifest["supporting"]])):
+        if _committed_members(root, commit, tree, members) != _git_modes(original[kind]):
+            raise ReviewError("REVIEW_CLOSURE_INVALID", "closure commit changed reviewed " + kind)
+    attempt = path.rsplit("/", 1)[0]
+    output = read(attempt + "/output.json")
+    if _sha(output) != receipt.get("output_sha256") or json.loads(output) != receipt["verdict"]:
+        raise ReviewError("REVIEW_CLOSURE_INVALID", "committed reviewer output does not match receipt")
+    manifests = [name for name in tree if name.startswith(prefix + "packet-") and name.endswith("/review-route.json")]
+    bound = next((name for name in manifests if json.loads(read(name)) == manifest), None)
+    if bound is None or _sha(read(bound.rsplit("/", 1)[0] + "/packet.md")) != manifest.get("packet_sha256"):
+        raise ReviewError("REVIEW_CLOSURE_INVALID", "committed packet/manifest is missing or changed")
+    if manifest["route"]["provider"] == "grok" and "context_tokens" in manifest["route"]:
+        from task import review_grok_acp
+        witness = json.loads(read(attempt + "/provider-route.json"))
+        review_grok_acp.verify_route(witness, manifest)
+        if (witness.get("session_id") != receipt["reviewer_session"]
+                or witness.get("context_tokens") != receipt.get("observed_context_tokens")):
+            raise ReviewError("REVIEW_CLOSURE_INVALID", "committed native route belongs to another session")
+        events = [json.loads(line) for line in read(attempt + "/provider-output.jsonl").splitlines() if line.strip()]
+        chunks, last_response = [], ""
+        for event in events:
+            params = event.get("params", {})
+            if params.get("sessionId") != receipt["reviewer_session"]:
+                continue
+            update = params.get("update", {})
+            if event.get("method") == "session/update" and update.get("sessionUpdate") == "agent_message_chunk":
+                content = update.get("content", {})
+                if content.get("type") == "text":
+                    chunks.append(content["text"])
+            if (event.get("method") == "_x.ai/session_notification"
+                    and update.get("sessionUpdate") == "response_completed"):
+                last_response = "".join(chunks)
+                chunks.clear()
+        if ("".join(chunks) or last_response).encode() != output:
+            raise ReviewError("REVIEW_CLOSURE_INVALID", "committed output differs from the native reviewer response")
+        terminal = next((event["result"] for event in reversed(events)
+                         if isinstance(event.get("result"), dict) and "stopReason" in event["result"]), {})
+        metadata = terminal.get("_meta", {})
+        usage = metadata.get("usage", {})
+        argv = json.loads(read(attempt + "/transport.json"))["argv"]
+        max_turns = int(argv[argv.index("--max-turns") + 1])
+        if (terminal.get("stopReason") != "end_turn" or metadata.get("sessionId") != receipt["reviewer_session"]
+                or metadata.get("modelId") != manifest["route"]["model"]
+                or any(type(usage.get(key)) is not int or usage[key] < 0
+                       for key in ("inputTokens", "outputTokens", "cachedReadTokens", "cacheCreationTokens"))
+                or usage["inputTokens"] + usage["outputTokens"] <= 0
+                or type(usage.get("numTurns")) is not int or not 0 < usage["numTurns"] <= max_turns
+                or any(value.get("usage_is_incomplete", False) for value in (terminal, metadata, usage))):
+            raise ReviewError("REVIEW_CLOSURE_INVALID", "committed native completion is not authentic")
+    return receipt
+
+
+def require_committed_green(plan_dir, item: str, selector: str, *, effort: str | None,
+                            decision: dict, result: str) -> dict:
+    try:
+        return _require_committed_green(plan_dir, item, selector, effort=effort, decision=decision, result=result)
+    except ReviewError:
+        raise
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, StopIteration) as exc:
+        raise ReviewError("REVIEW_CLOSURE_INVALID", "malformed immutable closure proof: " + str(exc)) from exc
 
 
 def validate_verdict(value: dict, manifest: dict) -> None:
@@ -655,16 +850,11 @@ def run(plan_dir, manifest_path, *, selector: str, timeout: int = 600, max_turns
         return receipt
 
 
-def require_green(plan_dir, item: str, selector: str, *, effort: str | None = None) -> dict:
+def _green_receipt(latest: dict, selector: str, *, effort: str | None = None) -> None:
     suffix_effort = reviewer(selector).get("effort")
     if effort is not None or suffix_effort:
         effort = selected_effort(selector, effort)
     selector = canonical_selector(selector)
-    plan_dir = Path(plan_dir).resolve()
-    rows = [row for row in _history(_location(plan_dir, item)) if row["status"] == "complete"]
-    if not rows:
-        raise ReviewError("OWNER_REVIEW_PENDING", "no complete independent verdict")
-    latest = rows[-1]
     validate_verdict(latest["verdict"], latest["manifest"])
     if latest["reviewer_session"] == latest["manifest"]["executor_session"]:
         raise ReviewError("REVIEW_NOT_INDEPENDENT", "executor session cannot certify itself")
@@ -677,6 +867,15 @@ def require_green(plan_dir, item: str, selector: str, *, effort: str | None = No
     if expected_context is not None and (type(latest.get("observed_context_tokens")) is not int
                                          or latest["observed_context_tokens"] < expected_context):
         raise ReviewError("REVIEW_CONTEXT_UNVERIFIABLE", "GREEN must attest the requested context capacity")
+
+
+def require_green(plan_dir, item: str, selector: str, *, effort: str | None = None) -> dict:
+    plan_dir = Path(plan_dir).resolve()
+    rows = [row for row in _history(_location(plan_dir, item)) if row["status"] == "complete"]
+    if not rows:
+        raise ReviewError("OWNER_REVIEW_PENDING", "no complete independent verdict")
+    latest = rows[-1]
+    _green_receipt(latest, selector, effort=effort)
     current(latest["manifest"], plan_dir)
     return latest
 

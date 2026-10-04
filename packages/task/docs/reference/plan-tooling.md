@@ -23,9 +23,13 @@ positive integer counts, k or m (500k = 500000); effort accepts low/medium/high/
 Suffix effort overrides the default, but conflicting explicit effort flags are rejected.
 Equivalent spellings normalize to the same durable route; original launch text is retained.
 The number requires **at least** that context capacity, not a token-spend limit and not a promise
-that Task can enlarge the model. Grok uses streaming-messages-json to capture its reported
-`modelUsage.<model>.contextWindow`; unknown/insufficient capacity cannot produce GREEN and does
-not trigger a second identical attempt. Native providers need captured context evidence too.
+that Task can enlarge the model. With explicit context, Grok uses a new native ACP session,
+sets the requested model/context/effort, and checks the session's effective route in its native
+`summary.json` before sending the digest-bound packet. A configuration acknowledgement alone
+is not proof. The terminal ACP response must attest the same session/model, `end_turn`, and
+complete positive usage. Internal accounting model names do not replace the effective model ID.
+Unknown/insufficient capacity cannot produce GREEN and does not trigger a second identical
+attempt. Native providers need captured context evidence too.
 Read-only/tool/time/turn limits remain unchanged. Explicit context does not enlarge the review packet.
 
 The root implements/tests an item, launches fresh read-only Grok, and consumes the receipt.

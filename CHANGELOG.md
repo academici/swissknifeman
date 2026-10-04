@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Task Grok reviewer:** явный размер контекста запускает свежую read-only ACP
+  сессию и проверяет эффективные модель, effort и окно по native provider summary
+  до отправки packet. Терминальное ACP evidence подтверждает завершение и usage;
+  внутреннее имя модели в token accounting больше не подменяет route ID.
+  Неполные попытки сохраняют исходную причину, логи и прежние бюджеты; initial
+  review явно сообщает об отсутствии предыдущих findings.
+
 ## [0.28.0] - 2026-10-04
 
 ### Added

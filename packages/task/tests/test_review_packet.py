@@ -213,23 +213,16 @@ class ReviewPacketTests(unittest.TestCase):
             packet = review.packet(self.plan, "P1.1", selector="grok/grok-4.7/500k/high/", executor_session="executor")
             manifest = self.manifest(packet)
             self.assertEqual(manifest["reviewer"], "grok/grok-4.7/500000")
-            def provider_call(argv, **kwargs):
-                self.assertEqual(argv[argv.index("--model") + 1], "grok-4.7")
-                self.assertEqual(argv[argv.index("--reasoning-effort") + 1], "high")
-                self.assertEqual(argv[argv.index("--output-format") + 1], "streaming-messages-json")
-                self.assertNotIn("--max-tokens", argv)
-                row = {"inputTokens": 10}
-                if context is not None:
-                    row["contextWindow"] = context
-                terminal = {"type": "result", "result": json.dumps(self.verdict(manifest)),
-                            "is_error": False, "stop_reason": "end_turn",
-                            "session_id": argv[argv.index("--session-id") + 1],
-                            "modelUsage": {"grok-4.7": row},
-                            "usage": {"input_tokens": 10, "output_tokens": 10,
-                                      "cache_read_input_tokens": 0, "cache_creation_input_tokens": 0}}
-                raw = json.dumps({"type": "system", "subtype": "init"}) + "\n" + json.dumps(terminal) + "\n"
-                return SimpleNamespace(stdout=raw.encode(), stderr=b"", returncode=0)
-            with patch("task.session_context.current_id", return_value="review-stream"), patch.object(review, "_invoke", side_effect=provider_call):
+            def provider_call(selected, packet_bytes, **kwargs):
+                self.assertEqual(selected["route"]["model"], "grok-4.7")
+                self.assertEqual(selected["effort"], "high")
+                self.assertEqual(packet_bytes, Path(packet["packet"]).read_bytes())
+                return {"session": "independent-native-session", "raw": b"native ACP transcript\n",
+                        "stderr": b"", "output": json.dumps(self.verdict(manifest)).encode(),
+                        "detail": "ACP end_turn", "complete": True, "observed_context": context,
+                        "provider_route": {"context_tokens": context}}
+            with patch("task.session_context.current_id", return_value="review-stream"), \
+                    patch("task.review_grok_acp.run", side_effect=provider_call):
                 receipt = review.run(self.plan, packet["manifest"], selector="grok/grok-4.7/500k/")
             self.assertEqual(receipt["action"], expected)
             if context == 500000:
@@ -237,6 +230,54 @@ class ReviewPacketTests(unittest.TestCase):
                 review.require_green(self.plan, "P1.1", "grok/grok-4.7")
             else:
                 self.assertEqual(receipt["status"], "incomplete")
+
+    def test_incomplete_error_is_not_hidden_by_missing_context(self):
+        packet = review.packet(self.plan, "P1.1", selector="grok/grok-4.7/500k", executor_session="executor")
+        manifest = self.manifest(packet)
+        directory = review._location(self.plan, "P1.1")
+        with review._lock(directory):
+            receipt = review._record(self.plan, directory, manifest, output=b"partial",
+                                     session="independent", observed_selector=manifest["reviewer"],
+                                     complete=False, detail="exit=1; error_max_turns", observed_context=None)
+        self.assertEqual(receipt["detail"], "exit=1; error_max_turns")
+        self.assertEqual(receipt["action"], "retry-transport")
+
+    def test_initial_packet_has_no_previous_findings_lookup(self):
+        packet = self.packet()
+        self.assertIn("there are no previous findings to locate", Path(packet["packet"]).read_text())
+
+    def test_native_capacity_refusal_has_typed_action_and_archived_witness(self):
+        packet = review.packet(self.plan, "P1.1", selector="grok/grok-4.7/500k", executor_session="executor")
+        result = {"session": "independent", "raw": b"ACP evidence\n", "stderr": b"provider stderr",
+                  "output": b"", "complete": False, "observed_context": 256000,
+                  "provider_route": {"context_tokens": 256000},
+                  "detail": "REVIEW_CONTEXT_UNDERSHOOT: native context is smaller than requested"}
+        with patch("task.session_context.current_id", return_value="review-stream"), \
+                patch("task.review_grok_acp.run", return_value=result):
+            receipt = review.run(self.plan, packet["manifest"], selector="grok/grok-4.7/500k")
+        self.assertEqual(receipt["action"], "review-context-undershoot")
+        self.assertEqual(receipt["detail"], result["detail"])
+        attempt = review._location(self.plan, "P1.1") / "attempt-0001"
+        self.assertEqual((attempt / "provider-output.jsonl").read_bytes(), result["raw"])
+        self.assertEqual((attempt / "stderr.log").read_bytes(), result["stderr"])
+        self.assertEqual(json.loads((attempt / "provider-route.json").read_text()), result["provider_route"])
+
+    def test_headless_accounting_alias_requires_native_route_corroboration(self):
+        for witnessed in (False, True):
+            self.product.write_text(f"witnessed = {witnessed}\n")
+            packet = self.packet()
+            manifest = self.manifest(packet)
+            def invoke(argv, **kwargs):
+                envelope = {"text": json.dumps(self.verdict(manifest)),
+                            "sessionId": argv[argv.index("--session-id") + 1], "stopReason": "end_turn",
+                            "modelUsage": {"grok-4.7-build": {"inputTokens": 10}}}
+                return SimpleNamespace(stdout=json.dumps(envelope).encode(), stderr=b"", returncode=0)
+            witness = {"model": "grok-4.7", "effort": "high"} if witnessed else {}
+            with patch("task.session_context.current_id", return_value="review-stream"), \
+                    patch.object(review, "_invoke", side_effect=invoke), \
+                    patch("task.review_grok_acp.provider_route", return_value=witness):
+                receipt = review.run(self.plan, packet["manifest"], selector="grok/grok-4.7")
+            self.assertEqual(receipt["status"], "complete" if witnessed else "incomplete")
 
     def test_grok_provider_envelope_must_be_complete_and_exact(self):
         packet = self.packet()

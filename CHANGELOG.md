@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.28.1] - 2026-10-04
+
 ### Changed
 
 - **mAInd AgentMemory and code graph:** the managed AgentMemory dependency is

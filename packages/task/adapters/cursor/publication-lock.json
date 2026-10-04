@@ -4,124 +4,124 @@
       "artifact_id": "task.cursor.design.skill",
       "path": "packages/task/adapters/cursor/skills/task-design/SKILL.md",
       "rendered_hash": "sha256:f645111d96f97e61a55e3077878328b21c32d604d644ce42c127d0f21ae1ff13",
-      "source_hash": "sha256:86cd1585f679c3e63017b30ba8ce259b3025aaaca0c8eaffe78fcfbdff22fbd5"
+      "source_hash": "sha256:e628985614e69b7ed075bc24f1ed3759c256c0bc9c9a83bfacca08ee9be887b1"
     },
     {
       "artifact_id": "task.cursor.design.runtime",
       "path": "packages/task/adapters/cursor/skills/task-design/command.md",
       "rendered_hash": "sha256:e3cd63a9361ceea5613a91c9581a8586584349dcbd869b4aa1cea8b3c3bd98df",
-      "source_hash": "sha256:e802fc81110f4dbc1b9c2e66a9be1edfb59e3ee4403a092a85ae6ec1930a9e0d"
+      "source_hash": "sha256:08db8cce3153b01e2578d41e7254752b55c32fc660836a668ecb69a32efa43a9"
     },
     {
       "artifact_id": "task.cursor.dev.skill",
       "path": "packages/task/adapters/cursor/skills/task-dev/SKILL.md",
       "rendered_hash": "sha256:6f4f89128b29661ca84e3b73b97bd1a2b9d6ae91caaa058497f0cfd6b5f125e4",
-      "source_hash": "sha256:d2d9655c88ef69827af2098249dc022c59235b9f10b89ea19c3825e18fac8a4b"
+      "source_hash": "sha256:ca7ed94219c60e25e9d2a31edeb7c050bb221c11c51502180e631a9d4ac291fc"
     },
     {
       "artifact_id": "task.cursor.dev.runtime",
       "path": "packages/task/adapters/cursor/skills/task-dev/command.md",
       "rendered_hash": "sha256:d9415b9044d2d1806d9438538ab2b7443a096f8f8a973015cc12ae28469df1b8",
-      "source_hash": "sha256:1a599867249bccbb86bee5ddb251bc19516a0deacc34d65e472a6359bc5a3183"
+      "source_hash": "sha256:be0dbc4ccc0fa13c85f84960278dbea86db996fc687f9355b176f877eb0b188e"
     },
     {
       "artifact_id": "task.cursor.fix.skill",
       "path": "packages/task/adapters/cursor/skills/task-fix/SKILL.md",
       "rendered_hash": "sha256:15f435a271b2fe47e0ce0f80dbab6e58ae74ed5b21091ea0e22bb81d1ba4d8ba",
-      "source_hash": "sha256:c493fbbfb9225d4ecdd2b8b52ca79a7b442bf6a58559dfc8f65448ec0d0b736c"
+      "source_hash": "sha256:6fd735b32fab4cbd3fb2c8f52e1a12bfa0aeaa7a75a7d73e09da6133371f28de"
     },
     {
       "artifact_id": "task.cursor.fix.runtime",
       "path": "packages/task/adapters/cursor/skills/task-fix/command.md",
       "rendered_hash": "sha256:f98177f7142958bed13e3352df2cde736cb3ac32767f3a22eeb1d1e5a44ff0ec",
-      "source_hash": "sha256:e8ceb7dc7f8027a9cb05150b24626318c6dca788462878e70b2d33583b586e72"
+      "source_hash": "sha256:18e160fd19302d9d1a9091a4ed3b0d1d704b0e5b3528e0aed7ad25023e9c3e10"
     },
     {
       "artifact_id": "task.cursor.make.workflow.skill",
       "path": "packages/task/adapters/cursor/skills/task-make-workflow/SKILL.md",
       "rendered_hash": "sha256:54c1d46d762162dce152fdb7ba3228c9455337b8fe0a732cbf71f8634fd27758",
-      "source_hash": "sha256:5d6b3facd0b7e1823a29b1efbb466348e6b0885cda08465bbafd8294d69cb13b"
+      "source_hash": "sha256:dd95501f31abaca8c4d26fae8ada265a49bb6ba55eb8d48460f557e893511a52"
     },
     {
       "artifact_id": "task.cursor.make.workflow.runtime",
       "path": "packages/task/adapters/cursor/skills/task-make-workflow/command.md",
       "rendered_hash": "sha256:46765cf486293a8a41a5e7820d8a02cbfa0dac0c36577fca5f745da529364e3c",
-      "source_hash": "sha256:68da6b5ae7ebe88facf36803fb59a03204b5a5614b3823602e653ead6693fa31"
+      "source_hash": "sha256:ae712fea08ff37286d3831f25d26e68549202bdd409d3d527848aa472a7e7f39"
     },
     {
       "artifact_id": "task.cursor.plan.audit.skill",
       "path": "packages/task/adapters/cursor/skills/task-plan-audit/SKILL.md",
       "rendered_hash": "sha256:9b3581427be3953672bd92ff6627a4f133fd86e951aab6cbd7f1d49ab938bde7",
-      "source_hash": "sha256:e698e15e882f7f361e43ab75a8f03e5f6c5a020ade00658e48feec39e52cecf4"
+      "source_hash": "sha256:089b20f33234e485ce31e6e37f9e4108b4ac8488966db9affd2bd0c9a99943bf"
     },
     {
       "artifact_id": "task.cursor.plan.audit.runtime",
       "path": "packages/task/adapters/cursor/skills/task-plan-audit/command.md",
       "rendered_hash": "sha256:743d480ea6cdb58b29c697722f08509a6f556faa15d610ba5c4f5a385be0ce25",
-      "source_hash": "sha256:f15747beae1963f7f8b5564323aee7fc8d267a1b626643be715383ba45852390"
+      "source_hash": "sha256:780d4082409bbb1fd807e10de2d1ef0cb9fe4986fa47b8d74e48ec91f6240b13"
     },
     {
       "artifact_id": "task.cursor.plan.close.skill",
       "path": "packages/task/adapters/cursor/skills/task-plan-close/SKILL.md",
       "rendered_hash": "sha256:838f25eeb9291968df99bffa55d7b270c24048fbf4084b9d488a2013a088ec98",
-      "source_hash": "sha256:d90e198d83556295dc5328851cc3e9abca5c1c44ecc56db286326e4e85e11749"
+      "source_hash": "sha256:0df7cd93f3105ecd8c5355b7ceccfda472950c6b7fc5f9f6c9c46a5df9cdd1d7"
     },
     {
       "artifact_id": "task.cursor.plan.close.runtime",
       "path": "packages/task/adapters/cursor/skills/task-plan-close/command.md",
       "rendered_hash": "sha256:e58d2a4f2b9a8272d5cab82c608c3efda9d7b3472d438eb146745202aeaee88f",
-      "source_hash": "sha256:1cf013fe84761acba03b3bd683523b4b46c4b44cf2dd6e83d7287c9999057797"
+      "source_hash": "sha256:93fcd0f66b3d1fbea4509693193f7150d7318c1abe55abc4046530fd777ff2e0"
     },
     {
       "artifact_id": "task.cursor.plan.design.skill",
       "path": "packages/task/adapters/cursor/skills/task-plan-design/SKILL.md",
       "rendered_hash": "sha256:3afb8e7399a63973451a22caf3f292a0504f0cc8fd20057c1b43dc164afaf14a",
-      "source_hash": "sha256:be0dc70233d6b7c479ffb0eaff44c21c17080f8b9a96353c32e53f938ac5e11a"
+      "source_hash": "sha256:4bf1b9b570e928c2737b9d88304fc943f83e10641d8150a61b8a0b5a0c2626de"
     },
     {
       "artifact_id": "task.cursor.plan.design.runtime",
       "path": "packages/task/adapters/cursor/skills/task-plan-design/command.md",
       "rendered_hash": "sha256:6a419d2a30564a5c1b088bd326a3f952d89583dc10719496406f1193a83944d0",
-      "source_hash": "sha256:dfc75d03cd299c9c5407fe5a98163ce9be04aaecdafec420ee2ddb0355b9046e"
+      "source_hash": "sha256:a459ce071a9288af9f38d06840e8337f6ac8ce19ca8710151f145b511213f6d9"
     },
     {
       "artifact_id": "task.cursor.plan.run.skill",
       "path": "packages/task/adapters/cursor/skills/task-plan-run/SKILL.md",
       "rendered_hash": "sha256:79617b22517ed01bc16c1be5c3dec6690095bdbb305a42a461375aa72c61bd25",
-      "source_hash": "sha256:740e2ac111c341406bb79fff0d3d6b9da52ac83c9dd8ba7dcd5eaf49c63be6f3"
+      "source_hash": "sha256:969da903205ed2be20ee3828c89699d64bad1595ecebb63855066f81c7ca49c3"
     },
     {
       "artifact_id": "task.cursor.plan.run.runtime",
       "path": "packages/task/adapters/cursor/skills/task-plan-run/command.md",
       "rendered_hash": "sha256:3bf3d3b139e5bfe6c0333fd86d969f5c4fd335ff59eaebeff4cad9ca68151688",
-      "source_hash": "sha256:4e9dd1b41b45e7cde5d3e6f4d5f83ff930f704ed73e2ab7bbb59b2aa00fde768"
+      "source_hash": "sha256:eec4c90836ac653e16811610a17a9d701c59d0a42aab9f4701291db774944bb2"
     },
     {
       "artifact_id": "task.cursor.research.skill",
       "path": "packages/task/adapters/cursor/skills/task-research/SKILL.md",
       "rendered_hash": "sha256:ee0b6041ad49e7752cdd5a3dd58f8ed2ac4594becae8b2425443aae5282e29e9",
-      "source_hash": "sha256:7d793c07c2622a2db4a761d5f7eaaa626373b510d071d8c78d00bc527f580adb"
+      "source_hash": "sha256:62cca83e38b790610fe1262aefc0f8264c0eea318a85444bbab2eab2acf26df5"
     },
     {
       "artifact_id": "task.cursor.research.runtime",
       "path": "packages/task/adapters/cursor/skills/task-research/command.md",
       "rendered_hash": "sha256:30e4790c0ccb97a79a12fcd874bbaac65502171fcb78565e1920a13388a4b8df",
-      "source_hash": "sha256:94bf4d9dbe7bd350b79a7ccd49e3bbf68f33dea1976d22b6e0935e7807a10ae0"
+      "source_hash": "sha256:0e82105e27005dd6ed8fa548a7bb788b2a8efafaac1cd88ecb5ec087bb759416"
     },
     {
       "artifact_id": "task.cursor.review.skill",
       "path": "packages/task/adapters/cursor/skills/task-review/SKILL.md",
       "rendered_hash": "sha256:9ef4deaa7b6071e9597be08e1e83cf059ddbb5d8af0b197cc8aa9d54eea0a962",
-      "source_hash": "sha256:450b6af8dd76a48c47f0ebd564016ce9a2b3103c01a9944b378029f13487f2ea"
+      "source_hash": "sha256:76a3dab0af8fa37867fb81ec9afe5b3c6f7a6e80b2680b9303422cde4409b603"
     },
     {
       "artifact_id": "task.cursor.review.runtime",
       "path": "packages/task/adapters/cursor/skills/task-review/command.md",
       "rendered_hash": "sha256:6c016fac12037d86e7bc406422424ed6a99a78639a84b31ec6550dff0f6500fa",
-      "source_hash": "sha256:4da71e24ca1abb41d66eff1cbaed5f7141941575f0b2d55961e33ffc7d11506c"
+      "source_hash": "sha256:aaf5ee9902ab2cbd0462927670bbd0c08119634f99d9b8fdd4eaddafc4f5069d"
     }
   ],
   "contract_version": "1.0.0",
   "publication_unit": "task",
-  "version": "0.28.0"
+  "version": "0.28.1"
 }

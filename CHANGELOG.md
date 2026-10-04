@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **mAInd AgentMemory and code graph:** the managed AgentMemory dependency is
+  updated to the latest published `0.9.29`; the bundled viewer URL is derived
+  from the configured REST port (`+2`) instead of assuming `:3113`. The code
+  graph engine is pinned to the immutable commit for Serena `v1.7.0`
+  (`949a27ef…`), including generated project MCP configuration.
+
 ## [0.28.0] - 2026-10-04
 
 ### Added

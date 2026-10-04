@@ -7,7 +7,7 @@ from pathlib import Path
 
 from maind.config import load_config
 from maind.federation import store_path
-from maind.verify import classify_memories, graph_report, serena_report
+from maind.verify import classify_memories, graph_report, memory_viewer_url, serena_report
 from tests.fixtures import make_repo, write_maind_config
 
 TWO = [
@@ -17,6 +17,10 @@ TWO = [
 
 
 class TestVerify(unittest.TestCase):
+    def test_memory_viewer_follows_configured_rest_port(self):
+        self.assertEqual(memory_viewer_url(4111), "http://127.0.0.1:4113")
+        self.assertEqual(memory_viewer_url(5311), "http://127.0.0.1:5313")
+
     def test_classify_seed_vs_real(self):
         mems = [
             {"content": "[maind:ecosystem-link] alpha — node", "createdAt": "2026-06-20T10:00:00Z"},

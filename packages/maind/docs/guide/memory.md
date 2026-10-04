@@ -23,6 +23,10 @@ register the daemon as systemd-service: [`maind service install`](./systemd).
 `stream_port` / `url`) → **default** `4111/4112`. No hardcodes - two nodes on one
 to the machine are routed to ports via `.env`.
 
+The AgentMemory viewer is a separate, loopback-only listener at **HTTP port + 2**
+(`http://127.0.0.1:4113` for the default). `maind verify` prints that effective URL;
+it must not be inferred as `:3113` when the REST port has been changed.
+
 ## Cross-machine mode: `memory.role` (ADR-0001)
 
 The default node is `standalone` (today's regime, its demon on loopback; back-compat —

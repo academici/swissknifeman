@@ -39,7 +39,7 @@ Write to `.mcp.json` project (default — Serena):
 ```json
 { "mcpServers": {
     "serena": { "command": "uvx", "args": [
-      "--from", "git+https://github.com/oraios/serena@026b007bb889366283c925527e9a3bab317f66c1", "serena", "start-mcp-server",
+      "--from", "git+https://github.com/oraios/serena@949a27ef1e5fda1a6e7b561e777bcece345c6ffd", "serena", "start-mcp-server",
       "--context", "ide-assistant", "--project", "/path/to/flexcrm",
       "--enable-web-dashboard", "false" ] } } }
 ```

@@ -18,8 +18,17 @@ from .config import load_config
 from .federation import _enabled_projects, store_path
 from .memory import export, health, resolve_ports
 
-MEMORY_VIEWER_URL = "http://127.0.0.1:3113"   # built-in viewer agentmemory
 SEED_PREFIX = "[maind:"                        # seeds/controlled facts from onboard/seed
+
+
+def memory_viewer_url(http_port):
+    """AgentMemory viewer follows the REST listener at ``http_port + 2``.
+
+    It is intentionally loopback-only by default, including when the memory API
+    is LAN-bound: the viewer is a bearer-aware proxy and must not become an
+    accidental network endpoint.
+    """
+    return f"http://127.0.0.1:{http_port + 2}"
 
 
 def _age(dt):
@@ -61,9 +70,9 @@ def classify_memories(mems):
 
 def memory_report(env, config):
     """Live memory measurement. Demon dump flat (namespace not in record) — take one common one."""
-    _http, _stream, url = resolve_ports(env, config)
+    http_port, _stream, url = resolve_ports(env, config)
     up = health(url)
-    rep = {"plane": "agent-memory", "url": url, "viewer": MEMORY_VIEWER_URL, "up": up,
+    rep = {"plane": "agent-memory", "url": url, "viewer": memory_viewer_url(http_port), "up": up,
            "total": 0, "seed": 0, "real": 0, "last": None}
     if up:
         rep.update(classify_memories(export(url, "global")))  # dump flat → 1 request

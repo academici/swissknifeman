@@ -50,25 +50,51 @@ def _positions(plan_dir: Path) -> dict[str, dict]:
             if (position := plan_item_state.latest_execution_event(history)) is not None}
 
 
-def _execution_ranks(plan_dir: Path, items: dict[str, dict]) -> dict[str, tuple]:
-    """Use a complete declared Planned Items order for inferred path edges.
-
-    Item numbers identify specs; they do not override an explicitly reordered phase.
-    Explicit producer annotations remain authoritative regardless of this order.
-    """
-    ranks = {item: _key(item) for item in items}
+def _declared_phase_orders(plan_dir: Path, items: dict[str, dict]) -> dict[str, tuple]:
+    """Read complete unique phase orders and whether they declare dependencies."""
+    declared = {}
     for phase in {item.split(".")[0] for item in items}:
         path = plan_layout.phase_path(plan_dir, phase)
         if not path.is_file():
             continue
         text = path.read_text(encoding="utf-8")
-        section = re.search(r"^## Planned Items(?:[ \t]+[^\n]*)?\n(.*?)(?=^## |\Z)", text, re.M | re.S)
-        if section is None:
-            continue
-        order = re.findall(r"^\s*-\s+\*\*(P[0-9]+\.[0-9]+)\s+[—–-]", section.group(1), re.M)
         members = {item for item in items if item.split(".")[0] == phase}
-        if len(order) != len(set(order)) or set(order) != members:
+        orders = set()
+        dependency_orders = set()
+        sections = re.finditer(
+            r"^## (Planned Items(?:[ \t]+[^\n]*)?|Dependencies(?: and order)?)\n"
+            r"(.*?)(?=^## |\Z)", text, re.M | re.S)
+        token = r"(?:`P[0-9]+\.[0-9]+`|P[0-9]+\.[0-9]+(?![0-9A-Za-z_]))"
+        for section in sections:
+            body = section.group(2)
+            candidates = []
+            if section.group(1).startswith("Planned Items"):
+                candidates.append(re.findall(
+                    r"^\s*-\s+\*\*(P[0-9]+\.[0-9]+)\s+[—–-]", body, re.M))
+            for chain in re.findall(
+                    rf"^[ \t]*({token}(?:[ \t]*(?:→|->)[ \t]*{token})+)"
+                    r"(?![ \t]*(?:→|->))", body, re.M):
+                candidates.append(re.findall(r"P[0-9]+\.[0-9]+", chain))
+            for order in candidates:
+                if len(order) == len(set(order)) and set(order) == members:
+                    orders.add(tuple(order))
+                    if section.group(1).startswith("Dependencies"):
+                        dependency_orders.add(tuple(order))
+        if len(orders) != 1:
             continue
+        order = orders.pop()
+        declared[phase] = (order, order in dependency_orders)
+    return declared
+
+
+def _execution_ranks(plan_dir: Path, items: dict[str, dict]) -> dict[str, tuple]:
+    """Use a complete declared phase order for inferred edges and successors.
+
+    Item numbers identify specs; they do not override an explicitly reordered phase.
+    Explicit producer annotations remain authoritative regardless of this order.
+    """
+    ranks = {item: _key(item) for item in items}
+    for order, _ in _declared_phase_orders(plan_dir, items).values():
         for index, item in enumerate(order):
             ranks[item] = (_key(item)[0], index + 1)
     return ranks
@@ -85,6 +111,10 @@ def _dependencies(plan_dir: Path, item_id: str, items: dict[str, dict]) -> set[s
     fields = items[item_id]
     ranks = _execution_ranks(plan_dir, items)
     producers = set()
+    phase = item_id.split(".")[0]
+    order, declares_dependencies = _declared_phase_orders(plan_dir, items).get(phase, ((), False))
+    if declares_dependencies and (index := order.index(item_id)) > 0:
+        producers.add(order[index - 1])
     for field in ("Inputs", "Required Reads"):
         for entry in plan_weight.split_entries(fields.get(field, "")):
             producer = plan_admission.producer_annotation(entry)
@@ -362,8 +392,9 @@ def materialize_next_ready(plan_dir, terminal_item: str) -> Path | None:
     if positions.get(terminal_item, {}).get("result") not in _READY_RESULTS:
         return None
     items = plan_downstream._all_items(root)
-    for item_id in sorted(items, key=_key):
-        if _key(item_id) <= _key(terminal_item):
+    ranks = _execution_ranks(root, items)
+    for item_id in sorted(items, key=ranks.__getitem__):
+        if ranks[item_id] <= ranks.get(terminal_item, _key(terminal_item)):
             continue
         if positions.get(item_id, {}).get("result") in _READY_RESULTS:
             continue

@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- **Task phase order:** recovery учитывает полную уникальную цепочку в `Dependencies and order`, её непосредственные predecessor edges и тот же порядок при выборе следующего bundle. Нечисловой execution order больше не создаёт ложные зависимости; legacy `Planned Items` и явные producer-аннотации сохранены.
+
 - **Task long-running review:** native ACP now probes process, route and selected-session
   activity every 30 seconds and times out only on inactivity. Active reviews have no elapsed
   deadline or default Task turn cap. Response notifications no longer impersonate native turns.

@@ -66,6 +66,76 @@ class PlanRecoveryTests(unittest.TestCase):
         items["P1.3"]["Inputs"] += " (producer: P1.2)"
         self.assertIn("P1.2", plan_recovery._dependencies(self.plan, "P1.3", items))
 
+    def test_complete_dependencies_arrow_order_controls_inferred_edges(self):
+        phase = self.plan / "phases/P1/P1.md"
+        phase.write_text(phase.read_text() + "\n## Dependencies and order\n\n"
+                         "`P1.1` → `P1.3` → `P1.2`. Execution order, not numeric order.\n"
+                         "\n### Grouping\n\nP1.3 → P1.2 is a solo continuation.\n")
+        items = {"P1.1": {}, "P1.2": {"Files": "`shared.php`", "Inputs": "`golden.php`"},
+                 "P1.3": {"Inputs": "`shared.php`", "Files": "`golden.php`"}}
+        self.assertNotIn("P1.2", plan_recovery._dependencies(self.plan, "P1.3", items))
+        self.assertIn("P1.3", plan_recovery._dependencies(self.plan, "P1.2", items))
+        items["P1.3"]["Inputs"] += " (producer: P1.2)"
+        self.assertIn("P1.2", plan_recovery._dependencies(self.plan, "P1.3", items))
+
+    def test_arrow_order_requires_complete_unique_declaration_in_order_section(self):
+        phase = self.plan / "phases/P1/P1.md"
+        original = phase.read_text()
+        items = {"P1.1": {}, "P1.2": {}, "P1.3": {}}
+        numeric = {item: plan_recovery._key(item) for item in items}
+        for heading, declaration in (
+                ("Dependencies and order", "`P1.1` → `P1.3`"),
+                ("Dependencies and order", "`P1.1` → `P1.3` → `P1.2` → `P1.3`"),
+                ("Dependencies and order", "`P1.1` → `P1.3` → `P1.2` → `P1.4`"),
+                ("Dependencies and order", "`P1.1` → `P1.3` → `P1.2` → unrelated prose"),
+                ("Dependencies and order", "`P1.1` → `P1.3` → `P1.2`\n"
+                 "`P1.1` → `P1.2` → `P1.3`"),
+                ("Dependencies and order", "Prose mentions P1.1 → P1.3 → P1.2."),
+                ("Scope Included", "`P1.1` → `P1.3` → `P1.2`")):
+            with self.subTest(heading=heading, declaration=declaration):
+                phase.write_text(original + f"\n## {heading}\n\n{declaration}\n")
+                self.assertEqual(plan_recovery._execution_ranks(self.plan, items), numeric)
+
+    def test_dependencies_arrow_order_blocks_until_immediate_predecessor_closes(self):
+        phase = self.plan / "phases/P1/P1.md"
+        phase.write_text(phase.read_text() + "\n## Dependencies and order\n\n"
+                         "`P1.1` → `P1.3` → `P1.2`. Frozen order.\n")
+        items = {"P1.1": {}, "P1.2": {}, "P1.3": {}}
+        positions = {"P1.1": {"result": "closed-green"}}
+        with patch("task.plan_downstream._all_items", return_value=items), \
+                patch.object(plan_recovery, "_positions", return_value=positions):
+            self.assertEqual(plan_recovery._dependencies(self.plan, "P1.2", items), {"P1.3"})
+            verdict = plan_recovery.inspect(self.plan, "P1.2")
+            self.assertFalse(verdict["allowed"])
+            self.assertEqual(verdict["active_item"], "P1.3")
+            positions["P1.3"] = {"result": "closed-green"}
+            self.assertTrue(plan_recovery.inspect(self.plan, "P1.2")["allowed"])
+
+    def test_materialize_next_ready_uses_declared_order_for_selection_and_cutoff(self):
+        phase = self.plan / "phases/P1/P1.md"
+        original = phase.read_text()
+        items = {"P1.1": {}, "P1.2": {}, "P1.3": {}}
+        declarations = (
+            "## Planned Items (outcomes)\n"
+            "- **P1.1 — first**\n- **P1.3 — producer**\n- **P1.2 — consumer**\n",
+            "## Dependencies and order\n\n`P1.1` → `P1.3` → `P1.2`. Frozen order.\n",
+        )
+        for declaration in declarations:
+            for terminal_item, next_item in (("P1.1", "P1.3"), ("P1.3", "P1.2")):
+                with self.subTest(declaration=declaration, terminal_item=terminal_item):
+                    phase.write_text(original + "\n" + declaration)
+                    positions = {"P1.1": {"result": "closed-green"}}
+                    positions[terminal_item] = {"result": "closed-green"}
+                    expected = self.plan / "bundles" / f"{next_item}.json"
+                    with patch.object(plan_recovery, "_positions", return_value=positions), \
+                            patch("task.plan_downstream._all_items", return_value=items), \
+                            patch.object(plan_bundle, "producer_readiness") as readiness, \
+                            patch.object(plan_bundle, "build", return_value=expected) as build:
+                        self.assertEqual(plan_recovery.materialize_next_ready(
+                            self.plan, terminal_item), expected)
+                    readiness.assert_called_once_with(self.plan, next_item)
+                    build.assert_called_once_with(self.plan, next_item)
+
     def test_successor_diagnosis_precedes_missing_bundle_capture(self):
         self.assertFalse((self.plan / "bundles" / "P1.2.json").exists())
         with self.assertRaises(plan_recovery.RecoveryError) as raised:

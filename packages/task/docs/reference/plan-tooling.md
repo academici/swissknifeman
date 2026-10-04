@@ -30,13 +30,14 @@ is not proof. The terminal ACP response must attest the same session/model, `end
 complete positive usage. Internal accounting model names do not replace the effective model ID.
 Unknown/insufficient capacity cannot produce GREEN and does not trigger a second identical
 attempt. Native providers need captured context evidence too.
-Read-only/tool/time/turn limits remain unchanged. Explicit context does not enlarge the review packet.
+Read-only/tool boundaries remain unchanged. Explicit context does not enlarge the review packet.
 
 The root implements/tests an item, launches fresh read-only Grok, and consumes the receipt.
 GREEN closes and continues to the next item; FINDINGS permits one owning correction, affected tests,
-and a second review. No manual `task:review` is needed. Two completed rounds or two incomplete
-attempts for one candidate stop further automatic calls; preserve the checkpoint for an actual
-owner decision, transport repair or missing capability. Never reset history on resume.
+and a second review. No manual `task:review` is needed. Only completed verdict rounds consume
+review budget; incomplete transport receipts have no separate attempt cap. Diagnose/repair a failed
+transport before retrying and preserve its history. A real stall/cancellation, missing capability or
+completed-round exhaustion preserves the checkpoint; never reset history on resume.
 `--review-effort high` is independent of executor effort. Each item `prepare` receives the selection
 and persists `owner-review-request/v1` under its review artifacts. Close enforces this request even
 when frozen Validation contains no owner-review carrier; conflicting prior selections fail closed.
@@ -71,8 +72,14 @@ Make one bounded attempt from the review stream or the automatically authorized 
 ```bash
 python3 packages/task/scripts/plan-work.py review-run \
   --plan-dir plans/<PLAN-ID> --manifest <returned-review-route.json> \
-  --reviewer grok/grok-4.7 --timeout 600 --max-turns 20
+  --reviewer grok/grok-4.7/500k --timeout 600 --heartbeat-interval 30
 ```
+
+Native ACP publishes `owner-review/live-progress.json` and archives `heartbeats.jsonl` with
+process/native-route/activity probes. Its timeout measures inactivity; streamed activity from the
+selected session extends waiting without an elapsed limit. Transport/config noise does not hide a
+stall. The default Task turn cap is absent; optional `--max-turns N` uses native terminal usage.
+Legacy non-ACP headless transport retains its elapsed timeout until its liveness carrier is migrated.
 
 Grok transport limits tools to reading, denies shell/edit/write/MCP, disables nested agents,
 uses JSON output and checks actual model/session, completion and usage. Other providers review in
@@ -93,8 +100,8 @@ Validation declares `self-check: <plan-relative-json>`. Design covers all affect
 resources and drivers; executor self-check records invariant evidence and every fixed/deferred risk.
 Re-review checks the affected risk class/model. A second finding with the same class/area after repair
 requires a shared-model tactic change. Two completed rounds exhaust the item review budget;
-two incomplete attempts separately stop transport retries for that candidate. Repair authority
-remains, while further model calls require an explicit bounded owner decision. There is no silent
+incomplete transport does not consume a round or a separate retry budget. Repair authority
+remains; further completed rounds after exhaustion require an explicit bounded owner decision. There is no silent
 close or budget reset. Exact schemas and recovery are in the canonical review-mode reference.
 
 An extra round uses `review-packet --budget-decision D#`: an accepted item-scoped owner decision

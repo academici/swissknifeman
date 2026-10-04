@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-run.md
-Canonical SHA-256: sha256:9bd0d060cf01163a153a17f64b4438c6808d062dbbb209a7251a8a6d55cb71a6
+Canonical SHA-256: sha256:c8e9c5f9179827994fdc31a95d10b55d49c0042a2b893b6f16f421488db5cbcb
 Adapter: task.cursor-command/1.0.18
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -110,8 +110,10 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
    fix in scope, rerun affected checks, prepare the changed candidate and call one second review.
    Consume the shared reducer action; never start a third completed round, replace the reviewer,
    reset budgets or recursively delegate fix/re-review. Systemic repair addresses the shared model
-   before that second review. An incomplete attempt is not a verdict: diagnose/repair the transport
-   and retry at most once for that candidate. Budget exhaustion, missing capability or a true decision
+   before that second review. An incomplete transport does not consume a review round or a separate
+   attempt budget: diagnose/repair the cause and continue without resetting history. Monitor reviewer
+   liveness periodically; active review has no elapsed deadline or default Task turn cap. A genuine
+   stall/cancellation preserves its checkpoint. Completed-round exhaustion, missing capability or a true decision
    boundary persists the exact checkpoint; do not ask the owner between normal items or rounds.
    Other providers need an independently routed native review session and `review-record`; unavailable
    launch capability is explicit, never a silent Grok fallback. A standalone requested review remains

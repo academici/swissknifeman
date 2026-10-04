@@ -59,7 +59,10 @@ returns a launch for that chosen reviewer.
    Oversized required model/spec/self-check refuses with a concrete decomposition request.
 4. In automatic mode the orchestrating root calls
    `review-run --plan-dir <dir> --manifest <review-route.json> --reviewer grok/grok-4.7`
-   for one Grok attempt, bounded by `--timeout` (600 seconds default) and `--max-turns` (20).
+   for one Grok transport. Native ACP uses `--timeout` as an inactivity timeout (600 seconds
+   default), with process/native-route/activity probes every `--heartbeat-interval` (30 seconds).
+   Active review has no elapsed deadline. `--max-turns` defaults to 0 (no Task cap); an explicit
+   cap is verified against terminal provider usage, never response notification counts.
    Prepare's durable request authorizes this launch from the executor session, not self-review;
    the subprocess has a fresh session and only its provider output can certify the candidate.
    Keep the product stable while it runs. Without automatic selection, persist the existing
@@ -82,8 +85,10 @@ returns a launch for that chosen reviewer.
    `design-required`, even when finding file/fingerprint changed. Establish/revise the common
    model before another local fix; only a new scope/authority choice needs an owner decision.
    The unchanged candidate reuses the verdict. At most two completed rounds per item are admitted;
-   two incomplete attempts per candidate stop transport retries separately. Exhaustion retains
-   repair authority and requires a bounded owner decision before further reviewer calls. Never
+   incomplete transports consume neither a completed round nor a separate attempt budget. Diagnose
+   and repair their cause before retrying; retain receipts and do not start blind retry loops. A real
+   stall/cancellation preserves its checkpoint. Completed-round exhaustion retains repair authority
+   and requires a bounded owner decision before further completed review rounds. Never
    silently increase the budget, restart it by changing route/candidate, or close with missing
    review. Accepted scope/Validation amendments use existing D# rules; deviations are not a bypass.
 

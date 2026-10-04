@@ -467,8 +467,12 @@ def main(argv=None) -> int:
         if name in {"review-run", "review-record"}:
             action.add_argument("--manifest", type=Path, required=True)
         if name == "review-run":
-            action.add_argument("--timeout", type=int, default=600)
-            action.add_argument("--max-turns", type=int, default=20)
+            action.add_argument("--timeout", type=int, default=600,
+                                help="native ACP inactivity timeout in seconds; active review has no elapsed deadline")
+            action.add_argument("--max-turns", type=int, default=0,
+                                help="explicit provider turn cap; 0 (default) imposes no Task cap")
+            action.add_argument("--heartbeat-interval", type=int, default=30,
+                                help="native ACP process/route/activity probe interval in seconds")
         if name == "review-record":
             action.add_argument("--output", type=Path, required=True)
             action.add_argument("--invocation", required=True)
@@ -485,7 +489,8 @@ def main(argv=None) -> int:
                                               budget_decision=args.budget_decision)
             elif args.action == "review-run":
                 result = review_packet.run(args.plan_dir, args.manifest, selector=args.reviewer,
-                                          timeout=args.timeout, max_turns=args.max_turns)
+                                          timeout=args.timeout, max_turns=args.max_turns,
+                                          heartbeat_interval=args.heartbeat_interval)
             elif args.action == "review-record":
                 declared = json.loads(args.manifest.read_text())
                 if declared["reviewer"] != review_packet.canonical_selector(args.reviewer):

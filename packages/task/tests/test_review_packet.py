@@ -385,16 +385,20 @@ class ReviewPacketTests(unittest.TestCase):
         with self.assertRaisesRegex(review.ReviewError, "OWNER_REVIEW_NOT_GREEN"):
             review.require_green(self.plan, "P1.1", "grok/grok-4.7")
 
-    def test_incomplete_does_not_consume_review_round_and_has_separate_cap(self):
+    def test_incomplete_attempts_never_consume_review_round_or_block_repaired_transport(self):
         packet = self.packet()
         first = self.receive(packet, complete=False)
         second = self.receive(packet, complete=False)
         self.assertEqual(first["action"], "retry-transport")
-        self.assertEqual(second["action"], "review-transport-exhausted")
+        self.assertEqual(second["action"], "retry-transport")
         self.assertEqual(self.packet()["completed_rounds"], 0)
-        with patch("task.session_context.current_id", return_value="review-stream"):
-            with self.assertRaisesRegex(review.ReviewError, "REVIEW_TRANSPORT_EXHAUSTED"):
-                review.run(self.plan, packet["manifest"], selector="grok/grok-4.7")
+        with patch("task.session_context.current_id", return_value="review-stream"), \
+                patch.object(review, "_invoke", side_effect=OSError("simulated transport failure")):
+            third = review.run(self.plan, packet["manifest"], selector="grok/grok-4.7")
+        self.assertEqual(third["action"], "retry-transport")
+        self.assertEqual(self.packet()["completed_rounds"], 0)
+        self.receive(packet)
+        self.assertEqual(self.packet()["action"], "reuse-verdict")
 
     def test_green_verdict_is_reused_without_another_model_call(self):
         packet = self.packet()

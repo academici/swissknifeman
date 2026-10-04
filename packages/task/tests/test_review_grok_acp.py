@@ -4,6 +4,8 @@ import json
 import queue
 import subprocess
 import tempfile
+import threading
+import time
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -82,6 +84,41 @@ class _Process:
     def terminate(self):
         self.terminated = True
         self.stdout.rows.put(b"")
+
+    def poll(self):
+        return -15 if self.terminated else None
+
+
+class _ActiveProcess(_Process):
+    def __init__(self, *, noise=False, response_notifications=0):
+        super().__init__()
+        self.noise = noise
+        self.response_notifications = response_notifications
+
+    def write(self, raw):
+        request = json.loads(raw)
+        if request.get("method") != "session/prompt":
+            return super().write(raw)
+        self.sent.append(request)
+
+        def stream():
+            for _ in range(15):
+                time.sleep(.02)
+                if self.terminated:
+                    return
+                self.stdout.put({"method": "session/update", "params": {
+                    "sessionId": "unrelated-session" if self.noise else self.session,
+                    "update": {"sessionUpdate": "agent_thought_chunk",
+                               "content": {"type": "text", "text": "activity"}}}})
+            for _ in range(self.response_notifications):
+                self.finished_response()
+            self.chunk('{"verdict":"GREEN"}')
+            self.finished_response()
+            self.stdout.put({"id": request["id"], "result": {
+                "stopReason": "end_turn", "_meta": {"sessionId": self.session,
+                "modelId": self.model, "usage": self.usage}}})
+
+        threading.Thread(target=stream, daemon=True).start()
 
 
 class GrokACPTests(unittest.TestCase):
@@ -198,6 +235,43 @@ class GrokACPTests(unittest.TestCase):
         self.assertIn("read_file,grep,list_dir", args)
         self.assertEqual(args[-1], "stdio")
         self.assertNotIn("--prompt-file", args)
+
+    def test_active_review_outlives_timeout_and_emits_liveness_probes(self):
+        process = _ActiveProcess(response_notifications=25)
+        heartbeats = []
+        with patch.object(acp.subprocess, "Popen", return_value=process), \
+                patch.object(acp, "provider_route", return_value=self.witness), \
+                patch.object(acp, "_stop", side_effect=lambda proc: proc.terminate()):
+            result = acp.run(self.manifest, b"packet", cwd=Path("/work"), timeout=.1,
+                             max_turns=20, heartbeat_interval=.03, progress=heartbeats.append)
+        self.assertTrue(result["complete"], result["detail"])
+        self.assertGreater(heartbeats[-1]["elapsed_seconds"], .1)
+        self.assertGreater(heartbeats[-1]["activity_events"], 0)
+        self.assertTrue(all(row["process_alive"] for row in heartbeats))
+        self.assertEqual(result["output"], b'{"verdict":"GREEN"}')
+
+    def test_unrelated_stream_activity_does_not_hide_stalled_reviewer(self):
+        process = _ActiveProcess(noise=True)
+        with patch.object(acp.subprocess, "Popen", return_value=process), \
+                patch.object(acp, "provider_route", return_value=self.witness), \
+                patch.object(acp, "_stop", side_effect=lambda proc: proc.terminate()):
+            result = acp.run(self.manifest, b"packet", cwd=Path("/work"), timeout=.1,
+                             heartbeat_interval=.03)
+        self.assertFalse(result["complete"])
+        self.assertIn("REVIEW_INACTIVE", result["detail"])
+        self.assertTrue(process.terminated)
+        self.assertTrue(result["heartbeats"])
+        self.assertEqual(result["heartbeats"][-1]["activity_events"], 0)
+
+    def test_default_turn_cap_is_absent_and_native_usage_may_exceed_twenty(self):
+        process = _Process()
+        process.usage["numTurns"] = 45
+        with patch.object(acp.subprocess, "Popen", return_value=process), \
+                patch.object(acp, "provider_route", return_value=self.witness), \
+                patch.object(acp, "_stop", side_effect=lambda proc: proc.terminate()):
+            result = acp.run(self.manifest, b"packet", cwd=Path("/work"), timeout=1)
+        self.assertTrue(result["complete"])
+        self.assertNotIn("--max-turns", result["argv"])
 
     def test_timeout_cleanup_kills_group_and_reaps_process(self):
         from unittest.mock import Mock

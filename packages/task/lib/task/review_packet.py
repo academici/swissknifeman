@@ -21,7 +21,6 @@ import uuid
 from task import plan_bundle, plan_evidence, plan_layout, plan_weight, review_policy
 
 PACKET_BYTES_MAX = 80_000
-INCOMPLETE_ATTEMPTS_MAX = 2
 RISK_CLASSES = ("local", "concurrency", "transaction", "auth", "data-integrity")
 SYSTEMIC = frozenset(RISK_CLASSES[1:])
 _SELECTOR = re.compile(r"^(claude-code|codex|cursor|grok)/([A-Za-z0-9][A-Za-z0-9._:-]*)$")
@@ -605,13 +604,14 @@ def _require_committed_green(plan_dir, item: str, selector: str, *, effort: str 
         metadata = terminal.get("_meta", {})
         usage = metadata.get("usage", {})
         argv = json.loads(read(attempt + "/transport.json"))["argv"]
-        max_turns = int(argv[argv.index("--max-turns") + 1])
+        max_turns = int(argv[argv.index("--max-turns") + 1]) if "--max-turns" in argv else 0
         if (terminal.get("stopReason") != "end_turn" or metadata.get("sessionId") != receipt["reviewer_session"]
                 or metadata.get("modelId") != manifest["route"]["model"]
                 or any(type(usage.get(key)) is not int or usage[key] < 0
                        for key in ("inputTokens", "outputTokens", "cachedReadTokens", "cacheCreationTokens"))
                 or usage["inputTokens"] + usage["outputTokens"] <= 0
-                or type(usage.get("numTurns")) is not int or not 0 < usage["numTurns"] <= max_turns
+                or type(usage.get("numTurns")) is not int or usage["numTurns"] <= 0
+                or (max_turns and usage["numTurns"] > max_turns)
                 or any(value.get("usage_is_incomplete", False) for value in (terminal, metadata, usage))):
             raise ReviewError("REVIEW_CLOSURE_INVALID", "committed native completion is not authentic")
     return receipt
@@ -657,7 +657,8 @@ def grok_argv(manifest: dict, packet_path: Path, root: Path, *, session: str, ma
             "--permission-mode", "dontAsk",
             "--tools", "read_file,grep,list_dir", "--allow", "Read", "--allow", "Grep",
             "--deny", "MCPTool", "--deny", "Bash", "--deny", "Edit", "--deny", "Write",
-            "--no-subagents", "--disable-web-search", "--max-turns", str(max_turns)]
+            "--no-subagents", "--disable-web-search",
+            *(["--max-turns", str(max_turns)] if max_turns else [])]
 
 
 def _invoke(argv: list[str], *, cwd: Path, timeout: int):
@@ -722,9 +723,6 @@ def _record(plan_dir: Path, directory: Path, manifest: dict, *, output: bytes,
         receipt["observed_context_tokens"] = observed_context
     receipt["action"] = review_policy.owner_review_action(rounds, verdict) if complete else "retry-transport"
     if not complete:
-        incomplete = sum(row["status"] == "incomplete" and row["candidate_sha256"] == manifest["candidate_sha256"] for row in history)
-        if incomplete + 1 >= INCOMPLETE_ATTEMPTS_MAX:
-            receipt["action"] = "review-transport-exhausted"
         if detail.startswith("REVIEW_CONTEXT_"):
             receipt["action"] = detail.split(":", 1)[0].lower().replace("_", "-")
     attempt = directory / f"attempt-{len(list(directory.glob('attempt-*'))) + 1:04d}"
@@ -764,10 +762,12 @@ def record(plan_dir, manifest_path, output_path, *, invocation: str) -> dict:
                        complete=True, detail="independent-session", observed_context=actual.get("context_window"))
 
 
-def run(plan_dir, manifest_path, *, selector: str, timeout: int = 600, max_turns: int = 20) -> dict:
+def run(plan_dir, manifest_path, *, selector: str, timeout: int = 600, max_turns: int = 0,
+        heartbeat_interval: int = 30) -> dict:
     """One transport attempt, invoked by the review stream, never the executor loop."""
-    if type(timeout) is not int or not 1 <= timeout <= 1800 or type(max_turns) is not int or not 1 <= max_turns <= 100:
-        raise ReviewError("REVIEW_LIMIT_INVALID", "timeout 1..1800 seconds and max-turns 1..100 required")
+    if (type(timeout) is not int or timeout < 1 or type(max_turns) is not int or max_turns < 0
+            or type(heartbeat_interval) is not int or heartbeat_interval < 1):
+        raise ReviewError("REVIEW_LIMIT_INVALID", "positive timeout/heartbeat interval and nonnegative max-turns required")
     plan_dir = Path(plan_dir).resolve()
     manifest_path = Path(manifest_path).resolve()
     manifest = json.loads(manifest_path.read_text())
@@ -805,18 +805,25 @@ def run(plan_dir, manifest_path, *, selector: str, timeout: int = 600, max_turns
             return {"action": "reuse-verdict", "receipt": complete_rows[-1]}
         if len(complete_rows) >= _round_limit(plan_dir, manifest, history):
             raise ReviewError("REVIEW_BUDGET_EXHAUSTED", "do not launch another model call")
-        if sum(row["status"] == "incomplete" and row["candidate_sha256"] == manifest["candidate_sha256"] for row in history) >= INCOMPLETE_ATTEMPTS_MAX:
-            raise ReviewError("REVIEW_TRANSPORT_EXHAUSTED", "repair transport before a new candidate")
         started = time.monotonic()
         raw, stderr, detail, complete, observed_context = b"", b"", "", False, None
         provider_witness = {}
+        heartbeats = []
+
+        def progress(snapshot):
+            live = directory / "live-progress.json"
+            temporary = live.with_suffix(".tmp")
+            temporary.write_bytes(_json(snapshot))
+            temporary.replace(live)
         try:
             if "context_tokens" in manifest["route"]:
                 result = review_grok_acp.run(manifest, packet_path.read_bytes(), cwd=root,
-                                             timeout=timeout, max_turns=max_turns)
+                                             timeout=timeout, max_turns=max_turns,
+                                             heartbeat_interval=heartbeat_interval, progress=progress)
                 raw, stderr, output = result["raw"], result["stderr"], result["output"]
                 session, detail, complete = result["session"], result["detail"], result["complete"]
                 observed_context, provider_witness = result["observed_context"], result["provider_route"]
+                heartbeats = result.get("heartbeats", [])
             else:
                 result = _invoke(argv, timeout=timeout, cwd=root)
                 raw, stderr = result.stdout, result.stderr
@@ -844,9 +851,14 @@ def run(plan_dir, manifest_path, *, selector: str, timeout: int = 600, max_turns
         attempt = sorted(directory.glob("attempt-*"))[-1]
         (attempt / ("provider-output.jsonl" if "context_tokens" in manifest["route"] else "provider-output.json")).write_bytes(raw)
         (attempt / "stderr.log").write_bytes(stderr)
+        if heartbeats:
+            (attempt / "heartbeats.jsonl").write_text(
+                "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in heartbeats))
         if provider_witness:
             (attempt / "provider-route.json").write_bytes(_json(provider_witness))
-        (attempt / "transport.json").write_bytes(_json({"argv": argv, "wall_seconds": round(time.monotonic() - started, 3)}))
+        (attempt / "transport.json").write_bytes(_json({"argv": argv, "wall_seconds": round(time.monotonic() - started, 3),
+                                                     "timeout_kind": "inactivity" if "context_tokens" in manifest["route"] else "elapsed",
+                                                     "timeout_seconds": timeout, "heartbeat_interval": heartbeat_interval}))
         return receipt
 
 

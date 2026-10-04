@@ -4,6 +4,12 @@
 
 ### Fixed
 
+- **Task long-running review:** native ACP now probes process, route and selected-session
+  activity every 30 seconds and times out only on inactivity. Active reviews have no elapsed
+  deadline or default Task turn cap. Response notifications no longer impersonate native turns.
+  Incomplete transports retain diagnostic receipts without consuming a separate retry budget;
+  only completed verdicts consume the existing two-round review budget.
+
 - **Task Codex invocation:** provider-owned `plan-run --reviewer=...` и форма
   с пробелом сопоставляются через общий reviewer parser, включая default high
   и canonical context/effort suffixes. Исходная команда сохраняется в route

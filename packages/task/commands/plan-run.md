@@ -91,8 +91,10 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
    fix in scope, rerun affected checks, prepare the changed candidate and call one second review.
    Consume the shared reducer action; never start a third completed round, replace the reviewer,
    reset budgets or recursively delegate fix/re-review. Systemic repair addresses the shared model
-   before that second review. An incomplete attempt is not a verdict: diagnose/repair the transport
-   and retry at most once for that candidate. Budget exhaustion, missing capability or a true decision
+   before that second review. An incomplete transport does not consume a review round or a separate
+   attempt budget: diagnose/repair the cause and continue without resetting history. Monitor reviewer
+   liveness periodically; active review has no elapsed deadline or default Task turn cap. A genuine
+   stall/cancellation preserves its checkpoint. Completed-round exhaustion, missing capability or a true decision
    boundary persists the exact checkpoint; do not ask the owner between normal items or rounds.
    Other providers need an independently routed native review session and `review-record`; unavailable
    launch capability is explicit, never a silent Grok fallback. A standalone requested review remains

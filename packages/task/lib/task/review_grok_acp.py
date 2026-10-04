@@ -22,11 +22,11 @@ class TransportError(ValueError):
     pass
 
 
-def argv(manifest: dict, *, max_turns: int) -> list[str]:
+def argv(manifest: dict, *, max_turns: int = 0) -> list[str]:
     return ["grok", "--permission-mode", "dontAsk", "--tools", "read_file,grep,list_dir",
             "--allow", "Read", "--allow", "Grep", "--deny", "MCPTool", "--deny", "Bash",
             "--deny", "Edit", "--deny", "Write", "--no-subagents", "--disable-web-search",
-            "--max-turns", str(max_turns), "agent", "--no-leader",
+            *(["--max-turns", str(max_turns)] if max_turns else []), "agent", "--no-leader",
             "--model", manifest["route"]["model"], "--reasoning-effort", manifest["effort"], "stdio"]
 
 
@@ -75,22 +75,42 @@ def _stop(process) -> None:
         process.wait(timeout=2)
 
 
-def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: int) -> dict:
+def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: int = 0,
+        heartbeat_interval: float = 30, progress=None) -> dict:
     """No retry, no product mutation, no prompt before native capacity proof."""
     command = argv(manifest, max_turns=max_turns)
     # A refused session/new still has a distinct attempt identity for archiving.
     result = {"session": str(uuid.uuid4()), "argv": command, "output": b"", "raw": b"",
               "stderr": b"", "complete": False, "detail": "", "observed_context": None,
-              "provider_route": {}}
+              "provider_route": {}, "heartbeats": []}
     process = None
     raw, stderr, chunks = [], [], []
     last_response = ""
     inbox = queue.Queue()
     readers = []
-    deadline = time.monotonic() + timeout
+    started = last_activity = time.monotonic()
+    next_probe = started + heartbeat_interval
+    activity_events = 0
     sequence = 0
     responses = 0
     session = None
+
+    def probe(method):
+        nonlocal next_probe
+        now = time.monotonic()
+        if process.poll() is not None:
+            raise TransportError("REVIEW_ACP_TERMINATED: provider exited before terminal response")
+        if session is not None and method == "session/prompt":
+            verify_route(provider_route(cwd, session), manifest)
+        snapshot = {"schema_version": "review-heartbeat/v1", "session_id": session,
+                    "phase": method, "process_alive": True,
+                    "elapsed_seconds": round(now - started, 3),
+                    "idle_seconds": round(now - last_activity, 3),
+                    "activity_events": activity_events, "responses": responses}
+        result["heartbeats"].append(snapshot)
+        if progress is not None:
+            progress(snapshot)
+        next_probe = now + heartbeat_interval
 
     def reader(stream, target, deliver=False):
         try:
@@ -107,18 +127,21 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
         process.stdin.flush()
 
     def rpc(method, params):
-        nonlocal sequence, last_response, responses
+        nonlocal sequence, last_response, responses, last_activity, activity_events
         sequence += 1
         request_id = sequence
         send({"jsonrpc": "2.0", "id": request_id, "method": method, "params": params})
         while True:
-            remaining = deadline - time.monotonic()
+            now = time.monotonic()
+            if now >= next_probe:
+                probe(method)
+            remaining = timeout - (now - last_activity)
             if remaining <= 0:
-                raise TransportError("timeout")
+                raise TransportError("REVIEW_INACTIVE: timeout without reviewer activity")
             try:
-                line = inbox.get(timeout=remaining)
-            except queue.Empty as exc:
-                raise TransportError("timeout") from exc
+                line = inbox.get(timeout=min(remaining, max(0, next_probe - now)))
+            except queue.Empty:
+                continue
             if line is None:
                 raise TransportError("REVIEW_ACP_TERMINATED: provider exited before terminal response")
             message = json.loads(line)
@@ -136,6 +159,12 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
                 if params.get("sessionId") != session:
                     continue
                 update = params.get("update", {})
+                if update.get("sessionUpdate") in {
+                    "agent_message_chunk", "agent_thought_chunk", "tool_call",
+                    "tool_call_update", "tool_call_delta_chunk", "response_completed",
+                }:
+                    last_activity = time.monotonic()
+                    activity_events += 1
                 if update.get("sessionUpdate") == "agent_message_chunk":
                     content = update.get("content", {})
                     if content.get("type") == "text":
@@ -144,21 +173,20 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
                     last_response = "".join(chunks)
                     chunks.clear()
                     responses += 1
-                    if responses > max_turns:
-                        raise TransportError("REVIEW_MAX_TURNS: provider exceeded the bounded review turns")
             if message.get("id") == request_id and "method" not in message:
                 if "error" in message:
                     raise TransportError("REVIEW_ACP_ERROR: " + json.dumps(message["error"], ensure_ascii=False))
                 value = message.get("result")
                 if not isinstance(value, dict):
                     raise TransportError("REVIEW_ACP_INVALID: missing result object")
+                last_activity = time.monotonic()
                 return value
 
     def route():
         # Persistence may trail set_model with a complete default route as well
         # as missing fields. Wait for bounded convergence, never prompt until
         # the effective native route satisfies every requested axis.
-        until = min(deadline, time.monotonic() + 3)
+        until = time.monotonic() + min(timeout, 3)
         while True:
             witness = provider_route(cwd, session)
             result["provider_route"] = witness
@@ -201,7 +229,8 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
                        and all(type(usage.get(key)) is int and usage[key] >= 0
                                for key in ("inputTokens", "outputTokens", "cachedReadTokens", "cacheCreationTokens"))
                        and usage["inputTokens"] + usage["outputTokens"] > 0
-                       and type(usage.get("numTurns")) is int and 0 < usage["numTurns"] <= max_turns
+                       and type(usage.get("numTurns")) is int and usage["numTurns"] > 0
+                       and (not max_turns or usage["numTurns"] <= max_turns)
                        and not usage.get("usage_is_incomplete", False))
         route()
         result["complete"] = (terminal.get("stopReason") == "end_turn" and metadata.get("sessionId") == session

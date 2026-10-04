@@ -1,6 +1,6 @@
 # Template handoff.md - rolling pointer plans/<PLAN-ID>/handoff.md
 
-Overwritten ENTIRELY each time an item/phase is closed (history in git).
+Overwritten after item completion, design/audit handoff or whole-plan closure (history in git).
 The keys of the Workarounds/Deferred/Open questions block match the run-report
 `devloop{workarounds,deferred,open_questions}` - reconciliation with telemetry.
 
@@ -10,6 +10,7 @@ The keys of the Workarounds/Deferred/Open questions block match the run-report
 |:--|:--|
 | `# HANDOFF - <YYYY-MM-DD> - after Pn.m` | closed item |
 | `# HANDOFF - <YYYY-MM-DD> - after Pn` | closed/audited/re-designed PHASE - step without “last closed item” as destination |
+| `# HANDOFF - <YYYY-MM-DD> - after plan` | whole-plan closure |
 
 **The `Context`** field for layout v2 is `continue-root` · `isolated-child-return` ·
 `cold-start-root`. The latter requires a reason from a private enum:
@@ -37,7 +38,7 @@ and `required:` groups retain the adjacent suffix. A single run is marked `Batch
 | `design-finish: task:plan-design <ID> finish` | reconciliation of fully detailed design |
 | `design-roadmap: task:plan-design <ID> roadmap` | update execution map without editing technical specifications |
 | `audit-phase: task:plan-audit <ID> Pn` | there is a fresh owner-bound `audit-admission/v2` on residual-risk question/candidate/run |
-| `close: task:plan-close <ID> Pn[.m]` | only explicitly requested standalone reconciliation; not handoff current result |
+| `close: task:plan-close <ID>` | whole plan acceptance is current; phase/item targets are forbidden |
 | `archive: task:plan-close archive <ID>` | the plan is entirely terminal |
 | `terminal: plan closed` | all items are terminal, the next step is outside the protocol |
 | `manual: <model-class/effort>` | owner-run step with no command — launch-block carries the route and a BARE item prompt |
@@ -45,8 +46,8 @@ and `required:` groups retain the adjacent suffix. A single run is marked `Batch
 
 Historical `/task:…` declarations remain compatibility inputs. New plans write the semantic
 form above; provider renderers emit Claude `/task:…` or Codex `$ task:…` without changing payload.
-`plan-run` itself closes the GREEN item and eligible final-item phase; handoff is built after
-closure and cannot iterate over the current item or run `plan-close` on it.
+`plan-run` itself completes the GREEN item and checks phase acceptance without closing
+the phase separately. Handoff cannot re-run the completed item or target its phase with `plan-close`.
 
 Owner-run step outside the command surface:
 

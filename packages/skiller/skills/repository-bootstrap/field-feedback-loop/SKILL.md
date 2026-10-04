@@ -51,8 +51,9 @@ that tooling didn't account for?
    **Don't implement speculatively.** Propose it for follow-up:
    - first turn the doubt into a fact: repo-grounded → confirm by reading code; external ("the
      library already does this", "not done that way anymore") → [decision-verification];
-   - **capture it immediately** so it isn't lost between projects: `maind memory store`
-     (namespace of the project/`swissknifeman`) — what you observed, on which project;
+   - **capture it in repository artifacts** so it survives working-memory expiry: what was
+     observed, on which project, and the evidence. Only an unresolved temporary blocker belongs
+     in `maind memory remember --type blocker --ttl-hours 48`; default scope is project-private;
    - give it a receiver: an explored direction → a roadmap note (with an **"adoption
      criterion"** field); a concrete actionable defect/request → a GitHub issue (`gh issue
      create`, repo `academici/swissknifeman`).

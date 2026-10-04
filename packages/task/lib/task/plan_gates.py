@@ -122,11 +122,11 @@ def _is_glob(value: str) -> bool:
 
 
 def _tracked_members(repository_root: Path, patterns: tuple[str, ...]) -> tuple[str, ...]:
-    """Resolve one declaration through Git's tracked index, failing closed."""
+    """Resolve tracked tombstones and nonignored new files, failing closed."""
     pathspecs = [f":(glob){pattern}" if _is_glob(pattern) else f":(literal){pattern}"
                  for pattern in patterns]
     completed = subprocess.run(
-        ["git", "ls-files", "-z", "--cached", "--", *pathspecs],
+        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", *pathspecs],
         cwd=repository_root, capture_output=True, check=False,
     )
     if completed.returncode != 0:
@@ -158,7 +158,7 @@ def _tracked_member_row(repository_root: Path, relative: str) -> dict:
 
 
 def _product_tree(plan_dir: Path, declared_paths: set[str]) -> tuple[str, list[dict]]:
-    """Hash current bytes of deterministic Git-tracked declared product members."""
+    """Hash current bytes of deterministic declared product members, including new files."""
     plan_dir = plan_dir.resolve()
     completed = subprocess.run(
         ["git", "rev-parse", "--show-toplevel"], cwd=plan_dir, text=True,
@@ -314,14 +314,14 @@ def _phase_reviews(plan_dir: Path, phase_id: str) -> dict[str, str]:
 
 def _audit_policy_decision(plan_dir: Path, phase_id: str, *, required: bool,
                            code: str, review: str, reason: str) -> dict:
-    kind = "audit-phase" if required else "close"
+    kind = "audit-phase" if required else None
     command = "task:plan-audit" if required else "task:plan-close"
     return {
         "audit_required": required,
         "code": code,
         "effective_review": review,
         "next_kind": kind,
-        "next_exact": f"{kind}: {command} {plan_dir.name} {phase_id}",
+        "next_exact": f"{kind}: {command} {plan_dir.name} {phase_id}" if required else None,
         "reasons": [reason],
     }
 

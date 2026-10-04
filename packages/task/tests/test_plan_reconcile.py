@@ -16,6 +16,14 @@ class TerminalReconciliationTests(unittest.TestCase):
     def test_terminal_journal_repairs_stale_views_and_materializes_one_successor(self):
         with tempfile.TemporaryDirectory() as tmp:
             plan = write_valid_plan(Path(tmp), "RECONCILE", layout="v2")
+            core = plan / "plan.md"
+            core.write_text(core.read_text().replace("## 3. Routing", """## 3. Routing
+
+| Batch | Items | Model class/effort | Exec | Review | Why |
+|:--|:--|:--|:--|:--|:--|
+| solo | P1.1 | implementation/high | run | none | bounded work |
+| solo | P1.2 | implementation/high | run | none | bounded work |
+"""))
             successor = plan / "phases/P1/P1.2.md"
             successor.write_text(item_spec_md("P1.2").replace(
                 "**Inputs:** `lib/pkg/config.py`.",

@@ -607,7 +607,7 @@ def lint_plan(plan_dir, diag):
         # («phase Pn is in Status Board, but no phases/Pn.md»), there is nothing to duplicate it here.
         known_phases = set(phases) | set(board_by_phase)
         title_ref = handoff.get("title_ref")
-        if title_ref and title_ref != HANDOFF_TITLE_BOOTSTRAP:
+        if title_ref and title_ref not in {HANDOFF_TITLE_BOOTSTRAP, "plan"}:
             title_phase = title_ref.split(".", 1)[0]
             if title_phase not in known_phases:
                 diag.error(handoff_path, handoff.get("title_lineno"),
@@ -837,11 +837,12 @@ def lint_plan(plan_dir, diag):
                 diag.warning(handoff_path, next_lineno,
                              "Next: /task:plan-close archive — the plan is not yet completely terminal")
         elif kind == "close":
-            ref_plan_id, ref_phase, ref_suffix = m.group(1), m.group(2), m.group(3)
-            _check_plan_id(ref_plan_id)
-            _check_phase(ref_phase)
-            if ref_suffix:
-                _check_item(ref_phase + ref_suffix)
+            _check_plan_id(m.group(1))
+            from task import plan_completion
+            try:
+                plan_completion.candidate(plan_dir)
+            except (ValueError, OSError) as exc:
+                diag.error(handoff_path, next_lineno, f"PLAN_CLOSE_NOT_READY: {exc}")
         else:
             diag.error(handoff_path, next_lineno, NEXT_FORMS_HELP)
 

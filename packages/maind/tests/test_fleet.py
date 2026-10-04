@@ -94,13 +94,13 @@ class TestFeatureLog(unittest.TestCase):
                                  memory_namespaces=["axioma"])
             flex = config["projects"][0]
             r = fleet.log_feature(env, config, flex, "added import CSV")
-            self.assertEqual(r["status"], "ok")
-            self.assertIn("ns:axioma", r["scopes"])
+            self.assertEqual(r["status"], "skip")
+            self.assertEqual(r["scopes"], [])
             # visible in the group bucket
             got = memory_mod.recall(url, "ns:axioma", fleet.FEATURE_MARKER)
-            self.assertTrue(any("CSV" in m["text"] for m in got))
+            self.assertEqual(got, [])
             feats = fleet.features(env, config, namespace="axioma")
-            self.assertTrue(any("CSV" in f["text"] for f in feats))
+            self.assertEqual(feats, [])
 
 
 class TestSimilar(unittest.TestCase):

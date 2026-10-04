@@ -27,7 +27,7 @@ Security, public API, concurrency, or irreversible effects require broader verif
 review. Run explicitly requested checks. Report a foreign red baseline and determine whether it intersects
 scope or dependency closure.
 
-Independent review is a separate read-only invocation with explicit `--reviewer provider/model`,
+Independent review is a separate read-only invocation with optional `--reviewer provider/model`,
 not a nested part of the executor's repair loop. Prepare the scoped candidate and evidence, then
 return the review handoff; reviewer findings return one owning correction. Systemic concurrency,
 transaction, auth and data-integrity work first establishes a shared invariant model and records

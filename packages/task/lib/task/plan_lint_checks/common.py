@@ -111,7 +111,7 @@ ESCALATION_RE = re.compile(r"^>\s*🔴\s*ESCALATION\s+(P\d+\.\d+)\s*:")
 # closed/audited/re-designed PHASE (step without «last closed item'a» like
 # destination). The group gives the link: with a dot - item, without a dot - phase (resolves to
 # lint_plan). Other forms (`after phase 2`, `after P2 item 8`) remain ERROR.
-HANDOFF_TITLE_RE = re.compile(r"^#\s+HANDOFF\s+—.*—\s+after\s+(P\d+(?:\.\d+)?)\s*$")
+HANDOFF_TITLE_RE = re.compile(r"^#\s+HANDOFF\s+—.*—\s+after\s+(P\d+(?:\.\d+)?|plan)\s*$")
 HANDOFF_TITLE_HELP = ("header does not match either of the two forms (SKILL §8): "
                       "«# HANDOFF — … — after Pn.m» (item) · «# HANDOFF — … — after Pn» (phase)")
 # Bootstrap-start form handoff'a: the plan has not yet been touched, phases `P0` does not happen.
@@ -137,7 +137,7 @@ PLAN_RUN_RE = re.compile(r"/task:plan-(?:run|exec)\s+(\S+)\s+(P\d+\.\d+)(?:\s*-\
 PLAN_AUDIT_DESIGN_RE = re.compile(r"/task:plan-audit\s+(\S+)\s+design\b")
 PLAN_AUDIT_RE = re.compile(r"/task:plan-audit\s+(\S+)\s+(P\d+)(?!\.\d)\b")
 PLAN_CLOSE_ARCHIVE_RE = re.compile(r"/task:plan-close\s+archive\s+(\S+)")
-PLAN_CLOSE_RE = re.compile(r"/task:plan-close\s+(\S+)\s+(P\d+)(\.\d+)?\b")
+PLAN_CLOSE_RE = re.compile(r"/task:plan-close\s+(\S+)(?=\s*$)")
 SEMANTIC_NEXT_RE = re.compile(
     r"^(run-items|exec-items|audit-design|design-phase|design-item|design-finish|"
     r"design-roadmap|audit-phase|close|archive|terminal|manual|waiting):\s*(.*)$")
@@ -162,7 +162,7 @@ NEXT_FORMS_HELP = (
     "/task:plan-design <ID> Pn · /task:plan-design <ID> Pn.m · "
     "/task:plan-design <ID> finish · /task:plan-design <ID> roadmap · "
     "/task:plan-audit <ID> Pn · /task:plan-audit <ID> design · "
-    "/task:plan-close <ID> Pn[.m] · /task:plan-close archive <ID> · "
+    "/task:plan-close <ID> · /task:plan-close archive <ID> · "
     "«plan closed» · «MANUAL START: <model/effort>» · «WAITING: <condition> → <target form>»"
 )
 PHASE_FILENAME_RE = re.compile(r"^(P\d+)\.md$")
@@ -393,13 +393,19 @@ def _plan_has_workflow_script(plan_dir):
 class Diagnostics:
     """Moneybox ERROR/WARNING with human readable output (Russian, file:line)."""
 
-    def __init__(self):
+    def __init__(self, *, selected_items=None):
         self.errors = []
         self.warnings = []
         self._raw_errors = [] # (path, msg) — for normalized_keys
         self._raw_warnings = []
+        self.selected_items = frozenset(selected_items) if selected_items is not None else None
 
     def error(self, path, line, msg):
+        if self.selected_items is not None and re.search(r"(?:read-budget-v1|bundle-v1):", msg):
+            subjects = set(re.findall(r"\bP\d+\.\d+\b", str(path) + " " + msg))
+            if subjects and subjects.isdisjoint(self.selected_items):
+                self.warning(path, line, "FUTURE_ITEM_NON_GATING: " + msg)
+                return
         self.errors.append(f"{_loc(path, line)}: {msg}")
         self._raw_errors.append((Path(path), msg))
 

@@ -111,7 +111,8 @@ class PhaseAssuranceTests(unittest.TestCase):
         plan = self.plan(impact="internal-integration", seams="migration", intent="required")
         snapshot = candidate()
         policy = plan_gates.phase_audit_policy(plan, "P1", candidate_snapshot=snapshot)
-        self.assertEqual(policy["next_kind"], "close")
+        self.assertIsNone(policy["next_kind"])
+        self.assertIsNone(policy["next_exact"])
         self.assertTrue(policy["diagnostics"])
         self.assertTrue(plan_gates.phase_close_gate(
             plan, "P1", candidate_snapshot=snapshot,

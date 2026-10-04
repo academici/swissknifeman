@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
-Canonical SHA-256: sha256:ad96ed4e0591c8df5f196c914a881489c4dddc9f384b36956201520f4d82fd45
+Canonical SHA-256: sha256:2b036b03f36c450e7a119d39cf284efe4247cc31a6089344a5b3d694954679ac
 Adapter: task.codex-command/1.0.18
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -75,11 +75,15 @@ evidence.
 
 Invocation payload: `$ARGUMENTS`.
 
-Require an explicit `--reviewer <provider>/<exact-model-id>` and use a fresh non-executor
-session whose captured provider/model matches it; effort defaults to `xhigh`. Native frontmatter
-does not pin a model/effort; compatibility routing minima do not replace the selected reviewer.
+`--reviewer <provider>/<exact-model-id>` is optional. Without it, audit using the actual captured
+native provider/model/effort; do not ask for a selector. Use a fresh non-executor session on that
+route when independence is required. An explicit selector uses a fresh session whose captured
+provider/model matches it; effort defaults to `xhigh`. Native frontmatter does not pin a route.
 On mismatch render the selected review launch and do not audit under another route.
 Historical audit evidence remains readable. This argument never grants phase-audit consent.
+
+A GREEN phase audit returns `plan_completion.successor()` from the actual plan state. It never
+returns a phase-close command or writes acceptance on behalf of the executor.
 Optional `/context` and `select the session effort` suffixes may follow the model, in either order, with a trailing `/`.
 Examples: `grok/grok-4.7/500k/`, `grok/grok-4.7/xhigh/`, `grok/grok-4.7/500k/xhigh/`.
 Normalize through `task.review_packet.invocation_selection`; `hight` is high. A conflicting explicit

@@ -123,7 +123,7 @@ class ProviderPlanRoutingTests(unittest.TestCase):
             "Phase is terminal → `/task:plan-close <PLAN-ID> Pn`", execution)
         self.assertIn("GREEN evidence direct-closes by default", execution)
         self.assertIn("fresh owner consent", execution)
-        self.assertIn("create its phase closure before deriving Next", execution)
+        self.assertIn("verify its phase acceptance without a phase-close event or carrier", execution)
 
     def test_each_plan_command_renders_from_one_semantic_carrier_for_both_providers(self):
         for command_id, expected in self.expected["plan_commands"].items():
@@ -220,7 +220,7 @@ class ProviderPlanRoutingTests(unittest.TestCase):
                 carrier = PlanNextCarrier(
                     kind=case["kind"],
                     command_id=case["command_id"], plan_id="PLAN",
-                    arguments=("PLAN", "P4.4"), context_kind="same-session")
+                    arguments=("PLAN",) if case["kind"] == "close" else ("PLAN", "P4.4"), context_kind="same-session")
                 minimum = tuple(case["minimum"]) if case["minimum"] else None
                 plan = plan_provider_invocation(
                     self.catalog, carrier, mapping, support,
@@ -280,7 +280,7 @@ class ProviderPlanRoutingTests(unittest.TestCase):
             with self.subTest(kind=case["kind"]):
                 carrier = parse_next_carrier(case["valid"])
                 self.assertEqual(carrier.kind, case["kind"])
-                with self.assertRaisesRegex(ValueError, "CMD_INVOCATION_INVALID"):
+                with self.assertRaisesRegex(ValueError, "CMD_INVOCATION_INVALID|PLAN_CLOSE_WHOLE_PLAN_ONLY"):
                     parse_next_carrier(case["invalid"])
                 if carrier.command_id is None:
                     continue

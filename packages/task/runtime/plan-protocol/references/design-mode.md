@@ -47,4 +47,5 @@ Model affected operations/resources/drivers as a system: order explicit and impl
 check every interfering pair; for auth/data work name invariant, enforcement and bypass paths.
 Design audit checks model completeness and consistency against the specification. Declare the
 adversarial `self-check` Validation carrier for execution. Owner-requested `owner-review` is a
-separate review invocation with explicit `--reviewer`, never a nested executor step; see review mode.
+separate review invocation; `--reviewer` optionally selects a route. Without the flag,
+an explicitly requested review uses its actual captured native route. See review mode.

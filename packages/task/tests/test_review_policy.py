@@ -89,8 +89,8 @@ class EvidenceFirstSignalTests(unittest.TestCase):
             policy = plan_gates.phase_audit_policy(
                 plan, "P1", candidate_snapshot=self._candidate())
             self.assertFalse(policy["audit_required"])
-            self.assertEqual(policy["next_kind"], "close")
-            self.assertEqual(policy["next_exact"], "close: task:plan-close P P1")
+            self.assertIsNone(policy["next_kind"])
+            self.assertIsNone(policy["next_exact"])
 
             snapshot = self._candidate()
             gate = plan_gates.phase_close_gate(

@@ -14,7 +14,7 @@ there and `maind sync`, and not in the copy of the project.
 
 | MCP-server | What is this | When to call |
 |:--|:--|:--|
-| **agentmemory** | Explicit long-term memory. Private scope project - `{{SCOPE}}`; general scope is set separately | Call when past decision or handoff may change operation. For continuity write one `active-handoff`; progress stored in the repository |
+| **maind memory tools** | Temporary useful context. Default private scope `{{SCOPE}}` | Recall only when useful context can affect this task. Store a short unresolved blocker, coordination note, or one replaceable `active-handoff`; decisions/progress stay in the repository |
 | **serena** (code graph) | Graph **code inside** project: symbols, links, implementations, file overview (engine Serena) | For **code navigation** — `find_symbol`, `find_referencing_symbols`, `get_symbols_overview` instead of reading entire files (saves tokens). Available if `.mcp.json` there is a code server (usually `serena`); no - navigate with regular search. Not to be confused with cross-project maind-graph |
 | **maind** | The hub itself (topology **between** projects, connection status) | When you need project connections to other ecosystem nodes or a status summary |
 
@@ -26,6 +26,17 @@ memory access: shared `ns:<name>` is read and written only when explicitly scope
 and memory rises upon request. `MODE=maind` with SessionStart digest is enabled only after
 measured evidence of benefit.
 
+Every record expires: **48 hours by default, at most 72 hours**, including handoffs. Maximum
+800 characters and 8 live entries per scope. Allowed categories: `context` (`fact` is a legacy
+alias), `blocker`, `coordination`, `active-handoff`. Use memory only for temporary information
+another session needs that cannot simply be read from repository artifacts. One `active-handoff`
+per scope points to the repository handoff and names the next action; replace it instead of
+appending a journal, and forget it on completion. Never store plan decisions, audit copies,
+progress/checkpoints, commit/release history or connection seeds. Reading never renews TTL.
+Empty memory is normal. Use `maind memory audit --all` to inspect; administrators use
+`maind memory prune --all --apply` with seven-day local backups and `maind memory gc-install`
+for hourly expiry collection on the memory host.
+
 ## Cross-project task (2+ project)
 
 The task concerns several ecosystem projects at once (for example «analyze X and Y and improve
@@ -35,8 +46,8 @@ common between them») — raise the cross-project context explicitly, in three 
    `maind_graph_path`/`maind_graph_neighbors` (MCP) — path/neighbors between graph nodes.
 2. **Group context** — raise shared memory namespace explicit (it is not in the digest by default):
    `maind memory recall --scope ns:<name>` (CLI) or `maind_memory_recall` c with this scope (MCP).
-3. **The output is written to the general scope**, not in a private project - otherwise the next project of the group will be his
-   will not see: `maind memory remember --scope ns:<name> "<fact>"` (CLI, `--scope` = direct address
+3. **Only necessary temporary coordination** may be written to an explicitly authorized shared
+   scope: `maind memory remember --scope ns:<name> --type coordination --ttl-hours 48 "<note>"` (CLI, `--scope` = direct address
    bucket - not to be confused with `--project --share`, which has a different purpose: private + group
    at once) or `maind_memory_store` with `scope: "ns:<name>"` (MCP).
 
@@ -54,7 +65,7 @@ serena-code graph (LSP) is relevant on the fly - the disclaimer does not apply t
 
 ## Project Communications
 
-- **scope memory:** `{{SCOPE}}`; ecosystem facts - in scope `global`.
+- **scope memory:** `{{SCOPE}}`; shared `ns:*`/`global` only by explicit authorized request.
 - **namespaces:** `{{NAMESPACES}}` (within a group - general, between groups - isolated).
 - **linked to:** {{LINKS}}.
 - see current connections: `maind graph --project {{PROJECT}}`.
@@ -72,5 +83,5 @@ respond or memory is empty:
    «idle». Memory through the eyes - viewer `http://127.0.0.1:3113`.
 2. When status `partial` / `standalone` — fix: `maind health --cwd --fix` (will raise the demon
    memory and add MCP-hub servers into the project).
-3. **Notify user**: status not yet `connected`, changes to this session **will not hit** in
-   shared memory and graph - an irreparable gap will appear in the history of the ecosystem.
+3. Report the unavailable channel and continue ordinary repository work. Memory is temporary
+   optional context; repository artifacts preserve decisions and history.

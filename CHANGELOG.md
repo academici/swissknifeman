@@ -2,7 +2,32 @@
 
 ## [Unreleased]
 
+## [0.28.2] - 2026-10-04
+
 ### Fixed
+
+- **Task roadmap follow-ups:** `plan-close` закрывает только весь план; новые
+  phase/item-close команды и lifecycle events запрещены, исторические carriers
+  остаются читаемыми. Проверяются terminal item evidence, phase/plan Validation,
+  freshness и owning work; terminal operation/reconcile машинно формирует
+  handoff, один successor bundle и delivery receipt, повтор без дублирования истории.
+- **Task reviewer correctness:** reviewer опционален; явное review/audit без флага
+  использует настоящий captured native route. Все новые Grok-запуски используют ACP
+  с inactivity-only liveness. Files раскрываются в concrete inventory с new/deleted
+  members и explicit foreign exclusions; native read ledger связывает фактически
+  прочитанные зависимости. Immutable source blobs и additive legacy recovery
+  сохраняют оригинальное evidence, не выдумывая отсутствующую lock/version history.
+- **Task qualification scope:** selected-item lint включает producer closure;
+  future-only bundle/read-budget defects видны, но не блокируют текущую работу.
+  Candidate/attempt-bound validation DAG исключает перезапись попыток и конкурентных
+  writers одного output; подробные review archives возвращаются компактным result.
+
+- **mAInd working memory:** память ограничена временным контекстом: TTL 48 часов
+  по умолчанию, максимум 72, 800 символов и 8 живых записей на scope; один заменяемый
+  handoff, дедупликация, фильтр журналов/решений/копий документов. Добавлены audit,
+  восстановимая prune и почасовой GC; автоматические graph seeds и копии коммитов
+  отключены. MCP/CLI/digest по умолчанию читают только свой проект; общая память
+  требует явного запроса и разрешённого scope, настройка общего digest не обходит это правило.
 
 - **Task phase order:** recovery учитывает полную уникальную цепочку в `Dependencies and order`, её непосредственные predecessor edges и тот же порядок при выборе следующего bundle. Нечисловой execution order больше не создаёт ложные зависимости; legacy `Planned Items` и явные producer-аннотации сохранены.
 

@@ -121,7 +121,7 @@ def _print_human(mem, gr, sr):
               f"  ({(mem['last'] or '—')[:16].replace('T', ' ')})")
         print(f"  viewer:      {mem['viewer']}")
         if mem["real"] == 0:
-            warn.append("memory: only seed-facts onboard — projects do not write real knowledge")
+            print("  empty working memory is healthy; do not create facts to prove activity")
 
     print("\nmaind-graph  " + "─" * 50)
     print(f"  coverage:   {len(gr['built'])}/{gr['total']} enabled-projects have sides")

@@ -425,21 +425,35 @@ def finalize(plan_dir, item_id: str) -> dict:
     return plan_reconcile.reconcile_terminal(plan_dir, item_id)
 
 
+def complete(plan_dir, item_id: str, entry: dict) -> dict:
+    """One resume-safe item terminal operation using the existing journal owner."""
+    if (not isinstance(entry, dict) or entry.get("item_id") != item_id
+            or entry.get("plan_id") != Path(plan_dir).name
+            or entry.get("command") not in _EXECUTION_COMMANDS
+            or entry.get("result") not in journal.TERMINAL_CLOSE_RESULTS
+            or not entry.get("run_id")):
+        raise WorkError("PLAN_TERMINAL_ENTRY_INVALID", "provide this item's qualified execution terminal")
+    journal.append_idempotent_terminal(plan_dir, entry)
+    return finalize(plan_dir, item_id)
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Compact Task work context and completion")
     actions = parser.add_subparsers(dest="action", required=True)
-    for name in ("prepare", "design-context", "finalize-design", "design-gate", "finalize"):
+    for name in ("prepare", "design-context", "finalize-design", "design-gate", "finalize", "complete", "close-plan", "validate-evidence", "review-recover-sources"):
         action = actions.add_parser(name)
         action.add_argument("--plan-dir", type=Path, required=True)
         if name in {"design-context", "finalize-design"}:
             target = action.add_mutually_exclusive_group(required=True)
             target.add_argument("--phase")
             target.add_argument("--finish", action="store_true")
-        elif name != "design-gate":
+        elif name not in {"design-gate", "close-plan", "validate-evidence"}:
             action.add_argument("--item", required=True)
         if name in {"prepare", "finalize-design"}:
             action.add_argument("--actor", required=True)
             action.add_argument("--session-id")
+        if name == "complete":
+            action.add_argument("--entry", type=Path, required=True, help="qualified terminal journal entry JSON")
         if name == "prepare":
             action.add_argument("--command", choices=_EXECUTION_COMMANDS, required=True)
             action.add_argument("--actual-route", type=Path)
@@ -451,16 +465,25 @@ def main(argv=None) -> int:
             action.add_argument("--phase", help="retain the owner's phase-scoped invocation while admitting its current item/batch")
             action.add_argument("--capability", action="append", default=[],
                                 help="JSON capability binding: id and support")
+        if name == "close-plan":
+            action.add_argument("--actor", default="task:plan-close")
+            action.add_argument("--session-id", required=True)
+        if name == "validate-evidence":
+            action.add_argument("--path", action="append", required=True)
+            action.add_argument("--checks", type=Path, required=True)
+            action.add_argument("--attempt-id", required=True)
+            action.add_argument("--output-dir", type=Path, required=True)
     for name in ("review-packet", "review-run", "review-record", "review-status"):
         action = actions.add_parser(name)
         action.add_argument("--plan-dir", type=Path, required=True)
-        action.add_argument("--reviewer", required=True)
+        action.add_argument("--reviewer")
         if name in {"review-packet", "review-status"}:
             action.add_argument("--item", required=True)
         if name == "review-packet":
             action.add_argument("--base", default="HEAD")
             action.add_argument("--path", action="append", default=[])
             action.add_argument("--evidence", action="append", default=[])
+            action.add_argument("--exclude", action="append", default=[], metavar="PATH=REASON")
             action.add_argument("--executor-session", required=True)
             action.add_argument("--budget-decision", help="accepted owner D# granting one exact extra round")
             action.add_argument("--effort", choices=("low", "medium", "high", "hight", "xhigh"))
@@ -479,27 +502,55 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     started_at = time.perf_counter()
     try:
-        if args.action.startswith("review-"):
+        if args.action == "review-recover-sources":
+            from task import review_sources
+            result = review_sources.recover(args.plan_dir, args.item)
+        elif args.action.startswith("review-"):
             from task import review_packet
-            review_packet.reviewer(args.reviewer)
+            if args.reviewer is not None:
+                review_packet.reviewer(args.reviewer)
             if args.action == "review-packet":
+                exclusions = {}
+                for value in args.exclude:
+                    path, separator, reason = value.partition("=")
+                    if not separator or path in exclusions:
+                        raise review_packet.ReviewError("REVIEW_EXCLUSION_INVALID", "use one PATH=REASON per foreign changed file")
+                    exclusions[path] = reason
                 result = review_packet.packet(args.plan_dir, args.item, selector=args.reviewer,
                                               base=args.base, paths=args.path, evidence=args.evidence,
                                               executor_session=args.executor_session, effort=args.effort,
-                                              budget_decision=args.budget_decision)
+                                              budget_decision=args.budget_decision, exclusions=exclusions)
             elif args.action == "review-run":
                 result = review_packet.run(args.plan_dir, args.manifest, selector=args.reviewer,
                                           timeout=args.timeout, max_turns=args.max_turns,
                                           heartbeat_interval=args.heartbeat_interval)
             elif args.action == "review-record":
                 declared = json.loads(args.manifest.read_text())
-                if declared["reviewer"] != review_packet.canonical_selector(args.reviewer):
+                if args.reviewer is not None and declared["reviewer"] != review_packet.canonical_selector(args.reviewer):
                     raise review_packet.ReviewError("REVIEW_ROUTE_MISMATCH", "reviewer differs from packet")
                 result = review_packet.record(args.plan_dir, args.manifest, args.output,
                                               invocation=args.invocation)
             else:
+                selected = args.reviewer
+                if selected is None:
+                    history = review_packet._history(review_packet._location(args.plan_dir, args.item))
+                    if not history:
+                        raise review_packet.ReviewError("OWNER_REVIEW_PENDING", "no review receipt")
+                    selected = history[-1]["reviewer"]
                 result = {"action": "accept-candidate", "receipt": review_packet.require_green(
-                    args.plan_dir, args.item, args.reviewer)}
+                    args.plan_dir, args.item, selected)}
+            if args.action != "review-packet":
+                item = args.item if args.action == "review-status" else json.loads(args.manifest.read_text())["item_id"]
+                result = review_packet.summary(result, review_packet._location(args.plan_dir, item))
+        elif args.action == "complete":
+            result = complete(args.plan_dir, args.item, json.loads(args.entry.read_text()))
+        elif args.action == "close-plan":
+            from task import plan_completion
+            result = plan_completion.close(args.plan_dir, actor=args.actor, session_id=args.session_id)
+        elif args.action == "validate-evidence":
+            from task import evidence_runner
+            result = evidence_runner.run(plan_weight.repo_root_for(args.plan_dir), args.output_dir,
+                paths=args.path, checks=json.loads(args.checks.read_text()), attempt_id=args.attempt_id)
         elif args.action == "prepare":
             result = prepare(args.plan_dir, args.item, command=args.command, actor=args.actor,
                              session_id=args.session_id, request=args.request,

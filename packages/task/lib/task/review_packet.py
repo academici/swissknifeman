@@ -41,6 +41,14 @@ def _json(value) -> bytes:
     return (json.dumps(value, sort_keys=True, ensure_ascii=False, indent=2) + "\n").encode()
 
 
+def runtime_provenance() -> dict:
+    directory = Path(__file__).parent
+    files = ("review_packet.py", "review_grok_acp.py", "review_sources.py", "file_manifest.py", "review_policy.py")
+    return {"schema_version": "review-runtime/v1", "verdict_schema": "review-verdict/v1",
+            "source_root": str(directory.resolve()),
+            "sources": {name: _sha((directory / name).read_bytes()) for name in files}}
+
+
 def reviewer(selector: str) -> dict:
     parts = (selector or "").strip().rstrip("/").split("/")
     match = _SELECTOR.fullmatch("/".join(parts[:2]))
@@ -133,7 +141,7 @@ def register_request(plan_dir, item: str, *, selector: str, effort: str,
 
 
 def invocation_selection(invocation: str) -> dict | None:
-    """New review launches must name a reviewer; historical receipts stay readable."""
+    """An omitted selector inherits the captured native review session route."""
     invocation = invocation.removeprefix("$ ").removeprefix("/")
     try:
         tokens = shlex.split(invocation)
@@ -150,8 +158,12 @@ def invocation_selection(invocation: str) -> dict | None:
                 values.append(tokens[index + 1])
             elif token.startswith(name + "="):
                 values.append(token.split("=", 1)[1])
-    if len(selections) != 1 or len(efforts) > 1:
-        raise ReviewError("REVIEWER_REQUIRED", "name exactly one --reviewer provider/model")
+    if len(selections) > 1 or len(efforts) > 1:
+        raise ReviewError("REVIEW_INVOCATION_INVALID", "reviewer and effort may be specified only once")
+    if not selections:
+        if efforts and efforts[0] not in {"low", "medium", "high", "hight", "xhigh"}:
+            raise ReviewError("REVIEW_ROUTE_INVALID", "unknown review effort")
+        return {"effort": "high" if efforts == ["hight"] else efforts[0]} if efforts else None
     selected = reviewer(selections[0])
     selected["effort"] = selected_effort(selections[0], efforts[0] if efforts else None,
                                          default="xhigh" if tokens[0] == "task:plan-audit" else "high")
@@ -315,9 +327,16 @@ def _snapshot(plan_dir: Path, item: str, paths, supporting, base: str) -> dict:
             "diff_sha256": _sha(_git(root, "diff", "--no-ext-diff", "--no-textconv", base, "--", *paths))}
 
 
-def packet(plan_dir, item: str, *, selector: str, base: str = "HEAD", paths=(),
-           evidence=(), executor_session: str, effort: str | None = None, budget_decision: str | None = None) -> dict:
+def packet(plan_dir, item: str, *, selector: str | None = None, base: str = "HEAD", paths=(),
+           evidence=(), executor_session: str, effort: str | None = None, budget_decision: str | None = None,
+           exclusions: dict | None = None) -> dict:
     plan_dir = Path(plan_dir).resolve()
+    if selector is None:
+        from task import route_evidence, session_context
+        actual = route_evidence.capture_launch(expected_invocation=f"task:review {plan_dir.name} {item}",
+                                              expected_cwd=plan_weight.repo_root_for(plan_dir))
+        selector = f"{session_context.resolve().provider}/{actual['model']}"
+        effort = effort or actual["effort"]
     route = reviewer(selector)
     effort = selected_effort(selector, effort)
     selector = canonical_selector(selector)
@@ -331,7 +350,12 @@ def packet(plan_dir, item: str, *, selector: str, base: str = "HEAD", paths=(),
     base = _git(root, "rev-parse", "--verify", "--end-of-options", base + "^{commit}").decode().strip()
     declared_paths = [plan_evidence._repository_path(path, plan_dir=plan_dir, repo_root=root)
                       for path in plan_evidence.material_product_paths(plan_dir, item)]
-    paths = sorted(set((*declared_paths, *paths)))
+    from task import file_manifest
+    declarations_paths = sorted(set((*declared_paths, *paths)))
+    try:
+        paths = list(file_manifest.expand(root, declarations_paths, base=base, required=True))
+    except (ValueError, subprocess.CalledProcessError) as exc:
+        raise ReviewError("REVIEW_COVERAGE_MISSING", str(exc)) from exc
     if not paths:
         raise ReviewError("REVIEW_COVERAGE_MISSING", "declare product Files or pass --path")
     directory = _location(plan_dir, item)
@@ -362,21 +386,53 @@ def packet(plan_dir, item: str, *, selector: str, base: str = "HEAD", paths=(),
     for relative in supporting:
         if not _inside(root, relative).is_file():
             raise ReviewError("REVIEW_INPUT_MISSING", relative)
+    if any(path.startswith("vendor/") for path in supporting):
+        supporting.append("composer.lock")
+        if not (root / "composer.lock").is_file():
+            raise ReviewError("REVIEW_INPUT_MISSING", "external vendor inputs require composer.lock")
     snapshot = _snapshot(plan_dir, item, paths, supporting, base)
-    if not any(row["sha256"] not in {None, "directory"} for row in snapshot["product"]):
+    changed = set(_git(root, "diff", "--name-only", "-z", base).decode().split("\0"))
+    changed.update(_git(root, "ls-files", "--others", "--exclude-standard", "-z").decode().split("\0"))
+    changed.discard("")
+    covered = {row["path"].rstrip("/") for group in ("product", "inputs") for row in snapshot[group]}
+    covered.update((root / path).resolve().relative_to(root).as_posix() for path in paths
+                   if (root / path).is_symlink())
+    exclusions = exclusions or {}
+    if (not isinstance(exclusions, dict) or any(not isinstance(path, str) or path not in changed
+            or path in covered or not isinstance(reason, str) or not reason.strip()
+            for path, reason in exclusions.items())):
+        raise ReviewError("REVIEW_EXCLUSION_INVALID", "exclude only concrete foreign changed files, with a reason")
+    plan_prefix = plan_dir.relative_to(root).as_posix() + "/"
+    uncovered = sorted(path for path in changed - covered - set(exclusions) if not path.startswith(plan_prefix))
+    if uncovered:
+        raise ReviewError("REVIEW_CHANGED_PATH_UNCOVERED", "include changed files or explicitly exclude foreign edits: " + ", ".join(uncovered[:20]))
+    if not any(row["sha256"] not in {None, "directory"} or row["sha256"] is None
+               and row["path"] in changed for row in snapshot["product"]):
         raise ReviewError("REVIEW_COVERAGE_MISSING", "candidate contains no product bytes")
     candidate = _sha(_json(snapshot))
     manifest = {"schema_version": "review-route/v1", "plan_id": plan_dir.name, "item_id": item,
                 "reviewer": selector, "route": route, "effort": effort, "executor_session": executor_session,
-                "risk_class": declared.get("risk-class", "local"), "base": base,
+                "risk_class": declared.get("risk-class", "unset"), "base": base,
                 "paths": paths, "supporting": sorted(set(supporting)), "snapshot": snapshot,
                 "candidate_sha256": candidate}
+    manifest["path_declarations"] = declarations_paths
+    manifest["changed_paths"] = sorted(changed & covered)
+    manifest["exclusions"] = dict(sorted(exclusions.items()))
+    manifest["runtime_provenance"] = runtime_provenance()
     manifest["budget_decision"] = budget_decision
     with _lock(directory):
+        from task import review_sources
+        tracked = set(_git(root, "ls-files", "-z").decode().split("\0"))
+        try:
+            manifest["external_sources"] = review_sources.archive(root, directory, snapshot["inputs"], tracked)
+        except ValueError as exc:
+            raise ReviewError("REVIEW_EXTERNAL_SOURCE_INVALID", str(exc)) from exc
         rounds = [row for row in _history(directory) if row["status"] == "complete"]
         previous = rounds[-1] if rounds else None
         if (previous and previous["candidate_sha256"] == candidate and previous["reviewer"] == selector
                 and previous["manifest"]["effort"] == effort):
+            if previous["verdict"]["verdict"] == "GREEN":
+                require_green(plan_dir, item, selector, effort=effort)
             return {"action": "reuse-verdict", "receipt": previous}
         if len(rounds) >= _round_limit(plan_dir, manifest, _history(directory)):
             raise ReviewError("REVIEW_BUDGET_EXHAUSTED", "two completed rounds; retain repair authority and request one bounded owner decision")
@@ -432,6 +488,15 @@ def current(manifest: dict, plan_dir: Path) -> None:
             or _sha(_json(original)) != manifest["candidate_sha256"]):
         raise ReviewError("REVIEW_CANDIDATE_STALE", "original candidate snapshot does not match its digest")
     snapshot = _snapshot(plan_dir, manifest["item_id"], manifest["paths"], manifest["supporting"], manifest["base"])
+    if "path_declarations" in manifest:
+        from task import file_manifest
+        try:
+            expanded = list(file_manifest.expand(plan_weight.repo_root_for(plan_dir),
+                            manifest["path_declarations"], base=manifest["base"], required=True))
+        except ValueError as exc:
+            raise ReviewError("REVIEW_CANDIDATE_STALE", str(exc)) from exc
+        if expanded != manifest["paths"]:
+            raise ReviewError("REVIEW_CANDIDATE_STALE", "declared Files inventory changed")
     # The reviewed member inventory binds bytes, modes, symlink targets and
     # supporting evidence. Git diff is presentation evidence: adding a reviewed
     # untracked file to the index changes the diff without changing that file.
@@ -564,8 +629,18 @@ def _require_committed_green(plan_dir, item: str, selector: str, *, effort: str 
             or receipt["candidate_sha256"] != manifest["candidate_sha256"]):
         raise ReviewError("REVIEW_CLOSURE_INVALID", "committed original snapshot does not match its digest")
     spec = plan_layout.carrier_path(plan_dir, "item-spec", item_id=item).relative_to(root).as_posix()
+    from task import review_sources
+    frozen = review_sources.frozen_members(manifest.get("external_sources", []), read=read, tree=tree)
+    missing_external = [row for row in original["inputs"] if row["path"].startswith("vendor/")
+                        and row["path"] not in tree and row["path"] not in frozen and row.get("sha256")]
+    if missing_external:
+        frozen.update(review_sources.recovered_members(root, commit, manifest,
+            prefix=prefix, missing=missing_external, read_original=read))
     for kind, members in (("product", manifest["paths"]), ("inputs", [spec, *manifest["supporting"]])):
-        if _committed_members(root, commit, tree, members) != _git_modes(original[kind]):
+        reconstructed = _committed_members(root, commit, tree, members)
+        reconstructed = [(_git_modes([frozen[row["path"]]])[0] if kind == "inputs"
+                           and row["path"] not in tree and row["path"] in frozen else row) for row in reconstructed]
+        if reconstructed != _git_modes(original[kind]):
             raise ReviewError("REVIEW_CLOSURE_INVALID", "closure commit changed reviewed " + kind)
     attempt = path.rsplit("/", 1)[0]
     output = read(attempt + "/output.json")
@@ -575,14 +650,45 @@ def _require_committed_green(plan_dir, item: str, selector: str, *, effort: str 
     bound = next((name for name in manifests if json.loads(read(name)) == manifest), None)
     if bound is None or _sha(read(bound.rsplit("/", 1)[0] + "/packet.md")) != manifest.get("packet_sha256"):
         raise ReviewError("REVIEW_CLOSURE_INVALID", "committed packet/manifest is missing or changed")
-    if manifest["route"]["provider"] == "grok" and "context_tokens" in manifest["route"]:
+    if manifest["route"]["provider"] == "grok" and ("context_tokens" in manifest["route"]
+            or attempt + "/provider-output.jsonl" in tree):
         from task import review_grok_acp
         witness = json.loads(read(attempt + "/provider-route.json"))
         review_grok_acp.verify_route(witness, manifest)
         if (witness.get("session_id") != receipt["reviewer_session"]
-                or witness.get("context_tokens") != receipt.get("observed_context_tokens")):
+                or "context_tokens" in manifest["route"]
+                   and witness.get("context_tokens") != receipt.get("observed_context_tokens")):
             raise ReviewError("REVIEW_CLOSURE_INVALID", "committed native route belongs to another session")
         events = [json.loads(line) for line in read(attempt + "/provider-output.jsonl").splitlines() if line.strip()]
+        if "read_ledger_sha256" in receipt:
+            ledger_bytes = read(attempt + "/read-ledger.json")
+            if _sha(ledger_bytes) != receipt["read_ledger_sha256"]:
+                raise ReviewError("REVIEW_CLOSURE_INVALID", "committed read ledger changed")
+            entries = json.loads(ledger_bytes)["reads"]
+            recorded_cwd = Path(witness.get("cwd", str(root)))
+            if not recorded_cwd.is_absolute() or ".." in recorded_cwd.parts:
+                raise ReviewError("REVIEW_CLOSURE_INVALID", "native read cwd is invalid")
+            ledger = review_sources.ReadLedger(recorded_cwd)
+            native_reads = {}
+            for event in events:
+                if event.get("params", {}).get("sessionId") != receipt["reviewer_session"]:
+                    continue
+                update = event.get("params", {}).get("update", {})
+                consulted_path = ledger.read_path(update)
+                if consulted_path is not None:
+                    native_reads.setdefault(consulted_path.relative_to(ledger.root).as_posix(), set()).add(update.get("toolCallId"))
+            if set(native_reads) != {entry["member"]["path"] for entry in entries}:
+                raise ReviewError("REVIEW_CLOSURE_INVALID", "read ledger does not cover native file reads")
+            consulted = review_sources.frozen_members(receipt.get("consulted_sources", []), read=read, tree=tree)
+            for entry in entries:
+                member = entry["member"]
+                rebuilt = (_committed_members(root, commit, tree, [member["path"]])[0]
+                           if member["path"] in tree else consulted.get(member["path"]))
+                if rebuilt is None or _git_modes([rebuilt])[0] != _git_modes([member])[0]:
+                    raise ReviewError("REVIEW_CLOSURE_INVALID", "consulted dependency changed at closure")
+                for observation in entry["reads"]:
+                    if observation["tool_call_id"] not in native_reads[member["path"]]:
+                        raise ReviewError("REVIEW_CLOSURE_INVALID", "read ledger lacks native tool evidence")
         chunks, last_response = [], ""
         for event in events:
             params = event.get("params", {})
@@ -692,7 +798,7 @@ def _invoke(argv: list[str], *, cwd: Path, timeout: int):
 
 def _record(plan_dir: Path, directory: Path, manifest: dict, *, output: bytes,
             session: str, observed_selector: str, complete: bool, detail: str,
-            observed_context: int | None = None) -> dict:
+            observed_context: int | None = None, publish: bool = True) -> dict:
     try:
         current(manifest, plan_dir)
     except ReviewError as exc:
@@ -728,7 +834,9 @@ def _record(plan_dir: Path, directory: Path, manifest: dict, *, output: bytes,
     attempt = directory / f"attempt-{len(list(directory.glob('attempt-*'))) + 1:04d}"
     attempt.mkdir()
     (attempt / "output.json").write_bytes(output)
-    (attempt / "receipt.json").write_bytes(_json(receipt))
+    (attempt / "receipt.json").write_bytes(_json(receipt if publish else {
+        **receipt, "status": "incomplete", "verdict": None, "action": "retry-transport",
+        "detail": "REVIEW_ARCHIVE_PENDING: transport evidence is not yet published"}))
     return receipt
 
 
@@ -756,13 +864,15 @@ def record(plan_dir, manifest_path, output_path, *, invocation: str) -> dict:
         if (completed and completed[-1]["candidate_sha256"] == manifest["candidate_sha256"]
                 and completed[-1]["manifest"]["effort"] == manifest["effort"]
                 and completed[-1]["reviewer"] == manifest["reviewer"]):
+            if completed[-1].get("verdict", {}).get("verdict") == "GREEN":
+                require_green(plan_dir, manifest["item_id"], selector, effort=manifest["effort"])
             return {"action": "reuse-verdict", "receipt": completed[-1]}
         return _record(plan_dir, directory, manifest, output=Path(output_path).read_bytes(),
                        session=actual["thread_id"], observed_selector=selector,
                        complete=True, detail="independent-session", observed_context=actual.get("context_window"))
 
 
-def run(plan_dir, manifest_path, *, selector: str, timeout: int = 600, max_turns: int = 0,
+def run(plan_dir, manifest_path, *, selector: str | None = None, timeout: int = 600, max_turns: int = 0,
         heartbeat_interval: int = 30) -> dict:
     """One transport attempt, invoked by the review stream, never the executor loop."""
     if (type(timeout) is not int or timeout < 1 or type(max_turns) is not int or max_turns < 0
@@ -771,6 +881,7 @@ def run(plan_dir, manifest_path, *, selector: str, timeout: int = 600, max_turns
     plan_dir = Path(plan_dir).resolve()
     manifest_path = Path(manifest_path).resolve()
     manifest = json.loads(manifest_path.read_text())
+    selector = selector or manifest["reviewer"]
     selected_effort(selector, manifest["effort"])
     selector = canonical_selector(selector)
     from task import session_context
@@ -787,11 +898,12 @@ def run(plan_dir, manifest_path, *, selector: str, timeout: int = 600, max_turns
     packet_path = manifest_path.with_name("packet.md")
     if _sha(packet_path.read_bytes()) != manifest["packet_sha256"]:
         raise ReviewError("REVIEW_PACKET_STALE", "packet bytes changed")
+    if manifest.get("runtime_provenance") is not None and manifest["runtime_provenance"] != runtime_provenance():
+        raise ReviewError("REVIEW_RUNTIME_MISMATCH", "actual Task source/schema differs from packet; rebuild packet before prompt")
     root = plan_weight.repo_root_for(plan_dir).resolve()
     session = str(uuid.uuid4())
     from task import review_grok_acp
-    argv = (review_grok_acp.argv(manifest, max_turns=max_turns) if "context_tokens" in manifest["route"]
-            else grok_argv(manifest, packet_path, root, session=session, max_turns=max_turns))
+    argv = review_grok_acp.argv(manifest, max_turns=max_turns)
     if manifest["route"]["provider"] != "grok":
         raise ReviewError("REVIEW_PROVIDER_UNSUPPORTED", "automated transport is Grok; other providers use independent sessions and review-record")
     directory = _location(plan_dir, manifest["item_id"])
@@ -802,6 +914,8 @@ def run(plan_dir, manifest_path, *, selector: str, timeout: int = 600, max_turns
         if (complete_rows and complete_rows[-1]["candidate_sha256"] == manifest["candidate_sha256"]
                 and complete_rows[-1]["reviewer"] == selector
                 and complete_rows[-1]["manifest"]["effort"] == manifest["effort"]):
+            if complete_rows[-1]["verdict"]["verdict"] == "GREEN":
+                require_green(plan_dir, manifest["item_id"], selector, effort=manifest["effort"])
             return {"action": "reuse-verdict", "receipt": complete_rows[-1]}
         if len(complete_rows) >= _round_limit(plan_dir, manifest, history):
             raise ReviewError("REVIEW_BUDGET_EXHAUSTED", "do not launch another model call")
@@ -809,6 +923,8 @@ def run(plan_dir, manifest_path, *, selector: str, timeout: int = 600, max_turns
         raw, stderr, detail, complete, observed_context = b"", b"", "", False, None
         provider_witness = {}
         heartbeats = []
+        read_ledger = {}
+        result = {}
 
         def progress(snapshot):
             live = directory / "live-progress.json"
@@ -816,29 +932,14 @@ def run(plan_dir, manifest_path, *, selector: str, timeout: int = 600, max_turns
             temporary.write_bytes(_json(snapshot))
             temporary.replace(live)
         try:
-            if "context_tokens" in manifest["route"]:
-                result = review_grok_acp.run(manifest, packet_path.read_bytes(), cwd=root,
-                                             timeout=timeout, max_turns=max_turns,
-                                             heartbeat_interval=heartbeat_interval, progress=progress)
-                raw, stderr, output = result["raw"], result["stderr"], result["output"]
-                session, detail, complete = result["session"], result["detail"], result["complete"]
-                observed_context, provider_witness = result["observed_context"], result["provider_route"]
-                heartbeats = result.get("heartbeats", [])
-            else:
-                result = _invoke(argv, timeout=timeout, cwd=root)
-                raw, stderr = result.stdout, result.stderr
-                envelope = json.loads(raw)
-                model_usage = envelope.get("modelUsage")
-                model_known = isinstance(model_usage, dict) and set(model_usage) == {manifest["route"]["model"]}
-                if not model_known and isinstance(model_usage, dict) and len(model_usage) == 1:
-                    provider_witness = review_grok_acp.provider_route(root, session)
-                    model_known = (provider_witness.get("model") == manifest["route"]["model"]
-                                   and provider_witness.get("effort") == manifest["effort"])
-                complete = (result.returncode == 0 and envelope.get("stopReason") == "end_turn"
-                            and envelope.get("sessionId") == session and not envelope.get("usage_is_incomplete", False)
-                            and model_known)
-                output = envelope.get("text", "").encode()
-                detail = f"exit={result.returncode}; stopReason={envelope.get('stopReason')}"
+            result = review_grok_acp.run(manifest, packet_path.read_bytes(), cwd=root,
+                                         timeout=timeout, max_turns=max_turns,
+                                         heartbeat_interval=heartbeat_interval, progress=progress)
+            raw, stderr, output = result["raw"], result["stderr"], result["output"]
+            session, detail, complete = result["session"], result["detail"], result["complete"]
+            observed_context, provider_witness = result["observed_context"], result["provider_route"]
+            heartbeats = result.get("heartbeats", [])
+            read_ledger = result.get("read_ledger", {})
         except subprocess.TimeoutExpired as exc:
             raw, stderr = exc.stdout or b"", exc.stderr or b""
             output, detail = b"", "timeout"
@@ -846,20 +947,58 @@ def run(plan_dir, manifest_path, *, selector: str, timeout: int = 600, max_turns
             output, detail = b"", type(exc).__name__ + ": " + str(exc)
         receipt = _record(plan_dir, directory, manifest, output=output, session=session,
                           observed_selector=selector, complete=complete, detail=detail,
-                          observed_context=observed_context)
+                          observed_context=observed_context, publish=False)
         # Context capacity is provider evidence, not a user-declared token-spend budget.
         attempt = sorted(directory.glob("attempt-*"))[-1]
-        (attempt / ("provider-output.jsonl" if "context_tokens" in manifest["route"] else "provider-output.json")).write_bytes(raw)
+        (attempt / "provider-output.jsonl").write_bytes(raw)
         (attempt / "stderr.log").write_bytes(stderr)
+        if read_ledger:
+            (attempt / "read-ledger.json").write_bytes(_json(read_ledger))
+            receipt["read_ledger_sha256"] = _sha(_json(read_ledger))
+            from task import review_sources
+            try:
+                tracked = set(_git(root, "ls-files", "-z").decode().split("\0"))
+                tracked.update(row["path"] for row in manifest["snapshot"]["product"])
+                receipt["consulted_sources"] = review_sources.archive(root, attempt,
+                    [row["member"] for row in read_ledger["reads"]], tracked)
+            except (OSError, ValueError) as exc:
+                receipt.update(status="incomplete", verdict=None, action="retry-transport", detail=str(exc))
         if heartbeats:
             (attempt / "heartbeats.jsonl").write_text(
                 "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in heartbeats))
         if provider_witness:
             (attempt / "provider-route.json").write_bytes(_json(provider_witness))
         (attempt / "transport.json").write_bytes(_json({"argv": argv, "wall_seconds": round(time.monotonic() - started, 3),
-                                                     "timeout_kind": "inactivity" if "context_tokens" in manifest["route"] else "elapsed",
+                                                     "timeout_kind": "inactivity",
                                                      "timeout_seconds": timeout, "heartbeat_interval": heartbeat_interval}))
+        receipt["coverage"] = {"product_members": len(manifest["snapshot"]["product"]),
+                               "supporting_members": len(manifest["snapshot"]["inputs"]),
+                               "consulted_files": len(read_ledger.get("reads", [])),
+                               "risk_class": manifest["risk_class"],
+                               "limits": ["read coverage does not establish semantic completeness"]}
+        if isinstance(result, dict):
+            receipt["usage"] = result.get("usage")
+            receipt["provider_runtime"] = result.get("provider_runtime")
+        (attempt / "receipt.json").write_bytes(_json(receipt))
+        progress({"schema_version": "review-heartbeat/v1", "session_id": session,
+                  "phase": "complete" if receipt["status"] == "complete" else "incomplete",
+                  "process_alive": False, "elapsed_seconds": round(time.monotonic() - started, 3),
+                  "detail": receipt["detail"], "action": receipt["action"]})
         return receipt
+
+
+def summary(receipt: dict, directory: Path) -> dict:
+    """Bounded CLI output; full manifests, findings and provider traces stay on disk."""
+    receipt = receipt.get("receipt", receipt)
+    findings = (receipt.get("verdict") or {}).get("findings", [])
+    return {"schema_version": "review-summary/v1", "status": receipt["status"],
+            "action": receipt["action"], "candidate_sha256": receipt["candidate_sha256"],
+            "reviewer": receipt["reviewer"], "reviewer_session": receipt["reviewer_session"],
+            "detail": receipt["detail"][:500], "artifact_directory": str(directory),
+            "coverage": receipt.get("coverage"), "usage": receipt.get("usage"),
+            "findings_count": len(findings),
+            "findings": [{key: str(value)[:300] if isinstance(value, str) else value
+                          for key, value in row.items()} for row in findings[:3]]}
 
 
 def _green_receipt(latest: dict, selector: str, *, effort: str | None = None) -> None:
@@ -883,12 +1022,32 @@ def _green_receipt(latest: dict, selector: str, *, effort: str | None = None) ->
 
 def require_green(plan_dir, item: str, selector: str, *, effort: str | None = None) -> dict:
     plan_dir = Path(plan_dir).resolve()
-    rows = [row for row in _history(_location(plan_dir, item)) if row["status"] == "complete"]
+    directory = _location(plan_dir, item)
+    rows = [row for row in _history(directory) if row["status"] == "complete"]
     if not rows:
         raise ReviewError("OWNER_REVIEW_PENDING", "no complete independent verdict")
     latest = rows[-1]
     _green_receipt(latest, selector, effort=effort)
     current(latest["manifest"], plan_dir)
+    if "read_ledger_sha256" in latest:
+        # Completed receipt may precede a later incomplete attempt.
+        try:
+            ledger_path = next(path.parent / "read-ledger.json" for path in sorted(directory.glob("attempt-*/receipt.json"))
+                               if json.loads(path.read_text()) == latest)
+            payload = ledger_path.read_bytes()
+            if _sha(payload) != latest["read_ledger_sha256"]:
+                raise ValueError("read ledger changed")
+            from task import review_sources
+            ledger = review_sources.ReadLedger(plan_weight.repo_root_for(plan_dir))
+            value = json.loads(payload)
+            if value.get("schema_version") != "review-read-ledger/v1":
+                raise ValueError("invalid read ledger schema")
+            ledger.rows = {row["member"]["path"]: row for row in value["reads"]}
+            if len(ledger.rows) != len(value["reads"]):
+                raise ValueError("duplicate read ledger member")
+            ledger.verify()
+        except (ValueError, OSError, KeyError, TypeError, StopIteration) as exc:
+            raise ReviewError("REVIEW_DEPENDENCY_STALE", str(exc)) from exc
     return latest
 
 

@@ -6,16 +6,19 @@ terminal ACP metadata establish the route; usage only establishes completion.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 from pathlib import Path
 import queue
 import re
 import signal
+import shutil
 import subprocess
 import threading
 import time
 from urllib.parse import quote
 import uuid
+from task.review_sources import ReadLedger
 
 
 class TransportError(ValueError):
@@ -51,9 +54,12 @@ def verify_route(witness: dict, manifest: dict) -> None:
     if witness.get("model") != manifest["route"]["model"] or witness.get("effort") != manifest["effort"]:
         raise TransportError("REVIEW_ROUTE_MISMATCH: native model/effort does not match the selected reviewer")
     context = witness.get("context_tokens")
+    requested = manifest["route"].get("context_tokens")
+    if requested is None:
+        return
     if type(context) is not int:
         raise TransportError("REVIEW_CONTEXT_UNVERIFIABLE: native session has no effective context window")
-    if context < manifest["route"]["context_tokens"]:
+    if context < requested:
         raise TransportError("REVIEW_CONTEXT_UNDERSHOOT: native context is smaller than requested")
 
 
@@ -82,7 +88,8 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
     # A refused session/new still has a distinct attempt identity for archiving.
     result = {"session": str(uuid.uuid4()), "argv": command, "output": b"", "raw": b"",
               "stderr": b"", "complete": False, "detail": "", "observed_context": None,
-              "provider_route": {}, "heartbeats": []}
+              "provider_route": {}, "heartbeats": [], "read_ledger": {}}
+    ledger = ReadLedger(cwd)
     process = None
     raw, stderr, chunks = [], [], []
     last_response = ""
@@ -159,6 +166,7 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
                 if params.get("sessionId") != session:
                     continue
                 update = params.get("update", {})
+                ledger.observe(update)
                 if update.get("sessionUpdate") in {
                     "agent_message_chunk", "agent_thought_chunk", "tool_call",
                     "tool_call_update", "tool_call_delta_chunk", "response_completed",
@@ -192,8 +200,9 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
             result["provider_route"] = witness
             result["observed_context"] = witness.get("context_tokens")
             if (witness.get("model") == manifest["route"]["model"] and witness.get("effort") == manifest["effort"]
-                    and type(witness.get("context_tokens")) is int
-                    and witness["context_tokens"] >= manifest["route"]["context_tokens"]):
+                    and ("context_tokens" not in manifest["route"] or
+                         type(witness.get("context_tokens")) is int
+                         and witness["context_tokens"] >= manifest["route"]["context_tokens"])):
                 verify_route(witness, manifest)
                 return witness
             if time.monotonic() >= until:
@@ -203,14 +212,21 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
             time.sleep(min(0.05, max(0, until - time.monotonic())))
 
     try:
+        executable = shutil.which(command[0])
+        result["provider_runtime"] = {"executable": executable,
+            "sha256": hashlib.sha256(Path(executable).read_bytes()).hexdigest() if executable else None}
+        # Local provenance collection is not time spent waiting for a provider.
+        started = last_activity = time.monotonic()
+        next_probe = started + heartbeat_interval
         process = subprocess.Popen(command, cwd=cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, start_new_session=os.name == "posix")
         for stream, target, deliver in ((process.stdout, raw, True), (process.stderr, stderr, False)):
             thread = threading.Thread(target=reader, args=(stream, target, deliver), daemon=True)
             thread.start()
             readers.append(thread)
-        rpc("initialize", {"protocolVersion": 1, "clientCapabilities": {},
-                           "clientInfo": {"name": "swissknifeman-task-review", "version": "1"}})
+        initialized = rpc("initialize", {"protocolVersion": 1, "clientCapabilities": {},
+                                          "clientInfo": {"name": "swissknifeman-task-review", "version": "1"}})
+        result["provider_runtime"]["agent_info"] = initialized.get("agentInfo", initialized.get("serverInfo"))
         created = rpc("session/new", {"cwd": str(cwd), "mcpServers": []})
         session = created.get("sessionId")
         if (not isinstance(session, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", session)
@@ -218,13 +234,17 @@ def run(manifest: dict, packet: bytes, *, cwd: Path, timeout: int, max_turns: in
             raise TransportError("REVIEW_NOT_INDEPENDENT: require a distinct newly created provider session")
         result["session"] = session
         rpc("session/set_model", {"sessionId": session, "modelId": manifest["route"]["model"],
-                                  "_meta": {"contextWindow": manifest["route"]["context_tokens"],
-                                            "reasoningEffort": manifest["effort"]}})
+                                  "_meta": {"reasoningEffort": manifest["effort"],
+                                            **({"contextWindow": manifest["route"]["context_tokens"]}
+                                               if "context_tokens" in manifest["route"] else {})}})
         route()
         terminal = rpc("session/prompt", {"sessionId": session,
                                           "prompt": [{"type": "text", "text": packet.decode()}]})
+        ledger.verify()
+        result["read_ledger"] = ledger.result()
         metadata = terminal.get("_meta", {})
         usage = metadata.get("usage", {})
+        result["usage"] = usage
         usage_known = (isinstance(usage, dict)
                        and all(type(usage.get(key)) is int and usage[key] >= 0
                                for key in ("inputTokens", "outputTokens", "cachedReadTokens", "cacheCreationTokens"))

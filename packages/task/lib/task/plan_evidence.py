@@ -52,6 +52,10 @@ def _declared_paths(value: str, *, allow_prose: bool = False) -> tuple[str, ...]
                  for part in re.split(r"\s*[·,]\s*", entry) if part.strip()]
     normalized = []
     for index, path in enumerate(paths):
+        if (re.fullmatch(r"#\[[^\]]+\]|[A-Za-z_]\w*(?::[\w-]+)?", path)
+                and (quoted or allow_prose)):
+            # Inline symbols/CLI examples are annotations, not Files members.
+            continue
         if (allow_prose or index in annotations) and re.fullmatch(
                 r"(?:\\+[A-Za-z_]\w*(?:\\+[A-Za-z_]\w*)*|[A-Za-z_]\w*(?:\\+[A-Za-z_]\w*)+)(?:\\+)?", path):
             # Deliverables and parenthetical file annotations can name PHP namespaces.
@@ -196,8 +200,10 @@ def compile_graph(plan_dir, item_id: str, *, execution_ref: str | None = None,
     except plan_layout.PlanLayoutError as exc:
         raise EvidenceError("EVIDENCE_ITEM_MISSING", str(exc)) from exc
     repo_root = plan_weight.repo_root_for(plan_dir)
-    product_paths = tuple(sorted({_repository_path(path, plan_dir=plan_dir, repo_root=repo_root)
-                                  for path in material_product_paths(plan_dir, item_id)}))
+    from task import file_manifest
+    product_paths = file_manifest.expand(repo_root, {
+        _repository_path(path, plan_dir=plan_dir, repo_root=repo_root)
+        for path in material_product_paths(plan_dir, item_id)})
     bundle = bundle if bundle is not None else plan_bundle.model(plan_dir, item_id)
     inputs = _bundle_inputs(bundle, plan_dir=plan_dir, repo_root=repo_root)
     collisions = sorted(set(product_paths) & set(inputs))

@@ -39,7 +39,7 @@ start. Whole-plan design finish and GREEN design audit gate execution only when 
 
 ## Continuous execution
 
-After each GREEN item, close the item and any directly closable GREEN phase in this invocation,
+After each GREEN item, close the item and verify applicable phase acceptance in this invocation,
 then compute Next from the resulting state. Continue a compatible ready successor inside the
 owner-authorized admitted scope. Local reversible repair stays in this invocation.
 If the owner requested only the completed scope, stop product writes and persist lifecycle
@@ -110,14 +110,23 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
 4. A foreign baseline stays visible but non-gating unless ownership/dependency closure intersects.
    Audit is read-only: it returns one owning continuation for a product finding and never starts a
    second audit/full replay without a new material hypothesis.
-5. After GREEN acceptance, persist evidence and the terminal journal event, then call
-   `scripts/plan-work.py finalize --plan-dir <dir> --item <Pn.m>` once to converge changed terminal
+5. After GREEN acceptance, persist qualified evidence and call
+   `scripts/plan-work.py complete --plan-dir <dir> --item <Pn.m> --entry <terminal-entry.json>`
+   once to append the idempotent terminal event and converge changed terminal
    projections, the selected successor bundle, freshness and delivery receipt. Close the item in this
-   invocation. If this is the last item, phase gates are GREEN, and no audit was explicitly admitted,
-   create its phase closure before deriving Next. Derive and validate one semantic Next through
+   invocation; `finalize` remains the recovery path for an already persisted terminal event.
+   If this is the last item, phase gates are GREEN, and no audit was explicitly admitted,
+   verify its phase acceptance without a phase-close event or carrier. Derive one semantic Next
+   with `plan_completion.successor()` and validate it through
    `plan_delivery` from the resulting state and dependencies; never emit `plan-close` for the current
    result or repeat `plan-run` for the current item. Use one scoped commit. A second bookkeeping
    commit requires a real session/ownership boundary or digest-input collision.
+
+   For validation DAGs, `plan-work.py validate-evidence` binds product paths, a candidate and a
+   unique attempt to ordered checks (`id`, `argv`, `depends_on`). It prevents concurrent writers
+   and waits for actual process exit before dependent generation/lint. Qualify closure with
+   `plan-lint.py <dir> --item <Pn.m>` for selected items plus producer closure; future read-budget
+   and bundle findings stay visible and non-gating. Full-plan/fleet lint remains the release gate.
 
 Have current GREEN evidence for every declared Validation carrier. Evidence remains current only
 while its relevant product/test/tool/config inputs and environment are unchanged; rerun the affected

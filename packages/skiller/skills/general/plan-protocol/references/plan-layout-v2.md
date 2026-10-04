@@ -327,12 +327,11 @@ files. Current file bytes must equal that committed synchronization.
 `phase_findings.acceptance()` checks the chain; missing, stale, incomplete or
 foreign evidence returns `PHASE_FINDINGS_UNRESOLVED`. Without this contract,
 non-GREEN items retain `PHASE_ACCEPTANCE_NON_GREEN`. No review repeat is needed.
-`plan-phase-close.py` calls the regular `phase_close_gate`, appends one phase
-GREEN event bound to the checked resolution SHA-256 and candidate fingerprint,
-then regenerates/checks status and closure. A new close requires the actual
-invoking provider `--session-id`; the launcher derives run identity and writes
-a durable start/terminal pair so native delivery can build a terminal receipt.
-A partially recorded earlier close is recovered append-only, never rewritten.
-Item states/history remain unchanged.
-Only a persisted still-valid admission projects the phase GREEN. The generated
-closure distinguishes current resolved findings from quoted historical deviations.
+`phase_close_gate` retains its compatibility name but establishes phase acceptance,
+not a separate close lifecycle. Execution verifies the resolution at its phase boundary;
+`task:plan-close <PLAN-ID>` rechecks every phase and closes only the whole plan.
+New phase/item-close events and targets are forbidden. `plan-phase-close.py --check`
+can inspect legacy closure evidence but cannot write a new start/terminal pair.
+Historic phase events and generated closure reports remain readable and are never
+rewritten. Terminal reconciliation replaces a legacy phase-close Next with the actual
+plan successor; item outcomes and historical deviations remain unchanged.

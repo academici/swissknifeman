@@ -178,7 +178,7 @@ class TestHealthDoc(unittest.TestCase):
             self.assertEqual(r1["state"], "absent")
             self.assertTrue(r1["changed"])
             claude = (pdir / "CLAUDE.md").read_text(encoding="utf-8")
-            self.assertIn("PRIORITY №1", claude)
+            self.assertIn("temporary project context", claude)
             self.assertIn("project:flexcrm", claude)
             r2 = health.apply_health_doc(env, config, proj, "auto", dry=False)
             self.assertEqual(r2["state"], "fresh")
@@ -190,14 +190,14 @@ class TestHealthDoc(unittest.TestCase):
             health.apply_health_doc(env, config, proj, "auto", dry=False)
             # fake drift
             claude = pdir / "CLAUDE.md"
-            claude.write_text(claude.read_text().replace("PRIORITY №1", "OLD"),
+            claude.write_text(claude.read_text().replace("temporary project context", "OLD"),
                               encoding="utf-8")
             r = health.apply_health_doc(env, config, proj, "install", dry=False)
             self.assertEqual(r["state"], "stale")
             self.assertFalse(r["changed"])  # install does NOT update outdated
             r2 = health.apply_health_doc(env, config, proj, "update", dry=False)
             self.assertTrue(r2["changed"])  # update — updates
-            self.assertIn("PRIORITY №1", claude.read_text())
+            self.assertIn("temporary project context", claude.read_text())
 
     def test_preserves_foreign_content(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -206,7 +206,7 @@ class TestHealthDoc(unittest.TestCase):
             health.apply_health_doc(env, config, proj, "auto", dry=False)
             txt = (pdir / "CLAUDE.md").read_text(encoding="utf-8")
             self.assertIn("My documentation", txt)
-            self.assertIn("PRIORITY №1", txt)
+            self.assertIn("temporary project context", txt)
 
 
 class TestHealthHook(unittest.TestCase):

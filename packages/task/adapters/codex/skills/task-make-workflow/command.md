@@ -1,13 +1,13 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/make-workflow.md
-Canonical SHA-256: sha256:e3f5d9192a6eb141c6d15cdc383caf7467796a00737552697b520be386d853f4
+Canonical SHA-256: sha256:940eb0989597930902eeb9d482be4e8f8752a25acf8cf8959e7a038c12c7e081
 Adapter: task.codex-command/1.0.18
 -->
 Activate only for an explicit request to create a workflow script. Ordinary development and research do
 not need this path. User input: `$ARGUMENTS`. The route is pinned to implementation/high.
 
-Read reviewer selection from explicit `--reviewer provider/model`; require it before generating
-a review-capable run or admitting the output review. The reviewer is a fresh read-only session
+Read optional reviewer selection from `--reviewer provider/model`; its absence does not add
+external review or prevent generation. A requested reviewer is a fresh read-only session
 under that selected route, not the workflow author's own evaluation.
 Accept optional context/effort suffixes and trailing `/` through `task.review_packet.reviewer`:
 `provider/model/500k/`, `provider/model/high/`, `provider/model/500k/high/` (`hight` = high).
@@ -60,7 +60,8 @@ Copy the selected template to `plans/<ID>/workflows/` and fill its slots:
 
 ## 5. Run a read-only static review
 
-Have one read-only reviewer inspect, not execute, the generated script against exactly the invariants in
+Check the generated script against exactly the invariants below. With `--reviewer`, have one
+fresh read-only reviewer inspect, not execute, it against the invariants in
 `packages/task/workflows/README.md` and the `workflow-craft` stage matrix. It must check:
 
 - Orchestration logic still matches a canonical template; task-specific logic was not forked.
@@ -80,5 +81,5 @@ return one owning correction and allow at most two completed review passes. A re
 class/area changes the shared model; exhaustion needs an explicit bounded decision in the main loop.
 Only `GREEN` releases `plans/<ID>/workflows/wf-<code-name>-<purpose>.js`.
 
-Return the script path, workflow type, and reviewer verdict. For `RED`, return violations and repair status
+Return the script path, workflow type, and self-check or requested reviewer verdict. For `RED`, return violations and repair status
 without presenting the script as ready.

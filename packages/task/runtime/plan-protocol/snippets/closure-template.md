@@ -4,8 +4,9 @@ Machine-readable phase evidence stored beside, not instead of, the generated lay
 `phases/<Pn>/<Pn>.closed.md`. Enable it with `Closure Protocol | v1` in `## 0. Meta`.
 Plans without this field are unaffected, and existing closed records are never rewritten.
 
-Writes phase-closing lifecycle of the current `plan-run` or explicitly called standalone
-`plan-close <ID> Pn` from the items/state fields (retelling is prohibited).
+Legacy format, retained for historical verification only. New execution verifies phase
+acceptance without a phase-closing lifecycle; `plan-close <ID>` closes the whole plan.
+Never create a standalone `plan-close <ID> Pn` invocation or rewrite old reports.
 Read: `plan_lint` (scheme + reconciliation with `## Phase Status` and Status Board) and `plan-audit <ID> Pn`
 (checking the relevance of evidence bindings; repeating only invalid/changed delta and live boundary,
 detection of editing phase specifications after closing by `inputs_sha256`).

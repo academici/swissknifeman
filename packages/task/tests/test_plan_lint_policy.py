@@ -552,12 +552,15 @@ class TestAuditTerminalPolicy(TmpPlanTestCase):
         self.assertTrue(
             _errors_containing(diag, "AUDIT_TERMINAL_CONTINUATION_INVALID"), diag.errors)
 
-    def test_audit_green_with_exact_close_successor_is_clean(self):
+    def test_audit_green_with_actual_plan_successor_is_clean(self):
         from task import journal
         plan = write_valid_plan(self.root, plan_id="2026.08.14-DEMO-AUDIT-CLOSE")
+        (plan / "phases/P1/P1.2.md").write_text((plan / "phases/P1/P1.1.md").read_text().replace("P1.1", "P1.2"))
+        from task import plan_item_state
+        plan_item_state.build_states(plan, item_id="P1.2", materialize_successor=False)
         self._append_block(
             plan, verdict="GREEN",
-            semantic_next="close: task:plan-close 2026.08.14-DEMO-AUDIT-CLOSE P1")
+            semantic_next="run-items: task:plan-run 2026.08.14-DEMO-AUDIT-CLOSE P1.2")
         self._append_raw_event(plan, journal.new_entry(
             plan_id=plan.name, item_id="P1", command="plan-audit",
             actor="frontier/xhigh", result="audit-green", fingerprint="a" * 64))

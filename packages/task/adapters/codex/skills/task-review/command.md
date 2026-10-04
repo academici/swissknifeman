@@ -1,12 +1,15 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/review.md
-Canonical SHA-256: sha256:6a7053663d9a111f9d95ddfd5a6e6ec8897b3643f62d95b9734e0c8f03fec9d5
+Canonical SHA-256: sha256:773247933714fd88af3584381ac287f3f86ee25454a71e218b97ec472abc6c42
 Adapter: task.codex-command/1.0.18
 -->
 This is a read-only review of `$ARGUMENTS`. Do not modify files.
 
-Require explicit `--reviewer <provider>/<exact-model-id>`; accept `claude-code`, `codex`,
-`cursor`, or `grok`. `--effort` defaults to `high`. This selects the reviewer, not the executor.
+`--reviewer <provider>/<exact-model-id>` is optional; accept `claude-code`, `codex`,
+`cursor`, or `grok`. Without it, perform the requested review on the current captured native
+provider/model/effort route; do not ask for a selector or fabricate route evidence. For an item
+executed by this session, launch a fresh read-only session on that route. An explicit selector
+defaults to `high` effort and selects the reviewer, not the executor.
 The selector also accepts optional context/effort suffixes and a trailing `/`: `grok/grok-4.7/500k/`,
 `grok/grok-4.7/high/`, `grok/grok-4.7/hight/`, `grok/grok-4.7/500k/high/`.
 Use `task.review_packet.invocation_selection`; context is required capacity, not a token-spend cap.

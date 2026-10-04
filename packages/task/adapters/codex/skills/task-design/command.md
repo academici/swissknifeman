@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/design.md
-Canonical SHA-256: sha256:9ac07eaa534ec502bded59a27b55e1af5d7b1ba68be508e694072ca2dc65d83f
+Canonical SHA-256: sha256:60cf239254634feac393137d4d9f02dfcc6a0dc0077266554d4cab8c8e81a4e0
 Adapter: task.codex-command/1.0.18
 -->
 This is a DESIGN task: produce durable artifacts, not implementation. User input: `$ARGUMENTS`.
@@ -25,4 +25,4 @@ Profile `design`:
 For concurrency, transactions, auth or data integrity, model affected operations/resources/drivers
 together and name invariant enforcement points; lock work checks interfering pairs and implicit
 locks. Handoff implementation and read-only review as separate invocations. A requested review
-names its reviewer explicitly (`--reviewer provider/model`); review does not implement its findings.
+may select a reviewer with optional `--reviewer provider/model`; review does not implement its findings.

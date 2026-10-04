@@ -135,6 +135,8 @@ class PlanNextCarrier:
                          else self.arguments[0] if self.arguments else None)
         if expected is not None and (not self.plan_id or plan_argument != self.plan_id):
             raise ValueError("CMD_INVOCATION_INVALID: plan identity is missing")
+        if self.kind == "close" and self.arguments != (self.plan_id,):
+            raise ValueError("PLAN_CLOSE_WHOLE_PLAN_ONLY: plan-close accepts only the plan ID")
         if self.context_kind not in {
                 "same-session", "cold-start", "continue-root",
                 "isolated-child-return", "cold-start-root"}:
@@ -1910,4 +1912,3 @@ def _required_string(value: object, label: str) -> str:
 
 def _json_bytes(value: object) -> bytes:
     return (json.dumps(value, sort_keys=True, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
-

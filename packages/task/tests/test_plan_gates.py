@@ -137,7 +137,9 @@ class TestReadBudgetGate(unittest.TestCase):
             (root / "products" / "tree" / "untracked.txt").write_text(
                 "untracked\n", encoding="utf-8")
             stable_digest, _rows = plan_gates._product_tree(plan_dir, declared)
-            self.assertEqual(stable_digest, before_digest)
+            self.assertNotEqual(stable_digest, before_digest)
+            ignored.write_bytes(b"different ignored cache")
+            self.assertEqual(plan_gates._product_tree(plan_dir, declared)[0], stable_digest)
 
             (root / "products" / "tree" / "root.txt").write_text("root-v2\n", encoding="utf-8")
             edited_digest, _rows = plan_gates._product_tree(plan_dir, declared)

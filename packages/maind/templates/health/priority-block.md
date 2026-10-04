@@ -1,13 +1,13 @@
-## ⚠ PRIORITY №1 — connection with mAInd (shared memory + graph)
+## mAInd — temporary project context and graph
 
-Before starting work, make sure that the project is connected to the hub **mAInd**. This is critical:
-without communication changes this session **will not hit** to shared memory and the graph to history
-development, irreparable gaps will appear, and further connections will not be drawn.
+Memory defaults to this project's private scope `{{SCOPE}}`. Read `ns:*` or `global`
+only for an explicit cross-project request and when the scope is authorized.
 
-1. Check connection: `maind health --cwd`
-2. If the status `partial` / `standalone` — fix: `maind health --cwd --fix`
-   (will raise the memory daemon and add MCP-hub servers to this project).
-3. Proceed with the task only when the status `connected`.
+Store only short useful temporary context: 48-hour default TTL, 72-hour maximum,
+800 characters, at most 8 live entries per scope. Use one replaceable `active-handoff`
+for continuity, then forget it when work finishes. Keep plans, decisions, progress,
+commit history and durable rules in repository artifacts. Empty memory is normal.
 
-Memory **general** (demon mAInd), scope of this project - `{{SCOPE}}`; facts about the entire ecosystem - in
-scope `global`. Project connections with others: `maind graph --project {{PROJECT}}`.
+Use `maind health --cwd` for connection symptoms or setup changes; repair with
+`maind health --cwd --fix`. A memory outage does not block ordinary repository work.
+Project connections: `maind graph --project {{PROJECT}}`.

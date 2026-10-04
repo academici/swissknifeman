@@ -368,6 +368,15 @@ def _handoff(plan_dir: Path, *, closed_subject: str | None = None) -> dict:
     next_exact = lines[start].split("**Next:**", 1)[1].strip()
     if not next_exact:
         raise DeliveryError("HANDOFF_RECOMMENDATION_MISSING", "Next empty")
+    if re.search(r"(?:/|\b)task:plan-close\s+\S+\s+P\d+(?:\.\d+)?(?:\s|$)", next_exact):
+        raise DeliveryError("PLAN_CLOSE_WHOLE_PLAN_ONLY", "reconcile the legacy phase/item-close successor")
+    if next_exact.startswith("close:"):
+        from task import command_render, plan_completion
+        try:
+            command_render.parse_next_carrier(next_exact)
+            plan_completion.candidate(plan_dir)
+        except (OSError, ValueError) as exc:
+            raise DeliveryError("PLAN_CLOSE_NOT_READY", str(exc)) from exc
     _validate_design_continuation(plan_dir, next_exact)
     _validate_priority_continuation(plan_dir, next_exact)
     _validate_phase_audit_continuation(plan_dir, next_exact)
@@ -530,12 +539,12 @@ def _closure_digest(plan_dir: Path, phase_id: str) -> str | None:
 
 
 def _require_completed_phase_before_item_handoff(plan_dir: Path, item_id: str) -> str | None:
-    """Keep the last GREEN item invocation active through eligible phase close.
+    """Keep phase acceptance gates at the final GREEN item boundary.
 
     Partial and non-GREEN terminal phases continue through their ordinary
     terminal-policy handoff.  Only when every item is GREEN does the rebuilt
-    candidate decide between a consented audit and an inline phase close before
-    the external handoff.
+    candidate decides between a consented audit and verified phase acceptance.
+    No standalone phase-close event or projection is required.
     """
     phase_id = item_id.split(".", 1)[0]
     from task import plan_item_state, plan_status
@@ -571,37 +580,14 @@ def _require_completed_phase_before_item_handoff(plan_dir: Path, item_id: str) -
     if not close_allowed or not gate.get("allow"):
         raise DeliveryError(
             gate.get("code") or policy.get("code") or "PHASE_CLOSE_NOT_ALLOWED",
-            f"{phase_id}: GREEN item completion does not allow phase close",
+            f"{phase_id}: GREEN item completion does not establish phase acceptance",
         )
 
+    from task import plan_completion
     try:
-        phase_status = plan_layout.phase_statuses(plan_dir).get(phase_id)
-    except plan_layout.PlanLayoutError as exc:
-        raise DeliveryError("PHASE_CLOSURE_REQUIRED", str(exc)) from exc
-    if phase_status != plan_status.STATUS_DONE:
-        raise DeliveryError(
-            "PHASE_CLOSURE_REQUIRED",
-            f"{phase_id}: terminal phase state not projected ({phase_status})",
-        )
-    if _closure_digest(plan_dir, phase_id) is None:
-        raise DeliveryError(
-            "PHASE_CLOSURE_REQUIRED",
-            f"{phase_id}: close the phase in the current item invocation to external handoff",
-        )
-    try:
-        plan_closure.build_closure(plan_dir, phase_id, check=True)
-    except plan_closure.ClosureError as exc:
-        raise DeliveryError(
-            "PHASE_CLOSURE_REQUIRED",
-            f"{phase_id}: phase closure carrier is deprecated: {exc}",
-        ) from exc
-    try:
-        _terminal_journal(plan_dir, phase_id)
-    except DeliveryError as exc:
-        raise DeliveryError(
-            "PHASE_CLOSURE_REQUIRED",
-            f"{phase_id}: terminal phase journal is not recorded in the current item invocation",
-        ) from exc
+        plan_completion.validate_acceptance(plan_dir, phase_id, candidate["fingerprint"])
+    except ValueError as exc:
+        raise DeliveryError("PHASE_ACCEPTANCE_REQUIRED", str(exc)) from exc
     return None
 
 
@@ -693,6 +679,15 @@ def build_terminal_receipt(plan_dir, subject: str) -> dict:
             plan_dir, subject, schema_version="terminal-delivery-receipt/v1", status="archived",
             state_digest=None, closure_digest=None, terminal=terminal,
         )
+    if subject == "plan":
+        from task import plan_completion
+        value = plan_completion.candidate(plan_dir)
+        path = plan_dir / "closure/plan.json"
+        if not path.is_file() or json.loads(path.read_text()) != value:
+            raise DeliveryError("PLAN_CLOSURE_REQUIRED", "whole-plan closure is missing or stale")
+        terminal = _terminal_journal(plan_dir, "plan")
+        return _base_receipt(plan_dir, subject, schema_version="terminal-delivery-receipt/v1",
+            status="closed-green", state_digest=None, closure_digest=file_digest(path), terminal=terminal)
     raise DeliveryError("DELIVERY_SUBJECT_INVALID", "subject should be Pn.m, Pn or archive")
 
 

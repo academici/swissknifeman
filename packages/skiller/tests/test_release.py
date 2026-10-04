@@ -3,6 +3,7 @@
 Unit tests use synthetic data without Git. Integration tests run against a
 synthetic temporary Git repository and never modify the root CHANGELOG.md.
 """
+import json
 import subprocess
 import tempfile
 import unittest
@@ -174,6 +175,19 @@ class CmdReleaseCase(unittest.TestCase):
         self.assertIsNone(exc)
         self.assertIn("v0.7.1 -> v0.7.2", out)
 
+    def test_parallel_tag_advances_to_next_free_patch(self):
+        subprocess.run(["git", "checkout", "-q", "-b", "parallel"], cwd=self.root,
+                       check=True, capture_output=True)
+        _commit(self.root, "fix: parallel bug")
+        subprocess.run(["git", "tag", "v0.7.2"], cwd=self.root, check=True,
+                       capture_output=True)
+        subprocess.run(["git", "checkout", "-q", "master"], cwd=self.root,
+                       check=True, capture_output=True)
+        _commit(self.root, "fix: branch bug")
+        exc, out = _run_cli(cmd_release, self.env, ["--dry-run"])
+        self.assertIsNone(exc)
+        self.assertIn("v0.7.1 -> v0.7.3", out)
+
     def test_breaking_marker_refuses_with_nonzero_exit(self):
         _commit(self.root, "feat!: change of contract")
         exc, out = _run_cli(cmd_release, self.env, [])
@@ -197,6 +211,15 @@ class CmdReleaseCase(unittest.TestCase):
         # The old Unreleased section is now empty.
         section = text.split("## [Unreleased]", 1)[1].split("## [0.8.0]", 1)[0]
         self.assertNotIn("- stub", section)
+
+    def test_without_dry_run_updates_task_catalog_version_when_present(self):
+        routing = self.root / "packages/task/configs/command-routing.json"
+        routing.parent.mkdir(parents=True)
+        routing.write_text('{\n  "plugin_version": "0.7.1"\n}\n', encoding="utf-8")
+        _commit(self.root, "fix: task release")
+        exc, _out = _run_cli(cmd_release, self.env, [])
+        self.assertIsNone(exc)
+        self.assertEqual("0.7.2", json.loads(routing.read_text())["plugin_version"])
 
     def test_git_tag_command_is_only_printed_never_executed(self):
         _commit(self.root, "feat: new feature")

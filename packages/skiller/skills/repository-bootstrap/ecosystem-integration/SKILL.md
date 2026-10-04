@@ -44,12 +44,12 @@ Chain (every step is standalone-safe — a missing neighbor doesn't fail onboard
    (physical transfer of specific skills into the repo via `.swissknifeman/config.json` +
    `skiller sync`). **Ask the user which channel** before installing (the `integrate` wizard
    also asks). Operational details and Boost-as-MCP — [project-tooling-runbook].
-3. **deploy** — hub MCP servers into the project's `.mcp.json`: `agentmemory` + `maind` [+ code
+3. **deploy** — scoped hub MCP into the project's `.mcp.json`: `maind` [+ code
    graph]. ⚠️ `.mcp.json` carries **absolute local paths** (`bin/maind`, the Serena project path)
    → must not be committed as-is. Hygiene (indirection via `.env`, or gitignore + a synced
    `.example`) — [project-tooling-runbook] §"Machine-specific config hygiene".
 4. **graph** — `derive` the topology graph from composer/docs + rebuild the index.
-5. **memory** — seed a connection fact into shared memory.
+5. **memory** — enable scoped access without automatic seed writes; topology stays in config/graph.
 6. **ecosystem-skill** — roll out the [ecosystem-mcp] skill into the project (orientation for
    its agent).
 
@@ -126,14 +126,17 @@ engine can be overridden per project (`code_command` / `code_args` with `{root}`
 
 ## Memo
 
-- Memory is **shared**: visible to linked projects within a namespace, isolated across
-  namespaces. But **the session-start digest does not share this shared context by default**
+- Memory is **project-only by default** in MCP, CLI and digest. Shared scope needs an explicit
+  cross-project request and allowed `memory_namespaces`, separate from graph `namespaces`.
+  **The session-start digest does not share context by default**
   (`shared_max=0`, D10) — only `project:<id>`; group-wide context is raised EXPLICITLY via
   `recall --scope ns:<name>` when the task is genuinely cross-project (guideline — skill
   [ecosystem-mcp] → "Cross-project task", doctrine —
   [docs/guide/memory.md](../../../../../packages/maind/docs/guide/memory.md)).
 - MCP is passive: the project's own agent calls `recall`/`store`/graph tools — no automatic
   "interception".
+- Store only temporary useful context (default 48 hours, maximum 72 hours, 800 characters).
+  Keep plan decisions, progress and history in repository files. Empty memory is normal.
 - Source of truth for artifacts is the templates in maind (`templates/`), don't edit project
   copies.
 

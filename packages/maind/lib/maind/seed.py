@@ -1,12 +1,7 @@
-"""Seed-memory: a basic fact about project connections so that memory is immediately «is not empty» and
-made it visible that she was GENERAL. The text is generated from derive-column (role related
-projects), is written to a private bucket project:<id> + short cross-ref to shared buckets
-groups (ns:<name>, wildcard → global) — parity with graph by namespace'am: group facts
-visible inside namespace and isolated between. Idempotent: repeat with the same text is not
-produces facts (dedup by marker/text)."""
+"""Read graph connections and render legacy seed text; automatic seed writes are retired."""
 from .common import content_hash
-from .memory import health, recall, resolve_ports, store
-from .namespaces import memory_namespaces_of, namespaces_of, private_scope, recall_scopes
+from .memory import resolve_ports
+from .namespaces import memory_namespaces_of, namespaces_of, recall_scopes
 
 MARKER = "maind:ecosystem-link"
 
@@ -52,28 +47,7 @@ def seed_text(env, config, project):
 
 
 def seed_memory(env, config, project, *, dry=False):
-    """Write seed-fact in private bucket project:<id> + cross-ref to shared group buckets
-    (ns:<name>, wildcard → global) — is idempotent. The demon lies - skip marked
-    (will be recorded on the next sync)."""
-    pid = project["id"]
-    scope = private_scope(project)
-    text = seed_text(env, config, project)
-    _, _, url = resolve_ports(env, config)
-    if not health(url):
-        return {"provisioner": "memory", "id": pid, "status": "skip",
-                "changed": False, "detail": "memory daemon not running"}
-    existing = [item for item in recall(url, scope, MARKER)
-                if (item.get("text") or "").startswith(f"[{MARKER}]")]
-    if len(existing) == 1 and existing[0].get("text") == text:
-        return {"provisioner": "memory", "id": pid, "status": "ok",
-                "changed": False, "state": "fresh", "detail": scope}
-    if dry:
-        return {"provisioner": "memory", "id": pid, "status": "dry", "changed": False}
-    from .memory import forget
-    for item in existing:
-        if item.get("id"):
-            forget(url, scope, item["id"])
-    store(url, scope, "ecosystem-link", text)
-    return {"provisioner": "memory", "id": pid, "status": "ok", "changed": True,
-            "state": "stale" if existing else "absent",
-            "detail": scope}
+    """Compatibility provisioner: topology belongs in config/graph, never working memory."""
+    return {"provisioner": "memory", "id": project["id"], "status": "skip",
+            "changed": False, "state": "disabled",
+            "detail": "connection facts live in config/graph; automatic memory seeds disabled"}

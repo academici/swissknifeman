@@ -16,6 +16,8 @@ def main(argv=None):
                               "--conflicts — she checks the canon, not a specific plan)")
     parser.add_argument("--json", action="store_true",
                          help="display the parsed model (plans→phases→items) in stdout like JSON")
+    parser.add_argument("--item", action="append", default=[],
+                        help="closure qualification: selected item plus its producer closure; future budget/bundle findings stay visible")
     parser.add_argument("--baseline", nargs="?", const="HEAD", default=None, metavar="REF",
                          help="git-ref to count NEW errors from the working tree (K, B1/D5/D6); "
                               "without value - HEAD")
@@ -54,12 +56,32 @@ def main(argv=None):
     # we use the same sign here to root-checks (ACTIVE.md/drafts)
     # were not applied to single `plan-lint.py plans/<ID>` (there ACTIVE.md out of sight).
     is_plans_root = not (root / "plan.md").is_file()
+    if args.item and is_plans_root:
+        parser.error("--item requires one plan directory")
 
     if not plan_dirs and not is_plans_root:
         print(f"no plans to check in {root}")
         return 0
 
-    diag = Diagnostics()
+    scope = None
+    if args.item:
+        from task import plan_recovery, plan_downstream
+        items = plan_downstream._all_items(root)
+        scope = set()
+        def include(item):
+            if item not in items:
+                raise ValueError(f"unknown selected item {item}")
+            if item in scope:
+                return
+            scope.add(item)
+            for producer in plan_recovery._dependencies(root, item, items):
+                include(producer)
+        try:
+            for item in args.item:
+                include(item)
+        except ValueError as exc:
+            parser.error(str(exc))
+    diag = Diagnostics(selected_items=scope)
     models = {}
     for plan_dir in plan_dirs:
         models[plan_dir.name] = lint_plan(plan_dir, diag)
@@ -76,7 +98,7 @@ def main(argv=None):
                          f"new error count not calculated")
         else:
             diff = Counter(diag.normalized_keys(root)) - Counter(base_keys)
-            new_count = sum(diff.values())
+            new_count = sum(count for key, count in diff.items() if not args.item or key[0] == "ERROR")
 
     for msg in diag.errors:
         print(f"ERROR: {msg}", file=sys.stderr)

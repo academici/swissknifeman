@@ -9,6 +9,7 @@ import os
 import stat
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
 from core.http import HTTPUnauthorizedError
@@ -148,18 +149,18 @@ class TestDigestSelection(unittest.TestCase):
     project-only default (D10). Testing on lists dict — form export()."""
 
     def _row(self, scope, text, ts):
-        return {"content": memory.mark_scope(scope, text), "timestamp": ts}
+        fresh = datetime.now(timezone.utc) - timedelta(minutes=32 - int(ts[8:10]))
+        return {"content": memory.mark_scope(scope, text), "timestamp": fresh.isoformat()}
 
     def test_real_dump_shape_sorts_by_updated_at_and_skips_superseded(self):
         # agentmemory 0.9.x export: updatedAt/createdAt, no `timestamp`; oldest-first dump order
         def rec(text, created, updated, **extra):
             return {"content": memory.mark_scope("project:p", text), "createdAt": created,
                     "updatedAt": updated, **extra}
-        raw = [
-            rec("old fact", "2026-06-01T00:00:00Z", "2026-06-01T00:00:00Z"),
-            rec("replaced fact", "2026-06-02T00:00:00Z", "2026-06-02T00:00:00Z", isLatest=False),
-            rec("fresh fact", "2026-09-01T00:00:00Z", "2026-09-01T00:00:00Z", isLatest=True),
-        ]
+        now = datetime.now(timezone.utc)
+        old, replaced, fresh = [(now - timedelta(hours=h)).isoformat() for h in (3, 2, 1)]
+        raw = [rec("old fact", old, old), rec("replaced fact", replaced, replaced, isLatest=False),
+               rec("fresh fact", fresh, fresh, isLatest=True)]
         items, dropped = memory.select_digest_items(
             raw, "project:p", {"project:p"}, limit=8, budget_chars=4000,
             item_max_chars=500, shared_max=0)

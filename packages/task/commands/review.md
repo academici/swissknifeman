@@ -1,12 +1,15 @@
 ---
 disable-model-invocation: true
 description: "Risk-scaled read-only review of code, docs or specs."
-argument-hint: "<artifact: diff / branch / PR# / docs path | PLAN-ID Pn.m> --reviewer <provider/model> [--effort high]"
+argument-hint: "<artifact: diff / branch / PR# / docs path | PLAN-ID Pn.m> [--reviewer <provider/model>] [--effort high]"
 ---
 This is a read-only review of `$ARGUMENTS`. Do not modify files.
 
-Require explicit `--reviewer <provider>/<exact-model-id>`; accept `claude-code`, `codex`,
-`cursor`, or `grok`. `--effort` defaults to `high`. This selects the reviewer, not the executor.
+`--reviewer <provider>/<exact-model-id>` is optional; accept `claude-code`, `codex`,
+`cursor`, or `grok`. Without it, perform the requested review on the current captured native
+provider/model/effort route; do not ask for a selector or fabricate route evidence. For an item
+executed by this session, launch a fresh read-only session on that route. An explicit selector
+defaults to `high` effort and selects the reviewer, not the executor.
 The selector also accepts optional context/effort suffixes and a trailing `/`: `grok/grok-4.7/500k/`,
 `grok/grok-4.7/high/`, `grok/grok-4.7/hight/`, `grok/grok-4.7/500k/high/`.
 Use `task.review_packet.invocation_selection`; context is required capacity, not a token-spend cap.

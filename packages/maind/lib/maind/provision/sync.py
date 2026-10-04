@@ -388,12 +388,9 @@ def _instruction_run(env, config, projects, mode, dry):
 
 
 def _feature_log_hook_run(env, config, projects, mode, dry):
-    """SessionEnd-hook for committing commits to shared memory (if code_graph.feature_log_hook)."""
-    from ..codegraph import settings
-    from ..health import apply_feature_log_hook, revert_feature_log_hook
-    enabled = bool(settings(config).get("feature_log_hook", False))
-    fn = apply_feature_log_hook if enabled else revert_feature_log_hook
-    return [fn(env, config, p, mode, dry) for p in projects]
+    """Retire automatic SessionEnd commit copying, including previously enabled hooks."""
+    from ..health import revert_feature_log_hook
+    return [revert_feature_log_hook(env, config, p, mode, dry) for p in projects]
 
 
 def _setup_skill_run(env, config, projects, mode, dry):

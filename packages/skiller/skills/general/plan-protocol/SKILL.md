@@ -224,7 +224,8 @@ with `PRODUCT_COVERAGE_MISSING`. Use backticks around each Files path and keep e
 outside them. Unnumbered Required Reads may use semicolons outside quoted paths/annotations.
 Before `audit-green`, regenerate
 audit-owned projections once, rebuild the candidate and persist `audit-finalization/v1` with the
-exact `phase_close_gate` admission; `plan-close` consumes that admission rather than discovering a
+exact `phase_close_gate` admission. This is phase acceptance evidence, not permission to append a
+phase-close event; whole-plan `plan-close` consumes current acceptance rather than discovering a
 new audit cycle.
 Before product work, `validation-admission/v1` checks deterministic local command prerequisites.
 A definitely absent literal Make target creates a nonterminal repair-inline observation in the same
@@ -232,33 +233,33 @@ attempt; dynamic Make definitions remain unknown rather than manufacturing a mis
 
 `Closure Protocol | v1` opts into `closure/<Pn>.json`; evidence class is exactly `real`,
 `synthetic`, or `baseline_pending`. It records judgement provenance and does not replace the
-generated `[v2]` phase-closure view. A ready-to-close phase is a candidate. Execution/handoff and
-standalone close call
+generated `[v2]` phase-closure view. A ready phase is an acceptance candidate. Execution/handoff and
+whole-plan close call
 `task.plan_assurance.evaluate()` (through the compatibility facade
 `task.plan_gates.phase_audit_policy`) over the same runtime-built candidate snapshot. An omitted
-`Phase Assurance | v1` means isolated, seam-free, reversible and direct-close. Declare the block
+`Phase Assurance | v1` means isolated, seam-free, reversible and direct acceptance. Declare the block
 only for an integration seam, hard risk, live/irreversible action, owner-requested audit, or an
 ambiguous default. `Routing.Review` and item count are item-execution depth, never phase-audit admission.
 <!-- i18n-keep: Audit Intent: light -->
 Historical `Audit Intent: light` normalizes to `legacy-light`; `required` and `auto` retain their
 enum values. All three remain readable but advisory: none admits audit or rewrites historical
 events. A phase with current
-GREEN item evidence and satisfied acceptance/safety gates direct-closes by default, including
+GREEN item evidence and satisfied acceptance/safety gates passes acceptance by default, including
 multi-item and integration phases. RED or missing evidence returns its owning repair. Material risk
 without matching `audit-admission/v2` produces a bounded recommendation while GREEN still
-direct-closes. After an admitted GREEN audit, `audit-impact/v1` classifies the mismatch for
+passes acceptance. After an admitted GREEN audit, `audit-impact/v1` classifies the mismatch for
 bookkeeping rebind, affected validation repair, evidence gathering, or owner review. `delta`/`full`
 describe impact only and never authorize another audit; every new audit requires a fresh residual-risk
 question and candidate/run-bound owner consent. RED or unresolved ATTENTION is repaired in its owning item.
 Historical read-only RED review findings may be resolved through exhaustive, committed
 `phase-findings-resolution/v1` evidence checked by `phase_findings.acceptance()`. The
-phase may close GREEN while the review remains RED/closed-deviations; unresolved
+phase may pass GREEN acceptance while the review remains RED/closed-deviations; unresolved
 findings, invalid links and stale evidence fail closed. See the layout reference.
 A terminal blocked item remains fail-closed, except for an explicit accepted, non-superseded
 phase-scoped owner D#: its `item` is `Pn`, `items` is exactly `Pn` plus every `Pn.*`, and it
 carries `` `phase-close: terminal-blocked-deviations` ``. That D# permits only a
-`closed-deviations` phase close and `🟠 Done with deviations` phase projection; it never
-rewrites the RED/blocked item history, audit evidence, or release authorization.
+`🟠 Done with deviations` phase acceptance projection; it never authorizes a new phase-close
+event or rewrites the RED/blocked item history, audit evidence, or release authorization.
 
 ## 5. Routing
 
@@ -363,12 +364,13 @@ store the provider-neutral semantic form and separately render Claude `/task:…
 `MODE:`, `INPUT:`, `SCOPE:`, `DO NOT TOUCH:`; an audit block declares `Verdict:`.
 
 A GREEN item closes inside its `plan-run` invocation: persist terminal evidence and
-journal, regenerate changed views, and, when it is the final item of a directly closable phase,
-create the phase closure before deriving Next. Evaluate `phase_audit_policy` once over the rebuilt
-candidate. Matching consent may produce `next_kind=audit-phase`; the default GREEN result closes the
-phase in place. Handoff is computed from post-closure state and dependencies and never launches
+journal, regenerate changed views, and, when it is the final item of a GREEN phase,
+verify phase acceptance before deriving Next. Evaluate `phase_audit_policy` once over the rebuilt
+candidate. Matching consent may produce `next_kind=audit-phase`; ordinary phase acceptance produces
+no separate close invocation or phase journal event. Handoff is computed from state and dependencies and never launches
 `plan-close` for the current result or repeats `plan-run` for the current item. The
-`close` form remains compatible for an explicitly requested standalone reconciliation.
+`close` form accepts only `task:plan-close <PLAN-ID>` for whole-plan acceptance.
+Historical phase-close events and carriers remain readable as legacy evidence.
 
 Completion of one item or an admitted batch is not terminality of the whole plan. An unfinished
 phase forbids `Context: terminal` and a terminal Next; `none` is not a declared Next form.
@@ -464,8 +466,8 @@ file count does not reopen design. Use `task:plan-run` for item
 execution under the session route;
 `task:plan-audit` for a design audit or an explicitly admitted adversarial phase audit;
 `task:plan-close` for explicitly
-requested standalone reconciliation or archive. Item execution owns its GREEN item close and an
-eligible final-item phase close. Mechanical data dependencies determine write order; commands recommend a working approach.
+requested whole-plan closure or archive. Item execution owns its GREEN item close and applicable
+phase acceptance. Mechanical data dependencies determine write order; commands recommend a working approach.
 Independent safe actions may be reordered within Scope, dependencies and Acceptance.
 
 Portable execution inputs must be committed or predecessor-produced. Host/chat/tmp/foreign paths

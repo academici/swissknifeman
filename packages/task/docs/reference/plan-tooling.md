@@ -23,7 +23,7 @@ positive integer counts, k or m (500k = 500000); effort accepts low/medium/high/
 Suffix effort overrides the default, but conflicting explicit effort flags are rejected.
 Equivalent spellings normalize to the same durable route; original launch text is retained.
 The number requires **at least** that context capacity, not a token-spend limit and not a promise
-that Task can enlarge the model. With explicit context, Grok uses a new native ACP session,
+that Task can enlarge the model. Every automated Grok run uses a new native ACP session,
 sets the requested model/context/effort, and checks the session's effective route in its native
 `summary.json` before sending the digest-bound packet. A configuration acknowledgement alone
 is not proof. The terminal ACP response must attest the same session/model, `end_turn`, and
@@ -44,12 +44,15 @@ when frozen Validation contains no owner-review carrier; conflicting prior selec
 The same root can launch transport, but only a separate reviewer session can certify the product.
 With a phase-scoped command, prepare also takes `--phase P1` while `--item`/`--request` identify
 the current admitted batch. Route evidence retains the actual phase command; no other phase is authorized.
-Grok has a built-in headless runner; other providers require a supported independent native launch
+Grok has a built-in read-only ACP runner; other providers require a supported independent native launch
 and `review-record`. An unavailable launcher is explicit, never an automatic model substitution.
 
 Without that explicit requirement normal execution uses self-check and affected tests;
 a phase/slice review is a dedicated read-only item. An explicit owner requirement may declare
-`owner-review: grok/grok-4.7` in Validation. Review commands require the exact route:
+`owner-review: grok/grok-4.7` in Validation. Reviewer selection is optional for all supporting
+commands. Explicit `task:review`/`task:plan-audit` without the flag use the independently captured
+native session's actual route; execution/design without it adds no external reviewer.
+Malformed explicit selections still fail. Examples with a selected route:
 
 ```text
 task:review <PLAN-ID> P1.2 --reviewer grok/grok-4.7 --effort high
@@ -79,7 +82,8 @@ Native ACP publishes `owner-review/live-progress.json` and archives `heartbeats.
 process/native-route/activity probes. Its timeout measures inactivity; streamed activity from the
 selected session extends waiting without an elapsed limit. Transport/config noise does not hide a
 stall. The default Task turn cap is absent; optional `--max-turns N` uses native terminal usage.
-Legacy non-ACP headless transport retains its elapsed timeout until its liveness carrier is migrated.
+This behavior also applies when no explicit context window was selected. Legacy headless archives
+remain readable, but new automatic reviews do not enter the elapsed-timeout transport.
 
 Grok transport limits tools to reading, denies shell/edit/write/MCP, disables nested agents,
 uses JSON output and checks actual model/session, completion and usage. Other providers review in
@@ -93,6 +97,59 @@ required context is never clipped. Changed relevant bytes invalidate GREEN; book
 foreign changes do not. Raw output, errors and immutable attempt receipts remain under
 `artifacts/P1.2/owner-review/`. `review-status --plan-dir <dir> --item P1.2 --reviewer <provider/model>`
 verifies the latest current GREEN carrier before item close.
+
+Files braces/globs expand deterministically to tracked/new members and tracked deletion tombstones.
+Unmatched required paths fail; inline symbols are not paths. Every changed non-plan file must be
+covered or carry an explicit `review-packet --exclude PATH=REASON` for an unrelated edit.
+Native `read_file` calls add a hash/range dependency ledger; changes to consulted files or external
+source identity invalidate completion and GREEN reuse. Grep/list discovery does not bind the entire
+repository. Coverage counts/ranges do not prove semantic understanding. Unclassified risk stays `unset`.
+Packets bind runtime source hashes; transport archives actual native provider identity/usage and
+the executable hash, not a guessed CLI version. CLI review results are compact summaries with archive paths.
+
+New untracked external inputs are stored as small immutable source blobs; Composer inputs bind
+package/version/reference and `composer.lock`. Historical consumption does not read live vendor files.
+For older receipts with authenticated input hashes but missing Git bytes, prepare additive witnesses:
+
+```bash
+python3 packages/task/scripts/plan-work.py review-recover-sources --plan-dir plans/<ID> --item P4.3
+```
+
+Commit only the returned `source-recovery/` carriers before consumption; never edit the original
+packet, receipt or journal. Recovery requires bytes matching the original reviewed hashes. If the
+original closure did not bind a lock, the witness explicitly states `original-lock-not-bound` and
+claims no package version. It cannot supply a missing verdict, route or original candidate proof.
+
+## Whole-plan closure and terminal operations
+
+`task:plan-close <PLAN-ID>` closes only the whole plan. Phase/item targets are rejected by command,
+Next, delivery and new journal writes. Historical phase events/reports remain readable. Phase gates
+still apply at execution boundaries; no new `Pn.closed.md` or phase-close invocation is required.
+Missing/RED validation and unresolved owning work do not become GREEN. GREEN phase audit returns
+the actual successor, not a phase-close command. Legacy handoffs can be safely recomputed by `finalize`.
+
+`plan-work.py complete --plan-dir <dir> --item Pn.m --entry <qualified-terminal.json>` appends one
+idempotent terminal event, then reconciles views, a single next-frontier bundle, machine-authored
+handoff and `.plan-cache/Pn.m-terminal-delivery-receipt.json`. It never starts the successor.
+`finalize` resumes an already persisted terminal after interruption; original history is preserved.
+Whole-plan `close-plan --session-id <actual-session>` checks all declared phases, item evidence,
+assurance and phase/plan Validation, then writes `closure/plan.json` and a terminal plan receipt.
+An unchanged repeated close does not add another journal event.
+
+Nonempty phase/plan `## Validation` sections require `acceptance/Pn.json` / `acceptance/plan.json`:
+`schema_version=plan-acceptance/v1`, `plan_id`, `subject`, `candidate_sha256`, `validation_sha256`,
+and `checks=[{requirement,status:green,path,sha256}]`. Every Validation bullet must be represented;
+when no bullets exist, bind the whole section as one requirement. Evidence paths are plan-local and
+byte-bound. Phase hashes come from `phase_candidate_fingerprint`; whole-plan identity binds all
+phase contracts/candidates/evidence and `plan.md`. This does not grant external CI/push authority.
+
+## Candidate-bound validation outputs
+
+`plan-work.py validate-evidence --plan-dir <dir> --path <product> --checks <checks.json>
+--attempt-id <id> --output-dir <repository-local-dir>` runs a declared completion DAG.
+Checks are `{id,argv:[...],depends_on:[...]}` objects; dependencies finish before consumers start.
+Outputs use candidate/attempt-specific directories with one exclusive writer. Failed dependencies,
+launch failures or changed candidate bytes prevent complete publication; old attempts are never overwritten.
 
 For concurrency, transactions, auth and data integrity, Implementation Rules declares
 `risk-class` and `invariant-model: <plan-relative-path>`; Inputs/Required Reads includes the model.

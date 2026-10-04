@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/dev.md
-Canonical SHA-256: sha256:834fdddee1a8364ae761a0de25bc4cfab9a2100ef5cd5348a92b74b463b0e99e
+Canonical SHA-256: sha256:4daf4662e3c0502cc714525a38a1468b87bed47b501f80a0d66c1d5ac30444c9
 Adapter: task.codex-command/1.0.18
 -->
 
@@ -25,7 +25,7 @@ Security, public API, concurrency, or irreversible effects require broader verif
 review. Run explicitly requested checks. Report a foreign red baseline and determine whether it intersects
 scope or dependency closure.
 
-Independent review is a separate read-only invocation with explicit `--reviewer provider/model`,
+Independent review is a separate read-only invocation with optional `--reviewer provider/model`,
 not a nested part of the executor's repair loop. Prepare the scoped candidate and evidence, then
 return the review handoff; reviewer findings return one owning correction. Systemic concurrency,
 transaction, auth and data-integrity work first establishes a shared invariant model and records

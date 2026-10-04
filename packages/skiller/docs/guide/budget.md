@@ -166,7 +166,7 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻503"]:::warm
-    plan_protocol["plan-protocol<br/>⊕26 ↻11132"]:::cool
+    plan_protocol["plan-protocol<br/>⊕26 ↻11192"]:::cool
     project_map["project-map<br/>⊕83 ↻618"]:::warm
     session_handoff["session-handoff<br/>⊕29 ↻590"]:::cool
     shell["shell<br/>⊕73 ↻1989"]:::warm
@@ -303,12 +303,12 @@ flowchart LR
     cross_project_optimizer["cross-project-optimizer<br/>⊕95 ↻1015"]:::warm
     decision_verification["decision-verification<br/>⊕39 ↻293"]:::mild
     docs_maintenance["docs-maintenance<br/>⊕88 ↻1005"]:::warm
-    ecosystem_integration["ecosystem-integration<br/>⊕77 ↻1954"]:::warm
-    ecosystem_mcp["ecosystem-mcp<br/>⊕92 ↻1608"]:::warm
+    ecosystem_integration["ecosystem-integration<br/>⊕77 ↻2035"]:::warm
+    ecosystem_mcp["ecosystem-mcp<br/>⊕92 ↻1855"]:::warm
     ecosystem_setup["ecosystem-setup<br/>⊕89 ↻1103"]:::warm
-    field_feedback_loop["field-feedback-loop<br/>⊕91 ↻1325"]:::warm
+    field_feedback_loop["field-feedback-loop<br/>⊕91 ↻1357"]:::warm
     harness_operations["harness-operations<br/>⊕87 ↻2093"]:::warm
-    maind_overview["maind-overview<br/>⊕80 ↻1615"]:::warm
+    maind_overview["maind-overview<br/>⊕80 ↻1738"]:::warm
     package_architecture["package-architecture<br/>⊕85 ↻3698"]:::warm
     project_tooling_runbook["project-tooling-runbook<br/>⊕42 ↻7466"]:::mild
     release_discipline["release-discipline<br/>⊕64 ↻1488"]:::warm
@@ -437,14 +437,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 232 skills · ⊕ always **12586** current (is always resident if you include the entire registry) · ↻ bodies 311875 current · ⌥ on-demand 850300 current (snippets + references).
+**Total:** 232 skills · ⊕ always **12586** current (is always resident if you include the entire registry) · ↻ bodies 312418 current · ⌥ on-demand 850591 current (snippets + references).
 
 ## By buckets
 
 | Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1260 | 34152 | 33347 |
-| `repository-bootstrap` | 14 | 1047 | 30254 | 0 |
+| `general` | 22 | 1260 | 34212 | 33638 |
+| `repository-bootstrap` | 14 | 1047 | 30737 | 0 |
 | `architect` | 15 | 937 | 19786 | 33082 |
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |
 | `blender-modeling` | 7 | 582 | 11542 | 13519 |
@@ -516,7 +516,7 @@ The heaviest bodies are loaded when using the skill.
 
 | Skill | Bucket | current |
 |---|---|--:|
-| `plan-protocol` | general | 11132 |
+| `plan-protocol` | general | 11192 |
 | `project-tooling-runbook` | repository-bootstrap | 7466 |
 | `task-development-philosophy` | repository-bootstrap | 3745 |
 | `package-architecture` | repository-bootstrap | 3698 |

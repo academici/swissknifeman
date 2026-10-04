@@ -28,9 +28,12 @@ It explicitly requires review of every requested implementation item and durably
 selection at each prepare (optional `--review-effort`, default high). The root may orchestrate the
 bounded transport; the reviewer still executes in its own read-only session. This request never
 changes executor routing, grants phase-audit consent or requires rewriting frozen item specifications.
-`task:review <PLAN-ID> <Pn.m> --reviewer <provider/model> [--effort high]` and
-`task:plan-audit <PLAN-ID> <Pn|design> --reviewer <provider/model> [--effort xhigh]`
-name the exact reviewer. Providers are `claude-code`, `codex`, `cursor`, `grok`; use the full
+`task:review <PLAN-ID> <Pn.m> [--reviewer <provider/model>] [--effort high]` and
+`task:plan-audit <PLAN-ID> <Pn|design> [--reviewer <provider/model>] [--effort xhigh]`
+perform the requested review/audit without requiring a selector. Omission inherits the actual
+captured native provider/model/effort in a fresh non-executor review session; execution/design
+commands without the flag add no external review. An explicit selector names the exact reviewer.
+Providers are `claude-code`, `codex`, `cursor`, `grok`; use the full
 model ID, not a semantic model class. The current captured route and effort must match, and the
 reviewer session must differ from the executor. Native review/audit frontmatter does not pin a
 model/effort; compatibility routing minima never replace the explicit selection. A route mismatch

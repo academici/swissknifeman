@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Close a phase through current assurance; regenerate and check its projections."""
+"""Read-only verification of legacy phase-close evidence; new writes are retired."""
 from __future__ import annotations
 
 import argparse
@@ -11,10 +11,12 @@ _PKG = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_PKG / "lib"))
 sys.path.insert(0, str(_PKG.parent.parent))
 
-from task import journal, phase_findings, plan_closure, plan_decisions, plan_gates, plan_status  # noqa: E402
+from task import phase_findings, plan_closure, plan_decisions, plan_gates, plan_status  # noqa: E402
 
 
 def close(plan_dir, phase_id, *, actor, note, check=False, session_id=None):
+    if not check:
+        raise ValueError("PLAN_CLOSE_WHOLE_PLAN_ONLY: phase-close writes are retired; verify phase acceptance inside plan-run")
     root = Path(plan_dir)
     candidate = plan_gates.phase_candidate_fingerprint(root, phase_id)
     gate = plan_gates.phase_close_gate(root, phase_id,
@@ -22,45 +24,11 @@ def close(plan_dir, phase_id, *, actor, note, check=False, session_id=None):
     if not gate["allow"]:
         raise ValueError(f"{gate['code']}: {gate}")
     proof = gate.get("audit_policy", {}).get("findings_resolution")
-    if check:
-        if proof and not phase_findings.closed_green(root, phase_id):
-            raise ValueError("PHASE_FINDINGS_CLOSE_MISSING: evidence is ready but phase close is not persisted")
-    else:
-        prior = [e for e in journal.read_authoritative_entries(root)
-                 if e.get("item_id") == phase_id and e.get("command") == "plan-close"]
-        matched = bool(prior and prior[-1].get("result") == "closed-green" and prior[-1].get("run_id")
-                       and prior[-1].get("fingerprint") == candidate["fingerprint"])
-        if proof:
-            matched = matched and (prior[-1].get("decision") or {}).get("findings_resolution_sha256") == proof["sha256"]
-        if not matched:
-            if not isinstance(session_id, str) or not session_id:
-                raise ValueError("PHASE_CLOSE_SESSION_REQUIRED: provide the actual invoking session ID")
-            decision = {"signal_class": "acceptance", "scope_class": "phase", "action": "close-green",
-                        "recovered": True, "terminal": True}
-            if proof:
-                decision["findings_resolution_sha256"] = proof["sha256"]
-            pending = [e for e in prior if e.get("result") == "in-progress" and e.get("session_id") == session_id
-                       and not any(t.get("run_id") == e.get("run_id") and t.get("result") in journal.TERMINAL_CLOSE_RESULTS
-                                   for t in prior)]
-            if len(pending) > 1:
-                raise ValueError("PHASE_CLOSE_RUN_AMBIGUOUS: reconcile existing phase-close starts")
-            attempt = pending[0]["attempt"] if pending else max((e.get("attempt", 1) for e in prior), default=0) + 1
-            run_id = journal.derive_run_id(plan_id=root.name, item_id=phase_id, attempt=attempt, session_id=session_id)
-            if not pending:
-                journal.append(root, journal.new_entry(plan_id=root.name, item_id=phase_id,
-                    command="plan-close", actor=actor, result="in-progress", session_id=session_id,
-                    run_id=run_id, attempt=attempt, fingerprint=candidate["fingerprint"], note="Checking phase-close admission."))
-            journal.append_idempotent_terminal(root, journal.new_entry(plan_id=root.name, item_id=phase_id,
-                command="plan-close", actor=actor, result="closed-green", note=note,
-                session_id=session_id, run_id=run_id, attempt=attempt,
-                fingerprint=candidate["fingerprint"], decision=decision))
-    plan_decisions.build_views(root, check=check)
-    plan_status.build_status(root, check=check)
-    plan_closure.build_closure(root, phase_id, check=check)
-    if not check:
-        plan_decisions.build_views(root, check=True)
-        plan_status.build_status(root, check=True)
-        plan_closure.build_closure(root, phase_id, check=True)
+    if proof and not phase_findings.closed_green(root, phase_id):
+        raise ValueError("PHASE_FINDINGS_CLOSE_MISSING: legacy phase-close proof is absent")
+    plan_decisions.build_views(root, check=True)
+    plan_status.build_status(root, check=True)
+    plan_closure.build_closure(root, phase_id, check=True)
     return {"phase_id": phase_id, "gate": gate, "fingerprint": candidate["fingerprint"], "checked": check}
 
 

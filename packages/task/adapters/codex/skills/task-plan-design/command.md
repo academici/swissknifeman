@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:c916e623fb53025ace1439decbeed4e06ee9043f8bea87a17f0661cb418f6dde
+Canonical SHA-256: sha256:419eabd052aa86dc331e64d52b1a55916116317bc7503b0d91af96548a8592b7
 Adapter: task.codex-command/1.0.18
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -103,8 +103,8 @@ verdict file) at the end of the phase; a large phase gets slice review items bet
 write implicit `Independent review` into every item's Validation. An explicit owner-requested
 `owner-review: provider/model` carrier is allowed, with a separate review invocation and bounded
 packet/receipt. `plan-run --reviewer` may orchestrate independent review and one owning correction
-automatically; no recursive/unbounded re-review is admitted. Review commands explicitly name
-`--reviewer provider/model`. Systemic work declares `risk-class` and `invariant-model` in
+automatically; no recursive/unbounded re-review is admitted. Review commands accept optional
+`--reviewer provider/model`; omission inherits the captured native review route. Systemic work declares `risk-class` and `invariant-model` in
 Implementation Rules, binds the model in Inputs/Required Reads and declares `self-check` in
 Validation; the model covers all interfering operations/resources/drivers, not just local actions.
 Routing names a minimum semantic class; the

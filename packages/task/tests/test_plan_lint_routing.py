@@ -46,24 +46,24 @@ class TestNextFormsEnum(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(any("is not terminal" in w for w in diag.warnings), diag.warnings)
 
-    def test_plan_close_phase_form_accepted(self):
+    def test_plan_close_phase_form_rejected(self):
         plan_dir = write_valid_plan(self.root)
         self._next(plan_dir, "/task:plan-close DEMO-1 P1")
         _, diag = _lint(plan_dir)
-        self.assertTrue(diag.ok, diag.errors)
+        self.assertFalse(diag.ok)
 
-    def test_plan_close_item_form_accepted(self):
+    def test_plan_close_item_form_rejected(self):
         plan_dir = write_valid_plan(self.root)
         self._next(plan_dir, "/task:plan-close DEMO-1 P1.1")
         _, diag = _lint(plan_dir)
-        self.assertTrue(diag.ok, diag.errors)
+        self.assertFalse(diag.ok)
 
     def test_plan_close_item_form_nonexistent_item_is_error(self):
         plan_dir = write_valid_plan(self.root)
         self._next(plan_dir, "/task:plan-close DEMO-1 P9.9")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "item «P9.9» does not exist in any phase"))
+        self.assertTrue(_errors_containing(diag, "Next does not match any of the valid forms"))
 
     def test_plan_close_archive_form_accepted_when_closed(self):
         # plan is entirely terminal (the only one item 🟢 Done) — form is valid

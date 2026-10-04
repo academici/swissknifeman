@@ -19,8 +19,10 @@ plans/<PLAN-ID>/
 │   ├── Pn.md
 │   ├── Pn.m.md
 │   ├── Pn.m.state.md
-│   └── Pn.closed.md
+│   └── Pn.closed.md   # legacy report, not required by new execution
 ├── bundles/Pn.m.json  # ordered digest-qualified executor inputs
+├── acceptance/       # candidate-bound phase/plan Validation evidence
+├── closure/plan.json # whole-plan closure proof
 ├── decisions/         # append-only records + generated views/owner gates
 ├── handoff.md         # rolling owner/design/audit pointer; not executor input in v2
 ├── journal.jsonl      # append-only execution history
@@ -38,9 +40,10 @@ For v2 the required executor path is exactly `plan.md` → `phases/<Pn>/<Pn>.md`
 `phases/<Pn>/<Pn.m>.md` → `bundles/<Pn.m>.json` → `<Pn.m>.state.md`. `handoff.md`, all
 `status.md`, the entire magazine and the entire catalog of solutions are not included in this path.
 
-The closure phase has two different media: opt-in `closure/<Pn>.json` captures the class
+Historical phase closure has two different media: opt-in `closure/<Pn>.json` captures the class
 evidence-judgments, and generated `phases/<Pn>/<Pn>.closed.md` is a terminal contract and
-result for designer/owner. One does not replace the other.
+result for designer/owner. One does not replace the other. New execution verifies phase acceptance
+without a phase-close lifecycle. Only `task:plan-close <PLAN-ID>` closes the whole plan.
 
 ## Evidence anchors
 
@@ -73,7 +76,8 @@ untouched; invalid, stale or released applicable state returns a stable `re-arm`
 Provider adapters may translate this reducer, but cannot replace its terminal policy.
 
 Before `audit-green` audit-finalization regenerates owned projections once, rebuilds candidate and
-records `audit-finalization/v1` with `close_admission=allow`. Phase close consumes that evidence.
+records `audit-finalization/v1` with `close_admission=allow`. Phase acceptance consumes that evidence;
+the compatibility gate name does not authorize a separate phase-close launch.
 
 ## Phase Assurance | v1
 

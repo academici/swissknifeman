@@ -119,7 +119,9 @@ class PhaseFindingsTests(unittest.TestCase):
             result="closed-green", fingerprint=candidate["fingerprint"], decision={"signal_class": "acceptance",
             "scope_class": "phase", "action": "close-green", "terminal": True, "recovered": True,
             "findings_resolution_sha256": proof["sha256"]})
-        journal.append(self.plan, event)
+        # Import historical evidence, bypassing the forward-only writer.
+        with (self.plan / "journal.jsonl").open("a") as stream:
+            stream.write(json.dumps(event) + "\n")
         self.assertTrue((self.plan / "journal.jsonl").read_bytes().startswith(history))
         self.assertEqual((self.plan / "findings/review.md").read_bytes(), report)
         self.assertEqual(plan_status._phase_status(["🟢 Done", "🟠 Done with deviations"],
@@ -193,7 +195,7 @@ class PhaseFindingsTests(unittest.TestCase):
         candidate = plan_gates.phase_candidate_fingerprint(self.plan, "P1")
         event = journal.new_entry(plan_id=self.plan.name, item_id="P1", command="plan-close", actor="test/high",
             result="closed-green", fingerprint=candidate["fingerprint"])
-        with self.assertRaisesRegex(journal.JournalValidationError, "PHASE_FINDINGS_UNRESOLVED"):
+        with self.assertRaisesRegex(journal.JournalValidationError, "PLAN_CLOSE_WHOLE_PLAN_ONLY"):
             journal.append(self.plan, event)
 
     def test_contract_sync_without_accepted_owner_decision_refused(self):
@@ -211,25 +213,18 @@ class PhaseFindingsTests(unittest.TestCase):
         self.record["reviews"][0]["findings"][1]["files"] = [self.ref(path)]
         self.refused()
 
-    def test_phase_close_launcher_is_idempotent_and_checks_projection(self):
+    def test_phase_close_launcher_is_retired_and_phase_acceptance_still_checks_findings(self):
         close = runpy.run_path(str(Path(__file__).parents[1] / "scripts/plan-phase-close.py"))["close"]
-        close(self.plan, "P1", actor="test/high", note="Checked repair evidence.", session_id="fixture-phase-session")
         history = (self.plan / "journal.jsonl").read_bytes()
-        closure = self.plan / "phases/P1/P1.closed.md"
-        self.assertIn("Resolved Review Findings", closure.read_text())
-        close(self.plan, "P1", actor="test/high", note="Checked repair evidence.", session_id="fixture-phase-session")
-        close(self.plan, "P1", actor="test/high", note="Checked repair evidence.", check=True)
+        with self.assertRaisesRegex(ValueError, "PLAN_CLOSE_WHOLE_PLAN_ONLY"):
+            close(self.plan, "P1", actor="test/high", note="Checked repair evidence.", session_id="fixture-phase-session")
+        from task import plan_completion
+        plan_completion.phase_acceptance(self.plan, "P1")
         self.assertEqual(history, (self.plan / "journal.jsonl").read_bytes())
-        (self.plan / "handoff.md").write_text("# HANDOFF — 2026-10-03 — after P1\n\n"
-            "**Next:** manual: frontier/high\n\n| Parameter | Meaning |\n|:--|:--|\n"
-            "| Model class | frontier |\n| Effort | high |\n| Context | continue-root |\n"
-            "\n**Done:** Phase closed.\n**Remaining:** Owner follow-up.\n**Open risks:** —\n")
-        receipt = plan_delivery.build_terminal_receipt(self.plan, "P1")
-        self.assertTrue(receipt["journal"]["run_id"])
-        self.assertTrue(plan_delivery.verify_receipt(self.plan, receipt))
+        self.assertFalse((self.plan / "phases/P1/P1.closed.md").exists())
         self.log.write_text("tampered\n")
         with self.assertRaisesRegex(ValueError, "PHASE_FINDINGS_UNRESOLVED"):
-            close(self.plan, "P1", actor="test/high", note="Tampered.", check=True)
+            plan_completion.phase_acceptance(self.plan, "P1")
 
     def test_committing_rewritten_review_does_not_replace_historical_origin(self):
         report = self.plan / "findings/review.md"

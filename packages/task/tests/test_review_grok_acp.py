@@ -123,6 +123,11 @@ class _ActiveProcess(_Process):
 
 class GrokACPTests(unittest.TestCase):
     def setUp(self):
+        # Provenance is exercised separately; never hash a machine-local binary
+        # or include its IO latency in millisecond-scale fake transport tests.
+        binary = patch.object(acp.shutil, "which", return_value=None)
+        binary.start()
+        self.addCleanup(binary.stop)
         self.manifest = {"route": {"model": "grok-4.7", "context_tokens": 500000},
                          "effort": "high", "executor_session": "executor"}
         self.witness = {"session_id": "reviewer-id", "model": "grok-4.7", "effort": "high",
@@ -272,6 +277,23 @@ class GrokACPTests(unittest.TestCase):
             result = acp.run(self.manifest, b"packet", cwd=Path("/work"), timeout=1)
         self.assertTrue(result["complete"])
         self.assertNotIn("--max-turns", result["argv"])
+
+    def test_route_without_explicit_context_still_uses_native_liveness_and_attestation(self):
+        self.manifest["route"].pop("context_tokens")
+        process = _ActiveProcess(response_notifications=25)
+        with patch.object(acp.subprocess, "Popen", return_value=process), \
+                patch.object(acp, "provider_route", return_value=self.witness), \
+                patch.object(acp, "_stop", side_effect=lambda proc: proc.terminate()):
+            result = acp.run(self.manifest, b"packet", cwd=Path("/work"), timeout=.1,
+                             heartbeat_interval=.03)
+        self.assertTrue(result["complete"], result["detail"])
+        self.assertTrue(result["heartbeats"])
+        selected = next(row for row in process.sent if row.get("method") == "session/set_model")
+        self.assertNotIn("contextWindow", selected["params"].get("_meta", {}))
+        self.witness["effort"] = "low"
+        refused, _ = self.run_transport(witness=self.witness, timeout=.03)
+        self.assertFalse(refused["complete"])
+        self.assertIn("REVIEW_ROUTE_MISMATCH", refused["detail"])
 
     def test_timeout_cleanup_kills_group_and_reaps_process(self):
         from unittest.mock import Mock

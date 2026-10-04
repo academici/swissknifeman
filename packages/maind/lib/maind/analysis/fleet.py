@@ -5,8 +5,7 @@ Three functions for cross-project optimization ~N similar projects (common core 
               (who demands what) → agent entry point, «where to look».
 - duplicates — cross-project search for code duplicates (wrapper over jscpd) by grouped
               paths → «what exactly is repeated» (cross-project clones first).
-- feature-log — facts «made a feature X» to shared memory (ns/global), so that the agent correlates
-              similar changes between projects.
+- feature-log — retired compatibility endpoint; feature history stays in git/docs.
 - similar    — SEMANTIC similarity of code (function embeddings/classes) over literals
               takes jscpd: «similar in meaning, not verbatim». Backend of embeddings - external
               (config code_graph.embed), orchestrated; without it - intelligible die.
@@ -26,7 +25,7 @@ from ..common import die, parse_args, warn
 from ..config import load_config
 from ..federation import federated_graph, graph_disabled
 from ..memory import health as mem_health
-from ..memory import recall, resolve_ports, store
+from ..memory import recall, resolve_ports
 from ..namespaces import group_scopes, namespaces_of, private_scope
 from ..projects import get as get_project
 from ..projects import listing
@@ -164,18 +163,9 @@ def find_duplicates(env, config, opts):
 
 # ── feature-log in shared memory ───────────────────────────────────────────────
 def log_feature(env, config, project, text, *, dry=False):
-    """Write fact «made a feature» to group (ns/global) + private bucket - for correlation
-    similar changes between projects by the optimization agent."""
-    pid = project["id"]
-    _, _, url = resolve_ports(env, config)
-    if not mem_health(url):
-        return {"status": "skip", "detail": "memory daemon not running"}
-    fact = f"[{FEATURE_MARKER}] {pid}: {text}"
-    scopes = [private_scope(project)] + group_scopes(project)
-    if not dry:
-        for sc in scopes:
-            store(url, sc, "feature-log", fact)
-    return {"status": "dry" if dry else "ok", "scopes": scopes, "fact": fact}
+    """Compatibility endpoint: commit/feature history stays in git and repository docs."""
+    return {"status": "skip", "scopes": [],
+            "detail": "automatic feature memory disabled; use git/docs for feature history"}
 
 
 def features(env, config, *, namespace=None):

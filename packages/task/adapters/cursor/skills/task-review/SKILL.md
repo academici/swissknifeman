@@ -11,7 +11,7 @@ Generated Cursor adapter for semantic command `task:review`.
 - Invocation: `task:review <arguments>`
 - Routing: `implementation/high -> composer-2.5/high`
 - Canonical source: `packages/task/commands/review.md`
-- Canonical SHA-256: `sha256:6a7053663d9a111f9d95ddfd5a6e6ec8897b3643f62d95b9734e0c8f03fec9d5`
+- Canonical SHA-256: `sha256:773247933714fd88af3584381ac287f3f86ee25454a71e218b97ec472abc6c42`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as the user prompt.

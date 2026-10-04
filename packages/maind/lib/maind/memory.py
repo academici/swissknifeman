@@ -4,8 +4,8 @@ agent-memory — external Node-demon (@agentmemory/agentmemory on iii-sdk); main
 ORCHESTRATED (start/stop/status), and does not rewrite. Ports are taken from env/config
 (no hardcodes), so as not to conflict with another node (for example Brain).
 
-HTTP-daemon contract: GET /health · POST /memories {namespace,type,text} ·
-GET /search?namespace=&q= → {results:[{score,text}]}."""
+HTTP contract: /agentmemory/health, remember, search, memories and forget.
+All writes have bounded TTL; scoped reads omit expired records."""
 import ipaddress
 import json
 import os
@@ -23,6 +23,7 @@ from core.http import HTTPUnauthorizedError
 from .common import (die, http_get_json, http_post_json, parse_args, pid_alive,
                      ping, warn)
 from .config import load_config
+from . import memory_policy as policy
 from .constants import (DIGEST_BUDGET_CHARS, DIGEST_ITEM_MAX_CHARS, DIGEST_MIN_TAIL_CHARS,
                         DIGEST_SHARED_MAX, DIGEST_TRUNCATE_SUFFIX, MEMORY_HEAVY_TIMEOUT_S,
                         MEMORY_HTTP_PORT, MEMORY_LIGHT_TIMEOUT_S, MEMORY_RETRIES,
@@ -384,48 +385,53 @@ def split_scope(text):
     while True:                       # remove residual leading markers (we do not change the owner)
         m2 = SCOPE_MARK_RE.match(rest)
         if not m2:
-            return owner, rest
+            return owner, policy.unpack(rest)[0]
         rest = rest[m2.end():]
 
 
-def store(url, scope, key, value, headers=None):
+def store(url, scope, key, value, headers=None, *, ttl_hours=policy.DEFAULT_TTL_HOURS,
+          source="internal"):
     """Save fact: POST /agentmemory/remember. scope is embedded in the CONTENT with a marker
     `[[s:<scope>]]` (demon ignores namespace and overrides type — is the only one
     reliable isolation channel on the side maind). `namespace`/`type` we send it as it was - on
     future, if the engine starts to respect them. `headers` — bearer-authentication (ADR-0001),
     without a secret are not transmitted at all (default does not change anything)."""
+    content = policy.envelope(key, value, ttl_hours=ttl_hours, source=source)
+    meta = policy.unpack(content)[1]
     return http_post_json(f"{url}/agentmemory/remember",
-                          {"namespace": scope, "content": mark_scope(scope, value),
-                           "type": key}, headers=headers)
+                          {"namespace": scope, "content": mark_scope(scope, content),
+                           "type": key, "ttlDays": (meta["expires_at"] - meta["created_at"]) / 86400},
+                          headers=headers)
 
 
-EPHEMERAL_KEYS = {"progress", "plan-progress", "checkpoint", "session-log"}
 ACTIVE_HANDOFF_MARKER = "[active-handoff]"
 
 
-def store_managed(url, scope, key, value, headers=None):
-    """Apply the durable-memory write policy before storing a fact.
-
-    Session/checkpoint journals belong in repository artifacts.  ``active-handoff``
-    is the single mutable continuity slot and is replaced atomically enough for the
-    underlying append-only engine (forget old slots, then write one current value).
-    """
-    normalized = (key or "fact").strip().lower()
-    if normalized in EPHEMERAL_KEYS:
-        raise ValueError("ephemeral progress is not durable memory; update the repository "
-                         "handoff or use key=active-handoff")
-    if normalized != "active-handoff":
-        return store(url, scope, key, value, headers=headers)
-    text = value if value.startswith(ACTIVE_HANDOFF_MARKER) else \
-        f"{ACTIVE_HANDOFF_MARKER} {value}"
-    for item in export(url, scope, headers):
-        raw = item.get("content") or item.get("narrative") or item.get("title") or ""
-        owner, clean = split_scope(raw)
-        if owner == scope and (clean or "").startswith(ACTIVE_HANDOFF_MARKER):
-            mid = item.get("id")
-            if mid:
-                forget(url, scope, mid, headers=headers)
-    return store(url, scope, "active-handoff", text, headers=headers)
+def store_managed(url, scope, key, value, headers=None, *, ttl_hours=policy.DEFAULT_TTL_HOURS,
+                  source="internal"):
+    """Validate before I/O; bound live scope size and replace the handoff after a successful write."""
+    normalized = (key or "context").strip().lower()
+    text = value
+    if normalized == "active-handoff" and isinstance(text, str) and not text.startswith(ACTIVE_HANDOFF_MARKER):
+        text = f"{ACTIVE_HANDOFF_MARKER} {text}"
+    policy.envelope(normalized, text, ttl_hours=ttl_hours, source=source)
+    rows = [r for r in export(url, scope, headers) if policy.record_parts(r)[0] == scope]
+    live = [r for r in rows if not policy.prune_reason(r)]
+    old_slots = [r for r in rows if policy.record_parts(r)[1].startswith(ACTIVE_HANDOFF_MARKER)] \
+        if normalized == "active-handoff" else []
+    for row in live:
+        if policy.record_parts(row)[1] == text and normalized != "active-handoff":
+            return {"success": True, "duplicate": True, "memory": {"id": row.get("id")}}
+    if len([r for r in live if r not in old_slots]) >= policy.MAX_SCOPE_ITEMS:
+        raise ValueError("memory scope has 8 live items; forget resolved context before adding more")
+    res = store(url, scope, normalized, text, headers=headers, ttl_hours=ttl_hours, source=source)
+    mid = (res.get("memory") or {}).get("id") if isinstance(res, dict) else None
+    if not mid:
+        raise RuntimeError("memory write returned no id; previous handoff was preserved")
+    for row in old_slots:
+        if row.get("id") and row["id"] != mid:
+            forget(url, scope, row["id"], headers=headers)
+    return res
 
 
 def recall(url, scope, query, limit=RECALL_LIMIT, headers=None):
@@ -436,12 +442,23 @@ def recall(url, scope, query, limit=RECALL_LIMIT, headers=None):
                          {"query": query, "namespace": scope, "limit": limit}, headers=headers)
     results = res.get("results", []) if isinstance(res, dict) else []
     out = []
+    legacy_dump = None
     for r in results:
         obs = r.get("observation") or {}
         raw = (obs.get("narrative") or obs.get("title")
                or " ".join(obs.get("facts") or []))
         sc, text = split_scope(raw)
         if sc != scope:           # alien scope or untagged legacy → isolate
+            continue
+        checked = obs
+        if policy.record_parts(obs)[2] is None and not (obs.get("createdAt") or obs.get("timestamp")):
+            # Search projections may omit legacy creation time. Use one dump, never renew age.
+            if legacy_dump is None:
+                legacy_dump = {m.get("id"): m for m in export(url, scope, headers)}
+            checked = legacy_dump.get(obs.get("id"))
+            if checked is None:
+                continue
+        if checked.get("isLatest") is False or policy.expired(checked):
             continue
         out.append({"score": r.get("score"), "text": text, "id": obs.get("id")})
     # Saturation: the demon returned exactly all candidate-pool (common to all projects) — relevant
@@ -501,7 +518,7 @@ def memory_owner_scope(url, memory_id, scopes, headers=None):
 # ── CLI ─────────────────────────────────────────────────────────────────────
 def cmd_memory(env, argv):
     if not argv or argv[0] in ("-h", "--help"):
-        print("maind memory <start|run|stop|status|remember|recall|forget|count|digest> ...")
+        print("maind memory <start|run|stop|status|remember|recall|forget|count|digest|audit|prune|gc-install> ...")
         return
     sub, rest = argv[0], argv[1:]
     config, _src = load_config(env)
@@ -523,6 +540,9 @@ def cmd_memory(env, argv):
         _cmd_count(env, config, rest)
     elif sub == "digest":
         _cmd_digest(env, config, rest)
+    elif sub in ("audit", "prune", "gc-install"):
+        from .memory_maintenance import cmd_maintenance
+        cmd_maintenance(env, config, sub, rest)
     else:
         die(f"unknown subcommand memory: {sub} "
             "(start|stop|status|remember|recall|forget|count|digest)")
@@ -567,9 +587,10 @@ def _require_daemon(env, config):
 
 def _cmd_remember(env, config, argv):
     opts, pos = parse_args(argv, {"--project": "str", "--scope": "str", "--share": "bool",
-                                  "--type": "str", "--json": "bool"}, max_pos=1)
+                                  "--type": "str", "--ttl-hours": "str", "--json": "bool"}, max_pos=1)
     if opts["help"] or not pos:
-        print('maind memory remember [--project ID | --scope S] [--share] [--type T] "<fact>"')
+        print('maind memory remember [--project ID | --scope S] [--share] [--type T] '
+              '[--ttl-hours 48] "<temporary context>"  # max TTL 72h, max 800 chars')
         return
     url, headers = _require_daemon(env, config)
     _proj, write_scopes, _read = _memory_target(env, config, opts)
@@ -577,7 +598,9 @@ def _cmd_remember(env, config, argv):
     written = []
     for sc in write_scopes:
         try:
-            res = store_managed(url, sc, key, pos[0], headers=headers)
+            res = store_managed(url, sc, key, pos[0], headers=headers,
+                                ttl_hours=float(opts.get("ttl_hours") or policy.DEFAULT_TTL_HOURS),
+                                source="cli")
         except ValueError as e:
             die(str(e))
         mid = (res.get("memory") or {}).get("id") if isinstance(res, dict) else None
@@ -670,7 +693,7 @@ def select_digest_items(raw, private, want, *, limit, budget_chars, item_max_cha
     Returns (items: list[str], dropped: int)."""
     seen, priv_rows, shared_rows = set(), [], []
     for m in raw:
-        if m.get("isLatest") is False:      # superseded version — a newer record replaces it
+        if m.get("isLatest") is False or policy.expired(m):
             continue
         text = m.get("content") or m.get("narrative") or m.get("title") or ""
         sc, clean = split_scope(text)
@@ -754,6 +777,12 @@ def _cmd_digest(env, config, argv):
     except SystemExit:
         return                                   # scope undefined → quiet
     private = read_scopes[0] if read_scopes else None
+    # A persisted node-wide shared_max must not enable cross-project context implicitly.
+    if opts.get("shared_max") not in (None, "") and shared_max > 0 and proj:
+        from .namespaces import recall_scopes
+        read_scopes = recall_scopes(proj, include_shared=True)
+    else:
+        shared_max = 0
     want = set(read_scopes)
     headers = auth_headers(resolve_secret(env, config))
     try:                                         # entire pool (namespace ignore) → filter by marker
@@ -799,6 +828,8 @@ def _cmd_count(env, config, argv):
     per = {sc: 0 for sc in read_scopes}
     seen = set()
     for m in raw:
+        if m.get("isLatest") is False or policy.expired(m):
+            continue
         text = m.get("content") or m.get("narrative") or m.get("title") or ""
         sc, clean = split_scope(text)
         if sc in per:

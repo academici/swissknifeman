@@ -1,8 +1,57 @@
 # Memory (agent-memory)
 
-Long-term memory - external **Node-demon** `@agentmemory/agentmemory` (on `iii-sdk`).
-maind him **orchestrates** (does not rewrite to Python) and speaks HTTP, collecting requests
-for the project.
+Temporary working memory uses the external Node daemon `@agentmemory/agentmemory` (on
+`iii-sdk`). mAInd orchestrates it and enforces scopes, write policy and expiry through its
+HTTP wrappers. Repository files and git own durable knowledge and history.
+
+## Write policy and expiry
+
+All records expire: **48 hours by default, at most 72 hours**. Reading never extends expiry.
+Legacy records without TTL expire within 72 hours of `createdAt`, regardless of `updatedAt`.
+Recall and digest hide expired entries; hourly collection physically deletes them. New writes
+also pass `ttlDays` to the daemon for native `forgetAfter` expiry when supported; the mAInd
+collector remains responsible for legacy records and policy violations.
+
+Store only short useful context that another session needs and cannot simply read from the
+repository. Categories: `context` (`fact` is a compatibility alias), `blocker`, `coordination`,
+`active-handoff`. Maximum 800 characters and 8 live entries per scope. Identical context is
+deduplicated without renewing expiry. One `active-handoff` per scope replaces its predecessor
+after successful storage. Include a repository handoff path and next action, then forget the
+memory when the work finishes. A renewed handoff is an explicit new write, never a side effect
+of reading. Empty working memory is healthy.
+
+Do not store plan decisions, audit/document copies, progress/checkpoints, session logs, code/git
+facts, commit/release history or ecosystem connection seeds. Category rejection and narrow
+structural patterns (`AD01 …`, `P09 designed …`, `[maind:ecosystem-link]`, code/JSON dumps) reject
+obvious copies; individual words such as "plan" are not banned. Semantic usefulness still needs
+agent judgment. Stop words alone cannot establish whether a note is useful.
+
+```bash
+maind memory remember --type blocker --ttl-hours 24 "Temporary blocker and next action"
+maind memory remember --type active-handoff "See plans/current/handoff.md; next: review"
+maind memory audit --all --json             # read-only inventory and proposed deletion reasons
+maind memory prune --all                    # preview only
+maind memory prune --all --apply --json     # exact ids, snapshot first, verify deletion
+maind memory gc-install                     # hourly systemd --user timer on the memory host
+```
+
+`audit`/`prune` default to the current project's private scope; `--scope` or administrator
+`--all` explicitly selects a wider pool. `--ids id1,id2` additionally removes owner-selected
+repository duplicates in that selected pool. Pruning snapshots the exact records into
+`~/.maind/memory-backups/` (directory 0700, files 0600), rechecks candidates for concurrent
+changes and verifies deletion. These local recovery snapshots expire after seven days during
+GC; they are never loaded into agent context. Recover by inspecting the snapshot and rewriting
+only still-useful entries with a fresh bounded TTL. Old journals should stay in repository files.
+
+The timer `maind-memory-gc.timer` runs once per hour and catches missed runs after login.
+Inspect with `systemctl --user status maind-memory-gc.timer` and `journalctl --user -u
+maind-memory-gc.service`. The daemon is not restarted. Already-running MCP sessions need a
+reconnection to load changed Python code; their legacy writes remain subject to collector rules.
+
+Metadata is embedded after the scope marker because the engine rewrites `type` and ignores
+`namespace`: category, creation/expiry, `source` (`cli`, `mcp`, `internal`) and provider when its
+session environment is available. Unknown authors remain `unknown`; no author is fabricated.
+Automatic graph seeds and SessionEnd feature/commit copying are disabled, including on sync.
 
 ## Life cycle
 
@@ -93,11 +142,11 @@ existing nodes do not change behavior). For multiple persistent machines
 > daemon bypass maind (`maind memory` / `maind_memory_*` MCP) — records without marker
 > will be invisible to scoped-recall.
 
-Scope model: seed writes one updated fact about connections only in private
-`project:<id>`. Graph namespaces (`namespaces`) and allowed shared memory areas
+Scope model: memory writes are explicit; connections are read from config/graph without seeds.
+Graph namespaces (`namespaces`) and allowed shared memory areas
 (`memory_namespaces`) are separated. Regular recall reads only `project:<id>`; `ns:<name>`
 is read or written only when explicitly passed `scope`. Automatic publication seed
-not included in the general bucket. Derivation of buckets - `namespaces.py`, seed — `seed.py`. Groups -
+is disabled. Derivation of buckets - `namespaces.py`. Groups -
 [Namespaces](./namespaces).
 
 ## Single write path/read: hook + MCP via maind
@@ -132,10 +181,10 @@ the demon didn't lose in this (otherwise the agent MUST REMEMBER to do `recall` 
   namespace without reservation inflated the start of each session and pulled someone else's group context -
   «negative» only had digest, not at recall/column). When `shared_max=0`, digest prints
   one-line tooltip `(cross-project: maind memory recall --scope ns:<name> — digest
-  project-only)`. Enable shared in the digest explicitly - `--shared-max N` (CLI) or
-  `memory.digest.shared_max` in the project config; then added N the latest shared-facts
-  after private. See «Cross-project task» below - how to raise the general context without changing
-  digest default.
+  project-only)`. Enable shared in the digest explicitly with `--shared-max N` (CLI).
+  A persisted `memory.digest.shared_max` alone cannot authorize cross-project injection;
+  then add N authorized shared records after private. See «Cross-project task» below for explicit
+  access without changing the default.
 
 **Flexible (per-project):** `maind onboard <id> --memory manual|maind|native|off` (default
 `manual`). `maind` clearly includes the old one SessionStart digest; `native` returns auto-memory.
@@ -152,8 +201,8 @@ context in three explicit steps (without changing digest default):
 2. **Group context** — raise shared memory namespace explicit (it's not in the digest):
    `maind memory recall --scope ns:<name> "<request>"` (CLI) or `maind_memory_recall` c with this
    `scope` (MCP).
-3. **Write output** — cross-project fact is written in scope groups, not private `project:<id>`,
-   otherwise other projects in the group will not see it: `maind memory remember --scope ns:<name> "<fact>"`
+3. **Temporary coordination only** — write a short note to an explicitly authorized shared scope
+   only if another project needs it: `maind memory remember --scope ns:<name> --type coordination --ttl-hours 48 "<note>"`
    (CLI) or `maind_memory_store` with `scope: "ns:<name>"` (MCP).
 
 The skill guide with the same guideline was rolled out to each connected project - `ecosystem-mcp`
@@ -165,10 +214,10 @@ code (duplicates/common packages) — separate local skill `cross-project-optimi
 
 The two layers are complementary, **do not duplicate the same fact in both**:
 
-- **maind** (`maind memory` / `maind_memory_*`) — explicit long-term memory: private
+- **maind** (`maind memory` / `maind_memory_*`) — explicit temporary memory: private
   `project:<id>` default, general scope by direct request only. For continuity use
-  key `active-handoff`: new entry replaces old one. Keys `progress`, `checkpoint`,
-  `session-log` rejected - This log belongs to the repository.
+  key `active-handoff`: new entry replaces old one and expires within 72 hours. Plan decisions,
+  progress, checkpoints and journals belong to the repository.
 - **native MEMORY.md** — is disabled when `MODE=maind`. If consciously `--memory native`: only
   small curated set of invariants «always at hand», without copies maind-facts.
 - **file-federation (`MODE=file/federation`, brain `core`)** — legacy, for infranodes only

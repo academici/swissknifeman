@@ -17,6 +17,11 @@ unresolvable selection fails closed.
 
 ## Bundle freshness
 
+For selected-workset closure use `plan-lint.py plans/<ID> --item P4.2 --item P4.3`.
+The scope includes recursive producer dependencies. Future-only `read-budget-v1` and `bundle-v1`
+problems remain visible as `FUTURE_ITEM_NON_GATING` warnings. Current/producer findings and global
+or unclassifiable failures remain errors. Unscoped lint and fleet CI/release remain full gates.
+
 For `Layout | v2` that already carries at least one Bundle v1 in its active phase,
 `plan-lint` checks every `ready` item in that phase. It rebuilds the expected manifest
 in memory and reports declaration

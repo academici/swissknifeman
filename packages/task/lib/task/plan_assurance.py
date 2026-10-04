@@ -112,7 +112,7 @@ def _decision(*, plan_dir: Path, phase_id: str, action: str, code: str,
         "owning-repair": "task:plan-close",
         "owner-review": "task:plan-close",
     }[action]
-    kind = "audit-phase" if audit_required else "close"
+    kind = "audit-phase" if audit_required else None
     return {
         "action": action,
         "audit_required": audit_required,
@@ -124,7 +124,7 @@ def _decision(*, plan_dir: Path, phase_id: str, action: str, code: str,
         "audit_admission": admission,
         "diagnostics": diagnostics or [],
         "next_kind": kind,
-        "next_exact": f"{kind}: {command} {plan_dir.name} {phase_id}",
+        "next_exact": f"{kind}: {command} {plan_dir.name} {phase_id}" if audit_required else None,
     }
 
 

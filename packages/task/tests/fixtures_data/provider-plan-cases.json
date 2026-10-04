@@ -5,7 +5,7 @@
   "plan_commands": {
     "task:plan-design": {"kind": "design-phase", "mode": "fixed", "minimum": ["frontier", "high"], "arguments": ["PLAN", "P4"], "claude": "/task:plan-design PLAN P4", "codex": "$ task:plan-design PLAN P4"},
     "task:plan-run": {"kind": "run-items", "mode": "inherited-plan", "minimum": ["implementation", "high"], "arguments": ["PLAN", "P4.4"], "claude": "/task:plan-run PLAN P4.4", "codex": "$ task:plan-run PLAN P4.4"},
-    "task:plan-close": {"kind": "close", "mode": "fixed", "minimum": ["implementation", "low"], "arguments": ["PLAN", "P4.4"], "claude": "/task:plan-close PLAN P4.4", "codex": "$ task:plan-close PLAN P4.4"},
+    "task:plan-close": {"kind": "close", "mode": "fixed", "minimum": ["implementation", "low"], "arguments": ["PLAN"], "claude": "/task:plan-close PLAN", "codex": "$ task:plan-close PLAN"},
     "task:plan-audit": {"kind": "audit-phase", "mode": "fixed", "minimum": ["frontier", "xhigh"], "arguments": ["PLAN", "P4"], "claude": "/task:plan-audit PLAN P4", "codex": "$ task:plan-audit PLAN P4"}
   },
   "next_kinds": [
@@ -32,7 +32,7 @@
     "design-finish": "design-finish: task:plan-design PLAN finish",
     "design-roadmap": "design-roadmap: task:plan-design PLAN roadmap",
     "audit-phase": "audit-phase: task:plan-audit PLAN P4",
-    "close": "close: task:plan-close PLAN P4.4",
+    "close": "close: task:plan-close PLAN",
     "archive": "archive: task:plan-close archive PLAN",
     "terminal": "terminal: plan closed",
     "manual": "manual: frontier/high P4.4",

@@ -27,4 +27,4 @@ Profile `design`:
 For concurrency, transactions, auth or data integrity, model affected operations/resources/drivers
 together and name invariant enforcement points; lock work checks interfering pairs and implicit
 locks. Handoff implementation and read-only review as separate invocations. A requested review
-names its reviewer explicitly (`--reviewer provider/model`); review does not implement its findings.
+may select a reviewer with optional `--reviewer provider/model`; review does not implement its findings.

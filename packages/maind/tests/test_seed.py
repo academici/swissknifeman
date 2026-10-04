@@ -51,10 +51,10 @@ class TestSeed(unittest.TestCase):
             with FakeMemoryServer() as url:
                 env, config, flex = _setup(tmp, url)
                 r = seed.seed_memory(env, config, flex)
-                self.assertEqual(r["status"], "ok")
-                self.assertTrue(r["changed"])
+                self.assertEqual(r["status"], "skip")
+                self.assertFalse(r["changed"])
                 priv = memory_mod.recall(url, "project:flexcrm", "ecosystem-link")
-                self.assertTrue(any("isolated" in m["text"] for m in priv))
+                self.assertEqual(priv, [])
                 grp = memory_mod.recall(url, "ns:default", "ecosystem-link")
                 self.assertEqual(grp, [])
                 self.assertEqual(memory_mod.recall(url, "global", "ecosystem-link"), [])
@@ -78,7 +78,7 @@ class TestSeed(unittest.TestCase):
                 seed.seed_memory(env, config, flex)
                 r2 = seed.seed_memory(env, config, flex)
                 self.assertFalse(r2["changed"])
-                self.assertEqual(r2["state"], "fresh")
+                self.assertEqual(r2["state"], "disabled")
 
     def test_skip_when_daemon_down(self):
         with tempfile.TemporaryDirectory() as tmp:

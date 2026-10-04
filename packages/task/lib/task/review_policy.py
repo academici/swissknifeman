@@ -251,7 +251,10 @@ def validate_phase_audit_continuation(entry: dict, *, plan_id: str,
     """Bind a persisted audit outcome to the only successor its reducer permits."""
     policy = phase_audit_terminal_policy(entry, plan_dir=plan_dir)
     if entry.get("result") == "audit-green":
-        expected = f"close: task:plan-close {plan_id} {policy['phase_id']}"
+        if plan_dir is None:
+            raise ReviewPolicyError("AUDIT_TERMINAL_CONTINUATION_INVALID", "GREEN audit needs actual plan state")
+        from task import plan_completion
+        expected = plan_completion.successor(plan_dir)
     else:
         expected = policy["continuation"]
     if next_exact != expected:

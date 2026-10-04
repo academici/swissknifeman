@@ -56,32 +56,32 @@
       "provider": "claude",
       "target": ".claude/skills/ecosystem-integration/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/ecosystem-integration/SKILL.md",
-      "canonical_sha256": "8cd383b8dc375dd76840dc44b412163ceee9323b82dceb41e057cb8e27691ab1",
-      "rendered_sha256": "e2bcb4d52d69c16a4984039455e47789bd84e5af2eb7712094123af0450642eb"
+      "canonical_sha256": "b0f1ba4bd0fa95061c3c800e9ceb4350f4911f68659624365e503a780b88caac",
+      "rendered_sha256": "9c5d883fda0b3bf8ff6d656b8fa7fd06bda4c198ec0debb5587cc7f9bb6887a1"
     },
     {
       "identity": "ecosystem-integration",
       "provider": "codex",
       "target": ".agents/skills/ecosystem-integration/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/ecosystem-integration/SKILL.md",
-      "canonical_sha256": "8cd383b8dc375dd76840dc44b412163ceee9323b82dceb41e057cb8e27691ab1",
-      "rendered_sha256": "e2bcb4d52d69c16a4984039455e47789bd84e5af2eb7712094123af0450642eb"
+      "canonical_sha256": "b0f1ba4bd0fa95061c3c800e9ceb4350f4911f68659624365e503a780b88caac",
+      "rendered_sha256": "9c5d883fda0b3bf8ff6d656b8fa7fd06bda4c198ec0debb5587cc7f9bb6887a1"
     },
     {
       "identity": "ecosystem-mcp",
       "provider": "claude",
       "target": ".claude/skills/ecosystem-mcp/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/ecosystem-mcp/SKILL.md",
-      "canonical_sha256": "caeb1bdf5cf3bf3a688bd74692c0600972b4cc0a72b6333ede54e85172e92424",
-      "rendered_sha256": "4519e36a646d63f1e9eb3698a50bbd9fa1944a7f9bc206fef868d25393a51aba"
+      "canonical_sha256": "36db38ffa47fbe15c9e63d7c5d8e7b7430c3d3b76769fdbc4613234fa030e5c7",
+      "rendered_sha256": "29a61a56501ba16e3a9c0a59323ad8d1cbe5942be41da74129757d94289969f7"
     },
     {
       "identity": "ecosystem-mcp",
       "provider": "codex",
       "target": ".agents/skills/ecosystem-mcp/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/ecosystem-mcp/SKILL.md",
-      "canonical_sha256": "caeb1bdf5cf3bf3a688bd74692c0600972b4cc0a72b6333ede54e85172e92424",
-      "rendered_sha256": "4519e36a646d63f1e9eb3698a50bbd9fa1944a7f9bc206fef868d25393a51aba"
+      "canonical_sha256": "36db38ffa47fbe15c9e63d7c5d8e7b7430c3d3b76769fdbc4613234fa030e5c7",
+      "rendered_sha256": "29a61a56501ba16e3a9c0a59323ad8d1cbe5942be41da74129757d94289969f7"
     },
     {
       "identity": "ecosystem-setup",
@@ -104,16 +104,16 @@
       "provider": "claude",
       "target": ".claude/skills/field-feedback-loop/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/field-feedback-loop/SKILL.md",
-      "canonical_sha256": "4f922f96b2e32174862d91b31190817f0b9e245814adab4d47a6ef91b5476f11",
-      "rendered_sha256": "a5bcdc0148641bb4e64964cc646cd2643a0d650205260c9181afc032e0661150"
+      "canonical_sha256": "ce712fb22e299e8ea5be5165779267a636b95abc23203652a51e1d4ddaa63a59",
+      "rendered_sha256": "801b67e58bdc9fa3a12e53becad500f1ed9fef6664ec88cb326fd321240c00f4"
     },
     {
       "identity": "field-feedback-loop",
       "provider": "codex",
       "target": ".agents/skills/field-feedback-loop/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/field-feedback-loop/SKILL.md",
-      "canonical_sha256": "4f922f96b2e32174862d91b31190817f0b9e245814adab4d47a6ef91b5476f11",
-      "rendered_sha256": "a5bcdc0148641bb4e64964cc646cd2643a0d650205260c9181afc032e0661150"
+      "canonical_sha256": "ce712fb22e299e8ea5be5165779267a636b95abc23203652a51e1d4ddaa63a59",
+      "rendered_sha256": "801b67e58bdc9fa3a12e53becad500f1ed9fef6664ec88cb326fd321240c00f4"
     },
     {
       "identity": "harness-operations",
@@ -136,16 +136,16 @@
       "provider": "claude",
       "target": ".claude/skills/maind-overview/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/maind-overview/SKILL.md",
-      "canonical_sha256": "a8d80ee84443796d3130149e1ee488c4f2605c4f42035e5124e98a2d84093bd8",
-      "rendered_sha256": "0b4d2c8eba7dd6844648fc4ac70d36271e9ba6ab8bfef63554776af0d1688fc9"
+      "canonical_sha256": "fcb147b84f6b0c66fa05c68e2db728be4aeda2fa15f70158107d26340ccb1550",
+      "rendered_sha256": "9526b297efbcec786eec8d884197cdd9c46a733597819971f3b4d6d79aab216e"
     },
     {
       "identity": "maind-overview",
       "provider": "codex",
       "target": ".agents/skills/maind-overview/SKILL.md",
       "canonical": "packages/skiller/skills/repository-bootstrap/maind-overview/SKILL.md",
-      "canonical_sha256": "a8d80ee84443796d3130149e1ee488c4f2605c4f42035e5124e98a2d84093bd8",
-      "rendered_sha256": "0b4d2c8eba7dd6844648fc4ac70d36271e9ba6ab8bfef63554776af0d1688fc9"
+      "canonical_sha256": "fcb147b84f6b0c66fa05c68e2db728be4aeda2fa15f70158107d26340ccb1550",
+      "rendered_sha256": "9526b297efbcec786eec8d884197cdd9c46a733597819971f3b4d6d79aab216e"
     },
     {
       "identity": "package-architecture",

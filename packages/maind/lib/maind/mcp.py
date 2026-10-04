@@ -34,13 +34,17 @@ def _graph_reader(env, config):
 
 TOOLS = [
     {"name": "maind_memory_store",
-     "description": "Save fact to long-term memory (scope=namespace; default - scope node).",
+     "description": "Store temporary useful context (48h default, 72h maximum, 800 chars). "
+                    "Project-private by default. No plan journals, decisions or code/git copies; "
+                    "use one active-handoff for continuity.",
      "inputSchema": {"type": "object", "properties": {
          "scope": {"type": "string", "description": "e.g. project:brain or global"},
-         "key": {"type": "string", "description": "fact category (type)"},
+         "key": {"type": "string", "enum": ["context", "fact", "blocker", "coordination", "active-handoff"]},
+         "ttl_hours": {"type": "number", "exclusiveMinimum": 0, "maximum": 72, "default": 48},
          "value": {"type": "string"}}, "required": ["value"]}},
     {"name": "maind_memory_recall",
-     "description": "Long-term memory search in scope (default - scope node).",
+     "description": "Search unexpired working context. Default: own project only. "
+                    "Shared ns/global requires explicit authorized scope.",
      "inputSchema": {"type": "object", "properties": {
          "scope": {"type": "string"}, "query": {"type": "string"}}, "required": ["query"]}},
     {"name": "maind_memory_forget",
@@ -300,7 +304,8 @@ def _run_tool(env, config, name, args, default_scope):
             return denied
         if name == "maind_memory_store":
             return _content(memory_mod.store_managed(
-                url, scope, args.get("key", "fact"), args["value"], headers=headers))
+                url, scope, args.get("key", "context"), args["value"], headers=headers,
+                ttl_hours=args.get("ttl_hours", 48), source="mcp"))
         if name == "maind_memory_recall":
             return _content(_recall_union(config, url, scope, args["query"],
                                           include_related_scopes=False,

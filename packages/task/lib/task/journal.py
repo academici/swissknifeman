@@ -218,6 +218,9 @@ def validate_append_policy(entry, *, plan_dir=None):
     Historical rows with longer notes remain schema-valid and readable.  Only a
     new append is rejected, before any bytes are written.
     """
+    if (entry.get("command") == "plan-close"
+            and re.fullmatch(r"P\d+(?:\.\d+)?", str(entry.get("item_id", "")))):
+        raise JournalValidationError("PLAN_CLOSE_WHOLE_PLAN_ONLY: new phase/item-close lifecycle events are forbidden")
     note = entry.get("note") if isinstance(entry, dict) else None
     if (isinstance(entry, dict) and plan_dir is not None
             and entry.get("command") == "plan-audit"

@@ -1,8 +1,43 @@
 # Roadmap
 
-Implemented 2026-10-04: Task executor/reviewer separation with explicit reviewer selection,
+Implemented 2026-10-04: Task executor/reviewer separation with optional reviewer selection,
 digest-bound owner-review packets, bounded transport/review rounds and invariant-model checks.
 See [Task tooling](task/reference/plan-tooling.md#independent-review-transport).
+
+## Roadmap audit — 2026-10-04
+
+All twelve dated local roadmap records were checked against code and regression evidence,
+not their prose status alone. Earlier fixes were retained; remaining runtime defects were repaired
+in the working tree. This is source qualification, not a release or consumer rollout.
+
+| Record (`2026-10-04-*.md`) | Previously implemented | Audit result / additional work |
+|:--|:--|:--|
+| `executor-reviewer-coupling` | Separate executor/reviewer, bound packets and completed-round budget | Verified; no extra incomplete-attempt budget or silent reviewer substitution |
+| `optional-reviewer-all-task-commands` | Only partly reflected in execution defaults | Reviewer optional; explicit review/audit inherits actual captured native route; cancellation is not GREEN |
+| `committed-predecessor-review` | Immutable first-closure proof | Verified and extended with small source blobs and additive legacy source recovery |
+| `review-candidate-tracking-state` | Inventory-based freshness | Verified; staging/commit presentation remains non-material; product/input/dependency changes still invalidate |
+| `plan-run-owner-invocation-normalization` | Shared parser and exact workset/route matching | Verified; original invocation and full-group suffix behavior retained |
+| `plan-run-reviewer-native-transport` | Native ACP for explicitly sized context | All new automatic Grok reviews now use native ACP; concrete Files expansion and route proof preserved |
+| `long-running-review-liveness` | Selected-session activity, heartbeat and native usage accounting | Verified; no-context routes also receive inactivity-only monitoring; old headless archives remain readable |
+| `declared-phase-execution-order` | Declared chain, predecessor edges and frontier ordering | Verified by existing order regressions; no replacement numerical heuristic introduced |
+| `plan-run-future-read-budget` | No selected-workset lint scope | Added selected-item + recursive producer scope; future bundle/budget failures visible but non-gating; full/fleet lint unchanged |
+| `plan-close-only-whole-plan` | Public phase/item close and phase lifecycle still existed | Whole-plan-only admission, checked acceptance, idempotent plan closure, legacy-history compatibility and safe successor reconciliation |
+| `azguard-plan-run-diagnostics` | Several owning fixes already committed | Remaining source issues above repaired; no product execution or edits in the consumer repository |
+| `codex-plan-run-reviewer-session-audit` | Diagnosis and earlier route/freshness fixes | Added exclusive candidate/attempt validation DAG, native read ledger, source witnesses, compact results/provenance and machine terminal reconciliation; comparative live efficiency/quality eval remains unmeasured |
+
+Qualification includes the Task suite (1,403 tests, one existing skip), generated-command parity
+and canonical registry checks. Local logs: `/tmp/skm-roadmap-final-validation.log`,
+`/tmp/skm-roadmap-registry-check.log`, and `/tmp/skm-roadmap-real-p43-proof.log`.
+The original AzGuard P4.3 closure `554126502890563c02a3ef9b5a19fd71982c3cd0` was also exercised
+in an isolated Git snapshot: two additive Gate/Response witnesses restored historical proof after
+live vendor deletion without changing the original packet, receipt or journal. That closure has no
+immutable `composer.lock`; its recovery explicitly reports `original-lock-not-bound` and invents no
+package version. New packets bind archived lock/package identity when Composer sources are used.
+
+Remaining field work: install/release the qualified source when requested, apply source recovery
+to consumer plans explicitly, and run matched live review/executor quality and latency comparisons.
+Unit regressions, isolated historical proof and coverage ranges are not evidence of model understanding
+or measured token/time savings. No consumer rollout, hosted CI, push, commit or release was performed.
 
 Directions only; order within a block is rough priority. Work starts on measured need, not in anticipation of it.
 

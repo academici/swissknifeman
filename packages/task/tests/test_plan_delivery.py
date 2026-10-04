@@ -120,7 +120,7 @@ class PlanDeliveryTests(unittest.TestCase):
         plan_item_state.build_states(plan, item_id="P1.1")
         if result == "closed-green":
             plan_closure.build_closure(plan, "P1")
-            journal.append(plan, journal.new_entry(
+            legacy = journal.new_entry(
                 plan_id=plan.name,
                 item_id="P1",
                 command="plan-close",
@@ -129,7 +129,9 @@ class PlanDeliveryTests(unittest.TestCase):
                 session_id="session-1",
                 run_id="run-phase-1",
                 fingerprint="b" * 64,
-            ))
+            )
+            with (plan / "journal.jsonl").open("a") as stream:
+                stream.write(json.dumps(legacy) + "\n")
         return plan
 
     def test_cli_renders_shared_final_without_optional_admission_lease(self):
@@ -193,7 +195,7 @@ class PlanDeliveryTests(unittest.TestCase):
             "close: task:plan-close DEMO-DELIVERY P1.1"), encoding="utf-8")
 
         with self.assertRaisesRegex(
-                plan_delivery.DeliveryError, "FINAL_BEFORE_TERMINAL_FORBIDDEN"):
+                plan_delivery.DeliveryError, "PLAN_CLOSE_WHOLE_PLAN_ONLY"):
             plan_delivery.build_terminal_receipt(plan, "P1.1")
 
     def _plan_with_ready_successor(self, *, root=None):
@@ -249,12 +251,15 @@ class PlanDeliveryTests(unittest.TestCase):
         receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")
         self.assertEqual(receipt["continuity"]["outcome"], "terminal")
 
-    def test_last_green_item_requires_inline_phase_closure(self):
+    def test_last_green_item_verifies_acceptance_without_phase_closure(self):
         plan = self._terminal_plan(root=self.root / "phase-closure-required")
         (plan / "phases" / "P1" / "P1.closed.md").unlink()
 
-        with self.assertRaisesRegex(plan_delivery.DeliveryError, "PHASE_CLOSURE_REQUIRED"):
-            plan_delivery.build_terminal_receipt(plan, "P1.1")
+        original = (plan / "journal.jsonl").read_bytes()
+        receipt = plan_delivery.build_terminal_receipt(plan, "P1.1")
+        self.assertEqual(receipt["status"], "🟢 Done")
+        self.assertIsNone(receipt["digests"]["closure"])
+        self.assertEqual((plan / "journal.jsonl").read_bytes(), original)
 
     def test_terminal_non_green_item_keeps_ordinary_handoff(self):
         for result, expected_status in (
@@ -432,18 +437,20 @@ class PlanDeliveryTests(unittest.TestCase):
                 plan_delivery.DeliveryError, "AUDIT_VERDICT_EVENT_MISMATCH"):
             plan_delivery.build_handoff_receipt(plan, "P1")
 
-    def test_phase_audit_green_receipt_binds_close_successor(self):
+    def test_phase_audit_green_receipt_binds_actual_plan_successor(self):
         plan = write_valid_plan(self.root, "DEMO-AUDIT-GREEN", layout="v2")
+        (plan / "phases/P1/P1.2.md").write_text((plan / "phases/P1/P1.1.md").read_text().replace("P1.1", "P1.2"))
+        plan_item_state.build_states(plan, item_id="P1.2", materialize_successor=False)
         phase = plan / "phases" / "P1" / "P1.md"
         phase.write_text(
             phase.read_text(encoding="utf-8")
             + "\n## Audit P1 — 2026-08-13\n\n**Verdict: GREEN**\n\n"
             "### What to run\n\n"
-            "Semantic Next: `close: task:plan-close DEMO-AUDIT-GREEN P1`.\n\n"
+            "Semantic Next: `run-items: task:plan-run DEMO-AUDIT-GREEN P1.2`.\n\n"
             "| Batch | Model | Thinking | Context | The bottom line | Command |\n"
             "|:--|:--|:--|:--|:--|:--|\n"
             "| n/a | implementation | high | `continue-root` | close | "
-            "`$ task:plan-close DEMO-AUDIT-GREEN P1` |\n",
+            "`$ task:plan-run DEMO-AUDIT-GREEN P1.2` |\n",
             encoding="utf-8",
         )
         journal.append(plan, journal.new_entry(
@@ -453,7 +460,7 @@ class PlanDeliveryTests(unittest.TestCase):
         ))
         receipt = plan_delivery.build_handoff_receipt(plan, "P1")
         self.assertEqual(
-            receipt["next_exact"], "close: task:plan-close DEMO-AUDIT-GREEN P1")
+            receipt["next_exact"], "run-items: task:plan-run DEMO-AUDIT-GREEN P1.2")
         self.assertEqual(receipt["continuity"]["reason"], "compatible-active-work")
         self.assertEqual(receipt["digests"]["handoff"], plan_delivery.file_digest(phase))
 
@@ -497,11 +504,13 @@ class PlanDeliveryTests(unittest.TestCase):
 
     def test_terminal_phase_and_archive_receipts_are_supported(self):
         phase_plan = self._terminal_plan()
-        journal.append(phase_plan, journal.new_entry(
+        legacy = journal.new_entry(
             plan_id=phase_plan.name, item_id="P1", command="plan-close",
             actor="implementation/high", result="closed-green", session_id="session-phase",
             run_id="run-phase", fingerprint="c" * 64,
-        ))
+        )
+        with (phase_plan / "journal.jsonl").open("a") as stream:
+            stream.write(json.dumps(legacy) + "\n")
         phase_receipt = plan_delivery.build_terminal_receipt(phase_plan, "P1")
         self.assertEqual(phase_receipt["status"], "🟢 Done")
         self.assertEqual(phase_receipt["journal"]["run_id"], "run-phase")

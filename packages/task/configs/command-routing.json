@@ -1,7 +1,7 @@
 {
   "contract_version": "1.0.0",
   "catalog_version": "1.0.0",
-  "plugin_version": "0.28.0",
+  "plugin_version": "0.28.2",
   "commands": [
     {
       "command_id": "task:design",
@@ -72,7 +72,7 @@
       "command_id": "task:make-workflow",
       "kind": "workflow-authoring",
       "source": "packages/task/commands/make-workflow.md",
-      "argument_contract": "workflow type and purpose plus explicit --reviewer provider/model",
+      "argument_contract": "workflow type and purpose; optional --reviewer provider/model adds independent review",
       "output_contract": "plan-owned workflow projection plus static review verdict",
       "routing": {
         "mode": "fixed",
@@ -114,7 +114,7 @@
       "command_id": "task:review",
       "kind": "intent",
       "source": "packages/task/commands/review.md",
-      "argument_contract": "code/doc artifact reference or plan ID/item plus explicit --reviewer provider/model",
+      "argument_contract": "code/doc artifact reference or plan ID/item; optional --reviewer provider/model overrides the captured native route",
       "output_contract": "risk-scaled read-only findings",
       "routing": {
         "mode": "fixed",
@@ -189,7 +189,7 @@
       "command_id": "task:plan-close",
       "kind": "plan-protocol",
       "source": "packages/task/commands/plan-close.md",
-      "argument_contract": "plan ID plus item, phase or archive mode",
+      "argument_contract": "plan ID only closes the whole plan; explicitly requested archive mode remains separate",
       "output_contract": "reconciled/closed/archived plan state",
       "routing": {
         "mode": "fixed",
@@ -216,7 +216,7 @@
       "command_id": "task:plan-audit",
       "kind": "plan-protocol",
       "source": "packages/task/commands/plan-audit.md",
-      "argument_contract": "plan ID plus phase or design mode plus explicit --reviewer provider/model",
+      "argument_contract": "plan ID plus phase or design mode; optional --reviewer provider/model overrides the captured native route",
       "output_contract": "append-only independent audit verdict",
       "routing": {
         "mode": "fixed",

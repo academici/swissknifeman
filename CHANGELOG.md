@@ -2,7 +2,24 @@
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-10-04
+
 ### Added
+
+- **Task executor/reviewer:** выполнение и read-only ревью разделены на отдельные
+  invocation; `review`/`plan-audit` явно принимают `--reviewer provider/model`.
+  `plan-run <план> <фаза/пункты> --reviewer provider/model` автоматически запускает
+  независимое item review и одно исправление без второй команды владельца;
+  выбор сохраняется при resume и не меняет модель исполнителя или frozen spec.
+  Reviewer допускает свободные suffixes контекста/effort и завершающий `/`
+  (`grok/grok-4.7/500k/high/`, `.../hight/`); размер окна подтверждает провайдер,
+  расходный token budget не вводится и неизвестное окно не запускает слепой повтор.
+  `plan-work.py review-packet|review-run|review-record|review-status` связывает
+  spec, product и evidence с дайджестом, ограничивает packet 80 КБ, проверяет
+  реальную модель/сессию Grok и архивирует неполные попытки без GREEN.
+  Явный `owner-review` блокирует item close до текущего GREEN; системные риски
+  требуют модели инвариантов и self-check. Повтор класса/области меняет тактику,
+  два завершённых раунда и две неполные попытки имеют раздельные бюджеты.
 
 - **Grok task plugin:** `install.sh` добавляет локальный marketplace и ставит
   плагин `packages/task` и `packages/task/adapters/grok/prefix-hold` командой
@@ -30,6 +47,14 @@
   `harness permissions` мержит в `.claude/settings.local.json`.
 
 ### Fixed
+
+- **Grok PreToolUse hook:** generated `.grok/hooks/lifecycle.py` now normalizes
+  Grok's camelCase envelope instead of silently exiting 2 on the Claude-only
+  schema. Until mAInd is connected it keeps `maind health --cwd`/`--fix` and
+  required bootstrap reads available; a real denial emits Grok's structured
+  `reason` and `hookSpecificOutput` fields as well as stderr. Malformed payloads,
+  unknown tool names, unavailable `maind`, and probe timeouts fail open with a
+  diagnostic rather than bricking the session.
 
 - **Task phase acceptance:** GREEN-закрытие после owning repairs проверяет полный
   inventory исторического RED review, admitted repeats, terminal evidence,

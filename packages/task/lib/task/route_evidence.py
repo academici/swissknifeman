@@ -487,6 +487,13 @@ def capture_launch(*, expected_invocation: str, expected_cwd: str | Path,
     if not semantic.startswith("task:"):
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_MISMATCH", "expected invocation must use semantic task:<command> form")
+    from task import review_packet
+    try:
+        review_selection = review_packet.invocation_selection(semantic)
+    except review_packet.ReviewError as exc:
+        raise RouteEvidenceError(exc.code, str(exc)) from exc
+    if review_selection and review_selection["provider"] != provider:
+        raise RouteEvidenceError("REVIEW_ROUTE_MISMATCH", "launch the explicitly selected reviewer provider")
     catalog = load_projection_catalog()
     spec = projection_spec(catalog, ProviderId(provider))
     if spec is None:
@@ -494,11 +501,15 @@ def capture_launch(*, expected_invocation: str, expected_cwd: str | Path,
             "ROUTE_LAUNCH_UNAVAILABLE", f"provider {provider!r} has no route adapter")
     module = importlib.import_module(f"task.{spec.route_evidence.adapter}")
     native_invocation = spec.route_evidence.semantic_prefix + semantic
-    return module.capture_current(
+    actual = module.capture_current(
         expected_invocation=native_invocation,
         expected_cwd=expected_cwd,
         **adapter_options,
     )
+    if review_selection and (actual.get("model") != review_selection["model"]
+                             or actual.get("effort") != review_selection["effort"]):
+        raise RouteEvidenceError("REVIEW_ROUTE_MISMATCH", "captured reviewer model/effort differs from explicit arguments")
+    return actual
 
 
 def build_run_receipt(*, plan_id: str, item_id: str, attempt: int, session_id: str,

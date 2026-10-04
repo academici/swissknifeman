@@ -24,7 +24,7 @@ from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_
                                   metadata_value)
 
 
-ADAPTER_VERSION = "1.0.17"
+ADAPTER_VERSION = "1.0.18"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 PROVIDER_LOCK_OWNER = "task.codex"
 _MAPPING_KEYS = frozenset({
@@ -558,9 +558,22 @@ def plan_provider_invocation(
             "provider projection is not enabled")
         return PlanProviderInvocation(carrier, None, None, None,
                                       tuple(diagnostics + [diagnostic]))
-    return PlanProviderInvocation(
-        carrier, invocation, dict(mapping.class_selectors)[observed_class][0],
-        dict(mapping.effort_selectors)[observed_effort][0], tuple(diagnostics))
+    model_selector = dict(mapping.class_selectors)[observed_class][0]
+    effort_selector = dict(mapping.effort_selectors)[observed_effort][0]
+    if record.command_id == "task:plan-audit" and any(
+            value == "--reviewer" or value.startswith("--reviewer=") for value in carrier.arguments):
+        from task import review_packet
+        try:
+            selected = review_packet.invocation_selection(f"{record.command_id} {arguments}")
+            if selected["provider"] != mapping.provider_id or selected["effort"] != observed_effort:
+                raise review_packet.ReviewError("REVIEW_ROUTE_MISMATCH", "render with the selected provider and effort")
+            model_selector = selected["model"]
+            effort_selector = dict(mapping.effort_selectors)[selected["effort"]][0]
+        except review_packet.ReviewError as exc:
+            diagnostic = _diag("CMD_REVIEWER_ROUTE_MISMATCH", record, "/routing/reviewer", {},
+                               {"error": str(exc)}, mapping, "explicit reviewer cannot be substituted")
+            return PlanProviderInvocation(carrier, None, None, None, tuple(diagnostics + [diagnostic]))
+    return PlanProviderInvocation(carrier, invocation, model_selector, effort_selector, tuple(diagnostics))
 
 
 def validate_route(record: CommandRecord, observed_class: str, observed_effort: str,
@@ -1760,11 +1773,11 @@ def _claude_frontmatter_diagnostics(
                       {"error": str(error)}, mapping,
                       "Claude command frontmatter is malformed"),)
 
-    if record.routing.mode == "inherited-plan":
+    if record.routing.mode == "inherited-plan" or record.command_id in {"task:review", "task:plan-audit"}:
         observed = {key: fields.get(key) for key in ("model", "effort") if key in fields}
         if observed:
             return (_diag("CMD_SOURCE_DRIFT", record, "/frontmatter/routing", {}, observed,
-                          mapping, "inherited-plan Claude command must not pin model or effort"),)
+                          mapping, "inherited/explicit-reviewer Claude command must not pin model or effort"),)
         return ()
 
     classes, efforts = dict(mapping.class_selectors), dict(mapping.effort_selectors)
@@ -1897,5 +1910,4 @@ def _required_string(value: object, label: str) -> str:
 
 def _json_bytes(value: object) -> bytes:
     return (json.dumps(value, sort_keys=True, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
-
 

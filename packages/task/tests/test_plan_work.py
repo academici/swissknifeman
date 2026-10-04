@@ -39,6 +39,40 @@ class PlanWorkTests(unittest.TestCase):
                                  actor="test/medium", session_id="test-session",
                                  actual_route=self.actual)
 
+    def test_prepare_explicit_reviewer_persists_automatic_selection_without_spec_rewrite(self):
+        from task import review_packet
+        spec = self.plan / "phases/P1/P1.1.md"
+        original = spec.read_bytes()
+        actual = {**self.actual, "invocation": "task:plan-run WORK P1.1 --reviewer grok/grok-4.7"}
+        result = plan_work.prepare(self.plan, "P1.1", command="plan-run",
+                                   actor="test/medium", session_id="test-session",
+                                   actual_route=actual, reviewer="grok/grok-4.7")
+        self.assertEqual(result["owner_review"]["reviewer"], "grok/grok-4.7")
+        self.assertEqual(spec.read_bytes(), original)
+        self.assertEqual(review_packet.review_request(self.plan, "P1.1")["executor_session"], "test-session")
+        self.assertEqual(self.prepare()["owner_review"]["reviewer"], "grok/grok-4.7")
+
+    def test_phase_launch_preserves_owner_invocation_and_refuses_cross_phase_items(self):
+        actual = {**self.actual, "invocation": "task:plan-run WORK P1 --reviewer grok/grok-4.7"}
+        with patch("task.route_evidence.capture_launch", return_value=actual) as capture:
+            plan_work.prepare(self.plan, "P1.1", command="plan-run", actor="test/medium",
+                              session_id="test-session", reviewer="grok/grok-4.7", phase="P1")
+        self.assertEqual(capture.call_args.kwargs["expected_invocation"], actual["invocation"])
+        before = (self.plan / "journal.jsonl").read_bytes()
+        with self.assertRaisesRegex(plan_work.WorkError, "PLAN_WORK_INVALID_TARGET"):
+            plan_work.prepare(self.plan, "P1.1", command="plan-run", actor="test/medium",
+                              session_id="test-session", phase="P2")
+        self.assertEqual((self.plan / "journal.jsonl").read_bytes(), before)
+
+    def test_free_reviewer_effort_is_normalized_without_changing_owner_invocation(self):
+        actual = {**self.actual, "invocation": "task:plan-run WORK P1 --reviewer grok/grok-4.7/hight/"}
+        with patch("task.route_evidence.capture_launch", return_value=actual) as capture:
+            result = plan_work.prepare(self.plan, "P1.1", command="plan-run", actor="test/medium",
+                                       session_id="test-session", reviewer="grok/grok-4.7/hight/", phase="P1")
+        self.assertEqual(capture.call_args.kwargs["expected_invocation"], actual["invocation"])
+        self.assertEqual(result["owner_review"]["effort"], "high")
+        self.assertEqual(result["owner_review"]["reviewer"], "grok/grok-4.7")
+
     def add_supporting_artifacts(self):
         phase = "P1"
         normative = (

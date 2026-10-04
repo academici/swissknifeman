@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:935aada204a20d8c64fffcc115ce12903ff4146460e0096d0afd4ede3e00189b
-Adapter: task.codex-command/1.0.17
+Canonical SHA-256: sha256:c916e623fb53025ace1439decbeed4e06ee9043f8bea87a17f0661cb418f6dde
+Adapter: task.codex-command/1.0.18
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
 
@@ -100,7 +100,14 @@ and a same-root recommendation; the owner may invoke execution in this session.
 Plan the shape of review, not a ritual: item Review defaults to `none` (self-check plus affected
 tests). Independent review is a dedicated read-only item (`Review Pn`, numeric `Pn.m`, Deliverable =
 verdict file) at the end of the phase; a large phase gets slice review items between slices. Never
-write `Independent review` into an item's Validation. Routing names a minimum semantic class; the
+write implicit `Independent review` into every item's Validation. An explicit owner-requested
+`owner-review: provider/model` carrier is allowed, with a separate review invocation and bounded
+packet/receipt. `plan-run --reviewer` may orchestrate independent review and one owning correction
+automatically; no recursive/unbounded re-review is admitted. Review commands explicitly name
+`--reviewer provider/model`. Systemic work declares `risk-class` and `invariant-model` in
+Implementation Rules, binds the model in Inputs/Required Reads and declares `self-check` in
+Validation; the model covers all interfering operations/resources/drivers, not just local actions.
+Routing names a minimum semantic class; the
 Executor/Reviewer cells of the execution sheet are recommended defaults from the provider model
 pool, so the owner may swap models inside the pool without editing the plan.
 

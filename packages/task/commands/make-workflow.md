@@ -1,12 +1,20 @@
 ---
 disable-model-invocation: true
 description: "Explicit workflow authoring: fill a canonical template and validate its stages."
-argument-hint: "[workflow type and objective: development | design | audit | orchestration target]"
+argument-hint: "<workflow type and objective> --reviewer <provider/model>"
 model: sonnet
 effort: high
 ---
 Activate only for an explicit request to create a workflow script. Ordinary development and research do
 not need this path. User input: `$ARGUMENTS`. The route is pinned to Sonnet/high.
+
+Read reviewer selection from explicit `--reviewer provider/model`; require it before generating
+a review-capable run or admitting the output review. The reviewer is a fresh read-only session
+under that selected route, not the workflow author's own evaluation.
+Accept optional context/effort suffixes and trailing `/` through `task.review_packet.reviewer`:
+`provider/model/500k/`, `provider/model/high/`, `provider/model/500k/high/` (`hight` = high).
+Fill model and effort slots from the parsed values, not the entire slash expression. Preserve
+context as a provider-proven capacity requirement; never reinterpret it as a spend budget.
 
 Copy and fill a canonical template; do not write orchestration from scratch.
 
@@ -65,11 +73,13 @@ Have one read-only reviewer inspect, not execute, the generated script against e
 - Top-level `return report` is accepted as the workflow runtime idiom.
 - A `dev` workflow contains slice, implementation, tests-to-green, risk-adaptive review, inter-slice gates,
   and commit stages.
-- A `design-only` workflow contains retrieval, design in the main loop, adversarial audit or DoR gate,
-  repair, and re-audit, with no implementation, test, or SemVer stage.
+- A `design-only` workflow contains retrieval, design in the main loop, separate read-only audit or
+  DoR gate and one owning correction; a bounded re-audit needs changed evidence. It contains no
+  implementation, test, or SemVer stage.
 
 The verdict is `GREEN` or `RED` with concrete invariant, location, and failure details. `RED` blocks delivery:
-repair and rerun the review, with at most three passes; then escalate remaining violations to the main loop.
+return one owning correction and allow at most two completed review passes. A repeated systemic
+class/area changes the shared model; exhaustion needs an explicit bounded decision in the main loop.
 Only `GREEN` releases `plans/<ID>/workflows/wf-<code-name>-<purpose>.js`.
 
 Return the script path, workflow type, and reviewer verdict. For `RED`, return violations and repair status

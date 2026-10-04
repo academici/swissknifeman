@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.38.1
+version: 2.40.0
 description: "Use when an explicitly invoked Task plan command needs a schema reference."
 when_to_use: "Only after explicit Task invocation, when a named plan schema detail is needed."
 disable-model-invocation: true
@@ -282,13 +282,27 @@ defaults, not admission contracts. Only a lower class stops (`ROUTE_UNDERSHOOT`)
 Review shape is part of the plan, not an item ritual: item Review defaults to `none` (self-check and
 affected tests). Independent review is a dedicated read-only review item (`Review Pn`, numeric `Pn.m`,
 Exec `run`, Deliverable = verdict file) at the end of a phase; a large phase gets slice review
-items between slices. Never put `Independent review` into an item's Validation. Findings get one
-owning correction; the re-review checks only the findings. The reviewer is a fresh session; another
+items between slices. Explicit owner-requested item review may instead declare
+`owner-review: <provider/model>` in Validation; it runs in a separate review invocation and
+blocks close until the selected reviewer accepts the current digest-bound candidate.
+`plan-run ... --reviewer provider/model` explicitly requires automatic independent review of
+each requested implementation item; prepare persists the selection without rewriting frozen specs.
+The root orchestrates fresh reviewer sessions, one owning correction and at most two completed
+rounds without another owner command. Launching transport is not acting as the reviewer.
+Findings get one owning correction; local re-review checks findings and their changed dependency
+closure, while systemic re-review checks the affected invariant model and risk class.
+The reviewer is a fresh session; another
 model only for a named hard risk or an owner requirement, picked from pool entries tagged `review`.
 Choose Review from concrete item risk: ordinary low-risk work uses self-check and
 affected tests, bounded integration adds the necessary package/integration check, and independent
 review requires a named hard risk or explicit owner requirement. Uncertainty gathers evidence rather
 than defaulting to full. A batch inherits its highest justified review depth.
+Review commands require `--reviewer <provider/model>`; actual provider route must match.
+Declare `risk-class: concurrency|transaction|auth|data-integrity` and
+`invariant-model: <plan-relative path>` in Implementation Rules for systemic work, plus
+`self-check: <plan-relative path>` in Validation. Lint checks the model exists; the executor
+records adversarial self-check evidence before handoff. Review packets and verdicts use
+[review mode](references/review-mode.md)'s bounded transport and class-based recurrence policy.
 `task_contract.resolve_exec` owns execution-mode normalization for both compiler and lint.
 There is one execution mode, `run`; legacy `plan-exec`, `manual` and `plan-run` resolve to it. The raw
 cell stays in `declared_exec` and routing digests. Unknown spellings fail closed; alias resolution

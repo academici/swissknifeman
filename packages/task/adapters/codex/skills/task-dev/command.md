@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/dev.md
-Canonical SHA-256: sha256:20a4afec35b75c41cefc1ddbea0869cbce277b62046d9400b5624372863ef275
-Adapter: task.codex-command/1.0.17
+Canonical SHA-256: sha256:834fdddee1a8364ae761a0de25bc4cfab9a2100ef5cd5348a92b74b463b0e99e
+Adapter: task.codex-command/1.0.18
 -->
 
 This is a DEVELOPMENT task. User input: `$ARGUMENTS`.
@@ -24,6 +24,13 @@ Start with focused checks of changed behavior. Add package or integration checks
 Security, public API, concurrency, or irreversible effects require broader verification and independent
 review. Run explicitly requested checks. Report a foreign red baseline and determine whether it intersects
 scope or dependency closure.
+
+Independent review is a separate read-only invocation with explicit `--reviewer provider/model`,
+not a nested part of the executor's repair loop. Prepare the scoped candidate and evidence, then
+return the review handoff; reviewer findings return one owning correction. Systemic concurrency,
+transaction, auth and data-integrity work first establishes a shared invariant model and records
+adversarial self-check evidence. A second finding in the same class/area changes tactics to that
+model; do not repeat local patches or silently exceed the bounded review budget.
 
 Repair authorized reversible defects until the result is ready. File count, an exhausted audit budget, or a
 recommended Next does not override Scope or Acceptance. External writes, changed Acceptance, and unavailable

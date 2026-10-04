@@ -17,6 +17,7 @@ it was possible to return to them directly.
 
 | Source | What | Maturity | Verdict | Taken from swissknifeman |
 |:--|:--|:--|:--|:--|
+| [Anthropic: Building effective agents](https://www.anthropic.com/engineering/building-effective-agents), [xAI headless CLI](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/14-headless-mode.md), [xAI permissions](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/22-permissions-and-safety.md) | Separate generator/evaluator calls, stopping conditions, exact Grok transport and tool permissions | Primary sources opened after Perplexity discovery, 2026-10-04; installed `grok --help` checked | **adopt (pattern and adapter contract)** | Task independent reviewer route, bounded attempts, JSON stopReason/modelUsage checks; read-only built-ins plus explicit MCP/shell/write denial. Two-round/80 KB limits and class/area recurrence are repository policy derived from the vaulter incident, not upstream guarantees. No external runtime dependency. |
 | [OpenAI — Build skills](https://learn.chatgpt.com/docs/build-skills) + [Model guidance](https://developers.openai.com/api/docs/guides/latest-model) | Initial skills-list budget, metadata/body disclosure, duplicate-name discovery and the sensitivity of the model to conflicting instructions | Primary pages opened and reviewed 2026-09-14; CLI 0.154.0 locally | **reference (audit and local implementation)** | 232 canonical skills, three consumer roots, five today roadmap incidents. Runtime inventory/character proxy are separated from provider usage; double delivery elimination recommended, short Codex hub and approval authority/continuity/final. |
 | [OpenAI model guidance](https://developers.openai.com/api/docs/guides/latest-model), [Build skills](https://learn.chatgpt.com/docs/build-skills), [AGENTS.md discovery](https://learn.chatgpt.com/docs/agent-configuration/agents-md); [Gloaguen et al. v2](https://arxiv.org/abs/2602.11988), [Lulla et al. v2](https://arxiv.org/abs/2601.20404), [SkillsBench v4](https://arxiv.org/abs/2602.12670) | Impact of conflicting instructions, progressive disclosure and matched usefulness rating skills/context files | First-party + primary research; Perplexity discovery and direct reading of primary pages 2026-09-10 | **reference** | Simplification audit: remove confirmed process conflicts; maintain non-standard restrictions and tools; do not consider the length of the files as evidence token savings and do not delete skills by zero direct calls. Implementation ordered as a separate session without a new plan; internal report is stored locally according to directory policy audits. |
 | Official spec Claude Code | subagents/skills/hooks/plugins, «steering» | first-party, active | **adopt** | canon frontmatter subagent (`name/description+<example>/tools/model/color`), hook contracts, progressive disclosure |
@@ -93,6 +94,26 @@ it was possible to return to them directly.
 | Inbound owner audit (Perplexity, 2026-07-29) — is pinned in | summary external analysis of monorepo: skills/token-budget, matrix role × stack, transfer from `wshobson/agents` and Anthropic multi-agent research, target structure of the repository, what to add to the documents | one-time parsing, the snapshot is pinned and immutable; adjudicated by code 2026-07-29 | **reference** (partially **adopt**: §11-rules 1 and 4, §7 policy-layer, §12) | **Disclaimer: the audit is compiled according to public README, and not wood** — six of its eight core recommendations have already been implemented (agent-packs, bucket crushing, role × stack, model-shooting galleries, provider-contract), and he proposed what had already been rejected, because the provenance catalogs lagged behind what was decided. Accepted: root always-on context = short index; spawn by context budget; delegation contract as a required form; updating the frame canon (the input itself `framework-overview.md` went bad and generated false audit sections). Rejected - [rejected-optimizations](./rejected-optimizations.md) (§10.1/§10.2/§10.3/§10.5). Section-by-section verdict - /research/01-audit-adjudication.md` |
 
 ## Cards
+
+### Executor/reviewer separation (2026-10-04)
+
+Perplexity retrieval and direct primary-source search agree that generator/evaluator calls should
+have clear evaluation criteria and bounded stopping conditions. Anthropic does not require two
+different models or prescribe a universal iteration count; Task requires a different session and
+the explicitly selected reviewer, with its own two-round policy based on measured field looping.
+One `plan-run --reviewer` owner invocation may orchestrate these separate sessions automatically;
+independence does not require manual user handoffs or an unrelated third orchestration process.
+Grok docs confirm `--prompt-file`, JSON completion/session/usage fields and built-in tool filtering.
+They also state that MCP meta-tools remain available after `--tools`; `plan` permission mode is
+compatibility syntax. Task therefore denies MCP/shell/edit/write explicitly and disables nested
+agents. The 80,000-byte packet ceiling is a conservative repository limit, not a documented Grok
+prompt maximum. Live model latency/cost and the next vaulter concurrency item remain field
+measurements; deterministic transport/closure tests do not establish the roadmap's future target.
+Flexible reviewer context suffixes are capacity requirements, not consumption budgets. The
+[xAI headless guide](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/14-headless-mode.md)
+documents the current model's `contextWindow` in streaming-messages-json output and notes that
+the field is absent when unknown. Task verifies that evidence and does not invent a CLI context
+override or rewrite global provider configuration. Insufficient/unknown capacity is not auto-retried.
 
 ### LLM-as-a-Judge — reference (boundaries `return-judgement` v1)
 

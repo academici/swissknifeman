@@ -27,6 +27,13 @@ Security, public API, concurrency, or irreversible effects require broader verif
 review. Run explicitly requested checks. Report a foreign red baseline and determine whether it intersects
 scope or dependency closure.
 
+Independent review is a separate read-only invocation with explicit `--reviewer provider/model`,
+not a nested part of the executor's repair loop. Prepare the scoped candidate and evidence, then
+return the review handoff; reviewer findings return one owning correction. Systemic concurrency,
+transaction, auth and data-integrity work first establishes a shared invariant model and records
+adversarial self-check evidence. A second finding in the same class/area changes tactics to that
+model; do not repeat local patches or silently exceed the bounded review budget.
+
 Repair authorized reversible defects until the result is ready. File count, an exhausted audit budget, or a
 recommended Next does not override Scope or Acceptance. External writes, changed Acceptance, and unavailable
 dependencies require the corresponding authority or readiness. Repeated failure without new evidence requires

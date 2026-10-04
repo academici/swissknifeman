@@ -166,7 +166,7 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻503"]:::warm
-    plan_protocol["plan-protocol<br/>⊕26 ↻10784"]:::cool
+    plan_protocol["plan-protocol<br/>⊕26 ↻11132"]:::cool
     project_map["project-map<br/>⊕83 ↻618"]:::warm
     session_handoff["session-handoff<br/>⊕29 ↻590"]:::cool
     shell["shell<br/>⊕73 ↻1989"]:::warm
@@ -174,7 +174,7 @@ flowchart LR
     spec_interview["spec-interview<br/>⊕35 ↻725"]:::mild
     task_brief_template["task-brief-template<br/>⊕47 ↻1176"]:::warm
     verify_claims["verify-claims<br/>⊕41 ↻341"]:::mild
-    workflow_craft["workflow-craft<br/>⊕48 ↻3304"]:::warm
+    workflow_craft["workflow-craft<br/>⊕48 ↻3538"]:::warm
     writing_style["writing-style<br/>⊕98 ↻1819"]:::hot
   end
   subgraph laravel_architecture["laravel-architecture"]
@@ -313,7 +313,7 @@ flowchart LR
     project_tooling_runbook["project-tooling-runbook<br/>⊕42 ↻7466"]:::mild
     release_discipline["release-discipline<br/>⊕64 ↻1488"]:::warm
     skill_authoring["skill-authoring<br/>⊕44 ↻1846"]:::warm
-    task_development_philosophy["task-development-philosophy<br/>⊕74 ↻3531"]:::warm
+    task_development_philosophy["task-development-philosophy<br/>⊕74 ↻3745"]:::warm
   end
   subgraph research["research"]
     query_craft["query-craft<br/>⊕35 ↻257"]:::mild
@@ -437,14 +437,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 232 skills · ⊕ always **12586** current (is always resident if you include the entire registry) · ↻ bodies 311079 current · ⌥ on-demand 847518 current (snippets + references).
+**Total:** 232 skills · ⊕ always **12586** current (is always resident if you include the entire registry) · ↻ bodies 311875 current · ⌥ on-demand 850300 current (snippets + references).
 
 ## By buckets
 
 | Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1260 | 33570 | 30565 |
-| `repository-bootstrap` | 14 | 1047 | 30040 | 0 |
+| `general` | 22 | 1260 | 34152 | 33347 |
+| `repository-bootstrap` | 14 | 1047 | 30254 | 0 |
 | `architect` | 15 | 937 | 19786 | 33082 |
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |
 | `blender-modeling` | 7 | 582 | 11542 | 13519 |
@@ -516,11 +516,11 @@ The heaviest bodies are loaded when using the skill.
 
 | Skill | Bucket | current |
 |---|---|--:|
-| `plan-protocol` | general | 10784 |
+| `plan-protocol` | general | 11132 |
 | `project-tooling-runbook` | repository-bootstrap | 7466 |
+| `task-development-philosophy` | repository-bootstrap | 3745 |
 | `package-architecture` | repository-bootstrap | 3698 |
-| `task-development-philosophy` | repository-bootstrap | 3531 |
-| `workflow-craft` | general | 3304 |
+| `workflow-craft` | general | 3538 |
 | `mcp-advisor` | general | 3188 |
 | `voice-ai` | voice-ai | 3165 |
 | `modular-architecture` | laravel-architecture | 3112 |

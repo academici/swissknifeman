@@ -28,3 +28,17 @@ Run an item's affected checks only; broad suites run once in the phase's review/
 Keep large logs/JSON in files and read status, counts and a few diagnostics.
 Read `../SKILL.md` or `plan-layout-v2.md` only for a named schema/detail needed during
 recovery or mutation.
+
+Execution owns implementation, adversarial self-check for a declared systemic risk, and affected
+tests. `plan-run ... --reviewer provider/model` authorizes automatic independent review of every
+requested implementation item. Pass the selection and `--review-effort` (default high) to each
+`prepare`; its durable request adds a close requirement without editing frozen item specs.
+The same root may orchestrate `review-packet` and one Grok `review-run`; transport creates a fresh
+read-only reviewer session. The root cannot record its own reviewer verdict. Keep product stable
+while the reviewer runs. GREEN closes and continues; FINDINGS gets one in-scope correction, affected
+tests and one second review. No manual owner handoff between those steps, no nested reviewer/fixer
+recursion or third completed round. A standalone review request still ends with its review artifact.
+Product/item closure stays pending until current GREEN exists. Unchanged evidence is reused.
+A repeated systemic class/area changes tactics to a
+shared invariant model, and review/transport budget exhaustion is an explicit bounded exit.
+Read review mode only when this declared carrier or a returned finding applies.

@@ -338,6 +338,11 @@ def lint_plan(plan_dir, diag):
         table_by_id = {row.get("ID"): (row, lineno) for row, lineno in parsed["status_table"]}
         for item_id, occurrences in parsed["items"].items():
             item = occurrences[0]  # duplicate diagnostics have already been issued above; to check we take the first one
+            from task import review_packet
+            try:
+                review_packet.validate_design(plan_dir, {key: value[0] for key, value in item["fields"].items()})
+            except review_packet.ReviewError as exc:
+                diag.error(path, item["header_lineno"], str(exc))
             from task import task_contract
             try:
                 task_contract.declared_authority(item_id, item["fields"])

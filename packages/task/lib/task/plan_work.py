@@ -164,7 +164,8 @@ def _execution_sheet(root: Path, routing: dict, *, strict: bool) -> dict:
 
 def prepare(plan_dir, item_id: str, *, command: str, actor: str,
             session_id: str | None = None, actual_route: dict | None = None,
-            capabilities=(), request=None, batch_receipt=None, repeat_admission=None) -> dict:
+            capabilities=(), request=None, batch_receipt=None, repeat_admission=None,
+            reviewer: str | None = None, review_effort: str | None = None, phase: str | None = None) -> dict:
     """Admit and durably start one item, exposing only its selected context."""
     from task import route_evidence
 
@@ -172,6 +173,15 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
     if command not in _EXECUTION_COMMANDS:
         raise WorkError("PLAN_WORK_INVALID_COMMAND", command)
     command = journal.canonical_command(command)
+    if phase is not None and (not re.fullmatch(r"P\d+", phase)
+                              or any(not member.startswith(phase + ".")
+                                     for member in task_contract.normalize_batch_request(request or [item_id]))):
+        raise WorkError("PLAN_WORK_INVALID_TARGET", "phase invocation cannot authorize items outside that phase")
+    from task import review_packet
+    effective_review_effort = review_packet.selected_effort(reviewer, review_effort) if reviewer is not None else "high"
+    review_packet.execution_boundary(root, item_id, plan_bundle._fields(root, item_id))
+    if reviewer is not None:
+        review_packet.check_request(root, item_id, selector=reviewer, effort=effective_review_effort)
     session_id = session_id or session_context.current_id()
     try:
         plan_readiness.validate_execution_design(root, (item_id,))
@@ -191,7 +201,11 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
         raise WorkError(admission["verdict"], admission)
     if item_id not in admission["requested"]:
         raise WorkError("BATCH_AMBIGUOUS", "item is missing from the request")
-    invocation = f"task:{command} {root.name} " + " ".join(admission["requested"])
+    invocation = f"task:{command} {root.name} " + (phase or " ".join(admission["requested"]))
+    if reviewer is not None:
+        invocation += f" --reviewer {reviewer}"
+        if review_effort is not None:
+            invocation += f" --review-effort {review_effort}"
     if actual_route is None:
         actual_route = route_evidence.capture_launch(
             expected_invocation=invocation,
@@ -230,6 +244,16 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
         "batch_receipt": admission.get("batch_receipt", batch_receipt),
     }
     snapshot.assert_live_integrity()
+    if reviewer is not None:
+        result["owner_review"] = review_packet.register_request(
+            root, item_id, selector=reviewer, effort=effective_review_effort,
+            executor_session=session_id, invocation=invocation)
+    else:
+        selected_review = review_packet.review_request(root, item_id)
+        if selected_review:
+            result["owner_review"] = review_packet.register_request(
+                root, item_id, selector=selected_review["reviewer"], effort=selected_review["effort"],
+                executor_session=session_id, invocation=invocation)
     return result
 
 
@@ -404,18 +428,63 @@ def main(argv=None) -> int:
             action.add_argument("--request", nargs="+")
             action.add_argument("--batch-receipt", type=Path)
             action.add_argument("--repeat-admission", type=Path)
+            action.add_argument("--reviewer", help="automatically review each requested item in an independent session")
+            action.add_argument("--review-effort", choices=("low", "medium", "high", "hight", "xhigh"))
+            action.add_argument("--phase", help="retain the owner's phase-scoped invocation while admitting its current item/batch")
             action.add_argument("--capability", action="append", default=[],
                                 help="JSON capability binding: id and support")
+    for name in ("review-packet", "review-run", "review-record", "review-status"):
+        action = actions.add_parser(name)
+        action.add_argument("--plan-dir", type=Path, required=True)
+        action.add_argument("--reviewer", required=True)
+        if name in {"review-packet", "review-status"}:
+            action.add_argument("--item", required=True)
+        if name == "review-packet":
+            action.add_argument("--base", default="HEAD")
+            action.add_argument("--path", action="append", default=[])
+            action.add_argument("--evidence", action="append", default=[])
+            action.add_argument("--executor-session", required=True)
+            action.add_argument("--budget-decision", help="accepted owner D# granting one exact extra round")
+            action.add_argument("--effort", choices=("low", "medium", "high", "hight", "xhigh"))
+        if name in {"review-run", "review-record"}:
+            action.add_argument("--manifest", type=Path, required=True)
+        if name == "review-run":
+            action.add_argument("--timeout", type=int, default=600)
+            action.add_argument("--max-turns", type=int, default=20)
+        if name == "review-record":
+            action.add_argument("--output", type=Path, required=True)
+            action.add_argument("--invocation", required=True)
     args = parser.parse_args(argv)
     started_at = time.perf_counter()
     try:
-        if args.action == "prepare":
+        if args.action.startswith("review-"):
+            from task import review_packet
+            review_packet.reviewer(args.reviewer)
+            if args.action == "review-packet":
+                result = review_packet.packet(args.plan_dir, args.item, selector=args.reviewer,
+                                              base=args.base, paths=args.path, evidence=args.evidence,
+                                              executor_session=args.executor_session, effort=args.effort,
+                                              budget_decision=args.budget_decision)
+            elif args.action == "review-run":
+                result = review_packet.run(args.plan_dir, args.manifest, selector=args.reviewer,
+                                          timeout=args.timeout, max_turns=args.max_turns)
+            elif args.action == "review-record":
+                declared = json.loads(args.manifest.read_text())
+                if declared["reviewer"] != review_packet.canonical_selector(args.reviewer):
+                    raise review_packet.ReviewError("REVIEW_ROUTE_MISMATCH", "reviewer differs from packet")
+                result = review_packet.record(args.plan_dir, args.manifest, args.output,
+                                              invocation=args.invocation)
+            else:
+                result = {"action": "accept-candidate", "receipt": review_packet.require_green(
+                    args.plan_dir, args.item, args.reviewer)}
+        elif args.action == "prepare":
             result = prepare(args.plan_dir, args.item, command=args.command, actor=args.actor,
                              session_id=args.session_id, request=args.request,
                              capabilities=[json.loads(value) for value in args.capability],
                              actual_route=json.loads(args.actual_route.read_text()) if args.actual_route else None,
                              batch_receipt=json.loads(args.batch_receipt.read_text()) if args.batch_receipt else None,
-                             repeat_admission=json.loads(args.repeat_admission.read_text()) if args.repeat_admission else None)
+                             repeat_admission=json.loads(args.repeat_admission.read_text()) if args.repeat_admission else None,
+                             reviewer=args.reviewer, review_effort=args.review_effort, phase=args.phase)
         elif args.action == "design-context":
             from task import route_evidence
 

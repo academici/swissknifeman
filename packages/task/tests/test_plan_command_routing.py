@@ -36,6 +36,7 @@ class ProviderPlanRoutingTests(unittest.TestCase):
     def test_fixture_freezes_neutral_axes_plan_commands_and_next_kinds(self):
         self.assertEqual(list(MODEL_CLASSES), self.expected["model_classes"])
         self.assertEqual(list(EFFORTS), self.expected["efforts"])
+
         self.assertEqual(
             set(self.expected["plan_commands"]),
             {record.command_id for record in self.catalog.records
@@ -54,6 +55,20 @@ class ProviderPlanRoutingTests(unittest.TestCase):
         for kind, declaration in self.expected["next_declarations"].items():
             with self.subTest(kind=kind):
                 self.assertEqual(parse_next_carrier(declaration).kind, kind)
+
+    def test_explicit_audit_reviewer_survives_native_rendering(self):
+        carrier = parse_next_carrier("audit-design: task:plan-audit DEMO design --reviewer codex/gpt-6")
+        mapping = mapping_from_catalog(self.catalog, "codex")
+        result = plan_provider_invocation(self.catalog, carrier, mapping,
+                                          observed_class="frontier", observed_effort="xhigh")
+        self.assertTrue(result.ok, result.diagnostics)
+        self.assertEqual(result.model_selector, "gpt-6")
+        self.assertIn("--reviewer codex/gpt-6", result.invocation)
+        foreign = mapping_from_catalog(self.catalog, "claude-code")
+        refused = plan_provider_invocation(self.catalog, carrier, foreign,
+                                           observed_class="frontier", observed_effort="xhigh")
+        self.assertFalse(refused.ok)
+        self.assertIsNone(refused.invocation)
 
     def test_audit_handoff_uses_the_shared_lifecycle_without_a_forced_root(self):
         audit = (COMMAND_ROOT / "plan-audit.md").read_text(encoding="utf-8")

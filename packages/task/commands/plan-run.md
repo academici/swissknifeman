@@ -1,7 +1,7 @@
 ---
 disable-model-invocation: true
 description: "Execute authorized Task plan items under the current session route with inline closure."
-argument-hint: "<PLAN-ID> Pn.m [Pn.k]"
+argument-hint: "<PLAN-ID> <Pn | Pn.m [Pn.k]> [--reviewer <provider/model>] [--review-effort high]"
 ---
 Read `runtime/plan-protocol/references/common-principles.md` and
 `runtime/plan-protocol/references/execution-mode.md` from the configured Task package root.
@@ -13,6 +13,24 @@ Run under the session's provider-attested route; never switch the model manually
 the minimum class/effort: a stronger model or higher effort is admitted and recorded as `over`, any
 pool model covering the class is valid, a weaker one stops before mutation. The durable start binds
 the route to `route-run-receipt/v1`; do not build a second route contract in the prompt.
+
+`--reviewer <provider>/<exact-model-id>` is owner authorization to automatically review every
+implementation item in the requested phase/workset before close. It selects only the reviewer,
+not the executor; `--review-effort` defaults to high. Pass this selection to each item's `prepare`.
+Selection accepts `provider/model[/context][/effort]`, with an optional trailing slash:
+`grok/grok-4.7/500k/`, `grok/grok-4.7/high/`, `grok/grok-4.7/hight/`, or
+`grok/grok-4.7/500k/high/`. Context and effort may appear in either order; `hight` means high,
+and k/m mean decimal token counts. Parse via `task.review_packet`; preserve the original invocation
+for route capture. A suffix sets effort unless a separate conflicting flag is supplied.
+Context is a minimum required window, not a token-spend budget. The runner verifies provider
+context evidence; unknown/insufficient capacity is a typed boundary, not a retry or fabricated success.
+Selection is durable and survives resume without rewriting frozen specifications. Existing
+`owner-review` requirements remain binding; conflicting selectors stop before product writes.
+The root acts as orchestrator: it may launch a separate reviewer and consume its verdict, but it
+may not act as that reviewer. No second owner command is needed on the supported Grok transport.
+For a phase argument `Pn`, visit its dependency-ready admitted batches in order; never widen to
+another phase. Pass `--phase Pn` to prepare so route capture retains the actual phase invocation
+rather than inventing a different item-list command. Batch admission still owns each workset.
 
 `prepare` is phase-scoped: only the phases of the requested items must be detailed; other phases may
 stay skeletons or backlog. An undetailed target phase returns a typed refusal before the durable
@@ -48,6 +66,8 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
    batch/authority admission, evidence graph, generated carriers, `task_contract.pre_mutation()` and
    durable start. Consume its compact execution capsule;
    full plan/phase/bundle/state are internal runtime inputs.
+   With automatic review append `--reviewer <provider/model> [--review-effort <effort>]`; carry it
+   across every requested item, not only the first. Retain the pre-implementation commit for review base.
    `PLAN_CONTEXT_TRUNCATED` and `PLAN_CONTEXT_DIGEST_MISMATCH` still block before product writes.
    For an explicitly granted separate repeat of a terminal solo item, pass
    `--repeat-admission <plan-owned JSON>`: the owner decision carries the exact marker
@@ -63,9 +83,28 @@ dependencies, Scope and Acceptance; recommended Next is not exclusive execution 
    concrete item risk (security/auth, destructive migration, irreversible external action,
    payment/accounting, concurrency/shared state, public API/schema, low-confidence impact, or release
    authority) or an explicit owner requirement, and then it is a separate read-only review item of the
-   plan (`Review Pn`), never a step run inside this item. Uncertainty gathers evidence; it does not
+   plan (`Review Pn`), or an explicitly declared `owner-review: <provider/model>` carrier.
+   Automatic owner review uses a fresh read-only reviewer session: prepare a bounded `review-packet`
+   and call `review-run` once from this root for the selected Grok route. The durable prepare selection
+   admits transport launch, not self-certification. Wait for the real receipt and keep product bytes
+   stable until it returns. GREEN closes and continues. FINDINGS returns one owning correction:
+   fix in scope, rerun affected checks, prepare the changed candidate and call one second review.
+   Consume the shared reducer action; never start a third completed round, replace the reviewer,
+   reset budgets or recursively delegate fix/re-review. Systemic repair addresses the shared model
+   before that second review. An incomplete attempt is not a verdict: diagnose/repair the transport
+   and retry at most once for that candidate. Budget exhaustion, missing capability or a true decision
+   boundary persists the exact checkpoint; do not ask the owner between normal items or rounds.
+   Other providers need an independently routed native review session and `review-record`; unavailable
+   launch capability is explicit, never a silent Grok fallback. A standalone requested review remains
+   a separate deliverable. Uncertainty gathers evidence; it does not
    default to full review. Never fabricate evidence or bypass those boundaries; existing dirty changes
    belong to the owner.
+   For `risk-class: concurrency|transaction|auth|data-integrity`, compare the design's
+   `invariant-model` against all affected paths/drivers and write the declared `self-check` before
+   packet preparation. Record every known risk as fixed or deferred with an accepted owner D# or
+   owning item and justification. Repeated systemic findings require a revised shared model and
+   owning design question before another local patch. See the review-mode reference for exact
+   carriers, verdict grammar and bounded exits.
 4. A foreign baseline stays visible but non-gating unless ownership/dependency closure intersects.
    Audit is read-only: it returns one owning continuation for a product finding and never starts a
    second audit/full replay without a new material hypothesis.

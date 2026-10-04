@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/design.md
-Canonical SHA-256: sha256:81e4e2f560866742472f4738d726e42b06f31d413effc02d6f1e5d9666ab7ef2
-Adapter: task.codex-command/1.0.17
+Canonical SHA-256: sha256:9ac07eaa534ec502bded59a27b55e1af5d7b1ba68be508e694072ca2dc65d83f
+Adapter: task.codex-command/1.0.18
 -->
 This is a DESIGN task: produce durable artifacts, not implementation. User input: `$ARGUMENTS`.
 Apply the shared opt-in contract in `references/intent-routing.md` from the installed Task package.
@@ -21,3 +21,8 @@ Profile `design`:
 4. Record material external sources in provenance (`docs/reference.md` when present).
 5. Ask only for a missing product choice or authority boundary. Make authorized reversible design decisions
    directly; do not request repeated approval of the method or plan.
+
+For concurrency, transactions, auth or data integrity, model affected operations/resources/drivers
+together and name invariant enforcement points; lock work checks interfering pairs and implicit
+locks. Handoff implementation and read-only review as separate invocations. A requested review
+names its reviewer explicitly (`--reviewer provider/model`); review does not implement its findings.

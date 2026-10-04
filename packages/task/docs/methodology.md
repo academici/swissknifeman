@@ -133,6 +133,15 @@ another review round merely to increase confidence beyond that boundary.
 
 ## review (by material trigger)
 
+Keep review in its own invocation and name `--reviewer <provider/model>` explicitly. The executor
+owns implementation/self-check/affected tests; the reviewer owns a read-only verdict and one owning
+continuation. `plan-run ... --reviewer provider/model` automatically orchestrates independent item
+review, one owning correction and at most two completed rounds in one owner invocation. Explicit
+item review uses a digest-bound packet and terminal GREEN gate, never recursive/unbounded fixing.
+Systemic risks use a shared invariant model;
+re-review covers the affected class, and repeated class/area findings require a changed tactic.
+See [independent review transport](reference/plan-tooling.md#independent-review-transport).
+
 Reviews are dispatched by artifact type, but not by ritual status. One scoped verdict
 is reused as long as the material scope, SHA or risk has not changed. Terminal items form
 runtime-built phase candidate. A single `plan_assurance.evaluate()` selects the next carrier without

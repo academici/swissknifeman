@@ -1,5 +1,102 @@
 # Plan tooling: verification gates `plans/`
 
+## Independent review transport
+
+Execution and review are separate sessions, not necessarily separate owner commands.
+For automatic review of every implementation item in your requested phase/workset:
+
+```text
+task:plan-run <PLAN-ID> P1 --reviewer grok/grok-4.7
+```
+
+The reviewer argument accepts flexible suffixes and an optional trailing slash:
+
+```text
+--reviewer grok/grok-4.7/high/
+--reviewer grok/grok-4.7/hight/
+--reviewer grok/grok-4.7/500k/
+--reviewer grok/grok-4.7/500k/high/
+```
+
+`hight` normalizes to high; context and effort may appear in either order. Context accepts
+positive integer counts, k or m (500k = 500000); effort accepts low/medium/high/xhigh.
+Suffix effort overrides the default, but conflicting explicit effort flags are rejected.
+Equivalent spellings normalize to the same durable route; original launch text is retained.
+The number requires **at least** that context capacity, not a token-spend limit and not a promise
+that Task can enlarge the model. Grok uses streaming-messages-json to capture its reported
+`modelUsage.<model>.contextWindow`; unknown/insufficient capacity cannot produce GREEN and does
+not trigger a second identical attempt. Native providers need captured context evidence too.
+Read-only/tool/time/turn limits remain unchanged. Explicit context does not enlarge the review packet.
+
+The root implements/tests an item, launches fresh read-only Grok, and consumes the receipt.
+GREEN closes and continues to the next item; FINDINGS permits one owning correction, affected tests,
+and a second review. No manual `task:review` is needed. Two completed rounds or two incomplete
+attempts for one candidate stop further automatic calls; preserve the checkpoint for an actual
+owner decision, transport repair or missing capability. Never reset history on resume.
+`--review-effort high` is independent of executor effort. Each item `prepare` receives the selection
+and persists `owner-review-request/v1` under its review artifacts. Close enforces this request even
+when frozen Validation contains no owner-review carrier; conflicting prior selections fail closed.
+The same root can launch transport, but only a separate reviewer session can certify the product.
+With a phase-scoped command, prepare also takes `--phase P1` while `--item`/`--request` identify
+the current admitted batch. Route evidence retains the actual phase command; no other phase is authorized.
+Grok has a built-in headless runner; other providers require a supported independent native launch
+and `review-record`. An unavailable launcher is explicit, never an automatic model substitution.
+
+Without that explicit requirement normal execution uses self-check and affected tests;
+a phase/slice review is a dedicated read-only item. An explicit owner requirement may declare
+`owner-review: grok/grok-4.7` in Validation. Review commands require the exact route:
+
+```text
+task:review <PLAN-ID> P1.2 --reviewer grok/grok-4.7 --effort high
+task:plan-audit <PLAN-ID> design --reviewer codex/<exact-model-id> --effort xhigh
+```
+
+The selected provider/model must actually run in a different session. Review/audit frontmatter
+does not pin a competing model/effort; captured route validation enforces the arguments. Standalone
+review remains a separate deliverable. Automatic mode orchestrates the bounded handoff in one root.
+
+```bash
+python3 packages/task/scripts/plan-work.py review-packet \
+  --plan-dir plans/<PLAN-ID> --item P1.2 --reviewer grok/grok-4.7 \
+  --executor-session <executor-session-id> --base <pre-implementation-commit> \
+  --evidence <repository-relative-test-log>
+```
+
+Make one bounded attempt from the review stream or the automatically authorized orchestrating root:
+
+```bash
+python3 packages/task/scripts/plan-work.py review-run \
+  --plan-dir plans/<PLAN-ID> --manifest <returned-review-route.json> \
+  --reviewer grok/grok-4.7 --timeout 600 --max-turns 20
+```
+
+Grok transport limits tools to reading, denies shell/edit/write/MCP, disables nested agents,
+uses JSON output and checks actual model/session, completion and usage. Other providers review in
+an independently routed native session, then use `review-record --output <verdict.json>
+--invocation 'task:review <PLAN-ID> P1.2 --reviewer <provider/model>'` with the same plan-dir,
+manifest and reviewer. That operation captures the current provider route.
+
+Packets bind declared Files (plus optional adjacent `--path`), spec, model, self-check and evidence
+to a SHA-256 candidate. The 80,000-byte cap uses full repository references when code is large;
+required context is never clipped. Changed relevant bytes invalidate GREEN; bookkeeping and
+foreign changes do not. Raw output, errors and immutable attempt receipts remain under
+`artifacts/P1.2/owner-review/`. `review-status --plan-dir <dir> --item P1.2 --reviewer <provider/model>`
+verifies the latest current GREEN carrier before item close.
+
+For concurrency, transactions, auth and data integrity, Implementation Rules declares
+`risk-class` and `invariant-model: <plan-relative-path>`; Inputs/Required Reads includes the model.
+Validation declares `self-check: <plan-relative-json>`. Design covers all affected operation pairs,
+resources and drivers; executor self-check records invariant evidence and every fixed/deferred risk.
+Re-review checks the affected risk class/model. A second finding with the same class/area after repair
+requires a shared-model tactic change. Two completed rounds exhaust the item review budget;
+two incomplete attempts separately stop transport retries for that candidate. Repair authority
+remains, while further model calls require an explicit bounded owner decision. There is no silent
+close or budget reset. Exact schemas and recovery are in the canonical review-mode reference.
+
+An extra round uses `review-packet --budget-decision D#`: an accepted item-scoped owner decision
+must include `[REVIEW-EXTRA-ROUND:Pn.m:<candidate-sha256>:<next-round-number>]`. It grants exactly
+one completed round for that candidate and is then consumed; earlier review history remains.
+
 ## Lean lifecycle selection
 
 `task.plan_lifecycle.select(LifecycleInput(...))` - recommendation for the assessed impact,

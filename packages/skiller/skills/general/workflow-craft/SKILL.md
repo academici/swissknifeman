@@ -1,7 +1,7 @@
 ---
 name: workflow-craft
 bucket: general
-version: 0.1.0
+version: 0.3.0
 description: "Activate on \"write a workflow\"/multi-agent orchestration: match 4 canonical templates first, then design-vs-dev stage matrix; slots per README."
 risk: draft
 persona: oss-dev
@@ -76,11 +76,20 @@ an interview question, it's a given).
 
 | Type | Base templates | Mandatory stages | What's absent |
 |:--|:--|:--|:--|
-| **Design** (design-only) | `wf-research-fanout.js`, `wf-audit-adversarial.js` | RAG research → design (expensive-model main loop) → adversarial audit/DoR gate → fixes → re-audit | code, tests, semver |
+| **Design** (design-only) | `wf-research-fanout.js`, `wf-audit-adversarial.js` | RAG research → design (expensive-model main loop) → separate read-only audit/DoR gate → one owning correction; bounded re-audit only after changed evidence | code, tests, semver |
 | **Development** (dev) | `wf-dev-slice.js`, `wf-author-by-spec.js` | slice → impl → tests-to-green → risk-adaptive review → inter-slice gates → commit | design decisions on the cheap model (escalate to main loop, don't decide inline) |
 
 This table is the skill's SSOT — the `/task:make-workflow` command and its
 output reviewer cite THIS table, not their own copy; fix drift here only.
+
+Execution and review are separate calls with explicit reviewer selection, never recursive unbounded
+fix/review. One owner `plan-run --reviewer` invocation may orchestrate both roles automatically,
+retaining their independent sessions and bounded receipts. The reviewer never repairs
+product or starts its successor. Fill reviewer slots from `--reviewer provider/model` before
+execution; do not silently pick a default model. Repeated systemic class/area findings revise the
+shared invariant model, and completed review rounds are bounded by Task's review policy. A
+resume retains review history and unchanged evidence; it never resets a cap or broad-replays
+previously accepted work. See the workflow README for slot/transport details.
 
 **Don't invent mandatory stages beyond this table** (source: `packages/task/workflows/README.md`) — if it seems
 like another mandatory stage is needed, propose a matrix edit explicitly,

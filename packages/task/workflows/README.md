@@ -46,6 +46,16 @@ lives in the main loop of an expensive model (model routing: expensive for desig
    to clean" has a numerical ceiling (`MAX_GREEN_ITERATIONS` in pattern 4); exhaustion =
    pipeline stop + escalation in the main loop, not another iteration. Infinite loop -
    is an agent that fits tests to code.
+6. **Execution/review separation.** Review-capable workflows require an explicit reviewer slot
+   filled from the owner's `--reviewer provider/model` selection; `wf-dev-slice` refuses an
+   unfilled REVIEWER before any author call. Executor calls own code/tests, reviewer calls own
+   read-only verdicts, and the orchestrator owns the handoff. A finding returns one owning
+   correction and stops the review stream; never recursively fix/re-audit in the reviewer.
+   Systemic findings retain `(risk_class, area)` across files/drivers and check the shared model.
+   Cross-provider item review uses Task's bounded review-packet transport and receipts; workflow
+   resumes must retain that history, never reset caps with a global cache-bust marker.
+   `plan-run --reviewer` can be the owning orchestrator for one-command automatic operation:
+   separate reviewer sessions do not require another manual owner command.
 
 General template invariants: fan-out - via `pipeline()` without barrier (verify/self-check
 starts immediately after its element, does not wait for the entire wave); audit/review agents - strictly

@@ -5,8 +5,9 @@ for explicit job selection.
 From version Task **0.21.0** workflows are enabled only by explicitly calling the command/skill. Codex
 gets `allow_implicit_invocation: false`, Claude - `disable-model-invocation: true`;
 harness does not implement Task policy in SessionStart and does not select commands by keywords.
-Each command **pins the model + reasoning effort + workflow profile**, interrupting the session settings,
-to avoid switching them manually. Default-on in each onboarded project (connect channel);
+Commands supply default model/effort routes; `plan-run` inherits its session, while review/audit
+requires explicit `--reviewer provider/model` and an independently captured matching route.
+Default-on in each onboarded project (connect channel);
 no resident tax - command descriptions are not injected into every request.
 
 **When to take.** When an explicit route is useful for development, research, design or review.
@@ -28,13 +29,13 @@ subagents live in `harness` (agent-packs); master plan protocol - in skill
 |:--|:--|:--|
 | `/task:fix` | Sonnet/medium | minor edits (narrow single-agent, no fan-out) |
 | `/task:design` | Opus/high | design (artifacts, not code) |
-| `/task:dev` | Sonnet/high | development by vertical slices with risk-adaptive review-gate |
+| `/task:dev` | Sonnet/high | development with affected checks and a separate risk-based review handoff |
 | `/task:research` | Opus/high | multi-source research with RAG verification |
-| `/task:review` | Sonnet/high | risk-scaled read-only review |
+| `/task:review` | explicit `--reviewer`; high | risk-scaled read-only review |
 | `/task:plan-design` | Opus/high | create/detail a master plan `plans/<ID>/` |
-| `/task:plan-run` | session route | execute plan items under the current session route; the minimum comes from the plan's Routing row |
+| `/task:plan-run` | session route | execute plan items; optional `--reviewer provider/model` automatically reviews each item in a separate session |
 | `/task:plan-close` | Sonnet/low | recovery-reconciliation of item or closing the phase after a fresh GREEN |
-| `/task:plan-audit` | Opus/xhigh | one pre-exec or pre-close audit by material trigger |
+| `/task:plan-audit` | explicit `--reviewer`; xhigh | one design or admitted phase audit |
 
 ## How to use it
 

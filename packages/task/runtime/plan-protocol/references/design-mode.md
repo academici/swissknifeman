@@ -40,3 +40,11 @@ Read only the relevant section of `../SKILL.md` or `plan-layout-v2.md` for a nam
 authoring another phase does not require loading the full canon again.
 Design-only remains an artifact boundary: return the result without unauthorized execution.
 Use `scope-complete` with `continue-root`; a completed design does not require a new process.
+
+For concurrency, transactions, auth or data-integrity work, declare the concrete `risk-class`
+and plan-owned `invariant-model` in Implementation Rules, with the model in Inputs/Required Reads.
+Model affected operations/resources/drivers as a system: order explicit and implicit locks and
+check every interfering pair; for auth/data work name invariant, enforcement and bypass paths.
+Design audit checks model completeness and consistency against the specification. Declare the
+adversarial `self-check` Validation carrier for execution. Owner-requested `owner-review` is a
+separate review invocation with explicit `--reviewer`, never a nested executor step; see review mode.

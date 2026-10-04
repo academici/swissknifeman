@@ -62,13 +62,13 @@ for f in sorted(glob.glob("commands/*.md")):
     if not fm.get("description"):
         bad.append(f"{f}: empty/no description")
     # plan-run.md intentionally WITHOUT model/effort — inherits the session, the only exception is
-    if f != "commands/plan-run.md":
+    if f not in {"commands/plan-run.md", "commands/review.md", "commands/plan-audit.md"}:
         if fm.get("model") not in VALID_MODELS:
             bad.append(f"{f}: model «{fm.get('model')}» not from {sorted(VALID_MODELS)}")
         if fm.get("effort") not in VALID_EFFORTS:
             bad.append(f"{f}: effort «{fm.get('effort')}» not from {sorted(VALID_EFFORTS)}")
     elif fm.get("model") or fm.get("effort"):
-        bad.append(f"{f}: model/effort STUNNED — plan-run is obliged not to carry them (D18)")
+        bad.append(f"{f}: model/effort must remain inherited or explicitly reviewer-selected")
 for b in bad:
     print("  FAIL:", b, file=sys.stderr)
 sys.exit(1 if bad else 0)

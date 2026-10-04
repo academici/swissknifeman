@@ -1,7 +1,7 @@
 {
   "contract_version": "1.0.0",
   "catalog_version": "1.0.0",
-  "plugin_version": "0.27.0",
+  "plugin_version": "0.28.0",
   "commands": [
     {
       "command_id": "task:design",
@@ -72,7 +72,7 @@
       "command_id": "task:make-workflow",
       "kind": "workflow-authoring",
       "source": "packages/task/commands/make-workflow.md",
-      "argument_contract": "workflow type and purpose",
+      "argument_contract": "workflow type and purpose plus explicit --reviewer provider/model",
       "output_contract": "plan-owned workflow projection plus static review verdict",
       "routing": {
         "mode": "fixed",
@@ -114,7 +114,7 @@
       "command_id": "task:review",
       "kind": "intent",
       "source": "packages/task/commands/review.md",
-      "argument_contract": "code/doc artifact reference",
+      "argument_contract": "code/doc artifact reference or plan ID/item plus explicit --reviewer provider/model",
       "output_contract": "risk-scaled read-only findings",
       "routing": {
         "mode": "fixed",
@@ -162,7 +162,7 @@
       "command_id": "task:plan-run",
       "kind": "plan-protocol",
       "source": "packages/task/commands/plan-run.md",
-      "argument_contract": "plan ID and item list",
+      "argument_contract": "plan ID and item list; optional --reviewer provider/model and --review-effort high authorize automatic independent item review",
       "output_contract": "implementation, validation, closed item and handoff under the session route",
       "routing": {
         "mode": "inherited-plan",
@@ -216,7 +216,7 @@
       "command_id": "task:plan-audit",
       "kind": "plan-protocol",
       "source": "packages/task/commands/plan-audit.md",
-      "argument_contract": "plan ID plus phase or design mode",
+      "argument_contract": "plan ID plus phase or design mode plus explicit --reviewer provider/model",
       "output_contract": "append-only independent audit verdict",
       "routing": {
         "mode": "fixed",

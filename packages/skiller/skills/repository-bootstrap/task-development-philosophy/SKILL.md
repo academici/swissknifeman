@@ -1,7 +1,7 @@
 ---
 name: task-development-philosophy
 bucket: repository-bootstrap
-version: 0.3.0
+version: 0.5.0
 description: "Guardrails for keeping Task plans flexible, proportional, and loop-free. Activate before creating or revising a plan in this repository or changing packages/task planning, validation, audit, close, retry, or budget policy."
 when_to_use: "Use for swissknifeman plan authoring and Task workflow-policy changes."
 risk: read
@@ -83,8 +83,15 @@ it into plan scope only after the trigger occurs or the owner explicitly priorit
 
 - **Review is plan shape.** Item `Review` defaults to `none` (self-check plus affected tests).
   Independent review is a dedicated read-only item (`Review Pn`) at the end of a phase, or between
-  slices of a large phase; never a step inside every item and never a line of an item's Validation.
-  Findings get one owning correction; the re-review checks only the findings. A different model is
+  slices of a large phase. An explicit owner-requested item carrier `owner-review: provider/model`
+  is the bounded exception. `plan-run ... --reviewer provider/model` is an explicit requirement for
+  automatic review of each requested item. One owner command may orchestrate separate executor and
+  read-only reviewer sessions: independence concerns roles and verdict provenance, not manual handoffs.
+  At most two completed review rounds and one owning correction run automatically; further calls need
+  a bounded owner decision. Reviewers never repair product or launch recursive fix/re-review.
+  Findings get one owning correction; local re-review checks findings and changed dependency closure,
+  while systemic re-review checks the shared invariant model and affected risk class.
+  Every review invocation names `--reviewer provider/model`; no implicit substitution. A different model is
   required only by a named hard risk or the owner.
 - **Design pacing is the owner's choice.** Detailing every phase first and detailing one phase,
   executing it and detailing the next from real code are both valid. Execution is gated per phase;
@@ -186,7 +193,7 @@ Reject these designs:
 - owner interruption for choices already bounded by scope and reversible implementation;
 - safety language used to justify unlimited cost without a concrete failure scenario;
 - gates that make the valid path impossible and then blame execution for looping;
-- independent review attached to every item, or a plan rewrite to swap one model for a stronger one.
+- independent review attached to every item without an explicit requirement, or a plan rewrite to swap one model for a stronger one.
 
 ## Decision test
 

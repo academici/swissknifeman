@@ -158,6 +158,22 @@ def validate(decision, *, result: str, plan_dir: Path | None = None,
 
     if plan_dir is not None and item_id is not None:
         from task import plan_repair
+        from task import review_packet, plan_bundle
+        try:
+            declared = review_packet.declarations(plan_bundle._fields(plan_dir, item_id))
+            review_packet.validate_self_check(Path(plan_dir), declared)
+            requested = review_packet.review_request(plan_dir, item_id)
+            if requested:
+                review_packet.check_request(plan_dir, item_id, selector=requested["reviewer"], effort=requested["effort"])
+            selected = requested["reviewer"] if requested else declared.get("owner-review")
+            if selected:
+                review_packet.require_green(plan_dir, item_id, selected,
+                                            effort=requested["effort"] if requested else None)
+        except plan_bundle.BundleError:
+            # Historical minimal fixtures have no independently declared carrier.
+            pass
+        except review_packet.ReviewError as exc:
+            raise TerminalPolicyError(exc.code, str(exc)) from exc
         unresolved = plan_repair.unresolved_incidents(plan_dir, item_id)
         if unresolved:
             carriers = ", ".join(command for _subject, command, _digest in unresolved)

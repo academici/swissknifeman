@@ -87,6 +87,12 @@ declare the file here: `plans/<PLAN-ID>/findings/P1-config-validation.md`.)
 
 ### Pn.m — <Title>
 
+<!-- Systemic item: Implementation Rules declares risk-class: concurrency (or transaction/auth/
+data-integrity) and invariant-model: artifacts/Pn.m/invariant-model.md; Inputs/Required Reads
+includes that model. Validation declares self-check: artifacts/Pn.m/self-check.json.
+Only an explicit owner requirement adds owner-review: provider/model to Validation.
+Execution prepares the packet; a separate task:review invocation selects --reviewer provider/model. -->
+
 **Status:** ⬜ Not started
 **Intent:** —
 **Why:** —

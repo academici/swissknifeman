@@ -1,5 +1,9 @@
 # Roadmap
 
+Implemented 2026-10-04: Task executor/reviewer separation with explicit reviewer selection,
+digest-bound owner-review packets, bounded transport/review rounds and invariant-model checks.
+See [Task tooling](task/reference/plan-tooling.md#independent-review-transport).
+
 Directions only; order within a block is rough priority. Work starts on measured need, not in anticipation of it.
 
 ## Near term

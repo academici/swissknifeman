@@ -113,6 +113,24 @@ adapter). Lifecycle hooks render `.grok/hooks/swissknifeman.json` plus
 `.grok/hooks.json` is not a hook document. Router and observer are hook-native
 (Grok also loads every `.grok/rules/*.md`).
 
+### PreToolUse envelope and mAInd admission
+
+The generated Grok dispatcher accepts both the native camelCase envelope
+(`hookEventName`, `toolName`, `toolInput`, `sessionId`, `workspaceRoot`) and the
+Claude-shaped snake_case envelope. A malformed envelope or an unfamiliar tool
+name is logged to stderr and allowed: it must never turn a repairable project
+into a silent `exit 2` loop.
+
+Its existing catch-all telemetry registration is also the mAInd admission point.
+Until `maind health --cwd --json` reports `connected`, it allows only the exact
+repair commands `maind health --cwd`, `maind health --cwd --fix`, and their
+optional `; echo EXIT:$?` tail, plus the hook/config and required skill/command
+reads. It also leaves `web_search` and `open_page` untouched. A genuine refusal
+prints the same three-part reason to stderr and as both `reason` and
+`hookSpecificOutput.permissionDecisionReason` in stdout JSON, then exits 2.
+When the health probe itself is unavailable or times out (30 seconds), the
+dispatcher logs and fails open.
+
 ## See also
 
 - [Adapter Grok](/skiller/adapters/grok)

@@ -1,11 +1,19 @@
 ---
 disable-model-invocation: true
 description: "Read-only Task design or phase audit; phase audit needs owner-bound consent."
-argument-hint: "<PLAN-ID> <Pn|design>"
-model: opus
-effort: xhigh
+argument-hint: "<PLAN-ID> <Pn|design> --reviewer <provider/model> [--effort xhigh]"
 ---
 Invocation payload: `$ARGUMENTS`.
+
+Require an explicit `--reviewer <provider>/<exact-model-id>` and use a fresh non-executor
+session whose captured provider/model matches it; effort defaults to `xhigh`. Native frontmatter
+does not pin a model/effort; compatibility routing minima do not replace the selected reviewer.
+On mismatch render the selected review launch and do not audit under another route.
+Historical audit evidence remains readable. This argument never grants phase-audit consent.
+Optional `/context` and `/effort` suffixes may follow the model, in either order, with a trailing `/`.
+Examples: `grok/grok-4.7/500k/`, `grok/grok-4.7/xhigh/`, `grok/grok-4.7/500k/xhigh/`.
+Normalize through `task.review_packet.invocation_selection`; `hight` is high. A conflicting explicit
+effort flag fails closed. Context is a provider-proven capacity requirement, never a spend budget.
 
 Read `runtime/plan-protocol/references/common-principles.md` and
 `runtime/plan-protocol/references/review-mode.md` from the configured Task package root.

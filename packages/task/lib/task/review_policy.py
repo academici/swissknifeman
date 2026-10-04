@@ -519,3 +519,23 @@ def validation_cadence(*, is_phase_terminal_item: bool) -> str:
     Declared Validation and impact selection own any wider qualification.
     """
     return "targeted"
+
+
+def owner_review_action(rounds: list[dict], verdict: dict) -> str:
+    """A second systemic finding after repair changes tactics, even in a new file.
+
+    Count class/area once per completed round, never report count or wording.
+    Review budget limits reviewer calls; it never removes owning repair authority.
+    """
+    if verdict["verdict"] == "GREEN":
+        return "accept-candidate"
+    systemic = {"concurrency", "transaction", "auth", "data-integrity"}
+    prior = {(finding["risk_class"], finding["area"])
+             for row in rounds for finding in row["verdict"]["findings"]
+             if finding["risk_class"] in systemic}
+    if any((finding["risk_class"], finding["area"]) in prior
+           for finding in verdict["findings"] if finding["risk_class"] in systemic):
+        return "design-required"
+    if len(rounds) + 1 >= AUDIT_ROUNDS_MAX:
+        return "review-budget-exhausted"
+    return "return-owning-continuation"

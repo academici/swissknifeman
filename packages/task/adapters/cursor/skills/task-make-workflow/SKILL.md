@@ -11,7 +11,7 @@ Generated Cursor adapter for semantic command `task:make-workflow`.
 - Invocation: `task:make-workflow <arguments>`
 - Routing: `implementation/high -> composer-2.5/high`
 - Canonical source: `packages/task/commands/make-workflow.md`
-- Canonical SHA-256: `sha256:eec5bc213f3ca2ac5746bf4dfda7a9b47dd2358a6bd061689734d711bf40cb8f`
+- Canonical SHA-256: `sha256:e3f5d9192a6eb141c6d15cdc383caf7467796a00737552697b520be386d853f4`
 - Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as the user prompt.

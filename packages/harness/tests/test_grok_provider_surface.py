@@ -1,6 +1,9 @@
 """Grok project surfaces follow Grok's own hook and config contract."""
 import json
+import os
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -87,6 +90,72 @@ class GrokProviderSurfaceTests(unittest.TestCase):
         self.assertIn('"--provider", _PROVIDER_ID', source)
         self.assertNotIn('record["provider_id"] = "codex"', source)
         self.assertNotIn('"--provider", "codex"', source)
+
+    def test_grok_pretooluse_normalizes_payload_and_keeps_maind_repair_reachable(self):
+        """A Grok envelope must not turn an observer into a silent exit-2 brick."""
+        source = render_codex_hook_handler(state_dir=".grok")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            handler = root / "lifecycle.py"
+            handler.write_bytes(source)
+            bindir = root / "bin"
+            bindir.mkdir()
+            maind = bindir / "maind"
+
+            def invoke(payload, *, status="connected"):
+                maind.write_text("#!/bin/sh\nprintf '%s\\n' '" + json.dumps({"status": status})
+                                 + "'\n", encoding="utf-8")
+                maind.chmod(0o755)
+                return subprocess.run(
+                    [sys.executable, str(handler), "--surface", "lifecycle.tool-telemetry"],
+                    input=json.dumps(payload).encode(), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    env={**os.environ, "PATH": f"{bindir}:{os.environ.get('PATH', '')}"},
+                    timeout=20)
+
+            def payload(tool_name, tool_input):
+                return {"hookEventName": "pre_tool_use", "toolName": tool_name,
+                        "toolInput": tool_input, "cwd": str(root),
+                        "workspaceRoot": str(root), "sessionId": "grok-session",
+                        "permissionMode": "acceptEdits"}
+
+            for command in ("maind health --cwd", "maind health --cwd --fix",
+                            "maind health --cwd; echo EXIT:$?",
+                            "maind health --cwd --fix; echo EXIT:$?"):
+                self.assertEqual(invoke(payload("run_terminal_command", {"command": command}),
+                                        status="partial").returncode, 0)
+            self.assertEqual(invoke(payload("read_file", {
+                "path": ".grok/hooks/swissknifeman.json"}), status="partial").returncode, 0)
+            denied = invoke(payload("run_terminal_command", {"command": "true"}), status="partial")
+            self.assertEqual(denied.returncode, 2)
+            decision = json.loads(denied.stdout)
+            self.assertEqual(decision["decision"], "deny")
+            self.assertEqual(decision["reason"], decision["hookSpecificOutput"]["permissionDecisionReason"])
+            self.assertIn("maind health --cwd --fix", decision["reason"])
+            self.assertIn(decision["reason"].encode(), denied.stderr)
+            # A bounded reviewer must be able to read under both compatibility
+            # plan mode and the explicit dontAsk allowlist used by Task transport.
+            for mode in ("plan", "dontAsk"):
+                for tool_name, tool_input in (("read_file", {"path": "src/Tree.php"}),
+                                             ("grep", {"pattern": "lockForUpdate", "path": "src"}),
+                                             ("list_dir", {"path": "src"})):
+                    envelope = payload(tool_name, tool_input)
+                    envelope["permissionMode"] = mode
+                    self.assertEqual(invoke(envelope).returncode, 0, (mode, tool_name))
+            for tool_name, tool_input in (
+                    ("run_terminal_command", {"command": "true"}),
+                    ("read_file", {"path": "README.md"}), ("grep", {"pattern": "needle"}),
+                    ("search_replace", {"path": "/tmp/grok-hook-probe.txt"}),
+                    ("web_search", {"query": "x"}), ("web_fetch", {"url": "https://example.test"}),
+                    ("search_tool", {})):
+                self.assertEqual(invoke(payload(tool_name, tool_input)).returncode, 0, tool_name)
+            malformed = subprocess.run(
+                [sys.executable, str(handler), "--surface", "lifecycle.tool-telemetry"],
+                input=b'{', stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=20)
+            self.assertEqual(malformed.returncode, 0)
+            self.assertIn(b"payload was not parseable", malformed.stderr)
+            unknown = invoke(payload("future_grok_tool", {}), status="partial")
+            self.assertEqual(unknown.returncode, 0)
+            self.assertIn(b"unrecognized Grok tool name", unknown.stderr)
 
 
 if __name__ == "__main__":

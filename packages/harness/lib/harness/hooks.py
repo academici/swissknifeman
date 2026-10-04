@@ -62,7 +62,7 @@ class LifecycleRenderPlan:
         return not any(item.severity is DiagnosticSeverity.ERROR for item in self.diagnostics)
 
 
-_CODEX_HOOK_ADAPTER_VERSION = "1.1.0"
+_CODEX_HOOK_ADAPTER_VERSION = "1.1.1"
 _CODEX_CAPTURE_ADAPTER_VERSION = "1.0.0"
 _LIFECYCLE_KINDS = frozenset(("lifecycle", "context", "security"))
 _D104_CODEX_HOOKS_TARGET = ".codex/hooks.json"
@@ -1254,11 +1254,10 @@ def _codex_router_catalog():
 def render_codex_hook_handler(*, state_dir: str = ".codex") -> bytes:
     """Generate the multi-surface dispatcher: one generator, one per-surface handler table.
 
-    Fail-closed on every path: unknown `--surface`, malformed JSON, or a payload missing a
-    field required for the resolved event all exit 2 with no side effect. Each handler is a
-    thin, best-effort adapter (never raises past its own try/except) so a runtime failure
-    inside one handler degrades to silence, exactly like the Claude-side hooks it mirrors.
-    Codex and Grok share this dispatcher; ``state_dir`` is the only provider-owned path.
+    Codex and Grok share this dispatcher, but their payload spellings differ.  The generated
+    adapter normalizes both shapes before dispatch.  A malformed or unknown provider payload is
+    deliberately fail-open: a lifecycle observer must never brick a session before it can run the
+    health repair that the policy asks for.  Explicit policy refusals are the only exit-2 path.
     """
     if state_dir not in {".codex", ".grok"}:
         raise ValueError("HARNESS_MAPPING_MISSING")
@@ -1295,6 +1294,168 @@ _EVENT_FIELDS = {{
     "Stop": ("stop_hook_active", "last_assistant_message"),
 }}
 _GATE_MODES = ("off", "warn", "strict")
+
+
+def _adapter_log(message):
+    try:
+        sys.stderr.write("[harness lifecycle] " + str(message) + "\\n")
+    except Exception:
+        pass
+
+
+def _canonical_event(value):
+    if not isinstance(value, str):
+        return ""
+    compact = value.replace("_", "").replace("-", "").lower()
+    return {{
+        "pretooluse": "PreToolUse",
+        "sessionstart": "SessionStart",
+        "sessionend": "SessionEnd",
+        "userpromptsubmit": "UserPromptSubmit",
+        "subagentstop": "SubagentStop",
+        "stop": "Stop",
+    }}.get(compact, value)
+
+
+def _normalize_payload(raw, expected_event):
+    """Accept Claude snake_case and Grok camelCase hook envelopes.
+
+    Grok supplies ``hookEventName``, ``toolName``, ``toolInput`` and ``sessionId``;
+    Claude-shaped providers use their snake_case counterparts.  Missing optional
+    fields are normalized to benign defaults.  An incompatible envelope returns
+    ``None`` so the caller can log and fail open rather than exit 2.
+    """
+    if not isinstance(raw, dict):
+        return None
+    payload = dict(raw)
+    event = _canonical_event(raw.get("hook_event_name") or raw.get("hookEventName"))
+    if event != expected_event:
+        return None
+    payload["hook_event_name"] = event
+    payload["tool_name"] = raw.get("tool_name") or raw.get("toolName")
+    tool_input = raw.get("tool_input")
+    if tool_input is None:
+        tool_input = raw.get("toolInput")
+    if expected_event == "PreToolUse" and not isinstance(tool_input, dict):
+        return None
+    payload["tool_input"] = tool_input if isinstance(tool_input, dict) else {{}}
+    payload["session_id"] = (raw.get("session_id") or raw.get("sessionId")
+                             or os.environ.get("GROK_SESSION_ID", ""))
+    payload["cwd"] = (raw.get("cwd") or raw.get("workspaceRoot")
+                      or os.environ.get("GROK_WORKSPACE_ROOT", "") or os.getcwd())
+    payload["permission_mode"] = raw.get("permission_mode") or raw.get("permissionMode") or ""
+    payload["model"] = raw.get("model") or ""
+    return payload
+
+
+_MAIND_HEALTH_COMMAND_RE = re.compile(
+    r"^\\s*maind\\s+health\\s+--cwd(?:\\s+--fix)?\\s*(?:;\\s*echo\\s+EXIT:\\$\\?\\s*)?$")
+_GROK_UNCONDITIONAL_ALLOW = frozenset(("web_search", "open_page"))
+_GROK_KNOWN_TOOL_NAMES = frozenset((
+    "run_terminal_command", "read_file", "grep", "list_dir", "search_replace",
+    "hashline_edit", "web_search", "open_page", "web_fetch", "search_tool", "use_tool",
+    "spawn_subagent", "todo_write", "monitor", "workflow", "enter_plan_mode",
+    "ask_user_question",
+))
+
+
+def _is_maind_health_command(command):
+    return isinstance(command, str) and bool(_MAIND_HEALTH_COMMAND_RE.fullmatch(command))
+
+
+def _read_path(tool_input):
+    if not isinstance(tool_input, dict):
+        return None
+    for name in ("path", "file_path", "filePath", "filename"):
+        value = tool_input.get(name)
+        if isinstance(value, str) and value:
+            return value
+    return None
+
+
+def _bootstrap_read_allowed(cwd, tool_input):
+    value = _read_path(tool_input)
+    if not isinstance(cwd, str) or not cwd or not value:
+        return False
+    try:
+        path = Path(value).expanduser()
+        if not path.is_absolute():
+            path = Path(cwd) / path
+        path = path.resolve()
+        root = Path(cwd).resolve()
+        relative = path.relative_to(root).as_posix()
+    except (OSError, RuntimeError, ValueError):
+        return False
+    exact = {{
+        ".grok/hooks/lifecycle.py", ".grok/hooks/swissknifeman.json",
+        ".claude/settings.json", ".claude/settings.local.json", "CLAUDE.md", "AGENTS.md",
+        ".ai/guidelines/agent-entrypoint.md",
+    }}
+    if relative in exact:
+        return True
+    parts = relative.split("/")
+    return (len(parts) >= 3 and parts[0] in {{".agents", ".claude", ".grok"}}
+            and parts[1] in {{"skills", "commands"}}
+            and parts[-1] in {{"SKILL.md", "command.md"}})
+
+
+def _maind_health_state(cwd):
+    """Return True/False for a completed health probe, otherwise None (fail-open)."""
+    if not isinstance(cwd, str) or not cwd:
+        return None
+    try:
+        result = subprocess.run(["maind", "health", "--cwd", "--json"], cwd=cwd,
+                                capture_output=True, text=True, timeout=30, check=False)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    try:
+        report = json.loads(result.stdout)
+    except (TypeError, ValueError):
+        return None
+    status = report.get("status") if isinstance(report, dict) else None
+    return status == "connected" if isinstance(status, str) else None
+
+
+def _deny_maind_connection():
+    reason = ("project is not connected to mAInd; run `maind health --cwd`, and if its status is "
+              "not connected run `maind health --cwd --fix`; repeat this tool call after connected.")
+    decision = {{
+        "decision": "deny",
+        "reason": reason,
+        "hookSpecificOutput": {{
+            "permissionDecision": "deny",
+            "permissionDecisionReason": reason,
+        }},
+    }}
+    print(json.dumps(decision, ensure_ascii=False))
+    _adapter_log(reason)
+    raise SystemExit(2)
+
+
+def _grok_maind_gate(payload):
+    """Keep the existing all-tool telemetry matcher as the mAInd admission point."""
+    if _PROVIDER_ID != "grok":
+        return
+    tool_name = payload.get("tool_name")
+    tool_input = payload.get("tool_input") or {{}}
+    if (not isinstance(tool_name, str) or not tool_name
+            or tool_name not in _GROK_KNOWN_TOOL_NAMES and not tool_name.startswith("mcp__")):
+        _adapter_log("unrecognized Grok tool name; allowing without mAInd admission")
+        return
+    if tool_name in _GROK_UNCONDITIONAL_ALLOW:
+        return
+    if tool_name == "run_terminal_command" and _is_maind_health_command(tool_input.get("command")):
+        return
+    if tool_name == "read_file" and _bootstrap_read_allowed(payload.get("cwd"), tool_input):
+        return
+    connected = _maind_health_state(payload.get("cwd"))
+    if connected is None:
+        _adapter_log("mAInd health probe unavailable; allowing this Grok tool call")
+        return
+    if not connected:
+        _deny_maind_connection()
 
 
 def _read_mode(cwd, filename):
@@ -1450,6 +1611,7 @@ def _tool_telemetry(payload):
         return
     if not isinstance(tool_name, str) or not tool_name:
         return
+    _grok_maind_gate(payload)
     entry = {{"tool": tool_name, "ts": datetime.datetime.now(datetime.timezone.utc).isoformat()}}
     cg = _codegraph_tool(tool_name)
     if cg:
@@ -1952,21 +2114,37 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--surface", required=True)
 args = parser.parse_args()
 if args.surface not in _SURFACE_EVENTS:
+    if _PROVIDER_ID == "grok":
+        _adapter_log("unknown lifecycle surface; allowing without dispatch")
+        sys.exit(0)
     sys.exit(2)
 try:
-    payload = json.load(sys.stdin)
-except (json.JSONDecodeError, TypeError):
-    sys.exit(2)
-if not isinstance(payload, dict):
+    raw_payload = json.load(sys.stdin)
+except (json.JSONDecodeError, TypeError, ValueError):
+    if _PROVIDER_ID == "grok":
+        _adapter_log("payload was not parseable; allowing without dispatch")
+        sys.exit(0)
     sys.exit(2)
 event = _SURFACE_EVENTS[args.surface]
-required = {{"session_id", "cwd", "hook_event_name", "model"}}
-if event == "SessionStart":
-    required.add("permission_mode")
-required.update(_EVENT_FIELDS.get(event, ()))
-if not required.issubset(payload) or payload["hook_event_name"] != event:
+payload = _normalize_payload(raw_payload, event)
+if payload is None:
+    if _PROVIDER_ID == "grok":
+        _adapter_log("payload did not match the lifecycle event; allowing without dispatch")
+        sys.exit(0)
     sys.exit(2)
-_HANDLERS[args.surface](payload)
+if _PROVIDER_ID != "grok":
+    required = {{"session_id", "cwd", "hook_event_name", "model"}}
+    if event == "SessionStart":
+        required.add("permission_mode")
+    required.update(_EVENT_FIELDS.get(event, ()))
+    if not required.issubset(payload):
+        sys.exit(2)
+try:
+    _HANDLERS[args.surface](payload)
+except SystemExit:
+    raise
+except Exception as error:
+    _adapter_log("lifecycle handler failed; allowing this tool call: " + type(error).__name__)
 '''.encode("utf-8")
 
 

@@ -1,7 +1,7 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/research.md
 Canonical SHA-256: sha256:43772c5691365eca22094bba0b59a5dad35a208bb0af0c6df530d05fa5bba195
-Adapter: task.codex-command/1.0.17
+Adapter: task.codex-command/1.0.18
 -->
 This is a RESEARCH task. User input: `$ARGUMENTS`. The route is pinned to frontier/high.
 

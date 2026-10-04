@@ -201,7 +201,9 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
         raise WorkError(admission["verdict"], admission)
     if item_id not in admission["requested"]:
         raise WorkError("BATCH_AMBIGUOUS", "item is missing from the request")
-    invocation = f"task:{command} {root.name} " + (phase or " ".join(admission["requested"]))
+    checkpoint = admission.get("batch_receipt") or batch_receipt
+    invocation_items = checkpoint["membership"] if checkpoint else admission["requested"]
+    invocation = f"task:{command} {root.name} " + (phase or " ".join(invocation_items))
     if reviewer is not None:
         invocation += f" --reviewer {reviewer}"
         if review_effort is not None:
@@ -210,6 +212,22 @@ def prepare(plan_dir, item_id: str, *, command: str, actor: str,
         actual_route = route_evidence.capture_launch(
             expected_invocation=invocation,
             expected_cwd=plan_weight.repo_root_for(root))
+    observed_invocation = actual_route.get("invocation")
+    if isinstance(observed_invocation, str):
+        observed_semantic = observed_invocation.removeprefix("$ ").removeprefix("/")
+        codex_source = actual_route.get("source_version") in {"codex-turn-context-v1", "codex-ancestor-argv-v1"}
+        if codex_source:
+            from task import route_evidence_codex
+            same_scope = (len(observed_invocation.splitlines()) == 1
+                          and route_evidence_codex._contains_invocation(observed_invocation, "$ " + invocation))
+        else:
+            same_scope = observed_semantic == invocation
+        if not same_scope:
+            raise WorkError("ROUTE_LAUNCH_MISMATCH", "captured invocation differs from admitted plan/workset/reviewer")
+        if codex_source:
+            invocation = observed_semantic
+    if actual_route.get("cwd") and Path(actual_route["cwd"]).resolve() != plan_weight.repo_root_for(root).resolve():
+        raise WorkError("ROUTE_LAUNCH_MISMATCH", "captured cwd differs from the admitted checkout")
     contract = task_contract.build(
         root, item_id, actual_route=actual_route, capabilities=capabilities,
         carrier=invocation, admission_route=admission["batch"]["route"])

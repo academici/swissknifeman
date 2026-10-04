@@ -4,6 +4,16 @@
 
 ### Fixed
 
+- **Task Codex invocation:** provider-owned `plan-run --reviewer=...` и форма
+  с пробелом сопоставляются через общий reviewer parser, включая default high
+  и canonical context/effort suffixes. Исходная команда сохраняется в route
+  evidence; несовпадение plan/workset, reviewer, cwd или executor route отклоняется.
+
+- **Task journal lint:** авторитетный committed terminal row проверяется по
+  immutable closure proof, поэтому изменения зависимого пункта не делают
+  закрытого predecessor устаревшим. Неподтверждённый commit закрытия сохраняет
+  live guard; повреждённое committed evidence не допускает fallback.
+
 - **Task committed predecessors:** batch/dependency admission проверяет закрытый
   reviewed producer по первому commit с точной terminal journal row и исходными
   receipt, packet, output и native evidence. Проверяется полный reviewed inventory

@@ -235,6 +235,38 @@ class ReviewPacketTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "REVIEW_CLOSURE_UNCOMMITTED"):
             task_contract._derived_completed_prefix(self.plan, ["P1.1"])
 
+    def journal_lint_errors(self):
+        from task.plan_lint_checks import parsing
+        diagnostics = plan_lint.Diagnostics()
+        parsing._lint_plan_journal_20(self.plan, self.plan.name, diagnostics)
+        return diagnostics.errors + diagnostics.warnings
+
+    def test_journal_lint_accepts_committed_close_after_consumer_product_edits(self):
+        self.closed_native_review()
+        self.commit_tree()
+        self.product.write_text("consumer_change = True\n")
+        self.assertEqual(self.journal_lint_errors(), [])
+
+    def test_journal_lint_uncommitted_close_still_requires_live_review(self):
+        self.closed_native_review()
+        self.assertEqual(self.journal_lint_errors(), [])
+        self.product.write_text("unreviewed_change = True\n")
+        self.assertTrue(any("REVIEW_CANDIDATE_STALE" in error
+                            for error in self.journal_lint_errors()))
+
+    def test_journal_lint_invalid_committed_proof_cannot_fall_back_to_live_green(self):
+        _packet, attempt, _decision = self.closed_native_review()
+        route_path = attempt / "provider-route.json"
+        original_route = route_path.read_bytes()
+        route = json.loads(original_route)
+        route["effort"] = "low"
+        route_path.write_text(json.dumps(route))
+        self.commit_tree()
+        route_path.write_bytes(original_route)
+        review.require_green(self.plan, "P1.1", "grok/grok-4.7/500k")
+        self.assertTrue(any("REVIEW_CLOSURE_INVALID" in error
+                            for error in self.journal_lint_errors()))
+
     def test_closure_tree_must_contain_exact_reviewed_product_and_inputs(self):
         self.closed_native_review()
         self.product.write_text("changed_before_closure_commit = True\n")

@@ -218,7 +218,8 @@ def validate_predecessor(decision, *, result: str, plan_dir: Path, item_id: str)
     validate(decision, result=result, plan_dir=plan_dir, item_id=item_id, _historical=True)
 
 
-def validate_entry(entry: dict, *, plan_dir: Path | None = None) -> None:
+def validate_entry(entry: dict, *, plan_dir: Path | None = None,
+                   _historical: bool = False) -> None:
     item_id = entry.get("item_id")
     decision = entry.get("decision")
     if isinstance(decision, dict) and decision.get("signal_class") == "producer-readiness":
@@ -259,4 +260,19 @@ def validate_entry(entry: dict, *, plan_dir: Path | None = None) -> None:
         except plan_decisions.DecisionError as exc:
             raise TerminalPolicyError("TERMINAL_DECISIONS_INVALID", str(exc)) from exc
     validate(
-        entry.get("decision"), result=entry["result"], plan_dir=plan_dir, item_id=item_id)
+        entry.get("decision"), result=entry["result"], plan_dir=plan_dir, item_id=item_id,
+        _historical=_historical)
+
+
+def validate_current_entry(entry: dict, *, plan_dir: Path) -> None:
+    """Lint a committed closure historically, or an uncommitted closure live.
+
+    Only absence of a committed terminal row permits live validation. Invalid
+    immutable closure evidence must never fall back to a current receipt.
+    """
+    try:
+        validate_entry(entry, plan_dir=plan_dir, _historical=True)
+    except TerminalPolicyError as exc:
+        if exc.code != "REVIEW_CLOSURE_UNCOMMITTED":
+            raise
+        validate_entry(entry, plan_dir=plan_dir)

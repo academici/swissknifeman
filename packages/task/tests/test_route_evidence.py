@@ -594,6 +594,42 @@ class JournalActorIntegrationTests(unittest.TestCase):
 
 
 class CodexLaunchEvidenceTests(unittest.TestCase):
+    def test_plan_run_reviewer_spelling_matches_typed_scope_and_preserves_owner_line(self):
+        from task import route_evidence_codex
+        raw = "$ task:plan-run PLAN P1.1 P1.2 --reviewer=grok/grok-4.7/500K/high/"
+        equivalent = ("$ task:plan-run PLAN P1.1 P1.2 --reviewer grok/grok-4.7/500000 --review-effort high",
+                      "$ task:plan-run PLAN P1.1–P1.2 --review-effort=high --reviewer=grok/grok-4.7/500k",
+                      "$ task:plan-run PLAN P1.1 P1.2 --reviewer grok/grok-4.7/500k/hight/")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = self._write_thread_state(root, thread_id="typed-reviewer", model="gpt-6.1-sol",
+                                            effort="high", prompt=raw)
+            source = path.read_bytes()
+            for expected in equivalent:
+                evidence = route_evidence_codex.capture_current(expected_invocation=expected,
+                    expected_cwd="/workspace/repo", thread_id="typed-reviewer", state_root=root)
+                self.assertEqual(evidence["invocation"], raw)
+                self.assertEqual(evidence["model"], "gpt-6.1-sol")
+            self.assertEqual(path.read_bytes(), source)
+
+    def test_typed_plan_run_scope_and_reviewer_mismatches_stay_closed(self):
+        from task import route_evidence_codex
+        expected = "$ task:plan-run PLAN P1.1 P1.2 --reviewer grok/grok-4.7/500k --review-effort high"
+        mismatches = ("$ task:plan-run OTHER P1.1 P1.2 --reviewer=grok/grok-4.7/500k",
+                      "$ task:plan-run PLAN P1.2 P1.1 --reviewer=grok/grok-4.7/500k",
+                      "$ task:plan-run PLAN P1 --reviewer=grok/grok-4.7/500k",
+                      "$ task:plan-run PLAN P1.1 P1.2 --reviewer=codex/grok-4.7/500k",
+                      "$ task:plan-run PLAN P1.1 P1.2 --reviewer=grok/grok-4.6/500k",
+                      "$ task:plan-run PLAN P1.1 P1.2 --reviewer=grok/grok-4.7/256k",
+                      "$ task:plan-run PLAN P1.1 P1.2 --reviewer=grok/grok-4.7/500k/low",
+                      "$ task:plan-run PLAN P1.1 P1.2 --reviewer=grok/grok-4.7/500k/high --review-effort=low",
+                      "$ task:plan-run PLAN P1.1 P1.2 --reviewer=grok/grok-4.7/500k --reviewer=grok/grok-4.7/500k",
+                      "$ task:plan-run PLAN P1.1 P1.2 --reviewer=grok/grok-4.7/500k --unknown=high",
+                      "$ task:plan-run PLAN P1.1 P1.2 --reviewer='grok/grok-4.7/500k",
+                      "$ task:plan-run PLAN P1.1 P1.2 --review-effort=high")
+        for actual in mismatches:
+            self.assertFalse(route_evidence_codex._contains_invocation(actual, expected), actual)
+
     def test_local_owner_invocation_survives_addition_but_not_revoke(self):
         from task import route_evidence_codex
         with tempfile.TemporaryDirectory() as directory:

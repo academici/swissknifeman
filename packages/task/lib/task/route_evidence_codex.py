@@ -18,6 +18,8 @@ import json
 import hashlib
 import os
 from pathlib import Path
+import re
+import shlex
 
 from task.route_evidence import (
     RouteEvidenceError, capture_actual, exactly_one, launch_option_values, mapped_effort,
@@ -129,10 +131,67 @@ def _task_invocation(line: str) -> str | None:
 
 
 def _contains_invocation(prompt: str, expected_invocation: str) -> bool:
+    return _matching_invocation(prompt, expected_invocation) is not None
+
+
+def _plan_run_signature(invocation: str) -> tuple | None:
+    """Closed plan-run grammar; spelling changes never broaden owner scope."""
+    from task import review_packet, task_contract
+    try:
+        tokens = shlex.split(invocation)
+        if not tokens or tokens[0] != "task:plan-run":
+            return None
+        positional, options = [], {}
+        index = 1
+        while index < len(tokens):
+            token = tokens[index]
+            if token.startswith("--"):
+                name, separator, value = token.partition("=")
+                if name not in {"--reviewer", "--review-effort"} or name in options:
+                    return None
+                if not separator:
+                    index += 1
+                    if index >= len(tokens):
+                        return None
+                    value = tokens[index]
+                if not value or value.startswith("--"):
+                    return None
+                options[name] = value
+            else:
+                positional.append(token)
+            index += 1
+        if len(positional) < 2 or "--review-effort" in options and "--reviewer" not in options:
+            return None
+        plan, *targets = positional
+        scope = (("phase", targets[0]) if len(targets) == 1 and re.fullmatch(r"P\d+", targets[0])
+                 else ("items", task_contract.normalize_batch_request(targets)))
+        reviewer = options.get("--reviewer")
+        selected = ((review_packet.canonical_selector(reviewer),
+                     review_packet.selected_effort(reviewer, options.get("--review-effort")))
+                    if reviewer is not None else None)
+        return tokens[0], plan, scope, selected
+    except (ValueError, TypeError):
+        return None
+
+
+def _matching_invocation(prompt: str, expected_invocation: str) -> str | None:
     expected = _task_invocation(expected_invocation)
-    return expected is not None and any(
-        _task_invocation(line) == expected for line in prompt.splitlines()
-    )
+    if expected is None:
+        return None
+    signature = _plan_run_signature(expected)
+    for line in prompt.splitlines():
+        actual = _task_invocation(line)
+        if actual is None:
+            continue
+        if expected.startswith("task:plan-run "):
+            matches = signature is not None and _plan_run_signature(actual) == signature
+        else:
+            matches = actual == expected
+        if matches:
+            # Keep provider-owned argument spelling. The native prefix remains
+            # the existing Codex projection even for a marker-free user line.
+            return "$ " + actual
+    return None
 
 
 def _read_thread_state(path: Path, thread_id: str, *, require_current_owner_invocation=False,
@@ -209,10 +268,12 @@ def _capture_thread_state(*, thread_id: str, expected_invocation: str,
     if not all(isinstance(value, str) and value for value in (model, effort, cwd)):
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_UNAVAILABLE", "Codex turn_context does not contain model/effort/cwd")
-    if not any(_contains_invocation(prompt, expected_invocation) for prompt in prompts):
+    observed_invocation = next((value for prompt in prompts
+                               if (value := _matching_invocation(prompt, expected_invocation)) is not None), None)
+    if observed_invocation is None:
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_MISMATCH",
-            "current Codex turn does not contain exact Task invocation line",
+            "current Codex turn does not contain the same typed Task invocation",
         )
     if Path(cwd).resolve() != Path(expected_cwd).resolve():
         raise RouteEvidenceError(
@@ -233,7 +294,7 @@ def _capture_thread_state(*, thread_id: str, expected_invocation: str,
         "thread_id": thread_id,
         "source_version": THREAD_SOURCE_VERSION,
         "cwd": str(Path(cwd).resolve()),
-        "invocation": expected_invocation,
+        "invocation": observed_invocation,
     })
     if require_current_owner_invocation:
         evidence["owner_message_digest"] = hashlib.sha256((str(context.get("owner_turn_id")) + "\n" + prompts[-1]).encode()).hexdigest()
@@ -282,7 +343,7 @@ def capture_current(*, expected_invocation: str, expected_cwd: str | Path,
     invocations = tuple(value for value in argv if value.startswith("$ task:"))
     invocation = _one(invocations, "Task prompt")
 
-    if invocation != expected_invocation:
+    if _matching_invocation(invocation, expected_invocation) is None:
         raise RouteEvidenceError(
             "ROUTE_LAUNCH_MISMATCH",
             f"Codex Task prompt {invocation!r} != expected {expected_invocation!r}")

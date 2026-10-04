@@ -369,10 +369,10 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
     for line_number, entry in parsed_entries:
         if _terminal_policy_is_active(entry):
             try:
-                terminal_policy.validate_entry(
-                    entry,
-                    plan_dir=plan_dir if id(entry) in current_entries else None,
-                )
+                if id(entry) in current_entries:
+                    terminal_policy.validate_current_entry(entry, plan_dir=plan_dir)
+                else:
+                    terminal_policy.validate_entry(entry)
             except terminal_policy.TerminalPolicyError as exc:
                 report(jf, line_number, str(exc))
 

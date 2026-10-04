@@ -1,5 +1,6 @@
 """One-call work preparation/finalization preserves the owning admission gates."""
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -38,6 +39,104 @@ class PlanWorkTests(unittest.TestCase):
         return plan_work.prepare(self.plan, "P1.1", command="plan-run",
                                  actor="test/medium", session_id="test-session",
                                  actual_route=self.actual)
+
+    def provider_thread(self, prompt, *, model="gpt-6.1-sol", effort="high", cwd=None):
+        home = Path(self.tmp.name) / "provider-state"
+        path = home / "sessions/2026/10/04/rollout-source-current.jsonl"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        events = [{"type": "session_meta", "payload": {"id": "source-current"}},
+                  {"type": "turn_context", "payload": {"turn_id": "owner-turn", "model": model,
+                      "effort": effort, "cwd": cwd or self.tmp.name, "approval_policy": "never",
+                      "sandbox_policy": {"type": "danger-full-access"}}},
+                  {"type": "event_msg", "payload": {"type": "item_completed", "turn_id": "owner-turn",
+                      "item": {"type": "UserMessage", "content": [{"type": "text", "text": prompt}]}}}]
+        path.write_text("\n".join(json.dumps(event) for event in events) + "\n")
+        return path, {"CODEX_HOME": str(home), "CODEX_THREAD_ID": "source-current"}
+
+    def test_provider_owner_equals_reviewer_reaches_prepare_without_injected_route(self):
+        raw = "$ task:plan-run WORK P1.1 --reviewer=grok/grok-4.7/500k"
+        path, environment = self.provider_thread(raw)
+        before = path.read_bytes()
+        with patch.dict(os.environ, environment, clear=True):
+            result = plan_work.prepare(self.plan, "P1.1", command="plan-run", actor="test/high",
+                reviewer="grok/grok-4.7/500000/high/", review_effort="high")
+        self.assertEqual(result["position"]["code"], "START_ITEM")
+        receipt = route_evidence.run_receipt_from_journal(self.plan, result["position"]["run_id"])
+        self.assertEqual(receipt["evidence"]["invocation"], raw)
+        self.assertEqual(receipt["evidence"]["model"], "gpt-6.1-sol")
+        self.assertEqual(result["owner_review"]["invocation"], raw.removeprefix("$ "))
+        self.assertEqual(result["owner_review"]["reviewer"], "grok/grok-4.7/500000")
+        self.assertEqual(result["owner_review"]["effort"], "high")
+        self.assertEqual(path.read_bytes(), before)
+
+    def test_provider_owned_phase_selection_matches_without_injected_route(self):
+        raw = "$ task:plan-run WORK P1 --reviewer=grok/grok-4.7/hight/"
+        _path, environment = self.provider_thread(raw)
+        with patch.dict(os.environ, environment, clear=True):
+            result = plan_work.prepare(self.plan, "P1.1", command="plan-run", actor="test/high",
+                phase="P1", reviewer="grok/grok-4.7", review_effort="high")
+        self.assertEqual(result["position"]["code"], "START_ITEM")
+        self.assertEqual(result["owner_review"]["invocation"], raw.removeprefix("$ "))
+
+    def test_provider_owned_full_batch_matches_admitted_suffix_without_injected_route(self):
+        from task import journal, task_contract, terminal_policy
+        successor = self.plan / "phases/P1/P1.2.md"
+        successor.write_text(item_spec_md("P1.2"))
+        core = self.plan / "plan.md"
+        core.write_text(core.read_text().replace("| solo | P1.1 |", "| B1 | P1.1–P1.2 |"))
+        decision = terminal_policy.build_decision(self.plan, "P1.1", result="closed-green",
+            validation=[{"carrier": "tests", "status": "green", "evidence_ids": ["producer-tests"]}])
+        journal.append(self.plan, journal.new_entry(plan_id=self.plan.name, item_id="P1.1",
+            command="plan-run", actor="test/medium", result="closed-green", decision=decision))
+        plan_item_state.build_states(self.plan, item_id="P1.1", materialize_successor=False)
+        plan_item_state.build_states(self.plan, item_id="P1.2", materialize_successor=False)
+        batch = task_contract.compile_batch_routing(self.plan)["batches"]["B1"]
+        checkpoint = task_contract.build_batch_receipt(batch, completed_prefix=("P1.1",))
+        raw = "$ task:plan-run WORK P1.1 P1.2 --reviewer=grok/grok-4.7/500k"
+        _path, environment = self.provider_thread(raw)
+        with patch.dict(os.environ, environment, clear=True):
+            result = plan_work.prepare(self.plan, "P1.2", command="plan-run", actor="test/high",
+                request=["P1.2"], batch_receipt=checkpoint, reviewer="grok/grok-4.7/500000", review_effort="high")
+        self.assertEqual(result["position"]["code"], "START_ITEM")
+        self.assertEqual(result["batch_receipt"]["completed_prefix"], ["P1.1"])
+        self.assertEqual(result["owner_review"]["invocation"], raw.removeprefix("$ "))
+
+    def test_provider_scope_cwd_and_executor_route_mismatches_do_not_start(self):
+        cases = [("$ task:plan-run OTHER P1.1 --reviewer=grok/grok-4.7/500k", {}),
+                 ("$ task:plan-run WORK P1 --reviewer=grok/grok-4.7/500k", {}),
+                 ("$ task:plan-run WORK P1.1 --reviewer=grok/grok-4.7/256k", {}),
+                 ("$ task:plan-run WORK P1.1 --reviewer=grok/grok-4.7/500k/low", {}),
+                 ("$ task:plan-run WORK P1.1 --reviewer=grok/grok-4.7/500k", {"cwd": "/other"}),
+                 ("$ task:plan-run WORK P1.1 --reviewer=grok/grok-4.7/500k", {"model": "unknown"}),
+                 ("$ task:plan-run WORK P1.1 --reviewer=grok/grok-4.7/500k", {"effort": "low"})]
+        for raw, options in cases:
+            with self.subTest(raw=raw, options=options):
+                _path, environment = self.provider_thread(raw, **options)
+                before = (self.plan / "journal.jsonl").read_bytes()
+                with patch.dict(os.environ, environment, clear=True), self.assertRaises(ValueError):
+                    plan_work.prepare(self.plan, "P1.1", command="plan-run", actor="test/high",
+                        reviewer="grok/grok-4.7/500k", review_effort="high")
+                self.assertEqual((self.plan / "journal.jsonl").read_bytes(), before)
+
+    def test_supplied_route_cannot_replace_admitted_scope_reviewer_or_cwd(self):
+        base = {**self.actual, "source_version": "codex-turn-context-v1"}
+        for raw, extra in (("$ task:plan-run OTHER P1.1 --reviewer=grok/grok-4.7", {}),
+                           ("$ task:plan-run WORK P1.2 --reviewer=grok/grok-4.7", {}),
+                           ("$ task:plan-run WORK P1 --reviewer=grok/grok-4.7", {}),
+                           ("$ task:plan-run WORK P1.1 --reviewer=grok/grok-4.6", {}),
+                           ("$ task:plan-run WORK P1.1 --reviewer=grok/grok-4.7\n$ task:plan-run OTHER P1.1", {}),
+                           ("$ task:plan-run WORK P1.1 --reviewer=grok/grok-4.7", {"cwd": "/other"})):
+            with self.subTest(raw=raw, extra=extra), self.assertRaisesRegex(plan_work.WorkError, "ROUTE_LAUNCH_MISMATCH"):
+                plan_work.prepare(self.plan, "P1.1", command="plan-run", actor="test/medium",
+                    session_id="test-session", reviewer="grok/grok-4.7", actual_route={**base, "invocation": raw, **extra})
+        self.assertEqual((self.plan / "journal.jsonl").read_text(), "")
+
+    def test_non_codex_route_keeps_exact_invocation_boundary(self):
+        actual = {**self.actual, "source_version": "claude-transcript-v1",
+                  "invocation": "/task:plan-run WORK P1.1 --reviewer=grok/grok-4.7"}
+        with self.assertRaisesRegex(plan_work.WorkError, "ROUTE_LAUNCH_MISMATCH"):
+            plan_work.prepare(self.plan, "P1.1", command="plan-run", actor="test/medium", session_id="test-session",
+                reviewer="grok/grok-4.7", actual_route=actual)
 
     def test_prepare_explicit_reviewer_persists_automatic_selection_without_spec_rewrite(self):
         from task import review_packet

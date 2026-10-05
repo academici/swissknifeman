@@ -13,7 +13,6 @@ application (`apply_claude_command_plan`/`plan_codex_command_apply` +
 from __future__ import annotations
 
 import argparse
-from hashlib import sha256
 import json
 import re
 import sys
@@ -39,9 +38,6 @@ _PARITY_FIXTURE = Path("packages/task/tests/fixtures_data/provider-command-parit
 _OPERATOR_REFERENCE = Path("packages/task/docs/reference/provider-commands.md")
 _MODEL_ROLES_REFERENCE = Path("packages/task/docs/reference/provider-model-roles.md")
 _CLAUDE_GOLDEN_ROOT = Path("packages/task/tests/fixtures_data/claude-command-golden")
-_PLAN_PROTOCOL_SOURCE = Path("packages/skiller/skills/general/plan-protocol/SKILL.md")
-_PLAN_PROTOCOL_RUNTIME = Path("packages/task/runtime/plan-protocol/SKILL.md")
-_PLAN_PROTOCOL_PROVENANCE = Path("packages/task/runtime/plan-protocol/provenance.json")
 
 
 def _build_plans(root: Path, *, allow_managed_drift: bool = False):
@@ -80,45 +76,6 @@ def _build_plans(root: Path, *, allow_managed_drift: bool = False):
     model_roles_bytes = render_provider_model_roles_reference(catalog)
     return (claude_plan, codex_plan, cursor_plan, grok_plan,
             render_provider_commands_reference(report), model_roles_bytes)
-
-
-def _plan_protocol_projection(root: Path) -> dict[Path, bytes]:
-    source = root / _PLAN_PROTOCOL_SOURCE
-    if not source.is_file():
-        raise FileNotFoundError(f"plan-protocol canon missing: {source}")
-    runtime = source.read_bytes()
-    provenance = json.dumps({
-        "canonical_source": _PLAN_PROTOCOL_SOURCE.as_posix(),
-        "canonical_sha256": "sha256:" + sha256(runtime).hexdigest(),
-    }, ensure_ascii=False, indent=2, sort_keys=True).encode("utf-8") + b"\n"
-    projection = {_PLAN_PROTOCOL_RUNTIME: runtime, _PLAN_PROTOCOL_PROVENANCE: provenance}
-    # These are on-demand support files, outside native skill discovery. Copy
-    # their relative layout so the standalone Task runtime never relies on CORE.
-    for directory in ("references",):
-        support = source.parent / directory
-        if not support.is_dir() or support.is_symlink():
-            raise FileNotFoundError(f"plan-protocol support missing: {support}")
-        for path in sorted(support.rglob("*")):
-            if path.is_symlink():
-                raise ValueError(f"plan-protocol support must be a regular file: {path}")
-            if path.is_file():
-                relative = path.relative_to(source.parent)
-                projection[_PLAN_PROTOCOL_RUNTIME.parent / relative] = path.read_bytes()
-    return projection
-
-
-def _plan_protocol_stale(root: Path, projection: dict[Path, bytes]) -> tuple[Path, ...]:
-    runtime_dir = root / _PLAN_PROTOCOL_RUNTIME.parent
-    if not runtime_dir.is_dir():
-        return ()
-    return tuple(path for path in sorted(runtime_dir.rglob("*"))
-                 if path.is_file() and path.relative_to(root) not in projection)
-
-
-def _plan_protocol_runtime_drift(root: Path, projection: dict[Path, bytes]) -> tuple[Path, ...]:
-    drift = tuple(root / path for path, expected in projection.items()
-                  if not (root / path).is_file() or (root / path).read_bytes() != expected)
-    return drift + _plan_protocol_stale(root, projection)
 
 
 def _claude_golden_projection(claude_plan) -> dict[Path, bytes]:
@@ -209,12 +166,11 @@ def cmd_check(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan, refer
         path for path, expected in _claude_golden_projection(claude_plan).items()
         if not (root / path).is_file() or (root / path).read_bytes() != expected
     )
-    runtime_drift = _plan_protocol_runtime_drift(root, _plan_protocol_projection(root))
     cursor_drift = _adapter_drift(root, cursor_plan)
     grok_drift = _adapter_drift(root, grok_plan)
     if (not claude_drift and not codex_drift and not cursor_drift and not grok_drift
             and not reference_drift
-            and not model_roles_drift and not golden_drift and not runtime_drift):
+            and not model_roles_drift and not golden_drift):
         print("render-provider-commands: check OK (no-op)")
         return 0
     for path in claude_drift:
@@ -227,8 +183,6 @@ def cmd_check(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan, refer
         print(f"drift: model-roles-reference {_MODEL_ROLES_REFERENCE}", file=sys.stderr)
     for path in golden_drift:
         print(f"drift: claude-golden {path}", file=sys.stderr)
-    for path in runtime_drift:
-        print(f"drift: plan-protocol-runtime {path.relative_to(root)}", file=sys.stderr)
     for path in cursor_drift:
         print(f"drift: cursor {path}", file=sys.stderr)
     for path in grok_drift:
@@ -262,13 +216,6 @@ def cmd_write(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan, refer
     model_roles_path.parent.mkdir(parents=True, exist_ok=True)
     model_roles_path.write_bytes(model_roles_bytes)
     for path, contents in _claude_golden_projection(claude_plan).items():
-        target = root / path
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(contents)
-    protocol_projection = _plan_protocol_projection(root)
-    for path in _plan_protocol_stale(root, protocol_projection):
-        path.unlink()
-    for path, contents in protocol_projection.items():
         target = root / path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(contents)

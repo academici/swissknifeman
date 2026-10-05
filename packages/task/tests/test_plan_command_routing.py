@@ -74,7 +74,7 @@ class ProviderPlanRoutingTests(unittest.TestCase):
         self.assertTrue(result.ok, result.diagnostics)
 
     def test_batches_are_authored_through_the_plan_cli(self):
-        protocol = (REPO_ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md"
+        protocol = (REPO_ROOT / "packages/task/runtime/plan-protocol/SKILL.md"
                     ).read_text(encoding="utf-8")
         self.assertIn("`batches`", protocol)
         design = (COMMAND_ROOT / "plan-design.md").read_text(encoding="utf-8")

@@ -15,7 +15,6 @@
     "./mcp-advisor",
     "./naming-conventions",
     "./packages-stack",
-    "./plan-protocol",
     "./project-map",
     "./session-handoff",
     "./shell",

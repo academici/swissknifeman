@@ -107,7 +107,6 @@ flowchart LR
     grill_with_docs["grill-with-docs"]
     implement["implement"]
     mcp_advisor["mcp-advisor"]
-    plan_protocol["plan-protocol"]
     project_map["project-map"]
     session_handoff["session-handoff"]
     spec_interview["spec-interview"]
@@ -354,8 +353,6 @@ flowchart LR
   observability_design -.->|feeds| runbook
   oncall_rotation -.->|feeds| incident_response
   oss_governance -.->|feeds| dependency_audit
-  plan_protocol -.->|feeds| complex_task_orchestrator
-  plan_protocol -.->|feeds| session_handoff
   postmortem -.->|feeds| runbook
   postmortem -.->|feeds| tech_debt_audit
   prd_from_brd -.->|feeds| api_design
@@ -384,7 +381,7 @@ flowchart LR
   verify_claims -.->|feeds| tech_stack_selection
 ```
 
-**In the column:** 130 skills, 88 ribs requires, 94 ribs produces_for.
+**In the column:** 129 skills, 88 ribs requires, 92 ribs produces_for.
 
 ## Isolated skills (102)
 

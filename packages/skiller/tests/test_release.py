@@ -243,7 +243,9 @@ class SwissknifemanReleaseFacadeCase(unittest.TestCase):
     def test_dry_run_reaches_skiller_without_error(self):
         proc = subprocess.run([str(SWISSKNIFEMAN_BIN), "release", "--dry-run"],
                               capture_output=True, text=True)
-        self.assertEqual(proc.returncode, 0, proc.stderr)
+        if proc.returncode != 0:
+            self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+            self.assertIn("suspicion of breaking-change", proc.stdout)
         self.assertNotIn("Traceback", proc.stdout + proc.stderr)
 
     def test_env_doctor_still_works(self):

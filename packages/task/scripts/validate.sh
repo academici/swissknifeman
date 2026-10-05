@@ -110,7 +110,7 @@ if [[ ${#plan_targets[@]} -eq 0 ]]; then
 fi
 
 # P0.7 — parity of provider projections of teams was maintained only by unit-tests; gate
-# of the generator also covers claude-golden, runtime-copy plan-protocol and publication-lock.
+# of the generator also covers claude-golden and publication-lock.
 
 echo "[5b/6] publication version ↔ umbrella ↔ manifests"
 if [[ -n "$MONOREPO_ROOT" ]]; then

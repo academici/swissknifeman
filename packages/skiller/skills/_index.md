@@ -4,7 +4,7 @@
 
 Source of truth for ported skills (machine registry - `skills.json`). Distribution to projects: `skiller connect` (plugin buckets) / `vendor` (physical. transfer). CORE-set of token skills (`general`/`oss-dev`) is heard by default - see `connect`/`vendor`.
 
-Total: 232 skills in 49 buckets.
+Total: 231 skills in 49 buckets.
 
 ## Skills for buckets
 
@@ -220,7 +220,7 @@ Total: 232 skills in 49 buckets.
 |:--|:--|:--|
 | `wayfinder` | Use for Laravel Wayfinder route/action generation, typed imports, forms, and import bound… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
 
-### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (22)
+### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (21)
 
 | Skill | Description | Tags |
 |:--|:--|:--|
@@ -236,7 +236,6 @@ Total: 232 skills in 49 buckets.
 | `mcp-advisor` | Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/… | `mcp`, `onboarding`, `tooling`, `context`, `claude-code` |
 | `naming-conventions` | Naming discipline (language-agnostic): name reveals intent, not implementation; fight noi… | `naming`, `conventions`, `readability`, `code-style`, `discipline`, `clean-code` |
 | `packages-stack` | Project external-dependency registry methodology: which packages are used and for what, a… | `dependencies`, `conventions`, `navigation`, `stack`, `init` |
-| `plan-protocol` | Use when an explicitly invoked Task plan command needs a plan layout, status or verb refe… | `workflow`, `planning`, `handoff`, `routing`, `multi-model` |
 | `project-map` | Project structure map methodology: zone directories by responsibility for safe change rou… | `conventions`, `navigation`, `architecture`, `structure`, `routing` |
 | `session-handoff` | Cross-session/agent handoff: compress a session into state, decisions, open items. | `workflow`, `context`, `tokens`, `handoff` |
 | `shell` | Growing cookbook of shell constructs compatible with this environment's hooks (currently … | `workflow`, `bash`, `shell`, `safety`, `hooks` |
@@ -648,7 +647,7 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `grilling` | `grill-with-docs` |
 | `gtm` | `competitive-analysis`, `go-to-market`, `new-project`, `pitch-deck`, `product-roadmap` |
 | `guardrails` | `git-safety` |
-| `handoff` | `gh-review`, `oncall-rotation`, `plan-protocol`, `session-handoff` |
+| `handoff` | `gh-review`, `oncall-rotation`, `session-handoff` |
 | `harness` | `agent-packs`, `harness-operations` |
 | `headless` | `reka-ui-cva` |
 | `health` | `health-checks` |
@@ -706,7 +705,6 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `monorepo` | `package-contribution-protocol` |
 | `multi-agent` | `workflow-craft` |
 | `multi-config` | `vite-multi-build` |
-| `multi-model` | `plan-protocol` |
 | `multi-tenant` | `config-driven-abstraction` |
 | `mutation` | `mutation-testing` |
 | `mutators` | `eloquent-accessors` |
@@ -746,7 +744,7 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `phpstan` | `php-upgrade-checklist` |
 | `pinia` | `pinia-stores`, `vue-testing-best-practices` |
 | `plan` | `artifact-review` |
-| `planning` | `plan-protocol`, `task-development-philosophy`, `to-issues`, `verify-claims` |
+| `planning` | `task-development-philosophy`, `to-issues`, `verify-claims` |
 | `plans` | `ecosystem-map` |
 | `playwright` | `playwright-e2e` |
 | `pnpm` | `node-pnpm-preflight` |
@@ -794,7 +792,7 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `root-bootstrap` | `cross-project-optimizer`, `decision-verification`, `docs-maintenance`, `ecosystem-integration`, `ecosystem-mcp`, `ecosystem-setup`, `field-feedback-loop`, `harness-operations`, `maind-overview`, `package-architecture`, `project-tooling-runbook`, `release-discipline`, `skill-authoring`, `task-development-philosophy` |
 | `router` | `docker` |
 | `routes` | `wayfinder` |
-| `routing` | `plan-protocol`, `project-map`, `vue-router-best-practices` |
+| `routing` | `project-map`, `vue-router-best-practices` |
 | `rules` | `model-rules` |
 | `runbook` | `observability-design`, `project-tooling-runbook` |
 | `russian` | `writing-style` |
@@ -893,5 +891,5 @@ Search for skills by tag (load pointwise, not the whole bucket).
 | `webrtc` | `voice-ai` |
 | `websocket` | `docker-services` |
 | `websockets` | `laravel-broadcasting`, `laravel-echo-client` |
-| `workflow` | `anti-drift`, `build-loop`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `implement`, `incident-response`, `laravel-subagents`, `plan-protocol`, `postmortem`, `refactoring-plan`, `session-handoff`, `shell`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead`, `workflow-craft` |
+| `workflow` | `anti-drift`, `build-loop`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `implement`, `incident-response`, `laravel-subagents`, `postmortem`, `refactoring-plan`, `session-handoff`, `shell`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead`, `workflow-craft` |
 | `writing` | `writing-style` |

@@ -6,7 +6,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[3]
 COMMANDS = ROOT / "packages/task/commands"
-PROTOCOL = ROOT / "packages/skiller/skills/general/plan-protocol/SKILL.md"
+PROTOCOL = ROOT / "packages/task/runtime/plan-protocol/SKILL.md"
 
 
 class CompactCanonTests(unittest.TestCase):

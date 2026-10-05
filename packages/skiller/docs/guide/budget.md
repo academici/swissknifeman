@@ -166,7 +166,6 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻503"]:::warm
-    plan_protocol["plan-protocol<br/>⊕33 ↻1599"]:::mild
     project_map["project-map<br/>⊕83 ↻618"]:::warm
     session_handoff["session-handoff<br/>⊕29 ↻590"]:::cool
     shell["shell<br/>⊕73 ↻1989"]:::warm
@@ -437,13 +436,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 232 skills · ⊕ always **12593** current (is always resident if you include the entire registry) · ↻ bodies 302367 current · ⌥ on-demand 826122 current (snippets + references).
+**Total:** 231 skills · ⊕ always **12560** current (is always resident if you include the entire registry) · ↻ bodies 300768 current · ⌥ on-demand 824510 current (snippets + references).
 
 ## By buckets
 
 | Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1267 | 24383 | 9169 |
+| `general` | 21 | 1234 | 22784 | 7557 |
 | `repository-bootstrap` | 14 | 1047 | 30515 | 0 |
 | `architect` | 15 | 937 | 19786 | 33082 |
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |

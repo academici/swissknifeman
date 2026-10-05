@@ -126,7 +126,7 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 22,
+      "count": 21,
       "status": "active"
     },
     "laravel-architecture": {
@@ -2286,27 +2286,6 @@
         "navigation",
         "stack",
         "init"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "plan-protocol",
-      "bucket": "general",
-      "path": "skills/general/plan-protocol/SKILL.md",
-      "version": "3.0.0",
-      "description": "Use when an explicitly invoked Task plan command needs a plan layout, status or verb reference.",
-      "sha256": "58852f818cfee73abacf43c462e6bdc6db991d9c9a7604105dc1d52c183085bd",
-      "content_sha256": "76e958eed1571b9424150dedf8a4c8e64826c3f6c96d780d3785e5fa471bd88c",
-      "tags": [
-        "workflow",
-        "planning",
-        "handoff",
-        "routing",
-        "multi-model"
-      ],
-      "produces_for": [
-        "session-handoff",
-        "complex-task-orchestrator"
       ],
       "source": "local"
     },

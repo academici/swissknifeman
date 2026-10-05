@@ -107,42 +107,35 @@ class TestCodexPublication(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 self._assert_core_cache_matches_catalog(cached, core_root, core)
 
-    def _optional_plan_protocol_root(self):
+    def _general_anti_drift_root(self):
         """Resolve the opt-in general skill through its rendered native manifest."""
         source_root = self.package_root / "skills/general"
         artifacts = build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
         manifest = next(item for item in artifacts
                         if item.target == source_root / ".codex-plugin/plugin.json")
         declared = json.loads(manifest.managed_bytes)["skills"]
-        self.assertIn("./plan-protocol", declared)
-        _, core = self._core_artifacts()
-        self.assertFalse(any("plan-protocol" in item.target.parts for item in core))
-        return source_root / "plan-protocol"
+        self.assertIn("./anti-drift", declared)
+        self.assertNotIn("./plan-protocol", declared)
+        return source_root / "anti-drift"
 
-    def test_optional_plan_protocol_keeps_runtime_tree_and_consumer_exclusions(self):
-        skill_root = self._optional_plan_protocol_root()
+    def test_general_anti_drift_keeps_runtime_tree_and_consumer_exclusions(self):
+        skill_root = self._general_anti_drift_root()
         files = _codex_skill_runtime_files(skill_root, source_root=skill_root.parent,
                                           plugin="general")
         artifacts = {path.relative_to(skill_root): path.read_bytes() for path in files}
-        runtime_path = Path("references/work-references.md")
+        runtime_path = Path("snippets/claude-md-anti-drift.md")
         expected_bytes = (skill_root / runtime_path).read_bytes()
         self.assertEqual(artifacts[runtime_path], expected_bytes)
         self.assertNotIn(Path("SKILL.ru.md"), artifacts)
         self.assertNotIn(Path("upstream.json"), artifacts)
         with tempfile.TemporaryDirectory() as tmp:
-            cached = Path(tmp) / "cached-general-plan-protocol"
+            cached = Path(tmp) / "cached-general-anti-drift"
             for relative, managed_bytes in artifacts.items():
                 target = cached / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(managed_bytes)
             self.assertEqual((cached / runtime_path).read_bytes(), expected_bytes)
             self.assertFalse((cached / "SKILL.ru.md").exists())
-
-    def test_optional_plan_protocol_names_the_plan_cli_verbs(self):
-        skill_root = self._optional_plan_protocol_root()
-        canon_text = (skill_root / "SKILL.md").read_text(encoding="utf-8")
-        for literal in ("`next`", "`start`", "`finish`", "`check`", "references/work-references.md"):
-            self.assertIn(literal, canon_text)
 
     def test_retirement_preserves_modified_files_and_removes_only_prior_owned_bytes(self):
         import tempfile

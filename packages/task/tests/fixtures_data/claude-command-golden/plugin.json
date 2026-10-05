@@ -1,6 +1,6 @@
 {
   "name": "task",
-  "version": "0.28.5",
+  "version": "0.28.6",
   "description": "task: intent commands for Claude Code (/task:design|dev|review|research|fix) plus the plan protocol (/task:plan-design|plan-run|plan-close|plan-audit). Executable master plans live in plans/ per the plan-protocol skill: frontier designs, plan-run executes under the session model, frontier audits. Each fixed command pins its model and reasoning effort; plan-run pins neither and inherits the session route.",
   "author": { "name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com" },
   "homepage": "https://github.com/academici/swissknifeman",

@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.28.6] - 2026-10-05
+
 ### Fixed
 
 - **Fleet delivery:** require a receipt row for every provider declared by release policy; omitted or unsupported providers now block release completion.

@@ -1,5 +1,8 @@
 # CLI harness — agent environment
 
+[Codex request lifecycle](./codex-request-lifecycle) explains native client request capture and
+the limits of diagnosing silent intervals from rollout logs.
+
 `harness` — configuration package **environment Claude Code, Codex and Cursor**: presets permissions,
 modes auto-approve/bypass, MCP-servers and hooks (memory/notify/log). Previously this
 functionality lived inside `skiller`; is placed in a separate package because

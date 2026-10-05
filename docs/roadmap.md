@@ -1,5 +1,10 @@
 # Roadmap
 
+An opt-in [Codex request observer](harness/codex-request-lifecycle.md) captures native
+app-server request identity and lifecycle without storing prompt or answer content; it needs
+integration at the owning client. A 2026-10-05 field silence of a Codex executor remains
+unexplained without those client/server events.
+
 Directions only; order within a block is rough priority. Work starts on measured need, not in anticipation of it.
 
 ## Near term

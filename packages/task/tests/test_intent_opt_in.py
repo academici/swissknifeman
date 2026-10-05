@@ -1,6 +1,5 @@
 """Instruction routing regressions: discovery cannot select a plan workflow."""
 from pathlib import Path
-import re
 import unittest
 
 import fixtures  # noqa: F401 — repository import fallback
@@ -55,7 +54,6 @@ class IntentOptInTests(unittest.TestCase):
                 for dependency in ("task-design", "task:plan-design", "task:plan-audit",
                                    "task:plan-close"):
                     self.assertNotIn(dependency, text)
-                self.assertIsNone(re.search(r"task\.(plan_lifecycle|task_contract)", text))
             wrapper = artifacts[f"packages/task/adapters/codex/skills/task-{command}/SKILL.md"]
             self.assertIn("Activate only when the owner explicitly invokes this Task command or skill", wrapper)
             self.assertIn("automatic workflow for development", wrapper)

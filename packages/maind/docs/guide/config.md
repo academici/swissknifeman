@@ -15,7 +15,7 @@ difflib), unknown nested - warning.
 | `node` | node identification: `id`, `name`, `role` (`primary`/`secondary`/`mirror`) |
 | `memory` | `http_port`, `stream_port`, `data_dir`, `url`, `config_path` |
 | `graph` | `adapter` (`federation` default / `disabled`) — federation single layout |
-| `code_graph` | code graph policy: `command`/`args`/`server_name`, `ignores`/`workspace_ignores`, `language_by_type`, `initial_prompt`/`workspace_prompt`, `pre_index`, `feature_log_hook` (see below) |
+| `code_graph` | code graph policy: `command`/`args`/`server_name`, `ignores`/`workspace_ignores`, `language_by_type`, `initial_prompt`/`workspace_prompt`, `pre_index` (see below) |
 | `agents` | `registry_enabled`, `heartbeat_interval_ms`, `max_idle_ms`, `definitions[]` |
 | `projects[]` | projects (see below) |
 | `providers` | optional fleet defaults provider selection; exact contract below |
@@ -121,8 +121,7 @@ The entire code graph policy is **in the config, not in the code** (you edit her
   "language_by_type": { "php-package": "php", "node-package": "typescript" },
   "ignores": ["vendor","node_modules","packages","..."],          // default mode
   "workspace_ignores": ["vendor","**/vendor","..."],              // single graph mode (packages not ignored)
-  "pre_index": true,                   // background warm-up-indexing when turned on
-  "feature_log_hook": false            // opt-in SessionEnd-publishing commits
+  "pre_index": true                    // background warm-up-indexing when turned on
 }
 ```
 

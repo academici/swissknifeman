@@ -68,13 +68,6 @@ cosine comparison - on stdlib; embedding - external (like jscpd). MVP, is develo
 
 ## features / log — feature correlation via shared memory
 
-```bash
-maind fleet log "added import CSV" --project flexcrm     # fact in ns:<group> + global + private
-maind fleet features --namespace axioma                    # group facts: what was changed where
-```
-
-Marker `maind:feature-log`. Optimizer agent `recall`-it and notices similar changes in different
-projects → candidate for general helper. Requires raised [memory](./memory).
 
 ## What already exists and what is new
 

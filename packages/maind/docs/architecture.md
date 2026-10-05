@@ -123,18 +123,18 @@ If memory is not raised in the project + maind MCP, development in progress «pa
 managed block in `CLAUDE.md`. SessionStart-hook available as explicit opt-in via
 `observability.session_start_health_hook`; default health is started manually.
 
-## Memory: visibility «general» + seed
+## Memory: visibility «general»
 
-During onboarding/send to private bucket `project:<id>` upsert-There is one basic fact about connections.
+Connections are read from config/graph and never written to memory.
 Graph namespaces do not publish memory automatically. Common areas are listed separately in
 `memory_namespaces` and are read only through explicit `scope=ns:<name>`.
 
 ## Unified provisioning: `maind sync`
 
 One command analyzes `config.json` and rolls out **managed artifacts** for everything
-connected projects through the registry of providers (`sync.py`): `mcp` · `graph` (derive) · `memory`
-(seed) · `memory-hook` (digest auto-loading + native off) · `health-hook` · `health-doc` ·
-`feature-log-hook` · `ecosystem-skill` (skill `ecosystem-mcp` to the project).
+connected projects through the registry of providers (`sync.py`): `mcp` · `graph` (derive) ·
+`memory-hook` (digest auto-loading + native off) · `health-hook` · `health-doc` ·
+`ecosystem-skill` (skill `ecosystem-mcp` to the project).
 `--only` narrows the set, `--mode install|update|auto` sets
 «syncing method by area» (create if not / update outdated software content-hash / both
 other). Fan-out on projects and resolution paths/scope moved to `ProjectContext`/`select_projects`

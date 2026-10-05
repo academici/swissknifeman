@@ -48,8 +48,6 @@ maind run <project> <capability> [-- args]   # pull command brain / swissknifema
 maind fleet manifest                                      # projects + groups by common packages (JSON)
 maind fleet duplicates [--group PKG | --projects a,b] [--min-tokens N] [--json]  # cross-project duplicates (jscpd)
 maind fleet similar [--group PKG | --projects a,b] [--threshold T] [--json]  # semantically similar code (embeddings)
-maind fleet log "<what did>" [--project ID]            # feature-fact to shared memory
-maind fleet features [--namespace NS]                    # feature-group facts
 
 maind onboard <project> [--with-code] [--with-brain]            # unified onboarding
 

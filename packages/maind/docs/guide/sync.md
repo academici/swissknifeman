@@ -24,11 +24,9 @@ Selecting projects (`select_projects`) — exactly one of `--project` / `--names
 | `mcp` | writes MCP-hub servers (agent-memory + maind [+ code graph]) in `.mcp.json` project | `deploy.py` |
 | `code-graph` | starting `.serena/project.yml` (when `code:true`, engine Serena) — language + ignores + initial_prompt | `codegraph.py` |
 | `graph` | `derive` project graph from sources + rebuild `_index.db` | `derive.py` |
-| `memory` | upsert basic fact about connections only in `project:<id>` | `seed.py` |
 | `memory-hook` | `MODE=manual`: remove digest and leave native off; `MODE=maind`: explicitly enable SessionStart digest | `health.py` |
 | `health-hook` | opt-in SessionStart-hook (`observability.session_start_health_hook`; disabled by default) | `health.py` |
 | `health-doc` | managed block «priority №1» in `CLAUDE.md` | `health.py` |
-| `feature-log-hook` | opt-in SessionEnd-publish commit (`code_graph.feature_log_hook`; disabled by default) | `health.py` |
 | `ecosystem-skill` | controlled skill `ecosystem-mcp` (what the MCP-tools, connections, repairs) in `.claude/skills/` | `skilldoc.py` |
 | `setup-skill` | controlled skill `ecosystem-setup` (project tooling decision tree) in `.claude/skills/` | `skilldoc.py` |
 | `skills-catalog` | `skiller update` — re-resolve skill catalog (buckets/exclude from disk); new skill for an already selected bucket (e.g. `pao` in `php`) arrives without manual re-run | `orchestrate.py` → `skm:update` |

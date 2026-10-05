@@ -13,7 +13,7 @@ depends on external things. Not promises - direction.
 - **Workspace-mode** (auto upon availability `packages/`): single graph «project + local packages»,
   edits go to real package repositories. Tested on flexcrm+corex.
 - **Cross-project layer** `maind fleet`: manifest (groups by common packages), duplicates (jscpd),
-  feature-log; skill `cross-project-optimizer`.
+  similar; skill `cross-project-optimizer`.
 - **Provisioning** `maind sync` + `onboard` + healthcheck + skills (`ecosystem-mcp`).
 - **Unified terminology of three planes** (agent-memory / maind-graph / code graph): name `graphify`
   cut out from prose and documents, all that remains is how legacy-alias in the config/flags (back-compat).
@@ -34,8 +34,6 @@ by merging into one root (works), but it's not N-federate-graphs. Depends on ups
 
 ## What maind can close itself (close)
 
-- **Auto feature-log**: hook, soft fixing «what has changed» to shared memory - to
-  the optimizer saw the history without manual `maind fleet log`.
 - **jscpd by monorepo**: smart default ignore (now `--ignore` for the monorepo package is set
   manually; do automatically by project type).
 - **Pre-index Serena when enabled** (`serena project index`) — so that the first call in the session does not

@@ -245,13 +245,6 @@ def onboard(env, config, project_or_path, opts):
                                 f"{d['edges']} ribs (code {d['by_via']['code']}, "
                                 f"doc {d['by_via']['doc']})"})
 
-    # 3b. seed-memory: a basic fact about connections (visibility «shared memory»)
-    if not dry:
-        from ..seed import seed_memory
-        ms = seed_memory(env, config, proj)
-        steps.append({"name": "memory", "status": "ok" if ms["status"] == "ok" else "skipped",
-                      "detail": ms.get("detail", ms["status"])})
-
     # 3c. ecosystem-skill: guided skill with instructions about MCP-tools and connections
     from .skilldoc import apply_ecosystem_skill, apply_setup_skill
     try:

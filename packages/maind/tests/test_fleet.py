@@ -1,4 +1,4 @@
-"""Tests fleet.py — manifest (groups by common packages), parsing duplicates, feature-log."""
+"""Tests fleet.py — manifest (groups by common packages), parsing duplicates, similarity."""
 import json
 import tempfile
 import unittest
@@ -6,7 +6,6 @@ from pathlib import Path
 
 from maind import derive
 from maind.analysis import fleet
-from maind import memory as memory_mod
 from maind.config import load_config
 from tests.fixtures import FakeMemoryServer, make_repo, write_maind_config
 
@@ -85,22 +84,6 @@ class TestDuplicatesParsing(unittest.TestCase):
             pmap, paths = fleet._resolve_targets(env, config, {"projects": "flexcrm"})
             self.assertEqual(list(pmap.values()), ["flexcrm"])
             self.assertEqual(len(paths), 1)
-
-
-class TestFeatureLog(unittest.TestCase):
-    def test_log_and_recall_cross_project(self):
-        with tempfile.TemporaryDirectory() as tmp, FakeMemoryServer() as url:
-            env, config = _setup(tmp, url, namespaces=["axioma"],
-                                 memory_namespaces=["axioma"])
-            flex = config["projects"][0]
-            r = fleet.log_feature(env, config, flex, "added import CSV")
-            self.assertEqual(r["status"], "ok")
-            self.assertIn("ns:axioma", r["scopes"])
-            # visible in the group bucket
-            got = memory_mod.recall(url, "ns:axioma", fleet.FEATURE_MARKER)
-            self.assertTrue(any("CSV" in m["text"] for m in got))
-            feats = fleet.features(env, config, namespace="axioma")
-            self.assertTrue(any("CSV" in f["text"] for f in feats))
 
 
 class TestSimilar(unittest.TestCase):

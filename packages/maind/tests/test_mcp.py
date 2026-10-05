@@ -114,7 +114,7 @@ class TestToolCalls(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
-                memory_mod.store(url, "project:x", "fact", "hello world")
+                memory_mod.store(url, "project:x", "context", "hello world")
                 r = call(env, cfg(memory={"url": url}), "maind_memory_recall",
                          {"scope": "project:x", "query": "hello"})
                 data = json.loads(r["result"]["content"][0]["text"])
@@ -128,10 +128,10 @@ class TestToolCalls(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
-                memory_mod.store(url, "project:a", "fact", "priv workflow one")
-                memory_mod.store(url, "project:a", "fact", "priv workflow two")
+                memory_mod.store(url, "project:a", "context", "priv workflow one")
+                memory_mod.store(url, "project:a", "context", "priv workflow two")
                 for i in range(memory_mod.RECALL_SHARED_LIMIT + 10):
-                    memory_mod.store(url, "ns:x", "fact", f"shared workflow item {i}")
+                    memory_mod.store(url, "ns:x", "context", f"shared workflow item {i}")
                 config = cfg(projects=[{"id": "a", "namespaces": ["x"]}], memory={"url": url})
                 r = call(env, config, "maind_memory_recall",
                          {"scope": "project:a", "query": "workflow"})
@@ -167,7 +167,7 @@ class TestToolCalls(unittest.TestCase):
                 os.environ["AGENTMEMORY_SECRET"] = "good-token"
                 try:
                     r = call(env, cfg(memory={"url": url}), "maind_memory_store",
-                             {"scope": "project:x", "key": "fact", "value": "hi"})
+                             {"scope": "project:x", "key": "context", "value": "hi"})
                 finally:
                     del os.environ["AGENTMEMORY_SECRET"]
                 self.assertFalse(r["result"].get("isError"))
@@ -177,7 +177,7 @@ class TestToolCalls(unittest.TestCase):
             _, env = make_repo(tmp)
             with FakeMemoryServer(secret="good-token") as url:
                 r = call(env, cfg(memory={"url": url}), "maind_memory_store",
-                         {"scope": "project:x", "key": "fact", "value": "hi"})
+                         {"scope": "project:x", "key": "context", "value": "hi"})
                 self.assertTrue(r["result"]["isError"])   # the server is alive, the server does not crash MCP
                 self.assertIn("401", r["result"]["content"][0]["text"])
 
@@ -206,7 +206,7 @@ class TestToolCalls(unittest.TestCase):
             with FakeMemoryServer() as url:
                 c = cfg(memory={"url": url})
                 stored = json.loads(call(env, c, "maind_memory_store",
-                    {"scope": "project:x", "key": "fact", "value": "hello world"}
+                    {"scope": "project:x", "key": "context", "value": "hello world"}
                     )["result"]["content"][0]["text"])
                 mid = stored["memory"]["id"]
                 got = json.loads(call(env, c, "maind_memory_recall",
@@ -289,7 +289,7 @@ class TestScopeIsolation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
-                memory_mod.store(url, "project:b", "fact", "project secret b")
+                memory_mod.store(url, "project:b", "context", "project secret b")
                 config = cfg(projects=self.NS, memory={"url": url})
                 r = scoped_call(env, config, "maind_memory_recall",
                                 {"scope": "project:b", "query": "secret"}, "project:a")
@@ -310,7 +310,7 @@ class TestScopeIsolation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
-                stored = memory_mod.store(url, "project:b", "fact", "delete me")
+                stored = memory_mod.store(url, "project:b", "context", "delete me")
                 mid = stored["memory"]["id"]
                 config = cfg(projects=self.NS, memory={"url": url})
                 # scope=project:a is allowed, but memoryId belongs to project:b → possession denial
@@ -340,7 +340,7 @@ class TestScopeIsolation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
-                memory_mod.store(url, "project:a", "fact", "own memory")
+                memory_mod.store(url, "project:a", "context", "own memory")
                 config = cfg(projects=self.NS, memory={"url": url})
                 r = scoped_call(env, config, "maind_memory_recall",
                                 {"scope": "project:a", "query": "own"}, "project:a")
@@ -353,8 +353,8 @@ class TestScopeIsolation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
-                memory_mod.store(url, "project:a", "fact", "private matching fact")
-                memory_mod.store(url, "ns:axioma", "fact", "shared matching fact")
+                memory_mod.store(url, "project:a", "context", "private matching fact")
+                memory_mod.store(url, "ns:axioma", "context", "shared matching fact")
                 config = cfg(projects=[{"id": "a", "namespaces": ["axioma"]}],
                              memory={"url": url})
                 response = scoped_call(env, config, "maind_memory_recall",
@@ -378,7 +378,7 @@ class TestScopeIsolation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
-                memory_mod.store(url, "project:b", "fact", "admin access")
+                memory_mod.store(url, "project:b", "context", "admin access")
                 config = cfg(projects=self.NS, memory={"url": url})
                 os.environ["MAIND_MCP_ALLOW_CROSS_SCOPE"] = "1"
                 try:
@@ -393,7 +393,7 @@ class TestScopeIsolation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             with FakeMemoryServer() as url:
-                memory_mod.store(url, "project:b", "fact", "hub sees everything")
+                memory_mod.store(url, "project:b", "context", "hub sees everything")
                 config = cfg(projects=self.NS, memory={"url": url})
                 r = scoped_call(env, config, "maind_memory_recall",
                                 {"scope": "project:b", "query": "hub"}, "global")

@@ -1,12 +1,10 @@
 """maind fleet — cross-project layer for the optimizer agent.
 
-Three functions for cross-project optimization ~N similar projects (common core packages):
+Cross-project optimization ~N similar projects (common core packages):
 - manifest  — single JSON: projects (paths/namespaces/scopes) + groups by COMMON packages
               (who demands what) → agent entry point, «where to look».
 - duplicates — cross-project search for code duplicates (wrapper over jscpd) by grouped
               paths → «what exactly is repeated» (cross-project clones first).
-- feature-log — facts «made a feature X» to shared memory (ns/global), so that the agent correlates
-              similar changes between projects.
 - similar    — SEMANTIC similarity of code (function embeddings/classes) over literals
               takes jscpd: «similar in meaning, not verbatim». Backend of embeddings - external
               (config code_graph.embed), orchestrated; without it - intelligible die.
@@ -25,13 +23,8 @@ from pathlib import Path
 from ..common import die, parse_args, warn
 from ..config import load_config
 from ..federation import federated_graph, graph_disabled
-from ..memory import health as mem_health
-from ..memory import recall, resolve_ports, store
 from ..namespaces import group_scopes, namespaces_of, private_scope
-from ..projects import get as get_project
 from ..projects import listing
-
-FEATURE_MARKER = "maind:feature-log"
 
 
 # ── manifest ─────────────────────────────────────────────────────────────────
@@ -162,37 +155,6 @@ def find_duplicates(env, config, opts):
             "clones": clones}
 
 
-# ── feature-log in shared memory ───────────────────────────────────────────────
-def log_feature(env, config, project, text, *, dry=False):
-    """Write fact «made a feature» to group (ns/global) + private bucket - for correlation
-    similar changes between projects by the optimization agent."""
-    pid = project["id"]
-    _, _, url = resolve_ports(env, config)
-    if not mem_health(url):
-        return {"status": "skip", "detail": "memory daemon not running"}
-    fact = f"[{FEATURE_MARKER}] {pid}: {text}"
-    scopes = [private_scope(project)] + group_scopes(project)
-    if not dry:
-        for sc in scopes:
-            store(url, sc, "feature-log", fact)
-    return {"status": "dry" if dry else "ok", "scopes": scopes, "fact": fact}
-
-
-def features(env, config, *, namespace=None):
-    """Collect feature-facts visible to the group: ns:<namespace> (if specified) + global."""
-    _, _, url = resolve_ports(env, config)
-    if not mem_health(url):
-        die("memory daemon not running - maind start --only memory")
-    scopes = ([f"ns:{namespace}"] if namespace else []) + ["global"]
-    out, seen = [], set()
-    for sc in scopes:
-        for r in recall(url, sc, FEATURE_MARKER):
-            if r["text"] and r["text"] not in seen:
-                seen.add(r["text"])
-                out.append({"scope": sc, "text": r["text"]})
-    return out
-
-
 # ── semantic similarity (embeddings) ─────────────────────────────────────
 # Code chunk = function declaration/class/method + following lines (context). Simple
 # language-agnostic-ish capture by keywords: function (PHP/JS/TS), class/interface/trait
@@ -304,8 +266,7 @@ def cmd_fleet(env, argv):
     rest = argv[1:] if argv and not argv[0].startswith("-") else argv
     if sub in ("-h", "--help", "help"):
         print("maind fleet [manifest] | duplicates [--group PKG|--projects a,b|--min-tokens N] "
-              "| similar [--group|--projects|--threshold T] | log <text> [--project ID] "
-              "| features [--namespace NS]   [--json]")
+              "| similar [--group|--projects|--threshold T]   [--json]")
         return
     config, _ = load_config(env)
 
@@ -349,31 +310,5 @@ def cmd_fleet(env, argv):
                       f"{p['b']['project']}:{p['b']['name']}")
         return
 
-    if sub == "log":
-        opts, pos = parse_args(rest, {"--project": "str", "--dry-run": "bool",
-                                      "--json": "bool"})
-        if not pos:
-            die("usage: maind fleet log <text> [--project ID]")
-        proj = get_project(config, opts["project"]) if opts["project"] else None
-        if proj is None and opts["project"]:
-            die(f"project not found: {opts['project']}")
-        if proj is None:  # default - by cwd
-            from ..health import _target
-            proj = _target(env, config, {})
-        r = log_feature(env, config, proj, " ".join(pos), dry=opts["dry_run"])
-        print(json.dumps(r, ensure_ascii=False, indent=2) if opts["json"]
-              else f"{r['status']}: {r.get('fact', r.get('detail', ''))}")
-        return
-
-    if sub == "features":
-        opts, _pos = parse_args(rest, {"--namespace": "str", "--json": "bool"})
-        feats = features(env, config, namespace=opts["namespace"])
-        if opts["json"]:
-            print(json.dumps(feats, ensure_ascii=False, indent=2))
-        else:
-            for f in feats:
-                print(f"  [{f['scope']}] {f['text']}")
-        return
-
     die(f"unknown subcommand fleet: {sub} "
-        "(manifest|duplicates|similar|log|features)")
+        "(manifest|duplicates|similar)")

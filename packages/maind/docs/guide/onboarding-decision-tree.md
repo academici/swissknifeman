@@ -110,10 +110,9 @@ for agent - `php/pao` (`packages/skiller/skills/php/pao/SKILL.md`).
 - **Code graph (Serena):** `--with-code` → MCP-code server + `.serena/project.yml` (language by type,
   ignores). No binary Serena → pass with warn.
 
-## Layer 7 - Graph + seed-memory
+## Layer 7 - Graph
 
 - **derive column** from the sources of truth (composer/package/docs/skills-lock) → project store + index.
-- **seed-memory:** basic fact about connections in `project:<id>` + `ns:<group>`.
 - Disabled `graph.enabled=false` / `--dry-run`.
 
 ## Layer 8 - Agent-packs
@@ -144,7 +143,7 @@ carries `[[wikilinks]]` (gate brain). Part - Brain `docs/workflow/docs-watcher.m
 
 | Task | Command | Branches |
 |:--|:--|:--|
-| **reroll artifacts** | `maind sync [--only mcp,graph,…] [--project\|--namespace\|--all] [--mode install\|update\|auto]` | provisioner-order: mcp → code-graph → graph → memory → memory-hook → health-hook → health-doc → feature-log → ecosystem-skill → setup-skill → agent-pack |
+| **reroll artifacts** | `maind sync [--only mcp,graph,…] [--project\|--namespace\|--all] [--mode install\|update\|auto]` | provisioner-order: mcp → code-graph → graph → memory-hook → health-hook → health-doc → ecosystem-skill → setup-skill → agent-pack |
 | **change skill channel** | `skiller status` → connect/vendor (Layer 3) | connect↔vendor; lock does not lose other people's records |
 | **migration** | `maind migrate …` | legacy `.maind.json`→`config.json`, adapter-normalization |
 | **diagnostics** | `maind health` (round-trip), `skiller status`, `maind doctor` | health=connected — gate «really writes», and not «raised» |

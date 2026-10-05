@@ -7,6 +7,7 @@ import io
 import json
 import sys
 import threading
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -112,7 +113,8 @@ class _Handler(BaseHTTPRequestHandler):
                 return
             q = parse_qs(parsed.query)
             ns = (q.get("namespace") or [""])[0]
-            mems = self.server.memories.get(ns, [])
+            mems = self.server.memories.get(ns, []) if ns else \
+                [m for bucket in self.server.memories.values() for m in bucket]
             self._send(200, {"memories": mems, "total": len(mems)})
         else:
             self._send(404, {"error": "not found"})
@@ -129,13 +131,15 @@ class _Handler(BaseHTTPRequestHandler):
             self.server._seq += 1
             mid = f"mem_fake_{self.server._seq}"
             self.server.memories.setdefault(ns, []).append(
-                {"id": mid, "content": payload.get("content", ""), "type": payload.get("type")})
+                {"id": mid, "content": payload.get("content", ""), "type": payload.get("type"),
+                 "createdAt": datetime.now(timezone.utc).isoformat()})
             self._send(201, {"success": True,
                              "memory": {"id": mid, "content": payload.get("content", "")}})
         elif parsed.path == "/agentmemory/search":
             query = (payload.get("query") or "").lower()
             limit = payload.get("limit")
             results = [{"observation": {"id": m["id"], "narrative": m["content"],
+                                        "createdAt": m.get("createdAt"),
                                         "title": m["content"], "facts": [m["content"]]},
                         "score": 1.0}
                        for m in self.server.memories.get(ns, [])

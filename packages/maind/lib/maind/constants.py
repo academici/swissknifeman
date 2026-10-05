@@ -66,15 +66,15 @@ GRAPH_VERSION = 1
 # initial_prompt/workspace_prompt: models are given natively when the project is activated Serena.
 # Serena pinned to release tag (NOT bare-main): breaking-change to main won't break
 # code graph for all projects suddenly. Bump - here, in ONE place; Check current release
-# on github.com/oraios/serena/releases. (verified 2026-07-27: pin on commit-SHA D110 —
-# @v1.5.3/@v1.6.1 both are older than schema.serena/project.yml, written by our provider
-# with ccd4505b (language_servers); upstream does not have a stable tag with this scheme)
-SERENA_SRC = "git+https://github.com/oraios/serena@026b007bb889366283c925527e9a3bab317f66c1"
+# on github.com/oraios/serena/releases. The release tag is resolved to its immutable commit
+# so a moved tag cannot silently change the engine in every project (verified 2026-10-04:
+# v1.7.0 -> 949a27ef1e5fda1a6e7b561e777bcece345c6ffd).
+SERENA_SRC = "git+https://github.com/oraios/serena@949a27ef1e5fda1a6e7b561e777bcece345c6ffd"
 # Required keys .serena/project.yml (Serena `_from_dict` FIELDS_WITHOUT_DEFAULTS), which
 # expects the version pinned above - an offline copy of the fact, and not a request to the upstream.
-# The fact was removed by directly reading the source of the pin (Serena 1.6.2.dev0, pin 026b007b…):
-# serena/config/serena_config.py:341 (path inside uv-archive, outside this repository),
-# reconciliation 2026-07-27. Other keys
+# The fact was checked in Serena 1.7.0 (pin 949a27ef…):
+# serena/config/serena_config.py `FIELDS_WITHOUT_DEFAULTS` still requires exactly this pair.
+# Other keys
 # .serena/project.yml have defaults (data.setdefault) are not included here.
 # Updated with the SAME seam as SERENA_SRC: bumped the pin - check this set with the new one
 # serena/resources/project.template.yml (or schema release notes), otherwise connectivity gate
@@ -116,7 +116,6 @@ CODE_GRAPH_DEFAULTS = {
         "— the change will affect the package itself and all its consumers."
     ),
     "pre_index": False,
-    "feature_log_hook": False,
 }
 
 # perplexity-web — keyless-bridge (browser profile) like hub-managed MCP-server.

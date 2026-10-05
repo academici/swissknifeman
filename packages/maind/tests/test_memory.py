@@ -2,6 +2,7 @@
 
 Real Node-daemon does not start: start short-circuit'appears alive FakeMemoryServer,
 a status/wrapper work against it."""
+import base64
 import contextlib
 import io
 import json
@@ -9,9 +10,11 @@ import os
 import stat
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
 from core.http import HTTPUnauthorizedError
+from maind import memory_policy as policy
 
 from maind import memory
 from tests.fixtures import FakeMemoryServer, make_repo
@@ -21,8 +24,8 @@ class TestWrapper(unittest.TestCase):
     def test_store_recall_health_and_scope(self):
         with FakeMemoryServer() as url:
             self.assertTrue(memory.health(url))
-            memory.store(url, "project:brain", "fact", "the sky is blue")
-            memory.store(url, "project:brain", "fact", "grass is green")
+            memory.store(url, "project:brain", "context", "the sky is blue")
+            memory.store(url, "project:brain", "context", "grass is green")
             texts = [r["text"] for r in memory.recall(url, "project:brain", "sky")]
             self.assertIn("the sky is blue", texts)
             self.assertNotIn("grass is green", texts)
@@ -110,14 +113,22 @@ class TestLifecycle(unittest.TestCase):
             self.assertTrue(st["pidfile_stale"])
 
 
+def live(text):
+    """Content with a valid unexpired envelope (bypasses write-time size limits)."""
+    now = datetime.now(timezone.utc).timestamp()
+    meta = {"key": "context", "created_at": now, "expires_at": now + 3600}
+    encoded = base64.urlsafe_b64encode(json.dumps(meta).encode()).decode()
+    return f"{policy.PREFIX}{encoded}] {text}"
+
+
 class TestCount(unittest.TestCase):
     def test_count_by_scope_marker(self):
         # count filters the pool by scope-TO MARKER, rather than counting the entire global daemon pool
         pool = [
-            {"content": memory.mark_scope("project:brain", "sky is blue")},
-            {"content": memory.mark_scope("project:brain", "grass is green")},
-            {"content": memory.mark_scope("project:other", "hidden")},   # alien scope — do not count
-            {"content": "unmarked legacy"},                              # without marker - do not count
+            {"content": memory.mark_scope("project:brain", live("sky is blue"))},
+            {"content": memory.mark_scope("project:brain", live("grass is green"))},
+            {"content": memory.mark_scope("project:other", live("hidden"))},   # alien scope — do not count
+            {"content": "unmarked"},                                     # without marker - do not count
         ]
         with FakeMemoryServer() as url:
             with tempfile.TemporaryDirectory() as tmp:
@@ -148,18 +159,18 @@ class TestDigestSelection(unittest.TestCase):
     project-only default (D10). Testing on lists dict — form export()."""
 
     def _row(self, scope, text, ts):
-        return {"content": memory.mark_scope(scope, text), "timestamp": ts}
+        fresh = datetime.now(timezone.utc) - timedelta(minutes=32 - int(ts[8:10]))
+        return {"content": memory.mark_scope(scope, live(text)), "timestamp": fresh.isoformat()}
 
     def test_real_dump_shape_sorts_by_updated_at_and_skips_superseded(self):
         # agentmemory 0.9.x export: updatedAt/createdAt, no `timestamp`; oldest-first dump order
         def rec(text, created, updated, **extra):
-            return {"content": memory.mark_scope("project:p", text), "createdAt": created,
+            return {"content": memory.mark_scope("project:p", live(text)), "createdAt": created,
                     "updatedAt": updated, **extra}
-        raw = [
-            rec("old fact", "2026-06-01T00:00:00Z", "2026-06-01T00:00:00Z"),
-            rec("replaced fact", "2026-06-02T00:00:00Z", "2026-06-02T00:00:00Z", isLatest=False),
-            rec("fresh fact", "2026-09-01T00:00:00Z", "2026-09-01T00:00:00Z", isLatest=True),
-        ]
+        now = datetime.now(timezone.utc)
+        old, replaced, fresh = [(now - timedelta(hours=h)).isoformat() for h in (3, 2, 1)]
+        raw = [rec("old fact", old, old), rec("replaced fact", replaced, replaced, isLatest=False),
+               rec("fresh fact", fresh, fresh, isLatest=True)]
         items, dropped = memory.select_digest_items(
             raw, "project:p", {"project:p"}, limit=8, budget_chars=4000,
             item_max_chars=500, shared_max=0)
@@ -321,8 +332,8 @@ class TestAuth(unittest.TestCase):
     def test_store_sends_authorization_header_when_secret_configured(self):
         with FakeMemoryServer(secret="good-token") as url:
             with self.assertRaises(HTTPUnauthorizedError):
-                memory.store(url, "project:p", "fact", "no header")
-            res = memory.store(url, "project:p", "fact", "with header",
+                memory.store(url, "project:p", "context", "no header")
+            res = memory.store(url, "project:p", "context", "with header",
                                headers=memory.auth_headers("good-token"))
             self.assertTrue(res.get("success"))
 

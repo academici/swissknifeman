@@ -33,7 +33,6 @@ from .provision.workspace import load_settings
 
 BLOCK_MARKER = "maind:healthcheck"
 HOOK_SCRIPT = ".claude/maind-health.sh"
-FEATURE_HOOK_SCRIPT = ".claude/maind-feature-log.sh"
 MEMORY_HOOK_SCRIPT = ".claude/maind-memory.sh"
 
 
@@ -344,26 +343,10 @@ def apply_health_hook(env, config, project, mode, dry):
         detail=".claude/maind-health.sh + settings")
 
 
-def apply_feature_log_hook(env, config, project, mode, dry):
-    """SessionEnd-script for committing a new commit to shared memory (maind fleet log) + hook."""
-    return _apply_script_hook(
-        env, project, mode, dry, name="feature-log-hook",
-        template="health/feature-log-hook.sh", script_rel=FEATURE_HOOK_SCRIPT,
-        subst={"PROJECT": project["id"]}, event="SessionEnd", marker="maind-feature-log",
-        detail=".claude/maind-feature-log.sh + settings")
-
-
 def revert_health_hook(env, config, project, mode, dry):
     return _remove_script_hook(project, dry, name="health-hook", script_rel=HOOK_SCRIPT,
                                event="SessionStart", marker="maind-health",
                                detail="SessionStart health disabled")
-
-
-def revert_feature_log_hook(env, config, project, mode, dry):
-    return _remove_script_hook(project, dry, name="feature-log-hook",
-                               script_rel=FEATURE_HOOK_SCRIPT, event="SessionEnd",
-                               marker="maind-feature-log",
-                               detail="autopublishing of commits is disabled")
 
 
 def apply_memory_hook(env, config, project, mode, dry):

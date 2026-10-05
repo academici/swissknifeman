@@ -33,9 +33,9 @@ MODES = ("install", "update", "auto", "repair")
 INTENT_ORDER = ("trust", "memory-context", "health", "skills", "agent-pack", "router",
                 "instruction-root", "instruction-package")
 PROVISIONER_INTENTS = {
-    "mcp": (), "code-graph": (), "graph": (), "memory": (),
+    "mcp": (), "code-graph": (), "graph": (),
     "memory-hook": ("memory-context",), "health-hook": ("health",),
-    "health-doc": ("health",), "feature-log-hook": ("health",),
+    "health-doc": ("health",),
     "ecosystem-skill": ("skills",), "setup-skill": ("skills",),
     "skills-catalog": ("skills",), "agent-pack": ("agent-pack",),
     "output-style": ("memory-context",), "router-config": ("router",),
@@ -240,12 +240,6 @@ def _graph_run(env, config, projects, mode, dry):
     return results
 
 
-def _memory_run(env, config, projects, mode, dry):
-    """Seed-memory: basic fact about project relationships project:<id> + cross-ref in global."""
-    from ..seed import seed_memory
-    return [seed_memory(env, config, p, dry=dry) for p in projects]
-
-
 def _health_hook_run(env, config, projects, mode, dry):
     """SessionStart-connection hook with the hub (DOES NOT block) in .claude/settings.json projects."""
     from ..health import apply_health_hook, revert_health_hook
@@ -385,15 +379,6 @@ def _instruction_run(env, config, projects, mode, dry):
                                state="clean" if operation.green else "non-green",
                                detail=detail, provider_aggregate=aggregate))
     return results
-
-
-def _feature_log_hook_run(env, config, projects, mode, dry):
-    """SessionEnd-hook for committing commits to shared memory (if code_graph.feature_log_hook)."""
-    from ..codegraph import settings
-    from ..health import apply_feature_log_hook, revert_feature_log_hook
-    enabled = bool(settings(config).get("feature_log_hook", False))
-    fn = apply_feature_log_hook if enabled else revert_feature_log_hook
-    return [fn(env, config, p, mode, dry) for p in projects]
 
 
 def _setup_skill_run(env, config, projects, mode, dry):
@@ -635,11 +620,9 @@ PROVISIONERS = {
     "mcp": _mcp_run,
     "code-graph": _codegraph_run,
     "graph": _graph_run,
-    "memory": _memory_run,
     "memory-hook": _memory_hook_run,
     "health-hook": _health_hook_run,
     "health-doc": _health_doc_run,
-    "feature-log-hook": _feature_log_hook_run,
     "ecosystem-skill": _ecosystem_skill_run,
     "setup-skill": _setup_skill_run,
     "skills-catalog": _skills_catalog_run,
@@ -649,8 +632,8 @@ PROVISIONERS = {
     "instructions": _instruction_run,
     "gitignore": _gitignore_run,
 }
-ORDER = ["mcp", "code-graph", "graph", "memory", "memory-hook", "health-hook",
-         "health-doc", "feature-log-hook", "ecosystem-skill", "setup-skill",
+ORDER = ["mcp", "code-graph", "graph", "memory-hook", "health-hook",
+         "health-doc", "ecosystem-skill", "setup-skill",
          "skills-catalog", "agent-pack", "output-style", "router-config",
          "instructions", "gitignore"]
 
@@ -1037,7 +1020,7 @@ def cmd_sync(env, argv):
                                 "--json": "bool", "--conformance": "str"})
     if opts["help"]:
         print("maind sync [--project ID | --namespace NS | --all] [--only mcp,code-graph,"
-              "graph,memory,memory-hook,health-hook,health-doc,feature-log-hook,"
+              "graph,memory-hook,health-hook,health-doc,"
               "ecosystem-skill,setup-skill,skills-catalog,agent-pack,output-style,"
               "router-config,instructions] "
               "[--mode install|update|auto|repair] [--dry-run] [--json]\n"

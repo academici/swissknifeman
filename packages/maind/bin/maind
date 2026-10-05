@@ -17,7 +17,7 @@
 #   health    healthcheck project connection with the hub: --cwd | --project X [--fix]
 #   workspace single trust Claude to ecosystem projects: sync | status
 #   run       execute the command of the neighboring package: run <proj> <cap> (--list)
-#   fleet     cross-project layer: manifest | duplicates | log | features
+#   fleet     cross-project layer: manifest | duplicates | similar
 #   onboard   unified project onboarding: skills (swissknifeman) + connection to the brain
 #   migrate   import: from-brain <.projects.json> | from-agentmemory <dir>
 #   mcp       run maind like MCP-server (stdio JSON-RPC)

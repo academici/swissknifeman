@@ -278,7 +278,7 @@ def render_guide(manifest, report) -> bytes:
         "",
     ]
     for capability in manifest.capabilities:
-        lines.extend([f"### `{capability.capability_id.value}`", "", capability.intent, ""])
+        lines.extend([f"### `{capability.capability_id.value}`", "", escape(capability.intent, quote=False), ""])
         for support in capability.support:
             evidence = "; ".join(
                 f"[{item.verified_at}] {escape(item.claim, quote=False)} — "
@@ -289,8 +289,8 @@ def render_guide(manifest, report) -> bytes:
             lines.extend([
                 f"- **{support.provider_id.value}** — `{support.level.value}`; binding: `{binding}`; "
                 f"adapter: `{support.adapter_id or '—'}`.",
-                f"  Diagnostic: {support.diagnostic}",
-                f"  Limitations: {'; '.join(support.limitations) or 'none'}.",
+                f"  Diagnostic: {escape(support.diagnostic, quote=False)}",
+                f"  Limitations: {escape('; '.join(support.limitations) or 'none', quote=False)}.",
                 f"  Evidence: {evidence}.",
                 "",
             ])

@@ -4,7 +4,7 @@
   "plugins": {
     "task": {
       "version_owner": "umbrella",
-      "required_providers": ["claude-code", "codex"]
+      "required_providers": ["claude-code", "codex", "grok"]
     },
     "maind": {
       "version_owner": "package",

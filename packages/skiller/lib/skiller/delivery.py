@@ -503,6 +503,32 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
                     if updated and row["readback"] and not any(i["errors"] for i in row["readback"]):
                         row["status"] = "updated"
                     save()
+        # Grok's Task commands are a machine-level plugin, not files in each
+        # project's `.grok/` directory.  Update only the existing channel and
+        # prove its installed cache against the attested Grok projection.
+        if shutil.which("grok") and "task" in units and "grok" in units["task"]["providers"]:
+            row = {"surface": "grok-cache/task", "status": "blocked"}
+            receipt["targets"].append(row)
+            save()
+            ok, detail = _run(["grok", "plugin", "update", "task"])
+            row["reason"] = detail
+            try:
+                listed = subprocess.run(["grok", "plugin", "list", "--json"],
+                                        capture_output=True, text=True, check=False)
+                entries = json.loads(listed.stdout) if listed.returncode == 0 else []
+            except (OSError, json.JSONDecodeError):
+                entries = []
+            installed = next((entry for entry in entries if entry.get("name") == "task"
+                              and entry.get("status") == "installed"), None)
+            if not installed or not installed.get("path"):
+                row["readback"] = ["GROK_TASK_NOT_INSTALLED"]
+            else:
+                row["readback"] = verify_surface(Path(installed["path"]),
+                                                  units["task"]["providers"]["grok"])
+            if ok and not row["readback"]:
+                row["status"] = "updated"
+                row["digest"] = units["task"]["providers"]["grok"]["tree_digest"]
+            save()
     receipt["cache_gc"] = prune_provider_caches(env, value, history, dry_run=dry_run) if native else []
     cache_blocked = any(row.get("status") == "blocked" for row in receipt["cache_gc"])
     receipt["status"] = ("GREEN" if receipt["targets"] and not cache_blocked

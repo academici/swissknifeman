@@ -53,3 +53,25 @@ JSON сохраняет то, что вернул браузерный текс�
 5. Сохранить новые результаты с новыми IDs, не переписывать исторические raw ответы.
 
 Локальный transport сам по себе не часть предлагаемого orchestration runtime. Его исходники в этом исследовании не менялись и новая Perplexity-интеграция в Swiss Knife Man не добавлялась.
+
+## Дополнение: review Claude Code (2026-10-05)
+
+Для [DECISIONS.md](../DECISIONS.md) выполнены 4 дополнительных вызова тем же `perplexity-web-mcp`
+(default pool), напрямую через stdio MCP, т.к. сервер не был подключён к сессии Claude Code.
+
+| ID | Тема | Результат | Как использован |
+| --- | --- | --- | --- |
+| Q11 | CAO: как определяется статус, issues надёжности | [JSON](perplexity/Q11.json), [ответ](perplexity/Q11.md) | Подтвердил: статус и ответ worker — по экрану TUI (pyte), headless-режима нет; перечислены фиксы #392/#579/#545/#555/#498. Сверено с открытыми issues на GitHub |
+| Q12 | Headless JSON-интерфейсы трёх CLI и подписка | [JSON](perplexity/Q12.json), [ответ](perplexity/Q12.md) | Терминальные события: Claude `result`, Codex `turn.completed/failed`; у Grok streaming-json нет документированного end-события → ACP. `--bare` не читает OAuth |
+| Q13 | ACP как универсальный транспорт | [JSON](perplexity/Q13.json), [ответ](perplexity/Q13.md) | **Экстрактор вернул только таблицу**; повторён Q13b |
+| Q13b | Выбор транспорта для порта адаптера | [JSON](perplexity/Q13b.json), [ответ](perplexity/Q13b.md) | Рекомендует ACP основным; **внутреннее противоречие** с Q12/Q13 о нативном `grok agent stdio` (официальная документация x.ai его описывает). Принят частично: см. DECISIONS §5.3 |
+
+## Дополнение: проектирование Plan 1 (2026-10-05)
+
+Два вызова `perplexity-web-mcp` (тот же pool, через `tools/pplx_stdio.py`) для внешних фактов, влияющих на
+контракты Plan 1 (`capability-record`, launch catalog, dry-render CAO). Сверка — WebFetch первичных страниц.
+
+| ID | Тема | Результат | Как использован |
+| --- | --- | --- | --- |
+| Q14 | CAO: формат agent profile | [JSON](perplexity/Q14.json), [ответ](perplexity/Q14.md) | Сверено с `docs/agent-profile.md` (main): Markdown + YAML frontmatter, обязательны `name`, `description`; `provider` ∈ `claude_code`/`codex`/`grok_cli` (с v2.5.0); `model`, `skills`, `allowedTools`, `role`, `claudeConfig`, `codexConfig`, `codexProfile`, `permissionMode`, `prompt`; тело — system prompt; установка `cao install <file>` в `~/.aws/cli-agent-orchestrator/agent-context`. Отдельного офлайн-валидатора не подтверждено → dry-render проверяет только собственную проекцию |
+| Q15 | Per-run доставка skills и флаги model/effort | [JSON](perplexity/Q15.json), [ответ](perplexity/Q15.md) | Сверено с code.claude.com/docs/en/cli-reference: `--plugin-dir` (только сессия), `--settings`, `--append-system-prompt-file`, `--tools`, `--disallowedTools`, `--model`, `--effort`, `--no-session-persistence`. **Противоречие:** Q15 советует `--bare`, но Q12/headless docs — `--bare` не читает OAuth подписки; принят запрет `--bare` (I12). Codex: `CODEX_HOME` изолирует и auth (нужна копия auth.json) — пометка `adapted` в capability-record. Grok: per-run фильтра skills и флагов model/effort для headless официально не найдено → `unknown`, проверка `grok --help` в probe Plan 2 |

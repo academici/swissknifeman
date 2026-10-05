@@ -1,0 +1,146 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.5",
+  "title": "Документация, CHANGELOG и широкий validate всех пакетов",
+  "status": "todo",
+  "summary": "packages/orch/docs (index, architecture, adding-an-engine) и README; страница в root docs по docs-maintenance; CHANGELOG [Unreleased]; широкие validate/test Task, Skiller, Harness, orch; managed-blocks и проекции без расхождений.",
+  "why": "R12, R16: устройство и способ добавить движок записаны; R21: финальная проверка совместимости всех пакетов один раз.",
+  "scope": {
+    "include": [
+      "packages/orch/docs/index.md, architecture.md (из knowledge/architecture), adding-an-engine.md (из knowledge/engine-port §adding-an-engine), README.md",
+      "root docs: страница об оркестрационных контрактах и ссылка в sidebar `docs/.vitepress/config.mts`, если раздел пакетов там есть (по skill docs-maintenance)",
+      "CHANGELOG.md [Unreleased]: skiller resolve, launch catalog, managed blocks, review method в Skiller, harness discovery"
+    ],
+    "exclude": [
+      "новые решения в документации (только перенос из knowledge)"
+    ]
+  },
+  "depends_on": [
+    "P5.4",
+    "P5.1"
+  ],
+  "decisions": [],
+  "reads": [
+    {
+      "path": "@plan/knowledge/architecture.json",
+      "section": "boundaries",
+      "why": "источник docs/architecture.md",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/architecture.json",
+      "section": "dependency-rule",
+      "why": "источник",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/engine-port.json",
+      "section": "adding-an-engine",
+      "why": "источник adding-an-engine.md",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/engine-port.json",
+      "section": "binding-matrix",
+      "why": "ссылка на матрицу",
+      "required": true
+    },
+    {
+      "path": "CHANGELOG.md",
+      "why": "формат",
+      "required": true
+    },
+    {
+      "path": "docs/.vitepress/config.mts",
+      "why": "sidebar",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/docs/*.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/README.md",
+      "change": "any",
+      "note": "created by P1.1"
+    },
+    {
+      "path": "docs/**",
+      "change": "any"
+    },
+    {
+      "path": "docs/.vitepress/config.mts",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Тексты — перенос из knowledge, без новых решений",
+    "Если широкий прогон красный — log --type blocker на owning item, не чинить чужой item молча"
+  ],
+  "guidance": "Исполнитель: Sol (codex gpt-6.1-sol, implementation/medium) — механика по готовым таблицам.\n\nШирокий прогон — один раз в конце, в порядке валидаций ниже. Docs-страница: краткое назначение packages/orch, схема зависимостей, ссылки на packages/orch/docs/*.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "bash packages/skiller/scripts/validate.sh && bash packages/skiller/scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "bash packages/harness/scripts/validate.sh && bash packages/harness/scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "python3 scripts/sync-managed-blocks.py --check --root . && python3 packages/task/scripts/render-provider-commands.py --check --root .",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V6",
+      "cmd": "test -s packages/orch/docs/adding-an-engine.md && test -s packages/orch/docs/architecture.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "docs orch + root docs",
+    "CHANGELOG",
+    "зелёные широкие проверки всех пакетов"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-05T17:00:31Z"
+}

@@ -1,0 +1,92 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.3",
+  "title": "Capability seeds для native / CAO / Claude-only",
+  "status": "todo",
+  "summary": "Семь capability-record (status declared) по готовой таблице; тест сверяет их со схемой и с bindings/matrix.json (model_set, effort_set, cancel, resume, usage) по provider.",
+  "why": "R16, I7, I14: prepare отказывает явно по capability, а не угадывает; значения Grok — unknown до probe Plan 2.",
+  "scope": {
+    "include": [
+      "7 файлов bindings/capabilities/*.json",
+      "tests/test_capability_seeds.py"
+    ],
+    "exclude": [
+      "probe реальных CLI (Plan 2)",
+      "изменение matrix.json (если расхождение — log --type blocker)"
+    ]
+  },
+  "depends_on": [
+    "P4.2",
+    "P1.4"
+  ],
+  "decisions": [],
+  "reads": [
+    {
+      "path": "@plan/knowledge/contracts.json",
+      "section": "capability-record",
+      "why": "поля и semantic",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/engine-port.json",
+      "section": "binding-matrix",
+      "why": "источник значений",
+      "required": true
+    },
+    {
+      "path": "packages/orch/bindings/matrix.json",
+      "why": "сверка значений",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/bindings/capabilities/*.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/tests/test_capability_seeds.py",
+      "change": "create"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "packages/orch/bindings/capabilities/native--grok.json",
+      "role": "output"
+    }
+  ],
+  "rules": [
+    "Значения — строго из таблицы",
+    "Не ставить supported без evidence kind doc"
+  ],
+  "guidance": "Исполнитель: Sol (codex gpt-6.1-sol, implementation/medium) — механика по готовым таблицам.\n\nФайлы `bindings/capabilities/<binding>--<provider>.json`, `status: \"declared\"`, `recorded_at` — время создания, `cli.name` — `claude`/`codex`/`grok`/`cao`.\nСокращения: S supported, A adapted, U unsupported, ? unknown.\n\n| файл | transport | auth_route | model set/obs | effort set/obs | stream | attach | cancel | resume | usage | tools_native | sandbox_os | prompt_only | skill_delivery mode / per_run | plan_write_prevention | terminal_signal |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| native--claude-code | jsonl | subscription_oauth | S/S | S/? | S | U | S | A | S | S | U | false | native_plugin_dir / S | A | final `result` event in stream-json, then exit; EOF without result = unknown_outcome |\n| native--codex | jsonl | subscription_oauth | S/A | S/? | S | U | S | A | S | A | S | false | isolated_home / A | A | `turn.completed` or `turn.failed`, then exit |\n| native--grok | acp | unknown | ?/? | ?/? | S | U | S | ? | ? | ? | ? | false | unknown / ? | ? | response to ACP `session/prompt` |\n| cao--claude-code | tui | subscription_oauth | S/A | A/? | A | S | A | A | ? | A | U | false | profile_skills / A | A | CAO status COMPLETED parsed from the TUI screen (premature COMPLETED is a known issue) |\n| cao--codex | tui | subscription_oauth | S/A | A/? | A | S | A | A | ? | A | A | false | profile_skills / A | A | как cao--claude-code |\n| cao--grok | tui | unknown | S/A | U/? | A | S | A | A | ? | A | ? | false | profile_skills / A | A | как cao--claude-code (provider id `grok_cli`) |\n| claude-only--claude-code | prompt | subscription_oauth | U/A | U/? | U | U | U | U | ? | U | U | true | project_dir / U | U | the session returns a report per result_contract |\n\n`evidence` (минимум одна запись `doc` для любого S):\n- native--claude-code: doc `https://code.claude.com/docs/en/cli-reference`, perplexity `orch/research/perplexity/Q12.md`, perplexity `orch/research/perplexity/Q15.md`;\n- native--codex: doc `https://learn.chatgpt.com/docs/config-file/config-advanced`, perplexity Q12, Q15;\n- native--grok: doc `https://docs.x.ai/build/features/skills-plugins-marketplaces`, perplexity Q12, Q13b, Q15;\n- cao--*: doc `https://github.com/awslabs/cli-agent-orchestrator/blob/main/docs/agent-profile.md`, perplexity Q11, Q14;\n- claude-only--claude-code: doc `https://code.claude.com/docs/en/cli-reference`.\n`extensions` для cao--*: `{\"cao_provider\": \"claude_code\"|\"codex\"|\"grok_cli\"}`.\n\nТест: все 7 валидны; имя файла == `<binding>--<provider>`; для пар (model.set ↔ model_set, effort.set ↔ effort_set, cancel, resume, usage) значение seed равно значению матрицы для binding (с учётом `by_provider`).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_capability_seeds -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/orch"
+    }
+  ],
+  "deliverables": [
+    "bindings/capabilities/*.json (7)",
+    "test_capability_seeds.py"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-05T17:00:31Z"
+}

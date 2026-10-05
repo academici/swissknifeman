@@ -53,5 +53,35 @@
     "id": "Q10",
     "title": "Повторная критика с учётом новых структурированных harness-интерфейсов",
     "query": "Re-evaluate a local coding orchestration architecture using CURRENT primary docs: https://ai-sdk.dev/docs/ai-sdk-harnesses/overview and harness-adapters now list experimental HarnessAgent adapters Claude Code, Codex, Grok Build; https://docs.x.ai/build/cli/headless-scripting documents streaming-json and ACP grok agent stdio. Compare AWS Labs CAO Python workflows vs a Python native-CLI JSON-stream runner vs Vercel AI SDK HarnessAgent. Clarify local runtime vs sandbox/cloud, native CLI credential handling, subscription billing not guaranteed by adapter, experimental package status and resume boundaries. Do not repeat API-only dismissal of Vercel or claim Grok lacks a machine interface. Identify what source CODE/released packages actually implement, not docs alone. Conditional recommendation, primary-source URLs, Russian maximum 800 words."
+  },
+  {
+    "id": "Q11",
+    "title": "CAO status detection: TUI vs structured; open reliability issues",
+    "query": "AWS Labs cli-agent-orchestrator (CAO, github.com/awslabs/cli-agent-orchestrator), state as of October 2026 (v2.5.x / main). How does CAO detect agent status (idle/processing/completed) for Claude Code, Codex CLI and Grok CLI providers: tmux screen/TUI parsing, or structured headless streams (stream-json, exec --json, ACP)? Is there any non-TUI / headless provider mode? List concrete open GitHub issues about wrong status detection, truncated or dropped worker replies, startup hangs, orphan terminals, cancel. Assess reliability for a sequential multi-stage pipeline (cheap context agent -> strong implementer -> checks -> reviewer) driven by subscription-authenticated CLIs. Cite primary sources (code, issues, release notes). Answer in Russian, max 700 words."
+  },
+  {
+    "id": "Q12",
+    "title": "Headless JSON interfaces of Claude/Codex/Grok CLIs and subscription auth",
+    "query": "October 2026: machine-readable headless interfaces of coding CLIs for building a local orchestrator. 1) Claude Code `claude -p --output-format stream-json` (and --input-format stream-json): event types, final result event, session_id, does it work with Pro/Max subscription OAuth login (not API key), effect of --bare. 2) OpenAI Codex CLI `codex exec --json` and Codex SDK: event schema (thread.started, turn.completed, usage), stability guarantees, ChatGPT-plan login support, resume. 3) xAI Grok Build CLI headless `-p --output-format streaming-json` and `grok agent stdio` (ACP): event shape, completion signal, SuperGrok subscription auth. Known hangs or breaking changes of these JSON modes. Primary-source URLs (official docs, changelogs, GitHub issues). Answer in Russian, max 700 words."
+  },
+  {
+    "id": "Q13",
+    "title": "ACP as universal transport (extractor returned table only)",
+    "query": "Agent Client Protocol (ACP, agentclientprotocol.com) as a universal transport for driving coding agents programmatically in October 2026: which agents support ACP natively or via adapters — Claude Code (claude-code-acp / Agent SDK adapter), OpenAI Codex (codex-acp), xAI Grok Build (grok agent stdio)? Do these ACP paths keep the CLI's native subscription login, skills/plugins, permissions, and model/effort selection? Maturity, versioning, Python client libraries. Compare ACP vs per-CLI JSON streams vs tmux/TUI orchestration (CAO) vs Vercel AI SDK HarnessAgent (experimental) for an engine-agnostic orchestrator with a stable port/adapter contract. Recommend which transport to standardize the adapter port on. Primary-source URLs. Answer in Russian, max 700 words."
+  },
+  {
+    "id": "Q13b",
+    "title": "Retry of Q13: transport choice for the adapter port",
+    "query": "Без таблиц, только абзацы и списки. Октябрь 2026. Я строю локальный engine-agnostic оркестратор coding-агентов (Claude Code, Codex CLI, Grok Build) с портом/адаптерами на Python stdlib. Какой транспорт стандартизировать в порте адаптера: (a) Agent Client Protocol (ACP, agentclientprotocol.com: claude-agent-acp, codex-acp, нативный grok agent stdio), (b) отдельные JSONL-потоки каждого CLI (claude -p stream-json, codex exec --json, grok streaming-json), (c) tmux/TUI как AWS CAO, (d) Vercel AI SDK HarnessAgent? Оцени зрелость и версионирование ACP, наличие Python-клиента, сохраняется ли нативный подписочный логин и skills/plugins у Claude через claude-agent-acp (Agent SDK) против claude -p. Дай конкретную рекомендацию: что основной транспорт, что запасной, и как спроектировать порт, чтобы смена транспорта не ломала контракты. Первичные URL. Русский, до 600 слов."
+  },
+  {
+    "id": "Q14",
+    "title": "CAO: формат agent profile для dry-render",
+    "query": "October 2026: awslabs/cli-agent-orchestrator (CAO) agent profile format, current main and latest release. 1) Exact file format of an agent profile (Markdown with YAML frontmatter?): every frontmatter field (name, description, provider, model, skills, allowedTools / tool restrictions, mcpServers, claudeConfig.effort, codexConfig.model_reasoning_effort, codexProfile, prompt/system body) and which are required. 2) Provider ids for Claude Code, Codex, Grok (claude_code, codex, grok_cli?). 3) How a profile is installed or referenced (cao install, agent store path, --agents), and whether a profile can be generated programmatically and validated offline without starting tmux or the CAO server. 4) Breaking changes to the profile format between v2.3 and v2.5.x. Cite exact primary-source URLs (docs/agent-profile.md, providers/*.py, release notes). Answer in Russian, max 700 words."
+  },
+  {
+    "id": "Q15",
+    "title": "Per-run доставка skills/плагинов и флаги model/effort трёх CLI",
+    "query": "October 2026: per-run (not global) delivery of skills, plugins and instructions to coding-agent CLIs launched headless by a local orchestrator, without modifying the user's global config, while keeping subscription login. 1) Claude Code: --plugin-dir, --settings, --append-system-prompt, --agents, --add-dir, --disallowedTools/--allowedTools, --setting-sources, skills discovery from .claude/skills, does -p mode load plugins/skills/CLAUDE.md; effect of --bare. 2) OpenAI Codex CLI: CODEX_HOME isolation and whether ChatGPT login survives it, --profile, -c overrides, skills.config / allow_implicit_invocation, AGENTS.md hierarchy, codex exec flags for model and reasoning effort. 3) xAI Grok Build CLI: skills/plugins discovery sources (.grok, .claude, .agents), flags to select model and reasoning effort in `grok -p` and `grok agent stdio`, any flag to restrict skills per run. Give exact flag names and primary-source URLs (official docs, changelogs). Answer in Russian, max 800 words."
   }
 ]

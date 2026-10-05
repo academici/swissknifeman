@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D2",
+  "title": "Публикация packages/orch в Plan 1",
+  "date": "2026-10-05",
+  "status": "accepted",
+  "question": "Публиковать packages/orch как plugin/release unit в Plan 1?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Нет: внутренний пакет, только монорепо и CI; release-units.json не меняется"
+    },
+    {
+      "id": "B",
+      "text": "Да: release unit и манифесты"
+    }
+  ],
+  "decision": "A — Нет: внутренний пакет, только монорепо и CI; release-units.json не меняется",
+  "rationale": "Ответ владельца M2. Публичный контракт раньше потребителя-движка не нужен; публикация — решение Plan 2.",
+  "applies_to": [
+    "P1",
+    "P5"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "opus",
+    "effort": "high"
+  },
+  "answered_by": "owner"
+}

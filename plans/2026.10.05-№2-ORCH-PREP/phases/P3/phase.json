@@ -1,0 +1,69 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P3",
+  "title": "Разделение инструкций по ролям (рефакторинг R19)",
+  "design": "detailed",
+  "goal": "У каждой инструкции один canonical владелец: тексты worker-ролей в orch, review-методика в Skiller (в Task — генерируемые блоки), дубликаты в Task заменены ссылками, plan-run отдаёт subagent brief + executor handoff; все обязанности записи W1–W12 сохранены и проверены тестом.",
+  "context": "Путь B без breaking (R19, R21) по инвентаризации knowledge/instruction-split; механизм D3 (managed-блоки). Требование владельца M4/R27: записи в JSON и артефакты не меньше прежнего.",
+  "scope": {
+    "include": [
+      "packages/orch/roles/*.md",
+      "scripts/sync-managed-blocks.py, configs/managed-blocks.json",
+      "quality:code-review и quality:artifact-review (export-фрагменты)",
+      "Task: review.md, review-mode.md, execution-mode.md, SKILL.md, plan-run.md, references/executor-handoff.md, docs",
+      "генерируемые проекции и golden"
+    ],
+    "exclude": [
+      "design-mode, common-principles, reviewer-selection (stay)",
+      "harness/run",
+      "роль-manifest JSON (P4.2)"
+    ]
+  },
+  "pitfalls": [
+    "plan-run.md: нельзя слова journal/bundle/receipt/continuity (test_canon_literals)",
+    "Проекции adapters/* и golden не править руками: render-provider-commands --write",
+    "Ни одна обязанность записи не исчезает: test_record_parity.py должен быть зелёным до и после правок"
+  ],
+  "deliverables": [
+    "5 текстов ролей",
+    "sync-managed-blocks с --check gate",
+    "review-методика у Skiller",
+    "dedupe и plan-run units"
+  ],
+  "items": [
+    "P3.1",
+    "P3.2",
+    "P3.3",
+    "P3.4"
+  ],
+  "batches": [
+    {
+      "id": "BP3-1",
+      "items": [
+        "P3.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP3-2",
+      "items": [
+        "P3.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP3-3",
+      "items": [
+        "P3.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP3-4",
+      "items": [
+        "P3.4"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

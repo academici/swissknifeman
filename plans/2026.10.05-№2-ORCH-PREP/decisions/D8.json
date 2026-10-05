@@ -1,0 +1,29 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D8",
+  "title": "Разрешение ссылок на другие планы",
+  "date": "2026-10-05",
+  "status": "accepted",
+  "question": "Как resolver находит чужой план и что делать с неразрешённой ссылкой?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Тот же repo — plans root (live, затем archive); чужой — --repo NAME=PATH или env SKM_PLAN_REPOS (JSON); context не падает (loaded:false+reason), brief отказывает REF_UNRESOLVED для item.decisions"
+    },
+    {
+      "id": "B",
+      "text": "Глобальный реестр в ~/.swissknifeman"
+    }
+  ],
+  "decision": "A — Тот же repo — plans root (live, затем archive); чужой — --repo NAME=PATH или env SKM_PLAN_REPOS (JSON); context не падает (loaded:false+reason), brief отказывает REF_UNRESOLVED для item.decisions",
+  "rationale": "Минимально и проверяемо; реестр — по триггеру реальных cross-repo планов.",
+  "applies_to": [
+    "P2"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "opus",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

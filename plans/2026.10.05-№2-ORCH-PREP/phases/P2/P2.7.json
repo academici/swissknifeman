@@ -1,0 +1,107 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.7",
+  "title": "Review P2: независимая проверка Task lifecycle",
+  "status": "todo",
+  "summary": "Read-only review диффа P2 с фокусом на модель инвариантов (INV-1..INV-7) и совместимость; вердикт в knowledge `review-p2` и note-событие.",
+  "why": "Task lifecycle — публичный контракт и data integrity (запрошено владельцем, PLAN1-PROMPT §5). I10: ≤2 раунда, 1 исправление.",
+  "scope": {
+    "include": [
+      "проверка enforcement/обходов/пар операций из knowledge/task-changes §invariant-model против кода",
+      "совместимость: §compat-tests",
+      "вердикт `plan.py add-document` id `review-p2` (applies_to [\"P2\"]) + `plan.py log PLAN2 P2 --type note`"
+    ],
+    "exclude": [
+      "исправления",
+      "повторный review без новой гипотезы"
+    ]
+  },
+  "depends_on": [
+    "P2.6"
+  ],
+  "decisions": [],
+  "reads": [
+    {
+      "path": "@plan/knowledge/task-changes.json",
+      "section": "invariant-model",
+      "why": "эталон инвариантов",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/task-changes.json",
+      "section": "compat-tests",
+      "why": "эталон совместимости",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/task-changes.json",
+      "section": "brief-mapping",
+      "why": "эталон маппинга",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/coverage.json",
+      "section": "invariants",
+      "why": "I1, I3–I6",
+      "required": true
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/review-mode.md",
+      "why": "форма вердикта",
+      "required": true
+    },
+    {
+      "path": "packages/task/commands/review.md",
+      "why": "adversarial: data integrity, invariant model",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "@plan/knowledge/review-p2.json",
+      "change": "create",
+      "note": "только через plan.py add-document"
+    }
+  ],
+  "rules": [
+    "Read-only",
+    "Finding: severity, `path:line`, сценарий отказа (конкретные вызовы plan.py), owning item P2.1–P2.6",
+    "Переиспользовать evidence P2.6 V1, если входы не менялись"
+  ],
+  "guidance": "Исполнитель: Sol (codex gpt-6.1-sol, implementation/medium) — механика по готовым таблицам.\n\nСценарии, которые стоит воспроизвести во временной копии demo-плана: двойной finish с одним attempt; finish после reopen со старым attempt; --executed-by слабее route; evidence чужого subject; settings.evidence required; brief на item с guidance, содержащим `plan.py finish`. Вердикт-документ как в P1.5.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 packages/task/scripts/plan.py show PLAN2 knowledge/review-p2 > /dev/null",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_*.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    }
+  ],
+  "deliverables": [
+    "knowledge/review-p2",
+    "note-событие"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-05T17:00:30Z"
+}

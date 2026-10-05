@@ -1,0 +1,33 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D4",
+  "title": "Валидатор схем в orch",
+  "date": "2026-10-05",
+  "status": "accepted",
+  "question": "Как orch валидирует exec/v1: импорт task/plan/schema.py, вынос в core или своя копия?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Адаптированная копия в packages/orch/lib/orch/schema.py (URN-префикс и KINDS — параметры Registry) + тест паритета профиля"
+    },
+    {
+      "id": "B",
+      "text": "Импорт task.plan.schema"
+    },
+    {
+      "id": "C",
+      "text": "Вынос в root core/"
+    }
+  ],
+  "decision": "A — Адаптированная копия в packages/orch/lib/orch/schema.py (URN-префикс и KINDS — параметры Registry) + тест паритета профиля",
+  "rationale": "B нарушает правило зависимостей (orch не зависит от task); C делает Task-plugin и orch зависимыми от core, которого нет у standalone-потребителя plugin. Копия ~300 строк закреплена тестом: SUPPORTED_KEYWORDS и ERROR_CODES orch ⊇ task.",
+  "applies_to": [
+    "P1"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "opus",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

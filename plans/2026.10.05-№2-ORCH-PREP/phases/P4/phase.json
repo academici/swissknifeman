@@ -1,0 +1,61 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P4",
+  "title": "Launch catalog, role manifests, capability seeds, skiller resolve",
+  "design": "detailed",
+  "goal": "Одна точка данных запуска роль × provider (launch catalog), пять role manifests, capability seeds для трёх bindings и `skiller resolve --role` с офлайн-проверкой closure; `start --scout` работает как раньше.",
+  "context": "DECISIONS §5.2 (catalog), §6 (S1, S3 offline); D5 (manifests в orch), D6 (catalog в command-routing.json). Значения capability — knowledge/engine-port §binding-matrix, факты Q12–Q15.",
+  "scope": {
+    "include": [
+      "packages/task/configs/command-routing.json orchestration.launch, command_catalog.py, scout.py",
+      "packages/orch/roles/*.json, bindings/capabilities/*.json",
+      "packages/skiller/lib/skiller/resolve.py, cli.py, bin/skiller"
+    ],
+    "exclude": [
+      "запуск процессов",
+      "per-run доставка skills (Plan 2)",
+      "перенос catalog в orch (Plan 2)"
+    ]
+  },
+  "pitfalls": [
+    "Scout должен получить побайтно прежний argv (текстовый вывод, filter_answer)",
+    "`--bare` запрещён (I12)",
+    "Модели только через mappings (I8)"
+  ],
+  "deliverables": [
+    "orchestration.launch",
+    "5 role manifests",
+    "7 capability seeds",
+    "skiller resolve --role"
+  ],
+  "items": [
+    "P4.1",
+    "P4.2",
+    "P4.3",
+    "P4.4"
+  ],
+  "batches": [
+    {
+      "id": "BP4-1",
+      "items": [
+        "P4.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B4-data",
+      "items": [
+        "P4.2",
+        "P4.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP4-4",
+      "items": [
+        "P4.4"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

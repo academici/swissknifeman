@@ -1,0 +1,147 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.1",
+  "title": "plan.py brief: проекция execution-input (T1, T3)",
+  "status": "todo",
+  "summary": "Новый read-only глагол `plan.py brief <plan> <item> [--unit U#] [--inline-reads] [--out FILE]` выдаёт exec/v1 execution-input из полного context pack по таблице полей; без report_api и lifecycle-инструкций.",
+  "why": "R1, R3, I1, I3: worker должен получать задание, а не плановый процесс; полный pack остаётся рядом и доступен по ссылке. D10: форма brief = exec/v1.",
+  "scope": {
+    "include": [
+      "lib/task/plan/brief.py: build(), render(), canonical_digest()",
+      "CLI-глагол brief в lib/task/plan/cli.py (рядом с context), `--output json` конверт",
+      "отказы REF_UNKNOWN, PHASE_NOT_DETAILED, READ_MISSING, HUMAN_VIEW",
+      "tests/engine/test_brief.py (mapping-кейсы)"
+    ],
+    "exclude": [
+      "verify/BRIEF_INCOMPLETE (P2.2)",
+      "resolver внешних decisions и --repo (P2.3)",
+      "изменения context.py/units.py"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D10"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/task-changes.json",
+      "section": "brief-verb",
+      "why": "сигнатура и отказы",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/task-changes.json",
+      "section": "brief-mapping",
+      "why": "таблица полей — единственный источник маппинга",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/contracts.json",
+      "section": "execution-input",
+      "why": "целевая форма",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/context.py",
+      "why": "collect/read_entry/missing_reads — источник данных",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/units.py",
+      "why": "brief(): как резолвятся unit checks",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/cli.py",
+      "why": "как зарегистрированы context и --output json",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/engine/demo.py",
+      "why": "make_demo_plan для тестов",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/engine/test_context.py",
+      "why": "стиль тестов движка",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/lib/task/plan/brief.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/lib/task/plan/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/tests/engine/test_brief.py",
+      "change": "create"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "packages/task/lib/task/plan/brief.py",
+      "role": "output"
+    }
+  ],
+  "rules": [
+    "Глагол ничего не пишет в план и не берёт PlanLock (тест: хэши всех файлов плана до/после равны)",
+    "Без усечения: --inline-reads кладёт полный текст",
+    "Не импортировать orch; canonical_digest — собственная функция с тем же алгоритмом",
+    "Маппинг — строго по knowledge/task-changes §brief-mapping"
+  ],
+  "guidance": "Исполнитель: Sonnet (claude-code, implementation/high) — лучше не экономить: ядро Task: точный маппинг, без усечения, read-only глагол.\n\n- `build(plan, item_id, *, unit_id=None, inline_reads=False, repos=None) -> dict`: проверить item/unit (`REF_UNKNOWN`), фазу (`PHASE_NOT_DETAILED`), `context.missing_reads` (`READ_MISSING`), затем `pack = context.collect(plan, item_id, with_scout=True)` и собрать документ по таблице; `digest`/`input_id` — в конце. `repos` пока принимается и не используется (P2.3).\n- `sha256` reads: по байтам файла для существующих файлов (`exists: true`, не glob).\n- `task_version`: `json.loads((Path(__file__).resolve().parents[3] / \".claude-plugin\" / \"plugin.json\").read_text())[\"version\"]`, при ошибке `\"unknown\"`.\n- `plan_dir` в provenance — путь плана относительно `plan.repo_root` (POSIX).\n- Тесты (`make_demo_plan` во временном plans root, item в detailed-фазе): маппинг goal/scope/constraints-source/acceptance/route; unit-вариант (`write_set` = unit.files, `read_only` при пустых files); `--inline-reads` полный текст; skeleton-фаза → `PHASE_NOT_DETAILED`; отсутствующий required read → `READ_MISSING`; в JSON нет подстроки `report_api` и `unit return`; два вызова → одинаковый digest; read-only (хэши файлов плана); CLI `--out` пишет файл; `--output json` даёт конверт.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_brief.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_context.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_units.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 packages/task/scripts/plan.py brief --help",
+      "expect": "exit 0; usage mentions --unit and --inline-reads",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "brief.py",
+    "глагол plan.py brief",
+    "test_brief.py"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-05T17:00:25Z"
+}

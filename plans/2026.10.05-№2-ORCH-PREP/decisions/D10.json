@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D10",
+  "title": "Форма brief и где конформанс",
+  "date": "2026-10-05",
+  "status": "accepted",
+  "question": "Что выдаёт plan.py brief и кто проверяет соответствие exec/v1?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Task выдаёт execution-input exec/v1 (свой canonical_digest); конформанс-тест — packages/orch/tests (subprocess plan.py brief на fixture-плане)"
+    },
+    {
+      "id": "B",
+      "text": "Task-тесты читают схемы orch"
+    }
+  ],
+  "decision": "A — Task выдаёт execution-input exec/v1 (свой canonical_digest); конформанс-тест — packages/orch/tests (subprocess plan.py brief на fixture-плане)",
+  "rationale": "Тест на стороне контракта не создаёт зависимость Task → orch.",
+  "applies_to": [
+    "P2",
+    "P5"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "opus",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

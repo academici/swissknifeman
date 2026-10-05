@@ -1,0 +1,33 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D9",
+  "title": "Evidence в Task без импорта orch",
+  "date": "2026-10-05",
+  "status": "accepted",
+  "question": "Как Task проверяет check-evidence и включает обязательность?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Структурная stdlib-проверка ключевых полей в lifecycle._load_evidence; plan.settings.evidence: optional|required (по умолчанию optional)"
+    },
+    {
+      "id": "B",
+      "text": "Импорт orch-валидатора"
+    },
+    {
+      "id": "C",
+      "text": "Всегда обязательный evidence"
+    }
+  ],
+  "decision": "A — Структурная stdlib-проверка ключевых полей в lifecycle._load_evidence; plan.settings.evidence: optional|required (по умолчанию optional)",
+  "rationale": "B нарушает правило зависимостей; C — breaking. Совпадение проверок закрепляет конформанс-тест в orch/tests.",
+  "applies_to": [
+    "P2"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "opus",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

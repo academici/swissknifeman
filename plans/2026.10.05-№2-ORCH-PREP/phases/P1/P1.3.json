@@ -1,0 +1,131 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.3",
+  "title": "Схемы выхода: run-event, stage-result, effect-receipt, check-evidence, launch-plan + traces",
+  "status": "todo",
+  "summary": "Пять схем выходной стороны exec/v1 с semantic checks, fixtures и тремя synthetic traces run-event (ok, quota, unknown).",
+  "why": "R2, R8, I4, I6, I14: наблюдаемость, доказательства проверок, эффекты и различение quota/auth/unknown от провала задаются контрактом до движка.",
+  "scope": {
+    "include": [
+      "schemas/exec/v1/{run-event,stage-result,effect-receipt,check-evidence,launch-plan}.schema.json — поля из knowledge/contracts",
+      "semantic checks: USAGE_UNKNOWN_NUMERIC, COMPLETED_PARSE_ERROR, COST_FORMAT, RECEIPT_RECONCILE, EVIDENCE_CARRIER, ATTEMPT_RANGE",
+      "fixtures valid/invalid каждого вида",
+      "fixtures/traces/{native-claude-code-ok,native-codex-quota,native-grok-unknown}.jsonl (по строке run-event)",
+      "tests/test_contracts_output.py"
+    ],
+    "exclude": [
+      "RunState reducer (P1.4)",
+      "живые trace от реальных CLI (Plan 2)"
+    ]
+  },
+  "depends_on": [
+    "P1.2"
+  ],
+  "decisions": [],
+  "reads": [
+    {
+      "path": "@plan/knowledge/contracts.json",
+      "section": "conventions",
+      "why": "профиль и fixtures",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/contracts.json",
+      "section": "run-event",
+      "why": "поля",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/contracts.json",
+      "section": "stage-result",
+      "why": "поля и semantic",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/contracts.json",
+      "section": "effect-receipt",
+      "why": "поля и semantic",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/contracts.json",
+      "section": "check-evidence",
+      "why": "поля и semantic",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/contracts.json",
+      "section": "launch-plan",
+      "why": "поля",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/schemas/exec/v1/*.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/contracts.py",
+      "change": "any",
+      "note": "created by P1.1"
+    },
+    {
+      "path": "packages/orch/fixtures/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/tests/test_contracts_output.py",
+      "change": "create"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "packages/orch/fixtures/traces/native-claude-code-ok.jsonl",
+      "role": "output"
+    }
+  ],
+  "rules": [
+    "Поле, которого нет в knowledge/contracts, не добавлять",
+    "`data`, `extensions`, `expected_prior`, `result` — открытые объекты; остальное закрыто",
+    "Traces — synthetic, без сырых данных реальных CLI"
+  ],
+  "guidance": "Исполнитель: Sol допустим вместо Sonnet (codex gpt-6.1-sol, effort high — route implementation/high разрешает без правки плана): перенос таблиц полей в JSON Schema и fixtures, коды заданы. Если тесты красные или записан blocker — перезапуск item на Sonnet.\n\n- Semantic коды: stage-result — `USAGE_UNKNOWN_NUMERIC` (status unknown и есть числа), `COMPLETED_PARSE_ERROR`, `COST_FORMAT` (`^\\d+(\\.\\d+)?$`); effect-receipt — `RECEIPT_RECONCILE` (outcome unknown и method none); check-evidence — `EVIDENCE_CARRIER` (cmd ⇒ exit без verdict; procedure ⇒ verdict+observation без exit; не ровно одно из cmd/procedure); run-event / stage-result — `ATTEMPT_RANGE` (attempt < 1, seq < 0).\n- Valid fixtures: run-event `started.json`, `quota-block.json`; stage-result `completed-reported.json`, `quota-unknown-usage.json`; effect-receipt `git-commit-applied.json`, `task-finish-unknown.json` (reconcile `task_show`); check-evidence `cmd-pass.json`, `procedure-pass.json`; launch-plan `claude-only-solo.json` (dry_run true, stages executor с transport `prompt`).\n- Invalid: stage-result `usage-unknown-with-tokens.json`→`USAGE_UNKNOWN_NUMERIC`; check-evidence `procedure-with-exit.json`→`EVIDENCE_CARRIER`, `cmd-without-exit.json`→`EVIDENCE_CARRIER`; effect-receipt `unknown-without-reconcile.json`→`RECEIPT_RECONCILE`; run-event `bad-kind.json`→`enum`, `attempt-zero.json`→`ATTEMPT_RANGE`; launch-plan `missing-refusals.json`→`required`.\n- Traces (`run_id` одинаковый, `seq` 0..n): `native-claude-code-ok.jsonl`: started → model_wait → tool → output → completed (с `data.usage` input_tokens/output_tokens); `native-codex-quota.jsonl`: started → model_wait → quota_block; `native-grok-unknown.jsonl`: started → output (без терминального события).\n- `tests/test_contracts_output.py`: таблица EXPECTED как в P1.2; каждая строка каждого trace валидна по run-event.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_contracts_output tests.test_contracts_input -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/orch"
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 packages/orch/scripts/orch.py validate check-evidence packages/orch/fixtures/exec/v1/invalid/check-evidence/procedure-with-exit.json",
+      "expect": "exit 1; output contains EVIDENCE_CARRIER",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "5 схем выхода",
+    "semantic checks",
+    "fixtures и 3 traces",
+    "test_contracts_output.py"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-05T17:00:28Z"
+}

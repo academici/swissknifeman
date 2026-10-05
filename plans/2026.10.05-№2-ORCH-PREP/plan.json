@@ -1,0 +1,55 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:plan:v1",
+  "id": "2026.10.05-№2-ORCH-PREP",
+  "short_id": "PLAN2",
+  "title": "Plan №2 — Подготовка к оркестрации: контракты, разделение пакетов, привязки к движкам",
+  "status": "active",
+  "created": "2026-10-05",
+  "updated_at": "2026-10-05T17:00:32Z",
+  "repository": "swissknifeman",
+  "owner": "repository owner",
+  "authoring": {
+    "provider": "claude-code",
+    "model": "opus",
+    "effort": "high"
+  },
+  "goal": "Подготовить репозиторий к оркестрации без breaking changes: нейтральные контракты exec/v1 и Engine Port в новом внутреннем пакете packages/orch; Task как поставщик данных (brief-проекция, полнота, resolver ссылок, раздельные actor, evidence, идемпотентная регистрация); разделение инструкций Task/Skiller/Harness по ролям с сохранением всех обязанностей записи; launch catalog роль × provider и skiller resolve --role; развязка monorepo-путей; доказательство переносимости одного execution-input на bindings native / CAO / Claude-only; документация и итоговый вывод.",
+  "context": "Решения: orch/DECISIONS.md (свой тонкий native-движок, CAO — опциональный adapter, контракты + Engine Port), требования R1–R28 и I1–I15 (brief, knowledge/coverage). Дизайн-досье плана — knowledge/architecture, contracts, engine-port, task-changes, instruction-split, coverage; дословные копии orch/ — knowledge/sources; Perplexity Q11–Q15 — @plan/research/. Исполнители: Opus (контракты/семантика lifecycle/перенос со сменой смысла/итог), Sonnet (реализация по контракту), GPT-Sol 6.1 (механика по таблицам, независимые review P1 и P2). Plan 2 (движок) составляется отдельно.",
+  "non_goals": [
+    "Запуск native-движка, live stream, recovery, CAO server, платные прогоны моделей (Plan 2)",
+    "Проектирование Plan 2",
+    "Публикация packages/orch (D2)",
+    "Изменения Artifex",
+    "Урезание context pack или обязательное ревью каждого item"
+  ],
+  "rules": [
+    "Исполнители (R24; route — минимальный класс, provider/model не фиксируются; таблица — plan.sections `model-economy`): Opus, не экономить — P1.4, P2.4, P2.5, P3.1, P3.3, P5.6. Sonnet, лучше не экономить — P2.1, P2.2, P2.3, P4.1, P4.4, P5.1, P5.3. Sol допустим вместо Sonnet (effort high, без правки плана) — P1.1, P1.2, P1.3, P3.2, P5.2, P5.4; при красных тестах или blocker — перезапуск на Sonnet. Sol по плану — P1.5, P2.6, P2.7, P3.4, P4.2, P4.3, P5.5. Понижение frontier-item (Opus) только через смену route (`plan.py set`), иначе ROUTE_UNDERSHOOT. Первая строка guidance каждого item повторяет рекомендацию.",
+    "Без breaking changes (R21): существующие команды Task, глаголы plan.py, plan/v1 (только optional поля), Skiller connect/vendor/sync, Harness installer и harness/run работают как раньше; перенос текста = новый canonical владелец + старое место ссылается или генерируется (knowledge/architecture §compat).",
+    "Запись не меньше прежнего (R27): каждый item при finish пишет `--notes` с итогом, все реально выполненные checks, `--deviation`/`--pending`, friction через `plan.py log`; длинные результаты — в `@plan/artifacts/<item>/` или knowledge; ни одна обязанность записи W1–W12 (knowledge/instruction-split §recording-obligations) не снимается.",
+    "Решения — из knowledge и decisions; если исполнителю нужен проектный выбор, которого нет в досье, — `plan.py log <plan> <item> --type blocker`, не импровизация (особенно Sol-items).",
+    "Новое внешнее утверждение, влияющее на код (флаги CLI, форматы событий, CAO profile), — через Perplexity (`perplexity-web` MCP или `python3 orch/research/tools/pplx_stdio.py search <q.txt> <out.json>`), сырой ответ в `@plan/research/`, решение после сверки с первичным источником (R22).",
+    "Ничего не запускает модели, CAO, tmux или платные вызовы; `orch prepare` только `--dry-run`.",
+    "Пакеты stdlib-only (I11); orch не импортирует task/skiller/harness/core; Task и Skiller не импортируют orch (knowledge/architecture §dependency-rule).",
+    "Коммиты — Conventional Commits на русском, один scoped commit на item (plan JSON + продуктовые файлы, как требует plan-run); runtime-файлы плана (`context/`, `.lock`) игнорируются .gitignore плана.",
+    "Широкий `validate.sh` пакета — только в последнем item фазы; остальные items запускают свои acceptance-тесты."
+  ],
+  "phases": [
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P5"
+  ],
+  "settings": {
+    "design_audit": "none",
+    "scout": "off",
+    "language": "ru"
+  },
+  "sections": [
+    {
+      "id": "model-economy",
+      "title": "Где нужны Opus и Sonnet, где экономить на Sol (решение владельца 2026-10-05)",
+      "text": "| Item | Исполнитель | Почему |\n| --- | --- | --- |\n| P1.4 | **Opus** — не экономить | семантика состояний порта (unknown вместо ложного success, quota ≠ провал) тиражируется во все адаптеры Plan 2 |\n| P2.4 | **Opus** — не экономить | data integrity и публичная схема plan/v1: повтор регистрации, гонки под lock |\n| P2.5 | **Opus** — не экономить | data integrity: exit проверки не должен выдумываться |\n| P3.1 | **Opus** — не экономить | перенос со сменой смысла; registrar обязан сохранить обязанности записи W1–W12 |\n| P3.3 | **Opus** — не экономить | слияние методики с существующими skills без противоречий и без потери лимитов Task |\n| P5.6 | **Opus** — не экономить | сверка 43 требований с доказательствами; Sonnet допустим только после смены route на implementation/high (`plan.py set`) |\n| P2.1 | **Sonnet** — лучше не экономить | ядро Task: точный маппинг, без усечения, read-only глагол |\n| P2.2 | **Sonnet** — лучше не экономить | конформанс Task ↔ orch, тест на стороне контракта |\n| P2.3 | **Sonnet** — лучше не экономить | тонкая обратная совместимость вывода context |\n| P4.1 | **Sonnet** — лучше не экономить | побайтно прежний argv scout, валидатор, запрет --bare |\n| P4.4 | **Sonnet** — лучше не экономить | новая команда Skiller, closure requires, правила пакета |\n| P5.1 | **Sonnet** — лучше не экономить | legacy harness/run: прежний fallback поиска пути обязан остаться |\n| P5.3 | **Sonnet** — лучше не экономить | алгоритм отказов для трёх bindings без скрытой подмены модели |\n| P1.1 | **Sol вместо Sonnet** (effort high) | копия валидатора и скрипты по готовой раскладке |\n| P1.2 | **Sol вместо Sonnet** (effort high) | перенос таблиц полей в JSON Schema и fixtures, коды заданы |\n| P1.3 | **Sol вместо Sonnet** (effort high) | перенос таблиц полей в JSON Schema и fixtures, коды заданы |\n| P3.2 | **Sol вместо Sonnet** (effort high) | небольшой отдельный скрипт по точной спецификации |\n| P5.2 | **Sol вместо Sonnet** (effort high) | детерминированный рендер, порядок секций задан |\n| P5.4 | **Sol вместо Sonnet** (effort high) | тест по четырём заданным условиям |\n| P1.5 | Sol (по плану) | механика по готовым таблицам / независимый review |\n| P2.6 | Sol (по плану) | механика по готовым таблицам / независимый review |\n| P2.7 | Sol (по плану) | механика по готовым таблицам / независимый review |\n| P3.4 | Sol (по плану) | механика по готовым таблицам / независимый review |\n| P4.2 | Sol (по плану) | механика по готовым таблицам / независимый review |\n| P4.3 | Sol (по плану) | механика по готовым таблицам / независимый review |\n| P5.5 | Sol (по плану) | механика по готовым таблицам / независимый review |\n\nИтог: Opus 6, Sonnet 7, Sol 13 (7 по плану + 6 замен). Route — минимальный класс: Sol (gpt-6.1-sol, implementation-класс) берёт implementation/high items без правки плана; frontier-items понижаются только сменой route. Сбой на Sol-замене (красные тесты, blocker) — перезапуск того же item на Sonnet, план не меняется."
+    }
+  ]
+}

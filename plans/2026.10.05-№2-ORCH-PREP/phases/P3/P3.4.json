@@ -1,0 +1,172 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.4",
+  "title": "Dedupe reviewer-абзаца, plan-run units → brief + executor handoff; широкий validate",
+  "status": "todo",
+  "summary": "Три копии абзаца про --reviewer и две копии в docs заменены ссылкой на reviewer-selection.md; plan-run Units отдаёт subagent `plan.py brief --unit` и executor handoff; создан references/executor-handoff.md (managed-блок из orch/roles/executor.md); проекции перегенерированы; широкие проверки зелёные.",
+  "why": "I9 (одна копия), R1 (subagent не получает brief.json с report_api), R21. Механический перенос по готовой таблице → Sol.",
+  "scope": {
+    "include": [
+      "F5: SKILL.md (стр.118–123), execution-mode.md (18–23), review-mode.md (17–22) → строка `Reviewer selection: see the Task package's references/reviewer-selection.md.`",
+      "F20: docs/methodology.md, docs/workflows.md — та же строка",
+      "F10: точная замена в plan-run.md из §plan-run-units",
+      "packages/task/references/executor-handoff.md (`# Executor handoff` + managed-блок `task-executor-handoff`) и запись в configs/managed-blocks.json",
+      "render-provider-commands --write, golden, sync --write"
+    ],
+    "exclude": [
+      "другие формулировки команд",
+      "design-mode, common-principles"
+    ]
+  },
+  "depends_on": [
+    "P3.1",
+    "P3.2",
+    "P3.3"
+  ],
+  "decisions": [],
+  "reads": [
+    {
+      "path": "@plan/knowledge/instruction-split.json",
+      "section": "inventory",
+      "why": "F5, F10, F20",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/instruction-split.json",
+      "section": "plan-run-units",
+      "why": "точный текст замены",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/instruction-split.json",
+      "section": "managed-blocks",
+      "why": "формат блока",
+      "required": true
+    },
+    {
+      "path": "packages/task/commands/plan-run.md",
+      "why": "что заменить",
+      "required": true
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/SKILL.md",
+      "why": "что заменить",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/test_canon_literals.py",
+      "why": "ограничения на plan-run.md",
+      "required": true
+    },
+    {
+      "path": "packages/task/tests/test_claude_command_adapter.py",
+      "why": "golden",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/skills/plan-protocol/SKILL.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/execution-mode.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/skills/plan-protocol/references/review-mode.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/docs/methodology.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/docs/workflows.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/commands/plan-run.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/task/references/executor-handoff.md",
+      "change": "create"
+    },
+    {
+      "path": "configs/managed-blocks.json",
+      "change": "any",
+      "note": "created by P3.2"
+    },
+    {
+      "path": "packages/task/adapters/**",
+      "change": "any",
+      "note": "generated"
+    },
+    {
+      "path": "packages/task/tests/fixtures_data/claude-command-golden/**",
+      "change": "any",
+      "note": "generated/golden"
+    }
+  ],
+  "rules": [
+    "Только перечисленные замены; иной выбор формулировки — log --type blocker",
+    "Проекции — генератором",
+    "После правок grep показывает абзац только в reviewer-selection.md"
+  ],
+  "guidance": "Исполнитель: Sol (codex gpt-6.1-sol, implementation/medium) — механика по готовым таблицам.\n\nПроверка дубля: фраза `exact native route; without an explicit review request no review runs` встречается только в копиях абзаца (в reviewer-selection.md её нет); после правок `grep` по skills/, docs/, commands/ пакета Task пуст (V1), reviewer-selection.md не меняется. Порядок: правки → `python3 scripts/sync-managed-blocks.py --write --root .` → `python3 packages/task/scripts/render-provider-commands.py --write --root .` → golden → проверки.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "! grep -rn 'exact native route; without an explicit review request no review runs' packages/task/skills packages/task/docs packages/task/commands",
+      "expect": "exit 0 (no matches)",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "grep -n 'plan.py brief <plan> <item> --unit <U#>' packages/task/commands/plan-run.md",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "bash packages/task/scripts/validate.sh",
+      "expect": "exit 0; `validate: OK`",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V4",
+      "cmd": "bash packages/orch/scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V5",
+      "cmd": "python3 scripts/sync-managed-blocks.py --check --root .",
+      "expect": "exit 0; `managed-blocks: OK`",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "одна копия reviewer-абзаца",
+    "plan-run Units → brief + handoff",
+    "executor-handoff.md",
+    "зелёные validate/test"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-05T17:00:30Z"
+}

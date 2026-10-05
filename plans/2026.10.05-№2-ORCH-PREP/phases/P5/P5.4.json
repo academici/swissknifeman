@@ -1,0 +1,95 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.4",
+  "title": "Тест переносимости: один execution-input на трёх bindings",
+  "status": "todo",
+  "summary": "test_portability.py: brief fixture-плана Task, ad-hoc и review-only входы проходят prepare на native/CAO/Claude-only с идентичным task-блоком; stage-result из synthetic trace валиден и привязан к digest; широкий validate orch.",
+  "why": "R16, R14 — критерий готовности Plan 1 (DECISIONS §3): goal/checks не переписываются под движок.",
+  "scope": {
+    "include": [
+      "tests/test_portability.py по knowledge/engine-port §conformance (параметризация по BINDINGS и provider)",
+      "общий helper tests/task_fixture.py (копия demo-plan в tmp, вызов plan.py brief), если ещё не выделен в P2.2"
+    ],
+    "exclude": [
+      "реальные запуски"
+    ]
+  },
+  "depends_on": [
+    "P5.3",
+    "P2.2"
+  ],
+  "decisions": [],
+  "reads": [
+    {
+      "path": "@plan/knowledge/engine-port.json",
+      "section": "conformance",
+      "why": "4 условия теста",
+      "required": true
+    },
+    {
+      "path": "packages/orch/tests/test_conformance_task.py",
+      "why": "как получить brief fixture-плана",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/bindings/__init__.py",
+      "why": "prepare_common",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/port.py",
+      "why": "RunState",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/tests/test_portability.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/tests/task_fixture.py",
+      "change": "any"
+    }
+  ],
+  "rules": [
+    "Ожидаемый отказ native × grok утверждается явно (assertRaises), не пропускается",
+    "Сравнение task-блока — байт-в-байт"
+  ],
+  "guidance": "Исполнитель: Sol допустим вместо Sonnet (codex gpt-6.1-sol, effort high — route implementation/high разрешает без правки плана): тест по четырём заданным условиям. Если тесты красные или записан blocker — перезапуск item на Sonnet.\n\nДля каждого входа: `block = render_task_block(input)`; для каждого binding × provider (native: claude-code, codex, grok; cao: claude-code, codex, grok; claude-only: claude-code) — prepare в tmp `--out`; прочитать файл проекции primary-стадии; `assertIn(block, text)`; проверить отсутствие LIFECYCLE_PHRASES. Затем `RunState` по `fixtures/traces/native-claude-code-ok.jsonl` → `stage_result(... input_digest=input[\"digest\"])` валиден и `hashes.input == input[\"digest\"]`.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_portability -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/orch"
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0; `validate: OK`",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "test_portability.py",
+    "зелёный validate orch"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-05T17:00:29Z"
+}

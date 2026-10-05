@@ -1,0 +1,182 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.1",
+  "title": "Каркас packages/orch: валидатор, CLI validate, CI",
+  "status": "todo",
+  "summary": "Создан пакет packages/orch: адаптированный closed-profile валидатор, contracts.py (KINDS, validate, semantic_checks-диспетчер, canonical_digest, LIFECYCLE_PHRASES), defs.schema.json, CLI `orch.py validate`, scripts validate.sh/test.sh, тесты границ и паритета профиля, шаги CI.",
+  "why": "Фундамент всех контрактов (R14, R18) и правила зависимостей (I11). Решение D4: своя копия валидатора, чтобы orch не зависел от Task.",
+  "scope": {
+    "include": [
+      "packages/orch/{README.md, scripts/orch.py, scripts/validate.sh, scripts/test.sh}",
+      "packages/orch/lib/orch/{__init__.py, schema.py, contracts.py, cli.py} — только verb `validate`",
+      "packages/orch/schemas/exec/v1/defs.schema.json полностью по knowledge/contracts §defs",
+      "packages/orch/tests/{__init__.py, test_schema_profile.py, test_boundaries.py, test_cli_validate.py}",
+      "шаги CI: `bash packages/orch/scripts/validate.sh` в .github/workflows/validate.yml; `bash packages/orch/scripts/test.sh -v` в .github/workflows/test.yml"
+    ],
+    "exclude": [
+      "остальные 9 схем (P1.2, P1.3)",
+      "port.py (P1.4)",
+      "CLAUDE.md/AGENTS.md пакета, .claude-plugin, release-units.json"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D1",
+    "D2",
+    "D4"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/architecture.json",
+      "section": "layout",
+      "why": "точная раскладка пакета",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/architecture.json",
+      "section": "dependency-rule",
+      "why": "что запрещено импортировать и как проверить",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/architecture.json",
+      "section": "cli",
+      "why": "контракт verb validate",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/contracts.json",
+      "section": "conventions",
+      "why": "профиль, $id, версии, digest, fixtures",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/contracts.json",
+      "section": "defs",
+      "why": "содержимое defs.schema.json",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/schema.py",
+      "why": "оригинал валидатора для адаптированной копии",
+      "required": true
+    },
+    {
+      "path": "packages/task/scripts/validate.sh",
+      "why": "образец структуры validate.sh (шаги, err(), итог)",
+      "required": true
+    },
+    {
+      "path": "packages/harness/scripts/test.sh",
+      "why": "образец test.sh",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/validate.yml",
+      "why": "куда добавить шаг",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "why": "куда добавить шаг",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/README.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/scripts/*",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/*.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/defs.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/tests/*",
+      "change": "create"
+    },
+    {
+      "path": ".github/workflows/validate.yml",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "packages/orch/lib/orch/contracts.py",
+      "role": "output"
+    },
+    {
+      "path": "packages/orch/scripts/orch.py",
+      "role": "output"
+    },
+    {
+      "path": "packages/orch/lib/orch/cli.py",
+      "role": "output"
+    },
+    {
+      "path": "packages/orch/README.md",
+      "role": "output"
+    }
+  ],
+  "rules": [
+    "stdlib-only; диагностика на английском",
+    "Схема defs — закрытый профиль, у каждого property есть description",
+    "Не менять packages/task/lib/task/plan/schema.py"
+  ],
+  "guidance": "Исполнитель: Sol допустим вместо Sonnet (codex gpt-6.1-sol, effort high — route implementation/high разрешает без правки плана): копия валидатора и скрипты по готовой раскладке. Если тесты красные или записан blocker — перезапуск item на Sonnet.\n\n1. `lib/orch/schema.py`: скопировать `packages/task/lib/task/plan/schema.py` и параметризовать: `Registry`/`load_registry(schema_dir, *, urn_prefix, kinds)`; убрать константы Task (`SCHEMA_URN_PREFIX`, `KINDS` Task). Набор `SUPPORTED_KEYWORDS` и `ERROR_CODES` — те же. Docstring: «adapted copy of task/plan/schema.py (PLAN2.D4)».\n2. `lib/orch/contracts.py`: `CONTRACT_VERSION = \"exec/v1\"`, `URN_PREFIX = \"urn:swissknifeman:orch:exec:\"`, `KINDS` (9 видов из knowledge/contracts в порядке: execution-input, run-policy, role-manifest, capability-record, run-event, stage-result, effect-receipt, check-evidence, launch-plan), `LIFECYCLE_PHRASES = (\"report_api\", \"plan.py start\", \"plan.py finish\", \"unit return\", \"task:plan-run\")`, `Issue(path, code, message, level=\"error\")`, `load_registry()` (кэш, каталог `schemas/exec/v1` относительно пакета), `validate(doc, kind, registry=None) -> list[Issue]` = schema issues + `semantic_checks(doc, kind)`; `SEMANTIC: dict[str, Callable]` (пока пустой) и общая проверка: `contract_version != \"exec/v1\"` → `CONTRACT_VERSION`; неизвестный kind → `SchemaProfileError`. `canonical_digest(doc)` — по knowledge/contracts §conventions.\n3. `cli.py`: argparse, verb `validate <kind> <file> [--quiet]`; вывод/коды — knowledge/architecture §cli. `scripts/orch.py`: добавить `lib` в `sys.path`, вызвать `orch.cli.main()`.\n4. `scripts/test.sh`: `cd` в пакет; `PYTHONPATH=lib python3 -m unittest discover -s tests -t . \"$@\"`.\n5. `scripts/validate.sh`: шаги `[1/6] compileall lib tests scripts`, `[2/6] bash -n scripts/*.sh`, `[3/6] required files`, `[4/6] schemas load` (`python3 -c` с `load_registry()`), `[5/6] fixtures`: каждый `fixtures/exec/v1/valid/<kind>/*.json` → `orch.py validate <kind>` exit 0, каждый `invalid/...` → exit 1 (каталога нет — пропуск с сообщением), `[6/6] bash scripts/test.sh`. Итог `validate: OK`/`validate: FAILURE`.\n6. Тесты: `test_schema_profile.py` — профиль: схема с недопустимым ключевым словом → `SchemaProfileError`; паритет: AST-разбор файла `packages/task/lib/task/plan/schema.py` (чтение файла, не импорт; путь от `Path(__file__).parents[3] / \"task\"`, тест `skipUnless` файл существует) — `SUPPORTED_KEYWORDS` orch ⊇ task; `canonical_digest` стабилен к порядку ключей и игнорирует `digest`. `test_boundaries.py` — AST всех `lib/orch/**/*.py`: импорты только из `sys.stdlib_module_names` и `orch`. `test_cli_validate.py` — tmp-документ с невалидным `contract_version` → exit 1 и код `CONTRACT_VERSION`; неизвестный kind → exit 1.\n7. README.md: назначение, статус «internal, not published (PLAN2.D2)», команды validate/test.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_schema_profile tests.test_boundaries tests.test_cli_validate -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/orch"
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0; last line `validate: OK`",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V3",
+      "cmd": "grep -n 'packages/orch/scripts/validate.sh' .github/workflows/validate.yml && grep -n 'packages/orch/scripts/test.sh' .github/workflows/test.yml",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "packages/orch skeleton с validator и CLI validate",
+    "defs.schema.json",
+    "тесты границ и профиля",
+    "CI шаги"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-05T17:00:27Z"
+}

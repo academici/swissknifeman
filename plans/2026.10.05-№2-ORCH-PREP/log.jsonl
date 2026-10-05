@@ -1,0 +1,16 @@
+{"v":1,"ts":"2026-10-05T16:25:33Z","type":"plan_created","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"plan PLAN2 created","data":{"plan_id":"2026.10.05-№2-ORCH-PREP"}}
+{"v":1,"ts":"2026-10-05T16:40:15Z","type":"decision","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"D1 accepted","data":{"id":"D1","by":"owner","option":"A"}}
+{"v":1,"ts":"2026-10-05T16:40:15Z","type":"decision","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"D2 accepted","data":{"id":"D2","by":"owner","option":"A"}}
+{"v":1,"ts":"2026-10-05T16:40:15Z","type":"decision","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"D3 accepted","data":{"id":"D3","by":"owner","option":"A"}}
+{"v":1,"ts":"2026-10-05T16:40:15Z","type":"decision","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"D4 accepted","data":{"id":"D4","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-05T16:40:15Z","type":"decision","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"D5 accepted","data":{"id":"D5","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-05T16:40:16Z","type":"decision","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"D6 accepted","data":{"id":"D6","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-05T16:40:16Z","type":"decision","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"D7 accepted","data":{"id":"D7","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-05T16:40:16Z","type":"decision","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"D8 accepted","data":{"id":"D8","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-05T16:40:16Z","type":"decision","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"D9 accepted","data":{"id":"D9","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-05T16:40:16Z","type":"decision","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"D10 accepted","data":{"id":"D10","by":"agent","option":"A"}}
+{"v":1,"ts":"2026-10-05T16:52:36Z","type":"design_done","phase":"P1","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"P1 design done"}
+{"v":1,"ts":"2026-10-05T16:52:37Z","type":"design_done","phase":"P2","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"P2 design done"}
+{"v":1,"ts":"2026-10-05T16:52:37Z","type":"design_done","phase":"P3","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"P3 design done"}
+{"v":1,"ts":"2026-10-05T16:52:38Z","type":"design_done","phase":"P4","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"P4 design done"}
+{"v":1,"ts":"2026-10-05T16:52:38Z","type":"design_done","phase":"P5","actor":{"provider":"claude-code","model":"opus","effort":"high"},"summary":"P5 design done"}

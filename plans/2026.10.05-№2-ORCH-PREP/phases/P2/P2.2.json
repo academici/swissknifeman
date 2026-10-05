@@ -1,0 +1,112 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.2",
+  "title": "Полнота brief (T2) и конформанс exec/v1 в orch",
+  "status": "todo",
+  "summary": "`brief.verify` проверяет присутствие всех acceptance-checks, правил, required reads, decisions и отсутствие lifecycle-фраз; нарушение — отказ BRIEF_INCOMPLETE. Тест orch прогоняет `plan.py brief` на fixture-плане и валидирует результат схемой execution-input.",
+  "why": "I1, I3, R1: дешёвый пересказ не может быть единственным носителем требований; полнота проверяется детерминированно. D10: конформанс на стороне контракта.",
+  "scope": {
+    "include": [
+      "brief.verify() и вызов из build()",
+      "тест-кейсы полноты в tests/engine/test_brief.py",
+      "packages/orch/tests/test_conformance_task.py: копия `packages/task/tests/engine/fixtures/demo-plan` в tmp `plans/2026.10.05-№7-DEMO`, subprocess `python3 packages/task/scripts/plan.py brief <путь-плана> P1.2`, validate execution-input, digest == orch canonical_digest, LIFECYCLE-фразы Task == orch"
+    ],
+    "exclude": [
+      "resolver (P2.3)"
+    ]
+  },
+  "depends_on": [
+    "P2.1",
+    "P1.1"
+  ],
+  "decisions": [
+    "D10"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/task-changes.json",
+      "section": "completeness",
+      "why": "правила и тест-кейсы",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/contracts.json",
+      "section": "execution-input",
+      "why": "схема для конформанса",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/plan/brief.py",
+      "why": "реализация P2.1",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/contracts.py",
+      "why": "validate, canonical_digest, LIFECYCLE_PHRASES",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/lib/task/plan/brief.py",
+      "change": "any",
+      "note": "created by P2.1"
+    },
+    {
+      "path": "packages/task/tests/engine/test_brief.py",
+      "change": "any",
+      "note": "created by P2.1"
+    },
+    {
+      "path": "packages/orch/tests/test_conformance_task.py",
+      "change": "create"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "packages/orch/tests/test_conformance_task.py",
+      "role": "output"
+    }
+  ],
+  "rules": [
+    "Список фраз в brief.py — константа `LIFECYCLE_PHRASES` с тем же содержимым, что в orch (тест сравнивает через AST-чтение файла brief.py)",
+    "Конформанс-тест orch вызывает Task только subprocess-ом; путь к Task: `Path(__file__).parents[3] / 'task'`; skipUnless существует"
+  ],
+  "guidance": "Исполнитель: Sonnet (claude-code, implementation/high) — лучше не экономить: конформанс Task ↔ orch, тест на стороне контракта.\n\n- `verify(plan, item_id, doc, *, unit_id=None) -> list[str]` — правила 1–7 из knowledge/task-changes §completeness; строки вида `\"acceptance.checks: missing V2\"`.\n- `build` вызывает `verify` после сборки, до digest; непустой список → `PlanError(\"BRIEF_INCOMPLETE\", \"; \".join(missing))`.\n- Чтобы протестировать нарушение, тест вызывает `verify` с вручную испорченной копией документа (удалён check/rule/read/decision) и с item, у которого guidance содержит `plan.py finish`.\n- Большой item: 200 reads (несуществующие optional) и 50 rules → `verify == []`, длина constraints == 50+правила плана.\n- Plan fixture short_id = PLAN3; адресовать план путём директории.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest discover -s tests/engine -p 'test_brief.py'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/task"
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_conformance_task -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/orch"
+    }
+  ],
+  "deliverables": [
+    "brief.verify + BRIEF_INCOMPLETE",
+    "test_conformance_task.py в orch"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-05T17:00:25Z"
+}

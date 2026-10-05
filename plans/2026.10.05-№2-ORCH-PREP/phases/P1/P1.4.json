@@ -1,0 +1,145 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.4",
+  "title": "Engine Port: Protocol, ошибки, RunState, binding-матрица, docs",
+  "status": "todo",
+  "summary": "port.py с EnginePort Protocol, PortError и PORT_ERROR_CODES, чистым reducer RunState; bindings/matrix.json; docs/contracts.md и docs/engine-port.md; тесты порта, reducer и матрицы; широкий validate пакета.",
+  "why": "R14, R16, I2, I7, I14: порт — граница обратимости между native/CAO/Claude-only. Hard risk: семантика состояний (unknown_outcome вместо ложного success, quota ≠ провал) — ошибка здесь тиражируется во все адаптеры Plan 2.",
+  "scope": {
+    "include": [
+      "lib/orch/port.py (Protocol, PortError, PORT_ERROR_CODES, RunState)",
+      "bindings/matrix.json",
+      "docs/contracts.md (таблицы полей + «Changelog контрактов»), docs/engine-port.md",
+      "tests/test_port.py, tests/test_runstate.py, tests/test_matrix.py"
+    ],
+    "exclude": [
+      "реализации bindings и prepare_common (P5.3)",
+      "запуск процессов"
+    ]
+  },
+  "depends_on": [
+    "P1.3"
+  ],
+  "decisions": [
+    "D4"
+  ],
+  "reads": [
+    {
+      "path": "@plan/knowledge/engine-port.json",
+      "section": "operations",
+      "why": "сигнатуры и коды ошибок",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/engine-port.json",
+      "section": "states",
+      "why": "правила reducer",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/engine-port.json",
+      "section": "binding-matrix",
+      "why": "данные матрицы",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/engine-port.json",
+      "section": "prepare-algorithm",
+      "why": "контекст для docs, реализация — P5.3",
+      "required": false
+    },
+    {
+      "path": "@plan/knowledge/contracts.json",
+      "section": "run-event",
+      "why": "kinds",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/contracts.json",
+      "section": "stage-result",
+      "why": "что собирает stage_result()",
+      "required": true
+    },
+    {
+      "path": "packages/orch/fixtures/traces/native-claude-code-ok.jsonl",
+      "why": "trace для теста reducer",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/port.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/bindings/matrix.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/docs/contracts.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/docs/engine-port.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/tests/test_*.py",
+      "change": "create"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "packages/orch/bindings/matrix.json",
+      "role": "output"
+    },
+    {
+      "path": "packages/orch/lib/orch/port.py",
+      "role": "output"
+    }
+  ],
+  "rules": [
+    "RunState — без I/O и без времени системы; всё из событий",
+    "Конец потока без терминального события — всегда unknown_outcome",
+    "Формат matrix.json: {\"version\":1, \"bindings\":[\"native\",\"cao\",\"claude-only\"], \"capabilities\":[{\"id\", \"<binding>\": {\"support\", \"by_provider\"?: {provider: support}, \"note\"?}}]}",
+    "matrix.json by_provider (native): grok — unknown для model_set, model_observe, effort_set, resume, usage, tool_restrictions, skill_delivery; codex — adapted для model_observe; cancel native supported для всех (kill process group не зависит от транспорта). cao by_provider grok: effort_set unsupported. P4.3 сверяет seeds с этими значениями."
+  ],
+  "guidance": "Исполнитель: Opus (claude-code, frontier/high) — не экономить: семантика состояний порта (unknown вместо ложного success, quota ≠ провал) тиражируется во все адаптеры Plan 2.\n\n- `port.py`: точные сигнатуры из knowledge/engine-port §operations. `PORT_ERROR_CODES` — кортеж в порядке таблицы. `RunState` — §states; `apply` валидирует событие `contracts.validate(event, \"run-event\")` (ошибки → `PortError(\"INPUT_INVALID\")`).\n- Тест-кейсы `test_runstate.py`: ok-trace → completed, usage reported; duplicate identical event → игнор; duplicate seq с другим kind → SEQ_ORDER; убывающий seq → SEQ_ORDER; событие после completed той же попытки → AFTER_TERMINAL; grok-unknown trace + close() → unknown_outcome с ошибкой transport; codex-quota → quota_blocked (не failed); started attempt 2 после failed → running; attempt 3 после completed → ошибка; usage без данных → `{\"status\": \"unknown\"}` и `stage_result` валиден по схеме.\n- `test_port.py`: dummy-класс со всеми методами — `isinstance(x, EnginePort)`; коды PortError ⊆ PORT_ERROR_CODES; набор кодов равен таблице в docs/engine-port.md (разбор таблицы Markdown).\n- `test_matrix.py`: ids из knowledge-таблицы (prepare, run, watch, cancel, resume, results, model_set, model_observe, effort_set, skill_delivery, tool_restrictions, plan_write_prevention, usage, effects, stream_live) присутствуют; у каждого — все 3 bindings; support ∈ {supported, adapted, unsupported, unknown}; для skill_delivery значения — режимы skill_delivery.mode; docs/engine-port.md содержит каждый id.\n- docs/contracts.md — человекочитаемые таблицы полей (кратко, ссылки на схемы) и раздел `## Changelog контрактов` с записью `exec/v1 — initial (PLAN2)`. docs/engine-port.md — операции, ошибки, состояния, матрица.\n- Последний item фазы перед review: широкий `bash packages/orch/scripts/validate.sh`.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "PYTHONPATH=lib python3 -m unittest tests.test_port tests.test_runstate tests.test_matrix -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/orch"
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0; `validate: OK`",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "port.py (EnginePort, PortError, RunState)",
+    "bindings/matrix.json",
+    "docs/contracts.md, docs/engine-port.md",
+    "тесты"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-05T17:00:22Z"
+}

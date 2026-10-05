@@ -535,6 +535,25 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
                 row["status"] = "updated"
                 row["digest"] = units["task"]["providers"]["grok"]["tree_digest"]
             save()
+    # A release policy is also a delivery contract.  Never silently omit a
+    # provider merely because its native binary/channel was absent: every
+    # required surface must leave a confirmed receipt row.
+    if native:
+        prefixes = {"codex": "codex-cache/", "claude-code": "claude-cache/",
+                    "grok": "grok-cache/"}
+        for unit in value["units"]:
+            for provider in unit.get("required_providers", []):
+                prefix = prefixes.get(provider)
+                if prefix is None:
+                    receipt["targets"].append({"surface": f"{provider}-cache/{unit['id']}",
+                                               "status": "blocked",
+                                               "reason": "DELIVERY_PROVIDER_UNSUPPORTED"})
+                    continue
+                expected = prefix + unit["id"]
+                if not any(row.get("surface") == expected for row in receipt["targets"]):
+                    receipt["targets"].append({"surface": expected, "status": "blocked",
+                                               "reason": "DELIVERY_PROVIDER_UNCONFIRMED"})
+        save()
     receipt["cache_gc"] = prune_provider_caches(env, value, history, dry_run=dry_run) if native else []
     cache_blocked = any(row.get("status") == "blocked" for row in receipt["cache_gc"])
     receipt["status"] = ("GREEN" if receipt["targets"] and not cache_blocked
